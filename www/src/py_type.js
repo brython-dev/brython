@@ -35,7 +35,7 @@ $B.$class_constructor = function(class_name, class_obj, parents,
                 if(parents[i]===undefined){
                     // restore the line of class definition
                     $B.line_info = class_obj.$def_line
-                    throw _b_.NameError("name '"+parents_names[i]+"' is not defined")
+                    throw _b_.NameError.$factory("name '"+parents_names[i]+"' is not defined")
                 }
             }
         }
@@ -152,7 +152,7 @@ $B.$class_constructor = function(class_name, class_obj, parents,
 
     if(!is_instanciable){
         function nofactory(){
-            throw _b_.TypeError("Can't instantiate abstract class interface"+
+            throw _b_.TypeError.$factory("Can't instantiate abstract class interface"+
                 " with abstract methods "+Object.keys(abstract_methods).join(', '))}
         //for(var attr in factory){nofactory[attr] = factory[attr]}
         //init_subclass(nofactory);
@@ -255,7 +255,7 @@ function make_mro(bases, cl_dict){
         var bmro = [], pos=0
         if(bases[i]===undefined ||
             bases[i].__mro__===undefined){
-            throw _b_.TypeError('Object passed as base class is not a class')
+            throw _b_.TypeError.$factory('Object passed as base class is not a class')
         }
         bmro[pos++] = bases[i]
         var _tmp = bases[i].__mro__
@@ -292,7 +292,7 @@ function make_mro(bases, cl_dict){
             else{break}
         }
         if(candidate===null){
-            throw _b_.TypeError("inconsistent hierarchy, no C3 MRO is possible")
+            throw _b_.TypeError.$factory("inconsistent hierarchy, no C3 MRO is possible")
         }
         mro[mpos++]=candidate
         for(var i=0;i<seqs.length;i++){
@@ -580,7 +580,7 @@ var $instance_creator = $B.$instance_creator = function(klass){
 
     // The class may not be instanciable if it has at least one abstract method
     if(klass.$instanciable!==undefined){
-        return function(){throw _b_.TypeError("Can't instantiate abstract "+
+        return function(){throw _b_.TypeError.$factory("Can't instantiate abstract "+
             "class interface with abstract methods")}
     }
     var metaclass = klass.__class__,

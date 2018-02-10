@@ -20,7 +20,7 @@ var $ListDict = {__class__:$B.$type,
 
 $ListDict.__add__ = function(self,other){
     if($B.get_class(self)!==$B.get_class(other)){
-        throw TypeError('can only concatenate list (not "'+
+        throw TypeError.$factory('can only concatenate list (not "'+
             $B.get_class(other).__name__+'") to list')
     }
     var res = self.valueOf().concat(other.valueOf())
@@ -51,7 +51,7 @@ $ListDict.__delitem__ = function(self,arg){
             self.splice(pos,1)
             return $N
         }
-        throw _b_.IndexError('list index out of range')
+        throw _b_.IndexError.$factory('list index out of range')
     }
     if(isinstance(arg,_b_.slice)) {
         var step = arg.step;if(step===None){step=1}
@@ -90,7 +90,7 @@ $ListDict.__delitem__ = function(self,arg){
        return $N
     }
 
-    throw _b_.TypeError('list indices must be integer, not '+_b_.str(arg.__class__))
+    throw _b_.TypeError.$factory('list indices must be integer, not '+_b_.str(arg.__class__))
 }
 
 $ListDict.__eq__ = function(self, other){
@@ -120,7 +120,7 @@ $ListDict.__getitem__ = function(self,arg){
         if(key<0) pos=items.length+pos
         if(pos>=0 && pos<items.length) return items[pos]
 
-        throw _b_.IndexError('list index out of range')
+        throw _b_.IndexError.$factory('list index out of range')
     }
     if (isinstance(key,_b_.slice)) {
         // Find integer values for start, stop and step
@@ -147,13 +147,13 @@ $ListDict.__getitem__ = function(self,arg){
        return $ListDict.__getitem__(self, _b_.int(key))
     }
 
-    throw _b_.TypeError('list indices must be integer, not '+
+    throw _b_.TypeError.$factory('list indices must be integer, not '+
         $B.get_class(key).__name__)
 }
 
 $ListDict.__ge__ = function(self,other){
     if(!isinstance(other,[list, _b_.tuple])){
-        throw _b_.TypeError("unorderable types: list() >= "+
+        throw _b_.TypeError.$factory("unorderable types: list() >= "+
             $B.get_class(other).__name__+'()')
     }
     var i=0
@@ -163,7 +163,7 @@ $ListDict.__ge__ = function(self,other){
         else {
             res = getattr(self[i],"__ge__")(other[i])
              if (res === _b_.NotImplemented) {
-                throw _b_.TypeError("unorderable types: "+$B.get_class(self[i]).__name__+"() >= "+
+                throw _b_.TypeError.$factory("unorderable types: "+$B.get_class(self[i]).__name__+"() >= "+
             $B.get_class(other[i]).__name__+'()')
              } else return res
         }
@@ -177,7 +177,7 @@ $ListDict.__ge__ = function(self,other){
 
 $ListDict.__gt__ = function(self,other){
     if(!isinstance(other,[list, _b_.tuple])){
-        throw _b_.TypeError("unorderable types: list() > "+
+        throw _b_.TypeError.$factory("unorderable types: list() > "+
             $B.get_class(other).__name__+'()')
     }
     var i=0
@@ -187,7 +187,7 @@ $ListDict.__gt__ = function(self,other){
         else {
             res = getattr(self[i],'__gt__')(other[i])
             if (res === _b_.NotImplemented) {
-                throw _b_.TypeError("unorderable types: "+$B.get_class(self[i]).__name__+"() > "+
+                throw _b_.TypeError.$factory("unorderable types: "+$B.get_class(self[i]).__name__+"() > "+
             $B.get_class(other[i]).__name__+'()')
             } else return res
         }
@@ -282,7 +282,7 @@ $ListDict.__mul__ = function(self,other){
        return $ListDict.__mul__(self, _b_.int(other))
     }
 
-    throw _b_.TypeError("can't multiply sequence by non-int of type '"+
+    throw _b_.TypeError.$factory("can't multiply sequence by non-int of type '"+
             $B.get_class(other).__name__+"'")
 }
 
@@ -291,7 +291,7 @@ $ListDict.__ne__ = function(self,other){return !$ListDict.__eq__(self,other)}
 
 $ListDict.__new__ = function(cls, ...args){
     if(cls===undefined){
-        throw _b_.TypeError('list.__new__(): not enough arguments')
+        throw _b_.TypeError.$factory('list.__new__(): not enough arguments')
     }
     var res = []
     res.__class__ = cls.$is_class ? cls : cls.$dict
@@ -319,10 +319,10 @@ $ListDict.__repr__ = function(self){
 $ListDict.__setattr__ = function(self, attr, value){
     if(self.__class__ === $ListDict){
         if($ListDict.hasOwnProperty(attr)){
-            throw _b_.AttributeError("'list' object attribute '" + attr +
+            throw _b_.AttributeError.$factory("'list' object attribute '" + attr +
                 "' is read-only")
         }else{
-            throw _b_.AttributeError("'list' object has no attribute '" +
+            throw _b_.AttributeError.$factory("'list' object has no attribute '" +
                 attr + "'")
         }
     }
@@ -338,7 +338,7 @@ $ListDict.__setitem__ = function(){
         var pos = arg
         if(arg<0) pos=self.length+pos
         if(pos>=0 && pos<self.length){self[pos]=value}
-        else {throw _b_.IndexError('list index out of range')}
+        else {throw _b_.IndexError.$factory('list index out of range')}
         return $N
     }
     if(isinstance(arg,_b_.slice)){
@@ -353,7 +353,7 @@ $ListDict.__setitem__ = function(){
        return $N
     }
 
-    throw _b_.TypeError('list indices must be integer, not '+arg.__class__.__name__)
+    throw _b_.TypeError.$factory('list indices must be integer, not '+arg.__class__.__name__)
 }
 
 // there is no list.__str__
@@ -424,7 +424,7 @@ $ListDict.index = function(){
     for(var i=start; i < stop;i++){
         if(_eq(self[i])) return i
     }
-    throw _b_.ValueError(_b_.str($.x)+" is not in list")
+    throw _b_.ValueError.$factory(_b_.str($.x)+" is not in list")
 }
 
 $ListDict.insert = function(){
@@ -443,7 +443,7 @@ $ListDict.pop = function(){
     pos = $B.$GetInt(pos)
     if(pos<0){pos+=self.length}
     var res = self[pos]
-    if(res===undefined){throw _b_.IndexError('pop index out of range')}
+    if(res===undefined){throw _b_.IndexError.$factory('pop index out of range')}
     self.splice(pos,1)
     return res
 }
@@ -457,7 +457,7 @@ $ListDict.remove = function(){
             return $N
         }
     }
-    throw _b_.ValueError(_b_.str($.x)+" is not in list")
+    throw _b_.ValueError.$factory(_b_.str($.x)+" is not in list")
 }
 
 $ListDict.reverse = function(self){
@@ -503,7 +503,7 @@ function $partition(arg,array,begin,end,pivot)
             var x = arg(array[ix])
             // If the comparison function changes the array size, raise
             // ValueError
-            if(array.length!==len){throw ValueError('list modified during sort')}
+            if(array.length!==len){throw ValueError.$factory('list modified during sort')}
             if(getattr(x,'__le__')(arg(piv))) {
                 array = swap(array, store, ix);
                 ++store;
@@ -554,7 +554,7 @@ $ListDict.sort = function(self){
     for(var i=0;i<keys.length;i++){
         if(keys[i]=="key"){func=kw_args.$string_dict[keys[i]]}
         else if(keys[i]=='reverse'){reverse=kw_args.$string_dict[keys[i]]}
-        else{throw _b_.TypeError("'"+keys[i]+
+        else{throw _b_.TypeError.$factory("'"+keys[i]+
             "' is an invalid keyword argument for this function")}
     }
     if(self.length==0) return
@@ -581,7 +581,7 @@ $ListDict.sort = function(self){
             if (reverse) {
                 cmp = function(b,a) {
                     res = getattr(a,'__le__')(b)
-                    if (res === _b_.NotImplemented) throw _b_.TypeError("unorderable types: "+$B.get_class(b).__name__+"() <="+$B.get_class(a).__name__+"()")
+                    if (res === _b_.NotImplemented) throw _b_.TypeError.$factory("unorderable types: "+$B.get_class(b).__name__+"() <="+$B.get_class(a).__name__+"()")
                     if(res) {
                         if(a==b){return 0};
                         return -1;
@@ -591,7 +591,7 @@ $ListDict.sort = function(self){
             } else {
                 cmp = function(a,b) {
                     res = getattr(a,'__le__')(b)
-                    if (res === _b_.NotImplemented) throw _b_.TypeError("unorderable types: "+$B.get_class(a).__name__+"() <="+$B.get_class(b).__name__+"()")
+                    if (res === _b_.NotImplemented) throw _b_.TypeError.$factory("unorderable types: "+$B.get_class(a).__name__+"() <="+$B.get_class(b).__name__+"()")
                     if(res ) {
                         if(a==b){return 0};
                         return -1;
@@ -604,7 +604,7 @@ $ListDict.sort = function(self){
                 cmp = function(b,a) {
                     var _a = func(a), _b=func(b);
                     res = getattr(_a,'__le__')(_b)
-                    if (res === _b_.NotImplemented) throw _b_.TypeError("unorderable types: "+$B.get_class(b).__name__+"() <="+$B.get_class(a).__name__+"()")
+                    if (res === _b_.NotImplemented) throw _b_.TypeError.$factory("unorderable types: "+$B.get_class(b).__name__+"() <="+$B.get_class(a).__name__+"()")
                     if(res) {
                         if(_a==_b){return 0};
                         return -1;
@@ -615,7 +615,7 @@ $ListDict.sort = function(self){
                 cmp = function(a,b) {
                     var _a = func(a), _b=func(b);
                     res = getattr(_a,'__le__')(_b)
-                    if (res === _b_.NotImplemented) throw _b_.TypeError("unorderable types: "+$B.get_class(a).__name__+"() <="+$B.get_class(b).__name__+"()")
+                    if (res === _b_.NotImplemented) throw _b_.TypeError.$factory("unorderable types: "+$B.get_class(a).__name__+"() <="+$B.get_class(b).__name__+"()")
                     if(res) {
                         if(_a==_b){return 0};
                         return -1;
@@ -739,13 +739,6 @@ for(var attr in $ListDict){
     }//switch
 }
 
-$TupleDict.__delitem__ = function(){
-    throw _b_.TypeError("'tuple' object doesn't support item deletion")
-}
-$TupleDict.__setitem__ = function(){
-    throw _b_.TypeError("'tuple' object does not support item assignment")
-}
-
 $TupleDict.__eq__ = function(self,other){
     // compare object "self" to class "list"
     if(other===undefined) return self===tuple
@@ -777,9 +770,8 @@ $TupleDict.__mro__ = [$ObjectDict]
 $TupleDict.__name__ = 'tuple'
 
 $TupleDict.__new__ = function(cls, ...args){
-    console.log("new tuple", args)
     if(cls===undefined){
-        throw _b_.TypeError('list.__new__(): not enough arguments')
+        throw _b_.TypeError.$factory('list.__new__(): not enough arguments')
     }
     var self = []
     self.__class__ = cls.$is_class ? cls : cls.$dict
@@ -802,7 +794,7 @@ $TupleDict.__new__ = function(cls, ...args){
     }
     return self
 }
-// set __repr__ and __str__
+// set method names
 $B.set_func_names($TupleDict)
 
 _b_.list = list

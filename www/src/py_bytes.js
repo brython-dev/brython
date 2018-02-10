@@ -40,14 +40,14 @@ bytearray.__repr__ = bytearray.__str__ = function(self){
 bytearray.__setitem__ = function(self,arg,value){
     if(isinstance(arg,_b_.int)){
         if(!isinstance(value, _b_.int)){
-            throw _b_.TypeError('an integer is required')
+            throw _b_.TypeError.$factory('an integer is required')
         }else if(value>255){
-            throw _b_.ValueError("byte must be in range(0, 256)")
+            throw _b_.ValueError.$factory("byte must be in range(0, 256)")
         }
         var pos = arg
         if(arg<0) pos=self.source.length+pos
         if(pos>=0 && pos<self.source.length){self.source[pos]=value}
-        else{throw _b_.IndexError('list index out of range')}
+        else{throw _b_.IndexError.$factory('list index out of range')}
     } else if(isinstance(arg,_b_.slice)){
         var start = arg.start===None ? 0 : arg.start
         var stop = arg.stop===None ? self.source.length : arg.stop
@@ -63,35 +63,35 @@ bytearray.__setitem__ = function(self,arg,value){
             var $temp = _b_.list(value)
             for(var i=$temp.length-1;i>=0;i--){
                 if(!isinstance($temp[i], _b_.int)){
-                    throw _b_.TypeError('an integer is required')
+                    throw _b_.TypeError.$factory('an integer is required')
                 }else if($temp[i]>255){
-                    throw ValueError("byte must be in range(0, 256)")
+                    throw ValueError.$factory("byte must be in range(0, 256)")
                 }
                 self.source.splice(start,0,$temp[i])
             }
         }else{
-            throw _b_.TypeError("can only assign an iterable")
+            throw _b_.TypeError.$factory("can only assign an iterable")
         }
     }else {
-        throw _b_.TypeError('list indices must be integer, not '+$B.get_class(arg).__name__)
+        throw _b_.TypeError.$factory('list indices must be integer, not '+$B.get_class(arg).__name__)
     }
 }
 
 bytearray.append = function(self,b){
-    if(arguments.length!=2){throw _b_.TypeError(
+    if(arguments.length!=2){throw _b_.TypeError.$factory(
         "append takes exactly one argument ("+(arguments.length-1)+" given)")
     }
-    if(!isinstance(b, _b_.int)) throw _b_.TypeError("an integer is required")
-    if(b>255) throw ValueError("byte must be in range(0, 256)")
+    if(!isinstance(b, _b_.int)) throw _b_.TypeError.$factory("an integer is required")
+    if(b>255) throw ValueError.$factory("byte must be in range(0, 256)")
     self.source[self.source.length]=b
 }
 
 bytearray.insert = function(self,pos,b){
-    if(arguments.length!=3){throw _b_.TypeError(
+    if(arguments.length!=3){throw _b_.TypeError.$factory(
         "insert takes exactly 2 arguments ("+(arguments.length-1)+" given)")
     }
-    if(!isinstance(b, _b_.int)) throw _b_.TypeError("an integer is required")
-    if(b>255) throw ValueError("byte must be in range(0, 256)")
+    if(!isinstance(b, _b_.int)) throw _b_.TypeError.$factory("an integer is required")
+    if(b>255) throw ValueError.$factory("byte must be in range(0, 256)")
     _b_.list.$dict.insert(self.source,pos,b)
 }
 
@@ -115,7 +115,7 @@ var bytes = {__class__ : $B.$type,
 
 bytes.__add__ = function(self,other){
     if(!isinstance(other,bytes)){
-        throw _b_.TypeError("can't concat bytes to " + _b_.str(other))
+        throw _b_.TypeError.$factory("can't concat bytes to " + _b_.str(other))
     }
     self.source = self.source.concat(other.source)
     return self
@@ -142,7 +142,7 @@ bytes.__getitem__ = function(self,arg){
         if(arg<0) pos=self.source.length+pos
 
         if(pos>=0 && pos<self.source.length) return self.source[pos]
-        throw _b_.IndexError('index out of range')
+        throw _b_.IndexError.$factory('index out of range')
     } else if(isinstance(arg,_b_.slice)) {
         var step = arg.step===None ? 1 : arg.step
         if(step>0){
@@ -234,7 +234,7 @@ bytes.__new__ = function(cls, source, encoding, errors){
     }else{
         if(isinstance(source,_b_.str)){
             if(encoding===undefined)
-                throw _b_.TypeError("string argument without an encoding")
+                throw _b_.TypeError.$factory("string argument without an encoding")
             int_list = encode(source,encoding)
         }else{
             // tranform iterable "source" into a list
@@ -327,9 +327,9 @@ bytes.find = function() {
         sub = $.sub,
         start = $.start;
     if (! sub.__class__ ) {
-        throw _b_.TypeError("first argument must be a bytes-like object not '"+$B.get_class($.sub).__name__+"'")
+        throw _b_.TypeError.$factory("first argument must be a bytes-like object not '"+$B.get_class($.sub).__name__+"'")
     } else if (! sub.__class__.$buffer_protocol ) {
-        throw _b_.TypeError("first argument must be a bytes-like object not '"+sub.__class__.__name__+"'")
+        throw _b_.TypeError.$factory("first argument must be a bytes-like object not '"+sub.__class__.__name__+"'")
     }
     var end = $.end == -1 ? $.self.source.length-sub.source.length : Math.min($.self.source.length-sub.source.length, $.end);
 
@@ -347,15 +347,15 @@ bytes.replace = function(){
     var count = $.count >= 0 ? $.count : src.length;
 
     if (! $.old.__class__ ) {
-        throw _b_.TypeError("first argument must be a bytes-like object not '"+$B.get_class($.old).__name__+"'")
+        throw _b_.TypeError.$factory("first argument must be a bytes-like object not '"+$B.get_class($.old).__name__+"'")
     } else if (! $.old.__class__.$buffer_protocol ) {
-        throw _b_.TypeError("first argument must be a bytes-like object not '"+$.sep.__class__.__name__+"'")
+        throw _b_.TypeError.$factory("first argument must be a bytes-like object not '"+$.sep.__class__.__name__+"'")
     }
 
     if (! $.new.__class__ ) {
-        throw _b_.TypeError("second argument must be a bytes-like object not '"+$B.get_class($.old).__name__+"'")
+        throw _b_.TypeError.$factory("second argument must be a bytes-like object not '"+$B.get_class($.old).__name__+"'")
     } else if (! $.new.__class__.$buffer_protocol ) {
-        throw _b_.TypeError("second argument must be a bytes-like object not '"+$.sep.__class__.__name__+"'")
+        throw _b_.TypeError.$factory("second argument must be a bytes-like object not '"+$.sep.__class__.__name__+"'")
     }
 
     for(var i=0;i<len;i++) {
@@ -377,9 +377,9 @@ bytes.split = function(){
         arguments, {}, null, null),
         res=[], start=0, stop=0
     if (! $.sep.__class__ ) {
-        throw _b_.TypeError("a bytes-like object is required not '"+$B.get_class($.start).__name__+"'")
+        throw _b_.TypeError.$factory("a bytes-like object is required not '"+$B.get_class($.start).__name__+"'")
     } else if (! $.sep.__class__.$buffer_protocol ) {
-        throw _b_.TypeError("a bytes-like object is required not '"+$.sep.__class__.__name__+"'")
+        throw _b_.TypeError.$factory("a bytes-like object is required not '"+$.sep.__class__.__name__+"'")
     }
     var seps = $.sep.source,
         len = seps.length,
@@ -411,7 +411,7 @@ function _strip(self,cars,lr){
     }else if(isinstance(cars,bytes)){
         cars = cars.source
     }else{
-        throw _b_.TypeError("Type str doesn't support the buffer API")
+        throw _b_.TypeError.$factory("Type str doesn't support the buffer API")
     }
     if(lr=='l'){
         for(var i=0, _len_i = self.source.length; i < _len_i;i++){
@@ -444,14 +444,14 @@ bytes.startswith = function(){
             if(_b_.isinstance($.prefix[i], bytes)){
                 items = items.concat($.prefix[i].source)
             }else{
-                throw _b_.TypeError("startswith first arg must be bytes or "+
+                throw _b_.TypeError.$factory("startswith first arg must be bytes or "+
                     "a tuple of bytes, not "+$B.get_class($.prefix).__name__)
             }
         }
         var prefix = bytes.$factory(items)
         return bytes.startswith($.self, prefix, start)
     }else{
-        throw _b_.TypeError("startsswith first arg must be bytes or a tuple of bytes, not "+
+        throw _b_.TypeError.$factory("startsswith first arg must be bytes or a tuple of bytes, not "+
             $B.get_class($.prefix).__name__)
     }
 }
@@ -465,7 +465,7 @@ bytes.translate = function(self,table,_delete) {
     if(_delete===undefined){_delete=[]}
     else if(isinstance(_delete, bytes)){_delete=_delete.source}
     else{
-        throw _b_.TypeError("Type "+$B.get_class(_delete).__name+" doesn't support the buffer API")
+        throw _b_.TypeError.$factory("Type "+$B.get_class(_delete).__name+" doesn't support the buffer API")
     }
     var res = [], pos=0
     if (isinstance(table, bytes) && table.source.length==256) {
@@ -512,13 +512,13 @@ bytes.lower = function(self) {
 }
 
 function $UnicodeEncodeError(encoding, code_point, position){
-    throw _b_.UnicodeEncodeError("'"+encoding+
+    throw _b_.UnicodeEncodeError.$factory("'"+encoding+
         "' codec can't encode character "+_b_.hex(code_point)+
         " in position "+position)
 }
 
 function $UnicodeDecodeError(encoding, position){
-    throw _b_.UnicodeDecodeError("'"+encoding+
+    throw _b_.UnicodeDecodeError.$factory("'"+encoding+
         "' codec can't decode bytes in position "+position)
 }
 
@@ -630,13 +630,13 @@ function decode(b,encoding,errors){
             else{
                 var msg = "'ascii' codec can't decode byte 0x"+cp.toString(16)
                 msg += " in position "+i+": ordinal not in range(128)"
-                throw _b_.UnicodeDecodeError(msg)
+                throw _b_.UnicodeDecodeError.$factory(msg)
             }
         }
         break;
       default:
         try{load_decoder(enc)}
-        catch(err){throw _b_.LookupError("unknown encoding: "+ enc)}
+        catch(err){throw _b_.LookupError.$factory("unknown encoding: "+ enc)}
         for(var i=0, _len_i = b.length; i < _len_i;i++){
             var u = to_unicode[enc][b[i]]
             if(u!==undefined){s+=String.fromCharCode(u)}
@@ -706,7 +706,7 @@ function encode(s,encoding){
         break;
       default:
           try{load_encoder(enc)}
-          catch(err){throw _b_.LookupError("unknown encoding: "+ enc)}
+          catch(err){throw _b_.LookupError.$factory("unknown encoding: "+ enc)}
 
           for(var i=0, _len_i = s.length; i < _len_i;i++){
               var cp = s.charCodeAt(i) // code point

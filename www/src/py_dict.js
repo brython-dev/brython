@@ -73,7 +73,7 @@ $item_generator.prototype.next = function() {
     if (this.i < this.items.length) {
        return this.items[this.i++]
     }
-    throw _b_.StopIteration("StopIteration")
+    throw _b_.StopIteration.$factory("StopIteration")
 }
 $item_generator.prototype.as_list = function() {
     return this.items
@@ -177,18 +177,18 @@ $DictDict.__delitem__ = function(){
         self=$.self, arg=$.arg
 
     if(self.$jsobj){
-        if(self.$jsobj[arg]===undefined){throw KeyError(arg)}
+        if(self.$jsobj[arg]===undefined){throw KeyError.$factory(arg)}
         delete self.$jsobj[arg]
         return $N
     }
     switch(typeof arg) {
       case 'string':
-        if (self.$string_dict[arg] === undefined) throw KeyError(_b_.str(arg))
+        if (self.$string_dict[arg] === undefined) throw KeyError.$factory(_b_.str(arg))
         delete self.$string_dict[arg]
         delete self.$str_hash[str_hash(arg)]
         return $N
       case 'number':
-        if (self.$numeric_dict[arg] === undefined) throw KeyError(_b_.str(arg))
+        if (self.$numeric_dict[arg] === undefined) throw KeyError.$factory(_b_.str(arg))
         delete self.$numeric_dict[arg]
         return $N
     }
@@ -247,7 +247,7 @@ $DictDict.__getitem__ = function(){
         self=$.self, arg=$.arg
 
     if(self.$jsobj){
-        if(!self.$jsobj.hasOwnProperty(arg)) throw _b_.KeyError(str(arg))
+        if(!self.$jsobj.hasOwnProperty(arg)) throw _b_.KeyError.$factory(str(arg))
         else if(self.$jsobj[arg]===undefined) return _b_.NotImplemented
         else if(self.$jsobj[arg]===null){return $N}
         return self.$jsobj[arg]
@@ -290,7 +290,7 @@ $DictDict.__getitem__ = function(){
             return missing_method(self, arg)
         }catch(err){}
     }
-    throw KeyError(_b_.str(arg))
+    throw KeyError.$factory(_b_.str(arg))
 }
 
 $DictDict.__hash__ = None
@@ -389,7 +389,7 @@ $DictDict.__mro__ = [$ObjectDict]
 $DictDict.__ne__ = function(self,other){return !$DictDict.__eq__(self,other)}
 
 $DictDict.__new__ = function(cls){
-    if(cls===undefined){throw _b_.TypeError('int.__new__(): not enough arguments')}
+    if(cls===undefined){throw _b_.TypeError.$factory('int.__new__(): not enough arguments')}
     return {
         __class__:cls.$factory ? cls : cls.$dict,
         $numeric_dict : {},
@@ -569,7 +569,7 @@ $DictDict.items = function(self){
     if (arguments.length > 1) {
        var _len=arguments.length - 1
        var _msg="items() takes no arguments ("+_len+" given)"
-       throw _b_.TypeError(_msg)
+       throw _b_.TypeError.$factory(_msg)
     }
     return $iterator_wrapper(new $item_iterator(self), $dict_itemsDict)
 }
@@ -580,7 +580,7 @@ $DictDict.keys = function(self){
     if (arguments.length > 1) {
        var _len=arguments.length - 1
        var _msg="keys() takes no arguments ("+_len+" given)"
-       throw _b_.TypeError(_msg)
+       throw _b_.TypeError.$factory(_msg)
     }
     return $iterator_wrapper(new $key_iterator(self),$dict_keysDict)
 }
@@ -613,7 +613,7 @@ $DictDict.popitem = function(self){
     }catch(err) {
         if (err.__name__ == "StopIteration") {
             $B.current_exception = ce
-            throw KeyError("'popitem(): dictionary is empty'")
+            throw KeyError.$factory("'popitem(): dictionary is empty'")
         }
     }
 }
@@ -662,7 +662,7 @@ $DictDict.values = function(self){
     if (arguments.length > 1) {
        var _len=arguments.length - 1
        var _msg="values() takes no arguments ("+_len+" given)"
-       throw _b_.TypeError(_msg)
+       throw _b_.TypeError.$factory(_msg)
     }
     return $iterator_wrapper(new $value_iterator(self), $dict_valuesDict)
 }
@@ -759,7 +759,7 @@ var mappingproxyDict = {
 mappingproxyDict.__mro__ = [_b_.object.$dict]
 
 mappingproxyDict.__setitem__ = function(){
-    throw _b_.TypeError("'mappingproxy' object does not support item assignment")
+    throw _b_.TypeError.$factory("'mappingproxy' object does not support item assignment")
 }
 
 
@@ -789,7 +789,7 @@ function jsobj2dict(x){
 $B.obj_dict = function(obj){
     var klass = $B.get_class(obj)
     if(klass !==undefined && klass.$native){
-        throw _b_.AttributeError(klass.__name__+
+        throw _b_.AttributeError.$factory(klass.__name__+
             " has no attribute '__dict__'")}
     var res = dict()
     res.$jsobj = obj

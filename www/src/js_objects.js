@@ -44,18 +44,34 @@ $JSConstructorDict.__call__ = function(self){
     // self.func is a constructor
     // It takes Javascript arguments so we must convert
     // those passed to the Python function
-    var args = [null]
-    for(var i=1, _len_i = arguments.length; i < _len_i;i++){
-        args.push(pyobj2jsobj(arguments[i]))
+    console.log("JSConstructor __call__")
+    return function(){
+        var args = [null]
+        for(var i=0, _len_i = arguments.length; i < _len_i;i++){
+            args.push(pyobj2jsobj(arguments[i]))
+        }
+        var factory = self.func.bind.apply(self.func, args)
+        var res = new factory()
+        // res is a Javascript object
+        console.log("call JSConstructor", self.func, res)
+        return $B.$JS2Py(res)
     }
-    var factory = self.func.bind.apply(self.func, args)
-    var res = new factory()
-    // res is a Javascript object
-    return $B.$JS2Py(res)
 }
 
-$JSConstructorDict.__getattr__ = function(self, attr){
+$JSConstructorDict.__getattribute__ = function(self, attr){
     // Attributes of a constructor are taken from the original JS object
+    if(attr=="__call__"){
+        return function(){
+            var args = [null]
+            for(var i=0, _len_i = arguments.length; i < _len_i;i++){
+                args.push(pyobj2jsobj(arguments[i]))
+            }
+            var factory = self.func.bind.apply(self.func, args)
+            var res = new factory()
+            // res is a Javascript object
+            return $B.$JS2Py(res)
+        }
+    }
     return $JSObjectDict.__getattribute__(self.obj, attr)
 }
 
@@ -206,6 +222,24 @@ $JSObjectDict.__getattribute__ = function(self,attr){
     if(attr.substr(0,2)=='$$') attr=attr.substr(2)
     if(self.js===null) return $ObjectDict.__getattribute__(None,attr)
     if(attr==='__class__') return $JSObjectDict
+    if(attr=="__call__"){
+        if(typeof self.js=="function"){
+            return function(){
+              // apply Javascript function to arguments converted from
+              // Python objects to JS or DOM objects
+              var args = []
+              for(var i=0; i<arguments.length; i++){
+                  args.push($B.pyobj2jsobj(arguments[i]))
+              }
+              var res = self.js.apply(null, args)
+              if(res===undefined){return None} // JSObject would throw an exception
+              // transform JS / DOM result in Python object
+              return $B.JSObject(res)
+            }
+        }else{
+            throw _b_.AttributeError.$factory("object is not callable")
+        }
+    }
     if(self.__class__===$JSObjectDict && attr=="bind" &&
         self.js[attr]===undefined &&
         self.js['addEventListener']!==undefined){
@@ -223,7 +257,6 @@ $JSObjectDict.__getattribute__ = function(self,attr){
             // where the arguments passed to the Python function G are converted to Javascript
             // objects usable by the underlying function F
             var res = function(){
-                //if(attr=='setValue'){console.log('run function')}
                 var args = []
                 for(var i=0, _len_i = arguments.length; i < _len_i;i++){
                     if(arguments[i] !== null && arguments[i].$nat!=undefined){
@@ -234,7 +267,7 @@ $JSObjectDict.__getattribute__ = function(self,attr){
                         // code like foo(y=1, x=2) applied to a JS function
                         // defined by function foo(x, y) can't be determined.
                         //
-                        throw TypeError("A Javascript function can't "+
+                        throw TypeError.$factory("A Javascript function can't "+
                             "take keyword arguments")
                     }else{
                         args.push(pyobj2jsobj(arguments[i]))
@@ -314,7 +347,7 @@ $JSObjectDict.__getattribute__ = function(self,attr){
         return $B.$JS2Py(res)
     }else{
         // XXX search __getattr__
-        throw _b_.AttributeError("no attribute "+attr+' for '+self.js)
+        throw _b_.AttributeError.$factory("no attribute "+attr+' for '+self.js)
     }
 }
 
@@ -325,19 +358,19 @@ $JSObjectDict.__getitem__ = function(self, rank){
                 var rank_to_int = _b_.int(rank)
                 if(rank_to_int<0){rank_to_int+=self.js.length}
                 var res = JSObject(self.js.item(rank_to_int))
-                if(res===undefined){throw _b_.KeyError(rank)}
+                if(res===undefined){throw _b_.KeyError.$factory(rank)}
                 return res
         }else if(typeof rank=="string" &&
             typeof self.js.getNamedItem=='function'){
              var res = JSObject(self.js.getNamedItem(rank))
-             if(res===undefined){throw _b_.keyError(rank)}
+             if(res===undefined){throw _b_.KeyError.$factory(rank)}
              return res
         }
     }
     try{return getattr(self.js,'__getitem__')(rank)}
     catch(err){
         if(self.js[rank]!==undefined){return JSObject(self.js[rank])}
-        throw _b_.KeyError(rank)
+        throw _b_.KeyError.$factory(rank)
     }
 }
 
@@ -374,7 +407,7 @@ $JSObjectDict.__len__ = function(self){
     if(typeof self.js.length=='number'){return self.js.length}
     try{return getattr(self.js,'__len__')()}
     catch(err){
-        throw _b_.AttributeError(self.js+' has no attribute __len__')
+        throw _b_.AttributeError.$factory(self.js+' has no attribute __len__')
     }
 }
 

@@ -157,7 +157,7 @@ $DOMEventDict.__getattribute__ = function(self,attr){
         }
         return $B.$JS2Py(res)
     }
-    throw _b_.AttributeError("object DOMEvent has no attribute '"+attr+"'")
+    throw _b_.AttributeError.$factory("object DOMEvent has no attribute '"+attr+"'")
 }
 
 
@@ -215,7 +215,7 @@ function $EventsList(elt,evt,arg){
                 break
             }
         }
-        if(!found){throw KeyError("not found")}
+        if(!found){throw KeyError.$factory("not found")}
     }
 }
 
@@ -431,7 +431,7 @@ DOMNodeDict.__add__ = function(self,other){
     }else{
         // If other is iterable, add all items
         try{res.children=res.children.concat(_b_.list(other))}
-        catch(err){throw _b_.TypeError("can't add '"+
+        catch(err){throw _b_.TypeError.$factory("can't add '"+
             $B.get_class(other).__name__+"' object to DOMNode instance")
         }
     }
@@ -461,7 +461,7 @@ DOMNodeDict.__del__ = function(self){
     // if element has a parent, calling __del__ removes object
     // from the parent's children
     if(!self.elt.parentNode){
-        throw _b_.ValueError("can't delete "+str(self.elt))
+        throw _b_.ValueError.$factory("can't delete "+str(self.elt))
     }
     self.elt.parentNode.removeChild(self.elt)
 }
@@ -470,7 +470,7 @@ DOMNodeDict.__delitem__ = function(self,key){
     if(self.elt.nodeType===9){ // document : remove by id
         var res = self.elt.getElementById(key)
         if(res){res.parentNode.removeChild(res)}
-        else{throw KeyError(key)}
+        else{throw KeyError.$factory(key)}
     }else{ // other node : remove by rank in child nodes
         self.elt.parentNode.removeChild(self.elt)
     }
@@ -521,7 +521,7 @@ DOMNodeDict.__getattribute__ = function(self,attr){
         if(self.elt.style[attr]){
             return parseInt(self.elt.style[attr])
         }else{
-            throw _b_.AttributeError("style." + attr + " is not set for " +
+            throw _b_.AttributeError.$factory("style." + attr + " is not set for " +
                 str(self))
         }
       case 'clear':
@@ -665,14 +665,14 @@ DOMNodeDict.__getitem__ = function(self, key){
         if(typeof key==="string"){
             var res = self.elt.getElementById(key)
             if(res) return DOMNode(res)
-            throw KeyError(key)
+            throw KeyError.$factory(key)
         }else{
             try{
                 var elts=self.elt.getElementsByTagName(key.$dict.__name__),res=[],pos=0
                 for(var $i=0;$i<elts.length;$i++) res[pos++]=DOMNode(elts[$i])
                 return res
             }catch(err){
-                throw KeyError(str(key))
+                throw KeyError.$factory(str(key))
             }
         }
     }else{
@@ -682,16 +682,16 @@ DOMNodeDict.__getitem__ = function(self, key){
                     var key_to_int = _b_.int(key)
                     if(key_to_int<0){key_to_int+=self.elt.length}
                     var res = DOMNode(self.elt.item(key_to_int))
-                    if(res===undefined){throw _b_.KeyError(key)}
+                    if(res===undefined){throw _b_.KeyError.$factory(key)}
                     return res
             }else if(typeof key=="string" &&
                 typeof self.elt.getNamedItem=='function'){
                  var res = DOMNode(self.elt.getNamedItem(key))
-                 if(res===undefined){throw _b_.keyError(key)}
+                 if(res===undefined){throw _b_.KeyError.$factory(key)}
                  return res
             }
         }
-        throw _b_.TypeError('DOMNode object is not subscriptable')
+        throw _b_.TypeError.$factory('DOMNode object is not subscriptable')
     }
 }
 
@@ -734,7 +734,7 @@ DOMNodeDict.__le__ = function(self,other){
                 DOMNodeDict.__le__(self, items[i])
             }
         }catch(err){
-            throw _b_.TypeError("can't add '"+
+            throw _b_.TypeError.$factory("can't add '"+
                 $B.get_class(other).__name__+
                 "' object to DOMNode instance")
         }
@@ -752,7 +752,7 @@ DOMNodeDict.__mul__ = function(self,other){
         }
         return res
     }
-    throw _b_.ValueError("can't multiply "+self.__class__+"by "+other)
+    throw _b_.ValueError.$factory("can't multiply "+self.__class__+"by "+other)
 }
 
 DOMNodeDict.__ne__ = function(self,other){return !DOMNodeDict.__eq__(self,other)}
@@ -762,7 +762,7 @@ DOMNodeDict.__next__ = function(self){
    if(self.$counter<self.elt.childNodes.length){
        return DOMNode(self.elt.childNodes[self.$counter])
    }
-   throw _b_.StopIteration('StopIteration')
+   throw _b_.StopIteration.$factory('StopIteration')
 }
 
 DOMNodeDict.__radd__ = function(self,other){ // add to a string
@@ -872,7 +872,7 @@ DOMNodeDict.abs_left = {
         return $getPosition(self.elt).left
     },
     __set__: function(){
-        throw _b_.AttributeError("'DOMNode' objectattribute 'abs_left' is read-only")
+        throw _b_.AttributeError.$factory("'DOMNode' objectattribute 'abs_left' is read-only")
     }
 }
 
@@ -881,7 +881,7 @@ DOMNodeDict.abs_top = {
         return $getPosition(self.elt).top
     },
     __set__: function(){
-        throw _b_.AttributeError("'DOMNode' objectattribute 'abs_top' is read-only")
+        throw _b_.AttributeError.$factory("'DOMNode' objectattribute 'abs_top' is read-only")
     }
 }
 
@@ -979,7 +979,7 @@ DOMNodeDict.closest = function(self, tagName){
     while(res.tagName.toLowerCase() != tagName){
         res = res.parentNode
         if(res===undefined || res.tagName===undefined){
-            throw _b_.KeyError('no parent of type '+tagName)
+            throw _b_.KeyError.$factory('no parent of type '+tagName)
         }
     }
     return DOMNode(res)
@@ -1017,7 +1017,7 @@ DOMNodeDict.get = function(self){
     }
     if($dict['name']!==undefined){
         if(obj.getElementsByName===undefined){
-            throw _b_.TypeError("DOMNode object doesn't support selection by name")
+            throw _b_.TypeError.$factory("DOMNode object doesn't support selection by name")
         }
         var res = [], pos=0
         var node_list = obj.getElementsByName($dict['name'])
@@ -1026,7 +1026,7 @@ DOMNodeDict.get = function(self){
     }
     if($dict['tag']!==undefined){
         if(obj.getElementsByTagName===undefined){
-            throw _b_.TypeError("DOMNode object doesn't support selection by tag name")
+            throw _b_.TypeError.$factory("DOMNode object doesn't support selection by tag name")
         }
         var res = [], pos=0
         var node_list = obj.getElementsByTagName($dict['tag'])
@@ -1035,7 +1035,7 @@ DOMNodeDict.get = function(self){
     }
     if($dict['classname']!==undefined){
         if(obj.getElementsByClassName===undefined){
-            throw _b_.TypeError("DOMNode object doesn't support selection by class name")
+            throw _b_.TypeError.$factory("DOMNode object doesn't support selection by class name")
         }
         var res = [], pos=0
         var node_list = obj.getElementsByClassName($dict['classname'])
@@ -1044,7 +1044,7 @@ DOMNodeDict.get = function(self){
     }
     if($dict['id']!==undefined){
         if(obj.getElementById===undefined){
-            throw _b_.TypeError("DOMNode object doesn't support selection by id")
+            throw _b_.TypeError.$factory("DOMNode object doesn't support selection by id")
         }
         var id_res = document.getElementById($dict['id'])
         if(!id_res) return []
@@ -1052,7 +1052,7 @@ DOMNodeDict.get = function(self){
     }
     if($dict['selector']!==undefined){
         if(obj.querySelectorAll===undefined){
-            throw _b_.TypeError("DOMNode object doesn't support selection by selector")
+            throw _b_.TypeError.$factory("DOMNode object doesn't support selection by selector")
         }
         var node_list = obj.querySelectorAll($dict['selector'])
         var sel_res = [], pos=0
@@ -1076,7 +1076,7 @@ DOMNodeDict.get = function(self){
 
 DOMNodeDict.getContext = function(self){ // for CANVAS tag
     if(!('getContext' in self.elt)){
-      throw _b_.AttributeError("object has no attribute 'getContext'")
+      throw _b_.AttributeError.$factory("object has no attribute 'getContext'")
     }
     var obj = self.elt
     return function(ctx){return JSObject(obj.getContext(ctx))}
@@ -1143,7 +1143,7 @@ DOMNodeDict.reset = function(self){ // for FORM
 DOMNodeDict.select = function(self, selector){
     // alias for get(selector=...)
     if(self.elt.querySelectorAll===undefined){
-        throw _b_.TypeError("DOMNode object doesn't support selection by selector")
+        throw _b_.TypeError.$factory("DOMNode object doesn't support selection by selector")
     }
     var node_list = self.elt.querySelectorAll(selector),
         res = []
@@ -1157,7 +1157,7 @@ DOMNodeDict.select = function(self, selector){
 DOMNodeDict.select_one = function(self, selector){
     // return the element matching selector, or None
     if(self.elt.querySelector===undefined){
-        throw _b_.TypeError("DOMNode object doesn't support selection by selector")
+        throw _b_.TypeError.$factory("DOMNode object doesn't support selection by selector")
     }
     var res = self.elt.querySelector(selector)
     if(res === null) {
@@ -1204,7 +1204,7 @@ DOMNodeDict.set_html = function(self,value){
 
 DOMNodeDict.set_style = function(self,style){ // style is a dict
     if(!_b_.isinstance(style, _b_.dict)){
-        throw TypeError('style must be dict, not '+$B.get_class(style).__name__)
+        throw TypeError.$factory('style must be dict, not '+$B.get_class(style).__name__)
     }
     var items = _b_.list(_b_.dict.$dict.items(style))
     for(var i=0;i<items.length;i++){
@@ -1307,7 +1307,7 @@ DOMNodeDict.unbind = function(self, event){
                 }
             }
             if(!found){
-                throw _b_.TypeError('function is not an event callback')
+                throw _b_.TypeError.$factory('function is not an event callback')
             }
         }
         for(var j=0;j<events.length;j++){
@@ -1320,7 +1320,7 @@ DOMNodeDict.unbind = function(self, event){
             }
         }
         // The indicated func was not found, error is thrown
-        if(!flag){throw KeyError('missing callback for event '+event)}
+        if(!flag){throw KeyError.$factory('missing callback for event '+event)}
     }
 }
 
@@ -1336,7 +1336,7 @@ $QueryDict.__getitem__ = function(self,key){
     // returns a single value or a list of values
     // associated with key, or raise KeyError
     var result = self._values[key]
-    if(result===undefined) throw KeyError(key)
+    if(result===undefined) throw KeyError.$factory(key)
     if(result.length==1) return result[0]
     return result
 }

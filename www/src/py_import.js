@@ -71,7 +71,7 @@ function $importer(){
 
     var timer = setTimeout( function() {
         $xmlhttp.abort()
-        throw _b_.ImportError("No module named '"+module+"'")}, 5000)
+        throw _b_.ImportError.$factory("No module named '"+module+"'")}, 5000)
     return [$xmlhttp,fake_qs,timer]
 }
 
@@ -91,11 +91,11 @@ function $download_module(module,url,$package){
          if ($xmlhttp.status == 200 || $xmlhttp.status == 0) {
             res = $xmlhttp.responseText
          } else {
-            res = _b_.FileNotFoundError("No module named '"+mod_name+"'")
+            res = _b_.FileNotFoundError.$factory("No module named '"+mod_name+"'")
          }
       }
       $xmlhttp.onerror=function() {
-         res = _b_.FileNotFoundError("No module named '"+mod_name+"'")
+         res = _b_.FileNotFoundError.$factory("No module named '"+mod_name+"'")
       }
     } else {
       $xmlhttp.onreadystatechange = function(){
@@ -109,7 +109,7 @@ function $download_module(module,url,$package){
                 console.log('Error '+this.status+
                     ' means that Python module '+mod_name+
                     ' was not found at url '+url)
-                res = _b_.FileNotFoundError("No module named '"+mod_name+"'")
+                res = _b_.FileNotFoundError.$factory("No module named '"+mod_name+"'")
             }
         }
       }
@@ -118,7 +118,7 @@ function $download_module(module,url,$package){
     $xmlhttp.send()
 
     //sometimes chrome doesn't set res correctly, so if res == null, assume no module found
-    if(res == null) throw _b_.FileNotFoundError("No module named '"+mod_name+"' (res is null)")
+    if(res == null) throw _b_.FileNotFoundError.$factory("No module named '"+mod_name+"' (res is null)")
 
     if(res.constructor===Error){throw res} // module not found
     $B.download_time += (new Date())-t0
@@ -144,13 +144,14 @@ function run_js(module_contents,path,module){
         if($B.$options.store){module.$js = module_contents}
     }catch(err){
         console.log(err)
+        console.log(path, module)
         throw err
     }
     // check that module name is in namespace
     try{$module}
     catch(err){
         console.log('no $module')
-        throw _b_.ImportError("name '$module' is not defined in module")
+        throw _b_.ImportError.$factory("name '$module' is not defined in module")
     }
 
     if (module !== undefined) {
@@ -569,7 +570,7 @@ function vfs_hook(path) {
     }
     var ext = path.substr(-7);
     if (ext != '.vfs.js') {
-        throw _b_.ImportError('VFS file URL must end with .vfs.js extension');
+        throw _b_.ImportError.$factory('VFS file URL must end with .vfs.js extension');
     }
     self = {__class__: vfs_hook.$dict, path: path};
     vfs_hook.$dict.load_vfs(self);
@@ -587,14 +588,14 @@ vfs_hook.$dict = {
         try { var code = $download_module({__name__:'<VFS>'}, self.path) }
         catch (e) {
             self.vfs = undefined;
-            throw new _b_.ImportError(e.$message || e.message);
+            throw new _b_.ImportError.$factory(e.$message || e.message);
         }
         eval(code);
         code = null
         try {
             self.vfs = $vfs;
         }
-        catch (e) { throw new _b_.ImportError('Expecting $vfs var in VFS file'); }
+        catch (e) { throw new _b_.ImportError.$factory('Expecting $vfs var in VFS file'); }
         $B.path_importer_cache[self.path + '/'] = self;
     },
     find_spec: function(self, fullname, module) {
@@ -777,7 +778,7 @@ $B.$__import__ = function (mod_name, globals, locals, fromlist, level){
        parsed_name = mod_name.split('.');
    if (modobj == _b_.None) {
        // [Import spec] Stop loading loop right away
-       throw _b_.ImportError(mod_name)
+       throw _b_.ImportError.$factory(mod_name)
    }
 
    if (modobj === undefined) {
@@ -795,7 +796,7 @@ $B.$__import__ = function (mod_name, globals, locals, fromlist, level){
             var modobj = $B.imported[_mod_name];
             if (modobj == _b_.None) {
                 // [Import spec] Stop loading loop right away
-                throw _b_.ImportError(_mod_name)
+                throw _b_.ImportError.$factory(_mod_name)
             }
             else if (modobj === undefined) {
                 try {
@@ -807,7 +808,7 @@ $B.$__import__ = function (mod_name, globals, locals, fromlist, level){
                 }
 
                 if ($B.is_none($B.imported[_mod_name])) {
-                    throw _b_.ImportError(_mod_name)
+                    throw _b_.ImportError.$factory(_mod_name)
                 }
                 else {
                     // [Import spec] Preserve module invariant
@@ -831,7 +832,7 @@ $B.$__import__ = function (mod_name, globals, locals, fromlist, level){
                         $B.imported[_mod_name][parsed_name[len]].__class__===$B.$ModuleDict){
                         return $B.imported[_mod_name][parsed_name[len]]
                     }
-                    throw _b_.ImportError(_mod_name)
+                    throw _b_.ImportError.$factory(_mod_name)
                 }
             }
        }
@@ -874,7 +875,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
             // Move up in package hierarchy
             elt = norm_parts.pop();
             if (elt === undefined) {
-                throw _b_.ImportError("Parent module '' not loaded, "+
+                throw _b_.ImportError.$factory("Parent module '' not loaded, "+
                     "cannot perform relative import");
             }
         }
@@ -974,11 +975,11 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                         if($err3.$py_error){
                             var msg = $err3.__class__.__name__ + '\n' +
                                 _b_.getattr($err3, "info")
-                            throw _b_.ImportError("cannot import name '"+
+                            throw _b_.ImportError.$factory("cannot import name '"+
                                 name+"'\n\n" + msg)
                         }
                         console.log($err3)
-                        throw _b_.ImportError("cannot import name '"+name+"'")
+                        throw _b_.ImportError.$factory("cannot import name '"+name+"'")
                     }
                 }
             }

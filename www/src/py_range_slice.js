@@ -35,7 +35,7 @@ $RangeDict.__contains__ = function(self,other){
 }
 
 $RangeDict.__delattr__ = function(self, attr, value){
-    throw _b_.AttributeError('readonly attribute')
+    throw _b_.AttributeError.$factory('readonly attribute')
 }
 
 $RangeDict.__eq__ = function(self, other){
@@ -72,7 +72,7 @@ $RangeDict.__getitem__ = function(self,rank){
     var res = $B.add(self.start, $B.mul(rank, self.step))
     if(($B.gt(self.step,0) && ($B.ge(res, self.stop) || $B.gt(self.start, res))) ||
         ($B.gt(0, self.step) && ($B.ge(self.stop, res) || $B.gt(res, self.start)))){
-            throw _b_.IndexError('range object index out of range')
+            throw _b_.IndexError.$factory('range object index out of range')
     }
     return res
 }
@@ -141,13 +141,13 @@ $RangeDict.__next__ = function(self){
         self.$counter += self.step
         if((self.step>0 && self.$counter >= self.stop)
             || (self.step<0 && self.$counter <= self.stop)){
-                throw _b_.StopIteration('')
+                throw _b_.StopIteration.$factory('')
         }
     }else{
         self.$counter = $B.add(self.$counter, self.step)
         if(($B.gt(self.step,0) && $B.ge(self.$counter, self.stop))
             || ($B.gt(0, self.step) && $B.ge(self.stop, self.$counter))){
-                throw _b_.StopIteration('')
+                throw _b_.StopIteration.$factory('')
         }
     }
     return self.$counter
@@ -169,7 +169,7 @@ $RangeDict.__repr__ = $RangeDict.__str__ = function(self){
 }
 
 $RangeDict.__setattr__ = function(self, attr, value){
-    throw _b_.AttributeError('readonly attribute')
+    throw _b_.AttributeError.$factory('readonly attribute')
 }
 
 //$RangeDict.descriptors = {
@@ -221,7 +221,7 @@ $RangeDict.index = function(self, other){
                 nb++
             }catch(err){
                 if(_b_.isinstance(err, _b_.StopIteration)){
-                    throw _b_.ValueError(_b_.str(other)+' not in range')
+                    throw _b_.ValueError.$factory(_b_.str(other)+' not in range')
                 }
                 throw err
             }
@@ -236,9 +236,9 @@ $RangeDict.index = function(self, other){
             ($B.ge(self.start, self.stop) && $B.ge(self.start, other)
             && $B.gt(other, self.stop))){
                 return fl
-        }else{throw _b_.ValueError(_b_.str(other)+' not in range')}
+        }else{throw _b_.ValueError.$factory(_b_.str(other)+' not in range')}
     }else{
-        throw _b_.ValueError(_b_.str(other)+' not in range')
+        throw _b_.ValueError.$factory(_b_.str(other)+' not in range')
     }
 }
 
@@ -261,7 +261,7 @@ function range(){
     start = $B.PyNumber_Index(start)
     stop = $B.PyNumber_Index(stop)
     step = $B.PyNumber_Index(step)
-    if(step==0){throw _b_.ValueError("range() arg 3 must not be zero")}
+    if(step==0){throw _b_.ValueError.$factory("range() arg 3 must not be zero")}
     safe = (typeof start=='number' && typeof stop=='number' &&
         typeof step=='number')
     return {__class__: $RangeDict,
@@ -293,7 +293,7 @@ $SliceDict.__repr__ = $SliceDict.__str__ = function(self){
     }
 
 $SliceDict.__setattr__ = function(self, attr, value){
-    throw _b_.AttributeError('readonly attribute')
+    throw _b_.AttributeError.$factory('readonly attribute')
 }
 
 $SliceDict.$conv = function(self, len){
@@ -312,7 +312,7 @@ $SliceDict.$conv_for_seq = function(self, len){
         step_is_neg = $B.gt(0, step),
         len_1 = $B.sub(len, 1)
     if (step == 0) {
-        throw _b_.ValueError('slice step cannot be zero');
+        throw _b_.ValueError.$factory('slice step cannot be zero');
     }
     var start
     if (self.start === None) {
@@ -345,7 +345,7 @@ $SliceDict.stop = function(self){return self.stop}
 
 $SliceDict.indices = function (self, length) {
   var len=$B.$GetInt(length)
-  if (len < 0) _b_.ValueError('length should not be negative')
+  if (len < 0) _b_.ValueError.$factory('length should not be negative')
   if (self.step > 0) {
      var _len = _b_.min(len, self.stop)
      return _b_.tuple([self.start, _len, self.step])
@@ -355,7 +355,7 @@ $SliceDict.indices = function (self, length) {
      if (_start == _b_.None) _start = 0
      return _b_.tuple([_start, _len, 1])
   }
-  _b_.NotImplementedError("Error! negative step indices not implemented yet")
+  _b_.NotImplementedError.$factory("Error! negative step indices not implemented yet")
 }
 
 function slice(){

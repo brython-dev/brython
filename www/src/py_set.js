@@ -27,7 +27,7 @@ var $SetDict = {
 }
 
 $SetDict.__add__ = function(self,other){
-    throw _b_.TypeError("unsupported operand type(s) for +: 'set' and " +
+    throw _b_.TypeError.$factory("unsupported operand type(s) for +: 'set' and " +
         typeof other )
 }
 
@@ -160,7 +160,7 @@ $SetDict.__iter__ = function(self){
         nxt = it.__next__
     it.__next__ = function(){
         if(it.__len__() != len){
-            throw _b_.RuntimeError("size changed during iteration")
+            throw _b_.RuntimeError.$factory("size changed during iteration")
         }
         return nxt()
     }
@@ -196,7 +196,7 @@ $SetDict.__ne__ = function(self,other){return !$SetDict.__eq__(self,other)}
 
 $SetDict.__new__ = function(cls){
     if(cls===undefined){
-        throw _b_.TypeError('set.__new__(): not enough arguments')
+        throw _b_.TypeError.$factory('set.__new__(): not enough arguments')
     }
     return {
         __class__:cls.$factory ? cls : cls.$dict,
@@ -280,7 +280,7 @@ $SetDict.__xor__ = function(self, other, accept_iter){
 
 function $test(accept_iter, other, op){
     if(accept_iter===undefined && !_b_.isinstance(other,[set, frozenset])){
-        throw _b_.TypeError("unsupported operand type(s) for "+op+
+        throw _b_.TypeError.$factory("unsupported operand type(s) for "+op+
             ": 'set' and '"+$B.get_class(other).__name__+"'")
     }
 }
@@ -408,7 +408,7 @@ $SetDict.isdisjoint = function(){
 }
 
 $SetDict.pop = function(self){
-    if(self.$items.length===0) throw _b_.KeyError('pop from an empty set')
+    if(self.$items.length===0) throw _b_.KeyError.$factory('pop from an empty set')
     return self.$items.pop()
 }
 
@@ -419,7 +419,7 @@ $SetDict.remove = function(self,item){
     if(!_b_.isinstance(item, set)){_b_.hash(item)}
     if (typeof item == 'string' || typeof item == 'number') {
        var _i=self.$items.indexOf(item)
-       if (_i == -1) throw _b_.KeyError(item)
+       if (_i == -1) throw _b_.KeyError.$factory(item)
        self.$items.splice(_i,1)
        return $N
     }
@@ -429,7 +429,7 @@ $SetDict.remove = function(self,item){
             return $N
         }
     }
-    throw _b_.KeyError(item)
+    throw _b_.KeyError.$factory(item)
 }
 
 $SetDict.symmetric_difference_update = function(self, s){
@@ -616,7 +616,7 @@ $FrozensetDict.__init__ = function(){
 
 $FrozensetDict.__new__ = function(cls){
     if(cls===undefined){
-        throw _b_.TypeError('frozenset.__new__(): not enough arguments')
+        throw _b_.TypeError.$factory('frozenset.__new__(): not enough arguments')
     }
     return {
         __class__:cls.$factory ? cls : cls.$dict,

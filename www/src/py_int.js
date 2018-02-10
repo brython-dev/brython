@@ -7,7 +7,7 @@ var $ObjectDict = _b_.object.$dict, $N = _b_.None
 function $err(op,other){
     var msg = "unsupported operand type(s) for "+op
     msg += ": 'int' and '"+$B.get_class(other).__name__+"'"
-    throw _b_.TypeError(msg)
+    throw _b_.TypeError.$factory(msg)
 }
 
 // dictionary for built-in class 'int'
@@ -37,7 +37,7 @@ $IntDict.from_bytes = function() {
     _bytes=x.source
     _len=x.source.length
   } else {
-    _b_.TypeError("Error! " + _b_.type(x) + " is not supported in int.from_bytes. fix me!")
+    _b_.TypeError.$factory("Error! " + _b_.type(x) + " is not supported in int.from_bytes. fix me!")
   }
 
   switch(byteorder) {
@@ -66,12 +66,12 @@ $IntDict.from_bytes = function() {
       return $B.sub(num, _mult)
   }
 
-  throw _b_.ValueError("byteorder must be either 'little' or 'big'");
+  throw _b_.ValueError.$factory("byteorder must be either 'little' or 'big'");
 }
 
 $IntDict.to_bytes = function(length, byteorder, star) {
   //var len = x.length
-  throw _b_.NotImplementedError("int.to_bytes is not implemented yet")
+  throw _b_.NotImplementedError.$factory("int.to_bytes is not implemented yet")
 }
 
 
@@ -110,7 +110,7 @@ $IntDict.__float__ = function(self){
 function preformat(self, fmt){
     if(fmt.empty){return _b_.str(self)}
     if(fmt.type && 'bcdoxXn'.indexOf(fmt.type)==-1){
-        throw _b_.ValueError("Unknown format code '"+fmt.type+
+        throw _b_.ValueError.$factory("Unknown format code '"+fmt.type+
             "' for object of type 'int'")
     }
 
@@ -163,11 +163,11 @@ $IntDict.__format__ = function(self,format_spec){
 
 $IntDict.__floordiv__ = function(self,other){
     if(isinstance(other,int)){
-        if(other==0) throw ZeroDivisionError('division by zero')
+        if(other==0) throw ZeroDivisionError.$factory('division by zero')
         return Math.floor(self/other)
     }
     if(isinstance(other,_b_.float)){
-        if(!other.valueOf()) throw ZeroDivisionError('division by zero')
+        if(!other.valueOf()) throw ZeroDivisionError.$factory('division by zero')
         return Math.floor(self/other)
     }
     if(hasattr(other,'__rfloordiv__')){
@@ -214,7 +214,7 @@ $IntDict.__mod__ = function(self,other) {
     if(isinstance(other,_b_.tuple) && other.length==1) other=other[0]
     if(isinstance(other,[int, _b_.float, bool])){
         if(other===false){other=0}else if(other===true){other=1}
-        if(other==0){throw _b_.ZeroDivisionError(
+        if(other==0){throw _b_.ZeroDivisionError.$factory(
             "integer division or modulo by zero")}
         return (self%other+other)%other
     }
@@ -267,7 +267,7 @@ $IntDict.__name__ = 'int'
 $IntDict.__neg__ = function(self){return -self}
 
 $IntDict.__new__ = function(cls){
-    if(cls===undefined){throw _b_.TypeError('int.__new__(): not enough arguments')}
+    if(cls===undefined){throw _b_.TypeError.$factory('int.__new__(): not enough arguments')}
     return {__class__:cls.$factory ? cls : cls.$dict}
 }
 
@@ -332,9 +332,9 @@ $IntDict.__rshift__ = function(self,other){
 $IntDict.__setattr__ = function(self,attr,value){
     if(typeof self=="number"){
         if($IntDict[attr]===undefined){
-            throw _b_.AttributeError("'int' object has no attribute '"+attr+"'")
+            throw _b_.AttributeError.$factory("'int' object has no attribute '"+attr+"'")
         }else{
-            throw _b_.AttributeError("'int' object attribute '"+attr+"' is read-only")
+            throw _b_.AttributeError.$factory("'int' object attribute '"+attr+"' is read-only")
         }
     }
     // subclasses of int can have attributes set
@@ -346,17 +346,17 @@ $IntDict.__str__ = $IntDict.__repr__
 
 $IntDict.__truediv__ = function(self,other){
     if(isinstance(other,int)){
-        if(other==0) throw ZeroDivisionError('division by zero')
+        if(other==0) throw ZeroDivisionError.$factory('division by zero')
         if(other.__class__==$B.LongInt.$dict){return new Number(self/parseInt(other.value))}
         return new Number(self/other)
     }
     if(isinstance(other,_b_.float)){
-        if(!other.valueOf()) throw ZeroDivisionError('division by zero')
+        if(!other.valueOf()) throw ZeroDivisionError.$factory('division by zero')
         return new Number(self/other)
     }
     if(isinstance(other,_b_.complex)){
         var cmod = other.$real*other.$real+other.$imag*other.$imag
-        if(cmod==0) throw ZeroDivisionError('division by zero')
+        if(cmod==0) throw ZeroDivisionError.$factory('division by zero')
         return $B.make_complex(self*other.$real/cmod,-self*other.$imag/cmod)
     }
     if(hasattr(other,'__rtruediv__')) return getattr(other,'__rtruediv__')(self)
@@ -464,7 +464,7 @@ var $comp_func = function(self,other){
     var inv_op = getattr(other, '__lt__', null)
     if(inv_op !== null){return inv_op(self)}
 
-    throw _b_.TypeError(
+    throw _b_.TypeError.$factory(
         "unorderable types: int() > "+$B.get_class(other).__name__+"()")
 }
 $comp_func += '' // source code
@@ -503,12 +503,12 @@ var int = function(value, base){
 
     if(base!==undefined){
         if(!isinstance(value,[_b_.str,_b_.bytes,_b_.bytearray])){
-            throw TypeError("int() can't convert non-string with explicit base")
+            throw TypeError.$factory("int() can't convert non-string with explicit base")
         }
     }
 
     if(isinstance(value,_b_.complex)){
-        throw TypeError("can't convert complex to int")
+        throw TypeError.$factory("can't convert complex to int")
     }
 
     var $ns=$B.args('int',2,{x:null,base:null},['x','base'],arguments,
@@ -525,7 +525,7 @@ var int = function(value, base){
 
     if (!(base >=2 && base <= 36)) {
         // throw error (base must be 0, or 2-36)
-        if (base != 0) throw _b_.ValueError("invalid base")
+        if (base != 0) throw _b_.ValueError.$factory("invalid base")
     }
 
     if (typeof value == 'number'){
@@ -535,7 +535,7 @@ var int = function(value, base){
            return value
         }else if(value.toString().search('e')>-1){
             // can't convert to another base if value is too big
-            throw _b_.OverflowError("can't convert to base "+base)
+            throw _b_.OverflowError.$factory("can't convert to base "+base)
         }else{
             var res=parseInt(value, base)
             if(res < $B.min_int || res > $B.max_int) return $B.LongInt(value,base)
@@ -557,7 +557,7 @@ var int = function(value, base){
     if(typeof value=="string") {
       var _value=value.trim()    // remove leading/trailing whitespace
       if (_value.length == 2 && base==0 && (_value=='0b' || _value=='0o' || _value=='0x')) {
-         throw _b_.ValueError('invalid value')
+         throw _b_.ValueError.$factory('invalid value')
       }
       if (_value.length >2) {
          var _pre=_value.substr(0,2).toUpperCase()
@@ -573,11 +573,11 @@ var int = function(value, base){
       var _digits=$valid_digits(base)
       var _re=new RegExp('^[+-]?['+_digits+']+$', 'i')
       if(!_re.test(_value)) {
-         throw _b_.ValueError(
+         throw _b_.ValueError.$factory(
              "invalid literal for int() with base "+base +": '"+_b_.str(value)+"'")
       }
       if(base <= 10 && !isFinite(value)) {
-         throw _b_.ValueError(
+         throw _b_.ValueError.$factory(
              "invalid literal for int() with base "+base +": '"+_b_.str(value)+"'")
       }
       var res=parseInt(_value, base)
@@ -589,7 +589,7 @@ var int = function(value, base){
         var _digits = $valid_digits(base)
         for(var i=0;i<value.source.length;i++){
             if(_digits.indexOf(String.fromCharCode(value.source[i]))==-1){
-                throw _b_.ValueError("invalid literal for int() with base "+
+                throw _b_.ValueError.$factory("invalid literal for int() with base "+
                     base +": "+_b_.repr(value))
             }
         }
@@ -602,16 +602,16 @@ var int = function(value, base){
         var res = getattr(value,'__trunc__')(),
             int_func = _b_.getattr(res, '__int__', null)
         if(int_func===null){
-            throw TypeError('__trunc__ returned non-Integral (type '+
+            throw TypeError.$factory('__trunc__ returned non-Integral (type '+
                 $B.get_class(res).__name__+')')
         }
         var res=int_func()
         if(isinstance(res, int)){return res}
-        throw TypeError('__trunc__ returned non-Integral (type '+
+        throw TypeError.$factory('__trunc__ returned non-Integral (type '+
                 $B.get_class(res).__name__+')')
     }
 
-    throw _b_.TypeError("int() argument must be a string, a bytes-like "+
+    throw _b_.TypeError.$factory("int() argument must be a string, a bytes-like "+
         "object or a number, not '"+$B.get_class(value).__name__+"'")
 }
 int.$dict = $IntDict

@@ -467,9 +467,9 @@ function $AssertCtx(context){
         not_ctx.tree = [condition]
         node.context = new_ctx
         var new_node = new $Node()
-        var js = 'throw AssertionError("AssertionError")'
+        var js = 'throw AssertionError.$factory("AssertionError")'
         if(message !== null){
-            js = 'throw AssertionError(str('+message.to_js()+'))'
+            js = 'throw AssertionError.$factory(str('+message.to_js()+'))'
         }
         new $NodeJSCtx(new_node,js)
         node.add(new_node)
@@ -706,7 +706,7 @@ function $AssignCtx(context){ //, check_unbound){
             var min_length = left_items.length
             if(packed!==null){min_length--}
             js = 'if('+rlname+'.length<'+min_length+')'+
-                 '{throw ValueError("need more than "+'+rlname+
+                 '{throw ValueError.$factory("need more than "+'+rlname+
                  '.length+" value" + ('+rlname+'.length>1 ?'+
                  ' "s" : "")+" to unpack")}'
             new $NodeJSCtx(check_node,js)
@@ -717,7 +717,7 @@ function $AssignCtx(context){ //, check_unbound){
                 var check_node = new $Node()
                 var min_length = left_items.length
                 js = 'if('+rlname+'.length>'+min_length+')'+
-                     '{throw ValueError("too many values to unpack '+
+                     '{throw ValueError.$factory("too many values to unpack '+
                      '(expected '+left_items.length+')")}'
                 new $NodeJSCtx(check_node,js)
                 new_nodes[pos++]=check_node
@@ -971,7 +971,7 @@ function $AugmentedAssignCtx(context, op){
             // For performance reasons, this is only implemented in debug mode
             if($B.debug>0){
                 var check_node = $NodeJS('if('+this.tree[0].to_js()+
-                    '===undefined){throw NameError("name \''+
+                    '===undefined){throw NameError.$factory("name \''+
                     this.tree[0].tree[0].value+'\' is not defined")}')
                 node.parent.insert(rank, check_node)
                 offset++
@@ -1232,7 +1232,7 @@ function $BreakCtx(context){
         if(this.loop_ctx.type!='asyncfor'){
             res += ';break'
         }else{
-            res += ';throw StopIteration('+this.loop_ctx.loop_num+')'
+            res += ';throw StopIteration.$factory('+this.loop_ctx.loop_num+')'
         }
         return res
     }
@@ -2925,7 +2925,7 @@ function $ForExpr(context){
 
         // Add test of length change
         while_node.add($NodeJS('if($locals.$len'+num+'!==null && $locals.$len'+
-            num+'!=$locals.$len_func'+num+'()){throw RuntimeError("dictionary'+
+            num+'!=$locals.$len_func'+num+'()){throw RuntimeError.$factory("dictionary'+
             ' changed size during iteration")}'))
 
         var try_node = new $Node()
@@ -3033,7 +3033,7 @@ function $FromCtx(context){
                     packages.pop()
                 }
                 if($package===undefined){
-                    return 'throw SystemError("Parent module \'\' not loaded,'+
+                    return 'throw SystemError.$factory("Parent module \'\' not loaded,'+
                         ' cannot perform relative import")'
                 }else if($package=='None'){
                     console.log('package is None !')
@@ -4658,7 +4658,7 @@ function $StringCtx(context,value){
             if(this.tree[i].type=="call"){
                 // syntax like "hello"(*args, **kw) raises TypeError
                 // cf issue 335
-                var js = '(function(){throw TypeError("'+"'str'"+
+                var js = '(function(){throw TypeError.$factory("'+"'str'"+
                     ' object is not callable")}())'
                 return js
             }else{
@@ -5103,7 +5103,7 @@ function $WithCtx(context){
         var js = '$exc'+num+' = false;$err'+$loop_num+'=$B.exception($err'+
             $loop_num+')\n'+' '.repeat(indent)+
             'if(!$B.$bool($ctx_manager_exit'+num+'($err'+$loop_num+
-            '.__class__.$factory,'+'$err'+$loop_num+
+            '.__class__,'+'$err'+$loop_num+
             ',$B.$getattr($err'+$loop_num+',"traceback"))))'
         js += '{throw $err'+$loop_num+'}'
         new $NodeJSCtx(fbody,js)
@@ -7957,7 +7957,7 @@ function run_script(script){
             console.log('Javascript error', $err)
             //console.log(js)
             //for(var attr in $err){console.log(attr+': '+$err[attr])}
-            $err=_b_.RuntimeError($err+'')
+            $err=_b_.RuntimeError.$factory($err+'')
         }
 
         // Print the error traceback on the standard error stream
@@ -8224,7 +8224,7 @@ function _run_scripts(options) {
                 console.log('Javascript error', $err)
                 //console.log($js)
                 //for(var attr in $err){console.log(attr+': '+$err[attr])}
-                $err=_b_.RuntimeError($err+'')
+                $err=_b_.RuntimeError.$factory($err+'')
             }
 
             // Print the error traceback on the standard error stream

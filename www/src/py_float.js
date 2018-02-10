@@ -7,7 +7,7 @@ var $ObjectDict = _b_.object.$dict
 function $err(op,other){
     var msg = "unsupported operand type(s) for "+op
     msg += ": 'float' and '"+$B.get_class(other).__name__+"'"
-    throw _b_.TypeError(msg)
+    throw _b_.TypeError.$factory(msg)
 }
 
 // dictionary for built-in class 'float'
@@ -30,10 +30,10 @@ $FloatDict.__float__ = function(self){return self}
 $FloatDict.as_integer_ratio=function(self) {
     if (self.valueOf() == Number.POSITIVE_INFINITY ||
         self.valueOf() == Number.NEGATIVE_INFINITY){
-        throw _b_.OverflowError("Cannot pass infinity to float.as_integer_ratio.")
+        throw _b_.OverflowError.$factory("Cannot pass infinity to float.as_integer_ratio.")
     }
     if (!Number.isFinite(self.valueOf())){
-        throw _b_.ValueError("Cannot pass NaN to float.as_integer_ratio.")
+        throw _b_.ValueError.$factory("Cannot pass NaN to float.as_integer_ratio.")
     }
 
     var tmp = _b_.$frexp(self.valueOf())
@@ -88,7 +88,7 @@ $FloatDict.__eq__ = function(self,other){
 
 $FloatDict.__floordiv__ = function(self,other){
     if(isinstance(other,[_b_.int, float])){
-      if(other.valueOf()==0) throw ZeroDivisionError('division by zero')
+      if(other.valueOf()==0) throw ZeroDivisionError.$factory('division by zero')
       return float(Math.floor(self/other))
     }
     if(hasattr(other,'__rfloordiv__')) {
@@ -101,7 +101,7 @@ $FloatDict.fromhex = function(arg){
    // [sign] ['0x'] integer ['.' fraction] ['p' exponent]
 
    if (!isinstance(arg, _b_.str)) {
-      throw _b_.ValueError('argument must be a string')
+      throw _b_.ValueError.$factory('argument must be a string')
    }
 
    var value = arg.trim()   // remove leading and trailing whitespace
@@ -120,7 +120,7 @@ $FloatDict.fromhex = function(arg){
       case '-nan':
            return $FloatClass(-Number.NaN)
       case '':
-           throw _b_.ValueError('count not convert string to float')
+           throw _b_.ValueError.$factory('count not convert string to float')
    }
 
    var _m=/^(\d*\.?\d*)$/.exec(value)
@@ -130,7 +130,7 @@ $FloatDict.fromhex = function(arg){
    // lets see if this is a hex string.
    var _m=/^(\+|-)?(0x)?([0-9A-F]+\.?)?(\.[0-9A-F]+)?(p(\+|-)?\d+)?$/i.exec(value)
 
-   if (_m == null) throw _b_.ValueError('invalid hexadecimal floating-point string')
+   if (_m == null) throw _b_.ValueError.$factory('invalid hexadecimal floating-point string')
 
    var _sign=_m[1]
    var _int = parseInt(_m[3] || '0', 16)
@@ -141,7 +141,7 @@ $FloatDict.fromhex = function(arg){
 
    //'0x3.a7p10'
    //(3 + 10./16 + 7./16**2) * 2.0**10, or 3740.0
-   //if (_int === undefined) throw _b_.ValueError('invalid hexadecimal floating-point string')
+   //if (_int === undefined) throw _b_.ValueError.$factory('invalid hexadecimal floating-point string')
    var _sum=_int
 
    for (var i=1, _len_i = _fraction.length; i < _len_i; i++){
@@ -152,13 +152,13 @@ $FloatDict.fromhex = function(arg){
 
 $FloatDict.__getformat__ = function(arg){
     if(arg=='double' || arg =='float') return 'IEEE, little-endian'
-    throw _b_.ValueError("__getformat__() argument 1 must be 'double' or 'float'")
+    throw _b_.ValueError.$factory("__getformat__() argument 1 must be 'double' or 'float'")
 }
 
 function preformat(self, fmt){
     if(fmt.empty){return _b_.str(self)}
     if(fmt.type && 'eEfFgGn%'.indexOf(fmt.type)==-1){
-        throw _b_.ValueError("Unknown format code '"+fmt.type+
+        throw _b_.ValueError.$factory("Unknown format code '"+fmt.type+
             "' for object of type 'float'")
     }
     if(isNaN(self)){
@@ -374,7 +374,7 @@ $FloatDict.is_integer = function(self) {return _b_.int(self) == self}
 
 $FloatDict.__mod__ = function(self,other) {
     // can't use Javascript % because it works differently for negative numbers
-    if(other==0){throw ZeroDivisionError('float modulo')}
+    if(other==0){throw ZeroDivisionError.$factory('float modulo')}
     if(isinstance(other,_b_.int)) return new Number((self%other+other)%other)
 
     if(isinstance(other,float)){
@@ -435,7 +435,7 @@ $FloatDict.__pow__= function(self,other){
             (!isFinite(other) || other.__class__===$B.LongInt.$dict || !$B.is_safe_int(other))
              && !isNaN(other) ){return new Number(1)}
         else if(self==0 && isFinite(other) && other<0){
-            throw _b_.ZeroDivisionError("0.0 cannot be raised to a negative power")
+            throw _b_.ZeroDivisionError.$factory("0.0 cannot be raised to a negative power")
         }else if(self==Number.NEGATIVE_INFINITY && !isNaN(other)){
             if(other<0 && other%2==1){
                 return new Number(-0.0)
@@ -479,9 +479,9 @@ $FloatDict.__repr__ = $FloatDict.__str__ = function(self){
 $FloatDict.__setattr__ = function(self,attr,value){
     if(self.constructor===Number){
         if($FloatDict[attr]===undefined){
-            throw _b_.AttributeError("'float' object has no attribute '"+attr+"'")
+            throw _b_.AttributeError.$factory("'float' object has no attribute '"+attr+"'")
         }else{
-            throw _b_.AttributeError("'float' object attribute '"+attr+"' is read-only")
+            throw _b_.AttributeError.$factory("'float' object attribute '"+attr+"' is read-only")
         }
     }
     // subclasses of float can have attributes set
@@ -491,12 +491,12 @@ $FloatDict.__setattr__ = function(self,attr,value){
 
 $FloatDict.__truediv__ = function(self,other){
     if(isinstance(other,[_b_.int, float])){
-        if(other.valueOf()==0) throw ZeroDivisionError('division by zero')
+        if(other.valueOf()==0) throw ZeroDivisionError.$factory('division by zero')
         return float(self/other)
     }
     if(isinstance(other,_b_.complex)){
         var cmod = other.$real*other.$real+other.$imag*other.$imag
-        if(cmod==0) throw ZeroDivisionError('division by zero')
+        if(cmod==0) throw ZeroDivisionError.$factory('division by zero')
 
         return $B.make_complex(float(self*other.$real/cmod),
                            float(-self*other.$imag/cmod))
@@ -557,7 +557,7 @@ var $comp_func = function(self,other){
     var inv_op = getattr(other, '__le__', null)
     if(inv_op !== null){return inv_op(self)}
 
-    throw _b_.TypeError(
+    throw _b_.TypeError.$factory(
         'unorderable types: float() > '+$B.get_class(other).__name__+"()")
 }
 
@@ -574,7 +574,7 @@ $B.make_rmethods($FloatDict)
 
 // unsupported operations
 var $notimplemented = function(self,other){
-    throw _b_.TypeError(
+    throw _b_.TypeError.$factory(
         "unsupported operand types for OPERATOR: 'float' and '"+
             $B.get_class(other).__name__+"'")
 }
@@ -648,17 +648,17 @@ var float = function (value){
          case '-nan':
            return -Number.NaN
          case '':
-           throw _b_.ValueError('count not convert string to float')
+           throw _b_.ValueError.$factory('count not convert string to float')
          default:
            value = to_digits(value) // convert arabic-indic digits to latin
            if (isFinite(value)) return $FloatClass(eval(value))
            else {
                _b_.str.$dict.encode(value, 'latin-1') // raises UnicodeEncodeError if not valid
-               throw _b_.ValueError("Could not convert to float(): '"+_b_.str(value)+"'")
+               throw _b_.ValueError.$factory("Could not convert to float(): '"+_b_.str(value)+"'")
            }
        }
     }
-    throw _b_.TypeError("float() argument must be a string or a number, not '"+
+    throw _b_.TypeError.$factory("float() argument must be a string or a number, not '"+
         $B.get_class(value).__name__+"'")
 }
 float.__class__ = $B.$factory
@@ -666,7 +666,7 @@ float.$dict = $FloatDict
 $FloatDict.$factory = float
 $FloatDict.__new__ = function(cls){
     if(cls===undefined){
-        throw _b_.TypeError('float.__new__(): not enough arguments')
+        throw _b_.TypeError.$factory('float.__new__(): not enough arguments')
     }
     return {__class__:cls.$factory ? cls : cls.$dict}
 }

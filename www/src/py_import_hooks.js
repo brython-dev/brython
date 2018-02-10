@@ -33,7 +33,7 @@
 
     if ($B.is_none(spec)) {
         // No import spec found
-        throw _b_.ImportError('No module named '+mod_name);
+        throw _b_.ImportError.$factory('No module named '+mod_name);
     }
 
     var _loader = _b_.getattr(spec, 'loader', _b_.None),
@@ -49,7 +49,7 @@
                 module = $B.$call(create_module)(_loader, spec);
             }
         }
-        if(module===undefined){throw _b_.ImportError(mod_name)}
+        if(module===undefined){throw _b_.ImportError.$factory(mod_name)}
         if ($B.is_none(module)) {
             // FIXME : Initialize __doc__ and __package__
             module = $B.$ModuleDict.$factory(mod_name);
@@ -86,7 +86,7 @@
             $B.modules[_spec_name] = _sys_modules[_spec_name] = module;
         }
         else {
-            throw _b_.ImportError(mod_name);
+            throw _b_.ImportError.$factory(mod_name);
         }
     }
     else {

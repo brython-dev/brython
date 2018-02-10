@@ -64,7 +64,7 @@ function normalize_start_end($){
     else if($.end<0){$.end += $.self.length; $.end=Math.max(0, $.end)}
 
     if(!isinstance($.start,_b_.int)||!isinstance($.end,_b_.int)){
-        throw _b_.TypeError(
+        throw _b_.TypeError.$factory(
             "slice indices must be integers or None or have an __index__ method")}
 
 }
@@ -75,21 +75,21 @@ function reverse(s){
 }
 
 function check_str(obj){
-    if(!_b_.isinstance(obj,str)){throw _b_.TypeError("can't convert '"+
+    if(!_b_.isinstance(obj,str)){throw _b_.TypeError.$factory("can't convert '"+
       $B.get_class(obj).__name__+"' object to str implicitely")}
 }
 
 $StringDict.__add__ = function(self,other){
     if(!(typeof other==="string")){
         try{return getattr(other,'__radd__')(self)}
-        catch(err){throw _b_.TypeError(
+        catch(err){throw _b_.TypeError.$factory(
             "Can't convert "+$B.get_class(other).__name__+" to str implicitely")}
     }
     return self+other
 }
 
 $StringDict.__contains__ = function(self,item){
-    if(!(typeof item==="string")){throw _b_.TypeError(
+    if(!(typeof item==="string")){throw _b_.TypeError.$factory(
          "'in <string>' requires string as left operand, not "+item.__class__)}
     var nbcar = item.length
     if(nbcar==0) return true // a string contains the empty string
@@ -101,7 +101,7 @@ $StringDict.__contains__ = function(self,item){
 }
 
 $StringDict.__delitem__ = function(){
-    throw _b_.TypeError("'str' object doesn't support item deletion")
+    throw _b_.TypeError.$factory("'str' object doesn't support item deletion")
 }
 
 // __dir__must be assigned explicitely because attribute resolution for builtin
@@ -121,7 +121,7 @@ $StringDict.__eq__ = function(self,other){
 function preformat(self, fmt){
     if(fmt.empty){return _b_.str(self)}
     if(fmt.type && fmt.type!='s'){
-        throw _b_.ValueError("Unknown format code '"+fmt.type+
+        throw _b_.ValueError.$factory("Unknown format code '"+fmt.type+
             "' for object of type 'str'")
     }
     return self
@@ -130,7 +130,7 @@ function preformat(self, fmt){
 $StringDict.__format__ = function(self, format_spec) {
     var fmt = new $B.parse_format_spec(format_spec)
     if(fmt.sign!==undefined){
-        throw _b_.ValueError("Sign not allowed in string format specifier")
+        throw _b_.ValueError.$factory("Sign not allowed in string format specifier")
     }
     // For strings, alignment default to left
     fmt.align = fmt.align || '<'
@@ -142,7 +142,7 @@ $StringDict.__getitem__ = function(self,arg){
         var pos = arg
         if(arg<0) pos+=self.length
         if(pos>=0 && pos<self.length) return self.charAt(pos)
-        throw _b_.IndexError('string index out of range')
+        throw _b_.IndexError.$factory('string index out of range')
     }
     if(isinstance(arg,slice)) {
         var s=_b_.slice.$dict.$conv_for_seq(arg, self.length),
@@ -158,7 +158,7 @@ $StringDict.__getitem__ = function(self,arg){
         return res
     }
     if(isinstance(arg,bool)) return self.__getitem__(_b_.int(arg))
-    throw _b_.TypeError('string indices must be integers')
+    throw _b_.TypeError.$factory('string indices must be integers')
 }
 
 $StringDict.__hash__ = function(self) {
@@ -544,7 +544,7 @@ var single_char_format = function(val, flags) {
     try {
         val = _b_.int(val)  // yes, floats are valid (they are cast to int)
     } catch (err) {
-        throw _b_.TypeError('%c requires int or char')
+        throw _b_.TypeError.$factory('%c requires int or char')
     }
     return format_padding(chr(val), flags)
 }
@@ -634,7 +634,7 @@ $StringDict.__mod__ = function(self, args) {
     if (_b_.isinstance(args, _b_.tuple)) {
         argpos = 0 |0
     }else{
-        getitem = _b_.getattr(args,'__getitem__', null)
+        getitem = _b_.getattr(args,'__getitem__', _b_.None)
     }
     var ret = ''
     var $get_kwarg_string = function(s) {
@@ -642,7 +642,7 @@ $StringDict.__mod__ = function(self, args) {
         ++pos
         var rslt = kwarg_key.exec(s.substring(newpos))
         if (!rslt) {
-            throw _b_.ValueError("incomplete format key")
+            throw _b_.ValueError.$factory("incomplete format key")
         }
         var key = rslt[1]
         newpos += rslt[0].length
@@ -652,7 +652,7 @@ $StringDict.__mod__ = function(self, args) {
             if (err.name === "KeyError") {
                 throw err
             }
-            throw _b_.TypeError("format requires a mapping")
+            throw _b_.TypeError.$factory("format requires a mapping")
         }
         return get_string_value(s, self)
     }
@@ -668,7 +668,7 @@ $StringDict.__mod__ = function(self, args) {
         } else {
             self = args[argpos++]
             if(self===undefined){
-                throw _b_.TypeError("not enough arguments for format string")
+                throw _b_.TypeError.$factory("not enough arguments for format string")
             }
         }
         return get_string_value(s, self)
@@ -693,9 +693,9 @@ $StringDict.__mod__ = function(self, args) {
                 if (err.name === "UnsupportedChar") {
                     invalid_char = s[newpos]
                     if (invalid_char === undefined) {
-                        throw _b_.ValueError("incomplete format")
+                        throw _b_.ValueError.$factory("incomplete format")
                     }
-                    throw _b_.ValueError("unsupported format character '" + invalid_char +
+                    throw _b_.ValueError.$factory("unsupported format character '" + invalid_char +
                         "' (0x" + invalid_char.charCodeAt(0).toString(16) + ") at index " + newpos)
                 } else if (err.name === "NotANumber") {
                     var try_char = s[newpos]
@@ -709,7 +709,7 @@ $StringDict.__mod__ = function(self, args) {
                     } else {
                         cls = cls.__name__
                     }
-                    throw _b_.TypeError("%" + try_char + " format: a number is required, not " + cls)
+                    throw _b_.TypeError.$factory("%" + try_char + " format: a number is required, not " + cls)
                 } else {
                     throw err
                 }
@@ -739,19 +739,19 @@ $StringDict.__mod__ = function(self, args) {
             }
         } else {
             // % at end of string
-            throw _b_.ValueError("incomplete format")
+            throw _b_.ValueError.$factory("incomplete format")
         }
         pos = newpos + 1
     } while (pos < length)
 
     if(argpos!==null){
         if(args.length>argpos){
-            throw _b_.TypeError('not enough arguments for format string')
+            throw _b_.TypeError.$factory('not enough arguments for format string')
         }else if(args.length<argpos){
-            throw _b_.TypeError('not all arguments converted during string formatting')
+            throw _b_.TypeError.$factory('not all arguments converted during string formatting')
         }
     }else if(nbph==0){
-        throw _b_.TypeError('not all arguments converted during string formatting')
+        throw _b_.TypeError.$factory('not all arguments converted during string formatting')
     }
     return ret
 }
@@ -761,7 +761,7 @@ $StringDict.__mro__ = [$ObjectDict]
 $StringDict.__mul__ = function(){
     var $=$B.args('__mul__',2,{self:null,other:null},['self','other'],
         arguments,{},null,null)
-    if(!isinstance($.other,_b_.int)){throw _b_.TypeError(
+    if(!isinstance($.other,_b_.int)){throw _b_.TypeError.$factory(
         "Can't multiply sequence by non-int of type '"+
             $B.get_class($.other).__name__+"'")}
     var $res = ''
@@ -786,7 +786,7 @@ $StringDict.__repr__ = function(self){
 }
 
 $StringDict.__setitem__ = function(self,attr,value){
-    throw _b_.TypeError("'str' object does not support item assignment")
+    throw _b_.TypeError.$factory("'str' object does not support item assignment")
 }
 $StringDict.__str__ = function(self){
     if(self===undefined) return "<class 'str'>"
@@ -796,7 +796,7 @@ $StringDict.toString = function(){return 'string!'}
 
 // generate comparison methods
 var $comp_func = function(self,other){
-    if(typeof other !=="string"){throw _b_.TypeError(
+    if(typeof other !=="string"){throw _b_.TypeError.$factory(
         "unorderable types: 'str' > "+$B.get_class(other).__name__+"()")}
     return self > other
 }
@@ -811,7 +811,7 @@ $B.make_rmethods($StringDict)
 
 // unsupported operations
 var $notimplemented = function(self,other){
-    throw NotImplementedError("OPERATOR not implemented for class str")
+    throw NotImplementedError.$factory("OPERATOR not implemented for class str")
 }
 
 // Copy static methods from unicode
@@ -858,7 +858,7 @@ $StringDict.count = function(){
     var $ = $B.args('count', 4, {self:null, sub:null, start:null, stop:null},
         ['self', 'sub', 'start', 'stop'], arguments, {start:null, stop:null},
         null, null)
-    if(!(typeof $.sub==="string")){throw _b_.TypeError(
+    if(!(typeof $.sub==="string")){throw _b_.TypeError.$factory(
         "Can't convert '"+$B.get_class($.sub).__name__+"' object to str implicitly")}
     var substr = $.self
     if($.start!==null){
@@ -918,7 +918,7 @@ $StringDict.endswith = function(){
     var s = $.self.substring($.start,$.end)
     for(var i=0, _len_i = suffixes.length; i < _len_i;i++){
         var suffix = suffixes[i]
-        if(!_b_.isinstance(suffix, str)){throw _b_.TypeError(
+        if(!_b_.isinstance(suffix, str)){throw _b_.TypeError.$factory(
             "endswith first arg must be str or a tuple of str, not int")}
         if(suffix.length<=s.length &&
             s.substr(s.length-suffix.length)==suffix) return true
@@ -966,7 +966,7 @@ $StringDict.find = function(){
     normalize_start_end($)
 
     if(!isinstance($.start,_b_.int)||!isinstance($.end,_b_.int)){
-        throw _b_.TypeError(
+        throw _b_.TypeError.$factory(
         "slice indices must be integers or None or have an __index__ method")}
     var s = $.self.substring($.start,$.end)
 
@@ -1009,7 +1009,7 @@ function parse_format(fmt_string){
         name=elts[0]
         conv=elts[1] // conversion flag
         if(conv.length!==1 || 'ras'.search(conv)==-1){
-            throw _b_.ValueError('wrong conversion flag '+conv)
+            throw _b_.ValueError.$factory('wrong conversion flag '+conv)
         }
     }
 
@@ -1108,7 +1108,7 @@ $StringDict.format = function(self) {
                     }
                 }else{end++}
             }
-            if(nb>0){throw ValueError("wrong format "+self)}
+            if(nb>0){throw ValueError.$factory("wrong format "+self)}
             pos = end
         }else{text += car;pos++;}
     }
@@ -1163,13 +1163,13 @@ $StringDict.format = function(self) {
 }
 
 $StringDict.format_map = function(self) {
-  throw NotImplementedError("function format_map not implemented yet");
+  throw NotImplementedError.$factory("function format_map not implemented yet");
 }
 
 $StringDict.index = function(self){
     // Like find(), but raise ValueError when the substring is not found.
     var res = $StringDict.find.apply(null,arguments)
-    if(res===-1) throw _b_.ValueError("substring not found")
+    if(res===-1) throw _b_.ValueError.$factory("substring not found")
     return res
 }
 
@@ -1184,7 +1184,7 @@ $StringDict.join = function(){
     while(1){
         try{
             var obj2 = _b_.next(iterable)
-            if(!isinstance(obj2,str)){throw _b_.TypeError(
+            if(!isinstance(obj2,str)){throw _b_.TypeError.$factory(
                 "sequence item "+count+": expected str instance, "+$B.get_class(obj2).__name__+" found")}
             res.push(obj2)
         }catch(err){
@@ -1233,18 +1233,18 @@ $StringDict.maketrans = function() {
         // Unicode ordinals, strings (of arbitrary lengths) or None. Character
         // keys will then be converted to ordinals.
         if(!_b_.isinstance($.x, _b_.dict)){
-            throw _b_.TypeError('maketrans only argument must be a dict')
+            throw _b_.TypeError.$factory('maketrans only argument must be a dict')
         }
         var items = _b_.list(_b_.dict.$dict.items($.x))
         for(var i=0, len=items.length;i<len;i++){
             var k = items[i][0], v=items[i][1]
             if(!_b_.isinstance(k, _b_.int)){
                 if(_b_.isinstance(k, _b_.str) && k.length==1){k = _b_.ord(k)}
-                else{throw _b_.TypeError("dictionary key "+k+
+                else{throw _b_.TypeError.$factory("dictionary key "+k+
                     " is not int or 1-char string")}
             }
             if(v!==_b_.None && !_b_.isinstance(v, [_b_.int, _b_.str])){
-                throw _b_.TypeError("dictionary value "+v+
+                throw _b_.TypeError.$factory("dictionary value "+v+
                     " is not None, integer or string")
             }
              _t.$numeric_dict[k] = v
@@ -1255,16 +1255,16 @@ $StringDict.maketrans = function() {
         // and in the resulting dictionary, each character in x will be mapped
         // to the character at the same position in y
         if(!(_b_.isinstance($.x, _b_.str) && _b_.isinstance($.y, _b_.str))){
-            throw _b_.TypeError("maketrans arguments must be strings")
+            throw _b_.TypeError.$factory("maketrans arguments must be strings")
         }else if($.x.length!==$.y.length){
-            throw _b_.TypeError("maketrans arguments must be strings or same length")
+            throw _b_.TypeError.$factory("maketrans arguments must be strings or same length")
         }else{
             var toNone = {}
             if($.z!==null){
                 // If there is a third argument, it must be a string, whose
                 // characters will be mapped to None in the result
                 if(!_b_.isinstance($.z, _b_.str)){
-                    throw _b_.TypeError('maketrans third argument must be a string')
+                    throw _b_.TypeError.$factory('maketrans third argument must be a string')
                 }
                 for(var i=0,len=$.z.length;i<len;i++){
                     toNone[_b_.ord($.z.charAt(i))] = true
@@ -1284,7 +1284,7 @@ $StringDict.maketrans = function() {
 $StringDict.partition = function() {
     var $=$B.args('partition',2,{self:null,sep:null},['self','sep'],
         arguments,{},null,null)
-  if($.sep==''){throw _b_.ValueError('empty separator')}
+  if($.sep==''){throw _b_.ValueError.$factory('empty separator')}
   check_str($.sep)
   var i=$.self.indexOf($.sep)
   if (i== -1) return _b_.tuple([$.self, '', ''])
@@ -1314,10 +1314,10 @@ $StringDict.replace = function(self, old, _new, count) {
     check_str(_new)
     // Validate instance type of 'count'
     if (!isinstance(count,[_b_.int,_b_.float])) {
-        throw _b_.TypeError("'" + $B.get_class(count).__name__ +
+        throw _b_.TypeError.$factory("'" + $B.get_class(count).__name__ +
             "' object cannot be interpreted as an integer");
     } else if (isinstance(count, _b_.float)) {
-        throw _b_.TypeError("integer argument expected, got float");
+        throw _b_.TypeError.$factory("integer argument expected, got float");
     }
     if(count==0){return self}
     if(count.__class__==$B.LongInt.$dict){count=parseInt(count.value)}
@@ -1382,7 +1382,7 @@ $StringDict.rfind = function(self){
 $StringDict.rindex = function(){
     // Like rfind() but raises ValueError when the substring sub is not found
     var res = $StringDict.rfind.apply(null,arguments)
-    if(res==-1){throw _b_.ValueError("substring not found")}
+    if(res==-1){throw _b_.ValueError.$factory("substring not found")}
     return res
 }
 
@@ -1448,7 +1448,7 @@ $StringDict.split = function(){
         {sep:_b_.None, maxsplit:-1},null,null)
     var sep=$.sep,maxsplit=$.maxsplit,self=$.self
     if(maxsplit.__class__===$B.LongInt.$dict){maxsplit=parseInt(maxsplit.value)}
-    if(sep=='') throw _b_.ValueError('empty separator')
+    if(sep=='') throw _b_.ValueError.$factory('empty separator')
     if(sep===_b_.None){
         var res = []
         while(pos<self.length&&self.charAt(pos).search(/\s/)>-1){pos++}
@@ -1502,7 +1502,7 @@ $StringDict.splitlines = function(self){
     var $=$B.args('splitlines',2,{self:null,keepends:null},
         ['self','keepends'],arguments,{keepends:false},null,null)
     if(!_b_.isinstance($.keepends,[_b_.bool, _b_.int])){
-        throw _b_.TypeError('integer argument expected, got '+
+        throw _b_.TypeError.$factory('integer argument expected, got '+
             $B.get_class($.keepends).__name)
     }
     var keepends = _b_.int($.keepends)
@@ -1550,7 +1550,7 @@ $StringDict.startswith = function(){
     var s = $.self.substring($.start,$.end)
     for(var i=0, _len_i = prefixes.length; i < _len_i;i++){
         prefix = prefixes[i]
-        if(!_b_.isinstance(prefix, str)){throw _b_.TypeError(
+        if(!_b_.isinstance(prefix, str)){throw _b_.TypeError.$factory(
             "endswith first arg must be str or a tuple of str, not int")}
         if(s.substr(0,prefix.length)==prefix) return true
     }
@@ -1643,7 +1643,7 @@ str.$dict = $StringDict
 $StringDict.$factory = str
 $StringDict.__new__ = function(cls){
     if(cls===undefined){
-        throw _b_.TypeError('str.__new__(): not enough arguments')
+        throw _b_.TypeError.$factory('str.__new__(): not enough arguments')
     }
     return {__class__:cls.$dict}
 }
@@ -1743,7 +1743,7 @@ $B.parse_format_spec = function(spec){
         if(car==','){this.comma=true;pos++;car=spec.charAt(pos)}
         if(car=='.'){
             if(digits.indexOf(spec.charAt(pos+1))==-1){
-                throw _b_.ValueError("Missing precision in format spec")
+                throw _b_.ValueError.$factory("Missing precision in format spec")
             }
             this.precision = spec.charAt(pos+1)
             pos+=2;car=spec.charAt(pos)
@@ -1755,7 +1755,7 @@ $B.parse_format_spec = function(spec){
         if(car && types.indexOf(car)>-1){this.type=car;pos++;car=spec.charAt(pos)}
         if(pos!==spec.length){
             //console.log('error', spec, this, pos, spec.charAt(pos))
-            throw _b_.ValueError("Invalid format specifier")
+            throw _b_.ValueError.$factory("Invalid format specifier")
         }
     }
     this.toString = function(){

@@ -33,10 +33,10 @@ function add_pos(v1, v2){
 function check_shift(shift){
     // Check the argument of >> and <<
     if(!isinstance(shift, LongInt)){
-        throw TypeError("shift must be int, not '"+
+        throw TypeError.$factory("shift must be int, not '"+
             $B.get_class(shift).__name__+"'")
     }
-    if(!shift.pos){throw ValueError("negative shift count")}
+    if(!shift.pos){throw ValueError.$factory("negative shift count")}
 }
 
 function clone(obj){
@@ -394,7 +394,7 @@ $LongIntDict.__lshift__ = function(self, shift){
     var is_long = shift.__class__==$LongIntDict
     if(is_long){
         var shift_value = parseInt(shift.value)
-        if(shift_value<0){throw _b_.ValueError('negative shift count')}
+        if(shift_value<0){throw _b_.ValueError.$factory('negative shift count')}
         if(shift_value < $B.max_int){shift_safe=true;shift = shift_value}
     }
     if(shift_safe){
@@ -473,7 +473,7 @@ $LongIntDict.__pow__ = function(self, power, z){
         power=LongInt(_b_.str(power))
     }else if(!isinstance(power, LongInt)){
         var msg = "power must be a LongDict, not '"
-        throw TypeError(msg+$B.get_class(power).__name__+"'")
+        throw TypeError.$factory(msg+$B.get_class(power).__name__+"'")
     }
     if(!power.pos){
         if(self.value=='1'){return self}
@@ -564,7 +564,7 @@ $LongIntDict.__truediv__ = function(self, other){
         return _b_.float(parseInt(self.value)/other)
     }else if(isinstance(other,_b_.float)){
         return _b_.float(parseInt(self.value)/other)
-    }else{throw TypeError("unsupported operand type(s) for /: 'int' and '"+
+    }else{throw TypeError.$factory("unsupported operand type(s) for /: 'int' and '"+
         $B.get_class(other).__name__+"'")}
 }
 
@@ -636,16 +636,16 @@ function intOrLong(long){
 
 function LongInt(value, base){
     if(arguments.length>2){
-        throw _b_.TypeError("LongInt takes at most 2 arguments ("+
+        throw _b_.TypeError.$factory("LongInt takes at most 2 arguments ("+
             arguments.length+" given)")
     }
     // base defaults to 10
     if(base===undefined){base = 10}
     else if(!isinstance(base, int)){
-        throw TypeError("'"+$B.get_class(base).__name__+"' object cannot be interpreted as an integer")
+        throw TypeError.$factory("'"+$B.get_class(base).__name__+"' object cannot be interpreted as an integer")
     }
     if(base<0 || base==1 || base>36){
-        throw ValueError("LongInt() base must be >= 2 and <= 36")
+        throw ValueError.$factory("LongInt() base must be >= 2 and <= 36")
     }
     if(isinstance(value, _b_.float)){
         if(value===Number.POSITIVE_INFINITY || value===Number.NEGATIVE_INFINITY){
@@ -660,11 +660,11 @@ function LongInt(value, base){
     if(typeof value=='number'){
         if(isSafeInteger(value)){value = value.toString()}
         else if(value.constructor == Number){console.log('big number', value);value = value.toString()}
-        else{console.log('wrong value', value);throw ValueError("argument of long_int is not a safe integer")}
+        else{console.log('wrong value', value);throw ValueError.$factory("argument of long_int is not a safe integer")}
     }else if(value.__class__===$LongIntDict){return value}
     else if(isinstance(value,_b_.bool)){value=_b_.bool.$dict.__int__(value)+''}
     else if(typeof value!='string'){
-        throw ValueError("argument of long_int must be a string, not "+
+        throw ValueError.$factory("argument of long_int must be a string, not "+
             $B.get_class(value).__name__)
     }
     var has_prefix = false, pos = true, start = 0
@@ -680,7 +680,7 @@ function LongInt(value, base){
         // Remove prefix
         if(value.length==1){
             // "+" or "-" alone are not valid arguments
-            throw ValueError('LongInt argument is not a valid number: "'+value+'"')
+            throw ValueError.$factory('LongInt argument is not a valid number: "'+value+'"')
         }else{value=value.substr(1)}
     }
     // Ignore leading zeros
@@ -692,7 +692,7 @@ function LongInt(value, base){
     for(var i=0;i<value.length;i++){
         if(value.charAt(i)=='.' && point==-1){point=i}
         else if(!is_digits[value.charAt(i)]){
-            throw ValueError('LongInt argument is not a valid number: "'+value+'"')
+            throw ValueError.$factory('LongInt argument is not a valid number: "'+value+'"')
         }
     }
     if(point!=-1){value=value.substr(0,point)}
@@ -714,6 +714,8 @@ function LongInt(value, base){
 LongInt.__class__ = $B.$factory
 LongInt.$dict = $LongIntDict
 $LongIntDict.$factory = LongInt
+
+$B.set_func_names($LongIntDict)
 
 $B.LongInt = LongInt
 

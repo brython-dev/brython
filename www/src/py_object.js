@@ -4,7 +4,7 @@ __BRYTHON__.$__new__ = function(factory){
     return function(cls){
         /*
         if(cls===undefined){
-            throw __BRYTHON__.builtins.TypeError(factory.$dict.__name__+'.__new__(): not enough arguments')
+            throw __BRYTHON__.builtins.TypeError.$factory(factory.$dict.__name__+'.__new__(): not enough arguments')
         }
         */
         console.log('create new object', cls, factory)
@@ -105,7 +105,7 @@ $ObjectDict.__eq__ = function(self,other){
 $ObjectDict.__format__ = function(){
     var $ = $B.args('__format__', 2, {self:null, spec:null},
         ['self', 'spec'], arguments, {}, null, null)
-    if($.spec!==''){throw _b_.TypeError("non-empty format string passed to object.__format__")}
+    if($.spec!==''){throw _b_.TypeError.$factory("non-empty format string passed to object.__format__")}
     return _b_.getattr($.self, '__str__')()
 }
 
@@ -300,14 +300,13 @@ var klass = obj.__class__ || $B.get_class(obj)
                         var msg = "unsupported operand types for "+
                             opsigns[rank]+": '"+ klass.__name__+"' and '"+
                             $B.get_class(arguments[0]).__name__+"'"
-                        throw _b_.TypeError(msg)
+                        throw _b_.TypeError.$factory(msg)
                     }
                 }
                 func.$infos = {__name__ : klass.__name__+'.'+attr}
                 return func
             }
         }
-        //throw AttributeError('object '+obj.__class__.__name__+" has no attribute '"+attr+"'")
     }
 }
 
@@ -321,7 +320,7 @@ $ObjectDict.__hash__ = function (self) {
 
 $ObjectDict.__init__ = function(){
     if(arguments.length==0){
-        throw _b_.TypeError("descriptor '__init__' of 'object' object "+
+        throw _b_.TypeError.$factory("descriptor '__init__' of 'object' object "+
             "needs an argument")
     }
     // object.__init__ does nothing else
@@ -333,7 +332,7 @@ $ObjectDict.__init_subclass__ = function(cls, kwargs){
     if(kwargs!==undefined){
         if(kwargs.__class__!==_b_.dict.$dict ||
                 Object.keys(kwargs.$string_dict).length>0){
-            throw _b_.TypeError("__init_subclass__() takes no keyword arguments")
+            throw _b_.TypeError.$factory("__init_subclass__() takes no keyword arguments")
         }
     }
     return _b_.None
@@ -346,11 +345,11 @@ $ObjectDict.__lt__ = function(){return _b_.NotImplemented}
 $ObjectDict.__mro__ = []
 
 $ObjectDict.__new__ = function(cls, ...args){
-    if(cls===undefined){throw _b_.TypeError('object.__new__(): not enough arguments')}
+    if(cls===undefined){throw _b_.TypeError.$factory('object.__new__(): not enough arguments')}
     var init_func = $B.$getattr(cls, "__init__")
     if(init_func===$ObjectDict.__init__){
         if(args.length>0){
-            throw _b_.TypeError("object() takes no parameters")
+            throw _b_.TypeError.$factory("object() takes no parameters")
         }
     }
     return {__class__ : cls.__class__ === $B.$factory ? cls.$dict : cls}
@@ -375,13 +374,13 @@ $ObjectDict.__repr__ = function(self){
 
 $ObjectDict.__setattr__ = function(self,attr,val){
     if(val===undefined){ // setting an attribute to 'object' type is not allowed
-        throw _b_.TypeError("can't set attributes of built-in/extension type 'object'")
+        throw _b_.TypeError.$factory("can't set attributes of built-in/extension type 'object'")
     }else if(self.__class__===$ObjectDict){
         // setting an attribute to object() is not allowed
         if($ObjectDict[attr]===undefined){
-            throw _b_.AttributeError("'object' object has no attribute '"+attr+"'")
+            throw _b_.AttributeError.$factory("'object' object has no attribute '"+attr+"'")
         }else{
-            throw _b_.AttributeError("'object' object attribute '"+attr+"' is read-only")
+            throw _b_.AttributeError.$factory("'object' object attribute '"+attr+"' is read-only")
         }
     }
     if($B.aliased_names[attr]){attr='$$'+attr}

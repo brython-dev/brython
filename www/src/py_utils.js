@@ -22,9 +22,11 @@ $B.args = function($fname,argcount,slots,var_names,$args,$dobj,
     // If the function call had keywords arguments, they are in the last
     // element of $args
     if(nb_pos>0 && $args[nb_pos-1] && $args[nb_pos-1].$nat){
-        has_kw_args=true
         nb_pos--
-        var kw_args=$args[nb_pos].kw
+        if(Object.keys($args[nb_pos].kw).length>0){
+            has_kw_args=true
+            var kw_args=$args[nb_pos].kw
+        }
     }
 
     if(extra_pos_args){
@@ -50,7 +52,7 @@ $B.args = function($fname,argcount,slots,var_names,$args,$dobj,
             // thow an exception
             msg = $fname+"() takes "+argcount+' positional argument'+
                 (argcount> 1 ? '' : 's') + ' but more were given'
-            throw _b_.TypeError(msg)
+            throw _b_.TypeError.$factory(msg)
         }else{
             // Store extra positional arguments
             for(var i=argcount;i<nb_pos;i++){
@@ -77,11 +79,11 @@ $B.args = function($fname,argcount,slots,var_names,$args,$dobj,
                     if(key.substr(0, 2)=='$$'){key=key.substr(2)}
                     slots[extra_kw_args].$string_dict[key]=value
                 }else{
-                    throw _b_.TypeError($fname+"() got an unexpected keyword argument '"+key+"'")
+                    throw _b_.TypeError.$factory($fname+"() got an unexpected keyword argument '"+key+"'")
                 }
             }else if(slots[key]!==null){
                 // The slot is already filled
-                throw _b_.TypeError($fname+"() got multiple values for argument '"+key+"'")
+                throw _b_.TypeError.$factory($fname+"() got multiple values for argument '"+key+"'")
             }else{
                 // Fill the slot with the key/value pair
                 slots[key] = value
@@ -101,11 +103,11 @@ $B.args = function($fname,argcount,slots,var_names,$args,$dobj,
     if(missing.length>0){
 
         if(missing.length==1){
-            throw _b_.TypeError($fname+" missing 1 positional argument: "+missing[0])
+            throw _b_.TypeError.$factory($fname+" missing 1 positional argument: "+missing[0])
         }else{
             var msg = $fname+" missing "+missing.length+" positional arguments: "
             msg += missing.join(' and ')
-            throw _b_.TypeError(msg)
+            throw _b_.TypeError.$factory(msg)
         }
 
     }
@@ -116,11 +118,11 @@ $B.args = function($fname,argcount,slots,var_names,$args,$dobj,
 $B.wrong_nb_args = function(name, received, expected, positional){
     if(received<expected){
         var missing = expected-received
-        throw _b_.TypeError(name+'() missing '+missing+
+        throw _b_.TypeError.$factory(name+'() missing '+missing+
             ' positional argument'+(missing>1 ? 's' : '')+': '+
             positional.slice(received))
     }else{
-        throw _b_.TypeError(name+'() takes '+expected+' positional argument'+
+        throw _b_.TypeError.$factory(name+'() takes '+expected+' positional argument'+
             (expected>1 ? 's' : '') + ' but more were given')
     }
 }
@@ -302,9 +304,9 @@ $B.$search = function(name, global_ns){
     else if(_b_[name]!==undefined){return _b_[name]}
     else{
         if(frame[0]==frame[2] || frame[1].$type=="class"){
-            throw _b_.NameError("name '"+name+"' is not defined")}
+            throw _b_.NameError.$factory("name '"+name+"' is not defined")}
         else{
-            throw _b_.UnboundLocalError("local variable '"+name+
+            throw _b_.UnboundLocalError.$factory("local variable '"+name+
                 "' referenced before assignment")}
     }
 }
@@ -335,7 +337,7 @@ $B.$global_search = function(name){
         if(frame[1][name]!==undefined){return frame[1][name]}
     }
 
-    throw _b_.NameError("name '"+$B.from_alias(name)+"' is not defined")
+    throw _b_.NameError.$factory("name '"+$B.from_alias(name)+"' is not defined")
 }
 
 $B.$local_search = function(name){
@@ -343,7 +345,7 @@ $B.$local_search = function(name){
     var frame = $B.last($B.frames_stack)
     if(frame[1][name]!==undefined){return frame[1][name]}
     else{
-        throw _b_.UnboundLocalError("local variable '"+name+
+        throw _b_.UnboundLocalError.$factory("local variable '"+name+
                 "' referenced before assignment")
     }
 }
@@ -351,13 +353,13 @@ $B.$local_search = function(name){
 $B.$check_def = function(name, value){
     // Check if value is not undefined
     if(value!==undefined){return value}
-    throw _b_.NameError("name '"+name+"' is not defined")
+    throw _b_.NameError.$factory("name '"+name+"' is not defined")
 }
 
 $B.$check_def_local = function(name, value){
     // Check if value is not undefined
     if(value!==undefined){return value}
-    throw _b_.UnboundLocalError("local variable '"+name+
+    throw _b_.UnboundLocalError.$factory("local variable '"+name+
         "' referenced before assignment")
 }
 
@@ -371,7 +373,7 @@ $B.$check_def_free = function(name, value){
         res = $B.frames_stack[i][3][name]
         if(res!==undefined){return res}
     }
-    throw _b_.NameError("free variable '"+name+
+    throw _b_.NameError.$factory("free variable '"+name+
         "' referenced before assignment in enclosing scope")
 }
 
@@ -410,7 +412,7 @@ $B.list_key = function(obj, key){
     key = $B.$GetInt(key)
     if(key<0){key += obj.length}
     var res = obj[key]
-    if(res===undefined){throw _b_.IndexError("list index out of range")}
+    if(res===undefined){throw _b_.IndexError.$factory("list index out of range")}
     return res
 }
 
@@ -429,7 +431,7 @@ $B.list_slice = function(obj, start, stop){
 $B.list_slice_step = function(obj, start, stop, step){
     if(step===null||step==1){return $B.list_slice(obj,start,stop)}
 
-    if(step==0){throw _b_.ValueError("slice step cannot be zero")}
+    if(step==0){throw _b_.ValueError.$factory("slice step cannot be zero")}
     step = $B.$GetInt(step)
 
     if(start===null){start = step >=0 ? 0 : obj.length-1}
@@ -455,7 +457,7 @@ $B.list_slice_step = function(obj, start, stop, step){
 // get item
 function index_error(obj){
     var type = typeof obj=='string' ? 'string' : 'list'
-    throw _b_.IndexError(type+" index out of range")
+    throw _b_.IndexError.$factory(type+" index out of range")
 }
 
 $B.$getitem = function(obj, item){
@@ -491,7 +493,7 @@ $B.set_list_key = function(obj,key,value){
     if(key<0){key+=obj.length}
     if(obj[key]===undefined){
         console.log(obj, key)
-        throw _b_.IndexError('list assignment index out of range')
+        throw _b_.IndexError.$factory('list assignment index out of range')
     }
     obj[key]=value
 }
@@ -512,7 +514,7 @@ $B.set_list_slice = function(obj,start,stop,value){
 $B.set_list_slice_step = function(obj,start,stop,step,value){
     if(step===null||step==1){return $B.set_list_slice(obj,start,stop,value)}
 
-    if(step==0){throw _b_.ValueError("slice step cannot be zero")}
+    if(step==0){throw _b_.ValueError.$factory("slice step cannot be zero")}
     step = $B.$GetInt(step)
 
     if(start===null){start = step>0 ? 0 : obj.length-1}
@@ -535,7 +537,7 @@ $B.set_list_slice_step = function(obj,start,stop,step,value){
     // length of the replacement sequence
     for(var i=start;test(i);i+=step){nb++}
     if(nb!=repl.length){
-            throw _b_.ValueError('attempt to assign sequence of size '+
+            throw _b_.ValueError.$factory('attempt to assign sequence of size '+
                 repl.length+' to extended slice of size '+nb)
     }
 
@@ -549,7 +551,7 @@ $B.set_list_slice_step = function(obj,start,stop,step,value){
 $B.$setitem = function(obj,item,value){
     if(Array.isArray(obj) && typeof item=='number' && !_b_.isinstance(obj,_b_.tuple)){
         if(item<0){item+=obj.length}
-        if(obj[item]===undefined){throw _b_.IndexError("list assignment index out of range")}
+        if(obj[item]===undefined){throw _b_.IndexError.$factory("list assignment index out of range")}
         obj[item]=value
         return
     }else if(obj.__class__===_b_.dict.$dict){
@@ -604,10 +606,10 @@ $B.extend = function(fname, arg){
             try{
                 var key = _b_.next(it)
                 if(typeof key!=='string'){
-                    throw _b_.TypeError(fname+"() keywords must be strings")
+                    throw _b_.TypeError.$factory(fname+"() keywords must be strings")
                 }
                 if(arg[key]!==undefined){
-                    throw _b_.TypeError(
+                    throw _b_.TypeError.$factory(
                         fname+"() got multiple values for argument '"+key+"'")
                 }
                 arg[key] = getter(key)
@@ -702,7 +704,7 @@ $B.$is_member = function(item,_set){
     // use __getitem__ if defined
     try{f = _b_.getattr(_set,"__getitem__")}
     catch(err){
-        throw _b_.TypeError("'"+$B.get_class(_set).__name__+"' object is not iterable")
+        throw _b_.TypeError.$factory("'"+$B.get_class(_set).__name__+"' object is not iterable")
     }
     if(f){
         var i = -1
@@ -737,7 +739,7 @@ $B.$call = function(callable){
     }catch(err){
         console.log(err)
         console.log(callable)
-        throw _b_.TypeError("'" + $B.get_class(callable).__name__ +
+        throw _b_.TypeError.$factory("'" + $B.get_class(callable).__name__ +
             "' object is not callable")
     }
 }
@@ -869,7 +871,7 @@ $B.pyobject2jsobject=function (obj){
     if (_b_.hasattr(obj, '__dict__')) {
        return $B.pyobject2jsobject(_b_.getattr(obj, '__dict__'))
     }
-    throw _b_.TypeError(_b_.str(obj)+' is not JSON serializable')
+    throw _b_.TypeError.$factory(_b_.str(obj)+' is not JSON serializable')
 }
 
 $B.set_line = function(line_num,module_name){
@@ -886,7 +888,7 @@ $B.$iterator = function(items,klass){
         __next__:function(){
             res.counter++
             if(res.counter<items.length) return items[res.counter]
-            throw _b_.StopIteration("StopIteration")
+            throw _b_.StopIteration.$factory("StopIteration")
         },
         __repr__:function(){return "<"+klass.__name__+" object>"},
         counter:-1
@@ -934,7 +936,7 @@ $B.$iterator_class = function(name){
           return _b_.getattr(as_list(self), '__eq__')(as_list(other))
        }
 
-       _b_.NotImplementedError("__eq__ not implemented yet for list and " + _b_.type(other))
+       _b_.NotImplementedError.$factory("__eq__ not implemented yet for list and " + _b_.type(other))
     }
 
     var _ops=['eq', 'ne']
@@ -954,7 +956,7 @@ $B.$iterator_class = function(name){
           return _b_.getattr(as_set(self), '__or__')(as_set(other))
        }
 
-       _b_.NotImplementedError("__or__ not implemented yet for set and " + _b_.type(other))
+       _b_.NotImplementedError.$factory("__or__ not implemented yet for set and " + _b_.type(other))
     }
 
     var _ops=['sub', 'and', 'xor', 'gt', 'ge', 'lt', 'le']
@@ -981,7 +983,7 @@ $B.$CodeDict.$factory = _code
 function $err(op,klass,other){
     var msg = "unsupported operand type(s) for "+op
     msg += ": '"+klass.__name__+"' and '"+$B.get_class(other).__name__+"'"
-    throw _b_.TypeError(msg)
+    throw _b_.TypeError.$factory(msg)
 }
 
 // Code to add support of "reflected" methods to built-in types
@@ -1025,7 +1027,7 @@ $B.$GetInt=function(value) {
       try {var v=_b_.getattr(value, '__int__')(); return v}catch(e){}
       try {var v=_b_.getattr(value, '__index__')(); return v}catch(e){}
   }
-  throw _b_.TypeError("'"+$B.get_class(value).__name__+
+  throw _b_.TypeError.$factory("'"+$B.get_class(value).__name__+
       "' object cannot be interpreted as an integer")
 }
 
@@ -1045,7 +1047,7 @@ $B.PyNumber_Index = function(item){
                 return $B.int_or_bool(method)
             }
         default:
-            throw _b_.TypeError("'"+$B.get_class(item).__name__+
+            throw _b_.TypeError.$factory("'"+$B.get_class(item).__name__+
                 "' object cannot be interpreted as an integer")
     }
 }
@@ -1059,11 +1061,11 @@ $B.int_or_bool = function(v){
         case "object":
             if(v.__class__===$B.LongInt.$dict){return v}
             else{
-                throw _b_.TypeError("'"+$B.get_class(v).__name__+
+                throw _b_.TypeError.$factory("'"+$B.get_class(v).__name__+
                 "' object cannot be interpreted as an integer")
             }
         default:
-            throw _b_.TypeError("'"+$B.get_class(v).__name__+
+            throw _b_.TypeError.$factory("'"+$B.get_class(v).__name__+
                 "' object cannot be interpreted as an integer")
     }
 }
@@ -1081,7 +1083,7 @@ $B.int_value = function(v){
         }else if(isinstance(v, _b_.float) && v==Math.floor(v)){
             return Math.floor(v)
         }else{
-            throw _b_.TypeError("'"+$B.get_class(v).__name__+
+            throw _b_.TypeError.$factory("'"+$B.get_class(v).__name__+
                 "' object cannot be interpreted as an integer")
         }
     }
@@ -1390,7 +1392,7 @@ $B.rich_comp = function(op, x, y){
         } else if ( op == '__ne__') {
             return !(x === y)
         } else {
-            throw _b_.TypeError("'"+op+"' not supported between types")
+            throw _b_.TypeError.$factory("'"+op+"' not supported between types")
         }
     }
 
@@ -1409,7 +1411,7 @@ $B.rich_comp = function(op, x, y){
         }
     }
     res = $B.$call(_b_.getattr(x, op))(y)
-    
+
     if ( res !== _b_.NotImplemented ) return res;
     if (compared) return false;
     rev_op = reversed_op[op] || op
@@ -1420,7 +1422,7 @@ $B.rich_comp = function(op, x, y){
     if(op=='__eq__'){return _b_.False}
     else if(op=='__ne__'){return _b_.True}
 
-    throw _b_.TypeError("'"+method2comp[op]+"' not supported between " +
+    throw _b_.TypeError.$factory("'"+method2comp[op]+"' not supported between " +
         "instances of '" + $B.get_class(x).__name__+ "' and '" +
         $B.get_class(y).__name__+"'")
 }

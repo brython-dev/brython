@@ -5,7 +5,7 @@ eval($B.InjectBuiltins())
 var $ObjectDict = _b_.object.$dict
 
 function $UnsupportedOpType(op,class1,class2){
-    throw _b_.TypeError("unsupported operand type(s) for "+op+": '"+class1+"' and '"+class2+"'")
+    throw _b_.TypeError.$factory("unsupported operand type(s) for "+op+": '"+class1+"' and '"+class2+"'")
 }
 
 var complex = {__class__:$B.$type,
@@ -23,7 +23,7 @@ complex.__abs__ = function(self){
     if (!isFinite(mag) && _rf && _if) {
         // In these circumstances Math.hypot quietly returns inf, but Python should raise.
         // See https://hg.python.org/jython/rev/69826acfb4a9
-        throw _b_.OverflowError("absolute value too large");
+        throw _b_.OverflowError.$factory("absolute value too large");
     }
     return mag;
 }
@@ -66,7 +66,7 @@ complex.__init__ = function() {
 complex.__invert__ = function(self){return ~self}
 
 complex.__mod__ = function(self,other) {
-    throw _b_.TypeError("TypeError: can't mod complex numbers.")
+    throw _b_.TypeError.$factory("TypeError: can't mod complex numbers.")
 }
 
 complex.__mro__ = [$ObjectDict]
@@ -93,14 +93,14 @@ complex.__ne__ = function(self,other){return !complex.__eq__(self,other)}
 complex.__neg__ = function(self){return make_complex(-self.$real,-self.$imag)}
 
 complex.__new__ = function(cls){
-    if(cls===undefined) throw _b_.TypeError('complex.__new__(): not enough arguments')
+    if(cls===undefined) throw _b_.TypeError.$factory('complex.__new__(): not enough arguments')
     var res;
     var args = $B.args("complex",3,{cls:null,real:null,imag:null},
         ["cls", "real","imag"], arguments, {real:0,imag:0}, null, null)
     var $real=args.real, $imag=args.imag;
     if(typeof $real=='string'){
         if (arguments.length > 1 || arguments[0].$nat !== undefined){
-            throw _b_.TypeError("complex() can't take second arg if first is a string")
+            throw _b_.TypeError.$factory("complex() can't take second arg if first is a string")
         }
         $real = $real.trim()
         if ($real.startsWith('(') && $real.endsWith(')')) {
@@ -109,9 +109,9 @@ complex.__new__ = function(cls){
         }
         var parts = complex_re.exec($real)
         if(parts===null){
-            throw _b_.ValueError("complex() arg is a malformed string")
+            throw _b_.ValueError.$factory("complex() arg is a malformed string")
         }else if(parts[_real]=='.' || parts[_imag]=='.' || parts[_real]=='.e' || parts[_imag]=='.e' || parts[_real]=='e' || parts[_imag]=='e'){
-            throw _b_.ValueError("complex() arg is a malformed string")
+            throw _b_.ValueError.$factory("complex() arg is a malformed string")
         }else if(parts[_j] != ''){
             if(parts[_sign]==''){
                 $real = 0;
@@ -155,13 +155,13 @@ complex.__new__ = function(cls){
     $real = _convert($real)
     $imag = _convert($imag)
     if(!isinstance($real, _b_.float) && !isinstance($real, _b_.int) && !isinstance($real, _b_.complex)) {
-        throw _b_.TypeError("complex() argument must be a string or a number")
+        throw _b_.TypeError.$factory("complex() argument must be a string or a number")
     }
     if(typeof $imag=='string') {
-        throw _b_.TypeError("complex() second arg can't be a string")
+        throw _b_.TypeError.$factory("complex() second arg can't be a string")
     }
     if(!isinstance($imag, _b_.float) && !isinstance($imag, _b_.int) && !isinstance($imag, _b_.complex) && $imag!==undefined) {
-        throw _b_.TypeError("complex() argument must be a string or a number")
+        throw _b_.TypeError.$factory("complex() argument must be a string or a number")
     }
     $imag = complex.__mul__(complex("1j"), $imag)
     return complex.__add__($imag, $real);
@@ -197,7 +197,7 @@ complex.__pow__ = function(self,other){
             theta = y*Math.log(exp.norm)-x*angle
         return make_complex(pw*Math.cos(theta), pw*Math.sin(theta))
     }else{
-        throw _b_.TypeError("unsupported operand type(s) for ** or pow(): "+
+        throw _b_.TypeError.$factory("unsupported operand type(s) for ** or pow(): "+
             "'complex' and '"+$B.get_class(other).__name__+"'")
     }
 }
@@ -237,7 +237,7 @@ complex.__sqrt__= function(self) {
 complex.__truediv__ = function(self,other){
     if(isinstance(other,complex)){
       if (other.$real == 0 && other.$imag == 0) {
-         throw ZeroDivisionError('division by zero')
+         throw ZeroDivisionError.$factory('division by zero')
       }
       var _num=self.$real*other.$real + self.$imag*other.$imag
       var _div=other.$real*other.$real + other.$imag*other.$imag
@@ -247,11 +247,11 @@ complex.__truediv__ = function(self,other){
       return make_complex(_num/_div, _num2/_div)
     }
     if(isinstance(other,_b_.int)){
-        if(!other.valueOf()) throw ZeroDivisionError('division by zero')
+        if(!other.valueOf()) throw ZeroDivisionError.$factory('division by zero')
         return complex.__truediv__(self, complex(other.valueOf()))
     }
     if(isinstance(other,_b_.float)){
-        if(!other.value) throw ZeroDivisionError('division by zero')
+        if(!other.value) throw ZeroDivisionError.$factory('division by zero')
         return complex.__truediv__(self, complex(other.value))
     }
     $UnsupportedOpType("//","complex",other.__class__)
@@ -263,7 +263,7 @@ complex.conjugate = function(self) {
 
 // operators
 var $op_func = function(self,other){
-    throw _b_.TypeError("TypeError: unsupported operand type(s) for -: 'complex' and '" +
+    throw _b_.TypeError.$factory("TypeError: unsupported operand type(s) for -: 'complex' and '" +
         $B.get_class(other).__name__+"'")
 }
 $op_func += '' // source code
@@ -284,7 +284,7 @@ var $op_func = function(self,other){
          if(other.valueOf()) bool_value=1;
          return make_complex(self.$real - bool_value, self.$imag)
     }
-    throw _b_.TypeError("unsupported operand type(s) for -: "+self.__repr__()+
+    throw _b_.TypeError.$factory("unsupported operand type(s) for -: "+self.__repr__()+
              " and '"+$B.get_class(other).__name__+"'")
 }
 complex.__sub__ = $op_func
@@ -298,7 +298,7 @@ var $comp_func = function(self,other){
     if (other===undefined || other == _b_.None) {
         throw _b_.NotImplemented("");
     }
-    throw _b_.TypeError("TypeError: no ordering relation is defined for complex numbers")
+    throw _b_.TypeError.$factory("TypeError: no ordering relation is defined for complex numbers")
 }
 $comp_func += '' // source codevar $comps = {'>':'gt','>=':'ge','<':'lt','<=':'le'}
 for(var $op in $B.$comps){
@@ -310,9 +310,9 @@ $B.make_rmethods(complex)
 
 // Descriptors to return real and imag
 complex.real = function(self){return new Number(self.$real)}
-complex.real.setter = function(){throw _b_.AttributeError("readonly attribute")}
+complex.real.setter = function(){throw _b_.AttributeError.$factory("readonly attribute")}
 complex.imag = function(self){return new Number(self.$imag)}
-complex.imag.setter = function(){throw _b_.AttributeError("readonly attribute")}
+complex.imag.setter = function(){throw _b_.AttributeError.$factory("readonly attribute")}
 
 var complex_re = /^\s*([\+\-]*\d*\.?\d*(e[\+\-]*\d*)?)([\+\-]?)(\d*\.?\d*(e[\+\-]*\d*)?)(j?)\s*$/i
 var _real=1,_real_mantissa=2,_sign=3,_imag=4,_imag_mantissa=5,_j=6;

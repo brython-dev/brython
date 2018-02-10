@@ -322,7 +322,7 @@ function _Random(){
             var len, rank
             if(Array.isArray(seq)){len = seq.length}
             else{len = _b_.getattr(seq,'__len__')()}
-            if(len==0){throw _b_.IndexError("Cannot choose from an empty sequence")}
+            if(len==0){throw _b_.IndexError.$factory("Cannot choose from an empty sequence")}
             rank = parseInt(_random()*len)
             if(Array.isArray(seq)){return seq[rank]}
             else{return _b_.getattr(seq,'__getitem__')(rank)}
@@ -374,7 +374,7 @@ function _Random(){
                 SG_MAGICCONST = 1.0 + Math.log(4.5)
 
             if(alpha <= 0.0 || beta <= 0.0){
-                throw _b_.ValueError('gammavariate: alpha and beta must be > 0.0')
+                throw _b_.ValueError.$factory('gammavariate: alpha and beta must be > 0.0')
             }
 
             if(alpha > 1.0){
@@ -481,7 +481,7 @@ function _Random(){
                 k = $B.$GetInt($.k)
             // getrandbits(k) -> x.  Generates a long int with k random bits.
             if(k <= 0){
-                throw _b_.ValueError('number of bits must be greater than zero')
+                throw _b_.ValueError.$factory('number of bits must be greater than zero')
             }
             if(k != _b_.int(k)){
                 throw _b_.TypeError('number of bits should be an integer')
@@ -560,10 +560,10 @@ function _Random(){
             }else{
                 var start = $.x, stop = $.stop,
                     step = $.step===null ? 1 : $.step
-                if(step==0){throw _b_.ValueError('step cannot be 0')}
+                if(step==0){throw _b_.ValueError.$factory('step cannot be 0')}
             }
             if((step>0 && start>stop) || (step<0 && start<stop)){
-                throw _b_.ValueError("empty range for randrange() (" +
+                throw _b_.ValueError.$factory("empty range for randrange() (" +
                     start+", "+stop+", "+step+")")
             }
             if(typeof start=='number' && typeof stop == 'number' &&
@@ -641,7 +641,7 @@ function _Random(){
             var n = _b_.getattr(population, '__len__')()
 
             if(k<0 || k>n){
-                throw _b_.ValueError("Sample larger than population")
+                throw _b_.ValueError.$factory("Sample larger than population")
             }
             var result = [],
                 setsize = 21        // size of a small set minus size of an empty list
@@ -710,7 +710,7 @@ function _Random(){
                     a = parseInt(res)
                 }
             }else{
-                throw ValueError('version can only be 1 or 2')
+                throw ValueError.$factory('version can only be 1 or 2')
             }
 
             _random.seed(a)
@@ -727,23 +727,23 @@ function _Random(){
                     $B.get_class($.state).__name__)
             }
             if($.state.length<state.length){
-                throw _b_.ValueError("need more than "+$.state.length+
+                throw _b_.ValueError.$factory("need more than "+$.state.length+
                     " values to unpack")
             }else if($.state.length>state.length){
-                throw _b_.ValueError("too many values to unpack (expected "+
+                throw _b_.ValueError.$factory("too many values to unpack (expected "+
                     state.length+")")
             }
             if($.state[0]!=3){
-                throw _b_.ValueError("ValueError: state with version "+
+                throw _b_.ValueError.$factory("ValueError: state with version "+
                     $.state[0]+" passed to Random.setstate() of version 3")
             }
             var second = _b_.list($.state[1])
             if(second.length!==state[1].length){
-                throw _b_.ValueError('state vector is the wrong size')
+                throw _b_.ValueError.$factory('state vector is the wrong size')
             }
             for(var i=0;i<second.length;i++){
                 if(typeof second[i] != 'number'){
-                    throw _b_.ValueError('state vector items must be integers')
+                    throw _b_.ValueError.$factory('state vector items must be integers')
                 }
             }
             _random.setstate($.state)

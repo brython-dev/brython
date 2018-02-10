@@ -9,13 +9,16 @@ $B.$raise= function(arg){
     if(arg===undefined){
         var es = $B.current_exception
         if(es!==undefined) throw es
-        throw _b_.RuntimeError('No active exception to reraise')
+        throw _b_.RuntimeError.$factory('No active exception to reraise')
     }else if(isinstance(arg, BaseException)){
         throw arg
     }else if(arg.__class__===$B.$factory && issubclass(arg, BaseException)){
         throw arg()
+    }else if(arg.$is_class && issubclass(arg, BaseException)){
+        throw arg.$factory()
     }else{
-        throw _b_.TypeError("exceptions must derive from BaseException")
+        console.log("bizarre", arg)
+        throw _b_.TypeError.$factory("exceptions must derive from BaseException")
     }
 }
 
@@ -56,13 +59,13 @@ $B.$SyntaxError = function(module, msg, pos, line_num, root) {
         // this may happen for syntax errors inside a lambda
         line_num=root.line_info
     }
-    var exc = _b_.SyntaxError(msg)
+    var exc = _b_.SyntaxError.$factory(msg)
     $B.$syntax_err_line(exc,module,pos,line_num)
     throw exc
 }
 
 $B.$IndentationError = function(module,msg,pos) {
-    var exc = _b_.IndentationError(msg)
+    var exc = _b_.IndentationError.$factory(msg)
     $B.$syntax_err_line(exc,module,pos)
     throw exc
 }
@@ -187,36 +190,37 @@ $B._frame=frame
 
 // built-in exceptions
 
-var $BaseExceptionDict = {__class__:$B.$type,
+var BaseException = _b_.BaseException =  {
+    __class__:$B.$type,
     __bases__ : [_b_.object],
     __module__:'builtins',
     __name__:'BaseException',
     args: []
 }
 
-$BaseExceptionDict.__init__ = function(self){
+BaseException.__init__ = function(self){
     var args = arguments[1] === undefined ? [] : [arguments[1]]
     self.args = _b_.tuple(args)
 }
 
-$BaseExceptionDict.__repr__ = function(self){
+BaseException.__repr__ = function(self){
     return self.__class__.__name__+repr(self.args)
 }
 
-$BaseExceptionDict.__str__ = function(self){
+BaseException.__str__ = function(self){
     return _b_.str(self.args[0])
 }
 
-$BaseExceptionDict.__mro__ = [_b_.object.$dict]
+BaseException.__mro__ = [_b_.object.$dict]
 
-$BaseExceptionDict.__new__ = function(cls){
+BaseException.__new__ = function(cls){
     cls = cls.$factory ? cls : cls.$dict
-    var err = _b_.BaseException()
+    var err = _b_.BaseException.$factory()
     err.__class__ = cls
     return err
 }
 
-$BaseExceptionDict.__getattr__ = function(self, attr){
+BaseException.__getattr__ = function(self, attr){
 
     if(attr=='info'){
 
@@ -261,28 +265,25 @@ $BaseExceptionDict.__getattr__ = function(self, attr){
         // Return traceback object
         return traceback(self.$stack)
     }else{
-        throw AttributeError(self.__class__.__name__+
+        throw _b_.AttributeError.$factory(self.__class__.__name__+
             "has no attribute '"+attr+"'")
     }
 }
 
-$BaseExceptionDict.__str__ = function(self){
+BaseException.__str__ = function(self){
     return self.args[0]
 }
 
-$BaseExceptionDict.with_traceback = function(self, tb){
+BaseException.with_traceback = function(self, tb){
     self.traceback = tb
     return self
 }
 
-$B.set_func_names($BaseExceptionDict)
-
-
-var BaseException = function (){
+BaseException.$factory = function (){
     var err = Error()
     err.__name__ = 'BaseException'
     err.args = _b_.tuple(Array.prototype.slice.call(arguments))
-    err.__class__ = $BaseExceptionDict
+    err.__class__ = _b_.BaseException
     err.$py_error = true
     err.$stack = $B.frames_stack.slice()
     if($B.frames_stack.length){
@@ -293,9 +294,14 @@ var BaseException = function (){
     return err
 }
 
-BaseException.__class__ = $B.$factory
-BaseException.$dict = $BaseExceptionDict
-$BaseExceptionDict.$factory = BaseException
+BaseException.$factory.$infos = {
+    __name__: "BaseException",
+    __qualname__: "BaseException"
+}
+
+BaseException.__class__ = $B.$type
+
+$B.set_func_names(BaseException)
 
 _b_.BaseException = BaseException
 
@@ -306,7 +312,7 @@ $B.exception = function(js_exc){
     // or by the Javascript interpreter (ReferenceError for instance)
     if(!js_exc.$py_error){
         // Print complete Javascript traceback in console
-        //console.log('js exc', js_exc)
+        console.log('js exc', js_exc)
 
         if(js_exc.info===undefined){
             var _frame = $B.last($B.frames_stack)
@@ -351,7 +357,7 @@ $B.exception = function(js_exc){
             js_exc.message = js_exc.message.replace('$$','')
         }else if(js_exc.name=="InternalError"){
             exc.__name__='RuntimeError'
-            exc.__class__=_b_.RuntimeError.$dict
+            exc.__class__=_b_.RuntimeError
         }
         var $message = js_exc.msg || '<'+js_exc+'>'
         exc.args = _b_.tuple([$message])
@@ -368,13 +374,17 @@ $B.exception = function(js_exc){
 $B.is_exc=function(exc, exc_list){
     // used in try/except to check if an exception is an instance of
     // one of the classes in exc_list
-    if(exc.__class__===undefined) exc = $B.exception(exc)
+    if(exc.__class__===undefined){
+        console.log("no _class__", exc)
+        exc = $B.exception(exc)
+    }
 
     var this_exc_class = exc.__class__
     for(var i=0;i<exc_list.length;i++){
         var exc_class = exc_list[i]
         exc_class == exc_class.__class__ === $B.$factory ? exc_class.$dict :
             exc_class
+        if(this_exc_class===undefined){console.log("exc class undefined", exc)}
         if(issubclass(this_exc_class,exc_class)) return true
     }
     return false
@@ -400,21 +410,25 @@ function $make_exc(names, parent){
         }
         // create a class for exception called "name"
         $B.bound['__builtins__'][name] = true
-        var $exc = (BaseException+'').replace(/BaseException/g,name)
+        var $exc = (BaseException.$factory+'').replace(/BaseException/g,name)
         $exc = $exc.replace('//placeholder//', code)
         // class dictionary
-        _str[pos++]='var $'+name+'Dict={__class__:$B.$type,__name__:"'+name+'"}'
-        _str[pos++]='$'+name+'Dict.__bases__ = [parent]'
-        _str[pos++]='$'+name+'Dict.__module__ = "builtins"'
-        _str[pos++]='$'+name+'Dict.__mro__=[_b_.'+parent.$dict.__name__+
-            '.$dict].concat(parent.$dict.__mro__)'
-        // class constructor
-        _str[pos++]='_b_.'+name+'='+$exc
-        _str[pos++]='_b_.'+name+'.__class__=$B.$factory'
-        _str[pos++]='$'+name+'Dict.$factory=_b_.'+name
-        _str[pos++]='_b_.'+name+'.$dict=$'+name+'Dict'
+        _str[pos++]='_b_.'+name+'={__class__:$B.$type,__name__:"'+name+'"}'
+        _str[pos++]='_b_.'+name+'.__bases__ = [parent]'
+        _str[pos++]='_b_.'+name+'.__module__ = "builtins"'
+        _str[pos++]='_b_.'+name+'.__mro__=[_b_.'+parent.__name__+
+            '].concat(parent.__mro__)'
+        _str[pos++]='_b_.'+name+'.$factory = ' + $exc
+        _str[pos++]='_b_.'+name+'.$factory.$infos = {__name__: "' + name +
+            '", __qualname__: "' + name + '"}'
+        _str[pos++]='_b_.'+name+'.$is_class = true'
     }
-    eval(_str.join(';'))
+    try{
+        eval(_str.join(';'))
+    }catch(err){
+        console.log("--err" + err)
+        throw err
+    }
 }
 
 $make_exc(['SystemExit','KeyboardInterrupt','GeneratorExit','Exception'],BaseException)
@@ -449,11 +463,11 @@ $make_exc(['EnvironmentError','IOError','VMSError','WindowsError'],_b_.OSError)
 $B.$NameError = function(name){
     // Used if a name is not found in the bound names
     // It is converted into
-    // $globals[name] !== undefined ? $globals[name] : __BRYTHON__.$NameError(name)
-    throw _b_.NameError("name '"+name+"' is not defined")
+    // $globals[name] !== undefined ? $globals[name] : __BRYTHON__.$NameError.$factory(name)
+    throw _b_.NameError.$factory("name '"+name+"' is not defined")
 }
 $B.$TypeError = function(msg){
-    throw _b_.TypeError(msg)
+    throw _b_.TypeError.$factory(msg)
 }
 
 })(__BRYTHON__)

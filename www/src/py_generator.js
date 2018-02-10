@@ -546,17 +546,18 @@ $gen_it.__iter__ = function(self){
 }
 
 $gen_it.__next__ = function(self){
-    if(self.$finished){throw _b_.StopIteration()}
+    if(self.$finished){throw _b_.StopIteration.$factory()}
     if(self.gi_running===true){
-        throw ValueError("generator already executing")
+        throw ValueError.$factory("generator already executing")
     }
     self.gi_running = true
     if(self.next===undefined){
         self.$finished = true
-        throw _b_.StopIteration()
+        throw _b_.StopIteration.$factory()
     }
 
     try{
+        //console.log("self.next", self.next, self.args)
         var res = self.next.apply(self, self.args)
     }catch(err){
         /*
@@ -576,12 +577,12 @@ $gen_it.__next__ = function(self){
     // Brython replaces "yield x" by "return [x, next_rank]"
     // next_rank is the rank of the function to call after this yield
 
-    if(res===undefined){throw _b_.StopIteration()}
+    if(res===undefined){throw _b_.StopIteration.$factory()}
     else if(res[0].__class__==$GeneratorReturn){
         // The function may have ordinary "return" lines, in this case
         // the iteration stops
         self.$finished = true
-        throw StopIteration(res[0].value)
+        throw StopIteration.$factory(res[0].value)
     }
 
     self.next = self.nexts[res[1]]
@@ -590,11 +591,11 @@ $gen_it.__next__ = function(self){
 }
 
 $gen_it.close = function(self, value){
-    self.sent_value = _b_.GeneratorExit()
+    self.sent_value = _b_.GeneratorExit.$factory()
     try{
         var res = $gen_it.__next__(self)
         if(res!==_b_.None){
-            throw _b_.RuntimeError("closed generator returned a value")
+            throw _b_.RuntimeError.$factory("closed generator returned a value")
         }
     }catch(err){
         if($B.is_exc(err,[_b_.StopIteration,_b_.GeneratorExit])){

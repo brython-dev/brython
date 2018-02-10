@@ -110,7 +110,7 @@
                                         $B.DOMNode.$dict.__le__(self, items[i])
                                     }
                                 }catch(err){
-                                    throw _b_.ValueError('wrong element '+first)
+                                    throw _b_.ValueError.$factory('wrong element '+first)
                                 }
                             }
                         }
@@ -137,7 +137,7 @@
                                     arg = arg.replace('_','-')
                                     $B.DOMNodeDict.__setattr__(self, arg, value)
                                 }catch(err){
-                                    throw _b_.ValueError("can't set attribute "+arg)
+                                    throw _b_.ValueError.$factory("can't set attribute "+arg)
                                 }
                             }
                         }
@@ -231,7 +231,7 @@
 
             function maketag(tag){
                 if(!(typeof tag=='string')){
-                    throw _b_.TypeError("html.maketag expects a string as argument")
+                    throw _b_.TypeError.$factory("html.maketag expects a string as argument")
                 }
                 dicts[tag] = makeTagDict(tag)
                 var factory = makeFactory(tag)
@@ -308,7 +308,7 @@
         modules: {
             __get__: function(){return _b_.dict($B.JSObject($B.imported))},
             __set__: function(self, obj, value){
-                 throw _b_.TypeError("Read only property 'sys.modules'")
+                 throw _b_.TypeError.$factory("Read only property 'sys.modules'")
              }
         },
         path: {
@@ -330,7 +330,7 @@
                 return _b_.dict($B.JSObject($B.path_importer_cache))
             },
             __set__: function(self, obj, value){
-                throw _b_.TypeError("Read only property"+
+                throw _b_.TypeError.$factory("Read only property"+
                     " 'sys.path_importer_cache'")
             }
         },

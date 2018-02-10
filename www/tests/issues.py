@@ -504,10 +504,11 @@ assert [4,0,4].index(4,1) == 2
 #issue 297
 assert type((1,)*2) == tuple
 
-t = 1,2
+t = 1, 2
 try:
-    t[0]=1
-except TypeError:
+    t[0] = 1
+    raise Exception('should have raised AttributeError')
+except AttributeError:
     pass
 
 # issue 298
@@ -517,14 +518,7 @@ assert n == 0
 
 #issue 301
 t = 1,2
-assertRaises(TypeError, t.__setitem__, 0, 1)
-
-try:
-    t[0]=1
-except TypeError:
-    pass
-else:
-    raise Exception('should have raised TypeError')
+assertRaises(AttributeError, getattr, t, "__setitem__")
 
 # issue 303
 assert "{0:.{1}f}".format(1.123,1) == "1.1"

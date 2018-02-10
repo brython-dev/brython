@@ -16,10 +16,10 @@ function check_nb_args(name, expected, got){
     // Check the number of arguments
     if(got != expected){
         if(expected==0){
-            throw _b_.TypeError(name+"() takes no argument" +
+            throw _b_.TypeError.$factory(name+"() takes no argument" +
                 " ("+got+" given)")
         }else{
-            throw _b_.TypeError(name+"() takes exactly "+expected+" argument" +
+            throw _b_.TypeError.$factory(name+"() takes exactly "+expected+" argument" +
                 (expected<2 ? '' : 's') +" ("+got+" given)")
         }
     }
@@ -28,7 +28,7 @@ function check_nb_args(name, expected, got){
 function check_no_kw(name, x, y){
     // Throw error if one of x, y is a keyword argument
     if(x.$nat || (y!==undefined && y.$nat)){
-        throw _b_.TypeError(name+"() takes no keyword arguments")}
+        throw _b_.TypeError.$factory(name+"() takes no keyword arguments")}
 }
 
 var $NoneDict = {__class__:$B.$type,__name__:'NoneType',__module__:"builtins"}
@@ -61,7 +61,7 @@ for(var $op in $B.$comps){ // None is not orderable with any type
       case 'lt':
         $NoneDict['__'+key+'__']=(function(op){
             return function(other){
-            throw _b_.TypeError("unorderable types: NoneType() "+op+" "+
+            throw _b_.TypeError.$factory("unorderable types: NoneType() "+op+" "+
                 $B.get_class(other).__name__+"()")}
         })($op)
     }
@@ -81,7 +81,7 @@ function abs(obj){
     if(isinstance(obj,_b_.float)) return _b_.float(Math.abs(obj));
     if(hasattr(obj,'__abs__')){return getattr(obj,'__abs__')()};
 
-    throw _b_.TypeError("Bad operand type for abs(): '"+$B.get_class(obj)+"'")
+    throw _b_.TypeError.$factory("Bad operand type for abs(): '"+$B.get_class(obj)+"'")
 }
 
 function all(obj){
@@ -146,7 +146,7 @@ function $builtin_base_convert_helper(obj, base) {
 
   if (value === undefined) {
      // need to raise an error
-     throw _b_.TypeError('Error, argument must be an integer or contains an __index__ function')
+     throw _b_.TypeError.$factory('Error, argument must be an integer or contains an __index__ function')
   }
 
   if (value >=0) return prefix + value.toString(base);
@@ -204,7 +204,7 @@ function chr(i) {
     check_nb_args('chr', 1, arguments.length)
     check_no_kw('chr', i)
 
-    if (i < 0 || i > 1114111) _b_.ValueError('Outside valid range')
+    if (i < 0 || i > 1114111) _b_.ValueError.$factory('Outside valid range')
 
     return String.fromCharCode(i)
 }
@@ -262,7 +262,7 @@ function delattr(obj, attr) {
     check_no_kw('delattr', obj, attr)
     check_nb_args('delattr', 2, arguments.length)
     if(typeof attr != 'string'){
-        throw _b_.TypeError("attribute name must be string, not '"+
+        throw _b_.TypeError.$factory("attribute name must be string, not '"+
             $B.get_class(attr).__name__+"'")
     }
     var klass = $B.get_class(obj)
@@ -403,7 +403,7 @@ function $eval(src, _globals, _locals){
         is_exec = src.mode == "exec"
         src = src.source
     }else if(typeof src !== 'string'){
-        throw _b_.TypeError("eval() arg 1 must be a string, bytes "+
+        throw _b_.TypeError.$factory("eval() arg 1 must be a string, bytes "+
             "or code object")
     }
 
@@ -417,7 +417,7 @@ function $eval(src, _globals, _locals){
     // globals_id
     if(_globals !== undefined){
         if(_globals.__class__!=_b_.dict.$dict){
-            throw _b_.TypeError("exec() globals must be a dict, not "+
+            throw _b_.TypeError.$factory("exec() globals must be a dict, not "+
                 _globals.__class__.__name__)
         }
         _globals.globals_id = _globals.globals_id || globals_id
@@ -545,7 +545,7 @@ function $eval(src, _globals, _locals){
                 break
             default:
                 if(!is_exec){
-                    throw _b_.SyntaxError("eval() argument must be an expression",
+                    throw _b_.SyntaxError.$factory("eval() argument must be an expression",
                         '<string>', 1, 1, src)
                 }
         }
@@ -657,16 +657,16 @@ function attr_error(attr, cname){
     var msg = "bad operand type for unary #: '"+cname+"'"
     switch(attr){
         case '__neg__':
-            throw _b_.TypeError(msg.replace('#','-'))
+            throw _b_.TypeError.$factory(msg.replace('#','-'))
         case '__pos__':
-            throw _b_.TypeError(msg.replace('#','+'))
+            throw _b_.TypeError.$factory(msg.replace('#','+'))
         case '__invert__':
-            throw _b_.TypeError(msg.replace('#','~'))
+            throw _b_.TypeError.$factory(msg.replace('#','~'))
         case '__call__':
-            throw _b_.TypeError("'"+cname+"'"+' object is not callable')
+            throw _b_.TypeError.$factory("'"+cname+"'"+' object is not callable')
         default:
             while(attr.charAt(0)=='$'){attr = attr.substr(1)}
-            throw _b_.AttributeError("'"+cname+"' object has no attribute '"+attr+"'")
+            throw _b_.AttributeError.$factory("'"+cname+"' object has no attribute '"+attr+"'")
     }
 }
 
@@ -681,15 +681,11 @@ $B.show_getattr = function(){
 }
 
 function getattr(obj,attr,_default){
-
-    var len = arguments.length
-    if(len<2){throw _b_.TypeError("getattr expected at least 2 arguments, "
-        + "got "+len)}
-    else if(len>3){
-        throw _b_.TypeError("getattr expected at most 3 arguments, got "
-            +len)
-    }
-    return $B.$getattr(obj, attr, _default)
+    var missing = {}
+    var $ = $B.args("getattr",3,{obj:null,attr:null,_default:null},
+        ["obj","attr","_default"],arguments,{_default:missing},null,null)
+    return $B.$getattr($.obj, $.attr,
+        $._default === missing ? undefined : $._default)
 }
 
 $B.$getattr = function(obj, attr, _default){
@@ -707,7 +703,6 @@ $B.$getattr = function(obj, attr, _default){
         klass = klass.__class__===$B.$factory ? klass.$dict : klass
     }
 
-    //if(attr=="register"){console.log("attr", attr, "de", obj, "class", klass)}
     // Shortcut for classes without parents
     if(klass!==undefined && klass.__bases__ && klass.__bases__.length==0){
         if(obj.hasOwnProperty(attr)){
@@ -745,7 +740,7 @@ $B.$getattr = function(obj, attr, _default){
             }
         }
         if(_default!==undefined) return _default
-        throw _b_.AttributeError('object has no attribute '+rawname)
+        throw _b_.AttributeError.$factory('object has no attribute '+rawname)
     }
 
     switch(attr) {
@@ -812,7 +807,9 @@ $B.$getattr = function(obj, attr, _default){
             var object_attr = _b_.object.$dict[attr]
             if(object_attr!==undefined){klass[attr]=object_attr}
             else{
-                if(_default===undefined){attr_error(attr, klass.__name__)}
+                if(_default===undefined){
+                    attr_error(attr, klass.__name__)
+                }
                 return _default
             }
         }
@@ -835,7 +832,8 @@ $B.$getattr = function(obj, attr, _default){
             method.$infos = {
                 __func__ : func,
                 __name__ : attr,
-                __self__ : self
+                __self__ : self,
+                __qualname__: klass.__name__+"."+attr
             }
             return method
         }
@@ -925,7 +923,7 @@ function hash(obj){
     if (hashfunc == _b_.None){
         // return obj.__hashvalue__=$B.$py_next_hash--
         console.log("pas de methode __hash__ pour", obj)
-        throw _b_.TypeError("unhashable type: '"+
+        throw _b_.TypeError.$factory("unhashable type: '"+
                 $B.get_class(obj).__name__+"'", 'hash')
     }
 
@@ -946,7 +944,7 @@ function hash(obj){
 
     if(hashfunc.$infos.__func__===_b_.object.$dict.__hash__){
         if(getattr(obj,'__eq__').$infos.__func__!==_b_.object.$dict.__eq__){
-            throw _b_.TypeError("unhashable type: '"+
+            throw _b_.TypeError.$factory("unhashable type: '"+
                 $B.get_class(obj).__name__+"'", 'hash')
         }else{
             return _b_.object.$dict.__hash__(obj)
@@ -1085,12 +1083,12 @@ function isinstance(obj,arg){
       if(check(mro[i], arg)){return true}
    }
 
-    // Search __instancecheck__ on arg
-    var hook = getattr(arg,'__instancecheck__',null)
-    if(hook!==null){
-        return hook(obj)
-    }
-   return false
+   // Search __instancecheck__ on arg
+   try{
+       return getattr(arg,'__instancecheck__')(obj)
+   }catch(err){
+       return false
+   }
 }
 
 function issubclass(klass,classinfo){
@@ -1102,7 +1100,7 @@ function issubclass(klass,classinfo){
     if(!klass.__class__ ||
             !(klass.$factory!==undefined || klass.$is_class!==undefined)){
                 console.log('not a class', klass,"\n", klass+"")
-      throw _b_.TypeError("issubclass() arg 1 must be a class")
+      throw _b_.TypeError.$factory("issubclass() arg 1 must be a class")
     }
     if(isinstance(classinfo,_b_.tuple)){
       for(var i=0;i<classinfo.length;i++){
@@ -1117,10 +1115,13 @@ function issubclass(klass,classinfo){
     }
 
     // Search __subclasscheck__ on classinfo
-    var hook = getattr(classinfo1,'__subclasscheck__',null)
-    if(hook!==null){return hook(klass)}
-
-    return false
+    try{
+        var sch = getattr(classinfo1,'__subclasscheck__')
+    }catch(err){
+        if(err.__class__ === _b_.AttributeError){return false}
+        throw err
+    }
+    return sch(klass)
 
 }
 
@@ -1137,9 +1138,11 @@ iterator_class.$dict.__module__ = "builtins"
 
 iterator_class.$dict.__next__ = function(self){
     self.counter++
-    if(self.len!==null && self.counter==self.len){throw _b_.StopIteration('')}
+    if(self.len!==null && self.counter==self.len){
+        throw _b_.StopIteration.$factory('')
+    }
     try{return self.getitem(self.counter)}
-    catch(err){throw _b_.StopIteration('')}
+    catch(err){throw _b_.StopIteration.$factory('')}
 }
 
 $B.$iter = function(obj){
@@ -1150,23 +1153,23 @@ $B.$iter = function(obj){
         _iter = $B.$call(_iter)
         }
     catch(err){
-        var gi = getattr(obj,'__getitem__',null),
-            ln = getattr(obj,'__len__',null)
-        if(gi!==null){
-            if(ln!==null){
+        var gi = getattr(obj,'__getitem__',-1),
+            ln = getattr(obj,'__len__',-1)
+        if(gi!==-1){
+            if(ln!==-1){
                 var len = getattr(ln,'__call__')()
                 return iterator_class(gi,len)
             }else{
                 return iterator_class(gi,null)
             }
       }
-      throw _b_.TypeError("'"+$B.get_class(obj).__name__+"' object is not iterable")
+      throw _b_.TypeError.$factory("'"+$B.get_class(obj).__name__+"' object is not iterable")
     }
     var res = $B.$call(_iter)(),
         ce = $B.current_exception
     try{getattr(res,'__next__')}
     catch(err){
-        if(isinstance(err,_b_.AttributeError)){throw _b_.TypeError(
+        if(isinstance(err,_b_.AttributeError)){throw _b_.TypeError.$factory(
             "iter() returned non-iterator of type '"+
              $B.get_class(res).__name__+"'")}
     }
@@ -1187,7 +1190,7 @@ function len(obj){
 
     try{return getattr(obj,'__len__')()}
     catch(err){
-        throw _b_.TypeError("object of type '"+$B.get_class(obj).__name__+
+        throw _b_.TypeError.$factory("object of type '"+$B.get_class(obj).__name__+
             "' has no len()")
     }
 }
@@ -1233,7 +1236,7 @@ function $extreme(args,op){ // used by min() and max()
     var $op_name='min'
     if(op==='__gt__') $op_name = "max"
 
-    if(args.length==0){throw _b_.TypeError($op_name+" expected 1 arguments, got 0")}
+    if(args.length==0){throw _b_.TypeError.$factory($op_name+" expected 1 arguments, got 0")}
     var last_arg = args[args.length-1],
         nb_args = args.length,
         has_default = false,
@@ -1251,13 +1254,13 @@ function $extreme(args,op){ // used by min() and max()
                     has_default = true
                     break
                 default:
-                    throw _b_.TypeError("'"+attr+"' is an invalid keyword argument for this function")
+                    throw _b_.TypeError.$factory("'"+attr+"' is an invalid keyword argument for this function")
             }
         }
     }
     if(!func){func = function(x){return x}}
     if(nb_args==0){
-        throw _b_.TypeError($op_name+" expected 1 argument, got 0")
+        throw _b_.TypeError.$factory($op_name+" expected 1 argument, got 0")
     }else if(nb_args==1){
         // Only one positional argument : it must be an iterable
         var $iter = iter(args[0]),
@@ -1272,7 +1275,7 @@ function $extreme(args,op){ // used by min() and max()
                     $B.current_exception = ce
                     if(res===null){
                         if(has_default){return default_value}
-                        else{throw _b_.ValueError($op_name+"() arg is an empty sequence")}
+                        else{throw _b_.ValueError.$factory($op_name+"() arg is an empty sequence")}
                     }else{return res}
                 }
                 throw err
@@ -1280,7 +1283,7 @@ function $extreme(args,op){ // used by min() and max()
         }
     }else{
         if(has_default){
-           throw _b_.TypeError("Cannot specify a default for "+$op_name+"() with multiple positional arguments")
+           throw _b_.TypeError.$factory("Cannot specify a default for "+$op_name+"() with multiple positional arguments")
         }
         var res = null
         for(var i=0;i<nb_args;i++){
@@ -1314,7 +1317,7 @@ var memoryview = $B.make_class({name:'memoryview',
             self.f_contiguous = true
             self.contiguous = true
         }else{
-            throw _b_.TypeError("memoryview: a bytes-like object "+
+            throw _b_.TypeError.$factory("memoryview: a bytes-like object "+
                 "is required, not '"+$B.get_class(obj).__name__+"'")
         }
     }
@@ -1358,7 +1361,7 @@ function next(obj){
     if(ga!==undefined){
         return $B.$call(ga)()
     }
-    throw _b_.TypeError("'"+$B.get_class(obj).__name__+
+    throw _b_.TypeError.$factory("'"+$B.get_class(obj).__name__+
         "' object is not an iterator")
 }
 
@@ -1376,21 +1379,21 @@ function ord(c) {
     // see http://msdn.microsoft.com/en-us/library/ie/hza4d04f(v=vs.94).aspx
     if(typeof c=='string'){
         if (c.length == 1) return c.charCodeAt(0)     // <= strobj.charCodeAt(index)
-        throw _b_.TypeError('ord() expected a character, but string of length ' +
+        throw _b_.TypeError.$factory('ord() expected a character, but string of length ' +
             c.length + ' found')
     }
     switch($B.get_class(c)) {
       case _b_.str.$dict:
         if (c.length == 1) return c.charCodeAt(0)     // <= strobj.charCodeAt(index)
-        throw _b_.TypeError('ord() expected a character, but string of length ' +
+        throw _b_.TypeError.$factory('ord() expected a character, but string of length ' +
             c.length + ' found')
       case _b_.bytes.$dict:
       case _b_.bytearray.$dict:
         if (c.source.length == 1) return c.source[0]     // <= strobj.charCodeAt(index)
-        throw _b_.TypeError('ord() expected a character, but string of length ' +
+        throw _b_.TypeError.$factory('ord() expected a character, but string of length ' +
             c.source.length + ' found')
       default:
-        throw _b_.TypeError('ord() expected a character, but ' +
+        throw _b_.TypeError.$factory('ord() expected a character, but ' +
             $B.get_class(c).__name__ + ' was found')
     }
 }
@@ -1403,7 +1406,7 @@ function pow() {
     if(z === null){return res}
     else{
         if(x!=_b_.int(x) || y != _b_.int(y)){
-            throw _b_.TypeError("pow() 3rd argument not allowed unless "+
+            throw _b_.TypeError.$factory("pow() 3rd argument not allowed unless "+
                 "all arguments are integers")
         }
         return getattr(res,'__mod__')(z)
@@ -1445,12 +1448,12 @@ function property(fget, fset, fdel, doc) {
     }
     p.__get__ = function(self, obj, objtype) {
         if(obj===undefined) return self
-        if(self.fget===undefined) throw _b_.AttributeError("unreadable attribute")
+        if(self.fget===undefined) throw _b_.AttributeError.$factory("unreadable attribute")
         return $B.$call(self.fget)(obj)
     }
     if(fset!==undefined){
         p.__set__ = function(self, obj, value){
-            if(self.fset===undefined) throw _b_.AttributeError("can't set attribute")
+            if(self.fset===undefined) throw _b_.AttributeError.$factory("can't set attribute")
             getattr(self.fset,'__call__')(obj,value)
         }
     }
@@ -1492,7 +1495,7 @@ function repr(obj){
     if(func!==undefined){
         return $B.$call(func)()
     }
-    throw _b_.AttributeError("object has no attribute __repr__")
+    throw _b_.AttributeError.$factory("object has no attribute __repr__")
 }
 
 var $ReversedDict = {__class__:$B.$type,__name__:'reversed'}
@@ -1500,7 +1503,7 @@ $ReversedDict.__mro__ = [$ObjectDict]
 $ReversedDict.__iter__ = function(self){return self}
 $ReversedDict.__next__ = function(self){
     self.$counter--
-    if(self.$counter<0) throw _b_.StopIteration('')
+    if(self.$counter<0) throw _b_.StopIteration.$factory('')
     return self.getter(self.$counter)
 }
 
@@ -1529,7 +1532,7 @@ function reversed(seq){
         }
         return res
     }catch(err){
-        throw _b_.TypeError("argument to reversed() must be a sequence")
+        throw _b_.TypeError.$factory("argument to reversed() must be a sequence")
     }
 }
 reversed.__class__=$B.$factory
@@ -1543,7 +1546,7 @@ function round(arg,n){
 
     if(!isinstance(arg,[_b_.int,_b_.float])){
         if (!hasattr(arg,'__round__'))
-            throw _b_.TypeError("type "+arg.__class__+
+            throw _b_.TypeError.$factory("type "+arg.__class__+
                 " doesn't define __round__ method")
         if(n===undefined) return getattr(arg,'__round__')()
         else return getattr(arg,'__round__')(n)
@@ -1551,7 +1554,7 @@ function round(arg,n){
 
     if(isinstance(arg, _b_.float) &&
         (arg.value === Infinity || arg.value === -Infinity)) {
-      throw _b_.OverflowError("cannot convert float infinity to integer")
+      throw _b_.OverflowError.$factory("cannot convert float infinity to integer")
     }
 
     if(n===None){
@@ -1563,7 +1566,7 @@ function round(arg,n){
             return _b_.int(Math.round(arg))
         }
     }
-    if(!isinstance(n,_b_.int)){throw _b_.TypeError(
+    if(!isinstance(n,_b_.int)){throw _b_.TypeError.$factory(
         "'"+n.__class__+"' object cannot be interpreted as an integer")}
     var mult = Math.pow(10,n)
     if(isinstance(arg, _b_.float)) {
@@ -1579,7 +1582,7 @@ function setattr(){
         ['obj', 'attr', 'value'], arguments, {}, null, null),
         obj = $.obj, attr=$.attr, value=$.value
     if(!(typeof attr=='string')){
-        throw _b_.TypeError("setattr(): attribute name must be string")
+        throw _b_.TypeError.$factory("setattr(): attribute name must be string")
     }
     return $B.$setattr(obj, attr, value)
 }
@@ -1601,7 +1604,7 @@ $B.$setattr = function(obj, attr, value){
         // set attribute __dict__
         // remove previous attributes
         if(!value.__class__===_b_.dict.$dict){
-            throw _b_.TypeError("__dict__ must be set to a dictionary, " +
+            throw _b_.TypeError.$factory("__dict__ must be set to a dictionary, " +
                 "not a '"+value.__class__.$dict.__name+"'")
         }
         for(var attr in obj){
@@ -1669,13 +1672,13 @@ $B.$setattr = function(obj, attr, value){
                 return None
             }
         }else if(klass && klass.$descriptors !== undefined &&
-            klass[attr] !== undefined){
+                klass[attr] !== undefined){
             var setter = klass[attr].setter
             if(typeof setter == 'function'){
                 setter(obj, value)
                 return None
             }else{
-                throw _b_.AttributeError('readonly attribute')
+                throw _b_.AttributeError.$factory('readonly attribute')
             }
         }
     }
@@ -1693,7 +1696,7 @@ $B.$setattr = function(obj, attr, value){
             for(var k in parent.$slots){slots[k] = true}
         }
         if(has_slots && slots[attr] === undefined){
-            throw _b_.AttributeError("'"+klass.__name__+
+            throw _b_.AttributeError.$factory("'"+klass.__name__+
                 "' object has no attribute '"+attr+"'")
         }
     }
@@ -1746,11 +1749,11 @@ function sum(iterable,start){
       start=0
     } else {
       if(typeof start === 'str') {
-        throw _b_.TypeError("TypeError: sum() can't sum strings [use ''.join(seq) instead]")
+        throw _b_.TypeError.$factory("TypeError: sum() can't sum strings [use ''.join(seq) instead]")
       }
 
       if (_b_.isinstance(start, _b_.bytes)) {
-         throw _b_.TypeError("TypeError: sum() can't sum bytes [use b''.join(seq) instead]")
+         throw _b_.TypeError.$factory("TypeError: sum() can't sum bytes [use b''.join(seq) instead]")
       }
     }
 
@@ -1817,7 +1820,7 @@ $SuperDict.__getattribute__ = function(self, attr){
         return method
     }
 
-    throw _b_.AttributeError("object 'super' has no attribute '"+attr+"'")
+    throw _b_.AttributeError.$factory("object 'super' has no attribute '"+attr+"'")
 }
 
 $SuperDict.__mro__ = [$ObjectDict]
@@ -1851,7 +1854,7 @@ function vars(){
         try{return getattr($.obj, '__dict__')}
         catch(err){
             if(err.__class__===_b_.AttributeError.$dict){
-                throw _b_.TypeError("vars() argument must have __dict__ attribute")
+                throw _b_.TypeError.$factory("vars() argument must have __dict__ attribute")
             }
             throw err
         }
@@ -1873,7 +1876,7 @@ $Reader.__mro__ = [$ObjectDict]
 $Reader.close = function(self){self.closed = true}
 
 $Reader.read = function(self,nb){
-    if(self.closed===true) throw _b_.ValueError('I/O operation on closed file')
+    if(self.closed===true) throw _b_.ValueError.$factory('I/O operation on closed file')
     if(nb===undefined) return self.$content
 
     self.$counter+=nb
@@ -1890,7 +1893,7 @@ $Reader.readline = function(self,limit){
     // set line counter
     self.$lc = self.$lc === undefined ? -1 : self.$lc
 
-    if(self.closed===true) throw _b_.ValueError('I/O operation on closed file')
+    if(self.closed===true) throw _b_.ValueError.$factory('I/O operation on closed file')
 
     if(self.$lc==self.$lines.length-1){
         return self.$bin ? _b_.bytes.$factory() : ''
@@ -1902,13 +1905,13 @@ $Reader.readline = function(self,limit){
 }
 
 $Reader.readlines = function(self,hint){
-    if(self.closed===true) throw _b_.ValueError('I/O operation on closed file')
+    if(self.closed===true) throw _b_.ValueError.$factory('I/O operation on closed file')
     self.$lc = self.$lc === undefined ? -1 : self.$lc
     return self.$lines.slice(self.$lc+1)
 }
 
 $Reader.seek = function(self,offset,whence){
-    if(self.closed===True) throw _b_.ValueError('I/O operation on closed file')
+    if(self.closed===True) throw _b_.ValueError.$factory('I/O operation on closed file')
     if(whence===undefined) whence=0
     if(whence===0){self.$counter = offset}
     else if(whence===1){self.$counter += offset}
@@ -1951,9 +1954,9 @@ function $url_open(){
             try {
                 var status = this.status
                 if(status===404){
-                    $res = _b_.IOError('File '+file+' not found')
+                    $res = _b_.IOError.$factory('File '+file+' not found')
                 }else if(status!==200){
-                    $res = _b_.IOError('Could not open file '+file+' : status '+status)
+                    $res = _b_.IOError.$factory('Could not open file '+file+' : status '+status)
                 }else{
                     $res = this.responseText
                     if(is_binary){
@@ -1961,7 +1964,7 @@ function $url_open(){
                     }
                 }
             } catch (err) {
-                $res = _b_.IOError('Could not open file '+file+' : error '+err)
+                $res = _b_.IOError.$factory('Could not open file '+file+' : error '+err)
             }
         }
         // add fake query string to avoid caching
@@ -2038,10 +2041,10 @@ $ZipDict.$factory = zip
 
 function no_set_attr(klass, attr){
     if(klass[attr]!==undefined){
-        throw _b_.AttributeError("'"+klass.__name__+"' object attribute '"+
+        throw _b_.AttributeError.$factory("'"+klass.__name__+"' object attribute '"+
             attr+"' is read-only")
     }else{
-        throw _b_.AttributeError("'"+klass.__name__+
+        throw _b_.AttributeError.$factory("'"+klass.__name__+
             "' object has no attribute '"+attr+"'")
     }
 }
@@ -2081,7 +2084,7 @@ for(var $key in $B.$comps){ // Ellipsis is not orderable with any type
       case 'lt':
         Ellipsis['__'+$B.$comps[$key]+'__']=(function(k){
             return function(other){
-            throw _b_.TypeError("unorderable types: ellipsis() "+k+" "+
+            throw _b_.TypeError.$factory("unorderable types: ellipsis() "+k+" "+
                 $B.get_class(other).__name__)}
         })($key)
     }
