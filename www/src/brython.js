@@ -76,8 +76,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-02-10 17:16:02.338177"
-__BRYTHON__.timestamp=1518279362338
+__BRYTHON__.compiled_date="2018-02-10 17:27:05.588320"
+__BRYTHON__.timestamp=1518280025588
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -10968,9 +10968,9 @@ return res}
 DOMNode.__class__=$B.$type
 DOMNode.__mro__=[_b_.object.$dict]
 DOMNode.__add__=function(self,other){
-var res=$TagSum()
+var res=TagSum.$factory()
 res.children=[self],pos=1
-if(isinstance(other,$TagSum)){res.children=res.children.concat(other.children)}else if(isinstance(other,[_b_.str,_b_.int,_b_.float,_b_.list,_b_.dict,_b_.set,_b_.tuple])){res.children[pos++]=DOMNode.$factory(document.createTextNode(_b_.str(other)))}else if(isinstance(other,DOMNode)){res.children[pos++]=other}else{
+if(isinstance(other,TagSum)){res.children=res.children.concat(other.children)}else if(isinstance(other,[_b_.str,_b_.int,_b_.float,_b_.list,_b_.dict,_b_.set,_b_.tuple])){res.children[pos++]=DOMNode.$factory(document.createTextNode(_b_.str(other)))}else if(isinstance(other,DOMNode)){res.children[pos++]=other}else{
 try{res.children=res.children.concat(_b_.list(other))}
 catch(err){throw _b_.TypeError.$factory("can't add '"+
 $B.get_class(other).__name__+"' object to DOMNode instance")}}
@@ -11096,7 +11096,7 @@ return $B.$iter(items)}
 DOMNode.__le__=function(self,other){
 var elt=self.elt
 if(self.elt.nodeType===9){elt=self.elt.body}
-if(isinstance(other,$TagSum)){var $i=0
+if(isinstance(other,TagSum)){var $i=0
 for($i=0;$i<other.children.length;$i++){elt.appendChild(other.children[$i].elt)}}else if(typeof other==="string" ||typeof other==="number"){var $txt=document.createTextNode(other.toString())
 elt.appendChild($txt)}else if(isinstance(other,DOMNode)){
 elt.appendChild(other.elt)}else{try{
@@ -11105,7 +11105,7 @@ for(var i=0;i<items.length;i++){DOMNode.__le__(self,items[i])}}catch(err){throw 
 $B.get_class(other).__name__+
 "' object to DOMNode instance")}}}
 DOMNode.__len__=function(self){return self.elt.length}
-DOMNode.__mul__=function(self,other){if(isinstance(other,_b_.int)&& other.valueOf()>0){var res=$TagSum()
+DOMNode.__mul__=function(self,other){if(isinstance(other,_b_.int)&& other.valueOf()>0){var res=TagSum.$factory()
 var pos=res.children.length
 for(var i=0;i<other.valueOf();i++){res.children[pos++]=DOMNode.clone(self)()}
 return res}
@@ -11115,7 +11115,7 @@ DOMNode.__next__=function(self){self.$counter++
 if(self.$counter<self.elt.childNodes.length){return DOMNode.$factory(self.elt.childNodes[self.$counter])}
 throw _b_.StopIteration.$factory('StopIteration')}
 DOMNode.__radd__=function(self,other){
-var res=$TagSum()
+var res=TagSum.$factory()
 var txt=DOMNode.$factory(document.createTextNode(other))
 res.children=[txt,self]
 return res}
@@ -11387,26 +11387,24 @@ if(res._keys.indexOf(key)>-1){res._values[key].push(value)}
 else{res._keys.push(key)
 res._values[key]=[value]}}
 return res}
-var $TagSumDict={__class__ : $B.$type,__name__:'TagSum'}
-$TagSumDict.appendChild=function(self,child){self.children.push(child)}
-$TagSumDict.__add__=function(self,other){if($B.get_class(other)===$TagSumDict){self.children=self.children.concat(other.children)}else if(isinstance(other,[_b_.str,_b_.int,_b_.float,_b_.dict,_b_.set,_b_.list])){self.children=self.children.concat(DOMNode.$factory(document.createTextNode(other)))}else{self.children.push(other)}
+var TagSum={__class__ : $B.$type,__mro__:[$ObjectDict],__name__:'TagSum'}
+TagSum.appendChild=function(self,child){self.children.push(child)}
+TagSum.__add__=function(self,other){if($B.get_class(other)===TagSum){self.children=self.children.concat(other.children)}else if(isinstance(other,[_b_.str,_b_.int,_b_.float,_b_.dict,_b_.set,_b_.list])){self.children=self.children.concat(DOMNode.$factory(document.createTextNode(other)))}else{self.children.push(other)}
 return self}
-$TagSumDict.__mro__=[$ObjectDict]
-$TagSumDict.__radd__=function(self,other){var res=$TagSum()
+TagSum.__radd__=function(self,other){var res=TagSum.$factory()
 res.children=self.children.concat(DOMNode.$factory(document.createTextNode(other)))
 return res}
-$TagSumDict.__repr__=function(self){var res='<object TagSum> '
+TagSum.__repr__=function(self){var res='<object TagSum> '
 for(var i=0;i<self.children.length;i++){res+=self.children[i]
 if(self.children[i].toString()=='[object Text]'){res +=' ['+self.children[i].textContent+']\n'}}
 return res}
-$TagSumDict.__str__=$TagSumDict.toString=$TagSumDict.__repr__
-$TagSumDict.clone=function(self){var res=$TagSum(),$i=0
+TagSum.__str__=TagSum.toString=TagSum.__repr__
+TagSum.clone=function(self){var res=TagSum.$factory(),$i=0
 for($i=0;$i<self.children.length;$i++){res.children.push(self.children[$i].cloneNode(true))}
 return res}
-function $TagSum(){return{__class__:$TagSumDict,children:[],toString:function(){return '(TagSum)'}}}
-$TagSum.__class__=$B.$factory
-$TagSum.$dict=$TagSumDict
-$B.$TagSum=$TagSum 
+TagSum.$factory=function(){return{
+__class__: TagSum,children:[],toString: function(){return '(TagSum)'}}}
+$B.TagSum=TagSum 
 var win=JSObject(_window)
 win.get_postMessage=function(msg,targetOrigin){if(isinstance(msg,dict)){var temp={__class__:'dict'}
 var items=_b_.list(_b_.dict.$dict.items(msg))
@@ -11703,13 +11701,13 @@ var regex=new RegExp("[\\?&]" + name + "=([^&#]*)"),results=regex.exec(location.
 results=results===null ? "" : decodeURIComponent(results[1].replace(/\+/g," "));
 return $B.builtins.str(results);}})
 modules['browser.html']=(function($B){var _b_=$B.builtins
-var $TagSumDict=$B.$TagSum.$dict
+var TagSum=$B.TagSum
 function makeTagDict(tagName){
 var dict={__class__:$B.$type,__name__:tagName}
 dict.__init__=function(){var $ns=$B.args('pow',1,{self:null},['self'],arguments,{},'args','kw'),self=$ns['self'],args=$ns['args']
 if(args.length==1){var first=args[0]
 if(_b_.isinstance(first,[_b_.str,_b_.int,_b_.float])){
-self.elt.innerHTML=_b_.str(first)}else if(first.__class__===$TagSumDict){for(var i=0,len=first.children.length;i < len;i++){self.elt.appendChild(first.children[i].elt)}}else{
+self.elt.innerHTML=_b_.str(first)}else if(first.__class__===TagSum){for(var i=0,len=first.children.length;i < len;i++){self.elt.appendChild(first.children[i].elt)}}else{
 if(_b_.isinstance(first,$B.DOMNode)){self.elt.appendChild(first.elt)}else{try{
 var items=_b_.list(first)
 for(var i=0;i<items.length;i++){$B.DOMNode.__le__(self,items[i])}}catch(err){console.log(err)

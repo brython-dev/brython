@@ -76,7 +76,7 @@
         modules['browser.html'] = (function($B){
 
             var _b_ = $B.builtins
-            var $TagSumDict = $B.$TagSum.$dict
+            var TagSum = $B.TagSum
 
             function makeTagDict(tagName){
                 // return the dictionary for the class associated with tagName
@@ -94,7 +94,7 @@
                         if(_b_.isinstance(first,[_b_.str,_b_.int,_b_.float])){
                             // set "first" as HTML content (not text)
                             self.elt.innerHTML = _b_.str(first)
-                        } else if(first.__class__===$TagSumDict){
+                        } else if(first.__class__===TagSum){
                             for(var i=0, len = first.children.length; i < len;i++){
                                 self.elt.appendChild(first.children[i].elt)
                             }
@@ -168,9 +168,6 @@
                 $B.set_func_names(dict, "browser.html")
                 return dict
             }
-
-            // the classes used for tag sums, $TagSum and $TagSumClass
-            // are defined in py_dom.js
 
             function makeFactory(klass){
                 var factory = function(){

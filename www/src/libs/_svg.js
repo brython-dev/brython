@@ -2,7 +2,7 @@
 var $module = (function($B){
 
 var _b_ = $B.builtins
-var $TagSumDict = $B.$TagSum.$dict
+var TagSum = $B.TagSum // defined in py_dom.js
 
 var $s=[]
 for(var $b in _b_) $s.push('var ' + $b +'=_b_["'+$b+'"]')
@@ -39,7 +39,7 @@ function makeTagDict(tagName){
             var first=args[0]
             if(isinstance(first,[str,int,float])){
                 self.elt.appendChild(document.createTextNode(str(first)))
-            } else if(first.__class__===$TagSumDict){
+            } else if(first.__class__===TagSum){
                 for(var i=0, _len_i = first.children.length; i < _len_i;i++){
                     self.elt.appendChild(first.children[i].elt)
                 }
@@ -97,10 +97,6 @@ function makeTagDict(tagName){
 
     return dict
 }
-
-
-// the classes used for tag sums, $TagSum and $TagSumClass 
-// are defined in py_dom.js
 
 function makeFactory(tagName){
     var factory = function(){

@@ -431,10 +431,10 @@ DOMNode.__class__ = $B.$type
 DOMNode.__mro__ = [_b_.object.$dict]
 
 DOMNode.__add__ = function(self,other){
-    // adding another element to self returns an instance of $TagSum
-    var res = $TagSum()
+    // adding another element to self returns an instance of TagSum
+    var res = TagSum.$factory()
     res.children = [self], pos=1
-    if(isinstance(other,$TagSum)){
+    if(isinstance(other, TagSum)){
         res.children = res.children.concat(other.children)
     } else if(isinstance(other,[_b_.str,_b_.int,_b_.float,_b_.list,
                                 _b_.dict,_b_.set,_b_.tuple])){
@@ -728,7 +728,7 @@ DOMNode.__le__ = function(self,other){
     // for document, append child to document.body
     var elt = self.elt
     if(self.elt.nodeType===9){elt = self.elt.body}
-    if(isinstance(other,$TagSum)){
+    if(isinstance(other, TagSum)){
         var $i=0
         for($i=0;$i<other.children.length;$i++){
             elt.appendChild(other.children[$i].elt)
@@ -758,7 +758,7 @@ DOMNode.__len__ = function(self){return self.elt.length}
 
 DOMNode.__mul__ = function(self,other){
     if(isinstance(other,_b_.int) && other.valueOf()>0){
-        var res = $TagSum()
+        var res = TagSum.$factory()
         var pos=res.children.length
         for(var i=0;i<other.valueOf();i++){
             res.children[pos++]= DOMNode.clone(self)()
@@ -779,7 +779,7 @@ DOMNode.__next__ = function(self){
 }
 
 DOMNode.__radd__ = function(self,other){ // add to a string
-    var res = $TagSum()
+    var res = TagSum.$factory()
     var txt = DOMNode.$factory(document.createTextNode(other))
     res.children = [txt,self]
     return res
@@ -1414,14 +1414,18 @@ DOMNode.query = function(self){
 }
 
 // class used for tag sums
-var $TagSumDict = {__class__ : $B.$type,__name__:'TagSum'}
+var TagSum = {
+    __class__ : $B.$type,
+    __mro__: [$ObjectDict],
+    __name__:'TagSum'
+}
 
-$TagSumDict.appendChild = function(self,child){
+TagSum.appendChild = function(self,child){
     self.children.push(child)
 }
 
-$TagSumDict.__add__ = function(self,other){
-    if($B.get_class(other)===$TagSumDict){
+TagSum.__add__ = function(self,other){
+    if($B.get_class(other)===TagSum){
         self.children = self.children.concat(other.children)
     }else if(isinstance(other,[_b_.str,_b_.int,_b_.float,
                                _b_.dict,_b_.set,_b_.list])){
@@ -1430,15 +1434,13 @@ $TagSumDict.__add__ = function(self,other){
     return self
 }
 
-$TagSumDict.__mro__ = [$ObjectDict]
-
-$TagSumDict.__radd__ = function(self,other){
-    var res = $TagSum()
+TagSum.__radd__ = function(self,other){
+    var res = TagSum.$factory()
     res.children = self.children.concat(DOMNode.$factory(document.createTextNode(other)))
     return res
 }
 
-$TagSumDict.__repr__ = function(self){
+TagSum.__repr__ = function(self){
     var res = '<object TagSum> '
     for(var i=0;i<self.children.length;i++){
         res+=self.children[i]
@@ -1447,25 +1449,25 @@ $TagSumDict.__repr__ = function(self){
     return res
 }
 
-$TagSumDict.__str__ = $TagSumDict.toString = $TagSumDict.__repr__
+TagSum.__str__ = TagSum.toString = TagSum.__repr__
 
-$TagSumDict.clone = function(self){
-    var res = $TagSum(), $i=0
+TagSum.clone = function(self){
+    var res = TagSum.$factory(), $i=0
     for($i=0;$i<self.children.length;$i++){
         res.children.push(self.children[$i].cloneNode(true))
     }
     return res
 }
 
-function $TagSum(){
-    return {__class__:$TagSumDict,
-        children:[],
-        toString:function(){return '(TagSum)'}
+TagSum.$factory = function(){
+    return {
+        __class__: TagSum,
+        children: [],
+        toString: function(){return '(TagSum)'}
     }
 }
-$TagSum.__class__=$B.$factory
-$TagSum.$dict = $TagSumDict
-$B.$TagSum = $TagSum // used in _html.js and _svg.js
+
+$B.TagSum = TagSum // used in _html.js and _svg.js
 
 var win =  JSObject(_window) //{__class__:$WinDict}
 
