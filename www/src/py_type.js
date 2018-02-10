@@ -247,8 +247,7 @@ function make_mro(bases, cl_dict){
         // we can't simply push bases[i].__mro__
         // because it would be modified in the algorithm
         if(bases[i]===_b_.str) bases[i] = $B.$StringSubclassFactory
-        else if(bases[i]===_b_.float) bases[i] = $B.$FloatSubclassFactory
-        //else if(bases[i]===_b_.list) bases[i] = $B.$ListSubclassFactory
+        else if(bases[i]===_b_.float) bases[i] = $B.FloatSubclass
         if(bases[i].__class__ == $B.$factory){
             bases[i] = bases[i].$dict
         }

@@ -1076,7 +1076,7 @@ function isinstance(obj,arg){
       else if(arg===_b_.str.$dict &&
           kl===$B.$StringSubclassFactory.$dict){return true}
       else if(arg===_b_.float &&
-          kl===$B.$FloatSubclassFactory.$dict){return true}
+          kl===$B.FloatSubclass){return true}
    }
    if(check(klass1, arg)){return true}
    var mro = klass1.__mro__

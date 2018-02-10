@@ -673,17 +673,17 @@ $B.$FloatClass = $FloatClass
 
 $B.set_func_names(float, "builtins")
 
-// dictionary and factory for subclasses of string
-var $FloatSubclassDict = {
+// Dictionary and factory for subclasses of float
+var FloatSubclass = $B.FloatSubclass  = {
     __class__: $B.$type,
-    __name__: 'float'
+    __mro__: [object],
+    __name__: 'float',
+    $is_class: true
 }
 
-// the methods in subclass apply the methods in $StringDict to the
-// result of instance.valueOf(), which is a Javascript string
 for(var $attr in float){
     if(typeof float[$attr]=='function'){
-        $FloatSubclassDict[$attr]=(function(attr){
+        FloatSubclass[$attr]=(function(attr){
             return function(){
                 var args = [], pos=0
                 if(arguments.length>0){
@@ -697,15 +697,8 @@ for(var $attr in float){
         })($attr)
     }
 }
-$FloatSubclassDict.__mro__ = [object]
 
-// factory for str subclasses
-$B.$FloatSubclassFactory = {
-    __class__:$B.$factory,
-    $dict:$FloatSubclassDict
-}
-
-$B.set_func_names($FloatSubclassDict, "builtins")
+$B.set_func_names(FloatSubclass, "builtins")
 
 _b_.float = float
 })(__BRYTHON__)

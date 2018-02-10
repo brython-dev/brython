@@ -76,8 +76,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-02-10 22:59:26.592096"
-__BRYTHON__.timestamp=1518299966592
+__BRYTHON__.compiled_date="2018-02-10 23:08:15.324519"
+__BRYTHON__.timestamp=1518300495324
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -4611,7 +4611,7 @@ function make_mro(bases,cl_dict){
 var seqs=[],pos1=0
 for(var i=0;i<bases.length;i++){
 if(bases[i]===_b_.str)bases[i]=$B.$StringSubclassFactory
-else if(bases[i]===_b_.float)bases[i]=$B.$FloatSubclassFactory
+else if(bases[i]===_b_.float)bases[i]=$B.FloatSubclass
 if(bases[i].__class__==$B.$factory){bases[i]=bases[i].$dict}
 var bmro=[],pos=0
 if(bases[i]===undefined ||
@@ -5867,7 +5867,7 @@ function check(kl,arg){if(kl===arg){return true}
 else if(arg===_b_.str.$dict &&
 kl===$B.$StringSubclassFactory.$dict){return true}
 else if(arg===_b_.float &&
-kl===$B.$FloatSubclassFactory.$dict){return true}}
+kl===$B.FloatSubclass){return true}}
 if(check(klass1,arg)){return true}
 var mro=klass1.__mro__
 for(var i=0;i<mro.length;i++){if(check(mro[i],arg)){return true}}
@@ -7953,14 +7953,12 @@ float.__new__=function(cls){if(cls===undefined){throw _b_.TypeError.$factory('fl
 return{__class__:cls.$factory ? cls : cls.$dict}}
 $B.$FloatClass=$FloatClass
 $B.set_func_names(float,"builtins")
-var $FloatSubclassDict={__class__: $B.$type,__name__: 'float'}
-for(var $attr in float){if(typeof float[$attr]=='function'){$FloatSubclassDict[$attr]=(function(attr){return function(){var args=[],pos=0
+var FloatSubclass=$B.FloatSubclass={__class__: $B.$type,__mro__:[object],__name__: 'float',$is_class: true}
+for(var $attr in float){if(typeof float[$attr]=='function'){FloatSubclass[$attr]=(function(attr){return function(){var args=[],pos=0
 if(arguments.length>0){var args=[arguments[0].valueOf()],pos=1
 for(var i=1,_len_i=arguments.length;i < _len_i;i++){args[pos++]=arguments[i]}}
 return float[attr].apply(null,args)}})($attr)}}
-$FloatSubclassDict.__mro__=[object]
-$B.$FloatSubclassFactory={__class__:$B.$factory,$dict:$FloatSubclassDict}
-$B.set_func_names($FloatSubclassDict,"builtins")
+$B.set_func_names(FloatSubclass,"builtins")
 _b_.float=float})(__BRYTHON__)
 ;(function($B){eval($B.InjectBuiltins())
 var object=_b_.object,$N=_b_.None
