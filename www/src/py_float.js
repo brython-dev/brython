@@ -2,7 +2,7 @@
 
 eval($B.InjectBuiltins())
 
-var $ObjectDict = _b_.object.$dict
+var object = _b_.object
 
 function $err(op,other){
     var msg = "unsupported operand type(s) for "+op
@@ -12,7 +12,7 @@ function $err(op,other){
 
 // dictionary for built-in class 'float'
 var $FloatDict = {__class__:$B.$type,
-    __dir__:$ObjectDict.__dir__,
+    __dir__:object.__dir__,
     __name__:'float',
     $native:true,
     $descriptors:{'numerator':true,
@@ -393,7 +393,7 @@ $FloatDict.__mod__ = function(self,other) {
     $err('%',other)
 }
 
-$FloatDict.__mro__ = [$ObjectDict]
+$FloatDict.__mro__ = [object]
 
 $FloatDict.__mul__ = function(self,other){
     if(isinstance(other,_b_.int)){
@@ -699,7 +699,7 @@ for(var $attr in $FloatDict){
         })($attr)
     }
 }
-$FloatSubclassDict.__mro__ = [$ObjectDict]
+$FloatSubclassDict.__mro__ = [object]
 
 // factory for str subclasses
 $B.$FloatSubclassFactory = {

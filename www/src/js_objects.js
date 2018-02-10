@@ -2,11 +2,11 @@
 
 eval($B.InjectBuiltins())
 
-var $ObjectDict = _b_.object.$dict
+var object = _b_.object
 
 var $LocationDict = {__class__:$B.$type,__name__:'Location'}
 
-$LocationDict.__mro__ = [$ObjectDict]
+$LocationDict.__mro__ = [object]
 
 var _window = self;
 
@@ -75,7 +75,7 @@ $JSConstructorDict.__getattribute__ = function(self, attr){
     return $JSObjectDict.__getattribute__(self.obj, attr)
 }
 
-$JSConstructorDict.__mro__ = [$ObjectDict]
+$JSConstructorDict.__mro__ = [object]
 
 function JSConstructor(obj){
     return {
@@ -93,9 +93,9 @@ $JSConstructorDict.$factory = JSConstructor
 
 // Object used to convert Javascript undefined value
 var $UndefinedClass = $B.make_class("undefined")
-$UndefinedClass.$dict.__bool__ = function(){return false}
-$UndefinedClass.$dict.__repr__ = function(){return "undefined"}
-$B.Undefined = $UndefinedClass()
+$UndefinedClass.__bool__ = function(){return false}
+$UndefinedClass.__repr__ = function(){return "undefined"}
+$B.Undefined = $UndefinedClass.$factory()
 
 var jsobj2pyobj=$B.jsobj2pyobj=function(jsobj) {
     switch(jsobj) {
@@ -220,7 +220,7 @@ $JSObjectDict.__dir__ = function(self){
 
 $JSObjectDict.__getattribute__ = function(self,attr){
     if(attr.substr(0,2)=='$$') attr=attr.substr(2)
-    if(self.js===null) return $ObjectDict.__getattribute__(None,attr)
+    if(self.js===null) return object.__getattribute__(None,attr)
     if(attr==='__class__') return $JSObjectDict
     if(attr=="__call__"){
         if(typeof self.js=="function"){
@@ -411,7 +411,7 @@ $JSObjectDict.__len__ = function(self){
     }
 }
 
-$JSObjectDict.__mro__ = [$ObjectDict]
+$JSObjectDict.__mro__ = [object]
 
 $JSObjectDict.__repr__ = function(self){
     if(self.js instanceof Date){return self.js.toString()}

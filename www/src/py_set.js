@@ -21,7 +21,7 @@ function clone(obj){
 
 var $SetDict = {
     __class__:$B.$type,
-    __dir__:_b_.object.$dict.__dir__,
+    __dir__:_b_.object.__dir__,
     __name__:'set',
     $native:true
 }
@@ -117,7 +117,7 @@ $SetDict.__ge__ = function(self,other){
     if(_b_.isinstance(other,[set, frozenset])){
         return !$SetDict.__lt__(self,other)
     }else{
-        return _b_.object.$dict.__ge__(self, other)
+        return _b_.object.__ge__(self, other)
     }
 }
 
@@ -125,7 +125,7 @@ $SetDict.__gt__ = function(self, other){
     if(_b_.isinstance(other,[set, frozenset])){
         return !$SetDict.__le__(self, other)
     }else{
-        return _b_.object.$dict.__gt__(self, other)
+        return _b_.object.__gt__(self, other)
     }
 }
 
@@ -175,7 +175,7 @@ $SetDict.__le__ = function(self,other){
         }
         return true
     }else{
-        return _b_.object.$dict.__le__(self, other)
+        return _b_.object.__le__(self, other)
     }
 }
 
@@ -186,11 +186,11 @@ $SetDict.__lt__ = function(self,other){
         return ($SetDict.__le__(self,other) &&
             $SetDict.__len__(self)<_b_.getattr(other,'__len__')())
     }else{
-        return _b_.object.$dict['__lt__'](self, other) // try other > self
+        return _b_.object['__lt__'](self, other) // try other > self
     }
 }
 
-$SetDict.__mro__ = [_b_.object.$dict]
+$SetDict.__mro__ = [_b_.object]
 
 $SetDict.__ne__ = function(self,other){return !$SetDict.__eq__(self,other)}
 
@@ -558,7 +558,7 @@ $B.set_func_names($SetDict)
 
 var $FrozensetDict = {__class__:$B.$type,__name__:'frozenset'}
 
-$FrozensetDict.__mro__ = [_b_.object.$dict]
+$FrozensetDict.__mro__ = [_b_.object]
 
 
 

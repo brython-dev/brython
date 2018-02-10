@@ -302,8 +302,8 @@ function make_mro(bases, cl_dict){
             }
         }
     }
-    if(mro[mro.length-1]!==_b_.object.$dict){
-        mro[mpos++]=_b_.object.$dict
+    if(mro[mro.length-1]!==_b_.object){
+        mro[mpos++]=_b_.object
     }
 
     return mro
@@ -344,7 +344,7 @@ $B.$type = {
 
 $B.$type.__class__ = $B.$type
 
-$B.$type.__mro__ = [_b_.object.$dict]
+$B.$type.__mro__ = [_b_.object]
 
 $B.$type.__new__ = function(meta, name, bases, cl_dict){
     // DRo - cls changed to meta to reflect that the class (cls) hasn't
@@ -401,7 +401,7 @@ $B.$type.__call__ = function(klass, ...extra_args){
    if(instance.__class__===klass){
         // call __init__ with the same parameters
         var init_func = $B.$type.__getattribute__(klass, "__init__")
-        if(init_func !== _b_.object.$dict.__init__){
+        if(init_func !== _b_.object.__init__){
             // object.__init__ is not called in this case (it would raise an
             // exception if there are parameters).
             init_func(instance, ...extra_args)
@@ -420,14 +420,13 @@ $B.$factory = {
     $factory:_b_.type,
     $is_class:true
 }
-$B.$factory.__mro__ = [$B.$type, _b_.object.$dict]
+$B.$factory.__mro__ = [$B.$type, _b_.object]
 
 _b_.type.__class__ = $B.$factory
 _b_.type.$dict = $B.$type
 
 // this could not be done before $type and $factory are defined
-_b_.object.$dict.__class__ = $B.$type
-_b_.object.__class__ = $B.$factory
+_b_.object.__class__ = $B.$type
 
 function method_wrapper(attr, klass, method){
     // add __str__ and __repr__ to special methods
@@ -609,7 +608,7 @@ member_descriptor.$dict = {
         return "<member '"+self.attr+"' of '"+self.klass.__name__+
         "' objects>"}
 }
-member_descriptor.$dict.__mro__ = [_b_.object.$dict]
+member_descriptor.$dict.__mro__ = [_b_.object]
 
 // used as the factory for method objects
 function $MethodFactory(){}
@@ -649,11 +648,11 @@ $B.$MethodDict.__getattribute__ = function(self, attr){
             infos.__func__.$infos[attr]){ // eg __doc__
         return infos.__func__.$infos[attr]
     }else{
-        return _b_.object.$dict.__getattribute__(self, attr)
+        return _b_.object.__getattribute__(self, attr)
     }
 }
 
-$B.$MethodDict.__mro__=[_b_.object.$dict]
+$B.$MethodDict.__mro__=[_b_.object]
 $B.$MethodDict.__repr__ = $B.$MethodDict.__str__ = function(self){
     return '<bound method '+self.$infos.__qualname__+
        ' of '+ _b_.str(self.$infos.__self__)+'>'
@@ -663,7 +662,7 @@ $B.set_func_names($B.$MethodDict, "builtins")
 
 $B.$InstanceMethodDict = {__class__:$B.$type,
     __name__:'instancemethod',
-    __mro__:[_b_.object.$dict],
+    __mro__:[_b_.object],
     $factory:$MethodFactory
 }
 

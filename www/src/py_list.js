@@ -2,7 +2,7 @@
 
 eval($B.InjectBuiltins())
 
-var $ObjectDict = _b_.object.$dict, $N = _b_.None
+var object = _b_.object, $N = _b_.None
 
 function $list(){
     // used for list displays
@@ -16,7 +16,7 @@ function $list(){
 var $ListDict = {__class__:$B.$type,
     __name__:'list',
     $native:true,
-    __dir__:$ObjectDict.__dir__}
+    __dir__:object.__dir__}
 
 $ListDict.__add__ = function(self,other){
     if($B.get_class(self)!==$B.get_class(other)){
@@ -266,7 +266,7 @@ $ListDict.__lt__ = function(self,other){
     return !$ListDict.__ge__(self,other)
 }
 
-$ListDict.__mro__ = [$ObjectDict]
+$ListDict.__mro__ = [object]
 
 $ListDict.__mul__ = function(self,other){
     if(isinstance(other,_b_.int)) {  //this should be faster..
@@ -765,7 +765,7 @@ $TupleDict.__init__ = function(){
     return $N
 }
 
-$TupleDict.__mro__ = [$ObjectDict]
+$TupleDict.__mro__ = [object]
 
 $TupleDict.__name__ = 'tuple'
 
@@ -801,6 +801,6 @@ _b_.list = list
 _b_.tuple = tuple
 
 // set object.__bases__ to an empty tuple
-_b_.object.$dict.__bases__ = tuple()
+_b_.object.__bases__ = tuple()
 
 })(__BRYTHON__)

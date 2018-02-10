@@ -2,7 +2,7 @@
 
 eval($B.InjectBuiltins())
 
-var $ObjectDict = _b_.object.$dict, $N = _b_.None
+var object = _b_.object, $N = _b_.None
 
 function $err(op,other){
     var msg = "unsupported operand type(s) for "+op
@@ -13,7 +13,7 @@ function $err(op,other){
 // dictionary for built-in class 'int'
 var $IntDict = {__class__:$B.$type,
     __name__:'int',
-    __dir__:$ObjectDict.__dir__,
+    __dir__:object.__dir__,
     $native:true,
     $descriptors:{'numerator':true,
                  'denominator':true,
@@ -222,7 +222,7 @@ $IntDict.__mod__ = function(self,other) {
     $err('%',other)
 }
 
-$IntDict.__mro__ = [$ObjectDict]
+$IntDict.__mro__ = [object]
 
 $IntDict.__mul__ = function(self,other){
 
@@ -689,6 +689,6 @@ $BoolDict.__xor__ = function(self, other) {
 }
 
 
-$BoolDict.__mro__ = [$IntDict, _b_.object.$dict]
+$BoolDict.__mro__ = [$IntDict, _b_.object]
 
 })(__BRYTHON__)

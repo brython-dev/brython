@@ -2,7 +2,7 @@
 
 eval($B.InjectBuiltins())
 
-var $ObjectDict = _b_.object.$dict
+var object = _b_.object
 var JSObject = $B.JSObject
 var _window = window //self;
 
@@ -127,7 +127,7 @@ var $NodeTypes = {1:"ELEMENT",
 
 var DOMEvent = $B.DOMEvent = {__class__:$B.$type,__name__:'DOMEvent'}
 
-DOMEvent.__mro__ = [$ObjectDict]
+DOMEvent.__mro__ = [object]
 
 DOMEvent.__new__ = function(cls, evt_name){
     var ev = new Event(evt_name)
@@ -195,7 +195,7 @@ Clipboard.__getitem__ = function(self, name){
     return self.data.getData(name)
 }
 
-Clipboard.__mro__ = [$ObjectDict]
+Clipboard.__mro__ = [object]
 
 Clipboard.__setitem__ = function(self, name, value){
     self.data.setData(name,value)
@@ -237,7 +237,7 @@ function $EventsList(elt,evt,arg){
 var OpenFile = $B.OpenFile = {
     __class__: $B.$type,  // metaclass type
     __name__: 'OpenFile',
-    __mro__: [$ObjectDict]
+    __mro__: [object]
 }
 
 
@@ -300,7 +300,7 @@ var Options = {
     __len__: function(self){
         return self.parent.options.length
     },
-    __mro__: [$ObjectDict],
+    __mro__: [object],
     __setattr__: function(self,attr,value){
         self.parent.options[attr]=value
     },
@@ -341,10 +341,10 @@ $B.set_func_names(Options, "<dom>")
 
 var Style = {__class__:$B.$type,__name__:'CSSProperty'}
 
-Style.__mro__ = [$ObjectDict]
+Style.__mro__ = [object]
 
 Style.__getattr__ = function(self,attr){
-    return $ObjectDict.__getattribute__(self.js,attr)
+    return object.__getattribute__(self.js,attr)
 }
 
 Style.__setattr__ = function(self,attr,value){
@@ -428,7 +428,7 @@ DOMNode.$factory = function(elt, fromtag){
 
 DOMNode.__class__ = $B.$type
 
-DOMNode.__mro__ = [_b_.object.$dict]
+DOMNode.__mro__ = [_b_.object]
 
 DOMNode.__add__ = function(self,other){
     // adding another element to self returns an instance of TagSum
@@ -670,7 +670,7 @@ DOMNode.__getattribute__ = function(self,attr){
 
         return $B.$JS2Py(res)
     }
-    return $ObjectDict.__getattribute__(self,attr)
+    return object.__getattribute__(self,attr)
 }
 
 DOMNode.__getitem__ = function(self, key){
@@ -1361,7 +1361,7 @@ Query.__iter__ = function(self){
     return $B.$iterator(self._keys, Query_iterator)
 }
 
-Query.__mro__ = [$ObjectDict]
+Query.__mro__ = [object]
 
 Query.getfirst = function(self, key, _default){
     // returns the first value associated with key
@@ -1416,7 +1416,7 @@ DOMNode.query = function(self){
 // class used for tag sums
 var TagSum = {
     __class__ : $B.$type,
-    __mro__: [$ObjectDict],
+    __mro__: [object],
     __name__:'TagSum'
 }
 

@@ -168,7 +168,7 @@ ajax.$dict = {
     }
 }
 
-ajax.$dict.__mro__ = [$B.JSObject.$dict, _b_.object.$dict]
+ajax.$dict.__mro__ = [$B.JSObject.$dict, _b_.object]
 
 $B.set_func_names(ajax.$dict)
 

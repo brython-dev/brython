@@ -4,7 +4,7 @@
 var _b_ = $B.builtins,
     None = _b_.None,
     $RangeDict = {__class__:$B.$type,
-        __dir__:_b_.object.$dict.__dir__,
+        __dir__:_b_.object.__dir__,
         __name__:'range',
         $native:true,
         $descriptors:{start:true,step:true,stop:true}
@@ -97,7 +97,7 @@ $RangeIterator.$dict = {
 
     __next__: function(self){return _b_.next(self.obj)}
 }
-$RangeIterator.$dict.__mro__ = [_b_.object.$dict]
+$RangeIterator.$dict.__mro__ = [_b_.object]
 
 $RangeDict.__iter__ = function(self){
     var res = {
@@ -153,7 +153,7 @@ $RangeDict.__next__ = function(self){
     return self.$counter
 }
 
-$RangeDict.__mro__ = [_b_.object.$dict]
+$RangeDict.__mro__ = [_b_.object]
 
 $RangeDict.__reversed__ = function(self){
     var n = $B.sub($RangeDict.__len__(self), 1)
@@ -285,7 +285,7 @@ var $SliceDict = {__class__:$B.$type,
     $descriptors:{start:true,step:true,stop:true}
 }
 
-$SliceDict.__mro__ = [_b_.object.$dict]
+$SliceDict.__mro__ = [_b_.object]
 
 $SliceDict.__repr__ = $SliceDict.__str__ = function(self){
         return 'slice('+_b_.str(self.start)+','+

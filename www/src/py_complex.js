@@ -2,17 +2,18 @@
 
 eval($B.InjectBuiltins())
 
-var $ObjectDict = _b_.object.$dict
+var object = _b_.object
 
 function $UnsupportedOpType(op,class1,class2){
     throw _b_.TypeError.$factory("unsupported operand type(s) for "+op+": '"+class1+"' and '"+class2+"'")
 }
 
-var complex = {__class__:$B.$type,
-    __dir__:$ObjectDict.__dir__,
-    __name__:'complex',
-    $native:true,
-    $descriptors:{real:true, imag:true}
+var complex = {
+    __class__: $B.$type,
+    __dir__: object.__dir__,
+    __name__: 'complex',
+    $native: true,
+    $descriptors: {real:true, imag:true}
 }
 
 complex.__abs__ = function(self){
@@ -69,7 +70,7 @@ complex.__mod__ = function(self,other) {
     throw _b_.TypeError.$factory("TypeError: can't mod complex numbers.")
 }
 
-complex.__mro__ = [$ObjectDict]
+complex.__mro__ = [object]
 
 complex.__mul__ = function(self,other){
     if(isinstance(other,complex)){

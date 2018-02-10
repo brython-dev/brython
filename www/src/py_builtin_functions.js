@@ -5,8 +5,8 @@ eval($B.InjectBuiltins())
 
 _b_.__debug__ = false
 
-var $ObjectDict = _b_.object.$dict,
-    odga = $ObjectDict.__getattribute__
+var object = _b_.object,
+    odga = object.__getattribute__
 
 // maps comparison operator to method names
 $B.$comps = {'>':'gt','>=':'ge','<':'lt','<=':'le'}
@@ -33,7 +33,7 @@ function check_no_kw(name, x, y){
 
 var $NoneDict = {__class__:$B.$type,__name__:'NoneType',__module__:"builtins"}
 
-$NoneDict.__mro__ = [$ObjectDict]
+$NoneDict.__mro__ = [object]
 
 $NoneDict.__setattr__ = function(self, attr){
     return no_set_attr($NoneDict, attr)
@@ -222,7 +222,7 @@ classmethod.$dict = {__class__:$B.$type,
     __name__:'classmethod',
     $factory: classmethod
 }
-classmethod.$dict.__mro__ = [$ObjectDict]
+classmethod.$dict.__mro__ = [object]
 
 //compile() (built in function)
 $B.$CodeObjectDict = {
@@ -231,7 +231,7 @@ $B.$CodeObjectDict = {
     __repr__:function(self){return '<code object '+self.name+', file '+self.filename+'>'},
 }
 $B.$CodeObjectDict.__str__ = $B.$CodeObjectDict.__repr__
-$B.$CodeObjectDict.__mro__ = [$ObjectDict]
+$B.$CodeObjectDict.__mro__ = [object]
 
 function compile() {
     var $=$B.args('compile', 6,
@@ -341,7 +341,7 @@ function divmod(x,y) {
 }
 
 var $EnumerateDict = {__class__:$B.$type,__name__:'enumerate'}
-$EnumerateDict.__mro__ = [$ObjectDict]
+$EnumerateDict.__mro__ = [object]
 
 function enumerate(){
     var $ns = $B.args("enumerate",2,{iterable:null,start:null},
@@ -623,7 +623,7 @@ exec.$is_func = true
 var $FilterDict = {__class__:$B.$type,__name__:'filter'}
 $FilterDict.__iter__ = function(self){return self}
 $FilterDict.__repr__ = $FilterDict.__str__ = function(){return "<filter object>"},
-$FilterDict.__mro__ = [$ObjectDict]
+$FilterDict.__mro__ = [object]
 
 function filter(func, iterable){
     check_no_kw('filter', func, iterable)
@@ -743,6 +743,7 @@ $B.$getattr = function(obj, attr, _default){
         throw _b_.AttributeError.$factory('object has no attribute '+rawname)
     }
 
+    //if(attr=="__str__"){console.log("$getattr, attr", attr, "de", obj, "klass", klass)}
     switch(attr) {
       case '__call__':
         if (typeof obj=='function'){
@@ -804,7 +805,7 @@ $B.$getattr = function(obj, attr, _default){
     if(klass.$native){
 
         if(klass[attr]===undefined){
-            var object_attr = _b_.object.$dict[attr]
+            var object_attr = _b_.object[attr]
             if(object_attr!==undefined){klass[attr]=object_attr}
             else{
                 if(_default===undefined){
@@ -856,7 +857,7 @@ $B.$getattr = function(obj, attr, _default){
         }
     }
     if(typeof attr_func!=='function'){
-        console.log(attr+' is not a function '+attr_func)
+        console.log(attr+' is not a function '+attr_func, klass)
     }
 
     if(attr_func===odga){
@@ -942,12 +943,12 @@ function hash(obj){
     //
     // throws an exception : unhashable type: 'A'
 
-    if(hashfunc.$infos.__func__===_b_.object.$dict.__hash__){
-        if(getattr(obj,'__eq__').$infos.__func__!==_b_.object.$dict.__eq__){
+    if(hashfunc.$infos.__func__===_b_.object.__hash__){
+        if(getattr(obj,'__eq__').$infos.__func__!==_b_.object.__eq__){
             throw _b_.TypeError.$factory("unhashable type: '"+
                 $B.get_class(obj).__name__+"'", 'hash')
         }else{
-            return _b_.object.$dict.__hash__(obj)
+            return _b_.object.__hash__(obj)
         }
     }else{
         return obj.__hashvalue__= hashfunc()
@@ -1134,9 +1135,9 @@ var iterator_class = $B.make_class({name:'iterator',
         self.counter = -1
     }
 })
-iterator_class.$dict.__module__ = "builtins"
+iterator_class.__module__ = "builtins"
 
-iterator_class.$dict.__next__ = function(self){
+iterator_class.__next__ = function(self){
     self.counter++
     if(self.len!==null && self.counter==self.len){
         throw _b_.StopIteration.$factory('')
@@ -1158,9 +1159,9 @@ $B.$iter = function(obj){
         if(gi!==-1){
             if(ln!==-1){
                 var len = getattr(ln,'__call__')()
-                return iterator_class(gi,len)
+                return iterator_class.$factory(gi,len)
             }else{
-                return iterator_class(gi,null)
+                return iterator_class.$factory(gi,null)
             }
       }
       throw _b_.TypeError.$factory("'"+$B.get_class(obj).__name__+"' object is not iterable")
@@ -1204,7 +1205,7 @@ function locals(){
 
 
 var $MapDict = {__class__:$B.$type,__name__:'map'}
-$MapDict.__mro__ = [$ObjectDict]
+$MapDict.__mro__ = [object]
 $MapDict.__iter__ = function (self){return self}
 
 function map(){
@@ -1322,17 +1323,17 @@ var memoryview = $B.make_class({name:'memoryview',
         }
     }
 })
-memoryview.$dict.__eq__ = function(self, other){
-    if(other.__class__!==memoryview.$dict){return false}
+memoryview.__eq__ = function(self, other){
+    if(other.__class__!==memoryview){return false}
     return getattr(self.obj, '__eq__')(other.obj)
 }
-memoryview.$dict.__name__ = "memory"
-memoryview.$dict.__getitem__ = function(self, key){
+memoryview.__name__ = "memory"
+memoryview.__getitem__ = function(self, key){
     var res = self.obj.__class__.__getitem__(self.obj, key)
-    if(key.__class__===_b_.slice.$dict){return memoryview(res)}
+    if(key.__class__===_b_.slice.$dict){return memoryview.$factory(res)}
     return res
 }
-memoryview.$dict.hex = function(self){
+memoryview.hex = function(self){
     var res = '',
         bytes = _b_.bytes.$factory(self)
     for(var i=0,len=bytes.source.length; i<len; i++){
@@ -1340,10 +1341,10 @@ memoryview.$dict.hex = function(self){
     }
     return res
 }
-memoryview.$dict.tobytes = function(self){
+memoryview.tobytes = function(self){
     return _b_.bytes.$factory(self.obj)
 }
-memoryview.$dict.tolist = function(self){
+memoryview.tolist = function(self){
     return _b_.list(_b_.bytes.$factory(self.obj))
 }
 
@@ -1366,7 +1367,7 @@ function next(obj){
 }
 
 var $NotImplemented = $B.make_class({__name__:"NotImplementedClass"}),
-    NotImplemented = $NotImplemented()
+    NotImplemented = $NotImplemented.$factory()
 
 function $not(obj){return !bool(obj)}
 
@@ -1433,7 +1434,7 @@ var $PropertyDict = {
     __class__ : $B.$type,
     __name__ : 'property'
 }
-$PropertyDict.__mro__ = [$ObjectDict]
+$PropertyDict.__mro__ = [object]
 $B.$PropertyDict = $PropertyDict
 
 function property(fget, fset, fdel, doc) {
@@ -1480,7 +1481,7 @@ function repr(obj){
         // class metaclass (usually "type") or its subclasses (usually
         // "object")
         // The metaclass is the attribute __class__ of the class dictionary
-        return _b_.object.$dict.__repr__(obj)
+        return _b_.object.__repr__(obj)
     }
     if(obj.$is_class || obj.$factory){
         // obj is a class
@@ -1499,7 +1500,7 @@ function repr(obj){
 }
 
 var $ReversedDict = {__class__:$B.$type,__name__:'reversed'}
-$ReversedDict.__mro__ = [$ObjectDict]
+$ReversedDict.__mro__ = [object]
 $ReversedDict.__iter__ = function(self){return self}
 $ReversedDict.__next__ = function(self){
     self.$counter--
@@ -1729,7 +1730,7 @@ function sorted () {
 
 // staticmethod() built in function
 var $StaticmethodDict = {__class__:$B.$type,__name__:'staticmethod'}
-$StaticmethodDict.__mro__ = [$ObjectDict]
+$StaticmethodDict.__mro__ = [object]
 
 function staticmethod(func) {
     func.$type = 'staticmethod'
@@ -1823,7 +1824,7 @@ $SuperDict.__getattribute__ = function(self, attr){
     throw _b_.AttributeError.$factory("object 'super' has no attribute '"+attr+"'")
 }
 
-$SuperDict.__mro__ = [$ObjectDict]
+$SuperDict.__mro__ = [object]
 
 $SuperDict.__repr__=$SuperDict.__str__=function(self){
     var res = "<super: <class '"+self.__thisclass__.__name__+"'>"
@@ -1871,7 +1872,7 @@ $Reader.__iter__ = function(self){return iter(self.$lines)}
 
 $Reader.__len__ = function(self){return self.lines.length}
 
-$Reader.__mro__ = [$ObjectDict]
+$Reader.__mro__ = [object]
 
 $Reader.close = function(self){self.closed = true}
 
@@ -1926,11 +1927,11 @@ $Reader.writable = function(self){return false}
 
 var $BufferedReader = {__class__:$B.$type,__name__:'_io.BufferedReader'}
 
-$BufferedReader.__mro__ = [$Reader,$ObjectDict]
+$BufferedReader.__mro__ = [$Reader,object]
 
 var $TextIOWrapper = {__class__:$B.$type,__name__:'_io.TextIOWrapper'}
 
-$TextIOWrapper.__mro__ = [$Reader,$ObjectDict]
+$TextIOWrapper.__mro__ = [$Reader,object]
 
 function $url_open(){
     // first argument is file : can be a string, or an instance of a DOM File object
@@ -2004,7 +2005,7 @@ $ZipDict.__iter__ = function(self){
         $B.$iterator(self.items,$zip_iterator)
 }
 
-$ZipDict.__mro__ = [$ObjectDict]
+$ZipDict.__mro__ = [object]
 
 function zip(){
     var res = {__class__:$ZipDict,items:[]}
@@ -2052,7 +2053,7 @@ function no_set_attr(klass, attr){
 }
 
 var $BoolDict = $B.$BoolDict = {__class__:$B.$type,
-    __dir__:$ObjectDict.__dir__,
+    __dir__:object.__dir__,
     __name__:'bool'
     //$native:true
 }
@@ -2069,7 +2070,7 @@ var False = false
 var $EllipsisDict = {__class__:$B.$type,
     __name__:'ellipsis'
 }
-$EllipsisDict.__mro__ = [$ObjectDict]
+$EllipsisDict.__mro__ = [object]
 
 var Ellipsis = {
     $dict: $EllipsisDict,
@@ -2103,11 +2104,11 @@ for(var $func in Ellipsis){
 
 // add attributes to native Function
 var $FunctionCodeDict = {__class__:$B.$type,__name__:'function code'}
-$FunctionCodeDict.__mro__ = [$ObjectDict]
+$FunctionCodeDict.__mro__ = [object]
 $FunctionCodeDict.$factory = {__class__:$B.$factory, $dict:$FunctionCodeDict}
 
 var $FunctionGlobalsDict = {__class:$B.$type,__name__:'function globals'}
-$FunctionGlobalsDict.__mro__ = [$ObjectDict]
+$FunctionGlobalsDict.__mro__ = [object]
 $FunctionGlobalsDict.$factory = {__class__:$B.$factory, $dict:$FunctionGlobalsDict}
 
 var $FunctionDict = $B.$FunctionDict = {
@@ -2147,7 +2148,7 @@ $FunctionDict.__getattribute__ = function(self, attr){
     }else if(self.$attrs && self.$attrs[attr] !== undefined){
         return self.$attrs[attr]
     }else{
-        return _b_.object.$dict.__getattribute__(self, attr)
+        return _b_.object.__getattribute__(self, attr)
     }
 }
 
@@ -2155,7 +2156,7 @@ $FunctionDict.__repr__=$FunctionDict.__str__ = function(self){
     return '<function '+self.$infos.__qualname__+'>'
 }
 
-$FunctionDict.__mro__ = [$ObjectDict]
+$FunctionDict.__mro__ = [object]
 $FunctionDict.__setattr__ = function(self, attr, value){
     if(self.$infos[attr]!==undefined){self.$infos[attr] = value}
     else{self.$attrs = self.$attrs || {}; self.$attrs[attr] = value}

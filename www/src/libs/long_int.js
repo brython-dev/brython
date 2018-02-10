@@ -395,7 +395,7 @@ $LongIntDict.__mod__ = function(self, other){
     return $LongIntDict.__divmod__(self, other)[1]
 }
 
-$LongIntDict.__mro__ = [_b_.object.$dict]
+$LongIntDict.__mro__ = [_b_.object]
 
 $LongIntDict.__mul__ = function(self, other){
     if (typeof other == 'number') other=LongInt(_b_.str(other))

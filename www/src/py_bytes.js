@@ -1,7 +1,7 @@
 ;(function($B){
 
 var _b_=$B.builtins
-var $ObjectDict = _b_.object.$dict
+var object = _b_.object
 var isinstance = _b_.isinstance, getattr=_b_.getattr, None=_b_.None
 
 var from_unicode={}, to_unicode={}
@@ -31,7 +31,7 @@ var $bytearray_iterator = $B.$iterator_class('bytearray_iterator')
 bytearray.__iter__ = function(self){
     return $B.$iterator(self.source,$bytearray_iterator)
 }
-bytearray.__mro__ = [$ObjectDict]
+bytearray.__mro__ = [object]
 
 bytearray.__repr__ = bytearray.__str__ = function(self){
     return 'bytearray('+bytes.__repr__(self)+")"
@@ -206,7 +206,7 @@ bytes.__lt__ = function(self,other){
     return _b_.list.$dict.__lt__(self.source,other.source)
 }
 
-bytes.__mro__ = [$ObjectDict]
+bytes.__mro__ = [object]
 
 bytes.__mul__ = function(){
     var $ = $B.args('__mul__', 2, {self:null, other:null}, ['self', 'other'],

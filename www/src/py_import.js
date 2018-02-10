@@ -12,7 +12,7 @@ $B.$ModuleDict = {
 $B.$ModuleDict.__repr__ = $B.$ModuleDict.__str__ = function(self){
     return '<module '+self.__name__+'>'
 }
-$B.$ModuleDict.__mro__ = [_b_.object.$dict]
+$B.$ModuleDict.__mro__ = [_b_.object]
 
 $B.$ModuleDict.__setattr__ = function(self, attr, value){
     if(self.__name__=='__builtins__'){
@@ -39,7 +39,7 @@ var loader = function(){}
 var Loader = {__class__:$B.$type,
     __name__ : 'Loader'
 }
-Loader.__mro__ = [_b_.object.$dict]
+Loader.__mro__ = [_b_.object]
 Loader.$factory = loader
 loader.$dict = Loader
 loader.__class__ = $B.$factory
@@ -371,7 +371,7 @@ finder_VFS.$dict = {
     }
 }
 
-finder_VFS.$dict.__mro__ = [_b_.object.$dict]
+finder_VFS.$dict.__mro__ = [_b_.object]
 finder_VFS.$dict.create_module.$type = 'classmethod'
 finder_VFS.$dict.exec_module.$type = 'classmethod'
 finder_VFS.$dict.find_module.$type = 'classmethod'
@@ -460,7 +460,7 @@ finder_stdlib_static.$dict = {
         return _b_.None;
     }
 }
-finder_stdlib_static.$dict.__mro__ = [_b_.object.$dict]
+finder_stdlib_static.$dict.__mro__ = [_b_.object]
 finder_stdlib_static.$dict.create_module.$type = 'classmethod'
 finder_stdlib_static.$dict.exec_module.$type = 'classmethod'
 finder_stdlib_static.$dict.find_module.$type = 'classmethod'
@@ -550,7 +550,7 @@ finder_path.$dict = {
     }
 }
 
-finder_path.$dict.__mro__ = [_b_.object.$dict]
+finder_path.$dict.__mro__ = [_b_.object]
 finder_path.$dict.create_module.$type = 'classmethod'
 finder_path.$dict.exec_module.$type = 'classmethod'
 finder_path.$dict.find_module.$type = 'classmethod'
@@ -628,7 +628,7 @@ vfs_hook.$dict = {
         self.vfs = undefined;
     }
 }
-vfs_hook.$dict.__mro__ = [_b_.object.$dict]
+vfs_hook.$dict.__mro__ = [_b_.object]
 $B.set_func_names(vfs_hook, "<import>")
 
 /**
@@ -719,7 +719,7 @@ url_hook.$dict = {
         // TODO: Implement
     }
 }
-url_hook.$dict.__mro__ = [_b_.object.$dict]
+url_hook.$dict.__mro__ = [_b_.object]
 
 
 $B.path_importer_cache = {};

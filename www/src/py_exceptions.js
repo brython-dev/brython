@@ -107,7 +107,7 @@ $TracebackDict.__getattribute__ = function(self, attr){
     }
 }
 
-$TracebackDict.__mro__ = [_b_.object.$dict]
+$TracebackDict.__mro__ = [_b_.object]
 
 $TracebackDict.__str__ = function(self){return '<traceback object>'}
 
@@ -136,7 +136,7 @@ $FrameDict.__getattr__ = function(self, attr){
     }
 }
 
-$FrameDict.__mro__ = [_b_.object.$dict]
+$FrameDict.__mro__ = [_b_.object]
 
 function to_dict(obj){
     var res = _b_.dict()
@@ -211,7 +211,7 @@ BaseException.__str__ = function(self){
     return _b_.str(self.args[0])
 }
 
-BaseException.__mro__ = [_b_.object.$dict]
+BaseException.__mro__ = [_b_.object]
 
 BaseException.__new__ = function(cls){
     cls = cls.$factory ? cls : cls.$dict

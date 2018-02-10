@@ -428,7 +428,7 @@ $LongIntDict.__mod__ = function(self, other){
     return intOrLong($LongIntDict.__divmod__(self, other)[1])
 }
 
-$LongIntDict.__mro__ = [_b_.int.$dict, _b_.object.$dict]
+$LongIntDict.__mro__ = [_b_.int.$dict, _b_.object]
 
 $LongIntDict.__mul__ = function(self, other){
     switch(self){

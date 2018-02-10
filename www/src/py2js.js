@@ -1464,8 +1464,10 @@ function $CallCtx(context){
               if(this.func.type=='id'){
                   if(this.func.is_builtin){
                       // simplify code for built-in functions
+                      var new_style = ["complex", "bytes", "bytearray",
+                          "object", "memoryview"]
                       if($B.builtin_funcs[this.func.value]!==undefined &&
-                          ["complex", "bytes", "bytearray"].indexOf(this.func.value) == -1 // XXX temporary
+                              new_style.indexOf(this.func.value) == -1 // XXX temporary
                           ){
                           return func_js+args_str
                       }
@@ -3476,7 +3478,10 @@ function $IdCtx(context,value){
                     }else{
                         // Builtin name ; it might be redefined inside the
                         // script, eg to redefine open()
-                        if(val!=='__builtins__'){val = '$B.builtins.'+val}
+                        if(val!=='__builtins__'){
+                            if(val=="object"){console.log("found in builtins", val)}
+                            val = '$B.builtins.'+val
+                        }
                         this.is_builtin = true
                     }
                 }else if(scope.id==scope.module){
@@ -3494,6 +3499,7 @@ function $IdCtx(context,value){
                                 // Cf issue #311
                                 if(found.length>1 && found[1].id == '__builtins__'){
                                     this.is_builtin = true
+                                    console.log("found in builtins", val)
                                     this.result = '$B.builtins.'+val+$to_js(this.tree,'')
                                     return this.result
                                 }

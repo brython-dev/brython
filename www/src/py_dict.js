@@ -2,7 +2,7 @@
 
 eval($B.InjectBuiltins())
 
-var $ObjectDict = _b_.object.$dict,
+var object = _b_.object,
     str_hash = _b_.str.$dict.__hash__,
     $N = _b_.None
 
@@ -20,7 +20,7 @@ function $DictClass($keys,$values){
 var $DictDict = {__class__:$B.$type,
     __name__ : 'dict',
     $native:true,
-    __dir__:$ObjectDict.__dir__
+    __dir__:object.__dir__
 }
 
 var $key_iterator = function(d) {
@@ -384,7 +384,7 @@ $DictDict.__len__ = function(self) {
     return _count
 }
 
-$DictDict.__mro__ = [$ObjectDict]
+$DictDict.__mro__ = [object]
 
 $DictDict.__ne__ = function(self,other){return !$DictDict.__eq__(self,other)}
 
@@ -756,7 +756,7 @@ var mappingproxyDict = {
     __class__ : $B.$type,
     __name__ : "mappingproxy"
 }
-mappingproxyDict.__mro__ = [_b_.object.$dict]
+mappingproxyDict.__mro__ = [object]
 
 mappingproxyDict.__setitem__ = function(){
     throw _b_.TypeError.$factory("'mappingproxy' object does not support item assignment")

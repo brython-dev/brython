@@ -1,34 +1,9 @@
-// A function that builds the __new__ method for the factory function
-__BRYTHON__.$__new__ = function(factory){
-    console.log('factory', factory)
-    return function(cls){
-        /*
-        if(cls===undefined){
-            throw __BRYTHON__.builtins.TypeError.$factory(factory.$dict.__name__+'.__new__(): not enough arguments')
-        }
-        */
-        console.log('create new object', cls, factory)
-        var res = factory.apply(null,[])
-        res.__class__ = cls.$dict
-        var init_func = null
-        try{init_func = __BRYTHON__.builtins.getattr(res,'__init__')}
-        catch(err){}
-        if(init_func!==null){
-            var args = [], pos=0
-            for(var i=1, _len_i = arguments.length; i < _len_i;i++){args[pos++]=arguments[i]}
-            init_func.apply(null,args)
-            res.__initialized__ = true
-        }
-        return res
-    }
-}
-
 __BRYTHON__.builtins.object = (function($B){
 
 var _b_=$B.builtins
 
 // class object for the built-in class 'object'
-var $ObjectDict = {
+var object = {
     //__class__:$type, : not here, added in py_type.js after $type is defined
     // __bases__ : set to an empty tuple in py_list.js after tuple is defined
     __name__:'object',
@@ -45,13 +20,13 @@ var opnames = ['add','sub','mul','truediv','floordiv','mod','pow',
     'lshift','rshift','and','xor','or']
 var opsigns = ['+','-','*','/','//','%','**','<<','>>','&','^', '|']
 
-$ObjectDict.__delattr__ = function(self,attr){
+object.__delattr__ = function(self,attr){
     _b_.getattr(self, attr) // raises AttributeError if necessary
     delete self[attr];
     return _b_.None
 }
 
-$ObjectDict.__dir__ = function(self) {
+object.__dir__ = function(self) {
     var objects = [self],
         pos=1,
         klass = self.__class__ || $B.get_class(self)
@@ -89,7 +64,7 @@ $ObjectDict.__dir__ = function(self) {
     return res
 }
 
-$ObjectDict.__eq__ = function(self,other){
+object.__eq__ = function(self,other){
     // equality test defaults to identity of objects
     //test_issue_1393
     var _class=$B.get_class(self)
@@ -102,17 +77,21 @@ $ObjectDict.__eq__ = function(self,other){
     return self===other
 }
 
-$ObjectDict.__format__ = function(){
+object.__format__ = function(){
     var $ = $B.args('__format__', 2, {self:null, spec:null},
         ['self', 'spec'], arguments, {}, null, null)
     if($.spec!==''){throw _b_.TypeError.$factory("non-empty format string passed to object.__format__")}
     return _b_.getattr($.self, '__str__')()
 }
 
-$ObjectDict.__ge__ = function(){return _b_.NotImplemented}
+object.__ge__ = function(){return _b_.NotImplemented}
 
-$ObjectDict.__getattribute__ = function(obj,attr){
-var klass = obj.__class__ || $B.get_class(obj)
+object.__getattribute__ = function(obj,attr){
+
+    var klass = obj.__class__ || $B.get_class(obj)
+
+    var trace= undefined
+    if(attr==trace){console.log("attr", attr, "de", obj, "klass", klass)}
     if(attr==='__class__'){
         return klass
     }
@@ -130,28 +109,12 @@ var klass = obj.__class__ || $B.get_class(obj)
         res = check(obj, klass, attr)
         if(res===undefined){
             var mro = klass.__mro__
+            if(attr==trace){console.log("cherche dans mro", mro)}
             for(var i=0, _len_i = mro.length; i < _len_i;i++){
                 res = check(obj, mro[i], attr)
                 if(res!==undefined){break}
             }
         }
-
-        // If the class doesn't define __str__ but defines __repr__,
-        // use __repr__
-        /*
-        if(res===undefined && attr=="__str__"){
-            var attr1 = "__repr__",
-                res1 = check(obj, klass, attr1)
-            if(res1===undefined){
-                var mro = klass.__mro__
-                for(var i=0, _len_i = mro.length; i < _len_i;i++){
-                    res1 = check(obj, mro[i], attr)
-                    if(res1!==undefined){break}
-                }
-            }
-            res = res1
-        }
-        */
 
     }else{
         if(res.__set__===undefined){
@@ -310,15 +273,15 @@ var klass = obj.__class__ || $B.get_class(obj)
     }
 }
 
-$ObjectDict.__gt__ = function(){return _b_.NotImplemented}
+object.__gt__ = function(){return _b_.NotImplemented}
 
-$ObjectDict.__hash__ = function (self) {
+object.__hash__ = function (self) {
     var hash = self.__hashvalue__
     if(hash!==undefined){return hash}
     return self.__hashvalue__=$B.$py_next_hash--;
 }
 
-$ObjectDict.__init__ = function(){
+object.__init__ = function(){
     if(arguments.length==0){
         throw _b_.TypeError.$factory("descriptor '__init__' of 'object' object "+
             "needs an argument")
@@ -327,7 +290,7 @@ $ObjectDict.__init__ = function(){
     return _b_.None
 }
 
-$ObjectDict.__init_subclass__ = function(cls, kwargs){
+object.__init_subclass__ = function(cls, kwargs){
     // Default implementation only checks that no keyword arguments were passed
     if(kwargs!==undefined){
         if(kwargs.__class__!==_b_.dict.$dict ||
@@ -338,16 +301,16 @@ $ObjectDict.__init_subclass__ = function(cls, kwargs){
     return _b_.None
 }
 
-$ObjectDict.__le__ = function(){return _b_.NotImplemented}
+object.__le__ = function(){return _b_.NotImplemented}
 
-$ObjectDict.__lt__ = function(){return _b_.NotImplemented}
+object.__lt__ = function(){return _b_.NotImplemented}
 
-$ObjectDict.__mro__ = []
+object.__mro__ = []
 
-$ObjectDict.__new__ = function(cls, ...args){
+object.__new__ = function(cls, ...args){
     if(cls===undefined){throw _b_.TypeError.$factory('object.__new__(): not enough arguments')}
     var init_func = $B.$getattr(cls, "__init__")
-    if(init_func===$ObjectDict.__init__){
+    if(init_func===object.__init__){
         if(args.length>0){
             throw _b_.TypeError.$factory("object() takes no parameters")
         }
@@ -355,11 +318,11 @@ $ObjectDict.__new__ = function(cls, ...args){
     return {__class__ : cls.__class__ === $B.$factory ? cls.$dict : cls}
 }
 
-$ObjectDict.__ne__ = function(self,other){
+object.__ne__ = function(self,other){
     return !$B.rich_comp("__eq__", self, other)
 }
 
-$ObjectDict.__repr__ = function(self){
+object.__repr__ = function(self){
     if(self===object) return "<class 'object'>"
     if(self.__class__===$B.$factory){
         return "<class '"+self.$dict.__name__+"'>"
@@ -372,12 +335,12 @@ $ObjectDict.__repr__ = function(self){
     }
 }
 
-$ObjectDict.__setattr__ = function(self,attr,val){
+object.__setattr__ = function(self,attr,val){
     if(val===undefined){ // setting an attribute to 'object' type is not allowed
         throw _b_.TypeError.$factory("can't set attributes of built-in/extension type 'object'")
-    }else if(self.__class__===$ObjectDict){
+    }else if(self.__class__===object){
         // setting an attribute to object() is not allowed
-        if($ObjectDict[attr]===undefined){
+        if(object[attr]===undefined){
             throw _b_.AttributeError.$factory("'object' object has no attribute '"+attr+"'")
         }else{
             throw _b_.AttributeError.$factory("'object' object attribute '"+attr+"' is read-only")
@@ -387,58 +350,50 @@ $ObjectDict.__setattr__ = function(self,attr,val){
     self[attr] = val
     return _b_.None
 }
-$ObjectDict.__setattr__.__get__ = function(obj){
+object.__setattr__.__get__ = function(obj){
     return function(attr, val){
-        $ObjectDict.__setattr__(obj, attr, val)
+        object.__setattr__(obj, attr, val)
     }
 }
 
-$ObjectDict.__setattr__.__str__ = function(){return 'method object.setattr'}
+object.__setattr__.__str__ = function(){return 'method object.setattr'}
 
-$ObjectDict.__str__ = function(self){
+object.__str__ = function(self){
     var repr_func = $B.$getattr(self, "__repr__")
     return $B.$call(repr_func)()
 }
 
-$ObjectDict.__subclasshook__ = function(){return _b_.NotImplemented}
+object.__subclasshook__ = function(){return _b_.NotImplemented}
 
-// add __str__ and __repr__
-$B.set_func_names($ObjectDict, "builtins")
 
 // constructor of the built-in class 'object'
-function object(){
-    var res = {__class__:$ObjectDict},
+object.$factory = function(){
+    var res = {__class__:object},
         args = [res].concat(Array.prototype.slice.call(arguments))
-    $ObjectDict.__init__.apply(null, args)
+    object.__init__.apply(null, args)
     return res
 }
 
-object.$dict = $ObjectDict
-// object.__class__ = $factory : this is done in py_types
-$ObjectDict.$factory = object
-object.__repr__ = object.__str__ = function(){return "<class 'object'>"}
+$B.set_func_names(object, "builtins")
 
 $B.make_class = function(class_obj){
     // class_obj has at least an attribute "name", and possibly an attribute
     // init
 
-    function A(){
-        var res = {__class__:A.$dict}
+    var A = {
+        __class__: $B.$type,
+        __mro__: [object],
+        __name__: class_obj.name
+    }
+
+    A.$factory = function(){
+        var res = {__class__:A}
         if(class_obj.init){
             class_obj.init.apply(null,
                 [res].concat(Array.prototype.slice.call(arguments)))
         }
         return res
     }
-
-    A.__class__ = $B.$factory
-
-    A.$dict = {
-        __class__: $B.$type,
-        __name__: class_obj.name,
-        $factory: A
-    }
-    A.$dict.__mro__ = [object.$dict]
 
     return A
 }

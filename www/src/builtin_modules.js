@@ -146,7 +146,7 @@
                     }
                 }
 
-                dict.__mro__ = [$B.DOMNode, $B.builtins.object.$dict]
+                dict.__mro__ = [$B.DOMNode, $B.builtins.object]
 
                 dict.__new__ = function(cls){
                     // __new__ must be defined explicitely : it returns an instance of

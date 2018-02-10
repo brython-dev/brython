@@ -49,10 +49,10 @@ if (!String.prototype.trimRight) {
   };
 }
 
-var $ObjectDict = object.$dict
+var object = _b_.object
 
 var $StringDict = {__class__:$B.$type,
-    __dir__:$ObjectDict.__dir__,
+    __dir__:object.__dir__,
     __name__:'str',
     $native:true
 }
@@ -106,7 +106,7 @@ $StringDict.__delitem__ = function(){
 
 // __dir__must be assigned explicitely because attribute resolution for builtin
 // classes doesn't use __mro__
-$StringDict.__dir__ = $ObjectDict.__dir__
+$StringDict.__dir__ = object.__dir__
 
 $StringDict.__eq__ = function(self,other){
     if(other===undefined){ // compare object "self" to class "str"
@@ -756,7 +756,7 @@ $StringDict.__mod__ = function(self, args) {
     return ret
 }
 
-$StringDict.__mro__ = [$ObjectDict]
+$StringDict.__mro__ = [object]
 
 $StringDict.__mul__ = function(){
     var $=$B.args('__mul__',2,{self:null,other:null},['self','other'],
@@ -1601,6 +1601,7 @@ $StringDict.zfill = function(self, width) {
 }
 
 function str(arg){
+    //console.log("str", arg)
     arg = arg.__class__ === $B.$factory ? arg.$dict : arg
     if(arg===undefined){console.log("undef"); return '<undefined>'}
     switch(typeof arg) {
@@ -1635,7 +1636,6 @@ function str(arg){
              return arg.toString()
         }
     }
-
     return $B.$call(f)()
 }
 str.__class__ = $B.$factory
@@ -1677,7 +1677,7 @@ for(var $attr in $StringDict){
 $StringSubclassDict.__new__ = function(cls){
     return {__class__:cls.$factory ? cls : cls.$dict}
 }
-$StringSubclassDict.__mro__ = [$ObjectDict]
+$StringSubclassDict.__mro__ = [object]
 
 // factory for str subclasses
 $B.$StringSubclassFactory = {

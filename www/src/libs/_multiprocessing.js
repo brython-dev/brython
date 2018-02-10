@@ -20,7 +20,7 @@ var $convert_args=function(args) {
     return _list.join(',')
 }
 
-$ProcessDict.__mro__ = [_b_.object.$dict]
+$ProcessDict.__mro__ = [_b_.object]
 
 $ProcessDict.__str__=$ProcessDict.toString=$ProcessDict.__repr__=function(self){
    return '<object Process>'
@@ -100,7 +100,7 @@ Process.$dict = $ProcessDict
 
 var $PoolDict = {__class__:$B.$type,__name__:'Pool'}
 
-$PoolDict.__mro__ = [_b_.object.$dict]
+$PoolDict.__mro__ = [_b_.object]
 
 $PoolDict.__enter__ = function(self){}
 $PoolDict.__exit__ = function(self){}
