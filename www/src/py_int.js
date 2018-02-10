@@ -11,17 +11,20 @@ function $err(op,other){
 }
 
 // dictionary for built-in class 'int'
-var $IntDict = {__class__:$B.$type,
-    __name__:'int',
-    __dir__:object.__dir__,
-    $native:true,
-    $descriptors:{'numerator':true,
-                 'denominator':true,
-                 'imag':true,
-                 'real':true}
+var int = {__class__: $B.$type,
+    __name__: 'int',
+    __dir__: object.__dir__,
+    $is_class: true,
+    $native: true,
+    $descriptors: {
+        'numerator': true,
+        'denominator': true,
+        'imag': true,
+        'real': true
+    }
 }
 
-$IntDict.from_bytes = function() {
+int.from_bytes = function() {
   var $=$B.args("from_bytes", 3,
       {bytes:null, byteorder:null, signed:null}, ['bytes', 'byteorder', 'signed'],
       arguments, {signed:False}, null, null)
@@ -69,26 +72,26 @@ $IntDict.from_bytes = function() {
   throw _b_.ValueError.$factory("byteorder must be either 'little' or 'big'");
 }
 
-$IntDict.to_bytes = function(length, byteorder, star) {
+int.to_bytes = function(length, byteorder, star) {
   //var len = x.length
   throw _b_.NotImplementedError.$factory("int.to_bytes is not implemented yet")
 }
 
 
-//$IntDict.__and__ = function(self,other){return self & other} // bitwise AND
+//int.__and__ = function(self,other){return self & other} // bitwise AND
 
-$IntDict.__abs__ = function(self){return abs(self)}
+int.__abs__ = function(self){return abs(self)}
 
-$IntDict.__bool__ = function(self){return new Boolean(self.valueOf())}
+int.__bool__ = function(self){return new Boolean(self.valueOf())}
 
-$IntDict.__ceil__ = function(self){return Math.ceil(self)}
+int.__ceil__ = function(self){return Math.ceil(self)}
 
 //is this a duplicate?
-$IntDict.__class__ = $B.$type
+int.__class__ = $B.$type
 
-$IntDict.__divmod__ = function(self, other){return divmod(self, other)}
+int.__divmod__ = function(self, other){return divmod(self, other)}
 
-$IntDict.__eq__ = function(self,other){
+int.__eq__ = function(self,other){
     // compare object "self" to class "int"
     if(other===undefined) return self===int
     if(isinstance(other,int)) return self.valueOf()==other.valueOf()
@@ -103,7 +106,7 @@ $IntDict.__eq__ = function(self,other){
     return self.valueOf()===other
 }
 
-$IntDict.__float__ = function(self){
+int.__float__ = function(self){
     return new Number(self)
 }
 
@@ -136,7 +139,7 @@ function preformat(self, fmt){
 }
 
 
-$IntDict.__format__ = function(self,format_spec){
+int.__format__ = function(self,format_spec){
     var fmt = new $B.parse_format_spec(format_spec)
     if(fmt.type && 'eEfFgG%'.indexOf(fmt.type)!=-1){
         // Call __format__ on float(self)
@@ -159,9 +162,9 @@ $IntDict.__format__ = function(self,format_spec){
     return $B.format_width(res, fmt)
 }
 
-//$IntDict.__float__ = function(self){return float(self)}
+//int.__float__ = function(self){return float(self)}
 
-$IntDict.__floordiv__ = function(self,other){
+int.__floordiv__ = function(self,other){
     if(isinstance(other,int)){
         if(other==0) throw ZeroDivisionError.$factory('division by zero')
         return Math.floor(self/other)
@@ -176,40 +179,40 @@ $IntDict.__floordiv__ = function(self,other){
     $err("//",other)
 }
 
-$IntDict.__hash__ = function(self){
+int.__hash__ = function(self){
    if (self === undefined) {
-      return $IntDict.__hashvalue__ || $B.$py_next_hash--  // for hash of int type (not instance of int)
+      return int.__hashvalue__ || $B.$py_next_hash--  // for hash of int type (not instance of int)
    }
 
    return self.valueOf()
 }
 
-//$IntDict.__ior__ = function(self,other){return self | other} // bitwise OR
+//int.__ior__ = function(self,other){return self | other} // bitwise OR
 
-$IntDict.__index__ = function(self){return self}
+int.__index__ = function(self){return self}
 
-$IntDict.__init__ = function(self,value){
+int.__init__ = function(self,value){
     if(value===undefined){value=0}
     self.toString = function(){return value}
     //self.valueOf = function(){return value}
     return $N
 }
 
-$IntDict.__int__ = function(self){return self}
+int.__int__ = function(self){return self}
 
-$IntDict.__invert__ = function(self){return ~self}
+int.__invert__ = function(self){return ~self}
 
 // bitwise left shift
-$IntDict.__lshift__ = function(self,other){
+int.__lshift__ = function(self,other){
     if(isinstance(other, int)){
-        return int($B.LongInt.$dict.__lshift__($B.LongInt(self), $B.LongInt(other)))
+        return int.$factory($B.LongInt.$dict.__lshift__($B.LongInt(self), $B.LongInt(other)))
     }
     var rlshift = getattr(other, '__rlshift__', null)
     if(rlshift!==null){return rlshift(self)}
     $err('<<', other)
 }
 
-$IntDict.__mod__ = function(self,other) {
+int.__mod__ = function(self,other) {
     // can't use Javascript % because it works differently for negative numbers
     if(isinstance(other,_b_.tuple) && other.length==1) other=other[0]
     if(isinstance(other,[int, _b_.float, bool])){
@@ -222,9 +225,9 @@ $IntDict.__mod__ = function(self,other) {
     $err('%',other)
 }
 
-$IntDict.__mro__ = [object]
+int.__mro__ = [object]
 
-$IntDict.__mul__ = function(self,other){
+int.__mul__ = function(self,other){
 
     var val = self.valueOf()
 
@@ -236,7 +239,7 @@ $IntDict.__mul__ = function(self,other){
     if(isinstance(other,int)){
         var res = self*other
         if(res>$B.min_int && res<$B.max_int){return res}
-        else{return int($B.LongInt.$dict.__mul__($B.LongInt(self),
+        else{return int.$factory($B.LongInt.$dict.__mul__($B.LongInt(self),
                 $B.LongInt(other)))}
     }
     if(isinstance(other,_b_.float)){
@@ -244,11 +247,11 @@ $IntDict.__mul__ = function(self,other){
     }
     if(isinstance(other,_b_.bool)){
          if (other.valueOf()) return self
-         return int(0)
+         return int.$factory(0)
     }
     if(isinstance(other,_b_.complex)){
-        return $B.make_complex($IntDict.__mul__(self, other.$real),
-            $IntDict.__mul__(self, other.$imag))
+        return $B.make_complex(int.__mul__(self, other.$real),
+            int.__mul__(self, other.$imag))
     }
     if(isinstance(other,[_b_.list,_b_.tuple])){
         var res = []
@@ -262,24 +265,24 @@ $IntDict.__mul__ = function(self,other){
     $err("*",other)
 }
 
-$IntDict.__name__ = 'int'
+int.__name__ = 'int'
 
-$IntDict.__neg__ = function(self){return -self}
+int.__neg__ = function(self){return -self}
 
-$IntDict.__new__ = function(cls){
+int.__new__ = function(cls){
     if(cls===undefined){throw _b_.TypeError.$factory('int.__new__(): not enough arguments')}
     return {__class__:cls.$factory ? cls : cls.$dict}
 }
 
-$IntDict.__pos__ = function(self){return self}
+int.__pos__ = function(self){return self}
 
-$IntDict.__pow__ = function(self,other,z){
+int.__pow__ = function(self,other,z){
     if(isinstance(other, int)) {
       switch(other.valueOf()) {
         case 0:
-          return int(1)
+          return int.$factory(1)
         case 1:
-          return int(self.valueOf())
+          return int.$factory(self.valueOf())
       }
       if(z !== undefined && z !== null){
           // If z is provided, the algorithm is faster than computing
@@ -295,7 +298,7 @@ $IntDict.__pow__ = function(self,other,z){
       if(res>$B.min_int && res<$B.max_int){return res}
       else if(res !== Infinity && !isFinite(res)){return res}
       else{
-          return int($B.LongInt.$dict.__pow__($B.LongInt(self),
+          return int.$factory($B.LongInt.$dict.__pow__($B.LongInt(self),
              $B.LongInt(other)))
       }
     }
@@ -314,24 +317,25 @@ $IntDict.__pow__ = function(self,other,z){
     $err("**",other)
 }
 
-$IntDict.__repr__ = function(self){
+int.__repr__ = function(self){
     if(self===int) return "<class 'int'>"
     return self.toString()
 }
 
 // bitwise right shift
-$IntDict.__rshift__ = function(self,other){
+int.__rshift__ = function(self,other){
     if(isinstance(other, int)){
-        return int($B.LongInt.$dict.__rshift__($B.LongInt(self), $B.LongInt(other)))
+        return int.$factory($B.LongInt.$dict.__rshift__($B.LongInt(self),
+            $B.LongInt(other)))
     }
     var rrshift = getattr(other, '__rrshift__', null)
     if(rrshift!==null){return rrshift(self)}
     $err('>>', other)
 }
 
-$IntDict.__setattr__ = function(self,attr,value){
+int.__setattr__ = function(self,attr,value){
     if(typeof self=="number"){
-        if($IntDict[attr]===undefined){
+        if(int.$factory[attr]===undefined){
             throw _b_.AttributeError.$factory("'int' object has no attribute '"+attr+"'")
         }else{
             throw _b_.AttributeError.$factory("'int' object attribute '"+attr+"' is read-only")
@@ -342,9 +346,9 @@ $IntDict.__setattr__ = function(self,attr,value){
     return $N
 }
 
-$IntDict.__str__ = $IntDict.__repr__
+int.__str__ = int.__repr__
 
-$IntDict.__truediv__ = function(self,other){
+int.__truediv__ = function(self,other){
     if(isinstance(other,int)){
         if(other==0) throw ZeroDivisionError.$factory('division by zero')
         if(other.__class__==$B.LongInt.$dict){return new Number(self/parseInt(other.value))}
@@ -363,19 +367,19 @@ $IntDict.__truediv__ = function(self,other){
     $err("/",other)
 }
 
-//$IntDict.__xor__ = function(self,other){return self ^ other} // bitwise XOR
+//int.__xor__ = function(self,other){return self ^ other} // bitwise XOR
 
-$IntDict.bit_length = function(self){
+int.bit_length = function(self){
     s = bin(self)
     s = getattr(s,'lstrip')('-0b') // remove leading zeros and minus sign
     return s.length       // len('100101') --> 6
 }
 
 // descriptors
-$IntDict.numerator = function(self){return self}
-$IntDict.denominator = function(self){return int(1)}
-$IntDict.imag = function(self){return int(0)}
-$IntDict.real = function(self){return self}
+int.numerator = function(self){return self}
+int.denominator = function(self){return int.$factory(1)}
+int.imag = function(self){return int.$factory(0)}
+int.real = function(self){return self}
 
 
 $B.max_int32= (1<<30) * 2 - 1
@@ -403,7 +407,7 @@ var $ops = {'&':'and','|':'or','^':'xor'}
 for(var $op in $ops){
     var opf = $op_func.replace(/-/gm,$op)
     opf = opf.replace(new RegExp('sub','gm'),$ops[$op])
-    eval('$IntDict.__'+$ops[$op]+'__ = '+opf)
+    eval('int.__'+$ops[$op]+'__ = '+opf)
 }
 
 // code for + and -
@@ -443,7 +447,7 @@ var $ops = {'+':'add','-':'sub'}
 for(var $op in $ops){
     var opf = $op_func.replace(/-/gm,$op)
     opf = opf.replace(new RegExp('sub','gm'),$ops[$op])
-    eval('$IntDict.__'+$ops[$op]+'__ = '+opf)
+    eval('int.__'+$ops[$op]+'__ = '+opf)
 }
 
 // comparison methods
@@ -457,7 +461,7 @@ var $comp_func = function(self,other){
       return self.valueOf() > _b_.bool.$dict.__hash__(other)
     }
     if (hasattr(other, '__int__') || hasattr(other, '__index__')) {
-       return $IntDict.__gt__(self, $B.$GetInt(other))
+       return int.__gt__(self, $B.$GetInt(other))
     }
 
     // See if other has the opposite operator, eg < for >
@@ -470,14 +474,14 @@ var $comp_func = function(self,other){
 $comp_func += '' // source code
 
 for(var $op in $B.$comps){
-    eval("$IntDict.__"+$B.$comps[$op]+'__ = '+
+    eval("int.__"+$B.$comps[$op]+'__ = '+
           $comp_func.replace(/>/gm,$op).
               replace(/__gt__/gm,'__'+$B.$comps[$op]+'__').
               replace(/__lt__/, '__'+$B.$inv_comps[$op]+'__'))
 }
 
 // add "reflected" methods
-$B.make_rmethods($IntDict)
+$B.make_rmethods(int)
 
 var $valid_digits=function(base) {
     var digits=''
@@ -493,7 +497,7 @@ var $valid_digits=function(base) {
     return digits
 }
 
-var int = function(value, base){
+int.$factory = function(value, base){
     // int() with no argument returns 0
     if(value===undefined){return 0}
 
@@ -614,11 +618,8 @@ var int = function(value, base){
     throw _b_.TypeError.$factory("int() argument must be a string, a bytes-like "+
         "object or a number, not '"+$B.get_class(value).__name__+"'")
 }
-int.$dict = $IntDict
-int.__class__ = $B.$factory
-$IntDict.$factory = int
 
-$B.set_func_names(int.$dict, "__builtins__")
+$B.set_func_names(int, "builtins")
 
 _b_.int = int
 
@@ -630,7 +631,7 @@ $BoolDict.__add__ = function(self,other){
 }
 
 $BoolDict.__and__ = function(self, other){
-    return bool($IntDict.__and__(self, other))
+    return bool(int.__and__(self, other))
 }
 
 $BoolDict.__eq__ = function(self,other){
@@ -642,11 +643,11 @@ $BoolDict.__ne__ = function(self,other){
 }
 
 $BoolDict.__ge__ = function(self,other){
-    return _b_.int.$dict.__ge__($BoolDict.__hash__(self),other)
+    return _b_.int.__ge__($BoolDict.__hash__(self),other)
 }
 
 $BoolDict.__gt__ = function(self,other){
-    return _b_.int.$dict.__gt__($BoolDict.__hash__(self),other)
+    return _b_.int.__gt__($BoolDict.__hash__(self),other)
 }
 
 $BoolDict.__hash__ = $BoolDict.__index__= $BoolDict.__int__=function(self) {
@@ -667,7 +668,7 @@ $BoolDict.__mul__ = function(self,other){
 $BoolDict.__neg__ = function(self){return -$B.int_or_bool(self)}
 
 $BoolDict.__or__ = function(self, other){
-    return bool($IntDict.__or__(self, other))
+    return bool(int.__or__(self, other))
 }
 
 $BoolDict.__pos__ = $B.int_or_bool
@@ -689,6 +690,6 @@ $BoolDict.__xor__ = function(self, other) {
 }
 
 
-$BoolDict.__mro__ = [$IntDict, _b_.object]
+$BoolDict.__mro__ = [int, _b_.object]
 
 })(__BRYTHON__)

@@ -428,7 +428,7 @@ $LongIntDict.__mod__ = function(self, other){
     return intOrLong($LongIntDict.__divmod__(self, other)[1])
 }
 
-$LongIntDict.__mro__ = [_b_.int.$dict, _b_.object]
+$LongIntDict.__mro__ = [_b_.int, _b_.object]
 
 $LongIntDict.__mul__ = function(self, other){
     switch(self){
@@ -654,8 +654,8 @@ function LongInt(value, base){
         if(value>=0){value=new Number(Math.round(value.value))}
         else{value=new Number(Math.ceil(value.value))}
     } else if(isinstance(value, _b_.bool)){
-        if (value.valueOf()) return int(1)
-        return int(0)
+        if (value.valueOf()) return int.$factory(1)
+        return int.$factory(0)
     }
     if(typeof value=='number'){
         if(isSafeInteger(value)){value = value.toString()}

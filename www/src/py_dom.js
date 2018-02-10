@@ -46,8 +46,8 @@ function $mouseCoords(ev){
             + document.documentElement.scrollTop;
     }
     var res = {}
-    res.x = _b_.int(posx)
-    res.y = _b_.int(posy)
+    res.x = _b_.int.$factory(posx)
+    res.y = _b_.int.$factory(posy)
     res.__getattr__ = function(attr){return this[attr]}
     res.__class__ = "MouseCoords"
     return res
@@ -692,7 +692,7 @@ DOMNode.__getitem__ = function(self, key){
         if(typeof self.elt.length=='number'){
             if((typeof key=="number" || typeof key=="boolean") &&
                 typeof self.elt.item=='function'){
-                    var key_to_int = _b_.int(key)
+                    var key_to_int = _b_.int.$factory(key)
                     if(key_to_int<0){key_to_int+=self.elt.length}
                     var res = DOMNode.$factory(self.elt.item(key_to_int))
                     if(res===undefined){throw _b_.KeyError.$factory(key)}

@@ -77,7 +77,7 @@ for(var $func in None){
 function abs(obj){
     check_nb_args('abs', 1, arguments.length)
     check_no_kw('abs', obj)
-    if(isinstance(obj,_b_.int)) return _b_.int(Math.abs(obj));
+    if(isinstance(obj,_b_.int)) return _b_.int.$factory(Math.abs(obj));
     if(isinstance(obj,_b_.float)) return _b_.float(Math.abs(obj));
     if(hasattr(obj,'__abs__')){return getattr(obj,'__abs__')()};
 
@@ -719,7 +719,7 @@ $B.$getattr = function(obj, attr, _default){
         // avoid calling $B.get_class in simple cases for performance
         if(typeof obj=='string'){klass = _b_.str.$dict}
         else if(typeof obj=='number'){
-            klass = obj % 1 == 0 ? _b_.int.$dict : _b_.float.$dict
+            klass = obj % 1 == 0 ? _b_.int : _b_.float.$dict
         }else if(obj instanceof Number){
             klass = _b_.float.$dict
         }else{
@@ -912,7 +912,7 @@ function hash(obj){
     obj = obj.__class__ === $B.$factory ? obj.$dict : obj
     if (obj.__hashvalue__ !== undefined) return obj.__hashvalue__
     if (isinstance(obj, _b_.int)) return obj.valueOf()
-    if (isinstance(obj, bool)) return _b_.int(obj)
+    if (isinstance(obj, bool)) return _b_.int.$factory(obj)
     if(obj.__class__===$B.$factory || obj.$is_class || obj.__class__===$B.$type){
         return obj.__hashvalue__ = $B.$py_next_hash--
     }
@@ -1406,7 +1406,7 @@ function pow() {
     var res = getattr(x,'__pow__')(y, z)
     if(z === null){return res}
     else{
-        if(x!=_b_.int(x) || y != _b_.int(y)){
+        if(x!=_b_.int.$factory(x) || y != _b_.int.$factory(y)){
             throw _b_.TypeError.$factory("pow() 3rd argument not allowed unless "+
                 "all arguments are integers")
         }
@@ -1564,16 +1564,16 @@ function round(arg,n){
         if (diff == 0.5){
             if (floor % 2){return Math.round(arg)}else{return Math.floor(arg)}
         }else{
-            return _b_.int(Math.round(arg))
+            return _b_.int.$factory(Math.round(arg))
         }
     }
     if(!isinstance(n,_b_.int)){throw _b_.TypeError.$factory(
         "'"+n.__class__+"' object cannot be interpreted as an integer")}
     var mult = Math.pow(10,n)
     if(isinstance(arg, _b_.float)) {
-        return _b_.float(_b_.int.$dict.__truediv__(Number(Math.round(arg.valueOf()*mult)),mult))
+        return _b_.float(_b_.int.__truediv__(Number(Math.round(arg.valueOf()*mult)),mult))
     } else {
-        return _b_.int(_b_.int.$dict.__truediv__(Number(Math.round(arg.valueOf()*mult)),mult))
+        return _b_.int.$factory(_b_.int.__truediv__(Number(Math.round(arg.valueOf()*mult)),mult))
     }
 }
 

@@ -22,8 +22,8 @@ var $FloatDict = {__class__:$B.$type,
     }
 
 $FloatDict.numerator = function(self){return self}
-$FloatDict.denominator = function(self){return _b_.int(1)}
-$FloatDict.imag = function(self){return _b_.int(0)}
+$FloatDict.denominator = function(self){return _b_.int.$factory(1)}
+$FloatDict.imag = function(self){return _b_.int.$factory(0)}
 $FloatDict.real = function(self){return self}
 $FloatDict.__float__ = function(self){return self}
 
@@ -53,14 +53,14 @@ $FloatDict.as_integer_ratio=function(self) {
     py_exponent = abs(exponent)
     denominator = 1
 
-    py_exponent = _b_.getattr(int(denominator),"__lshift__")(py_exponent)
+    py_exponent = _b_.getattr(int.$factory(denominator),"__lshift__")(py_exponent)
     if (exponent > 0){
         numerator = numerator * py_exponent
     } else {
         denominator = py_exponent
     }
 
-    return _b_.tuple([_b_.int(numerator), _b_.int(denominator)])
+    return _b_.tuple([_b_.int.$factory(numerator), _b_.int.$factory(denominator)])
 }
 
 $FloatDict.__bool__ = function(self){return _b_.bool(self.valueOf())}
@@ -253,9 +253,9 @@ $FloatDict.__hash__ = function(self) {
 
     var r=_b_.$frexp(_v)
     r[0] *= Math.pow(2,31)
-    var hipart = _b_.int(r[0])
+    var hipart = _b_.int.$factory(r[0])
     r[0] = (r[0] - hipart) * Math.pow(2,31)
-    var x = hipart + _b_.int(r[0]) + (r[1] << 15)
+    var x = hipart + _b_.int.$factory(r[0]) + (r[1] << 15)
     return x & 0xFFFFFFFF
 }
 
@@ -370,7 +370,7 @@ $FloatDict.__init__ = function(self,value){
 
 $FloatDict.__int__ = function(self){return parseInt(self)}
 
-$FloatDict.is_integer = function(self) {return _b_.int(self) == self}
+$FloatDict.is_integer = function(self) {return _b_.int.$factory(self) == self}
 
 $FloatDict.__mod__ = function(self,other) {
     // can't use Javascript % because it works differently for negative numbers
@@ -451,7 +451,7 @@ $FloatDict.__pow__= function(self,other){
         }else if(other==Number.POSITIVE_INFINITY  && !isNaN(self)){
             return Math.abs(self)<1 ? new Number(0) : Number.POSITIVE_INFINITY
         }
-        if(self<0 && !_b_.getattr(other,'__eq__')(_b_.int(other))){
+        if(self<0 && !_b_.getattr(other,'__eq__')(_b_.int.$factory(other))){
             // use complex power
             return _b_.complex.__pow__($B.make_complex(self, 0), other)
         }

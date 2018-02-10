@@ -183,7 +183,7 @@ $RangeDict.stop = function(self){return self.stop}
 
 $RangeDict.count = function(self, ob){
     if(_b_.isinstance(ob, [_b_.int, _b_.float, _b_.bool])){
-        return _b_.int($RangeDict.__contains__(self, ob))
+        return _b_.int.$factory($RangeDict.__contains__(self, ob))
     }else{
         var comp = function(other){return $B.rich_comp("__eq__", ob, other)},
             it = $RangeDict.__iter__(self)

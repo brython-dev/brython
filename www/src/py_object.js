@@ -6,8 +6,9 @@ var _b_=$B.builtins
 var object = {
     //__class__:$type, : not here, added in py_type.js after $type is defined
     // __bases__ : set to an empty tuple in py_list.js after tuple is defined
-    __name__:'object',
-    $native:true
+    __name__: 'object',
+    $is_class: true,
+    $native: true
 }
 
 // Name of special methods : if they are not found as attributes, try
@@ -383,7 +384,8 @@ $B.make_class = function(class_obj){
     var A = {
         __class__: $B.$type,
         __mro__: [object],
-        __name__: class_obj.name
+        __name__: class_obj.name,
+        $is_class: true
     }
 
     A.$factory = function(){

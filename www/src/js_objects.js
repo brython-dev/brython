@@ -110,7 +110,7 @@ var jsobj2pyobj=$B.jsobj2pyobj=function(jsobj) {
     if (Array.isArray(jsobj)) return _b_.list(jsobj)
 
     if (typeof jsobj === 'number') {
-       if (jsobj.toString().indexOf('.') == -1) return _b_.int(jsobj)
+       if (jsobj.toString().indexOf('.') == -1) return _b_.int.$factory(jsobj)
        // for now, lets assume a float
        return _b_.float(jsobj)
     }
@@ -355,7 +355,7 @@ $JSObjectDict.__getitem__ = function(self, rank){
     if(typeof self.js.length=='number'){
         if((typeof rank=="number" || typeof rank=="boolean") &&
             typeof self.js.item=='function'){
-                var rank_to_int = _b_.int(rank)
+                var rank_to_int = _b_.int.$factory(rank)
                 if(rank_to_int<0){rank_to_int+=self.js.length}
                 var res = JSObject(self.js.item(rank_to_int))
                 if(res===undefined){throw _b_.KeyError.$factory(rank)}

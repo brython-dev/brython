@@ -157,7 +157,7 @@ $StringDict.__getitem__ = function(self,arg){
         }
         return res
     }
-    if(isinstance(arg,bool)) return self.__getitem__(_b_.int(arg))
+    if(isinstance(arg,bool)) return self.__getitem__(_b_.int.$factory(arg))
     throw _b_.TypeError.$factory('string indices must be integers')
 }
 
@@ -542,7 +542,7 @@ var octal_format = function(val, flags) {
 var single_char_format = function(val, flags) {
     if(isinstance(val,str) && val.length==1) return val
     try {
-        val = _b_.int(val)  // yes, floats are valid (they are cast to int)
+        val = _b_.int.$factory(val)  // yes, floats are valid (they are cast to int)
     } catch (err) {
         throw _b_.TypeError.$factory('%c requires int or char')
     }
@@ -1505,7 +1505,7 @@ $StringDict.splitlines = function(self){
         throw _b_.TypeError.$factory('integer argument expected, got '+
             $B.get_class($.keepends).__name)
     }
-    var keepends = _b_.int($.keepends)
+    var keepends = _b_.int.$factory($.keepends)
     // Remove trailing line breaks
     if(keepends){
         var res = [],

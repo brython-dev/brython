@@ -167,7 +167,7 @@ bytes.__getitem__ = function(self,arg){
         }
         return bytes.$factory(res)
     } else if(isinstance(arg,bool)){
-        return self.source.__getitem__(_b_.int(arg))
+        return self.source.__getitem__(_b_.int.$factory(arg))
     }
 }
 
@@ -522,7 +522,7 @@ function $UnicodeDecodeError(encoding, position){
         "' codec can't decode bytes in position "+position)
 }
 
-function _hex(int){return int.toString(16)}
+function _hex(_int){return _int.toString(16)}
 function _int(hex){return parseInt(hex,16)}
 
 function normalise(encoding){

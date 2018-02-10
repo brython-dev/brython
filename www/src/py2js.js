@@ -1465,7 +1465,7 @@ function $CallCtx(context){
                   if(this.func.is_builtin){
                       // simplify code for built-in functions
                       var new_style = ["complex", "bytes", "bytearray",
-                          "object", "memoryview"]
+                          "object", "memoryview", "int"]
                       if($B.builtin_funcs[this.func.value]!==undefined &&
                               new_style.indexOf(this.func.value) == -1 // XXX temporary
                           ){
@@ -3479,7 +3479,6 @@ function $IdCtx(context,value){
                         // Builtin name ; it might be redefined inside the
                         // script, eg to redefine open()
                         if(val!=='__builtins__'){
-                            if(val=="object"){console.log("found in builtins", val)}
                             val = '$B.builtins.'+val
                         }
                         this.is_builtin = true

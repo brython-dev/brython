@@ -483,11 +483,11 @@ function _Random(){
             if(k <= 0){
                 throw _b_.ValueError.$factory('number of bits must be greater than zero')
             }
-            if(k != _b_.int(k)){
+            if(k != _b_.int.$factory(k)){
                 throw _b_.TypeError('number of bits should be an integer')
             }
             var numbytes = (k + 7), // bits / 8 and rounded up
-                x = _b_.int.$dict.from_bytes(_urandom(numbytes), 'big')
+                x = _b_.int.from_bytes(_urandom(numbytes), 'big')
             return _b_.getattr(x, '__rshift__')(
                 _b_.getattr(numbytes*8,'__sub__')(k))
         },
@@ -597,7 +597,7 @@ function _Random(){
                     pos: true}
                 d = _b_.getattr(step, '__mul__')(offset)
                 d = _b_.getattr(start, '__add__')(d)
-                return _b_.int(d)
+                return _b_.int.$factory(d)
             }
         },
 
@@ -690,9 +690,9 @@ function _Random(){
             if(version==1){a = _b_.hash(a)}
             else if(version==2){
                 if(_b_.isinstance(a, _b_.str)){
-                    a = _b_.int.$dict.from_bytes(_b_.bytes.$factory(a, 'utf-8'), 'big')
+                    a = _b_.int.from_bytes(_b_.bytes.$factory(a, 'utf-8'), 'big')
                 }else if(_b_.isinstance(a, [_b_.bytes, _b_.bytearray])){
-                    a = _b_.int.$dict.from_bytes(a, 'big')
+                    a = _b_.int.from_bytes(a, 'big')
                 }else if(!_b_.isinstance(a, _b_.int)){
                     throw _b_.TypeError('wrong argument')
                 }

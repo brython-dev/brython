@@ -203,7 +203,7 @@ var _mod = {
        if (isNaN(x)) return float('nan')
 
        var y=float_check(x);
-       if (!isNaN(parseFloat(y)) && isFinite(y)) return int(Math.ceil(y));
+       if (!isNaN(parseFloat(y)) && isFinite(y)) return int.$factory(Math.ceil(y));
        
        $raise('ValueError', 'object is not a number and does not contain __ceil__')
     },
@@ -491,9 +491,9 @@ var _mod = {
        try{return getattr(x,'__trunc__')()}catch(err){}
        var x1=float_check(x);
        if (!isNaN(parseFloat(x1)) && isFinite(x1)) {
-          if (Math.trunc !== undefined) { return int(Math.trunc(x1))}
-          if (x1 > 0) {return int(Math.floor(x1))}
-          return int(Math.ceil(x1))  // x1 < 0
+          if (Math.trunc !== undefined) { return int.$factory(Math.trunc(x1))}
+          if (x1 > 0) {return int.$factory(Math.floor(x1))}
+          return int.$factory(Math.ceil(x1))  // x1 < 0
        }
        $raise('ValueError', 'object is not a number and does not contain __trunc__')
     }

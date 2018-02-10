@@ -86,7 +86,7 @@ $ListDict.__delitem__ = function(self,arg){
     }
 
     if (hasattr(arg, '__int__') || hasattr(arg, '__index__')) {
-       $ListDict.__delitem__(self, _b_.int(arg))
+       $ListDict.__delitem__(self, _b_.int.$factory(arg))
        return $N
     }
 
@@ -144,7 +144,7 @@ $ListDict.__getitem__ = function(self,arg){
     }
 
     if (hasattr(key, '__int__') || hasattr(key, '__index__')) {
-       return $ListDict.__getitem__(self, _b_.int(key))
+       return $ListDict.__getitem__(self, _b_.int.$factory(key))
     }
 
     throw _b_.TypeError.$factory('list indices must be integer, not '+
@@ -279,7 +279,7 @@ $ListDict.__mul__ = function(self,other){
     }
 
     if (hasattr(other, '__int__') || hasattr(other, '__index__')) {
-       return $ListDict.__mul__(self, _b_.int(other))
+       return $ListDict.__mul__(self, _b_.int.$factory(other))
     }
 
     throw _b_.TypeError.$factory("can't multiply sequence by non-int of type '"+
@@ -349,7 +349,7 @@ $ListDict.__setitem__ = function(){
     }
 
     if (hasattr(arg, '__int__') || hasattr(arg, '__index__')) {
-       $ListDict.__setitem__(self, _b_.int(arg), value)
+       $ListDict.__setitem__(self, _b_.int.$factory(arg), value)
        return $N
     }
 
@@ -571,7 +571,7 @@ $ListDict.sort = function(self){
         else
             cmp = function(a,b) {return $B.$AlphabeticalCompare(a,b)};
     }
-    else if(func===null && self.$cl===_b_.int.$dict){
+    else if(func===null && self.$cl===_b_.int){
         if (reverse)
             cmp = function(b,a) {return a-b};
         else

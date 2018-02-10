@@ -139,8 +139,8 @@ $B.get_class = function(obj){
         switch(typeof obj) {
           case 'number':
             if (obj % 1 === 0) { // this is an int
-               obj.__class__=_b_.int.$dict
-               return _b_.int.$dict
+               obj.__class__=_b_.int
+               return _b_.int
             }
             // this is a float
             obj.__class__=_b_.float.$dict
@@ -1023,7 +1023,7 @@ $B.$GetInt=function(value) {
   else if(typeof value==="boolean"){return value ? 1 : 0}
   else if (_b_.isinstance(value, _b_.int)) {return value}
   else if (_b_.isinstance(value, _b_.float)) {return value.valueOf()}
-  if(value.__class__!==$B.$factory){
+  if(value.__class__!==$B.$factory && !value.$is_class){
       try {var v=_b_.getattr(value, '__int__')(); return v}catch(e){}
       try {var v=_b_.getattr(value, '__index__')(); return v}catch(e){}
   }
