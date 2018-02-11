@@ -1467,7 +1467,7 @@ function $CallCtx(context){
                       var new_style = ["complex", "bytes", "bytearray",
                           "object", "memoryview", "int", "float", "str",
                           "list", "tuple", "dict", "set", "frozenset",
-                          "range", "slice"]
+                          "range", "slice", "zip"]
                       if($B.builtin_funcs[this.func.value]!==undefined &&
                               new_style.indexOf(this.func.value) == -1 // XXX temporary
                           ){

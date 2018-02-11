@@ -309,7 +309,7 @@ function dir(obj){
     obj = obj.__class__ === $B.$factory ? obj.$dict : obj
     var klass = obj.__class__ || $B.get_class(obj),
         ce = $B.current_exception
-    
+
     if(obj.$is_class){
         // Use metaclass __dir__
         var dir_func = $B.$getattr(obj.__class__, "__dir__")
@@ -2003,19 +2003,26 @@ function $url_open(){
     }
 }
 
-var $ZipDict = {__class__:$B.$type,__name__:'zip'}
+var zip = {
+    __class__: $B.$type,
+    __module__: "builtins",
+    __mro__: [object],
+    __name__: "zip",
+    $is_class: true
+}
 
 var $zip_iterator = $B.$iterator_class('zip_iterator')
-$ZipDict.__iter__ = function(self){
+zip.__iter__ = function(self){
     // issue #317 : iterator is not reset at each call to zip()
     return self.$iterator = self.$iterator ||
         $B.$iterator(self.items,$zip_iterator)
 }
 
-$ZipDict.__mro__ = [object]
-
-function zip(){
-    var res = {__class__:$ZipDict,items:[]}
+zip.$factory = function(){
+    var res = {
+        __class__:zip,
+        items:[]
+    }
     if(arguments.length==0) return res
     var $ns=$B.args('zip',0,{},[],arguments,{},'args','kw')
     var _args = $ns['args']
@@ -2043,9 +2050,8 @@ function zip(){
     res.items = items
     return res
 }
-zip.__class__=$B.$factory
-zip.$dict = $ZipDict
-$ZipDict.$factory = zip
+
+$B.set_func_names(zip, "builtins")
 
 // built-in constants : True, False, None
 

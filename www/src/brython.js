@@ -76,8 +76,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-02-11 15:31:58.789303"
-__BRYTHON__.timestamp=1518359518789
+__BRYTHON__.compiled_date="2018-02-11 15:38:19.580629"
+__BRYTHON__.timestamp=1518359899580
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -778,7 +778,7 @@ if(star_args){
 args_str='.apply(null,'+args_str+')'}else{args_str='('+args_str+')'}
 var default_res="$B.$call("+func_js+")" + args_str
 if(this.tree.length>-1){if(this.func.type=='id'){if(this.func.is_builtin){
-var new_style=["complex","bytes","bytearray","object","memoryview","int","float","str","list","tuple","dict","set","frozenset","range","slice"]
+var new_style=["complex","bytes","bytearray","object","memoryview","int","float","str","list","tuple","dict","set","frozenset","range","slice","zip"]
 if($B.builtin_funcs[this.func.value]!==undefined &&
 new_style.indexOf(this.func.value)==-1 
 ){return func_js+args_str}}else{var bound_obj=this.func.found
@@ -6254,13 +6254,12 @@ for(var i=0;i<lines.length-1;i++){lines[i]+='\n'}}
 var res={$content:$res,$counter:0,$lines:lines,$bin:is_binary,closed:False,encoding:encoding,mode:mode,name:file}
 res.__class__=is_binary ? $BufferedReader : $TextIOWrapper
 return res}}
-var $ZipDict={__class__:$B.$type,__name__:'zip'}
+var zip={__class__: $B.$type,__module__: "builtins",__mro__:[object],__name__: "zip",$is_class: true}
 var $zip_iterator=$B.$iterator_class('zip_iterator')
-$ZipDict.__iter__=function(self){
+zip.__iter__=function(self){
 return self.$iterator=self.$iterator ||
 $B.$iterator(self.items,$zip_iterator)}
-$ZipDict.__mro__=[object]
-function zip(){var res={__class__:$ZipDict,items:[]}
+zip.$factory=function(){var res={__class__:zip,items:[]}
 if(arguments.length==0)return res
 var $ns=$B.args('zip',0,{},[],arguments,{},'args','kw')
 var _args=$ns['args']
@@ -6275,9 +6274,7 @@ items[rank++]=_b_.tuple.$factory(line)}
 $B.current_exception=ce
 res.items=items
 return res}
-zip.__class__=$B.$factory
-zip.$dict=$ZipDict
-$ZipDict.$factory=zip
+$B.set_func_names(zip,"builtins")
 function no_set_attr(klass,attr){if(klass[attr]!==undefined){throw _b_.AttributeError.$factory("'"+klass.__name__+"' object attribute '"+
 attr+"' is read-only")}else{throw _b_.AttributeError.$factory("'"+klass.__name__+
 "' object has no attribute '"+attr+"'")}}
