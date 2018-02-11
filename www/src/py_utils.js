@@ -139,20 +139,20 @@ $B.get_class = function(obj){
         switch(typeof obj) {
           case 'number':
             if (obj % 1 === 0) { // this is an int
-               obj.__class__=_b_.int
+               obj.__class__ = _b_.int
                return _b_.int
             }
             // this is a float
-            obj.__class__=_b_.float
+            obj.__class__ = _b_.float
             return _b_.float
           case 'string':
-            obj.__class__=_b_.str
+            obj.__class__ = _b_.str
             return _b_.str
           case 'boolean':
-            obj.__class__=$B.$BoolDict
-            return $B.$BoolDict
+            obj.__class__ = _b_.bool
+            return _b_.bool
           case 'function':
-            obj.__class__=$B.$FunctionDict
+            obj.__class__ = $B.$FunctionDict
             return $B.$FunctionDict
           case 'object':
             if(Array.isArray(obj)){
@@ -651,7 +651,7 @@ $B.$test_item = function(expr){
     // returns a Javascript boolean (true or false) and stores
     // the evaluation in a global variable $test_result
     $B.$test_result = expr
-    return _b_.bool(expr)
+    return _b_.bool.$factory(expr)
 }
 
 $B.$test_expr = function(){

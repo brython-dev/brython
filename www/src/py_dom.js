@@ -802,7 +802,7 @@ DOMNode.__str__ = DOMNode.__repr__ = function(self){
 DOMNode.__setattr__ = function(self,attr,value){
 
    if(attr.substr(0,2)=='on'){ // event
-        if (!_b_.bool(value)) { // remove all callbacks attached to event
+        if (!$B.$bool(value)) { // remove all callbacks attached to event
             DOMNode.unbind(self,attr.substr(2))
         }else{
             // value is a function taking an event as argument

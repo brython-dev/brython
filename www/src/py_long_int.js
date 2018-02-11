@@ -668,7 +668,7 @@ long_int.$factory = function(value, base){
         else if(value.constructor == Number){console.log('big number', value);value = value.toString()}
         else{console.log('wrong value', value);throw ValueError.$factory("argument of long_int is not a safe integer")}
     }else if(value.__class__===long_int){return value}
-    else if(isinstance(value,_b_.bool)){value=_b_.bool.$dict.__int__(value)+''}
+    else if(isinstance(value,_b_.bool)){value=_b_.bool.__int__(value)+''}
     else if(typeof value!='string'){
         throw ValueError.$factory("argument of long_int must be a string, not "+
             $B.get_class(value).__name__)

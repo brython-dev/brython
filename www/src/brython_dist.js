@@ -76,8 +76,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-02-11 15:38:19.580629"
-__BRYTHON__.timestamp=1518359899580
+__BRYTHON__.compiled_date="2018-02-11 16:12:20.968169"
+__BRYTHON__.timestamp=1518361940968
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -778,7 +778,7 @@ if(star_args){
 args_str='.apply(null,'+args_str+')'}else{args_str='('+args_str+')'}
 var default_res="$B.$call("+func_js+")" + args_str
 if(this.tree.length>-1){if(this.func.type=='id'){if(this.func.is_builtin){
-var new_style=["complex","bytes","bytearray","object","memoryview","int","float","str","list","tuple","dict","set","frozenset","range","slice","zip"]
+var new_style=["complex","bytes","bytearray","object","memoryview","int","float","str","list","tuple","dict","set","frozenset","range","slice","zip","bool"]
 if($B.builtin_funcs[this.func.value]!==undefined &&
 new_style.indexOf(this.func.value)==-1 
 ){return func_js+args_str}}else{var bound_obj=this.func.found
@@ -4815,8 +4815,8 @@ case 'string':
 obj.__class__=_b_.str
 return _b_.str
 case 'boolean':
-obj.__class__=$B.$BoolDict
-return $B.$BoolDict
+obj.__class__=_b_.bool
+return _b_.bool
 case 'function':
 obj.__class__=$B.$FunctionDict
 return $B.$FunctionDict
@@ -5040,7 +5040,7 @@ throw err}}
 return res}
 $B.$test_item=function(expr){
 $B.$test_result=expr
-return _b_.bool(expr)}
+return _b_.bool.$factory(expr)}
 $B.$test_expr=function(){
 return $B.$test_result}
 $B.$is=function(a,b){
@@ -5460,12 +5460,12 @@ function all(obj){check_nb_args('all',1,arguments.length)
 check_no_kw('all',obj)
 var iterable=iter(obj),ce=$B.current_exception
 while(1){try{var elt=next(iterable)
-if(!bool(elt))return false}catch(err){$B.current_exception=ce;return true}}}
+if(!$B.$bool(elt))return false}catch(err){$B.current_exception=ce;return true}}}
 function any(obj){check_nb_args('any',1,arguments.length)
 check_no_kw('any',obj)
 var iterable=iter(obj),ce=$B.current_exception
 while(1){try{var elt=next(iterable)
-if(bool(elt))return true}catch(err){$B.current_exception=ce;return false}}}
+if($B.$bool(elt))return true}catch(err){$B.current_exception=ce;return false}}}
 function ascii(obj){check_nb_args('ascii',1,arguments.length)
 check_no_kw('ascii',obj)
 var res=repr(obj),res1='',cp
@@ -5494,23 +5494,6 @@ function bin(obj){check_nb_args('bin',1,arguments.length)
 check_no_kw('bin',obj)
 if(isinstance(obj,_b_.int)){return $builtin_base_convert_helper(obj,2)}
 return getattr(obj,'__index__')()}
-$B.$bool=function(obj){
-if(obj===null ||obj===undefined )return false
-switch(typeof obj){case 'boolean':
-return obj
-case 'number':
-case 'string':
-if(obj)return true
-return false
-default:
-var ce=$B.current_exception
-try{return getattr(obj,'__bool__')()}
-catch(err){$B.current_exception=ce
-try{return getattr(obj,'__len__')()>0}
-catch(err){return true}}}}
-function bool(){
-var $=$B.args('bool',1,{x:null},['x'],arguments,{x:false},null,null)
-return $B.$bool($.x)}
 function callable(obj){check_nb_args('callable',1,arguments.length)
 check_no_kw('callable',obj)
 return hasattr(obj,'__call__')}
@@ -5569,7 +5552,8 @@ try{
 var res=$B.$call(getattr(obj,'__dir__'))()
 res=_b_.list.$factory(res)
 res.sort()
-return res}catch(err){}
+return res}catch(err){
+console.log(err)}
 $B.current_exception=ce
 var res=[],pos=0
 for(var attr in obj){if(attr.charAt(0)!=='$' && attr!=='__class__' &&
@@ -5685,7 +5669,7 @@ $FilterDict.__repr__=$FilterDict.__str__=function(){return "<filter object>"},$F
 function filter(func,iterable){check_no_kw('filter',func,iterable)
 check_nb_args('filter',2,arguments.length)
 iterable=iter(iterable)
-if(func===_b_.None)func=bool
+if(func===_b_.None)func=$B.$bool
 var __next__=function(){while(true){var _item=next(iterable)
 if(func(_item)){return _item}}}
 return{
@@ -5804,7 +5788,7 @@ check_nb_args('hash',1,arguments.length)
 obj=obj.__class__===$B.$factory ? obj.$dict : obj
 if(obj.__hashvalue__ !==undefined)return obj.__hashvalue__
 if(isinstance(obj,_b_.int))return obj.valueOf()
-if(isinstance(obj,bool))return _b_.int.$factory(obj)
+if(isinstance(obj,_b_.bool))return _b_.int.$factory(obj)
 if(obj.__class__===$B.$factory ||obj.$is_class ||obj.__class__===$B.$type){return obj.__hashvalue__=$B.$py_next_hash--}
 if(obj.__hash__ !==undefined){return obj.__hashvalue__=obj.__hash__()}
 var hashfunc=getattr(obj,'__hash__',_b_.None)
@@ -5954,13 +5938,13 @@ if(!func){func=function(x){return x}}
 if(nb_args==0){throw _b_.TypeError.$factory($op_name+" expected 1 argument, got 0")}else if(nb_args==1){
 var $iter=iter(args[0]),res=null,ce=$B.current_exception
 while(true){try{var x=next($iter)
-if(res===null ||bool(getattr(func(x),op)(func(res)))){res=x}}catch(err){if(err.__name__=="StopIteration"){$B.current_exception=ce
+if(res===null ||$B.$bool(getattr(func(x),op)(func(res)))){res=x}}catch(err){if(err.__name__=="StopIteration"){$B.current_exception=ce
 if(res===null){if(has_default){return default_value}
 else{throw _b_.ValueError.$factory($op_name+"() arg is an empty sequence")}}else{return res}}
 throw err}}}else{if(has_default){throw _b_.TypeError.$factory("Cannot specify a default for "+$op_name+"() with multiple positional arguments")}
 var res=null
 for(var i=0;i<nb_args;i++){var x=args[i]
-if(res===null ||bool(getattr(func(x),op)(func(res)))){res=x}}
+if(res===null ||$B.$bool(getattr(func(x),op)(func(res)))){res=x}}
 return res}}
 function max(){var args=[],pos=0
 for(var i=0;i<arguments.length;i++){args[pos++]=arguments[i]}
@@ -5999,7 +5983,7 @@ if(ga!==undefined){return $B.$call(ga)()}
 throw _b_.TypeError.$factory("'"+$B.get_class(obj).__name__+
 "' object is not an iterator")}
 var $NotImplemented=$B.make_class({__name__:"NotImplementedClass"}),NotImplemented=$NotImplemented.$factory()
-function $not(obj){return !bool(obj)}
+function $not(obj){return !$B.$bool(obj)}
 function oct(x){return $builtin_base_convert_helper(x,8)}
 function ord(c){check_no_kw('ord',c)
 check_nb_args('ord',1,arguments.length)
@@ -6278,10 +6262,6 @@ $B.set_func_names(zip,"builtins")
 function no_set_attr(klass,attr){if(klass[attr]!==undefined){throw _b_.AttributeError.$factory("'"+klass.__name__+"' object attribute '"+
 attr+"' is read-only")}else{throw _b_.AttributeError.$factory("'"+klass.__name__+
 "' object has no attribute '"+attr+"'")}}
-var $BoolDict=$B.$BoolDict={__class__:$B.$type,__dir__:object.__dir__,__name__:'bool'}
-bool.__class__=$B.$factory
-bool.$dict=$BoolDict
-$BoolDict.$factory=bool
 var True=true
 var False=false
 var $EllipsisDict={__class__:$B.$type,__name__:'ellipsis'}
@@ -7642,7 +7622,7 @@ py_exponent=_b_.getattr(int.$factory(denominator),"__lshift__")(py_exponent)
 if(exponent > 0){numerator=numerator * py_exponent}else{
 denominator=py_exponent}
 return _b_.tuple.$factory([_b_.int.$factory(numerator),_b_.int.$factory(denominator)])}
-float.__bool__=function(self){return _b_.bool(self.valueOf())}
+float.__bool__=function(self){return _b_.bool.$factory(self.valueOf())}
 float.__class__=$B.$type
 float.__eq__=function(self,other){if(isNaN(self)&& isNaN(other)){return false}
 if(isinstance(other,_b_.int))return self==other
@@ -7873,7 +7853,7 @@ eval('float.__'+$ops[$op]+'__ = '+$opf)}
 var $comp_func=function(self,other){if(isinstance(other,_b_.int)){if(other.__class__===$B.long_int){return self > parseInt(other.value)}
 return self > other.valueOf()}
 if(isinstance(other,float))return self > other
-if(isinstance(other,_b_.bool)){return self.valueOf()> _b_.bool.$dict.__hash__(other)}
+if(isinstance(other,_b_.bool)){return self.valueOf()> _b_.bool.__hash__(other)}
 if(hasattr(other,'__int__')||hasattr(other,'__index__')){return $IntDict.__gt__(self,$B.$GetInt(other))}
 var inv_op=getattr(other,'__le__',null)
 if(inv_op !==null){return inv_op(self)}
@@ -8157,7 +8137,7 @@ eval('int.__'+$ops[$op]+'__ = '+opf)}
 var $comp_func=function(self,other){if(other.__class__===$B.long_int){return $B.long_int.__lt__(other,$B.long_int.$factory(self))}
 if(isinstance(other,int))return self.valueOf()> other.valueOf()
 if(isinstance(other,_b_.float))return self.valueOf()> other.valueOf()
-if(isinstance(other,_b_.bool)){return self.valueOf()> _b_.bool.$dict.__hash__(other)}
+if(isinstance(other,_b_.bool)){return self.valueOf()> _b_.bool.__hash__(other)}
 if(hasattr(other,'__int__')||hasattr(other,'__index__')){return int.__gt__(self,$B.$GetInt(other))}
 var inv_op=getattr(other,'__lt__',null)
 if(inv_op !==null){return inv_op(self)}
@@ -8236,27 +8216,45 @@ throw _b_.TypeError.$factory("int() argument must be a string, a bytes-like "+
 "object or a number, not '"+$B.get_class(value).__name__+"'")}
 $B.set_func_names(int,"builtins")
 _b_.int=int
-var $BoolDict=_b_.bool.$dict
-$BoolDict.__add__=function(self,other){return(other ? 1 : 0)+(self ? 1 : 0)}
-$BoolDict.__and__=function(self,other){return bool(int.__and__(self,other))}
-$BoolDict.__eq__=function(self,other){return self ? bool(other): !bool(other)}
-$BoolDict.__ne__=function(self,other){return self ? !bool(other): bool(other)}
-$BoolDict.__ge__=function(self,other){return _b_.int.__ge__($BoolDict.__hash__(self),other)}
-$BoolDict.__gt__=function(self,other){return _b_.int.__gt__($BoolDict.__hash__(self),other)}
-$BoolDict.__hash__=$BoolDict.__index__=$BoolDict.__int__=function(self){if(self.valueOf())return 1
+$B.$bool=function(obj){
+if(obj===null ||obj===undefined )return false
+switch(typeof obj){case 'boolean':
+return obj
+case 'number':
+case 'string':
+if(obj)return true
+return false
+default:
+var ce=$B.current_exception
+try{return getattr(obj,'__bool__')()}
+catch(err){$B.current_exception=ce
+try{return getattr(obj,'__len__')()>0}
+catch(err){return true}}}}
+var bool={__class__: $B.$type,__module__: "builtins",__mro__:[int,object],__name__: "bool",$is_class: true,$native: true}
+bool.__add__=function(self,other){return(other ? 1 : 0)+(self ? 1 : 0)}
+bool.__and__=function(self,other){return $B.$bool(int.__and__(self,other))}
+bool.__eq__=function(self,other){return self ? $B.$bool(other): !$B.$bool(other)}
+bool.__ne__=function(self,other){return self ? !$B.$bool(other): $B.$bool(other)}
+bool.__ge__=function(self,other){return _b_.int.__ge__(bool.__hash__(self),other)}
+bool.__gt__=function(self,other){return _b_.int.__gt__(bool.__hash__(self),other)}
+bool.__hash__=bool.__index__=bool.__int__=function(self){if(self.valueOf())return 1
 return 0}
-$BoolDict.__le__=function(self,other){return !$BoolDict.__gt__(self,other)}
-$BoolDict.__lshift__=function(self,other){return self.valueOf()<< other}
-$BoolDict.__lt__=function(self,other){return !$BoolDict.__ge__(self,other)}
-$BoolDict.__mul__=function(self,other){return self ? other : 0}
-$BoolDict.__neg__=function(self){return -$B.int_or_bool(self)}
-$BoolDict.__or__=function(self,other){return bool(int.__or__(self,other))}
-$BoolDict.__pos__=$B.int_or_bool
-$BoolDict.__repr__=$BoolDict.__str__=function(self){return self ? "True" : "False"}
-$BoolDict.__setattr__=function(self,attr){return no_set_attr($BoolDict,attr)}
-$BoolDict.__sub__=function(self,other){return(self ? 1 : 0)-(other ? 1 : 0)}
-$BoolDict.__xor__=function(self,other){return self.valueOf()!=other.valueOf()}
-$BoolDict.__mro__=[int,_b_.object]})(__BRYTHON__)
+bool.__le__=function(self,other){return !bool.__gt__(self,other)}
+bool.__lshift__=function(self,other){return self.valueOf()<< other}
+bool.__lt__=function(self,other){return !bool.__ge__(self,other)}
+bool.__mul__=function(self,other){return self ? other : 0}
+bool.__neg__=function(self){return -$B.int_or_bool(self)}
+bool.__or__=function(self,other){return $B.$bool(int.__or__(self,other))}
+bool.__pos__=$B.int_or_bool
+bool.__repr__=bool.__str__=function(self){return self ? "True" : "False"}
+bool.__setattr__=function(self,attr){return no_set_attr(bool,attr)}
+bool.__sub__=function(self,other){return(self ? 1 : 0)-(other ? 1 : 0)}
+bool.__xor__=function(self,other){return self.valueOf()!=other.valueOf()}
+bool.$factory=function(){
+var $=$B.args('bool',1,{x:null},['x'],arguments,{x:false},null,null)
+return $B.$bool($.x)}
+_b_.bool=bool
+$B.set_func_names(bool,"builtins")})(__BRYTHON__)
 ;(function($B){
 eval($B.InjectBuiltins())
 var long_int={__class__: $B.$type,__module__: "builtins",__mro__:[int,object],__name__: 'int',$is_class: true}
@@ -8570,7 +8568,7 @@ return int.$factory(0)}
 if(typeof value=='number'){if(isSafeInteger(value)){value=value.toString()}
 else if(value.constructor==Number){console.log('big number',value);value=value.toString()}
 else{console.log('wrong value',value);throw ValueError.$factory("argument of long_int is not a safe integer")}}else if(value.__class__===long_int){return value}
-else if(isinstance(value,_b_.bool)){value=_b_.bool.$dict.__int__(value)+''}
+else if(isinstance(value,_b_.bool)){value=_b_.bool.__int__(value)+''}
 else if(typeof value!='string'){throw ValueError.$factory("argument of long_int must be a string, not "+
 $B.get_class(value).__name__)}
 var has_prefix=false,pos=true,start=0
@@ -11082,7 +11080,7 @@ return "<"+name+" object>"}
 var res="<DOMNode object type '"
 return res+$NodeTypes[self.elt.nodeType]+"' name '"+self.elt.nodeName+"'>"}
 DOMNode.__setattr__=function(self,attr,value){if(attr.substr(0,2)=='on'){
-if(!_b_.bool(value)){
+if(!$B.$bool(value)){
 DOMNode.unbind(self,attr.substr(2))}else{
 DOMNode.bind(self,attr.substr(2),value)}}else{switch(attr){case "left":
 case "top":

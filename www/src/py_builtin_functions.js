@@ -92,7 +92,7 @@ function all(obj){
     while(1){
         try{
             var elt = next(iterable)
-            if(!bool(elt)) return false
+            if(!$B.$bool(elt)) return false
         }catch(err){$B.current_exception=ce;return true}
     }
 }
@@ -105,7 +105,7 @@ function any(obj){
     while(1){
         try{
             var elt = next(iterable)
-            if(bool(elt)) return true
+            if($B.$bool(elt)) return true
         }catch(err){$B.current_exception=ce;return false}
     }
 }
@@ -162,35 +162,6 @@ function bin(obj) {
         return $builtin_base_convert_helper(obj, 2)
     }
     return getattr(obj, '__index__')()
-}
-
-$B.$bool = function(obj){ // return true or false
-    if(obj===null || obj === undefined ) return false
-    switch(typeof obj) {
-      case 'boolean':
-        return obj
-      case 'number':
-      case 'string':
-        if(obj) return true
-        return false
-      default:
-        var ce = $B.current_exception
-        try{return getattr(obj,'__bool__')()}
-        catch(err){
-            $B.current_exception = ce
-            try{return getattr(obj,'__len__')()>0}
-            catch(err){return true}
-        }
-    }// switch
-}
-
-function bool(){
-    // This function is exposed as __builtins__.bool, to support the control
-    // on arguments provided by $B.$args.
-    // It calls $B.$bool, which is used inside the generated JS code and skips
-    // arguments control.
-    var $=$B.args('bool', 1, {x:null}, ['x'], arguments,{x:false},null,null)
-    return $B.$bool($.x)
 }
 
 function callable(obj) {
@@ -317,11 +288,13 @@ function dir(obj){
     }
     try {
         var res = $B.$call(getattr(obj, '__dir__'))()
+
         res = _b_.list.$factory(res)
         res.sort()
         return res
     } catch (err){
         // ignore, default
+        console.log(err)
     }
 
     $B.current_exception = ce
@@ -636,7 +609,7 @@ function filter(func, iterable){
     check_nb_args('filter', 2, arguments.length)
 
     iterable=iter(iterable)
-    if(func === _b_.None) func = bool
+    if(func === _b_.None) func = $B.$bool
 
     var __next__ = function() {
         while(true){
@@ -918,7 +891,7 @@ function hash(obj){
     obj = obj.__class__ === $B.$factory ? obj.$dict : obj
     if (obj.__hashvalue__ !== undefined) return obj.__hashvalue__
     if (isinstance(obj, _b_.int)) return obj.valueOf()
-    if (isinstance(obj, bool)) return _b_.int.$factory(obj)
+    if (isinstance(obj, _b_.bool)) return _b_.int.$factory(obj)
     if(obj.__class__===$B.$factory || obj.$is_class || obj.__class__===$B.$type){
         return obj.__hashvalue__ = $B.$py_next_hash--
     }
@@ -1277,7 +1250,7 @@ function $extreme(args,op){ // used by min() and max()
         while(true){
             try{
                 var x = next($iter)
-                if(res===null || bool(getattr(func(x),op)(func(res)))){res = x}
+                if(res===null || $B.$bool(getattr(func(x),op)(func(res)))){res = x}
             }catch(err){
                 if(err.__name__=="StopIteration"){
                     $B.current_exception = ce
@@ -1296,7 +1269,7 @@ function $extreme(args,op){ // used by min() and max()
         var res = null
         for(var i=0;i<nb_args;i++){
             var x = args[i]
-            if(res===null || bool(getattr(func(x),op)(func(res)))){res = x}
+            if(res===null || $B.$bool(getattr(func(x),op)(func(res)))){res = x}
         }
         return res
     }
@@ -1376,7 +1349,7 @@ function next(obj){
 var $NotImplemented = $B.make_class({__name__:"NotImplementedClass"}),
     NotImplemented = $NotImplemented.$factory()
 
-function $not(obj){return !bool(obj)}
+function $not(obj){return !$B.$bool(obj)}
 
 function oct(x) {return $builtin_base_convert_helper(x, 8)}
 
@@ -2064,16 +2037,6 @@ function no_set_attr(klass, attr){
             "' object has no attribute '"+attr+"'")
     }
 }
-
-var $BoolDict = $B.$BoolDict = {__class__:$B.$type,
-    __dir__:object.__dir__,
-    __name__:'bool'
-    //$native:true
-}
-bool.__class__ = $B.$factory
-bool.$dict = $BoolDict
-
-$BoolDict.$factory = bool
 
 // True and False are the same as Javascript true and false
 

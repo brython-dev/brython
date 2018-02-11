@@ -456,7 +456,7 @@ var $comp_func = function(self,other){
     if(isinstance(other,int)) return self.valueOf() > other.valueOf()
     if(isinstance(other,_b_.float)) return self.valueOf() > other.valueOf()
     if(isinstance(other,_b_.bool)) {
-      return self.valueOf() > _b_.bool.$dict.__hash__(other)
+      return self.valueOf() > _b_.bool.__hash__(other)
     }
     if (hasattr(other, '__int__') || hasattr(other, '__index__')) {
        return int.__gt__(self, $B.$GetInt(other))
@@ -614,7 +614,6 @@ int.$factory = function(value, base){
         throw TypeError.$factory('__trunc__ returned non-Integral (type '+
                 $B.get_class(res).__name__+')')
     }
-
     throw _b_.TypeError.$factory("int() argument must be a string, a bytes-like "+
         "object or a number, not '"+$B.get_class(value).__name__+"'")
 }
@@ -624,72 +623,107 @@ $B.set_func_names(int, "builtins")
 _b_.int = int
 
 // Boolean type
-var $BoolDict = _b_.bool.$dict
+$B.$bool = function(obj){ // return true or false
+    if(obj===null || obj === undefined ) return false
+    switch(typeof obj) {
+      case 'boolean':
+        return obj
+      case 'number':
+      case 'string':
+        if(obj) return true
+        return false
+      default:
+        var ce = $B.current_exception
+        try{return getattr(obj,'__bool__')()}
+        catch(err){
+            $B.current_exception = ce
+            try{return getattr(obj,'__len__')()>0}
+            catch(err){return true}
+        }
+    }// switch
+}
 
-$BoolDict.__add__ = function(self,other){
+var bool = {
+    __class__: $B.$type,
+    __module__: "builtins",
+    __mro__: [int, object],
+    __name__: "bool",
+    $is_class: true,
+    $native: true
+}
+
+bool.__add__ = function(self,other){
     return (other ? 1 : 0)+(self ? 1 : 0)
 }
 
-$BoolDict.__and__ = function(self, other){
-    return bool(int.__and__(self, other))
+bool.__and__ = function(self, other){
+    return $B.$bool(int.__and__(self, other))
 }
 
-$BoolDict.__eq__ = function(self,other){
-    return self ? bool(other) : !bool(other)
+bool.__eq__ = function(self,other){
+    return self ? $B.$bool(other) : !$B.$bool(other)
 }
 
-$BoolDict.__ne__ = function(self,other){
-    return self ? !bool(other) : bool(other)
+bool.__ne__ = function(self,other){
+    return self ? !$B.$bool(other) : $B.$bool(other)
 }
 
-$BoolDict.__ge__ = function(self,other){
-    return _b_.int.__ge__($BoolDict.__hash__(self),other)
+bool.__ge__ = function(self,other){
+    return _b_.int.__ge__(bool.__hash__(self),other)
 }
 
-$BoolDict.__gt__ = function(self,other){
-    return _b_.int.__gt__($BoolDict.__hash__(self),other)
+bool.__gt__ = function(self,other){
+    return _b_.int.__gt__(bool.__hash__(self),other)
 }
 
-$BoolDict.__hash__ = $BoolDict.__index__= $BoolDict.__int__=function(self) {
+bool.__hash__ = bool.__index__= bool.__int__=function(self) {
    if(self.valueOf()) return 1
    return 0
 }
 
-$BoolDict.__le__ = function(self,other){return !$BoolDict.__gt__(self,other)}
+bool.__le__ = function(self,other){return !bool.__gt__(self,other)}
 
-$BoolDict.__lshift__ = function(self,other){return self.valueOf() << other}
+bool.__lshift__ = function(self,other){return self.valueOf() << other}
 
-$BoolDict.__lt__ = function(self,other){return !$BoolDict.__ge__(self,other)}
+bool.__lt__ = function(self,other){return !bool.__ge__(self,other)}
 
-$BoolDict.__mul__ = function(self,other){
+bool.__mul__ = function(self,other){
     return self ? other : 0
 }
 
-$BoolDict.__neg__ = function(self){return -$B.int_or_bool(self)}
+bool.__neg__ = function(self){return -$B.int_or_bool(self)}
 
-$BoolDict.__or__ = function(self, other){
-    return bool(int.__or__(self, other))
+bool.__or__ = function(self, other){
+    return $B.$bool(int.__or__(self, other))
 }
 
-$BoolDict.__pos__ = $B.int_or_bool
+bool.__pos__ = $B.int_or_bool
 
-$BoolDict.__repr__ = $BoolDict.__str__ = function(self){
+bool.__repr__ = bool.__str__ = function(self){
     return self ? "True" : "False"
 }
 
-$BoolDict.__setattr__ = function(self, attr){
-    return no_set_attr($BoolDict, attr)
+bool.__setattr__ = function(self, attr){
+    return no_set_attr(bool, attr)
 }
 
-$BoolDict.__sub__ = function(self,other){
+bool.__sub__ = function(self,other){
     return (self ? 1 : 0) - (other ? 1 : 0)
 }
 
-$BoolDict.__xor__ = function(self, other) {
+bool.__xor__ = function(self, other) {
     return self.valueOf() != other.valueOf()
 }
 
+bool.$factory = function(){
+    // Calls $B.$bool, which is used inside the generated JS code and skips
+    // arguments control.
+    var $=$B.args('bool', 1, {x:null}, ['x'], arguments,{x:false},null,null)
+    return $B.$bool($.x)
+}
 
-$BoolDict.__mro__ = [int, _b_.object]
+_b_.bool = bool
+
+$B.set_func_names(bool, "builtins")
 
 })(__BRYTHON__)

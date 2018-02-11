@@ -68,7 +68,7 @@ float.as_integer_ratio=function(self) {
         _b_.int.$factory(denominator)])
 }
 
-float.__bool__ = function(self){return _b_.bool(self.valueOf())}
+float.__bool__ = function(self){return _b_.bool.$factory(self.valueOf())}
 
 float.__class__ = $B.$type
 
@@ -543,7 +543,7 @@ var $comp_func = function(self,other){
     if(isinstance(other,float)) return self > other
 
     if(isinstance(other,_b_.bool)) {
-      return self.valueOf() > _b_.bool.$dict.__hash__(other)
+      return self.valueOf() > _b_.bool.__hash__(other)
     }
     if (hasattr(other, '__int__') || hasattr(other, '__index__')) {
        return $IntDict.__gt__(self, $B.$GetInt(other))
