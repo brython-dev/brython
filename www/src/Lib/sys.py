@@ -260,6 +260,3 @@ __stdout__ = __BRYTHON__.stdout
 __stderr__ = __BRYTHON__.stderr
 __stdin__ = __BRYTHON__.stdin
 
-#delete objects not in python sys module namespace
-del JSObject
-del _implementation

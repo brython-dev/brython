@@ -749,7 +749,7 @@ $B.$getattr = function(obj, attr, _default){
         throw _b_.AttributeError.$factory('object has no attribute '+rawname)
     }
 
-    //if(attr=="__str__"){console.log("$getattr, attr", attr, "de", obj, "klass", klass)}
+    // if(attr=="modules"){console.log("$getattr, attr", attr, "de", obj, "klass", klass)}
     switch(attr) {
       case '__call__':
         if (typeof obj=='function'){
@@ -793,8 +793,8 @@ $B.$getattr = function(obj, attr, _default){
           }
         break
       case '$$new':
-        if (klass===$B.JSObject.$dict && obj.js_func !== undefined){
-          return $B.JSConstructor(obj)
+        if (klass===$B.JSObject && obj.js_func !== undefined){
+          return $B.JSConstructor.$factory(obj)
         }
         break
     }//switch

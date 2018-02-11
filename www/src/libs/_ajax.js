@@ -89,7 +89,7 @@ ajax.$dict = {
             }
         }
         // Otherwise default to JSObject method
-        return $B.JSObject.$dict.__getattribute__(self, attr)
+        return $B.JSObject.__getattribute__(self, attr)
     },
 
     __repr__ : function(self){return '<object Ajax>'},
@@ -171,7 +171,7 @@ ajax.$dict = {
     }
 }
 
-ajax.$dict.__mro__ = [$B.JSObject.$dict, _b_.object]
+ajax.$dict.__mro__ = [$B.JSObject, _b_.object]
 
 $B.set_func_names(ajax.$dict)
 

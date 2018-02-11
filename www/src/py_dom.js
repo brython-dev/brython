@@ -1091,7 +1091,7 @@ DOMNode.getContext = function(self){ // for CANVAS tag
       throw _b_.AttributeError.$factory("object has no attribute 'getContext'")
     }
     var obj = self.elt
-    return function(ctx){return JSObject(obj.getContext(ctx))}
+    return function(ctx){return JSObject.$factory(obj.getContext(ctx))}
 }
 
 DOMNode.getSelectionRange = function(self){ // for TEXTAREA
@@ -1181,7 +1181,7 @@ DOMNode.select_one = function(self, selector){
 DOMNode.style = function(self){
     // set attribute "float" for cross-browser compatibility
     self.elt.style.float = self.elt.style.cssFloat || self.style.styleFloat
-    return $B.JSObject(self.elt.style)
+    return $B.JSObject.$factory(self.elt.style)
 }
 
 DOMNode.setSelectionRange = function(self){ // for TEXTAREA
@@ -1469,7 +1469,7 @@ TagSum.$factory = function(){
 
 $B.TagSum = TagSum // used in _html.js and _svg.js
 
-var win =  JSObject(_window) //{__class__:$WinDict}
+var win =  JSObject.$factory(_window) //{__class__:$WinDict}
 
 win.get_postMessage = function(msg,targetOrigin){
     if(isinstance(msg,dict)){

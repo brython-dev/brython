@@ -149,7 +149,7 @@ var $module=(function($B){
             mo.start = function(){return mo._match.index}
             mo.end = function(){return mo._match.length-mo._match.index}
             mo.string = string
-            _list.push(JSObject(mo))
+            _list.push(JSObject.$factory(mo))
         }
         return _list
     }
@@ -186,7 +186,7 @@ var $module=(function($B){
         mo.start = function(){return jsmatch.index}
         mo.end = function(){return jsmatch.length-jsmatch.index}
         mo.string = string
-        return JSObject(mo)
+        return JSObject.$factory(mo)
     }
     obj.sub = function(pattern,repl,string){
         var $ns=$B.args('re.search', 3,
@@ -228,7 +228,7 @@ var $module=(function($B){
                     }
                     return res
                 }
-                return repl(JSObject(mo))
+                return repl(JSObject.$factory(mo))
             }
         }
         if(count==0){flags+='g'}

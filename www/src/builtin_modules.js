@@ -11,7 +11,7 @@
         $is_package: true,
         __package__:'browser',
         __file__:$B.brython_path.replace(/\/*$/g,'')+'/Lib/browser/__init__.py',
-        console:$B.JSObject(self.console),
+        console:$B.JSObject.$factory(self.console),
         win: $B.win,
         $$window: $B.win,
     }
@@ -20,7 +20,7 @@
     if (! $B.isa_web_worker ) {
         update(browser, {
             $$alert:function(message){window.alert($B.builtins.str.$factory(message))},
-            confirm: $B.JSObject(window.confirm),
+            confirm: $B.JSObject.$factory(window.confirm),
             $$document:$B.DOMNode.$factory(document),
             doc: $B.DOMNode.$factory(document),   //want to use document instead of doc
             DOMEvent:$B.DOMEvent,
@@ -31,9 +31,9 @@
                 var content = $B.builtins.getattr(file_obj, 'read')()
                 eval(content)
             },
-            mouseCoords: function(ev){return $B.JSObject($mouseCoords(ev))},
+            mouseCoords: function(ev){return $B.JSObject.$factory($mouseCoords(ev))},
             prompt: function(message, default_value){
-                return $B.JSObject(window.prompt(message, default_value||''))
+                return $B.JSObject.$factory(window.prompt(message, default_value||''))
             },
             reload: function(){
                 // Javascripts in the page
@@ -265,7 +265,7 @@
         JSConstructor: function(){
             console.log('"javascript.JSConstructor" is deprecrated. '+
                 'Please refer to the documentation.')
-            return $B.JSConstructor.apply(null, arguments)
+            return $B.JSConstructor.$factory.apply(null, arguments)
         },
         load:function(script_url){
             console.log('"javascript.load" is deprecrated. '+
@@ -302,10 +302,12 @@
             return $B._frame($B.frames_stack, depth)
         },
         modules: {
-            __get__: function(){return _b_.dict.$factory($B.JSObject($B.imported))},
+            __get__: function(){
+                return $B.obj_dict($B.imported)
+            },
             __set__: function(self, obj, value){
                  throw _b_.TypeError.$factory("Read only property 'sys.modules'")
-             }
+            }
         },
         path: {
             __get__: function(){return $B.path},
@@ -323,7 +325,7 @@
         },
         path_importer_cache: {
             __get__: function(){
-                return _b_.dict($B.JSObject($B.path_importer_cache))
+                return _b_.dict.$factory($B.JSObject.$factory($B.path_importer_cache))
             },
             __set__: function(self, obj, value){
                 throw _b_.TypeError.$factory("Read only property"+

@@ -388,7 +388,7 @@ $B.$JS2Py = function(src){
     if(klass!==undefined){
         if(klass===_b_.list){
             for(var i=0, _len_i = src.length; i< _len_i;i++) src[i] = $B.$JS2Py(src[i])
-        }else if(klass===$B.JSObject.$dict){
+        }else if(klass===$B.JSObject){
             src = src.js
         }else{
             return src
@@ -404,7 +404,7 @@ $B.$JS2Py = function(src){
             return res
         }
     }
-    return $B.JSObject(src)
+    return $B.JSObject.$factory(src)
 }
 
 // Functions used if we can guess the type from lexical analysis
@@ -817,7 +817,7 @@ $B.jsobject2pyobject=function(obj){
        return _b_.iter(obj.data)
     }
 
-    return $B.JSObject(obj)
+    return $B.JSObject.$factory(obj)
 }
 
 $B.pyobject2jsobject=function (obj){

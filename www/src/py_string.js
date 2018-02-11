@@ -1628,6 +1628,7 @@ str.$factory = function(arg){
         //return f()
     }
     catch(err){
+        console.log("pas de __str__ pour", arg)
         console.log('err ', err)
         try{ // try __repr__
              var f = getattr(arg,'__repr__')
