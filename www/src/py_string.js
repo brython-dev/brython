@@ -147,7 +147,7 @@ str.__getitem__ = function(self,arg){
         throw _b_.IndexError.$factory('string index out of range')
     }
     if(isinstance(arg,slice)) {
-        var s=_b_.slice.$dict.$conv_for_seq(arg, self.length),
+        var s=_b_.slice.$conv_for_seq(arg, self.length),
             start=s.start, stop=s.stop, step=s.step
         var res = '',i=null
         if(step>0){
@@ -865,8 +865,8 @@ str.count = function(){
     var substr = $.self
     if($.start!==null){
         var _slice
-        if($.stop!==null){_slice = _b_.slice($.start, $.stop)}
-        else{_slice = _b_.slice($.start,$.self.length)}
+        if($.stop!==null){_slice = _b_.slice.$factory($.start, $.stop)}
+        else{_slice = _b_.slice.$factory($.start,$.self.length)}
         substr = str.__getitem__.apply(null, [$.self].concat(_slice))
     }else{
         if($.self.length+$.sub.length==0){return 1} // ''.count('') = 1

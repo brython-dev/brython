@@ -1466,7 +1466,8 @@ function $CallCtx(context){
                       // simplify code for built-in functions
                       var new_style = ["complex", "bytes", "bytearray",
                           "object", "memoryview", "int", "float", "str",
-                          "list", "tuple", "dict", "set", "frozenset"]
+                          "list", "tuple", "dict", "set", "frozenset",
+                          "range", "slice"]
                       if($B.builtin_funcs[this.func.value]!==undefined &&
                               new_style.indexOf(this.func.value) == -1 // XXX temporary
                           ){
@@ -4762,7 +4763,7 @@ function $SubCtx(context){
                 if(this.tree[i].type==='abstract_expr'){res1[pos++]='None'}
                 else{res1[pos++]=this.tree[i].to_js()}
             }
-            res += 'slice(' + res1.join(',') + '))'
+            res += 'slice.$factory(' + res1.join(',') + '))'
         }
         return shortcut ? res+')' : res
     }

@@ -1337,7 +1337,7 @@ memoryview.__eq__ = function(self, other){
 memoryview.__name__ = "memory"
 memoryview.__getitem__ = function(self, key){
     var res = self.obj.__class__.__getitem__(self.obj, key)
-    if(key.__class__===_b_.slice.$dict){return memoryview.$factory(res)}
+    if(key.__class__===_b_.slice){return memoryview.$factory(res)}
     return res
 }
 memoryview.hex = function(self){

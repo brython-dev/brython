@@ -485,7 +485,7 @@ $B.set_list_key = function(obj,key,value){
     try{key = $B.$GetInt(key)}
     catch(err){
         if(_b_.isinstance(key, _b_.slice)){
-            var s = _b_.slice.$dict.$conv_for_seq(key, obj.length)
+            var s = _b_.slice.$conv_for_seq(key, obj.length)
             return $B.set_list_slice_step(obj,s.start,
                 s.stop,s.step,value)
         }

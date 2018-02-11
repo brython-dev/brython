@@ -130,7 +130,7 @@ list.__getitem__ = function(self,arg){
     }
     if (isinstance(key,_b_.slice)) {
         // Find integer values for start, stop and step
-        var s = _b_.slice.$dict.$conv_for_seq(key, self.length)
+        var s = _b_.slice.$conv_for_seq(key, self.length)
         // Return the sliced list
         var res=[], i=null, items=self.valueOf(), pos=0,
             start=s.start, stop=s.stop, step=s.step
@@ -345,7 +345,7 @@ list.__setitem__ = function(){
         return $N
     }
     if(isinstance(arg,_b_.slice)){
-        var s = _b_.slice.$dict.$conv_for_seq(arg, self.length)
+        var s = _b_.slice.$conv_for_seq(arg, self.length)
         if(arg.step===null){$B.set_list_slice(self, s.start, s.stop, value)}
         else{$B.set_list_slice_step(self, s.start, s.stop, s.step, value)}
         return $N
