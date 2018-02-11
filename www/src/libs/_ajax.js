@@ -131,12 +131,12 @@ ajax.$dict = {
                 // content-type so we may as well override that header if it was set
                 // by the user.
                 res = new FormData()
-                var items = _b_.list(_b_.dict.$dict.items(params))
+                var items = _b_.list.$factory(_b_.dict.$dict.items(params))
                 for(var i=0, _len_i = items.length; i < _len_i;i++){
                     add_to_res(res, str.$factory(items[i][0]), items[i][1])
                 }
             }else{
-                var items = _b_.list(_b_.dict.$dict.items(params))
+                var items = _b_.list.$factory(_b_.dict.$dict.items(params))
                 for(var i=0, _len_i = items.length; i < _len_i;i++){
                     var key = encodeURIComponent(str.$factory(items[i][0]));
                     if (isinstance(items[i][1],list)) {

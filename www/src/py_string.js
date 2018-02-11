@@ -1092,7 +1092,7 @@ str.format = function(self) {
                                 if(/\d+/.exec(key)){
                                     // If key is numeric, search in positional
                                     // arguments
-                                    return _b_.tuple.$dict.__getitem__($.$args,
+                                    return _b_.tuple.__getitem__($.$args,
                                         parseInt(key))
                                 }else{
                                     // Else try in keyword arguments
@@ -1126,7 +1126,7 @@ str.format = function(self) {
         if(fmt.name.charAt(0).search(/\d/)>-1){
             // Numerical reference : use positional arguments
             var pos = parseInt(fmt.name),
-                value = _b_.tuple.$dict.__getitem__($.$args, pos)
+                value = _b_.tuple.__getitem__($.$args, pos)
         }else{
             // Use keyword arguments
             var value = _b_.dict.$dict.__getitem__($.$kw, fmt.name)
@@ -1237,7 +1237,7 @@ str.maketrans = function() {
         if(!_b_.isinstance($.x, _b_.dict)){
             throw _b_.TypeError.$factory('maketrans only argument must be a dict')
         }
-        var items = _b_.list(_b_.dict.$dict.items($.x))
+        var items = _b_.list.$factory(_b_.dict.$dict.items($.x))
         for(var i=0, len=items.length;i<len;i++){
             var k = items[i][0], v=items[i][1]
             if(!_b_.isinstance(k, _b_.int)){
@@ -1289,8 +1289,8 @@ str.partition = function() {
   if($.sep==''){throw _b_.ValueError.$factory('empty separator')}
   check_str($.sep)
   var i=$.self.indexOf($.sep)
-  if (i== -1) return _b_.tuple([$.self, '', ''])
-  return _b_.tuple([$.self.substring(0,i), $.sep,
+  if (i== -1) return _b_.tuple.$factory([$.self, '', ''])
+  return _b_.tuple.$factory([$.self.substring(0,i), $.sep,
       $.self.substring(i+$.sep.length)])
 }
 

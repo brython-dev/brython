@@ -652,7 +652,7 @@ function _Random(){
                 // An n-length list is smaller than a k-length set
                 if(Array.isArray(population)){
                     var pool = population.slice()
-                }else{var pool = _b_.list(population)}
+                }else{var pool = _b_.list.$factory(population)}
                 for(var i=0;i<k;i++){ //invariant:  non-selected at [0,n-i)
                     var j = _randbelow(n-i)
                     result[i] = pool[j]
@@ -737,7 +737,7 @@ function _Random(){
                 throw _b_.ValueError.$factory("ValueError: state with version "+
                     $.state[0]+" passed to Random.setstate() of version 3")
             }
-            var second = _b_.list($.state[1])
+            var second = _b_.list.$factory($.state[1])
             if(second.length!==state[1].length){
                 throw _b_.ValueError.$factory('state vector is the wrong size')
             }

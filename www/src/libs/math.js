@@ -19,7 +19,7 @@ var isOdd=function(x) {return isWholeNumber(x) && 2*Math.floor(x/2) != x}
 var isLargeNumber=function(x) {return x > Math.pow(2,32)}
 
 // Big number Library from jsfromhell.com
-// This library helps with producing "correct" results from 
+// This library helps with producing "correct" results from
 // mathematic operations
 
 //+ Jonas Raoni Soares Silva
@@ -171,7 +171,7 @@ var _mod = {
         return res
     },
     acos: function(x) {return float.$factory(Math.acos(float_check(x)))},
-    acosh: function(x) { 
+    acosh: function(x) {
         if (_b_.$isinf(x)) return float.$factory('inf');
         var y = float_check(x);
         return float.$factory(Math.log(y + Math.sqrt(y*y-1)));
@@ -190,7 +190,7 @@ var _mod = {
     atan2: function(y,x) {
         return float.$factory(Math.atan2(float_check(y),float_check(x)))
     },
-    atanh: function(x) { 
+    atanh: function(x) {
        var y=float_check(x);
        if (y==0) return 0;
        return float.$factory(0.5 * Math.log((1/y+1)/(1/y-1)));
@@ -204,7 +204,7 @@ var _mod = {
 
        var y=float_check(x);
        if (!isNaN(parseFloat(y)) && isFinite(y)) return int.$factory(Math.ceil(y));
-       
+
        $raise('ValueError', 'object is not a number and does not contain __ceil__')
     },
     copysign: function(x,y) {
@@ -224,19 +224,19 @@ var _mod = {
     degrees: function(x){return float.$factory(float_check(x) * 180/Math.PI)},
     e: float.$factory(Math.E),
     erf: function(x) {
-        // inspired from 
+        // inspired from
         // http://stackoverflow.com/questions/457408/is-there-an-easily-available-implementation-of-erf-for-python
         var y =float_check(x);
         var t = 1.0 / (1.0 + 0.5 * Math.abs(y))
         var ans = 1 - t * Math.exp( -y*y - 1.26551223 +
                      t * ( 1.00002368 +
-                     t * ( 0.37409196 + 
-                     t * ( 0.09678418 + 
-                     t * (-0.18628806 + 
-                     t * ( 0.27886807 + 
-                     t * (-1.13520398 + 
-                     t * ( 1.48851587 + 
-                     t * (-0.82215223 + 
+                     t * ( 0.37409196 +
+                     t * ( 0.09678418 +
+                     t * (-0.18628806 +
+                     t * ( 0.27886807 +
+                     t * (-1.13520398 +
+                     t * ( 1.48851587 +
+                     t * (-0.82215223 +
                      t * 0.17087277)))))))))
         if (y >= 0.0) return ans
 
@@ -244,19 +244,19 @@ var _mod = {
     },
 
     erfc: function(x) {
-        // inspired from 
+        // inspired from
         // http://stackoverflow.com/questions/457408/is-there-an-easily-available-implementation-of-erf-for-python
         var y = float_check(x);
         var t = 1.0 / (1.0 + 0.5 * Math.abs(y))
         var ans = 1 - t * Math.exp( -y*y - 1.26551223 +
                      t * ( 1.00002368 +
-                     t * ( 0.37409196 + 
-                     t * ( 0.09678418 + 
-                     t * (-0.18628806 + 
-                     t * ( 0.27886807 + 
-                     t * (-1.13520398 + 
-                     t * ( 1.48851587 + 
-                     t * (-0.82215223 + 
+                     t * ( 0.37409196 +
+                     t * ( 0.09678418 +
+                     t * (-0.18628806 +
+                     t * ( 0.27886807 +
+                     t * (-1.13520398 +
+                     t * ( 1.48851587 +
+                     t * (-0.82215223 +
                      t * 0.17087277)))))))))
         if (y >= 0.0) return 1-ans
         return 1+ans
@@ -280,14 +280,17 @@ var _mod = {
     },
     floor:function(x){return Math.floor(float_check(x))},
     fmod:function(x,y){return float.$factory(float_check(x)%float_check(y))},
-    frexp: function(x){var _l=_b_.$frexp(x);return _b_.tuple([float.$factory(_l[0]), _l[1]])}, // located in py_float.js
+    frexp: function(x){
+        var _l=_b_.$frexp(x);
+        return _b_.tuple.$factory([float.$factory(_l[0]), _l[1]])
+    },
     fsum:function(x){
         /* Translation into Javascript of the function msum in an Active
            State Cookbook recipe : https://code.activestate.com/recipes/393090/
            by Raymond Hettinger
         */
         var partials = [],
-            res = new Number(), 
+            res = new Number(),
             _it = _b_.iter(x)
         while(true){
             try{
@@ -329,8 +332,8 @@ var _mod = {
          var d2 = 1.000000000190015;
          d2 +=  76.18009172947146 / (z+1);
          d2 += -86.50532032941677 / (z+2);
-         d2 +=  24.01409824083091 / (z+3); 
-         d2 += -1.231739572450155 / (z+4); 
+         d2 +=  24.01409824083091 / (z+3);
+         d2 += -1.231739572450155 / (z+4);
          d2 +=  1.208650973866179E-3 / (z+5);
          d2 += -5.395239384953E-6 / (z+6);
 
@@ -348,8 +351,8 @@ var _mod = {
                           {a:null,b:null,rel_tol:null,abs_tol:null},
                           ['a', 'b', 'rel_tol', 'abs_tol'],
                           arguments,
-                          {rel_tol:1e-09, abs_tol:0.0}, 
-                          null, 
+                          {rel_tol:1e-09, abs_tol:0.0},
+                          null,
                           null)
         var a = $ns['a'];
         var b = $ns['b'];
@@ -374,8 +377,8 @@ var _mod = {
          var d2 = 1.000000000190015;
          d2 +=  76.18009172947146 / (z+1);
          d2 += -86.50532032941677 / (z+2);
-         d2 +=  24.01409824083091 / (z+3); 
-         d2 += -1.231739572450155 / (z+4); 
+         d2 +=  24.01409824083091 / (z+3);
+         d2 += -1.231739572450155 / (z+4);
          d2 +=  1.208650973866179E-3 / (z+5);
          d2 += -5.395239384953E-6 / (z+6);
 
@@ -392,44 +395,44 @@ var _mod = {
         if (_b_.$isninf(x)) throw ValueError('')
         var x1=float_check(x)
         if (x1 < 0.0) throw ValueError('')
-        //if (isLargeNumber(x1)) x1=new BigNumber(x1)         
+        //if (isLargeNumber(x1)) x1=new BigNumber(x1)
         return float.$factory(Math.log(x1)/Math.LN2)
     },
     log10: function(x) {return float.$factory(Math.log(float_check(x))/Math.LN10)},
     modf:function(x) {
-       if (_b_.$isninf(x)) return _b_.tuple([0.0, float.$factory('-inf')])
-       if (_b_.$isinf(x)) return _b_.tuple([0.0, float.$factory('inf')])
-       if (isNaN(x)) return _b_.tuple([float.$factory('nan'), float.$factory('nan')])
+       if (_b_.$isninf(x)) return _b_.tuple.$factory([0.0, float.$factory('-inf')])
+       if (_b_.$isinf(x)) return _b_.tuple.$factory([0.0, float.$factory('inf')])
+       if (isNaN(x)) return _b_.tuple.$factory([float.$factory('nan'), float.$factory('nan')])
 
        var x1=float_check(x);
        if (x1 > 0) {
           var i=float.$factory(x1-Math.floor(x1))
-          return _b_.tuple([i, float.$factory(x1-i)])
+          return _b_.tuple.$factory([i, float.$factory(x1-i)])
        }
 
        var x2=Math.ceil(x1)
        var i=float.$factory(x1-x2)
-       return _b_.tuple([i, float.$factory(x2)])
+       return _b_.tuple.$factory([i, float.$factory(x2)])
     },
     nan: float.$factory('nan'),
     pi : float.$factory(Math.PI),
     pow: function(x,y) {
         var x1=float_check(x)
         var y1=float_check(y)
-        if (y1 == 0) return float.$factory(1)        
+        if (y1 == 0) return float.$factory(1)
         if (x1 == 0 && y1 < 0) throw _b_.ValueError('')
 
-        if(isNaN(y1)) {if(x1==1) return float.$factory(1) 
+        if(isNaN(y1)) {if(x1==1) return float.$factory(1)
                        return float.$factory('nan')
         }
         if (x1 == 0) return float.$factory(0)
 
         if(_b_.$isninf(y)) {if(x1==1||x1==-1) {return float.$factory(1)}
-                       if(x1 < 1 && x1 > -1) return float.$factory('inf') 
+                       if(x1 < 1 && x1 > -1) return float.$factory('inf')
                        return float.$factory(0)
         }
-        if(_b_.$isinf(y)) {if(x1==1||x1==-1) {return float.$factory(1)} 
-                      if(x1 < 1 && x1 > -1) return float.$factory(0) 
+        if(_b_.$isinf(y)) {if(x1==1||x1==-1) {return float.$factory(1)}
+                      if(x1 < 1 && x1 > -1) return float.$factory(0)
                       return float.$factory('inf')}
 
         if(isNaN(x1)) return float.$factory('nan')
@@ -440,7 +443,7 @@ var _mod = {
             return float.$factory(1)
         }
 
-        if(_b_.$isinf(x)) { 
+        if(_b_.$isinf(x)) {
             if (y1 > 0) return float.$factory('inf')
             if (y1 < 0) return float.$factory(0)
             return float.$factory(1)
@@ -463,7 +466,7 @@ var _mod = {
     },
     radians: function(x){return float.$factory(float_check(x) * Math.PI/180)},
     sin : function(x){return float.$factory(Math.sin(float_check(x)))},
-    sinh: function(x) { 
+    sinh: function(x) {
         //if (_b_.$isinf(x)) return float.$factory('inf');
         var y = float_check(x)
         if (Math.sinh !== undefined) { return float.$factory(Math.sinh(y))}
@@ -485,7 +488,7 @@ var _mod = {
         var y = float_check(x)
         if (Math.tanh !== undefined) return float.$factory(Math.tanh(y))
         return float.$factory((Math.pow(Math.E,y) - Math.pow(Math.E,-y))/
-                     (Math.pow(Math.E,y) + Math.pow(Math.E,-y)))       
+                     (Math.pow(Math.E,y) + Math.pow(Math.E,-y)))
     },
     trunc: function(x) {
        try{return getattr(x,'__trunc__')()}catch(err){}

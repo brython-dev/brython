@@ -64,7 +64,8 @@ float.as_integer_ratio=function(self) {
         denominator = py_exponent
     }
 
-    return _b_.tuple([_b_.int.$factory(numerator), _b_.int.$factory(denominator)])
+    return _b_.tuple.$factory([_b_.int.$factory(numerator),
+        _b_.int.$factory(denominator)])
 }
 
 float.__bool__ = function(self){return _b_.bool(self.valueOf())}
@@ -283,7 +284,6 @@ _b_.$frexp= function(x){
     if (isinstance(x, float)) x1=x.valueOf()
 
     if (isNaN(x1) || _b_.$isinf(x1)) { return [x1,-1]}
-    //if (x1 == 0) {return _b_.tuple([0,0])}
     if (x1 == 0) return [0,0]
 
     var sign=1, ex = 0, man = x1

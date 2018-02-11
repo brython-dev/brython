@@ -107,7 +107,7 @@ var jsobj2pyobj=$B.jsobj2pyobj=function(jsobj) {
     if(jsobj === undefined){return $B.Undefined}
     else if(jsobj === null) {return _b_.None}
 
-    if (Array.isArray(jsobj)) return _b_.list(jsobj)
+    if (Array.isArray(jsobj)) return _b_.list.$factory(jsobj)
 
     if (typeof jsobj === 'number') {
        if (jsobj.toString().indexOf('.') == -1) return _b_.int.$factory(jsobj)
@@ -145,7 +145,7 @@ var pyobj2jsobj=$B.pyobj2jsobj=function(pyobj){
         // underlying DOM element
         return pyobj.elt
 
-    }else if([_b_.list.$dict,_b_.tuple.$dict].indexOf(klass)>-1){
+    }else if([_b_.list,_b_.tuple].indexOf(klass)>-1){
 
         // Python list : transform its elements
         var res = []
@@ -157,7 +157,7 @@ var pyobj2jsobj=$B.pyobj2jsobj=function(pyobj){
         // Python dictionaries are transformed into a Javascript object
         // whose attributes are the dictionary keys
         var jsobj = {}
-        var items = _b_.list(_b_.dict.$dict.items(pyobj))
+        var items = _b_.list.$factory(_b_.dict.$dict.items(pyobj))
         for(var j=0, _len_j = items.length; j < _len_j;j++){
             if(typeof items[j][1]=='function'){
                 // set "this" to jsobj

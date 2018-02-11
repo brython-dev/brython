@@ -22,7 +22,7 @@ for(var i=0, _len_i = mutable_methods.length; i < _len_i;i++){
         return function(self){
             var args = [self.source], pos=1
             for(var i=1, _len_i = arguments.length; i < _len_i;i++) args[pos++]=arguments[i]
-            return _b_.list.$dict[m].apply(null,args)
+            return _b_.list[m].apply(null,args)
         }
     })(method)
 }
@@ -60,7 +60,7 @@ bytearray.__setitem__ = function(self,arg,value){
         // copy items in a temporary JS array
         // otherwise, a[:0]=a fails
         if(_b_.hasattr(value,'__iter__')){
-            var $temp = _b_.list(value)
+            var $temp = _b_.list.$factory(value)
             for(var i=$temp.length-1;i>=0;i--){
                 if(!isinstance($temp[i], _b_.int)){
                     throw _b_.TypeError.$factory('an integer is required')
@@ -92,7 +92,7 @@ bytearray.insert = function(self,pos,b){
     }
     if(!isinstance(b, _b_.int)) throw _b_.TypeError.$factory("an integer is required")
     if(b>255) throw ValueError.$factory("byte must be in range(0, 256)")
-    _b_.list.$dict.insert(self.source,pos,b)
+    _b_.list.insert(self.source,pos,b)
 }
 
 bytearray.$factory = function(source, encoding, errors) {
@@ -132,7 +132,7 @@ bytes.__eq__ = function(self,other){
 }
 
 bytes.__ge__ = function(self,other){
-    return _b_.list.$dict.__ge__(self.source,other.source)
+    return _b_.list.__ge__(self.source,other.source)
 }
 
 // borrowed from py_string.js.
@@ -174,7 +174,7 @@ bytes.__getitem__ = function(self,arg){
 
 
 bytes.__gt__ = function(self,other){
-    return _b_.list.$dict.__gt__(self.source,other.source)
+    return _b_.list.__gt__(self.source,other.source)
 }
 
 bytes.__hash__ = function(self) {
@@ -198,13 +198,13 @@ bytes.__init__ = function(){
 }
 
 bytes.__le__ = function(self,other){
-    return _b_.list.$dict.__le__(self.source,other.source)
+    return _b_.list.__le__(self.source,other.source)
 }
 
 bytes.__len__ = function(self){return self.source.length}
 
 bytes.__lt__ = function(self,other){
-    return _b_.list.$dict.__lt__(self.source,other.source)
+    return _b_.list.__lt__(self.source,other.source)
 }
 
 bytes.__mro__ = [object]
@@ -239,7 +239,7 @@ bytes.__new__ = function(cls, source, encoding, errors){
             int_list = encode(source,encoding)
         }else{
             // tranform iterable "source" into a list
-            int_list = _b_.list(source)
+            int_list = _b_.list.$factory(source)
         }
     }
     self.source = int_list

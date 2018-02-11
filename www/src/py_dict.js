@@ -85,7 +85,7 @@ var $item_iterator = function(d) {
     this.iter = new $item_generator(d)
 }
 $item_iterator.prototype.length = function() {return this.iter.items.length }
-$item_iterator.prototype.next = function() { return _b_.tuple(this.iter.next()) }
+$item_iterator.prototype.next = function() { return _b_.tuple.$factory(this.iter.next()) }
 
 var $copy_dict = function(left, right) {
     var _l=new $item_generator(right).as_list(),
@@ -609,7 +609,7 @@ $DictDict.popitem = function(self){
     try{
         var itm = new $item_iterator(self).next()
         $DictDict.__delitem__(self,itm[0])
-        return _b_.tuple(itm)
+        return _b_.tuple.$factory(itm)
     }catch(err) {
         if (err.__name__ == "StopIteration") {
             $B.current_exception = ce
@@ -642,7 +642,7 @@ $DictDict.update = function(self){
          if(o.$jsobj){o = jsobj2dict(o);}
          $copy_dict(self, o)
       } else if (hasattr(o, '__getitem__') && hasattr(o, 'keys')) {
-         var _keys=_b_.list(getattr(o, 'keys')())
+         var _keys=_b_.list.$factory(getattr(o, 'keys')())
          var si=$DictDict.__setitem__
          var i=_keys.length
          while(i--) {

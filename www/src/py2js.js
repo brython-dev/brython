@@ -1406,7 +1406,7 @@ function $CallCtx(context){
                 for(var i=0, len=positional.length; i<len; i++){
                     arg = positional[i]
                     if(arg[1]=='*'){ // star argument
-                        p.push('_b_.list('+arg[0]+')')
+                        p.push('_b_.list.$factory('+arg[0]+')')
                     }else{
                         var elt = [positional[i][0]]
                         // list the following arguments until the end, or
@@ -1465,7 +1465,8 @@ function $CallCtx(context){
                   if(this.func.is_builtin){
                       // simplify code for built-in functions
                       var new_style = ["complex", "bytes", "bytearray",
-                          "object", "memoryview", "int", "float", "str"]
+                          "object", "memoryview", "int", "float", "str",
+                          "list", "tuple"]
                       if($B.builtin_funcs[this.func.value]!==undefined &&
                               new_style.indexOf(this.func.value) == -1 // XXX temporary
                           ){
@@ -1594,7 +1595,7 @@ function $ClassCtx(context){
                 if(_tmp.tree[0].type=='kwarg'){kw.push(_tmp.tree[0])}
                 else{args.push(_tmp.to_js())}
             }
-            js[pos++]=',tuple(['+args.join(',')+']),['
+            js[pos++]=',tuple.$factory(['+args.join(',')+']),['
             // add the names - needed to raise exception if a value is undefined
             var _re=new RegExp('"','g')
             var _r=[], rpos=0
@@ -1611,7 +1612,7 @@ function $ClassCtx(context){
             js[pos++]= ',[' + _r.join(',') + ']'
 
         }else{ // form "class foo:"
-            js[pos++]=',tuple([]),[],[]'
+            js[pos++]=',tuple.$factory([]),[],[]'
         }
         js[pos++]=')'
         var cl_cons = new $Node()
@@ -2644,7 +2645,7 @@ function $ExprCtx(context,name,with_commas){
         this.js_processed=true
         if(this.type==='list') return '['+$to_js(this.tree)+']'
         if(this.tree.length===1) return this.tree[0].to_js(arg)
-        return 'tuple('+$to_js(this.tree)+')'
+        return 'tuple.$factory('+$to_js(this.tree)+')'
     }
 }
 
@@ -3955,7 +3956,7 @@ function $ListOrTupleCtx(context,real){
             if(this.tree.length===1 && this.has_comma===undefined){
                 return this.tree[0].to_js()
             }
-            return 'tuple(['+$to_js(this.tree)+'])'
+            return 'tuple.$factory(['+$to_js(this.tree)+'])'
         }
     }
 }
@@ -8153,7 +8154,7 @@ function brython(options){
     if ($B.$options.args) {
         $B.__ARGV = $B.$options.args
     } else {
-        $B.__ARGV = _b_.list([])
+        $B.__ARGV = _b_.list.$factory([])
     }
     if (!isWebWorker) {
         _run_scripts(options)

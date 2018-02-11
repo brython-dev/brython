@@ -31,7 +31,8 @@ $B.$syntax_err_line = function(exc,module,pos,line_num) {
     if(src===undefined){
         console.log('no src for', module)
         exc.$line_info = line_num+','+module
-        exc.args = _b_.tuple([$B.$getitem(exc.args,0), module, line_num, 0, 0])
+        exc.args = _b_.tuple.$factory([$B.$getitem(exc.args,0), module,
+            line_num, 0, 0])
     } else {
         var line_pos = {1:0}
         for(var i=0, _len_i = src.length; i < _len_i;i++){
@@ -50,7 +51,8 @@ $B.$syntax_err_line = function(exc,module,pos,line_num) {
             len=line.length
         line=line.replace(/^\s*/,'')
         lpos-=len-line.length
-        exc.args = _b_.tuple([$B.$getitem(exc.args,0), module, line_num, lpos, line])
+        exc.args = _b_.tuple.$factory([$B.$getitem(exc.args,0), module,
+            line_num, lpos, line])
     }
 }
 
@@ -200,7 +202,7 @@ var BaseException = _b_.BaseException =  {
 
 BaseException.__init__ = function(self){
     var args = arguments[1] === undefined ? [] : [arguments[1]]
-    self.args = _b_.tuple(args)
+    self.args = _b_.tuple.$factory(args)
 }
 
 BaseException.__repr__ = function(self){
@@ -282,7 +284,7 @@ BaseException.with_traceback = function(self, tb){
 BaseException.$factory = function (){
     var err = Error()
     err.__name__ = 'BaseException'
-    err.args = _b_.tuple(Array.prototype.slice.call(arguments))
+    err.args = _b_.tuple.$factory(Array.prototype.slice.call(arguments))
     err.__class__ = _b_.BaseException
     err.$py_error = true
     err.$stack = $B.frames_stack.slice()
@@ -360,7 +362,7 @@ $B.exception = function(js_exc){
             exc.__class__=_b_.RuntimeError
         }
         var $message = js_exc.msg || '<'+js_exc+'>'
-        exc.args = _b_.tuple([$message])
+        exc.args = _b_.tuple.$factory([$message])
         exc.info = ''
         exc.$py_error = true
         exc.$stack = $B.frames_stack.slice()

@@ -60,8 +60,8 @@ object.__dir__ = function(self) {
         if(attr.substr(0, 2) == '$$'){res[pos++] = attr.substr(2)}
         else if (attr.charAt(0) != '$'){res[pos++] = attr}
     }
-    res = _b_.list(_b_.set(res))
-    _b_.list.$dict.sort(res)
+    res = _b_.list.$factory(_b_.set(res))
+    _b_.list.sort(res)
     return res
 }
 

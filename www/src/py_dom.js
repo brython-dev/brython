@@ -443,7 +443,7 @@ DOMNode.__add__ = function(self,other){
         res.children[pos++] = other
     }else{
         // If other is iterable, add all items
-        try{res.children=res.children.concat(_b_.list(other))}
+        try{res.children=res.children.concat(_b_.list.$factory(other))}
         catch(err){throw _b_.TypeError.$factory("can't add '"+
             $B.get_class(other).__name__+"' object to DOMNode instance")
         }
@@ -742,7 +742,7 @@ DOMNode.__le__ = function(self,other){
     }else{
         try{
             // If other is an iterable, add the items
-            var items = _b_.list(other)
+            var items = _b_.list.$factory(other)
             for(var i=0; i<items.length; i++){
                 DOMNode.__le__(self, items[i])
             }
@@ -1023,7 +1023,7 @@ DOMNode.get = function(self){
     for(var i=1;i<arguments.length;i++){args[pos++]=arguments[i]}
     var $ns=$B.args('get',0,{},[],args,{},null,'kw')
     var $dict = {}
-    var items = _b_.list(_b_.dict.$dict.items($ns['kw']))
+    var items = _b_.list.$factory(_b_.dict.$dict.items($ns['kw']))
     for(var i=0;i<items.length;i++){
         $dict[items[i][0]]=items[i][1]
     }
@@ -1218,7 +1218,7 @@ DOMNode.set_style = function(self,style){ // style is a dict
     if(!_b_.isinstance(style, _b_.dict)){
         throw TypeError.$factory('style must be dict, not '+$B.get_class(style).__name__)
     }
-    var items = _b_.list(_b_.dict.$dict.items(style))
+    var items = _b_.list.$factory(_b_.dict.$dict.items(style))
     for(var i=0;i<items.length;i++){
         var key = items[i][0],value=items[i][1]
         if(key.toLowerCase()==='float'){
@@ -1474,7 +1474,7 @@ var win =  JSObject(_window) //{__class__:$WinDict}
 win.get_postMessage = function(msg,targetOrigin){
     if(isinstance(msg,dict)){
         var temp = {__class__:'dict'}
-        var items = _b_.list(_b_.dict.$dict.items(msg))
+        var items = _b_.list.$factory(_b_.dict.$dict.items(msg))
         for(var i=0;i<items.length;i++) temp[items[i][0]]=items[i][1]
         msg = temp
     }

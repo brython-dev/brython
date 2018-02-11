@@ -290,7 +290,7 @@ function dir(obj){
         // if dir is called without arguments, use globals
         var frame = $B.last($B.frames_stack),
             globals_obj = frame[3],
-            res = _b_.list(),
+            res = _b_.list.$factory(),
             pos=0
         for(var attr in globals_obj){
             if(attr.charAt(0)=='$' && attr.charAt(1) != '$') {
@@ -299,7 +299,7 @@ function dir(obj){
             }
             res[pos++]=attr
         }
-        _b_.list.$dict.sort(res)
+        _b_.list.sort(res)
         return res
     }
 
@@ -313,7 +313,7 @@ function dir(obj){
         // We first look if the object has the __dir__ method
         try {
             var res = getattr(obj, '__dir__')()
-            res = _b_.list(res)
+            res = _b_.list.$factory(res)
             res.sort()
             return res
         } catch (err){}
@@ -336,7 +336,7 @@ function divmod(x,y) {
    check_nb_args('divmod', 2, arguments.length)
 
    var klass = x.__class__ || $B.get_class(x)
-   return _b_.tuple([getattr(klass, '__floordiv__')(x,y),
+   return _b_.tuple.$factory([getattr(klass, '__floordiv__')(x,y),
        getattr(klass, '__mod__')(x,y)])
 }
 
@@ -355,7 +355,7 @@ function enumerate(){
         __name__:'enumerate iterator',
         __next__:function(){
             res.counter++
-            return _b_.tuple([res.counter,next(_iter)])
+            return _b_.tuple.$factory([res.counter,next(_iter)])
         },
         __repr__:function(){return "<enumerate object>"},
         __str__:function(){return "<enumerate object>"},
@@ -777,7 +777,7 @@ $B.$getattr = function(obj, attr, _default){
             for(var i=0;i<mro.length;i++){
                 res.push(mro[i])
             }
-            return _b_.tuple(res)
+            return _b_.tuple.$factory(res)
         }
         break
       case '__subclasses__':
@@ -1018,7 +1018,8 @@ function __import__(mod_name, globals, locals, fromlist, level) {
     var $ = $B.args('__import__',5,
         {name:null,globals:null,locals:null,fromlist:null,level:null},
         ['name', 'globals', 'locals', 'fromlist', 'level'],
-        arguments, {globals:None, locals:None, fromlist:_b_.tuple(), level:0},
+        arguments,
+        {globals:None, locals:None, fromlist:_b_.tuple.$factory(), level:0},
         null, null)
     return $B.$__import__($.name, $.globals, $.locals, $.fromlist);
 }
@@ -1311,9 +1312,9 @@ var memoryview = $B.make_class({name:'memoryview',
             self.format = 'B'
             self.itemsize = 1
             self.ndim = 1
-            self.shape = _b_.tuple([self.obj.source.length])
-            self.strides = _b_.tuple([1])
-            self.suboffsets = _b_.tuple([])
+            self.shape = _b_.tuple.$factory([self.obj.source.length])
+            self.strides = _b_.tuple.$factory([1])
+            self.suboffsets = _b_.tuple.$factory([])
             self.c_contiguous = true
             self.f_contiguous = true
             self.contiguous = true
@@ -1345,7 +1346,7 @@ memoryview.tobytes = function(self){
     return _b_.bytes.$factory(self.obj)
 }
 memoryview.tolist = function(self){
-    return _b_.list(_b_.bytes.$factory(self.obj))
+    return _b_.list.$factory(_b_.bytes.$factory(self.obj))
 }
 
 
@@ -1721,10 +1722,10 @@ $B.$setattr = function(obj, attr, value){
 function sorted () {
     var $=$B.args('sorted',1,{iterable:null},['iterable'],
         arguments,{},null,'kw')
-    var _list = _b_.list(iter($.iterable)),
+    var _list = _b_.list.$factory(iter($.iterable)),
         args = [_list]
     for(var i=1;i<arguments.length;i++){args.push(arguments[i])}
-    _b_.list.$dict.sort.apply(null,args)
+    _b_.list.sort.apply(null,args)
     return _list
 }
 
@@ -2030,7 +2031,7 @@ function zip(){
             }
         }
         if(!flag) break
-        items[rank++]=_b_.tuple(line)
+        items[rank++]=_b_.tuple.$factory(line)
     }
     $B.current_exception = ce
     res.items = items

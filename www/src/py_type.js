@@ -110,7 +110,7 @@ $B.$class_constructor = function(class_name, class_obj, parents,
         var _slots = mro[i].__slots__
         if(_slots!==undefined){
             if(typeof _slots == 'string'){_slots = [_slots]}
-            else{_slots = _b_.list(_slots)}
+            else{_slots = _b_.list.$factory(_slots)}
             for(var j=0;j<_slots.length;j++){
                 cl_dict.$slots = cl_dict.$slots || {}
                 cl_dict.$slots[_slots[j]]=class_dict.__mro__[i]
@@ -252,7 +252,8 @@ function make_mro(bases, cl_dict){
         }
         var bmro = [], pos=0
         if(bases[i]===undefined ||
-            bases[i].__mro__===undefined){
+                bases[i].__mro__===undefined){
+            console.log(cl_dict, bases, "not a class", bases[i])
             throw _b_.TypeError.$factory('Object passed as base class is not a class')
         }
         bmro[pos++] = bases[i]
@@ -268,7 +269,7 @@ function make_mro(bases, cl_dict){
     }
 
     if(bases.indexOf(_b_.object)==-1){
-        bases=bases.concat(_b_.tuple([_b_.object]))
+        bases=bases.concat(_b_.tuple.$factory([_b_.object]))
     }
 
     for(var i=0;i<bases.length;i++) seqs[pos1++]=bases[i]

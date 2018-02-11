@@ -79,9 +79,9 @@ $RangeDict.__getitem__ = function(self,rank){
 
 $RangeDict.__hash__ = function(self){
     var len = $RangeDict.__len__(self)
-    if(len==0){return _b_.hash(_b_.tuple([0, None, None]))}
-    if(len==1){return _b_.hash(_b_.tuple([1, self.start, None]))}
-    return _b_.hash(_b_.tuple([len, self.start, self.step]))
+    if(len==0){return _b_.hash(_b_.tuple.$factory([0, None, None]))}
+    if(len==1){return _b_.hash(_b_.tuple.$factory([1, self.start, None]))}
+    return _b_.hash(_b_.tuple.$factory([len, self.start, self.step]))
 }
 
 var $RangeIterator = function(obj){
@@ -350,12 +350,12 @@ $SliceDict.indices = function (self, length) {
   if (len < 0) _b_.ValueError.$factory('length should not be negative')
   if (self.step > 0) {
      var _len = _b_.min(len, self.stop)
-     return _b_.tuple([self.start, _len, self.step])
+     return _b_.tuple.$factory([self.start, _len, self.step])
   } else if (self.step == _b_.None) {
      var _len = _b_.min(len, self.stop)
      var _start = self.start
      if (_start == _b_.None) _start = 0
-     return _b_.tuple([_start, _len, 1])
+     return _b_.tuple.$factory([_start, _len, 1])
   }
   _b_.NotImplementedError.$factory("Error! negative step indices not implemented yet")
 }

@@ -256,7 +256,7 @@ int.__mul__ = function(self,other){
         // make temporary copy of list
         var $temp = other.slice(0,other.length)
         for(var i=0;i<val;i++) res=res.concat($temp)
-        if(isinstance(other,_b_.tuple)) res=_b_.tuple(res)
+        if(isinstance(other,_b_.tuple)) res=_b_.tuple.$factory(res)
         return res
     }
     if(hasattr(other,'__rmul__')) return getattr(other,'__rmul__')(self)

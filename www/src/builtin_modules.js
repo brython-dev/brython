@@ -105,7 +105,7 @@
                                 try{
                                     // If the argument is an iterable other than
                                     // str, add the items
-                                    var items = _b_.list(first)
+                                    var items = _b_.list.$factory(first)
                                     for(var i=0;i<items.length;i++){
                                         $B.DOMNode.__le__(self, items[i])
                                     }
@@ -119,7 +119,7 @@
                     }
 
                     // attributes
-                    var items = _b_.list(_b_.dict.$dict.items($ns['kw']))
+                    var items = _b_.list.$factory(_b_.dict.$dict.items($ns['kw']))
                     for(var i=0, len = items.length; i < len;i++){
                         // keyword arguments
                         var arg = items[i][0],

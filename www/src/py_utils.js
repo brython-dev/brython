@@ -31,7 +31,7 @@ $B.args = function($fname,argcount,slots,var_names,$args,$dobj,
 
     if(extra_pos_args){
         slots[extra_pos_args]=[];
-        slots[extra_pos_args].__class__=_b_.tuple.$dict
+        slots[extra_pos_args].__class__=_b_.tuple
     }
     if(extra_kw_args){
         // Build a dict object faster than with _b_.dict()
@@ -157,8 +157,8 @@ $B.get_class = function(obj){
           case 'object':
             if(Array.isArray(obj)){
                 if(Object.getPrototypeOf(obj)===Array.prototype) {
-                  obj.__class__=_b_.list.$dict
-                  return _b_.list.$dict
+                  obj.__class__=_b_.list
+                  return _b_.list
                 }
             }else if(obj.constructor===Number) return _b_.float
             break
@@ -386,7 +386,7 @@ $B.$JS2Py = function(src){
     if(src===null||src===undefined) return _b_.None
     var klass = $B.get_class(src)
     if(klass!==undefined){
-        if(klass===_b_.list.$dict){
+        if(klass===_b_.list){
             for(var i=0, _len_i = src.length; i< _len_i;i++) src[i] = $B.$JS2Py(src[i])
         }else if(klass===$B.JSObject.$dict){
             src = src.js
@@ -507,7 +507,7 @@ $B.set_list_slice = function(obj,start,stop,value){
     if(stop===null){stop=obj.length}
     stop = $B.$GetInt(stop)
     if(stop<0){stop=Math.max(0, stop+obj.length)}
-    var res = _b_.list(value)
+    var res = _b_.list.$factory(value)
     obj.splice.apply(obj,[start, stop-start].concat(res))
 }
 
@@ -529,7 +529,7 @@ $B.set_list_slice_step = function(obj,start,stop,step,value){
         if(stop<0){stop=Math.max(0, stop+obj.length)}
     }
 
-    var repl = _b_.list(value),j=0,test,nb=0
+    var repl = _b_.list.$factory(value),j=0,test,nb=0
     if(step>0){test = function(i){return i<stop}}
     else{test = function(i){return i>stop}}
 
@@ -841,7 +841,7 @@ $B.pyobject2jsobject=function (obj){
     }
     if(_b_.isinstance(obj,_b_.dict)){
         var res = {}
-        var items = _b_.list(_b_.dict.$dict.items(obj))
+        var items = _b_.list.$factory(_b_.dict.$dict.items(obj))
         for(var i=0, _len_i = items.length; i < _len_i;i++){
             res[$B.pyobject2jsobject(items[i][0])]=$B.pyobject2jsobject(items[i][1])
         }
@@ -925,7 +925,7 @@ $B.$iterator_class = function(name){
        return _a
     }
 
-    function as_list(s) {return _b_.list(as_array(s))}
+    function as_list(s) {return _b_.list.$factory(as_array(s))}
     function as_set(s) {return _b_.set(as_array(s))}
 
     res.__eq__=function(self,other){
