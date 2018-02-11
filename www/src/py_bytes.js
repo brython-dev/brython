@@ -8,9 +8,11 @@ var from_unicode={}, to_unicode={}
 
 //bytearray() (built in function)
 var bytearray = {
-    __class__:$B.$type,
+    __class__:_b_.type,
+    __mro__: [object],
     __name__:'bytearray',
-    $buffer_protocol:true
+    $buffer_protocol:true,
+    $is_class: true
 }
 
 var mutable_methods = ['__delitem__','clear','copy','count','index','pop',
@@ -98,7 +100,6 @@ bytearray.insert = function(self,pos,b){
 bytearray.$factory = function(source, encoding, errors) {
     return bytearray.__new__(bytearray,source,encoding,errors)
 }
-bytearray.__class__=$B.$type
 
 /*
 bytearray.__code__={}
@@ -108,9 +109,12 @@ bytearray.__code__.co_varnames=['i']
 */
 
 //bytes() (built in function)
-var bytes = {__class__ : $B.$type,
+var bytes = {
+    __class__ : _b_.type,
+    __mro__: [object],
     __name__ : 'bytes',
-    $buffer_protocol:true
+    $buffer_protocol:true,
+    $is_class: true
 }
 
 bytes.__add__ = function(self,other){
@@ -206,8 +210,6 @@ bytes.__len__ = function(self){return self.source.length}
 bytes.__lt__ = function(self,other){
     return _b_.list.__lt__(self.source,other.source)
 }
-
-bytes.__mro__ = [object]
 
 bytes.__mul__ = function(){
     var $ = $B.args('__mul__', 2, {self:null, other:null}, ['self', 'other'],
@@ -726,7 +728,7 @@ bytes.$factory = function (source, encoding, errors) {
     return bytes.__new__(bytes, source, encoding, errors)
 }
 
-bytes.__class__ = $B.$type
+bytes.__class__ = _b_.type
 bytes.$is_class = true
 
 // add methods of bytes to bytearray

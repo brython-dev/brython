@@ -4,7 +4,7 @@
 var _b_ = $B.builtins,
     None = _b_.None,
     range = {
-        __class__: $B.$type,
+        __class__: _b_.type,
         __module__: "builtins",
         __mro__: [_b_.object],
         __name__: 'range',
@@ -96,7 +96,7 @@ var $RangeIterator = function(obj){
 }
 $RangeIterator.__class__ = $B.$factory
 $RangeIterator.$dict = {
-    __class__: $B.$type,
+    __class__: _b_.type,
     __name__: 'range_iterator',
     $factory: $RangeIterator,
 
@@ -281,7 +281,7 @@ $B.set_func_names(range, "builtins")
 
 // slice
 var slice = {
-    __class__: $B.$type,
+    __class__: _b_.type,
     __module__: "builtins",
     __mro__: [_b_.object],
     __name__: 'slice',

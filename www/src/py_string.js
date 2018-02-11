@@ -52,7 +52,7 @@ if (!String.prototype.trimRight) {
 var object = _b_.object
 
 var str = {
-    __class__:$B.$type,
+    __class__:_b_.type,
     __dir__:object.__dir__,
     __name__:'str',
     $is_class: true,
@@ -1653,7 +1653,7 @@ $B.set_func_names(str, "builtins")
 
 // dictionary and factory for subclasses of string
 var StringSubclass = $B.StringSubclass = {
-    __class__:$B.$type,
+    __class__:_b_.type,
     __mro__: [object],
     __name__:'str',
     $is_class: true

@@ -6,7 +6,7 @@ var _b_ = $B.builtins
 var _window = self;
 
 $B.$ModuleDict = {
-    __class__ : $B.$type,
+    __class__ : _b_.type,
     __name__ : 'module'
 }
 $B.$ModuleDict.__repr__ = $B.$ModuleDict.__str__ = function(self){
@@ -36,7 +36,7 @@ module.$dict = $B.$ModuleDict
 $B.$ModuleDict.$factory = module
 
 var loader = function(){}
-var Loader = {__class__:$B.$type,
+var Loader = {__class__:_b_.type,
     __name__ : 'Loader'
 }
 Loader.__mro__ = [_b_.object]
@@ -311,7 +311,7 @@ finder_VFS.__class__ = $B.$factory
 
 finder_VFS.$dict = {
     $factory: finder_VFS,
-    __class__: $B.$type,
+    __class__: _b_.type,
     __name__: 'VFSFinder',
 
     create_module : function(cls, spec) {
@@ -390,7 +390,7 @@ finder_stdlib_static.__class__ = $B.$factory
 
 finder_stdlib_static.$dict = {
     $factory : finder_stdlib_static,
-    __class__ : $B.$type,
+    __class__ : _b_.type,
     __name__ : 'StdlibStatic',
     create_module : function(cls, spec) {
         // Fallback to default module creation
@@ -477,7 +477,7 @@ finder_path.__class__ = $B.$factory
 
 finder_path.$dict = {
     $factory: finder_path,
-    __class__: $B.$type,
+    __class__: _b_.type,
     __name__: 'ImporterPath',
 
     create_module : function(cls, spec) {
@@ -581,7 +581,7 @@ vfs_hook.__class__ = $B.$factory
 
 vfs_hook.$dict = {
     $factory: vfs_hook,
-    __class__: $B.$type,
+    __class__: _b_.type,
     __name__: 'VfsPathFinder',
 
     load_vfs: function(self) {
@@ -645,7 +645,7 @@ url_hook.__class__ = $B.$factory
 
 url_hook.$dict = {
     $factory: url_hook,
-    __class__: $B.$type,
+    __class__: _b_.type,
     __name__ : 'UrlPathFinder',
     __repr__: function(self) {
         return '<UrlPathFinder' + (self.hint? " for '" + self.hint + "'":

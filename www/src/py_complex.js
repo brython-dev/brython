@@ -9,9 +9,10 @@ function $UnsupportedOpType(op,class1,class2){
 }
 
 var complex = {
-    __class__: $B.$type,
+    __class__: _b_.type,
     __dir__: object.__dir__,
     __name__: 'complex',
+    $is_class: true,
     $native: true,
     $descriptors: {real:true, imag:true}
 }
@@ -30,8 +31,6 @@ complex.__abs__ = function(self){
 }
 
 complex.__bool__ = function(self){if (self.$real == 0 && self.$imag == 0) return false; else return true;}
-
-complex.__class__ = $B.$type
 
 complex.__eq__ = function(self,other){
     if(isinstance(other,complex)) return self.$real.valueOf()==other.$real.valueOf() && self.$imag.valueOf()==other.$imag.valueOf()
@@ -338,9 +337,6 @@ $B.make_complex = make_complex = function(real, imag){
 complex.$factory = function(){
     return complex.__new__(complex, ...arguments)
 }
-
-complex.__class__ = $B.$type
-complex.$is_class = true
 
 $B.set_func_names(complex)
 

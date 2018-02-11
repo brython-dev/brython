@@ -329,7 +329,7 @@ object.__repr__ = function(self){
     if(self.__class__===$B.$factory){
         return "<class '"+self.$dict.__name__+"'>"
     }
-    if(self.__class__===$B.$type) return "<class '"+self.__name__+"'>"
+    if(self.__class__===_b_.type) return "<class '"+self.__name__+"'>"
     if(self.__class__.__module__!==undefined){
         return "<"+self.__class__.__module__+"."+self.__class__.__name__+" object>"
     }else{
@@ -383,7 +383,7 @@ $B.make_class = function(class_obj){
     // init
 
     var A = {
-        __class__: $B.$type,
+        __class__: _b_.type,
         __mro__: [object],
         __name__: class_obj.name,
         $is_class: true

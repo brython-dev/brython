@@ -14,7 +14,7 @@ function $list(){
 }
 
 var list = {
-    __class__: $B.$type,
+    __class__: _b_.type,
     __module__: "builtins",
     __mro__: [object],
     __name__: 'list',
@@ -697,7 +697,7 @@ $B.set_func_names(list, "builtins")
 function $tuple(arg){return arg} // used for parenthesed expressions
 
 var tuple = {
-    __class__:$B.$type,
+    __class__:_b_.type,
     __module__: "builtins",
     __mro__: [object],
     __name__: 'tuple',

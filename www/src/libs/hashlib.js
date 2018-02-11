@@ -73,7 +73,7 @@ function bytes2WordArray(obj){
 }
 
 var hashDict = {
-    __class__: $B.$type,
+    __class__: _b_.type,
     __name__: 'hash'
 }
 hashDict.__mro__ = [_b_.object]

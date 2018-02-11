@@ -939,7 +939,7 @@ function Random(){
 }
 Random.__class__ = $B.$factory
 Random.$dict = {
-    __class__: $B.$type,
+    __class__: _b_.type,
     __name__: 'Random',
     $factory: Random,
     __init__: function(self){self.$r = _Random()},
@@ -955,7 +955,7 @@ $module.SystemRandom = function(){
     var f = function(){return {__class__:f.$dict}}
     f.__class__ = $B.$factory
     f.$dict = {
-        __class__: $B.$type,
+        __class__: _b_.type,
         __name__: 'SystemRandom',
         $factory: f,
         __getattribute__: function(){

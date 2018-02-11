@@ -32,7 +32,7 @@ function check_no_kw(name, x, y){
 }
 
 var NoneType = {
-    __class__: $B.$type,
+    __class__: _b_.type,
     __name__: "NoneType",
     __module__: "builtins",
     __mro__: [object],
@@ -193,7 +193,7 @@ function classmethod(func) {
     return func
 }
 classmethod.__class__=$B.$factory
-classmethod.$dict = {__class__:$B.$type,
+classmethod.$dict = {__class__:_b_.type,
     __name__:'classmethod',
     $factory: classmethod
 }
@@ -201,7 +201,7 @@ classmethod.$dict.__mro__ = [object]
 
 //compile() (built in function)
 $B.$CodeObjectDict = {
-    __class__:$B.$type,
+    __class__:_b_.type,
     __name__:'code',
     __repr__:function(self){return '<code object '+self.name+', file '+self.filename+'>'},
 }
@@ -323,7 +323,7 @@ function divmod(x,y) {
        getattr(klass, '__mod__')(x,y)])
 }
 
-var $EnumerateDict = {__class__:$B.$type,__name__:'enumerate'}
+var $EnumerateDict = {__class__:_b_.type,__name__:'enumerate'}
 $EnumerateDict.__mro__ = [object]
 
 function enumerate(){
@@ -603,7 +603,7 @@ function exec(src, globals, locals){
 
 exec.$is_func = true
 
-var $FilterDict = {__class__:$B.$type,__name__:'filter'}
+var $FilterDict = {__class__:_b_.type,__name__:'filter'}
 $FilterDict.__iter__ = function(self){return self}
 $FilterDict.__repr__ = $FilterDict.__str__ = function(){return "<filter object>"},
 $FilterDict.__mro__ = [object]
@@ -827,7 +827,7 @@ $B.$getattr = function(obj, attr, _default){
     var mro, attr_func
 
     if(is_class){
-        attr_func=$B.$type.__getattribute__ // XXX metaclass
+        attr_func=_b_.type.__getattribute__ // XXX metaclass
     }else{
         attr_func = klass.__getattribute__
         if(attr_func===undefined){
@@ -896,7 +896,7 @@ function hash(obj){
     if (obj.__hashvalue__ !== undefined) return obj.__hashvalue__
     if (isinstance(obj, _b_.int)) return obj.valueOf()
     if (isinstance(obj, _b_.bool)) return _b_.int.$factory(obj)
-    if(obj.__class__===$B.$factory || obj.$is_class || obj.__class__===$B.$type){
+    if(obj.__class__===$B.$factory || obj.$is_class || obj.__class__===_b_.type){
         return obj.__hashvalue__ = $B.$py_next_hash--
     }
     if (obj.__hash__ !== undefined) {
@@ -1188,7 +1188,7 @@ function locals(){
 }
 
 
-var $MapDict = {__class__:$B.$type,__name__:'map'}
+var $MapDict = {__class__:_b_.type,__name__:'map'}
 $MapDict.__mro__ = [object]
 $MapDict.__iter__ = function (self){return self}
 
@@ -1415,7 +1415,7 @@ $print.is_func = true
 
 // property (built in function)
 var $PropertyDict = {
-    __class__ : $B.$type,
+    __class__ : _b_.type,
     __name__ : 'property'
 }
 $PropertyDict.__mro__ = [object]
@@ -1473,7 +1473,7 @@ function repr(obj){
         // class or its subclasses, but the attribute __repr__ of the
         // class metaclass (usually "type")
         // The metaclass is the attribute __class__ of the class
-        var func = $B.$type.__getattribute__(obj.__class__,'__repr__')
+        var func = _b_.type.__getattribute__(obj.__class__,'__repr__')
         return func(obj)
     }
     var func = getattr(obj, '__repr__')
@@ -1483,7 +1483,7 @@ function repr(obj){
     throw _b_.AttributeError.$factory("object has no attribute __repr__")
 }
 
-var $ReversedDict = {__class__:$B.$type,__name__:'reversed'}
+var $ReversedDict = {__class__:_b_.type,__name__:'reversed'}
 $ReversedDict.__mro__ = [object]
 $ReversedDict.__iter__ = function(self){return self}
 $ReversedDict.__next__ = function(self){
@@ -1713,7 +1713,7 @@ function sorted () {
 }
 
 // staticmethod() built in function
-var $StaticmethodDict = {__class__:$B.$type,__name__:'staticmethod'}
+var $StaticmethodDict = {__class__:_b_.type,__name__:'staticmethod'}
 $StaticmethodDict.__mro__ = [object]
 
 function staticmethod(func) {
@@ -1760,7 +1760,7 @@ function sum(iterable,start){
 }
 
 // super() built in function
-var $SuperDict = {__class__:$B.$type,__name__:'super'}
+var $SuperDict = {__class__:_b_.type,__name__:'super'}
 
 $SuperDict.__getattribute__ = function(self, attr){
 
@@ -1788,7 +1788,7 @@ $SuperDict.__getattribute__ = function(self, attr){
         // Special cases
         return function(){return $SuperDict[attr](self)}
     }
-    var f = _b_.type.$dict.__getattribute__(mro[0], attr)
+    var f = _b_.type.__getattribute__(mro[0], attr)
 
     if(f.$type=="staticmethod"){return f}
     else{
@@ -1846,7 +1846,7 @@ function vars(){
     }
 }
 
-var $Reader = {__class__:$B.$type,__name__:'reader'}
+var $Reader = {__class__:_b_.type,__name__:'reader'}
 
 $Reader.__enter__ = function(self){return self}
 
@@ -1909,11 +1909,11 @@ $Reader.tell = function(self){return self.$counter}
 
 $Reader.writable = function(self){return false}
 
-var $BufferedReader = {__class__:$B.$type,__name__:'_io.BufferedReader'}
+var $BufferedReader = {__class__:_b_.type,__name__:'_io.BufferedReader'}
 
 $BufferedReader.__mro__ = [$Reader,object]
 
-var $TextIOWrapper = {__class__:$B.$type,__name__:'_io.TextIOWrapper'}
+var $TextIOWrapper = {__class__:_b_.type,__name__:'_io.TextIOWrapper'}
 
 $TextIOWrapper.__mro__ = [$Reader,object]
 
@@ -1981,7 +1981,7 @@ function $url_open(){
 }
 
 var zip = {
-    __class__: $B.$type,
+    __class__: _b_.type,
     __module__: "builtins",
     __mro__: [object],
     __name__: "zip",
@@ -2047,7 +2047,7 @@ function no_set_attr(klass, attr){
 var True = true
 var False = false
 
-var $EllipsisDict = {__class__:$B.$type,
+var $EllipsisDict = {__class__:_b_.type,
     __name__:'ellipsis'
 }
 $EllipsisDict.__mro__ = [object]
@@ -2083,16 +2083,16 @@ for(var $func in Ellipsis){
 
 
 // add attributes to native Function
-var $FunctionCodeDict = {__class__:$B.$type,__name__:'function code'}
+var $FunctionCodeDict = {__class__:_b_.type,__name__:'function code'}
 $FunctionCodeDict.__mro__ = [object]
 $FunctionCodeDict.$factory = {__class__:$B.$factory, $dict:$FunctionCodeDict}
 
-var $FunctionGlobalsDict = {__class:$B.$type,__name__:'function globals'}
+var $FunctionGlobalsDict = {__class:_b_.type,__name__:'function globals'}
 $FunctionGlobalsDict.__mro__ = [object]
 $FunctionGlobalsDict.$factory = {__class__:$B.$factory, $dict:$FunctionGlobalsDict}
 
 var Function = $B.Function = {
-    __class__:$B.$type,
+    __class__:_b_.type,
     __code__:{__class__:$FunctionCodeDict,__name__:'function code'},
     __globals__:{__class__:$FunctionGlobalsDict,__name__:'function globals'},
     __module__: "builtins",

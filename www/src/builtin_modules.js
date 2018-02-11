@@ -80,9 +80,10 @@
 
             function makeTagDict(tagName){
                 // return the dictionary for the class associated with tagName
-                var dict = {__class__:$B.$type,
-                    __name__:tagName
-                    }
+                var dict = {
+                    __class__: _b_.type,
+                    __name__: tagName
+                }
 
                 dict.__init__ = function(){
                     var $ns=$B.args('pow',1,{self:null},['self'],arguments,

@@ -18,8 +18,9 @@ function $DictClass($keys,$values){
 }
 
 var dict = {
-    __class__: $B.$type,
+    __class__: _b_.type,
     __module__: "builtins",
+    __mro__: [object],
     __name__ : 'dict',
     $is_class: true,
     $native: true
@@ -386,8 +387,6 @@ dict.__len__ = function(self) {
     return _count
 }
 
-dict.__mro__ = [object]
-
 dict.__ne__ = function(self,other){return !dict.__eq__(self,other)}
 
 dict.__new__ = function(cls){
@@ -443,7 +442,7 @@ dict.__setitem__ = function(self,key,value){
         self=$.self, key=$.key, value=$.value
 
     if(self.$jsobj){
-        if(self.$jsobj.__class__===$B.$type){
+        if(self.$jsobj.__class__===_b_.type){
             self.$jsobj[key] = $B.pyobj2jsobj(value)
             if(key=="__init__" || key=="__new__"){
                 // If class attribute __init__ or __new__ are reset,
@@ -751,7 +750,7 @@ $B.$dict_get_copy = dict.copy  // return a shallow copy
 
 // Class for attribute __dict__ of classes
 var mappingproxyDict = {
-    __class__ : $B.$type,
+    __class__ : _b_.type,
     __name__ : "mappingproxy"
 }
 mappingproxyDict.__mro__ = [object]

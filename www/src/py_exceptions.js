@@ -74,8 +74,10 @@ $B.$IndentationError = function(module,msg,pos) {
 
 
 // class of traceback objects
-var $TracebackDict = {__class__:$B.$type,
-    __name__:'traceback'
+var $TracebackDict = {
+    __class__:_b_.type,
+    __name__:'traceback',
+    $is_class: true
 }
 $TracebackDict.__getattribute__ = function(self, attr){
     if(self.stack.length==0){alert('no stack', attr)}
@@ -124,7 +126,8 @@ traceback.$dict = $TracebackDict
 $TracebackDict.$factory = traceback
 
 // class of frame objects
-var $FrameDict = {__class__:$B.$type,
+var $FrameDict = {
+    __class__:_b_.type,
     __name__:'frame'
 }
 
@@ -193,11 +196,13 @@ $B._frame=frame
 // built-in exceptions
 
 var BaseException = _b_.BaseException =  {
-    __class__:$B.$type,
+    __class__:_b_.type,
     __bases__ : [_b_.object],
     __module__:'builtins',
+    __mro__: [_b_.object],
     __name__:'BaseException',
-    args: []
+    args: [],
+    $is_class: true
 }
 
 BaseException.__init__ = function(self){
@@ -212,8 +217,6 @@ BaseException.__repr__ = function(self){
 BaseException.__str__ = function(self){
     return _b_.str.$factory(self.args[0])
 }
-
-BaseException.__mro__ = [_b_.object]
 
 BaseException.__new__ = function(cls){
     cls = cls.$factory ? cls : cls.$dict
@@ -300,8 +303,6 @@ BaseException.$factory.$infos = {
     __name__: "BaseException",
     __qualname__: "BaseException"
 }
-
-BaseException.__class__ = $B.$type
 
 $B.set_func_names(BaseException)
 
@@ -415,7 +416,7 @@ function $make_exc(names, parent){
         var $exc = (BaseException.$factory+'').replace(/BaseException/g,name)
         $exc = $exc.replace('//placeholder//', code)
         // class dictionary
-        _str[pos++]='_b_.'+name+'={__class__:$B.$type,__name__:"'+name+'"}'
+        _str[pos++]='_b_.'+name+'={__class__:_b_.type,__name__:"'+name+'"}'
         _str[pos++]='_b_.'+name+'.__bases__ = [parent]'
         _str[pos++]='_b_.'+name+'.__module__ = "builtins"'
         _str[pos++]='_b_.'+name+'.__mro__=[_b_.'+parent.__name__+

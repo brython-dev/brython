@@ -11,7 +11,7 @@ function $err(op,other){
 }
 
 // dictionary for built-in class 'int'
-var int = {__class__: $B.$type,
+var int = {__class__: _b_.type,
     __name__: 'int',
     __dir__: object.__dir__,
     $is_class: true,
@@ -85,9 +85,6 @@ int.__abs__ = function(self){return abs(self)}
 int.__bool__ = function(self){return new Boolean(self.valueOf())}
 
 int.__ceil__ = function(self){return Math.ceil(self)}
-
-//is this a duplicate?
-int.__class__ = $B.$type
 
 int.__divmod__ = function(self, other){return divmod(self, other)}
 
@@ -644,7 +641,7 @@ $B.$bool = function(obj){ // return true or false
 }
 
 var bool = {
-    __class__: $B.$type,
+    __class__: _b_.type,
     __module__: "builtins",
     __mro__: [int, object],
     __name__: "bool",

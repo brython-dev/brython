@@ -56,7 +56,7 @@ var $module=(function($B){
         return true
     }
     var $SRE_PatternDict = {
-        __class__:$B.$type,
+        __class__:_b_.type,
         __name__:'SRE_Pattern'
     }
     $SRE_PatternDict.__mro__ = [object]

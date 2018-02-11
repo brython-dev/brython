@@ -6,7 +6,7 @@ var _b_=$B.builtins
 $B.$class_constructor = function(class_name, class_obj, parents,
         parents_names, kwargs){
 
-    var metaclass = _b_.type.$dict  // DRo put here, because is used inside if and later
+    var metaclass = _b_.type  // DRo put here, because is used inside if and later
 
     var module = class_obj.__module__
     if(module===undefined){
@@ -63,7 +63,7 @@ $B.$class_constructor = function(class_name, class_obj, parents,
 
     if(bases.length>0){
         metaclass = bases[0].__class__
-        metaclass = bases[0].__class__ === $B.$factory ? $B.$type : metaclass
+        metaclass = bases[0].__class__ === $B.$factory ? _b_.type : metaclass
     }
 
     // Create the class dictionary
@@ -128,10 +128,8 @@ $B.$class_constructor = function(class_name, class_obj, parents,
         }
     }
 
-    //metaclass = metaclass.__class__ === $B.$type ? metaclass : metaclass.$dict
-
     // Apply method __new__ of metaclass to create the class object
-    var meta_new = $B.$type.__getattribute__(metaclass, '__new__'),
+    var meta_new = _b_.type.__getattribute__(metaclass, '__new__'),
         kls = meta_new(metaclass, class_name, bases, cl_dict)
     kls.__mro__ = class_dict.__mro__
     kls.__class__ = metaclass
@@ -140,7 +138,7 @@ $B.$class_constructor = function(class_name, class_obj, parents,
     kls.$is_class = true
 
     // Initialize the class object by a call to metaclass __init__
-    var meta_init = $B.$type.__getattribute__(metaclass, '__init__')
+    var meta_init = _b_.type.__getattribute__(metaclass, '__init__')
 
     meta_init(kls, class_name, bases, Object.keys(kls))
 
@@ -161,7 +159,7 @@ $B.$class_constructor = function(class_name, class_obj, parents,
 
     // call __init_subclass__ with the extra keyword arguments
     var first_parent = mro[0],
-        init_subclass = $B.$type.__getattribute__(first_parent,
+        init_subclass = _b_.type.__getattribute__(first_parent,
             "__init_subclass__")
 
     init_subclass(kls, extra_kwargs)
@@ -311,43 +309,16 @@ function make_mro(bases, cl_dict){
 
 }
 
-_b_.type = function(obj, bases, cl_dict){
-    if(obj===null){console.log('type of', obj)}
-    if(arguments.length==1){
-        if(obj.__class__===$B.$factory){ // XXX old style
-            // Get type of a class
-            return obj.$dict.__class__ //.$factory
-        }
-        return $B.get_class(obj) //.$factory
-    }
-
-    // DRo - Begin
-    // Instead of calling type.__new__ which now returns a class and not
-    // a factory, the existing $class_constructor is reused. The arguments
-    // are slightly different and in different order
-    // 1. name: in this case "obj"
-    // 2. class_obj which is an object containing the definitions in the class
-    // 3. parents: in this case the bases
-    // 4. parents_names: which is not needed, because invoking this function
-    //    should fail if something wrong is given dynamically to "type"
-    // 5. kwargs: no such thing in type ... pass as undefined as a flag for
-    //    $class_constructor to know it's coming from type
-    return $B.$class_constructor(obj, cl_dict, bases, undefined, undefined)
-    // DRo - End
+var type = {
+    __module__: "builtins",
+    __mro__: [_b_.object],
+    __name__:'type',
+    $is_class: true
 }
 
-_b_.type.__class__ = $B.$factory
+type.__class__ = type
 
-$B.$type = {
-    $factory: _b_.type,
-    __name__:'type'
-}
-
-$B.$type.__class__ = $B.$type
-
-$B.$type.__mro__ = [_b_.object]
-
-$B.$type.__new__ = function(meta, name, bases, cl_dict){
+type.__new__ = function(meta, name, bases, cl_dict){
     // DRo - cls changed to meta to reflect that the class (cls) hasn't
     // yet been created. It's about to be created by "meta"
 
@@ -386,22 +357,19 @@ $B.$type.__new__ = function(meta, name, bases, cl_dict){
     return class_dict
 }
 
-
-// DRo - BEGIN
-$B.$type.__init__ = function(){
+type.__init__ = function(){
     // Returns nothing
     // Performs initialization of cls which is the class created by the
     // metaclass __new__ (either from type or custom
 }
-// DRo - END
 
-$B.$type.__call__ = function(klass, ...extra_args){
-    var new_func = $B.$type.__getattribute__(klass, "__new__")
+type.__call__ = function(klass, ...extra_args){
+    var new_func = _b_.type.__getattribute__(klass, "__new__")
     // create an instance with __new__
     var instance = new_func.apply(null, arguments)
    if(instance.__class__===klass){
         // call __init__ with the same parameters
-        var init_func = $B.$type.__getattribute__(klass, "__init__")
+        var init_func = _b_.type.__getattribute__(klass, "__init__")
         if(init_func !== _b_.object.__init__){
             // object.__init__ is not called in this case (it would raise an
             // exception if there are parameters).
@@ -411,23 +379,10 @@ $B.$type.__call__ = function(klass, ...extra_args){
     return instance
 }
 
-$B.$type.__format__ = function(klass, fmt_spec){
+type.__format__ = function(klass, fmt_spec){
     // For classes, format spec is ignored, return str(klass)
     return _b_.str.$factory(klass)
 }
-// class of constructors
-$B.$factory = {
-    __class__:$B.$type,
-    $factory:_b_.type,
-    $is_class:true
-}
-$B.$factory.__mro__ = [$B.$type, _b_.object]
-
-_b_.type.__class__ = $B.$factory
-_b_.type.$dict = $B.$type
-
-// this could not be done before $type and $factory are defined
-_b_.object.__class__ = $B.$type
 
 function method_wrapper(attr, klass, method){
     // add __str__ and __repr__ to special methods
@@ -437,7 +392,7 @@ function method_wrapper(attr, klass, method){
     return method
 }
 
-$B.$type.__repr__ = $B.$type.__str__ = function(kls){
+type.__repr__ = type.__str__ = function(kls){
     if(kls.__class__===$B.$factory){console.log("in type str", kls);kls = kls.$dict}
     var qualname = kls.__name__
     if(kls.__module__ != 'builtins'){
@@ -447,9 +402,9 @@ $B.$type.__repr__ = $B.$type.__str__ = function(kls){
 }
 
 // DRo Begin/End - Added metaclassed as flag during class construction
-$B.$type.__getattribute__=function(klass, attr){
+type.__getattribute__=function(klass, attr){
 
-    // if(attr=="x"){console.log("attr", attr, "de la classe", klass)}
+    //console.log("attr", attr, "de la classe", klass)
     switch(attr) {
       case '__class__':
         return klass.__class__ //.$factory
@@ -573,7 +528,43 @@ $B.$type.__getattribute__=function(klass, attr){
     }
 }
 
-$B.set_func_names($B.$type, "__builtins__")
+type.$factory = function(obj, bases, cl_dict){
+    //if(obj===null){console.log('type of', obj)}
+    if(arguments.length==1){
+        if(obj.__class__===$B.$factory){ // XXX old style
+            // Get type of a class
+            return obj.$dict.__class__ //.$factory
+        }
+        return $B.get_class(obj) //.$factory
+    }
+
+    // DRo - Begin
+    // Instead of calling type.__new__ which now returns a class and not
+    // a factory, the existing $class_constructor is reused. The arguments
+    // are slightly different and in different order
+    // 1. name: in this case "obj"
+    // 2. class_obj which is an object containing the definitions in the class
+    // 3. parents: in this case the bases
+    // 4. parents_names: which is not needed, because invoking this function
+    //    should fail if something wrong is given dynamically to "type"
+    // 5. kwargs: no such thing in type ... pass as undefined as a flag for
+    //    $class_constructor to know it's coming from type
+    return $B.$class_constructor(obj, cl_dict, bases, undefined, undefined)
+    // DRo - End
+}
+
+$B.set_func_names(type, "__builtins__")
+
+_b_.type = type
+
+
+// class of constructors
+$B.$factory = {
+    __class__: type,
+    $is_class: true
+}
+$B.$factory.__mro__ = [type, _b_.object]
+
 
 var $instance_creator = $B.$instance_creator = function(klass){
     // return the function to initalise a class instance
@@ -584,7 +575,7 @@ var $instance_creator = $B.$instance_creator = function(klass){
             "class interface with abstract methods")}
     }
     var metaclass = klass.__class__,
-        call_func = $B.$type.__getattribute__(metaclass, "__call__")
+        call_func = _b_.type.__getattribute__(metaclass, "__call__")
     var factory = function(){
         return call_func(klass, ...arguments)
     }
@@ -598,7 +589,7 @@ var $instance_creator = $B.$instance_creator = function(klass){
 
 // Used for class members, defined in __slots__
 var member_descriptor = {
-    __class__: $B.$type,
+    __class__: _b_.type,
     __module__: "builtins",
     __mro__: [_b_.object],
     __name__: 'member_descriptor',
@@ -616,7 +607,7 @@ member_descriptor.$factory = function(klass, attr){
 // used as the factory for method objects
 
 var method = {
-    __class__:$B.$type,
+    __class__:_b_.type,
     __module__ : "builtins",
     __mro__: [_b_.object],
     __name__:'method',
@@ -665,9 +656,8 @@ $B.method = method
 
 $B.set_func_names(method, "builtins")
 
-$B.$InstanceMethodDict = {__class__:$B.$type,
-    __name__:'instancemethod',
-    __mro__:[_b_.object]
-}
+
+// this could not be done before $type and $factory are defined
+_b_.object.__class__ = type
 
 })(__BRYTHON__)

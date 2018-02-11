@@ -21,7 +21,7 @@ function clone(obj){
 }
 
 var set = {
-    __class__: $B.$type,
+    __class__: _b_.type,
     __module__: "builtins",
     __name__: 'set',
     $is_class: true,
@@ -556,7 +556,7 @@ set.$factory = function(){
 $B.set_func_names(set, "builtins")
 
 var frozenset = {
-    __class__: $B.$type,
+    __class__: _b_.type,
     __module__: "builtins",
     __mro__: [object],
     __name__: 'frozenset',

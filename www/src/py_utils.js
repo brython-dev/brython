@@ -746,7 +746,7 @@ $B.$call = function(callable){
 
 // default standard output and error
 // can be reset by sys.stdout or sys.stderr
-var $io = {__class__:$B.$type,__name__:'io'}
+var $io = {__class__:_b_.type,__name__:'io'}
 $io.__mro__ = [_b_.object]
 
 $B.stderr = {
@@ -900,7 +900,7 @@ $B.$iterator = function(items,klass){
 
 $B.$iterator_class = function(name){
     var res = {
-        __class__:$B.$type,
+        __class__:_b_.type,
         __name__:name,
         __module__: "builtins"
     }
@@ -973,7 +973,7 @@ $B.$iterator_class = function(name){
 }
 
 // class dict of functions attribute __code__
-$B.$CodeDict = {__class__:$B.$type,__name__:'code'}
+$B.$CodeDict = {__class__:_b_.type,__name__:'code'}
 $B.$CodeDict.__mro__ = [_b_.object]
 
 function _code(){}

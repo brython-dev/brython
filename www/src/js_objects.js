@@ -4,7 +4,10 @@ eval($B.InjectBuiltins())
 
 var object = _b_.object
 
-var $LocationDict = {__class__:$B.$type,__name__:'Location'}
+var $LocationDict = {
+    __class__: _b_.type,
+    __name__: 'Location'
+}
 
 $LocationDict.__mro__ = [object]
 
@@ -39,7 +42,7 @@ $Location.$dict = $LocationDict
 // that returns instances of the constructor, converted to Python objects
 
 var JSConstructor = {
-    __class__: $B.$type,
+    __class__: _b_.type,
     __module__: "<javascript>",
     __mro__: [object],
     __name__: 'JSConstructor',
@@ -200,7 +203,7 @@ var pyobj2jsobj=$B.pyobj2jsobj=function(pyobj){
 }
 
 var JSObject = {
-    __class__: $B.$type,
+    __class__: _b_.type,
     __module__: "<javascript>",
     __mro__: [object],
     __name__: 'JSObject'

@@ -12,7 +12,7 @@ function $err(op,other){
 
 // dictionary for built-in class 'float'
 var float = {
-    __class__:$B.$type,
+    __class__:_b_.type,
     __dir__:object.__dir__,
     __name__:'float',
     $is_class: true,
@@ -69,8 +69,6 @@ float.as_integer_ratio=function(self) {
 }
 
 float.__bool__ = function(self){return _b_.bool.$factory(self.valueOf())}
-
-float.__class__ = $B.$type
 
 float.__eq__ = function(self,other){
     if(isNaN(self) && isNaN(other)){return false}
@@ -676,7 +674,7 @@ $B.set_func_names(float, "builtins")
 
 // Dictionary and factory for subclasses of float
 var FloatSubclass = $B.FloatSubclass  = {
-    __class__: $B.$type,
+    __class__: _b_.type,
     __mro__: [object],
     __name__: 'float',
     $is_class: true

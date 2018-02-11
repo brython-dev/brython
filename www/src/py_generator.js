@@ -304,7 +304,12 @@ function in_try(node){
     return tries
 }
 
-var $BRGeneratorDict = {__class__:$B.$type,__name__:'generator',__module__:'builtins'}
+var $BRGeneratorDict = {
+    __class__:_b_.type,
+    __name__:'generator',
+    __module__:'builtins',
+    $is_class: true
+}
 
 $B.gen_counter = 0 // used to identify the function run for each next()
 
@@ -530,7 +535,7 @@ function make_next(self, yield_node_id){
 }
 
 var $gen_it = {
-    __class__: $B.$type,
+    __class__: _b_.type,
     __name__: "generator",
     __module__: "builtins"
 }

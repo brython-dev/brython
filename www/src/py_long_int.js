@@ -6,7 +6,7 @@ Module to manipulate long integers
 eval($B.InjectBuiltins())
 
 var long_int = {
-    __class__: $B.$type,
+    __class__: _b_.type,
     __module__: "builtins",
     __mro__: [int, object],
     __name__: 'int',

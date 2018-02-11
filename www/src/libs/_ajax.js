@@ -77,7 +77,7 @@ var add_to_res = function(res,key,val) {
 
 ajax.$dict = {
 
-    __class__:$B.$type,
+    __class__:_b_.type,
     __name__:'ajax',
     $factory: ajax,
 

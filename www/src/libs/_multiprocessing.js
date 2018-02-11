@@ -8,7 +8,7 @@ eval($s.join(';'))
 
 //for(var $py_builtin in _b_){eval("var "+$py_builtin+"=_b_[$py_builtin]")}
 
-var $ProcessDict = {__class__:$B.$type,__name__:'Process'}
+var $ProcessDict = {__class__:_b_.type,__name__:'Process'}
 
 var $convert_args=function(args) {
     var _list=[]
@@ -98,7 +98,7 @@ Process.__class__ = $B.$factory
 Process.$dict = $ProcessDict
 
 
-var $PoolDict = {__class__:$B.$type,__name__:'Pool'}
+var $PoolDict = {__class__:_b_.type,__name__:'Pool'}
 
 $PoolDict.__mro__ = [_b_.object]
 

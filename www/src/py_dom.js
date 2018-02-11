@@ -125,9 +125,11 @@ var $NodeTypes = {1:"ELEMENT",
 
 // Class for DOM events
 
-var DOMEvent = $B.DOMEvent = {__class__:$B.$type,__name__:'DOMEvent'}
-
-DOMEvent.__mro__ = [object]
+var DOMEvent = $B.DOMEvent = {
+    __class__:_b_.type,
+    __mro__: [object],
+    __name__:'DOMEvent'
+}
 
 DOMEvent.__new__ = function(cls, evt_name){
     var ev = new Event(evt_name)
@@ -175,8 +177,6 @@ DOMEvent.$factory = function(evt_name){
     return DOMEvent.__new__(DOMEvent, evt_name)
 }
 
-DOMEvent.__class__ = $B.$type
-
 // Function to transform a DOM event into an instance of DOMEvent
 $B.$DOMEvent = $DOMEvent = function(ev){
     ev.__class__ = DOMEvent
@@ -187,7 +187,7 @@ $B.$DOMEvent = $DOMEvent = function(ev){
 
 
 var Clipboard = {
-    __class__:$B.$type,
+    __class__:_b_.type,
     __name__:'Clipboard'
 }
 
@@ -235,7 +235,7 @@ function $EventsList(elt,evt,arg){
 
 
 var OpenFile = $B.OpenFile = {
-    __class__: $B.$type,  // metaclass type
+    __class__: _b_.type,  // metaclass type
     __name__: 'OpenFile',
     __mro__: [object]
 }
@@ -281,15 +281,15 @@ $B.set_func_names(OpenFile)
 var dom = { File : function(){},
     FileReader : function(){}
     }
-dom.File.__class__ = $B.$type
+dom.File.__class__ = _b_.type
 dom.File.__str__ = function(){return "<class 'File'>"}
-dom.FileReader.__class__ = $B.$type
+dom.FileReader.__class__ = _b_.type
 dom.FileReader.__str__ = function(){return "<class 'FileReader'>"}
 
 // Class for options in a select box
 
 var Options = {
-    __class__:$B.$type,
+    __class__:_b_.type,
     __name__:'Options',
     __delitem__: function(self, arg){
         self.parent.options.remove(arg.elt)
@@ -339,7 +339,7 @@ $B.set_func_names(Options, "<dom>")
 
 // Class for DOM element style
 
-var Style = {__class__:$B.$type,__name__:'CSSProperty'}
+var Style = {__class__:_b_.type,__name__:'CSSProperty'}
 
 Style.__mro__ = [object]
 
@@ -376,7 +376,8 @@ $B.set_func_names(Style, "<dom>")
 // Class for DOM nodes
 
 DOMNode = {
-    __class__ : $B.$type,
+    __class__ : _b_.type,
+    __mro__: [object],
     __name__ : 'DOMNode'
 }
 
@@ -426,10 +427,6 @@ DOMNode.$factory = function(elt, fromtag){
 }
 
 
-DOMNode.__class__ = $B.$type
-
-DOMNode.__mro__ = [_b_.object]
-
 DOMNode.__add__ = function(self,other){
     // adding another element to self returns an instance of TagSum
     var res = TagSum.$factory()
@@ -452,8 +449,6 @@ DOMNode.__add__ = function(self,other){
 }
 
 DOMNode.__bool__ = function(self){return true}
-
-DOMNode.__class__ = $B.$type
 
 DOMNode.__contains__ = function(self,key){
     // For document, if key is a string, "key in document" tells if an element
@@ -1339,7 +1334,7 @@ DOMNode.unbind = function(self, event){
 // return query string as an object with methods to access keys and values
 // same interface as cgi.FieldStorage, with getvalue / getlist / getfirst
 var Query = {
-    __class__:$B.$type,
+    __class__:_b_.type,
     __name__:'query'
 }
 
@@ -1415,7 +1410,7 @@ DOMNode.query = function(self){
 
 // class used for tag sums
 var TagSum = {
-    __class__ : $B.$type,
+    __class__ : _b_.type,
     __mro__: [object],
     __name__:'TagSum'
 }
