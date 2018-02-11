@@ -306,18 +306,24 @@ function dir(obj){
     check_nb_args('dir', 1, arguments.length)
     check_no_kw('dir', obj)
 
+    obj = obj.__class__ === $B.$factory ? obj.$dict : obj
     var klass = obj.__class__ || $B.get_class(obj),
         ce = $B.current_exception
-    if(klass && klass.is_class){obj=obj.$dict}
-    else {
-        // We first look if the object has the __dir__ method
-        try {
-            var res = getattr(obj, '__dir__')()
-            res = _b_.list.$factory(res)
-            res.sort()
-            return res
-        } catch (err){}
+    
+    if(obj.$is_class){
+        // Use metaclass __dir__
+        var dir_func = $B.$getattr(obj.__class__, "__dir__")
+        return $B.$call(dir_func)(obj)
     }
+    try {
+        var res = $B.$call(getattr(obj, '__dir__'))()
+        res = _b_.list.$factory(res)
+        res.sort()
+        return res
+    } catch (err){
+        // ignore, default
+    }
+
     $B.current_exception = ce
     var res = [], pos=0
     for(var attr in obj){

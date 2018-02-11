@@ -1466,7 +1466,7 @@ function $CallCtx(context){
                       // simplify code for built-in functions
                       var new_style = ["complex", "bytes", "bytearray",
                           "object", "memoryview", "int", "float", "str",
-                          "list", "tuple", "dict"]
+                          "list", "tuple", "dict", "set", "frozenset"]
                       if($B.builtin_funcs[this.func.value]!==undefined &&
                               new_style.indexOf(this.func.value) == -1 // XXX temporary
                           ){
@@ -2551,11 +2551,11 @@ function $DictOrSetCtx(context){
             }
             return 'dict.$factory(['+res.join(',')+'])'+$to_js(this.tree)
           case 'set_comp':
-            return 'set('+$to_js(this.items)+')'+$to_js(this.tree)
+            return 'set.$factory('+$to_js(this.items)+')'+$to_js(this.tree)
           case 'dict_comp':
             return 'dict.$factory('+$to_js(this.items)+')'+$to_js(this.tree)
         }
-        return 'set(['+$to_js(this.items)+'])'+$to_js(this.tree)
+        return 'set.$factory(['+$to_js(this.items)+'])'+$to_js(this.tree)
     }
 }
 

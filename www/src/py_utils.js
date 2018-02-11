@@ -926,7 +926,7 @@ $B.$iterator_class = function(name){
     }
 
     function as_list(s) {return _b_.list.$factory(as_array(s))}
-    function as_set(s) {return _b_.set(as_array(s))}
+    function as_set(s) {return _b_.set.$factory(as_array(s))}
 
     res.__eq__=function(self,other){
        if (_b_.isinstance(other, [_b_.tuple, _b_.set, _b_.list])) {

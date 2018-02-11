@@ -103,7 +103,7 @@ function toSet(items){
         try{res.push(items.next())}
         catch(err){break}
     }
-    return _b_.set(res)
+    return _b_.set.$factory(res)
 }
 
 var $iterator_wrapper = function(items,klass){
