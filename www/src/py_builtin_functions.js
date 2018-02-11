@@ -31,26 +31,30 @@ function check_no_kw(name, x, y){
         throw _b_.TypeError.$factory(name+"() takes no keyword arguments")}
 }
 
-var $NoneDict = {__class__:$B.$type,__name__:'NoneType',__module__:"builtins"}
+var NoneType = {
+    __class__: $B.$type,
+    __name__: "NoneType",
+    __module__: "builtins",
+    __mro__: [object],
+    $is_class: true
+}
 
-$NoneDict.__mro__ = [object]
-
-$NoneDict.__setattr__ = function(self, attr){
-    return no_set_attr($NoneDict, attr)
+NoneType.__setattr__ = function(self, attr){
+    return no_set_attr(NoneType, attr)
 }
 
 var None = {
     __bool__ : function(){return False},
-    __class__ : $NoneDict,
+    __class__ : NoneType,
     __hash__ : function(){return 0},
     __repr__ : function(){return 'None'},
     __str__ : function(){return 'None'},
     toString : function(){return 'None'}
 }
 
-$NoneDict.$factory = function(){return None}
-$NoneDict.$factory.__class__=$B.$factory
-$NoneDict.$factory.$dict=$NoneDict
+NoneType.$factory = function(){return None}
+
+$B.set_func_names(NoneType, "builtins")
 
 for(var $op in $B.$comps){ // None is not orderable with any type
     var key = $B.$comps[$op]
@@ -59,7 +63,7 @@ for(var $op in $B.$comps){ // None is not orderable with any type
       case 'gt':
       case 'le':
       case 'lt':
-        $NoneDict['__'+key+'__']=(function(op){
+        NoneType['__'+key+'__']=(function(op){
             return function(other){
             throw _b_.TypeError.$factory("unorderable types: NoneType() "+op+" "+
                 $B.get_class(other).__name__+"()")}

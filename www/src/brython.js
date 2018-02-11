@@ -76,8 +76,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-02-11 16:12:20.968169"
-__BRYTHON__.timestamp=1518361940968
+__BRYTHON__.compiled_date="2018-02-11 16:17:51.442864"
+__BRYTHON__.timestamp=1518362271442
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -5434,20 +5434,18 @@ if(got !=expected){if(expected==0){throw _b_.TypeError.$factory(name+"() takes n
 (expected<2 ? '' : 's')+" ("+got+" given)")}}}
 function check_no_kw(name,x,y){
 if(x.$nat ||(y!==undefined && y.$nat)){throw _b_.TypeError.$factory(name+"() takes no keyword arguments")}}
-var $NoneDict={__class__:$B.$type,__name__:'NoneType',__module__:"builtins"}
-$NoneDict.__mro__=[object]
-$NoneDict.__setattr__=function(self,attr){return no_set_attr($NoneDict,attr)}
-var None={__bool__ : function(){return False},__class__ : $NoneDict,__hash__ : function(){return 0},__repr__ : function(){return 'None'},__str__ : function(){return 'None'},toString : function(){return 'None'}}
-$NoneDict.$factory=function(){return None}
-$NoneDict.$factory.__class__=$B.$factory
-$NoneDict.$factory.$dict=$NoneDict
+var NoneType={__class__: $B.$type,__name__: "NoneType",__module__: "builtins",__mro__:[object],$is_class: true}
+NoneType.__setattr__=function(self,attr){return no_set_attr(NoneType,attr)}
+var None={__bool__ : function(){return False},__class__ : NoneType,__hash__ : function(){return 0},__repr__ : function(){return 'None'},__str__ : function(){return 'None'},toString : function(){return 'None'}}
+NoneType.$factory=function(){return None}
+$B.set_func_names(NoneType,"builtins")
 for(var $op in $B.$comps){
 var key=$B.$comps[$op]
 switch(key){case 'ge':
 case 'gt':
 case 'le':
 case 'lt':
-$NoneDict['__'+key+'__']=(function(op){return function(other){throw _b_.TypeError.$factory("unorderable types: NoneType() "+op+" "+
+NoneType['__'+key+'__']=(function(op){return function(other){throw _b_.TypeError.$factory("unorderable types: NoneType() "+op+" "+
 $B.get_class(other).__name__+"()")}})($op)}}
 for(var $func in None){if(typeof None[$func]==='function'){None[$func].__str__=(function(f){return function(){return "<method-wrapper "+f+" of NoneType object>"}})($func)}}
 function abs(obj){check_nb_args('abs',1,arguments.length)
