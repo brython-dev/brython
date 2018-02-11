@@ -22,7 +22,9 @@ $B.$class_constructor = function(class_name, class_obj, parents,
     // have been generated before getting here (or will be generated if it's not
     // a valid parent
     if(kwargs !== undefined) {
-        var cl_dict=_b_.dict(), bases=null, extra_kwargs = _b_.dict()
+        var cl_dict=_b_.dict.$factory(),
+            bases=null,
+            extra_kwargs = _b_.dict.$factory()
         // transform class object into a dictionary
         for(var attr in class_obj){
             if(attr.charAt(0)!='$' || attr.substr(0,2)=='$$'){

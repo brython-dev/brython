@@ -152,12 +152,12 @@ var pyobj2jsobj=$B.pyobj2jsobj=function(pyobj){
         for(var i=0, _len_i = pyobj.length; i < _len_i;i++){res.push(pyobj2jsobj(pyobj[i]))}
         return res
 
-    }else if(klass===_b_.dict.$dict){
+    }else if(klass===_b_.dict){
 
         // Python dictionaries are transformed into a Javascript object
         // whose attributes are the dictionary keys
         var jsobj = {}
-        var items = _b_.list.$factory(_b_.dict.$dict.items(pyobj))
+        var items = _b_.list.$factory(_b_.dict.items(pyobj))
         for(var j=0, _len_j = items.length; j < _len_j;j++){
             if(typeof items[j][1]=='function'){
                 // set "this" to jsobj
@@ -400,7 +400,7 @@ $JSObjectDict.__iter__ = function(self){
     }
     // Else iterate on the dictionary built from the JS object
     var _dict = $JSObjectDict.to_dict(self)
-    return _b_.dict.$dict.__iter__(_dict)
+    return _b_.dict.__iter__(_dict)
 }
 
 $JSObjectDict.__len__ = function(self){

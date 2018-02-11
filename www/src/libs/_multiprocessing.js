@@ -77,8 +77,8 @@ function Process(){
     var $ns=$B.args('Process',0,{},[],arguments,{},null,'kw')
     var kw=$ns['kw']
 
-    var target=_b_.dict.$dict.get($ns['kw'],'target',None)
-    var args=_b_.dict.$dict.get($ns['kw'],'args',tuple.$factory())
+    var target=_b_.dict.get($ns['kw'],'target',None)
+    var args=_b_.dict.get($ns['kw'],'args',tuple.$factory())
 
     var worker = new Worker('/src/web_workers/multiprocessing.js')
 

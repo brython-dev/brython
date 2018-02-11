@@ -141,8 +141,8 @@ $FrameDict.__getattr__ = function(self, attr){
 $FrameDict.__mro__ = [_b_.object]
 
 function to_dict(obj){
-    var res = _b_.dict()
-    var setitem=_b_.dict.$dict.__setitem__
+    var res = _b_.dict.$factory()
+    var setitem=_b_.dict.__setitem__
     for(var attr in obj){
         if(attr.charAt(0)=='$'){continue}
         setitem(res, attr, obj[attr])

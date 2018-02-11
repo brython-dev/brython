@@ -195,8 +195,8 @@ var $module=(function($B){
             arguments,{},'args','kw')
         for($var in $ns){eval("var "+$var+"=$ns[$var]")}
         var args = $ns['args']
-        var count = _b_.dict.$dict.get($ns['kw'],'count',0)
-        var flags = _b_.dict.$dict.get($ns['kw'],'flags','')
+        var count = _b_.dict.get($ns['kw'],'count',0)
+        var flags = _b_.dict.get($ns['kw'],'flags','')
         if(args.length>0){var count=args[0]}
         if(args.length>1){var flags=args[1]}
         flags = normflags(flags);

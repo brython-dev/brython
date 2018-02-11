@@ -416,7 +416,7 @@ function $eval(src, _globals, _locals){
     // If a _globals dictionary is provided, set or reuse its attribute
     // globals_id
     if(_globals !== undefined){
-        if(_globals.__class__!=_b_.dict.$dict){
+        if(_globals.__class__!=_b_.dict){
             throw _b_.TypeError.$factory("exec() globals must be a dict, not "+
                 _globals.__class__.__name__)
         }
@@ -489,7 +489,7 @@ function $eval(src, _globals, _locals){
             eval(ex)
         }
     }else{
-        var items = _b_.dict.$dict.items(_locals), item
+        var items = _b_.dict.items(_locals), item
         if(_locals.$jsobj){var items = _locals.$jsobj}
         else{var items = _locals.$string_dict}
         for(var item in items){
@@ -1605,7 +1605,7 @@ $B.$setattr = function(obj, attr, value){
     }else if(attr=='__dict__'){
         // set attribute __dict__
         // remove previous attributes
-        if(!value.__class__===_b_.dict.$dict){
+        if(!value.__class__===_b_.dict){
             throw _b_.TypeError.$factory("__dict__ must be set to a dictionary, " +
                 "not a '"+value.__class__.$dict.__name+"'")
         }

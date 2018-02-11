@@ -36,7 +36,7 @@ $B.args = function($fname,argcount,slots,var_names,$args,$dobj,
     if(extra_kw_args){
         // Build a dict object faster than with _b_.dict()
         slots[extra_kw_args]={
-            __class__:_b_.dict.$dict,
+            __class__:_b_.dict,
             $numeric_dict : {},
             $object_dict : {},
             $string_dict : {},
@@ -554,7 +554,7 @@ $B.$setitem = function(obj,item,value){
         if(obj[item]===undefined){throw _b_.IndexError.$factory("list assignment index out of range")}
         obj[item]=value
         return
-    }else if(obj.__class__===_b_.dict.$dict){
+    }else if(obj.__class__===_b_.dict){
         obj.__class__.__setitem__(obj, item, value)
         return
     }
@@ -788,7 +788,7 @@ $B.jsobject2pyobject=function(obj){
     if(typeof obj==='object' && !Array.isArray(obj) &&
         obj.__class__===undefined){
         // transform JS object into a Python dict
-        var res = _b_.dict()
+        var res = _b_.dict.$factory()
         for(var attr in obj){
            res.$string_dict[attr] = $B.jsobject2pyobject(obj[attr])
         }
@@ -841,7 +841,7 @@ $B.pyobject2jsobject=function (obj){
     }
     if(_b_.isinstance(obj,_b_.dict)){
         var res = {}
-        var items = _b_.list.$factory(_b_.dict.$dict.items(obj))
+        var items = _b_.list.$factory(_b_.dict.items(obj))
         for(var i=0, _len_i = items.length; i < _len_i;i++){
             res[$B.pyobject2jsobject(items[i][0])]=$B.pyobject2jsobject(items[i][1])
         }

@@ -119,7 +119,7 @@
                     }
 
                     // attributes
-                    var items = _b_.list.$factory(_b_.dict.$dict.items($ns['kw']))
+                    var items = _b_.list.$factory(_b_.dict.items($ns['kw']))
                     for(var i=0, len = items.length; i < len;i++){
                         // keyword arguments
                         var arg = items[i][0],
@@ -220,7 +220,7 @@
 
             // Module has an attribute "tags" : a dictionary that maps all tag
             // names to the matching tag class factory function.
-            var obj = {tags:_b_.dict()},
+            var obj = {tags:_b_.dict.$factory()},
                 dicts = {}
 
             // register tags in DOMNode to autogenerate tags when DOMNode is invoked
@@ -302,7 +302,7 @@
             return $B._frame($B.frames_stack, depth)
         },
         modules: {
-            __get__: function(){return _b_.dict($B.JSObject($B.imported))},
+            __get__: function(){return _b_.dict.$factory($B.JSObject($B.imported))},
             __set__: function(self, obj, value){
                  throw _b_.TypeError.$factory("Read only property 'sys.modules'")
              }

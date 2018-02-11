@@ -1096,7 +1096,7 @@ str.format = function(self) {
                                         parseInt(key))
                                 }else{
                                     // Else try in keyword arguments
-                                    return _b_.dict.$dict.__getitem__($.$kw, key)
+                                    return _b_.dict.__getitem__($.$kw, key)
                                 }
                             }
                             fmt_obj.spec = fmt_obj.spec.replace(/\{(.+?)\}/g,
@@ -1129,7 +1129,7 @@ str.format = function(self) {
                 value = _b_.tuple.__getitem__($.$args, pos)
         }else{
             // Use keyword arguments
-            var value = _b_.dict.$dict.__getitem__($.$kw, fmt.name)
+            var value = _b_.dict.__getitem__($.$kw, fmt.name)
         }
         // If name has extensions (attributes or subscriptions)
         for(var j=0;j<fmt.name_ext.length;j++){
@@ -1225,7 +1225,7 @@ str.maketrans = function() {
     var $ = $B.args('maketrans', 3, {x:null,y:null,z:null},['x','y','z'],
         arguments, {y:null, z:null}, null, null)
 
-    var _t=_b_.dict()
+    var _t=_b_.dict.$factory()
     // make 'default' translate table
     for(var i=0; i < 256; i++) _t.$numeric_dict[i]=i
 
@@ -1237,7 +1237,7 @@ str.maketrans = function() {
         if(!_b_.isinstance($.x, _b_.dict)){
             throw _b_.TypeError.$factory('maketrans only argument must be a dict')
         }
-        var items = _b_.list.$factory(_b_.dict.$dict.items($.x))
+        var items = _b_.list.$factory(_b_.dict.items($.x))
         for(var i=0, len=items.length;i<len;i++){
             var k = items[i][0], v=items[i][1]
             if(!_b_.isinstance(k, _b_.int)){
@@ -1581,7 +1581,7 @@ str.translate = function(self,table) {
     var res = [], pos=0
     if (isinstance(table, _b_.dict)) {
        for (var i=0, _len_i = self.length; i < _len_i; i++) {
-           var repl = _b_.dict.$dict.get(table,self.charCodeAt(i),-1)
+           var repl = _b_.dict.get(table,self.charCodeAt(i),-1)
            if(repl==-1){res[pos++]=self.charAt(i)}
            else if(repl!==None){res[pos++]=_b_.chr(repl)}
        }

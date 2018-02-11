@@ -50,7 +50,7 @@ var $module=(function($B) {
              eval(ex)
              }else{
                  $B.bound[globals_id] = {}
-                 var items = _b_.dict.$dict.items(_globals), item
+                 var items = _b_.dict.items(_globals), item
                  while(1){
                      try{
                          var item = _b_.next(items)
@@ -77,7 +77,7 @@ var $module=(function($B) {
              eval(ex)
                  }
              }else{
-                 var items = _b_.dict.$dict.items(_locals), item
+                 var items = _b_.dict.items(_locals), item
                  while(1){
                      try{
                          var item = _b_.next(items)

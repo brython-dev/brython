@@ -553,7 +553,7 @@ list.sort = function(self){
 
     var func=null
     var reverse = false
-    var kw_args = $.kw, keys=_b_.list.$factory(_b_.dict.$dict.keys(kw_args))
+    var kw_args = $.kw, keys=_b_.list.$factory(_b_.dict.keys(kw_args))
     for(var i=0;i<keys.length;i++){
         if(keys[i]=="key"){func=kw_args.$string_dict[keys[i]]}
         else if(keys[i]=='reverse'){reverse=kw_args.$string_dict[keys[i]]}

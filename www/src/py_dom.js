@@ -548,7 +548,7 @@ DOMNode.__getattribute__ = function(self,attr){
           req.send(null);
           var headers = req.getAllResponseHeaders();
           headers = headers.split('\r\n')
-          var res = _b_.dict()
+          var res = _b_.dict.$factory()
           for(var i=0;i<headers.length;i++){
               var header = headers[i]
               if(header.strip().length==0){continue}
@@ -1023,7 +1023,7 @@ DOMNode.get = function(self){
     for(var i=1;i<arguments.length;i++){args[pos++]=arguments[i]}
     var $ns=$B.args('get',0,{},[],args,{},null,'kw')
     var $dict = {}
-    var items = _b_.list.$factory(_b_.dict.$dict.items($ns['kw']))
+    var items = _b_.list.$factory(_b_.dict.items($ns['kw']))
     for(var i=0;i<items.length;i++){
         $dict[items[i][0]]=items[i][1]
     }
@@ -1218,7 +1218,7 @@ DOMNode.set_style = function(self,style){ // style is a dict
     if(!_b_.isinstance(style, _b_.dict)){
         throw TypeError.$factory('style must be dict, not '+$B.get_class(style).__name__)
     }
-    var items = _b_.list.$factory(_b_.dict.$dict.items(style))
+    var items = _b_.list.$factory(_b_.dict.items(style))
     for(var i=0;i<items.length;i++){
         var key = items[i][0],value=items[i][1]
         if(key.toLowerCase()==='float'){
@@ -1474,7 +1474,7 @@ var win =  JSObject(_window) //{__class__:$WinDict}
 win.get_postMessage = function(msg,targetOrigin){
     if(isinstance(msg,dict)){
         var temp = {__class__:'dict'}
-        var items = _b_.list.$factory(_b_.dict.$dict.items(msg))
+        var items = _b_.list.$factory(_b_.dict.items(msg))
         for(var i=0;i<items.length;i++) temp[items[i][0]]=items[i][1]
         msg = temp
     }
