@@ -144,7 +144,7 @@ $B.set_func_names = function(klass, module){
                 __name__:attr
             }
             if(klass[attr].$type == "classmethod"){
-                klass[attr].__class__ = $B.$MethodDict
+                klass[attr].__class__ = $B.method
             }
         }
     }

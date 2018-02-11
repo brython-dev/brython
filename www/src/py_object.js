@@ -204,7 +204,7 @@ object.__getattribute__ = function(obj,attr){
                 // In function myfunc, self.repr is an instance of MyRepr,
                 // it must be used as is, not transformed into a method
 
-                else if(res1.__class__===$B.$MethodDict){
+                else if(res1.__class__===$B.method){
                     return res
                 }
 
@@ -215,7 +215,7 @@ object.__getattribute__ = function(obj,attr){
                     function method(){
                         return res(self, ...arguments)
                     }
-                    method.__class__ = $B.$MethodDict
+                    method.__class__ = $B.method
                     method.$infos = {
                         __self__: self,
                         __func__: res,

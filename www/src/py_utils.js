@@ -152,8 +152,8 @@ $B.get_class = function(obj){
             obj.__class__ = _b_.bool
             return _b_.bool
           case 'function':
-            obj.__class__ = $B.$FunctionDict
-            return $B.$FunctionDict
+            obj.__class__ = $B.Function
+            return $B.Function
           case 'object':
             if(Array.isArray(obj)){
                 if(Object.getPrototypeOf(obj)===Array.prototype) {
@@ -722,7 +722,7 @@ $B.$is_member = function(item,_set){
 }
 
 $B.$call = function(callable){
-    if(callable.__class__ === $B.$MethodDict){
+    if(callable.__class__ === $B.method){
         return callable
     }
     else if(callable.$is_func || typeof callable=="function"){return callable}

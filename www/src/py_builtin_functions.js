@@ -812,7 +812,7 @@ $B.$getattr = function(obj, attr, _default){
             function method(){
                 return klass[attr](self, ...arguments)
             }
-            method.__class__ = $B.$MethodDict
+            method.__class__ = $B.method
             method.$infos = {
                 __func__ : func,
                 __name__ : attr,
@@ -1795,7 +1795,7 @@ $SuperDict.__getattribute__ = function(self, attr){
         var method = function(){
             return f(self.__self_class__, ...arguments)
         }
-        method.__class__ = $B.$MethodDict
+        method.__class__ = $B.method
         method.$infos = {
             __self__: self.__self_class__,
             __name__: attr,
@@ -2091,25 +2091,28 @@ var $FunctionGlobalsDict = {__class:$B.$type,__name__:'function globals'}
 $FunctionGlobalsDict.__mro__ = [object]
 $FunctionGlobalsDict.$factory = {__class__:$B.$factory, $dict:$FunctionGlobalsDict}
 
-var $FunctionDict = $B.$FunctionDict = {
+var Function = $B.Function = {
     __class__:$B.$type,
     __code__:{__class__:$FunctionCodeDict,__name__:'function code'},
     __globals__:{__class__:$FunctionGlobalsDict,__name__:'function globals'},
-    __name__:'function'
+    __module__: "builtins",
+    __mro__: [object],
+    __name__:'function',
+    $is_class: true
 }
 
-$FunctionDict.__dir__ = function(self){
+Function.__dir__ = function(self){
     var infos = self.$infos || {},
         attrs = self.$attrs || {}
 
     return Object.keys(infos).concat(Object.keys(attrs))
 }
 
-$FunctionDict.__eq__ = function(self, other){
+Function.__eq__ = function(self, other){
     return self === other
 }
 
-$FunctionDict.__getattribute__ = function(self, attr){
+Function.__getattribute__ = function(self, attr){
     // Internal attributes __name__, __module__, __doc__ etc.
     // are stored in self.$infos
     if(self.$infos && self.$infos[attr]!==undefined){
@@ -2132,21 +2135,19 @@ $FunctionDict.__getattribute__ = function(self, attr){
     }
 }
 
-$FunctionDict.__repr__=$FunctionDict.__str__ = function(self){
+Function.__repr__=Function.__str__ = function(self){
     return '<function '+self.$infos.__qualname__+'>'
 }
 
-$FunctionDict.__mro__ = [object]
-$FunctionDict.__setattr__ = function(self, attr, value){
+Function.__mro__ = [object]
+Function.__setattr__ = function(self, attr, value){
     if(self.$infos[attr]!==undefined){self.$infos[attr] = value}
     else{self.$attrs = self.$attrs || {}; self.$attrs[attr] = value}
 }
 
-var $Function = function(){}
-$Function.__class__ = $B.$factory
-$FunctionDict.$factory = $Function
-$Function.$dict = $FunctionDict
-$B.set_func_names($FunctionDict, "builtins")
+Function.$factory = function(){}
+
+$B.set_func_names(Function, "builtins")
 
 _b_.__BRYTHON__ = __BRYTHON__
 

@@ -185,7 +185,7 @@ $B.make_method = function(attr, klass, func){
                 }
                 return func.apply(instance, local_args)
             }
-            instance_method.__class__ = $B.$MethodDict
+            instance_method.__class__ = $B.method
             instance_method.$infos = {
                 __class__:klass,
                 __func__:func,
@@ -218,7 +218,7 @@ $B.make_method = function(attr, klass, func){
                 }
                 return func.apply(null, local_args)
             }
-            class_method.__class__ = $B.$MethodDict
+            class_method.__class__ = $B.method
             class_method.$infos = {
                 __class__:klass,
                 __func__:func,
@@ -493,7 +493,7 @@ $B.$type.__getattribute__=function(klass, attr){
                     var meta_method = function(){
                         return res(klass, ...arguments)
                     }
-                    meta_method.__class__ = $B.$MethodDict
+                    meta_method.__class__ = $B.method
                     meta_method.$infos = {
                         __self__: klass,
                         __func__: res,
@@ -534,7 +534,7 @@ $B.$type.__getattribute__=function(klass, attr){
     }
 
     if(res===undefined && klass.$slots && klass.$slots[attr]!==undefined){
-        return member_descriptor(klass.$slots[attr], attr)
+        return member_descriptor.$factory(klass.$slots[attr], attr)
     }
 
     if(res!==undefined){
@@ -556,7 +556,7 @@ $B.$type.__getattribute__=function(klass, attr){
                     var cl_method = function(){
                         return res(klass, ...arguments)
                     }
-                    cl_method.__class__ = $B.$MethodDict
+                    cl_method.__class__ = $B.method
                     cl_method.$infos = {
                         __self__: klass,
                         __func__: res,
@@ -588,7 +588,7 @@ var $instance_creator = $B.$instance_creator = function(klass){
     var factory = function(){
         return call_func(klass, ...arguments)
     }
-    factory.__class__ = $B.$FunctionDict
+    factory.__class__ = $B.Function
     factory.$infos = {
         __name__: klass.__name__,
         __module__: klass.__module__
@@ -597,41 +597,44 @@ var $instance_creator = $B.$instance_creator = function(klass){
 }
 
 // Used for class members, defined in __slots__
-function member_descriptor(klass, attr){
-    return {__class__:member_descriptor.$dict, klass: klass, attr: attr}
-}
-member_descriptor.__class__ = $B.$factory
-member_descriptor.$dict = {
+var member_descriptor = {
     __class__: $B.$type,
+    __module__: "builtins",
+    __mro__: [_b_.object],
     __name__: 'member_descriptor',
-    $factory: member_descriptor,
-    __str__: function(self){
-        return "<member '"+self.attr+"' of '"+self.klass.__name__+
-        "' objects>"}
+    $is_class: true
 }
-member_descriptor.$dict.__mro__ = [_b_.object]
+member_descriptor.$factory = function(klass, attr){
+    return {
+        __class__:member_descriptor,
+        klass: klass,
+        attr: attr
+    }
+}
+
 
 // used as the factory for method objects
-function $MethodFactory(){}
-$MethodFactory.__class__ = $B.$factory
 
-$B.$MethodDict = {__class__:$B.$type,
+var method = {
+    __class__:$B.$type,
+    __module__ : "builtins",
+    __mro__: [_b_.object],
     __name__:'method',
-    $factory:$MethodFactory
+    $is_class: true
 }
 
-$B.$MethodDict.__eq__ = function(self, other){
+method.__eq__ = function(self, other){
     return self.$infos !== undefined &&
            other.$infos !== undefined &&
            self.$infos.__func__===other.$infos.__func__ &&
            self.$infos.__self__===other.$infos.__self__
 }
 
-$B.$MethodDict.__ne__ = function(self, other){
-    return !$B.$MethodDict.__eq__(self,other)
+method.__ne__ = function(self, other){
+    return !$B.method.__eq__(self,other)
 }
 
-$B.$MethodDict.__getattribute__ = function(self, attr){
+method.__getattribute__ = function(self, attr){
     // Internal attributes __name__, __func__, __self__ etc.
     // are stored in self.$infos
     var infos = self.$infos
@@ -653,18 +656,18 @@ $B.$MethodDict.__getattribute__ = function(self, attr){
     }
 }
 
-$B.$MethodDict.__mro__=[_b_.object]
-$B.$MethodDict.__repr__ = $B.$MethodDict.__str__ = function(self){
+method.__repr__ = method.__str__ = function(self){
     return '<bound method '+self.$infos.__qualname__+
        ' of '+ _b_.str.$factory(self.$infos.__self__)+'>'
 }
-$MethodFactory.$dict = $B.$MethodDict
-$B.set_func_names($B.$MethodDict, "builtins")
+
+$B.method = method
+
+$B.set_func_names(method, "builtins")
 
 $B.$InstanceMethodDict = {__class__:$B.$type,
     __name__:'instancemethod',
-    __mro__:[_b_.object],
-    $factory:$MethodFactory
+    __mro__:[_b_.object]
 }
 
 })(__BRYTHON__)
