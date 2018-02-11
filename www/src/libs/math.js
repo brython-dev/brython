@@ -8,7 +8,7 @@ eval($s.join(';'))
 //for(var $py_builtin in _b_){eval("var "+$py_builtin+"=_b_[$py_builtin]")}
 
 var float_check=function(x) {
-    if (x.__class__===$B.LongInt.$dict){return parseInt(x.value)}
+    if (x.__class__===$B.long_int){return parseInt(x.value)}
     return _b_.float.$factory(x)
 }
 

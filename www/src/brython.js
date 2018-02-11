@@ -76,8 +76,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-02-11 13:47:44.183971"
-__BRYTHON__.timestamp=1518353264183
+__BRYTHON__.compiled_date="2018-02-11 14:10:49.097696"
+__BRYTHON__.timestamp=1518354649097
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -1811,7 +1811,7 @@ this.toString=function(){return 'int '+this.value}
 this.to_js=function(){this.js_processed=true
 var v=parseInt(value[1],value[0])
 if(v>$B.min_int && v<$B.max_int){return v}
-else{return '$B.LongInt("'+value[1]+'", '+value[0]+')'}}}
+else{return '$B.long_int.$factory("'+value[1]+'", '+value[0]+')'}}}
 function $JSCode(js){this.js=js
 this.toString=function(){return this.js}
 this.to_js=function(){this.js_processed=true
@@ -5191,7 +5191,7 @@ return item ? 1 : 0
 case "number":
 return item
 case "object":
-if(item.__class__===$B.LongInt.$dict){return item}
+if(item.__class__===$B.long_int){return item}
 var method=_b_.getattr(item,'__index__',null)
 if(method!==null){method=typeof method=='function' ?
 method :
@@ -5205,7 +5205,7 @@ return v ? 1 : 0
 case "number":
 return v
 case "object":
-if(v.__class__===$B.LongInt.$dict){return v}
+if(v.__class__===$B.long_int){return v}
 else{throw _b_.TypeError.$factory("'"+$B.get_class(v).__name__+
 "' object cannot be interpreted as an integer")}
 default:
@@ -5312,45 +5312,45 @@ $B.add=function(x,y){var z=(typeof x!='number' ||typeof y!='number')?
 new Number(x+y): x+y
 if(x>min_int && x<max_int && y>min_int && y<max_int
 && z>min_int && z<max_int){return z}
-else if((typeof x=='number' ||x.__class__===$B.LongInt.$dict)
-&&(typeof y=='number' ||y.__class__===$B.LongInt.$dict)){if((typeof x=='number' && isNaN(x))||
+else if((typeof x=='number' ||x.__class__===$B.long_int)
+&&(typeof y=='number' ||y.__class__===$B.long_int)){if((typeof x=='number' && isNaN(x))||
 (typeof y=='number' && isNaN(y))){return _b_.float.$factory('nan')}
-var res=$B.LongInt.$dict.__add__($B.LongInt(x),$B.LongInt(y))
+var res=$B.long_int.__add__($B.long_int.$factory(x),$B.long_int.$factory(y))
 return res}else{return z}}
 $B.div=function(x,y){var z=x/y
 if(x>min_int && x<max_int && y>min_int && y<max_int
 && z>min_int && z<max_int){return z}
-else{return $B.LongInt.$dict.__truediv__($B.LongInt(x),$B.LongInt(y))}}
+else{return $B.long_int.__truediv__($B.long_int.$factory(x),$B.long_int.$factory(y))}}
 $B.eq=function(x,y){if(x>min_int && x<max_int && y>min_int && y<max_int){return x==y}
-return $B.LongInt.$dict.__eq__($B.LongInt(x),$B.LongInt(y))}
+return $B.long_int.__eq__($B.long_int.$factory(x),$B.long_int.$factory(y))}
 $B.floordiv=function(x,y){var z=x/y
 if(x>min_int && x<max_int && y>min_int && y<max_int
 && z>min_int && z<max_int){return Math.floor(z)}
-else{return $B.LongInt.$dict.__floordiv__($B.LongInt(x),$B.LongInt(y))}}
+else{return $B.long_int.__floordiv__($B.long_int.$factory(x),$B.long_int.$factory(y))}}
 $B.mul=function(x,y){var z=(typeof x!='number' ||typeof y!='number')?
 new Number(x*y): x*y
 if(x>min_int && x<max_int && y>min_int && y<max_int
 && z>min_int && z<max_int){return z}
-else if((typeof x=='number' ||x.__class__===$B.LongInt.$dict)
-&&(typeof y=='number' ||y.__class__===$B.LongInt.$dict)){if((typeof x=='number' && isNaN(x))||
+else if((typeof x=='number' ||x.__class__===$B.long_int)
+&&(typeof y=='number' ||y.__class__===$B.long_int)){if((typeof x=='number' && isNaN(x))||
 (typeof y=='number' && isNaN(y))){return _b_.float.$factory('nan')}
-return $B.LongInt.$dict.__mul__($B.LongInt(x),$B.LongInt(y))}else{return z}}
+return $B.long_int.__mul__($B.long_int.$factory(x),$B.long_int.$factory(y))}else{return z}}
 $B.sub=function(x,y){var z=(typeof x!='number' ||typeof y!='number')?
 new Number(x-y): x-y
 if(x>min_int && x<max_int && y>min_int && y<max_int
 && z>min_int && z<max_int){return z}
-else if((typeof x=='number' ||x.__class__===$B.LongInt.$dict)
-&&(typeof y=='number' ||y.__class__===$B.LongInt.$dict)){if((typeof x=='number' && isNaN(x))||
+else if((typeof x=='number' ||x.__class__===$B.long_int)
+&&(typeof y=='number' ||y.__class__===$B.long_int)){if((typeof x=='number' && isNaN(x))||
 (typeof y=='number' && isNaN(y))){return _b_.float.$factory('nan')}
-return $B.LongInt.$dict.__sub__($B.LongInt(x),$B.LongInt(y))}else{return z}}
+return $B.long_int.__sub__($B.long_int.$factory(x),$B.long_int.$factory(y))}else{return z}}
 $B.ge=function(x,y){if(typeof x=='number' && typeof y=='number'){return x>=y}
 else if(typeof x=='number' && typeof y!='number'){return !y.pos}
 else if(typeof x !='number' && typeof y=='number'){return x.pos===true}
-else{return $B.LongInt.$dict.__ge__(x,y)}}
+else{return $B.long_int.__ge__(x,y)}}
 $B.gt=function(x,y){if(typeof x=='number' && typeof y=='number'){return x>y}
 else if(typeof x=='number' && typeof y!='number'){return !y.pos}
 else if(typeof x !='number' && typeof y=='number'){return x.pos===true}
-else{return $B.LongInt.$dict.__gt__(x,y)}}
+else{return $B.long_int.__gt__(x,y)}}
 var reversed_op={'__lt__': '__gt__','__le__':'__ge__','__gt__': '__lt__','__ge__': '__le__'}
 var method2comp={'__lt__': '<','__le__': '<=','__gt__': '>','__ge__': '>='}
 $B.rich_comp=function(op,x,y){var x1=x.valueOf(),y1=y.valueOf()
@@ -5482,8 +5482,8 @@ case 16:
 prefix='0x';break;
 default:
 console.log('invalid base:' + base)}
-if(obj.__class__===$B.LongInt.$dict){if(obj.pos)return prefix + $B.LongInt.$dict.to_base(obj,base)
-return '-' + prefix + $B.LongInt.$dict.to_base(-obj,base)}
+if(obj.__class__===$B.long_int){if(obj.pos)return prefix + $B.long_int.to_base(obj,base)
+return '-' + prefix + $B.long_int.to_base(-obj,base)}
 var value=$B.$GetInt(obj)
 if(value===undefined){
 throw _b_.TypeError.$factory('Error, argument must be an integer or contains an __index__ function')}
@@ -6622,8 +6622,8 @@ var n=$B.sub(self.stop,$B.add(1,self.start)),q=$B.floordiv(n,self.step)
 len=$B.add(1,q)}else{if($B.ge(self.stop,self.start)){return 0}
 var n=$B.sub(self.start,$B.add(1,self.stop)),q=$B.floordiv(n,$B.mul(-1,self.step))
 len=$B.add(1,q)}
-if($B.maxsize===undefined){$B.maxsize=$B.LongInt.$dict.__pow__($B.LongInt(2),63)
-$B.maxsize=$B.LongInt.$dict.__sub__($B.maxsize,1)}
+if($B.maxsize===undefined){$B.maxsize=$B.long_int.__pow__($B.long_int.$factory(2),63)
+$B.maxsize=$B.long_int.__sub__($B.maxsize,1)}
 return len}
 $RangeDict.__next__=function(self){if(self.$safe){self.$counter +=self.step
 if((self.step>0 && self.$counter >=self.stop)
@@ -7828,7 +7828,7 @@ return new Number((self%bool_value+bool_value)%bool_value)}
 if(hasattr(other,'__rmod__'))return getattr(other,'__rmod__')(self)
 $err('%',other)}
 float.__mro__=[object]
-float.__mul__=function(self,other){if(isinstance(other,_b_.int)){if(other.__class__==$B.LongInt.$dict){return new Number(self*parseFloat(other.value))}
+float.__mul__=function(self,other){if(isinstance(other,_b_.int)){if(other.__class__==$B.long_int){return new Number(self*parseFloat(other.value))}
 return new Number(self*other)}
 if(isinstance(other,float))return new Number(self*other)
 if(isinstance(other,_b_.bool)){var bool_value=0;
@@ -7844,7 +7844,7 @@ float.__pow__=function(self,other){var other_int=isinstance(other,_b_.int)
 if(other_int ||isinstance(other,float)){if(self==1){return self}
 if(other==0){return new Number(1)}
 if(self==-1 &&
-(!isFinite(other)||other.__class__===$B.LongInt.$dict ||!$B.is_safe_int(other))
+(!isFinite(other)||other.__class__===$B.long_int ||!$B.is_safe_int(other))
 && !isNaN(other)){return new Number(1)}
 else if(self==0 && isFinite(other)&& other<0){throw _b_.ZeroDivisionError.$factory("0.0 cannot be raised to a negative power")}else if(self==Number.NEGATIVE_INFINITY && !isNaN(other)){if(other<0 && other%2==1){return new Number(-0.0)}else if(other<0){return new Number(0)}
 else if(other>0 && other%2==1){return Number.NEGATIVE_INFINITY}else{return Number.POSITIVE_INFINITY}}else if(self==Number.POSITIVE_INFINITY && !isNaN(other)){return other>0 ? self : new Number(0)}
@@ -7872,7 +7872,7 @@ if(cmod==0)throw ZeroDivisionError.$factory('division by zero')
 return $B.make_complex(float.$factory(self*other.$real/cmod),float.$factory(-self*other.$imag/cmod))}
 if(hasattr(other,'__rtruediv__'))return getattr(other,'__rtruediv__')(self)
 $err('/',other)}
-var $op_func=function(self,other){if(isinstance(other,_b_.int)){if(typeof other=='boolean'){return other ? self-1 : self}else if(other.__class__===$B.LongInt.$dict){return float.$factory(self-parseInt(other.value))}else{return float.$factory(self-other)}}
+var $op_func=function(self,other){if(isinstance(other,_b_.int)){if(typeof other=='boolean'){return other ? self-1 : self}else if(other.__class__===$B.long_int){return float.$factory(self-parseInt(other.value))}else{return float.$factory(self-other)}}
 if(isinstance(other,float))return float.$factory(self-other)
 if(isinstance(other,_b_.bool)){var bool_value=0;
 if(other.valueOf())bool_value=1;
@@ -7885,7 +7885,7 @@ var $ops={'+':'add','-':'sub'}
 for(var $op in $ops){var $opf=$op_func.replace(/-/gm,$op)
 $opf=$opf.replace(/__rsub__/gm,'__r'+$ops[$op]+'__')
 eval('float.__'+$ops[$op]+'__ = '+$opf)}
-var $comp_func=function(self,other){if(isinstance(other,_b_.int)){if(other.__class__===$B.LongInt.$dict){return self > parseInt(other.value)}
+var $comp_func=function(self,other){if(isinstance(other,_b_.int)){if(other.__class__===$B.long_int){return self > parseInt(other.value)}
 return self > other.valueOf()}
 if(isinstance(other,float))return self > other
 if(isinstance(other,_b_.bool)){return self.valueOf()> _b_.bool.$dict.__hash__(other)}
@@ -8059,7 +8059,7 @@ self.toString=function(){return value}
 return $N}
 int.__int__=function(self){return self}
 int.__invert__=function(self){return ~self}
-int.__lshift__=function(self,other){if(isinstance(other,int)){return int.$factory($B.LongInt.$dict.__lshift__($B.LongInt(self),$B.LongInt(other)))}
+int.__lshift__=function(self,other){if(isinstance(other,int)){return int.$factory($B.long_int.__lshift__($B.long_int.$factory(self),$B.long_int.$factory(other)))}
 var rlshift=getattr(other,'__rlshift__',null)
 if(rlshift!==null){return rlshift(self)}
 $err('<<',other)}
@@ -8076,7 +8076,7 @@ int.__mul__=function(self,other){var val=self.valueOf()
 if(typeof other==="string"){return other.repeat(val)}
 if(isinstance(other,int)){var res=self*other
 if(res>$B.min_int && res<$B.max_int){return res}
-else{return int.$factory($B.LongInt.$dict.__mul__($B.LongInt(self),$B.LongInt(other)))}}
+else{return int.$factory($B.long_int.__mul__($B.long_int.$factory(self),$B.long_int.$factory(other)))}}
 if(isinstance(other,_b_.float)){return new Number(self*other)}
 if(isinstance(other,_b_.bool)){if(other.valueOf())return self
 return int.$factory(0)}
@@ -8105,7 +8105,7 @@ return res}
 var res=Math.pow(self.valueOf(),other.valueOf())
 if(res>$B.min_int && res<$B.max_int){return res}
 else if(res !==Infinity && !isFinite(res)){return res}
-else{return int.$factory($B.LongInt.$dict.__pow__($B.LongInt(self),$B.LongInt(other)))}}
+else{return int.$factory($B.long_int.__pow__($B.long_int.$factory(self),$B.long_int.$factory(other)))}}
 if(isinstance(other,_b_.float)){if(self>=0){return new Number(Math.pow(self,other.valueOf()))}
 else{
 return _b_.complex.__pow__($B.make_complex(self,0),other)}}else if(isinstance(other,_b_.complex)){var preal=Math.pow(self,other.$real),ln=Math.log(self)
@@ -8114,7 +8114,7 @@ if(hasattr(other,'__rpow__'))return getattr(other,'__rpow__')(self)
 $err("**",other)}
 int.__repr__=function(self){if(self===int)return "<class 'int'>"
 return self.toString()}
-int.__rshift__=function(self,other){if(isinstance(other,int)){return int.$factory($B.LongInt.$dict.__rshift__($B.LongInt(self),$B.LongInt(other)))}
+int.__rshift__=function(self,other){if(isinstance(other,int)){return int.$factory($B.long_int.__rshift__($B.long_int.$factory(self),$B.long_int.$factory(other)))}
 var rrshift=getattr(other,'__rrshift__',null)
 if(rrshift!==null){return rrshift(self)}
 $err('>>',other)}
@@ -8123,7 +8123,7 @@ self[attr]=value
 return $N}
 int.__str__=int.__repr__
 int.__truediv__=function(self,other){if(isinstance(other,int)){if(other==0)throw ZeroDivisionError.$factory('division by zero')
-if(other.__class__==$B.LongInt.$dict){return new Number(self/parseInt(other.value))}
+if(other.__class__==$B.long_int){return new Number(self/parseInt(other.value))}
 return new Number(self/other)}
 if(isinstance(other,_b_.float)){if(!other.valueOf())throw ZeroDivisionError.$factory('division by zero')
 return new Number(self/other)}
@@ -8141,9 +8141,9 @@ int.imag=function(self){return int.$factory(0)}
 int.real=function(self){return self}
 $B.max_int32=(1<<30)* 2 - 1
 $B.min_int32=- $B.max_int32
-var $op_func=function(self,other){if(isinstance(other,int)){if(other.__class__===$B.LongInt.$dict){return $B.LongInt.$dict.__sub__($B.LongInt(self),$B.LongInt(other))}
+var $op_func=function(self,other){if(isinstance(other,int)){if(other.__class__===$B.long_int){return $B.long_int.__sub__($B.long_int.$factory(self),$B.long_int.$factory(other))}
 if(self > $B.max_int32 ||self < $B.min_int32 ||
-other > $B.max_int32 ||other < $B.min_int32){return $B.LongInt.$dict.__sub__($B.LongInt(self),$B.LongInt(other))}
+other > $B.max_int32 ||other < $B.min_int32){return $B.long_int.__sub__($B.long_int.$factory(self),$B.long_int.$factory(other))}
 return self-other}
 if(isinstance(other,_b_.bool))return self-other
 if(hasattr(other,'__rsub__'))return getattr(other,'__rsub__')(self)
@@ -8155,7 +8155,7 @@ opf=opf.replace(new RegExp('sub','gm'),$ops[$op])
 eval('int.__'+$ops[$op]+'__ = '+opf)}
 var $op_func=function(self,other){if(isinstance(other,int)){if(typeof other=='number'){var res=self.valueOf()-other.valueOf()
 if(res>=$B.min_int && res<=$B.max_int){return res}
-else{return $B.LongInt.$dict.__sub__($B.LongInt(self),$B.LongInt(other))}}else if(typeof other=="boolean"){return other ? self-1 : self}else{return $B.LongInt.$dict.__sub__($B.LongInt(self),$B.LongInt(other))}}
+else{return $B.long_int.__sub__($B.long_int.$factory(self),$B.long_int.$factory(other))}}else if(typeof other=="boolean"){return other ? self-1 : self}else{return $B.long_int.__sub__($B.long_int.$factory(self),$B.long_int.$factory(other))}}
 if(isinstance(other,_b_.float)){return new Number(self-other)}
 if(isinstance(other,_b_.complex)){return $B.make_complex(self-other.$real,-other.$imag)}
 if(isinstance(other,_b_.bool)){var bool_value=0;
@@ -8169,7 +8169,7 @@ var $ops={'+':'add','-':'sub'}
 for(var $op in $ops){var opf=$op_func.replace(/-/gm,$op)
 opf=opf.replace(new RegExp('sub','gm'),$ops[$op])
 eval('int.__'+$ops[$op]+'__ = '+opf)}
-var $comp_func=function(self,other){if(other.__class__===$B.LongInt.$dict){return $B.LongInt.$dict.__lt__(other,$B.LongInt(self))}
+var $comp_func=function(self,other){if(other.__class__===$B.long_int){return $B.long_int.__lt__(other,$B.long_int.$factory(self))}
 if(isinstance(other,int))return self.valueOf()> other.valueOf()
 if(isinstance(other,_b_.float))return self.valueOf()> other.valueOf()
 if(isinstance(other,_b_.bool)){return self.valueOf()> _b_.bool.$dict.__hash__(other)}
@@ -8200,18 +8200,18 @@ if(isinstance(value,_b_.complex)){throw TypeError.$factory("can't convert comple
 var $ns=$B.args('int',2,{x:null,base:null},['x','base'],arguments,{'base':10},'null','null')
 var value=$ns['x']
 var base=$ns['base']
-if(isinstance(value,_b_.float)&& base===10){if(value<$B.min_int ||value>$B.max_int){return $B.LongInt.$dict.$from_float(value)}
+if(isinstance(value,_b_.float)&& base===10){if(value<$B.min_int ||value>$B.max_int){return $B.long_int.$from_float(value)}
 else{return value>0 ? Math.floor(value): Math.ceil(value)}}
 if(!(base >=2 && base <=36)){
 if(base !=0)throw _b_.ValueError.$factory("invalid base")}
-if(typeof value=='number'){if(base==10){if(value < $B.min_int ||value > $B.max_int)return $B.LongInt(value)
+if(typeof value=='number'){if(base==10){if(value < $B.min_int ||value > $B.max_int)return $B.long_int.$factory(value)
 return value}else if(value.toString().search('e')>-1){
 throw _b_.OverflowError.$factory("can't convert to base "+base)}else{var res=parseInt(value,base)
-if(res < $B.min_int ||res > $B.max_int)return $B.LongInt(value,base)
+if(res < $B.min_int ||res > $B.max_int)return $B.long_int.$factory(value,base)
 return res}}
 if(value===true)return Number(1)
 if(value===false)return Number(0)
-if(value.__class__===$B.LongInt.$dict){var z=parseInt(value.value)
+if(value.__class__===$B.long_int){var z=parseInt(value.value)
 if(z>$B.min_int && z<$B.max_int){return z}
 else{return value}}
 base=$B.$GetInt(base)
@@ -8232,7 +8232,7 @@ if(base <=10 && !isFinite(value)){throw _b_.ValueError.$factory(
 "invalid literal for int() with base "+base +": '"+
 _b_.str.$factory(value)+"'")}
 var res=parseInt(_value,base)
-if(res < $B.min_int ||res > $B.max_int)return $B.LongInt(_value,base)
+if(res < $B.min_int ||res > $B.max_int)return $B.long_int.$factory(_value,base)
 return res}
 if(isinstance(value,[_b_.bytes,_b_.bytearray])){var _digits=$valid_digits(base)
 for(var i=0;i<value.source.length;i++){if(_digits.indexOf(String.fromCharCode(value.source[i]))==-1){throw _b_.ValueError.$factory("invalid literal for int() with base "+
@@ -8274,7 +8274,7 @@ $BoolDict.__xor__=function(self,other){return self.valueOf()!=other.valueOf()}
 $BoolDict.__mro__=[int,_b_.object]})(__BRYTHON__)
 ;(function($B){
 eval($B.InjectBuiltins())
-var $LongIntDict={__class__:$B.$type,__name__:'int'}
+var long_int={__class__: $B.$type,__module__: "builtins",__mro__:[int,object],__name__: 'int',$is_class: true}
 function add_pos(v1,v2){
 var res='',carry=0,iself=v1.length,sv=0,x
 for(var i=v2.length-1;i>=0;i--){iself--
@@ -8287,9 +8287,9 @@ x=(carry+parseInt(v1.charAt(iself))).toString()
 if(x.length==2){res=x.charAt(1)+res;carry=parseInt(x.charAt(0))}
 else{res=x+res;carry=0}}
 if(carry){res=carry+res}
-return{__class__:$LongIntDict,value:res,pos:true}}
+return{__class__:long_int,value:res,pos:true}}
 function check_shift(shift){
-if(!isinstance(shift,LongInt)){throw TypeError.$factory("shift must be int, not '"+
+if(!isinstance(shift,long_int)){throw TypeError.$factory("shift must be int, not '"+
 $B.get_class(shift).__name__+"'")}
 if(!shift.pos){throw ValueError.$factory("negative shift count")}}
 function clone(obj){
@@ -8306,9 +8306,9 @@ function divmod_pos(v1,v2){
 var quotient,mod
 if(comp_pos(v1,v2)==-1){
 quotient='0'
-mod=LongInt(v1)}else if(v2==v1){
+mod=long_int.$factory(v1)}else if(v2==v1){
 quotient='1';
-mod=LongInt('0')}else{var quotient=''
+mod=long_int.$factory('0')}else{var quotient=''
 var left=v1.substr(0,v2.length)
 if(v1<v2){left=v1.substr(0,v2.length+1)}
 var right=v1.substr(left.length)
@@ -8325,7 +8325,7 @@ if(right.length==0){break}
 left +=right.charAt(0)
 right=right.substr(1)}
 mod=sub_pos(v1,mul_pos(quotient,v2).value)}
-return[LongInt(quotient),mod]}
+return[long_int.$factory(quotient),mod]}
 function split_chunks(s,size){var nb=Math.ceil(s.length/size),chunks=[],len=s.length
 for(var i=0;i<nb;i++){var pos=len-size*(i+1)
 if(pos<0){size +=pos;pos=0}
@@ -8348,7 +8348,7 @@ while(products[i]!==undefined){s=products[i].toString()
 if(products[i+1]!==undefined){s='0'.repeat(chunk_size-s.length)+s}
 result=s+result;
 i++}
-return LongInt(result)}
+return long_int.$factory(result)}
 function sub_pos(v1,v2){
 var res='',carry=0,i1=v1.length,sv=0,x
 for(var i=v2.length-1;i>=0;i--){i1--
@@ -8361,14 +8361,14 @@ x=(parseInt(v1.charAt(i1))-carry)
 if(x<0){res=(10+x)+res;carry=1}
 else{res=x+res;carry=0}}
 while(res.charAt(0)=='0' && res.length>1){res=res.substr(1)}
-return{__class__:$LongIntDict,value:res,pos:true}}
-$LongIntDict.$from_float=function(value){var s=Math.abs(value).toString(),v=s
+return{__class__:long_int,value:res,pos:true}}
+long_int.$from_float=function(value){var s=Math.abs(value).toString(),v=s
 if(s.search('e')>-1){var t=/-?(\d)(\.\d+)?e([+-])(\d*)/.exec(s),n1=t[1],n2=t[2],pos=t[3],exp=t[4]
 if(pos=='+'){if(n2===undefined){v=n1+'0'.repeat(exp-1)}else{v=n1+n2+'0'.repeat(exp-1-n2.length)}}}
-return{__class__:$LongIntDict,value: v,pos: value >=0}}
-$LongIntDict.__abs__=function(self){return{__class__:$LongIntDict,value: self.value,pos:true}}
-$LongIntDict.__add__=function(self,other){if(isinstance(other,_b_.float)){return _b_.float.$factory(parseInt(self.value)+other.value)}
-if(typeof other=='number')other=LongInt(_b_.str.$factory(other))
+return{__class__:long_int,value: v,pos: value >=0}}
+long_int.__abs__=function(self){return{__class__:long_int,value: self.value,pos:true}}
+long_int.__add__=function(self,other){if(isinstance(other,_b_.float)){return _b_.float.$factory(parseInt(self.value)+other.value)}
+if(typeof other=='number')other=long_int.$factory(_b_.str.$factory(other))
 var res
 if(self.pos&&other.pos){
 return add_pos(self.value,other.value)}else if(!self.pos&&!other.pos){
@@ -8379,7 +8379,7 @@ switch(comp_pos(self.value,other.value)){case 1:
 res=sub_pos(self.value,other.value)
 break
 case 0:
-res={__class__:$LongIntDict,value:0,pos:true}
+res={__class__:long_int,value:0,pos:true}
 break
 case -1:
 res=sub_pos(other.value,self.value)
@@ -8391,42 +8391,42 @@ res=sub_pos(self.value,other.value)
 res.pos=false
 break
 case 0:
-res={__class__:$LongIntDict,value:0,pos:true}
+res={__class__:long_int,value:0,pos:true}
 break
 case -1:
 res=sub_pos(other.value,self.value)
 break}
 return intOrLong(res)}}
-$LongIntDict.__and__=function(self,other){if(typeof other=='number')other=LongInt(_b_.str.$factory(other))
-var v1=$LongIntDict.__index__(self)
-var v2=$LongIntDict.__index__(other)
+long_int.__and__=function(self,other){if(typeof other=='number')other=long_int.$factory(_b_.str.$factory(other))
+var v1=long_int.__index__(self)
+var v2=long_int.__index__(other)
 if(v1.length<v2.length){var temp=v2;v2=v1;v1=temp}
 if(v2.charAt(0)=='1'){v2='1'.repeat(v1.length-v2.length)+v2}
 var start=v1.length-v2.length
 var res=''
 for(var i=0;i<v2.length;i++){if(v1.charAt(start+i)=='1' && v2.charAt(i)=='1'){res +='1'}
 else{res +='0'}}
-return intOrLong(LongInt(res,2))}
-$LongIntDict.__divmod__=function(self,other){if(typeof other=='number')other=LongInt(_b_.str.$factory(other))
+return intOrLong(long_int.$factory(res,2))}
+long_int.__divmod__=function(self,other){if(typeof other=='number')other=long_int.$factory(_b_.str.$factory(other))
 var dm=divmod_pos(self.value,other.value)
 if(self.pos!==other.pos){if(dm[0].value!='0'){dm[0].pos=false}
 if(dm[1].value!='0'){
-dm[0]=$LongIntDict.__sub__(dm[0],LongInt('1'))
-dm[1]=$LongIntDict.__add__(dm[1],LongInt('1'))}}
+dm[0]=long_int.__sub__(dm[0],long_int.$factory('1'))
+dm[1]=long_int.__add__(dm[1],long_int.$factory('1'))}}
 return[intOrLong(dm[0]),intOrLong(dm[1])]}
-$LongIntDict.__eq__=function(self,other){if(typeof other=='number')other=LongInt(_b_.str.$factory(other))
+long_int.__eq__=function(self,other){if(typeof other=='number')other=long_int.$factory(_b_.str.$factory(other))
 return self.value==other.value && self.pos==other.pos}
-$LongIntDict.__float__=function(self){return new Number(parseFloat(self.value))}
-$LongIntDict.__floordiv__=function(self,other){if(isinstance(other,_b_.float)){return _b_.float.$factory(parseInt(self.value)/other)}
-if(typeof other=='number')other=LongInt(_b_.str.$factory(other))
-return intOrLong($LongIntDict.__divmod__(self,other)[0])}
-$LongIntDict.__ge__=function(self,other){if(typeof other=='number')other=LongInt(_b_.str.$factory(other))
+long_int.__float__=function(self){return new Number(parseFloat(self.value))}
+long_int.__floordiv__=function(self,other){if(isinstance(other,_b_.float)){return _b_.float.$factory(parseInt(self.value)/other)}
+if(typeof other=='number')other=long_int.$factory(_b_.str.$factory(other))
+return intOrLong(long_int.__divmod__(self,other)[0])}
+long_int.__ge__=function(self,other){if(typeof other=='number')other=long_int.$factory(_b_.str.$factory(other))
 if(self.pos !=other.pos){return !other.pos}
 if(self.value.length>other.value.length){return self.pos}
 else if(self.value.length<other.value.length){return !self.pos}
 else{return self.pos ? self.value >=other.value : self.value <=other.value}}
-$LongIntDict.__gt__=function(self,other){return !$LongIntDict.__le__(self,other)}
-$LongIntDict.__index__=function(self){
+long_int.__gt__=function(self,other){return !long_int.__le__(self,other)}
+long_int.__index__=function(self){
 var res='',temp=self.value,d
 while(true){d=divmod_pos(temp,'2')
 res=d[1].value + res
@@ -8440,18 +8440,18 @@ else{if(flag){nres='0'+nres}else{flag=true;nres='1'+nres}}}
 nres='1'+nres
 res=nres}else{res='0' + res}
 return intOrLong(res)}
-$LongIntDict.__invert__=function(self){return $LongIntDict.__sub__(LongInt('-1'),self)}
-$LongIntDict.__le__=function(self,other){if(typeof other=='number')other=LongInt(_b_.str.$factory(other))
+long_int.__invert__=function(self){return long_int.__sub__(long_int.$factory('-1'),self)}
+long_int.__le__=function(self,other){if(typeof other=='number')other=long_int.$factory(_b_.str.$factory(other))
 if(self.pos !==other.pos){return !self.pos}
 if(self.value.length>other.value.length){return !self.pos}
 else if(self.value.length<other.value.length){return self.pos}
 else{return self.pos ? self.value <=other.value : self.value >=other.value}}
-$LongIntDict.__lt__=function(self,other){return !$LongIntDict.__ge__(self,other)}
-$LongIntDict.__lshift__=function(self,shift){var is_long=shift.__class__==$LongIntDict
+long_int.__lt__=function(self,other){return !long_int.__ge__(self,other)}
+long_int.__lshift__=function(self,shift){var is_long=shift.__class__==long_int
 if(is_long){var shift_value=parseInt(shift.value)
 if(shift_value<0){throw _b_.ValueError.$factory('negative shift count')}
 if(shift_value < $B.max_int){shift_safe=true;shift=shift_value}}
-if(shift_safe){if(shift_value==0){return self}}else{shift=LongInt(shift)
+if(shift_safe){if(shift_value==0){return self}}else{shift=long_int.$factory(shift)
 if(shift.value=='0'){return self}}
 var res=self.value
 while(true){var x,carry=0,res1=''
@@ -8463,61 +8463,61 @@ res=res1
 if(shift_safe){shift--
 if(shift==0){break}}else{shift=sub_pos(shift.value,'1')
 if(shift.value=='0'){break}}}
-return intOrLong({__class__:$LongIntDict,value:res,pos:self.pos})}
-$LongIntDict.__mod__=function(self,other){return intOrLong($LongIntDict.__divmod__(self,other)[1])}
-$LongIntDict.__mro__=[_b_.int,_b_.object]
-$LongIntDict.__mul__=function(self,other){switch(self){case Number.NEGATIVE_INFINITY:
+return intOrLong({__class__:long_int,value:res,pos:self.pos})}
+long_int.__mod__=function(self,other){return intOrLong(long_int.__divmod__(self,other)[1])}
+long_int.__mro__=[_b_.int,_b_.object]
+long_int.__mul__=function(self,other){switch(self){case Number.NEGATIVE_INFINITY:
 case Number.POSITIVE_INFINITY:
 if($B.rich_comp("__eq__",other,0)){return NaN}
 else if(_b_.getattr(other,'__gt__')(0)){return self}
 else{return -self}}
 if(isinstance(other,_b_.float)){return _b_.float.$factory(parseInt(self.value)*other)}
-if(typeof other=='number')other=LongInt(_b_.str.$factory(other))
+if(typeof other=='number')other=long_int.$factory(_b_.str.$factory(other))
 var res=mul_pos(self.value,other.value)
 if(self.pos==other.pos){return intOrLong(res)}
 res.pos=false
 return intOrLong(res)}
-$LongIntDict.__neg__=function(obj){return{__class__:$LongIntDict,value:obj.value,pos:!obj.pos}}
-$LongIntDict.__or__=function(self,other){other=LongInt(other)
-var v1=$LongIntDict.__index__(self)
-var v2=$LongIntDict.__index__(other)
+long_int.__neg__=function(obj){return{__class__:long_int,value:obj.value,pos:!obj.pos}}
+long_int.__or__=function(self,other){other=long_int.$factory(other)
+var v1=long_int.__index__(self)
+var v2=long_int.__index__(other)
 if(v1.length<v2.length){var temp=v2;v2=v1;v1=temp}
 var start=v1.length-v2.length
 var res=v1.substr(0,start)
 for(var i=0;i<v2.length;i++){if(v1.charAt(start+i)=='1' ||v2.charAt(i)=='1'){res +='1'}
 else{res +='0'}}
-return intOrLong(LongInt(res,2))}
-$LongIntDict.__pos__=function(self){return self}
-$LongIntDict.__pow__=function(self,power,z){if(typeof power=="number"){power=LongInt(_b_.str.$factory(power))}else if(!isinstance(power,LongInt)){var msg="power must be a LongDict, not '"
+return intOrLong(long_int.$factory(res,2))}
+long_int.__pos__=function(self){return self}
+long_int.__pow__=function(self,power,z){if(typeof power=="number"){power=long_int.$factory(_b_.str.$factory(power))}else if(!isinstance(power,long_int)){var msg="power must be a LongDict, not '"
 throw TypeError.$factory(msg+$B.get_class(power).__name__+"'")}
 if(!power.pos){if(self.value=='1'){return self}
-return LongInt('0')}else if(power.value=='0'){return LongInt('1')}
-var res={__class__:$LongIntDict,value:self.value,pos:self.pos}
+return long_int.$factory('0')}else if(power.value=='0'){return long_int.$factory('1')}
+var res={__class__:long_int,value:self.value,pos:self.pos}
 var pow=power.value
 while(true){pow=sub_pos(pow,'1').value
 if(pow=='0'){break}
-res=LongInt($LongIntDict.__mul__(res,self))
-if(z !==undefined){res=$LongIntDict.__mod__(res,z)}}
+res=long_int.$factory(long_int.__mul__(res,self))
+if(z !==undefined){res=long_int.__mod__(res,z)}}
 return intOrLong(res)}
-$LongIntDict.__rshift__=function(self,shift){shift=LongInt(shift)
+long_int.__rshift__=function(self,shift){shift=long_int.$factory(shift)
 if(shift.value=='0'){return self}
 var res=self.value
 while(true){res=divmod_pos(res,'2')[0].value
 if(res.value=='0'){break}
 shift=sub_pos(shift.value,'1')
 if(shift.value=='0'){break}}
-return intOrLong({__class__:$LongIntDict,value:res,pos:self.pos})}
-$LongIntDict.__str__=$LongIntDict.__repr__=function(self){var res=""
+return intOrLong({__class__:long_int,value:res,pos:self.pos})}
+long_int.__str__=long_int.__repr__=function(self){var res=""
 if(!self.pos){res +='-'}
 return res+self.value}
-$LongIntDict.__sub__=function(self,other){if(isinstance(other,_b_.float)){return _b_.float.$factory(parseInt(self.value)-other.value)}
-if(typeof other=='number')other=LongInt(_b_.str.$factory(other))
+long_int.__sub__=function(self,other){if(isinstance(other,_b_.float)){return _b_.float.$factory(parseInt(self.value)-other.value)}
+if(typeof other=='number')other=long_int.$factory(_b_.str.$factory(other))
 var res
 if(self.pos && other.pos){switch(comp_pos(self.value,other.value)){case 1:
 res=sub_pos(self.value,other.value)
 break
 case 0:
-res={__class__:$LongIntDict,value:'0',pos:true}
+res={__class__:long_int,value:'0',pos:true}
 break
 case -1:
 res=sub_pos(other.value,self.value)
@@ -8528,7 +8528,7 @@ res=sub_pos(self.value,other.value)
 res.pos=false
 break
 case 0:
-res={__class__:$LongIntDict,value:'0',pos:true}
+res={__class__:long_int,value:'0',pos:true}
 break
 case -1:
 res=sub_pos(other.value,self.value)
@@ -8536,19 +8536,19 @@ break}
 return intOrLong(res)}else if(self.pos && !other.pos){return intOrLong(add_pos(self.value,other.value))}else{res=add_pos(self.value,other.value)
 res.pos=false
 return intOrLong(res)}}
-$LongIntDict.__truediv__=function(self,other){if(isinstance(other,LongInt)){return _b_.float.$factory(parseInt(self.value)/parseInt(other.value))}else if(isinstance(other,_b_.int)){return _b_.float.$factory(parseInt(self.value)/other)}else if(isinstance(other,_b_.float)){return _b_.float.$factory(parseInt(self.value)/other)}else{throw TypeError.$factory("unsupported operand type(s) for /: 'int' and '"+
+long_int.__truediv__=function(self,other){if(isinstance(other,long_int)){return _b_.float.$factory(parseInt(self.value)/parseInt(other.value))}else if(isinstance(other,_b_.int)){return _b_.float.$factory(parseInt(self.value)/other)}else if(isinstance(other,_b_.float)){return _b_.float.$factory(parseInt(self.value)/other)}else{throw TypeError.$factory("unsupported operand type(s) for /: 'int' and '"+
 $B.get_class(other).__name__+"'")}}
-$LongIntDict.__xor__=function(self,other){other=LongInt(other)
-var v1=$LongIntDict.__index__(self)
-var v2=$LongIntDict.__index__(other)
+long_int.__xor__=function(self,other){other=long_int.$factory(other)
+var v1=long_int.__index__(self)
+var v2=long_int.__index__(other)
 if(v1.length<v2.length){var temp=v2;v2=v1;v1=temp}
 var start=v1.length-v2.length
 var res=v1.substr(0,start)
 for(var i=0;i<v2.length;i++){if(v1.charAt(start+i)=='1' && v2.charAt(i)=='0'){res +='1'}
 else if(v1.charAt(start+i)=='0' && v2.charAt(i)=='1'){res +='1'}
 else{res +='0'}}
-return intOrLong(LongInt(res,2))}
-$LongIntDict.to_base=function(self,base){
+return intOrLong(long_int.$factory(res,2))}
+long_int.to_base=function(self,base){
 var res='',v=self.value
 while(v>0){var dm=divmod_pos(v,base.toString())
 res=parseInt(dm[1].value).toString(base)+res
@@ -8573,18 +8573,18 @@ function intOrLong(long){
 var v=parseInt(long.value)*(long.pos ? 1 : -1)
 if(v>MIN_SAFE_INTEGER && v<MAX_SAFE_INTEGER){return v}
 return long}
-function LongInt(value,base){if(arguments.length>2){throw _b_.TypeError.$factory("LongInt takes at most 2 arguments ("+
+long_int.$factory=function(value,base){if(arguments.length>2){throw _b_.TypeError.$factory("long_int takes at most 2 arguments ("+
 arguments.length+" given)")}
 if(base===undefined){base=10}
 else if(!isinstance(base,int)){throw TypeError.$factory("'"+$B.get_class(base).__name__+"' object cannot be interpreted as an integer")}
-if(base<0 ||base==1 ||base>36){throw ValueError.$factory("LongInt() base must be >= 2 and <= 36")}
+if(base<0 ||base==1 ||base>36){throw ValueError.$factory("long_int.$factory() base must be >= 2 and <= 36")}
 if(isinstance(value,_b_.float)){if(value===Number.POSITIVE_INFINITY ||value===Number.NEGATIVE_INFINITY){return value}
 if(value>=0){value=new Number(Math.round(value.value))}
 else{value=new Number(Math.ceil(value.value))}}else if(isinstance(value,_b_.bool)){if(value.valueOf())return int.$factory(1)
 return int.$factory(0)}
 if(typeof value=='number'){if(isSafeInteger(value)){value=value.toString()}
 else if(value.constructor==Number){console.log('big number',value);value=value.toString()}
-else{console.log('wrong value',value);throw ValueError.$factory("argument of long_int is not a safe integer")}}else if(value.__class__===$LongIntDict){return value}
+else{console.log('wrong value',value);throw ValueError.$factory("argument of long_int is not a safe integer")}}else if(value.__class__===long_int){return value}
 else if(isinstance(value,_b_.bool)){value=_b_.bool.$dict.__int__(value)+''}
 else if(typeof value!='string'){throw ValueError.$factory("argument of long_int must be a string, not "+
 $B.get_class(value).__name__)}
@@ -8595,25 +8595,22 @@ if(value.charAt(0)=='+'){has_prefix=true}
 else if(value.charAt(0)=='-'){has_prefix=true;pos=false}
 if(has_prefix){
 if(value.length==1){
-throw ValueError.$factory('LongInt argument is not a valid number: "'+value+'"')}else{value=value.substr(1)}}
+throw ValueError.$factory('long_int argument is not a valid number: "'+value+'"')}else{value=value.substr(1)}}
 while(start<value.length-1 && value.charAt(start)=='0'){start++}
 value=value.substr(start)
 var is_digits=digits(base),point=-1
 for(var i=0;i<value.length;i++){if(value.charAt(i)=='.' && point==-1){point=i}
-else if(!is_digits[value.charAt(i)]){throw ValueError.$factory('LongInt argument is not a valid number: "'+value+'"')}}
+else if(!is_digits[value.charAt(i)]){throw ValueError.$factory('long_int argument is not a valid number: "'+value+'"')}}
 if(point!=-1){value=value.substr(0,point)}
 if(base!=10){
-var coef='1',v10=LongInt(0),pos=value.length
+var coef='1',v10=long_int.$factory(0),pos=value.length
 while(pos--){var digit_base10=parseInt(value.charAt(pos),base).toString(),digit_by_coef=mul_pos(coef,digit_base10).value
 v10=add_pos(v10.value,digit_by_coef)
 coef=mul_pos(coef,base.toString()).value}
 return v10}
-return{__class__:$LongIntDict,value:value,pos:pos}}
-LongInt.__class__=$B.$factory
-LongInt.$dict=$LongIntDict
-$LongIntDict.$factory=LongInt
-$B.set_func_names($LongIntDict)
-$B.LongInt=LongInt})(__BRYTHON__)
+return{__class__:long_int,value:value,pos:pos}}
+$B.set_func_names(long_int,"builtins")
+$B.long_int=long_int})(__BRYTHON__)
 ;(function($B){eval($B.InjectBuiltins())
 var object=_b_.object
 function $UnsupportedOpType(op,class1,class2){throw _b_.TypeError.$factory("unsupported operand type(s) for "+op+": '"+class1+"' and '"+class2+"'")}
@@ -9237,10 +9234,10 @@ return $N}
 list.index=function(){var $=$B.args('index',4,{self:null,x:null,start:null,stop:null},['self','x','start','stop'],arguments,{start:null,stop:null},null,null),self=$.self,start=$.start,stop=$.stop
 var _eq=function(other){return $B.rich_comp("__eq__",$.x,other)}
 if(start===null){start=0}
-else{if(start.__class__===$B.LongInt.$dict){start=parseInt(start.value)*(start.pos ? 1 : -1)}
+else{if(start.__class__===$B.long_int){start=parseInt(start.value)*(start.pos ? 1 : -1)}
 if(start<0){start=Math.max(0,start+self.length)}}
 if(stop===null){stop=self.length}
-else{if(stop.__class__===$B.LongInt.$dict){stop=parseInt(stop.value)*(stop.pos ? 1 : -1)}
+else{if(stop.__class__===$B.long_int){stop=parseInt(stop.value)*(stop.pos ? 1 : -1)}
 if(stop<0){stop=Math.min(self.length,stop+self.length)}}
 for(var i=start;i < stop;i++){if(_eq(self[i]))return i}
 throw _b_.ValueError.$factory(_b_.str.$factory($.x)+" is not in list")}
@@ -9515,7 +9512,7 @@ var format_int_precision=function(val,flags){var precision=flags.precision
 if(!precision){return val.toString()}
 precision=parseInt(precision,10)
 var s
-if(val.__class__===$B.LongInt.$dict){s=$B.LongInt.$dict.to_base(val,10)}else{
+if(val.__class__===$B.long_int){s=$B.long_int.to_base(val,10)}else{
 s=val.toString()}
 if(s[0]==='-'){return '-' + get_char_array(precision - s.length + 1,'0')+ s.slice(1)}
 return get_char_array(precision - s.length,'0')+ s}
@@ -9531,7 +9528,7 @@ var str_format=function(val,flags){
 flags.pad_char=" " 
 return format_padding(str.$factory(val),flags)}
 var num_format=function(val,flags){number_check(val)
-if(val.__class__===$B.LongInt.$dict){val=$B.LongInt.$dict.to_base(val,10)}else{
+if(val.__class__===$B.long_int){val=$B.long_int.to_base(val,10)}else{
 val=parseInt(val)}
 var s=format_int_precision(val,flags)
 if(flags.pad_char==='0'){if(val < 0){s=s.substring(1)
@@ -9597,7 +9594,7 @@ var floating_point_exponential_format=function(val,upper,flags){val=_float_helpe
 return format_padding(format_sign(val,flags)+ format_float_precision(val,upper,flags,_floating_exp_helper),flags)}
 var signed_hex_format=function(val,upper,flags){var ret
 number_check(val)
-if(val.__class__===$B.LongInt.$dict){ret=$B.LongInt.$dict.to_base(val,16)}else{
+if(val.__class__===$B.long_int){ret=$B.long_int.to_base(val,16)}else{
 ret=parseInt(val)
 ret=ret.toString(16)}
 ret=format_int_precision(ret,flags)
@@ -9613,7 +9610,7 @@ ret="0x" + ret}}}
 return format_padding(format_sign(val,flags)+ ret,flags)}
 var octal_format=function(val,flags){number_check(val)
 var ret
-if(val.__class__===$B.LongInt.$dict){ret=$B.LongInt.$dict.to_base(8)}else{
+if(val.__class__===$B.long_int){ret=$B.long_int.to_base(8)}else{
 ret=parseInt(val)
 ret=ret.toString(8)}
 ret=format_int_precision(ret,flags)
@@ -9923,7 +9920,7 @@ check_str(_new)
 if(!isinstance(count,[_b_.int,_b_.float])){throw _b_.TypeError.$factory("'" + $B.get_class(count).__name__ +
 "' object cannot be interpreted as an integer");}else if(isinstance(count,_b_.float)){throw _b_.TypeError.$factory("integer argument expected, got float");}
 if(count==0){return self}
-if(count.__class__==$B.LongInt.$dict){count=parseInt(count.value)}
+if(count.__class__==$B.long_int){count=parseInt(count.value)}
 if(old==''){if(_new==''){return self}
 if(self==''){return _new}
 var elts=self.split('')
@@ -9975,7 +9972,7 @@ return '';}
 str.split=function(){var pos=0
 var $=$B.args("split",3,{self:null,sep:null,maxsplit:null},['self','sep','maxsplit'],arguments,{sep:_b_.None,maxsplit:-1},null,null)
 var sep=$.sep,maxsplit=$.maxsplit,self=$.self
-if(maxsplit.__class__===$B.LongInt.$dict){maxsplit=parseInt(maxsplit.value)}
+if(maxsplit.__class__===$B.long_int){maxsplit=parseInt(maxsplit.value)}
 if(sep=='')throw _b_.ValueError.$factory('empty separator')
 if(sep===_b_.None){var res=[]
 while(pos<self.length&&self.charAt(pos).search(/\s/)>-1){pos++}

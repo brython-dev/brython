@@ -400,7 +400,7 @@ float.__mro__ = [object]
 
 float.__mul__ = function(self,other){
     if(isinstance(other,_b_.int)){
-        if(other.__class__==$B.LongInt.$dict){
+        if(other.__class__==$B.long_int){
             return new Number(self*parseFloat(other.value))
         }
         return new Number(self*other)
@@ -432,7 +432,7 @@ float.__pow__= function(self,other){
         if(other==0){return new Number(1)}
 
         if(self==-1 &&
-            (!isFinite(other) || other.__class__===$B.LongInt.$dict || !$B.is_safe_int(other))
+            (!isFinite(other) || other.__class__===$B.long_int || !$B.is_safe_int(other))
              && !isNaN(other) ){return new Number(1)}
         else if(self==0 && isFinite(other) && other<0){
             throw _b_.ZeroDivisionError.$factory("0.0 cannot be raised to a negative power")
@@ -510,7 +510,7 @@ var $op_func = function(self,other){
     if(isinstance(other,_b_.int)){
         if(typeof other=='boolean'){
             return other ? self-1 : self
-        }else if(other.__class__===$B.LongInt.$dict){
+        }else if(other.__class__===$B.long_int){
             return float.$factory(self-parseInt(other.value))
         }else{return float.$factory(self-other)}
     }
@@ -537,7 +537,7 @@ for(var $op in $ops){
 // comparison methods
 var $comp_func = function(self,other){
     if(isinstance(other,_b_.int)){
-        if(other.__class__===$B.LongInt.$dict){return self > parseInt(other.value)}
+        if(other.__class__===$B.long_int){return self > parseInt(other.value)}
         return self > other.valueOf()
     }
     if(isinstance(other,float)) return self > other

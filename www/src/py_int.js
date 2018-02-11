@@ -203,7 +203,7 @@ int.__invert__ = function(self){return ~self}
 // bitwise left shift
 int.__lshift__ = function(self,other){
     if(isinstance(other, int)){
-        return int.$factory($B.LongInt.$dict.__lshift__($B.LongInt(self), $B.LongInt(other)))
+        return int.$factory($B.long_int.__lshift__($B.long_int.$factory(self), $B.long_int.$factory(other)))
     }
     var rlshift = getattr(other, '__rlshift__', null)
     if(rlshift!==null){return rlshift(self)}
@@ -237,8 +237,8 @@ int.__mul__ = function(self,other){
     if(isinstance(other,int)){
         var res = self*other
         if(res>$B.min_int && res<$B.max_int){return res}
-        else{return int.$factory($B.LongInt.$dict.__mul__($B.LongInt(self),
-                $B.LongInt(other)))}
+        else{return int.$factory($B.long_int.__mul__($B.long_int.$factory(self),
+                $B.long_int.$factory(other)))}
     }
     if(isinstance(other,_b_.float)){
         return new Number(self*other)
@@ -296,8 +296,8 @@ int.__pow__ = function(self,other,z){
       if(res>$B.min_int && res<$B.max_int){return res}
       else if(res !== Infinity && !isFinite(res)){return res}
       else{
-          return int.$factory($B.LongInt.$dict.__pow__($B.LongInt(self),
-             $B.LongInt(other)))
+          return int.$factory($B.long_int.__pow__($B.long_int.$factory(self),
+             $B.long_int.$factory(other)))
       }
     }
     if(isinstance(other, _b_.float)) {
@@ -323,8 +323,8 @@ int.__repr__ = function(self){
 // bitwise right shift
 int.__rshift__ = function(self,other){
     if(isinstance(other, int)){
-        return int.$factory($B.LongInt.$dict.__rshift__($B.LongInt(self),
-            $B.LongInt(other)))
+        return int.$factory($B.long_int.__rshift__($B.long_int.$factory(self),
+            $B.long_int.$factory(other)))
     }
     var rrshift = getattr(other, '__rrshift__', null)
     if(rrshift!==null){return rrshift(self)}
@@ -349,7 +349,7 @@ int.__str__ = int.__repr__
 int.__truediv__ = function(self,other){
     if(isinstance(other,int)){
         if(other==0) throw ZeroDivisionError.$factory('division by zero')
-        if(other.__class__==$B.LongInt.$dict){return new Number(self/parseInt(other.value))}
+        if(other.__class__==$B.long_int){return new Number(self/parseInt(other.value))}
         return new Number(self/other)
     }
     if(isinstance(other,_b_.float)){
@@ -386,12 +386,12 @@ $B.min_int32= - $B.max_int32
 // code for operands & | ^
 var $op_func = function(self,other){
     if(isinstance(other,int)) {
-        if(other.__class__===$B.LongInt.$dict){
-            return $B.LongInt.$dict.__sub__($B.LongInt(self), $B.LongInt(other))
+        if(other.__class__===$B.long_int){
+            return $B.long_int.__sub__($B.long_int.$factory(self), $B.long_int.$factory(other))
         }
         if (self > $B.max_int32 || self < $B.min_int32 ||
             other > $B.max_int32 || other < $B.min_int32) {
-            return $B.LongInt.$dict.__sub__($B.LongInt(self), $B.LongInt(other))
+            return $B.long_int.__sub__($B.long_int.$factory(self), $B.long_int.$factory(other))
         }
         return self-other
     }
@@ -414,13 +414,13 @@ var $op_func = function(self,other){
         if(typeof other=='number'){
             var res = self.valueOf()-other.valueOf()
             if(res>=$B.min_int && res<=$B.max_int){return res}
-            else{return $B.LongInt.$dict.__sub__($B.LongInt(self),
-                $B.LongInt(other))}
+            else{return $B.long_int.__sub__($B.long_int.$factory(self),
+                $B.long_int.$factory(other))}
         }else if(typeof other=="boolean"){
             return other ? self-1 : self
         }else{
-            return $B.LongInt.$dict.__sub__($B.LongInt(self),
-                $B.LongInt(other))
+            return $B.long_int.__sub__($B.long_int.$factory(self),
+                $B.long_int.$factory(other))
         }
     }
     if(isinstance(other,_b_.float)){
@@ -450,8 +450,8 @@ for(var $op in $ops){
 
 // comparison methods
 var $comp_func = function(self,other){
-    if (other.__class__ === $B.LongInt.$dict) {
-        return $B.LongInt.$dict.__lt__(other, $B.LongInt(self))
+    if (other.__class__ === $B.long_int) {
+        return $B.long_int.__lt__(other, $B.long_int.$factory(self))
     }
     if(isinstance(other,int)) return self.valueOf() > other.valueOf()
     if(isinstance(other,_b_.float)) return self.valueOf() > other.valueOf()
@@ -520,7 +520,7 @@ int.$factory = function(value, base){
 
     if(isinstance(value, _b_.float) && base===10){
         if(value<$B.min_int || value>$B.max_int){
-            return $B.LongInt.$dict.$from_float(value)
+            return $B.long_int.$from_float(value)
         }
         else{return value>0 ? Math.floor(value) : Math.ceil(value)}
     }
@@ -533,21 +533,21 @@ int.$factory = function(value, base){
     if (typeof value == 'number'){
 
         if(base==10){
-           if(value < $B.min_int || value > $B.max_int) return $B.LongInt(value)
+           if(value < $B.min_int || value > $B.max_int) return $B.long_int.$factory(value)
            return value
         }else if(value.toString().search('e')>-1){
             // can't convert to another base if value is too big
             throw _b_.OverflowError.$factory("can't convert to base "+base)
         }else{
             var res=parseInt(value, base)
-            if(res < $B.min_int || res > $B.max_int) return $B.LongInt(value,base)
+            if(res < $B.min_int || res > $B.max_int) return $B.long_int.$factory(value,base)
             return res
         }
     }
 
     if(value===true) return Number(1)
     if(value===false) return Number(0)
-    if(value.__class__===$B.LongInt.$dict){
+    if(value.__class__===$B.long_int){
         var z = parseInt(value.value)
         if(z>$B.min_int && z<$B.max_int){return z}
         else{return value}
@@ -585,7 +585,7 @@ int.$factory = function(value, base){
              _b_.str.$factory(value)+"'")
       }
       var res=parseInt(_value, base)
-      if(res < $B.min_int || res > $B.max_int) return $B.LongInt(_value, base)
+      if(res < $B.min_int || res > $B.max_int) return $B.long_int.$factory(_value, base)
       return res
     }
 

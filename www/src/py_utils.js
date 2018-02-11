@@ -1039,7 +1039,7 @@ $B.PyNumber_Index = function(item){
         case "number":
             return item
         case "object":
-            if(item.__class__===$B.LongInt.$dict){return item}
+            if(item.__class__===$B.long_int){return item}
             var method = _b_.getattr(item, '__index__', null)
             if(method!==null){
                 method = typeof method=='function' ?
@@ -1060,7 +1060,7 @@ $B.int_or_bool = function(v){
         case "number":
             return v
         case "object":
-            if(v.__class__===$B.LongInt.$dict){return v}
+            if(v.__class__===$B.long_int){return v}
             else{
                 throw _b_.TypeError.$factory("'"+$B.get_class(v).__name__+
                 "' object cannot be interpreted as an integer")
@@ -1286,11 +1286,11 @@ $B.add = function(x,y){
                 new Number(x+y) : x+y
     if(x>min_int && x<max_int && y>min_int && y<max_int
         && z>min_int && z<max_int){return z}
-    else if((typeof x=='number' || x.__class__===$B.LongInt.$dict)
-        && (typeof y=='number' || y.__class__===$B.LongInt.$dict)){
+    else if((typeof x=='number' || x.__class__===$B.long_int)
+        && (typeof y=='number' || y.__class__===$B.long_int)){
         if((typeof x=='number' && isNaN(x)) ||
             (typeof y=='number' && isNaN(y))){return _b_.float.$factory('nan')}
-        var res = $B.LongInt.$dict.__add__($B.LongInt(x), $B.LongInt(y))
+        var res = $B.long_int.__add__($B.long_int.$factory(x), $B.long_int.$factory(y))
         return res
     }else{return z}
 }
@@ -1300,13 +1300,13 @@ $B.div = function(x,y){
     if(x>min_int && x<max_int && y>min_int && y<max_int
         && z>min_int && z<max_int){return z}
     else{
-        return $B.LongInt.$dict.__truediv__($B.LongInt(x), $B.LongInt(y))
+        return $B.long_int.__truediv__($B.long_int.$factory(x), $B.long_int.$factory(y))
     }
 }
 
 $B.eq = function(x,y){
     if(x>min_int && x<max_int && y>min_int && y<max_int){return x==y}
-    return $B.LongInt.$dict.__eq__($B.LongInt(x), $B.LongInt(y))
+    return $B.long_int.__eq__($B.long_int.$factory(x), $B.long_int.$factory(y))
 }
 
 $B.floordiv = function(x,y){
@@ -1314,7 +1314,7 @@ $B.floordiv = function(x,y){
     if(x>min_int && x<max_int && y>min_int && y<max_int
         && z>min_int && z<max_int){return Math.floor(z)}
     else{
-        return $B.LongInt.$dict.__floordiv__($B.LongInt(x), $B.LongInt(y))
+        return $B.long_int.__floordiv__($B.long_int.$factory(x), $B.long_int.$factory(y))
     }
 }
 
@@ -1323,11 +1323,11 @@ $B.mul = function(x,y){
             new Number(x*y) : x*y
     if(x>min_int && x<max_int && y>min_int && y<max_int
         && z>min_int && z<max_int){return z}
-    else if((typeof x=='number' || x.__class__===$B.LongInt.$dict)
-        && (typeof y=='number' || y.__class__===$B.LongInt.$dict)){
+    else if((typeof x=='number' || x.__class__===$B.long_int)
+        && (typeof y=='number' || y.__class__===$B.long_int)){
         if((typeof x=='number' && isNaN(x)) ||
             (typeof y=='number' && isNaN(y))){return _b_.float.$factory('nan')}
-        return $B.LongInt.$dict.__mul__($B.LongInt(x), $B.LongInt(y))
+        return $B.long_int.__mul__($B.long_int.$factory(x), $B.long_int.$factory(y))
     }else{return z}
 }
 $B.sub = function(x,y){
@@ -1335,11 +1335,11 @@ $B.sub = function(x,y){
                 new Number(x-y) : x-y
     if(x>min_int && x<max_int && y>min_int && y<max_int
         && z>min_int && z<max_int){return z}
-    else if((typeof x=='number' || x.__class__===$B.LongInt.$dict)
-        && (typeof y=='number' || y.__class__===$B.LongInt.$dict)){
+    else if((typeof x=='number' || x.__class__===$B.long_int)
+        && (typeof y=='number' || y.__class__===$B.long_int)){
         if((typeof x=='number' && isNaN(x)) ||
             (typeof y=='number' && isNaN(y))){return _b_.float.$factory('nan')}
-        return $B.LongInt.$dict.__sub__($B.LongInt(x), $B.LongInt(y))
+        return $B.long_int.__sub__($B.long_int.$factory(x), $B.long_int.$factory(y))
     }else{return z}
 }
 // greater or equal
@@ -1348,14 +1348,14 @@ $B.ge = function(x,y){
     // a safe int is >= to a long int if the long int is negative
     else if(typeof x=='number' && typeof y!= 'number'){return !y.pos}
     else if(typeof x !='number' && typeof y=='number'){return x.pos===true}
-    else{return $B.LongInt.$dict.__ge__(x, y)}
+    else{return $B.long_int.__ge__(x, y)}
 }
 $B.gt = function(x,y){
     if(typeof x=='number' && typeof y== 'number'){return x>y}
     // a safe int is >= to a long int if the long int is negative
     else if(typeof x=='number' && typeof y!= 'number'){return !y.pos}
     else if(typeof x !='number' && typeof y=='number'){return x.pos===true}
-    else{return $B.LongInt.$dict.__gt__(x, y)}
+    else{return $B.long_int.__gt__(x, y)}
 }
 
 var reversed_op = {'__lt__': '__gt__', '__le__':'__ge__',

@@ -573,7 +573,7 @@ function _Random(){
                 var d = _b_.getattr(stop,'__sub__')(start)
                 d = _b_.getattr(d, '__floordiv__')(step)
                 // Force d to be a LongInt
-                d = $B.LongInt(d)
+                d = $B.long_int.$factory(d)
                 // d is a long integer with n digits ; to choose a random number
                 // between 0 and d the most simple is to take a random digit
                 // at each position, except the first one
@@ -593,7 +593,7 @@ function _Random(){
                         res += Math.floor(_random()*10)+''
                     }
                 }
-                var offset = {__class__:$B.LongInt.$dict, value: res,
+                var offset = {__class__:$B.long_int, value: res,
                     pos: true}
                 d = _b_.getattr(step, '__mul__')(offset)
                 d = _b_.getattr(start, '__add__')(d)
@@ -696,7 +696,7 @@ function _Random(){
                 }else if(!_b_.isinstance(a, _b_.int)){
                     throw _b_.TypeError('wrong argument')
                 }
-                if(a.__class__===$B.LongInt.$dict){
+                if(a.__class__===$B.long_int){
                     // In this implementation, seed() only accepts safe integers
                     // Generate a random one from the underlying string value,
                     // using an arbitrary seed (99) to always return the same

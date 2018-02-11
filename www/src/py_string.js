@@ -238,8 +238,8 @@ var format_int_precision = function(val, flags) {
     }
     precision = parseInt(precision, 10)
     var s
-    if (val.__class__ === $B.LongInt.$dict) {
-       s=$B.LongInt.$dict.to_base(val, 10)
+    if (val.__class__ === $B.long_int) {
+       s=$B.long_int.to_base(val, 10)
     } else {
        s=val.toString()
     }
@@ -290,8 +290,8 @@ var str_format = function(val, flags) {
 
 var num_format = function(val, flags) {
     number_check(val)
-    if (val.__class__ === $B.LongInt.$dict) {
-      val = $B.LongInt.$dict.to_base(val, 10)
+    if (val.__class__ === $B.long_int) {
+      val = $B.long_int.to_base(val, 10)
     } else {
       val = parseInt(val)
     }
@@ -468,8 +468,8 @@ var signed_hex_format = function(val, upper, flags) {
     var ret
     number_check(val)
 
-    if (val.__class__ === $B.LongInt.$dict) {
-       ret=$B.LongInt.$dict.to_base(val, 16)
+    if (val.__class__ === $B.long_int) {
+       ret=$B.long_int.to_base(val, 16)
     } else {
        ret = parseInt(val)
        ret = ret.toString(16)
@@ -511,8 +511,8 @@ var octal_format = function(val, flags) {
     number_check(val)
     var ret
 
-    if (val.__class__ === $B.LongInt.$dict) {
-      ret = $B.LongInt.$dict.to_base(8)
+    if (val.__class__ === $B.long_int) {
+      ret = $B.long_int.to_base(8)
     } else {
       ret = parseInt(val)
       ret = ret.toString(8)
@@ -1322,7 +1322,7 @@ str.replace = function(self, old, _new, count) {
         throw _b_.TypeError.$factory("integer argument expected, got float");
     }
     if(count==0){return self}
-    if(count.__class__==$B.LongInt.$dict){count=parseInt(count.value)}
+    if(count.__class__==$B.long_int){count=parseInt(count.value)}
     if(old==''){
         if(_new==''){return self}
         if(self==''){return _new}
@@ -1449,7 +1449,7 @@ str.split = function(){
         ['self','sep','maxsplit'],arguments,
         {sep:_b_.None, maxsplit:-1},null,null)
     var sep=$.sep,maxsplit=$.maxsplit,self=$.self
-    if(maxsplit.__class__===$B.LongInt.$dict){maxsplit=parseInt(maxsplit.value)}
+    if(maxsplit.__class__===$B.long_int){maxsplit=parseInt(maxsplit.value)}
     if(sep=='') throw _b_.ValueError.$factory('empty separator')
     if(sep===_b_.None){
         var res = []

@@ -137,9 +137,9 @@ function $builtin_base_convert_helper(obj, base) {
          console.log('invalid base:' + base)
   }
 
-  if (obj.__class__ === $B.LongInt.$dict) {
-     if (obj.pos) return prefix + $B.LongInt.$dict.to_base(obj, base)
-     return '-' + prefix + $B.LongInt.$dict.to_base(-obj, base)
+  if (obj.__class__ === $B.long_int) {
+     if (obj.pos) return prefix + $B.long_int.to_base(obj, base)
+     return '-' + prefix + $B.long_int.to_base(-obj, base)
   }
 
   var value=$B.$GetInt(obj)

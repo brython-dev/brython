@@ -130,8 +130,8 @@ $RangeDict.__len__ = function(self){
     }
     //if($B.gt(len, $B.maxsise)){throw _b_.OverflowError("range len too big")}
     if($B.maxsize===undefined){
-        $B.maxsize = $B.LongInt.$dict.__pow__($B.LongInt(2), 63)
-        $B.maxsize = $B.LongInt.$dict.__sub__($B.maxsize, 1)
+        $B.maxsize = $B.long_int.__pow__($B.long_int.$factory(2), 63)
+        $B.maxsize = $B.long_int.__sub__($B.maxsize, 1)
     }
     return len
 }

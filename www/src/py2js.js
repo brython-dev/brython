@@ -3685,7 +3685,7 @@ function $IntCtx(context,value){
         this.js_processed=true
         var v = parseInt(value[1], value[0])
         if(v>$B.min_int && v<$B.max_int){return v}
-        else{return '$B.LongInt("'+value[1]+'", '+value[0]+')'}
+        else{return '$B.long_int.$factory("'+value[1]+'", '+value[0]+')'}
     }
 }
 

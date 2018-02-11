@@ -412,14 +412,14 @@ list.index = function(){
     var _eq = function(other){return $B.rich_comp("__eq__", $.x, other)}
     if(start===null){start=0}
     else{
-        if(start.__class__===$B.LongInt.$dict){
+        if(start.__class__===$B.long_int){
             start=parseInt(start.value)*(start.pos ? 1 : -1)
         }
         if(start<0){start=Math.max(0,start+self.length)}
     }
     if(stop===null){stop=self.length}
     else{
-        if(stop.__class__===$B.LongInt.$dict){
+        if(stop.__class__===$B.long_int){
             stop=parseInt(stop.value)*(stop.pos ? 1 : -1)
         }
         if(stop<0){stop=Math.min(self.length,stop+self.length)}
