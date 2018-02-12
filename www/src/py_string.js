@@ -1145,8 +1145,7 @@ str.format = function(self) {
                 value = _b_.getattr(value, '__getitem__')(key)
             }
         }
-        // XXX temporary
-        value = value.__class__ === $B.$factory ? value.$dict : value
+        
         // If the conversion flag is set, first call a function to convert
         // the value
         if(fmt.conv=='a'){value = _b_.ascii(value)}
@@ -1604,7 +1603,6 @@ str.zfill = function(self, width) {
 
 str.$factory = function(arg){
     //console.log("str", arg)
-    arg = arg.__class__ === $B.$factory ? arg.$dict : arg
     if(arg===undefined){console.log("undef"); return '<undefined>'}
     switch(typeof arg) {
       case 'string':
@@ -1678,7 +1676,7 @@ for(var $attr in str){
     }
 }
 StringSubclass.__new__ = function(cls){
-    return {__class__:cls.$factory ? cls : cls.$dict}
+    return {__class__: cls}
 }
 
 $B.set_func_names(StringSubclass, "builtins")

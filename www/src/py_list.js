@@ -297,7 +297,7 @@ list.__new__ = function(cls, ...args){
         throw _b_.TypeError.$factory('list.__new__(): not enough arguments')
     }
     var res = []
-    res.__class__ = cls.$is_class ? cls : cls.$dict
+    res.__class__ = cls
     res.__brython__ = true
     return res
 }
@@ -782,7 +782,7 @@ tuple.__new__ = function(cls, ...args){
         throw _b_.TypeError.$factory('list.__new__(): not enough arguments')
     }
     var self = []
-    self.__class__ = cls.$is_class ? cls : cls.$dict
+    self.__class__ = cls
     self.__brython__ = true
     var arg = $B.$iter(args[0]),
         next_func = $B.$call(getattr(arg,'__next__')),

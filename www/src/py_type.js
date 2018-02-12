@@ -145,7 +145,6 @@ $B.$class_constructor = function(class_name, class_obj, parents,
 
     // Set new class as subclass of its parents
     for(var i=0;i<parents.length;i++){
-        if(parents[i].__class__===$B.$factory){parents[i] = parents[i].$dict}
         parents[i].$subclasses  = parents[i].$subclasses || []
         parents[i].$subclasses.push(kls)
     }
@@ -177,9 +176,6 @@ function make_mro(bases, cl_dict){
         // because it would be modified in the algorithm
         if(bases[i]===_b_.str) bases[i] = $B.StringSubclass
         else if(bases[i]===_b_.float) bases[i] = $B.FloatSubclass
-        if(bases[i].__class__ == $B.$factory){
-            bases[i] = bases[i].$dict
-        }
         var bmro = [], pos=0
         if(bases[i]===undefined ||
                 bases[i].__mro__===undefined){
@@ -323,7 +319,6 @@ function method_wrapper(attr, klass, method){
 }
 
 type.__repr__ = type.__str__ = function(kls){
-    if(kls.__class__===$B.$factory){console.log("in type str", kls);kls = kls.$dict}
     var qualname = kls.__name__
     if(kls.__module__ != 'builtins'){
         qualname = kls.__module__ + '.' + qualname
@@ -461,11 +456,7 @@ type.__getattribute__=function(klass, attr){
 type.$factory = function(obj, bases, cl_dict){
     //if(obj===null){console.log('type of', obj)}
     if(arguments.length==1){
-        if(obj.__class__===$B.$factory){ // XXX old style
-            // Get type of a class
-            return obj.$dict.__class__ //.$factory
-        }
-        return $B.get_class(obj) //.$factory
+        return obj.__clas__ || $B.get_class(obj)
     }
 
     // DRo - Begin

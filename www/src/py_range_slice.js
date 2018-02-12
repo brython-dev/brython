@@ -190,7 +190,7 @@ range.count = function(self, ob){
     }else{
         var comp = function(other){return $B.rich_comp("__eq__", ob, other)},
             it = range.__iter__(self)
-            _next = $RangeIterator.$dict.__next__,
+            _next = RangeIterator.__next__,
             nb = 0,
             ce = $B.current_exception
         while(true){
@@ -216,7 +216,7 @@ range.index = function(self, other){
     }catch(err){
         var comp = comp = function(x){return $B.rich_comp("__eq__", other, x)},
             it = range.__iter__(self),
-            _next = $RangeIterator.$dict.__next__,
+            _next = RangeIterator.__next__,
             nb = 0
         while(true){
             try{

@@ -4,66 +4,33 @@ var $module = (function($B){
 eval($B.InjectBuiltins())
 var $N = $B.builtins.None
 
-
-function ajax1(){
-    if (window.XMLHttpRequest){// code for IE7+, Firefox, Chrome, Opera, Safari
-        var xmlhttp = new XMLHttpRequest();
-    }else{// code for IE6, IE5
-        var xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-    }
-    xmlhttp.onreadystatechange = function(){
-        // here, "this" refers to xmlhttp
-        var state = this.readyState
-        var timer = this.$requestTimer
-        if(state===0 && this.onuninitialized){this.onuninitialized()}
-        else if(state===1 && this.onloading){this.onloading()}
-        else if(state===2 && this.onloaded){this.onloaded()}
-        else if(state===3 && this.oninteractive){this.oninteractive()}
-        else if(state===4 && this.oncomplete){
-            if(timer !== null){window.clearTimeout(timer)}
-            this.oncomplete()
+var ajax1 = $B.make_class("ajax1",
+    function(){
+        if (window.XMLHttpRequest){// code for IE7+, Firefox, Chrome, Opera, Safari
+            var xmlhttp = new XMLHttpRequest();
+        }else{// code for IE6, IE5
+            var xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+        }
+        xmlhttp.onreadystatechange = function(){
+            // here, "this" refers to xmlhttp
+            var state = this.readyState
+            var timer = this.$requestTimer
+            if(state===0 && this.onuninitialized){this.onuninitialized()}
+            else if(state===1 && this.onloading){this.onloading()}
+            else if(state===2 && this.onloaded){this.onloaded()}
+            else if(state===3 && this.oninteractive){this.oninteractive()}
+            else if(state===4 && this.oncomplete){
+                if(timer !== null){window.clearTimeout(timer)}
+                this.oncomplete()
+            }
+        }
+        return {
+            __class__: ajax,
+            js: xmlhttp,
+            headers: {}
         }
     }
-    return {
-        __class__: ajax.$dict,
-        js: xmlhttp,
-        headers: {}
-    }
-}
-ajax1.__class__ = $B.$factory
-
-ajax.__class__ = $B.$factory
-
-function ajax(){
-
-    if (window.XMLHttpRequest){// code for IE7+, Firefox, Chrome, Opera, Safari
-        var xmlhttp=new XMLHttpRequest();
-    }else{// code for IE6, IE5
-        var xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
-    }
-    xmlhttp.onreadystatechange = function(){
-        // here, "this" refers to xmlhttp
-        var state = this.readyState
-        if(this.responseType == "" || this.responseType=="text"){
-            res.js.text = this.responseText
-        }
-        var timer = this.$requestTimer
-        if(state===0 && this.onuninitialized){this.onuninitialized(res)}
-        else if(state===1 && this.onloading){this.onloading(res)}
-        else if(state===2 && this.onloaded){this.onloaded(res)}
-        else if(state===3 && this.oninteractive){this.oninteractive(res)}
-        else if(state===4 && this.oncomplete){
-            if(timer !== null){window.clearTimeout(timer)}
-            this.oncomplete(res)
-        }
-    }
-    var res = {
-        __class__: ajax.$dict,
-        js: xmlhttp,
-        headers: {}
-    }
-    return res
-}
+)
 
 var add_to_res = function(res,key,val) {
     if (isinstance(val,list)) {
@@ -75,17 +42,17 @@ var add_to_res = function(res,key,val) {
     } else res.append(key,str.$factory(val))
 }
 
-ajax.$dict = {
+var ajax = {
 
     __class__:_b_.type,
+    __mro__: [$B.JSObject, _b_.object],
     __name__:'ajax',
-    $factory: ajax,
 
     __getattribute__ : function(self, attr){
         // Special case for send : accept dict as parameters
         if(attr=='send'){
             return function(params){
-                return ajax.$dict.send(self, params)
+                return ajax.send(self, params)
             }
         }
         // Otherwise default to JSObject method
@@ -171,9 +138,39 @@ ajax.$dict = {
     }
 }
 
-ajax.$dict.__mro__ = [$B.JSObject, _b_.object]
+ajax.$factory = function(){
 
-$B.set_func_names(ajax.$dict)
+    if (window.XMLHttpRequest){// code for IE7+, Firefox, Chrome, Opera, Safari
+        var xmlhttp=new XMLHttpRequest();
+    }else{// code for IE6, IE5
+        var xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+    }
+    xmlhttp.onreadystatechange = function(){
+        // here, "this" refers to xmlhttp
+        var state = this.readyState
+        if(this.responseType == "" || this.responseType=="text"){
+            res.js.text = this.responseText
+        }
+        var timer = this.$requestTimer
+        if(state===0 && this.onuninitialized){this.onuninitialized(res)}
+        else if(state===1 && this.onloading){this.onloading(res)}
+        else if(state===2 && this.onloaded){this.onloaded(res)}
+        else if(state===3 && this.oninteractive){this.oninteractive(res)}
+        else if(state===4 && this.oncomplete){
+            if(timer !== null){window.clearTimeout(timer)}
+            this.oncomplete(res)
+        }
+    }
+    var res = {
+        __class__: ajax,
+        js: xmlhttp,
+        headers: {}
+    }
+    return res
+}
+
+
+$B.set_func_names(ajax)
 
 return {ajax:ajax, ajax1:ajax1}
 

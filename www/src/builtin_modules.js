@@ -152,7 +152,6 @@
                 dict.__new__ = function(cls){
                     // __new__ must be defined explicitely : it returns an instance of
                     // DOMNode for the specified tagName
-                    cls = cls.__class__ === $B.$factory ? cls.$dict : cls // XXX temporary
                     if(cls.$elt_wrap !== undefined) {
                         // DOMNode is piggybacking on us to autogenerate a node
                         var elt = cls.$elt_wrap  // keep track of the to wrap element

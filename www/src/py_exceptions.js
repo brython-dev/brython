@@ -193,7 +193,6 @@ BaseException.__str__ = function(self){
 }
 
 BaseException.__new__ = function(cls){
-    cls = cls.$factory ? cls : cls.$dict
     var err = _b_.BaseException.$factory()
     err.__class__ = cls
     return err
@@ -326,11 +325,11 @@ $B.exception = function(js_exc){
         }
         var exc = Error()
         exc.__name__ = 'Internal Javascript error: '+(js_exc.__name__ || js_exc.name)
-        exc.__class__ = _b_.Exception.$dict
+        exc.__class__ = _b_.Exception
         exc.$js_exc = js_exc
         if(js_exc.name=='ReferenceError'){
             exc.__name__='NameError'
-            exc.__class__=_b_.NameError.$dict
+            exc.__class__=_b_.NameError
             js_exc.message = js_exc.message.replace('$$','')
         }else if(js_exc.name=="InternalError"){
             exc.__name__='RuntimeError'
@@ -359,8 +358,6 @@ $B.is_exc=function(exc, exc_list){
     var this_exc_class = exc.__class__
     for(var i=0;i<exc_list.length;i++){
         var exc_class = exc_list[i]
-        exc_class == exc_class.__class__ === $B.$factory ? exc_class.$dict :
-            exc_class
         if(this_exc_class===undefined){console.log("exc class undefined", exc)}
         if(issubclass(this_exc_class,exc_class)) return true
     }

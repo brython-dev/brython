@@ -273,7 +273,6 @@ function dir(obj){
     check_nb_args('dir', 1, arguments.length)
     check_no_kw('dir', obj)
 
-    obj = obj.__class__ === $B.$factory ? obj.$dict : obj
     var klass = obj.__class__ || $B.get_class(obj),
         ce = $B.current_exception
 
@@ -667,14 +666,9 @@ $B.$getattr = function(obj, attr, _default){
     var rawname = attr
     if($B.aliased_names[attr]){attr = '$$'+attr}
 
-    obj = obj.__class__ == $B.$factory ? obj.$dict : obj
-
     var is_class = obj.$is_class || obj.$factory
 
     var klass = obj.__class__
-    if(klass !== undefined){
-        klass = klass.__class__===$B.$factory ? klass.$dict : klass
-    }
 
     // Shortcut for classes without parents
     if(klass!==undefined && klass.__bases__ && klass.__bases__.length==0){
@@ -767,7 +761,7 @@ $B.$getattr = function(obj, attr, _default){
     }//switch
 
     if(typeof obj == 'function') {
-      var value = obj.__class__ === $B.$factory ? obj.$dict[attr] : obj[attr]
+      var value = obj[attr]
       if(value !== undefined) {
         if (attr == '__module__'){
           return value
@@ -882,7 +876,6 @@ function hash(obj){
     check_no_kw('hash', obj)
     check_nb_args('hash', 1, arguments.length)
 
-    obj = obj.__class__ === $B.$factory ? obj.$dict : obj
     if (obj.__hashvalue__ !== undefined) return obj.__hashvalue__
     if (isinstance(obj, _b_.int)) return obj.valueOf()
     if (isinstance(obj, _b_.bool)) return _b_.int.$factory(obj)
@@ -1014,8 +1007,6 @@ function isinstance(obj,arg){
     check_no_kw('isinstance', obj, arg)
     check_nb_args('isinstance', 2, arguments.length)
 
-    arg = arg.__class__===$B.$factory ? arg.$dict : arg
-
     if(obj===null) return arg===None
     if(obj===undefined) return false
     if(arg.constructor===Array){
@@ -1037,10 +1028,6 @@ function isinstance(obj,arg){
 
     if (klass === undefined) { return false }
 
-   //if(arg.$dict===undefined){return false}
-
-   var klass1 = klass===$B.$factory ? obj.$dict.__class__ : klass
-
    // Return true if one of the parents of obj class is arg
    // If one of the parents is the class used to inherit from str, obj is an
    // instance of str ; same for list
@@ -1052,8 +1039,8 @@ function isinstance(obj,arg){
       else if(arg===_b_.float &&
           kl===$B.FloatSubclass){return true}
    }
-   if(check(klass1, arg)){return true}
-   var mro = klass1.__mro__
+   if(check(klass, arg)){return true}
+   var mro = klass.__mro__
    for(var i=0;i<mro.length;i++){
       if(check(mro[i], arg)){return true}
    }
@@ -1070,8 +1057,6 @@ function issubclass(klass,classinfo){
     check_no_kw('issubclass', klass, classinfo)
     check_nb_args('issubclass', 2, arguments.length)
 
-    klass = klass.__class__ === $B.$factory ? klass.$dict : klass
-
     if(!klass.__class__ ||
             !(klass.$factory!==undefined || klass.$is_class!==undefined)){
                 console.log('not a class', klass,"\n", klass+"")
@@ -1083,15 +1068,14 @@ function issubclass(klass,classinfo){
       }
       return false
     }
-    var classinfo1 = classinfo.__class__ === $B.$factory ? classinfo.$dict : classinfo
-    if(classinfo1.$factory){
-        if(klass===classinfo1 ||
-            klass.__mro__.indexOf(classinfo1)>-1){return true}
+    if(classinfo.$factory || classinfo.$is_class){
+        if(klass===classinfo ||
+            klass.__mro__.indexOf(classinfo)>-1){return true}
     }
 
     // Search __subclasscheck__ on classinfo
     try{
-        var sch = getattr(classinfo1,'__subclasscheck__')
+        var sch = getattr(classinfo,'__subclasscheck__')
     }catch(err){
         if(err.__class__ === _b_.AttributeError){return false}
         throw err
@@ -1600,13 +1584,7 @@ $B.$setattr = function(obj, attr, value){
         return None
     }
 
-    value = value.__class__===$B.$factory ? value.$dict : value // XXX old style
-
-    if(obj.__class__===$B.$factory){ // XXX - old style
-        // Setting attribute of a class means updating the class
-        // dictionary, not the class factory function
-        obj.$dict[attr]=value;return None
-    }else if(obj.$factory || obj.$is_class){
+    if(obj.$factory || obj.$is_class){
         obj[attr] = value
         if(attr=="__init__" || attr=="__new__"){
             // redefine the function that creates instances of the class
@@ -1758,7 +1736,7 @@ function sum(iterable,start){
 var $$super = $B.make_class("super",
     function (_type1,_type2){
         return {__class__:$$super,
-            __thisclass__:_type1.__class__===$B.$factory ? _type1.$dict : _type1,
+            __thisclass__:_type1,
             __self_class__:(_type2 || None)
         }
     }

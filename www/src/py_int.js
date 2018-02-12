@@ -266,7 +266,7 @@ int.__neg__ = function(self){return -self}
 
 int.__new__ = function(cls){
     if(cls===undefined){throw _b_.TypeError.$factory('int.__new__(): not enough arguments')}
-    return {__class__:cls.$factory ? cls : cls.$dict}
+    return {__class__: cls}
 }
 
 int.__pos__ = function(self){return self}

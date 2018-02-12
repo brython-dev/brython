@@ -13,9 +13,7 @@ var $xlinkNS = "http://www.w3.org/1999/xlink"
 
 function makeTagDict(tagName){
     // return the dictionary for the class associated with tagName
-    var dict = {__class__:_b_.type,
-        __name__:tagName
-        }
+    var dict = $B.make_class(tagName)
 
     dict.__getattribute__ = function(self, attr){
         if(self.elt.hasAttributeNS(null, attr)){
@@ -27,7 +25,7 @@ function makeTagDict(tagName){
                 return dict[attr].apply(null, args)
             }
         }
-        return $B.DOMNode.__getattribute__(self, attr)        
+        return $B.DOMNode.__getattribute__(self, attr)
     }
 
     dict.__init__ = function(){
@@ -55,7 +53,7 @@ function makeTagDict(tagName){
             // keyword arguments
             var arg = items[i][0]
             var value = items[i][1]
-            if(arg.toLowerCase().substr(0,2)==="on"){ 
+            if(arg.toLowerCase().substr(0,2)==="on"){
                 // Event binding passed as argument "onclick", "onfocus"...
                 // Better use method bind of DOMNode objects
                 var js = '$B.DOMNode.bind(self,"'
@@ -83,10 +81,10 @@ function makeTagDict(tagName){
 
     dict.__new__ = function(cls){
         var res = $B.DOMNode.$factory(document.createElementNS($svgNS,tagName))
-        res.__class__ = cls.$dict
+        res.__class__ = cls
         return res
     }
-    
+
     dict.__setattr__ = function(self, key, value){
         if(self.elt.hasAttributeNS(null, key)){
             self.elt.setAttributeNS(null,key,value)
@@ -94,6 +92,8 @@ function makeTagDict(tagName){
             $B.DOMNode.__setattr__(self, key, value)
         }
     }
+
+    $B.set_func_names(dict, "browser.svg")
 
     return dict
 }
@@ -108,8 +108,6 @@ function makeFactory(tagName){
         dicts[tagName].__init__.apply(null,args)
         return res
     }
-    factory.__class__=$B.$factory
-    factory.$dict = dicts[tagName]
     return factory
 }
 
@@ -156,7 +154,7 @@ var obj = new Object()
 var dicts = {}
 for(var i=0, _len_i = $svg_tags.length; i < _len_i;i++){
     var tag = $svg_tags[i]
-    dicts[tag]=makeTagDict(tag)
+    dicts[tag] = makeTagDict(tag)
     obj[tag] = makeFactory(tag)
     dicts[tag].$factory = obj[tag]
 }

@@ -150,8 +150,7 @@ dict.__contains__ = function(){
       case 'number':
         return self.$numeric_dict[item] !==undefined
     }
-    item = item.__class__ === $B.$factory ? item.$dict : item // XXX old style
-
+    
     var _key=hash(item)
     if (self.$str_hash[_key]!==undefined &&
         $B.rich_comp("__eq__", item, self.$str_hash[_key])){return true}
@@ -267,7 +266,6 @@ dict.__getitem__ = function(){
 
     // since the key is more complex use 'default' method of getting item
 
-    arg = arg.__class__ === $B.$factory ? arg.$dict : arg
     var _key = _b_.hash(arg),
         _eq = function(other){return $B.rich_comp('__eq__', arg, other)}
 
@@ -392,7 +390,7 @@ dict.__ne__ = function(self,other){return !dict.__eq__(self,other)}
 dict.__new__ = function(cls){
     if(cls===undefined){throw _b_.TypeError.$factory('int.__new__(): not enough arguments')}
     return {
-        __class__:cls.$factory ? cls : cls.$dict,
+        __class__: cls,
         $numeric_dict : {},
         $object_dict : {},
         $string_dict : {},
@@ -467,7 +465,6 @@ dict.__setitem__ = function(self,key,value){
 
     // if we got here the key is more complex, use default method
 
-    key = key.__class__ === $B.$factory ? key.$dict : key
     var _key=hash(key)
     var _eq=function(other){return $B.rich_comp("__eq__", key, other)};
 

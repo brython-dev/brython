@@ -932,39 +932,33 @@ function _Random(){
 
 }
 
-function Random(){
-    var obj = {__class__: Random.$dict}
-    Random.$dict.__init__(obj)
-    return obj
+var Random = $B.make_class("Random",
+    function(){
+        var obj = {__class__: Random}
+        Random.__init__(obj)
+        return obj
+    }
+)
+Random.__getattribute__ = function(self, attr){
+    return self.$r[attr]
 }
-Random.__class__ = $B.$factory
-Random.$dict = {
-    __class__: _b_.type,
-    __name__: 'Random',
-    $factory: Random,
-    __init__: function(self){self.$r = _Random()},
-    __getattribute__: function(self, attr){return self.$r[attr]}
-}
-Random.$dict.__mro__ = [$B.builtins.object]
+
+$B.set_func_names(Random, "random")
 
 var $module = _Random()
 
 $module.Random = Random
 
-$module.SystemRandom = function(){
-    var f = function(){return {__class__:f.$dict}}
-    f.__class__ = $B.$factory
-    f.$dict = {
-        __class__: _b_.type,
-        __name__: 'SystemRandom',
-        $factory: f,
-        __getattribute__: function(){
-            throw $B.builtins.NotImplementedError()
-        }
+var SystemRandom = $B.make_class("SystemRandom",
+    function(){
+        return {__class__: SystemRandom}
     }
-    f.$dict.__mro__ = [$B.builtins.object]
-    return f()
+)
+SystemRandom.__getattribute__ = function(){
+    throw $B.builtins.NotImplementedError()
 }
+
+$module.SystemRandom = SystemRandom
 
 return $module
 

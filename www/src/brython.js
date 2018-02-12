@@ -76,8 +76,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-02-12 17:27:32.185390"
-__BRYTHON__.timestamp=1518452852185
+__BRYTHON__.compiled_date="2018-02-12 21:16:24.917082"
+__BRYTHON__.timestamp=1518466584917
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -4493,10 +4493,9 @@ object.__mro__=[]
 object.__new__=function(cls,...args){if(cls===undefined){throw _b_.TypeError.$factory('object.__new__(): not enough arguments')}
 var init_func=$B.$getattr(cls,"__init__")
 if(init_func===object.__init__){if(args.length>0){throw _b_.TypeError.$factory("object() takes no parameters")}}
-return{__class__ : cls.__class__===$B.$factory ? cls.$dict : cls}}
+return{__class__ : cls}}
 object.__ne__=function(self,other){return !$B.rich_comp("__eq__",self,other)}
 object.__repr__=function(self){if(self===object)return "<class 'object'>"
-if(self.__class__===$B.$factory){return "<class '"+self.$dict.__name__+"'>"}
 if(self.__class__===_b_.type)return "<class '"+self.__name__+"'>"
 if(self.__class__.__module__!==undefined){return "<"+self.__class__.__module__+"."+self.__class__.__name__+" object>"}else{return "<"+self.__class__.__name__+" object>"}}
 object.__setattr__=function(self,attr,val){if(val===undefined){
@@ -4566,8 +4565,7 @@ kls.$subclasses=[]
 kls.$is_class=true
 var meta_init=_b_.type.__getattribute__(metaclass,'__init__')
 meta_init(kls,class_name,bases,Object.keys(kls))
-for(var i=0;i<parents.length;i++){if(parents[i].__class__===$B.$factory){parents[i]=parents[i].$dict}
-parents[i].$subclasses=parents[i].$subclasses ||[]
+for(var i=0;i<parents.length;i++){parents[i].$subclasses=parents[i].$subclasses ||[]
 parents[i].$subclasses.push(kls)}
 if(!is_instanciable){function nofactory(){throw _b_.TypeError.$factory("Can't instantiate abstract class interface"+
 " with abstract methods "+Object.keys(abstract_methods).join(', '))}
@@ -4580,7 +4578,6 @@ var seqs=[],pos1=0
 for(var i=0;i<bases.length;i++){
 if(bases[i]===_b_.str)bases[i]=$B.StringSubclass
 else if(bases[i]===_b_.float)bases[i]=$B.FloatSubclass
-if(bases[i].__class__==$B.$factory){bases[i]=bases[i].$dict}
 var bmro=[],pos=0
 if(bases[i]===undefined ||
 bases[i].__mro__===undefined){console.log(cl_dict,bases,"not a class",bases[i])
@@ -4631,8 +4628,7 @@ return _b_.str.$factory(klass)}
 function method_wrapper(attr,klass,method){
 method.__str__=method.__repr__=function(self){return "<method '"+attr+"' of '"+klass.__name__+"' objects>"}
 return method}
-type.__repr__=type.__str__=function(kls){if(kls.__class__===$B.$factory){console.log("in type str",kls);kls=kls.$dict}
-var qualname=kls.__name__
+type.__repr__=type.__str__=function(kls){var qualname=kls.__name__
 if(kls.__module__ !='builtins'){qualname=kls.__module__ + '.' + qualname}
 return "<class '" + qualname +"'>"}
 type.__getattribute__=function(klass,attr){
@@ -4685,9 +4681,7 @@ cl_method.__class__=$B.method
 cl_method.$infos={__self__: klass,__func__: res,__name__: attr,__qualname__: klass.__name__ + '.' + attr,__module__: res.$infos ? res.$infos.__module__ : ""}
 return cl_method}}else{return res}}}
 type.$factory=function(obj,bases,cl_dict){
-if(arguments.length==1){if(obj.__class__===$B.$factory){
-return obj.$dict.__class__ }
-return $B.get_class(obj)}
+if(arguments.length==1){return obj.__clas__ ||$B.get_class(obj)}
 return $B.$class_constructor(obj,cl_dict,bases,undefined,undefined)}
 $B.set_func_names(type,"__builtins__")
 _b_.type=type
@@ -4783,7 +4777,7 @@ return $B.Function
 case 'object':
 if(Array.isArray(obj)){if(Object.getPrototypeOf(obj)===Array.prototype){obj.__class__=_b_.list
 return _b_.list}}else if(obj.constructor===Number)return _b_.float
-break}}else if(klass.__class__===$B.$factory){klass=klass.$dict}
+break}}
 return klass}
 $B.$mkdict=function(glob,loc){var res={}
 for(var arg in glob)res[arg]=glob[arg]
@@ -5005,8 +4999,7 @@ $B.$test_expr=function(){
 return $B.$test_result}
 $B.$is=function(a,b){
 if(a instanceof Number && b instanceof Number){return a.valueOf()==b.valueOf()}
-var a1=a.__class__===$B.$factory ? a.$dict : a,b1=b.__class__===$B.$factory ? b.$dict : b
-return a1===b1}
+return a===b}
 $B.$is_member=function(item,_set){
 var f,_iter
 var ce=$B.current_exception
@@ -5319,8 +5312,6 @@ return x1 >=y1
 case "__gt__":
 return x1 > y1}}
 var res,rev_op,compared=false
-x=x.__class__===$B.$factory ? x.$dict : x
-y=y.__class__===$B.$factory ? y.$dict : y
 if(x.$is_class ||x.$factory){if(op=='__eq__'){return(x===y)}else if(op=='__ne__'){return !(x===y)}else{
 throw _b_.TypeError.$factory("'"+op+"' not supported between types")}}
 if(x.__class__ && y.__class__){
@@ -5486,7 +5477,6 @@ _b_.list.sort(res)
 return res}
 check_nb_args('dir',1,arguments.length)
 check_no_kw('dir',obj)
-obj=obj.__class__===$B.$factory ? obj.$dict : obj
 var klass=obj.__class__ ||$B.get_class(obj),ce=$B.current_exception
 if(obj.$is_class){
 var dir_func=$B.$getattr(obj.__class__,"__dir__")
@@ -5642,10 +5632,8 @@ return $B.$getattr($.obj,$.attr,$._default===missing ? undefined : $._default)}
 $B.$getattr=function(obj,attr,_default){
 var rawname=attr
 if($B.aliased_names[attr]){attr='$$'+attr}
-obj=obj.__class__==$B.$factory ? obj.$dict : obj
 var is_class=obj.$is_class ||obj.$factory
 var klass=obj.__class__
-if(klass !==undefined){klass=klass.__class__===$B.$factory ? klass.$dict : klass}
 if(klass!==undefined && klass.__bases__ && klass.__bases__.length==0){if(obj.hasOwnProperty(attr)){return obj[attr]}else if(klass.hasOwnProperty(attr)){if(typeof klass[attr]!="function" && attr !="__dict__" &&
 klass[attr].__get__===undefined){return klass[attr]}}}
 if(klass===undefined){
@@ -5680,7 +5668,7 @@ break
 case '$$new':
 if(klass===$B.JSObject && obj.js_func !==undefined){return $B.JSConstructor.$factory(obj)}
 break}
-if(typeof obj=='function'){var value=obj.__class__===$B.$factory ? obj.$dict[attr]: obj[attr]
+if(typeof obj=='function'){var value=obj[attr]
 if(value !==undefined){if(attr=='__module__'){return value}}}
 if(klass.$native){if(klass[attr]===undefined){var object_attr=_b_.object[attr]
 if(object_attr!==undefined){klass[attr]=object_attr}
@@ -5725,7 +5713,6 @@ try{getattr(obj,attr);return true}
 catch(err){$B.current_exception=ce;return false}}
 function hash(obj){check_no_kw('hash',obj)
 check_nb_args('hash',1,arguments.length)
-obj=obj.__class__===$B.$factory ? obj.$dict : obj
 if(obj.__hashvalue__ !==undefined)return obj.__hashvalue__
 if(isinstance(obj,_b_.int))return obj.valueOf()
 if(isinstance(obj,_b_.bool))return _b_.int.$factory(obj)
@@ -5778,7 +5765,6 @@ if(stdin.len===stdin.pos){_b_.getattr(stdin,'close')();}
 return val;}
 function isinstance(obj,arg){check_no_kw('isinstance',obj,arg)
 check_nb_args('isinstance',2,arguments.length)
-arg=arg.__class__===$B.$factory ? arg.$dict : arg
 if(obj===null)return arg===None
 if(obj===undefined)return false
 if(arg.constructor===Array){for(var i=0;i<arg.length;i++){if(isinstance(obj,arg[i]))return true}
@@ -5790,28 +5776,25 @@ if(obj.contructor==Number && arg==_b_.float){return true}
 if(typeof obj=='number' && arg==_b_.int){return true}
 klass=$B.get_class(obj)}
 if(klass===undefined){return false }
-var klass1=klass===$B.$factory ? obj.$dict.__class__ : klass
 function check(kl,arg){if(kl===arg){return true}
 else if(arg===_b_.str &&
 kl===$B.StringSubclass){return true}
 else if(arg===_b_.float &&
 kl===$B.FloatSubclass){return true}}
-if(check(klass1,arg)){return true}
-var mro=klass1.__mro__
+if(check(klass,arg)){return true}
+var mro=klass.__mro__
 for(var i=0;i<mro.length;i++){if(check(mro[i],arg)){return true}}
 try{return getattr(arg,'__instancecheck__')(obj)}catch(err){return false}}
 function issubclass(klass,classinfo){check_no_kw('issubclass',klass,classinfo)
 check_nb_args('issubclass',2,arguments.length)
-klass=klass.__class__===$B.$factory ? klass.$dict : klass
 if(!klass.__class__ ||
 !(klass.$factory!==undefined ||klass.$is_class!==undefined)){console.log('not a class',klass,"\n",klass+"")
 throw _b_.TypeError.$factory("issubclass() arg 1 must be a class")}
 if(isinstance(classinfo,_b_.tuple)){for(var i=0;i<classinfo.length;i++){if(issubclass(klass,classinfo[i]))return true}
 return false}
-var classinfo1=classinfo.__class__===$B.$factory ? classinfo.$dict : classinfo
-if(classinfo1.$factory){if(klass===classinfo1 ||
-klass.__mro__.indexOf(classinfo1)>-1){return true}}
-try{var sch=getattr(classinfo1,'__subclasscheck__')}catch(err){if(err.__class__===_b_.AttributeError){return false}
+if(classinfo.$factory ||classinfo.$is_class){if(klass===classinfo ||
+klass.__mro__.indexOf(classinfo)>-1){return true}}
+try{var sch=getattr(classinfo,'__subclasscheck__')}catch(err){if(err.__class__===_b_.AttributeError){return false}
 throw err}
 return sch(klass)}
 var iterator_class=$B.make_class("iterator",function(getitem,len){return{
@@ -6018,9 +6001,7 @@ if(!value.__class__===_b_.dict){throw _b_.TypeError.$factory("__dict__ must be s
 for(var attr in obj){if(attr !=="__class__"){delete obj[attr]}}
 for(var attr in value.$string_dict){obj[attr]=value.$string_dict[attr]}
 return None}
-value=value.__class__===$B.$factory ? value.$dict : value 
-if(obj.__class__===$B.$factory){
-obj.$dict[attr]=value;return None}else if(obj.$factory ||obj.$is_class){obj[attr]=value
+if(obj.$factory ||obj.$is_class){obj[attr]=value
 if(attr=="__init__" ||attr=="__new__"){
 obj.$factory=$B.$instance_creator(obj)}
 return None}
@@ -6074,7 +6055,7 @@ while(1){try{var _item=next(iterable)
 res=getattr(res,'__add__')(_item)}catch(err){if(err.__name__==='StopIteration'){$B.current_exception=ce
 break}else{throw err}}}
 return res}
-var $$super=$B.make_class("super",function(_type1,_type2){return{__class__:$$super,__thisclass__:_type1.__class__===$B.$factory ? _type1.$dict : _type1,__self_class__:(_type2 ||None)}}
+var $$super=$B.make_class("super",function(_type1,_type2){return{__class__:$$super,__thisclass__:_type1,__self_class__:(_type2 ||None)}}
 )
 $$super.__getattribute__=function(self,attr){var mro=self.__thisclass__.__mro__,res
 var sc=self.__self_class__
@@ -6327,8 +6308,7 @@ BaseException.__init__=function(self){var args=arguments[1]===undefined ?[]:[arg
 self.args=_b_.tuple.$factory(args)}
 BaseException.__repr__=function(self){return self.__class__.__name__+repr(self.args)}
 BaseException.__str__=function(self){return _b_.str.$factory(self.args[0])}
-BaseException.__new__=function(cls){cls=cls.$factory ? cls : cls.$dict
-var err=_b_.BaseException.$factory()
+BaseException.__new__=function(cls){var err=_b_.BaseException.$factory()
 err.__class__=cls
 return err}
 BaseException.__getattr__=function(self,attr){if(attr=='info'){var name=self.__class__.__name__
@@ -6393,10 +6373,10 @@ js_exc.msg=msg
 js_exc.info_in_msg=true}}else{console.log('error ',js_exc)}}
 var exc=Error()
 exc.__name__='Internal Javascript error: '+(js_exc.__name__ ||js_exc.name)
-exc.__class__=_b_.Exception.$dict
+exc.__class__=_b_.Exception
 exc.$js_exc=js_exc
 if(js_exc.name=='ReferenceError'){exc.__name__='NameError'
-exc.__class__=_b_.NameError.$dict
+exc.__class__=_b_.NameError
 js_exc.message=js_exc.message.replace('$$','')}else if(js_exc.name=="InternalError"){exc.__name__='RuntimeError'
 exc.__class__=_b_.RuntimeError}
 var $message=js_exc.msg ||'<'+js_exc+'>'
@@ -6411,8 +6391,6 @@ if(exc.__class__===undefined){console.log("no _class__",exc)
 exc=$B.exception(exc)}
 var this_exc_class=exc.__class__
 for(var i=0;i<exc_list.length;i++){var exc_class=exc_list[i]
-exc_class==exc_class.__class__===$B.$factory ? exc_class.$dict :
-exc_class
 if(this_exc_class===undefined){console.log("exc class undefined",exc)}
 if(issubclass(this_exc_class,exc_class))return true}
 return false}
@@ -6518,12 +6496,12 @@ range.__setattr__=function(self,attr,value){throw _b_.AttributeError.$factory('r
 range.start=function(self){return self.start}
 range.step=function(self){return self.step},range.stop=function(self){return self.stop}
 range.count=function(self,ob){if(_b_.isinstance(ob,[_b_.int,_b_.float,_b_.bool])){return _b_.int.$factory(range.__contains__(self,ob))}else{var comp=function(other){return $B.rich_comp("__eq__",ob,other)},it=range.__iter__(self)
-_next=$RangeIterator.$dict.__next__,nb=0,ce=$B.current_exception
+_next=RangeIterator.__next__,nb=0,ce=$B.current_exception
 while(true){try{if(comp(_next(it))){nb++}}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){$B.current_exception=ce
 return nb}
 throw err}}}}
 range.index=function(self,other){var $=$B.args('index',2,{self:null,other:null},['self','other'],arguments,{},null,null),self=$.self,other=$.other
-try{other=$B.int_or_bool(other)}catch(err){var comp=comp=function(x){return $B.rich_comp("__eq__",other,x)},it=range.__iter__(self),_next=$RangeIterator.$dict.__next__,nb=0
+try{other=$B.int_or_bool(other)}catch(err){var comp=comp=function(x){return $B.rich_comp("__eq__",other,x)},it=range.__iter__(self),_next=RangeIterator.__next__,nb=0
 while(true){try{if(comp(_next(it))){return nb}
 nb++}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){throw _b_.ValueError.$factory(_b_.str.$factory(other)+
 ' not in range')}
@@ -7790,7 +7768,7 @@ _b_.str.$factory(value)+"'")}}}
 throw _b_.TypeError.$factory("float() argument must be a string or a number, not '"+
 $B.get_class(value).__name__+"'")}
 float.__new__=function(cls){if(cls===undefined){throw _b_.TypeError.$factory('float.__new__(): not enough arguments')}
-return{__class__:cls.$factory ? cls : cls.$dict}}
+return{__class__: cls}}
 $B.$FloatClass=$FloatClass
 $B.set_func_names(float,"builtins")
 var FloatSubclass=$B.FloatSubclass={__class__: _b_.type,__mro__:[object],__name__: 'float',$is_class: true}
@@ -7923,7 +7901,7 @@ $err("*",other)}
 int.__name__='int'
 int.__neg__=function(self){return -self}
 int.__new__=function(cls){if(cls===undefined){throw _b_.TypeError.$factory('int.__new__(): not enough arguments')}
-return{__class__:cls.$factory ? cls : cls.$dict}}
+return{__class__: cls}}
 int.__pos__=function(self){return self}
 int.__pow__=function(self,other,z){if(isinstance(other,int)){switch(other.valueOf()){case 0:
 return int.$factory(1)
@@ -9030,7 +9008,7 @@ $B.get_class(other).__name__+"'")}
 list.__ne__=function(self,other){return !list.__eq__(self,other)}
 list.__new__=function(cls,...args){if(cls===undefined){throw _b_.TypeError.$factory('list.__new__(): not enough arguments')}
 var res=[]
-res.__class__=cls.$is_class ? cls : cls.$dict
+res.__class__=cls
 res.__brython__=true
 return res}
 list.__repr__=function(self){if(self===undefined)return "<class 'list'>"
@@ -9244,7 +9222,7 @@ tuple.__init__=function(){
 return $N}
 tuple.__new__=function(cls,...args){if(cls===undefined){throw _b_.TypeError.$factory('list.__new__(): not enough arguments')}
 var self=[]
-self.__class__=cls.$is_class ? cls : cls.$dict
+self.__class__=cls
 self.__brython__=true
 var arg=$B.$iter(args[0]),next_func=$B.$call(getattr(arg,'__next__')),ce=$B.current_exception
 while(1){try{var item=next_func()
@@ -9699,7 +9677,6 @@ value=_b_.getattr(value,ext.substr(1))}else{
 var key=ext.substr(1,ext.length-2)
 if(key.charAt(0).search(/\d/)>-1){key=parseInt(key)}
 value=_b_.getattr(value,'__getitem__')(key)}}
-value=value.__class__===$B.$factory ? value.$dict : value
 if(fmt.conv=='a'){value=_b_.ascii(value)}
 else if(fmt.conv=='r'){value=_b_.repr(value)}
 else if(fmt.conv=='s'){value=_b_.str.$factory(value)}
@@ -9887,7 +9864,6 @@ return self.charAt(0)+'0'.repeat($.width-self.length)+self.substr(1)
 default:
 return '0'.repeat(width - self.length)+self}}
 str.$factory=function(arg){
-arg=arg.__class__===$B.$factory ? arg.$dict : arg
 if(arg===undefined){console.log("undef");return '<undefined>'}
 switch(typeof arg){case 'string':
 return arg
@@ -9912,7 +9888,7 @@ for(var $attr in str){if(typeof str[$attr]=='function'){StringSubclass[$attr]=(f
 if(arguments.length>0){var args=[arguments[0].valueOf()],pos=1
 for(var i=1,_len_i=arguments.length;i < _len_i;i++){args[pos++]=arguments[i]}}
 return str[attr].apply(null,args)}})($attr)}}
-StringSubclass.__new__=function(cls){return{__class__:cls.$factory ? cls : cls.$dict}}
+StringSubclass.__new__=function(cls){return{__class__: cls}}
 $B.set_func_names(StringSubclass,"builtins")
 _b_.str=str
 $B.parse_format_spec=function(spec){if(spec==''){this.empty=true}
@@ -10095,7 +10071,6 @@ switch(typeof item){case 'string':
 return self.$string_dict[item]!==undefined
 case 'number':
 return self.$numeric_dict[item]!==undefined}
-item=item.__class__===$B.$factory ? item.$dict : item 
 var _key=hash(item)
 if(self.$str_hash[_key]!==undefined &&
 $B.rich_comp("__eq__",item,self.$str_hash[_key])){return true}
@@ -10143,7 +10118,6 @@ if(self.$string_dict[arg]!==undefined)return self.$string_dict[arg]
 break
 case 'number':
 if(self.$numeric_dict[arg]!==undefined)return self.$numeric_dict[arg]}
-arg=arg.__class__===$B.$factory ? arg.$dict : arg
 var _key=_b_.hash(arg),_eq=function(other){return $B.rich_comp('__eq__',arg,other)}
 var sk=self.$str_hash[_key]
 if(sk!==undefined && _eq(sk)){return self.$string_dict[sk]}
@@ -10199,7 +10173,7 @@ return _count}
 dict.__ne__=function(self,other){return !dict.__eq__(self,other)}
 dict.__new__=function(cls){if(cls===undefined){throw _b_.TypeError.$factory('int.__new__(): not enough arguments')}
 return{
-__class__:cls.$factory ? cls : cls.$dict,$numeric_dict :{},$object_dict :{},$string_dict :{},$str_hash:{}}}
+__class__: cls,$numeric_dict :{},$object_dict :{},$string_dict :{},$str_hash:{}}}
 dict.__next__=function(self){if(self.$iter==null){self.$iter=new $item_generator(self)}
 try{
 return self.$iter.next()}catch(err){if(err.__name__ !=="StopIteration"){throw err }}}
@@ -10223,7 +10197,6 @@ return $N
 case 'number':
 self.$numeric_dict[key]=value
 return $N}
-key=key.__class__===$B.$factory ? key.$dict : key
 var _key=hash(key)
 var _eq=function(other){return $B.rich_comp("__eq__",key,other)};
 if(self.$numeric_dict[_key]!==undefined && _eq(_key)){self.$numeric_dict[_key]=value
@@ -10430,7 +10403,7 @@ set.__mro__=[_b_.object]
 set.__ne__=function(self,other){return !set.__eq__(self,other)}
 set.__new__=function(cls){if(cls===undefined){throw _b_.TypeError.$factory('set.__new__(): not enough arguments')}
 return{
-__class__:cls.$factory ? cls : cls.$dict,$str:true,$num:true,$items:[]}}
+__class__: cls,$str:true,$num:true,$items:[]}}
 set.__or__=function(self,other,accept_iter){
 var res=clone(self)
 var func=_b_.getattr($B.$iter(other),'__next__')
@@ -10600,7 +10573,7 @@ frozenset.__init__=function(){
 return $N}
 frozenset.__new__=function(cls){if(cls===undefined){throw _b_.TypeError.$factory('frozenset.__new__(): not enough arguments')}
 return{
-__class__:cls.$factory ? cls : cls.$dict,$str:true,$num:true,$items:[]}}
+__class__: cls,$str:true,$num:true,$items:[]}}
 var singleton_id=Math.floor(Math.random()*Math.pow(2,40))
 function empty_frozenset(){return{__class__:frozenset,$items:[],$id:singleton_id}}
 frozenset.$factory=function(){var $=$B.args('frozenset',1,{iterable:null},['iterable'],arguments,{iterable:null},null,null)
@@ -11525,7 +11498,6 @@ try{arg=arg.replace('_','-')
 $B.DOMNode.__setattr__(self,arg,value)}catch(err){throw _b_.ValueError.$factory("can't set attribute "+arg)}}}}}
 dict.__mro__=[$B.DOMNode,$B.builtins.object]
 dict.__new__=function(cls){
-cls=cls.__class__===$B.$factory ? cls.$dict : cls 
 if(cls.$elt_wrap !==undefined){
 var elt=cls.$elt_wrap 
 cls.$elt_wrap=undefined 

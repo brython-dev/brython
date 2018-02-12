@@ -163,8 +163,6 @@ $B.get_class = function(obj){
             }else if(obj.constructor===Number) return _b_.float
             break
         }
-    }else if(klass.__class__===$B.$factory){
-        klass = klass.$dict
     }
     return klass
 }
@@ -667,9 +665,7 @@ $B.$is = function(a, b){
     if(a instanceof Number && b instanceof Number){
         return a.valueOf()==b.valueOf()
     }
-    var a1 = a.__class__ === $B.$factory ? a.$dict : a,
-        b1 = b.__class__ === $B.$factory ? b.$dict : b
-    return a1 === b1
+    return a === b
 }
 
 $B.$is_member = function(item,_set){
@@ -1373,9 +1369,7 @@ $B.rich_comp = function(op, x, y){
         }
     }
     var res, rev_op, compared = false
-    x = x.__class__===$B.$factory ? x.$dict : x
-    y = y.__class__===$B.$factory ? y.$dict : y
-
+    
     if(x.$is_class || x.$factory) {
         if ( op == '__eq__') {
             return (x === y)

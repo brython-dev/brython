@@ -201,7 +201,7 @@ set.__new__ = function(cls){
         throw _b_.TypeError.$factory('set.__new__(): not enough arguments')
     }
     return {
-        __class__:cls.$factory ? cls : cls.$dict,
+        __class__: cls,
         $str:true,
         $num:true,
         $items:[]
@@ -621,7 +621,7 @@ frozenset.__new__ = function(cls){
         throw _b_.TypeError.$factory('frozenset.__new__(): not enough arguments')
     }
     return {
-        __class__:cls.$factory ? cls : cls.$dict,
+        __class__: cls,
         $str:true,
         $num:true,
         $items:[]

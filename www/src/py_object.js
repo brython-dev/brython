@@ -317,7 +317,7 @@ object.__new__ = function(cls, ...args){
             throw _b_.TypeError.$factory("object() takes no parameters")
         }
     }
-    return {__class__ : cls.__class__ === $B.$factory ? cls.$dict : cls}
+    return {__class__ : cls}
 }
 
 object.__ne__ = function(self,other){
@@ -326,9 +326,6 @@ object.__ne__ = function(self,other){
 
 object.__repr__ = function(self){
     if(self===object) return "<class 'object'>"
-    if(self.__class__===$B.$factory){
-        return "<class '"+self.$dict.__name__+"'>"
-    }
     if(self.__class__===_b_.type) return "<class '"+self.__name__+"'>"
     if(self.__class__.__module__!==undefined){
         return "<"+self.__class__.__module__+"."+self.__class__.__name__+" object>"

@@ -665,7 +665,7 @@ float.__new__ = function(cls){
     if(cls===undefined){
         throw _b_.TypeError.$factory('float.__new__(): not enough arguments')
     }
-    return {__class__:cls.$factory ? cls : cls.$dict}
+    return {__class__: cls}
 }
 
 $B.$FloatClass = $FloatClass
