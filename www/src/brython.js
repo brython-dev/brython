@@ -76,8 +76,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-02-12 08:50:12.016872"
-__BRYTHON__.timestamp=1518421812016
+__BRYTHON__.compiled_date="2018-02-12 09:00:47.874616"
+__BRYTHON__.timestamp=1518422447874
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -6104,7 +6104,7 @@ return res+'>'}
 $B.set_func_names("super","builtins")
 function vars(){var def={},$=$B.args('vars',1,{obj:null},['obj'],arguments,{obj: def},null,null)
 if($.obj===def){return _b_.locals()}else{try{return getattr($.obj,'__dict__')}
-catch(err){if(err.__class__===_b_.AttributeError.$dict){throw _b_.TypeError.$factory("vars() argument must have __dict__ attribute")}
+catch(err){if(err.__class__===_b_.AttributeError){throw _b_.TypeError.$factory("vars() argument must have __dict__ attribute")}
 throw err}}}
 var $Reader={__class__:_b_.type,__name__:'reader'}
 $Reader.__enter__=function(self){return self}
@@ -6193,30 +6193,26 @@ attr+"' is read-only")}else{throw _b_.AttributeError.$factory("'"+klass.__name__
 "' object has no attribute '"+attr+"'")}}
 var True=true
 var False=false
-var $EllipsisDict={__class__:_b_.type,__name__:'ellipsis'}
-$EllipsisDict.__mro__=[object]
-var Ellipsis={$dict: $EllipsisDict,__bool__ : function(){return True},__class__ : $EllipsisDict}
-$EllipsisDict.$factory=Ellipsis
+var ellipsis=$B.make_class("ellipsis",function(){return Ellipsis}
+)
+var Ellipsis={__class__:ellipsis,__bool__ : function(){return True},}
 for(var $key in $B.$comps){
 switch($B.$comps[$key]){case 'ge':
 case 'gt':
 case 'le':
 case 'lt':
-Ellipsis['__'+$B.$comps[$key]+'__']=(function(k){return function(other){throw _b_.TypeError.$factory("unorderable types: ellipsis() "+k+" "+
+ellipsis['__'+$B.$comps[$key]+'__']=(function(k){return function(other){throw _b_.TypeError.$factory("unorderable types: ellipsis() "+k+" "+
 $B.get_class(other).__name__)}})($key)}}
 for(var $func in Ellipsis){if(typeof Ellipsis[$func]==='function'){Ellipsis[$func].__str__=(function(f){return function(){return "<method-wrapper "+f+" of Ellipsis object>"}})($func)}}
-var $FunctionCodeDict={__class__:_b_.type,__name__:'function code'}
-$FunctionCodeDict.__mro__=[object]
-$FunctionCodeDict.$factory={__class__:$B.$factory,$dict:$FunctionCodeDict}
-var $FunctionGlobalsDict={__class:_b_.type,__name__:'function globals'}
-$FunctionGlobalsDict.__mro__=[object]
-$FunctionGlobalsDict.$factory={__class__:$B.$factory,$dict:$FunctionGlobalsDict}
-var Function=$B.Function={__class__:_b_.type,__code__:{__class__:$FunctionCodeDict,__name__:'function code'},__globals__:{__class__:$FunctionGlobalsDict,__name__:'function globals'},__module__: "builtins",__mro__:[object],__name__:'function',$is_class: true}
+$B.set_func_names(ellipsis)
+var FunctionCode=$B.make_class("function code")
+var FunctionGlobals=$B.make_class("function globals")
+var Function=$B.Function={__class__:_b_.type,__code__:{__class__:FunctionCode,__name__:'function code'},__globals__:{__class__:FunctionGlobals,__name__:'function globals'},__module__: "builtins",__mro__:[object],__name__:'function',$is_class: true}
 Function.__dir__=function(self){var infos=self.$infos ||{},attrs=self.$attrs ||{}
 return Object.keys(infos).concat(Object.keys(attrs))}
 Function.__eq__=function(self,other){return self===other}
 Function.__getattribute__=function(self,attr){
-if(self.$infos && self.$infos[attr]!==undefined){if(attr=='__code__'){var res={__class__:$B.$CodeDict}
+if(self.$infos && self.$infos[attr]!==undefined){if(attr=='__code__'){var res={__class__:code}
 for(var attr in self.$infos.__code__){res[attr]=self.$infos.__code__[attr]}
 return res}else if(attr=='__annotations__'){
 return $B.obj_dict(self.$infos[attr])}else{return self.$infos[attr]}}else if(self.$attrs && self.$attrs[attr]!==undefined){return self.$attrs[attr]}else{return _b_.object.__getattribute__(self,attr)}}

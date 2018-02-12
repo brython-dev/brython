@@ -1829,7 +1829,7 @@ function vars(){
     }else{
         try{return getattr($.obj, '__dict__')}
         catch(err){
-            if(err.__class__===_b_.AttributeError.$dict){
+            if(err.__class__===_b_.AttributeError){
                 throw _b_.TypeError.$factory("vars() argument must have __dict__ attribute")
             }
             throw err
@@ -2032,17 +2032,13 @@ function no_set_attr(klass, attr){
 var True = true
 var False = false
 
-var $EllipsisDict = {__class__:_b_.type,
-    __name__:'ellipsis'
-}
-$EllipsisDict.__mro__ = [object]
-
+var ellipsis = $B.make_class("ellipsis",
+    function(){return Ellipsis}
+)
 var Ellipsis = {
-    $dict: $EllipsisDict,
+    __class__:ellipsis,
     __bool__ : function(){return True},
-    __class__ : $EllipsisDict
 }
-$EllipsisDict.$factory = Ellipsis
 
 for(var $key in $B.$comps){ // Ellipsis is not orderable with any type
     switch($B.$comps[$key]) {
@@ -2050,7 +2046,7 @@ for(var $key in $B.$comps){ // Ellipsis is not orderable with any type
       case 'gt':
       case 'le':
       case 'lt':
-        Ellipsis['__'+$B.$comps[$key]+'__']=(function(k){
+        ellipsis['__'+$B.$comps[$key]+'__']=(function(k){
             return function(other){
             throw _b_.TypeError.$factory("unorderable types: ellipsis() "+k+" "+
                 $B.get_class(other).__name__)}
@@ -2066,20 +2062,17 @@ for(var $func in Ellipsis){
     }
 }
 
+$B.set_func_names(ellipsis)
 
 // add attributes to native Function
-var $FunctionCodeDict = {__class__:_b_.type,__name__:'function code'}
-$FunctionCodeDict.__mro__ = [object]
-$FunctionCodeDict.$factory = {__class__:$B.$factory, $dict:$FunctionCodeDict}
+var FunctionCode = $B.make_class("function code")
 
-var $FunctionGlobalsDict = {__class:_b_.type,__name__:'function globals'}
-$FunctionGlobalsDict.__mro__ = [object]
-$FunctionGlobalsDict.$factory = {__class__:$B.$factory, $dict:$FunctionGlobalsDict}
+var FunctionGlobals = $B.make_class("function globals")
 
 var Function = $B.Function = {
     __class__:_b_.type,
-    __code__:{__class__:$FunctionCodeDict,__name__:'function code'},
-    __globals__:{__class__:$FunctionGlobalsDict,__name__:'function globals'},
+    __code__:{__class__:FunctionCode,__name__:'function code'},
+    __globals__:{__class__:FunctionGlobals,__name__:'function globals'},
     __module__: "builtins",
     __mro__: [object],
     __name__:'function',
@@ -2102,7 +2095,7 @@ Function.__getattribute__ = function(self, attr){
     // are stored in self.$infos
     if(self.$infos && self.$infos[attr]!==undefined){
         if(attr=='__code__'){
-            var res = {__class__:$B.$CodeDict}
+            var res = {__class__:code}
             for(var attr in self.$infos.__code__){
                 res[attr]=self.$infos.__code__[attr]
             }
