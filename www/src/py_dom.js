@@ -412,18 +412,15 @@ DOMNode.$factory = function(elt, fromtag){
         }
         // all "else" ... default to old behavior of plain DOMNode wrapping
     }
-
-    // returns the element, enriched with an attribute $brython_id for
-    // equality testing and with all the attributes of Node
-    var res = {}
-    res.$dict = {} // used in getattr
-    res.elt = elt // DOM element
     if(elt['$brython_id']===undefined||elt.nodeType===9){
         // add a unique id for comparisons
         elt.$brython_id='DOM-'+$B.UUID()
     }
-    res.__class__ = DOMNode
-    return res
+    
+    return {
+        __class__: DOMNode,
+        elt: elt
+    }
 }
 
 

@@ -76,8 +76,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-02-12 09:00:47.874616"
-__BRYTHON__.timestamp=1518422447874
+__BRYTHON__.compiled_date="2018-02-12 09:30:02.599693"
+__BRYTHON__.timestamp=1518424202599
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -5462,8 +5462,8 @@ func.$type='classmethod'
 return func}
 )
 $B.set_func_names(classmethod,"builtins")
-var code=$B.make_class("code")
-code.__repr__=code.__str__=function(self){return '<code object '+self.name+', file '+self.filename+'>'}
+var code=$B.code=$B.make_class("code")
+code.__repr__=code.__str__=function(self){return '<code object ' + self.name + ', file ' + self.filename + '>'}
 function compile(){var $=$B.args('compile',6,{source:null,filename:null,mode:null,flags:null,dont_inherit:null,optimize:null},['source','filename','mode','flags','dont_inherit','optimize'],arguments,{flags:0,dont_inherit:false,optimize:-1},null,null)
 var module_name='$exec_' + $B.UUID()
 $B.clear_ns(module_name)
@@ -5706,7 +5706,7 @@ return klass[attr]}
 var mro,attr_func
 if(is_class){attr_func=_b_.type.__getattribute__ }else{attr_func=klass.__getattribute__
 if(attr_func===undefined){var mro=klass.__mro__
-if(mro===undefined){console.log("no mro, klass",klass,klass.__class__===$B.$factory)}
+if(mro===undefined){console.log(obj,attr,"no mro, klass",klass,klass.__class__===$B.$factory)}
 for(var i=0,len=mro.length;i<len;i++){attr_func=mro[i]['__getattribute__']
 if(attr_func!==undefined){break}}}}
 if(typeof attr_func!=='function'){console.log(attr+' is not a function '+attr_func,klass)}
@@ -6283,14 +6283,16 @@ throw exc}
 $B.$IndentationError=function(module,msg,pos){var exc=_b_.IndentationError.$factory(msg)
 $B.$syntax_err_line(exc,module,pos)
 throw exc}
-var $TracebackDict={__class__:_b_.type,__name__:'traceback',$is_class: true}
-$TracebackDict.__getattribute__=function(self,attr){if(self.stack.length==0){alert('no stack',attr)}
+var traceback=$B.make_class("traceback",function(stack){return{
+__class__ : traceback,stack : stack}}
+)
+traceback.__getattribute__=function(self,attr){if(self.stack.length==0){alert('no stack',attr)}
 var last_frame=$B.last(self.stack)
 if(last_frame==undefined){alert('last frame undef ');
 console.log(self.stack,Object.keys(self.stack))}
 var line_info=last_frame[1].$line_info
 switch(attr){case 'tb_frame':
-return frame(self.stack)
+return frame.$factory(self.stack)
 case 'tb_lineno':
 if(line_info===undefined){return -1}
 else{return parseInt(line_info.split(',')[0])}
@@ -6301,26 +6303,11 @@ var src=$B.$py_src[info[1]]
 if(src!==undefined){return src.split('\n')[parseInt(info[0]-1)].trim()}else{return '<unknown>'}}
 case 'tb_next':
 if(self.stack.length==1){return None}
-else{return traceback(self.stack.slice(0,self.stack.length-1))}
+else{return traceback.$factory(self.stack.slice(0,self.stack.length-1))}
 default:
-return $TracebackDict[attr]}}
-$TracebackDict.__mro__=[_b_.object]
-$TracebackDict.__str__=function(self){return '<traceback object>'}
-function traceback(stack){return{__class__ : $TracebackDict,stack : stack}}
-traceback.__class__=$B.$factory
-traceback.$dict=$TracebackDict
-$TracebackDict.$factory=traceback
-var $FrameDict={__class__:_b_.type,__name__:'frame'}
-$FrameDict.__getattr__=function(self,attr){
-if(attr=='f_back'){if(self.$pos>0){return frame(self.$stack,self.$pos-1)}}}
-$FrameDict.__mro__=[_b_.object]
-function to_dict(obj){var res=_b_.dict.$factory()
-var setitem=_b_.dict.__setitem__
-for(var attr in obj){if(attr.charAt(0)=='$'){continue}
-setitem(res,attr,obj[attr])}
-return res}
-function frame(stack,pos){var fs=stack
-var res={__class__:$FrameDict,f_builtins :{},
+return traceback[attr]}}
+var frame=$B.make_class("frame",function(stack,pos){var fs=stack
+var res={__class__: frame,f_builtins :{},
 $stack: stack,}
 if(pos===undefined){pos=fs.length-1}
 res.$pos=pos
@@ -6331,16 +6318,17 @@ throw err}
 res.f_globals=$B.obj_dict(_frame[3])
 if(_frame[1].$line_info===undefined){res.f_lineno=-1}
 else{res.f_lineno=parseInt(_frame[1].$line_info.split(',')[0])}
-res.f_code={__class__:$B.$CodeDict,co_code:None,
+res.f_code={__class__:$B.code,co_code:None,
 co_name: locals_id,
 co_filename: _frame[3].__name__ }
 if(res.f_code.co_filename===undefined){console.log(_frame[0],_frame[1],_frame[2],_frame[3]);
 alert('no cofilename')}}
 return res}
-frame.__class__=$B.$factory
-frame.$dict=$FrameDict
-$FrameDict.$factory=frame
-$B._frame=frame
+)
+frame.__getattr__=function(self,attr){
+if(attr=='f_back'){if(self.$pos>0){return frame.$factory(self.$stack,self.$pos-1)}}}
+$B.set_func_names("frame","builtins")
+$B._frame=frame 
 var BaseException=_b_.BaseException={__class__:_b_.type,__bases__ :[_b_.object],__module__:'builtins',__mro__:[_b_.object],__name__:'BaseException',args:[],$is_class: true}
 BaseException.__init__=function(self){var args=arguments[1]===undefined ?[]:[arguments[1]]
 self.args=_b_.tuple.$factory(args)}
@@ -6373,7 +6361,7 @@ if(line)line=line.replace(/^[ ]+/g,'')
 if(line===undefined){console.log('line undef...',line_info,$B.$py_src[line_info[1]])}
 info +='\n    '+line}
 return info}else if(attr=='traceback'){
-return traceback(self.$stack)}else{throw _b_.AttributeError.$factory(self.__class__.__name__+
+return traceback.$factory(self.$stack)}else{throw _b_.AttributeError.$factory(self.__class__.__name__+
 "has no attribute '"+attr+"'")}}
 BaseException.__str__=function(self){return self.args[0]}
 BaseException.with_traceback=function(self,tb){self.traceback=tb
@@ -10203,7 +10191,7 @@ var si=dict.__setitem__
 while(i-->0)si(self,obj[i-1][0],obj[i-1][1])
 return $N}else if(obj.$nat===undefined && isinstance(obj,dict)){$copy_dict(self,obj)
 return $N}
-if(obj.__class__===$B.JSObject.$dict){
+if(obj.__class__===$B.JSObject){
 self.$jsobj=obj.js
 return $N}}
 var $ns=$B.args('dict',0,{},[],args,{},'args','kw')
@@ -10386,16 +10374,12 @@ $B.$dict_contains=dict.__contains__
 $B.$dict_items=function(d){return new $item_generator(d).as_list()}
 $B.$copy_dict=$copy_dict 
 $B.$dict_get_copy=dict.copy 
-var mappingproxyDict={__class__ : _b_.type,__name__ : "mappingproxy"}
-mappingproxyDict.__mro__=[object]
-mappingproxyDict.__setitem__=function(){throw _b_.TypeError.$factory("'mappingproxy' object does not support item assignment")}
-function mappingproxy(obj){var res=obj_dict(obj)
-res.__class__=mappingproxyDict
+var mappingproxy=$B.make_class("mappingproxy",function(obj){var res=obj_dict(obj)
+res.__class__=mappingproxy
 return res}
-mappingproxy.__class__=$B.$factory
-mappingproxy.$dict=mappingproxyDict
-mappingproxyDict.$factory=mappingproxy
-$B.mappingproxy=mappingproxy
+)
+mappingproxy.__setitem__=function(){throw _b_.TypeError.$factory("'mappingproxy' object does not support item assignment")}
+$B.set_func_names(mappingproxy,"builtins")
 function jsobj2dict(x){var d=dict.$factory()
 for(var attr in x){if(attr.charAt(0)!='$' && attr!=='__class__'){if(x[attr].$jsobj===x){d.$string_dict[attr]=d}else{d.$string_dict[attr]=x[attr]}}}
 return d}
@@ -10807,13 +10791,10 @@ if(tdict !==undefined){var klass=tdict[elt.tagName]
 if(klass !==undefined){
 klass.$elt_wrap=elt 
 return klass.$factory()}}}}
-var res={}
-res.$dict={}
-res.elt=elt 
 if(elt['$brython_id']===undefined||elt.nodeType===9){
 elt.$brython_id='DOM-'+$B.UUID()}
-res.__class__=DOMNode
-return res}
+return{
+__class__: DOMNode,elt: elt}}
 DOMNode.__add__=function(self,other){
 var res=TagSum.$factory()
 res.children=[self],pos=1
@@ -11573,7 +11554,7 @@ dict.__mro__=[$B.DOMNode,$B.builtins.object]
 dict.__new__=function(cls){
 cls=cls.__class__===$B.$factory ? cls.$dict : cls 
 if(cls.$elt_wrap !==undefined){
-var elt=cls.$dict.$elt_wrap 
+var elt=cls.$elt_wrap 
 cls.$elt_wrap=undefined 
 var res=$B.DOMNode.$factory(elt,true)
 res._wrapped=true }else{
@@ -11623,7 +11604,7 @@ eval(content)},NULL: null,py2js: function(src,module_name){if(module_name===unde
 return $B.py2js(src,module_name,module_name,'__builtins__').to_js()},pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},jsobj2pyobj:function(obj){return $B.jsobj2pyobj(obj)},UNDEFINED: undefined}
 var _b_=$B.builtins
 modules['_sys']={__file__:$B.brython_path+'/libs/_sys.js',
-Getframe : function(depth){return $B._frame($B.frames_stack,depth)},modules:{
+Getframe : function(depth){return $B._frame.$factory($B.frames_stack,depth)},modules:{
 __get__: function(){return $B.obj_dict($B.imported)},__set__: function(self,obj,value){throw _b_.TypeError.$factory("Read only property 'sys.modules'")}},path:{
 __get__: function(){return $B.path},__set__: function(self,obj,value){$B.path=value;}},meta_path:{
 __get__: function(){return $B.meta_path},__set__: function(self,obj,value){$B.meta_path=value }},path_hooks:{
@@ -11644,8 +11625,7 @@ for(var attr in modules){load(attr,modules[attr])}
 if(! $B.isa_web_worker)modules['browser'].html=modules['browser.html'];
 var _b_=$B.builtins
 _b_.__builtins__=$B.$ModuleDict.$factory('__builtins__','Python builtins')
-for(var attr in $B.builtins){_b_.__builtins__[attr]=_b_[attr]
-if(_b_[attr].__class__===$B.$factory){_b_[attr].$dict.__module__='builtins'}}
+for(var attr in $B.builtins){_b_.__builtins__[attr]=_b_[attr]}
 _b_.__builtins__.__setattr__=function(attr,value){_b_[attr]=value}
 $B.bound.__builtins__.__builtins__=_b_.__builtins__})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins

@@ -4,7 +4,7 @@ var $module=(function($B){
         // Called "Getframe" because "_getframe" wouldn't be imported in
         // sys.py with "from _sys import *"
         Getframe : function(depth){
-            return $B._frame($B.frames_stack, depth)
+            return $B._frame.$factory($B.frames_stack, depth)
         },
         modules :
             {'__get__':function(){

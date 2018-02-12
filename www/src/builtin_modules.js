@@ -155,7 +155,7 @@
                     cls = cls.__class__ === $B.$factory ? cls.$dict : cls // XXX temporary
                     if(cls.$elt_wrap !== undefined) {
                         // DOMNode is piggybacking on us to autogenerate a node
-                        var elt = cls.$dict.$elt_wrap  // keep track of the to wrap element
+                        var elt = cls.$elt_wrap  // keep track of the to wrap element
                         cls.$elt_wrap = undefined  // nullify for later calls
                         var res = $B.DOMNode.$factory(elt, true)  // generate the wrapped DOMNode
                         res._wrapped = true  // marked as wrapped
@@ -300,7 +300,7 @@
         // Called "Getframe" because "_getframe" wouldn't be imported in
         // sys.py with "from _sys import *"
         Getframe : function(depth){
-            return $B._frame($B.frames_stack, depth)
+            return $B._frame.$factory($B.frames_stack, depth)
         },
         modules: {
             __get__: function(){
@@ -375,9 +375,6 @@
         'Python builtins')
     for(var attr in $B.builtins){
         _b_.__builtins__[attr] = _b_[attr]
-        if(_b_[attr].__class__===$B.$factory){
-            _b_[attr].$dict.__module__ = 'builtins'
-        }
     }
     _b_.__builtins__.__setattr__ = function(attr, value){
         _b_[attr] = value

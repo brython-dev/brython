@@ -317,7 +317,7 @@ dict.__init__ = function(self){
             return $N
         }
 
-        if(obj.__class__===$B.JSObject.$dict){
+        if(obj.__class__===$B.JSObject){
             // convert a JSObject into a Python dictionary
 
             // Attribute $jsobj is used to update the original JS object
@@ -749,26 +749,19 @@ $B.$dict_get_copy = dict.copy  // return a shallow copy
 
 
 // Class for attribute __dict__ of classes
-var mappingproxyDict = {
-    __class__ : _b_.type,
-    __name__ : "mappingproxy"
-}
-mappingproxyDict.__mro__ = [object]
+var mappingproxy = $B.make_class("mappingproxy",
+    function(obj){
+        var res = obj_dict(obj)
+        res.__class__ = mappingproxy
+        return res
+    }
+)
 
-mappingproxyDict.__setitem__ = function(){
+mappingproxy.__setitem__ = function(){
     throw _b_.TypeError.$factory("'mappingproxy' object does not support item assignment")
 }
 
-
-function mappingproxy(obj){
-    var res = obj_dict(obj)
-    res.__class__ = mappingproxyDict
-    return res
-}
-mappingproxy.__class__ = $B.$factory
-mappingproxy.$dict = mappingproxyDict
-mappingproxyDict.$factory = mappingproxy
-$B.mappingproxy = mappingproxy
+$B.set_func_names(mappingproxy, "builtins")
 
 function jsobj2dict(x){
     var d = dict.$factory()

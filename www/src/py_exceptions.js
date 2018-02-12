@@ -73,12 +73,16 @@ $B.$IndentationError = function(module,msg,pos) {
 
 
 // class of traceback objects
-var $TracebackDict = {
-    __class__:_b_.type,
-    __name__:'traceback',
-    $is_class: true
-}
-$TracebackDict.__getattribute__ = function(self, attr){
+var traceback = $B.make_class("traceback",
+    function(stack){
+        return {
+            __class__ : traceback,
+            stack : stack
+        }
+    }
+)
+
+traceback.__getattribute__ = function(self, attr){
     if(self.stack.length==0){alert('no stack', attr)}
     var last_frame = $B.last(self.stack)
     if(last_frame==undefined){
@@ -89,7 +93,7 @@ $TracebackDict.__getattribute__ = function(self, attr){
 
     switch(attr){
         case 'tb_frame':
-            return frame(self.stack)
+            return frame.$factory(self.stack)
         case 'tb_lineno':
             if(line_info===undefined){return -1}
             else{return parseInt(line_info.split(',')[0])}
@@ -104,93 +108,64 @@ $TracebackDict.__getattribute__ = function(self, attr){
             }
         case 'tb_next':
             if(self.stack.length==1){return None}
-            else{return traceback(self.stack.slice(0, self.stack.length-1))}
+            else{return traceback.$factory(self.stack.slice(0, self.stack.length-1))}
         default:
-            return $TracebackDict[attr]
+            return traceback[attr]
     }
 }
 
-$TracebackDict.__mro__ = [_b_.object]
-
-$TracebackDict.__str__ = function(self){return '<traceback object>'}
-
-function traceback(stack) {
-  return {__class__ : $TracebackDict,
-      stack : stack
-  }
-}
-
-traceback.__class__ = $B.$factory
-traceback.$dict = $TracebackDict
-$TracebackDict.$factory = traceback
-
 // class of frame objects
-var $FrameDict = {
-    __class__:_b_.type,
-    __name__:'frame'
-}
+var frame = $B.make_class("frame",
+    function(stack, pos){
+        var fs = stack
+        var res = {
+            __class__: frame,
+            f_builtins : {}, // XXX fix me
+            $stack: stack,
+        }
+        if(pos===undefined){pos = fs.length-1}
+        res.$pos = pos
+        if(fs.length){
+            var _frame = fs[pos]
+            var locals_id = _frame[0]
+            try{
+                res.f_locals = $B.obj_dict(_frame[1])
+            }catch(err){
+                console.log('err '+err)
+                throw err
+            }
+            res.f_globals = $B.obj_dict(_frame[3])
 
-$FrameDict.__getattr__ = function(self, attr){
+            if(_frame[1].$line_info === undefined){res.f_lineno=-1}
+            else{res.f_lineno = parseInt(_frame[1].$line_info.split(',')[0])}
+
+            res.f_code = {__class__:$B.code,
+                co_code:None, // XXX fix me
+                co_name: locals_id, // idem
+                co_filename: _frame[3].__name__ // idem
+            }
+            if(res.f_code.co_filename===undefined){
+                console.log(_frame[0],_frame[1],_frame[2],_frame[3]);
+                alert('no cofilename')
+            }
+        }
+        return res
+    }
+)
+
+frame.__getattr__ = function(self, attr){
     // Used for f_back to avoid computing it when the frame object
     // is initialised
     if(attr=='f_back'){
         if(self.$pos>0){
-            return frame(self.$stack, self.$pos-1)
+            return frame.$factory(self.$stack, self.$pos-1)
         }
     }
 }
 
-$FrameDict.__mro__ = [_b_.object]
+$B.set_func_names("frame", "builtins")
+$B._frame = frame // used in builtin_modules.js
 
-function to_dict(obj){
-    var res = _b_.dict.$factory()
-    var setitem=_b_.dict.__setitem__
-    for(var attr in obj){
-        if(attr.charAt(0)=='$'){continue}
-        setitem(res, attr, obj[attr])
-    }
-    return res
-}
-
-function frame(stack, pos){
-    var fs = stack
-    var res = {__class__:$FrameDict,
-        f_builtins : {}, // XXX fix me
-        $stack: stack,
-    }
-    if(pos===undefined){pos = fs.length-1}
-    res.$pos = pos
-    if(fs.length){
-        var _frame = fs[pos]
-        var locals_id = _frame[0]
-        try{
-            res.f_locals = $B.obj_dict(_frame[1])
-        }catch(err){
-            console.log('err '+err)
-            throw err
-        }
-        res.f_globals = $B.obj_dict(_frame[3])
-
-        if(_frame[1].$line_info === undefined){res.f_lineno=-1}
-        else{res.f_lineno = parseInt(_frame[1].$line_info.split(',')[0])}
-
-        res.f_code = {__class__:$B.$CodeDict,
-            co_code:None, // XXX fix me
-            co_name: locals_id, // idem
-            co_filename: _frame[3].__name__ // idem
-        }
-        if(res.f_code.co_filename===undefined){
-            console.log(_frame[0],_frame[1],_frame[2],_frame[3]);
-            alert('no cofilename')
-        }
-    }
-    return res
-}
-
-frame.__class__ = $B.$factory
-frame.$dict = $FrameDict
-$FrameDict.$factory = frame
-$B._frame=frame
 
 // built-in exceptions
 
@@ -267,7 +242,7 @@ BaseException.__getattr__ = function(self, attr){
 
     }else if(attr=='traceback'){
         // Return traceback object
-        return traceback(self.$stack)
+        return traceback.$factory(self.$stack)
     }else{
         throw _b_.AttributeError.$factory(self.__class__.__name__+
             "has no attribute '"+attr+"'")

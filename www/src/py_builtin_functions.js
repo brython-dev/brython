@@ -197,10 +197,10 @@ var classmethod = $B.make_class("classmethod",
 $B.set_func_names(classmethod, "builtins")
 
 //compile() (built in function)
-var code = $B.make_class("code")
+var code = $B.code = $B.make_class("code")
 
 code.__repr__ = code.__str__ = function(self){
-    return '<code object '+self.name+', file '+self.filename+'>'
+    return '<code object ' + self.name + ', file ' + self.filename + '>'
 }
 
 function compile() {
@@ -822,7 +822,7 @@ $B.$getattr = function(obj, attr, _default){
         attr_func = klass.__getattribute__
         if(attr_func===undefined){
             var mro = klass.__mro__
-            if(mro===undefined){console.log("no mro, klass", klass, klass.__class__===$B.$factory)}
+            if(mro===undefined){console.log(obj, attr, "no mro, klass", klass, klass.__class__===$B.$factory)}
             for(var i=0, len=mro.length;i<len;i++){
                 attr_func = mro[i]['__getattribute__']
                 if(attr_func!==undefined){break}
