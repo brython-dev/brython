@@ -1468,7 +1468,8 @@ function $CallCtx(context){
                           "object", "memoryview", "int", "float", "str",
                           "list", "tuple", "dict", "set", "frozenset",
                           "range", "slice", "zip", "bool", "type",
-                          "classmethod", "staticmethod"]
+                          "classmethod", "staticmethod", "enumerate",
+                          "reversed", "property", "$$super", "zip"]
                       if($B.builtin_funcs[this.func.value]!==undefined &&
                               new_style.indexOf(this.func.value) == -1 // XXX temporary
                           ){

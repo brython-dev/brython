@@ -76,8 +76,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-02-12 07:57:49.108654"
-__BRYTHON__.timestamp=1518418669108
+__BRYTHON__.compiled_date="2018-02-12 08:50:12.016872"
+__BRYTHON__.timestamp=1518421812016
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -778,7 +778,7 @@ if(star_args){
 args_str='.apply(null,'+args_str+')'}else{args_str='('+args_str+')'}
 var default_res="$B.$call("+func_js+")" + args_str
 if(this.tree.length>-1){if(this.func.type=='id'){if(this.func.is_builtin){
-var new_style=["complex","bytes","bytearray","object","memoryview","int","float","str","list","tuple","dict","set","frozenset","range","slice","zip","bool","type","classmethod","staticmethod"]
+var new_style=["complex","bytes","bytearray","object","memoryview","int","float","str","list","tuple","dict","set","frozenset","range","slice","zip","bool","type","classmethod","staticmethod","enumerate","reversed","property","$$super","zip"]
 if($B.builtin_funcs[this.func.value]!==undefined &&
 new_style.indexOf(this.func.value)==-1 
 ){return func_js+args_str}}else{var bound_obj=this.func.found
@@ -4431,7 +4431,7 @@ if(attr==trace){console.log("cherche dans mro",mro)}
 for(var i=0,_len_i=mro.length;i < _len_i;i++){res=check(obj,mro[i],attr)
 if(res!==undefined){break}}}}else{if(res.__set__===undefined){
 return res}}
-if(res!==undefined){if(res.__class__===_b_.property.$dict){return res.__get__(res,obj,klass)}
+if(res!==undefined){if(res.__class__===_b_.property){return res.__get__(res,obj,klass)}
 var get=res.__get__
 if(get===undefined && res.__class__){var get=res.__class__.__get__
 for(var i=0;i<res.__class__.__mro__.length && get===undefined;i++){get=res.__class__.__mro__[i].__get__}}
@@ -4514,11 +4514,9 @@ object.$factory=function(){var res={__class__:object},args=[res].concat(Array.pr
 object.__init__.apply(null,args)
 return res}
 $B.set_func_names(object,"builtins")
-$B.make_class=function(class_obj){
-var A={__class__: _b_.type,__mro__:[object],__name__: class_obj.name,$is_class: true}
-A.$factory=function(){var res={__class__:A}
-if(class_obj.init){class_obj.init(res,...arguments)}
-return res}
+$B.make_class=function(name,factory){
+var A={__class__: _b_.type,__mro__:[object],__name__: name,$is_class: true}
+A.$factory=factory
 return A}
 return object})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins
@@ -5458,24 +5456,20 @@ function chr(i){check_nb_args('chr',1,arguments.length)
 check_no_kw('chr',i)
 if(i < 0 ||i > 1114111)_b_.ValueError.$factory('Outside valid range')
 return String.fromCharCode(i)}
-var classmethod=$B.make_class("classmethod")
-classmethod.$factory=function(func){check_nb_args('classmethod',1,arguments.length)
+var classmethod=$B.make_class("classmethod",function(func){check_nb_args('classmethod',1,arguments.length)
 check_no_kw('classmethod',func)
 func.$type='classmethod'
 return func}
+)
 $B.set_func_names(classmethod,"builtins")
-$B.$CodeObjectDict={__class__:_b_.type,__name__:'code',__repr__:function(self){return '<code object '+self.name+', file '+self.filename+'>'},}
-$B.$CodeObjectDict.__str__=$B.$CodeObjectDict.__repr__
-$B.$CodeObjectDict.__mro__=[object]
+var code=$B.make_class("code")
+code.__repr__=code.__str__=function(self){return '<code object '+self.name+', file '+self.filename+'>'}
 function compile(){var $=$B.args('compile',6,{source:null,filename:null,mode:null,flags:null,dont_inherit:null,optimize:null},['source','filename','mode','flags','dont_inherit','optimize'],arguments,{flags:0,dont_inherit:false,optimize:-1},null,null)
 var module_name='$exec_' + $B.UUID()
 $B.clear_ns(module_name)
-$.__class__=$B.$CodeObjectDict
+$.__class__=code
 $.co_flags=$.flags
 return $}
-compile.__class__=$B.factory
-$B.$CodeObjectDict.$factory=compile
-compile.$dict=$B.$CodeObjectDict
 var __debug__=$B.debug>0
 function delattr(obj,attr){
 check_no_kw('delattr',obj,attr)
@@ -5520,18 +5514,15 @@ function divmod(x,y){check_no_kw('divmod',x,y)
 check_nb_args('divmod',2,arguments.length)
 var klass=x.__class__ ||$B.get_class(x)
 return _b_.tuple.$factory([getattr(klass,'__floordiv__')(x,y),getattr(klass,'__mod__')(x,y)])}
-var $EnumerateDict={__class__:_b_.type,__name__:'enumerate'}
-$EnumerateDict.__mro__=[object]
-function enumerate(){var $ns=$B.args("enumerate",2,{iterable:null,start:null},['iterable','start'],arguments,{start:0},null,null)
+var enumerate=$B.make_class("enumerate",function(){var $ns=$B.args("enumerate",2,{iterable:null,start:null},['iterable','start'],arguments,{start:0},null,null)
 var _iter=iter($ns["iterable"])
 var _start=$ns["start"]
-var res={__class__:$EnumerateDict,__getattr__:function(attr){return res[attr]},__iter__:function(){return res},__name__:'enumerate iterator',__next__:function(){res.counter++
+var res={__class__:enumerate,__getattr__:function(attr){return res[attr]},__iter__:function(){return res},__name__:'enumerate iterator',__next__:function(){res.counter++
 return _b_.tuple.$factory([res.counter,next(_iter)])},__repr__:function(){return "<enumerate object>"},__str__:function(){return "<enumerate object>"},counter:_start-1}
 for(var attr in res){if(typeof res[attr]==='function' && attr!=="__class__"){res[attr].__str__=(function(x){return function(){return "<method wrapper '"+x+"' of enumerate object>"}})(attr)}}
 return res}
-enumerate.__class__=$B.$factory
-enumerate.$dict=$EnumerateDict
-$EnumerateDict.$factory=enumerate
+)
+$B.set_func_names("enumerate","builtins")
 function $eval(src,_globals,_locals){function from_alias(attr){if(attr.substr(0,2)=='$$' && $B.aliased_names[attr.substr(2)]){return attr.substr(2)}
 return attr}
 function to_alias(attr){if($B.aliased_names[attr]){return '$$'+attr}
@@ -5540,7 +5531,7 @@ var current_frame=$B.frames_stack[$B.frames_stack.length-1]
 if(current_frame!==undefined){var current_locals_id=current_frame[0].replace(/\./,'_'),current_globals_id=current_frame[2].replace(/\./,'_')}
 var stack_len=$B.frames_stack.length
 var is_exec=arguments[3]=='exec',leave=false
-if(src.__class__===$B.$CodeObjectDict){is_exec=src.mode=="exec"
+if(src.__class__===code){is_exec=src.mode=="exec"
 src=src.source}else if(typeof src !=='string'){throw _b_.TypeError.$factory("eval() arg 1 must be a string, bytes "+
 "or code object")}
 var globals_id='$exec_'+$B.UUID(),locals_id,parent_block_id,ce=$B.current_exception
@@ -5830,10 +5821,9 @@ klass.__mro__.indexOf(classinfo1)>-1){return true}}
 try{var sch=getattr(classinfo1,'__subclasscheck__')}catch(err){if(err.__class__===_b_.AttributeError){return false}
 throw err}
 return sch(klass)}
-var iterator_class=$B.make_class({name:'iterator',init:function(self,getitem,len){self.getitem=getitem
-self.len=len
-self.counter=-1}})
-iterator_class.__module__="builtins"
+var iterator_class=$B.make_class("iterator",function(getitem,len){return{
+__class__: iterator_class,getitem: getitem,len: len,counter: -1}}
+)
 iterator_class.__next__=function(self){self.counter++
 if(self.len!==null && self.counter==self.len){throw _b_.StopIteration.$factory('')}
 try{return self.getitem(self.counter)}
@@ -5905,19 +5895,13 @@ return res}}
 function max(){var args=[],pos=0
 for(var i=0;i<arguments.length;i++){args[pos++]=arguments[i]}
 return $extreme(args,'__gt__')}
-var memoryview=$B.make_class({name:'memoryview',init:function(self,obj){check_no_kw('memoryview',obj)
-check_nb_args('memoryview',2,arguments.length)
-if($B.get_class(obj).$buffer_protocol){self.obj=obj
-self.format='B'
-self.itemsize=1
-self.ndim=1
-self.shape=_b_.tuple.$factory([self.obj.source.length])
-self.strides=_b_.tuple.$factory([1])
-self.suboffsets=_b_.tuple.$factory([])
-self.c_contiguous=true
-self.f_contiguous=true
-self.contiguous=true}else{throw _b_.TypeError.$factory("memoryview: a bytes-like object "+
-"is required, not '"+$B.get_class(obj).__name__+"'")}}})
+var memoryview=$B.make_class('memoryview',function(obj){check_no_kw('memoryview',obj)
+check_nb_args('memoryview',1,arguments.length)
+if($B.get_class(obj).$buffer_protocol){return{
+__class__: memoryview,obj: obj,
+format: 'B',itemsize: 1,ndim: 1,shape: _b_.tuple.$factory([obj.source.length]),strides: _b_.tuple.$factory([1]),suboffsets: _b_.tuple.$factory([]),c_contiguous: true,f_contiguous: true,contiguous: true}}else{throw _b_.TypeError.$factory("memoryview: a bytes-like object "+
+"is required, not '"+$B.get_class(obj).__name__+"'")}}
+)
 memoryview.__eq__=function(self,other){if(other.__class__!==memoryview){return false}
 return getattr(self.obj,'__eq__')(other.obj)}
 memoryview.__name__="memory"
@@ -5929,6 +5913,7 @@ for(var i=0,len=bytes.source.length;i<len;i++){res +=bytes.source[i].toString(16
 return res}
 memoryview.tobytes=function(self){return _b_.bytes.$factory(self.obj)}
 memoryview.tolist=function(self){return _b_.list.$factory(_b_.bytes.$factory(self.obj))}
+$B.set_func_names("memoryview","builtins")
 function min(){var args=[],pos=0
 for(var i=0;i<arguments.length;i++){args[pos++]=arguments[i]}
 return $extreme(args,'__lt__')}
@@ -5938,7 +5923,10 @@ var ga=getattr(obj,'__next__')
 if(ga!==undefined){return $B.$call(ga)()}
 throw _b_.TypeError.$factory("'"+$B.get_class(obj).__name__+
 "' object is not an iterator")}
-var $NotImplemented=$B.make_class({__name__:"NotImplementedClass"}),NotImplemented=$NotImplemented.$factory()
+var NotImplementedType=$B.make_class("NotImplementedType",function(){return NotImplemented}
+)
+NotImplementedType.__repr__=NotImplementedType.__str__=function(){return "NotImplemented"}
+var NotImplemented={__class__: NotImplementedType,}
 function $not(obj){return !$B.$bool(obj)}
 function oct(x){return $builtin_base_convert_helper(x,8)}
 function ord(c){check_no_kw('ord',c)
@@ -5950,8 +5938,8 @@ switch($B.get_class(c)){case _b_.str:
 if(c.length==1)return c.charCodeAt(0)
 throw _b_.TypeError.$factory('ord() expected a character, but string of length ' +
 c.length + ' found')
-case _b_.bytes.$dict:
-case _b_.bytearray.$dict:
+case _b_.bytes:
+case _b_.bytearray:
 if(c.source.length==1)return c.source[0]
 throw _b_.TypeError.$factory('ord() expected a character, but string of length ' +
 c.source.length + ' found')
@@ -5972,23 +5960,19 @@ getattr(file,'write')(args.map(_b_.str.$factory).join(sep)+end)
 return None}
 $print.__name__='print'
 $print.is_func=true
-var $PropertyDict={__class__ : _b_.type,__name__ : 'property'}
-$PropertyDict.__mro__=[object]
-$B.$PropertyDict=$PropertyDict
-function property(fget,fset,fdel,doc){var p={__class__ : $PropertyDict,__doc__ : doc ||"",$type:fget.$type,fget:fget,fset:fset,fdel:fdel,toString:function(){return '<property>'}}
+var property=$B.make_class("property",function(fget,fset,fdel,doc){var p={__class__ : property,__doc__ : doc ||"",$type:fget.$type,fget:fget,fset:fset,fdel:fdel,toString:function(){return '<property>'}}
 p.__get__=function(self,obj,objtype){if(obj===undefined)return self
 if(self.fget===undefined)throw _b_.AttributeError.$factory("unreadable attribute")
 return $B.$call(self.fget)(obj)}
 if(fset!==undefined){p.__set__=function(self,obj,value){if(self.fset===undefined)throw _b_.AttributeError.$factory("can't set attribute")
 getattr(self.fset,'__call__')(obj,value)}}
 p.__delete__=fdel;
-p.getter=function(fget){return property(fget,p.fset,p.fdel,p.__doc__)}
-p.setter=function(fset){return property(p.fget,fset,p.fdel,p.__doc__)}
-p.deleter=function(fdel){return property(p.fget,p.fset,fdel,p.__doc__)}
+p.getter=function(fget){return property.$factory(fget,p.fset,p.fdel,p.__doc__)}
+p.setter=function(fset){return property.$factory(p.fget,fset,p.fdel,p.__doc__)}
+p.deleter=function(fdel){return property.$factory(p.fget,p.fset,fdel,p.__doc__)}
 return p}
-property.__class__=$B.$factory
-property.$dict=$PropertyDict
-$PropertyDict.$factory=property
+)
+$B.set_func_names("property","builtins")
 function repr(obj){check_no_kw('repr',obj)
 check_nb_args('repr',1,arguments.length)
 if(obj.__class__===$B.$factory){
@@ -5999,24 +5983,20 @@ return func(obj)}
 var func=getattr(obj,'__repr__')
 if(func!==undefined){return $B.$call(func)()}
 throw _b_.AttributeError.$factory("object has no attribute __repr__")}
-var $ReversedDict={__class__:_b_.type,__name__:'reversed'}
-$ReversedDict.__mro__=[object]
-$ReversedDict.__iter__=function(self){return self}
-$ReversedDict.__next__=function(self){self.$counter--
-if(self.$counter<0)throw _b_.StopIteration.$factory('')
-return self.getter(self.$counter)}
-function reversed(seq){
+var reversed=$B.make_class("reversed",function(seq){
 check_no_kw('reversed',seq)
 check_nb_args('reversed',1,arguments.length)
 var ce=$B.current_exception
 try{return getattr(seq,'__reversed__')()}
 catch(err){if(err.__name__!='AttributeError'){throw err}}
 $B.current_exception=ce
-try{var res={__class__:$ReversedDict,$counter : getattr(seq,'__len__')(),getter:getattr(seq,'__getitem__')}
+try{var res={__class__:reversed,$counter : getattr(seq,'__len__')(),getter:getattr(seq,'__getitem__')}
 return res}catch(err){throw _b_.TypeError.$factory("argument to reversed() must be a sequence")}}
-reversed.__class__=$B.$factory
-reversed.$dict=$ReversedDict
-$ReversedDict.$factory=reversed
+)
+reversed.__iter__=function(self){return self}
+reversed.__next__=function(self){self.$counter--
+if(self.$counter<0)throw _b_.StopIteration.$factory('')
+return self.getter(self.$counter)}
 function round(arg,n){var $=$B.args('round',2,{number:null,ndigits:null},['number','ndigits'],arguments,{ndigits: None},null,null),arg=$.number,n=$.ndigits
 if(!isinstance(arg,[_b_.int,_b_.float])){if(!hasattr(arg,'__round__'))
 throw _b_.TypeError.$factory("type "+arg.__class__+
@@ -6041,7 +6021,7 @@ if($B.aliased_names[attr]){attr='$$' + attr}else if(attr.substr(0,2)=='$$' && $B
 else if(attr=='__XXXclass__'){
 return None}else if(attr=='__dict__'){
 if(!value.__class__===_b_.dict){throw _b_.TypeError.$factory("__dict__ must be set to a dictionary, " +
-"not a '"+value.__class__.$dict.__name+"'")}
+"not a '"+value.__class__.__name+"'")}
 for(var attr in obj){if(attr !=="__class__"){delete obj[attr]}}
 for(var attr in value.$string_dict){obj[attr]=value.$string_dict[attr]}
 return None}
@@ -6088,9 +6068,9 @@ var _list=_b_.list.$factory(iter($.iterable)),args=[_list]
 for(var i=1;i<arguments.length;i++){args.push(arguments[i])}
 _b_.list.sort.apply(null,args)
 return _list}
-var staticmethod=$B.make_class("staticmethod")
-staticmethod.$factory=function(func){func.$type='staticmethod'
+var staticmethod=$B.make_class("staticmethod",function(func){func.$type='staticmethod'
 return func}
+)
 $B.set_func_names("staticmethod","builtins")
 function sum(iterable,start){var $=$B.args('sum',2,{iterable:null,start:null},['iterable','start'],arguments,{start: 0},null,null),iterable=$.iterable,start=$.start
 if(start===undefined){start=0}else{
@@ -6101,15 +6081,16 @@ while(1){try{var _item=next(iterable)
 res=getattr(res,'__add__')(_item)}catch(err){if(err.__name__==='StopIteration'){$B.current_exception=ce
 break}else{throw err}}}
 return res}
-var $SuperDict={__class__:_b_.type,__name__:'super'}
-$SuperDict.__getattribute__=function(self,attr){var mro=self.__thisclass__.__mro__,res
+var $$super=$B.make_class("super",function(_type1,_type2){return{__class__:$$super,__thisclass__:_type1.__class__===$B.$factory ? _type1.$dict : _type1,__self_class__:(_type2 ||None)}}
+)
+$$super.__getattribute__=function(self,attr){var mro=self.__thisclass__.__mro__,res
 var sc=self.__self_class__
 if(sc!==None){if(sc.__class__!==$B.$factory && !sc.$is_class){sc=sc.__class__}
 var sc_mro=[sc].concat(sc.__mro__)
 for(i=0;i<sc_mro.length;i++){if(sc_mro[i]===self.__thisclass__){mro=sc_mro.slice(i+1)
 break}}}
 if(attr=="__repr__" ||attr=="__str__"){
-return function(){return $SuperDict[attr](self)}}
+return function(){return $$super[attr](self)}}
 var f=_b_.type.__getattribute__(mro[0],attr)
 if(f.$type=="staticmethod"){return f}
 else{var method=function(){return f(self.__self_class__,...arguments)}
@@ -6117,15 +6098,10 @@ method.__class__=$B.method
 method.$infos={__self__: self.__self_class__,__name__: attr,__module__: f.$infos.__module__,__qualname__: self.__thisclass__.__name__+"."+attr}
 return method}
 throw _b_.AttributeError.$factory("object 'super' has no attribute '"+attr+"'")}
-$SuperDict.__mro__=[object]
-$SuperDict.__repr__=$SuperDict.__str__=function(self){var res="<super: <class '"+self.__thisclass__.__name__+"'>"
+$$super.__repr__=$$super.__str__=function(self){var res="<super: <class '"+self.__thisclass__.__name__+"'>"
 if(self.__self_class__!==undefined){res +=', <'+self.__self_class__.__class__.__name__+' object>'}
 return res+'>'}
-function $$super(_type1,_type2){return{__class__:$SuperDict,__thisclass__:_type1.__class__===$B.$factory ? _type1.$dict : _type1,__self_class__:(_type2 ||None)}}
-$$super.$dict=$SuperDict
-$$super.__class__=$B.$factory
-$SuperDict.$factory=$$super
-$$super.$is_func=true
+$B.set_func_names("super","builtins")
 function vars(){var def={},$=$B.args('vars',1,{obj:null},['obj'],arguments,{obj: def},null,null)
 if($.obj===def){return _b_.locals()}else{try{return getattr($.obj,'__dict__')}
 catch(err){if(err.__class__===_b_.AttributeError.$dict){throw _b_.TypeError.$factory("vars() argument must have __dict__ attribute")}
@@ -6185,18 +6161,13 @@ req.open('GET',file+fake_qs,false)
 req.overrideMimeType('text/plain; charset=utf-8');
 req.send()
 if($res.constructor===Error)throw $res
-if(is_binary){var lf=_b_.bytes.$factory('\n','ascii'),lines=_b_.bytes.$dict.split($res,lf)
+if(is_binary){var lf=_b_.bytes.$factory('\n','ascii'),lines=_b_.bytes.split($res,lf)
 for(var i=0;i<lines.length-1;i++){lines[i].source.push(10)}}else{var lines=$res.split('\n')
 for(var i=0;i<lines.length-1;i++){lines[i]+='\n'}}
 var res={$content:$res,$counter:0,$lines:lines,$bin:is_binary,closed:False,encoding:encoding,mode:mode,name:file}
 res.__class__=is_binary ? $BufferedReader : $TextIOWrapper
 return res}}
-var zip={__class__: _b_.type,__module__: "builtins",__mro__:[object],__name__: "zip",$is_class: true}
-var $zip_iterator=$B.$iterator_class('zip_iterator')
-zip.__iter__=function(self){
-return self.$iterator=self.$iterator ||
-$B.$iterator(self.items,$zip_iterator)}
-zip.$factory=function(){var res={__class__:zip,items:[]}
+var zip=$B.make_class("zip",function(){var res={__class__:zip,items:[]}
 if(arguments.length==0)return res
 var $ns=$B.args('zip',0,{},[],arguments,{},'args','kw')
 var _args=$ns['args']
@@ -6211,6 +6182,11 @@ items[rank++]=_b_.tuple.$factory(line)}
 $B.current_exception=ce
 res.items=items
 return res}
+)
+var $zip_iterator=$B.$iterator_class('zip_iterator')
+zip.__iter__=function(self){
+return self.$iterator=self.$iterator ||
+$B.$iterator(self.items,$zip_iterator)}
 $B.set_func_names(zip,"builtins")
 function no_set_attr(klass,attr){if(klass[attr]!==undefined){throw _b_.AttributeError.$factory("'"+klass.__name__+"' object attribute '"+
 attr+"' is read-only")}else{throw _b_.AttributeError.$factory("'"+klass.__name__+
@@ -6969,10 +6945,11 @@ return $B.$JS2Py(res)}}
 return JSObject.__getattribute__(self.obj,attr)}
 JSConstructor.$factory=function(obj){return{
 __class__: JSConstructor,obj: obj,func: obj.js_func}}
-var $UndefinedClass=$B.make_class("undefined")
-$UndefinedClass.__bool__=function(){return false}
-$UndefinedClass.__repr__=function(){return "undefined"}
-$B.Undefined=$UndefinedClass.$factory()
+var UndefinedClass=$B.make_class("undefined",function(){return Undefined}
+)
+UndefinedClass.__bool__=function(){return false}
+UndefinedClass.__repr__=function(){return "undefined"}
+var Undefined={__class__: UndefinedClass}
 var jsobj2pyobj=$B.jsobj2pyobj=function(jsobj){switch(jsobj){case true:
 case false:
 return jsobj}

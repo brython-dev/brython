@@ -185,26 +185,23 @@ function chr(i) {
 }
 
 //classmethod() (built in class)
-var classmethod = $B.make_class("classmethod")
+var classmethod = $B.make_class("classmethod",
+    function(func) {
+        check_nb_args('classmethod', 1, arguments.length)
+        check_no_kw('classmethod', func)
 
-classmethod.$factory = function(func) {
-    check_nb_args('classmethod', 1, arguments.length)
-    check_no_kw('classmethod', func)
-
-    func.$type = 'classmethod'
-    return func
-}
-
+        func.$type = 'classmethod'
+        return func
+    }
+)
 $B.set_func_names(classmethod, "builtins")
 
 //compile() (built in function)
-$B.$CodeObjectDict = {
-    __class__:_b_.type,
-    __name__:'code',
-    __repr__:function(self){return '<code object '+self.name+', file '+self.filename+'>'},
+var code = $B.make_class("code")
+
+code.__repr__ = code.__str__ = function(self){
+    return '<code object '+self.name+', file '+self.filename+'>'
 }
-$B.$CodeObjectDict.__str__ = $B.$CodeObjectDict.__repr__
-$B.$CodeObjectDict.__mro__ = [object]
 
 function compile() {
     var $=$B.args('compile', 6,
@@ -215,14 +212,11 @@ function compile() {
 
     var module_name = '$exec_' + $B.UUID()
     $B.clear_ns(module_name)
-    $.__class__ = $B.$CodeObjectDict
+    $.__class__ = code
     $.co_flags = $.flags
     return $
 }
 
-compile.__class__ = $B.factory
-$B.$CodeObjectDict.$factory = compile
-compile.$dict = $B.$CodeObjectDict
 
 //function complex is located in py_complex.js
 
@@ -321,39 +315,37 @@ function divmod(x,y) {
        getattr(klass, '__mod__')(x,y)])
 }
 
-var $EnumerateDict = {__class__:_b_.type,__name__:'enumerate'}
-$EnumerateDict.__mro__ = [object]
-
-function enumerate(){
-    var $ns = $B.args("enumerate",2,{iterable:null,start:null},
-        ['iterable', 'start'],arguments,{start:0}, null, null)
-    var _iter = iter($ns["iterable"])
-    var _start = $ns["start"]
-    var res = {
-        __class__:$EnumerateDict,
-        __getattr__:function(attr){return res[attr]},
-        __iter__:function(){return res},
-        __name__:'enumerate iterator',
-        __next__:function(){
-            res.counter++
-            return _b_.tuple.$factory([res.counter,next(_iter)])
-        },
-        __repr__:function(){return "<enumerate object>"},
-        __str__:function(){return "<enumerate object>"},
-        counter:_start-1
-    }
-    for(var attr in res){
-        if(typeof res[attr]==='function' && attr!=="__class__"){
-            res[attr].__str__=(function(x){
-                return function(){return "<method wrapper '"+x+"' of enumerate object>"}
-            })(attr)
+var enumerate = $B.make_class("enumerate",
+    function(){
+        var $ns = $B.args("enumerate",2,{iterable:null,start:null},
+            ['iterable', 'start'],arguments,{start:0}, null, null)
+        var _iter = iter($ns["iterable"])
+        var _start = $ns["start"]
+        var res = {
+            __class__:enumerate,
+            __getattr__:function(attr){return res[attr]},
+            __iter__:function(){return res},
+            __name__:'enumerate iterator',
+            __next__:function(){
+                res.counter++
+                return _b_.tuple.$factory([res.counter,next(_iter)])
+            },
+            __repr__:function(){return "<enumerate object>"},
+            __str__:function(){return "<enumerate object>"},
+            counter:_start-1
         }
+        for(var attr in res){
+            if(typeof res[attr]==='function' && attr!=="__class__"){
+                res[attr].__str__=(function(x){
+                    return function(){return "<method wrapper '"+x+"' of enumerate object>"}
+                })(attr)
+            }
+        }
+        return res
     }
-    return res
-}
-enumerate.__class__ = $B.$factory
-enumerate.$dict = $EnumerateDict
-$EnumerateDict.$factory = enumerate
+)
+
+$B.set_func_names("enumerate", "builtins")
 
 //eval() (built in function)
 function $eval(src, _globals, _locals){
@@ -380,7 +372,7 @@ function $eval(src, _globals, _locals){
 
     var is_exec = arguments[3]=='exec',leave = false
 
-    if(src.__class__===$B.$CodeObjectDict){
+    if(src.__class__===code){
         is_exec = src.mode == "exec"
         src = src.source
     }else if(typeof src !== 'string'){
@@ -1110,14 +1102,16 @@ function issubclass(klass,classinfo){
 
 // Utility class for iterators built from objects that have a __getitem__ and
 // __len__ method
-var iterator_class = $B.make_class({name:'iterator',
-    init:function(self,getitem,len){
-        self.getitem = getitem
-        self.len = len
-        self.counter = -1
+var iterator_class = $B.make_class("iterator",
+    function(getitem, len){
+        return {
+            __class__: iterator_class,
+            getitem: getitem,
+            len: len,
+            counter: -1
+        }
     }
-})
-iterator_class.__module__ = "builtins"
+)
 
 iterator_class.__next__ = function(self){
     self.counter++
@@ -1283,28 +1277,31 @@ function max(){
     return $extreme(args,'__gt__')
 }
 
-var memoryview = $B.make_class({name:'memoryview',
-    init:function(self, obj){
+var memoryview = $B.make_class('memoryview',
+    function(obj){
         check_no_kw('memoryview', obj)
-        check_nb_args('memoryview', 2, arguments.length)
+        check_nb_args('memoryview', 1, arguments.length)
         if($B.get_class(obj).$buffer_protocol){
-            self.obj = obj
-            // XXX fix me : next values are only for bytes and bytearray
-            self.format = 'B'
-            self.itemsize = 1
-            self.ndim = 1
-            self.shape = _b_.tuple.$factory([self.obj.source.length])
-            self.strides = _b_.tuple.$factory([1])
-            self.suboffsets = _b_.tuple.$factory([])
-            self.c_contiguous = true
-            self.f_contiguous = true
-            self.contiguous = true
+            return {
+                __class__: memoryview,
+                obj: obj,
+                // XXX fix me : next values are only for bytes and bytearray
+                format: 'B',
+                itemsize: 1,
+                ndim: 1,
+                shape: _b_.tuple.$factory([obj.source.length]),
+                strides: _b_.tuple.$factory([1]),
+                suboffsets: _b_.tuple.$factory([]),
+                c_contiguous: true,
+                f_contiguous: true,
+                contiguous: true
+            }
         }else{
             throw _b_.TypeError.$factory("memoryview: a bytes-like object "+
                 "is required, not '"+$B.get_class(obj).__name__+"'")
         }
     }
-})
+)
 memoryview.__eq__ = function(self, other){
     if(other.__class__!==memoryview){return false}
     return getattr(self.obj, '__eq__')(other.obj)
@@ -1330,6 +1327,7 @@ memoryview.tolist = function(self){
     return _b_.list.$factory(_b_.bytes.$factory(self.obj))
 }
 
+$B.set_func_names("memoryview", "builtins")
 
 function min(){
     var args = [], pos=0
@@ -1348,8 +1346,15 @@ function next(obj){
         "' object is not an iterator")
 }
 
-var $NotImplemented = $B.make_class({__name__:"NotImplementedClass"}),
-    NotImplemented = $NotImplemented.$factory()
+var NotImplementedType = $B.make_class("NotImplementedType",
+    function(){return NotImplemented}
+)
+NotImplementedType.__repr__ = NotImplementedType.__str__ = function(){
+    return "NotImplemented"
+}
+var NotImplemented = {
+    __class__: NotImplementedType,
+}
 
 function $not(obj){return !$B.$bool(obj)}
 
@@ -1370,8 +1375,8 @@ function ord(c) {
         if (c.length == 1) return c.charCodeAt(0)     // <= strobj.charCodeAt(index)
         throw _b_.TypeError.$factory('ord() expected a character, but string of length ' +
             c.length + ' found')
-      case _b_.bytes.$dict:
-      case _b_.bytearray.$dict:
+      case _b_.bytes:
+      case _b_.bytearray:
         if (c.source.length == 1) return c.source[0]     // <= strobj.charCodeAt(index)
         throw _b_.TypeError.$factory('ord() expected a character, but string of length ' +
             c.source.length + ' found')
@@ -1412,45 +1417,43 @@ $print.__name__ = 'print'
 $print.is_func = true
 
 // property (built in function)
-var $PropertyDict = {
-    __class__ : _b_.type,
-    __name__ : 'property'
-}
-$PropertyDict.__mro__ = [object]
-$B.$PropertyDict = $PropertyDict
-
-function property(fget, fset, fdel, doc) {
-    var p = {
-        __class__ : $PropertyDict,
-        __doc__ : doc || "",
-        $type:fget.$type,
-        fget:fget,
-        fset:fset,
-        fdel:fdel,
-        toString:function(){return '<property>'}
-    }
-    p.__get__ = function(self, obj, objtype) {
-        if(obj===undefined) return self
-        if(self.fget===undefined) throw _b_.AttributeError.$factory("unreadable attribute")
-        return $B.$call(self.fget)(obj)
-    }
-    if(fset!==undefined){
-        p.__set__ = function(self, obj, value){
-            if(self.fset===undefined) throw _b_.AttributeError.$factory("can't set attribute")
-            getattr(self.fset,'__call__')(obj,value)
+var property = $B.make_class("property",
+    function(fget, fset, fdel, doc) {
+        var p = {
+            __class__ : property,
+            __doc__ : doc || "",
+            $type:fget.$type,
+            fget:fget,
+            fset:fset,
+            fdel:fdel,
+            toString:function(){return '<property>'}
         }
+        p.__get__ = function(self, obj, objtype) {
+            if(obj===undefined) return self
+            if(self.fget===undefined) throw _b_.AttributeError.$factory("unreadable attribute")
+            return $B.$call(self.fget)(obj)
+        }
+        if(fset!==undefined){
+            p.__set__ = function(self, obj, value){
+                if(self.fset===undefined) throw _b_.AttributeError.$factory("can't set attribute")
+                getattr(self.fset,'__call__')(obj,value)
+            }
+        }
+        p.__delete__ = fdel;
+
+        p.getter = function(fget){
+            return property.$factory(fget, p.fset, p.fdel, p.__doc__)
+        }
+        p.setter = function(fset){
+            return property.$factory(p.fget, fset, p.fdel, p.__doc__)
+        }
+        p.deleter = function(fdel){
+            return property.$factory(p.fget, p.fset, fdel, p.__doc__)
+        }
+        return p
     }
-    p.__delete__ = fdel;
-
-    p.getter = function(fget){return property(fget, p.fset, p.fdel, p.__doc__)}
-    p.setter = function(fset){return property(p.fget, fset, p.fdel, p.__doc__)}
-    p.deleter = function(fdel){return property(p.fget, p.fset, fdel, p.__doc__)}
-    return p
-}
-
-property.__class__ = $B.$factory
-property.$dict = $PropertyDict
-$PropertyDict.$factory = property
+)
+$B.set_func_names("property", "builtins")
 
 function repr(obj){
     check_no_kw('repr', obj)
@@ -1481,46 +1484,43 @@ function repr(obj){
     throw _b_.AttributeError.$factory("object has no attribute __repr__")
 }
 
-var $ReversedDict = {__class__:_b_.type,__name__:'reversed'}
-$ReversedDict.__mro__ = [object]
-$ReversedDict.__iter__ = function(self){return self}
-$ReversedDict.__next__ = function(self){
+var reversed = $B.make_class("reversed",
+    function(seq){
+        // Return a reverse iterator. seq must be an object which has a
+        // __reversed__() method or supports the sequence protocol (the __len__()
+        // method and the __getitem__() method with integer arguments starting at
+        // 0).
+
+        check_no_kw('reversed', seq)
+        check_nb_args('reversed', 1, arguments.length)
+
+        var ce = $B.current_exception
+
+        try{return getattr(seq,'__reversed__')()}
+        catch(err){
+            if(err.__name__!='AttributeError'){throw err}
+        }
+        $B.current_exception = ce
+
+        try{
+            var res = {
+                __class__:reversed,
+                $counter : getattr(seq,'__len__')(),
+                getter:getattr(seq,'__getitem__')
+            }
+            return res
+        }catch(err){
+            throw _b_.TypeError.$factory("argument to reversed() must be a sequence")
+        }
+    }
+)
+
+reversed.__iter__ = function(self){return self}
+reversed.__next__ = function(self){
     self.$counter--
     if(self.$counter<0) throw _b_.StopIteration.$factory('')
     return self.getter(self.$counter)
 }
-
-function reversed(seq){
-    // Return a reverse iterator. seq must be an object which has a
-    // __reversed__() method or supports the sequence protocol (the __len__()
-    // method and the __getitem__() method with integer arguments starting at
-    // 0).
-
-    check_no_kw('reversed', seq)
-    check_nb_args('reversed', 1, arguments.length)
-
-    var ce = $B.current_exception
-
-    try{return getattr(seq,'__reversed__')()}
-    catch(err){
-        if(err.__name__!='AttributeError'){throw err}
-    }
-    $B.current_exception = ce
-
-    try{
-        var res = {
-            __class__:$ReversedDict,
-            $counter : getattr(seq,'__len__')(),
-            getter:getattr(seq,'__getitem__')
-        }
-        return res
-    }catch(err){
-        throw _b_.TypeError.$factory("argument to reversed() must be a sequence")
-    }
-}
-reversed.__class__=$B.$factory
-reversed.$dict = $ReversedDict
-$ReversedDict.$factory = reversed
 
 function round(arg,n){
     var $ = $B.args('round', 2, {number:null, ndigits:null},
@@ -1588,7 +1588,7 @@ $B.$setattr = function(obj, attr, value){
         // remove previous attributes
         if(!value.__class__===_b_.dict){
             throw _b_.TypeError.$factory("__dict__ must be set to a dictionary, " +
-                "not a '"+value.__class__.$dict.__name+"'")
+                "not a '"+value.__class__.__name+"'")
         }
         for(var attr in obj){
             if(attr !== "__class__"){delete obj[attr]}
@@ -1711,13 +1711,12 @@ function sorted () {
 }
 
 // staticmethod() built in function
-var staticmethod = $B.make_class("staticmethod")
-
-staticmethod.$factory = function(func) {
-    func.$type = 'staticmethod'
-    return func
-}
-
+var staticmethod = $B.make_class("staticmethod",
+    function(func) {
+        func.$type = 'staticmethod'
+        return func
+    }
+)
 $B.set_func_names("staticmethod", "builtins")
 
 // str() defined in py_string.js
@@ -1756,9 +1755,16 @@ function sum(iterable,start){
 }
 
 // super() built in function
-var $SuperDict = {__class__:_b_.type,__name__:'super'}
+var $$super = $B.make_class("super",
+    function (_type1,_type2){
+        return {__class__:$$super,
+            __thisclass__:_type1.__class__===$B.$factory ? _type1.$dict : _type1,
+            __self_class__:(_type2 || None)
+        }
+    }
+)
 
-$SuperDict.__getattribute__ = function(self, attr){
+$$super.__getattribute__ = function(self, attr){
 
     var mro = self.__thisclass__.__mro__,
         res
@@ -1782,7 +1788,7 @@ $SuperDict.__getattribute__ = function(self, attr){
 
     if(attr=="__repr__" || attr=="__str__"){
         // Special cases
-        return function(){return $SuperDict[attr](self)}
+        return function(){return $$super[attr](self)}
     }
     var f = _b_.type.__getattribute__(mro[0], attr)
 
@@ -1804,9 +1810,7 @@ $SuperDict.__getattribute__ = function(self, attr){
     throw _b_.AttributeError.$factory("object 'super' has no attribute '"+attr+"'")
 }
 
-$SuperDict.__mro__ = [object]
-
-$SuperDict.__repr__=$SuperDict.__str__=function(self){
+$$super.__repr__ = $$super.__str__=function(self){
     var res = "<super: <class '"+self.__thisclass__.__name__+"'>"
     if(self.__self_class__!==undefined){
         res += ', <'+self.__self_class__.__class__.__name__+' object>'
@@ -1814,16 +1818,7 @@ $SuperDict.__repr__=$SuperDict.__str__=function(self){
     return res+'>'
 }
 
-function $$super(_type1,_type2){
-    return {__class__:$SuperDict,
-        __thisclass__:_type1.__class__===$B.$factory ? _type1.$dict : _type1,
-        __self_class__:(_type2 || None)
-    }
-}
-$$super.$dict = $SuperDict
-$$super.__class__ = $B.$factory
-$SuperDict.$factory = $$super
-$$super.$is_func = true
+$B.set_func_names("super", "builtins")
 
 function vars(){
     var def = {},
@@ -1959,7 +1954,7 @@ function $url_open(){
 
         if(is_binary){
             var lf = _b_.bytes.$factory('\n', 'ascii'),
-                lines = _b_.bytes.$dict.split($res, lf)
+                lines = _b_.bytes.split($res, lf)
             for(var i=0;i<lines.length-1;i++){lines[i].source.push(10)}
         }else{
             var lines = $res.split('\n')
@@ -1976,52 +1971,46 @@ function $url_open(){
     }
 }
 
-var zip = {
-    __class__: _b_.type,
-    __module__: "builtins",
-    __mro__: [object],
-    __name__: "zip",
-    $is_class: true
-}
+var zip = $B.make_class("zip",
+    function(){
+        var res = {
+            __class__:zip,
+            items:[]
+        }
+        if(arguments.length==0) return res
+        var $ns=$B.args('zip',0,{},[],arguments,{},'args','kw')
+        var _args = $ns['args']
+        var args = [], pos=0
+        for(var i=0;i<_args.length;i++){args[pos++]=iter(_args[i])}
+        var rank=0,
+            items=[],
+            ce = $B.current_exception
+        while(1){
+            var line=[],flag=true, pos=0
+            for(var i=0;i<args.length;i++){
+                try{
+                    line[pos++]=next(args[i])
+                }catch(err){
+                    if(err.__name__==='StopIteration'){
+                        flag=false
+                        break
+                    }else{throw err}
+                }
+            }
+            if(!flag) break
+            items[rank++]=_b_.tuple.$factory(line)
+        }
+        $B.current_exception = ce
+        res.items = items
+        return res
+    }
+)
 
 var $zip_iterator = $B.$iterator_class('zip_iterator')
 zip.__iter__ = function(self){
     // issue #317 : iterator is not reset at each call to zip()
     return self.$iterator = self.$iterator ||
         $B.$iterator(self.items,$zip_iterator)
-}
-
-zip.$factory = function(){
-    var res = {
-        __class__:zip,
-        items:[]
-    }
-    if(arguments.length==0) return res
-    var $ns=$B.args('zip',0,{},[],arguments,{},'args','kw')
-    var _args = $ns['args']
-    var args = [], pos=0
-    for(var i=0;i<_args.length;i++){args[pos++]=iter(_args[i])}
-    var rank=0,
-        items=[],
-        ce = $B.current_exception
-    while(1){
-        var line=[],flag=true, pos=0
-        for(var i=0;i<args.length;i++){
-            try{
-                line[pos++]=next(args[i])
-            }catch(err){
-                if(err.__name__==='StopIteration'){
-                    flag=false
-                    break
-                }else{throw err}
-            }
-        }
-        if(!flag) break
-        items[rank++]=_b_.tuple.$factory(line)
-    }
-    $B.current_exception = ce
-    res.items = items
-    return res
 }
 
 $B.set_func_names(zip, "builtins")

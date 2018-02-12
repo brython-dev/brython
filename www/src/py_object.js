@@ -127,7 +127,7 @@ object.__getattribute__ = function(obj,attr){
 
     if(res!==undefined){
 
-        if(res.__class__===_b_.property.$dict){
+        if(res.__class__===_b_.property){
             return res.__get__(res, obj, klass)
         }
 
@@ -378,24 +378,17 @@ object.$factory = function(){
 
 $B.set_func_names(object, "builtins")
 
-$B.make_class = function(class_obj){
-    // class_obj has at least an attribute "name", and possibly an attribute
-    // init
+$B.make_class = function(name, factory){
+    // Buils a basic class object
 
     var A = {
         __class__: _b_.type,
         __mro__: [object],
-        __name__: class_obj.name,
+        __name__: name,
         $is_class: true
     }
 
-    A.$factory = function(){
-        var res = {__class__:A}
-        if(class_obj.init){
-            class_obj.init(res, ...arguments)
-        }
-        return res
-    }
+    A.$factory = factory
 
     return A
 }
