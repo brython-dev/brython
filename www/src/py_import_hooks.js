@@ -52,7 +52,7 @@
         if(module===undefined){throw _b_.ImportError.$factory(mod_name)}
         if ($B.is_none(module)) {
             // FIXME : Initialize __doc__ and __package__
-            module = $B.$ModuleDict.$factory(mod_name);
+            module = $B.module.$factory(mod_name);
             var mod_desc = _b_.getattr(spec, 'origin');
             if (_b_.getattr(spec, 'has_location')) {
                 mod_desc = "from '" + mod_desc + "'";

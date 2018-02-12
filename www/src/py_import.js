@@ -5,16 +5,19 @@
 var _b_ = $B.builtins
 var _window = self;
 
-$B.$ModuleDict = {
+var module = $B.module = {
     __class__ : _b_.type,
+    __module__: "builtins",
+    __mro__: [_b_.object],
     __name__ : 'module'
 }
-$B.$ModuleDict.__repr__ = $B.$ModuleDict.__str__ = function(self){
+
+module.__repr__ = module.__str__ = function(self){
     return '<module '+self.__name__+'>'
 }
-$B.$ModuleDict.__mro__ = [_b_.object]
 
-$B.$ModuleDict.__setattr__ = function(self, attr, value){
+
+module.__setattr__ = function(self, attr, value){
     if(self.__name__=='__builtins__'){
         // set a Python builtin
         $B.builtins[attr] = value
@@ -23,26 +26,16 @@ $B.$ModuleDict.__setattr__ = function(self, attr, value){
     }
 }
 
-function module(name,doc,$package){
-    return {__class__:$B.$ModuleDict,
+module.$factory = function(name, doc, $package){
+    return {
+        __class__:module,
         __name__:name,
         __doc__:doc||_b_.None,
         __package__:$package||_b_.None
     }
 }
 
-module.__class__ = $B.$factory
-module.$dict = $B.$ModuleDict
-$B.$ModuleDict.$factory = module
-
-var loader = function(){}
-var Loader = {__class__:_b_.type,
-    __name__ : 'Loader'
-}
-Loader.__mro__ = [_b_.object]
-Loader.$factory = loader
-loader.$dict = Loader
-loader.__class__ = $B.$factory
+$B.set_func_names(module, "builtins")
 
 /**
  * Module's parent package name
@@ -137,14 +130,14 @@ function import_js(module,path) {
     return true
 }
 
-function run_js(module_contents,path,module){
+function run_js(module_contents, path, _module){
     // FIXME : Enhanced module isolation e.g. run_js arg names , globals ...
     try{
         eval(module_contents);
-        if($B.$options.store){module.$js = module_contents}
+        if($B.$options.store){_module.$js = module_contents}
     }catch(err){
         console.log(err)
-        console.log(path, module)
+        console.log(path, _module)
         throw err
     }
     // check that module name is in namespace
@@ -154,31 +147,31 @@ function run_js(module_contents,path,module){
         throw _b_.ImportError.$factory("name '$module' is not defined in module")
     }
 
-    if (module !== undefined) {
+    if (_module !== undefined) {
         // FIXME : This might not be efficient . Refactor js modules instead.
         // Overwrite original module object . Needed e.g. for reload()
-        for (var attr in $module) { module[attr] = $module[attr]; }
-        $module = module;
+        for (var attr in $module) { _module[attr] = $module[attr]; }
+        $module = _module;
     }
     else {
         // add class and __str__
-        $module.__class__ = $B.$ModuleDict
-        $module.__name__ = module.name
+        $module.__class__ = module
+        $module.__name__ = _module.name
         $module.__repr__=$module.__str__ = function(){
-          if ($B.builtin_module_names.indexOf(module.name) > -1) {
-             return "<module '"+module.name+"' (built-in)>"
+          if ($B.builtin_module_names.indexOf(_module.name) > -1) {
+             return "<module '"+_module.name+"' (built-in)>"
           }
 
           //if(module.name == 'builtins') return "<module '"+module.name+"' (built-in)>"
-          return "<module '"+module.name+"' from "+path+" >"
+          return "<module '"+_module.name+"' from "+path+" >"
         }
 
         //$module.toString = function(){return "<module '"+module.name+"' from "+path+" >"}
-        if(module.name != 'builtins') { // builtins do not have a __file__ attribute
+        if(_module.name != 'builtins') { // builtins do not have a __file__ attribute
           $module.__file__ = path
         }
     }
-    $B.imported[module.__name__] = $module
+    $B.imported[_module.__name__] = $module
 
     return true
 }
@@ -299,19 +292,14 @@ $B.run_py = run_py
 function new_spec(fields) {
     // TODO : Implement ModuleSpec class i.e. not a module object
     // add Python-related fields
-    fields.__class__ = $B.$ModuleDict
+    fields.__class__ = module
     return fields;
 }
 
 // Virtual File System optimized module import
-function finder_VFS(){
-    return {__class__:finder_VFS.$dict}
-}
-finder_VFS.__class__ = $B.$factory
-
-finder_VFS.$dict = {
-    $factory: finder_VFS,
+var finder_VFS = {
     __class__: _b_.type,
+    __mro__: [_b_.object],
     __name__: 'VFSFinder',
 
     create_module : function(cls, spec) {
@@ -338,11 +326,11 @@ finder_VFS.$dict = {
     find_module: function(cls, name, path){
         return {__class__:Loader,
             load_module:function(name, path){
-                var spec = cls.$dict.find_spec(cls, name, path)
-                var mod = module(name)
+                var spec = cls.find_spec(cls, name, path)
+                var mod = module.$factory(name)
                 $B.imported[name] = mod
                 mod.__spec__ = spec
-                cls.$dict.exec_module(cls, mod)
+                cls.exec_module(cls, mod)
             }
         }
     },
@@ -371,27 +359,27 @@ finder_VFS.$dict = {
     }
 }
 
-finder_VFS.$dict.__mro__ = [_b_.object]
-finder_VFS.$dict.create_module.$type = 'classmethod'
-finder_VFS.$dict.exec_module.$type = 'classmethod'
-finder_VFS.$dict.find_module.$type = 'classmethod'
-finder_VFS.$dict.find_spec.$type = 'classmethod'
+finder_VFS.create_module.$type = 'classmethod'
+finder_VFS.exec_module.$type = 'classmethod'
+finder_VFS.find_module.$type = 'classmethod'
+finder_VFS.find_spec.$type = 'classmethod'
 
-$B.set_func_names(finder_VFS.$dict, "<import>")
+finder_VFS.$factory = function(){
+    return {__class__:finder_VFS}
+}
+
+$B.set_func_names(finder_VFS, "<import>")
 
 /**
  * Module importer optimizing module lookups via stdlib_paths.js
  */
 
-function finder_stdlib_static(){
-    return {__class__:finder_stdlib_static.$dict}
-}
-finder_stdlib_static.__class__ = $B.$factory
-
-finder_stdlib_static.$dict = {
+var finder_stdlib_static = {
     $factory : finder_stdlib_static,
     __class__ : _b_.type,
+    __mro__: [_b_.object],
     __name__ : 'StdlibStatic',
+
     create_module : function(cls, spec) {
         // Fallback to default module creation
         return _b_.None;
@@ -408,15 +396,15 @@ finder_stdlib_static.$dict = {
         delete module.__spec__['loader_state'];
     },
     find_module: function(cls, name, path){
-        var spec = cls.$dict.find_spec(cls, name, path)
+        var spec = cls.find_spec(cls, name, path)
         if(spec===_b_.None){return _b_.None}
         return {__class__:Loader,
             load_module:function(name, path){
-                var mod = module(name)
+                var mod = module.$factory(name)
                 $B.imported[name] = mod
                 mod.__spec__ = spec
                 mod.__package__ = spec.parent
-                cls.$dict.exec_module(cls, mod)
+                cls.exec_module(cls, mod)
             }
         }
     },
@@ -460,24 +448,23 @@ finder_stdlib_static.$dict = {
         return _b_.None;
     }
 }
-finder_stdlib_static.$dict.__mro__ = [_b_.object]
-finder_stdlib_static.$dict.create_module.$type = 'classmethod'
-finder_stdlib_static.$dict.exec_module.$type = 'classmethod'
-finder_stdlib_static.$dict.find_module.$type = 'classmethod'
-finder_stdlib_static.$dict.find_spec.$type = 'classmethod'
 
-$B.set_func_names(finder_stdlib_static.$dict, "<import>")
+finder_stdlib_static.create_module.$type = 'classmethod'
+finder_stdlib_static.exec_module.$type = 'classmethod'
+finder_stdlib_static.find_module.$type = 'classmethod'
+finder_stdlib_static.find_spec.$type = 'classmethod'
+
+finder_stdlib_static.$factory = function (){
+    return {__class__: finder_stdlib_static}
+}
+
+$B.set_func_names(finder_stdlib_static, "<import>")
 /**
  * Search an import path for .py modules
  */
-function finder_path(){
-    return {__class__:finder_path.$dict}
-}
-finder_path.__class__ = $B.$factory
-
-finder_path.$dict = {
-    $factory: finder_path,
+var finder_path = {
     __class__: _b_.type,
+    __mro__: [_b_.object],
     __name__: 'ImporterPath',
 
     create_module : function(cls, spec) {
@@ -500,7 +487,7 @@ finder_path.$dict = {
     },
 
     find_module: function(cls, name, path){
-        return finder_path.$dict.find_spec(cls, name, path)
+        return finder_path.find_spec(cls, name, path)
     },
 
     find_spec : function(cls, fullname, path, prev_module) {
@@ -520,13 +507,13 @@ finder_path.$dict = {
                 for (var j = 0, lj = $B.path_hooks.length;
                      j < lj && finder_notfound;
                      ++j) {
-                    var hook = $B.path_hooks[j];
+                    var hook = $B.path_hooks[j].$factory;
                     try {
                         finder = (typeof hook=='function' ? hook : _b_.getattr(hook, '__call__'))(path_entry)
                         finder_notfound = false;
                     }
                     catch (e) {
-                        if (e.__class__ !== _b_.ImportError.$dict) { throw e; }
+                        if (e.__class__ !== _b_.ImportError) { throw e; }
                     }
                 }
                 if (finder_notfound) {
@@ -550,13 +537,16 @@ finder_path.$dict = {
     }
 }
 
-finder_path.$dict.__mro__ = [_b_.object]
-finder_path.$dict.create_module.$type = 'classmethod'
-finder_path.$dict.exec_module.$type = 'classmethod'
-finder_path.$dict.find_module.$type = 'classmethod'
-finder_path.$dict.find_spec.$type = 'classmethod'
+finder_path.create_module.$type = 'classmethod'
+finder_path.exec_module.$type = 'classmethod'
+finder_path.find_module.$type = 'classmethod'
+finder_path.find_spec.$type = 'classmethod'
 
-$B.set_func_names(finder_path.$dict, "<import>")
+finder_path.$factory = function(){
+    return {__class__:finder_path}
+}
+
+$B.set_func_names(finder_path, "<import>")
 
 /**
  * Find modules packaged in a js script to be used as a virtual file system
@@ -564,24 +554,9 @@ $B.set_func_names(finder_path.$dict, "<import>")
  * @param {string}      URL pointing at location of VFS js file
  */
 
-function vfs_hook(path) {
-    if (path.substr(-1) == '/') {
-        path = path.slice(0, -1);
-    }
-    var ext = path.substr(-7);
-    if (ext != '.vfs.js') {
-        throw _b_.ImportError.$factory('VFS file URL must end with .vfs.js extension');
-    }
-    self = {__class__: vfs_hook.$dict, path: path};
-    vfs_hook.$dict.load_vfs(self);
-    return self;
-}
-
-vfs_hook.__class__ = $B.$factory
-
-vfs_hook.$dict = {
-    $factory: vfs_hook,
+var vfs_hook = {
     __class__: _b_.type,
+    __mro__: [_b_.object],
     __name__: 'VfsPathFinder',
 
     load_vfs: function(self) {
@@ -600,7 +575,7 @@ vfs_hook.$dict = {
     },
     find_spec: function(self, fullname, module) {
         if (self.vfs === undefined) {
-            try { vfs_hook.$dict.load_vfs(self) }
+            try { vfs_hook.load_vfs(self) }
             catch(e) {
                 console.log("Could not load VFS while importing '" + fullname + "'");
                 return _b_.None;
@@ -628,7 +603,19 @@ vfs_hook.$dict = {
         self.vfs = undefined;
     }
 }
-vfs_hook.$dict.__mro__ = [_b_.object]
+vfs_hook.$factory = function(path) {
+    if (path.substr(-1) == '/') {
+        path = path.slice(0, -1);
+    }
+    var ext = path.substr(-7);
+    if (ext != '.vfs.js') {
+        throw _b_.ImportError.$factory('VFS file URL must end with .vfs.js extension');
+    }
+    self = {__class__: vfs_hook, path: path};
+    vfs_hook.load_vfs(self);
+    return self;
+}
+
 $B.set_func_names(vfs_hook, "<import>")
 
 /**
@@ -638,14 +625,9 @@ $B.set_func_names(vfs_hook, "<import>")
  * @param {string}      one of 'js', 'py' or undefined (i.e. yet unknown)
  */
 
-function url_hook(path_entry, hint) {
-    return {__class__: url_hook.$dict, path_entry:path_entry, hint:hint }
-}
-url_hook.__class__ = $B.$factory
-
-url_hook.$dict = {
-    $factory: url_hook,
+var url_hook = {
     __class__: _b_.type,
+    __mro__: [_b_.object],
     __name__ : 'UrlPathFinder',
     __repr__: function(self) {
         return '<UrlPathFinder' + (self.hint? " for '" + self.hint + "'":
@@ -691,7 +673,7 @@ url_hook.$dict = {
                 if (loader_data.is_package) {
                     // Populate cache in advance to speed up submodule imports
                     $B.path_importer_cache[base_path + '/'] =
-                            url_hook(base_path + '/', self.hint);
+                            url_hook.$factory(base_path + '/', self.hint);
                 }
                 loader_data.path = file_info[0];
             }catch(err){
@@ -719,7 +701,10 @@ url_hook.$dict = {
         // TODO: Implement
     }
 }
-url_hook.$dict.__mro__ = [_b_.object]
+url_hook.$factory = function(path_entry, hint) {
+    return {__class__: url_hook, path_entry:path_entry, hint:hint }
+}
+$B.set_func_names(url_hook, "<import>")
 
 
 $B.path_importer_cache = {};
@@ -733,7 +718,7 @@ for (i = 0; i < _sys_paths.length; ++i) {
     var _path = _sys_paths[i],
         _type = _path[1];
     _path = _path[0];
-    $B.path_importer_cache[_path] = url_hook(_path, _type);
+    $B.path_importer_cache[_path] = url_hook.$factory(_path, _type);
 }
 delete _path;
 delete _type;
@@ -829,7 +814,7 @@ $B.$__import__ = function (mod_name, globals, locals, fromlist, level){
                     // an attribute of module, and this attribute is a module,
                     // return it. This is the case for os.path for instance
                     if(i==len-1 && $B.imported[_mod_name][parsed_name[len]] &&
-                        $B.imported[_mod_name][parsed_name[len]].__class__===$B.$ModuleDict){
+                        $B.imported[_mod_name][parsed_name[len]].__class__===module){
                         return $B.imported[_mod_name][parsed_name[len]]
                     }
                     throw _b_.ImportError.$factory(_mod_name)
@@ -997,14 +982,18 @@ $B.$meta_path = [finder_VFS, finder_stdlib_static, finder_path];
 function optimize_import_for_path(path, filetype) {
     if (path.slice(-1) != '/') { path = path + '/' }
     // Ensure sys is loaded
-    var value = (filetype == 'none')? _b_.None : url_hook(path, filetype);
+    var value = (filetype == 'none')? _b_.None : url_hook.$factory(path, filetype);
     $B.path_importer_cache[path] = value;
 }
 
 // Introspection for builtin importers
+var Loader = {__class__:$B.$type,
+    __mro__: [_b_.object],
+    __name__ : 'Loader'
+}
 
 _importlib_module = {
-    __class__ : $B.$ModuleDict,
+    __class__ : module,
     __name__ : '_importlib',
     Loader: Loader,
     VFSFinder: finder_VFS,

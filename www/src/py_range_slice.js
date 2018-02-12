@@ -66,7 +66,7 @@ function compute_item(r, i){
 
 range.__getitem__ = function(self,rank){
     if(_b_.isinstance(rank, _b_.slice)){
-        var norm = _b_.slice.$dict.$conv_for_seq(rank, range.__len__(self)),
+        var norm = _b_.slice.$conv_for_seq(rank, range.__len__(self)),
             substep = $B.mul(self.step, norm.step),
             substart = compute_item(self, norm.start),
             substop = compute_item(self, norm.stop)
@@ -91,20 +91,21 @@ range.__hash__ = function(self){
     return _b_.hash(_b_.tuple.$factory([len, self.start, self.step]))
 }
 
-var $RangeIterator = function(obj){
-    return {__class__:$RangeIterator.$dict, obj: obj}
-}
-$RangeIterator.__class__ = $B.$factory
-$RangeIterator.$dict = {
+var RangeIterator = {
     __class__: _b_.type,
+    __mro__: [_b_.object],
     __name__: 'range_iterator',
-    $factory: $RangeIterator,
 
     __iter__: function(self){return self},
 
     __next__: function(self){return _b_.next(self.obj)}
 }
-$RangeIterator.$dict.__mro__ = [_b_.object]
+
+RangeIterator.$factory = function(obj){
+    return {__class__:RangeIterator, obj: obj}
+}
+
+$B.set_func_names(RangeIterator, "builtins")
 
 range.__iter__ = function(self){
     var res = {
@@ -118,7 +119,7 @@ range.__iter__ = function(self){
     }else{
         res.$counter = $B.sub(self.start, self.step)
     }
-    return $RangeIterator(res)
+    return RangeIterator.$factory(res)
 }
 
 range.__len__ = function(self){

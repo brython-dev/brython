@@ -348,7 +348,7 @@
 
     function load(name, module_obj){
         // add class and __str__
-        module_obj.__class__ = $B.$ModuleDict
+        module_obj.__class__ = $B.module
         //module_obj.__file__ = '<builtin>'
         module_obj.__name__ = name
         module_obj.__repr__ = module_obj.__str__ = function(){
@@ -371,7 +371,7 @@
     var _b_ = $B.builtins
 
     // Set builtin name __builtins__
-    _b_.__builtins__ = $B.$ModuleDict.$factory('__builtins__',
+    _b_.__builtins__ = $B.module.$factory('__builtins__',
         'Python builtins')
     for(var attr in $B.builtins){
         _b_.__builtins__[attr] = _b_[attr]

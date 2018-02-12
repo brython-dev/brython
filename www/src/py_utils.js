@@ -897,13 +897,14 @@ $B.$iterator = function(items,klass){
 }
 
 $B.$iterator_class = function(name){
+
     var res = {
         __class__:_b_.type,
         __name__:name,
-        __module__: "builtins"
+        __module__: "builtins",
+        __mro__: [_b_.object],
+        $is_class: true
     }
-
-    res.__mro__ = [_b_.object]
 
     function as_array(s) {
        var _a=[],
@@ -966,18 +967,8 @@ $B.$iterator_class = function(name){
         eval('res.'+_op+'='+_f.replace(new RegExp('__or__', 'g'), _op))
     }
 
-    res.$factory = {__class__:$B.$factory,$dict:res}
     return res
 }
-
-// class dict of functions attribute __code__
-$B.$CodeDict = {__class__:_b_.type,__name__:'code'}
-$B.$CodeDict.__mro__ = [_b_.object]
-
-function _code(){}
-_code.__class__ = $B.$factory
-_code.$dict = $B.$CodeDict
-$B.$CodeDict.$factory = _code
 
 function $err(op,klass,other){
     var msg = "unsupported operand type(s) for "+op

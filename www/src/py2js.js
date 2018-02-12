@@ -2394,7 +2394,7 @@ function $DefCtx(context){
 
         // Add attribute __code__
         var h = '\n'+' '.repeat(indent+8)
-        js = '    __code__:{'+h+'    __class__:$B.$CodeDict'
+        js = '    __code__:{'+h+'    __class__:$B.Code'
         var h1 = ','+h+' '.repeat(4)
         js += h1+'co_argcount:'+this.argcount+
             h1+'co_filename:$locals_'+scope.module.replace(/\./g,'_')+'["__file__"]'+
@@ -8130,7 +8130,7 @@ function brython(options){
                     (' ' + e.rel + ' ').indexOf(' prefetch ') != -1) {
                 // Prefetch VFS file
                 $B.path_importer_cache[href + '/'] =
-                        $B.imported['_importlib'].VFSPathFinder(href)
+                        $B.imported['_importlib'].VFSPathFinder.$factory(href)
             }
             var filetype = e.hreflang;
             if (filetype) {

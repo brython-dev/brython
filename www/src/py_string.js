@@ -1646,7 +1646,7 @@ str.__new__ = function(cls){
     if(cls===undefined){
         throw _b_.TypeError.$factory('str.__new__(): not enough arguments')
     }
-    return {__class__:cls.$dict}
+    return {__class__:cls}
 }
 
 $B.set_func_names(str, "builtins")
