@@ -4,39 +4,8 @@ eval($B.InjectBuiltins())
 
 var object = _b_.object
 
-var $LocationDict = {
-    __class__: _b_.type,
-    __name__: 'Location'
-}
-
-$LocationDict.__mro__ = [object]
-
 var _window = self;
 
-function $Location(){ // used because of Firefox bug #814622
-    var obj = {}
-    for(var x in _window.location){
-        if(typeof _window.location[x]==='function'){
-            obj[x] = (function(f){
-                return function(){
-                    return f.apply(_window.location,arguments)
-                }
-              })(_window.location[x])
-        }else{
-            obj[x]=_window.location[x]
-        }
-    }
-    if(obj['replace']===undefined){ // IE
-        obj['replace'] = function(url){_window.location = url}
-    }
-    obj.__class__ = $LocationDict
-    obj.toString = function(){return _window.location.toString()}
-    obj.__repr__ = obj.__str__ = obj.toString
-    return obj
-}
-
-$LocationDict.$factory = $Location
-$Location.$dict = $LocationDict
 
 // Transforms a Javascript constructor into a Python function
 // that returns instances of the constructor, converted to Python objects

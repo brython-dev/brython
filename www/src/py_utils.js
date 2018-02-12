@@ -737,8 +737,6 @@ $B.$call = function(callable){
     try{
         return $B.$getattr(callable, "__call__")
     }catch(err){
-        console.log(err)
-        console.log(callable)
         throw _b_.TypeError.$factory("'" + $B.get_class(callable).__name__ +
             "' object is not callable")
     }

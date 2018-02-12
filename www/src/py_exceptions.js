@@ -17,7 +17,6 @@ $B.$raise= function(arg){
     }else if(arg.$is_class && issubclass(arg, BaseException)){
         throw arg.$factory()
     }else{
-        console.log("bizarre", arg)
         throw _b_.TypeError.$factory("exceptions must derive from BaseException")
     }
 }

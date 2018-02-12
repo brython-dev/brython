@@ -76,8 +76,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-02-11 21:28:02.544530"
-__BRYTHON__.timestamp=1518380882544
+__BRYTHON__.compiled_date="2018-02-12 07:42:34.342111"
+__BRYTHON__.timestamp=1518417754357
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -4577,36 +4577,6 @@ kls.$factory=nofactory}
 var first_parent=mro[0],init_subclass=_b_.type.__getattribute__(first_parent,"__init_subclass__")
 init_subclass(kls,extra_kwargs)
 return kls}
-$B.make_method=function(attr,klass,func){
-var method
-switch(func.$type){case undefined:
-case 'function':
-method=function(instance){var instance_method=function(){var local_args=[instance]
-for(var i=0,_len_i=arguments.length;i < _len_i;i++){local_args.push(arguments[i])}
-return func.apply(instance,local_args)}
-instance_method.__class__=$B.method
-instance_method.$infos={__class__:klass,__func__:func,__name__:attr,__qualname__:klass.__name__+'.'+attr,__self__:instance}
-instance_method.$is_func=true
-return instance_method}
-break
-case 'instancemethod':
-return func
-case 'classmethod':
-method=function(obj){var class_method=function(){var local_args=0;
-if(obj !==undefined){local_args=[obj.__class__]}else{
-local_args=[klass]}
-var pos=local_args.length
-for(var i=0,_len_i=arguments.length;i < _len_i;i++){local_args[pos++]=arguments[i]}
-return func.apply(null,local_args)}
-class_method.__class__=$B.method
-class_method.$infos={__class__:klass,__func__:func,__name__:attr,__qualname__:klass.__name__+'.'+attr}
-return class_method}
-break
-case 'staticmethod':
-method=function(){return func}
-break}
-method.$is_func=true
-return method}
 function make_mro(bases,cl_dict){
 var seqs=[],pos1=0
 for(var i=0;i<bases.length;i++){
@@ -5063,9 +5033,7 @@ else if(callable.$factory){return callable.$factory}
 else if(callable.$is_class){
 return callable.$factory=$B.$instance_creator(callable)}
 else if(callable.__class__===$B.$factory){return callable}
-try{return $B.$getattr(callable,"__call__")}catch(err){console.log(err)
-console.log(callable)
-throw _b_.TypeError.$factory("'" + $B.get_class(callable).__name__ +
+try{return $B.$getattr(callable,"__call__")}catch(err){throw _b_.TypeError.$factory("'" + $B.get_class(callable).__name__ +
 "' object is not callable")}}
 var $io={__class__:_b_.type,__name__:'io'}
 $io.__mro__=[_b_.object]
@@ -6323,8 +6291,7 @@ _b_['$$super']=$$super})(__BRYTHON__)
 $B.$raise=function(arg){
 if(arg===undefined){var es=$B.current_exception
 if(es!==undefined)throw es
-throw _b_.RuntimeError.$factory('No active exception to reraise')}else if(isinstance(arg,BaseException)){throw arg}else if(arg.__class__===$B.$factory && issubclass(arg,BaseException)){throw arg()}else if(arg.$is_class && issubclass(arg,BaseException)){throw arg.$factory()}else{console.log("bizarre",arg)
-throw _b_.TypeError.$factory("exceptions must derive from BaseException")}}
+throw _b_.RuntimeError.$factory('No active exception to reraise')}else if(isinstance(arg,BaseException)){throw arg}else if(arg.__class__===$B.$factory && issubclass(arg,BaseException)){throw arg()}else if(arg.$is_class && issubclass(arg,BaseException)){throw arg.$factory()}else{throw _b_.TypeError.$factory("exceptions must derive from BaseException")}}
 $B.$syntax_err_line=function(exc,module,pos,line_num){
 var pos2line={},lnum=1,src=$B.$py_src[module],module=module.charAt(0)=='$' ? '<string>' : module
 if(src===undefined){console.log('no src for',module)
@@ -6987,20 +6954,7 @@ _b_.bytes=bytes
 _b_.bytearray=bytearray})(__BRYTHON__)
 ;(function($B){eval($B.InjectBuiltins())
 var object=_b_.object
-var $LocationDict={__class__: _b_.type,__name__: 'Location'}
-$LocationDict.__mro__=[object]
 var _window=self;
-function $Location(){
-var obj={}
-for(var x in _window.location){if(typeof _window.location[x]==='function'){obj[x]=(function(f){return function(){return f.apply(_window.location,arguments)}})(_window.location[x])}else{obj[x]=_window.location[x]}}
-if(obj['replace']===undefined){
-obj['replace']=function(url){_window.location=url}}
-obj.__class__=$LocationDict
-obj.toString=function(){return _window.location.toString()}
-obj.__repr__=obj.__str__=obj.toString
-return obj}
-$LocationDict.$factory=$Location
-$Location.$dict=$LocationDict
 var JSConstructor={__class__: _b_.type,__module__: "<javascript>",__mro__:[object],__name__: 'JSConstructor',$is_class: true}
 JSConstructor.__call__=function(self){
 console.log("JSConstructor __call__")
