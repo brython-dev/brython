@@ -76,8 +76,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-02-12 09:30:02.599693"
-__BRYTHON__.timestamp=1518424202599
+__BRYTHON__.compiled_date="2018-02-12 16:43:24.616202"
+__BRYTHON__.timestamp=1518450204616
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -11465,12 +11465,11 @@ var src=root.children[0].src(),next_src=src.substr(src.search('function'))
 next_src=next_src.substr(10)
 next_src=next_src.substr(next_src.search('function'))
 return next_src}
-var $gen_it={__class__: _b_.type,__name__: "generator",__module__: "builtins"}
-$gen_it.__mro__=[_b_.object]
-$gen_it.__enter__=function(self){console.log("generator.__enter__ called")}
-$gen_it.__exit__=function(self){console.log("generator.__exit__ called")}
-$gen_it.__iter__=function(self){return self}
-$gen_it.__next__=function(self){if(self.$finished){throw _b_.StopIteration.$factory()}
+var generator={__class__: _b_.type,__module__: "builtins",__mro__:[_b_.object],__name__: "generator",}
+generator.__enter__=function(self){console.log("generator.__enter__ called")}
+generator.__exit__=function(self){console.log("generator.__exit__ called")}
+generator.__iter__=function(self){return self}
+generator.__next__=function(self){if(self.$finished){throw _b_.StopIteration.$factory()}
 if(self.gi_running===true){throw ValueError.$factory("generator already executing")}
 self.gi_running=true
 if(self.next===undefined){self.$finished=true
@@ -11488,24 +11487,22 @@ throw StopIteration.$factory(res[0].value)}
 self.next=self.nexts[res[1]]
 self.gi_running=false
 return res[0]}
-$gen_it.close=function(self,value){self.sent_value=_b_.GeneratorExit.$factory()
-try{var res=$gen_it.__next__(self)
+generator.close=function(self,value){self.sent_value=_b_.GeneratorExit.$factory()
+try{var res=generator.__next__(self)
 if(res!==_b_.None){throw _b_.RuntimeError.$factory("closed generator returned a value")}}catch(err){if($B.is_exc(err,[_b_.StopIteration,_b_.GeneratorExit])){return _b_.None}
 throw err}}
-$gen_it.send=function(self,value){self.sent_value=value
-return $gen_it.__next__(self)}
-$gen_it.$$throw=function(self,value){if(_b_.isinstance(value,_b_.type))value=value()
+generator.send=function(self,value){self.sent_value=value
+return generator.__next__(self)}
+generator.$$throw=function(self,value){if(_b_.isinstance(value,_b_.type))value=value()
 self.sent_value={__class__:$B.$GeneratorSendError,err:value}
-return $gen_it.__next__(self)}
-$B.genfunc=function(name,blocks,funcs,$defaults){
+return generator.__next__(self)}
+generator.$factory=$B.genfunc=function(name,blocks,funcs,$defaults){
 return function(){var iter_id='$gen'+$B.gen_counter++,gfuncs=[]
 gfuncs.push(funcs[0]($defaults))
 for(var i=1;i<funcs.length;i++){gfuncs.push(funcs[i])}
-var res={__class__: $gen_it,args: Array.prototype.slice.call(arguments),blocks: blocks,env:{},name: name,nexts: gfuncs.slice(1),next: gfuncs[0],iter_id: iter_id,gi_running: false,$started: false,$defaults: $defaults}
+var res={__class__: generator,args: Array.prototype.slice.call(arguments),blocks: blocks,env:{},name: name,nexts: gfuncs.slice(1),next: gfuncs[0],iter_id: iter_id,gi_running: false,$started: false,$defaults: $defaults}
 return res}}
-$B.genfunc.__class__=$B.$factory
-$B.genfunc.$dict=$gen_it
-$gen_it.$factory=$B.genfunc})(__BRYTHON__)
+$B.set_func_names(generator,"builtins")})(__BRYTHON__)
  ;(function($B){var update=function(mod,data){for(attr in data){mod[attr]=data[attr]}}
 var _window=self;
 var modules={}

@@ -534,23 +534,22 @@ function make_next(self, yield_node_id){
     return next_src
 }
 
-var $gen_it = {
+var generator = {
     __class__: _b_.type,
+    __module__: "builtins",
+    __mro__: [_b_.object],
     __name__: "generator",
-    __module__: "builtins"
 }
 
-$gen_it.__mro__ = [_b_.object]
-
 //fix me, need to investigate __enter__ and __exit__ and what they do
-$gen_it.__enter__ = function(self){console.log("generator.__enter__ called")}
-$gen_it.__exit__ = function(self){console.log("generator.__exit__ called")}
+generator.__enter__ = function(self){console.log("generator.__enter__ called")}
+generator.__exit__ = function(self){console.log("generator.__exit__ called")}
 
-$gen_it.__iter__ = function(self){
+generator.__iter__ = function(self){
     return self
 }
 
-$gen_it.__next__ = function(self){
+generator.__next__ = function(self){
     if(self.$finished){throw _b_.StopIteration.$factory()}
     if(self.gi_running===true){
         throw ValueError.$factory("generator already executing")
@@ -595,10 +594,10 @@ $gen_it.__next__ = function(self){
     return res[0]
 }
 
-$gen_it.close = function(self, value){
+generator.close = function(self, value){
     self.sent_value = _b_.GeneratorExit.$factory()
     try{
-        var res = $gen_it.__next__(self)
+        var res = generator.__next__(self)
         if(res!==_b_.None){
             throw _b_.RuntimeError.$factory("closed generator returned a value")
         }
@@ -610,18 +609,18 @@ $gen_it.close = function(self, value){
     }
 }
 
-$gen_it.send = function(self, value){
+generator.send = function(self, value){
     self.sent_value = value
-    return $gen_it.__next__(self)
+    return generator.__next__(self)
 }
 
-$gen_it.$$throw = function(self, value){
+generator.$$throw = function(self, value){
     if(_b_.isinstance(value,_b_.type)) value=value()
     self.sent_value = {__class__:$B.$GeneratorSendError,err:value}
-    return $gen_it.__next__(self)
+    return generator.__next__(self)
 }
 
-$B.genfunc = function(name, blocks, funcs, $defaults){
+generator.$factory = $B.genfunc = function(name, blocks, funcs, $defaults){
     // Transform a list of functions into a generator object, ie a function
     // that returns an iterator
     return function(){
@@ -634,7 +633,7 @@ $B.genfunc = function(name, blocks, funcs, $defaults){
         }
 
         var res = {
-            __class__: $gen_it,
+            __class__: generator,
             args: Array.prototype.slice.call(arguments),
             blocks: blocks,
             env: {},
@@ -649,9 +648,7 @@ $B.genfunc = function(name, blocks, funcs, $defaults){
         return res
     }
 }
-$B.genfunc.__class__ = $B.$factory
-$B.genfunc.$dict = $gen_it
-$gen_it.$factory = $B.genfunc
 
+$B.set_func_names(generator, "builtins")
 
 })(__BRYTHON__)
