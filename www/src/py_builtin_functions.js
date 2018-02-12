@@ -184,20 +184,18 @@ function chr(i) {
     return String.fromCharCode(i)
 }
 
-//classmethod() (built in function)
-function classmethod(func) {
+//classmethod() (built in class)
+var classmethod = $B.make_class("classmethod")
+
+classmethod.$factory = function(func) {
     check_nb_args('classmethod', 1, arguments.length)
     check_no_kw('classmethod', func)
 
     func.$type = 'classmethod'
     return func
 }
-classmethod.__class__=$B.$factory
-classmethod.$dict = {__class__:_b_.type,
-    __name__:'classmethod',
-    $factory: classmethod
-}
-classmethod.$dict.__mro__ = [object]
+
+$B.set_func_names(classmethod, "builtins")
 
 //compile() (built in function)
 $B.$CodeObjectDict = {
@@ -1713,16 +1711,14 @@ function sorted () {
 }
 
 // staticmethod() built in function
-var $StaticmethodDict = {__class__:_b_.type,__name__:'staticmethod'}
-$StaticmethodDict.__mro__ = [object]
+var staticmethod = $B.make_class("staticmethod")
 
-function staticmethod(func) {
+staticmethod.$factory = function(func) {
     func.$type = 'staticmethod'
     return func
 }
-staticmethod.__class__=$B.$factory
-staticmethod.$dict = $StaticmethodDict
-$StaticmethodDict.$factory = staticmethod
+
+$B.set_func_names("staticmethod", "builtins")
 
 // str() defined in py_string.js
 

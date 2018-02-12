@@ -1299,7 +1299,7 @@ function $CallCtx(context){
         if(this.func!==undefined) {
             switch(this.func.value) {
               case 'classmethod':
-                return 'classmethod('+$to_js(this.tree)+')'
+                return 'classmethod.$factory('+$to_js(this.tree)+')'
               case '$$super':
                 if(this.tree.length==0){
                    // super() called with no argument : if inside a class, add the
@@ -1467,7 +1467,8 @@ function $CallCtx(context){
                       var new_style = ["complex", "bytes", "bytearray",
                           "object", "memoryview", "int", "float", "str",
                           "list", "tuple", "dict", "set", "frozenset",
-                          "range", "slice", "zip", "bool", "type"]
+                          "range", "slice", "zip", "bool", "type",
+                          "classmethod", "staticmethod"]
                       if($B.builtin_funcs[this.func.value]!==undefined &&
                               new_style.indexOf(this.func.value) == -1 // XXX temporary
                           ){

@@ -76,8 +76,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-02-12 07:42:34.342111"
-__BRYTHON__.timestamp=1518417754357
+__BRYTHON__.compiled_date="2018-02-12 07:57:49.108654"
+__BRYTHON__.timestamp=1518418669108
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -696,7 +696,7 @@ if(this.tree.length>0){if(this.tree[this.tree.length-1].tree.length==0){
 this.tree.pop()}}
 var func_js=this.func.to_js()
 if(this.func!==undefined){switch(this.func.value){case 'classmethod':
-return 'classmethod('+$to_js(this.tree)+')'
+return 'classmethod.$factory('+$to_js(this.tree)+')'
 case '$$super':
 if(this.tree.length==0){
 var scope=$get_scope(this)
@@ -778,7 +778,7 @@ if(star_args){
 args_str='.apply(null,'+args_str+')'}else{args_str='('+args_str+')'}
 var default_res="$B.$call("+func_js+")" + args_str
 if(this.tree.length>-1){if(this.func.type=='id'){if(this.func.is_builtin){
-var new_style=["complex","bytes","bytearray","object","memoryview","int","float","str","list","tuple","dict","set","frozenset","range","slice","zip","bool","type"]
+var new_style=["complex","bytes","bytearray","object","memoryview","int","float","str","list","tuple","dict","set","frozenset","range","slice","zip","bool","type","classmethod","staticmethod"]
 if($B.builtin_funcs[this.func.value]!==undefined &&
 new_style.indexOf(this.func.value)==-1 
 ){return func_js+args_str}}else{var bound_obj=this.func.found
@@ -4517,7 +4517,7 @@ $B.set_func_names(object,"builtins")
 $B.make_class=function(class_obj){
 var A={__class__: _b_.type,__mro__:[object],__name__: class_obj.name,$is_class: true}
 A.$factory=function(){var res={__class__:A}
-if(class_obj.init){class_obj.init.apply(null,[res].concat(Array.prototype.slice.call(arguments)))}
+if(class_obj.init){class_obj.init(res,...arguments)}
 return res}
 return A}
 return object})(__BRYTHON__)
@@ -5458,13 +5458,12 @@ function chr(i){check_nb_args('chr',1,arguments.length)
 check_no_kw('chr',i)
 if(i < 0 ||i > 1114111)_b_.ValueError.$factory('Outside valid range')
 return String.fromCharCode(i)}
-function classmethod(func){check_nb_args('classmethod',1,arguments.length)
+var classmethod=$B.make_class("classmethod")
+classmethod.$factory=function(func){check_nb_args('classmethod',1,arguments.length)
 check_no_kw('classmethod',func)
 func.$type='classmethod'
 return func}
-classmethod.__class__=$B.$factory
-classmethod.$dict={__class__:_b_.type,__name__:'classmethod',$factory: classmethod}
-classmethod.$dict.__mro__=[object]
+$B.set_func_names(classmethod,"builtins")
 $B.$CodeObjectDict={__class__:_b_.type,__name__:'code',__repr__:function(self){return '<code object '+self.name+', file '+self.filename+'>'},}
 $B.$CodeObjectDict.__str__=$B.$CodeObjectDict.__repr__
 $B.$CodeObjectDict.__mro__=[object]
@@ -6089,13 +6088,10 @@ var _list=_b_.list.$factory(iter($.iterable)),args=[_list]
 for(var i=1;i<arguments.length;i++){args.push(arguments[i])}
 _b_.list.sort.apply(null,args)
 return _list}
-var $StaticmethodDict={__class__:_b_.type,__name__:'staticmethod'}
-$StaticmethodDict.__mro__=[object]
-function staticmethod(func){func.$type='staticmethod'
+var staticmethod=$B.make_class("staticmethod")
+staticmethod.$factory=function(func){func.$type='staticmethod'
 return func}
-staticmethod.__class__=$B.$factory
-staticmethod.$dict=$StaticmethodDict
-$StaticmethodDict.$factory=staticmethod
+$B.set_func_names("staticmethod","builtins")
 function sum(iterable,start){var $=$B.args('sum',2,{iterable:null,start:null},['iterable','start'],arguments,{start: 0},null,null),iterable=$.iterable,start=$.start
 if(start===undefined){start=0}else{
 if(typeof start==='str'){throw _b_.TypeError.$factory("TypeError: sum() can't sum strings [use ''.join(seq) instead]")}

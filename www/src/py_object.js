@@ -392,8 +392,7 @@ $B.make_class = function(class_obj){
     A.$factory = function(){
         var res = {__class__:A}
         if(class_obj.init){
-            class_obj.init.apply(null,
-                [res].concat(Array.prototype.slice.call(arguments)))
+            class_obj.init(res, ...arguments)
         }
         return res
     }
