@@ -1145,7 +1145,7 @@ str.format = function(self) {
                 value = _b_.getattr(value, '__getitem__')(key)
             }
         }
-        
+
         // If the conversion flag is set, first call a function to convert
         // the value
         if(fmt.conv=='a'){value = _b_.ascii(value)}

@@ -76,8 +76,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-02-12 21:16:24.917082"
-__BRYTHON__.timestamp=1518466584917
+__BRYTHON__.compiled_date="2018-02-12 21:52:01.171983"
+__BRYTHON__.timestamp=1518468721171
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -11537,9 +11537,9 @@ return obj})(__BRYTHON__)}
 modules['browser']=browser
 modules['javascript']={__file__:$B.brython_path+'/libs/javascript.js',$$this: function(){
 if($B.js_this===undefined){return $B.builtins.None}
-return $B.JSObject($B.js_this)},JSObject: function(){console.log('"javascript.JSObject" is deprecrated. '+
+return $B.JSObject.$factory($B.js_this)},JSObject: function(){console.log('"javascript.JSObject" is deprecrated. '+
 'Please refer to the documentation.')
-return $B.JSObject.apply(null,arguments)},JSConstructor: function(){console.log('"javascript.JSConstructor" is deprecrated. '+
+return $B.JSObject.$factory(...arguments)},JSConstructor: function(){console.log('"javascript.JSConstructor" is deprecrated. '+
 'Please refer to the documentation.')
 return $B.JSConstructor.$factory.apply(null,arguments)},load:function(script_url){console.log('"javascript.load" is deprecrated. '+
 'Use browser.load instead.')

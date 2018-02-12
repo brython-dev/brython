@@ -255,12 +255,12 @@
             // returns the content of Javascript "this"
             // $B.js_this is set to "this" at the beginning of each function
             if($B.js_this===undefined){return $B.builtins.None}
-            return $B.JSObject($B.js_this)
+            return $B.JSObject.$factory($B.js_this)
         },
         JSObject: function(){
             console.log('"javascript.JSObject" is deprecrated. '+
                 'Please refer to the documentation.')
-            return $B.JSObject.apply(null, arguments)
+            return $B.JSObject.$factory(...arguments)
         },
         JSConstructor: function(){
             console.log('"javascript.JSConstructor" is deprecrated. '+

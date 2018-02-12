@@ -43,7 +43,7 @@ function makeTagDict(tagName){
                 }
             } else { // argument is another DOMNode instance
                 try{self.elt.appendChild(first.elt)}
-                catch(err){throw ValueError('wrong element '+first)}
+                catch(err){throw ValueError.$factory('wrong element '+first)}
             }
         }
 
@@ -70,7 +70,7 @@ function makeTagDict(tagName){
                         arg = arg.replace('_','-')
                         self.elt.setAttributeNS(null,arg,value)
                     }catch(err){
-                        throw ValueError("can't set attribute "+arg)
+                        throw ValueError.$factory("can't set attribute "+arg)
                     }
                 }
             }
@@ -93,23 +93,19 @@ function makeTagDict(tagName){
         }
     }
 
+    dict.$factory = function(){
+        var res = $B.DOMNode.$factory(document.createElementNS($svgNS,tagName))
+        res.__class__ = dict
+        // apply __init__
+        dict.__init__(res, ...arguments)
+        return res
+    }
+
     $B.set_func_names(dict, "browser.svg")
 
     return dict
 }
 
-function makeFactory(tagName){
-    var factory = function(){
-        var res = $B.DOMNode.$factory(document.createElementNS($svgNS,tagName))
-        res.__class__ = dicts[tagName]
-        // apply __init__
-        var args = [res]
-        for(var i=0, _len_i = arguments.length; i < _len_i;i++){args.push(arguments[i])}
-        dicts[tagName].__init__.apply(null,args)
-        return res
-    }
-    return factory
-}
 
 // SVG
 var $svg_tags = ['a',
@@ -154,9 +150,7 @@ var obj = new Object()
 var dicts = {}
 for(var i=0, _len_i = $svg_tags.length; i < _len_i;i++){
     var tag = $svg_tags[i]
-    dicts[tag] = makeTagDict(tag)
-    obj[tag] = makeFactory(tag)
-    dicts[tag].$factory = obj[tag]
+    obj[tag] = makeTagDict(tag)
 }
 return obj
 })(__BRYTHON__)
