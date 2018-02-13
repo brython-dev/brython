@@ -276,7 +276,7 @@ OpenFile.__setattr__ = function(self, attr, value) {
     }
 }
 
-$B.set_func_names(OpenFile)
+$B.set_func_names(OpenFile, "<dom>")
 
 var dom = { File : function(){},
     FileReader : function(){}

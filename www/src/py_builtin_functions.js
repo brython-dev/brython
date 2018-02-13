@@ -344,10 +344,10 @@ var enumerate = $B.make_class("enumerate",
     }
 )
 
-$B.set_func_names("enumerate", "builtins")
+$B.set_func_names(enumerate, "builtins")
 
 //eval() (built in function)
-function $eval(src, _globals, _locals){
+function $$eval(src, _globals, _locals){
 
     function from_alias(attr){
         if(attr.substr(0, 2)=='$$' && $B.aliased_names[attr.substr(2)]){
@@ -584,37 +584,48 @@ function $eval(src, _globals, _locals){
 
     }
 }
-$eval.$is_func = true
+$$eval.$is_func = true
 
 function exec(src, globals, locals){
-    return $eval(src, globals, locals,'exec') || _b_.None
+    return $$eval(src, globals, locals,'exec') || _b_.None
 }
 
 exec.$is_func = true
 
-var $FilterDict = {__class__:_b_.type,__name__:'filter'}
-$FilterDict.__iter__ = function(self){return self}
-$FilterDict.__repr__ = $FilterDict.__str__ = function(){return "<filter object>"},
-$FilterDict.__mro__ = [object]
+function exit(){
+    throw _b_.SystemExit
+}
 
-function filter(func, iterable){
-    check_no_kw('filter', func, iterable)
-    check_nb_args('filter', 2, arguments.length)
+exit.__repr__ = exit.__str__ = function(){
+    return "Use exit() or Ctrl-Z plus Return to exit"
+}
 
-    iterable=iter(iterable)
-    if(func === _b_.None) func = $B.$bool
+var filter = $B.make_class("filter",
+    function(func, iterable){
+        check_no_kw('filter', func, iterable)
+        check_nb_args('filter', 2, arguments.length)
 
-    var __next__ = function() {
-        while(true){
-            var _item = next(iterable)
-            if (func(_item)){return _item}
+        iterable=iter(iterable)
+        if(func === _b_.None) func = $B.$bool
+
+        return {
+            __class__: filter,
+            func: func,
+            iterable: iterable
         }
     }
-    return {
-        __class__: $FilterDict,
-        __next__: __next__
+)
+
+filter.__iter__ = function(self){return self}
+
+filter.__next__ = function(self) {
+    while(true){
+        var _item = next(self.iterable)
+        if (self.func(_item)){return _item}
     }
 }
+
+$B.set_func_names(filter, "builtins")
 
 function format(value, format_spec) {
   var args = $B.args("format",2,{value:null,format_spec:null},
@@ -963,6 +974,11 @@ function help(obj){
     catch(err){$B.current_exception = ce;return ''}
 }
 
+help.__repr__ = help.__str__ = function(){
+    return "Type help() for interactive help, or help(object) " +
+        "for help about object."
+}
+
 function hex(x) {
     check_no_kw('hex', x)
     check_nb_args('hex', 1, arguments.length)
@@ -1291,7 +1307,7 @@ memoryview.__eq__ = function(self, other){
     if(other.__class__!==memoryview){return false}
     return getattr(self.obj, '__eq__')(other.obj)
 }
-memoryview.__name__ = "memory"
+
 memoryview.__getitem__ = function(self, key){
     var res = self.obj.__class__.__getitem__(self.obj, key)
     if(key.__class__===_b_.slice){return memoryview.$factory(res)}
@@ -1312,7 +1328,7 @@ memoryview.tolist = function(self){
     return _b_.list.$factory(_b_.bytes.$factory(self.obj))
 }
 
-$B.set_func_names("memoryview", "builtins")
+$B.set_func_names(memoryview, "builtins")
 
 function min(){
     var args = [], pos=0
@@ -1438,7 +1454,14 @@ var property = $B.make_class("property",
         return p
     }
 )
-$B.set_func_names("property", "builtins")
+$B.set_func_names(property, "builtins")
+
+function quit(){
+    throw _b_.SystemExit
+}
+quit.__repr__ = quit.__str__ = function(){
+    return "Use quit() or Ctrl-Z plus Return to exit"
+}
 
 function repr(obj){
     check_no_kw('repr', obj)
@@ -1506,6 +1529,8 @@ reversed.__next__ = function(self){
     if(self.$counter<0) throw _b_.StopIteration.$factory('')
     return self.getter(self.$counter)
 }
+
+$B.set_func_names(reversed, "builtins")
 
 function round(arg,n){
     var $ = $B.args('round', 2, {number:null, ndigits:null},
@@ -1696,7 +1721,7 @@ var staticmethod = $B.make_class("staticmethod",
         return func
     }
 )
-$B.set_func_names("staticmethod", "builtins")
+$B.set_func_names(staticmethod, "builtins")
 
 // str() defined in py_string.js
 
@@ -1799,7 +1824,7 @@ $$super.__repr__ = $$super.__str__=function(self){
     return res+'>'
 }
 
-$B.set_func_names("super", "builtins")
+$B.set_func_names($$super, "builtins")
 
 function vars(){
     var def = {},
@@ -2095,6 +2120,7 @@ Function.__getattribute__ = function(self, attr){
 }
 
 Function.__repr__=Function.__str__ = function(self){
+    if(self.$infos===undefined){console.log(self)}
     return '<function '+self.$infos.__qualname__+'>'
 }
 
@@ -2110,75 +2136,64 @@ $B.set_func_names(Function, "builtins")
 
 _b_.__BRYTHON__ = __BRYTHON__
 
-var builtin_funcs = ['abs', 'all', 'any', 'ascii', 'bin', 'bool', 'bytearray',
-'bytes', 'callable', 'chr', 'classmethod', 'compile', 'complex', 'delattr',
-'dict', 'dir', 'divmod', 'enumerate', 'eval', 'exec', 'exit',
-'filter', 'float', 'format', 'frozenset', 'getattr', 'globals', 'hasattr', 'hash',
-'help', 'hex', 'id', 'input', 'int', 'isinstance', 'issubclass', 'iter', 'len',
-'list', 'locals', 'map', 'max', 'memoryview', 'min', 'next', 'object',
-'oct', 'open', 'ord', 'pow', 'print', 'property', 'quit', 'range', 'repr',
-'reversed', 'round', 'set', 'setattr', 'slice', 'sorted', 'staticmethod', 'str',
-'sum','$$super', 'tuple', 'type', 'vars', 'zip']
-
-var builtin_classes = [
-    "complex", "bytes", "bytearray", "object", "memoryview", "int", "float",
-    "str", "list", "tuple", "dict", "set", "frozenset", "range", "slice",
-    "zip", "bool", "type", "classmethod", "staticmethod", "enumerate",
-    "reversed", "property", "$$super", "zip"
+$B.builtin_funcs = [
+    "abs", "all", "any", "ascii", "bin", "callable", "chr", "compile",
+    "delattr", "dir", "divmod", "eval", "exec", "exit", "format", "getattr",
+    "globals", "hasattr", "hash", "help", "hex", "id", "input", "isinstance",
+    "issubclass", "iter", "len", "locals", "max", "min", "next", "oct",
+    "open", "ord", "pow", "print", "quit", "repr", "round", "setattr",
+    "sorted", "sum", "vars"
 ]
 
-for(var i=0;i<builtin_funcs.length;i++){
-    var name = builtin_funcs[i]
-    if(name=='open'){name1 = '$url_open'}
-    if(name=='super'){name = '$$super'}
-    if(name=='eval'){name = '$eval'}
-    $B.builtin_funcs[name]=true
-}
-$B.builtin_funcs['$eval'] = true
+$B.builtin_classes = [
+    "bool", "bytearray", "bytes", "classmethod", "complex", "dict", "enumerate",
+    "filter", "float", "frozenset", "int", "list", "map", "memoryview",
+    "object", "property", "range", "reversed", "set", "slice", "staticmethod",
+    "str", "super", "tuple", "type", "zip"
+]
 
-var other_builtins = [ 'Ellipsis', 'False',  'None', 'True',
-'__debug__', '__import__',
-'copyright', 'credits', 'license', 'NotImplemented', 'type']
+var other_builtins = [
+    'Ellipsis', 'False',  'None', 'True', '__debug__', '__import__',
+    'copyright', 'credits', 'license', 'NotImplemented'
+]
 
-var builtin_names = builtin_funcs.concat(other_builtins)
+var builtin_names = $B.builtin_funcs.
+    concat($B.builtin_classes).
+    concat(other_builtins)
 
 for(var i=0;i<builtin_names.length;i++){
-    var name = builtin_names[i]
-    var orig_name = name
-    var name1 = name
+    var name = builtin_names[i],
+        orig_name = name,
+        name1 = name
     if(name=='open'){name1 = '$url_open'}
-    if(name=='super'){name = '$$super'}
+    if(name=='super'){name = name1 = '$$super'}
     if(name=='eval'){name = name1 = '$$eval'}
     if(name=='print'){name1 = '$print'}
     $B.bound['__builtins__'][name] = true
     try{
         _b_[name] = eval(name1)
-        if($B.builtin_funcs[name]!==undefined){
-            //console.log(name+' is builtin func')
+        if($B.builtin_funcs.indexOf(orig_name) > -1){
             if(_b_[name].__repr__===undefined){
-                //console.log('set repr for '+name)
                 _b_[name].__repr__ = _b_[name].__str__ = (function(x){
                     return function(){return '<built-in function '+x+'>'}
                 })(orig_name)
             }
             // used by inspect module
-            _b_[name].__module__ = 'builtins'
-            _b_[name].__name__ = name
-            _b_[name].__defaults__= _b_[name].__defaults__ || []
-            _b_[name].__kwdefaults__= _b_[name].__kwdefaults__ || {}
-            _b_[name].__annotations__= _b_[name].__annotations__ || {}
+            _b_[name].$infos = {
+                __module__: 'builtins',
+                __name__: name
+            }
         }
-        _b_[name].__doc__=_b_[name].__doc__ || ''
 
     }
-    catch(err){}
+    catch(err){
+        // Error for the built-in names that are not defined in this script,
+        // eg int, str, float, etc.
+    }
 }
-
-_b_['$$eval']=$eval
 
 _b_['open']=$url_open
 _b_['print']=$print
 _b_['$$super']=$$super
-
 
 })(__BRYTHON__)

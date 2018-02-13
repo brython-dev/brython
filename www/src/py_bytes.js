@@ -740,8 +740,8 @@ for(var attr in bytes){
     }
 }
 
-$B.set_func_names(bytes)
-$B.set_func_names(bytearray)
+$B.set_func_names(bytes, "builtins")
+$B.set_func_names(bytearray, "builtins")
 
 _b_.bytes = bytes
 _b_.bytearray = bytearray

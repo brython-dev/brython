@@ -163,7 +163,7 @@ frame.__getattr__ = function(self, attr){
     }
 }
 
-$B.set_func_names("frame", "builtins")
+$B.set_func_names(frame, "builtins")
 $B._frame = frame // used in builtin_modules.js
 
 
@@ -244,7 +244,7 @@ BaseException.__getattr__ = function(self, attr){
         return traceback.$factory(self.$stack)
     }else{
         throw _b_.AttributeError.$factory(self.__class__.__name__+
-            "has no attribute '"+attr+"'")
+            " has no attribute '"+attr+"'")
     }
 }
 

@@ -338,7 +338,7 @@ complex.$factory = function(){
     return complex.__new__(complex, ...arguments)
 }
 
-$B.set_func_names(complex)
+$B.set_func_names(complex, "builtins")
 
 _b_.complex = complex
 

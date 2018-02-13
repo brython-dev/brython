@@ -474,7 +474,7 @@ type.$factory = function(obj, bases, cl_dict){
     // DRo - End
 }
 
-$B.set_func_names(type, "__builtins__")
+$B.set_func_names(type, "builtins")
 
 _b_.type = type
 

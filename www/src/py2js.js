@@ -1469,11 +1469,14 @@ function $CallCtx(context){
                           "list", "tuple", "dict", "set", "frozenset",
                           "range", "slice", "zip", "bool", "type",
                           "classmethod", "staticmethod", "enumerate",
-                          "reversed", "property", "$$super", "zip"]
-                      if($B.builtin_funcs[this.func.value]!==undefined &&
-                              new_style.indexOf(this.func.value) == -1 // XXX temporary
-                          ){
-                          return func_js+args_str
+                          "reversed", "property", "$$super", "zip", "map",
+                          "filter"]
+                      if($B.builtin_funcs[this.func.value]!==undefined){
+                          if(new_style.indexOf(this.func.value) == -1){// XXX temporary
+                              return func_js + args_str
+                          }else{
+                              return func_js + ".$factory" + args_str
+                          }
                       }
                   }else{
                       var bound_obj = this.func.found

@@ -372,6 +372,7 @@
     // Set builtin name __builtins__
     _b_.__builtins__ = $B.module.$factory('__builtins__',
         'Python builtins')
+
     for(var attr in $B.builtins){
         _b_.__builtins__[attr] = _b_[attr]
     }
