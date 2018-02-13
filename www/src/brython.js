@@ -76,8 +76,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-02-13 10:57:35.720063"
-__BRYTHON__.timestamp=1518515855720
+__BRYTHON__.compiled_date="2018-02-13 20:45:33.738149"
+__BRYTHON__.timestamp=1518551133738
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -4627,8 +4627,7 @@ return _b_.str.$factory(klass)}
 function method_wrapper(attr,klass,method){
 method.__str__=method.__repr__=function(self){return "<method '"+attr+"' of '"+klass.__name__+"' objects>"}
 return method}
-type.__repr__=type.__str__=function(kls){if(kls.__name__=="memoryview"){console.log("type str",kls)}
-var qualname=kls.__name__
+type.__repr__=type.__str__=function(kls){var qualname=kls.__name__
 if(kls.__module__ !='builtins'){qualname=kls.__module__ + '.' + qualname}
 return "<class '" + qualname +"'>"}
 type.__getattribute__=function(klass,attr){
@@ -5978,6 +5977,7 @@ reversed.__iter__=function(self){return self}
 reversed.__next__=function(self){self.$counter--
 if(self.$counter<0)throw _b_.StopIteration.$factory('')
 return self.getter(self.$counter)}
+$B.set_func_names(reversed,"builtins")
 function round(arg,n){var $=$B.args('round',2,{number:null,ndigits:null},['number','ndigits'],arguments,{ndigits: None},null,null),arg=$.number,n=$.ndigits
 if(!isinstance(arg,[_b_.int,_b_.float])){if(!hasattr(arg,'__round__'))
 throw _b_.TypeError.$factory("type "+arg.__class__+
@@ -6205,7 +6205,7 @@ $B.set_func_names(Function,"builtins")
 _b_.__BRYTHON__=__BRYTHON__
 $B.builtin_funcs=["abs","all","any","ascii","bin","callable","chr","compile","delattr","dir","divmod","eval","exec","exit","format","getattr","globals","hasattr","hash","help","hex","id","input","isinstance","issubclass","iter","len","locals","max","min","next","oct","open","ord","pow","print","quit","repr","round","setattr","sorted","sum","vars"
 ]
-$B.builtin_classes=["complex","bytes","bytearray","object","memoryview","int","float","str","list","tuple","dict","set","frozenset","range","slice","zip","bool","type","classmethod","staticmethod","enumerate","reversed","property","super","zip"
+$B.builtin_classes=["bool","bytearray","bytes","classmethod","complex","dict","enumerate","filter","float","frozenset","int","list","map","memoryview","object","property","range","reversed","set","slice","staticmethod","str","super","tuple","type","zip"
 ]
 var other_builtins=['Ellipsis','False','None','True','__debug__','__import__','copyright','credits','license','NotImplemented'
 ]
