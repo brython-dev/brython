@@ -1164,33 +1164,34 @@ function locals(){
 }
 
 
-var $MapDict = {__class__:_b_.type,__name__:'map'}
-$MapDict.__mro__ = [object]
-$MapDict.__iter__ = function (self){return self}
-
-function map(){
-    var $ = $B.args('map', 2, {func: null, it1:null}, ['func', 'it1'],
-        arguments, {}, 'args', null),
-        func = $B.$call($.func)
-    var iter_args = [$B.$iter($.it1)]
-    for(var i=0;i<$.args.length;i++){
-        iter_args.push($B.$iter($.args[i]))
-    }
-    var __next__ = function(){
-        var args = [], pos=0
-        for(var i=0;i<iter_args.length;i++){
-            args[pos++]=next(iter_args[i])
+var map = $B.make_class("map",
+    function(){
+        var $ = $B.args('map', 2, {func: null, it1:null}, ['func', 'it1'],
+            arguments, {}, 'args', null),
+            func = $B.$call($.func)
+        var iter_args = [$B.$iter($.it1)]
+        for(var i=0;i<$.args.length;i++){
+            iter_args.push($B.$iter($.args[i]))
         }
-        return func.apply(null,args)
+        var obj = {
+            __class__: map,
+            args: iter_args,
+            func: func
+        }
+        return obj
     }
-    var obj = {
-        __class__:$MapDict,
-        __repr__:function(){return "<map object>"},
-        __str__:function(){return "<map object>"},
-        __next__: __next__
+)
+
+map.__iter__ = function (self){return self}
+map.__next__ = function(self){
+    var args = [], pos=0
+    for(var i=0;i<self.args.length;i++){
+        args[pos++]=next(self.args[i])
     }
-    return obj
+    return self.func.apply(null,args)
 }
+
+$B.set_func_names(map, "builtins")
 
 
 function $extreme(args,op){ // used by min() and max()
@@ -1734,10 +1735,10 @@ function sum(iterable,start){
 
 // super() built in function
 var $$super = $B.make_class("super",
-    function (_type1,_type2){
-        return {__class__:$$super,
-            __thisclass__:_type1,
-            __self_class__:(_type2 || None)
+    function (_type1, _type2){
+        return {__class__: $$super,
+            __thisclass__: _type1,
+            __self_class__: _type2
         }
     }
 )
@@ -1748,7 +1749,7 @@ $$super.__getattribute__ = function(self, attr){
         res
 
     var sc = self.__self_class__
-    if(sc!==None){
+    if(sc!==undefined){
         if(sc.__class__!==$B.$factory && !sc.$is_class){
             sc = sc.__class__
         }
@@ -1792,6 +1793,8 @@ $$super.__repr__ = $$super.__str__=function(self){
     var res = "<super: <class '"+self.__thisclass__.__name__+"'>"
     if(self.__self_class__!==undefined){
         res += ', <'+self.__self_class__.__class__.__name__+' object>'
+    }else{
+        res += ', NULL'
     }
     return res+'>'
 }
@@ -2116,6 +2119,13 @@ var builtin_funcs = ['abs', 'all', 'any', 'ascii', 'bin', 'bool', 'bytearray',
 'oct', 'open', 'ord', 'pow', 'print', 'property', 'quit', 'range', 'repr',
 'reversed', 'round', 'set', 'setattr', 'slice', 'sorted', 'staticmethod', 'str',
 'sum','$$super', 'tuple', 'type', 'vars', 'zip']
+
+var builtin_classes = [
+    "complex", "bytes", "bytearray", "object", "memoryview", "int", "float",
+    "str", "list", "tuple", "dict", "set", "frozenset", "range", "slice",
+    "zip", "bool", "type", "classmethod", "staticmethod", "enumerate",
+    "reversed", "property", "$$super", "zip"
+]
 
 for(var i=0;i<builtin_funcs.length;i++){
     var name = builtin_funcs[i]
