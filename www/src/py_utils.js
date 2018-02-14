@@ -1369,7 +1369,7 @@ $B.rich_comp = function(op, x, y){
         }
     }
     var res, rev_op, compared = false
-    
+
     if(x.$is_class || x.$factory) {
         if ( op == '__eq__') {
             return (x === y)

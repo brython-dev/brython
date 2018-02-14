@@ -381,37 +381,44 @@ function $$eval(src, _globals, _locals){
 
     // code will be run in a specific block
     var globals_id = '$exec_'+$B.UUID(),
-        locals_id,
+        locals_id = '$exec_' + $B.UUID(),
         parent_block_id,
         ce = $B.current_exception
 
-    // If a _globals dictionary is provided, set or reuse its attribute
-    // globals_id
-    if(_globals !== undefined){
+    if(_globals === undefined){
+        if(current_locals_id == current_globals_id){
+            locals_id = globals_id
+        }
+        parent_block_id = current_locals_id
+
+    }else{
+        // If a _globals dictionary is provided, set or reuse its attribute
+        // globals_id
         if(_globals.__class__!=_b_.dict){
             throw _b_.TypeError.$factory("exec() globals must be a dict, not "+
                 _globals.__class__.__name__)
         }
         _globals.globals_id = _globals.globals_id || globals_id
         globals_id = _globals.globals_id
+
+        if(_locals===_globals || _locals===undefined){
+            locals_id = globals_id
+            parent_block_id = "__builtins__"
+        }else{
+            // The parent block of locals must be set to globals
+            parent_block_id = globals_id
+            if($B.modules[globals_id] === undefined){
+                $B.modules[globals_id] = {
+                    id: globals_id,
+                    parent_block: $B.modules["__builtins__"]
+                }
+            }
+        }
     }
 
     // set module path
     $B.$py_module_path[globals_id] = $B.$py_module_path[current_globals_id]
 
-    if(_globals===undefined){
-        if(current_locals_id == current_globals_id){
-            locals_id = globals_id
-        }else{
-            locals_id = '$exec_' + $B.UUID()
-        }
-    }else{
-        if(_locals===_globals || _locals===undefined){
-            locals_id = globals_id
-        }else{
-            locals_id = '$exec_' + $B.UUID()
-        }
-    }
     // Initialise the object for block namespaces
     eval('var $locals_'+globals_id+' = {}\nvar $locals_'+locals_id+' = {}')
 
@@ -419,7 +426,6 @@ function $$eval(src, _globals, _locals){
     if(_globals===undefined){
         var gobj = current_frame[3],
             ex = ''
-        parent_block_id = current_globals_id
         ex += 'var $locals_'+current_globals_id+'=gobj;' // needed for generators
         ex += 'var $locals_'+globals_id+'=gobj;'
         eval(ex)
@@ -442,7 +448,6 @@ function $$eval(src, _globals, _locals){
                 break
             }
         }
-        parent_block_id = '__builtins__'
     }
 
     // Initialise block locals

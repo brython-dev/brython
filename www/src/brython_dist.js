@@ -76,8 +76,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-02-13 20:45:33.738149"
-__BRYTHON__.timestamp=1518551133738
+__BRYTHON__.compiled_date="2018-02-14 10:37:52.860452"
+__BRYTHON__.timestamp=1518601072860
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -3839,7 +3839,9 @@ var root=new $Node('module')
 root.module=module
 root.id=locals_id
 $B.modules[root.id]=root
-if(locals_id==parent_block_id){root.parent_block=$B.modules[parent_block_id].parent_block ||$B.modules['__builtins__']}else{root.parent_block=$B.modules[parent_block_id]||$B.modules['__builtins__']}
+if(locals_id==parent_block_id){root.parent_block=$B.modules[parent_block_id].parent_block ||
+$B.modules['__builtins__']}else{root.parent_block=$B.modules[parent_block_id]||
+$B.modules['__builtins__']}
 root.line_info=line_info
 root.indent=-1
 root.comments=[]
@@ -5516,16 +5518,20 @@ var is_exec=arguments[3]=='exec',leave=false
 if(src.__class__===code){is_exec=src.mode=="exec"
 src=src.source}else if(typeof src !=='string'){throw _b_.TypeError.$factory("eval() arg 1 must be a string, bytes "+
 "or code object")}
-var globals_id='$exec_'+$B.UUID(),locals_id,parent_block_id,ce=$B.current_exception
-if(_globals !==undefined){if(_globals.__class__!=_b_.dict){throw _b_.TypeError.$factory("exec() globals must be a dict, not "+
+var globals_id='$exec_'+$B.UUID(),locals_id='$exec_' + $B.UUID(),parent_block_id,ce=$B.current_exception
+if(_globals===undefined){if(current_locals_id==current_globals_id){locals_id=globals_id}
+parent_block_id=current_locals_id}else{
+if(_globals.__class__!=_b_.dict){throw _b_.TypeError.$factory("exec() globals must be a dict, not "+
 _globals.__class__.__name__)}
 _globals.globals_id=_globals.globals_id ||globals_id
-globals_id=_globals.globals_id}
+globals_id=_globals.globals_id
+if(_locals===_globals ||_locals===undefined){locals_id=globals_id
+parent_block_id="__builtins__"}else{
+parent_block_id=globals_id
+if($B.modules[globals_id]===undefined){$B.modules[globals_id]={id: globals_id,parent_block: $B.modules["__builtins__"]}}}}
 $B.$py_module_path[globals_id]=$B.$py_module_path[current_globals_id]
-if(_globals===undefined){if(current_locals_id==current_globals_id){locals_id=globals_id}else{locals_id='$exec_' + $B.UUID()}}else{if(_locals===_globals ||_locals===undefined){locals_id=globals_id}else{locals_id='$exec_' + $B.UUID()}}
 eval('var $locals_'+globals_id+' = {}\nvar $locals_'+locals_id+' = {}')
 if(_globals===undefined){var gobj=current_frame[3],ex=''
-parent_block_id=current_globals_id
 ex +='var $locals_'+current_globals_id+'=gobj;' 
 ex +='var $locals_'+globals_id+'=gobj;'
 eval(ex)
@@ -5537,8 +5543,7 @@ for(var item in items){item1=to_alias(item)
 try{eval('$locals_'+globals_id+'["'+item1+'"] = items[item]')
 $B.bound[globals_id][item]=true}catch(err){console.log(err)
 console.log('error setting',item)
-break}}
-parent_block_id='__builtins__'}
+break}}}
 $B.bound[locals_id]=$B.bound[locals_id]||{}
 if(_locals===undefined){if(_globals!==undefined){eval('var $locals_'+locals_id+' = $locals_'+globals_id)}else{var lobj=current_frame[1],ex=''
 for(var attr in current_frame[1]){ex +='$locals_'+locals_id+'["'+attr+

@@ -3328,6 +3328,16 @@ function $IdCtx(context,value){
         var innermost = $get_scope(this),
             scope = innermost, found=[]
 
+        /*
+        if(val=="NOTHING"){
+            console.log("search order for", val)
+            var x = innermost
+            while(x){
+                console.log(x)
+                x = x.parent_block
+            }
+        }
+        */
         // get global scope
         var gs = innermost
         while(gs.parent_block && gs.parent_block.id!=='__builtins__'){
@@ -3396,6 +3406,7 @@ function $IdCtx(context,value){
             else{break}
         }
         this.found = found
+
         if(this.nonlocal && found[0]===innermost){found.shift()}
 
         if(found.length>0){
@@ -7153,9 +7164,11 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
     $B.modules[root.id] = root
 
     if(locals_id==parent_block_id){
-        root.parent_block = $B.modules[parent_block_id].parent_block || $B.modules['__builtins__']
+        root.parent_block = $B.modules[parent_block_id].parent_block ||
+            $B.modules['__builtins__']
     }else{
-        root.parent_block = $B.modules[parent_block_id] || $B.modules['__builtins__']
+        root.parent_block = $B.modules[parent_block_id] ||
+            $B.modules['__builtins__']
     }
     root.line_info = line_info
     root.indent = -1
