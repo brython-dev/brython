@@ -309,33 +309,31 @@ $B.$search = function(name, global_ns){
     }
 }
 
-$B.$global_search = function(name){
+$B.$global_search = function(name, search_ids){
     // search in all namespaces above current stack frame
-    var glob = $B.frames_stack[$B.frames_stack.length-1][2],
-        in_exec = glob.substr(0, 5)=="$exec",
-        end = 0
-    if(in_exec){
-        // If the code is running in an "exec", don't search further up than
-        // the global namespace defined for exec
-        var end = $B.frames_stack.length - 1
-        while(end>=1){
-            if($B.frames_stack[end - 1][0].startsWith("__ge")){
-                // If the code is run in a generator expression, use its
-                // global namespace
-                glob = $B.frames_stack[end - 1][2]
-            }else if($B.frames_stack[end - 1][2]!=glob){
-                break
-            }
-            end--
-        }
-    }
-    for(var i=$B.frames_stack.length-1; i>=end; i--){
+    if(name=="__package__"){console.log("cherche", name, "ids", search_ids)}
+    var ns = {}
+
+    for(var i=0;i<$B.frames_stack.length;i++){
         var frame = $B.frames_stack[i]
-        if(frame[3][name]!==undefined){return frame[3][name]}
-        if(frame[1][name]!==undefined){return frame[1][name]}
+        ns[frame[0]] = frame[1]
+        ns[frame[2]] = frame[3]
     }
 
-    throw _b_.NameError.$factory("name '"+$B.from_alias(name)+"' is not defined")
+    for(var i=0;i<search_ids.length;i++){
+        var search_id = search_ids[i]
+        if(name=="__package__"){
+            console.log("ns", search_id, ns[search_id], $B.imported[search_id])
+        }
+        if(ns[search_id] && ns[search_id][name]!==undefined){
+            return ns[search_id][name]
+        }else if($B.imported[search_id] && $B.imported[search_id][name]){
+            return $B.imported[search_id][name]
+        }
+    }
+
+    throw _b_.NameError.$factory("name '"+$B.from_alias(name)+
+        "' is not defined")
 }
 
 $B.$local_search = function(name){

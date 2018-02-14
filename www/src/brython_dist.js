@@ -76,8 +76,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-02-14 10:37:52.860452"
-__BRYTHON__.timestamp=1518601072860
+__BRYTHON__.compiled_date="2018-02-14 13:20:40.664809"
+__BRYTHON__.timestamp=1518610840664
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -1686,14 +1686,18 @@ return '$B.$search("'+val+'")'}
 if(this.unbound && !this.nonlocal){if(this.scope.ntype=='def' ||this.scope.ntype=='generator'){return '$B.$local_search("'+val+'")'}else{return '$B.$search("'+val+'")'}}
 if(val=='__BRYTHON__' ||val=='$B'){return val}
 var innermost=$get_scope(this),scope=innermost,found=[]
+var search_ids=['"' + innermost.id + '"']
 var gs=innermost
-while(gs.parent_block && gs.parent_block.id!=='__builtins__'){gs=gs.parent_block}
+while(gs.parent_block && gs.parent_block.id!=='__builtins__'){gs=gs.parent_block
+search_ids.push('"' + gs.id + '"')}
+search_ids="[" + search_ids.join(", ")+ "]"
 var global_ns='$locals_'+gs.id.replace(/\./g,'_')
 while(1){if($B.bound[scope.id]===undefined){console.log('name '+val+' undef '+scope.id)}
 if($B._globals[scope.id]!==undefined &&
 $B._globals[scope.id][val]!==undefined){
 if($B.bound[gs.id][val]!==undefined ||this.bound){this.result=global_ns+'["'+val+'"]'
-return this.result}else{this.result='$B.$global_search("'+val+'")'
+return this.result}else{this.result='$B.$global_search("'+val+'", ' +
+search_ids + ')'
 return this.result}}
 if(scope===innermost){
 var bound_before=this_node.bound_before
@@ -1760,7 +1764,7 @@ val='$B.$check_def_free("'+val+'",'+scope_name+'["'+val+'"])'}else{val='$B.$chec
 this.result=val+$to_js(this.tree,'')
 return this.result}else{
 this.unknown_binding=true
-this.result='$B.$global_search("'+val+'")'
+this.result='$B.$global_search("'+val+'", ' + search_ids + ')'
 return this.result}}}
 function $ImaginaryCtx(C,value){
 this.type='imaginary'
@@ -4844,17 +4848,17 @@ else if(_b_[name]!==undefined){return _b_[name]}
 else{if(frame[0]==frame[2]||frame[1].$type=="class"){throw _b_.NameError.$factory("name '"+name+"' is not defined")}
 else{throw _b_.UnboundLocalError.$factory("local variable '"+name+
 "' referenced before assignment")}}}
-$B.$global_search=function(name){
-var glob=$B.frames_stack[$B.frames_stack.length-1][2],in_exec=glob.substr(0,5)=="$exec",end=0
-if(in_exec){
-var end=$B.frames_stack.length - 1
-while(end>=1){if($B.frames_stack[end - 1][0].startsWith("__ge")){
-glob=$B.frames_stack[end - 1][2]}else if($B.frames_stack[end - 1][2]!=glob){break}
-end--}}
-for(var i=$B.frames_stack.length-1;i>=end;i--){var frame=$B.frames_stack[i]
-if(frame[3][name]!==undefined){return frame[3][name]}
-if(frame[1][name]!==undefined){return frame[1][name]}}
-throw _b_.NameError.$factory("name '"+$B.from_alias(name)+"' is not defined")}
+$B.$global_search=function(name,search_ids){
+if(name=="__package__"){console.log("cherche",name,"ids",search_ids)}
+var ns={}
+for(var i=0;i<$B.frames_stack.length;i++){var frame=$B.frames_stack[i]
+ns[frame[0]]=frame[1]
+ns[frame[2]]=frame[3]}
+for(var i=0;i<search_ids.length;i++){var search_id=search_ids[i]
+if(name=="__package__"){console.log("ns",search_id,ns[search_id],$B.imported[search_id])}
+if(ns[search_id]&& ns[search_id][name]!==undefined){return ns[search_id][name]}else if($B.imported[search_id]&& $B.imported[search_id][name]){return $B.imported[search_id][name]}}
+throw _b_.NameError.$factory("name '"+$B.from_alias(name)+
+"' is not defined")}
 $B.$local_search=function(name){
 var frame=$B.last($B.frames_stack)
 if(frame[1][name]!==undefined){return frame[1][name]}
@@ -7187,6 +7191,7 @@ $B.clear_ns(module.__name__)}
 try{
 var mod=eval('$module')
 for(var attr in mod){module[attr]=mod[attr];}
+console.log("initialize",module.__name__)
 module.__initializing__=false
 $B.imported[module.__name__]=module
 return true}catch(err){console.log(''+err+' '+' for module '+module.name)

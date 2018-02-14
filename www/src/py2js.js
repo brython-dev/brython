@@ -3328,21 +3328,15 @@ function $IdCtx(context,value){
         var innermost = $get_scope(this),
             scope = innermost, found=[]
 
-        /*
-        if(val=="NOTHING"){
-            console.log("search order for", val)
-            var x = innermost
-            while(x){
-                console.log(x)
-                x = x.parent_block
-            }
-        }
-        */
+        var search_ids = ['"' + innermost.id + '"']
         // get global scope
         var gs = innermost
         while(gs.parent_block && gs.parent_block.id!=='__builtins__'){
             gs = gs.parent_block
+            search_ids.push('"' + gs.id + '"')
         }
+        search_ids = "[" + search_ids.join(", ") + "]"
+
         var global_ns = '$locals_'+gs.id.replace(/\./g,'_')
 
         // Build the list of scopes where the variable name is bound
@@ -3360,7 +3354,8 @@ function $IdCtx(context,value){
                     this.result = global_ns+'["'+val+'"]'
                     return this.result
                 }else{
-                    this.result = '$B.$global_search("'+val+'")'
+                    this.result = '$B.$global_search("'+val+'", ' +
+                        search_ids + ')'
                     return this.result
                 }
             }
@@ -3604,7 +3599,7 @@ function $IdCtx(context,value){
             // else raise a NameError
             // Function $search is defined in py_utils.js
 
-            this.result = '$B.$global_search("'+val+'")'
+            this.result = '$B.$global_search("'+val+'", ' + search_ids + ')'
             return this.result
         }
     }

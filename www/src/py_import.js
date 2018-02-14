@@ -272,6 +272,7 @@ function run_py(module_contents,path,module,compiled) {
         for (var attr in mod) {
             module[attr] = mod[attr];
         }
+        console.log("initialize", module.__name__)
         module.__initializing__ = false
         // $B.imported[mod.__name__] must be the module object, so that
         // setting attributes in a program affects the module namespace
