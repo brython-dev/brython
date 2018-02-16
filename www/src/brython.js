@@ -76,8 +76,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-02-16 17:54:09.077557"
-__BRYTHON__.timestamp=1518800049077
+__BRYTHON__.compiled_date="2018-02-16 18:14:47.257117"
+__BRYTHON__.timestamp=1518801287257
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -1934,11 +1934,9 @@ res2[pos++]='"'+txt+'"'}
 res1.push('['+res2.join(',')+']')}
 var line_num=$get_node(this).line_num
 switch(this.real){case 'list_comp':
-var local_name=scope.id.replace(/\./g,'_')
 var lc=$B.$list_comp(items),
-py=lc[0],ix=lc[1],listcomp_name='lc'+ix,local_name=scope.id.replace(/\./g,'_')
-var save_pos=$pos
-var root=$B.py2js({src:py,is_comp:true},module_name,listcomp_name,local_name,line_num)
+py=lc[0],ix=lc[1],listcomp_name='lc'+ix,save_pos=$pos
+var root=$B.py2js({src:py,is_comp:true},module_name,listcomp_name,scope.id,line_num)
 $pos=save_pos
 var js=root.to_js()
 root=null
@@ -3844,7 +3842,8 @@ root.module=module
 root.id=locals_id
 $B.modules[root.id]=root
 if(locals_id==parent_block_id){root.parent_block=$B.modules[parent_block_id].parent_block ||
-$B.modules['__builtins__']}else{root.parent_block=$B.modules[parent_block_id]||
+$B.modules['__builtins__']}else{if($B.modules[parent_block_id]===undefined){console.log('parent block undef',locals_id,parent_block_id)}
+root.parent_block=$B.modules[parent_block_id]||
 $B.modules['__builtins__']}
 root.line_info=line_info
 root.indent=-1

@@ -3331,6 +3331,7 @@ function $IdCtx(context,value){
         var search_ids = ['"' + innermost.id + '"']
         // get global scope
         var gs = innermost
+        
         while(gs.parent_block && gs.parent_block.id!=='__builtins__'){
             gs = gs.parent_block
             search_ids.push('"' + gs.id + '"')
@@ -3928,15 +3929,13 @@ function $ListOrTupleCtx(context,real){
 
             switch(this.real) {
               case 'list_comp':
-                var local_name = scope.id.replace(/\./g,'_')
                 var lc = $B.$list_comp(items), // defined in py_utils.js
                     py = lc[0], ix=lc[1],
                     listcomp_name = 'lc'+ix,
-                    local_name = scope.id.replace(/\./g,'_')
-                var save_pos = $pos
+                    save_pos = $pos
 
                 var root = $B.py2js({src:py, is_comp:true}, module_name,
-                    listcomp_name, local_name, line_num)
+                    listcomp_name, scope.id, line_num)
 
                 $pos = save_pos
 
@@ -7162,6 +7161,9 @@ function $tokenize(src,module,locals_id,parent_block_id,line_info){
         root.parent_block = $B.modules[parent_block_id].parent_block ||
             $B.modules['__builtins__']
     }else{
+        if($B.modules[parent_block_id]===undefined){
+            console.log('parent block undef', locals_id, parent_block_id)
+        }
         root.parent_block = $B.modules[parent_block_id] ||
             $B.modules['__builtins__']
     }
