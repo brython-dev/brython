@@ -76,8 +76,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-02-14 13:20:40.664809"
-__BRYTHON__.timestamp=1518610840664
+__BRYTHON__.compiled_date="2018-02-16 11:35:23.798290"
+__BRYTHON__.timestamp=1518777323798
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -4524,39 +4524,41 @@ A.$factory=factory
 return A}
 return object})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins
-$B.$class_constructor=function(class_name,class_obj,parents,parents_names,kwargs){var metaclass=_b_.type 
+$B.$class_constructor=function(class_name,class_obj,bases,parents_names,kwargs){
+if(class_name=="A"){console.log("class constructor",class_name,class_obj,bases,parents_names,kwargs)}
+bases=bases ||[]
+var metaclass
 var module=class_obj.__module__
 if(module===undefined){
 module=$B.last($B.frames_stack)[2]}
-if(kwargs !==undefined){var cl_dict=_b_.dict.$factory(),bases=null,extra_kwargs=_b_.dict.$factory()
-for(var attr in class_obj){if(attr.charAt(0)!='$' ||attr.substr(0,2)=='$$'){cl_dict.$string_dict[attr]=class_obj[attr]}}
-if(parents!==undefined){for(var i=0;i<parents.length;i++){if(parents[i]===undefined){
+for(var i=0;i<bases.length;i++){if(bases[i]===undefined){
 $B.line_info=class_obj.$def_line
-throw _b_.NameError.$factory("name '"+parents_names[i]+"' is not defined")}}}
-bases=parents
+throw _b_.NameError.$factory("name '" + parents_names[i]+
+"' is not defined")}}
+if(kwargs !==undefined){var cl_dict=_b_.dict.$factory()
+for(var attr in class_obj){if(attr.charAt(0)!='$' ||attr.substr(0,2)=='$$'){cl_dict.$string_dict[attr]=class_obj[attr]}}
+var extra_kwargs=_b_.dict.$factory()
 for(var i=0;i<kwargs.length;i++){var key=kwargs[i][0],val=kwargs[i][1]
 if(key=='metaclass'){
 metaclass=val}else{
 extra_kwargs.$string_dict[key]=val}}
 var mro0=class_obj}else{
 var cl_dict=class_obj 
-bases=parents
 var mro0=cl_dict.$string_dict }
-if(bases.length>0){metaclass=bases[0].__class__
-metaclass=bases[0].__class__===$B.$factory ? _b_.type : metaclass}
-var class_dict={__name__ : class_name.replace('$$',''),__bases__ : bases,__dict__ : cl_dict}
+if(metaclass===undefined){if(bases && bases.length>0){metaclass=bases[0].__class__}else{metaclass=_b_.type}}
+var class_dict={__name__: class_name.replace('$$',''),__bases__: bases,__dict__: cl_dict}
 for(key in cl_dict.$string_dict){class_dict[key]=cl_dict.$string_dict[key]}
 class_dict.__slots__=mro0.__slots__
-class_dict.__mro__=make_mro(bases,cl_dict)
+class_dict.__mro__=make_mro(bases)
 var is_instanciable=true,non_abstract_methods={},abstract_methods={},mro=[class_dict].concat(class_dict.__mro__)
 for(var i=0;i<mro.length;i++){var kdict=i==0 ? mro0 : mro[i]
 for(var attr in kdict){if(non_abstract_methods[attr]){continue}
 var v=kdict[attr]
-if(typeof v=='function' && v.__class__!==$B.$factory){if(v.__isabstractmethod__===true ||
+if(typeof v=='function' && v.__class__ !==$B.$factory){if(v.__isabstractmethod__===true ||
 (v.$attrs && v.$attrs.__isabstractmethod__)){is_instanciable=false
 abstract_methods[attr]=true}else{non_abstract_methods[attr]=true}}}}
 for(var i=0;i<mro.length;i++){var _slots=mro[i].__slots__
-if(_slots!==undefined){if(typeof _slots=='string'){_slots=[_slots]}
+if(_slots !==undefined){if(typeof _slots=='string'){_slots=[_slots]}
 else{_slots=_b_.list.$factory(_slots)}
 for(var j=0;j<_slots.length;j++){cl_dict.$slots=cl_dict.$slots ||{}
 cl_dict.$slots[_slots[j]]=class_dict.__mro__[i]}}}
@@ -4568,24 +4570,25 @@ kls.__class__=metaclass
 kls.__module__=module
 kls.$subclasses=[]
 kls.$is_class=true
+if(kls.__class__===metaclass){
 var meta_init=_b_.type.__getattribute__(metaclass,'__init__')
-meta_init(kls,class_name,bases,Object.keys(kls))
-for(var i=0;i<parents.length;i++){parents[i].$subclasses=parents[i].$subclasses ||[]
-parents[i].$subclasses.push(kls)}
+meta_init(kls,class_name,bases,cl_dict)}
+for(var i=0;i<bases.length;i++){bases[i].$subclasses=bases[i].$subclasses ||[]
+bases[i].$subclasses.push(kls)}
 if(!is_instanciable){function nofactory(){throw _b_.TypeError.$factory("Can't instantiate abstract class interface"+
 " with abstract methods "+Object.keys(abstract_methods).join(', '))}
 kls.$factory=nofactory}
 var first_parent=mro[0],init_subclass=_b_.type.__getattribute__(first_parent,"__init_subclass__")
 init_subclass(kls,extra_kwargs)
 return kls}
-function make_mro(bases,cl_dict){
+function make_mro(bases){
 var seqs=[],pos1=0
 for(var i=0;i<bases.length;i++){
 if(bases[i]===_b_.str)bases[i]=$B.StringSubclass
 else if(bases[i]===_b_.float)bases[i]=$B.FloatSubclass
 var bmro=[],pos=0
 if(bases[i]===undefined ||
-bases[i].__mro__===undefined){console.log(cl_dict,bases,"not a class",bases[i])
+bases[i].__mro__===undefined){console.log("not a class",bases[i])
 throw _b_.TypeError.$factory('Object passed as base class is not a class')}
 bmro[pos++]=bases[i]
 var _tmp=bases[i].__mro__
@@ -4611,14 +4614,16 @@ if(seq[0]===candidate){
 seqs[i].shift()}}}
 if(mro[mro.length-1]!==_b_.object){mro[mpos++]=_b_.object}
 return mro}
-var type={__module__: "builtins",__mro__:[_b_.object],__name__:'type',$is_class: true}
+var type=$B.make_class("type",function(obj,bases,cl_dict){
+if(arguments.length==1){return obj.__class__ ||$B.get_class(obj)}
+return $B.$class_constructor(obj,cl_dict,bases)}
+)
 type.__class__=type
 type.__new__=function(meta,name,bases,cl_dict){
-var class_dict={__class__ : meta,__name__ : name.replace('$$',''),__bases__ : bases,__dict__ : cl_dict,$methods :{},$slots: cl_dict.$slots,$has_setattr: cl_dict.$has_setattr}
+var class_dict={__class__ : meta,__name__ : name.replace('$$',''),__bases__ : bases,__dict__ : cl_dict,$slots: cl_dict.$slots,$has_setattr: cl_dict.$has_setattr}
 var items=$B.$dict_items(cl_dict);
 for(var i=0;i<items.length;i++){var key=items[i][0],v=items[i][1]
 class_dict[key]=v}
-class_dict.__mro__=make_mro(bases,cl_dict)
 return class_dict}
 type.__init__=function(){}
 type.__call__=function(klass,...extra_args){var new_func=_b_.type.__getattribute__(klass,"__new__")
@@ -4638,7 +4643,7 @@ if(kls.__module__ !='builtins'){qualname=kls.__module__ + '.' + qualname}
 return "<class '" + qualname +"'>"}
 type.__getattribute__=function(klass,attr){
 switch(attr){case '__class__':
-return klass.__class__ 
+return klass.__class__
 case '__doc__':
 return klass.__doc__ ||_b_.None
 case '__setattr__':
@@ -4685,9 +4690,6 @@ var cl_method=function(){return res(klass,...arguments)}
 cl_method.__class__=$B.method
 cl_method.$infos={__self__: klass,__func__: res,__name__: attr,__qualname__: klass.__name__ + '.' + attr,__module__: res.$infos ? res.$infos.__module__ : ""}
 return cl_method}}else{return res}}}
-type.$factory=function(obj,bases,cl_dict){
-if(arguments.length==1){return obj.__clas__ ||$B.get_class(obj)}
-return $B.$class_constructor(obj,cl_dict,bases,undefined,undefined)}
 $B.set_func_names(type,"builtins")
 _b_.type=type
 $B.$factory={__class__: type,$is_class: true}
@@ -4700,10 +4702,11 @@ var factory=function(){return call_func(klass,...arguments)}
 factory.__class__=$B.Function
 factory.$infos={__name__: klass.__name__,__module__: klass.__module__}
 return factory}
-var member_descriptor={__class__: _b_.type,__module__: "builtins",__mro__:[_b_.object],__name__: 'member_descriptor',$is_class: true}
-member_descriptor.$factory=function(klass,attr){return{
+var member_descriptor=$B.make_class("member_descriptor",function(klass,attr){return{
 __class__:member_descriptor,klass: klass,attr: attr}}
-var method={__class__:_b_.type,__module__ : "builtins",__mro__:[_b_.object],__name__:'method',$is_class: true}
+)
+$B.set_func_names(member_descriptor,"builtins")
+var method=$B.make_class("method")
 method.__eq__=function(self,other){return self.$infos !==undefined &&
 other.$infos !==undefined &&
 self.$infos.__func__===other.$infos.__func__ &&
