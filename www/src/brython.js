@@ -76,8 +76,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-02-16 11:35:23.798290"
-__BRYTHON__.timestamp=1518777323798
+__BRYTHON__.compiled_date="2018-02-16 17:54:09.077557"
+__BRYTHON__.timestamp=1518800049077
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -4525,7 +4525,6 @@ return A}
 return object})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins
 $B.$class_constructor=function(class_name,class_obj,bases,parents_names,kwargs){
-if(class_name=="A"){console.log("class constructor",class_name,class_obj,bases,parents_names,kwargs)}
 bases=bases ||[]
 var metaclass
 var module=class_obj.__module__
@@ -4546,7 +4545,7 @@ var mro0=class_obj}else{
 var cl_dict=class_obj 
 var mro0=cl_dict.$string_dict }
 if(metaclass===undefined){if(bases && bases.length>0){metaclass=bases[0].__class__}else{metaclass=_b_.type}}
-var class_dict={__name__: class_name.replace('$$',''),__bases__: bases,__dict__: cl_dict}
+var class_dict={__name__: class_name.replace('$$',''),__bases__: bases,__class__: metaclass,__dict__: cl_dict}
 for(key in cl_dict.$string_dict){class_dict[key]=cl_dict.$string_dict[key]}
 class_dict.__slots__=mro0.__slots__
 class_dict.__mro__=make_mro(bases)
@@ -4564,12 +4563,10 @@ for(var j=0;j<_slots.length;j++){cl_dict.$slots=cl_dict.$slots ||{}
 cl_dict.$slots[_slots[j]]=class_dict.__mro__[i]}}}
 for(var i=0;i<mro.length-1;i++){if(mro[i].hasOwnProperty("__setattr__")){cl_dict.$has_setattr=true
 break}}
-var meta_new=_b_.type.__getattribute__(metaclass,'__new__'),kls=meta_new(metaclass,class_name,bases,cl_dict)
-kls.__mro__=class_dict.__mro__
-kls.__class__=metaclass
+var meta_new=_b_.type.__getattribute__(metaclass,'__new__')
+var kls=meta_new(metaclass,class_name,bases,cl_dict)
 kls.__module__=module
 kls.$subclasses=[]
-kls.$is_class=true
 if(kls.__class__===metaclass){
 var meta_init=_b_.type.__getattribute__(metaclass,'__init__')
 meta_init(kls,class_name,bases,cl_dict)}
@@ -4620,10 +4617,11 @@ return $B.$class_constructor(obj,cl_dict,bases)}
 )
 type.__class__=type
 type.__new__=function(meta,name,bases,cl_dict){
-var class_dict={__class__ : meta,__name__ : name.replace('$$',''),__bases__ : bases,__dict__ : cl_dict,$slots: cl_dict.$slots,$has_setattr: cl_dict.$has_setattr}
+var class_dict={__class__ : meta,__name__ : name.replace('$$',''),__bases__ : bases,__dict__ : cl_dict,$is_class: true,$slots: cl_dict.$slots,$has_setattr: cl_dict.$has_setattr}
 var items=$B.$dict_items(cl_dict);
 for(var i=0;i<items.length;i++){var key=items[i][0],v=items[i][1]
 class_dict[key]=v}
+class_dict.__mro__=make_mro(bases)
 return class_dict}
 type.__init__=function(){}
 type.__call__=function(klass,...extra_args){var new_func=_b_.type.__getattribute__(klass,"__new__")
@@ -4656,7 +4654,7 @@ return method_wrapper(attr,klass,function(key){delete klass[key]})}
 var res=klass[attr]
 if(res===undefined){
 var v=klass[attr]
-if(v===undefined){if(klass.__mro__===undefined){console.log('pas de mro',klass)}
+if(v===undefined){if(klass.__mro__===undefined){console.log('attr',attr,'pas de mro',klass,Object.keys(klass),klass.__mro__)}
 var mro=klass.__mro__
 for(var i=0;i<mro.length;i++){var v=mro[i][attr]
 if(v!==undefined){res=v
@@ -7194,7 +7192,6 @@ $B.clear_ns(module.__name__)}
 try{
 var mod=eval('$module')
 for(var attr in mod){module[attr]=mod[attr];}
-console.log("initialize",module.__name__)
 module.__initializing__=false
 $B.imported[module.__name__]=module
 return true}catch(err){console.log(''+err+' '+' for module '+module.name)

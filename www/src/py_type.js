@@ -8,11 +8,6 @@ $B.$class_constructor = function(class_name, class_obj, bases,
 
     // XXX todo : handle the __prepare__ method
 
-    if(class_name=="A"){
-        console.log("class constructor", class_name, class_obj,
-            bases, parents_names, kwargs)
-    }
-
     bases = bases || []
     var metaclass
 
@@ -75,6 +70,7 @@ $B.$class_constructor = function(class_name, class_obj, bases,
     var class_dict = {
         __name__: class_name.replace('$$', ''),
         __bases__: bases,
+        __class__: metaclass,
         __dict__: cl_dict
     }
 
@@ -86,8 +82,8 @@ $B.$class_constructor = function(class_name, class_obj, bases,
     // or in class definition in class_obj. mro0 simplifies the choosing
     class_dict.__slots__ = mro0.__slots__
 
-    class_dict.__mro__ = make_mro(bases)
-
+    class_dict.__mro__ = make_mro(bases) // XXX this is done in type.__new__
+    
     // Check if at least one method is abstract (cf PEP 3119)
     // If this is the case, the class cannot be instanciated
     var is_instanciable = true,
@@ -134,14 +130,11 @@ $B.$class_constructor = function(class_name, class_obj, bases,
     }
 
     // Apply method __new__ of metaclass to create the class object
-    var meta_new = _b_.type.__getattribute__(metaclass, '__new__'),
-        kls = meta_new(metaclass, class_name, bases, cl_dict)
-    kls.__mro__ = class_dict.__mro__
-    kls.__class__ = metaclass
+    var meta_new = _b_.type.__getattribute__(metaclass, '__new__')
+    var kls = meta_new(metaclass, class_name, bases, cl_dict)
     kls.__module__ = module
     kls.$subclasses = []
-    kls.$is_class = true
-
+    
     if(kls.__class__ === metaclass){
         // Initialize the class object by a call to metaclass __init__
         var meta_init = _b_.type.__getattribute__(metaclass, '__init__')
@@ -269,6 +262,7 @@ type.__new__ = function(meta, name, bases, cl_dict){
         __name__ : name.replace('$$',''),
         __bases__ : bases,
         __dict__ : cl_dict,
+        $is_class: true,
         $slots: cl_dict.$slots,
         $has_setattr: cl_dict.$has_setattr
     }
@@ -279,6 +273,8 @@ type.__new__ = function(meta, name, bases, cl_dict){
         var key=items[i][0], v=items[i][1]
         class_dict[key] = v
     }
+
+    class_dict.__mro__ = make_mro(bases)
 
     return class_dict
 }
@@ -350,7 +346,9 @@ type.__getattribute__ = function(klass, attr){
 
         var v = klass[attr]
         if(v===undefined){
-            if(klass.__mro__===undefined){console.log('pas de mro', klass)}
+            if(klass.__mro__===undefined){
+                console.log('attr', attr, 'pas de mro', klass, Object.keys(klass), klass.__mro__)
+            }
             var mro = klass.__mro__
             for(var i=0;i<mro.length;i++){
                 var v = mro[i][attr]
