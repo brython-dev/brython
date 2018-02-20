@@ -136,9 +136,9 @@ interacting with other javascript libraries.
 Documentation
 =============
 Documentation is available on the [official site](http://www.brython.info "Brython Homepage").
-You can read the docs in [English](http://brython.info/doc/en/index.html),
-[French](http://brython.info/doc/fr/index.html) and
-[Spanish](http://brython.info/doc/es/index.html).
+You can read the docs in [English](http://brython.info/static_doc/en/intro.html),
+[French](http://brython.info/static_doc/fr/intro.html) and
+[Spanish](http://brython.info/static_doc/es/intro.html).
 
 The most updated docs usually are the English and French versions so if you
 want to be up-to-date, please, use these versions.
