@@ -48,10 +48,6 @@ $B.$py_src = {}
 // __BRYTHON__.path is the list of paths where Python modules are searched
 $B.path = [$path+'Lib', $path+'libs', $script_dir, $path+'Lib/site-packages']
 
-// Name bindings in scopes
-// Name "x" defined in a scope is a key of the dictionary
-$B.bound = {}
-
 // for the time being, a flag will be used to know if we should
 // enable async functionality.
 $B.async_enabled=false

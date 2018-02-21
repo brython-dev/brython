@@ -308,7 +308,6 @@ $B.$search = function(name, global_ns){
 
 $B.$global_search = function(name, search_ids){
     // search in all namespaces above current stack frame
-    if(name=="row"){console.log("cherche", name, "ids", search_ids)}
     var ns = {}
 
     for(var i=0;i<$B.frames_stack.length;i++){

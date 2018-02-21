@@ -583,12 +583,6 @@ function $$eval(src, _globals, _locals){
         if(res===undefined) return _b_.None
         return res
     }catch(err){
-        console.log('error in exec', globals_id, locals_id, parent_scope)
-        console.log(js)
-        if(typeof parent_scope == "string"){
-            console.log("module", $B.modules[parent_scope])
-        }
-        console.log($B.frames_stack.slice())
         if(err.$py_error===undefined){throw $B.exception(err)}
         throw err
     }finally{

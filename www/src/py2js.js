@@ -3416,8 +3416,6 @@ function $IdCtx(context,value){
         }
         this.found = found
 
-        if(val=="row"){console.log(val, search_ids, found)}
-
         if(this.nonlocal && found[0]===innermost){found.shift()}
 
         if(found.length>0){
@@ -3918,7 +3916,7 @@ function $ListOrTupleCtx(context,real){
                 var start = this.intervals[i-1],
                     end = this.intervals[i],
                     txt = src.substring(start, end)
-
+                    
                 for(var j=0;j<comments.length;j++){
                     if(comments[j][0]>start && comments[j][0]<end){
                         // If there is a comment inside the interval, remove it
@@ -4658,14 +4656,15 @@ function $StringCtx(context,value){
                     var expr = parsed_fstring[i].expression,
                         parts = expr.split(':')
                     expr = parts[0]
-                    //expr = expr.replace('\n', '\\n')
-                    expr = expr.replace(/'/g, "\\'")
                     // We transform the source code of the expression using py2js.
                     // This gives us a node whose structure is always the same.
                     // The Javascript code matching the expression is the first
                     // child of the first "try" block in the node's children.
-                    var expr_node = $B.py2js(expr, scope.module, scope.id, scope)
+                    var save_pos = $pos,
+                        temp_id = "temp" + $B.UUID()
+                    var expr_node = $B.py2js(expr, scope.module, temp_id, scope)
                     expr_node.to_js()
+                    $pos = save_pos
                     for(var j=0; j<expr_node.children.length; j++){
                         var node = expr_node.children[j]
                         if(node.context.tree && node.context.tree.length == 1 &&
@@ -6844,6 +6843,7 @@ function $transition(context,token){
             }
             return context
         }
+        console.log('syntax error', 'token', token, 'after', context)
         $_SyntaxError(context,'token '+token+' after '+context)
       case 'not':
         switch(token) {
@@ -7210,7 +7210,12 @@ function $tokenize(src,module,locals_id,parent_block,line_info){
     var root = new $Node('module')
     root.module = module
     root.id = locals_id
-    root.binding = {}
+    root.binding = {
+        __doc__: true,
+        __name__: true,
+        
+__file__: true
+    }
     $B.modules[root.id] = root
 
     if(typeof parent_block == "string"){
@@ -7836,14 +7841,6 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_info){
     var local_ns = '$locals_'+locals_id.replace(/\./g,'_')
 
     var global_ns = '$locals_'+module.replace(/\./g,'_')
-
-    $B.bound[module] = $B.bound[module] || {} // XXX
-
-    // Internal variables must be defined before tokenising, otherwise
-    // references to these names would generate a NameError
-    $B.bound[module]['__doc__'] = true // XXX et suivants
-    $B.bound[module]['__name__'] = true
-    $B.bound[module]['__file__'] = true
 
     $B.$py_src[locals_id] = src
     var root = $tokenize({src:src, is_comp:is_comp},
