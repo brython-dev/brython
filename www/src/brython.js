@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-02-21 09:46:52.137529"
-__BRYTHON__.timestamp=1519202812137
+__BRYTHON__.compiled_date="2018-02-21 10:16:06.334880"
+__BRYTHON__.timestamp=1519204566334
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -1091,7 +1091,9 @@ for(var i=0;i<this.default_list.length;i++){dobj[pos++]=this.default_list[i]+':n
 dobj='{'+dobj.join(',')+'}'
 var nodes=[],js
 var global_scope=scope
-while(global_scope.parent_block.id !=='__builtins__'){global_scope=global_scope.parent_block}
+if(global_scope.parent_block===undefined){console.log("pas de parent block",global_scope)}
+while(global_scope.parent_block &&
+global_scope.parent_block.id !=='__builtins__'){global_scope=global_scope.parent_block}
 var global_ns='$locals_'+global_scope.id.replace(/\./g,'_')
 var prefix=this.tree[0].to_js()
 if(this.decorated){prefix=this.alias}
@@ -5557,8 +5559,8 @@ _globals.globals_id=_globals.globals_id ||globals_id
 globals_id=_globals.globals_id
 if(_locals===_globals ||_locals===undefined){locals_id=globals_id
 parent_scope=$B.builtins_scope}else{
-parent_block_id=globals_id
-if($B.modules[globals_id]===undefined){$B.modules[globals_id]={id: globals_id,parent_scope: $B.builtins_scope}}}}
+parent_scope={id: globals_id,parent_block: $B.builtins_scope,binding:{}}
+for(var attr in _globals.$string_dict){parent_scope.binding[attr]=true}}}
 $B.$py_module_path[globals_id]=$B.$py_module_path[current_globals_id]
 eval('var $locals_'+globals_id+' = {}\nvar $locals_'+locals_id+' = {}')
 if(_globals===undefined){var gobj=current_frame[3],ex=''

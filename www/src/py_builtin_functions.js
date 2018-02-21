@@ -406,12 +406,12 @@ function $$eval(src, _globals, _locals){
         }
         local_scope.parent_block = global_scope
         global_scope.parent_block = $B.builtins_scope
+
         parent_scope = local_scope
 
         // restore parent scope object
         eval("$locals_" + parent_scope.id + " = current_frame[1]")
 
-        //console.log("exec, parent_block", parent_block_id, $B.modules[parent_block_id])
     }else{
         // If a _globals dictionary is provided, set or reuse its attribute
         // globals_id
@@ -427,12 +427,13 @@ function $$eval(src, _globals, _locals){
             parent_scope = $B.builtins_scope
         }else{
             // The parent block of locals must be set to globals
-            parent_block_id = globals_id
-            if($B.modules[globals_id] === undefined){
-                $B.modules[globals_id] = {
-                    id: globals_id,
-                    parent_scope: $B.builtins_scope
-                }
+            parent_scope = {
+                id: globals_id,
+                parent_block: $B.builtins_scope,
+                binding: {}
+            }
+            for(var attr in _globals.$string_dict){
+                parent_scope.binding[attr] = true
             }
         }
     }

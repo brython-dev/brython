@@ -2131,7 +2131,11 @@ function $DefCtx(context){
 
         // Get id of global scope
         var global_scope = scope
-        while(global_scope.parent_block.id !== '__builtins__'){
+        if(global_scope.parent_block === undefined){
+            console.log("pas de parent block", global_scope)
+        }
+        while(global_scope.parent_block &&
+                global_scope.parent_block.id !== '__builtins__'){
             global_scope=global_scope.parent_block
         }
         var global_ns = '$locals_'+global_scope.id.replace(/\./g,'_')
@@ -3916,7 +3920,7 @@ function $ListOrTupleCtx(context,real){
                 var start = this.intervals[i-1],
                     end = this.intervals[i],
                     txt = src.substring(start, end)
-                    
+
                 for(var j=0;j<comments.length;j++){
                     if(comments[j][0]>start && comments[j][0]<end){
                         // If there is a comment inside the interval, remove it
