@@ -382,15 +382,36 @@ function $$eval(src, _globals, _locals){
     // code will be run in a specific block
     var globals_id = '$exec_'+$B.UUID(),
         locals_id = '$exec_' + $B.UUID(),
-        parent_block_id,
+        parent_scope,
         ce = $B.current_exception
 
     if(_globals === undefined){
         if(current_locals_id == current_globals_id){
             locals_id = globals_id
         }
-        parent_block_id = current_locals_id
 
+        var local_scope = {
+            id: current_locals_id,
+            binding: {}
+        }
+        for(var attr in current_frame[1]){
+            local_scope.binding[attr] = true
+        }
+        var global_scope = {
+            id: current_globals_id,
+            binding: {}
+        }
+        for(var attr in current_frame[3]){
+            global_scope.binding[attr] = true
+        }
+        local_scope.parent_block = global_scope
+        global_scope.parent_block = $B.builtins_scope
+        parent_scope = local_scope
+
+        // restore parent scope object
+        eval("$locals_" + parent_scope.id + " = current_frame[1]")
+
+        //console.log("exec, parent_block", parent_block_id, $B.modules[parent_block_id])
     }else{
         // If a _globals dictionary is provided, set or reuse its attribute
         // globals_id
@@ -403,14 +424,14 @@ function $$eval(src, _globals, _locals){
 
         if(_locals===_globals || _locals===undefined){
             locals_id = globals_id
-            parent_block_id = "__builtins__"
+            parent_scope = $B.builtins_scope
         }else{
             // The parent block of locals must be set to globals
             parent_block_id = globals_id
             if($B.modules[globals_id] === undefined){
                 $B.modules[globals_id] = {
                     id: globals_id,
-                    parent_block: $B.modules["__builtins__"]
+                    parent_scope: $B.builtins_scope
                 }
             }
         }
@@ -429,19 +450,13 @@ function $$eval(src, _globals, _locals){
         ex += 'var $locals_'+current_globals_id+'=gobj;' // needed for generators
         ex += 'var $locals_'+globals_id+'=gobj;'
         eval(ex)
-        $B.bound[globals_id] = $B.bound[globals_id] ||  {}
-        for(var attr in gobj){
-            $B.bound[globals_id][attr] = true
-        }
     }else{
-        $B.bound[globals_id] = {}
         if(_globals.$jsobj){var items = _globals.$jsobj}
         else{var items = _globals.$string_dict}
         for(var item in items){
             item1 = to_alias(item)
             try{
                 eval('$locals_'+globals_id+'["'+item1+'"] = items[item]')
-                $B.bound[globals_id][item]=true
             }catch(err){
                 console.log(err)
                 console.log('error setting', item)
@@ -451,7 +466,6 @@ function $$eval(src, _globals, _locals){
     }
 
     // Initialise block locals
-    $B.bound[locals_id] = $B.bound[locals_id] || {}
     if(_locals===undefined){
         if(_globals!==undefined){
             eval('var $locals_'+locals_id+' = $locals_'+globals_id)
@@ -461,7 +475,6 @@ function $$eval(src, _globals, _locals){
             for(var attr in current_frame[1]){
                 ex += '$locals_'+locals_id+'["'+attr+
                     '"] = current_frame[1]["'+attr+'"];'
-                $B.bound[locals_id][attr] = true
             }
             eval(ex)
         }
@@ -473,7 +486,6 @@ function $$eval(src, _globals, _locals){
             item1 = to_alias(item)
             try{
                 eval('$locals_'+locals_id+'["'+item[0]+'"] = item[1]')
-                $B.bound[locals_id][item] = true
             }catch(err){
                 console.log(err)
                 console.log('error setting', item)
@@ -484,7 +496,7 @@ function $$eval(src, _globals, _locals){
 
     $B.current_exception = ce
 
-    var root = $B.py2js(src, globals_id, locals_id, parent_block_id),
+    var root = $B.py2js(src, globals_id, locals_id, parent_scope),
         js, gns, lns
 
     try{
@@ -571,6 +583,12 @@ function $$eval(src, _globals, _locals){
         if(res===undefined) return _b_.None
         return res
     }catch(err){
+        console.log('error in exec', globals_id, locals_id, parent_scope)
+        console.log(js)
+        if(typeof parent_scope == "string"){
+            console.log("module", $B.modules[parent_scope])
+        }
+        console.log($B.frames_stack.slice())
         if(err.$py_error===undefined){throw $B.exception(err)}
         throw err
     }finally{
@@ -586,7 +604,6 @@ function $$eval(src, _globals, _locals){
 
         $B.clear_ns(globals_id)
         $B.clear_ns(locals_id)
-
     }
 }
 $$eval.$is_func = true
@@ -2174,7 +2191,6 @@ for(var i=0;i<builtin_names.length;i++){
     if(name=='super'){name = name1 = '$$super'}
     if(name=='eval'){name = name1 = '$$eval'}
     if(name=='print'){name1 = '$print'}
-    $B.bound['__builtins__'][name] = true
     try{
         _b_[name] = eval(name1)
         if($B.builtin_funcs.indexOf(orig_name) > -1){

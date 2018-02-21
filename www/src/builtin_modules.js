@@ -375,10 +375,10 @@
 
     for(var attr in $B.builtins){
         _b_.__builtins__[attr] = _b_[attr]
+        $B.builtins_scope.binding[attr] = true
     }
     _b_.__builtins__.__setattr__ = function(attr, value){
         _b_[attr] = value
     }
-    $B.bound.__builtins__.__builtins__ = _b_.__builtins__
-
+    
 })(__BRYTHON__)

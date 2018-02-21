@@ -383,7 +383,7 @@ function $make_exc(names, parent){
                 name = name[0]
         }
         // create a class for exception called "name"
-        $B.bound['__builtins__'][name] = true
+        $B.builtins_scope[name] = true
         var $exc = (BaseException.$factory+'').replace(/BaseException/g,name)
         $exc = $exc.replace('//placeholder//', code)
         // class dictionary

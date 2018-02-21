@@ -224,9 +224,8 @@ $B.$dict_comp = function(module_name, parent_block_id, items, line_num){
     return js
 }
 
-$B.$gen_expr = function(module_name, parent_block_id, items, line_num){
+$B.$gen_expr = function(module_name, parent_scope, items, line_num){
     // Called for generator expressions
-
     var $ix = $B.UUID(),
         py = 'def __ge'+$ix+'():\n', // use a special name (cf $global_search)
         indent=1
@@ -239,8 +238,8 @@ $B.$gen_expr = function(module_name, parent_block_id, items, line_num){
     py += 'yield ('+items[0]+')'
 
     var genexpr_name = '__ge'+$ix,
-        root = $B.py2js({src:py, is_comp:true}, module_name, genexpr_name,
-            parent_block_id, line_num),
+        root = $B.py2js({src:py, is_comp:true}, genexpr_name, genexpr_name,
+            parent_scope, line_num),
         js = root.to_js(),
         lines = js.split('\n')
 
@@ -249,7 +248,7 @@ $B.$gen_expr = function(module_name, parent_block_id, items, line_num){
         '$res.is_gen_expr=true;\nreturn $res\n'
     js = '(function(){'+js+'})()\n'
 
-    $B.clear_ns(genexpr_name)
+    //$B.clear_ns(genexpr_name)
     delete $B.$py_src[genexpr_name]
 
     return js
@@ -257,16 +256,14 @@ $B.$gen_expr = function(module_name, parent_block_id, items, line_num){
 
 $B.clear_ns = function(name){
     // Remove name from __BRYTHON__.modules, and all the keys that start with name
-
+    if(name.startsWith("__ge")){console.log("clear ns", name)}
     var len = name.length
     for(var key in $B.modules){
         if(key.substr(0, len)==name){
             $B.modules[key] = null
-            $B.bound[key] = null
             $B._globals[key] = null
 
             delete $B.modules[key]
-            delete $B.bound[key]
             delete $B._globals[key]
         }
     }
@@ -311,7 +308,7 @@ $B.$search = function(name, global_ns){
 
 $B.$global_search = function(name, search_ids){
     // search in all namespaces above current stack frame
-    if(name=="__package__"){console.log("cherche", name, "ids", search_ids)}
+    if(name=="row"){console.log("cherche", name, "ids", search_ids)}
     var ns = {}
 
     for(var i=0;i<$B.frames_stack.length;i++){

@@ -50,7 +50,6 @@ $B.path = [$path+'Lib', $path+'libs', $script_dir, $path+'Lib/site-packages']
 
 // Name bindings in scopes
 // Name "x" defined in a scope is a key of the dictionary
-// __BRYTHON__.bound[scope.id]
 $B.bound = {}
 
 // for the time being, a flag will be used to know if we should
@@ -86,10 +85,8 @@ $B.builtins = {
     __str__:function(){return "<module 'builtins'>"},
 }
 
-$B.builtins_block = {id:'__builtins__',module:'__builtins__'}
-$B.modules['__builtins__'] = $B.builtins_block
-$B.bound['__builtins__'] = {'__BRYTHON__':true, '$eval':true, '$open': true}
-$B.bound['__builtins__']['BaseException'] = true
+$B.builtins_scope = {id:'__builtins__',module:'__builtins__', binding:{}}
+$B.modules['__builtins__'] = $B.builtins_scope
 
 // Builtin functions : used in py2js to simplify the code produced by a call
 $B.builtin_funcs = {}
