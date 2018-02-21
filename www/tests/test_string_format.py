@@ -54,15 +54,6 @@ assert "The year is {}".format(2010) == 'The year is 2010'
 #brython fix me
 #assert "{0:{width}.{precision}s}".format('hello world', width=8, precision=5) == 'hello   '
 
-import datetime
-d = datetime.date(2010, 9, 7)
-
-assert "The year is {0.year}".format(d) == "The year is 2010"
-assert "Tested on {0:%Y-%m-%d}".format(d) == "Tested on 2010-09-07"
-
-import datetime
-d = datetime.datetime(2010, 7, 4, 12, 15, 58)
-assert '{:%Y-%m-%d %H:%M:%S}'.format(d) == '2010-07-04 12:15:58'
 
 # format objects
 class A:

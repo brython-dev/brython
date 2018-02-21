@@ -153,7 +153,7 @@ try:
 except ImportError:
     DecimalTuple = lambda *args: args
 
-# Moved from below as it is used globally    
+# Moved from below as it is used globally
 import _jsre as re
 
 # Rounding
@@ -555,7 +555,6 @@ def localcontext(ctx=None):
     if ctx is None: ctx = getcontext()
     return _ContextManager(ctx)
 
-
 ##### Decimal class #######################################################
 
 # Do not subclass Decimal from numbers.Real and do not register it as such
@@ -655,7 +654,7 @@ class Decimal(object):
                   self._int = value
                   self._exp = 0
                return self
-      
+
             #m = _parser(value.strip())
             #if m is None:
             if context is None:

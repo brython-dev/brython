@@ -917,7 +917,7 @@ TimSort = function(array, compare) {
  */
 function tim_sort(array, compare, lo, hi) {
   if (!Array.isArray(array)) {
-    throw new TypeError('Can only sort arrays');
+    throw TypeError.$factory('Can only sort arrays');
   }
 
   /*

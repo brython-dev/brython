@@ -1,36 +1,14 @@
-// A function that builds the __new__ method for the factory function
-__BRYTHON__.$__new__ = function(factory){
-    return function(cls){
-        /*
-        if(cls===undefined){
-            throw __BRYTHON__.builtins.TypeError(factory.$dict.__name__+'.__new__(): not enough arguments')
-        }
-        */
-        var res = factory.apply(null,[])
-        res.__class__ = cls.$dict
-        var init_func = null
-        try{init_func = __BRYTHON__.builtins.getattr(res,'__init__')}
-        catch(err){}
-        if(init_func!==null){
-            var args = [], pos=0
-            for(var i=1, _len_i = arguments.length; i < _len_i;i++){args[pos++]=arguments[i]}
-            init_func.apply(null,args)
-            res.__initialized__ = true
-        }
-        return res
-    }
-}
-
 __BRYTHON__.builtins.object = (function($B){
 
 var _b_=$B.builtins
 
 // class object for the built-in class 'object'
-var $ObjectDict = {
+var object = {
     //__class__:$type, : not here, added in py_type.js after $type is defined
     // __bases__ : set to an empty tuple in py_list.js after tuple is defined
-    __name__:'object',
-    $native:true
+    __name__: 'object',
+    $is_class: true,
+    $native: true
 }
 
 // Name of special methods : if they are not found as attributes, try
@@ -43,13 +21,13 @@ var opnames = ['add','sub','mul','truediv','floordiv','mod','pow',
     'lshift','rshift','and','xor','or']
 var opsigns = ['+','-','*','/','//','%','**','<<','>>','&','^', '|']
 
-$ObjectDict.__delattr__ = function(self,attr){
+object.__delattr__ = function(self,attr){
     _b_.getattr(self, attr) // raises AttributeError if necessary
     delete self[attr];
     return _b_.None
 }
 
-$ObjectDict.__dir__ = function(self) {
+object.__dir__ = function(self) {
     var objects = [self],
         pos=1,
         klass = self.__class__ || $B.get_class(self)
@@ -82,12 +60,12 @@ $ObjectDict.__dir__ = function(self) {
         if(attr.substr(0, 2) == '$$'){res[pos++] = attr.substr(2)}
         else if (attr.charAt(0) != '$'){res[pos++] = attr}
     }
-    res = _b_.list(_b_.set(res))
-    _b_.list.$dict.sort(res)
+    res = _b_.list.$factory(_b_.set.$factory(res))
+    _b_.list.sort(res)
     return res
 }
 
-$ObjectDict.__eq__ = function(self,other){
+object.__eq__ = function(self,other){
     // equality test defaults to identity of objects
     //test_issue_1393
     var _class=$B.get_class(self)
@@ -100,20 +78,23 @@ $ObjectDict.__eq__ = function(self,other){
     return self===other
 }
 
-$ObjectDict.__format__ = function(){
+object.__format__ = function(){
     var $ = $B.args('__format__', 2, {self:null, spec:null},
         ['self', 'spec'], arguments, {}, null, null)
-    if($.spec!==''){throw _b_.TypeError("non-empty format string passed to object.__format__")}
+    if($.spec!==''){throw _b_.TypeError.$factory("non-empty format string passed to object.__format__")}
     return _b_.getattr($.self, '__str__')()
 }
 
-$ObjectDict.__ge__ = function(){return _b_.NotImplemented}
+object.__ge__ = function(){return _b_.NotImplemented}
 
-$ObjectDict.__getattribute__ = function(obj,attr){
+object.__getattribute__ = function(obj,attr){
 
     var klass = obj.__class__ || $B.get_class(obj)
+
+    var trace= undefined
+    if(attr==trace){console.log("attr", attr, "de", obj, "klass", klass)}
     if(attr==='__class__'){
-        return klass.$factory
+        return klass
     }
     var res = obj[attr]
 
@@ -129,25 +110,11 @@ $ObjectDict.__getattribute__ = function(obj,attr){
         res = check(obj, klass, attr)
         if(res===undefined){
             var mro = klass.__mro__
+            if(attr==trace){console.log("cherche dans mro", mro)}
             for(var i=0, _len_i = mro.length; i < _len_i;i++){
                 res = check(obj, mro[i], attr)
                 if(res!==undefined){break}
             }
-        }
-
-        // If the class doesn't define __str__ but defines __repr__,
-        // use __repr__
-        if(res===undefined && attr=="__str__"){
-            var attr1 = "__repr__",
-                res1 = check(obj, klass, attr1)
-            if(res1===undefined){
-                var mro = klass.__mro__
-                for(var i=0, _len_i = mro.length; i < _len_i;i++){
-                    res1 = check(obj, mro[i], attr)
-                    if(res1!==undefined){break}
-                }
-            }
-            res = res1
         }
 
     }else{
@@ -160,7 +127,7 @@ $ObjectDict.__getattribute__ = function(obj,attr){
 
     if(res!==undefined){
 
-        if(res.__class__===_b_.property.$dict){
+        if(res.__class__===_b_.property){
             return res.__get__(res, obj, klass)
         }
 
@@ -175,9 +142,10 @@ $ObjectDict.__getattribute__ = function(obj,attr){
 
         // For descriptors, attribute resolution is done by applying __get__
         if(__get__!==null){
-            try{return __get__.apply(null, [obj, klass.$factory])}
+            try{return __get__.apply(null, [obj, klass])}
             catch(err){
                 console.log('error in get.apply', err)
+                console.log("get attr", attr, "of", obj)
                 console.log(__get__+'')
                 throw err
             }
@@ -197,6 +165,7 @@ $ObjectDict.__getattribute__ = function(obj,attr){
             // __new__ is a static method
             if(attr == '__new__'){res.$type = 'staticmethod'}
             var res1 = __get__.apply(null, [res, obj, klass])
+
             if(typeof res1 == 'function'){
                 // If attribute is a class then return it unchanged
                 //
@@ -217,7 +186,7 @@ $ObjectDict.__getattribute__ = function(obj,attr){
                 // class A, its method __init__ must be called without B's
                 // self as first argument
 
-                if(res1.__class__ === $B.$factory) return res
+                if(res1.__class__ === $B.$factory) return res /// XXX old style
 
                 // Same thing if the attribute is a method of an instance
                 // =================
@@ -235,13 +204,26 @@ $ObjectDict.__getattribute__ = function(obj,attr){
                 // In function myfunc, self.repr is an instance of MyRepr,
                 // it must be used as is, not transformed into a method
 
-                else if(res1.__class__===$B.$MethodDict){
+                else if(res1.__class__===$B.method){
                     return res
                 }
 
                 // instance method object
-                return $B.make_method(attr, klass, res)(obj)
-
+                if(res.$type=="staticmethod"){return res}
+                else{
+                    var self = res.$type=="classmethod" ? klass : obj
+                    function method(){
+                        return res(self, ...arguments)
+                    }
+                    method.__class__ = $B.method
+                    method.$infos = {
+                        __self__: self,
+                        __func__: res,
+                        __name__: attr,
+                        __qualname__: klass.__name__ + "." + attr
+                    }
+                    return method
+                }
             }else{
                 // result of __get__ is not a function
                 return res1
@@ -283,61 +265,68 @@ $ObjectDict.__getattribute__ = function(obj,attr){
                         var msg = "unsupported operand types for "+
                             opsigns[rank]+": '"+ klass.__name__+"' and '"+
                             $B.get_class(arguments[0]).__name__+"'"
-                        throw _b_.TypeError(msg)
+                        throw _b_.TypeError.$factory(msg)
                     }
                 }
                 func.$infos = {__name__ : klass.__name__+'.'+attr}
                 return func
             }
         }
-        //throw AttributeError('object '+obj.__class__.__name__+" has no attribute '"+attr+"'")
     }
 }
 
-$ObjectDict.__gt__ = function(){return _b_.NotImplemented}
+object.__gt__ = function(){return _b_.NotImplemented}
 
-$ObjectDict.__hash__ = function (self) {
+object.__hash__ = function (self) {
     var hash = self.__hashvalue__
     if(hash!==undefined){return hash}
     return self.__hashvalue__=$B.$py_next_hash--;
 }
 
-$ObjectDict.__init__ = function(){
-    if(arguments.length == 1) {  // only self
-        return _b_.None  // all is good ... return None
-    } else if(arguments.length == 2) {  // at most "self" and kwargs
-        kw = arguments[1]
-        if(kw.$nat !== undefined && kw.kw !== undefined) { // kwargs is well formed
-            if(Object.keys(kw.kw).length == 0) {  // no items in kwargs
-                return _b_.None  // all is good ... return None
-            }
+object.__init__ = function(){
+    if(arguments.length==0){
+        throw _b_.TypeError.$factory("descriptor '__init__' of 'object' object "+
+            "needs an argument")
+    }
+    // object.__init__ does nothing else
+    return _b_.None
+}
+
+object.__init_subclass__ = function(cls, kwargs){
+    // Default implementation only checks that no keyword arguments were passed
+    if(kwargs!==undefined){
+        if(kwargs.__class__!==_b_.dict ||
+                Object.keys(kwargs.$string_dict).length>0){
+            throw _b_.TypeError.$factory("__init_subclass__() takes no keyword arguments")
         }
     }
-    // *args expansion has elements or **kwargs is not empty
-    throw _b_.TypeError("object() takes no parameters")
+    return _b_.None
 }
 
-$ObjectDict.__le__ = function(){return _b_.NotImplemented}
+object.__le__ = function(){return _b_.NotImplemented}
 
-$ObjectDict.__lt__ = function(){return _b_.NotImplemented}
+object.__lt__ = function(){return _b_.NotImplemented}
 
-$ObjectDict.__mro__ = []
+object.__mro__ = []
 
-$ObjectDict.__new__ = function(cls){
-    if(cls===undefined){throw _b_.TypeError('object.__new__(): not enough arguments')}
-    return {__class__ : cls.__class__ === $B.$factory ? cls.$dict : cls}
+object.__new__ = function(cls, ...args){
+    if(cls===undefined){throw _b_.TypeError.$factory('object.__new__(): not enough arguments')}
+    var init_func = $B.$getattr(cls, "__init__")
+    if(init_func===object.__init__){
+        if(args.length>0){
+            throw _b_.TypeError.$factory("object() takes no parameters")
+        }
+    }
+    return {__class__ : cls}
 }
 
-$ObjectDict.__ne__ = function(self,other){
+object.__ne__ = function(self,other){
     return !$B.rich_comp("__eq__", self, other)
 }
 
-$ObjectDict.__repr__ = function(self){
+object.__repr__ = function(self){
     if(self===object) return "<class 'object'>"
-    if(self.__class__===$B.$factory){
-        return "<class '"+self.$dict.__name__+"'>"
-    }
-    if(self.__class__===$B.$type) return "<class '"+self.__name__+"'>"
+    if(self.__class__===_b_.type) return "<class '"+self.__name__+"'>"
     if(self.__class__.__module__!==undefined){
         return "<"+self.__class__.__module__+"."+self.__class__.__name__+" object>"
     }else{
@@ -345,70 +334,58 @@ $ObjectDict.__repr__ = function(self){
     }
 }
 
-$ObjectDict.__setattr__ = function(self,attr,val){
+object.__setattr__ = function(self,attr,val){
     if(val===undefined){ // setting an attribute to 'object' type is not allowed
-        throw _b_.TypeError("can't set attributes of built-in/extension type 'object'")
-    }else if(self.__class__===$ObjectDict){
+        throw _b_.TypeError.$factory("can't set attributes of built-in/extension type 'object'")
+    }else if(self.__class__===object){
         // setting an attribute to object() is not allowed
-        if($ObjectDict[attr]===undefined){
-            throw _b_.AttributeError("'object' object has no attribute '"+attr+"'")
+        if(object[attr]===undefined){
+            throw _b_.AttributeError.$factory("'object' object has no attribute '"+attr+"'")
         }else{
-            throw _b_.AttributeError("'object' object attribute '"+attr+"' is read-only")
+            throw _b_.AttributeError.$factory("'object' object attribute '"+attr+"' is read-only")
         }
     }
     if($B.aliased_names[attr]){attr='$$'+attr}
     self[attr] = val
     return _b_.None
 }
-$ObjectDict.__setattr__.__get__ = function(obj){
+object.__setattr__.__get__ = function(obj){
     return function(attr, val){
-        $ObjectDict.__setattr__(obj, attr, val)
+        object.__setattr__(obj, attr, val)
     }
 }
 
-$ObjectDict.__setattr__.__str__ = function(){return 'method object.setattr'}
+object.__setattr__.__str__ = function(){return 'method object.setattr'}
 
-$ObjectDict.__str__ = $ObjectDict.__repr__
+object.__str__ = function(self){
+    var repr_func = $B.$getattr(self, "__repr__")
+    return $B.$call(repr_func)()
+}
 
-$ObjectDict.__subclasshook__ = function(){return _b_.NotImplemented}
+object.__subclasshook__ = function(){return _b_.NotImplemented}
 
-// add __str__ and __repr__
-$B.set_func_names($ObjectDict)
 
 // constructor of the built-in class 'object'
-function object(){
-    var res = {__class__:$ObjectDict},
+object.$factory = function(){
+    var res = {__class__:object},
         args = [res].concat(Array.prototype.slice.call(arguments))
-    $ObjectDict.__init__.apply(null, args)
+    object.__init__.apply(null, args)
     return res
 }
 
-object.$dict = $ObjectDict
-// object.__class__ = $factory : this is done in py_types
-$ObjectDict.$factory = object
-object.__repr__ = object.__str__ = function(){return "<class 'object'>"}
+$B.set_func_names(object, "builtins")
 
-$B.make_class = function(class_obj){
-    // class_obj has at least an attribute "name", and possibly an attribute
-    // init
+$B.make_class = function(name, factory){
+    // Buils a basic class object
 
-    function A(){
-        var res = {__class__:A.$dict}
-        if(class_obj.init){
-            class_obj.init.apply(null,
-                [res].concat(Array.prototype.slice.call(arguments)))
-        }
-        return res
+    var A = {
+        __class__: _b_.type,
+        __mro__: [object],
+        __name__: name,
+        $is_class: true
     }
 
-    A.__class__ = $B.$factory
-
-    A.$dict = {
-        __class__: $B.$type,
-        __name__: class_obj.name,
-        $factory: A
-    }
-    A.$dict.__mro__ = [object.$dict]
+    A.$factory = factory
 
     return A
 }

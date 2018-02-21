@@ -304,7 +304,12 @@ function in_try(node){
     return tries
 }
 
-var $BRGeneratorDict = {__class__:$B.$type,__name__:'generator',__module__:'builtins'}
+var $BRGeneratorDict = {
+    __class__:_b_.type,
+    __name__:'generator',
+    __module__:'builtins',
+    $is_class: true
+}
 
 $B.gen_counter = 0 // used to identify the function run for each next()
 
@@ -529,34 +534,34 @@ function make_next(self, yield_node_id){
     return next_src
 }
 
-var $gen_it = {
-    __class__: $B.$type,
+var generator = {
+    __class__: _b_.type,
+    __module__: "builtins",
+    __mro__: [_b_.object],
     __name__: "generator",
-    __module__: "builtins"
 }
 
-$gen_it.__mro__ = [_b_.object.$dict]
-
 //fix me, need to investigate __enter__ and __exit__ and what they do
-$gen_it.__enter__ = function(self){console.log("generator.__enter__ called")}
-$gen_it.__exit__ = function(self){console.log("generator.__exit__ called")}
+generator.__enter__ = function(self){console.log("generator.__enter__ called")}
+generator.__exit__ = function(self){console.log("generator.__exit__ called")}
 
-$gen_it.__iter__ = function(self){
+generator.__iter__ = function(self){
     return self
 }
 
-$gen_it.__next__ = function(self){
-    if(self.$finished){throw _b_.StopIteration()}
+generator.__next__ = function(self){
+    if(self.$finished){throw _b_.StopIteration.$factory()}
     if(self.gi_running===true){
-        throw ValueError("generator already executing")
+        throw ValueError.$factory("generator already executing")
     }
     self.gi_running = true
     if(self.next===undefined){
         self.$finished = true
-        throw _b_.StopIteration()
+        throw _b_.StopIteration.$factory()
     }
 
     try{
+        //console.log("self.next", self.next, self.args)
         var res = self.next.apply(self, self.args)
     }catch(err){
         /*
@@ -576,12 +581,12 @@ $gen_it.__next__ = function(self){
     // Brython replaces "yield x" by "return [x, next_rank]"
     // next_rank is the rank of the function to call after this yield
 
-    if(res===undefined){throw _b_.StopIteration()}
+    if(res===undefined){throw _b_.StopIteration.$factory()}
     else if(res[0].__class__==$GeneratorReturn){
         // The function may have ordinary "return" lines, in this case
         // the iteration stops
         self.$finished = true
-        throw StopIteration(res[0].value)
+        throw StopIteration.$factory(res[0].value)
     }
 
     self.next = self.nexts[res[1]]
@@ -589,12 +594,12 @@ $gen_it.__next__ = function(self){
     return res[0]
 }
 
-$gen_it.close = function(self, value){
-    self.sent_value = _b_.GeneratorExit()
+generator.close = function(self, value){
+    self.sent_value = _b_.GeneratorExit.$factory()
     try{
-        var res = $gen_it.__next__(self)
+        var res = generator.__next__(self)
         if(res!==_b_.None){
-            throw _b_.RuntimeError("closed generator returned a value")
+            throw _b_.RuntimeError.$factory("closed generator returned a value")
         }
     }catch(err){
         if($B.is_exc(err,[_b_.StopIteration,_b_.GeneratorExit])){
@@ -604,18 +609,18 @@ $gen_it.close = function(self, value){
     }
 }
 
-$gen_it.send = function(self, value){
+generator.send = function(self, value){
     self.sent_value = value
-    return $gen_it.__next__(self)
+    return generator.__next__(self)
 }
 
-$gen_it.$$throw = function(self, value){
+generator.$$throw = function(self, value){
     if(_b_.isinstance(value,_b_.type)) value=value()
     self.sent_value = {__class__:$B.$GeneratorSendError,err:value}
-    return $gen_it.__next__(self)
+    return generator.__next__(self)
 }
 
-$B.genfunc = function(name, blocks, funcs, $defaults){
+generator.$factory = $B.genfunc = function(name, blocks, funcs, $defaults){
     // Transform a list of functions into a generator object, ie a function
     // that returns an iterator
     return function(){
@@ -628,7 +633,7 @@ $B.genfunc = function(name, blocks, funcs, $defaults){
         }
 
         var res = {
-            __class__: $gen_it,
+            __class__: generator,
             args: Array.prototype.slice.call(arguments),
             blocks: blocks,
             env: {},
@@ -643,9 +648,7 @@ $B.genfunc = function(name, blocks, funcs, $defaults){
         return res
     }
 }
-$B.genfunc.__class__ = $B.$factory
-$B.genfunc.$dict = $gen_it
-$gen_it.$factory = $B.genfunc
 
+$B.set_func_names(generator, "builtins")
 
 })(__BRYTHON__)

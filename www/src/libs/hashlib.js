@@ -9,15 +9,15 @@ eval($s.join(';'))
 var $mod = {
 
     __getattr__ : function(attr){
-        if (attr == 'new') return $hashlib_new;
+        if (attr == 'new') return hash.$factory;
         return this[attr]
     },
-    md5: function(obj) {return $hashlib_new('md5', obj)},
-    sha1: function(obj) {return $hashlib_new('sha1', obj)},
-    sha224: function(obj) {return $hashlib_new('sha224', obj)},
-    sha256: function(obj) {return $hashlib_new('sha256', obj)},
-    sha384: function(obj) {return $hashlib_new('sha384', obj)},
-    sha512: function(obj) {return $hashlib_new('sha512', obj)},
+    md5: function(obj) {return hash.$factory('md5', obj)},
+    sha1: function(obj) {return hash.$factory('sha1', obj)},
+    sha224: function(obj) {return hash.$factory('sha224', obj)},
+    sha256: function(obj) {return hash.$factory('sha256', obj)},
+    sha384: function(obj) {return hash.$factory('sha384', obj)},
+    sha512: function(obj) {return hash.$factory('sha512', obj)},
 
     algorithms_guaranteed: ['md5', 'sha1', 'sha224', 'sha256', 'sha384', 'sha512'],
     algorithms_available:  ['md5', 'sha1', 'sha224', 'sha256', 'sha384', 'sha512']
@@ -49,7 +49,7 @@ function $get_CryptoJS_lib(alg) {
 
    try{
       eval(res + "; $B.CryptoJS=CryptoJS;")
-   } catch (err) { 
+   } catch (err) {
       throw Error("JS Eval Error", "Cannot eval CryptoJS algorithm '" + alg + "' : error:" + err);
    }
 }
@@ -72,21 +72,21 @@ function bytes2WordArray(obj){
     return {words: words, sigBytes:obj.source.length}
 }
 
-var hashDict = {
-    __class__: $B.$type,
+var hash = {
+    __class__: _b_.type,
+    __mro__: [_b_.object],
     __name__: 'hash'
 }
-hashDict.__mro__ = [_b_.object.$dict]
 
-hashDict.update = function(self, msg){
+hash.update = function(self, msg){
     self.hash.update(bytes2WordArray(msg))
 }
 
-hashDict.copy = function(self){
+hash.copy = function(self){
     return self.hash.clone()
 }
-    
-hashDict.digest = function(self){
+
+hash.digest = function(self){
     var obj = self.hash.clone().finalize().toString(),
         res = []
     for(var i=0;i<obj.length;i+=2){
@@ -95,15 +95,14 @@ hashDict.digest = function(self){
     return _b_.bytes(res)
 }
 
-hashDict.hexdigest = function(self) {
+hash.hexdigest = function(self) {
     return self.hash.clone().finalize().toString()
 }
 
-
-function $hashlib_new(alg, obj) {
+hash.$factory = function(alg, obj) {
 
     var res = {
-        __class__: hashDict
+        __class__: hash
     }
 
     switch(alg) {
@@ -114,7 +113,7 @@ function $hashlib_new(alg, obj) {
       case 'sha384':
       case 'sha512':
         var ALG=alg.toUpperCase()
-        if ($B.Crypto === undefined || 
+        if ($B.Crypto === undefined ||
             $B.CryptoJS.algo[ALG] === undefined) $get_CryptoJS_lib(alg)
 
         res.hash = $B.CryptoJS.algo[ALG].create()
@@ -125,13 +124,9 @@ function $hashlib_new(alg, obj) {
       default:
         $raise('AttributeError', 'Invalid hash algorithm:' + alg)
     }
- 
+
     return res
 }
-
-$hashlib_new.$type = $B.$factory
-hashDict.$factory = $hashlib_new
-$hashlib_new.$dict = hashDict
 
 return $mod
 

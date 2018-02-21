@@ -30,7 +30,7 @@ def clear_print():
 def run_code(ev):
     global FIRST_TIME
     if FIRST_TIME:
-        FIRST_TIME = False 
+        FIRST_TIME = False
         inform("Importing turtle module for the first time and processing; please wait")
     else:
         inform("Processing")
@@ -39,7 +39,7 @@ def run_code(ev):
     timer.set_timeout(exec_code, 1)
 
 def exec_code():
-    _code= document["source"].text 
+    _code= document["source"].text
     try:
         exec(_code)
     except:
@@ -64,7 +64,7 @@ def delayed_clear():
 def clear(ev):
     global FIRST_TIME
     if FIRST_TIME:
-        FIRST_TIME = False 
+        FIRST_TIME = False
         inform("Importing turtle module for the first time and processing; please wait")
         document["run"].class_name = 'btn-disabled'
     # delay to allow updated DOM with above text to be shown.
@@ -96,7 +96,7 @@ document["info"].html = document["info1"].html
     color: blue;
   }
   pre {
-    max-width: 800px;    
+    max-width: 800px;
     overflow: auto;
     word-break: normal !important;
     word-wrap: normal !important;
@@ -159,7 +159,7 @@ document["info"].html = document["info1"].html
 
 <p>Select the desired demo.
 <select id="demo_selector" autocomplete="off">
-  <option value="1">Square with default turtle</option> 
+  <option value="1">Square with default turtle</option>
   <option value="2">Custom container and instant drawing</option>
   <option value="3">All the turtles</option>
   <option value="4">Writing samples</option>
@@ -175,7 +175,7 @@ Note that the content is editable.
 </p>
 <div id="info"></div>
 
-<p><button id="run" class="btn-enabled">Run</button> <span id="status-info"></span> 
+<p><button id="run" class="btn-enabled">Run</button> <span id="status-info"></span>
   <button id="clear" class="btn-disabled">Clear</button>
   <button id="replay-scene" class="btn-disabled">Replay scene</button></p>
 <pre id="turtle-print-output"></pre>
@@ -187,16 +187,16 @@ Note that the content is editable.
 
 <div id='info1' style='display:none'>
 <h2>Simple demo</h2>
-<p>When you click on <b>Run</b>, Brython translates the Python code into 
+<p>When you click on <b>Run</b>, Brython translates the Python code into
   Javascript, which is then being executed in a single thread. The end result of
   turtle module computations is the creation of an aminated <em>scene</em> that
   uses SVG. This scene is then added to the DOM so that it can be seen.</p>
 
-<p>The first time you do this, Brython has to do extra work to translate the 
+<p>The first time you do this, Brython has to do extra work to translate the
 turtle module from Python into Javascript; subsequent runs will be faster.</p>
 
   <p>As soon as a scene has been created, the <b>Run</b> button will be disabled
-  and two new buttons will be enabled: one to clear everything so that the program 
+  and two new buttons will be enabled: one to clear everything so that the program
   could be modified and executed again, and the second which can be used to show
   the scene that was created as many times as desired, without requiring additional
 computation.</p>
@@ -271,7 +271,7 @@ turtle.done()
 
 <div id='info3' style='display:none'>
   <h2>Yet another simple demo</h2>
-<p>This demo shows the available turtles, how to use <code>stamp()</code>, 
+<p>This demo shows the available turtles, how to use <code>stamp()</code>,
 and how to change the background color.</p>
 </div>
 
@@ -298,7 +298,7 @@ for name,c,y in [(None, 'black', 150),  # same as "classic"
                  ("turtle", ('green', 'white'), 0)]:
     if name is not None:
         t = turtle.Turtle(name)
-    else: 
+    else:
         t = turtle.Turtle()
         screen = t.getscreen()
         screen.bgcolor('rgb(255, 255, 200)')
@@ -357,15 +357,15 @@ turtle.done()
 <div id='info5' style="display:none">
 <h2>A complex scene</h2>
 <p>Other than setting some defaults, and calling <code>done()</code>
-  at the end, this demo has been copied from code linked in  
+  at the end, this demo has been copied from code linked in
   <a href="https://www.reddit.com/r/Python/comments/7mo2l8/turtle_module_drawing_a_randomised_landscape/"
   target="_blank">
-  a post on reddit</a>, as a test to show that everything required had been 
+  a post on reddit</a>, as a test to show that everything required had been
 properly implemented in this version of the turtle module.</p>
 <p>If the turtle module has already been imported at least once,
-  depending on your browser, it can take between 10 and 20 seconds to 
-  <b><em>create</em></b> this scene. 
-    Once it has been created, you can view it being drawn as often as you want 
+  depending on your browser, it can take between 10 and 20 seconds to
+  <b><em>create</em></b> this scene.
+    Once it has been created, you can view it being drawn as often as you want
     by clicking on <b>Replay scene</b>.</p>
 </div>
 
@@ -396,7 +396,7 @@ tuft = Turtle()
 
 cut = Turtle()
 cut.speed(0)
-    
+
 lake = Turtle()
 
 mountain = Turtle()
@@ -456,15 +456,15 @@ def drawmountains():
     print("Drawing mountains 1")
     for i in range(10):
         templen = randint(20,200)
-        
+
         tempang = randint(45,80)
-        
+
         mountain.left(tempang)
         mountain.forward(templen)
         mountain.right(2*tempang)
         mountain.forward(templen)
         mountain.setheading(0)
-        
+
     mountain.goto(300,-400)
     mountain.goto(-300,-400)
     mountain.end_fill()
@@ -478,15 +478,15 @@ def drawmountains():
     print("Drawing mountains 2")
     for i in range(10):
         templen = randint(20,200)
-        
+
         tempang = randint(20,30)
-        
+
         mountain.left(tempang)
         mountain.forward(templen)
         mountain.right(2*tempang)
         mountain.forward(templen)
         mountain.setheading(0)
-        
+
     mountain.goto(300,-400)
     mountain.goto(-300,-400)
     mountain.end_fill()
@@ -499,15 +499,15 @@ def drawmountains():
     print("Drawing mountains 3")
     for i in range(10):
         templen = randint(20,200)
-        
+
         tempang = randint(10,20)
-        
+
         mountain.left(tempang)
         mountain.forward(templen)
         mountain.right(2*tempang)
         mountain.forward(templen)
         mountain.setheading(0)
-        
+
     mountain.goto(300,-400)
     mountain.goto(-300,-400)
     mountain.end_fill()
@@ -520,7 +520,7 @@ def drawgrass(amount,locx,locy):
     def tuftdraw(size):
         if randint(0,1) == 1:
             size = -size
-        tuft.color(greens[randint(0,4)]) 
+        tuft.color(greens[randint(0,4)])
         penup()
         tuft.goto(locx+size,locy+size)
         pendown()
@@ -540,13 +540,13 @@ def drawtrees():
     def grassdraw():
         penup()
         grass.goto(randint(-160,-150),randint(-240,-190))
-        
+
         pendown()
         grass.begin_fill()
         for i in range(200):
             grass.color(greens[randint(0,4)])
             grass.goto(randint(-300,-50),randint(-200,-150))
-        
+
         grass.end_fill()
 
     def greentree():
@@ -602,7 +602,7 @@ def drawtrees():
             trees.end_fill()
 
     grassdraw()
-    
+
     print("\n")
     trees.speed(0)
 
@@ -610,14 +610,14 @@ def drawtrees():
         trees.color(browns[randint(0,4)])
         trees.pensize(randint(2,4))
         penup()
-            
+
         trees.goto(treeheight) #goes to random location and draws random length
         pendown()
         trees.setheading(90)
         trees.forward(randint(20,30))
 
         greentree()
-            
+
         trees.left(270) #turns back to the normal direction
 
 
@@ -634,24 +634,24 @@ def drawtrees():
 def clouddraw():
     print("\n")
     cloud.color('white')
-    
+
     def randloc():
         location = randint(-250,250),randint(0,270)
         return location
-    
+
     def brushstroke(randloc,leng):
         penup()
         cloud.goto(randloc)
         pendown()
         cloud.pensize(randint(3,5))
         cloud.forward(leng)
-        
+
     def singlecloud():
         temp = randloc()
         temp2 = temp[1]
         temp3 = temp[0]
         leng = 30
-            
+
         for i in range(20):
             temp4 = (temp3, temp2)
             brushstroke(temp4,leng)
@@ -661,7 +661,7 @@ def clouddraw():
 
     for i in range(4):
         print("Drawing cloud:",i+1)
-            
+
         singlecloud()
 
 
@@ -698,7 +698,7 @@ def lakedraw():
         lake.color("#"+blues[randint(0,6)])
         lake.forward(5)
         lake.right(randint(0,8)/10)
-        
+
     lake.color("#"+blues[1])
     lake.goto(temp.pos())
     lake.end_fill()
@@ -718,7 +718,7 @@ def lilypads(amount):
         for i in range(0,7):
             lily.forward(2)
             lily.pensize(7-i)
-    
+
 
 def cutdraw():
     print("\nCutting out")
@@ -763,8 +763,8 @@ print("Elapsed time: %s seconds" % (time.time() - start_time))
   <h2>OOP version: comparison with CPython</h2>
   <p>All of the implemented methods listed below are called at least once
   in the demonstration program.</p>
-  <p>Due to the way that a scene is constructed, anything dealing with 
-    removing items drawn on the screen does not 
+  <p>Due to the way that a scene is constructed, anything dealing with
+    removing items drawn on the screen does not
   make sense in this implementation of the turtle module.</p>
   <p>In general, when a "public" non-implemented method is called, a warning
   is written on stderr.
@@ -904,7 +904,7 @@ turtle.done()
 
 <div id='info7' style='display:none'>
   <h2>OOP version: comparison with CPython</h2>
-  <p>Note: anything dealing with removing items drawn on the screen does not 
+  <p>Note: anything dealing with removing items drawn on the screen does not
   make sense in this implementation of the turtle module.</p>
     <p><a href="https://docs.python.org/3/library/turtle.html#turtle-methods" target="_blank">
     Pen Control</a> (link opens in new tab)</p>
@@ -976,7 +976,7 @@ turtle.done()
 
 <div id='info8' style='display:none'>
   <h2>OOP version: comparison with CPython</h2>
-  <p>Note: anything dealing with removing items drawn on the screen does not 
+  <p>Note: anything dealing with removing items drawn on the screen does not
   make sense in this implementation of the turtle module.</p>
     <p><a href="https://docs.python.org/3/library/turtle.html#turtle-methods" target="_blank">
     Turtle state, using events, and special methods</a> (link opens in new tab)</p>
@@ -1004,7 +1004,7 @@ shapetransform(): not implemented
 
 <h3>Using events</h3>
 <p>This version of the turtle module creates an animated <em>scene</em>
-which can be played back <em>as is</em> multiple times. 
+which can be played back <em>as is</em> multiple times.
 This scene cannot be interacted with.</p>
 <pre class="not-implemented">onclick(): not implemented
 onrelease(): not implemented
@@ -1089,11 +1089,11 @@ turtle.done()
 
 <div id='info9' style='display:none'>
   <h2>OOP version: comparison with CPython</h2>
-  <p>Note: anything dealing with removing items drawn on the screen does not 
+  <p>Note: anything dealing with removing items drawn on the screen does not
   make sense in this implementation of the turtle module.</p>
     <p><a href="https://docs.python.org/3/library/turtle.html#turtle-methods" target="_blank">
     Methods of TurtleScreen/Screen</a> (link opens in new tab)</p>
-    <p>This turtle implementation does not support <code>colormode</code>: 
+    <p>This turtle implementation does not support <code>colormode</code>:
       all colours must be given as strings. However, <b><em>more</em></b>
       color modes are supported since color may be given by name
       ['red'], by hexadecimal notation ['#abcdef', or '#345'], in rgb notation
@@ -1229,11 +1229,11 @@ turtle.done()
 
 <div id='info10' style='display:none'>
   <h2>Procedural version: comparison with CPython</h2>
-  <p>This demo shows the procedural version of the turtle module. 
-    We did not provide an html container, so a default one is created 
-    which is not styled; to show it, we changed the background color in 
+  <p>This demo shows the procedural version of the turtle module.
+    We did not provide an html container, so a default one is created
+    which is not styled; to show it, we changed the background color in
   the code.</p>
-  <p> All implemented <b><em>methods</em></b> from the 
+  <p> All implemented <b><em>methods</em></b> from the
       <a href="https://docs.python.org/3/library/turtle.html#turtle-methods" target="_blank">
     CPython version</a> mentioned in the other demos should also be available as functions.
    We do not list them all nor test them all here, but chose a few for a demo.
@@ -1243,7 +1243,7 @@ turtle.done()
 
 <div id='demo10' style="display:none">from turtle import *
 
-# screen function 
+# screen function
 bgcolor('rgb(255, 245, 230)')
 
 # turtle functions

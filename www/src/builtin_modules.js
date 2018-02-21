@@ -11,7 +11,7 @@
         $is_package: true,
         __package__:'browser',
         __file__:$B.brython_path.replace(/\/*$/g,'')+'/Lib/browser/__init__.py',
-        console:$B.JSObject(self.console),
+        console:$B.JSObject.$factory(self.console),
         win: $B.win,
         $$window: $B.win,
     }
@@ -19,21 +19,21 @@
 
     if (! $B.isa_web_worker ) {
         update(browser, {
-            $$alert:function(message){window.alert($B.builtins.str(message))},
-            confirm: $B.JSObject(window.confirm),
-            $$document:$B.DOMNode(document),
-            doc: $B.DOMNode(document),   //want to use document instead of doc
+            $$alert:function(message){window.alert($B.builtins.str.$factory(message))},
+            confirm: $B.JSObject.$factory(window.confirm),
+            $$document:$B.DOMNode.$factory(document),
+            doc: $B.DOMNode.$factory(document),   //want to use document instead of doc
             DOMEvent:$B.DOMEvent,
-            DOMNode:$B.DOMNode,
+            DOMNode:$B.DOMNode.$factory,
             load:function(script_url){
                 // Load and eval() the Javascript file at script_url
                 var file_obj = $B.builtins.open(script_url)
                 var content = $B.builtins.getattr(file_obj, 'read')()
                 eval(content)
             },
-            mouseCoords: function(ev){return $B.JSObject($mouseCoords(ev))},
+            mouseCoords: function(ev){return $B.JSObject.$factory($mouseCoords(ev))},
             prompt: function(message, default_value){
-                return $B.JSObject(window.prompt(message, default_value||''))
+                return $B.JSObject.$factory(window.prompt(message, default_value||''))
             },
             reload: function(){
                 // Javascripts in the page
@@ -68,7 +68,7 @@
             var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
                 results = regex.exec(location.search);
             results= results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
-            return $B.builtins.str(results);
+            return $B.builtins.str.$factory(results);
             }
         })
 
@@ -76,13 +76,14 @@
         modules['browser.html'] = (function($B){
 
             var _b_ = $B.builtins
-            var $TagSumDict = $B.$TagSum.$dict
+            var TagSum = $B.TagSum
 
             function makeTagDict(tagName){
                 // return the dictionary for the class associated with tagName
-                var dict = {__class__:$B.$type,
-                    __name__:tagName
-                    }
+                var dict = {
+                    __class__: _b_.type,
+                    __name__: tagName
+                }
 
                 dict.__init__ = function(){
                     var $ns=$B.args('pow',1,{self:null},['self'],arguments,
@@ -93,8 +94,8 @@
                         var first=args[0]
                         if(_b_.isinstance(first,[_b_.str,_b_.int,_b_.float])){
                             // set "first" as HTML content (not text)
-                            self.elt.innerHTML = _b_.str(first)
-                        } else if(first.__class__===$TagSumDict){
+                            self.elt.innerHTML = _b_.str.$factory(first)
+                        } else if(first.__class__===TagSum){
                             for(var i=0, len = first.children.length; i < len;i++){
                                 self.elt.appendChild(first.children[i].elt)
                             }
@@ -105,19 +106,21 @@
                                 try{
                                     // If the argument is an iterable other than
                                     // str, add the items
-                                    var items = _b_.list(first)
+                                    var items = _b_.list.$factory(first)
                                     for(var i=0;i<items.length;i++){
-                                        $B.DOMNode.$dict.__le__(self, items[i])
+                                        $B.DOMNode.__le__(self, items[i])
                                     }
                                 }catch(err){
-                                    throw _b_.ValueError('wrong element '+first)
+                                    console.log(err)
+                                    console.log("first", first)
+                                    throw _b_.ValueError.$factory('wrong element '+first)
                                 }
                             }
                         }
                     }
 
                     // attributes
-                    var items = _b_.list(_b_.dict.$dict.items($ns['kw']))
+                    var items = _b_.list.$factory(_b_.dict.items($ns['kw']))
                     for(var i=0, len = items.length; i < len;i++){
                         // keyword arguments
                         var arg = items[i][0],
@@ -125,73 +128,69 @@
                         if(arg.toLowerCase().substr(0,2)==="on"){
                             // Event binding passed as argument "onclick", "onfocus"...
                             // Better use method bind of DOMNode objects
-                            var js = '$B.DOMNodeDict.bind(self,"'
+                            var js = '$B.DOMNode.bind(self,"'
                             js += arg.toLowerCase().substr(2)
                             eval(js+'",function(){'+value+'})')
                         }else if(arg.toLowerCase()=="style"){
-                            $B.DOMNodeDict.set_style(self,value)
+                            $B.DOMNode.set_style(self,value)
                         } else {
                             if(value!==false){
                                 // option.selected=false sets it to true :-)
                                 try{
                                     arg = arg.replace('_','-')
-                                    $B.DOMNodeDict.__setattr__(self, arg, value)
+                                    $B.DOMNode.__setattr__(self, arg, value)
                                 }catch(err){
-                                    throw _b_.ValueError("can't set attribute "+arg)
+                                    throw _b_.ValueError.$factory("can't set attribute "+arg)
                                 }
                             }
                         }
                     }
                 }
 
-                dict.__mro__ = [$B.DOMNodeDict, $B.builtins.object.$dict]
+                dict.__mro__ = [$B.DOMNode, $B.builtins.object]
 
                 dict.__new__ = function(cls){
                     // __new__ must be defined explicitely : it returns an instance of
                     // DOMNode for the specified tagName
-                    if(cls.$dict.$elt_wrap !== undefined) {
+                    if(cls.$elt_wrap !== undefined) {
                         // DOMNode is piggybacking on us to autogenerate a node
-                        var elt = cls.$dict.$elt_wrap  // keep track of the to wrap element
-                        cls.$dict.$elt_wrap = undefined  // nullify for later calls
-                        var res = $B.DOMNode(elt, true)  // generate the wrapped DOMNode
+                        var elt = cls.$elt_wrap  // keep track of the to wrap element
+                        cls.$elt_wrap = undefined  // nullify for later calls
+                        var res = $B.DOMNode.$factory(elt, true)  // generate the wrapped DOMNode
                         res._wrapped = true  // marked as wrapped
                     } else {
-                        var res = $B.DOMNode(document.createElement(tagName), true)
+                        var res = $B.DOMNode.$factory(document.createElement(tagName), true)
                         res._wrapped = false  // not wrapped
                     }
-                    res.__class__ = cls.$dict
+                    res.__class__ = cls
                     return res
                 }
+                $B.set_func_names(dict, "browser.html")
                 return dict
             }
 
-            // the classes used for tag sums, $TagSum and $TagSumClass
-            // are defined in py_dom.js
-
-            function makeFactory(tagName){
+            function makeFactory(klass){
                 var factory = function(){
-                    if(factory.$dict.$elt_wrap !== undefined) {
+                    if(klass.$elt_wrap !== undefined) {
                         // DOMNode is piggybacking on us to autogenerate a node
-                        var elt = factory.$dict.$elt_wrap  // keep track of the to wrap element
-                        factory.$dict.$elt_wrap = undefined  // nullify for later calls
-                        var res = $B.DOMNode(elt, true)  // generate the wrapped DOMNode
+                        var elt = klass.$elt_wrap  // keep track of the to wrap element
+                        klass.$elt_wrap = undefined  // nullify for later calls
+                        var res = $B.DOMNode.$factory(elt, true)  // generate the wrapped DOMNode
                         res._wrapped = true  // marked as wrapped
                     } else {
-                        if(tagName=='SVG'){
-                            var res = $B.DOMNode(document.createElementNS("http://www.w3.org/2000/svg", "svg"), true)
+                        if(klass.__name__=='SVG'){
+                            var res = $B.DOMNode.$factory(document.createElementNS("http://www.w3.org/2000/svg", "svg"), true)
                         }else{
-                            var res = $B.DOMNode(document.createElement(tagName), true)
+                            var res = $B.DOMNode.$factory(document.createElement(klass.__name__), true)
                         }
                         res._wrapped = false  // not wrapped
                     }
-                    res.__class__ = dicts[tagName]
+                    res.__class__ = klass
                     // apply __init__
-                    var args = [res].concat(Array.prototype.slice.call(arguments))
-                    dicts[tagName].__init__.apply(null, args)
+                    klass.__init__(res, ...arguments)
                     return res
                 }
                 factory.__class__=$B.$factory
-                factory.$dict = dicts[tagName]
                 return factory
             }
 
@@ -221,21 +220,20 @@
 
             // Module has an attribute "tags" : a dictionary that maps all tag
             // names to the matching tag class factory function.
-            var obj = {tags:_b_.dict()},
+            var obj = {tags:_b_.dict.$factory()},
                 dicts = {}
 
             // register tags in DOMNode to autogenerate tags when DOMNode is invoked
-            $B.DOMNodeDict.tags = obj.tags
+            $B.DOMNode.tags = obj.tags
 
             function maketag(tag){
                 if(!(typeof tag=='string')){
-                    throw _b_.TypeError("html.maketag expects a string as argument")
+                    throw _b_.TypeError.$factory("html.maketag expects a string as argument")
                 }
-                dicts[tag] = makeTagDict(tag)
-                var factory = makeFactory(tag)
-                dicts[tag].$factory = factory
-                obj.tags.$string_dict[tag] = factory
-                return factory
+                var klass = dicts[tag] = makeTagDict(tag)
+                klass.$factory = makeFactory(klass)
+                obj.tags.$string_dict[tag] = klass
+                return klass
             }
 
             for(var i=0, len = tags.length; i < len;i++){
@@ -257,17 +255,17 @@
             // returns the content of Javascript "this"
             // $B.js_this is set to "this" at the beginning of each function
             if($B.js_this===undefined){return $B.builtins.None}
-            return $B.JSObject($B.js_this)
+            return $B.JSObject.$factory($B.js_this)
         },
         JSObject: function(){
             console.log('"javascript.JSObject" is deprecrated. '+
                 'Please refer to the documentation.')
-            return $B.JSObject.apply(null, arguments)
+            return $B.JSObject.$factory(...arguments)
         },
         JSConstructor: function(){
             console.log('"javascript.JSConstructor" is deprecrated. '+
                 'Please refer to the documentation.')
-            return $B.JSConstructor.apply(null, arguments)
+            return $B.JSConstructor.$factory.apply(null, arguments)
         },
         load:function(script_url){
             console.log('"javascript.load" is deprecrated. '+
@@ -301,13 +299,15 @@
         // Called "Getframe" because "_getframe" wouldn't be imported in
         // sys.py with "from _sys import *"
         Getframe : function(depth){
-            return $B._frame($B.frames_stack, depth)
+            return $B._frame.$factory($B.frames_stack, depth)
         },
         modules: {
-            __get__: function(){return _b_.dict($B.JSObject($B.imported))},
+            __get__: function(){
+                return $B.obj_dict($B.imported)
+            },
             __set__: function(self, obj, value){
-                 throw _b_.TypeError("Read only property 'sys.modules'")
-             }
+                 throw _b_.TypeError.$factory("Read only property 'sys.modules'")
+            }
         },
         path: {
             __get__: function(){return $B.path},
@@ -325,10 +325,10 @@
         },
         path_importer_cache: {
             __get__: function(){
-                return _b_.dict($B.JSObject($B.path_importer_cache))
+                return _b_.dict.$factory($B.JSObject.$factory($B.path_importer_cache))
             },
             __set__: function(self, obj, value){
-                throw _b_.TypeError("Read only property"+
+                throw _b_.TypeError.$factory("Read only property"+
                     " 'sys.path_importer_cache'")
             }
         },
@@ -347,7 +347,7 @@
 
     function load(name, module_obj){
         // add class and __str__
-        module_obj.__class__ = $B.$ModuleDict
+        module_obj.__class__ = $B.module
         //module_obj.__file__ = '<builtin>'
         module_obj.__name__ = name
         module_obj.__repr__ = module_obj.__str__ = function(){
@@ -370,13 +370,11 @@
     var _b_ = $B.builtins
 
     // Set builtin name __builtins__
-    _b_.__builtins__ = $B.$ModuleDict.$factory('__builtins__',
+    _b_.__builtins__ = $B.module.$factory('__builtins__',
         'Python builtins')
+
     for(var attr in $B.builtins){
         _b_.__builtins__[attr] = _b_[attr]
-        if(_b_[attr].__class__===$B.$factory){
-            _b_[attr].$dict.__module__ = 'builtins'
-        }
     }
     _b_.__builtins__.__setattr__ = function(attr, value){
         _b_[attr] = value

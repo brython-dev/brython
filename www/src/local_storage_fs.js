@@ -14,7 +14,7 @@ function $local_storage_open( ) {
 
     if (mode == 'rb' || mode == 'r') {
        if (localStorage[file] === undefined) {
-          throw IOError('File not found: ' + file)
+          throw IOError.$factory('File not found: ' + file)
        }
        var $res=localStorage[file]
        var lines=$res.split('\n')
@@ -36,7 +36,7 @@ function $local_storage_open( ) {
            }
        }
        res.readline = function(limit){
-           if(res.closed){throw ValueError('I/O operation on closed file')}
+           if(res.closed){throw ValueError.$factory('I/O operation on closed file')}
            var line = ''
            if(limit===undefined||limit===-1){limit=null}
            while(true){
@@ -54,7 +54,7 @@ function $local_storage_open( ) {
            return line
        }
        res.readlines = function(hint){
-            if(res.closed){throw ValueError('I/O operation on closed file')}
+            if(res.closed){throw ValueError.$factory('I/O operation on closed file')}
             var x = $res.substr(counter).split('\n')
             if(hint && hint!==-1){
                 var y=[],size=0
@@ -67,7 +67,7 @@ function $local_storage_open( ) {
             }else{return x}
        }
        res.seek = function(offset,whence){
-            if(res.closed){throw ValueError('I/O operation on closed file')}
+            if(res.closed){throw ValueError.$factory('I/O operation on closed file')}
             if(whence===undefined){whence=0}
             if(whence===0){counter = offset}
             else if(whence===1){counter += offset}
@@ -92,5 +92,5 @@ function $local_storage_open( ) {
        return res;
     }
 
-    throw IOError("Invalid mode: " + mode);
+    throw IOError.$factory("Invalid mode: " + mode);
 }

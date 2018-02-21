@@ -49,11 +49,13 @@ if (!String.prototype.trimRight) {
   };
 }
 
-var $ObjectDict = object.$dict
+var object = _b_.object
 
-var $StringDict = {__class__:$B.$type,
-    __dir__:$ObjectDict.__dir__,
+var str = {
+    __class__:_b_.type,
+    __dir__:object.__dir__,
     __name__:'str',
+    $is_class: true,
     $native:true
 }
 
@@ -64,7 +66,7 @@ function normalize_start_end($){
     else if($.end<0){$.end += $.self.length; $.end=Math.max(0, $.end)}
 
     if(!isinstance($.start,_b_.int)||!isinstance($.end,_b_.int)){
-        throw _b_.TypeError(
+        throw _b_.TypeError.$factory(
             "slice indices must be integers or None or have an __index__ method")}
 
 }
@@ -75,21 +77,21 @@ function reverse(s){
 }
 
 function check_str(obj){
-    if(!_b_.isinstance(obj,str)){throw _b_.TypeError("can't convert '"+
+    if(!_b_.isinstance(obj,str)){throw _b_.TypeError.$factory("can't convert '"+
       $B.get_class(obj).__name__+"' object to str implicitely")}
 }
 
-$StringDict.__add__ = function(self,other){
+str.__add__ = function(self,other){
     if(!(typeof other==="string")){
         try{return getattr(other,'__radd__')(self)}
-        catch(err){throw _b_.TypeError(
+        catch(err){throw _b_.TypeError.$factory(
             "Can't convert "+$B.get_class(other).__name__+" to str implicitely")}
     }
     return self+other
 }
 
-$StringDict.__contains__ = function(self,item){
-    if(!(typeof item==="string")){throw _b_.TypeError(
+str.__contains__ = function(self,item){
+    if(!(typeof item==="string")){throw _b_.TypeError.$factory(
          "'in <string>' requires string as left operand, not "+item.__class__)}
     var nbcar = item.length
     if(nbcar==0) return true // a string contains the empty string
@@ -100,15 +102,15 @@ $StringDict.__contains__ = function(self,item){
     return false
 }
 
-$StringDict.__delitem__ = function(){
-    throw _b_.TypeError("'str' object doesn't support item deletion")
+str.__delitem__ = function(){
+    throw _b_.TypeError.$factory("'str' object doesn't support item deletion")
 }
 
 // __dir__must be assigned explicitely because attribute resolution for builtin
 // classes doesn't use __mro__
-$StringDict.__dir__ = $ObjectDict.__dir__
+str.__dir__ = object.__dir__
 
-$StringDict.__eq__ = function(self,other){
+str.__eq__ = function(self,other){
     if(other===undefined){ // compare object "self" to class "str"
         return self===str
     }
@@ -119,33 +121,33 @@ $StringDict.__eq__ = function(self,other){
 }
 
 function preformat(self, fmt){
-    if(fmt.empty){return _b_.str(self)}
+    if(fmt.empty){return _b_.str.$factory(self)}
     if(fmt.type && fmt.type!='s'){
-        throw _b_.ValueError("Unknown format code '"+fmt.type+
+        throw _b_.ValueError.$factory("Unknown format code '"+fmt.type+
             "' for object of type 'str'")
     }
     return self
 }
 
-$StringDict.__format__ = function(self, format_spec) {
+str.__format__ = function(self, format_spec) {
     var fmt = new $B.parse_format_spec(format_spec)
     if(fmt.sign!==undefined){
-        throw _b_.ValueError("Sign not allowed in string format specifier")
+        throw _b_.ValueError.$factory("Sign not allowed in string format specifier")
     }
     // For strings, alignment default to left
     fmt.align = fmt.align || '<'
     return $B.format_width(preformat(self, fmt), fmt)
 }
 
-$StringDict.__getitem__ = function(self,arg){
+str.__getitem__ = function(self,arg){
     if(isinstance(arg,_b_.int)){
         var pos = arg
         if(arg<0) pos+=self.length
         if(pos>=0 && pos<self.length) return self.charAt(pos)
-        throw _b_.IndexError('string index out of range')
+        throw _b_.IndexError.$factory('string index out of range')
     }
     if(isinstance(arg,slice)) {
-        var s=_b_.slice.$dict.$conv_for_seq(arg, self.length),
+        var s=_b_.slice.$conv_for_seq(arg, self.length),
             start=s.start, stop=s.stop, step=s.step
         var res = '',i=null
         if(step>0){
@@ -157,13 +159,13 @@ $StringDict.__getitem__ = function(self,arg){
         }
         return res
     }
-    if(isinstance(arg,bool)) return self.__getitem__(_b_.int(arg))
-    throw _b_.TypeError('string indices must be integers')
+    if(isinstance(arg,bool)) return self.__getitem__(_b_.int.$factory(arg))
+    throw _b_.TypeError.$factory('string indices must be integers')
 }
 
-$StringDict.__hash__ = function(self) {
+str.__hash__ = function(self) {
   if (self === undefined) {
-     return $StringDict.__hashvalue__ || $B.$py_next_hash--  // for hash of string type (not instance of string)
+     return str.__hashvalue__ || $B.$py_next_hash--  // for hash of string type (not instance of string)
   }
 
   //http://stackoverflow.com/questions/2909106/python-whats-a-correct-and-good-way-to-implement-hash
@@ -177,19 +179,19 @@ $StringDict.__hash__ = function(self) {
   return hash
 }
 
-$StringDict.__init__ = function(self,arg){
+str.__init__ = function(self,arg){
     self.valueOf = function(){return arg}
     self.toString = function(){return arg}
     return _b_.None
 }
 
 var $str_iterator = $B.$iterator_class('str_iterator')
-$StringDict.__iter__ = function(self){
+str.__iter__ = function(self){
     var items = self.split('') // list of all characters in string
     return $B.$iterator(items,$str_iterator)
 }
 
-$StringDict.__len__ = function(self){return self.length}
+str.__len__ = function(self){return self.length}
 
 // Start of section for legacy formatting (with %)
 
@@ -236,8 +238,8 @@ var format_int_precision = function(val, flags) {
     }
     precision = parseInt(precision, 10)
     var s
-    if (val.__class__ === $B.LongInt.$dict) {
-       s=$B.LongInt.$dict.to_base(val, 10)
+    if (val.__class__ === $B.long_int) {
+       s=$B.long_int.to_base(val, 10)
     } else {
        s=val.toString()
     }
@@ -283,13 +285,13 @@ var format_sign = function(val, flags) {
 var str_format = function(val, flags) {
     // string format supports left and right padding
     flags.pad_char = " "  // even if 0 padding is defined, don't use it
-    return format_padding(str(val), flags)
+    return format_padding(str.$factory(val), flags)
 }
 
 var num_format = function(val, flags) {
     number_check(val)
-    if (val.__class__ === $B.LongInt.$dict) {
-      val = $B.LongInt.$dict.to_base(val, 10)
+    if (val.__class__ === $B.long_int) {
+      val = $B.long_int.to_base(val, 10)
     } else {
       val = parseInt(val)
     }
@@ -466,8 +468,8 @@ var signed_hex_format = function(val, upper, flags) {
     var ret
     number_check(val)
 
-    if (val.__class__ === $B.LongInt.$dict) {
-       ret=$B.LongInt.$dict.to_base(val, 16)
+    if (val.__class__ === $B.long_int) {
+       ret=$B.long_int.to_base(val, 16)
     } else {
        ret = parseInt(val)
        ret = ret.toString(16)
@@ -509,8 +511,8 @@ var octal_format = function(val, flags) {
     number_check(val)
     var ret
 
-    if (val.__class__ === $B.LongInt.$dict) {
-      ret = $B.LongInt.$dict.to_base(8)
+    if (val.__class__ === $B.long_int) {
+      ret = $B.long_int.to_base(8)
     } else {
       ret = parseInt(val)
       ret = ret.toString(8)
@@ -542,9 +544,9 @@ var octal_format = function(val, flags) {
 var single_char_format = function(val, flags) {
     if(isinstance(val,str) && val.length==1) return val
     try {
-        val = _b_.int(val)  // yes, floats are valid (they are cast to int)
+        val = _b_.int.$factory(val)  // yes, floats are valid (they are cast to int)
     } catch (err) {
-        throw _b_.TypeError('%c requires int or char')
+        throw _b_.TypeError.$factory('%c requires int or char')
     }
     return format_padding(chr(val), flags)
 }
@@ -625,7 +627,7 @@ var UnsupportedChar = function() {
     this.name = "UnsupportedChar"
 }
 
-$StringDict.__mod__ = function(self, args) {
+str.__mod__ = function(self, args) {
 
     var length = self.length,
         pos = 0 |0,
@@ -634,7 +636,7 @@ $StringDict.__mod__ = function(self, args) {
     if (_b_.isinstance(args, _b_.tuple)) {
         argpos = 0 |0
     }else{
-        getitem = _b_.getattr(args,'__getitem__', null)
+        getitem = _b_.getattr(args,'__getitem__', _b_.None)
     }
     var ret = ''
     var $get_kwarg_string = function(s) {
@@ -642,7 +644,7 @@ $StringDict.__mod__ = function(self, args) {
         ++pos
         var rslt = kwarg_key.exec(s.substring(newpos))
         if (!rslt) {
-            throw _b_.ValueError("incomplete format key")
+            throw _b_.ValueError.$factory("incomplete format key")
         }
         var key = rslt[1]
         newpos += rslt[0].length
@@ -652,7 +654,7 @@ $StringDict.__mod__ = function(self, args) {
             if (err.name === "KeyError") {
                 throw err
             }
-            throw _b_.TypeError("format requires a mapping")
+            throw _b_.TypeError.$factory("format requires a mapping")
         }
         return get_string_value(s, self)
     }
@@ -668,7 +670,7 @@ $StringDict.__mod__ = function(self, args) {
         } else {
             self = args[argpos++]
             if(self===undefined){
-                throw _b_.TypeError("not enough arguments for format string")
+                throw _b_.TypeError.$factory("not enough arguments for format string")
             }
         }
         return get_string_value(s, self)
@@ -693,9 +695,9 @@ $StringDict.__mod__ = function(self, args) {
                 if (err.name === "UnsupportedChar") {
                     invalid_char = s[newpos]
                     if (invalid_char === undefined) {
-                        throw _b_.ValueError("incomplete format")
+                        throw _b_.ValueError.$factory("incomplete format")
                     }
-                    throw _b_.ValueError("unsupported format character '" + invalid_char +
+                    throw _b_.ValueError.$factory("unsupported format character '" + invalid_char +
                         "' (0x" + invalid_char.charCodeAt(0).toString(16) + ") at index " + newpos)
                 } else if (err.name === "NotANumber") {
                     var try_char = s[newpos]
@@ -709,7 +711,7 @@ $StringDict.__mod__ = function(self, args) {
                     } else {
                         cls = cls.__name__
                     }
-                    throw _b_.TypeError("%" + try_char + " format: a number is required, not " + cls)
+                    throw _b_.TypeError.$factory("%" + try_char + " format: a number is required, not " + cls)
                 } else {
                     throw err
                 }
@@ -739,29 +741,29 @@ $StringDict.__mod__ = function(self, args) {
             }
         } else {
             // % at end of string
-            throw _b_.ValueError("incomplete format")
+            throw _b_.ValueError.$factory("incomplete format")
         }
         pos = newpos + 1
     } while (pos < length)
 
     if(argpos!==null){
         if(args.length>argpos){
-            throw _b_.TypeError('not enough arguments for format string')
+            throw _b_.TypeError.$factory('not enough arguments for format string')
         }else if(args.length<argpos){
-            throw _b_.TypeError('not all arguments converted during string formatting')
+            throw _b_.TypeError.$factory('not all arguments converted during string formatting')
         }
     }else if(nbph==0){
-        throw _b_.TypeError('not all arguments converted during string formatting')
+        throw _b_.TypeError.$factory('not all arguments converted during string formatting')
     }
     return ret
 }
 
-$StringDict.__mro__ = [$ObjectDict]
+str.__mro__ = [object]
 
-$StringDict.__mul__ = function(){
+str.__mul__ = function(){
     var $=$B.args('__mul__',2,{self:null,other:null},['self','other'],
         arguments,{},null,null)
-    if(!isinstance($.other,_b_.int)){throw _b_.TypeError(
+    if(!isinstance($.other,_b_.int)){throw _b_.TypeError.$factory(
         "Can't multiply sequence by non-int of type '"+
             $B.get_class($.other).__name__+"'")}
     var $res = ''
@@ -769,9 +771,9 @@ $StringDict.__mul__ = function(){
     return $res
 }
 
-$StringDict.__ne__ = function(self,other){return other!==self.valueOf()}
+str.__ne__ = function(self,other){return other!==self.valueOf()}
 
-$StringDict.__repr__ = function(self){
+str.__repr__ = function(self){
     var res = self.replace(/\n/g,'\\\\n')
     // escape the escape char
     res = res.replace(/\\/g, '\\\\')
@@ -785,54 +787,61 @@ $StringDict.__repr__ = function(self){
     return res
 }
 
-$StringDict.__setitem__ = function(self,attr,value){
-    throw _b_.TypeError("'str' object does not support item assignment")
+str.__setitem__ = function(self,attr,value){
+    throw _b_.TypeError.$factory("'str' object does not support item assignment")
 }
-$StringDict.__str__ = function(self){
+str.__str__ = function(self){
     if(self===undefined) return "<class 'str'>"
     return self.toString()
 }
-$StringDict.toString = function(){return 'string!'}
+str.toString = function(){return 'string!'}
 
 // generate comparison methods
 var $comp_func = function(self,other){
-    if(typeof other !=="string"){throw _b_.TypeError(
+    if(typeof other !=="string"){throw _b_.TypeError.$factory(
         "unorderable types: 'str' > "+$B.get_class(other).__name__+"()")}
     return self > other
 }
 $comp_func += '' // source code
 var $comps = {'>':'gt','>=':'ge','<':'lt','<=':'le'}
 for(var $op in $comps){
-    eval("$StringDict.__"+$comps[$op]+'__ = '+$comp_func.replace(/>/gm,$op))
+    eval("str.__"+$comps[$op]+'__ = '+$comp_func.replace(/>/gm,$op))
 }
 
 // add "reflected" methods
-$B.make_rmethods($StringDict)
+$B.make_rmethods(str)
 
 // unsupported operations
 var $notimplemented = function(self,other){
-    throw NotImplementedError("OPERATOR not implemented for class str")
+    throw NotImplementedError.$factory("OPERATOR not implemented for class str")
 }
 
-$StringDict.title = unicode.title;
-$StringDict.capitalize = unicode.capitalize;
-$StringDict.casefold = unicode.casefold;
-$StringDict.islower = unicode.islower;
-$StringDict.isupper = unicode.isupper;
-$StringDict.istitle = unicode.istitle;
-$StringDict.isspace = unicode.isspace;
-$StringDict.isalpha = unicode.isalpha;
-$StringDict.isalnum = unicode.isalnum;
-$StringDict.isdecimal = unicode.isdecimal;
-$StringDict.isdigit = unicode.isdigit;
-$StringDict.isnumeric = unicode.isnumeric;
-$StringDict.isidentifier = unicode.isidentifier;
-$StringDict.isprintable = unicode.isprintable;
-$StringDict.lower = unicode.lower;
-$StringDict.swapcase = unicode.swapcase;
-$StringDict.upper = unicode.upper;
+// Copy static methods from unicode
+var from_unicode = [
+    "title",
+    "capitalize",
+    "casefold",
+    "islower",
+    "isupper",
+    "istitle",
+    "isspace",
+    "isalpha",
+    "isalnum",
+    "isdecimal",
+    "isdigit",
+    "isnumeric",
+    "isidentifier",
+    "isprintable",
+    "lower",
+    "swapcase",
+    "upper"
+]
+for(var i=0;i<from_unicode.length;i++){
+    var name = from_unicode[i]
+    str[name] = unicode[name]
+}
 
-$StringDict.center = function(self,width,fillchar){
+str.center = function(self,width,fillchar){
     var $=$B.args("center",3,
         {self:null, width:null, fillchar:null},
         ['self', 'width', 'fillchar'],
@@ -847,18 +856,18 @@ $StringDict.center = function(self,width,fillchar){
     return res
 }
 
-$StringDict.count = function(){
+str.count = function(){
     var $ = $B.args('count', 4, {self:null, sub:null, start:null, stop:null},
         ['self', 'sub', 'start', 'stop'], arguments, {start:null, stop:null},
         null, null)
-    if(!(typeof $.sub==="string")){throw _b_.TypeError(
+    if(!(typeof $.sub==="string")){throw _b_.TypeError.$factory(
         "Can't convert '"+$B.get_class($.sub).__name__+"' object to str implicitly")}
     var substr = $.self
     if($.start!==null){
         var _slice
-        if($.stop!==null){_slice = _b_.slice($.start, $.stop)}
-        else{_slice = _b_.slice($.start,$.self.length)}
-        substr = $StringDict.__getitem__.apply(null, [$.self].concat(_slice))
+        if($.stop!==null){_slice = _b_.slice.$factory($.start, $.stop)}
+        else{_slice = _b_.slice.$factory($.start,$.self.length)}
+        substr = str.__getitem__.apply(null, [$.self].concat(_slice))
     }else{
         if($.self.length+$.sub.length==0){return 1} // ''.count('') = 1
     }
@@ -875,7 +884,7 @@ $StringDict.count = function(){
     return n
 }
 
-$StringDict.encode = function(self, encoding) {
+str.encode = function(self, encoding) {
     if (encoding === undefined) encoding='utf-8'
     if(encoding=='rot13' || encoding=='rot_13'){
         // Special case : returns a string
@@ -890,10 +899,10 @@ $StringDict.encode = function(self, encoding) {
         }
         return res
     }
-    return _b_.bytes(self, encoding)
+    return _b_.bytes.$factory(self, encoding)
 }
 
-$StringDict.endswith = function(){
+str.endswith = function(){
     // Return True if the string ends with the specified suffix, otherwise
     // return False. suffix can also be a tuple of suffixes to look for.
     // With optional start, test beginning at that position. With optional
@@ -911,7 +920,7 @@ $StringDict.endswith = function(){
     var s = $.self.substring($.start,$.end)
     for(var i=0, _len_i = suffixes.length; i < _len_i;i++){
         var suffix = suffixes[i]
-        if(!_b_.isinstance(suffix, str)){throw _b_.TypeError(
+        if(!_b_.isinstance(suffix, str)){throw _b_.TypeError.$factory(
             "endswith first arg must be str or a tuple of str, not int")}
         if(suffix.length<=s.length &&
             s.substr(s.length-suffix.length)==suffix) return true
@@ -919,7 +928,7 @@ $StringDict.endswith = function(){
     return false
 }
 
-$StringDict.expandtabs = function(self, tabsize) {
+str.expandtabs = function(self, tabsize) {
     var $ = $B.args('expandtabs', 2, {self:null, tabsize:null},
         ['self', 'tabsize'], arguments, {tabsize:8}, null, null)
     var s=$B.$GetInt($.tabsize), col=0,pos=0,res=''
@@ -946,12 +955,12 @@ $StringDict.expandtabs = function(self, tabsize) {
     return res
 }
 
-$StringDict.find = function(){
+str.find = function(){
     // Return the lowest index in the string where substring sub is found,
     // such that sub is contained in the slice s[start:end]. Optional
     // arguments start and end are interpreted as in slice notation.
     // Return -1 if sub is not found.
-    var $=$B.args("$StringDict.find",4,
+    var $=$B.args("str.find",4,
         {self:null, sub:null, start:null, end:null},
         ['self', 'sub', 'start','end'],
         arguments,{start:0,end:null},null,null)
@@ -959,7 +968,7 @@ $StringDict.find = function(){
     normalize_start_end($)
 
     if(!isinstance($.start,_b_.int)||!isinstance($.end,_b_.int)){
-        throw _b_.TypeError(
+        throw _b_.TypeError.$factory(
         "slice indices must be integers or None or have an __index__ method")}
     var s = $.self.substring($.start,$.end)
 
@@ -1002,7 +1011,7 @@ function parse_format(fmt_string){
         name=elts[0]
         conv=elts[1] // conversion flag
         if(conv.length!==1 || 'ras'.search(conv)==-1){
-            throw _b_.ValueError('wrong conversion flag '+conv)
+            throw _b_.ValueError.$factory('wrong conversion flag '+conv)
         }
     }
 
@@ -1021,7 +1030,7 @@ function parse_format(fmt_string){
         conv: conv, spec: spec||''}
 }
 
-$StringDict.format = function(self) {
+str.format = function(self) {
     var $ = $B.args('format', 1, {self:null}, ['self'],
         arguments, {}, '$args', '$kw')
 
@@ -1083,11 +1092,11 @@ $StringDict.format = function(self) {
                                 if(/\d+/.exec(key)){
                                     // If key is numeric, search in positional
                                     // arguments
-                                    return _b_.tuple.$dict.__getitem__($.$args,
+                                    return _b_.tuple.__getitem__($.$args,
                                         parseInt(key))
                                 }else{
                                     // Else try in keyword arguments
-                                    return _b_.dict.$dict.__getitem__($.$kw, key)
+                                    return _b_.dict.__getitem__($.$kw, key)
                                 }
                             }
                             fmt_obj.spec = fmt_obj.spec.replace(/\{(.+?)\}/g,
@@ -1101,7 +1110,7 @@ $StringDict.format = function(self) {
                     }
                 }else{end++}
             }
-            if(nb>0){throw ValueError("wrong format "+self)}
+            if(nb>0){throw ValueError.$factory("wrong format "+self)}
             pos = end
         }else{text += car;pos++;}
     }
@@ -1117,10 +1126,10 @@ $StringDict.format = function(self) {
         if(fmt.name.charAt(0).search(/\d/)>-1){
             // Numerical reference : use positional arguments
             var pos = parseInt(fmt.name),
-                value = _b_.tuple.$dict.__getitem__($.$args, pos)
+                value = _b_.tuple.__getitem__($.$args, pos)
         }else{
             // Use keyword arguments
-            var value = _b_.dict.$dict.__getitem__($.$kw, fmt.name)
+            var value = _b_.dict.__getitem__($.$kw, fmt.name)
         }
         // If name has extensions (attributes or subscriptions)
         for(var j=0;j<fmt.name_ext.length;j++){
@@ -1136,17 +1145,16 @@ $StringDict.format = function(self) {
                 value = _b_.getattr(value, '__getitem__')(key)
             }
         }
+
         // If the conversion flag is set, first call a function to convert
         // the value
         if(fmt.conv=='a'){value = _b_.ascii(value)}
         else if(fmt.conv=='r'){value = _b_.repr(value)}
-        else if(fmt.conv=='s'){value = _b_.str(value)}
+        else if(fmt.conv=='s'){value = _b_.str.$factory(value)}
 
         // Call attribute __format__ to perform the actual formatting
-        if(value.__class__===$B.$factory){
+        if(value.$is_class || value.$factory){
             // For classes, don't use the class __format__ method
-            res += value.$dict.__class__.__format__(value, fmt.spec)
-        }else if(value.$factory){
             res += value.__class__.__format__(value, fmt.spec)
         }else{
             res += _b_.getattr(value, '__format__')(fmt.spec)
@@ -1155,18 +1163,18 @@ $StringDict.format = function(self) {
     return res
 }
 
-$StringDict.format_map = function(self) {
-  throw NotImplementedError("function format_map not implemented yet");
+str.format_map = function(self) {
+  throw NotImplementedError.$factory("function format_map not implemented yet");
 }
 
-$StringDict.index = function(self){
+str.index = function(self){
     // Like find(), but raise ValueError when the substring is not found.
-    var res = $StringDict.find.apply(null,arguments)
-    if(res===-1) throw _b_.ValueError("substring not found")
+    var res = str.find.apply(null,arguments)
+    if(res===-1) throw _b_.ValueError.$factory("substring not found")
     return res
 }
 
-$StringDict.join = function(){
+str.join = function(){
     var $=$B.args('join',2,{self:null,iterable:null},
         ['self', 'iterable'], arguments, {}, null, null)
 
@@ -1177,7 +1185,7 @@ $StringDict.join = function(){
     while(1){
         try{
             var obj2 = _b_.next(iterable)
-            if(!isinstance(obj2,str)){throw _b_.TypeError(
+            if(!isinstance(obj2,str)){throw _b_.TypeError.$factory(
                 "sequence item "+count+": expected str instance, "+$B.get_class(obj2).__name__+" found")}
             res.push(obj2)
         }catch(err){
@@ -1191,7 +1199,7 @@ $StringDict.join = function(){
     return res.join($.self)
 }
 
-$StringDict.ljust = function(self) {
+str.ljust = function(self) {
     var $=$B.args('ljust',3,{self:null,width:null,fillchar:null},
         ['self','width','fillchar'],arguments,{fillchar:' '},null,null)
 
@@ -1199,7 +1207,7 @@ $StringDict.ljust = function(self) {
     return self + $.fillchar.repeat($.width - self.length)
 }
 
-$StringDict.lstrip = function(self,x){
+str.lstrip = function(self,x){
     var $=$B.args('lstrip',2,{self:null,chars:null},['self','chars'],
             arguments,{chars:_b_.None},null,null)
     if($.chars===_b_.None){return $.self.trimLeft()}
@@ -1212,11 +1220,11 @@ $StringDict.lstrip = function(self,x){
 }
 
 // note, maketrans should be a static function.
-$StringDict.maketrans = function() {
+str.maketrans = function() {
     var $ = $B.args('maketrans', 3, {x:null,y:null,z:null},['x','y','z'],
         arguments, {y:null, z:null}, null, null)
 
-    var _t=_b_.dict()
+    var _t=_b_.dict.$factory()
     // make 'default' translate table
     for(var i=0; i < 256; i++) _t.$numeric_dict[i]=i
 
@@ -1226,18 +1234,18 @@ $StringDict.maketrans = function() {
         // Unicode ordinals, strings (of arbitrary lengths) or None. Character
         // keys will then be converted to ordinals.
         if(!_b_.isinstance($.x, _b_.dict)){
-            throw _b_.TypeError('maketrans only argument must be a dict')
+            throw _b_.TypeError.$factory('maketrans only argument must be a dict')
         }
-        var items = _b_.list(_b_.dict.$dict.items($.x))
+        var items = _b_.list.$factory(_b_.dict.items($.x))
         for(var i=0, len=items.length;i<len;i++){
             var k = items[i][0], v=items[i][1]
             if(!_b_.isinstance(k, _b_.int)){
                 if(_b_.isinstance(k, _b_.str) && k.length==1){k = _b_.ord(k)}
-                else{throw _b_.TypeError("dictionary key "+k+
+                else{throw _b_.TypeError.$factory("dictionary key "+k+
                     " is not int or 1-char string")}
             }
             if(v!==_b_.None && !_b_.isinstance(v, [_b_.int, _b_.str])){
-                throw _b_.TypeError("dictionary value "+v+
+                throw _b_.TypeError.$factory("dictionary value "+v+
                     " is not None, integer or string")
             }
              _t.$numeric_dict[k] = v
@@ -1248,16 +1256,16 @@ $StringDict.maketrans = function() {
         // and in the resulting dictionary, each character in x will be mapped
         // to the character at the same position in y
         if(!(_b_.isinstance($.x, _b_.str) && _b_.isinstance($.y, _b_.str))){
-            throw _b_.TypeError("maketrans arguments must be strings")
+            throw _b_.TypeError.$factory("maketrans arguments must be strings")
         }else if($.x.length!==$.y.length){
-            throw _b_.TypeError("maketrans arguments must be strings or same length")
+            throw _b_.TypeError.$factory("maketrans arguments must be strings or same length")
         }else{
             var toNone = {}
             if($.z!==null){
                 // If there is a third argument, it must be a string, whose
                 // characters will be mapped to None in the result
                 if(!_b_.isinstance($.z, _b_.str)){
-                    throw _b_.TypeError('maketrans third argument must be a string')
+                    throw _b_.TypeError.$factory('maketrans third argument must be a string')
                 }
                 for(var i=0,len=$.z.length;i<len;i++){
                     toNone[_b_.ord($.z.charAt(i))] = true
@@ -1274,14 +1282,14 @@ $StringDict.maketrans = function() {
     }
 }
 
-$StringDict.partition = function() {
+str.partition = function() {
     var $=$B.args('partition',2,{self:null,sep:null},['self','sep'],
         arguments,{},null,null)
-  if($.sep==''){throw _b_.ValueError('empty separator')}
+  if($.sep==''){throw _b_.ValueError.$factory('empty separator')}
   check_str($.sep)
   var i=$.self.indexOf($.sep)
-  if (i== -1) return _b_.tuple([$.self, '', ''])
-  return _b_.tuple([$.self.substring(0,i), $.sep,
+  if (i== -1) return _b_.tuple.$factory([$.self, '', ''])
+  return _b_.tuple.$factory([$.self.substring(0,i), $.sep,
       $.self.substring(i+$.sep.length)])
 }
 
@@ -1295,7 +1303,7 @@ function $re_escape(str)
   return str
 }
 
-$StringDict.replace = function(self, old, _new, count) {
+str.replace = function(self, old, _new, count) {
     // Replaces occurrences of 'old' by '_new'. Count references
     // the number of times to replace. In CPython, negative or undefined
     // values of count means replace all.
@@ -1307,13 +1315,13 @@ $StringDict.replace = function(self, old, _new, count) {
     check_str(_new)
     // Validate instance type of 'count'
     if (!isinstance(count,[_b_.int,_b_.float])) {
-        throw _b_.TypeError("'" + $B.get_class(count).__name__ +
+        throw _b_.TypeError.$factory("'" + $B.get_class(count).__name__ +
             "' object cannot be interpreted as an integer");
     } else if (isinstance(count, _b_.float)) {
-        throw _b_.TypeError("integer argument expected, got float");
+        throw _b_.TypeError.$factory("integer argument expected, got float");
     }
     if(count==0){return self}
-    if(count.__class__==$B.LongInt.$dict){count=parseInt(count.value)}
+    if(count.__class__==$B.long_int){count=parseInt(count.value)}
     if(old==''){
         if(_new==''){return self}
         if(self==''){return _new}
@@ -1323,7 +1331,7 @@ $StringDict.replace = function(self, old, _new, count) {
             return _new+elts.slice(0, count).join(_new)+rest
         }else{return _new+elts.join(_new)+_new}
     }else{
-        var elts = $StringDict.split(self,old,count)
+        var elts = str.split(self,old,count)
     }
 
     var res = self, pos = -1
@@ -1347,7 +1355,7 @@ $StringDict.replace = function(self, old, _new, count) {
     return res;
 }
 
-$StringDict.rfind = function(self){
+str.rfind = function(self){
     // Return the highest index in the string where substring sub is found,
     // such that sub is contained within s[start:end]. Optional arguments
     // start and end are interpreted as in slice notation. Return -1 on failure.
@@ -1372,14 +1380,14 @@ $StringDict.rfind = function(self){
     return -1
 }
 
-$StringDict.rindex = function(){
+str.rindex = function(){
     // Like rfind() but raises ValueError when the substring sub is not found
-    var res = $StringDict.rfind.apply(null,arguments)
-    if(res==-1){throw _b_.ValueError("substring not found")}
+    var res = str.rfind.apply(null,arguments)
+    if(res==-1){throw _b_.ValueError.$factory("substring not found")}
     return res
 }
 
-$StringDict.rjust = function(self) {
+str.rjust = function(self) {
     var $=$B.args("rjust",3,
         {self:null, width:null, fillchar:null},
         ['self', 'width', 'fillchar'],
@@ -1390,20 +1398,20 @@ $StringDict.rjust = function(self) {
     return $.fillchar.repeat($.width - self.length) + self
 }
 
-$StringDict.rpartition = function(self,sep) {
+str.rpartition = function(self,sep) {
     var $=$B.args('rpartition',2,{self:null,sep:null},['self','sep'],
         arguments,{},null,null)
     check_str($.sep)
     var self = reverse($.self),
         sep = reverse($.sep)
-    var items = $StringDict.partition(self,sep).reverse()
+    var items = str.partition(self,sep).reverse()
     for(var i=0;i<items.length;i++){
         items[i]=items[i].split('').reverse().join('')
     }
     return items
 }
 
-$StringDict.rsplit = function(self) {
+str.rsplit = function(self) {
     var $=$B.args("rsplit",3,{self:null,sep:null,maxsplit:null},
         ['self','sep','maxsplit'],arguments,
         {sep:_b_.None, maxsplit:-1},null,null),
@@ -1412,7 +1420,7 @@ $StringDict.rsplit = function(self) {
     // Use split on the reverse of the string and of separator
     var rev_str = reverse($.self),
         rev_sep = sep === _b_.None ? sep : reverse($.sep),
-        rev_res = $StringDict.split(rev_str, rev_sep, $.maxsplit)
+        rev_res = str.split(rev_str, rev_sep, $.maxsplit)
 
     // Reverse the list, then each string inside the list
     rev_res.reverse()
@@ -1422,7 +1430,7 @@ $StringDict.rsplit = function(self) {
     return rev_res
 }
 
-$StringDict.rstrip = function(self,x){
+str.rstrip = function(self,x){
     var $=$B.args('rstrip',2,{self:null,chars:null},['self','chars'],
             arguments,{chars:_b_.None},null,null)
     if($.chars===_b_.None){return $.self.trimRight()}
@@ -1434,14 +1442,14 @@ $StringDict.rstrip = function(self,x){
     return '';
 }
 
-$StringDict.split = function(){
+str.split = function(){
     var pos=0
     var $=$B.args("split",3,{self:null,sep:null,maxsplit:null},
         ['self','sep','maxsplit'],arguments,
         {sep:_b_.None, maxsplit:-1},null,null)
     var sep=$.sep,maxsplit=$.maxsplit,self=$.self
-    if(maxsplit.__class__===$B.LongInt.$dict){maxsplit=parseInt(maxsplit.value)}
-    if(sep=='') throw _b_.ValueError('empty separator')
+    if(maxsplit.__class__===$B.long_int){maxsplit=parseInt(maxsplit.value)}
+    if(sep=='') throw _b_.ValueError.$factory('empty separator')
     if(sep===_b_.None){
         var res = []
         while(pos<self.length&&self.charAt(pos).search(/\s/)>-1){pos++}
@@ -1491,14 +1499,14 @@ $StringDict.split = function(){
     }
 }
 
-$StringDict.splitlines = function(self){
+str.splitlines = function(self){
     var $=$B.args('splitlines',2,{self:null,keepends:null},
         ['self','keepends'],arguments,{keepends:false},null,null)
     if(!_b_.isinstance($.keepends,[_b_.bool, _b_.int])){
-        throw _b_.TypeError('integer argument expected, got '+
+        throw _b_.TypeError.$factory('integer argument expected, got '+
             $B.get_class($.keepends).__name)
     }
-    var keepends = _b_.int($.keepends)
+    var keepends = _b_.int.$factory($.keepends)
     // Remove trailing line breaks
     if(keepends){
         var res = [],
@@ -1525,7 +1533,7 @@ $StringDict.splitlines = function(self){
     }
 }
 
-$StringDict.startswith = function(){
+str.startswith = function(){
     // Return True if string starts with the prefix, otherwise return False.
     // prefix can also be a tuple of prefixes to look for. With optional
     // start, test string beginning at that position. With optional end,
@@ -1543,7 +1551,7 @@ $StringDict.startswith = function(){
     var s = $.self.substring($.start,$.end)
     for(var i=0, _len_i = prefixes.length; i < _len_i;i++){
         prefix = prefixes[i]
-        if(!_b_.isinstance(prefix, str)){throw _b_.TypeError(
+        if(!_b_.isinstance(prefix, str)){throw _b_.TypeError.$factory(
             "endswith first arg must be str or a tuple of str, not int")}
         if(s.substr(0,prefix.length)==prefix) return true
     }
@@ -1551,7 +1559,7 @@ $StringDict.startswith = function(){
 
 }
 
-$StringDict.strip = function(){
+str.strip = function(){
     var $=$B.args('strip',2,{self:null,chars:null},['self','chars'],
             arguments,{chars:_b_.None},null,null)
     if($.chars===_b_.None){return $.self.trim()}
@@ -1568,11 +1576,11 @@ $StringDict.strip = function(){
     return $.self.substring(i,j+1);
 }
 
-$StringDict.translate = function(self,table) {
+str.translate = function(self,table) {
     var res = [], pos=0
     if (isinstance(table, _b_.dict)) {
        for (var i=0, _len_i = self.length; i < _len_i; i++) {
-           var repl = _b_.dict.$dict.get(table,self.charCodeAt(i),-1)
+           var repl = _b_.dict.get(table,self.charCodeAt(i),-1)
            if(repl==-1){res[pos++]=self.charAt(i)}
            else if(repl!==None){res[pos++]=_b_.chr(repl)}
        }
@@ -1580,7 +1588,7 @@ $StringDict.translate = function(self,table) {
     return res.join('')
 }
 
-$StringDict.zfill = function(self, width) {
+str.zfill = function(self, width) {
     var $=$B.args('zfill',2,{self:null,width:null},
         ['self','width'],arguments,{},null,null)
     if ($.width <= self.length) {return self}
@@ -1593,9 +1601,9 @@ $StringDict.zfill = function(self, width) {
     }
 }
 
-function str(arg){
-    arg = arg.__class__ === $B.$factory ? arg.$dict : arg
-    if(arg===undefined) return '<undefined>'
+str.$factory = function(arg){
+    //console.log("str", arg)
+    if(arg===undefined){console.log("undef"); return '<undefined>'}
     switch(typeof arg) {
       case 'string':
           return arg
@@ -1603,16 +1611,13 @@ function str(arg){
           if(isFinite(arg)){return arg.toString()}
     }
     try{
-        if(arg.$factory){
-            // arg is a class (the factory function)
+        if(arg.$is_class || arg.$factory){
+            // arg is a class
             // In this case, str() doesn't use the attribute __str__ of the
             // class or its subclasses, but the attribute __str__ of the
             // class metaclass (usually "type") or its subclasses (usually
             // "object")
             // The metaclass is the attribute __class__ of the class dictionary
-            if(arg.__class__===$B.$type){return $B.$type.__str__(arg)}
-            return $B.$getattr(arg.__class__, '__str__')(arg)
-        }else if(arg.$factory){
             var func = $B.$getattr(arg.__class__, '__str__')
             return func(arg)
         }
@@ -1621,6 +1626,7 @@ function str(arg){
         //return f()
     }
     catch(err){
+        console.log("pas de __str__ pour", arg)
         console.log('err ', err)
         try{ // try __repr__
              var f = getattr(arg,'__repr__')
@@ -1631,32 +1637,31 @@ function str(arg){
              return arg.toString()
         }
     }
-
-    return getattr(f, '__call__')()
+    return $B.$call(f)()
 }
-str.__class__ = $B.$factory
-str.$dict = $StringDict
-$StringDict.$factory = str
-$StringDict.__new__ = function(cls){
+
+str.__new__ = function(cls){
     if(cls===undefined){
-        throw _b_.TypeError('str.__new__(): not enough arguments')
+        throw _b_.TypeError.$factory('str.__new__(): not enough arguments')
     }
-    return {__class__:cls.$dict}
+    return {__class__:cls}
 }
 
-$B.set_func_names($StringDict)
+$B.set_func_names(str, "builtins")
 
 // dictionary and factory for subclasses of string
-var $StringSubclassDict = {
-    __class__:$B.$type,
-    __name__:'str'
+var StringSubclass = $B.StringSubclass = {
+    __class__:_b_.type,
+    __mro__: [object],
+    __name__:'str',
+    $is_class: true
 }
 
-// the methods in subclass apply the methods in $StringDict to the
+// the methods in subclass apply the methods in str to the
 // result of instance.valueOf(), which is a Javascript string
-for(var $attr in $StringDict){
-    if(typeof $StringDict[$attr]=='function'){
-        $StringSubclassDict[$attr]=(function(attr){
+for(var $attr in str){
+    if(typeof str[$attr]=='function'){
+        StringSubclass[$attr]=(function(attr){
             return function(){
                 var args = [], pos=0
                 if(arguments.length>0){
@@ -1665,18 +1670,16 @@ for(var $attr in $StringDict){
                         args[pos++]=arguments[i]
                     }
                 }
-                return $StringDict[attr].apply(null,args)
+                return str[attr].apply(null,args)
             }
         })($attr)
     }
 }
-$StringSubclassDict.__mro__ = [$ObjectDict]
-
-// factory for str subclasses
-$B.$StringSubclassFactory = {
-    __class__:$B.$factory,
-    $dict:$StringSubclassDict
+StringSubclass.__new__ = function(cls){
+    return {__class__: cls}
 }
+
+$B.set_func_names(StringSubclass, "builtins")
 
 _b_.str = str
 
@@ -1734,7 +1737,7 @@ $B.parse_format_spec = function(spec){
         if(car==','){this.comma=true;pos++;car=spec.charAt(pos)}
         if(car=='.'){
             if(digits.indexOf(spec.charAt(pos+1))==-1){
-                throw _b_.ValueError("Missing precision in format spec")
+                throw _b_.ValueError.$factory("Missing precision in format spec")
             }
             this.precision = spec.charAt(pos+1)
             pos+=2;car=spec.charAt(pos)
@@ -1746,11 +1749,11 @@ $B.parse_format_spec = function(spec){
         if(car && types.indexOf(car)>-1){this.type=car;pos++;car=spec.charAt(pos)}
         if(pos!==spec.length){
             //console.log('error', spec, this, pos, spec.charAt(pos))
-            throw _b_.ValueError("Invalid format specifier")
+            throw _b_.ValueError.$factory("Invalid format specifier")
         }
     }
     this.toString = function(){
-        return (this.fill===undefined ? '' : _b_.str(this.fill))+
+        return (this.fill===undefined ? '' : _b_.str.$factory(this.fill))+
             (this.align||'')+
             (this.sign||'')+
             (this.alternate ? '#' : '')+

@@ -49,7 +49,7 @@ var Base64 = {
                 alphabet.charAt(enc4);
 
         }
-        return _b_.bytes(output, 'utf-8', 'strict');
+        return _b_.bytes.$factory(output, 'utf-8', 'strict');
     },
 
 
@@ -81,7 +81,7 @@ var Base64 = {
             }
         }
         input = _input;
-        if (_input.length == padding ) return _b_.bytes([]);
+        if (_input.length == padding ) return _b_.bytes.$factory([]);
         if ( _input.length % 4 > 0) throw Base64.error("Incorrect padding");
 
         var i = 0;
@@ -107,7 +107,7 @@ var Base64 = {
 
         }
         // return Python bytes
-        return _b_.bytes(output, 'utf-8', 'strict')
+        return _b_.bytes.$factory(output, 'utf-8', 'strict')
 
     },
 

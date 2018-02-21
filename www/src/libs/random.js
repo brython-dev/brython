@@ -305,7 +305,7 @@ function _Random(){
 
         var randbytes= []
         for(i=0;i<n;i++){randbytes.push(parseInt(_random()*256))}
-        return _b_.bytes(randbytes)
+        return _b_.bytes.$factory(randbytes)
     }
 
     var res = {
@@ -322,7 +322,7 @@ function _Random(){
             var len, rank
             if(Array.isArray(seq)){len = seq.length}
             else{len = _b_.getattr(seq,'__len__')()}
-            if(len==0){throw _b_.IndexError("Cannot choose from an empty sequence")}
+            if(len==0){throw _b_.IndexError.$factory("Cannot choose from an empty sequence")}
             rank = parseInt(_random()*len)
             if(Array.isArray(seq)){return seq[rank]}
             else{return _b_.getattr(seq,'__getitem__')(rank)}
@@ -374,7 +374,7 @@ function _Random(){
                 SG_MAGICCONST = 1.0 + Math.log(4.5)
 
             if(alpha <= 0.0 || beta <= 0.0){
-                throw _b_.ValueError('gammavariate: alpha and beta must be > 0.0')
+                throw _b_.ValueError.$factory('gammavariate: alpha and beta must be > 0.0')
             }
 
             if(alpha > 1.0){
@@ -481,13 +481,13 @@ function _Random(){
                 k = $B.$GetInt($.k)
             // getrandbits(k) -> x.  Generates a long int with k random bits.
             if(k <= 0){
-                throw _b_.ValueError('number of bits must be greater than zero')
+                throw _b_.ValueError.$factory('number of bits must be greater than zero')
             }
-            if(k != _b_.int(k)){
+            if(k != _b_.int.$factory(k)){
                 throw _b_.TypeError('number of bits should be an integer')
             }
             var numbytes = (k + 7), // bits / 8 and rounded up
-                x = _b_.int.$dict.from_bytes(_urandom(numbytes), 'big')
+                x = _b_.int.from_bytes(_urandom(numbytes), 'big')
             return _b_.getattr(x, '__rshift__')(
                 _b_.getattr(numbytes*8,'__sub__')(k))
         },
@@ -560,10 +560,10 @@ function _Random(){
             }else{
                 var start = $.x, stop = $.stop,
                     step = $.step===null ? 1 : $.step
-                if(step==0){throw _b_.ValueError('step cannot be 0')}
+                if(step==0){throw _b_.ValueError.$factory('step cannot be 0')}
             }
             if((step>0 && start>stop) || (step<0 && start<stop)){
-                throw _b_.ValueError("empty range for randrange() (" +
+                throw _b_.ValueError.$factory("empty range for randrange() (" +
                     start+", "+stop+", "+step+")")
             }
             if(typeof start=='number' && typeof stop == 'number' &&
@@ -573,7 +573,7 @@ function _Random(){
                 var d = _b_.getattr(stop,'__sub__')(start)
                 d = _b_.getattr(d, '__floordiv__')(step)
                 // Force d to be a LongInt
-                d = $B.LongInt(d)
+                d = $B.long_int.$factory(d)
                 // d is a long integer with n digits ; to choose a random number
                 // between 0 and d the most simple is to take a random digit
                 // at each position, except the first one
@@ -593,11 +593,11 @@ function _Random(){
                         res += Math.floor(_random()*10)+''
                     }
                 }
-                var offset = {__class__:$B.LongInt.$dict, value: res,
+                var offset = {__class__:$B.long_int, value: res,
                     pos: true}
                 d = _b_.getattr(step, '__mul__')(offset)
                 d = _b_.getattr(start, '__add__')(d)
-                return _b_.int(d)
+                return _b_.int.$factory(d)
             }
         },
 
@@ -641,7 +641,7 @@ function _Random(){
             var n = _b_.getattr(population, '__len__')()
 
             if(k<0 || k>n){
-                throw _b_.ValueError("Sample larger than population")
+                throw _b_.ValueError.$factory("Sample larger than population")
             }
             var result = [],
                 setsize = 21        // size of a small set minus size of an empty list
@@ -652,7 +652,7 @@ function _Random(){
                 // An n-length list is smaller than a k-length set
                 if(Array.isArray(population)){
                     var pool = population.slice()
-                }else{var pool = _b_.list(population)}
+                }else{var pool = _b_.list.$factory(population)}
                 for(var i=0;i<k;i++){ //invariant:  non-selected at [0,n-i)
                     var j = _randbelow(n-i)
                     result[i] = pool[j]
@@ -690,13 +690,13 @@ function _Random(){
             if(version==1){a = _b_.hash(a)}
             else if(version==2){
                 if(_b_.isinstance(a, _b_.str)){
-                    a = _b_.int.$dict.from_bytes(_b_.bytes(a, 'utf-8'), 'big')
+                    a = _b_.int.from_bytes(_b_.bytes.$factory(a, 'utf-8'), 'big')
                 }else if(_b_.isinstance(a, [_b_.bytes, _b_.bytearray])){
-                    a = _b_.int.$dict.from_bytes(a, 'big')
+                    a = _b_.int.from_bytes(a, 'big')
                 }else if(!_b_.isinstance(a, _b_.int)){
                     throw _b_.TypeError('wrong argument')
                 }
-                if(a.__class__===$B.LongInt.$dict){
+                if(a.__class__===$B.long_int){
                     // In this implementation, seed() only accepts safe integers
                     // Generate a random one from the underlying string value,
                     // using an arbitrary seed (99) to always return the same
@@ -710,7 +710,7 @@ function _Random(){
                     a = parseInt(res)
                 }
             }else{
-                throw ValueError('version can only be 1 or 2')
+                throw ValueError.$factory('version can only be 1 or 2')
             }
 
             _random.seed(a)
@@ -727,23 +727,23 @@ function _Random(){
                     $B.get_class($.state).__name__)
             }
             if($.state.length<state.length){
-                throw _b_.ValueError("need more than "+$.state.length+
+                throw _b_.ValueError.$factory("need more than "+$.state.length+
                     " values to unpack")
             }else if($.state.length>state.length){
-                throw _b_.ValueError("too many values to unpack (expected "+
+                throw _b_.ValueError.$factory("too many values to unpack (expected "+
                     state.length+")")
             }
             if($.state[0]!=3){
-                throw _b_.ValueError("ValueError: state with version "+
+                throw _b_.ValueError.$factory("ValueError: state with version "+
                     $.state[0]+" passed to Random.setstate() of version 3")
             }
-            var second = _b_.list($.state[1])
+            var second = _b_.list.$factory($.state[1])
             if(second.length!==state[1].length){
-                throw _b_.ValueError('state vector is the wrong size')
+                throw _b_.ValueError.$factory('state vector is the wrong size')
             }
             for(var i=0;i<second.length;i++){
                 if(typeof second[i] != 'number'){
-                    throw _b_.ValueError('state vector items must be integers')
+                    throw _b_.ValueError.$factory('state vector items must be integers')
                 }
             }
             _random.setstate($.state)
@@ -924,7 +924,7 @@ function _Random(){
             beta = $.beta
 
         var y = res.gammavariate(alpha, 1)
-        if(y == 0){return _b_.float(0)}
+        if(y == 0){return _b_.float.$factory(0)}
         else{return y / (y + res.gammavariate(beta, 1))}
     }
 
@@ -932,39 +932,33 @@ function _Random(){
 
 }
 
-function Random(){
-    var obj = {__class__: Random.$dict}
-    Random.$dict.__init__(obj)
-    return obj
+var Random = $B.make_class("Random",
+    function(){
+        var obj = {__class__: Random}
+        Random.__init__(obj)
+        return obj
+    }
+)
+Random.__getattribute__ = function(self, attr){
+    return self.$r[attr]
 }
-Random.__class__ = $B.$factory
-Random.$dict = {
-    __class__: $B.$type,
-    __name__: 'Random',
-    $factory: Random,
-    __init__: function(self){self.$r = _Random()},
-    __getattribute__: function(self, attr){return self.$r[attr]}
-}
-Random.$dict.__mro__ = [$B.builtins.object.$dict]
+
+$B.set_func_names(Random, "random")
 
 var $module = _Random()
 
 $module.Random = Random
 
-$module.SystemRandom = function(){
-    var f = function(){return {__class__:f.$dict}}
-    f.__class__ = $B.$factory
-    f.$dict = {
-        __class__: $B.$type,
-        __name__: 'SystemRandom',
-        $factory: f,
-        __getattribute__: function(){
-            throw $B.builtins.NotImplementedError()
-        }
+var SystemRandom = $B.make_class("SystemRandom",
+    function(){
+        return {__class__: SystemRandom}
     }
-    f.$dict.__mro__ = [$B.builtins.object.$dict]
-    return f()
+)
+SystemRandom.__getattribute__ = function(){
+    throw $B.builtins.NotImplementedError()
 }
+
+$module.SystemRandom = SystemRandom
 
 return $module
 

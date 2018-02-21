@@ -1,15 +1,18 @@
 ;(function($B){
 
 var _b_=$B.builtins
-var $ObjectDict = _b_.object.$dict
+var object = _b_.object
 var isinstance = _b_.isinstance, getattr=_b_.getattr, None=_b_.None
 
 var from_unicode={}, to_unicode={}
 
 //bytearray() (built in function)
-var $BytearrayDict = {__class__:$B.$type,
+var bytearray = {
+    __class__:_b_.type,
+    __mro__: [object],
     __name__:'bytearray',
-    $buffer_protocol:true
+    $buffer_protocol:true,
+    $is_class: true
 }
 
 var mutable_methods = ['__delitem__','clear','copy','count','index','pop',
@@ -17,36 +20,36 @@ var mutable_methods = ['__delitem__','clear','copy','count','index','pop',
 
 for(var i=0, _len_i = mutable_methods.length; i < _len_i;i++){
     var method = mutable_methods[i]
-    $BytearrayDict[method] = (function(m){
+    bytearray[method] = (function(m){
         return function(self){
             var args = [self.source], pos=1
             for(var i=1, _len_i = arguments.length; i < _len_i;i++) args[pos++]=arguments[i]
-            return _b_.list.$dict[m].apply(null,args)
+            return _b_.list[m].apply(null,args)
         }
     })(method)
 }
 
 var $bytearray_iterator = $B.$iterator_class('bytearray_iterator')
-$BytearrayDict.__iter__ = function(self){
+bytearray.__iter__ = function(self){
     return $B.$iterator(self.source,$bytearray_iterator)
 }
-$BytearrayDict.__mro__ = [$ObjectDict]
+bytearray.__mro__ = [object]
 
-$BytearrayDict.__repr__ = $BytearrayDict.__str__ = function(self){
-    return 'bytearray('+$BytesDict.__repr__(self)+")"
+bytearray.__repr__ = bytearray.__str__ = function(self){
+    return 'bytearray('+bytes.__repr__(self)+")"
 }
 
-$BytearrayDict.__setitem__ = function(self,arg,value){
+bytearray.__setitem__ = function(self,arg,value){
     if(isinstance(arg,_b_.int)){
         if(!isinstance(value, _b_.int)){
-            throw _b_.TypeError('an integer is required')
+            throw _b_.TypeError.$factory('an integer is required')
         }else if(value>255){
-            throw _b_.ValueError("byte must be in range(0, 256)")
+            throw _b_.ValueError.$factory("byte must be in range(0, 256)")
         }
         var pos = arg
         if(arg<0) pos=self.source.length+pos
         if(pos>=0 && pos<self.source.length){self.source[pos]=value}
-        else{throw _b_.IndexError('list index out of range')}
+        else{throw _b_.IndexError.$factory('list index out of range')}
     } else if(isinstance(arg,_b_.slice)){
         var start = arg.start===None ? 0 : arg.start
         var stop = arg.stop===None ? self.source.length : arg.stop
@@ -59,91 +62,92 @@ $BytearrayDict.__setitem__ = function(self,arg,value){
         // copy items in a temporary JS array
         // otherwise, a[:0]=a fails
         if(_b_.hasattr(value,'__iter__')){
-            var $temp = _b_.list(value)
+            var $temp = _b_.list.$factory(value)
             for(var i=$temp.length-1;i>=0;i--){
                 if(!isinstance($temp[i], _b_.int)){
-                    throw _b_.TypeError('an integer is required')
+                    throw _b_.TypeError.$factory('an integer is required')
                 }else if($temp[i]>255){
-                    throw ValueError("byte must be in range(0, 256)")
+                    throw ValueError.$factory("byte must be in range(0, 256)")
                 }
                 self.source.splice(start,0,$temp[i])
             }
         }else{
-            throw _b_.TypeError("can only assign an iterable")
+            throw _b_.TypeError.$factory("can only assign an iterable")
         }
     }else {
-        throw _b_.TypeError('list indices must be integer, not '+$B.get_class(arg).__name__)
+        throw _b_.TypeError.$factory('list indices must be integer, not '+$B.get_class(arg).__name__)
     }
 }
 
-$BytearrayDict.append = function(self,b){
-    if(arguments.length!=2){throw _b_.TypeError(
+bytearray.append = function(self,b){
+    if(arguments.length!=2){throw _b_.TypeError.$factory(
         "append takes exactly one argument ("+(arguments.length-1)+" given)")
     }
-    if(!isinstance(b, _b_.int)) throw _b_.TypeError("an integer is required")
-    if(b>255) throw ValueError("byte must be in range(0, 256)")
+    if(!isinstance(b, _b_.int)) throw _b_.TypeError.$factory("an integer is required")
+    if(b>255) throw ValueError.$factory("byte must be in range(0, 256)")
     self.source[self.source.length]=b
 }
 
-$BytearrayDict.insert = function(self,pos,b){
-    if(arguments.length!=3){throw _b_.TypeError(
+bytearray.insert = function(self,pos,b){
+    if(arguments.length!=3){throw _b_.TypeError.$factory(
         "insert takes exactly 2 arguments ("+(arguments.length-1)+" given)")
     }
-    if(!isinstance(b, _b_.int)) throw _b_.TypeError("an integer is required")
-    if(b>255) throw ValueError("byte must be in range(0, 256)")
-    _b_.list.$dict.insert(self.source,pos,b)
+    if(!isinstance(b, _b_.int)) throw _b_.TypeError.$factory("an integer is required")
+    if(b>255) throw ValueError.$factory("byte must be in range(0, 256)")
+    _b_.list.insert(self.source,pos,b)
 }
 
-function bytearray(source, encoding, errors) {
-    var obj = {__class__:$BytearrayDict}
-    $BytearrayDict.__init__(obj,source,encoding,errors)
-    return obj
+bytearray.$factory = function(source, encoding, errors) {
+    return bytearray.__new__(bytearray,source,encoding,errors)
 }
-bytearray.__class__=$B.$factory
-bytearray.$dict = $BytearrayDict
-$BytearrayDict.$factory = bytearray
 
+/*
 bytearray.__code__={}
 bytearray.__code__.co_argcount=1
 bytearray.__code__.co_consts=[]
 bytearray.__code__.co_varnames=['i']
+*/
 
 //bytes() (built in function)
-var $BytesDict = {__class__ : $B.$type,
+var bytes = {
+    __class__ : _b_.type,
+    __mro__: [object],
     __name__ : 'bytes',
-    $buffer_protocol:true
+    $buffer_protocol:true,
+    $is_class: true
 }
 
-$BytesDict.__add__ = function(self,other){
+bytes.__add__ = function(self,other){
     if(!isinstance(other,bytes)){
-        throw _b_.TypeError("can't concat bytes to " + _b_.str(other))
+        throw _b_.TypeError.$factory("can't concat bytes to " +
+            _b_.str.$factory(other))
     }
     self.source = self.source.concat(other.source)
     return self
 }
 
 var $bytes_iterator = $B.$iterator_class('bytes_iterator')
-$BytesDict.__iter__ = function(self){
+bytes.__iter__ = function(self){
     return $B.$iterator(self.source,$bytes_iterator)
 }
 
-$BytesDict.__eq__ = function(self,other){
+bytes.__eq__ = function(self,other){
     return getattr(self.source,'__eq__')(other.source)
 }
 
-$BytesDict.__ge__ = function(self,other){
-    return _b_.list.$dict.__ge__(self.source,other.source)
+bytes.__ge__ = function(self,other){
+    return _b_.list.__ge__(self.source,other.source)
 }
 
 // borrowed from py_string.js.
-$BytesDict.__getitem__ = function(self,arg){
+bytes.__getitem__ = function(self,arg){
     var i
     if(isinstance(arg,_b_.int)){
         var pos = arg
         if(arg<0) pos=self.source.length+pos
 
         if(pos>=0 && pos<self.source.length) return self.source[pos]
-        throw _b_.IndexError('index out of range')
+        throw _b_.IndexError.$factory('index out of range')
     } else if(isinstance(arg,_b_.slice)) {
         var step = arg.step===None ? 1 : arg.step
         if(step>0){
@@ -159,27 +163,27 @@ $BytesDict.__getitem__ = function(self,arg){
         var res = [],i=null, pos=0
         if(step>0){
           stop = Math.min(stop, self.source.length)
-          if(stop<=start) return bytes([])
+          if(stop<=start) return bytes.$factory([])
           for(i=start;i<stop;i+=step) res[pos++]=self.source[i]
         } else {
-            if(stop>=start) return bytes([])
+            if(stop>=start) return bytes.$factory([])
             stop = Math.max(0, stop)
             for(i=start;i>=stop;i+=step) res[pos++]=self.source[i]
         }
-        return bytes(res)
+        return bytes.$factory(res)
     } else if(isinstance(arg,bool)){
-        return self.source.__getitem__(_b_.int(arg))
+        return self.source.__getitem__(_b_.int.$factory(arg))
     }
 }
 
 
-$BytesDict.__gt__ = function(self,other){
-    return _b_.list.$dict.__gt__(self.source,other.source)
+bytes.__gt__ = function(self,other){
+    return _b_.list.__gt__(self.source,other.source)
 }
 
-$BytesDict.__hash__ = function(self) {
+bytes.__hash__ = function(self) {
   if (self === undefined) {
-     return $BytesDict.__hashvalue__ || $B.$py_next_hash--  // for hash of str$
+     return bytes.__hashvalue__ || $B.$py_next_hash--  // for hash of str$
   }
 
   //http://stackoverflow.com/questions/2909106/python-whats-a-correct-and-good-$
@@ -193,8 +197,36 @@ $BytesDict.__hash__ = function(self) {
   return hash
 }
 
+bytes.__init__ = function(){
+    return _b_.None
+}
 
-$BytesDict.__init__ = function(self,source,encoding,errors){
+bytes.__le__ = function(self,other){
+    return _b_.list.__le__(self.source,other.source)
+}
+
+bytes.__len__ = function(self){return self.source.length}
+
+bytes.__lt__ = function(self,other){
+    return _b_.list.__lt__(self.source,other.source)
+}
+
+bytes.__mul__ = function(){
+    var $ = $B.args('__mul__', 2, {self:null, other:null}, ['self', 'other'],
+        arguments, {}, null, null),
+        other = $B.PyNumber_Index($.other),
+        res = bytes.$factory()
+    for(var i=0; i<other; i++){
+        res.source = res.source.concat($.self.source)
+    }
+    return res
+}
+
+bytes.__ne__ = function(self,other){return !bytes.__eq__(self,other)}
+
+bytes.__new__ = function(cls, source, encoding, errors){
+    // Create an instance of bytes
+    var self = {__class__:cls}
     var int_list = [], pos=0
     if(source===undefined){
         // empty list
@@ -205,44 +237,20 @@ $BytesDict.__init__ = function(self,source,encoding,errors){
     }else{
         if(isinstance(source,_b_.str)){
             if(encoding===undefined)
-                throw _b_.TypeError("string argument without an encoding")
+                throw _b_.TypeError.$factory("string argument without an encoding")
             int_list = encode(source,encoding)
         }else{
             // tranform iterable "source" into a list
-            int_list = _b_.list(source)
+            int_list = _b_.list.$factory(source)
         }
     }
     self.source = int_list
     self.encoding = encoding
     self.errors = errors
+    return self
 }
 
-$BytesDict.__le__ = function(self,other){
-    return _b_.list.$dict.__le__(self.source,other.source)
-}
-
-$BytesDict.__len__ = function(self){return self.source.length}
-
-$BytesDict.__lt__ = function(self,other){
-    return _b_.list.$dict.__lt__(self.source,other.source)
-}
-
-$BytesDict.__mro__ = [$ObjectDict]
-
-$BytesDict.__mul__ = function(){
-    var $ = $B.args('__mul__', 2, {self:null, other:null}, ['self', 'other'],
-        arguments, {}, null, null),
-        other = $B.PyNumber_Index($.other),
-        res = bytes()
-    for(var i=0; i<other; i++){
-        res.source = res.source.concat($.self.source)
-    }
-    return res
-}
-
-$BytesDict.__ne__ = function(self,other){return !$BytesDict.__eq__(self,other)}
-
-$BytesDict.__repr__ = $BytesDict.__str__ = function(self){
+bytes.__repr__ = bytes.__str__ = function(self){
     var res = "b'"
     for(var i=0, _len_i = self.source.length; i < _len_i;i++){
         var s=self.source[i]
@@ -257,9 +265,9 @@ $BytesDict.__repr__ = $BytesDict.__str__ = function(self){
     return res+"'"
 }
 
-$BytesDict.__reduce_ex__ = function(self){return $BytesDict.__repr__(self)}
+bytes.__reduce_ex__ = function(self){return bytes.__repr__(self)}
 
-$BytesDict.decode = function(self,encoding,errors){
+bytes.decode = function(self,encoding,errors){
     if(encoding === undefined) encoding = 'utf-8'
     if(errors === undefined) errors='strict'
 
@@ -276,20 +284,20 @@ $BytesDict.decode = function(self,encoding,errors){
     }
 }
 
-$BytesDict.join = function(){
+bytes.join = function(){
     var $ns = $B.args('join',2,{self:null,iterable:null},
         ['self','iterable'], arguments, {}),
         self = $ns['self'], iterable = $ns['iterable']
     var next_func = _b_.getattr(_b_.iter(iterable), '__next__'),
-        res = bytes(),
+        res = bytes.$factory(),
         empty = true,
         ce = $B.current_exception
     while(true){
         try{
             var item = next_func()
             if(empty){empty=false}
-            else{res = $BytesDict.__add__(res, self)}
-            res = $BytesDict.__add__(res, item)
+            else{res = bytes.__add__(res, self)}
+            res = bytes.__add__(res, item)
         }catch(err){
             if(isinstance(err, _b_.StopIteration)){
                 $B.current_exception = ce
@@ -301,7 +309,7 @@ $BytesDict.join = function(){
     return res
 }
 
-$BytesDict.maketrans=function(from, to) {
+bytes.maketrans=function(from, to) {
     var _t=[]
     // make 'default' translate table
     for(var i=0; i < 256; i++) _t[i]=i
@@ -313,28 +321,28 @@ $BytesDict.maketrans=function(from, to) {
     }
 
     // return the bytes object associated to the 256-elt list
-    return bytes(_t)
+    return bytes.$factory(_t)
 }
 
-$BytesDict.find = function() {
+bytes.find = function() {
     var $ = $B.args('find', 4, {self:null, sub:null, start:null, end:null}, ['self', 'sub', 'start', 'end'],
         arguments, {start:0,end:-1}, null, null),
         sub = $.sub,
         start = $.start;
     if (! sub.__class__ ) {
-        throw _b_.TypeError("first argument must be a bytes-like object not '"+$B.get_class($.sub).__name__+"'")
+        throw _b_.TypeError.$factory("first argument must be a bytes-like object not '"+$B.get_class($.sub).__name__+"'")
     } else if (! sub.__class__.$buffer_protocol ) {
-        throw _b_.TypeError("first argument must be a bytes-like object not '"+sub.__class__.__name__+"'")
+        throw _b_.TypeError.$factory("first argument must be a bytes-like object not '"+sub.__class__.__name__+"'")
     }
     var end = $.end == -1 ? $.self.source.length-sub.source.length : Math.min($.self.source.length-sub.source.length, $.end);
 
     for(var i=start;i<=end;i++) {
-        if ($BytesDict.startswith($.self, sub, i)) return i;
+        if (bytes.startswith($.self, sub, i)) return i;
     }
     return -1;
 }
 
-$BytesDict.replace = function(){
+bytes.replace = function(){
     var $ = $B.args('replace', 4, {self:null, old:null, new:null, count:null}, ['self', 'old', 'new', 'count'],
         arguments, {count:-1}, null, null),
         res = [];
@@ -342,19 +350,19 @@ $BytesDict.replace = function(){
     var count = $.count >= 0 ? $.count : src.length;
 
     if (! $.old.__class__ ) {
-        throw _b_.TypeError("first argument must be a bytes-like object not '"+$B.get_class($.old).__name__+"'")
+        throw _b_.TypeError.$factory("first argument must be a bytes-like object not '"+$B.get_class($.old).__name__+"'")
     } else if (! $.old.__class__.$buffer_protocol ) {
-        throw _b_.TypeError("first argument must be a bytes-like object not '"+$.sep.__class__.__name__+"'")
+        throw _b_.TypeError.$factory("first argument must be a bytes-like object not '"+$.sep.__class__.__name__+"'")
     }
 
     if (! $.new.__class__ ) {
-        throw _b_.TypeError("second argument must be a bytes-like object not '"+$B.get_class($.old).__name__+"'")
+        throw _b_.TypeError.$factory("second argument must be a bytes-like object not '"+$B.get_class($.old).__name__+"'")
     } else if (! $.new.__class__.$buffer_protocol ) {
-        throw _b_.TypeError("second argument must be a bytes-like object not '"+$.sep.__class__.__name__+"'")
+        throw _b_.TypeError.$factory("second argument must be a bytes-like object not '"+$.sep.__class__.__name__+"'")
     }
 
     for(var i=0;i<len;i++) {
-        if ($BytesDict.startswith(self, old, i) && count) {
+        if (bytes.startswith(self, old, i) && count) {
             for(var j=0;j<$new.source.length;j++) {
                 res.push($new.source[j]);
             }
@@ -364,17 +372,17 @@ $BytesDict.replace = function(){
             res.push(src[i]);
         }
     }
-    return bytes(res);
+    return bytes.$factory(res);
 }
 
-$BytesDict.split = function(){
+bytes.split = function(){
     var $ = $B.args('split', 2, {self:null, sep:null}, ['self', 'sep'],
         arguments, {}, null, null),
         res=[], start=0, stop=0
     if (! $.sep.__class__ ) {
-        throw _b_.TypeError("a bytes-like object is required not '"+$B.get_class($.start).__name__+"'")
+        throw _b_.TypeError.$factory("a bytes-like object is required not '"+$B.get_class($.start).__name__+"'")
     } else if (! $.sep.__class__.$buffer_protocol ) {
-        throw _b_.TypeError("a bytes-like object is required not '"+$.sep.__class__.__name__+"'")
+        throw _b_.TypeError.$factory("a bytes-like object is required not '"+$.sep.__class__.__name__+"'")
     }
     var seps = $.sep.source,
         len = seps.length,
@@ -387,14 +395,14 @@ $BytesDict.split = function(){
             if(src[stop+i]!=seps[i]){match=false}
         }
         if(match){
-            res.push(bytes(src.slice(start, stop)))
+            res.push(bytes.$factory(src.slice(start, stop)))
             start = stop+len
             stop = start
         }else{
             stop++
         }
     }
-    if(match || (stop>start)){res.push(bytes(src.slice(start, stop)))}
+    if(match || (stop>start)){res.push(bytes.$factory(src.slice(start, stop)))}
     return res
 }
 
@@ -406,24 +414,24 @@ function _strip(self,cars,lr){
     }else if(isinstance(cars,bytes)){
         cars = cars.source
     }else{
-        throw _b_.TypeError("Type str doesn't support the buffer API")
+        throw _b_.TypeError.$factory("Type str doesn't support the buffer API")
     }
     if(lr=='l'){
         for(var i=0, _len_i = self.source.length; i < _len_i;i++){
             if(cars.indexOf(self.source[i])==-1) break
         }
-        return bytes(self.source.slice(i))
+        return bytes.$factory(self.source.slice(i))
     }
     for(var i=self.source.length-1;i>=0;i--){
        if(cars.indexOf(self.source[i])==-1) break
     }
-    return bytes(self.source.slice(0,i+1))
+    return bytes.$factory(self.source.slice(0,i+1))
 }
 
-$BytesDict.lstrip = function(self,cars) {return _strip(self,cars,'l')}
-$BytesDict.rstrip = function(self,cars) {return _strip(self,cars,'r')}
+bytes.lstrip = function(self,cars) {return _strip(self,cars,'l')}
+bytes.rstrip = function(self,cars) {return _strip(self,cars,'r')}
 
-$BytesDict.startswith = function(){
+bytes.startswith = function(){
     var $ = $B.args('startswith', 3, {self: null, prefix: null, start:null},
         ['self', 'prefix', 'start'], arguments, {start:0}, null, null),
         start = $.start
@@ -439,28 +447,28 @@ $BytesDict.startswith = function(){
             if(_b_.isinstance($.prefix[i], bytes)){
                 items = items.concat($.prefix[i].source)
             }else{
-                throw _b_.TypeError("startswith first arg must be bytes or "+
+                throw _b_.TypeError.$factory("startswith first arg must be bytes or "+
                     "a tuple of bytes, not "+$B.get_class($.prefix).__name__)
             }
         }
-        var prefix = bytes(items)
-        return $BytesDict.startswith($.self, prefix, start)
+        var prefix = bytes.$factory(items)
+        return bytes.startswith($.self, prefix, start)
     }else{
-        throw _b_.TypeError("startsswith first arg must be bytes or a tuple of bytes, not "+
+        throw _b_.TypeError.$factory("startsswith first arg must be bytes or a tuple of bytes, not "+
             $B.get_class($.prefix).__name__)
     }
 }
 
-$BytesDict.strip = function(self,cars){
-    var res = $BytesDict.lstrip(self,cars)
-    return $BytesDict.rstrip(res,cars)
+bytes.strip = function(self,cars){
+    var res = bytes.lstrip(self,cars)
+    return bytes.rstrip(res,cars)
 }
 
-$BytesDict.translate = function(self,table,_delete) {
+bytes.translate = function(self,table,_delete) {
     if(_delete===undefined){_delete=[]}
     else if(isinstance(_delete, bytes)){_delete=_delete.source}
     else{
-        throw _b_.TypeError("Type "+$B.get_class(_delete).__name+" doesn't support the buffer API")
+        throw _b_.TypeError.$factory("Type "+$B.get_class(_delete).__name+" doesn't support the buffer API")
     }
     var res = [], pos=0
     if (isinstance(table, bytes) && table.source.length==256) {
@@ -469,7 +477,7 @@ $BytesDict.translate = function(self,table,_delete) {
            res[pos++]=table.source[self.source[i]]
        }
     }
-    return bytes(res)
+    return bytes.$factory(res)
 }
 
 var _upper = function(char_code) {
@@ -488,36 +496,36 @@ var _lower = function(char_code) {
     }
 }
 
-$BytesDict.upper = function(self) {
+bytes.upper = function(self) {
     var _res=[], pos=0
     for(var i=0, _len_i = self.source.length; i < _len_i; i++) {
         if (self.source[i])
         _res[pos++]=_upper(self.source[i])
     }
-    return bytes(_res)
+    return bytes.$factory(_res)
 }
 
-$BytesDict.lower = function(self) {
+bytes.lower = function(self) {
     var _res=[], pos=0
     for(var i=0, _len_i = self.source.length; i < _len_i; i++) {
         if (self.source[i])
         _res[pos++]=_lower(self.source[i])
     }
-    return bytes(_res)
+    return bytes.$factory(_res)
 }
 
 function $UnicodeEncodeError(encoding, code_point, position){
-    throw _b_.UnicodeEncodeError("'"+encoding+
+    throw _b_.UnicodeEncodeError.$factory("'"+encoding+
         "' codec can't encode character "+_b_.hex(code_point)+
         " in position "+position)
 }
 
 function $UnicodeDecodeError(encoding, position){
-    throw _b_.UnicodeDecodeError("'"+encoding+
+    throw _b_.UnicodeDecodeError.$factory("'"+encoding+
         "' codec can't decode bytes in position "+position)
 }
 
-function _hex(int){return int.toString(16)}
+function _hex(_int){return _int.toString(16)}
 function _int(hex){return parseInt(hex,16)}
 
 function normalise(encoding){
@@ -625,13 +633,13 @@ function decode(b,encoding,errors){
             else{
                 var msg = "'ascii' codec can't decode byte 0x"+cp.toString(16)
                 msg += " in position "+i+": ordinal not in range(128)"
-                throw _b_.UnicodeDecodeError(msg)
+                throw _b_.UnicodeDecodeError.$factory(msg)
             }
         }
         break;
       default:
         try{load_decoder(enc)}
-        catch(err){throw _b_.LookupError("unknown encoding: "+ enc)}
+        catch(err){throw _b_.LookupError.$factory("unknown encoding: "+ enc)}
         for(var i=0, _len_i = b.length; i < _len_i;i++){
             var u = to_unicode[enc][b[i]]
             if(u!==undefined){s+=String.fromCharCode(u)}
@@ -701,7 +709,7 @@ function encode(s,encoding){
         break;
       default:
           try{load_encoder(enc)}
-          catch(err){throw _b_.LookupError("unknown encoding: "+ enc)}
+          catch(err){throw _b_.LookupError.$factory("unknown encoding: "+ enc)}
 
           for(var i=0, _len_i = s.length; i < _len_i;i++){
               var cp = s.charCodeAt(i) // code point
@@ -716,34 +724,24 @@ function encode(s,encoding){
 }
 
 
-function bytes(source, encoding, errors) {
-    // Whatever the type of "source" (integer or iterable), compute a list
-    // of integers from 0 to 255
-    var obj = {__class__:$BytesDict}
-    $BytesDict.__init__(obj,source,encoding,errors)
-    return obj
+bytes.$factory = function (source, encoding, errors) {
+    return bytes.__new__(bytes, source, encoding, errors)
 }
 
-bytes.__class__ = $B.$factory
-bytes.$dict = $BytesDict
-$BytesDict.$factory = bytes
-
-bytes.__code__={}
-bytes.__code__.co_argcount=1
-bytes.__code__.co_consts=[]
-bytes.__code__.co_varnames=['i']
+bytes.__class__ = _b_.type
+bytes.$is_class = true
 
 // add methods of bytes to bytearray
-for(var $attr in $BytesDict){
-    if($BytearrayDict[$attr]===undefined){
-        $BytearrayDict[$attr]=(function(attr){
-            return function(){return $BytesDict[attr].apply(null,arguments)}
-        })($attr)
+for(var attr in bytes){
+    if(bytearray[attr]===undefined && typeof bytes[attr]=="function"){
+        bytearray[attr]=(function(_attr){
+            return function(){return bytes[_attr].apply(null, arguments)}
+        })(attr)
     }
 }
 
-$B.set_func_names($BytesDict)
-$B.set_func_names($BytearrayDict)
+$B.set_func_names(bytes, "builtins")
+$B.set_func_names(bytearray, "builtins")
 
 _b_.bytes = bytes
 _b_.bytearray = bytearray

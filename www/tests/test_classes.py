@@ -216,4 +216,39 @@ A.__init__ = init
 a = A(5)
 assert a.x == 5
 
+# string representation
+class A:
+
+    def f(self, y):
+        return y
+
+    @classmethod
+    def f_cl(cls, x):
+        return x
+
+a = A()
+assert str(A.f) == "<function A.f>"
+assert str(type(A.f)) == "<class 'function'>"
+assert str(a.f) == "<bound method A.f of <__main__.A object>>"
+assert str(type(a.f)) == "<class 'method'>"
+assert str(a.f.__func__) == "<function A.f>"
+
+assert a.f.__func__ == A.f
+assert A.f_cl == a.f_cl
+
+assert A.f_cl(3) == 3
+assert a.f_cl(8) == 8
+
+# A subclass inherits its parent metaclass
+class Meta(type):
+    pass
+
+class A(metaclass=Meta):
+    pass
+
+class B(A):
+    pass
+
+assert type(B) == Meta
+
 print('passed all tests..')

@@ -98,7 +98,7 @@ $B.__getattr__ = function(attr){return this[attr]}
 $B.__setattr__ = function(attr,value){
     // limited to some attributes
     if(['debug', 'stdout', 'stderr'].indexOf(attr)>-1){$B[attr]=value}
-    else{throw $B.builtins.AttributeError('__BRYTHON__ object has no attribute '+attr)}
+    else{throw $B.builtins.AttributeError.$factory('__BRYTHON__ object has no attribute '+attr)}
 }
 
 // system language ( _not_ the one set in browser settings)
@@ -133,11 +133,19 @@ $B.lambda_magic = Math.random().toString(36).substr(2,8)
 $B.callbacks = {}
 
 // Set __name__ attribute of klass methods
-$B.set_func_names = function(klass){
+$B.set_func_names = function(klass, module){
     var name = klass.__name__
+    klass.__module__ = module
     for(var attr in klass){
         if(typeof klass[attr] == 'function'){
-            klass[attr].$infos = {__qualname__ : name+'.'+attr, __name__:attr}
+            klass[attr].$infos = {
+                __module__: module,
+                __qualname__ : name+'.'+attr,
+                __name__:attr
+            }
+            if(klass[attr].$type == "classmethod"){
+                klass[attr].__class__ = $B.method
+            }
         }
     }
 }

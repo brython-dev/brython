@@ -100,4 +100,15 @@ assert timedelta(days=-0.4/us_per_day) == timedelta(0)
 #assert timedelta(hours=-0.2/us_per_hour) == timedelta(0)
 #assert timedelta(days=-0.4/us_per_day, hours=-0.2/us_per_hour) == timedelta(microseconds=-1)
 
+# issue 295
+assert datetime.strptime('2014-01-01','%Y-%m-%d') == datetime(2014,1,1,0,0)
 
+d = date(2010, 9, 7)
+
+assert "The year is {0.year}".format(d) == "The year is 2010"
+assert "Tested on {0:%Y-%m-%d}".format(d) == "Tested on 2010-09-07"
+
+d = datetime(2010, 7, 4, 12, 15, 58)
+assert '{:%Y-%m-%d %H:%M:%S}'.format(d) == '2010-07-04 12:15:58'
+
+print('passed all tests')

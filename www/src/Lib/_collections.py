@@ -390,7 +390,7 @@ class deque_iterator(object):
         return self
 
 class defaultdict(dict):
-    
+
     def __init__(self, *args, **kwds):
         if len(args) > 0:
             default_factory = args[0]
@@ -404,16 +404,9 @@ class defaultdict(dict):
         self.update(args, kwds)
         super(defaultdict, self).__init__(*args, **kwds)
 
-    #fixme..  had to add this function to get defaultdict working with brython correctly
-    #def __getitem__(self, key):
-    #    if self.__contains__(key):  
-    #       return dict.__getitem__(self,key)
-    #
-    #    return self.__missing__(key)
-
     def __missing__(self, key):
         # from defaultdict docs
-        if self.default_factory is None: 
+        if self.default_factory is None:
             raise KeyError(key)
         self[key] = value = self.default_factory()
         return value
@@ -429,7 +422,7 @@ class defaultdict(dict):
 
     def copy(self):
         return type(self)(self.default_factory, self)
-    
+
     def __copy__(self):
         return self.copy()
 
@@ -538,7 +531,7 @@ def namedtuple(typename, field_names, verbose=False, rename=False):
             return tuple(self) \n\n''' % locals()
     for i, name in enumerate(field_names):
         template += '        %s = _property(_itemgetter(%d))\n' % (name, i)
-    
+
     if verbose:
         print(template)
 

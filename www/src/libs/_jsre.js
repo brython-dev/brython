@@ -56,10 +56,10 @@ var $module=(function($B){
         return true
     }
     var $SRE_PatternDict = {
-        __class__:$B.$type,
+        __class__:_b_.type,
         __name__:'SRE_Pattern'
     }
-    $SRE_PatternDict.__mro__ = [object.$dict]
+    $SRE_PatternDict.__mro__ = [object]
     $SRE_PatternDict.findall = function(self,string){
         return obj.findall(self.pattern,string,self.flags)
     }
@@ -149,7 +149,7 @@ var $module=(function($B){
             mo.start = function(){return mo._match.index}
             mo.end = function(){return mo._match.length-mo._match.index}
             mo.string = string
-            _list.push(JSObject(mo))
+            _list.push(JSObject.$factory(mo))
         }
         return _list
     }
@@ -186,7 +186,7 @@ var $module=(function($B){
         mo.start = function(){return jsmatch.index}
         mo.end = function(){return jsmatch.length-jsmatch.index}
         mo.string = string
-        return JSObject(mo)
+        return JSObject.$factory(mo)
     }
     obj.sub = function(pattern,repl,string){
         var $ns=$B.args('re.search', 3,
@@ -195,8 +195,8 @@ var $module=(function($B){
             arguments,{},'args','kw')
         for($var in $ns){eval("var "+$var+"=$ns[$var]")}
         var args = $ns['args']
-        var count = _b_.dict.$dict.get($ns['kw'],'count',0)
-        var flags = _b_.dict.$dict.get($ns['kw'],'flags','')
+        var count = _b_.dict.get($ns['kw'],'count',0)
+        var flags = _b_.dict.get($ns['kw'],'flags','')
         if(args.length>0){var count=args[0]}
         if(args.length>1){var flags=args[1]}
         flags = normflags(flags);
@@ -228,7 +228,7 @@ var $module=(function($B){
                     }
                     return res
                 }
-                return repl(JSObject(mo))
+                return repl(JSObject.$factory(mo))
             }
         }
         if(count==0){flags+='g'}

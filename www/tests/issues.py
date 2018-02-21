@@ -63,21 +63,6 @@ def foo():
     return res
 assert foo() == [0, 1, 2, 3, 4]
 
-# issues 62, 63 and 64
-import test_sp
-
-s = 'a = 3'
-exec(s, test_sp.__dict__)
-assert test_sp.a == 3
-del test_sp.__dict__['a']
-try:
-    test_sp.a
-    raise ValueError('should have raised AttributeError')
-except AttributeError:
-    pass
-except:
-    raise ValueError('should have raised AttributeError')
-
 # issue 82 : Ellipsis literal (...) missing
 def f():
     ...
@@ -187,17 +172,13 @@ assert recur() == 1
 
 #issue 131
 import time
-import datetime
+
 target = time.struct_time([1970, 1, 1, 0, 0, 0, 3, 1, 0])
 assert time.gmtime(0).args == target.args
 target = time.struct_time([1970, 1, 1, 0, 1, 40, 3, 1, 0])
 assert time.gmtime(100).args == target.args
 target = time.struct_time([2001, 9, 9, 1, 46, 40, 6, 252, 0])
 assert time.gmtime(1000000000).args == target.args
-target1 = datetime.datetime(1969, 12, 31, 12, 0)
-target2 = datetime.datetime(1970, 1, 1, 12, 0)
-## depending on timezone this could be any hour near midnight Jan 1st, 1970
-assert target1 <= datetime.datetime.fromtimestamp(0) <= target2
 
 try:
     time.asctime(1)
@@ -354,25 +335,6 @@ ModuleType=type(sys)
 foo=ModuleType("foo", "foodoc")
 assert foo.__name__=="foo"
 assert foo.__doc__=="foodoc"
-#assert type(foo.__dict__) == dict
-
-# issue 183
-x=4
-cd=dict(globals())
-cd.update(locals())
-exec("x=x+4",cd)
-
-assert x == 4
-assert cd['x'] == 8
-
-y=5
-yd=dict(globals())
-yd.update(locals())
-co=compile("y=y+4","","exec")
-exec(co,yd)
-
-assert yd['y'] == 9
-assert y == 5
 
 # issue 201
 import json
@@ -508,10 +470,11 @@ assert [4,0,4].index(4,1) == 2
 #issue 297
 assert type((1,)*2) == tuple
 
-t = 1,2
+t = 1, 2
 try:
-    t[0]=1
-except TypeError:
+    t[0] = 1
+    raise Exception('should have raised AttributeError')
+except AttributeError:
     pass
 
 # issue 298
@@ -521,14 +484,7 @@ assert n == 0
 
 #issue 301
 t = 1,2
-assertRaises(TypeError, t.__setitem__, 0, 1)
-
-try:
-    t[0]=1
-except TypeError:
-    pass
-else:
-    raise Exception('should have raised TypeError')
+assertRaises(AttributeError, getattr, t, "__setitem__")
 
 # issue 303
 assert "{0:.{1}f}".format(1.123,1) == "1.1"
@@ -1061,15 +1017,6 @@ assert order == ['try', 'else', 'finally']
 x = [-644475]
 assert "{:,}".format(int(x[0])) == "-644,475"
 
-# issue 533
-err = """def f():
-    x = yaz
-f()"""
-try:
-    exec(err)
-except NameError:
-    pass
-
 # issue 542
 def test(*args):
     return args
@@ -1486,24 +1433,6 @@ assert found == 'c'
 assert [0, 1][-1] == 1
 assert {-1: 'a'}[-1] == 'a'
 
-# issue 686
-s = "message = 5"
-t = {}
-exec(s, t)
-assert 'message' in t
-exec('x = message', t)
-assert 'x' in t
-assert t['x'] == 5
-
-# issue 690
-t = {}
-exec("""def f():
-    global x
-    x = 3
-""", t)
-exec("f()", t)
-assert t['x'] == 3
-
 # issue 691
 class C(object): pass
 c1 = C()
@@ -1624,15 +1553,6 @@ for i in range(10):
     a[i] = i
     assert a[i] == i
 
-# issue 748
-y = 42
-g = { 'x':0 }
-try:
-    exec('print(y)', g)
-    raise Exception("should have raised NameError")
-except NameError:
-    pass
-
 # issue 749
 assert float.__eq__(1.5, 1.5)
 assert float.__eq__(1.0, 1)
@@ -1710,6 +1630,18 @@ try:
     raise Exception("should have raised NotImplementedError")
 except NotImplementedError:
     pass
+
+# issue 780
+def g():
+    print(xtr) # should crash, of course
+
+def f():
+    xtr = 42
+    g()
+
+assertRaises(NameError, f)
+
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

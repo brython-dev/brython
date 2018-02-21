@@ -9,7 +9,7 @@ $B.make_async = function(func){
             __str__: function(){return '<coroutine object>'},
             send: function(){
                 var res = func()
-                if(res.__class__ !== awaitable.$dict){
+                if(res.__class__ !== awaitable){
                     throw _b_.StopIteration(res)
                 }
             }

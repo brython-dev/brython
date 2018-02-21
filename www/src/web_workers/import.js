@@ -125,7 +125,7 @@ self.addEventListener('message', function (e) {
         }
 
         if (!flag) {
-            throw __BRYTHON__.builtins.ImportError("module " + module.name +
+            throw __BRYTHON__.builtins.ImportError.$factory("module " + module.name +
                                                    " not found")
         }
     }

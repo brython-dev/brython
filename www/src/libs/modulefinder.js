@@ -3,8 +3,8 @@ var $module=(function($B){
 var _b_=$B.builtins
 var _mod = {}
 
-$ModuleFinderDict = {__class__:$B.$type,__name__:'ModuleFinder'}
-$ModuleFinderDict.__mro__ = [_b_.object.$dict]
+$ModuleFinderDict = {__class__:_b_.type,__name__:'ModuleFinder'}
+$ModuleFinderDict.__mro__ = [_b_.object]
 
 $ModuleFinderDict.run_script = function(self, pathname){
     // pathname is the url of a Python script

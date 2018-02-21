@@ -1,5 +1,5 @@
 var $module = (function(){
-    var obj = {__class__:__BRYTHON__.$ModuleDict,__name__:'builtins'}
+    var obj = {__class__:__BRYTHON__.module,__name__:'builtins'}
     var builtin_names = ['ArithmeticError', 'AssertionError', 'AttributeError', 
     'BaseException', 'BlockingIOError', 'BrokenPipeError', 'BufferError', 
     'BytesWarning', 'ChildProcessError', 'ConnectionAbortedError', 

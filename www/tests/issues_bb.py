@@ -822,10 +822,3 @@ assert str(values)== "[b'100', bytearray(b'100'), '100', b'100', bytearray(b'100
 
 # issue 294
 assert [1][::-1] == [1]
-
-# issue 295
-import datetime
-
-assert datetime.datetime.strptime('2014-01-01','%Y-%m-%d') == datetime.datetime(2014,1,1,0,0)
-print('passed all tests')
-

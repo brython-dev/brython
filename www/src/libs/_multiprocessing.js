@@ -8,27 +8,26 @@ eval($s.join(';'))
 
 //for(var $py_builtin in _b_){eval("var "+$py_builtin+"=_b_[$py_builtin]")}
 
-var $ProcessDict = {__class__:$B.$type,__name__:'Process'}
+var Process = {
+    __class__:_b_.type,
+    __mro__: [_b_.object],
+    __name__:'Process',
+    $is_class: true
+}
 
 var $convert_args=function(args) {
     var _list=[]
     for(var i=0, _len_i = args.length; i < _len_i; i++) {
       var _a=args[i]
-      if(isinstance(_a, str)){_list.push("'"+_a+"'")} else {_list.push(_a)} 
+      if(isinstance(_a, str)){_list.push("'"+_a+"'")} else {_list.push(_a)}
     }
 
     return _list.join(',')
 }
 
-$ProcessDict.__mro__ = [_b_.object.$dict]
+Process.is_alive = function(self){return self.$alive}
 
-$ProcessDict.__str__=$ProcessDict.toString=$ProcessDict.__repr__=function(self){
-   return '<object Process>'
-}
-
-$ProcessDict.is_alive = function(self){return self.$alive}
-
-$ProcessDict.join = function(self, timeout){
+Process.join = function(self, timeout){
    // need to block until process is complete
    // could probably use a addEventListener to execute all existing code
    // after this join statement
@@ -41,18 +40,12 @@ $ProcessDict.join = function(self, timeout){
    }, false);
 }
 
-$ProcessDict.run = function(self){
+Process.run = function(self){
    //fix me
 }
 
-$ProcessDict.start = function(self){
-   //var _args=[]
-   //for(var i=0; i < self.$args.length; i++) {
-   //   var _a=self.$args[i]
-   //   if(isinstance(_a, str)){_args.push("'"+_a+"'")} else {_args.push(_a)} 
-   //}
-
-   self.$worker.postMessage({target: self.$target, 
+Process.start = function(self){
+   self.$worker.postMessage({target: self.$target,
                              args: $convert_args(self.$args),
                           //   kwargs: self.$kwargs
                            })
@@ -60,7 +53,7 @@ $ProcessDict.start = function(self){
    self.$alive=true
 }
 
-$ProcessDict.terminate = function(self){
+Process.terminate = function(self){
    self.$worker.terminate()
    self.$alive=false
 }
@@ -71,19 +64,19 @@ $ProcessDict.terminate = function(self){
 //pid
 //exitcode
 
-function Process(){
+Process. $factory = function(){
     //arguments group=None, target=None, name=None, args=(), kwargs=()
 
     var $ns=$B.args('Process',0,{},[],arguments,{},null,'kw')
     var kw=$ns['kw']
 
-    var target=_b_.dict.$dict.get($ns['kw'],'target',None)
-    var args=_b_.dict.$dict.get($ns['kw'],'args',tuple())
+    var target=_b_.dict.get($ns['kw'],'target',None)
+    var args=_b_.dict.get($ns['kw'],'args',tuple.$factory())
 
     var worker = new Worker('/src/web_workers/multiprocessing.js')
 
     var res = {
-        __class__:$ProcessDict,
+        __class__:Process,
         $worker: worker,
         name: $ns['name'] || None,
         $target: target+'',
@@ -94,22 +87,18 @@ function Process(){
     return res
 }
 
-Process.__class__ = $B.$factory
-Process.$dict = $ProcessDict
+$B.set_func_names(Process, "multiprocessing")
 
+var Pool = $B.make_class("Pool")
 
-var $PoolDict = {__class__:$B.$type,__name__:'Pool'}
+Pool.__enter__ = function(self){}
+Pool.__exit__ = function(self){}
 
-$PoolDict.__mro__ = [_b_.object.$dict]
-
-$PoolDict.__enter__ = function(self){}
-$PoolDict.__exit__ = function(self){}
-
-$PoolDict.__str__ = $PoolDict.toString = $PoolDict.__repr__=function(self){
+Pool.__str__ = Pool.toString = Pool.__repr__=function(self){
    return '<object Pool>'
 }
 
-$PoolDict.map = function(){
+Pool.map = function(){
 
    var $ns=$B.args('Pool.map', 3,
        {self:null, func:null, fargs:null}, ['self', 'func', 'fargs'],
@@ -128,7 +117,7 @@ $PoolDict.map = function(){
        _workers[i] = new Worker('/src/web_workers/multiprocessing.js')
        var arg
 
-       try{arg=getattr(fargs, '__next__')()} 
+       try{arg=getattr(fargs, '__next__')()}
        catch(err) {
           if (err.__name__ != 'StopIteration') throw err
        }
@@ -155,9 +144,9 @@ $PoolDict.map = function(){
    }
 }
 
-$PoolDict.apply_async = function(){
+Pool.apply_async = function(){
 
-   var $ns=$B.$MakeArgs('apply_async', 3, 
+   var $ns=$B.$MakeArgs('apply_async', 3,
        {self:null, func:null, fargs:null}, ['self', 'func', 'fargs'],
        arguments,{},'args','kw')
    var func=$ns['func']
@@ -179,7 +168,7 @@ $PoolDict.apply_async = function(){
        _workers[i] = new Worker('/src/web_workers/multiprocessing.js')
        var arg
 
-       try{arg=getattr(fargs, '__next__')()} 
+       try{arg=getattr(fargs, '__next__')()}
        catch(err) {
           if (err.__name__ != 'StopIteration') throw err
        }
@@ -209,7 +198,7 @@ $PoolDict.apply_async = function(){
    return async_result
 }
 
-function Pool(){
+Pool.$factory = function(){
     console.log("pool")
     console.log(arguments)
     var $ns=$B.args('Pool',1,
@@ -228,14 +217,13 @@ function Pool(){
 
     console.log(processes)
     var res = {
-        __class__:$PoolDict,
+        __class__:Pool,
         $processes:processes
     }
     return res
 }
 
-Pool.__class__ = $B.$factory
-Pool.$dict = $PoolDict
+$B.set_func_names(Pool, "multiprocessing")
 
 return {Process:Process, Pool:Pool}
 
