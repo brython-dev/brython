@@ -3338,31 +3338,18 @@ function $IdCtx(context,value){
         var gs = innermost
 
         while(true){
-            //if(val=="row"){console.log(val, gs)}
             if(gs.parent_block){
                 if(gs.parent_block.id == "__builtins__"){break}
                 gs = gs.parent_block
-            }else if(gs.parent_block_id){
-                if($B.modules[gs.parent_block_id]===undefined){
-                    console.log("pas de module", gs.parent_block_id)
-                    console.log(Object.keys($B.modules))
-                }
-                gs = $B.modules[gs.parent_block_id]
             }
             search_ids.push('"' + gs.id + '"')
         }
         search_ids = "[" + search_ids.join(", ") + "]"
 
-        //if(val=="row"){console.log(val, search_ids, innermost)}
-
         var global_ns = '$locals_'+ gs.id.replace(/\./g,'_')
 
         // Build the list of scopes where the variable name is bound
         while(1){
-            if(scope.binding===undefined){console.log("pas de binding", scope)}
-            if(scope.binding[name] === undefined){
-                //console.log('name '+val+' undef '+scope.id)
-            }
             if($B._globals[scope.id]!==undefined &&
                 $B._globals[scope.id][val]!==undefined){
                 // Variable is declared as global. If the name is bound in the global
@@ -3793,8 +3780,7 @@ function $LambdaCtx(context){
         py += '    return '+body
 
         var lambda_name = 'lambda'+rand,
-            module_name = module.id.replace(/\./g, '_'),
-            scope_id = scope.id.replace(/\./g, '_')
+            module_name = module.id.replace(/\./g, '_')
 
         var js = $B.py2js(py, module_name, lambda_name, scope, node.line_num).to_js()
 
@@ -3847,14 +3833,6 @@ function $ListOrTupleCtx(context,real){
     this.get_src = function(){
         // Return the Python source code
         var scope = $get_scope(this)
-        var ident = scope.id
-        while($B.$py_src[ident]===undefined && $B.modules[ident].parent_block){
-            ident = $B.modules[ident].parent_block.id
-        }
-        if(ident != scope.module){
-            console.log("get src, scope", scope, "module",
-                 scope.module, "ident for py_src", ident, ident==scope.module)
-        }
         // replace comments by whitespace, cf. issue #658
         var src = $B.$py_src[scope.module]
         if(scope.comments === undefined){return src}
@@ -3976,7 +3954,7 @@ function $ListOrTupleCtx(context,real){
                     return $B.$gen_expr(module_name, scope, items, line_num)
                 }
 
-                return $B.$dict_comp(module_name, scope.id, items, line_num)
+                return $B.$dict_comp(module_name, scope, items, line_num)
 
             }
 
@@ -7222,20 +7200,7 @@ __file__: true
     }
     $B.modules[root.id] = root
 
-    if(typeof parent_block == "string"){
-        if(locals_id==parent_block){
-            root.parent_block = $B.modules[parent_block].parent_block ||
-                $B.modules['__builtins__']
-        }else{
-            if($B.modules[parent_block]===undefined){
-                console.log('parent block undef', src, locals_id, parent_block)
-            }
-            root.parent_block = $B.modules[parent_block] ||
-                $B.modules['__builtins__']
-        }
-    }else{
-        root.parent_block = parent_block
-    }
+    root.parent_block = parent_block
     root.line_info = line_info
     root.indent = -1
     root.comments = []

@@ -214,8 +214,8 @@ function run_py(module_contents,path,module,compiled) {
         var $Node = $B.$Node,$NodeJSCtx=$B.$NodeJSCtx
         $B.$py_module_path[module.__name__]=path
 
-        root = $B.py2js(module_contents,module.__name__,
-            module.__name__,'__builtins__')
+        root = $B.py2js(module_contents, module.__name__,
+            module.__name__, $B.builtins_scope)
 
         var body = root.children
         root.children = []

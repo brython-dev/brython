@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-02-21 10:16:06.334880"
-__BRYTHON__.timestamp=1519204566334
+__BRYTHON__.compiled_date="2018-02-21 11:20:32.615388"
+__BRYTHON__.timestamp=1519208432615
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -1692,17 +1692,12 @@ if(val=='__BRYTHON__' ||val=='$B'){return val}
 var innermost=$get_scope(this),scope=innermost,found=[]
 var search_ids=['"' + innermost.id + '"']
 var gs=innermost
-while(true){
-if(gs.parent_block){if(gs.parent_block.id=="__builtins__"){break}
-gs=gs.parent_block}else if(gs.parent_block_id){if($B.modules[gs.parent_block_id]===undefined){console.log("pas de module",gs.parent_block_id)
-console.log(Object.keys($B.modules))}
-gs=$B.modules[gs.parent_block_id]}
+while(true){if(gs.parent_block){if(gs.parent_block.id=="__builtins__"){break}
+gs=gs.parent_block}
 search_ids.push('"' + gs.id + '"')}
 search_ids="[" + search_ids.join(", ")+ "]"
 var global_ns='$locals_'+ gs.id.replace(/\./g,'_')
-while(1){if(scope.binding===undefined){console.log("pas de binding",scope)}
-if(scope.binding[name]===undefined){}
-if($B._globals[scope.id]!==undefined &&
+while(1){if($B._globals[scope.id]!==undefined &&
 $B._globals[scope.id][val]!==undefined){
 if(gs.binding[val]!==undefined ||
 this.bound){this.result=global_ns+'["'+val+'"]'
@@ -1861,7 +1856,7 @@ body=body.replace(/\n/g,' ')
 var scope=$get_scope(this)
 var rand=$B.UUID(),func_name='lambda_'+$B.lambda_magic+'_'+rand,py='def '+func_name+'('+args+'):\n'
 py +='    return '+body
-var lambda_name='lambda'+rand,module_name=module.id.replace(/\./g,'_'),scope_id=scope.id.replace(/\./g,'_')
+var lambda_name='lambda'+rand,module_name=module.id.replace(/\./g,'_')
 var js=$B.py2js(py,module_name,lambda_name,scope,node.line_num).to_js()
 js='(function(){\n'+js+'\nreturn $locals.'+func_name+'\n})()'
 $B.clear_ns(lambda_name)
@@ -1891,9 +1886,6 @@ return true}
 return false}
 this.get_src=function(){
 var scope=$get_scope(this)
-var ident=scope.id
-while($B.$py_src[ident]===undefined && $B.modules[ident].parent_block){ident=$B.modules[ident].parent_block.id}
-if(ident !=scope.module){console.log("get src, scope",scope,"module",scope.module,"ident for py_src",ident,ident==scope.module)}
 var src=$B.$py_src[scope.module]
 if(scope.comments===undefined){return src}
 for(var i=0;i<scope.comments.length;i++){var start=scope.comments[i][0],len=scope.comments[i][1]
@@ -1956,7 +1948,7 @@ js='(function(){'+js+'})()'
 return js
 case 'dict_or_set_comp':
 if(this.expression.length===1){return $B.$gen_expr(module_name,scope,items,line_num)}
-return $B.$dict_comp(module_name,scope.id,items,line_num)}
+return $B.$dict_comp(module_name,scope,items,line_num)}
 return $B.$gen_expr(module_name,scope,items,line_num)
 case 'tuple':
 if(this.tree.length===1 && this.has_comma===undefined){return this.tree[0].to_js()}
@@ -3865,10 +3857,7 @@ root.module=module
 root.id=locals_id
 root.binding={__doc__: true,__name__: true,__file__: true}
 $B.modules[root.id]=root
-if(typeof parent_block=="string"){if(locals_id==parent_block){root.parent_block=$B.modules[parent_block].parent_block ||
-$B.modules['__builtins__']}else{if($B.modules[parent_block]===undefined){console.log('parent block undef',src,locals_id,parent_block)}
-root.parent_block=$B.modules[parent_block]||
-$B.modules['__builtins__']}}else{root.parent_block=parent_block}
+root.parent_block=parent_block
 root.line_info=line_info
 root.indent=-1
 root.comments=[]
@@ -4821,14 +4810,14 @@ indent +=4}
 py +=' '.repeat(indent)
 py +='x'+ix+'.append('+items[0]+')\n'
 return[py,ix]}
-$B.$dict_comp=function(module_name,parent_block_id,items,line_num){
+$B.$dict_comp=function(module_name,parent_scope,items,line_num){
 var ix=$B.UUID(),res='res'+ix,py=res+"={}\n",
 indent=0
 for(var i=1,len=items.length;i<len;i++){var item=items[i].replace(/\s+$/,'').replace(/\n/g,'')
 py +='    '.repeat(indent)+ item +':\n'
 indent++}
 py +='    '.repeat(indent)+ res + '.update({'+items[0]+'})'
-var dictcomp_name='dc'+ix,root=$B.py2js({src:py,is_comp:true},module_name,dictcomp_name,parent_block_id,line_num),js=root.to_js()
+var dictcomp_name='dc'+ix,root=$B.py2js({src:py,is_comp:true},module_name,dictcomp_name,parent_scope,line_num),js=root.to_js()
 js +='\nreturn $locals["'+res+'"]\n'
 js='(function(){'+js+'})()'
 $B.clear_ns(dictcomp_name)
@@ -5373,7 +5362,7 @@ return}
 var res={}
 for(var attr in $B.imported){var info=$B.VFS[attr]
 if(info!==undefined){var lang=info[0],src=info[1]
-if(lang=='.js'){res[attr]=['.js',src]}else{res[attr]=['.js',$B.py2js(src,attr,attr,'__builtins__').to_js()]
+if(lang=='.js'){res[attr]=['.js',src]}else{res[attr]=['.js',$B.py2js(src,attr,attr,$B.builtins_scope).to_js()]
 if(info[2]!==undefined){res[attr].push(info[2])}}}}
 var _code="__BRYTHON__.use_VFS = true;\n__BRYTHON__.VFS = "+JSON.stringify(res)
 if(isWebWorker){console.log(_code);}else{
@@ -7181,7 +7170,7 @@ return run_py(module_contents,path,module)}
 function run_py(module_contents,path,module,compiled){var root,js
 if(!compiled){var $Node=$B.$Node,$NodeJSCtx=$B.$NodeJSCtx
 $B.$py_module_path[module.__name__]=path
-root=$B.py2js(module_contents,module.__name__,module.__name__,'__builtins__')
+root=$B.py2js(module_contents,module.__name__,module.__name__,$B.builtins_scope)
 var body=root.children
 root.children=[]
 var mod_node=new $Node('expression')
@@ -11573,7 +11562,7 @@ return $B.JSConstructor.$factory.apply(null,arguments)},load:function(script_url
 var file_obj=$B.builtins.open(script_url)
 var content=$B.builtins.getattr(file_obj,'read')()
 eval(content)},NULL: null,py2js: function(src,module_name){if(module_name===undefined){module_name='__main__'+$B.UUID()}
-return $B.py2js(src,module_name,module_name,'__builtins__').to_js()},pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},jsobj2pyobj:function(obj){return $B.jsobj2pyobj(obj)},UNDEFINED: undefined}
+return $B.py2js(src,module_name,module_name,$B.builtins_scope).to_js()},pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},jsobj2pyobj:function(obj){return $B.jsobj2pyobj(obj)},UNDEFINED: undefined}
 var _b_=$B.builtins
 modules['_sys']={__file__:$B.brython_path+'/libs/_sys.js',
 Getframe : function(depth){return $B._frame.$factory($B.frames_stack,depth)},modules:{

@@ -282,7 +282,7 @@
                 module_name = '__main__'+$B.UUID()
             }
             return $B.py2js(src, module_name, module_name,
-                '__builtins__').to_js()
+                $B.builtins_scope).to_js()
         },
         pyobj2jsobj:function(obj){ return $B.pyobj2jsobj(obj)},
         jsobj2pyobj:function(obj){ return $B.jsobj2pyobj(obj)},

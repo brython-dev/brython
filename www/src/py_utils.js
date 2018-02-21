@@ -193,7 +193,7 @@ $B.$list_comp = function(items){
     return [py,ix]
 }
 
-$B.$dict_comp = function(module_name, parent_block_id, items, line_num){
+$B.$dict_comp = function(module_name, parent_scope, items, line_num){
     // Called for dict comprehensions
     // items[0] is the Python code for the comprehension expression
     // items[1:] is the loops and conditions in the comprehension
@@ -213,7 +213,7 @@ $B.$dict_comp = function(module_name, parent_block_id, items, line_num){
 
     var dictcomp_name = 'dc'+ix,
         root = $B.py2js({src:py, is_comp:true}, module_name, dictcomp_name,
-            parent_block_id, line_num),
+            parent_scope, line_num),
         js = root.to_js()
     js += '\nreturn $locals["'+res+'"]\n'
 
@@ -1440,7 +1440,8 @@ $B.compiled_imports = function(){
             if(lang=='.js'){
                 res[attr] = ['.js', src]
             }else{
-                res[attr] = ['.js', $B.py2js(src, attr, attr,'__builtins__').to_js()]
+                res[attr] = ['.js',
+                    $B.py2js(src, attr, attr, $B.builtins_scope).to_js()]
                 if(info[2]!==undefined){res[attr].push(info[2])}
             }
         }
