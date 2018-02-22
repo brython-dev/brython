@@ -15,7 +15,8 @@ Number.isSafeInteger = Number.isSafeInteger || function (value) {
 var js,$pos,res,$op
 var _b_ = $B.builtins
 var _window = self;
-var isWebWorker = $B.isa_web_worker = ('undefined' !== typeof WorkerGlobalScope) && ("function" === typeof importScripts) && (navigator instanceof WorkerNavigator);
+var isWebWorker = $B.isa_web_worker = ('undefined' !== typeof WorkerGlobalScope) &&
+    ("function" === typeof importScripts) && (navigator instanceof WorkerNavigator);
 
 
 /*
@@ -207,7 +208,7 @@ function $Node(type){
         if(this.type==='module'){
           for(var i=0;i<this.children.length;i++){
              this.res[pos++]=this.children[i].to_js()
-             this.children[i].js_index = pos //this.res.length+0
+             this.children[i].js_index = pos
           }
           this.js = this.res.join('')
           return this.js
@@ -217,12 +218,12 @@ function $Node(type){
         if(ctx_js){ // empty for "global x"
           this.res[pos++]=' '.repeat(indent)
           this.res[pos++]=ctx_js
-          this.js_index = pos //this.res.length+0
+          this.js_index = pos
           if(this.children.length>0) this.res[pos++]='{'
           this.res[pos++]='\n'
           for(var i=0;i<this.children.length;i++){
              this.res[pos++]=this.children[i].to_js(indent+4)
-             this.children[i].js_index = pos //this.res.length+0
+             this.children[i].js_index = pos
           }
           if(this.children.length>0){
              this.res[pos++]=' '.repeat(indent)
@@ -538,7 +539,7 @@ function $AssignCtx(context){ //, check_unbound){
                 // the right part of the assignement must be evaluated
                 // first, and it is the builtin "range"
                 var node = $get_node(this)
-                node.bound_before = $B.keys(scope.binding) // XXX
+                node.bound_before = $B.keys(scope.binding)
                 $bind(assigned.value, scope, level)
             }else{
                 // assignement to a variable defined as global : bind name at
@@ -933,7 +934,7 @@ function $AugmentedAssignCtx(context, op){
     }
 
     // Store the names already bound
-    $get_node(this).bound_before = $B.keys(scope.binding) // XXX
+    $get_node(this).bound_before = $B.keys(scope.binding)
 
     this.module = scope.module
 
@@ -974,7 +975,7 @@ function $AugmentedAssignCtx(context, op){
                 offset++
             }
             var left_id = this.tree[0].tree[0].value,
-                was_bound = this.scope.binding[left_id]!==undefined, // XXX
+                was_bound = this.scope.binding[left_id]!==undefined,
                 left_id_unbound = this.tree[0].tree[0].unbound
         }
 
@@ -1469,7 +1470,7 @@ function $CallCtx(context){
                           "reversed", "property", "$$super", "zip", "map",
                           "filter"]
                       if($B.builtin_funcs[this.func.value]!==undefined){
-                          if(new_style.indexOf(this.func.value) == -1){// XXX temporary
+                          if(new_style.indexOf(this.func.value) == -1){
                               return func_js + args_str
                           }else{
                               return func_js + ".$factory" + args_str
@@ -3296,7 +3297,7 @@ function $IdCtx(context,value){
         this.js_processed=true
         var val = this.value
 
-        var is_local = this.scope.binding[val]!==undefined, // XXX
+        var is_local = this.scope.binding[val]!==undefined,
             this_node = $get_node(this),
             bound_before = this_node.bound_before
 
@@ -4002,7 +4003,7 @@ function $NodeCtx(node){
     // When a new node is created, a copy of the names currently
     // bound in the scope is created. It is used in $IdCtx to detect
     // names that are referenced but not yet bound in the scope
-    this.node.locals = clone(scope.binding) // XXX
+    this.node.locals = clone(scope.binding)
 
     this.toString = function(){return 'node '+this.tree}
 
@@ -4090,10 +4091,10 @@ function $NonlocalCtx(context){
                     console.log('nonlocal error, context '+context)
                     // restore $pos to get the correct error line
                     $pos = this.names[name][1]
-                    $_SyntaxError(context,["no binding for nonlocal '"+name+"' found"])
+                    $_SyntaxError(context, ["no binding for nonlocal '" +
+                        name+"' found"])
                 }
             }
-            //if(this.scope.globals.indexOf(name)==-1){this.scope.globals.push(name)}
         }
     }
 
@@ -4109,11 +4110,11 @@ function $NotCtx(context){
     this.type = 'not'
     this.parent = context
     this.tree = []
-    context.tree[context.tree.length]=this
-    this.toString = function(){return 'not ('+this.tree+')'}
+    context.tree[context.tree.length] = this
+    this.toString = function(){return 'not (' + this.tree + ')'}
     this.to_js = function(){
-        this.js_processed=true
-        return '!$B.$bool('+$to_js(this.tree)+')'
+        this.js_processed = true
+        return '!$B.$bool(' + $to_js(this.tree) + ')'
     }
 }
 
@@ -4126,12 +4127,12 @@ function $OpCtx(context,op){
     this.scope = $get_scope(this)
 
     // Get type of left operand
-    if(context.type=="expr"){
-        if(['int','float','str'].indexOf(context.tree[0].type)>-1){
+    if(context.type == "expr"){
+        if(['int', 'float', 'str'].indexOf(context.tree[0].type) > -1){
             this.left_type = context.tree[0].type
-        }else if(context.tree[0].type=="id"){
+        }else if(context.tree[0].type == "id"){
             var binding = this.scope.binding[context.tree[0].value]
-            if(binding){this.left_type=binding.type}
+            if(binding){this.left_type = binding.type}
         }
     }
 
@@ -4139,13 +4140,14 @@ function $OpCtx(context,op){
     context.parent.tree.pop()
     context.parent.tree.push(this)
 
-    this.toString = function(){return '(op '+this.op+') ['+this.tree+']'}
-
+    this.toString = function(){
+        return '(op ' + this.op + ') [' + this.tree + ']'
+    }
 
     this.to_js = function(){
         this.js_processed=true
-        var comps = {'==':'eq','!=':'ne','>=':'ge','<=':'le',
-            '<':'lt','>':'gt'}
+        var comps = {'==': 'eq','!=': 'ne','>=': 'ge','<=': 'le',
+            '<': 'lt','>': 'gt'}
         if(comps[this.op]!==undefined){
             var method=comps[this.op]
             if(this.tree[0].type=='expr' && this.tree[1].type=='expr'){
@@ -7193,7 +7195,7 @@ function $tokenize(src,module,locals_id,parent_block,line_info){
     root.binding = {
         __doc__: true,
         __name__: true,
-        
+
 __file__: true
     }
 
@@ -7833,22 +7835,19 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_info){
     offset++
 
     // module doc string
-    var ds_node = new $Node()
-    new $NodeJSCtx(ds_node, local_ns+'["__doc__"]='+(root.doc_string||'None')+';')
-    root.insert(offset++,ds_node)
+    root.insert(offset++,
+        $NodeJS(local_ns+'["__doc__"]='+(root.doc_string||'None')+';'))
     // name
-    var name_node = new $Node()
-    new $NodeJSCtx(name_node,local_ns+'["__name__"]='+local_ns+'["__name__"] || "'+locals_id+'";')
-    root.insert(offset++,name_node)
+    root.insert(offset++,
+        $NodeJS(local_ns+'["__name__"]='+local_ns+'["__name__"] || "'+locals_id+'";'))
     // file
-    var file_node = new $Node()
-    new $NodeJSCtx(file_node,local_ns+'["__file__"]="'+$B.$py_module_path[module]+'";None;\n')
-    root.insert(offset++,file_node)
+    root.insert(offset++,
+        $NodeJS(local_ns+'["__file__"]="'+$B.$py_module_path[module]+'";None;\n'))
+
     // if line_info is provided, store it
     if(line_info !== undefined){
-        var line_node = new $Node()
-        new $NodeJSCtx(line_node,local_ns+'.$line="'+line_info+'";None;\n')
-        root.insert(offset++,line_node)
+        root.insert(offset++,
+            $NodeJS(local_ns+'.$line="'+line_info+'";None;\n'))
     }
 
     var enter_frame_pos = offset,
@@ -7902,53 +7901,51 @@ function load_scripts(scripts, run_script, onerror){
     // external (<script src="external_script.py"></script>)
 
     if (run_script === undefined) {
-      run_script = $B._run_script;
+      run_script = $B._run_script
     }
 
     // Callback function when an external script is loaded
     function callback(ev, script){
         var ok = false,
-            skip = false;
-        if (ev !== null) {
+            skip = false
+        if(ev !== null){
             var req = ev.target
             if(req.readyState==4){
                 if(req.status==200){
                     ok = true;
-                    var script = {name:req.module_name,
-                              url:req.responseURL,
-                              src:req.responseText};
+                    var script = {
+                        name:req.module_name,
+                        url:req.responseURL,
+                        src:req.responseText
+                    }
                 }
-            }
-            else {
+            }else{
                 // AJAX request with readyState !== 4 => NOP
-                skip = true;
+                skip = true
             }
-        }
-        else {
+        }else{
             // All data is supplied in script arg
-            ok = true;
+            ok = true
         }
-        if (skip) { return; }
-        if (ok) {
-            try {
+        if(skip){return}
+        if(ok){
+            try{
                 run_script(script)
-            }
-            catch (e) {
-                if (onerror === undefined) { throw e; }
-                else { onerror(e); }
+            }catch(e){
+                if(onerror === undefined){throw e}
+                else{onerror(e)}
             }
             if(scripts.length>0){
                 load_scripts(scripts)
             }
         }else{
-            try {
+            try{
                 throw Error("cannot load script "+
                     req.module_name+' at '+req.responseURL+
                     ': error '+req.status)
-            }
-            catch (e) {
-                if (onerror === undefined) { throw e; }
-                else { onerror(e); }
+            }catch(e){
+                if(onerror === undefined) {throw e}
+                else{onerror(e)}
             }
         }
     }
@@ -7992,33 +7989,33 @@ function run_script(script){
         // Run resulting Javascript
         eval(js)
 
-    }catch($err){
+    }catch(err){
         if($B.debug>1){
-            console.log($err)
-            for(var attr in $err){
-               console.log(attr+' : ', $err[attr])
+            console.log(err)
+            for(var attr in err){
+               console.log(attr+' : ', err[attr])
             }
         }
 
         // If the error was not caught by the Python runtime, build an
         // instance of a Python exception
-        if($err.$py_error===undefined){
-            console.log('Javascript error', $err)
+        if(err.$py_error===undefined){
+            console.log('Javascript error', err)
             //console.log(js)
-            //for(var attr in $err){console.log(attr+': '+$err[attr])}
-            $err=_b_.RuntimeError.$factory($err+'')
+            //for(var attr in err){console.log(attr+': '+err[attr])}
+            err=_b_.RuntimeError.$factory(err+'')
         }
 
         // Print the error traceback on the standard error stream
-        var name = $err.__name__
-        var $trace = _b_.getattr($err,'info')
+        var name = err.__name__
+        var $trace = _b_.getattr(err,'info')
         if(name=='SyntaxError' || name=='IndentationError'){
-            var offset = $err.args[3]
+            var offset = err.args[3]
             $trace += '\n    ' + ' '.repeat(offset) + '^' +
-                '\n' + name+': '+$err.args[0]
+                '\n' + name+': '+err.args[0]
 
         }else{
-            $trace += '\n'+name+': ' + $err.args
+            $trace += '\n'+name+': ' + err.args
         }
         try{
             _b_.getattr($B.stderr,'write')($trace)
@@ -8026,8 +8023,9 @@ function run_script(script){
             console.log($trace)
         }
         // Throw the error to stop execution
-        throw $err
+        throw err
     }finally{
+        delete root.children
         root = null
         js = null
         $B.clear_ns(script.name)
@@ -8051,21 +8049,23 @@ function brython(options){
 
     // If the argument provided to brython() is a number, it is the debug
     // level
-    if(typeof options==='number') options={'debug':options}
-    if(options.debug === undefined) { options.debug = 0 }
+    if(typeof options==='number'){options={'debug':options}}
+    if(options.debug === undefined){options.debug = 0}
     $B.debug = options.debug
     // set built-in variable __debug__
-    _b_.__debug__ = $B.debug>0
+    _b_.__debug__ = $B.debug > 0
 
     $B.compile_time = 0
 
-    if(options.profile === undefined){ options.profile = 0}
+    if(options.profile === undefined){options.profile = 0}
     $B.profile = options.profile
 
     // For imports, default mode is to search modules of the standard library
     // using a static mapping stored in stdlib_paths.js
     // This can be disabled by setting option "static_stdlib_import" to false
-    if(options.static_stdlib_import===undefined){options.static_stdlib_import=true}
+    if(options.static_stdlib_import === undefined){
+        options.static_stdlib_import = true
+    }
     $B.static_stdlib_import = options.static_stdlib_import
 
     // If options has an attribute "open", it will be used by the built-in
@@ -8088,8 +8088,8 @@ function brython(options){
     //   packages and modules in the standard distribution
     // - finder_path : search module at different urls
 
-    var meta_path = []
-    var path_hooks = []
+    var meta_path = [],
+        path_hooks = []
 
     // $B.use_VFS is set to true if the script brython_stdlib.js or
     // brython_dist.js has been loaded in the page. In this case we use the
@@ -8117,12 +8117,11 @@ function brython(options){
     path_hooks.push($B.$path_hooks[1])
     $B.path_hooks = path_hooks
 
-
     // URL of the script where function brython() is called
     var $href = $B.script_path = _window.location.href,
         $href_elts = $href.split('/')
     $href_elts.pop()
-    if ( isWebWorker ) $href_elts.pop() // WebWorker script is in the web_workers subdirectory
+    if(isWebWorker){$href_elts.pop()} // WebWorker script is in the web_workers subdirectory
     $B.curdir = $href_elts.join('/')
 
     // List of URLs where imported modules should be searched
@@ -8142,21 +8141,24 @@ function brython(options){
     // where the prefetch attribute should be present & true if prefetching is required
     // otherwise it should be present and false
 
-    if (options.python_paths) {
-        options.python_paths.forEach(function(path) {
+    if (options.python_paths){
+        options.python_paths.forEach(function(path){
             var lang, prefetch;
-            if (typeof path !== "string") {
+            if (typeof path !== "string"){
                 lang = path.lang
                 prefetch = path.prefetch
                 path = path.path
             }
             $B.path.push(path)
-            if (path.slice(-7).toLowerCase() == '.vfs.js' && (prefetch === undefined || prefetch === true)) $B.path_importer_cache[path+'/'] = $B.imported['_importlib'].VFSPathFinder(path)
-            if (lang) _importlib.optimize_import_for_path(path, lang)
+            if(path.slice(-7).toLowerCase() == '.vfs.js' &&
+                    (prefetch === undefined || prefetch === true)){
+                $B.path_importer_cache[path+'/'] = $B.imported['_importlib'].VFSPathFinder(path)
+            }
+            if(lang){_importlib.optimize_import_for_path(path, lang)}
         })
     }
 
-    if (! isWebWorker ) {
+    if(!isWebWorker){
     // Get all links with rel=pythonpath and add them to sys.path
         var path_links = document.querySelectorAll('head link[rel~=pythonpath]'),
             _importlib = $B.imported['_importlib'];
@@ -8173,10 +8175,10 @@ function brython(options){
                 $B.path_importer_cache[href + '/'] =
                         $B.imported['_importlib'].VFSPathFinder.$factory(href)
             }
-            var filetype = e.hreflang;
-            if (filetype) {
-                if (filetype.slice(0,2) == 'x-') filetype = filetype.slice(2);
-                _importlib.optimize_import_for_path(e.href, filetype);
+            var filetype = e.hreflang
+            if(filetype){
+                if(filetype.slice(0,2) == 'x-'){filetype = filetype.slice(2)}
+                _importlib.optimize_import_for_path(e.href, filetype)
             }
         }
     }
@@ -8186,11 +8188,12 @@ function brython(options){
     // 'jsre' for brythons customized re module
     // Default is for brython to guess which to use by looking at
     // complexity of the re pattern
-    if (options.re_module !==undefined) {
-       if (options.re_module == 'pyre' || options.re_module=='jsre') {
+    if(options.re_module !==undefined){
+       if(options.re_module == 'pyre' || options.re_module=='jsre'){
           $B.$options.re=options.re
        }
-       console.log("DeprecationWarning: \'re_module\' option of \'brython\' function will be deprecated in future versions of Brython.")
+       console.log("DeprecationWarning: \'re_module\' option of \'brython\' "+
+           "function will be deprecated in future versions of Brython.")
     }
 
     $B.scripts = []
