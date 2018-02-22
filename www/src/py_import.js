@@ -1006,6 +1006,6 @@ _importlib_module = {
 _importlib_module.__repr__ = _importlib_module.__str__ = function(){
 return "<module '_importlib' (built-in)>"
 }
-$B.imported['_importlib'] = $B.modules['_importlib'] = _importlib_module
+$B.imported['_importlib'] = _importlib_module
 
 })(__BRYTHON__)

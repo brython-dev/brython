@@ -380,14 +380,11 @@ $B.$BRgenerator = function(func_name, blocks, def_id, def_node){
 
     var funcs = [raw_src]
 
-    $B.modules[iter_id] = obj
     obj.parent_block = def_node //.parent_block
 
     for(var i=0; i<func_root.yields.length;i++){
         funcs.push(make_next(obj, i))
     }
-
-    delete $B.modules[iter_id]
 
     return funcs
 }
@@ -411,11 +408,7 @@ function make_next(self, yield_node_id){
     root.addChild(fnode)
 
     var parent_scope = self.func_root
-    $B.modules[self.iter_id] = {
-        id: self.iter_id,
-        parent_block: parent_scope
-    }
-
+    
     // restore namespaces
     var js =  'for(var attr in this.blocks){eval("var "+attr+"='+
         'this.blocks[attr]");};var $locals_'+self.iter_id+' = this.env,'+

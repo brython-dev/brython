@@ -353,7 +353,7 @@
         module_obj.__repr__ = module_obj.__str__ = function(){
             return "<module '"+name+"' (built-in)>"
         }
-        $B.imported[name] = $B.modules[name] = module_obj
+        $B.imported[name] = module_obj
         // set attribute "name" of functions
         for(var attr in module_obj){
             if(typeof module_obj[attr] == 'function'){

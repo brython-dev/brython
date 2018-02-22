@@ -296,29 +296,20 @@ $B.exception = function(js_exc){
             if(_frame && _frame[1].$line_info!==undefined){
                 var line_info = _frame[1].$line_info.split(',')
                 var mod_name = line_info[1]
-                var module = $B.modules[mod_name]
-                if(module){
-                    if(module.caller!==undefined){
-                        // for list comprehension and the likes, replace
-                        // by the line in the enclosing module
-                        var mod_name = line_info[1]
-                    }
-                    var lib_module = mod_name
-                    var line_num = parseInt(line_info[0])
-                    if($B.$py_src[mod_name]===undefined){
-                        console.log('pas de py_src pour '+mod_name)
-                        console.log(js_exc)
-                    }
-                    var lines = $B.$py_src[mod_name].split('\n'),
-                        msg = js_exc.message.toString()
-                    // For some weird reason, nothing can be added to js_exc.message
-                    // so we have to create another attribute with the complete
-                    // error message including line in source code
-                    msg += "\n  module '"+lib_module+"' line "+line_num
-                    msg += '\n'+lines[line_num-1]
-                    js_exc.msg = msg
-                    js_exc.info_in_msg = true
+                var line_num = parseInt(line_info[0])
+                if($B.$py_src[mod_name]===undefined){
+                    console.log('pas de py_src pour '+mod_name)
+                    console.log(js_exc)
                 }
+                var lines = $B.$py_src[mod_name].split('\n'),
+                    msg = js_exc.message.toString()
+                // For some weird reason, nothing can be added to js_exc.message
+                // so we have to create another attribute with the complete
+                // error message including line in source code
+                msg += "\n  module '"+mod_name+"' line "+line_num
+                msg += '\n'+lines[line_num-1]
+                js_exc.msg = msg
+                js_exc.info_in_msg = true
             }else{
                 console.log('error ', js_exc)
             }

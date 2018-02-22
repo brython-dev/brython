@@ -83,7 +83,7 @@
 
     if ($B.is_none(_loader)) {
         if (!$B.is_none(locs)) {
-            $B.modules[_spec_name] = _sys_modules[_spec_name] = module;
+            _sys_modules[_spec_name] = module;
         }
         else {
             throw _b_.ImportError.$factory(mod_name);
@@ -96,10 +96,9 @@
             module = _b_.getattr(_loader, 'load_module')(_spec_name);
         }
         else {
-            $B.modules[_spec_name] = _sys_modules[_spec_name] = module;
+            _sys_modules[_spec_name] = module;
             try { exec_module(module, blocking) }
             catch (e) {
-                delete $B.modules[_spec_name];
                 delete _sys_modules[_spec_name];
                 throw e;
            }

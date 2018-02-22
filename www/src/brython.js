@@ -29,7 +29,6 @@ $B.$py_src={}
 $B.path=[$path+'Lib',$path+'libs',$script_dir,$path+'Lib/site-packages']
 $B.async_enabled=false
 if($B.async_enabled)$B.block={}
-$B.modules={}
 $B.imported={}
 $B.module_source={}
 $B.vars={}
@@ -37,7 +36,6 @@ $B._globals={}
 $B.frames_stack=[]
 $B.builtins={__repr__:function(){return "<module 'builtins>'"},__str__:function(){return "<module 'builtins'>"},}
 $B.builtins_scope={id:'__builtins__',module:'__builtins__',binding:{}}
-$B.modules['__builtins__']=$B.builtins_scope
 $B.builtin_funcs={}
 $B.__getattr__=function(attr){return this[attr]}
 $B.__setattr__=function(attr,value){
@@ -73,8 +71,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-02-21 11:20:32.615388"
-__BRYTHON__.timestamp=1519208432615
+__BRYTHON__.compiled_date="2018-02-22 08:54:21.021640"
+__BRYTHON__.timestamp=1519286061021
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -798,7 +796,6 @@ this.name=name
 this.id=C.node.module+'_'+name+'_'+this.random
 this.binding={}
 if($B.async_enabled)$B.block[this.id]={}
-$B.modules[this.id]=this.parent.node
 this.parent.node.id=this.id
 var parent_block=scope
 while(parent_block.C && parent_block.C.tree[0].type=='class'){parent_block=parent_block.parent}
@@ -1030,7 +1027,6 @@ this.id=this.id.replace(/\./g,'_')
 this.id +='_'+ $B.UUID()
 this.parent.node.id=this.id
 this.parent.node.module=this.module
-$B.modules[this.id]=this.parent.node
 this.binding={}
 this.level=this.scope.level
 if($B._globals[this.scope.id]!==undefined &&
@@ -1049,7 +1045,7 @@ pb=pb.parent}
 this.doc_string=$get_docstring(node)
 this.rank=rank 
 var indent=node.indent+16
-if(this.name.substr(0,15)=='lambda_'+$B.lambda_magic){var pblock=scope.parent_block 
+if(this.name.substr(0,15)=='lambda_'+$B.lambda_magic){var pblock=scope.parent_block
 if(pblock.C && pblock.C.tree[0].type=="def"){this.enclosing.push(pblock)}}
 var pnode=this.parent.node
 while(pnode.parent && pnode.parent.is_def_func){this.enclosing.push(pnode.parent.parent)
@@ -3856,7 +3852,6 @@ var root=new $Node('module')
 root.module=module
 root.id=locals_id
 root.binding={__doc__: true,__name__: true,__file__: true}
-$B.modules[root.id]=root
 root.parent_block=parent_block
 root.line_info=line_info
 root.indent=-1
@@ -4328,7 +4323,7 @@ $B.path.push(path)
 if(path.slice(-7).toLowerCase()=='.vfs.js' &&(prefetch===undefined ||prefetch===true))$B.path_importer_cache[path+'/']=$B.imported['_importlib'].VFSPathFinder(path)
 if(lang)_importlib.optimize_import_for_path(path,lang)})}
 if(! isWebWorker ){
-var path_links=document.querySelectorAll('head link[rel~=pythonpath]'),_importlib=$B.modules['_importlib'];
+var path_links=document.querySelectorAll('head link[rel~=pythonpath]'),_importlib=$B.imported['_importlib'];
 for(var i=0,e;e=path_links[i];++i){var href=e.href;
 if((' ' + e.rel + ' ').indexOf(' prepend ')!=-1){$B.path.unshift(href);}else{
 $B.path.push(href);}
@@ -4841,12 +4836,10 @@ return js}
 $B.clear_ns=function(name){
 if(name.startsWith("__ge")){console.log("clear ns",name)}
 var len=name.length
-for(var key in $B.modules){if(key.substr(0,len)==name){$B.modules[key]=null
-$B._globals[key]=null
-delete $B.modules[key]
-delete $B._globals[key]}}
 for(var key in $B.$py_module_path){if(key.substr(0,len)==name){$B.$py_module_path[key]=null
 delete $B.$py_module_path[key]}}
+$B.$py_src[name]=null
+delete $B.$py_src[name]
 var alt_name=name.replace(/\./g,'_')
 if(alt_name!=name){$B.clear_ns(alt_name)}}
 $B.from_alias=function(attr){if(attr.substr(0,2)=='$$' && $B.aliased_names[attr.substr(2)]){return attr.substr(2)}
@@ -6373,18 +6366,14 @@ if(js_exc.info===undefined){var _frame=$B.last($B.frames_stack)
 if(_frame===undefined){_frame=$B.pmframe}
 if(_frame && _frame[1].$line_info!==undefined){var line_info=_frame[1].$line_info.split(',')
 var mod_name=line_info[1]
-var module=$B.modules[mod_name]
-if(module){if(module.caller!==undefined){
-var mod_name=line_info[1]}
-var lib_module=mod_name
 var line_num=parseInt(line_info[0])
 if($B.$py_src[mod_name]===undefined){console.log('pas de py_src pour '+mod_name)
 console.log(js_exc)}
 var lines=$B.$py_src[mod_name].split('\n'),msg=js_exc.message.toString()
-msg +="\n  module '"+lib_module+"' line "+line_num
+msg +="\n  module '"+mod_name+"' line "+line_num
 msg +='\n'+lines[line_num-1]
 js_exc.msg=msg
-js_exc.info_in_msg=true}}else{console.log('error ',js_exc)}}
+js_exc.info_in_msg=true}else{console.log('error ',js_exc)}}
 var exc=Error()
 exc.__name__='Internal Javascript error: '+(js_exc.__name__ ||js_exc.name)
 exc.__class__=_b_.Exception
@@ -7454,7 +7443,7 @@ $B.path_importer_cache[path]=value;}
 var Loader={__class__:$B.$type,__mro__:[_b_.object],__name__ : 'Loader'}
 _importlib_module={__class__ : module,__name__ : '_importlib',Loader: Loader,VFSFinder: finder_VFS,StdlibStatic: finder_stdlib_static,ImporterPath: finder_path,VFSPathFinder : vfs_hook,UrlPathFinder: url_hook,optimize_import_for_path : optimize_import_for_path}
 _importlib_module.__repr__=_importlib_module.__str__=function(){return "<module '_importlib' (built-in)>"}
-$B.imported['_importlib']=$B.modules['_importlib']=_importlib_module})(__BRYTHON__)
+$B.imported['_importlib']=_importlib_module})(__BRYTHON__)
 ;(function($B){eval($B.InjectBuiltins())
 var object=_b_.object
 function $err(op,other){var msg="unsupported operand type(s) for "+op
@@ -11366,10 +11355,8 @@ var src=func_root.src(),
 raw_src=src.substr(src.search('function'))
 raw_src +='return '+def_ctx.name+def_ctx.num+'}'
 var funcs=[raw_src]
-$B.modules[iter_id]=obj
 obj.parent_block=def_node 
 for(var i=0;i<func_root.yields.length;i++){funcs.push(make_next(obj,i))}
-delete $B.modules[iter_id]
 return funcs}
 function make_next(self,yield_node_id){
 var exit_node=self.func_root.yields[yield_node_id]
@@ -11378,7 +11365,6 @@ var root=new $B.genNode(self.def_ctx.to_js())
 var fnode=self.func_root.clone()
 root.addChild(fnode)
 var parent_scope=self.func_root
-$B.modules[self.iter_id]={id: self.iter_id,parent_block: parent_scope}
 var js='for(var attr in this.blocks){eval("var "+attr+"='+
 'this.blocks[attr]");};var $locals_'+self.iter_id+' = this.env,'+
 ' $locals = $locals_'+self.iter_id+', $local_name="'+self.iter_id+'";'
@@ -11578,7 +11564,7 @@ function load(name,module_obj){
 module_obj.__class__=$B.module
 module_obj.__name__=name
 module_obj.__repr__=module_obj.__str__=function(){return "<module '"+name+"' (built-in)>"}
-$B.imported[name]=$B.modules[name]=module_obj
+$B.imported[name]=module_obj
 for(var attr in module_obj){if(typeof module_obj[attr]=='function'){var name=attr
 while(name.charAt(0)=='$'){name=name.substr(1)}
 module_obj[attr].$infos={__name__:name}}}}
@@ -11620,7 +11606,7 @@ if(_b_.getattr(spec,'has_location')){module.__file__=_b_.getattr(spec,'origin')
 $B.$py_module_path[module.__name__]=module.__file__;}
 var cached=_b_.getattr(spec,'cached');
 if(!$B.is_none(cached)){module.__cached__=cached;}
-if($B.is_none(_loader)){if(!$B.is_none(locs)){$B.modules[_spec_name]=_sys_modules[_spec_name]=module;}
+if($B.is_none(_loader)){if(!$B.is_none(locs)){_sys_modules[_spec_name]=module;}
 else{
 throw _b_.ImportError.$factory(mod_name);}}
 else{
@@ -11628,10 +11614,9 @@ var exec_module=_b_.getattr(_loader,'exec_module',_b_.None);
 if($B.is_none(exec_module)){
 module=_b_.getattr(_loader,'load_module')(_spec_name);}
 else{
-$B.modules[_spec_name]=_sys_modules[_spec_name]=module;
+_sys_modules[_spec_name]=module;
 try{exec_module(module,blocking)}
-catch(e){delete $B.modules[_spec_name];
-delete _sys_modules[_spec_name];
+catch(e){delete _sys_modules[_spec_name];
 throw e;}}}
 return _sys_modules[_spec_name];}
 $B.import_hooks=import_hooks})(__BRYTHON__)

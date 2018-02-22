@@ -1513,7 +1513,6 @@ function $ClassCtx(context){
         this.id = context.node.module+'_'+name+'_'+this.random
         this.binding = {}
         if ($B.async_enabled) $B.block[this.id] = {}
-        $B.modules[this.id] = this.parent.node
         this.parent.node.id = this.id
 
         var parent_block = scope
@@ -2002,7 +2001,6 @@ function $DefCtx(context){
         this.parent.node.id = this.id
         this.parent.node.module = this.module
 
-        $B.modules[this.id] = this.parent.node
         this.binding = {}
 
         this.level = this.scope.level
@@ -2055,7 +2053,7 @@ function $DefCtx(context){
 
         // For lambdas, test if the parent block is a function
         if(this.name.substr(0,15)=='lambda_'+$B.lambda_magic){
-            var pblock = scope.parent_block //$B.modules[scope.id].parent_block
+            var pblock = scope.parent_block
             if(pblock.context && pblock.context.tree[0].type=="def"){
                 this.enclosing.push(pblock)
             }
@@ -7198,7 +7196,6 @@ function $tokenize(src,module,locals_id,parent_block,line_info){
         
 __file__: true
     }
-    $B.modules[root.id] = root
 
     root.parent_block = parent_block
     root.line_info = line_info
@@ -8162,7 +8159,7 @@ function brython(options){
     if (! isWebWorker ) {
     // Get all links with rel=pythonpath and add them to sys.path
         var path_links = document.querySelectorAll('head link[rel~=pythonpath]'),
-            _importlib = $B.modules['_importlib'];
+            _importlib = $B.imported['_importlib'];
         for (var i=0, e; e = path_links[i]; ++i) {
             var href = e.href;
             if ((' ' + e.rel + ' ').indexOf(' prepend ') != -1) {

@@ -53,11 +53,6 @@ $B.path = [$path+'Lib', $path+'libs', $script_dir, $path+'Lib/site-packages']
 $B.async_enabled=false
 if ($B.async_enabled) $B.block = {}
 
-// Maps a module name to the matching module object
-// A module can be the body of a script, or the body of a block inside a
-// script, such as in exec() or in a comprehension
-$B.modules = {}
-
 // Maps the name of imported modules to the module object
 $B.imported = {}
 
@@ -82,7 +77,6 @@ $B.builtins = {
 }
 
 $B.builtins_scope = {id:'__builtins__',module:'__builtins__', binding:{}}
-$B.modules['__builtins__'] = $B.builtins_scope
 
 // Builtin functions : used in py2js to simplify the code produced by a call
 $B.builtin_funcs = {}
