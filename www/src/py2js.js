@@ -46,9 +46,10 @@ $B.last = function(table){return table[table.length-1]}
 
 // Convert a list to an object indexed with list values
 $B.list2obj = function(list, value){
-    var res = {}, i = list.length
-    if(value===undefined){value=true}
-    while(i-->0){res[list[i]]=value}
+    var res = {},
+        i = list.length
+    if(value === undefined){value = true}
+    while(i-->0){res[list[i]] = value}
     return res
 }
 
@@ -5696,1577 +5697,1672 @@ function $transition(context,token){
                   }
           }
           return $transition(context.parent, token, arguments[2])
-      case 'annotation':
-          return $transition(context.parent, token)
-      case 'assert':
-          if(token == 'eol'){return $transition(context.parent, token)}
-          $_SyntaxError(context, token)
-      case 'assign':
-          if(token == 'eol'){
-              if(context.tree[1].type == 'abstract_expr'){
-                  $_SyntaxError(context, 'token ' + token + ' after ' +
-                      context)
-              }
-              // If left is an id, update binding to the type of right operand
-              context.guess_type()
-              return $transition(context.parent, 'eol')
-          }
-          $_SyntaxError(context, 'token ' + token + ' after ' + context)
-      case 'async':
-          if(token == "def"){
-              return $transition(context.parent, token, arguments[2])
-          }
-          $_SyntaxError(context, 'token ' + token + ' after ' + context)
-      case 'attribute':
-          if(token==='id'){
-              var name = arguments[2]
-              if(noassign[name] === true){$_SyntaxError(context,
-                  ["cannot assign to " + name])}
-              name = $mangle(name, context)
-              context.name = name
-              return context.parent
-          }
-          $_SyntaxError(context,token)
-      case 'augm_assign':
-          if(token == 'eol'){
-              if(context.tree[1].type == 'abstract_expr'){
-                  $_SyntaxError(context, 'token ' + token + ' after ' +
-                      context)
-              }
-              return $transition(context.parent, 'eol')
-          }
-          $_SyntaxError(context, 'token ' + token + ' after ' + context)
-      case 'break':
-          if(token == 'eol'){return $transition(context.parent, 'eol')}
-          $_SyntaxError(context, token)
-      case 'call':
-          switch(token) {
-              case ',':
-                  if(context.expect == 'id'){$_SyntaxError(context, token)}
-                  context.expect = 'id'
-                  return context
-              case 'id':
-              case 'imaginary':
-              case 'int':
-              case 'float':
-              case 'str':
-              case 'bytes':
-              case '[':
-              case '(':
-              case '{':
-              case '.':
-              case 'not':
-              case 'lambda':
-                  if(context.has_dstar){$_SyntaxError(context, token)}
-                  context.expect = ','
-                  return $transition(new $CallArgCtx(context), token,
-                      arguments[2])
-              case ')':
-                  context.end = $pos
-                  return context.parent
-              case 'op':
-                  context.expect = ','
-                  switch(arguments[2]) {
-                      case '-':
-                      case '~':
-                      case '+':
-                          context.expect = ','
-                          return $transition(new $CallArgCtx(context), token,
-                              arguments[2])
-                      case '*':
-                          context.has_star = true
-                          return new $StarArgCtx(context)
-                      case '**':
-                          context.has_dstar = true
-                          return new $DoubleStarArgCtx(context)
-                  }
-                  $_SyntaxError(context, token)
-          }
-
-          return $transition(context.parent, token, arguments[2])
-
-      case 'call_arg':
-          switch(token) {
-              case 'id':
-              case 'imaginary':
-              case 'int':
-              case 'float':
-              case 'str':
-              case 'bytes':
-              case '[':
-              case '(':
-              case '{':
-              case '.':
-              case 'not':
-              case 'lambda':
-                  if(context.expect == 'id'){
-                       context.expect = ','
-                       var expr = new $AbstractExprCtx(context, false)
-                       return $transition(expr, token, arguments[2])
-                  }
-                  break
-              case '=':
-                  if(context.expect == ','){
-                      return new $ExprCtx(new $KwArgCtx(context), 'kw_value',
-                          false)
-                  }
-                  break
-              case 'for':
-                  // comprehension
-                  var lst = new $ListOrTupleCtx(context, 'gen_expr')
-                  lst.vars = context.vars // copy variables
-                  lst.locals = context.locals
-                  lst.intervals = [context.start]
-                  context.tree.pop()
-                  lst.expression = context.tree
-                  context.tree = [lst]
-                  lst.tree = []
-                  var comp = new $ComprehensionCtx(lst)
-                  return new $TargetListCtx(new $CompForCtx(comp))
-              case 'op':
-                  if(context.expect == 'id'){
-                     var op = arguments[2]
-                     context.expect = ','
-                     switch(op) {
-                         case '+':
-                         case '-':
-                         case '~':
-                             return $transition(new $AbstractExprCtx(context,false),token,op)
-                         case '*':
-                             return new $StarArgCtx(context)
-                         case '**':
-                             return new $DoubleStarArgCtx(context)
-                     }
-                  }
-                  $_SyntaxError(context, 'token ' + token + ' after ' + context)
-              case ')':
-                  if(context.parent.kwargs &&
-                          $B.last(context.parent.tree).tree[0] && // if call ends with ,)
-                          ['kwarg', 'star_arg', 'double_star_arg'].
-                              indexOf($B.last(context.parent.tree).tree[0].type) == -1){
-                      $_SyntaxError(context,
-                          ['non-keyword arg after keyword arg'])
-                  }
-                  if(context.tree.length>0){
-                      var son = context.tree[context.tree.length - 1]
-                      if(son.type == 'list_or_tuple' &&
-                              son.real == 'gen_expr'){
-                          son.intervals.push($pos)
-                      }
-                  }
-                  return $transition(context.parent,token)
-              case ':':
-                  if(context.expect == ',' &&
-                          context.parent.parent.type == 'lambda') {
-                      return $transition(context.parent.parent, token)
-                  }
-                  break
-              case ',':
-                  if(context.expect == ','){
-                      if(context.parent.kwargs &&
-                              ['kwarg','star_arg', 'double_star_arg'].
-                                  indexOf($B.last(context.parent.tree).tree[0].type)==-1){
-                          $_SyntaxError(context,
-                              ['non-keyword arg after keyword arg'])
-                      }
-                      return $transition(context.parent, token, arguments[2])
-                  }
-          }
-          $_SyntaxError(context, 'token ' + token + ' after ' + context)
-      case 'class':
-          switch(token) {
-              case 'id':
-                  if(context.expect == 'id'){
-                       context.set_name(arguments[2])
-                       context.expect = '(:'
-                       return context
-                  }
-                  break
-              case '(':
-                  return new $CallCtx(context)
-              case ':':
-                  return $BodyCtx(context)
-          }
-          $_SyntaxError(context, 'token ' + token + ' after ' + context)
-      case 'comp_if':
-          return $transition(context.parent, token, arguments[2])
-      case 'comp_for':
-          if(token == 'in' && context.expect == 'in'){
-              context.expect = null
-              return new $AbstractExprCtx(new $CompIterableCtx(context), true)
-          }
-          if(context.expect === null){
-              // ids in context.tree[0] are local to the comprehension
-              return $transition(context.parent, token, arguments[2])
-          }
-          $_SyntaxError(context, 'token ' + token + ' after ' + context)
-      case 'comp_iterable':
-          return $transition(context.parent, token, arguments[2])
-      case 'comprehension':
-          switch(token) {
-              case 'if':
-                  return new $AbstractExprCtx(new $CompIfCtx(context), false)
-              case 'for':
-                  return new $TargetListCtx(new $CompForCtx(context))
-          }
-          return $transition(context.parent,token,arguments[2])
-      case 'condition':
-          if(token == ':'){return $BodyCtx(context)}
-          $_SyntaxError(context, 'token ' + token + ' after ' + context)
-      case 'continue':
-          if(token == 'eol'){return context.parent}
-          $_SyntaxError(context, 'token ' + token + ' after ' + context)
-      case 'ctx_manager_alias':
-          switch(token){
-              case ',':
-              case ':':
-                  return $transition(context.parent, token, arguments[2])
-          }
-          $_SyntaxError(context, 'token ' + token + ' after ' + context)
-      case 'decorator':
-          if(token == 'id' && context.tree.length == 0){
-              return $transition(new $AbstractExprCtx(context, false),
-                  token, arguments[2])
-          }
-          if(token == 'eol') {
-              return $transition(context.parent, token)
-          }
-          $_SyntaxError(context,'token '+token+' after '+context)
-      case 'def':
-          switch(token) {
-              case 'id':
-                  if(context.name) {
-                      $_SyntaxError(context,'token '+token+' after '+context)
-                  }
-                  context.set_name(arguments[2])
-                  return context
-              case '(':
-                  if(context.name == null){
-                      $_SyntaxError(context, 'token ' + token +
-                          ' after ' + context)
-                  }
-                  context.has_args = true;
-                  return new $FuncArgs(context)
-              case 'annotation':
-                  return new $AbstractExprCtx(new $AnnotationCtx(context), true)
-              case ':':
-                  if(context.has_args){return $BodyCtx(context)}
-          }
-          $_SyntaxError(context, 'token ' + token + ' after ' + context)
-      case 'del':
-          if(token == 'eol'){return $transition(context.parent, token)}
-          $_SyntaxError(context, 'token ' + token + ' after ' + context)
-      case 'dict_or_set':
-        if(context.closed){
-            switch(token) {
-              case '[':
-                return new $AbstractExprCtx(new $SubCtx(context.parent),false)
-              case '(':
-                return new $CallArgCtx(new $CallCtx(context))
+        case 'annotation':
+            return $transition(context.parent, token)
+        case 'assert':
+            if(token == 'eol'){return $transition(context.parent, token)}
+            $_SyntaxError(context, token)
+        case 'assign':
+            if(token == 'eol'){
+                if(context.tree[1].type == 'abstract_expr'){
+                    $_SyntaxError(context, 'token ' + token + ' after ' +
+                        context)
+                }
+                // If left is an id, update binding to the type of right operand
+                context.guess_type()
+                return $transition(context.parent, 'eol')
             }
-            return $transition(context.parent,token,arguments[2])
-        }else{
-            if(context.expect===','){
-                switch(token) {
-                  case '}':
-                    switch(context.real) {
-                      case 'dict_or_set':
-                         if (context.tree.length !== 1) break
-                         context.real='set'   // is this needed?
-                      case 'set':
-                      case 'set_comp':
-                      case 'dict_comp':
-                         context.items = context.tree
-                         context.tree = []
-                         context.closed = true
-                         return context
-                      case 'dict':
-                        if (context.tree.length%2 === 0) {
-                           context.items = context.tree
-                           context.tree = []
-                           context.closed = true
-                           return context
-                        }
-                    }//switch
-                    $_SyntaxError(context,'token '+token+' after '+context)
-                  case ',':
-                    if(context.real==='dict_or_set'){context.real='set'}
-                    if(context.real==='dict' && context.tree.length%2){
-                        $_SyntaxError(context,'token '+token+' after '+context)
-                    }
+            $_SyntaxError(context, 'token ' + token + ' after ' + context)
+        case 'async':
+            if(token == "def"){
+                return $transition(context.parent, token, arguments[2])
+            }
+            $_SyntaxError(context, 'token ' + token + ' after ' + context)
+        case 'attribute':
+            if(token==='id'){
+                var name = arguments[2]
+                if(noassign[name] === true){$_SyntaxError(context,
+                    ["cannot assign to " + name])}
+                name = $mangle(name, context)
+                context.name = name
+                return context.parent
+            }
+            $_SyntaxError(context,token)
+        case 'augm_assign':
+            if(token == 'eol'){
+                if(context.tree[1].type == 'abstract_expr'){
+                    $_SyntaxError(context, 'token ' + token + ' after ' +
+                        context)
+                }
+                return $transition(context.parent, 'eol')
+            }
+            $_SyntaxError(context, 'token ' + token + ' after ' + context)
+        case 'break':
+            if(token == 'eol'){return $transition(context.parent, 'eol')}
+            $_SyntaxError(context, token)
+        case 'call':
+            switch(token) {
+                case ',':
+                    if(context.expect == 'id'){$_SyntaxError(context, token)}
                     context.expect = 'id'
                     return context
-                  case ':':
-                    if(context.real==='dict_or_set'){context.real='dict'}
-                    if(context.real==='dict'){
-                        context.expect=','
-                        return new $AbstractExprCtx(context,false)
-                    }else{$_SyntaxError(context,'token '+token+' after '+context)}
-                  case 'for':
+                case 'id':
+                case 'imaginary':
+                case 'int':
+                case 'float':
+                case 'str':
+                case 'bytes':
+                case '[':
+                case '(':
+                case '{':
+                case '.':
+                case 'not':
+                case 'lambda':
+                    if(context.has_dstar){$_SyntaxError(context, token)}
+                    context.expect = ','
+                    return $transition(new $CallArgCtx(context), token,
+                        arguments[2])
+                case ')':
+                    context.end = $pos
+                    return context.parent
+                case 'op':
+                    context.expect = ','
+                    switch(arguments[2]) {
+                        case '-':
+                        case '~':
+                        case '+':
+                            context.expect = ','
+                            return $transition(new $CallArgCtx(context), token,
+                                arguments[2])
+                        case '*':
+                            context.has_star = true
+                            return new $StarArgCtx(context)
+                        case '**':
+                            context.has_dstar = true
+                            return new $DoubleStarArgCtx(context)
+                    }
+                    $_SyntaxError(context, token)
+            }
+
+            return $transition(context.parent, token, arguments[2])
+
+        case 'call_arg':
+            switch(token) {
+                case 'id':
+                case 'imaginary':
+                case 'int':
+                case 'float':
+                case 'str':
+                case 'bytes':
+                case '[':
+                case '(':
+                case '{':
+                case '.':
+                case 'not':
+                case 'lambda':
+                    if(context.expect == 'id'){
+                         context.expect = ','
+                         var expr = new $AbstractExprCtx(context, false)
+                         return $transition(expr, token, arguments[2])
+                    }
+                    break
+                case '=':
+                    if(context.expect == ','){
+                        return new $ExprCtx(new $KwArgCtx(context), 'kw_value',
+                            false)
+                    }
+                    break
+                case 'for':
                     // comprehension
-                    if(context.real==='dict_or_set'){context.real = 'set_comp'}
-                    else{context.real='dict_comp'}
-                    var lst = new $ListOrTupleCtx(context,'dict_or_set_comp')
-                    lst.intervals = [context.start+1]
-                    lst.vars = context.vars
+                    var lst = new $ListOrTupleCtx(context, 'gen_expr')
+                    lst.vars = context.vars // copy variables
+                    lst.locals = context.locals
+                    lst.intervals = [context.start]
                     context.tree.pop()
                     lst.expression = context.tree
                     context.tree = [lst]
                     lst.tree = []
                     var comp = new $ComprehensionCtx(lst)
                     return new $TargetListCtx(new $CompForCtx(comp))
-
-                } //switch(token)
-                $_SyntaxError(context,'token '+token+' after '+context)
-            }else if(context.expect==='id'){
-                switch(token) {
-                  case '}':
-                    if(context.tree.length==0){ // empty dict
-                        context.items = []
-                        context.real = 'dict'
-                    }else{ // trailing comma, eg {'a':1,'b':2,}
-                        context.items = context.tree
-                    }
-                    context.tree = []
-                    context.closed = true
-                    return context
-                  case 'id':
-                  case 'imaginary':
-                  case 'int':
-                  case 'float':
-                  case 'str':
-                  case 'bytes':
-                  case '[':
-                  case '(':
-                  case '{':
-                  case '.':
-                  case 'not':
-                  case 'lambda':
-                    context.expect = ','
-                    var expr = new $AbstractExprCtx(context,false)
-                    return $transition(expr,token,arguments[2])
-                  case 'op':
-                    switch(arguments[2]) {
-                      case '+':
-                        // ignore unary +
-                        return context
-                      case '-':
-                      case '~':
-                        // create a left argument for operator "unary"
-                        context.expect = ','
-                        var left = new $UnaryCtx(context,arguments[2])
-                        // create the operator "unary"
-                        if(arguments[2]=='-'){var op_expr = new $OpCtx(left,'unary_neg')}
-                        else if(arguments[2]=='+'){var op_expr = new $OpCtx(left,'unary_pos')}
-                        else{var op_expr = new $OpCtx(left,'unary_inv')}
-                        return new $AbstractExprCtx(op_expr,false)
-                    }//switch
-                    $_SyntaxError(context,'token '+token+' after '+context)
-                } //switch
-                $_SyntaxError(context,'token '+token+' after '+context)
-            }
-            return $transition(context.parent,token,arguments[2])
-        }
-      case 'double_star_arg':
-        switch(token) {
-          case 'id':
-          case 'imaginary':
-          case 'int':
-          case 'float':
-          case 'str':
-          case 'bytes':
-          case '[':
-          case '(':
-          case '{':
-          case '.':
-          case 'not':
-          case 'lambda':
-            return $transition(new $AbstractExprCtx(context,false),token,arguments[2])
-          case ',':
-          case ')':
-            return $transition(context.parent,token)
-          case ':':
-            if (context.parent.parent.type==='lambda'){
-              return $transition(context.parent.parent,token)
-            }
-        }
-        $_SyntaxError(context,'token '+token+' after '+context)
-
-      case 'ellipsis':
-          if(token=='.'){context.nbdots++;return context}
-          else{
-              if(context.nbdots!=3){
-                  $pos--;$_SyntaxError(context,'token '+token+' after '+context)
-              }else{
-                  return $transition(context.parent, token, arguments[2])
-              }
-          }
-
-      case 'except':
-        switch(token) {
-          case 'id':
-          case 'imaginary':
-          case 'int':
-          case 'float':
-          case 'str':
-          case 'bytes':
-          case '[':
-          case '(':
-          case '{':
-          case 'not':
-          case 'lamdba':
-            if (context.expect === 'id') {
-               context.expect = 'as'
-               return $transition(new $AbstractExprCtx(context,false),token,arguments[2])
-            }
-          case 'as':
-            // only one alias allowed
-            if (context.expect === 'as' && context.has_alias===undefined){
-               context.expect = 'alias'
-               context.has_alias = true
-               return context
-            }
-          case 'id':
-            if (context.expect === 'alias') {
-               context.expect=':'
-               context.set_alias(arguments[2])
-               return context
-            }
-            break
-          case ':':
-            var _ce=context.expect
-            if (_ce == 'id' || _ce == 'as' || _ce == ':') {
-               return $BodyCtx(context)
-            }
-            break
-          case '(':
-            if (context.expect === 'id' && context.tree.length ===0) {
-               context.parenth = true
-               return context
-            }
-            break
-          case ')':
-            if (context.expect == ',' || context.expect == 'as') {
-               context.expect = 'as'
-               return context
-            }
-          case ',':
-            if (context.parenth!==undefined && context.has_alias === undefined &&
-                (context.expect == 'as' || context.expect == ',')) {
-                context.expect='id'
-                return context
-            }
-        }// switch
-        $_SyntaxError(context,'token '+token+' after '+context.expect)
-      case 'expr':
-        switch(token) {
-          case 'id':
-          case 'imaginary':
-          case 'int':
-          case 'float':
-          case 'str':
-          case 'bytes':
-          case 'lamdba':
-            $_SyntaxError(context,'token '+token+' after '+context)
-            break
-          case '[':
-          case '(':
-          case '{':
-          case '.':
-          case 'not':
-            if(context.expect==='expr'){
-              context.expect = ','
-              return $transition(new $AbstractExprCtx(context,false),token,arguments[2])
-            }
-        }
-        switch(token) {
-          case 'not':
-            if (context.expect === ',') return new $ExprNot(context)
-            break
-          case 'in':
-            if(context.parent.type=='target_list'){
-                // expr used for target list
-                return $transition(context.parent, token)
-            }
-            if(context.expect===',') return $transition(context,'op','in')
-            break
-          case ',':
-            if(context.expect===','){
-               if(context.with_commas){
-                 // implicit tuple
-                 context.parent.tree.pop()
-                 var tuple = new $ListOrTupleCtx(context.parent,'tuple')
-                 tuple.implicit = true
-                 tuple.has_comma = true
-                 tuple.tree = [context]
-                 context.parent = tuple
-                 return tuple
-               }
-            }
-            return $transition(context.parent,token)
-          case '.':
-            return new $AttrCtx(context)
-          case '[':
-            return new $AbstractExprCtx(new $SubCtx(context),true)
-          case '(':
-            return new $CallCtx(context)
-          case 'op':
-            // handle operator precedence
-            var op_parent=context.parent,op=arguments[2]
-
-            // conditional expressions have the lowest priority
-            if(op_parent.type=='ternary' && op_parent.in_else){
-                var new_op = new $OpCtx(context,op)
-                return new $AbstractExprCtx(new_op,false)
-            }
-
-            var op1 = context.parent,repl=null
-            while(1){
-                if(op1.type==='expr'){op1=op1.parent}
-                else if(op1.type==='op'
-                    &&$op_weight[op1.op]>=$op_weight[op]
-                    && !(op1.op=='**' && op=='**') // cf. issue #250
-                    ){
-                        repl=op1;op1=op1.parent
-                }else if(op1.type=="not" && $op_weight['not']>$op_weight[op]){
-                    repl=op1;op1=op1.parent
-                }else{break}
-            }
-            if(repl===null){
-                while(1){
-                    if(context.parent!==op1){
-                        context = context.parent
-                        op_parent = context.parent
-                    }else{
-                        break
-                    }
-                }
-                context.parent.tree.pop()
-                var expr = new $ExprCtx(op_parent,'operand',context.with_commas)
-                expr.expect = ','
-                context.parent = expr
-                var new_op = new $OpCtx(context,op)
-                return new $AbstractExprCtx(new_op,false)
-            }else{
-                // issue #371
-                if(op === 'and' || op === 'or'){
-                    while(repl.parent.type==='not'||
-                        (repl.parent.type==='expr'&&repl.parent.parent.type==='not')){
-                        // 'and' and 'or' have higher precedence than 'not'
-                        repl = repl.parent
-                        op_parent = repl.parent
-                    }
-                }
-            }
-            if(repl.type==='op') {
-                var _flag=false
-                switch(repl.op) {
-                  case '<':
-                  case '<=':
-                  case '==':
-                  case '!=':
-                  case 'is':
-                  case '>=':
-                  case '>':
-                   _flag=true
-                }//switch
-                if (_flag) {
-                   switch(op) {
-                     case '<':
-                     case '<=':
-                     case '==':
-                     case '!=':
-                     case 'is':
-                     case '>=':
-                     case '>':
-                       // chained comparisons such as c1 <= c2 < c3
-                       // replace by (c1 op1 c2) and (c2 op c3)
-
-                       // save c2
-                       var c2 = repl.tree[1], // right operand of op1
-                           c2js = c2.to_js()
-
-                       // clone c2
-                       var c2_clone = new Object()
-                       for(var attr in c2){c2_clone[attr]=c2[attr]}
-
-                       // The variable c2 must be evaluated only once ; we
-                       // generate a temporary variable name to replace
-                       // c2.to_js() and c2_clone.to_js()
-                       var vname = "$c"+chained_comp_num
-                       c2.to_js = function(){return vname}
-                       c2_clone.to_js = function(){return vname}
-                       chained_comp_num++
-
-                       // If there are consecutive chained comparisons
-                       // we must go up to the uppermost 'and' operator
-                       while(repl.parent && repl.parent.type=='op'){
-                           if($op_weight[repl.parent.op]<$op_weight[repl.op]){
-                               repl = repl.parent
-                           }else{break}
+                case 'op':
+                    if(context.expect == 'id'){
+                       var op = arguments[2]
+                       context.expect = ','
+                       switch(op) {
+                           case '+':
+                           case '-':
+                           case '~':
+                               return $transition(new $AbstractExprCtx(context,false),token,op)
+                           case '*':
+                               return new $StarArgCtx(context)
+                           case '**':
+                               return new $DoubleStarArgCtx(context)
                        }
-                       repl.parent.tree.pop()
-
-                       // Create a new 'and' operator, with the left operand
-                       // equal to c1 <= c2
-                       var and_expr = new $OpCtx(repl,'and')
-                       // Set an attribute "wrap" to the $OpCtx instance.
-                       // It will be used in an anomymous function where the
-                       // temporary variable called vname will be set to the
-                       // value of c2
-                       and_expr.wrap = {'name': vname, 'js': c2js}
-
-                       c2_clone.parent = and_expr
-                       // For compatibility with the interface of $OpCtx,
-                       // add a fake element to and_expr : it will be removed
-                       // when new_op is created at the next line
-                       and_expr.tree.push('xxx')
-                       var new_op = new $OpCtx(c2_clone,op)
-                       return new $AbstractExprCtx(new_op,false)
-                   }// switch
-                }// if _flag
-            }
-            repl.parent.tree.pop()
-            var expr = new $ExprCtx(repl.parent,'operand',false)
-            expr.tree = [op1]
-            repl.parent = expr
-            var new_op = new $OpCtx(repl,op) // replace old operation
-            return new $AbstractExprCtx(new_op,false)
-          case 'augm_assign':
-            if(context.expect===','){
-               return new $AbstractExprCtx(new $AugmentedAssignCtx(context,arguments[2]),true)
-            }
-            break
-          case '=':
-           if(context.expect===','){
-               if(context.parent.type==="call_arg"){
-                   // issue 708
-                   if(context.tree[0].type != 'id'){
-                       $_SyntaxError(context, ["keyword can't be an expression"])
-                   }
-                  return new $AbstractExprCtx(new $KwArgCtx(context),true)
-               }else if(context.parent.type=="annotation"){
-                   return $transition(context.parent.parent, token, arguments[2])
-               }
-
-               while(context.parent!==undefined){
-                   context=context.parent
-                   if(context.type=='condition'){
-                       $_SyntaxError(context,'token '+token+' after '+context)
-                   }
-               }
-               context = context.tree[0]
-               return new $AbstractExprCtx(new $AssignCtx(context),true)
-            }
-            break
-          case 'if':
-            var in_comp = false,
-                ctx = context.parent
-            while(true){
-                if(ctx.type=='comp_iterable'){in_comp=true;break}
-                else if(ctx.parent!==undefined){ctx = ctx.parent}
-                else{break}
-            }
-            if(in_comp){break}
-              // Ternary operator : "expr1 if cond else expr2"
-              // If the part before "if" is an operation, apply operator
-              // precedence
-              // Example : print(1+n if n else 0)
-              var ctx = context
-              while(ctx.parent && ctx.parent.type=='op'){
-                ctx=ctx.parent
-                if(ctx.type=='expr' && ctx.parent && ctx.parent.type=='op'){
-                    ctx=ctx.parent
-                }
-              }
-              return new $AbstractExprCtx(new $TernaryCtx(ctx),false)
-        }//switch
-        return $transition(context.parent,token)
-      case 'expr_not':
-        if(token=='in'){ // expr not in : operator
-            context.parent.tree.pop()
-            return new $AbstractExprCtx(new $OpCtx(context.parent,'not_in'),false)
-        }
-        $_SyntaxError(context,'token '+token+' after '+context)
-      case 'for':
-        switch(token) {
-          case 'in':
-            return new $AbstractExprCtx(new $ExprCtx(context,'target list', true),false)
-          case ':':
-            if(context.tree.length<2){ // issue 638
-                $_SyntaxError(context,'token '+token+' after '+context)
-            }
-            return $BodyCtx(context)
-        }
-        $_SyntaxError(context,'token '+token+' after '+context)
-      case 'from':
-        switch(token) {
-          case 'id':
-            if(context.expect=='id'){
-              context.add_name(arguments[2])
-              context.expect = ','
-              return context
-            }
-            if(context.expect==='alias'){
-              context.aliases[context.names[context.names.length-1]]= arguments[2]
-              context.expect=','
-              return context
-            }
-          case '.':
-            if(context.expect=='module'){
-              if(token=='id'){context.module += arguments[2]}
-              else{context.module += '.'}
-              return context
-            }
-          case 'import':
-            if(context.expect=='module'){
-              context.expect = 'id'
-              return context
-            }
-          case 'op':
-            if(arguments[2]=='*' && context.expect=='id'
-              && context.names.length ==0){
-               if($get_scope(context).ntype!=='module'){
-                   $_SyntaxError(context,["import * only allowed at module level"])
-               }
-               context.add_name('*')
-               context.expect = 'eol'
-               return context
-            }
-          case ',':
-            if(context.expect==','){
-              context.expect = 'id'
-              return context
-            }
-          case 'eol':
-            switch(context.expect) {
-              case ',':
-              case 'eol':
-                context.bind_names()
-                return $transition(context.parent,token)
-              case 'id':
-                $_SyntaxError(context,['trailing comma not allowed without surrounding parentheses'])
-              default:
-                $_SyntaxError(context,['invalid syntax'])
-            }
-          case 'as':
-            if (context.expect ==',' || context.expect=='eol'){
-               context.expect='alias'
-               return context
-            }
-          case '(':
-            if (context.expect == 'id') {
-               context.expect='id'
-               return context
-            }
-          case ')':
-            if (context.expect == ',' || context.expect=='id') {
-               context.expect='eol'
-               return context
-            }
-        }
-        $_SyntaxError(context,'token '+token+' after '+context)
-      case 'func_arg_id':
-        switch(token) {
-          case '=':
-            if (context.expect==='='){
-               context.has_default = true
-               var def_ctx = context.parent.parent
-               if(context.parent.has_star_arg){
-                   def_ctx.default_list.push(def_ctx.after_star.pop())
-               }else{
-                   def_ctx.default_list.push(def_ctx.positional_list.pop())
-               }
-               return new $AbstractExprCtx(context,false)
-            }
-            break
-          case ',':
-          case ')':
-            if(context.parent.has_default && context.tree.length==0 &&
-                context.parent.has_star_arg===undefined){
-                console.log('parent '+context.parent, context.parent)
-                $pos -= context.name.length
-                $_SyntaxError(context,['non-default argument follows default argument'])
-            }else{
-                return $transition(context.parent,token)
-            }
-          case ':':
-            // annotation associated with a function parameter
-            if(context.has_default){ // issue 610
-                $_SyntaxError(context,'token '+token+' after '+context)
-            }
-            return new $AbstractExprCtx(new $AnnotationCtx(context), false)
-        }
-        $_SyntaxError(context,'token '+token+' after '+context)
-      case 'func_args':
-        switch (token) {
-           case 'id':
-             if (context.expect==='id'){
-                context.expect = ','
-                if(context.names.indexOf(arguments[2])>-1){
-                  $_SyntaxError(context,['duplicate argument '+arguments[2]+' in function definition'])
-                }
-             }
-             return new $FuncArgIdCtx(context,arguments[2])
-           case ',':
-             if(context.has_kw_arg) $_SyntaxError(context,'duplicate kw arg')
-             if(context.expect===','){
-                context.expect = 'id'
-                return context
-             }
-             $_SyntaxError(context,'token '+token+' after '+context)
-           case ')':
-             return context.parent
-           case 'op':
-             var op = arguments[2]
-             context.expect = ','
-             if(op=='*'){
-                if(context.has_star_arg){$_SyntaxError(context,'duplicate star arg')}
-                return new $FuncStarArgCtx(context,'*')
-             }
-             if(op=='**') return new $FuncStarArgCtx(context,'**')
-             $_SyntaxError(context,'token '+op+' after '+context)
-        }//switch
-        $_SyntaxError(context,'token '+token+' after '+context)
-      case 'func_star_arg':
-        switch(token) {
-          case 'id':
-            if (context.name===undefined){
-               if(context.parent.names.indexOf(arguments[2])>-1){
-                 $_SyntaxError(context,['duplicate argument '+arguments[2]+' in function definition'])
-               }
-            }
-            context.set_name(arguments[2])
-            context.parent.names.push(arguments[2])
-            return context //.parent
-          case ',':
-          case ')':
-            if (context.name===undefined){
-               // anonymous star arg - found in configparser
-               context.set_name('$dummy')
-               context.parent.names.push('$dummy')
-            }
-            return $transition(context.parent,token)
-          case ':':
-            // annotation associated with a function parameter
-            if(context.name===undefined){
-                $_SyntaxError(context, 'annotation on an unnamed parameter')
-            }
-            return new $AbstractExprCtx(new $AnnotationCtx(context), false)
-        }// switch
-        $_SyntaxError(context,'token '+token+' after '+context)
-      case 'global':
-        switch(token) {
-          case 'id':
-            if (context.expect==='id'){
-               new $IdCtx(context,arguments[2])
-               context.add(arguments[2])
-               context.expect=','
-               return context
-            }
-            break
-          case ',':
-            if (context.expect===','){
-               context.expect='id'
-               return context
-            }
-            break
-          case 'eol':
-            if (context.expect===','){
-               return $transition(context.parent,token)
-            }
-            break
-        } // switch
-        $_SyntaxError(context,'token '+token+' after '+context)
-      case 'id':
-        switch(token) {
-          case '=':
-            if(context.parent.type==='expr' &&
-                context.parent.parent !== undefined &&
-                context.parent.parent.type ==='call_arg'){
-                    return new $AbstractExprCtx(new $KwArgCtx(context.parent),false)
-            }
-            return $transition(context.parent,token,arguments[2])
-          case 'op':
-            return $transition(context.parent,token,arguments[2])
-          case 'id':
-          case 'str':
-          case 'int':
-          case 'float':
-          case 'imaginary':
-            if(context.value=="print"){
-                $_SyntaxError(context,
-                    ["missing parenthesis in call to 'print'"])
-            }
-            $_SyntaxError(context,'token '+token+' after '+context)
-        }
-          if(context.value=="async"){
-              // Until Python 3.7 async is not a keyword
-              if(token=='def'){
-                  context.parent.parent.tree = []
-                  var ctx = $transition(context.parent.parent,
-                      token, arguments[2])
-                  ctx.async = true
-                  return ctx
-              }
-          }
-
-        return $transition(context.parent,token,arguments[2])
-      case 'import':
-        switch(token) {
-          case 'id':
-            if (context.expect==='id'){
-               new $ImportedModuleCtx(context,arguments[2])
-               context.expect=','
-               return context
-            }
-            if (context.expect==='qual'){
-               context.expect = ','
-               context.tree[context.tree.length-1].name += '.'+arguments[2]
-               context.tree[context.tree.length-1].alias += '.'+arguments[2]
-               return context
-            }
-            if (context.expect==='alias'){
-               context.expect = ','
-               context.tree[context.tree.length-1].alias = arguments[2]
-               return context
-            }
-            break
-          case '.':
-            if (context.expect===','){
-               context.expect = 'qual'
-               return context
-            }
-            break
-          case ',':
-            if (context.expect===','){
-               context.expect = 'id'
-               return context
-            }
-            break
-          case 'as':
-            //}else if(token==='as' &&
-            if (context.expect===','){
-               context.expect = 'alias'
-               return context
-            }
-            break
-          case 'eol':
-            if (context.expect===','){
-               context.bind_names()
-               return $transition(context.parent,token)
-            }
-            break
-        }//switch
-        $_SyntaxError(context,'token '+token+' after '+context)
-      case 'imaginary':
-      case 'int':
-      case 'float':
-        switch(token) {
-          case 'id':
-          case 'imaginary':
-          case 'int':
-          case 'float':
-          case 'str':
-          case 'bytes':
-          case '[':
-          case '(':
-          case '{':
-          case 'not':
-          case 'lamdba':
-            $_SyntaxError(context,'token '+token+' after '+context)
-        }
-        return $transition(context.parent,token,arguments[2])
-      case 'kwarg':
-        if(token===',') return new $CallArgCtx(context.parent.parent)
-        return $transition(context.parent,token)
-      case 'lambda':
-        if(token===':' && context.args===undefined){
-            context.args = context.tree
-            context.tree = []
-            context.body_start = $pos
-            return new $AbstractExprCtx(context,false)
-        }
-        if(context.args!==undefined){ // returning from expression
-            context.body_end = $pos
-            return $transition(context.parent,token)
-        }
-        if(context.args===undefined){
-            return $transition(new $CallCtx(context),token,arguments[2])
-        }
-        $_SyntaxError(context,'token '+token+' after '+context)
-      case 'list_or_tuple':
-        if(context.closed){
-            if(token==='[') return new $AbstractExprCtx(new $SubCtx(context.parent),false)
-            if(token==='(') return new $CallCtx(context)
-            return $transition(context.parent,token,arguments[2])
-        }else{
-            if(context.expect===','){
-               switch(context.real) {
-                  case 'tuple':
-                  case 'gen_expr':
-                    if (token===')'){
-                       context.closed = true
-                       if(context.real==='gen_expr'){context.intervals.push($pos)}
-                       return context.parent
+                    }
+                    $_SyntaxError(context, 'token ' + token + ' after ' + context)
+                case ')':
+                    if(context.parent.kwargs &&
+                            $B.last(context.parent.tree).tree[0] && // if call ends with ,)
+                            ['kwarg', 'star_arg', 'double_star_arg'].
+                                indexOf($B.last(context.parent.tree).tree[0].type) == -1){
+                        $_SyntaxError(context,
+                            ['non-keyword arg after keyword arg'])
+                    }
+                    if(context.tree.length>0){
+                        var son = context.tree[context.tree.length - 1]
+                        if(son.type == 'list_or_tuple' &&
+                                son.real == 'gen_expr'){
+                            son.intervals.push($pos)
+                        }
+                    }
+                    return $transition(context.parent,token)
+                case ':':
+                    if(context.expect == ',' &&
+                            context.parent.parent.type == 'lambda') {
+                        return $transition(context.parent.parent, token)
                     }
                     break
-                  case 'list':
-                  case 'list_comp':
-                    if (token===']'){
-                       context.closed = true
-                       if(context.real==='list_comp'){context.intervals.push($pos)}
+                case ',':
+                    if(context.expect == ','){
+                        if(context.parent.kwargs &&
+                                ['kwarg','star_arg', 'double_star_arg'].
+                                    indexOf($B.last(context.parent.tree).tree[0].type)==-1){
+                            $_SyntaxError(context,
+                                ['non-keyword arg after keyword arg'])
+                        }
+                        return $transition(context.parent, token, arguments[2])
+                    }
+            }
+            $_SyntaxError(context, 'token ' + token + ' after ' + context)
+        case 'class':
+            switch(token) {
+                case 'id':
+                    if(context.expect == 'id'){
+                         context.set_name(arguments[2])
+                         context.expect = '(:'
+                         return context
+                    }
+                    break
+                case '(':
+                    return new $CallCtx(context)
+                case ':':
+                    return $BodyCtx(context)
+            }
+            $_SyntaxError(context, 'token ' + token + ' after ' + context)
+        case 'comp_if':
+            return $transition(context.parent, token, arguments[2])
+        case 'comp_for':
+            if(token == 'in' && context.expect == 'in'){
+                context.expect = null
+                return new $AbstractExprCtx(new $CompIterableCtx(context), true)
+            }
+            if(context.expect === null){
+                // ids in context.tree[0] are local to the comprehension
+                return $transition(context.parent, token, arguments[2])
+            }
+            $_SyntaxError(context, 'token ' + token + ' after ' + context)
+        case 'comp_iterable':
+            return $transition(context.parent, token, arguments[2])
+        case 'comprehension':
+            switch(token) {
+                case 'if':
+                    return new $AbstractExprCtx(new $CompIfCtx(context), false)
+                case 'for':
+                    return new $TargetListCtx(new $CompForCtx(context))
+            }
+            return $transition(context.parent,token,arguments[2])
+        case 'condition':
+            if(token == ':'){return $BodyCtx(context)}
+            $_SyntaxError(context, 'token ' + token + ' after ' + context)
+        case 'continue':
+            if(token == 'eol'){return context.parent}
+            $_SyntaxError(context, 'token ' + token + ' after ' + context)
+        case 'ctx_manager_alias':
+            switch(token){
+                case ',':
+                case ':':
+                    return $transition(context.parent, token, arguments[2])
+            }
+            $_SyntaxError(context, 'token ' + token + ' after ' + context)
+        case 'decorator':
+            if(token == 'id' && context.tree.length == 0){
+                return $transition(new $AbstractExprCtx(context, false),
+                    token, arguments[2])
+            }
+            if(token == 'eol') {
+                return $transition(context.parent, token)
+            }
+            $_SyntaxError(context, 'token ' + token + ' after ' + context)
+        case 'def':
+            switch(token) {
+                case 'id':
+                    if(context.name) {
+                        $_SyntaxError(context, 'token ' + token + ' after ' + context)
+                    }
+                    context.set_name(arguments[2])
+                    return context
+                case '(':
+                    if(context.name == null){
+                        $_SyntaxError(context, 'token ' + token +
+                            ' after ' + context)
+                    }
+                    context.has_args = true;
+                    return new $FuncArgs(context)
+                case 'annotation':
+                    return new $AbstractExprCtx(new $AnnotationCtx(context), true)
+                case ':':
+                    if(context.has_args){return $BodyCtx(context)}
+            }
+            $_SyntaxError(context, 'token ' + token + ' after ' + context)
+        case 'del':
+            if(token == 'eol'){return $transition(context.parent, token)}
+            $_SyntaxError(context, 'token ' + token + ' after ' + context)
+        case 'dict_or_set':
+            if(context.closed){
+                switch(token) {
+                  case '[':
+                    return new $AbstractExprCtx(new $SubCtx(context.parent),false)
+                  case '(':
+                    return new $CallArgCtx(new $CallCtx(context))
+                }
+                return $transition(context.parent,token,arguments[2])
+            }else{
+                if(context.expect===','){
+                    switch(token) {
+                        case '}':
+                            switch(context.real) {
+                                case 'dict_or_set':
+                                     if (context.tree.length != 1){break}
+                                     context.real = 'set'   // is this needed?
+                                case 'set':
+                                case 'set_comp':
+                                case 'dict_comp':
+                                     context.items = context.tree
+                                     context.tree = []
+                                     context.closed = true
+                                     return context
+                                case 'dict':
+                                    if(context.tree.length % 2 == 0){
+                                        context.items = context.tree
+                                        context.tree = []
+                                        context.closed = true
+                                        return context
+                                    }
+                              }
+                              $_SyntaxError(context, 'token ' + token +
+                                  ' after ' + context)
+                        case ',':
+                            if(context.real == 'dict_or_set'){context.real = 'set'}
+                            if(context.real == 'dict' && context.tree.length % 2){
+                                $_SyntaxError(context, 'token ' + token +
+                                    ' after ' + context)
+                            }
+                            context.expect = 'id'
+                            return context
+                        case ':':
+                          if(context.real == 'dict_or_set'){context.real = 'dict'}
+                          if(context.real == 'dict'){
+                              context.expect = ','
+                              return new $AbstractExprCtx(context,false)
+                          }else{$_SyntaxError(context, 'token ' + token +
+                              ' after ' + context)}
+                        case 'for':
+
+                            // comprehension
+                            if(context.real == 'dict_or_set'){context.real = 'set_comp'}
+                            else{context.real = 'dict_comp'}
+                            var lst = new $ListOrTupleCtx(context, 'dict_or_set_comp')
+                            lst.intervals = [context.start + 1]
+                            lst.vars = context.vars
+                            context.tree.pop()
+                            lst.expression = context.tree
+                            context.tree = [lst]
+                            lst.tree = []
+                            var comp = new $ComprehensionCtx(lst)
+                            return new $TargetListCtx(new $CompForCtx(comp))
+                    }
+                    $_SyntaxError(context, 'token ' + token + ' after ' + context)
+                }else if(context.expect == 'id'){
+                    switch(token) {
+                        case '}':
+                            if(context.tree.length == 0){ // empty dict
+                                context.items = []
+                                context.real = 'dict'
+                            }else{ // trailing comma, eg {'a':1,'b':2,}
+                                context.items = context.tree
+                            }
+                            context.tree = []
+                            context.closed = true
+                            return context
+                        case 'id':
+                        case 'imaginary':
+                        case 'int':
+                        case 'float':
+                        case 'str':
+                        case 'bytes':
+                        case '[':
+                        case '(':
+                        case '{':
+                        case '.':
+                        case 'not':
+                        case 'lambda':
+                            context.expect = ','
+                            var expr = new $AbstractExprCtx(context, false)
+                            return $transition(expr, token, arguments[2])
+                        case 'op':
+                            switch(arguments[2]) {
+                                case '+':
+                                    // ignore unary +
+                                    return context
+                                case '-':
+                                case '~':
+                                    // create a left argument for operator "unary"
+                                    context.expect = ','
+                                    var left = new $UnaryCtx(context, arguments[2])
+                                    // create the operator "unary"
+                                    if(arguments[2] == '-'){
+                                        var op_expr = new $OpCtx(left, 'unary_neg')
+                                    }else if(arguments[2] == '+'){
+                                        var op_expr = new $OpCtx(left, 'unary_pos')
+                                    }else{
+                                        var op_expr = new $OpCtx(left, 'unary_inv')
+                                    }
+                                    return new $AbstractExprCtx(op_expr,false)
+                            }
+                            $_SyntaxError(context, 'token ' + token +
+                                ' after ' + context)
+                    }
+                    $_SyntaxError(context, 'token ' + token + ' after ' + context)
+                }
+                return $transition(context.parent, token, arguments[2])
+            }
+        case 'double_star_arg':
+            switch(token){
+                case 'id':
+                case 'imaginary':
+                case 'int':
+                case 'float':
+                case 'str':
+                case 'bytes':
+                case '[':
+                case '(':
+                case '{':
+                case '.':
+                case 'not':
+                case 'lambda':
+                    return $transition(new $AbstractExprCtx(context, false),
+                        token, arguments[2])
+                case ',':
+                case ')':
+                    return $transition(context.parent, token)
+                case ':':
+                    if(context.parent.parent.type == 'lambda'){
+                      return $transition(context.parent.parent, token)
+                    }
+            }
+            $_SyntaxError(context, 'token ' + token + ' after ' + context)
+        case 'ellipsis':
+            if(token == '.'){context.nbdots++; return context}
+            else{
+                if(context.nbdots != 3){
+                    $pos--
+                    $_SyntaxError(context, 'token ' + token + ' after ' +
+                        context)
+                }else{
+                    return $transition(context.parent, token, arguments[2])
+                }
+            }
+
+        case 'except':
+            switch(token) {
+                case 'id':
+                case 'imaginary':
+                case 'int':
+                case 'float':
+                case 'str':
+                case 'bytes':
+                case '[':
+                case '(':
+                case '{':
+                case 'not':
+                case 'lamdba':
+                    if (context.expect == 'id') {
+                       context.expect = 'as'
+                       return $transition(new $AbstractExprCtx(context, false),
+                           token, arguments[2])
+                    }
+                case 'as':
+                    // only one alias allowed
+                    if(context.expect == 'as' &&
+                            context.has_alias === undefined){
+                        context.expect = 'alias'
+                        context.has_alias = true
+                        return context
+                    }
+                case 'id':
+                    if(context.expect == 'alias'){
+                        context.expect = ':'
+                        context.set_alias(arguments[2])
+                        return context
+                    }
+                    break
+                case ':':
+                    var _ce = context.expect
+                    if (_ce == 'id' || _ce == 'as' || _ce == ':'){
+                        return $BodyCtx(context)
+                    }
+                    break
+                case '(':
+                    if(context.expect == 'id' && context.tree.length == 0){
+                        context.parenth = true
+                        return context
+                    }
+                    break
+                case ')':
+                    if(context.expect == ',' || context.expect == 'as'){
+                        context.expect = 'as'
+                        return context
+                    }
+                case ',':
+                    if (context.parenth !== undefined &&
+                            context.has_alias === undefined &&
+                            (context.expect == 'as' || context.expect == ',')){
+                        context.expect = 'id'
+                        return context
+                    }
+          }
+          $_SyntaxError(context, 'token ' + token + ' after ' + context.expect)
+      case 'expr':
+          switch(token) {
+              case 'id':
+              case 'imaginary':
+              case 'int':
+              case 'float':
+              case 'str':
+              case 'bytes':
+              case 'lamdba':
+                  $_SyntaxError(context, 'token ' + token + ' after ' +
+                      context)
+                  break
+              case '[':
+              case '(':
+              case '{':
+              case '.':
+              case 'not':
+                  if(context.expect == 'expr'){
+                      context.expect = ','
+                      return $transition(new $AbstractExprCtx(context, false),
+                          token, arguments[2])
+                  }
+          }
+          switch(token) {
+              case 'not':
+                  if(context.expect == ','){return new $ExprNot(context)}
+                  break
+              case 'in':
+                  if(context.parent.type == 'target_list'){
+                      // expr used for target list
+                      return $transition(context.parent, token)
+                  }
+                  if(context.expect == ','){
+                      return $transition(context, 'op', 'in')
+                  }
+                  break
+              case ',':
+                  if(context.expect == ','){
+                      if(context.with_commas){
+                           // implicit tuple
+                           context.parent.tree.pop()
+                           var tuple = new $ListOrTupleCtx(context.parent,
+                               'tuple')
+                           tuple.implicit = true
+                           tuple.has_comma = true
+                           tuple.tree = [context]
+                           context.parent = tuple
+                           return tuple
+                       }
+                  }
+                  return $transition(context.parent,token)
+            case '.':
+                return new $AttrCtx(context)
+            case '[':
+                return new $AbstractExprCtx(new $SubCtx(context), true)
+            case '(':
+                return new $CallCtx(context)
+            case 'op':
+                // handle operator precedence ; fasten seat belt ;-)
+                var op_parent = context.parent,
+                    op = arguments[2]
+
+                // conditional expressions have the lowest priority
+                if(op_parent.type == 'ternary' && op_parent.in_else){
+                    var new_op = new $OpCtx(context, op)
+                    return new $AbstractExprCtx(new_op, false)
+                }
+
+                var op1 = context.parent,
+                    repl = null
+                while(1){
+                    if(op1.type == 'expr'){op1 = op1.parent}
+                    else if(op1.type == 'op' &&
+                            $op_weight[op1.op] >= $op_weight[op] &&
+                            !(op1.op == '**' && op == '**')){ // cf. issue #250
+                        repl = op1
+                        op1 = op1.parent
+                    }else if(op1.type == "not" &&
+                            $op_weight['not'] > $op_weight[op]){
+                        repl = op1
+                        op1 = op1.parent
+                    }else{break}
+                }
+                if(repl === null){
+                    while(1){
+                        if(context.parent !== op1){
+                            context = context.parent
+                            op_parent = context.parent
+                        }else{
+                            break
+                        }
+                    }
+                    context.parent.tree.pop()
+                    var expr = new $ExprCtx(op_parent, 'operand',
+                        context.with_commas)
+                    expr.expect = ','
+                    context.parent = expr
+                    var new_op = new $OpCtx(context, op)
+                    return new $AbstractExprCtx(new_op, false)
+                }else{
+                    // issue #371
+                    if(op === 'and' || op === 'or'){
+                        while(repl.parent.type == 'not'||
+                                (repl.parent.type == 'expr' &&
+                                repl.parent.parent.type == 'not')){
+                            // 'and' and 'or' have higher precedence than 'not'
+                            repl = repl.parent
+                            op_parent = repl.parent
+                        }
+                    }
+                }
+                if(repl.type == 'op'){
+                    var _flag = false
+                    switch(repl.op){
+                        case '<':
+                        case '<=':
+                        case '==':
+                        case '!=':
+                        case 'is':
+                        case '>=':
+                        case '>':
+                           _flag=true
+                    }
+                    if(_flag) {
+                        switch(op) {
+                            case '<':
+                            case '<=':
+                            case '==':
+                            case '!=':
+                            case 'is':
+                            case '>=':
+                            case '>':
+                             // chained comparisons such as c1 <= c2 < c3
+                             // replace by (c1 op1 c2) and (c2 op c3)
+
+                             // save c2
+                             var c2 = repl.tree[1], // right operand of op1
+                                 c2js = c2.to_js()
+
+                             // clone c2
+                             var c2_clone = new Object()
+                             for(var attr in c2){c2_clone[attr] = c2[attr]}
+
+                             // The variable c2 must be evaluated only once ;
+                             // we generate a temporary variable name to
+                             // replace c2.to_js() and c2_clone.to_js()
+                             var vname = "$c" + chained_comp_num
+                             c2.to_js = function(){return vname}
+                             c2_clone.to_js = function(){return vname}
+                             chained_comp_num++
+
+                             // If there are consecutive chained comparisons
+                             // we must go up to the uppermost 'and' operator
+                             while(repl.parent && repl.parent.type == 'op'){
+                                 if($op_weight[repl.parent.op] <
+                                         $op_weight[repl.op]){
+                                     repl = repl.parent
+                                 }else{break}
+                             }
+                             repl.parent.tree.pop()
+
+                             // Create a new 'and' operator, with the left
+                             // operand equal to c1 <= c2
+                             var and_expr = new $OpCtx(repl, 'and')
+                             // Set an attribute "wrap" to the $OpCtx instance.
+                             // It will be used in an anomymous function where
+                             // the temporary variable called vname will be
+                             // set to the value of c2
+                             and_expr.wrap = {'name': vname, 'js': c2js}
+
+                             c2_clone.parent = and_expr
+                             // For compatibility with the interface of $OpCtx,
+                             // add a fake element to and_expr : it will be
+                             // removed when new_op is created at the next
+                             // line
+                             and_expr.tree.push('xxx')
+                             var new_op = new $OpCtx(c2_clone, op)
+                             return new $AbstractExprCtx(new_op, false)
+                       }
+                    }
+                }
+                repl.parent.tree.pop()
+                var expr = new $ExprCtx(repl.parent,'operand',false)
+                expr.tree = [op1]
+                repl.parent = expr
+                var new_op = new $OpCtx(repl,op) // replace old operation
+                return new $AbstractExprCtx(new_op,false)
+            case 'augm_assign':
+                if(context.expect == ','){
+                     return new $AbstractExprCtx(
+                         new $AugmentedAssignCtx(context, arguments[2]), true)
+                }
+                break
+            case '=':
+               if(context.expect == ','){
+                   if(context.parent.type == "call_arg"){
+                       // issue 708
+                       if(context.tree[0].type != 'id'){
+                           $_SyntaxError(context,
+                               ["keyword can't be an expression"])
+                       }
+                      return new $AbstractExprCtx(new $KwArgCtx(context), true)
+                   }else if(context.parent.type == "annotation"){
+                       return $transition(context.parent.parent, token,
+                           arguments[2])
+                   }
+
+                   while(context.parent !== undefined){
+                       context = context.parent
+                       if(context.type == 'condition'){
+                           $_SyntaxError(context, 'token ' + token + ' after '
+                               + context)
+                       }
+                   }
+                   context = context.tree[0]
+                   return new $AbstractExprCtx(new $AssignCtx(context), true)
+                }
+                break
+            case 'if':
+                var in_comp = false,
+                    ctx = context.parent
+                while(true){
+                    if(ctx.type == 'comp_iterable'){in_comp = true; break}
+                    else if(ctx.parent !== undefined){ctx = ctx.parent}
+                    else{break}
+                }
+                if(in_comp){break}
+                // Ternary operator : "expr1 if cond else expr2"
+                // If the part before "if" is an operation, apply operator
+                // precedence
+                // Example : print(1+n if n else 0)
+                var ctx = context
+                while(ctx.parent && ctx.parent.type == 'op'){
+                    ctx = ctx.parent
+                    if(ctx.type == 'expr' &&
+                            ctx.parent && ctx.parent.type == 'op'){
+                        ctx=ctx.parent
+                    }
+                }
+                return new $AbstractExprCtx(new $TernaryCtx(ctx), false)
+          }
+          return $transition(context.parent,token)
+        case 'expr_not':
+            if(token == 'in'){ // expr not in : operator
+                context.parent.tree.pop()
+                return new $AbstractExprCtx(
+                    new $OpCtx(context.parent, 'not_in'), false)
+            }
+            $_SyntaxError(context, 'token ' + token + ' after ' + context)
+        case 'for':
+            switch(token) {
+                case 'in':
+                    return new $AbstractExprCtx(
+                        new $ExprCtx(context,'target list', true), false)
+                case ':':
+                    if(context.tree.length < 2){ // issue 638
+                        $_SyntaxError(context, 'token ' + token + ' after ' +
+                            context)
+                    }
+                    return $BodyCtx(context)
+            }
+            $_SyntaxError(context, 'token ' + token + ' after ' + context)
+        case 'from':
+            switch(token) {
+                case 'id':
+                    if(context.expect == 'id'){
+                        context.add_name(arguments[2])
+                        context.expect = ','
+                        return context
+                    }
+                    if(context.expect == 'alias'){
+                        context.aliases[context.names[context.names.length - 1]] =
+                            arguments[2]
+                        context.expect = ','
+                        return context
+                    }
+                case '.':
+                  if(context.expect == 'module'){
+                      if(token == 'id'){context.module += arguments[2]}
+                      else{context.module += '.'}
+                      return context
+                  }
+                case 'import':
+                    if(context.expect == 'module'){
+                        context.expect = 'id'
+                        return context
+                    }
+                case 'op':
+                    if(arguments[2] == '*' && context.expect == 'id'
+                            && context.names.length == 0){
+                       if($get_scope(context).ntype !== 'module'){
+                           $_SyntaxError(context,
+                               ["import * only allowed at module level"])
+                       }
+                       context.add_name('*')
+                       context.expect = 'eol'
+                       return context
+                    }
+                case ',':
+                    if(context.expect == ','){
+                        context.expect = 'id'
+                        return context
+                    }
+                case 'eol':
+                    switch(context.expect) {
+                        case ',':
+                        case 'eol':
+                            context.bind_names()
+                            return $transition(context.parent, token)
+                        case 'id':
+                            $_SyntaxError(context,
+                                ['trailing comma not allowed without ' +
+                                    'surrounding parentheses'])
+                        default:
+                            $_SyntaxError(context, ['invalid syntax'])
+                    }
+                case 'as':
+                  if (context.expect == ',' || context.expect == 'eol'){
+                     context.expect = 'alias'
+                     return context
+                  }
+                case '(':
+
+                    if (context.expect == 'id') {
+                        context.expect='id'
+                        return context
+                    }
+                case ')':
+                  if (context.expect == ',' || context.expect=='id') {
+                     context.expect='eol'
+                     return context
+                  }
+            }
+            $_SyntaxError(context, 'token ' + token + ' after ' + context)
+        case 'func_arg_id':
+            switch(token) {
+                case '=':
+                    if (context.expect == '='){
+                       context.has_default = true
+                       var def_ctx = context.parent.parent
+                       if(context.parent.has_star_arg){
+                           def_ctx.default_list.push(def_ctx.after_star.pop())
+                       }else{
+                           def_ctx.default_list.push(def_ctx.positional_list.pop())
+                       }
+                       return new $AbstractExprCtx(context, false)
+                    }
+                    break
+                case ',':
+                case ')':
+                    if(context.parent.has_default && context.tree.length == 0 &&
+                            context.parent.has_star_arg === undefined){
+                        $pos -= context.name.length
+                        $_SyntaxError(context,
+                            ['non-default argument follows default argument'])
+                    }else{
+                        return $transition(context.parent, token)
+                    }
+                case ':':
+                    // annotation associated with a function parameter
+                    if(context.has_default){ // issue 610
+                        $_SyntaxError(context, 'token ' + token + ' after ' +
+                            context)
+                    }
+                    return new $AbstractExprCtx(new $AnnotationCtx(context),
+                        false)
+            }
+            $_SyntaxError(context, 'token ' + token + ' after ' + context)
+        case 'func_args':
+            switch (token) {
+                case 'id':
+                    if (context.expect == 'id'){
+                        context.expect = ','
+                        if(context.names.indexOf(arguments[2]) > -1){
+                          $_SyntaxError(context,
+                              ['duplicate argument ' + arguments[2] +
+                                  ' in function definition'])
+                        }
+                    }
+                    return new $FuncArgIdCtx(context, arguments[2])
+                case ',':
+                    if(context.has_kw_arg){
+                        $_SyntaxError(context,'duplicate kw arg')
+                    }
+                    if(context.expect == ','){
+                        context.expect = 'id'
+                        return context
+                    }
+                    $_SyntaxError(context, 'token ' + token + ' after ' +
+                        context)
+                case ')':
+                    return context.parent
+                case 'op':
+                    var op = arguments[2]
+                    context.expect = ','
+                    if(op == '*'){
+                        if(context.has_star_arg){
+                            $_SyntaxError(context,'duplicate star arg')
+                        }
+                        return new $FuncStarArgCtx(context, '*')
+                    }
+                    if(op == '**'){return new $FuncStarArgCtx(context, '**')}
+                    $_SyntaxError(context, 'token ' + op + ' after ' + context)
+            }
+            $_SyntaxError(context, 'token ' + token + ' after ' + context)
+        case 'func_star_arg':
+            switch(token) {
+                case 'id':
+                    if (context.name === undefined){
+                       if(context.parent.names.indexOf(arguments[2]) > -1){
+                         $_SyntaxError(context,
+                             ['duplicate argument ' + arguments[2] +
+                                 ' in function definition'])
+                       }
+                    }
+                    context.set_name(arguments[2])
+                    context.parent.names.push(arguments[2])
+                    return context
+                case ',':
+                case ')':
+                    if (context.name === undefined){
+                       // anonymous star arg - found in configparser
+                       context.set_name('$dummy')
+                       context.parent.names.push('$dummy')
+                    }
+                    return $transition(context.parent, token)
+                case ':':
+                    // annotation associated with a function parameter
+                    if(context.name === undefined){
+                        $_SyntaxError(context,
+                            'annotation on an unnamed parameter')
+                    }
+                    return new $AbstractExprCtx(
+                        new $AnnotationCtx(context), false)
+            }// switch
+            $_SyntaxError(context, 'token ' + token + ' after ' + context)
+        case 'global':
+            switch(token) {
+                case 'id':
+                    if(context.expect == 'id'){
+                       new $IdCtx(context, arguments[2])
+                       context.add(arguments[2])
+                       context.expect = ','
                        return context
                     }
                     break
-                  case 'dict_or_set_comp':
-                    if (token==='}'){
-                       context.intervals.push($pos)
-                       return $transition(context.parent,token)
+                case ',':
+                    if(context.expect == ','){
+                       context.expect = 'id'
+                       return context
                     }
                     break
-               }
+                case 'eol':
+                    if (context.expect == ','){
+                       return $transition(context.parent, token)
+                    }
+                    break
+            }
+            $_SyntaxError(context, 'token ' + token + ' after ' + context)
+        case 'id':
+            switch(token) {
+                case '=':
+                    if(context.parent.type == 'expr' &&
+                            context.parent.parent !== undefined &&
+                            context.parent.parent.type == 'call_arg'){
+                        return new $AbstractExprCtx(
+                            new $KwArgCtx(context.parent), false)
+                    }
+                    return $transition(context.parent, token, arguments[2])
+                case 'op':
+                    return $transition(context.parent, token, arguments[2])
+                case 'id':
+                case 'str':
+                case 'int':
+                case 'float':
+                case 'imaginary':
+                    if(context.value == "print"){
+                        $_SyntaxError(context,
+                            ["missing parenthesis in call to 'print'"])
+                    }
+                    $_SyntaxError(context, 'token ' + token + ' after ' +
+                        context)
+            }
+            if(context.value == "async"){
+                // Until Python 3.7 async is not a keyword
+                if(token == 'def'){
+                    context.parent.parent.tree = []
+                    var ctx = $transition(context.parent.parent,
+                        token, arguments[2])
+                    ctx.async = true
+                    return ctx
+                }
+            }
 
-               switch(token) {
-                 case ',':
-                   if(context.real==='tuple'){context.has_comma=true}
-                   context.expect = 'id'
-                   return context
-                 case 'for':
-                   // comprehension
-                   if(context.real==='list'){context.real = 'list_comp'}
-                   else{context.real='gen_expr'}
-                   // remove names already referenced in list from the function
-                   // references
-                   context.intervals = [context.start+1]
-                   context.expression = context.tree
-                   context.tree = [] // reset tree
-                   var comp = new $ComprehensionCtx(context)
-                   return new $TargetListCtx(new $CompForCtx(comp))
-               }//switch
-               return $transition(context.parent,token,arguments[2])
-            }else if(context.expect==='id'){
-               switch(context.real) {
-                 case 'tuple':
-                   if (token===')'){
-                      context.closed = true
-                      return context.parent
-                   }
-                   if (token=='eol' && context.implicit===true){
-                      context.closed = true
-                      return $transition(context.parent,token)
-                   }
-                   break
-                 case 'gen_expr':
-                   if (token===')'){
-                      context.closed = true
-                      return $transition(context.parent,token)
-                   }
-                   break
-                 case 'list':
-                   if (token===']'){
-                      context.closed = true
-                      return context
-                   }
-                   break
-               }// switch
+            return $transition(context.parent, token, arguments[2])
+        case 'import':
+            switch(token) {
+                case 'id':
+                    if(context.expect == 'id'){
+                       new $ImportedModuleCtx(context, arguments[2])
+                       context.expect = ','
+                       return context
+                    }
+                    if(context.expect == 'qual'){
+                       context.expect = ','
+                       context.tree[context.tree.length - 1].name +=
+                           '.' + arguments[2]
+                       context.tree[context.tree.length - 1].alias +=
+                           '.' + arguments[2]
+                       return context
+                    }
+                    if(context.expect == 'alias'){
+                       context.expect = ','
+                       context.tree[context.tree.length - 1].alias =
+                           arguments[2]
+                       return context
+                    }
+                    break
+                case '.':
+                    if(context.expect == ','){
+                        context.expect = 'qual'
+                        return context
+                    }
+                    break
+                case ',':
+                    if(context.expect == ','){
+                       context.expect = 'id'
+                       return context
+                    }
+                    break
+                case 'as':
+                    if(context.expect == ','){
+                       context.expect = 'alias'
+                       return context
+                    }
+                    break
+                case 'eol':
+                    if(context.expect == ','){
+                       context.bind_names()
+                       return $transition(context.parent, token)
+                    }
+                    break
+            }
+            $_SyntaxError(context, 'token ' + token + ' after ' + context)
+        case 'imaginary':
+        case 'int':
+        case 'float':
+            switch(token) {
+                case 'id':
+                case 'imaginary':
+                case 'int':
+                case 'float':
+                case 'str':
+                case 'bytes':
+                case '[':
+                case '(':
+                case '{':
+                case 'not':
+                case 'lamdba':
+                    $_SyntaxError(context, 'token ' + token + ' after ' +
+                        context)
+            }
+            return $transition(context.parent, token, arguments[2])
+        case 'kwarg':
+            if(token == ','){return new $CallArgCtx(context.parent.parent)}
+            return $transition(context.parent, token)
+        case 'lambda':
+            if(token == ':' && context.args === undefined){
+                context.args = context.tree
+                context.tree = []
+                context.body_start = $pos
+                return new $AbstractExprCtx(context, false)
+            }
+            if(context.args !== undefined){ // returning from expression
+                context.body_end = $pos
+                return $transition(context.parent, token)
+            }
+            if(context.args === undefined){
+                return $transition(new $CallCtx(context), token, arguments[2])
+            }
+            $_SyntaxError(context, 'token ' + token + ' after ' + context)
+        case 'list_or_tuple':
+            if(context.closed){
+                if(token == '['){
+                    return new $AbstractExprCtx(
+                        new $SubCtx(context.parent),false)
+                }
+                if(token == '('){return new $CallCtx(context)}
+                return $transition(context.parent, token, arguments[2])
+            }else{
+                if(context.expect == ','){
+                    switch(context.real){
+                        case 'tuple':
+                        case 'gen_expr':
+                            if(token===')'){
+                               context.closed = true
+                               if(context.real == 'gen_expr'){
+                                   context.intervals.push($pos)
+                               }
+                               return context.parent
+                            }
+                            break
+                        case 'list':
+                        case 'list_comp':
+                            if(token == ']'){
+                                 context.closed = true
+                                 if(context.real == 'list_comp'){
+                                     context.intervals.push($pos)
+                                 }
+                                 return context
+                            }
+                            break
+                        case 'dict_or_set_comp':
+                            if(token == '}'){
+                                 context.intervals.push($pos)
+                                 return $transition(context.parent, token)
+                            }
+                            break
+                    }
 
-               switch(token) {
-                 case '=':
-                   if (context.real=='tuple' && context.implicit===true){
-                      context.closed = true
-                      context.parent.tree.pop()
-                      var expr=new $ExprCtx(context.parent,'tuple',false)
-                      expr.tree=[context]
-                      context.parent=expr
-                      return $transition(context.parent,token)
-                   }
-                   break
-                 case ')':
-                   break
-                 case ']':
-                   if(context.real=='tuple' && context.implicit===true){
-                       // Syntax like d[1,]=2
-                       return $transition(context.parent, token, arguments[2])
-                   }else{
-                       break
-                   }
-                 case ',':
-                   $_SyntaxError(context,'unexpected comma inside list')
-                 default:
-                   context.expect = ','
-                   var expr = new $AbstractExprCtx(context,false)
-                   return $transition(expr,token,arguments[2])
-               }//switch
+                    switch(token) {
+                        case ',':
+                            if(context.real == 'tuple'){
+                                context.has_comma = true
+                            }
+                            context.expect = 'id'
+                            return context
+                        case 'for':
+                            // comprehension
+                            if(context.real == 'list'){
+                                context.real = 'list_comp'
+                            }
+                            else{context.real = 'gen_expr'}
+                            // remove names already referenced in list from
+                            // the function references
+                            context.intervals = [context.start + 1]
+                            context.expression = context.tree
+                            context.tree = [] // reset tree
+                            var comp = new $ComprehensionCtx(context)
+                            return new $TargetListCtx(new $CompForCtx(comp))
+                    }
+                    return $transition(context.parent,token,arguments[2])
+                }else if(context.expect == 'id'){
+                    switch(context.real) {
+                        case 'tuple':
+                            if (token == ')'){
+                              context.closed = true
+                              return context.parent
+                            }
+                            if (token == 'eol' && context.implicit === true){
+                              context.closed = true
+                              return $transition(context.parent, token)
+                            }
+                            break
+                        case 'gen_expr':
+                            if (token == ')'){
+                              context.closed = true
+                              return $transition(context.parent, token)
+                            }
+                            break
+                        case 'list':
+                            if (token == ']'){
+                              context.closed = true
+                              return context
+                            }
+                            break
+                    }
 
-            }else{return $transition(context.parent,token,arguments[2])}
-        }
-      case 'list_comp':
-        switch(token) {
-          case ']':
-            return context.parent
-          case 'in':
-            return new $ExprCtx(context,'iterable',true)
-          case 'if':
-            return new $ExprCtx(context,'condition',true)
-        }
-        $_SyntaxError(context,'token '+token+' after '+context)
+                    switch(token) {
+                        case '=':
+                            if (context.real == 'tuple' &&
+                                    context.implicit === true){
+                                context.closed = true
+                                context.parent.tree.pop()
+                                var expr = new $ExprCtx(context.parent,
+                                    'tuple', false)
+                                expr.tree = [context]
+                                context.parent = expr
+                                return $transition(context.parent, token)
+                            }
+                            break
+                        case ')':
+                            break
+                        case ']':
+                            if(context.real == 'tuple' &&
+                                    context.implicit===true){
+                                // Syntax like d[1,]=2
+                                return $transition(context.parent, token,
+                                    arguments[2])
+                            }else{
+                                break
+                            }
+                        case ',':
+                            $_SyntaxError(context,
+                                'unexpected comma inside list')
+                        default:
+                            context.expect = ','
+                            var expr = new $AbstractExprCtx(context, false)
+                            return $transition(expr,token, arguments[2])
+                    }
+
+                }else{
+                    return $transition(context.parent, token, arguments[2])
+                }
+            }
+        case 'list_comp':
+            switch(token) {
+                case ']':
+                    return context.parent
+                case 'in':
+                    return new $ExprCtx(context, 'iterable', true)
+                case 'if':
+                    return new $ExprCtx(context, 'condition', true)
+            }
+            $_SyntaxError(context, 'token ' + token + ' after ' + context)
       case 'node':
-        switch(token) {
-          case 'id':
-          case 'imaginary':
-          case 'int':
-          case 'float':
-          case 'str':
-          case 'bytes':
-          case '[':
-          case '(':
-          case '{':
-          case 'not':
-          case 'lamdba':
-          case '.':
-            var expr = new $AbstractExprCtx(context,true)
-            return $transition(expr,token,arguments[2])
-          case 'op':
-            switch(arguments[2]) {
-              case '*':
-              case '+':
-              case '-':
-              case '~':
-                var expr = new $AbstractExprCtx(context,true)
-                return $transition(expr,token,arguments[2])
-            }// switch
-            break
-          case 'class':
-            return new $ClassCtx(context)
-          case 'continue':
-            return new $ContinueCtx(context)
-          case '__debugger__':
-            return new $DebuggerCtx(context)
-          case 'break':
-            return new $BreakCtx(context)
-          case 'def':
-            return new $DefCtx(context)
-          case 'for':
-            return new $TargetListCtx(new $ForExpr(context))
-          case 'if':
-          case 'while':
-            return new $AbstractExprCtx(new $ConditionCtx(context,token),false)
-          case 'elif':
-            var previous = $previous(context)
-            if(['condition'].indexOf(previous.type)==-1 ||
-                previous.token=='while'){
-                $_SyntaxError(context, 'elif after '+previous.type)
+          switch(token) {
+              case 'id':
+              case 'imaginary':
+              case 'int':
+              case 'float':
+              case 'str':
+              case 'bytes':
+              case '[':
+              case '(':
+              case '{':
+              case 'not':
+              case 'lamdba':
+              case '.':
+                  var expr = new $AbstractExprCtx(context,true)
+                  return $transition(expr,token,arguments[2])
+              case 'op':
+                  switch(arguments[2]) {
+                      case '*':
+                      case '+':
+                      case '-':
+                      case '~':
+                          var expr = new $AbstractExprCtx(context, true)
+                          return $transition(expr, token, arguments[2])
+                  }
+                  break
+              case 'class':
+                  return new $ClassCtx(context)
+              case 'continue':
+                  return new $ContinueCtx(context)
+              case '__debugger__':
+                  return new $DebuggerCtx(context)
+              case 'break':
+                  return new $BreakCtx(context)
+              case 'def':
+                  return new $DefCtx(context)
+              case 'for':
+                  return new $TargetListCtx(new $ForExpr(context))
+              case 'if':
+              case 'while':
+                  return new $AbstractExprCtx(
+                      new $ConditionCtx(context, token), false)
+              case 'elif':
+                  var previous = $previous(context)
+                  if(['condition'].indexOf(previous.type) == -1 ||
+                          previous.token == 'while'){
+                      $_SyntaxError(context, 'elif after ' + previous.type)
+                  }
+                  return new $AbstractExprCtx(
+                      new $ConditionCtx(context, token), false)
+              case 'else':
+                  var previous = $previous(context)
+                  if(['condition', 'except', 'for'].
+                          indexOf(previous.type) == -1){
+                      $_SyntaxError(context, 'else after ' + previous.type)
+                  }
+                  return new $SingleKwCtx(context,token)
+              case 'finally':
+                  var previous = $previous(context)
+                  if(['try', 'except'].indexOf(previous.type) == -1 &&
+                          (previous.type != 'single_kw' ||
+                              previous.token != 'else')){
+                      $_SyntaxError(context, 'finally after ' + previous.type)
+                  }
+                  return new $SingleKwCtx(context,token)
+              case 'try':
+                  return new $TryCtx(context)
+              case 'except':
+                  var previous = $previous(context)
+                  if(['try', 'except'].indexOf(previous.type) == -1){
+                      $_SyntaxError(context, 'except after ' + previous.type)
+                  }
+                  return new $ExceptCtx(context)
+              case 'assert':
+                  return new $AbstractExprCtx(
+                      new $AssertCtx(context), 'assert', true)
+              case 'from':
+                  return new $FromCtx(context)
+              case 'import':
+                  return new $ImportCtx(context)
+              case 'global':
+                  return new $GlobalCtx(context)
+              case 'nonlocal':
+                  return new $NonlocalCtx(context)
+              case 'lambda':
+                  return new $LambdaCtx(context)
+              case 'pass':
+                  return new $PassCtx(context)
+              case 'raise':
+                  return new $AbstractExprCtx(new $RaiseCtx(context), true)
+              case 'return':
+                  return new $AbstractExprCtx(new $ReturnCtx(context),true)
+              case 'with':
+                  return new $AbstractExprCtx(new $WithCtx(context),false)
+              case 'yield':
+                  return new $AbstractExprCtx(new $YieldCtx(context),true)
+              case 'del':
+                  return new $AbstractExprCtx(new $DelCtx(context),true)
+              case '@':
+                  return new $DecoratorCtx(context)
+              case 'eol':
+                  if(context.tree.length == 0){ // might be the case after a :
+                      context.node.parent.children.pop()
+                      return context.node.parent.context
+                  }
+                  return context
+          }
+          console.log('syntax error', 'token', token, 'after', context)
+          $_SyntaxError(context, 'token ' + token + ' after ' + context)
+        case 'not':
+            switch(token) {
+                case 'in':
+                    // not is always in an expression : remove it
+                    context.parent.parent.tree.pop() // remove 'not'
+                    return new $ExprCtx(new $OpCtx(context.parent, 'not_in'),
+                        'op', false)
+                case 'id':
+                case 'imaginary':
+                case 'int':
+                case 'float':
+                case 'str':
+                case 'bytes':
+                case '[':
+                case '(':
+                case '{':
+                case '.':
+                case 'not':
+                case 'lamdba':
+                    var expr = new $AbstractExprCtx(context, false)
+                    return $transition(expr, token, arguments[2])
+                case 'op':
+                  var a = arguments[2]
+                  if('+' == a || '-' == a || '~' == a){
+                    var expr = new $AbstractExprCtx(context, false)
+                    return $transition(expr, token, arguments[2])
+                  }
             }
-            return new $AbstractExprCtx(new $ConditionCtx(context,token),false)
-          case 'else':
-            var previous = $previous(context)
-            if(['condition', 'except', 'for'].indexOf(previous.type)==-1){
-                $_SyntaxError(context, 'else after '+previous.type)
+            return $transition(context.parent, token)
+        case 'op':
+            if(context.op === undefined){
+                $_SyntaxError(context,['context op undefined ' + context])
             }
-            return new $SingleKwCtx(context,token)
-          case 'finally':
-            var previous = $previous(context)
-            if(['try', 'except'].indexOf(previous.type)==-1 &&
-                (previous.type!='single_kw' || previous.token!='else')){
-                $_SyntaxError(context, 'finally after '+previous.type)
+            if(context.op.substr(0,5) == 'unary' && token != 'eol'){
+                if(context.parent.type == 'assign' ||
+                        context.parent.type == 'return'){
+                    // create and return a tuple whose first element is context
+                    context.parent.tree.pop()
+                    var t = new $ListOrTupleCtx(context.parent, 'tuple')
+                    t.tree.push(context)
+                    context.parent = t
+                    return t
+                }
             }
-            return new $SingleKwCtx(context,token)
-          case 'try':
-            return new $TryCtx(context)
-          case 'except':
-            var previous = $previous(context)
-            if(['try', 'except'].indexOf(previous.type)==-1){
-                $_SyntaxError(context, 'except after '+previous.type)
-            }
-            return new $ExceptCtx(context)
-          case 'assert':
-            return new $AbstractExprCtx(new $AssertCtx(context),'assert',true)
-          case 'from':
-            return new $FromCtx(context)
-          case 'import':
-            return new $ImportCtx(context)
-          case 'global':
-            return new $GlobalCtx(context)
-          case 'nonlocal':
-            return new $NonlocalCtx(context)
-          case 'lambda':
-            return new $LambdaCtx(context)
-          case 'pass':
-            return new $PassCtx(context)
-          case 'raise':
-            return new $AbstractExprCtx(new $RaiseCtx(context), true)
-          case 'return':
-            return new $AbstractExprCtx(new $ReturnCtx(context),true)
-          case 'with':
-            return new $AbstractExprCtx(new $WithCtx(context),false)
-          case 'yield':
-            return new $AbstractExprCtx(new $YieldCtx(context),true)
-          case 'del':
-            return new $AbstractExprCtx(new $DelCtx(context),true)
-          case '@':
-            return new $DecoratorCtx(context)
-          case 'eol':
-            if(context.tree.length===0){ // might be the case after a :
-                context.node.parent.children.pop()
-                return context.node.parent.context
-            }
-            return context
-        }
-        console.log('syntax error', 'token', token, 'after', context)
-        $_SyntaxError(context,'token '+token+' after '+context)
-      case 'not':
-        switch(token) {
-          case 'in':
-            // not is always in an expression : remove it
-            context.parent.parent.tree.pop() // remove 'not'
-            return new $ExprCtx(new $OpCtx(context.parent,'not_in'),'op',false)
-          case 'id':
-          case 'imaginary':
-          case 'int':
-          case 'float':
-          case 'str':
-          case 'bytes':
-          case '[':
-          case '(':
-          case '{':
-          case '.':
-          case 'not':
-          case 'lamdba':
-            var expr = new $AbstractExprCtx(context,false)
-            return $transition(expr,token,arguments[2])
-          case 'op':
-            var a=arguments[2]
-            if ('+' == a || '-' == a || '~' == a) {
-              var expr = new $AbstractExprCtx(context,false)
-              return $transition(expr,token,arguments[2])
-            }
-        }//switch
-        return $transition(context.parent,token)
-      case 'op':
-        if(context.op===undefined){
-            $_SyntaxError(context,['context op undefined '+context])
-        }
-        if(context.op.substr(0,5)=='unary' && token != 'eol'){
-            if(context.parent.type=='assign' || context.parent.type=='return'){
-                // create and return a tuple whose first element is context
-                context.parent.tree.pop()
-                var t = new $ListOrTupleCtx(context.parent,'tuple')
-                t.tree.push(context)
-                context.parent = t
-                return t
-            }
-        }
 
-        switch(token) {
-          case 'id':
-          case 'imaginary':
-          case 'int':
-          case 'float':
-          case 'str':
-          case 'bytes':
-          case '[':
-          case '(':
-          case '{':
-          case '.':
-          case 'not':
-          case 'lamdba':
-            return $transition(new $AbstractExprCtx(context,false),token,arguments[2])
-          case 'op':
-            switch(arguments[2]) {
-              case '+':
-              case '-':
-              case '~':
-                return new $UnaryCtx(context,arguments[2])
-            }//switch
-          default:
-            if(context.tree[context.tree.length-1].type=='abstract_expr'){
-              $_SyntaxError(context,'token '+token+' after '+context)
+            switch(token) {
+                case 'id':
+                case 'imaginary':
+                case 'int':
+                case 'float':
+                case 'str':
+                case 'bytes':
+                case '[':
+                case '(':
+                case '{':
+                case '.':
+                case 'not':
+                case 'lamdba':
+                    return $transition(new $AbstractExprCtx(context, false),
+                        token, arguments[2])
+                case 'op':
+                    switch(arguments[2]){
+                        case '+':
+                        case '-':
+                        case '~':
+                            return new $UnaryCtx(context, arguments[2])
+                    }
+                default:
+                    if(context.tree[context.tree.length - 1].type ==
+                            'abstract_expr'){
+                        $_SyntaxError(context, 'token ' + token + ' after ' +
+                            context)
+                    }
             }
-        }// switch
-        var t0=context.tree[0], t1=context.tree[1]
-        if(t0.tree && t1.tree){
-            t0 = t0.tree[0]
-            t1 = t1.tree[0]
-        }
-        return $transition(context.parent,token)
-      case 'packed':
-        if(token==='id'){
-            new $IdCtx(context,arguments[2])
-            context.parent.expect = ','
-            return context.parent
-        }
-        $_SyntaxError(context,'token '+token+' after '+context)
-      case 'pass':
-        if(token==='eol') return context.parent
-        $_SyntaxError(context,'token '+token+' after '+context)
-      case 'raise':
-        switch(token) {
-          case 'id':
-            if (context.tree.length===0){
-               return new $IdCtx(new $ExprCtx(context,'exc',false),arguments[2])
-            }
-            break
-          case 'from':
-            if (context.tree.length>0){
-               return new $AbstractExprCtx(context,false)
-            }
-            break
-          case 'eol':
-            //if(token==='eol')
-            return $transition(context.parent,token)
-        }//switch
-        $_SyntaxError(context,'token '+token+' after '+context)
-      case 'return':
-        return $transition(context.parent,token)
-      case 'single_kw':
-        if(token===':') return $BodyCtx(context)
-        $_SyntaxError(context,'token '+token+' after '+context)
-      case 'star_arg':
-        switch(token) {
-          case 'id':
-            if(context.parent.type=="target_list"){
-                context.tree.push(arguments[2])
+            return $transition(context.parent, token)
+        case 'packed':
+            if(token == 'id'){
+                new $IdCtx(context, arguments[2])
                 context.parent.expect = ','
-                console.log('return parent', context.parent)
                 return context.parent
             }
-            return $transition(new $AbstractExprCtx(context,false),token,arguments[2])
-          case 'imaginary':
-          case 'int':
-          case 'float':
-          case 'str':
-          case 'bytes':
-          case '[':
-          case '(':
-          case '{':
-          case 'not':
-          case 'lamdba':
-            return $transition(new $AbstractExprCtx(context,false),token,arguments[2])
-          case ',':
+            $_SyntaxError(context, 'token ' + token + ' after ' + context)
+        case 'pass':
+            if(token == 'eol'){return context.parent}
+            $_SyntaxError(context, 'token ' + token + ' after ' + context)
+        case 'raise':
+            switch(token) {
+                case 'id':
+                    if (context.tree.length == 0){
+                       return new $IdCtx(new $ExprCtx(context, 'exc', false),
+                           arguments[2])
+                    }
+                    break
+                case 'from':
+                    if(context.tree.length>0){
+                        return new $AbstractExprCtx(context, false)
+                    }
+                    break
+                case 'eol':
+                    return $transition(context.parent, token)
+            }
+            $_SyntaxError(context, 'token ' + token + ' after ' + context)
+        case 'return':
             return $transition(context.parent,token)
-          case ')':
-            return $transition(context.parent,token)
-          case ':':
-            if(context.parent.parent.type==='lambda'){
-              return $transition(context.parent.parent,token)
+        case 'single_kw':
+            if(token == ':'){return $BodyCtx(context)}
+            $_SyntaxError(context, 'token ' + token + ' after ' + context)
+        case 'star_arg':
+            switch(token) {
+                case 'id':
+                    if(context.parent.type == "target_list"){
+                        context.tree.push(arguments[2])
+                        context.parent.expect = ','
+                        return context.parent
+                    }
+                    return $transition(new $AbstractExprCtx(context, false),
+                        token, arguments[2])
+                case 'imaginary':
+                case 'int':
+                case 'float':
+                case 'str':
+                case 'bytes':
+                case '[':
+                case '(':
+                case '{':
+                case 'not':
+                case 'lamdba':
+                    return $transition(new $AbstractExprCtx(context, false),
+                        token, arguments[2])
+                case ',':
+                    return $transition(context.parent, token)
+                case ')':
+                    return $transition(context.parent, token)
+                case ':':
+                    if(context.parent.parent.type == 'lambda'){
+                      return $transition(context.parent.parent, token)
+                    }
             }
-        } //switch
-        $_SyntaxError(context,'token '+token+' after '+context)
-      case 'str':
-        switch(token) {
-          case '[':
-            return new $AbstractExprCtx(new $SubCtx(context.parent),false)
-          case '(':
-            // Strings are not callable. We replace the string by a call to
-            // an object that will raise the correct exception
-            context.parent.tree[0] = context
-            return new $CallCtx(context.parent)
-          case 'str':
-            context.tree.push(arguments[2])
-            return context
-        }//switch
-        return $transition(context.parent,token,arguments[2])
-      case 'sub':
-        // subscription x[a] or slicing x[a:b:c]
-        switch(token) {
-          case 'id':
-          case 'imaginary':
-          case 'int':
-          case 'float':
-          case 'str':
-          case 'bytes':
-          case '[':
-          case '(':
-          case '{':
-          case '.':
-          case 'not':
-          case 'lamdba':
-            var expr = new $AbstractExprCtx(context,false)
-            return $transition(expr,token,arguments[2])
-          case ']':
-            return context.parent
-          case ':':
-            if(context.tree.length==0){
-                new $AbstractExprCtx(context,false)
+            $_SyntaxError(context, 'token ' + token + ' after ' + context)
+        case 'str':
+            switch(token) {
+                case '[':
+                    return new $AbstractExprCtx(new $SubCtx(context.parent),
+                        false)
+                case '(':
+                    // Strings are not callable. We replace the string by a call
+                    // to an object that will raise the correct exception
+                    context.parent.tree[0] = context
+                    return new $CallCtx(context.parent)
+                case 'str':
+                    context.tree.push(arguments[2])
+                    return context
             }
-            return new $AbstractExprCtx(context,false)
-        }
-        $_SyntaxError(context,'token '+token+' after '+context)
-      case 'target_list':
-        switch(token) {
-          case 'id':
-            if(context.expect==='id'){
-              context.expect = ','
-              return new $IdCtx(new $ExprCtx(context, 'target', false),arguments[2])
+            return $transition(context.parent, token, arguments[2])
+        case 'sub':
+            // subscription x[a] or slicing x[a:b:c]
+            switch(token) {
+                case 'id':
+                case 'imaginary':
+                case 'int':
+                case 'float':
+                case 'str':
+                case 'bytes':
+                case '[':
+                case '(':
+                case '{':
+                case '.':
+                case 'not':
+                case 'lamdba':
+                    var expr = new $AbstractExprCtx(context,false)
+                    return $transition(expr, token, arguments[2])
+                case ']':
+                    return context.parent
+                case ':':
+                    if(context.tree.length == 0){
+                        new $AbstractExprCtx(context, false)
+                    }
+                    return new $AbstractExprCtx(context, false)
             }
-          case 'op':
-            if(context.expect=='id' && arguments[2]=='*'){
-                // form "for a, *b in X"
-                return new $PackedCtx(context)
+            $_SyntaxError(context, 'token ' + token + ' after ' + context)
+        case 'target_list':
+            switch(token) {
+                case 'id':
+                    if(context.expect == 'id'){
+                        context.expect = ','
+                        return new $IdCtx(
+                            new $ExprCtx(context, 'target', false),
+                                arguments[2])
+                    }
+                case 'op':
+                    if(context.expect == 'id' && arguments[2] == '*'){
+                        // form "for a, *b in X"
+                        return new $PackedCtx(context)
+                    }
+                case '(':
+                case '[':
+                    if(context.expect == 'id'){
+                      context.expect = ','
+                      return new $TargetListCtx(context)
+                    }
+                case ')':
+                case ']':
+                    if(context.expect == ','){return context.parent}
+                case ',':
+                    if(context.expect == ','){
+                        context.expect = 'id'
+                        return context
+                    }
             }
-          case '(':
-          case '[':
-            if(context.expect==='id'){
-              context.expect = ','
-              return new $TargetListCtx(context)
-            }
-          case ')':
-          case ']':
-            if(context.expect===',') return context.parent
-          case ',':
-            if(context.expect==','){
-              context.expect='id'
-              return context
-            }
-        } //switch
 
-        if(context.expect===',') {
-            return $transition(context.parent,token,arguments[2])
-        }else if(token=='in'){
-            // Support syntax "for x, in ..."
-            return $transition(context.parent,token,arguments[2])
-        }
-        $_SyntaxError(context,'token '+token+' after '+context)
-      case 'ternary':
-        if(token==='else'){
-            context.in_else = true
-            return new $AbstractExprCtx(context,false)
-        }
-        return $transition(context.parent,token,arguments[2])
-      case 'try':
-        if(token===':') return $BodyCtx(context)
-        $_SyntaxError(context,'token '+token+' after '+context)
-      case 'unary':
-        switch(token) {
-          case 'int':
-          case 'float':
-          case 'imaginary':
-            // replace by real value of integer or float
-            // parent of context is a $ExprCtx
-            // grand-parent is a $AbstractExprCtx
-            // we remove the $ExprCtx and trigger a transition
-            // from the $AbstractExpCtx with an integer or float
-            // of the correct value
-            console.log(token,arguments[2],'after',context)
-            var expr = context.parent
-            context.parent.parent.tree.pop()
-            var value = arguments[2]
-            if(context.op==='-'){value="-"+value}
-            else if(context.op==='~'){value=~value}
-            return $transition(context.parent.parent,token,value)
-          case 'id':
-            // replace by x.__neg__(), x.__invert__ or x.__pos__
-            context.parent.parent.tree.pop()
-            var expr = new $ExprCtx(context.parent.parent,'call',false)
-            var expr1 = new $ExprCtx(expr,'id',false)
-            new $IdCtx(expr1,arguments[2]) // create id
-            var repl = new $AttrCtx(expr)
-            if(context.op==='+'){repl.name='__pos__'}
-            else if(context.op==='-'){repl.name='__neg__'}
-            else{repl.name='__invert__'}
-            // new context is the expression above the id
-            return expr1
-          case 'op':
-            if ('+' == arguments[2] || '-' == arguments[2]) {
-               var op = arguments[2]
-               if(context.op===op){context.op='+'}else{context.op='-'}
-               return context
+            if(context.expect == ',') {
+                return $transition(context.parent, token, arguments[2])
+            }else if(token == 'in'){
+                // Support syntax "for x, in ..."
+                return $transition(context.parent, token, arguments[2])
             }
-        } //switch
-        return $transition(context.parent,token,arguments[2])
-      case 'with':
-        switch(token) {
-          case 'id':
-            if(context.expect==='id'){
-              context.expect = 'as'
-              return $transition(new $AbstractExprCtx(context,false),token,arguments[2])
+            $_SyntaxError(context, 'token ' + token + ' after ' + context)
+        case 'ternary':
+            if(token == 'else'){
+                context.in_else = true
+                return new $AbstractExprCtx(context, false)
             }
-            if(context.expect==='alias'){
-               if(context.parenth!==undefined){context.expect = ','}
-               else{context.expect=':'}
-               context.set_alias(arguments[2])
-               return context
+            return $transition(context.parent, token, arguments[2])
+        case 'try':
+            if(token == ':'){return $BodyCtx(context)}
+            $_SyntaxError(context, 'token ' + token + ' after ' + context)
+        case 'unary':
+            switch(token) {
+                case 'int':
+                case 'float':
+                case 'imaginary':
+                    // replace by real value of integer or float
+                    // parent of context is a $ExprCtx
+                    // grand-parent is a $AbstractExprCtx
+                    // we remove the $ExprCtx and trigger a transition
+                    // from the $AbstractExpCtx with an integer or float
+                    // of the correct value
+                    var expr = context.parent
+                    context.parent.parent.tree.pop()
+                    var value = arguments[2]
+                    if(context.op == '-'){value = "-" + value}
+                    else if(context.op == '~'){value = ~value}
+                    return $transition(context.parent.parent, token, value)
+                case 'id':
+                    // replace by x.__neg__(), x.__invert__ or x.__pos__
+                    context.parent.parent.tree.pop()
+                    var expr = new $ExprCtx(context.parent.parent, 'call',
+                        false)
+                    var expr1 = new $ExprCtx(expr, 'id', false)
+                    new $IdCtx(expr1,arguments[2]) // create id
+                    var repl = new $AttrCtx(expr)
+                    if(context.op == '+'){repl.name = '__pos__'}
+                    else if(context.op == '-'){repl.name = '__neg__'}
+                    else{repl.name = '__invert__'}
+                    // new context is the expression above the id
+                    return expr1
+                case 'op':
+                    if ('+' == arguments[2] || '-' == arguments[2]) {
+                       var op = arguments[2]
+                       if(context.op === op){context.op = '+'}
+                       else{context.op = '-'}
+                       return context
+                    }
             }
-            break
-          case 'as':
-            return new $AbstractExprCtx(new $AliasCtx(context))
-          case ':':
-            switch(context.expect) {
-              case 'id':
-              case 'as':
-              case ':':
-               return $BodyCtx(context)
+            return $transition(context.parent, token, arguments[2])
+        case 'with':
+            switch(token) {
+                case 'id':
+                    if(context.expect == 'id'){
+                        context.expect = 'as'
+                        return $transition(
+                            new $AbstractExprCtx(context, false), token,
+                                arguments[2])
+                    }
+                    if(context.expect == 'alias'){
+                        if(context.parenth !== undefined){
+                            context.expect = ','
+                        }
+                        else{context.expect = ':'}
+                        context.set_alias(arguments[2])
+                        return context
+                    }
+                    break
+                case 'as':
+                    return new $AbstractExprCtx(new $AliasCtx(context))
+                case ':':
+                    switch(context.expect) {
+                        case 'id':
+                        case 'as':
+                        case ':':
+                            return $BodyCtx(context)
+                    }
+                    break
+                case '(':
+                    if(context.expect == 'id' && context.tree.length == 0){
+                        context.parenth = true
+                        return context
+                    }else if(context.expect == 'alias'){
+                       context.expect = ':'
+                       return new $TargetListCtx(context, false)
+                    }
+                    break
+                case ')':
+                    if(context.expect == ',' || context.expect == 'as') {
+                       context.expect = ':'
+                       return context
+                    }
+                    break
+                case ',':
+                    if(context.parenth !== undefined &&
+                            context.has_alias === undefined &&
+                            (context.expect == ',' || context.expect == 'as')){
+                        context.expect = 'id'
+                        return context
+                    }else if(context.expect == 'as'){
+                        context.expect = 'id'
+                        return context
+                    }else if(context.expect == ':'){
+                        context.expect = 'id'
+                        return context
+                    }
+                    break
             }
-            break
-          case '(':
-            if(context.expect==='id' && context.tree.length===0){
-               context.parenth = true
-               return context
-            }else if(context.expect=='alias'){
-               context.expect = ':'
-               return new $TargetListCtx(context,false)
+            $_SyntaxError(context, 'token ' + token + ' after ' +
+                context.expect)
+        case 'yield':
+            if(token == 'from'){ // form "yield from <expr>"
+                if(context.tree[0].type != 'abstract_expr'){
+                    // 'from' must follow immediately "from"
+                    $_SyntaxError(context, "'from' must follow 'yield'")
+                }
+                context.from = true
+                return context.tree[0]
             }
-            break
-          case ')':
-            if (context.expect == ',' || context.expect == 'as') {
-               context.expect = ':'
-               return context
-            }
-            break
-          case ',':
-            if(context.parenth!==undefined && context.has_alias === undefined &&
-              (context.expect == ',' || context.expect == 'as')) {
-                context.expect='id'
-                return context
-            }else if(context.expect=='as'){
-                context.expect = 'id'
-                return context
-            }else if(context.expect==':'){
-                context.expect = 'id'
-                return context
-            }
-            break
-        }//switch
-        $_SyntaxError(context,'token '+token+' after '+context.expect)
-      case 'yield':
-        if(token=='from'){ // form "yield from <expr>"
-            if(context.tree[0].type!='abstract_expr'){
-                // 'from' must follow immediately "from"
-                $_SyntaxError(context,"'from' must follow 'yield'")
-            }
-            context.from = true
-            return context.tree[0]
-            //context.from = true
-            //context.tree = []
-            //return new $AbstractExprCtx(context, true)
-        }
-        return $transition(context.parent,token)
-    } // switch(context.type)
+            return $transition(context.parent, token)
+    }
 }
 
-$B.forbidden = ['alert', 'arguments', 'case', 'catch', 'constructor', 'Date',
-    'delete', 'default', 'document', 'enum', 'eval', 'extends', 'Error',
-    'history','function', 'length', 'location', 'Math', 'new', 'null',
-    'Number', 'RegExp', 'super', 'this','throw', 'var', 'window',
-    'toLocaleString', 'toString', 'message']
-$B.aliased_names = {}
-for(var i=0;i<$B.forbidden.length;i++){$B.aliased_names[$B.forbidden[i]]=true}
+// Names that can't be given to variable names or attributes
+$B.forbidden = ["alert", "arguments", "case", "catch", "constructor", "Date",
+    "delete", "default", "document", "enum", "eval", "extends", "Error",
+    "history", "function", "length", "location", "Math", "new", "null",
+    "Number", "RegExp", "super", "this","throw", "var", "window",
+    "toLocaleString", "toString", "message"]
+$B.aliased_names = $B.list2obj($B.forbidden)
 
-var s_escaped = 'abfnrtvxuU"0123456789'+"'"+'\\', is_escaped={}
-for(var i=0;i<s_escaped.length;i++){is_escaped[s_escaped.charAt(i)]=true}
+var s_escaped = 'abfnrtvxuU"0123456789' + "'" + '\\',
+    is_escaped = {}
+for(var i = 0; i < s_escaped.length; i++){
+    is_escaped[s_escaped.charAt(i)]=true
+}
 
-function $tokenize(src,module,locals_id,parent_block,line_info){
-    var br_close = {")":"(","]":"[","}":"{"}
-    var br_stack = ""
-    var br_pos = []
-    var kwdict = ["class", "return", "break", "for","lambda","try","finally",
-        "raise", "def", "from", "nonlocal", "while", "del", "global", "with",
-        "as", "elif", "else", "if", "yield", "assert", "import", "except",
-        "raise","in", "pass","with","continue","__debugger__"
+function $tokenize(src, module, locals_id, parent_block, line_info){
+    var br_close = {")": "(", "]": "[", "}": "{"},
+        br_stack = "",
+        br_pos = []
+    var kwdict = [
+        "class", "return", "break", "for", "lambda", "try", "finally",
+        "raise", "def", "from", "nonlocal", "while", "del", "global",
+        "with", "as", "elif", "else", "if", "yield", "assert", "import",
+        "except", "raise", "in", "pass", "with", "continue", "__debugger__"
         ]
     var unsupported = []
-    var $indented = ['class','def','for','condition','single_kw','try','except','with']
+    var $indented = [
+        "class", "def", "for", "condition", "single_kw", "try", "except",
+        "with"
+    ]
     // from https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Reserved_Words
 
     var int_pattern = new RegExp("^\\d+(j|J)?"),
@@ -7283,8 +7379,7 @@ function $tokenize(src,module,locals_id,parent_block,line_info){
     root.binding = {
         __doc__: true,
         __name__: true,
-
-__file__: true
+        __file__: true
     }
 
     root.parent_block = parent_block
@@ -7300,59 +7395,62 @@ __file__: true
         indent = null,
         string_modifier = false
 
-    if(typeof src=="object"){
+    if(typeof src == "object"){
         root.is_comp = src.is_comp
         src = src.src
     }
     root.src = src
     var lnum = 1
-    while(pos<src.length){
+    while(pos < src.length){
         var car = src.charAt(pos)
         // build tree structure from indentation
-        if(indent===null){
+        if(indent === null){
             var indent = 0
-            while(pos<src.length){
-                var _s=src.charAt(pos)
-                if(_s==" "){indent++;pos++}
-                else if(_s=="\t"){
+            while(pos < src.length){
+                var _s = src.charAt(pos)
+                if(_s == " "){indent++; pos++}
+                else if(_s == "\t"){
                     // tab : fill until indent is multiple of 8
-                    indent++;pos++
-                    if(indent%8>0) indent+=8-indent%8
+                    indent++; pos++
+                    if(indent % 8 > 0){indent += 8 - indent % 8}
                 }else{break}
             }
             // ignore empty lines
-            var _s=src.charAt(pos)
-            if(_s=='\n'){pos++;lnum++;indent=null;continue}
-            else if(_s==='#'){ // comment
+            var _s = src.charAt(pos)
+            if(_s == '\n'){pos++; lnum++; indent=null; continue}
+            else if(_s == '#'){ // comment
                 var offset = src.substr(pos).search(/\n/)
-                if(offset===-1){break}
-                pos+=offset+1;lnum++;indent=null;continue
+                if(offset == -1){break}
+                pos += offset + 1
+                lnum++
+                indent = null
+                continue
             }
             new_node.indent = indent
             new_node.line_num = lnum
             new_node.module = module
             // attach new node to node with indentation immediately smaller
-            if(indent>current.indent){
+            if(indent > current.indent){
                 // control that parent ended with ':'
-                if(context!==null){
-                    if($indented.indexOf(context.tree[0].type)==-1){
+                if(context !== null){
+                    if($indented.indexOf(context.tree[0].type) == -1){
                         $pos = pos
-                        $_SyntaxError(context,'unexpected indent',pos)
+                        $_SyntaxError(context, 'unexpected indent', pos)
                     }
                 }
                 // add a child to current node
                 current.add(new_node)
-            }else if(indent<=current.indent &&
-                $indented.indexOf(context.tree[0].type)>-1 &&
-                context.tree.length<2){
-                    $pos = pos
-                    $_SyntaxError(context,'expected an indented block',pos)
+            }else if(indent <= current.indent &&
+                    $indented.indexOf(context.tree[0].type) > -1 &&
+                    context.tree.length < 2){
+                $pos = pos
+                $_SyntaxError(context, 'expected an indented block',pos)
             }else{ // same or lower level
-                while(indent!==current.indent){
+                while(indent !== current.indent){
                     current = current.parent
-                    if(current===undefined || indent>current.indent){
+                    if(current === undefined || indent > current.indent){
                         $pos = pos
-                        $_SyntaxError(context,'unexpected indent',pos)
+                        $_SyntaxError(context, 'unexpected indent', pos)
                     }
                 }
                 current.parent.add(new_node)
@@ -7362,16 +7460,16 @@ __file__: true
             continue
         }
         // comment
-        if(car=="#"){
-            var end = src.substr(pos+1).search('\n')
-            if(end==-1){end=src.length-1}
+        if(car == "#"){
+            var end = src.substr(pos + 1).search('\n')
+            if(end == -1){end = src.length-1}
             // Keep track of comment positions
             root.comments.push([pos, end])
-            pos += end+1;
+            pos += end + 1
             continue
         }
         // string
-        if(car=='"' || car=="'"){
+        if(car == '"' || car == "'"){
             var raw = context.type == 'str' && context.raw,
                 bytes = false,
                 fstring = false,
@@ -7379,46 +7477,53 @@ __file__: true
                 end = null;
             if(string_modifier){
                 switch(string_modifier) {
-                  case 'r': // raw string
-                    raw = true
-                    break
-                  case 'u':
-                    // in string literals, '\U' and '\u' escapes in raw strings
-                    // are not treated specially.
-                    break
-                  case 'b':
-                    bytes = true
-                    break
-                  case 'rb':
-                  case 'br':
-                    bytes=true;raw=true
-                    break
-                  case 'f':
-                    fstring = true
-                    sm_length = 1
-                    break
-                  case 'fr', 'rf':
-                    fstring = true
-                    sm_length = 2
-                    raw = true
-                    break
+                    case 'r': // raw string
+                        raw = true
+                        break
+                    case 'u':
+                        // in string literals, '\U' and '\u' escapes in raw strings
+                        // are not treated specially.
+                        break
+                    case 'b':
+                        bytes = true
+                        break
+                    case 'rb':
+                    case 'br':
+                        bytes=true;raw=true
+                        break
+                    case 'f':
+                        fstring = true
+                        sm_length = 1
+                        break
+                    case 'fr', 'rf':
+                        fstring = true
+                        sm_length = 2
+                        raw = true
+                        break
                 }
                 string_modifier = false
             }
-            if(src.substr(pos,3)==car+car+car){_type="triple_string";end=pos+3}
-            else{_type="string";end=pos+1}
-            var escaped = false
-            var zone = car
-            var found = false
-            while(end<src.length){
+            if(src.substr(pos, 3) == car + car + car){
+                _type = "triple_string"
+                end = pos + 3
+            }else{
+                _type = "string"
+                end = pos + 1
+            }
+            var escaped = false,
+                zone = car,
+                found = false
+            while(end < src.length){
                 if(escaped){
-                    zone+=src.charAt(end)
-                    if(raw && src.charAt(end)=='\\'){zone+='\\'}
-                    escaped=false;end+=1
-                }else if(src.charAt(end)=="\\"){
+                    zone += src.charAt(end)
+                    if(raw && src.charAt(end) == '\\'){zone += '\\'}
+                    escaped = false
+                    end++
+                }else if(src.charAt(end) == "\\"){
                     if(raw){
-                        if(end<src.length-1 && src.charAt(end+1)==car){
-                            zone += '\\\\'+car
+                        if(end < src.length - 1 &&
+                                src.charAt(end + 1) == car){
+                            zone += '\\\\' + car
                             end += 2
                         }else{
                             zone += '\\\\'
@@ -7426,50 +7531,51 @@ __file__: true
                         }
                         escaped = true
                     } else {
-                        if(src.charAt(end+1)=='\n'){
+                        if(src.charAt(end + 1) == '\n'){
                             // explicit line joining inside strings
                             end += 2
                             lnum++
-                        }else if(src.substr(end+1, 2)=='N{'){
+                        }else if(src.substr(end + 1, 2)=='N{'){
                             // Unicode literal ?
                             var end_lit = end + 3,
                                 re = new RegExp("[-A-Z0-9 ]+"),
                                 search = re.exec(src.substr(end_lit))
-                            if(search===null){
+                            if(search === null){
                                 $_SyntaxError(context,"(unicode error) " +
-                                    "malformed \\N character escape",pos)
+                                    "malformed \\N character escape", pos)
                             }
                             var end_lit = end_lit + search[0].length
                             if(src.charAt(end_lit) != "}"){
-                                $_SyntaxError(context,"(unicode error) " +
-                                    "malformed \\N character escape",pos)
+                                $_SyntaxError(context, "(unicode error) " +
+                                    "malformed \\N character escape", pos)
                             }
                             var description = search[0]
                             // Load unicode table if not already loaded
-                            if($B.unicodedb===undefined){
+                            if($B.unicodedb === undefined){
                                 var xhr = new XMLHttpRequest
                                 xhr.open("GET", $B.brython_path+"unicode.txt",
                                     false)
                                 xhr.onreadystatechange = function(){
-                                    if(this.readyState===4){
-                                        if(this.status===200){
-                                            $B.unicodedb=this.responseText
+                                    if(this.readyState == 4){
+                                        if(this.status == 200){
+                                            $B.unicodedb = this.responseText
                                         }else{
-                                            console.log("Warning - could not "+
+                                            console.log("Warning - could not " +
                                                 "load unicode.txt")
                                         }
                                     }
                                 }
                                 xhr.send()
                             }
-                            if($B.unicodedb!==undefined){
-                                var re = new RegExp("^([0-9A-F]+);"+description+"$", "m")
+                            if($B.unicodedb !== undefined){
+                                var re = new RegExp("^([0-9A-F]+);" +
+                                    description + "$", "m")
                                 search = re.exec($B.unicodedb)
-                                if(search===null){
+                                if(search === null){
                                     $_SyntaxError(context,"(unicode error) " +
                                         "unknown Unicode character name",pos)
                                 }
-                                if(search[1].length==4){
+                                if(search[1].length == 4){
                                     zone += "\\u" + search[1]
                                     end = end_lit + 1
                                 }else{
@@ -7479,41 +7585,45 @@ __file__: true
                                 end++
                             }
                         } else {
-                            if(end < src.length-1 &&
-                                is_escaped[src.charAt(end+1)]==undefined){
+                            if(end < src.length - 1 &&
+                                is_escaped[src.charAt(end + 1)] === undefined){
                                     zone += '\\'
                             }
-                            zone+='\\'
-                            escaped=true;end+=1
+                            zone += '\\'
+                            escaped = true
+                            end++
                         }
                     }
-                } else if(src.charAt(end)=='\n' && _type!='triple_string'){
+                }else if(src.charAt(end) == '\n' && _type != 'triple_string'){
                     // In a string with single quotes, line feed not following
                     // a backslash raises SyntaxError
                     $pos = end
                     $_SyntaxError(context, ["EOL while scanning string literal"])
-                } else if(src.charAt(end)==car){
-                    if(_type=="triple_string" && src.substr(end,3)!=car+car+car){
+                }else if(src.charAt(end) == car){
+                    if(_type == "triple_string" &&
+                            src.substr(end, 3) != car + car + car){
                         zone += src.charAt(end)
                         end++
                     } else {
                         found = true
                         // end of string
                         $pos = pos
-                        // Escape quotes inside string, except if they are already escaped
-                        // In raw mode, always escape
-                        var $string = zone.substr(1),string=''
-                        for(var i=0;i<$string.length;i++){
+                        // Escape quotes inside string, except if they are
+                        // already escaped.
+                        // In raw mode, always escape.
+                        var $string = zone.substr(1), string = ''
+                        for(var i = 0; i < $string.length; i++){
                             var $car = $string.charAt(i)
-                            if($car==car &&
-                                (raw || (i==0 || $string.charAt(i-1)!=='\\'))){
-                                    string += '\\'
+                            if($car == car &&
+                                    (raw || (i == 0 ||
+                                        $string.charAt(i - 1) != '\\'))){
+                                string += '\\'
                             }
                             string += $car
                         }
                         if(fstring){
                             try{
-                                var re = new RegExp("\\\\"+car, "g"),
+                                var re = new RegExp("\\\\" + car, "g"),
                                     string_no_bs = string.replace(re, car)
                                 var elts = $B.parse_fstring(string_no_bs) // in py_string.js
                             }catch(err){
@@ -7522,345 +7632,354 @@ __file__: true
                         }
 
                         if(bytes){
-                            context = $transition(context,'str','b'+car+string+car)
+                            context = $transition(context, 'str',
+                                'b' + car + string + car)
                         }else if(fstring){
                             $pos -= sm_length
-                            context = $transition(context,'str', elts)
+                            context = $transition(context, 'str', elts)
                             $pos += sm_length
                         }else{
-                            context = $transition(context,'str',car+string+car)
+                            context = $transition(context, 'str',
+                                car + string + car)
                         }
                         context.raw = raw;
-                        pos = end+1
-                        if(_type=="triple_string"){pos = end+3}
+                        pos = end + 1
+                        if(_type == "triple_string"){pos = end + 3}
                         break
                     }
                 } else {
                     zone += src.charAt(end)
-                    if(src.charAt(end)=='\n'){lnum++}
+                    if(src.charAt(end) == '\n'){lnum++}
                     end++
                 }
             }
             if(!found){
-                if(_type==="triple_string"){
-                    $_SyntaxError(context,"Triple string end not found")
+                if(_type === "triple_string"){
+                    $_SyntaxError(context, "Triple string end not found")
                 }else{
-                    $_SyntaxError(context,"String end not found")
+                    $_SyntaxError(context, "String end not found")
                 }
             }
             continue
         }
         // identifier ?
-        if(name=="" && car!='$'){
-            // regexIdentifier is defined in brython_builtins.js. It is a regular
-            // expression that matches all the valid Python identifier names,
-            // including those in non-latin writings (cf issue #358)
+        if(name == "" && car != '$'){
+            // regexIdentifier is defined in brython_builtins.js. It is a
+            // regular expression that matches all the valid Python
+            // identifier names, including those in non-latin writings (cf
+            // issue #358)
             if($B.regexIdentifier.exec(car)){
-                name=car // identifier start
-                var p0=pos
+                name = car // identifier start
+                var p0 = pos
                 pos++
-                while(pos<src.length && $B.regexIdentifier.exec(src.substring(p0, pos+1))){
-                    name+=src.charAt(pos)
+                while(pos < src.length &&
+                        $B.regexIdentifier.exec(src.substring(p0, pos + 1))){
+                    name += src.charAt(pos)
                     pos++
                 }
             }
             if(name){
-                //pos += name.length
-                if(kwdict.indexOf(name)>-1){
-                    $pos = pos-name.length
-                    if(unsupported.indexOf(name)>-1){
-                        $_SyntaxError(context,"Unsupported Python keyword '"+name+"'")
+                if(kwdict.indexOf(name) > -1){
+                    $pos = pos - name.length
+                    if(unsupported.indexOf(name) > -1){
+                        $_SyntaxError(context,
+                            "Unsupported Python keyword '" + name + "'")
                     }
-                    context = $transition(context,name)
-                } else if(typeof $operators[name]=='string') {
+                    context = $transition(context, name)
+                } else if(typeof $operators[name] == 'string') {
                     // Literal operators : "and", "or", "is", "not"
                     // The additional test is to exclude the name "constructor"
-                    if(name=='is'){
+                    if(name == 'is'){
                         // if keyword is "is", see if it is followed by "not"
                         var re = /^\s+not\s+/
                         var res = re.exec(src.substr(pos))
-                        if(res!==null){
+                        if(res !== null){
                             pos += res[0].length
-                            $pos = pos-name.length
-                            context = $transition(context,'op','is_not')
+                            $pos = pos - name.length
+                            context = $transition(context, 'op', 'is_not')
                         }else{
-                            $pos = pos-name.length
-                            context = $transition(context,'op', name)
+                            $pos = pos - name.length
+                            context = $transition(context, 'op', name)
                         }
-                    }else if(name=='not'){
+                    }else if(name == 'not'){
                         // if keyword is "not", see if it is followed by "in"
                         var re = /^\s+in\s+/
                         var res = re.exec(src.substr(pos))
-                        if(res!==null){
+                        if(res !== null){
                             pos += res[0].length
-                            $pos = pos-name.length
-                            context = $transition(context,'op','not_in')
+                            $pos = pos - name.length
+                            context = $transition(context, 'op', 'not_in')
                         }else{
-                            $pos = pos-name.length
-                            context = $transition(context,name)
+                            $pos = pos - name.length
+                            context = $transition(context, name)
                         }
                     }else{
-                        $pos = pos-name.length
-                        context = $transition(context,'op',name)
+                        $pos = pos - name.length
+                        context = $transition(context, 'op', name)
                     }
-                } else if((src.charAt(pos)=='"'||src.charAt(pos)=="'")
-                    && ['r','b','u','rb','br', 'f', 'fr', 'rf'].indexOf(name.toLowerCase())!==-1){
+                }else if((src.charAt(pos) == '"' || src.charAt(pos) == "'")
+                        && ['r', 'b', 'u', 'rb', 'br', 'f', 'fr', 'rf'].
+                            indexOf(name.toLowerCase()) !== -1){
                     string_modifier = name.toLowerCase()
                     name = ""
                     continue
                 } else {
-                    if($B.forbidden.indexOf(name)>-1){name='$$'+name}
-                    $pos = pos-name.length
-                    context = $transition(context,'id',name)
+                    if($B.forbidden.indexOf(name) > -1){name = '$$' + name}
+                    $pos = pos - name.length
+                    context = $transition(context, 'id', name)
                 }
-                name=""
+                name = ""
                 continue
             }
         }
 
         switch(car) {
-          case ' ':
-          case '\t':
-            pos++
-            break
-          case '.':
-            // point, ellipsis (...)
-            if(pos<src.length-1 && /^\d$/.test(src.charAt(pos+1))){
-                // number starting with . : add a 0 before the point
-                var j = pos+1
-                while(j<src.length && src.charAt(j).search(/\d|e|E/)>-1){j++}
-                context = $transition(context,'float','0'+src.substr(pos,j-pos))
-                pos = j
+            case ' ':
+            case '\t':
+                pos++
                 break
-            }
-            $pos = pos
-            context = $transition(context,'.')
-            pos++
-            break
-          case '0':
-            // octal, hexadecimal, binary
-            //if(car==="0"){
-            var res = hex_pattern.exec(src.substr(pos))
-            if(res){
-                context=$transition(context,'int',[16,res[1]])
-                pos += res[0].length
-                break
-            }
-            var res = octal_pattern.exec(src.substr(pos))
-            if(res){
-                context=$transition(context,'int',[8,res[1]]) //parseInt(res[1],8))
-                pos += res[0].length
-                break
-            }
-            var res = binary_pattern.exec(src.substr(pos))
-            if(res){
-                context=$transition(context,'int',[2,res[1]]) //parseInt(res[1],2))
-                pos += res[0].length
-                break
-            }
-            // literal like "077" is not valid in Python3
-            if(src.charAt(pos+1).search(/\d/)>-1){
-                // literal like "000" is valid in Python3
-                if(parseInt(src.substr(pos)) === 0){
-                    res = int_pattern.exec(src.substr(pos))
-                    $pos = pos
-                    context = $transition(context,'int',[10,res[0]])
-                    pos += res[0].length
+            case '.':
+                // point, ellipsis (...)
+                if(pos < src.length - 1 && /^\d$/.test(src.charAt(pos + 1))){
+                    // number starting with . : add a 0 before the point
+                    var j = pos + 1
+                    while(j < src.length &&
+                        src.charAt(j).search(/\d|e|E/) > -1){j++}
+                    context = $transition(context, 'float',
+                        '0' + src.substr(pos, j - pos))
+                    pos = j
                     break
-                }else{$_SyntaxError(context,('invalid literal starting with 0'))}
-            }
-          case '0':
-          case '1':
-          case '2':
-          case '3':
-          case '4':
-          case '5':
-          case '6':
-          case '7':
-          case '8':
-          case '9':
-            // digit
-            var res = float_pattern1.exec(src.substr(pos))
-            if(res){
+                }
                 $pos = pos
-                if(res[2]!==undefined){
-                    context = $transition(context,'imaginary',
-                        res[0].substr(0,res[0].length-1))
-                }else{context = $transition(context,'float',res[0])}
-            }else{
-                res = float_pattern2.exec(src.substr(pos))
+                context = $transition(context, '.')
+                pos++
+                break
+            case '0':
+              // octal, hexadecimal, binary
+              var res = hex_pattern.exec(src.substr(pos))
+              if(res){
+                  context = $transition(context, 'int', [16, res[1]])
+                  pos += res[0].length
+                  break
+              }
+              var res = octal_pattern.exec(src.substr(pos))
+              if(res){
+                  context = $transition(context, 'int', [8, res[1]])
+                  pos += res[0].length
+                  break
+              }
+              var res = binary_pattern.exec(src.substr(pos))
+              if(res){
+                  context = $transition(context, 'int', [2, res[1]])
+                  pos += res[0].length
+                  break
+              }
+              // literal like "077" is not valid in Python3
+              if(src.charAt(pos + 1).search(/\d/) > -1){
+                  // literal like "000" is valid in Python3
+                  if(parseInt(src.substr(pos)) === 0){
+                      res = int_pattern.exec(src.substr(pos))
+                      $pos = pos
+                      context = $transition(context, 'int', [10, res[0]])
+                      pos += res[0].length
+                      break
+                  }else{$_SyntaxError(context,
+                      'invalid literal starting with 0')}
+              }
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+            case '9':
+                // digit
+                var res = float_pattern1.exec(src.substr(pos))
                 if(res){
-                    $pos =pos
-                    if(res[2]!==undefined){
-                        context = $transition(context,'imaginary',
-                            res[0].substr(0,res[0].length-1))
-                    }else{context = $transition(context,'float',res[0])}
-                }else{
-                    res = int_pattern.exec(src.substr(pos))
                     $pos = pos
-                    if(res[1]!==undefined){
-                        context = $transition(context,'imaginary',
-                            res[0].substr(0,res[0].length-1))
-                    }else{context = $transition(context,'int',[10,res[0]])}
-                }
-            }
-            pos += res[0].length
-            break
-          case '\n':
-            // line end
-            lnum++
-            if(br_stack.length>0){
-                // implicit line joining inside brackets
-                pos++;//continue
-            } else {
-                if(current.context.tree.length>0){
-                    $pos = pos
-                    context = $transition(context,'eol')
-                    indent=null
-                    new_node = new $Node()
+                    if(res[2] !== undefined){
+                        context = $transition(context, 'imaginary',
+                            res[0].substr(0,res[0].length - 1))
+                    }else{context = $transition(context, 'float', res[0])}
                 }else{
-                    new_node.line_num = lnum
+                    res = float_pattern2.exec(src.substr(pos))
+                    if(res){
+                        $pos =pos
+                        if(res[2] !== undefined){
+                            context = $transition(context, 'imaginary',
+                                res[0].substr(0,res[0].length - 1))
+                        }else{context = $transition(context, 'float', res[0])}
+                    }else{
+                        res = int_pattern.exec(src.substr(pos))
+                        $pos = pos
+                        if(res[1] !== undefined){
+                            context = $transition(context, 'imaginary',
+                                res[0].substr(0, res[0].length - 1))
+                        }else{
+                            context = $transition(context, 'int', [10, res[0]])
+                         }
+                    }
                 }
+                pos += res[0].length
+                break
+            case '\n':
+                // line end
+                lnum++
+                if(br_stack.length > 0){
+                    // implicit line joining inside brackets
+                    pos++
+                } else {
+                    if(current.context.tree.length>0){
+                        $pos = pos
+                        context = $transition(context, 'eol')
+                        indent = null
+                        new_node = new $Node()
+                    }else{
+                        new_node.line_num = lnum
+                    }
+                    pos++
+                }
+                break
+            case '(':
+            case '[':
+            case '{':
+                br_stack += car
+                br_pos[br_stack.length - 1] = [context, pos]
+                $pos = pos
+                context = $transition(context, car)
                 pos++
-            }
-            break
-          case '(':
-          case '[':
-          case '{':
-            br_stack += car
-            br_pos[br_stack.length-1] = [context,pos]
-            $pos = pos
-            context = $transition(context,car)
-            pos++
-            break
-          case ')':
-          case ']':
-          case '}':
-            if(br_stack==""){
-                $_SyntaxError(context,"Unexpected closing bracket")
-            } else if(br_close[car]!=br_stack.charAt(br_stack.length-1)){
-                $_SyntaxError(context,"Unbalanced bracket")
-            } else {
-                br_stack = br_stack.substr(0,br_stack.length-1)
+                break
+            case ')':
+            case ']':
+            case '}':
+                if(br_stack == ""){
+                    $_SyntaxError(context, "Unexpected closing bracket")
+                }else if(br_close[car] !=
+                        br_stack.charAt(br_stack.length - 1)){
+                    $_SyntaxError(context,"Unbalanced bracket")
+                }else{
+                    br_stack = br_stack.substr(0, br_stack.length - 1)
+                    $pos = pos
+                    context = $transition(context, car)
+                    pos++
+                }
+                break
+            case '=':
+                if(src.charAt(pos + 1) != "="){
+                    $pos = pos
+                    context = $transition(context,'=')
+                    pos++
+                } else {
+                    $pos = pos
+                    context = $transition(context, 'op', '==')
+                    pos += 2
+                }
+                break
+            case ',':
+            case ':':
                 $pos = pos
-                context = $transition(context,car)
+                context = $transition(context, car)
                 pos++
-            }
-            break
-          case '=':
-            if(src.charAt(pos+1)!="="){
+                break
+            case ';':
+                $transition(context, 'eol') // close previous instruction
+                // create a new node, at the same level as current's parent
+                if(current.context.tree.length == 0){
+                    // consecutive ; are not allowed
+                    $pos = pos
+                    $_SyntaxError(context, 'invalid syntax')
+                }
+                // if ; ends the line, ignore it
+                var pos1 = pos + 1
+                var ends_line = false
+                while(pos1 < src.length){
+                    var _s = src.charAt(pos1)
+                    if(_s == '\n' || _s == '#'){ends_line = true; break}
+                    else if(_s == ' '){pos1++}
+                    else{break}
+                }
+                if(ends_line){pos++; break}
+
+                new_node = new $Node()
+                new_node.indent = $get_node(context).indent
+                new_node.line_num = lnum
+                new_node.module = module
+                $get_node(context).parent.add(new_node)
+                current = new_node
+                context = new $NodeCtx(new_node)
+                pos++
+                break
+            case '/':
+            case '%':
+            case '&':
+            case '>':
+            case '<':
+            case '-':
+            case '+':
+            case '*':
+            case '/':
+            case '^':
+            case '=':
+            case '|':
+            case '~':
+            case '!':
+                // operators
+
+                // special case for annotation syntax
+                if(car == '-' && src.charAt(pos + 1) == '>'){
+                    context = $transition(context, 'annotation')
+                    pos += 2
+                    continue
+                }
+                // find longest match
+                var op_match = ""
+                for(var op_sign in $operators){
+                    if(op_sign == src.substr(pos, op_sign.length)
+                            && op_sign.length > op_match.length){
+                        op_match = op_sign
+                    }
+                }
                 $pos = pos
-                context = $transition(context,'=')
-                pos++; //continue
-            } else {
+                if(op_match.length > 0){
+                    if(op_match in $augmented_assigns){
+                        context = $transition(context, 'augm_assign', op_match)
+                    }else{
+                        context = $transition(context, 'op', op_match)
+                    }
+                    pos += op_match.length
+                }else{
+                    $_SyntaxError(context, 'invalid character: ' + car)
+                }
+                break
+            case '\\':
+                if(src.charAt(pos+1) == '\n'){
+                  lnum++
+                  pos += 2
+                  break
+                }
+            case '@':
                 $pos = pos
-                context = $transition(context,'op','==')
-                pos+=2
-            }
-            break
-          case ',':
-          case ':':
-            $pos = pos
-            context = $transition(context,car)
-            pos++
-            break
-          case ';':
-            $transition(context,'eol') // close previous instruction
-            // create a new node, at the same level as current's parent
-            if(current.context.tree.length===0){
-                // consecutive ; are not allowed
+                context = $transition(context, car)
+                pos++
+                break
+            default:
                 $pos=pos
-                $_SyntaxError(context,'invalid syntax')
-            }
-            // if ; ends the line, ignore it
-            var pos1 = pos+1
-            var ends_line = false
-            while(pos1<src.length){
-                var _s=src.charAt(pos1)
-                if(_s=='\n' || _s=='#'){ends_line=true;break}
-                else if(_s==' '){pos1++}
-                else{break}
-            }
-            if(ends_line){pos++;break}
-
-            new_node = new $Node()
-            new_node.indent = $get_node(context).indent
-            new_node.line_num = lnum
-            new_node.module = module
-            $get_node(context).parent.add(new_node)
-            current = new_node
-            context = new $NodeCtx(new_node)
-            pos++
-            break
-          case '/':
-          case '%':
-          case '&':
-          case '>':
-          case '<':
-          case '-':
-          case '+':
-          case '*':
-          case '/':
-          case '^':
-          case '=':
-          case '|':
-          case '~':
-          case '!':
-          //case 'i':
-          //case 'n':
-            // operators
-
-            // special case for annotation syntax
-            if(car=='-' && src.charAt(pos+1)=='>'){
-                context = $transition(context,'annotation')
-                pos += 2
-                continue
-            }
-            // find longest match
-            var op_match = ""
-            for(var op_sign in $operators){
-                if(op_sign==src.substr(pos,op_sign.length)
-                    && op_sign.length>op_match.length){
-                    op_match=op_sign
-                }
-            }
-            //if(car=='!'){alert('op_match '+op_match)}
-            $pos = pos
-            if(op_match.length>0){
-                if(op_match in $augmented_assigns){
-                    context = $transition(context,'augm_assign',op_match)
-                }else{
-                    context = $transition(context,'op',op_match)
-                }
-                pos += op_match.length
-            }else{
-                $_SyntaxError(context,'invalid character: '+car)
-            }
-            break
-          case '\\':
-            if (src.charAt(pos+1)=='\n'){
-              lnum++
-              pos+=2
-              break
-            }
-          case '@':
-            $pos = pos
-            context = $transition(context,car)
-            pos++
-            break
-          default:
-            $pos=pos;$_SyntaxError(context,'unknown token ['+car+']')
-        } //switch
+                $_SyntaxError(context, 'unknown token [' + car + ']')
+        }
     }
 
-    if(br_stack.length!=0){
+    if(br_stack.length != 0){
         var br_err = br_pos[0]
         $pos = br_err[1]
-        $_SyntaxError(br_err[0],["Unbalanced bracket "+br_stack.charAt(br_stack.length-1)])
+        $_SyntaxError(br_err[0],
+            ["Unbalanced bracket " + br_stack.charAt(br_stack.length - 1)])
     }
-    if(context!==null && $indented.indexOf(context.tree[0].type)>-1){
+    if(context !== null && $indented.indexOf(context.tree[0].type) > -1){
         $pos = pos-1
-        $_SyntaxError(context,'expected an indented block',pos)
+        $_SyntaxError(context, 'expected an indented block', pos)
     }
 
     return root
@@ -7872,34 +7991,33 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_info){
     // locals_id = the id of the block that will be created
     // parent_scope = the scope where the code is created
     // line_info = [line_num, parent_block_id] if debug mode is set
-    // create_ns = boolean to create a namespace for locals_id (used in exec)
     //
     // Returns a tree structure representing the Python source code
 
     var t0 = new Date().getTime(),
         is_comp = false
 
-    if(typeof src=='object'){
+    if(typeof src == 'object'){
         is_comp = src.is_comp
         src = src.src
     }
 
     // Normalise line ends and script end
-    src = src.replace(/\r\n/gm,'\n')
-    if(src.charAt(src.length-1)!="\n"){src+='\n'}
+    src = src.replace(/\r\n/gm, "\n")
+    if(src.charAt(src.length - 1) != "\n"){src += "\n"}
 
     var locals_is_module = Array.isArray(locals_id)
     if(locals_is_module){
         locals_id = locals_id[0]
     }
-    var internal = locals_id.charAt(0)=='$'
+    var internal = locals_id.charAt(0) == '$'
 
-    var local_ns = '$locals_'+locals_id.replace(/\./g,'_')
+    var local_ns = '$locals_' + locals_id.replace(/\./g,'_')
 
-    var global_ns = '$locals_'+module.replace(/\./g,'_')
+    var global_ns = '$locals_' + module.replace(/\./g,'_')
 
     $B.$py_src[locals_id] = src
-    var root = $tokenize({src:src, is_comp:is_comp},
+    var root = $tokenize({src: src, is_comp: is_comp},
         module, locals_id, parent_scope, line_info)
     root.is_comp = is_comp
     root.transform()
@@ -7907,15 +8025,15 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_info){
     // Create internal variables
     var js = ['var $B = __BRYTHON__;\n'], pos=1
 
-    js[pos++]='eval(__BRYTHON__.InjectBuiltins());\n\n'
+    js[pos++] = 'eval(__BRYTHON__.InjectBuiltins());\n\n'
 
     js[pos] = 'var '
     if(locals_is_module){
-        js[pos] += local_ns+'=$locals_'+module+', '
+        js[pos] += local_ns + '=$locals_' + module + ', '
     }else if(!internal){
-        js[pos] += local_ns+'=$B.imported["'+locals_id+'"] || {}, '
+        js[pos] += local_ns + '=$B.imported["' + locals_id + '"] || {}, '
     }
-    js[pos]+='$locals='+local_ns+';'
+    js[pos] += '$locals=' + local_ns + ';'
 
     var offset = 0
 
@@ -7924,61 +8042,66 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_info){
 
     // module doc string
     root.insert(offset++,
-        $NodeJS(local_ns+'["__doc__"]='+(root.doc_string||'None')+';'))
+        $NodeJS(local_ns + '["__doc__"]=' + (root.doc_string || 'None') + ';'))
     // name
     root.insert(offset++,
-        $NodeJS(local_ns+'["__name__"]='+local_ns+'["__name__"] || "'+locals_id+'";'))
+        $NodeJS(local_ns + '["__name__"]=' + local_ns +
+            '["__name__"] || "' + locals_id + '";'))
     // file
     root.insert(offset++,
-        $NodeJS(local_ns+'["__file__"]="'+$B.$py_module_path[module]+'";None;\n'))
+        $NodeJS(local_ns + '["__file__"]="' + $B.$py_module_path[module] +
+            '";None;\n'))
 
     // if line_info is provided, store it
     if(line_info !== undefined){
         root.insert(offset++,
-            $NodeJS(local_ns+'.$line="'+line_info+'";None;\n'))
+            $NodeJS(local_ns + '.$line="' + line_info + '";None;\n'))
     }
 
+    // Code to create the execution frame and store it on the frames stack
     var enter_frame_pos = offset,
-        js = 'var $top_frame = ["'+locals_id.replace(/\./g,'_')+'", '+
-            local_ns+', "'+module.replace(/\./g,'_')+'", '+global_ns+
-            ', "a"]; $B.frames_stack.push($top_frame); var $stack_length = '+
-            '$B.frames_stack.length;'
+        js = 'var $top_frame = ["' + locals_id.replace(/\./g, '_') + '", ' +
+            local_ns + ', "' + module.replace(/\./g, '_') + '", ' +
+            global_ns + ', "a"]; $B.frames_stack.push($top_frame); ' +
+            'var $stack_length = $B.frames_stack.length;'
     root.insert(offset++, $NodeJS(js))
 
     // Wrap code in a try/finally to make sure we leave the frame
     var try_node = new $NodeJS('try'),
-        children = root.children.slice(enter_frame_pos+1, root.children.length)
-    root.insert(enter_frame_pos+1, try_node)
+        children = root.children.slice(enter_frame_pos + 1,
+            root.children.length)
+    root.insert(enter_frame_pos + 1, try_node)
 
     // Add module body to the "try" clause
-    if(children.length==0){children=[$NodeJS('')]} // in case the script is empty
-    for(var i=0;i<children.length;i++){
-        try_node.add(children[i])
-    }
+    if(children.length == 0){children = [$NodeJS('')]} // in case the script is empty
+    children.forEach(function(child){
+        try_node.add(child)
+    })
     // add node to exit frame in case no exception was raised
-    try_node.add($NodeJS('$B.leave_frame("'+locals_id+'")'))
+    try_node.add($NodeJS('$B.leave_frame("' + locals_id + '")'))
 
-    root.children.splice(enter_frame_pos+2, root.children.length)
+    root.children.splice(enter_frame_pos + 2, root.children.length)
 
     var catch_node = new $NodeJS('catch(err)')
-    catch_node.add($NodeJS('$B.leave_frame("'+locals_id+'")'))
+    catch_node.add($NodeJS('$B.leave_frame("' + locals_id + '")'))
     catch_node.add($NodeJS('throw err'))
 
     root.add(catch_node)
 
-    if($B.profile>0){$add_profile(root,null,module)}
-    if($B.debug>0){
-        $add_line_num(root,null,module)
+    if($B.profile > 0){$add_profile(root, null, module)}
+    if($B.debug > 0){
+        $add_line_num(root, null, module)
     }
 
     var t1 = new Date().getTime()
-    if($B.debug>=2){
+    if($B.debug >= 2){
         if(module == locals_id){
-            console.log('module '+module+' translated in '+(t1 - t0)+' ms')
+            console.log('module ' + module + ' translated in ' +
+                (t1 - t0) + ' ms')
         }
     }
 
-    $B.compile_time += t1-t0
+    $B.compile_time += t1 - t0
 
     return root
 }
@@ -8002,9 +8125,9 @@ function load_scripts(scripts, run_script, onerror){
                 if(req.status==200){
                     ok = true;
                     var script = {
-                        name:req.module_name,
-                        url:req.responseURL,
-                        src:req.responseText
+                        name: req.module_name,
+                        url: req.responseURL,
+                        src: req.responseText
                     }
                 }
             }else{
@@ -8023,14 +8146,14 @@ function load_scripts(scripts, run_script, onerror){
                 if(onerror === undefined){throw e}
                 else{onerror(e)}
             }
-            if(scripts.length>0){
+            if(scripts.length > 0){
                 load_scripts(scripts)
             }
         }else{
             try{
                 throw Error("cannot load script "+
-                    req.module_name+' at '+req.responseURL+
-                    ': error '+req.status)
+                    req.module_name + ' at ' + req.responseURL +
+                    ': error ' + req.status)
             }catch(e){
                 if(onerror === undefined) {throw e}
                 else{onerror(e)}
@@ -8040,9 +8163,9 @@ function load_scripts(scripts, run_script, onerror){
 
     var noajax = true
     // Loop for efficient usage of the calling stack (faster than recursion?)
-    while(scripts.length>0 && noajax){
+    while(scripts.length > 0 && noajax){
         var script = scripts.shift()
-        if(script['src']===undefined){
+        if(script['src'] === undefined){
             // External script : load it by an Ajax call
             noajax = false;
             var req = new XMLHttpRequest()
@@ -8063,50 +8186,49 @@ $B._load_scripts = load_scripts;
 function run_script(script){
     // script has attributes url, src, name
 
-    $B.$py_module_path[script.name]=script.url
+    $B.$py_module_path[script.name] = script.url
     var root, js
 
     try{
         // Conversion of Python source code to Javascript
-
-        root = $B.py2js(script.src,script.name,script.name,
+        root = $B.py2js(script.src, script.name, script.name,
             $B.builtins_scope)
         js = root.to_js()
         //console.log('imports in', script.name, root.imports)
-        if($B.debug>1){console.log(js)}
+        if($B.debug > 1){console.log(js)}
         // Run resulting Javascript
         eval(js)
 
     }catch(err){
-        if($B.debug>1){
+        if($B.debug > 1){
             console.log(err)
             for(var attr in err){
-               console.log(attr+' : ', err[attr])
+               console.log(attr + ' : ', err[attr])
             }
         }
 
         // If the error was not caught by the Python runtime, build an
         // instance of a Python exception
-        if(err.$py_error===undefined){
+        if(err.$py_error === undefined){
             console.log('Javascript error', err)
             //console.log(js)
             //for(var attr in err){console.log(attr+': '+err[attr])}
-            err=_b_.RuntimeError.$factory(err+'')
+            err = _b_.RuntimeError.$factory(err + '')
         }
 
         // Print the error traceback on the standard error stream
         var name = err.__name__
-        var $trace = _b_.getattr(err,'info')
-        if(name=='SyntaxError' || name=='IndentationError'){
+        var $trace = _b_.getattr(err, 'info')
+        if(name == 'SyntaxError' || name == 'IndentationError'){
             var offset = err.args[3]
             $trace += '\n    ' + ' '.repeat(offset) + '^' +
-                '\n' + name+': '+err.args[0]
+                '\n' + name + ': ' + err.args[0]
 
         }else{
-            $trace += '\n'+name+': ' + err.args
+            $trace += '\n' + name + ': ' + err.args
         }
         try{
-            _b_.getattr($B.stderr,'write')($trace)
+            _b_.getattr($B.stderr, 'write')($trace)
         }catch(print_exc_err){
             console.log($trace)
         }
@@ -8120,7 +8242,7 @@ function run_script(script){
     }
 }
 
-$B._run_script = run_script;
+$B._run_script = run_script
 
 function brython(options){
 
@@ -8133,11 +8255,11 @@ function brython(options){
     $B.$options = {}
 
     // By default, only set debug level
-    if(options===undefined) options={'debug':0}
+    if(options === undefined){options={'debug': 0}}
 
     // If the argument provided to brython() is a number, it is the debug
     // level
-    if(typeof options==='number'){options={'debug':options}}
+    if(typeof options == 'number'){options = {'debug': options}}
     if(options.debug === undefined){options.debug = 0}
     $B.debug = options.debug
     // set built-in variable __debug__
@@ -8187,13 +8309,13 @@ function brython(options){
         path_hooks.push($B.$path_hooks[0])
     }
 
-    if(options.static_stdlib_import!==false){
+    if(options.static_stdlib_import !== false){
         // Add finder using static paths
         meta_path.push($B.$meta_path[1])
         // Remove /Lib and /libs in sys.path :
         // if we use the static list and the module
         // was not find in it, it's no use searching twice in the same place
-        if($B.path.length>3) {
+        if($B.path.length > 3) {
             $B.path.shift()
             $B.path.shift()
         }
@@ -8214,7 +8336,7 @@ function brython(options){
 
     // List of URLs where imported modules should be searched
     // A list can be provided as attribute of options
-    if (options.pythonpath!==undefined){
+    if (options.pythonpath !== undefined){
         $B.path = options.pythonpath
         $B.$options.static_stdlib_import = false
     }
@@ -8231,7 +8353,7 @@ function brython(options){
 
     if (options.python_paths){
         options.python_paths.forEach(function(path){
-            var lang, prefetch;
+            var lang, prefetch
             if (typeof path !== "string"){
                 lang = path.lang
                 prefetch = path.prefetch
@@ -8240,7 +8362,8 @@ function brython(options){
             $B.path.push(path)
             if(path.slice(-7).toLowerCase() == '.vfs.js' &&
                     (prefetch === undefined || prefetch === true)){
-                $B.path_importer_cache[path+'/'] = $B.imported['_importlib'].VFSPathFinder(path)
+                $B.path_importer_cache[path+'/'] =
+                    $B.imported['_importlib'].VFSPathFinder(path)
             }
             if(lang){_importlib.optimize_import_for_path(path, lang)}
         })
@@ -8249,15 +8372,15 @@ function brython(options){
     if(!isWebWorker){
     // Get all links with rel=pythonpath and add them to sys.path
         var path_links = document.querySelectorAll('head link[rel~=pythonpath]'),
-            _importlib = $B.imported['_importlib'];
-        for (var i=0, e; e = path_links[i]; ++i) {
+            _importlib = $B.imported['_importlib']
+        for(var i=0, e; e = path_links[i]; ++i) {
             var href = e.href;
-            if ((' ' + e.rel + ' ').indexOf(' prepend ') != -1) {
+            if((' ' + e.rel + ' ').indexOf(' prepend ') != -1) {
                 $B.path.unshift(href);  // support prepending to pythonpath
-            } else {
+            }else{
                 $B.path.push(href);
             }
-            if (href.slice(-7).toLowerCase() == '.vfs.js' &&
+            if(href.slice(-7).toLowerCase() == '.vfs.js' &&
                     (' ' + e.rel + ' ').indexOf(' prefetch ') != -1) {
                 // Prefetch VFS file
                 $B.path_importer_cache[href + '/'] =
@@ -8276,9 +8399,9 @@ function brython(options){
     // 'jsre' for brythons customized re module
     // Default is for brython to guess which to use by looking at
     // complexity of the re pattern
-    if(options.re_module !==undefined){
-       if(options.re_module == 'pyre' || options.re_module=='jsre'){
-          $B.$options.re=options.re
+    if(options.re_module !== undefined){
+       if(options.re_module == 'pyre' || options.re_module == 'jsre'){
+          $B.$options.re = options.re
        }
        console.log("DeprecationWarning: \'re_module\' option of \'brython\' "+
            "function will be deprecated in future versions of Brython.")
@@ -8300,23 +8423,23 @@ function _run_scripts(options) {
     // Save initial Javascript namespace
     var kk = Object.keys(_window)
 
-
     // Option to run code on demand and not all the scripts defined in a page
     // The following lines are included to allow to run brython scripts in
     // the IPython/Jupyter notebook using a cell magic. Have a look at
     // https://github.com/kikocorreoso/brythonmagic for more info.
-    if(options.ipy_id!==undefined){
-        var $elts = [];
-        for(var $i=0;$i<options.ipy_id.length;$i++){
-            $elts.push(document.getElementById(options.ipy_id[$i]));
-        }
+    if(options.ipy_id !== undefined){
+        var $elts = []
+        options.ipy_id.forEach(function(elt){
+            $elts.push(document.getElementById(elt))
+        })
     }else{
-        var scripts=document.getElementsByTagName('script'),$elts=[]
+        var scripts = document.getElementsByTagName('script'),
+            $elts = []
         // Freeze the list of scripts here ; other scripts can be inserted on
         // the fly by viruses
-        for(var i=0;i<scripts.length;i++){
+        for(var i = 0; i < scripts.length; i++){
             var script = scripts[i]
-            if(script.type=="text/python" || script.type=="text/python3"){
+            if(script.type == "text/python" || script.type == "text/python3"){
                 $elts.push(script)
             }
         }
@@ -8324,21 +8447,20 @@ function _run_scripts(options) {
 
     // Get all scripts with type = text/python or text/python3 and run them
 
-    var first_script = true, module_name;
-    if(options.ipy_id!==undefined){
-        module_name='__main__';
+    var first_script = true, module_name
+    if(options.ipy_id !== undefined){
+        module_name='__main__'
         var $src = "", js, root
-        $B.$py_module_path[module_name] = $B.script_path;
-        for(var $i=0;$i<$elts.length;$i++){
-            var $elt = $elts[$i];
-            $src += ($elt.innerHTML || $elt.textContent);
-        }
+        $B.$py_module_path[module_name] = $B.script_path
+        $elts.forEach(function(elt){
+            $src += (elt.innerHTML || elt.textContent)
+        })
         try{
             // Conversion of Python source code to Javascript
 
-            root = $B.py2js($src,module_name,module_name,$B.builtins_block)
+            root = $B.py2js($src, module_name, module_name, $B.builtins_block)
             js = root.to_js()
-            if($B.debug>1) console.log(js)
+            if($B.debug>1){console.log(js)}
 
             // Run resulting Javascript
             eval(js)
@@ -8351,27 +8473,27 @@ function _run_scripts(options) {
             root = null
             js = null
             console.log($err)
-            if($B.debug>1){
+            if($B.debug > 1){
                 console.log($err)
                 for(var attr in $err){
-                   console.log(attr+' : ', $err[attr])
+                   console.log(attr + ' : ', $err[attr])
                 }
             }
 
             // If the error was not caught by the Python runtime, build an
             // instance of a Python exception
-            if($err.$py_error===undefined){
+            if($err.$py_error === undefined){
                 console.log('Javascript error', $err)
                 //console.log($js)
                 //for(var attr in $err){console.log(attr+': '+$err[attr])}
-                $err=_b_.RuntimeError.$factory($err+'')
+                $err = _b_.RuntimeError.$factory($err + '')
             }
 
             // Print the error traceback on the standard error stream
-            var $trace = _b_.getattr($err,'info')+'\n'+$err.__name__+
-                ': ' +$err.args
+            var $trace = _b_.getattr($err,'info') + '\n' + $err.__name__ +
+                ': ' + $err.args
             try{
-                _b_.getattr($B.stderr,'write')($trace)
+                _b_.getattr($B.stderr, 'write')($trace)
             }catch(print_exc_err){
                 console.log($trace)
             }
@@ -8381,48 +8503,58 @@ function _run_scripts(options) {
     }else{
         // Get all explicitely defined ids, to avoid overriding
         var defined_ids = {}
-        for(var i=0;i<$elts.length;i++){
+        for(var i = 0; i < $elts.length; i++){
             var elt = $elts[i]
             if(elt.id){
                 if(defined_ids[elt.id]){
-                    throw Error("Brython error : Found 2 scripts with the same id '"+
-                        elt.id+"'")
+                    throw Error("Brython error : Found 2 scripts with the " +
+                      "same id '" + elt.id + "'")
                 }else{
                     defined_ids[elt.id] = true
                 }
             }
         }
         var scripts = []
-        for(var $i=0;$i<$elts.length;$i++){
-            var $elt = $elts[$i]
-            if($elt.type=="text/python"||$elt.type==="text/python3"){
-
-                if($elt.id){module_name=$elt.id}
+        $elts.forEach(function(elt){
+            if(elt.type == "text/python" || elt.type == "text/python3"){
+                // Set the module name, ie the value of the builtin variable
+                // __name__.
+                // If the <script> tag has an attribute "id", it is taken as
+                // the module name.
+                if(elt.id){module_name = elt.id}
                 else{
-                    if(first_script){module_name='__main__'; first_script=false}
-                    else{module_name = '__main__'+$B.UUID()}
-                    while(defined_ids[module_name]!==undefined){
-                        module_name = '__main__'+$B.UUID()
+                    // If no explicit name is given, the module name is
+                    // "__main__" for the first script, and "__main__" + a
+                    // random value for the next ones.
+                    if(first_script){
+                        module_name = '__main__'
+                        first_script = false
+                    }else{
+                        module_name = '__main__' + $B.UUID()
+                    }
+                    while(defined_ids[module_name] !== undefined){
+                        module_name = '__main__' + $B.UUID()
                     }
                 }
                 $B.scripts.push(module_name)
 
                 // Get Python source code
                 var $src = null
-                if($elt.src){
+                if(elt.src){
                     // format <script type="text/python" src="python_script.py">
                     // get source code by an Ajax call
-                    scripts.push({name:module_name, url:$elt.src})
+                    scripts.push({name: module_name, url: elt.src})
                 }else{
                     // Get source code inside the script element
-                    var $src = ($elt.innerHTML || $elt.textContent)
+                    var src = (elt.innerHTML || elt.textContent)
                     // remove leading CR if any
-                    $src = $src.replace(/^\n/, '')
+                    src = src.replace(/^\n/, '')
                     $B.$py_module_path[module_name] = $B.script_path
-                    scripts.push({name: module_name, src: $src, url: $B.script_path})
+                    scripts.push({name: module_name, src: src,
+                        url: $B.script_path})
                 }
             }
-        }
+        })
     }
 
     /*
