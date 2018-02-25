@@ -19,17 +19,14 @@ var $module=(function($B) {
              current_globals_id = current_frame[2].replace(/\./,'_')
             }
 
-            var is_exec = true, leave = false
-
-            if(src.__class__===$B.$CodeObjectDict){
-                src = src.source
-            }
+            var is_exec = true,
+                leave = false
 
             // code will be run in a specific block
             var globals_id = '$profile_'+$B.UUID(),
-             locals_id,
-             parent_block_id
-             if(_locals===_globals || _locals===undefined){
+             locals_id
+
+             if(_locals===_globals){
                  locals_id = globals_id
              }else{
                  locals_id = '$profile_'+$B.UUID()
@@ -38,66 +35,68 @@ var $module=(function($B) {
              eval('var $locals_'+globals_id+' = {}\nvar $locals_'+locals_id+' = {}')
 
              // Initialise block globals
-             if(_globals===undefined){
-                 var gobj = current_frame[3],
-             ex = ''
-             for(var attr in current_frame[3]){
-                 ex == '$locals_'+globals_id+'["'+attr+
-                 '"] = gobj["'+attr+'"]';
-             }
-             parent_block_id = current_globals_id
-             ex += 'var $locals_'+current_globals_id+'=gobj;'
-             eval(ex)
-             }else{
-                 $B.bound[globals_id] = {}
-                 var items = _b_.dict.items(_globals), item
-                 while(1){
-                     try{
-                         var item = _b_.next(items)
-                         eval('$locals_'+globals_id+'["'+item[0]+'"] = item[1]')
-                         $B.bound[globals_id][item[0]]=true
-                     }catch(err){
-                         break
-                     }
-                 }
-                 parent_block_id = '__builtins__'
-             }
+
+            // A _globals dictionary is provided, set or reuse its attribute
+            // globals_id
+            _globals.globals_id = _globals.globals_id || globals_id
+            globals_id = _globals.globals_id
+
+            if(_locals === _globals || _locals === undefined){
+                locals_id = globals_id
+                parent_scope = $B.builtins_scope
+            }else{
+                // The parent block of locals must be set to globals
+                parent_scope = {
+                    id: globals_id,
+                    parent_block: $B.builtins_scope,
+                    binding: {}
+                }
+                for(var attr in _globals.$string_dict){
+                    parent_scope.binding[attr] = true
+                }
+            }
+
+            // Initialise block globals
+            if(_globals.$jsobj){var items = _globals.$jsobj}
+            else{var items = _globals.$string_dict}
+            for(var item in items){
+                item1 = to_alias(item)
+                try{
+                    eval('$locals_' + globals_id + '["' + item1 +
+                        '"] = items[item]')
+                }catch(err){
+                    console.log(err)
+                    console.log('error setting', item)
+                    break
+                }
+            }
 
              // Initialise block locals
-             if(_locals===undefined){
-                 if(_globals!==undefined){
-                     eval('var $locals_'+locals_id+' = $locals_'+globals_id)
-                 }else{
-                     var lobj = current_frame[1],
-             ex = ''
-             for(var attr in current_frame[1]){
-                 ex += '$locals_'+locals_id+'["'+attr+
-                 '"] = current_frame[1]["'+attr+'"];'
-             }
-             eval(ex)
-                 }
-             }else{
-                 var items = _b_.dict.items(_locals), item
-                 while(1){
-                     try{
-                         var item = _b_.next(items)
-                         eval('$locals_'+locals_id+'["'+item[0]+'"] = item[1]')
-                     }catch(err){
-                         break
-                     }
-                 }
-             }
+            var items = _b_.dict.items(_locals), item
+            if(_locals.$jsobj){var items = _locals.$jsobj}
+            else{var items = _locals.$string_dict}
+            for(var item in items){
+                item1 = to_alias(item)
+                try{
+                    eval('$locals_' + locals_id + '["' + item[0] + '"] = item[1]')
+                }catch(err){
+                    console.log(err)
+                    console.log('error setting', item)
+                    break
+                }
+            }
              //var nb_modules = Object.keys(__BRYTHON__.modules).length
              //console.log('before exec', nb_modules)
 
-             var root = $B.py2js(src, globals_id, locals_id, parent_block_id),
-             leave_frame = true
+            $B.current_exception = ce
+
+            console.log("call py2js", src, globals_id, locals_id, parent_scope)
+            var root = $B.py2js(src, globals_id, locals_id, parent_scope),
+                js, gns, lns
 
              try{
 
                  var js = root.to_js()
-
-                 if ($B.async_enabled) js=$B.execution_object.source_conversion(js)
 
                      var i,res,gns;
                      for(i=0;i<nruns;i++) {

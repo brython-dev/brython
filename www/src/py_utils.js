@@ -1098,7 +1098,33 @@ $B.memory = function(){
    }
 }
 
-$B.$profile_data = {}
+var Profile = $B.make_class("profile",
+    function(){return {__class__: Profile}}
+)
+Profile.__dir__ = function(self){
+    return Object.keys(self)
+}
+Profile.__getattribute__ = function(self, attr){
+    if(attr == "__str__"){
+        return function(){
+            var res = "<profile object"
+            for(var attr in self){
+                if(attr.startsWith("__")){continue}
+                res += " " + attr + ": "
+                if(typeof self[attr] == "object"){
+                    res += _b_.dict.__str__($B.obj_dict(self[attr]))
+                }else{
+                    res += _b_.str.$factory(self[attr])
+                }
+            }
+            return res + ">"
+        }
+    }
+    return $B.jsobj2pyobj(self[attr])
+}
+
+$B.$profile_data = Profile.$factory()
+
 $B.$profile = (function(profile) {
     var call_times={},      // indexed by function-hash,
                             //   - given a function it contains a stack with an element for
