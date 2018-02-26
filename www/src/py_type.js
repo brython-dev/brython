@@ -83,7 +83,7 @@ $B.$class_constructor = function(class_name, class_obj, bases,
     class_dict.__slots__ = mro0.__slots__
 
     class_dict.__mro__ = make_mro(bases) // XXX this is done in type.__new__
-    
+
     // Check if at least one method is abstract (cf PEP 3119)
     // If this is the case, the class cannot be instanciated
     var is_instanciable = true,
@@ -134,7 +134,7 @@ $B.$class_constructor = function(class_name, class_obj, bases,
     var kls = meta_new(metaclass, class_name, bases, cl_dict)
     kls.__module__ = module
     kls.$subclasses = []
-    
+
     if(kls.__class__ === metaclass){
         // Initialize the class object by a call to metaclass __init__
         var meta_init = _b_.type.__getattribute__(metaclass, '__init__')

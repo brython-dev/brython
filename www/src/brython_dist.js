@@ -71,8 +71,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-02-26 11:51:54.047372"
-__BRYTHON__.timestamp=1519642314047
+__BRYTHON__.compiled_date="2018-02-26 21:57:55.247974"
+__BRYTHON__.timestamp=1519678675247
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -7128,6 +7128,9 @@ for(var i=0;i<pkglist.length;i++)$B.stdlib[pkglist[i]]=['py',true]})(__BRYTHON__
 ;(function($B){var _b_=$B.builtins
 var _window=self;
 var module=$B.module={__class__ : _b_.type,__module__: "builtins",__mro__:[_b_.object],__name__ : 'module'}
+module.__init__=function(){}
+module.__new__=function(cls,name,doc,$package){return{
+__class__:cls,__name__:name,__doc__:doc||_b_.None,__package__:$package||_b_.None}}
 module.__repr__=module.__str__=function(self){return '<module '+self.__name__+'>'}
 module.__setattr__=function(self,attr,value){if(self.__name__=='__builtins__'){
 $B.builtins[attr]=value}else{self[attr]=value}}

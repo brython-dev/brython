@@ -12,6 +12,17 @@ var module = $B.module = {
     __name__ : 'module'
 }
 
+module.__init__ = function(){}
+
+module.__new__= function(cls, name, doc, $package){
+    return {
+        __class__:cls,
+        __name__:name,
+        __doc__:doc||_b_.None,
+        __package__:$package||_b_.None
+    }
+}
+
 module.__repr__ = module.__str__ = function(self){
     return '<module '+self.__name__+'>'
 }
