@@ -1641,6 +1641,24 @@ def f():
 
 assertRaises(NameError, f)
 
+# issue 781
+
+# can't call strings
+assertRaises(TypeError, 'a')
+assertRaises(TypeError, 'a', 1)
+assertRaises(TypeError, 'a', {'x': 1})
+
+# can't call lists
+t = [1, 2]
+assertRaises(TypeError, t)
+assertRaises(TypeError, t, 1)
+assertRaises(TypeError, t, {'x': 1})
+
+# can't call dicts
+d = {1: 'a'}
+assertRaises(TypeError,d)
+assertRaises(TypeError, d, 1)
+assertRaises(TypeError, d, {'x': 1})
 
 # ==========================================
 # Finally, report that all tests have passed

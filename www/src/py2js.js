@@ -5963,7 +5963,7 @@ function $transition(context,token){
                   case '[':
                     return new $AbstractExprCtx(new $SubCtx(context.parent),false)
                   case '(':
-                    return new $CallArgCtx(new $CallCtx(context))
+                    return new $CallArgCtx(new $CallCtx(context.parent))
                 }
                 return $transition(context.parent,token,arguments[2])
             }else{
@@ -6759,7 +6759,7 @@ function $transition(context,token){
                     return new $AbstractExprCtx(
                         new $SubCtx(context.parent),false)
                 }
-                if(token == '('){return new $CallCtx(context)}
+                if(token == '('){return new $CallCtx(context.parent)}
                 return $transition(context.parent, token, arguments[2])
             }else{
                 if(context.expect == ','){

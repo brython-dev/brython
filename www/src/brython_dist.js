@@ -71,8 +71,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-02-26 08:52:34.184019"
-__BRYTHON__.timestamp=1519631554184
+__BRYTHON__.compiled_date="2018-02-26 11:51:54.047372"
+__BRYTHON__.timestamp=1519642314047
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -2961,7 +2961,7 @@ case 'dict_or_set':
 if(C.closed){switch(token){case '[':
 return new $AbstractExprCtx(new $SubCtx(C.parent),false)
 case '(':
-return new $CallArgCtx(new $CallCtx(C))}
+return new $CallArgCtx(new $CallCtx(C.parent))}
 return $transition(C.parent,token,arguments[2])}else{if(C.expect===','){switch(token){case '}':
 switch(C.real){case 'dict_or_set':
 if(C.tree.length !=1){break}
@@ -3461,7 +3461,7 @@ $_SyntaxError(C,'token ' + token + ' after ' + C)
 case 'list_or_tuple':
 if(C.closed){if(token=='['){return new $AbstractExprCtx(
 new $SubCtx(C.parent),false)}
-if(token=='('){return new $CallCtx(C)}
+if(token=='('){return new $CallCtx(C.parent)}
 return $transition(C.parent,token,arguments[2])}else{if(C.expect==','){switch(C.real){case 'tuple':
 case 'gen_expr':
 if(token===')'){C.closed=true
