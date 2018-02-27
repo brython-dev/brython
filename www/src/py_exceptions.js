@@ -2,11 +2,11 @@
 
 eval($B.InjectBuiltins())
 
-$B.$raise= function(arg){
+$B.$raise = function(arg){
     // Used for "raise" without specifying an exception.
     // If there is an exception in the stack, use it, else throw a simple
     // Exception
-    if(arg===undefined){
+    if(arg === undefined){
         var es = $B.current_exception
         if(es!==undefined) throw es
         throw _b_.RuntimeError.$factory('No active exception to reraise')
@@ -74,45 +74,50 @@ $B.$IndentationError = function(module,msg,pos) {
 
 // class of traceback objects
 var traceback = $B.make_class("traceback",
-    function(stack){
+    function(exc){
         return {
             __class__ : traceback,
-            stack : stack
+            exc: exc
         }
     }
 )
 
 traceback.__getattribute__ = function(self, attr){
-    if(self.stack.length==0){alert('no stack', attr)}
-    var last_frame = $B.last(self.stack)
-    if(last_frame==undefined){
+    if(self.exc.$stack.length==0){alert('no stack', attr)}
+    var last_frame = $B.last(self.exc.$stack)
+    if(last_frame === undefined){
         alert('last frame undef ');
-        console.log(self.stack, Object.keys(self.stack))
+        console.log(self.exc.$stack, Object.keys(self.exc.$stack))
     }
-    var line_info = last_frame[1].$line_info
+    var line_info = self.exc.$line_info || last_frame[1].$line_info
 
     switch(attr){
         case 'tb_frame':
-            return frame.$factory(self.stack)
+            return frame.$factory(self.exc.$stack)
         case 'tb_lineno':
             if(line_info===undefined){return -1}
             else{return parseInt(line_info.split(',')[0])}
         case 'tb_lasti':
-            if(line_info===undefined){return '<unknown>'}
+            if(line_info === undefined){return '<unknown>'}
             else{
                 var info = line_info.split(',')
                 var src = $B.$py_src[info[1]]
-                if(src!==undefined){
+                if(src !== undefined){
                     return src.split('\n')[parseInt(info[0]-1)].trim()
                 }else{return '<unknown>'}
             }
         case 'tb_next':
-            if(self.stack.length==1){return None}
-            else{return traceback.$factory(self.stack.slice(0, self.stack.length-1))}
+            if(self.exc.$stack.length==1){return None}
+            else{
+                return traceback.$factory(
+                    self.exc.$stack.slice(0, self.exc.$stack.length-1))
+            }
         default:
-            return traceback[attr]
+            return _b_.object.__getattribute__(traceback, attr)
     }
 }
+
+$B.set_func_names(traceback, "builtins")
 
 // class of frame objects
 var frame = $B.make_class("frame",
@@ -200,7 +205,7 @@ BaseException.__new__ = function(cls){
 
 BaseException.__getattr__ = function(self, attr){
 
-    if(attr=='info'){
+    if(attr == 'info'){
 
         var name = self.__class__.__name__
         if(name=='SyntaxError' || name=='IndentationError'){
@@ -225,23 +230,32 @@ BaseException.__getattr__ = function(self, attr){
             //console.log('frame', i, frame, frame[3].$line_info)
             if(!frame[1] || !frame[1].$line_info){continue}
             var $line_info = frame[1].$line_info
-            if(i==0 && self.$line_info){$line_info=self.$line_info}
-            var line_info = $line_info.split(',')
-            if($B.$py_src[line_info[1]]===undefined){continue}
-            var lines = $B.$py_src[line_info[1]].split('\n'),
+            if(i == self.$stack.length - 1 && self.$line_info){
+                $line_info = self.$line_info
+            }
+            var line_info = $line_info.split(','),
+                src = $B.$py_src[line_info[1]]
+            if(src === undefined && self.module == line_info[1]){
+                src = self.src
+            }
+            if(src === undefined){continue}
+            var lines = src.split('\n'),
                 module = line_info[1]
-            if(module.charAt(0)=='$'){module = '<module>'}
-            info += '\n  module '+module+' line '+line_info[0]
-            var line = lines[parseInt(line_info[0])-1]
-            if(line) line=line.replace(/^[ ]+/g, '')
-            if(line===undefined){console.log('line undef...',line_info,$B.$py_src[line_info[1]])}
+            if(module.charAt(0) == '$'){module = '<module>'}
+            info += '\n  module ' + module + ' line ' + line_info[0]
+            var line = lines[parseInt(line_info[0]) - 1]
+            if(line){line=line.replace(/^[ ]+/g, '')}
+            if(line === undefined){
+                console.log('line undef...', line_info,
+                    $B.$py_src[line_info[1]])
+            }
             info += '\n    '+line
         }
         return info
 
-    }else if(attr=='traceback'){
+    }else if(attr == 'traceback'){
         // Return traceback object
-        return traceback.$factory(self.$stack)
+        return traceback.$factory(self)
     }else{
         throw _b_.AttributeError.$factory(self.__class__.__name__+
             " has no attribute '"+attr+"'")

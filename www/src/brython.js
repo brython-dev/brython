@@ -71,8 +71,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,0,'rc',0]
 __BRYTHON__.__MAGIC__="3.5.0"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-02-27 15:00:48.016698"
-__BRYTHON__.timestamp=1519740048016
+__BRYTHON__.compiled_date="2018-02-27 18:21:34.938669"
+__BRYTHON__.timestamp=1519752094938
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -5631,7 +5631,9 @@ for(var attr in gns){attr1=from_alias(attr)
 if(attr1.charAt(0)!='$'){if(_globals.$jsobj){_globals.$jsobj[attr]=gns[attr]}
 else{_globals.$string_dict[attr1]=gns[attr]}}}}else{for(var attr in gns){current_frame[3][attr]=gns[attr]}}
 if(res===undefined)return _b_.None
-return res}catch(err){if(err.$py_error===undefined){throw $B.exception(err)}
+return res}catch(err){err.src=src
+err.module=globals_id
+if(err.$py_error===undefined){throw $B.exception(err)}
 throw err}finally{
 if($B.frames_stack.length==stack_len+1){$B.frames_stack.pop()}
 root=null
@@ -5841,7 +5843,9 @@ kl===$B.FloatSubclass){return true}}
 if(check(klass,arg)){return true}
 var mro=klass.__mro__
 for(var i=0;i<mro.length;i++){if(check(mro[i],arg)){return true}}
-try{return getattr(arg,'__instancecheck__')(obj)}catch(err){return false}}
+var ce=__BRYTHON__.current_exception
+try{return getattr(arg,'__instancecheck__')(obj)}catch(err){__BRYTHON__.current_exception=ce
+return false}}
 function issubclass(klass,classinfo){check_no_kw('issubclass',klass,classinfo)
 check_nb_args('issubclass',2,arguments.length)
 if(!klass.__class__ ||
@@ -5851,7 +5855,10 @@ if(isinstance(classinfo,_b_.tuple)){for(var i=0;i<classinfo.length;i++){if(issub
 return false}
 if(classinfo.$factory ||classinfo.$is_class){if(klass===classinfo ||
 klass.__mro__.indexOf(classinfo)> -1){return true}}
-try{var sch=getattr(classinfo,'__subclasscheck__')}catch(err){if(err.__class__===_b_.AttributeError){return false}
+var ce=__BRYTHON__.current_exception
+try{var sch=getattr(classinfo,'__subclasscheck__')}catch(err){__BRYTHON__.current_exception=ce
+if(err===_b_.AttributeError ||
+err.__class__===_b_.AttributeError){return false}
 throw err}
 return sch(klass)}
 var iterator_class=$B.make_class("iterator",function(getitem,len){return{
@@ -6315,16 +6322,16 @@ throw exc}
 $B.$IndentationError=function(module,msg,pos){var exc=_b_.IndentationError.$factory(msg)
 $B.$syntax_err_line(exc,module,pos)
 throw exc}
-var traceback=$B.make_class("traceback",function(stack){return{
-__class__ : traceback,stack : stack}}
+var traceback=$B.make_class("traceback",function(exc){return{
+__class__ : traceback,exc: exc}}
 )
-traceback.__getattribute__=function(self,attr){if(self.stack.length==0){alert('no stack',attr)}
-var last_frame=$B.last(self.stack)
-if(last_frame==undefined){alert('last frame undef ');
-console.log(self.stack,Object.keys(self.stack))}
-var line_info=last_frame[1].$line_info
+traceback.__getattribute__=function(self,attr){if(self.exc.$stack.length==0){alert('no stack',attr)}
+var last_frame=$B.last(self.exc.$stack)
+if(last_frame===undefined){alert('last frame undef ');
+console.log(self.exc.$stack,Object.keys(self.exc.$stack))}
+var line_info=self.exc.$line_info ||last_frame[1].$line_info
 switch(attr){case 'tb_frame':
-return frame.$factory(self.stack)
+return frame.$factory(self.exc.$stack)
 case 'tb_lineno':
 if(line_info===undefined){return -1}
 else{return parseInt(line_info.split(',')[0])}
@@ -6332,12 +6339,14 @@ case 'tb_lasti':
 if(line_info===undefined){return '<unknown>'}
 else{var info=line_info.split(',')
 var src=$B.$py_src[info[1]]
-if(src!==undefined){return src.split('\n')[parseInt(info[0]-1)].trim()}else{return '<unknown>'}}
+if(src !==undefined){return src.split('\n')[parseInt(info[0]-1)].trim()}else{return '<unknown>'}}
 case 'tb_next':
-if(self.stack.length==1){return None}
-else{return traceback.$factory(self.stack.slice(0,self.stack.length-1))}
+if(self.exc.$stack.length==1){return None}
+else{return traceback.$factory(
+self.exc.$stack.slice(0,self.exc.$stack.length-1))}
 default:
-return traceback[attr]}}
+return _b_.object.__getattribute__(traceback,attr)}}
+$B.set_func_names(traceback,"builtins")
 var frame=$B.make_class("frame",function(stack,pos){var fs=stack
 var res={__class__: frame,f_builtins :{},
 $stack: stack,}
@@ -6381,18 +6390,19 @@ info+='\n'}
 for(var i=0;i<self.$stack.length;i++){var frame=self.$stack[i]
 if(!frame[1]||!frame[1].$line_info){continue}
 var $line_info=frame[1].$line_info
-if(i==0 && self.$line_info){$line_info=self.$line_info}
-var line_info=$line_info.split(',')
-if($B.$py_src[line_info[1]]===undefined){continue}
-var lines=$B.$py_src[line_info[1]].split('\n'),module=line_info[1]
+if(i==self.$stack.length - 1 && self.$line_info){$line_info=self.$line_info}
+var line_info=$line_info.split(','),src=$B.$py_src[line_info[1]]
+if(src===undefined && self.module==line_info[1]){src=self.src}
+if(src===undefined){continue}
+var lines=src.split('\n'),module=line_info[1]
 if(module.charAt(0)=='$'){module='<module>'}
-info +='\n  module '+module+' line '+line_info[0]
-var line=lines[parseInt(line_info[0])-1]
-if(line)line=line.replace(/^[ ]+/g,'')
+info +='\n  module ' + module + ' line ' + line_info[0]
+var line=lines[parseInt(line_info[0])- 1]
+if(line){line=line.replace(/^[ ]+/g,'')}
 if(line===undefined){console.log('line undef...',line_info,$B.$py_src[line_info[1]])}
 info +='\n    '+line}
 return info}else if(attr=='traceback'){
-return traceback.$factory(self.$stack)}else{throw _b_.AttributeError.$factory(self.__class__.__name__+
+return traceback.$factory(self)}else{throw _b_.AttributeError.$factory(self.__class__.__name__+
 " has no attribute '"+attr+"'")}}
 BaseException.__str__=function(self){return self.args[0]}
 BaseException.with_traceback=function(self,tb){self.traceback=tb

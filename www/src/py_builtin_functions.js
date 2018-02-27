@@ -448,7 +448,7 @@ function $$eval(src, _globals, _locals){
 
     // set module path
     $B.$py_module_path[globals_id] = $B.$py_module_path[current_globals_id]
-
+    
     // Initialise the object for block namespaces
     eval('var $locals_' + globals_id + ' = {}\nvar $locals_' +
         locals_id + ' = {}')
@@ -595,6 +595,8 @@ function $$eval(src, _globals, _locals){
         if(res === undefined) return _b_.None
         return res
     }catch(err){
+        err.src = src
+        err.module = globals_id
         if(err.$py_error === undefined){throw $B.exception(err)}
         throw err
     }finally{
@@ -1097,11 +1099,14 @@ function isinstance(obj,arg){
    }
 
    // Search __instancecheck__ on arg
-   try{
-       return getattr(arg, '__instancecheck__')(obj)
-   }catch(err){
-       return false
-   }
+    var ce = __BRYTHON__.current_exception
+
+    try{
+        return getattr(arg, '__instancecheck__')(obj)
+    }catch(err){
+        __BRYTHON__.current_exception = ce
+        return false
+    }
 }
 
 function issubclass(klass,classinfo){
@@ -1125,10 +1130,15 @@ function issubclass(klass,classinfo){
     }
 
     // Search __subclasscheck__ on classinfo
+    var ce = __BRYTHON__.current_exception
     try{
         var sch = getattr(classinfo, '__subclasscheck__')
     }catch(err){
-        if(err.__class__ === _b_.AttributeError){return false}
+        __BRYTHON__.current_exception = ce
+        if(err === _b_.AttributeError ||
+                err.__class__ === _b_.AttributeError){
+            return false
+        }
         throw err
     }
     return sch(klass)
