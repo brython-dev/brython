@@ -71,8 +71,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-02-26 21:57:55.247974"
-__BRYTHON__.timestamp=1519678675247
+__BRYTHON__.compiled_date="2018-02-27 08:04:54.443286"
+__BRYTHON__.timestamp=1519715094458
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -724,8 +724,7 @@ case 'id':
 positional.push([arg.to_js(),'s'])
 break
 default:
-if(arg.tree[0]===undefined){console.log('bizarre',arg)}
-else{type=arg.tree[0].type}
+type=arg.tree[0].type
 switch(type){case 'expr':
 positional.push([arg.to_js(),'s'])
 break
@@ -763,7 +762,7 @@ args_str=p[0]
 for(var i=1;i<p.length;i++){args_str +='.concat(' + p[i]+ ')'}}else{for(var i=0,len=positional.length;i<len;i++){positional[i]=positional[i][0]}
 args_str=positional.join(', ')}
 var kw_args_str='{' + kw_args.join(', ')+ '}'
-if(dstar_args.length){kw_args_str='{$nat:"kw",kw:$B.extend("' + this.func.value +
+if(dstar_args.length){kw_args_str='{$nat:"kw",kw:$B.extend("' + this.func.name +
 '",' + kw_args_str + ',' + dstar_args.join(', ')+ ')}'}else if(kw_args_str !='{}'){kw_args_str='{$nat:"kw",kw:' + kw_args_str + '}'}else{kw_args_str=''}
 if(star_args && kw_args_str){args_str +='.concat([' + kw_args_str + '])'}else{if(args_str && kw_args_str){args_str +=',' + kw_args_str}
 else if(!args_str){args_str=kw_args_str}}
@@ -3990,8 +3989,7 @@ end++}}}else if(src.charAt(end)=='\n' && _type !='triple_string'){
 $pos=end
 $_SyntaxError(C,["EOL while scanning string literal"])}else if(src.charAt(end)==car){if(_type=="triple_string" &&
 src.substr(end,3)!=car + car + car){zone +=src.charAt(end)
-end++}else{
-found=true
+end++}else{found=true
 $pos=pos
 var $string=zone.substr(1),string=''
 for(var i=0;i < $string.length;i++){var $car=$string.charAt(i)
