@@ -5492,9 +5492,6 @@ function $get_scope(context){
     var scope = tree_node.parent || tree_node // module
     scope.ntype = "module"
     scope.level = level
-    if(scope.id == "header_show_3"){
-        console.log("scope for", context, scope)
-    }
     return scope
 }
 
