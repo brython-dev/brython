@@ -71,8 +71,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,0,'rc',0]
 __BRYTHON__.__MAGIC__="3.5.0"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-02-27 09:33:10.956408"
-__BRYTHON__.timestamp=1519720390956
+__BRYTHON__.compiled_date="2018-02-27 15:00:48.016698"
+__BRYTHON__.timestamp=1519740048016
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -6623,12 +6623,10 @@ return res}
 $B.set_func_names(slice,"builtins")
 _b_.range=range
 _b_.slice=slice})(__BRYTHON__)
-;(function($B){var _b_=$B.builtins
-var object=_b_.object
-var isinstance=_b_.isinstance,getattr=_b_.getattr,None=_b_.None
+;(function($B){var _b_=$B.builtins,object=_b_.object,isinstance=_b_.isinstance,getattr=_b_.getattr,None=_b_.None
 var from_unicode={},to_unicode={}
-var bytearray={__class__:_b_.type,__mro__:[object],__name__:'bytearray',$buffer_protocol:true,$is_class: true}
-var mutable_methods=['__delitem__','clear','copy','count','index','pop','remove','reverse','sort']
+var bytearray={__class__: _b_.type,__mro__:[object],__name__: 'bytearray',$buffer_protocol: true,$is_class: true}
+var mutable_methods=["__delitem__","clear","copy","count","index","pop","remove","reverse","sort"]
 for(var i=0,_len_i=mutable_methods.length;i < _len_i;i++){var method=mutable_methods[i]
 bytearray[method]=(function(m){return function(self){var args=[self.source],pos=1
 for(var i=1,_len_i=arguments.length;i < _len_i;i++)args[pos++]=arguments[i]
@@ -6706,10 +6704,14 @@ bytes.__new__=function(cls,source,encoding,errors){
 var self={__class__:cls}
 var int_list=[],pos=0
 if(source===undefined){}else if(isinstance(source,_b_.int)){var i=source
-while(i--)int_list[pos++]=0}else{if(isinstance(source,_b_.str)){if(encoding===undefined)
-throw _b_.TypeError.$factory("string argument without an encoding")
+while(i--)int_list[pos++]=0}else{if(isinstance(source,_b_.str)){if(encoding===undefined){throw _b_.TypeError.$factory("string argument without an encoding")}
 int_list=encode(source,encoding)}else{
-int_list=_b_.list.$factory(source)}}
+int_list=_b_.list.$factory(source)
+for(var i=0;i < int_list.length;i++){try{var item=_b_.int.$factory(int_list[i])}catch(err){throw _b_.TypeError.$factory("'" +
+$B.get_class(int_list[i]).__name__ + "' object " +
+"cannot be interpreted as an integer")}
+if(item < 0 ||item > 255){throw _b_.ValueError.$factory("bytes must be in range" +
+"(0, 256)")}}}}
 self.source=int_list
 self.encoding=encoding
 self.errors=errors
@@ -7845,10 +7847,11 @@ var int={__class__: _b_.type,__name__: 'int',__dir__: object.__dir__,$is_class: 
 int.from_bytes=function(){var $=$B.args("from_bytes",3,{bytes:null,byteorder:null,signed:null},['bytes','byteorder','signed'],arguments,{signed:False},null,null)
 var x=$.bytes,byteorder=$.byteorder,signed=$.signed
 var _bytes,_len
-if(isinstance(x,[_b_.list,_b_.tuple])){_bytes=x
-_len=len(x)}else if(isinstance(x,[_b_.bytes,_b_.bytearray])){_bytes=x.source
+if(isinstance(x,[_b_.bytes,_b_.bytearray])){_bytes=x.source
 _len=x.source.length}else{
-_b_.TypeError.$factory("Error! " + _b_.type(x)+ " is not supported in int.from_bytes. fix me!")}
+_bytes=_b_.list.$factory(x)
+_len=_bytes.length
+for(var i=0;i<_len;i++){_b_.bytes.$factory([_bytes[i]])}}
 switch(byteorder){case 'big':
 var num=_bytes[_len - 1];
 var _mult=256

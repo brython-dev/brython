@@ -1,22 +1,25 @@
 ;(function($B){
 
-var _b_=$B.builtins
-var object = _b_.object
-var isinstance = _b_.isinstance, getattr=_b_.getattr, None=_b_.None
+var _b_ = $B.builtins,
+    object = _b_.object,
+    isinstance = _b_.isinstance,
+    getattr=_b_.getattr,
+    None=_b_.None
 
-var from_unicode={}, to_unicode={}
+var from_unicode = {},
+    to_unicode = {}
 
-//bytearray() (built in function)
+//bytearray() (built in class)
 var bytearray = {
-    __class__:_b_.type,
+    __class__: _b_.type,
     __mro__: [object],
-    __name__:'bytearray',
-    $buffer_protocol:true,
+    __name__: 'bytearray',
+    $buffer_protocol: true,
     $is_class: true
 }
 
-var mutable_methods = ['__delitem__','clear','copy','count','index','pop',
-    'remove','reverse','sort']
+var mutable_methods = ["__delitem__", "clear", "copy", "count", "index",
+    "pop", "remove", "reverse", "sort"]
 
 for(var i=0, _len_i = mutable_methods.length; i < _len_i;i++){
     var method = mutable_methods[i]
@@ -236,12 +239,26 @@ bytes.__new__ = function(cls, source, encoding, errors){
         while(i--) int_list[pos++]=0
     }else{
         if(isinstance(source,_b_.str)){
-            if(encoding===undefined)
+            if(encoding===undefined){
                 throw _b_.TypeError.$factory("string argument without an encoding")
+            }
             int_list = encode(source,encoding)
         }else{
             // tranform iterable "source" into a list
             int_list = _b_.list.$factory(source)
+            for(var i = 0; i < int_list.length; i++){
+                try{
+                    var item = _b_.int.$factory(int_list[i])
+                }catch(err){
+                    throw _b_.TypeError.$factory("'" +
+                        $B.get_class(int_list[i]).__name__ + "' object " +
+                        "cannot be interpreted as an integer")
+                }
+                if(item < 0 || item > 255){
+                    throw _b_.ValueError.$factory("bytes must be in range" +
+                        "(0, 256)")
+                }
+            }
         }
     }
     self.source = int_list

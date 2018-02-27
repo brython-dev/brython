@@ -1,3 +1,5 @@
+from tester import assertRaises
+
 assert str(bytes("㋰",'utf-8'))==r"b'\xe3\x8b\xb0'"
 
 assert [hex(c) for c in bytes('abcd','utf-8')] == ['0x61', '0x62', '0x63', '0x64']
@@ -33,5 +35,11 @@ assert b'-'.join([b'a', b'b']) == b'a-b'
 for word in ['donnée','ήλιος','машина','太陽']:
     b = word.encode('utf-8')
     assert b.decode('utf-8') == word
+
+# issue 791
+assert int.from_bytes(map(ord, 'abcd'), 'big') == 1633837924
+
+t = [66, 'a']
+assertRaises(TypeError, bytes, t, "big")
 
 print('passed all tests...')

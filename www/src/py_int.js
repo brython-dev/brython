@@ -26,23 +26,25 @@ var int = {__class__: _b_.type,
 
 int.from_bytes = function() {
   var $=$B.args("from_bytes", 3,
-      {bytes:null, byteorder:null, signed:null}, ['bytes', 'byteorder', 'signed'],
+      {bytes:null, byteorder:null, signed:null},
+      ['bytes', 'byteorder', 'signed'],
       arguments, {signed:False}, null, null)
 
   var x = $.bytes,
       byteorder = $.byteorder,
       signed = $.signed
   var _bytes, _len
-  if (isinstance(x, [_b_.list, _b_.tuple])) {
-     _bytes=x
-     _len=len(x)
-  } else if (isinstance(x, [_b_.bytes, _b_.bytearray])) {
+  if (isinstance(x, [_b_.bytes, _b_.bytearray])) {
     _bytes=x.source
     _len=x.source.length
-  } else {
-    _b_.TypeError.$factory("Error! " + _b_.type(x) + " is not supported in int.from_bytes. fix me!")
-  }
 
+  } else {
+      _bytes = _b_.list.$factory(x)
+      _len = _bytes.length
+      for(var i=0;i<_len;i++){
+          _b_.bytes.$factory([_bytes[i]])
+      }
+  }
   switch(byteorder) {
     case 'big':
       var num = _bytes[_len - 1];
