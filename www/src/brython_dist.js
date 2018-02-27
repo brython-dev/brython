@@ -52,7 +52,7 @@ $B.lambda_magic=Math.random().toString(36).substr(2,8)
 $B.callbacks={}
 $B.set_func_names=function(klass,module){var name=klass.__name__
 klass.__module__=module
-for(var attr in klass){if(typeof klass[attr]=='function'){klass[attr].$infos={__module__: module,__qualname__ : name+'.'+attr,__name__:attr}
+for(var attr in klass){if(typeof klass[attr]=='function'){klass[attr].$infos={__doc__: klass[attr].__doc__ ||"",__module__: module,__qualname__ : name+'.'+attr,__name__: attr}
 if(klass[attr].$type=="classmethod"){klass[attr].__class__=$B.method}}}}
 var has_storage=typeof(Storage)!=="undefined"
 if(has_storage){$B.has_local_storage=false
@@ -71,8 +71,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,4,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.4.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-02-27 08:04:54.443286"
-__BRYTHON__.timestamp=1519715094458
+__BRYTHON__.compiled_date="2018-02-27 08:40:06.595597"
+__BRYTHON__.timestamp=1519717206626
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&

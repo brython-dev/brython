@@ -126,9 +126,10 @@ $B.set_func_names = function(klass, module){
     for(var attr in klass){
         if(typeof klass[attr] == 'function'){
             klass[attr].$infos = {
+                __doc__: klass[attr].__doc__ || "",
                 __module__: module,
                 __qualname__ : name+'.'+attr,
-                __name__:attr
+                __name__: attr
             }
             if(klass[attr].$type == "classmethod"){
                 klass[attr].__class__ = $B.method
