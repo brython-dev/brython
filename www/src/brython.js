@@ -71,8 +71,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,0,'rc',0]
 __BRYTHON__.__MAGIC__="3.5.0"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-02-27 22:41:36.552551"
-__BRYTHON__.timestamp=1519767696552
+__BRYTHON__.compiled_date="2018-02-28 09:33:56.930060"
+__BRYTHON__.timestamp=1519806836930
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -6423,18 +6423,7 @@ _b_.BaseException=BaseException
 $B.exception=function(js_exc){
 if(!js_exc.$py_error){
 console.log('js exc',js_exc)
-if(js_exc.info===undefined){var _frame=$B.last($B.frames_stack)
-if(_frame===undefined){_frame=$B.pmframe}
-if(_frame && _frame[1].$line_info!==undefined){var line_info=_frame[1].$line_info.split(',')
-var mod_name=line_info[1]
-var line_num=parseInt(line_info[0])
-if($B.$py_src[mod_name]===undefined){console.log('pas de py_src pour '+mod_name)
-console.log(js_exc)}
-var lines=$B.$py_src[mod_name].split('\n'),msg=js_exc.message.toString()
-msg +="\n  module '"+mod_name+"' line "+line_num
-msg +='\n'+lines[line_num-1]
-js_exc.msg=msg
-js_exc.info_in_msg=true}else{console.log('error ',js_exc)}}
+if(js_exc.info===undefined){js_exc.msg=BaseException.__getattr__(js_exc,"info")}
 var exc=Error()
 exc.__name__='Internal Javascript error: '+(js_exc.__name__ ||js_exc.name)
 exc.__class__=_b_.Exception

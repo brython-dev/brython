@@ -305,28 +305,7 @@ $B.exception = function(js_exc){
         console.log('js exc', js_exc)
 
         if(js_exc.info===undefined){
-            var _frame = $B.last($B.frames_stack)
-            if(_frame===undefined){_frame=$B.pmframe} // use post-mortem frame
-            if(_frame && _frame[1].$line_info!==undefined){
-                var line_info = _frame[1].$line_info.split(',')
-                var mod_name = line_info[1]
-                var line_num = parseInt(line_info[0])
-                if($B.$py_src[mod_name]===undefined){
-                    console.log('pas de py_src pour '+mod_name)
-                    console.log(js_exc)
-                }
-                var lines = $B.$py_src[mod_name].split('\n'),
-                    msg = js_exc.message.toString()
-                // For some weird reason, nothing can be added to js_exc.message
-                // so we have to create another attribute with the complete
-                // error message including line in source code
-                msg += "\n  module '"+mod_name+"' line "+line_num
-                msg += '\n'+lines[line_num-1]
-                js_exc.msg = msg
-                js_exc.info_in_msg = true
-            }else{
-                console.log('error ', js_exc)
-            }
+            js_exc.msg = BaseException.__getattr__(js_exc, "info")
         }
         var exc = Error()
         exc.__name__ = 'Internal Javascript error: '+(js_exc.__name__ || js_exc.name)
