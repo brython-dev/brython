@@ -448,7 +448,7 @@ function $$eval(src, _globals, _locals){
 
     // set module path
     $B.$py_module_path[globals_id] = $B.$py_module_path[current_globals_id]
-    
+
     // Initialise the object for block namespaces
     eval('var $locals_' + globals_id + ' = {}\nvar $locals_' +
         locals_id + ' = {}')
@@ -695,7 +695,7 @@ $B.show_getattr = function(){
     for(var i=0;i<10;i++){console.log(items[i])}
 }
 
-function getattr(obj, attr, _default){
+function getattr(){
     var missing = {}
     var $ = $B.args("getattr", 3, {obj: null, attr: null, _default: null},
         ["obj", "attr", "_default"], arguments, {_default: missing},
@@ -881,12 +881,11 @@ $B.$getattr = function(obj, attr, _default){
             return obj[attr]
         }
     }
-
+    
     try{
         var res = attr_func(obj, attr)
     }
     catch(err){
-        if(attr == "find_spec"){console.log(err)}
         if(_default !== undefined){return _default}
         throw err
     }

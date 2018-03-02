@@ -71,8 +71,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,0,'rc',0]
 __BRYTHON__.__MAGIC__="3.5.0"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-02-28 09:33:56.930060"
-__BRYTHON__.timestamp=1519806836930
+__BRYTHON__.compiled_date="2018-03-02 10:34:10.412322"
+__BRYTHON__.timestamp=1519983250412
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -5682,7 +5682,7 @@ for(var attr in $B.counter){items.push([$B.counter[attr],attr])}
 items.sort(function(x,y){return x[0]> y[0]? 1 : x[0]==y[0]? 0 : -1})
 items.reverse()
 for(var i=0;i<10;i++){console.log(items[i])}}
-function getattr(obj,attr,_default){var missing={}
+function getattr(){var missing={}
 var $=$B.args("getattr",3,{obj: null,attr: null,_default: null},["obj","attr","_default"],arguments,{_default: missing},null,null)
 return $B.$getattr($.obj,$.attr,$._default===missing ? undefined : $._default)}
 $B.$getattr=function(obj,attr,_default){
@@ -5751,8 +5751,7 @@ if(attr_func===odga){var res=obj[attr]
 if(res===null){return null}
 else if(res===undefined && obj.hasOwnProperty(attr)){return res}else if(res !==undefined && res.__set__===undefined){return obj[attr]}}
 try{var res=attr_func(obj,attr)}
-catch(err){if(attr=="find_spec"){console.log(err)}
-if(_default !==undefined){return _default}
+catch(err){if(_default !==undefined){return _default}
 throw err}
 if(res !==undefined){return res}
 if(_default !==undefined){return _default}
@@ -11610,15 +11609,22 @@ _b_.__builtins__.__setattr__=function(attr,value){_b_[attr]=value}})(__BRYTHON__
 ;(function($B){var _b_=$B.builtins
 function import_hooks(mod_name,_path,module,blocking){
 if($B.is_none(module)){module=undefined;}
-var _meta_path=$B.meta_path;
-var spec=undefined;
-for(var i=0,_len_i=_meta_path.length;i < _len_i && $B.is_none(spec);i++){var _finder=_meta_path[i],find_spec=_b_.getattr(_finder,'find_spec',null)
-if(find_spec !==null){spec=find_spec(mod_name,_path,undefined,blocking);
-spec.blocking=blocking}}
-if($B.is_none(spec)){
+var _meta_path=$B.meta_path,_sys_modules=$B.imported,_loader,spec
+for(var i=0,_len_i=_meta_path.length;i < _len_i;i++){var _finder=_meta_path[i],find_spec=$B.$getattr(_finder,'find_spec',_b_.None)
+if(find_spec==_b_.None){
+var find_module=$B.$getattr(_finder,"find_module",_b_.None)
+if(find_module !==_b_.None){_loader=find_module(mod_name,_path)
+var load_module=$B.$getattr(_loader,"load_module")
+module=$B.$call(load_module)(mod_name)
+_sys_modules[mod_name]=module
+return module
+break}}else{spec=find_spec(mod_name,_path,undefined,blocking)
+if(!$B.is_none(spec)){spec.blocking=blocking
+_loader=_b_.getattr(spec,'loader',_b_.None)
+break}}}
+if(_loader===undefined){
 throw _b_.ImportError.$factory('No module named '+mod_name);}
-var _loader=_b_.getattr(spec,'loader',_b_.None),_sys_modules=$B.imported,_spec_name=_b_.getattr(spec,'name');
-if($B.is_none(module)){
+if($B.is_none(module)){var _spec_name=_b_.getattr(spec,'name')
 if(!$B.is_none(_loader)){var create_module=_b_.getattr(_loader,'create_module',_b_.None);
 if(!$B.is_none(create_module)){module=$B.$call(create_module)(_loader,spec);}}
 if(module===undefined){throw _b_.ImportError.$factory(mod_name)}

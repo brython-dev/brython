@@ -19,29 +19,46 @@
         module = undefined;
     }
 
-    var _meta_path=$B.meta_path;
+    var _meta_path = $B.meta_path,
+        _sys_modules = $B.imported,
+        _loader,
+        spec
 
-    var spec = undefined;
-    for (var i=0, _len_i = _meta_path.length; i < _len_i && $B.is_none(spec); i++) {
+    for (var i=0, _len_i = _meta_path.length; i < _len_i; i++) {
         var _finder=_meta_path[i],
-            find_spec = _b_.getattr(_finder, 'find_spec', null)
-        if(find_spec !== null){
-            spec=find_spec(mod_name, _path, undefined, blocking);
-            spec.blocking = blocking
+            find_spec = $B.$getattr(_finder, 'find_spec', _b_.None)
+        if(find_spec == _b_.None){
+            // If find_spec is not defined for the meta path, try the legacy
+            // method find_module()
+            var find_module = $B.$getattr(_finder, "find_module", _b_.None)
+            if(find_module !== _b_.None){
+                _loader = find_module(mod_name, _path)
+                // The loader has a method load_module()
+                var load_module = $B.$getattr(_loader, "load_module")
+                module = $B.$call(load_module)(mod_name)
+                _sys_modules[mod_name] = module
+                return module
+                break
+            }
+        }else{
+            spec = find_spec(mod_name, _path, undefined, blocking)
+            if(!$B.is_none(spec)){
+                spec.blocking = blocking
+                _loader = _b_.getattr(spec, 'loader', _b_.None)
+                break
+            }
         }
     } //for
 
-    if ($B.is_none(spec)) {
+    if(_loader === undefined) {
         // No import spec found
         throw _b_.ImportError.$factory('No module named '+mod_name);
     }
 
-    var _loader = _b_.getattr(spec, 'loader', _b_.None),
-        _sys_modules = $B.imported,
-        _spec_name = _b_.getattr(spec, 'name');
-
     // Import spec represents a match
     if ($B.is_none(module)) {
+        var _spec_name = _b_.getattr(spec, 'name')
+
         // Create module object
         if (!$B.is_none(_loader)) {
             var create_module = _b_.getattr(_loader, 'create_module', _b_.None);
