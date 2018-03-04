@@ -71,8 +71,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,0,'rc',0]
 __BRYTHON__.__MAGIC__="3.5.0"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-03-04 18:34:45.748874"
-__BRYTHON__.timestamp=1520184885748
+__BRYTHON__.compiled_date="2018-03-04 19:00:10.353843"
+__BRYTHON__.timestamp=1520186410353
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -6065,7 +6065,7 @@ function setattr(){var $=$B.args('setattr',3,{obj: null,attr: null,value: null},
 if(!(typeof attr=='string')){throw _b_.TypeError.$factory("setattr(): attribute name must be string")}
 return $B.$setattr(obj,attr,value)}
 $B.$setattr=function(obj,attr,value){
-if($B.aliased_names[attr]){attr='$$' + attr}else if(attr.substr(0,2)=='$$' && $B.aliased_names[attr.substr(2)]){attr=attr.substr(2)}else if(attr=='__dict__'){
+if($B.aliased_names[attr]){attr='$$' + attr}else if(attr=='__dict__'){
 if(!value.__class__===_b_.dict){throw _b_.TypeError.$factory("__dict__ must be set to a dictionary, " +
 "not a '" + value.__class__.__name + "'")}
 for(var attr in obj){if(attr !=="__class__"){delete obj[attr]}}

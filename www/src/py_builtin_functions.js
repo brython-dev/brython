@@ -881,7 +881,7 @@ $B.$getattr = function(obj, attr, _default){
             return obj[attr]
         }
     }
-    
+
     try{
         var res = attr_func(obj, attr)
     }
@@ -1647,8 +1647,6 @@ $B.$setattr = function(obj, attr, value){
     // since we know we will get the 3 values
     if($B.aliased_names[attr]){
         attr = '$$' + attr
-    }else if(attr.substr(0,2) == '$$' && $B.aliased_names[attr.substr(2)]){
-        attr = attr.substr(2)
     }else if(attr == '__dict__'){
         // set attribute __dict__
         // remove previous attributes

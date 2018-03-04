@@ -1660,6 +1660,26 @@ assertRaises(TypeError,d)
 assertRaises(TypeError, d, 1)
 assertRaises(TypeError, d, {'x': 1})
 
+# issue 782
+class Greetings:
+    default = None
+
+    def hello(self):
+        return "Hello!"
+
+_func_body = """\
+def {name}():
+    if {obj} is None:
+        {obj} = {init}
+    return {obj}.{name}()
+"""
+
+def_str = _func_body.format(obj='Greetings.default',
+    init='Greetings()', name="hello")
+exec(def_str, globals())
+
+assert hello() == "Hello!"
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
