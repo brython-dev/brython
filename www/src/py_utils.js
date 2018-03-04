@@ -835,7 +835,7 @@ $B.pyobject2jsobject=function (obj){
           try {
            _a[pos++]=$B.pyobject2jsobject(_b_.next(obj))
           } catch(err) {
-            if (err.__classe__ !== _b_.StopIteration) throw err
+            if (err.__class__ !== _b_.StopIteration) throw err
             $B.current_exception = ce
             break
           }

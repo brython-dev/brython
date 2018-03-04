@@ -71,8 +71,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,0,'rc',0]
 __BRYTHON__.__MAGIC__="3.5.0"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-03-04 15:49:21.425170"
-__BRYTHON__.timestamp=1520174961425
+__BRYTHON__.compiled_date="2018-03-04 18:34:45.748874"
+__BRYTHON__.timestamp=1520184885748
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -5102,7 +5102,7 @@ return res}
 if(_b_.hasattr(obj,'__iter__')){
 var _a=[],pos=0,ce=$B.current_exception
 while(1){try{
-_a[pos++]=$B.pyobject2jsobject(_b_.next(obj))}catch(err){if(err.__classe__ !==_b_.StopIteration)throw err
+_a[pos++]=$B.pyobject2jsobject(_b_.next(obj))}catch(err){if(err.__class__ !==_b_.StopIteration)throw err
 $B.current_exception=ce
 break}}
 return{'_type_': 'iter',data: _a}}
