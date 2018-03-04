@@ -119,7 +119,7 @@ Pool.map = function(){
 
        try{arg=getattr(fargs, '__next__')()}
        catch(err) {
-          if (err.__name__ != 'StopIteration') throw err
+          if (err.__class__ !== _b_.StopIteration) throw err
        }
        console.log(arg)
        _workers[i].finished=false
@@ -137,7 +137,7 @@ Pool.map = function(){
                                             args: $convert_args([arg])})
                _pos++
            } catch(err) {
-               if (err.__name__ != 'StopIteration') throw err
+               if (err.__class__ !== _b_.StopIteration) throw err
                this.finished=true
            }
        }, false);
@@ -170,7 +170,7 @@ Pool.apply_async = function(){
 
        try{arg=getattr(fargs, '__next__')()}
        catch(err) {
-          if (err.__name__ != 'StopIteration') throw err
+          if (err.__class__ !== _b_.StopIteration) throw err
        }
        //console.log(arg)
        //_workers[i].finished=false
@@ -188,7 +188,7 @@ Pool.apply_async = function(){
                                             args: $convert_args([arg])})
                _pos++
            } catch(err) {
-               if (err.__name__ != 'StopIteration') throw err
+               if (err.__class__ !== _b_.StopIteration) throw err
                this.finished=true
            }
        }, false);

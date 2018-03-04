@@ -71,8 +71,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,0,'rc',0]
 __BRYTHON__.__MAGIC__="3.5.0"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-03-02 10:34:10.412322"
-__BRYTHON__.timestamp=1519983250412
+__BRYTHON__.compiled_date="2018-03-04 15:49:21.425170"
+__BRYTHON__.timestamp=1520174961425
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -5040,7 +5040,7 @@ if(f)return f(item)
 try{_iter=_b_.iter(_set)}
 catch(err){$B.current_exception=ce}
 if(_iter){while(1){try{var elt=_b_.next(_iter)
-if($B.rich_comp("__eq__",elt,item))return true}catch(err){if(err.__name__=="StopIteration"){$B.current_exception=ce
+if($B.rich_comp("__eq__",elt,item))return true}catch(err){if(err.__class__===_b_.StopIteration){$B.current_exception=ce
 return false}
 throw err}}}
 try{f=_b_.getattr(_set,"__getitem__")}
@@ -5048,7 +5048,7 @@ catch(err){throw _b_.TypeError.$factory("'"+$B.get_class(_set).__name__+"' objec
 if(f){var i=-1
 while(1){i++
 try{var elt=f(i)
-if($B.rich_comp("__eq__",elt,item))return true}catch(err){if(err.__name__=='IndexError')return false
+if($B.rich_comp("__eq__",elt,item))return true}catch(err){if(err.__class__===_b_.IndexError)return false
 throw err}}}}
 $B.$call=function(callable){if(callable.__class__===$B.method){return callable}
 else if(callable.$is_func ||typeof callable=="function"){return callable}
@@ -5102,7 +5102,7 @@ return res}
 if(_b_.hasattr(obj,'__iter__')){
 var _a=[],pos=0,ce=$B.current_exception
 while(1){try{
-_a[pos++]=$B.pyobject2jsobject(_b_.next(obj))}catch(err){if(err.__name__ !=="StopIteration")throw err
+_a[pos++]=$B.pyobject2jsobject(_b_.next(obj))}catch(err){if(err.__classe__ !==_b_.StopIteration)throw err
 $B.current_exception=ce
 break}}
 return{'_type_': 'iter',data: _a}}
@@ -5120,7 +5120,7 @@ return res}
 $B.$iterator_class=function(name){var res={__class__:_b_.type,__name__:name,__module__: "builtins",__mro__:[_b_.object],$is_class: true}
 function as_array(s){var _a=[],pos=0,_it=_b_.iter(s),ce=$B.current_exception
 while(1){try{
-_a[pos++]=_b_.next(_it)}catch(err){if(err.__name__=='StopIteration'){$B.current_exception=ce
+_a[pos++]=_b_.next(_it)}catch(err){if(err.__class__===_b_.StopIteration){$B.current_exception=ce
 break}}}
 return _a}
 function as_list(s){return _b_.list.$factory(as_array(s))}
@@ -5926,7 +5926,7 @@ if(!func){func=function(x){return x}}
 if(nb_args==0){throw _b_.TypeError.$factory($op_name + " expected 1 argument, got 0")}else if(nb_args==1){
 var $iter=iter(args[0]),res=null,ce=$B.current_exception
 while(true){try{var x=next($iter)
-if(res===null ||$B.$bool(getattr(func(x),op)(func(res)))){res=x}}catch(err){if(err.__name__=="StopIteration"){$B.current_exception=ce
+if(res===null ||$B.$bool(getattr(func(x),op)(func(res)))){res=x}}catch(err){if(err.__class__==_b_.StopIteration){$B.current_exception=ce
 if(res===null){if(has_default){return default_value}
 else{throw _b_.ValueError.$factory($op_name +
 "() arg is an empty sequence")}}else{return res}}
@@ -6033,7 +6033,7 @@ check_no_kw('reversed',seq)
 check_nb_args('reversed',1,arguments.length)
 var ce=$B.current_exception
 try{return getattr(seq,'__reversed__')()}
-catch(err){if(err.__name__ !='AttributeError'){throw err}}
+catch(err){if(err.__class__ !=_b_.AttributeError){throw err}}
 $B.current_exception=ce
 try{var res={__class__: reversed,$counter : getattr(seq,'__len__')(),getter: getattr(seq,'__getitem__')}
 return res}catch(err){throw _b_.TypeError.$factory("argument to reversed() must be a sequence")}}
@@ -6123,7 +6123,7 @@ if(_b_.isinstance(start,_b_.bytes)){throw _b_.TypeError.$factory("TypeError: sum
 " [use b''.join(seq) instead]")}}
 var res=start,iterable=iter(iterable),ce=$B.current_exception
 while(1){try{var _item=next(iterable)
-res=getattr(res,'__add__')(_item)}catch(err){if(err.__name__==='StopIteration'){$B.current_exception=ce
+res=getattr(res,'__add__')(_item)}catch(err){if(err.__class__===_b_.StopIteration){$B.current_exception=ce
 break}else{throw err}}}
 return res}
 var $$super=$B.make_class("super",function(_type1,_type2){return{__class__: $$super,__thisclass__: _type1,__self_class__: _type2}}
@@ -6222,7 +6222,7 @@ var args=[],pos=0
 for(var i=0;i<_args.length;i++){args[pos++]=iter(_args[i])}
 var rank=0,items=[],ce=$B.current_exception
 while(1){var line=[],flag=true,pos=0
-for(var i=0;i<args.length;i++){try{line[pos++]=next(args[i])}catch(err){if(err.__name__=='StopIteration'){flag=false
+for(var i=0;i<args.length;i++){try{line[pos++]=next(args[i])}catch(err){if(err.__class__==_b_.StopIteration){flag=false
 break}else{throw err}}}
 if(!flag){break}
 items[rank++]=_b_.tuple.$factory(line)}
@@ -6407,7 +6407,6 @@ BaseException.__str__=function(self){return self.args[0]}
 BaseException.with_traceback=function(self,tb){self.traceback=tb
 return self}
 BaseException.$factory=function(){var err=Error()
-err.__name__='BaseException'
 err.args=_b_.tuple.$factory(Array.prototype.slice.call(arguments))
 err.__class__=_b_.BaseException
 err.$py_error=true
@@ -6439,8 +6438,7 @@ exc.$stack=$B.frames_stack.slice()}else{var exc=js_exc}
 $B.current_exception=exc
 return exc}
 $B.is_exc=function(exc,exc_list){
-if(exc.__class__===undefined){console.log("no _class__",exc)
-exc=$B.exception(exc)}
+if(exc.__class__===undefined){exc=$B.exception(exc)}
 var this_exc_class=exc.__class__
 for(var i=0;i<exc_list.length;i++){var exc_class=exc_list[i]
 if(this_exc_class===undefined){console.log("exc class undefined",exc)}
@@ -6994,7 +6992,7 @@ for(var i=0;i<arguments.length;i++){if(arguments[i]===undefined){args.push(_b_.N
 else{args.push(jsobj2pyobj(arguments[i]))}}
 return pyobj2jsobj(pyobj.apply(this,args))}catch(err){console.log(err)
 console.log(_b_.getattr(err,'info'))
-console.log(err.__name__+':',err.args.length > 0 ? err.args[0]: '' )
+console.log(err.__class__.__name__+':',err.args.length > 0 ? err.args[0]: '' )
 throw err}}}else{
 return pyobj}}
 var JSObject={__class__: _b_.type,__module__: "<javascript>",__mro__:[object],__name__: 'JSObject'}
@@ -9046,7 +9044,7 @@ if(arg===undefined)return $N
 var arg=$B.$iter(arg),next_func=$B.$call(getattr(arg,'__next__')),pos=len_func(),ce=$B.current_exception
 while(1){try{var res=next_func()
 self[pos++]=res}
-catch(err){if(err.__name__=='StopIteration'){$B.current_exception=ce
+catch(err){if(err.__class__===_b_.StopIteration){$B.current_exception=ce
 break}
 else{throw err}}}
 return $N}
@@ -9285,7 +9283,7 @@ self.__brython__=true
 var arg=$B.$iter(args[0]),next_func=$B.$call(getattr(arg,'__next__')),ce=$B.current_exception
 while(1){try{var item=next_func()
 self.push(item)}
-catch(err){if(err.__name__=='StopIteration'){$B.current_exception=ce
+catch(err){if(err.__class__===_b_.StopIteration){$B.current_exception=ce
 break}
 else{throw err}}}
 return self}
@@ -10203,7 +10201,7 @@ return $N}
 if(Array.isArray(args[0])){var src=args[0],i=src.length - 1,si=dict.__setitem__
 while(i-- > 0){si(self,src[i - 1][0],src[i - 1][1])}}else{var iterable=$B.$iter(args[0]),ce=$B.current_exception
 while(1){try{var elt=next(iterable),key=getattr(elt,'__getitem__')(0),value=getattr(elt,'__getitem__')(1)
-dict.__setitem__(self,key,value)}catch(err){if(err.__name__==='StopIteration'){$B.current_exception=ce
+dict.__setitem__(self,key,value)}catch(err){if(err.__class__===_b_.StopIteration){$B.current_exception=ce
 break}
 throw err}}}}
 if(dict.__len__(kw)> 0){$copy_dict(self,kw)}
@@ -10289,13 +10287,13 @@ return $iterator_wrapper(new $key_iterator(self),$dict_keysDict)}
 dict.pop=function(){var $=$B.args('pop',3,{self: null,key: null,_default: null},['self','key','_default'],arguments,{_default: $N},null,null),self=$.self,key=$.key,_default=$._default
 try{var res=dict.__getitem__(self,key)
 dict.__delitem__(self,key)
-return res}catch(err){if(err.__name__==='KeyError'){if(_default !==undefined){return _default}
+return res}catch(err){if(err.__class__===_b_.KeyError){if(_default !==undefined){return _default}
 throw err}
 throw err}}
 dict.popitem=function(self){var ce=$B.current_exception
 try{var itm=new $item_iterator(self).next()
 dict.__delitem__(self,itm[0])
-return _b_.tuple.$factory(itm)}catch(err){if(err.__name__=="StopIteration"){$B.current_exception=ce
+return _b_.tuple.$factory(itm)}catch(err){if(err.__class__==_b_.StopIteration){$B.current_exception=ce
 throw KeyError.$factory("'popitem(): dictionary is empty'")}}}
 dict.setdefault=function(){var $=$B.args('setdefault',3,{self: null,key: null,_default: null},['self','key','_default'],arguments,{_default: $N},null,null),self=$.self,key=$.key,_default=$._default
 try{return dict.__getitem__(self,key)}
@@ -10406,7 +10404,7 @@ if(_b_.len(other)!=self.$items.length)return false
 var _it=$B.$iter(other)
 while(1){try{
 var e=_b_.next(_it)
-if(!set.__contains__(self,e))return false}catch(err){if(err.__name__=="StopIteration"){break}
+if(!set.__contains__(self,e))return false}catch(err){if(err.__class__===_b_.StopIteration){break}
 throw err}}
 return true}
 return false}

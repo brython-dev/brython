@@ -273,7 +273,6 @@ BaseException.with_traceback = function(self, tb){
 
 BaseException.$factory = function (){
     var err = Error()
-    err.__name__ = 'BaseException'
     err.args = _b_.tuple.$factory(Array.prototype.slice.call(arguments))
     err.__class__ = _b_.BaseException
     err.$py_error = true
@@ -335,7 +334,6 @@ $B.is_exc=function(exc, exc_list){
     // used in try/except to check if an exception is an instance of
     // one of the classes in exc_list
     if(exc.__class__===undefined){
-        console.log("no _class__", exc)
         exc = $B.exception(exc)
     }
 

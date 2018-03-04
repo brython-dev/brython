@@ -162,7 +162,8 @@ var pyobj2jsobj=$B.pyobj2jsobj=function(pyobj){
             }catch(err){
                 console.log(err)
                 console.log(_b_.getattr(err,'info'))
-                console.log(err.__name__+':', err.args.length > 0 ? err.args[0] : '' )
+                console.log(err.__class__.__name__+':', 
+                    err.args.length > 0 ? err.args[0] : '' )
                 throw err
             }
         }

@@ -371,7 +371,7 @@ dict.__init__ = function(self){
                        value = getattr(elt,'__getitem__')(1)
                    dict.__setitem__(self, key, value)
                 }catch(err){
-                   if(err.__name__ === 'StopIteration'){
+                   if(err.__class__ === _b_.StopIteration){
                        $B.current_exception = ce
                        break
                    }
@@ -619,7 +619,7 @@ dict.pop = function(){
         dict.__delitem__(self, key)
         return res
     }catch(err){
-        if(err.__name__ === 'KeyError'){
+        if(err.__class__ === _b_.KeyError){
             if(_default !== undefined){return _default}
             throw err
         }
@@ -634,7 +634,7 @@ dict.popitem = function(self){
         dict.__delitem__(self, itm[0])
         return _b_.tuple.$factory(itm)
     }catch(err) {
-        if (err.__name__ == "StopIteration") {
+        if (err.__class__ == _b_.StopIteration) {
             $B.current_exception = ce
             throw KeyError.$factory("'popitem(): dictionary is empty'")
         }

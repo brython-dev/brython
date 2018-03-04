@@ -102,7 +102,7 @@ set.__eq__ = function(self,other){
            var e=_b_.next(_it)
            if(!set.__contains__(self, e)) return false
          } catch(err) {
-           if(err.__name__=="StopIteration") {break}
+           if(err.__class__ === _b_.StopIteration) {break}
            throw err
          }
       }

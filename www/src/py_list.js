@@ -244,7 +244,7 @@ list.__init__ = function(self,arg){
             self[pos++]=res
         }
         catch(err){
-            if(err.__name__=='StopIteration'){
+            if(err.__class__ === _b_.StopIteration){
                 $B.current_exception = ce
                 break
             }
@@ -793,7 +793,7 @@ tuple.__new__ = function(cls, ...args){
             self.push(item)
         }
         catch(err){
-            if(err.__name__=='StopIteration'){
+            if(err.__class__ === _b_.StopIteration){
                 $B.current_exception = ce
                 break
             }

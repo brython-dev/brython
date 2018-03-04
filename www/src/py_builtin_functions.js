@@ -1300,7 +1300,7 @@ function $extreme(args, op){ // used by min() and max()
                     res = x
                 }
             }catch(err){
-                if(err.__name__ == "StopIteration"){
+                if(err.__class__ == _b_.StopIteration){
                     $B.current_exception = ce
                     if(res === null){
                         if(has_default){return default_value}
@@ -1566,7 +1566,7 @@ var reversed = $B.make_class("reversed",
 
         try{return getattr(seq, '__reversed__')()}
         catch(err){
-            if(err.__name__ != 'AttributeError'){throw err}
+            if(err.__class__ != _b_.AttributeError){throw err}
         }
         $B.current_exception = ce
 
@@ -1807,7 +1807,7 @@ function sum(iterable,start){
             var _item = next(iterable)
             res = getattr(res, '__add__')(_item)
         }catch(err){
-           if(err.__name__ === 'StopIteration'){
+           if(err.__class__ === _b_.StopIteration){
                $B.current_exception = ce
                break
            }else{throw err}
@@ -2073,7 +2073,7 @@ var zip = $B.make_class("zip",
                 try{
                     line[pos++] = next(args[i])
                 }catch(err){
-                    if(err.__name__ == 'StopIteration'){
+                    if(err.__class__ == _b_.StopIteration){
                         flag = false
                         break
                     }else{throw err}

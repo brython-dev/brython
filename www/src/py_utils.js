@@ -672,7 +672,7 @@ $B.$is_member = function(item,_set){
                 var elt = _b_.next(_iter)
                 if($B.rich_comp("__eq__", elt, item)) return true
             }catch(err){
-                if(err.__name__=="StopIteration"){
+                if(err.__class__ === _b_.StopIteration){
                     $B.current_exception = ce
                     return false
                 }
@@ -694,7 +694,7 @@ $B.$is_member = function(item,_set){
                 var elt = f(i)
                 if($B.rich_comp("__eq__", elt, item)) return true
             }catch(err){
-                if(err.__name__=='IndexError') return false
+                if(err.__class__ === _b_.IndexError) return false
                 throw err
             }
         }
@@ -835,7 +835,7 @@ $B.pyobject2jsobject=function (obj){
           try {
            _a[pos++]=$B.pyobject2jsobject(_b_.next(obj))
           } catch(err) {
-            if (err.__name__ !== "StopIteration") throw err
+            if (err.__classe__ !== _b_.StopIteration) throw err
             $B.current_exception = ce
             break
           }
@@ -895,7 +895,7 @@ $B.$iterator_class = function(name){
          try {
               _a[pos++]=_b_.next(_it)
          } catch (err) {
-              if (err.__name__ == 'StopIteration'){
+              if (err.__class__ === _b_.StopIteration){
                   $B.current_exception = ce
                   break
               }
