@@ -8632,7 +8632,7 @@ function _run_scripts(options) {
 
     /*
     load_ext(ext_scripts)
-    for(var i=0;i<inner_scripts.length;i++){
+    for(var i = 0; i < inner_scripts.length; i++){
         run_script(inner_scripts[i])
     }
     */
@@ -8641,8 +8641,8 @@ function _run_scripts(options) {
 
     /* Uncomment to check the names added in global Javascript namespace
     var kk1 = Object.keys(_window)
-    for (var i=0; i < kk1.length; i++){
-        if(kk[i]===undefined){
+    for (var i  =0; i < kk1.length; i++){
+        if(kk[i] === undefined){
             console.log(kk1[i])
         }
     }

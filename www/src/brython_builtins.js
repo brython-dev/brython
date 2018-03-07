@@ -50,7 +50,7 @@ $B.path = [$path+'Lib', $path+'libs', $script_dir, $path+'Lib/site-packages']
 
 // for the time being, a flag will be used to know if we should
 // enable async functionality.
-$B.async_enabled=false
+$B.async_enabled = false
 if ($B.async_enabled) $B.block = {}
 
 // Maps the name of imported modules to the module object
@@ -84,7 +84,7 @@ $B.builtin_funcs = {}
 $B.__getattr__ = function(attr){return this[attr]}
 $B.__setattr__ = function(attr,value){
     // limited to some attributes
-    if(['debug', 'stdout', 'stderr'].indexOf(attr)>-1){$B[attr]=value}
+    if(['debug', 'stdout', 'stderr'].indexOf(attr)>-1){$B[attr] = value}
     else{throw $B.builtins.AttributeError.$factory('__BRYTHON__ object has no attribute '+attr)}
 }
 
@@ -109,7 +109,7 @@ $B.$py_next_hash = Math.pow(2,53)-1
 
 // $py_UUID guarantees a unique id.  Do not use this variable
 // directly, use the $B.UUID function defined in py_utils.js
-$B.$py_UUID=0
+$B.$py_UUID = 0
 
 // Magic name used in lambdas
 $B.lambda_magic = Math.random().toString(36).substr(2,8)

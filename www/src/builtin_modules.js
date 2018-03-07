@@ -39,21 +39,20 @@
                 // Javascripts in the page
                 var scripts = document.getElementsByTagName('script'),
                     js_scripts = []
-                for(var i=0;i<scripts.length;i++){
-                    if(scripts[i].type===undefined ||
-                        scripts[i].type=='text/javascript'){
-                        js_scripts.push(scripts[i])
-                        if(scripts[i].src){
-                            console.log(scripts[i].src)
+                scripts.forEach(function(script){
+                    if(script.type === undefined ||
+                            script.type == 'text/javascript'){
+                        js_scripts.push(script)
+                        if(script.src){
+                            console.log(script.src)
                         }
                     }
-                }
+                })
                 console.log(js_scripts)
                 // Python scripts in current page
-                for(var i=0;i<$B.scripts.length;i++){
-                    var name = $B.scripts[i]
-                    console.log('script:', name)
-                }
+                $B.scripts.forEach(function(script){
+                    console.log('script:', script)
+                })
                 // Check if imported scripts have been modified
                 for(var mod in $B.imported){
                     if($B.imported[mod].$last_modified){
@@ -67,7 +66,7 @@
             name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
             var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
                 results = regex.exec(location.search);
-            results= results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+            results = results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
             return $B.builtins.str.$factory(results);
             }
         })
@@ -86,17 +85,17 @@
                 }
 
                 dict.__init__ = function(){
-                    var $ns=$B.args('pow',1,{self:null},['self'],arguments,
-                        {},'args','kw'),
+                    var $ns = $B.args('pow', 1, {self: null}, ['self'],
+                        arguments, {}, 'args', 'kw'),
                         self = $ns['self'],
                         args = $ns['args']
-                    if(args.length==1){
-                        var first=args[0]
+                    if(args.length == 1){
+                        var first = args[0]
                         if(_b_.isinstance(first,[_b_.str,_b_.int,_b_.float])){
                             // set "first" as HTML content (not text)
                             self.elt.innerHTML = _b_.str.$factory(first)
-                        } else if(first.__class__===TagSum){
-                            for(var i=0, len = first.children.length; i < len;i++){
+                        } else if(first.__class__ === TagSum){
+                            for(var i = 0, len = first.children.length; i < len; i++){
                                 self.elt.appendChild(first.children[i].elt)
                             }
                         } else {
@@ -107,9 +106,9 @@
                                     // If the argument is an iterable other than
                                     // str, add the items
                                     var items = _b_.list.$factory(first)
-                                    for(var i=0;i<items.length;i++){
-                                        $B.DOMNode.__le__(self, items[i])
-                                    }
+                                    items.forEach(function(item){
+                                        $B.DOMNode.__le__(self, item)
+                                    })
                                 }catch(err){
                                     console.log(err)
                                     console.log("first", first)
@@ -121,21 +120,21 @@
 
                     // attributes
                     var items = _b_.list.$factory(_b_.dict.items($ns['kw']))
-                    for(var i=0, len = items.length; i < len;i++){
+                    for(var i = 0, len = items.length; i < len; i++){
                         // keyword arguments
                         var arg = items[i][0],
                             value = items[i][1]
-                        if(arg.toLowerCase().substr(0,2)==="on"){
+                        if(arg.toLowerCase().substr(0,2) == "on"){
                             // Event binding passed as argument "onclick", "onfocus"...
                             // Better use method bind of DOMNode objects
-                            var js = '$B.DOMNode.bind(self,"'
-                            js += arg.toLowerCase().substr(2)
+                            var js = '$B.DOMNode.bind(self,"' +
+                                arg.toLowerCase().substr(2)
                             eval(js+'",function(){'+value+'})')
-                        }else if(arg.toLowerCase()=="style"){
+                        }else if(arg.toLowerCase() == "style"){
                             $B.DOMNode.set_style(self,value)
                         } else {
-                            if(value!==false){
-                                // option.selected=false sets it to true :-)
+                            if(value !== false){
+                                // option.selected = false sets it to true :-)
                                 try{
                                     arg = arg.replace('_','-')
                                     $B.DOMNode.__setattr__(self, arg, value)
@@ -178,7 +177,7 @@
                         var res = $B.DOMNode.$factory(elt, true)  // generate the wrapped DOMNode
                         res._wrapped = true  // marked as wrapped
                     } else {
-                        if(klass.__name__=='SVG'){
+                        if(klass.__name__ == 'SVG'){
                             var res = $B.DOMNode.$factory(document.createElementNS("http://www.w3.org/2000/svg", "svg"), true)
                         }else{
                             var res = $B.DOMNode.$factory(document.createElement(klass.__name__), true)
@@ -190,7 +189,7 @@
                     klass.__init__(res, ...arguments)
                     return res
                 }
-                factory.__class__=$B.$factory
+                factory.__class__ = $B.$factory
                 return factory
             }
 
@@ -227,7 +226,7 @@
             $B.DOMNode.tags = obj.tags
 
             function maketag(tag){
-                if(!(typeof tag=='string')){
+                if(!(typeof tag == 'string')){
                     throw _b_.TypeError.$factory("html.maketag expects a string as argument")
                 }
                 var klass = dicts[tag] = makeTagDict(tag)
@@ -236,9 +235,9 @@
                 return klass
             }
 
-            for(var i=0, len = tags.length; i < len;i++){
-                obj[tags[i]] = maketag(tags[i])
-            }
+            tags.forEach(function(tag){
+                obj[tag] = maketag(tag)
+            })
 
             // expose function maketag to generate arbitrary tags (issue #624)
             obj.maketag = maketag
@@ -254,7 +253,7 @@
         $$this: function(){
             // returns the content of Javascript "this"
             // $B.js_this is set to "this" at the beginning of each function
-            if($B.js_this===undefined){return $B.builtins.None}
+            if($B.js_this === undefined){return $B.builtins.None}
             return $B.JSObject.$factory($B.js_this)
         },
         JSObject: function(){
@@ -278,8 +277,8 @@
         },
         NULL: null,
         py2js: function(src, module_name){
-            if (module_name===undefined) {
-                module_name = '__main__'+$B.UUID()
+            if (module_name === undefined) {
+                module_name = '__main__' + $B.UUID()
             }
             return $B.py2js(src, module_name, module_name,
                 $B.builtins_scope).to_js()
@@ -293,7 +292,7 @@
     // the import machinery.
     // see https://github.com/brython-dev/brython/issues/189
     // see https://docs.python.org/3/reference/toplevel_components.html#programs
-    var _b_=$B.builtins
+    var _b_ = $B.builtins
     modules['_sys'] = {
         __file__:$B.brython_path+'/libs/_sys.js',
         // Called "Getframe" because "_getframe" wouldn't be imported in
@@ -358,7 +357,7 @@
         for(var attr in module_obj){
             if(typeof module_obj[attr] == 'function'){
                 var name = attr
-                while(name.charAt(0)=='$'){name=name.substr(1)}
+                while(name.charAt(0) == '$'){name = name.substr(1)}
                 module_obj[attr].$infos = {__name__:name}
             }
         }
@@ -380,5 +379,5 @@
     _b_.__builtins__.__setattr__ = function(attr, value){
         _b_[attr] = value
     }
-    
+
 })(__BRYTHON__)
