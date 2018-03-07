@@ -285,667 +285,675 @@ function RandomStream(seed) {
 
 }
 
-function _Random(){
-    var _random = RandomStream()
-
-    _b_ = $B.builtins
-
-    var NV_MAGICCONST = 4 * Math.exp(-0.5)/Math.sqrt(2),
-        gauss_next = null
-
-    function _randbelow(x){
-        return Math.floor(x*_random())
-    }
-
-    function _urandom(n){
-        /*
-        urandom(n) -> str
-        Return n random bytes suitable for cryptographic use.
-        */
-
-        var randbytes= []
-        for(i=0;i<n;i++){randbytes.push(parseInt(_random()*256))}
-        return _b_.bytes.$factory(randbytes)
-    }
-
-    var res = {
-        // magic constants
-        NV_MAGICCONST: 1.71552776992141,
-        TWOPI: 6.28318530718,
-        LOG4: 1.38629436111989,
-        SG_MAGICCONST: 2.50407739677627,
-
-        choice: function(seq){
-            var $ = $B.args('choice', 1,
-                {seq:null},['seq'],arguments, {}, null, null),
-                seq = $.seq
-            var len, rank
-            if(Array.isArray(seq)){len = seq.length}
-            else{len = _b_.getattr(seq,'__len__')()}
-            if(len==0){throw _b_.IndexError.$factory("Cannot choose from an empty sequence")}
-            rank = parseInt(_random()*len)
-            if(Array.isArray(seq)){return seq[rank]}
-            else{return _b_.getattr(seq,'__getitem__')(rank)}
-        },
-
-        expovariate: function(lambd){
-            /*
-            Exponential distribution.
-
-            lambd is 1.0 divided by the desired mean.  It should be
-            nonzero.  (The parameter would be called "lambda", but that is
-            a reserved word in Python.)  Returned values range from 0 to
-            positive infinity if lambd is positive, and from negative
-            infinity to 0 if lambd is negative.
-
-            */
-            // lambd: rate lambd = 1/mean
-            // ('lambda' is a Python reserved word)
-
-            // we use 1-random() instead of random() to preclude the
-            // possibility of taking the log of zero.
-            return -Math.log(1.0 - _random())/lambd
-        },
-
-        gammavariate: function(alpha, beta){
-            /* Gamma distribution.  Not the gamma function!
-
-            Conditions on the parameters are alpha > 0 and beta > 0.
-
-            The probability distribution function is:
-
-                        x ** (alpha - 1) * math.exp(-x / beta)
-              pdf(x) =  --------------------------------------
-                          math.gamma(alpha) * beta ** alpha
-
-            */
-
-            // alpha > 0, beta > 0, mean is alpha*beta, variance is alpha*beta**2
-
-            // Warning: a few older sources define the gamma distribution in terms
-            // of alpha > -1.0
-
-            var $ = $B.args('gammavariate', 2,
-                    {alpha:null, beta:null}, ['alpha', 'beta'],
-                    arguments, {}, null, null),
-                alpha = $.alpha,
-                beta = $.beta,
-                LOG4 = Math.log(4),
-                SG_MAGICCONST = 1.0 + Math.log(4.5)
-
-            if(alpha <= 0.0 || beta <= 0.0){
-                throw _b_.ValueError.$factory('gammavariate: alpha and beta must be > 0.0')
-            }
-
-            if(alpha > 1.0){
-
-                // Uses R.C.H. Cheng, "The generation of Gamma
-                // variables with non-integral shape parameters",
-                // Applied Statistics, (1977), 26, No. 1, p71-74
-
-                var ainv = Math.sqrt(2.0 * alpha - 1.0),
-                    bbb = alpha - LOG4,
-                    ccc = alpha + ainv
-
-                while(true){
-                    var u1 = _random()
-                    if(!((1e-7 < u1) && (u1 < .9999999))){
-                        continue
-                    }
-                    var u2 = 1.0 - _random(),
-                        v = Math.log(u1/(1.0-u1))/ainv,
-                        x = alpha*Math.exp(v),
-                        z = u1*u1*u2,
-                        r = bbb+ccc*v-x
-                    if((r + SG_MAGICCONST - 4.5*z >= 0.0) || r >= Math.log(z)){
-                        return x * beta
-                    }
-                }
-            }else if(alpha == 1.0){
-                // expovariate(1)
-                var u = _random()
-                while(u <= 1e-7){u = _random()}
-                return -Math.log(u) * beta
-            }else{
-                // alpha is between 0 and 1 (exclusive)
-
-                // Uses ALGORITHM GS of Statistical Computing - Kennedy & Gentle
-
-                while(true){
-                    var u = _random(),
-                        b = (Math.E + alpha)/Math.E,
-                        p = b*u,
-                        x
-                    if(p <= 1.0){x = Math.pow(p, (1.0/alpha))}
-                    else{x = -Math.log((b-p)/alpha)}
-                    var u1 = _random()
-                    if(p > 1.0){
-                        if(u1 <= Math.pow(x, alpha - 1.0)){
-                            break
-                        }
-                    }else if(u1 <= Math.exp(-x)){
-                        break
-                    }
-                }
-                return x * beta
-            }
-        },
-
-        gauss:function(){
-
-            /* Gaussian distribution.
-
-            mu is the mean, and sigma is the standard deviation.  This is
-            slightly faster than the normalvariate() function.
-
-            Not thread-safe without a lock around calls.
-
-            # When x and y are two variables from [0, 1), uniformly
-            # distributed, then
-            #
-            #    cos(2*pi*x)*sqrt(-2*log(1-y))
-            #    sin(2*pi*x)*sqrt(-2*log(1-y))
-            #
-            # are two *independent* variables with normal distribution
-            # (mu = 0, sigma = 1).
-            # (Lambert Meertens)
-            # (corrected version; bug discovered by Mike Miller, fixed by LM)
-
-            # Multithreading note: When two threads call this function
-            # simultaneously, it is possible that they will receive the
-            # same return value.  The window is very small though.  To
-            # avoid this, you have to use a lock around all calls.  (I
-            # didn't want to slow this down in the serial case by using a
-            # lock here.)
-            */
-
-            var $ = $B.args('gauss', 2, {mu:null, sigma:null},
-                    ['mu', 'sigma'], arguments, {}, null, null),
-                mu = $.mu,
-                sigma = $.sigma
-
-            var z = gauss_next
-            gauss_next = null
-            if(z===null){
-                var x2pi = _random() * Math.PI * 2,
-                    g2rad = Math.sqrt(-2.0 * Math.log(1.0 - _random())),
-                    z = Math.cos(x2pi) * g2rad
-                gauss_next = Math.sin(x2pi) * g2rad
-            }
-            return mu + z*sigma
-        },
-
-        getrandbits: function(k){
-            var $ = $B.args('getrandbits', 1,
-                {k:null},['k'],arguments, {}, null, null),
-                k = $B.$GetInt($.k)
-            // getrandbits(k) -> x.  Generates a long int with k random bits.
-            if(k <= 0){
-                throw _b_.ValueError.$factory('number of bits must be greater than zero')
-            }
-            if(k != _b_.int.$factory(k)){
-                throw _b_.TypeError('number of bits should be an integer')
-            }
-            var numbytes = (k + 7), // bits / 8 and rounded up
-                x = _b_.int.from_bytes(_urandom(numbytes), 'big')
-            return _b_.getattr(x, '__rshift__')(
-                _b_.getattr(numbytes*8,'__sub__')(k))
-        },
-
-        getstate: function(){
-            // Return internal state; can be passed to setstate() later.
-            var $ = $B.args('getstate', 0, {}, [], arguments, {}, null, null)
-            return _random.getstate()
-        },
-
-        normalvariate: function(mu, sigma){
-            /*
-            Normal distribution.
-
-            mu is the mean, and sigma is the standard deviation.
-
-            */
-
-            // mu = mean, sigma = standard deviation
-
-            // Uses Kinderman and Monahan method. Reference: Kinderman,
-            // A.J. and Monahan, J.F., "Computer generation of random
-            // variables using the ratio of uniform deviates", ACM Trans
-            // Math Software, 3, (1977), pp257-260.
-
-            var $=$B.args('normalvariate', 2,
-                {mu:null, sigma:null}, ['mu', 'sigma'],
-                arguments, {}, null, null),
-                mu = $.mu,
-                sigma = $.sigma
-
-            while(true){
-                var u1 = _random(),
-                    u2 = 1.0 - _random(),
-                    z = NV_MAGICCONST*(u1-0.5)/u2,
-                    zz = z*z/4.0
-                if(zz <= -Math.log(u2)){break}
-            }
-            return mu + z*sigma
-        },
-
-        paretovariate: function(){
-            /* Pareto distribution.  alpha is the shape parameter.*/
-            // Jain, pg. 495
-
-            var $ = $B.args('paretovariate', 1, {alpha:null}, ['alpha'],
-                        arguments, {}, null, null)
-
-            var u = 1 - _random()
-            return 1 / Math.pow(u,1/$.alpha)
-        },
-
-        randint: function(a, b){
-            var $ = $B.args('randint', 2,
-                {a:null, b:null},
-                ['a', 'b'],
-                arguments, {}, null, null)
-            return _Random().randrange($.a, $.b+1)
-        },
-
-        random: _random,
-
-        randrange: function(){
-            var $ = $B.args('randrange', 3,
-                {x:null, stop:null, step:null},
-                ['x', 'stop', 'step'],
-                arguments, {stop:null, step:null}, null, null)
-            if($.stop===null){
-                var start = 0, stop = $.x, step = 1
-            }else{
-                var start = $.x, stop = $.stop,
-                    step = $.step===null ? 1 : $.step
-                if(step==0){throw _b_.ValueError.$factory('step cannot be 0')}
-            }
-            if((step>0 && start>stop) || (step<0 && start<stop)){
-                throw _b_.ValueError.$factory("empty range for randrange() (" +
-                    start+", "+stop+", "+step+")")
-            }
-            if(typeof start=='number' && typeof stop == 'number' &&
-                typeof step=='number'){
-                return start+step*Math.floor(_random()*Math.ceil((stop-start)/step))
-            }else{
-                var d = _b_.getattr(stop,'__sub__')(start)
-                d = _b_.getattr(d, '__floordiv__')(step)
-                // Force d to be a LongInt
-                d = $B.long_int.$factory(d)
-                // d is a long integer with n digits ; to choose a random number
-                // between 0 and d the most simple is to take a random digit
-                // at each position, except the first one
-                var s = d.value, _len = s.length,
-                    res = Math.floor(_random()*(parseInt(s.charAt(0))+(_len==1 ? 0 : 1)))+''
-                var same_start = res.charAt(0)==s.charAt(0)
-                for(var i=1;i<_len;i++){
-                    if(same_start){
-                        // If it's the last digit, don't allow stop as valid
-                        if(i==_len-1){
-                            res += Math.floor(_random()*parseInt(s.charAt(i)))+''
-                        }else{
-                            res += Math.floor(_random()*(parseInt(s.charAt(i))+1))+''
-                            same_start = res.charAt(i)==s.charAt(i)
-                        }
-                    }else{
-                        res += Math.floor(_random()*10)+''
-                    }
-                }
-                var offset = {__class__:$B.long_int, value: res,
-                    pos: true}
-                d = _b_.getattr(step, '__mul__')(offset)
-                d = _b_.getattr(start, '__add__')(d)
-                return _b_.int.$factory(d)
-            }
-        },
-
-        sample: function(){
-            /*
-            Chooses k unique random elements from a population sequence or set.
-
-            Returns a new list containing elements from the population while
-            leaving the original population unchanged.  The resulting list is
-            in selection order so that all sub-slices will also be valid random
-            samples.  This allows raffle winners (the sample) to be partitioned
-            into grand prize and second place winners (the subslices).
-
-            Members of the population need not be hashable or unique.  If the
-            population contains repeats, then each occurrence is a possible
-            selection in the sample.
-
-            To choose a sample in a range of integers, use range as an argument.
-            This is especially fast and space efficient for sampling from a
-            large population:   sample(range(10000000), 60)
-
-            # Sampling without replacement entails tracking either potential
-            # selections (the pool) in a list or previous selections in a set.
-
-            # When the number of selections is small compared to the
-            # population, then tracking selections is efficient, requiring
-            # only a small set and an occasional reselection.  For
-            # a larger number of selections, the pool tracking method is
-            # preferred since the list takes less space than the
-            # set and it doesn't suffer from frequent reselections.'
-
-            */
-            var $ = $B.args('sample',2,{population:null,k:null},
-                ['population','k'], arguments,{},null,null),
-                population = $.population,
-                k = $.k
-
-            if(!_b_.hasattr(population, '__len__')){
-                throw _b_.TypeError("Population must be a sequence or set.  For dicts, use list(d).")
-            }
-            var n = _b_.getattr(population, '__len__')()
-
-            if(k<0 || k>n){
-                throw _b_.ValueError.$factory("Sample larger than population")
-            }
-            var result = [],
-                setsize = 21        // size of a small set minus size of an empty list
-            if(k > 5){
-                setsize += Math.pow(4, Math.ceil(Math.log(k * 3, 4))) // table size for big sets
-            }
-            if(n <= setsize){
-                // An n-length list is smaller than a k-length set
-                if(Array.isArray(population)){
-                    var pool = population.slice()
-                }else{var pool = _b_.list.$factory(population)}
-                for(var i=0;i<k;i++){ //invariant:  non-selected at [0,n-i)
-                    var j = _randbelow(n-i)
-                    result[i] = pool[j]
-                    pool[j] = pool[n-i-1]   // move non-selected item into vacancy
-                }
-            }else{
-                selected = {}
-                for(var i=0;i<k;i++){
-                    var j = _randbelow(n)
-                    while(selected[j]!==undefined){
-                        j = _randbelow(n)
-                    }
-                    selected[j] = true
-                    result[i] = Array.isArray(population) ? population[j] :
-                                    _b_.getattr(population, '__getitem__')(j)
-                }
-            }
-            return result
-        },
-
-        seed: function(){
-            /*
-            Initialize internal state from hashable object.
-
-            None or no argument seeds from current time or from an operating
-            system specific randomness source if available.
-
-            If *a* is an int, all bits are used.
-            */
-            var $=$B.args('seed',2,{a:null, version:null},['a', 'version'],
-                    arguments,{a:new Date(), version:2},null,null),
-                a = $.a,
-                version = $.version
-
-            if(version==1){a = _b_.hash(a)}
-            else if(version==2){
-                if(_b_.isinstance(a, _b_.str)){
-                    a = _b_.int.from_bytes(_b_.bytes.$factory(a, 'utf-8'), 'big')
-                }else if(_b_.isinstance(a, [_b_.bytes, _b_.bytearray])){
-                    a = _b_.int.from_bytes(a, 'big')
-                }else if(!_b_.isinstance(a, _b_.int)){
-                    throw _b_.TypeError('wrong argument')
-                }
-                if(a.__class__===$B.long_int){
-                    // In this implementation, seed() only accepts safe integers
-                    // Generate a random one from the underlying string value,
-                    // using an arbitrary seed (99) to always return the same
-                    // integer
-                    var numbers = a.value, res = '', pos
-                    _random.seed(99)
-                    for(var i=0;i<17;i++){
-                        pos = parseInt(_random()*numbers.length)
-                        res += numbers.charAt(pos)
-                    }
-                    a = parseInt(res)
-                }
-            }else{
-                throw ValueError.$factory('version can only be 1 or 2')
-            }
-
-            _random.seed(a)
-            gauss_next = null
-        },
-
-        setstate: function(state){
-            // Restore internal state from object returned by getstate().
-            var $ = $B.args('setstate', 1, {state:null}, ['state'],
-                arguments, {}, null, null)
-            var state = _random.getstate()
-            if(!Array.isArray($.state)){
-                throw _b_.TypeError('state must be a list, not '+
-                    $B.get_class($.state).__name__)
-            }
-            if($.state.length<state.length){
-                throw _b_.ValueError.$factory("need more than "+$.state.length+
-                    " values to unpack")
-            }else if($.state.length>state.length){
-                throw _b_.ValueError.$factory("too many values to unpack (expected "+
-                    state.length+")")
-            }
-            if($.state[0]!=3){
-                throw _b_.ValueError.$factory("ValueError: state with version "+
-                    $.state[0]+" passed to Random.setstate() of version 3")
-            }
-            var second = _b_.list.$factory($.state[1])
-            if(second.length!==state[1].length){
-                throw _b_.ValueError.$factory('state vector is the wrong size')
-            }
-            for(var i=0;i<second.length;i++){
-                if(typeof second[i] != 'number'){
-                    throw _b_.ValueError.$factory('state vector items must be integers')
-                }
-            }
-            _random.setstate($.state)
-        },
-
-        shuffle: function(x, random){
-            /*
-            x, random=random.random -> shuffle list x in place; return None.
-
-            Optional arg random is a 0-argument function returning a random
-            float in [0.0, 1.0); by default, the standard random.random.
-            */
-
-            var $ = $B.args('shuffle',2,{x:null,random:null},
-                ['x','random'],
-                arguments,{random:null},null,null),
-                x = $.x,
-                random = $.random
-
-            if(random===null){random=_random}
-
-            if(Array.isArray(x)){
-                for(var i=x.length-1;i>=0;i--){
-                    var j = Math.floor(random() * (i+1)),
-                        temp = x[j]
-                    x[j] = x[i]
-                    x[i] = temp
-                }
-            }else{
-                var len = _b_.getattr(x, '__len__')(), temp,
-                    x_get = _b_.getattr(x, '__getitem__'),
-                    x_set = _b_.getattr(x, '__setitem__')
-
-                for(i=len-1;i>=0;i--){
-                    var j = Math.floor(random() * (i+1)),
-                        temp = x_get(j)
-                    x_set(j, x_get(i))
-                    x_set(i, temp)
-                }
-            }
-        },
-
-        triangular: function(){
-            /*
-            Triangular distribution.
-
-            Continuous distribution bounded by given lower and upper limits,
-            and having a given mode value in-between.
-
-            http://en.wikipedia.org/wiki/Triangular_distribution
-            */
-            var $=$B.args('triangular',3,
-                {low:null, high:null, mode:null},
-                ['low', 'high', 'mode'],
-                arguments,{low:0, high:1, mode:null}, null, null),
-                low = $.low,
-                high = $.high,
-                mode = $.mode
-
-            var u = _random(),
-                c = mode===null ? 0.5 : (mode - low) / (high - low)
-            if(u > c){
-                u = 1 - u
-                c = 1 - c
-                var temp = low
-                low = high
-                high = temp
-            }
-            return low + (high - low) * Math.pow(u * c, 0.5)
-        },
-
-        uniform: function(){
-            var $ = $B.args('uniform',2,{a:null,b:null},['a','b'],
-                arguments,{},null,null),
-                a = $B.$GetInt($.a),
-                b = $B.$GetInt($.b)
-
-            return a + (b-a)*_random()
-        },
-
-        vonmisesvariate: function(mu, kappa){
-            /* Circular data distribution.
-
-            mu is the mean angle, expressed in radians between 0 and 2*pi, and
-            kappa is the concentration parameter, which must be greater than or
-            equal to zero.  If kappa is equal to zero, this distribution reduces
-            to a uniform random angle over the range 0 to 2*pi.
-
-            */
-            // mu:    mean angle (in radians between 0 and 2*pi)
-            // kappa: concentration parameter kappa (>= 0)
-            // if kappa = 0 generate uniform random angle
-
-            // Based upon an algorithm published in: Fisher, N.I.,
-            // "Statistical Analysis of Circular Data", Cambridge
-            // University Press, 1993.
-
-            // Thanks to Magnus Kessler for a correction to the
-            // implementation of step 4.
-
-            var $=$B.args('vonmisesvariate', 2,
-                    {mu: null, kappa:null}, ['mu', 'kappa'],
-                    arguments, {}, null, null),
-                mu = $.mu,
-                kappa = $.kappa,
-                TWOPI = 2*Math.PI
-
-            if(kappa <= 1e-6){return TWOPI * _random()}
-
-            var s = 0.5 / kappa,
-                r = s + Math.sqrt(1.0 + s * s)
-
-            while(true){
-                var u1 = _random(),
-                    z = Math.cos(Math.PI * u1),
-                    d = z / (r + z),
-                    u2 = _random()
-                if((u2 < 1.0 - d * d) ||
-                    (u2 <= (1.0 - d) * Math.exp(d))){
-                        break
-                }
-            }
-            var q = 1.0 / r,
-                f = (q + z) / (1.0 + q * z),
-                u3 = _random()
-            if(u3 > 0.5){var theta = (mu + Math.acos(f)) % TWOPI}
-            else{var theta = (mu - Math.acos(f)) % TWOPI}
-            return theta
-        },
-
-        weibullvariate: function(){
-            /*Weibull distribution.
-
-            alpha is the scale parameter and beta is the shape parameter.
-
-            */
-            // Jain, pg. 499; bug fix courtesy Bill Arms
-
-            var $ = $B.args('weibullvariate', 2, {alpha:null, beta:null},
-                    ['alpha', 'beta'], arguments, {}, null, null),
-                alpha = $.alpha,
-                beta = $.beta
-
-            var u = 1 - _random()
-            return alpha * Math.pow(-Math.log(u), 1/beta)
-        },
-
-        VERSION: VERSION
-    }
-
-    res.lognormvariate = function(){
-        /*
-        Log normal distribution.
-
-        If you take the natural logarithm of this distribution, you'll get a
-        normal distribution with mean mu and standard deviation sigma.
-        mu can have any value, and sigma must be greater than zero.
-
-        */
-
-        return Math.exp(res.normalvariate.apply(null, arguments))
-    }
-
-    res.betavariate = function(){
-        /* Beta distribution.
-
-        Conditions on the parameters are alpha > 0 and beta > 0.
-        Returned values range between 0 and 1.
-
-
-        # This version due to Janne Sinkkonen, and matches all the std
-        # texts (e.g., Knuth Vol 2 Ed 3 pg 134 "the beta distribution").
-        */
-
-        var $ = $B.args('betavariate', 2, {alpha:null, beta:null},
-                ['alpha', 'beta'], arguments, {}, null, null),
-            alpha = $.alpha,
-            beta = $.beta
-
-        var y = res.gammavariate(alpha, 1)
-        if(y == 0){return _b_.float.$factory(0)}
-        else{return y / (y + res.gammavariate(beta, 1))}
-    }
-
-    return res
-
-}
+// magic constants
+
+var NV_MAGICCONST = 4 * Math.exp(-0.5)/Math.sqrt(2),
+    gauss_next = null,
+    NV_MAGICCONST = 1.71552776992141,
+    TWOPI = 6.28318530718,
+    LOG4 = 1.38629436111989,
+    SG_MAGICCONST = 2.50407739677627,
+    VERSION = VERSION
 
 var Random = $B.make_class("Random",
     function(){
-        var obj = {__class__: Random}
-        Random.__init__(obj)
-        return obj
+        return {
+            __class__: Random,
+            _random: RandomStream()
+        }
     }
 )
-Random.__getattribute__ = function(self, attr){
-    return self.$r[attr]
+
+Random._randbelow = function(self, x){
+    return Math.floor(x * self._random())
+}
+
+Random._urandom = function(self, n){
+    /*
+    urandom(n) -> str
+    Return n random bytes suitable for cryptographic use.
+    */
+
+    var randbytes= []
+    for(i=0;i<n;i++){randbytes.push(parseInt(self._random()*256))}
+    return _b_.bytes.$factory(randbytes)
+}
+
+Random.betavariate = function(){
+    /* Beta distribution.
+
+    Conditions on the parameters are alpha > 0 and beta > 0.
+    Returned values range between 0 and 1.
+
+
+    # This version due to Janne Sinkkonen, and matches all the std
+    # texts (e.g., Knuth Vol 2 Ed 3 pg 134 "the beta distribution").
+    */
+
+    var $ = $B.args('betavariate', 3, {self: null, alpha:null, beta:null},
+            ['self', 'alpha', 'beta'], arguments, {}, null, null),
+        self = $.self,
+        alpha = $.alpha,
+        beta = $.beta
+
+    var y = Random.gammavariate(self, alpha, 1)
+    if(y == 0){return _b_.float.$factory(0)}
+    else{return y / (y + Random.gammavariate(self, beta, 1))}
+}
+
+Random.choice = function(){
+    var $ = $B.args("choice", 2,
+        {self: null, seq:null},["self", "seq"],arguments, {}, null, null),
+        self = $.self,
+        seq = $.seq
+    var len, rank
+    if(Array.isArray(seq)){len = seq.length}
+    else{len = _b_.getattr(seq,"__len__")()}
+    if(len==0){throw _b_.IndexError.$factory("Cannot choose from an empty sequence")}
+    rank = parseInt(self._random()*len)
+    if(Array.isArray(seq)){return seq[rank]}
+    else{return _b_.getattr(seq, "__getitem__")(rank)}
+}
+
+Random.expovariate = function(self, lambd){
+    /*
+    Exponential distribution.
+
+    lambd is 1.0 divided by the desired mean.  It should be
+    nonzero.  (The parameter would be called "lambda", but that is
+    a reserved word in Python.)  Returned values range from 0 to
+    positive infinity if lambd is positive, and from negative
+    infinity to 0 if lambd is negative.
+
+    */
+    // lambd: rate lambd = 1/mean
+    // ('lambda' is a Python reserved word)
+
+    // we use 1-random() instead of random() to preclude the
+    // possibility of taking the log of zero.
+    return -Math.log(1.0 - self._random()) / lambd
+}
+
+Random.gammavariate = function(self, alpha, beta){
+    /* Gamma distribution.  Not the gamma function!
+
+    Conditions on the parameters are alpha > 0 and beta > 0.
+
+    The probability distribution function is:
+
+                x ** (alpha - 1) * math.exp(-x / beta)
+      pdf(x) =  --------------------------------------
+                  math.gamma(alpha) * beta ** alpha
+
+    */
+
+    // alpha > 0, beta > 0, mean is alpha*beta, variance is alpha*beta**2
+
+    // Warning: a few older sources define the gamma distribution in terms
+    // of alpha > -1.0
+
+    var $ = $B.args('gammavariate', 3,
+            {self: null, alpha:null, beta:null},
+            ['self', 'alpha', 'beta'],
+            arguments, {}, null, null),
+        self = $.self,
+        alpha = $.alpha,
+        beta = $.beta,
+        LOG4 = Math.log(4),
+        SG_MAGICCONST = 1.0 + Math.log(4.5)
+
+    if(alpha <= 0.0 || beta <= 0.0){
+        throw _b_.ValueError.$factory('gammavariate: alpha and beta must be > 0.0')
+    }
+
+    if(alpha > 1.0){
+
+        // Uses R.C.H. Cheng, "The generation of Gamma
+        // variables with non-integral shape parameters",
+        // Applied Statistics, (1977), 26, No. 1, p71-74
+
+        var ainv = Math.sqrt(2.0 * alpha - 1.0),
+            bbb = alpha - LOG4,
+            ccc = alpha + ainv
+
+        while(true){
+            var u1 = self._random()
+            if(!((1e-7 < u1) && (u1 < .9999999))){
+                continue
+            }
+            var u2 = 1.0 - self._random(),
+                v = Math.log(u1/(1.0-u1))/ainv,
+                x = alpha*Math.exp(v),
+                z = u1*u1*u2,
+                r = bbb+ccc*v-x
+            if((r + SG_MAGICCONST - 4.5*z >= 0.0) || r >= Math.log(z)){
+                return x * beta
+            }
+        }
+    }else if(alpha == 1.0){
+        // expovariate(1)
+        var u = _random()
+        while(u <= 1e-7){u = self._random()}
+        return -Math.log(u) * beta
+    }else{
+        // alpha is between 0 and 1 (exclusive)
+
+        // Uses ALGORITHM GS of Statistical Computing - Kennedy & Gentle
+
+        while(true){
+            var u = self._random(),
+                b = (Math.E + alpha)/Math.E,
+                p = b*u,
+                x
+            if(p <= 1.0){x = Math.pow(p, (1.0/alpha))}
+            else{x = -Math.log((b-p)/alpha)}
+            var u1 = self._random()
+            if(p > 1.0){
+                if(u1 <= Math.pow(x, alpha - 1.0)){
+                    break
+                }
+            }else if(u1 <= Math.exp(-x)){
+                break
+            }
+        }
+        return x * beta
+    }
+}
+
+Random.gauss = function(){
+
+    /* Gaussian distribution.
+
+    mu is the mean, and sigma is the standard deviation.  This is
+    slightly faster than the normalvariate() function.
+
+    Not thread-safe without a lock around calls.
+
+    # When x and y are two variables from [0, 1), uniformly
+    # distributed, then
+    #
+    #    cos(2*pi*x)*sqrt(-2*log(1-y))
+    #    sin(2*pi*x)*sqrt(-2*log(1-y))
+    #
+    # are two *independent* variables with normal distribution
+    # (mu = 0, sigma = 1).
+    # (Lambert Meertens)
+    # (corrected version; bug discovered by Mike Miller, fixed by LM)
+
+    # Multithreading note: When two threads call this function
+    # simultaneously, it is possible that they will receive the
+    # same return value.  The window is very small though.  To
+    # avoid this, you have to use a lock around all calls.  (I
+    # didn't want to slow this down in the serial case by using a
+    # lock here.)
+    */
+
+    var $ = $B.args('gauss', 3, {self: null, mu:null, sigma:null},
+            ['self', 'mu', 'sigma'], arguments, {}, null, null),
+        self = $.self,
+        mu = $.mu,
+        sigma = $.sigma
+
+    var z = gauss_next
+    gauss_next = null
+    if(z===null){
+        var x2pi = self._random() * Math.PI * 2,
+            g2rad = Math.sqrt(-2.0 * Math.log(1.0 - self._random())),
+            z = Math.cos(x2pi) * g2rad
+        gauss_next = Math.sin(x2pi) * g2rad
+    }
+    return mu + z*sigma
+}
+
+Random.getrandbits = function(){
+    var $ = $B.args("getrandbits", 2,
+        {self: null, k:null},["self", "k"],arguments, {}, null, null),
+        self = $.self,
+        k = $B.$GetInt($.k)
+    // getrandbits(k) -> x.  Generates a long int with k random bits.
+    if(k <= 0){
+        throw _b_.ValueError.$factory('number of bits must be greater than zero')
+    }
+    if(k != _b_.int.$factory(k)){
+        throw _b_.TypeError('number of bits should be an integer')
+    }
+    var numbytes = (k + 7), // bits / 8 and rounded up
+        x = _b_.int.from_bytes(Random._urandom(self, numbytes), 'big')
+    return _b_.getattr(x, '__rshift__')(
+        _b_.getattr(numbytes*8,'__sub__')(k))
+}
+
+Random.getstate = function(){
+    // Return internal state; can be passed to setstate() later.
+    var $ = $B.args('getstate', 1, {self: null},
+        ["self"], arguments, {}, null, null)
+    return $.self._random.getstate()
+}
+
+Random.lognormvariate = function(){
+    /*
+    Log normal distribution.
+
+    If you take the natural logarithm of this distribution, you'll get a
+    normal distribution with mean mu and standard deviation sigma.
+    mu can have any value, and sigma must be greater than zero.
+
+    */
+    return Math.exp(Random.normalvariate.apply(null, arguments))
+}
+
+Random.normalvariate = function(){
+    /*
+    Normal distribution.
+
+    mu is the mean, and sigma is the standard deviation.
+
+    */
+
+    // mu = mean, sigma = standard deviation
+
+    // Uses Kinderman and Monahan method. Reference: Kinderman,
+    // A.J. and Monahan, J.F., "Computer generation of random
+    // variables using the ratio of uniform deviates", ACM Trans
+    // Math Software, 3, (1977), pp257-260.
+
+    var $=$B.args("normalvariate", 3,
+        {self: null, mu:null, sigma:null}, ["self", "mu", "sigma"],
+        arguments, {}, null, null),
+        self = $.self,
+        mu = $.mu,
+        sigma = $.sigma
+
+    while(true){
+        var u1 = self._random(),
+            u2 = 1.0 - self._random(),
+            z = NV_MAGICCONST*(u1-0.5)/u2,
+            zz = z*z/4.0
+        if(zz <= -Math.log(u2)){break}
+    }
+    return mu + z*sigma
+}
+
+Random.paretovariate = function(){
+    /* Pareto distribution.  alpha is the shape parameter.*/
+    // Jain, pg. 495
+
+    var $ = $B.args("paretovariate", 2, {self: null, alpha:null},
+        ["self", "alpha"], arguments, {}, null, null)
+
+    var u = 1 - $.self._random()
+    return 1 / Math.pow(u, 1 / $.alpha)
+}
+
+Random.randint = function(self, a, b){
+    var $ = $B.args('randint', 3,
+        {self: null, a:null, b:null},
+        ['self', 'a', 'b'],
+        arguments, {}, null, null)
+    return Random.randrange($.self, $.a, $.b+1)
+}
+
+Random.random = function(self){
+    return self._random()
+}
+
+Random.randrange = function(){
+    var $ = $B.args('randrange', 4,
+        {self: null, x:null, stop:null, step:null},
+        ['self', 'x', 'stop', 'step'],
+        arguments, {stop:null, step:null}, null, null),
+        self = $.self,
+        _random = self._random
+        //console.log("randrange", $)
+
+    if($.stop===null){
+        var start = 0, stop = $.x, step = 1
+    }else{
+        var start = $.x, stop = $.stop,
+            step = $.step===null ? 1 : $.step
+        if(step==0){throw _b_.ValueError.$factory('step cannot be 0')}
+    }
+    if((step>0 && start>stop) || (step<0 && start<stop)){
+        throw _b_.ValueError.$factory("empty range for randrange() (" +
+            start+", "+stop+", "+step+")")
+    }
+    if(typeof start=='number' && typeof stop == 'number' &&
+        typeof step=='number'){
+        return start+step*Math.floor(_random()*Math.ceil((stop-start)/step))
+    }else{
+        var d = _b_.getattr(stop,'__sub__')(start)
+        d = _b_.getattr(d, '__floordiv__')(step)
+        // Force d to be a LongInt
+        d = $B.long_int.$factory(d)
+        // d is a long integer with n digits ; to choose a random number
+        // between 0 and d the most simple is to take a random digit
+        // at each position, except the first one
+        var s = d.value, _len = s.length,
+            res = Math.floor(_random()*(parseInt(s.charAt(0))+(_len==1 ? 0 : 1)))+''
+        var same_start = res.charAt(0)==s.charAt(0)
+        for(var i=1;i<_len;i++){
+            if(same_start){
+                // If it's the last digit, don't allow stop as valid
+                if(i==_len-1){
+                    res += Math.floor(_random()*parseInt(s.charAt(i)))+''
+                }else{
+                    res += Math.floor(_random()*(parseInt(s.charAt(i))+1))+''
+                    same_start = res.charAt(i)==s.charAt(i)
+                }
+            }else{
+                res += Math.floor(_random()*10)+''
+            }
+        }
+        var offset = {__class__:$B.long_int, value: res,
+            pos: true}
+        d = _b_.getattr(step, '__mul__')(offset)
+        d = _b_.getattr(start, '__add__')(d)
+        return _b_.int.$factory(d)
+    }
+}
+
+Random.sample = function(){
+    /*
+    Chooses k unique random elements from a population sequence or set.
+
+    Returns a new list containing elements from the population while
+    leaving the original population unchanged.  The resulting list is
+    in selection order so that all sub-slices will also be valid random
+    samples.  This allows raffle winners (the sample) to be partitioned
+    into grand prize and second place winners (the subslices).
+
+    Members of the population need not be hashable or unique.  If the
+    population contains repeats, then each occurrence is a possible
+    selection in the sample.
+
+    To choose a sample in a range of integers, use range as an argument.
+    This is especially fast and space efficient for sampling from a
+    large population:   sample(range(10000000), 60)
+
+    # Sampling without replacement entails tracking either potential
+    # selections (the pool) in a list or previous selections in a set.
+
+    # When the number of selections is small compared to the
+    # population, then tracking selections is efficient, requiring
+    # only a small set and an occasional reselection.  For
+    # a larger number of selections, the pool tracking method is
+    # preferred since the list takes less space than the
+    # set and it doesn't suffer from frequent reselections.'
+
+    */
+    var $ = $B.args('sample',3,{self:null, population:null,k:null},
+        ['self', 'population','k'], arguments,{},null,null),
+        self = $.self,
+        population = $.population,
+        k = $.k
+
+    if(!_b_.hasattr(population, '__len__')){
+        throw _b_.TypeError("Population must be a sequence or set.  For dicts, use list(d).")
+    }
+    var n = _b_.getattr(population, '__len__')()
+
+    if(k<0 || k>n){
+        throw _b_.ValueError.$factory("Sample larger than population")
+    }
+    var result = [],
+        setsize = 21        // size of a small set minus size of an empty list
+    if(k > 5){
+        setsize += Math.pow(4, Math.ceil(Math.log(k * 3, 4))) // table size for big sets
+    }
+    if(n <= setsize){
+        // An n-length list is smaller than a k-length set
+        if(Array.isArray(population)){
+            var pool = population.slice()
+        }else{var pool = _b_.list.$factory(population)}
+        for(var i=0;i<k;i++){ //invariant:  non-selected at [0,n-i)
+            var j = Random._randbelow(self, n-i)
+            result[i] = pool[j]
+            pool[j] = pool[n-i-1]   // move non-selected item into vacancy
+        }
+    }else{
+        selected = {}
+        for(var i=0;i<k;i++){
+            var j = Random._randbelow(self, n)
+            while(selected[j]!==undefined){
+                j = Random._randbelow(self, n)
+            }
+            selected[j] = true
+            result[i] = Array.isArray(population) ? population[j] :
+                            _b_.getattr(population, '__getitem__')(j)
+        }
+    }
+    return result
+}
+
+Random.seed = function(){
+    /*
+    Initialize internal state from hashable object.
+
+    None or no argument seeds from current time or from an operating
+    system specific randomness source if available.
+
+    If *a* is an int, all bits are used.
+    */
+    var $=$B.args('seed',3,{self: null, a:null, version:null},
+        ['self', 'a', 'version'],
+        arguments,{a:new Date(), version:2},null,null),
+        self = $.self,
+        a = $.a,
+        version = $.version
+
+    if(version==1){a = _b_.hash(a)}
+    else if(version==2){
+        if(_b_.isinstance(a, _b_.str)){
+            a = _b_.int.from_bytes(_b_.bytes.$factory(a, 'utf-8'), 'big')
+        }else if(_b_.isinstance(a, [_b_.bytes, _b_.bytearray])){
+            a = _b_.int.from_bytes(a, 'big')
+        }else if(!_b_.isinstance(a, _b_.int)){
+            throw _b_.TypeError('wrong argument')
+        }
+        if(a.__class__===$B.long_int){
+            // In this implementation, seed() only accepts safe integers
+            // Generate a random one from the underlying string value,
+            // using an arbitrary seed (99) to always return the same
+            // integer
+            var numbers = a.value, res = '', pos
+            self._random.seed(99)
+            for(var i=0;i<17;i++){
+                pos = parseInt(self._random()*numbers.length)
+                res += numbers.charAt(pos)
+            }
+            a = parseInt(res)
+        }
+    }else{
+        throw ValueError.$factory('version can only be 1 or 2')
+    }
+
+    self._random.seed(a)
+    gauss_next = null
+}
+
+Random.setstate = function(state){
+    // Restore internal state from object returned by getstate().
+    var $ = $B.args('setstate', 2, {self: null, state:null}, ['self', 'state'],
+        arguments, {}, null, null),
+        self = $.self
+    var state = self._random.getstate()
+    if(!Array.isArray($.state)){
+        throw _b_.TypeError('state must be a list, not '+
+            $B.get_class($.state).__name__)
+    }
+    if($.state.length<state.length){
+        throw _b_.ValueError.$factory("need more than "+$.state.length+
+            " values to unpack")
+    }else if($.state.length>state.length){
+        throw _b_.ValueError.$factory("too many values to unpack (expected "+
+            state.length+")")
+    }
+    if($.state[0]!=3){
+        throw _b_.ValueError.$factory("ValueError: state with version "+
+            $.state[0]+" passed to Random.setstate() of version 3")
+    }
+    var second = _b_.list.$factory($.state[1])
+    if(second.length!==state[1].length){
+        throw _b_.ValueError.$factory('state vector is the wrong size')
+    }
+    for(var i=0;i<second.length;i++){
+        if(typeof second[i] != 'number'){
+            throw _b_.ValueError.$factory('state vector items must be integers')
+        }
+    }
+    self._random.setstate($.state)
+}
+
+Random.shuffle = function(x, random){
+    /*
+    x, random=random.random -> shuffle list x in place; return None.
+
+    Optional arg random is a 0-argument function returning a random
+    float in [0.0, 1.0); by default, the standard random.random.
+    */
+
+    var $ = $B.args('shuffle',3,{self:null, x:null,random:null},
+        ['self', 'x','random'],
+        arguments,{random:null},null,null),
+        self = $.self,
+        x = $.x,
+        random = $.random
+
+    if(random===null){random=self._random}
+
+    if(Array.isArray(x)){
+        for(var i=x.length-1;i>=0;i--){
+            var j = Math.floor(random() * (i+1)),
+                temp = x[j]
+            x[j] = x[i]
+            x[i] = temp
+        }
+    }else{
+        var len = _b_.getattr(x, '__len__')(), temp,
+            x_get = _b_.getattr(x, '__getitem__'),
+            x_set = _b_.getattr(x, '__setitem__')
+
+        for(i=len-1;i>=0;i--){
+            var j = Math.floor(random() * (i+1)),
+                temp = x_get(j)
+            x_set(j, x_get(i))
+            x_set(i, temp)
+        }
+    }
+}
+
+Random.triangular = function(){
+    /*
+    Triangular distribution.
+
+    Continuous distribution bounded by given lower and upper limits,
+    and having a given mode value in-between.
+
+    http://en.wikipedia.org/wiki/Triangular_distribution
+    */
+    var $=$B.args('triangular',4,
+        {self: null, low:null, high:null, mode:null},
+        ['self', 'low', 'high', 'mode'],
+        arguments,{low:0, high:1, mode:null}, null, null),
+        low = $.low,
+        high = $.high,
+        mode = $.mode
+
+    var u = $.self._random(),
+        c = mode===null ? 0.5 : (mode - low) / (high - low)
+    if(u > c){
+        u = 1 - u
+        c = 1 - c
+        var temp = low
+        low = high
+        high = temp
+    }
+    return low + (high - low) * Math.pow(u * c, 0.5)
+}
+
+Random.uniform = function(){
+    var $ = $B.args('uniform',3,{self:null, a:null,b:null},['self', 'a','b'],
+        arguments,{},null,null),
+        a = $B.$GetInt($.a),
+        b = $B.$GetInt($.b)
+
+    return a + (b - a) * $.self._random()
+}
+
+Random.vonmisesvariate = function(){
+    /* Circular data distribution.
+
+    mu is the mean angle, expressed in radians between 0 and 2*pi, and
+    kappa is the concentration parameter, which must be greater than or
+    equal to zero.  If kappa is equal to zero, this distribution reduces
+    to a uniform random angle over the range 0 to 2*pi.
+
+    */
+    // mu:    mean angle (in radians between 0 and 2*pi)
+    // kappa: concentration parameter kappa (>= 0)
+    // if kappa = 0 generate uniform random angle
+
+    // Based upon an algorithm published in: Fisher, N.I.,
+    // "Statistical Analysis of Circular Data", Cambridge
+    // University Press, 1993.
+
+    // Thanks to Magnus Kessler for a correction to the
+    // implementation of step 4.
+
+    var $=$B.args('vonmisesvariate', 3,
+            {self: null, mu: null, kappa:null}, ['self', 'mu', 'kappa'],
+            arguments, {}, null, null),
+        self = $.self,
+        mu = $.mu,
+        kappa = $.kappa,
+        TWOPI = 2*Math.PI
+
+    if(kappa <= 1e-6){return TWOPI * self._random()}
+
+    var s = 0.5 / kappa,
+        r = s + Math.sqrt(1.0 + s * s)
+
+    while(true){
+        var u1 = self._random(),
+            z = Math.cos(Math.PI * u1),
+            d = z / (r + z),
+            u2 = self._random()
+        if((u2 < 1.0 - d * d) ||
+            (u2 <= (1.0 - d) * Math.exp(d))){
+                break
+        }
+    }
+    var q = 1.0 / r,
+        f = (q + z) / (1.0 + q * z),
+        u3 = self._random()
+    if(u3 > 0.5){var theta = (mu + Math.acos(f)) % TWOPI}
+    else{var theta = (mu - Math.acos(f)) % TWOPI}
+    return theta
+}
+
+Random.weibullvariate = function(){
+    /*Weibull distribution.
+
+    alpha is the scale parameter and beta is the shape parameter.
+
+    */
+    // Jain, pg. 499; bug fix courtesy Bill Arms
+    var $ = $B.args("weibullvariate", 3, {self: null, alpha:null, beta:null},
+            ["self", "alpha", "beta"], arguments, {}, null, null)
+
+    var u = 1 - $.self._random()
+    return $.alpha * Math.pow(-Math.log(u), 1/$.beta)
 }
 
 $B.set_func_names(Random, "random")
 
-var $module = _Random()
+var $module = Random.$factory()
+for(var attr in Random){
+    $module[attr] = (function(x){
+        return function(){return Random[x]($module, ...arguments)}
+    })(attr)
+    $module[attr].$infos = Random[attr].$infos
+}
 
 $module.Random = Random
 

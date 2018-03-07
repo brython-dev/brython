@@ -60,3 +60,11 @@ try:
     raise Exception("should have raised ValueError")
 except ValueError:
     pass
+
+# issue 795
+n = 10 ** 3
+
+a = [random.randint(0, 10 ** 8) for _ in range(n)]
+
+unique = len(set(a))
+assert 100 * unique / n > 99
