@@ -24,7 +24,7 @@ var mutable_methods = ["__delitem__", "clear", "copy", "count", "index",
 mutable_methods.forEach(function(method){
     bytearray[method] = (function(m){
         return function(self){
-            var args = [self.source], pos=1
+            var args = [self.source], pos = 1
             for(var i = 1, len = arguments.length; i < len; i++){
                 args[pos++] = arguments[i]
             }
@@ -112,13 +112,6 @@ bytearray.$factory = function(source, encoding, errors) {
     return bytearray.__new__(bytearray, source, encoding, errors)
 }
 
-/*
-bytearray.__code__={}
-bytearray.__code__.co_argcount=1
-bytearray.__code__.co_consts=[]
-bytearray.__code__.co_varnames=['i']
-*/
-
 //bytes() (built in function)
 var bytes = {
     __class__ : _b_.type,
@@ -203,7 +196,7 @@ bytes.__hash__ = function(self) {
 
   var hash = 1
   for(var i = 0, len = self.length; i < len; i++) {
-      hash=(101 * hash + self.source[i]) & 0xFFFFFFFF
+      hash = (101 * hash + self.source[i]) & 0xFFFFFFFF
   }
 
   return hash
@@ -381,9 +374,9 @@ bytes.replace = function(){
         res = [];
     var self = $.self,
         src = self.source,
-        len=src.length,
-        old=$.old,
-        $new=$.new
+        len = src.length,
+        old = $.old,
+        $new = $.new
     var count = $.count >= 0 ? $.count : src.length
 
     if(! $.old.__class__){
@@ -514,7 +507,7 @@ bytes.strip = function(self, cars){
     return bytes.rstrip(res, cars)
 }
 
-bytes.translate = function(self ,table, _delete) {
+bytes.translate = function(self, table, _delete) {
     if(_delete === undefined){
         _delete = []
     }else if(isinstance(_delete, bytes)){
@@ -523,7 +516,7 @@ bytes.translate = function(self ,table, _delete) {
         throw _b_.TypeError.$factory("Type " +
             $B.get_class(_delete).__name + " doesn't support the buffer API")
     }
-    var res = [], pos=0
+    var res = [], pos = 0
     if (isinstance(table, bytes) && table.source.length == 256) {
        for (var i = 0, len = self.source.length; i < len; i++) {
            if(_delete.indexOf(self.source[i]) > -1){continue}
@@ -552,14 +545,14 @@ var _lower = function(char_code) {
 bytes.upper = function(self) {
     var _res = [], pos=0
     for(var i = 0, len = self.source.length; i < len; i++) {
-        if (self.source[i]){_res[pos++]=_upper(self.source[i])}
+        if (self.source[i]){_res[pos++] = _upper(self.source[i])}
     }
     return bytes.$factory(_res)
 }
 
 bytes.lower = function(self) {
-    var _res  =[], pos = 0
-    for(var i=0, len = self.source.length; i < len; i++) {
+    var _res = [], pos = 0
+    for(var i = 0, len = self.source.length; i < len; i++) {
         if (self.source[i]){_res[pos++] = _lower(self.source[i])}
     }
     return bytes.$factory(_res)
@@ -577,13 +570,13 @@ function $UnicodeDecodeError(encoding, position){
 }
 
 function _hex(_int){return _int.toString(16)}
-function _int(hex){return parseInt(hex,16)}
+function _int(hex){return parseInt(hex, 16)}
 
 function normalise(encoding){
-    var enc=encoding.toLowerCase()
-    if(enc.substr(0, 7) == 'windows'){enc = 'cp' + enc.substr(7)}
-    enc = enc.replace('-', '') // first hyphen, like in cp-1250
-    enc = enc.replace('-', '_') // second, like in iso-8859-1
+    var enc = encoding.toLowerCase()
+    if(enc.substr(0, 7) == "windows"){enc = "cp" + enc.substr(7)}
+    enc = enc.replace("-", "") // first hyphen, like in cp-1250
+    enc = enc.replace("-", "_") // second, like in iso-8859-1
     return enc
 }
 
@@ -601,7 +594,7 @@ function load_decoder(enc){
 function load_encoder(enc){
     // load table from encodings/<enc>.py
     if(from_unicode[enc] === undefined){
-        var mod = _b_.__import__('encodings.' + enc),
+        var mod = _b_.__import__("encodings." + enc),
             table = mod[enc].decoding_table
         from_unicode[enc] = {}
         for(var i = 0; i < table.length; i++){
@@ -611,26 +604,26 @@ function load_encoder(enc){
 }
 
 function decode(b, encoding, errors){
-    var s = '',
+    var s = "",
         enc = normalise(encoding)
 
     switch(enc) {
-      case 'utf_8':
-      case 'utf-8':
-      case 'utf8':
-      case 'U8':
-      case 'UTF':
+      case "utf_8":
+      case "utf-8":
+      case "utf8":
+      case "U8":
+      case "UTF":
         var i = 0,
             cp,
-            _int_800 = _int('800'),
-            _int_c2 = _int('c2'),
-            _int_1000 = _int('1000'),
-            _int_e0 = _int('e0'),
-            _int_e1 = _int('e1'),
-            _int_e3 = _int('e3'),
-            _int_a0 = _int('a0'),
-            _int_80 = _int('80'),
-            _int_2000 = _int('2000')
+            _int_800 = _int("800"),
+            _int_c2 = _int("c2"),
+            _int_1000 = _int("1000"),
+            _int_e0 = _int("e0"),
+            _int_e1 = _int("e1"),
+            _int_e3 = _int("e3"),
+            _int_a0 = _int("a0"),
+            _int_80 = _int("80"),
+            _int_2000 = _int("2000")
 
         while(i < b.length){
             if(b[i] <= 127){
@@ -664,8 +657,8 @@ function decode(b, encoding, errors){
                     s += String.fromCharCode(cp)
                     i += 3
                 }else{
-                    if (errors == 'surrogateescape') {
-                       s += '\\udc' + _hex(b[i])
+                    if (errors == "surrogateescape") {
+                       s += "\\udc" + _hex(b[i])
                        i += 1
                     } else {
                        $UnicodeDecodeError(encoding, i)
@@ -673,21 +666,21 @@ function decode(b, encoding, errors){
                 }
             }
         }
-        break;
-      case 'latin_1':
-      case 'windows1252':
-      case 'iso-8859-1':
-      case 'iso8859-1':
-      case '8859':
-      case 'cp819':
-      case 'latin':
-      case 'latin1':
-      case 'L1':
+        break
+      case "latin_1":
+      case "windows1252":
+      case "iso-8859-1":
+      case "iso8859-1":
+      case "8859":
+      case "cp819":
+      case "latin":
+      case "latin1":
+      case "L1":
           b.forEach(function(item){
               s += String.fromCharCode(item)
           })
           break
-      case 'ascii':
+      case "ascii":
           for(var i = 0, len = b.length; i < len; i++){
               var cp = b[i]
               if(cp <= 127){s += String.fromCharCode(cp)}
@@ -698,7 +691,7 @@ function decode(b, encoding, errors){
                   throw _b_.UnicodeDecodeError.$factory(msg)
               }
           }
-          break;
+          break
       default:
           try{load_decoder(enc)}
           catch(err){
@@ -706,7 +699,7 @@ function decode(b, encoding, errors){
           }
           b.forEach(function(item){
               var u = to_unicode[enc][item]
-              if(u!==undefined){s+=String.fromCharCode(u)}
+              if(u !== undefined){s += String.fromCharCode(u)}
               else{s += String.fromCharCode(item)}
           })
           break
@@ -715,7 +708,7 @@ function decode(b, encoding, errors){
 }
 
 function encode(s, encoding){
-    var $ = $B.args('encode', 2, {s:null, encoding:null}, ['s', 'encoding'],
+    var $ = $B.args("encode", 2, {s:null, encoding:null}, ["s", "encoding"],
         arguments, {}, null, null),
         s = $.s,
         encoding = $.encoding
@@ -724,18 +717,18 @@ function encode(s, encoding){
         enc = normalise(encoding)
 
     switch(enc) {
-        case 'utf-8':
-        case 'utf8':
+        case "utf-8":
+        case "utf8":
             //optimize by creating constants..
-            var _int_800 = _int('800'),
-                _int_c2 = _int('c2'),
-                _int_1000 = _int('1000'),
-                _int_e0 = _int('e0'),
-                _int_e1 = _int('e1'),
-                _int_a0 = _int('a0'),
-                _int_80 = _int('80'),
-                _int_2000 = _int('2000'),
-                _int_D000 = _int('D000')
+            var _int_800 = _int("800"),
+                _int_c2 = _int("c2"),
+                _int_1000 = _int("1000"),
+                _int_e0 = _int("e0"),
+                _int_e1 = _int("e1"),
+                _int_a0 = _int("a0"),
+                _int_80 = _int("80"),
+                _int_2000 = _int("2000"),
+                _int_D000 = _int("D000")
 
             for(var i = 0, len = s.length; i < len; i++){
                 var cp = s.charCodeAt(i) // code point
@@ -765,17 +758,17 @@ function encode(s, encoding){
                     t[pos++] = _int_80 + cp - _int_2000 - 64 * zone
                 }
             }
-            break;
-        case 'latin1':
-        case 'iso8859_1':
-        case 'windows1252':
+            break
+        case "latin1":
+        case "iso8859_1":
+        case "windows1252":
             for(var i = 0, len = s.length; i < len; i++){
                 var cp = s.charCodeAt(i) // code point
                 if(cp <= 255){t[pos++] = cp}
                 else{$UnicodeEncodeError(encoding, i)}
             }
             break
-        case 'ascii':
+        case "ascii":
           for(var i = 0, len = s.length; i < len; i++){
               var cp = s.charCodeAt(i) // code point
               if(cp <= 127){t[pos++] = cp}

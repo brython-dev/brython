@@ -366,7 +366,7 @@ JSObject.__iter__ = function(self){
         // If object has length and item(), it's a collection : iterate on
         // its items
         if(self.js.length !== undefined && self.js.item !== undefined){
-            for(var i=0; i < self.js.length ; i++){
+            for(var i = 0; i < self.js.length ; i++){
                 items.push(JSObject.$factory(self.js[i]))
             }
         }else{

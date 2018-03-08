@@ -99,11 +99,11 @@ var $DOMEventAttrs_IE = ["altKey", "altLeft", "button", "cancelBubble",
 
 $B.$isEvent = function(obj){
     var flag = true
-    for(var i=0;i<$DOMEventAttrs_W3C.length;i++){
+    for(var i = 0; i < $DOMEventAttrs_W3C.length; i++){
         if(obj[$DOMEventAttrs_W3C[i]] === undefined){flag = false; break}
     }
     if(flag) return true
-    for(var i=0;i<$DOMEventAttrs_IE.length;i++){
+    for(var i = 0; i < $DOMEventAttrs_IE.length; i++){
         if(obj[$DOMEventAttrs_IE[i]] === undefined){return false}
     }
     return true
@@ -449,13 +449,13 @@ DOMNode.__add__ = function(self, other){
         res.children = res.children.concat(other.children)
     } else if(isinstance(other,[_b_.str, _b_.int, _b_.float, _b_.list,
                                 _b_.dict, _b_.set, _b_.tuple])){
-        res.children[pos++]=DOMNode.$factory(
+        res.children[pos++] = DOMNode.$factory(
             document.createTextNode(_b_.str.$factory(other)))
     }else if(isinstance(other, DOMNode)){
         res.children[pos++] = other
     }else{
         // If other is iterable, add all items
-        try{res.children=res.children.concat(_b_.list.$factory(other))}
+        try{res.children = res.children.concat(_b_.list.$factory(other))}
         catch(err){throw _b_.TypeError.$factory("can't add '" +
             $B.get_class(other).__name__ + "' object to DOMNode instance")
         }
@@ -551,7 +551,7 @@ DOMNode.__getattribute__ = function(self, attr){
         case "closest":
             return function(){return DOMNode[attr](self, arguments[0])}
         case "headers":
-          if(self.elt.nodeType==9){
+          if(self.elt.nodeType == 9){
               // HTTP headers
               var req = new XMLHttpRequest();
               req.open("GET", document.location, false)
@@ -633,7 +633,7 @@ DOMNode.__getattribute__ = function(self, attr){
         if(typeof res === "function"){
             var func = (function(f, elt){
                 return function(){
-                    var args = [], pos=0
+                    var args = [], pos = 0
                     for(var i = 0; i < arguments.length; i++){
                         var arg = arguments[i]
                         if(typeof arg == "function"){
@@ -693,9 +693,9 @@ DOMNode.__getitem__ = function(self, key){
             try{
                 var elts = self.elt.getElementsByTagName(key.__name__),
                     res = []
-                    elts.forEach(function(elt){
-                        res.push(DOMNode.$factory(elt))
-                    })
+                    for(var i = 0; i < elts.length; i++){
+                        res.push(DOMNode.$factory(elts[i]))
+                    }
                     return res
             }catch(err){
                 throw KeyError.$factory(str.$factory(key))
@@ -711,7 +711,7 @@ DOMNode.__getitem__ = function(self, key){
                     if(res === undefined){throw _b_.KeyError.$factory(key)}
                     return res
             }else if(typeof key == "string" &&
-                typeof self.elt.getNamedItem=="function"){
+                     typeof self.elt.getNamedItem == "function"){
                  var res = DOMNode.$factory(self.elt.getNamedItem(key))
                  if(res === undefined){throw _b_.KeyError.$factory(key)}
                  return res
@@ -1092,7 +1092,7 @@ DOMNode.get = function(self){
         }
         var sel_res = make_list(obj.querySelectorAll($dict['selector']))
         if(res === undefined){return sel_res}
-        var to_delete = [], pos=0
+        var to_delete = [], pos = 0
         for(var i  =0; i < res.length; i++){
             var elt = res[i], // keep it only if it is also inside sel_res
                 flag = false
@@ -1213,7 +1213,7 @@ DOMNode.setSelectionRange = function(self){ // for TEXTAREA
     }else if (this["createTextRange"] !== undefined) {
         return (function(obj){
             return function(start_pos, end_pos){
-                if(end_pos==undefined){end_pos = start_pos}
+                if(end_pos == undefined){end_pos = start_pos}
             var range = obj.createTextRange()
             range.collapse(true)
             range.moveEnd("character", start_pos)
@@ -1473,7 +1473,7 @@ TagSum.__repr__ = function(self){
     var res = "<object TagSum> "
     for(var i = 0; i < self.children.length; i++){
         res += self.children[i]
-        if(self.children[i].toString()=="[object Text]"){
+        if(self.children[i].toString() == "[object Text]"){
             res += " ["+self.children[i].textContent+"]\n"
         }
     }
@@ -1484,7 +1484,7 @@ TagSum.__str__ = TagSum.toString = TagSum.__repr__
 
 TagSum.clone = function(self){
     var res = TagSum.$factory()
-    for(var i=0; i<self.children.length; i++){
+    for(var i = 0; i < self.children.length; i++){
         res.children.push(self.children[i].cloneNode(true))
     }
     return res

@@ -20,7 +20,7 @@ var complex = {
 
 complex.__abs__ = function(self){
     var _rf = isFinite(self.$real),
-        _if=isFinite(self.$imag)
+        _if = isFinite(self.$imag)
     if((_rf && isNaN(self.$imag)) || (_if && isNaN(self.$real)) ||
         (isNaN(self.$imag) && isNaN(self.$real))){return NaN}
     if(! _rf || ! _if){return Infinity}
@@ -128,10 +128,10 @@ complex.__new__ = function(cls){
             throw _b_.ValueError.$factory("complex() arg is a malformed string")
         }else if(parts[_real] == "." || parts[_imag] == "." ||
                 parts[_real] == ".e" || parts[_imag] == ".e" ||
-                parts[_real] == "e" || parts[_imag]=="e"){
+                parts[_real] == "e" || parts[_imag] == "e"){
             throw _b_.ValueError.$factory("complex() arg is a malformed string")
         }else if(parts[_j] != ""){
-            if(parts[_sign]==""){
+            if(parts[_sign] == ""){
                 $real = 0
                 if (parts[_real] == "+" || parts[_real] == "") {
                     $imag = 1
@@ -167,7 +167,7 @@ complex.__new__ = function(cls){
         return res
     }
 
-    for(i=0;i<type_conversions.length;i++) {
+    for(i = 0; i < type_conversions.length; i++) {
         if(hasattr($real, type_conversions[i])) {
 
         }
@@ -253,7 +253,7 @@ complex.__str__ = complex.__repr__ = function(self){
     return "(" + self.$real + "-" + (-self.$imag) + "j)"
 }
 
-complex.__sqrt__= function(self) {
+complex.__sqrt__ = function(self) {
   if(self.$imag == 0){return complex(Math.sqrt(self.$real))}
 
   var r = self.$real,
@@ -322,7 +322,7 @@ var $op_func = function(self,other){
     }
     if(isinstance(other, _b_.bool)){
          var bool_value = 0
-         if(other.valueOf()){bool_value=1}
+         if(other.valueOf()){bool_value = 1}
          return make_complex(self.$real - bool_value, self.$imag)
     }
     throw _b_.TypeError.$factory("unsupported operand type(s) for -: " +

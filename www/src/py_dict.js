@@ -168,7 +168,7 @@ dict.__contains__ = function(){
         //         def __hash__(self): return hash('u')
         //
         //     a = {'u': 'a', X(): 'b'}
-        //     assert set(a.values())=={'a', 'b'}
+        //     assert set(a.values()) == {'a', 'b'}
         //     assert not X() in a
         return $B.rich_comp("__eq__", item, self.$object_dict[_key][0])
     }
@@ -462,7 +462,7 @@ dict.__setitem__ = function(self, key, value){
     if(self.$jsobj){
         if(self.$jsobj.__class__ === _b_.type){
             self.$jsobj[key] = $B.pyobj2jsobj(value)
-            if(key=="__init__" || key=="__new__"){
+            if(key == "__init__" || key == "__new__"){
                 // If class attribute __init__ or __new__ are reset,
                 // the factory function has to change
                 self.$jsobj.$factory = $B.$instance_creator(self.$jsobj)

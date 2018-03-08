@@ -8,11 +8,11 @@ $B.$raise = function(arg){
     // Exception
     if(arg === undefined){
         var es = $B.current_exception
-        if(es!==undefined) throw es
-        throw _b_.RuntimeError.$factory('No active exception to reraise')
+        if(es !== undefined){throw es}
+        throw _b_.RuntimeError.$factory("No active exception to reraise")
     }else if(isinstance(arg, BaseException)){
         throw arg
-    }else if(arg.__class__===$B.$factory && issubclass(arg, BaseException)){
+    }else if(arg.__class__ === $B.$factory && issubclass(arg, BaseException)){
         throw arg()
     }else if(arg.$is_class && issubclass(arg, BaseException)){
         throw arg.$factory()
@@ -21,53 +21,53 @@ $B.$raise = function(arg){
     }
 }
 
-$B.$syntax_err_line = function(exc,module,pos,line_num) {
+$B.$syntax_err_line = function(exc, module, pos, line_num){
     // map position to line number
     var pos2line = {},
-        lnum=1,
+        lnum = 1,
         src = $B.$py_src[module],
-        module = module.charAt(0) == '$' ? '<string>' : module
+        module = module.charAt(0) == "$" ? "<string>" : module
     if(src===undefined){
-        console.log('no src for', module)
-        exc.$line_info = line_num+','+module
-        exc.args = _b_.tuple.$factory([$B.$getitem(exc.args,0), module,
+        console.log("no src for", module)
+        exc.$line_info = line_num + ',' + module
+        exc.args = _b_.tuple.$factory([$B.$getitem(exc.args, 0), module,
             line_num, 0, 0])
     } else {
         var line_pos = {1:0}
-        for(var i=0, _len_i = src.length; i < _len_i;i++){
+        for(var i = 0, len = src.length; i < len; i++){
             pos2line[i]=lnum
-            if(src.charAt(i)=='\n'){line_pos[++lnum]=i}
+            if(src.charAt(i)=="\n"){line_pos[++lnum]=i}
         }
         while(line_num===undefined){
             line_num = pos2line[pos]
             pos--
         }
-        exc.$line_info = line_num+','+module
+        exc.$line_info = line_num + "," + module
 
-        var lines = src.split('\n'),
-            line = lines[line_num-1],
-            lpos = pos-line_pos[line_num],
-            len=line.length
-        line=line.replace(/^\s*/,'')
-        lpos-=len-line.length
-        exc.args = _b_.tuple.$factory([$B.$getitem(exc.args,0), module,
+        var lines = src.split("\n"),
+            line = lines[line_num - 1],
+            lpos = pos - line_pos[line_num],
+            len = line.length
+        line = line.replace(/^\s*/,'')
+        lpos -= len - line.length
+        exc.args = _b_.tuple.$factory([$B.$getitem(exc.args, 0), module,
             line_num, lpos, line])
     }
 }
 
 $B.$SyntaxError = function(module, msg, pos, line_num, root) {
-    if(root!==undefined && root.line_info!==undefined){
+    if(root !== undefined && root.line_info !== undefined){
         // this may happen for syntax errors inside a lambda
-        line_num=root.line_info
+        line_num = root.line_info
     }
     var exc = _b_.SyntaxError.$factory(msg)
-    $B.$syntax_err_line(exc,module,pos,line_num)
+    $B.$syntax_err_line(exc, module, pos, line_num)
     throw exc
 }
 
-$B.$IndentationError = function(module,msg,pos) {
+$B.$IndentationError = function(module, msg, pos) {
     var exc = _b_.IndentationError.$factory(msg)
-    $B.$syntax_err_line(exc,module,pos)
+    $B.$syntax_err_line(exc, module, pos)
     throw exc
 }
 
@@ -83,34 +83,34 @@ var traceback = $B.make_class("traceback",
 )
 
 traceback.__getattribute__ = function(self, attr){
-    if(self.exc.$stack.length==0){alert('no stack', attr)}
+    if(self.exc.$stack.length == 0){alert("no stack", attr)}
     var last_frame = $B.last(self.exc.$stack)
     if(last_frame === undefined){
-        alert('last frame undef ');
+        alert("last frame undef ")
         console.log(self.exc.$stack, Object.keys(self.exc.$stack))
     }
     var line_info = self.exc.$line_info || last_frame[1].$line_info
 
     switch(attr){
-        case 'tb_frame':
+        case "tb_frame":
             return frame.$factory(self.exc.$stack)
-        case 'tb_lineno':
-            if(line_info===undefined){return -1}
-            else{return parseInt(line_info.split(',')[0])}
-        case 'tb_lasti':
-            if(line_info === undefined){return '<unknown>'}
+        case "tb_lineno":
+            if(line_info === undefined){return -1}
+            else{return parseInt(line_info.split(",")[0])}
+        case "tb_lasti":
+            if(line_info === undefined){return "<unknown>"}
             else{
-                var info = line_info.split(',')
+                var info = line_info.split(",")
                 var src = $B.$py_src[info[1]]
                 if(src !== undefined){
-                    return src.split('\n')[parseInt(info[0]-1)].trim()
-                }else{return '<unknown>'}
+                    return src.split("\n")[parseInt(info[0]-1)].trim()
+                }else{return "<unknown>"}
             }
-        case 'tb_next':
-            if(self.exc.$stack.length==1){return None}
+        case "tb_next":
+            if(self.exc.$stack.length == 1){return None}
             else{
                 return traceback.$factory(
-                    self.exc.$stack.slice(0, self.exc.$stack.length-1))
+                    self.exc.$stack.slice(0, self.exc.$stack.length - 1))
             }
         default:
             return _b_.object.__getattribute__(traceback, attr)
@@ -128,7 +128,7 @@ var frame = $B.make_class("frame",
             f_builtins : {}, // XXX fix me
             $stack: stack,
         }
-        if(pos===undefined){pos = fs.length-1}
+        if(pos === undefined){pos = fs.length - 1}
         res.$pos = pos
         if(fs.length){
             var _frame = fs[pos]
@@ -136,22 +136,22 @@ var frame = $B.make_class("frame",
             try{
                 res.f_locals = $B.obj_dict(_frame[1])
             }catch(err){
-                console.log('err '+err)
+                console.log("err " + err)
                 throw err
             }
             res.f_globals = $B.obj_dict(_frame[3])
 
-            if(_frame[1].$line_info === undefined){res.f_lineno=-1}
+            if(_frame[1].$line_info === undefined){res.f_lineno = -1}
             else{res.f_lineno = parseInt(_frame[1].$line_info.split(',')[0])}
 
-            res.f_code = {__class__:$B.code,
-                co_code:None, // XXX fix me
+            res.f_code = {__class__: $B.code,
+                co_code: None, // XXX fix me
                 co_name: locals_id, // idem
                 co_filename: _frame[3].__name__ // idem
             }
-            if(res.f_code.co_filename===undefined){
-                console.log(_frame[0],_frame[1],_frame[2],_frame[3]);
-                alert('no cofilename')
+            if(res.f_code.co_filename === undefined){
+                console.log(_frame[0], _frame[1], _frame[2], _frame[3])
+                alert("no cofilename")
             }
         }
         return res
@@ -161,9 +161,9 @@ var frame = $B.make_class("frame",
 frame.__getattr__ = function(self, attr){
     // Used for f_back to avoid computing it when the frame object
     // is initialised
-    if(attr=='f_back'){
-        if(self.$pos>0){
-            return frame.$factory(self.$stack, self.$pos-1)
+    if(attr == "f_back"){
+        if(self.$pos > 0){
+            return frame.$factory(self.$stack, self.$pos - 1)
         }
     }
 }
@@ -175,11 +175,11 @@ $B._frame = frame // used in builtin_modules.js
 // built-in exceptions
 
 var BaseException = _b_.BaseException =  {
-    __class__:_b_.type,
+    __class__: _b_.type,
     __bases__ : [_b_.object],
-    __module__:'builtins',
+    __module__: "builtins",
     __mro__: [_b_.object],
-    __name__:'BaseException',
+    __name__: "BaseException",
     args: [],
     $is_class: true
 }
@@ -190,7 +190,7 @@ BaseException.__init__ = function(self){
 }
 
 BaseException.__repr__ = function(self){
-    return self.__class__.__name__+repr(self.args)
+    return self.__class__.__name__ + repr(self.args)
 }
 
 BaseException.__str__ = function(self){
@@ -205,30 +205,30 @@ BaseException.__new__ = function(cls){
 
 BaseException.__getattr__ = function(self, attr){
 
-    if(attr == 'info'){
+    if(attr == "info"){
 
         var name = self.__class__.__name__
-        if(name=='SyntaxError' || name=='IndentationError'){
-            return 'File "'+self.args[1]+'", line '+self.args[2]+'\n    '+
-                self.args[4]
+        if(name == "SyntaxError" || name == "IndentationError"){
+            return 'File "' + self.args[1] + '", line ' + self.args[2] +
+                "\n    " + self.args[4]
         }
 
-        var info = 'Traceback (most recent call last):'
+        var info = "Traceback (most recent call last):"
 
         var line_info = self.$line_info
 
-        if(self.$js_exc!==undefined){
+        if(self.$js_exc !== undefined){
             for(var attr in self.$js_exc){
-                if(attr==='message') continue
-                try{info += '\n    '+attr+' : '+self.$js_exc[attr]}
+                if(attr == "message"){continue}
+                try{info += "\n    " + attr + " : " + self.$js_exc[attr]}
                 catch(_err){}
             }
-            info+='\n'
+            info += "\n"
         }
-        for(var i=0;i<self.$stack.length;i++){
+        for(var i = 0; i < self.$stack.length; i++){
             var frame = self.$stack[i]
             //console.log('frame', i, frame, frame[3].$line_info)
-            if(!frame[1] || !frame[1].$line_info){continue}
+            if(! frame[1] || ! frame[1].$line_info){continue}
             var $line_info = frame[1].$line_info
             if(i == self.$stack.length - 1 && self.$line_info){
                 $line_info = self.$line_info
@@ -239,26 +239,26 @@ BaseException.__getattr__ = function(self, attr){
                 src = self.src
             }
             if(src === undefined){continue}
-            var lines = src.split('\n'),
+            var lines = src.split("\n"),
                 module = line_info[1]
-            if(module.charAt(0) == '$'){module = '<module>'}
-            info += '\n  module ' + module + ' line ' + line_info[0]
+            if(module.charAt(0) == "$"){module = "<module>"}
+            info += "\n  module " + module + " line " + line_info[0]
             var line = lines[parseInt(line_info[0]) - 1]
-            if(line){line=line.replace(/^[ ]+/g, '')}
+            if(line){line = line.replace(/^[ ]+/g, "")}
             if(line === undefined){
-                console.log('line undef...', line_info,
+                console.log("line undef...", line_info,
                     $B.$py_src[line_info[1]])
             }
-            info += '\n    '+line
+            info += "\n    " + line
         }
         return info
 
-    }else if(attr == 'traceback'){
+    }else if(attr == "traceback"){
         // Return traceback object
         return traceback.$factory(self)
     }else{
-        throw _b_.AttributeError.$factory(self.__class__.__name__+
-            " has no attribute '"+attr+"'")
+        throw _b_.AttributeError.$factory(self.__class__.__name__ +
+            " has no attribute '" + attr + "'")
     }
 }
 
@@ -281,7 +281,7 @@ BaseException.$factory = function (){
         err.$line_info = $B.last($B.frames_stack)[1].$line_info
     }
     $B.current_exception = err
-    eval('//placeholder//');
+    eval("//placeholder//")
     return err
 }
 
@@ -299,28 +299,29 @@ $B.exception = function(js_exc){
     // js_exc is the Javascript exception, which can be raised by the
     // code generated by Python - in this case it has attribute $py_error set -
     // or by the Javascript interpreter (ReferenceError for instance)
-    if(!js_exc.$py_error){
+    if(! js_exc.$py_error){
         // Print complete Javascript traceback in console
-        console.log('js exc', js_exc)
+        console.log("js exc", js_exc)
 
-        if(js_exc.info===undefined){
+        if(js_exc.info === undefined){
             js_exc.msg = BaseException.__getattr__(js_exc, "info")
         }
         var exc = Error()
-        exc.__name__ = 'Internal Javascript error: '+(js_exc.__name__ || js_exc.name)
+        exc.__name__ = "Internal Javascript error: " +
+            (js_exc.__name__ || js_exc.name)
         exc.__class__ = _b_.Exception
         exc.$js_exc = js_exc
-        if(js_exc.name=='ReferenceError'){
-            exc.__name__='NameError'
-            exc.__class__=_b_.NameError
-            js_exc.message = js_exc.message.replace('$$','')
-        }else if(js_exc.name=="InternalError"){
-            exc.__name__='RuntimeError'
-            exc.__class__=_b_.RuntimeError
+        if(js_exc.name == "ReferenceError"){
+            exc.__name__ = "NameError"
+            exc.__class__ = _b_.NameError
+            js_exc.message = js_exc.message.replace("$$", "")
+        }else if(js_exc.name == "InternalError"){
+            exc.__name__ = "RuntimeError"
+            exc.__class__ = _b_.RuntimeError
         }
-        var $message = js_exc.msg || '<'+js_exc+'>'
+        var $message = js_exc.msg || "<" + js_exc + ">"
         exc.args = _b_.tuple.$factory([$message])
-        exc.info = ''
+        exc.info = ""
         exc.$py_error = true
         exc.$stack = $B.frames_stack.slice()
     }else{
@@ -330,18 +331,18 @@ $B.exception = function(js_exc){
     return exc
 }
 
-$B.is_exc=function(exc, exc_list){
+$B.is_exc = function(exc, exc_list){
     // used in try/except to check if an exception is an instance of
     // one of the classes in exc_list
-    if(exc.__class__===undefined){
+    if(exc.__class__ === undefined){
         exc = $B.exception(exc)
     }
 
     var this_exc_class = exc.__class__
-    for(var i=0;i<exc_list.length;i++){
+    for(var i = 0; i < exc_list.length; i++){
         var exc_class = exc_list[i]
-        if(this_exc_class===undefined){console.log("exc class undefined", exc)}
-        if(issubclass(this_exc_class,exc_class)) return true
+        if(this_exc_class === undefined){console.log("exc class undefined", exc)}
+        if(issubclass(this_exc_class, exc_class)){return true}
     }
     return false
 }
@@ -353,10 +354,10 @@ $B.clear_exc = function(){
 function $make_exc(names, parent){
     // Creates the exception classes that inherit from parent
     // names is the list of exception names
-    var _str=[], pos=0
-    for(var i=0;i<names.length;i++){
+    var _str = [], pos = 0
+    for(var i = 0; i < names.length; i++){
         var name = names[i],
-            code = ''
+            code = ""
         if(Array.isArray(name)){
             // If name is an array, its first item is the exception name
             // and the second is a piece of code to replace the placeholder
@@ -366,61 +367,66 @@ function $make_exc(names, parent){
         }
         // create a class for exception called "name"
         $B.builtins_scope[name] = true
-        var $exc = (BaseException.$factory+'').replace(/BaseException/g,name)
-        $exc = $exc.replace('//placeholder//', code)
+        var $exc = (BaseException.$factory + "").replace(/BaseException/g,name)
+        $exc = $exc.replace("//placeholder//", code)
         // class dictionary
-        _str[pos++]='_b_.'+name+'={__class__:_b_.type,__name__:"'+name+'"}'
-        _str[pos++]='_b_.'+name+'.__bases__ = [parent]'
-        _str[pos++]='_b_.'+name+'.__module__ = "builtins"'
-        _str[pos++]='_b_.'+name+'.__mro__=[_b_.'+parent.__name__+
-            '].concat(parent.__mro__)'
-        _str[pos++]='_b_.'+name+'.$factory = ' + $exc
-        _str[pos++]='_b_.'+name+'.$factory.$infos = {__name__: "' + name +
-            '", __qualname__: "' + name + '"}'
-        _str[pos++]='_b_.'+name+'.$is_class = true'
+        _str[pos++] = "_b_." + name + '={__class__:_b_.type,__name__:"' +
+            name + '"}'
+        _str[pos++] = "_b_." + name + ".__bases__ = [parent]"
+        _str[pos++] = "_b_." + name + '.__module__ = "builtins"'
+        _str[pos++] = '_b_.' + name + ".__mro__ = [_b_." + parent.__name__ +
+            "].concat(parent.__mro__)"
+        _str[pos++] = "_b_." + name + ".$factory = " + $exc
+        _str[pos++] = "_b_." + name + '.$factory.$infos = {__name__: "' +
+            name + '", __qualname__: "' + name + '"}'
+        _str[pos++] = "_b_." + name + ".$is_class = true"
     }
     try{
-        eval(_str.join(';'))
+        eval(_str.join(";"))
     }catch(err){
         console.log("--err" + err)
         throw err
     }
 }
 
-$make_exc(['SystemExit','KeyboardInterrupt','GeneratorExit','Exception'],BaseException)
-$make_exc([['StopIteration','err.value = arguments[0]'],
-    'ArithmeticError','AssertionError','AttributeError',
-    'BufferError','EOFError','ImportError','LookupError','MemoryError',
-    'NameError','OSError','ReferenceError','RuntimeError','SyntaxError',
-    'SystemError','TypeError','ValueError','Warning'],_b_.Exception)
-$make_exc(['FloatingPointError','OverflowError','ZeroDivisionError'],
+$make_exc(["SystemExit", "KeyboardInterrupt", "GeneratorExit", "Exception"],
+    BaseException)
+$make_exc([["StopIteration","err.value = arguments[0]"],
+    "ArithmeticError", "AssertionError", "AttributeError",
+    "BufferError", "EOFError", "ImportError", "LookupError", "MemoryError",
+    "NameError", "OSError", "ReferenceError", "RuntimeError", "SyntaxError",
+    "SystemError", "TypeError", "ValueError", "Warning"],_b_.Exception)
+$make_exc(["FloatingPointError", "OverflowError", "ZeroDivisionError"],
     _b_.ArithmeticError)
-$make_exc(['IndexError','KeyError'],_b_.LookupError)
-$make_exc(['UnboundLocalError'],_b_.NameError)
-$make_exc(['BlockingIOError','ChildProcessError','ConnectionError',
-    'FileExistsError','FileNotFoundError','InterruptedError',
-    'IsADirectoryError','NotADirectoryError','PermissionError',
-    'ProcessLookupError','TimeoutError'],_b_.OSError)
-$make_exc(['BrokenPipeError','ConnectionAbortedError','ConnectionRefusedError',
-    'ConnectionResetError'],_b_.ConnectionError)
-$make_exc(['NotImplementedError'],_b_.RuntimeError)
-$make_exc(['NotImplemented'],_b_.RuntimeError)
-$make_exc(['IndentationError'],_b_.SyntaxError)
-$make_exc(['TabError'],_b_.IndentationError)
-$make_exc(['UnicodeError'],_b_.ValueError)
-$make_exc(['UnicodeDecodeError','UnicodeEncodeError','UnicodeTranslateError'],
-    _b_.UnicodeError)
-$make_exc(['DeprecationWarning','PendingDeprecationWarning','RuntimeWarning',
-    'SyntaxWarning','UserWarning','FutureWarning','ImportWarning',
-    'UnicodeWarning','BytesWarning','ResourceWarning'],_b_.Warning)
+$make_exc(["IndexError","KeyError"], _b_.LookupError)
+$make_exc(["UnboundLocalError"], _b_.NameError)
+$make_exc(["BlockingIOError", "ChildProcessError", "ConnectionError",
+    "FileExistsError", "FileNotFoundError", "InterruptedError",
+    "IsADirectoryError", "NotADirectoryError", "PermissionError",
+    "ProcessLookupError", "TimeoutError"], _b_.OSError)
+$make_exc(["BrokenPipeError", "ConnectionAbortedError",
+    "ConnectionRefusedError", "ConnectionResetError"], _b_.ConnectionError)
+$make_exc(["NotImplementedError"], _b_.RuntimeError)
+$make_exc(["NotImplemented"], _b_.RuntimeError)
+$make_exc(["IndentationError"], _b_.SyntaxError)
+$make_exc(["TabError"], _b_.IndentationError)
+$make_exc(["UnicodeError"], _b_.ValueError)
+$make_exc(["UnicodeDecodeError", "UnicodeEncodeError",
+    "UnicodeTranslateError"], _b_.UnicodeError)
+$make_exc(["DeprecationWarning", "PendingDeprecationWarning",
+    "RuntimeWarning", "SyntaxWarning", "UserWarning", "FutureWarning",
+    "ImportWarning", "UnicodeWarning", "BytesWarning", "ResourceWarning"],
+    _b_.Warning)
 
-$make_exc(['EnvironmentError','IOError','VMSError','WindowsError'],_b_.OSError)
+$make_exc(["EnvironmentError", "IOError", "VMSError", "WindowsError"],
+    _b_.OSError)
 
 $B.$NameError = function(name){
     // Used if a name is not found in the bound names
     // It is converted into
-    // $globals[name] !== undefined ? $globals[name] : __BRYTHON__.$NameError.$factory(name)
-    throw _b_.NameError.$factory("name '"+name+"' is not defined")
+    // $globals[name] !== undefined ? $globals[name] : 
+    //    __BRYTHON__.$NameError.$factory(name)
+    throw _b_.NameError.$factory("name '" + name + "' is not defined")
 }
 $B.$TypeError = function(msg){
     throw _b_.TypeError.$factory(msg)
