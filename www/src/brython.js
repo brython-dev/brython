@@ -71,8 +71,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,0,'rc',0]
 __BRYTHON__.__MAGIC__="3.5.0"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-03-08 09:19:18.594482"
-__BRYTHON__.timestamp=1520497158594
+__BRYTHON__.compiled_date="2018-03-09 10:11:30.468342"
+__BRYTHON__.timestamp=1520586690468
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -6294,8 +6294,7 @@ $B.$syntax_err_line=function(exc,module,pos,line_num){
 var pos2line={},lnum=1,src=$B.$py_src[module],module=module.charAt(0)=="$" ? "<string>" : module
 if(src===undefined){console.log("no src for",module)
 exc.$line_info=line_num + ',' + module
-exc.args=_b_.tuple.$factory([$B.$getitem(exc.args,0),module,line_num,0,0])}else{
-var line_pos={1:0}
+exc.args=_b_.tuple.$factory([$B.$getitem(exc.args,0),module,line_num,0,0])}else{var line_pos={1:0}
 for(var i=0,len=src.length;i < len;i++){pos2line[i]=lnum
 if(src.charAt(i)=="\n"){line_pos[++lnum]=i}}
 while(line_num===undefined){line_num=pos2line[pos]
@@ -7122,251 +7121,249 @@ for(var i=0;i<js.length;i++)$B.stdlib[js[i]]=['js']
 var pkglist=['asyncio','browser','collections','concurrent','concurrent.futures','encodings','html','http','importlib','jqueryui','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib','xml','xml.etree','xml.parsers','xml.sax']
 for(var i=0;i<pkglist.length;i++)$B.stdlib[pkglist[i]]=['py',true]})(__BRYTHON__)
 
-;(function($B){var _b_=$B.builtins
-var _window=self;
-var module=$B.module={__class__ : _b_.type,__module__: "builtins",__mro__:[_b_.object],__name__ : 'module'}
+;(function($B){var _b_=$B.builtins,_window=self
+var module=$B.module={__class__ : _b_.type,__module__: "builtins",__mro__:[_b_.object],__name__ : "module"}
 module.__init__=function(){}
 module.__new__=function(cls,name,doc,$package){return{
-__class__:cls,__name__:name,__doc__:doc||_b_.None,__package__:$package||_b_.None}}
-module.__repr__=module.__str__=function(self){return '<module '+self.__name__+'>'}
-module.__setattr__=function(self,attr,value){if(self.__name__=='__builtins__'){
+__class__: cls,__name__: name,__doc__: doc ||_b_.None,__package__: $package ||_b_.None}}
+module.__repr__=module.__str__=function(self){return "<module " + self.__name__ + ">"}
+module.__setattr__=function(self,attr,value){if(self.__name__=="__builtins__"){
 $B.builtins[attr]=value}else{self[attr]=value}}
 module.$factory=function(name,doc,$package){return{
-__class__:module,__name__:name,__doc__:doc||_b_.None,__package__:$package||_b_.None}}
+__class__: module,__name__: name,__doc__: doc ||_b_.None,__package__: $package ||_b_.None}}
 $B.set_func_names(module,"builtins")
-function parent_package(mod_name){var parts=mod_name.split('.');
-parts.pop();
-return parts.join('.');}
+function parent_package(mod_name){var parts=mod_name.split(".")
+parts.pop()
+return parts.join(".")}
 function $importer(){
-var $xmlhttp=new XMLHttpRequest();
-var fake_qs;
-switch($B.$options.cache){case 'version':
-fake_qs="?v="+$B.version_info[2]
-break;
-case 'browser':
-fake_qs=''
-break;
+var $xmlhttp=new XMLHttpRequest()
+var fake_qs
+switch($B.$options.cache){case "version":
+fake_qs="?v=" + $B.version_info[2]
+break
+case "browser":
+fake_qs=""
+break
 default:
-fake_qs="?v="+(new Date().getTime())}
+fake_qs="?v=" +(new Date().getTime())}
 var timer=setTimeout(function(){$xmlhttp.abort()
-throw _b_.ImportError.$factory("No module named '"+module+"'")},5000)
+throw _b_.ImportError.$factory("No module named '" + module + "'")},5000)
 return[$xmlhttp,fake_qs,timer]}
 function $download_module(module,url,$package){var imp=$importer(),$xmlhttp=imp[0],fake_qs=imp[1],timer=imp[2],res=null,mod_name=module.__name__,res,t0=new Date()
 $B.download_time=$B.download_time ||0
-$xmlhttp.open('GET',url+fake_qs,false)
+$xmlhttp.open("GET",url + fake_qs,false)
 if($B.$CORS){$xmlhttp.onload=function(){if($xmlhttp.status==200 ||$xmlhttp.status==0){res=$xmlhttp.responseText}else{
-res=_b_.FileNotFoundError.$factory("No module named '"+mod_name+"'")}}
-$xmlhttp.onerror=function(){res=_b_.FileNotFoundError.$factory("No module named '"+mod_name+"'")}}else{
-$xmlhttp.onreadystatechange=function(){if(this.readyState==4){_window.clearTimeout(timer)
+res=_b_.FileNotFoundError.$factory("No module named '" +
+mod_name + "'")}}
+$xmlhttp.onerror=function(){res=_b_.FileNotFoundError.$factory("No module named '" +
+mod_name + "'")}}else{$xmlhttp.onreadystatechange=function(){if(this.readyState==4){_window.clearTimeout(timer)
 if(this.status==200 ||$xmlhttp.status==0){res=this.responseText
-module.$last_modified=this.getResponseHeader('Last-Modified')}else{
-console.log('Error '+this.status+
-' means that Python module '+mod_name+
-' was not found at url '+url)
-res=_b_.FileNotFoundError.$factory("No module named '"+mod_name+"'")}}}}
-if('overrideMimeType' in $xmlhttp){$xmlhttp.overrideMimeType("text/plain")}
+module.$last_modified=
+this.getResponseHeader("Last-Modified")}else{
+console.log("Error " + this.status +
+" means that Python module " + mod_name +
+" was not found at url " + url)
+res=_b_.FileNotFoundError.$factory("No module named '" +
+mod_name + "'")}}}}
+if("overrideMimeType" in $xmlhttp){$xmlhttp.overrideMimeType("text/plain")}
 $xmlhttp.send()
-if(res==null)throw _b_.FileNotFoundError.$factory("No module named '"+mod_name+"' (res is null)")
+if(res==null){throw _b_.FileNotFoundError.$factory("No module named '" +
+mod_name + "' (res is null)")}
 if(res.constructor===Error){throw res}
-$B.download_time +=(new Date())-t0
+$B.download_time +=(new Date())- t0
 return res}
 $B.$download_module=$download_module
 function import_js(module,path){try{var module_contents=$download_module(module,path,undefined)}catch(err){return null}
 run_js(module_contents,path,module)
 return true}
 function run_js(module_contents,path,_module){
-try{eval(module_contents);
+try{eval(module_contents)
 if($B.$options.store){_module.$js=module_contents}}catch(err){console.log(err)
 console.log(path,_module)
 throw err}
 try{$module}
-catch(err){console.log('no $module')
+catch(err){console.log("no $module")
 throw _b_.ImportError.$factory("name '$module' is not defined in module")}
 if(_module !==undefined){
-for(var attr in $module){_module[attr]=$module[attr];}
-$module=_module;}
+for(var attr in $module){_module[attr]=$module[attr]}
+$module=_module}
 else{
 $module.__class__=module
 $module.__name__=_module.name
-$module.__repr__=$module.__str__=function(){if($B.builtin_module_names.indexOf(_module.name)> -1){return "<module '"+_module.name+"' (built-in)>"}
-return "<module '"+_module.name+"' from "+path+" >"}
-if(_module.name !='builtins'){
+$module.__repr__=$module.__str__=function(){if($B.builtin_module_names.indexOf(_module.name)> -1){return "<module '" + _module.name + "' (built-in)>"}
+return "<module '" + _module.name + "' from " + path + " >"}
+if(_module.name !="builtins"){
 $module.__file__=path}}
 $B.imported[_module.__name__]=$module
 return true}
 function show_ns(){var kk=Object.keys(_window)
-for(var i=0,_len_i=kk.length;i < _len_i;i++){console.log(kk[i])
-if(kk[i].charAt(0)=='$'){console.log(eval(kk[i]))}}
-console.log('---')}
+for(var i=0,len=kk.length;i < len;i++){console.log(kk[i])
+if(kk[i].charAt(0)=="$"){console.log(eval(kk[i]))}}
+console.log("---")}
 function import_py(module,path,$package){
 var mod_name=module.__name__,module_contents=$download_module(module,path,$package)
 $B.imported[mod_name].$is_package=module.$is_package
 $B.imported[mod_name].$last_modified=module.$last_modified
-if(path.substr(path.length-12)=='/__init__.py'){
-$B.imported[mod_name].__package__=mod_name
+if(path.substr(path.length-12)=="/__init__.py"){$B.imported[mod_name].__package__=mod_name
 $B.imported[mod_name].__path__=path
-$B.imported[mod_name].$is_package=module.$is_package=true}else if($package){$B.imported[mod_name].__package__=$package}else{var mod_elts=mod_name.split('.')
+$B.imported[mod_name].$is_package=module.$is_package=true}else if($package){$B.imported[mod_name].__package__=$package}else{var mod_elts=mod_name.split(".")
 mod_elts.pop()
-$B.imported[mod_name].__package__=mod_elts.join('.')}
+$B.imported[mod_name].__package__=mod_elts.join(".")}
 $B.imported[mod_name].__file__=path
 return run_py(module_contents,path,module)}
 function run_py(module_contents,path,module,compiled){var root,js
-if(!compiled){var $Node=$B.$Node,$NodeJSCtx=$B.$NodeJSCtx
+if(! compiled){var $Node=$B.$Node,$NodeJSCtx=$B.$NodeJSCtx
 $B.$py_module_path[module.__name__]=path
 root=$B.py2js(module_contents,module.__name__,module.__name__,$B.builtins_scope)
 var body=root.children
 root.children=[]
-var mod_node=new $Node('expression')
-new $NodeJSCtx(mod_node,'var $module=(function()')
+var mod_node=new $Node("expression")
+new $NodeJSCtx(mod_node,"var $module = (function()")
 root.insert(0,mod_node)
-for(var i=0,_len_i=body.length;i < _len_i;i++){mod_node.add(body[i])}
-var ret_node=new $Node('expression')
-new $NodeJSCtx(ret_node,'return $locals_'+module.__name__.replace(/\./g,'_'))
+for(var i=0,len=body.length;i < len;i++){mod_node.add(body[i])}
+var ret_node=new $Node("expression")
+new $NodeJSCtx(ret_node,"return $locals_" +
+module.__name__.replace(/\./g,"_"))
 mod_node.add(ret_node)
-var ex_node=new $Node('expression')
-new $NodeJSCtx(ex_node,')(__BRYTHON__)')
+var ex_node=new $Node("expression")
+new $NodeJSCtx(ex_node,")(__BRYTHON__)")
 root.add(ex_node)}
-try{js=(compiled)? module_contents : root.to_js()
-if($B.$options.debug==10){console.log('code for module '+module.__name__)
+try{js=compiled ? module_contents : root.to_js()
+if($B.$options.debug==10){console.log("code for module " + module.__name__)
 console.log(js)}
-eval(js)}catch(err){console.log(err+' for module '+module.__name__)
+eval(js)}catch(err){console.log(err + " for module " + module.__name__)
 console.log(err)
 for(var attr in err){console.log(attr,err[attr])}
-console.log(_b_.getattr(err,'info','[no info]'))
-console.log('message: '+err.$message)
-console.log('filename: '+err.fileName)
-console.log('linenum: '+err.lineNumber)
-if($B.debug>0){console.log('line info '+ $B.line_info)}
+console.log(_b_.getattr(err,"info","[no info]"))
+console.log("message: " + err.$message)
+console.log("filename: " + err.fileName)
+console.log("linenum: " + err.lineNumber)
+if($B.debug > 0){console.log("line info " + $B.line_info)}
 throw err}finally{root=null
 js=null
 $B.clear_ns(module.__name__)}
 try{
-var mod=eval('$module')
-for(var attr in mod){module[attr]=mod[attr];}
+var mod=eval("$module")
+for(var attr in mod){module[attr]=mod[attr]}
 module.__initializing__=false
 $B.imported[module.__name__]=module
-return true}catch(err){console.log(''+err+' '+' for module '+module.name)
-for(var attr in err)console.log(attr+' '+err[attr])
-if($B.debug>0){console.log('line info '+__BRYTHON__.line_info)}
+return true}catch(err){console.log("" + err + " " + " for module " + module.name)
+for(var attr in err){console.log(attr + " " + err[attr])}
+if($B.debug > 0){console.log("line info " + __BRYTHON__.line_info)}
 throw err}}
 $B.run_py=run_py
 function new_spec(fields){
 fields.__class__=module
-return fields;}
-var finder_VFS={__class__: _b_.type,__mro__:[_b_.object],__name__: 'VFSFinder',create_module : function(cls,spec){
-return _b_.None;},exec_module : function(cls,module){var stored=module.__spec__.loader_state.stored;
-delete module.__spec__['loader_state'];
-var ext=stored[0],module_contents=stored[1];
-module.$is_package=stored[2]||false;
-var path=$B.brython_path+'Lib/'+module.__name__
-if(module.$is_package){path +='/__init__.py'}
+return fields}
+var finder_VFS={__class__: _b_.type,__mro__:[_b_.object],__name__: "VFSFinder",create_module : function(cls,spec){
+return _b_.None},exec_module : function(cls,module){var stored=module.__spec__.loader_state.stored
+delete module.__spec__["loader_state"]
+var ext=stored[0],module_contents=stored[1]
+module.$is_package=stored[2]||false
+var path=$B.brython_path + "Lib/" + module.__name__
+if(module.$is_package){path +="/__init__.py"}
 module.__file__=path
 if(ext=='.js'){run_js(module_contents,module.__path__,module)}
 else{
 run_py(module_contents,module.__path__,module,ext=='.pyc.js')}
-if($B.debug>1){console.log('import '+module.__name__+' from VFS')}},find_module: function(cls,name,path){return{__class__:Loader,load_module:function(name,path){var spec=cls.find_spec(cls,name,path)
+if($B.debug > 1){console.log("import " + module.__name__ + " from VFS")}},find_module: function(cls,name,path){return{
+__class__: Loader,load_module: function(name,path){var spec=cls.find_spec(cls,name,path)
 var mod=module.$factory(name)
 $B.imported[name]=mod
 mod.__spec__=spec
-cls.exec_module(cls,mod)}}},find_spec : function(cls,fullname,path,prev_module){if(!$B.use_VFS){return _b_.None;}
-var stored=$B.VFS[fullname];
-if(stored===undefined){return _b_.None;}
-var is_package=stored[2],is_builtin=$B.builtin_module_names.indexOf(fullname)> -1;
+cls.exec_module(cls,mod)}}},find_spec : function(cls,fullname,path,prev_module){if(!$B.use_VFS){return _b_.None}
+var stored=$B.VFS[fullname]
+if(stored===undefined){return _b_.None}
+var is_package=stored[2],is_builtin=$B.builtin_module_names.indexOf(fullname)> -1
 return new_spec({name : fullname,loader: cls,
-origin : is_builtin? 'built-in' : 'brython_stdlib',
+origin : is_builtin? "built-in" : "brython_stdlib",
 submodule_search_locations: is_package?[]: _b_.None,loader_state:{stored: stored},
-cached: _b_.None,parent: is_package? fullname : parent_package(fullname),has_location: _b_.False});}}
-finder_VFS.create_module.$type='classmethod'
-finder_VFS.exec_module.$type='classmethod'
-finder_VFS.find_module.$type='classmethod'
-finder_VFS.find_spec.$type='classmethod'
-finder_VFS.$factory=function(){return{__class__:finder_VFS}}
+cached: _b_.None,parent: is_package? fullname : parent_package(fullname),has_location: _b_.False})}}
+finder_VFS.create_module.$type="classmethod"
+finder_VFS.exec_module.$type="classmethod"
+finder_VFS.find_module.$type="classmethod"
+finder_VFS.find_spec.$type="classmethod"
+finder_VFS.$factory=function(){return{__class__: finder_VFS}}
 $B.set_func_names(finder_VFS,"<import>")
-var finder_stdlib_static={$factory : finder_stdlib_static,__class__ : _b_.type,__mro__:[_b_.object],__name__ : 'StdlibStatic',create_module : function(cls,spec){
-return _b_.None;},exec_module : function(cls,module){var metadata=module.__spec__.loader_state;
-module.$is_package=metadata.is_package;
-if(metadata.ext=='py'){import_py(module,metadata.path,module.__package__);}
-else{
-import_js(module,metadata.path);}
-delete module.__spec__['loader_state'];},find_module: function(cls,name,path){var spec=cls.find_spec(cls,name,path)
+var finder_stdlib_static={$factory : finder_stdlib_static,__class__ : _b_.type,__mro__:[_b_.object],__name__ : "StdlibStatic",create_module : function(cls,spec){
+return _b_.None},exec_module : function(cls,module){var metadata=module.__spec__.loader_state
+module.$is_package=metadata.is_package
+if(metadata.ext=="py"){import_py(module,metadata.path,module.__package__)}else{import_js(module,metadata.path)}
+delete module.__spec__["loader_state"]},find_module: function(cls,name,path){var spec=cls.find_spec(cls,name,path)
 if(spec===_b_.None){return _b_.None}
-return{__class__:Loader,load_module:function(name,path){var mod=module.$factory(name)
+return{
+__class__:Loader,load_module: function(name,path){var mod=module.$factory(name)
 $B.imported[name]=mod
 mod.__spec__=spec
 mod.__package__=spec.parent
-cls.exec_module(cls,mod)}}},find_spec: function(cls,fullname,path,prev_module){if($B.stdlib && $B.$options.static_stdlib_import){var address=$B.stdlib[fullname];
-if(address===undefined){var elts=fullname.split('.')
-if(elts.length>1){elts.pop()
-var $package=$B.stdlib[elts.join('.')]
-if($package && $package[1]){address=['py']}}}
-if(address !==undefined){var ext=address[0],is_pkg=address[1]!==undefined,path=$B.brython_path +((ext=='py')? 'Lib/' : 'libs/')+
-fullname.replace(/\./g,'/'),metadata={ext: ext,is_package: is_pkg,path: path +(is_pkg? '/__init__.py' :
-((ext=='py')? '.py' : '.js')),address: address}
-var res=new_spec(
-{name : fullname,loader: cls,
+cls.exec_module(cls,mod)}}},find_spec: function(cls,fullname,path,prev_module){if($B.stdlib && $B.$options.static_stdlib_import){var address=$B.stdlib[fullname]
+if(address===undefined){var elts=fullname.split(".")
+if(elts.length > 1){elts.pop()
+var $package=$B.stdlib[elts.join(".")]
+if($package && $package[1]){address=["py"]}}}
+if(address !==undefined){var ext=address[0],is_pkg=address[1]!==undefined,path=$B.brython_path +((ext=="py")? "Lib/" : "libs/")+
+fullname.replace(/\./g,"/"),metadata={ext: ext,is_package: is_pkg,path: path +(is_pkg? "/__init__.py" :
+((ext=="py")? ".py" : ".js")),address: address}
+var res=new_spec({name : fullname,loader: cls,
 origin : metadata.path,submodule_search_locations: is_pkg?[path]: _b_.None,loader_state: metadata,
-cached: _b_.None,parent: is_pkg? fullname :
-parent_package(fullname),has_location: _b_.True});
+cached: _b_.None,parent: is_pkg ? fullname : parent_package(fullname),has_location: _b_.True})
 return res}}
-return _b_.None;}}
-finder_stdlib_static.create_module.$type='classmethod'
-finder_stdlib_static.exec_module.$type='classmethod'
-finder_stdlib_static.find_module.$type='classmethod'
-finder_stdlib_static.find_spec.$type='classmethod'
+return _b_.None}}
+finder_stdlib_static.create_module.$type="classmethod"
+finder_stdlib_static.exec_module.$type="classmethod"
+finder_stdlib_static.find_module.$type="classmethod"
+finder_stdlib_static.find_spec.$type="classmethod"
 finder_stdlib_static.$factory=function(){return{__class__: finder_stdlib_static}}
 $B.set_func_names(finder_stdlib_static,"<import>")
-var finder_path={__class__: _b_.type,__mro__:[_b_.object],__name__: 'ImporterPath',create_module : function(cls,spec){
-return _b_.None;},exec_module : function(cls,module){var _spec=_b_.getattr(module,'__spec__'),code=_spec.loader_state.code;
-module.$is_package=_spec.loader_state.is_package,delete _spec.loader_state['code'];
+var finder_path={__class__: _b_.type,__mro__:[_b_.object],__name__: "ImporterPath",create_module : function(cls,spec){
+return _b_.None},exec_module : function(cls,module){var _spec=_b_.getattr(module,"__spec__"),code=_spec.loader_state.code;
+module.$is_package=_spec.loader_state.is_package,delete _spec.loader_state["code"]
 var src_type=_spec.loader_state.type
-if(src_type=='py' ||src_type=='pyc.js'){run_py(code,_spec.origin,module,src_type=='pyc.js');}
-else if(_spec.loader_state.type=='js'){run_js(code,_spec.origin,module)}},find_module: function(cls,name,path){return finder_path.find_spec(cls,name,path)},find_spec : function(cls,fullname,path,prev_module){if($B.is_none(path)){
+if(src_type=="py" ||src_type=="pyc.js"){run_py(code,_spec.origin,module,src_type=="pyc.js")}
+else if(_spec.loader_state.type=="js"){run_js(code,_spec.origin,module)}},find_module: function(cls,name,path){return finder_path.find_spec(cls,name,path)},find_spec : function(cls,fullname,path,prev_module){if($B.is_none(path)){
 path=$B.path}
-for(var i=0,li=path.length;i<li;++i){var path_entry=path[i];
-if(path_entry[path_entry.length - 1]!='/'){path_entry +='/'}
-var finder=$B.path_importer_cache[path_entry];
-if(finder===undefined){var finder_notfound=true;
+for(var i=0,li=path.length;i < li;++i){var path_entry=path[i]
+if(path_entry[path_entry.length - 1]!="/"){path_entry +="/"}
+var finder=$B.path_importer_cache[path_entry]
+if(finder===undefined){var finder_notfound=true
 for(var j=0,lj=$B.path_hooks.length;
-j < lj && finder_notfound;
-++j){var hook=$B.path_hooks[j].$factory;
-try{
-finder=(typeof hook=='function' ? hook : _b_.getattr(hook,'__call__'))(path_entry)
-finder_notfound=false;}
-catch(e){if(e.__class__ !==_b_.ImportError){throw e;}}}
-if(finder_notfound){$B.path_importer_cache[path_entry]=_b_.None;}}
-if($B.is_none(finder))
-continue;
-var find_spec=_b_.getattr(finder,'find_spec'),fs_func=typeof find_spec=='function' ?
+j < lj && finder_notfound;++j){var hook=$B.path_hooks[j].$factory
+try{finder=(typeof hook=="function" ? hook :
+_b_.getattr(hook,"__call__"))(path_entry)
+finder_notfound=false}catch(e){if(e.__class__ !==_b_.ImportError){throw e}}}
+if(finder_notfound){$B.path_importer_cache[path_entry]=_b_.None}}
+if($B.is_none(finder)){continue}
+var find_spec=_b_.getattr(finder,"find_spec"),fs_func=typeof find_spec=="function" ?
 find_spec :
-_b_.getattr(find_spec,'__call__')
-var spec=fs_func(fullname,prev_module);
-if(!$B.is_none(spec)){return spec;}}
-return _b_.None;}}
-finder_path.create_module.$type='classmethod'
-finder_path.exec_module.$type='classmethod'
-finder_path.find_module.$type='classmethod'
-finder_path.find_spec.$type='classmethod'
-finder_path.$factory=function(){return{__class__:finder_path}}
+_b_.getattr(find_spec,"__call__")
+var spec=fs_func(fullname,prev_module)
+if(!$B.is_none(spec)){return spec}}
+return _b_.None}}
+finder_path.create_module.$type="classmethod"
+finder_path.exec_module.$type="classmethod"
+finder_path.find_module.$type="classmethod"
+finder_path.find_spec.$type="classmethod"
+finder_path.$factory=function(){return{__class__: finder_path}}
 $B.set_func_names(finder_path,"<import>")
-var vfs_hook={__class__: _b_.type,__mro__:[_b_.object],__name__: 'VfsPathFinder',load_vfs: function(self){try{var code=$download_module({__name__:'<VFS>'},self.path)}
-catch(e){self.vfs=undefined;
-throw new _b_.ImportError.$factory(e.$message ||e.message);}
-eval(code);
+var vfs_hook={__class__: _b_.type,__mro__:[_b_.object],__name__: "VfsPathFinder",load_vfs: function(self){try{var code=$download_module({__name__: "<VFS>"},self.path)}
+catch(e){self.vfs=undefined
+throw new _b_.ImportError.$factory(e.$message ||e.message)}
+eval(code)
 code=null
-try{
-self.vfs=$vfs;}
-catch(e){throw new _b_.ImportError.$factory('Expecting $vfs var in VFS file');}
-$B.path_importer_cache[self.path + '/']=self;},find_spec: function(self,fullname,module){if(self.vfs===undefined){try{vfs_hook.load_vfs(self)}
-catch(e){console.log("Could not load VFS while importing '" + fullname + "'");
-return _b_.None;}}
-var stored=self.vfs[fullname];
-if(stored===undefined){return _b_.None;}
-var is_package=stored[2];
+try{self.vfs=$vfs}
+catch(e){throw new _b_.ImportError.$factory("Expecting $vfs var in VFS file")}
+$B.path_importer_cache[self.path + "/"]=self},find_spec: function(self,fullname,module){if(self.vfs===undefined){try{vfs_hook.load_vfs(self)}
+catch(e){console.log("Could not load VFS while importing '" +
+fullname + "'")
+return _b_.None}}
+var stored=self.vfs[fullname]
+if(stored===undefined){return _b_.None}
+var is_package=stored[2]
 return new_spec({name : fullname,loader: finder_VFS,
 origin : self.path + '#' + fullname,
 submodule_search_locations: is_package?[self.path]:
 _b_.None,loader_state:{stored: stored},
-cached: _b_.None,parent: is_package? fullname : parent_package(fullname),has_location: _b_.True});},invalidate_caches: function(self){self.vfs=undefined;}}
+cached: _b_.None,parent: is_package ? fullname : parent_package(fullname),has_location: _b_.True})},invalidate_caches: function(self){self.vfs=undefined}}
 vfs_hook.$factory=function(path){if(path.substr(-1)=='/'){path=path.slice(0,-1);}
 var ext=path.substr(-7);
 if(ext !='.vfs.js'){throw _b_.ImportError.$factory('VFS file URL must end with .vfs.js extension');}
@@ -7374,148 +7371,136 @@ self={__class__: vfs_hook,path: path};
 vfs_hook.load_vfs(self);
 return self;}
 $B.set_func_names(vfs_hook,"<import>")
-var url_hook={__class__: _b_.type,__mro__:[_b_.object],__name__ : 'UrlPathFinder',__repr__: function(self){return '<UrlPathFinder' +(self.hint? " for '" + self.hint + "'":
-"(unbound)")+ ' at ' + self.path_entry + '>'},find_spec : function(self,fullname,module){var loader_data={},notfound=true,hint=self.hint,base_path=self.path_entry + fullname.match(/[^.]+$/g)[0],modpaths=[];
+var url_hook={__class__: _b_.type,__mro__:[_b_.object],__name__ : "UrlPathFinder",__repr__: function(self){return "<UrlPathFinder" +(self.hint? " for '" + self.hint + "'":
+"(unbound)")+ " at " + self.path_entry + '>'},find_spec : function(self,fullname,module){var loader_data={},notfound=true,hint=self.hint,base_path=self.path_entry + fullname.match(/[^.]+$/g)[0],modpaths=[];
 var tryall=hint===undefined;
-if(tryall ||hint=='js'){
-modpaths=[[base_path + '.js','js',false]];}
+if(tryall ||hint=="js"){
+modpaths=[[base_path + ".js","js",false]];}
 if(tryall ||hint=='pyc.js'){
-modpaths=modpaths.concat([[base_path + '.pyc.js','pyc.js',false],[base_path + '/__init__.pyc.js','pyc.js',true]]);}
+modpaths=modpaths.concat([[base_path + ".pyc.js","pyc.js",false],[base_path + "/__init__.pyc.js","pyc.js",true]])}
 if(tryall ||hint=='py'){
-modpaths=modpaths.concat([[base_path + '.py','py',false],[base_path + '/__init__.py','py',true]]);}
+modpaths=modpaths.concat([[base_path + ".py","py",false],[base_path + "/__init__.py","py",true]])}
 for(var j=0;notfound && j < modpaths.length;++j){try{var file_info=modpaths[j],module={__name__:fullname,$is_package: false}
-loader_data.code=$download_module(module,file_info[0],undefined);
-notfound=false;
-loader_data.type=file_info[1];
-loader_data.is_package=file_info[2];
-if(hint===undefined){self.hint=file_info[1];
-$B.path_importer_cache[self.path_entry]=self;}
+loader_data.code=$download_module(module,file_info[0],undefined)
+notfound=false
+loader_data.type=file_info[1]
+loader_data.is_package=file_info[2]
+if(hint===undefined){self.hint=file_info[1]
+$B.path_importer_cache[self.path_entry]=self}
 if(loader_data.is_package){
 $B.path_importer_cache[base_path + '/']=
-url_hook.$factory(base_path + '/',self.hint);}
-loader_data.path=file_info[0];}catch(err){}}
+url_hook.$factory(base_path + '/',self.hint)}
+loader_data.path=file_info[0]}catch(err){}}
 if(!notfound){return new_spec({name : fullname,loader: finder_path,origin : loader_data.path,
-submodule_search_locations: loader_data.is_package?[base_path]:
-_b_.None,loader_state: loader_data,
+submodule_search_locations: loader_data.is_package?
+[base_path]: _b_.None,loader_state: loader_data,
 cached: _b_.None,parent: loader_data.is_package? fullname :
-parent_package(fullname),has_location: _b_.True});}
-return _b_.None;},invalidate_caches : function(self){}}
-url_hook.$factory=function(path_entry,hint){return{__class__: url_hook,path_entry:path_entry,hint:hint }}
+parent_package(fullname),has_location: _b_.True})}
+return _b_.None},invalidate_caches : function(self){}}
+url_hook.$factory=function(path_entry,hint){return{__class__: url_hook,path_entry: path_entry,hint: hint}}
 $B.set_func_names(url_hook,"<import>")
 $B.path_importer_cache={};
-var _sys_paths=[[$B.script_dir + '/','py'],[$B.brython_path + 'Lib/','py'],[$B.brython_path + 'Lib/site-packages/','py'],[$B.brython_path + 'libs/','js']];
-for(i=0;i < _sys_paths.length;++i){var _path=_sys_paths[i],_type=_path[1];
-_path=_path[0];
-$B.path_importer_cache[_path]=url_hook.$factory(_path,_type);}
-delete _path;
-delete _type;
-delete _sys_paths;
+var _sys_paths=[[$B.script_dir + "/","py"],[$B.brython_path + "Lib/","py"],[$B.brython_path + "Lib/site-packages/","py"],[$B.brython_path + "libs/","js"]]
+for(i=0;i < _sys_paths.length;++i){var _path=_sys_paths[i],_type=_path[1]
+_path=_path[0]
+$B.path_importer_cache[_path]=url_hook.$factory(_path,_type)}
+delete _path
+delete _type
+delete _sys_paths
 $B.$__import__=function(mod_name,globals,locals,fromlist,level){
-var modobj=$B.imported[mod_name],parsed_name=mod_name.split('.');
+var modobj=$B.imported[mod_name],parsed_name=mod_name.split('.')
 if(modobj==_b_.None){
 throw _b_.ImportError.$factory(mod_name)}
 if(modobj===undefined){
-if($B.is_none(fromlist)){fromlist=[];}
-for(var i=0,modsep='',_mod_name='',len=parsed_name.length - 1,__path__=_b_.None;i <=len;++i){var _parent_name=_mod_name;
-_mod_name +=modsep + parsed_name[i];
-modsep='.';
-var modobj=$B.imported[_mod_name];
+if($B.is_none(fromlist)){fromlist=[]}
+for(var i=0,modsep="",_mod_name="",len=parsed_name.length - 1,__path__=_b_.None;i <=len;++i){var _parent_name=_mod_name;
+_mod_name +=modsep + parsed_name[i]
+modsep="."
+var modobj=$B.imported[_mod_name]
 if(modobj==_b_.None){
 throw _b_.ImportError.$factory(_mod_name)}
-else if(modobj===undefined){try{
-$B.import_hooks(_mod_name,__path__,undefined)}catch(err){delete $B.imported[_mod_name]
+else if(modobj===undefined){try{$B.import_hooks(_mod_name,__path__,undefined)}catch(err){delete $B.imported[_mod_name]
 $B.imported[_mod_name]=null
 throw err}
-if($B.is_none($B.imported[_mod_name])){throw _b_.ImportError.$factory(_mod_name)}
-else{
-if(_parent_name){_b_.setattr($B.imported[_parent_name],parsed_name[i],$B.imported[_mod_name]);}}}
-if(i < len){try{
-__path__=_b_.getattr($B.imported[_mod_name],'__path__')}catch(e){
+if($B.is_none($B.imported[_mod_name])){throw _b_.ImportError.$factory(_mod_name)}else{
+if(_parent_name){_b_.setattr($B.imported[_parent_name],parsed_name[i],$B.imported[_mod_name])}}}
+if(i < len){try{__path__=_b_.getattr($B.imported[_mod_name],"__path__")}catch(e){
 if(i==len-1 && $B.imported[_mod_name][parsed_name[len]]&&
 $B.imported[_mod_name][parsed_name[len]].__class__===module){return $B.imported[_mod_name][parsed_name[len]]}
 throw _b_.ImportError.$factory(_mod_name)}}}}
 if(fromlist.length > 0){
-return $B.imported[mod_name]}
-else{
+return $B.imported[mod_name]}else{
 return $B.imported[parsed_name[0]]}}
-$B.$import=function(mod_name,fromlist,aliases,locals){var parts=mod_name.split('.');
-if(mod_name[mod_name.length - 1]=='.'){parts.pop()}
-var norm_parts=[],prefix=true;
-for(var i=0,_len_i=parts.length;i < _len_i;i++){var p=parts[i];
-if(prefix && p==''){
-elt=norm_parts.pop();
+$B.$import=function(mod_name,fromlist,aliases,locals){var parts=mod_name.split(".")
+if(mod_name[mod_name.length - 1]=="."){parts.pop()}
+var norm_parts=[],prefix=true
+for(var i=0,len=parts.length;i < len;i++){var p=parts[i]
+if(prefix && p==""){
+elt=norm_parts.pop()
 if(elt===undefined){throw _b_.ImportError.$factory("Parent module '' not loaded, "+
-"cannot perform relative import");}}
-else{
-prefix=false;
-norm_parts.push(p.substr(0,2)=='$$' ? p.substr(2): p)}}
-var mod_name=norm_parts.join('.')
-if($B.$options.debug==10){console.log('$import '+mod_name)
-console.log('use VFS ? '+$B.use_VFS)
-console.log('use static stdlib paths ? '+$B.static_stdlib_import)}
-var current_frame=$B.frames_stack[$B.frames_stack.length-1],_globals=current_frame[3],__import__=_globals['__import__'],globals=$B.obj_dict(_globals);
+"cannot perform relative import")}}else{prefix=false;
+norm_parts.push(p.substr(0,2)=="$$" ? p.substr(2): p)}}
+var mod_name=norm_parts.join(".")
+if($B.$options.debug==10){console.log("$import "+mod_name)
+console.log("use VFS ? "+$B.use_VFS)
+console.log("use static stdlib paths ? "+$B.static_stdlib_import)}
+var current_frame=$B.frames_stack[$B.frames_stack.length-1],_globals=current_frame[3],__import__=_globals["__import__"],globals=$B.obj_dict(_globals)
 if(__import__===undefined){
-__import__=$B.$__import__;}
-var importer=typeof __import__=='function' ?
+__import__=$B.$__import__}
+var importer=typeof __import__=="function" ?
 __import__ :
-_b_.getattr(__import__,'__call__'),modobj=importer(mod_name,globals,undefined,fromlist,0);
-if(!fromlist ||fromlist.length==0){
-var alias=aliases[mod_name];
-if(alias){locals[alias]=$B.imported[mod_name];}
-else{
-locals[norm_parts[0]]=modobj;}}
-else{
-var __all__=fromlist,thunk={};
-if(fromlist && fromlist[0]=='*'){__all__=_b_.getattr(modobj,'__all__',thunk);
+_b_.getattr(__import__,"__call__"),modobj=importer(mod_name,globals,undefined,fromlist,0)
+if(! fromlist ||fromlist.length==0){
+var alias=aliases[mod_name]
+if(alias){locals[alias]=$B.imported[mod_name]}else{locals[norm_parts[0]]=modobj}}else{var __all__=fromlist,thunk={}
+if(fromlist && fromlist[0]=="*"){__all__=_b_.getattr(modobj,"__all__",thunk);
 if(__all__ !==thunk){
-aliases={};}}
+aliases={}}}
 if(__all__===thunk){
-for(var attr in modobj){if(attr[0]!=='_'){locals[attr]=modobj[attr];}}}
-else{
-for(var i=0,l=__all__.length;i < l;++i){var name=__all__[i];
-var alias=aliases[name]||name;
+for(var attr in modobj){if(attr[0]!=="_"){locals[attr]=modobj[attr]}}}else{
+for(var i=0,l=__all__.length;i < l;++i){var name=__all__[i]
+var alias=aliases[name]||name
 try{
-locals[alias]=_b_.getattr(modobj,name);}
-catch($err1){
+locals[alias]=_b_.getattr(modobj,name);}catch($err1){
 try{_b_.getattr(__import__,'__call__')(mod_name + '.' + name,globals,undefined,[],0);
-locals[alias]=_b_.getattr(modobj,name);}
-catch($err3){
+locals[alias]=_b_.getattr(modobj,name);}catch($err3){
 if(mod_name==="__future__"){
 var frame=$B.last($B.frames_stack),line_info=frame[3].$line_info,line_elts=line_info.split(','),line_num=parseInt(line_elts[0])
 $B.$SyntaxError(frame[2],"future feature "+name+" is not defined",undefined,line_num)}
-if($err3.$py_error){var msg=$err3.__class__.__name__ + '\n' +
+if($err3.$py_error){var msg=$err3.__class__.__name__ + "\n" +
 _b_.getattr($err3,"info")
 throw _b_.ImportError.$factory("cannot import name '"+
 name+"'\n\n" + msg)}
 console.log($err3)
 throw _b_.ImportError.$factory("cannot import name '"+name+"'")}}}}}}
-$B.$path_hooks=[vfs_hook,url_hook];
-$B.$meta_path=[finder_VFS,finder_stdlib_static,finder_path];
-function optimize_import_for_path(path,filetype){if(path.slice(-1)!='/'){path=path + '/' }
-var value=(filetype=='none')? _b_.None : url_hook.$factory(path,filetype);
-$B.path_importer_cache[path]=value;}
-var Loader={__class__:$B.$type,__mro__:[_b_.object],__name__ : 'Loader'}
-_importlib_module={__class__ : module,__name__ : '_importlib',Loader: Loader,VFSFinder: finder_VFS,StdlibStatic: finder_stdlib_static,ImporterPath: finder_path,VFSPathFinder : vfs_hook,UrlPathFinder: url_hook,optimize_import_for_path : optimize_import_for_path}
+$B.$path_hooks=[vfs_hook,url_hook]
+$B.$meta_path=[finder_VFS,finder_stdlib_static,finder_path]
+function optimize_import_for_path(path,filetype){if(path.slice(-1)!="/"){path=path + "/" }
+var value=(filetype=='none')? _b_.None :
+url_hook.$factory(path,filetype)
+$B.path_importer_cache[path]=value}
+var Loader={__class__:$B.$type,__mro__:[_b_.object],__name__ : "Loader"}
+_importlib_module={__class__ : module,__name__ : "_importlib",Loader: Loader,VFSFinder: finder_VFS,StdlibStatic: finder_stdlib_static,ImporterPath: finder_path,VFSPathFinder : vfs_hook,UrlPathFinder: url_hook,optimize_import_for_path : optimize_import_for_path}
 _importlib_module.__repr__=_importlib_module.__str__=function(){return "<module '_importlib' (built-in)>"}
-$B.imported['_importlib']=_importlib_module})(__BRYTHON__)
+$B.imported["_importlib"]=_importlib_module})(__BRYTHON__)
 ;(function($B){eval($B.InjectBuiltins())
 var object=_b_.object
-function $err(op,other){var msg="unsupported operand type(s) for "+op
-msg +=": 'float' and '"+$B.get_class(other).__name__+"'"
+function $err(op,other){var msg="unsupported operand type(s) for " + op +
+": 'float' and '" + $B.get_class(other).__name__ + "'"
 throw _b_.TypeError.$factory(msg)}
-var float={__class__:_b_.type,__dir__:object.__dir__,__name__:'float',$is_class: true,$native: true,$descriptors:{
-'numerator':true,'denominator':true,'imag':true,'real':true}}
+var float={__class__: _b_.type,__dir__: object.__dir__,__name__: "float",$is_class: true,$native: true,$descriptors:{
+"numerator": true,"denominator": true,"imag": true,"real": true}}
 float.numerator=function(self){return self}
 float.denominator=function(self){return _b_.int.$factory(1)}
 float.imag=function(self){return _b_.int.$factory(0)}
 float.real=function(self){return self}
 float.__float__=function(self){return self}
 float.as_integer_ratio=function(self){if(self.valueOf()==Number.POSITIVE_INFINITY ||
-self.valueOf()==Number.NEGATIVE_INFINITY){throw _b_.OverflowError.$factory("Cannot pass infinity to float.as_integer_ratio.")}
-if(!Number.isFinite(self.valueOf())){throw _b_.ValueError.$factory("Cannot pass NaN to float.as_integer_ratio.")}
-var tmp=_b_.$frexp(self.valueOf())
-var fp=tmp[0]
-var exponent=tmp[1]
+self.valueOf()==Number.NEGATIVE_INFINITY){throw _b_.OverflowError.$factory("Cannot pass infinity to " +
+"float.as_integer_ratio.")}
+if(! Number.isFinite(self.valueOf())){throw _b_.ValueError.$factory("Cannot pass NaN to " +
+"float.as_integer_ratio.")}
+var tmp=_b_.$frexp(self.valueOf()),fp=tmp[0],exponent=tmp[1]
 for(var i=0;i < 300;i++){if(fp==Math.floor(fp)){break}else{
 fp *=2
 exponent--}}
@@ -7523,99 +7508,96 @@ numerator=float.$factory(fp)
 py_exponent=abs(exponent)
 denominator=1
 py_exponent=_b_.getattr(int.$factory(denominator),"__lshift__")(py_exponent)
-if(exponent > 0){numerator=numerator * py_exponent}else{
-denominator=py_exponent}
+if(exponent > 0){numerator=numerator * py_exponent}else{denominator=py_exponent}
 return _b_.tuple.$factory([_b_.int.$factory(numerator),_b_.int.$factory(denominator)])}
 float.__bool__=function(self){return _b_.bool.$factory(self.valueOf())}
 float.__eq__=function(self,other){if(isNaN(self)&& isNaN(other)){return false}
-if(isinstance(other,_b_.int))return self==other
+if(isinstance(other,int)){return self==other}
 if(isinstance(other,float)){
 return self.valueOf()==other.valueOf()}
-if(isinstance(other,_b_.complex)){if(other.$imag !=0)return false
+if(isinstance(other,_b_.complex)){if(other.$imag !=0){return false}
 return self==other.$real}
-if(_b_.hasattr(other,'__eq__')){return _b_.getattr(other,'__eq__')(self.value)}
+if(_b_.hasattr(other,"__eq__")){return _b_.getattr(other,"__eq__")(self.value)}
 return self.value===other}
-float.__floordiv__=function(self,other){if(isinstance(other,[_b_.int,float])){if(other.valueOf()==0)throw ZeroDivisionError.$factory('division by zero')
-return float.$factory(Math.floor(self/other))}
-if(hasattr(other,'__rfloordiv__')){return getattr(other,'__rfloordiv__')(self)}
-$err('//',other)}
+float.__floordiv__=function(self,other){if(isinstance(other,[int,float])){if(other.valueOf()==0){throw ZeroDivisionError.$factory('division by zero')}
+return float.$factory(Math.floor(self / other))}
+if(hasattr(other,"__rfloordiv__")){return getattr(other,"__rfloordiv__")(self)}
+$err("//",other)}
 float.fromhex=function(arg){
-if(!isinstance(arg,_b_.str)){throw _b_.ValueError.$factory('argument must be a string')}
+if(! isinstance(arg,str)){throw _b_.ValueError.$factory("argument must be a string")}
 var value=arg.trim()
-switch(value.toLowerCase()){case '+inf':
-case 'inf':
-case '+infinity':
-case 'infinity':
+switch(value.toLowerCase()){case "+inf":
+case "inf":
+case "+infinity":
+case "infinity":
 return $FloatClass(Infinity)
-case '-inf':
-case '-infinity':
+case "-inf":
+case "-infinity":
 return $FloatClass(-Infinity)
-case '+nan':
-case 'nan':
+case "+nan":
+case "nan":
 return $FloatClass(Number.NaN)
-case '-nan':
+case "-nan":
 return $FloatClass(-Number.NaN)
-case '':
-throw _b_.ValueError.$factory('count not convert string to float')}
+case "":
+throw _b_.ValueError.$factory("could not convert string to float")}
 var _m=/^(\d*\.?\d*)$/.exec(value)
-if(_m !==null)return $FloatClass(parseFloat(_m[1]))
+if(_m !==null){return $FloatClass(parseFloat(_m[1]))}
 var _m=/^(\+|-)?(0x)?([0-9A-F]+\.?)?(\.[0-9A-F]+)?(p(\+|-)?\d+)?$/i.exec(value)
-if(_m==null)throw _b_.ValueError.$factory('invalid hexadecimal floating-point string')
-var _sign=_m[1]
-var _int=parseInt(_m[3]||'0',16)
-var _fraction=_m[4]||'.0'
-var _exponent=_m[5]||'p0'
-if(_sign=='-'){_sign=-1}else{_sign=1}
+if(_m==null){throw _b_.ValueError.$factory("invalid hexadecimal floating-point string")}
+var _sign=_m[1],_int=parseInt(_m[3]||'0',16),_fraction=_m[4]||'.0',_exponent=_m[5]||'p0'
+if(_sign=="-"){_sign=-1}else{_sign=1}
 var _sum=_int
-for(var i=1,_len_i=_fraction.length;i < _len_i;i++){_sum+=parseInt(_fraction.charAt(i),16)/Math.pow(16,i)}
+for(var i=1,len=_fraction.length;i < len;i++){_sum+=parseInt(_fraction.charAt(i),16)/Math.pow(16,i)}
 return new Number(_sign * _sum * Math.pow(2,parseInt(_exponent.substring(1))))}
-float.__getformat__=function(arg){if(arg=='double' ||arg=='float')return 'IEEE, little-endian'
-throw _b_.ValueError.$factory("__getformat__() argument 1 must be 'double' or 'float'")}
-function preformat(self,fmt){if(fmt.empty){return _b_.str.$factory(self)}
-if(fmt.type && 'eEfFgGn%'.indexOf(fmt.type)==-1){throw _b_.ValueError.$factory("Unknown format code '"+fmt.type+
+float.__getformat__=function(arg){if(arg=="double" ||arg=="float"){return "IEEE, little-endian"}
+throw _b_.ValueError.$factory("__getformat__() argument 1 must be " +
+"'double' or 'float'")}
+function preformat(self,fmt){if(fmt.empty){return str.$factory(self)}
+if(fmt.type && 'eEfFgGn%'.indexOf(fmt.type)==-1){throw _b_.ValueError.$factory("Unknown format code '" + fmt.type +
 "' for object of type 'float'")}
-if(isNaN(self)){if(fmt.type=='f'||fmt.type=='g'){return 'nan'}
-else{return 'NAN'}}
-if(self==Number.POSITIVE_INFINITY){if(fmt.type=='f'||fmt.type=='g'){return 'inf'}
-else{return 'INF'}}
+if(isNaN(self)){if(fmt.type=="f" ||fmt.type=="g"){return "nan"}
+else{return "NAN"}}
+if(self==Number.POSITIVE_INFINITY){if(fmt.type=="f" ||fmt.type=="g"){return "inf"}
+else{return "INF"}}
 if(fmt.precision===undefined && fmt.type !==undefined){fmt.precision=6}
-if(fmt.type=='%'){self *=100}
-if(fmt.type=='e'){var res=self.toExponential(fmt.precision),exp=parseInt(res.substr(res.search('e')+1))
-if(Math.abs(exp)<10){res=res.substr(0,res.length-1)+'0'+
-res.charAt(res.length-1)}
+if(fmt.type=="%"){self *=100}
+if(fmt.type=="e"){var res=self.toExponential(fmt.precision),exp=parseInt(res.substr(res.search("e")+ 1))
+if(Math.abs(exp)< 10){res=res.substr(0,res.length - 1)+ "0" +
+res.charAt(res.length - 1)}
 return res}
-if(fmt.precision!==undefined){
+if(fmt.precision !==undefined){
 var prec=fmt.precision
-if(prec==0){return Math.round(self)+''}
-var res=self.toFixed(prec),pt_pos=res.indexOf('.')
-if(fmt.type!==undefined &&
-(fmt.type=='%' ||fmt.type.toLowerCase()=='f')){if(pt_pos==-1){res +='.'+'0'.repeat(fmt.precision)}
-else{var missing=fmt.precision-res.length+pt_pos+1
-if(missing>0)res +='0'.repeat(missing)}}else{var res1=self.toExponential(fmt.precision-1),exp=parseInt(res1.substr(res1.search('e')+1))
-if(exp<-4 ||exp>=fmt.precision-1){res=res1
-if(Math.abs(exp)<10){res=res.substr(0,res.length-1)+'0'+
-res.charAt(res.length-1)}}}}else{var res=_b_.str.$factory(self)}
-if(fmt.type===undefined||'gGn'.indexOf(fmt.type)!=-1){
-while(res.charAt(res.length-1)=='0'){res=res.substr(0,res.length-1)}
-if(res.charAt(res.length-1)=='.'){if(fmt.type===undefined){res +='0'}
-else{res=res.substr(0,res.length-1)}}}
-if(fmt.sign!==undefined){if((fmt.sign==' ' ||fmt.sign=='+')&& self>0){res=fmt.sign+res}}
-if(fmt.type=='%'){res+='%'}
+if(prec==0){return Math.round(self)+ ""}
+var res=self.toFixed(prec),pt_pos=res.indexOf(".")
+if(fmt.type !==undefined &&
+(fmt.type=="%" ||fmt.type.toLowerCase()=="f")){if(pt_pos==-1){res +="." + "0".repeat(fmt.precision)}
+else{var missing=fmt.precision - res.length + pt_pos + 1
+if(missing > 0){res +="0".repeat(missing)}}}else{var res1=self.toExponential(fmt.precision - 1),exp=parseInt(res1.substr(res1.search("e")+ 1))
+if(exp < -4 ||exp >=fmt.precision - 1){res=res1
+if(Math.abs(exp)< 10){res=res.substr(0,res.length - 1)+ "0" +
+res.charAt(res.length - 1)}}}}else{var res=_b_.str.$factory(self)}
+if(fmt.type===undefined||"gGn".indexOf(fmt.type)!=-1){
+while(res.charAt(res.length-1)=="0"){res=res.substr(0,res.length - 1)}
+if(res.charAt(res.length - 1)=="."){if(fmt.type===undefined){res +="0"}
+else{res=res.substr(0,res.length - 1)}}}
+if(fmt.sign !==undefined){if((fmt.sign==" " ||fmt.sign=="+" )&& self > 0){res=fmt.sign + res}}
+if(fmt.type=="%"){res +="%"}
 return res}
 float.__format__=function(self,format_spec){var fmt=new $B.parse_format_spec(format_spec)
-fmt.align=fmt.align ||'>'
+fmt.align=fmt.align ||">"
 var raw=preformat(self,fmt).split('.'),_int=raw[0]
-if(fmt.comma){var len=_int.length,nb=Math.ceil(_int.length/3),chunks=[]
-for(var i=0;i<nb;i++){chunks.push(_int.substring(len-3*i-3,len-3*i))}
+if(fmt.comma){var len=_int.length,nb=Math.ceil(_int.length / 3),chunks=[]
+for(var i=0;i < nb;i++){chunks.push(_int.substring(len - 3 * i - 3,len - 3 * i))}
 chunks.reverse()
-raw[0]=chunks.join(',')}
-return $B.format_width(raw.join('.'),fmt)}
+raw[0]=chunks.join(",")}
+return $B.format_width(raw.join("."),fmt)}
 float.__hash__=function(self){if(self===undefined){return float.__hashvalue__ ||$B.$py_next_hash-- }
 var _v=self.valueOf()
-if(_v===Infinity)return 314159
-if(_v===-Infinity)return -271828
-if(isNaN(_v))return 0
-if(_v==Math.round(_v))return Math.round(_v)
+if(_v===Infinity){return 314159}
+if(_v===-Infinity){return -271828}
+if(isNaN(_v)){return 0}
+if(_v==Math.round(_v)){return Math.round(_v)}
 var r=_b_.$frexp(_v)
 r[0]*=Math.pow(2,31)
 var hipart=_b_.int.$factory(r[0])
@@ -7623,16 +7605,17 @@ r[0]=(r[0]- hipart)* Math.pow(2,31)
 var x=hipart + _b_.int.$factory(r[0])+(r[1]<< 15)
 return x & 0xFFFFFFFF}
 _b_.$isninf=function(x){var x1=x
-if(isinstance(x,float))x1=x.valueOf()
+if(isinstance(x,float)){x1=x.valueOf()}
 return x1==-Infinity ||x1==Number.NEGATIVE_INFINITY}
 _b_.$isinf=function(x){var x1=x
-if(isinstance(x,float))x1=x.valueOf()
-return x1==Infinity ||x1==-Infinity ||x1==Number.POSITIVE_INFINITY ||x1==Number.NEGATIVE_INFINITY}
-_b_.$fabs=function(x){return x>0?float.$factory(x):float.$factory(-x)}
+if(isinstance(x,float)){x1=x.valueOf()}
+return x1==Infinity ||x1==-Infinity ||
+x1==Number.POSITIVE_INFINITY ||x1==Number.NEGATIVE_INFINITY}
+_b_.$fabs=function(x){return x > 0 ? float.$factory(x): float.$factory(-x)}
 _b_.$frexp=function(x){var x1=x
-if(isinstance(x,float))x1=x.valueOf()
+if(isinstance(x,float)){x1=x.valueOf()}
 if(isNaN(x1)||_b_.$isinf(x1)){return[x1,-1]}
-if(x1==0)return[0,0]
+if(x1==0){return[0,0]}
 var sign=1,ex=0,man=x1
 if(man < 0.){sign=-sign
 man=-man}
@@ -7641,147 +7624,151 @@ ex--}
 while(man >=1.0){man *=0.5
 ex++}
 man *=sign
-return[man ,ex]}
-_b_.$ldexp=function(x,i){if(_b_.$isninf(x))return float.$factory('-inf')
-if(_b_.$isinf(x))return float.$factory('inf')
+return[man,ex]}
+_b_.$ldexp=function(x,i){if(_b_.$isninf(x)){return float.$factory('-inf')}
+if(_b_.$isinf(x)){return float.$factory('inf')}
 var y=x
-if(isinstance(x,float))y=x.valueOf()
-if(y==0)return y
+if(isinstance(x,float)){y=x.valueOf()}
+if(y==0){return y}
 var j=i
-if(isinstance(i,float))j=i.valueOf()
+if(isinstance(i,float)){j=i.valueOf()}
 return y * Math.pow(2,j)}
 float.hex=function(self){
-var DBL_MANT_DIG=53 
-var TOHEX_NBITS=DBL_MANT_DIG + 3 -(DBL_MANT_DIG+2)%4;
+var DBL_MANT_DIG=53,
+TOHEX_NBITS=DBL_MANT_DIG + 3 -(DBL_MANT_DIG + 2)% 4
 switch(self.valueOf()){case Infinity:
 case -Infinity:
 case Number.NaN:
 case -Number.NaN:
 return self
 case -0:
-return '-0x0.0p0'
+return "-0x0.0p0"
 case 0:
-return '0x0.0p0'}
-var _a=_b_.$frexp(_b_.$fabs(self.valueOf()))
-var _m=_a[0],_e=_a[1]
-var _shift=1 - Math.max(-1021 - _e,0)
+return "0x0.0p0"}
+var _a=_b_.$frexp(_b_.$fabs(self.valueOf())),_m=_a[0],_e=_a[1],_shift=1 - Math.max(-1021 - _e,0)
 _m=_b_.$ldexp(_m,_shift)
 _e -=_shift
-var _int2hex='0123456789ABCDEF'.split('')
-var _s=_int2hex[Math.floor(_m)]
+var _int2hex="0123456789ABCDEF".split(""),_s=_int2hex[Math.floor(_m)]
 _s+='.'
 _m -=Math.floor(_m)
-for(var i=0;i <(TOHEX_NBITS-1)/4;i++){_m*=16.0
-_s+=_int2hex[Math.floor(_m)]
-_m-=Math.floor(_m)}
-var _esign='+'
-if(_e < 0){_esign='-'
+for(var i=0;i <(TOHEX_NBITS - 1)/ 4;i++){_m *=16.0
+_s +=_int2hex[Math.floor(_m)]
+_m -=Math.floor(_m)}
+var _esign="+"
+if(_e < 0){_esign="-"
 _e=-_e}
-if(self.value < 0)return "-0x" + _s + 'p' + _esign + _e;
-return "0x" + _s + 'p' + _esign + _e;}
+if(self.value < 0){return "-0x" + _s + "p" + _esign + _e}
+return "0x" + _s + "p" + _esign + _e}
 float.__init__=function(self,value){self.valueOf=function(){return value.valueOf()}
-self.toString=function(){return value+''}
+self.toString=function(){return value + ""}
 return _b_.None}
 float.__int__=function(self){return parseInt(self)}
 float.is_integer=function(self){return _b_.int.$factory(self)==self}
 float.__mod__=function(self,other){
-if(other==0){throw ZeroDivisionError.$factory('float modulo')}
-if(isinstance(other,_b_.int))return new Number((self%other+other)%other)
+if(other==0){throw ZeroDivisionError.$factory("float modulo")}
+if(isinstance(other,int)){return new Number((self % other + other)% other)}
 if(isinstance(other,float)){
-var q=Math.floor(self/other),r=self-other*q
+var q=Math.floor(self / other),r=self - other * q
 return new Number(r)}
-if(isinstance(other,_b_.bool)){var bool_value=0;
-if(other.valueOf())bool_value=1;
-return new Number((self%bool_value+bool_value)%bool_value)}
-if(hasattr(other,'__rmod__'))return getattr(other,'__rmod__')(self)
-$err('%',other)}
+if(isinstance(other,bool)){var bool_value=0
+if(other.valueOf()){bool_value=1}
+return new Number((self % bool_value + bool_value)% bool_value)}
+if(hasattr(other,"__rmod__")){return getattr(other,"__rmod__")(self)}
+$err("%",other)}
 float.__mro__=[object]
-float.__mul__=function(self,other){if(isinstance(other,_b_.int)){if(other.__class__==$B.long_int){return new Number(self*parseFloat(other.value))}
-return new Number(self*other)}
-if(isinstance(other,float))return new Number(self*other)
-if(isinstance(other,_b_.bool)){var bool_value=0;
-if(other.valueOf())bool_value=1;
-return new Number(self*bool_value)}
-if(isinstance(other,_b_.complex)){return $B.make_complex(float.$factory(self*other.$real),float.$factory(self*other.$imag))}
-if(hasattr(other,'__rmul__'))return getattr(other,'__rmul__')(self)
-$err('*',other)}
-float.__ne__=function(self,other){return !float.__eq__(self,other)}
+float.__mul__=function(self,other){if(isinstance(other,int)){if(other.__class__==$B.long_int){return new Number(self * parseFloat(other.value))}
+return new Number(self * other)}
+if(isinstance(other,float)){return new Number(self * other)}
+if(isinstance(other,bool)){var bool_value=0
+if(other.valueOf()){bool_value=1}
+return new Number(self * bool_value)}
+if(isinstance(other,_b_.complex)){return $B.make_complex(float.$factory(self * other.$real),float.$factory(self * other.$imag))}
+if(hasattr(other,"__rmul__")){return getattr(other,"__rmul__")(self)}
+$err("*",other)}
+float.__ne__=function(self,other){return ! float.__eq__(self,other)}
 float.__neg__=function(self,other){return float.$factory(-self)}
 float.__pos__=function(self){return self}
-float.__pow__=function(self,other){var other_int=isinstance(other,_b_.int)
+float.__pow__=function(self,other){var other_int=isinstance(other,int)
 if(other_int ||isinstance(other,float)){if(self==1){return self}
 if(other==0){return new Number(1)}
 if(self==-1 &&
-(!isFinite(other)||other.__class__===$B.long_int ||!$B.is_safe_int(other))
-&& !isNaN(other)){return new Number(1)}
-else if(self==0 && isFinite(other)&& other<0){throw _b_.ZeroDivisionError.$factory("0.0 cannot be raised to a negative power")}else if(self==Number.NEGATIVE_INFINITY && !isNaN(other)){if(other<0 && other%2==1){return new Number(-0.0)}else if(other<0){return new Number(0)}
-else if(other>0 && other%2==1){return Number.NEGATIVE_INFINITY}else{return Number.POSITIVE_INFINITY}}else if(self==Number.POSITIVE_INFINITY && !isNaN(other)){return other>0 ? self : new Number(0)}
-if(other==Number.NEGATIVE_INFINITY && !isNaN(self)){return Math.abs(self)<1 ? Number.POSITIVE_INFINITY : new Number(0)}else if(other==Number.POSITIVE_INFINITY && !isNaN(self)){return Math.abs(self)<1 ? new Number(0): Number.POSITIVE_INFINITY}
-if(self<0 && !_b_.getattr(other,'__eq__')(_b_.int.$factory(other))){
+(! isFinite(other)||other.__class__===$B.long_int ||
+! $B.is_safe_int(other))&&
+! isNaN(other)){return new Number(1)}else if(self==0 && isFinite(other)&& other < 0){throw _b_.ZeroDivisionError.$factory("0.0 cannot be raised " +
+"to a negative power")}else if(self==Number.NEGATIVE_INFINITY && ! isNaN(other)){if(other < 0 && other % 2==1){return new Number(-0.0)}else if(other < 0){return new Number(0)}
+else if(other > 0 && other % 2==1){return Number.NEGATIVE_INFINITY}else{return Number.POSITIVE_INFINITY}}else if(self==Number.POSITIVE_INFINITY && ! isNaN(other)){return other > 0 ? self : new Number(0)}
+if(other==Number.NEGATIVE_INFINITY && ! isNaN(self)){return Math.abs(self)< 1 ? Number.POSITIVE_INFINITY :
+new Number(0)}else if(other==Number.POSITIVE_INFINITY && ! isNaN(self)){return Math.abs(self)< 1 ? new Number(0):
+Number.POSITIVE_INFINITY}
+if(self < 0 &&
+! _b_.getattr(other,"__eq__")(_b_.int.$factory(other))){
 return _b_.complex.__pow__($B.make_complex(self,0),other)}
 return float.$factory(Math.pow(self,other))}else if(isinstance(other,_b_.complex)){var preal=Math.pow(self,other.$real),ln=Math.log(self)
-return $B.make_complex(preal*Math.cos(ln),preal*Math.sin(ln))}
-if(hasattr(other,'__rpow__'))return getattr(other,'__rpow__')(self)
+return $B.make_complex(preal * Math.cos(ln),preal * Math.sin(ln))}
+if(hasattr(other,"__rpow__")){return getattr(other,"__rpow__")(self)}
 $err("** or pow()",other)}
-float.__repr__=float.__str__=function(self){if(self===float)return "<class 'float'>"
-if(self.valueOf()==Infinity)return 'inf'
-if(self.valueOf()==-Infinity)return '-inf'
-if(isNaN(self.valueOf()))return 'nan'
-var res=self.valueOf()+'' 
-if(res.indexOf('.')==-1)res+='.0'
+float.__repr__=float.__str__=function(self){if(self===float){return "<class 'float'>"}
+if(self.valueOf()==Infinity){return 'inf'}
+if(self.valueOf()==-Infinity){return '-inf'}
+if(isNaN(self.valueOf())){return 'nan'}
+var res=self.valueOf()+ "" 
+if(res.indexOf(".")==-1){res +=".0"}
 return _b_.str.$factory(res)}
-float.__setattr__=function(self,attr,value){if(self.constructor===Number){if(float[attr]===undefined){throw _b_.AttributeError.$factory("'float' object has no attribute '"+attr+"'")}else{throw _b_.AttributeError.$factory("'float' object attribute '"+attr+"' is read-only")}}
+float.__setattr__=function(self,attr,value){if(self.constructor===Number){if(float[attr]===undefined){throw _b_.AttributeError.$factory("'float' object has no attribute '" +
+attr + "'")}else{throw _b_.AttributeError.$factory("'float' object attribute '" +
+attr + "' is read-only")}}
 self[attr]=value
 return $N}
-float.__truediv__=function(self,other){if(isinstance(other,[_b_.int,float])){if(other.valueOf()==0)throw ZeroDivisionError.$factory('division by zero')
+float.__truediv__=function(self,other){if(isinstance(other,[int,float])){if(other.valueOf()==0){throw ZeroDivisionError.$factory("division by zero")}
 return float.$factory(self/other)}
-if(isinstance(other,_b_.complex)){var cmod=other.$real*other.$real+other.$imag*other.$imag
-if(cmod==0)throw ZeroDivisionError.$factory('division by zero')
-return $B.make_complex(float.$factory(self*other.$real/cmod),float.$factory(-self*other.$imag/cmod))}
-if(hasattr(other,'__rtruediv__'))return getattr(other,'__rtruediv__')(self)
-$err('/',other)}
-var $op_func=function(self,other){if(isinstance(other,_b_.int)){if(typeof other=='boolean'){return other ? self-1 : self}else if(other.__class__===$B.long_int){return float.$factory(self-parseInt(other.value))}else{return float.$factory(self-other)}}
-if(isinstance(other,float))return float.$factory(self-other)
-if(isinstance(other,_b_.bool)){var bool_value=0;
-if(other.valueOf())bool_value=1;
-return float.$factory(self-bool_value)}
+if(isinstance(other,_b_.complex)){var cmod=other.$real * other.$real + other.$imag * other.$imag
+if(cmod==0){throw ZeroDivisionError.$factory("division by zero")}
+return $B.make_complex(float.$factory(self * other.$real / cmod),float.$factory(-self * other.$imag / cmod))}
+if(hasattr(other,"__rtruediv__")){return getattr(other,"__rtruediv__")(self)}
+$err("/",other)}
+var $op_func=function(self,other){if(isinstance(other,int)){if(typeof other=="boolean"){return other ? self - 1 : self}else if(other.__class__===$B.long_int){return float.$factory(self - parseInt(other.value))}else{return float.$factory(self - other)}}
+if(isinstance(other,float)){return float.$factory(self - other)}
+if(isinstance(other,bool)){var bool_value=0
+if(other.valueOf()){bool_value=1}
+return float.$factory(self - bool_value)}
 if(isinstance(other,_b_.complex)){return $B.make_complex(self - other.$real,-other.$imag)}
-if(hasattr(other,'__rsub__'))return getattr(other,'__rsub__')(self)
-$err('-',other)}
-$op_func +='' 
-var $ops={'+':'add','-':'sub'}
+if(hasattr(other,"__rsub__")){return getattr(other,"__rsub__")(self)}
+$err("-",other)}
+$op_func +="" 
+var $ops={"+": "add","-": "sub"}
 for(var $op in $ops){var $opf=$op_func.replace(/-/gm,$op)
-$opf=$opf.replace(/__rsub__/gm,'__r'+$ops[$op]+'__')
-eval('float.__'+$ops[$op]+'__ = '+$opf)}
-var $comp_func=function(self,other){if(isinstance(other,_b_.int)){if(other.__class__===$B.long_int){return self > parseInt(other.value)}
+$opf=$opf.replace(/__rsub__/gm,"__r"+$ops[$op]+"__")
+eval("float.__" + $ops[$op]+ "__ = " + $opf)}
+var $comp_func=function(self,other){if(isinstance(other,int)){if(other.__class__===$B.long_int){return self > parseInt(other.value)}
 return self > other.valueOf()}
-if(isinstance(other,float))return self > other
-if(isinstance(other,_b_.bool)){return self.valueOf()> _b_.bool.__hash__(other)}
-if(hasattr(other,'__int__')||hasattr(other,'__index__')){return $IntDict.__gt__(self,$B.$GetInt(other))}
-var inv_op=getattr(other,'__le__',null)
-if(inv_op !==null){return inv_op(self)}
-var inv_op=getattr(other,'__le__',null)
-if(inv_op !==null){return inv_op(self)}
+if(isinstance(other,float)){return self > other}
+if(isinstance(other,bool)){return self.valueOf()> bool.__hash__(other)}
+if(hasattr(other,"__int__")||hasattr(other,"__index__")){return int.__gt__(self,$B.$GetInt(other))}
+var inv_op=getattr(other,"__le__",None)
+if(inv_op !==None){return inv_op(self)}
+var inv_op=getattr(other,"__le__",None)
+if(inv_op !==None){return inv_op(self)}
 throw _b_.TypeError.$factory(
-'unorderable types: float() > '+$B.get_class(other).__name__+"()")}
-$comp_func +='' 
-for(var $op in $B.$comps){eval("float.__"+$B.$comps[$op]+'__ = '+
+"unorderable types: float() > " + $B.get_class(other).__name__ + "()")}
+$comp_func +="" 
+for(var $op in $B.$comps){eval("float.__" + $B.$comps[$op]+ "__ = "+
 $comp_func.replace(/>/gm,$op).
-replace(/__gt__/gm,'__'+$B.$comps[$op]+'__').
-replace(/__le__/,'__'+$B.$inv_comps[$op]+'__'))}
+replace(/__gt__/gm,"__" + $B.$comps[$op]+ "__").
+replace(/__le__/,"__" + $B.$inv_comps[$op]+ "__"))}
 $B.make_rmethods(float)
 var $notimplemented=function(self,other){throw _b_.TypeError.$factory(
-"unsupported operand types for OPERATOR: 'float' and '"+
-$B.get_class(other).__name__+"'")}
-$notimplemented +='' 
+"unsupported operand types for OPERATOR: 'float' and '" +
+$B.get_class(other).__name__ + "'")}
+$notimplemented +="" 
 for(var $op in $B.$operators){
-if($B.augmented_assigns[$op]===undefined){var $opfunc='__'+$B.$operators[$op]+'__'
-if(float[$opfunc]===undefined){eval('float.'+$opfunc+"="+$notimplemented.replace(/OPERATOR/gm,$op))}}}
+if($B.augmented_assigns[$op]===undefined){var $opfunc="__" + $B.$operators[$op]+ "__"
+if(float[$opfunc]===undefined){eval("float." + $opfunc + "=" +
+$notimplemented.replace(/OPERATOR/gm,$op))}}}
 function $FloatClass(value){return new Number(value)}
 function to_digits(s){
-var arabic_digits='\u0660\u0661\u0662\u0663\u0664\u0665\u0666\u0667\u0668\u0669',res=''
-for(var i=0;i<s.length;i++){var x=arabic_digits.indexOf(s[i])
-if(x>-1){res +=x}
+var arabic_digits="\u0660\u0661\u0662\u0663\u0664\u0665\u0666\u0667\u0668\u0669",res=""
+for(var i=0;i < s.length;i++){var x=arabic_digits.indexOf(s[i])
+if(x > -1){res +=x}
 else{res +=s[i]}}
 return res}
 float.$factory=function(value){switch(value){case undefined:
@@ -7794,44 +7781,44 @@ case true:
 return new Number(1)
 case false:
 return new Number(0)}
-if(typeof value=="number")return new Number(value)
+if(typeof value=="number"){return new Number(value)}
 if(isinstance(value,float)){return value}
-if(isinstance(value,_b_.bytes)){var s=getattr(value,'decode')('latin-1')
-return float.$factory(getattr(value,'decode')('latin-1'))}
-if(hasattr(value,'__float__')){return $FloatClass(getattr(value,'__float__')())}
-if(typeof value=='string'){value=value.trim()
-switch(value.toLowerCase()){case '+inf':
-case 'inf':
-case '+infinity':
-case 'infinity':
+if(isinstance(value,bytes)){var s=getattr(value,"decode")("latin-1")
+return float.$factory(getattr(value,"decode")("latin-1"))}
+if(hasattr(value,"__float__")){return $FloatClass(getattr(value,"__float__")())}
+if(typeof value=="string"){value=value.trim()
+switch(value.toLowerCase()){case "+inf":
+case "inf":
+case "+infinity":
+case "infinity":
 return Number.POSITIVE_INFINITY
-case '-inf':
-case '-infinity':
+case "-inf":
+case "-infinity":
 return Number.NEGATIVE_INFINITY
-case '+nan':
-case 'nan':
+case "+nan":
+case "nan":
 return Number.NaN
-case '-nan':
+case "-nan":
 return -Number.NaN
-case '':
-throw _b_.ValueError.$factory('count not convert string to float')
+case "":
+throw _b_.ValueError.$factory("count not convert string to float")
 default:
 value=to_digits(value)
 if(isFinite(value))return $FloatClass(eval(value))
 else{
-_b_.str.encode(value,'latin-1')
+_b_.str.encode(value,"latin-1")
 throw _b_.ValueError.$factory("Could not convert to float(): '"+
 _b_.str.$factory(value)+"'")}}}
-throw _b_.TypeError.$factory("float() argument must be a string or a number, not '"+
-$B.get_class(value).__name__+"'")}
-float.__new__=function(cls){if(cls===undefined){throw _b_.TypeError.$factory('float.__new__(): not enough arguments')}
+throw _b_.TypeError.$factory("float() argument must be a string or a " +
+"number, not '" + $B.get_class(value).__name__ + "'")}
+float.__new__=function(cls){if(cls===undefined){throw _b_.TypeError.$factory("float.__new__(): not enough arguments")}
 return{__class__: cls}}
 $B.$FloatClass=$FloatClass
 $B.set_func_names(float,"builtins")
-var FloatSubclass=$B.FloatSubclass={__class__: _b_.type,__mro__:[object],__name__: 'float',$is_class: true}
-for(var $attr in float){if(typeof float[$attr]=='function'){FloatSubclass[$attr]=(function(attr){return function(){var args=[],pos=0
-if(arguments.length>0){var args=[arguments[0].valueOf()],pos=1
-for(var i=1,_len_i=arguments.length;i < _len_i;i++){args[pos++]=arguments[i]}}
+var FloatSubclass=$B.FloatSubclass={__class__: _b_.type,__mro__:[object],__name__: "float",$is_class: true}
+for(var $attr in float){if(typeof float[$attr]=="function"){FloatSubclass[$attr]=(function(attr){return function(){var args=[],pos=0
+if(arguments.length > 0){var args=[arguments[0].valueOf()],pos=1
+for(var i=1,len=arguments.length;i < len;i++){args[pos++]=arguments[i]}}
 return float[attr].apply(null,args)}})($attr)}}
 $B.set_func_names(FloatSubclass,"builtins")
 _b_.float=float})(__BRYTHON__)
@@ -11233,55 +11220,55 @@ if(node.C.$genjs){var ctx_js=node.C.$genjs}else{var ctx_js=node.C.$genjs=node.C.
 var is_cond=false,is_except=false,is_else=false,is_continue
 if(node.locals_def){
 var iter_name=top_node.iter_id
-ctx_js='for(var attr in this.blocks){'+
-'eval("var "+attr+"=this.blocks[attr]");};'+
-'var $locals_'+iter_name+' = this.env = {}'+
-', $local_name = "'+iter_name+
-'", $locals = $locals_'+iter_name+';'}
+ctx_js='for(var attr in this.blocks){' +
+'eval("var "+attr+" = this.blocks[attr]");};' +
+'var $locals_' + iter_name + ' = this.env = {}' +
+', $local_name = "' + iter_name+
+'", $locals = $locals_' + iter_name + ';'}
 if(node.is_catch){is_except=true;is_cond=true}
 if(node.is_except){is_except=true}
-if(node.C.type=='node'){var ctx=node.C.tree[0]
+if(node.C.type=="node"){var ctx=node.C.tree[0]
 var ctype=ctx.type
-switch(ctx.type){case 'except':
+switch(ctx.type){case "except":
 is_except=true
 is_cond=true
 break
-case 'single_kw':
+case "single_kw":
 is_cond=true
-if(ctx.token=='else')is_else=true
-if(ctx.token=='finally')is_except=true
+if(ctx.token=="else"){is_else=true}
+if(ctx.token=="finally"){is_except=true}
 break
-case 'condition':
-if(ctx.token=='elif'){is_else=true;is_cond=true}
-if(ctx.token=='if')is_cond=true}}
+case "condition":
+if(ctx.token=="elif"){is_else=true;is_cond=true}
+if(ctx.token=="if"){is_cond=true}}}
 if(ctx_js){
 var new_node=new $B.genNode(ctx_js)
 new_node.line_num=node.line_num
-if(ctype=='yield'){
+if(ctype=="yield"){
 var yield_node_id=top_node.yields.length
-while(ctx_js.charAt(ctx_js.length-1)==';'){ctx_js=ctx_js.substr(0,ctx_js.length-1)}
-var res='return ['+ctx_js+', '+yield_node_id+']'
+while(ctx_js.charAt(ctx_js.length-1)==";"){ctx_js=ctx_js.substr(0,ctx_js.length - 1)}
+var res="return [" + ctx_js + ", " + yield_node_id + "]"
 new_node.data=res
 top_node.yields.push(new_node)}else if(node.is_set_yield_value){
 var yield_node_id=top_node.yields.length
-var js='var sent_value = this.sent_value || None;'
-js +='if(sent_value.__class__===$B.$GeneratorSendError)'+
-'{throw sent_value.err}'
-js +='var $yield_value'+ctx_js+'=sent_value;'
-js +='this.sent_value=None'
-new_node.data=js}else if(ctype=='break' ||ctype=="continue"){
-new_node['is_'+ctype]=true
+var js="var sent_value = this.sent_value || None;"
+js +="if(sent_value.__class__ === $B.$GeneratorSendError)"+
+"{throw sent_value.err}"
+js +="var $yield_value" + ctx_js + " = sent_value;"
+js +="this.sent_value = None"
+new_node.data=js}else if(ctype=="break" ||ctype=="continue"){
+new_node["is_" + ctype]=true
 new_node.loop_num=node.C.tree[0].loop_ctx.loop_num}
-new_node.is_yield=(ctype=='yield'||ctype=='return')
+new_node.is_yield=(ctype=="yield" ||ctype=="return")
 new_node.is_cond=is_cond
 new_node.is_except=is_except
-new_node.is_if=ctype=='condition' && ctx.token=="if"
+new_node.is_if=ctype=="condition" && ctx.token=="if"
 new_node.is_try=node.is_try
 new_node.is_else=is_else
 new_node.loop_start=node.loop_start
 new_node.is_set_yield_value=node.is_set_yield_value
-for(var i=0,_len_i=node.children.length;i < _len_i;i++){var nd=make_node(top_node,node.children[i])
-if(nd!==undefined){new_node.addChild(nd)}}}
+for(var i=0,len=node.children.length;i < len;i++){var nd=make_node(top_node,node.children[i])
+if(nd !==undefined){new_node.addChild(nd)}}}
 return new_node}
 $B.genNode=function(data,parent){this.data=data
 this.parent=parent
@@ -11289,11 +11276,11 @@ this.children=[]
 this.has_child=false
 if(parent===undefined){this.nodes={}
 this.num=0}
-this.addChild=function(child){if(child===undefined){console.log('child of '+this+' undefined')}
+this.addChild=function(child){if(child===undefined){console.log("child of " + this + " undefined")}
 this.children[this.children.length]=child
 this.has_child=true
 child.parent=this
-child.rank=this.children.length-1}
+child.rank=this.children.length - 1}
 this.clone=function(){var res=new $B.genNode(this.data)
 res.has_child=this.has_child
 res.is_cond=this.is_cond
@@ -11308,15 +11295,15 @@ res.line_num=this.line_num
 return res}
 this.clone_tree=function(exit_node,head){
 var res=new $B.genNode(this.data)
-if(this.replaced && !in_loop(this)){
-res.data='void(0)'}
-if(this===exit_node &&(this.parent.is_cond ||!in_loop(this))){
-if(!exit_node.replaced){
-res=new $B.genNode('void(0)')}else{res=new $B.genNode(exit_node.data)}
+if(this.replaced && ! in_loop(this)){
+res.data="void(0)"}
+if(this===exit_node &&(this.parent.is_cond ||! in_loop(this))){
+if(! exit_node.replaced){
+res=new $B.genNode("void(0)")}else{res=new $B.genNode(exit_node.data)}
 exit_node.replaced=true}
-if(head && this.is_break){res.data='$locals["$no_break'+this.loop_num+'"]=false;'
-res.data +='var err = new Error("break");'
-res.data +='err.__class__=$B.GeneratorBreak;throw err;'
+if(head && this.is_break){res.data='$locals["$no_break'+this.loop_num+'"] = false;' +
+'var err = new Error("break"); ' +
+"err.__class__ = $B.GeneratorBreak; throw err;"
 res.is_break=true}
 res.is_continue=this.is_continue
 res.has_child=this.has_child
@@ -11329,33 +11316,33 @@ res.loop_start=this.loop_start
 res.no_break=true
 res.is_yield=this.is_yield
 res.line_num=this.line_num
-for(var i=0,_len_i=this.children.length;i < _len_i;i++){if(this.children[i].is_continue){
-res.addChild(new $B.genNode('continue'))
+for(var i=0,len=this.children.length;i < len;i++){if(this.children[i].is_continue){
+res.addChild(new $B.genNode("continue"))
 break}
 res.addChild(this.children[i].clone_tree(exit_node,head))
 if(this.children[i].is_break){res.no_break=false}}
 return res}
 this.has=function(keyword){
-if(this['is_'+keyword]){return true}
-else{for(var i=0,_len_i=this.children.length;i < _len_i;i++){if(this.children[i].has(keyword)){return true}}}
+if(this["is_" + keyword]){return true}
+else{for(var i=0,len=this.children.length;i < len;i++){if(this.children[i].has(keyword)){return true}}}
 return false}
-this.indent_src=function(indent){return ' '.repeat(indent*indent)}
+this.indent_src=function(indent){return " ".repeat(indent * indent)}
 this.src=function(indent){
 indent=indent ||0
-var res=[this.indent_src(indent)+this.data],pos=1
-if(this.has_child)res[pos++]='{'
-res[pos++]='\n'
-for(var i=0,_len_i=this.children.length;i < _len_i;i++){res[pos++]=this.children[i].src(indent+1)
+var res=[this.indent_src(indent)+ this.data],pos=1
+if(this.has_child){res[pos++]="{"}
+res[pos++]="\n"
+for(var i=0,len=this.children.length;i < len;i++){res[pos++]=this.children[i].src(indent + 1)
 if(this.children[i].is_yield){break}}
-if(this.has_child)res[pos++]='\n'+this.indent_src(indent)+'}\n'
-return res.join('')}
-this.toString=function(){return '<Node '+this.data+'>'}}
+if(this.has_child){res[pos++]="\n" + this.indent_src(indent)+ "}\n"}
+return res.join("")}
+this.toString=function(){return "<Node " + this.data + ">"}}
 $B.GeneratorBreak={}
 $B.$GeneratorSendError={}
 var $GeneratorReturn={}
-$B.generator_return=function(value){return{__class__:$GeneratorReturn,value:value}}
+$B.generator_return=function(value){return{__class__: $GeneratorReturn,value: value}}
 function in_loop(node){
-while(node){if(node.loop_start!==undefined)return node
+while(node){if(node.loop_start !==undefined){return node}
 node=node.parent}
 return false}
 function in_try(node){
@@ -11363,10 +11350,10 @@ var tries=[],pnode=node.parent,pos=0
 while(pnode){if(pnode.is_try){tries[pos++]=pnode}
 pnode=pnode.parent}
 return tries}
-var $BRGeneratorDict={__class__:_b_.type,__name__:'generator',__module__:'builtins',$is_class: true}
+var $BRGeneratorDict={__class__: _b_.type,__name__: "generator",__module__: "builtins",$is_class: true}
 $B.gen_counter=0 
 function remove_line_nums(node){
-for(var i=0;i<node.children.length;i++){if(node.children[i].is_line_num){node.children.splice(i,1)}else{remove_line_nums(node.children[i])}}}
+for(var i=0;i < node.children.length;i++){if(node.children[i].is_line_num){node.children.splice(i,1)}else{remove_line_nums(node.children[i])}}}
 $B.$BRgenerator=function(func_name,blocks,def_id,def_node){
 var def_ctx=def_node.C.tree[0]
 var module=def_node.module,
@@ -11380,16 +11367,16 @@ func_root.yields=[]
 func_root.loop_ends={}
 func_root.def_id=def_id
 func_root.iter_id=iter_id
-for(var i=0,_len_i=def_node.children.length;i < _len_i;i++){var nd=make_node(func_root,def_node.children[i])
+for(var i=0,len=def_node.children.length;i < len;i++){var nd=make_node(func_root,def_node.children[i])
 if(nd===undefined){continue}
 func_root.addChild(nd)}
-var obj={__class__ : $BRGeneratorDict,blocks: blocks,def_ctx:def_ctx,def_id:def_id,func_name:func_name,func_root:func_root,module:module,gi_running:false,iter_id:iter_id,id:iter_id,num:0}
+var obj={__class__ : $BRGeneratorDict,blocks: blocks,def_ctx: def_ctx,def_id: def_id,func_name: func_name,func_root: func_root,module: module,gi_running: false,iter_id: iter_id,id: iter_id,num: 0}
 var src=func_root.src(),
-raw_src=src.substr(src.search('function'))
-raw_src +='return '+def_ctx.name+def_ctx.num+'}'
+raw_src=src.substr(src.search("function"))
+raw_src +="return " + def_ctx.name + def_ctx.num + "}"
 var funcs=[raw_src]
-obj.parent_block=def_node 
-for(var i=0;i<func_root.yields.length;i++){funcs.push(make_next(obj,i))}
+obj.parent_block=def_node
+for(var i=0;i < func_root.yields.length;i++){funcs.push(make_next(obj,i))}
 return funcs}
 function make_next(self,yield_node_id){
 var exit_node=self.func_root.yields[yield_node_id]
@@ -11398,56 +11385,58 @@ var root=new $B.genNode(self.def_ctx.to_js())
 var fnode=self.func_root.clone()
 root.addChild(fnode)
 var parent_scope=self.func_root
-var js='for(var attr in this.blocks){eval("var "+attr+"='+
-'this.blocks[attr]");};var $locals_'+self.iter_id+' = this.env,'+
-' $locals = $locals_'+self.iter_id+', $local_name="'+self.iter_id+'";'
+var js='for(var attr in this.blocks){eval("var "+attr+" = ' +
+'this.blocks[attr]");};var $locals_' + self.iter_id + ' = this.env,' +
+' $locals = $locals_' + self.iter_id + ', $local_name = "' +
+self.iter_id + '";'
 fnode.addChild(new $B.genNode(js))
-js='var $top_frame = ["'+self.iter_id+'",$locals,"'+self.module+
-'",$locals_'+self.module.replace(/\./g,'_')+'];'+
-'$B.frames_stack.push($top_frame); var $stack_length = '+
+js='var $top_frame = ["' + self.iter_id + '",$locals,"' + self.module +
+'",$locals_' + self.module.replace(/\./g,'_')+ '];' +
+'$B.frames_stack.push($top_frame); var $stack_length = ' +
 '$B.frames_stack.length;'
 fnode.addChild(new $B.genNode(js))
 while(1){
 var exit_parent=exit_node.parent,rest=[],pos=0,has_break,has_continue
-var start=exit_node.rank+1
-if(exit_node.loop_start!==undefined){
+var start=exit_node.rank + 1
+if(exit_node.loop_start !==undefined){
 start=exit_node.rank}else if(exit_node.is_cond){
-while(start<exit_parent.children.length &&
+while(start < exit_parent.children.length &&
 (exit_parent.children[start].is_except ||
 exit_parent.children[start].is_else)){start++}}else if(exit_node.is_try ||exit_node.is_except){
-while(start<exit_parent.children.length &&
+while(start < exit_parent.children.length &&
 (exit_parent.children[start].is_except ||
 exit_parent.children[start].is_else)){start++}}
-for(var i=start,_len_i=exit_parent.children.length;i < _len_i;i++){var clone=exit_parent.children[i].clone_tree(null,true)
-if(clone.has('continue')){has_continue=true;break}
+for(var i=start,len=exit_parent.children.length;i < len;i++){var clone=exit_parent.children[i].clone_tree(null,true)
+if(clone.has("continue")){has_continue=true;break}
 rest[pos++]=clone
-if(clone.has('break')){has_break=true}}
-if(has_break && rest.length>0){
-var rest_try=new $B.genNode('try')
-for(var i=0,_len_i=rest.length;i < _len_i;i++){rest_try.addChild(rest[i])}
-var catch_test='catch(err)'
-catch_test +='{if(err.__class__!==$B.GeneratorBreak)'
-catch_test +='{throw err}}'
+if(clone.has("break")){has_break=true}}
+if(has_break && rest.length > 0){
+var rest_try=new $B.genNode("try")
+for(var i=0,len=rest.length;i < len;i++){rest_try.addChild(rest[i])}
+var catch_test="catch(err)" +
+"{if(err.__class__!==$B.GeneratorBreak){throw err}}"
 catch_test=new $B.genNode(catch_test)
 rest=[rest_try,catch_test]}
 var tries=in_try(exit_node)
 if(tries.length==0){
-for(var i=0;i<rest.length;i++){fnode.addChild(rest[i])}}else{
+for(var i=0;i < rest.length;i++){fnode.addChild(rest[i])}}else{
 var tree=[],pos=0
-for(var i=0;i<tries.length;i++){var try_node=tries[i],try_clone=try_node.clone()
-if(i==0){for(var j=0;j<rest.length;j++){try_clone.addChild(rest[j])}}
+for(var i=0;i < tries.length;i++){var try_node=tries[i],try_clone=try_node.clone()
+if(i==0){for(var j=0;j < rest.length;j++){try_clone.addChild(rest[j])}}
 var children=[try_clone],cpos=1
-for(var j=try_node.rank+1;j<try_node.parent.children.length;j++){if(try_node.parent.children[j].is_except){children[cpos++]=try_node.parent.children[j].clone_tree(null,true)}else{break}}
+for(var j=try_node.rank + 1;
+j < try_node.parent.children.length;j++){if(try_node.parent.children[j].is_except){children[cpos++]=
+try_node.parent.children[j].clone_tree(null,true)}else{break}}
 tree[pos++]=children}
 var parent=fnode
 while(tree.length){children=tree.pop()
-for(var i=0;i<children.length;i++){parent.addChild(children[i])}
+children.forEach(function(child){parent.addChild(child)})
 parent=children[0]}}
 exit_node=exit_parent
 if(exit_node===self.func_root){break}}
-var src=root.children[0].src(),next_src=src.substr(src.search('function'))
+var src=root.children[0].src(),next_src=src.substr(src.search("function"))
 next_src=next_src.substr(10)
-next_src=next_src.substr(next_src.search('function'))
+next_src=next_src.substr(next_src.search("function"))
 return next_src}
 var generator={__class__: _b_.type,__module__: "builtins",__mro__:[_b_.object],__name__: "generator",}
 generator.__enter__=function(self){console.log("generator.__enter__ called")}
@@ -11465,7 +11454,7 @@ throw err}finally{
 self.gi_running=false
 $B.leave_frame(self.iter_id)}
 if(res===undefined){throw _b_.StopIteration.$factory()}
-else if(res[0].__class__==$GeneratorReturn){
+else if(res[0].__class__===$GeneratorReturn){
 self.$finished=true
 throw StopIteration.$factory(res[0].value)}
 self.next=self.nexts[res[1]]
@@ -11473,17 +11462,17 @@ self.gi_running=false
 return res[0]}
 generator.close=function(self,value){self.sent_value=_b_.GeneratorExit.$factory()
 try{var res=generator.__next__(self)
-if(res!==_b_.None){throw _b_.RuntimeError.$factory("closed generator returned a value")}}catch(err){if($B.is_exc(err,[_b_.StopIteration,_b_.GeneratorExit])){return _b_.None}
+if(res !==_b_.None){throw _b_.RuntimeError.$factory("closed generator returned a value")}}catch(err){if($B.is_exc(err,[_b_.StopIteration,_b_.GeneratorExit])){return _b_.None}
 throw err}}
 generator.send=function(self,value){self.sent_value=value
 return generator.__next__(self)}
-generator.$$throw=function(self,value){if(_b_.isinstance(value,_b_.type))value=value()
-self.sent_value={__class__:$B.$GeneratorSendError,err:value}
+generator.$$throw=function(self,value){if(_b_.isinstance(value,_b_.type)){value=value()}
+self.sent_value={__class__: $B.$GeneratorSendError,err: value}
 return generator.__next__(self)}
 generator.$factory=$B.genfunc=function(name,blocks,funcs,$defaults){
-return function(){var iter_id='$gen'+$B.gen_counter++,gfuncs=[]
+return function(){var iter_id="$gen" + $B.gen_counter++,gfuncs=[]
 gfuncs.push(funcs[0]($defaults))
-for(var i=1;i<funcs.length;i++){gfuncs.push(funcs[i])}
+for(var i=1;i < funcs.length;i++){gfuncs.push(funcs[i])}
 var res={__class__: generator,args: Array.prototype.slice.call(arguments),blocks: blocks,env:{},name: name,nexts: gfuncs.slice(1),next: gfuncs[0],iter_id: iter_id,gi_running: false,$started: false,$defaults: $defaults}
 return res}}
 $B.set_func_names(generator,"builtins")})(__BRYTHON__)
@@ -11609,53 +11598,46 @@ $B.builtins_scope.binding[attr]=true}
 _b_.__builtins__.__setattr__=function(attr,value){_b_[attr]=value}})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins
 function import_hooks(mod_name,_path,module,blocking){
-if($B.is_none(module)){module=undefined;}
+if($B.is_none(module)){module=undefined}
 var _meta_path=$B.meta_path,_sys_modules=$B.imported,_loader,spec
-for(var i=0,_len_i=_meta_path.length;i < _len_i;i++){var _finder=_meta_path[i],find_spec=$B.$getattr(_finder,'find_spec',_b_.None)
+for(var i=0,len=_meta_path.length;i < len;i++){var _finder=_meta_path[i],find_spec=$B.$getattr(_finder,"find_spec",_b_.None)
 if(find_spec==_b_.None){
 var find_module=$B.$getattr(_finder,"find_module",_b_.None)
 if(find_module !==_b_.None){_loader=find_module(mod_name,_path)
 var load_module=$B.$getattr(_loader,"load_module")
 module=$B.$call(load_module)(mod_name)
 _sys_modules[mod_name]=module
-return module
-break}}else{spec=find_spec(mod_name,_path,undefined,blocking)
+return module}}else{spec=find_spec(mod_name,_path,undefined,blocking)
 if(!$B.is_none(spec)){spec.blocking=blocking
-_loader=_b_.getattr(spec,'loader',_b_.None)
+_loader=_b_.getattr(spec,"loader",_b_.None)
 break}}}
 if(_loader===undefined){
-throw _b_.ImportError.$factory('No module named '+mod_name);}
-if($B.is_none(module)){var _spec_name=_b_.getattr(spec,'name')
-if(!$B.is_none(_loader)){var create_module=_b_.getattr(_loader,'create_module',_b_.None);
-if(!$B.is_none(create_module)){module=$B.$call(create_module)(_loader,spec);}}
+throw _b_.ImportError.$factory("No module named " + mod_name)}
+if($B.is_none(module)){var _spec_name=_b_.getattr(spec,"name")
+if(!$B.is_none(_loader)){var create_module=_b_.getattr(_loader,"create_module",_b_.None)
+if(!$B.is_none(create_module)){module=$B.$call(create_module)(_loader,spec)}}
 if(module===undefined){throw _b_.ImportError.$factory(mod_name)}
 if($B.is_none(module)){
-module=$B.module.$factory(mod_name);
-var mod_desc=_b_.getattr(spec,'origin');
-if(_b_.getattr(spec,'has_location')){mod_desc="from '" + mod_desc + "'";}
+module=$B.module.$factory(mod_name)
+var mod_desc=_b_.getattr(spec,"origin")
+if(_b_.getattr(spec,"has_location")){mod_desc="from '" + mod_desc + "'"}
 else{
-mod_desc='(' + mod_desc + ')';}}}
-module.__name__=_spec_name;
-module.__loader__=_loader;
-module.__package__=_b_.getattr(spec,'parent','');
-module.__spec__=spec;
-var locs=_b_.getattr(spec,'submodule_search_locations');
-if(module.$is_package=!$B.is_none(locs)){module.__path__=locs;}
-if(_b_.getattr(spec,'has_location')){module.__file__=_b_.getattr(spec,'origin')
-$B.$py_module_path[module.__name__]=module.__file__;}
-var cached=_b_.getattr(spec,'cached');
-if(!$B.is_none(cached)){module.__cached__=cached;}
-if($B.is_none(_loader)){if(!$B.is_none(locs)){_sys_modules[_spec_name]=module;}
-else{
-throw _b_.ImportError.$factory(mod_name);}}
-else{
-var exec_module=_b_.getattr(_loader,'exec_module',_b_.None);
+mod_desc="(" + mod_desc + ")"}}}
+module.__name__=_spec_name
+module.__loader__=_loader
+module.__package__=_b_.getattr(spec,"parent","")
+module.__spec__=spec
+var locs=_b_.getattr(spec,"submodule_search_locations")
+if(module.$is_package=!$B.is_none(locs)){module.__path__=locs}
+if(_b_.getattr(spec,"has_location")){module.__file__=_b_.getattr(spec,"origin")
+$B.$py_module_path[module.__name__]=module.__file__}
+var cached=_b_.getattr(spec,"cached")
+if(! $B.is_none(cached)){module.__cached__=cached}
+if($B.is_none(_loader)){if(!$B.is_none(locs)){_sys_modules[_spec_name]=module}else{throw _b_.ImportError.$factory(mod_name)}}else{var exec_module=_b_.getattr(_loader,"exec_module",_b_.None)
 if($B.is_none(exec_module)){
-module=_b_.getattr(_loader,'load_module')(_spec_name);}
-else{
-_sys_modules[_spec_name]=module;
+module=_b_.getattr(_loader,"load_module")(_spec_name)}else{_sys_modules[_spec_name]=module
 try{exec_module(module,blocking)}
-catch(e){delete _sys_modules[_spec_name];
-throw e;}}}
-return _sys_modules[_spec_name];}
+catch(e){delete _sys_modules[_spec_name]
+throw e}}}
+return _sys_modules[_spec_name]}
 $B.import_hooks=import_hooks})(__BRYTHON__)

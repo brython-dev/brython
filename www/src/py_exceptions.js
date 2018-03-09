@@ -27,18 +27,18 @@ $B.$syntax_err_line = function(exc, module, pos, line_num){
         lnum = 1,
         src = $B.$py_src[module],
         module = module.charAt(0) == "$" ? "<string>" : module
-    if(src===undefined){
+    if(src === undefined){
         console.log("no src for", module)
         exc.$line_info = line_num + ',' + module
         exc.args = _b_.tuple.$factory([$B.$getitem(exc.args, 0), module,
             line_num, 0, 0])
-    } else {
+    }else{
         var line_pos = {1:0}
         for(var i = 0, len = src.length; i < len; i++){
-            pos2line[i]=lnum
-            if(src.charAt(i)=="\n"){line_pos[++lnum]=i}
+            pos2line[i] = lnum
+            if(src.charAt(i) == "\n"){line_pos[++lnum] = i}
         }
-        while(line_num===undefined){
+        while(line_num === undefined){
             line_num = pos2line[pos]
             pos--
         }

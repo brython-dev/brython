@@ -64,7 +64,7 @@ bytearray.__setitem__ = function(self, arg, value){
         self.source.splice(start, stop - start)
 
         // copy items in a temporary JS array
-        // otherwise, a[:0]=a fails
+        // otherwise, a[:0] = a fails
         if(_b_.hasattr(value, '__iter__')){
             var $temp = _b_.list.$factory(value)
             for(var i = $temp.length - 1; i >= 0; i--){
@@ -543,7 +543,7 @@ var _lower = function(char_code) {
 }
 
 bytes.upper = function(self) {
-    var _res = [], pos=0
+    var _res = [], pos = 0
     for(var i = 0, len = self.source.length; i < len; i++) {
         if (self.source[i]){_res[pos++] = _upper(self.source[i])}
     }
