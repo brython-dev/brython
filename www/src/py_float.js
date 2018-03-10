@@ -59,7 +59,7 @@ float.as_integer_ratio = function(self) {
     py_exponent = abs(exponent)
     denominator = 1
 
-    py_exponent = _b_.getattr(int.$factory(denominator),
+    py_exponent = _b_.getattr(_b_.int.$factory(denominator),
         "__lshift__")(py_exponent)
     if(exponent > 0){
         numerator = numerator * py_exponent
@@ -75,7 +75,7 @@ float.__bool__ = function(self){return _b_.bool.$factory(self.valueOf())}
 
 float.__eq__ = function(self, other){
     if(isNaN(self) && isNaN(other)){return false}
-    if(isinstance(other, int)){return self == other}
+    if(isinstance(other, _b_.int)){return self == other}
     if(isinstance(other, float)) {
       // new Number(1.2) == new Number(1.2) returns false !!!
       return self.valueOf() == other.valueOf()
@@ -93,7 +93,7 @@ float.__eq__ = function(self, other){
 }
 
 float.__floordiv__ = function(self, other){
-    if(isinstance(other,[int, float])){
+    if(isinstance(other,[_b_.int, float])){
       if(other.valueOf() == 0){
           throw ZeroDivisionError.$factory('division by zero')
       }
@@ -395,7 +395,7 @@ float.is_integer = function(self) {return _b_.int.$factory(self) == self}
 float.__mod__ = function(self, other) {
     // can't use Javascript % because it works differently for negative numbers
     if(other == 0){throw ZeroDivisionError.$factory("float modulo")}
-    if(isinstance(other, int)){
+    if(isinstance(other, _b_.int)){
         return new Number((self % other + other) % other)
     }
 
@@ -418,7 +418,7 @@ float.__mod__ = function(self, other) {
 float.__mro__ = [object]
 
 float.__mul__ = function(self, other){
-    if(isinstance(other, int)){
+    if(isinstance(other, _b_.int)){
         if(other.__class__ == $B.long_int){
             return new Number(self * parseFloat(other.value))
         }
@@ -445,7 +445,7 @@ float.__neg__ = function(self, other){return float.$factory(-self)}
 float.__pos__ = function(self){return self}
 
 float.__pow__ = function(self, other){
-    var other_int = isinstance(other, int)
+    var other_int = isinstance(other, _b_.int)
     if(other_int || isinstance(other, float)){
         if(self == 1){return self} // even for Infinity or NaN
         if(other == 0){return new Number(1)}
@@ -517,7 +517,7 @@ float.__setattr__ = function(self, attr, value){
 }
 
 float.__truediv__ = function(self, other){
-    if(isinstance(other, [int, float])){
+    if(isinstance(other, [_b_.int, float])){
         if(other.valueOf() == 0){
             throw ZeroDivisionError.$factory("division by zero")
         }
@@ -538,7 +538,7 @@ float.__truediv__ = function(self, other){
 
 // operations
 var $op_func = function(self, other){
-    if(isinstance(other, int)){
+    if(isinstance(other, _b_.int)){
         if(typeof other == "boolean"){
             return other ? self - 1 : self
         }else if(other.__class__ === $B.long_int){
@@ -567,7 +567,7 @@ for(var $op in $ops){
 
 // comparison methods
 var $comp_func = function(self, other){
-    if(isinstance(other, int)){
+    if(isinstance(other, _b_.int)){
         if(other.__class__ === $B.long_int){
             return self > parseInt(other.value)
         }
@@ -579,7 +579,7 @@ var $comp_func = function(self, other){
       return self.valueOf() > bool.__hash__(other)
     }
     if(hasattr(other, "__int__") || hasattr(other, "__index__")) {
-       return int.__gt__(self, $B.$GetInt(other))
+       return _b_.int.__gt__(self, $B.$GetInt(other))
     }
 
     // See if other has the opposite operator, eg <= for >

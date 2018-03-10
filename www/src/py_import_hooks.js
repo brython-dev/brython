@@ -25,7 +25,7 @@ var _meta_path = $B.meta_path,
     spec
 
 for(var i = 0, len = _meta_path.length; i < len; i++){
-    var _finder=_meta_path[i],
+    var _finder = _meta_path[i],
         find_spec = $B.$getattr(_finder, "find_spec", _b_.None)
     if(find_spec == _b_.None){
         // If find_spec is not defined for the meta path, try the legacy

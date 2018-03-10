@@ -1,12 +1,12 @@
 __BRYTHON__.builtins.object = (function($B){
 
-var _b_=$B.builtins
+var _b_ = $B.builtins
 
 // class object for the built-in class 'object'
 var object = {
     //__class__:$type, : not here, added in py_type.js after $type is defined
     // __bases__ : set to an empty tuple in py_list.js after tuple is defined
-    __name__: 'object',
+    __name__: "object",
     $is_class: true,
     $native: true
 }
@@ -17,131 +17,134 @@ var object = {
 // "__mul__", try a function using the attribute "__rmul__" of its
 // first argument
 
-var opnames = ['add','sub','mul','truediv','floordiv','mod','pow',
-    'lshift','rshift','and','xor','or']
-var opsigns = ['+','-','*','/','//','%','**','<<','>>','&','^', '|']
+var opnames = ["add", "sub", "mul", "truediv", "floordiv", "mod", "pow",
+    "lshift", "rshift", "and", "xor", "or"]
+var opsigns = ["+", "-", "*", "/", "//", "%", "**", "<<", ">>", "&", "^", "|"]
 
-object.__delattr__ = function(self,attr){
+object.__delattr__ = function(self, attr){
     _b_.getattr(self, attr) // raises AttributeError if necessary
-    delete self[attr];
+    delete self[attr]
     return _b_.None
 }
 
 object.__dir__ = function(self) {
     var objects = [self],
-        pos=1,
+        pos = 1,
         klass = self.__class__ || $B.get_class(self)
     objects[pos++] = klass
     var mro = klass.__mro__
-    for (var i=0, _len_i = mro.length; i < _len_i; i++) {
-        objects[pos++]=mro[i]
+    for(var i = 0, len = mro.length; i < len; i++){
+        objects[pos++] = mro[i]
     }
 
-    var res = [], pos=0
-    for (var i=0, _len_i = objects.length; i < _len_i; i++) {
+    var res = []
+    for(var i = 0, len = objects.length; i < len; i++){
         for(var attr in objects[i]){
-            if(attr=='toString'){console.log(attr, objects[i][attr])}
-            if(attr.charAt(0)=='$') {
+            if(attr == "toString"){console.log(attr, objects[i][attr])}
+            if(attr.charAt(0) == "$") {
                 // exclude internal attributes set by Brython
                 continue
             }
-            if(!isNaN(parseInt(attr.charAt(0)))){
+            if(! isNaN(parseInt(attr.charAt(0)))){
                 // Exclude numerical attributes
                 // '0', '1' are in attributes of string 'ab'
                 continue
             }
-            if(attr=='__mro__'){continue}
-            res[pos++]=attr
+            if(attr == "__mro__"){continue}
+            res.push(attr)
         }
     }
 
     // add object's own attributes
     for(var attr in self){
-        if(attr.substr(0, 2) == '$$'){res[pos++] = attr.substr(2)}
-        else if (attr.charAt(0) != '$'){res[pos++] = attr}
+        if(attr.substr(0, 2) == "$$"){res.push(attr.substr(2))}
+        else if(attr.charAt(0) != "$"){res.push(attr)}
     }
     res = _b_.list.$factory(_b_.set.$factory(res))
     _b_.list.sort(res)
     return res
 }
 
-object.__eq__ = function(self,other){
+object.__eq__ = function(self, other){
     // equality test defaults to identity of objects
     //test_issue_1393
-    var _class=$B.get_class(self)
-    if (_class.$native || _class.__name__ == 'function') {
-       var _class1=$B.get_class(other)
-       if (!_class1.$native && _class1.__name__ != 'function') {
+    var _class = $B.get_class(self)
+    if(_class.$native || _class.__name__ == "function"){
+       var _class1 = $B.get_class(other)
+       if(!_class1.$native && _class1.__name__ != "function"){
            return $B.rich_comp("__eq__", other, self)
        }
     }
-    return self===other
+    return self === other
 }
 
 object.__format__ = function(){
-    var $ = $B.args('__format__', 2, {self:null, spec:null},
-        ['self', 'spec'], arguments, {}, null, null)
-    if($.spec!==''){throw _b_.TypeError.$factory("non-empty format string passed to object.__format__")}
-    return _b_.getattr($.self, '__str__')()
+    var $ = $B.args("__format__", 2, {self: null, spec: null},
+        ["self", "spec"], arguments, {}, null, null)
+    if($.spec !== ""){
+        throw _b_.TypeError.$factory(
+            "non-empty format string passed to object.__format__")}
+    return _b_.getattr($.self, "__str__")()
 }
 
 object.__ge__ = function(){return _b_.NotImplemented}
 
-object.__getattribute__ = function(obj,attr){
+object.__getattribute__ = function(obj, attr){
 
     var klass = obj.__class__ || $B.get_class(obj)
 
-    var trace= undefined
-    if(attr==trace){console.log("attr", attr, "de", obj, "klass", klass)}
-    if(attr==='__class__'){
+    var trace = undefined
+    if(attr == trace){console.log("attr", attr, "de", obj, "klass", klass)}
+    if(attr === "__class__"){
         return klass
     }
     var res = obj[attr]
 
-    if(res===undefined){
+    if(res === undefined){
         // search in classes hierarchy, following method resolution order
         function check(obj, kl, attr){
-            var v=kl[attr]
-            if(v!==undefined){
+            var v = kl[attr]
+            if(v !== undefined){
                 return v
             }
         }
 
         res = check(obj, klass, attr)
-        if(res===undefined){
+        if(res === undefined){
             var mro = klass.__mro__
-            if(attr==trace){console.log("cherche dans mro", mro)}
-            for(var i=0, _len_i = mro.length; i < _len_i;i++){
+            for(var i = 0, len = mro.length; i < len; i++){
                 res = check(obj, mro[i], attr)
-                if(res!==undefined){break}
+                if(res !== undefined){break}
             }
         }
 
     }else{
-        if(res.__set__===undefined){
+        if(res.__set__ === undefined){
             // For non-data descriptors, the attribute found in object
             // dictionary takes precedence
             return res
         }
     }
 
-    if(res!==undefined){
+    if(res !== undefined){
 
-        if(res.__class__===_b_.property){
+        if(res.__class__ === _b_.property){
             return res.__get__(res, obj, klass)
         }
 
         var get = res.__get__
-        if(get===undefined && res.__class__){
+        if(get === undefined && res.__class__){
             var get = res.__class__.__get__
-            for(var i=0;i<res.__class__.__mro__.length && get===undefined; i++){
+            for(var i = 0; i < res.__class__.__mro__.length &&
+                    get === undefined; i++){
                 get = res.__class__.__mro__[i].__get__
             }
         }
-        var __get__ = get === undefined ? null : _b_.getattr(res,'__get__',null)
+        var __get__ = get === undefined ? null :
+            _b_.getattr(res, "__get__", null)
 
         // For descriptors, attribute resolution is done by applying __get__
-        if(__get__!==null){
+        if(__get__ !== null){
             try{return __get__.apply(null, [obj, klass])}
             catch(err){
                 console.log('error in get.apply', err)
@@ -151,22 +154,24 @@ object.__getattribute__ = function(obj,attr){
             }
         }
 
-        if(typeof res=='object'){
-            if(__get__ && (typeof __get__=='function')){
-                get_func = function(x,y){return __get__.apply(x,[y,klass.$factory])}
+        if(typeof res == "object"){
+            if(__get__ && (typeof __get__ == "function")){
+                get_func = function(x, y){
+                    return __get__.apply(x, [y, klass.$factory])
+                }
             }
         }
 
-        if(__get__===null && (typeof res=='function')){
+        if(__get__ === null && (typeof res == "function")){
             __get__ = function(x){return x}
         }
-        if(__get__!==null){ // descriptor
+        if(__get__ !== null){ // descriptor
             res.__name__ = attr
             // __new__ is a static method
-            if(attr == '__new__'){res.$type = 'staticmethod'}
+            if(attr == "__new__"){res.$type = "staticmethod"}
             var res1 = __get__.apply(null, [res, obj, klass])
 
-            if(typeof res1 == 'function'){
+            if(typeof res1 == "function"){
                 // If attribute is a class then return it unchanged
                 //
                 // Example :
@@ -195,8 +200,8 @@ object.__getattribute__ = function(obj,attr){
                 //         return a
                 //
                 // class myclass:
-                //     _repr=myRepr()
-                //     repr= _repr.repr
+                //     _repr = myRepr()
+                //     repr = _repr.repr
                 //
                 //     def myfunc(self):
                 //         return self.repr('test')
@@ -204,14 +209,14 @@ object.__getattribute__ = function(obj,attr){
                 // In function myfunc, self.repr is an instance of MyRepr,
                 // it must be used as is, not transformed into a method
 
-                else if(res1.__class__===$B.method){
+                else if(res1.__class__ === $B.method){
                     return res
                 }
 
                 // instance method object
-                if(res.$type=="staticmethod"){return res}
+                if(res.$type == "staticmethod"){return res}
                 else{
-                    var self = res.$type=="classmethod" ? klass : obj
+                    var self = res.$type == "classmethod" ? klass : obj
                     function method(){
                         return res(self, ...arguments)
                     }
@@ -233,42 +238,45 @@ object.__getattribute__ = function(obj,attr){
         return res
     }else{
         // search __getattr__
-        var _ga = obj['__getattr__']
-        if(_ga===undefined){
-            _ga = klass['__getattr__']
-            if(_ga===undefined){
+        var _ga = obj["__getattr__"]
+        if(_ga === undefined){
+            _ga = klass["__getattr__"]
+            if(_ga === undefined){
                 var mro = klass.__mro__
-                for(var i=0, len=mro.length; i < len;i++){
-                    _ga = mro[i]['__getattr__']
-                    if(_ga!==undefined){
+                for(var i = 0, len = mro.length; i < len; i++){
+                    _ga = mro[i]["__getattr__"]
+                    if(_ga !== undefined){
                         break
                     }
                 }
             }
         }
-        if(_ga!==undefined){
-            try{return _ga(obj,attr)}
+        if(_ga !== undefined){
+            try{return _ga(obj, attr)}
             catch(err){}
         }
         // for special methods such as __mul__, look for __rmul__ on operand
-        if(attr.substr(0,2)=='__' && attr.substr(attr.length-2)=='__'){
-            var attr1 = attr.substr(2,attr.length-4) // stripped of __
+        if(attr.substr(0,2) == "__" && attr.substr(attr.length - 2) == "__"){
+            var attr1 = attr.substr(2, attr.length - 4) // stripped of __
             var rank = opnames.indexOf(attr1)
             if(rank > -1){
-                var rop = '__r'+opnames[rank]+'__' // name of reflected operator
+                var rop = "__r" + opnames[rank] + "__" // name of reflected operator
                 var func = function(){
                     try{
                         // Operands must be of different types
-                        if($B.get_class(arguments[0])===klass){throw Error('')}
-                        return _b_.getattr(arguments[0],rop)(obj)
+                        if($B.get_class(arguments[0]) === klass){
+                            throw Error('')
+                        }
+                        return _b_.getattr(arguments[0], rop)(obj)
                     }catch(err){
-                        var msg = "unsupported operand types for "+
-                            opsigns[rank]+": '"+ klass.__name__+"' and '"+
-                            $B.get_class(arguments[0]).__name__+"'"
+                        var msg = "unsupported operand types for " +
+                            opsigns[rank] + ": '" + klass.__name__ +
+                            "' and '" + $B.get_class(arguments[0]).__name__ +
+                            "'"
                         throw _b_.TypeError.$factory(msg)
                     }
                 }
-                func.$infos = {__name__ : klass.__name__+'.'+attr}
+                func.$infos = {__name__ : klass.__name__ + "." + attr}
                 return func
             }
         }
@@ -279,14 +287,14 @@ object.__gt__ = function(){return _b_.NotImplemented}
 
 object.__hash__ = function (self) {
     var hash = self.__hashvalue__
-    if(hash!==undefined){return hash}
-    return self.__hashvalue__=$B.$py_next_hash--;
+    if(hash !== undefined){return hash}
+    return self.__hashvalue__ = $B.$py_next_hash--
 }
 
 object.__init__ = function(){
-    if(arguments.length==0){
-        throw _b_.TypeError.$factory("descriptor '__init__' of 'object' object "+
-            "needs an argument")
+    if(arguments.length == 0){
+        throw _b_.TypeError.$factory("descriptor '__init__' of 'object' " +
+            "object needs an argument")
     }
     // object.__init__ does nothing else
     return _b_.None
@@ -294,10 +302,11 @@ object.__init__ = function(){
 
 object.__init_subclass__ = function(cls, kwargs){
     // Default implementation only checks that no keyword arguments were passed
-    if(kwargs!==undefined){
-        if(kwargs.__class__!==_b_.dict ||
-                Object.keys(kwargs.$string_dict).length>0){
-            throw _b_.TypeError.$factory("__init_subclass__() takes no keyword arguments")
+    if(kwargs !== undefined){
+        if(kwargs.__class__ !== _b_.dict ||
+                Object.keys(kwargs.$string_dict).length > 0){
+            throw _b_.TypeError.$factory(
+                "__init_subclass__() takes no keyword arguments")
         }
     }
     return _b_.None
@@ -310,42 +319,51 @@ object.__lt__ = function(){return _b_.NotImplemented}
 object.__mro__ = []
 
 object.__new__ = function(cls, ...args){
-    if(cls===undefined){throw _b_.TypeError.$factory('object.__new__(): not enough arguments')}
+    if(cls === undefined){
+        throw _b_.TypeError.$factory("object.__new__(): not enough arguments")
+    }
     var init_func = $B.$getattr(cls, "__init__")
-    if(init_func===object.__init__){
-        if(args.length>0){
+    if(init_func === object.__init__){
+        if(args.length > 0){
             throw _b_.TypeError.$factory("object() takes no parameters")
         }
     }
     return {__class__ : cls}
 }
 
-object.__ne__ = function(self,other){
-    return !$B.rich_comp("__eq__", self, other)
+object.__ne__ = function(self, other){
+    return ! $B.rich_comp("__eq__", self, other)
 }
 
 object.__repr__ = function(self){
-    if(self===object) return "<class 'object'>"
-    if(self.__class__===_b_.type) return "<class '"+self.__name__+"'>"
-    if(self.__class__.__module__!==undefined){
-        return "<"+self.__class__.__module__+"."+self.__class__.__name__+" object>"
+    if(self === object) {return "<class 'object'>"}
+    if(self.__class__ === _b_.type) {
+        return "<class '" + self.__name__ + "'>"
+    }
+    if(self.__class__.__module__ !== undefined){
+        return "<" + self.__class__.__module__ + "." +
+            self.__class__.__name__ + " object>"
     }else{
-        return "<"+self.__class__.__name__+" object>"
+        return "<" + self.__class__.__name__ + " object>"
     }
 }
 
-object.__setattr__ = function(self,attr,val){
-    if(val===undefined){ // setting an attribute to 'object' type is not allowed
-        throw _b_.TypeError.$factory("can't set attributes of built-in/extension type 'object'")
-    }else if(self.__class__===object){
+object.__setattr__ = function(self, attr, val){
+    if(val === undefined){
+        // setting an attribute to 'object' type is not allowed
+        throw _b_.TypeError.$factory(
+            "can't set attributes of built-in/extension type 'object'")
+    }else if(self.__class__ === object){
         // setting an attribute to object() is not allowed
-        if(object[attr]===undefined){
-            throw _b_.AttributeError.$factory("'object' object has no attribute '"+attr+"'")
+        if(object[attr] === undefined){
+            throw _b_.AttributeError.$factory(
+                "'object' object has no attribute '" + attr + "'")
         }else{
-            throw _b_.AttributeError.$factory("'object' object attribute '"+attr+"' is read-only")
+            throw _b_.AttributeError.$factory(
+                "'object' object attribute '" + attr + "' is read-only")
         }
     }
-    if($B.aliased_names[attr]){attr='$$'+attr}
+    if($B.aliased_names[attr]){attr = "$$"+attr}
     self[attr] = val
     return _b_.None
 }
@@ -355,7 +373,7 @@ object.__setattr__.__get__ = function(obj){
     }
 }
 
-object.__setattr__.__str__ = function(){return 'method object.setattr'}
+object.__setattr__.__str__ = function(){return "method object.setattr"}
 
 object.__str__ = function(self){
     var repr_func = $B.$getattr(self, "__repr__")

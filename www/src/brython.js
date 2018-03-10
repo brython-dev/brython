@@ -71,8 +71,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,0,'rc',0]
 __BRYTHON__.__MAGIC__="3.5.0"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-03-09 10:11:30.468342"
-__BRYTHON__.timestamp=1520586690468
+__BRYTHON__.compiled_date="2018-03-10 08:48:58.176213"
+__BRYTHON__.timestamp=1520668138176
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -4424,69 +4424,71 @@ $B.brython=brython})(__BRYTHON__)
 var brython=__BRYTHON__.brython
 __BRYTHON__.builtins.object=(function($B){var _b_=$B.builtins
 var object={
-__name__: 'object',$is_class: true,$native: true}
-var opnames=['add','sub','mul','truediv','floordiv','mod','pow','lshift','rshift','and','xor','or']
-var opsigns=['+','-','*','/','//','%','**','<<','>>','&','^','|']
+__name__: "object",$is_class: true,$native: true}
+var opnames=["add","sub","mul","truediv","floordiv","mod","pow","lshift","rshift","and","xor","or"]
+var opsigns=["+","-","*","/","//","%","**","<<",">>","&","^","|"]
 object.__delattr__=function(self,attr){_b_.getattr(self,attr)
-delete self[attr];
+delete self[attr]
 return _b_.None}
 object.__dir__=function(self){var objects=[self],pos=1,klass=self.__class__ ||$B.get_class(self)
 objects[pos++]=klass
 var mro=klass.__mro__
-for(var i=0,_len_i=mro.length;i < _len_i;i++){objects[pos++]=mro[i]}
-var res=[],pos=0
-for(var i=0,_len_i=objects.length;i < _len_i;i++){for(var attr in objects[i]){if(attr=='toString'){console.log(attr,objects[i][attr])}
-if(attr.charAt(0)=='$'){
+for(var i=0,len=mro.length;i < len;i++){objects[pos++]=mro[i]}
+var res=[]
+for(var i=0,len=objects.length;i < len;i++){for(var attr in objects[i]){if(attr=="toString"){console.log(attr,objects[i][attr])}
+if(attr.charAt(0)=="$"){
 continue}
-if(!isNaN(parseInt(attr.charAt(0)))){
+if(! isNaN(parseInt(attr.charAt(0)))){
 continue}
-if(attr=='__mro__'){continue}
-res[pos++]=attr}}
-for(var attr in self){if(attr.substr(0,2)=='$$'){res[pos++]=attr.substr(2)}
-else if(attr.charAt(0)!='$'){res[pos++]=attr}}
+if(attr=="__mro__"){continue}
+res.push(attr)}}
+for(var attr in self){if(attr.substr(0,2)=="$$"){res.push(attr.substr(2))}
+else if(attr.charAt(0)!="$"){res.push(attr)}}
 res=_b_.list.$factory(_b_.set.$factory(res))
 _b_.list.sort(res)
 return res}
 object.__eq__=function(self,other){
 var _class=$B.get_class(self)
-if(_class.$native ||_class.__name__=='function'){var _class1=$B.get_class(other)
-if(!_class1.$native && _class1.__name__ !='function'){return $B.rich_comp("__eq__",other,self)}}
+if(_class.$native ||_class.__name__=="function"){var _class1=$B.get_class(other)
+if(!_class1.$native && _class1.__name__ !="function"){return $B.rich_comp("__eq__",other,self)}}
 return self===other}
-object.__format__=function(){var $=$B.args('__format__',2,{self:null,spec:null},['self','spec'],arguments,{},null,null)
-if($.spec!==''){throw _b_.TypeError.$factory("non-empty format string passed to object.__format__")}
-return _b_.getattr($.self,'__str__')()}
+object.__format__=function(){var $=$B.args("__format__",2,{self: null,spec: null},["self","spec"],arguments,{},null,null)
+if($.spec !==""){throw _b_.TypeError.$factory(
+"non-empty format string passed to object.__format__")}
+return _b_.getattr($.self,"__str__")()}
 object.__ge__=function(){return _b_.NotImplemented}
 object.__getattribute__=function(obj,attr){var klass=obj.__class__ ||$B.get_class(obj)
 var trace=undefined
 if(attr==trace){console.log("attr",attr,"de",obj,"klass",klass)}
-if(attr==='__class__'){return klass}
+if(attr==="__class__"){return klass}
 var res=obj[attr]
 if(res===undefined){
 function check(obj,kl,attr){var v=kl[attr]
-if(v!==undefined){return v}}
+if(v !==undefined){return v}}
 res=check(obj,klass,attr)
 if(res===undefined){var mro=klass.__mro__
-if(attr==trace){console.log("cherche dans mro",mro)}
-for(var i=0,_len_i=mro.length;i < _len_i;i++){res=check(obj,mro[i],attr)
-if(res!==undefined){break}}}}else{if(res.__set__===undefined){
+for(var i=0,len=mro.length;i < len;i++){res=check(obj,mro[i],attr)
+if(res !==undefined){break}}}}else{if(res.__set__===undefined){
 return res}}
-if(res!==undefined){if(res.__class__===_b_.property){return res.__get__(res,obj,klass)}
+if(res !==undefined){if(res.__class__===_b_.property){return res.__get__(res,obj,klass)}
 var get=res.__get__
 if(get===undefined && res.__class__){var get=res.__class__.__get__
-for(var i=0;i<res.__class__.__mro__.length && get===undefined;i++){get=res.__class__.__mro__[i].__get__}}
-var __get__=get===undefined ? null : _b_.getattr(res,'__get__',null)
-if(__get__!==null){try{return __get__.apply(null,[obj,klass])}
+for(var i=0;i < res.__class__.__mro__.length &&
+get===undefined;i++){get=res.__class__.__mro__[i].__get__}}
+var __get__=get===undefined ? null :
+_b_.getattr(res,"__get__",null)
+if(__get__ !==null){try{return __get__.apply(null,[obj,klass])}
 catch(err){console.log('error in get.apply',err)
 console.log("get attr",attr,"of",obj)
 console.log(__get__+'')
 throw err}}
-if(typeof res=='object'){if(__get__ &&(typeof __get__=='function')){get_func=function(x,y){return __get__.apply(x,[y,klass.$factory])}}}
-if(__get__===null &&(typeof res=='function')){__get__=function(x){return x}}
-if(__get__!==null){
+if(typeof res=="object"){if(__get__ &&(typeof __get__=="function")){get_func=function(x,y){return __get__.apply(x,[y,klass.$factory])}}}
+if(__get__===null &&(typeof res=="function")){__get__=function(x){return x}}
+if(__get__ !==null){
 res.__name__=attr
-if(attr=='__new__'){res.$type='staticmethod'}
+if(attr=="__new__"){res.$type="staticmethod"}
 var res1=__get__.apply(null,[res,obj,klass])
-if(typeof res1=='function'){
+if(typeof res1=="function"){
 if(res1.__class__===$B.$factory)return res 
 else if(res1.__class__===$B.method){return res}
 if(res.$type=="staticmethod"){return res}
@@ -4497,54 +4499,60 @@ method.$infos={__self__: self,__func__: res,__name__: attr,__qualname__: klass._
 return method}}else{
 return res1}}
 return res}else{
-var _ga=obj['__getattr__']
-if(_ga===undefined){_ga=klass['__getattr__']
+var _ga=obj["__getattr__"]
+if(_ga===undefined){_ga=klass["__getattr__"]
 if(_ga===undefined){var mro=klass.__mro__
-for(var i=0,len=mro.length;i < len;i++){_ga=mro[i]['__getattr__']
-if(_ga!==undefined){break}}}}
-if(_ga!==undefined){try{return _ga(obj,attr)}
+for(var i=0,len=mro.length;i < len;i++){_ga=mro[i]["__getattr__"]
+if(_ga !==undefined){break}}}}
+if(_ga !==undefined){try{return _ga(obj,attr)}
 catch(err){}}
-if(attr.substr(0,2)=='__' && attr.substr(attr.length-2)=='__'){var attr1=attr.substr(2,attr.length-4)
+if(attr.substr(0,2)=="__" && attr.substr(attr.length - 2)=="__"){var attr1=attr.substr(2,attr.length - 4)
 var rank=opnames.indexOf(attr1)
-if(rank > -1){var rop='__r'+opnames[rank]+'__' 
+if(rank > -1){var rop="__r" + opnames[rank]+ "__" 
 var func=function(){try{
 if($B.get_class(arguments[0])===klass){throw Error('')}
-return _b_.getattr(arguments[0],rop)(obj)}catch(err){var msg="unsupported operand types for "+
-opsigns[rank]+": '"+ klass.__name__+"' and '"+
-$B.get_class(arguments[0]).__name__+"'"
+return _b_.getattr(arguments[0],rop)(obj)}catch(err){var msg="unsupported operand types for " +
+opsigns[rank]+ ": '" + klass.__name__ +
+"' and '" + $B.get_class(arguments[0]).__name__ +
+"'"
 throw _b_.TypeError.$factory(msg)}}
-func.$infos={__name__ : klass.__name__+'.'+attr}
+func.$infos={__name__ : klass.__name__ + "." + attr}
 return func}}}}
 object.__gt__=function(){return _b_.NotImplemented}
 object.__hash__=function(self){var hash=self.__hashvalue__
-if(hash!==undefined){return hash}
-return self.__hashvalue__=$B.$py_next_hash--;}
-object.__init__=function(){if(arguments.length==0){throw _b_.TypeError.$factory("descriptor '__init__' of 'object' object "+
-"needs an argument")}
+if(hash !==undefined){return hash}
+return self.__hashvalue__=$B.$py_next_hash--}
+object.__init__=function(){if(arguments.length==0){throw _b_.TypeError.$factory("descriptor '__init__' of 'object' " +
+"object needs an argument")}
 return _b_.None}
 object.__init_subclass__=function(cls,kwargs){
-if(kwargs!==undefined){if(kwargs.__class__!==_b_.dict ||
-Object.keys(kwargs.$string_dict).length>0){throw _b_.TypeError.$factory("__init_subclass__() takes no keyword arguments")}}
+if(kwargs !==undefined){if(kwargs.__class__ !==_b_.dict ||
+Object.keys(kwargs.$string_dict).length > 0){throw _b_.TypeError.$factory(
+"__init_subclass__() takes no keyword arguments")}}
 return _b_.None}
 object.__le__=function(){return _b_.NotImplemented}
 object.__lt__=function(){return _b_.NotImplemented}
 object.__mro__=[]
-object.__new__=function(cls,...args){if(cls===undefined){throw _b_.TypeError.$factory('object.__new__(): not enough arguments')}
+object.__new__=function(cls,...args){if(cls===undefined){throw _b_.TypeError.$factory("object.__new__(): not enough arguments")}
 var init_func=$B.$getattr(cls,"__init__")
-if(init_func===object.__init__){if(args.length>0){throw _b_.TypeError.$factory("object() takes no parameters")}}
+if(init_func===object.__init__){if(args.length > 0){throw _b_.TypeError.$factory("object() takes no parameters")}}
 return{__class__ : cls}}
-object.__ne__=function(self,other){return !$B.rich_comp("__eq__",self,other)}
-object.__repr__=function(self){if(self===object)return "<class 'object'>"
-if(self.__class__===_b_.type)return "<class '"+self.__name__+"'>"
-if(self.__class__.__module__!==undefined){return "<"+self.__class__.__module__+"."+self.__class__.__name__+" object>"}else{return "<"+self.__class__.__name__+" object>"}}
+object.__ne__=function(self,other){return ! $B.rich_comp("__eq__",self,other)}
+object.__repr__=function(self){if(self===object){return "<class 'object'>"}
+if(self.__class__===_b_.type){return "<class '" + self.__name__ + "'>"}
+if(self.__class__.__module__ !==undefined){return "<" + self.__class__.__module__ + "." +
+self.__class__.__name__ + " object>"}else{return "<" + self.__class__.__name__ + " object>"}}
 object.__setattr__=function(self,attr,val){if(val===undefined){
-throw _b_.TypeError.$factory("can't set attributes of built-in/extension type 'object'")}else if(self.__class__===object){
-if(object[attr]===undefined){throw _b_.AttributeError.$factory("'object' object has no attribute '"+attr+"'")}else{throw _b_.AttributeError.$factory("'object' object attribute '"+attr+"' is read-only")}}
-if($B.aliased_names[attr]){attr='$$'+attr}
+throw _b_.TypeError.$factory(
+"can't set attributes of built-in/extension type 'object'")}else if(self.__class__===object){
+if(object[attr]===undefined){throw _b_.AttributeError.$factory(
+"'object' object has no attribute '" + attr + "'")}else{throw _b_.AttributeError.$factory(
+"'object' object attribute '" + attr + "' is read-only")}}
+if($B.aliased_names[attr]){attr="$$"+attr}
 self[attr]=val
 return _b_.None}
 object.__setattr__.__get__=function(obj){return function(attr,val){object.__setattr__(obj,attr,val)}}
-object.__setattr__.__str__=function(){return 'method object.setattr'}
+object.__setattr__.__str__=function(){return "method object.setattr"}
 object.__str__=function(self){var repr_func=$B.$getattr(self,"__repr__")
 return $B.$call(repr_func)()}
 object.__subclasshook__=function(){return _b_.NotImplemented}
@@ -6476,7 +6484,7 @@ $B.$NameError=function(name){
 throw _b_.NameError.$factory("name '" + name + "' is not defined")}
 $B.$TypeError=function(msg){throw _b_.TypeError.$factory(msg)}})(__BRYTHON__)
 
-;(function($B){var _b_=$B.builtins,None=_b_.None,range={__class__: _b_.type,__module__: "builtins",__mro__:[_b_.object],__name__: 'range',$is_class: true,$native: true,$descriptors:{start: true,step: true,stop: true}}
+;(function($B){var _b_=$B.builtins,None=_b_.None,range={__class__: _b_.type,__module__: "builtins",__mro__:[_b_.object],__name__: "range",$is_class: true,$native: true,$descriptors:{start: true,step: true,stop: true}}
 range.__contains__=function(self,other){if(range.__len__(self)==0){return false}
 try{other=$B.int_or_bool(other)}
 catch(err){
@@ -6484,35 +6492,37 @@ try{range.index(self,other);return true}
 catch(err){return false}}
 var sub=$B.sub(other,self.start),fl=$B.floordiv(sub,self.step),res=$B.mul(self.step,fl)
 if($B.eq(res,sub)){if($B.gt(self.stop,self.start)){return $B.ge(other,self.start)&& $B.gt(self.stop,other)}else{return $B.ge(self.start,other)&& $B.gt(other,self.stop)}}else{return false}}
-range.__delattr__=function(self,attr,value){throw _b_.AttributeError.$factory('readonly attribute')}
+range.__delattr__=function(self,attr,value){throw _b_.AttributeError.$factory("readonly attribute")}
 range.__eq__=function(self,other){if(_b_.isinstance(other,range)){var len=range.__len__(self)
-if(!$B.eq(len,range.__len__(other))){return false}
+if(! $B.eq(len,range.__len__(other))){return false}
 if(len==0){return true}
-if(!$B.eq(self.start,other.start)){return false}
+if(! $B.eq(self.start,other.start)){return false}
 if(len==1){return true}
 return $B.eq(self.step,other.step)}
 return false}
 function compute_item(r,i){var len=range.__len__(r)
 if(len==0){return r.start}
-else if(i>len){return r.stop}
+else if(i > len){return r.stop}
 return $B.add(r.start,$B.mul(r.step,i))}
 range.__getitem__=function(self,rank){if(_b_.isinstance(rank,_b_.slice)){var norm=_b_.slice.$conv_for_seq(rank,range.__len__(self)),substep=$B.mul(self.step,norm.step),substart=compute_item(self,norm.start),substop=compute_item(self,norm.stop)
 return range.$factory(substart,substop,substep)}
 if(typeof rank !="number"){rank=$B.$GetInt(rank)}
 if($B.gt(0,rank)){rank=$B.add(rank,range.__len__(self))}
 var res=$B.add(self.start,$B.mul(rank,self.step))
-if(($B.gt(self.step,0)&&($B.ge(res,self.stop)||$B.gt(self.start,res)))||
-($B.gt(0,self.step)&&($B.ge(self.stop,res)||$B.gt(res,self.start)))){throw _b_.IndexError.$factory('range object index out of range')}
+if(($B.gt(self.step,0)&&
+($B.ge(res,self.stop)||$B.gt(self.start,res)))||
+($B.gt(0,self.step)&&
+($B.ge(self.stop,res)||$B.gt(res,self.start)))){throw _b_.IndexError.$factory("range object index out of range")}
 return res}
 range.__hash__=function(self){var len=range.__len__(self)
 if(len==0){return _b_.hash(_b_.tuple.$factory([0,None,None]))}
 if(len==1){return _b_.hash(_b_.tuple.$factory([1,self.start,None]))}
 return _b_.hash(_b_.tuple.$factory([len,self.start,self.step]))}
-var RangeIterator={__class__: _b_.type,__mro__:[_b_.object],__name__: 'range_iterator',__iter__: function(self){return self},__next__: function(self){return _b_.next(self.obj)}}
-RangeIterator.$factory=function(obj){return{__class__:RangeIterator,obj: obj}}
+var RangeIterator={__class__: _b_.type,__mro__:[_b_.object],__name__: "range_iterator",__iter__: function(self){return self},__next__: function(self){return _b_.next(self.obj)}}
+RangeIterator.$factory=function(obj){return{__class__: RangeIterator,obj: obj}}
 $B.set_func_names(RangeIterator,"builtins")
-range.__iter__=function(self){var res={__class__ : range,start:self.start,stop:self.stop,step:self.step}
-if(self.$safe){res.$counter=self.start-self.step}else{res.$counter=$B.sub(self.start,self.step)}
+range.__iter__=function(self){var res={__class__ : range,start: self.start,stop: self.stop,step: self.step}
+if(self.$safe){res.$counter=self.start - self.step}else{res.$counter=$B.sub(self.start,self.step)}
 return RangeIterator.$factory(res)}
 range.__len__=function(self){var len
 if($B.gt(self.step,0)){if($B.ge(self.start,self.stop)){return 0}
@@ -6524,90 +6534,88 @@ if($B.maxsize===undefined){$B.maxsize=$B.long_int.__pow__($B.long_int.$factory(2
 $B.maxsize=$B.long_int.__sub__($B.maxsize,1)}
 return len}
 range.__next__=function(self){if(self.$safe){self.$counter +=self.step
-if((self.step>0 && self.$counter >=self.stop)
-||(self.step<0 && self.$counter <=self.stop)){throw _b_.StopIteration.$factory('')}}else{self.$counter=$B.add(self.$counter,self.step)
+if((self.step > 0 && self.$counter >=self.stop)
+||(self.step < 0 && self.$counter <=self.stop)){throw _b_.StopIteration.$factory("")}}else{self.$counter=$B.add(self.$counter,self.step)
 if(($B.gt(self.step,0)&& $B.ge(self.$counter,self.stop))
-||($B.gt(0,self.step)&& $B.ge(self.stop,self.$counter))){throw _b_.StopIteration.$factory('')}}
+||($B.gt(0,self.step)&& $B.ge(self.stop,self.$counter))){throw _b_.StopIteration.$factory("")}}
 return self.$counter}
 range.__reversed__=function(self){var n=$B.sub(range.__len__(self),1)
 return range.$factory($B.add(self.start,$B.mul(n,self.step)),$B.sub(self.start,self.step),$B.mul(-1,self.step))}
-range.__repr__=range.__str__=function(self){var res='range('+_b_.str.$factory(self.start)+', '+
+range.__repr__=range.__str__=function(self){var res="range(" + _b_.str.$factory(self.start)+ ", " +
 _b_.str.$factory(self.stop)
-if(self.step!=1)res +=', '+_b_.str.$factory(self.step)
-return res+')'}
-range.__setattr__=function(self,attr,value){throw _b_.AttributeError.$factory('readonly attribute')}
+if(self.step !=1){res +=", " + _b_.str.$factory(self.step)}
+return res + ")"}
+range.__setattr__=function(self,attr,value){throw _b_.AttributeError.$factory("readonly attribute")}
 range.start=function(self){return self.start}
 range.step=function(self){return self.step},range.stop=function(self){return self.stop}
-range.count=function(self,ob){if(_b_.isinstance(ob,[_b_.int,_b_.float,_b_.bool])){return _b_.int.$factory(range.__contains__(self,ob))}else{var comp=function(other){return $B.rich_comp("__eq__",ob,other)},it=range.__iter__(self)
-_next=RangeIterator.__next__,nb=0,ce=$B.current_exception
+range.count=function(self,ob){if(_b_.isinstance(ob,[_b_.int,_b_.float,_b_.bool])){return _b_.int.$factory(range.__contains__(self,ob))}else{var comp=function(other){return $B.rich_comp("__eq__",ob,other)},it=range.__iter__(self),_next=RangeIterator.__next__,nb=0,ce=$B.current_exception
 while(true){try{if(comp(_next(it))){nb++}}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){$B.current_exception=ce
 return nb}
 throw err}}}}
-range.index=function(self,other){var $=$B.args('index',2,{self:null,other:null},['self','other'],arguments,{},null,null),self=$.self,other=$.other
-try{other=$B.int_or_bool(other)}catch(err){var comp=comp=function(x){return $B.rich_comp("__eq__",other,x)},it=range.__iter__(self),_next=RangeIterator.__next__,nb=0
+range.index=function(self,other){var $=$B.args("index",2,{self: null,other: null},["self","other"],arguments,{},null,null),self=$.self,other=$.other
+try{other=$B.int_or_bool(other)}catch(err){var comp=function(x){return $B.rich_comp("__eq__",other,x)},it=range.__iter__(self),_next=RangeIterator.__next__,nb=0
 while(true){try{if(comp(_next(it))){return nb}
 nb++}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){throw _b_.ValueError.$factory(_b_.str.$factory(other)+
-' not in range')}
+" not in range")}
 throw err}}}
 var sub=$B.sub(other,self.start),fl=$B.floordiv(sub,self.step),res=$B.mul(self.step,fl)
 if($B.eq(res,sub)){if(($B.gt(self.stop,self.start)&& $B.ge(other,self.start)
 && $B.gt(self.stop,other))||
 ($B.ge(self.start,self.stop)&& $B.ge(self.start,other)
 && $B.gt(other,self.stop))){return fl}else{throw _b_.ValueError.$factory(_b_.str.$factory(other)+
-' not in range')}}else{throw _b_.ValueError.$factory(_b_.str.$factory(other)+' not in range')}}
-range.$factory=function(){var $=$B.args('range',3,{start:null,stop:null,step:null},['start','stop','step'],arguments,{stop:null,step:null},null,null),start=$.start,stop=$.stop,step=$.step,safe
+' not in range')}}else{throw _b_.ValueError.$factory(_b_.str.$factory(other)+
+" not in range")}}
+range.$factory=function(){var $=$B.args("range",3,{start: null,stop: null,step: null},["start","stop","step"],arguments,{stop: null,step: null},null,null),start=$.start,stop=$.stop,step=$.step,safe
 if(stop===null && step===null){stop=$B.PyNumber_Index(start)
 safe=typeof stop==="number"
-return{__class__:range,start: 0,stop: stop,step: 1,$is_range: true,$safe: safe}}
+return{__class__: range,start: 0,stop: stop,step: 1,$is_range: true,$safe: safe}}
 if(step===null){step=1}
 start=$B.PyNumber_Index(start)
 stop=$B.PyNumber_Index(stop)
 step=$B.PyNumber_Index(step)
 if(step==0){throw _b_.ValueError.$factory("range.$factory() arg 3 must not be zero")}
-safe=(typeof start=='number' && typeof stop=='number' &&
-typeof step=='number')
+safe=(typeof start=="number" && typeof stop=="number" &&
+typeof step=="number")
 return{__class__: range,start: start,stop: stop,step: step,$is_range: true,$safe: safe}}
 $B.set_func_names(range,"builtins")
-var slice={__class__: _b_.type,__module__: "builtins",__mro__:[_b_.object],__name__: 'slice',$is_class: true,$native: true,$descriptors:{
+var slice={__class__: _b_.type,__module__: "builtins",__mro__:[_b_.object],__name__: "slice",$is_class: true,$native: true,$descriptors:{
 start: true,step: true,stop: true}}
-slice.__repr__=slice.__str__=function(self){return 'slice('+_b_.str.$factory(self.start)+','+
-_b_.str.$factory(self.stop)+','+_b_.str.$factory(self.step)+')'}
-slice.__setattr__=function(self,attr,value){throw _b_.AttributeError.$factory('readonly attribute')}
+slice.__repr__=slice.__str__=function(self){return "slice(" + _b_.str.$factory(self.start)+ "," +
+_b_.str.$factory(self.stop)+ "," + _b_.str.$factory(self.step)+ ")"}
+slice.__setattr__=function(self,attr,value){throw _b_.AttributeError.$factory("readonly attribute")}
 slice.$conv=function(self,len){
 return{start: self.start===_b_.None ? 0 : self.start,stop: self.stop===_b_.None ? len : self.stop,step: self.step===_b_.None ? 1 : self.step}}
 slice.$conv_for_seq=function(self,len){
 var step=self.step===None ? 1 : $B.PyNumber_Index(self.step),step_is_neg=$B.gt(0,step),len_1=$B.sub(len,1)
-if(step==0){throw _b_.ValueError.$factory('slice step cannot be zero');}
+if(step==0){throw _b_.ValueError.$factory('slice step cannot be zero')}
 var start
-if(self.start===None){start=step_is_neg ? len_1 : 0;}else{
-start=$B.PyNumber_Index(self.start);
-if($B.gt(0,start))start=$B.add(start,len);
-if($B.gt(0,start))start=step<0 ? -1 : 0
-if($B.ge(start,len))start=step<0 ? len_1 : len;}
-if(self.stop===None){stop=step_is_neg ? -1 : len;}else{
-stop=$B.PyNumber_Index(self.stop);
-if($B.gt(0,stop))stop +=len
-if($B.gt(0,stop))stop=step<0 ? -1 : 0
-if($B.ge(stop,len))stop=step_is_neg ? len_1 : len;}
+if(self.start===None){start=step_is_neg ? len_1 : 0}else{start=$B.PyNumber_Index(self.start)
+if($B.gt(0,start)){start=$B.add(start,len)}
+if($B.gt(0,start)){start=step<0 ? -1 : 0}
+if($B.ge(start,len)){start=step<0 ? len_1 : len}}
+if(self.stop===None){stop=step_is_neg ? -1 : len}else{stop=$B.PyNumber_Index(self.stop)
+if($B.gt(0,stop)){stop +=len}
+if($B.gt(0,stop)){stop=step<0 ? -1 : 0}
+if($B.ge(stop,len)){stop=step_is_neg ? len_1 : len}}
 return{start: start,stop: stop,step: step}}
 slice.start=function(self){return self.start}
 slice.step=function(self){return self.step}
 slice.stop=function(self){return self.stop}
 slice.indices=function(self,length){var len=$B.$GetInt(length)
-if(len < 0)_b_.ValueError.$factory('length should not be negative')
+if(len < 0){_b_.ValueError.$factory("length should not be negative")}
 if(self.step > 0){var _len=_b_.min(len,self.stop)
-return _b_.tuple.$factory([self.start,_len,self.step])}else if(self.step==_b_.None){var _len=_b_.min(len,self.stop)
-var _start=self.start
-if(_start==_b_.None)_start=0
+return _b_.tuple.$factory([self.start,_len,self.step])}else if(self.step==_b_.None){var _len=_b_.min(len,self.stop),_start=self.start
+if(_start==_b_.None){_start=0}
 return _b_.tuple.$factory([_start,_len,1])}
-_b_.NotImplementedError.$factory("Error! negative step indices not implemented yet")}
-slice.$factory=function(){var $=$B.args('slice',3,{start:null,stop:null,step:null},['start','stop','step'],arguments,{stop:null,step:null},null,null),start,stop,step
+_b_.NotImplementedError.$factory(
+"Error! negative step indices not implemented yet")}
+slice.$factory=function(){var $=$B.args("slice",3,{start: null,stop: null,step: null},["start","stop","step"],arguments,{stop: null,step: null},null,null),start,stop,step
 if($.stop===null && $.step===null){start=_b_.None
 stop=$.start
 step=_b_.None}else{start=$.start
 stop=$.stop
 step=$.step===null ? _b_.None : $.step}
-var res={__class__ : slice,start:start,stop:stop,step:step}
+var res={__class__ : slice,start: start,stop: stop,step: step}
 return res}
 $B.set_func_names(slice,"builtins")
 _b_.range=range
@@ -7507,19 +7515,19 @@ exponent--}}
 numerator=float.$factory(fp)
 py_exponent=abs(exponent)
 denominator=1
-py_exponent=_b_.getattr(int.$factory(denominator),"__lshift__")(py_exponent)
+py_exponent=_b_.getattr(_b_.int.$factory(denominator),"__lshift__")(py_exponent)
 if(exponent > 0){numerator=numerator * py_exponent}else{denominator=py_exponent}
 return _b_.tuple.$factory([_b_.int.$factory(numerator),_b_.int.$factory(denominator)])}
 float.__bool__=function(self){return _b_.bool.$factory(self.valueOf())}
 float.__eq__=function(self,other){if(isNaN(self)&& isNaN(other)){return false}
-if(isinstance(other,int)){return self==other}
+if(isinstance(other,_b_.int)){return self==other}
 if(isinstance(other,float)){
 return self.valueOf()==other.valueOf()}
 if(isinstance(other,_b_.complex)){if(other.$imag !=0){return false}
 return self==other.$real}
 if(_b_.hasattr(other,"__eq__")){return _b_.getattr(other,"__eq__")(self.value)}
 return self.value===other}
-float.__floordiv__=function(self,other){if(isinstance(other,[int,float])){if(other.valueOf()==0){throw ZeroDivisionError.$factory('division by zero')}
+float.__floordiv__=function(self,other){if(isinstance(other,[_b_.int,float])){if(other.valueOf()==0){throw ZeroDivisionError.$factory('division by zero')}
 return float.$factory(Math.floor(self / other))}
 if(hasattr(other,"__rfloordiv__")){return getattr(other,"__rfloordiv__")(self)}
 $err("//",other)}
@@ -7666,7 +7674,7 @@ float.__int__=function(self){return parseInt(self)}
 float.is_integer=function(self){return _b_.int.$factory(self)==self}
 float.__mod__=function(self,other){
 if(other==0){throw ZeroDivisionError.$factory("float modulo")}
-if(isinstance(other,int)){return new Number((self % other + other)% other)}
+if(isinstance(other,_b_.int)){return new Number((self % other + other)% other)}
 if(isinstance(other,float)){
 var q=Math.floor(self / other),r=self - other * q
 return new Number(r)}
@@ -7676,7 +7684,7 @@ return new Number((self % bool_value + bool_value)% bool_value)}
 if(hasattr(other,"__rmod__")){return getattr(other,"__rmod__")(self)}
 $err("%",other)}
 float.__mro__=[object]
-float.__mul__=function(self,other){if(isinstance(other,int)){if(other.__class__==$B.long_int){return new Number(self * parseFloat(other.value))}
+float.__mul__=function(self,other){if(isinstance(other,_b_.int)){if(other.__class__==$B.long_int){return new Number(self * parseFloat(other.value))}
 return new Number(self * other)}
 if(isinstance(other,float)){return new Number(self * other)}
 if(isinstance(other,bool)){var bool_value=0
@@ -7688,7 +7696,7 @@ $err("*",other)}
 float.__ne__=function(self,other){return ! float.__eq__(self,other)}
 float.__neg__=function(self,other){return float.$factory(-self)}
 float.__pos__=function(self){return self}
-float.__pow__=function(self,other){var other_int=isinstance(other,int)
+float.__pow__=function(self,other){var other_int=isinstance(other,_b_.int)
 if(other_int ||isinstance(other,float)){if(self==1){return self}
 if(other==0){return new Number(1)}
 if(self==-1 &&
@@ -7719,14 +7727,14 @@ attr + "'")}else{throw _b_.AttributeError.$factory("'float' object attribute '" 
 attr + "' is read-only")}}
 self[attr]=value
 return $N}
-float.__truediv__=function(self,other){if(isinstance(other,[int,float])){if(other.valueOf()==0){throw ZeroDivisionError.$factory("division by zero")}
+float.__truediv__=function(self,other){if(isinstance(other,[_b_.int,float])){if(other.valueOf()==0){throw ZeroDivisionError.$factory("division by zero")}
 return float.$factory(self/other)}
 if(isinstance(other,_b_.complex)){var cmod=other.$real * other.$real + other.$imag * other.$imag
 if(cmod==0){throw ZeroDivisionError.$factory("division by zero")}
 return $B.make_complex(float.$factory(self * other.$real / cmod),float.$factory(-self * other.$imag / cmod))}
 if(hasattr(other,"__rtruediv__")){return getattr(other,"__rtruediv__")(self)}
 $err("/",other)}
-var $op_func=function(self,other){if(isinstance(other,int)){if(typeof other=="boolean"){return other ? self - 1 : self}else if(other.__class__===$B.long_int){return float.$factory(self - parseInt(other.value))}else{return float.$factory(self - other)}}
+var $op_func=function(self,other){if(isinstance(other,_b_.int)){if(typeof other=="boolean"){return other ? self - 1 : self}else if(other.__class__===$B.long_int){return float.$factory(self - parseInt(other.value))}else{return float.$factory(self - other)}}
 if(isinstance(other,float)){return float.$factory(self - other)}
 if(isinstance(other,bool)){var bool_value=0
 if(other.valueOf()){bool_value=1}
@@ -7739,11 +7747,11 @@ var $ops={"+": "add","-": "sub"}
 for(var $op in $ops){var $opf=$op_func.replace(/-/gm,$op)
 $opf=$opf.replace(/__rsub__/gm,"__r"+$ops[$op]+"__")
 eval("float.__" + $ops[$op]+ "__ = " + $opf)}
-var $comp_func=function(self,other){if(isinstance(other,int)){if(other.__class__===$B.long_int){return self > parseInt(other.value)}
+var $comp_func=function(self,other){if(isinstance(other,_b_.int)){if(other.__class__===$B.long_int){return self > parseInt(other.value)}
 return self > other.valueOf()}
 if(isinstance(other,float)){return self > other}
 if(isinstance(other,bool)){return self.valueOf()> bool.__hash__(other)}
-if(hasattr(other,"__int__")||hasattr(other,"__index__")){return int.__gt__(self,$B.$GetInt(other))}
+if(hasattr(other,"__int__")||hasattr(other,"__index__")){return _b_.int.__gt__(self,$B.$GetInt(other))}
 var inv_op=getattr(other,"__le__",None)
 if(inv_op !==None){return inv_op(self)}
 var inv_op=getattr(other,"__le__",None)
@@ -7824,38 +7832,36 @@ $B.set_func_names(FloatSubclass,"builtins")
 _b_.float=float})(__BRYTHON__)
 ;(function($B){eval($B.InjectBuiltins())
 var object=_b_.object,$N=_b_.None
-function $err(op,other){var msg="unsupported operand type(s) for "+op
-msg +=": 'int' and '"+$B.get_class(other).__name__+"'"
+function $err(op,other){var msg="unsupported operand type(s) for " + op +
+": 'int' and '" + $B.get_class(other).__name__ + "'"
 throw _b_.TypeError.$factory(msg)}
-var int={__class__: _b_.type,__name__: 'int',__dir__: object.__dir__,$is_class: true,$native: true,$descriptors:{
-'numerator': true,'denominator': true,'imag': true,'real': true}}
-int.from_bytes=function(){var $=$B.args("from_bytes",3,{bytes:null,byteorder:null,signed:null},['bytes','byteorder','signed'],arguments,{signed:False},null,null)
-var x=$.bytes,byteorder=$.byteorder,signed=$.signed
-var _bytes,_len
+var int={__class__: _b_.type,__name__: "int",__dir__: object.__dir__,$is_class: true,$native: true,$descriptors:{
+"numerator": true,"denominator": true,"imag": true,"real": true}}
+int.from_bytes=function(){var $=$B.args("from_bytes",3,{bytes:null,byteorder:null,signed:null},["bytes","byteorder","signed"],arguments,{signed: False},null,null)
+var x=$.bytes,byteorder=$.byteorder,signed=$.signed,_bytes,_len
 if(isinstance(x,[_b_.bytes,_b_.bytearray])){_bytes=x.source
-_len=x.source.length}else{
-_bytes=_b_.list.$factory(x)
+_len=x.source.length}else{_bytes=_b_.list.$factory(x)
 _len=_bytes.length
-for(var i=0;i<_len;i++){_b_.bytes.$factory([_bytes[i]])}}
-switch(byteorder){case 'big':
-var num=_bytes[_len - 1];
+for(var i=0;i < _len;i++){_b_.bytes.$factory([_bytes[i]])}}
+switch(byteorder){case "big":
+var num=_bytes[_len - 1]
 var _mult=256
-for(var i=(_len - 2);i >=0;i--){
+for(var i=_len - 2;i >=0;i--){
 num=$B.add($B.mul(_mult,_bytes[i]),num)
 _mult=$B.mul(_mult,256)}
-if(!signed)return num
-if(_bytes[0]< 128)return num
+if(! signed){return num}
+if(_bytes[0]< 128){return num}
 return $B.sub(num,_mult)
-case 'little':
+case "little":
 var num=_bytes[0]
-if(num >=128)num=num - 256
+if(num >=128){num=num - 256}
 var _mult=256
 for(var i=1;i < _len;i++){num=$B.add($B.mul(_mult,_bytes[i]),num)
 _mult=$B.mul(_mult,256)}
-if(!signed)return num
-if(_bytes[_len - 1]< 128)return num
+if(! signed){return num}
+if(_bytes[_len - 1]< 128){return num}
 return $B.sub(num,_mult)}
-throw _b_.ValueError.$factory("byteorder must be either 'little' or 'big'");}
+throw _b_.ValueError.$factory("byteorder must be either 'little' or 'big'")}
 int.to_bytes=function(length,byteorder,star){
 throw _b_.NotImplementedError.$factory("int.to_bytes is not implemented yet")}
 int.__abs__=function(self){return abs(self)}
@@ -7863,48 +7869,48 @@ int.__bool__=function(self){return new Boolean(self.valueOf())}
 int.__ceil__=function(self){return Math.ceil(self)}
 int.__divmod__=function(self,other){return divmod(self,other)}
 int.__eq__=function(self,other){
-if(other===undefined)return self===int
-if(isinstance(other,int))return self.valueOf()==other.valueOf()
-if(isinstance(other,_b_.float))return self.valueOf()==other.valueOf()
-if(isinstance(other,_b_.complex)){if(other.$imag !=0)return False
+if(other===undefined){return self===int}
+if(isinstance(other,int)){return self.valueOf()==other.valueOf()}
+if(isinstance(other,_b_.float)){return self.valueOf()==other.valueOf()}
+if(isinstance(other,_b_.complex)){if(other.$imag !=0){return False}
 return self.valueOf()==other.$real}
-if(hasattr(other,'__eq__'))return getattr(other,'__eq__')(self)
+if(hasattr(other,"__eq__")){return getattr(other,"__eq__")(self)}
 return self.valueOf()===other}
 int.__float__=function(self){return new Number(self)}
 function preformat(self,fmt){if(fmt.empty){return _b_.str.$factory(self)}
-if(fmt.type && 'bcdoxXn'.indexOf(fmt.type)==-1){throw _b_.ValueError.$factory("Unknown format code '"+fmt.type+
+if(fmt.type && 'bcdoxXn'.indexOf(fmt.type)==-1){throw _b_.ValueError.$factory("Unknown format code '" + fmt.type +
 "' for object of type 'int'")}
 switch(fmt.type){case undefined:
-case 'd':
+case "d":
 return self.toString()
-case 'b':
-return(fmt.alternate ? '0b' : '')+ self.toString(2)
-case 'c':
+case "b":
+return(fmt.alternate ? "0b" : "")+ self.toString(2)
+case "c":
 return _b_.chr(self)
-case 'o':
-return(fmt.alternate ? '0o' : '')+ self.toString(8)
-case 'x':
-return(fmt.alternate ? '0x' : '')+ self.toString(16)
-case 'X':
-return(fmt.alternate ? '0X' : '')+ self.toString(16).toUpperCase()
-case 'n':
+case "o":
+return(fmt.alternate ? "0o" : "")+ self.toString(8)
+case "x":
+return(fmt.alternate ? "0x" : "")+ self.toString(16)
+case "X":
+return(fmt.alternate ? "0X" : "")+ self.toString(16).toUpperCase()
+case "n":
 return self }
 return res}
 int.__format__=function(self,format_spec){var fmt=new $B.parse_format_spec(format_spec)
 if(fmt.type && 'eEfFgG%'.indexOf(fmt.type)!=-1){
 return _b_.float.__format__(self,format_spec)}
-fmt.align=fmt.align ||'>'
+fmt.align=fmt.align ||">"
 var res=preformat(self,fmt)
-if(fmt.comma){var sign=res[0]=='-' ? '-' : '',rest=res.substr(sign.length),len=rest.length,nb=Math.ceil(rest.length/3),chunks=[]
-for(var i=0;i<nb;i++){chunks.push(rest.substring(len-3*i-3,len-3*i))}
+if(fmt.comma){var sign=res[0]=="-" ? "-" : "",rest=res.substr(sign.length),len=rest.length,nb=Math.ceil(rest.length/3),chunks=[]
+for(var i=0;i < nb;i++){chunks.push(rest.substring(len - 3 * i - 3,len - 3 * i))}
 chunks.reverse()
-res=sign+chunks.join(',')}
+res=sign + chunks.join(",")}
 return $B.format_width(res,fmt)}
-int.__floordiv__=function(self,other){if(isinstance(other,int)){if(other==0)throw ZeroDivisionError.$factory('division by zero')
-return Math.floor(self/other)}
-if(isinstance(other,_b_.float)){if(!other.valueOf())throw ZeroDivisionError.$factory('division by zero')
-return Math.floor(self/other)}
-if(hasattr(other,'__rfloordiv__')){return getattr(other,'__rfloordiv__')(self)}
+int.__floordiv__=function(self,other){if(isinstance(other,int)){if(other==0){throw ZeroDivisionError.$factory("division by zero")}
+return Math.floor(self / other)}
+if(isinstance(other,_b_.float)){if(!other.valueOf()){throw ZeroDivisionError.$factory("division by zero")}
+return Math.floor(self / other)}
+if(hasattr(other,"__rfloordiv__")){return getattr(other,"__rfloordiv__")(self)}
 $err("//",other)}
 int.__hash__=function(self){if(self===undefined){return int.__hashvalue__ ||$B.$py_next_hash-- }
 return self.valueOf()}
@@ -7915,37 +7921,37 @@ return $N}
 int.__int__=function(self){return self}
 int.__invert__=function(self){return ~self}
 int.__lshift__=function(self,other){if(isinstance(other,int)){return int.$factory($B.long_int.__lshift__($B.long_int.$factory(self),$B.long_int.$factory(other)))}
-var rlshift=getattr(other,'__rlshift__',null)
-if(rlshift!==null){return rlshift(self)}
-$err('<<',other)}
+var rlshift=getattr(other,"__rlshift__",None)
+if(rlshift !==None){return rlshift(self)}
+$err("<<",other)}
 int.__mod__=function(self,other){
-if(isinstance(other,_b_.tuple)&& other.length==1)other=other[0]
-if(isinstance(other,[int,_b_.float,bool])){if(other===false){other=0}else if(other===true){other=1}
+if(isinstance(other,_b_.tuple)&& other.length==1){other=other[0]}
+if(isinstance(other,[int,_b_.float,bool])){if(other===false){other=0}
+else if(other===true){other=1}
 if(other==0){throw _b_.ZeroDivisionError.$factory(
 "integer division or modulo by zero")}
-return(self%other+other)%other}
-if(hasattr(other,'__rmod__'))return getattr(other,'__rmod__')(self)
-$err('%',other)}
+return(self % other + other)% other}
+if(hasattr(other,"__rmod__")){return getattr(other,"__rmod__")(self)}
+$err("%",other)}
 int.__mro__=[object]
 int.__mul__=function(self,other){var val=self.valueOf()
 if(typeof other==="string"){return other.repeat(val)}
-if(isinstance(other,int)){var res=self*other
-if(res>$B.min_int && res<$B.max_int){return res}
+if(isinstance(other,int)){var res=self * other
+if(res > $B.min_int && res < $B.max_int){return res}
 else{return int.$factory($B.long_int.__mul__($B.long_int.$factory(self),$B.long_int.$factory(other)))}}
-if(isinstance(other,_b_.float)){return new Number(self*other)}
-if(isinstance(other,_b_.bool)){if(other.valueOf())return self
+if(isinstance(other,_b_.float)){return new Number(self * other)}
+if(isinstance(other,_b_.bool)){if(other.valueOf()){return self}
 return int.$factory(0)}
 if(isinstance(other,_b_.complex)){return $B.make_complex(int.__mul__(self,other.$real),int.__mul__(self,other.$imag))}
 if(isinstance(other,[_b_.list,_b_.tuple])){var res=[]
 var $temp=other.slice(0,other.length)
-for(var i=0;i<val;i++)res=res.concat($temp)
-if(isinstance(other,_b_.tuple))res=_b_.tuple.$factory(res)
+for(var i=0;i < val;i++){res=res.concat($temp)}
+if(isinstance(other,_b_.tuple)){res=_b_.tuple.$factory(res)}
 return res}
-if(hasattr(other,'__rmul__'))return getattr(other,'__rmul__')(self)
+if(hasattr(other,"__rmul__")){return getattr(other,"__rmul__")(self)}
 $err("*",other)}
-int.__name__='int'
 int.__neg__=function(self){return -self}
-int.__new__=function(cls){if(cls===undefined){throw _b_.TypeError.$factory('int.__new__(): not enough arguments')}
+int.__new__=function(cls){if(cls===undefined){throw _b_.TypeError.$factory("int.__new__(): not enough arguments")}
 return{__class__: cls}}
 int.__pos__=function(self){return self}
 int.__pow__=function(self,other,z){if(isinstance(other,int)){switch(other.valueOf()){case 0:
@@ -7954,171 +7960,176 @@ case 1:
 return int.$factory(self.valueOf())}
 if(z !==undefined && z !==null){
 var res=(self % z + z)% z
-for(var i=1;i<other;i++){res *=self
+for(var i=1;i < other;i++){res *=self
 res=(res % z + z)% z}
 return res}
 var res=Math.pow(self.valueOf(),other.valueOf())
-if(res>$B.min_int && res<$B.max_int){return res}
+if(res > $B.min_int && res < $B.max_int){return res}
 else if(res !==Infinity && !isFinite(res)){return res}
 else{return int.$factory($B.long_int.__pow__($B.long_int.$factory(self),$B.long_int.$factory(other)))}}
-if(isinstance(other,_b_.float)){if(self>=0){return new Number(Math.pow(self,other.valueOf()))}
+if(isinstance(other,_b_.float)){if(self >=0){return new Number(Math.pow(self,other.valueOf()))}
 else{
 return _b_.complex.__pow__($B.make_complex(self,0),other)}}else if(isinstance(other,_b_.complex)){var preal=Math.pow(self,other.$real),ln=Math.log(self)
-return $B.make_complex(preal*Math.cos(ln),preal*Math.sin(ln))}
-if(hasattr(other,'__rpow__'))return getattr(other,'__rpow__')(self)
+return $B.make_complex(preal * Math.cos(ln),preal * Math.sin(ln))}
+if(hasattr(other,"__rpow__")){return getattr(other,"__rpow__")(self)}
 $err("**",other)}
-int.__repr__=function(self){if(self===int)return "<class 'int'>"
+int.__repr__=function(self){if(self===int){return "<class 'int'>"}
 return self.toString()}
 int.__rshift__=function(self,other){if(isinstance(other,int)){return int.$factory($B.long_int.__rshift__($B.long_int.$factory(self),$B.long_int.$factory(other)))}
-var rrshift=getattr(other,'__rrshift__',null)
-if(rrshift!==null){return rrshift(self)}
+var rrshift=getattr(other,"__rrshift__",None)
+if(rrshift !==None){return rrshift(self)}
 $err('>>',other)}
-int.__setattr__=function(self,attr,value){if(typeof self=="number"){if(int.$factory[attr]===undefined){throw _b_.AttributeError.$factory("'int' object has no attribute '"+attr+"'")}else{throw _b_.AttributeError.$factory("'int' object attribute '"+attr+"' is read-only")}}
+int.__setattr__=function(self,attr,value){if(typeof self=="number"){if(int.$factory[attr]===undefined){throw _b_.AttributeError.$factory(
+"'int' object has no attribute '" + attr + "'")}else{throw _b_.AttributeError.$factory(
+"'int' object attribute '" + attr + "' is read-only")}}
 self[attr]=value
 return $N}
 int.__str__=int.__repr__
-int.__truediv__=function(self,other){if(isinstance(other,int)){if(other==0)throw ZeroDivisionError.$factory('division by zero')
-if(other.__class__==$B.long_int){return new Number(self/parseInt(other.value))}
-return new Number(self/other)}
-if(isinstance(other,_b_.float)){if(!other.valueOf())throw ZeroDivisionError.$factory('division by zero')
-return new Number(self/other)}
-if(isinstance(other,_b_.complex)){var cmod=other.$real*other.$real+other.$imag*other.$imag
-if(cmod==0)throw ZeroDivisionError.$factory('division by zero')
-return $B.make_complex(self*other.$real/cmod,-self*other.$imag/cmod)}
-if(hasattr(other,'__rtruediv__'))return getattr(other,'__rtruediv__')(self)
+int.__truediv__=function(self,other){if(isinstance(other,int)){if(other==0){throw ZeroDivisionError.$factory("division by zero")}
+if(other.__class__===$B.long_int){return new Number(self / parseInt(other.value))}
+return new Number(self / other)}
+if(isinstance(other,_b_.float)){if(!other.valueOf()){throw ZeroDivisionError.$factory("division by zero")}
+return new Number(self / other)}
+if(isinstance(other,_b_.complex)){var cmod=other.$real * other.$real + other.$imag * other.$imag
+if(cmod==0){throw ZeroDivisionError.$factory("division by zero")}
+return $B.make_complex(self * other.$real / cmod,-self * other.$imag / cmod)}
+if(hasattr(other,"__rtruediv__")){return getattr(other,"__rtruediv__")(self)}
 $err("/",other)}
 int.bit_length=function(self){s=bin(self)
-s=getattr(s,'lstrip')('-0b')
+s=getattr(s,"lstrip")("-0b")
 return s.length }
 int.numerator=function(self){return self}
 int.denominator=function(self){return int.$factory(1)}
 int.imag=function(self){return int.$factory(0)}
 int.real=function(self){return self}
-$B.max_int32=(1<<30)* 2 - 1
+$B.max_int32=(1 << 30)* 2 - 1
 $B.min_int32=- $B.max_int32
 var $op_func=function(self,other){if(isinstance(other,int)){if(other.__class__===$B.long_int){return $B.long_int.__sub__($B.long_int.$factory(self),$B.long_int.$factory(other))}
 if(self > $B.max_int32 ||self < $B.min_int32 ||
 other > $B.max_int32 ||other < $B.min_int32){return $B.long_int.__sub__($B.long_int.$factory(self),$B.long_int.$factory(other))}
 return self-other}
-if(isinstance(other,_b_.bool))return self-other
-if(hasattr(other,'__rsub__'))return getattr(other,'__rsub__')(self)
+if(isinstance(other,_b_.bool)){return self - other}
+if(hasattr(other,"__rsub__")){return getattr(other,"__rsub__")(self)}
 $err("-",other)}
-$op_func +='' 
-var $ops={'&':'and','|':'or','^':'xor'}
+$op_func +="" 
+var $ops={"&": "and","|": "or","^": "xor"}
 for(var $op in $ops){var opf=$op_func.replace(/-/gm,$op)
-opf=opf.replace(new RegExp('sub','gm'),$ops[$op])
-eval('int.__'+$ops[$op]+'__ = '+opf)}
-var $op_func=function(self,other){if(isinstance(other,int)){if(typeof other=='number'){var res=self.valueOf()-other.valueOf()
-if(res>=$B.min_int && res<=$B.max_int){return res}
+opf=opf.replace(new RegExp("sub","gm"),$ops[$op])
+eval("int.__" + $ops[$op]+ "__ = " + opf)}
+var $op_func=function(self,other){if(isinstance(other,int)){if(typeof other=="number"){var res=self.valueOf()- other.valueOf()
+if(res > $B.min_int && res < $B.max_int){return res}
 else{return $B.long_int.__sub__($B.long_int.$factory(self),$B.long_int.$factory(other))}}else if(typeof other=="boolean"){return other ? self-1 : self}else{return $B.long_int.__sub__($B.long_int.$factory(self),$B.long_int.$factory(other))}}
-if(isinstance(other,_b_.float)){return new Number(self-other)}
-if(isinstance(other,_b_.complex)){return $B.make_complex(self-other.$real,-other.$imag)}
+if(isinstance(other,_b_.float)){return new Number(self - other)}
+if(isinstance(other,_b_.complex)){return $B.make_complex(self - other.$real,-other.$imag)}
 if(isinstance(other,_b_.bool)){var bool_value=0;
-if(other.valueOf())bool_value=1;
-return self-bool_value}
+if(other.valueOf()){bool_value=1}
+return self - bool_value}
 if(isinstance(other,_b_.complex)){return $B.make_complex(self.valueOf()- other.$real,other.$imag)}
-if(hasattr(other,'__rsub__'))return getattr(other,'__rsub__')(self)
-throw $err('-',other)}
-$op_func +='' 
-var $ops={'+':'add','-':'sub'}
+var rsub=$B.$getattr(other,"__rsub__",None)
+if(rsub !==None){return rsub(self)}
+throw $err("-",other)}
+$op_func +="" 
+var $ops={"+": "add","-": "sub"}
 for(var $op in $ops){var opf=$op_func.replace(/-/gm,$op)
-opf=opf.replace(new RegExp('sub','gm'),$ops[$op])
-eval('int.__'+$ops[$op]+'__ = '+opf)}
+opf=opf.replace(new RegExp("sub","gm"),$ops[$op])
+eval("int.__" + $ops[$op]+ "__ = " + opf)}
 var $comp_func=function(self,other){if(other.__class__===$B.long_int){return $B.long_int.__lt__(other,$B.long_int.$factory(self))}
-if(isinstance(other,int))return self.valueOf()> other.valueOf()
-if(isinstance(other,_b_.float))return self.valueOf()> other.valueOf()
+if(isinstance(other,int)){return self.valueOf()> other.valueOf()}
+if(isinstance(other,_b_.float)){return self.valueOf()> other.valueOf()}
 if(isinstance(other,_b_.bool)){return self.valueOf()> _b_.bool.__hash__(other)}
-if(hasattr(other,'__int__')||hasattr(other,'__index__')){return int.__gt__(self,$B.$GetInt(other))}
-var inv_op=getattr(other,'__lt__',null)
-if(inv_op !==null){return inv_op(self)}
+if(hasattr(other,"__int__")||hasattr(other,"__index__")){return int.__gt__(self,$B.$GetInt(other))}
+var inv_op=$B.$getattr(other,"__lt__",None)
+if(inv_op !==None){return inv_op(self)}
 throw _b_.TypeError.$factory(
 "unorderable types: int() > "+$B.get_class(other).__name__+"()")}
-$comp_func +='' 
-for(var $op in $B.$comps){eval("int.__"+$B.$comps[$op]+'__ = '+
+$comp_func +="" 
+for(var $op in $B.$comps){eval("int.__"+$B.$comps[$op]+ "__ = " +
 $comp_func.replace(/>/gm,$op).
-replace(/__gt__/gm,'__'+$B.$comps[$op]+'__').
-replace(/__lt__/,'__'+$B.$inv_comps[$op]+'__'))}
+replace(/__gt__/gm,"__" + $B.$comps[$op]+ "__").
+replace(/__lt__/,"__" + $B.$inv_comps[$op]+ "__"))}
 $B.make_rmethods(int)
-var $valid_digits=function(base){var digits=''
-if(base===0)return '0'
-if(base < 10){for(var i=0;i < base;i++)digits+=String.fromCharCode(i+48)
+var $valid_digits=function(base){var digits=""
+if(base===0){return "0"}
+if(base < 10){for(var i=0;i < base;i++){digits +=String.fromCharCode(i+48)}
 return digits}
-var digits='0123456789'
-for(var i=10;i < base;i++)digits+=String.fromCharCode(i+55)
+var digits="0123456789"
+for(var i=10;i < base;i++){digits +=String.fromCharCode(i+55)}
 return digits}
 int.$factory=function(value,base){
 if(value===undefined){return 0}
-if(typeof value=='number' &&
+if(typeof value=="number" &&
 (base===undefined ||base==10)){return parseInt(value)}
-if(base!==undefined){if(!isinstance(value,[_b_.str,_b_.bytes,_b_.bytearray])){throw TypeError.$factory("int() can't convert non-string with explicit base")}}
+if(base !==undefined){if(! isinstance(value,[_b_.str,_b_.bytes,_b_.bytearray])){throw TypeError.$factory(
+"int() can't convert non-string with explicit base")}}
 if(isinstance(value,_b_.complex)){throw TypeError.$factory("can't convert complex to int")}
-var $ns=$B.args('int',2,{x:null,base:null},['x','base'],arguments,{'base':10},'null','null')
-var value=$ns['x']
-var base=$ns['base']
-if(isinstance(value,_b_.float)&& base===10){if(value<$B.min_int ||value>$B.max_int){return $B.long_int.$from_float(value)}
-else{return value>0 ? Math.floor(value): Math.ceil(value)}}
+var $ns=$B.args("int",2,{x:null,base:null},["x","base"],arguments,{"base": 10},null,null),value=$ns["x"],base=$ns["base"]
+if(isinstance(value,_b_.float)&& base==10){if(value < $B.min_int ||value > $B.max_int){return $B.long_int.$from_float(value)}
+else{return value > 0 ? Math.floor(value): Math.ceil(value)}}
 if(!(base >=2 && base <=36)){
-if(base !=0)throw _b_.ValueError.$factory("invalid base")}
-if(typeof value=='number'){if(base==10){if(value < $B.min_int ||value > $B.max_int)return $B.long_int.$factory(value)
-return value}else if(value.toString().search('e')>-1){
-throw _b_.OverflowError.$factory("can't convert to base "+base)}else{var res=parseInt(value,base)
-if(res < $B.min_int ||res > $B.max_int)return $B.long_int.$factory(value,base)
+if(base !=0){throw _b_.ValueError.$factory("invalid base")}}
+if(typeof value=="number"){if(base==10){if(value < $B.min_int ||value > $B.max_int){return $B.long_int.$factory(value)}
+return value}else if(value.toString().search("e")> -1){
+throw _b_.OverflowError.$factory("can't convert to base " + base)}else{var res=parseInt(value,base)
+if(value < $B.min_int ||value > $B.max_int){return $B.long_int.$factory(value,base)}
 return res}}
-if(value===true)return Number(1)
-if(value===false)return Number(0)
+if(value===true){return Number(1)}
+if(value===false){return Number(0)}
 if(value.__class__===$B.long_int){var z=parseInt(value.value)
-if(z>$B.min_int && z<$B.max_int){return z}
+if(z > $B.min_int && z < $B.max_int){return z}
 else{return value}}
 base=$B.$GetInt(base)
-if(isinstance(value,_b_.str))value=value.valueOf()
+if(isinstance(value,_b_.str)){value=value.valueOf()}
 if(typeof value=="string"){var _value=value.trim()
-if(_value.length==2 && base==0 &&(_value=='0b' ||_value=='0o' ||_value=='0x')){throw _b_.ValueError.$factory('invalid value')}
+if(_value.length==2 && base==0 &&
+(_value=="0b" ||_value=="0o" ||_value=="0x")){throw _b_.ValueError.$factory("invalid value")}
 if(_value.length >2){var _pre=_value.substr(0,2).toUpperCase()
-if(base==0){if(_pre=='0B')base=2
-if(_pre=='0O')base=8
-if(_pre=='0X')base=16}
-if(_pre=='0B' ||_pre=='0O' ||_pre=='0X'){_value=_value.substr(2)}}
+if(base==0){if(_pre=="0B"){base=2}
+if(_pre=="0O"){base=8}
+if(_pre=="0X"){base=16}}
+if(_pre=="0B" ||_pre=="0O" ||_pre=="0X"){_value=_value.substr(2)}}
 var _digits=$valid_digits(base)
-var _re=new RegExp('^[+-]?['+_digits+']+$','i')
-if(!_re.test(_value)){throw _b_.ValueError.$factory(
-"invalid literal for int() with base "+base +": '"+
-_b_.str.$factory(value)+"'")}
-if(base <=10 && !isFinite(value)){throw _b_.ValueError.$factory(
-"invalid literal for int() with base "+base +": '"+
-_b_.str.$factory(value)+"'")}
+var _re=new RegExp("^[+-]?[" + _digits + "]+$","i")
+if(! _re.test(_value)){throw _b_.ValueError.$factory(
+"invalid literal for int() with base " + base + ": '" +
+_b_.str.$factory(value)+ "'")}
+if(base <=10 && ! isFinite(value)){throw _b_.ValueError.$factory(
+"invalid literal for int() with base " + base + ": '" +
+_b_.str.$factory(value)+ "'")}
 var res=parseInt(_value,base)
-if(res < $B.min_int ||res > $B.max_int)return $B.long_int.$factory(_value,base)
+if(res < $B.min_int ||res > $B.max_int){return $B.long_int.$factory(_value,base)}
 return res}
 if(isinstance(value,[_b_.bytes,_b_.bytearray])){var _digits=$valid_digits(base)
-for(var i=0;i<value.source.length;i++){if(_digits.indexOf(String.fromCharCode(value.source[i]))==-1){throw _b_.ValueError.$factory("invalid literal for int() with base "+
-base +": "+_b_.repr(value))}}
-return Number(parseInt(getattr(value,'decode')('latin-1'),base))}
-if(hasattr(value,'__int__'))return getattr(value,'__int__')()
-if(hasattr(value,'__index__'))return getattr(value,'__index__')()
-if(hasattr(value,'__trunc__')){var res=getattr(value,'__trunc__')(),int_func=_b_.getattr(res,'__int__',null)
-if(int_func===null){throw TypeError.$factory('__trunc__ returned non-Integral (type '+
-$B.get_class(res).__name__+')')}
+for(var i=0;i < value.source.length;i++){if(_digits.indexOf(String.fromCharCode(value.source[i]))==-1){throw _b_.ValueError.$factory(
+"invalid literal for int() with base " + base + ": " +
+_b_.repr(value))}}
+return Number(parseInt(getattr(value,"decode")("latin-1"),base))}
+if(hasattr(value,"__int__")){return getattr(value,"__int__")()}
+if(hasattr(value,"__index__")){return getattr(value,"__index__")()}
+if(hasattr(value,"__trunc__")){var res=getattr(value,"__trunc__")(),int_func=_b_.getattr(res,"__int__",null)
+if(int_func===null){throw TypeError.$factory("__trunc__ returned non-Integral (type "+
+$B.get_class(res).__name__+")")}
 var res=int_func()
 if(isinstance(res,int)){return res}
-throw TypeError.$factory('__trunc__ returned non-Integral (type '+
-$B.get_class(res).__name__+')')}
-throw _b_.TypeError.$factory("int() argument must be a string, a bytes-like "+
-"object or a number, not '"+$B.get_class(value).__name__+"'")}
+throw TypeError.$factory("__trunc__ returned non-Integral (type "+
+$B.get_class(res).__name__+")")}
+throw _b_.TypeError.$factory(
+"int() argument must be a string, a bytes-like " +
+"object or a number, not '" + $B.get_class(value).__name__ + "'")}
 $B.set_func_names(int,"builtins")
 _b_.int=int
 $B.$bool=function(obj){
-if(obj===null ||obj===undefined )return false
-switch(typeof obj){case 'boolean':
+if(obj===null ||obj===undefined ){return false}
+switch(typeof obj){case "boolean":
 return obj
-case 'number':
-case 'string':
-if(obj)return true
+case "number":
+case "string":
+if(obj){return true}
 return false
 default:
 var ce=$B.current_exception
-try{return getattr(obj,'__bool__')()}
+try{return getattr(obj,"__bool__")()}
 catch(err){$B.current_exception=ce
-try{return getattr(obj,'__len__')()>0}
+try{return getattr(obj,"__len__")()>0}
 catch(err){return true}}}}
 var bool={__class__: _b_.type,__module__: "builtins",__mro__:[int,object],__name__: "bool",$is_class: true,$native: true}
 bool.__add__=function(self,other){return(other ? 1 : 0)+(self ? 1 : 0)}
@@ -8129,9 +8140,9 @@ bool.__ge__=function(self,other){return _b_.int.__ge__(bool.__hash__(self),other
 bool.__gt__=function(self,other){return _b_.int.__gt__(bool.__hash__(self),other)}
 bool.__hash__=bool.__index__=bool.__int__=function(self){if(self.valueOf())return 1
 return 0}
-bool.__le__=function(self,other){return !bool.__gt__(self,other)}
+bool.__le__=function(self,other){return ! bool.__gt__(self,other)}
 bool.__lshift__=function(self,other){return self.valueOf()<< other}
-bool.__lt__=function(self,other){return !bool.__ge__(self,other)}
+bool.__lt__=function(self,other){return ! bool.__ge__(self,other)}
 bool.__mul__=function(self,other){return self ? other : 0}
 bool.__neg__=function(self){return -$B.int_or_bool(self)}
 bool.__or__=function(self,other){return $B.$bool(int.__or__(self,other))}
@@ -8141,53 +8152,54 @@ bool.__setattr__=function(self,attr){return no_set_attr(bool,attr)}
 bool.__sub__=function(self,other){return(self ? 1 : 0)-(other ? 1 : 0)}
 bool.__xor__=function(self,other){return self.valueOf()!=other.valueOf()}
 bool.$factory=function(){
-var $=$B.args('bool',1,{x:null},['x'],arguments,{x:false},null,null)
+var $=$B.args("bool",1,{x: null},["x"],arguments,{x: false},null,null)
 return $B.$bool($.x)}
 _b_.bool=bool
 $B.set_func_names(bool,"builtins")})(__BRYTHON__)
 ;(function($B){
 eval($B.InjectBuiltins())
-var long_int={__class__: _b_.type,__module__: "builtins",__mro__:[int,object],__name__: 'int',$is_class: true}
+var long_int={__class__: _b_.type,__module__: "builtins",__mro__:[int,object],__name__: "int",$is_class: true}
 function add_pos(v1,v2){
-var res='',carry=0,iself=v1.length,sv=0,x
-for(var i=v2.length-1;i>=0;i--){iself--
-if(iself<0){sv=0}else{sv=parseInt(v1.charAt(iself))}
-x=(carry+sv+parseInt(v2.charAt(i))).toString()
-if(x.length==2){res=x.charAt(1)+res;carry=parseInt(x.charAt(0))}
-else{res=x+res;carry=0}}
-while(iself>0){iself--
-x=(carry+parseInt(v1.charAt(iself))).toString()
-if(x.length==2){res=x.charAt(1)+res;carry=parseInt(x.charAt(0))}
-else{res=x+res;carry=0}}
-if(carry){res=carry+res}
-return{__class__:long_int,value:res,pos:true}}
+var res="",carry=0,iself=v1.length,sv=0,x
+for(var i=v2.length - 1;i >=0 ;i--){iself--
+if(iself < 0){sv=0}else{sv=parseInt(v1.charAt(iself))}
+x=(carry + sv + parseInt(v2.charAt(i))).toString()
+if(x.length==2){res=x.charAt(1)+ res
+carry=parseInt(x.charAt(0))}
+else{res=x + res;carry=0}}
+while(iself > 0){iself--
+x=(carry + parseInt(v1.charAt(iself))).toString()
+if(x.length==2){res=x.charAt(1)+ res
+carry=parseInt(x.charAt(0))}
+else{res=x + res;carry=0}}
+if(carry){res=carry + res}
+return{__class__: long_int,value: res,pos: true}}
 function check_shift(shift){
-if(!isinstance(shift,long_int)){throw TypeError.$factory("shift must be int, not '"+
-$B.get_class(shift).__name__+"'")}
-if(!shift.pos){throw ValueError.$factory("negative shift count")}}
+if(! isinstance(shift,long_int)){throw TypeError.$factory("shift must be int, not '" +
+$B.get_class(shift).__name__ + "'")}
+if(! shift.pos){throw ValueError.$factory("negative shift count")}}
 function clone(obj){
 var obj1={}
 for(var attr in obj){obj1[attr]=obj[attr]}
 return obj1}
 function comp_pos(v1,v2){
-if(v1.length>v2.length){return 1}
-else if(v1.length<v2.length){return -1}
-else{if(v1>v2){return 1}
-else if(v1<v2){return -1}}
+if(v1.length > v2.length){return 1}
+else if(v1.length < v2.length){return -1}
+else{if(v1 > v2){return 1}
+else if(v1 < v2){return -1}}
 return 0}
 function divmod_pos(v1,v2){
 var quotient,mod
 if(comp_pos(v1,v2)==-1){
-quotient='0'
+quotient="0"
 mod=long_int.$factory(v1)}else if(v2==v1){
-quotient='1';
-mod=long_int.$factory('0')}else{var quotient=''
-var left=v1.substr(0,v2.length)
-if(v1<v2){left=v1.substr(0,v2.length+1)}
+quotient="1"
+mod=long_int.$factory("0")}else{var quotient="",left=v1.substr(0,v2.length)
+if(v1 < v2){left=v1.substr(0,v2.length + 1)}
 var right=v1.substr(left.length)
 var mv2={}
 while(true){
-var candidate=Math.floor(parseInt(left)/parseInt(v2))+''
+var candidate=Math.floor(parseInt(left)/ parseInt(v2))+ ""
 if(mv2[candidate]===undefined){mv2[candidate]=mul_pos(v2,candidate).value}
 if(comp_pos(left,mv2[candidate])==-1){
 candidate--
@@ -8199,60 +8211,60 @@ left +=right.charAt(0)
 right=right.substr(1)}
 mod=sub_pos(v1,mul_pos(quotient,v2).value)}
 return[long_int.$factory(quotient),mod]}
-function split_chunks(s,size){var nb=Math.ceil(s.length/size),chunks=[],len=s.length
-for(var i=0;i<nb;i++){var pos=len-size*(i+1)
-if(pos<0){size +=pos;pos=0}
+function split_chunks(s,size){var nb=Math.ceil(s.length / size),chunks=[],len=s.length
+for(var i=0;i < nb;i++){var pos=len - size *(i + 1)
+if(pos < 0){size +=pos;pos=0}
 chunks.push(parseInt(s.substr(pos,size)))}
 return chunks}
 function mul_pos(x,y){
-var chunk_size=6
-var cx=split_chunks(x,chunk_size),cy=split_chunks(y,chunk_size)
-var products={},len=cx.length+cy.length
-for(var i=0;i<len-1;i++){products[i]=0}
-for(var i=0;i<cx.length;i++){for(var j=0;j<cy.length;j++){products[i+j]+=cx[i]*cy[j]}}
-var nb=len-1,pos
-for(var i=0;i<len-1;i++){var chunks=split_chunks(products[i].toString(),chunk_size)
-for(var j=1;j<chunks.length;j++){pos=i+j
-if(products[pos]===undefined){products[pos]=parseInt(chunks[j]);nb=pos}
+var chunk_size=6,cx=split_chunks(x,chunk_size),cy=split_chunks(y,chunk_size)
+var products={},len=cx.length + cy.length
+for(var i=0;i < len - 1;i++){products[i]=0}
+for(var i=0;i < cx.length;i++){for(var j=0;j < cy.length;j++){products[i + j]+=cx[i]* cy[j]}}
+var nb=len - 1,pos
+for(var i=0;i < len - 1;i++){var chunks=split_chunks(products[i].toString(),chunk_size)
+for(var j=1;j < chunks.length;j++){pos=i + j
+if(products[pos]===undefined){products[pos]=parseInt(chunks[j])
+nb=pos}
 else{products[pos]+=parseInt(chunks[j])}}
 products[i]=chunks[0]}
-var result='',i=0,s
+var result="",i=0,s
 while(products[i]!==undefined){s=products[i].toString()
-if(products[i+1]!==undefined){s='0'.repeat(chunk_size-s.length)+s}
-result=s+result;
+if(products[i + 1]!==undefined){s="0".repeat(chunk_size - s.length)+ s}
+result=s + result
 i++}
 return long_int.$factory(result)}
 function sub_pos(v1,v2){
-var res='',carry=0,i1=v1.length,sv=0,x
-for(var i=v2.length-1;i>=0;i--){i1--
+var res="",carry=0,i1=v1.length,sv=0,x
+for(var i=v2.length - 1;i >=0;i--){i1--
 sv=parseInt(v1.charAt(i1))
-x=(sv-carry-parseInt(v2.charAt(i)))
-if(x<0){res=(10+x)+res;carry=1}
-else{res=x+res;carry=0}}
-while(i1>0){i1--
-x=(parseInt(v1.charAt(i1))-carry)
-if(x<0){res=(10+x)+res;carry=1}
-else{res=x+res;carry=0}}
-while(res.charAt(0)=='0' && res.length>1){res=res.substr(1)}
-return{__class__:long_int,value:res,pos:true}}
+x=(sv - carry - parseInt(v2.charAt(i)))
+if(x < 0){res=(10 + x)+ res;carry=1}
+else{res=x + res;carry=0}}
+while(i1 > 0){i1--
+x=(parseInt(v1.charAt(i1))- carry)
+if(x < 0){res=(10 + x)+ res;carry=1}
+else{res=x + res;carry=0}}
+while(res.charAt(0)=="0" && res.length > 1){res=res.substr(1)}
+return{__class__: long_int,value: res,pos: true}}
 long_int.$from_float=function(value){var s=Math.abs(value).toString(),v=s
-if(s.search('e')>-1){var t=/-?(\d)(\.\d+)?e([+-])(\d*)/.exec(s),n1=t[1],n2=t[2],pos=t[3],exp=t[4]
-if(pos=='+'){if(n2===undefined){v=n1+'0'.repeat(exp-1)}else{v=n1+n2+'0'.repeat(exp-1-n2.length)}}}
-return{__class__:long_int,value: v,pos: value >=0}}
-long_int.__abs__=function(self){return{__class__:long_int,value: self.value,pos:true}}
-long_int.__add__=function(self,other){if(isinstance(other,_b_.float)){return _b_.float.$factory(parseInt(self.value)+other.value)}
-if(typeof other=='number')other=long_int.$factory(_b_.str.$factory(other))
+if(s.search("e")> -1){var t=/-?(\d)(\.\d+)?e([+-])(\d*)/.exec(s),n1=t[1],n2=t[2],pos=t[3],exp=t[4]
+if(pos=="+"){if(n2===undefined){v=n1 + "0".repeat(exp - 1)}else{v=n1 + n2 + "0".repeat(exp - 1 - n2.length)}}}
+return{__class__: long_int,value: v,pos: value >=0}}
+long_int.__abs__=function(self){return{__class__: long_int,value: self.value,pos: true}}
+long_int.__add__=function(self,other){if(isinstance(other,_b_.float)){return _b_.float.$factory(parseInt(self.value)+ other.value)}
+if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}
 var res
-if(self.pos&&other.pos){
-return add_pos(self.value,other.value)}else if(!self.pos&&!other.pos){
+if(self.pos && other.pos){
+return add_pos(self.value,other.value)}else if(! self.pos && ! other.pos){
 res=add_pos(self.value,other.value)
 res.pos=false
-return intOrLong(res)}else if(self.pos && !other.pos){
+return intOrLong(res)}else if(self.pos && ! other.pos){
 switch(comp_pos(self.value,other.value)){case 1:
 res=sub_pos(self.value,other.value)
 break
 case 0:
-res={__class__:long_int,value:0,pos:true}
+res={__class__: long_int,value:0,pos: true}
 break
 case -1:
 res=sub_pos(other.value,self.value)
@@ -8264,165 +8276,165 @@ res=sub_pos(self.value,other.value)
 res.pos=false
 break
 case 0:
-res={__class__:long_int,value:0,pos:true}
+res={__class__: ong_int,value: 0,pos: true}
 break
 case -1:
 res=sub_pos(other.value,self.value)
 break}
 return intOrLong(res)}}
-long_int.__and__=function(self,other){if(typeof other=='number')other=long_int.$factory(_b_.str.$factory(other))
-var v1=long_int.__index__(self)
-var v2=long_int.__index__(other)
-if(v1.length<v2.length){var temp=v2;v2=v1;v1=temp}
-if(v2.charAt(0)=='1'){v2='1'.repeat(v1.length-v2.length)+v2}
-var start=v1.length-v2.length
-var res=''
-for(var i=0;i<v2.length;i++){if(v1.charAt(start+i)=='1' && v2.charAt(i)=='1'){res +='1'}
-else{res +='0'}}
+long_int.__and__=function(self,other){if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}
+var v1=long_int.__index__(self),v2=long_int.__index__(other)
+if(v1.length < v2.length){var temp=v2;v2=v1;v1=temp}
+if(v2.charAt(0)=="1"){v2="1".repeat(v1.length - v2.length)+ v2}
+var start=v1.length - v2.length,res=""
+for(var i=0;i < v2.length;i++){if(v1.charAt(start+i)=="1" && v2.charAt(i)=="1"){res +="1"}
+else{res +="0"}}
 return intOrLong(long_int.$factory(res,2))}
-long_int.__divmod__=function(self,other){if(typeof other=='number')other=long_int.$factory(_b_.str.$factory(other))
+long_int.__divmod__=function(self,other){if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}
 var dm=divmod_pos(self.value,other.value)
-if(self.pos!==other.pos){if(dm[0].value!='0'){dm[0].pos=false}
-if(dm[1].value!='0'){
-dm[0]=long_int.__sub__(dm[0],long_int.$factory('1'))
-dm[1]=long_int.__add__(dm[1],long_int.$factory('1'))}}
+if(self.pos !==other.pos){if(dm[0].value !="0"){dm[0].pos=false}
+if(dm[1].value !="0"){
+dm[0]=long_int.__sub__(dm[0],long_int.$factory("1"))
+dm[1]=long_int.__add__(dm[1],long_int.$factory("1"))}}
 return[intOrLong(dm[0]),intOrLong(dm[1])]}
-long_int.__eq__=function(self,other){if(typeof other=='number')other=long_int.$factory(_b_.str.$factory(other))
+long_int.__eq__=function(self,other){if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}
 return self.value==other.value && self.pos==other.pos}
 long_int.__float__=function(self){return new Number(parseFloat(self.value))}
-long_int.__floordiv__=function(self,other){if(isinstance(other,_b_.float)){return _b_.float.$factory(parseInt(self.value)/other)}
-if(typeof other=='number')other=long_int.$factory(_b_.str.$factory(other))
+long_int.__floordiv__=function(self,other){if(isinstance(other,_b_.float)){return _b_.float.$factory(parseInt(self.value)/ other)}
+if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}
 return intOrLong(long_int.__divmod__(self,other)[0])}
-long_int.__ge__=function(self,other){if(typeof other=='number')other=long_int.$factory(_b_.str.$factory(other))
-if(self.pos !=other.pos){return !other.pos}
-if(self.value.length>other.value.length){return self.pos}
-else if(self.value.length<other.value.length){return !self.pos}
-else{return self.pos ? self.value >=other.value : self.value <=other.value}}
-long_int.__gt__=function(self,other){return !long_int.__le__(self,other)}
+long_int.__ge__=function(self,other){if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}
+if(self.pos !=other.pos){return ! other.pos}
+if(self.value.length > other.value.length){return self.pos}
+else if(self.value.length < other.value.length){return ! self.pos}
+else{return self.pos ? self.value >=other.value :
+self.value <=other.value}}
+long_int.__gt__=function(self,other){return ! long_int.__le__(self,other)}
 long_int.__index__=function(self){
 var res='',temp=self.value,d
-while(true){d=divmod_pos(temp,'2')
+while(true){d=divmod_pos(temp,"2")
 res=d[1].value + res
 temp=d[0].value
-if(temp=='0'){break}}
-if(!self.pos){
-var nres='',flag=false
-for(var len=res.length-1,i=len;i>=0 ;i--){var bit=res.charAt(i)
-if(bit=='0'){if(flag){nres='1'+nres}else{nres='0'+nres}}
-else{if(flag){nres='0'+nres}else{flag=true;nres='1'+nres}}}
-nres='1'+nres
-res=nres}else{res='0' + res}
+if(temp=="0"){break}}
+if(! self.pos){
+var nres="",flag=false
+for(var len=res.length - 1,i=len;i >=0 ;i--){var bit=res.charAt(i)
+if(bit=="0"){if(flag){nres="1" + nres}else{nres="0" + nres}}else{if(flag){nres="0" + nres}
+else{flag=true;nres="1" + nres}}}
+nres="1" + nres
+res=nres}else{res="0" + res}
 return intOrLong(res)}
-long_int.__invert__=function(self){return long_int.__sub__(long_int.$factory('-1'),self)}
-long_int.__le__=function(self,other){if(typeof other=='number')other=long_int.$factory(_b_.str.$factory(other))
-if(self.pos !==other.pos){return !self.pos}
-if(self.value.length>other.value.length){return !self.pos}
-else if(self.value.length<other.value.length){return self.pos}
-else{return self.pos ? self.value <=other.value : self.value >=other.value}}
+long_int.__invert__=function(self){return long_int.__sub__(long_int.$factory("-1"),self)}
+long_int.__le__=function(self,other){if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}
+if(self.pos !==other.pos){return ! self.pos}
+if(self.value.length > other.value.length){return ! self.pos}
+else if(self.value.length < other.value.length){return self.pos}
+else{return self.pos ? self.value <=other.value :
+self.value >=other.value}}
 long_int.__lt__=function(self,other){return !long_int.__ge__(self,other)}
-long_int.__lshift__=function(self,shift){var is_long=shift.__class__==long_int
+long_int.__lshift__=function(self,shift){var is_long=shift.__class__===long_int
 if(is_long){var shift_value=parseInt(shift.value)
-if(shift_value<0){throw _b_.ValueError.$factory('negative shift count')}
+if(shift_value < 0){throw _b_.ValueError.$factory('negative shift count')}
 if(shift_value < $B.max_int){shift_safe=true;shift=shift_value}}
 if(shift_safe){if(shift_value==0){return self}}else{shift=long_int.$factory(shift)
-if(shift.value=='0'){return self}}
+if(shift.value=="0"){return self}}
 var res=self.value
-while(true){var x,carry=0,res1=''
-for(var i=res.length-1;i>=0;i--){x=(carry+parseInt(res.charAt(i))*2).toString()
-if(x.length==2){res1=x.charAt(1)+res1;carry=parseInt(x.charAt(0))}
-else{res1=x+res1;carry=0}}
-if(carry){res1=carry+res1}
+while(true){var x,carry=0,res1=""
+for(var i=res.length - 1;i >=0;i--){x=(carry + parseInt(res.charAt(i))* 2).toString()
+if(x.length==2){res1=x.charAt(1)+ res1
+carry=parseInt(x.charAt(0))}else{res1=x + res1
+carry=0}}
+if(carry){res1=carry + res1}
 res=res1
 if(shift_safe){shift--
-if(shift==0){break}}else{shift=sub_pos(shift.value,'1')
-if(shift.value=='0'){break}}}
-return intOrLong({__class__:long_int,value:res,pos:self.pos})}
+if(shift==0){break}}else{shift=sub_pos(shift.value,"1")
+if(shift.value=="0"){break}}}
+return intOrLong({__class__: long_int,value: res,pos: self.pos})}
 long_int.__mod__=function(self,other){return intOrLong(long_int.__divmod__(self,other)[1])}
 long_int.__mro__=[_b_.int,_b_.object]
 long_int.__mul__=function(self,other){switch(self){case Number.NEGATIVE_INFINITY:
 case Number.POSITIVE_INFINITY:
 if($B.rich_comp("__eq__",other,0)){return NaN}
-else if(_b_.getattr(other,'__gt__')(0)){return self}
+else if(_b_.getattr(other,"__gt__")(0)){return self}
 else{return -self}}
-if(isinstance(other,_b_.float)){return _b_.float.$factory(parseInt(self.value)*other)}
-if(typeof other=='number')other=long_int.$factory(_b_.str.$factory(other))
+if(isinstance(other,_b_.float)){return _b_.float.$factory(parseInt(self.value)* other)}
+if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}
 var res=mul_pos(self.value,other.value)
 if(self.pos==other.pos){return intOrLong(res)}
 res.pos=false
 return intOrLong(res)}
-long_int.__neg__=function(obj){return{__class__:long_int,value:obj.value,pos:!obj.pos}}
+long_int.__neg__=function(obj){return{__class__: long_int,value: obj.value,pos: ! obj.pos}}
 long_int.__or__=function(self,other){other=long_int.$factory(other)
 var v1=long_int.__index__(self)
 var v2=long_int.__index__(other)
-if(v1.length<v2.length){var temp=v2;v2=v1;v1=temp}
-var start=v1.length-v2.length
+if(v1.length < v2.length){var temp=v2;v2=v1;v1=temp}
+var start=v1.length - v2.length
 var res=v1.substr(0,start)
-for(var i=0;i<v2.length;i++){if(v1.charAt(start+i)=='1' ||v2.charAt(i)=='1'){res +='1'}
-else{res +='0'}}
+for(var i=0;i < v2.length;i++){if(v1.charAt(start+i)=="1" ||v2.charAt(i)=="1"){res +="1"}
+else{res +="0"}}
 return intOrLong(long_int.$factory(res,2))}
 long_int.__pos__=function(self){return self}
-long_int.__pow__=function(self,power,z){if(typeof power=="number"){power=long_int.$factory(_b_.str.$factory(power))}else if(!isinstance(power,long_int)){var msg="power must be a LongDict, not '"
-throw TypeError.$factory(msg+$B.get_class(power).__name__+"'")}
-if(!power.pos){if(self.value=='1'){return self}
-return long_int.$factory('0')}else if(power.value=='0'){return long_int.$factory('1')}
-var res={__class__:long_int,value:self.value,pos:self.pos}
-var pow=power.value
-while(true){pow=sub_pos(pow,'1').value
-if(pow=='0'){break}
+long_int.__pow__=function(self,power,z){if(typeof power=="number"){power=long_int.$factory(_b_.str.$factory(power))}else if(! isinstance(power,long_int)){var msg="power must be a LongDict, not '"
+throw TypeError.$factory(msg + $B.get_class(power).__name__ + "'")}
+if(! power.pos){if(self.value=="1"){return self}
+return long_int.$factory("0")}else if(power.value=="0"){return long_int.$factory("1")}
+var res={__class__: long_int,value: self.value,pos: self.pos},pow=power.value
+while(true){pow=sub_pos(pow,"1").value
+if(pow=="0"){break}
 res=long_int.$factory(long_int.__mul__(res,self))
 if(z !==undefined){res=long_int.__mod__(res,z)}}
 return intOrLong(res)}
 long_int.__rshift__=function(self,shift){shift=long_int.$factory(shift)
-if(shift.value=='0'){return self}
+if(shift.value=="0"){return self}
 var res=self.value
-while(true){res=divmod_pos(res,'2')[0].value
-if(res.value=='0'){break}
-shift=sub_pos(shift.value,'1')
-if(shift.value=='0'){break}}
-return intOrLong({__class__:long_int,value:res,pos:self.pos})}
+while(true){res=divmod_pos(res,"2")[0].value
+if(res.value=="0"){break}
+shift=sub_pos(shift.value,"1")
+if(shift.value=="0"){break}}
+return intOrLong({__class__: long_int,value: res,pos: self.pos})}
 long_int.__str__=long_int.__repr__=function(self){var res=""
-if(!self.pos){res +='-'}
-return res+self.value}
-long_int.__sub__=function(self,other){if(isinstance(other,_b_.float)){return _b_.float.$factory(parseInt(self.value)-other.value)}
-if(typeof other=='number')other=long_int.$factory(_b_.str.$factory(other))
+if(! self.pos){res +='-'}
+return res + self.value}
+long_int.__sub__=function(self,other){if(isinstance(other,_b_.float)){return _b_.float.$factory(parseInt(self.value)- other.value)}
+if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}
 var res
 if(self.pos && other.pos){switch(comp_pos(self.value,other.value)){case 1:
 res=sub_pos(self.value,other.value)
 break
 case 0:
-res={__class__:long_int,value:'0',pos:true}
+res={__class__: long_int,value: "0",pos: true}
 break
 case -1:
 res=sub_pos(other.value,self.value)
 res.pos=false
 break}
-return intOrLong(res)}else if(!self.pos && !other.pos){switch(comp_pos(self.value,other.value)){case 1:
+return intOrLong(res)}else if(! self.pos && ! other.pos){switch(comp_pos(self.value,other.value)){case 1:
 res=sub_pos(self.value,other.value)
 res.pos=false
 break
 case 0:
-res={__class__:long_int,value:'0',pos:true}
+res={__class__: long_int,value: "0",pos: true}
 break
 case -1:
 res=sub_pos(other.value,self.value)
 break}
-return intOrLong(res)}else if(self.pos && !other.pos){return intOrLong(add_pos(self.value,other.value))}else{res=add_pos(self.value,other.value)
+return intOrLong(res)}else if(self.pos && ! other.pos){return intOrLong(add_pos(self.value,other.value))}else{res=add_pos(self.value,other.value)
 res.pos=false
 return intOrLong(res)}}
-long_int.__truediv__=function(self,other){if(isinstance(other,long_int)){return _b_.float.$factory(parseInt(self.value)/parseInt(other.value))}else if(isinstance(other,_b_.int)){return _b_.float.$factory(parseInt(self.value)/other)}else if(isinstance(other,_b_.float)){return _b_.float.$factory(parseInt(self.value)/other)}else{throw TypeError.$factory("unsupported operand type(s) for /: 'int' and '"+
-$B.get_class(other).__name__+"'")}}
+long_int.__truediv__=function(self,other){if(isinstance(other,long_int)){return _b_.float.$factory(parseInt(self.value)/ parseInt(other.value))}else if(isinstance(other,_b_.int)){return _b_.float.$factory(parseInt(self.value)/ other)}else if(isinstance(other,_b_.float)){return _b_.float.$factory(parseInt(self.value)/other)}else{throw TypeError.$factory(
+"unsupported operand type(s) for /: 'int' and '" +
+$B.get_class(other).__name__ + "'")}}
 long_int.__xor__=function(self,other){other=long_int.$factory(other)
-var v1=long_int.__index__(self)
-var v2=long_int.__index__(other)
-if(v1.length<v2.length){var temp=v2;v2=v1;v1=temp}
-var start=v1.length-v2.length
+var v1=long_int.__index__(self),v2=long_int.__index__(other)
+if(v1.length < v2.length){var temp=v2;v2=v1;v1=temp}
+var start=v1.length - v2.length
 var res=v1.substr(0,start)
-for(var i=0;i<v2.length;i++){if(v1.charAt(start+i)=='1' && v2.charAt(i)=='0'){res +='1'}
-else if(v1.charAt(start+i)=='0' && v2.charAt(i)=='1'){res +='1'}
-else{res +='0'}}
+for(var i=0;i < v2.length;i++){if(v1.charAt(start + i)=="1" && v2.charAt(i)=="0"){res +="1"}
+else if(v1.charAt(start + i)=="0" && v2.charAt(i)=="1"){res +="1"}
+else{res +="0"}}
 return intOrLong(long_int.$factory(res,2))}
 long_int.to_base=function(self,base){
-var res='',v=self.value
+var res="",v=self.value
 while(v>0){var dm=divmod_pos(v,base.toString())
 res=parseInt(dm[1].value).toString(base)+res
 v=dm[0].value
@@ -8430,58 +8442,65 @@ if(v==0){break}}
 return res}
 function digits(base){
 var is_digits={}
-for(var i=0;i<base;i++){if(i==10){break}
+for(var i=0;i < base;i++){if(i==10){break}
 is_digits[i]=true}
-if(base>10){
-for(var i=0;i<base-10;i++){is_digits[String.fromCharCode(65+i)]=true
-is_digits[String.fromCharCode(97+i)]=true}}
+if(base > 10){
+for(var i=0;i < base - 10;i++){is_digits[String.fromCharCode(65 + i)]=true
+is_digits[String.fromCharCode(97 + i)]=true}}
 return is_digits}
-var MAX_SAFE_INTEGER=Math.pow(2,53)-1;
-var MIN_SAFE_INTEGER=-MAX_SAFE_INTEGER;
-function isSafeInteger(n){return(typeof n==='number' &&
+var MAX_SAFE_INTEGER=Math.pow(2,53)- 1
+var MIN_SAFE_INTEGER=-MAX_SAFE_INTEGER
+function isSafeInteger(n){return(typeof n==="number" &&
 Math.round(n)===n &&
 MIN_SAFE_INTEGER <=n &&
-n <=MAX_SAFE_INTEGER);}
+n <=MAX_SAFE_INTEGER)}
 function intOrLong(long){
 var v=parseInt(long.value)*(long.pos ? 1 : -1)
-if(v>MIN_SAFE_INTEGER && v<MAX_SAFE_INTEGER){return v}
+if(v > MIN_SAFE_INTEGER && v < MAX_SAFE_INTEGER){return v}
 return long}
-long_int.$factory=function(value,base){if(arguments.length>2){throw _b_.TypeError.$factory("long_int takes at most 2 arguments ("+
-arguments.length+" given)")}
+long_int.$factory=function(value,base){if(arguments.length > 2){throw _b_.TypeError.$factory("long_int takes at most 2 arguments (" +
+arguments.length + " given)")}
 if(base===undefined){base=10}
-else if(!isinstance(base,int)){throw TypeError.$factory("'"+$B.get_class(base).__name__+"' object cannot be interpreted as an integer")}
-if(base<0 ||base==1 ||base>36){throw ValueError.$factory("long_int.$factory() base must be >= 2 and <= 36")}
-if(isinstance(value,_b_.float)){if(value===Number.POSITIVE_INFINITY ||value===Number.NEGATIVE_INFINITY){return value}
-if(value>=0){value=new Number(Math.round(value.value))}
-else{value=new Number(Math.ceil(value.value))}}else if(isinstance(value,_b_.bool)){if(value.valueOf())return int.$factory(1)
+else if(!isinstance(base,int)){throw TypeError.$factory("'" + $B.get_class(base).__name__ +
+"' object cannot be interpreted as an integer")}
+if(base < 0 ||base==1 ||base > 36){throw ValueError.$factory(
+"long_int.$factory() base must be >= 2 and <= 36")}
+if(isinstance(value,_b_.float)){if(value===Number.POSITIVE_INFINITY ||
+value===Number.NEGATIVE_INFINITY){return value}
+if(value >=0){value=new Number(Math.round(value.value))}
+else{value=new Number(Math.ceil(value.value))}}else if(isinstance(value,_b_.bool)){if(value.valueOf()){return int.$factory(1)}
 return int.$factory(0)}
-if(typeof value=='number'){if(isSafeInteger(value)){value=value.toString()}
-else if(value.constructor==Number){console.log('big number',value);value=value.toString()}
-else{console.log('wrong value',value);throw ValueError.$factory("argument of long_int is not a safe integer")}}else if(value.__class__===long_int){return value}
-else if(isinstance(value,_b_.bool)){value=_b_.bool.__int__(value)+''}
-else if(typeof value!='string'){throw ValueError.$factory("argument of long_int must be a string, not "+
+if(typeof value=="number"){if(isSafeInteger(value)){value=value.toString()}
+else if(value.constructor==Number){value=value.toString()}
+else{throw ValueError.$factory(
+"argument of long_int is not a safe integer")}}else if(value.__class__===long_int){return value}
+else if(isinstance(value,_b_.bool)){value=_b_.bool.__int__(value)+ ""}
+else if(typeof value !="string"){throw ValueError.$factory(
+"argument of long_int must be a string, not " +
 $B.get_class(value).__name__)}
 var has_prefix=false,pos=true,start=0
-while(value.charAt(0)==' ' && value.length){value=value.substr(1)}
-while(value.charAt(value.length-1)==' ' && value.length){value=value.substr(0,value.length-1)}
-if(value.charAt(0)=='+'){has_prefix=true}
-else if(value.charAt(0)=='-'){has_prefix=true;pos=false}
+while(value.charAt(0)==" " && value.length){value=value.substr(1)}
+while(value.charAt(value.length-1)==" " && value.length){value=value.substr(0,value.length - 1)}
+if(value.charAt(0)=="+"){has_prefix=true}
+else if(value.charAt(0)=="-"){has_prefix=true;pos=false}
 if(has_prefix){
 if(value.length==1){
-throw ValueError.$factory('long_int argument is not a valid number: "'+value+'"')}else{value=value.substr(1)}}
-while(start<value.length-1 && value.charAt(start)=='0'){start++}
+throw ValueError.$factory(
+'long_int argument is not a valid number: "' + value + '"')}else{value=value.substr(1)}}
+while(start < value.length-1 && value.charAt(start)=="0"){start++}
 value=value.substr(start)
 var is_digits=digits(base),point=-1
-for(var i=0;i<value.length;i++){if(value.charAt(i)=='.' && point==-1){point=i}
-else if(!is_digits[value.charAt(i)]){throw ValueError.$factory('long_int argument is not a valid number: "'+value+'"')}}
-if(point!=-1){value=value.substr(0,point)}
-if(base!=10){
-var coef='1',v10=long_int.$factory(0),pos=value.length
+for(var i=0;i < value.length;i++){if(value.charAt(i)=="." && point==-1){point=i}
+else if(! is_digits[value.charAt(i)]){throw ValueError.$factory(
+'long_int argument is not a valid number: "' + value + '"')}}
+if(point !=-1){value=value.substr(0,point)}
+if(base !=10){
+var coef="1",v10=long_int.$factory(0),pos=value.length
 while(pos--){var digit_base10=parseInt(value.charAt(pos),base).toString(),digit_by_coef=mul_pos(coef,digit_base10).value
 v10=add_pos(v10.value,digit_by_coef)
 coef=mul_pos(coef,base.toString()).value}
 return v10}
-return{__class__:long_int,value:value,pos:pos}}
+return{__class__: long_int,value: value,pos: pos}}
 $B.set_func_names(long_int,"builtins")
 $B.long_int=long_int})(__BRYTHON__)
 ;(function($B){eval($B.InjectBuiltins())
@@ -8940,292 +8959,269 @@ $B.$AlphabeticalCompare=alphabeticalCompare;})(__BRYTHON__)
 ;(function($B){eval($B.InjectBuiltins())
 var object=_b_.object,$N=_b_.None
 function $list(){
-var args=[],pos=0
-for(var i=0,_len_i=arguments.length;i < _len_i;i++){args[pos++]=arguments[i]}
-return list.$factory(args)}
-var list={__class__: _b_.type,__module__: "builtins",__mro__:[object],__name__: 'list',$is_class: true,$native: true,__dir__: object.__dir__}
-list.__add__=function(self,other){if($B.get_class(self)!==$B.get_class(other)){throw TypeError.$factory('can only concatenate list (not "'+
-$B.get_class(other).__name__+'") to list')}
+return list.$factory.apply(null,arguments)}
+var list={__class__: _b_.type,__module__: "builtins",__mro__:[object],__name__: "list",$is_class: true,$native: true,__dir__: object.__dir__}
+list.__add__=function(self,other){if($B.get_class(self)!==$B.get_class(other)){throw TypeError.$factory('can only concatenate list (not "' +
+$B.get_class(other).__name__ + '") to list')}
 var res=self.valueOf().concat(other.valueOf())
-if(isinstance(self,tuple))res=tuple.$factory(res)
+if(isinstance(self,tuple)){res=tuple.$factory(res)}
 return res}
-list.__contains__=function(self,item){var $=$B.args('__contains__',2,{self:null,item:null},['self','item'],arguments,{},null,null),self=$.self,item=$.item
+list.__contains__=function(self,item){var $=$B.args("__contains__",2,{self: null,item: null},["self","item"],arguments,{},null,null),self=$.self,item=$.item
 var _eq=function(other){return $B.rich_comp("__eq__",item,other)}
 var i=0
-while(i<self.length){if(_eq(self[i]))return true
+while(i < self.length){if(_eq(self[i])){return true}
 i++}
 return false}
 list.__delitem__=function(self,arg){if(isinstance(arg,_b_.int)){var pos=arg
-if(arg<0)pos=self.length+pos
-if(pos>=0 && pos<self.length){self.splice(pos,1)
+if(arg < 0){pos=self.length + pos}
+if(pos >=0 && pos < self.length){self.splice(pos,1)
 return $N}
-throw _b_.IndexError.$factory('list index out of range')}
-if(isinstance(arg,_b_.slice)){var step=arg.step;if(step===None){step=1}
+throw _b_.IndexError.$factory("list index out of range")}
+if(isinstance(arg,_b_.slice)){var step=arg.step
+if(step===None){step=1}
 var start=arg.start
-if(start===None){start=step>0 ? 0 : self.length}
+if(start===None){start=step > 0 ? 0 : self.length}
 var stop=arg.stop
 if(stop===None){stop=step >0 ? self.length : 0}
-if(start<0)start=self.length+start
-if(stop<0)stop=self.length+stop
+if(start < 0){start=self.length + start}
+if(stop < 0){stop=self.length+stop}
 var res=[],i=null,pos=0
-if(step>0){if(stop>start){for(var i=start;i<stop;i+=step){if(self[i]!==undefined){res[pos++]=i}}}}else{
-if(stop<start){for(var i=start;i>stop;i+=step){if(self[i]!==undefined){res[pos++]=i}}
+if(step > 0){if(stop > start){for(var i=start;i < stop;i +=step){if(self[i]!==undefined){res[pos++]=i}}}}else{if(stop < start){for(var i=start;i > stop;i +=step){if(self[i]!==undefined){res[pos++]=i}}
 res.reverse()}}
 var i=res.length
-while(i--){
-self.splice(res[i],1)}
+while(i--){self.splice(res[i],1)}
 return $N}
-if(hasattr(arg,'__int__')||hasattr(arg,'__index__')){list.__delitem__(self,_b_.int.$factory(arg))
+if(hasattr(arg,"__int__")||hasattr(arg,"__index__")){list.__delitem__(self,_b_.int.$factory(arg))
 return $N}
-throw _b_.TypeError.$factory('list indices must be integer, not '+
+throw _b_.TypeError.$factory("list indices must be integer, not " +
 _b_.str.$factory(arg.__class__))}
 list.__eq__=function(self,other){if(isinstance(self,list)){var klass=list}else{var klass=tuple}
 if(isinstance(other,klass)){if(other.length==self.length){var i=self.length
-while(i--){if(!$B.rich_comp("__eq__",self[i],other[i]))return false}
+while(i--){if(! $B.rich_comp("__eq__",self[i],other[i])){return false}}
 return true}}
 return false}
-list.__getitem__=function(self,arg){var $=$B.args('__getitem__',2,{self:null,key:null},['self','key'],arguments,{},null,null),self=$.self,key=$.key
+list.__getitem__=function(self,arg){var $=$B.args("__getitem__",2,{self: null,key: null},["self","key"],arguments,{},null,null),self=$.self,key=$.key
 var factory=$B.get_class(self).$factory
-if(isinstance(key,_b_.int)){var items=self.valueOf()
-var pos=key
-if(key<0)pos=items.length+pos
-if(pos>=0 && pos<items.length)return items[pos]
-throw _b_.IndexError.$factory('list index out of range')}
+if(isinstance(key,_b_.int)){var items=self.valueOf(),pos=key
+if(key < 0){pos=items.length + pos}
+if(pos >=0 && pos < items.length){return items[pos]}
+throw _b_.IndexError.$factory("list index out of range")}
 if(isinstance(key,_b_.slice)){
 var s=_b_.slice.$conv_for_seq(key,self.length)
 var res=[],i=null,items=self.valueOf(),pos=0,start=s.start,stop=s.stop,step=s.step
-if(step > 0){if(stop <=start)return factory(res);
-for(var i=start;i<stop;i+=step){res[pos++]=items[i]}
-return factory(res);}else{
-if(stop > start)return factory(res);
-for(var i=start;i>stop;i+=step){res[pos++]=items[i]}
-return factory(res);}}
-if(hasattr(key,'__int__')||hasattr(key,'__index__')){return list.__getitem__(self,_b_.int.$factory(key))}
-throw _b_.TypeError.$factory('list indices must be integer, not '+
+if(step > 0){if(stop <=start){return factory(res)}
+for(var i=start;i < stop;i +=step){res[pos++]=items[i]}
+return factory(res)}else{if(stop > start){return factory(res)}
+for(var i=start;i > stop;i +=step){res[pos++]=items[i]}
+return factory(res)}}
+if(hasattr(key,"__int__")||hasattr(key,"__index__")){return list.__getitem__(self,_b_.int.$factory(key))}
+throw _b_.TypeError.$factory("list indices must be integer, not " +
 $B.get_class(key).__name__)}
-list.__ge__=function(self,other){if(!isinstance(other,[list,_b_.tuple])){throw _b_.TypeError.$factory("unorderable types: list() >= "+
-$B.get_class(other).__name__+'()')}
+list.__ge__=function(self,other){if(! isinstance(other,[list,_b_.tuple])){throw _b_.TypeError.$factory("unorderable types: list() >= "+
+$B.get_class(other).__name__+"()")}
 var i=0
-while(i<self.length){if(i>=other.length)return true
+while(i < self.length){if(i >=other.length){return true}
 if($B.rich_comp("__eq__",self[i],other[i])){i++}
 else{
 res=getattr(self[i],"__ge__")(other[i])
-if(res===_b_.NotImplemented){throw _b_.TypeError.$factory("unorderable types: "+
-$B.get_class(self[i]).__name__+"() >= "+
-$B.get_class(other[i]).__name__+'()')}else return res}}
+if(res===_b_.NotImplemented){throw _b_.TypeError.$factory("unorderable types: " +
+$B.get_class(self[i]).__name__ + "() >= " +
+$B.get_class(other[i]).__name__ + "()")}else{return res}}}
 return other.length==self.length}
-list.__gt__=function(self,other){if(!isinstance(other,[list,_b_.tuple])){throw _b_.TypeError.$factory("unorderable types: list() > "+
-$B.get_class(other).__name__+'()')}
+list.__gt__=function(self,other){if(! isinstance(other,[list,_b_.tuple])){throw _b_.TypeError.$factory("unorderable types: list() > " +
+$B.get_class(other).__name__ + "()")}
 var i=0
-while(i<self.length){if(i>=other.length)return true
+while(i < self.length){if(i >=other.length){return true}
 if($B.rich_comp("__eq__",self[i],other[i])){i++}
-else{
-res=getattr(self[i],'__gt__')(other[i])
-if(res===_b_.NotImplemented){throw _b_.TypeError.$factory("unorderable types: "+
-$B.get_class(self[i]).__name__+"() > "+
-$B.get_class(other[i]).__name__+'()')}else return res}}
+else{res=getattr(self[i],"__gt__")(other[i])
+if(res===_b_.NotImplemented){throw _b_.TypeError.$factory("unorderable types: " +
+$B.get_class(self[i]).__name__ + "() > " +
+$B.get_class(other[i]).__name__ + "()")}else return res}}
 return false}
 list.__hash__=None
-list.__iadd__=function(){var $=$B.args('__iadd__',2,{self:null,x:null},['self','x'],arguments,{},null,null)
+list.__iadd__=function(){var $=$B.args("__iadd__",2,{self: null,x: null},["self","x"],arguments,{},null,null)
 var x=list.$factory($B.$iter($.x))
 for(var i=0;i < x.length;i++){$.self.push(x[i])}
 return $.self}
-list.__imul__=function(){var $=$B.args('__imul__',2,{self:null,x:null},['self','x'],arguments,{},null,null)
-var x=$B.$GetInt($.x),len=$.self.length,pos=len
+list.__imul__=function(){var $=$B.args("__imul__",2,{self: null,x: null},["self","x"],arguments,{},null,null),x=$B.$GetInt($.x),len=$.self.length,pos=len
 if(x==0){list.clear($.self);return $.self}
-for(var i=1;i < x;i++){for(j=0;j<len;j++){$.self[pos++]=$.self[j]}}
+for(var i=1;i < x;i++){for(j=0;j < len;j++){$.self[pos++]=$.self[j]}}
 return $.self}
-list.__init__=function(self,arg){var len_func=$B.$call(getattr(self,'__len__')),pop_func=getattr(self,'pop',_b_.None)
+list.__init__=function(self,arg){var len_func=$B.$call(getattr(self,"__len__")),pop_func=getattr(self,"pop",_b_.None)
 if(pop_func !==_b_.None){pop_func=$B.$call(pop_func)
-while(len_func())pop_func()}
-if(arg===undefined)return $N
-var arg=$B.$iter(arg),next_func=$B.$call(getattr(arg,'__next__')),pos=len_func(),ce=$B.current_exception
+while(len_func()){pop_func()}}
+if(arg===undefined){return $N}
+var arg=$B.$iter(arg),next_func=$B.$call(getattr(arg,"__next__")),pos=len_func(),ce=$B.current_exception
 while(1){try{var res=next_func()
-self[pos++]=res}
-catch(err){if(err.__class__===_b_.StopIteration){$B.current_exception=ce
+self[pos++]=res}catch(err){if(err.__class__===_b_.StopIteration){$B.current_exception=ce
 break}
 else{throw err}}}
 return $N}
-var $list_iterator=$B.$iterator_class('list_iterator')
+var $list_iterator=$B.$iterator_class("list_iterator")
 list.__iter__=function(self){return $B.$iterator(self,$list_iterator)}
-list.__le__=function(self,other){return !list.__gt__(self,other)}
+list.__le__=function(self,other){return ! list.__gt__(self,other)}
 list.__len__=function(self){return self.length}
-list.__lt__=function(self,other){return !list.__ge__(self,other)}
+list.__lt__=function(self,other){return ! list.__ge__(self,other)}
 list.__mul__=function(self,other){if(isinstance(other,_b_.int)){
 var res=[],$temp=self.slice(),len=$temp.length
-for(var i=0;i<other;i++){for(var j=0;j<len;j++){res.push($temp[j])}}
+for(var i=0;i < other;i++){for(var j=0;j < len;j++){res.push($temp[j])}}
 res.__class__=self.__class__
 return res}
-if(hasattr(other,'__int__')||hasattr(other,'__index__')){return list.__mul__(self,_b_.int.$factory(other))}
-throw _b_.TypeError.$factory("can't multiply sequence by non-int of type '"+
-$B.get_class(other).__name__+"'")}
-list.__ne__=function(self,other){return !list.__eq__(self,other)}
-list.__new__=function(cls,...args){if(cls===undefined){throw _b_.TypeError.$factory('list.__new__(): not enough arguments')}
+if(hasattr(other,"__int__")||hasattr(other,"__index__")){return list.__mul__(self,_b_.int.$factory(other))}
+throw _b_.TypeError.$factory(
+"can't multiply sequence by non-int of type '" +
+$B.get_class(other).__name__ + "'")}
+list.__ne__=function(self,other){return ! list.__eq__(self,other)}
+list.__new__=function(cls,...args){if(cls===undefined){throw _b_.TypeError.$factory("list.__new__(): not enough arguments")}
 var res=[]
 res.__class__=cls
 res.__brython__=true
 return res}
-list.__repr__=function(self){if(self===undefined)return "<class 'list'>"
+list.__repr__=function(self){if(self===undefined){return "<class 'list'>"}
 var _r=[]
-for(var i=0;i<self.length;i++){if(self[i]===self){_r.push('[...]')}
+for(var i=0;i < self.length;i++){if(self[i]===self){_r.push('[...]')}
 else{_r.push(_b_.repr(self[i]))}}
-if(self.__class__===tuple){if(self.length==1){return '('+_r[0]+',)'}
-return '('+_r.join(', ')+')'}
-return '['+_r.join(', ')+']'}
-list.__setattr__=function(self,attr,value){if(self.__class__===list){if(list.hasOwnProperty(attr)){throw _b_.AttributeError.$factory("'list' object attribute '" + attr +
-"' is read-only")}else{throw _b_.AttributeError.$factory("'list' object has no attribute '" +
-attr + "'")}}
+if(self.__class__===tuple){if(self.length==1){return "(" + _r[0]+ ",)"}
+return "(" + _r.join(", ")+ ")"}
+return "[" + _r.join(", ")+ "]"}
+list.__setattr__=function(self,attr,value){if(self.__class__===list){if(list.hasOwnProperty(attr)){throw _b_.AttributeError.$factory("'list' object attribute '" +
+attr + "' is read-only")}else{throw _b_.AttributeError.$factory(
+"'list' object has no attribute '" + attr + "'")}}
 self[attr]=value
 return $N}
-list.__setitem__=function(){var $=$B.args('__setitem__',3,{self:null,key:null,value:null},['self','key','value'],arguments,{},null,null),self=$.self,arg=$.key,value=$.value
+list.__setitem__=function(){var $=$B.args("__setitem__",3,{self: null,key: null,value: null},["self","key","value"],arguments,{},null,null),self=$.self,arg=$.key,value=$.value
 if(isinstance(arg,_b_.int)){var pos=arg
-if(arg<0)pos=self.length+pos
-if(pos>=0 && pos<self.length){self[pos]=value}
-else{throw _b_.IndexError.$factory('list index out of range')}
+if(arg < 0){pos=self.length + pos}
+if(pos >=0 && pos < self.length){self[pos]=value}
+else{throw _b_.IndexError.$factory("list index out of range")}
 return $N}
 if(isinstance(arg,_b_.slice)){var s=_b_.slice.$conv_for_seq(arg,self.length)
 if(arg.step===null){$B.set_list_slice(self,s.start,s.stop,value)}
 else{$B.set_list_slice_step(self,s.start,s.stop,s.step,value)}
 return $N}
-if(hasattr(arg,'__int__')||hasattr(arg,'__index__')){list.__setitem__(self,_b_.int.$factory(arg),value)
+if(hasattr(arg,"__int__")||hasattr(arg,"__index__")){list.__setitem__(self,_b_.int.$factory(arg),value)
 return $N}
-throw _b_.TypeError.$factory('list indices must be integer, not '+arg.__class__.__name__)}
+throw _b_.TypeError.$factory("list indices must be integer, not " +
+arg.__class__.__name__)}
 $B.make_rmethods(list)
-var _ops=['add','sub']
-list.append=function(){var $=$B.args('append',2,{self:null,x:null},['self','x'],arguments,{},null,null)
+var _ops=["add","sub"]
+list.append=function(){var $=$B.args("append",2 ,{self: null,x: null},["self","x"],arguments,{},null,null)
 $.self[$.self.length]=$.x
 return $N}
-list.clear=function(){var $=$B.args('clear',1,{self:null},['self'],arguments,{},null,null)
+list.clear=function(){var $=$B.args("clear",1,{self: null},["self"],arguments,{},null,null)
 while($.self.length){$.self.pop()}
 return $N}
-list.copy=function(){var $=$B.args('copy',1,{self:null},['self'],arguments,{},null,null)
+list.copy=function(){var $=$B.args("copy",1,{self: null},["self"],arguments,{},null,null)
 return $.self.slice()}
-list.count=function(){var $=$B.args('count',2,{self:null,x:null},['self','x'],arguments,{},null,null)
-var res=0
-_eq=function(other){return $B.rich_comp("__eq__",$.x,other)}
-var i=$.self.length
-while(i--)if(_eq($.self[i]))res++
+list.count=function(){var $=$B.args("count",2,{self: null,x: null},["self","x"],arguments,{},null,null)
+var res=0,_eq=function(other){return $B.rich_comp("__eq__",$.x,other)},i=$.self.length
+while(i--){if(_eq($.self[i])){res++}}
 return res}
-list.extend=function(){var $=$B.args('extend',2,{self:null,t:null},['self','t'],arguments,{},null,null)
+list.extend=function(){var $=$B.args("extend",2,{self: null,t: null},["self","t"],arguments,{},null,null)
 other=list.$factory($B.$iter($.t))
-for(var i=0;i<other.length;i++){$.self.push(other[i])}
+for(var i=0;i < other.length;i++){$.self.push(other[i])}
 return $N}
-list.index=function(){var $=$B.args('index',4,{self:null,x:null,start:null,stop:null},['self','x','start','stop'],arguments,{start:null,stop:null},null,null),self=$.self,start=$.start,stop=$.stop
+list.index=function(){var $=$B.args("index",4,{self: null,x: null,start: null,stop: null},["self","x","start" ,"stop"],arguments,{start: null,stop: null},null,null),self=$.self,start=$.start,stop=$.stop
 var _eq=function(other){return $B.rich_comp("__eq__",$.x,other)}
 if(start===null){start=0}
 else{if(start.__class__===$B.long_int){start=parseInt(start.value)*(start.pos ? 1 : -1)}
-if(start<0){start=Math.max(0,start+self.length)}}
+if(start < 0){start=Math.max(0,start + self.length)}}
 if(stop===null){stop=self.length}
 else{if(stop.__class__===$B.long_int){stop=parseInt(stop.value)*(stop.pos ? 1 : -1)}
-if(stop<0){stop=Math.min(self.length,stop+self.length)}}
-for(var i=start;i < stop;i++){if(_eq(self[i]))return i}
-throw _b_.ValueError.$factory(_b_.str.$factory($.x)+" is not in list")}
-list.insert=function(){var $=$B.args('insert',3,{self:null,i:null,item:null},['self','i','item'],arguments,{},null,null)
+if(stop < 0){stop=Math.min(self.length,stop + self.length)}}
+for(var i=start;i < stop;i++){if(_eq(self[i])){return i}}
+throw _b_.ValueError.$factory(_b_.str.$factory($.x)+ " is not in list")}
+list.insert=function(){var $=$B.args("insert",3,{self: null,i: null,item: null},["self","i","item"],arguments,{},null,null)
 $.self.splice($.i,0,$.item)
 return $N}
-list.pop=function(){var $=$B.args('pop',2,{self:null,pos:null},['self','pos'],arguments,{pos:null},null,null),self=$.self,pos=$.pos
-if(pos===null){pos=self.length-1}
+list.pop=function(){var $=$B.args("pop",2,{self: null,pos: null},["self","pos"],arguments,{pos: null},null,null),self=$.self,pos=$.pos
+if(pos===null){pos=self.length - 1}
 pos=$B.$GetInt(pos)
-if(pos<0){pos+=self.length}
+if(pos < 0){pos +=self.length}
 var res=self[pos]
-if(res===undefined){throw _b_.IndexError.$factory('pop index out of range')}
+if(res===undefined){throw _b_.IndexError.$factory("pop index out of range")}
 self.splice(pos,1)
 return res}
-list.remove=function(){var $=$B.args('remove',2,{self:null,x:null},['self','x'],arguments,{},null,null)
-for(var i=0,_len_i=$.self.length;i < _len_i;i++){if($B.rich_comp("__eq__",$.self[i],$.x)){$.self.splice(i,1)
+list.remove=function(){var $=$B.args("remove",2,{self: null,x: null},["self","x"],arguments,{},null,null)
+for(var i=0,len=$.self.length;i < len;i++){if($B.rich_comp("__eq__",$.self[i],$.x)){$.self.splice(i,1)
 return $N}}
-throw _b_.ValueError.$factory(_b_.str.$factory($.x)+" is not in list")}
-list.reverse=function(self){var $=$B.args('reverse',1,{self:null},['self'],arguments,{},null,null),_len=$.self.length-1,i=parseInt($.self.length/2)
+throw _b_.ValueError.$factory(_b_.str.$factory($.x)+ " is not in list")}
+list.reverse=function(self){var $=$B.args("reverse",1,{self: null},["self"],arguments,{},null,null),_len=$.self.length - 1,i=parseInt($.self.length / 2)
 while(i--){var buf=$.self[i]
-$.self[i]=$.self[_len-i]
-$.self[_len-i]=buf}
+$.self[i]=$.self[_len - i]
+$.self[_len - i]=buf}
 return $N}
 function $partition(arg,array,begin,end,pivot)
-{var piv=array[pivot];
-array=swap(array,pivot,end-1);
-var store=begin;
-if(arg===null){if(array.$cl!==false){
-var le_func=_b_.getattr(array.$cl,'__le__')
-for(var ix=begin;ix<end-1;++ix){if(le_func(array[ix],piv)){array=swap(array,store,ix);
-++store;}}}else{for(var ix=begin;ix<end-1;++ix){if(getattr(array[ix],'__le__')(piv)){array=swap(array,store,ix);
-++store;}}}}else{var len=array.length
-for(var ix=begin;ix<end-1;++ix){var x=arg(array[ix])
-if(array.length!==len){throw ValueError.$factory('list modified during sort')}
-if(getattr(x,'__le__')(arg(piv))){array=swap(array,store,ix);
-++store;}}}
-array=swap(array,end-1,store);
-return store;}
-function swap(_array,a,b){var tmp=_array[a];
-_array[a]=_array[b];
-_array[b]=tmp;
+{var piv=array[pivot]
+array=swap(array,pivot,end - 1)
+var store=begin
+if(arg===null){if(array.$cl !==false){
+var le_func=_b_.getattr(array.$cl,"__le__")
+for(var ix=begin;ix < end - 1;++ix){if(le_func(array[ix],piv)){array=swap(array,store,ix);
+++store}}}else{for(var ix=begin;ix < end - 1;++ix){if(getattr(array[ix],"__le__")(piv)){array=swap(array,store,ix)
+++store}}}}else{var len=array.length
+for(var ix=begin;ix < end - 1;++ix){var x=arg(array[ix])
+if(array.length !==len){throw ValueError.$factory("list modified during sort")}
+if(getattr(x,"__le__")(arg(piv))){array=swap(array,store,ix)
+++store}}}
+array=swap(array,end - 1,store)
+return store}
+function swap(_array,a,b){var tmp=_array[a]
+_array[a]=_array[b]
+_array[b]=tmp
 return _array}
-function $qsort(arg,array,begin,end)
-{if(end-1>begin){var pivot=begin+Math.floor(Math.random()*(end-begin))
-pivot=$partition(arg,array,begin,end,pivot);
-$qsort(arg,array,begin,pivot);
-$qsort(arg,array,pivot+1,end);}}
+function $qsort(arg,array,begin,end){if(end - 1 > begin){var pivot=begin + Math.floor(Math.random()*(end - begin))
+pivot=$partition(arg,array,begin,end,pivot)
+$qsort(arg,array,begin,pivot)
+$qsort(arg,array,pivot + 1,end)}}
 function $elts_class(self){
 if(self.length==0){return null}
 var cl=$B.get_class(self[0]),i=self.length
-while(i--){
-if($B.get_class(self[i])!==cl)return false}
+while(i--){if($B.get_class(self[i])!==cl){return false}}
 return cl}
-list.sort=function(self){var $=$B.args('sort',1,{self:null},['self'],arguments,{},null,'kw')
-var func=null
-var reverse=false
-var kw_args=$.kw,keys=_b_.list.$factory(_b_.dict.keys(kw_args))
-for(var i=0;i<keys.length;i++){if(keys[i]=="key"){func=kw_args.$string_dict[keys[i]]}
-else if(keys[i]=='reverse'){reverse=kw_args.$string_dict[keys[i]]}
-else{throw _b_.TypeError.$factory("'"+keys[i]+
+list.sort=function(self){var $=$B.args("sort",1,{self: null},["self"],arguments,{},null,"kw")
+var func=null,reverse=false,kw_args=$.kw,keys=_b_.list.$factory(_b_.dict.keys(kw_args))
+for(var i=0;i < keys.length;i++){if(keys[i]=="key"){func=kw_args.$string_dict[keys[i]]}
+else if(keys[i]=="reverse"){reverse=kw_args.$string_dict[keys[i]]}
+else{throw _b_.TypeError.$factory("'" + keys[i]+
 "' is an invalid keyword argument for this function")}}
-if(self.length==0)return
-if(func!==null){func=$B.$call(func)}
+if(self.length==0){return}
+if(func !==null){func=$B.$call(func)}
 self.$cl=$elts_class(self)
 var cmp=null;
-if(func===null && self.$cl===_b_.str){if(reverse)
-cmp=function(b,a){return $B.$AlphabeticalCompare(a,b)};
-else
-cmp=function(a,b){return $B.$AlphabeticalCompare(a,b)};}
-else if(func===null && self.$cl===_b_.int){if(reverse)
-cmp=function(b,a){return a-b};
-else
-cmp=function(a,b){return a-b};}else{
-if(func===null){if(reverse){cmp=function(b,a){res=getattr(a,'__le__')(b)
-if(res===_b_.NotImplemented){throw _b_.TypeError.$factory("unorderable types: "+
-$B.get_class(b).__name__+"() <="+
-$B.get_class(a).__name__+"()")}
-if(res){if(a==b){return 0};
-return -1;}
-return 1;}}else{
-cmp=function(a,b){res=getattr(a,'__le__')(b)
-if(res===_b_.NotImplemented){throw _b_.TypeError.$factory("unorderable types: "+
-$B.get_class(a).__name__+"() <="+
-$B.get_class(b).__name__+"()")}
-if(res){if(a==b){return 0};
-return -1;}
-return 1;}}}else{
-if(reverse){cmp=function(b,a){var _a=func(a),_b=func(b);
-res=getattr(_a,'__le__')(_b)
-if(res===_b_.NotImplemented){throw _b_.TypeError.$factory("unorderable types: "+
-$B.get_class(b).__name__+"() <="+
-$B.get_class(a).__name__+"()")}
-if(res){if(_a==_b){return 0};
-return -1;}
-return 1;}}else{
-cmp=function(a,b){var _a=func(a),_b=func(b);
-res=getattr(_a,'__le__')(_b)
-if(res===_b_.NotImplemented){throw _b_.TypeError.$factory("unorderable types: "+
-$B.get_class(a).__name__+"() <="+
-$B.get_class(b).__name__+"()")}
-if(res){if(_a==_b){return 0};
-return -1;}
-return 1;}}}}
+if(func===null && self.$cl===_b_.str){if(reverse){cmp=function(b,a){return $B.$AlphabeticalCompare(a,b)}}else{cmp=function(a,b){return $B.$AlphabeticalCompare(a,b)}}}else if(func===null && self.$cl===_b_.int){if(reverse){cmp=function(b,a){return a - b}}else{cmp=function(a,b){return a - b}}}else{if(func===null){if(reverse){cmp=function(b,a){res=getattr(a,"__le__")(b)
+if(res===_b_.NotImplemented){throw _b_.TypeError.$factory("unorderable types: " +
+$B.get_class(b).__name__ + "() <=" +
+$B.get_class(a).__name__ + "()")}
+if(res){if(a==b){return 0}
+return -1}
+return 1}}else{cmp=function(a,b){res=getattr(a,"__le__")(b)
+if(res===_b_.NotImplemented){throw _b_.TypeError.$factory("unorderable types: " +
+$B.get_class(a).__name__ + "() <=" +
+$B.get_class(b).__name__ + "()")}
+if(res){if(a==b){return 0}
+return -1}
+return 1}}}else{if(reverse){cmp=function(b,a){var _a=func(a),_b=func(b)
+res=getattr(_a,"__le__")(_b)
+if(res===_b_.NotImplemented){throw _b_.TypeError.$factory("unorderable types: " +
+$B.get_class(b).__name__ + "() <=" +
+$B.get_class(a).__name__ + "()")}
+if(res){if(_a==_b){return 0}
+return -1}
+return 1}}else{cmp=function(a,b){var _a=func(a),_b=func(b)
+res=getattr(_a,"__le__")(_b)
+if(res===_b_.NotImplemented){throw _b_.TypeError.$factory("unorderable types: " +
+$B.get_class(a).__name__ + "() <=" +
+$B.get_class(b).__name__ + "()")}
+if(res){if(_a==_b){return 0}
+return -1}
+return 1}}}}
 $B.$TimSort(self,cmp,0,self.length)
 return(self.__brython__ ? $N : self)}
-$B.$list=function(t){t.__brython__=true;
+$B.$list=function(t){t.__brython__=true
 return t}
 list.$factory=function(){if(arguments.length==0){return[]}
-var $=$B.args('list',1,{obj:null},['obj'],arguments,{},null,null),obj=$.obj
+var $=$B.args("list",1,{obj: null},["obj"],arguments,{},null,null),obj=$.obj
 if(Array.isArray(obj)){
 obj=obj.slice()
 obj.__brython__=true;
@@ -9233,7 +9229,7 @@ if(obj.__class__==tuple){var res=obj.slice()
 res.__class__=list
 return res}
 return obj}
-var res=[],pos=0,arg=$B.$iter(obj),next_func=$B.$call(getattr(arg,'__next__')),ce=$B.current_exception
+var res=[],pos=0,arg=$B.$iter(obj),next_func=$B.$call(getattr(arg,"__next__")),ce=$B.current_exception
 while(1){try{res[pos++]=next_func()}
 catch(err){if(!isinstance(err,_b_.StopIteration)){throw err}
 $B.current_exception=ce
@@ -9242,43 +9238,43 @@ res.__brython__=true
 return res}
 $B.set_func_names(list,"builtins")
 function $tuple(arg){return arg}
-var tuple={__class__:_b_.type,__module__: "builtins",__mro__:[object],__name__: 'tuple',$is_class: true,$native: true}
+var tuple={__class__: _b_.type,__module__: "builtins",__mro__:[object],__name__: "tuple",$is_class: true,$native: true}
 tuple.__iter__=function(self){return $B.$iterator(self,$tuple_iterator)}
-var $tuple_iterator=$B.$iterator_class('tuple_iterator')
+var $tuple_iterator=$B.$iterator_class("tuple_iterator")
 tuple.$factory=function(){var obj=list.$factory(...arguments)
 obj.__class__=tuple
 return obj}
-for(var attr in list){switch(attr){case '__delitem__':
-case '__iadd__':
-case '__imul__':
-case '__setitem__':
-case 'append':
-case 'extend':
-case 'insert':
-case 'remove':
-case 'pop':
-case 'reverse':
-case 'sort':
+for(var attr in list){switch(attr){case "__delitem__":
+case "__iadd__":
+case "__imul__":
+case "__setitem__":
+case "append":
+case "extend":
+case "insert":
+case "remove":
+case "pop":
+case "reverse":
+case "sort":
 break
 default:
-if(tuple[attr]===undefined){if(typeof list[attr]=='function'){tuple[attr]=(function(x){return function(){return list[x].apply(null,arguments)}})(attr)}else{}}}}
+if(tuple[attr]===undefined){if(typeof list[attr]=="function"){tuple[attr]=(function(x){return function(){return list[x].apply(null,arguments)}})(attr)}else{}}}}
 tuple.__eq__=function(self,other){
-if(other===undefined)return self===tuple
+if(other===undefined){return self===tuple}
 return list.__eq__(self,other)}
 function c_mul(a,b){s=((parseInt(a)* b)& 0xFFFFFFFF).toString(16)
-return parseInt(s.substr(0,s.length-1),16)}
+return parseInt(s.substr(0,s.length - 1),16)}
 tuple.__hash__=function(self){
 var x=0x3456789
-for(var i=0,_len_i=self.length;i < _len_i;i++){var y=_b_.hash(self[i]);
-x=c_mul(1000003,x)^ y & 0xFFFFFFFF;}
+for(var i=0,len=self.length;i < len;i++){var y=_b_.hash(self[i])
+x=c_mul(1000003,x)^ y & 0xFFFFFFFF}
 return x}
 tuple.__init__=function(){
 return $N}
-tuple.__new__=function(cls,...args){if(cls===undefined){throw _b_.TypeError.$factory('list.__new__(): not enough arguments')}
+tuple.__new__=function(cls,...args){if(cls===undefined){throw _b_.TypeError.$factory("list.__new__(): not enough arguments")}
 var self=[]
 self.__class__=cls
 self.__brython__=true
-var arg=$B.$iter(args[0]),next_func=$B.$call(getattr(arg,'__next__')),ce=$B.current_exception
+var arg=$B.$iter(args[0]),next_func=$B.$call(getattr(arg,"__next__")),ce=$B.current_exception
 while(1){try{var item=next_func()
 self.push(item)}
 catch(err){if(err.__class__===_b_.StopIteration){$B.current_exception=ce
@@ -10369,216 +10365,210 @@ if(klass !==undefined && klass.$native){throw _b_.AttributeError.$factory(klass.
 var res=dict.$factory()
 res.$jsobj=obj
 return res}})(__BRYTHON__)
-;(function($B){var _b_=$B.builtins,object=_b_.object
-var $N=_b_.None
+;(function($B){var _b_=$B.builtins,object=_b_.object,$N=_b_.None
 function create_type(obj){return $B.get_class(obj).$factory()}
 function clone(obj){var res=create_type(obj)
 res.$items=obj.$items.slice()
 return res}
-var set={__class__: _b_.type,__module__: "builtins",__name__: 'set',$is_class: true,$native: true}
-set.__add__=function(self,other){throw _b_.TypeError.$factory("unsupported operand type(s) for +: 'set' and " +
-typeof other )}
+var set={__class__: _b_.type,__module__: "builtins",__name__: "set",$is_class: true,$native: true}
+set.__add__=function(self,other){throw _b_.TypeError.$factory(
+"unsupported operand type(s) for +: 'set' and " + typeof other)}
 set.__and__=function(self,other,accept_iter){$test(accept_iter,other)
 var res=create_type(self)
-for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if(_b_.getattr(other,'__contains__')(self.$items[i])){set.add(res,self.$items[i])}}
+for(var i=0,len=self.$items.length;i < len;i++){if(_b_.getattr(other,"__contains__")(self.$items[i])){set.add(res,self.$items[i])}}
 return res}
-set.__contains__=function(self,item){if(self.$num &&(typeof item=='number')){if(isNaN(item)){
-for(var i=self.$items.length-1;i>=0;i--){if(isNaN(self.$items[i])){return true}}
-return false}else{return self.$items.indexOf(item)>-1}}
-if(self.$str &&(typeof item=='string')){return self.$items.indexOf(item)>-1}
+set.__contains__=function(self,item){if(self.$num &&(typeof item=="number")){if(isNaN(item)){
+for(var i=self.$items.length-1;i >=0;i--){if(isNaN(self.$items[i])){return true}}
+return false}else{return self.$items.indexOf(item)> -1}}
+if(self.$str &&(typeof item=="string")){return self.$items.indexOf(item)> -1}
 if(! _b_.isinstance(item,set)){_b_.hash(item)}
-for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if($B.rich_comp("__eq__",self.$items[i],item))return true}
+for(var i=0,len=self.$items.length;i < len;i++){if($B.rich_comp("__eq__",self.$items[i],item)){return true}}
 return false}
 set.__eq__=function(self,other){
-if(other===undefined)return self===set
-if(_b_.isinstance(other,_b_.set)){if(other.$items.length==self.$items.length){for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if(set.__contains__(self,other.$items[i])===false)return false}
+if(other===undefined){return self===set}
+if(_b_.isinstance(other,_b_.set)){if(other.$items.length==self.$items.length){for(var i=0,len=self.$items.length;i < len;i++){if(set.__contains__(self,other.$items[i])===false){return false}}
 return true}
 return false}
-if(_b_.isinstance(other,[_b_.list])){if(_b_.len(other)!=self.$items.length)return false
-for(var i=0,_len_i=_b_.len(other);i < _len_i;i++){var _value=_b_.getattr(other,'__getitem__')(i)
-if(set.__contains__(self,_value)===false)return false}
+if(_b_.isinstance(other,[_b_.list])){if(_b_.len(other)!=self.$items.length){return false}
+for(var i=0,len=_b_.len(other);i < len;i++){var _value=_b_.getattr(other,"__getitem__")(i)
+if(set.__contains__(self,_value)===false){return false}}
 return true}
-if(_b_.hasattr(other,'__iter__')){
-if(_b_.len(other)!=self.$items.length)return false
+if(_b_.hasattr(other,"__iter__")){
+if(_b_.len(other)!=self.$items.length){return false}
 var _it=$B.$iter(other)
-while(1){try{
-var e=_b_.next(_it)
-if(!set.__contains__(self,e))return false}catch(err){if(err.__class__===_b_.StopIteration){break}
+while(1){try{var e=_b_.next(_it)
+if(!set.__contains__(self,e)){return false}}catch(err){if(err.__class__===_b_.StopIteration){break}
 throw err}}
 return true}
 return false}
 set.__format__=function(self,format_string){return set.__str__(self)}
-set.__ge__=function(self,other){if(_b_.isinstance(other,[set,frozenset])){return !set.__lt__(self,other)}else{return _b_.object.__ge__(self,other)}}
-set.__gt__=function(self,other){if(_b_.isinstance(other,[set,frozenset])){return !set.__le__(self,other)}else{return _b_.object.__gt__(self,other)}}
-set.__init__=function(self){var $=$B.args('__init__',2,{self:null,iterable:null},['self','iterable'],arguments,{iterable:[]},null,null),self=$.self,iterable=$.iterable
+set.__ge__=function(self,other){if(_b_.isinstance(other,[set,frozenset])){return ! set.__lt__(self,other)}else{return _b_.object.__ge__(self,other)}}
+set.__gt__=function(self,other){if(_b_.isinstance(other,[set,frozenset])){return ! set.__le__(self,other)}else{return _b_.object.__gt__(self,other)}}
+set.__init__=function(self){var $=$B.args("__init__",2,{self:null,iterable:null},["self","iterable"],arguments,{iterable:[]},null,null),self=$.self,iterable=$.iterable
 if(_b_.isinstance(iterable,[set,frozenset])){self.$items=iterable.$items.slice()
 return $N}
-var it=$B.$iter(iterable),obj={$items:[],$str:true,$num:true}
+var it=$B.$iter(iterable),obj={$items:[],$str: true,$num: true}
 while(1){try{var item=_b_.next(it)
 set.add(obj,item)}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){break}
 throw err}}
 self.$items=obj.$items
 return $N}
-var $set_iterator=$B.$iterator_class('set iterator')
+var $set_iterator=$B.$iterator_class("set iterator")
 set.__iter__=function(self){var it=$B.$iterator(self.$items,$set_iterator),len=self.$items.length,nxt=it.__next__
 it.__next__=function(){if(it.__len__()!=len){throw _b_.RuntimeError.$factory("size changed during iteration")}
 return nxt()}
 return it}
-set.__le__=function(self,other){if(_b_.isinstance(other,[set,frozenset])){var cfunc=_b_.getattr(other,'__contains__')
-for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if(!cfunc(self.$items[i]))return false}
+set.__le__=function(self,other){if(_b_.isinstance(other,[set,frozenset])){var cfunc=_b_.getattr(other,"__contains__")
+for(var i=0,len=self.$items.length;i < len;i++){if(! cfunc(self.$items[i])){return false}}
 return true}else{return _b_.object.__le__(self,other)}}
 set.__len__=function(self){return self.$items.length}
-set.__lt__=function(self,other){if(_b_.isinstance(other,[set,frozenset])){return(set.__le__(self,other)&&
-set.__len__(self)<_b_.getattr(other,'__len__')())}else{return _b_.object['__lt__'](self,other)}}
+set.__lt__=function(self,other){if(_b_.isinstance(other,[set,frozenset])){return set.__le__(self,other)&&
+set.__len__(self)<_b_.getattr(other,"__len__")()}else{return _b_.object["__lt__"](self,other)}}
 set.__mro__=[_b_.object]
-set.__ne__=function(self,other){return !set.__eq__(self,other)}
-set.__new__=function(cls){if(cls===undefined){throw _b_.TypeError.$factory('set.__new__(): not enough arguments')}
+set.__ne__=function(self,other){return ! set.__eq__(self,other)}
+set.__new__=function(cls){if(cls===undefined){throw _b_.TypeError.$factory("set.__new__(): not enough arguments")}
 return{
-__class__: cls,$str:true,$num:true,$items:[]}}
+__class__: cls,$str: true,$num: true,$items:[]}}
 set.__or__=function(self,other,accept_iter){
-var res=clone(self)
-var func=_b_.getattr($B.$iter(other),'__next__')
+var res=clone(self),func=_b_.getattr($B.$iter(other),"__next__")
 while(1){try{set.add(res,func())}
 catch(err){if(_b_.isinstance(err,_b_.StopIteration)){break}
 throw err}}
 res.__class__=self.__class__
 return res}
-set.__str__=set.__repr__=function(self){var frozen=self.$real==='frozen'
-self.$cycle=self.$cycle===undefined ? 0 : self.$cycle+1
-if(self.$items.length===0){if(frozen)return 'frozenset()'
-return 'set()'}
-var klass_name=$B.get_class(self).__name__,head=klass_name+'({',tail='})'
-if(head=='set('){head='{';tail='}'}
+set.__str__=set.__repr__=function(self){var frozen=self.$real==="frozen"
+self.$cycle=self.$cycle===undefined ? 0 : self.$cycle + 1
+if(self.$items.length===0){if(frozen){return "frozenset()"}
+return "set()"}
+var klass_name=$B.get_class(self).__name__,head=klass_name + "({",tail="})"
+if(head=="set("){head="{";tail="}"}
 var res=[]
 if(self.$cycle){self.$cycle--
-return klass_name+'(...)'}
-for(var i=0,_len_i=self.$items.length;i < _len_i;i++){var r=_b_.repr(self.$items[i])
-if(r===self||r===self.$items[i]){res.push('{...}')}
+return klass_name + "(...)"}
+for(var i=0,len=self.$items.length;i < len;i++){var r=_b_.repr(self.$items[i])
+if(r===self ||r===self.$items[i]){res.push("{...}")}
 else{res.push(r)}}
-res=res.join(', ')
+res=res.join(", ")
 self.$cycle--
-return head+res+tail}
+return head + res + tail}
 set.__sub__=function(self,other,accept_iter){
-$test(accept_iter,other,'-')
-var res=create_type(self)
-var cfunc=_b_.getattr(other,'__contains__')
-for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if(!cfunc(self.$items[i])){res.$items.push(self.$items[i])}}
+$test(accept_iter,other,"-")
+var res=create_type(self),cfunc=_b_.getattr(other,"__contains__")
+for(var i=0,len=self.$items.length;i < len;i++){if(! cfunc(self.$items[i])){res.$items.push(self.$items[i])}}
 return res}
 set.__xor__=function(self,other,accept_iter){
-$test(accept_iter,other,'^')
-var res=create_type(self)
-var cfunc=_b_.getattr(other,'__contains__')
-for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if(!cfunc(self.$items[i])){set.add(res,self.$items[i])}}
-for(var i=0,_len_i=other.$items.length;i < _len_i;i++){if(!set.__contains__(self,other.$items[i])){set.add(res,other.$items[i])}}
+$test(accept_iter,other,"^")
+var res=create_type(self),cfunc=_b_.getattr(other,"__contains__")
+for(var i=0,len=self.$items.length;i < len;i++){if(! cfunc(self.$items[i])){set.add(res,self.$items[i])}}
+for(var i=0,len=other.$items.length;i < len;i++){if(! set.__contains__(self,other.$items[i])){set.add(res,other.$items[i])}}
 return res}
-function $test(accept_iter,other,op){if(accept_iter===undefined && !_b_.isinstance(other,[set,frozenset])){throw _b_.TypeError.$factory("unsupported operand type(s) for "+op+
-": 'set' and '"+$B.get_class(other).__name__+"'")}}
+function $test(accept_iter,other,op){if(accept_iter===undefined &&
+! _b_.isinstance(other,[set,frozenset])){throw _b_.TypeError.$factory("unsupported operand type(s) for " + op +
+": 'set' and '" + $B.get_class(other).__name__ + "'")}}
 $B.make_rmethods(set)
-set.add=function(){var $=$B.args('add',2,{self:null,item:null},['self','item'],arguments,{},null,null),self=$.self,item=$.item
+set.add=function(){var $=$B.args("add",2,{self: null,item: null},["self","item"],arguments,{},null,null),self=$.self,item=$.item
 _b_.hash(item)
 if(self.$str && !(typeof item=='string')){self.$str=false}
 if(self.$num && !(typeof item=='number')){self.$num=false}
-if(self.$num||self.$str){var ix=self.$items.indexOf(item)
+if(self.$num ||self.$str){var ix=self.$items.indexOf(item)
 if(ix==-1){self.$items.push(item)}
 else{
-if(item!==self.$items[ix]){self.$items.push(item)}}
+if(item !==self.$items[ix]){self.$items.push(item)}}
 return $N}
 var cfunc=function(other){return $B.rich_comp("__eq__",item,other)}
-for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if(cfunc(self.$items[i]))return}
+for(var i=0,len=self.$items.length;i < len;i++){if(cfunc(self.$items[i])){return $N}}
 self.$items.push(item)
 return $N}
-set.clear=function(){var $=$B.args('clear',1,{self:null},['self'],arguments,{},null,null)
-$.self.$items=[];
+set.clear=function(){var $=$B.args("clear",1,{self: null},["self"],arguments,{},null,null)
+$.self.$items=[]
 return $N}
-set.copy=function(){var $=$B.args('copy',1,{self:null},['self'],arguments,{},null,null)
+set.copy=function(){var $=$B.args("copy",1,{self: null},["self"],arguments,{},null,null)
 if(_b_.isinstance($.self,frozenset)){return $.self}
 var res=set.$factory()
-for(var i=0,_len_i=$.self.$items.length;i < _len_i;i++){res.$items[i]=$.self.$items[i]}
+for(var i=0,len=$.self.$items.length;i < len;i++){res.$items[i]=$.self.$items[i]}
 return res}
-set.difference_update=function(self){var $=$B.args('difference_update',1,{self:null},['self'],arguments,{},'args',null)
-for(var i=0;i<$.args.length;i++){var s=set.$factory($.args[i]),_next=_b_.getattr($B.$iter(s),'__next__'),item
+set.difference_update=function(self){var $=$B.args("difference_update",1,{self: null},["self"],arguments,{},"args",null)
+for(var i=0;i < $.args.length;i++){var s=set.$factory($.args[i]),_next=_b_.getattr($B.$iter(s),"__next__"),item
 while(true){try{item=_next()
 var _type=typeof item
-if(_type=='string' ||_type=="number"){var _index=self.$items.indexOf(item)
-if(_index > -1){self.$items.splice(_index,1)}}else{
-for(var j=0;j < self.$items.length;j++){if($B.rich_comp("__eq__",self.$items[j],item)){self.$items.splice(j,1)}}}}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){break}
+if(_type=="string" ||_type=="number"){var _index=self.$items.indexOf(item)
+if(_index > -1){self.$items.splice(_index,1)}}else{for(var j=0;j < self.$items.length;j++){if($B.rich_comp("__eq__",self.$items[j],item)){self.$items.splice(j,1)}}}}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){break}
 throw err}}}
 return $N}
-set.discard=function(){var $=$B.args('discard',2,{self:null,item:null},['self','item'],arguments,{},null,null)
+set.discard=function(){var $=$B.args("discard",2,{self: null,item: null},["self","item"],arguments,{},null,null)
 try{set.remove($.self,$.item)}
 catch(err){if(!_b_.isinstance(err,[_b_.KeyError,_b_.LookupError])){throw err}}
 return $N}
 set.intersection_update=function(){
-var $=$B.args('intersection_update',1,{self:null},['self'],arguments,{},'args',null),self=$.self
-for(var i=0;i<$.args.length;i++){var remove=[],s=set.$factory($.args[i])
-for(var j=0;j<self.$items.length;j++){var _item=self.$items[j],_type=typeof _item
-if(_type=='string' ||_type=="number"){if(s.$items.indexOf(_item)==-1){remove.push(j)}}else{var found=false
-for(var k=0;!found && k < s.$items.length;k++){if($B.rich_comp("__eq__",s.$items[k],_item)){found=true}}
-if(!found){remove.push(j)}}}
-remove.sort(function(x,y){return x-y}).reverse()
-for(var j=0;j<remove.length;j++){self.$items.splice(remove[j],1)}}
+var $=$B.args("intersection_update",1,{self: null},["self"],arguments,{},"args",null),self=$.self
+for(var i=0;i < $.args.length;i++){var remove=[],s=set.$factory($.args[i])
+for(var j=0;j < self.$items.length;j++){var _item=self.$items[j],_type=typeof _item
+if(_type=="string" ||_type=="number"){if(s.$items.indexOf(_item)==-1){remove.push(j)}}else{var found=false
+for(var k=0;! found && k < s.$items.length;k++){if($B.rich_comp("__eq__",s.$items[k],_item)){found=true}}
+if(! found){remove.push(j)}}}
+remove.sort(function(x,y){return x - y}).reverse()
+for(var j=0;j < remove.length;j++){self.$items.splice(remove[j],1)}}
 return $N}
-set.isdisjoint=function(){var $=$B.args('is_disjoint',2,{self:null,other:null},['self','other'],arguments,{},null,null)
-for(var i=0,_len_i=$.self.$items.length;i < _len_i;i++){if(_b_.getattr($.other,'__contains__')($.self.$items[i]))return false}
+set.isdisjoint=function(){var $=$B.args("is_disjoint",2,{self: null,other: null},["self","other"],arguments,{},null,null)
+for(var i=0,len=$.self.$items.length;i < len;i++){if(_b_.getattr($.other,"__contains__")($.self.$items[i])){return false}}
 return true}
-set.pop=function(self){if(self.$items.length===0)throw _b_.KeyError.$factory('pop from an empty set')
+set.pop=function(self){if(self.$items.length===0){throw _b_.KeyError.$factory('pop from an empty set')}
 return self.$items.pop()}
 set.remove=function(self,item){
-var $=$B.args('remove',2,{self:null,item:null},['self','item'],arguments,{},null,null),self=$.self,item=$.item
-if(!_b_.isinstance(item,set)){_b_.hash(item)}
-if(typeof item=='string' ||typeof item=='number'){var _i=self.$items.indexOf(item)
-if(_i==-1)throw _b_.KeyError.$factory(item)
+var $=$B.args("remove",2,{self: null,item: null},["self","item"],arguments,{},null,null),self=$.self,item=$.item
+if(! _b_.isinstance(item,set)){_b_.hash(item)}
+if(typeof item=="string" ||typeof item=="number"){var _i=self.$items.indexOf(item)
+if(_i==-1){throw _b_.KeyError.$factory(item)}
 self.$items.splice(_i,1)
 return $N}
-for(var i=0,_len_i=self.$items.length;i < _len_i;i++){if($B.rich_comp("__eq__",self.$items[i],item)){self.$items.splice(i,1)
+for(var i=0,len=self.$items.length;i < len;i++){if($B.rich_comp("__eq__",self.$items[i],item)){self.$items.splice(i,1)
 return $N}}
 throw _b_.KeyError.$factory(item)}
 set.symmetric_difference_update=function(self,s){
-var $=$B.args('symmetric_difference_update',2,{self:null,s:null},['self','s'],arguments,{},null,null),self=$.self,s=$.s
-var _next=_b_.getattr($B.$iter(s),'__next__'),item,remove=[],add=[]
+var $=$B.args("symmetric_difference_update",2,{self: null,s: null},["self","s"],arguments,{},null,null),self=$.self,s=$.s
+var _next=_b_.getattr($B.$iter(s),"__next__"),item,remove=[],add=[]
 while(true){try{item=_next()
 var _type=typeof item
-if(_type=='string' ||_type=="number"){var _index=self.$items.indexOf(item)
-if(_index > -1){remove.push(_index)}else{add.push(item)}}else{
-var found=false
-for(var j=0;!found && j < self.$items.length;j++){if($B.rich_comp("__eq__",self.$items[j],item)){remove.push(j)
+if(_type=="string" ||_type=="number"){var _index=self.$items.indexOf(item)
+if(_index > -1){remove.push(_index)}else{add.push(item)}}else{var found=false
+for(var j=0;! found && j < self.$items.length;j++){if($B.rich_comp("__eq__",self.$items[j],item)){remove.push(j)
 found=true}}
-if(!found){add.push(item)}}}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){break}
+if(! found){add.push(item)}}}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){break}
 throw err}}
-remove.sort(function(x,y){return x-y}).reverse()
-for(var i=0;i<remove.length;i++){if(remove[i]!=remove[i-1]){self.$items.splice(remove[i],1)}}
-for(var i=0;i<add.length;i++){set.add(self,add[i])}
+remove.sort(function(x,y){return x - y}).reverse()
+for(var i=0;i < remove.length;i++){if(remove[i]!=remove[i - 1]){self.$items.splice(remove[i],1)}}
+for(var i=0;i < add.length;i++){set.add(self,add[i])}
 return $N}
 set.update=function(self){
-var $=$B.args('update',1,{self:null},['self'],arguments,{},'args',null)
-for(var i=0;i<$.args.length;i++){var other=set.$factory($.args[i])
+var $=$B.args("update",1,{self: null},["self"],arguments,{},"args",null)
+for(var i=0;i < $.args.length;i++){var other=set.$factory($.args[i])
 for(var j=0,_len=other.$items.length;j < _len;j++){set.add(self,other.$items[j])}}
 return $N}
-set.difference=function(){var $=$B.args('difference',1,{self:null},['self'],arguments,{},'args',null)
+set.difference=function(){var $=$B.args("difference",1,{self: null},["self"],arguments,{},"args",null)
 if($.args.length==0){return set.copy($.self)}
 var res=clone($.self)
-for(var i=0;i<$.args.length;i++){res=set.__sub__(res,set.$factory($.args[i]))}
+for(var i=0;i < $.args.length;i++){res=set.__sub__(res,set.$factory($.args[i]))}
 return res}
-var fc=set.difference+'' 
-eval('set.intersection = '+
-fc.replace(/difference/g,'intersection').replace('__sub__','__and__'))
-eval('set.symmetric_difference = '+
-fc.replace(/difference/g,'symmetric_difference').replace('__sub__','__xor__'))
-eval('set.union = '+
-fc.replace(/difference/g,'union').replace('__sub__','__or__'))
-set.issubset=function(){var $=$B.args('issubset',2,{self:null,other:null},['self','other'],arguments,{},'args',null),func=_b_.getattr($.other,'__contains__')
-for(var i=0,len=$.self.$items.length;i<len;i++){if(!func($.self.$items[i])){return false}}
+var fc=set.difference + "" 
+eval("set.intersection = "+
+fc.replace(/difference/g,"intersection").replace("__sub__","__and__"))
+eval("set.symmetric_difference = " +
+fc.replace(/difference/g,"symmetric_difference").replace("__sub__","__xor__"))
+eval("set.union = " +
+fc.replace(/difference/g,"union").replace("__sub__","__or__"))
+set.issubset=function(){var $=$B.args("issubset",2,{self: null,other: null},["self","other"],arguments,{},"args",null),func=_b_.getattr($.other,"__contains__")
+for(var i=0,len=$.self.$items.length;i < len;i++){if(! func($.self.$items[i])){return false}}
 return true}
-set.issuperset=function(){var $=$B.args('issuperset',2,{self:null,other:null},['self','other'],arguments,{},'args',null)
-var func=_b_.getattr($.self,'__contains__'),it=$B.$iter($.other)
+set.issuperset=function(){var $=$B.args("issuperset",2,{self: null,other: null},["self","other"],arguments,{},"args",null)
+var func=_b_.getattr($.self,"__contains__"),it=$B.$iter($.other)
 while(true){try{var item=_b_.next(it)
-if(!func(item)){return false}}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){return true}
+if(! func(item)){return false}}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){return true}
 throw err}}
 return true}
 set.$factory=function(){
-var res={__class__:set,$str:true,$num:true,$items:[]}
+var res={__class__: set,$str: true,$num: true,$items:[]}
 var args=[res].concat(Array.prototype.slice.call(arguments))
-set.__init__.apply(null,args)
+set.__init__(res,...arguments)
 return res}
 $B.set_func_names(set,"builtins")
 var frozenset={__class__: _b_.type,__module__: "builtins",__mro__:[object],__name__: 'frozenset',$is_class: true,$native: true}
@@ -10595,7 +10585,7 @@ frozenset.__hash__=function(self){if(self===undefined){return frozenset.__hashva
 if(self.__hashvalue__ !==undefined)return self.__hashvalue__
 var _hash=1927868237
 _hash *=self.$items.length
-for(var i=0,_len_i=self.$items.length;i < _len_i;i++){var _h=_b_.hash(self.$items[i])
+for(var i=0,len=self.$items.length;i < len;i++){var _h=_b_.hash(self.$items[i])
 _hash ^=((_h ^ 89869747)^(_h << 16))* 3644798167}
 _hash=_hash * 69069 + 907133923
 if(_hash==-1)_hash=590923713

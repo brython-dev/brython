@@ -964,7 +964,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                         locals[alias] = _b_.getattr(modobj, name);
                     }catch($err3){
                         // [Import spec] Attribute not found
-                        if(mod_name==="__future__"){
+                        if(mod_name === "__future__"){
                             // special case for __future__, cf issue #584
                             var frame = $B.last($B.frames_stack),
                                 line_info = frame[3].$line_info,
