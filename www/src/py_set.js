@@ -236,7 +236,7 @@ set.__str__ = set.__repr__ = function(self){
     var klass_name = $B.get_class(self).__name__,
         head = klass_name + "({",
         tail = "})"
-    if(head == "set("){head = "{"; tail = "}"}
+    if(head == "set({"){head = "{"; tail = "}"}
     var res = []
     if(self.$cycle){
         self.$cycle--
