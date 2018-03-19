@@ -561,6 +561,11 @@ set.issuperset = function(){
     return true
 }
 
+set.__iand__ = set.intersection_update;          // &=
+set.__isub__ = set.difference_update;            // -=
+set.__ixor__ = set.symmetric_difference_update;  // ^=
+set.__ior__ = set.update;                        // |=
+
 set.$factory = function(){
     // Instances of set have attributes $str and $num
     // $str is true if all the elements in the set are string, $num if
