@@ -1090,20 +1090,7 @@ DOMNode.get = function(self){
             throw _b_.TypeError.$factory("DOMNode object doesn't support " +
                 "selection by selector")
         }
-        var sel_res = make_list(obj.querySelectorAll($dict['selector']))
-        if(res === undefined){return sel_res}
-        var to_delete = [], pos = 0
-        for(var i  =0; i < res.length; i++){
-            var elt = res[i], // keep it only if it is also inside sel_res
-                flag = false
-            for(var j = 0; j < sel_res.length; j++){
-                if(elt.__eq__(sel_res[j])){flag = true; break}
-            }
-            if(! flag){to_delete[pos++] = i}
-        }
-        for(var i = to_delete.length - 1; i >= 0; i--){
-            res.splice(to_delete[i], 1)
-        }
+        return make_list(obj.querySelectorAll($dict['selector']))
     }
     return res
 }
