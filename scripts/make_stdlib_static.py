@@ -48,10 +48,11 @@ with open(os.path.join(libfolder, 'stdlib_paths.js'), 'w') as out:
             else:
                 pylist.append(mod_name)
     pylist.sort()
-    out.write("var pylist=['%s']\n" % "','".join(pylist))
+    out.write("var pylist = ['%s']\n" % "','".join(pylist))
     pkglist.sort()
     out.write(
-        "for(var i=0;i<pylist.length;i++) $B.stdlib[pylist[i]]=['py']\n\n")
+        "for(var i = 0; i < pylist.length; i++)" +
+            "{$B.stdlib[pylist[i]] = ['py']}\n\n")
 
     jspath = os.path.join(libfolder, 'libs')
     jslist = []
@@ -63,13 +64,14 @@ with open(os.path.join(libfolder, 'stdlib_paths.js'), 'w') as out:
             jslist.append(mod_name)
 
     jslist.sort()
-    out.write("var js=['%s']\n" % "','".join(jslist))
+    out.write("var js = ['%s']\n" % "','".join(jslist))
 
-    out.write("""for(var i=0;i<js.length;i++) $B.stdlib[js[i]]=['js']\n\n""")
+    out.write("for(var i = 0; i < js.length; i++)" +
+        "{$B.stdlib[js[i]] = ['js']}\n\n""")
 
-    out.write("var pkglist=['%s']\n" % "','".join(pkglist))
-    out.write(
-        "for(var i=0;i<pkglist.length;i++) $B.stdlib[pkglist[i]]=['py',true]\n")
+    out.write("var pkglist = ['%s']\n" % "','".join(pkglist))
+    out.write("for(var i  =0; i < pkglist.length; i++)" +
+        "{$B.stdlib[pkglist[i]] = ['py', true]}\n")
     out.write('})(__BRYTHON__)')
 
 

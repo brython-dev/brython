@@ -192,10 +192,10 @@ def run():
     print('write changelog file')
     try:
         first = 'Changes in Brython version {}'.format(vname)
-        with open(os.path.join(pdir, 'setup', 'changelog.txt')) as file_to_read:
-            input_changelog_data_string = file_to_read.read()
+        with open(os.path.join(pdir, 'setup', 'changelog.txt')) as f:
+            input_changelog_data_string = f.read()
         with open(os.path.join(pdir, 'setup', 'data',
-            'changelog_{}.txt'.format(vname)), 'w') as out:
+                'changelog_{}.txt'.format(vname)), 'w') as out:
             out.write('%s\n' % first)
             out.write('%s\n\n' % ('=' * len(first)))
             out.write(input_changelog_data_string)
@@ -203,5 +203,5 @@ def run():
         print(error)
         print("Warning - no changelog file")
 
-if __name__=="__main__":
+if __name__ == "__main__":
     run()

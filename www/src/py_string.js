@@ -177,7 +177,7 @@ str.__getitem__ = function(self,arg){
             stop = s.stop,
             step = s.step
         var res = "",
-            i= null
+            i = null
         if(step > 0){
             if(stop <= start){return ""}
             for(var i = start; i < stop; i += step){res += self.charAt(i)}
@@ -201,7 +201,7 @@ str.__hash__ = function(self) {
 
   var hash = 1
   for(var i = 0, len = self.length; i < len; i++){
-      hash=(101 * hash + self.charCodeAt(i)) & 0xFFFFFFFF
+      hash = (101 * hash + self.charCodeAt(i)) & 0xFFFFFFFF
   }
 
   return hash
@@ -951,7 +951,7 @@ str.endswith = function(){
     // return False. suffix can also be a tuple of suffixes to look for.
     // With optional start, test beginning at that position. With optional
     // end, stop comparing at that position.
-    var $=$B.args("endswith", 4,
+    var $ = $B.args("endswith", 4,
         {self:null, suffix:null, start:null, end:null},
         ["self", "suffix", "start", "end"],
         arguments, {start: 0, end: null}, null, null)
@@ -1007,7 +1007,7 @@ str.find = function(){
     // such that sub is contained in the slice s[start:end]. Optional
     // arguments start and end are interpreted as in slice notation.
     // Return -1 if sub is not found.
-    var $=$B.args("str.find", 4,
+    var $ = $B.args("str.find", 4,
         {self: null, sub: null, start: null, end: null},
         ["self", "sub", "start", "end"],
         arguments, {start: 0, end: null}, null, null)
@@ -1046,7 +1046,7 @@ function parse_format(fmt_string){
         name,
         conv,
         spec,
-        name_ext=[]
+        name_ext = []
     if(elts.length == 1){
         // No : in the string : it only contains a name
         name = fmt_string
@@ -1229,10 +1229,10 @@ str.index = function(self){
 }
 
 str.join = function(){
-    var $=$B.args("join", 2, {self: null, iterable: null},
+    var $ = $B.args("join", 2, {self: null, iterable: null},
         ["self", "iterable"], arguments, {}, null, null)
 
-    var iterable=_b_.iter($.iterable),
+    var iterable = _b_.iter($.iterable),
         res = [],
         count = 0,
         ce = $B.current_exception
@@ -1347,7 +1347,7 @@ str.maketrans = function() {
 str.partition = function() {
     var $ = $B.args("partition", 2, {self: null, sep: null}, ["self", "sep"],
         arguments, {}, null, null)
-    if($.sep==""){throw _b_.ValueError.$factory("empty separator")}
+    if($.sep == ""){throw _b_.ValueError.$factory("empty separator")}
     check_str($.sep)
     var i = $.self.indexOf($.sep)
     if (i == -1){return _b_.tuple.$factory([$.self, "", ""])}
@@ -1425,7 +1425,7 @@ str.rfind = function(self){
     // Return the highest index in the string where substring sub is found,
     // such that sub is contained within s[start:end]. Optional arguments
     // start and end are interpreted as in slice notation. Return -1 on failure.
-    var $=$B.args("rfind", 4,
+    var $ = $B.args("rfind", 4,
         {self: null, sub: null, start: null, end: null},
         ["self", "sub", "start", "end"],
         arguments, {start: 0, end: null}, null, null)
@@ -1496,8 +1496,8 @@ str.rsplit = function(self) {
     return rev_res
 }
 
-str.rstrip = function(self,x){
-    var $=$B.args("rstrip", 2, {self: null, chars: null}, ["self", "chars"],
+str.rstrip = function(self, x){
+    var $ = $B.args("rstrip", 2, {self: null, chars: null}, ["self", "chars"],
             arguments, {chars: _b_.None}, null, null)
     if($.chars === _b_.None){return $.self.trimRight()}
     for(var j = $.self.length-1; j >= 0; j--){
@@ -1570,7 +1570,7 @@ str.split = function(){
 }
 
 str.splitlines = function(self){
-    var $=$B.args("splitlines", 2, {self: null, keepends: null},
+    var $ = $B.args("splitlines", 2, {self: null, keepends: null},
         ["self", "keepends"], arguments, {keepends: false}, null, null)
     if(! _b_.isinstance($.keepends, [_b_.bool, _b_.int])){
         throw _b_.TypeError.$factory("integer argument expected, got " +
@@ -1660,7 +1660,7 @@ str.translate = function(self,table){
 }
 
 str.zfill = function(self, width){
-    var $=$B.args("zfill", 2, {self: null, width: null},
+    var $ = $B.args("zfill", 2, {self: null, width: null},
         ["self", "width"], arguments, {}, null, null)
     if($.width <= self.length){return self}
     switch(self.charAt(0)){
@@ -1733,7 +1733,7 @@ var StringSubclass = $B.StringSubclass = {
 // result of instance.valueOf(), which is a Javascript string
 for(var $attr in str){
     if(typeof str[$attr] == "function"){
-        StringSubclass[$attr]=(function(attr){
+        StringSubclass[$attr] = (function(attr){
             return function(){
                 var args = [],
                     pos = 0
@@ -1797,7 +1797,7 @@ $B.parse_format_spec = function(spec){
         }
         if(car == "#"){this.alternate = true; pos++; car = spec.charAt(pos)}
         if(car == "0"){
-            // sign-aware : equivalent to fill=0 and align=="="
+            // sign-aware : equivalent to fill = 0 and align == "="
             this.fill = "0"
             this.align = "="
             pos++
@@ -1902,7 +1902,7 @@ $B.parse_fstring = function(string){
                     pos++
                 }
             }else if(car == "}"){
-                if(string.charAt(pos+1)==car){
+                if(string.charAt(pos+1) == car){
                     ctype = "string"
                     current = "}"
                     pos += 2

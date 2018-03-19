@@ -67,7 +67,7 @@ a.sort_link{
 <div id="test">
 </div>
 
-<canvas id="test_canvas" width=400>
+<canvas id="test_canvas" width="400">
 </canvas>
 <script type="text/python">
 from browser import document, html
@@ -104,6 +104,11 @@ span = uSPAN('hi').sty({'background':'red'})
 document <= span
 
 assert span.style.backgroundColor == "red", span.style.backgroundColor
+
+# selection
+assert len(document.get(selector="#test")) == 1
+assert len(document.select("#test")) == 1
+
 print("all tests ok")
 
 </script>

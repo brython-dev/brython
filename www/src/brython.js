@@ -71,8 +71,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,0,'rc',0]
 __BRYTHON__.__MAGIC__="3.5.0"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-03-19 09:09:11.841714"
-__BRYTHON__.timestamp=1521446951841
+__BRYTHON__.compiled_date="2018-03-19 22:42:50.907829"
+__BRYTHON__.timestamp=1521495770907
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -4572,7 +4572,7 @@ var metaclass
 var module=class_obj.__module__
 if(module===undefined){
 module=$B.last($B.frames_stack)[2]}
-for(var i=0;i<bases.length;i++){if(bases[i]===undefined){
+for(var i=0;i < bases.length;i++){if(bases[i]===undefined){
 $B.line_info=class_obj.$def_line
 throw _b_.NameError.$factory("name '" + parents_names[i]+
 "' is not defined")}}
@@ -5146,8 +5146,7 @@ res.__eq__=function(self,other){if(_b_.isinstance(other,[_b_.tuple,_b_.set,_b_.l
 if(_b_.hasattr(other,"__iter__")){return _b_.getattr(as_list(self),"__eq__")(as_list(other))}
 _b_.NotImplementedError.$factory(
 "__eq__ not implemented yet for list and " + _b_.type(other))}
-var _ops=["eq","ne"]
-var _f=res.__eq__ + ""
+var _ops=["eq","ne"],_f=res.__eq__ + ""
 for(var i=0;i < _ops.length;i++){var _op="__" + _ops[i]+ "__"
 eval("res." + _op + "=" + _f.replace(new RegExp("__eq__","g"),_op))}
 res.__or__=function(self,other){if(_b_.isinstance(other,[_b_.tuple,_b_.set,_b_.list])){return _b_.getattr(as_set(self),"__or__")(other)}
@@ -5323,7 +5322,7 @@ $B.div=function(x,y){var z=x / y
 if(x > min_int && x < max_int && y > min_int && y < max_int
 && z > min_int && z < max_int){return z}
 else{return $B.long_int.__truediv__($B.long_int.$factory(x),$B.long_int.$factory(y))}}
-$B.eq=function(x,y){if(x>min_int && x<max_int && y>min_int && y<max_int){return x==y}
+$B.eq=function(x,y){if(x > min_int && x < max_int && y > min_int && y < max_int){return x==y}
 return $B.long_int.__eq__($B.long_int.$factory(x),$B.long_int.$factory(y))}
 $B.floordiv=function(x,y){var z=x / y
 if(x > min_int && x < max_int && y > min_int && y < max_int
@@ -5387,7 +5386,7 @@ throw _b_.TypeError.$factory("'" + method2comp[op]+
 "' not supported between instances of '" + $B.get_class(x).__name__ +
 "' and '" + $B.get_class(y).__name__ + "'")}
 $B.is_none=function(o){return o===undefined ||o===null ||o==_b_.None}})(__BRYTHON__)
-if(!Array.indexOf){Array.prototype.indexOf=function(obj){for(var i=0,len=this.length;i < len;i++)if(this[i]==obj)return i
+if(!Array.indexOf){Array.prototype.indexOf=function(obj){for(var i=0,len=this.length;i < len;i++){if(this[i]==obj){return i}}
 return -1}}
 if(!String.prototype.repeat){String.prototype.repeat=function(count){if(count < 1)return '';
 var result='',pattern=this.valueOf()
@@ -7102,11 +7101,11 @@ $B.JSObject=JSObject
 $B.JSConstructor=JSConstructor})(__BRYTHON__)
 ;(function($B){$B.stdlib={}
 var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','argparse','atexit','base64','bdb','binascii','bisect','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','Clib','copy','copyreg','csv','datetime','decimal','difflib','doctest','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','gettext','glob','heapq','imp','inspect','io','itertools','keyword','linecache','locale','marshal','numbers','opcode','operator','optparse','os','pdb','pickle','platform','posix','posixpath','pprint','profile','pwd','pydoc','queue','re','reprlib','select','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','uuid','warnings','weakref','webbrowser','zipfile','zlib']
-for(var i=0;i<pylist.length;i++)$B.stdlib[pylist[i]]=['py']
+for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
 var js=['_ajax','_base64','_jsre','_multiprocessing','_posixsubprocess','_profile','_svg','_sys','aes','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','json','long_int','math','md5','modulefinder','pbkdf2','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes']
-for(var i=0;i<js.length;i++)$B.stdlib[js[i]]=['js']
+for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
 var pkglist=['asyncio','browser','collections','concurrent','concurrent.futures','encodings','html','http','importlib','jqueryui','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib','xml','xml.etree','xml.parsers','xml.sax']
-for(var i=0;i<pkglist.length;i++)$B.stdlib[pkglist[i]]=['py',true]})(__BRYTHON__)
+for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}})(__BRYTHON__)
 
 ;(function($B){var _b_=$B.builtins,_window=self
 var module=$B.module={__class__ : _b_.type,__module__: "builtins",__mro__:[_b_.object],__name__ : "module"}
@@ -10973,14 +10972,7 @@ if(! id_res){return[]}
 return[DOMNode.$factory(id_res)]}
 if($dict["selector"]!==undefined){if(obj.querySelectorAll===undefined){throw _b_.TypeError.$factory("DOMNode object doesn't support " +
 "selection by selector")}
-var sel_res=make_list(obj.querySelectorAll($dict['selector']))
-if(res===undefined){return sel_res}
-var to_delete=[],pos=0
-for(var i=0;i < res.length;i++){var elt=res[i],
-flag=false
-for(var j=0;j < sel_res.length;j++){if(elt.__eq__(sel_res[j])){flag=true;break}}
-if(! flag){to_delete[pos++]=i}}
-for(var i=to_delete.length - 1;i >=0;i--){res.splice(to_delete[i],1)}}
+return make_list(obj.querySelectorAll($dict['selector']))}
 return res}
 DOMNode.getContext=function(self){
 if(!("getContext" in self.elt)){throw _b_.AttributeError.$factory("object has no attribute 'getContext'")}

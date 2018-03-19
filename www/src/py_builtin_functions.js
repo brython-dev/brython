@@ -2106,7 +2106,7 @@ for(var $key in $B.$comps){ // Ellipsis is not orderable with any type
       case 'gt':
       case 'le':
       case 'lt':
-        ellipsis['__' + $B.$comps[$key] + '__']=(function(k){
+        ellipsis['__' + $B.$comps[$key] + '__'] = (function(k){
             return function(other){
                 throw _b_.TypeError.$factory("unorderable types: ellipsis() " +
                     k + " " + $B.get_class(other).__name__)

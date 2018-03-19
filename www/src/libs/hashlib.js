@@ -2,22 +2,22 @@ var $module=(function($B){
 
 var _b_ = $B.builtins
 
-var $s=[]
-for(var $b in _b_) $s.push('var ' + $b +'=_b_["'+$b+'"]')
+var $s = []
+for(var $b in _b_){$s.push('var ' + $b +' = _b_["'+$b+'"]')}
 eval($s.join(';'))
 
 var $mod = {
 
     __getattr__ : function(attr){
-        if (attr == 'new') return hash.$factory;
+        if (attr == 'new'){return hash.$factory}
         return this[attr]
     },
-    md5: function(obj) {return hash.$factory('md5', obj)},
-    sha1: function(obj) {return hash.$factory('sha1', obj)},
-    sha224: function(obj) {return hash.$factory('sha224', obj)},
-    sha256: function(obj) {return hash.$factory('sha256', obj)},
-    sha384: function(obj) {return hash.$factory('sha384', obj)},
-    sha512: function(obj) {return hash.$factory('sha512', obj)},
+    md5: function(obj){return hash.$factory('md5', obj)},
+    sha1: function(obj){return hash.$factory('sha1', obj)},
+    sha224: function(obj){return hash.$factory('sha224', obj)},
+    sha256: function(obj){return hash.$factory('sha256', obj)},
+    sha384: function(obj){return hash.$factory('sha384', obj)},
+    sha512: function(obj){return hash.$factory('sha512', obj)},
 
     algorithms_guaranteed: ['md5', 'sha1', 'sha224', 'sha256', 'sha384', 'sha512'],
     algorithms_available:  ['md5', 'sha1', 'sha224', 'sha256', 'sha384', 'sha512']
@@ -25,32 +25,38 @@ var $mod = {
 
 
 //todo: eventually move this function to a "utility" file or use ajax module?
-function $get_CryptoJS_lib(alg) {
-   var imp=$importer()
-   var $xmlhttp=imp[0], fake_qs=imp[1], timer=imp[2], res=null
+function $get_CryptoJS_lib(alg){
+   var imp = $importer(),
+       $xmlhttp = imp[0],
+       fake_qs = imp[1],
+       timer = imp[2],
+       res = null
 
    $xmlhttp.onreadystatechange = function(){
-        if($xmlhttp.readyState==4){
+        if($xmlhttp.readyState == 4){
             window.clearTimeout(timer)
-            if($xmlhttp.status==200 || $xmlhttp.status==0){res=$xmlhttp.responseText}
-            else{
+            if($xmlhttp.status == 200 || $xmlhttp.status == 0){
+                res=$xmlhttp.responseText
+            }else{
                 // don't throw an exception here, it will not be caught (issue #30)
                 res = Error()
                 res.name = 'NotFoundError'
-                res.message = "No CryptoJS lib named '"+alg+"'"
+                res.message = "No CryptoJS lib named '" + alg + "'"
             }
         }
    }
 
-   $xmlhttp.open('GET', $B.brython_path+'libs/crypto_js/rollups/'+alg+'.js'+fake_qs,false)
+   $xmlhttp.open('GET', $B.brython_path + 'libs/crypto_js/rollups/' + alg +
+       '.js' + fake_qs, false)
    if('overrideMimeType' in $xmlhttp){$xmlhttp.overrideMimeType("text/plain")}
    $xmlhttp.send()
-   if(res.constructor===Error){throw res} // module not found
+   if(res.constructor === Error){throw res} // module not found
 
    try{
-      eval(res + "; $B.CryptoJS=CryptoJS;")
+      eval(res + "; $B.CryptoJS = CryptoJS;")
    } catch (err) {
-      throw Error("JS Eval Error", "Cannot eval CryptoJS algorithm '" + alg + "' : error:" + err);
+      throw Error("JS Eval Error",
+          "Cannot eval CryptoJS algorithm '" + alg + "' : error:" + err);
    }
 }
 
@@ -58,18 +64,18 @@ function bytes2WordArray(obj){
     // Transform a bytes object into an instance of class WordArray
     // defined in CryptoJS
     if(!_b_.isinstance(obj, _b_.bytes)){
-        throw _b_.TypeError("expected bytes, got "+
+        throw _b_.TypeError("expected bytes, got " +
             $B.get_class(obj).__name__)
     }
 
     var words = []
-    for(var i=0;i<obj.source.length;i+=4){
-        var word = obj.source.slice(i, i+4)
-        while(word.length<4){word.push(0)}
-        var w = word[3] +(word[2]<<8)+(word[1]<<16)+(word[0]<<24)
+    for(var i = 0; i < obj.source.length; i += 4){
+        var word = obj.source.slice(i, i + 4)
+        while(word.length < 4){word.push(0)}
+        var w = word[3] + (word[2] << 8) + (word[1] << 16) + (word[0] << 24)
         words.push(w)
     }
-    return {words: words, sigBytes:obj.source.length}
+    return {words: words, sigBytes: obj.source.length}
 }
 
 var hash = {
@@ -89,8 +95,8 @@ hash.copy = function(self){
 hash.digest = function(self){
     var obj = self.hash.clone().finalize().toString(),
         res = []
-    for(var i=0;i<obj.length;i+=2){
-        res.push(parseInt(obj.substr(i,2), 16))
+    for(var i = 0; i < obj.length; i += 2){
+        res.push(parseInt(obj.substr(i, 2), 16))
     }
     return _b_.bytes(res)
 }
@@ -112,12 +118,12 @@ hash.$factory = function(alg, obj) {
       case 'sha256':
       case 'sha384':
       case 'sha512':
-        var ALG=alg.toUpperCase()
+        var ALG = alg.toUpperCase()
         if ($B.Crypto === undefined ||
-            $B.CryptoJS.algo[ALG] === undefined) $get_CryptoJS_lib(alg)
+            $B.CryptoJS.algo[ALG] === undefined){$get_CryptoJS_lib(alg)}
 
         res.hash = $B.CryptoJS.algo[ALG].create()
-        if(obj!==undefined){
+        if(obj !== undefined){
             res.hash.update(bytes2WordArray(obj))
         }
         break

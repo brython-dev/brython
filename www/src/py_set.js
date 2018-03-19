@@ -1,6 +1,6 @@
 ;(function($B){
 
-var _b_=$B.builtins,
+var _b_ = $B.builtins,
     object = _b_.object,
     $N = _b_.None
 
@@ -348,7 +348,7 @@ set.difference_update = function(self){
         while (true){
             try{
                item = _next()
-               var _type= typeof item
+               var _type = typeof item
 
                if(_type == "string" || _type == "number") {
                    var _index = self.$items.indexOf(item)
@@ -599,8 +599,8 @@ for(var attr in set){
       case "update":
           break
       default:
-          if(frozenset[attr] ==undefined){
-              if(typeof set[attr]=="function"){
+          if(frozenset[attr] == undefined){
+              if(typeof set[attr] == "function"){
                   frozenset[attr] = (function(x){
                       return function(){return set[x].apply(null, arguments)}
                   })(attr)
@@ -621,11 +621,11 @@ frozenset.__hash__ = function(self) {
 
    if (self.__hashvalue__ !== undefined){return self.__hashvalue__}
 
-   var _hash=1927868237
+   var _hash = 1927868237
    _hash *= self.$items.length
 
    for (var i = 0, len = self.$items.length; i < len; i++) {
-      var _h=_b_.hash(self.$items[i])
+      var _h = _b_.hash(self.$items[i])
       _hash ^= ((_h ^ 89869747) ^ (_h << 16)) * 3644798167
    }
 

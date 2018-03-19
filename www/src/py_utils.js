@@ -211,7 +211,7 @@ $B.$dict_comp = function(module_name, parent_scope, items, line_num){
     var ix = $B.UUID(),
         res = "res" + ix,
         py = res+"={}\n", // Python code
-        indent=0
+        indent = 0
     for(var i = 1, len = items.length; i < len; i++){
         var item = items[i].replace(/\s+$/,"").replace(/\n/g, "")
         py += "    ".repeat(indent) + item + ":\n"
@@ -599,7 +599,7 @@ for(var i  =0, len = augm_ops.length; i < len; i++){
 $B.extend = function(fname, arg){
     // Called if a function call has **kw arguments
     // arg is a dictionary with the keyword arguments entered with the
-    // syntax key=value
+    // syntax key = value
     // The next arguments of $B.extend are the mappings to unpack
     for(var i = 2; i < arguments.length; i++){
         var mapping = arguments[i]
@@ -779,7 +779,7 @@ $B.stdin = {
     }
 }
 
-$B.jsobject2pyobject=function(obj){
+$B.jsobject2pyobject = function(obj){
     switch(obj) {
         case null:
             return _b_.None
@@ -825,7 +825,7 @@ $B.jsobject2pyobject=function(obj){
     return $B.JSObject.$factory(obj)
 }
 
-$B.pyobject2jsobject=function (obj){
+$B.pyobject2jsobject = function(obj){
     // obj is a Python object
     switch(obj) {
         case _b_.None:
@@ -949,11 +949,11 @@ $B.$iterator_class = function(name){
            "__eq__ not implemented yet for list and " + _b_.type(other))
     }
 
-    var _ops=["eq", "ne"]
-    var _f = res.__eq__ + ""
+    var _ops = ["eq", "ne"],
+        _f = res.__eq__ + ""
 
     for (var i = 0; i < _ops.length; i++) {
-        var _op="__" + _ops[i] + "__"
+        var _op = "__" + _ops[i] + "__"
         eval("res." + _op + "=" + _f.replace(new RegExp("__eq__", "g"), _op))
     }
 
@@ -998,7 +998,7 @@ var ropsigns = ["+", "-", "*", "/", "//", "%", "**", "<<", ">>", "&", "^",
 $B.make_rmethods = function(klass){
     for(var j = 0, _len_j = ropnames.length; j < _len_j; j++){
         if(klass["__" + ropnames[j] + "__"] === undefined){
-            klass["__" + ropnames[j] + "__"]=(function(name, sign){
+            klass["__" + ropnames[j] + "__"] = (function(name, sign){
                 return function(self, other){
                     try{return _b_.getattr(other, "__r" + name + "__")(self)}
                     catch(err){$err(sign, klass, other)}
@@ -1013,7 +1013,7 @@ $B.make_rmethods = function(klass){
 $B.UUID = function() {return $B.$py_UUID++}
 
 $B.InjectBuiltins = function() {
-   var _str=["var _b_ = $B.builtins"],
+   var _str = ["var _b_ = $B.builtins"],
        pos = 1
    for(var $b in $B.builtins){
        _str[pos++] = "var " + $b + '=_b_["' + $b + '"]'
@@ -1076,7 +1076,7 @@ $B.int_or_bool = function(v){
 $B.int_value = function(v){
     // If v is an integer, return v
     // If it's a boolean, return 0 or 1
-    // If it's a complex with v.imag=0, return int_value(v.real)
+    // If it's a complex with v.imag = 0, return int_value(v.real)
     // If it's a float that equals an integer, return it
     // Else throw ValueError
     try{return $B.int_or_bool(v)}
@@ -1289,10 +1289,10 @@ $B.$profile = (function(profile) {
             cumulated = 0;
             profile.line_counts = {}
             profile.call_times = {}
-            profile.call_times_proper= {}
-            profile.call_counts= {}
-            profile.call_counts_norec= {}
-            profile.callers= {}
+            profile.call_times_proper = {}
+            profile.call_counts = {}
+            profile.call_counts_norec = {}
+            profile.callers = {}
             active = false
             paused = false
         },
@@ -1344,7 +1344,7 @@ $B.div = function(x, y){
 }
 
 $B.eq = function(x, y){
-    if(x>min_int && x<max_int && y>min_int && y<max_int){return x==y}
+    if(x > min_int && x < max_int && y > min_int && y < max_int){return x == y}
     return $B.long_int.__eq__($B.long_int.$factory(x), $B.long_int.$factory(y))
 }
 
@@ -1486,7 +1486,9 @@ $B.is_none = function(o){
 // IE doesn't implement indexOf on Arrays
 if(!Array.indexOf){
   Array.prototype.indexOf = function(obj){
-    for(var i=0, len = this.length; i < len;i++) if(this[i]==obj) return i
+    for(var i = 0, len = this.length; i < len; i++){
+        if(this[i] == obj){return i}
+    }
     return -1
   }
 }

@@ -18,7 +18,7 @@ $B.$class_constructor = function(class_name, class_obj, bases,
     }
 
     // check if parents are defined
-    for(var i=0;i<bases.length;i++){
+    for(var i = 0; i < bases.length; i++){
         if(bases[i] === undefined){
             // restore the line of class definition
             $B.line_info = class_obj.$def_line
@@ -197,7 +197,7 @@ function make_mro(bases){
     }
 
     if(bases.indexOf(_b_.object) == -1){
-        bases=bases.concat(_b_.tuple.$factory([_b_.object]))
+        bases = bases.concat(_b_.tuple.$factory([_b_.object]))
     }
 
     for(var i = 0; i < bases.length; i++){seqs[pos1++] = bases[i]}
@@ -344,7 +344,7 @@ type.__getattribute__ = function(klass, attr){
             if(klass["__setattr__"] !== undefined){
                 var func = klass["__setattr__"]
             }else{
-                var func = function(key,value){klass[key]=value}
+                var func = function(key,value){klass[key] = value}
             }
             return method_wrapper(attr, klass, func)
         case "__delattr__":
