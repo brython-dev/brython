@@ -579,30 +579,30 @@ var frozenset = {
     __class__: _b_.type,
     __module__: "builtins",
     __mro__: [object],
-    __name__: 'frozenset',
+    __name__: "frozenset",
     $is_class: true,
     $native: true
 }
 
 for(var attr in set){
     switch(attr) {
-      case 'add':
-      case 'clear':
-      case 'discard':
-      case 'pop':
-      case 'remove':
-      case 'update':
-        break
+      case "add":
+      case "clear":
+      case "discard":
+      case "pop":
+      case "remove":
+      case "update":
+          break
       default:
-        if(frozenset[attr] ==undefined){
-            if(typeof set[attr]=='function'){
-                frozenset[attr] = (function(x){
-                    return function(){return set[x].apply(null, arguments)}
-                })(attr)
-            }else{
-                frozenset[attr] = set[attr]
-            }
-        }
+          if(frozenset[attr] ==undefined){
+              if(typeof set[attr]=="function"){
+                  frozenset[attr] = (function(x){
+                      return function(){return set[x].apply(null, arguments)}
+                  })(attr)
+              }else{
+                  frozenset[attr] = set[attr]
+              }
+          }
     }
 }
 
@@ -614,10 +614,10 @@ frozenset.__hash__ = function(self) {
 
    //taken from python repo /Objects/setobject.c
 
-   if (self.__hashvalue__ !== undefined) return self.__hashvalue__
+   if (self.__hashvalue__ !== undefined){return self.__hashvalue__}
 
    var _hash=1927868237
-   _hash *=self.$items.length
+   _hash *= self.$items.length
 
    for (var i = 0, len = self.$items.length; i < len; i++) {
       var _h=_b_.hash(self.$items[i])
@@ -626,7 +626,7 @@ frozenset.__hash__ = function(self) {
 
    _hash = _hash * 69069 + 907133923
 
-   if (_hash == -1) _hash = 590923713
+   if(_hash == -1){_hash = 590923713}
 
    return self.__hashvalue__ = _hash
 }
@@ -637,29 +637,36 @@ frozenset.__init__ = function(){
 }
 
 frozenset.__new__ = function(cls){
-    if(cls===undefined){
-        throw _b_.TypeError.$factory('frozenset.__new__(): not enough arguments')
+    if(cls === undefined){
+        throw _b_.TypeError.$factory(
+            "frozenset.__new__(): not enough arguments")
     }
     return {
         __class__: cls,
-        $str:true,
-        $num:true,
-        $items:[]
+        $str: true,
+        $num: true,
+        $items: []
         }
 }
 
 // Singleton for empty frozensets
-var singleton_id = Math.floor(Math.random()*Math.pow(2,40))
-function empty_frozenset(){return {__class__:frozenset, $items:[], $id:singleton_id}}
+var singleton_id = Math.floor(Math.random() * Math.pow(2, 40))
+function empty_frozenset(){
+    return {
+        __class__: frozenset,
+        $items: [],
+        $id: singleton_id
+    }
+}
 
 frozenset.$factory = function(){
-    var $ = $B.args('frozenset', 1, {iterable:null},['iterable'],
-        arguments,{iterable:null},null,null)
-    if($.iterable===null){return empty_frozenset()}
-    else if($.iterable.__class__==frozenset){return $.iterable}
+    var $ = $B.args("frozenset", 1, {iterable: null}, ["iterable"],
+        arguments, {iterable: null}, null, null)
+    if($.iterable === null){return empty_frozenset()}
+    else if($.iterable.__class__ == frozenset){return $.iterable}
 
     var res = set.$factory($.iterable)
-    if(res.$items.length==0){return empty_frozenset()}
+    if(res.$items.length == 0){return empty_frozenset()}
     res.__class__ = frozenset
     return res
 }

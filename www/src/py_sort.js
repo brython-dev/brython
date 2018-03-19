@@ -15,18 +15,18 @@ eval($B.InjectBuiltins())
 /**
  * Default minimum size of a run.
  */
-DEFAULT_MIN_MERGE = 32;
+DEFAULT_MIN_MERGE = 32
 
 /**
  * Minimum ordered subsequece required to do galloping.
  */
-DEFAULT_MIN_GALLOPING = 7;
+DEFAULT_MIN_GALLOPING = 7
 
 /**
  * Default tmp storage length. Can increase depending on the size of the
  * smallest run to merge.
  */
-DEFAULT_TMP_STORAGE_LENGTH = 256;
+DEFAULT_TMP_STORAGE_LENGTH = 256
 
 /**
  * Pre-computed powers of 10 for efficient lexicographic comparison of
@@ -41,27 +41,27 @@ POWERS_OF_TEN = [1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9]
  * @return {number} - The estimated logarithm of the integer.
  */
 function log10(x) {
-  if (x < 1e5) {
-    if (x < 1e2) {
-      return x < 1e1 ? 0 : 1;
+  if(x < 1e5){
+    if(x < 1e2){
+      return x < 1e1 ? 0 : 1
     }
 
-    if (x < 1e4) {
-      return x < 1e3 ? 2 : 3;
+    if(x < 1e4){
+      return x < 1e3 ? 2 : 3
     }
 
-    return 4;
+    return 4
   }
 
-  if (x < 1e7) {
-    return x < 1e6 ? 5 : 6;
+  if(x < 1e7){
+    return x < 1e6 ? 5 : 6
   }
 
-  if (x < 1e9) {
-    return x < 1e8 ? 7 : 8;
+  if(x < 1e9){
+    return x < 1e8 ? 7 : 8
   }
 
-  return 9;
+  return 9
 }
 
 /**
@@ -72,59 +72,59 @@ function log10(x) {
  * @return {number} - A positive number if a.toString() > b.toString(), a
  * negative number if .toString() < b.toString(), 0 otherwise.
  */
-function alphabeticalCompare(a, b) {
-  if (a === b) {
-    return 0;
-  }
-
-  if (~~a === a && ~~b === b) {
-    if (a === 0 || b === 0) {
-      return a < b ? -1 : 1;
+function alphabeticalCompare(a, b){
+    if(a === b){
+        return 0
     }
 
-    if (a < 0 || b < 0) {
-      if (b >= 0) {
-        return -1;
-      }
+    if(~~a === a && ~~b === b){
+        if(a === 0 || b === 0){
+            return a < b ? -1 : 1
+        }
 
-      if (a >= 0) {
-        return 1;
-      }
+        if(a < 0 || b < 0){
+            if(b >= 0){
+              return -1
+            }
 
-      a = -a;
-      b = -b;
+            if(a >= 0){
+              return 1
+            }
+
+            a = -a
+            b = -b
+        }
+
+        al = log10(a)
+        bl = log10(b)
+
+        var t = 0
+
+        if(al < bl){
+            a *= POWERS_OF_TEN[bl - al - 1]
+            b /= 10
+            t = -1
+        }else if(al > bl){
+            b *= POWERS_OF_TEN[al - bl - 1]
+            a /= 10;
+            t = 1;
+        }
+
+        if(a === b){
+            return t
+        }
+
+        return a < b ? -1 : 1
     }
 
-    al = log10(a);
-    bl = log10(b);
+    var aStr = String(a)
+    var bStr = String(b)
 
-    var t = 0;
-
-    if (al < bl) {
-      a *= POWERS_OF_TEN[bl - al - 1];
-      b /= 10;
-      t = -1;
-    } else if (al > bl) {
-      b *= POWERS_OF_TEN[al - bl - 1];
-      a /= 10;
-      t = 1;
+    if(aStr === bStr){
+        return 0
     }
 
-    if (a === b) {
-      return t;
-    }
-
-    return a < b ? -1 : 1;
-  }
-
-  var aStr = String(a);
-  var bStr = String(b);
-
-  if (aStr === bStr) {
-    return 0;
-  }
-
-  return aStr < bStr ? -1 : 1;
+    return aStr < bStr ? -1 : 1
 }
 
 /**
@@ -133,14 +133,14 @@ function alphabeticalCompare(a, b) {
  * @param {number} n - The size of the array to sort.
  */
 function minRunLength(n) {
-  var r = 0;
+    var r = 0
 
-  while (n >= DEFAULT_MIN_MERGE) {
-    r |= (n & 1);
-    n >>= 1;
-  }
+    while (n >= DEFAULT_MIN_MERGE) {
+        r |= (n & 1)
+        n >>= 1
+    }
 
-  return n + r;
+    return n + r
 }
 
 /**
@@ -154,28 +154,28 @@ function minRunLength(n) {
  * @param {function} compare - Item comparison function.
  * @return {number} - The length of the run.
  */
-function makeAscendingRun(array, lo, hi, compare) {
-  var runHi = lo + 1;
+function makeAscendingRun(array, lo, hi, compare){
+    var runHi = lo + 1
 
-  if (runHi === hi) {
-    return 1;
-  }
-
-  // Descending
-  if (compare(array[runHi++], array[lo]) < 0) {
-    while (runHi < hi && compare(array[runHi], array[runHi - 1]) < 0) {
-      runHi++;
+    if(runHi === hi){
+        return 1;
     }
 
-    reverseRun(array, lo, runHi);
-    // Ascending
-  } else {
-    while (runHi < hi && compare(array[runHi], array[runHi - 1]) >= 0) {
-      runHi++;
-    }
-  }
+    // Descending
+    if(compare(array[runHi++], array[lo]) < 0){
+        while(runHi < hi && compare(array[runHi], array[runHi - 1]) < 0){
+            runHi++
+        }
 
-  return runHi - lo;
+      reverseRun(array, lo, runHi)
+      // Ascending
+    } else {
+        while(runHi < hi && compare(array[runHi], array[runHi - 1]) >= 0){
+            runHi++
+        }
+    }
+
+    return runHi - lo
 }
 
 /**
@@ -186,13 +186,13 @@ function makeAscendingRun(array, lo, hi, compare) {
  * @param {number} hi - Last element in the range.
  */
 function reverseRun(array, lo, hi) {
-  hi--;
+    hi--
 
-  while (lo < hi) {
-    var t = array[lo];
-    array[lo++] = array[hi];
-    array[hi--] = t;
-  }
+    while (lo < hi) {
+        var t = array[lo]
+        array[lo++] = array[hi]
+        array[hi--] = t
+    }
 }
 
 /**
@@ -205,58 +205,58 @@ function reverseRun(array, lo, hi) {
  * @param {number} start - First element possibly out of order.
  * @param {function} compare - Item comparison function.
  */
-function binaryInsertionSort(array, lo, hi, start, compare) {
-  if (start === lo) {
-    start++;
-  }
-
-  for (; start < hi; start++) {
-    var pivot = array[start];
-
-    // Ranges of the array where pivot belongs
-    var left = lo;
-    var right = start;
-
-    /*
-     *   pivot >= array[i] for i in [lo, left)
-     *   pivot <  array[i] for i in  in [right, start)
-     */
-    while (left < right) {
-      var mid = (left + right) >>> 1;
-
-      if (compare(pivot, array[mid]) < 0) {
-        right = mid;
-      } else {
-        left = mid + 1;
-      }
+function binaryInsertionSort(array, lo, hi, start, compare){
+    if(start === lo){
+        start++
     }
 
-    /*
-     * Move elements right to make room for the pivot. If there are elements
-     * equal to pivot, left points to the first slot after them: this is also
-     * a reason for which TimSort is stable
-     */
-    var n = start - left;
-    // Switch is just an optimization for small arrays
-    switch (n) {
-      case 3:
-        array[left + 3] = array[left + 2];
-      /* falls through */
-      case 2:
-        array[left + 2] = array[left + 1];
-      /* falls through */
-      case 1:
-        array[left + 1] = array[left];
-        break;
-      default:
-        while (n > 0) {
-          array[left + n] = array[left + n - 1];
-          n--;
+    for (; start < hi; start++) {
+        var pivot = array[start]
+
+        // Ranges of the array where pivot belongs
+        var left = lo
+        var right = start
+
+        /*
+         *   pivot >= array[i] for i in [lo, left)
+         *   pivot <  array[i] for i in  in [right, start)
+         */
+        while(left < right){
+            var mid = (left + right) >>> 1
+
+            if(compare(pivot, array[mid]) < 0){
+                right = mid
+            } else {
+                left = mid + 1
+            }
         }
-    }
 
-    array[left] = pivot;
-  }
+        /*
+         * Move elements right to make room for the pivot. If there are elements
+         * equal to pivot, left points to the first slot after them: this is also
+         * a reason for which TimSort is stable
+         */
+        var n = start - left
+        // Switch is just an optimization for small arrays
+        switch (n) {
+            case 3:
+                array[left + 3] = array[left + 2]
+            /* falls through */
+            case 2:
+                array[left + 2] = array[left + 1]
+            /* falls through */
+            case 1:
+                array[left + 1] = array[left]
+                break;
+            default:
+                while (n > 0) {
+                    array[left + n] = array[left + n - 1]
+                    n--;
+                }
+        }
+
+        array[left] = pivot
+    }
 }
 
 /**
@@ -273,69 +273,70 @@ function binaryInsertionSort(array, lo, hi, start, compare) {
  * @return {number} - The index where to insert value.
  */
 function gallopLeft(value, array, start, length, hint, compare) {
-  var lastOffset = 0;
-  var maxOffset = 0;
-  var offset = 1;
+    var lastOffset = 0,
+        maxOffset = 0,
+        offset = 1
 
-  if (compare(value, array[start + hint]) > 0) {
-    maxOffset = length - hint;
+    if(compare(value, array[start + hint]) > 0){
+        maxOffset = length - hint
 
-    while (offset < maxOffset && compare(value, array[start + hint + offset]) > 0) {
-      lastOffset = offset;
-      offset = (offset << 1) + 1;
+        while(offset < maxOffset && compare(value,
+                array[start + hint + offset]) > 0){
+            lastOffset = offset
+            offset = (offset << 1) + 1
 
-      if (offset <= 0) {
-        offset = maxOffset;
-      }
-    }
+            if(offset <= 0){
+                offset = maxOffset
+            }
+        }
 
-    if (offset > maxOffset) {
-      offset = maxOffset;
-    }
+        if(offset > maxOffset){
+            offset = maxOffset
+        }
 
-    // Make offsets relative to start
-    lastOffset += hint;
-    offset += hint;
+        // Make offsets relative to start
+        lastOffset += hint
+        offset += hint
 
-    // value <= array[start + hint]
-  } else {
-    maxOffset = hint + 1;
-    while (offset < maxOffset && compare(value, array[start + hint - offset]) <= 0) {
-      lastOffset = offset;
-      offset = (offset << 1) + 1;
-
-      if (offset <= 0) {
-        offset = maxOffset;
-      }
-    }
-    if (offset > maxOffset) {
-      offset = maxOffset;
-    }
-
-    // Make offsets relative to start
-    var tmp = lastOffset;
-    lastOffset = hint - offset;
-    offset = hint - tmp;
-  }
-
-  /*
-   * Now array[start+lastOffset] < value <= array[start+offset], so value
-   * belongs somewhere in the range (start + lastOffset, start + offset]. Do a
-   * binary search, with invariant array[start + lastOffset - 1] < value <=
-   * array[start + offset].
-   */
-  lastOffset++;
-  while (lastOffset < offset) {
-    var m = lastOffset + ((offset - lastOffset) >>> 1);
-
-    if (compare(value, array[start + m]) > 0) {
-      lastOffset = m + 1;
-
+        // value <= array[start + hint]
     } else {
-      offset = m;
+        maxOffset = hint + 1
+        while(offset < maxOffset && compare(value,
+                array[start + hint - offset]) <= 0){
+            lastOffset = offset
+            offset = (offset << 1) + 1
+
+            if(offset <= 0){
+              offset = maxOffset
+            }
+        }
+        if(offset > maxOffset){
+            offset = maxOffset
+        }
+
+        // Make offsets relative to start
+        var tmp = lastOffset
+        lastOffset = hint - offset
+        offset = hint - tmp
     }
-  }
-  return offset;
+
+    /*
+     * Now array[start+lastOffset] < value <= array[start+offset], so value
+     * belongs somewhere in the range (start + lastOffset, start + offset]. Do a
+     * binary search, with invariant array[start + lastOffset - 1] < value <=
+     * array[start + offset].
+     */
+    lastOffset++
+    while(lastOffset < offset){
+      var m = lastOffset + ((offset - lastOffset) >>> 1)
+
+      if(compare(value, array[start + m]) > 0){
+        lastOffset = m + 1
+      }else{
+        offset = m
+      }
+    }
+    return offset
 }
 
 /**
@@ -352,86 +353,87 @@ function gallopLeft(value, array, start, length, hint, compare) {
  * @return {number} - The index where to insert value.
  */
 function gallopRight(value, array, start, length, hint, compare) {
-  var lastOffset = 0;
-  var maxOffset = 0;
-  var offset = 1;
+    var lastOffset = 0,
+        maxOffset = 0,
+        offset = 1
 
-  if (compare(value, array[start + hint]) < 0) {
-    maxOffset = hint + 1;
+    if(compare(value, array[start + hint]) < 0){
+        maxOffset = hint + 1
 
-    while (offset < maxOffset && compare(value, array[start + hint - offset]) < 0) {
-      lastOffset = offset;
-      offset = (offset << 1) + 1;
+        while(offset < maxOffset && compare(value,
+                array[start + hint - offset]) < 0){
+            lastOffset = offset
+            offset = (offset << 1) + 1
 
-      if (offset <= 0) {
-        offset = maxOffset;
-      }
+            if(offset <= 0){
+              offset = maxOffset
+            }
+        }
+
+        if(offset > maxOffset){
+            offset = maxOffset
+        }
+
+        // Make offsets relative to start
+        var tmp = lastOffset
+        lastOffset = hint - offset
+        offset = hint - tmp
+
+        // value >= array[start + hint]
+    }else{
+        maxOffset = length - hint
+
+        while(offset < maxOffset && compare(value,
+                array[start + hint + offset]) >= 0){
+            lastOffset = offset
+            offset = (offset << 1) + 1
+
+            if(offset <= 0){
+              offset = maxOffset
+            }
+        }
+
+        if(offset > maxOffset){
+            offset = maxOffset
+        }
+
+        // Make offsets relative to start
+        lastOffset += hint
+        offset += hint
     }
 
-    if (offset > maxOffset) {
-      offset = maxOffset;
+    /*
+     * Now array[start+lastOffset] < value <= array[start+offset], so value
+     * belongs somewhere in the range (start + lastOffset, start + offset]. Do a
+     * binary search, with invariant array[start + lastOffset - 1] < value <=
+     * array[start + offset].
+     */
+    lastOffset++
+
+    while(lastOffset < offset){
+        var m = lastOffset + ((offset - lastOffset) >>> 1)
+
+        if (compare(value, array[start + m]) < 0){
+            offset = m
+        }else{
+          lastOffset = m + 1
+        }
     }
 
-    // Make offsets relative to start
-    var tmp = lastOffset;
-    lastOffset = hint - offset;
-    offset = hint - tmp;
-
-    // value >= array[start + hint]
-  } else {
-    maxOffset = length - hint;
-
-    while (offset < maxOffset && compare(value, array[start + hint + offset]) >= 0) {
-      lastOffset = offset;
-      offset = (offset << 1) + 1;
-
-      if (offset <= 0) {
-        offset = maxOffset;
-      }
-    }
-
-    if (offset > maxOffset) {
-      offset = maxOffset;
-    }
-
-    // Make offsets relative to start
-    lastOffset += hint;
-    offset += hint;
-  }
-
-  /*
-   * Now array[start+lastOffset] < value <= array[start+offset], so value
-   * belongs somewhere in the range (start + lastOffset, start + offset]. Do a
-   * binary search, with invariant array[start + lastOffset - 1] < value <=
-   * array[start + offset].
-   */
-  lastOffset++;
-
-  while (lastOffset < offset) {
-    var m = lastOffset + ((offset - lastOffset) >>> 1);
-
-    if (compare(value, array[start + m]) < 0) {
-      offset = m;
-
-    } else {
-      lastOffset = m + 1;
-    }
-  }
-
-  return offset;
+    return offset
 }
 
-TimSort = function(array, compare) {
+TimSort = function(array, compare){
     self = {
-        array:array,
-        compare:compare,
-        minGallop:DEFAULT_MIN_GALLOPING,
+        array: array,
+        compare: compare,
+        minGallop: DEFAULT_MIN_GALLOPING,
         length : array.length,
-        tmpStorageLength:DEFAULT_TMP_STORAGE_LENGTH,
-        stackLength:0,
-        runStart:null,
-        runLength:null,
-        stackSize:0,
+        tmpStorageLength: DEFAULT_TMP_STORAGE_LENGTH,
+        stackLength: 0,
+        runStart: null,
+        runLength: null,
+        stackSize: 0,
 
         /**
         * Push a new run on TimSort's stack.
@@ -439,10 +441,10 @@ TimSort = function(array, compare) {
         * @param {number} runStart - Start index of the run in the original array.
         * @param {number} runLength - Length of the run;
         */
-        pushRun: function(runStart, runLength) {
-            this.runStart[this.stackSize] = runStart;
-            this.runLength[this.stackSize] = runLength;
-            this.stackSize += 1;
+        pushRun: function(runStart, runLength){
+            this.runStart[this.stackSize] = runStart
+            this.runLength[this.stackSize] = runLength
+            this.stackSize += 1
         },
 
         /**
@@ -451,36 +453,34 @@ TimSort = function(array, compare) {
         * 2) runLength[i - 2] > runLength[i - 1]
         */
         mergeRuns: function() {
-            while (this.stackSize > 1) {
-            var n = this.stackSize - 2;
+            while(this.stackSize > 1){
+                var n = this.stackSize - 2
 
-            if ((n >= 1 &&
-                this.runLength[n - 1] <= this.runLength[n] + this.runLength[n + 1]) ||
-                (n >= 2 &&
-                this.runLength[n - 2] <= this.runLength[n] + this.runLength[n - 1])) {
-
-                if (this.runLength[n - 1] < this.runLength[n + 1]) {
-                n--;
+                if((n >= 1 && this.runLength[n - 1] <=
+                        this.runLength[n] + this.runLength[n + 1]) ||
+                        (n >= 2 && this.runLength[n - 2] <=
+                        this.runLength[n] + this.runLength[n - 1])){
+                    if(this.runLength[n - 1] < this.runLength[n + 1]){
+                      n--
+                    }
+                }else if(this.runLength[n] > this.runLength[n + 1]){
+                    break
                 }
-
-            } else if (this.runLength[n] > this.runLength[n + 1]) {
-                break;
-            }
-            this.mergeAt(n);
+                this.mergeAt(n)
             }
         },
         /**
         * Merge all runs on TimSort's stack until only one remains.
         */
-        forceMergeRuns: function() {
-            while (this.stackSize > 1) {
-            var n = this.stackSize - 2;
+        forceMergeRuns: function(){
+            while(this.stackSize > 1){
+            var n = this.stackSize - 2
 
-            if (n > 0 && this.runLength[n - 1] < this.runLength[n + 1]) {
-                n--;
+            if(n > 0 && this.runLength[n - 1] < this.runLength[n + 1]){
+                n--
             }
 
-            this.mergeAt(n);
+            this.mergeAt(n)
             }
         },
 
@@ -491,19 +491,18 @@ TimSort = function(array, compare) {
         * @param {number} i - Index of the run to merge in TimSort's stack.
         */
         mergeAt: function(i) {
-            var compare = this.compare;
-            var array = this.array;
+            var compare = this.compare,
+                array = this.array,
+                start1 = this.runStart[i],
+                length1 = this.runLength[i],
+                start2 = this.runStart[i + 1],
+                length2 = this.runLength[i + 1]
 
-            var start1 = this.runStart[i];
-            var length1 = this.runLength[i];
-            var start2 = this.runStart[i + 1];
-            var length2 = this.runLength[i + 1];
+            this.runLength[i] = length1 + length2
 
-            this.runLength[i] = length1 + length2;
-
-            if (i === this.stackSize - 3) {
-            this.runStart[i + 1] = this.runStart[i + 2];
-            this.runLength[i + 1] = this.runLength[i + 2];
+            if(i === this.stackSize - 3){
+                this.runStart[i + 1] = this.runStart[i + 2]
+                this.runLength[i + 1] = this.runLength[i + 2]
             }
 
             this.stackSize--;
@@ -512,33 +511,30 @@ TimSort = function(array, compare) {
             * Find where the first element in the second run goes in run1. Previous
             * elements in run1 are already in place
             */
-            var k = gallopRight(array[start2], array, start1, length1, 0, compare);
-            start1 += k;
-            length1 -= k;
+            var k = gallopRight(array[start2], array, start1, length1, 0,
+                compare)
+            start1 += k
+            length1 -= k
 
-            if (length1 === 0) {
-            return;
-            }
+            if(length1 === 0){return}
 
             /*
             * Find where the last element in the first run goes in run2. Next elements
             * in run2 are already in place
             */
-            length2 = gallopLeft(array[start1 + length1 - 1], array, start2, length2, length2 - 1, compare);
+            length2 = gallopLeft(array[start1 + length1 - 1], array, start2,
+                length2, length2 - 1, compare)
 
-            if (length2 === 0) {
-            return;
-            }
+            if(length2 === 0){return}
 
             /*
             * Merge remaining runs. A tmp array with length = min(length1, length2) is
             * used
             */
-            if (length1 <= length2) {
-            this.mergeLow(start1, length1, start2, length2);
-
-            } else {
-            this.mergeHigh(start1, length1, start2, length2);
+            if(length1 <= length2){
+                this.mergeLow(start1, length1, start2, length2)
+            }else{
+                this.mergeHigh(start1, length1, start2, length2)
             }
         },
 
@@ -555,152 +551,152 @@ TimSort = function(array, compare) {
         * @param {number} start2 - First element in run2.
         * @param {number} length2 - Length of run2.
         */
-        mergeLow: function(start1, length1, start2, length2) {
+        mergeLow: function(start1, length1, start2, length2){
 
-            var compare = this.compare;
-            var array = this.array;
-            var tmp = this.tmp;
-            var i = 0;
+            var compare = this.compare,
+                array = this.array,
+                tmp = this.tmp,
+                i = 0
 
-            for (i = 0; i < length1; i++) {
-            tmp[i] = array[start1 + i];
+            for(i = 0; i < length1; i++){
+                tmp[i] = array[start1 + i]
             }
 
-            var cursor1 = 0;
-            var cursor2 = start2;
-            var dest = start1;
+            var cursor1 = 0,
+                cursor2 = start2,
+                dest = start1
 
-            array[dest++] = array[cursor2++];
+            array[dest++] = array[cursor2++]
 
-            if (--length2 === 0) {
-            for (i = 0; i < length1; i++) {
-                array[dest + i] = tmp[cursor1 + i];
-            }
-            return;
-            }
-
-            if (length1 === 1) {
-            for (i = 0; i < length2; i++) {
-                array[dest + i] = array[cursor2 + i];
-            }
-            array[dest + length2] = tmp[cursor1];
-            return;
+            if(--length2 === 0){
+                for(i = 0; i < length1; i++){
+                    array[dest + i] = tmp[cursor1 + i]
+                }
+                return
             }
 
-            var minGallop = this.minGallop;
+            if(length1 === 1){
+                for(i = 0; i < length2; i++){
+                    array[dest + i] = array[cursor2 + i]
+                }
+                array[dest + length2] = tmp[cursor1]
+                return
+            }
 
-            while (true) {
-            var count1 = 0;
-            var count2 = 0;
-            var exit = false;
+            var minGallop = this.minGallop
 
-            do {
-                if (compare(array[cursor2], tmp[cursor1]) < 0) {
-                array[dest++] = array[cursor2++];
-                count2++;
-                count1 = 0;
+            while(true){
+                var count1 = 0,
+                    count2 = 0,
+                    exit = false
 
-                if (--length2 === 0) {
-                    exit = true;
-                    break;
+                do{
+                    if(compare(array[cursor2], tmp[cursor1]) < 0){
+                        array[dest++] = array[cursor2++]
+                        count2++
+                        count1 = 0
+
+                        if(--length2 === 0){
+                            exit = true
+                            break
+                        }
+                    }else{
+                        array[dest++] = tmp[cursor1++]
+                        count1++
+                        count2 = 0
+                        if(--length1 === 1){
+                            exit = true
+                            break
+                        }
+                    }
+                }while ((count1 | count2) < minGallop)
+
+                if(exit){
+                    break
                 }
 
-                } else {
-                array[dest++] = tmp[cursor1++];
-                count1++;
-                count2 = 0;
-                if (--length1 === 1) {
-                    exit = true;
-                    break;
-                }
-                }
-            } while ((count1 | count2) < minGallop);
+                do {
+                    count1 = gallopRight(array[cursor2], tmp, cursor1,
+                        length1, 0, compare)
 
-            if (exit) {
-                break;
+                    if(count1 !== 0){
+                        for(i = 0; i < count1; i++){
+                            array[dest + i] = tmp[cursor1 + i]
+                        }
+
+                        dest += count1
+                        cursor1 += count1
+                        length1 -= count1
+                        if(length1 <= 1){
+                            exit = true
+                            break
+                        }
+                    }
+
+                    array[dest++] = array[cursor2++]
+
+                    if(--length2 === 0){
+                        exit = true
+                        break
+                    }
+
+                    count2 = gallopLeft(tmp[cursor1], array, cursor2, length2,
+                        0, compare)
+
+                    if(count2 !== 0){
+                        for(i = 0; i < count2; i++){
+                            array[dest + i] = array[cursor2 + i]
+                        }
+
+                        dest += count2
+                        cursor2 += count2
+                        length2 -= count2
+
+                        if(length2 === 0){
+                            exit = true
+                            break
+                        }
+                    }
+                    array[dest++] = tmp[cursor1++]
+
+                    if(--length1 === 1){
+                        exit = true
+                        break
+                    }
+
+                    minGallop--;
+
+                }while(count1 >= DEFAULT_MIN_GALLOPING ||
+                        count2 >= DEFAULT_MIN_GALLOPING);
+
+                if(exit){
+                    break
+                }
+
+                if(minGallop < 0){
+                    minGallop = 0
+                }
+
+                minGallop += 2
             }
 
-            do {
-                count1 = gallopRight(array[cursor2], tmp, cursor1, length1, 0, compare);
+            this.minGallop = minGallop
 
-                if (count1 !== 0) {
-                for (i = 0; i < count1; i++) {
-                    array[dest + i] = tmp[cursor1 + i];
-                }
-
-                dest += count1;
-                cursor1 += count1;
-                length1 -= count1;
-                if (length1 <= 1) {
-                    exit = true;
-                    break;
-                }
-                }
-
-                array[dest++] = array[cursor2++];
-
-                if (--length2 === 0) {
-                exit = true;
-                break;
-                }
-
-                count2 = gallopLeft(tmp[cursor1], array, cursor2, length2, 0, compare);
-
-                if (count2 !== 0) {
-                for (i = 0; i < count2; i++) {
-                    array[dest + i] = array[cursor2 + i];
-                }
-
-                dest += count2;
-                cursor2 += count2;
-                length2 -= count2;
-
-                if (length2 === 0) {
-                    exit = true;
-                    break;
-                }
-                }
-                array[dest++] = tmp[cursor1++];
-
-                if (--length1 === 1) {
-                exit = true;
-                break;
-                }
-
-                minGallop--;
-
-            } while (count1 >= DEFAULT_MIN_GALLOPING || count2 >= DEFAULT_MIN_GALLOPING);
-
-            if (exit) {
-                break;
+            if(minGallop < 1){
+                this.minGallop = 1
             }
 
-            if (minGallop < 0) {
-                minGallop = 0;
-            }
-
-            minGallop += 2;
-            }
-
-            this.minGallop = minGallop;
-
-            if (minGallop < 1) {
-            this.minGallop = 1;
-            }
-
-            if (length1 === 1) {
-            for (i = 0; i < length2; i++) {
-                array[dest + i] = array[cursor2 + i];
-            }
-            array[dest + length2] = tmp[cursor1];
-
-            } else if (length1 === 0) {
-            throw new Error('mergeLow preconditions were not respected');
-
-            } else {
-            for (i = 0; i < length1; i++) {
-                array[dest + i] = tmp[cursor1 + i];
-            }
+            if(length1 === 1){
+                for(i = 0; i < length2; i++){
+                    array[dest + i] = array[cursor2 + i]
+                }
+                array[dest + length2] = tmp[cursor1]
+            }else if(length1 === 0){
+                throw new Error('mergeLow preconditions were not respected')
+            }else{
+                for(i = 0; i < length1; i++){
+                    array[dest + i] = tmp[cursor1 + i]
+                }
             }
         },
 
@@ -717,193 +713,186 @@ TimSort = function(array, compare) {
         * @param {number} start2 - First element in run2.
         * @param {number} length2 - Length of run2.
         */
-        mergeHigh: function(start1, length1, start2, length2) {
-            var compare = this.compare;
-            var array = this.array;
-            var tmp = this.tmp;
-            var i = 0;
+        mergeHigh: function(start1, length1, start2, length2){
+            var compare = this.compare,
+                array = this.array,
+                tmp = this.tmp,
+                i = 0
 
-            for (i = 0; i < length2; i++) {
-            tmp[i] = array[start2 + i];
+            for(i = 0; i < length2; i++){
+                tmp[i] = array[start2 + i]
             }
 
-            var cursor1 = start1 + length1 - 1;
-            var cursor2 = length2 - 1;
-            var dest = start2 + length2 - 1;
-            var customCursor = 0;
-            var customDest = 0;
+            var cursor1 = start1 + length1 - 1,
+                cursor2 = length2 - 1,
+                dest = start2 + length2 - 1,
+                customCursor = 0,
+                customDest = 0
 
-            array[dest--] = array[cursor1--];
+            array[dest--] = array[cursor1--]
 
-            if (--length1 === 0) {
-            customCursor = dest - (length2 - 1);
+            if(--length1 === 0){
+                customCursor = dest - (length2 - 1)
 
-            for (i = 0; i < length2; i++) {
-                array[customCursor + i] = tmp[i];
+                for(i = 0; i < length2; i++){
+                    array[customCursor + i] = tmp[i]
+                }
+
+                return
             }
 
-            return;
+            if(length2 === 1){
+                dest -= length1
+                cursor1 -= length1
+                customDest = dest + 1
+                customCursor = cursor1 + 1
+
+                for(i = length1 - 1; i >= 0; i--){
+                    array[customDest + i] = array[customCursor + i]
+                }
+
+                array[dest] = tmp[cursor2]
+                return
             }
 
-            if (length2 === 1) {
-            dest -= length1;
-            cursor1 -= length1;
-            customDest = dest + 1;
-            customCursor = cursor1 + 1;
-
-            for (i = length1 - 1; i >= 0; i--) {
-                array[customDest + i] = array[customCursor + i];
-            }
-
-            array[dest] = tmp[cursor2];
-            return;
-            }
-
-            var minGallop = this.minGallop;
+            var minGallop = this.minGallop
 
             while (true) {
-            var count1 = 0;
-            var count2 = 0;
-            var exit = false;
+                var count1 = 0,
+                    count2 = 0,
+                    exit = false
 
-            do {
-                if (compare(tmp[cursor2], array[cursor1]) < 0) {
-                array[dest--] = array[cursor1--];
-                count1++;
-                count2 = 0;
-                if (--length1 === 0) {
-                    exit = true;
-                    break;
-                }
+                do{
+                    if(compare(tmp[cursor2], array[cursor1]) < 0){
+                        array[dest--] = array[cursor1--]
+                        count1++
+                        count2 = 0
+                        if(--length1 === 0){
+                            exit = true
+                            break
+                        }
+                    }else{
+                        array[dest--] = tmp[cursor2--]
+                        count2++
+                        count1 = 0
+                        if(--length2 === 1){
+                            exit = true
+                            break
+                        }
+                    }
+                }while ((count1 | count2) < minGallop)
 
-                } else {
-                array[dest--] = tmp[cursor2--];
-                count2++;
-                count1 = 0;
-                if (--length2 === 1) {
-                    exit = true;
-                    break;
-                }
-                }
+                if(exit){break}
 
-            } while ((count1 | count2) < minGallop);
+                do{
+                    count1 = length1 - gallopRight(tmp[cursor2], array,
+                        start1, length1, length1 - 1, compare)
 
-            if (exit) {
-                break;
+                    if(count1 !== 0){
+                        dest -= count1
+                        cursor1 -= count1
+                        length1 -= count1
+                        customDest = dest + 1
+                        customCursor = cursor1 + 1
+
+                        for(i = count1 - 1; i >= 0; i--){
+                            array[customDest + i] = array[customCursor + i]
+                        }
+
+                        if(length1 === 0){
+                            exit = true
+                            break
+                        }
+                    }
+
+                    array[dest--] = tmp[cursor2--]
+
+                    if(--length2 === 1){
+                        exit = true
+                        break
+                    }
+
+                    count2 = length2 - gallopLeft(array[cursor1], tmp, 0,
+                        length2, length2 - 1, compare)
+
+                    if(count2 !== 0){
+                        dest -= count2
+                        cursor2 -= count2
+                        length2 -= count2
+                        customDest = dest + 1
+                        customCursor = cursor2 + 1
+
+                        for(i = 0; i < count2; i++){
+                            array[customDest + i] = tmp[customCursor + i]
+                        }
+
+                        if(length2 <= 1){
+                            exit = true
+                            break
+                        }
+                    }
+
+                    array[dest--] = array[cursor1--]
+
+                    if(--length1 === 0){
+                        exit = true
+                        break
+                    }
+
+                    minGallop--
+
+                } while (count1 >= DEFAULT_MIN_GALLOPING ||
+                        count2 >= DEFAULT_MIN_GALLOPING)
+
+                if(exit){break}
+
+                if(minGallop < 0){minGallop = 0}
+
+                minGallop += 2
             }
 
-            do {
-                count1 = length1 - gallopRight(tmp[cursor2], array, start1, length1, length1 - 1, compare);
+            this.minGallop = minGallop
 
-                if (count1 !== 0) {
-                dest -= count1;
-                cursor1 -= count1;
-                length1 -= count1;
-                customDest = dest + 1;
-                customCursor = cursor1 + 1;
-
-                for (i = count1 - 1; i >= 0; i--) {
-                    array[customDest + i] = array[customCursor + i];
-                }
-
-                if (length1 === 0) {
-                    exit = true;
-                    break;
-                }
-                }
-
-                array[dest--] = tmp[cursor2--];
-
-                if (--length2 === 1) {
-                exit = true;
-                break;
-                }
-
-                count2 = length2 - gallopLeft(array[cursor1], tmp, 0, length2, length2 - 1, compare);
-
-                if (count2 !== 0) {
-                dest -= count2;
-                cursor2 -= count2;
-                length2 -= count2;
-                customDest = dest + 1;
-                customCursor = cursor2 + 1;
-
-                for (i = 0; i < count2; i++) {
-                    array[customDest + i] = tmp[customCursor + i];
-                }
-
-                if (length2 <= 1) {
-                    exit = true;
-                    break;
-                }
-                }
-
-                array[dest--] = array[cursor1--];
-
-                if (--length1 === 0) {
-                exit = true;
-                break;
-                }
-
-                minGallop--;
-
-            } while (count1 >= DEFAULT_MIN_GALLOPING || count2 >= DEFAULT_MIN_GALLOPING);
-
-            if (exit) {
-                break;
+            if(minGallop < 1){
+                this.minGallop = 1
             }
 
-            if (minGallop < 0) {
-                minGallop = 0;
-            }
+            if(length2 === 1){
+                dest -= length1
+                cursor1 -= length1
+                customDest = dest + 1
+                customCursor = cursor1 + 1
 
-            minGallop += 2;
-            }
+                for(i = length1 - 1; i >= 0; i--){
+                    array[customDest + i] = array[customCursor + i]
+                }
 
-            this.minGallop = minGallop;
-
-            if (minGallop < 1) {
-            this.minGallop = 1;
-            }
-
-            if (length2 === 1) {
-            dest -= length1;
-            cursor1 -= length1;
-            customDest = dest + 1;
-            customCursor = cursor1 + 1;
-
-            for (i = length1 - 1; i >= 0; i--) {
-                array[customDest + i] = array[customCursor + i];
-            }
-
-            array[dest] = tmp[cursor2];
-
-            } else if (length2 === 0) {
-            throw new Error('mergeHigh preconditions were not respected');
-
-            } else {
-            customCursor = dest - (length2 - 1);
-            for (i = 0; i < length2; i++) {
-                array[customCursor + i] = tmp[i];
-            }
+                array[dest] = tmp[cursor2]
+            }else if(length2 == 0){
+                throw new Error("mergeHigh preconditions were not respected")
+            }else{
+                customCursor = dest - (length2 - 1)
+                for(i = 0; i < length2; i++){
+                    array[customCursor + i] = tmp[i]
+                }
             }
         }
     }
 
-    if (self.length < 2 * DEFAULT_TMP_STORAGE_LENGTH) {
-      self.tmpStorageLength = self.length >>> 1;
+    if(self.length < 2 * DEFAULT_TMP_STORAGE_LENGTH){
+        self.tmpStorageLength = self.length >>> 1
     }
 
-    self.tmp = new Array(self.tmpStorageLength);
+    self.tmp = new Array(self.tmpStorageLength)
 
     self.stackLength =
       (self.length < 120 ? 5 :
         self.length < 1542 ? 10 :
-          self.length < 119151 ? 19 : 40);
+          self.length < 119151 ? 19 : 40)
 
-    self.runStart = new Array(self.stackLength);
-    self.runLength = new Array(self.stackLength);
-    return self;
+    self.runStart = new Array(self.stackLength)
+    self.runLength = new Array(self.stackLength)
+    return self
 }
 /**
  * Sort an array in the range [lo, hi) using TimSort.
@@ -915,76 +904,70 @@ TimSort = function(array, compare) {
  * @param {number} hi - Last element in the range.
  *     comparator.
  */
-function tim_sort(array, compare, lo, hi) {
-  if (!Array.isArray(array)) {
-    throw TypeError.$factory('Can only sort arrays');
-  }
-
-  /*
-   * Handle the case where a comparison function is not provided. We do
-   * lexicographic sorting
-   */
-  if (!compare) {
-    compare = alphabeticalCompare;
-
-  } else if (typeof compare !== 'function') {
-    hi = lo;
-    lo = compare;
-    compare = alphabeticalCompare;
-  }
-
-  if (!lo) {
-    lo = 0;
-  }
-  if (!hi) {
-    hi = array.length;
-  }
-
-  var remaining = hi - lo;
-
-  // The array is already sorted
-  if (remaining < 2) {
-    return;
-  }
-
-  var runLength = 0;
-  // On small arrays binary sort can be used directly
-  if (remaining < DEFAULT_MIN_MERGE) {
-    runLength = makeAscendingRun(array, lo, hi, compare);
-    binaryInsertionSort(array, lo, hi, lo + runLength, compare);
-    return;
-  }
-
-  var ts = new TimSort(array, compare);
-
-  var minRun = minRunLength(remaining);
-
-  do {
-    runLength = makeAscendingRun(array, lo, hi, compare);
-    if (runLength < minRun) {
-      var force = remaining;
-      if (force > minRun) {
-        force = minRun;
-      }
-
-      binaryInsertionSort(array, lo, lo + force, lo + runLength, compare);
-      runLength = force;
+function tim_sort(array, compare, lo, hi){
+    if(!Array.isArray(array)){
+        throw TypeError.$factory("Can only sort arrays")
     }
-    // Push new run and merge if necessary
-    ts.pushRun(lo, runLength);
-    ts.mergeRuns();
 
-    // Go find next run
-    remaining -= runLength;
-    lo += runLength;
+    /*
+     * Handle the case where a comparison function is not provided. We do
+     * lexicographic sorting
+     */
+    if(!compare){
+        compare = alphabeticalCompare
+    }else if (typeof compare !== "function"){
+        hi = lo
+        lo = compare
+        compare = alphabeticalCompare
+    }
 
-  } while (remaining !== 0);
+    if(!lo){lo = 0}
+    if(!hi){hi = array.length}
 
-  // Force merging of remaining runs
-  ts.forceMergeRuns();
+    var remaining = hi - lo
+
+    // The array is already sorted
+    if(remaining < 2){return}
+
+    var runLength = 0
+    // On small arrays binary sort can be used directly
+    if(remaining < DEFAULT_MIN_MERGE){
+        runLength = makeAscendingRun(array, lo, hi, compare)
+        binaryInsertionSort(array, lo, hi, lo + runLength, compare)
+        return
+    }
+
+    var ts = new TimSort(array, compare)
+
+    var minRun = minRunLength(remaining)
+
+    do{
+        runLength = makeAscendingRun(array, lo, hi, compare)
+        if(runLength < minRun){
+            var force = remaining
+            if(force > minRun){
+              force = minRun
+            }
+
+            binaryInsertionSort(array, lo, lo + force, lo + runLength, 
+                compare)
+            runLength = force
+        }
+        // Push new run and merge if necessary
+        ts.pushRun(lo, runLength)
+        ts.mergeRuns()
+
+        // Go find next run
+        remaining -= runLength
+        lo += runLength
+
+    }while(remaining !== 0)
+
+    // Force merging of remaining runs
+    ts.forceMergeRuns()
 }
 
-$B.$TimSort = tim_sort;
-$B.$AlphabeticalCompare = alphabeticalCompare;
+$B.$TimSort = tim_sort
+$B.$AlphabeticalCompare = alphabeticalCompare
 
 })(__BRYTHON__)
