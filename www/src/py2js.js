@@ -2175,8 +2175,8 @@ function $DefCtx(context){
                  "$B.frames_stack.length-1][1].$line_info}else{" +
                  "_parent_line_info = " + global_ns + ".$line_info};" +
                  ";$B.$profile.call('" + fmod + "','" + fname + "'," +
-                 node.line_num + ",_parent_line_info);" + js;
-            enter_frame_nodes.push($NodeJS(js))
+                 node.line_num + ",_parent_line_info);"
+            enter_frame_nodes.splice(0, 0, $NodeJS(js))
         }
         enter_frame_nodes.forEach(function(node){
             node.enter_frame = true
