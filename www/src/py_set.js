@@ -561,10 +561,17 @@ set.issuperset = function(){
     return true
 }
 
-set.__iand__ = set.intersection_update;          // &=
-set.__isub__ = set.difference_update;            // -=
-set.__ixor__ = set.symmetric_difference_update;  // ^=
-set.__ior__ = set.update;                        // |=
+function $accept_only_set(f, op) {
+    return function(self, other, accept_iter) {
+        $test(accept_iter, other, op)
+        return f(self, other)
+    }
+}
+
+set.__iand__ = $accept_only_set(set.intersection_update, "&=")
+set.__isub__ = $accept_only_set(set.difference_update, "-=")
+set.__ixor__ = $accept_only_set(set.symmetric_difference_update, "^=")
+set.__ior__ = $accept_only_set(set.update, "|=")
 
 set.$factory = function(){
     // Instances of set have attributes $str and $num
