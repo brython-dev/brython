@@ -103,7 +103,7 @@ traceback.__getattribute__ = function(self, attr){
                 var info = line_info.split(",")
                 var src = $B.$py_src[info[1]]
                 if(src !== undefined){
-                    return src.split("\n")[parseInt(info[0]-1)].trim()
+                    return src.split("\n")[parseInt(info[0] - 1)].trim()
                 }else{return "<unknown>"}
             }
         case "tb_next":

@@ -429,7 +429,6 @@ var _mod = {
         if(_b_.$isninf(x)) {throw ValueError('')}
         var x1 = float_check(x)
         if(x1 < 0.0){throw ValueError('')}
-        //if (isLargeNumber(x1)) x1=new BigNumber(x1)
         return float.$factory(Math.log(x1) / Math.LN2)
     },
     log10: function(x) {
@@ -558,7 +557,7 @@ for(var $attr in _mod){
         _mod[$attr].__repr__ = (function(func){
             return function(){return '<built-in function ' + func + '>'}
         })($attr)
-        _mod[$attr].__str__=(function(func){
+        _mod[$attr].__str__ = (function(func){
             return function(){return '<built-in function ' + func + '>'}
         })($attr)
     }

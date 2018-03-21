@@ -149,7 +149,7 @@ object.__getattribute__ = function(obj, attr){
             catch(err){
                 console.log('error in get.apply', err)
                 console.log("get attr", attr, "of", obj)
-                console.log(__get__+'')
+                console.log(__get__ + '')
                 throw err
             }
         }

@@ -112,7 +112,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
 
         // If the object is a function, the JSObject has a js_func attribute,
         // which is the original Javascript function
-        if(pyobj.js_func!==undefined){return pyobj.js_func}
+        if(pyobj.js_func !== undefined){return pyobj.js_func}
         return pyobj.js
 
     }else if(klass === $B.DOMNode ||
@@ -122,7 +122,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
         // underlying DOM element
         return pyobj.elt
 
-    }else if([_b_.list,_b_.tuple].indexOf(klass)>-1){
+    }else if([_b_.list,_b_.tuple].indexOf(klass) > -1){
 
         // Python list : transform its elements
         var res = []
@@ -164,7 +164,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
             }catch(err){
                 console.log(err)
                 console.log(_b_.getattr(err,'info'))
-                console.log(err.__class__.__name__+':',
+                console.log(err.__class__.__name__ + ':',
                     err.args.length > 0 ? err.args[0] : '' )
                 throw err
             }
@@ -248,8 +248,9 @@ JSObject.__getattribute__ = function(self,attr){
                         // code like foo(y=1, x=2) applied to a JS function
                         // defined by function foo(x, y) can't be determined.
                         //
-                        throw TypeError.$factory("A Javascript function can't "+
-                            "take keyword arguments")
+                        throw TypeError.$factory(
+                            "A Javascript function can't take " +
+                                "keyword arguments")
                     }else{
                         args.push(pyobj2jsobj(arguments[i]))
                     }
@@ -338,7 +339,7 @@ JSObject.__getitem__ = function(self, rank){
         if((typeof rank == "number" || typeof rank == "boolean") &&
                 typeof self.js.item == 'function'){
             var rank_to_int = _b_.int.$factory(rank)
-            if(rank_to_int<0){rank_to_int += self.js.length}
+            if(rank_to_int < 0){rank_to_int += self.js.length}
             var res = JSObject.$factory(self.js.item(rank_to_int))
             if(res === undefined){throw _b_.KeyError.$factory(rank)}
             return res
@@ -431,12 +432,12 @@ JSObject.__setattr__ = function(self,attr,value){
                     var info = _b_.getattr(err,'info')
                     if (err.args.length > 0) {
                         err.toString = function(){
-                            return info + '\n' + err.__class__.__name__+
+                            return info + '\n' + err.__class__.__name__ +
                             ': ' + _b_.repr(err.args[0])
                         }
                     } else {
                         err.toString = function(){
-                            return info + '\n'+err.__class__.__name__
+                            return info + '\n' + err.__class__.__name__
                         }
                     }
                     console.log(err + '')

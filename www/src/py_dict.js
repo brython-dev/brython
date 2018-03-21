@@ -327,7 +327,7 @@ dict.__init__ = function(self){
             if(Array.isArray(obj)){
                 var i = obj.length,
                     si = dict.__setitem__
-                while(i-- > 0){si(self, obj[i-1][0], obj[i-1][1])}
+                while(i-- > 0){si(self, obj[i - 1][0], obj[i - 1][1])}
                 return $N
             }else if(obj.$nat === undefined && isinstance(obj, dict)){
                 $copy_dict(self, obj)

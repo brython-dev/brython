@@ -43,9 +43,9 @@ function make_node(top_node, node){
         // can be restored in the next iteration
         var iter_name = top_node.iter_id
         ctx_js = 'for(var attr in this.blocks){' +
-            'eval("var "+attr+" = this.blocks[attr]");};' +
+            'eval("var " + attr + " = this.blocks[attr]");};' +
             'var $locals_' + iter_name + ' = this.env = {}' +
-            ', $local_name = "' + iter_name+
+            ', $local_name = "' + iter_name +
             '", $locals = $locals_' + iter_name + ';'
     }
 
@@ -85,7 +85,7 @@ function make_node(top_node, node){
             // Replace "yield value" by "return [value, node_id]"
 
             var yield_node_id = top_node.yields.length
-            while(ctx_js.charAt(ctx_js.length-1) == ";"){
+            while(ctx_js.charAt(ctx_js.length - 1) == ";"){
                 ctx_js = ctx_js.substr(0, ctx_js.length - 1)
             }
             var res =  "return [" + ctx_js + ", " + yield_node_id + "]"
@@ -199,7 +199,7 @@ $B.genNode = function(data, parent){
         }
 
         if(head && this.is_break){
-            res.data = '$locals["$no_break'+this.loop_num+'"] = false;' +
+            res.data = '$locals["$no_break' + this.loop_num + '"] = false;' +
                 'var err = new Error("break"); ' +
                 "err.__class__ = $B.GeneratorBreak; throw err;"
             res.is_break = true
@@ -341,7 +341,7 @@ $B.$BRgenerator = function(func_name, blocks, def_id, def_node){
     // Create a tree structure based on the generator tree
     // iter_id is used in the node where the iterator resets local
     // namespace
-    if($B.debug>0){
+    if($B.debug > 0){
         // add line nums for error reporting
         $B.$add_line_num(def_node, def_ctx.rank)
     }
@@ -413,8 +413,8 @@ function make_next(self, yield_node_id){
     var parent_scope = self.func_root
 
     // restore namespaces
-    var js =  'for(var attr in this.blocks){eval("var "+attr+" = ' +
-        'this.blocks[attr]");};var $locals_' + self.iter_id + ' = this.env,' +
+    var js =  'for(var attr in this.blocks){eval("var " + attr + " = ' +
+        'this.blocks[attr]");}; var $locals_' + self.iter_id + ' = this.env,' +
         ' $locals = $locals_' + self.iter_id + ', $local_name = "' +
         self.iter_id + '";'
 
@@ -447,7 +447,7 @@ function make_next(self, yield_node_id){
             has_continue
 
         // "start" is the position where the rest of the block starts
-        // By default it is the node of rank exit_node.rank+1
+        // By default it is the node of rank exit_node.rank + 1
         var start = exit_node.rank + 1
 
         if(exit_node.loop_start !== undefined){
@@ -486,7 +486,7 @@ function make_next(self, yield_node_id){
                 rest_try.addChild(rest[i])
             }
             var catch_test = "catch(err)" +
-                "{if(err.__class__!==$B.GeneratorBreak){throw err}}"
+                "{if(err.__class__ !== $B.GeneratorBreak){throw err}}"
             catch_test = new $B.genNode(catch_test)
             rest = [rest_try, catch_test]
         }
@@ -578,7 +578,7 @@ generator.__next__ = function(self){
     }catch(err){
         /*
         console.log('error in __next__ of', self.name)
-        console.log(self.next+'')
+        console.log(self.next + '')
         console.log(err)
         */
         self.$finished = true

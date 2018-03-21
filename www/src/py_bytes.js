@@ -51,7 +51,7 @@ bytearray.__setitem__ = function(self, arg, value){
             throw _b_.ValueError.$factory("byte must be in range(0, 256)")
         }
         var pos = arg
-        if(arg<0){pos = self.source.length + pos}
+        if(arg < 0){pos = self.source.length + pos}
         if(pos >= 0 && pos < self.source.length){self.source[pos] = value}
         else{throw _b_.IndexError.$factory('list index out of range')}
     } else if(isinstance(arg, _b_.slice)){
@@ -164,7 +164,7 @@ bytes.__getitem__ = function(self, arg){
             var stop = arg.stop === None ? 0 : arg.stop
         }
         if(start < 0){start = self.source.length + start}
-        if(stop<0){stop = self.source.length + stop}
+        if(stop < 0){stop = self.source.length + stop}
         var res = [], i = null, pos = 0
         if(step > 0){
           stop = Math.min(stop, self.source.length)
@@ -357,7 +357,7 @@ bytes.find = function() {
         throw _b_.TypeError.$factory("first argument must be a bytes-like " +
             "object, not '" + sub.__class__.__name__ + "'")
     }
-    var end = $.end == -1 ? $.self.source.length-sub.source.length :
+    var end = $.end == -1 ? $.self.source.length - sub.source.length :
         Math.min($.self.source.length - sub.source.length, $.end)
 
     for(var i = start; i <= end; i++) {
@@ -370,7 +370,7 @@ bytes.replace = function(){
     var $ = $B.args('replace', 4,
         {self: null, old: null, new: null, count: null},
         ['self', 'old', 'new', 'count'],
-        arguments, {count:-1}, null, null),
+        arguments, {count: -1}, null, null),
         res = [];
     var self = $.self,
         src = self.source,

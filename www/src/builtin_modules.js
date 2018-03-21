@@ -9,9 +9,10 @@
     var browser = {
         $package: true,
         $is_package: true,
-        __package__:'browser',
-        __file__:$B.brython_path.replace(/\/*$/g,'')+'/Lib/browser/__init__.py',
-        console:$B.JSObject.$factory(self.console),
+        __package__: 'browser',
+        __file__: $B.brython_path.replace(/\/*$/g,'') +
+            '/Lib/browser/__init__.py',
+        console: $B.JSObject.$factory(self.console),
         win: $B.win,
         $$window: $B.win,
     }
@@ -66,7 +67,8 @@
             name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
             var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
                 results = regex.exec(location.search);
-            results = results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+            results = results === null ? "" :
+                decodeURIComponent(results[1].replace(/\+/g, " "));
             return $B.builtins.str.$factory(results);
             }
         })
@@ -112,7 +114,8 @@
                                 }catch(err){
                                     console.log(err)
                                     console.log("first", first)
-                                    throw _b_.ValueError.$factory('wrong element '+first)
+                                    throw _b_.ValueError.$factory(
+                                        'wrong element ' + first)
                                 }
                             }
                         }
@@ -129,17 +132,18 @@
                             // Better use method bind of DOMNode objects
                             var js = '$B.DOMNode.bind(self,"' +
                                 arg.toLowerCase().substr(2)
-                            eval(js+'",function(){'+value+'})')
+                            eval(js + '",function(){' + value + '})')
                         }else if(arg.toLowerCase() == "style"){
                             $B.DOMNode.set_style(self,value)
                         } else {
                             if(value !== false){
                                 // option.selected = false sets it to true :-)
                                 try{
-                                    arg = arg.replace('_','-')
+                                    arg = arg.replace('_', '-')
                                     $B.DOMNode.__setattr__(self, arg, value)
                                 }catch(err){
-                                    throw _b_.ValueError.$factory("can't set attribute "+arg)
+                                    throw _b_.ValueError.$factory(
+                                        "can't set attribute " + arg)
                                 }
                             }
                         }
@@ -249,7 +253,7 @@
     modules['browser'] = browser
 
     modules['javascript'] = {
-        __file__:$B.brython_path+'/libs/javascript.js',
+        __file__:$B.brython_path + '/libs/javascript.js',
         $$this: function(){
             // returns the content of Javascript "this"
             // $B.js_this is set to "this" at the beginning of each function
@@ -257,17 +261,17 @@
             return $B.JSObject.$factory($B.js_this)
         },
         JSObject: function(){
-            console.log('"javascript.JSObject" is deprecrated. '+
+            console.log('"javascript.JSObject" is deprecrated. ' +
                 'Please refer to the documentation.')
             return $B.JSObject.$factory(...arguments)
         },
         JSConstructor: function(){
-            console.log('"javascript.JSConstructor" is deprecrated. '+
+            console.log('"javascript.JSConstructor" is deprecrated. ' +
                 'Please refer to the documentation.')
             return $B.JSConstructor.$factory.apply(null, arguments)
         },
         load:function(script_url){
-            console.log('"javascript.load" is deprecrated. '+
+            console.log('"javascript.load" is deprecrated. ' +
                 'Use browser.load instead.')
             // Load and eval() the Javascript file at script_url
             // Set the names in array "names" in the Javacript global namespace
@@ -294,7 +298,7 @@
     // see https://docs.python.org/3/reference/toplevel_components.html#programs
     var _b_ = $B.builtins
     modules['_sys'] = {
-        __file__:$B.brython_path+'/libs/_sys.js',
+        __file__:$B.brython_path + '/libs/_sys.js',
         // Called "Getframe" because "_getframe" wouldn't be imported in
         // sys.py with "from _sys import *"
         Getframe : function(depth){
@@ -327,7 +331,7 @@
                 return _b_.dict.$factory($B.JSObject.$factory($B.path_importer_cache))
             },
             __set__: function(self, obj, value){
-                throw _b_.TypeError.$factory("Read only property"+
+                throw _b_.TypeError.$factory("Read only property" +
                     " 'sys.path_importer_cache'")
             }
         },
@@ -350,7 +354,7 @@
         //module_obj.__file__ = '<builtin>'
         module_obj.__name__ = name
         module_obj.__repr__ = module_obj.__str__ = function(){
-            return "<module '"+name+"' (built-in)>"
+            return "<module '" + name + "' (built-in)>"
         }
         $B.imported[name] = module_obj
         // set attribute "name" of functions

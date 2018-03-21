@@ -1,5 +1,5 @@
 var $module=(function($B){
-    var _b_=$B.builtins
+    var _b_ = $B.builtins
     return {
         // Called "Getframe" because "_getframe" wouldn't be imported in
         // sys.py with "from _sys import *"

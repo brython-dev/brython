@@ -653,9 +653,9 @@ long_int.to_base = function(self, base){
     // Returns the string representation of self in specified base
     var res = "",
         v = self.value
-    while(v>0){
+    while(v > 0){
         var dm = divmod_pos(v, base.toString())
-        res = parseInt(dm[1].value).toString(base)+res
+        res = parseInt(dm[1].value).toString(base) + res
         v = dm[0].value
         if(v == 0){break}
     }
@@ -746,7 +746,7 @@ long_int.$factory = function(value, base){
         start = 0
     // Strip leading and trailing whitespaces
     while(value.charAt(0) == " " && value.length){value = value.substr(1)}
-    while(value.charAt(value.length-1) == " " && value.length){
+    while(value.charAt(value.length - 1) == " " && value.length){
         value = value.substr(0, value.length - 1)
     }
     // Check if string starts with + or -
@@ -761,7 +761,7 @@ long_int.$factory = function(value, base){
         }else{value = value.substr(1)}
     }
     // Ignore leading zeros
-    while(start < value.length-1 && value.charAt(start) == "0"){start++}
+    while(start < value.length - 1 && value.charAt(start) == "0"){start++}
     value = value.substr(start)
 
     // Check if all characters in value are valid in the base

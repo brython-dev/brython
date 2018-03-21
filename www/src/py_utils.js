@@ -123,7 +123,7 @@ $B.args = function($fname, argcount, slots, var_names, $args, $dobj,
 
 $B.wrong_nb_args = function(name, received, expected, positional){
     if(received < expected){
-        var missing = expected-received
+        var missing = expected - received
         throw _b_.TypeError.$factory(name + "() missing " + missing +
             " positional argument" + (missing > 1 ? "s" : "") + ": " +
             positional.slice(received))
@@ -210,7 +210,7 @@ $B.$dict_comp = function(module_name, parent_scope, items, line_num){
 
     var ix = $B.UUID(),
         res = "res" + ix,
-        py = res+"={}\n", // Python code
+        py = res + "={}\n", // Python code
         indent = 0
     for(var i = 1, len = items.length; i < len; i++){
         var item = items[i].replace(/\s+$/,"").replace(/\n/g, "")
@@ -242,7 +242,7 @@ $B.$gen_expr = function(module_name, parent_scope, items, line_num){
         py += " ".repeat(indent) + item + ":\n"
         indent += 4
     }
-    py+=" ".repeat(indent)
+    py += " ".repeat(indent)
     py += "yield (" + items[0] + ")"
 
     var genexpr_name = "__ge" + $ix,
@@ -567,7 +567,7 @@ $B.$setitem = function(obj, item, value){
 // augmented item
 $B.augm_item_add = function(obj, item, incr){
     if(Array.isArray(obj) && typeof item == "number" &&
-            obj[item]!==undefined){
+            obj[item] !== undefined){
         if(Array.isArray(obj[item]) && Array.isArray(incr)){
             for(var i  =0, len = incr.length; i < len; i++){
                 obj[item].push(incr[i])
@@ -878,7 +878,7 @@ $B.pyobject2jsobject = function(obj){
     if (_b_.hasattr(obj, "__dict__")) {
        return $B.pyobject2jsobject(_b_.getattr(obj, "__dict__"))
     }
-    throw _b_.TypeError.$factory(_b_.str.$factory(obj)+
+    throw _b_.TypeError.$factory(_b_.str.$factory(obj) +
         " is not JSON serializable")
 }
 

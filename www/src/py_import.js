@@ -212,7 +212,7 @@ function import_py(module, path, $package){
         module_contents = $download_module(module, path, $package)
     $B.imported[mod_name].$is_package = module.$is_package
     $B.imported[mod_name].$last_modified = module.$last_modified
-    if(path.substr(path.length-12) == "/__init__.py"){
+    if(path.substr(path.length - 12) == "/__init__.py"){
         $B.imported[mod_name].__package__ = mod_name
         $B.imported[mod_name].__path__ = path
         $B.imported[mod_name].$is_package = module.$is_package = true
@@ -838,8 +838,10 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
                     // If this is the last but one part, and the last part is
                     // an attribute of module, and this attribute is a module,
                     // return it. This is the case for os.path for instance
-                    if(i == len-1 && $B.imported[_mod_name][parsed_name[len]] &&
-                        $B.imported[_mod_name][parsed_name[len]].__class__ === module){
+                    if(i == len - 1 &&
+                            $B.imported[_mod_name][parsed_name[len]] &&
+                            $B.imported[_mod_name][parsed_name[len]].__class__ ===
+                                module){
                         return $B.imported[_mod_name][parsed_name[len]]
                     }
                     throw _b_.ImportError.$factory(_mod_name)
@@ -902,7 +904,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
     //if ($B.$options.debug == 10) {show_ns()}
 
     // [Import spec] Resolve __import__ in global namespace
-    var current_frame = $B.frames_stack[$B.frames_stack.length-1],
+    var current_frame = $B.frames_stack[$B.frames_stack.length - 1],
         _globals = current_frame[3],
         __import__ = _globals["__import__"],
         globals = $B.obj_dict(_globals)
@@ -971,7 +973,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                                 line_elts = line_info.split(','),
                                 line_num = parseInt(line_elts[0])
                             $B.$SyntaxError(frame[2],
-                                "future feature "+name+" is not defined",
+                                "future feature " + name + " is not defined",
                                 undefined, line_num)
                         }
                         // For other modules, raise ImportError
@@ -979,10 +981,11 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                             var msg = $err3.__class__.__name__ + "\n" +
                                 _b_.getattr($err3, "info")
                             throw _b_.ImportError.$factory("cannot import name '"+
-                                name+"'\n\n" + msg)
+                                name + "'\n\n" + msg)
                         }
                         console.log($err3)
-                        throw _b_.ImportError.$factory("cannot import name '"+name+"'")
+                        throw _b_.ImportError.$factory(
+                            "cannot import name '" + name + "'")
                     }
                 }
             }

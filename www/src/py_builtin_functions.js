@@ -214,7 +214,7 @@ function compile() {
         {source:null, filename:null, mode:null, flags:null, dont_inherit:null,
          optimize:null},
          ['source', 'filename', 'mode', 'flags', 'dont_inherit', 'optimize'],
-         arguments, {flags:0, dont_inherit:false, optimize:-1}, null, null)
+         arguments, {flags: 0, dont_inherit: false, optimize: -1}, null, null)
 
     var module_name = '$exec_' + $B.UUID()
     $B.clear_ns(module_name)
@@ -337,7 +337,7 @@ var enumerate = $B.make_class("enumerate",
             },
             __repr__: function(){return "<enumerate object>"},
             __str__: function(){return "<enumerate object>"},
-            counter: _start-1
+            counter: _start - 1
         }
         for(var attr in res){
             if(typeof res[attr] === 'function' && attr !== "__class__"){
@@ -368,9 +368,9 @@ function $$eval(src, _globals, _locals){
         return attr
     }
 
-    var current_frame = $B.frames_stack[$B.frames_stack.length-1]
+    var current_frame = $B.frames_stack[$B.frames_stack.length - 1]
 
-    if(current_frame!==undefined){
+    if(current_frame !== undefined){
         var current_locals_id = current_frame[0].replace(/\./, '_'),
             current_globals_id = current_frame[2].replace(/\./, '_')
     }
@@ -575,7 +575,7 @@ function $$eval(src, _globals, _locals){
             }
         }
 
-        if(_globals!==undefined){
+        if(_globals !== undefined){
             // Update _globals with the namespace after execution
             for(var attr in gns){
                 attr1 = from_alias(attr)
@@ -601,7 +601,7 @@ function $$eval(src, _globals, _locals){
         throw err
     }finally{
         // "leave_frame" was removed so we must execute it here
-        if($B.frames_stack.length == stack_len+1){
+        if($B.frames_stack.length == stack_len + 1){
             $B.frames_stack.pop()
         }
 
@@ -667,7 +667,7 @@ function format(value, format_spec) {
 }
 
 function attr_error(attr, cname){
-    var msg = "bad operand type for unary #: '"+cname+"'"
+    var msg = "bad operand type for unary #: '" + cname + "'"
     switch(attr){
         case '__neg__':
             throw _b_.TypeError.$factory(msg.replace('#', '-'))
@@ -676,7 +676,7 @@ function attr_error(attr, cname){
         case '__invert__':
             throw _b_.TypeError.$factory(msg.replace('#', '~'))
         case '__call__':
-            throw _b_.TypeError.$factory("'" + cname+"'" +
+            throw _b_.TypeError.$factory("'" + cname + "'" +
                 ' object is not callable')
         default:
             while(attr.charAt(0) == '$'){attr = attr.substr(1)}
@@ -951,7 +951,7 @@ function _get_builtins_doc(){
     if($B.builtins_doc === undefined){
         // Load builtins docstrings from file builtins_doctring.js
         var url = $B.brython_path
-        if(url.charAt(url.length-1) == '/'){
+        if(url.charAt(url.length - 1) == '/'){
             url = url.substr(0, url.length - 1)
         }
         url += '/builtins_docstrings.js'
@@ -1373,7 +1373,7 @@ function next(obj){
     check_no_kw('next', obj)
     check_nb_args('next', 1, arguments.length)
     var ga = getattr(obj, '__next__')
-    if(ga!==undefined){
+    if(ga !== undefined){
         return $B.$call(ga)()
     }
     throw _b_.TypeError.$factory("'" + $B.get_class(obj).__name__ +
@@ -1563,7 +1563,7 @@ var reversed = $B.make_class("reversed",
 reversed.__iter__ = function(self){return self}
 reversed.__next__ = function(self){
     self.$counter--
-    if(self.$counter<0){throw _b_.StopIteration.$factory('')}
+    if(self.$counter < 0){throw _b_.StopIteration.$factory('')}
     return self.getter(self.$counter)
 }
 

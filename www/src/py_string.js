@@ -97,8 +97,8 @@ function reverse(s){
 
 function check_str(obj){
     if(! _b_.isinstance(obj, str)){
-        throw _b_.TypeError.$factory("can't convert '"+
-            $B.get_class(obj).__name__+"' object to str implicitely")
+        throw _b_.TypeError.$factory("can't convert '" +
+            $B.get_class(obj).__name__ + "' object to str implicitely")
     }
 }
 
@@ -984,7 +984,7 @@ str.expandtabs = function(self, tabsize) {
         var car = self.charAt(pos)
         switch(car){
             case "\t":
-                while(col%s > 0){res += " "; col++}
+                while(col % s > 0){res += " "; col++}
                 break
             case "\r":
             case "\n":
@@ -1098,7 +1098,7 @@ str.format = function(self) {
         rank = 0
     while(pos < _len){
         car = self.charAt(pos)
-        if(car == "{" && self.charAt(pos+1) == "{"){
+        if(car == "{" && self.charAt(pos + 1) == "{"){
             // replace {{ by literal {
             text += "{"
             pos += 2
@@ -1176,7 +1176,7 @@ str.format = function(self) {
 
         // Format objects
         fmt = parts[i]
-        if(fmt.name.charAt(0).search(/\d/)>-1){
+        if(fmt.name.charAt(0).search(/\d/) > -1){
             // Numerical reference : use positional arguments
             var pos = parseInt(fmt.name),
                 value = _b_.tuple.__getitem__($.$args, pos)
@@ -1500,7 +1500,7 @@ str.rstrip = function(self, x){
     var $ = $B.args("rstrip", 2, {self: null, chars: null}, ["self", "chars"],
             arguments, {chars: _b_.None}, null, null)
     if($.chars === _b_.None){return $.self.trimRight()}
-    for(var j = $.self.length-1; j >= 0; j--){
+    for(var j = $.self.length - 1; j >= 0; j--){
         if($.chars.indexOf($.self.charAt(j)) == -1){
             return $.self.substring(0, j + 1)
         }
@@ -1820,7 +1820,7 @@ $B.parse_format_spec = function(spec){
             pos += 2
             car = spec.charAt(pos)
             while(car && digits.indexOf(car) > -1){
-                this.precision+=car
+                this.precision += car
                 pos++
                 car = spec.charAt(pos)
             }
@@ -1892,7 +1892,7 @@ $B.parse_fstring = function(string){
         if(ctype === null){
             car = string.charAt(pos)
             if(car == "{"){
-                if(string.charAt(pos+1) == "{"){
+                if(string.charAt(pos + 1) == "{"){
                     ctype = "string"
                     current = "{"
                     pos += 2
@@ -1902,7 +1902,7 @@ $B.parse_fstring = function(string){
                     pos++
                 }
             }else if(car == "}"){
-                if(string.charAt(pos+1) == car){
+                if(string.charAt(pos + 1) == car){
                     ctype = "string"
                     current = "}"
                     pos += 2
@@ -1920,7 +1920,7 @@ $B.parse_fstring = function(string){
             while(i < string.length){
                 car = string.charAt(i)
                 if(car == "{"){
-                    if(string.charAt(i+1) == "{"){
+                    if(string.charAt(i + 1) == "{"){
                         current += "{"
                         i += 2
                     }else{
@@ -1972,7 +1972,7 @@ $B.parse_fstring = function(string){
                     throw Error("f-string expression part cannot include a" +
                         " backslash")
                 }else if(nb_paren == 0 && car == "!" && current.fmt === null &&
-                    ":}".indexOf(string.charAt(i + 2))>-1){
+                    ":}".indexOf(string.charAt(i + 2)) > -1){
                     if(current.expression.length == 0){
                         throw Error("f-string: empty expression not allowed")
                     }
@@ -2021,7 +2021,7 @@ $B.parse_fstring = function(string){
                     i++
                 }
             }
-            if(nb_braces>0){
+            if(nb_braces > 0){
                 throw Error("f-string: expected '}'")
             }
         }

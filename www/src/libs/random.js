@@ -79,7 +79,7 @@ function RandomStream(seed) {
     //c//static unsigned long mt[N]; /* the array for the state vector  */
     //c//static int mti=N+1; /* mti==N+1 means mt[N] is not initialized */
     var mt = new Array(N)   /* the array for the state vector  */
-    var mti = N+1           /* mti==N+1 means mt[N] is not initialized */
+    var mti = N + 1           /* mti==N+1 means mt[N] is not initialized */
 
     function unsigned32(n1){
         // returns a 32-bits unsiged integer from an operand to which applied a
@@ -161,7 +161,7 @@ function RandomStream(seed) {
           i++
           j++
           if(i >= N){mt[0] = mt[N-1]; i = 1}
-          if(j >= key_length){j=0}
+          if(j >= key_length){j = 0}
         }
         for(k = N - 1; k; k--){
             //c//mt[i] = (mt[i] ^ ((mt[i-1] ^ (mt[i-1] >> 30)) * 1566083941))
@@ -265,7 +265,7 @@ function RandomStream(seed) {
     //c//double genrand_res53(void)
     function genrand_res53() {
         //c//unsigned long a=genrand_int32()>>5, b=genrand_int32()>>6;
-        var a = genrand_int32() >>> 5, 
+        var a = genrand_int32() >>> 5,
             b = genrand_int32() >>> 6
         return (a * 67108864.0 + b) * (1.0 / 9007199254740992.0)
     }
@@ -329,8 +329,8 @@ Random._urandom = function(self, n){
     Return n random bytes suitable for cryptographic use.
     */
 
-    var randbytes= []
-    for(i=0;i<n;i++){randbytes.push(parseInt(self._random()*256))}
+    var randbytes = []
+    for(i = 0; i < n; i++){randbytes.push(parseInt(self._random() * 256))}
     return _b_.bytes.$factory(randbytes)
 }
 
@@ -364,8 +364,10 @@ Random.choice = function(){
     var len, rank
     if(Array.isArray(seq)){len = seq.length}
     else{len = _b_.getattr(seq,"__len__")()}
-    if(len==0){throw _b_.IndexError.$factory("Cannot choose from an empty sequence")}
-    rank = parseInt(self._random()*len)
+    if(len == 0){
+        throw _b_.IndexError.$factory("Cannot choose from an empty sequence")
+    }
+    rank = parseInt(self._random() * len)
     if(Array.isArray(seq)){return seq[rank]}
     else{return _b_.getattr(seq, "__getitem__")(rank)}
 }
@@ -511,7 +513,7 @@ Random.gauss = function(){
 
     var z = gauss_next
     gauss_next = null
-    if(z===null){
+    if(z === null){
         var x2pi = self._random() * Math.PI * 2,
             g2rad = Math.sqrt(-2.0 * Math.log(1.0 - self._random())),
             z = Math.cos(x2pi) * g2rad
@@ -572,7 +574,7 @@ Random.normalvariate = function(){
     // variables using the ratio of uniform deviates", ACM Trans
     // Math Software, 3, (1977), pp257-260.
 
-    var $=$B.args("normalvariate", 3,
+    var $ = $B.args("normalvariate", 3,
         {self: null, mu:null, sigma:null}, ["self", "mu", "sigma"],
         arguments, {}, null, null),
         self = $.self,
@@ -621,45 +623,49 @@ Random.randrange = function(){
         _random = self._random
         //console.log("randrange", $)
 
-    if($.stop===null){
+    if($.stop === null){
         var start = 0, stop = $.x, step = 1
     }else{
         var start = $.x, stop = $.stop,
-            step = $.step===null ? 1 : $.step
-        if(step==0){throw _b_.ValueError.$factory('step cannot be 0')}
+            step = $.step === null ? 1 : $.step
+        if(step == 0){throw _b_.ValueError.$factory('step cannot be 0')}
     }
     if((step>0 && start>stop) || (step<0 && start<stop)){
         throw _b_.ValueError.$factory("empty range for randrange() (" +
             start+", "+stop+", "+step+")")
     }
-    if(typeof start=='number' && typeof stop == 'number' &&
-        typeof step=='number'){
-        return start+step*Math.floor(_random()*Math.ceil((stop-start)/step))
+    if(typeof start == 'number' && typeof stop == 'number' &&
+        typeof step == 'number'){
+        return start + step * Math.floor(_random() *
+            Math.ceil((stop - start) / step))
     }else{
-        var d = _b_.getattr(stop,'__sub__')(start)
+        var d = _b_.getattr(stop, '__sub__')(start)
         d = _b_.getattr(d, '__floordiv__')(step)
         // Force d to be a LongInt
         d = $B.long_int.$factory(d)
         // d is a long integer with n digits ; to choose a random number
         // between 0 and d the most simple is to take a random digit
         // at each position, except the first one
-        var s = d.value, _len = s.length,
-            res = Math.floor(_random()*(parseInt(s.charAt(0))+(_len==1 ? 0 : 1)))+''
-        var same_start = res.charAt(0)==s.charAt(0)
-        for(var i=1;i<_len;i++){
+        var s = d.value,
+            _len = s.length,
+            res = Math.floor(_random() * (parseInt(s.charAt(0)) +
+                (_len == 1 ? 0 : 1))) + ''
+        var same_start = res.charAt(0) == s.charAt(0)
+        for(var i = 1; i < _len; i++){
             if(same_start){
                 // If it's the last digit, don't allow stop as valid
-                if(i==_len-1){
-                    res += Math.floor(_random()*parseInt(s.charAt(i)))+''
+                if(i == _len - 1){
+                    res += Math.floor(_random() * parseInt(s.charAt(i))) + ''
                 }else{
-                    res += Math.floor(_random()*(parseInt(s.charAt(i))+1))+''
-                    same_start = res.charAt(i)==s.charAt(i)
+                    res += Math.floor(_random() *
+                        (parseInt(s.charAt(i)) + 1)) + ''
+                    same_start = res.charAt(i) == s.charAt(i)
                 }
             }else{
-                res += Math.floor(_random()*10)+''
+                res += Math.floor(_random() * 10) + ''
             }
         }
-        var offset = {__class__:$B.long_int, value: res,
+        var offset = {__class__: $B.long_int, value: res,
             pos: true}
         d = _b_.getattr(step, '__mul__')(offset)
         d = _b_.getattr(start, '__add__')(d)
@@ -696,18 +702,19 @@ Random.sample = function(){
     # set and it doesn't suffer from frequent reselections.'
 
     */
-    var $ = $B.args('sample',3,{self:null, population:null,k:null},
-        ['self', 'population','k'], arguments,{},null,null),
+    var $ = $B.args('sample', 3, {self: null, population: null,k: null},
+        ['self', 'population','k'], arguments, {}, null, null),
         self = $.self,
         population = $.population,
         k = $.k
 
     if(!_b_.hasattr(population, '__len__')){
-        throw _b_.TypeError("Population must be a sequence or set.  For dicts, use list(d).")
+        throw _b_.TypeError("Population must be a sequence or set. " +
+            "For dicts, use list(d).")
     }
     var n = _b_.getattr(population, '__len__')()
 
-    if(k<0 || k>n){
+    if(k < 0 || k > n){
         throw _b_.ValueError.$factory("Sample larger than population")
     }
     var result = [],
@@ -720,16 +727,16 @@ Random.sample = function(){
         if(Array.isArray(population)){
             var pool = population.slice()
         }else{var pool = _b_.list.$factory(population)}
-        for(var i=0;i<k;i++){ //invariant:  non-selected at [0,n-i)
-            var j = Random._randbelow(self, n-i)
+        for(var i = 0; i < k; i++){ //invariant:  non-selected at [0,n-i)
+            var j = Random._randbelow(self, n - i)
             result[i] = pool[j]
-            pool[j] = pool[n-i-1]   // move non-selected item into vacancy
+            pool[j] = pool[n - i - 1]   // move non-selected item into vacancy
         }
     }else{
         selected = {}
-        for(var i=0;i<k;i++){
+        for(var i = 0; i < k; i++){
             var j = Random._randbelow(self, n)
-            while(selected[j]!==undefined){
+            while(selected[j] !== undefined){
                 j = Random._randbelow(self, n)
             }
             selected[j] = true
@@ -749,15 +756,15 @@ Random.seed = function(){
 
     If *a* is an int, all bits are used.
     */
-    var $=$B.args('seed',3,{self: null, a:null, version:null},
+    var $=$B.args('seed', 3, {self: null, a: null, version: null},
         ['self', 'a', 'version'],
-        arguments,{a:new Date(), version:2},null,null),
+        arguments, {a: new Date(), version: 2}, null, null),
         self = $.self,
         a = $.a,
         version = $.version
 
-    if(version==1){a = _b_.hash(a)}
-    else if(version==2){
+    if(version == 1){a = _b_.hash(a)}
+    else if(version == 2){
         if(_b_.isinstance(a, _b_.str)){
             a = _b_.int.from_bytes(_b_.bytes.$factory(a, 'utf-8'), 'big')
         }else if(_b_.isinstance(a, [_b_.bytes, _b_.bytearray])){
@@ -765,15 +772,17 @@ Random.seed = function(){
         }else if(!_b_.isinstance(a, _b_.int)){
             throw _b_.TypeError('wrong argument')
         }
-        if(a.__class__===$B.long_int){
+        if(a.__class__ === $B.long_int){
             // In this implementation, seed() only accepts safe integers
             // Generate a random one from the underlying string value,
             // using an arbitrary seed (99) to always return the same
             // integer
-            var numbers = a.value, res = '', pos
+            var numbers = a.value,
+                res = '',
+                pos
             self._random.seed(99)
-            for(var i=0;i<17;i++){
-                pos = parseInt(self._random()*numbers.length)
+            for(var i = 0; i < 17; i++){
+                pos = parseInt(self._random() * numbers.length)
                 res += numbers.charAt(pos)
             }
             a = parseInt(res)
@@ -792,26 +801,26 @@ Random.setstate = function(state){
         arguments, {}, null, null),
         self = $.self
     var state = self._random.getstate()
-    if(!Array.isArray($.state)){
+    if(! Array.isArray($.state)){
         throw _b_.TypeError('state must be a list, not '+
             $B.get_class($.state).__name__)
     }
     if($.state.length<state.length){
-        throw _b_.ValueError.$factory("need more than "+$.state.length+
+        throw _b_.ValueError.$factory("need more than " + $.state.length +
             " values to unpack")
     }else if($.state.length>state.length){
-        throw _b_.ValueError.$factory("too many values to unpack (expected "+
-            state.length+")")
+        throw _b_.ValueError.$factory("too many values to unpack (expected " +
+            state.length + ")")
     }
-    if($.state[0]!=3){
-        throw _b_.ValueError.$factory("ValueError: state with version "+
-            $.state[0]+" passed to Random.setstate() of version 3")
+    if($.state[0] != 3){
+        throw _b_.ValueError.$factory("ValueError: state with version " +
+            $.state[0] + " passed to Random.setstate() of version 3")
     }
     var second = _b_.list.$factory($.state[1])
-    if(second.length!==state[1].length){
+    if(second.length !== state[1].length){
         throw _b_.ValueError.$factory('state vector is the wrong size')
     }
-    for(var i=0;i<second.length;i++){
+    for(var i = 0; i < second.length; i++){
         if(typeof second[i] != 'number'){
             throw _b_.ValueError.$factory('state vector items must be integers')
         }
@@ -827,18 +836,18 @@ Random.shuffle = function(x, random){
     float in [0.0, 1.0); by default, the standard random.random.
     */
 
-    var $ = $B.args('shuffle',3,{self:null, x:null,random:null},
+    var $ = $B.args('shuffle', 3, {self: null, x: null, random: null},
         ['self', 'x','random'],
-        arguments,{random:null},null,null),
+        arguments, {random: null}, null, null),
         self = $.self,
         x = $.x,
         random = $.random
 
-    if(random===null){random=self._random}
+    if(random === null){random = self._random}
 
     if(Array.isArray(x)){
-        for(var i=x.length-1;i>=0;i--){
-            var j = Math.floor(random() * (i+1)),
+        for(var i = x.length - 1; i >= 0;i--){
+            var j = Math.floor(random() * (i + 1)),
                 temp = x[j]
             x[j] = x[i]
             x[i] = temp
@@ -848,8 +857,8 @@ Random.shuffle = function(x, random){
             x_get = _b_.getattr(x, '__getitem__'),
             x_set = _b_.getattr(x, '__setitem__')
 
-        for(i=len-1;i>=0;i--){
-            var j = Math.floor(random() * (i+1)),
+        for(i = len - 1; i >= 0; i--){
+            var j = Math.floor(random() * (i + 1)),
                 temp = x_get(j)
             x_set(j, x_get(i))
             x_set(i, temp)
@@ -866,16 +875,16 @@ Random.triangular = function(){
 
     http://en.wikipedia.org/wiki/Triangular_distribution
     */
-    var $=$B.args('triangular',4,
-        {self: null, low:null, high:null, mode:null},
+    var $=$B.args('triangular', 4,
+        {self: null, low: null, high: null, mode: null},
         ['self', 'low', 'high', 'mode'],
-        arguments,{low:0, high:1, mode:null}, null, null),
+        arguments, {low: 0, high: 1, mode: null}, null, null),
         low = $.low,
         high = $.high,
         mode = $.mode
 
     var u = $.self._random(),
-        c = mode===null ? 0.5 : (mode - low) / (high - low)
+        c = mode === null ? 0.5 : (mode - low) / (high - low)
     if(u > c){
         u = 1 - u
         c = 1 - c
@@ -887,8 +896,8 @@ Random.triangular = function(){
 }
 
 Random.uniform = function(){
-    var $ = $B.args('uniform',3,{self:null, a:null,b:null},['self', 'a','b'],
-        arguments,{},null,null),
+    var $ = $B.args('uniform', 3, {self: null, a: null, b: null},
+        ['self', 'a', 'b'], arguments, {}, null, null),
         a = $B.$GetInt($.a),
         b = $B.$GetInt($.b)
 
@@ -953,11 +962,12 @@ Random.weibullvariate = function(){
 
     */
     // Jain, pg. 499; bug fix courtesy Bill Arms
-    var $ = $B.args("weibullvariate", 3, {self: null, alpha:null, beta:null},
-            ["self", "alpha", "beta"], arguments, {}, null, null)
+    var $ = $B.args("weibullvariate", 3, 
+        {self: null, alpha: null, beta: null},
+        ["self", "alpha", "beta"], arguments, {}, null, null)
 
     var u = 1 - $.self._random()
-    return $.alpha * Math.pow(-Math.log(u), 1/$.beta)
+    return $.alpha * Math.pow(-Math.log(u), 1 / $.beta)
 }
 
 $B.set_func_names(Random, "random")

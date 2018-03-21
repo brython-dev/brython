@@ -935,7 +935,7 @@ DOMNode.bind = function(self, event){
                 try{
                     return f($DOMEvent(ev))
                 }catch(err){
-                    if(err.__class__!==undefined){
+                    if(err.__class__ !== undefined){
                         var msg = _b_.getattr(err, "info") +
                             "\n" + err.__class__.__name__
                         if(err.args){msg += ": " + err.args[0]}
@@ -1192,7 +1192,7 @@ DOMNode.style = function(self){
 }
 
 DOMNode.setSelectionRange = function(self){ // for TEXTAREA
-    if(this["setSelectionRange"]!==undefined){
+    if(this["setSelectionRange"] !== undefined){
         return (function(obj){
             return function(){
                 return obj.setSelectionRange.apply(obj, arguments)
@@ -1461,7 +1461,7 @@ TagSum.__repr__ = function(self){
     for(var i = 0; i < self.children.length; i++){
         res += self.children[i]
         if(self.children[i].toString() == "[object Text]"){
-            res += " ["+self.children[i].textContent+"]\n"
+            res += " [" + self.children[i].textContent + "]\n"
         }
     }
     return res

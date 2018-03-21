@@ -36,7 +36,7 @@ function $get_CryptoJS_lib(alg){
         if($xmlhttp.readyState == 4){
             window.clearTimeout(timer)
             if($xmlhttp.status == 200 || $xmlhttp.status == 0){
-                res=$xmlhttp.responseText
+                res = $xmlhttp.responseText
             }else{
                 // don't throw an exception here, it will not be caught (issue #30)
                 res = Error()

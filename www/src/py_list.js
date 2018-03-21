@@ -65,7 +65,7 @@ list.__delitem__ = function(self, arg){
         var stop = arg.stop
         if(stop === None){stop = step >0 ? self.length : 0}
         if(start < 0){start = self.length + start}
-        if(stop < 0){stop = self.length+stop}
+        if(stop < 0){stop = self.length + stop}
         var res = [],
             i = null,
             pos = 0
@@ -167,7 +167,7 @@ list.__getitem__ = function(self, arg){
 list.__ge__ = function(self, other){
     if(! isinstance(other, [list, _b_.tuple])){
         throw _b_.TypeError.$factory("unorderable types: list() >= "+
-            $B.get_class(other).__name__+"()")
+            $B.get_class(other).__name__ + "()")
     }
     var i = 0
     while(i < self.length){

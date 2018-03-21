@@ -406,7 +406,7 @@ var $op_func = function(self, other){
             return $B.long_int.__sub__($B.long_int.$factory(self),
                 $B.long_int.$factory(other))
         }
-        return self-other
+        return self - other
     }
     if(isinstance(other, _b_.bool)){return self - other}
     if(hasattr(other, "__rsub__")){return getattr(other, "__rsub__")(self)}
@@ -430,7 +430,7 @@ var $op_func = function(self, other){
             else{return $B.long_int.__sub__($B.long_int.$factory(self),
                 $B.long_int.$factory(other))}
         }else if(typeof other == "boolean"){
-            return other ? self-1 : self
+            return other ? self - 1 : self
         }else{
             return $B.long_int.__sub__($B.long_int.$factory(self),
                 $B.long_int.$factory(other))
@@ -481,7 +481,7 @@ var $comp_func = function(self, other){
     if(inv_op !== None){return inv_op(self)}
 
     throw _b_.TypeError.$factory(
-        "unorderable types: int() > "+$B.get_class(other).__name__+"()")
+        "unorderable types: int() > " + $B.get_class(other).__name__ + "()")
 }
 $comp_func += "" // source code
 
@@ -499,13 +499,13 @@ var $valid_digits = function(base) {
     var digits = ""
     if(base === 0){return "0"}
     if(base < 10){
-       for(var i = 0; i < base; i++){digits += String.fromCharCode(i+48)}
+       for(var i = 0; i < base; i++){digits += String.fromCharCode(i + 48)}
        return digits
     }
 
     var digits = "0123456789"
     // A = 65 (10 + 55)
-    for (var i = 10; i < base; i++) {digits += String.fromCharCode(i+55)}
+    for (var i = 10; i < base; i++) {digits += String.fromCharCode(i + 55)}
     return digits
 }
 
@@ -630,12 +630,12 @@ int.$factory = function(value, base){
             int_func = _b_.getattr(res, "__int__", null)
         if(int_func === null){
             throw TypeError.$factory("__trunc__ returned non-Integral (type "+
-                $B.get_class(res).__name__+")")
+                $B.get_class(res).__name__ + ")")
         }
         var res = int_func()
         if(isinstance(res, int)){return res}
         throw TypeError.$factory("__trunc__ returned non-Integral (type "+
-                $B.get_class(res).__name__+")")
+                $B.get_class(res).__name__ + ")")
     }
     throw _b_.TypeError.$factory(
         "int() argument must be a string, a bytes-like " +
@@ -661,7 +661,7 @@ $B.$bool = function(obj){ // return true or false
             try{return getattr(obj, "__bool__")()}
             catch(err){
                 $B.current_exception = ce
-                try{return getattr(obj, "__len__")()>0}
+                try{return getattr(obj, "__len__")() > 0}
                 catch(err){return true}
             }
     }

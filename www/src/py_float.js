@@ -152,7 +152,7 @@ float.fromhex = function(arg){
    var _sum = _int
 
    for(var i = 1, len = _fraction.length; i < len; i++){
-       _sum+=parseInt(_fraction.charAt(i),16)/Math.pow(16,i)
+       _sum += parseInt(_fraction.charAt(i), 16) / Math.pow(16, i)
    }
    return new Number(_sign * _sum * Math.pow(2,
        parseInt(_exponent.substring(1))))
@@ -222,7 +222,7 @@ function preformat(self, fmt){
 
     if(fmt.type === undefined|| "gGn".indexOf(fmt.type) != -1){
         // remove trailing 0
-        while(res.charAt(res.length-1) == "0"){
+        while(res.charAt(res.length - 1) == "0"){
             res = res.substr(0, res.length - 1)
         }
         if(res.charAt(res.length - 1) == "."){
@@ -363,7 +363,7 @@ float.hex = function(self) {
 
     var _int2hex = "0123456789ABCDEF".split(""),
         _s = _int2hex[Math.floor(_m)]
-    _s+='.'
+    _s += '.'
     _m -= Math.floor(_m)
 
     for(var i = 0; i < (TOHEX_NBITS - 1) / 4; i++){
@@ -561,7 +561,7 @@ $op_func += "" // source code
 var $ops = {"+": "add", "-": "sub"}
 for(var $op in $ops){
     var $opf = $op_func.replace(/-/gm, $op)
-    $opf = $opf.replace(/__rsub__/gm, "__r"+$ops[$op]+"__")
+    $opf = $opf.replace(/__rsub__/gm, "__r" + $ops[$op] + "__")
     eval("float.__" + $ops[$op] + "__ = " + $opf)
 }
 
@@ -688,8 +688,9 @@ float.$factory = function (value){
                if (isFinite(value)) return $FloatClass(eval(value))
                else {
                    _b_.str.encode(value, "latin-1") // raises UnicodeEncodeError if not valid
-                   throw _b_.ValueError.$factory("Could not convert to float(): '"+
-                       _b_.str.$factory(value)+"'")
+                   throw _b_.ValueError.$factory(
+                       "Could not convert to float(): '" +
+                       _b_.str.$factory(value) + "'")
                }
          }
     }

@@ -187,7 +187,7 @@ function $Node(type){
         indent = indent || 0
         res += ' '.repeat(indent)
         res += this.context
-        if(this.children.length>0){res += '{'}
+        if(this.children.length > 0){res += '{'}
         res +='\n'
         this.children.forEach(function(child){
            res += '[' + i + '] ' + child.show(indent + 4)
@@ -223,7 +223,7 @@ function $Node(type){
           this.children.forEach(function(child){
               this.res.push(child.to_js(indent + 4))
           }, this)
-          if(this.children.length>0){
+          if(this.children.length > 0){
              this.res.push(' '.repeat(indent))
              this.res.push('}\n')
           }
@@ -239,7 +239,7 @@ function $Node(type){
         // we must jump to the next original node, skipping those that have
         // just been inserted
 
-        if(this.yield_atoms.length>0){
+        if(this.yield_atoms.length > 0){
             // If the node contains 'yield' atoms, we must split the node into
             // several nodes
             // The line 'a = yield X' is transformed into 4 lines :
@@ -303,7 +303,7 @@ function $Node(type){
             // module doc string
             this.doc_string = $get_docstring(this)
             var i = 0
-            while(i<this.children.length){
+            while(i < this.children.length){
                 var offset = this.children[i].transform(i)
                 if(offset === undefined){offset = 1}
                 i += offset
@@ -715,9 +715,9 @@ function $AssignCtx(context){
             var min_length = left_items.length
             if(packed !== null){min_length--}
             js = 'if(' + rlname + '.length<' + min_length + ')' +
-                 '{throw ValueError.$factory("need more than "+' + rlname +
-                 '.length+" value" + (' + rlname + '.length>1 ?' +
-                 ' "s" : "")+" to unpack")}'
+                 '{throw ValueError.$factory("need more than " +' + rlname +
+                 '.length + " value" + (' + rlname + '.length > 1 ?' +
+                 ' "s" : "") + " to unpack")}'
             new $NodeJSCtx(check_node, js)
             node.parent.insert(rank++, check_node)
 
@@ -975,7 +975,7 @@ function $AugmentedAssignCtx(context, op){
             // a += 1
 
             // For performance reasons, this is only implemented in debug mode
-            if($B.debug>0){
+            if($B.debug > 0){
                 var check_node = $NodeJS('if(' + this.tree[0].to_js() +
                     ' === undefined){throw NameError.$factory("name \'' +
                     this.tree[0].tree[0].value + '\' is not defined")}')
@@ -1035,7 +1035,7 @@ function $AugmentedAssignCtx(context, op){
                         case 'def':
                         case 'generator':
                             if(scope.globals &&
-                                    scope.globals.indexOf(context.tree[0].value)>-1){
+                                    scope.globals.indexOf(context.tree[0].value) > -1){
                                 prefix = global_ns
                             }else{prefix = '$locals'}
                             break
@@ -2253,14 +2253,14 @@ function $DefCtx(context){
                 nodes.push($NodeJS('var $len = arguments.length;'))
 
                 var new_node = new $Node()
-                var js = 'if($len>0 && arguments[$len-1].$nat!==undefined)'
+                var js = 'if($len > 0 && arguments[$len - 1].$nat !== undefined)'
                 new $NodeJSCtx(new_node,js)
                 nodes.push(new_node)
 
                 // If at least one argument is not "simple", fall back to
                 // $B.args()
                 new_node.add(make_args_nodes[0])
-                if(make_args_nodes.length>1){new_node.add(make_args_nodes[1])}
+                if(make_args_nodes.length > 1){new_node.add(make_args_nodes[1])}
 
                 var else_node = new $Node()
                 new $NodeJSCtx(else_node, 'else')
@@ -2273,7 +2273,7 @@ function $DefCtx(context){
             if($B.debug > 0){
                 // If all arguments are "simple" all there is to check is that
                 // we got the right number of arguments
-                js = 'if($len!=' + pos_len + '){$B.wrong_nb_args("' +
+                js = 'if($len !=' + pos_len + '){$B.wrong_nb_args("' +
                     this.name + '", $len, ' + pos_len
                 if(positional_str.length > 0){
                     js += ', [' + positional_str + ']'
@@ -2295,7 +2295,7 @@ function $DefCtx(context){
                         pargs.push(arg + ':' + arg)
                     })
                     if($B.debug < 1){
-                        js = 'if($len!=' + pos_len + '){$B.wrong_nb_args("' +
+                        js = 'if($len !=' + pos_len + '){$B.wrong_nb_args("' +
                             this.name + '", $len, ' + pos_len
                         if(positional_str.length > 0){
                             js += ', [' + positional_str + ']'
@@ -2470,7 +2470,7 @@ function $DefCtx(context){
         func_name = func_name || this.tree[0].to_js()
         if(this.decorated){func_name = 'var ' + this.alias}
 
-        return func_name +' = (function ($defaults){function '+
+        return func_name + ' = (function ($defaults){function '+
             this.name + this.num + '(' + this.params + ')'
     }
 }
@@ -2957,7 +2957,7 @@ function $ForExpr(context){
         // Add test of length change
         while_node.add($NodeJS('if($locals.$len' + num +
             '!==null && $locals.$len' + num + '!=$locals.$len_func' +
-            num + '()){throw RuntimeError.$factory("dictionary'+
+            num + '()){throw RuntimeError.$factory("dictionary' +
             ' changed size during iteration")}'))
 
         var try_node = $NodeJS("try")
@@ -2985,7 +2985,7 @@ function $ForExpr(context){
         try_node.add(iter_node)
 
         while_node.add(
-            $NodeJS('catch($err){if($B.is_exc($err, [StopIteration]))'+
+            $NodeJS('catch($err){if($B.is_exc($err, [StopIteration]))' +
                  '{$B.current_exception = ce;break;}else{throw($err)}}'))
 
         // set new loop children
@@ -3062,8 +3062,8 @@ function $FromCtx(context){
                     packages.pop()
                 }
                 if($package === undefined){
-                    return 'throw SystemError.$factory("Parent module \'\' not loaded,'+
-                        ' cannot perform relative import")'
+                    return 'throw SystemError.$factory("Parent module \'\' ' +
+                        'not loaded, cannot perform relative import")'
                 }else if($package == 'None'){
                     console.log('package is None !')
                 }
@@ -3468,7 +3468,7 @@ function $IdCtx(context,value){
                     return this.result
                 }
             }
-            if(found.length>1 && found[0].context){
+            if(found.length > 1 && found[0].context){
 
                 if(found[0].context.tree[0].type == 'class' && !this.bound){
                     var ns0 = '$locals_' + found[0].id.replace(/\./g, '_'),
@@ -3500,7 +3500,7 @@ function $IdCtx(context,value){
                         return this.result
                     }else{
                         this.found = false
-                        var res = ns0 + '["' + val + '"]!==undefined ? '
+                        var res = ns0 + '["' + val + '"] !== undefined ? '
                         res += ns0 + '["' + val + '"] : '
                         this.result = "(" + res + ns1 + '["' + val + '"])'
                         return this.result
@@ -4265,7 +4265,7 @@ function $OpCtx(context,op){
                     // this.wrap.name ; expr1.to_js() is stored in this.wrap.js
                     // They are initialized in
                     return '(function(){var ' + this.wrap.name + ' = ' +
-                        this.wrap.js + ';return $B.$test_expr($B.$test_item('+
+                        this.wrap.js + ';return $B.$test_expr($B.$test_item(' +
                         op0 + ') && $B.$test_item(' + op1 + '))})()'
                 }else{
                     return '$B.$test_expr($B.$test_item(' + op0 + ')&&' +
@@ -4284,8 +4284,8 @@ function $OpCtx(context,op){
             case 'unary_inv':
                 // For unary operators, the left operand is the unary sign(s)
                 var op, method
-                if(this.op == 'unary_neg'){op = '-';method = '__neg__'}
-                else if(this.op == 'unary_pos'){op = '+';method = '__pos__'}
+                if(this.op == 'unary_neg'){op = '-'; method = '__neg__'}
+                else if(this.op == 'unary_pos'){op = '+'; method = '__pos__'}
                 else{op = '~';method = '__invert__'}
                 // for integers or float, replace their value using
                 // Javascript operators
@@ -4638,7 +4638,7 @@ function $SingleKwCtx(context,token){
             var scope = $get_scope(this)
             if(scope.ntype != 'generator'){
                 var scope_id = scope.id.replace(/\./g, '_'),
-                    js = 'var $exit;if($B.frames_stack.length<$stack_length)'+
+                    js = 'var $exit;if($B.frames_stack.length<$stack_length)' +
                         '{$exit = true;$B.frames_stack.push($top_frame)}'
                 node.insert(0, $NodeJS(js))
                 // If the finally block ends with "return", don't add the
@@ -5095,7 +5095,7 @@ function $WithCtx(context){
 
     this.transform = function(node,rank){
 
-        while(this.tree.length>1){
+        while(this.tree.length > 1){
             /*
             with A() as a, B() as b:
                 suite
@@ -5162,7 +5162,7 @@ function $WithCtx(context){
         //         with y as y1:
         //             ...
 
-        if(this.tree.length>1){
+        if(this.tree.length > 1){
             var nw = new $Node(),
                 ctx = new $NodeCtx(nw)
             nw.parent = node
@@ -5888,7 +5888,7 @@ function $transition(context,token){
                         $_SyntaxError(context,
                             ['non-keyword arg after keyword arg'])
                     }
-                    if(context.tree.length>0){
+                    if(context.tree.length > 0){
                         var son = context.tree[context.tree.length - 1]
                         if(son.type == 'list_or_tuple' &&
                                 son.real == 'gen_expr'){
@@ -7160,7 +7160,7 @@ function $transition(context,token){
                     }
                     break
                 case 'from':
-                    if(context.tree.length>0){
+                    if(context.tree.length > 0){
                         return new $AbstractExprCtx(context, false)
                     }
                     break
@@ -7532,7 +7532,7 @@ function $tokenize(src, module, locals_id, parent_block, line_info){
         // comment
         if(car == "#"){
             var end = src.substr(pos + 1).search('\n')
-            if(end == -1){end = src.length-1}
+            if(end == -1){end = src.length - 1}
             // Keep track of comment positions
             root.comments.push([pos, end])
             pos += end + 1
@@ -7904,7 +7904,7 @@ function $tokenize(src, module, locals_id, parent_block, line_info){
                     // implicit line joining inside brackets
                     pos++
                 } else {
-                    if(current.context.tree.length>0){
+                    if(current.context.tree.length > 0){
                         $pos = pos
                         context = $transition(context, 'eol')
                         indent = null
@@ -8050,7 +8050,7 @@ function $tokenize(src, module, locals_id, parent_block, line_info){
             ["Unbalanced bracket " + br_stack.charAt(br_stack.length - 1)])
     }
     if(context !== null && $indented.indexOf(context.tree[0].type) > -1){
-        $pos = pos-1
+        $pos = pos - 1
         $_SyntaxError(context, 'expected an indented block', pos)
     }
 
@@ -8533,7 +8533,7 @@ function _run_scripts(options) {
 
             root = $B.py2js($src, module_name, module_name, $B.builtins_block)
             js = root.to_js()
-            if($B.debug>1){console.log(js)}
+            if($B.debug > 1){console.log(js)}
 
             // Run resulting Javascript
             eval(js)

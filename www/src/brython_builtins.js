@@ -16,7 +16,7 @@ if ($B.brython_path === undefined) {
         this_url = _window.location.href;
     } else {
         var scripts = document.getElementsByTagName('script')
-        this_url = scripts[scripts.length-1].src
+        this_url = scripts[scripts.length - 1].src
     }
 
 
@@ -24,7 +24,7 @@ if ($B.brython_path === undefined) {
     elts.pop()
     // brython_path is the url of the directory holding brython core scripts
     // It is used to import modules of the standard library
-    $path = $B.brython_path = elts.join('/')+'/'
+    $path = $B.brython_path = elts.join('/') + '/'
 } else {
     $path = $B.brython_path
 }
@@ -46,7 +46,8 @@ $B.$py_module_path = {}
 $B.$py_src = {}
 
 // __BRYTHON__.path is the list of paths where Python modules are searched
-$B.path = [$path+'Lib', $path+'libs', $script_dir, $path+'Lib/site-packages']
+$B.path = [$path + 'Lib', $path + 'libs', $script_dir,
+    $path + 'Lib/site-packages']
 
 // for the time being, a flag will be used to know if we should
 // enable async functionality.
@@ -84,8 +85,11 @@ $B.builtin_funcs = {}
 $B.__getattr__ = function(attr){return this[attr]}
 $B.__setattr__ = function(attr,value){
     // limited to some attributes
-    if(['debug', 'stdout', 'stderr'].indexOf(attr)>-1){$B[attr] = value}
-    else{throw $B.builtins.AttributeError.$factory('__BRYTHON__ object has no attribute '+attr)}
+    if(['debug', 'stdout', 'stderr'].indexOf(attr) > -1){$B[attr] = value}
+    else{
+        throw $B.builtins.AttributeError.$factory(
+            '__BRYTHON__ object has no attribute ' + attr)
+    }
 }
 
 // system language ( _not_ the one set in browser settings)
@@ -100,19 +104,19 @@ if (isWebWorker) {
 }
 
 // minimum and maximum safe integers
-$B.max_int = Math.pow(2,53)-1
+$B.max_int = Math.pow(2,53) - 1
 $B.min_int = -$B.max_int
 
 // Used to compute the hash value of some objects (see
 // py_builtin_functions.js)
-$B.$py_next_hash = Math.pow(2,53)-1
+$B.$py_next_hash = Math.pow(2,53) - 1
 
 // $py_UUID guarantees a unique id.  Do not use this variable
 // directly, use the $B.UUID function defined in py_utils.js
 $B.$py_UUID = 0
 
 // Magic name used in lambdas
-$B.lambda_magic = Math.random().toString(36).substr(2,8)
+$B.lambda_magic = Math.random().toString(36).substr(2, 8)
 
 // Callback functions indexed by their name
 // Used to print a traceback if an exception is raised when the function
@@ -128,7 +132,7 @@ $B.set_func_names = function(klass, module){
             klass[attr].$infos = {
                 __doc__: klass[attr].__doc__ || "",
                 __module__: module,
-                __qualname__ : name+'.'+attr,
+                __qualname__ : name + '.' + attr,
                 __name__: attr
             }
             if(klass[attr].$type == "classmethod"){
@@ -138,7 +142,7 @@ $B.set_func_names = function(klass, module){
     }
 }
 
-var has_storage = typeof(Storage)!=="undefined"
+var has_storage = typeof(Storage) !== "undefined"
 if(has_storage){
     $B.has_local_storage = false
     // add attributes local_storage and session_storage
@@ -162,7 +166,7 @@ if(has_storage){
 
 $B.globals = function(){
     // Can be used in Javascript console to inspect global namespace
-    return $B.frames_stack[$B.frames_stack.length-1][3]
+    return $B.frames_stack[$B.frames_stack.length - 1][3]
 }
 
 // copied from https://raw.githubusercontent.com/mathiasbynens/mothereff.in/master/js-variables/eff.js
