@@ -72,8 +72,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,0,'rc',0]
 __BRYTHON__.__MAGIC__="3.5.0"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-03-21 12:54:44.623749"
-__BRYTHON__.timestamp=1521633284623
+__BRYTHON__.compiled_date="2018-03-21 12:56:20.443208"
+__BRYTHON__.timestamp=1521633380443
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -10509,10 +10509,12 @@ while(true){try{var item=_b_.next(it)
 if(! func(item)){return false}}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){return true}
 throw err}}
 return true}
-set.__iand__=set.intersection_update;
-set.__isub__=set.difference_update;
-set.__ixor__=set.symmetric_difference_update;
-set.__ior__=set.update;
+function $accept_only_set(f,op){return function(self,other,accept_iter){$test(accept_iter,other,op)
+return f(self,other)}}
+set.__iand__=$accept_only_set(set.intersection_update,"&=")
+set.__isub__=$accept_only_set(set.difference_update,"-=")
+set.__ixor__=$accept_only_set(set.symmetric_difference_update,"^=")
+set.__ior__=$accept_only_set(set.update,"|=")
 set.$factory=function(){
 var res={__class__: set,$str: true,$num: true,$items:[]}
 var args=[res].concat(Array.prototype.slice.call(arguments))
