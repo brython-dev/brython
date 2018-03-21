@@ -182,4 +182,39 @@ def symmetric_difference_update_self(t):
 
 symmetric_difference_update_self(t)
 assert t == set()
+
+# from stdlib Lib/test/test_set:TestOnlySetsInBinaryOps
+# test update operator
+s = set(word)
+try:
+    s |= otherword
+except TypeError:
+    pass
+else:
+    assert 0, "expected TypeError"
+
+# test intersection update operator
+try:
+    s &= otherword
+except TypeError:
+    pass
+else:
+    assert 0, "expected TypeError"
+
+# test sym difference update operator
+try:
+    s ^= otherword
+except TypeError:
+    pass
+else:
+    assert 0, "expected TypeError"
+
+# test difference update operator
+try:
+    s -= otherword
+except TypeError:
+    pass
+else:
+    assert 0, "expected TypeError"
+
 print("passed all tests..")
