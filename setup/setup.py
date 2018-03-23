@@ -10,7 +10,7 @@ with open('README.rst', encoding='utf-8') as fobj:
 setup(
     name='brython',
 
-    version='3.4.0',
+    version='3.5.0',
 
     description='Brython is an implementation of Python 3 running in the browser',
 
