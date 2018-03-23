@@ -26,6 +26,21 @@ var $mod = {
 
 //todo: eventually move this function to a "utility" file or use ajax module?
 function $get_CryptoJS_lib(alg){
+    if($B.VFS !== undefined){
+        // use file in brython_stdlib.js
+        var lib = $B.VFS["crypto_js.rollups." + alg]
+        if (lib===undefined){
+            throw _b_.ImportError.$factory("can't import hashlib." + alg)
+        }
+        var res = lib[1]
+        try{
+            eval(res + "; $B.CryptoJS = CryptoJS;")
+            return
+        }catch(err){
+            throw Error("JS Eval Error",
+                "Cannot eval CryptoJS algorithm '" + alg + "' : error:" + err)
+        }
+    }
    var imp = $importer(),
        $xmlhttp = imp[0],
        fake_qs = imp[1],
@@ -98,7 +113,7 @@ hash.digest = function(self){
     for(var i = 0; i < obj.length; i += 2){
         res.push(parseInt(obj.substr(i, 2), 16))
     }
-    return _b_.bytes(res)
+    return _b_.bytes.$factory(res)
 }
 
 hash.hexdigest = function(self) {
@@ -106,7 +121,6 @@ hash.hexdigest = function(self) {
 }
 
 hash.$factory = function(alg, obj) {
-
     var res = {
         __class__: hash
     }
