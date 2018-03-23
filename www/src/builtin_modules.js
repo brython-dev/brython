@@ -18,7 +18,7 @@
     }
     browser.__path__ = browser.__file__
 
-    if (! $B.isa_web_worker ) {
+    if(! $B.isa_web_worker ){
         update(browser, {
             $$alert:function(message){window.alert($B.builtins.str.$factory(message))},
             confirm: $B.JSObject.$factory(window.confirm),
@@ -96,11 +96,11 @@
                         if(_b_.isinstance(first,[_b_.str,_b_.int,_b_.float])){
                             // set "first" as HTML content (not text)
                             self.elt.innerHTML = _b_.str.$factory(first)
-                        } else if(first.__class__ === TagSum){
+                        }else if(first.__class__ === TagSum){
                             for(var i = 0, len = first.children.length; i < len; i++){
                                 self.elt.appendChild(first.children[i].elt)
                             }
-                        } else {
+                        }else{
                             if(_b_.isinstance(first, $B.DOMNode)){
                                 self.elt.appendChild(first.elt)
                             }else{
@@ -135,7 +135,7 @@
                             eval(js + '",function(){' + value + '})')
                         }else if(arg.toLowerCase() == "style"){
                             $B.DOMNode.set_style(self,value)
-                        } else {
+                        }else{
                             if(value !== false){
                                 // option.selected = false sets it to true :-)
                                 try{
@@ -161,7 +161,7 @@
                         cls.$elt_wrap = undefined  // nullify for later calls
                         var res = $B.DOMNode.$factory(elt, true)  // generate the wrapped DOMNode
                         res._wrapped = true  // marked as wrapped
-                    } else {
+                    }else{
                         var res = $B.DOMNode.$factory(document.createElement(tagName), true)
                         res._wrapped = false  // not wrapped
                     }
@@ -180,7 +180,7 @@
                         klass.$elt_wrap = undefined  // nullify for later calls
                         var res = $B.DOMNode.$factory(elt, true)  // generate the wrapped DOMNode
                         res._wrapped = true  // marked as wrapped
-                    } else {
+                    }else{
                         if(klass.__name__ == 'SVG'){
                             var res = $B.DOMNode.$factory(document.createElementNS("http://www.w3.org/2000/svg", "svg"), true)
                         }else{
@@ -281,7 +281,7 @@
         },
         NULL: null,
         py2js: function(src, module_name){
-            if (module_name === undefined) {
+            if(module_name === undefined){
                 module_name = '__main__' + $B.UUID()
             }
             return $B.py2js(src, module_name, module_name,
@@ -368,7 +368,7 @@
     }
 
     for(var attr in modules){load(attr, modules[attr])}
-    if (! $B.isa_web_worker) modules['browser'].html = modules['browser.html'];
+    if(! $B.isa_web_worker){modules['browser'].html = modules['browser.html']}
 
     var _b_ = $B.builtins
 

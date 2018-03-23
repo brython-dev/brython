@@ -12,13 +12,11 @@ var _window=self;
 var $path
 if($B.brython_path===undefined){
 var this_url;
-if(isWebWorker){this_url=_window.location.href;}else{
-var scripts=document.getElementsByTagName('script')
+if(isWebWorker){this_url=_window.location.href;}else{var scripts=document.getElementsByTagName('script')
 this_url=scripts[scripts.length - 1].src}
 var elts=this_url.split('/')
 elts.pop()
-$path=$B.brython_path=elts.join('/')+ '/'}else{
-$path=$B.brython_path}
+$path=$B.brython_path=elts.join('/')+ '/'}else{$path=$B.brython_path}
 var $href=$B.script_path=_window.location.href
 var $href_elts=$href.split('/')
 $href_elts.pop()
@@ -28,7 +26,7 @@ $B.$py_module_path={}
 $B.$py_src={}
 $B.path=[$path + 'Lib',$path + 'libs',$script_dir,$path + 'Lib/site-packages']
 $B.async_enabled=false
-if($B.async_enabled)$B.block={}
+if($B.async_enabled){$B.block={}}
 $B.imported={}
 $B.module_source={}
 $B.vars={}
@@ -57,14 +55,11 @@ for(var attr in klass){if(typeof klass[attr]=='function'){klass[attr].$infos={__
 if(klass[attr].$type=="classmethod"){klass[attr].__class__=$B.method}}}}
 var has_storage=typeof(Storage)!=="undefined"
 if(has_storage){$B.has_local_storage=false
-try{
-if(localStorage){$B.local_storage=localStorage
+try{if(localStorage){$B.local_storage=localStorage
 $B.has_local_storage=true}}catch(err){}
 $B.has_session_storage=false
-try{
-if(sessionStorage){$B.session_storage=sessionStorage
-$B.has_session_storage=true}}catch(err){}}else{
-$B.has_local_storage=false
+try{if(sessionStorage){$B.session_storage=sessionStorage
+$B.has_session_storage=true}}catch(err){}}else{$B.has_local_storage=false
 $B.has_session_storage=false}
 $B.globals=function(){
 return $B.frames_stack[$B.frames_stack.length - 1][3]}
@@ -72,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,0,'rc',0]
 __BRYTHON__.__MAGIC__="3.5.0"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-03-21 12:56:20.443208"
-__BRYTHON__.timestamp=1521633380443
+__BRYTHON__.compiled_date="2018-03-23 08:07:02.703401"
+__BRYTHON__.timestamp=1521788822703
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -2459,7 +2454,7 @@ with_ctx.tree=[item]
 suite.forEach(function(elt){new_node.add(elt)})
 node.children=[new_node]}
 node.is_try=true 
-if(this.transformed)return 
+if(this.transformed){return}
 if(this.tree.length > 1){var nw=new $Node(),ctx=new $NodeCtx(nw)
 nw.parent=node
 nw.module=node.module
@@ -3961,8 +3956,7 @@ end++}else if(src.charAt(end)=="\\"){if(raw){if(end < src.length - 1 &&
 src.charAt(end + 1)==car){zone +='\\\\' + car
 end +=2}else{zone +='\\\\'
 end++}
-escaped=true}else{
-if(src.charAt(end + 1)=='\n'){
+escaped=true}else{if(src.charAt(end + 1)=='\n'){
 end +=2
 lnum++}else if(src.substr(end + 1,2)=='N{'){
 var end_lit=end + 3,re=new RegExp("[-A-Z0-9 ]+"),search=re.exec(src.substr(end_lit))
@@ -3983,8 +3977,7 @@ search=re.exec($B.unicodedb)
 if(search===null){$_SyntaxError(C,"(unicode error) " +
 "unknown Unicode character name",pos)}
 if(search[1].length==4){zone +="\\u" + search[1]
-end=end_lit + 1}else{end++}}else{end++}}else{
-if(end < src.length - 1 &&
+end=end_lit + 1}else{end++}}else{end++}}else{if(end < src.length - 1 &&
 is_escaped[src.charAt(end + 1)]===undefined){zone +='\\'}
 zone +='\\'
 escaped=true
@@ -4008,8 +4001,7 @@ $pos +=sm_length}else{C=$transition(C,'str',car + string + car)}
 C.raw=raw;
 pos=end + 1
 if(_type=="triple_string"){pos=end + 3}
-break}}else{
-zone +=src.charAt(end)
+break}}else{zone +=src.charAt(end)
 if(src.charAt(end)=='\n'){lnum++}
 end++}}
 if(!found){if(_type==="triple_string"){$_SyntaxError(C,"Triple string end not found")}else{$_SyntaxError(C,"String end not found")}}
@@ -4041,8 +4033,7 @@ C=$transition(C,'op',name)}}else if((src.charAt(pos)=='"' ||src.charAt(pos)=="'"
 &&['r','b','u','rb','br','f','fr','rf'].
 indexOf(name.toLowerCase())!==-1){string_modifier=name.toLowerCase()
 name=""
-continue}else{
-if($B.forbidden.indexOf(name)> -1){name='$$' + name}
+continue}else{if($B.forbidden.indexOf(name)> -1){name='$$' + name}
 $pos=pos - name.length
 C=$transition(C,'id',name)}
 name=""
@@ -4104,8 +4095,7 @@ break
 case '\n':
 lnum++
 if(br_stack.length > 0){
-pos++}else{
-if(current.C.tree.length > 0){$pos=pos
+pos++}else{if(current.C.tree.length > 0){$pos=pos
 C=$transition(C,'eol')
 indent=null
 new_node=new $Node()}else{new_node.line_num=lnum}
@@ -4132,8 +4122,7 @@ break
 case '=':
 if(src.charAt(pos + 1)!="="){$pos=pos
 C=$transition(C,'=')
-pos++}else{
-$pos=pos
+pos++}else{$pos=pos
 C=$transition(C,'op','==')
 pos +=2}
 break
@@ -4320,9 +4309,9 @@ if(options.profile===undefined){options.profile=0}
 $B.profile=options.profile
 if(options.static_stdlib_import===undefined){options.static_stdlib_import=true}
 $B.static_stdlib_import=options.static_stdlib_import
-if(options.open !==undefined){_b_.open=options.open;
+if(options.open !==undefined){_b_.open=options.open
 console.log("DeprecationWarning: \'open\' option of \'brython\' "+
-"function will be deprecated in future versions of Brython.");}
+"function will be deprecated in future versions of Brython.")}
 $B.$options=options
 var meta_path=[],path_hooks=[]
 if($B.use_VFS){meta_path.push($B.$meta_path[0])
@@ -4366,8 +4355,7 @@ console.log("DeprecationWarning: \'re_module\' option of \'brython\' "+
 "function will be deprecated in future versions of Brython.")}
 $B.scripts=[]
 $B.js={}
-if($B.$options.args){$B.__ARGV=$B.$options.args}else{
-$B.__ARGV=_b_.list.$factory([])}
+if($B.$options.args){$B.__ARGV=$B.$options.args}else{$B.__ARGV=_b_.list.$factory([])}
 if(!isWebWorker){_run_scripts(options)}}
 function _run_scripts(options){
 var kk=Object.keys(_window)
@@ -4915,7 +4903,7 @@ throw _b_.UnboundLocalError.$factory("local variable '" + name +
 $B.$check_def_free=function(name,value){
 if(value !==undefined){return value}
 var res
-for(var i=$B.frames_stack.length-1;i >=0;i--){res=$B.frames_stack[i][1][name]
+for(var i=$B.frames_stack.length - 1;i >=0;i--){res=$B.frames_stack[i][1][name]
 if(res !==undefined){return res}
 res=$B.frames_stack[i][3][name]
 if(res !==undefined){return res}}
@@ -5120,8 +5108,7 @@ $B.pyobject2jsobject(items[i][1])}
 return res}
 if(_b_.hasattr(obj,"__iter__")){
 var _a=[],pos=0,ce=$B.current_exception
-while(1){try{
-_a[pos++]=$B.pyobject2jsobject(_b_.next(obj))}catch(err){if(err.__class__ !==_b_.StopIteration){throw err}
+while(1){try{_a[pos++]=$B.pyobject2jsobject(_b_.next(obj))}catch(err){if(err.__class__ !==_b_.StopIteration){throw err}
 $B.current_exception=ce
 break}}
 return{"_type_": "iter",data: _a}}
@@ -5216,7 +5203,7 @@ $B.leave_frame_exec=function(arg){
 if($B.profile > 0){$B.$profile.return()}
 if($B.frames_stack.length==0){console.log("empty stack");return}
 var frame=$B.frames_stack.pop()
-for(var i=$B.frames_stack.length-1;i >=0;i--){if($B.frames_stack[i][2]==frame[2]){$B.frames_stack[i][3]=frame[3]}}}
+for(var i=$B.frames_stack.length - 1;i >=0;i--){if($B.frames_stack[i][2]==frame[2]){$B.frames_stack[i][3]=frame[3]}}}
 $B.memory=function(){var info=[]
 for(var attr in __BRYTHON__){var obj=__BRYTHON__[attr]
 if(obj===null){continue}
@@ -5389,11 +5376,11 @@ throw _b_.TypeError.$factory("'" + method2comp[op]+
 $B.is_none=function(o){return o===undefined ||o===null ||o==_b_.None}})(__BRYTHON__)
 if(!Array.indexOf){Array.prototype.indexOf=function(obj){for(var i=0,len=this.length;i < len;i++){if(this[i]==obj){return i}}
 return -1}}
-if(!String.prototype.repeat){String.prototype.repeat=function(count){if(count < 1)return '';
+if(!String.prototype.repeat){String.prototype.repeat=function(count){if(count < 1){return ''}
 var result='',pattern=this.valueOf()
-while(count > 1){if(count & 1)result +=pattern
+while(count > 1){if(count & 1){result +=pattern}
 count >>=1,pattern +=pattern}
-return result + pattern;}}
+return result + pattern}}
 
 ;(function($B){eval($B.InjectBuiltins())
 _b_.__debug__=false
@@ -5516,8 +5503,7 @@ var klass=obj.__class__ ||$B.get_class(obj),ce=$B.current_exception
 if(obj.$is_class){
 var dir_func=$B.$getattr(obj.__class__,"__dir__")
 return $B.$call(dir_func)(obj)}
-try{
-var res=$B.$call(getattr(obj,'__dir__'))()
+try{var res=$B.$call(getattr(obj,'__dir__'))()
 res=_b_.list.$factory(res)
 res.sort()
 return res}catch(err){
@@ -6036,8 +6022,7 @@ if(!isinstance(n,_b_.int)){throw _b_.TypeError.$factory(
 "'" + n.__class__ + "' object cannot be interpreted as an integer")}
 var mult=Math.pow(10,n)
 if(isinstance(arg,_b_.float)){return _b_.float.$factory(_b_.int.__truediv__(
-Number(Math.round(arg.valueOf()* mult)),mult))}else{
-return _b_.int.$factory(_b_.int.__truediv__(
+Number(Math.round(arg.valueOf()* mult)),mult))}else{return _b_.int.$factory(_b_.int.__truediv__(
 Number(Math.round(arg.valueOf()* mult)),mult))}}
 function setattr(){var $=$B.args('setattr',3,{obj: null,attr: null,value: null},['obj','attr','value'],arguments,{},null,null),obj=$.obj,attr=$.attr,value=$.value
 if(!(typeof attr=='string')){throw _b_.TypeError.$factory("setattr(): attribute name must be string")}
@@ -6176,8 +6161,7 @@ var is_binary=mode.search('b')> -1
 if(isinstance(file,$B.JSObject)){return $B.OpenFile.$factory(file.js,mode,encoding)}
 if(isinstance(file,_b_.str)){
 var req=new XMLHttpRequest();
-req.onreadystatechange=function(){try{
-var status=this.status
+req.onreadystatechange=function(){try{var status=this.status
 if(status==404){$res=_b_.IOError.$factory('File ' + file + ' not found')}else if(status !=200){$res=_b_.IOError.$factory('Could not open file ' +
 file + ' : status ' + status)}else{$res=this.responseText
 if(is_binary){$res=_b_.str.encode($res,'utf-8')}}}catch(err){$res=_b_.IOError.$factory('Could not open file ' + file +
@@ -6621,8 +6605,7 @@ if(stop < 0){stop=self.source.length + stop}
 self.source.splice(start,stop - start)
 if(_b_.hasattr(value,'__iter__')){var $temp=_b_.list.$factory(value)
 for(var i=$temp.length - 1;i >=0;i--){if(!isinstance($temp[i],_b_.int)){throw _b_.TypeError.$factory('an integer is required')}else if($temp[i]> 255){throw ValueError.$factory("byte must be in range(0, 256)")}
-self.source.splice(start,0,$temp[i])}}else{throw _b_.TypeError.$factory("can only assign an iterable")}}else{
-throw _b_.TypeError.$factory('list indices must be integer, not ' +
+self.source.splice(start,0,$temp[i])}}else{throw _b_.TypeError.$factory("can only assign an iterable")}}else{throw _b_.TypeError.$factory('list indices must be integer, not ' +
 $B.get_class(arg).__name__)}}
 bytearray.append=function(self,b){if(arguments.length !=2){throw _b_.TypeError.$factory(
 "append takes exactly one argument (" +(arguments.length - 1)+
@@ -6744,8 +6727,7 @@ if(! $.new.__class__){throw _b_.TypeError.$factory("second argument must be a by
 "object, not '" + $.sep.__class__.__name__ + "'")}
 for(var i=0;i < len;i++){if(bytes.startswith(self,old,i)&& count){for(var j=0;j < $new.source.length;j++){res.push($new.source[j])}
 i +=(old.source.length - 1)
-count--}else{
-res.push(src[i])}}
+count--}else{res.push(src[i])}}
 return bytes.$factory(res)}
 bytes.split=function(){var $=$B.args('split',2,{self:null,sep:null},['self','sep'],arguments,{},null,null),res=[],start=0,stop=0
 if(! $.sep.__class__ ){throw _b_.TypeError.$factory("a bytes-like object is required, " +
@@ -6835,8 +6817,7 @@ var zone=b[i + 1]- _int_80 + 64 * zone1
 cp=b[i + 2]- _int_80 + _int_2000 + 64 * zone
 s +=String.fromCharCode(cp)
 i +=3}else{if(errors=="surrogateescape"){s +="\\udc" + _hex(b[i])
-i +=1}else{
-$UnicodeDecodeError(encoding,i)}}}}
+i +=1}else{$UnicodeDecodeError(encoding,i)}}}}
 break
 case "latin_1":
 case "windows1252":
@@ -6947,8 +6928,8 @@ case false:
 return jsobj}
 if(jsobj===undefined){return $B.Undefined}
 else if(jsobj===null){return _b_.None}
-if(Array.isArray(jsobj))return _b_.list.$factory(jsobj)
-if(typeof jsobj==='number'){if(jsobj.toString().indexOf('.')==-1)return _b_.int.$factory(jsobj)
+if(Array.isArray(jsobj)){return _b_.list.$factory(jsobj)}
+if(typeof jsobj==='number'){if(jsobj.toString().indexOf('.')==-1){return _b_.int.$factory(jsobj)}
 return _b_.float.$factory(jsobj)}
 return JSObject.$factory(jsobj)}
 var pyobj2jsobj=$B.pyobj2jsobj=function(pyobj){
@@ -7010,7 +6991,7 @@ throw TypeError.$factory(
 "keyword arguments")}else{args.push(pyobj2jsobj(arguments[i]))}}
 if(attr==='replace' && self.js===location){location.replace(args[0])
 return}
-var new_this=self.js;
+var new_this=self.js
 if(self.js_func){
 new_this=self.js_func;}
 if(this !==null && this !==undefined && this !==_window){new_this=this}
@@ -7080,8 +7061,7 @@ try{return value.apply(null,args)}
 catch(err){err=$B.exception(err)
 var info=_b_.getattr(err,'info')
 if(err.args.length > 0){err.toString=function(){return info + '\n' + err.__class__.__name__ +
-': ' + _b_.repr(err.args[0])}}else{
-err.toString=function(){return info + '\n' + err.__class__.__name__}}
+': ' + _b_.repr(err.args[0])}}else{err.toString=function(){return info + '\n' + err.__class__.__name__}}
 console.log(err + '')
 throw err}}}}}
 JSObject.__setitem__=JSObject.__setattr__
@@ -7140,8 +7120,7 @@ return[$xmlhttp,fake_qs,timer]}
 function $download_module(module,url,$package){var imp=$importer(),$xmlhttp=imp[0],fake_qs=imp[1],timer=imp[2],res=null,mod_name=module.__name__,res,t0=new Date()
 $B.download_time=$B.download_time ||0
 $xmlhttp.open("GET",url + fake_qs,false)
-if($B.$CORS){$xmlhttp.onload=function(){if($xmlhttp.status==200 ||$xmlhttp.status==0){res=$xmlhttp.responseText}else{
-res=_b_.FileNotFoundError.$factory("No module named '" +
+if($B.$CORS){$xmlhttp.onload=function(){if($xmlhttp.status==200 ||$xmlhttp.status==0){res=$xmlhttp.responseText}else{res=_b_.FileNotFoundError.$factory("No module named '" +
 mod_name + "'")}}
 $xmlhttp.onerror=function(){res=_b_.FileNotFoundError.$factory("No module named '" +
 mod_name + "'")}}else{$xmlhttp.onreadystatechange=function(){if(this.readyState==4){_window.clearTimeout(timer)
@@ -7174,8 +7153,7 @@ catch(err){console.log("no $module")
 throw _b_.ImportError.$factory("name '$module' is not defined in module")}
 if(_module !==undefined){
 for(var attr in $module){_module[attr]=$module[attr]}
-$module=_module}
-else{
+$module=_module}else{
 $module.__class__=module
 $module.__name__=_module.name
 $module.__repr__=$module.__str__=function(){if($B.builtin_module_names.indexOf(_module.name)> -1){return "<module '" + _module.name + "' (built-in)>"}
@@ -7352,18 +7330,18 @@ origin : self.path + '#' + fullname,
 submodule_search_locations: is_package?[self.path]:
 _b_.None,loader_state:{stored: stored},
 cached: _b_.None,parent: is_package ? fullname : parent_package(fullname),has_location: _b_.True})},invalidate_caches: function(self){self.vfs=undefined}}
-vfs_hook.$factory=function(path){if(path.substr(-1)=='/'){path=path.slice(0,-1);}
-var ext=path.substr(-7);
+vfs_hook.$factory=function(path){if(path.substr(-1)=='/'){path=path.slice(0,-1)}
+var ext=path.substr(-7)
 if(ext !='.vfs.js'){throw _b_.ImportError.$factory('VFS file URL must end with .vfs.js extension');}
-self={__class__: vfs_hook,path: path};
-vfs_hook.load_vfs(self);
-return self;}
+self={__class__: vfs_hook,path: path}
+vfs_hook.load_vfs(self)
+return self}
 $B.set_func_names(vfs_hook,"<import>")
 var url_hook={__class__: _b_.type,__mro__:[_b_.object],__name__ : "UrlPathFinder",__repr__: function(self){return "<UrlPathFinder" +(self.hint? " for '" + self.hint + "'":
-"(unbound)")+ " at " + self.path_entry + '>'},find_spec : function(self,fullname,module){var loader_data={},notfound=true,hint=self.hint,base_path=self.path_entry + fullname.match(/[^.]+$/g)[0],modpaths=[];
-var tryall=hint===undefined;
+"(unbound)")+ " at " + self.path_entry + '>'},find_spec : function(self,fullname,module){var loader_data={},notfound=true,hint=self.hint,base_path=self.path_entry + fullname.match(/[^.]+$/g)[0],modpaths=[]
+var tryall=hint===undefined
 if(tryall ||hint=="js"){
-modpaths=[[base_path + ".js","js",false]];}
+modpaths=[[base_path + ".js","js",false]]}
 if(tryall ||hint=='pyc.js'){
 modpaths=modpaths.concat([[base_path + ".pyc.js","pyc.js",false],[base_path + "/__init__.pyc.js","pyc.js",true]])}
 if(tryall ||hint=='py'){
@@ -7406,8 +7384,7 @@ _mod_name +=modsep + parsed_name[i]
 modsep="."
 var modobj=$B.imported[_mod_name]
 if(modobj==_b_.None){
-throw _b_.ImportError.$factory(_mod_name)}
-else if(modobj===undefined){try{$B.import_hooks(_mod_name,__path__,undefined)}catch(err){delete $B.imported[_mod_name]
+throw _b_.ImportError.$factory(_mod_name)}else if(modobj===undefined){try{$B.import_hooks(_mod_name,__path__,undefined)}catch(err){delete $B.imported[_mod_name]
 $B.imported[_mod_name]=null
 throw err}
 if($B.is_none($B.imported[_mod_name])){throw _b_.ImportError.$factory(_mod_name)}else{
@@ -7492,8 +7469,7 @@ self.valueOf()==Number.NEGATIVE_INFINITY){throw _b_.OverflowError.$factory("Cann
 if(! Number.isFinite(self.valueOf())){throw _b_.ValueError.$factory("Cannot pass NaN to " +
 "float.as_integer_ratio.")}
 var tmp=_b_.$frexp(self.valueOf()),fp=tmp[0],exponent=tmp[1]
-for(var i=0;i < 300;i++){if(fp==Math.floor(fp)){break}else{
-fp *=2
+for(var i=0;i < 300;i++){if(fp==Math.floor(fp)){break}else{fp *=2
 exponent--}}
 numerator=float.$factory(fp)
 py_exponent=abs(exponent)
@@ -8533,7 +8509,7 @@ var parts=complex_re.exec($real)
 if(parts===null){throw _b_.ValueError.$factory("complex() arg is a malformed string")}else if(parts[_real]=="." ||parts[_imag]=="." ||
 parts[_real]==".e" ||parts[_imag]==".e" ||
 parts[_real]=="e" ||parts[_imag]=="e"){throw _b_.ValueError.$factory("complex() arg is a malformed string")}else if(parts[_j]!=""){if(parts[_sign]==""){$real=0
-if(parts[_real]=="+" ||parts[_real]==""){$imag=1}else if(parts[_real]=='-'){$imag=-1}else $imag=parseFloat(parts[_real])}else{$real=parseFloat(parts[_real])
+if(parts[_real]=="+" ||parts[_real]==""){$imag=1}else if(parts[_real]=='-'){$imag=-1}else{$imag=parseFloat(parts[_real])}}else{$real=parseFloat(parts[_real])
 $imag=parts[_imag]=="" ? 1 : parseFloat(parts[_imag])
 $imag=parts[_sign]=="-" ? -$imag : $imag}}else{$real=parseFloat(parts[_real])
 $imag=0}
@@ -8665,8 +8641,7 @@ return n + r}
 function makeAscendingRun(array,lo,hi,compare){var runHi=lo + 1
 if(runHi===hi){return 1;}
 if(compare(array[runHi++],array[lo])< 0){while(runHi < hi && compare(array[runHi],array[runHi - 1])< 0){runHi++}
-reverseRun(array,lo,runHi)}else{
-while(runHi < hi && compare(array[runHi],array[runHi - 1])>=0){runHi++}}
+reverseRun(array,lo,runHi)}else{while(runHi < hi && compare(array[runHi],array[runHi - 1])>=0){runHi++}}
 return runHi - lo}
 function reverseRun(array,lo,hi){hi--
 while(lo < hi){var t=array[lo]
@@ -8677,8 +8652,7 @@ for(;start < hi;start++){var pivot=array[start]
 var left=lo
 var right=start
 while(left < right){var mid=(left + right)>>> 1
-if(compare(pivot,array[mid])< 0){right=mid}else{
-left=mid + 1}}
+if(compare(pivot,array[mid])< 0){right=mid}else{left=mid + 1}}
 var n=start - left
 switch(n){case 3:
 array[left + 3]=array[left + 2]
@@ -8698,8 +8672,7 @@ offset=(offset << 1)+ 1
 if(offset <=0){offset=maxOffset}}
 if(offset > maxOffset){offset=maxOffset}
 lastOffset +=hint
-offset +=hint}else{
-maxOffset=hint + 1
+offset +=hint}else{maxOffset=hint + 1
 while(offset < maxOffset && compare(value,array[start + hint - offset])<=0){lastOffset=offset
 offset=(offset << 1)+ 1
 if(offset <=0){offset=maxOffset}}
@@ -8971,8 +8944,7 @@ $B.get_class(other).__name__ + "()")}
 var i=0
 while(i < self.length){if(i >=other.length){return true}
 if($B.rich_comp("__eq__",self[i],other[i])){i++}
-else{
-res=getattr(self[i],"__ge__")(other[i])
+else{res=getattr(self[i],"__ge__")(other[i])
 if(res===_b_.NotImplemented){throw _b_.TypeError.$factory("unorderable types: " +
 $B.get_class(self[i]).__name__ + "() >= " +
 $B.get_class(other[i]).__name__ + "()")}else{return res}}}
@@ -9299,8 +9271,7 @@ throw _b_.IndexError.$factory("string index out of range")}
 if(isinstance(arg,slice)){var s=_b_.slice.$conv_for_seq(arg,self.length),start=s.start,stop=s.stop,step=s.step
 var res="",i=null
 if(step > 0){if(stop <=start){return ""}
-for(var i=start;i < stop;i +=step){res +=self.charAt(i)}}else{
-if(stop >=start){return ''}
+for(var i=start;i < stop;i +=step){res +=self.charAt(i)}}else{if(stop >=start){return ''}
 for(var i=start;i > stop;i +=step){res +=self.charAt(i)}}
 return res}
 if(isinstance(arg,bool)){return self.__getitem__(_b_.int.$factory(arg))}
@@ -9459,8 +9430,7 @@ var rslt=kwarg_key.exec(s.substring(newpos))
 if(! rslt){throw _b_.ValueError.$factory("incomplete format key")}
 var key=rslt[1]
 newpos +=rslt[0].length
-try{
-var self=getitem(key)}catch(err){if(err.name==="KeyError"){throw err}
+try{var self=getitem(key)}catch(err){if(err.name==="KeyError"){throw err}
 throw _b_.TypeError.$factory("format requires a mapping")}
 return get_string_value(s,self)}
 var $get_arg_string=function(s){
@@ -9473,8 +9443,7 @@ return get_string_value(s,self)}
 var get_string_value=function(s,self){
 var flags={"pad_char": " "}
 do{var func=char_mapping[s[newpos]]
-try{
-if(func===undefined){throw new UnsupportedChar()}else{var ret=func(self,flags)
+try{if(func===undefined){throw new UnsupportedChar()}else{var ret=func(self,flags)
 if(ret !==undefined){return ret}
 ++newpos}}catch(err){if(err.name=="UnsupportedChar"){invalid_char=s[newpos]
 if(invalid_char===undefined){throw _b_.ValueError.$factory("incomplete format")}
@@ -9493,8 +9462,7 @@ ret +=self.substring(pos,newpos)
 ++newpos
 if(newpos < length){if(self[newpos]==="%"){ret +="%"}else{nbph++
 if(self[newpos]==="("){++newpos
-ret +=$get_kwarg_string(self)}else{
-ret +=$get_arg_string(self)}}}else{
+ret +=$get_kwarg_string(self)}else{ret +=$get_arg_string(self)}}}else{
 throw _b_.ValueError.$factory("incomplete format")}
 pos=newpos + 1}while(pos < length)
 if(argpos !==null){if(args.length > argpos){throw _b_.TypeError.$factory(
@@ -10607,7 +10575,7 @@ var $DOMEventAttrs_W3C=["NONE","CAPTURING_PHASE","AT_TARGET","BUBBLING_PHASE","t
 var $DOMEventAttrs_IE=["altKey","altLeft","button","cancelBubble","clientX","clientY","contentOverflow","ctrlKey","ctrlLeft","data","dataFld","dataTransfer","fromElement","keyCode","nextPage","offsetX","offsetY","origin","propertyName","reason","recordset","repeat","screenX","screenY","shiftKey","shiftLeft","source","srcElement","srcFilter","srcUrn","toElement","type","url","wheelDelta","x","y"]
 $B.$isEvent=function(obj){var flag=true
 for(var i=0;i < $DOMEventAttrs_W3C.length;i++){if(obj[$DOMEventAttrs_W3C[i]]===undefined){flag=false;break}}
-if(flag)return true
+if(flag){return true}
 for(var i=0;i < $DOMEventAttrs_IE.length;i++){if(obj[$DOMEventAttrs_IE[i]]===undefined){return false}}
 return true}
 var $NodeTypes={1: "ELEMENT",2: "ATTRIBUTE",3: "TEXT",4: "CDATA_SECTION",5: "ENTITY_REFERENCE",6: "ENTITY",7: "PROCESSING_INSTRUCTION",8: "COMMENT",9: "DOCUMENT",10: "DOCUMENT_TYPE",11: "DOCUMENT_FRAGMENT",12: "NOTATION"}
@@ -10667,14 +10635,12 @@ __name__: "OpenFile",__mro__:[object]}
 OpenFile.$factory=function(file,mode,encoding){var res={__class__: $OpenFileDict,file: file,reader: new FileReader()}
 if(mode==="r"){res.reader.readAsText(file,encoding)}else if(mode==="rb"){res.reader.readAsBinaryString(file)}
 return res}
-OpenFile.__getattr__=function(self,attr){if(self["get_" + attr]!==undefined)
-return self["get_" + attr]
+OpenFile.__getattr__=function(self,attr){if(self["get_" + attr]!==undefined){return self["get_" + attr]}
 return self.reader[attr]}
 OpenFile.__setattr__=function(self,attr,value){var obj=self.reader
 if(attr.substr(0,2)=="on"){
 var callback=function(ev){return value($DOMEvent(ev))}
-obj.addEventListener(attr.substr(2),callback)}else if("set_" + attr in obj){return obj["set_" + attr](value)}else if(attr in obj){obj[attr]=value}else{
-setattr(obj,attr,value)}}
+obj.addEventListener(attr.substr(2),callback)}else if("set_" + attr in obj){return obj["set_" + attr](value)}else if(attr in obj){obj[attr]=value}else{setattr(obj,attr,value)}}
 $B.set_func_names(OpenFile,"<dom>")
 var dom={File : function(){},FileReader : function(){}}
 dom.File.__class__=_b_.type
@@ -11440,8 +11406,7 @@ var dict={__class__: _b_.type,__name__: tagName}
 dict.__init__=function(){var $ns=$B.args('pow',1,{self: null},['self'],arguments,{},'args','kw'),self=$ns['self'],args=$ns['args']
 if(args.length==1){var first=args[0]
 if(_b_.isinstance(first,[_b_.str,_b_.int,_b_.float])){
-self.elt.innerHTML=_b_.str.$factory(first)}else if(first.__class__===TagSum){for(var i=0,len=first.children.length;i < len;i++){self.elt.appendChild(first.children[i].elt)}}else{
-if(_b_.isinstance(first,$B.DOMNode)){self.elt.appendChild(first.elt)}else{try{
+self.elt.innerHTML=_b_.str.$factory(first)}else if(first.__class__===TagSum){for(var i=0,len=first.children.length;i < len;i++){self.elt.appendChild(first.children[i].elt)}}else{if(_b_.isinstance(first,$B.DOMNode)){self.elt.appendChild(first.elt)}else{try{
 var items=_b_.list.$factory(first)
 items.forEach(function(item){$B.DOMNode.__le__(self,item)})}catch(err){console.log(err)
 console.log("first",first)
@@ -11453,8 +11418,7 @@ var arg=items[i][0],value=items[i][1]
 if(arg.toLowerCase().substr(0,2)=="on"){
 var js='$B.DOMNode.bind(self,"' +
 arg.toLowerCase().substr(2)
-eval(js + '",function(){' + value + '})')}else if(arg.toLowerCase()=="style"){$B.DOMNode.set_style(self,value)}else{
-if(value !==false){
+eval(js + '",function(){' + value + '})')}else if(arg.toLowerCase()=="style"){$B.DOMNode.set_style(self,value)}else{if(value !==false){
 try{arg=arg.replace('_','-')
 $B.DOMNode.__setattr__(self,arg,value)}catch(err){throw _b_.ValueError.$factory(
 "can't set attribute " + arg)}}}}}
@@ -11464,8 +11428,7 @@ if(cls.$elt_wrap !==undefined){
 var elt=cls.$elt_wrap 
 cls.$elt_wrap=undefined 
 var res=$B.DOMNode.$factory(elt,true)
-res._wrapped=true }else{
-var res=$B.DOMNode.$factory(document.createElement(tagName),true)
+res._wrapped=true }else{var res=$B.DOMNode.$factory(document.createElement(tagName),true)
 res._wrapped=false }
 res.__class__=cls
 return res}
@@ -11475,8 +11438,7 @@ function makeFactory(klass){var factory=function(){if(klass.$elt_wrap !==undefin
 var elt=klass.$elt_wrap 
 klass.$elt_wrap=undefined 
 var res=$B.DOMNode.$factory(elt,true)
-res._wrapped=true }else{
-if(klass.__name__=='SVG'){var res=$B.DOMNode.$factory(document.createElementNS("http://www.w3.org/2000/svg","svg"),true)}else{var res=$B.DOMNode.$factory(document.createElement(klass.__name__),true)}
+res._wrapped=true }else{if(klass.__name__=='SVG'){var res=$B.DOMNode.$factory(document.createElementNS("http://www.w3.org/2000/svg","svg"),true)}else{var res=$B.DOMNode.$factory(document.createElement(klass.__name__),true)}
 res._wrapped=false }
 res.__class__=klass
 klass.__init__(res,...arguments)
@@ -11529,7 +11491,7 @@ for(var attr in module_obj){if(typeof module_obj[attr]=='function'){var name=att
 while(name.charAt(0)=='$'){name=name.substr(1)}
 module_obj[attr].$infos={__name__:name}}}}
 for(var attr in modules){load(attr,modules[attr])}
-if(! $B.isa_web_worker)modules['browser'].html=modules['browser.html'];
+if(! $B.isa_web_worker){modules['browser'].html=modules['browser.html']}
 var _b_=$B.builtins
 _b_.__builtins__=$B.module.$factory('__builtins__','Python builtins')
 for(var attr in $B.builtins){_b_.__builtins__[attr]=_b_[attr]
@@ -11559,9 +11521,7 @@ if(module===undefined){throw _b_.ImportError.$factory(mod_name)}
 if($B.is_none(module)){
 module=$B.module.$factory(mod_name)
 var mod_desc=_b_.getattr(spec,"origin")
-if(_b_.getattr(spec,"has_location")){mod_desc="from '" + mod_desc + "'"}
-else{
-mod_desc="(" + mod_desc + ")"}}}
+if(_b_.getattr(spec,"has_location")){mod_desc="from '" + mod_desc + "'"}else{mod_desc="(" + mod_desc + ")"}}}
 module.__name__=_spec_name
 module.__loader__=_loader
 module.__package__=_b_.getattr(spec,"parent","")

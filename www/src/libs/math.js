@@ -8,7 +8,7 @@ eval($s.join(';'))
 //for(var $py_builtin in _b_){eval("var "+$py_builtin+"=_b_[$py_builtin]")}
 
 var float_check = function(x) {
-    if (x.__class__ === $B.long_int){return parseInt(x.value)}
+    if(x.__class__ === $B.long_int){return parseInt(x.value)}
     return _b_.float.$factory(x)
 }
 
@@ -206,8 +206,8 @@ var _mod = {
         return float.$factory(Math.log(y + Math.sqrt(y * y + 1)))
     },
     atan: function(x) {
-        if (_b_.$isninf(x)){return float.$factory(-Math.PI / 2)}
-        if (_b_.$isinf(x)){return float.$factory(Math.PI / 2)}
+        if(_b_.$isninf(x)){return float.$factory(-Math.PI / 2)}
+        if(_b_.$isinf(x)){return float.$factory(Math.PI / 2)}
         return float.$factory(Math.atan(float_check(x)))},
     atan2: function(y, x) {
         return float.$factory(Math.atan2(float_check(y), float_check(x)))
@@ -366,7 +366,7 @@ var _mod = {
          return d1 * d2 * Math.pow(z + 5.5, z + 0.5) * Math.exp(-(z + 5.5))
     },
     hypot: function(x,y){
-       if (_b_.$isinf(x) || _b_.$isinf(y)) return float.$factory('inf')
+       if(_b_.$isinf(x) || _b_.$isinf(y)){return float.$factory('inf')}
        var x1 = float_check(x),
            y1 = float_check(y)
        return float.$factory(Math.sqrt(x1 * x1 + y1 * y1))},
@@ -420,7 +420,7 @@ var _mod = {
     },
     log: function(x, base){
          var x1 = float_check(x)
-         if (base === undefined){return float.$factory(Math.log(x1))}
+         if(base === undefined){return float.$factory(Math.log(x1))}
          return float.$factory(Math.log(x1) / Math.log(float_check(base)))
     },
     log1p: function(x){return float.$factory(Math.log(1.0 + float_check(x)))},
@@ -535,7 +535,7 @@ var _mod = {
     },
     tanh: function(x) {
         var y = float_check(x)
-        if (Math.tanh !== undefined){return float.$factory(Math.tanh(y))}
+        if(Math.tanh !== undefined){return float.$factory(Math.tanh(y))}
         return float.$factory((Math.pow(Math.E, y) - Math.pow(Math.E, -y))/
              (Math.pow(Math.E, y) + Math.pow(Math.E, -y)))
     },

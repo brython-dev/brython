@@ -82,12 +82,12 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj) {
     }
 
     if(jsobj === undefined){return $B.Undefined}
-    else if(jsobj === null) {return _b_.None}
+    else if(jsobj === null){return _b_.None}
 
-    if (Array.isArray(jsobj)) return _b_.list.$factory(jsobj)
+    if(Array.isArray(jsobj)){return _b_.list.$factory(jsobj)}
 
-    if (typeof jsobj === 'number') {
-       if (jsobj.toString().indexOf('.') == -1) return _b_.int.$factory(jsobj)
+    if(typeof jsobj === 'number'){
+       if(jsobj.toString().indexOf('.') == -1){return _b_.int.$factory(jsobj)}
        // for now, lets assume a float
        return _b_.float.$factory(jsobj)
     }
@@ -102,7 +102,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
     if(pyobj === $B.Undefined){return undefined}
 
     var klass = $B.get_class(pyobj)
-    if (klass === undefined) {
+    if(klass === undefined){
         // not a Python object , consider arg as Javascript object instead
         return pyobj;
     }
@@ -261,13 +261,13 @@ JSObject.__getattribute__ = function(self,attr){
                     return
                 }
                 // normally, we provide self.js as `this` to simulate js method call
-                var new_this = self.js;
-                if (self.js_func) {
+                var new_this = self.js
+                if(self.js_func){
                     // if self is a wrapped function, unwrap it back
                     new_this = self.js_func;
                 }
                 // but if we get explicit `this` (e.g. through apply call) we should pass it on
-                if (this !== null && this !== undefined && this !== _window) {
+                if(this !== null && this !== undefined && this !== _window){
                     new_this = this
                 }
 
@@ -276,7 +276,7 @@ JSObject.__getattribute__ = function(self,attr){
                 // NOTE: fix for situations when wrapped function is constructor (thus it does not return and value is lost)
                 // this has side effect that non-constructor functions returning nothing will return `this` instead, which can break something
                 //
-                if (result === undefined) {
+                if(result === undefined){
                     result = this
                 }
                 return $B.$JS2Py(result)
@@ -429,13 +429,13 @@ JSObject.__setattr__ = function(self,attr,value){
                 try{return value.apply(null, args)}
                 catch(err){
                     err = $B.exception(err)
-                    var info = _b_.getattr(err,'info')
-                    if (err.args.length > 0) {
+                    var info = _b_.getattr(err, 'info')
+                    if(err.args.length > 0){
                         err.toString = function(){
                             return info + '\n' + err.__class__.__name__ +
                             ': ' + _b_.repr(err.args[0])
                         }
-                    } else {
+                    }else{
                         err.toString = function(){
                             return info + '\n' + err.__class__.__name__
                         }
@@ -469,7 +469,7 @@ JSObject.to_dict = function(self){
 }
 
 JSObject.$factory = function(obj){
-    if (obj === null) {return _b_.None}
+    if(obj === null){return _b_.None}
     // If obj is a function, calling it with JSObject implies that it is
     // a function defined in Javascript. It must be wrapped in a JSObject
     // so that when called, the arguments are transformed into JS values
@@ -479,7 +479,7 @@ JSObject.$factory = function(obj){
 
     var klass = $B.get_class(obj)
     // we need to do this or nan is returned, when doing json.loads(...)
-    if (klass === _b_.float){return _b_.float.$factory(obj)}
+    if(klass === _b_.float){return _b_.float.$factory(obj)}
 
     // If obj is a Python object, return it unchanged
     if(klass !== undefined){return obj}

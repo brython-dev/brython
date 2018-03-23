@@ -169,7 +169,7 @@ function makeAscendingRun(array, lo, hi, compare){
 
       reverseRun(array, lo, runHi)
       // Ascending
-    } else {
+    }else{
         while(runHi < hi && compare(array[runHi], array[runHi - 1]) >= 0){
             runHi++
         }
@@ -226,7 +226,7 @@ function binaryInsertionSort(array, lo, hi, start, compare){
 
             if(compare(pivot, array[mid]) < 0){
                 right = mid
-            } else {
+            }else{
                 left = mid + 1
             }
         }
@@ -299,7 +299,7 @@ function gallopLeft(value, array, start, length, hint, compare) {
         offset += hint
 
         // value <= array[start + hint]
-    } else {
+    }else{
         maxOffset = hint + 1
         while(offset < maxOffset && compare(value,
                 array[start + hint - offset]) <= 0){

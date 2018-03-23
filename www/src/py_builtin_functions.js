@@ -145,20 +145,20 @@ function $builtin_base_convert_helper(obj, base) {
          console.log('invalid base:' + base)
   }
 
-  if (obj.__class__ === $B.long_int) {
+  if(obj.__class__ === $B.long_int){
      if(obj.pos){return prefix + $B.long_int.to_base(obj, base)}
      return '-' + prefix + $B.long_int.to_base(-obj, base)
   }
 
   var value = $B.$GetInt(obj)
 
-  if (value === undefined) {
+  if(value === undefined){
      // need to raise an error
      throw _b_.TypeError.$factory('Error, argument must be an integer or' +
          ' contains an __index__ function')
   }
 
-  if (value >= 0){return prefix + value.toString(base)}
+  if(value >= 0){return prefix + value.toString(base)}
   return '-' + prefix + (-value).toString(base)
 }
 
@@ -184,7 +184,7 @@ function chr(i) {
     check_nb_args('chr', 1, arguments.length)
     check_no_kw('chr', i)
 
-    if (i < 0 || i > 1114111){
+    if(i < 0 || i > 1114111){
         throw _b_.ValueError.$factory('Outside valid range')
     }
     return String.fromCharCode(i)
@@ -287,13 +287,13 @@ function dir(obj){
         var dir_func = $B.$getattr(obj.__class__, "__dir__")
         return $B.$call(dir_func)(obj)
     }
-    try {
+    try{
         var res = $B.$call(getattr(obj, '__dir__'))()
 
         res = _b_.list.$factory(res)
         res.sort()
         return res
-    } catch (err){
+    }catch (err){
         // ignore, default
         console.log(err)
     }
@@ -651,7 +651,7 @@ filter.__iter__ = function(self){return self}
 filter.__next__ = function(self) {
     while(true){
         var _item = next(self.iterable)
-        if (self.func(_item)){return _item}
+        if(self.func(_item)){return _item}
     }
 }
 
@@ -746,7 +746,7 @@ $B.$getattr = function(obj, attr, _default){
 
     switch(attr) {
       case '__call__':
-        if (typeof obj == 'function'){
+        if(typeof obj == 'function'){
             return obj
         }
         break
@@ -779,7 +779,7 @@ $B.$getattr = function(obj, attr, _default){
           }
         break
       case '$$new':
-        if (klass === $B.JSObject && obj.js_func !== undefined){
+        if(klass === $B.JSObject && obj.js_func !== undefined){
           return $B.JSConstructor.$factory(obj)
         }
         break
@@ -787,8 +787,8 @@ $B.$getattr = function(obj, attr, _default){
 
     if(typeof obj == 'function') {
       var value = obj[attr]
-      if(value !== undefined) {
-        if (attr == '__module__'){
+      if(value !== undefined){
+        if(attr == '__module__'){
           return value
         }
       }
@@ -962,13 +962,13 @@ function _get_builtins_doc(){
 }
 
 function help(obj){
-    if (obj === undefined){obj = 'help'}
+    if(obj === undefined){obj = 'help'}
 
     // if obj is a builtin, lets take a shortcut, and output doc string
     if(typeof obj == 'string' && _b_[obj] !== undefined) {
         _get_builtins_doc()
         var _doc = $B.builtins_doc[obj]
-        if (_doc !== undefined && _doc != '') {
+        if(_doc !== undefined && _doc != ''){
              _b_.print(_doc)
              return
         }
@@ -1005,7 +1005,7 @@ function hex(x) {
 function id(obj) {
    check_no_kw('id', obj)
    check_nb_args('id', 1, arguments.length)
-   if (isinstance(obj, [_b_.str, _b_.int, _b_.float])){
+   if(isinstance(obj, [_b_.str, _b_.int, _b_.float])){
        return getattr(_b_.str.$factory(obj), '__hash__')()
    }else if(obj.$id !== undefined){return obj.$id}
    else{return obj.$id = $B.UUID()}
@@ -1029,7 +1029,7 @@ function input(src) {
     if(stdin.__original__){return prompt(src || '') || ''}
     var val = _b_.getattr(stdin, 'readline')()
     val = val.split('\n')[0]
-    if (stdin.len === stdin.pos){
+    if(stdin.len === stdin.pos){
         _b_.getattr(stdin, 'close')()
     }
     // $B.stdout.write(val+'\n'); // uncomment if we are to mimic the behavior in the console
@@ -1590,8 +1590,8 @@ function round(arg,n){
     if(n === None){
         var floor = Math.floor(arg)
         var diff = Math.abs(arg - floor)
-        if (diff == 0.5){
-            if (floor % 2){return Math.round(arg)}else{return Math.floor(arg)}
+        if(diff == 0.5){
+            if(floor % 2){return Math.round(arg)}else{return Math.floor(arg)}
         }else{
             return _b_.int.$factory(Math.round(arg))
         }
@@ -1602,7 +1602,7 @@ function round(arg,n){
     if(isinstance(arg, _b_.float)) {
         return _b_.float.$factory(_b_.int.__truediv__(
             Number(Math.round(arg.valueOf() * mult)), mult))
-    } else {
+    }else{
         return _b_.int.$factory(_b_.int.__truediv__(
             Number(Math.round(arg.valueOf() * mult)), mult))
     }
@@ -1764,12 +1764,12 @@ function sum(iterable,start){
     if(start === undefined){
         start = 0
     }else{
-        if(typeof start === 'str') {
+        if(typeof start === 'str'){
             throw _b_.TypeError.$factory("TypeError: sum() can't sum strings" +
                 " [use ''.join(seq) instead]")
         }
 
-        if (_b_.isinstance(start, _b_.bytes)) {
+        if(_b_.isinstance(start, _b_.bytes)){
             throw _b_.TypeError.$factory("TypeError: sum() can't sum bytes" +
                 " [use b''.join(seq) instead]")
         }
@@ -1977,7 +1977,7 @@ function $url_open(){
         // read the file content and return an object with file object methods
         var req = new XMLHttpRequest();
         req.onreadystatechange = function(){
-            try {
+            try{
                 var status = this.status
                 if(status == 404){
                     $res = _b_.IOError.$factory('File ' + file + ' not found')
@@ -1990,7 +1990,7 @@ function $url_open(){
                         $res = _b_.str.encode($res, 'utf-8')
                     }
                 }
-            } catch (err) {
+            }catch (err){
                 $res = _b_.IOError.$factory('Could not open file ' + file +
                     ' : error ' + err)
             }

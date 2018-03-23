@@ -620,13 +620,13 @@ for(var attr in set){
 
 // hash is allowed on frozensets
 frozenset.__hash__ = function(self) {
-   if (self === undefined) {
+   if(self === undefined){
       return frozenset.__hashvalue__ || $B.$py_next_hash--  // for hash of string type (not instance of string)
    }
 
    //taken from python repo /Objects/setobject.c
 
-   if (self.__hashvalue__ !== undefined){return self.__hashvalue__}
+   if(self.__hashvalue__ !== undefined){return self.__hashvalue__}
 
    var _hash = 1927868237
    _hash *= self.$items.length

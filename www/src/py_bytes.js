@@ -78,7 +78,7 @@ bytearray.__setitem__ = function(self, arg, value){
         }else{
             throw _b_.TypeError.$factory("can only assign an iterable")
         }
-    }else {
+    }else{
         throw _b_.TypeError.$factory('list indices must be integer, not ' +
             $B.get_class(arg).__name__)
     }
@@ -152,7 +152,7 @@ bytes.__getitem__ = function(self, arg){
 
         if(pos >= 0 && pos < self.source.length){return self.source[pos]}
         throw _b_.IndexError.$factory('index out of range')
-    } else if(isinstance(arg, _b_.slice)) {
+    }else if(isinstance(arg, _b_.slice)){
         var step = arg.step === None ? 1 : arg.step
         if(step > 0){
             var start = arg.start === None ? 0 : arg.start
@@ -176,7 +176,7 @@ bytes.__getitem__ = function(self, arg){
             for(i = start; i >= stop; i += step){res[pos++] = self.source[i]}
         }
         return bytes.$factory(res)
-    } else if(isinstance(arg, bool)){
+    }else if(isinstance(arg, bool)){
         return self.source.__getitem__(_b_.int.$factory(arg))
     }
 }
@@ -187,7 +187,7 @@ bytes.__gt__ = function(self, other){
 }
 
 bytes.__hash__ = function(self) {
-  if (self === undefined) {
+  if(self === undefined){
      return bytes.__hashvalue__ || $B.$py_next_hash--  // for hash of str$
   }
 
@@ -360,8 +360,8 @@ bytes.find = function() {
     var end = $.end == -1 ? $.self.source.length - sub.source.length :
         Math.min($.self.source.length - sub.source.length, $.end)
 
-    for(var i = start; i <= end; i++) {
-        if (bytes.startswith($.self, sub, i)){return i}
+    for(var i = start; i <= end; i++){
+        if(bytes.startswith($.self, sub, i)){return i}
     }
     return -1
 }
@@ -402,7 +402,7 @@ bytes.replace = function(){
             }
             i += (old.source.length - 1)
             count--
-        } else {
+        }else{
             res.push(src[i])
         }
     }
@@ -517,7 +517,7 @@ bytes.translate = function(self, table, _delete) {
             $B.get_class(_delete).__name + " doesn't support the buffer API")
     }
     var res = [], pos = 0
-    if (isinstance(table, bytes) && table.source.length == 256) {
+    if(isinstance(table, bytes) && table.source.length == 256){
        for (var i = 0, len = self.source.length; i < len; i++) {
            if(_delete.indexOf(self.source[i]) > -1){continue}
            res[pos++] = table.source[self.source[i]]
@@ -544,16 +544,16 @@ var _lower = function(char_code) {
 
 bytes.upper = function(self) {
     var _res = [], pos = 0
-    for(var i = 0, len = self.source.length; i < len; i++) {
-        if (self.source[i]){_res[pos++] = _upper(self.source[i])}
+    for(var i = 0, len = self.source.length; i < len; i++){
+        if(self.source[i]){_res[pos++] = _upper(self.source[i])}
     }
     return bytes.$factory(_res)
 }
 
 bytes.lower = function(self) {
     var _res = [], pos = 0
-    for(var i = 0, len = self.source.length; i < len; i++) {
-        if (self.source[i]){_res[pos++] = _lower(self.source[i])}
+    for(var i = 0, len = self.source.length; i < len; i++){
+        if(self.source[i]){_res[pos++] = _lower(self.source[i])}
     }
     return bytes.$factory(_res)
 }
@@ -657,10 +657,10 @@ function decode(b, encoding, errors){
                     s += String.fromCharCode(cp)
                     i += 3
                 }else{
-                    if (errors == "surrogateescape") {
+                    if(errors == "surrogateescape"){
                        s += "\\udc" + _hex(b[i])
                        i += 1
-                    } else {
+                    }else{
                        $UnicodeDecodeError(encoding, i)
                     }
                 }

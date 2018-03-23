@@ -179,7 +179,7 @@ int.__floordiv__ = function(self,other){
 }
 
 int.__hash__ = function(self){
-   if (self === undefined) {
+   if(self === undefined){
       return int.__hashvalue__ || $B.$py_next_hash--  // for hash of int type (not instance of int)
    }
    return self.valueOf()
@@ -401,8 +401,8 @@ var $op_func = function(self, other){
             return $B.long_int.__sub__($B.long_int.$factory(self),
                 $B.long_int.$factory(other))
         }
-        if (self > $B.max_int32 || self < $B.min_int32 ||
-                other > $B.max_int32 || other < $B.min_int32) {
+        if(self > $B.max_int32 || self < $B.min_int32 ||
+                other > $B.max_int32 || other < $B.min_int32){
             return $B.long_int.__sub__($B.long_int.$factory(self),
                 $B.long_int.$factory(other))
         }
@@ -464,7 +464,7 @@ for(var $op in $ops){
 
 // comparison methods
 var $comp_func = function(self, other){
-    if (other.__class__ === $B.long_int) {
+    if(other.__class__ === $B.long_int){
         return $B.long_int.__lt__(other, $B.long_int.$factory(self))
     }
     if(isinstance(other, int)){return self.valueOf() > other.valueOf()}

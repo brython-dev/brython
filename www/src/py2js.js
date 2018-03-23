@@ -604,7 +604,7 @@ function $AssignCtx(context){
             case 'expr':
                 if(left.tree.length > 1){
                     left_items = left.tree
-                }else if (left.tree[0].type == 'list_or_tuple' ||
+                }else if(left.tree[0].type == 'list_or_tuple' ||
                         left.tree[0].type == 'target_list'){
                     left_items = left.tree[0].tree
                 }else if(left.tree[0].type == 'id'){
@@ -5151,7 +5151,7 @@ function $WithCtx(context){
 
         node.is_try = true // for generators that use a context manager
 
-        if(this.transformed) return  // used if inside a for loop
+        if(this.transformed){return}  // used if inside a for loop
 
         // If there are several "with" clauses, create a new child
         // For instance :
@@ -6024,7 +6024,7 @@ function $transition(context,token){
                         case '}':
                             switch(context.real) {
                                 case 'dict_or_set':
-                                     if (context.tree.length != 1){break}
+                                     if(context.tree.length != 1){break}
                                      context.real = 'set'   // is this needed?
                                 case 'set':
                                 case 'set_comp':
@@ -6180,7 +6180,7 @@ function $transition(context,token){
                 case '{':
                 case 'not':
                 case 'lamdba':
-                    if (context.expect == 'id') {
+                    if(context.expect == 'id'){
                        context.expect = 'as'
                        return $transition(new $AbstractExprCtx(context, false),
                            token, arguments[2])
@@ -6202,7 +6202,7 @@ function $transition(context,token){
                     break
                 case ':':
                     var _ce = context.expect
-                    if (_ce == 'id' || _ce == 'as' || _ce == ':'){
+                    if(_ce == 'id' || _ce == 'as' || _ce == ':'){
                         return $BodyCtx(context)
                     }
                     break
@@ -6218,7 +6218,7 @@ function $transition(context,token){
                         return context
                     }
                 case ',':
-                    if (context.parenth !== undefined &&
+                    if(context.parenth !== undefined &&
                             context.has_alias === undefined &&
                             (context.expect == 'as' || context.expect == ',')){
                         context.expect = 'id'
@@ -6547,18 +6547,18 @@ function $transition(context,token){
                             $_SyntaxError(context, ['invalid syntax'])
                     }
                 case 'as':
-                  if (context.expect == ',' || context.expect == 'eol'){
+                  if(context.expect == ',' || context.expect == 'eol'){
                      context.expect = 'alias'
                      return context
                   }
                 case '(':
 
-                    if (context.expect == 'id') {
+                    if(context.expect == 'id'){
                         context.expect = 'id'
                         return context
                     }
                 case ')':
-                  if (context.expect == ',' || context.expect == 'id') {
+                  if(context.expect == ',' || context.expect == 'id'){
                      context.expect = 'eol'
                      return context
                   }
@@ -6568,7 +6568,7 @@ function $transition(context,token){
         case 'func_arg_id':
             switch(token) {
                 case '=':
-                    if (context.expect == '='){
+                    if(context.expect == '='){
                        context.has_default = true
                        var def_ctx = context.parent.parent
                        if(context.parent.has_star_arg){
@@ -6603,7 +6603,7 @@ function $transition(context,token){
         case 'func_args':
             switch (token) {
                 case 'id':
-                    if (context.expect == 'id'){
+                    if(context.expect == 'id'){
                         context.expect = ','
                         if(context.names.indexOf(arguments[2]) > -1){
                           $_SyntaxError(context,
@@ -6641,7 +6641,7 @@ function $transition(context,token){
         case 'func_star_arg':
             switch(token) {
                 case 'id':
-                    if (context.name === undefined){
+                    if(context.name === undefined){
                        if(context.parent.names.indexOf(arguments[2]) > -1){
                          $_SyntaxError(context,
                              ['duplicate argument ' + arguments[2] +
@@ -6653,7 +6653,7 @@ function $transition(context,token){
                     return context
                 case ',':
                 case ')':
-                    if (context.name === undefined){
+                    if(context.name === undefined){
                        // anonymous star arg - found in configparser
                        context.set_name('$dummy')
                        context.parent.names.push('$dummy')
@@ -6687,7 +6687,7 @@ function $transition(context,token){
                     }
                     break
                 case 'eol':
-                    if (context.expect == ','){
+                    if(context.expect == ','){
                        return $transition(context.parent, token)
                     }
                     break
@@ -6885,23 +6885,23 @@ function $transition(context,token){
                 }else if(context.expect == 'id'){
                     switch(context.real) {
                         case 'tuple':
-                            if (token == ')'){
+                            if(token == ')'){
                               context.closed = true
                               return context.parent
                             }
-                            if (token == 'eol' && context.implicit === true){
+                            if(token == 'eol' && context.implicit === true){
                               context.closed = true
                               return $transition(context.parent, token)
                             }
                             break
                         case 'gen_expr':
-                            if (token == ')'){
+                            if(token == ')'){
                               context.closed = true
                               return $transition(context.parent, token)
                             }
                             break
                         case 'list':
-                            if (token == ']'){
+                            if(token == ']'){
                               context.closed = true
                               return context
                             }
@@ -6910,7 +6910,7 @@ function $transition(context,token){
 
                     switch(token) {
                         case '=':
-                            if (context.real == 'tuple' &&
+                            if(context.real == 'tuple' &&
                                     context.implicit === true){
                                 context.closed = true
                                 context.parent.tree.pop()
@@ -6947,7 +6947,7 @@ function $transition(context,token){
             }
 
         case 'list_comp':
-            switch(token) {
+            switch(token){
                 case ']':
                     return context.parent
                 case 'in':
@@ -7154,7 +7154,7 @@ function $transition(context,token){
         case 'raise':
             switch(token) {
                 case 'id':
-                    if (context.tree.length == 0){
+                    if(context.tree.length == 0){
                        return new $IdCtx(new $ExprCtx(context, 'exc', false),
                            arguments[2])
                     }
@@ -7323,7 +7323,7 @@ function $transition(context,token){
                     // new context is the expression above the id
                     return expr1
                 case 'op':
-                    if ('+' == arguments[2] || '-' == arguments[2]) {
+                    if('+' == arguments[2] || '-' == arguments[2]){
                        var op = arguments[2]
                        if(context.op === op){context.op = '+'}
                        else{context.op = '-'}
@@ -7600,7 +7600,7 @@ function $tokenize(src, module, locals_id, parent_block, line_info){
                             end++
                         }
                         escaped = true
-                    } else {
+                    }else{
                         if(src.charAt(end + 1) == '\n'){
                             // explicit line joining inside strings
                             end += 2
@@ -7654,7 +7654,7 @@ function $tokenize(src, module, locals_id, parent_block, line_info){
                             }else{
                                 end++
                             }
-                        } else {
+                        }else{
                             if(end < src.length - 1 &&
                                 is_escaped[src.charAt(end + 1)] === undefined){
                                     zone += '\\'
@@ -7719,7 +7719,7 @@ function $tokenize(src, module, locals_id, parent_block, line_info){
                         }
                         break
                     }
-                } else {
+                }else{
                     zone += src.charAt(end)
                     if(src.charAt(end) == '\n'){lnum++}
                     end++
@@ -7758,7 +7758,7 @@ function $tokenize(src, module, locals_id, parent_block, line_info){
                             "Unsupported Python keyword '" + name + "'")
                     }
                     context = $transition(context, name)
-                } else if(typeof $operators[name] == 'string') {
+                }else if(typeof $operators[name] == 'string'){
                     // Literal operators : "and", "or", "is", "not"
                     // The additional test is to exclude the name "constructor"
                     if(name == 'is'){
@@ -7795,7 +7795,7 @@ function $tokenize(src, module, locals_id, parent_block, line_info){
                     string_modifier = name.toLowerCase()
                     name = ""
                     continue
-                } else {
+                }else{
                     if($B.forbidden.indexOf(name) > -1){name = '$$' + name}
                     $pos = pos - name.length
                     context = $transition(context, 'id', name)
@@ -7903,7 +7903,7 @@ function $tokenize(src, module, locals_id, parent_block, line_info){
                 if(br_stack.length > 0){
                     // implicit line joining inside brackets
                     pos++
-                } else {
+                }else{
                     if(current.context.tree.length > 0){
                         $pos = pos
                         context = $transition(context, 'eol')
@@ -7944,7 +7944,7 @@ function $tokenize(src, module, locals_id, parent_block, line_info){
                     $pos = pos
                     context = $transition(context, '=')
                     pos++
-                } else {
+                }else{
                     $pos = pos
                     context = $transition(context, 'op', '==')
                     pos += 2
@@ -8184,7 +8184,7 @@ function load_scripts(scripts, run_script, onerror){
     // Script can be internal (code inside the <script></script> tag) or
     // external (<script src="external_script.py"></script>)
 
-    if (run_script === undefined) {
+    if(run_script === undefined){
       run_script = $B._run_script
     }
 
@@ -8320,7 +8320,7 @@ $B._run_script = run_script
 function brython(options){
 
     // meta_path used in py_import.js
-    if ($B.meta_path === undefined) {
+    if($B.meta_path === undefined){
         $B.meta_path = []
     }
 
@@ -8353,10 +8353,10 @@ function brython(options){
 
     // If options has an attribute "open", it will be used by the built-in
     // function open() - see py_builtin_functions.js
-    if (options.open !== undefined) {
-        _b_.open = options.open;
+    if(options.open !== undefined){
+        _b_.open = options.open
         console.log("DeprecationWarning: \'open\' option of \'brython\' "+
-            "function will be deprecated in future versions of Brython.");
+            "function will be deprecated in future versions of Brython.")
     }
 
     $B.$options = options
@@ -8409,7 +8409,7 @@ function brython(options){
 
     // List of URLs where imported modules should be searched
     // A list can be provided as attribute of options
-    if (options.pythonpath !== undefined){
+    if(options.pythonpath !== undefined){
         $B.path = options.pythonpath
         $B.$options.static_stdlib_import = false
     }
@@ -8424,10 +8424,10 @@ function brython(options){
     // where the prefetch attribute should be present & true if prefetching is required
     // otherwise it should be present and false
 
-    if (options.python_paths){
+    if(options.python_paths){
         options.python_paths.forEach(function(path){
             var lang, prefetch
-            if (typeof path !== "string"){
+            if(typeof path !== "string"){
                 lang = path.lang
                 prefetch = path.prefetch
                 path = path.path
@@ -8482,12 +8482,12 @@ function brython(options){
 
     $B.scripts = []
     $B.js = {} // maps script name to JS conversion
-    if ($B.$options.args) {
+    if($B.$options.args){
         $B.__ARGV = $B.$options.args
-    } else {
+    }else{
         $B.__ARGV = _b_.list.$factory([])
     }
-    if (!isWebWorker) {
+    if(!isWebWorker){
         _run_scripts(options)
     }
 }
@@ -8637,7 +8637,7 @@ function _run_scripts(options) {
     }
     */
 
-    if (options.ipy_id === undefined){$B._load_scripts(scripts)}
+    if(options.ipy_id === undefined){$B._load_scripts(scripts)}
 
     /* Uncomment to check the names added in global Javascript namespace
     var kk1 = Object.keys(_window)

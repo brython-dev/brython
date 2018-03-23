@@ -44,11 +44,11 @@ complex.__eq__ = function(self, other){
             self.$imag.valueOf() == other.$imag.valueOf()
     }
     if(isinstance(other, _b_.int)){
-        if (self.$imag != 0){return False}
+        if(self.$imag != 0){return False}
         return self.$real == other.valueOf()
     }
     if(isinstance(other, _b_.float)){
-      if (self.$imag != 0){return False}
+      if(self.$imag != 0){return False}
       return self.$real == other.valueOf()
     }
     $UnsupportedOpType("==", "complex", $B.get_class(other))
@@ -61,7 +61,7 @@ complex.__floordiv__ = function(self,other){
 complex.__hash__ = function(self){
     // this is a quick fix for something like 'hash(complex)', where
     // complex is not an instance but a type
-    if (self === undefined) {
+    if(self === undefined){
        return complex.__hashvalue__ || $B.$py_next_hash--
     }
 
@@ -119,7 +119,7 @@ complex.__new__ = function(cls){
                 "if first is a string")
         }
         $real = $real.trim()
-        if ($real.startsWith("(") && $real.endsWith(")")) {
+        if($real.startsWith("(") && $real.endsWith(")")){
             $real = $real.substr(1)
             $real = $real.substr(0, $real.length - 1)
         }
@@ -133,11 +133,11 @@ complex.__new__ = function(cls){
         }else if(parts[_j] != ""){
             if(parts[_sign] == ""){
                 $real = 0
-                if (parts[_real] == "+" || parts[_real] == "") {
+                if(parts[_real] == "+" || parts[_real] == ""){
                     $imag = 1
-                } else if (parts[_real] == '-') {
+                }else if (parts[_real] == '-'){
                     $imag = -1
-                } else $imag = parseFloat(parts[_real])
+                }else{$imag = parseFloat(parts[_real])}
             }else{
                 $real = parseFloat(parts[_real])
                 $imag = parts[_imag] == "" ? 1 : parseFloat(parts[_imag])
@@ -154,11 +154,11 @@ complex.__new__ = function(cls){
         }
         return res
     }
-    if (arguments.length == 1 && $real.__class__ === complex && $imag == 0) {
+    if(arguments.length == 1 && $real.__class__ === complex && $imag == 0){
         return $real
     }
-    if ((isinstance($real, _b_.float) || isinstance($real, _b_.int)) &&
-            (isinstance($imag, _b_.float) || isinstance($imag, _b_.int))) {
+    if((isinstance($real, _b_.float) || isinstance($real, _b_.int)) &&
+            (isinstance($imag, _b_.float) || isinstance($imag, _b_.int))){
         res = {
             __class__: complex,
             $real: $real,
@@ -167,23 +167,23 @@ complex.__new__ = function(cls){
         return res
     }
 
-    for(i = 0; i < type_conversions.length; i++) {
-        if(hasattr($real, type_conversions[i])) {
+    for(i = 0; i < type_conversions.length; i++){
+        if(hasattr($real, type_conversions[i])){
 
         }
     }
     $real = _convert($real)
     $imag = _convert($imag)
     if(! isinstance($real, _b_.float) && ! isinstance($real, _b_.int) &&
-            ! isinstance($real, _b_.complex)) {
+            ! isinstance($real, _b_.complex)){
         throw _b_.TypeError.$factory("complex() argument must be a string " +
             "or a number")
     }
-    if(typeof $imag == "string") {
+    if(typeof $imag == "string"){
         throw _b_.TypeError.$factory("complex() second arg can't be a string")
     }
     if(! isinstance($imag, _b_.float) && ! isinstance($imag, _b_.int) &&
-            ! isinstance($imag, _b_.complex) && $imag !== undefined) {
+            ! isinstance($imag, _b_.complex) && $imag !== undefined){
         throw _b_.TypeError.$factory("complex() argument must be a string " +
             "or a number")
     }
@@ -314,7 +314,7 @@ var $op_func = function(self,other){
     if(isinstance(other, complex)){
         return make_complex(self.$real - other.$real, self.$imag - other.$imag)
     }
-    if (isinstance(other, _b_.int)){
+    if(isinstance(other, _b_.int)){
         return make_complex($B.sub(self.$real,other.valueOf()), self.$imag)
     }
     if(isinstance(other, _b_.float)){
@@ -336,7 +336,7 @@ eval("complex.__add__ = " + $op_func)
 
 // comparison methods
 var $comp_func = function(self, other){
-    if (other === undefined || other == _b_.None) {
+    if(other === undefined || other == _b_.None){
         throw _b_.NotImplemented("")
     }
     throw _b_.TypeError.$factory("TypeError: no ordering relation " +

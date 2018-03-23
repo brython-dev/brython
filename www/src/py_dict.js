@@ -72,7 +72,7 @@ var $item_generator = function(d) {
 }
 
 $item_generator.prototype.next = function() {
-    if (this.i < this.items.length) {
+    if(this.i < this.items.length){
        return this.items[this.i++]
     }
     throw _b_.StopIteration.$factory("StopIteration")
@@ -155,11 +155,11 @@ dict.__contains__ = function(){
     }
 
     var _key = hash(item)
-    if (self.$str_hash[_key] !== undefined &&
+    if(self.$str_hash[_key] !== undefined &&
         $B.rich_comp("__eq__", item, self.$str_hash[_key])){return true}
-    if (self.$numeric_dict[_key] !== undefined &&
+    if(self.$numeric_dict[_key] !== undefined &&
         $B.rich_comp("__eq__", item, _key)){return true}
-    if (self.$object_dict[_key] !== undefined) {
+    if(self.$object_dict[_key] !== undefined){
         // If the key is an object, its hash must be in the dict keys but the
         // key itself must compare equal to the key associated with the hash
         // For instance :
@@ -187,7 +187,7 @@ dict.__delitem__ = function(){
         delete self.$jsobj[arg]
         return $N
     }
-    switch(typeof arg) {
+    switch(typeof arg){
         case "string":
             if(self.$string_dict[arg] === undefined){
                 throw KeyError.$factory(_b_.str.$factory(arg))
@@ -206,7 +206,7 @@ dict.__delitem__ = function(){
 
     var _key = hash(arg)
 
-    if (self.$object_dict[_key] !== undefined) {
+    if(self.$object_dict[_key] !== undefined){
         delete self.$object_dict[_key]
     }
 
@@ -289,10 +289,10 @@ dict.__getitem__ = function(){
         _eq = function(other){return $B.rich_comp("__eq__", arg, other)}
 
     var sk = self.$str_hash[_key]
-    if (sk !== undefined && _eq(sk)){
+    if(sk !== undefined && _eq(sk)){
         return self.$string_dict[sk]
     }
-    if (self.$numeric_dict[_key] !== undefined && _eq(_key)){
+    if(self.$numeric_dict[_key] !== undefined && _eq(_key)){
          return self.$numeric_dict[_key]
     }
 
@@ -348,7 +348,7 @@ dict.__init__ = function(self){
         args = $ns["args"],
         kw = $ns["kw"]
 
-    if (args.length > 0){
+    if(args.length > 0){
         if(isinstance(args[0], dict)){
             $B.$copy_dict(self, args[0])
             return $N
@@ -397,9 +397,9 @@ dict.__len__ = function(self) {
         return _count
     }
 
-    for (var k in self.$numeric_dict){_count++}
-    for (var k in self.$string_dict){_count++}
-    for (var k in self.$object_dict){_count += self.$object_dict[k].length}
+    for(var k in self.$numeric_dict){_count++}
+    for(var k in self.$string_dict){_count++}
+    for(var k in self.$object_dict){_count += self.$object_dict[k].length}
 
     return _count
 }
@@ -587,7 +587,7 @@ dict.get = function(){
 var $dict_itemsDict = $B.$iterator_class("dict_items")
 
 dict.items = function(self){
-    if (arguments.length > 1) {
+    if(arguments.length > 1){
        var _len = arguments.length - 1,
            _msg = "items() takes no arguments (" + _len + " given)"
        throw _b_.TypeError.$factory(_msg)
@@ -598,7 +598,7 @@ dict.items = function(self){
 var $dict_keysDict = $B.$iterator_class("dict_keys")
 
 dict.keys = function(self){
-    if (arguments.length > 1) {
+    if(arguments.length > 1){
        var _len = arguments.length - 1,
            _msg = "keys() takes no arguments (" + _len + " given)"
        throw _b_.TypeError.$factory(_msg)
@@ -687,7 +687,7 @@ dict.update = function(self){
 var $dict_valuesDict = $B.$iterator_class("dict_values")
 
 dict.values = function(self){
-    if (arguments.length > 1) {
+    if(arguments.length > 1){
        var _len = arguments.length - 1,
            _msg = "values() takes no arguments (" + _len + " given)"
        throw _b_.TypeError.$factory(_msg)

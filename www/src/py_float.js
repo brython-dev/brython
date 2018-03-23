@@ -47,9 +47,9 @@ float.as_integer_ratio = function(self) {
         exponent = tmp[1]
 
     for (var i = 0; i < 300; i++){
-        if (fp == Math.floor(fp)){
+        if(fp == Math.floor(fp)){
             break
-        } else {
+        }else{
             fp *= 2
             exponent--
         }
@@ -85,7 +85,7 @@ float.__eq__ = function(self, other){
       return self == other.$real
     }
 
-    if (_b_.hasattr(other, "__eq__")) {
+    if(_b_.hasattr(other, "__eq__")){
        return _b_.getattr(other, "__eq__")(self.value)
     }
 
@@ -108,7 +108,7 @@ float.__floordiv__ = function(self, other){
 float.fromhex = function(arg){
    // [sign] ['0x'] integer ['.' fraction] ['p' exponent]
 
-   if (! isinstance(arg, str)) {
+   if(! isinstance(arg, str)){
       throw _b_.ValueError.$factory("argument must be a string")
    }
 
@@ -257,7 +257,7 @@ float.__format__ = function(self, format_spec) {
 }
 
 float.__hash__ = function(self) {
-    if (self === undefined) {
+    if(self === undefined){
        return float.__hashvalue__ || $B.$py_next_hash--  // for hash of float type (not instance of int)
     }
 
@@ -266,7 +266,7 @@ float.__hash__ = function(self) {
     if(_v === -Infinity){return -271828}
     if(isNaN(_v)){return 0}
     // for integers, return the value
-    if (_v == Math.round(_v)){return Math.round(_v)}
+    if(_v == Math.round(_v)){return Math.round(_v)}
 
     var r = _b_.$frexp(_v)
     r[0] *= Math.pow(2, 31)
@@ -662,10 +662,10 @@ float.$factory = function (value){
       var s = getattr(value, "decode")("latin-1")
       return float.$factory(getattr(value, "decode")("latin-1"))
     }
-    if(hasattr(value, "__float__")) {
+    if(hasattr(value, "__float__")){
       return $FloatClass(getattr(value, "__float__")())
     }
-    if (typeof value == "string") {
+    if(typeof value == "string"){
        value = value.trim()   // remove leading and trailing whitespace
        switch(value.toLowerCase()) {
            case "+inf":

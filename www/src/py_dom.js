@@ -102,7 +102,7 @@ $B.$isEvent = function(obj){
     for(var i = 0; i < $DOMEventAttrs_W3C.length; i++){
         if(obj[$DOMEventAttrs_W3C[i]] === undefined){flag = false; break}
     }
-    if(flag) return true
+    if(flag){return true}
     for(var i = 0; i < $DOMEventAttrs_IE.length; i++){
         if(obj[$DOMEventAttrs_IE[i]] === undefined){return false}
     }
@@ -248,14 +248,11 @@ function $EventsList(elt, evt, arg){
     }
 }
 
-
-
 var OpenFile = $B.OpenFile = {
     __class__: _b_.type,  // metaclass type
     __name__: "OpenFile",
     __mro__: [object]
 }
-
 
 OpenFile.$factory = function(file, mode, encoding) {
     var res = {
@@ -263,31 +260,29 @@ OpenFile.$factory = function(file, mode, encoding) {
         file: file,
         reader: new FileReader()
     }
-    if(mode === "r") {
+    if(mode === "r"){
         res.reader.readAsText(file, encoding)
-    } else if(mode === "rb") {
+    }else if(mode === "rb"){
         res.reader.readAsBinaryString(file)
     }
     return res
 }
 
 OpenFile.__getattr__ = function(self, attr) {
-    if(self["get_" + attr] !== undefined)
-        return self["get_" + attr]
-
+    if(self["get_" + attr] !== undefined){return self["get_" + attr]}
     return self.reader[attr]
 }
 
 OpenFile.__setattr__ = function(self, attr, value) {
     var obj = self.reader
-    if(attr.substr(0,2) == "on") { // event
+    if(attr.substr(0,2) == "on"){ // event
         var callback = function(ev) { return value($DOMEvent(ev)) }
         obj.addEventListener(attr.substr(2), callback)
-    } else if("set_" + attr in obj) {
+    }else if("set_" + attr in obj){
         return obj["set_" + attr](value)
-    } else if(attr in obj) {
+    }else if(attr in obj){
         obj[attr] = value
-    } else {
+    }else{
         setattr(obj, attr, value)
     }
 }
@@ -447,7 +442,7 @@ DOMNode.__add__ = function(self, other){
     res.children = [self], pos = 1
     if(isinstance(other, TagSum)){
         res.children = res.children.concat(other.children)
-    } else if(isinstance(other,[_b_.str, _b_.int, _b_.float, _b_.list,
+    }else if(isinstance(other,[_b_.str, _b_.int, _b_.float, _b_.list,
                                 _b_.dict, _b_.set, _b_.tuple])){
         res.children[pos++] = DOMNode.$factory(
             document.createTextNode(_b_.str.$factory(other)))
@@ -610,7 +605,7 @@ DOMNode.__getattribute__ = function(self, attr){
 
     // looking for attribute. If the attribute is in the forbidden
     // arena ... look for the aliased version
-    if(res === undefined && $B.aliased_names[attr]) {
+    if(res === undefined && $B.aliased_names[attr]){
         attr = "$$" + attr
         res = self.elt[attr]
     }
@@ -815,7 +810,7 @@ DOMNode.__str__ = DOMNode.__repr__ = function(self){
 DOMNode.__setattr__ = function(self, attr, value){
 
    if(attr.substr(0,2) == "on"){ // event
-        if (!$B.$bool(value)) { // remove all callbacks attached to event
+        if(!$B.$bool(value)){ // remove all callbacks attached to event
             DOMNode.unbind(self, attr.substr(2))
         }else{
             // value is a function taking an event as argument
@@ -1197,7 +1192,7 @@ DOMNode.setSelectionRange = function(self){ // for TEXTAREA
             return function(){
                 return obj.setSelectionRange.apply(obj, arguments)
             }})(this)
-    }else if (this["createTextRange"] !== undefined) {
+    }else if (this["createTextRange"] !== undefined){
         return (function(obj){
             return function(start_pos, end_pos){
                 if(end_pos == undefined){end_pos = start_pos}

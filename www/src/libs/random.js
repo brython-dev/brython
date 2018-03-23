@@ -108,7 +108,7 @@ function RandomStream(seed) {
         // expressible using unsigned 32 bits.
         var sum = 0
         for (var i = 0; i < 32; ++i){
-            if ((n1 >>> i) & 0x1){
+            if((n1 >>> i) & 0x1){
                 sum = addition32(sum, unsigned32(n2 << i))
             }
         }
@@ -124,7 +124,7 @@ function RandomStream(seed) {
             mt[mti] =
                 //c//(1812433253 * (mt[mti-1] ^ (mt[mti-1] >> 30)) + mti);
                 addition32(multiplication32(1812433253,
-                    unsigned32(mt[mti-1] ^ (mt[mti-1] >>> 30))), mti)
+                    unsigned32(mt[mti - 1] ^ (mt[mti - 1] >>> 30))), mti)
             /* See Knuth TAOCP Vol2. 3rd Ed. P.106 for multiplier. */
             /* In the previous versions, MSBs of the seed affect   */
             /* only MSBs of the array mt[].                        */
@@ -146,13 +146,13 @@ function RandomStream(seed) {
         init_genrand(19650218)
         i = 1
         j = 0
-        k = (N>key_length ? N : key_length)
+        k = (N > key_length ? N : key_length)
         for(; k; k--){
           //c//mt[i] = (mt[i] ^ ((mt[i-1] ^ (mt[i-1] >> 30)) * 1664525))
           //c// + init_key[j] + j; /* non linear */
           mt[i] = addition32(
               addition32(unsigned32(mt[i] ^
-                  multiplication32(unsigned32(mt[i-1] ^ (mt[i-1] >>> 30)),
+                  multiplication32(unsigned32(mt[i - 1] ^ (mt[i - 1] >>> 30)),
                   1664525)),
               init_key[j]), j)
           mt[i] =
@@ -160,7 +160,7 @@ function RandomStream(seed) {
               unsigned32(mt[i] & 0xffffffff)
           i++
           j++
-          if(i >= N){mt[0] = mt[N-1]; i = 1}
+          if(i >= N){mt[0] = mt[N - 1]; i = 1}
           if(j >= key_length){j = 0}
         }
         for(k = N - 1; k; k--){
@@ -170,7 +170,7 @@ function RandomStream(seed) {
                 unsigned32(
                     (mt[i]) ^
                         multiplication32(
-                            unsigned32(mt[i-1] ^ (mt[i-1] >>> 30)),
+                            unsigned32(mt[i - 1] ^ (mt[i - 1] >>> 30)),
                     1566083941)),
                 i
             )
@@ -202,7 +202,7 @@ function RandomStream(seed) {
             for(kk = 0; kk < N - M; kk++){
               //c//y = (mt[kk]&UPPER_MASK)|(mt[kk+1]&LOWER_MASK);
               //c//mt[kk] = mt[kk+M] ^ (y >> 1) ^ mag01[y & 0x1];
-              y = unsigned32((mt[kk]&UPPER_MASK) | (mt[kk+1]&LOWER_MASK))
+              y = unsigned32((mt[kk]&UPPER_MASK) | (mt[kk + 1]&LOWER_MASK))
               mt[kk] = unsigned32(mt[kk + M] ^ (y >>> 1) ^ mag01[y & 0x1])
             }
             for(;kk < N - 1; kk++){
@@ -439,11 +439,11 @@ Random.gammavariate = function(self, alpha, beta){
                 continue
             }
             var u2 = 1.0 - self._random(),
-                v = Math.log(u1/(1.0-u1))/ainv,
-                x = alpha*Math.exp(v),
-                z = u1*u1*u2,
-                r = bbb+ccc*v-x
-            if((r + SG_MAGICCONST - 4.5*z >= 0.0) || r >= Math.log(z)){
+                v = Math.log(u1 / (1.0 - u1)) / ainv,
+                x = alpha * Math.exp(v),
+                z = u1 * u1 * u2,
+                r = bbb + ccc * v - x
+            if((r + SG_MAGICCONST - 4.5 * z >= 0.0) || r >= Math.log(z)){
                 return x * beta
             }
         }
@@ -584,11 +584,11 @@ Random.normalvariate = function(){
     while(true){
         var u1 = self._random(),
             u2 = 1.0 - self._random(),
-            z = NV_MAGICCONST*(u1-0.5)/u2,
-            zz = z*z/4.0
+            z = NV_MAGICCONST * (u1 - 0.5) / u2,
+            zz = z * z / 4.0
         if(zz <= -Math.log(u2)){break}
     }
-    return mu + z*sigma
+    return mu + z * sigma
 }
 
 Random.paretovariate = function(){
@@ -607,7 +607,7 @@ Random.randint = function(self, a, b){
         {self: null, a:null, b:null},
         ['self', 'a', 'b'],
         arguments, {}, null, null)
-    return Random.randrange($.self, $.a, $.b+1)
+    return Random.randrange($.self, $.a, $.b + 1)
 }
 
 Random.random = function(self){
@@ -630,9 +630,9 @@ Random.randrange = function(){
             step = $.step === null ? 1 : $.step
         if(step == 0){throw _b_.ValueError.$factory('step cannot be 0')}
     }
-    if((step>0 && start>stop) || (step<0 && start<stop)){
+    if((step > 0 && start > stop) || (step < 0 && start < stop)){
         throw _b_.ValueError.$factory("empty range for randrange() (" +
-            start+", "+stop+", "+step+")")
+            start + ", " + stop + ", " + step + ")")
     }
     if(typeof start == 'number' && typeof stop == 'number' &&
         typeof step == 'number'){
@@ -756,7 +756,7 @@ Random.seed = function(){
 
     If *a* is an int, all bits are used.
     */
-    var $=$B.args('seed', 3, {self: null, a: null, version: null},
+    var $ = $B.args('seed', 3, {self: null, a: null, version: null},
         ['self', 'a', 'version'],
         arguments, {a: new Date(), version: 2}, null, null),
         self = $.self,
@@ -805,10 +805,10 @@ Random.setstate = function(state){
         throw _b_.TypeError('state must be a list, not '+
             $B.get_class($.state).__name__)
     }
-    if($.state.length<state.length){
+    if($.state.length < state.length){
         throw _b_.ValueError.$factory("need more than " + $.state.length +
             " values to unpack")
-    }else if($.state.length>state.length){
+    }else if($.state.length > state.length){
         throw _b_.ValueError.$factory("too many values to unpack (expected " +
             state.length + ")")
     }
@@ -830,7 +830,7 @@ Random.setstate = function(state){
 
 Random.shuffle = function(x, random){
     /*
-    x, random=random.random -> shuffle list x in place; return None.
+    x, random = random.random -> shuffle list x in place; return None.
 
     Optional arg random is a 0-argument function returning a random
     float in [0.0, 1.0); by default, the standard random.random.
@@ -875,7 +875,7 @@ Random.triangular = function(){
 
     http://en.wikipedia.org/wiki/Triangular_distribution
     */
-    var $=$B.args('triangular', 4,
+    var $ = $B.args('triangular', 4,
         {self: null, low: null, high: null, mode: null},
         ['self', 'low', 'high', 'mode'],
         arguments, {low: 0, high: 1, mode: null}, null, null),
@@ -924,7 +924,7 @@ Random.vonmisesvariate = function(){
     // Thanks to Magnus Kessler for a correction to the
     // implementation of step 4.
 
-    var $=$B.args('vonmisesvariate', 3,
+    var $ = $B.args('vonmisesvariate', 3,
             {self: null, mu: null, kappa:null}, ['self', 'mu', 'kappa'],
             arguments, {}, null, null),
         self = $.self,

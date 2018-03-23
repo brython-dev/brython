@@ -210,7 +210,7 @@ function make_mro(bases){
         for(var i = 0; i < seqs.length; i++){
             if(seqs[i].length > 0){non_empty[pos++] = seqs[i]}
         }
-        if (non_empty.length == 0){break}
+        if(non_empty.length == 0){break}
         for(var i  =0; i < non_empty.length; i++){
             var seq = non_empty[i],
                 candidate = seq[0],

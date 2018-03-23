@@ -9,7 +9,7 @@ eval($s.join(';'))
 var $mod = {
 
     __getattr__ : function(attr){
-        if (attr == 'new'){return hash.$factory}
+        if(attr == 'new'){return hash.$factory}
         return this[attr]
     },
     md5: function(obj){return hash.$factory('md5', obj)},
@@ -54,9 +54,9 @@ function $get_CryptoJS_lib(alg){
 
    try{
       eval(res + "; $B.CryptoJS = CryptoJS;")
-   } catch (err) {
+   }catch (err){
       throw Error("JS Eval Error",
-          "Cannot eval CryptoJS algorithm '" + alg + "' : error:" + err);
+          "Cannot eval CryptoJS algorithm '" + alg + "' : error:" + err)
    }
 }
 
@@ -119,7 +119,7 @@ hash.$factory = function(alg, obj) {
       case 'sha384':
       case 'sha512':
         var ALG = alg.toUpperCase()
-        if ($B.Crypto === undefined ||
+        if($B.Crypto === undefined ||
             $B.CryptoJS.algo[ALG] === undefined){$get_CryptoJS_lib(alg)}
 
         res.hash = $B.CryptoJS.algo[ALG].create()

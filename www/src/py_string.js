@@ -2,7 +2,7 @@
 
 eval($B.InjectBuiltins())
 
-if (!String.prototype.trim) {
+if(!String.prototype.trim){
     // Polyfill for older browsers
     // The code does not use a regex to make it a bit faster.
     // Implementation taken from a comment by Timo on the blog:
@@ -19,7 +19,7 @@ if (!String.prototype.trim) {
         }
         for(var j = this.length - 1; j >= i; j--){
             c = this.charCodeAt(j)
-            if ([32, 10, 13, 9, 12, 11, 160, 5760, 6158, 8192, 8193, 8194,
+            if([32, 10, 13, 9, 12, 11, 160, 5760, 6158, 8192, 8193, 8194,
                     8195, 8196, 8197, 8198, 8199, 8200, 8201, 8202, 8232,
                     8233, 8239, 8287, 12288, 65279].indexOf(c) > -1){
                 continue
@@ -28,14 +28,14 @@ if (!String.prototype.trim) {
         return this.substring(i, j + 1);
     }
 }
-if (!String.prototype.trimLeft) {
+if(!String.prototype.trimLeft) {
   // Convenience method for browsers which do not have a native trimLeft
   // (which is a nonstandard extension in Firefox and Chrome)
     String.prototype.trimLeft = function () {
         var c
         for(var i = 0; i < this.length; i++){
             c = this.charCodeAt(i)
-            if ([32, 10, 13, 9, 12, 11, 160, 5760, 6158, 8192, 8193, 8194,
+            if([32, 10, 13, 9, 12, 11, 160, 5760, 6158, 8192, 8193, 8194,
                     8195, 8196, 8197, 8198, 8199, 8200, 8201, 8202, 8232,
                     8233, 8239, 8287, 12288, 65279].indexOf(c) > -1){
                 continue
@@ -44,7 +44,7 @@ if (!String.prototype.trimLeft) {
         return this.substring(i)
     }
 }
-if (!String.prototype.trimRight) {
+if(!String.prototype.trimRight) {
     String.prototype.trimRight = function () {
         // Convenience method for browsers which do not have a native trimRight
         // (which is a nonstandard extension in Firefox and Chrome)
@@ -138,7 +138,7 @@ str.__eq__ = function(self,other){
     if(other === undefined){ // compare object "self" to class "str"
         return self === str
     }
-    if (_b_.isinstance(other, _b_.str)) {
+    if(_b_.isinstance(other, _b_.str)){
        return other.valueOf() == self.valueOf()
     }
     return other === self.valueOf()
@@ -181,7 +181,7 @@ str.__getitem__ = function(self,arg){
         if(step > 0){
             if(stop <= start){return ""}
             for(var i = start; i < stop; i += step){res += self.charAt(i)}
-        } else {
+        }else{
             if(stop >= start){return ''}
             for(var i = start; i > stop; i += step){res += self.charAt(i)}
         }
@@ -192,7 +192,7 @@ str.__getitem__ = function(self,arg){
 }
 
 str.__hash__ = function(self) {
-  if (self === undefined) {
+  if(self === undefined){
      return str.__hashvalue__ || $B.$py_next_hash--  // for hash of string type (not instance of string)
   }
 
@@ -236,18 +236,18 @@ var number_check = function(s){
 }
 
 var get_char_array = function(size, char){
-    if (size <= 0){return ""}
+    if(size <= 0){return ""}
     return new Array(size + 1).join(char)
 }
 
 var format_padding = function(s, flags, minus_one){
     var padding = flags.padding
-    if (! padding) {  // undefined
+    if(! padding){  // undefined
         return s
     }
     s = s.toString()
     padding = parseInt(padding, 10)
-    if (minus_one) {  // numeric formatting where sign goes in front of padding
+    if(minus_one){  // numeric formatting where sign goes in front of padding
         padding -= 1
     }
     if(! flags.left){
@@ -481,7 +481,7 @@ var _floating_exp_helper = function(val, precision, flags, upper) {
     val = val.toExponential(precision)
     // pad exponent to two digits
     var e_idx = val.lastIndexOf("e")
-    if (e_idx > val.length - 4) {
+    if(e_idx > val.length - 4){
         val = val.substring(0, e_idx + 2) + "0" + val.substring(e_idx + 2)
     }
     if(upper){return val.toUpperCase()}
@@ -500,7 +500,7 @@ var signed_hex_format = function(val, upper, flags){
     var ret
     number_check(val)
 
-    if (val.__class__ === $B.long_int){
+    if(val.__class__ === $B.long_int){
        ret = $B.long_int.to_base(val, 16)
     }else{
        ret = parseInt(val)
@@ -508,7 +508,7 @@ var signed_hex_format = function(val, upper, flags){
     }
     ret = format_int_precision(ret, flags)
     if(upper){ret = ret.toUpperCase()}
-    if (flags.pad_char === "0") {
+    if(flags.pad_char === "0"){
         if(val < 0){
             ret = ret.substring(1)
             ret = "-" + format_padding(ret, flags, true)
@@ -585,7 +585,7 @@ var num_flag = function(c, flags){
 }
 
 var decimal_point_flag = function(val, flags) {
-    if (flags.decimal_point) {
+    if(flags.decimal_point){
         // can only have one decimal point
         throw new UnsupportedChar()
     }
@@ -679,7 +679,7 @@ str.__mod__ = function(self, args) {
         }
         var key = rslt[1]
         newpos += rslt[0].length
-        try {
+        try{
             var self = getitem(key)
         }catch(err){
             if(err.name === "KeyError"){
@@ -713,7 +713,7 @@ str.__mod__ = function(self, args) {
         var flags = {"pad_char": " "}
         do{
             var func = char_mapping[s[newpos]]
-            try {
+            try{
                 if(func === undefined){
                     throw new UnsupportedChar()
                 }else{
@@ -770,7 +770,7 @@ str.__mod__ = function(self, args) {
                 if(self[newpos] === "("){
                     ++newpos
                     ret += $get_kwarg_string(self)
-                } else {
+                }else{
                     ret += $get_arg_string(self)
                 }
             }
@@ -928,7 +928,7 @@ str.count = function(){
 }
 
 str.encode = function(self, encoding) {
-    if (encoding === undefined){encoding = "utf-8"}
+    if(encoding === undefined){encoding = "utf-8"}
     if(encoding == "rot13" || encoding == "rot_13"){
         // Special case : returns a string
         var res = ""
@@ -1350,7 +1350,7 @@ str.partition = function() {
     if($.sep == ""){throw _b_.ValueError.$factory("empty separator")}
     check_str($.sep)
     var i = $.self.indexOf($.sep)
-    if (i == -1){return _b_.tuple.$factory([$.self, "", ""])}
+    if(i == -1){return _b_.tuple.$factory([$.self, "", ""])}
     return _b_.tuple.$factory([$.self.substring(0, i), $.sep,
         $.self.substring(i + $.sep.length)])
 }
@@ -1380,7 +1380,7 @@ str.replace = function(self, old, _new, count) {
     check_str(old)
     check_str(_new)
     // Validate instance type of 'count'
-    if (! isinstance(count,[_b_.int, _b_.float])) {
+    if(! isinstance(count,[_b_.int, _b_.float])){
         throw _b_.TypeError.$factory("'" + $B.get_class(count).__name__ +
             "' object cannot be interpreted as an integer")
     }else if(isinstance(count, _b_.float)){

@@ -145,7 +145,7 @@ $B.get_class = function(obj){
     if(klass === undefined){
         switch(typeof obj) {
             case "number":
-                if (obj % 1 === 0) { // this is an int
+                if(obj % 1 === 0){ // this is an int
                    obj.__class__ = _b_.int
                    return _b_.int
                 }
@@ -355,7 +355,7 @@ $B.$check_def_free = function(name, value){
     // Check if value is not undefined
     if(value !== undefined){return value}
     var res
-    for(var i = $B.frames_stack.length-1; i >= 0; i--){
+    for(var i = $B.frames_stack.length - 1; i >= 0; i--){
         res = $B.frames_stack[i][1][name]
         if(res !== undefined){return res}
         res = $B.frames_stack[i][3][name]
@@ -861,7 +861,7 @@ $B.pyobject2jsobject = function(obj){
            pos = 0,
            ce = $B.current_exception
        while(1) {
-          try {
+          try{
            _a[pos++] = $B.pyobject2jsobject(_b_.next(obj))
           }catch(err){
             if(err.__class__ !== _b_.StopIteration){throw err}
@@ -872,10 +872,10 @@ $B.pyobject2jsobject = function(obj){
        return {"_type_": "iter", data: _a}
     }
 
-    if (_b_.hasattr(obj, "__getstate__")) {
+    if(_b_.hasattr(obj, "__getstate__")){
        return _b_.getattr(obj, "__getstate__")()
     }
-    if (_b_.hasattr(obj, "__dict__")) {
+    if(_b_.hasattr(obj, "__dict__")){
        return $B.pyobject2jsobject(_b_.getattr(obj, "__dict__"))
     }
     throw _b_.TypeError.$factory(_b_.str.$factory(obj) +
@@ -937,11 +937,11 @@ $B.$iterator_class = function(name){
     function as_set(s){return _b_.set.$factory(as_array(s))}
 
     res.__eq__ = function(self,other){
-       if (_b_.isinstance(other, [_b_.tuple, _b_.set, _b_.list])) {
+       if(_b_.isinstance(other, [_b_.tuple, _b_.set, _b_.list])){
           return _b_.getattr(as_list(self), "__eq__")(other)
        }
 
-       if (_b_.hasattr(other, "__iter__")) {
+       if(_b_.hasattr(other, "__iter__")){
           return _b_.getattr(as_list(self), "__eq__")(as_list(other))
        }
 
@@ -1110,7 +1110,7 @@ $B.leave_frame_exec = function(arg){
     if($B.profile > 0){$B.$profile.return()}
     if($B.frames_stack.length == 0){console.log("empty stack"); return}
     var frame = $B.frames_stack.pop()
-    for(var i = $B.frames_stack.length-1; i >= 0; i--){
+    for(var i = $B.frames_stack.length - 1; i >= 0; i--){
         if($B.frames_stack[i][2] == frame[2]){
             $B.frames_stack[i][3] = frame[3]
         }
@@ -1299,7 +1299,7 @@ $B.$profile = (function(profile) {
         "status":function() {
             if($B.profile <= 0){return "Disabled"}
             if(active){return "Collecting data: active"}
-            else if (paused){return "Collecting data: paused"}
+            else if(paused){return "Collecting data: paused"}
             else{return "Stopped"}
         },
     }
@@ -1496,14 +1496,14 @@ if(!Array.indexOf){
 
 // http://stackoverflow.com/questions/202605/repeat-string-javascript
 // allows for efficient indention..
-if (!String.prototype.repeat) {
+if(!String.prototype.repeat){
   String.prototype.repeat = function(count) {
-    if (count < 1) return '';
+    if(count < 1){return ''}
     var result = '', pattern = this.valueOf()
-    while (count > 1) {
-        if (count & 1) result += pattern
+    while(count > 1){
+        if(count & 1){result += pattern}
         count >>= 1, pattern += pattern
     }
-    return result + pattern;
+    return result + pattern
   }
 }

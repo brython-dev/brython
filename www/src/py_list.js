@@ -130,7 +130,7 @@ list.__getitem__ = function(self, arg){
 
         throw _b_.IndexError.$factory("list index out of range")
     }
-    if (isinstance(key, _b_.slice)){
+    if(isinstance(key, _b_.slice)){
         // Find integer values for start, stop and step
         var s = _b_.slice.$conv_for_seq(key, self.length)
         // Return the sliced list
@@ -173,13 +173,13 @@ list.__ge__ = function(self, other){
     while(i < self.length){
         if(i >= other.length){return true}
         if($B.rich_comp("__eq__", self[i], other[i])){i++}
-        else {
+        else{
             res = getattr(self[i], "__ge__")(other[i])
-            if (res === _b_.NotImplemented) {
+            if(res === _b_.NotImplemented){
                 throw _b_.TypeError.$factory("unorderable types: " +
                     $B.get_class(self[i]).__name__  + "() >= " +
                     $B.get_class(other[i]).__name__ + "()")
-             }else{return res}
+            }else{return res}
         }
     }
 
@@ -291,7 +291,7 @@ list.__mul__ = function(self, other){
        return res
     }
 
-    if (hasattr(other, "__int__") || hasattr(other, "__index__")) {
+    if(hasattr(other, "__int__") || hasattr(other, "__index__")){
        return list.__mul__(self, _b_.int.$factory(other))
     }
 
@@ -323,7 +323,7 @@ list.__repr__ = function(self){
         else{_r.push(_b_.repr(self[i]))}
     }
 
-    if (self.__class__ === tuple){
+    if(self.__class__ === tuple){
         if(self.length == 1){return "(" + _r[0] + ",)"}
         return "(" + _r.join(", ") + ")"
     }
@@ -608,7 +608,7 @@ list.sort = function(self){
             if(reverse){
                 cmp = function(b, a) {
                     res = getattr(a, "__le__")(b)
-                    if (res === _b_.NotImplemented){
+                    if(res === _b_.NotImplemented){
                         throw _b_.TypeError.$factory("unorderable types: " +
                             $B.get_class(b).__name__ + "() <=" +
                             $B.get_class(a).__name__ + "()")
@@ -622,7 +622,7 @@ list.sort = function(self){
             }else{
                 cmp = function(a, b){
                     res = getattr(a, "__le__")(b)
-                    if (res === _b_.NotImplemented){
+                    if(res === _b_.NotImplemented){
                         throw _b_.TypeError.$factory("unorderable types: " +
                             $B.get_class(a).__name__ + "() <=" +
                             $B.get_class(b).__name__ + "()")
@@ -640,7 +640,7 @@ list.sort = function(self){
                     var _a = func(a),
                         _b = func(b)
                     res = getattr(_a, "__le__")(_b)
-                    if (res === _b_.NotImplemented){
+                    if(res === _b_.NotImplemented){
                         throw _b_.TypeError.$factory("unorderable types: " +
                             $B.get_class(b).__name__ + "() <=" +
                             $B.get_class(a).__name__ + "()")

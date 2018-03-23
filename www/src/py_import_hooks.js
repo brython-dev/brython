@@ -70,10 +70,9 @@ if($B.is_none(module)){
         // FIXME : Initialize __doc__ and __package__
         module = $B.module.$factory(mod_name)
         var mod_desc = _b_.getattr(spec, "origin")
-        if (_b_.getattr(spec, "has_location")) {
+        if(_b_.getattr(spec, "has_location")){
             mod_desc = "from '" + mod_desc + "'"
-        }
-        else {
+        }else{
             mod_desc = "(" + mod_desc + ")"
         }
     }
@@ -105,7 +104,7 @@ if($B.is_none(_loader)){
     }
 }else{
     var exec_module = _b_.getattr(_loader, "exec_module", _b_.None)
-    if ($B.is_none(exec_module)){
+    if($B.is_none(exec_module)){
         // FIXME : Remove !!! Backwards compat in CPython
         module = _b_.getattr(_loader, "load_module")(_spec_name)
     }else{

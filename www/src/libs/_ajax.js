@@ -6,16 +6,16 @@ var $N = $B.builtins.None
 
 var ajax1 = $B.make_class("ajax1",
     function(){
-        if (window.XMLHttpRequest){// code for IE7+, Firefox, Chrome, Opera, Safari
-            var xmlhttp = new XMLHttpRequest();
+        if(window.XMLHttpRequest){// code for IE7+, Firefox, Chrome, Opera, Safari
+            var xmlhttp = new XMLHttpRequest()
         }else{// code for IE6, IE5
-            var xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+            var xmlhttp = new ActiveXObject("Microsoft.XMLHTTP")
         }
         xmlhttp.onreadystatechange = function(){
             // here, "this" refers to xmlhttp
             var state = this.readyState
             var timer = this.$requestTimer
-            if(state===0 && this.onuninitialized){this.onuninitialized()}
+            if(state == 0 && this.onuninitialized){this.onuninitialized()}
             else if(state == 1 && this.onloading){this.onloading()}
             else if(state == 2 && this.onloaded){this.onloaded()}
             else if(state == 3 && this.oninteractive){this.oninteractive()}
@@ -33,7 +33,7 @@ var ajax1 = $B.make_class("ajax1",
 )
 
 var add_to_res = function(res, key, val) {
-    if (isinstance(val, list)) {
+    if(isinstance(val, list)){
         for (j = 0; j < val.length; j++) {
             add_to_res(res, key, val[j])
         }
@@ -68,7 +68,7 @@ var ajax = {
                 return func.apply(null, arguments)
             }catch(err){
                 if(err.__class__ !== undefined){
-                    var msg = _b_.getattr(err, 'info')+
+                    var msg = _b_.getattr(err, 'info') +
                         '\n' + err.__class__.__name__
                     if(err.args){msg += ': ' + err.args[0]}
                     try{getattr($B.stderr, "write")(msg)}
@@ -105,12 +105,12 @@ var ajax = {
                 var items = _b_.list.$factory(_b_.dict.items(params))
                 for(var i = 0, len = items.length; i < len; i++){
                     var key = encodeURIComponent(str.$factory(items[i][0]));
-                    if (isinstance(items[i][1], list)) {
+                    if(isinstance(items[i][1], list)){
                         for (j = 0; j < items[i][1].length; j++) {
                             res += key +'=' +
                                 encodeURIComponent(str.$factory(items[i][1][j])) + '&'
                         }
-                    } else {
+                    }else{
                         res += key + '=' +
                             encodeURIComponent(str.$factory(items[i][1])) + '&'
                     }
@@ -139,15 +139,15 @@ var ajax = {
 
 ajax.$factory = function(){
 
-    if (window.XMLHttpRequest){// code for IE7+, Firefox, Chrome, Opera, Safari
-        var xmlhttp = new XMLHttpRequest();
+    if(window.XMLHttpRequest){// code for IE7+, Firefox, Chrome, Opera, Safari
+        var xmlhttp = new XMLHttpRequest()
     }else{// code for IE6, IE5
         var xmlhttp = new ActiveXObject("Microsoft.XMLHTTP")
     }
     xmlhttp.onreadystatechange = function(){
         // here, "this" refers to xmlhttp
         var state = this.readyState
-        if(this.responseType == "" || this.responseType=="text"){
+        if(this.responseType == "" || this.responseType == "text"){
             res.js.text = this.responseText
         }
         var timer = this.$requestTimer

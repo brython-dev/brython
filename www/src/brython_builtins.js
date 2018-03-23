@@ -9,12 +9,12 @@ var _window = self;
 
 var $path
 
-if ($B.brython_path === undefined) {
+if($B.brython_path === undefined){
     // Get url of this script brython_builtins.js
     var this_url;
-    if (isWebWorker) {
+    if(isWebWorker){
         this_url = _window.location.href;
-    } else {
+    }else{
         var scripts = document.getElementsByTagName('script')
         this_url = scripts[scripts.length - 1].src
     }
@@ -25,7 +25,7 @@ if ($B.brython_path === undefined) {
     // brython_path is the url of the directory holding brython core scripts
     // It is used to import modules of the standard library
     $path = $B.brython_path = elts.join('/') + '/'
-} else {
+}else{
     $path = $B.brython_path
 }
 
@@ -52,11 +52,10 @@ $B.path = [$path + 'Lib', $path + 'libs', $script_dir,
 // for the time being, a flag will be used to know if we should
 // enable async functionality.
 $B.async_enabled = false
-if ($B.async_enabled) $B.block = {}
+if($B.async_enabled){$B.block = {}}
 
 // Maps the name of imported modules to the module object
 $B.imported = {}
-
 
 // Maps the name of modules to the matching Javascript code
 $B.module_source = {}
@@ -96,9 +95,9 @@ $B.__setattr__ = function(attr,value){
 // cf http://stackoverflow.com/questions/1043339/javascript-for-detecting-browser-language-preference
 $B.language = _window.navigator.userLanguage || _window.navigator.language
 
-if (isWebWorker) {
+if(isWebWorker){
     $B.charset = "utf-8"
-} else {
+}else{
     // document charset ; defaults to "utf-8"
     $B.charset = document.characterSet || document.inputEncoding || "utf-8"
 }
@@ -146,20 +145,20 @@ var has_storage = typeof(Storage) !== "undefined"
 if(has_storage){
     $B.has_local_storage = false
     // add attributes local_storage and session_storage
-    try {
-        if (localStorage) {
+    try{
+        if(localStorage){
             $B.local_storage = localStorage
             $B.has_local_storage = true
         }
-    } catch (err) { }
+    }catch(err){}
     $B.has_session_storage = false
-    try {
-        if (sessionStorage) {
+    try{
+        if(sessionStorage){
             $B.session_storage = sessionStorage
             $B.has_session_storage = true
         }
-    } catch (err) { }
-} else {
+    }catch(err){}
+}else{
     $B.has_local_storage = false
     $B.has_session_storage = false
 }

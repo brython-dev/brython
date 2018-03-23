@@ -96,9 +96,9 @@ function $download_module(module, url, $package){
 
     if($B.$CORS){
       $xmlhttp.onload = function() {
-         if ($xmlhttp.status == 200 || $xmlhttp.status == 0) {
+         if($xmlhttp.status == 200 || $xmlhttp.status == 0){
             res = $xmlhttp.responseText
-         } else {
+         }else{
             res = _b_.FileNotFoundError.$factory("No module named '" +
                 mod_name + "'")
          }
@@ -171,13 +171,12 @@ function run_js(module_contents, path, _module){
         throw _b_.ImportError.$factory("name '$module' is not defined in module")
     }
 
-    if (_module !== undefined) {
+    if(_module !== undefined){
         // FIXME : This might not be efficient . Refactor js modules instead.
         // Overwrite original module object . Needed e.g. for reload()
         for(var attr in $module){_module[attr] = $module[attr]}
         $module = _module
-    }
-    else {
+    }else{
         // add class and __str__
         $module.__class__ = module
         $module.__name__ = _module.name
@@ -435,7 +434,7 @@ var finder_stdlib_static = {
     },
 
     find_spec: function(cls, fullname, path, prev_module){
-        if ($B.stdlib && $B.$options.static_stdlib_import){
+        if($B.stdlib && $B.$options.static_stdlib_import){
             var address = $B.stdlib[fullname]
             if(address === undefined){
                 var elts = fullname.split(".")
@@ -629,16 +628,16 @@ var vfs_hook = {
     invalidate_caches: function(self){self.vfs = undefined}
 }
 vfs_hook.$factory = function(path) {
-    if (path.substr(-1) == '/') {
-        path = path.slice(0, -1);
+    if(path.substr(-1) == '/'){
+        path = path.slice(0, -1)
     }
-    var ext = path.substr(-7);
-    if (ext != '.vfs.js') {
+    var ext = path.substr(-7)
+    if(ext != '.vfs.js'){
         throw _b_.ImportError.$factory('VFS file URL must end with .vfs.js extension');
     }
-    self = {__class__: vfs_hook, path: path};
-    vfs_hook.load_vfs(self);
-    return self;
+    self = {__class__: vfs_hook, path: path}
+    vfs_hook.load_vfs(self)
+    return self
 }
 
 $B.set_func_names(vfs_hook, "<import>")
@@ -664,25 +663,25 @@ var url_hook = {
             notfound = true,
             hint = self.hint,
             base_path = self.path_entry + fullname.match(/[^.]+$/g)[0],
-            modpaths = [];
-        var tryall = hint === undefined;
-        if (tryall || hint == "js") {
+            modpaths = []
+        var tryall = hint === undefined
+        if(tryall || hint == "js"){
             // either js or undefined , try js code
-            modpaths = [[base_path + ".js", "js", false]];
+            modpaths = [[base_path + ".js", "js", false]]
         }
-        if (tryall || hint == 'pyc.js') {
+        if(tryall || hint == 'pyc.js'){
             // either pyc or undefined , try pre-compiled module code
             modpaths = modpaths.concat([[base_path + ".pyc.js", "pyc.js", false],
                                         [base_path + "/__init__.pyc.js",
                                          "pyc.js", true]])
         }
-        if (tryall || hint == 'py') {
+        if(tryall || hint == 'py'){
             // either py or undefined , try py code
             modpaths = modpaths.concat([[base_path + ".py", "py", false],
                 [base_path + "/__init__.py", "py", true]])
         }
 
-        for (var j = 0; notfound && j < modpaths.length; ++j) {
+        for(var j = 0; notfound && j < modpaths.length; ++j){
             try{
                 var file_info = modpaths[j],
                     module = {__name__:fullname, $is_package: false}
@@ -705,7 +704,7 @@ var url_hook = {
             }catch(err){
             }
         }
-        if (!notfound) {
+        if(!notfound){
             return new_spec({
                 name : fullname,
                 loader: finder_path,
@@ -740,7 +739,7 @@ var _sys_paths = [[$B.script_dir + "/", "py"],
                   [$B.brython_path + "Lib/site-packages/", "py"],
                   [$B.brython_path + "libs/", "js"]]
 
-for (i = 0; i < _sys_paths.length; ++i) {
+for(i = 0; i < _sys_paths.length; ++i){
     var _path = _sys_paths[i],
         _type = _path[1]
     _path = _path[0]
@@ -787,15 +786,15 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
 
    var modobj = $B.imported[mod_name],
        parsed_name = mod_name.split('.')
-   if (modobj == _b_.None) {
+   if(modobj == _b_.None){
        // [Import spec] Stop loading loop right away
        throw _b_.ImportError.$factory(mod_name)
    }
 
-   if (modobj === undefined) {
+   if(modobj === undefined){
        // [Import spec] Argument defaults and preconditions
        // get name of module this was called in
-       if ($B.is_none(fromlist)) {
+       if($B.is_none(fromlist)){
             fromlist = []
        }
        // TODO: Async module download and request multiplexing
@@ -805,11 +804,10 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
             _mod_name += modsep + parsed_name[i]
             modsep = "."
             var modobj = $B.imported[_mod_name]
-            if (modobj == _b_.None) {
+            if(modobj == _b_.None){
                 // [Import spec] Stop loading loop right away
                 throw _b_.ImportError.$factory(_mod_name)
-            }
-            else if (modobj === undefined) {
+            }else if (modobj === undefined){
                 try{
                     $B.import_hooks(_mod_name, __path__, undefined)
                 }catch(err){
@@ -896,7 +894,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
     }
     var mod_name = norm_parts.join(".")
 
-    if ($B.$options.debug == 10) {
+    if($B.$options.debug == 10){
        console.log("$import "+mod_name)
        console.log("use VFS ? "+$B.use_VFS)
        console.log("use static stdlib paths ? "+$B.static_stdlib_import)
@@ -908,7 +906,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
         _globals = current_frame[3],
         __import__ = _globals["__import__"],
         globals = $B.obj_dict(_globals)
-    if (__import__ === undefined) {
+    if(__import__ === undefined){
         // [Import spec] Fall back to
         __import__ = $B.$__import__
     }

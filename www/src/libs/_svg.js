@@ -37,11 +37,11 @@ function makeTagDict(tagName){
             var first = args[0]
             if(isinstance(first, [str, int, float])){
                 self.elt.appendChild(document.createTextNode(str.$factory(first)))
-            } else if(first.__class__ === TagSum){
+            }else if(first.__class__ === TagSum){
                 for(var i = 0, len = first.children.length; i < len; i++){
                     self.elt.appendChild(first.children[i].elt)
                 }
-            } else { // argument is another DOMNode instance
+            }else{ // argument is another DOMNode instance
                 try{self.elt.appendChild(first.elt)}
                 catch(err){throw ValueError.$factory('wrong element ' + first)}
             }
@@ -64,7 +64,7 @@ function makeTagDict(tagName){
             }else if(arg.toLowerCase().indexOf("href") !== -1){ // xlink:href
                 self.elt.setAttributeNS( "http://www.w3.org/1999/xlink",
                     "href",value)
-            } else {
+            }else{
                 if(value !== false){
                     // option.selected=false sets it to true :-)
                     try{

@@ -315,7 +315,7 @@ long_int.__add__ = function(self, other){
 }
 
 long_int.__and__ = function(self, other){
-    if (typeof other == "number"){
+    if(typeof other == "number"){
         other = long_int.$factory(_b_.str.$factory(other))
     }
     // Bitwise "and" : build the binary representation of self and other
@@ -367,14 +367,14 @@ long_int.__floordiv__ = function(self, other){
     if(isinstance(other, _b_.float)){
         return _b_.float.$factory(parseInt(self.value) / other)
     }
-    if (typeof other == "number"){
+    if(typeof other == "number"){
         other = long_int.$factory(_b_.str.$factory(other))
     }
     return intOrLong(long_int.__divmod__(self, other)[0])
 }
 
 long_int.__ge__ = function(self, other){
-    if (typeof other == "number"){
+    if(typeof other == "number"){
         other = long_int.$factory(_b_.str.$factory(other))
     }
     if(self.pos != other.pos){return ! other.pos}
@@ -495,14 +495,14 @@ long_int.__mul__ = function(self, other){
     switch(self){
         case Number.NEGATIVE_INFINITY:
         case Number.POSITIVE_INFINITY:
-            if ($B.rich_comp("__eq__", other, 0)){return NaN} // infinity * 0 = NaN
+            if($B.rich_comp("__eq__", other, 0)){return NaN} // infinity * 0 = NaN
             else if(_b_.getattr(other, "__gt__")(0)){return self}
             else{return -self}
     }
     if(isinstance(other, _b_.float)){
         return _b_.float.$factory(parseInt(self.value) * other)
     }
-    if (typeof other == "number"){
+    if(typeof other == "number"){
         other = long_int.$factory(_b_.str.$factory(other))
     }
     var res = mul_pos(self.value, other.value)
@@ -532,7 +532,7 @@ long_int.__or__ = function(self, other){
 long_int.__pos__ = function(self){return self}
 
 long_int.__pow__ = function(self, power, z){
-    if (typeof power == "number") {
+    if(typeof power == "number"){
         power = long_int.$factory(_b_.str.$factory(power))
     }else if(! isinstance(power, long_int)){
         var msg = "power must be a LongDict, not '"
@@ -723,8 +723,8 @@ long_int.$factory = function(value, base){
         }
         if(value >= 0){value = new Number(Math.round(value.value))}
         else{value  =new Number(Math.ceil(value.value))}
-    } else if(isinstance(value, _b_.bool)){
-        if (value.valueOf()){return int.$factory(1)}
+    }else if(isinstance(value, _b_.bool)){
+        if(value.valueOf()){return int.$factory(1)}
         return int.$factory(0)
     }
     if(typeof value == "number"){
