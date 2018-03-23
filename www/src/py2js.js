@@ -8066,6 +8066,12 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_info){
     //
     // Returns a tree structure representing the Python source code
 
+    if(typeof module == "object"){
+        var __package__ = module.__package__
+        module = module.__name__
+    }
+
+
     var t0 = new Date().getTime(),
         is_comp = false
 
@@ -8116,10 +8122,19 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_info){
     root.insert(offset++,
         $NodeJS(local_ns + '["__doc__"] = ' + (root.doc_string || 'None') +
             ';'))
+
     // name
     root.insert(offset++,
         $NodeJS(local_ns + '["__name__"] = ' + local_ns +
             '["__name__"] || "' + locals_id + '";'))
+
+    // package, if available
+    if(__package__ !== undefined){
+        root.insert(offset++,
+            $NodeJS(local_ns + '["__package__"] = ' + local_ns +
+                '["__package__"] || "' + __package__ + '";'))
+    }
+
     // file
     root.insert(offset++,
         $NodeJS(local_ns + '["__file__"] = "' + $B.$py_module_path[module] +

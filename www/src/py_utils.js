@@ -311,18 +311,21 @@ $B.$global_search = function(name, search_ids){
 
     for(var i = 0; i< $B.frames_stack.length; i++){
         var frame = $B.frames_stack[i]
-        ns[frame[0]] = frame[1]
-        ns[frame[2]] = frame[3]
-    }
-
-    for(var i = 0; i < search_ids.length; i++){
-        var search_id = search_ids[i]
-        if(ns[search_id] && ns[search_id][name] !== undefined){
-            return ns[search_id][name]
-        }else if($B.imported[search_id] && $B.imported[search_id][name]){
-            return $B.imported[search_id][name]
+        if(search_ids.indexOf(frame[0]) > -1 &&
+                frame[1][name] !== undefined){
+            return frame[1][name]
+        }
+        if(search_ids.indexOf(frame[2]) > -1 &&
+                frame[3][name] !== undefined){
+            return frame[3][name]
         }
     }
+
+    search_ids.forEach(function(search_id){
+        if($B.imported[search_id] && $B.imported[search_id][name]){
+            return $B.imported[search_id][name]
+        }
+    })
 
     throw _b_.NameError.$factory("name '" + $B.from_alias(name) +
         "' is not defined")

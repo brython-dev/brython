@@ -234,16 +234,19 @@ function run_py(module_contents, path, module, compiled) {
             $NodeJSCtx = $B.$NodeJSCtx
         $B.$py_module_path[module.__name__] = path
 
-        root = $B.py2js(module_contents, module.__name__,
+        root = $B.py2js(module_contents, module,
             module.__name__, $B.builtins_scope)
 
+        if(module.__package__ !== undefined){
+            root.binding["__package__"] = true
+        }
         var body = root.children
         root.children = []
         // use the module pattern : module name returns the results of an anonymous function
         var mod_node = new $Node("expression")
         new $NodeJSCtx(mod_node,"var $module = (function()")
         root.insert(0, mod_node)
-        for(var i  =0, len = body.length; i < len; i++){mod_node.add(body[i])}
+        for(var i = 0, len = body.length; i < len; i++){mod_node.add(body[i])}
 
         // $globals will be returned when the anonymous function is run
         var ret_node = new $Node("expression")
@@ -268,6 +271,8 @@ function run_py(module_contents, path, module, compiled) {
         eval(js)
     }catch(err){
         console.log(err + " for module " + module.__name__)
+        console.log("module", module)
+        console.log(root)
         console.log(err)
         //console.log(js)
         //console.log(module_contents

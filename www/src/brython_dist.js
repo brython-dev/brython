@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,0,0,0]
 __BRYTHON__.__MAGIC__="3.5.0"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-03-23 09:03:24.785773"
-__BRYTHON__.timestamp=1521792204785
+__BRYTHON__.compiled_date="2018-03-23 10:33:23.830475"
+__BRYTHON__.timestamp=1521797603830
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -4882,10 +4882,11 @@ name + "' referenced before assignment")}}}
 $B.$global_search=function(name,search_ids){
 var ns={}
 for(var i=0;i< $B.frames_stack.length;i++){var frame=$B.frames_stack[i]
-ns[frame[0]]=frame[1]
-ns[frame[2]]=frame[3]}
-for(var i=0;i < search_ids.length;i++){var search_id=search_ids[i]
-if(ns[search_id]&& ns[search_id][name]!==undefined){return ns[search_id][name]}else if($B.imported[search_id]&& $B.imported[search_id][name]){return $B.imported[search_id][name]}}
+if(search_ids.indexOf(frame[0])> -1 &&
+frame[1][name]!==undefined){return frame[1][name]}
+if(search_ids.indexOf(frame[2])> -1 &&
+frame[3][name]!==undefined){return frame[3][name]}}
+for(var i=0;i < search_ids.length;i++){if($B.imported[search_id]&& $B.imported[search_id][name]){return $B.imported[search_id][name]}}
 throw _b_.NameError.$factory("name '" + $B.from_alias(name)+
 "' is not defined")}
 $B.$local_search=function(name){
