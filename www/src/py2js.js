@@ -5614,9 +5614,9 @@ function $mangle(name, context){
 // Function called in function $tokenise for each token found in the
 // Python source code
 
-function $transition(context,token){
+function $transition(context, token, value){
 
-    //console.log('context '+context+' token '+token, arguments[2])
+    //console.log('context '+context+' token '+token, value)
 
     switch(context.type){
         case 'abstract_expr':
@@ -5643,22 +5643,22 @@ function $transition(context,token){
           switch(token) {
               case 'id':
                   return new $IdCtx(new $ExprCtx(context, 'id', commas),
-                      arguments[2])
+                      value)
               case 'str':
                   return new $StringCtx(new $ExprCtx(context, 'str', commas),
-                      arguments[2])
+                      value)
               case 'bytes':
                   return new $StringCtx(new $ExprCtx(context, 'bytes', commas),
-                      arguments[2])
+                      value)
               case 'int':
                   return new $IntCtx(new $ExprCtx(context, 'int', commas),
-                      arguments[2])
+                      value)
               case 'float':
                   return new $FloatCtx(new $ExprCtx(context, 'float', commas),
-                      arguments[2])
+                      value)
               case 'imaginary':
                   return new $ImaginaryCtx(
-                      new $ExprCtx(context, 'imaginary', commas), arguments[2])
+                      new $ExprCtx(context, 'imaginary', commas), value)
               case '(':
                   return new $ListOrTupleCtx(
                       new $ExprCtx(context, 'tuple', commas), 'tuple')
@@ -5680,7 +5680,7 @@ function $transition(context,token){
               case 'lambda':
                   return new $LambdaCtx(new $ExprCtx(context, 'lambda', commas))
               case 'op':
-                  var tg = arguments[2]
+                  var tg = value
                   switch(tg) {
                       case '*':
                           context.parent.tree.pop() // remove abstract expression
@@ -5717,7 +5717,7 @@ function $transition(context,token){
               case 'yield':
                   return new $AbstractExprCtx(new $YieldCtx(context), true)
               case ':':
-                  return $transition(context.parent, token, arguments[2])
+                  return $transition(context.parent, token, value)
               case ')':
               case ',':
                   switch(context.parent.type) {
@@ -5730,7 +5730,7 @@ function $transition(context,token){
                           $_SyntaxError(context, token)
                   }
           }
-          return $transition(context.parent, token, arguments[2])
+          return $transition(context.parent, token, value)
 
         case 'annotation':
             return $transition(context.parent, token)
@@ -5753,13 +5753,13 @@ function $transition(context,token){
 
         case 'async':
             if(token == "def"){
-                return $transition(context.parent, token, arguments[2])
+                return $transition(context.parent, token, value)
             }
             $_SyntaxError(context, 'token ' + token + ' after ' + context)
 
         case 'attribute':
             if(token === 'id'){
-                var name = arguments[2]
+                var name = value
                 if(noassign[name] === true){$_SyntaxError(context,
                     ["cannot assign to " + name])}
                 name = $mangle(name, context)
@@ -5803,19 +5803,19 @@ function $transition(context,token){
                     if(context.has_dstar){$_SyntaxError(context, token)}
                     context.expect = ','
                     return $transition(new $CallArgCtx(context), token,
-                        arguments[2])
+                        value)
                 case ')':
                     context.end = $pos
                     return context.parent
                 case 'op':
                     context.expect = ','
-                    switch(arguments[2]) {
+                    switch(value) {
                         case '-':
                         case '~':
                         case '+':
                             context.expect = ','
                             return $transition(new $CallArgCtx(context), token,
-                                arguments[2])
+                                value)
                         case '*':
                             context.has_star = true
                             return new $StarArgCtx(context)
@@ -5826,7 +5826,7 @@ function $transition(context,token){
                     $_SyntaxError(context, token)
             }
 
-            return $transition(context.parent, token, arguments[2])
+            return $transition(context.parent, token, value)
 
         case 'call_arg':
             switch(token) {
@@ -5845,7 +5845,7 @@ function $transition(context,token){
                     if(context.expect == 'id'){
                          context.expect = ','
                          var expr = new $AbstractExprCtx(context, false)
-                         return $transition(expr, token, arguments[2])
+                         return $transition(expr, token, value)
                     }
                     break
                 case '=':
@@ -5868,7 +5868,7 @@ function $transition(context,token){
                     return new $TargetListCtx(new $CompForCtx(comp))
                 case 'op':
                     if(context.expect == 'id'){
-                       var op = arguments[2]
+                       var op = value
                        context.expect = ','
                        switch(op) {
                            case '+':
@@ -5912,7 +5912,7 @@ function $transition(context,token){
                             $_SyntaxError(context,
                                 ['non-keyword arg after keyword arg'])
                         }
-                        return $transition(context.parent, token, arguments[2])
+                        return $transition(context.parent, token, value)
                     }
             }
             $_SyntaxError(context, 'token ' + token + ' after ' + context)
@@ -5921,7 +5921,7 @@ function $transition(context,token){
             switch(token) {
                 case 'id':
                     if(context.expect == 'id'){
-                         context.set_name(arguments[2])
+                         context.set_name(value)
                          context.expect = '(:'
                          return context
                     }
@@ -5934,7 +5934,7 @@ function $transition(context,token){
             $_SyntaxError(context, 'token ' + token + ' after ' + context)
 
         case 'comp_if':
-            return $transition(context.parent, token, arguments[2])
+            return $transition(context.parent, token, value)
 
         case 'comp_for':
             if(token == 'in' && context.expect == 'in'){
@@ -5943,12 +5943,12 @@ function $transition(context,token){
             }
             if(context.expect === null){
                 // ids in context.tree[0] are local to the comprehension
-                return $transition(context.parent, token, arguments[2])
+                return $transition(context.parent, token, value)
             }
             $_SyntaxError(context, 'token ' + token + ' after ' + context)
 
         case 'comp_iterable':
-            return $transition(context.parent, token, arguments[2])
+            return $transition(context.parent, token, value)
 
         case 'comprehension':
             switch(token) {
@@ -5957,7 +5957,7 @@ function $transition(context,token){
                 case 'for':
                     return new $TargetListCtx(new $CompForCtx(context))
             }
-            return $transition(context.parent,token,arguments[2])
+            return $transition(context.parent,token,value)
 
         case 'condition':
             if(token == ':'){return $BodyCtx(context)}
@@ -5971,14 +5971,14 @@ function $transition(context,token){
             switch(token){
                 case ',':
                 case ':':
-                    return $transition(context.parent, token, arguments[2])
+                    return $transition(context.parent, token, value)
             }
             $_SyntaxError(context, 'token ' + token + ' after ' + context)
 
         case 'decorator':
             if(token == 'id' && context.tree.length == 0){
                 return $transition(new $AbstractExprCtx(context, false),
-                    token, arguments[2])
+                    token, value)
             }
             if(token == 'eol') {
                 return $transition(context.parent, token)
@@ -5991,7 +5991,7 @@ function $transition(context,token){
                     if(context.name) {
                         $_SyntaxError(context, 'token ' + token + ' after ' + context)
                     }
-                    context.set_name(arguments[2])
+                    context.set_name(value)
                     return context
                 case '(':
                     if(context.name == null){
@@ -6019,7 +6019,7 @@ function $transition(context,token){
                   case '(':
                     return new $CallArgCtx(new $CallCtx(context.parent))
                 }
-                return $transition(context.parent,token,arguments[2])
+                return $transition(context.parent,token,value)
             }else{
                 if(context.expect == ','){
                     switch(token) {
@@ -6102,9 +6102,9 @@ function $transition(context,token){
                         case 'lambda':
                             context.expect = ','
                             var expr = new $AbstractExprCtx(context, false)
-                            return $transition(expr, token, arguments[2])
+                            return $transition(expr, token, value)
                         case 'op':
-                            switch(arguments[2]) {
+                            switch(value) {
                                 case '+':
                                     // ignore unary +
                                     return context
@@ -6112,11 +6112,11 @@ function $transition(context,token){
                                 case '~':
                                     // create a left argument for operator "unary"
                                     context.expect = ','
-                                    var left = new $UnaryCtx(context, arguments[2])
+                                    var left = new $UnaryCtx(context, value)
                                     // create the operator "unary"
-                                    if(arguments[2] == '-'){
+                                    if(value == '-'){
                                         var op_expr = new $OpCtx(left, 'unary_neg')
-                                    }else if(arguments[2] == '+'){
+                                    }else if(value == '+'){
                                         var op_expr = new $OpCtx(left, 'unary_pos')
                                     }else{
                                         var op_expr = new $OpCtx(left, 'unary_inv')
@@ -6128,7 +6128,7 @@ function $transition(context,token){
                     }
                     $_SyntaxError(context, 'token ' + token + ' after ' + context)
                 }
-                return $transition(context.parent, token, arguments[2])
+                return $transition(context.parent, token, value)
             }
 
         case 'double_star_arg':
@@ -6146,7 +6146,7 @@ function $transition(context,token){
                 case 'not':
                 case 'lambda':
                     return $transition(new $AbstractExprCtx(context, false),
-                        token, arguments[2])
+                        token, value)
                 case ',':
                 case ')':
                     return $transition(context.parent, token)
@@ -6165,7 +6165,7 @@ function $transition(context,token){
                     $_SyntaxError(context, 'token ' + token + ' after ' +
                         context)
                 }else{
-                    return $transition(context.parent, token, arguments[2])
+                    return $transition(context.parent, token, value)
                 }
             }
 
@@ -6185,7 +6185,7 @@ function $transition(context,token){
                     if(context.expect == 'id'){
                        context.expect = 'as'
                        return $transition(new $AbstractExprCtx(context, false),
-                           token, arguments[2])
+                           token, value)
                     }
                 case 'as':
                     // only one alias allowed
@@ -6198,7 +6198,7 @@ function $transition(context,token){
                 case 'id':
                     if(context.expect == 'alias'){
                         context.expect = ':'
-                        context.set_alias(arguments[2])
+                        context.set_alias(value)
                         return context
                     }
                     break
@@ -6249,7 +6249,7 @@ function $transition(context,token){
                   if(context.expect == 'expr'){
                       context.expect = ','
                       return $transition(new $AbstractExprCtx(context, false),
-                          token, arguments[2])
+                          token, value)
                   }
           }
           switch(token) {
@@ -6289,7 +6289,7 @@ function $transition(context,token){
             case 'op':
                 // handle operator precedence ; fasten seat belt ;-)
                 var op_parent = context.parent,
-                    op = arguments[2]
+                    op = value
 
                 // conditional expressions have the lowest priority
                 if(op_parent.type == 'ternary' && op_parent.in_else){
@@ -6419,7 +6419,7 @@ function $transition(context,token){
             case 'augm_assign':
                 if(context.expect == ','){
                      return new $AbstractExprCtx(
-                         new $AugmentedAssignCtx(context, arguments[2]), true)
+                         new $AugmentedAssignCtx(context, value), true)
                 }
                 break
             case '=':
@@ -6433,7 +6433,7 @@ function $transition(context,token){
                       return new $AbstractExprCtx(new $KwArgCtx(context), true)
                    }else if(context.parent.type == "annotation"){
                        return $transition(context.parent.parent, token,
-                           arguments[2])
+                           value)
                    }
 
                    while(context.parent !== undefined){
@@ -6498,19 +6498,19 @@ function $transition(context,token){
             switch(token) {
                 case 'id':
                     if(context.expect == 'id'){
-                        context.add_name(arguments[2])
+                        context.add_name(value)
                         context.expect = ','
                         return context
                     }
                     if(context.expect == 'alias'){
                         context.aliases[context.names[context.names.length - 1]] =
-                            arguments[2]
+                            value
                         context.expect = ','
                         return context
                     }
                 case '.':
                   if(context.expect == 'module'){
-                      if(token == 'id'){context.module += arguments[2]}
+                      if(token == 'id'){context.module += value}
                       else{context.module += '.'}
                       return context
                   }
@@ -6520,7 +6520,7 @@ function $transition(context,token){
                         return context
                     }
                 case 'op':
-                    if(arguments[2] == '*' && context.expect == 'id'
+                    if(value == '*' && context.expect == 'id'
                             && context.names.length == 0){
                        if($get_scope(context).ntype !== 'module'){
                            $_SyntaxError(context,
@@ -6607,13 +6607,13 @@ function $transition(context,token){
                 case 'id':
                     if(context.expect == 'id'){
                         context.expect = ','
-                        if(context.names.indexOf(arguments[2]) > -1){
+                        if(context.names.indexOf(value) > -1){
                           $_SyntaxError(context,
-                              ['duplicate argument ' + arguments[2] +
+                              ['duplicate argument ' + value +
                                   ' in function definition'])
                         }
                     }
-                    return new $FuncArgIdCtx(context, arguments[2])
+                    return new $FuncArgIdCtx(context, value)
                 case ',':
                     if(context.has_kw_arg){
                         $_SyntaxError(context,'duplicate kw arg')
@@ -6627,7 +6627,7 @@ function $transition(context,token){
                 case ')':
                     return context.parent
                 case 'op':
-                    var op = arguments[2]
+                    var op = value
                     context.expect = ','
                     if(op == '*'){
                         if(context.has_star_arg){
@@ -6644,14 +6644,14 @@ function $transition(context,token){
             switch(token) {
                 case 'id':
                     if(context.name === undefined){
-                       if(context.parent.names.indexOf(arguments[2]) > -1){
+                       if(context.parent.names.indexOf(value) > -1){
                          $_SyntaxError(context,
-                             ['duplicate argument ' + arguments[2] +
+                             ['duplicate argument ' + value +
                                  ' in function definition'])
                        }
                     }
-                    context.set_name(arguments[2])
-                    context.parent.names.push(arguments[2])
+                    context.set_name(value)
+                    context.parent.names.push(value)
                     return context
                 case ',':
                 case ')':
@@ -6676,8 +6676,8 @@ function $transition(context,token){
             switch(token) {
                 case 'id':
                     if(context.expect == 'id'){
-                       new $IdCtx(context, arguments[2])
-                       context.add(arguments[2])
+                       new $IdCtx(context, value)
+                       context.add(value)
                        context.expect = ','
                        return context
                     }
@@ -6705,9 +6705,9 @@ function $transition(context,token){
                         return new $AbstractExprCtx(
                             new $KwArgCtx(context.parent), false)
                     }
-                    return $transition(context.parent, token, arguments[2])
+                    return $transition(context.parent, token, value)
                 case 'op':
-                    return $transition(context.parent, token, arguments[2])
+                    return $transition(context.parent, token, value)
                 case 'id':
                 case 'str':
                 case 'int':
@@ -6725,34 +6725,34 @@ function $transition(context,token){
                 if(token == 'def'){
                     context.parent.parent.tree = []
                     var ctx = $transition(context.parent.parent,
-                        token, arguments[2])
+                        token, value)
                     ctx.async = true
                     return ctx
                 }
             }
 
-            return $transition(context.parent, token, arguments[2])
+            return $transition(context.parent, token, value)
 
         case 'import':
             switch(token) {
                 case 'id':
                     if(context.expect == 'id'){
-                       new $ImportedModuleCtx(context, arguments[2])
+                       new $ImportedModuleCtx(context, value)
                        context.expect = ','
                        return context
                     }
                     if(context.expect == 'qual'){
                        context.expect = ','
                        context.tree[context.tree.length - 1].name +=
-                           '.' + arguments[2]
+                           '.' + value
                        context.tree[context.tree.length - 1].alias +=
-                           '.' + arguments[2]
+                           '.' + value
                        return context
                     }
                     if(context.expect == 'alias'){
                        context.expect = ','
                        context.tree[context.tree.length - 1].alias =
-                           arguments[2]
+                           value
                        return context
                     }
                     break
@@ -6801,7 +6801,7 @@ function $transition(context,token){
                     $_SyntaxError(context, 'token ' + token + ' after ' +
                         context)
             }
-            return $transition(context.parent, token, arguments[2])
+            return $transition(context.parent, token, value)
 
         case 'kwarg':
             if(token == ','){return new $CallArgCtx(context.parent.parent)}
@@ -6819,7 +6819,7 @@ function $transition(context,token){
                 return $transition(context.parent, token)
             }
             if(context.args === undefined){
-                return $transition(new $CallCtx(context), token, arguments[2])
+                return $transition(new $CallCtx(context), token, value)
             }
             $_SyntaxError(context, 'token ' + token + ' after ' + context)
 
@@ -6830,7 +6830,7 @@ function $transition(context,token){
                         new $SubCtx(context.parent),false)
                 }
                 if(token == '('){return new $CallCtx(context.parent)}
-                return $transition(context.parent, token, arguments[2])
+                return $transition(context.parent, token, value)
             }else{
                 if(context.expect == ','){
                     switch(context.real){
@@ -6883,7 +6883,7 @@ function $transition(context,token){
                             var comp = new $ComprehensionCtx(context)
                             return new $TargetListCtx(new $CompForCtx(comp))
                     }
-                    return $transition(context.parent,token,arguments[2])
+                    return $transition(context.parent,token,value)
                 }else if(context.expect == 'id'){
                     switch(context.real) {
                         case 'tuple':
@@ -6930,7 +6930,7 @@ function $transition(context,token){
                                     context.implicit === true){
                                 // Syntax like d[1,] = 2
                                 return $transition(context.parent, token,
-                                    arguments[2])
+                                    value)
                             }else{
                                 break
                             }
@@ -6940,11 +6940,11 @@ function $transition(context,token){
                         default:
                             context.expect = ','
                             var expr = new $AbstractExprCtx(context, false)
-                            return $transition(expr,token, arguments[2])
+                            return $transition(expr,token, value)
                     }
 
                 }else{
-                    return $transition(context.parent, token, arguments[2])
+                    return $transition(context.parent, token, value)
                 }
             }
 
@@ -6974,15 +6974,15 @@ function $transition(context,token){
                 case 'lamdba':
                 case '.':
                     var expr = new $AbstractExprCtx(context,true)
-                    return $transition(expr,token,arguments[2])
+                    return $transition(expr,token,value)
                 case 'op':
-                    switch(arguments[2]) {
+                    switch(value) {
                         case '*':
                         case '+':
                         case '-':
                         case '~':
                             var expr = new $AbstractExprCtx(context, true)
-                            return $transition(expr, token, arguments[2])
+                            return $transition(expr, token, value)
                     }
                     break
                 case 'class':
@@ -7088,12 +7088,12 @@ function $transition(context,token){
                 case 'not':
                 case 'lamdba':
                     var expr = new $AbstractExprCtx(context, false)
-                    return $transition(expr, token, arguments[2])
+                    return $transition(expr, token, value)
                 case 'op':
-                  var a = arguments[2]
+                  var a = value
                   if('+' == a || '-' == a || '~' == a){
                     var expr = new $AbstractExprCtx(context, false)
-                    return $transition(expr, token, arguments[2])
+                    return $transition(expr, token, value)
                   }
             }
             return $transition(context.parent, token)
@@ -7127,13 +7127,13 @@ function $transition(context,token){
                 case 'not':
                 case 'lamdba':
                     return $transition(new $AbstractExprCtx(context, false),
-                        token, arguments[2])
+                        token, value)
                 case 'op':
-                    switch(arguments[2]){
+                    switch(value){
                         case '+':
                         case '-':
                         case '~':
-                            return new $UnaryCtx(context, arguments[2])
+                            return new $UnaryCtx(context, value)
                     }
                 default:
                     if(context.tree[context.tree.length - 1].type ==
@@ -7145,7 +7145,7 @@ function $transition(context,token){
             return $transition(context.parent, token)
         case 'packed':
             if(token == 'id'){
-                new $IdCtx(context, arguments[2])
+                new $IdCtx(context, value)
                 context.parent.expect = ','
                 return context.parent
             }
@@ -7158,7 +7158,7 @@ function $transition(context,token){
                 case 'id':
                     if(context.tree.length == 0){
                        return new $IdCtx(new $ExprCtx(context, 'exc', false),
-                           arguments[2])
+                           value)
                     }
                     break
                 case 'from':
@@ -7179,12 +7179,12 @@ function $transition(context,token){
             switch(token) {
                 case 'id':
                     if(context.parent.type == "target_list"){
-                        context.tree.push(arguments[2])
+                        context.tree.push(value)
                         context.parent.expect = ','
                         return context.parent
                     }
                     return $transition(new $AbstractExprCtx(context, false),
-                        token, arguments[2])
+                        token, value)
                 case 'imaginary':
                 case 'int':
                 case 'float':
@@ -7196,7 +7196,7 @@ function $transition(context,token){
                 case 'not':
                 case 'lamdba':
                     return $transition(new $AbstractExprCtx(context, false),
-                        token, arguments[2])
+                        token, value)
                 case ',':
                     return $transition(context.parent, token)
                 case ')':
@@ -7218,10 +7218,10 @@ function $transition(context,token){
                     context.parent.tree[0] = context
                     return new $CallCtx(context.parent)
                 case 'str':
-                    context.tree.push(arguments[2])
+                    context.tree.push(value)
                     return context
             }
-            return $transition(context.parent, token, arguments[2])
+            return $transition(context.parent, token, value)
         case 'sub':
             // subscription x[a] or slicing x[a:b:c]
             switch(token) {
@@ -7238,7 +7238,7 @@ function $transition(context,token){
                 case 'not':
                 case 'lamdba':
                     var expr = new $AbstractExprCtx(context,false)
-                    return $transition(expr, token, arguments[2])
+                    return $transition(expr, token, value)
                 case ']':
                     return context.parent
                 case ':':
@@ -7255,10 +7255,10 @@ function $transition(context,token){
                         context.expect = ','
                         return new $IdCtx(
                             new $ExprCtx(context, 'target', false),
-                                arguments[2])
+                                value)
                     }
                 case 'op':
-                    if(context.expect == 'id' && arguments[2] == '*'){
+                    if(context.expect == 'id' && value == '*'){
                         // form "for a, *b in X"
                         return new $PackedCtx(context)
                     }
@@ -7279,10 +7279,10 @@ function $transition(context,token){
             }
 
             if(context.expect == ',') {
-                return $transition(context.parent, token, arguments[2])
+                return $transition(context.parent, token, value)
             }else if(token == 'in'){
                 // Support syntax "for x, in ..."
-                return $transition(context.parent, token, arguments[2])
+                return $transition(context.parent, token, value)
             }
             $_SyntaxError(context, 'token ' + token + ' after ' + context)
         case 'ternary':
@@ -7290,7 +7290,7 @@ function $transition(context,token){
                 context.in_else = true
                 return new $AbstractExprCtx(context, false)
             }
-            return $transition(context.parent, token, arguments[2])
+            return $transition(context.parent, token, value)
         case 'try':
             if(token == ':'){return $BodyCtx(context)}
             $_SyntaxError(context, 'token ' + token + ' after ' + context)
@@ -7307,7 +7307,6 @@ function $transition(context,token){
                     // of the correct value
                     var expr = context.parent
                     context.parent.parent.tree.pop()
-                    var value = arguments[2]
                     if(context.op == '-'){value = "-" + value}
                     else if(context.op == '~'){value = ~value}
                     return $transition(context.parent.parent, token, value)
@@ -7317,7 +7316,7 @@ function $transition(context,token){
                     var expr = new $ExprCtx(context.parent.parent, 'call',
                         false)
                     var expr1 = new $ExprCtx(expr, 'id', false)
-                    new $IdCtx(expr1,arguments[2]) // create id
+                    new $IdCtx(expr1,value) // create id
                     var repl = new $AttrCtx(expr)
                     if(context.op == '+'){repl.name = '__pos__'}
                     else if(context.op == '-'){repl.name = '__neg__'}
@@ -7325,14 +7324,13 @@ function $transition(context,token){
                     // new context is the expression above the id
                     return expr1
                 case 'op':
-                    if('+' == arguments[2] || '-' == arguments[2]){
-                       var op = arguments[2]
-                       if(context.op === op){context.op = '+'}
+                    if('+' == value || '-' == value){
+                       if(context.op === value){context.op = '+'}
                        else{context.op = '-'}
                        return context
                     }
             }
-            return $transition(context.parent, token, arguments[2])
+            return $transition(context.parent, token, value)
         case 'with':
             switch(token) {
                 case 'id':
@@ -7340,14 +7338,14 @@ function $transition(context,token){
                         context.expect = 'as'
                         return $transition(
                             new $AbstractExprCtx(context, false), token,
-                                arguments[2])
+                                value)
                     }
                     if(context.expect == 'alias'){
                         if(context.parenth !== undefined){
                             context.expect = ','
                         }
                         else{context.expect = ':'}
-                        context.set_alias(arguments[2])
+                        context.set_alias(value)
                         return context
                     }
                     break
