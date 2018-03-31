@@ -22,6 +22,13 @@
 var _b_ = $B.builtins
 eval($B.InjectBuiltins())
 
+function rstrip(s, strip_chars) {
+    var _chars = strip_chars || " \t\n";
+    var nstrip = 0, len = s.length;
+    while( nstrip < len && _chars.indexOf(s.charAt(len-1-nstrip)) > -1 ) nstrip ++;
+    return s.substr(0, len-nstrip)
+}
+
 // Code to store/restore local namespace
 //
 // In generators, the namespace is stored in an attribute of the
@@ -99,9 +106,7 @@ function make_node(top_node, node){
             // Replace "yield value" by "return [value, node_id]"
 
             var yield_node_id = top_node.yields.length
-            while(ctx_js.charAt(ctx_js.length - 1) == ";"){
-                ctx_js = ctx_js.substr(0, ctx_js.length - 1)
-            }
+            ctx_js = rstrip(ctx_js, ';')
             var res =  "return [" + ctx_js + ", " + yield_node_id + "]"
             new_node.data = res
             top_node.yields.push(new_node)
