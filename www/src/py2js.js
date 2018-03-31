@@ -112,6 +112,20 @@ function create_temp_name(prefix) {
     var _prefix = prefix || '$temp'
     return _prefix + $loop_num ++;
 }
+
+// Adds a new block of javascript to :param:`parent` at position :param:`insert_at`.
+// Position may also be '-1' in which case the node is added at the end. Other
+// negative positions are not supported.
+// Returns the created $Node.
+function add_jscode(parent, insert_at, code) {
+    var new_node = new $NodeJS(code)
+    if (insert_at === -1)
+        parent.add(new_node)
+    else
+        parent.insert(insert_at, new_node)
+    return new_node
+}
+
 // Variable used for chained comparison
 var chained_comp_num = 0
 
