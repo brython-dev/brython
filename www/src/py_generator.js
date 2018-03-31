@@ -119,7 +119,7 @@ function make_node(top_node, node){
             // Here, this line is replaced by a test on the attribute
             // sent_value of __BRYTHON__.modules[iter_id]. This attribute is
             // set when methods send() or throw() of the generators are
-            // inovked
+            // invoked
 
             var yield_node_id = top_node.yields.length
             var js = "var sent_value = this.sent_value || None;"
