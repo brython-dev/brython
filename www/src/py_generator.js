@@ -22,6 +22,24 @@
 var _b_ = $B.builtins
 eval($B.InjectBuiltins())
 
+// Code to store/restore local namespace
+//
+// In generators, the namespace is stored in an attribute of the
+// object __BRYTHON__ until the iterator is exhausted, so that it
+// can be restored in the next iteration
+function jscode_namespace(iter_name, action) {
+    var _clean= '';
+    if (action === 'store') {
+        _clean = ' = {}'
+    }
+    return 'for(var attr in this.blocks){' +
+              'eval("var " + attr + " = this.blocks[attr]")'+
+           '};' +
+           'var $locals_' + iter_name + ' = this.env' + _clean + ', '+
+               '$local_name = "' + iter_name + '", ' +
+               '$locals = $locals_' + iter_name + ';'
+}
+
 function make_node(top_node, node){
 
     // Transforms a node from the original generator function into a node
@@ -42,11 +60,7 @@ function make_node(top_node, node){
         // object __BRYTHON__ until the iterator is exhausted, so that it
         // can be restored in the next iteration
         var iter_name = top_node.iter_id
-        ctx_js = 'for(var attr in this.blocks){' +
-            'eval("var " + attr + " = this.blocks[attr]");};' +
-            'var $locals_' + iter_name + ' = this.env = {}' +
-            ', $local_name = "' + iter_name +
-            '", $locals = $locals_' + iter_name + ';'
+        ctx_js = jscode_namespace(iter_name, 'store')
     }
 
     // Mark some node types (try, except, finally, if, elif, else)
@@ -413,10 +427,7 @@ function make_next(self, yield_node_id){
     var parent_scope = self.func_root
 
     // restore namespaces
-    var js =  'for(var attr in this.blocks){eval("var " + attr + " = ' +
-        'this.blocks[attr]");}; var $locals_' + self.iter_id + ' = this.env,' +
-        ' $locals = $locals_' + self.iter_id + ', $local_name = "' +
-        self.iter_id + '";'
+    var js = jscode_namespace(self.iter_id, 'restore')
 
     fnode.addChild(new $B.genNode(js))
     // add a node to enter the frame
