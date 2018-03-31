@@ -108,6 +108,10 @@ $op_order.forEach(function(_tmp){
 // Variable used to generate random names used in loops
 var $loop_num = 0
 
+function create_temp_name(prefix) {
+    var _prefix = prefix || '$temp'
+    return _prefix + $loop_num ++;
+}
 // Variable used for chained comparison
 var chained_comp_num = 0
 
