@@ -7447,7 +7447,8 @@ for(var i = 0; i < s_escaped.length; i++){
     is_escaped[s_escaped.charAt(i)] = true
 }
 
-var $tokenize = $B.parser.$tokenize = function(src, module, locals_id, parent_block, line_info){
+
+var $tokenize = $B.parser.$tokenize = function(root, src) {
     var br_close = {")": "(", "]": "[", "}": "{"},
         br_stack = "",
         br_pos = []
@@ -7472,20 +7473,6 @@ var $tokenize = $B.parser.$tokenize = function(src, module, locals_id, parent_bl
         binary_pattern = new RegExp("^0[bB]([01]+)")
 
     var context = null
-    var root = new $Node('module')
-    root.module = module
-    root.id = locals_id
-    root.binding = {
-        __doc__: true,
-        __name__: true,
-        __file__: true
-    }
-
-    root.parent_block = parent_block
-    root.line_info = line_info
-    root.indent = -1
-    root.comments = []
-    root.imports = {}
     var new_node = new $Node(),
         current = root,
         name = "",
@@ -7494,11 +7481,8 @@ var $tokenize = $B.parser.$tokenize = function(src, module, locals_id, parent_bl
         indent = null,
         string_modifier = false
 
-    if(typeof src == "object"){
-        root.is_comp = src.is_comp
-        src = src.src
-    }
-    root.src = src
+    var module = root.module
+
     var lnum = 1
     while(pos < src.length){
         var car = src.charAt(pos)
@@ -8083,6 +8067,28 @@ var $tokenize = $B.parser.$tokenize = function(src, module, locals_id, parent_bl
         $_SyntaxError(context, 'expected an indented block', pos)
     }
 
+}
+
+var $create_root_node = $B.parser.$create_root_node = function(src, module, locals_id, parent_block, line_info){
+    var root = new $Node('module')
+    root.module = module
+    root.id = locals_id
+    root.binding = {
+        __doc__: true,
+        __name__: true,
+        __file__: true
+    }
+
+    root.parent_block = parent_block
+    root.line_info = line_info
+    root.indent = -1
+    root.comments = []
+    root.imports = {}
+    if(typeof src == "object"){
+        root.is_comp = src.is_comp
+        src = src.src
+    }
+    root.src = src
     return root
 }
 
@@ -8125,8 +8131,9 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_info){
     var global_ns = '$locals_' + module.replace(/\./g,'_')
 
     $B.$py_src[locals_id] = src
-    var root = $tokenize({src: src, is_comp: is_comp},
+    var root = $create_root_node({src: src, is_comp: is_comp},
         module, locals_id, parent_scope, line_info)
+    $tokenize(root, src)
     root.is_comp = is_comp
     root.transform()
 
