@@ -697,58 +697,60 @@ function $AssignCtx(context){
             node.parent.children.splice(rank, 1) // remove original line
 
             // evaluate right argument (it might be a function call)
-            var new_node = new $Node()
-            node.parent.insert(rank++, new_node)
+            var rname = create_temp_name('$right')
+            var rlname = create_temp_name('$rlist');
 
-            // set attribute line_num for debugging
-            new_node.line_num = node.line_num
+            add_jscode(node.parent, rank++,
+                'var ' + rname + ' = ' + '$B.$getattr($B.$iter(' + right.to_js() + '), "__next__");'
+            ).line_num = node.line_num // set attribute line_num for debugging
 
-            var rname = '$right' + $loop_num
-
-            var js = 'var ' + rname + ' = $B.$getattr($B.$iter(' +
-                right.to_js() + '), "__next__");'
-            new $NodeJSCtx(new_node,js)
-
-            var rlist_node = new $Node()
-            var rlname = '$rlist' + $loop_num
-            js = 'var ' + rlname + ' = [], $pos = 0;' + 'while(1){try{' +
-                rlname + '[$pos++] = ' + rname + '()}catch(err){break}};'
-            new $NodeJSCtx(rlist_node, js)
-            node.parent.insert(rank++, rlist_node)
+            add_jscode(node.parent, rank++,
+                'var '+rlname+'=[], $pos=0;'+
+                'while(1){'+
+                    'try{' +
+                        rlname + '[$pos++] = ' + rname +'()' +
+                    '}catch(err){'+
+                       'break'+
+                    '}'+
+                '}'
+            )
 
             // If there is a packed tuple in the list of left items, store
             // its rank in the list
             var packed = null
+            var min_length = left_items.length
             for(var i = 0; i < left_items.length; i++){
                 var expr = left_items[i]
                 if(expr.type == 'packed' ||
                         (expr.type == 'expr' && expr.tree[0].type == 'packed')){
                     packed = i
+                    min_length--
                     break
                 }
             }
 
             // Test if there were enough values in the right part
-            var check_node = new $Node()
-            var min_length = left_items.length
-            if(packed !== null){min_length--}
-            js = 'if(' + rlname + '.length<' + min_length + ')' +
-                 '{throw ValueError.$factory("need more than " +' + rlname +
-                 '.length + " value" + (' + rlname + '.length > 1 ?' +
-                 ' "s" : "") + " to unpack")}'
-            new $NodeJSCtx(check_node, js)
-            node.parent.insert(rank++, check_node)
+            add_jscode(node.parent, rank++,
+                'if(' + rlname + '.length<' + min_length + '){' +
+                    'throw ValueError.$factory('+
+                       '"need more than " +' + rlname + '.length + " value" + (' +
+                        rlname + '.length > 1 ?' + ' "s" : "") + " to unpack"'+
+                    ')'+
+                '}'
+            )
 
-            // Test if there were enough variables in the left part
+             // Test if there were enough variables in the left part
             if(packed == null){
-                var check_node = new $Node()
-                var min_length = left_items.length
-                js = 'if(' + rlname + '.length>' + min_length + ')' +
-                     '{throw ValueError.$factory("too many values to unpack ' +
-                     '(expected ' + left_items.length + ')")}'
-                new $NodeJSCtx(check_node, js)
-                node.parent.insert(rank++, check_node)
+                add_jscode(node.parent, rank++,
+                    'if(' + rlname + '.length>' + min_length + '){' +
+                        'throw ValueError.$factory(' +
+                           '"too many values to unpack ' +
+                           '(expected ' + left_items.length + ')"'+
+                        ')'+
+                    '}'
+                )
             }
+
 
             left_items.forEach(function(left_item, i){
 
@@ -4657,16 +4659,23 @@ function $SingleKwCtx(context,token){
         if(this.token == 'finally'){
             var scope = $get_scope(this)
             if(scope.ntype != 'generator'){
-                var scope_id = scope.id.replace(/\./g, '_'),
-                    js = 'var $exit;if($B.frames_stack.length<$stack_length)' +
-                        '{$exit = true;$B.frames_stack.push($top_frame)}'
-                node.insert(0, $NodeJS(js))
+                add_jscode(node, 0,
+                    'var $exit;'+
+                    'if($B.frames_stack.length<$stack_length){' +
+                        '$exit = true;'+
+                        '$B.frames_stack.push($top_frame)'+
+                    '}'
+                )
+
+                var scope_id = scope.id.replace(/\./g, '_')
+                var last_child = node.children[node.children.length - 1]
+
                 // If the finally block ends with "return", don't add the
                 // final line
-                var last_child = node.children[node.children.length - 1]
                 if(last_child.context.tree[0].type != "return"){
-                    node.add($NodeJS('if($exit){$B.leave_frame("' +
-                        scope_id + '")}'))
+                    add_jscode(node, -1,
+                        'if($exit){$B.leave_frame("' + scope_id + '")}'
+                    )
                 }
             }
         }
@@ -4964,31 +4973,33 @@ function $TryCtx(context){
         }
         var scope = $get_scope(this)
 
-        var $var = 'var $failed' + $loop_num
+        var error_name = create_temp_name('$err')
+        var failed_name = create_temp_name('$failed')
 
         // Transform node into Javascript 'try' (necessary if
         // "try" inside a "for" loop)
         // Add a boolean $failed, used to run the 'else' clause
-        var js = $var + ' = false;\n' + ' '.repeat(node.indent + 8) + 'try'
+        var js = 'var '+failed_name + ' = false;\n' + ' '.repeat(node.indent + 8) + 'try'
         new $NodeJSCtx(node, js)
         node.is_try = true // used in generators
         node.has_return = this.has_return
 
         // Insert new 'catch' clause
-        var catch_node = new $Node()
-        new $NodeJSCtx(catch_node, 'catch($err' + $loop_num + ')')
+        var catch_node = add_jscode(node.parent, rank + 1,
+            'catch('+ error_name + ')'
+        )
         catch_node.is_catch = true
-        node.parent.insert(rank + 1, catch_node)
 
-        // Fake line to start the 'else if' clauses
-        var new_node = new $Node()
         // Set the boolean $failed to true
         // Set attribute "pmframe" (post mortem frame) to $B in case an error
         // happens in a callback function ; in this case the frame would be
         // lost at the time the exception is handled by $B.exception
-        new $NodeJSCtx(new_node,
-            $var + ' = true;$B.pmframe = $B.last($B.frames_stack);if(0){}')
-        catch_node.insert(0, new_node)
+        add_jscode(catch_node, 0,
+            'var '+ failed_name + ' = true;' +
+            '$B.pmframe = $B.last($B.frames_stack);'+
+            // Fake line to start the 'else if' clauses
+            'if(0){}'
+        )
 
         var pos = rank + 2
         var has_default = false // is there an "except:" ?
@@ -5005,16 +5016,14 @@ function $TryCtx(context){
                 if(has_finally){
                     $_SyntaxError(context,"'except' after 'finally'")
                 }
-                ctx.error_name = '$err' + $loop_num
+                ctx.error_name = error_name
                 if(ctx.tree.length > 0 && ctx.tree[0].alias !== null
                         && ctx.tree[0].alias !== undefined){
                     // syntax "except ErrorName as Alias"
-                    var new_node = new $Node()
                     var alias = ctx.tree[0].alias
-                    var js = '$locals["' + alias + '"] = $B.exception($err' +
-                        $loop_num + ')'
-                    new $NodeJSCtx(new_node, js)
-                    node.parent.children[pos].insert(0, new_node)
+                    add_jscode(node.parent.children[pos], 0,
+                        '$locals["' + alias + '"] = $B.exception(' + error_name + ')'
+                    )
                 }
                 catch_node.insert(catch_node.children.length,
                     node.parent.children[pos])
@@ -5048,12 +5057,12 @@ function $TryCtx(context){
                 ctx = new $NodeCtx(new_node)
             catch_node.insert(catch_node.children.length, new_node)
             new $SingleKwCtx(ctx, 'else')
-            new_node.add($NodeJS('throw $err' + $loop_num))
+            new_node.add($NodeJS('throw '+ error_name))
         }
         if(has_else){
             var else_node = new $Node()
             else_node.module = scope.module
-            new $NodeJSCtx(else_node, 'if(!$failed' + $loop_num + ')')
+            new $NodeJSCtx(else_node, 'if(!'+failed_name+ ')')
             else_body.children.forEach(function(elt){
                 else_node.add(elt)
             })
@@ -5199,7 +5208,13 @@ function $WithCtx(context){
             return
         }
 
-        var num = this.num = $loop_num
+        // Used to create js identifiers:
+        var num = this.num = $loop_num++
+        var cm_name  = '$ctx_manager' + num,
+            cme_name = '$ctx_manager_exit' + num,
+            exc_name = '$exc' + num,
+            err_name = '$err' + num,
+            val_name = '$value' + num
 
         if(this.tree[0].alias === null){this.tree[0].alias = '$temp'}
 
@@ -5238,10 +5253,9 @@ function $WithCtx(context){
         // if there is an alias, insert the value
         if(this.tree[0].alias){
             var alias = this.tree[0].alias.tree[0].tree[0].value
-            var js = '$locals' + '["' + alias + '"] = $value' + num
-            var value_node = new $Node()
-            new $NodeJSCtx(value_node, js)
-            try_node.add(value_node)
+            add_jscode(try_node, -1,
+                '$locals' + '["' + alias + '"] = ' + val_name
+            )
         }
 
         // place block inside a try clause
@@ -5249,18 +5263,21 @@ function $WithCtx(context){
 
         var catch_node = new $Node()
         catch_node.is_catch = true // for generators
-        new $NodeJSCtx(catch_node, 'catch($err' + $loop_num + ')')
+        new $NodeJSCtx(catch_node, 'catch(' + err_name + ')')
 
-        var fbody = new $Node(),
-            indent = node.indent + 4,
-            js = '$exc' + num + ' = false;$err' + $loop_num +
-                ' = $B.exception($err' + $loop_num + ')\n' + ' '.repeat(indent) +
-                'if(!$B.$bool($ctx_manager_exit' + num + '($err' + $loop_num +
-                '.__class__,' + '$err' + $loop_num + ',$B.$getattr($err' +
-                $loop_num + ', "traceback"))))'
-        js += '{throw $err' + $loop_num + '}'
-        new $NodeJSCtx(fbody, js)
-        catch_node.add(fbody)
+        add_jscode(catch_node, -1,
+            exc_name + ' = false;' +
+            err_name + ' = $B.exception(' + err_name + ')\n' + ' '.repeat(node.indent+4) +
+                'if(!$B.$bool('+cme_name+'('+
+                                    err_name + '.__class__,' +
+                                    err_name + ','+
+                                    '$B.$getattr('+err_name + ', "traceback")'+
+                                ')'+
+                            ')'+
+                '){' +
+                   'throw ' + err_name +
+                '}'
+        )
         node.add(catch_node)
 
         var finally_node = new $Node()
@@ -5270,13 +5287,10 @@ function $WithCtx(context){
         finally_node.context.in_ctx_manager = true
         finally_node.is_except = true
         finally_node.in_ctx_manager = true
-        var fbody = new $Node()
-        new $NodeJSCtx(fbody, 'if($exc' + num + '){$ctx_manager_exit' +
-            num + '(None,None,None)}')
-        finally_node.add(fbody)
+        add_jscode(finally_node, -1,
+            'if(' + exc_name + ')'+ cme_name+'(None,None,None);'
+        )
         node.parent.insert(rank + 1, finally_node)
-
-        $loop_num++
 
         this.transformed = true
     }
@@ -5286,13 +5300,15 @@ function $WithCtx(context){
         var indent = $get_node(this).indent,
             h = ' '.repeat(indent + 4),
             num = this.num
-        var res = 'var $ctx_manager' + num + ' = ' + this.tree[0].to_js() +
-            '\n' + h + 'var $ctx_manager_exit' + num +
-            ' = $B.$getattr($ctx_manager' + num + ',"__exit__")\n' +
-            h + 'var $value' + num + ' = $B.$getattr($ctx_manager' + num +
-            ',"__enter__")()\n'
-        res += h + 'var $exc' + num + ' = true\n'
-        return res + h + 'try'
+        var cm_name  = '$ctx_manager' + num,
+            cme_name = '$ctx_manager_exit' + num,
+            exc_name = '$exc' + num,
+            val_name = '$value' + num
+        return 'var ' + cm_name + ' = ' + this.tree[0].to_js() + '\n' +
+               h + 'var ' + cme_name + ' = $B.$getattr('+cm_name+',"__exit__")\n' +
+               h + 'var ' + val_name + ' = $B.$getattr('+cm_name+',"__enter__")()\n' +
+               h + 'var ' + exc_name + ' = true\n'+
+               h + 'try'
     }
 }
 
@@ -5379,11 +5395,9 @@ function $YieldCtx(context){
             $loop_num++
 
         }else{
-
-            var new_node = new $Node()
-            new $NodeJSCtx(new_node, '// placeholder for generator sent value')
-            new_node.set_yield_value = true
-            node.parent.insert(rank + 1, new_node)
+            add_jscode(node.parent, rank + 1,
+                '// placeholder for generator sent value'
+            ).set_yield_value = true
         }
     }
 
