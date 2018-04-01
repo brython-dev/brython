@@ -20,6 +20,7 @@ var isWebWorker = $B.isa_web_worker =
     ("function" === typeof importScripts) &&
     (navigator instanceof WorkerNavigator)
 
+$B.parser = {}
 
 /*
 Utility functions
@@ -108,7 +109,7 @@ $op_order.forEach(function(_tmp){
 // Variable used to generate random names used in loops
 var $loop_num = 0
 
-function create_temp_name(prefix) {
+var create_temp_name = $B.parser.create_temp_name = function(prefix) {
     var _prefix = prefix || '$temp'
     return _prefix + $loop_num ++;
 }
@@ -117,7 +118,7 @@ function create_temp_name(prefix) {
 // Position may also be '-1' in which case the node is added at the end. Other
 // negative positions are not supported.
 // Returns the created $Node.
-function add_jscode(parent, insert_at, code) {
+var add_jscode = $B.parser.add_jscode = function(parent, insert_at, code) {
     var new_node = new $NodeJS(code)
     if (insert_at === -1)
         parent.add(new_node)
@@ -134,7 +135,7 @@ Function called in case of SyntaxError
 ======================================
 */
 
-function $_SyntaxError(context,msg,indent){
+var $_SyntaxError = $B.parser.$_SyntaxError = function (context,msg,indent){
     //console.log('syntax error, context '+context,' msg ',msg)
     var ctx_node = context
     while(ctx_node.type !== 'node'){ctx_node = ctx_node.parent}
@@ -171,7 +172,7 @@ as a child of the block where it stands : the root for instructions at
 module level, or a function definition, a loop, a condition, etc.
 */
 
-function $Node(type){
+var $Node = $B.parser.$Node = function(type){
     this.type = type
     this.children = []
     this.yield_atoms = []
@@ -422,7 +423,7 @@ Most contexts have a method to_js() that return the Javascript code for
 this context. It is called by the method to_js() of the root node.
 */
 
-function $AbstractExprCtx(context, with_commas){
+var $AbstractExprCtx = $B.parser.$AbstractExprCtx = function(context, with_commas){
     this.type = 'abstract_expr'
     // allow expression with comma-separated values, or a single value ?
     this.with_commas = with_commas
@@ -441,7 +442,7 @@ function $AbstractExprCtx(context, with_commas){
     }
 }
 
-function $AliasCtx(context){
+var $AliasCtx = $B.parser.$AliasCtx = function(context){
     // Class for context manager alias
     this.type = 'ctx_manager_alias'
     this.parent = context
@@ -449,7 +450,7 @@ function $AliasCtx(context){
     context.tree[context.tree.length - 1].alias = this
 }
 
-function $AnnotationCtx(context){
+var $AnnotationCtx = $B.parser.$AnnotationCtx = function(context){
     // Class for annotations, eg "def f(x:int) -> list:"
     this.type = 'annotation'
     this.parent = context
@@ -462,7 +463,7 @@ function $AnnotationCtx(context){
     this.to_js = function(){return $to_js(this.tree)}
 }
 
-function $AssertCtx(context){
+var $AssertCtx = $B.parser.$AssertCtx = function(context){
     // Context for keyword "assert"
     this.type = 'assert'
     this.parent = context
@@ -496,7 +497,7 @@ function $AssertCtx(context){
     }
 }
 
-function $AssignCtx(context){
+var $AssignCtx = $B.parser.$AssignCtx = function(context){
     /*
     Class for the assignment operator "="
     context is the left operand of assignment
@@ -874,7 +875,7 @@ function $AssignCtx(context){
     }
 }
 
-function $AsyncCtx(context){
+var $AsyncCtx = $B.parser.$AsyncCtx = function(context){
     // Class for async : def, while, for
     this.type = 'async'
     this.parent = context
@@ -882,7 +883,7 @@ function $AsyncCtx(context){
     this.toString = function(){return '(async)'}
 }
 
-function $AttrCtx(context){
+var $AttrCtx = $B.parser.$AttrCtx = function(context){
     // Class for object attributes (eg x in obj.x)
     this.type = 'attribute'
     this.value = context.tree[0]
@@ -927,7 +928,7 @@ function $AttrCtx(context){
     }
 }
 
-function $AugmentedAssignCtx(context, op){
+var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
     // Class for augmented assignments such as "+="
     this.type = 'augm_assign'
     this.parent = context.parent
@@ -1178,7 +1179,7 @@ function $AugmentedAssignCtx(context, op){
     this.to_js = function(){return ''}
 }
 
-function $BodyCtx(context){
+var $BodyCtx = $B.parser.$BodyCtx = function(context){
     // inline body for def, class, if, elif, else, try...
     // creates a new node, child of context node
     var ctx_node = context.parent
@@ -1190,7 +1191,7 @@ function $BodyCtx(context){
     return new $NodeCtx(body_node)
 }
 
-function set_loop_context(context, kw){
+var set_loop_context = $B.parser.set_loop_context = function(context, kw){
     // For keywords "continue" and "break"
     // "this" is the instance of $BreakCtx or $ContinueCtx
     // We search the loop to "break" or "continue"
@@ -1234,7 +1235,7 @@ function set_loop_context(context, kw){
     }
 }
 
-function $BreakCtx(context){
+var $BreakCtx = $B.parser.$BreakCtx = function(context){
     // Used for the keyword "break"
     // A flag is associated to the enclosing "for" or "while" loop
     // If the loop exits with a break, this flag is set to true
@@ -1266,7 +1267,7 @@ function $BreakCtx(context){
     }
 }
 
-function $CallArgCtx(context){
+var $CallArgCtx = $B.parser.$CallArgCtx = function(context){
     // Base class for arguments in a function call
     this.type = 'call_arg'
     this.parent = context
@@ -1283,7 +1284,7 @@ function $CallArgCtx(context){
     }
 }
 
-function $CallCtx(context){
+var $CallCtx = $B.parser.$CallCtx = function(context){
     // Context of a call on a callable, ie what is inside the parenthesis
     // in "callable(...)"
     this.type = 'call'
@@ -1518,7 +1519,7 @@ function $CallCtx(context){
     }
 }
 
-function $ClassCtx(context){
+var $ClassCtx = $B.parser.$ClassCtx = function(context){
     // Class for keyword "class"
     this.type = 'class'
     this.parent = context
@@ -1682,7 +1683,7 @@ function $ClassCtx(context){
     }
 }
 
-function $CompIfCtx(context){
+var $CompIfCtx = $B.parser.$CompIfCtx = function(context){
     // Class for keyword "if" inside a comprehension
     this.type = 'comp_if'
     context.parent.intervals.push($pos)
@@ -1698,7 +1699,7 @@ function $CompIfCtx(context){
     }
 }
 
-function $ComprehensionCtx(context){
+var $ComprehensionCtx = $B.parser.$ComprehensionCtx = function(context){
     // Class for comprehensions
     this.type = 'comprehension'
     this.parent = context
@@ -1717,7 +1718,7 @@ function $ComprehensionCtx(context){
     }
 }
 
-function $CompForCtx(context){
+var $CompForCtx = $B.parser.$CompForCtx = function(context){
     // Class for keyword "for" in a comprehension
     this.type = 'comp_for'
     context.parent.intervals.push($pos)
@@ -1734,7 +1735,7 @@ function $CompForCtx(context){
     }
 }
 
-function $CompIterableCtx(context){
+var $CompIterableCtx = $B.parser.$CompIterableCtx = function(context){
     // Class for keyword "in" in a comprehension
     this.type = 'comp_iterable'
     this.parent = context
@@ -1749,7 +1750,7 @@ function $CompIterableCtx(context){
     }
 }
 
-function $ConditionCtx(context,token){
+var $ConditionCtx = $B.parser.$ConditionCtx = function(context,token){
     // Class for keywords "if", "elif", "while"
     this.type = 'condition'
     this.token = token
@@ -1801,7 +1802,7 @@ function $ConditionCtx(context,token){
     }
 }
 
-function $ContinueCtx(context){
+var $ContinueCtx = $B.parser.$ContinueCtx = function(context){
     // Class for keyword "continue"
     this.type = 'continue'
     this.parent = context
@@ -1819,7 +1820,7 @@ function $ContinueCtx(context){
     }
 }
 
-function $DebuggerCtx(context){
+var $DebuggerCtx = $B.parser.$DebuggerCtx = function(context){
     // Class for debugger
     this.type = 'continue'
     this.parent = context
@@ -1833,7 +1834,7 @@ function $DebuggerCtx(context){
     }
 }
 
-function $DecoratorCtx(context){
+var $DecoratorCtx = $B.parser.$DecoratorCtx = function(context){
     // Class for decorators
     this.type = 'decorator'
     this.parent = context
@@ -1946,7 +1947,7 @@ function $DecoratorCtx(context){
     }
 }
 
-function $DefCtx(context){
+var $DefCtx = $B.parser.$DefCtx = function(context){
     this.type = 'def'
     this.name = null
     this.parent = context
@@ -2495,7 +2496,7 @@ function $DefCtx(context){
     }
 }
 
-function $DelCtx(context){
+var $DelCtx = $B.parser.$DelCtx = function(context){
     // Class for keyword "del"
     this.type = 'del'
     this.parent = context
@@ -2550,7 +2551,7 @@ function $DelCtx(context){
     }
 }
 
-function $DictOrSetCtx(context){
+var $DictOrSetCtx = $B.parser.$DictOrSetCtx = function(context){
     // Context for literal dictionaries or sets
     // Rhe real type (dist or set) is set inside $transition
     // as the attribute 'real'
@@ -2597,7 +2598,7 @@ function $DictOrSetCtx(context){
     }
 }
 
-function $DoubleStarArgCtx(context){
+var $DoubleStarArgCtx = $B.parser.$DoubleStarArgCtx = function(context){
     // Class for syntax "**kw" in a call
     this.type = 'double_star_arg'
     this.parent = context
@@ -2612,7 +2613,7 @@ function $DoubleStarArgCtx(context){
     }
 }
 
-function $EllipsisCtx(context){
+var $EllipsisCtx = $B.parser.$EllipsisCtx = function(context){
     // Class for "..."
     this.type = 'ellipsis'
     this.parent = context
@@ -2627,7 +2628,7 @@ function $EllipsisCtx(context){
     }
 }
 
-function $ExceptCtx(context){
+var $ExceptCtx = $B.parser.$ExceptCtx = function(context){
     // Class for keyword "except"
     this.type = 'except'
     this.parent = context
@@ -2671,7 +2672,7 @@ function $ExceptCtx(context){
     }
 }
 
-function $ExprCtx(context, name, with_commas){
+var $ExprCtx = $B.parser.$ExprCtx = function(context, name, with_commas){
     // Base class for expressions
     this.type = 'expr'
     this.name = name
@@ -2694,7 +2695,7 @@ function $ExprCtx(context, name, with_commas){
     }
 }
 
-function $ExprNot(context){
+var $ExprNot = $B.parser.$ExprNot = function(context){
     // Class used temporarily for 'x not', only accepts 'in' as next token
     // Never remains in the final tree, so there is no need to define to_js()
     this.type = 'expr_not'
@@ -2706,7 +2707,7 @@ function $ExprNot(context){
 
 }
 
-function $FloatCtx(context,value){
+var $FloatCtx = $B.parser.$FloatCtx = function(context,value){
     // Class for literal floats
     this.type = 'float'
     this.value = value
@@ -2728,7 +2729,7 @@ function $FloatCtx(context,value){
     }
 }
 
-function $ForExpr(context){
+var $ForExpr = $B.parser.$ForExpr = function(context){
     // Class for keyword "for" outside of comprehensions
     this.type = 'for'
     this.parent = context
@@ -3025,7 +3026,7 @@ function $ForExpr(context){
     }
 }
 
-function $FromCtx(context){
+var $FromCtx = $B.parser.$FromCtx = function(context){
     // Class for keyword "from" for imports
     this.type = 'from'
     this.parent = context
@@ -3129,7 +3130,7 @@ function $FromCtx(context){
     }
 }
 
-function $FuncArgs(context){
+var $FuncArgs = $B.parser.$FuncArgs = function(context){
     // Class for arguments in a function definition
     this.type = 'func_args'
     this.parent = context
@@ -3150,7 +3151,7 @@ function $FuncArgs(context){
     }
 }
 
-function $FuncArgIdCtx(context,name){
+var $FuncArgIdCtx = $B.parser.$FuncArgIdCtx = function(context,name){
     // id in function arguments
     // may be followed by = for default value
     this.type = 'func_arg_id'
@@ -3194,7 +3195,7 @@ function $FuncArgIdCtx(context,name){
     }
 }
 
-function $FuncStarArgCtx(context,op){
+var $FuncStarArgCtx = $B.parser.$FuncStarArgCtx = function(context,op){
     // Class for "star argument" in a function definition : f(*args)
     this.type = 'func_star_arg'
     this.op = op
@@ -3234,7 +3235,7 @@ function $FuncStarArgCtx(context,op){
     }
 }
 
-function $GlobalCtx(context){
+var $GlobalCtx = $B.parser.$GlobalCtx = function(context){
     // Class for keyword "global"
     this.type = 'global'
     this.parent = context
@@ -3256,7 +3257,7 @@ function $GlobalCtx(context){
     }
 }
 
-function $IdCtx(context,value){
+var $IdCtx = $B.parser.$IdCtx = function(context,value){
     // Class for identifiers (variable names)
 
     this.type = 'id'
@@ -3659,7 +3660,7 @@ function $IdCtx(context,value){
     }
 }
 
-function $ImaginaryCtx(context,value){
+var $ImaginaryCtx = $B.parser.$ImaginaryCtx = function(context,value){
     // Class for the imaginary part of a complex number
     this.type = 'imaginary'
     this.value = value
@@ -3675,7 +3676,7 @@ function $ImaginaryCtx(context,value){
     }
 }
 
-function $ImportCtx(context){
+var $ImportCtx = $B.parser.$ImportCtx = function(context){
     // Class for keyword "import"
     this.type = 'import'
     this.parent = context
@@ -3723,7 +3724,7 @@ function $ImportCtx(context){
     }
 }
 
-function $ImportedModuleCtx(context,name){
+var $ImportedModuleCtx = $B.parser.$ImportedModuleCtx = function(context,name){
     this.type = 'imported module'
     this.parent = context
     this.name = name
@@ -3738,7 +3739,7 @@ function $ImportedModuleCtx(context,name){
     }
 }
 
-function $IntCtx(context,value){
+var $IntCtx = $B.parser.$IntCtx = function(context,value){
     // Class for literal integers
     // value is a 2-elt tuple [base, value_as_string] where
     // base is one of 16 (hex literal), 8 (octal), 2 (binary) or 10 (int)
@@ -3760,7 +3761,7 @@ function $IntCtx(context,value){
     }
 }
 
-function $JSCode(js){
+var $JSCode = $B.parser.$JSCode = function(js){
     this.js = js
 
     this.toString = function(){return this.js}
@@ -3771,7 +3772,7 @@ function $JSCode(js){
     }
 }
 
-function $KwArgCtx(context){
+var $KwArgCtx = $B.parser.$KwArgCtx = function(context){
     // Class for keyword argument in a call
     this.type = 'kwarg'
     this.parent = context.parent
@@ -3805,7 +3806,7 @@ function $KwArgCtx(context){
     }
 }
 
-function $LambdaCtx(context){
+var $LambdaCtx = $B.parser.$LambdaCtx = function(context){
     // Class for keyword "lambda"
     this.type = 'lambda'
     this.parent = context
@@ -3856,7 +3857,7 @@ function $LambdaCtx(context){
 
 }
 
-function $ListOrTupleCtx(context,real){
+var $ListOrTupleCtx = $B.parser.$ListOrTupleCtx = function(context,real){
     // Class for literal lists or tuples
     // The real type (list or tuple) is set inside $transition
     // as attribute 'real'
@@ -4030,7 +4031,7 @@ function $ListOrTupleCtx(context,real){
     }
 }
 
-function $NodeCtx(node){
+var $NodeCtx = $B.parser.$NodeCtx = function(node){
     // Base class for the context in a node
     this.node = node
     node.context = this
@@ -4084,13 +4085,13 @@ function $NodeCtx(node){
     }
 }
 
-function $NodeJS(js){
+var $NodeJS = $B.parser.$NodeJS = function(js){
     var node = new $Node()
     new $NodeJSCtx(node, js)
     return node
 }
 
-function $NodeJSCtx(node,js){
+var $NodeJSCtx = $B.parser.$NodeJSCtx = function(node,js){
     // Class used for raw JS code
     this.node = node
     node.context = this
@@ -4105,7 +4106,7 @@ function $NodeJSCtx(node,js){
     }
 }
 
-function $NonlocalCtx(context){
+var $NonlocalCtx = $B.parser.$NonlocalCtx = function(context){
     // Class for keyword "nonlocal"
     this.type = 'global'
     this.parent = context
@@ -4166,7 +4167,7 @@ function $NonlocalCtx(context){
 }
 
 
-function $NotCtx(context){
+var $NotCtx = $B.parser.$NotCtx = function(context){
     // Class for keyword "not"
     this.type = 'not'
     this.parent = context
@@ -4181,7 +4182,7 @@ function $NotCtx(context){
     }
 }
 
-function $OpCtx(context,op){
+var $OpCtx = $B.parser.$OpCtx = function(context,op){
     // Class for operators ; context is the left operand
     this.type = 'op'
     this.op = op
@@ -4499,7 +4500,7 @@ function $OpCtx(context,op){
     }
 }
 
-function $PackedCtx(context){
+var $PackedCtx = $B.parser.$PackedCtx = function(context){
     // used for packed tuples in expressions, eg
     //     a, *b, c = [1, 2, 3, 4]
     this.type = 'packed'
@@ -4526,7 +4527,7 @@ function $PackedCtx(context){
 }
 
 
-function $PassCtx(context){
+var $PassCtx = $B.parser.$PassCtx = function(context){
     // Class for keyword "pass"
     this.type = 'pass'
     this.parent = context
@@ -4541,7 +4542,7 @@ function $PassCtx(context){
     }
 }
 
-function $RaiseCtx(context){
+var $RaiseCtx = $B.parser.$RaiseCtx = function(context){
     // Class for keyword "raise"
     this.type = 'raise'
     this.parent = context
@@ -4559,7 +4560,7 @@ function $RaiseCtx(context){
     }
 }
 
-function $RawJSCtx(context,js){
+var $RawJSCtx = $B.parser.$RawJSCtx = function(context,js){
     this.type = "raw_js"
     context.tree[context.tree.length] = this
     this.parent = context
@@ -4572,7 +4573,7 @@ function $RawJSCtx(context,js){
     }
 }
 
-function $ReturnCtx(context){
+var $ReturnCtx = $B.parser.$ReturnCtx = function(context){
     // Class for keyword "return"
     this.type = 'return'
     this.parent = context
@@ -4620,7 +4621,7 @@ function $ReturnCtx(context){
     }
 }
 
-function $SingleKwCtx(context,token){
+var $SingleKwCtx = $B.parser.$SingleKwCtx = function(context,token){
     // Class for keywords "finally", "else"
     this.type = 'single_kw'
     this.token = token
@@ -4697,7 +4698,7 @@ function $SingleKwCtx(context,token){
     }
 }
 
-function $StarArgCtx(context){
+var $StarArgCtx = $B.parser.$StarArgCtx = function(context){
     // Class for star args in calls, eg f(*args)
     this.type = 'star_arg'
     this.parent = context
@@ -4712,7 +4713,7 @@ function $StarArgCtx(context){
     }
 }
 
-function $StringCtx(context,value){
+var $StringCtx = $B.parser.$StringCtx = function(context,value){
     // Class for literal strings
     this.type = 'str'
     this.parent = context
@@ -4842,7 +4843,7 @@ function $StringCtx(context,value){
     }
 }
 
-function $SubCtx(context){
+var $SubCtx = $B.parser.$SubCtx = function(context){
     // Class for subscription or slicing, eg x in t[x]
     this.type = 'sub'
     this.func = 'getitem' // set to 'setitem' if assignment
@@ -4913,7 +4914,7 @@ function $SubCtx(context){
     }
 }
 
-function $TargetListCtx(context){
+var $TargetListCtx = $B.parser.$TargetListCtx = function(context){
     // Class for target of "for" in loops or comprehensions,
     // eg x in "for x in A"
     this.type = 'target_list'
@@ -4930,7 +4931,7 @@ function $TargetListCtx(context){
     }
 }
 
-function $TernaryCtx(context){
+var $TernaryCtx = $B.parser.$TernaryCtx = function(context){
     // Class for the ternary operator : "x if C else y"
     this.type = 'ternary'
     this.parent = context.parent
@@ -4949,7 +4950,7 @@ function $TernaryCtx(context){
     }
 }
 
-function $TryCtx(context){
+var $TryCtx = $B.parser.$TryCtx = function(context){
     // Class for the keyword "try"
     this.type = 'try'
     this.parent = context
@@ -5087,7 +5088,7 @@ function $TryCtx(context){
 
 }
 
-function $UnaryCtx(context,op){
+var $UnaryCtx = $B.parser.$UnaryCtx = function(context,op){
     // Class for unary operators : - and ~
     this.type = 'unary'
     this.op = op
@@ -5102,7 +5103,7 @@ function $UnaryCtx(context,op){
     }
 }
 
-function $WithCtx(context){
+var $WithCtx = $B.parser.$WithCtx = function(context){
     // Class for keyword "with"
     this.type = 'with'
     this.parent = context
@@ -5312,7 +5313,7 @@ function $WithCtx(context){
     }
 }
 
-function $YieldCtx(context){
+var $YieldCtx = $B.parser.$YieldCtx = function(context){
     // Class for keyword "yield"
     this.type = 'yield'
     this.toString = function(){return '(yield) ' + this.tree}
@@ -5371,6 +5372,7 @@ function $YieldCtx(context){
             }
             node.parent.insert(rank, new_node)
 
+
             var for_ctx = new $ForExpr(new $NodeCtx(new_node))
             new $IdCtx(new $ExprCtx(for_ctx, 'id', false),
                 '$temp' + $loop_num)
@@ -5410,7 +5412,7 @@ function $YieldCtx(context){
     }
 }
 
-function $add_profile(node,rank){
+var $add_profile = $B.parser.$add_profile = function(node,rank){
     if(node.type == 'module'){
         var i = 0
         while(i < node.children.length){
@@ -5446,7 +5448,7 @@ function $add_profile(node,rank){
     }
 }
 
-function $add_line_num(node,rank){
+var $add_line_num = $B.parser.$add_line_num = function(node,rank){
     if(node.type == 'module'){
         var i = 0
         while(i < node.children.length){
@@ -5497,7 +5499,7 @@ function $add_line_num(node,rank){
 
 $B.$add_line_num = $add_line_num
 
-function $bind(name, scope, level){
+var $bind = $B.parser.$bind = function(name, scope, level){
     // Bind a name in scope
     if(scope.binding[name] !== undefined){
         // If the name is already bound, use the smallest level
@@ -5509,7 +5511,7 @@ function $bind(name, scope, level){
     }
 }
 
-function $previous(context){
+var $previous = $B.parser.$previous = function(context){
     var previous = context.node.parent.children[
             context.node.parent.children.length - 2]
     if(!previous || !previous.context){
@@ -5518,7 +5520,7 @@ function $previous(context){
     return previous.context.tree[0]
 }
 
-function $get_docstring(node){
+var $get_docstring = $B.parser.$get_docstring = function(node){
     var doc_string = ''
     if(node.children.length > 0){
         var firstchild = node.children[0]
@@ -5534,7 +5536,7 @@ function $get_docstring(node){
     return doc_string
 }
 
-function $get_scope(context){
+var $get_scope = $B.parser.$get_scope = function(context){
     // Return the instance of $Node indicating the scope of context
     // Return null for the root node
     var ctx_node = context.parent
@@ -5565,7 +5567,7 @@ function $get_scope(context){
     return scope
 }
 
-function $get_level(ctx){
+var $get_level = $B.parser.$get_level = function(ctx){
     var nd = $get_node(ctx),
         level = 0
     while(nd.parent !== undefined){
@@ -5575,7 +5577,7 @@ function $get_level(ctx){
     return level
 }
 
-function $get_module(context){
+var $get_module = $B.parser.$get_module = function(context){
     // Return the instance of $Node for the module where context
     // is defined
     var ctx_node = context.parent
@@ -5591,31 +5593,31 @@ function $get_module(context){
     return scope
 }
 
-function $get_src(context){
+var $get_src = $B.parser.$get_src = function(context){
     // Get the source code of context module
     var node = $get_node(context)
     while(node.parent !== undefined){node = node.parent}
     return node.src
 }
 
-function $get_node(context){
+var $get_node = $B.parser.$get_node = function(context){
     var ctx = context
     while(ctx.parent){ctx = ctx.parent}
     return ctx.node
 }
 
-function $to_js_map(tree_element) {
+var $to_js_map = $B.parser.$to_js_map = function(tree_element) {
     if(tree_element.to_js !== undefined){return tree_element.to_js()}
     throw Error('no to_js() for ' + tree_element)
 }
 
-function $to_js(tree,sep){
+var $to_js = $B.parser.$to_js = function(tree,sep){
     if(sep === undefined){sep = ','}
 
     return tree.map($to_js_map).join(sep)
 }
 
-function $mangle(name, context){
+var $mangle = $B.parser.$mangle = function(name, context){
     // If name starts with __ and doesn't end with __, and if it is defined
     // in a class, "mangle" it, ie preprend _<classname>
     if(name.substr(0, 2) == "__" && name.substr(name.length - 2) !== "__"){
@@ -5641,7 +5643,7 @@ function $mangle(name, context){
 // Function called in function $tokenize for each token found in the
 // Python source code
 
-function $transition(context, token, value){
+var $transition = $B.parser.$transition = function(context, token, value){
 
     //console.log('context '+context+' token '+token, value)
 
@@ -7445,7 +7447,7 @@ for(var i = 0; i < s_escaped.length; i++){
     is_escaped[s_escaped.charAt(i)] = true
 }
 
-function $tokenize(src, module, locals_id, parent_block, line_info){
+var $tokenize = $B.parser.$tokenize = function(src, module, locals_id, parent_block, line_info){
     var br_close = {")": "(", "]": "[", "}": "{"},
         br_stack = "",
         br_pos = []
@@ -8222,7 +8224,7 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_info){
     return root
 }
 
-function load_scripts(scripts, run_script, onerror){
+var load_scripts = $B.parser.load_scripts = function(scripts, run_script, onerror){
     // Loads and runs the scripts in the order they are placed in the page
     // Script can be internal (code inside the <script></script> tag) or
     // external (<script src="external_script.py"></script>)
@@ -8299,7 +8301,7 @@ function load_scripts(scripts, run_script, onerror){
 
 $B._load_scripts = load_scripts;
 
-function run_script(script){
+var run_script = $B.parser.run_script = function(script){
     // script has attributes url, src, name
 
     $B.$py_module_path[script.name] = script.url
@@ -8359,7 +8361,7 @@ function run_script(script){
 
 $B._run_script = run_script
 
-function brython(options){
+var brython = $B.parser.brython = function(options){
 
     // meta_path used in py_import.js
     if($B.meta_path === undefined){
@@ -8534,7 +8536,7 @@ function brython(options){
     }
 }
 
-function _run_scripts(options) {
+var _run_scripts = $B.parser._run_scripts = function(options) {
     // Save initial Javascript namespace
     var kk = Object.keys(_window)
 
