@@ -7423,7 +7423,7 @@ var $transition = $B.parser.$transition = function(context, token, value){
         case 'yield':
             if(token == 'from'){ // form "yield from <expr>"
                 if(context.tree[0].type != 'abstract_expr'){
-                    // 'from' must follow immediately "from"
+                    // 'from' must follow 'yield' immediately
                     $_SyntaxError(context, "'from' must follow 'yield'")
                 }
                 context.from = true
