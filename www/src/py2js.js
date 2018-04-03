@@ -5402,16 +5402,99 @@ var $YieldCtx = $B.parser.$YieldCtx = function(context){
     this.transform = function(node, rank){
 
         if(this.from === true){
+            /* FIXME:
+
+                RESULT = yield from EXPR
+
+             should be equivalent to
+                          _i = iter(EXPR)
+             */
+            var INDENT = " ".repeat(node.indent)
+            var replace_with =
+                INDENT + "import sys" + "\n" +
+                INDENT + "try:" + "\n" +
+                INDENT + "    _y = next(_i)" + "\n" +
+                INDENT + "except StopIteration as _e:" + "\n" +
+                INDENT + "    _r = _e.value" + "\n" +
+                INDENT + "else:" + "\n" +
+                INDENT + "    while 1:" + "\n" +
+                INDENT + "        try:" + "\n" +
+                INDENT + "            _s = yield _y" + "\n" +
+                INDENT + "        except GeneratorExit as _e:" + "\n" +
+                INDENT + "            try:" + "\n" +
+                INDENT + "                _m = _i.close" + "\n" +
+                INDENT + "            except AttributeError:" + "\n" +
+                INDENT + "                pass" + "\n" +
+                INDENT + "            else:" + "\n" +
+                INDENT + "                _m()" + "\n" +
+                INDENT + "            raise _e" + "\n" +
+                INDENT + "        except BaseException as _e:" + "\n" +
+                INDENT + "            _x = sys.exc_info()" + "\n" +
+                INDENT + "            try:" + "\n" +
+                INDENT + "                _m = _i.throw" + "\n" +
+                INDENT + "            except AttributeError:" + "\n" +
+                INDENT + "                raise _e" + "\n" +
+                INDENT + "            else:" + "\n" +
+                INDENT + "                try:" + "\n" +
+                INDENT + "                    _y = _m(*_x)" + "\n" +
+                INDENT + "                except StopIteration as _e:" + "\n" +
+                INDENT + "                    _r = _e.value" + "\n" +
+                INDENT + "                    break" + "\n" +
+                INDENT + "        else:" + "\n" +
+                INDENT + "            try:" + "\n" +
+                INDENT + "                if _s is None:" + "\n" +
+                INDENT + "                    _y = next(_i)" + "\n" +
+                INDENT + "                else:" + "\n" +
+                INDENT + "                    _y = _i.send(_s)" + "\n" +
+                INDENT + "            except StopIteration as _e:" + "\n" +
+                INDENT + "                _r = _e.value" + "\n" +
+                INDENT + "                break" + "\n" +
+                INDENT + "RESULT = _r\n"
 
             // replace "yield from X" by "for $temp in X: yield $temp"
 
-            var new_node = new $Node()
-            new_node.locals = node.locals
-            if(this.parent.type != "assign"){
-                node.parent.children.splice(rank, 1)
-            }
-            node.parent.insert(rank, new_node)
 
+            var repl = {
+                _i : create_temp_name('__i'),
+                _y : create_temp_name('__y'),
+                _r : create_temp_name('__r'),
+                _e : create_temp_name('__e'),
+                _s : create_temp_name('__s'),
+                _m : create_temp_name('__m'),
+                RESULT : create_temp_name('__RESULT')
+            }
+
+            for(attr in repl) {
+                replace_with = replace_with.replace(new RegExp(attr, 'g'), repl[attr])
+            }
+
+
+            var new_node = new $Node('node')
+            new $NodeCtx(new_node)
+            new_node.locals = node.locals
+            new_node.indent = node.indent
+            new_node.parent = node
+            new_node.module = node.module
+
+            if (this.parent.type == "assign") {
+//                 replace_with = replace_with.replace(repl.RESULT, this.parent.tree[0].to_js())
+//                 node.parent.children.splice(rank, 1)
+            } else {
+                         node.parent.children.splice(rank, 1)
+            }
+
+            add_identnode(node.parent, rank++,
+                 repl._i,
+                 new $JSCode('$B.$iter(' + this.tree[0].to_js() + ')')
+            )
+            console.log(replace_with)
+            $tokenize(node.parent, replace_with)
+            add_jscode(node.parent, -1,
+                this.parent.tree[0].to_js() + '=' + repl.RESULT+ ";"
+            )
+
+
+/*
 
             var for_ctx = new $ForExpr(new $NodeCtx(new_node))
             new $IdCtx(new $ExprCtx(for_ctx, 'id', false),
@@ -5434,7 +5517,7 @@ var $YieldCtx = $B.parser.$YieldCtx = function(context){
             // apply "transform" to the newly created "for"
             for_ctx.transform(new_node, rank)
 
-            $loop_num++
+            $loop_num++*/
 
         }else{
             add_jscode(node.parent, rank + 1,
