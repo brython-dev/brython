@@ -127,6 +127,46 @@ var add_jscode = $B.parser.add_jscode = function(parent, insert_at, code) {
     return new_node
 }
 
+// Adds a new identifier node to :param:`parent` at position :param:`insert_at`.
+// The identifier will be named :param:`name` and it will be assigned the value
+// :param:`val`, which should be a node.
+// Position may also be '-1' in which case the node is added at the end. Other
+// negative positions are not supported.
+// Returns the newly created $Node.
+//
+// Example:
+//
+// If one wants to add, e.g., the python statement
+//
+//    a = 10
+//
+// to a node, one could use the method as follows
+//
+//    add_identnode(node, -1, 'a', new $JSCode('10'))
+//
+//
+var add_identnode = $B.parser.add_identnode = function(parent, insert_at, name, val) {
+    var new_node = new $Node()
+    new_node.parent = parent
+    new_node.locals = parent.locals
+    new_node.module = parent.module
+    var new_ctx = new $NodeCtx(new_node)
+
+    var expr_ctx = new $ExprCtx(new_ctx, 'id', true)
+    var idctx = new $IdCtx(expr_ctx, name)
+    var assign = new $AssignCtx(expr_ctx)
+
+    if (insert_at === -1)
+        parent.add(new_node)
+    else
+        parent.insert(insert_at, new_node)
+
+    assign.tree[1] = val
+
+
+    return new_node
+}
+
 // Variable used for chained comparison
 var chained_comp_num = 0
 
