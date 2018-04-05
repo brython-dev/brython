@@ -1680,6 +1680,24 @@ exec(def_str, globals())
 
 assert hello() == "Hello!"
 
+# issue 801
+
+
+class L:
+    def __init__(self):
+        self._called = 0
+
+    def get_list(self):
+        self._called += 1
+        return [0]
+
+l = L()
+
+for i in l.get_list():
+    pass
+
+assert l._called == 1
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
