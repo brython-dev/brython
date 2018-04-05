@@ -3364,7 +3364,8 @@ function $IdCtx(context,value){
 
         while(true){
             if(gs.parent_block){
-                if(gs.parent_block.id == "__builtins__"){break}
+                if(gs.parent_block == $B.builtins_scope){break}
+                else if(gs.parent_block.id === undefined){break}
                 gs = gs.parent_block
             }
             search_ids.push('"' + gs.id + '"')
@@ -8071,6 +8072,7 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_info){
         module = module.__name__
     }
 
+    parent_scope = parent_scope || $B.builtins_scope
 
     var t0 = new Date().getTime(),
         is_comp = false
@@ -8279,8 +8281,7 @@ function run_script(script){
 
     try{
         // Conversion of Python source code to Javascript
-        root = $B.py2js(script.src, script.name, script.name,
-            $B.builtins_scope)
+        root = $B.py2js(script.src, script.name, script.name)
         js = root.to_js()
         //console.log('imports in', script.name, root.imports)
         if($B.debug > 1){console.log(js)}
@@ -8546,7 +8547,7 @@ function _run_scripts(options) {
         try{
             // Conversion of Python source code to Javascript
 
-            root = $B.py2js($src, module_name, module_name, $B.builtins_block)
+            root = $B.py2js($src, module_name, module_name)
             js = root.to_js()
             if($B.debug > 1){console.log(js)}
 

@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.5.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-03-23 10:59:05.125186"
-__BRYTHON__.timestamp=1521799145125
+__BRYTHON__.compiled_date="2018-04-05 09:16:46.589727"
+__BRYTHON__.timestamp=1522912606589
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -1652,7 +1652,8 @@ if(val=='__BRYTHON__' ||val=='$B'){return val}
 var innermost=$get_scope(this),scope=innermost,found=[]
 var search_ids=['"' + innermost.id + '"']
 var gs=innermost
-while(true){if(gs.parent_block){if(gs.parent_block.id=="__builtins__"){break}
+while(true){if(gs.parent_block){if(gs.parent_block==$B.builtins_scope){break}
+else if(gs.parent_block.id===undefined){break}
 gs=gs.parent_block}
 search_ids.push('"' + gs.id + '"')}
 search_ids="[" + search_ids.join(", ")+ "]"
@@ -4198,6 +4199,7 @@ return root}
 $B.py2js=function(src,module,locals_id,parent_scope,line_info){
 if(typeof module=="object"){var __package__=module.__package__
 module=module.__name__}
+parent_scope=parent_scope ||$B.builtins_scope
 var t0=new Date().getTime(),is_comp=false
 if(typeof src=='object'){is_comp=src.is_comp
 src=src.src}
@@ -4282,7 +4284,7 @@ function run_script(script){
 $B.$py_module_path[script.name]=script.url
 var root,js
 try{
-root=$B.py2js(script.src,script.name,script.name,$B.builtins_scope)
+root=$B.py2js(script.src,script.name,script.name)
 js=root.to_js()
 if($B.debug > 1){console.log(js)}
 eval(js)}catch(err){if($B.debug > 1){console.log(err)
@@ -4373,7 +4375,7 @@ var $src="",js,root
 $B.$py_module_path[module_name]=$B.script_path
 $elts.forEach(function(elt){$src +=(elt.innerHTML ||elt.textContent)})
 try{
-root=$B.py2js($src,module_name,module_name,$B.builtins_block)
+root=$B.py2js($src,module_name,module_name)
 js=root.to_js()
 if($B.debug > 1){console.log(js)}
 eval(js)
