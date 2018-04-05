@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.5.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-04-05 09:16:46.589727"
-__BRYTHON__.timestamp=1522912606589
+__BRYTHON__.compiled_date="2018-04-05 09:23:34.769775"
+__BRYTHON__.timestamp=1522913014769
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -1438,12 +1438,13 @@ new_nodes=[],pos=0}
 var new_node=new $Node()
 new_node.line_num=$get_node(this).line_num
 var it_js=iterable.to_js()
-var js='$locals["$next' + num + '"]' + ' = $B.$getattr($B.$iter(' +
-it_js + '),"__next__")'
+iterable_name='$iter'+num
+js='var ' + iterable_name + ' = ' + it_js + ';' +
+'$locals["$next' + num + '"]' + ' = $B.$getattr($B.$iter('+iterable_name+'),"__next__")'
 new $NodeJSCtx(new_node,js)
 new_nodes[pos++]=new_node
-var js='if(isinstance(' + it_js + ', dict)){$locals.$len_func' +
-num + ' = $B.$getattr(' + it_js + ', "__len__"); $locals.$len' +
+var js='if(isinstance(' + iterable_name + ', dict)){$locals.$len_func' +
+num + ' = $B.$getattr(' + iterable_name + ', "__len__"); $locals.$len' +
 num + ' = $locals.$len_func' + num + '()}else{$locals.$len' +
 num + ' = null}'
 new_nodes[pos++]=$NodeJS(js)
