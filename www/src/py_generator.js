@@ -53,6 +53,7 @@ function make_node(top_node, node){
     // for the modified function that will return iterators
     // top_node is the root node of the modified function
 
+    if (node.type === "marker") return
     // cache context.to_js
     if(node.context.$genjs){
         var ctx_js = node.context.$genjs
@@ -578,14 +579,14 @@ generator.__iter__ = function(self){
 }
 
 generator.__next__ = function(self){
-    if(self.$finished){throw _b_.StopIteration.$factory()}
+    if(self.$finished){throw _b_.StopIteration.$factory(_b_.None)}
     if(self.gi_running === true){
         throw ValueError.$factory("generator already executing")
     }
     self.gi_running = true
     if(self.next === undefined){
         self.$finished = true
-        throw _b_.StopIteration.$factory()
+        throw _b_.StopIteration.$factory(_b_.None)
     }
 
     try{
@@ -609,7 +610,7 @@ generator.__next__ = function(self){
     // Brython replaces "yield x" by "return [x, next_rank]"
     // next_rank is the rank of the function to call after this yield
 
-    if(res === undefined){throw _b_.StopIteration.$factory()}
+    if(res === undefined){throw _b_.StopIteration.$factory(_b_.None)}
     else if(res[0].__class__ === $GeneratorReturn){
         // The function may have ordinary "return" lines, in this case
         // the iteration stops

@@ -114,6 +114,24 @@ var create_temp_name = $B.parser.create_temp_name = function(prefix) {
     return _prefix + $loop_num ++;
 }
 
+/*
+ * Replaces the node :param:`replace_what` ($Node) with :param:`replace_with`
+ * in the ast tree (assumes replace_what is a child of its parent)
+ */
+var replace_node = $B.parser.replace_node = function(replace_what, replace_with){
+    var parent = replace_what.parent
+    var pos = get_rank_in_parent(replace_what)
+    parent.children[pos] = replace_with
+    replace_with.parent = parent
+}
+
+/*
+ * Returns n such that :param:`node` is the n-th child of its parent node.
+ */
+var get_rank_in_parent = $B.parser.get_rank_in_parent = function(node) {
+    return node.parent.children.indexOf(node)
+}
+
 // Adds a new block of javascript to :param:`parent` at position :param:`insert_at`.
 // Position may also be '-1' in which case the node is added at the end. Other
 // negative positions are not supported.
@@ -166,6 +184,126 @@ var add_identnode = $B.parser.add_identnode = function(parent, insert_at, name, 
 
     return new_node
 }
+
+
+// Returns the node owning this context (as a descendant)
+var $get_closest_ancestor_node = $B.parser.$get_closest_ancestor_node = function(ctx) {
+    while(ctx.parent)
+        ctx = ctx.parent
+    return ctx.node
+}
+
+
+/*
+ * This helper function is used to convert `yield from` statements into
+ * blocks of code using only `yield` (see PEP 808). When a yield from
+ * is encountered, this function creates the python code (see variable replace_with)
+ * parses it using the :function:`$tokenize` function inserting it at the current
+ * position in the tree. Finally, the yield_ctx is replaced with a $YieldFromMarkerNode
+ * which, when transformed, does the following:
+ *
+ *   1. stores the expression that is yielded from into the variable `_i`
+ *      so that it can then be used in the replacement code
+ *
+ *   2. adds a node to store the value sent to the generator
+ *      in the appropriate variable (i.e. if `x = yield from z`
+ *      the variable `x` needs to hold the value sent to the generator).
+ *
+ * Note that since the function :function:`$add_yield_from_code` is called
+ * during the parsing process when the `from` token is encountered, the expression
+ * that is yielded from is not parsed yet so that we can't populate the variable `_i`
+ * but must post-pone it to the transform method of $YieldFromMarkerNode.
+ */
+var $add_yield_from_code = $B.parser.$add_yield_from_code = function(yield_ctx) {
+    var pnode = $get_closest_ancestor_node(yield_ctx)
+    var generator = $get_scope(yield_ctx).context.tree[0]
+
+
+    pnode.yield_atoms.splice(pnode.yield_atoms.indexOf(this),1)
+    generator.yields.splice(generator.yields.indexOf(this), 1)
+
+    /*
+                  RESULT = yield from EXPR
+
+        should be equivalent to
+
+                  _i = iter(EXPR)
+    */
+
+
+    var INDENT = " ".repeat(pnode.indent)
+
+    var replace_with =
+        INDENT + "import sys"                                       + "\n" +
+        INDENT + "try:"                                             + "\n" +
+        INDENT + "    _y = next(_i)"                                + "\n" +
+        INDENT + "except StopIteration as _e:"                      + "\n" +
+        INDENT + "    _r = _e.value"                                + "\n" +
+        INDENT + "else:"                                            + "\n" +
+        INDENT + "    while 1:"                                     + "\n" +
+        INDENT + "        try:"                                     + "\n" +
+        INDENT + "            _s = yield _y"                        + "\n" +
+        INDENT + "        except GeneratorExit as _e:"              + "\n" +
+        INDENT + "            try:"                                 + "\n" +
+        INDENT + "                _m = _i.close"                    + "\n" +
+        INDENT + "            except AttributeError:"               + "\n" +
+        INDENT + "                pass"                             + "\n" +
+        INDENT + "            else:"                                + "\n" +
+        INDENT + "                _m()"                             + "\n" +
+        INDENT + "            raise _e"                             + "\n" +
+        INDENT + "        except BaseException as _e:"              + "\n" +
+        INDENT + "            _x = sys.exc_info()"                  + "\n" +
+        INDENT + "            try:"                                 + "\n" +
+        INDENT + "                _m = _i.throw"                    + "\n" +
+        INDENT + "            except AttributeError:"               + "\n" +
+        INDENT + "                raise _e"                         + "\n" +
+        INDENT + "            else:"                                + "\n" +
+        INDENT + "                try:"                             + "\n" +
+        INDENT + "                    _y = _m(*_x)"                 + "\n" +
+        INDENT + "                except StopIteration as _e:"      + "\n" +
+        INDENT + "                    _r = _e.value"                + "\n" +
+        INDENT + "                    break"                        + "\n" +
+        INDENT + "        else:"                                    + "\n" +
+        INDENT + "            try:"                                 + "\n" +
+        INDENT + "                if _s is None:"                   + "\n" +
+        INDENT + "                    _y = next(_i)"                + "\n" +
+        INDENT + "                else:"                            + "\n" +
+        INDENT + "                    _y = _i.send(_s)"             + "\n" +
+        INDENT + "            except StopIteration as _e:"          + "\n" +
+        INDENT + "                _r = _e.value"                    + "\n" +
+        INDENT + "                break"                            + "\n";
+
+    var repl = {
+        _i : create_temp_name('__i'),
+        _y : create_temp_name('__y'),
+        _r : create_temp_name('__r'),
+        _e : create_temp_name('__e'),
+        _s : create_temp_name('__s'),
+        _m : create_temp_name('__m'),
+    }
+
+    for(attr in repl)
+        replace_with = replace_with.replace(new RegExp(attr, 'g'), repl[attr])
+
+
+    $tokenize(pnode, replace_with)
+
+    params = {
+        iter_name: repl._i,
+        result_var_name: repl._r,
+        yield_expr: yield_ctx,
+    }
+
+    if (yield_ctx.parent.type === 'assign') {
+        params.save_result = true
+        params.assign_ctx = yield_ctx.parent
+        params.save_result_rank = pnode.parent.children.length-pnode.parent.children.indexOf(pnode)
+    }
+
+    replace_node(pnode, new $YieldFromMarkerNode(params))
+
+}
+
 
 // Variable used for chained comparison
 var chained_comp_num = 0
@@ -311,43 +449,37 @@ var $Node = $B.parser.$Node = function(type){
             this.parent.children.splice(rank, 1)
             var offset = 0
             this.yield_atoms.forEach(function(atom){
+                // create a line to store the yield expression in a
+                // temporary variable
+                var temp_node = new $Node()
+                var js = 'var $yield_value' + $loop_num
+                js += ' = ' + (atom.to_js() || 'None')
+                new $NodeJSCtx(temp_node, js)
+                this.parent.insert(rank + offset, temp_node)
 
-                if(atom.from){
-                    // for "yield from" use the transform method of YieldCtx
-                    atom.transform(this, rank)
-                }else{
-                    // create a line to store the yield expression in a
-                    // temporary variable
-                    var temp_node = new $Node()
-                    var js = 'var $yield_value' + $loop_num
-                    js += ' = ' + (atom.to_js() || 'None')
-                    new $NodeJSCtx(temp_node, js)
-                    this.parent.insert(rank + offset, temp_node)
+                // create a node to yield the yielded value
+                var yield_node = new $Node()
+                this.parent.insert(rank + offset + 1, yield_node)
+                var yield_expr = new $YieldCtx(new $NodeCtx(yield_node))
+                new $StringCtx(yield_expr, '$yield_value' + $loop_num)
 
-                    // create a node to yield the yielded value
-                    var yield_node = new $Node()
-                    this.parent.insert(rank + offset + 1, yield_node)
-                    var yield_expr = new $YieldCtx(new $NodeCtx(yield_node))
-                    new $StringCtx(yield_expr, '$yield_value' + $loop_num)
+                // create a node to set the yielded value to the last
+                // value sent to the generator, if any
+                var set_yield = new $Node()
+                set_yield.is_set_yield_value = true
 
-                    // create a node to set the yielded value to the last
-                    // value sent to the generator, if any
-                    var set_yield = new $Node()
-                    set_yield.is_set_yield_value = true
+                // the JS code will be set in py_utils.$B.make_node
+                js = $loop_num
+                new $NodeJSCtx(set_yield, js)
+                this.parent.insert(rank + offset + 2, set_yield)
 
-                    // the JS code will be set in py_utils.$B.make_node
-                    js = $loop_num
-                    new $NodeJSCtx(set_yield, js)
-                    this.parent.insert(rank + offset + 2, set_yield)
+                // in the original node, replace yield atom by None
+                atom.to_js = (function(x){
+                    return function(){return '$yield_value' + x}
+                    })($loop_num)
 
-                    // in the original node, replace yield atom by None
-                    atom.to_js = (function(x){
-                        return function(){return '$yield_value' + x}
-                        })($loop_num)
-
-                    $loop_num++
-                    offset += 3
-                }
+                $loop_num++
+                offset += 3
           }, this)
           // insert the original node after the yield nodes
           this.parent.insert(rank + offset, this)
@@ -430,6 +562,31 @@ var $Node = $B.parser.$Node = function(type){
         var res = new $Node(this.type)
         for(var attr in this){res[attr] = this[attr]}
         return res
+    }
+
+}
+
+var $YieldFromMarkerNode = $B.parser.$YieldFromMarkerNode = function(params) {
+    $Node.apply(this, ['marker'])
+    new $NodeCtx(this)
+    this.params = params
+    this.tree
+    this.transform = function(rank) {
+        add_identnode(this.parent, rank,
+                params.iter_name,
+                new $JSCode('$B.$iter(' + params.yield_expr.tree[0].to_js() + ')')
+        )
+        if (params.save_result) {
+            var assign_ctx = params.assign_ctx
+            assign_ctx.tree.pop()
+            var expr_ctx = new $ExprCtx(assign_ctx, 'id', true)
+            var idctx = new $IdCtx(expr_ctx, params.result_var_name)
+            assign_ctx.tree[1] = expr_ctx
+            add_jscode(this.parent, params.save_result_rank+rank+1,
+                assign_ctx.to_js()
+            )
+        }
+            return 2
     }
 
 }
@@ -5400,130 +5557,9 @@ var $YieldCtx = $B.parser.$YieldCtx = function(context){
     }
 
     this.transform = function(node, rank){
-
-        if(this.from === true){
-            /* FIXME:
-
-                RESULT = yield from EXPR
-
-             should be equivalent to
-                          _i = iter(EXPR)
-             */
-            var INDENT = " ".repeat(node.indent)
-            var replace_with =
-                INDENT + "import sys" + "\n" +
-                INDENT + "try:" + "\n" +
-                INDENT + "    _y = next(_i)" + "\n" +
-                INDENT + "except StopIteration as _e:" + "\n" +
-                INDENT + "    _r = _e.value" + "\n" +
-                INDENT + "else:" + "\n" +
-                INDENT + "    while 1:" + "\n" +
-                INDENT + "        try:" + "\n" +
-                INDENT + "            _s = yield _y" + "\n" +
-                INDENT + "        except GeneratorExit as _e:" + "\n" +
-                INDENT + "            try:" + "\n" +
-                INDENT + "                _m = _i.close" + "\n" +
-                INDENT + "            except AttributeError:" + "\n" +
-                INDENT + "                pass" + "\n" +
-                INDENT + "            else:" + "\n" +
-                INDENT + "                _m()" + "\n" +
-                INDENT + "            raise _e" + "\n" +
-                INDENT + "        except BaseException as _e:" + "\n" +
-                INDENT + "            _x = sys.exc_info()" + "\n" +
-                INDENT + "            try:" + "\n" +
-                INDENT + "                _m = _i.throw" + "\n" +
-                INDENT + "            except AttributeError:" + "\n" +
-                INDENT + "                raise _e" + "\n" +
-                INDENT + "            else:" + "\n" +
-                INDENT + "                try:" + "\n" +
-                INDENT + "                    _y = _m(*_x)" + "\n" +
-                INDENT + "                except StopIteration as _e:" + "\n" +
-                INDENT + "                    _r = _e.value" + "\n" +
-                INDENT + "                    break" + "\n" +
-                INDENT + "        else:" + "\n" +
-                INDENT + "            try:" + "\n" +
-                INDENT + "                if _s is None:" + "\n" +
-                INDENT + "                    _y = next(_i)" + "\n" +
-                INDENT + "                else:" + "\n" +
-                INDENT + "                    _y = _i.send(_s)" + "\n" +
-                INDENT + "            except StopIteration as _e:" + "\n" +
-                INDENT + "                _r = _e.value" + "\n" +
-                INDENT + "                break" + "\n" +
-                INDENT + "RESULT = _r\n"
-
-            // replace "yield from X" by "for $temp in X: yield $temp"
-
-
-            var repl = {
-                _i : create_temp_name('__i'),
-                _y : create_temp_name('__y'),
-                _r : create_temp_name('__r'),
-                _e : create_temp_name('__e'),
-                _s : create_temp_name('__s'),
-                _m : create_temp_name('__m'),
-                RESULT : create_temp_name('__RESULT')
-            }
-
-            for(attr in repl) {
-                replace_with = replace_with.replace(new RegExp(attr, 'g'), repl[attr])
-            }
-
-
-            var new_node = new $Node('node')
-            new $NodeCtx(new_node)
-            new_node.locals = node.locals
-            new_node.indent = node.indent
-            new_node.parent = node
-            new_node.module = node.module
-
-            if (this.parent.type == "assign") {
-//                 replace_with = replace_with.replace(repl.RESULT, this.parent.tree[0].to_js())
-//                 node.parent.children.splice(rank, 1)
-            } else {
-                         node.parent.children.splice(rank, 1)
-            }
-
-            add_identnode(node.parent, rank++,
-                 repl._i,
-                 new $JSCode('$B.$iter(' + this.tree[0].to_js() + ')')
-            )
-            console.log(replace_with)
-            $tokenize(node.parent, replace_with)
-            add_jscode(node.parent, -1,
-                this.parent.tree[0].to_js() + '=' + repl.RESULT+ ";"
-            )
-
-
-/*
-
-            var for_ctx = new $ForExpr(new $NodeCtx(new_node))
-            new $IdCtx(new $ExprCtx(for_ctx, 'id', false),
-                '$temp' + $loop_num)
-            this.scope.binding['$temp' + $loop_num] = true
-            for_ctx.tree[1] = this.tree[0]
-            this.tree[0].parent = for_ctx
-
-            var yield_node = new $Node()
-            new_node.locals = node.locals
-            new_node.add(yield_node)
-            new $IdCtx(new $YieldCtx(new $NodeCtx(yield_node)),
-                '$temp' + $loop_num)
-
-            var ph_node = new $Node()
-            new $NodeJSCtx(ph_node,'// placeholder for generator sent value')
-            ph_node.set_yield_value = true
-            new_node.add(ph_node)
-
-            // apply "transform" to the newly created "for"
-            for_ctx.transform(new_node, rank)
-
-            $loop_num++*/
-
-        }else{
-            add_jscode(node.parent, rank + 1,
-                '// placeholder for generator sent value'
-            ).set_yield_value = true
-        }
+        add_jscode(node.parent, rank + 1,
+            '// placeholder for generator sent value'
+        ).set_yield_value = true
     }
 
     this.to_js = function(){
@@ -5577,7 +5613,7 @@ var $add_line_num = $B.parser.$add_line_num = function(node,rank){
         while(i < node.children.length){
             i += $add_line_num(node.children[i], i)
         }
-    }else{
+    }else if(node.type !== 'marker'){
         var elt = node.context.tree[0],
             offset = 1,
             flag = true,
@@ -5647,7 +5683,7 @@ var $get_docstring = $B.parser.$get_docstring = function(node){
     var doc_string = ''
     if(node.children.length > 0){
         var firstchild = node.children[0]
-        if(firstchild.context.tree &&
+        if(firstchild.context.tree && firstchild.context.tree.length > 0 &&
                 firstchild.context.tree[0].type == 'expr'){
             var expr = firstchild.context.tree[0].tree[0]
             // Set as docstring if first child is a string, but not a f-string
@@ -6381,7 +6417,7 @@ var $transition = $B.parser.$transition = function(context, token, value){
           }
           $_SyntaxError(context, 'token ' + token + ' after ' + context.expect)
 
-      case 'expr':
+        case 'expr':
           switch(token) {
               case 'id':
               case 'imaginary':
@@ -7549,7 +7585,9 @@ var $transition = $B.parser.$transition = function(context, token, value){
                     // 'from' must follow 'yield' immediately
                     $_SyntaxError(context, "'from' must follow 'yield'")
                 }
+
                 context.from = true
+                $add_yield_from_code(context)
                 return context.tree[0]
             }
             return $transition(context.parent, token)
@@ -7646,7 +7684,7 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
                 }
                 // add a child to current node
                 current.add(new_node)
-            }else if(indent <= current.indent &&
+            }else if(indent <= current.indent && context && context.tree[0] &&
                     $indented.indexOf(context.tree[0].type) > -1 &&
                     context.tree.length < 2){
                 $pos = pos
@@ -8185,7 +8223,7 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
         $_SyntaxError(br_err[0],
             ["Unbalanced bracket " + br_stack.charAt(br_stack.length - 1)])
     }
-    if(context !== null && $indented.indexOf(context.tree[0].type) > -1){
+    if(context !== null && context.tree[0] && $indented.indexOf(context.tree[0].type) > -1){
         $pos = pos - 1
         $_SyntaxError(context, 'expected an indented block', pos)
     }
