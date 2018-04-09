@@ -314,7 +314,6 @@ Function called in case of SyntaxError
 */
 
 var $_SyntaxError = $B.parser.$_SyntaxError = function (context,msg,indent){
-    //console.log('syntax error, context '+context,' msg ',msg)
     var ctx_node = context
     while(ctx_node.type !== 'node'){ctx_node = ctx_node.parent}
     var tree_node = ctx_node.node,
@@ -5804,8 +5803,6 @@ var $mangle = $B.parser.$mangle = function(name, context){
 
 var $transition = $B.parser.$transition = function(context, token, value){
 
-    //console.log('context '+context+' token '+token, value)
-
     switch(context.type){
         case 'abstract_expr':
 
@@ -8769,8 +8766,6 @@ var _run_scripts = $B.parser._run_scripts = function(options) {
             // instance of a Python exception
             if($err.$py_error === undefined){
                 console.log('Javascript error', $err)
-                //console.log($js)
-                //for(var attr in $err){console.log(attr+': '+$err[attr])}
                 $err = _b_.RuntimeError.$factory($err + '')
             }
 
