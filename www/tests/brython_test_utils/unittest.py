@@ -18,8 +18,8 @@ class BrythonModuleTestCase(unittest.TestCase):
         status, tstart, tend, msg = utils.run_test_module(self.modname,
                                                      self.base_path)
         # TODO: Record and output generated traceback
-        self.assertEquals(1, status,
-                          "Failure detected for module '%s'\n\n"
+        if not status == 1:
+            raise self.failureException("Failure detected for module '%s'\n\n"
                           "%s" % (self.modname, msg))
 
 
