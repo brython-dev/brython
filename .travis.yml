@@ -1,5 +1,8 @@
 language: javascript
 
+addons:
+    firefox: "59.0"
+
 cache:
   directories:
     - "travis_phantomjs"
