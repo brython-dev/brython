@@ -22,12 +22,38 @@
 var _b_ = $B.builtins
 eval($B.InjectBuiltins())
 
+function rstrip(s, strip_chars) {
+    var _chars = strip_chars || " \t\n";
+    var nstrip = 0, len = s.length;
+    while( nstrip < len && _chars.indexOf(s.charAt(len-1-nstrip)) > -1 ) nstrip ++;
+    return s.substr(0, len-nstrip)
+}
+
+// Code to store/restore local namespace
+//
+// In generators, the namespace is stored in an attribute of the
+// object __BRYTHON__ until the iterator is exhausted, so that it
+// can be restored in the next iteration
+function jscode_namespace(iter_name, action) {
+    var _clean= '';
+    if (action === 'store') {
+        _clean = ' = {}'
+    }
+    return 'for(var attr in this.blocks){' +
+              'eval("var " + attr + " = this.blocks[attr]")'+
+           '};' +
+           'var $locals_' + iter_name + ' = this.env' + _clean + ', '+
+               '$local_name = "' + iter_name + '", ' +
+               '$locals = $locals_' + iter_name + ';'
+}
+
 function make_node(top_node, node){
 
     // Transforms a node from the original generator function into a node
     // for the modified function that will return iterators
     // top_node is the root node of the modified function
 
+    if (node.type === "marker") return
     // cache context.to_js
     if(node.context.$genjs){
         var ctx_js = node.context.$genjs
@@ -42,11 +68,7 @@ function make_node(top_node, node){
         // object __BRYTHON__ until the iterator is exhausted, so that it
         // can be restored in the next iteration
         var iter_name = top_node.iter_id
-        ctx_js = 'for(var attr in this.blocks){' +
-            'eval("var " + attr + " = this.blocks[attr]");};' +
-            'var $locals_' + iter_name + ' = this.env = {}' +
-            ', $local_name = "' + iter_name +
-            '", $locals = $locals_' + iter_name + ';'
+        ctx_js = jscode_namespace(iter_name, 'store')
     }
 
     // Mark some node types (try, except, finally, if, elif, else)
@@ -85,9 +107,7 @@ function make_node(top_node, node){
             // Replace "yield value" by "return [value, node_id]"
 
             var yield_node_id = top_node.yields.length
-            while(ctx_js.charAt(ctx_js.length - 1) == ";"){
-                ctx_js = ctx_js.substr(0, ctx_js.length - 1)
-            }
+            ctx_js = rstrip(ctx_js, ';')
             var res =  "return [" + ctx_js + ", " + yield_node_id + "]"
             new_node.data = res
             top_node.yields.push(new_node)
@@ -100,7 +120,7 @@ function make_node(top_node, node){
             // Here, this line is replaced by a test on the attribute
             // sent_value of __BRYTHON__.modules[iter_id]. This attribute is
             // set when methods send() or throw() of the generators are
-            // inovked
+            // invoked
 
             var yield_node_id = top_node.yields.length
             var js = "var sent_value = this.sent_value || None;"
@@ -413,10 +433,7 @@ function make_next(self, yield_node_id){
     var parent_scope = self.func_root
 
     // restore namespaces
-    var js =  'for(var attr in this.blocks){eval("var " + attr + " = ' +
-        'this.blocks[attr]");}; var $locals_' + self.iter_id + ' = this.env,' +
-        ' $locals = $locals_' + self.iter_id + ', $local_name = "' +
-        self.iter_id + '";'
+    var js = jscode_namespace(self.iter_id, 'restore')
 
     fnode.addChild(new $B.genNode(js))
     // add a node to enter the frame
@@ -562,14 +579,14 @@ generator.__iter__ = function(self){
 }
 
 generator.__next__ = function(self){
-    if(self.$finished){throw _b_.StopIteration.$factory()}
+    if(self.$finished){throw _b_.StopIteration.$factory(_b_.None)}
     if(self.gi_running === true){
         throw ValueError.$factory("generator already executing")
     }
     self.gi_running = true
     if(self.next === undefined){
         self.$finished = true
-        throw _b_.StopIteration.$factory()
+        throw _b_.StopIteration.$factory(_b_.None)
     }
 
     try{
@@ -593,7 +610,7 @@ generator.__next__ = function(self){
     // Brython replaces "yield x" by "return [x, next_rank]"
     // next_rank is the rank of the function to call after this yield
 
-    if(res === undefined){throw _b_.StopIteration.$factory()}
+    if(res === undefined){throw _b_.StopIteration.$factory(_b_.None)}
     else if(res[0].__class__ === $GeneratorReturn){
         // The function may have ordinary "return" lines, in this case
         // the iteration stops

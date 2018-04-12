@@ -1613,6 +1613,26 @@ class A:
 
 assert '{0}'.format(A()) == 'an A'
 
+# issue 765
+def sub_gen(expect):
+    res = yield None
+    assert res == expect, "Value should be sent to the inner generator"
+    return res
+
+def main_gen(expect):
+    r = yield from sub_gen(expect)
+    assert r == expect, "Value returned from the inner generator should be result of yield from expression"
+    return r
+
+expect_value = 30
+g = main_gen(expect_value)
+assert g.send(None) is None
+try:
+    g.send(expect_value)
+    assert False, "Return from iterator should send StopIteration"
+except StopIteration as e:
+    assert e.value == expect_value
+
 # issue 776
 def f():
     d = {
