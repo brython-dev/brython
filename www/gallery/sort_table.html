@@ -75,7 +75,7 @@ orders = {}
 
 def sort_by_col(evt, numeric=False):
     cell = evt.target
-    
+
     # get title cell
     th_elt = cell.closest('TH')
 
@@ -113,56 +113,58 @@ def sort_by_col(evt, numeric=False):
 
     t <= rows
 
-lines = ['Allemagne','Berlin',357026,81.8,
-'Autriche','Vienne',83871,8.40,
-'Belgique','Bruxelles',30518,10.91,
-'Bulgarie','Sofia',110944,7.50,
-'Chypre','Nicosie',9251,0.80,
-'Danemark','Copenhague',43098,5.56,
-'Espagne','Madrid',505997,46.15,
-'Estonie','Tallinn',43698,1.34,
-'Finlande','Helsinki',338144,5.37,
-'France','Paris',544000,65.07,
-'Grèce','Athènes',131625,11.32,
-'Hongrie','Budapest',93029,9.98,
-'Irlande','Dublin',69797,4.48,
-'Italie','Rome',301336,60.62,
-'Lettonie','Riga',64589,2.22,
-'Lituanie','Vilnius',62678,3.24,
-'Luxembourg','Luxembourg',2586,0.51,
-'Malte','La Valette',315,0.41,
-'Pays-Bas','Amsterdam',41528,16.65,
-'Pologne','Varsovie',312685,38.20,
-'Portugal','Lisbonne',91946,10.63,
-'République tchèque','Prague',78867,10.53,
-'Roumanie','Bucarest',238391,21.41,
-'Royaume-Uni','Londres',243820,62.43,
-'Slovaquie','Bratislava',49034,5.43,
-'Slovénie','Ljubljana',20273,2.05,
-'Suède','Stockholm',441369,9.41]
+lines = [
+    "Allemagne", "Berlin", 357026, 81.8,
+    "Autriche", "Vienne", 83871, 8.40,
+    "Belgique", "Bruxelles", 30518, 10.91,
+    "Bulgarie", "Sofia", 110944, 7.50,
+    "Chypre", "Nicosie", 9251, 0.80,
+    "Danemark", "Copenhague", 43098, 5.56,
+    "Espagne", "Madrid", 505997, 46.15,
+    "Estonie", "Tallinn", 43698, 1.34,
+    "Finlande", "Helsinki", 338144, 5.37,
+    "France", "Paris", 544000, 65.07,
+    "Grèce", "Athènes", 131625, 11.32,
+    "Hongrie", "Budapest", 93029, 9.98,
+    "Irlande", "Dublin", 69797, 4.48,
+    "Italie", "Rome", 301336, 60.62,
+    "Lettonie", "Riga", 64589, 2.22,
+    "Lituanie", "Vilnius", 62678, 3.24,
+    "Luxembourg", "Luxembourg", 2586, 0.51,
+    "Malte", "La Valette", 315, 0.41,
+    "Pays-Bas", "Amsterdam", 41528, 16.65,
+    "Pologne", "Varsovie", 312685, 38.20,
+    "Portugal", "Lisbonne", 91946, 10.63,
+    "République tchèque", "Prague", 78867, 10.53,
+    "Roumanie", "Bucarest", 238391, 21.41,
+    "Royaume-Uni", "Londres", 243820, 62.43,
+    "Slovaquie", "Bratislava", 49034, 5.43,
+    "Slovénie", "Ljubljana", 20273, 2.05,
+    "Suède", "Stockholm", 441369, 9.41
+]
 
 doc <= html.H2("Pays d'Europe")
 
 table = html.TABLE(cellspacing=0)
 t = html.TBODY()
 title = html.TR()
-link = html.A('\u2191\u2193', href="#", Class="sort_link")
-link.bind('click',sort_by_col)
+link = html.A("\u2191\u2193", href="#", Class="sort_link")
+link.bind("click", sort_by_col)
 
-link_num = html.A('\u2191\u2193', href="#", Class="sort_link")
-link_num.bind('click',lambda ev:sort_by_col(ev,True))
+link_num = html.A("\u2191\u2193", href="#", Class="sort_link")
+link_num.bind("click", lambda ev:sort_by_col(ev,True))
 link1 = link.clone()
-title <= html.TH('Pays'+link)
-title <= html.TH('Capitale'+link.clone())
-title <= html.TH('Superficie'+link_num)
-title <= html.TH('Population'+link_num.clone())
+title <= html.TH("Pays" + link)
+title <= html.TH("Capitale" + link.clone())
+title <= html.TH("Superficie" + link_num)
+title <= html.TH("Population" + link_num.clone())
 t <= title
 
 rows = []
-for i in range(int(len(lines)/4)):
+for i in range(int(len(lines) / 4)):
     row = html.TR()
-    row <= (html.TD(lines[4*i+j]) for j in range(2))
-    row <= (html.TD(lines[4*i+j],align="right") for j in range(2, 4))
+    row <= (html.TD(lines[4 * i + j]) for j in range(2))
+    row <= (html.TD(lines[4 * i + j], align="right") for j in range(2, 4))
     rows.append(row)
 
 t <= rows
@@ -170,7 +172,8 @@ t <= rows
 table <= t
 doc <= table
 
-foot = html.P()+html.I('Ecrit en '+html.A('Brython',href="http://www.brython.info"))
+foot = html.P()+html.I("Ecrit en " +
+    html.A("Brython",href="http://www.brython.info"))
 
 doc <= foot
 

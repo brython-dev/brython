@@ -39,20 +39,21 @@
 
 from browser import document
 
-@document['user_in'].bind('keyup')
 def render(event):
 
-    '''This function converts its input, a string of decimal digits, into a
+    """This function converts its input, a string of decimal digits, into a
     barcode, using the interleaved 2 of 5 format. The input string must not
     contain an odd number of digits. The output is an SVG string.
 
     Wikipedia [ITF Format]: http://en.wikipedia.org/wiki/Interleaved_2_of_5
-    '''
+    """
 
     digits = event.target.value
 
-    if len(digits) % 2 != 0: return
-    if [ digit for digit in digits if digit not in '0123456789' ]: return
+    if len(digits) % 2 != 0:
+        return
+    if [digit for digit in digits if digit not in "0123456789"]:
+        return
 
     top = '<svg height="58" width="{0}" style="background:white">'
     bar = '<rect x="{0}" y="4" width="{1}" height="50" style="fill:black"/>'
@@ -77,29 +78,30 @@ def render(event):
 
         if i == len(digits): return bits
 
-        for odd, even in zip(byte(i), byte(i+1)): bits.extend([odd, even])
+        for odd, even in zip(byte(i), byte(i + 1)): bits.extend([odd, even])
 
-        return encode(bits, i+2)
+        return encode(bits, i + 2)
 
     def svg(bits, i=0, x=4):
 
         '''Converts the list of ints returned by `encode` to a list of SVG
         elements that can be joined to form an SVG string.'''
 
-        if i == len(bits): return barcode + ['</svg>']
+        if i == len(bits): return barcode + ["</svg>"]
 
-        odd, even = bits[i:i+2]
+        odd, even = bits[i:i + 2]
         barcode.append(bar.format(x, odd))
 
-        return svg(bits, i+2, x+odd+even)
+        return svg(bits, i + 2, x + odd + even)
 
     # The call to `encode` passes in the itf start code, and the itf end
     # code's added to the list that `encode` returns. The complete list
     # is passed to `svg`, which returns a list of SVG element strings
     # that're joined with newlines to create the actual SVG output.
 
-    document['barcode'].html = '\n'.join(svg(encode([2, 2, 2, 2]) + [4, 2, 2, 0]))
+    document["barcode"].html = "\n".join(svg(encode([2, 2, 2, 2]) + [4, 2, 2, 0]))
 
+document["user_in"].bind("keyup", render)
 </script>
 
 </body>

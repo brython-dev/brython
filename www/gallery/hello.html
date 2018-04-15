@@ -12,9 +12,10 @@
 <script type="text/python">
 from browser import document, alert
 
-@document["test"].bind("click")
 def echo(ev):
     alert("Hello {} !".format(document["zone"].value))
+
+document["test"].bind("click", echo)
 </script>
 <p>Your name is : <input id="zone" autocomplete="off">
 <button id="test">clic !</button>

@@ -33,11 +33,13 @@ cliquer ailleurs dans la page pour que le champ de saisie perde le focus.
 ```exec_on_load
 from browser import document
 
-@document["entry"].bind("focus")
 def focus(ev):
-    document["traceFocus"].text = f'{ev.target.id} reçoit le focus'
+    document["traceFocus"].text = f"{ev.target.id} reçoit le focus"
 
-@document['entry'].bind("blur")
+document["entry"].bind("focus", focus)
+
 def blur(ev):
-    document["traceFocus"].text = f'{ev.target.id} perd le focus'
+    document["traceFocus"].text = f"{ev.target.id} perd le focus"
+
+document["entry"].bind("blur", blur)
 ```

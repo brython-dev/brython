@@ -62,13 +62,13 @@ dest.style.left = "{}px".format(150 + panel.abs_left)
 # déplacé quand le glissement commence
 m0 = [None, None]
 
-@source.bind("mouseover")
 def mouseover(ev):
     """Quand la souris passe sur l'objet déplaçable, changer le curseur."""
     print("voilà la souris !")
     ev.target.style.cursor = "pointer"
 
-@source.bind("dragstart")
+source.bind("mouseover", mouseover)
+
 def dragstart(ev):
     """Fonction appelée quand l'utilisateur commence à déplacer l'objet."""
     global m0
@@ -82,7 +82,8 @@ def dragstart(ev):
     # permet à l'object d'être déplacé dans l'objet destination
     ev.dataTransfer.effectAllowed = "move"
 
-@dest.bind("dragover")
+source.bind("dragstart", dragstart)
+
 def dragover(ev):
     """Fonction appelée quand l'objet déplaçable vient au-dessus de la zone de
     destination.
@@ -91,7 +92,8 @@ def dragover(ev):
     # il faut désactiver le comportement par défaut pour ce genre d'événement
     ev.preventDefault()
 
-@dest.bind("drop")
+dest.bind("dragover", dragover)
+
 def drop(ev):
     """Fonction attachée à la zone de destination.
     Elle définit ce qui se passe quand l'objet est déposé, c'est-à-dire
@@ -110,4 +112,6 @@ def drop(ev):
     elt.unbind("mouseover")
     elt.style.cursor = "auto"
     ev.preventDefault()
+
+dest.bind("drop", drop)
 ```

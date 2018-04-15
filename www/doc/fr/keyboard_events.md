@@ -56,10 +56,10 @@ Saisir du texte dans le champ ci-dessous, en appuyant ou pas sur la touche Alt
 ```exec_on_load
 from browser import document
 
-@document["altKey"].bind("keypress")
 def altKey(ev):
-    document["traceAltKey"].text = f'altKey : {ev.altKey}'
+    document["traceAltKey"].text = f"altKey : {ev.altKey}"
 
+document["altKey"].bind("keypress", altKey)
 ```
 </td>
 </tr>
@@ -85,11 +85,12 @@ Entrer du texte dans le champ ci-dessous. Notez qu'on lit le caractère par
 ```exec_on_load
 from browser import document
 
-@document["charCode"].bind("keypress")
 def keypress(ev):
     trace = document["traceCharCode"]
     char = chr(ev.charCode)
-    trace.text = f'charCode : {ev.charCode}, character: {char}'
+    trace.text = f"charCode : {ev.charCode}, character: {char}"
+
+document["charCode"].bind("keypress", keypress)
 ```
 </td>
 
@@ -117,10 +118,11 @@ Saisir du texte dans le champ ci-dessous, en appuyant ou pas sur la touche Ctrl
 ```exec_on_load
 from browser import document
 
-@document["ctrlKey"].bind("keypress")
 def keypress(ev):
-    document["traceCtrlKey"].text = f'ctrlKey : {ev.ctrlKey}'
+    document["traceCtrlKey"].text = f"ctrlKey : {ev.ctrlKey}"
     ev.preventDefault()
+
+document["ctrlKey"].bind("keypress", keypress)
 ```
 Notez que `ev.preventDefault()` est appelé pour éviter le comportement par
 défaut associé à certains raccourcis clavier qui utilisent la touche Ctrl.
@@ -161,7 +163,7 @@ from browser import document
 
 def keyCode(ev):
     trace = document["traceKeyCode"]
-    trace.text = f'event: {ev.type}, keyCode: {ev.keyCode}'
+    trace.text = f"event: {ev.type}, keyCode: {ev.keyCode}"
     ev.stopPropagation()
 
 document["keyCodeKeydown"].bind("keydown", keyCode)
@@ -196,9 +198,10 @@ Majuscule
 ```exec_on_load
 from browser import document
 
-@document["shiftKey"].bind("keypress")
 def keypress(ev):
     document["traceShiftKey"].text = f'shiftKey : {ev.shiftKey}'
+
+document["shiftKey"].bind("keypress", keypress)
 ```
 </td>
 </tr>
@@ -244,13 +247,13 @@ from browser import document
 trace = document["traceWhich"]
 
 def which(ev):
-    trace.html = f'event : {ev.type}<br> which : {ev.which}'
-    if ev.type == 'keypress':
-        trace.html += f'<br>character : {chr(ev.which)}'
+    trace.html = f"event : {ev.type}<br> which : {ev.which}"
+    if ev.type == "keypress":
+        trace.html += f"<br>character : {chr(ev.which)}"
 
-document['whichKeydown'].bind('keydown', which)
-document['whichKeypress'].bind('keypress', which)
-document['whichKeyup'].bind('keyup', which)
+document["whichKeydown"].bind("keydown", which)
+document["whichKeypress"].bind("keypress", which)
+document["whichKeyup"].bind("keyup", which)
 ```
  </td>
  </tr>

@@ -15,24 +15,26 @@ from browser import document
 from browser import alert
 
 def myevent(ev):
-    alert('ça marche !')
+    alert("ça marche !")
 
 def compteur():
     alert('%s événement(s) attaché(s) à "click"'
-        %len(document['myblock'].events('click')))
+        %len(document["myblock"].events("click")))
 
-@document['attache'].bind('click')
 def attache(ev):
-    document['myblock'].bind('click', myevent)
+    document["myblock"].bind("click", myevent)
     compteur()
-    document['mymessage'].text='événement attaché, cliquer pour voir...'
+    document["mymessage"].text = "événement attaché, cliquer pour voir..."
 
-@document['detache'].bind('click')
+document["attache"].bind("click", attache)
+
 def detache(ev):
-    if document['myblock'].events('click'):
-        document['myblock'].unbind('click', myevent)
+    if document["myblock"].events("click"):
+        document["myblock"].unbind("click", myevent)
         compteur()
-        document['mymessage'].text='clic désactivé'
+        document["mymessage"].text = "clic désactivé"
+
+document["detache"].bind("click", detache)
 ```
 
 </td>

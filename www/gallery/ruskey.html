@@ -20,7 +20,7 @@ Phonetic ordering of cyrillic (фонетических упорядочение
 We are matching the latin alphabet, uppercase, then lowercase
 """
 
-CYR =  'АБЦДЕФГЧИЙКЛМНОПЯРСТУВЖХЫЗШЩЭЮЁЬЪабцдефгчийклмнопярстувжхызшщэюёьъ'
+CYR =  "АБЦДЕФГЧИЙКЛМНОПЯРСТУВЖХЫЗШЩЭЮЁЬЪабцдефгчийклмнопярстувжхызшщэюёьъ"
 position = 0
 
 
@@ -31,10 +31,10 @@ def printkey_button(ev):
 def printkey(letter):
     global position
     try:
-        span = doc['x%s' %position]
+        span = doc[f"x{position}"]
         span.value = letter
     except KeyError:
-        doc <= SPAN(letter, id = 'x%s' %position)
+        doc <= SPAN(letter, id = f"x{position}")
     position += 1
 
 def deletekey():
@@ -43,7 +43,7 @@ def deletekey():
     if position < 0:
         position = 0
     else:
-        del doc['x%s' %position]
+        del doc[f"x{position}"]
 
 
 def keydown(e):
@@ -56,7 +56,7 @@ def keydown(e):
     if key == 8: 
         deletekey()
     elif key == 32:
-        printkey(' ')
+        printkey(" ")
     elif key in range(48, 58):
         printkey(str(key - 48))
     elif key >= offset:
@@ -75,9 +75,9 @@ def drawkeyboard():
     row = TR()
     for letter in CYR:
         b = BUTTON(letter)
-        b.bind('click',printkey_button)
+        b.bind("click", printkey_button)
         row <= TD(b)
-        if letter in ('Я','Ъ','я'):
+        if letter in ("Я","Ъ","я"):
             tbody <= row
             row=TR()
     tbody <= row
@@ -87,8 +87,8 @@ def drawkeyboard():
 # Draw keyboard and set key events
 
 drawkeyboard()
-doc.bind('keydown',keydown)
-doc.bind('keyup',keyup)
+doc.bind("keydown", keydown)
+doc.bind("keyup", keyup)
 
 </script>
 <br />

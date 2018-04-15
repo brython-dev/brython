@@ -16,23 +16,25 @@ dit comment réagir à un clic. Pour cela, il faut définir une fonction qui
 sera appelée quand on clique, en utilisant la syntaxe :
 
 ```python
-@btn.bind("click")
 def montre(ev):
     ...
+
+btn.bind("click", montre)
 ```
 
-`btn` est une référence à l'élement. L'argument de `bind` est le type
-d'événement auquel le bouton doit réagir : les pages suivantes donnent de
-nombreux exemples d'événement relatifs à la souris, au clavier, au
-glisser-déposer, etc.
+`btn` est une référence à l'élement. Les arguments de `bind` sont le type
+d'événement auquel le bouton doit réagir, et la fonction à appeler quand cet
+évenement se produit. Les pages suivantes donnent de nombreux exemples
+d'événements relatifs à la souris, au clavier, au glisser-déposer, etc.
 
 La fonction décorée prend un seul argument, une instance de la classe
 `DOMEvent` (définie dans le module **browser**). Par exemple :
 
 ```python
-@btn.bind("click")
 def montre(ev):
     print('ouah !')
+
+btn.bind("click", montre)
 ```
 
 (rappelez-vous que pour voir les résultats de `print` il faut ouvrir la
@@ -50,22 +52,10 @@ Par exemple, si on veut afficher le texte affiché sur le bouton, et la
 position de la souris :
 
 ```python
-@btn.bind("click")
 def montre(ev):
     print(ev.target.text, ev.x, ev.y)
-```
 
-Si le corps de la fonction à déclencher n'est pas présent dans le script (par
-exemple parce qu'elle est importée), ou si on veut associer le même gestionnaire
-d'événements pour une liste d'éléments, on peut utiliser une variante de
-la méthode `bind()` :
-
-```python
-def action(ev):
-    ...
-
-for element in elements:
-    element.bind("click", action)
+btn.bind("click", montre)
 ```
 
 Interface
@@ -73,13 +63,10 @@ Interface
 Pour la gestion des événements, les éléments d'une page possèdent les
 méthodes suivantes :
 
-<code>elt.bind(_nom_evt[, gestionnaire]_)</code>
+<code>elt.bind(_nom_evt, gestionnaire_)</code>
 
-> - si une fonction _gestionnaire_ est spécifiée, cette fonction est appelée
-> quand l'événement _nom_evt_ se produit sur l'élément
-
-> - si la fonction n'est pas précisée, retourne un décorateur qui associe la
-> fonction décorée à l'événement _nom_evt_
+Indique que la fonction _gestionnaire_ est appelée quand l'événement
+_nom_evt_ se produit sur l'élément.
 
 <code>elt.unbind(_nom\_evt[, gest_])</code>
 
@@ -119,7 +106,7 @@ doc['_bubbles'].bind('click',lambda ev:alert('bubbles : %s ' %ev.bubbles))
 <td>
 <button id="_cancelable">test</button>
 <script type="text/python">
-doc['_cancelable'].bind('click',lambda ev:alert('cancelable : %s ' %ev.cancelable))
+doc['_cancelable'].bind('click', lambda ev:alert('cancelable : %s ' %ev.cancelable))
 </script>
 </td>
 </tr>
@@ -217,10 +204,10 @@ et les méthodes suivantes
 ```exec_on_load
 from browser import document
 
-def annule(ev):
+def click(ev):
     ev.preventDefault()
 
-document["disabled_cbox"].bind('click',annule)
+document["disabled_cbox"].bind("click", click)
 ```
 </blockquote></blockquote>
 >> résultat :
@@ -247,15 +234,15 @@ document["disabled_cbox"].bind('click',annule)
 from browser import document, alert
 
 def show(ev):
-    alert('clic sur %s' %ev.currentTarget.id)
+    alert("clic sur %s" %ev.currentTarget.id)
 
 def show_stop(ev):
-    alert('clic sur %s' %ev.currentTarget.id)
+    alert("clic sur %s" %ev.currentTarget.id)
     ev.stopPropagation()
 
-document["jaune"].bind('click',show)
-document["bleu"].bind('click',show)
-document["vert"].bind('click',show_stop)
+document["jaune"].bind("click", show)
+document["bleu"].bind("click", show)
+document["vert"].bind("click", show_stop)
 ```
 </blockquote>
 

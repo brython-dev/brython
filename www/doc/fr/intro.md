@@ -25,11 +25,12 @@ Un exemple simple :
 <script type="text/python">
 from browser import document, alert
 
-# associe l'événement "click" sur le bouton à la fonction echo
-@document["echo"].bind("click")
-def echo(ev):
+# associe une fonction à l'événement "click" sur le bouton
+
+def click(ev):
     alert(document["zone"].value)
 
+document["echo"].bind("click")
 </script>
 <input id="zone">
 <button id="echo">click !</button>
@@ -44,11 +45,11 @@ essayez :<p>
 <script type="text/python">
 from browser import document, alert
 
-# bind event 'click' on button to function echo
-@document["echo"].bind("click")
-def echo(ev):
+# bind event 'click' on button to function click
+def click(ev):
     alert(document["zone"].value)
 
+document["echo"].bind("click", click)
 </script>
 
 <input id="zone" autocomplete="off">

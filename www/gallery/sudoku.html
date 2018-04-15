@@ -63,7 +63,7 @@ def entry_keypress(ev):
         # jump to next cell
         cell_rank = int(cell.id[1:])
         if cell_rank < 80:
-            next_cell = puzzle.get(selector='TD')[cell_rank + 1]
+            next_cell = puzzle.get(selector="TD")[cell_rank + 1]
             make_input(next_cell)
 
 def entry_keydown(ev):
@@ -80,17 +80,17 @@ def entry_keydown(ev):
         cell_rank = int(cell.id[1:])
         if not ev.shiftKey:
             if cell_rank < 80:
-                next_cell = puzzle.get(selector='TD')[cell_rank + 1]
+                next_cell = puzzle.get(selector="TD")[cell_rank + 1]
                 make_input(next_cell)
         else: # shift tab
             if cell_rank > 0:
-                next_cell = puzzle.get(selector='TD')[cell_rank - 1]
+                next_cell = puzzle.get(selector="TD")[cell_rank - 1]
                 make_input(next_cell)
 
 def end_entry(ev):
     global current_cell
     if current_cell is not None:
-        inputs = current_cell.get(selector='INPUT')
+        inputs = current_cell.get(selector="INPUT")
         if inputs:
             value = inputs[0].value
             current_cell.clear()
@@ -108,11 +108,10 @@ def make_input(cell):
     value = cell.text.strip()
     cell.clear()
     input = html.INPUT(value=value,
-        style={'width':'1.3em','padding':'0px'})
+        style={"width": "1.3em", "padding": "0px"})
     cell <= input
-    input.bind('keydown', entry_keydown)
-    input.bind('keypress', entry_keypress)
-    #input.bind('blur', entry_blur)
+    input.bind("keydown", entry_keydown)
+    input.bind("keypress", entry_keypress)
     input.focus()
     input.select()
     current_cell = cell
@@ -130,29 +129,29 @@ def make_grid (grid):
     srow = -1
     for i,val in enumerate(grid):
         row, column = divmod(i, 9)
-        if row>srow:
-            if row%3==0:
+        if row > srow:
+            if row % 3 == 0:
                 tb = html.TBODY()
                 t <= tb
             line = html.TR()
             tb <= line
             srow = row
-        if val == '0':
-            val = ' '
-        cell = html.TD(val,id='i%s' %i)
-        cell.bind('click', entry)
+        if val == "0":
+            val = " "
+        cell = html.TD(val, id="i%s" %i)
+        cell.bind("click", entry)
         cell.style.contentEditable = True
-        if column%3==0:
-            cell.style.borderLeftWidth = '1px'
-        if column==8:
-            cell.style.borderRightWidth = '1px'
+        if column % 3 == 0:
+            cell.style.borderLeftWidth = "1px"
+        if column == 8:
+            cell.style.borderRightWidth = "1px"
         line <= cell
 
     current_cell = None
     return t
 
 # example from http://magictour.free.fr/msk_009
-grids = [line.replace('.','0').strip() for line in open('sudoku_grids.txt')]
+grids = [line.replace(".", "0").strip() for line in open("sudoku_grids.txt")]
 
 puzzle = html.SPAN(style={"float":"left"})
 puzzle <= make_grid(choice(grids))
@@ -160,13 +159,12 @@ document <= puzzle
 
 buttons = html.SPAN(style={"float":"left"})
 
-b_solve = html.BUTTON('Solve')
+b_solve = html.BUTTON("Solve")
 buttons <= html.DIV(b_solve)
 
-@b_solve.bind('click')
 def solve(ev):
-    line = ''.join(cell.text or ' ' for cell in puzzle.get(selector='TD'))
-    line = line.replace(' ','0')
+    line = "".join(cell.text or " " for cell in puzzle.get(selector="TD"))
+    line = line.replace(" ","0")
     try:
         solution = sudoku.sudoku99(line)
         result.clear()
@@ -175,27 +173,31 @@ def solve(ev):
         result.clear()
         result <= "No solution !"
 
+b_solve.bind("click", solve)
+
 buttons <= html.P()
 
-b_change = html.BUTTON('Load random grid')
+b_change = html.BUTTON("Load random grid")
 buttons <= html.DIV(b_change)
 
-@b_change.bind('click')
 def change_grid(ev):
     puzzle.clear()
     puzzle <= make_grid(choice(grids))
 
-b_clear = html.BUTTON('Enter new grid')
+b_change.bind("click", change_grid)
+
+b_clear = html.BUTTON("Enter new grid")
 buttons <= html.DIV(b_clear)
 
-@b_clear.bind('click')
 def clear_grid(ev):
     result.clear()
-    cells = puzzle.get(selector='TD')
+    cells = puzzle.get(selector="TD")
     for cell in cells:
-        cell.text = ' '
-    alert('Enter digits in the puzzle. Use TAB key to navigate')
+        cell.text = " "
+    alert("Enter digits in the puzzle. Use TAB key to navigate")
     make_input(cells[0])
+
+b_clear.bind("click", clear_grid)
 
 document <= buttons
 

@@ -63,9 +63,9 @@ class Request(ajax.Request):
 
 def fake_qs(method):
     if method == "GET":
-        return '?foo=%s' %time.time()
+        return "?foo=%s" %time.time()
     else:
-        return ''
+        return ""
 
 def go(url, method="GET"):
 
@@ -73,15 +73,15 @@ def go(url, method="GET"):
         Request(url+fake_qs(method), method=method, timeout=7)
     else:
         Request(url+fake_qs(method), method=method, timeout=7,
-            headers={'Content-type':'application/x-www-form-urlencoded'},
-            data={'foo': 34}
+            headers={"Content-type":"application/x-www-form-urlencoded"},
+            data={"foo": 34}
         )
 
 # bindings
-doc['get_text'].bind('click',lambda ev:go('ajax_data.txt'))
-doc['i_dont_exist'].bind('click',lambda ev:go('i_dont_exist.txt'))
-doc['get_test'].bind('click',lambda ev:go('/cgi-bin/get_test.py'))
-doc['post_test'].bind('click',lambda ev:go('/cgi-bin/post_test.py', 'post'))
+doc["get_text"].bind("click", lambda ev:go("ajax_data.txt"))
+doc["i_dont_exist"].bind("click", lambda ev:go("i_dont_exist.txt"))
+doc["get_test"].bind("click", lambda ev:go("/cgi-bin/get_test.py"))
+doc["post_test"].bind("click", lambda ev:go("/cgi-bin/post_test.py", "post"))
 </script>
 
 </body>

@@ -13,20 +13,19 @@ from browser import document, timer
 
 FIRST_TIME = True
 def inform(*args):
-    document["status-info"].html = ''.join(args)
+    document["status-info"].html = "".join(args)
 
 def _write(*args):
-    document["turtle-print-output"].html += ''.join(args)
+    document["turtle-print-output"].html += "".join(args)
 def __write(*args):
-    document["turtle-print-output"].html += '<span class="error">' + ''.join(args) + '</span>'
+    document["turtle-print-output"].html += '<span class="error">' + "".join(args) + "</span>"
 
 sys.stdout.write = _write
 sys.stderr.write = __write
 
 def clear_print():
-    document["turtle-print-output"].html = ''
+    document["turtle-print-output"].html = ""
 
-@document["run"].bind("click")
 def run_code(ev):
     global FIRST_TIME
     if FIRST_TIME:
@@ -34,9 +33,11 @@ def run_code(ev):
         inform("Importing turtle module for the first time and processing; please wait")
     else:
         inform("Processing")
-    document["run"].class_name = 'btn-disabled'
+    document["run"].class_name = "btn-disabled"
     # delay to allow updated DOM with above text to be shown.
     timer.set_timeout(exec_code, 1)
+
+document["run"].bind("click", run_code)
 
 def exec_code():
     _code= document["source"].text
@@ -47,44 +48,45 @@ def exec_code():
             traceback.print_exc()
         except:
             print("could not print traceback")
-    document["clear"].class_name = 'btn-enabled'
-    document["replay-scene"].class_name = 'btn-enabled'
+    document["clear"].class_name = "btn-enabled"
+    document["replay-scene"].class_name = "btn-enabled"
     inform("")
 
 def delayed_clear():
     from turtle import restart
     restart()
     inform("")
-    document["run"].class_name = 'btn-enabled'
-    document["replay-scene"].class_name = 'btn-disabled'
-    document["clear"].class_name = 'btn-disabled'
+    document["run"].class_name = "btn-enabled"
+    document["replay-scene"].class_name = "btn-disabled"
+    document["clear"].class_name = "btn-disabled"
     clear_print()
 
-@document["clear"].bind("click")
 def clear(ev):
     global FIRST_TIME
     if FIRST_TIME:
         FIRST_TIME = False
         inform("Importing turtle module for the first time and processing; please wait")
-        document["run"].class_name = 'btn-disabled'
+        document["run"].class_name = "btn-disabled"
     # delay to allow updated DOM with above text to be shown.
     timer.set_timeout(delayed_clear, 1)
 
+document["clear"].bind("click", clear)
 
-@document["replay-scene"].bind("click")
 def replay(ev):
     # importing turtle earlier slows down the loading
     # of this page
     from turtle import replay_scene
     replay_scene()
 
+document["replay-scene"].bind("click", replay)
 
-@document["demo_selector"].bind("change")
 def copy_content(ev):
     choice = document["demo_selector"].value
     document["source"].text = document['demo'+ str(choice)].text
     document["info"].html = document['info'+ str(choice)].html
     clear(ev)
+
+document["demo_selector"].bind("change", copy_content)
 
 # Start with first demo
 document["source"].text = document["demo1"].text
@@ -279,7 +281,7 @@ and how to change the background color.</p>
 
 turtle.set_defaults(
     canvheight = 400,
-    turtle_canvas_wrapper = document['turtle-div']
+    turtle_canvas_wrapper = document["turtle-div"]
 )
 
 def draw_square(t):
@@ -289,19 +291,19 @@ def draw_square(t):
         t.left(90)
     t.end_fill()
 
-for name,c,y in [(None, 'black', 150),  # same as "classic"
-                 ("classic", 'blue', 100),
-                 ("arrow", 'orange', 50),
-                 ("circle", 'red', -50),
-                 ("square", 'purple',-100),
-                 ("triangle", 'brown', -150),
-                 ("turtle", ('green', 'white'), 0)]:
+for name,c,y in [(None, "black", 150),  # same as "classic"
+                 ("classic", "blue", 100),
+                 ("arrow", "orange", 50),
+                 ("circle", "red", -50),
+                 ("square", "purple",-100),
+                 ("triangle", "brown", -150),
+                 ("turtle", ("green", "white"), 0)]:
     if name is not None:
         t = turtle.Turtle(name)
     else:
         t = turtle.Turtle()
         screen = t.getscreen()
-        screen.bgcolor('rgb(255, 255, 200)')
+        screen.bgcolor("rgb(255, 255, 200)")
     t.penup()
     if len(c) == 2:
         t.color(c[0], c[1])
@@ -314,7 +316,7 @@ for name,c,y in [(None, 'black', 150),  # same as "classic"
     t.forward(100)
     t.stamp()
     t.forward(100)
-screen.bgcolor('white')
+screen.bgcolor("white")
 
 turtle.done()
 </div>
@@ -334,22 +336,22 @@ t = turtle.Turtle()
 t.penup()
 
 
-t.color('rgba(255, 0, 0, 0.5)')
+t.color("rgba(255, 0, 0, 0.5)")
 t.dot(5)
 t.color('black')
 t.write("Default settings")
 
 t.goto(0, 50)
 t.color("red")
-t.write("Left-aligned", align='left', font=("Verdana", 20, "italic"))
+t.write("Left-aligned", align="left", font=("Verdana", 20, "italic"))
 
 t.goto(0, 100)
 t.color("blue")
-t.write("Center-aligned", align='center', font=("Times Roman", 20, "oblique"))
+t.write("Center-aligned", align="center", font=("Times Roman", 20, "oblique"))
 
 t.goto(0, 150)
 t.color("green")
-t.write("Right-aligned", align='right', font=("Courier", 20, "normal"))
+t.write("Right-aligned", align="right", font=("Courier", 20, "normal"))
 
 turtle.done()
 </div>
@@ -381,14 +383,14 @@ start_time = time.time()
 set_defaults(
     canvwidth = 650,
     canvheight = 650,
-    turtle_canvas_wrapper = document['turtle-div']
+    turtle_canvas_wrapper = document["turtle-div"]
 )
 
 grass = Turtle()
-grass.color('#007b0c')
+grass.color("#007b0c")
 
 sky = Turtle()
-sky.color('#e5e5ff')
+sky.color("#e5e5ff")
 sky.pensize(100)
 sky.speed(0)
 
@@ -401,16 +403,16 @@ lake = Turtle()
 
 mountain = Turtle()
 mountain.pensize()
-mountain.color('#a9a9a9')
+mountain.color("#a9a9a9")
 mountain.speed(0)
 
 trees = Turtle()
 trees.pensize(5)
-trees.color('#654321')
+trees.color("#654321")
 
 cloud = Turtle()
 
-turtles = [grass,sky,mountain,trees,cloud,lake,tuft,cut]
+turtles = [grass, sky, mountain, trees, cloud, lake, tuft, cut]
 
 def penup():
     for i in turtles:
@@ -426,10 +428,21 @@ def speed():
 hexnum = ["1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"]
 
 penup()
-sky.goto(-200,-200)
+sky.goto(-200, -200)
 pendown()
 
-skycol = ['add8e6','b5d8e5','bdd8e4','c5d8e3','cdd8e3','d6d8e2','ded8e1','e6d8e1','eed8e0','f6d8df','ffd9df']
+skycol = ["add8e6",
+    "b5d8e5",
+    "bdd8e4",
+    "c5d8e3",
+    "cdd8e3",
+    "d6d8e2",
+    "ded8e1",
+    "e6d8e1",
+    "eed8e0",
+    "f6d8df",
+    "ffd9df"
+]
 
 def drawsky():
     print("Drawing sky")
@@ -461,39 +474,39 @@ def drawmountains():
 
         mountain.left(tempang)
         mountain.forward(templen)
-        mountain.right(2*tempang)
+        mountain.right(2 * tempang)
         mountain.forward(templen)
         mountain.setheading(0)
 
-    mountain.goto(300,-400)
-    mountain.goto(-300,-400)
+    mountain.goto(300, -400)
+    mountain.goto(-300, -400)
     mountain.end_fill()
 
-    mountain.color('#d3d3d3')
+    mountain.color("#d3d3d3")
     penup()
-    mountain.goto(-300,-150)
+    mountain.goto(-300, -150)
     pendown()
     mountain.begin_fill()
 
     print("Drawing mountains 2")
     for i in range(10):
-        templen = randint(20,200)
+        templen = randint(20, 200)
 
-        tempang = randint(20,30)
+        tempang = randint(20, 30)
 
         mountain.left(tempang)
         mountain.forward(templen)
-        mountain.right(2*tempang)
+        mountain.right(2 * tempang)
         mountain.forward(templen)
         mountain.setheading(0)
 
-    mountain.goto(300,-400)
-    mountain.goto(-300,-400)
+    mountain.goto(300, -400)
+    mountain.goto(-300, -400)
     mountain.end_fill()
 
-    mountain.color('#6d8383')
+    mountain.color("#6d8383")
     penup()
-    mountain.goto(-300,-165)
+    mountain.goto(-300, -165)
     pendown()
     mountain.begin_fill()
     print("Drawing mountains 3")
@@ -504,54 +517,54 @@ def drawmountains():
 
         mountain.left(tempang)
         mountain.forward(templen)
-        mountain.right(2*tempang)
+        mountain.right(2 * tempang)
         mountain.forward(templen)
         mountain.setheading(0)
 
-    mountain.goto(300,-400)
-    mountain.goto(-300,-400)
+    mountain.goto(300, -400)
+    mountain.goto(-300, -400)
     mountain.end_fill()
 
-browns = ['#7a5230','#614126','#49311c','#302013','#181009']
-greens = ['#004000','#003300','#002600','#001900','#004c00']
+browns = ["#7a5230", "#614126", "#49311c", "#302013", "#181009"]
+greens = ["#004000", "#003300", "#002600", "#001900", "#004c00"]
 
 def drawgrass(amount,locx,locy):
-    tuft.color('#004000')
+    tuft.color("#004000")
     def tuftdraw(size):
-        if randint(0,1) == 1:
+        if randint(0, 1) == 1:
             size = -size
-        tuft.color(greens[randint(0,4)])
+        tuft.color(greens[randint(0, 4)])
         penup()
-        tuft.goto(locx+size,locy+size)
+        tuft.goto(locx + size,locy + size)
         pendown()
-        tuft.goto(locx+5+size,locy+10+size)
-        tuft.goto(locx+size,locy+size)
-        tuft.goto(locx-5+size,locy+10+size)
-        tuft.goto(locx-1+size,locy-1+size)
-        tuft.goto(locx+3+size,locy+6+size)
-        tuft.goto(locx+1+size,locy-1+size)
-        tuft.goto(locx-2+size,locy+5+size)
+        tuft.goto(locx + 5 + size, locy + 10 + size)
+        tuft.goto(locx + size, locy + size)
+        tuft.goto(locx - 5 + size, locy + 10 + size)
+        tuft.goto(locx - 1 + size, locy - 1 + size)
+        tuft.goto(locx + 3 + size, locy + 6 + size)
+        tuft.goto(locx + 1 + size, locy - 1 + size)
+        tuft.goto(locx - 2 + size, locy + 5 + size)
     for i in range(amount):
-        for i in range(randint(1,4)):
-            tuftdraw(i*3)
+        for i in range(randint(1, 4)):
+            tuftdraw(i * 3)
 
 def drawtrees():
 
     def grassdraw():
         penup()
-        grass.goto(randint(-160,-150),randint(-240,-190))
+        grass.goto(randint(-160, -150),randint(-240, -190))
 
         pendown()
         grass.begin_fill()
         for i in range(200):
-            grass.color(greens[randint(0,4)])
-            grass.goto(randint(-300,-50),randint(-200,-150))
+            grass.color(greens[randint(0, 4)])
+            grass.goto(randint(-300, -50), randint(-200, -150))
 
         grass.end_fill()
 
     def greentree():
             temppos = trees.pos()
-            trees.color(greens[randint(0,4)])
+            trees.color(greens[randint(0, 4)])
             trees.pensize(1)
 
             trees.setheading(90)
@@ -607,14 +620,14 @@ def drawtrees():
     trees.speed(0)
 
     def treees(treeheight):
-        trees.color(browns[randint(0,4)])
-        trees.pensize(randint(2,4))
+        trees.color(browns[randint(0, 4)])
+        trees.pensize(randint(2, 4))
         penup()
 
         trees.goto(treeheight) #goes to random location and draws random length
         pendown()
         trees.setheading(90)
-        trees.forward(randint(20,30))
+        trees.forward(randint(20, 30))
 
         greentree()
 
@@ -622,28 +635,28 @@ def drawtrees():
 
 
     for i in range(10):
-        print("Drawing tree",i+1,"/20")
-        temph = randint(-270,-80),randint(-180,-170)
+        print("Drawing tree", i + 1, "/20")
+        temph = randint(-270, -80),randint(-180, -170)
         treees(temph)
     for i in range(10):
-        print("Drawing tree",i+11,"/20")
-        temph = randint(-270,-80),randint(-200,-190)
+        print("Drawing tree", i + 11, "/20")
+        temph = randint(-270, -80),randint(-200, -190)
         treees(temph)
 
 
 def clouddraw():
     print("\n")
-    cloud.color('white')
+    cloud.color("white")
 
     def randloc():
-        location = randint(-250,250),randint(0,270)
+        location = randint(-250, 250),randint(0, 270)
         return location
 
-    def brushstroke(randloc,leng):
+    def brushstroke(randloc, leng):
         penup()
         cloud.goto(randloc)
         pendown()
-        cloud.pensize(randint(3,5))
+        cloud.pensize(randint(3, 5))
         cloud.forward(leng)
 
     def singlecloud():
@@ -654,23 +667,30 @@ def clouddraw():
 
         for i in range(20):
             temp4 = (temp3, temp2)
-            brushstroke(temp4,leng)
+            brushstroke(temp4, leng)
             temp2 += 1
-            temp3 += randint(-10,10)
-            leng += randint(-40,40)
+            temp3 += randint(-10, 10)
+            leng += randint(-40, 40)
 
     for i in range(4):
-        print("Drawing cloud:",i+1)
+        print("Drawing cloud:", i + 1)
 
         singlecloud()
 
 
 def lakedraw():
     print("\nDrawing lake")
-    blues = ['00004c','000066','000099','0000b2','0000cc','0000e5','0000ff']
+    blues = ["00004c",
+        "000066",
+        "000099",
+        "0000b2",
+        "0000cc",
+        "0000e5",
+        "0000ff"
+    ]
 
     penup()
-    lake.goto(randint(-50,50),randint(-170,-150))
+    lake.goto(randint(-50, 50), randint(-170, -150))
     temp = Turtle()
     temp.penup()
     temp.hideturtle()
@@ -681,25 +701,25 @@ def lakedraw():
 
     lake.pensize(5)
     for i in range(50):
-        lake.color("#"+blues[randint(0,6)])
+        lake.color("#" + blues[randint(0, 6)])
         lake.forward(5)
-        lake.right(randint(0,5)/10)
-        if randint(0,2) == 2:
-            drawgrass(5,lake.pos()[0],lake.pos()[1])
+        lake.right(randint(0, 5) / 10)
+        if randint(0, 2) == 2:
+            drawgrass(5, lake.pos()[0], lake.pos()[1])
     while lake.heading() > 185:
-        lake.color("#"+blues[randint(0,6)])
+        lake.color("#" + blues[randint(0, 6)])
         lake.forward(2)
-        lake.right(randint(-2,8))
+        lake.right(randint(-2, 8))
     for i in range(50):
-        lake.color("#"+blues[randint(0,6)])
+        lake.color("#" + blues[randint(0, 6)])
         lake.forward(5)
-        lake.left(randint(0,2)/10)
+        lake.left(randint(0, 2) / 10)
     for i in range(100):
-        lake.color("#"+blues[randint(0,6)])
+        lake.color("#" + blues[randint(0, 6)])
         lake.forward(5)
-        lake.right(randint(0,8)/10)
+        lake.right(randint(0, 8) / 10)
 
-    lake.color("#"+blues[1])
+    lake.color("#" + blues[1])
     lake.goto(temp.pos())
     lake.end_fill()
 
@@ -708,16 +728,16 @@ def lilypads(amount):
     lily.hideturtle()
     lily.speed(0)
     for i in range(amount):
-        lily.color(greens[randint(0,4)])
+        lily.color(greens[randint(0, 4)])
         lily.penup()
-        lily.goto(randint(0,200),randint(-300,-175))
+        lily.goto(randint(0, 200), randint(-300, -175))
         lily.pendown()
-        for i in range(2,7):
+        for i in range(2, 7):
             lily.forward(2)
             lily.pensize(i)
-        for i in range(0,7):
+        for i in range(0, 7):
             lily.forward(2)
-            lily.pensize(7-i)
+            lily.pensize(7 - i)
 
 
 def cutdraw():
@@ -725,25 +745,25 @@ def cutdraw():
 
     cut.penup()
 
-    cut.color('black')
+    cut.color("black")
     cut.pensize(40)
-    cut.goto(-250,250)
+    cut.goto(-250, 250)
     cut.pendown()
-    cut.goto(250,250)
-    cut.goto(250,-250)
-    cut.goto(-250,-250)
-    cut.goto(-250,250)
+    cut.goto(250, 250)
+    cut.goto(250, -250)
+    cut.goto(-250, -250)
+    cut.goto(-250, 250)
 
     penup()
     cut.speed(9)
-    cut.color('white')
+    cut.color("white")
     cut.pensize(200)
-    cut.goto(-345,345)
+    cut.goto(-345, 345)
     cut.pendown()
-    cut.goto(345,345)
-    cut.goto(345,-345)
-    cut.goto(-345,-345)
-    cut.goto(-345,345)
+    cut.goto(345, 345)
+    cut.goto(345, -345)
+    cut.goto(-345, -345)
+    cut.goto(-345, 345)
 
 
 speed() #sets all speeds to fastest
@@ -807,7 +827,7 @@ radians()
 <div id='demo6' style="display:none">import turtle
 from math import pi
 turtle.set_defaults(
-    turtle_canvas_wrapper = document['turtle-div']
+    turtle_canvas_wrapper = document["turtle-div"]
 )
 
 t = turtle.Turtle("turtle")
@@ -892,8 +912,8 @@ t.forward(150)
 t.seth(90)
 t.fd(20)
 
-t.dot(30, 'rgba(255, 0, 0, 0.2)')
-t.color('red')
+t.dot(30, "rgba(255, 0, 0, 0.2)")
+t.color("red")
 t.speed(0)
 t.forward(30)
 t.left(90)
@@ -931,7 +951,7 @@ write()
 
 <div id='demo7' style="display:none">import turtle
 turtle.set_defaults(
-    turtle_canvas_wrapper = document['turtle-div']
+    turtle_canvas_wrapper = document["turtle-div"]
 )
 
 
@@ -1028,7 +1048,7 @@ undobufferentries(): not implemented
 
 <div id='demo8' style="display:none">import turtle
 turtle.set_defaults(
-    turtle_canvas_wrapper = document['turtle-div']
+    turtle_canvas_wrapper = document["turtle-div"]
 )
 
 t = turtle.Turtle("turtle")
@@ -1073,7 +1093,7 @@ c.right(90)
 c.fd(40)
 
 d = t.getpen()
-d.color('red')
+d.color("red")
 d.fd(40)
 
 r = t.clone()
@@ -1081,7 +1101,6 @@ r.fd(40)
 
 screen = t.getscreen()
 screen.bgcolor("rgb(240, 255, 240)")
-
 
 turtle.done()
 </div>
@@ -1172,30 +1191,30 @@ are guaranteed to be available.</p>
 
 <div id='demo9' style="display:none">import turtle
 turtle.set_defaults(
-    turtle_canvas_wrapper = document['turtle-div']
+    turtle_canvas_wrapper = document["turtle-div"]
 )
 
 screen = turtle.Screen()
 print("Uncomment one of the demo choices at the bottom.")
 
 def test(x, y):
-    t = turtle.Turtle('turtle')
+    t = turtle.Turtle("turtle")
     others = []
     t.penup()
     t.goto(x, y)
     font = ("Arial", 12, "normal")
     for _ in range(4):
-        t.dot(2, 'green')
-        t.pen('black')
-        t.write(t.position(), font=font, align='center',
-                color='black')
+        t.dot(2, "green")
+        t.pen("black")
+        t.write(t.position(), font=font, align="center",
+                color="black")
         t.fd(200)
         t.left(90)
         others.append(t.clone())
-    t.goto(x+100, y+100)
-    t.color('green', 'white')
+    t.goto(x + 100, y + 100)
+    t.color("green", "white")
     for o in others:
-        o.color('red')
+        o.color("red")
         o.speed(1)
         o.left(320)
     for tt in screen.turtles():
@@ -1206,11 +1225,11 @@ def demo_default():
     test(0, 0)
 
 def demo_logo():
-    screen.mode('logo')
+    screen.mode("logo")
     test(0, 0)
 
 def demo_world():
-    screen.mode('world')
+    screen.mode("world")
     test(250, 250)
 
 def demo_custom():
@@ -1244,12 +1263,12 @@ turtle.done()
 <div id='demo10' style="display:none">from turtle import *
 
 # screen function
-bgcolor('rgb(255, 245, 230)')
+bgcolor("rgb(255, 245, 230)")
 
 # turtle functions
 fd(100)
-shape('turtle')
-color('green', 'white')
+shape("turtle")
+color("green", "white")
 left(90)
 up()
 fd(100)

@@ -72,7 +72,7 @@ def btn_click(ev):
         cursor = store.delete(row.key)
 
         # when record is deleted, update table
-        cursor.bind('success', show)    
+        cursor.bind("success", show)    
 
     elif action == "Add":
         values = [entry.value for entry in row.get(selector="INPUT")]
@@ -86,7 +86,7 @@ def btn_click(ev):
             cursor = store.put(data, row.key)
         
         # when record is added, update table
-        cursor.bind('success', show)
+        cursor.bind("success", show)
 
     elif action == "Edit":
         # Replace cells for "title" and "author" by INPUT fields
@@ -99,15 +99,15 @@ def btn_click(ev):
 
         # Replace buttons "Edit" and "Delete" by button "Update"
         cells[-1].clear()
-        update_btn = html.BUTTON('Update')
+        update_btn = html.BUTTON("Update")
         cells[-1] <= update_btn
 
         # Bind its "click" event
-        update_btn.bind('click', btn_click)
+        update_btn.bind("click", btn_click)
 
     elif action == "Update":
         values = [entry.value for entry in row.select("INPUT")]
-        data = dict(zip(['title', 'author'], values))
+        data = dict(zip(["title", "author"], values))
         data['isbn'] = row.key # required for the "store.put" method below
 
         db = request.result
@@ -116,7 +116,7 @@ def btn_click(ev):
         cursor = store.put(data)
         
         # When record is added, update table
-        cursor.bind('success', show)
+        cursor.bind("success", show)
 
 
 def show(ev):
@@ -127,13 +127,13 @@ def show(ev):
     cursor = store.openCursor()
     
     # clear table
-    document['table'].clear()
+    document["table"].clear()
     
     # headers
     t = html.TABLE()
-    document['table'] <= t
+    document["table"] <= t
     
-    t <= html.TR(html.TH(x) for x in ['Title', 'Author', 'ISBN', 'Actions'])
+    t <= html.TR(html.TH(x) for x in ["Title", "Author", "ISBN", "Actions"])
     
     def add_row(ev):
         """Add a row to the table for each iteration on cursor
@@ -144,9 +144,9 @@ def show(ev):
             v = res.value
             row = html.TR()
             row <= (html.TD(getattr(v, key)) 
-                for key in ['title', 'author', 'isbn'])
-            row <= html.TD(html.BUTTON('Edit')+
-                html.BUTTON('Delete'))
+                for key in ["title", "author", "isbn"])
+            row <= html.TD(html.BUTTON("Edit")+
+                html.BUTTON("Delete"))
             row.key = res.key
             t <= row
             getattr(res, "continue")()
@@ -154,23 +154,23 @@ def show(ev):
             # add empty row
             row = html.TR()
             row <= (html.TD(html.INPUT(name="new_%s" %key))
-                for key in ['title', 'author', 'isbn'])
-            row <= html.TD(html.BUTTON('Add'))
+                for key in ["title", "author", "isbn"])
+            row <= html.TD(html.BUTTON("Add"))
             t <= row
             # bind all buttons
             for btn in t.get(selector="BUTTON"):
-                btn.bind('click', btn_click)
+                btn.bind("click", btn_click)
         
-    cursor.bind('success', add_row)
+    cursor.bind("success", add_row)
 
 
 request = IDB.open("library")
 
 # If database doesn't exist, create it
-request.bind('upgradeneeded', create_db)
+request.bind("upgradeneeded", create_db)
 
 # Else print a table with all elements in table "books"
-request.bind('success', show)
+request.bind("success", show)
 </script>
 
 <h1>Library</h1>
