@@ -23,10 +23,10 @@ Un ejemplo simple :
 <script type="text/python">
 from browser import document, alert
 
-@document["mybutton"].bind("click")
 def echo(ev):
     alert(document["zone"].value)
 
+document["mybutton"].bind("click", echo)
 </script>
 <input id="zone">
 <button id="mybutton">click !</button>
@@ -41,10 +41,10 @@ Intenta:
 <script type="text/python">
 from browser import document, alert
 
-@document["mybutton"].bind("click")
 def echo(ev):
     alert(document["zone"].value)
 
+document["mybutton"].bind("click", echo)
 </script>
 
 <input id="zone" autocomplete="off">

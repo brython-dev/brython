@@ -53,13 +53,13 @@ dest.style.left = "{}px".format(150 + panel.abs_left)
 # offset of mouse relatively to dragged object when dragging starts
 m0 = [None, None]
 
-@source.bind("mouseover")
 def mouseover(ev):
     """When mouse is over the draggable element, change cursor."""
     print('mouse over ! ')
     ev.target.style.cursor = "pointer"
 
-@source.bind("dragstart")
+source.bind("mouseover", mouseover)
+
 def dragstart(ev):
     """Function called when the user starts dragging the object."""
     global m0
@@ -73,7 +73,8 @@ def dragstart(ev):
     # allow dragged object to be moved
     ev.dataTransfer.effectAllowed = "move"
 
-@dest.bind("dragover")
+source.bind("dragstart", dragstart)
+
 def dragover(ev):
     """Function called when the draggable object comes over the destination
     zone.
@@ -82,7 +83,8 @@ def dragover(ev):
     # here we must prevent the default behaviour for this kind of event
     ev.preventDefault()
 
-@dest.bind("drop")
+dest.bind("dragover", dragover)
+
 def drop(ev):
     """Function attached to the destination zone.
     Describes what happens when the object is dropped, ie when the mouse is
@@ -100,4 +102,6 @@ def drop(ev):
     elt.unbind("mouseover")
     elt.style.cursor = "auto"
     ev.preventDefault()
+
+dest.bind("drop", drop)
 ```

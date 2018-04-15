@@ -17,25 +17,26 @@ from browser import document
 from browser import alert
 
 def myevent(ev):
-    alert('it works !')
+    alert("it works !")
 
 def counter():
     alert('%s event(s) attached to "click"'
-        %len(document['myblock'].events('click')))
+        %len(document["myblock"].events("click")))
 
-@document['bind_click'].bind('click')
 def bind_click(ev):
-    document['myblock'].bind('click', myevent)
+    document["myblock"].bind("click", myevent)
     counter()
-    document['mymessage'].text='event is bound, just click to see...'
+    document["mymessage"].text="event is bound, just click to see..."
 
-@document['unbind_click'].bind('click')
+document["bind_click"].bind("click", bind_click)
+
 def unbind_click(ev):
-    if document['myblock'].events('click'):
-        document['myblock'].unbind('click', myevent)
+    if document["myblock"].events("click"):
+        document["myblock"].unbind("click", myevent)
         counter()
-        document['mymessage'].text='click disabled'
+        document["mymessage"].text="click disabled"
 
+document["unbind_click"].bind("click", unbind_click)
 ```
 </td>
 

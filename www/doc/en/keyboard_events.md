@@ -57,9 +57,10 @@ Enter text in the field below, with or without pressing the Alt key
 from browser import document
 
 # the entry field has the id "altKey"
-@document["altKey"].bind("keypress")
 def keypress(ev):
-    document["traceAltKey"].text = f'altKey: {ev.altKey}'
+    document["traceAltKey"].text = f"altKey: {ev.altKey}"
+
+document["altKey"].bind("keypress", keypress)
 ```
 </td>
 </tr>
@@ -86,11 +87,12 @@ Enter text in the entry below. Note that the character can be read by
 ```exec_on_load
 from browser import document
 
-@document["charCode"].bind("keypress")
 def charCode(ev):
     trace = document["traceCharCode"]
     char = chr(ev.charCode)
-    trace.text = f'charCode: {ev.charCode}, character: {char}'
+    trace.text = f"charCode: {ev.charCode}, character: {char}"
+
+document["charCode"].bind("keypress", charCode)
 ```
 </td>
 
@@ -116,11 +118,12 @@ Enter text in the field below, with or without pressing the Ctrl key
 ```exec_on_load
 from browser import document
 
-@document["ctrlKey"].bind("keypress")
 def keypress(ev):
     trace = document["traceCtrlKey"]
-    trace.text = f'ctrlKey : {ev.ctrlKey}'
+    trace.text = f"ctrlKey : {ev.ctrlKey}"
     ev.preventDefault()
+
+document["ctrlKey"].bind("keypress", keypress)
 ```
 
 Note that `ev.preventDefault()` is used to avoid the default behaviour of
@@ -160,7 +163,7 @@ from browser import document
 
 def keyCode(ev):
     trace = document["traceKeyCode"]
-    trace.text = f'event {ev.type}, keyCode : {ev.keyCode}'
+    trace.text = f"event {ev.type}, keyCode : {ev.keyCode}"
     ev.stopPropagation()
 
 document["keyCodeKeydown"].bind("keydown", keyCode)
@@ -193,10 +196,11 @@ Enter text in the field below, with or without pressing the Shift key
 ```exec_on_load
 from browser import document
 
-@document['shiftKey'].bind('keypress')
 def keypress(ev):
     trace = document["traceShiftKey"]
-    trace.text = f'shiftKey : {ev.shiftKey}'
+    trace.text = f"shiftKey : {ev.shiftKey}"
+
+document["shiftKey"].bind("keypress", keypress)
 ```
 </td>
 </tr>
@@ -241,9 +245,9 @@ from browser import document
 
 def which(ev):
     trace = document["traceWhich"]
-    trace.html = f'event : {ev.type}<br>which: {ev.which}'
+    trace.html = f"event : {ev.type}<br>which: {ev.which}"
     if ev.type == "keypress":
-        trace.html += f'<br>character : {chr(ev.which)}'
+        trace.html += f"<br>character : {chr(ev.which)}"
 
 document["whichKeydown"].bind("keydown", which)
 document["whichKeypress"].bind("keypress", which)

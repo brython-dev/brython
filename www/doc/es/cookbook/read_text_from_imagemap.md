@@ -16,14 +16,20 @@ from browser import document, html
 def writetext(txt):
     document["description"] <= txt
 
-coords = [(0,0,160,95),(180,0,400,165),(0,120,180,400),(175,235,270,400)]
-messages = ['Avión volando a wonderland en un soleado día',
-    'El sol y los planetas gigantes gaseosos como Jupiter son, a distancia, \
-        los mayores objetos de nuestro sistema solar.',
-    'Este soy yo o eres tú.',
-    'Daniel el travieso!!!!!!!!']
-prompt = 'Mueve el ratón sobre los diferentes elementos de la imagen para ver \
-    una descripción.'
+coords = [
+    (0, 0, 160, 95),
+    (180, 0, 400, 165),
+    (0, 120, 180, 400),
+    (175, 235, 270, 400)
+]
+
+messages = ["Avión volando a wonderland en un soleado día",
+    "El sol y los planetas gigantes gaseosos como Jupiter son, a distancia, \
+        los mayores objetos de nuestro sistema solar.",
+    "Este soy yo o eres tú.",
+    "Daniel el travieso!!!!!!!!"]
+prompt = "Mueve el ratón sobre los diferentes elementos de la imagen para ver \
+    una descripción."
 
 writetext(prompt)
 

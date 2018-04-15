@@ -18,20 +18,23 @@ Para ello, la acción para definir esto se realiza mediante la siguiente
 sintaxis :
 
 ```python
-@btn.bind("click")
 def show(ev):
     ...
+
+btn.bind("click", show)
 ```
 
 `btn` es una referencia al elemento.
-El argumento de `bind` es el tipo de evento que el botón deberá manejar.
-La función decorada toma un único argumento, una instancia
-de la clase `DOMEvent`. Por ejemplo :
+Los argumentos de `bind` son el tipo de evento que el botón deberá manejar, y
+la función que es llamada quando el evento ocurre sobre el elemento. La
+función toma un único argumento, una instancia de la clase `DOMEvent`. Por
+ejemplo :
 
 ```python
-@btn.bind("click")
 def show(ev):
     print('ok')
+
+btn.bind("click", show)
 ```
 
 (recuerda que para ver los resultados del `print` deberás tener abierta la
@@ -48,21 +51,10 @@ relacionados con el ratón, los atributos incluyen
 Por ejemplo, para imprimir el texto del botón y la posición del ratón :
 
 ```python
-@btn.bind("click")
 def show(ev):
     print(ev.target.text, ev.x, ev.y)
-```
 
-Si el corpo de la función no esta en el script (por ejemplo porque es
-importada), o si queremos definir la misma acción para una lista de
-elementos, se puede usar otra forma del método `bind()` :
-
-```python
-def action(ev):
-    ...
-
-for element in elements:
-    element.bind("click", action)
+btn.bind("click", show)
 ```
 
 Interfaz
@@ -71,13 +63,9 @@ Interfaz
 Para la gestión de eventos, los elementos de una página disponen de los
 siguientes métodos :
 
-<code>elt.bind(_evt\_name[, handler]_)</code>
+<code>elt.bind(_evt\_name, handler_)</code>
 
-> - si la función _handler_ está presente, es llamada quando el evento
-> ocurre sobre el elemento
-
-> - si non está presente, retorne un decorador que asocia la función decorada
-> al evento llamado _nom_evt_
+> la función _handler_ es llamada quando el evento ocurre sobre el elemento
 
 <code>elt.unbind(_evt\_name[, handler_])</code>
 
@@ -110,7 +98,8 @@ poseen los siguientes atributos
 <script type="text/python">
 from browser import document, alert
 
-document['_bubbles'].bind('click',lambda ev:alert('bubbles : %s ' %ev.bubbles))
+document["_bubbles"].bind("click",
+    lambda ev:alert("bubbles : %s " %ev.bubbles))
 </script>
 </td>
 </tr>
@@ -125,7 +114,8 @@ document['_bubbles'].bind('click',lambda ev:alert('bubbles : %s ' %ev.bubbles))
 <script type="text/python">
 from browser import document, alert
 
-document['_cancelable'].bind('click',lambda ev:alert('cancelable : %s ' %ev.cancelable))
+document["_cancelable"].bind("click",
+    lambda ev:alert("cancelable : %s " %ev.cancelable))
 </script>
 </td>
 </tr>
@@ -140,7 +130,8 @@ document['_cancelable'].bind('click',lambda ev:alert('cancelable : %s ' %ev.canc
 <script type="text/python">
 from browser import document, alert
 
-document['_currentTarget'].bind('click',lambda ev:alert('currentTarget : %s ' %ev.currentTarget))
+document["_currentTarget"].bind("click",
+    lambda ev:alert("currentTarget : %s " %ev.currentTarget))
 </script>
 </td>
 </tr>
@@ -155,7 +146,8 @@ document['_currentTarget'].bind('click',lambda ev:alert('currentTarget : %s ' %e
 <script type="text/python">
 from browser import document, alert
 
-document['_defaultPrevented'].bind('click',lambda ev:alert('defaultPrevented : %s ' %ev.defaultPrevented))
+document["_defaultPrevented"].bind("click",
+    lambda ev:alert("defaultPrevented : %s " %ev.defaultPrevented))
 </script>
 </td>
 </tr>
@@ -170,7 +162,8 @@ document['_defaultPrevented'].bind('click',lambda ev:alert('defaultPrevented : %
 <script type="text/python">
 from browser import document, alert
 
-document['_eventPhase'].bind('click',lambda ev:alert('eventPhase : %s ' %ev.eventPhase))
+document["_eventPhase"].bind("click",
+    lambda ev:alert("eventPhase : %s " %ev.eventPhase))
 </script>
 </td>
 </tr>
@@ -185,7 +178,8 @@ document['_eventPhase'].bind('click',lambda ev:alert('eventPhase : %s ' %ev.even
 <script type="text/python">
 from browser import document, alert
 
-document['_target'].bind('click',lambda ev:alert('target : %s ' %ev.target))
+document["_target"].bind("click",
+    lambda ev:alert("target : %s " %ev.target))
 </script>
 </td>
 </tr>
@@ -200,7 +194,8 @@ document['_target'].bind('click',lambda ev:alert('target : %s ' %ev.target))
 <script type="text/python">
 from browser import document, alert
 
-document['_timeStamp'].bind('click',lambda ev:alert('timeStamp : %s ' %ev.timeStamp))
+document["_timeStamp"].bind("click",
+    lambda ev:alert("timeStamp : %s " %ev.timeStamp))
 </script>
 </td>
 </tr>
@@ -215,7 +210,7 @@ document['_timeStamp'].bind('click',lambda ev:alert('timeStamp : %s ' %ev.timeSt
 <script type="text/python">
 from browser import document, alert
 
-document['_type'].bind('click',lambda ev:alert('type : %s ' %ev.type))
+document["_type"].bind("click", lambda ev:alert("type : %s " %ev.type))
 </script>
 </td>
 </tr>
@@ -236,24 +231,19 @@ y los siguientes métodos
 > Para deshabilitar este comportamiento en el checkbox :
 
 <blockquote>
-<div id="disable_cbox">
-    from browser import document
+```exec_on_load
+from browser import document
 
-    def _cancel(ev):
-        ev.preventDefault()
+def _cancel(ev):
+    ev.preventDefault()
 
-    document["disabled_cbox"].bind('click',_cancel)
-</div>
+document["disabled_cbox"].bind("click",_cancel)
+```
 </blockquote>
 
 >> resultado :
 
 >> checkbox deshabilitado <input type="checkbox" id="disabled_cbox">
-
-<script type="text/python">
-from browser import document
-exec(document["disable_cbox"].text)
-</script>
 
 `stopPropagation()`
 > previene la propagación del evento
@@ -267,43 +257,45 @@ exec(document["disable_cbox"].text)
 <div id="green" style="background-color:green;color:white;padding:20px;">inner, propagation stopped</div>
 </div>
 
-> los 3 elementos (el frame amarillo exterior y los frames interiores azul y verde) manejan el evento 'click'
+> los 3 elementos (el frame amarillo exterior y los frames interiores azul y
+> verde) manejan el evento 'click'
 
 <blockquote>
-<div id="zzz_source">
-    from browser import document, alert
+```exec_on_load
+from browser import document, alert
 
-    def show(ev):
-        alert('click on %s' %ev.currentTarget.id)
+def show(ev):
+    alert("click on %s" %ev.currentTarget.id)
 
-    def show_stop(ev):
-        alert('clic on %s' %ev.currentTarget.id)
-        ev.stopPropagation()
+def show_stop(ev):
+    alert("clic on %s" %ev.currentTarget.id)
+    ev.stopPropagation()
 
-    document["yellow"].bind('click',show)
-    document["blue"].bind('click',show)
-    document["green"].bind('click',show_stop)
-</div>
+document["yellow"].bind("click", show)
+document["blue"].bind("click", show)
+document["green"].bind("click", show_stop)
+```
 </blockquote>
 
 <div id="zzz"></div>
 
-> Pulsando en la zona amarilla provoca la llamada a la función `show()`, la cual muestra el mensaje "click on yellow"
+> Pulsando en la zona amarilla provoca la llamada a la función `show()`, la
+> cual muestra el mensaje "click on yellow"
 
-> Pulsando en la zona azul provoca el mensaje "click on blue". A posteriori el evento se propaga al padre, el frame amarillo. SDebido a que este frame tambien maneja el evento "click", el navegador llama a la acción asociada, la misma función `show()`, y muestra el mensaje "click on yellow" (fíjate que el atributo `currentTarget` se actualiza cuando el evento se propaga)
+> Pulsando en la zona azul provoca el mensaje "click on blue". A posteriori
+> el evento se propaga al padre, el frame amarillo. SDebido a que este frame
+> tambien maneja el evento "click", el navegador llama a la acción asociada,
+> la misma función `show()`, y muestra el mensaje "click on yellow" (fíjate
+> que el atributo `currentTarget` se actualiza cuando el evento se propaga).
 
-> Pulsando sobre  la zona verde provoca que se muestre el mensaje "click on green". Este evento está manejado por la función `show_stop()`, la cual finaliza en
+> Pulsando sobre  la zona verde provoca que se muestre el mensaje "click on
+> green". Este evento está manejado por la función `show_stop()`, la cual
+> finaliza en
 
 >>    ev.stopPropagation()
 
-> De esta forma el evento no se propaga a un nivel superior y la ejecución termina sin un mensaje de alerta "click on yellow"
-
-
-<script type="text/python">
-from browser import document
-
-eval(document["zzz_source"].text)
-</script>
+> De esta forma el evento no se propaga a un nivel superior y la ejecución
+> termina sin un mensaje de alerta "click on yellow".
 
 
 Creando y ejecutando un evento

@@ -42,22 +42,22 @@ def update_checkboxes(ev):
     for elt in document.get(selector='input[type="checkbox"]'):
         elt.checked = elt.value in selected
     
-choices = ['one','two','three','four','five']
+choices = ["one", "two", "three", "four", "five"]
 sel = html.SELECT(size=5, multiple=True)
 for item in choices:
     sel <= html.OPTION(item)
-sel.bind('change', update_checkboxes)
+sel.bind("change", update_checkboxes)
 
 for item in choices:
     chbox = html.INPUT(Type="checkbox", value=item)
-    chbox.bind('click', update_select)
-    document['panel'] <= item + chbox
+    chbox.bind("click", update_select)
+    document["panel"] <= item + chbox
 
-document['panel'] <= sel
+document["panel"] <= sel
 
-b_show = html.BUTTON('show selected')
-b_show.bind('click', show_selected)
-document['panel'] <= b_show
+b_show = html.BUTTON("show selected")
+b_show.bind("click", show_selected)
+document["panel"] <= b_show
 ```
 
 <div id="panel"></div>

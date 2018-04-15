@@ -23,10 +23,11 @@ A simple example :
 from browser import document, alert
 
 # bind event 'click' on button to function echo
-@document["mybutton"].bind("click")
+
 def echo(ev):
     alert(document["zone"].value)
 
+document["mybutton"].bind("click", echo)
 </script>
 <input id="zone">
 <button id="mybutton">click !</button>
@@ -42,10 +43,10 @@ Try it!
 <script type="text/python">
 from browser import document, alert
 
-@document["mybutton"].bind("click")
 def echo(ev):
     alert(document["zone"].value)
 
+document["mybutton"].bind("click", echo)
 </script>
 
 <input id="zone">

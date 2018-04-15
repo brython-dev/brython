@@ -55,7 +55,6 @@ dest.style.left = "{}px".format(150 + panel.abs_left)
 # offset del ratón en relación con el objeto arrastrable cuando comienza el arrastrado
 m0 = [None, None]
 
-@source.bind('mouseover')
 def mouseover(ev):
     """Cuando el ratón se encuentra sobre el elemento arrastrable, cambiar el
     cursor.
@@ -63,7 +62,8 @@ def mouseover(ev):
     print("Ratón sobre el elemento ! ")
     ev.target.style.cursor = "pointer"
 
-@source.bind('dragstart')
+source.bind("mouseover", mouseover)
+
 def dragstart(ev):
     """Función a llamar cuando el usuario inicia el arrastrado del objeto."""
     global m0
@@ -78,7 +78,8 @@ def dragstart(ev):
     # permitir al elemento arrastrable que sea movido
     ev.dataTransfer.effectAllowed = "move"
 
-@dest.bind('dragover')
+source.bind("dragstart", dragstart)
+
 def dragover(ev):
     """Función a llamar cuando el elemento arrastrable llega sobre la zona de
     destino.
@@ -88,7 +89,8 @@ def dragover(ev):
     # evento
     ev.preventDefault()
 
-@dest.bind('drop')
+dest.bind("dragover", dragover)
+
 def drop(ev):
     """Función asociada a la zona de destino.
     Describe que sucede cuando se suelta el objeto, ie cuando se suelta el
@@ -106,4 +108,6 @@ def drop(ev):
     elt.unbind("mouseover")
     elt.style.cursor = "auto"
     ev.preventDefault()
+
+dest.bind("drop", drop)
 ```
