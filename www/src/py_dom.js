@@ -1345,6 +1345,8 @@ DOMNode.unbind = function(self, event){
     }
 }
 
+$B.set_func_names(DOMNode, "<dom>")
+
 // return query string as an object with methods to access keys and values
 // same interface as cgi.FieldStorage, with getvalue / getlist / getfirst
 var Query = {
@@ -1479,6 +1481,8 @@ TagSum.$factory = function(){
         toString: function(){return "(TagSum)"}
     }
 }
+
+$B.set_func_names(TagSum, "<dom>")
 
 $B.TagSum = TagSum // used in _html.js and _svg.js
 
