@@ -163,7 +163,6 @@ header.show()
     def hello(ev):
         alert("Hello !")
 
-
     document["button0"].bind("click", hello)
     </script>
 
@@ -760,12 +759,12 @@ the second argument.
 </div>
 
 <div class="example" id="ex_mousemove">
-    <button id="button_mousemove">move an element with the mouse</button>
-    <span style="width:300; height:50; background-color:#fff;" id="zone_mousemove">
-        <b style="position: relative;left:140;top:10;font-size:30px;"
-            id="moving">&#9635;
-        </b>
-    </span>
+    <button id="button_mousemove" style="border-width:0;background-color:inherit;">
+        move an element with the mouse
+    </button>
+    <b style="position: relative;left:140;top:10;font-size:16px; padding: 3px; background-color: #ddd; border-radius: 4px;"
+        id="moving">drag me
+    </b>
 
     <script type="text/python"  id="script_mousemove">
     from browser import document
@@ -1058,7 +1057,7 @@ the second argument.
     def change(event):
         s = window.String.new("abracadabra")
         document["zone17"].text = s.replace(window.RegExp.new("a", "g"), "i")
-    
+
     document["button17"].bind("click", change)
     </script>
 
