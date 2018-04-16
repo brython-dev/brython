@@ -424,7 +424,7 @@ $make_exc(["EnvironmentError", "IOError", "VMSError", "WindowsError"],
 $B.$NameError = function(name){
     // Used if a name is not found in the bound names
     // It is converted into
-    // $globals[name] !== undefined ? $globals[name] : 
+    // $globals[name] !== undefined ? $globals[name] :
     //    __BRYTHON__.$NameError.$factory(name)
     throw _b_.NameError.$factory("name '" + name + "' is not defined")
 }

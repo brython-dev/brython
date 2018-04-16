@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.5.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-04-15 22:07:15.392908"
-__BRYTHON__.timestamp=1523822835392
+__BRYTHON__.compiled_date="2018-04-16 11:12:54.215148"
+__BRYTHON__.timestamp=1523869974215
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -1062,6 +1062,22 @@ var res=[]
 this.decorators.forEach(function(decorator,i){res.push('var ' + this.dec_ids[i]+ ' = ' +
 $to_js(decorator)+ ';')},this)
 return res.join('')}}
+var $DecoratorExprCtx=$B.parser.$DecoratorExprCtx=function(C){
+this.type='decorator_expression'
+this.parent=C
+C.tree[C.tree.length]=this
+this.names=[]
+this.tree=[]
+this.is_call=false
+this.toString=function(){return '(decorator expression)'}
+this.to_js=function(){this.js_processed=true
+var func=new $IdCtx(this,this.names[0])
+var obj=func.to_js()
+this.names.slice(1).forEach(function(name){obj="_b_.getattr(" + obj + ", '" + name + "')"})
+if(this.tree.length > 1){
+this.tree[0].func={to_js: function(){return obj}}
+return this.tree[0].to_js()}
+return obj }}
 var $DefCtx=$B.parser.$DefCtx=function(C){this.type='def'
 this.name=null
 this.parent=C
@@ -3008,8 +3024,18 @@ case ':':
 return $transition(C.parent,token,value)}
 $_SyntaxError(C,'token ' + token + ' after ' + C)
 case 'decorator':
-if(token=='id' && C.tree.length==0){return $transition(new $AbstractExprCtx(C,false),token,value)}
+if(token=='id' && C.tree.length==0){return $transition(new $DecoratorExprCtx(C),token,value)}
 if(token=='eol'){return $transition(C.parent,token)}
+$_SyntaxError(C,'token ' + token + ' after ' + C)
+case 'decorator_expression':
+if(C.expects===undefined){if(token=="id"){C.names.push(value)
+C.expects="."
+return C}
+$_SyntaxError(C,'token ' + token + ' after ' + C)}else if(C.is_call && token !=="eol"){$_SyntaxError(C,'token ' + token + ' after ' + C)}else if(token=="id" && C.expects=="id"){C.names.push(value)
+C.expects="."
+return C}else if(token=="." && C.expects=="."){C.expects="id"
+return C}else if(token=="(" && C.expects=="."){if(! C.is_call){C.is_call=true
+return new $CallCtx(C)}}else if(token=='eol'){return $transition(C.parent,token)}
 $_SyntaxError(C,'token ' + token + ' after ' + C)
 case 'def':
 switch(token){case 'id':
@@ -4366,14 +4392,13 @@ eval(js)}catch(err){if($B.debug > 1){console.log(err)
 for(var attr in err){console.log(attr + ' : ',err[attr])}}
 if(err.$py_error===undefined){console.log('Javascript error',err)
 err=_b_.RuntimeError.$factory(err + '')}
-var name=err.__name__
+var name=err.__class__.__name__
 var $trace=_b_.getattr(err,'info')
 if(name=='SyntaxError' ||name=='IndentationError'){var offset=err.args[3]
 $trace +='\n    ' + ' '.repeat(offset)+ '^' +
 '\n' + name + ': ' + err.args[0]}else{$trace +='\n' + name + ': ' + err.args}
 try{_b_.getattr($B.stderr,'write')($trace)}catch(print_exc_err){console.log($trace)}
-throw err}finally{delete root.children
-root=null
+throw err}finally{root=null
 js=null
 $B.clear_ns(script.name)}}
 $B._run_script=run_script
@@ -5702,7 +5727,9 @@ lns=null
 $B.clear_ns(globals_id)
 $B.clear_ns(locals_id)}}
 $$eval.$is_func=true
-function exec(src,globals,locals){return $$eval(src,globals,locals,'exec')||_b_.None}
+function exec(src,globals,locals){var missing={}
+var $=$B.args("exec",3,{src: null,globals: null,locals: null},["src","globals","locals"],arguments,{globals: missing,locals: missing},null,null),src=$.src,globals=$.globals===missing ? undefined : $.globals,locals=$.locals===missing ? undefined : $.locals
+return $$eval(src,globals,locals,'exec')||_b_.None}
 exec.$is_func=true
 function exit(){throw _b_.SystemExit}
 exit.__repr__=exit.__str__=function(){return "Use exit() or Ctrl-Z plus Return to exit"}

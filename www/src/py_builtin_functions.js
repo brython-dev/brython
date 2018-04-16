@@ -617,6 +617,13 @@ function $$eval(src, _globals, _locals){
 $$eval.$is_func = true
 
 function exec(src, globals, locals){
+    var missing = {}
+    var $ = $B.args("exec", 3, {src: null, globals: null, locals: null},
+        ["src", "globals", "locals"], arguments,
+        {globals: missing, locals: missing}, null, null),
+        src = $.src,
+        globals = $.globals === missing ? undefined : $.globals,
+        locals = $.locals === missing ? undefined : $.locals
     return $$eval(src, globals, locals, 'exec') || _b_.None
 }
 

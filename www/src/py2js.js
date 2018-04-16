@@ -2143,6 +2143,38 @@ var $DecoratorCtx = $B.parser.$DecoratorCtx = function(context){
     }
 }
 
+var $DecoratorExprCtx = $B.parser.$DecoratorExprCtx = function(context){
+    // Class for decorator expression. This can't be an arbitrary expression :
+    // it must be a dotted name, possibly called with arbitrary arguments
+    this.type = 'decorator_expression'
+    this.parent = context
+    context.tree[context.tree.length] = this
+    this.names = []
+    this.tree = []
+    this.is_call = false
+
+    this.toString = function(){return '(decorator expression)'}
+
+    this.to_js = function(){
+        this.js_processed = true
+
+        var func = new $IdCtx(this, this.names[0])
+        var obj = func.to_js()
+        this.names.slice(1).forEach(function(name){
+            obj = "_b_.getattr(" + obj + ", '" + name + "')"
+        })
+
+        if(this.tree.length > 1){
+            // decorator is a call
+            this.tree[0].func = {to_js: function(){return obj}}
+            return this.tree[0].to_js()
+        }
+
+
+        return obj //res.join(".")
+    }
+}
+
 var $DefCtx = $B.parser.$DefCtx = function(context){
     this.type = 'def'
     this.name = null
@@ -6162,10 +6194,37 @@ var $transition = $B.parser.$transition = function(context, token, value){
 
         case 'decorator':
             if(token == 'id' && context.tree.length == 0){
-                return $transition(new $AbstractExprCtx(context, false),
+                return $transition(new $DecoratorExprCtx(context),
                     token, value)
             }
             if(token == 'eol') {
+                return $transition(context.parent, token)
+            }
+            $_SyntaxError(context, 'token ' + token + ' after ' + context)
+
+        case 'decorator_expression':
+            if(context.expects === undefined){
+                if(token == "id"){
+                    context.names.push(value)
+                    context.expects = "."
+                    return context
+                }
+                $_SyntaxError(context, 'token ' + token + ' after ' + context)
+            }else if(context.is_call && token !== "eol"){
+                $_SyntaxError(context, 'token ' + token + ' after ' + context)
+            }else if(token == "id" && context.expects == "id"){
+                context.names.push(value)
+                context.expects = "."
+                return context
+            }else if(token == "." && context.expects == "."){
+                context.expects = "id"
+                return context
+            }else if(token == "(" && context.expects == "."){
+                if(! context.is_call){
+                    context.is_call = true
+                    return new $CallCtx(context)
+                }
+            }else if(token == 'eol') {
                 return $transition(context.parent, token)
             }
             $_SyntaxError(context, 'token ' + token + ' after ' + context)
@@ -8499,7 +8558,7 @@ var run_script = $B.parser.run_script = function(script){
         }
 
         // Print the error traceback on the standard error stream
-        var name = err.__name__
+        var name = err.__class__.__name__
         var $trace = _b_.getattr(err, 'info')
         if(name == 'SyntaxError' || name == 'IndentationError'){
             var offset = err.args[3]
@@ -8517,7 +8576,6 @@ var run_script = $B.parser.run_script = function(script){
         // Throw the error to stop execution
         throw err
     }finally{
-        delete root.children
         root = null
         js = null
         $B.clear_ns(script.name)
