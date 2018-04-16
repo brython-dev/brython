@@ -321,6 +321,10 @@ function method_wrapper(attr, klass, method){
     method.__str__ = method.__repr__ = function(self){
         return "<method '" + attr + "' of '" + klass.__name__ + "' objects>"
     }
+    method.$infos = {
+        __name__: attr,
+        __module__: klass.__module__
+    }
     return method
 }
 

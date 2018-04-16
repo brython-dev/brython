@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.5.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-04-16 11:12:54.215148"
-__BRYTHON__.timestamp=1523869974215
+__BRYTHON__.compiled_date="2018-04-16 11:25:22.517266"
+__BRYTHON__.timestamp=1523870722517
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -4772,6 +4772,7 @@ type.__format__=function(klass,fmt_spec){
 return _b_.str.$factory(klass)}
 function method_wrapper(attr,klass,method){
 method.__str__=method.__repr__=function(self){return "<method '" + attr + "' of '" + klass.__name__ + "' objects>"}
+method.$infos={__name__: attr,__module__: klass.__module__}
 return method}
 type.__repr__=type.__str__=function(kls){var qualname=kls.__name__
 if(kls.__module__ !="builtins"){qualname=kls.__module__ + "." + qualname}

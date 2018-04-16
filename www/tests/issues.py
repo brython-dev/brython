@@ -1718,6 +1718,29 @@ for i in l.get_list():
 
 assert l._called == 1
 
+# issue 808
+class A:
+  pass
+
+class B(object):
+    def __init__(self, *args, **kwargs):
+        self.res = None
+
+    def __setattr__(self, *args, **kwargs):
+        res = None
+        if len(args) == 2 and hasattr(self, args[0]):
+            old = getattr(self, args[0])
+            new = args[1]
+            res = super(B, self).__setattr__(*args, **kwargs)
+        else:
+            res = super(B, self).__setattr__(*args, **kwargs)
+        return res
+
+class C(B,A):
+  pass
+
+c = C()
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
