@@ -22,9 +22,10 @@ Here is a simple example of an HTML page running Python:
             <script type="text/python">
             from browser import document, alert
 
-            @document["mybutton"].bind("click")
             def echo(event):
                 alert(document["zone"].value)
+            
+            document["mybutton"].bind("click", echo)
             </script>
 
             <input id="zone"><button id="mybutton">click !</button>
@@ -62,7 +63,7 @@ either choose the latest stable release :
 
 ```xml
 <script type="text/javascript"
-    src="https://cdn.rawgit.com/brython-dev/brython/3.4.0/www/src/brython.js">
+    src="https://cdn.rawgit.com/brython-dev/brython/3.5.1/www/src/brython.js">
 </script>
 ```
 
@@ -81,7 +82,7 @@ with the [available stdlib](https://github.com/brython-dev/brython/tree/master/w
 
 ```xml
 <script type="text/javascript"
-    src="https://cdn.rawgit.com/brython-dev/brython/3.4.0/www/src/brython_stdlib.js">
+    src="https://cdn.rawgit.com/brython-dev/brython/3.5.1/www/src/brython_stdlib.js">
 </script>
 ```
 
@@ -157,8 +158,6 @@ If you find a bug/issue or do you want to see a new feature in Brython, please,
 [open a new issue](https://github.com/brython-dev/brython/issues "Brython GitHub Issues").
 
 There's a [Brython Community on Google Plus](https://plus.google.com/communities/114694456237115550531).
-
-IRC: #brython on [freenode](https://webchat.freenode.net/)
 
 Agile Development
 =================
