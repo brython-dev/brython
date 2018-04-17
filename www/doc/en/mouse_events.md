@@ -126,9 +126,10 @@ the mouse</div>
 ```exec_on_load
 from browser import document
 
-@document["green"].bind('mousemove')
 def mousemove(ev):
-    document["trace3"].text = f'coordinates : {ev.x}, {ev.y}'
+    document["trace3"].text = f"coordinates : {ev.x}, {ev.y}"
+
+document["green"].bind("mousemove", mousemove)
 ```
 </blockquote>
 </td>

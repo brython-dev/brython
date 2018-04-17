@@ -114,9 +114,10 @@ for elt_id in ["jaune2", "bleu2"]:
 ```exec_on_load
 from browser import document
 
-@document["vert"].bind("mousemove")
 def mousemove(ev):
-    document["trace3"].text = f'coordonnées : {ev.x}, {ev.y}'
+    document["trace3"].text = f"coordonnées : {ev.x}, {ev.y}"
+
+document["vert"].bind("mousemove", mousemove)
 ```
 
 Attributs de l'objet `DOMEvent`
