@@ -1741,6 +1741,15 @@ class C(B,A):
 
 c = C()
 
+# issue 794
+assert (-1024).to_bytes(2, "big", signed=True) == b'\xfc\x00'
+assert (1024).to_bytes(2, "big") == b'\x04\x00'
+assert (1024).to_bytes(2, "little") == b'\x00\x04'
+
+import ipaddress
+assert repr(ipaddress.ip_address('192.168.0.1')) == "IPv4Address('192.168.0.1')"
+assert repr(ipaddress.ip_address('2001:db8::')) == "IPv6Address('2001:db8::')"
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

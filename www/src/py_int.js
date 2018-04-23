@@ -74,9 +74,49 @@ int.from_bytes = function() {
   throw _b_.ValueError.$factory("byteorder must be either 'little' or 'big'")
 }
 
-int.to_bytes = function(length, byteorder, star) {
-  //var len = x.length
-  throw _b_.NotImplementedError.$factory("int.to_bytes is not implemented yet")
+int.to_bytes = function(){
+    var $ = $B.args("to_bytes", 3,
+        {self: null, len: null, byteorder: null},
+        ["self", "len", "byteorder"],
+        arguments, {}, "args", "kw"),
+        self = $.self,
+        len = $.len,
+        byteorder = $.byteorder,
+        kwargs = $.kw
+    if(! _b_.isinstance(len, _b_.int)){
+        throw _b_.TypeError.$factory("integer argument expected, got " +
+            $B.get_class(len).__name__)
+    }
+    if(["little", "big"].indexOf(byteorder) == -1){
+        throw _b_.ValueError.$factory("byteorder must be either 'little' or 'big'")
+    }
+    var signed = kwargs.$string_dict["signed"] || false,
+        res = []
+
+    if(self < 0){
+        if(! signed){
+            throw _b_.OverflowError.$factory("can't convert negative int to unsigned")
+        }
+        self = Math.pow(256, len) + self
+    }
+    var value = self
+    while(true){
+        var quotient = Math.floor(value / 256),
+            rest = value - 256 * quotient
+        res.push(rest)
+        if(quotient == 0){
+            break
+        }
+        value = quotient
+    }
+    if(res.length > len){
+        throw _b_.OverflowError.$factory("int too big to convert")
+    }
+    if(byteorder == "big"){res = res.reverse()}
+    return {
+        __class__: _b_.bytes,
+        source: res
+    }
 }
 
 
