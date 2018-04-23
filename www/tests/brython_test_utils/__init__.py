@@ -51,6 +51,7 @@ def discover_brython_test_modules():
           ("test_struct.py", "struct"),
           ("test_types.py", "types"),
           ("test_unittest.py", "unittest"),
+          ("test_urllib.py", "urllib"),
           #("test_indexedDB.py", "indexedDB"),
           #("test_time.py", "time"),
         ])]

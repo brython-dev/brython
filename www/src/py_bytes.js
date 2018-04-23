@@ -193,9 +193,8 @@ bytes.__hash__ = function(self) {
 
   //http://stackoverflow.com/questions/2909106/python-whats-a-correct-and-good-$
   // this implementation for strings maybe good enough for us..
-
   var hash = 1
-  for(var i = 0, len = self.length; i < len; i++) {
+  for(var i = 0, len = self.source.length; i < len; i++) {
       hash = (101 * hash + self.source[i]) & 0xFFFFFFFF
   }
 
