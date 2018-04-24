@@ -8523,7 +8523,7 @@ var load_scripts = $B.parser.load_scripts = function(scripts, run_script, onerro
     }
 }
 
-$B._load_scripts = load_scripts;
+$B._load_scripts = load_scripts
 
 var run_script = $B.parser.run_script = function(script){
     // script has attributes url, src, name
@@ -8759,6 +8759,98 @@ var brython = $B.parser.brython = function(options){
     }
 }
 
+var idb_cx
+
+function ajax_load_script(script){
+    var url = script.url,
+        name = script.name
+    var req = new XMLHttpRequest()
+    req.open("GET", url, true)
+    req.onreadystatechange = function(){
+        if(this.readyState==4){
+            if(this.status==200){
+                var src = this.responseText,
+                    root = $B.py2js(src, name, name),
+                    js = root.to_js()
+                /*
+                for(var key in root.imports){
+                    if(!__BRYTHON__.module_source.hasOwnProperty(key)){
+                        $B.tasks.splice(0, 0, [inImported, key])
+                    }
+                }
+                */
+                $B.tasks.splice(0, 0, ["execute",
+                    {js: js, src: src, name: name, url: url}])
+            }else if(this.status==404){
+                throw Error(url+" not found")
+            }
+            loop()
+        }
+    }
+    req.send()
+}
+
+var loop = $B.loop = function(){
+    if($B.tasks.length==0){
+        // No more $B.tasks to process.
+        if(idb_cx){idb_cx.result.close()}
+        return
+    }
+    var task = $B.tasks.shift(),
+        func = task[0],
+        args = task.slice(1)
+
+    if(func == "execute"){
+        try{
+            var script = task[1],
+                src = script.src,
+                name = script.name,
+                url = script.url,
+                js = script.js
+            eval(js)
+        }catch(err){
+            if($B.debug>1){
+                console.log(err)
+                for(var attr in err){
+                   console.log(attr+' : ', err[attr])
+                }
+            }
+
+            // If the error was not caught by the Python runtime, build an
+            // instance of a Python exception
+            if(err.$py_error===undefined){
+                console.log('Javascript error', err)
+                err=_b_.RuntimeError(err+'')
+            }
+
+            // Print the error traceback on the standard error stream
+            var name = err.__name__,
+                trace = _b_.getattr(err,'info')
+            if(name=='SyntaxError' || name=='IndentationError'){
+                var offset = err.args[3]
+                trace += '\n    ' + ' '.repeat(offset) + '^' +
+                    '\n' + name+': '+err.args[0]
+            }else{
+                trace += '\n'+name+': ' + err.args
+            }
+            try{
+                _b_.getattr($B.stderr,'write')(trace)
+            }catch(print_exc_err){
+                console.log(trace)
+            }
+            // Throw the error to stop execution
+            throw err
+
+        }
+        loop()
+    }else{
+        // Run function with arguments
+        func.apply(null, args)
+    }
+}
+
+$B.tasks = []
+
 var _run_scripts = $B.parser._run_scripts = function(options) {
     // Save initial Javascript namespace
     var kk = Object.keys(_window)
@@ -8881,15 +8973,18 @@ var _run_scripts = $B.parser._run_scripts = function(options) {
                 if(elt.src){
                     // format <script type="text/python" src="python_script.py">
                     // get source code by an Ajax call
-                    scripts.push({name: module_name, url: elt.src})
+                    $B.tasks.push([ajax_load_script,
+                        {name: module_name, url: elt.src}])
                 }else{
                     // Get source code inside the script element
                     var src = (elt.innerHTML || elt.textContent)
                     // remove leading CR if any
                     src = src.replace(/^\n/, '')
                     $B.$py_module_path[module_name] = $B.script_path
-                    scripts.push({name: module_name, src: src,
-                        url: $B.script_path})
+                    var root = $B.py2js(src, module_name, module_name),
+                        js = root.to_js()
+                    $B.tasks.push(["execute",
+                        {js: js, name: module_name, src: src, url: $B.script_path}])
                 }
             }
         })
@@ -8902,7 +8997,7 @@ var _run_scripts = $B.parser._run_scripts = function(options) {
     }
     */
 
-    if(options.ipy_id === undefined){$B._load_scripts(scripts)}
+    if(options.ipy_id === undefined){$B.loop()} //$B._load_scripts(scripts)}
 
     /* Uncomment to check the names added in global Javascript namespace
     var kk1 = Object.keys(_window)

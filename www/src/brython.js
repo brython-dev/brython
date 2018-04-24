@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.5.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-04-23 19:10:45.617759"
-__BRYTHON__.timestamp=1524503445617
+__BRYTHON__.compiled_date="2018-04-24 11:03:03.346482"
+__BRYTHON__.timestamp=1524560583346
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -4380,7 +4380,7 @@ req.open('GET',script.url,true)
 req.send()}else{
 callback(null,script)
 load_scripts(scripts)}}}
-$B._load_scripts=load_scripts;
+$B._load_scripts=load_scripts
 var run_script=$B.parser.run_script=function(script){
 $B.$py_module_path[script.name]=script.url
 var root,js
@@ -4463,6 +4463,35 @@ $B.scripts=[]
 $B.js={}
 if($B.$options.args){$B.__ARGV=$B.$options.args}else{$B.__ARGV=_b_.list.$factory([])}
 if(!isWebWorker){_run_scripts(options)}}
+var idb_cx
+function ajax_load_script(script){var url=script.url,name=script.name
+var req=new XMLHttpRequest()
+req.open("GET",url,true)
+req.onreadystatechange=function(){if(this.readyState==4){if(this.status==200){var src=this.responseText,root=$B.py2js(src,name,name),js=root.to_js()
+$B.tasks.splice(0,0,["execute",{js: js,src: src,name: name,url: url}])}else if(this.status==404){throw Error(url+" not found")}
+loop()}}
+req.send()}
+var loop=$B.loop=function(){if($B.tasks.length==0){
+if(idb_cx){idb_cx.result.close()}
+return}
+var task=$B.tasks.shift(),func=task[0],args=task.slice(1)
+console.log("task",task)
+if(func=="execute"){if(task[2]!==undefined){console.log('env for eval',task[2])
+eval("$locals_"+task[2][0]+"=task[2][1]")}
+try{var script=task[1],src=script.src,name=script.name,url=script.url,js=script.js
+eval(js)}catch(err){if($B.debug>1){console.log(err)
+for(var attr in err){console.log(attr+' : ',err[attr])}}
+if(err.$py_error===undefined){console.log('Javascript error',err)
+err=_b_.RuntimeError(err+'')}
+var name=err.__name__,trace=_b_.getattr(err,'info')
+if(name=='SyntaxError' ||name=='IndentationError'){var offset=err.args[3]
+trace +='\n    ' + ' '.repeat(offset)+ '^' +
+'\n' + name+': '+err.args[0]}else{trace +='\n'+name+': ' + err.args}
+try{_b_.getattr($B.stderr,'write')(trace)}catch(print_exc_err){console.log(trace)}
+throw err}
+loop()}else{
+func.apply(null,args)}}
+$B.tasks=[]
 var _run_scripts=$B.parser._run_scripts=function(options){
 var kk=Object.keys(_window)
 if(options.ipy_id !==undefined){var $elts=[]
@@ -4506,12 +4535,13 @@ while(defined_ids[module_name]!==undefined){module_name='__main__' + $B.UUID()}}
 $B.scripts.push(module_name)
 var $src=null
 if(elt.src){
-scripts.push({name: module_name,url: elt.src})}else{
+$B.tasks.push([ajax_load_script,{name: module_name,url: elt.src}])}else{
 var src=(elt.innerHTML ||elt.textContent)
 src=src.replace(/^\n/,'')
 $B.$py_module_path[module_name]=$B.script_path
-scripts.push({name: module_name,src: src,url: $B.script_path})}}})}
-if(options.ipy_id===undefined){$B._load_scripts(scripts)}}
+var root=$B.py2js(src,module_name,module_name),js=root.to_js()
+$B.tasks.push(["execute",{js: js,name: module_name,src: src,url: $B.script_path}])}}})}
+if(options.ipy_id===undefined){$B.loop()}}
 $B.$operators=$operators
 $B.$Node=$Node
 $B.$NodeJSCtx=$NodeJSCtx
