@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.5.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-04-24 16:48:41.782632"
-__BRYTHON__.timestamp=1524581321782
+__BRYTHON__.compiled_date="2018-04-24 19:44:39.423452"
+__BRYTHON__.timestamp=1524591879423
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -3318,7 +3318,8 @@ break
 case '=':
 if(C.expect==','){if(C.parent.type=="call_arg"){
 if(C.tree[0].type !='id'){$_SyntaxError(C,["keyword can't be an expression"])}
-return new $AbstractExprCtx(new $KwArgCtx(C),true)}else if(C.parent.type=="annotation"){return $transition(C.parent.parent,token,value)}
+return new $AbstractExprCtx(new $KwArgCtx(C),true)}else if(C.parent.type=="annotation"){return $transition(C.parent.parent,token,value)}else if(C.parent.type=="op"){
+$_SyntaxError(C,["can't assign to operator"])}
 while(C.parent !==undefined){C=C.parent
 if(C.type=='condition'){$_SyntaxError(C,'token ' + token + ' after '
 + C)}}
@@ -4480,16 +4481,18 @@ if(func=="execute"){try{var script=task[1],src=script.src,name=script.name,url=s
 eval(js)}catch(err){if($B.debug>1){console.log(err)
 for(var attr in err){console.log(attr+' : ',err[attr])}}
 if(err.$py_error===undefined){console.log('Javascript error',err)
-err=_b_.RuntimeError(err+'')}
-var name=err.__name__,trace=_b_.getattr(err,'info')
+err=_b_.RuntimeError.$factory(err+'')}
+handle_error(err)}
+loop()}else{
+func.apply(null,args)}}
+$B.tasks=[]
+function handle_error(err){
+var name=err.__class__.__name__,trace=_b_.getattr(err,'info')
 if(name=='SyntaxError' ||name=='IndentationError'){var offset=err.args[3]
 trace +='\n    ' + ' '.repeat(offset)+ '^' +
 '\n' + name+': '+err.args[0]}else{trace +='\n'+name+': ' + err.args}
 try{_b_.getattr($B.stderr,'write')(trace)}catch(print_exc_err){console.log(trace)}
 throw err}
-loop()}else{
-func.apply(null,args)}}
-$B.tasks=[]
 var _run_scripts=$B.parser._run_scripts=function(options){
 var kk=Object.keys(_window)
 if(options.ipy_id !==undefined){var $elts=[]
@@ -4524,7 +4527,8 @@ for(var i=0;i < $elts.length;i++){var elt=$elts[i]
 if(elt.id){if(defined_ids[elt.id]){throw Error("Brython error : Found 2 scripts with the " +
 "same id '" + elt.id + "'")}else{defined_ids[elt.id]=true}}}
 var scripts=[]
-$elts.forEach(function(elt){if(elt.type=="text/python" ||elt.type=="text/python3"){
+for(var i=0;i < $elts.length;i++){var elt=$elts[i]
+if(elt.type=="text/python" ||elt.type=="text/python3"){
 if(elt.id){module_name=elt.id}
 else{
 if(first_script){module_name='__main__'
@@ -4537,10 +4541,10 @@ $B.tasks.push([ajax_load_script,{name: module_name,url: elt.src}])}else{
 var src=(elt.innerHTML ||elt.textContent)
 src=src.replace(/^\n/,'')
 $B.$py_module_path[module_name]=$B.script_path
-var root=$B.py2js(src,module_name,module_name),js=root.to_js(),script={js: js,name: module_name,src: src,url: $B.script_path}
+try{var root=$B.py2js(src,module_name,module_name),js=root.to_js(),script={js: js,name: module_name,src: src,url: $B.script_path}}catch(err){handle_error(err)}
 if($B.hasOwnProperty("VFS")){Object.keys(root.imports).forEach(function(name){if($B.VFS.hasOwnProperty(name)){console.log("load submodule",name)
 var submodule=$B.VFS[name],type=submodule[0],src=submodule[1],is_package=submodule.length==3}})}
-$B.tasks.push(["execute",script])}}})}
+$B.tasks.push(["execute",script])}}}}
 if(options.ipy_id===undefined){$B.loop()}}
 $B.$operators=$operators
 $B.$Node=$Node
@@ -6479,7 +6483,8 @@ BaseException.__str__=function(self){return _b_.str.$factory(self.args[0])}
 BaseException.__new__=function(cls){var err=_b_.BaseException.$factory()
 err.__class__=cls
 return err}
-BaseException.__getattr__=function(self,attr){if(attr=="info"){var name=self.__class__.__name__
+BaseException.__getattr__=function(self,attr){if(attr=="info"){if(self.__class__===undefined){console.log("no class",self)}
+var name=self.__class__.__name__
 if(name=="SyntaxError" ||name=="IndentationError"){return 'File "' + self.args[1]+ '", line ' + self.args[2]+
 "\n    " + self.args[4]}
 var info="Traceback (most recent call last):"

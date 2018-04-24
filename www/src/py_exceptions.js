@@ -207,6 +207,8 @@ BaseException.__getattr__ = function(self, attr){
 
     if(attr == "info"){
 
+        if(self.__class__ === undefined){console.log("no class", self)}
+
         var name = self.__class__.__name__
         if(name == "SyntaxError" || name == "IndentationError"){
             return 'File "' + self.args[1] + '", line ' + self.args[2] +

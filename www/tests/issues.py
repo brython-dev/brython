@@ -1750,6 +1750,13 @@ import ipaddress
 assert repr(ipaddress.ip_address('192.168.0.1')) == "IPv4Address('192.168.0.1')"
 assert repr(ipaddress.ip_address('2001:db8::')) == "IPv6Address('2001:db8::')"
 
+# issue 811
+try:
+    exec("a + b = 1")
+    raise Exception("should have raised SyntaxError")
+except SyntaxError:
+    pass
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

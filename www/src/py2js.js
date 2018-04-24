@@ -6683,6 +6683,9 @@ var $transition = $B.parser.$transition = function(context, token, value){
                    }else if(context.parent.type == "annotation"){
                        return $transition(context.parent.parent, token,
                            value)
+                   }else if(context.parent.type == "op"){
+                        // issue 811
+                        $_SyntaxError(context, ["can't assign to operator"])
                    }
 
                    while(context.parent !== undefined){
@@ -8825,26 +8828,10 @@ var loop = $B.loop = function(){
             // instance of a Python exception
             if(err.$py_error===undefined){
                 console.log('Javascript error', err)
-                err=_b_.RuntimeError(err+'')
+                err=_b_.RuntimeError.$factory(err+'')
             }
 
-            // Print the error traceback on the standard error stream
-            var name = err.__name__,
-                trace = _b_.getattr(err,'info')
-            if(name=='SyntaxError' || name=='IndentationError'){
-                var offset = err.args[3]
-                trace += '\n    ' + ' '.repeat(offset) + '^' +
-                    '\n' + name+': '+err.args[0]
-            }else{
-                trace += '\n'+name+': ' + err.args
-            }
-            try{
-                _b_.getattr($B.stderr,'write')(trace)
-            }catch(print_exc_err){
-                console.log(trace)
-            }
-            // Throw the error to stop execution
-            throw err
+            handle_error(err)
 
         }
         loop()
@@ -8855,6 +8842,26 @@ var loop = $B.loop = function(){
 }
 
 $B.tasks = []
+
+function handle_error(err){
+    // Print the error traceback on the standard error stream
+    var name = err.__class__.__name__,
+        trace = _b_.getattr(err,'info')
+    if(name=='SyntaxError' || name=='IndentationError'){
+        var offset = err.args[3]
+        trace += '\n    ' + ' '.repeat(offset) + '^' +
+            '\n' + name+': '+err.args[0]
+    }else{
+        trace += '\n'+name+': ' + err.args
+    }
+    try{
+        _b_.getattr($B.stderr,'write')(trace)
+    }catch(print_exc_err){
+        console.log(trace)
+    }
+    // Throw the error to stop execution
+    throw err
+}
 
 var _run_scripts = $B.parser._run_scripts = function(options) {
     // Save initial Javascript namespace
@@ -8950,7 +8957,8 @@ var _run_scripts = $B.parser._run_scripts = function(options) {
             }
         }
         var scripts = []
-        $elts.forEach(function(elt){
+        for(var i = 0; i < $elts.length; i++){
+            var elt = $elts[i]
             if(elt.type == "text/python" || elt.type == "text/python3"){
                 // Set the module name, ie the value of the builtin variable
                 // __name__.
@@ -8986,10 +8994,14 @@ var _run_scripts = $B.parser._run_scripts = function(options) {
                     // remove leading CR if any
                     src = src.replace(/^\n/, '')
                     $B.$py_module_path[module_name] = $B.script_path
-                    var root = $B.py2js(src, module_name, module_name),
-                        js = root.to_js(),
-                        script = {js: js, name: module_name, src: src,
+                    try{
+                        var root = $B.py2js(src, module_name, module_name),
+                            js = root.to_js(),
+                            script = {js: js, name: module_name, src: src,
                             url: $B.script_path}
+                    }catch(err){
+                        handle_error(err)
+                    }
                     if($B.hasOwnProperty("VFS")){
                         Object.keys(root.imports).forEach(function(name){
                             if($B.VFS.hasOwnProperty(name)){
@@ -9014,7 +9026,7 @@ var _run_scripts = $B.parser._run_scripts = function(options) {
                     $B.tasks.push(["execute", script])
                 }
             }
-        })
+        }
     }
 
     /*
