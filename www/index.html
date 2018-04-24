@@ -30,9 +30,13 @@ def ch_lang(ev):
     new_lang = sel.options[sel.selectedIndex].value
     document.location.href = f"index.html?lang={new_lang}"
 
-for elt in document[html.SELECT]:
-    if elt.id.startswith('change_lang_'):
-        document[elt.id].bind('change',ch_lang)
+for elt in document.select("select.language"):
+    elt.bind('change', ch_lang)
+
+# underline links in page text, but not in the upper banner
+for elt in document.select("a"):
+    if not elt.classList.contains("banner"):
+        elt.style.textDecoration = "underline"
 </script>
 
 <script type="text/python3">
