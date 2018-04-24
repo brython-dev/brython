@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.5.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-04-24 11:03:03.346482"
-__BRYTHON__.timestamp=1524560583346
+__BRYTHON__.compiled_date="2018-04-24 16:48:41.782632"
+__BRYTHON__.timestamp=1524581321782
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -1644,7 +1644,8 @@ if(this.names[0]=='*'){
 scope.blurred=true
 res[pos++]='\n' + head + 'for(var $attr in $B.imported["' +
 mod_name + '"]){if($attr.charAt(0) !== "_")' +
-'{$locals[$attr] = $B.imported["' + mod_name + '"][$attr]}};'}else{this.names.forEach(function(name){res[pos++]='\n' + head + '$locals["' +
+'{$locals[$attr] = $B.imported["' + mod_name + '"][$attr]}};'}else{this.names.forEach(function(name){module.imports[this.module + '.' + name]=true
+res[pos++]='\n' + head + '$locals["' +
 (this.aliases[name]||name)+ '"] = $B.imported["' +
 mod_name + '"]["' + name + '"];'},this)}
 res[pos++]='\n' + head + 'None;'
@@ -4475,10 +4476,7 @@ var loop=$B.loop=function(){if($B.tasks.length==0){
 if(idb_cx){idb_cx.result.close()}
 return}
 var task=$B.tasks.shift(),func=task[0],args=task.slice(1)
-console.log("task",task)
-if(func=="execute"){if(task[2]!==undefined){console.log('env for eval',task[2])
-eval("$locals_"+task[2][0]+"=task[2][1]")}
-try{var script=task[1],src=script.src,name=script.name,url=script.url,js=script.js
+if(func=="execute"){try{var script=task[1],src=script.src,name=script.name,url=script.url,js=script.js
 eval(js)}catch(err){if($B.debug>1){console.log(err)
 for(var attr in err){console.log(attr+' : ',err[attr])}}
 if(err.$py_error===undefined){console.log('Javascript error',err)
@@ -4539,8 +4537,10 @@ $B.tasks.push([ajax_load_script,{name: module_name,url: elt.src}])}else{
 var src=(elt.innerHTML ||elt.textContent)
 src=src.replace(/^\n/,'')
 $B.$py_module_path[module_name]=$B.script_path
-var root=$B.py2js(src,module_name,module_name),js=root.to_js()
-$B.tasks.push(["execute",{js: js,name: module_name,src: src,url: $B.script_path}])}}})}
+var root=$B.py2js(src,module_name,module_name),js=root.to_js(),script={js: js,name: module_name,src: src,url: $B.script_path}
+if($B.hasOwnProperty("VFS")){Object.keys(root.imports).forEach(function(name){if($B.VFS.hasOwnProperty(name)){console.log("load submodule",name)
+var submodule=$B.VFS[name],type=submodule[0],src=submodule[1],is_package=submodule.length==3}})}
+$B.tasks.push(["execute",script])}}})}
 if(options.ipy_id===undefined){$B.loop()}}
 $B.$operators=$operators
 $B.$Node=$Node

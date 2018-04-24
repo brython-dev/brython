@@ -3324,6 +3324,10 @@ var $FromCtx = $B.parser.$FromCtx = function(context){
         }
         if(_mod){packages.push(_mod)}
         this.module = packages.join('.')
+        /*
+        console.log("from", this.module, "import", this.names, $package, packages,
+            module.module)
+        */
 
         // FIXME : Replacement still needed ?
         var mod_name = this.module.replace(/\$/g, '')
@@ -3347,6 +3351,7 @@ var $FromCtx = $B.parser.$FromCtx = function(context){
                 '{$locals[$attr] = $B.imported["' + mod_name + '"][$attr]}};'
         }else{
             this.names.forEach(function(name){
+                module.imports[this.module + '.' + name] = true
                 res[pos++] = '\n' + head + '$locals["' +
                 (this.aliases[name] || name) + '"] = $B.imported["' +
                 mod_name + '"]["' + name + '"];'
@@ -8982,9 +8987,31 @@ var _run_scripts = $B.parser._run_scripts = function(options) {
                     src = src.replace(/^\n/, '')
                     $B.$py_module_path[module_name] = $B.script_path
                     var root = $B.py2js(src, module_name, module_name),
-                        js = root.to_js()
-                    $B.tasks.push(["execute",
-                        {js: js, name: module_name, src: src, url: $B.script_path}])
+                        js = root.to_js(),
+                        script = {js: js, name: module_name, src: src,
+                            url: $B.script_path}
+                    if($B.hasOwnProperty("VFS")){
+                        Object.keys(root.imports).forEach(function(name){
+                            if($B.VFS.hasOwnProperty(name)){
+                                console.log("load submodule", name)
+                                var submodule = $B.VFS[name],
+                                    type = submodule[0],
+                                    src = submodule[1],
+                                    is_package = submodule.length == 3
+                                /*
+                                if(type==".py"){
+                                    root = $B.py2js(src, name, name),
+                                    js = root.to_js()
+                                }else{
+                                    js = src
+                                }
+                                $B.tasks.splice(0, 0, ["execute",
+                                    {src: src, js: js, name: name, url: "<VFS>"}])
+                                */
+                            }
+                        })
+                    }
+                    $B.tasks.push(["execute", script])
                 }
             }
         })
