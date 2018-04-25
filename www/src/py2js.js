@@ -8777,18 +8777,22 @@ function ajax_load_script(script){
     req.onreadystatechange = function(){
         if(this.readyState==4){
             if(this.status==200){
-                var src = this.responseText,
-                    root = $B.py2js(src, name, name),
+                var src = this.responseText
+                try{
+                    var root = $B.py2js(src, name, name),
                     js = root.to_js()
-                /*
-                for(var key in root.imports){
-                    if(!__BRYTHON__.module_source.hasOwnProperty(key)){
-                        $B.tasks.splice(0, 0, [inImported, key])
+                    /*
+                    for(var key in root.imports){
+                        if(!__BRYTHON__.module_source.hasOwnProperty(key)){
+                            $B.tasks.splice(0, 0, [inImported, key])
+                        }
                     }
+                    */
+                    $B.tasks.splice(0, 0, ["execute",
+                        {js: js, src: src, name: name, url: url}])
+                }catch(err){
+                    handle_error(err)
                 }
-                */
-                $B.tasks.splice(0, 0, ["execute",
-                    {js: js, src: src, name: name, url: url}])
             }else if(this.status==404){
                 throw Error(url+" not found")
             }
