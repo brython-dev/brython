@@ -131,7 +131,7 @@ def run():
 
 @asyncio.run_async(loop=global_loop)
 def test_next():
-    global script_num,failed
+    global script_num, failed
     script_num += 1
     options = doc['files'].options
     if script_num < len(options):

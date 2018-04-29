@@ -6,6 +6,7 @@ from browser import timer
 import asyncio
 import time
 
+
 class Handle:
     def __init__(self):
         self._cancelled = False
@@ -15,6 +16,7 @@ class Handle:
 
     def cancelled(self):
         return self._cancelled
+
 
 class TimerHandle(Handle):
     """Object returned by timed callback registration methods."""
@@ -58,6 +60,7 @@ class TimerHandle(Handle):
             timer.clear_timeout(self._timeout)
             self._cancelled = True
 
+
 class PausableTimerHandle(TimerHandle):
     def __init__(self, callback, when, schedule_immediately=True):
         super().__init__(None, when)
@@ -77,7 +80,7 @@ class PausableTimerHandle(TimerHandle):
                 delay = 0
             else:
                 delay = (self._when-tm)*1000
-            self._timeout = timer.set_timeout(self._cb,delay)
+            self._timeout = timer.set_timeout(self._cb, delay)
 
     def pause(self):
         if not self._finished and self._timeout:
@@ -92,7 +95,6 @@ class PausableTimerHandle(TimerHandle):
 
     def finished(self):
         return self._finished
-
 
 
 class BrowserEventLoop:
@@ -187,6 +189,7 @@ class BrowserEventLoop:
     def set_debug(self, enabled):
         self._debug = enabled
 
+
 class AbstractEventLoopPolicy:
     def __init__(self):
         loop = self.new_event_loop()
@@ -206,19 +209,22 @@ _default_policy = AbstractEventLoopPolicy()
 _current_policy = _default_policy
 
 
-
 def get_event_loop_policy():
     return _current_policy
+
 
 def set_event_loop_policy(policy):
     global current_policy
     _current_policy = policy or _default_policy
 
+
 def get_event_loop():
     return _current_policy.get_event_loop()
 
+
 def set_event_loop(loop):
     _current_policy.set_event_loop(loop)
+
 
 def new_event_loop():
     return _current_policy.new_event_loop()
