@@ -865,7 +865,7 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context){
             new $NodeJSCtx(new_node, 'var ' + $var + ' = [], $pos = 0')
             new_nodes[pos++] = new_node
 
-            righ_items.forEach(function(right_item){
+            right_items.forEach(function(right_item){
                 var js = $var + '[$pos++] = ' + right_item.to_js()
                 var new_node = new $Node()
                 new $NodeJSCtx(new_node, js)
