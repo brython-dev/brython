@@ -424,8 +424,30 @@ var $Node = $B.parser.$Node = function(type){
              this.res.push('}\n')
           }
         }
-
         this.js = this.res.join('')
+
+
+        // Replace placeholders in __code__.co_code  attributes of
+        // functions with the actual javascript code of the functions
+        var collect=false, collected='';
+        for(let ch of this.children) {
+            if (! collect && ch.context && ch.context.tree
+                && ch.context.tree[0] && ch.context.tree[0]._func_marker) { // ch is the node starting the function
+                    collect = ch.context.tree[0]._func_marker
+                    collected = ch.to_js(indent+4)
+            } else if (ch instanceof $MarkerNode && ch._name.startsWith('func_end:')
+                && ch._name.slice(9) === collect) { // ch is a marker node ending the function
+                    // replace the placeholder (collect) with the js code (collected)
+                    // of all the nodes starting with the first and ending with the end marker
+                    // node
+                    this.js = this.js.replace(collect, escape(collected))
+                    collect = false
+                    collected = ''
+            } else if (collect) {
+                collected += ch.to_js(indent+4)
+            }
+        }
+
         return this.js
     }
 
@@ -585,9 +607,17 @@ var $YieldFromMarkerNode = $B.parser.$YieldFromMarkerNode = function(params) {
                 assign_ctx.to_js()
             )
         }
-            return 2
+        return 2
     }
 
+}
+
+var $MarkerNode = $B.parser.$MarkerNode = function(name) {
+    $Node.apply(this, ['marker'])
+    new $NodeCtx(this)
+    this._name = name
+    this.transform = function(rank){return 1}
+    this.to_js = function(){return ''}
 }
 
 /*
@@ -2652,7 +2682,9 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         var co_varnames = []
         for(var attr in this.varnames){co_varnames.push('"' + attr + '"')}
 
-        // Add attribute __code__
+        // CODE_MARKER is a placeholder which will be replaced
+        // by the javascript code of the function
+        var CODE_MARKER = '___%%%-CODE-%%%___' + this.name + this.num;
         var h = '\n' + ' '.repeat(indent + 8)
         js = '    __code__:{' + h + '    __class__:$B.Code'
         var h1 = ',' + h + ' '.repeat(4)
@@ -2665,6 +2697,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
             h1 + 'co_name: "' + this.name + '"' +
             h1 + 'co_nlocals: ' + co_varnames.length +
             h1 + 'co_varnames: [' + co_varnames.join(', ') + ']' +
+            h1 + 'co_code:  unescape("'+CODE_MARKER +'")' +
             h + '}\n    };'
 
         // End with None for interactive interpreter
@@ -2675,6 +2708,8 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         // Close anonymous function with defaults as argument
         this.default_str = '{' + defs1.join(', ') + '}'
         if(this.type == "def"){
+            // Add a node to mark the end of the function
+            node.parent.insert(rank + offset++, new $MarkerNode('func_end:'+CODE_MARKER))
             node.parent.insert(rank + offset++,
                 $NodeJS('return ' + name + '})(' + this.default_str + ')'))
             if(this.async){
@@ -2709,6 +2744,8 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         }
 
         this.transformed = true
+
+        this._func_marker = CODE_MARKER
 
         return offset
     }
