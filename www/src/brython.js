@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.5.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-04-25 16:26:13.366821"
-__BRYTHON__.timestamp=1524666373366
+__BRYTHON__.compiled_date="2018-04-29 16:58:56.260839"
+__BRYTHON__.timestamp=1525013936260
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -700,7 +700,7 @@ expr1.parent.tree.pop()
 expr1.parent.tree.push(assign1)
 var aa2=$NodeJS("else")
 parent.insert(rank + offset,aa2)
-aa2.add($NodeJS('$B.$getattr(' + C.to_js()+ ',"' +
+aa2.add($NodeJS(left + ' = $B.$getattr(' + C.to_js()+ ',"' +
 func + '")(' + right + ')'))
 if(left_is_id && !was_bound && !this.scope.blurred){this.scope.binding[left_id]=undefined}
 return offset}
@@ -4542,9 +4542,11 @@ $B.tasks.push([ajax_load_script,{name: module_name,url: elt.src}])}else{
 var src=(elt.innerHTML ||elt.textContent)
 src=src.replace(/^\n/,'')
 $B.$py_module_path[module_name]=$B.script_path
-try{var root=$B.py2js(src,module_name,module_name),js=root.to_js(),script={js: js,name: module_name,src: src,url: $B.script_path}}catch(err){handle_error(err)}
+try{var root=$B.py2js(src,module_name,module_name),js=root.to_js(),script={js: js,name: module_name,src: src,url: $B.script_path}
+if($B.debug > 1){console.log(js)}}catch(err){handle_error(err)}
 if($B.hasOwnProperty("VFS")){Object.keys(root.imports).forEach(function(name){if($B.VFS.hasOwnProperty(name)){console.log("load submodule",name)
-var submodule=$B.VFS[name],type=submodule[0],src=submodule[1],is_package=submodule.length==3}})}
+var submodule=$B.VFS[name],type=submodule[0],src=submodule[1],imports=submodule[2],is_package=submodule.length==4
+if(type==".py"){console.log("imports",imports)}}})}
 $B.tasks.push(["execute",script])}}}}
 if(options.ipy_id===undefined){$B.loop()}}
 $B.$operators=$operators
@@ -7373,8 +7375,8 @@ return fields}
 var finder_VFS={__class__: _b_.type,__mro__:[_b_.object],__name__: "VFSFinder",create_module : function(cls,spec){
 return _b_.None},exec_module : function(cls,module){var stored=module.__spec__.loader_state.stored
 delete module.__spec__["loader_state"]
-var ext=stored[0],module_contents=stored[1]
-module.$is_package=stored[2]||false
+var ext=stored[0],module_contents=stored[1],imports=stored[2]
+module.$is_package=stored[3]||false
 var path=$B.brython_path + "Lib/" + module.__name__
 if(module.$is_package){path +="/__init__.py"}
 module.__file__=path
@@ -7389,7 +7391,7 @@ mod.__spec__=spec
 cls.exec_module(cls,mod)}}},find_spec : function(cls,fullname,path,prev_module){if(!$B.use_VFS){return _b_.None}
 var stored=$B.VFS[fullname]
 if(stored===undefined){return _b_.None}
-var is_package=stored[2],is_builtin=$B.builtin_module_names.indexOf(fullname)> -1
+var is_package=stored[3]||false,is_builtin=$B.builtin_module_names.indexOf(fullname)> -1
 return new_spec({name : fullname,loader: cls,
 origin : is_builtin? "built-in" : "brython_stdlib",
 submodule_search_locations: is_package?[]: _b_.None,loader_state:{stored: stored},
@@ -9046,7 +9048,9 @@ var object=_b_.object,$N=_b_.None
 function $list(){
 return list.$factory.apply(null,arguments)}
 var list={__class__: _b_.type,__module__: "builtins",__mro__:[object],__name__: "list",$is_class: true,$native: true,__dir__: object.__dir__}
-list.__add__=function(self,other){if($B.get_class(self)!==$B.get_class(other)){throw TypeError.$factory('can only concatenate list (not "' +
+list.__add__=function(self,other){if($B.get_class(self)!==$B.get_class(other)){var radd=getattr(other,"__radd__",NotImplemented)
+if(radd !==NotImplemented){return radd(self)}
+throw TypeError.$factory('can only concatenate list (not "' +
 $B.get_class(other).__name__ + '") to list')}
 var res=self.valueOf().concat(other.valueOf())
 if(isinstance(self,tuple)){res=tuple.$factory(res)}
@@ -9067,7 +9071,7 @@ if(step===None){step=1}
 var start=arg.start
 if(start===None){start=step > 0 ? 0 : self.length}
 var stop=arg.stop
-if(stop===None){stop=step >0 ? self.length : 0}
+if(stop===None){stop=step > 0 ? self.length : 0}
 if(start < 0){start=self.length + start}
 if(stop < 0){stop=self.length + stop}
 var res=[],i=null,pos=0
@@ -9124,6 +9128,8 @@ $B.get_class(other[i]).__name__ + "()")}else return res}}
 return false}
 list.__hash__=None
 list.__iadd__=function(){var $=$B.args("__iadd__",2,{self: null,x: null},["self","x"],arguments,{},null,null)
+var radd=getattr($.x,"__radd__",NotImplemented)
+if(radd !==NotImplemented){return radd($.self)}
 var x=list.$factory($B.$iter($.x))
 for(var i=0;i < x.length;i++){$.self.push(x[i])}
 return $.self}
@@ -9152,6 +9158,8 @@ for(var i=0;i < other;i++){for(var j=0;j < len;j++){res.push($temp[j])}}
 res.__class__=self.__class__
 return res}
 if(hasattr(other,"__int__")||hasattr(other,"__index__")){return list.__mul__(self,_b_.int.$factory(other))}
+var rmul=$B.$getattr(other,"__rmul__",NotImplemented)
+if(rmul !==NotImplemented){return rmul(self)}
 throw _b_.TypeError.$factory(
 "can't multiply sequence by non-int of type '" +
 $B.get_class(other).__name__ + "'")}
@@ -10641,7 +10649,8 @@ if(! func(item)){return false}}catch(err){if(_b_.isinstance(err,_b_.StopIteratio
 throw err}}
 return true}
 function $accept_only_set(f,op){return function(self,other,accept_iter){$test(accept_iter,other,op)
-return f(self,other)}}
+f(self,other)
+return self}}
 set.__iand__=$accept_only_set(set.intersection_update,"&=")
 set.__isub__=$accept_only_set(set.difference_update,"-=")
 set.__ixor__=$accept_only_set(set.symmetric_difference_update,"^=")

@@ -564,7 +564,8 @@ set.issuperset = function(){
 function $accept_only_set(f, op) {
     return function(self, other, accept_iter) {
         $test(accept_iter, other, op)
-        return f(self, other)
+        f(self, other)
+        return self
     }
 }
 

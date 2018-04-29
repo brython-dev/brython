@@ -1360,7 +1360,7 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
         parent.insert(rank + offset, aa2)
 
         // create node for "foo.__iadd__(bar)"
-        aa2.add($NodeJS('$B.$getattr(' + context.to_js() + ',"' +
+        aa2.add($NodeJS(left + ' = $B.$getattr(' + context.to_js() + ',"' +
             func + '")(' + right + ')'))
 
         // Augmented assignment doesn't bind names ; if the variable name has
@@ -9003,6 +9003,7 @@ var _run_scripts = $B.parser._run_scripts = function(options) {
                             js = root.to_js(),
                             script = {js: js, name: module_name, src: src,
                             url: $B.script_path}
+                            if($B.debug > 1){console.log(js)}
                     }catch(err){
                         handle_error(err)
                     }
@@ -9013,17 +9014,11 @@ var _run_scripts = $B.parser._run_scripts = function(options) {
                                 var submodule = $B.VFS[name],
                                     type = submodule[0],
                                     src = submodule[1],
-                                    is_package = submodule.length == 3
-                                /*
+                                    imports = submodule[2],
+                                    is_package = submodule.length == 4
                                 if(type==".py"){
-                                    root = $B.py2js(src, name, name),
-                                    js = root.to_js()
-                                }else{
-                                    js = src
+                                    console.log("imports", imports)
                                 }
-                                $B.tasks.splice(0, 0, ["execute",
-                                    {src: src, js: js, name: name, url: "<VFS>"}])
-                                */
                             }
                         })
                     }

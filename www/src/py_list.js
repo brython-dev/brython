@@ -24,6 +24,8 @@ var list = {
 
 list.__add__ = function(self, other){
     if($B.get_class(self) !== $B.get_class(other)){
+        var radd = getattr(other, "__radd__", NotImplemented)
+        if(radd !== NotImplemented){return radd(self)}
         throw TypeError.$factory('can only concatenate list (not "' +
             $B.get_class(other).__name__ + '") to list')
     }
@@ -63,7 +65,7 @@ list.__delitem__ = function(self, arg){
         var start = arg.start
         if(start === None){start = step > 0 ? 0 : self.length}
         var stop = arg.stop
-        if(stop === None){stop = step >0 ? self.length : 0}
+        if(stop === None){stop = step > 0 ? self.length : 0}
         if(start < 0){start = self.length + start}
         if(stop < 0){stop = self.length + stop}
         var res = [],
@@ -213,6 +215,8 @@ list.__hash__ = None
 list.__iadd__ = function() {
     var $ = $B.args("__iadd__", 2, {self: null, x: null}, ["self", "x"],
         arguments, {}, null, null)
+    var radd = getattr($.x, "__radd__", NotImplemented)
+    if(radd !== NotImplemented){return radd($.self)}
     var x = list.$factory($B.$iter($.x))
     for(var i = 0; i < x.length; i++){
         $.self.push(x[i])
@@ -293,6 +297,11 @@ list.__mul__ = function(self, other){
 
     if(hasattr(other, "__int__") || hasattr(other, "__index__")){
        return list.__mul__(self, _b_.int.$factory(other))
+    }
+
+    var rmul = $B.$getattr(other, "__rmul__", NotImplemented)
+    if(rmul !== NotImplemented){
+        return rmul(self)
     }
 
     throw _b_.TypeError.$factory(

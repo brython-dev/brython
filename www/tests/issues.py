@@ -1757,6 +1757,17 @@ try:
 except SyntaxError:
     pass
 
+# issue 813
+class A:
+    def __radd__(self, other):
+        return 99
+
+    def __rmul__(self, other):
+        return 100
+
+assert [5] + A() == 99
+assert [6] * A() == 100
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
