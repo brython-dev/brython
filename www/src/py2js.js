@@ -2868,7 +2868,7 @@ var $ExceptCtx = $B.parser.$ExceptCtx = function(context){
     this.toString = function(){return '(except) '}
 
     this.set_alias = function(alias){
-        this.tree[0].alias = alias
+        this.tree[0].alias = $mangle(alias, this)
         this.scope.binding[alias] = {level: this.scope.level}
     }
 
