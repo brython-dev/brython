@@ -23,8 +23,8 @@ def coroutine(func):
 def run_async(loop=None):
     @decorator
     def _decorator(func):
+        coro = coroutine(func)
         def task(*a, **k):
-            coro = coroutine(func)
             return Task(coro(*a, **k), loop=loop, task_name=func.__name__)
         task.__async_task__ = True
         return task

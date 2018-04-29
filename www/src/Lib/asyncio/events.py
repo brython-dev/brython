@@ -63,9 +63,10 @@ class PausableTimerHandle(TimerHandle):
         super().__init__(None, when)
         self._finished = False
         def _cb():
-            self._finished = False
+            self._finished = True
             callback()
         self._cb = _cb
+        self._cb.__name__ = callback.__name__
         if schedule_immediately:
             self.resume()
 
@@ -172,6 +173,7 @@ class BrowserEventLoop:
     def call_at(self, when, callback, *args):
         def _callback():
             callback(*args)
+        _callback.__name__ = callback.__name__
         handle = PausableTimerHandle(_callback, when, schedule_immediately = self._running)
         self._scheduled.append(handle)
         return handle
