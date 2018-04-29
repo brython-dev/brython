@@ -337,8 +337,9 @@ var finder_VFS = {
         var stored = module.__spec__.loader_state.stored
         delete module.__spec__["loader_state"]
         var ext = stored[0],
-            module_contents = stored[1]
-        module.$is_package = stored[2] || false
+            module_contents = stored[1],
+            imports = stored[2]
+        module.$is_package = stored[3] || false
         var path = $B.brython_path + "Lib/" + module.__name__
         if(module.$is_package){path += "/__init__.py"}
         module.__file__ = path
@@ -368,7 +369,7 @@ var finder_VFS = {
         if(!$B.use_VFS){return _b_.None}
         var stored = $B.VFS[fullname]
         if(stored === undefined){return _b_.None}
-        var is_package = stored[2],
+        var is_package = stored[3] || false,
             is_builtin = $B.builtin_module_names.indexOf(fullname) > -1
         return new_spec({
             name : fullname,
