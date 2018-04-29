@@ -124,7 +124,10 @@ def run():
     async_manager.print_results()
     if async_manager.failed:
         state = 0
-    print('<completed in %6.2f ms>' % ((time.perf_counter() - t0) * 1000.0))
+    if state == 0:
+        print('<completed in %6.2f ms (FAILED)>' % ((time.perf_counter() - t0) * 1000.0))
+    else:
+        print('<completed in %6.2f ms (OK)>' % ((time.perf_counter() - t0) * 1000.0))
     #window.attrs()
 
     return state
@@ -137,6 +140,7 @@ def test_next():
     if script_num < len(options):
         try:
             option = doc['files'].options[script_num]
+            print('Running tests in', option.innerText)
             src = open(option.value).read()
             doc['files'].selectedIndex = script_num
             editor.editor.setValue(src)
