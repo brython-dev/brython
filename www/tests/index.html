@@ -147,7 +147,7 @@ def test_next():
             state = yield from run()
             if state == 0:
                 failed.append(option.text)
-            global_loop.call_later(500, test_next)
+            global_loop.call_later(0.5, test_next)
         except Exception as exc:
             traceback.print_exc(file=sys.stderr)
     else:
