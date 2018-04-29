@@ -120,11 +120,7 @@ def run():
         print('<async tests pending {pending} (out of {total})>'.format(
                 pending=async_manager.count_tests(pending_only=True),
                 total=async_manager.count_tests()))
-
-    console.log("Calling finish")
     yield from async_manager.finish()
-    console.log("Done finish")
-
     async_manager.print_results()
     if async_manager.failed:
         state = 0

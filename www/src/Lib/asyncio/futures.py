@@ -149,12 +149,8 @@ class Future:
         self._schedule_callbacks()
 
     def __iter__(self):
-        console.log("Iterating future", self)
         if not self.done():
-            console.log("Future not done")
             yield self
-        console.log("Future done:", self._result, self._exception)
-        console.log("  Returning", self.result())
         return self.result()
 
 

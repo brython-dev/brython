@@ -120,12 +120,10 @@ class AsyncTestManager:
             self._tests.append((coro_func.__name__,fut))
             if timeout_sec is not None:
                 timeout_at = self._loop.time()+timeout_sec
-                console.log("  Timeout at ", timeout_at)
                 handle = self.MASTER_LOOP.call_at(timeout_at, self._set_exception_if_not_done, fut, asyncio.TimeoutError())
                 fut.add_done_callback(lambda *args: handle.cancel())
                 if timeout_at > self._global_timeout_at:
                     self._global_timeout_at = timeout_at
-                console.log("  Global timeout ", self._global_timeout_at)
             return coro_func
         return _decorator
 
@@ -178,16 +176,10 @@ class AsyncTestManager:
 
     @asyncio.run_async(loop=MASTER_LOOP)
     def finish(self, wait_secs=0.1):
-        console.log("Finish: starting", self._loop.time())
         if self._loop.pending_futures():
             if self._global_timeout_at > self._loop.time():
-                console.log("Finish: waiting", (self._global_timeout_at - self._loop.time()), "secs")
                 yield from asyncio.sleep((self._global_timeout_at - self._loop.time()), loop=AsyncTestManager.MASTER_LOOP)
-            console.log("Finish: sending timeout exceptions")
             self._loop.send_exception_to_pending_futures(asyncio.TimeoutError())
-            console.log("Finish: waiting", wait_secs, "secs")
             yield from asyncio.sleep(wait_secs, loop=AsyncTestManager.MASTER_LOOP)
-        console.log("Finish: closing event loop")
         self._loop.close()
-        console.log("Finish: done")
         return self
