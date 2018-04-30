@@ -8456,66 +8456,6 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_info){
     return root
 }
 
-
-var run_script = $B.parser.run_script = function(script){
-    // script has attributes url, src, name
-
-    $B.$py_module_path[script.name] = script.url
-    var root, js
-
-    try{
-        // Conversion of Python source code to Javascript
-        root = $B.py2js(script.src, script.name, script.name)
-        js = root.to_js()
-        //console.log('imports in', script.name, root.imports)
-        if($B.debug > 1){console.log(js)}
-        // Run resulting Javascript
-        eval(js)
-
-    }catch(err){
-        if($B.debug > 1){
-            console.log(err)
-            for(var attr in err){
-               console.log(attr + ' : ', err[attr])
-            }
-        }
-
-        // If the error was not caught by the Python runtime, build an
-        // instance of a Python exception
-        if(err.$py_error === undefined){
-            console.log('Javascript error', err)
-            //console.log(js)
-            //for(var attr in err){console.log(attr+': '+err[attr])}
-            err = _b_.RuntimeError.$factory(err + '')
-        }
-
-        // Print the error traceback on the standard error stream
-        var name = err.__class__.__name__
-        var $trace = _b_.getattr(err, 'info')
-        if(name == 'SyntaxError' || name == 'IndentationError'){
-            var offset = err.args[3]
-            $trace += '\n    ' + ' '.repeat(offset) + '^' +
-                '\n' + name + ': ' + err.args[0]
-
-        }else{
-            $trace += '\n' + name + ': ' + err.args
-        }
-        try{
-            _b_.getattr($B.stderr, 'write')($trace)
-        }catch(print_exc_err){
-            console.log($trace)
-        }
-        // Throw the error to stop execution
-        throw err
-    }finally{
-        root = null
-        js = null
-        $B.clear_ns(script.name)
-    }
-}
-
-$B._run_script = run_script
-
 var brython = $B.parser.brython = function(options){
 
     // meta_path used in py_import.js
