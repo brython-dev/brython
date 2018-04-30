@@ -25,7 +25,7 @@ def brython_js(status_line=status):
         (brython.js)
     """
     src_size = 0
-    sources = MANIFEST['sources']['base']
+    sources = MANIFEST['sources']['core']
     ret = """// brython.js brython.info
 // version {}
 // implementation {}
@@ -204,7 +204,7 @@ def list_core_files():
     """
         Prints out a list of source files comprising the core implementation of Brython
     """
-    print('.js\n'.join(MANIFEST['sources']['base'])+'.js')
+    print('.js\n'.join(MANIFEST['sources']['core'])+'.js')
 
 
 @M.command()
