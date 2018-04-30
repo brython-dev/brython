@@ -8456,82 +8456,6 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_info){
     return root
 }
 
-var load_scripts = $B.parser.load_scripts = function(scripts, run_script, onerror){
-    // Loads and runs the scripts in the order they are placed in the page
-    // Script can be internal (code inside the <script></script> tag) or
-    // external (<script src="external_script.py"></script>)
-
-    if(run_script === undefined){
-      run_script = $B._run_script
-    }
-
-    // Callback function when an external script is loaded
-    function callback(ev, script){
-        var ok = false,
-            skip = false
-        if(ev !== null){
-            var req = ev.target
-            if(req.readyState == 4){
-                if(req.status == 200){
-                    ok = true;
-                    var script = {
-                        name: req.module_name,
-                        url: req.responseURL,
-                        src: req.responseText
-                    }
-                }
-            }else{
-                // AJAX request with readyState !== 4 => NOP
-                skip = true
-            }
-        }else{
-            // All data is supplied in script arg
-            ok = true
-        }
-        if(skip){return}
-        if(ok){
-            try{
-                run_script(script)
-            }catch(e){
-                if(onerror === undefined){throw e}
-                else{onerror(e)}
-            }
-            if(scripts.length > 0){
-                load_scripts(scripts)
-            }
-        }else{
-            try{
-                throw Error("cannot load script "+
-                    req.module_name + ' at ' + req.responseURL +
-                    ': error ' + req.status)
-            }catch(e){
-                if(onerror === undefined) {throw e}
-                else{onerror(e)}
-            }
-        }
-    }
-
-    var noajax = true
-    // Loop for efficient usage of the calling stack (faster than recursion?)
-    while(scripts.length > 0 && noajax){
-        var script = scripts.shift()
-        if(script['src'] === undefined){
-            // External script : load it by an Ajax call
-            noajax = false;
-            var req = new XMLHttpRequest()
-            req.onreadystatechange = callback
-            req.module_name = script.name
-            req.open('GET', script.url, true)
-            req.send()
-        }else{
-            // Internal script : execute it
-            callback(null, script)
-            load_scripts(scripts)
-        }
-    }
-}
-
-$B._load_scripts = load_scripts
 
 var run_script = $B.parser.run_script = function(script){
     // script has attributes url, src, name
@@ -9035,7 +8959,7 @@ var _run_scripts = $B.parser._run_scripts = function(options) {
     }
     */
 
-    if(options.ipy_id === undefined){$B.loop()} //$B._load_scripts(scripts)}
+    if(options.ipy_id === undefined){$B.loop()}
 
     /* Uncomment to check the names added in global Javascript namespace
     var kk1 = Object.keys(_window)

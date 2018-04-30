@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.5.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-04-29 16:58:56.260839"
-__BRYTHON__.timestamp=1525013936260
+__BRYTHON__.compiled_date="2018-04-30 08:36:51.687911"
+__BRYTHON__.timestamp=1525070211687
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -4356,33 +4356,6 @@ if($B.debug >=2){if(module==locals_id){console.log('module ' + module + ' transl
 (t1 - t0)+ ' ms')}}
 $B.compile_time +=t1 - t0
 return root}
-var load_scripts=$B.parser.load_scripts=function(scripts,run_script,onerror){
-if(run_script===undefined){run_script=$B._run_script}
-function callback(ev,script){var ok=false,skip=false
-if(ev !==null){var req=ev.target
-if(req.readyState==4){if(req.status==200){ok=true;
-var script={name: req.module_name,url: req.responseURL,src: req.responseText}}}else{
-skip=true}}else{
-ok=true}
-if(skip){return}
-if(ok){try{run_script(script)}catch(e){if(onerror===undefined){throw e}
-else{onerror(e)}}
-if(scripts.length > 0){load_scripts(scripts)}}else{try{throw Error("cannot load script "+
-req.module_name + ' at ' + req.responseURL +
-': error ' + req.status)}catch(e){if(onerror===undefined){throw e}
-else{onerror(e)}}}}
-var noajax=true
-while(scripts.length > 0 && noajax){var script=scripts.shift()
-if(script['src']===undefined){
-noajax=false;
-var req=new XMLHttpRequest()
-req.onreadystatechange=callback
-req.module_name=script.name
-req.open('GET',script.url,true)
-req.send()}else{
-callback(null,script)
-load_scripts(scripts)}}}
-$B._load_scripts=load_scripts
 var run_script=$B.parser.run_script=function(script){
 $B.$py_module_path[script.name]=script.url
 var root,js
