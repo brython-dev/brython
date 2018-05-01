@@ -9,6 +9,7 @@
     var browser = {
         $package: true,
         $is_package: true,
+        __initialized__: true,
         __package__: 'browser',
         __file__: $B.brython_path.replace(/\/*$/g,'') +
             '/Lib/browser/__init__.py',
@@ -50,10 +51,6 @@
                     }
                 })
                 console.log(js_scripts)
-                // Python scripts in current page
-                $B.scripts.forEach(function(script){
-                    console.log('script:', script)
-                })
                 // Check if imported scripts have been modified
                 for(var mod in $B.imported){
                     if($B.imported[mod].$last_modified){

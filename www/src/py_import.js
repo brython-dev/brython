@@ -333,22 +333,69 @@ var finder_VFS = {
         return _b_.None
     },
 
-    exec_module : function(cls, module) {
-        var stored = module.__spec__.loader_state.stored
-        delete module.__spec__["loader_state"]
+    exec_module : function(cls, modobj) {
+        var stored = modobj.__spec__.loader_state.stored
+        delete modobj.__spec__["loader_state"]
         var ext = stored[0],
             module_contents = stored[1],
             imports = stored[2]
-        module.$is_package = stored[3] || false
-        var path = $B.brython_path + "Lib/" + module.__name__
-        if(module.$is_package){path += "/__init__.py"}
-        module.__file__ = path
-        if(ext == '.js'){run_js(module_contents, module.__path__, module)}
-        else {
-            run_py(module_contents, module.__path__, module, ext == '.pyc.js')
+        modobj.$is_package = stored[3] || false
+        var path = $B.brython_path + "Lib/" + modobj.__name__
+        if(modobj.$is_package){path += "/__init__.py"}
+        modobj.__file__ = path
+        if(ext == '.js'){run_js(module_contents, modobj.__path__, modobj)}
+        else if($B.module_source.hasOwnProperty(modobj.__name__)){
+           var parts = modobj.__name__.split(".")
+           for(var i = 0; i < parts.length; i++){
+               var parent = parts.slice(0, i + 1).join(".")
+               if($B.imported.hasOwnProperty(parent) &&
+                       $B.imported[parent].__initialized__){
+                   continue
+               }
+               // Initialise $B.imported[parent]
+               var mod_js = $B.module_source[parent],
+                   is_package = Array.isArray(mod_js)
+               if(is_package){mod_js=mod_js[0]}
+               $B.imported[parent] = module.$factory(parent, undefined, is_package)
+               $B.imported[parent].__initialized__ = true
+               if(is_package){
+                   $B.imported[parent].__path__ = "<stdlib>"
+               }
+                //console.log('mod_name', mod_name, "parts", parts, "parent", parent)
+               try{
+                   eval(mod_js)
+               }catch(err){
+                   console.log(mod_js)
+                   console.log(err)
+                   for(var k in err){console.log(k, err[k])}
+                   console.log(Object.keys($B.imported))
+                   throw err
+               }
+               try{
+                   var $module = eval("$locals_" +
+                       parent.replace(/\./g, "_"))
+               }catch(err){
+                   console.log(mod_js)
+                   throw err
+               }
+               for(var attr in $module){
+                   $B.imported[parent][attr] = $module[attr]
+               }
+               if(i>0){
+                   // Set attribute of parent module
+                   $B.builtins.setattr($B.imported[parts.slice(0, i).join(".")],
+                       parts[i], $module)
+               }
+
+           }
+           return $module
+
+
+        }else{
+            run_py(module_contents, modobj.__path__, modobj, ext == '.pyc.js')
         }
         if($B.debug > 1){
-            console.log("import " + module.__name__ + " from VFS")
+            console.log("import " + modobj.__name__ + " from VFS")
         }
     },
 
@@ -803,7 +850,7 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
        if($B.is_none(fromlist)){
             fromlist = []
        }
-       // TODO: Async module download and request multiplexing
+
        for(var i = 0, modsep = "", _mod_name = "", len = parsed_name.length - 1,
                 __path__ = _b_.None; i <= len; ++i){
             var _parent_name = _mod_name;

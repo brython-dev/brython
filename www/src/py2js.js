@@ -3680,6 +3680,9 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                     }
                 }
             }else{
+                if(scope.binding === undefined){
+                    console.log("scope", scope, val, "no binding", innermost)
+                }
                 if(scope.binding[val]){
                     found.push(scope)
                 }
@@ -8619,8 +8622,6 @@ var brython = $B.parser.brython = function(options){
            "function will be deprecated in future versions of Brython.")
     }
 
-    $B.scripts = []
-    $B.js = {} // maps script name to JS conversion
     if($B.$options.args){
         $B.__ARGV = $B.$options.args
     }else{
@@ -8632,6 +8633,174 @@ var brython = $B.parser.brython = function(options){
 }
 
 var idb_cx
+
+function idb_load(evt, module){
+    // Callback function of a request to the indexedDB database with a module
+    // name as key.
+    // If the module is precompiled and its timestamp is the same as in
+    // brython_stdlib, use the precompiled Javascript.
+    // Otherwise, get the source code from brython_stdlib.js. If
+    var res = evt.target.result
+
+    if(res === undefined || res.timestamp != $B.timestamp){
+        // Not found or not with the same date as in brython_stdlib.js:
+        // search in VFS
+        if($B.VFS[module] !== undefined){
+            var elts = $B.VFS[module],
+                ext = elts[0],
+                source = elts[1],
+                is_package = elts.length == 4,
+                __package__
+            if(ext==".py"){
+                // Store Javascript translation in indexedDB
+
+                // Temporarily set $B.imported[module] for relative imports
+                if(is_package){__package__ = module}
+                else{
+                    var parts = module.split(".")
+                    parts.pop()
+                    __package__ = parts.join(".")
+                }
+                $B.imported[module] = $B.module.$factory(module, "",
+                    __package__)
+
+                var root = $B.py2js(source, module, module),
+                    js = root.to_js()
+
+                // Delete temporary import
+                delete $B.imported[module]
+
+                var imports = elts[2]
+                imports = imports.join(",")
+                $B.tasks.splice(0, 0, [store_precompiled,
+                    module, js, imports, is_package])
+            }else{
+                console.log('bizarre', module, ext)
+            }
+        }else{
+            // Module not found : do nothing
+        }
+    }else{
+        // Precompiled Javascript found in indexedDB database.
+        if(res.is_package){
+            $B.module_source[module] = [res.content]
+        }else{
+            $B.module_source[module] = res.content
+        }
+        if(res.imports.length > 0){
+            // res.impots is a string with the modules imported by the current
+            // modules, separated by commas
+            var subimports = res.imports.split(",")
+            for(var i=0;i<subimports.length;i++){
+                var subimport = subimports[i]
+                if(subimport.startsWith(".")){
+                    // Relative imports
+                    var url_elts = module.split("."),
+                        nb_dots = 0
+                    while(subimport.startsWith(".")){
+                        nb_dots++
+                        subimport = subimport.substr(1)
+                    }
+                    var elts = url_elts.slice(0, nb_dots)
+                    if(subimport){
+                        elts = elts.concat([subimport])
+                    }
+                    subimport = elts.join(".")
+                }
+                if(!$B.imported.hasOwnProperty(subimport) &&
+                        !$B.module_source.hasOwnProperty(subimport)){
+                    // If the code of the required module is not already
+                    // loaded, add a task for this.
+                    if($B.VFS.hasOwnProperty(subimport)){
+                        var submodule = $B.VFS[subimport],
+                            ext = submodule[0],
+                            source = submodule[1]
+                        if(submodule[0] == ".py"){
+                            $B.tasks.splice(0, 0, [idb_get, subimport])
+                        }else{
+                            add_jsmodule(subimport, source)
+                        }
+                    }
+                }
+            }
+        }
+    }
+    loop()
+}
+
+function store_precompiled(module, js, imports, is_package){
+    // Sends a request to store the compiled Javascript for a module.
+    var db = idb_cx.result,
+        tx = db.transaction("modules", "readwrite"),
+        store = tx.objectStore("modules"),
+        cursor = store.openCursor(),
+        data = {"name": module, "content": js,
+            "imports": imports,
+            "timestamp": __BRYTHON__.timestamp,
+            "is_package": is_package},
+        request = store.put(data)
+    request.onsuccess = function(evt){
+        // Restart the task "idb_get", knowing that this time it will use
+        // the compiled version.
+        $B.tasks.splice(0, 0, [idb_get, module])
+        loop()
+    }
+}
+
+
+function idb_get(module){
+    // Sends a request to the indexedDB database for the module name.
+    var db = idb_cx.result,
+        tx = db.transaction("modules", "readonly")
+
+    try{
+        var store = tx.objectStore("modules")
+            req = store.get(module)
+        req.onsuccess = function(evt){idb_load(evt, module)}
+    }catch(err){
+        console.log('error', err)
+    }
+}
+
+$B.idb_open = function(obj){
+    idb_cx = indexedDB.open("brython_stdlib")
+    idb_cx.onsuccess = function(){
+        var db = idb_cx.result
+        if(!db.objectStoreNames.contains("modules")){
+            var version = db.version
+            db.close()
+            console.log('create object store', version)
+            idb_cx = indexedDB.open("brython_stdlib", version+1)
+            idb_cx.onupgradeneeded = function(){
+                console.log("upgrade needed")
+                var db = idb_cx.result,
+                    store = db.createObjectStore("modules", {"keyPath": "name"})
+                store.onsuccess = loop
+            }
+            idb_cx.onversionchanged = function(){
+                console.log("version changed")
+            }
+            idb_cx.onsuccess = function(){
+                console.log("db opened", idb_cx)
+                var db = idb_cx.result,
+                    store = db.createObjectStore("modules", {"keyPath": "name"})
+                store.onsuccess = loop
+            }
+        }else{
+            console.log("using indexedDB for stdlib modules cache")
+            loop()
+        }
+    }
+    idb_cx.onupgradeneeded = function(){
+        console.log("upgrade needed")
+        var db = idb_cx.result,
+            store = db.createObjectStore("modules", {"keyPath": "name"})
+        store.onsuccess = loop
+    }
+    idb_cx.onerror = function(){
+        console.log('erreur open')
+    }
+}
 
 function ajax_load_script(script){
     var url = script.url,
@@ -8645,13 +8814,6 @@ function ajax_load_script(script){
                 try{
                     var root = $B.py2js(src, name, name),
                     js = root.to_js()
-                    /*
-                    for(var key in root.imports){
-                        if(!__BRYTHON__.module_source.hasOwnProperty(key)){
-                            $B.tasks.splice(0, 0, [inImported, key])
-                        }
-                    }
-                    */
                     $B.tasks.splice(0, 0, ["execute",
                         {js: js, src: src, name: name, url: url}])
                 }catch(err){
@@ -8664,6 +8826,33 @@ function ajax_load_script(script){
         }
     }
     req.send()
+}
+
+function add_jsmodule(module, source){
+    // Use built-in Javascript module
+    source += "\nvar $locals_" +
+        module.replace(/\./g, "_") + " = $module"
+    $B.module_source[module] = source
+}
+
+var inImported = $B.inImported = function(module){
+    if($B.imported.hasOwnProperty(module)){
+        // already imported, do nothing
+    }else if(__BRYTHON__.VFS && __BRYTHON__.VFS.hasOwnProperty(module)){
+        var elts = __BRYTHON__.VFS[module]
+        if(elts === undefined){console.log('bizarre', module)}
+        var ext = elts[0],
+            source = elts[1],
+            is_package = elts.length == 4
+        if(ext==".py"){
+            $B.tasks.splice(0, 0, [idb_get, module])
+        }else{
+            add_jsmodule(module, source)
+        }
+    }else{
+        console.log("bizarre", module)
+    }
+    loop()
 }
 
 var loop = $B.loop = function(){
@@ -8729,6 +8918,35 @@ function handle_error(err){
     }
     // Throw the error to stop execution
     throw err
+}
+
+function required_stdlib_imports(imports, start){
+    // Returns the list of modules from the standard library needed by
+    // the modules in "imports"
+    var nb_added = 0
+    start = start || 0
+    for(var i = start; i < imports.length; i++){
+        var module = imports[i]
+        if($B.imported.hasOwnProperty(module)){continue}
+        var mod_obj = $B.VFS[module]
+        if(mod_obj===undefined){console.log("undef", module)}
+        if(mod_obj[0] == ".py"){
+            var subimports = mod_obj[2] // list of modules needed by this mod
+            subimports.forEach(function(subimport){
+                if(!$B.imported.hasOwnProperty(subimport) &&
+                        imports.indexOf(subimport) == -1){
+                    if($B.VFS.hasOwnProperty(subimport)){
+                        imports.push(subimport)
+                        nb_added++
+                    }
+                }
+            })
+        }
+    }
+    if(nb_added){
+        required_stdlib_imports(imports, imports.length - nb_added)
+    }
+    return imports
 }
 
 var _run_scripts = $B.parser._run_scripts = function(options) {
@@ -8811,6 +9029,11 @@ var _run_scripts = $B.parser._run_scripts = function(options) {
             throw $err
         }
     }else{
+        if($elts.length > 0){
+            if(window.indexedDB && $B.hasOwnProperty("VFS")){
+                $B.tasks.push([$B.idb_open])
+            }
+        }
         // Get all explicitely defined ids, to avoid overriding
         var defined_ids = {}
         for(var i = 0; i < $elts.length; i++){
@@ -8847,7 +9070,6 @@ var _run_scripts = $B.parser._run_scripts = function(options) {
                         module_name = '__main__' + $B.UUID()
                     }
                 }
-                $B.scripts.push(module_name)
 
                 // Get Python source code
                 var $src = null
@@ -8865,26 +9087,47 @@ var _run_scripts = $B.parser._run_scripts = function(options) {
                     try{
                         var root = $B.py2js(src, module_name, module_name),
                             js = root.to_js(),
-                            script = {js: js, name: module_name, src: src,
-                            url: $B.script_path}
+                            script = {
+                                js: js,
+                                name: module_name,
+                                src: src,
+                                url: $B.script_path
+                            }
                             if($B.debug > 1){console.log(js)}
                     }catch(err){
                         handle_error(err)
                     }
                     if($B.hasOwnProperty("VFS")){
-                        Object.keys(root.imports).forEach(function(name){
+                        // Build the list of stdlib modules required by the
+                        // script
+                        var imports1 = Object.keys(root.imports).slice(),
+                            imports = imports1.filter(function(item){
+                                return $B.VFS.hasOwnProperty(item)})
+                        Object.keys(imports).forEach(function(name){
                             if($B.VFS.hasOwnProperty(name)){
-                                console.log("load submodule", name)
                                 var submodule = $B.VFS[name],
-                                    type = submodule[0],
-                                    src = submodule[1],
-                                    imports = submodule[2],
-                                    is_package = submodule.length == 4
+                                    type = submodule[0]
                                 if(type==".py"){
-                                    console.log("imports", imports)
+                                    var src = submodule[1],
+                                        subimports = submodule[2],
+                                        is_package = submodule.length == 4
+                                    // "subimports" is the list of stdlib modules
+                                    // directly imported by the module.
+                                    if(type==".py"){
+                                        // Add stdlib modules recursively imported
+                                        required_stdlib_imports(subimports)
+                                    }
+                                    subimports.forEach(function(mod){
+                                        if(imports.indexOf(mod) == -1){
+                                            imports.push(mod)
+                                        }
+                                    })
                                 }
                             }
                         })
+                        for(var j=0; j<imports.length;j++){
+                           $B.tasks.push([$B.inImported, imports[j]])
+                        }
                     }
                     $B.tasks.push(["execute", script])
                 }

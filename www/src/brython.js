@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.5.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-04-30 08:39:37.877473"
-__BRYTHON__.timestamp=1525070377877
+__BRYTHON__.compiled_date="2018-05-01 17:14:26.372885"
+__BRYTHON__.timestamp=1525187666372
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -1789,7 +1789,8 @@ if(!this.bound && this_node.locals[val]===undefined){
 if(!scope.is_comp &&
 (!scope.parent_block ||
 !scope.parent_block.is_comp)){
-found.push(scope)}}else{found.push(scope)}}}}else{if(scope.binding[val]){found.push(scope)}}
+found.push(scope)}}else{found.push(scope)}}}}else{if(scope.binding===undefined){console.log("scope",scope,val,"no binding",innermost)}
+if(scope.binding[val]){found.push(scope)}}
 if(scope.parent_block){scope=scope.parent_block}
 else{break}}
 this.found=found
@@ -4413,11 +4414,68 @@ _importlib.optimize_import_for_path(e.href,filetype)}}}
 if(options.re_module !==undefined){if(options.re_module=='pyre' ||options.re_module=='jsre'){$B.$options.re=options.re}
 console.log("DeprecationWarning: \'re_module\' option of \'brython\' "+
 "function will be deprecated in future versions of Brython.")}
-$B.scripts=[]
-$B.js={}
 if($B.$options.args){$B.__ARGV=$B.$options.args}else{$B.__ARGV=_b_.list.$factory([])}
 if(!isWebWorker){_run_scripts(options)}}
 var idb_cx
+function idb_load(evt,module){
+var res=evt.target.result
+if(res===undefined ||res.timestamp !=$B.timestamp){
+if($B.VFS[module]!==undefined){var elts=$B.VFS[module],ext=elts[0],source=elts[1],is_package=elts.length==4,__package__
+if(ext==".py"){
+if(is_package){__package__=module}
+else{var parts=module.split(".")
+parts.pop()
+__package__=parts.join(".")}
+$B.imported[module]=$B.module.$factory(module,"",__package__)
+var root=$B.py2js(source,module,module),js=root.to_js()
+delete $B.imported[module]
+var imports=elts[2]
+imports=imports.join(",")
+$B.tasks.splice(0,0,[store_precompiled,module,js,imports,is_package])}else{console.log('bizarre',module,ext)}}else{}}else{
+if(res.is_package){$B.module_source[module]=[res.content]}else{$B.module_source[module]=res.content}
+if(res.imports.length > 0){
+var subimports=res.imports.split(",")
+for(var i=0;i<subimports.length;i++){var subimport=subimports[i]
+if(subimport.startsWith(".")){
+var url_elts=module.split("."),nb_dots=0
+while(subimport.startsWith(".")){nb_dots++
+subimport=subimport.substr(1)}
+var elts=url_elts.slice(0,nb_dots)
+if(subimport){elts=elts.concat([subimport])}
+subimport=elts.join(".")}
+if(!$B.imported.hasOwnProperty(subimport)&&
+!$B.module_source.hasOwnProperty(subimport)){
+if($B.VFS.hasOwnProperty(subimport)){var submodule=$B.VFS[subimport],ext=submodule[0],source=submodule[1]
+if(submodule[0]==".py"){$B.tasks.splice(0,0,[idb_get,subimport])}else{add_jsmodule(subimport,source)}}}}}}
+loop()}
+function store_precompiled(module,js,imports,is_package){
+var db=idb_cx.result,tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules"),cursor=store.openCursor(),data={"name": module,"content": js,"imports": imports,"timestamp": __BRYTHON__.timestamp,"is_package": is_package},request=store.put(data)
+request.onsuccess=function(evt){
+$B.tasks.splice(0,0,[idb_get,module])
+loop()}}
+function idb_get(module){
+var db=idb_cx.result,tx=db.transaction("modules","readonly")
+try{var store=tx.objectStore("modules")
+req=store.get(module)
+req.onsuccess=function(evt){idb_load(evt,module)}}catch(err){console.log('error',err)}}
+$B.idb_open=function(obj){idb_cx=indexedDB.open("brython_stdlib")
+idb_cx.onsuccess=function(){var db=idb_cx.result
+if(!db.objectStoreNames.contains("modules")){var version=db.version
+db.close()
+console.log('create object store',version)
+idb_cx=indexedDB.open("brython_stdlib",version+1)
+idb_cx.onupgradeneeded=function(){console.log("upgrade needed")
+var db=idb_cx.result,store=db.createObjectStore("modules",{"keyPath": "name"})
+store.onsuccess=loop}
+idb_cx.onversionchanged=function(){console.log("version changed")}
+idb_cx.onsuccess=function(){console.log("db opened",idb_cx)
+var db=idb_cx.result,store=db.createObjectStore("modules",{"keyPath": "name"})
+store.onsuccess=loop}}else{console.log("using indexedDB for stdlib modules cache")
+loop()}}
+idb_cx.onupgradeneeded=function(){console.log("upgrade needed")
+var db=idb_cx.result,store=db.createObjectStore("modules",{"keyPath": "name"})
+store.onsuccess=loop}
+idb_cx.onerror=function(){console.log('erreur open')}}
 function ajax_load_script(script){var url=script.url,name=script.name
 var req=new XMLHttpRequest()
 req.open("GET",url,true)
@@ -4426,6 +4484,15 @@ try{var root=$B.py2js(src,name,name),js=root.to_js()
 $B.tasks.splice(0,0,["execute",{js: js,src: src,name: name,url: url}])}catch(err){handle_error(err)}}else if(this.status==404){throw Error(url+" not found")}
 loop()}}
 req.send()}
+function add_jsmodule(module,source){
+source +="\nvar $locals_" +
+module.replace(/\./g,"_")+ " = $module"
+$B.module_source[module]=source}
+var inImported=$B.inImported=function(module){if($B.imported.hasOwnProperty(module)){}else if(__BRYTHON__.VFS && __BRYTHON__.VFS.hasOwnProperty(module)){var elts=__BRYTHON__.VFS[module]
+if(elts===undefined){console.log('bizarre',module)}
+var ext=elts[0],source=elts[1],is_package=elts.length==4
+if(ext==".py"){$B.tasks.splice(0,0,[idb_get,module])}else{add_jsmodule(module,source)}}else{console.log("bizarre",module)}
+loop()}
 var loop=$B.loop=function(){if($B.tasks.length==0){
 if(idb_cx){idb_cx.result.close()}
 return}
@@ -4446,6 +4513,19 @@ trace +='\n    ' + ' '.repeat(offset)+ '^' +
 '\n' + name+': '+err.args[0]}else{trace +='\n'+name+': ' + err.args}
 try{_b_.getattr($B.stderr,'write')(trace)}catch(print_exc_err){console.log(trace)}
 throw err}
+function required_stdlib_imports(imports,start){
+var nb_added=0
+start=start ||0
+for(var i=start;i < imports.length;i++){var module=imports[i]
+if($B.imported.hasOwnProperty(module)){continue}
+var mod_obj=$B.VFS[module]
+if(mod_obj===undefined){console.log("undef",module)}
+if(mod_obj[0]==".py"){var subimports=mod_obj[2]
+subimports.forEach(function(subimport){if(!$B.imported.hasOwnProperty(subimport)&&
+imports.indexOf(subimport)==-1){if($B.VFS.hasOwnProperty(subimport)){imports.push(subimport)
+nb_added++}}})}}
+if(nb_added){required_stdlib_imports(imports,imports.length - nb_added)}
+return imports}
 var _run_scripts=$B.parser._run_scripts=function(options){
 var kk=Object.keys(_window)
 if(options.ipy_id !==undefined){var $elts=[]
@@ -4474,7 +4554,7 @@ $err=_b_.RuntimeError.$factory($err + '')}
 var $trace=_b_.getattr($err,'info')+ '\n' + $err.__name__ +
 ': ' + $err.args
 try{_b_.getattr($B.stderr,'write')($trace)}catch(print_exc_err){console.log($trace)}
-throw $err}}else{
+throw $err}}else{if($elts.length > 0){if(window.indexedDB && $B.hasOwnProperty("VFS")){$B.tasks.push([$B.idb_open])}}
 var defined_ids={}
 for(var i=0;i < $elts.length;i++){var elt=$elts[i]
 if(elt.id){if(defined_ids[elt.id]){throw Error("Brython error : Found 2 scripts with the " +
@@ -4487,7 +4567,6 @@ else{
 if(first_script){module_name='__main__'
 first_script=false}else{module_name='__main__' + $B.UUID()}
 while(defined_ids[module_name]!==undefined){module_name='__main__' + $B.UUID()}}
-$B.scripts.push(module_name)
 var $src=null
 if(elt.src){
 $B.tasks.push([ajax_load_script,{name: module_name,url: elt.src}])}else{
@@ -4496,9 +4575,14 @@ src=src.replace(/^\n/,'')
 $B.$py_module_path[module_name]=$B.script_path
 try{var root=$B.py2js(src,module_name,module_name),js=root.to_js(),script={js: js,name: module_name,src: src,url: $B.script_path}
 if($B.debug > 1){console.log(js)}}catch(err){handle_error(err)}
-if($B.hasOwnProperty("VFS")){Object.keys(root.imports).forEach(function(name){if($B.VFS.hasOwnProperty(name)){console.log("load submodule",name)
-var submodule=$B.VFS[name],type=submodule[0],src=submodule[1],imports=submodule[2],is_package=submodule.length==4
-if(type==".py"){console.log("imports",imports)}}})}
+if($B.hasOwnProperty("VFS")){
+var imports1=Object.keys(root.imports).slice(),imports=imports1.filter(function(item){return $B.VFS.hasOwnProperty(item)})
+Object.keys(imports).forEach(function(name){if($B.VFS.hasOwnProperty(name)){var submodule=$B.VFS[name],type=submodule[0]
+if(type==".py"){var src=submodule[1],subimports=submodule[2],is_package=submodule.length==4
+if(type==".py"){
+required_stdlib_imports(subimports)}
+subimports.forEach(function(mod){if(imports.indexOf(mod)==-1){imports.push(mod)}})}}})
+for(var j=0;j<imports.length;j++){$B.tasks.push([$B.inImported,imports[j]])}}
 $B.tasks.push(["execute",script])}}}}
 if(options.ipy_id===undefined){$B.loop()}}
 $B.$operators=$operators
@@ -7325,17 +7409,36 @@ function new_spec(fields){
 fields.__class__=module
 return fields}
 var finder_VFS={__class__: _b_.type,__mro__:[_b_.object],__name__: "VFSFinder",create_module : function(cls,spec){
-return _b_.None},exec_module : function(cls,module){var stored=module.__spec__.loader_state.stored
-delete module.__spec__["loader_state"]
+return _b_.None},exec_module : function(cls,modobj){var stored=modobj.__spec__.loader_state.stored
+delete modobj.__spec__["loader_state"]
 var ext=stored[0],module_contents=stored[1],imports=stored[2]
-module.$is_package=stored[3]||false
-var path=$B.brython_path + "Lib/" + module.__name__
-if(module.$is_package){path +="/__init__.py"}
-module.__file__=path
-if(ext=='.js'){run_js(module_contents,module.__path__,module)}
-else{
-run_py(module_contents,module.__path__,module,ext=='.pyc.js')}
-if($B.debug > 1){console.log("import " + module.__name__ + " from VFS")}},find_module: function(cls,name,path){return{
+modobj.$is_package=stored[3]||false
+var path=$B.brython_path + "Lib/" + modobj.__name__
+if(modobj.$is_package){path +="/__init__.py"}
+modobj.__file__=path
+if(ext=='.js'){run_js(module_contents,modobj.__path__,modobj)}
+else if($B.module_source.hasOwnProperty(modobj.__name__)){var parts=modobj.__name__.split(".")
+for(var i=0;i < parts.length;i++){var parent=parts.slice(0,i + 1).join(".")
+if($B.imported.hasOwnProperty(parent)&&
+$B.imported[parent].__initialized__){continue}
+var mod_js=$B.module_source[parent],is_package=Array.isArray(mod_js)
+if(is_package){mod_js=mod_js[0]}
+$B.imported[parent]=module.$factory(parent,undefined,is_package)
+$B.imported[parent].__initialized__=true
+if(is_package){$B.imported[parent].__path__="<stdlib>"}
+try{eval(mod_js)}catch(err){console.log(mod_js)
+console.log(err)
+for(var k in err){console.log(k,err[k])}
+console.log(Object.keys($B.imported))
+throw err}
+try{var $module=eval("$locals_" +
+parent.replace(/\./g,"_"))}catch(err){console.log(mod_js)
+throw err}
+for(var attr in $module){$B.imported[parent][attr]=$module[attr]}
+if(i>0){
+$B.builtins.setattr($B.imported[parts.slice(0,i).join(".")],parts[i],$module)}}
+return $module}else{run_py(module_contents,modobj.__path__,modobj,ext=='.pyc.js')}
+if($B.debug > 1){console.log("import " + modobj.__name__ + " from VFS")}},find_module: function(cls,name,path){return{
 __class__: Loader,load_module: function(name,path){var spec=cls.find_spec(cls,name,path)
 var mod=module.$factory(name)
 $B.imported[name]=mod
@@ -11512,7 +11615,7 @@ $B.set_func_names(generator,"builtins")})(__BRYTHON__)
  ;(function($B){var update=function(mod,data){for(attr in data){mod[attr]=data[attr]}}
 var _window=self;
 var modules={}
-var browser={$package: true,$is_package: true,__package__: 'browser',__file__: $B.brython_path.replace(/\/*$/g,'')+
+var browser={$package: true,$is_package: true,__initialized__: true,__package__: 'browser',__file__: $B.brython_path.replace(/\/*$/g,'')+
 '/Lib/browser/__init__.py',console: $B.JSObject.$factory(self.console),win: $B.win,$$window: $B.win,}
 browser.__path__=browser.__file__
 if(! $B.isa_web_worker ){update(browser,{$$alert:function(message){window.alert($B.builtins.str.$factory(message))},confirm: $B.JSObject.$factory(window.confirm),$$document:$B.DOMNode.$factory(document),doc: $B.DOMNode.$factory(document),
@@ -11525,7 +11628,6 @@ scripts.forEach(function(script){if(script.type===undefined ||
 script.type=='text/javascript'){js_scripts.push(script)
 if(script.src){console.log(script.src)}}})
 console.log(js_scripts)
-$B.scripts.forEach(function(script){console.log('script:',script)})
 for(var mod in $B.imported){if($B.imported[mod].$last_modified){console.log('check',mod,$B.imported[mod].__file__,$B.imported[mod].$last_modified)}else{console.log('no date for mod',mod)}}},URLParameter:function(name){name=name.replace(/[\[]/,"\\[").replace(/[\]]/,"\\]");
 var regex=new RegExp("[\\?&]" + name + "=([^&#]*)"),results=regex.exec(location.search);
 results=results===null ? "" :
