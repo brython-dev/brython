@@ -59,7 +59,7 @@ class Task(Future):
                 f = self._coro_obj.send(val)
         except StopIteration as e:
             self.set_result(e.value)
-        except Exception as e:
+        except BaseException as e:
             self.set_exception(e)
         else:
             f.add_done_callback(self._wakeup)
@@ -67,7 +67,7 @@ class Task(Future):
     def _wakeup(self, fut):
         try:
             res = fut.result()
-        except Exception as e:
+        except BaseException as e:
             self._step(None, e)
         else:
             self._step(res, None)

@@ -127,7 +127,7 @@ class BrowserEventLoop:
             try:
                 if not fut.done():
                     fut.set_exception(ex)
-            except Exception as exc:
+            except BaseException as exc:
                 console.log("Error sending exception", ex, "to", fut, ":", exc)
 
     def close(self):
