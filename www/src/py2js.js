@@ -8683,15 +8683,15 @@ function idb_load(evt, module){
     }else{
         // Precompiled Javascript found in indexedDB database.
         if(res.is_package){
-            $B.module_source[module] = [res.content]
+            $B.precompiled[module] = [res.content]
         }else{
-            $B.module_source[module] = res.content
+            $B.precompiled[module] = res.content
         }
         if(res.imports.length > 0){
             // res.impots is a string with the modules imported by the current
             // modules, separated by commas
             var subimports = res.imports.split(",")
-            for(var i=0;i<subimports.length;i++){
+            for(var i = 0; i < subimports.length; i++){
                 var subimport = subimports[i]
                 if(subimport.startsWith(".")){
                     // Relative imports
@@ -8708,7 +8708,7 @@ function idb_load(evt, module){
                     subimport = elts.join(".")
                 }
                 if(!$B.imported.hasOwnProperty(subimport) &&
-                        !$B.module_source.hasOwnProperty(subimport)){
+                        !$B.precompiled.hasOwnProperty(subimport)){
                     // If the code of the required module is not already
                     // loaded, add a task for this.
                     if($B.VFS.hasOwnProperty(subimport)){
@@ -8832,7 +8832,7 @@ function add_jsmodule(module, source){
     // Use built-in Javascript module
     source += "\nvar $locals_" +
         module.replace(/\./g, "_") + " = $module"
-    $B.module_source[module] = source
+    $B.precompiled[module] = source
 }
 
 var inImported = $B.inImported = function(module){
@@ -8857,7 +8857,7 @@ var inImported = $B.inImported = function(module){
 
 var loop = $B.loop = function(){
     if($B.tasks.length==0){
-        // No more $B.tasks to process.
+        // No more task to process.
         if(idb_cx){idb_cx.result.close()}
         return
     }
@@ -8899,6 +8899,7 @@ var loop = $B.loop = function(){
 }
 
 $B.tasks = []
+$B.has_indexedDB = window.indexedDB !== undefined
 
 function handle_error(err){
     // Print the error traceback on the standard error stream
@@ -9030,7 +9031,7 @@ var _run_scripts = $B.parser._run_scripts = function(options) {
         }
     }else{
         if($elts.length > 0){
-            if(window.indexedDB && $B.hasOwnProperty("VFS")){
+            if($B.has_indexedDB && $B.hasOwnProperty("VFS")){
                 $B.tasks.push([$B.idb_open])
             }
         }
@@ -9097,7 +9098,7 @@ var _run_scripts = $B.parser._run_scripts = function(options) {
                     }catch(err){
                         handle_error(err)
                     }
-                    if($B.hasOwnProperty("VFS")){
+                    if($B.hasOwnProperty("VFS") && $B.has_indexedDB){
                         // Build the list of stdlib modules required by the
                         // script
                         var imports1 = Object.keys(root.imports).slice(),
@@ -9125,6 +9126,7 @@ var _run_scripts = $B.parser._run_scripts = function(options) {
                                 }
                             }
                         })
+                        // Add task to stack
                         for(var j=0; j<imports.length;j++){
                            $B.tasks.push([$B.inImported, imports[j]])
                         }

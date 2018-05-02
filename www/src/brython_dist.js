@@ -28,7 +28,7 @@ $B.path=[$path + 'Lib',$path + 'libs',$script_dir,$path + 'Lib/site-packages']
 $B.async_enabled=false
 if($B.async_enabled){$B.block={}}
 $B.imported={}
-$B.module_source={}
+$B.precompiled={}
 $B.vars={}
 $B._globals={}
 $B.frames_stack=[]
@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.5.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-05-01 17:14:26.372885"
-__BRYTHON__.timestamp=1525187666372
+__BRYTHON__.compiled_date="2018-05-02 08:52:49.230418"
+__BRYTHON__.timestamp=1525243969230
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -4432,10 +4432,10 @@ delete $B.imported[module]
 var imports=elts[2]
 imports=imports.join(",")
 $B.tasks.splice(0,0,[store_precompiled,module,js,imports,is_package])}else{console.log('bizarre',module,ext)}}else{}}else{
-if(res.is_package){$B.module_source[module]=[res.content]}else{$B.module_source[module]=res.content}
+if(res.is_package){$B.precompiled[module]=[res.content]}else{$B.precompiled[module]=res.content}
 if(res.imports.length > 0){
 var subimports=res.imports.split(",")
-for(var i=0;i<subimports.length;i++){var subimport=subimports[i]
+for(var i=0;i < subimports.length;i++){var subimport=subimports[i]
 if(subimport.startsWith(".")){
 var url_elts=module.split("."),nb_dots=0
 while(subimport.startsWith(".")){nb_dots++
@@ -4444,7 +4444,7 @@ var elts=url_elts.slice(0,nb_dots)
 if(subimport){elts=elts.concat([subimport])}
 subimport=elts.join(".")}
 if(!$B.imported.hasOwnProperty(subimport)&&
-!$B.module_source.hasOwnProperty(subimport)){
+!$B.precompiled.hasOwnProperty(subimport)){
 if($B.VFS.hasOwnProperty(subimport)){var submodule=$B.VFS[subimport],ext=submodule[0],source=submodule[1]
 if(submodule[0]==".py"){$B.tasks.splice(0,0,[idb_get,subimport])}else{add_jsmodule(subimport,source)}}}}}}
 loop()}
@@ -4471,6 +4471,7 @@ idb_cx.onversionchanged=function(){console.log("version changed")}
 idb_cx.onsuccess=function(){console.log("db opened",idb_cx)
 var db=idb_cx.result,store=db.createObjectStore("modules",{"keyPath": "name"})
 store.onsuccess=loop}}else{console.log("using indexedDB for stdlib modules cache")
+console.log("version",db.version)
 loop()}}
 idb_cx.onupgradeneeded=function(){console.log("upgrade needed")
 var db=idb_cx.result,store=db.createObjectStore("modules",{"keyPath": "name"})
@@ -4487,7 +4488,7 @@ req.send()}
 function add_jsmodule(module,source){
 source +="\nvar $locals_" +
 module.replace(/\./g,"_")+ " = $module"
-$B.module_source[module]=source}
+$B.precompiled[module]=source}
 var inImported=$B.inImported=function(module){if($B.imported.hasOwnProperty(module)){}else if(__BRYTHON__.VFS && __BRYTHON__.VFS.hasOwnProperty(module)){var elts=__BRYTHON__.VFS[module]
 if(elts===undefined){console.log('bizarre',module)}
 var ext=elts[0],source=elts[1],is_package=elts.length==4
@@ -4506,6 +4507,7 @@ handle_error(err)}
 loop()}else{
 func.apply(null,args)}}
 $B.tasks=[]
+$B.has_indexedDB=window.indexedDB !==undefined
 function handle_error(err){
 var name=err.__class__.__name__,trace=_b_.getattr(err,'info')
 if(name=='SyntaxError' ||name=='IndentationError'){var offset=err.args[3]
@@ -4554,7 +4556,7 @@ $err=_b_.RuntimeError.$factory($err + '')}
 var $trace=_b_.getattr($err,'info')+ '\n' + $err.__name__ +
 ': ' + $err.args
 try{_b_.getattr($B.stderr,'write')($trace)}catch(print_exc_err){console.log($trace)}
-throw $err}}else{if($elts.length > 0){if(window.indexedDB && $B.hasOwnProperty("VFS")){$B.tasks.push([$B.idb_open])}}
+throw $err}}else{if($elts.length > 0){if($B.has_indexedDB && $B.hasOwnProperty("VFS")){$B.tasks.push([$B.idb_open])}}
 var defined_ids={}
 for(var i=0;i < $elts.length;i++){var elt=$elts[i]
 if(elt.id){if(defined_ids[elt.id]){throw Error("Brython error : Found 2 scripts with the " +
@@ -4575,7 +4577,7 @@ src=src.replace(/^\n/,'')
 $B.$py_module_path[module_name]=$B.script_path
 try{var root=$B.py2js(src,module_name,module_name),js=root.to_js(),script={js: js,name: module_name,src: src,url: $B.script_path}
 if($B.debug > 1){console.log(js)}}catch(err){handle_error(err)}
-if($B.hasOwnProperty("VFS")){
+if($B.hasOwnProperty("VFS")&& $B.has_indexedDB){
 var imports1=Object.keys(root.imports).slice(),imports=imports1.filter(function(item){return $B.VFS.hasOwnProperty(item)})
 Object.keys(imports).forEach(function(name){if($B.VFS.hasOwnProperty(name)){var submodule=$B.VFS[name],type=submodule[0]
 if(type==".py"){var src=submodule[1],subimports=submodule[2],is_package=submodule.length==4
@@ -7417,11 +7419,11 @@ var path=$B.brython_path + "Lib/" + modobj.__name__
 if(modobj.$is_package){path +="/__init__.py"}
 modobj.__file__=path
 if(ext=='.js'){run_js(module_contents,modobj.__path__,modobj)}
-else if($B.module_source.hasOwnProperty(modobj.__name__)){var parts=modobj.__name__.split(".")
+else if($B.precompiled.hasOwnProperty(modobj.__name__)){var parts=modobj.__name__.split(".")
 for(var i=0;i < parts.length;i++){var parent=parts.slice(0,i + 1).join(".")
 if($B.imported.hasOwnProperty(parent)&&
 $B.imported[parent].__initialized__){continue}
-var mod_js=$B.module_source[parent],is_package=Array.isArray(mod_js)
+var mod_js=$B.precompiled[parent],is_package=Array.isArray(mod_js)
 if(is_package){mod_js=mod_js[0]}
 $B.imported[parent]=module.$factory(parent,undefined,is_package)
 $B.imported[parent].__initialized__=true

@@ -344,7 +344,7 @@ var finder_VFS = {
         if(modobj.$is_package){path += "/__init__.py"}
         modobj.__file__ = path
         if(ext == '.js'){run_js(module_contents, modobj.__path__, modobj)}
-        else if($B.module_source.hasOwnProperty(modobj.__name__)){
+        else if($B.precompiled.hasOwnProperty(modobj.__name__)){
            var parts = modobj.__name__.split(".")
            for(var i = 0; i < parts.length; i++){
                var parent = parts.slice(0, i + 1).join(".")
@@ -353,7 +353,7 @@ var finder_VFS = {
                    continue
                }
                // Initialise $B.imported[parent]
-               var mod_js = $B.module_source[parent],
+               var mod_js = $B.precompiled[parent],
                    is_package = Array.isArray(mod_js)
                if(is_package){mod_js=mod_js[0]}
                $B.imported[parent] = module.$factory(parent, undefined, is_package)

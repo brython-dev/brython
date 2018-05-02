@@ -58,7 +58,7 @@ if($B.async_enabled){$B.block = {}}
 $B.imported = {}
 
 // Maps the name of modules to the matching Javascript code
-$B.module_source = {}
+$B.precompiled = {}
 
 // Distionary used to save the loval variables of a generator
 $B.vars = {}
