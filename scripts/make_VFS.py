@@ -62,7 +62,7 @@ def process(filename, exclude_dirs=['test','site-packages']):
             if flag:
                continue  # skip these modules
             if '__pycache__' in _dir:
-                continue
+                _dir.remove("__pycache__")
             nb += 1
 
             if stdlib_dir == "Lib":
@@ -100,17 +100,19 @@ def process(filename, exclude_dirs=['test','site-packages']):
 
                 if vfs_path.startswith('/libs/crypto_js/rollups/'):
                    if _file not in ('md5.js', 'sha1.js', 'sha3.js',
-                                'sha224.js', 'sha384.js', 'sha512.js'):
+                                'sha224.js', 'sha256.js', 'sha384.js',
+                                'sha512.js'):
                       continue
 
                 mod_name = vfs_path[len(stdlib_dir) + 2:].replace('/', '.')
                 mod_name, ext = os.path.splitext(mod_name)
                 is_package = mod_name.endswith('__init__')
-                if is_package:
-                   mod_name = mod_name[:-9]
-                   VFS[mod_name] = [ext, data, imports, 1]
-                elif ext == ".py":
-                    VFS[mod_name] = [ext, data, imports]
+                if ext == ".py":
+                    if is_package:
+                       mod_name = mod_name[:-9]
+                       VFS[mod_name] = [ext, data, imports, 1]
+                    else:
+                        VFS[mod_name] = [ext, data, imports]
                 else:
                    VFS[mod_name] = [ext, data]
                 print("adding {}".format(mod_name))
