@@ -9,6 +9,8 @@ import shutil
 import html.parser
 import ast
 import json
+import traceback
+import sys
 
 # Template for application setup.py script
 setup = """from setuptools import setup, find_packages
@@ -337,6 +339,7 @@ class ModulesFinder:
                             self.get_imports(script)
                         except SyntaxError:
                             print('syntax error', path)
+                            traceback.print_exc(file=sys.stderr)
                 elif ext.lower() == '.py':
                     if dirname != self.directory and not is_package(dirname):
                         continue
@@ -347,6 +350,7 @@ class ModulesFinder:
                             self.get_imports(fobj.read(), package)
                         except SyntaxError:
                             print('syntax error', path)
+                            traceback.print_exc(file=sys.stderr)
 
     def make_brython_modules(self):
         """Build brython_modules.js from the list of modules needed by the
