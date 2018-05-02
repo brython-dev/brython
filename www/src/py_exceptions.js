@@ -74,26 +74,29 @@ $B.$IndentationError = function(module, msg, pos) {
 
 // class of traceback objects
 var traceback = $B.make_class("traceback",
-    function(exc){
+    function(exc, stack){
+        if(stack===undefined)
+            stack=exc.$stack
         return {
             __class__ : traceback,
+            $stack: stack,
             exc: exc
         }
     }
 )
 
 traceback.__getattribute__ = function(self, attr){
-    if(self.exc.$stack.length == 0){alert("no stack", attr)}
-    var last_frame = $B.last(self.exc.$stack)
+    if(self.$stack.length == 0){alert("no stack", attr)}
+    var last_frame = $B.last(self.$stack)
     if(last_frame === undefined){
         alert("last frame undef ")
-        console.log(self.exc.$stack, Object.keys(self.exc.$stack))
+        console.log(self.$stack, Object.keys(self.$stack))
     }
-    var line_info = self.exc.$line_info || last_frame[1].$line_info
+    var line_info = last_frame[1].$line_info
 
     switch(attr){
         case "tb_frame":
-            return frame.$factory(self.exc.$stack)
+            return frame.$factory(self.$stack)
         case "tb_lineno":
             if(line_info === undefined){return -1}
             else{return parseInt(line_info.split(",")[0])}
@@ -107,10 +110,10 @@ traceback.__getattribute__ = function(self, attr){
                 }else{return "<unknown>"}
             }
         case "tb_next":
-            if(self.exc.$stack.length == 1){return None}
+            if(self.$stack.length <= 1){return None}
             else{
-                return traceback.$factory(
-                    self.exc.$stack.slice(0, self.exc.$stack.length - 1))
+                return traceback.$factory(self.exc,
+                    self.exc.$stack.slice(0, self.exc.$stack.length - 2))
             }
         default:
             return _b_.object.__getattribute__(traceback, attr)
