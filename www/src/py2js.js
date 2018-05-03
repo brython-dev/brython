@@ -5843,6 +5843,7 @@ var $mangle = $B.parser.$mangle = function(name, context){
 
 var $transition = $B.parser.$transition = function(context, token, value){
 
+    //console.log(context, token, value)
     switch(context.type){
         case 'abstract_expr':
 
@@ -7501,7 +7502,17 @@ var $transition = $B.parser.$transition = function(context, token, value){
                         new $AbstractExprCtx(context, false)
                     }
                     return new $AbstractExprCtx(context, false)
+                case ',':
+                    console.log(context, "token ,")
+                    var child = context.tree[0]
+                    context.tree = []
+                    var t = new $ListOrTupleCtx(context)
+                    child.parent = t
+                    t.tree.push(child)
+                    t.real = "tuple"
+                    return t
             }
+            console.log('syntax error', context, token)
             $_SyntaxError(context, 'token ' + token + ' after ' + context)
         case 'target_list':
             switch(token) {
@@ -8950,6 +8961,57 @@ function required_stdlib_imports(imports, start){
     return imports
 }
 
+$B.run_script = function(src, name){
+    $B.$py_module_path[name] = $B.script_path
+    try{
+        var root = $B.py2js(src, name, name),
+            js = root.to_js(),
+            script = {
+                js: js,
+                name: name,
+                src: src,
+                url: $B.script_path
+            }
+            if($B.debug > 1){console.log(js)}
+    }catch(err){
+        handle_error(err)
+    }
+    if($B.hasOwnProperty("VFS") && $B.has_indexedDB){
+        // Build the list of stdlib modules required by the
+        // script
+        var imports1 = Object.keys(root.imports).slice(),
+            imports = imports1.filter(function(item){
+                return $B.VFS.hasOwnProperty(item)})
+        Object.keys(imports).forEach(function(name){
+            if($B.VFS.hasOwnProperty(name)){
+                var submodule = $B.VFS[name],
+                    type = submodule[0]
+                if(type==".py"){
+                    var src = submodule[1],
+                        subimports = submodule[2],
+                        is_package = submodule.length == 4
+                    // "subimports" is the list of stdlib modules
+                    // directly imported by the module.
+                    if(type==".py"){
+                        // Add stdlib modules recursively imported
+                        required_stdlib_imports(subimports)
+                    }
+                    subimports.forEach(function(mod){
+                        if(imports.indexOf(mod) == -1){
+                            imports.push(mod)
+                        }
+                    })
+                }
+            }
+        })
+        // Add task to stack
+        for(var j=0; j<imports.length;j++){
+           $B.tasks.push([$B.inImported, imports[j]])
+        }
+    }
+    $B.tasks.push(["execute", script])
+}
+
 var _run_scripts = $B.parser._run_scripts = function(options) {
     // Save initial Javascript namespace
     var kk = Object.keys(_window)
@@ -9084,6 +9146,8 @@ var _run_scripts = $B.parser._run_scripts = function(options) {
                     var src = (elt.innerHTML || elt.textContent)
                     // remove leading CR if any
                     src = src.replace(/^\n/, '')
+                    $B.run_script(src, module_name)
+                    /*
                     $B.$py_module_path[module_name] = $B.script_path
                     try{
                         var root = $B.py2js(src, module_name, module_name),
@@ -9132,6 +9196,7 @@ var _run_scripts = $B.parser._run_scripts = function(options) {
                         }
                     }
                     $B.tasks.push(["execute", script])
+                    */
                 }
             }
         }

@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.5.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-05-02 08:52:49.230418"
-__BRYTHON__.timestamp=1525243969230
+__BRYTHON__.compiled_date="2018-05-03 08:50:33.782433"
+__BRYTHON__.timestamp=1525330233782
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -2770,7 +2770,8 @@ while(true){if(scope.ntype=="module"){return name}
 else if(scope.ntype=="class"){var class_name=scope.C.tree[0].name
 while(class_name.charAt(0)=='_'){class_name=class_name.substr(1)}
 return '_' + class_name + name}else{if(scope.parent && scope.parent.C){scope=$get_scope(scope.C.tree[0])}else{return name}}}}else{return name}}
-var $transition=$B.parser.$transition=function(C,token,value){switch(C.type){case 'abstract_expr':
+var $transition=$B.parser.$transition=function(C,token,value){
+switch(C.type){case 'abstract_expr':
 switch(token){case 'id':
 case 'imaginary':
 case 'int':
@@ -3861,7 +3862,17 @@ case ']':
 return C.parent
 case ':':
 if(C.tree.length==0){new $AbstractExprCtx(C,false)}
-return new $AbstractExprCtx(C,false)}
+return new $AbstractExprCtx(C,false)
+case ',':
+console.log(C,"token ,")
+var child=C.tree[0]
+C.tree=[]
+var t=new $ListOrTupleCtx(C)
+child.parent=t
+t.tree.push(child)
+t.real="tuple"
+return t}
+console.log('syntax error',C,token)
 $_SyntaxError(C,'token ' + token + ' after ' + C)
 case 'target_list':
 switch(token){case 'id':
@@ -4471,7 +4482,6 @@ idb_cx.onversionchanged=function(){console.log("version changed")}
 idb_cx.onsuccess=function(){console.log("db opened",idb_cx)
 var db=idb_cx.result,store=db.createObjectStore("modules",{"keyPath": "name"})
 store.onsuccess=loop}}else{console.log("using indexedDB for stdlib modules cache")
-console.log("version",db.version)
 loop()}}
 idb_cx.onupgradeneeded=function(){console.log("upgrade needed")
 var db=idb_cx.result,store=db.createObjectStore("modules",{"keyPath": "name"})
@@ -4528,6 +4538,18 @@ imports.indexOf(subimport)==-1){if($B.VFS.hasOwnProperty(subimport)){imports.pus
 nb_added++}}})}}
 if(nb_added){required_stdlib_imports(imports,imports.length - nb_added)}
 return imports}
+$B.run_script=function(src,name){$B.$py_module_path[name]=$B.script_path
+try{var root=$B.py2js(src,name,name),js=root.to_js(),script={js: js,name: name,src: src,url: $B.script_path}
+if($B.debug > 1){console.log(js)}}catch(err){handle_error(err)}
+if($B.hasOwnProperty("VFS")&& $B.has_indexedDB){
+var imports1=Object.keys(root.imports).slice(),imports=imports1.filter(function(item){return $B.VFS.hasOwnProperty(item)})
+Object.keys(imports).forEach(function(name){if($B.VFS.hasOwnProperty(name)){var submodule=$B.VFS[name],type=submodule[0]
+if(type==".py"){var src=submodule[1],subimports=submodule[2],is_package=submodule.length==4
+if(type==".py"){
+required_stdlib_imports(subimports)}
+subimports.forEach(function(mod){if(imports.indexOf(mod)==-1){imports.push(mod)}})}}})
+for(var j=0;j<imports.length;j++){$B.tasks.push([$B.inImported,imports[j]])}}
+$B.tasks.push(["execute",script])}
 var _run_scripts=$B.parser._run_scripts=function(options){
 var kk=Object.keys(_window)
 if(options.ipy_id !==undefined){var $elts=[]
@@ -4574,18 +4596,7 @@ if(elt.src){
 $B.tasks.push([ajax_load_script,{name: module_name,url: elt.src}])}else{
 var src=(elt.innerHTML ||elt.textContent)
 src=src.replace(/^\n/,'')
-$B.$py_module_path[module_name]=$B.script_path
-try{var root=$B.py2js(src,module_name,module_name),js=root.to_js(),script={js: js,name: module_name,src: src,url: $B.script_path}
-if($B.debug > 1){console.log(js)}}catch(err){handle_error(err)}
-if($B.hasOwnProperty("VFS")&& $B.has_indexedDB){
-var imports1=Object.keys(root.imports).slice(),imports=imports1.filter(function(item){return $B.VFS.hasOwnProperty(item)})
-Object.keys(imports).forEach(function(name){if($B.VFS.hasOwnProperty(name)){var submodule=$B.VFS[name],type=submodule[0]
-if(type==".py"){var src=submodule[1],subimports=submodule[2],is_package=submodule.length==4
-if(type==".py"){
-required_stdlib_imports(subimports)}
-subimports.forEach(function(mod){if(imports.indexOf(mod)==-1){imports.push(mod)}})}}})
-for(var j=0;j<imports.length;j++){$B.tasks.push([$B.inImported,imports[j]])}}
-$B.tasks.push(["execute",script])}}}}
+$B.run_script(src,module_name)}}}}
 if(options.ipy_id===undefined){$B.loop()}}
 $B.$operators=$operators
 $B.$Node=$Node
@@ -11630,7 +11641,10 @@ scripts.forEach(function(script){if(script.type===undefined ||
 script.type=='text/javascript'){js_scripts.push(script)
 if(script.src){console.log(script.src)}}})
 console.log(js_scripts)
-for(var mod in $B.imported){if($B.imported[mod].$last_modified){console.log('check',mod,$B.imported[mod].__file__,$B.imported[mod].$last_modified)}else{console.log('no date for mod',mod)}}},URLParameter:function(name){name=name.replace(/[\[]/,"\\[").replace(/[\]]/,"\\]");
+for(var mod in $B.imported){if($B.imported[mod].$last_modified){console.log('check',mod,$B.imported[mod].__file__,$B.imported[mod].$last_modified)}else{console.log('no date for mod',mod)}}},run_script: function(){var $=$B.args("run_script",2,{src: null,name: null},["src","name"],arguments,{name: "script_" + $B.UUID()},null,null)
+if($B.hasOwnProperty("VFS")&& $B.has_indexedDB){$B.tasks.push([$B.idb_open])}
+$B.run_script($.src,$.name)
+$B.loop()},URLParameter:function(name){name=name.replace(/[\[]/,"\\[").replace(/[\]]/,"\\]");
 var regex=new RegExp("[\\?&]" + name + "=([^&#]*)"),results=regex.exec(location.search);
 results=results===null ? "" :
 decodeURIComponent(results[1].replace(/\+/g," "));
