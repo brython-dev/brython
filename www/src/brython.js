@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.5.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-05-03 08:50:33.782433"
-__BRYTHON__.timestamp=1525330233782
+__BRYTHON__.compiled_date="2018-05-03 17:15:49.701553"
+__BRYTHON__.timestamp=1525360549701
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -1622,7 +1622,8 @@ this.toString=function(){return '(from) ' + this.module + ' (import) ' + this.na
 '(as)' + this.aliases}
 this.to_js=function(){this.js_processed=true
 var scope=$get_scope(this),module=$get_module(this),mod=module.module,res=[],pos=0,indent=$get_node(this).indent,head=' '.repeat(indent)
-module.imports[this.module]=true
+var mod_elts=this.module.split(".")
+for(var i=0;i < mod_elts.length;i++){module.imports[mod_elts.slice(0,i).join(".")]=true}
 var _mod=this.module.replace(/\$/g,''),$package,packages=[]
 while(_mod.length > 0){if(_mod.charAt(0)=='.'){if($package===undefined){if($B.imported[mod]!==undefined){$package=$B.imported[mod].__package__
 packages=$package.split('.')}}else{$package=$B.imported[$package]
@@ -1878,8 +1879,8 @@ var scope=$get_scope(this),res=[]
 module=$get_module(this)
 this.tree.forEach(function(item){var mod_name=item.name,aliases=(item.name==item.alias)?
 '{}' :('{"' + mod_name + '" : "' +
-item.alias + '"}'),localns='$locals_' + scope.id.replace(/\./g,'_')
-module.imports[mod_name]=true
+item.alias + '"}'),localns='$locals_' + scope.id.replace(/\./g,'_'),mod_elts=item.name.split(".")
+for(var i=0;i < mod_elts.length;i++){module.imports[mod_elts.slice(0,i).join(".")]=true}
 res.push('$B.$import("' + mod_name + '", [],' + aliases +
 ',' + localns + ', true);')})
 return res.join('')+ 'None;'}}
@@ -7444,8 +7445,7 @@ console.log(err)
 for(var k in err){console.log(k,err[k])}
 console.log(Object.keys($B.imported))
 throw err}
-try{var $module=eval("$locals_" +
-parent.replace(/\./g,"_"))}catch(err){console.log(mod_js)
+try{var $module=eval("$locals_" +parent.replace(/\./g,"_"))}catch(err){console.log("error",parent,mod_js)
 throw err}
 for(var attr in $module){$B.imported[parent][attr]=$module[attr]}
 if(i>0){

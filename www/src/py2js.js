@@ -3295,8 +3295,10 @@ var $FromCtx = $B.parser.$FromCtx = function(context){
             indent = $get_node(this).indent,
             head = ' '.repeat(indent)
 
-        module.imports[this.module] = true
-
+        var mod_elts = this.module.split(".")
+        for(var i = 0; i < mod_elts.length; i++){
+            module.imports[mod_elts.slice(0, i).join(".")] = true
+        }
         var _mod = this.module.replace(/\$/g, ''),
             $package,
             packages = []
@@ -3950,8 +3952,11 @@ var $ImportCtx = $B.parser.$ImportCtx = function(context){
                 aliases = (item.name == item.alias)?
                     '{}' : ('{"' + mod_name + '" : "' +
                     item.alias + '"}'),
-                localns = '$locals_' + scope.id.replace(/\./g, '_')
-            module.imports[mod_name] = true
+                localns = '$locals_' + scope.id.replace(/\./g, '_'),
+                mod_elts = item.name.split(".")
+            for(var i = 0; i < mod_elts.length; i++){
+                module.imports[mod_elts.slice(0, i).join(".")] = true
+            }
             res.push('$B.$import("' + mod_name + '", [],' + aliases +
                 ',' + localns + ', true);')
         })

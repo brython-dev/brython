@@ -372,10 +372,9 @@ var finder_VFS = {
                    throw err
                }
                try{
-                   var $module = eval("$locals_" +
-                       parent.replace(/\./g, "_"))
+                   var $module = eval("$locals_" +parent.replace(/\./g, "_"))
                }catch(err){
-                   console.log(mod_js)
+                   console.log("error", parent, mod_js)
                    throw err
                }
                for(var attr in $module){

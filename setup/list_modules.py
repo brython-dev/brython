@@ -358,15 +358,13 @@ class ModulesFinder:
         """
         vfs = {}
         for module in self.modules:
-            if module in stdlib:
-                vfs[module] = stdlib[module]
-            else:
-                vfs[module] = user_modules[module]
-                elts = module.split('.')
-                for i in range(1, len(elts)):
-                    pkg = '.'.join(elts[:i])
-                    if not pkg in vfs:
-                        vfs[pkg] = user_modules[pkg]
+            dico = stdlib if module in stdlib else user_modules
+            vfs[module] = dico[module]
+            elts = module.split('.')
+            for i in range(1, len(elts)):
+                pkg = '.'.join(elts[:i])
+                if not pkg in vfs:
+                    vfs[pkg] = dico[pkg]
 
         # save in brython_modules.js
         path = os.path.join(stdlib_dir, "brython_modules.js")
