@@ -304,6 +304,14 @@ var slice = {
     }
 }
 
+slice.__eq__ = function(self, other){
+    var conv1 = conv_slice(self),
+        conv2 = conv_slice(other)
+    return conv1[0] == conv2[0] &&
+        conv1[1] == conv2[1] &&
+        conv1[2] == conv2[2]
+}
+
 slice.__repr__ = slice.__str__ = function(self){
     return "slice(" + _b_.str.$factory(self.start) + "," +
         _b_.str.$factory(self.stop) + "," + _b_.str.$factory(self.step) + ")"
@@ -313,13 +321,25 @@ slice.__setattr__ = function(self, attr, value){
     throw _b_.AttributeError.$factory("readonly attribute")
 }
 
-slice.$conv = function(self, len){
+function conv_slice(self){
     // Internal method, uses the integer len to set
     // start, stop, step to integers
-    return {start: self.start === _b_.None ? 0 : self.start,
-        stop: self.stop === _b_.None ? len : self.stop,
-        step: self.step === _b_.None ? 1 : self.step
+    var attrs = ["start", "stop", "step"],
+        res = []
+    for(var i = 0; i < attrs.length; i++){
+        var val = self[attrs[i]]
+        if(val === _b_.None){
+            res.push(val)
+        }else{
+            try{
+                res.push($B.PyNumber_Index(val))
+            }catch(err){
+                throw _b_.TypeError.$factory("slice indices must be " +
+                    "integers or None or have an __index__ method")
+            }
+        }
     }
+    return res
 }
 
 slice.$conv_for_seq = function(self, len){
@@ -398,6 +418,7 @@ slice.$factory = function(){
         stop: stop,
         step: step
     }
+    conv_slice(res) // to check types
     return res
 }
 
