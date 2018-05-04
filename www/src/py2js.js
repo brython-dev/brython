@@ -4939,6 +4939,23 @@ var $SingleKwCtx = $B.parser.$SingleKwCtx = function(context,token){
     }
 }
 
+var $SliceCtx = $B.parser.$SliceCtx = function(context){
+    // Class for slices inside a subscription : t[1:2]
+    this.type = 'slice'
+    this.parent = context
+    this.tree = context.tree.length > 0 ? [context.tree.pop()] : []
+    context.tree.push(this)
+
+    this.to_js = function(){
+        for(var i = 0; i < this.tree.length; i++){
+            if(this.tree[i].type == "abstract_expr"){
+                this.tree[i].to_js = function(){return "None"}
+            }
+        }
+        return "slice.$factory(" + $to_js(this.tree) + ")"
+    }
+}
+
 var $StarArgCtx = $B.parser.$StarArgCtx = function(context){
     // Class for star args in calls, eg f(*args)
     this.type = 'star_arg'
@@ -5149,7 +5166,7 @@ var $SubCtx = $B.parser.$SubCtx = function(context){
                 if(elt.type == 'abstract_expr'){res1.push('None')}
                 else{res1.push(elt.to_js())}
             })
-            res += 'slice.$factory(' + res1.join(',') + '))'
+            res += 'tuple.$factory([' + res1.join(',') + ']))'
         }
         return shortcut ? res + ')' : res
     }
@@ -7436,6 +7453,11 @@ var $transition = $B.parser.$transition = function(context, token, value){
         case 'single_kw':
             if(token == ':'){return $BodyCtx(context)}
             $_SyntaxError(context, 'token ' + token + ' after ' + context)
+        case 'slice':
+            if(token == ":"){
+                    return new $AbstractExprCtx(context, false)
+            }
+            return $transition(context.parent, token, value)
         case 'star_arg':
             switch(token) {
                 case 'id':
@@ -7503,19 +7525,9 @@ var $transition = $B.parser.$transition = function(context, token, value){
                 case ']':
                     return context.parent
                 case ':':
-                    if(context.tree.length == 0){
-                        new $AbstractExprCtx(context, false)
-                    }
-                    return new $AbstractExprCtx(context, false)
+                    return new $AbstractExprCtx(new $SliceCtx(context), false)
                 case ',':
-                    console.log(context, "token ,")
-                    var child = context.tree[0]
-                    context.tree = []
-                    var t = new $ListOrTupleCtx(context)
-                    child.parent = t
-                    t.tree.push(child)
-                    t.real = "tuple"
-                    return t
+                    return new $AbstractExprCtx(context, false)
             }
             console.log('syntax error', context, token)
             $_SyntaxError(context, 'token ' + token + ' after ' + context)
@@ -8888,6 +8900,7 @@ var loop = $B.loop = function(){
                 name = script.name,
                 url = script.url,
                 js = script.js
+            console.log("js size", js.length, js.split("\n").length, "lines")
             eval(js)
         }catch(err){
             if($B.debug>1){

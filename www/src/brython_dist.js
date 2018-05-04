@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.5.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-05-03 17:15:49.701553"
-__BRYTHON__.timestamp=1525360549701
+__BRYTHON__.compiled_date="2018-05-04 10:00:53.641048"
+__BRYTHON__.timestamp=1525420853641
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -2359,6 +2359,13 @@ if(this.loop_num !==undefined){var scope=$get_scope(this)
 var res='if($locals_' + scope.id.replace(/\./g,'_')
 return res + '["$no_break' + this.loop_num + '"])'}
 return this.token}}
+var $SliceCtx=$B.parser.$SliceCtx=function(C){
+this.type='slice'
+this.parent=C
+this.tree=C.tree.length > 0 ?[C.tree.pop()]:[]
+C.tree.push(this)
+this.to_js=function(){for(var i=0;i < this.tree.length;i++){if(this.tree[i].type=="abstract_expr"){this.tree[i].to_js=function(){return "None"}}}
+return "slice.$factory(" + $to_js(this.tree)+ ")"}}
 var $StarArgCtx=$B.parser.$StarArgCtx=function(C){
 this.type='star_arg'
 this.parent=C
@@ -2458,7 +2465,7 @@ res +='$B.$getattr(' + val + ',"__' + this.func + '__")('
 if(this.tree.length==1){res +=this.tree[0].to_js()+ ')'}else{var res1=[]
 this.tree.forEach(function(elt){if(elt.type=='abstract_expr'){res1.push('None')}
 else{res1.push(elt.to_js())}})
-res +='slice.$factory(' + res1.join(',')+ '))'}
+res +='tuple.$factory([' + res1.join(',')+ ']))'}
 return shortcut ? res + ')' : res}}
 var $TargetListCtx=$B.parser.$TargetListCtx=function(C){
 this.type='target_list'
@@ -3810,6 +3817,9 @@ return $transition(C.parent,token)
 case 'single_kw':
 if(token==':'){return $BodyCtx(C)}
 $_SyntaxError(C,'token ' + token + ' after ' + C)
+case 'slice':
+if(token==":"){return new $AbstractExprCtx(C,false)}
+return $transition(C.parent,token,value)
 case 'star_arg':
 switch(token){case 'id':
 if(C.parent.type=="target_list"){C.tree.push(value)
@@ -3862,17 +3872,9 @@ return $transition(expr,token,value)
 case ']':
 return C.parent
 case ':':
-if(C.tree.length==0){new $AbstractExprCtx(C,false)}
-return new $AbstractExprCtx(C,false)
+return new $AbstractExprCtx(new $SliceCtx(C),false)
 case ',':
-console.log(C,"token ,")
-var child=C.tree[0]
-C.tree=[]
-var t=new $ListOrTupleCtx(C)
-child.parent=t
-t.tree.push(child)
-t.real="tuple"
-return t}
+return new $AbstractExprCtx(C,false)}
 console.log('syntax error',C,token)
 $_SyntaxError(C,'token ' + token + ' after ' + C)
 case 'target_list':
@@ -4510,6 +4512,7 @@ if(idb_cx){idb_cx.result.close()}
 return}
 var task=$B.tasks.shift(),func=task[0],args=task.slice(1)
 if(func=="execute"){try{var script=task[1],src=script.src,name=script.name,url=script.url,js=script.js
+console.log("js size",js.length,js.split("\n").length,"lines")
 eval(js)}catch(err){if($B.debug>1){console.log(err)
 for(var attr in err){console.log(attr+' : ',err[attr])}}
 if(err.$py_error===undefined){console.log('Javascript error',err)
@@ -6741,11 +6744,19 @@ return{__class__: range,start: start,stop: stop,step: step,$is_range: true,$safe
 $B.set_func_names(range,"builtins")
 var slice={__class__: _b_.type,__module__: "builtins",__mro__:[_b_.object],__name__: "slice",$is_class: true,$native: true,$descriptors:{
 start: true,step: true,stop: true}}
+slice.__eq__=function(self,other){var conv1=conv_slice(self),conv2=conv_slice(other)
+return conv1[0]==conv2[0]&&
+conv1[1]==conv2[1]&&
+conv1[2]==conv2[2]}
 slice.__repr__=slice.__str__=function(self){return "slice(" + _b_.str.$factory(self.start)+ "," +
 _b_.str.$factory(self.stop)+ "," + _b_.str.$factory(self.step)+ ")"}
 slice.__setattr__=function(self,attr,value){throw _b_.AttributeError.$factory("readonly attribute")}
-slice.$conv=function(self,len){
-return{start: self.start===_b_.None ? 0 : self.start,stop: self.stop===_b_.None ? len : self.stop,step: self.step===_b_.None ? 1 : self.step}}
+function conv_slice(self){
+var attrs=["start","stop","step"],res=[]
+for(var i=0;i < attrs.length;i++){var val=self[attrs[i]]
+if(val===_b_.None){res.push(val)}else{try{res.push($B.PyNumber_Index(val))}catch(err){throw _b_.TypeError.$factory("slice indices must be " +
+"integers or None or have an __index__ method")}}}
+return res}
 slice.$conv_for_seq=function(self,len){
 var step=self.step===None ? 1 : $B.PyNumber_Index(self.step),step_is_neg=$B.gt(0,step),len_1=$B.sub(len,1)
 if(step==0){throw _b_.ValueError.$factory('slice step cannot be zero')}
@@ -6777,6 +6788,7 @@ step=_b_.None}else{start=$.start
 stop=$.stop
 step=$.step===null ? _b_.None : $.step}
 var res={__class__ : slice,start: start,stop: stop,step: step}
+conv_slice(res)
 return res}
 $B.set_func_names(slice,"builtins")
 _b_.range=range
@@ -7400,6 +7412,8 @@ eval(js)}catch(err){console.log(err + " for module " + module.__name__)
 console.log("module",module)
 console.log(root)
 console.log(err)
+js.split("\n").forEach(function(item,i){console.log(i+1,":",item)})
+console.log(js)
 for(var attr in err){console.log(attr,err[attr])}
 console.log(_b_.getattr(err,"info","[no info]"))
 console.log("message: " + err.$message)

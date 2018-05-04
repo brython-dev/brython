@@ -1746,10 +1746,11 @@ assert (-1024).to_bytes(2, "big", signed=True) == b'\xfc\x00'
 assert (1024).to_bytes(2, "big") == b'\x04\x00'
 assert (1024).to_bytes(2, "little") == b'\x00\x04'
 
+"""
 import ipaddress
 assert repr(ipaddress.ip_address('192.168.0.1')) == "IPv4Address('192.168.0.1')"
 assert repr(ipaddress.ip_address('2001:db8::')) == "IPv6Address('2001:db8::')"
-
+"""
 # issue 811
 try:
     exec("a + b = 1")
@@ -1767,6 +1768,17 @@ class A:
 
 assert [5] + A() == 99
 assert [6] * A() == 100
+
+# issue reported on the Google Group
+# https://groups.google.com/forum/?fromgroups=#!topic/brython/U6cmUP9Q6Y8
+class ndarray:
+  def __getitem__(self, val):
+    return val
+
+t = ndarray()
+
+assert slice(1, 5, None) == slice(1, 5, None)
+assert t[1:5, 7] == (slice(1, 5, None), 7)
 
 # ==========================================
 # Finally, report that all tests have passed
