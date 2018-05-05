@@ -1,16 +1,25 @@
+"""
+    Decorators for the creating management commands.
+"""
 import importlib
 import inspect
 
 from plumbum import cli
 
 
-class Param:
+class Option:
+    """
+        Annotate command options with this type.
+    """
     def __init__(self, doc='', names=[]):
         self._names = names
         self._doc = doc
 
 
 class Flag:
+    """
+        Annotate command flags with this type.
+    """
     def __init__(self, doc='', names=[]):
         self._names = names
         self._doc = doc
@@ -29,6 +38,11 @@ class M(cli.Application):
 
     @classmethod
     def command(cls, name=None):
+        """
+            Decorator used to indicate that a method should be exported
+            as a cli subcommand of ./manage.py. The optional name the
+            cli command to be named differently from the function name.
+        """
         postfix = name
         def decorator(method):
             if postfix is None:
@@ -61,7 +75,7 @@ class M(cli.Application):
             arguments = []
             for (arg_name, param) in signature.parameters.items():
                 tp = param.annotation
-                if isinstance(tp, Param) or isinstance(tp, Flag):
+                if isinstance(tp, Option) or isinstance(tp, Flag):
                     if tp._names:
                         names = tp._names
                     else:
@@ -79,7 +93,7 @@ class M(cli.Application):
             newclass = app.subcommand(name)(newclass)
 
             for tp, name, names, default, doc in arguments:
-                if isinstance(tp, Param):
+                if isinstance(tp, Option):
                     setattr(newclass, name, cli.SwitchAttr(names, default=default, help=doc))
                 elif isinstance(tp, Flag):
                     setattr(newclass, name, cli.Flag(names, help=doc))

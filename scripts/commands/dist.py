@@ -13,7 +13,7 @@ import time
 import zipfile
 
 from ..javascript_minifier import minify as js_minify
-from .lib.cli import M, Param
+from .lib.cli import M, Option
 from .lib.git import GIT, in_git, get_releases
 from .lib.info import MANIFEST, BRYTHON_DIR, SRC_DIR, VERSION_NAME
 from .lib.term import status
@@ -170,7 +170,7 @@ def list_releases():
 
 
 @M.command()
-def changes(since: Param('list only changes since the given release', ['-s', '--since']) = None):
+def changes(since: Option('list only changes since the given release', ['-s', '--since']) = None):
     """
         Lists changes between releases (using git shortlog)
     """

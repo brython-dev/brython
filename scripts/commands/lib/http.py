@@ -1,3 +1,6 @@
+"""
+    Implements a simple http server to serve the development version of the Brython website.
+"""
 import os
 import sys
 import email

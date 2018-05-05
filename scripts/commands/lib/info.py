@@ -1,4 +1,7 @@
-#!/usr/bin/env python3
+"""
+    Contains information about the development setup (e.g. where the git repo is located (BRYTHON_DIR),
+    where the Brython Sources are located (SRC_DIR), ...)
+"""
 
 import json
 import pathlib

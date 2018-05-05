@@ -1,3 +1,6 @@
+"""
+    Miscellaneous utility functions to deal with the git repository
+"""
 import pathlib
 
 from plumbum import local

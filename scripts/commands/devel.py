@@ -4,14 +4,14 @@
 import os
 from webbrowser import open_new_tab
 
-from .lib.cli import M, Param, Flag
+from .lib.cli import M, Option, Flag
 from .lib.http import RequestHandler, server as http_server
 from .lib.info import BRYTHON_DIR, STATIC_DOC_DIR
 
 from .doc import compile as compile_docs
 
 @M.command()
-def server(port: Param('Port to run the http server on') = 8000,
+def server(port: Option('Port to run the http server on') = 8000,
            no_docs: Flag('Do not build the docs', names=['--no_docs']) = False,
            no_browser: Flag('Do not open in a browser window', names=['--no_browser']) = False):
     """Run a devel server."""
