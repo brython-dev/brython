@@ -84,6 +84,7 @@ def create_vfs(path, exclude_dirs=['test', 'site-packages'], progress_func=print
         return False
 
     nb = 0
+
     for subdir in ("libs", "Lib"):
         for p in walk(path / subdir, skip):
             nb += 1

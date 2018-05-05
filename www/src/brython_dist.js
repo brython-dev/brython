@@ -28,7 +28,7 @@ $B.path=[$path + 'Lib',$path + 'libs',$script_dir,$path + 'Lib/site-packages']
 $B.async_enabled=false
 if($B.async_enabled){$B.block={}}
 $B.imported={}
-$B.module_source={}
+$B.precompiled={}
 $B.vars={}
 $B._globals={}
 $B.frames_stack=[]
@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.5.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-05-01 17:14:26.372885"
-__BRYTHON__.timestamp=1525187666372
+__BRYTHON__.compiled_date="2018-05-04 10:00:53.641048"
+__BRYTHON__.timestamp=1525420853641
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -1622,7 +1622,8 @@ this.toString=function(){return '(from) ' + this.module + ' (import) ' + this.na
 '(as)' + this.aliases}
 this.to_js=function(){this.js_processed=true
 var scope=$get_scope(this),module=$get_module(this),mod=module.module,res=[],pos=0,indent=$get_node(this).indent,head=' '.repeat(indent)
-module.imports[this.module]=true
+var mod_elts=this.module.split(".")
+for(var i=0;i < mod_elts.length;i++){module.imports[mod_elts.slice(0,i).join(".")]=true}
 var _mod=this.module.replace(/\$/g,''),$package,packages=[]
 while(_mod.length > 0){if(_mod.charAt(0)=='.'){if($package===undefined){if($B.imported[mod]!==undefined){$package=$B.imported[mod].__package__
 packages=$package.split('.')}}else{$package=$B.imported[$package]
@@ -1878,8 +1879,8 @@ var scope=$get_scope(this),res=[]
 module=$get_module(this)
 this.tree.forEach(function(item){var mod_name=item.name,aliases=(item.name==item.alias)?
 '{}' :('{"' + mod_name + '" : "' +
-item.alias + '"}'),localns='$locals_' + scope.id.replace(/\./g,'_')
-module.imports[mod_name]=true
+item.alias + '"}'),localns='$locals_' + scope.id.replace(/\./g,'_'),mod_elts=item.name.split(".")
+for(var i=0;i < mod_elts.length;i++){module.imports[mod_elts.slice(0,i).join(".")]=true}
 res.push('$B.$import("' + mod_name + '", [],' + aliases +
 ',' + localns + ', true);')})
 return res.join('')+ 'None;'}}
@@ -2358,6 +2359,13 @@ if(this.loop_num !==undefined){var scope=$get_scope(this)
 var res='if($locals_' + scope.id.replace(/\./g,'_')
 return res + '["$no_break' + this.loop_num + '"])'}
 return this.token}}
+var $SliceCtx=$B.parser.$SliceCtx=function(C){
+this.type='slice'
+this.parent=C
+this.tree=C.tree.length > 0 ?[C.tree.pop()]:[]
+C.tree.push(this)
+this.to_js=function(){for(var i=0;i < this.tree.length;i++){if(this.tree[i].type=="abstract_expr"){this.tree[i].to_js=function(){return "None"}}}
+return "slice.$factory(" + $to_js(this.tree)+ ")"}}
 var $StarArgCtx=$B.parser.$StarArgCtx=function(C){
 this.type='star_arg'
 this.parent=C
@@ -2457,7 +2465,7 @@ res +='$B.$getattr(' + val + ',"__' + this.func + '__")('
 if(this.tree.length==1){res +=this.tree[0].to_js()+ ')'}else{var res1=[]
 this.tree.forEach(function(elt){if(elt.type=='abstract_expr'){res1.push('None')}
 else{res1.push(elt.to_js())}})
-res +='slice.$factory(' + res1.join(',')+ '))'}
+res +='tuple.$factory([' + res1.join(',')+ ']))'}
 return shortcut ? res + ')' : res}}
 var $TargetListCtx=$B.parser.$TargetListCtx=function(C){
 this.type='target_list'
@@ -2770,7 +2778,8 @@ while(true){if(scope.ntype=="module"){return name}
 else if(scope.ntype=="class"){var class_name=scope.C.tree[0].name
 while(class_name.charAt(0)=='_'){class_name=class_name.substr(1)}
 return '_' + class_name + name}else{if(scope.parent && scope.parent.C){scope=$get_scope(scope.C.tree[0])}else{return name}}}}else{return name}}
-var $transition=$B.parser.$transition=function(C,token,value){switch(C.type){case 'abstract_expr':
+var $transition=$B.parser.$transition=function(C,token,value){
+switch(C.type){case 'abstract_expr':
 switch(token){case 'id':
 case 'imaginary':
 case 'int':
@@ -3808,6 +3817,9 @@ return $transition(C.parent,token)
 case 'single_kw':
 if(token==':'){return $BodyCtx(C)}
 $_SyntaxError(C,'token ' + token + ' after ' + C)
+case 'slice':
+if(token==":"){return new $AbstractExprCtx(C,false)}
+return $transition(C.parent,token,value)
 case 'star_arg':
 switch(token){case 'id':
 if(C.parent.type=="target_list"){C.tree.push(value)
@@ -3860,8 +3872,10 @@ return $transition(expr,token,value)
 case ']':
 return C.parent
 case ':':
-if(C.tree.length==0){new $AbstractExprCtx(C,false)}
+return new $AbstractExprCtx(new $SliceCtx(C),false)
+case ',':
 return new $AbstractExprCtx(C,false)}
+console.log('syntax error',C,token)
 $_SyntaxError(C,'token ' + token + ' after ' + C)
 case 'target_list':
 switch(token){case 'id':
@@ -4432,10 +4446,10 @@ delete $B.imported[module]
 var imports=elts[2]
 imports=imports.join(",")
 $B.tasks.splice(0,0,[store_precompiled,module,js,imports,is_package])}else{console.log('bizarre',module,ext)}}else{}}else{
-if(res.is_package){$B.module_source[module]=[res.content]}else{$B.module_source[module]=res.content}
+if(res.is_package){$B.precompiled[module]=[res.content]}else{$B.precompiled[module]=res.content}
 if(res.imports.length > 0){
 var subimports=res.imports.split(",")
-for(var i=0;i<subimports.length;i++){var subimport=subimports[i]
+for(var i=0;i < subimports.length;i++){var subimport=subimports[i]
 if(subimport.startsWith(".")){
 var url_elts=module.split("."),nb_dots=0
 while(subimport.startsWith(".")){nb_dots++
@@ -4444,7 +4458,7 @@ var elts=url_elts.slice(0,nb_dots)
 if(subimport){elts=elts.concat([subimport])}
 subimport=elts.join(".")}
 if(!$B.imported.hasOwnProperty(subimport)&&
-!$B.module_source.hasOwnProperty(subimport)){
+!$B.precompiled.hasOwnProperty(subimport)){
 if($B.VFS.hasOwnProperty(subimport)){var submodule=$B.VFS[subimport],ext=submodule[0],source=submodule[1]
 if(submodule[0]==".py"){$B.tasks.splice(0,0,[idb_get,subimport])}else{add_jsmodule(subimport,source)}}}}}}
 loop()}
@@ -4487,7 +4501,7 @@ req.send()}
 function add_jsmodule(module,source){
 source +="\nvar $locals_" +
 module.replace(/\./g,"_")+ " = $module"
-$B.module_source[module]=source}
+$B.precompiled[module]=source}
 var inImported=$B.inImported=function(module){if($B.imported.hasOwnProperty(module)){}else if(__BRYTHON__.VFS && __BRYTHON__.VFS.hasOwnProperty(module)){var elts=__BRYTHON__.VFS[module]
 if(elts===undefined){console.log('bizarre',module)}
 var ext=elts[0],source=elts[1],is_package=elts.length==4
@@ -4498,6 +4512,7 @@ if(idb_cx){idb_cx.result.close()}
 return}
 var task=$B.tasks.shift(),func=task[0],args=task.slice(1)
 if(func=="execute"){try{var script=task[1],src=script.src,name=script.name,url=script.url,js=script.js
+console.log("js size",js.length,js.split("\n").length,"lines")
 eval(js)}catch(err){if($B.debug>1){console.log(err)
 for(var attr in err){console.log(attr+' : ',err[attr])}}
 if(err.$py_error===undefined){console.log('Javascript error',err)
@@ -4506,6 +4521,7 @@ handle_error(err)}
 loop()}else{
 func.apply(null,args)}}
 $B.tasks=[]
+$B.has_indexedDB=window.indexedDB !==undefined
 function handle_error(err){
 var name=err.__class__.__name__,trace=_b_.getattr(err,'info')
 if(name=='SyntaxError' ||name=='IndentationError'){var offset=err.args[3]
@@ -4526,6 +4542,18 @@ imports.indexOf(subimport)==-1){if($B.VFS.hasOwnProperty(subimport)){imports.pus
 nb_added++}}})}}
 if(nb_added){required_stdlib_imports(imports,imports.length - nb_added)}
 return imports}
+$B.run_script=function(src,name){$B.$py_module_path[name]=$B.script_path
+try{var root=$B.py2js(src,name,name),js=root.to_js(),script={js: js,name: name,src: src,url: $B.script_path}
+if($B.debug > 1){console.log(js)}}catch(err){handle_error(err)}
+if($B.hasOwnProperty("VFS")&& $B.has_indexedDB){
+var imports1=Object.keys(root.imports).slice(),imports=imports1.filter(function(item){return $B.VFS.hasOwnProperty(item)})
+Object.keys(imports).forEach(function(name){if($B.VFS.hasOwnProperty(name)){var submodule=$B.VFS[name],type=submodule[0]
+if(type==".py"){var src=submodule[1],subimports=submodule[2],is_package=submodule.length==4
+if(type==".py"){
+required_stdlib_imports(subimports)}
+subimports.forEach(function(mod){if(imports.indexOf(mod)==-1){imports.push(mod)}})}}})
+for(var j=0;j<imports.length;j++){$B.tasks.push([$B.inImported,imports[j]])}}
+$B.tasks.push(["execute",script])}
 var _run_scripts=$B.parser._run_scripts=function(options){
 var kk=Object.keys(_window)
 if(options.ipy_id !==undefined){var $elts=[]
@@ -4554,7 +4582,7 @@ $err=_b_.RuntimeError.$factory($err + '')}
 var $trace=_b_.getattr($err,'info')+ '\n' + $err.__name__ +
 ': ' + $err.args
 try{_b_.getattr($B.stderr,'write')($trace)}catch(print_exc_err){console.log($trace)}
-throw $err}}else{if($elts.length > 0){if(window.indexedDB && $B.hasOwnProperty("VFS")){$B.tasks.push([$B.idb_open])}}
+throw $err}}else{if($elts.length > 0){if($B.has_indexedDB && $B.hasOwnProperty("VFS")){$B.tasks.push([$B.idb_open])}}
 var defined_ids={}
 for(var i=0;i < $elts.length;i++){var elt=$elts[i]
 if(elt.id){if(defined_ids[elt.id]){throw Error("Brython error : Found 2 scripts with the " +
@@ -4572,18 +4600,7 @@ if(elt.src){
 $B.tasks.push([ajax_load_script,{name: module_name,url: elt.src}])}else{
 var src=(elt.innerHTML ||elt.textContent)
 src=src.replace(/^\n/,'')
-$B.$py_module_path[module_name]=$B.script_path
-try{var root=$B.py2js(src,module_name,module_name),js=root.to_js(),script={js: js,name: module_name,src: src,url: $B.script_path}
-if($B.debug > 1){console.log(js)}}catch(err){handle_error(err)}
-if($B.hasOwnProperty("VFS")){
-var imports1=Object.keys(root.imports).slice(),imports=imports1.filter(function(item){return $B.VFS.hasOwnProperty(item)})
-Object.keys(imports).forEach(function(name){if($B.VFS.hasOwnProperty(name)){var submodule=$B.VFS[name],type=submodule[0]
-if(type==".py"){var src=submodule[1],subimports=submodule[2],is_package=submodule.length==4
-if(type==".py"){
-required_stdlib_imports(subimports)}
-subimports.forEach(function(mod){if(imports.indexOf(mod)==-1){imports.push(mod)}})}}})
-for(var j=0;j<imports.length;j++){$B.tasks.push([$B.inImported,imports[j]])}}
-$B.tasks.push(["execute",script])}}}}
+$B.run_script(src,module_name)}}}}
 if(options.ipy_id===undefined){$B.loop()}}
 $B.$operators=$operators
 $B.$Node=$Node
@@ -6727,11 +6744,19 @@ return{__class__: range,start: start,stop: stop,step: step,$is_range: true,$safe
 $B.set_func_names(range,"builtins")
 var slice={__class__: _b_.type,__module__: "builtins",__mro__:[_b_.object],__name__: "slice",$is_class: true,$native: true,$descriptors:{
 start: true,step: true,stop: true}}
+slice.__eq__=function(self,other){var conv1=conv_slice(self),conv2=conv_slice(other)
+return conv1[0]==conv2[0]&&
+conv1[1]==conv2[1]&&
+conv1[2]==conv2[2]}
 slice.__repr__=slice.__str__=function(self){return "slice(" + _b_.str.$factory(self.start)+ "," +
 _b_.str.$factory(self.stop)+ "," + _b_.str.$factory(self.step)+ ")"}
 slice.__setattr__=function(self,attr,value){throw _b_.AttributeError.$factory("readonly attribute")}
-slice.$conv=function(self,len){
-return{start: self.start===_b_.None ? 0 : self.start,stop: self.stop===_b_.None ? len : self.stop,step: self.step===_b_.None ? 1 : self.step}}
+function conv_slice(self){
+var attrs=["start","stop","step"],res=[]
+for(var i=0;i < attrs.length;i++){var val=self[attrs[i]]
+if(val===_b_.None){res.push(val)}else{try{res.push($B.PyNumber_Index(val))}catch(err){throw _b_.TypeError.$factory("slice indices must be " +
+"integers or None or have an __index__ method")}}}
+return res}
 slice.$conv_for_seq=function(self,len){
 var step=self.step===None ? 1 : $B.PyNumber_Index(self.step),step_is_neg=$B.gt(0,step),len_1=$B.sub(len,1)
 if(step==0){throw _b_.ValueError.$factory('slice step cannot be zero')}
@@ -6763,6 +6788,7 @@ step=_b_.None}else{start=$.start
 stop=$.stop
 step=$.step===null ? _b_.None : $.step}
 var res={__class__ : slice,start: start,stop: stop,step: step}
+conv_slice(res)
 return res}
 $B.set_func_names(slice,"builtins")
 _b_.range=range
@@ -7386,6 +7412,8 @@ eval(js)}catch(err){console.log(err + " for module " + module.__name__)
 console.log("module",module)
 console.log(root)
 console.log(err)
+js.split("\n").forEach(function(item,i){console.log(i+1,":",item)})
+console.log(js)
 for(var attr in err){console.log(attr,err[attr])}
 console.log(_b_.getattr(err,"info","[no info]"))
 console.log("message: " + err.$message)
@@ -7417,11 +7445,11 @@ var path=$B.brython_path + "Lib/" + modobj.__name__
 if(modobj.$is_package){path +="/__init__.py"}
 modobj.__file__=path
 if(ext=='.js'){run_js(module_contents,modobj.__path__,modobj)}
-else if($B.module_source.hasOwnProperty(modobj.__name__)){var parts=modobj.__name__.split(".")
+else if($B.precompiled.hasOwnProperty(modobj.__name__)){var parts=modobj.__name__.split(".")
 for(var i=0;i < parts.length;i++){var parent=parts.slice(0,i + 1).join(".")
 if($B.imported.hasOwnProperty(parent)&&
 $B.imported[parent].__initialized__){continue}
-var mod_js=$B.module_source[parent],is_package=Array.isArray(mod_js)
+var mod_js=$B.precompiled[parent],is_package=Array.isArray(mod_js)
 if(is_package){mod_js=mod_js[0]}
 $B.imported[parent]=module.$factory(parent,undefined,is_package)
 $B.imported[parent].__initialized__=true
@@ -7431,8 +7459,7 @@ console.log(err)
 for(var k in err){console.log(k,err[k])}
 console.log(Object.keys($B.imported))
 throw err}
-try{var $module=eval("$locals_" +
-parent.replace(/\./g,"_"))}catch(err){console.log(mod_js)
+try{var $module=eval("$locals_" +parent.replace(/\./g,"_"))}catch(err){console.log("error",parent,mod_js)
 throw err}
 for(var attr in $module){$B.imported[parent][attr]=$module[attr]}
 if(i>0){
@@ -11628,7 +11655,10 @@ scripts.forEach(function(script){if(script.type===undefined ||
 script.type=='text/javascript'){js_scripts.push(script)
 if(script.src){console.log(script.src)}}})
 console.log(js_scripts)
-for(var mod in $B.imported){if($B.imported[mod].$last_modified){console.log('check',mod,$B.imported[mod].__file__,$B.imported[mod].$last_modified)}else{console.log('no date for mod',mod)}}},URLParameter:function(name){name=name.replace(/[\[]/,"\\[").replace(/[\]]/,"\\]");
+for(var mod in $B.imported){if($B.imported[mod].$last_modified){console.log('check',mod,$B.imported[mod].__file__,$B.imported[mod].$last_modified)}else{console.log('no date for mod',mod)}}},run_script: function(){var $=$B.args("run_script",2,{src: null,name: null},["src","name"],arguments,{name: "script_" + $B.UUID()},null,null)
+if($B.hasOwnProperty("VFS")&& $B.has_indexedDB){$B.tasks.push([$B.idb_open])}
+$B.run_script($.src,$.name)
+$B.loop()},URLParameter:function(name){name=name.replace(/[\[]/,"\\[").replace(/[\]]/,"\\]");
 var regex=new RegExp("[\\?&]" + name + "=([^&#]*)"),results=regex.exec(location.search);
 results=results===null ? "" :
 decodeURIComponent(results[1].replace(/\+/g," "));

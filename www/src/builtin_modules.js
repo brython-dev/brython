@@ -24,7 +24,7 @@
             $$alert:function(message){window.alert($B.builtins.str.$factory(message))},
             confirm: $B.JSObject.$factory(window.confirm),
             $$document:$B.DOMNode.$factory(document),
-            doc: $B.DOMNode.$factory(document),   //want to use document instead of doc
+            doc: $B.DOMNode.$factory(document), // want to use document instead of doc
             DOMEvent:$B.DOMEvent,
             DOMNode:$B.DOMNode.$factory,
             load:function(script_url){
@@ -54,11 +54,22 @@
                 // Check if imported scripts have been modified
                 for(var mod in $B.imported){
                     if($B.imported[mod].$last_modified){
-                        console.log('check', mod, $B.imported[mod].__file__, $B.imported[mod].$last_modified)
+                        console.log('check', mod, $B.imported[mod].__file__,
+                            $B.imported[mod].$last_modified)
                     }else{
                         console.log('no date for mod', mod)
                     }
                 }
+            },
+            run_script: function(){
+                var $ = $B.args("run_script", 2, {src: null, name: null},
+                    ["src", "name"], arguments, {name: "script_" + $B.UUID()},
+                    null, null)
+                if($B.hasOwnProperty("VFS") && $B.has_indexedDB){
+                    $B.tasks.push([$B.idb_open])
+                }
+                $B.run_script($.src, $.name)
+                $B.loop()
             },
             URLParameter:function(name) {
             name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");

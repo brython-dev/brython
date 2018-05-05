@@ -3295,8 +3295,10 @@ var $FromCtx = $B.parser.$FromCtx = function(context){
             indent = $get_node(this).indent,
             head = ' '.repeat(indent)
 
-        module.imports[this.module] = true
-
+        var mod_elts = this.module.split(".")
+        for(var i = 0; i < mod_elts.length; i++){
+            module.imports[mod_elts.slice(0, i).join(".")] = true
+        }
         var _mod = this.module.replace(/\$/g, ''),
             $package,
             packages = []
@@ -3950,8 +3952,11 @@ var $ImportCtx = $B.parser.$ImportCtx = function(context){
                 aliases = (item.name == item.alias)?
                     '{}' : ('{"' + mod_name + '" : "' +
                     item.alias + '"}'),
-                localns = '$locals_' + scope.id.replace(/\./g, '_')
-            module.imports[mod_name] = true
+                localns = '$locals_' + scope.id.replace(/\./g, '_'),
+                mod_elts = item.name.split(".")
+            for(var i = 0; i < mod_elts.length; i++){
+                module.imports[mod_elts.slice(0, i).join(".")] = true
+            }
             res.push('$B.$import("' + mod_name + '", [],' + aliases +
                 ',' + localns + ', true);')
         })
@@ -4934,6 +4939,23 @@ var $SingleKwCtx = $B.parser.$SingleKwCtx = function(context,token){
     }
 }
 
+var $SliceCtx = $B.parser.$SliceCtx = function(context){
+    // Class for slices inside a subscription : t[1:2]
+    this.type = 'slice'
+    this.parent = context
+    this.tree = context.tree.length > 0 ? [context.tree.pop()] : []
+    context.tree.push(this)
+
+    this.to_js = function(){
+        for(var i = 0; i < this.tree.length; i++){
+            if(this.tree[i].type == "abstract_expr"){
+                this.tree[i].to_js = function(){return "None"}
+            }
+        }
+        return "slice.$factory(" + $to_js(this.tree) + ")"
+    }
+}
+
 var $StarArgCtx = $B.parser.$StarArgCtx = function(context){
     // Class for star args in calls, eg f(*args)
     this.type = 'star_arg'
@@ -5144,7 +5166,7 @@ var $SubCtx = $B.parser.$SubCtx = function(context){
                 if(elt.type == 'abstract_expr'){res1.push('None')}
                 else{res1.push(elt.to_js())}
             })
-            res += 'slice.$factory(' + res1.join(',') + '))'
+            res += 'tuple.$factory([' + res1.join(',') + ']))'
         }
         return shortcut ? res + ')' : res
     }
@@ -5843,6 +5865,7 @@ var $mangle = $B.parser.$mangle = function(name, context){
 
 var $transition = $B.parser.$transition = function(context, token, value){
 
+    //console.log(context, token, value)
     switch(context.type){
         case 'abstract_expr':
 
@@ -7430,6 +7453,11 @@ var $transition = $B.parser.$transition = function(context, token, value){
         case 'single_kw':
             if(token == ':'){return $BodyCtx(context)}
             $_SyntaxError(context, 'token ' + token + ' after ' + context)
+        case 'slice':
+            if(token == ":"){
+                    return new $AbstractExprCtx(context, false)
+            }
+            return $transition(context.parent, token, value)
         case 'star_arg':
             switch(token) {
                 case 'id':
@@ -7497,11 +7525,11 @@ var $transition = $B.parser.$transition = function(context, token, value){
                 case ']':
                     return context.parent
                 case ':':
-                    if(context.tree.length == 0){
-                        new $AbstractExprCtx(context, false)
-                    }
+                    return new $AbstractExprCtx(new $SliceCtx(context), false)
+                case ',':
                     return new $AbstractExprCtx(context, false)
             }
+            console.log('syntax error', context, token)
             $_SyntaxError(context, 'token ' + token + ' after ' + context)
         case 'target_list':
             switch(token) {
@@ -8683,15 +8711,15 @@ function idb_load(evt, module){
     }else{
         // Precompiled Javascript found in indexedDB database.
         if(res.is_package){
-            $B.module_source[module] = [res.content]
+            $B.precompiled[module] = [res.content]
         }else{
-            $B.module_source[module] = res.content
+            $B.precompiled[module] = res.content
         }
         if(res.imports.length > 0){
             // res.impots is a string with the modules imported by the current
             // modules, separated by commas
             var subimports = res.imports.split(",")
-            for(var i=0;i<subimports.length;i++){
+            for(var i = 0; i < subimports.length; i++){
                 var subimport = subimports[i]
                 if(subimport.startsWith(".")){
                     // Relative imports
@@ -8708,7 +8736,7 @@ function idb_load(evt, module){
                     subimport = elts.join(".")
                 }
                 if(!$B.imported.hasOwnProperty(subimport) &&
-                        !$B.module_source.hasOwnProperty(subimport)){
+                        !$B.precompiled.hasOwnProperty(subimport)){
                     // If the code of the required module is not already
                     // loaded, add a task for this.
                     if($B.VFS.hasOwnProperty(subimport)){
@@ -8832,7 +8860,7 @@ function add_jsmodule(module, source){
     // Use built-in Javascript module
     source += "\nvar $locals_" +
         module.replace(/\./g, "_") + " = $module"
-    $B.module_source[module] = source
+    $B.precompiled[module] = source
 }
 
 var inImported = $B.inImported = function(module){
@@ -8857,7 +8885,7 @@ var inImported = $B.inImported = function(module){
 
 var loop = $B.loop = function(){
     if($B.tasks.length==0){
-        // No more $B.tasks to process.
+        // No more task to process.
         if(idb_cx){idb_cx.result.close()}
         return
     }
@@ -8872,6 +8900,7 @@ var loop = $B.loop = function(){
                 name = script.name,
                 url = script.url,
                 js = script.js
+            console.log("js size", js.length, js.split("\n").length, "lines")
             eval(js)
         }catch(err){
             if($B.debug>1){
@@ -8899,6 +8928,7 @@ var loop = $B.loop = function(){
 }
 
 $B.tasks = []
+$B.has_indexedDB = window.indexedDB !== undefined
 
 function handle_error(err){
     // Print the error traceback on the standard error stream
@@ -8947,6 +8977,57 @@ function required_stdlib_imports(imports, start){
         required_stdlib_imports(imports, imports.length - nb_added)
     }
     return imports
+}
+
+$B.run_script = function(src, name){
+    $B.$py_module_path[name] = $B.script_path
+    try{
+        var root = $B.py2js(src, name, name),
+            js = root.to_js(),
+            script = {
+                js: js,
+                name: name,
+                src: src,
+                url: $B.script_path
+            }
+            if($B.debug > 1){console.log(js)}
+    }catch(err){
+        handle_error(err)
+    }
+    if($B.hasOwnProperty("VFS") && $B.has_indexedDB){
+        // Build the list of stdlib modules required by the
+        // script
+        var imports1 = Object.keys(root.imports).slice(),
+            imports = imports1.filter(function(item){
+                return $B.VFS.hasOwnProperty(item)})
+        Object.keys(imports).forEach(function(name){
+            if($B.VFS.hasOwnProperty(name)){
+                var submodule = $B.VFS[name],
+                    type = submodule[0]
+                if(type==".py"){
+                    var src = submodule[1],
+                        subimports = submodule[2],
+                        is_package = submodule.length == 4
+                    // "subimports" is the list of stdlib modules
+                    // directly imported by the module.
+                    if(type==".py"){
+                        // Add stdlib modules recursively imported
+                        required_stdlib_imports(subimports)
+                    }
+                    subimports.forEach(function(mod){
+                        if(imports.indexOf(mod) == -1){
+                            imports.push(mod)
+                        }
+                    })
+                }
+            }
+        })
+        // Add task to stack
+        for(var j=0; j<imports.length;j++){
+           $B.tasks.push([$B.inImported, imports[j]])
+        }
+    }
+    $B.tasks.push(["execute", script])
 }
 
 var _run_scripts = $B.parser._run_scripts = function(options) {
@@ -9030,7 +9111,7 @@ var _run_scripts = $B.parser._run_scripts = function(options) {
         }
     }else{
         if($elts.length > 0){
-            if(window.indexedDB && $B.hasOwnProperty("VFS")){
+            if($B.has_indexedDB && $B.hasOwnProperty("VFS")){
                 $B.tasks.push([$B.idb_open])
             }
         }
@@ -9083,6 +9164,8 @@ var _run_scripts = $B.parser._run_scripts = function(options) {
                     var src = (elt.innerHTML || elt.textContent)
                     // remove leading CR if any
                     src = src.replace(/^\n/, '')
+                    $B.run_script(src, module_name)
+                    /*
                     $B.$py_module_path[module_name] = $B.script_path
                     try{
                         var root = $B.py2js(src, module_name, module_name),
@@ -9097,7 +9180,7 @@ var _run_scripts = $B.parser._run_scripts = function(options) {
                     }catch(err){
                         handle_error(err)
                     }
-                    if($B.hasOwnProperty("VFS")){
+                    if($B.hasOwnProperty("VFS") && $B.has_indexedDB){
                         // Build the list of stdlib modules required by the
                         // script
                         var imports1 = Object.keys(root.imports).slice(),
@@ -9125,11 +9208,13 @@ var _run_scripts = $B.parser._run_scripts = function(options) {
                                 }
                             }
                         })
+                        // Add task to stack
                         for(var j=0; j<imports.length;j++){
                            $B.tasks.push([$B.inImported, imports[j]])
                         }
                     }
                     $B.tasks.push(["execute", script])
+                    */
                 }
             }
         }
