@@ -29,6 +29,24 @@ financially, consider donating to the
   Github, assuming one does not already exist. Clearly describe the issue
   including steps to reproduce when it is a bug.
 * Fork the repository on GitHub.
+* clone your repo using git
+* (*optionally*) install the development requirements using [pipenv](https://docs.pipenv.org/) (**strongly** recommended):
+
+```bash
+    $ pipenv install --dev
+```
+  or (not recommended)
+```bash
+    $ pip install -r requirements.txt
+```
+  If you used `pipenv`, the development requirements are installed into a separate
+  [virtual environment](https://docs.python.org/3/tutorial/venv.html) which you can activate
+  by running
+```bash
+    $ pipenv shell
+```
+  from the terminal. This will allow you to use the `./manage.py` command in your terminal.
+
 
 ## Making Changes
 
@@ -48,7 +66,7 @@ financially, consider donating to the
 
 ## Repository Layout
 
-  - `manage.py` - plays the role of a "Makefile", use it to run tests, build documentation, etc. (needs the python plumbum package: `pip install plumbum`)
+  - `manage.py` - plays the role of a "Makefile", use it to run tests, build documentation, etc. (needs the python plumbum package: `pipenv install --dev && pipenv shell`)
   - `scripts`   - miscellaneous release helper scripts
   - `www`
     - `doc` - directory with documentation (as visible [here](http://www.brython.info/static_doc/en/intro.html?lang=en)); documentation is generated using the `scripts/make_doc.py` script.
