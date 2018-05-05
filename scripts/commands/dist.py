@@ -14,7 +14,7 @@ import zipfile
 
 from ..javascript_minifier import minify as js_minify
 from .lib.cli import M, Option
-from .lib.git import GIT, in_git, get_releases
+from .lib.git import GIT, in_git, get_releases, is_clean, version, version_string
 from .lib.info import MANIFEST, BRYTHON_DIR, SRC_DIR, VERSION_NAME
 from .lib.term import status
 
@@ -339,3 +339,9 @@ def make_stdlibpath():
 
         out.write('})(__BRYTHON__)')
     status.end_action()
+
+
+@M.command(name='version')
+def current_version():
+    cv = version()
+    print(version_string(cv))
