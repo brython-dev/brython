@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.5.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-05-07 10:46:38.287057"
-__BRYTHON__.timestamp=1525682798287
+__BRYTHON__.compiled_date="2018-05-07 10:48:43.405763"
+__BRYTHON__.timestamp=1525682923405
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -243,6 +243,15 @@ this.children.forEach(function(child){this.res.push(child.to_js(indent + 4))},th
 if(this.children.length > 0){this.res.push(' '.repeat(indent))
 this.res.push('}\n')}}
 this.js=this.res.join('')
+var collect=false,collected='';
+for(let ch of this.children){if(! collect && ch.C && ch.C.tree
+&& ch.C.tree[0]&& ch.C.tree[0]._func_marker){
+collect=ch.C.tree[0]._func_marker
+collected=ch.to_js(indent+4)}else if(ch instanceof $MarkerNode && ch._name.startsWith('func_end:')
+&& ch._name.slice(9)===collect){
+this.js=this.js.replace(collect,escape(collected))
+collect=false
+collected=''}else if(collect){collected +=ch.to_js(indent+4)}}
 return this.js}
 this.transform=function(rank){
 if(this.yield_atoms.length > 0){
@@ -318,6 +327,11 @@ assign_ctx.tree[1]=expr_ctx
 add_jscode(this.parent,params.save_result_rank+rank+1,assign_ctx.to_js()
 )}
 return 2}}
+var $MarkerNode=$B.parser.$MarkerNode=function(name){$Node.apply(this,['marker'])
+new $NodeCtx(this)
+this._name=name
+this.transform=function(rank){return 1}
+this.to_js=function(){return ''}}
 var $AbstractExprCtx=$B.parser.$AbstractExprCtx=function(C,with_commas){this.type='abstract_expr'
 this.with_commas=with_commas
 this.parent=C
@@ -1291,6 +1305,7 @@ node.parent.insert(rank + offset++,$NodeJS('    __annotations__: {' + annotation
 for(var attr in this.binding){this.varnames[attr]=true}
 var co_varnames=[]
 for(var attr in this.varnames){co_varnames.push('"' + attr + '"')}
+var CODE_MARKER='___%%%-CODE-%%%___' + this.name + this.num;
 var h='\n' + ' '.repeat(indent + 8)
 js='    __code__:{' + h + '    __class__:$B.Code'
 var h1=',' + h + ' '.repeat(4)
@@ -1303,11 +1318,14 @@ h1 + 'co_kwonlyargcount:' + this.kwonlyargcount +
 h1 + 'co_name: "' + this.name + '"' +
 h1 + 'co_nlocals: ' + co_varnames.length +
 h1 + 'co_varnames: [' + co_varnames.join(', ')+ ']' +
+h1 + 'co_code:  unescape("'+CODE_MARKER +'")' +
 h + '}\n    };'
 js +='None;'
 node.parent.insert(rank + offset++,$NodeJS(js))
 this.default_str='{' + defs1.join(', ')+ '}'
-if(this.type=="def"){node.parent.insert(rank + offset++,$NodeJS('return ' + name + '})(' + this.default_str + ')'))
+if(this.type=="def"){
+node.parent.insert(rank + offset++,new $MarkerNode('func_end:'+CODE_MARKER))
+node.parent.insert(rank + offset++,$NodeJS('return ' + name + '})(' + this.default_str + ')'))
 if(this.async){node.parent.insert(rank + offset++,$NodeJS(prefix + ' = $B.make_async(' + prefix + ')'))}}
 if(this.type=='def'){var parent=node
 for(var pos=0;pos < parent.children.length &&
@@ -1320,6 +1338,7 @@ var except_node=$NodeJS('catch(err)')
 except_node.add($NodeJS('$B.leave_frame($local_name);throw err'))
 parent.add(except_node)}
 this.transformed=true
+this._func_marker=CODE_MARKER
 return offset}
 this.to_js=function(func_name){this.js_processed=true
 func_name=func_name ||this.tree[0].to_js()
