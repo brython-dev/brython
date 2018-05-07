@@ -1,5 +1,5 @@
-from .coroutines import coroutine
-from .futures import Future
+from .coroutines import coroutine, ensure_future
+from .futures import Future, gather
 from ._utils import decorator
 
 import logging
@@ -67,7 +67,7 @@ def _generate_guard(func):
         elif self._init_future.done():
             return func(self, *args, **kwargs)
         else:
-            if hasattr(func, '__coroutine'):
+            if hasattr(func, '__async_task__'):
                 logger.info("Defering method %s until object is initialized.", str(func))
                 return defer(self._init_future, func, self, *args, **kwargs)
             else:
@@ -89,4 +89,208 @@ def async_class(cls):
             if hasattr(meth, '__call__'):
                 setattr(cls, member, _generate_guard(meth))
     return cls
+
+
+class FutureCall(Future):
+    """
+        A future representing the result of a method applied to a
+        future result.
+    """
+
+    def __init__(self, fn, fut, loop=None):
+        super().__init__(loop=loop)
+        self._fn = fn
+        ensure_future(fut, loop=loop).add_done_callback(self._done)
+
+    def _done(self, fut):
+        ex = fut.exception()
+        if ex is None:
+            res = self._fn(fut.result())
+            if isinstance(res, Future):
+                res.add_done_callback(self._done)
+            else:
+                self.set_result(res)
+        else:
+            self.set_exception(fut.exception())
+
+
+def val(fut_or_val):
+    """
+        Utility function for handling finished Futures as values.
+        If :param:`fut_or_val` is a Future, returns the future's
+        result otherwise returns :param:`fut_or_val`.
+    """
+    if isinstance(fut_or_val, Future):
+        return fut_or_val.result()
+    return fut_or_val
+
+
+def wrap_in_future(res, loop=None):
+    """
+        Unconditionally wraps a value in a future. It does this
+        by calling asyncio.ensure_future and, if that fails,
+        creating a dummy future and setting its result to
+        :param:`res`.
+    """
+    try:
+        return ensure_future(res, loop=loop)
+    except TypeError:
+        pass
+    fut = Future()
+    fut.set_result(res)
+    return fut
+
+
+def wait_for(*args, loop=None):
+    """
+        Returns a future waiting for all its arguments to recursively resolve
+        to a non-future result.
+    """
+    return gather(*[FullyResolved(wrap_in_future(a, loop=loop)) for a in args])
+
+
+class FullyResolved(Future):
+    """
+        Wraps a future into one which returns a recursively resolved result, i.e.
+        if the future finishes and its result is another future, this class waits
+        until the other future is also done, and so on.
+    """
+    def __init__(self, fut, loop=None):
+        super().__init__(loop=loop)
+        self._fut = wrap_in_future(fut, loop=loop)
+        self._fut.add_done_callback(self._done)
+
+    def _done(self, fut):
+        if fut.exception() is not None:
+            self.set_exception(fut.exception())
+        else:
+            try:
+                self._fut = ensure_future(fut.result())
+                self._fut.add_done_callback(self._done)
+            except TypeError:
+                self.set_result(fut.result())
+
+
+class FutureObject(Future):
+    """
+        A future simulating a future object. I.e. one can do attribute access and method calls
+        on the future objects with the result being a future which is resolved once the
+        future object is resolved. Typical use is in functions which are not coroutines
+        (or async) and so can't use yield from or await, but still want to deal with asynchronous
+        calls in a reasonable way. E.g. assume we have a method to asynchronously open a file.
+        In a normal async function we could write
+
+        .. code-block:: python
+
+            async def test():
+                f = await async_open('/tmp/test.txt')
+                f.write('test')
+                f.close()
+
+        The :class:`FutureObject` class allows writing similar code even in functions
+        which are not async:
+
+        .. code-block:: python
+
+            def test():
+                f = FutureObject(async_open('/tmp/test.txt'))
+                f.write('test') # returns a future which we ignore it
+                f.write(f.name) # also works (!)
+                f.close()       # returns a future which we ignore
+
+        Note: that the arguments of all "future" function calls are first resolved. This is
+        for convenience's sake. However it means that methods which expect Futures as arguments
+        wont work!
+    """
+    FORBIDDEN = [name for name in dir(Future) if not name.startswith('__')] + \
+                ['_loop', '_callbacks'] +\
+                ['__getattr__', '__setattr__', '__call__'] + \
+                ['_fut', '_done']
+
+    @classmethod
+    def future_or_val(cls, x, loop=None):
+        """
+            If :param:`x` is a :class:`asyncio.Future` wraps it in a :class:`FutureObject`, otherwise
+            returns :param:`x` unchanged.
+        """
+        try:
+            return FutureObject(ensure_future(x, loop=loop))
+        except TypeError:
+            return x
+        return x
+
+    def __init__(self, fut, loop=None):
+        super().__init__(loop=loop)
+        self._fut = ensure_future(fut, loop=loop)
+        self._fut.add_done_callback(self._done)
+
+    def _done(self, fut):
+        if fut.exception() is None:
+            self.set_result(fut.result())
+        else:
+            self.set_exception(fut.exception())
+
+    def __getattr__(self, name):
+        if name in FutureObject.FORBIDDEN:
+            return super().__getattribute__(name)
+
+        if self.done():
+            return self.future_or_val(getattr(self.result(), name), loop=self._loop)
+
+        ret = Future()
+
+        def resolve(fut):
+            ex = fut.exception()
+            if ex is None:
+                ret.set_result(self.future_or_val(getattr(fut.result(), name), loop=self._loop))
+            else:
+                ret.set_exception(fut.exception())
+
+        self._fut.add_done_callback(resolve)
+
+        return FutureObject(ret)
+
+    def __setattr__(self, name, value):
+        if name in FutureObject.FORBIDDEN:
+            return super().__setattr__(name, value)
+
+        ready_fut = wait_for(self, value, loop=self._loop)
+
+        if ready_fut.done():
+            return self.future_or_val(setattr(self.result(), name, val(value)), loop=self._loop)
+
+        ret = Future()
+
+        def resolve(fut):
+            ex = fut.exception()
+            if ex is None:
+                ret.set_result(self.future_or_val(setattr(self.result(), name, val(value)), loop=self._loop))
+            else:
+                ret.set_exception(fut.exception())
+
+        self._fut.add_done_callback(resolve)
+
+        return FutureObject(ret)
+
+    def __call__(self, *args, **kwargs):
+
+        ready_fut = wait_for(self, *args, *kwargs.values(), loop=self._loop)
+
+        if ready_fut.done():
+            return self.future_or_val(self.result()(*[val(a) for a in args], **{k: val(v) for k, v in kwargs.items()}), loop=self._loop)
+
+        ret = Future()
+
+        def resolve(fut):
+            ex = fut.exception()
+            if ex is None:
+                ret.set_result(self.future_or_val(self.result()(*[val(a) for a in args], **{k: val(v) for k, v in kwargs.items()}), loop=self._loop))
+            else:
+                ret.set_exception(fut.exception())
+
+        ready_fut.add_done_callback(resolve)
+
+        return FutureObject(ret)
+
+
 
