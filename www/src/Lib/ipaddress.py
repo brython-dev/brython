@@ -1644,6 +1644,9 @@ class _BaseV6:
         if not ip_str:
             raise AddressValueError('Address cannot be empty')
 
+        if ip_str in str2int:
+            return str2int[ip_str]
+
         parts = ip_str.split(':')
 
         # An IPv6 address needs at least 2 colons (3 parts).
@@ -2222,7 +2225,7 @@ class IPv6Network(_BaseV6, _BaseNetwork):
         else:
             arg = self._max_prefixlen
         self.netmask, self._prefixlen = self._make_netmask(arg)
-
+        
         if strict:
             if (IPv6Address(int(self.network_address) & int(self.netmask)) !=
                 self.network_address):
@@ -2261,6 +2264,39 @@ class IPv6Network(_BaseV6, _BaseNetwork):
                 self.broadcast_address.is_site_local)
 
 
+# Brython : use int instead of string, the converstion takes too long on
+# page load
+str2int = {
+    "fe80::": 338288524927261089654018896841347694592,
+    "ff00::": 338953138925153547590470800371487866880,
+    "::1": 1,
+    "::": 0,
+    "::ffff:0:0": 281470681743360,
+    "100::": 1329227995784915872903807060280344576,
+    "2001::": 42540488161975842760550356425300246528,
+    "2001:2::": 42540488320432167789079031612388147200,
+    "2001:db8::": 42540766411282592856903984951653826560,
+    "2001:10::": 42540489429626442988779757922003451904,
+    "fc00::": 334965454937798799971759379190646833152,
+    "fe80::": 338288524927261089654018896841347694592,
+    "::": 0,
+    "100::": 1329227995784915872903807060280344576,
+    "200::": 2658455991569831745807614120560689152,
+    "400::": 5316911983139663491615228241121378304,
+    "800::": 10633823966279326983230456482242756608,
+    "1000::": 21267647932558653966460912964485513216,
+    "4000::": 85070591730234615865843651857942052864,
+    "6000::": 127605887595351923798765477786913079296,
+    "8000::": 170141183460469231731687303715884105728,
+    "A000::": 212676479325586539664609129644855132160,
+    "C000::": 255211775190703847597530955573826158592,
+    "E000::": 297747071055821155530452781502797185024,
+    "F000::": 319014718988379809496913694467282698240,
+    "F800::": 329648542954659136480144150949525454848,
+    "FE00::": 337623910929368631717566993311207522304,
+    "fec0::": 338620831926207318622244848606417780736
+}
+
 class _IPv6Constants:
 
     _linklocal_network = IPv6Network('fe80::/10')
@@ -2278,8 +2314,8 @@ class _IPv6Constants:
         IPv6Network('2001:10::/28'),
         IPv6Network('fc00::/7'),
         IPv6Network('fe80::/10'),
-        ]
-
+    ]
+    """
     _reserved_networks = [
         IPv6Network('::/8'), IPv6Network('100::/8'),
         IPv6Network('200::/7'), IPv6Network('400::/6'),
@@ -2292,6 +2328,6 @@ class _IPv6Constants:
     ]
 
     _sitelocal_network = IPv6Network('fec0::/10')
-
+    """
 
 IPv6Address._constants = _IPv6Constants
