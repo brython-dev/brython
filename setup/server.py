@@ -26,41 +26,40 @@ except ImportError:
 # https://github.com/h5bp/server-configs-apache.
 # compressed_types is set to this list when the server is started with
 # command line option --gzip.
-commonly_compressed_types = [ "application/atom+xml",
-                              "application/javascript",
-                              "application/json",
-                              "application/ld+json",
-                              "application/manifest+json",
-                              "application/rdf+xml",
-                              "application/rss+xml",
-                              "application/schema+json",
-                              "application/vnd.geo+json",
-                              "application/vnd.ms-fontobject",
-                              "application/x-font-ttf",
-                              "application/x-javascript",
-                              "application/x-web-app-manifest+json",
-                              "application/xhtml+xml",
-                              "application/xml",
-                              "font/eot",
-                              "font/opentype",
-                              "image/bmp",
-                              "image/svg+xml",
-                              "image/vnd.microsoft.icon",
-                              "image/x-icon",
-                              "text/cache-manifest",
-                              "text/css",
-                              "text/html",
-                              "text/javascript",
-                              "text/plain",
-                              "text/vcard",
-                              "text/vnd.rim.location.xloc",
-                              "text/vtt",
-                              "text/x-component",
-                              "text/x-cross-domain-policy",
-                              "text/xml"
-                            ]
-
-# Generators for HTTP compression
+commonly_compressed_types = [
+    "application/atom+xml",
+    "application/javascript",
+    "application/json",
+    "application/ld+json",
+    "application/manifest+json",
+    "application/rdf+xml",
+    "application/rss+xml",
+    "application/schema+json",
+    "application/vnd.geo+json",
+    "application/vnd.ms-fontobject",
+    "application/x-font-ttf",
+    "application/x-javascript",
+    "application/x-web-app-manifest+json",
+    "application/xhtml+xml",
+    "application/xml",
+    "font/eot",
+    "font/opentype",
+    "image/bmp",
+    "image/svg+xml",
+    "image/vnd.microsoft.icon",
+    "image/x-icon",
+    "text/cache-manifest",
+    "text/css",
+    "text/html",
+    "text/javascript",
+    "text/plain",
+    "text/vcard",
+    "text/vnd.rim.location.xloc",
+    "text/vtt",
+    "text/x-component",
+    "text/x-cross-domain-policy",
+    "text/xml"
+]
 
 # Generators for HTTP compression
 
@@ -103,12 +102,11 @@ class RequestHandler(SimpleHTTPRequestHandler):
             'deflate': _deflate_producer,
             'gzip': _gzip_producer,
             'x-gzip': _gzip_producer # alias for gzip
-    }
+        }
 
     def _make_chunk(self, data):
-        """Produces a data chunk for Chunked Transfer Encoding."""
-        return ("{:X}".format(len(data)).encode("ascii") + b"\r\n" + data
-            + b"\r\n")
+        """Make a data chunk in Chunked Transfer Encoding format."""
+        return f"{len(data):X}".encode("ascii") + b"\r\n" + data + b"\r\n"
 
     def do_GET(self):
         """Serve a GET request."""
@@ -205,12 +203,12 @@ class RequestHandler(SimpleHTTPRequestHandler):
             self.send_header("Last-Modified",
                 self.date_time_string(fs.st_mtime))
 
-            # Use HTTP compression if possible
-
             if ctype not in self.compressed_types:
                 self.send_header("Content-Length", str(content_length))
                 self.end_headers()
                 return f
+
+            # Use HTTP compression if possible
 
             # Get accepted encodings ; "encodings" is a dictionary mapping
             # encodings to their quality ; eg for header "gzip; q=0.8",

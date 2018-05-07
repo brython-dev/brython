@@ -15,6 +15,8 @@ import email
 import datetime
 import urllib.parse
 from http import HTTPStatus
+import socketserver
+from http.server import CGIHTTPRequestHandler
 
 # port to be used when the server runs locally
 parser = argparse.ArgumentParser()
@@ -24,8 +26,8 @@ parser.add_argument('--port', help="The port to be used by the local server")
 # when testing new code on your repo it is not necessary to generate docs all
 # the time so this option allows you to avoid this process
 parser.add_argument(
-    '--no-docs', 
-    help="Do not generate static docs.", 
+    '--no-docs',
+    help="Do not generate static docs.",
     action="store_true")
 
 args = parser.parse_args()
@@ -43,13 +45,6 @@ if not args.no_docs:
         os.chdir(save_dir)
 
 os.chdir(os.path.join(os.getcwd(), 'www'))
-
-try:
-    import http.server as server
-    from http.server import CGIHTTPRequestHandler
-except:
-    import BaseHTTPServer as server
-    from CGIHTTPServer import CGIHTTPRequestHandler
 
 cgi_dir = os.path.join(os.path.dirname(os.getcwd()), 'cgi-bin')
 
@@ -116,7 +111,7 @@ class RequestHandler(CGIHTTPRequestHandler):
                             fs.st_mtime, datetime.timezone.utc)
                         # remove microseconds, like in If-Modified-Since
                         last_modif = last_modif.replace(microsecond=0)
-                        
+
                         if last_modif <= ims:
                             self.send_response(HTTPStatus.NOT_MODIFIED)
                             self.end_headers()
@@ -126,7 +121,7 @@ class RequestHandler(CGIHTTPRequestHandler):
             self.send_response(HTTPStatus.OK)
             self.send_header("Content-type", ctype)
             self.send_header("Content-Length", str(fs[6]))
-            self.send_header("Last-Modified", 
+            self.send_header("Last-Modified",
                 self.date_time_string(fs.st_mtime))
             self.end_headers()
             return f
@@ -141,8 +136,8 @@ class RequestHandler(CGIHTTPRequestHandler):
             return os.path.join(cgi_dir,*elts[2:])
         return CGIHTTPRequestHandler.translate_path(self, path)
 
-server_address, handler = ('', port), RequestHandler
-httpd = server.HTTPServer(server_address, handler)
+server_address, handler = ('0.0.0.0', port), RequestHandler
+httpd = socketserver.ThreadingTCPServer(server_address, handler)
 print(__doc__)
 print(("Server running on port http://localhost:{}.".format(server_address[1])))
 print("Press CTRL+C to Quit.")
