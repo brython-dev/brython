@@ -3297,7 +3297,7 @@ var $FromCtx = $B.parser.$FromCtx = function(context){
 
         var mod_elts = this.module.split(".")
         for(var i = 0; i < mod_elts.length; i++){
-            module.imports[mod_elts.slice(0, i).join(".")] = true
+            module.imports[mod_elts.slice(0, i + 1).join(".")] = true
         }
         var _mod = this.module.replace(/\$/g, ''),
             $package,
@@ -3891,7 +3891,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
             // If the name exists at run time in the global namespace, use it,
             // else raise a NameError
             // Function $search is defined in py_utils.js
-
+            
             this.result = '$B.$global_search("' + val + '", ' + search_ids + ')'
             return this.result
         }
@@ -3955,7 +3955,7 @@ var $ImportCtx = $B.parser.$ImportCtx = function(context){
                 localns = '$locals_' + scope.id.replace(/\./g, '_'),
                 mod_elts = item.name.split(".")
             for(var i = 0; i < mod_elts.length; i++){
-                module.imports[mod_elts.slice(0, i).join(".")] = true
+                module.imports[mod_elts.slice(0, i + 1).join(".")] = true
             }
             res.push('$B.$import("' + mod_name + '", [],' + aliases +
                 ',' + localns + ', true);')
@@ -8332,7 +8332,8 @@ var $create_root_node = $B.parser.$create_root_node = function(src, module, loca
     root.binding = {
         __doc__: true,
         __name__: true,
-        __file__: true
+        __file__: true,
+        __package__: true
     }
 
     root.parent_block = parent_block
@@ -8422,11 +8423,9 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_info){
             '["__name__"] || "' + locals_id + '";'))
 
     // package, if available
-    if(__package__ !== undefined){
-        root.insert(offset++,
-            $NodeJS(local_ns + '["__package__"] = ' + local_ns +
-                '["__package__"] || "' + __package__ + '";'))
-    }
+    root.insert(offset++,
+        $NodeJS(local_ns + '["__package__"] = ' + local_ns +
+            '["__package__"]'))
 
     // file
     root.insert(offset++,
@@ -8900,7 +8899,6 @@ var loop = $B.loop = function(){
                 name = script.name,
                 url = script.url,
                 js = script.js
-            console.log("js size", js.length, js.split("\n").length, "lines")
             eval(js)
         }catch(err){
             if($B.debug>1){
