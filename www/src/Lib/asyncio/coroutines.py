@@ -1,77 +1,100 @@
 from .futures import Future, CancelledError
-from ._utils import decorator
-
-
-def get_continuation(generator, final_result):
-    def _cb(previous_result):
-        if final_result.cancelled():
-            return
-        try:
-            if previous_result.cancelled():
-                next_result = generator.throw(CancelledError())
-            elif previous_result.exception() is not None:
-                next_result = generator.throw(previous_result.exception())
-            else:
-                next_result = generator.send(previous_result.result())
-            cb = get_continuation(generator, final_result)
-            next_result.add_done_callback(cb)
-        except StopIteration as ex:
-            if hasattr(ex, 'value'):
-                final_result.set_result(ex.value)
-            else:
-                final_result.set_result(None)
-        except Exception as ex:
-            final_result.set_exception(ex)
-    return _cb
+from ._utils import decorator, _isgenerator
 
 
 @decorator
 def coroutine(func):
     """
-        A coroutine decorator which allows a function to call asynchronous operations
-        (using "yield") and use their results as if they were synchronous operations,
-        e.g.
-
-        @coroutine
-        def print_google()
-            html = yield wget("www.google.com")
-            print(html)
-
-        would download the www.google.com website and then print its html. The magic
-        is that the ``wget`` function returns a Future, but the yield
-        converts this promise into an actual value which is sent back to the function
-        so that when ``print`` is called it has the results ready.
+        Implementation adapted from https://www.pythonsheets.com/notes/python-asyncio.html
     """
+    func.__coroutinefunction__ = True
+    return func
 
-    if not func.__code__.co_flags & 0x20:
-        # The function is not a generator
-        def run(*args, **kwargs):
-            final_result = Future()
-            try:
-                final_result.set_result(func(*args, **kwargs))
-            except Exception as ex:
-                final_result.set_exception(ex)
-            return final_result
-    else:
-        def run(*args, **kwargs):
-            generator = func(*args, **kwargs)
-            final_result = Future()
-            try:
-                first_result = next(generator)
-                _cb = get_continuation(generator, final_result)
-                first_result.add_done_callback(_cb)
-            except StopIteration as ex:
-                if hasattr(ex, 'value'):
-                    final_result.set_result(ex.value)
-                else:
-                    final_result.set_result(None)
-            except Exception as ex:
-                final_result.set_exception(ex)
-            return final_result
-    run.__coroutine = True
-    run.__name__ = func.__name__
-    return run
+    def coro(*a, **k):
+        res = func(*a, **k)
+        if isinstance(res, Future) or _isgenerator(res):
+            yield from res
+        else:
+            return res
+    coro.__coroutinefunction__ = True
+    return coro
+
+
+def run_async(loop=None):
+    @decorator
+    def _decorator(func):
+        coro = coroutine(func)
+        def task(*a, **k):
+            return Task(coro(*a, **k), loop=loop, task_name=func.__name__)
+        task.__async_task__ = True
+        return task
+    return _decorator
+
+
+def iscoroutinefunction(fun):
+    return hasattr(fun, '__coroutinefunction__')
 
 
 def iscoroutine(obj):
-    return hasattr(obj, '__coroutine')
+    return _isgenerator(obj)
+
+
+class Task(Future):
+    """
+        Implementation adapted from https://www.pythonsheets.com/notes/python-asyncio.html
+    """
+    def __init__(self, coro_object, *, loop=None, task_name=None):
+        super().__init__(loop)
+        self._coro_obj = coro_object
+        self._loop.call_soon(self._step)
+        self._name = task_name
+
+    def _step(self, val=None, exc=None):
+        if self.done():
+            return
+        try:
+            if exc:
+                f = self._coro_obj.throw(exc)
+            else:
+                f = self._coro_obj.send(val)
+        except StopIteration as e:
+            self.set_result(e.value)
+        except BaseException as e:
+            self.set_exception(e)
+        else:
+            f.add_done_callback(self._wakeup)
+
+    def _wakeup(self, fut):
+        try:
+            res = fut.result()
+        except BaseException as e:
+            self._step(None, e)
+        else:
+            self._step(res, None)
+
+    def __str__(self):
+        ret = "Task("+str(self._name)+"): "
+        if self.done():
+            if self._exception:
+                ret += "finished with exception"
+            else:
+                ret += "finished with result:"+str(self._result)
+        elif self.cancelled():
+            ret += "canceled"
+        else:
+            ret += "pending"
+        return ret
+
+
+
+
+def ensure_future(fut_or_coroutine_obj, *, loop=None):
+    if isinstance(fut_or_coroutine_obj, Future):
+        if loop is not None and loop is not fut_or_coroutine_obj._loop:
+            raise ValueError('loop argument must agree with Future')
+        return fut_or_coroutine_obj
+    elif iscoroutine(fut_or_coroutine_obj):
+        return Task(fut_or_coroutine_obj, loop=loop, task_name=fut_or_coroutine_obj.__name__)
+    else:
+        raise TypeError('Expecting coroutine object or Future got '+str(fut_or_coroutine_obj)+' instead.')
+

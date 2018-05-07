@@ -1532,15 +1532,6 @@ assert set([randrange(1, 7, 3) for i in range(100)]) == set([1, 4])
 assert set([randrange(1, 8, 3) for i in range(100)]) == set([1, 4, 7])
 
 
-from asyncio import coroutine
-
-@coroutine
-def simple_coroutine():
-    return 10
-
-fut = simple_coroutine()
-assert fut.result() == 10
-
 # issue 743
 def test(msg = 'a', e_type: int = 10):
     pass

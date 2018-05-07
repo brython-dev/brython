@@ -16,7 +16,7 @@
         # we can open it using the `open` method
         ff = afs.open(i.files[0])
 
-        # The method is a coroutine, so it returns a `asyncio.Future`
+        # The method returns an `asyncio.Future`
         # Once the file is read, we can retrieve the result with
         f = ff.result()
 
@@ -50,7 +50,7 @@
     `asyncio.fs.open_local`
 
     Which opens a file dialog which the user can use to pick a file. The method
-    returns a `asyncio.Future` which resolves into an `asyncio.fs.BrowserFile`
+    returns an `asyncio.Future` which resolves into an `asyncio.fs.BrowserFile`
     with the file contents when the file is read. The method works by
     appending an input to the document body, registering a change handler for it,
     programmatically clicking it, and then immediately deleting it from the document.
@@ -62,7 +62,7 @@ from browser import window, document as doc, html
 
 from .futures import Future
 from .http import HTTPRequest
-from .coroutines import coroutine
+from .coroutines import run_async
 
 
 class BrowserFile(io.StringIO):
@@ -132,7 +132,7 @@ def open_local():
     i = html.INPUT(type='file')
     result = Future()
 
-    @coroutine
+    @run_async()
     def change_handler(evt):
         ret = yield open(i.files[0])
         result.set_result(ret)
@@ -144,7 +144,7 @@ def open_local():
     return result
 
 
-@coroutine
+@run_async()
 def open(file, mode='r', size_limit=None):
     """
         Opens a local or remote file and returns a Future, which, upon completion,

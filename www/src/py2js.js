@@ -442,7 +442,7 @@ var $Node = $B.parser.$Node = function(type){
             //     $yield_value0 = X
             //     yield $yield_value0
             //     $yield_value0 = <value sent to generator > or None
-            //     a = $yield_value
+            //     a = $yield_value0
 
             // remove original line
             this.parent.children.splice(rank, 1)
@@ -865,7 +865,7 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context){
             new $NodeJSCtx(new_node, 'var ' + $var + ' = [], $pos = 0')
             new_nodes[pos++] = new_node
 
-            righ_items.forEach(function(right_item){
+            right_items.forEach(function(right_item){
                 var js = $var + '[$pos++] = ' + right_item.to_js()
                 var new_node = new $Node()
                 new $NodeJSCtx(new_node, js)
@@ -2868,7 +2868,7 @@ var $ExceptCtx = $B.parser.$ExceptCtx = function(context){
     this.toString = function(){return '(except) '}
 
     this.set_alias = function(alias){
-        this.tree[0].alias = alias
+        this.tree[0].alias = $mangle(alias, this)
         this.scope.binding[alias] = {level: this.scope.level}
     }
 

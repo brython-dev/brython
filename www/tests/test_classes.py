@@ -251,4 +251,16 @@ class B(A):
 
 assert type(B) == Meta
 
+
+class TestMangling:
+    def test(self):
+        try:
+            raise Exception(10)
+        except Exception as __e:
+            assert __e == __e
+
+t = TestMangling()
+t.test()
+
+
 print('passed all tests..')

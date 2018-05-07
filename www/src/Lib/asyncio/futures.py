@@ -31,12 +31,15 @@ class Future:
     STATUS_FINISHED = 2
     STATUS_ERROR = 3
 
-    def __init__(self):
-        self._loop = get_event_loop()
+    def __init__(self, loop=None):
+        if loop is None:
+            loop = get_event_loop()
+        self._loop = loop
         self._status = Future.STATUS_STARTED
         self._result = None
         self._exception = None
         self._callbacks = []
+        self._loop._register_future(self)
 
     def _schedule_callbacks(self):
         for cb in self._callbacks:
@@ -145,10 +148,15 @@ class Future:
         self._status = Future.STATUS_ERROR
         self._schedule_callbacks()
 
+    def __iter__(self):
+        if not self.done():
+            yield self
+        return self.result()
+
 
 class GatheredFuture(Future):
-    def __init__(self, futures, return_exceptions=False):
-        super().__init__()
+    def __init__(self, futures, return_exceptions=False, loop=None):
+        super().__init__(loop=None)
         self._futures = futures
         self._ret_exceptions = return_exceptions
         for fut in futures:
@@ -191,7 +199,17 @@ class GatheredFuture(Future):
 
 
 class SleepFuture(Future):
-    def __init__(self, seconds, result=None):
-        super().__init__()
+    def __init__(self, seconds, result=None, loop=None):
+        super().__init__(loop)
         self._loop.call_later(seconds, self.set_result, result)
 
+    def set_result(self, result):
+        if not self.done():
+            super().set_result(result)
+        else:
+            print("Sleep already finished with ex:", self.exception())
+
+
+def gather(*coros_or_futures, return_exceptions=False, loop=None):
+    fut_list = [ensure_future(c, loop=loop) for c in coros_or_futures]
+    return GatheredFuture(fut_list, return_exceptions=False)
