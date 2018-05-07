@@ -364,8 +364,12 @@ var finder_VFS = {
                $B.imported[parent].__initialized__ = true
                if(is_package){
                    $B.imported[parent].__path__ = "<stdlib>"
+                   $B.imported[parent].__package__ = parent
+               }else{
+                   var elts = parent.split(".")
+                   elts.pop()
+                   $B.imported[parent].__package__ = elts.join(".")
                }
-                //console.log('mod_name', mod_name, "parts", parts, "parent", parent)
                try{
                    eval(mod_js)
                }catch(err){
@@ -395,6 +399,7 @@ var finder_VFS = {
 
 
         }else{
+            console.log("run Python code from VFS", modobj.__name__)
             run_py(module_contents, modobj.__path__, modobj, ext == '.pyc.js')
         }
         if($B.debug > 1){

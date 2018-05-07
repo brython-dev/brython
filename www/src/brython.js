@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.5.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-05-04 10:00:53.641048"
-__BRYTHON__.timestamp=1525420853641
+__BRYTHON__.compiled_date="2018-05-07 10:46:38.287057"
+__BRYTHON__.timestamp=1525682798287
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -432,7 +432,7 @@ var $var='$temp' + $loop_num
 var new_node=new $Node()
 new $NodeJSCtx(new_node,'var ' + $var + ' = [], $pos = 0')
 new_nodes[pos++]=new_node
-righ_items.forEach(function(right_item){var js=$var + '[$pos++] = ' + right_item.to_js()
+right_items.forEach(function(right_item){var js=$var + '[$pos++] = ' + right_item.to_js()
 var new_node=new $Node()
 new $NodeJSCtx(new_node,js)
 new_nodes[pos++]=new_node})
@@ -1413,7 +1413,7 @@ this.tree=[]
 this.expect='id'
 this.scope=$get_scope(this)
 this.toString=function(){return '(except) '}
-this.set_alias=function(alias){this.tree[0].alias=alias
+this.set_alias=function(alias){this.tree[0].alias=$mangle(alias,this)
 this.scope.binding[alias]={level: this.scope.level}}
 this.to_js=function(){
 this.js_processed=true
@@ -1623,7 +1623,7 @@ this.toString=function(){return '(from) ' + this.module + ' (import) ' + this.na
 this.to_js=function(){this.js_processed=true
 var scope=$get_scope(this),module=$get_module(this),mod=module.module,res=[],pos=0,indent=$get_node(this).indent,head=' '.repeat(indent)
 var mod_elts=this.module.split(".")
-for(var i=0;i < mod_elts.length;i++){module.imports[mod_elts.slice(0,i).join(".")]=true}
+for(var i=0;i < mod_elts.length;i++){module.imports[mod_elts.slice(0,i + 1).join(".")]=true}
 var _mod=this.module.replace(/\$/g,''),$package,packages=[]
 while(_mod.length > 0){if(_mod.charAt(0)=='.'){if($package===undefined){if($B.imported[mod]!==undefined){$package=$B.imported[mod].__package__
 packages=$package.split('.')}}else{$package=$B.imported[$package]
@@ -1880,7 +1880,7 @@ module=$get_module(this)
 this.tree.forEach(function(item){var mod_name=item.name,aliases=(item.name==item.alias)?
 '{}' :('{"' + mod_name + '" : "' +
 item.alias + '"}'),localns='$locals_' + scope.id.replace(/\./g,'_'),mod_elts=item.name.split(".")
-for(var i=0;i < mod_elts.length;i++){module.imports[mod_elts.slice(0,i).join(".")]=true}
+for(var i=0;i < mod_elts.length;i++){module.imports[mod_elts.slice(0,i + 1).join(".")]=true}
 res.push('$B.$import("' + mod_name + '", [],' + aliases +
 ',' + localns + ', true);')})
 return res.join('')+ 'None;'}}
@@ -4303,7 +4303,7 @@ $_SyntaxError(C,'expected an indented block',pos)}}
 var $create_root_node=$B.parser.$create_root_node=function(src,module,locals_id,parent_block,line_info){var root=new $Node('module')
 root.module=module
 root.id=locals_id
-root.binding={__doc__: true,__name__: true,__file__: true}
+root.binding={__doc__: true,__name__: true,__file__: true,__package__: true}
 root.parent_block=parent_block
 root.line_info=line_info
 root.indent=-1
@@ -4344,8 +4344,8 @@ root.insert(offset++,$NodeJS(local_ns + '["__doc__"] = ' +(root.doc_string ||'No
 ';'))
 root.insert(offset++,$NodeJS(local_ns + '["__name__"] = ' + local_ns +
 '["__name__"] || "' + locals_id + '";'))
-if(__package__ !==undefined){root.insert(offset++,$NodeJS(local_ns + '["__package__"] = ' + local_ns +
-'["__package__"] || "' + __package__ + '";'))}
+root.insert(offset++,$NodeJS(local_ns + '["__package__"] = ' + local_ns +
+'["__package__"]'))
 root.insert(offset++,$NodeJS(local_ns + '["__file__"] = "' + $B.$py_module_path[module]+
 '";None;\n'))
 if(line_info !==undefined){root.insert(offset++,$NodeJS(local_ns + '.$line = "' + line_info + '";None;\n'))}
@@ -4512,7 +4512,6 @@ if(idb_cx){idb_cx.result.close()}
 return}
 var task=$B.tasks.shift(),func=task[0],args=task.slice(1)
 if(func=="execute"){try{var script=task[1],src=script.src,name=script.name,url=script.url,js=script.js
-console.log("js size",js.length,js.split("\n").length,"lines")
 eval(js)}catch(err){if($B.debug>1){console.log(err)
 for(var attr in err){console.log(attr+' : ',err[attr])}}
 if(err.$py_error===undefined){console.log('Javascript error',err)
@@ -5083,7 +5082,8 @@ if(search_ids.indexOf(frame[0])> -1 &&
 frame[1][name]!==undefined){return frame[1][name]}
 if(search_ids.indexOf(frame[2])> -1 &&
 frame[3][name]!==undefined){return frame[3][name]}}
-search_ids.forEach(function(search_id){if($B.imported[search_id]&& $B.imported[search_id][name]){return $B.imported[search_id][name]}})
+for(var i=0;i < search_ids.length;i++){var search_id=search_ids[i]
+if($B.imported[search_id]&& $B.imported[search_id][name]){return $B.imported[search_id][name]}}
 throw _b_.NameError.$factory("name '" + $B.from_alias(name)+
 "' is not defined")}
 $B.$local_search=function(name){
@@ -6483,16 +6483,18 @@ throw exc}
 $B.$IndentationError=function(module,msg,pos){var exc=_b_.IndentationError.$factory(msg)
 $B.$syntax_err_line(exc,module,pos)
 throw exc}
-var traceback=$B.make_class("traceback",function(exc){return{
-__class__ : traceback,exc: exc}}
+var traceback=$B.make_class("traceback",function(exc,stack){if(stack===undefined)
+stack=exc.$stack
+return{
+__class__ : traceback,$stack: stack,exc: exc}}
 )
-traceback.__getattribute__=function(self,attr){if(self.exc.$stack.length==0){alert("no stack",attr)}
-var last_frame=$B.last(self.exc.$stack)
+traceback.__getattribute__=function(self,attr){if(self.$stack.length==0){alert("no stack",attr)}
+var last_frame=$B.last(self.$stack)
 if(last_frame===undefined){alert("last frame undef ")
-console.log(self.exc.$stack,Object.keys(self.exc.$stack))}
-var line_info=self.exc.$line_info ||last_frame[1].$line_info
+console.log(self.$stack,Object.keys(self.$stack))}
+var line_info=last_frame[1].$line_info
 switch(attr){case "tb_frame":
-return frame.$factory(self.exc.$stack)
+return frame.$factory(self.$stack)
 case "tb_lineno":
 if(line_info===undefined){return -1}
 else{return parseInt(line_info.split(",")[0])}
@@ -6502,9 +6504,8 @@ else{var info=line_info.split(",")
 var src=$B.$py_src[info[1]]
 if(src !==undefined){return src.split("\n")[parseInt(info[0]- 1)].trim()}else{return "<unknown>"}}
 case "tb_next":
-if(self.exc.$stack.length==1){return None}
-else{return traceback.$factory(
-self.exc.$stack.slice(0,self.exc.$stack.length - 1))}
+if(self.$stack.length <=1){return None}
+else{return traceback.$factory(self.exc,self.exc.$stack.slice(0,self.exc.$stack.length - 2))}
 default:
 return _b_.object.__getattribute__(traceback,attr)}}
 $B.set_func_names(traceback,"builtins")
@@ -6535,7 +6536,9 @@ var BaseException=_b_.BaseException={__class__: _b_.type,__bases__ :[_b_.object]
 BaseException.__init__=function(self){var args=arguments[1]===undefined ?[]:[arguments[1]]
 self.args=_b_.tuple.$factory(args)}
 BaseException.__repr__=function(self){return self.__class__.__name__ + repr(self.args)}
-BaseException.__str__=function(self){return _b_.str.$factory(self.args[0])}
+BaseException.__str__=function(self){if(self.args.length > 0)
+return _b_.str.$factory(self.args[0])
+return self.__class__.__name__}
 BaseException.__new__=function(cls){var err=_b_.BaseException.$factory()
 err.__class__=cls
 return err}
@@ -6566,7 +6569,6 @@ info +="\n    " + line}
 return info}else if(attr=="traceback"){
 return traceback.$factory(self)}else{throw _b_.AttributeError.$factory(self.__class__.__name__ +
 " has no attribute '" + attr + "'")}}
-BaseException.__str__=function(self){return self.args[0]}
 BaseException.with_traceback=function(self,tb){self.traceback=tb
 return self}
 BaseException.$factory=function(){var err=Error()
@@ -7412,8 +7414,7 @@ eval(js)}catch(err){console.log(err + " for module " + module.__name__)
 console.log("module",module)
 console.log(root)
 console.log(err)
-js.split("\n").forEach(function(item,i){console.log(i+1,":",item)})
-console.log(js)
+if($B.debug > 1){js.split("\n").forEach(function(item,i){console.log(i+1,":",item)})}
 for(var attr in err){console.log(attr,err[attr])}
 console.log(_b_.getattr(err,"info","[no info]"))
 console.log("message: " + err.$message)
@@ -7453,7 +7454,10 @@ var mod_js=$B.precompiled[parent],is_package=Array.isArray(mod_js)
 if(is_package){mod_js=mod_js[0]}
 $B.imported[parent]=module.$factory(parent,undefined,is_package)
 $B.imported[parent].__initialized__=true
-if(is_package){$B.imported[parent].__path__="<stdlib>"}
+if(is_package){$B.imported[parent].__path__="<stdlib>"
+$B.imported[parent].__package__=parent}else{var elts=parent.split(".")
+elts.pop()
+$B.imported[parent].__package__=elts.join(".")}
 try{eval(mod_js)}catch(err){console.log(mod_js)
 console.log(err)
 for(var k in err){console.log(k,err[k])}
@@ -7464,7 +7468,8 @@ throw err}
 for(var attr in $module){$B.imported[parent][attr]=$module[attr]}
 if(i>0){
 $B.builtins.setattr($B.imported[parts.slice(0,i).join(".")],parts[i],$module)}}
-return $module}else{run_py(module_contents,modobj.__path__,modobj,ext=='.pyc.js')}
+return $module}else{console.log("run Python code from VFS",modobj.__name__)
+run_py(module_contents,modobj.__path__,modobj,ext=='.pyc.js')}
 if($B.debug > 1){console.log("import " + modobj.__name__ + " from VFS")}},find_module: function(cls,name,path){return{
 __class__: Loader,load_module: function(name,path){var spec=cls.find_spec(cls,name,path)
 var mod=module.$factory(name)

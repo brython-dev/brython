@@ -320,12 +320,12 @@ $B.$global_search = function(name, search_ids){
             return frame[3][name]
         }
     }
-
-    search_ids.forEach(function(search_id){
+    for(var i = 0; i < search_ids.length; i++){
+        var search_id = search_ids[i]
         if($B.imported[search_id] && $B.imported[search_id][name]){
             return $B.imported[search_id][name]
         }
-    })
+    }
 
     throw _b_.NameError.$factory("name '" + $B.from_alias(name) +
         "' is not defined")
