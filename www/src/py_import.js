@@ -274,7 +274,11 @@ function run_py(module_contents, path, module, compiled) {
         console.log("module", module)
         console.log(root)
         console.log(err)
-        //console.log(js)
+        if($B.debug > 1){
+            js.split("\n").forEach(function(item, i){
+                console.log(i+1, ":", item)
+            })
+        }
         //console.log(module_contents
         for(var attr in err){
             console.log(attr, err[attr])
