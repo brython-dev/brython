@@ -209,6 +209,11 @@ code.__repr__ = code.__str__ = function(self){
     return '<code object ' + self.name + ', file ' + self.filename + '>'
 }
 
+code.__getattr__ = function(self, attr){
+    if(attr == "co_code"){return 'co_code'}
+    return self[attr]
+}
+
 function compile() {
     var $ = $B.args('compile', 6,
         {source:null, filename:null, mode:null, flags:null, dont_inherit:null,
@@ -2169,6 +2174,9 @@ Function.__getattribute__ = function(self, attr){
             for(var attr in self.$infos.__code__){
                 res[attr] = self.$infos.__code__[attr]
             }
+            res.name = self.$infos.__name__
+            res.filename = self.$infos.__code__.co_filename
+            res.co_code = self + "" // Javascript source code
             return res
         }else if(attr == '__annotations__'){
             // annotations is stored as a Javascript object

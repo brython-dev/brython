@@ -1771,6 +1771,12 @@ t = ndarray()
 assert slice(1, 5, None) == slice(1, 5, None)
 assert t[1:5, 7] == (slice(1, 5, None), 7)
 
+# test attribute __code__.co_code of functions
+def f():
+    print(10)
+
+assert f.__code__.co_code.startswith("function f")
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

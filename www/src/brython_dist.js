@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.5.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-05-07 10:48:43.405763"
-__BRYTHON__.timestamp=1525682923405
+__BRYTHON__.compiled_date="2018-05-08 16:03:55.449359"
+__BRYTHON__.timestamp=1525788235449
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -243,15 +243,6 @@ this.children.forEach(function(child){this.res.push(child.to_js(indent + 4))},th
 if(this.children.length > 0){this.res.push(' '.repeat(indent))
 this.res.push('}\n')}}
 this.js=this.res.join('')
-var collect=false,collected='';
-for(let ch of this.children){if(! collect && ch.C && ch.C.tree
-&& ch.C.tree[0]&& ch.C.tree[0]._func_marker){
-collect=ch.C.tree[0]._func_marker
-collected=ch.to_js(indent+4)}else if(ch instanceof $MarkerNode && ch._name.startsWith('func_end:')
-&& ch._name.slice(9)===collect){
-this.js=this.js.replace(collect,escape(collected))
-collect=false
-collected=''}else if(collect){collected +=ch.to_js(indent+4)}}
 return this.js}
 this.transform=function(rank){
 if(this.yield_atoms.length > 0){
@@ -1307,10 +1298,9 @@ var co_varnames=[]
 for(var attr in this.varnames){co_varnames.push('"' + attr + '"')}
 var CODE_MARKER='___%%%-CODE-%%%___' + this.name + this.num;
 var h='\n' + ' '.repeat(indent + 8)
-js='    __code__:{' + h + '    __class__:$B.Code'
+js='    __code__:{' + h + '    co_argcount:' + this.argcount
 var h1=',' + h + ' '.repeat(4)
-js +=h1 + 'co_argcount:' + this.argcount +
-h1 + 'co_filename:$locals_' + scope.module.replace(/\./g,'_')+
+js +=h1 + 'co_filename:$locals_' + scope.module.replace(/\./g,'_')+
 '["__file__"]' +
 h1 + 'co_firstlineno:' + node.line_num +
 h1 + 'co_flags:' + flags +
@@ -1318,7 +1308,6 @@ h1 + 'co_kwonlyargcount:' + this.kwonlyargcount +
 h1 + 'co_name: "' + this.name + '"' +
 h1 + 'co_nlocals: ' + co_varnames.length +
 h1 + 'co_varnames: [' + co_varnames.join(', ')+ ']' +
-h1 + 'co_code:  unescape("'+CODE_MARKER +'")' +
 h + '}\n    };'
 js +='None;'
 node.parent.insert(rank + offset++,$NodeJS(js))
@@ -1647,7 +1636,8 @@ var _mod=this.module.replace(/\$/g,''),$package,packages=[]
 while(_mod.length > 0){if(_mod.charAt(0)=='.'){if($package===undefined){if($B.imported[mod]!==undefined){$package=$B.imported[mod].__package__
 packages=$package.split('.')}}else{$package=$B.imported[$package]
 packages.pop()}
-if($package===undefined){return 'throw SystemError.$factory("Parent module \'\' ' +
+if($package===undefined){console.log("throw system error",this.module,$package)
+return 'throw SystemError.$factory("Parent module \'\' ' +
 'not loaded, cannot perform relative import")'}else if($package=='None'){console.log('package is None !')}
 _mod=_mod.substr(1)}else{break}}
 if(_mod){packages.push(_mod)}
@@ -4965,7 +4955,6 @@ method.__repr__=method.__str__=function(self){return "<bound method " + self.$in
 " of " + _b_.str.$factory(self.$infos.__self__)+ ">"}
 $B.method=method
 $B.set_func_names(method,"builtins")
-$B.Code=$B.make_class("code",function(){})
 _b_.object.__class__=type})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins,_window=self,isWebWorker=('undefined' !==typeof WorkerGlobalScope)&&
 ("function"===typeof importScripts)&&
@@ -5687,6 +5676,8 @@ return func}
 $B.set_func_names(classmethod,"builtins")
 var code=$B.code=$B.make_class("code")
 code.__repr__=code.__str__=function(self){return '<code object ' + self.name + ', file ' + self.filename + '>'}
+code.__getattr__=function(self,attr){if(attr=="co_code"){return 'co_code'}
+return self[attr]}
 function compile(){var $=$B.args('compile',6,{source:null,filename:null,mode:null,flags:null,dont_inherit:null,optimize:null},['source','filename','mode','flags','dont_inherit','optimize'],arguments,{flags: 0,dont_inherit: false,optimize: -1},null,null)
 var module_name='$exec_' + $B.UUID()
 $B.clear_ns(module_name)
@@ -6444,6 +6435,9 @@ Function.__eq__=function(self,other){return self===other}
 Function.__getattribute__=function(self,attr){
 if(self.$infos && self.$infos[attr]!==undefined){if(attr=='__code__'){var res={__class__: code}
 for(var attr in self.$infos.__code__){res[attr]=self.$infos.__code__[attr]}
+res.name=self.$infos.__name__
+res.filename=self.$infos.__code__.co_filename
+res.co_code=self + "" 
 return res}else if(attr=='__annotations__'){
 return $B.obj_dict(self.$infos[attr])}else{return self.$infos[attr]}}else if(self.$attrs && self.$attrs[attr]!==undefined){return self.$attrs[attr]}else{return _b_.object.__getattribute__(self,attr)}}
 Function.__repr__=Function.__str__=function(self){if(self.$infos===undefined){console.log(self)}

@@ -564,9 +564,6 @@ $B.method = method
 
 $B.set_func_names(method, "builtins")
 
-// class dict of functions attribute __code__
-$B.Code = $B.make_class("code", function(){})
-
 // this could not be done before $type and $factory are defined
 _b_.object.__class__ = type
 

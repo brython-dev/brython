@@ -426,28 +426,6 @@ var $Node = $B.parser.$Node = function(type){
         }
         this.js = this.res.join('')
 
-
-        // Replace placeholders in __code__.co_code  attributes of
-        // functions with the actual javascript code of the functions
-        var collect=false, collected='';
-        for(let ch of this.children) {
-            if (! collect && ch.context && ch.context.tree
-                && ch.context.tree[0] && ch.context.tree[0]._func_marker) { // ch is the node starting the function
-                    collect = ch.context.tree[0]._func_marker
-                    collected = ch.to_js(indent+4)
-            } else if (ch instanceof $MarkerNode && ch._name.startsWith('func_end:')
-                && ch._name.slice(9) === collect) { // ch is a marker node ending the function
-                    // replace the placeholder (collect) with the js code (collected)
-                    // of all the nodes starting with the first and ending with the end marker
-                    // node
-                    this.js = this.js.replace(collect, escape(collected))
-                    collect = false
-                    collected = ''
-            } else if (collect) {
-                collected += ch.to_js(indent+4)
-            }
-        }
-
         return this.js
     }
 
@@ -2686,10 +2664,9 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         // by the javascript code of the function
         var CODE_MARKER = '___%%%-CODE-%%%___' + this.name + this.num;
         var h = '\n' + ' '.repeat(indent + 8)
-        js = '    __code__:{' + h + '    __class__:$B.Code'
+        js = '    __code__:{' + h + '    co_argcount:' + this.argcount
         var h1 = ',' + h + ' '.repeat(4)
-        js += h1 + 'co_argcount:' + this.argcount +
-            h1 + 'co_filename:$locals_' + scope.module.replace(/\./g,'_') +
+        js += h1 + 'co_filename:$locals_' + scope.module.replace(/\./g,'_') +
             '["__file__"]' +
             h1 + 'co_firstlineno:' + node.line_num +
             h1 + 'co_flags:' + flags +
@@ -2697,7 +2674,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
             h1 + 'co_name: "' + this.name + '"' +
             h1 + 'co_nlocals: ' + co_varnames.length +
             h1 + 'co_varnames: [' + co_varnames.join(', ') + ']' +
-            h1 + 'co_code:  unescape("'+CODE_MARKER +'")' +
+            //h1 + 'co_code:  unescape("'+CODE_MARKER +'")' +
             h + '}\n    };'
 
         // End with None for interactive interpreter
@@ -3351,6 +3328,7 @@ var $FromCtx = $B.parser.$FromCtx = function(context){
                     packages.pop()
                 }
                 if($package === undefined){
+                    console.log("throw system error", this.module, $package)
                     return 'throw SystemError.$factory("Parent module \'\' ' +
                         'not loaded, cannot perform relative import")'
                 }else if($package == 'None'){
@@ -3928,7 +3906,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
             // If the name exists at run time in the global namespace, use it,
             // else raise a NameError
             // Function $search is defined in py_utils.js
-            
+
             this.result = '$B.$global_search("' + val + '", ' + search_ids + ')'
             return this.result
         }
