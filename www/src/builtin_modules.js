@@ -353,7 +353,16 @@
             __set__: function(self, obj, value){$B.stdout = value},
             write: function(data){_b_.getattr($B.stdout,"write")(data)}
         },
-        stdin : $B.stdin
+        stdin : $B.stdin,
+        vfs: {
+            __get__: function(){
+                if($B.hasOwnProperty("VFS")){return $B.obj_dict($B.VFS)}
+                else{return _b_.None}
+            },
+            __set__: function(){
+                throw _b_.TypeError.$factory("Read only property 'sys.vfs'")
+            }
+        }
     }
 
     function load(name, module_obj){

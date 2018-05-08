@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.5.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-05-08 16:03:55.449359"
-__BRYTHON__.timestamp=1525788235449
+__BRYTHON__.compiled_date="2018-05-08 16:32:07.435640"
+__BRYTHON__.timestamp=1525789927435
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -11763,7 +11763,9 @@ __get__: function(){return $B.path_hooks},__set__: function(self,obj,value){$B.p
 __get__: function(){return _b_.dict.$factory($B.JSObject.$factory($B.path_importer_cache))},__set__: function(self,obj,value){throw _b_.TypeError.$factory("Read only property" +
 " 'sys.path_importer_cache'")}},stderr:{
 __get__: function(){return $B.stderr},__set__: function(self,obj,value){$B.stderr=value},write: function(data){_b_.getattr($B.stderr,"write")(data)}},stdout:{
-__get__: function(){return $B.stdout},__set__: function(self,obj,value){$B.stdout=value},write: function(data){_b_.getattr($B.stdout,"write")(data)}},stdin : $B.stdin}
+__get__: function(){return $B.stdout},__set__: function(self,obj,value){$B.stdout=value},write: function(data){_b_.getattr($B.stdout,"write")(data)}},stdin : $B.stdin,vfs:{
+__get__: function(){if($B.hasOwnProperty("VFS")){return $B.obj_dict($B.VFS)}
+else{return _b_.None}},__set__: function(){throw _b_.TypeError.$factory("Read only property 'sys.vfs'")}}}
 function load(name,module_obj){
 module_obj.__class__=$B.module
 module_obj.__name__=name
