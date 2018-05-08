@@ -9178,67 +9178,10 @@ var _run_scripts = $B.parser._run_scripts = function(options) {
                     // remove leading CR if any
                     src = src.replace(/^\n/, '')
                     $B.run_script(src, module_name)
-                    /*
-                    $B.$py_module_path[module_name] = $B.script_path
-                    try{
-                        var root = $B.py2js(src, module_name, module_name),
-                            js = root.to_js(),
-                            script = {
-                                js: js,
-                                name: module_name,
-                                src: src,
-                                url: $B.script_path
-                            }
-                            if($B.debug > 1){console.log(js)}
-                    }catch(err){
-                        handle_error(err)
-                    }
-                    if($B.hasOwnProperty("VFS") && $B.has_indexedDB){
-                        // Build the list of stdlib modules required by the
-                        // script
-                        var imports1 = Object.keys(root.imports).slice(),
-                            imports = imports1.filter(function(item){
-                                return $B.VFS.hasOwnProperty(item)})
-                        Object.keys(imports).forEach(function(name){
-                            if($B.VFS.hasOwnProperty(name)){
-                                var submodule = $B.VFS[name],
-                                    type = submodule[0]
-                                if(type==".py"){
-                                    var src = submodule[1],
-                                        subimports = submodule[2],
-                                        is_package = submodule.length == 4
-                                    // "subimports" is the list of stdlib modules
-                                    // directly imported by the module.
-                                    if(type==".py"){
-                                        // Add stdlib modules recursively imported
-                                        required_stdlib_imports(subimports)
-                                    }
-                                    subimports.forEach(function(mod){
-                                        if(imports.indexOf(mod) == -1){
-                                            imports.push(mod)
-                                        }
-                                    })
-                                }
-                            }
-                        })
-                        // Add task to stack
-                        for(var j=0; j<imports.length;j++){
-                           $B.tasks.push([$B.inImported, imports[j]])
-                        }
-                    }
-                    $B.tasks.push(["execute", script])
-                    */
                 }
             }
         }
     }
-
-    /*
-    load_ext(ext_scripts)
-    for(var i = 0; i < inner_scripts.length; i++){
-        run_script(inner_scripts[i])
-    }
-    */
 
     if(options.ipy_id === undefined){$B.loop()}
 
