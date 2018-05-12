@@ -51,40 +51,6 @@
 
 <script type="text/javascript" src="../src/brython_stdlib.js"></script>
 
-<script>
-var modules = []
-function size(){
-    var keys = Object.keys(__BRYTHON__.modules)
-    console.log(keys.length, 'modules')
-    if(modules.length>0){
-        for(var i=0;i<keys.length;i++){
-            if(modules.indexOf(keys[i])==-1){
-                console.log('nouveau', keys[i])
-            }
-        }
-    }
-    modules = Object.keys(__BRYTHON__.modules)
-}
-
-function attrs(){
-    var infos = []
-    for(var attr in __BRYTHON__){
-        if(typeof __BRYTHON__[attr]=='object'){
-            infos.push([Object.keys(__BRYTHON__[attr]).length, attr])
-        }
-    }
-    infos.sort(function(a,b){
-        if(a[0]>b[0]){return 1}
-        else if(a[0]==b[0]){return 0}
-        return -1
-    }
-    )
-    for(var i=0;i<infos.length;i++){
-        console.log(infos[i])
-    }
-    console.log(Object.keys(__BRYTHON__).length, 'attributes')
-}
-</script>
 <script type="text/python3" id="tests">
 import asyncio
 import time
