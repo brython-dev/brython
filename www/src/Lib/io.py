@@ -299,9 +299,9 @@ class RawIOBase:
 # XXX Brython : the following are here just to avoid AttributeError
 BufferedIOBase = RawIOBase
 BufferedReader = RawIOBase
-BytesIO = StringIO
 
 class BytesIO(IOBase):
+
     def __init__(self, buf=b''):
         super().__init__(buf)
         self.empty_char = b''
