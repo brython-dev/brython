@@ -1904,17 +1904,13 @@ $Reader.__mro__ = [object]
 
 $Reader.close = function(self){self.closed = true}
 
-$Reader.read = function(self,nb){
+$Reader.read = function(self, nb){
     if(self.closed === true){
         throw _b_.ValueError.$factory('I/O operation on closed file')
     }
     if(nb === undefined){return self.$content}
 
     self.$counter += nb
-    if(self.$bin){
-        var res = self.$content.source.slice(self.$counter - nb, self.$counter)
-        return _b_.bytes.$factory(res)
-    }
     return self.$content.substr(self.$counter - nb, nb)
 }
 
@@ -1982,6 +1978,9 @@ function $url_open(){
     if(args.length > 0){var mode = args[0]}
     if(args.length > 1){var encoding = args[1]}
     var is_binary = mode.search('b') > -1
+    if(is_binary){
+        throw _b_.IOError.$factory("open() in binary mode is not supported")
+    }
     if(isinstance(file, $B.JSObject)){
         return $B.OpenFile.$factory(file.js, mode, encoding) // defined in py_dom.js
     }
@@ -1998,9 +1997,6 @@ function $url_open(){
                         file + ' : status ' + status)
                 }else{
                     $res = this.responseText
-                    if(is_binary){
-                        $res = _b_.str.encode($res, 'utf-8')
-                    }
                 }
             }catch (err){
                 $res = _b_.IOError.$factory('Could not open file ' + file +
@@ -2010,28 +2006,19 @@ function $url_open(){
         // add fake query string to avoid caching
         var fake_qs = '?foo=' + (new Date().getTime())
         req.open('GET', file + fake_qs, false)
-        req.overrideMimeType('text/plain; charset=utf-8');
+        req.overrideMimeType('text/plain; charset=utf-8')
         req.send()
 
         if($res.constructor === Error){throw $res}
 
-        if(is_binary){
-            var lf = _b_.bytes.$factory('\n', 'ascii'),
-                lines = _b_.bytes.split($res, lf)
-            for(var i = 0; i < lines.length - 1; i++){
-                lines[i].source.push(10)
-            }
-        }else{
-            var lines = $res.split('\n')
-            for(var i = 0; i < lines.length - 1; i++){lines[i] += '\n'}
-        }
+        var lines = $res.split('\n')
+        for(var i = 0; i < lines.length - 1; i++){lines[i] += '\n'}
 
         // return the file-like object
         var res = {
             $content:$res,
             $counter:0,
             $lines:lines,
-            $bin:is_binary,
             closed:False,
             encoding:encoding,
             mode:mode,
