@@ -314,6 +314,7 @@ Function called in case of SyntaxError
 */
 
 var $_SyntaxError = $B.parser.$_SyntaxError = function (context,msg,indent){
+    //console.log("syntax error", context, msg)
     var ctx_node = context
     while(ctx_node.type !== 'node'){ctx_node = ctx_node.parent}
     var tree_node = ctx_node.node,
@@ -5880,7 +5881,6 @@ var $mangle = $B.parser.$mangle = function(name, context){
 
 var $transition = $B.parser.$transition = function(context, token, value){
 
-    //console.log(context, token, value)
     switch(context.type){
         case 'abstract_expr':
 
@@ -5980,6 +5980,11 @@ var $transition = $B.parser.$transition = function(context, token, value){
               case 'yield':
                   return new $AbstractExprCtx(new $YieldCtx(context), true)
               case ':':
+                  if(context.parent.type == "sub" ||
+                          (context.parent.type == "list_or_tuple" &&
+                          context.parent.parent.type == "sub")){
+                      return new $AbstractExprCtx(new $SliceCtx(context.parent), false)
+                  }
                   return $transition(context.parent, token, value)
               case ')':
               case ',':
@@ -6710,6 +6715,17 @@ var $transition = $B.parser.$transition = function(context, token, value){
                 if(context.expect == ','){
                      return new $AbstractExprCtx(
                          new $AugmentedAssignCtx(context, value), true)
+                }
+                break
+            case ":": // slice
+                // valid only if expr is parent is a subscription, or a tuple
+                // inside a subscription, or a slice
+                if(context.parent.type=="sub" ||
+                        (context.parent.type == "list_or_tuple" &&
+                        context.parent.parent.type == "sub")){
+                    return new $AbstractExprCtx(new $SliceCtx(context.parent), false)
+                }else if(context.parent.type == "slice"){
+                    return $transition(context.parent, token, value)
                 }
                 break
             case '=':
@@ -7470,7 +7486,7 @@ var $transition = $B.parser.$transition = function(context, token, value){
             $_SyntaxError(context, 'token ' + token + ' after ' + context)
         case 'slice':
             if(token == ":"){
-                    return new $AbstractExprCtx(context, false)
+                return new $AbstractExprCtx(context, false)
             }
             return $transition(context.parent, token, value)
         case 'star_arg':
@@ -8916,7 +8932,7 @@ var loop = $B.loop = function(){
                 js = script.js
             eval(js)
         }catch(err){
-            if($B.debug>1){
+            if($B.debug > 1){
                 console.log(err)
                 for(var attr in err){
                    console.log(attr+' : ', err[attr])
@@ -8931,7 +8947,6 @@ var loop = $B.loop = function(){
             }
 
             handle_error(err)
-
         }
         loop()
     }else{
@@ -8945,14 +8960,19 @@ $B.has_indexedDB = window.indexedDB !== undefined
 
 function handle_error(err){
     // Print the error traceback on the standard error stream
-    var name = err.__class__.__name__,
-        trace = _b_.getattr(err,'info')
-    if(name=='SyntaxError' || name=='IndentationError'){
-        var offset = err.args[3]
-        trace += '\n    ' + ' '.repeat(offset) + '^' +
-            '\n' + name+': '+err.args[0]
+    if(err.__class__ !== undefined){
+        var name = err.__class__.__name__,
+            trace = _b_.getattr(err,'info')
+        if(name=='SyntaxError' || name=='IndentationError'){
+            var offset = err.args[3]
+            trace += '\n    ' + ' '.repeat(offset) + '^' +
+                '\n' + name+': '+err.args[0]
+        }else{
+            trace += '\n'+name+': ' + err.args
+        }
     }else{
-        trace += '\n'+name+': ' + err.args
+        console.log(err)
+        trace = err + ""
     }
     try{
         _b_.getattr($B.stderr,'write')(trace)

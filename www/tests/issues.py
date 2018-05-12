@@ -833,6 +833,21 @@ Set[0]
 Set[int]
 Set[str]
 
+# issue 443
+class Pepe:
+    def __getitem__(self, arg):
+        return arg
+
+pepe = Pepe()
+
+assert pepe[0:1] == slice(0, 1)
+
+assert pepe[1,0,0:10:2] == (1, 0, slice(0, 10, 2))
+assert pepe[0, 0:10:1] == (0, slice(0, 10, 1))
+assert pepe[0,0] == (0, 0)
+assert pepe[0,:] == (0, slice(None, None, None))
+assert pepe[0,1,1,1,2,3,4,:] == (0, 1, 1, 1, 2, 3, 4, slice(None, None, None))
+
 # issue 448
 d = { 0 : [1] }
 d[0] += [2]

@@ -313,8 +313,8 @@ slice.__eq__ = function(self, other){
 }
 
 slice.__repr__ = slice.__str__ = function(self){
-    return "slice(" + _b_.str.$factory(self.start) + "," +
-        _b_.str.$factory(self.stop) + "," + _b_.str.$factory(self.step) + ")"
+    return "slice(" + _b_.str.$factory(self.start) + ", " +
+        _b_.str.$factory(self.stop) + ", " + _b_.str.$factory(self.step) + ")"
 }
 
 slice.__setattr__ = function(self, attr, value){

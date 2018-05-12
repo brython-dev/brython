@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.5.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-05-08 16:32:07.435640"
-__BRYTHON__.timestamp=1525789927435
+__BRYTHON__.compiled_date="2018-05-12 10:42:53.704771"
+__BRYTHON__.timestamp=1526114573720
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -188,7 +188,8 @@ params.assign_ctx=yield_ctx.parent
 params.save_result_rank=pnode.parent.children.length-pnode.parent.children.indexOf(pnode)}
 replace_node(pnode,new $YieldFromMarkerNode(params))}
 var chained_comp_num=0
-var $_SyntaxError=$B.parser.$_SyntaxError=function(C,msg,indent){var ctx_node=C
+var $_SyntaxError=$B.parser.$_SyntaxError=function(C,msg,indent){
+var ctx_node=C
 while(ctx_node.type !=='node'){ctx_node=ctx_node.parent}
 var tree_node=ctx_node.node,root=tree_node
 while(root.parent !==undefined){root=root.parent}
@@ -2787,8 +2788,7 @@ while(true){if(scope.ntype=="module"){return name}
 else if(scope.ntype=="class"){var class_name=scope.C.tree[0].name
 while(class_name.charAt(0)=='_'){class_name=class_name.substr(1)}
 return '_' + class_name + name}else{if(scope.parent && scope.parent.C){scope=$get_scope(scope.C.tree[0])}else{return name}}}}else{return name}}
-var $transition=$B.parser.$transition=function(C,token,value){
-switch(C.type){case 'abstract_expr':
+var $transition=$B.parser.$transition=function(C,token,value){switch(C.type){case 'abstract_expr':
 switch(token){case 'id':
 case 'imaginary':
 case 'int':
@@ -2865,6 +2865,9 @@ $_SyntaxError(C,token)
 case 'yield':
 return new $AbstractExprCtx(new $YieldCtx(C),true)
 case ':':
+if(C.parent.type=="sub" ||
+(C.parent.type=="list_or_tuple" &&
+C.parent.parent.type=="sub")){return new $AbstractExprCtx(new $SliceCtx(C.parent),false)}
 return $transition(C.parent,token,value)
 case ')':
 case ',':
@@ -3333,6 +3336,11 @@ return new $AbstractExprCtx(new_op,false)
 case 'augm_assign':
 if(C.expect==','){return new $AbstractExprCtx(
 new $AugmentedAssignCtx(C,value),true)}
+break
+case ":": 
+if(C.parent.type=="sub" ||
+(C.parent.type=="list_or_tuple" &&
+C.parent.parent.type=="sub")){return new $AbstractExprCtx(new $SliceCtx(C.parent),false)}else if(C.parent.type=="slice"){return $transition(C.parent,token,value)}
 break
 case '=':
 if(C.expect==','){if(C.parent.type=="call_arg"){
@@ -4521,7 +4529,7 @@ if(idb_cx){idb_cx.result.close()}
 return}
 var task=$B.tasks.shift(),func=task[0],args=task.slice(1)
 if(func=="execute"){try{var script=task[1],src=script.src,name=script.name,url=script.url,js=script.js
-eval(js)}catch(err){if($B.debug>1){console.log(err)
+eval(js)}catch(err){if($B.debug > 1){console.log(err)
 for(var attr in err){console.log(attr+' : ',err[attr])}}
 if(err.$py_error===undefined){console.log('Javascript error',err)
 err=_b_.RuntimeError.$factory(err+'')}
@@ -4531,10 +4539,11 @@ func.apply(null,args)}}
 $B.tasks=[]
 $B.has_indexedDB=window.indexedDB !==undefined
 function handle_error(err){
-var name=err.__class__.__name__,trace=_b_.getattr(err,'info')
+if(err.__class__ !==undefined){var name=err.__class__.__name__,trace=_b_.getattr(err,'info')
 if(name=='SyntaxError' ||name=='IndentationError'){var offset=err.args[3]
 trace +='\n    ' + ' '.repeat(offset)+ '^' +
-'\n' + name+': '+err.args[0]}else{trace +='\n'+name+': ' + err.args}
+'\n' + name+': '+err.args[0]}else{trace +='\n'+name+': ' + err.args}}else{console.log(err)
+trace=err + ""}
 try{_b_.getattr($B.stderr,'write')(trace)}catch(print_exc_err){console.log(trace)}
 throw err}
 function required_stdlib_imports(imports,start){
@@ -6335,8 +6344,6 @@ $Reader.close=function(self){self.closed=true}
 $Reader.read=function(self,nb){if(self.closed===true){throw _b_.ValueError.$factory('I/O operation on closed file')}
 if(nb===undefined){return self.$content}
 self.$counter +=nb
-if(self.$bin){var res=self.$content.source.slice(self.$counter - nb,self.$counter)
-return _b_.bytes.$factory(res)}
 return self.$content.substr(self.$counter - nb,nb)}
 $Reader.readable=function(self){return true}
 $Reader.readline=function(self,limit){
@@ -6368,23 +6375,22 @@ for(var attr in $ns){eval('var ' + attr + '=$ns["' + attr + '"]')}
 if(args.length > 0){var mode=args[0]}
 if(args.length > 1){var encoding=args[1]}
 var is_binary=mode.search('b')> -1
+if(is_binary){throw _b_.IOError.$factory("open() in binary mode is not supported")}
 if(isinstance(file,$B.JSObject)){return $B.OpenFile.$factory(file.js,mode,encoding)}
 if(isinstance(file,_b_.str)){
 var req=new XMLHttpRequest();
 req.onreadystatechange=function(){try{var status=this.status
 if(status==404){$res=_b_.IOError.$factory('File ' + file + ' not found')}else if(status !=200){$res=_b_.IOError.$factory('Could not open file ' +
-file + ' : status ' + status)}else{$res=this.responseText
-if(is_binary){$res=_b_.str.encode($res,'utf-8')}}}catch(err){$res=_b_.IOError.$factory('Could not open file ' + file +
+file + ' : status ' + status)}else{$res=this.responseText}}catch(err){$res=_b_.IOError.$factory('Could not open file ' + file +
 ' : error ' + err)}}
 var fake_qs='?foo=' +(new Date().getTime())
 req.open('GET',file + fake_qs,false)
-req.overrideMimeType('text/plain; charset=utf-8');
+req.overrideMimeType('text/plain; charset=utf-8')
 req.send()
 if($res.constructor===Error){throw $res}
-if(is_binary){var lf=_b_.bytes.$factory('\n','ascii'),lines=_b_.bytes.split($res,lf)
-for(var i=0;i < lines.length - 1;i++){lines[i].source.push(10)}}else{var lines=$res.split('\n')
-for(var i=0;i < lines.length - 1;i++){lines[i]+='\n'}}
-var res={$content:$res,$counter:0,$lines:lines,$bin:is_binary,closed:False,encoding:encoding,mode:mode,name:file}
+var lines=$res.split('\n')
+for(var i=0;i < lines.length - 1;i++){lines[i]+='\n'}
+var res={$content:$res,$counter:0,$lines:lines,closed:False,encoding:encoding,mode:mode,name:file}
 res.__class__=is_binary ? $BufferedReader : $TextIOWrapper
 return res}}
 var zip=$B.make_class("zip",function(){var res={__class__:zip,items:[]}
@@ -6763,8 +6769,8 @@ slice.__eq__=function(self,other){var conv1=conv_slice(self),conv2=conv_slice(ot
 return conv1[0]==conv2[0]&&
 conv1[1]==conv2[1]&&
 conv1[2]==conv2[2]}
-slice.__repr__=slice.__str__=function(self){return "slice(" + _b_.str.$factory(self.start)+ "," +
-_b_.str.$factory(self.stop)+ "," + _b_.str.$factory(self.step)+ ")"}
+slice.__repr__=slice.__str__=function(self){return "slice(" + _b_.str.$factory(self.start)+ ", " +
+_b_.str.$factory(self.stop)+ ", " + _b_.str.$factory(self.step)+ ")"}
 slice.__setattr__=function(self,attr,value){throw _b_.AttributeError.$factory("readonly attribute")}
 function conv_slice(self){
 var attrs=["start","stop","step"],res=[]
