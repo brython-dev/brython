@@ -5708,7 +5708,7 @@ var $add_line_num = $B.parser.$add_line_num = function(node,rank){
             // add a trailing None for interactive mode
             var js = ';$locals.$line_info = "' + node.line_num + ',' +
                 mod_id + '";'
-
+            
             var new_node = new $Node()
             new_node.is_line_num = true // used in generators
             new $NodeJSCtx(new_node, js)
@@ -5730,6 +5730,8 @@ var $add_line_num = $B.parser.$add_line_num = function(node,rank){
         }
 
         return offset
+    }else{
+        return 1
     }
 }
 
