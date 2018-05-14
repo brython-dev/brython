@@ -7,6 +7,38 @@ import shutil
 with open('README.rst', encoding='utf-8') as fobj:
     LONG_DESCRIPTION = fobj.read()
 
+this_dir = os.getcwd()
+root_dir = os.path.dirname(this_dir)
+src_dir = os.path.join(root_dir, "www", "src")
+data_dir = os.path.join(this_dir, "data")
+
+# copy files from /www/src
+for fname in ["brython.js", "brython_stdlib.js", "unicode.txt"]:
+    shutil.copyfile(os.path.join(src_dir, fname),
+        os.path.join(data_dir, fname))
+
+# copy demo.html
+with open(os.path.join(root_dir, 'www', 'demo.html'), encoding="utf-8") as f:
+    demo = f.read()
+start_tag = "<!-- start copy -->"
+end_tag = "<!-- end copy -->"
+start = demo.find(start_tag)
+if start == -1:
+    raise Exception("No tag <!-- start copy --> in demo.html")
+end = demo.find(end_tag)
+if end == -1:
+    raise Exception("No tag <!-- end copy --> in demo.html")
+body = demo[start + len(start_tag) : end].strip()
+
+with open(os.path.join(data_dir, "demo.tmpl"), encoding="utf-8") as f:
+    template = f.read()
+
+demo = template.replace("{{body}}", body)
+
+with open(os.path.join(data_dir, "demo.html"), "w", encoding="utf-8") as out:
+    out.write(demo)
+
+
 setup(
     name='brython',
 

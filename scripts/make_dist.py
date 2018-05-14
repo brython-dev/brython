@@ -139,8 +139,11 @@ def run():
 
     # copy files in folder /setup
     sdir = os.path.join(pdir, 'setup', 'data')
+
+    """
     for f in ['brython.js', 'brython_stdlib.js', 'unicode.txt']:
         shutil.copyfile(os.path.join(src_dir, f), os.path.join(sdir, f))
+    """
 
     # copy demo.html
     with open(os.path.join(pdir, 'www', 'demo.html'), encoding="utf-8") as f:
