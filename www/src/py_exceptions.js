@@ -212,12 +212,15 @@ BaseException.__getattr__ = function(self, attr){
 
     if(attr == "info"){
 
-        if(self.__class__ === undefined){console.log("no class", self)}
-
-        var name = self.__class__.__name__
-        if(name == "SyntaxError" || name == "IndentationError"){
-            return 'File "' + self.args[1] + '", line ' + self.args[2] +
-                "\n    " + self.args[4]
+        if(self.__class__ === undefined){
+            console.log("no class", self)
+            return self + ''
+        }else{
+            var name = self.__class__.__name__
+            if(name == "SyntaxError" || name == "IndentationError"){
+                return 'File "' + self.args[1] + '", line ' + self.args[2] +
+                    "\n    " + self.args[4]
+            }
         }
 
         var info = "Traceback (most recent call last):"
