@@ -122,13 +122,14 @@ var bytes = {
 }
 
 bytes.__add__ = function(self, other){
+    console.log("__add__, self class", self.__class__.__name__)
     if(isinstance(other, bytes)){
         self.source = self.source.concat(other.source)
         return self
     }else if(isinstance(other, bytearray)){
-        return bytes.__add__(self, bytes.$factory(other))
+        return self.__class__.$factory(bytes.__add__(self, bytes.$factory(other)))
     }else if(isinstance(other, _b_.memoryview)){
-        return bytes.__add__(self, _b_.memoryview.tobytes(other))
+        return self.__class__.$factory(bytes.__add__(self, _b_.memoryview.tobytes(other)))
     }
     throw _b_.TypeError.$factory("can't concat bytes to " +
         _b_.str.$factory(other))
@@ -310,8 +311,9 @@ bytes.join = function(){
         ['self', 'iterable'], arguments, {}),
         self = $ns['self'],
         iterable = $ns['iterable']
+    console.log("bytes join")
     var next_func = _b_.getattr(_b_.iter(iterable), '__next__'),
-        res = bytes.$factory(),
+        res = self.__class__.$factory(),
         empty = true,
         ce = $B.current_exception
     while(true){
