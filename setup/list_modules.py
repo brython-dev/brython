@@ -69,167 +69,6 @@ if args.install:
 
 """
 
-# Get all modules in the Brython standard distribution.
-# They must be in brython_stdlib.js somewhere in the current directory
-# or below.
-print('searching brython_stdlib.js...')
-stdlib = {}
-stdlib_dir = None
-for dirname, dirnames, filenames in os.walk(os.getcwd()):
-    for filename in filenames:
-        if filename == "brython_stdlib.js":
-            stdlib_dir = dirname
-            path = os.path.join(dirname, filename)
-            with open(path, encoding="utf-8") as fobj:
-                modules = fobj.read()
-                modules = modules[modules.find('{'):]
-                stdlib = json.loads(modules)
-
-
-# get all Python modules and packages
-user_modules = {}
-
-packages = set()
-
-def is_package(folder):
-    """Test if folder is a package, ie has __init__.py and all the folders
-    above until os.getcwd() also have __init__.py.
-    Use set "packages" to cache results.
-    """
-    if folder in packages:
-        return True
-    current = folder
-    while True:
-        if not os.path.exists(os.path.join(current, "__init__.py")):
-            return False
-        current = os.path.dirname(current)
-        if current == os.getcwd():
-            packages.add(folder)
-            return True
-
-print('finding packages...')
-for dirname, dirnames, filenames in os.walk(os.getcwd()):
-    for filename in filenames:
-        name, ext = os.path.splitext(filename)
-        if not ext == ".py":
-            continue
-        if dirname == os.getcwd():
-            # modules in the same directory
-            path = os.path.join(dirname, filename)
-            with open(path, encoding="utf-8") as fobj:
-                user_modules[name] = [ext, fobj.read()]
-        elif is_package(dirname):
-            # modules in packages below current directory
-            path = os.path.join(dirname, filename)
-            package = dirname[len(os.getcwd()) + 1:].replace(os.sep, '.')
-            if filename == "__init__.py":
-                module_name = package
-            else:
-                module_name = "{}.{}".format(package, name)
-            with open(path, encoding="utf-8") as fobj:
-                user_modules[module_name] = [ext, fobj.read()]
-                if module_name == package:
-                    user_modules[module_name].append(1)
-
-
-class CharsetDetector(html.parser.HTMLParser):
-    """Used to detect <meta charset="..."> in HTML page."""
-
-    def __init__(self, *args, **kw):
-        kw.setdefault('convert_charrefs', True)
-        try:
-            html.parser.HTMLParser.__init__(self, *args, **kw)
-        except TypeError:
-            # convert_charrefs is only supported by Python 3.4+
-            del kw['convert_charrefs']
-            html.parser.HTMLParser.__init__(self, *args, **kw)
-
-        self.encoding = "iso-8859-1"
-
-    def handle_starttag(self, tag, attrs):
-        if tag.lower() == "meta":
-            for key, value in attrs:
-                if key == "charset":
-                    self.encoding = value
-
-class BrythonScriptsExtractor(html.parser.HTMLParser):
-    """Used to extract all Brython scripts in HTML pages."""
-
-    def __init__(self, dirname, **kw):
-        kw.setdefault('convert_charrefs', True)
-        try:
-            html.parser.HTMLParser.__init__(self, **kw)
-        except TypeError:
-            # convert_charrefs is only supported by Python 3.4+
-            del kw['convert_charrefs']
-            html.parser.HTMLParser.__init__(self, **kw)
-
-        self.dirname = dirname
-        self.scripts = []
-        self.py_tags = [] # stack of Python blocks
-        self.tag_stack = []
-
-    def handle_starttag(self, tag, attrs):
-        if tag.lower() == "script":
-            _type = "js_script"
-            src = None
-            for key, value in attrs:
-                if key == 'type' and value == "text/python":
-                    _type = "py_script"
-                elif key == "src":
-                    src = value
-            if _type == "py_script" and src:
-                _type = "py_script_with_src"
-                path = os.path.join(self.dirname, src)
-                with open(path, encoding="utf-8") as fobj:
-                    self.scripts.append(fobj.read())
-            self.tag_stack.append(_type)
-
-    def handle_endtag(self, tag):
-        if tag.lower() == "script":
-            self.tag_stack.pop()
-
-    def handle_data(self, data):
-        """Data is printed unchanged"""
-        if data.strip():
-            if self.tag_stack and self.tag_stack[-1].lower() == "py_script":
-                self.scripts.append(data)
-
-
-class VFSReplacementParser(html.parser.HTMLParser):
-    """Used to replace brython_stdlib.js by brython_modules.js in HTML
-    pages."""
-
-    def __init__(self, path, **kw):
-        kw.setdefault('convert_charrefs', True)
-        try:
-            html.parser.HTMLParser.__init__(self, **kw)
-        except TypeError:
-            # convert_charrefs is only supported by Python 3.4+
-            del kw['convert_charrefs']
-            html.parser.HTMLParser.__init__(self, **kw)
-        self.vfs = False
-        self.has_vfs = False
-
-    def handle_starttag(self, tag, attrs):
-        if tag.lower() == "script":
-            _type = "js_script"
-            src = None
-            for key, value in attrs:
-                if key == "src":
-                    elts = value.split("/")
-                    if elts and elts[-1] == "brython_stdlib.js":
-                        self.vfs = True
-                        self.has_vfs = True
-                        self.attrs = attrs
-                        self.start = self.getpos()
-                        return
-        self.vfs = False
-
-    def handle_endtag(self, tag):
-        if tag.lower() == "script" and self.vfs:
-            self.end = self.getpos()
-
 class ImportsFinder(ast.NodeVisitor):
     """Used to detect all imports in an AST tree and store the results in
     attribute imports.
@@ -270,6 +109,7 @@ class ImportsFinder(ast.NodeVisitor):
                 if name.name != "*":
                     self.imports.add('{}{}.{}'.format(package, node.module,
                         name.name))
+
 
 class ModulesFinder:
 
@@ -312,6 +152,7 @@ class ModulesFinder:
         """Walk the directory to find all pages with Brython scripts, parse
         them to get the list of modules needed to make them run.
         """
+        imports = set()
         for dirname, dirnames, filenames in os.walk(self.directory):
             for name in dirnames:
                 if name.endswith('__dist__'):
@@ -336,7 +177,7 @@ class ModulesFinder:
                     for script in parser.scripts:
                         script = self.norm_indent(script)
                         try:
-                            self.get_imports(script)
+                            imports |= self.get_imports(script)
                         except SyntaxError:
                             print('syntax error', path)
                             traceback.print_exc(file=sys.stderr)
@@ -347,10 +188,11 @@ class ModulesFinder:
                     package = dirname[len(self.directory) + 1:] or None
                     with open(path, encoding="utf-8") as fobj:
                         try:
-                            self.get_imports(fobj.read(), package)
+                            imports |= self.get_imports(fobj.read(), package)
                         except SyntaxError:
                             print('syntax error', path)
                             traceback.print_exc(file=sys.stderr)
+        self.imports = sorted(list(imports))
 
     def make_brython_modules(self):
         """Build brython_modules.js from the list of modules needed by the
@@ -482,5 +324,173 @@ class ModulesFinder:
         with open(path, "w", encoding="utf-8") as out:
             out.write(app.format(**info))
 
+# Get all modules in the Brython standard distribution.
+# They must be in brython_stdlib.js somewhere in the current directory
+# or below.
+print('searching brython_stdlib.js...')
+stdlib = {}
+stdlib_dir = None
+for dirname, dirnames, filenames in os.walk(os.getcwd()):
+    for filename in filenames:
+        if filename == "brython_stdlib.js":
+            stdlib_dir = dirname
+            path = os.path.join(dirname, filename)
+            with open(path, encoding="utf-8") as fobj:
+                modules = fobj.read()
+                modules = modules[modules.find('{'):]
+                stdlib = json.loads(modules)
+
+
+# get all Python modules and packages
+user_modules = {}
+
+packages = set()
+
+def is_package(folder):
+    """Test if folder is a package, ie has __init__.py and all the folders
+    above until os.getcwd() also have __init__.py.
+    Use set "packages" to cache results.
+    """
+    if folder in packages:
+        return True
+    current = folder
+    while True:
+        if not os.path.exists(os.path.join(current, "__init__.py")):
+            return False
+        current = os.path.dirname(current)
+        if current == os.getcwd():
+            packages.add(folder)
+            return True
+
+print('finding packages...')
+for dirname, dirnames, filenames in os.walk(os.getcwd()):
+    for filename in filenames:
+        name, ext = os.path.splitext(filename)
+        if not ext == ".py":
+            continue
+        if dirname == os.getcwd():
+            # modules in the same directory
+            path = os.path.join(dirname, filename)
+            with open(path, encoding="utf-8") as fobj:
+                src = fobj.read()
+            mf = ModulesFinder(dirname)
+            imports = sorted(list(mf.get_imports(src)))
+            user_modules[name] = [ext, src, imports]
+        elif is_package(dirname):
+            # modules in packages below current directory
+            path = os.path.join(dirname, filename)
+            package = dirname[len(os.getcwd()) + 1:].replace(os.sep, '.')
+            if filename == "__init__.py":
+                module_name = package
+            else:
+                module_name = "{}.{}".format(package, name)
+            with open(path, encoding="utf-8") as fobj:
+                src = fobj.read()
+            mf = ModulesFinder(dirname)
+            imports = sorted(list(mf.get_imports(src)))
+            user_modules[name] = [ext, src, imports]
+            if module_name == package:
+                user_modules[module_name].append(1)
+
+
+class CharsetDetector(html.parser.HTMLParser):
+    """Used to detect <meta charset="..."> in HTML page."""
+
+    def __init__(self, *args, **kw):
+        kw.setdefault('convert_charrefs', True)
+        try:
+            html.parser.HTMLParser.__init__(self, *args, **kw)
+        except TypeError:
+            # convert_charrefs is only supported by Python 3.4+
+            del kw['convert_charrefs']
+            html.parser.HTMLParser.__init__(self, *args, **kw)
+
+        self.encoding = "iso-8859-1"
+
+    def handle_starttag(self, tag, attrs):
+        if tag.lower() == "meta":
+            for key, value in attrs:
+                if key == "charset":
+                    self.encoding = value
+
+class BrythonScriptsExtractor(html.parser.HTMLParser):
+    """Used to extract all Brython scripts in HTML pages."""
+
+    def __init__(self, dirname, **kw):
+        kw.setdefault('convert_charrefs', True)
+        try:
+            html.parser.HTMLParser.__init__(self, **kw)
+        except TypeError:
+            # convert_charrefs is only supported by Python 3.4+
+            del kw['convert_charrefs']
+            html.parser.HTMLParser.__init__(self, **kw)
+
+        self.dirname = dirname
+        self.scripts = []
+        self.py_tags = [] # stack of Python blocks
+        self.tag_stack = []
+
+    def handle_starttag(self, tag, attrs):
+        if tag.lower() == "script":
+            _type = "js_script"
+            src = None
+            for key, value in attrs:
+                if key == 'type' and value == "text/python":
+                    _type = "py_script"
+                elif key == "src":
+                    src = value
+            if _type == "py_script" and src:
+                _type = "py_script_with_src"
+                path = os.path.join(self.dirname, src)
+                with open(path, encoding="utf-8") as fobj:
+                    self.scripts.append(fobj.read())
+            self.tag_stack.append(_type)
+
+    def handle_endtag(self, tag):
+        if tag.lower() == "script":
+            self.tag_stack.pop()
+
+    def handle_data(self, data):
+        """Data is printed unchanged"""
+        if data.strip():
+            if self.tag_stack and self.tag_stack[-1].lower() == "py_script":
+                self.scripts.append(data)
+
+
+class VFSReplacementParser(html.parser.HTMLParser):
+    """Used to replace brython_stdlib.js by brython_modules.js in HTML
+    pages."""
+
+    def __init__(self, path, **kw):
+        kw.setdefault('convert_charrefs', True)
+        try:
+            html.parser.HTMLParser.__init__(self, **kw)
+        except TypeError:
+            # convert_charrefs is only supported by Python 3.4+
+            del kw['convert_charrefs']
+            html.parser.HTMLParser.__init__(self, **kw)
+        self.vfs = False
+        self.has_vfs = False
+
+    def handle_starttag(self, tag, attrs):
+        if tag.lower() == "script":
+            _type = "js_script"
+            src = None
+            for key, value in attrs:
+                if key == "src":
+                    elts = value.split("/")
+                    if elts and elts[-1] == "brython_stdlib.js":
+                        self.vfs = True
+                        self.has_vfs = True
+                        self.attrs = attrs
+                        self.start = self.getpos()
+                        return
+        self.vfs = False
+
+    def handle_endtag(self, tag):
+        if tag.lower() == "script" and self.vfs:
+            self.end = self.getpos()
+
+
 if __name__ == "__main__":
-    ModulesFinder().make_setup()
+    ModulesFinder().inspect()
