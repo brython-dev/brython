@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.5.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-05-13 16:46:13.862069"
-__BRYTHON__.timestamp=1526222773862
+__BRYTHON__.compiled_date="2018-05-14 09:40:18.704186"
+__BRYTHON__.timestamp=1526283618704
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -6561,10 +6561,10 @@ return self.__class__.__name__}
 BaseException.__new__=function(cls){var err=_b_.BaseException.$factory()
 err.__class__=cls
 return err}
-BaseException.__getattr__=function(self,attr){if(attr=="info"){if(self.__class__===undefined){console.log("no class",self)}
-var name=self.__class__.__name__
+BaseException.__getattr__=function(self,attr){if(attr=="info"){if(self.__class__===undefined){console.log("no class",self)
+return self + ''}else{var name=self.__class__.__name__
 if(name=="SyntaxError" ||name=="IndentationError"){return 'File "' + self.args[1]+ '", line ' + self.args[2]+
-"\n    " + self.args[4]}
+"\n    " + self.args[4]}}
 var info="Traceback (most recent call last):"
 var line_info=self.$line_info
 if(self.$js_exc !==undefined){for(var attr in self.$js_exc){if(attr=="message"){continue}
@@ -6852,10 +6852,10 @@ if(b > 255){throw ValueError.$factory("byte must be in range(0, 256)")}
 _b_.list.insert(self.source,pos,b)}
 bytearray.$factory=function(source,encoding,errors){return bytearray.__new__(bytearray,source,encoding,errors)}
 var bytes={__class__ : _b_.type,__mro__:[object],__name__ : 'bytes',$buffer_protocol: true,$is_class: true}
-bytes.__add__=function(self,other){if(! isinstance(other,bytes)){throw _b_.TypeError.$factory("can't concat bytes to " +
+bytes.__add__=function(self,other){if(isinstance(other,bytes)){self.source=self.source.concat(other.source)
+return self}else if(isinstance(other,bytearray)){return bytes.__add__(self,bytes.$factory(other))}else if(isinstance(other,_b_.memoryview)){return bytes.__add__(self,_b_.memoryview.tobytes(other))}
+throw _b_.TypeError.$factory("can't concat bytes to " +
 _b_.str.$factory(other))}
-self.source=self.source.concat(other.source)
-return self}
 var $bytes_iterator=$B.$iterator_class('bytes_iterator')
 bytes.__iter__=function(self){return $B.$iterator(self.source,$bytes_iterator)}
 bytes.__eq__=function(self,other){return getattr(self.source,'__eq__')(other.source)}

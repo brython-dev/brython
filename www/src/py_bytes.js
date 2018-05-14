@@ -122,12 +122,16 @@ var bytes = {
 }
 
 bytes.__add__ = function(self, other){
-    if(! isinstance(other, bytes)){
-        throw _b_.TypeError.$factory("can't concat bytes to " +
-            _b_.str.$factory(other))
+    if(isinstance(other, bytes)){
+        self.source = self.source.concat(other.source)
+        return self
+    }else if(isinstance(other, bytearray)){
+        return bytes.__add__(self, bytes.$factory(other))
+    }else if(isinstance(other, _b_.memoryview)){
+        return bytes.__add__(self, _b_.memoryview.tobytes(other))
     }
-    self.source = self.source.concat(other.source)
-    return self
+    throw _b_.TypeError.$factory("can't concat bytes to " +
+        _b_.str.$factory(other))
 }
 
 var $bytes_iterator = $B.$iterator_class('bytes_iterator')

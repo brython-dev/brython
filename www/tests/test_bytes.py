@@ -42,4 +42,10 @@ assert int.from_bytes(map(ord, 'abcd'), 'big') == 1633837924
 t = [66, 'a']
 assertRaises(TypeError, bytes, t, "big")
 
+# mentioned in issue 623
+assert b''.join([memoryview(b'foo'), b'bar']) == b'foobar'
+assert b''.join([b'bar', memoryview(b'foo')]) == b'barfoo'
+assert b''.join([bytearray(b'foo'), b'bar']) == b'foobar'
+assert b''.join([b'bar', bytearray(b'foo')]) == b'barfoo'
+
 print('passed all tests...')
