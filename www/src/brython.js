@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.5.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-05-14 10:09:15.397081"
-__BRYTHON__.timestamp=1526285355397
+__BRYTHON__.compiled_date="2018-05-14 10:10:47.030085"
+__BRYTHON__.timestamp=1526285447030
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -6852,8 +6852,7 @@ if(b > 255){throw ValueError.$factory("byte must be in range(0, 256)")}
 _b_.list.insert(self.source,pos,b)}
 bytearray.$factory=function(source,encoding,errors){return bytearray.__new__(bytearray,source,encoding,errors)}
 var bytes={__class__ : _b_.type,__mro__:[object],__name__ : 'bytes',$buffer_protocol: true,$is_class: true}
-bytes.__add__=function(self,other){console.log("__add__, self class",self.__class__.__name__)
-if(isinstance(other,bytes)){self.source=self.source.concat(other.source)
+bytes.__add__=function(self,other){if(isinstance(other,bytes)){self.source=self.source.concat(other.source)
 return self}else if(isinstance(other,bytearray)){return self.__class__.$factory(bytes.__add__(self,bytes.$factory(other)))}else if(isinstance(other,_b_.memoryview)){return self.__class__.$factory(bytes.__add__(self,_b_.memoryview.tobytes(other)))}
 throw _b_.TypeError.$factory("can't concat bytes to " +
 _b_.str.$factory(other))}
@@ -6927,7 +6926,6 @@ case 'backslashreplace':
 return decode(self.source,encoding,errors)
 default:}}
 bytes.join=function(){var $ns=$B.args('join',2,{self: null,iterable: null},['self','iterable'],arguments,{}),self=$ns['self'],iterable=$ns['iterable']
-console.log("bytes join")
 var next_func=_b_.getattr(_b_.iter(iterable),'__next__'),res=self.__class__.$factory(),empty=true,ce=$B.current_exception
 while(true){try{var item=next_func()
 if(empty){empty=false}

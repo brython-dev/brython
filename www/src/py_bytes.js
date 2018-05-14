@@ -122,7 +122,6 @@ var bytes = {
 }
 
 bytes.__add__ = function(self, other){
-    console.log("__add__, self class", self.__class__.__name__)
     if(isinstance(other, bytes)){
         self.source = self.source.concat(other.source)
         return self
@@ -311,7 +310,6 @@ bytes.join = function(){
         ['self', 'iterable'], arguments, {}),
         self = $ns['self'],
         iterable = $ns['iterable']
-    console.log("bytes join")
     var next_func = _b_.getattr(_b_.iter(iterable), '__next__'),
         res = self.__class__.$factory(),
         empty = true,
