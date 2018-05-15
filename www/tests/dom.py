@@ -27,3 +27,15 @@ assert x.mybool is False
 
 y = A(False)
 assert y.mybool == False
+
+# test setting a callback function
+f_called = False
+def f(*args, **kwargs):
+	global f_called
+	f_called = True
+
+element = document.getElementById('dom-test-element-id')
+# test passing an additional argument after the callback f
+element.addEventListener('click', f, True)
+element.click()
+assert f_called

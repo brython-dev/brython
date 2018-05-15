@@ -632,10 +632,10 @@ DOMNode.__getattribute__ = function(self, attr){
                     for(var i = 0; i < arguments.length; i++){
                         var arg = arguments[i]
                         if(typeof arg == "function"){
-                            var f1 = function(){
-                                try{return arg.apply(null, arguments)}
+                            var f1 = function(dest_fn) { return function(){
+                                try{return dest_fn.apply(null, arguments)}
                                 catch(err){
-                                    console.log(arg, typeof arg, err)
+                                    console.log(dest_fn, typeof dest_fn, err)
                                     if(err.__class__ !== undefined){
                                         var msg = _b_.getattr(err, 'info') +
                                             '\n' + err.__class__.__name__
@@ -648,7 +648,7 @@ DOMNode.__getattribute__ = function(self, attr){
                                     }
                                     throw err
                                 }
-                            }
+                            }}(arg)
                             args[pos++] = f1
                         }
                         else if(isinstance(arg, JSObject)){
