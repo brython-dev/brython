@@ -1792,6 +1792,22 @@ def f():
 
 assert f.__code__.co_code.startswith("function f")
 
+# Regression introduced in 6888c6d67b3d5b44905a09fa427a84bef2c7b304
+class A:
+    pass
+
+global_x = None
+def target(x=None):
+    global global_x
+    global_x = x
+
+js_obj_dict = A().__dict__
+js_obj_dict['target_key'] = target
+js_obj_dict['target_key'](x='hello')
+
+assert global_x == 'hello'
+
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
