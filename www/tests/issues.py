@@ -63,6 +63,21 @@ def foo():
     return res
 assert foo() == [0, 1, 2, 3, 4]
 
+# issues 62, 63 and 64
+import test_sp
+
+s = 'a = 3'
+exec(s, test_sp.__dict__)
+assert test_sp.a == 3
+del test_sp.__dict__['a']
+try:
+    test_sp.a
+    raise ValueError('should have raised AttributeError')
+except AttributeError:
+    pass
+except:
+    raise ValueError('should have raised AttributeError')
+
 # issue 82 : Ellipsis literal (...) missing
 def f():
     ...
@@ -335,6 +350,25 @@ ModuleType=type(sys)
 foo=ModuleType("foo", "foodoc")
 assert foo.__name__=="foo"
 assert foo.__doc__=="foodoc"
+#assert type(foo.__dict__) == dict
+
+# issue 183
+x=4
+cd=dict(globals())
+cd.update(locals())
+exec("x=x+4",cd)
+
+assert x == 4
+assert cd['x'] == 8
+
+y=5
+yd=dict(globals())
+yd.update(locals())
+co=compile("y=y+4","","exec")
+exec(co,yd)
+
+assert yd['y'] == 9
+assert y == 5
 
 # issue 201
 import json
@@ -1032,6 +1066,15 @@ assert order == ['try', 'else', 'finally']
 x = [-644475]
 assert "{:,}".format(int(x[0])) == "-644,475"
 
+# issue 533
+err = """def f():
+    x = yaz
+f()"""
+try:
+    exec(err)
+except NameError:
+    pass
+
 # issue 542
 def test(*args):
     return args
@@ -1448,6 +1491,24 @@ assert found == 'c'
 assert [0, 1][-1] == 1
 assert {-1: 'a'}[-1] == 'a'
 
+# issue 686
+s = "message = 5"
+t = {}
+exec(s, t)
+assert 'message' in t
+exec('x = message', t)
+assert 'x' in t
+assert t['x'] == 5
+
+# issue 690
+t = {}
+exec("""def f():
+    global x
+    x = 3
+""", t)
+exec("f()", t)
+assert t['x'] == 3
+
 # issue 691
 class C(object): pass
 c1 = C()
@@ -1558,6 +1619,15 @@ a = window.Uint8ClampedArray.new(10)
 for i in range(10):
     a[i] = i
     assert a[i] == i
+
+# issue 748
+y = 42
+g = { 'x':0 }
+try:
+    exec('print(y)', g)
+    raise Exception("should have raised NameError")
+except NameError:
+    pass
 
 # issue 749
 assert float.__eq__(1.5, 1.5)
