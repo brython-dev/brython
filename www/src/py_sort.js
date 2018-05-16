@@ -423,6 +423,13 @@ function gallopRight(value, array, start, length, hint, compare) {
     return offset
 }
 
+var TIM_SORT_ASSERTION = "TimSortAssertion"
+var TimSortAssertion = function(message) {
+    this.name = TIM_SORT_ASSERTION
+    this.message = message
+}
+
+
 TimSort = function(array, compare){
     self = {
         array: array,
@@ -692,7 +699,7 @@ TimSort = function(array, compare){
                 }
                 array[dest + length2] = tmp[cursor1]
             }else if(length1 === 0){
-                throw new Error('mergeLow preconditions were not respected')
+                throw new TimSortAssertion('mergeLow preconditions were not respected')
             }else{
                 for(i = 0; i < length1; i++){
                     array[dest + i] = tmp[cursor1 + i]
@@ -869,7 +876,7 @@ TimSort = function(array, compare){
 
                 array[dest] = tmp[cursor2]
             }else if(length2 == 0){
-                throw new Error("mergeHigh preconditions were not respected")
+                throw new TimSortAssertion("mergeHigh preconditions were not respected")
             }else{
                 customCursor = dest - (length2 - 1)
                 for(i = 0; i < length2; i++){
@@ -967,7 +974,22 @@ function tim_sort(array, compare, lo, hi){
     ts.forceMergeRuns()
 }
 
-$B.$TimSort = tim_sort
+function tim_sort_safe(array, compare) {
+    // Some input arrays cause the timsort implementation to fail:
+    //     see https://github.com/mziccard/node-timsort/issues/14
+    // Catch any such failures and fall back to the builtin JS Array sort
+    try {
+        tim_sort(array, compare, 0, array.length)
+    } catch (e) {
+        if (e.name == TIM_SORT_ASSERTION) {
+            array.sort(compare);
+        } else {
+            throw e;
+        }
+    }
+}
+
+$B.$TimSort = tim_sort_safe
 $B.$AlphabeticalCompare = alphabeticalCompare
 
 })(__BRYTHON__)
