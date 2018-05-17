@@ -362,7 +362,7 @@ constructor = 0
 try:
     'a'+2
 except TypeError as exc:
-    assert exc.args[0] == "Can't convert int to str implicitely"
+    assert exc.args[0] == "Can't convert int to str implicitly"
 
 # check that line is in exception info
 x = []

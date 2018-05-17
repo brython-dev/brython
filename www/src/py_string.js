@@ -98,7 +98,7 @@ function reverse(s){
 function check_str(obj){
     if(! _b_.isinstance(obj, str)){
         throw _b_.TypeError.$factory("can't convert '" +
-            $B.get_class(obj).__name__ + "' object to str implicitely")
+            $B.get_class(obj).__name__ + "' object to str implicitly")
     }
 }
 
@@ -107,7 +107,7 @@ str.__add__ = function(self,other){
         try{return getattr(other, "__radd__")(self)}
         catch(err){
             throw _b_.TypeError.$factory("Can't convert " +
-                $B.get_class(other).__name__ + " to str implicitely")}
+                $B.get_class(other).__name__ + " to str implicitly")}
     }
     return self + other
 }
