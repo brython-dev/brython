@@ -270,12 +270,12 @@
         },
         JSObject: function(){
             console.log('"javascript.JSObject" is deprecrated. ' +
-                'Please refer to the documentation.')
+                'Use window.<jsobject name> instead.')
             return $B.JSObject.$factory(...arguments)
         },
         JSConstructor: function(){
             console.log('"javascript.JSConstructor" is deprecrated. ' +
-                'Please refer to the documentation.')
+                'Use window.<js constructor name>.new() instead.')
             return $B.JSConstructor.$factory.apply(null, arguments)
         },
         load:function(script_url){

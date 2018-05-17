@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.5.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-05-14 21:44:27.751786"
-__BRYTHON__.timestamp=1526327067751
+__BRYTHON__.compiled_date="2018-05-17 10:26:32.344351"
+__BRYTHON__.timestamp=1526545592344
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -7162,6 +7162,7 @@ else if(jsobj===null){return _b_.None}
 if(Array.isArray(jsobj)){return _b_.list.$factory(jsobj)}
 if(typeof jsobj==='number'){if(jsobj.toString().indexOf('.')==-1){return _b_.int.$factory(jsobj)}
 return _b_.float.$factory(jsobj)}
+if(jsobj.$nat==='kw'){return jsobj}
 return JSObject.$factory(jsobj)}
 var pyobj2jsobj=$B.pyobj2jsobj=function(pyobj){
 if(pyobj===true ||pyobj===false){return pyobj}
@@ -8974,6 +8975,9 @@ lastOffset++
 while(lastOffset < offset){var m=lastOffset +((offset - lastOffset)>>> 1)
 if(compare(value,array[start + m])< 0){offset=m}else{lastOffset=m + 1}}
 return offset}
+var TIM_SORT_ASSERTION="TimSortAssertion"
+var TimSortAssertion=function(message){this.name=TIM_SORT_ASSERTION
+this.message=message}
 TimSort=function(array,compare){self={array: array,compare: compare,minGallop: DEFAULT_MIN_GALLOPING,length : array.length,tmpStorageLength: DEFAULT_TMP_STORAGE_LENGTH,stackLength: 0,runStart: null,runLength: null,stackSize: 0,
 pushRun: function(runStart,runLength){this.runStart[this.stackSize]=runStart
 this.runLength[this.stackSize]=runLength
@@ -9049,7 +9053,7 @@ minGallop +=2}
 this.minGallop=minGallop
 if(minGallop < 1){this.minGallop=1}
 if(length1===1){for(i=0;i < length2;i++){array[dest + i]=array[cursor2 + i]}
-array[dest + length2]=tmp[cursor1]}else if(length1===0){throw new Error('mergeLow preconditions were not respected')}else{for(i=0;i < length1;i++){array[dest + i]=tmp[cursor1 + i]}}},
+array[dest + length2]=tmp[cursor1]}else if(length1===0){throw new TimSortAssertion('mergeLow preconditions were not respected')}else{for(i=0;i < length1;i++){array[dest + i]=tmp[cursor1 + i]}}},
 mergeHigh: function(start1,length1,start2,length2){var compare=this.compare,array=this.array,tmp=this.tmp,i=0
 for(i=0;i < length2;i++){tmp[i]=array[start2 + i]}
 var cursor1=start1 + length1 - 1,cursor2=length2 - 1,dest=start2 + length2 - 1,customCursor=0,customDest=0
@@ -9112,7 +9116,7 @@ cursor1 -=length1
 customDest=dest + 1
 customCursor=cursor1 + 1
 for(i=length1 - 1;i >=0;i--){array[customDest + i]=array[customCursor + i]}
-array[dest]=tmp[cursor2]}else if(length2==0){throw new Error("mergeHigh preconditions were not respected")}else{customCursor=dest -(length2 - 1)
+array[dest]=tmp[cursor2]}else if(length2==0){throw new TimSortAssertion("mergeHigh preconditions were not respected")}else{customCursor=dest -(length2 - 1)
 for(i=0;i < length2;i++){array[customCursor + i]=tmp[i]}}}}
 if(self.length < 2 * DEFAULT_TMP_STORAGE_LENGTH){self.tmpStorageLength=self.length >>> 1}
 self.tmp=new Array(self.tmpStorageLength)
@@ -9147,7 +9151,11 @@ ts.mergeRuns()
 remaining -=runLength
 lo +=runLength}while(remaining !==0)
 ts.forceMergeRuns()}
-$B.$TimSort=tim_sort
+function tim_sort_safe(array,compare){
+try{
+tim_sort(array,compare,0,array.length)}catch(e){if(e.name==TIM_SORT_ASSERTION){array.sort(compare);}else{
+throw e;}}}
+$B.$TimSort=tim_sort_safe
 $B.$AlphabeticalCompare=alphabeticalCompare})(__BRYTHON__)
 ;(function($B){eval($B.InjectBuiltins())
 var object=_b_.object,$N=_b_.None
@@ -9414,7 +9422,7 @@ $B.get_class(b).__name__ + "()")}
 if(res){if(_a==_b){return 0}
 return -1}
 return 1}}}}
-$B.$TimSort(self,cmp,0,self.length)
+$B.$TimSort(self,cmp)
 return(self.__brython__ ? $N : self)}
 $B.$list=function(t){t.__brython__=true
 return t}
@@ -9514,10 +9522,10 @@ if(! isinstance($.start,_b_.int)||! isinstance($.end,_b_.int)){throw _b_.TypeErr
 function reverse(s){
 return s.split("").reverse().join("")}
 function check_str(obj){if(! _b_.isinstance(obj,str)){throw _b_.TypeError.$factory("can't convert '" +
-$B.get_class(obj).__name__ + "' object to str implicitely")}}
+$B.get_class(obj).__name__ + "' object to str implicitly")}}
 str.__add__=function(self,other){if(!(typeof other==="string")){try{return getattr(other,"__radd__")(self)}
 catch(err){throw _b_.TypeError.$factory("Can't convert " +
-$B.get_class(other).__name__ + " to str implicitely")}}
+$B.get_class(other).__name__ + " to str implicitly")}}
 return self + other}
 str.__contains__=function(self,item){if(!(typeof item=="string")){throw _b_.TypeError.$factory("'in <string>' requires " +
 "string as left operand, not " + item.__class__)}
@@ -11044,15 +11052,15 @@ return DOMNode.select(self,selector)}}
 if(res !==undefined){if(res===null){return _b_.None}
 if(typeof res==="function"){var func=(function(f,elt){return function(){var args=[],pos=0
 for(var i=0;i < arguments.length;i++){var arg=arguments[i]
-if(typeof arg=="function"){var f1=function(){try{return arg.apply(null,arguments)}
-catch(err){console.log(arg,typeof arg,err)
+if(typeof arg=="function"){var f1=function(dest_fn){return function(){try{return dest_fn.apply(null,arguments)}
+catch(err){console.log(dest_fn,typeof dest_fn,err)
 if(err.__class__ !==undefined){var msg=_b_.getattr(err,'info')+
 '\n' + err.__class__.__name__
 if(err.args){msg +=': ' + err.args[0]}
 try{getattr($B.stderr,"write")(msg)}
 catch(err){console.log(msg)}}else{try{getattr($B.stderr,"write")(err)}
 catch(err1){console.log(err)}}
-throw err}}
+throw err}}}(arg)
 args[pos++]=f1}
 else if(isinstance(arg,JSObject)){args[pos++]=arg.js}else if(isinstance(arg,DOMNode)){args[pos++]=arg.elt}else if(arg===_b_.None){args[pos++]=null}else{args[pos++]=arg}}
 var result=f.apply(elt,args)
@@ -11749,9 +11757,9 @@ modules['browser']=browser
 modules['javascript']={__file__:$B.brython_path + '/libs/javascript.js',$$this: function(){
 if($B.js_this===undefined){return $B.builtins.None}
 return $B.JSObject.$factory($B.js_this)},JSObject: function(){console.log('"javascript.JSObject" is deprecrated. ' +
-'Please refer to the documentation.')
+'Use window.<jsobject name> instead.')
 return $B.JSObject.$factory(...arguments)},JSConstructor: function(){console.log('"javascript.JSConstructor" is deprecrated. ' +
-'Please refer to the documentation.')
+'Use window.<js constructor name>.new() instead.')
 return $B.JSConstructor.$factory.apply(null,arguments)},load:function(script_url){console.log('"javascript.load" is deprecrated. ' +
 'Use browser.load instead.')
 var file_obj=$B.builtins.open(script_url)
