@@ -55,16 +55,21 @@ def reset_src_area():
         editor.value = 'for i in range(10):\n\tprint(i)'
 
 class cOutput:
+    def __init__(self):
+        self.cons = doc["console"]
+        self.buf = ''
 
     def write(self, data):
-        doc["console"].value += str(data)
+        self.buf += str(data)
 
     def flush(self):
-        pass
+        self.cons.value += self.buf
+        self.buf = ''
 
 if "console" in doc:
-    sys.stdout = cOutput()
-    sys.stderr = cOutput()
+    cOut = cOutput()
+    sys.stdout = cOut
+    sys.stderr = cOut
 
 def to_str(xx):
     return str(xx)
@@ -99,6 +104,7 @@ def run(*args):
     except Exception as exc:
         traceback.print_exc(file=sys.stderr)
         state = 0
+    sys.stdout.flush()
     output = doc["console"].value
 
     print('<completed in %6.2f ms>' % ((time.perf_counter() - t0) * 1000.0))

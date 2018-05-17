@@ -50,6 +50,8 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 """
 
+CODE_ELT = doc['code']
+
 def credits():
     print(_credits)
 credits.__repr__ = lambda:_credits
@@ -62,9 +64,17 @@ def license():
     print(_license)
 license.__repr__ = lambda:_license
 
-def write(data):
-    doc['code'].value += str(data)
 
+OUT_BUFFER = ''
+
+def write(data):
+    global OUT_BUFFER
+    OUT_BUFFER += str(data)
+
+def flush():
+    global CODE_ELT, OUT_BUFFER
+    CODE_ELT.value += OUT_BUFFER
+    OUT_BUFFER = ''
 
 sys.stdout.write = sys.stderr.write = write
 history = []
@@ -115,8 +125,10 @@ def myKeyPress(event):
         if _status == "main" or _status == "3string":
             try:
                 _ = editor_ns['_'] = eval(currentLine, editor_ns)
+                flush()
                 if _ is not None:
                     write(repr(_)+'\n')
+                flush()
                 doc['code'].value += '>>> '
                 _status = "main"
             except IndentationError:
@@ -132,6 +144,7 @@ def myKeyPress(event):
                         exec(currentLine, editor_ns)
                     except:
                         traceback.print_exc()
+                    flush()
                     doc['code'].value += '>>> '
                     _status = "main"
                 elif str(msg) == 'decorator expects function':
@@ -139,10 +152,12 @@ def myKeyPress(event):
                     _status = "block"
                 else:
                     traceback.print_exc()
+                    flush()
                     doc['code'].value += '>>> '
                     _status = "main"
             except:
                 traceback.print_exc()
+                flush()
                 doc['code'].value += '>>> '
                 _status = "main"
         elif currentLine == "":  # end of block
@@ -157,6 +172,7 @@ def myKeyPress(event):
                     print(repr(_))
             except:
                 traceback.print_exc()
+            flush()
             doc['code'].value += '>>> '
         else:
             doc['code'].value += '... '
