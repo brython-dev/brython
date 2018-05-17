@@ -5708,7 +5708,7 @@ var $add_line_num = $B.parser.$add_line_num = function(node,rank){
             // add a trailing None for interactive mode
             var js = ';$locals.$line_info = "' + node.line_num + ',' +
                 mod_id + '";'
-            
+
             var new_node = new $Node()
             new_node.is_line_num = true // used in generators
             new $NodeJSCtx(new_node, js)
@@ -8645,7 +8645,7 @@ var brython = $B.parser.brython = function(options){
     }
 
     if(!isWebWorker){
-    // Get all links with rel=pythonpath and add them to sys.path
+        // Get all links with rel=pythonpath and add them to sys.path
         var path_links = document.querySelectorAll('head link[rel~=pythonpath]'),
             _importlib = $B.imported['_importlib']
         for(var i = 0, e; e = path_links[i]; ++i) {

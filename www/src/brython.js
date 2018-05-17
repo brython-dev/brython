@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.5.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-05-17 10:26:32.344351"
-__BRYTHON__.timestamp=1526545592344
+__BRYTHON__.compiled_date="2018-05-17 22:36:23.239263"
+__BRYTHON__.timestamp=1526589383239
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -10871,7 +10871,10 @@ ev.__class__=DOMEvent
 if(ev.preventDefault===undefined){ev.preventDefault=function(){ev.returnValue=false}}
 if(ev.stopPropagation===undefined){ev.stopPropagation=function(){ev.cancelBubble=true}}
 return ev}
-DOMEvent.__getattribute__=function(self,attr){switch(attr){case 'x':
+DOMEvent.__getattribute__=function(self,attr){switch(attr){case '__repr__':
+case '__str__':
+return function(){return '<DOMEvent object>'}
+case 'x':
 return $mouseCoords(self).x
 case 'y':
 return $mouseCoords(self).y
@@ -11030,11 +11033,13 @@ break
 case "$$location":
 attr="location"
 break}
-if(self.elt.getAttribute !==undefined){res=self.elt.getAttribute(attr)
+var attr1=attr
+if(!(self.elt instanceof SVGElement)){attr1=attr1.toLowerCase()}
+if(self.elt.getAttribute !==undefined){res=self.elt.getAttribute(attr1)
 if(res !==undefined && res !==null && self.elt[attr]===undefined){
 return res}
-var attr1=attr.replace(/_/g,"-")
-if(attr1 !=attr){res=self.elt.getAttribute(attr1)
+var attr2=attr1.replace(/_/g,"-")
+if(attr2 !=attr){res=self.elt.getAttribute(attr2)
 if(res !==undefined && res !==null &&
 self.elt[attr]===undefined){
 return res}}}
@@ -11138,17 +11143,18 @@ if(self.elt.tagName=="CANVAS"){self.elt.style[attr]=value}else if(self.elt.nodeT
 break}
 if(DOMNode["set_" + attr]!==undefined){return DOMNode["set_" + attr](self,value)}
 if(self.elt[attr]!==undefined){self.elt[attr]=value;return}
-var attr1=attr.replace("_","-").toLowerCase()
+var attr1=attr.replace("_","-")
+if(!(self.elt instanceof SVGElement)){attr=attr.toLowerCase()
+attr1=attr1.toLowerCase()}
 if(self.elt instanceof SVGElement &&
 self.elt.getAttributeNS(null,attr1)!==null){self.elt.setAttributeNS(null,attr1,value)
 return}
+attr1=attr1.toLowerCase()
 if(typeof self.elt.getAttribute=="function" &&
-typeof self.elt.setAttribute=="function"){try{self.elt.setAttribute(attr1,value)}catch(err){
+typeof self.elt.setAttribute=="function"){if(typeof value=="string"){try{self.elt.setAttribute(attr1,value)}catch(err){
 self.elt[attr]=value
-return _b_.None}
-if(self.elt.getAttribute(attr1)!==value){
-self.elt.removeAttribute(attr1)
-self.elt[attr]=value}
+return _b_.None}}
+self.elt[attr]=value
 return _b_.None}
 self.elt[attr]=value
 return _b_.None}}
@@ -11670,13 +11676,27 @@ for(var i=1;i < funcs.length;i++){gfuncs.push(funcs[i])}
 var res={__class__: generator,args: Array.prototype.slice.call(arguments),blocks: blocks,env:{},name: name,nexts: gfuncs.slice(1),next: gfuncs[0],iter_id: iter_id,gi_running: false,$started: false,$defaults: $defaults}
 return res}}
 $B.set_func_names(generator,"builtins")})(__BRYTHON__)
- ;(function($B){var update=function(mod,data){for(attr in data){mod[attr]=data[attr]}}
+ ;(function($B){var _b_=$B.builtins
+var update=function(mod,data){for(attr in data){mod[attr]=data[attr]}}
 var _window=self;
 var modules={}
 var browser={$package: true,$is_package: true,__initialized__: true,__package__: 'browser',__file__: $B.brython_path.replace(/\/*$/g,'')+
 '/Lib/browser/__init__.py',console: $B.JSObject.$factory(self.console),win: $B.win,$$window: $B.win,}
 browser.__path__=browser.__file__
-if(! $B.isa_web_worker ){update(browser,{$$alert:function(message){window.alert($B.builtins.str.$factory(message))},confirm: $B.JSObject.$factory(window.confirm),$$document:$B.DOMNode.$factory(document),doc: $B.DOMNode.$factory(document),
+if(! $B.isa_web_worker ){update(browser,{$$alert:function(message){window.alert($B.builtins.str.$factory(message))},bind:function(){
+var $=$B.args("bind",2,{elt: null,evt: null},["elt","evt"],arguments,{},null,null)
+return function(callback){if(_b_.isinstance($.elt,$B.DOMNode)){
+$B.DOMNode.bind($.elt,$.evt,callback)
+return callback}else if(_b_.isinstance($.elt,_b_.str)){
+var items=document.querySelectorAll($.elt)
+for(var i=0;i < items.length;i++){$B.DOMNode.bind($B.DOMNode.$factory(items[i]),$.evt,callback)}
+return callback}
+try{var it=$B.$iter($.elt)
+while(true){try{var elt=_b_.next(it)
+$B.DOMNode.bind(elt,$.evt,callback)}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){break}
+throw err}}}catch(err){if(_b_.isinstance(err,_b_.AttributeError)){$B.DOMNode.bind($.elt,$.evt,callback)}
+throw err}
+return callback}},confirm: $B.JSObject.$factory(window.confirm),$$document:$B.DOMNode.$factory(document),doc: $B.DOMNode.$factory(document),
 DOMEvent:$B.DOMEvent,DOMNode:$B.DOMNode.$factory,load:function(script_url){
 var file_obj=$B.builtins.open(script_url)
 var content=$B.builtins.getattr(file_obj,'read')()
