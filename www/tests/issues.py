@@ -1802,9 +1802,9 @@ def target(x=None):
     global global_x
     global_x = x
 
-js_obj_dict = A().__dict__
-js_obj_dict['target_key'] = target
-js_obj_dict['target_key'](x='hello')
+obj_dict = A().__dict__
+obj_dict['target_key'] = target
+obj_dict['target_key'](x='hello')
 
 assert global_x == 'hello'
 
