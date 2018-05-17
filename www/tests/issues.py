@@ -1792,6 +1792,22 @@ def f():
 
 assert f.__code__.co_code.startswith("function f")
 
+
+# Regression introduced in 6888c6d67b3d5b44905a09fa427a84bef2c7b304
+class A:
+    pass
+
+global_x = None
+def target(x=None):
+    global global_x
+    global_x = x
+
+js_obj_dict = A().__dict__
+js_obj_dict['target_key'] = target
+js_obj_dict['target_key'](x='hello')
+
+assert global_x == 'hello'
+
 # Issue 753
 # This array trips over a bug in the sorting library that we use:
 #    see https://github.com/mziccard/node-timsort/issues/14
@@ -1803,6 +1819,7 @@ a = [1.0, 1.0, 1.0, 1.0, 1.0, 0.5, 1.0, 0.5, 0.5, 1.0,
 a.sort()
 for i in range(len(a) - 1):
     assert a[i] <= a[i+1]
+
 
 
 # ==========================================

@@ -92,6 +92,10 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj) {
        return _b_.float.$factory(jsobj)
     }
 
+    if(jsobj.$nat === 'kw') {
+        return jsobj
+    }
+
     return JSObject.$factory(jsobj)
 }
 
