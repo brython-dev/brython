@@ -76,18 +76,21 @@ global_loop = asyncio.new_event_loop()
 @asyncio.run_async(loop=global_loop)
 def run():
     global output
+    import sys
     doc["console"].value = ''
     src = editor.editor.getValue()
     if storage is not None:
        storage["py_src"] = src
-
     state, t0, t1, _, async_manager = utils.run(src)
+    sys.stdout.flush()
     output = doc["console"].value
     print('<sync tests completed in %6.2f ms>' % ((t1 - t0) * 1000.0))
+    sys.stdout.flush()
     if async_manager.count_tests(pending_only=True) > 0:
         print('<async tests pending {pending} (out of {total})>'.format(
                 pending=async_manager.count_tests(pending_only=True),
                 total=async_manager.count_tests()))
+    sys.stdout.flush()
     yield from async_manager.finish()
     async_manager.print_results()
     if async_manager.failed:
@@ -96,6 +99,7 @@ def run():
         print('<completed in %6.2f ms (FAILED)>' % ((time.perf_counter() - t0) * 1000.0))
     else:
         print('<completed in %6.2f ms (OK)>' % ((time.perf_counter() - t0) * 1000.0))
+    sys.stdout.flush()
     #window.attrs()
 
     return state
@@ -103,18 +107,21 @@ def run():
 @asyncio.run_async(loop=global_loop)
 def test_next():
     global script_num, failed
+    import sys
     script_num += 1
     options = doc['files'].options
     if script_num < len(options):
         try:
             option = doc['files'].options[script_num]
             print('Running tests in', option.innerText)
+            sys.stdout.flush()
             src = open(option.value).read()
             doc['files'].selectedIndex = script_num
             editor.editor.setValue(src)
             state = yield from run()
             if state == 0:
                 failed.append(option.text)
+            sys.stdout.flush()
             global_loop.call_later(0.5, test_next)
         except Exception as exc:
             traceback.print_exc(file=sys.stderr)
@@ -122,6 +129,7 @@ def test_next():
         doc['console'].value = ''
         print('completed all tests in %.2f s' %(time.time()-t_start))
         print('failed : %s' %failed)
+    sys.stdout.flush()
 
 def test_all(ev):
     global script_num,failed,t_start
