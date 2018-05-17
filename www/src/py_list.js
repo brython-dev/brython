@@ -680,7 +680,7 @@ list.sort = function(self){
 
         }
     }
-    $B.$TimSort(self, cmp, 0, self.length)
+    $B.$TimSort(self, cmp)
 
     // Javascript libraries might use the return value
     return (self.__brython__ ? $N : self)
