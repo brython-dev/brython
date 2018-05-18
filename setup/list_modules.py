@@ -388,7 +388,7 @@ for dirname, dirnames, filenames in os.walk(os.getcwd()):
                 src = fobj.read()
             mf = ModulesFinder(dirname)
             imports = sorted(list(mf.get_imports(src)))
-            user_modules[name] = [ext, src, imports]
+            user_modules[module_name] = [ext, src, imports]
             if module_name == package:
                 user_modules[module_name].append(1)
 
