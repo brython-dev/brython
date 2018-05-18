@@ -24,7 +24,7 @@ window.console = console;
 document.$py_src = {}
 document.$debug = 0
 
-self={};
+self=window;
 __BRYTHON__={}
 __BRYTHON__.$py_module_path = {}
 __BRYTHON__.$py_module_alias = {}
@@ -85,7 +85,7 @@ $compile_python=function(module_contents,module) {
     var mod_names = []
     for(var i=0, _len_i = mod_node.children.length; i < _len_i;i++){
         var node = mod_node.children[i]
-        // use function get_ctx() 
+        // use function get_ctx()
         // because attribute 'context' is renamed by make_dist...
         var ctx = node.get_ctx().tree[0]
         if(ctx.type==='def'||ctx.type==='class'){
@@ -125,11 +125,11 @@ $compile_python=function(module_contents,module) {
     new $NodeJSCtx(ret_node,ret_code)
     mod_node.add(ret_node)
     // add parenthesis for anonymous function execution
-    
+
     var ex_node = new $Node('expression')
     new $NodeJSCtx(ex_node,')()')
     root.add(ex_node)
-    
+
     try{
         var js = root.to_js()
         return js;
@@ -139,12 +139,18 @@ $compile_python=function(module_contents,module) {
     return undefined;
 }
 
-function execute_python_script(filename) {
+function execute_python_script(filename, moduleName, outFilename) {
   _py_src=fs.readFileSync(filename, 'utf8')
   __BRYTHON__.$py_module_path['__main__']='./'
-  var root = __BRYTHON__.py2js(_py_src,'__main__', '__main__', '__builtins__')
+  if (moduleName === undefined) {
+    moduleName = '__main__'
+  }
+  var root = __BRYTHON__.py2js(_py_src, moduleName, moduleName, __BRYTHON__.builtins_scope)
   var js = root.to_js()
-  //console.log(js);
+  if (outFilename !== undefined) {
+    fs.writeFileSync(outFilename, js)
+    console.log('Compiled script written to ' + outFilename)
+  }
   eval(js);
 }
 
@@ -165,5 +171,13 @@ __BRYTHON__.$options.debug = 0
 // other import algs don't work in node
 //import_funcs=[node_import]
 
+if (process.argv.length < 3) {
+  console.log('Usage: node node_bridge.js pyFilename [ jsOutputFilename [ pyModuleName ] ]')
+  return;
+}
+
 var filename=process.argv[2];
-execute_python_script(filename)
+var outFilename = process.argv[3];
+var moduleName = process.argv[4];
+
+execute_python_script(filename, moduleName, outFilename)
