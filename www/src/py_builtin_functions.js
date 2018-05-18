@@ -1093,12 +1093,11 @@ function isinstance(obj,arg){
    // Search __instancecheck__ on arg
     var ce = __BRYTHON__.current_exception
 
-    try{
-        return getattr(arg, '__instancecheck__')(obj)
-    }catch(err){
-        __BRYTHON__.current_exception = ce
-        return false
+    var hook = getattr(arg,'__instancecheck__',_b_.None)
+    if(hook!==_b_.None){
+        return hook(obj)
     }
+    return false
 }
 
 function issubclass(klass,classinfo){
@@ -1123,18 +1122,11 @@ function issubclass(klass,classinfo){
 
     // Search __subclasscheck__ on classinfo
     var ce = __BRYTHON__.current_exception
-    try{
-        var sch = getattr(classinfo, '__subclasscheck__')
-    }catch(err){
-        __BRYTHON__.current_exception = ce
-        if(err === _b_.AttributeError ||
-                err.__class__ === _b_.AttributeError){
-            return false
-        }
-        throw err
+    var sch = getattr(classinfo, '__subclasscheck__', _b_.None)
+    if (sch == _b_.None) {
+        return false;
     }
     return sch(klass)
-
 }
 
 // Utility class for iterators built from objects that have a __getitem__ and
