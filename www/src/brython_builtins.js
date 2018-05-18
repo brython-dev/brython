@@ -1,4 +1,5 @@
 var __BRYTHON__=__BRYTHON__ || {}  // global object with brython built-ins
+window.__BRYTHON__ = __BRYTHON__
 
 ;(function($B) {
 

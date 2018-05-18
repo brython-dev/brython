@@ -11,6 +11,8 @@ before_install:
   - mkdir qunit
   - wget -O qunit/qunit-1.18.0.css http://code.jquery.com/qunit/qunit-1.18.0.css
   - wget -O qunit/qunit-1.18.0.js  http://code.jquery.com/qunit/qunit-1.18.0.js
+  - nvm install --lts
+  - nvm use --lts
   - npm install testem
 
 before_script:
@@ -21,6 +23,7 @@ before_script:
   # - export PATH=$PWD/travis_phantomjs/phantomjs-2.1.1-linux-x86_64/bin:$PATH
 
 script:
+  - (cd scripts; node node_bridge.js ../www/tests/test_print.py)
   - ./node_modules/.bin/testem --skip PhantomJS -t www/tests/qunit/run_tests.html ci
   #- phantomjs phantomjs/examples/run-qunit.js www/tests/qunit/run_tests.html
 
