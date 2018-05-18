@@ -1,8 +1,8 @@
 __BRYTHON__.implementation = [3, 5, 2, 'dev', 0]
 __BRYTHON__.__MAGIC__ = "3.5.2"
 __BRYTHON__.version_info = [3, 3, 0, 'alpha', 0]
-__BRYTHON__.compiled_date = "2018-05-17 15:18:26.291999"
-__BRYTHON__.timestamp = 1526584706292
+__BRYTHON__.compiled_date = "2018-05-18 08:40:25.552411"
+__BRYTHON__.timestamp = 1526625625552
 __BRYTHON__.builtin_module_names = ["posix","sys", "errno", "time","_ajax",
     "_base64",
     "_jsre",
@@ -26,16 +26,13 @@ __BRYTHON__.builtin_module_names = ["posix","sys", "errno", "time","_ajax",
     "_functools",
     "_imp",
     "_io",
-    "_markupbase",
     "_random",
     "_socket",
     "_sre",
     "_string",
-    "_strptime",
     "_struct",
     "_sysconfigdata",
     "_testcapi",
     "_thread",
-    "_threading_local",
     "_warnings",
     "_weakref"]
