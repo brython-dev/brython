@@ -1073,27 +1073,26 @@ function isinstance(obj,arg){
 
     if(klass === undefined){return false}
 
-   // Return true if one of the parents of obj class is arg
-   // If one of the parents is the class used to inherit from str, obj is an
-   // instance of str ; same for list
+    // Return true if one of the parents of obj class is arg
+    // If one of the parents is the class used to inherit from str, obj is an
+    // instance of str ; same for list
 
-   function check(kl, arg){
-      if(kl === arg){return true}
-      else if(arg === _b_.str &&
-          kl === $B.StringSubclass){return true}
-      else if(arg === _b_.float &&
-          kl === $B.FloatSubclass){return true}
-   }
-   if(check(klass, arg)){return true}
-   var mro = klass.__mro__
-   for(var i = 0; i < mro.length; i++){
-      if(check(mro[i], arg)){return true}
-   }
+    function check(kl, arg){
+        if(kl === arg){return true}
+        else if(arg === _b_.str &&
+            kl === $B.StringSubclass){return true}
+        else if(arg === _b_.float &&
+            kl === $B.FloatSubclass){return true}
+    }
+    if(check(klass, arg)){return true}
+    var mro = klass.__mro__
+    for(var i = 0; i < mro.length; i++){
+       if(check(mro[i], arg)){return true}
+    }
 
-   // Search __instancecheck__ on arg
-    var ce = __BRYTHON__.current_exception
-
-    var hook = getattr(arg,'__instancecheck__',_b_.None)
+    // Search __instancecheck__ on arg
+ 
+    var hook = getattr(arg, '__instancecheck__', _b_.None)
     if(hook!==_b_.None){
         return hook(obj)
     }
@@ -1121,10 +1120,9 @@ function issubclass(klass,classinfo){
     }
 
     // Search __subclasscheck__ on classinfo
-    var ce = __BRYTHON__.current_exception
     var sch = getattr(classinfo, '__subclasscheck__', _b_.None)
-    if (sch == _b_.None) {
-        return false;
+    if(sch == _b_.None){
+        return false
     }
     return sch(klass)
 }
