@@ -71,6 +71,7 @@ __BRYTHON__.compiled_date="2018-05-17 22:36:23.239263"
 __BRYTHON__.timestamp=1526589383239
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
+
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
 isFinite(value)&&
 Math.floor(value)===value};
@@ -6030,8 +6031,9 @@ if(check(klass,arg)){return true}
 var mro=klass.__mro__
 for(var i=0;i < mro.length;i++){if(check(mro[i],arg)){return true}}
 var ce=__BRYTHON__.current_exception
-try{return getattr(arg,'__instancecheck__')(obj)}catch(err){__BRYTHON__.current_exception=ce
-return false}}
+var hook=getattr(arg,'__instancecheck__',_b_.None)
+if(hook!==_b_.None){return hook(obj)}
+return false}
 function issubclass(klass,classinfo){check_no_kw('issubclass',klass,classinfo)
 check_nb_args('issubclass',2,arguments.length)
 if(!klass.__class__ ||
@@ -6042,10 +6044,8 @@ return false}
 if(classinfo.$factory ||classinfo.$is_class){if(klass===classinfo ||
 klass.__mro__.indexOf(classinfo)> -1){return true}}
 var ce=__BRYTHON__.current_exception
-try{var sch=getattr(classinfo,'__subclasscheck__')}catch(err){__BRYTHON__.current_exception=ce
-if(err===_b_.AttributeError ||
-err.__class__===_b_.AttributeError){return false}
-throw err}
+var sch=getattr(classinfo,'__subclasscheck__',_b_.None)
+if(sch==_b_.None){return false;}
 return sch(klass)}
 var iterator_class=$B.make_class("iterator",function(getitem,len){return{
 __class__: iterator_class,getitem: getitem,len: len,counter: -1}}
