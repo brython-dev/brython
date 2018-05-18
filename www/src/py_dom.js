@@ -146,6 +146,9 @@ DOMEvent.__new__ = function(cls, evt_name){
 
 DOMEvent.__getattribute__ = function(self, attr){
     switch(attr) {
+        case '__repr__':
+        case '__str__':
+            return function(){return '<DOMEvent object>'}
         case 'x':
             return $mouseCoords(self).x
         case 'y':
@@ -569,8 +572,12 @@ DOMNode.__getattribute__ = function(self, attr){
             break
     }
 
+    var attr1 = attr
+    if(!(self.elt instanceof SVGElement)){attr1 = attr1.toLowerCase()}
+
     if(self.elt.getAttribute !== undefined){
-        res = self.elt.getAttribute(attr)
+
+        res = self.elt.getAttribute(attr1)
         // IE returns the properties of a DOMNode (eg parentElement)
         // as "attribute", so we must check that this[attr] is not
         // defined
@@ -579,9 +586,9 @@ DOMNode.__getattribute__ = function(self, attr){
             return res
         }
         // try replacing "_" by "-"
-        var attr1 = attr.replace(/_/g, "-")
-        if(attr1 != attr){
-            res = self.elt.getAttribute(attr1)
+        var attr2 = attr1.replace(/_/g, "-")
+        if(attr2 != attr){
+            res = self.elt.getAttribute(attr2)
             if(res !== undefined && res !== null &&
                     self.elt[attr] === undefined){
                 // now we're sure it's an attribute
@@ -602,7 +609,7 @@ DOMNode.__getattribute__ = function(self, attr){
     }
 
     var res = self.elt[attr]
-
+    
     // looking for attribute. If the attribute is in the forbidden
     // arena ... look for the aliased version
     if(res === undefined && $B.aliased_names[attr]){
@@ -845,9 +852,16 @@ DOMNode.__setattr__ = function(self, attr, value){
 
         if(self.elt[attr] !== undefined){self.elt[attr] = value; return}
 
-        // Case-insensitive version of the attribute. Also replaces _ by -
-        // to support setting attributes that have a -
-        var attr1 = attr.replace("_", "-").toLowerCase()
+        // Replaces _ by - to support setting attributes that have a -
+        var attr1 = attr.replace("_", "-")
+
+        // Attributes are case-sensitive for SVG elements and case-insensitive
+        // for the other elements
+
+        if(!(self.elt instanceof SVGElement)){
+            attr = attr.toLowerCase()
+            attr1 = attr1.toLowerCase()
+        }
 
         if(self.elt instanceof SVGElement &&
                 self.elt.getAttributeNS(null, attr1) !== null){
@@ -855,24 +869,24 @@ DOMNode.__setattr__ = function(self, attr, value){
             return
         }
 
+        // Attributes of other elements are case-insensitive
+        attr1 = attr1.toLowerCase()
+
         if(typeof self.elt.getAttribute == "function" &&
                 typeof self.elt.setAttribute == "function"){
-            
-            try{
-                self.elt.setAttribute(attr1, value)
-            }catch(err){
-                // happens for instance if attr starts with _ because
-                // attr1 starts with "-" and it is an invalid 1st arg
-                // for setAttribute
-                self.elt[attr] = value
-                return _b_.None
-            }
-            if(self.elt.getAttribute(attr1) !== value){
-                // If value is a Brython object, eg a dictionary
-                self.elt.removeAttribute(attr1)
-                self.elt[attr] = value
-            }
 
+            if(typeof value == "string"){
+                try{
+                    self.elt.setAttribute(attr1, value)
+                }catch(err){
+                    // happens for instance if attr starts with _ because
+                    // in this case, attr1 starts with "-" and it is an
+                    // invalid 1st arg for setAttribute
+                    self.elt[attr] = value
+                    return _b_.None
+                }
+            }
+            self.elt[attr] = value
             return _b_.None
         }
 

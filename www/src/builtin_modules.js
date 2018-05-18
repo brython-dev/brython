@@ -1,4 +1,5 @@
  ;(function($B) {
+     var _b_ = $B.builtins
     var update = function(mod, data) {
         for(attr in data) {
             mod[attr] = data[attr]
@@ -22,6 +23,46 @@
     if(! $B.isa_web_worker ){
         update(browser, {
             $$alert:function(message){window.alert($B.builtins.str.$factory(message))},
+            bind:function(){
+                // bind(element, event) is a decorator for callback function
+                var $ = $B.args("bind", 2, {elt: null, evt: null}, ["elt", "evt"],
+                    arguments, {}, null, null)
+                return function(callback){
+                    if(_b_.isinstance($.elt, $B.DOMNode)){
+                        // DOM element
+                        $B.DOMNode.bind($.elt, $.evt, callback)
+                        return callback
+                    }else if(_b_.isinstance($.elt, _b_.str)){
+                        // string interpreted as a CSS selector
+                        var items = document.querySelectorAll($.elt)
+                        for(var i = 0; i < items.length; i++){
+                            $B.DOMNode.bind($B.DOMNode.$factory(items[i]),
+                                $.evt, callback)
+                        }
+                        return callback
+                    }
+                    try{
+                        var it = $B.$iter($.elt)
+                        while(true){
+                            try{
+                                var elt = _b_.next(it)
+                                $B.DOMNode.bind(elt, $.evt, callback)
+                            }catch(err){
+                                if(_b_.isinstance(err, _b_.StopIteration)){
+                                    break
+                                }
+                                throw err
+                            }
+                        }
+                    }catch(err){
+                        if(_b_.isinstance(err, _b_.AttributeError)){
+                            $B.DOMNode.bind($.elt, $.evt, callback)
+                        }
+                        throw err
+                    }
+                    return callback
+                }
+            },
             confirm: $B.JSObject.$factory(window.confirm),
             $$document:$B.DOMNode.$factory(document),
             doc: $B.DOMNode.$factory(document), // want to use document instead of doc
