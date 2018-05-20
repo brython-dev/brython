@@ -187,7 +187,7 @@ str.__getitem__ = function(self,arg){
         }
         return res
     }
-    if(isinstance(arg, bool)){return self.__getitem__(_b_.int.$factory(arg))}
+    if(isinstance(arg, _b_.bool)){return self.__getitem__(_b_.int.$factory(arg))}
     throw _b_.TypeError.$factory("string indices must be integers")
 }
 
