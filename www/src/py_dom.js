@@ -124,6 +124,108 @@ var $NodeTypes = {1:  "ELEMENT",
     12: "NOTATION"
 }
 
+// Class for DOM attributes
+var Attributes = $B.make_class("Attributes",
+    function(elt){
+        return{
+            __class__: Attributes,
+            elt: elt
+        }
+    }
+)
+
+Attributes.__contains__ = function(){
+    var $ = $B.args("__getitem__", 2, {self: null, key:null},
+        ["self", "key"], arguments, {}, null, null)
+    if($.self.elt instanceof SVGElement){
+        return $.self.elt.hasAttributeNS(null, $.key)
+    }else if(typeof $.self.elt.hasAttribute == "function"){
+        return $.self.elt.hasAttribute($.key)
+    }
+    return false
+}
+
+Attributes.__delitem__ = function(){
+    var $ = $B.args("__getitem__", 2, {self: null, key:null},
+        ["self", "key"], arguments, {}, null, null)
+    if(!Attributes.__contains__($.self, $.key)){
+        throw _b_.KeyError.$factory($.key)
+    }
+    if($.self.elt instanceof SVGElement){
+        $.self.elt.removeAttributeNS(null, $.key)
+        return _b_.None
+    }else if(typeof $.self.elt.hasAttribute == "function"){
+        $.self.elt.removeAttribute($.key)
+        return _b_.None
+    }
+}
+
+Attributes.__getitem__ = function(){
+    var $ = $B.args("__getitem__", 2, {self: null, key:null},
+        ["self", "key"], arguments, {}, null, null)
+    if($.self.elt instanceof SVGElement &&
+            $.self.elt.hasAttributeNS(null, $.key)){
+        return $.self.getAttributeNS(null, $.key)
+    }else if(typeof $.self.elt.hasAttribute == "function" &&
+            $.self.elt.hasAttribute($.key)){
+        return $.self.elt.getAttribute($.key)
+    }
+    throw _b_.KeyError.$factory($.key)
+}
+
+Attributes.__iter__ = function(self){
+    self.$counter = 0
+    // Initialize list of key-value attribute pairs
+    var attrs = self.elt.attributes,
+        items = []
+    for(var i = 0; i < attrs.length; i++){
+        items.push([attrs[i].name, attrs[i].value])
+    }
+    self.$items = items
+    return self
+}
+
+Attributes.__next__ = function(){
+    var $ = $B.args("__next__", 1, {self: null},
+        ["self"], arguments, {}, null, null)
+    if($.self.$counter < $.self.$items.length){
+        var res = $.self.$items[$.self.$counter]
+        $.self.$counter++
+        return res
+    }else{
+        throw _b_.StopIteration.$factory("")
+    }
+}
+
+Attributes.__setitem__ = function(){
+    var $ = $B.args("__setitem__", 3, {self: null, key:null, value: null},
+        ["self", "key", "value"], arguments, {}, null, null)
+    if($.self.elt instanceof SVGElement &&
+            typeof $.self.elt.setAttributeNS == "function"){
+        $.self.setAttributeNS(null, $.key, $value)
+        return _b_.None
+    }else if(typeof $.self.elt.setAttribute == "function"){
+        $.self.elt.setAttribute($.key, $.value)
+        return _b_.None
+    }
+    throw _b_.TypeError.$factory("Can't set attributes on element")
+}
+
+Attributes.get = function(){
+    var $ = $B.args("get", 3, {self: null, key:null, deflt: null},
+        ["self", "key", "deflt"], arguments, {deflt:_b_.None}, null, null)
+    try{
+        return Attributes.__getitem__($.self, $.key)
+    }catch(err){
+        if(err.__class__ === _b_.KeyError){
+            return $B.deflt
+        }else{
+            throw err
+        }
+    }
+}
+$B.set_func_names(Attributes, "<dom>")
+
 // Class for DOM events
 
 var DOMEvent = $B.DOMEvent = {
@@ -204,6 +306,7 @@ $B.$DOMEvent = $DOMEvent = function(ev){
     return ev
 }
 
+$B.set_func_names(DOMEvent, "<dom>")
 
 var Clipboard = {
     __class__: _b_.type,
@@ -518,6 +621,8 @@ DOMNode.__getattribute__ = function(self, attr){
 
     if(attr.substr(0, 2) == "$$"){attr = attr.substr(2)}
     switch(attr) {
+        case "attrs":
+            return Attributes.$factory(self.elt)
         case "class_name":
         case "html":
         case "id":
@@ -585,33 +690,44 @@ DOMNode.__getattribute__ = function(self, attr){
         }
     }
 
-    // Looking for attribute. If the attribute is in the forbidden
-    // arena ... look for the aliased version
-    var res1 = self.elt[attr]
-    if(res1 === undefined && $B.aliased_names[attr]){
-        res1 = self.elt["$$" + attr1]
-    }
-
+    var attribute,
+        property
+    // Search in the DOM attributes
     if(self.elt instanceof SVGElement &&
             typeof self.elt.getAttributeNS == "function"){
-        var res2 = self.elt.getAttributeNS(null, attr)
-        if((! res2) && $B.aliased_names[attr]){
-            res2 = self.elt.getAttributeNS(null, "$$" + attr)
+        if(self.elt.hasAttributeNS(null, attr)){
+            attribute = self.elt.getAttributeNS(null, attr)
+        }else if($B.aliased_names[attr] &&
+                self.has.getAttributeNS(null, "$$" + attr)){
+            attribute = self.elt.getAttributeNS(null, "$$" + attr)
         }
     }else if(typeof self.elt.getAttribute == "function"){
-        var res2 = self.elt.getAttribute(attr)
-        if((!res2) && $B.aliased_names[attr]){
-            res2 = self.elt.getAttribute("$$" + attr)
+        if(self.elt.hasAttribute(attr)){
+            attribute = self.elt.getAttribute(attr)
+        }else if($B.aliased_names[attr] &&
+                self.elt.hasAttribute("$$" + attr)){
+            attribute = self.elt.getAttribute("$$" + attr)
         }
     }
 
-    if((! res2) && res1 === undefined){
-        return object.__getattribute__(self, attr)
+    // Looking for property. If the attribute is in the forbidden
+    // arena ... look for the aliased version
+    property = self.elt[attr]
+    if(property === undefined && $B.aliased_names[attr]){
+        property = self.elt["$$" + attr1]
     }
 
-    if(res1 === undefined){return res2}
+    if(property === undefined){
+        if(!!attribute){
+            // If attribute is set to a usable value, return it
+            return attribute
+        }else{
+            // Default
+            return object.__getattribute__(self, attr)
+        }
+    }
 
-    var res = res1
+    var res = property
 
     if(res !== undefined){
         if(res === null){return _b_.None}
@@ -823,7 +939,9 @@ DOMNode.__setattr__ = function(self, attr, value){
           return DOMNode["set_" + attr](self, value)
         }
 
+        // Use "direct" attribute setting, not with setAttribute
         self.elt[attr] = value
+
         return _b_.None
     }
 }

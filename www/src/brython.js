@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.5.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-05-20 09:58:51.111459"
-__BRYTHON__.timestamp=1526803131111
+__BRYTHON__.compiled_date="2018-05-20 16:44:18.937614"
+__BRYTHON__.timestamp=1526827458937
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -1825,7 +1825,6 @@ var res=ns0 + '["' + val + '"] !== undefined ? '
 res +=ns0 + '["' + val + '"] : '
 this.result="(" + res + ns1 + '["' + val + '"])'
 return this.result}}}
-if(val=="a"){console.log(val,"found",found)}
 var scope=found[0]
 this.found=scope.binding[val]
 var scope_ns='$locals_' + scope.id.replace(/\./g,'_')
@@ -5114,7 +5113,6 @@ if(search_ids.indexOf(frame[2])> -1 &&
 frame[3][name]!==undefined){return frame[3][name]}}
 for(var i=0;i < search_ids.length;i++){var search_id=search_ids[i]
 if($B.imported[search_id]&& $B.imported[search_id][name]){return $B.imported[search_id][name]}}
-console.log('name error',name,search_ids)
 throw _b_.NameError.$factory("name '" + $B.from_alias(name)+
 "' is not defined")}
 $B.$local_search=function(name){
@@ -10876,6 +10874,39 @@ if(flag){return true}
 for(var i=0;i < $DOMEventAttrs_IE.length;i++){if(obj[$DOMEventAttrs_IE[i]]===undefined){return false}}
 return true}
 var $NodeTypes={1: "ELEMENT",2: "ATTRIBUTE",3: "TEXT",4: "CDATA_SECTION",5: "ENTITY_REFERENCE",6: "ENTITY",7: "PROCESSING_INSTRUCTION",8: "COMMENT",9: "DOCUMENT",10: "DOCUMENT_TYPE",11: "DOCUMENT_FRAGMENT",12: "NOTATION"}
+var Attributes=$B.make_class("Attributes",function(elt){return{__class__: Attributes,elt: elt}}
+)
+Attributes.__contains__=function(){var $=$B.args("__getitem__",2,{self: null,key:null},["self","key"],arguments,{},null,null)
+if($.self.elt instanceof SVGElement){return $.self.elt.hasAttributeNS(null,$.key)}else if(typeof $.self.elt.hasAttribute=="function"){return $.self.elt.hasAttribute($.key)}
+return false}
+Attributes.__delitem__=function(){var $=$B.args("__getitem__",2,{self: null,key:null},["self","key"],arguments,{},null,null)
+if(!Attributes.__contains__($.self,$.key)){throw _b_.KeyError.$factory($.key)}
+if($.self.elt instanceof SVGElement){$.self.elt.removeAttributeNS(null,$.key)
+return _b_.None}else if(typeof $.self.elt.hasAttribute=="function"){$.self.elt.removeAttribute($.key)
+return _b_.None}}
+Attributes.__getitem__=function(){var $=$B.args("__getitem__",2,{self: null,key:null},["self","key"],arguments,{},null,null)
+if($.self.elt instanceof SVGElement &&
+$.self.elt.hasAttributeNS(null,$.key)){return $.self.getAttributeNS(null,$.key)}else if(typeof $.self.elt.hasAttribute=="function" &&
+$.self.elt.hasAttribute($.key)){return $.self.elt.getAttribute($.key)}
+throw _b_.KeyError.$factory($.key)}
+Attributes.__iter__=function(self){self.$counter=0
+var attrs=self.elt.attributes,items=[]
+for(var i=0;i < attrs.length;i++){items.push([attrs[i].name,attrs[i].value])}
+self.$items=items
+return self}
+Attributes.__next__=function(){var $=$B.args("__next__",1,{self: null},["self"],arguments,{},null,null)
+if($.self.$counter < $.self.$items.length){var res=$.self.$items[$.self.$counter]
+$.self.$counter++
+return res}else{throw _b_.StopIteration.$factory("")}}
+Attributes.__setitem__=function(){var $=$B.args("__setitem__",3,{self: null,key:null,value: null},["self","key","value"],arguments,{},null,null)
+if($.self.elt instanceof SVGElement &&
+typeof $.self.elt.setAttributeNS=="function"){$.self.setAttributeNS(null,$.key,$value)
+return _b_.None}else if(typeof $.self.elt.setAttribute=="function"){$.self.elt.setAttribute($.key,$.value)
+return _b_.None}
+throw _b_.TypeError.$factory("Can't set attributes on element")}
+Attributes.get=function(){var $=$B.args("get",3,{self: null,key:null,deflt: null},["self","key","deflt"],arguments,{deflt:_b_.None},null,null)
+try{return Attributes.__getitem__($.self,$.key)}catch(err){if(err.__class__===_b_.KeyError){return $B.deflt}else{throw err}}}
+$B.set_func_names(Attributes,"<dom>")
 var DOMEvent=$B.DOMEvent={__class__: _b_.type,__mro__:[object],__name__: "DOMEvent"}
 DOMEvent.__new__=function(cls,evt_name){var ev=new Event(evt_name)
 ev.__class__=DOMEvent
@@ -10911,6 +10942,7 @@ $B.$DOMEvent=$DOMEvent=function(ev){ev.__class__=DOMEvent
 if(ev.preventDefault===undefined){ev.preventDefault=function(){ev.returnValue=false}}
 if(ev.stopPropagation===undefined){ev.stopPropagation=function(){ev.cancelBubble=true}}
 return ev}
+$B.set_func_names(DOMEvent,"<dom>")
 var Clipboard={__class__: _b_.type,__name__: "Clipboard"}
 Clipboard.__getitem__=function(self,name){return self.data.getData(name)}
 Clipboard.__mro__=[object]
@@ -11009,7 +11041,9 @@ for(var attr in DOMNode){if(attr.charAt(0)!="$" && res.indexOf(attr)==-1){res.pu
 return res}
 DOMNode.__eq__=function(self,other){return self.elt==other.elt}
 DOMNode.__getattribute__=function(self,attr){if(attr.substr(0,2)=="$$"){attr=attr.substr(2)}
-switch(attr){case "class_name":
+switch(attr){case "attrs":
+return Attributes.$factory(self.elt)
+case "class_name":
 case "html":
 case "id":
 case "parent":
@@ -11047,15 +11081,17 @@ break}
 if(attr=="select" && self.elt.nodeType==1 &&
 ["INPUT","TEXTAREA"].indexOf(self.elt.tagName.toUpperCase())> -1){return function(selector){if(selector===undefined){self.elt.select();return _b_.None}
 return DOMNode.select(self,selector)}}
-var res1=self.elt[attr]
-if(res1===undefined && $B.aliased_names[attr]){res1=self.elt["$$" + attr1]}
+var attribute,property
 if(self.elt instanceof SVGElement &&
-typeof self.elt.getAttributeNS=="function"){var res2=self.elt.getAttributeNS(null,attr)
-if((! res2)&& $B.aliased_names[attr]){res2=self.elt.getAttributeNS(null,"$$" + attr)}}else if(typeof self.elt.getAttribute=="function"){var res2=self.elt.getAttribute(attr)
-if((!res2)&& $B.aliased_names[attr]){res2=self.elt.getAttribute("$$" + attr)}}
-if((! res2)&& res1===undefined){return object.__getattribute__(self,attr)}
-if(res1===undefined){return res2}
-var res=res1
+typeof self.elt.getAttributeNS=="function"){if(self.elt.hasAttributeNS(null,attr)){attribute=self.elt.getAttributeNS(null,attr)}else if($B.aliased_names[attr]&&
+self.has.getAttributeNS(null,"$$" + attr)){attribute=self.elt.getAttributeNS(null,"$$" + attr)}}else if(typeof self.elt.getAttribute=="function"){if(self.elt.hasAttribute(attr)){attribute=self.elt.getAttribute(attr)}else if($B.aliased_names[attr]&&
+self.elt.hasAttribute("$$" + attr)){attribute=self.elt.getAttribute("$$" + attr)}}
+property=self.elt[attr]
+if(property===undefined && $B.aliased_names[attr]){property=self.elt["$$" + attr1]}
+if(property===undefined){if(!!attribute){
+return attribute}else{
+return object.__getattribute__(self,attr)}}
+var res=property
 if(res !==undefined){if(res===null){return _b_.None}
 if(typeof res==="function"){var func=(function(f,elt){return function(){var args=[],pos=0
 for(var i=0;i < arguments.length;i++){var arg=arguments[i]
