@@ -189,7 +189,7 @@
                                 // option.selected = false sets it to true :-)
                                 try{
                                     arg = arg.replace('_', '-')
-                                    $B.DOMNode.__setattr__(self, arg, value)
+                                    self.elt.setAttribute(arg, value)
                                 }catch(err){
                                     throw _b_.ValueError.$factory(
                                         "can't set attribute " + arg)

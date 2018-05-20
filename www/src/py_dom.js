@@ -572,63 +572,46 @@ DOMNode.__getattribute__ = function(self, attr){
             break
     }
 
-    var attr1 = attr
-    if(!(self.elt instanceof SVGElement)){attr1 = attr1.toLowerCase()}
-
-    if(self.elt.getAttribute !== undefined){
-
-        res = self.elt.getAttribute(attr1)
-        // IE returns the properties of a DOMNode (eg parentElement)
-        // as "attribute", so we must check that this[attr] is not
-        // defined
-        if(res !== undefined && res !== null && self.elt[attr] === undefined){
-            // now we're sure it's an attribute
-            return res
-        }
-        // try replacing "_" by "-"
-        var attr2 = attr1.replace(/_/g, "-")
-        if(attr2 != attr){
-            res = self.elt.getAttribute(attr2)
-            if(res !== undefined && res !== null &&
-                    self.elt[attr] === undefined){
-                // now we're sure it's an attribute
-                return res
-            }
-        }
-    }
-
-    if(self.elt.getAttributeNS !== undefined){
-        res = self.elt.getAttributeNS(null, attr)
-        // If attribute is not set, modern browsers return undefined or null
-        // but old versions of Android browser return the empty string !!!
-        if(res !== undefined && res !== null && res != "" &&
-                self.elt[attr] === undefined){
-            // now we're sure it's an attribute
-            return res
-        }
-    }
-
-    var res = self.elt[attr]
-    
-    // looking for attribute. If the attribute is in the forbidden
-    // arena ... look for the aliased version
-    if(res === undefined && $B.aliased_names[attr]){
-        attr = "$$" + attr
-        res = self.elt[attr]
-    }
-
+    // Special case for attribute "select" of INPUT or TEXTAREA tags :
+    // they have a "select" methods ; element.select() selects the
+    // element text content.
+    // Return a function that, if called without arguments, uses this
+    // method ; otherwise, uses DOMNode.select
     if(attr == "select" && self.elt.nodeType == 1 &&
-            ["INPUT", "TEXTAREA"].indexOf(self.elt.tagName.toUpperCase()) > -1 ){
-        // Special case for attribute "select" of INPUT or TEXTAREA tags :
-        // they have a "select" methods ; element.select() selects the
-        // element text content.
-        // Return a function that, if called without arguments, uses this
-        // method ; otherwise, uses DOMNode.select
+            ["INPUT", "TEXTAREA"].indexOf(self.elt.tagName.toUpperCase()) > -1){
         return function(selector){
-            if(selector === undefined){self.elet.select(); return _b_.None}
+            if(selector === undefined){self.elt.select(); return _b_.None}
             return DOMNode.select(self, selector)
         }
     }
+
+    // Looking for attribute. If the attribute is in the forbidden
+    // arena ... look for the aliased version
+    var res1 = self.elt[attr]
+    if(res1 === undefined && $B.aliased_names[attr]){
+        res1 = self.elt["$$" + attr1]
+    }
+
+    if(self.elt instanceof SVGElement &&
+            typeof self.elt.getAttributeNS == "function"){
+        var res2 = self.elt.getAttributeNS(null, attr)
+        if((! res2) && $B.aliased_names[attr]){
+            res2 = self.elt.getAttributeNS(null, "$$" + attr)
+        }
+    }else if(typeof self.elt.getAttribute == "function"){
+        var res2 = self.elt.getAttribute(attr)
+        if((!res2) && $B.aliased_names[attr]){
+            res2 = self.elt.getAttribute("$$" + attr)
+        }
+    }
+
+    if((! res2) && res1 === undefined){
+        return object.__getattribute__(self, attr)
+    }
+
+    if(res1 === undefined){return res2}
+
+    var res = res1
 
     if(res !== undefined){
         if(res === null){return _b_.None}
@@ -816,7 +799,7 @@ DOMNode.__str__ = DOMNode.__repr__ = function(self){
 
 DOMNode.__setattr__ = function(self, attr, value){
 
-   if(attr.substr(0,2) == "on"){ // event
+    if(attr.substr(0,2) == "on"){ // event
         if(!$B.$bool(value)){ // remove all callbacks attached to event
             DOMNode.unbind(self, attr.substr(2))
         }else{
@@ -839,59 +822,7 @@ DOMNode.__setattr__ = function(self, attr, value){
         if(DOMNode["set_" + attr] !== undefined) {
           return DOMNode["set_" + attr](self, value)
         }
-        // Setting an attribute to an instance of DOMNode can mean 2
-        // different things:
-        // - setting an attribute to the DOM element, eg elt.href = ...
-        //   sets <A href="...">
-        // - setting an arbitrary attribute to the Python object
-        //
-        // The first option is used if the DOM element supports getAttribute
-        // (or getAttributeNS for SVG elements), and if this method applied to
-        // the attribute returns the same value.
-        // Otherwise, the second option is used.
 
-        if(self.elt[attr] !== undefined){self.elt[attr] = value; return}
-
-        // Replaces _ by - to support setting attributes that have a -
-        var attr1 = attr.replace("_", "-")
-
-        // Attributes are case-sensitive for SVG elements and case-insensitive
-        // for the other elements
-
-        if(!(self.elt instanceof SVGElement)){
-            attr = attr.toLowerCase()
-            attr1 = attr1.toLowerCase()
-        }
-
-        if(self.elt instanceof SVGElement &&
-                self.elt.getAttributeNS(null, attr1) !== null){
-            self.elt.setAttributeNS(null, attr1, value)
-            return
-        }
-
-        // Attributes of other elements are case-insensitive
-        attr1 = attr1.toLowerCase()
-
-        if(typeof self.elt.getAttribute == "function" &&
-                typeof self.elt.setAttribute == "function"){
-
-            if(typeof value == "string"){
-                try{
-                    self.elt.setAttribute(attr1, value)
-                }catch(err){
-                    // happens for instance if attr starts with _ because
-                    // in this case, attr1 starts with "-" and it is an
-                    // invalid 1st arg for setAttribute
-                    self.elt[attr] = value
-                    return _b_.None
-                }
-            }
-            self.elt[attr] = value
-            return _b_.None
-        }
-
-        // If setAttribute doesn't work, ie subsequent getAttribute doesn't
-        // return the same value, set key/value on the DOMNode instance
         self.elt[attr] = value
         return _b_.None
     }

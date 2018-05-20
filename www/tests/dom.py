@@ -1,4 +1,4 @@
-from browser import window, document, html
+from browser import window, document, html, svg
 
 assert window.empty_list() == []
 assert window.list1() == [1, 2, 'a', ['b']]
@@ -31,11 +31,41 @@ assert y.mybool == False
 # test setting a callback function
 f_called = False
 def f(*args, **kwargs):
-	global f_called
-	f_called = True
+    global f_called
+    f_called = True
 
 element = document.getElementById('dom-test-element-id')
 # test passing an additional argument after the callback f
 element.addEventListener('click', f, True)
 element.click()
 assert f_called
+
+# issue 829
+# HTML attributes are case-insensitive
+class A(html.DIV):
+    def __init__(self):
+        self.uV = 5
+        self.Xyz = "mystring"
+        self.zd = {"a": 3}
+
+p = A()
+assert not hasattr(p, "XYZ")
+assert p.Xyz == "mystring"
+assert p.uV == 5
+assert not hasattr(p, "uv")
+assert p.zd == {"a": 3}
+
+# SVG attributes are case-sensitive
+class B(svg.circle):
+    def __init__(self):
+        self.svg_uV = 6
+        self.Abc = "anotherstring"
+
+q = B()
+assert q.svg_uV == 6
+assert q.Abc == "anotherstring"
+try:
+    print('q.abc', q.abc)
+    raise Exception("should have raised AttributeError")
+except AttributeError:
+    pass

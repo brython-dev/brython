@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.5.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-05-18 08:40:25.552411"
-__BRYTHON__.timestamp=1526625625552
+__BRYTHON__.compiled_date="2018-05-20 09:58:51.111459"
+__BRYTHON__.timestamp=1526803131111
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -1825,6 +1825,7 @@ var res=ns0 + '["' + val + '"] !== undefined ? '
 res +=ns0 + '["' + val + '"] : '
 this.result="(" + res + ns1 + '["' + val + '"])'
 return this.result}}}
+if(val=="a"){console.log(val,"found",found)}
 var scope=found[0]
 this.found=scope.binding[val]
 var scope_ns='$locals_' + scope.id.replace(/\./g,'_')
@@ -4740,6 +4741,18 @@ var init_func=$B.$getattr(cls,"__init__")
 if(init_func===object.__init__){if(args.length > 0){throw _b_.TypeError.$factory("object() takes no parameters")}}
 return{__class__ : cls}}
 object.__ne__=function(self,other){return ! $B.rich_comp("__eq__",self,other)}
+object.__reduce__=function(self){function _reconstructor(){console.log("reconstructor args",arguments)
+args=[]
+var cls=arguments[0],obj=$B.$call(cls).apply(null,args)
+return obj}
+var res=[_reconstructor]
+res.push(_b_.tuple.$factory([self.__class__].
+concat(self.__class__.__mro__)))
+var d=_b_.dict.$factory()
+for(var attr in self){d.$string_dict[attr]=self[attr]}
+res.push(d)
+console.log('reduce',res)
+return _b_.tuple.$factory(res)}
 object.__repr__=function(self){if(self===object){return "<class 'object'>"}
 if(self.__class__===_b_.type){return "<class '" + self.__name__ + "'>"}
 if(self.__class__.__module__ !==undefined){return "<" + self.__class__.__module__ + "." +
@@ -5101,6 +5114,7 @@ if(search_ids.indexOf(frame[2])> -1 &&
 frame[3][name]!==undefined){return frame[3][name]}}
 for(var i=0;i < search_ids.length;i++){var search_id=search_ids[i]
 if($B.imported[search_id]&& $B.imported[search_id][name]){return $B.imported[search_id][name]}}
+console.log('name error',name,search_ids)
 throw _b_.NameError.$factory("name '" + $B.from_alias(name)+
 "' is not defined")}
 $B.$local_search=function(name){
@@ -7746,7 +7760,7 @@ return float.$factory(Math.floor(self / other))}
 if(hasattr(other,"__rfloordiv__")){return getattr(other,"__rfloordiv__")(self)}
 $err("//",other)}
 float.fromhex=function(arg){
-if(! isinstance(arg,str)){throw _b_.ValueError.$factory("argument must be a string")}
+if(! isinstance(arg,_b_.str)){throw _b_.ValueError.$factory("argument must be a string")}
 var value=arg.trim()
 switch(value.toLowerCase()){case "+inf":
 case "inf":
@@ -7775,7 +7789,7 @@ return new Number(_sign * _sum * Math.pow(2,parseInt(_exponent.substring(1))))}
 float.__getformat__=function(arg){if(arg=="double" ||arg=="float"){return "IEEE, little-endian"}
 throw _b_.ValueError.$factory("__getformat__() argument 1 must be " +
 "'double' or 'float'")}
-function preformat(self,fmt){if(fmt.empty){return str.$factory(self)}
+function preformat(self,fmt){if(fmt.empty){return _b_.str.$factory(self)}
 if(fmt.type && 'eEfFgGn%'.indexOf(fmt.type)==-1){throw _b_.ValueError.$factory("Unknown format code '" + fmt.type +
 "' for object of type 'float'")}
 if(isNaN(self)){if(fmt.type=="f" ||fmt.type=="g"){return "nan"}
@@ -11030,27 +11044,18 @@ break
 case "$$location":
 attr="location"
 break}
-var attr1=attr
-if(!(self.elt instanceof SVGElement)){attr1=attr1.toLowerCase()}
-if(self.elt.getAttribute !==undefined){res=self.elt.getAttribute(attr1)
-if(res !==undefined && res !==null && self.elt[attr]===undefined){
-return res}
-var attr2=attr1.replace(/_/g,"-")
-if(attr2 !=attr){res=self.elt.getAttribute(attr2)
-if(res !==undefined && res !==null &&
-self.elt[attr]===undefined){
-return res}}}
-if(self.elt.getAttributeNS !==undefined){res=self.elt.getAttributeNS(null,attr)
-if(res !==undefined && res !==null && res !="" &&
-self.elt[attr]===undefined){
-return res}}
-var res=self.elt[attr]
-if(res===undefined && $B.aliased_names[attr]){attr="$$" + attr
-res=self.elt[attr]}
 if(attr=="select" && self.elt.nodeType==1 &&
-["INPUT","TEXTAREA"].indexOf(self.elt.tagName.toUpperCase())> -1 ){
-return function(selector){if(selector===undefined){self.elet.select();return _b_.None}
+["INPUT","TEXTAREA"].indexOf(self.elt.tagName.toUpperCase())> -1){return function(selector){if(selector===undefined){self.elt.select();return _b_.None}
 return DOMNode.select(self,selector)}}
+var res1=self.elt[attr]
+if(res1===undefined && $B.aliased_names[attr]){res1=self.elt["$$" + attr1]}
+if(self.elt instanceof SVGElement &&
+typeof self.elt.getAttributeNS=="function"){var res2=self.elt.getAttributeNS(null,attr)
+if((! res2)&& $B.aliased_names[attr]){res2=self.elt.getAttributeNS(null,"$$" + attr)}}else if(typeof self.elt.getAttribute=="function"){var res2=self.elt.getAttribute(attr)
+if((!res2)&& $B.aliased_names[attr]){res2=self.elt.getAttribute("$$" + attr)}}
+if((! res2)&& res1===undefined){return object.__getattribute__(self,attr)}
+if(res1===undefined){return res2}
+var res=res1
 if(res !==undefined){if(res===null){return _b_.None}
 if(typeof res==="function"){var func=(function(f,elt){return function(){var args=[],pos=0
 for(var i=0;i < arguments.length;i++){var arg=arguments[i]
@@ -11139,20 +11144,6 @@ case "height":
 if(self.elt.tagName=="CANVAS"){self.elt.style[attr]=value}else if(self.elt.nodeType==1){self.elt.style[attr]=value + "px"}
 break}
 if(DOMNode["set_" + attr]!==undefined){return DOMNode["set_" + attr](self,value)}
-if(self.elt[attr]!==undefined){self.elt[attr]=value;return}
-var attr1=attr.replace("_","-")
-if(!(self.elt instanceof SVGElement)){attr=attr.toLowerCase()
-attr1=attr1.toLowerCase()}
-if(self.elt instanceof SVGElement &&
-self.elt.getAttributeNS(null,attr1)!==null){self.elt.setAttributeNS(null,attr1,value)
-return}
-attr1=attr1.toLowerCase()
-if(typeof self.elt.getAttribute=="function" &&
-typeof self.elt.setAttribute=="function"){if(typeof value=="string"){try{self.elt.setAttribute(attr1,value)}catch(err){
-self.elt[attr]=value
-return _b_.None}}
-self.elt[attr]=value
-return _b_.None}
 self.elt[attr]=value
 return _b_.None}}
 DOMNode.__setitem__=function(self,key,value){self.elt.childNodes[key]=value}
@@ -11732,7 +11723,7 @@ var js='$B.DOMNode.bind(self,"' +
 arg.toLowerCase().substr(2)
 eval(js + '",function(){' + value + '})')}else if(arg.toLowerCase()=="style"){$B.DOMNode.set_style(self,value)}else{if(value !==false){
 try{arg=arg.replace('_','-')
-$B.DOMNode.__setattr__(self,arg,value)}catch(err){throw _b_.ValueError.$factory(
+self.elt.setAttribute(arg,value)}catch(err){throw _b_.ValueError.$factory(
 "can't set attribute " + arg)}}}}}
 dict.__mro__=[$B.DOMNode,$B.builtins.object]
 dict.__new__=function(cls){

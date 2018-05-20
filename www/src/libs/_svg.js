@@ -28,8 +28,8 @@ function makeTagDict(tagName){
         if(self.elt[attr] !== null && self.elt[attr] !== undefined){
             return self.elt[attr]
         }
-        throw _b_.AttributeError.$factory("SVGElement has no attribute " + attr)
-        //return $B.DOMNode.__getattribute__(self, attr)
+        //throw _b_.AttributeError.$factory("SVGElement has no attribute " + attr)
+        return $B.DOMNode.__getattribute__(self, attr)
     }
 
     dict.__init__ = function(){
@@ -89,15 +89,6 @@ function makeTagDict(tagName){
         res.__class__ = cls
         return res
     }
-
-    dict.__setattr__ = function(self, key, value){
-        if(typeof value == "string"){
-            self.elt.setAttributeNS(null, key, value)
-        }else{
-            self.elt[key] = value
-        }
-        return _b_.None
-}
 
     dict.$factory = function(){
         var res = $B.DOMNode.$factory(
