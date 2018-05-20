@@ -15,23 +15,6 @@ function makeTagDict(tagName){
     // return the dictionary for the class associated with tagName
     var dict = $B.make_class(tagName)
 
-    dict.__getattribute__ = function(self, attr){
-        if(self.elt.hasAttributeNS(null, attr)){
-            return self.elt.getAttributeNS(null, attr)
-        }
-        if(dict[attr] !== undefined){
-            return function(){
-                var args = [self].concat(Array.prototype.slice.call(arguments))
-                return dict[attr].apply(null, args)
-            }
-        }
-        if(self.elt[attr] !== null && self.elt[attr] !== undefined){
-            return self.elt[attr]
-        }
-        //throw _b_.AttributeError.$factory("SVGElement has no attribute " + attr)
-        return $B.DOMNode.__getattribute__(self, attr)
-    }
-
     dict.__init__ = function(){
         var $ns = $B.args('__init__', 1, {self: null}, ['self'],
             arguments, {}, 'args', 'kw'),

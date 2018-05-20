@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.5.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-05-20 16:44:18.937614"
-__BRYTHON__.timestamp=1526827458937
+__BRYTHON__.compiled_date="2018-05-20 22:23:03.094268"
+__BRYTHON__.timestamp=1526847783094
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -9568,7 +9568,7 @@ if(step > 0){if(stop <=start){return ""}
 for(var i=start;i < stop;i +=step){res +=self.charAt(i)}}else{if(stop >=start){return ''}
 for(var i=start;i > stop;i +=step){res +=self.charAt(i)}}
 return res}
-if(isinstance(arg,bool)){return self.__getitem__(_b_.int.$factory(arg))}
+if(isinstance(arg,_b_.bool)){return self.__getitem__(_b_.int.$factory(arg))}
 throw _b_.TypeError.$factory("string indices must be integers")}
 str.__hash__=function(self){if(self===undefined){return str.__hashvalue__ ||$B.$py_next_hash-- }
 var hash=1
@@ -10886,7 +10886,7 @@ return _b_.None}else if(typeof $.self.elt.hasAttribute=="function"){$.self.elt.r
 return _b_.None}}
 Attributes.__getitem__=function(){var $=$B.args("__getitem__",2,{self: null,key:null},["self","key"],arguments,{},null,null)
 if($.self.elt instanceof SVGElement &&
-$.self.elt.hasAttributeNS(null,$.key)){return $.self.getAttributeNS(null,$.key)}else if(typeof $.self.elt.hasAttribute=="function" &&
+$.self.elt.hasAttributeNS(null,$.key)){return $.self.elt.getAttributeNS(null,$.key)}else if(typeof $.self.elt.hasAttribute=="function" &&
 $.self.elt.hasAttribute($.key)){return $.self.elt.getAttribute($.key)}
 throw _b_.KeyError.$factory($.key)}
 Attributes.__iter__=function(self){self.$counter=0
@@ -10900,7 +10900,7 @@ $.self.$counter++
 return res}else{throw _b_.StopIteration.$factory("")}}
 Attributes.__setitem__=function(){var $=$B.args("__setitem__",3,{self: null,key:null,value: null},["self","key","value"],arguments,{},null,null)
 if($.self.elt instanceof SVGElement &&
-typeof $.self.elt.setAttributeNS=="function"){$.self.setAttributeNS(null,$.key,$value)
+typeof $.self.elt.setAttributeNS=="function"){$.self.elt.setAttributeNS(null,$.key,$.value)
 return _b_.None}else if(typeof $.self.elt.setAttribute=="function"){$.self.elt.setAttribute($.key,$.value)
 return _b_.None}
 throw _b_.TypeError.$factory("Can't set attributes on element")}
@@ -11081,16 +11081,9 @@ break}
 if(attr=="select" && self.elt.nodeType==1 &&
 ["INPUT","TEXTAREA"].indexOf(self.elt.tagName.toUpperCase())> -1){return function(selector){if(selector===undefined){self.elt.select();return _b_.None}
 return DOMNode.select(self,selector)}}
-var attribute,property
-if(self.elt instanceof SVGElement &&
-typeof self.elt.getAttributeNS=="function"){if(self.elt.hasAttributeNS(null,attr)){attribute=self.elt.getAttributeNS(null,attr)}else if($B.aliased_names[attr]&&
-self.has.getAttributeNS(null,"$$" + attr)){attribute=self.elt.getAttributeNS(null,"$$" + attr)}}else if(typeof self.elt.getAttribute=="function"){if(self.elt.hasAttribute(attr)){attribute=self.elt.getAttribute(attr)}else if($B.aliased_names[attr]&&
-self.elt.hasAttribute("$$" + attr)){attribute=self.elt.getAttribute("$$" + attr)}}
-property=self.elt[attr]
-if(property===undefined && $B.aliased_names[attr]){property=self.elt["$$" + attr1]}
-if(property===undefined){if(!!attribute){
-return attribute}else{
-return object.__getattribute__(self,attr)}}
+var property=self.elt[attr]
+if(property===undefined && $B.aliased_names[attr]){property=self.elt["$$" + attr]}
+if(property===undefined){return object.__getattribute__(self,attr)}
 var res=property
 if(res !==undefined){if(res===null){return _b_.None}
 if(typeof res==="function"){var func=(function(f,elt){return function(){var args=[],pos=0

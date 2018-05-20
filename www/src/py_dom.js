@@ -165,7 +165,7 @@ Attributes.__getitem__ = function(){
         ["self", "key"], arguments, {}, null, null)
     if($.self.elt instanceof SVGElement &&
             $.self.elt.hasAttributeNS(null, $.key)){
-        return $.self.getAttributeNS(null, $.key)
+        return $.self.elt.getAttributeNS(null, $.key)
     }else if(typeof $.self.elt.hasAttribute == "function" &&
             $.self.elt.hasAttribute($.key)){
         return $.self.elt.getAttribute($.key)
@@ -202,7 +202,7 @@ Attributes.__setitem__ = function(){
         ["self", "key", "value"], arguments, {}, null, null)
     if($.self.elt instanceof SVGElement &&
             typeof $.self.elt.setAttributeNS == "function"){
-        $.self.setAttributeNS(null, $.key, $value)
+        $.self.elt.setAttributeNS(null, $.key, $.value)
         return _b_.None
     }else if(typeof $.self.elt.setAttribute == "function"){
         $.self.elt.setAttribute($.key, $.value)
@@ -690,41 +690,15 @@ DOMNode.__getattribute__ = function(self, attr){
         }
     }
 
-    var attribute,
-        property
-    // Search in the DOM attributes
-    if(self.elt instanceof SVGElement &&
-            typeof self.elt.getAttributeNS == "function"){
-        if(self.elt.hasAttributeNS(null, attr)){
-            attribute = self.elt.getAttributeNS(null, attr)
-        }else if($B.aliased_names[attr] &&
-                self.has.getAttributeNS(null, "$$" + attr)){
-            attribute = self.elt.getAttributeNS(null, "$$" + attr)
-        }
-    }else if(typeof self.elt.getAttribute == "function"){
-        if(self.elt.hasAttribute(attr)){
-            attribute = self.elt.getAttribute(attr)
-        }else if($B.aliased_names[attr] &&
-                self.elt.hasAttribute("$$" + attr)){
-            attribute = self.elt.getAttribute("$$" + attr)
-        }
-    }
-
     // Looking for property. If the attribute is in the forbidden
     // arena ... look for the aliased version
-    property = self.elt[attr]
+    var property = self.elt[attr]
     if(property === undefined && $B.aliased_names[attr]){
-        property = self.elt["$$" + attr1]
+        property = self.elt["$$" + attr]
     }
 
     if(property === undefined){
-        if(!!attribute){
-            // If attribute is set to a usable value, return it
-            return attribute
-        }else{
-            // Default
-            return object.__getattribute__(self, attr)
-        }
+        return object.__getattribute__(self, attr)
     }
 
     var res = property
