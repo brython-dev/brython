@@ -1586,6 +1586,19 @@ try:
 except TypeError:
     pass
 
+# Issue 753
+# This array trips over a bug in the sorting library that we use:
+#    see https://github.com/mziccard/node-timsort/issues/14
+a = [1.0, 1.0, 1.0, 1.0, 1.0, 0.5, 1.0, 0.5, 0.5, 1.0,
+     0.5, 0.5, 0.5, 1.0, 0.5, 0.5, 0.5, 0.5, 1.0, 0.5,
+     0.5, 0.5, 0.5, 0.5, 1.0, 0.5, 1.0, 0.5, 0.5, 0.5,
+     0.6, 1.0]
+
+a.sort()
+for i in range(len(a) - 1):
+    assert a[i] <= a[i+1]
+
+
 # issue 755
 assert '{}'.format(int) == "<class 'int'>"
 
@@ -1808,17 +1821,14 @@ obj_dict['target_key'](x='hello')
 
 assert global_x == 'hello'
 
-# Issue 753
-# This array trips over a bug in the sorting library that we use:
-#    see https://github.com/mziccard/node-timsort/issues/14
-a = [1.0, 1.0, 1.0, 1.0, 1.0, 0.5, 1.0, 0.5, 0.5, 1.0,
-     0.5, 0.5, 0.5, 1.0, 0.5, 0.5, 0.5, 0.5, 1.0, 0.5,
-     0.5, 0.5, 0.5, 0.5, 1.0, 0.5, 1.0, 0.5, 0.5, 0.5,
-     0.6, 1.0]
+# issue 823
+x = 5
+s = "Distance {}km".format(x)
+assert s == "Distance 5km"
 
-a.sort()
-for i in range(len(a) - 1):
-    assert a[i] <= a[i+1]
+x = 5.1
+s = "Distance {}km".format(x)
+assert s == "Distance 5.1km"
 
 
 
