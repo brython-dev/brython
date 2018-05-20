@@ -108,7 +108,7 @@ float.__floordiv__ = function(self, other){
 float.fromhex = function(arg){
    // [sign] ['0x'] integer ['.' fraction] ['p' exponent]
 
-   if(! isinstance(arg, str)){
+   if(! isinstance(arg, _b_.str)){
       throw _b_.ValueError.$factory("argument must be a string")
    }
 
@@ -165,7 +165,7 @@ float.__getformat__ = function(arg){
 }
 
 function preformat(self, fmt){
-    if(fmt.empty){return str.$factory(self)}
+    if(fmt.empty){return _b_.str.$factory(self)}
     if(fmt.type && 'eEfFgGn%'.indexOf(fmt.type) == -1){
         throw _b_.ValueError.$factory("Unknown format code '" + fmt.type +
             "' for object of type 'float'")
