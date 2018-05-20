@@ -326,7 +326,6 @@ $B.$global_search = function(name, search_ids){
             return $B.imported[search_id][name]
         }
     }
-
     throw _b_.NameError.$factory("name '" + $B.from_alias(name) +
         "' is not defined")
 }

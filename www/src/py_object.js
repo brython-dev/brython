@@ -335,6 +335,27 @@ object.__ne__ = function(self, other){
     return ! $B.rich_comp("__eq__", self, other)
 }
 
+object.__reduce__ = function(self){
+    function _reconstructor(){
+        console.log("reconstructor args", arguments)
+        args = []
+        var cls = arguments[0],
+            obj = $B.$call(cls).apply(null, args)
+
+        return obj
+    }
+    var res = [_reconstructor]
+    res.push(_b_.tuple.$factory([self.__class__].
+        concat(self.__class__.__mro__)))
+    var d = _b_.dict.$factory()
+    for(var attr in self){
+        d.$string_dict[attr] = self[attr]
+    }
+    res.push(d)
+    console.log('reduce', res)
+    return _b_.tuple.$factory(res)
+}
+
 object.__repr__ = function(self){
     if(self === object) {return "<class 'object'>"}
     if(self.__class__ === _b_.type) {

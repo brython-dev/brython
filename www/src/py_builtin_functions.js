@@ -1091,7 +1091,7 @@ function isinstance(obj,arg){
     }
 
     // Search __instancecheck__ on arg
- 
+
     var hook = getattr(arg, '__instancecheck__', _b_.None)
     if(hook!==_b_.None){
         return hook(obj)
