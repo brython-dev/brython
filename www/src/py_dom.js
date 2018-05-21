@@ -777,22 +777,20 @@ DOMNode.__getitem__ = function(self, key){
             }
         }
     }else{
-        if(typeof self.elt.length == "number"){
-            if((typeof key == "number" || typeof key == "boolean") &&
-                typeof self.elt.item == "function"){
-                    var key_to_int = _b_.int.$factory(key)
-                    if(key_to_int < 0){key_to_int += self.elt.length}
-                    var res = DOMNode.$factory(self.elt.item(key_to_int))
-                    if(res === undefined){throw _b_.KeyError.$factory(key)}
-                    return res
-            }else if(typeof key == "string" &&
-                     typeof self.elt.getNamedItem == "function"){
-                 var res = DOMNode.$factory(self.elt.getNamedItem(key))
-                 if(res === undefined){throw _b_.KeyError.$factory(key)}
-                 return res
-            }
+        if((typeof key == "number" || typeof key == "boolean") &&
+            typeof self.elt.item == "function"){
+                var key_to_int = _b_.int.$factory(key)
+                if(key_to_int < 0){key_to_int += self.elt.length}
+                var res = DOMNode.$factory(self.elt.item(key_to_int))
+                if(res === undefined){throw _b_.KeyError.$factory(key)}
+                return res
+        }else if(typeof key == "string" &&
+                 self.elt.attributes &&
+                 typeof self.elt.attributes.getNamedItem == "function"){
+             var attr = self.elt.attributes.getNamedItem(key)
+             if(!!attr){return attr.value}
+             throw _b_.KeyError.$factory(key)
         }
-        throw _b_.TypeError.$factory("DOMNode object is not subscriptable")
     }
 }
 
@@ -921,7 +919,17 @@ DOMNode.__setattr__ = function(self, attr, value){
 }
 
 DOMNode.__setitem__ = function(self, key, value){
-    self.elt.childNodes[key] = value
+    if(typeof key == "number"){
+        self.elt.childNodes[key] = value
+    }else if(typeof key == "string"){
+        if(self.elt.attributes){
+            if(self.elt instanceof SVGElement){
+                self.elt.setAttributeNS(null, key, value)
+            }else if(typeof self.elt.setAttribute == "function"){
+                self.elt.setAttribute(key, value)
+            }
+        }
+    }
 }
 
 DOMNode.abs_left = {
