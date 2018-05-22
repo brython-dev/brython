@@ -77,6 +77,8 @@ def flush():
     OUT_BUFFER = ''
 
 sys.stdout.write = sys.stderr.write = write
+sys.stdout.__len__ = sys.stderr.__len__ = lambda: len(OUT_BUFFER)
+
 history = []
 current = 0
 _status = "main"  # or "block" if typing inside a block
