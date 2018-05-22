@@ -172,6 +172,16 @@ function run_js(module_contents, path, _module){
     }
 
     if(_module !== undefined){
+        // Don't let module implementations set the value of these reserved attributes
+        delete $module.__cached__
+        delete $module.__class__
+        delete $module.__file__
+        delete $module.__loader__
+        delete $module.__name__
+        delete $module.__package__
+        delete $module.__path__
+        delete $module.__spec__
+
         // FIXME : This might not be efficient . Refactor js modules instead.
         // Overwrite original module object . Needed e.g. for reload()
         for(var attr in $module){_module[attr] = $module[attr]}

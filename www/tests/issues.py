@@ -1821,6 +1821,11 @@ for i in range(len(a) - 1):
     assert a[i] <= a[i+1]
 
 
+# Issue 838
+import sys
+import random
+assert type(random) == type(sys)
+
 
 # ==========================================
 # Finally, report that all tests have passed
