@@ -12,6 +12,7 @@ before_install:
   - wget -O qunit/qunit-1.18.0.css http://code.jquery.com/qunit/qunit-1.18.0.css
   - wget -O qunit/qunit-1.18.0.js  http://code.jquery.com/qunit/qunit-1.18.0.js
   - npm install testem
+  - ./node_modules/.bin/testem launchers
 
 before_script:
   - export DISPLAY=:99.0
@@ -21,6 +22,6 @@ before_script:
   # - export PATH=$PWD/travis_phantomjs/phantomjs-2.1.1-linux-x86_64/bin:$PATH
 
 script:
-  - ./node_modules/.bin/testem --skip PhantomJS -t www/tests/qunit/run_tests.html ci
+  - ./node_modules/.bin/testem --skip PhantomJS,Chromium -t www/tests/qunit/run_tests.html ci
   #- phantomjs phantomjs/examples/run-qunit.js www/tests/qunit/run_tests.html
 
