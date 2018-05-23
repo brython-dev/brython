@@ -56,12 +56,12 @@ def latin_1_encode(*args,**kw):
     pass
 
 def lookup(encoding):
-    """lookup(encoding) -> CodecInfo    
+    """lookup(encoding) -> CodecInfo
     Looks up a codec tuple in the Python codec registry and returns
     a CodecInfo object."""
 
     if encoding in ('utf-8', 'utf_8'):
-       from javascript import console
+       from browser import console
        console.log('encoding', encoding)
        import encodings.utf_8
        return encodings.utf_8.getregentry()

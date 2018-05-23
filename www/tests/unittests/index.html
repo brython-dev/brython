@@ -57,7 +57,7 @@ del document["msgbox"]
 sys.path.append(os.path.join(os.environ['PYTHONPATH'], "Lib", "test"))
 
 def flush(*args):
-    from javascript import console
+    from browser import console
     console.log(args)
 
 # a submodule of unittest expects the output object to have a flush function
