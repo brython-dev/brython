@@ -54,7 +54,10 @@ def reset_src_area():
     else:
         editor.value = 'for i in range(10):\n\tprint(i)'
 
+
 class cOutput:
+    encoding = 'utf-8'
+
     def __init__(self):
         self.cons = doc["console"]
         self.buf = ''
@@ -66,10 +69,14 @@ class cOutput:
         self.cons.value += self.buf
         self.buf = ''
 
+    def __len__(self):
+        return len(self.buf)
+
 if "console" in doc:
     cOut = cOutput()
     sys.stdout = cOut
     sys.stderr = cOut
+
 
 def to_str(xx):
     return str(xx)

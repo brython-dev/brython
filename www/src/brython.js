@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.5.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-05-20 22:23:03.094268"
-__BRYTHON__.timestamp=1526847783094
+__BRYTHON__.compiled_date="2018-05-23 13:07:46.696540"
+__BRYTHON__.timestamp=1527073666696
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -5973,7 +5973,8 @@ if(obj.__hashvalue__ !==undefined){return obj.__hashvalue__}
 if(isinstance(obj,_b_.int)){return obj.valueOf()}
 if(isinstance(obj,_b_.bool)){return _b_.int.$factory(obj)}
 if(obj.__class__===$B.$factory ||obj.$is_class ||
-obj.__class__===_b_.type){return obj.__hashvalue__=$B.$py_next_hash--}
+obj.__class__===_b_.type ||
+obj.__class__===$B.Function){return obj.__hashvalue__=$B.$py_next_hash--}
 if(obj.__hash__ !==undefined){return obj.__hashvalue__=obj.__hash__()}
 var hashfunc=getattr(obj,'__hash__',_b_.None)
 if(hashfunc==_b_.None){throw _b_.TypeError.$factory("unhashable type: '" +
@@ -11114,16 +11115,16 @@ if(typeof key=="string"){var res=self.elt.getElementById(key)
 if(res){return DOMNode.$factory(res)}
 throw KeyError.$factory(key)}else{try{var elts=self.elt.getElementsByTagName(key.__name__),res=[]
 for(var i=0;i < elts.length;i++){res.push(DOMNode.$factory(elts[i]))}
-return res}catch(err){throw KeyError.$factory(str.$factory(key))}}}else{if(typeof self.elt.length=="number"){if((typeof key=="number" ||typeof key=="boolean")&&
+return res}catch(err){throw KeyError.$factory(str.$factory(key))}}}else{if((typeof key=="number" ||typeof key=="boolean")&&
 typeof self.elt.item=="function"){var key_to_int=_b_.int.$factory(key)
 if(key_to_int < 0){key_to_int +=self.elt.length}
 var res=DOMNode.$factory(self.elt.item(key_to_int))
 if(res===undefined){throw _b_.KeyError.$factory(key)}
 return res}else if(typeof key=="string" &&
-typeof self.elt.getNamedItem=="function"){var res=DOMNode.$factory(self.elt.getNamedItem(key))
-if(res===undefined){throw _b_.KeyError.$factory(key)}
-return res}}
-throw _b_.TypeError.$factory("DOMNode object is not subscriptable")}}
+self.elt.attributes &&
+typeof self.elt.attributes.getNamedItem=="function"){var attr=self.elt.attributes.getNamedItem(key)
+if(!!attr){return attr.value}
+throw _b_.KeyError.$factory(key)}}}
 DOMNode.__iter__=function(self){
 if(self.elt.length !==undefined && typeof self.elt.item=="function"){var items=[]
 for(var i=0,len=self.elt.length;i < len;i++){items.push(DOMNode.$factory(self.elt.item(i)))}}else if(self.elt.childNodes !==undefined){var items=[]
@@ -11163,19 +11164,37 @@ return "<" + name + " object>"}
 var res="<DOMNode object type '"
 return res + $NodeTypes[self.elt.nodeType]+ "' name '" +
 self.elt.nodeName + "'>"}
-DOMNode.__setattr__=function(self,attr,value){if(attr.substr(0,2)=="on"){
+DOMNode.__setattr__=function(self,attr,value){
+if(attr.substr(0,2)=="on"){
 if(!$B.$bool(value)){
 DOMNode.unbind(self,attr.substr(2))}else{
 DOMNode.bind(self,attr.substr(2),value)}}else{switch(attr){case "left":
 case "top":
 case "width":
 case "height":
-if(self.elt.tagName=="CANVAS"){self.elt.style[attr]=value}else if(self.elt.nodeType==1){self.elt.style[attr]=value + "px"}
+if(self.elt.tagName=="CANVAS"){self.elt.style[attr]=value
+return _b_.None}else if(self.elt.nodeType==1){self.elt.style[attr]=value + "px"
+return _b_.None}
 break}
 if(DOMNode["set_" + attr]!==undefined){return DOMNode["set_" + attr](self,value)}
+function warn(msg){console.log(msg)
+var frame=$B.last($B.frames_stack)
+if($B.debug > 0){var info=frame[1].$line_info.split(",")
+console.log("module",info[1],"line",info[0])
+if($B.$py_src.hasOwnProperty(info[1])){var src=$B.$py_src[info[1]]
+console.log(src.split("\n")[parseInt(info[0])- 1])}}else{console.log("module",frame[2])}}
+var proto=Object.getPrototypeOf(self.elt),nb=0
+while(!!proto && proto !==Object.prototype && nb++ < 10){var descriptors=Object.getOwnPropertyDescriptors(proto)
+if(!!descriptors &&
+typeof descriptors.hasOwnProperty=="function"){if(descriptors.hasOwnProperty(attr)){if(!descriptors[attr].writable){warn("Warning: property '" + attr +
+"' is not writable. Use element.attrs['" +
+attr +"'] instead.")}
+break}}else{break}
+proto=Object.getPrototypeOf(proto)}
+if(self.elt.style && self.elt.style[attr]!==undefined){warn("Warning: '" + attr + "' is a property of element.style")}
 self.elt[attr]=value
 return _b_.None}}
-DOMNode.__setitem__=function(self,key,value){self.elt.childNodes[key]=value}
+DOMNode.__setitem__=function(self,key,value){if(typeof key=="number"){self.elt.childNodes[key]=value}else if(typeof key=="string"){if(self.elt.attributes){if(self.elt instanceof SVGElement){self.elt.setAttributeNS(null,key,value)}else if(typeof self.elt.setAttribute=="function"){self.elt.setAttribute(key,value)}}}}
 DOMNode.abs_left={__get__: function(self){return $getPosition(self.elt).left},__set__: function(){throw _b_.AttributeError.$factory("'DOMNode' objectattribute " +
 "'abs_left' is read-only")}}
 DOMNode.abs_top={__get__: function(self){return $getPosition(self.elt).top},__set__: function(){throw _b_.AttributeError.$factory("'DOMNode' objectattribute " +

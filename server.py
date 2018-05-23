@@ -138,6 +138,8 @@ class RequestHandler(CGIHTTPRequestHandler):
 
 server_address, handler = ('0.0.0.0', port), RequestHandler
 httpd = socketserver.ThreadingTCPServer(server_address, handler)
+httpd.server_name = "Brython built-in server"
+httpd.server_port = port
 print(__doc__)
 print(("Server running on port http://localhost:{}.".format(server_address[1])))
 print("Press CTRL+C to Quit.")
