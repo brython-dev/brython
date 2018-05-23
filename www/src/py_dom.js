@@ -886,6 +886,8 @@ DOMNode.__str__ = DOMNode.__repr__ = function(self){
 }
 
 DOMNode.__setattr__ = function(self, attr, value){
+    // Sets the *property* attr of the underlying element (not its
+    // *attribute*)
 
     if(attr.substr(0,2) == "on"){ // event
         if(!$B.$bool(value)){ // remove all callbacks attached to event
@@ -902,8 +904,10 @@ DOMNode.__setattr__ = function(self, attr, value){
             case "height":
                 if(self.elt.tagName == "CANVAS"){
                     self.elt.style[attr] = value
+                    return _b_.None
                 }else if(self.elt.nodeType == 1){
                     self.elt.style[attr] = value + "px"
+                    return _b_.None
                 }
                 break
         }
@@ -911,7 +915,49 @@ DOMNode.__setattr__ = function(self, attr, value){
           return DOMNode["set_" + attr](self, value)
         }
 
-        // Use "direct" attribute setting, not with setAttribute
+        function warn(msg){
+            console.log(msg)
+            var frame = $B.last($B.frames_stack)
+            if($B.debug > 0){
+                var info = frame[1].$line_info.split(",")
+                console.log("module", info[1], "line", info[0])
+                if($B.$py_src.hasOwnProperty(info[1])){
+                    var src = $B.$py_src[info[1]]
+                    console.log(src.split("\n")[parseInt(info[0]) - 1])
+                }
+            }else{
+                console.log("module", frame[2])
+            }
+        }
+
+        // Warns if attr is a descriptor of the element's prototype
+        // and it is not writable
+        var proto = Object.getPrototypeOf(self.elt),
+            nb = 0
+        while(!!proto && proto !== Object.prototype && nb++ < 10){
+            var descriptors = Object.getOwnPropertyDescriptors(proto)
+            if(!!descriptors &&
+                    typeof descriptors.hasOwnProperty == "function"){
+                if(descriptors.hasOwnProperty(attr)){
+                    if(!descriptors[attr].writable){
+                        warn("Warning: property '" + attr +
+                            "' is not writable. Use element.attrs['" +
+                            attr +"'] instead.")
+                    }
+                    break
+                }
+            }else{
+                break
+            }
+            proto = Object.getPrototypeOf(proto)
+        }
+
+        // Warns if attribute is a property of style
+        if(self.elt.style && self.elt.style[attr] !== undefined){
+            warn("Warning: '" + attr + "' is a property of element.style")
+        }
+
+        // Set the property
         self.elt[attr] = value
 
         return _b_.None
