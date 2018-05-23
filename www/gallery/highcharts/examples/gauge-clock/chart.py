@@ -1,8 +1,7 @@
 import datetime
 from browser import document, timer, window
-from javascript import JSConstructor
 
-b_highchart = JSConstructor(window.Highcharts.Chart)
+b_highchart = window.Highcharts.Chart.new
 
 class Now:
 
