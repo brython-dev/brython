@@ -71,7 +71,7 @@ def n_queens(queen_count):
 
 
 def test_n_queens(iterations):
-    from javascript import console
+    from browser import console
     # Warm-up runs.
     list(n_queens(8))
     list(n_queens(8))

@@ -24,11 +24,11 @@ class bookkeeping:
 
       self.add_brython_result(int((time.perf_counter() - t0) * 1000.0))
       src = src.replace('\r\n','\n')
-      
+
       self._timings[self._filename]['code'] = src
 
       def err_msg(*args):
-          from javascript import console
+          from browser import console
           console.log(args)
 
       #also run this for cpython via cgi-bin

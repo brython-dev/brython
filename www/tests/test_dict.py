@@ -60,5 +60,17 @@ assert window.test_null('python_none')
 # Test setdefault
 assert pyobj.setdefault('default') is None
 
+# Test that functions are hashable
+def f(): return 5
+def g(): return 6
+
+d = {
+    f: 1,
+    g: 2,
+}
+
+assert d[f] == 1
+assert d[g] == 2
+assert hash(f) != hash(g)
 
 print("passed all tests..")

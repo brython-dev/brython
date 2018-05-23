@@ -923,7 +923,8 @@ function hash(obj){
     if(isinstance(obj, _b_.int)){return obj.valueOf()}
     if(isinstance(obj, _b_.bool)){return _b_.int.$factory(obj)}
     if(obj.__class__ === $B.$factory || obj.$is_class ||
-            obj.__class__ === _b_.type){
+            obj.__class__ === _b_.type ||
+            obj.__class__ === $B.Function){
         return obj.__hashvalue__ = $B.$py_next_hash--
     }
     if(obj.__hash__ !== undefined) {

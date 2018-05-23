@@ -1,7 +1,6 @@
 import math
 
 from browser import document, window
-from javascript import JSObject
 
 bRaphael = window.Raphael
 
