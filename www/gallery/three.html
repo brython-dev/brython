@@ -9,15 +9,12 @@
         print('start ...')
         from browser import document as doc
         from browser import window
-        from javascript import JSObject,JSConstructor
         
         THREE = window.THREE
-        print(THREE)
 
         cameraC = THREE.PerspectiveCamera.new
         camera = cameraC( 75, 1, 1, 10000 )
         camera.position.z = 1000;
-        print('ok')
 
         sceneC = THREE.Scene.new
         scene = sceneC()
@@ -54,7 +51,7 @@
     </script>
 
 </head>
-<body onload="brython(2)">
+<body onload="brython(1)">
     <div id="test"></div>
 </body>
 </html>
