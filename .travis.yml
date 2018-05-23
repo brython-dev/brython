@@ -1,7 +1,9 @@
 language: javascript
 
 addons:
+    chrome: stable
     firefox: "59.0"
+    firefox: latest-beta
 
 cache:
   directories:
