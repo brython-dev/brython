@@ -878,10 +878,14 @@ $B.$getattr = function(obj, attr, _default){
     }
 
     try{
+        var ce = $B.current_exception
         var res = attr_func(obj, attr)
     }
     catch(err){
-        if(_default !== undefined){return _default}
+        if(_default !== undefined){
+            $B.current_exception = ce
+            return _default
+        }
         throw err
     }
 

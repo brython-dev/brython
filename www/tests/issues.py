@@ -1830,6 +1830,16 @@ x = 5.1
 s = "Distance {}km".format(x)
 assert s == "Distance 5.1km"
 
+# issue 843
+import sys
+
+try:
+    raise FileNotFoundError()
+except FloatingPointError:
+    assert False
+except FileNotFoundError:
+    assert sys.exc_info()[0] == FileNotFoundError
+
 
 
 # ==========================================
