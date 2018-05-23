@@ -3,7 +3,6 @@ language: javascript
 addons:
     chrome: stable
     firefox: "59.0"
-    firefox: latest-beta
 
 cache:
   directories:
@@ -15,6 +14,8 @@ before_install:
   - wget -O qunit/qunit-1.18.0.js  http://code.jquery.com/qunit/qunit-1.18.0.js
   - npm install testem
   - ./node_modules/.bin/testem launchers
+  # A newer version of libnss3 is needed for the latest Chrome version
+  - apt-get --only-upgrade install libnss3
 
 before_script:
   - export DISPLAY=:99.0
