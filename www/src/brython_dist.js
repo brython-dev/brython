@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.5.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-05-23 12:57:55.330204"
-__BRYTHON__.timestamp=1527073075330
+__BRYTHON__.compiled_date="2018-05-23 13:07:46.696540"
+__BRYTHON__.timestamp=1527073666696
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -5973,7 +5973,8 @@ if(obj.__hashvalue__ !==undefined){return obj.__hashvalue__}
 if(isinstance(obj,_b_.int)){return obj.valueOf()}
 if(isinstance(obj,_b_.bool)){return _b_.int.$factory(obj)}
 if(obj.__class__===$B.$factory ||obj.$is_class ||
-obj.__class__===_b_.type){return obj.__hashvalue__=$B.$py_next_hash--}
+obj.__class__===_b_.type ||
+obj.__class__===$B.Function){return obj.__hashvalue__=$B.$py_next_hash--}
 if(obj.__hash__ !==undefined){return obj.__hashvalue__=obj.__hash__()}
 var hashfunc=getattr(obj,'__hash__',_b_.None)
 if(hashfunc==_b_.None){throw _b_.TypeError.$factory("unhashable type: '" +
