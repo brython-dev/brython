@@ -115,7 +115,7 @@ def qux():
 
 
 def test_calls(iterations):
-    from javascript import console
+    from browser import console
     times = []
     for _i in range(iterations):
         console.log("iteration: %s" % _i)
