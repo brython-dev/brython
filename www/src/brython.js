@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.5.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-05-23 13:07:46.696540"
-__BRYTHON__.timestamp=1527073666696
+__BRYTHON__.compiled_date="2018-05-24 18:35:30.700618"
+__BRYTHON__.timestamp=1527179730700
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -378,16 +378,16 @@ var scope=$get_scope(this),level=$get_level(this)
 if(C.type=='expr' && C.tree[0].type=='call'){$_SyntaxError(C,["can't assign to function call "])}else if(C.type=='list_or_tuple' ||
 (C.type=='expr' && C.tree[0].type=='list_or_tuple')){if(C.type=='expr'){C=C.tree[0]}
 C.bind_ids(scope,level)}else if(C.type=='assign'){C.tree.forEach(function(elt){var assigned=elt.tree[0]
-if(assigned.type=='id'){$bind(assigned.value,scope,level)}})}else{var assigned=C.tree[0]
+if(assigned.type=='id'){$bind(assigned.value,scope,level,this)}})}else{var assigned=C.tree[0]
 if(assigned && assigned.type=='id'){if(noassign[assigned.value]===true){$_SyntaxError(C,["can't assign to keyword"])}
 assigned.bound=true
 if(!$B._globals[scope.id]||
 $B._globals[scope.id][assigned.value]===undefined){
 var node=$get_node(this)
 node.bound_before=$B.keys(scope.binding)
-$bind(assigned.value,scope,level)}else{
+$bind(assigned.value,scope,level,this)}else{
 var module=$get_module(C)
-$bind(assigned.value,module,level)}}else if(["str","int","float","complex"].indexOf(assigned.type)> -1){$_SyntaxError(C,["can't assign to literal"])}}
+$bind(assigned.value,module,level,this)}}else if(["str","int","float","complex"].indexOf(assigned.type)> -1){$_SyntaxError(C,["can't assign to literal"])}}
 this.guess_type=function(){return}
 this.toString=function(){return '(assign) ' + this.tree[0]+ '=' + this.tree[1]}
 this.transform=function(node,rank){
@@ -404,6 +404,7 @@ nassign=new $AssignCtx(nleft)
 nassign.tree[1]=right
 assigned.forEach(function(elt){var new_node=new $Node(),node_ctx=new $NodeCtx(new_node)
 new_node.locals=node.locals
+new_node.line_num=node.line_num
 node.parent.insert(rank + 1,new_node)
 elt.parent=node_ctx
 var assign=new $AssignCtx(elt)
@@ -432,20 +433,24 @@ left_items.length + ')')}else if(right_items.length < left_items.length){throw E
 right_items.length + ' to unpack')}
 var new_nodes=[],pos=0
 var new_node=new $Node()
+new_node.line_num=node.line_num
 new $NodeJSCtx(new_node,'void(0)')
 new_nodes[pos++]=new_node
 var $var='$temp' + $loop_num
 var new_node=new $Node()
+new_node.line_num=node.line_num
 new $NodeJSCtx(new_node,'var ' + $var + ' = [], $pos = 0')
 new_nodes[pos++]=new_node
 right_items.forEach(function(right_item){var js=$var + '[$pos++] = ' + right_item.to_js()
 var new_node=new $Node()
+new_node.line_num=node.line_num
 new $NodeJSCtx(new_node,js)
 new_nodes[pos++]=new_node})
 var this_node=$get_node(this)
 left_items.forEach(function(left_item){var new_node=new $Node()
 new_node.id=this_node.module
-new_node.locals=this.node.locals
+new_node.locals=this_node.locals
+new_node.line_num=node.line_num
 var C=new $NodeCtx(new_node)
 left_item.parent=C
 var assign=new $AssignCtx(left_item,false)
@@ -491,6 +496,7 @@ if(packed==null){add_jscode(node.parent,rank++,'if(' + rlname + '.length>' + min
 )}
 left_items.forEach(function(left_item,i){var new_node=new $Node()
 new_node.id=scope.id
+new_node.line_num=node.line_num
 node.parent.insert(rank++,new_node)
 var C=new $NodeCtx(new_node)
 left_item.parent=C
@@ -896,7 +902,7 @@ while(parent_block.C &&
 'generator' !=parent_block.C.tree[0].type){parent_block=parent_block.parent}
 this.parent.node.parent_block=parent_block
 this.level=this.scope.level
-this.scope.binding[name]=this
+$bind(name,this.scope,this.level,this)
 if(scope.is_function){if(scope.C.tree[0].locals.indexOf(name)==-1){scope.C.tree[0].locals.push(name)}}}
 this.transform=function(node,rank){
 this.doc_string=$get_docstring(node)
@@ -1060,7 +1066,7 @@ var res=ref + ' = '
 decorators.forEach(function(elt,i){res +='$B.$call(' + this.dec_ids[i]+ ')('
 tail +=')'},this)
 res +=(obj.decorated ? obj.alias : ref)+ tail + ';'
-scope.binding[obj.name]=true
+$bind(obj.name,scope,$get_level(this),this)
 node.parent.insert(func_rank + 1,$NodeJS(res))
 this.decorators=decorators}
 this.to_js=function(){this.js_processed=true
@@ -1130,7 +1136,8 @@ this.binding={}
 this.level=this.scope.level
 if($B._globals[this.scope.id]!==undefined &&
 $B._globals[this.scope.id][name]!==undefined){
-this.root.binding[name]=this}else{this.scope.binding[name]=this}
+console.log("bind global name",name,this)
+$bind(name,this.root,this.level,this)}else{$bind(name,this.scope,this.level,this)}
 id_ctx.bound=true
 if(scope.is_function){if(scope.C.tree[0].locals.indexOf(name)==-1){scope.C.tree[0].locals.push(name)}}}
 this.toString=function(){return 'def ' + this.name + '(' + this.tree + ')'}
@@ -1423,7 +1430,7 @@ this.expect='id'
 this.scope=$get_scope(this)
 this.toString=function(){return '(except) '}
 this.set_alias=function(alias){this.tree[0].alias=$mangle(alias,this)
-this.scope.binding[alias]={level: this.scope.level}}
+$bind(alias,this.scope,this.scope.level,this)}
 this.to_js=function(){
 this.js_processed=true
 switch(this.tree.length){case 0:
@@ -1626,7 +1633,7 @@ if(name=='*'){this.scope.blurred=true}}
 this.bind_names=function(){
 var scope=$get_scope(this)
 this.names.forEach(function(name){name=this.aliases[name]||name
-scope.binding[name]={level: scope.level}},this)}
+$bind(name,scope,scope.level,this)},this)}
 this.toString=function(){return '(from) ' + this.module + ' (import) ' + this.names +
 '(as)' + this.aliases}
 this.to_js=function(){this.js_processed=true
@@ -1681,7 +1688,7 @@ this.parent=C
 if(C.has_star_arg){C.parent.after_star.push(name)}else{C.parent.positional_list.push(name)}
 var node=$get_node(this)
 if(node.binding[name]){$_SyntaxError(C,["duplicate argument '" + name + "' in function definition"])}
-node.binding[name]={level: 1}
+$bind(name,node,1,this)
 this.tree=[]
 C.tree[C.tree.length]=this
 var ctx=C
@@ -1704,7 +1711,7 @@ this.toString=function(){return '(func star arg ' + this.op + ') ' + this.name}
 this.set_name=function(name){this.name=name
 if(name=='$dummy'){return}
 if(this.node.binding[name]){$_SyntaxError(C,["duplicate argument '" + name + "' in function definition"])}
-this.node.binding[name]={level: 1}
+$bind(name,this.node,1,this)
 var ctx=C
 while(ctx.parent !==undefined){if(ctx.type=='def'){ctx.locals.push(name)
 break}
@@ -1736,7 +1743,7 @@ if(C.parent.type=='call_arg'){this.call_arg=true}
 this.level=$get_level(this)
 var ctx=C
 while(ctx.parent !==undefined){switch(ctx.type){case 'ctx_manager_alias':
-scope.binding[value]={level: $get_level(this)}
+$bind(value,scope,$get_level(this),this)
 break
 case 'list_or_tuple':
 case 'dict_or_set':
@@ -1750,7 +1757,7 @@ else{ctx.locals.push(value)}}}
 ctx=ctx.parent}
 if(C.type=='target_list' ||
 (C.type=='expr' && C.parent.type=='target_list')){
-scope.binding[value]={level: $get_level(this)}
+$bind(value,scope,$get_level(this),this)
 this.bound=true}
 if(scope.ntype=='def' ||scope.ntype=='generator'){
 var _ctx=this.parent
@@ -1883,7 +1890,7 @@ this.bind_names=function(){
 var scope=$get_scope(this)
 this.tree.forEach(function(item){if(item.name==item.alias){var name=item.name,parts=name.split('.'),bound=name
 if(parts.length>1){bound=parts[0]}}else{bound=item.alias}
-scope.binding[bound]={level: scope.level}})}
+$bind(bound,scope,scope.level,this)},this)}
 this.to_js=function(){this.js_processed=true
 var scope=$get_scope(this),res=[]
 module=$get_module(this)
@@ -1990,13 +1997,13 @@ src=src.substr(0,start)+ ' '.repeat(len + 1)+
 src.substr(start + len + 1)})
 return src}
 this.bind_ids=function(scope,level){
-this.tree.forEach(function(item){if(item.type=='id'){$bind(item.value,scope,level)
-item.bound=true}else if(item.type=='expr' && item.tree[0].type=="id"){$bind(item.tree[0].value,scope,level)
-item.tree[0].bound=true}else if(item.type=='expr' && item.tree[0].type=="packed"){if(item.tree[0].tree[0].type=='id'){$bind(item.tree[0].tree[0].value,scope,level)
+this.tree.forEach(function(item){if(item.type=='id'){$bind(item.value,scope,level,this)
+item.bound=true}else if(item.type=='expr' && item.tree[0].type=="id"){$bind(item.tree[0].value,scope,level,this)
+item.tree[0].bound=true}else if(item.type=='expr' && item.tree[0].type=="packed"){if(item.tree[0].tree[0].type=='id'){$bind(item.tree[0].tree[0].value,scope,level,this)
 item.tree[0].tree[0].bound=true}}else if(item.type=='list_or_tuple' ||
 (item.type=="expr" &&
 item.tree[0].type=='list_or_tuple')){if(item.type=="expr"){item=item.tree[0]}
-item.bind_ids(scope,level)}})}
+item.bind_ids(scope,level)}},this)}
 this.to_js=function(){this.js_processed=true
 var scope=$get_scope(this),sc=scope,scope_id=scope.id.replace(/\//g, '_'),
             pos = 0
@@ -2580,7 +2587,7 @@ this.expect='as'
 this.scope=$get_scope(this)
 this.toString=function(){return '(with) ' + this.tree}
 this.set_alias=function(arg){this.tree[this.tree.length - 1].alias=arg
-this.scope.binding[arg]={level: this.scope.level}
+$bind(arg,this.scope,this.scope.level,this)
 if(this.scope.ntype !=='module'){
 this.scope.C.tree[0].locals.push(arg)}}
 this.transform=function(node,rank){while(this.tree.length > 1){
@@ -2726,7 +2733,7 @@ if((elt.type=='condition' && elt.token=="while")
 ',' + mod_id + '";'))}}
 return offset}else{return 1}}
 $B.$add_line_num=$add_line_num
-var $bind=$B.parser.$bind=function(name,scope,level){
+var $bind=$B.parser.$bind=function(name,scope,level,C){
 if(scope.binding[name]!==undefined){
 if(level < scope.binding[name].level){scope.binding[name].level=level}}else{scope.binding[name]={level: level}}}
 var $previous=$B.parser.$previous=function(C){var previous=C.node.parent.children[C.node.parent.children.length - 2]
@@ -2775,8 +2782,13 @@ var $get_src=$B.parser.$get_src=function(C){
 var node=$get_node(C)
 while(node.parent !==undefined){node=node.parent}
 return node.src}
-var $get_node=$B.parser.$get_node=function(C){var ctx=C
-while(ctx.parent){ctx=ctx.parent}
+var $get_node=$B.parser.$get_node=function(C){if(C===window){console.log("C = window !")}
+var ctx=C,nb=0
+while(ctx.parent){ctx=ctx.parent
+nb++
+if(nb > 50){console.log("bizarre",C,ctx)
+throw Error("échec get ndode")
+break}}
 return ctx.node}
 var $to_js_map=$B.parser.$to_js_map=function(tree_element){if(tree_element.to_js !==undefined){return tree_element.to_js()}
 throw Error('no to_js() for ' + tree_element)}
@@ -7395,7 +7407,8 @@ catch(err){console.log("no $module")
 throw _b_.ImportError.$factory("name '$module' is not defined in module")}
 if(_module !==undefined){
 for(var attr in $module){_module[attr]=$module[attr]}
-$module=_module}else{
+$module=_module
+$module.__class__=module }else{
 $module.__class__=module
 $module.__name__=_module.name
 $module.__repr__=$module.__str__=function(){if($B.builtin_module_names.indexOf(_module.name)> -1){return "<module '" + _module.name + "' (built-in)>"}

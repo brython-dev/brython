@@ -116,7 +116,7 @@ def test_next():
             print('Running tests in', option.innerText)
             sys.stdout.flush()
             src = open(option.value).read()
-            doc['files'].selectedIndex = script_num
+            doc['files'].attrs["selectedIndex"] = script_num
             editor.editor.setValue(src)
             state = yield from run()
             if state == 0:

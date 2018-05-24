@@ -174,8 +174,11 @@ function run_js(module_contents, path, _module){
     if(_module !== undefined){
         // FIXME : This might not be efficient . Refactor js modules instead.
         // Overwrite original module object . Needed e.g. for reload()
-        for(var attr in $module){_module[attr] = $module[attr]}
+        for(var attr in $module){
+            _module[attr] = $module[attr]
+        }
         $module = _module
+        $module.__class__ = module // in case $module has __class__ (issue #838)
     }else{
         // add class and __str__
         $module.__class__ = module
