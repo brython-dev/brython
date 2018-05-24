@@ -1830,7 +1830,10 @@ x = 5.1
 s = "Distance {}km".format(x)
 assert s == "Distance 5.1km"
 
-
+# issue 838
+import sys
+import random
+assert type(random) == type(sys)
 
 # ==========================================
 # Finally, report that all tests have passed
