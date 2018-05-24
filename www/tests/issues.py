@@ -1835,6 +1835,17 @@ import sys
 import random
 assert type(random) == type(sys)
 
+# issue 843
+import sys
+
+try:
+    raise FileNotFoundError()
+except FloatingPointError:
+    assert False
+except FileNotFoundError:
+    assert sys.exc_info()[0] == FileNotFoundError
+
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
