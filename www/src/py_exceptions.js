@@ -15,7 +15,7 @@ $B.$raise = function(arg){
     }else if(arg.__class__ === $B.$factory && issubclass(arg, BaseException)){
         throw arg()
     }else if(arg.$is_class && issubclass(arg, BaseException)){
-        throw arg.$factory()
+        throw $B.$call(arg)()
     }else{
         throw _b_.TypeError.$factory("exceptions must derive from BaseException")
     }

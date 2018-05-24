@@ -1832,6 +1832,31 @@ assert s == "Distance 5.1km"
 
 
 
+# Test exception raising with and without parens for
+# custom and builtin exception types
+class CustomException(Exception):
+    pass
+
+try:
+    raise Exception()
+except Exception:
+    pass
+
+try:
+    raise Exception
+except Exception:
+    pass
+
+try:
+    raise CustomException()
+except CustomException:
+    pass
+
+try:
+    raise CustomException
+except CustomException:
+    pass
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
