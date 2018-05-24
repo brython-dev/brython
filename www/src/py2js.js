@@ -3756,6 +3756,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                 if(locs[val] === undefined &&
                         ((innermost.type != 'def' ||
                              innermost.type != 'generator') &&
+                        innermost.ntype != 'class' &&
                         innermost.context.tree[0].args.indexOf(val) == -1) &&
                         (nonlocs === undefined || nonlocs[val] === undefined)){
                     this.result = '$B.$local_search("' + val + '")'

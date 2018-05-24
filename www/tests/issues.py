@@ -1830,6 +1830,14 @@ x = 5.1
 s = "Distance {}km".format(x)
 assert s == "Distance 5.1km"
 
+# issue 835
+x = 0
+class A:
+    assert x == 0
+    def x(self):
+        pass
+    assert callable(x)
+    
 # issue 838
 import sys
 import random
