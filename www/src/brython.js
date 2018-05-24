@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.5.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-05-24 18:35:30.700618"
-__BRYTHON__.timestamp=1527179730700
+__BRYTHON__.compiled_date="2018-05-24 18:50:12.049139"
+__BRYTHON__.timestamp=1527180612049
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -5963,8 +5963,10 @@ if(typeof attr_func !=='function'){console.log(attr + ' is not a function ' + at
 if(attr_func===odga){var res=obj[attr]
 if(res===null){return null}
 else if(res===undefined && obj.hasOwnProperty(attr)){return res}else if(res !==undefined && res.__set__===undefined){return obj[attr]}}
-try{var res=attr_func(obj,attr)}
-catch(err){if(_default !==undefined){return _default}
+try{var ce=$B.current_exception
+var res=attr_func(obj,attr)}
+catch(err){if(_default !==undefined){$B.current_exception=ce
+return _default}
 throw err}
 if(res !==undefined){return res}
 if(_default !==undefined){return _default}
@@ -6501,7 +6503,7 @@ _b_['$$super']=$$super})(__BRYTHON__)
 $B.$raise=function(arg){
 if(arg===undefined){var es=$B.current_exception
 if(es !==undefined){throw es}
-throw _b_.RuntimeError.$factory("No active exception to reraise")}else if(isinstance(arg,BaseException)){throw arg}else if(arg.__class__===$B.$factory && issubclass(arg,BaseException)){throw arg()}else if(arg.$is_class && issubclass(arg,BaseException)){throw arg.$factory()}else{throw _b_.TypeError.$factory("exceptions must derive from BaseException")}}
+throw _b_.RuntimeError.$factory("No active exception to reraise")}else if(isinstance(arg,BaseException)){throw arg}else if(arg.__class__===$B.$factory && issubclass(arg,BaseException)){throw arg()}else if(arg.$is_class && issubclass(arg,BaseException)){throw $B.$call(arg)()}else{throw _b_.TypeError.$factory("exceptions must derive from BaseException")}}
 $B.$syntax_err_line=function(exc,module,pos,line_num){
 var pos2line={},lnum=1,src=$B.$py_src[module],module=module.charAt(0)=="$" ? "<string>" : module
 if(src===undefined){console.log("no src for",module)
