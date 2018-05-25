@@ -9,6 +9,7 @@ served from subdirectory cgi-bin
 
 import os
 import sys
+import time
 from webbrowser import open_new_tab
 import argparse
 import email
@@ -48,6 +49,8 @@ os.chdir(os.path.join(os.getcwd(), 'www'))
 
 cgi_dir = os.path.join(os.path.dirname(os.getcwd()), 'cgi-bin')
 
+POST_PATHS = ['/time_cpython']
+
 class RequestHandler(CGIHTTPRequestHandler):
 
     def send_head(self):
@@ -62,6 +65,9 @@ class RequestHandler(CGIHTTPRequestHandler):
             return self.run_cgi()
 
         path = self.translate_path(self.path)
+        if path in POST_PATHS:
+            return
+
         f = None
         if os.path.isdir(path):
             parts = urllib.parse.urlsplit(self.path)
@@ -135,6 +141,26 @@ class RequestHandler(CGIHTTPRequestHandler):
         if len(elts)>1 and elts[0]=='' and elts[1]=='cgi-bin':
             return os.path.join(cgi_dir,*elts[2:])
         return CGIHTTPRequestHandler.translate_path(self, path)
+
+    def do_POST(self):
+        if self.path == '/time_cpython':
+            data = self.rfile.read(int(self.headers.get('Content-Length')))
+            src = data.decode('utf-8')
+
+            t0 = time.perf_counter()
+            exec(src, {})
+            t1 = time.perf_counter()
+
+            response = '%f' % ((t1 - t0) * 1000.0)
+            response_data = response.encode('utf-8')
+
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/plain')
+            self.send_header('Content-Length', str(len(response_data)))
+            self.end_headers()
+            self.wfile.write(response_data)
+        else:
+            super(RequestHandler, self).do_POST()
 
 server_address, handler = ('0.0.0.0', port), RequestHandler
 httpd = socketserver.ThreadingTCPServer(server_address, handler)
