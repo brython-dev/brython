@@ -36,6 +36,15 @@ assert '{: f}; {: f}'.format(3.14, -3.14)  == ' 3.140000; -3.140000'
 # show only the minus -- same as '{:f}; {:f}'
 assert '{:-f}; {:-f}'.format(3.14, -3.14)  == '3.140000; -3.140000'
 
+# issue #850: str.format doesn't show sign for integer positive numbers when requested
+# show sign always
+assert '{:+}; {:+}; {:+}'.format(1, 0, -1)  == '+1; +0; -1'
+# show a space for positive numbers
+assert '{: }; {: }; {: }'.format(1, 0, -1)  == ' 1;  0; -1'
+# show only the minus -- same as '{:d}; {:d}'
+assert '{:-}; {:-}; {:-}'.format(1, 0, -1)  == '1; 0; -1'
+
+
 # format also supports binary numbers
 assert "int: {0:d};  hex: {0:x};  oct: {0:o};  bin: {0:b}".format(42) == 'int: 42;  hex: 2a;  oct: 52;  bin: 101010'
 # with 0x, 0o, or 0b as prefix:
