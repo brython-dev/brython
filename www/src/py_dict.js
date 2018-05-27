@@ -454,11 +454,11 @@ dict.__repr__ = function(self){
 dict.__setitem__ = function(self, key, value){
 
     var $ = $B.args("__setitem__", 3, {self: null, key: null, value: null},
-        ["self", "key", "value"], arguments, {}, null, null),
-        self = $.self,
-        key = $.key,
-        value = $.value
+        ["self", "key", "value"], arguments, {}, null, null)
+    return dict.$setitem($.self, $.key, $.value)
+}
 
+dict.$setitem = function(self, key, value){
     if(self.$jsobj){
         if(self.$jsobj.__class__ === _b_.type){
             self.$jsobj[key] = $B.pyobj2jsobj(value)

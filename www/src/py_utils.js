@@ -561,7 +561,7 @@ $B.$setitem = function(obj, item, value){
         obj[item] = value
         return
     }else if(obj.__class__ === _b_.dict){
-        obj.__class__.__setitem__(obj, item, value)
+        _b_.dict.$setitem(obj, item, value)
         return
     }
     _b_.getattr(obj, "__setitem__")(item, value)

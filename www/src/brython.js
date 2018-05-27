@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.5.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-05-27 14:31:48.601430"
-__BRYTHON__.timestamp=1527424308601
+__BRYTHON__.compiled_date="2018-05-27 14:46:28.649128"
+__BRYTHON__.timestamp=1527425188649
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -5235,7 +5235,7 @@ $B.$setitem=function(obj,item,value){if(Array.isArray(obj)&& typeof item=="numbe
 !_b_.isinstance(obj,_b_.tuple)){if(item < 0){item +=obj.length}
 if(obj[item]===undefined){throw _b_.IndexError.$factory("list assignment index out of range")}
 obj[item]=value
-return}else if(obj.__class__===_b_.dict){obj.__class__.__setitem__(obj,item,value)
+return}else if(obj.__class__===_b_.dict){_b_.dict.$setitem(obj,item,value)
 return}
 _b_.getattr(obj,"__setitem__")(item,value)}
 $B.augm_item_add=function(obj,item,incr){if(Array.isArray(obj)&& typeof item=="number" &&
@@ -10452,8 +10452,9 @@ var res=[],items=new $item_generator(self).as_list()
 items.forEach(function(item){if((!self.$jsobj && item[1]===self)||
 (self.$jsobj && item[1]===self.$jsobj)){res.push(repr(item[0])+ ": {...}")}else{try{res.push(repr(item[0])+ ": " + repr(item[1]))}catch(err){res.push(repr(item[0])+ ": <unprintable object>")}}})
 return "{" + res.join(", ")+ "}"}
-dict.__setitem__=function(self,key,value){var $=$B.args("__setitem__",3,{self: null,key: null,value: null},["self","key","value"],arguments,{},null,null),self=$.self,key=$.key,value=$.value
-if(self.$jsobj){if(self.$jsobj.__class__===_b_.type){self.$jsobj[key]=$B.pyobj2jsobj(value)
+dict.__setitem__=function(self,key,value){var $=$B.args("__setitem__",3,{self: null,key: null,value: null},["self","key","value"],arguments,{},null,null)
+return dict.$setitem($.self,$.key,$.value)}
+dict.$setitem=function(self,key,value){if(self.$jsobj){if(self.$jsobj.__class__===_b_.type){self.$jsobj[key]=$B.pyobj2jsobj(value)
 if(key=="__init__" ||key=="__new__"){
 self.$jsobj.$factory=$B.$instance_creator(self.$jsobj)}}else{self.$jsobj[key]=$B.pyobj2jsobj(value)}
 return $N}
