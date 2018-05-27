@@ -155,25 +155,36 @@ function preformat(self, fmt){
         throw _b_.ValueError.$factory("Unknown format code '" + fmt.type +
             "' for object of type 'int'")
     }
-
+    var res
     switch(fmt.type){
         case undefined:
         case "d":
-            return self.toString()
+            res = self.toString()
+            break
         case "b":
-            return (fmt.alternate ? "0b" : "") + self.toString(2)
+            res = (fmt.alternate ? "0b" : "") + self.toString(2)
+            break
         case "c":
-            return _b_.chr(self)
+            res = _b_.chr(self)
+            break
         case "o":
-            return (fmt.alternate ? "0o" : "") + self.toString(8)
+            res = (fmt.alternate ? "0o" : "") + self.toString(8)
+            break
         case "x":
-            return (fmt.alternate ? "0x" : "") + self.toString(16)
+            res = (fmt.alternate ? "0x" : "") + self.toString(16)
+            break
         case "X":
-            return (fmt.alternate ? "0X" : "") + self.toString(16).toUpperCase()
+            res = (fmt.alternate ? "0X" : "") + self.toString(16).toUpperCase()
+            break
         case "n":
             return self // fix me
     }
 
+    if(fmt.sign !== undefined){
+        if((fmt.sign == " " || fmt.sign == "+" ) && self >= 0){
+            res = fmt.sign + res
+        }
+    }
     return res
 }
 
@@ -792,4 +803,3 @@ _b_.bool = bool
 $B.set_func_names(bool, "builtins")
 
 })(__BRYTHON__)
-
