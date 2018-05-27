@@ -97,7 +97,7 @@ $B.$class_constructor = function(class_name, class_obj, bases,
         for(var attr in kdict){
             if(non_abstract_methods[attr]){continue}
             var v = kdict[attr]
-            if(typeof v == "function" && v.__class__ !== $B.$factory){
+            if(typeof v == "function"){
                 if(v.__isabstractmethod__ === true ||
                         (v.$attrs && v.$attrs.__isabstractmethod__)){
                     is_instanciable = false

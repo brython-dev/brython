@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.5.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-05-27 14:46:28.649128"
-__BRYTHON__.timestamp=1527425188649
+__BRYTHON__.compiled_date="2018-05-27 15:15:57.134437"
+__BRYTHON__.timestamp=1527426957134
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -581,8 +581,7 @@ if(this.value.value==params[0]&& parent.C &&
 parent.C.tree[0].args===undefined){
 this.assign_self=true
 return[js + ".__class__ && !" +
-js + ".__class__.$has_setattr && " +
-js + '.__class__ !== $B.$factory ? ' + js + "." +
+js + ".__class__.$has_setattr ? " + js + "." +
 this.name + " = "," : $B.$setattr(" + js +
 ', "' + this.name + '", ']}}}}
 if(this.func=='setattr'){
@@ -4704,8 +4703,7 @@ res.__name__=attr
 if(attr=="__new__"){res.$type="staticmethod"}
 var res1=__get__.apply(null,[res,obj,klass])
 if(typeof res1=="function"){
-if(res1.__class__===$B.$factory)return res 
-else if(res1.__class__===$B.method){return res}
+if(res1.__class__===$B.method){return res}
 if(res.$type=="staticmethod"){return res}
 else{var self=res.$type=="classmethod" ? klass : obj
 function method(){return res(self,...arguments)}
@@ -4821,7 +4819,7 @@ var is_instanciable=true,non_abstract_methods={},abstract_methods={},mro=[class_
 for(var i=0;i < mro.length;i++){var kdict=i==0 ? mro0 : mro[i]
 for(var attr in kdict){if(non_abstract_methods[attr]){continue}
 var v=kdict[attr]
-if(typeof v=="function" && v.__class__ !==$B.$factory){if(v.__isabstractmethod__===true ||
+if(typeof v=="function"){if(v.__isabstractmethod__===true ||
 (v.$attrs && v.$attrs.__isabstractmethod__)){is_instanciable=false
 abstract_methods[attr]=true}else{non_abstract_methods[attr]=true}}}}
 for(var i=0;i < mro.length;i++){var _slots=mro[i].__slots__
@@ -5302,7 +5300,6 @@ $B.$call=function(callable){if(callable.__class__===$B.method){return callable}
 else if(callable.$is_func ||typeof callable=="function"){return callable}else if(callable.$factory){return callable.$factory}
 else if(callable.$is_class){
 return callable.$factory=$B.$instance_creator(callable)}
-else if(callable.__class__===$B.$factory){return callable}
 try{return $B.$getattr(callable,"__call__")}catch(err){throw _b_.TypeError.$factory("'" + $B.get_class(callable).__name__ +
 "' object is not callable")}}
 var $io={__class__: _b_.type,__name__: "io"}
@@ -5401,7 +5398,7 @@ if(typeof value=="number" ||value.constructor===Number){return value}
 else if(typeof value==="boolean"){return value ? 1 : 0}
 else if(_b_.isinstance(value,_b_.int)){return value}
 else if(_b_.isinstance(value,_b_.float)){return value.valueOf()}
-if(value.__class__ !==$B.$factory && ! value.$is_class){try{var v=_b_.getattr(value,"__int__")();return v}catch(e){}
+if(! value.$is_class){try{var v=_b_.getattr(value,"__int__")();return v}catch(e){}
 try{var v=_b_.getattr(value,"__index__")();return v}catch(e){}}
 throw _b_.TypeError.$factory("'" + $B.get_class(value).__name__ +
 "' object cannot be interpreted as an integer")}
@@ -5928,7 +5925,7 @@ for(var i=0;i < builtin_names.length;i++){if(obj===_b_[builtin_names[i]]){_get_b
 return $B.builtins_doc[builtin_names[i]]}}
 break
 case '__mro__':
-if(klass===$B.$factory ||obj.$is_class){
+if(obj.$is_class){
 return _b_.tuple.$factory([obj].concat(obj.__mro__))}
 break
 case '__subclasses__':
@@ -5957,7 +5954,7 @@ return klass[attr]}
 var mro,attr_func
 if(is_class){attr_func=_b_.type.__getattribute__ }else{attr_func=klass.__getattribute__
 if(attr_func===undefined){var mro=klass.__mro__
-if(mro===undefined){console.log(obj,attr,"no mro, klass",klass,klass.__class__===$B.$factory)}
+if(mro===undefined){console.log(obj,attr,"no mro, klass",klass)}
 for(var i=0,len=mro.length;i < len;i++){attr_func=mro[i]['__getattribute__']
 if(attr_func !==undefined){break}}}}
 if(typeof attr_func !=='function'){console.log(attr + ' is not a function ' + attr_func,klass)}
@@ -5987,7 +5984,7 @@ check_nb_args('hash',1,arguments.length)
 if(obj.__hashvalue__ !==undefined){return obj.__hashvalue__}
 if(isinstance(obj,_b_.int)){return obj.valueOf()}
 if(isinstance(obj,_b_.bool)){return _b_.int.$factory(obj)}
-if(obj.__class__===$B.$factory ||obj.$is_class ||
+if(obj.$is_class ||
 obj.__class__===_b_.type ||
 obj.__class__===$B.Function){return obj.__hashvalue__=$B.$py_next_hash--}
 if(obj.__hash__ !==undefined){return obj.__hashvalue__=obj.__hash__()}
@@ -6228,8 +6225,6 @@ function quit(){throw _b_.SystemExit}
 quit.__repr__=quit.__str__=function(){return "Use quit() or Ctrl-Z plus Return to exit"}
 function repr(obj){check_no_kw('repr',obj)
 check_nb_args('repr',1,arguments.length)
-if(obj.__class__===$B.$factory){
-return _b_.object.__repr__(obj)}
 if(obj.$is_class ||obj.$factory){
 var func=_b_.type.__getattribute__(obj.__class__,'__repr__')
 return func(obj)}
@@ -6337,7 +6332,7 @@ var $$super=$B.make_class("super",function(_type1,_type2){return{__class__: $$su
 )
 $$super.__getattribute__=function(self,attr){var mro=self.__thisclass__.__mro__,res
 var sc=self.__self_class__
-if(sc !==undefined){if(sc.__class__ !==$B.$factory && !sc.$is_class){sc=sc.__class__}
+if(sc !==undefined){if(!sc.$is_class){sc=sc.__class__}
 var sc_mro=[sc].concat(sc.__mro__)
 for(i=0;i < sc_mro.length;i++){if(sc_mro[i]===self.__thisclass__){mro=sc_mro.slice(i + 1)
 break}}}
@@ -6504,7 +6499,7 @@ _b_['$$super']=$$super})(__BRYTHON__)
 $B.$raise=function(arg){
 if(arg===undefined){var es=$B.current_exception
 if(es !==undefined){throw es}
-throw _b_.RuntimeError.$factory("No active exception to reraise")}else if(isinstance(arg,BaseException)){throw arg}else if(arg.__class__===$B.$factory && issubclass(arg,BaseException)){throw arg()}else if(arg.$is_class && issubclass(arg,BaseException)){throw $B.$call(arg)()}else{throw _b_.TypeError.$factory("exceptions must derive from BaseException")}}
+throw _b_.RuntimeError.$factory("No active exception to reraise")}else if(isinstance(arg,BaseException)){throw arg}else if(arg.$is_class && issubclass(arg,BaseException)){throw $B.$call(arg)()}else{throw _b_.TypeError.$factory("exceptions must derive from BaseException")}}
 $B.$syntax_err_line=function(exc,module,pos,line_num){
 var pos2line={},lnum=1,src=$B.$py_src[module],module=module.charAt(0)=="$" ? "<string>" : module
 if(src===undefined){console.log("no src for",module)
@@ -11819,7 +11814,6 @@ res._wrapped=false }
 res.__class__=klass
 klass.__init__(res,...arguments)
 return res}
-factory.__class__=$B.$factory
 return factory}
 var tags=['A','ABBR','ACRONYM','ADDRESS','APPLET','AREA','B','BASE','BASEFONT','BDO','BIG','BLOCKQUOTE','BODY','BR','BUTTON','CAPTION','CENTER','CITE','CODE','COL','COLGROUP','DD','DEL','DFN','DIR','DIV','DL','DT','EM','FIELDSET','FONT','FORM','FRAME','FRAMESET','H1','H2','H3','H4','H5','H6','HEAD','HR','HTML','I','IFRAME','IMG','INPUT','INS','ISINDEX','KBD','LABEL','LEGEND','LI','LINK','MAP','MENU','META','NOFRAMES','NOSCRIPT','OBJECT','OL','OPTGROUP','OPTION','P','PARAM','PRE','Q','S','SAMP','SCRIPT','SELECT','SMALL','SPAN','STRIKE','STRONG','STYLE','SUB','SUP','SVG','TABLE','TBODY','TD','TEXTAREA','TFOOT','TH','THEAD','TITLE','TR','TT','U','UL','VAR',
 'ARTICLE','ASIDE','AUDIO','BDI','CANVAS','COMMAND','DATA','DATALIST','EMBED','FIGCAPTION','FIGURE','FOOTER','HEADER','KEYGEN','MAIN','MARK','MATH','METER','NAV','OUTPUT','PROGRESS','RB','RP','RT','RTC','RUBY','SECTION','SOURCE','TEMPLATE','TIME','TRACK','VIDEO','WBR',

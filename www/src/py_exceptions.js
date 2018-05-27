@@ -12,8 +12,6 @@ $B.$raise = function(arg){
         throw _b_.RuntimeError.$factory("No active exception to reraise")
     }else if(isinstance(arg, BaseException)){
         throw arg
-    }else if(arg.__class__ === $B.$factory && issubclass(arg, BaseException)){
-        throw arg()
     }else if(arg.$is_class && issubclass(arg, BaseException)){
         throw $B.$call(arg)()
     }else{

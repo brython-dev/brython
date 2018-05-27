@@ -242,7 +242,6 @@
                     klass.__init__(res, ...arguments)
                     return res
                 }
-                factory.__class__ = $B.$factory
                 return factory
             }
 

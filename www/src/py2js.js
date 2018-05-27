@@ -1120,8 +1120,7 @@ var $AttrCtx = $B.parser.$AttrCtx = function(context){
                         // set attr to instance of a class without a parent
                         this.assign_self = true
                         return [js + ".__class__ && !" +
-                            js + ".__class__.$has_setattr && " +
-                            js + '.__class__ !== $B.$factory ? ' + js + "." +
+                            js + ".__class__.$has_setattr ? " + js + "." +
                             this.name + " = ", " : $B.$setattr(" + js +
                             ', "' + this.name + '", ']
                     }

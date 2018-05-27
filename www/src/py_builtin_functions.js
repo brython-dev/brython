@@ -778,7 +778,7 @@ $B.$getattr = function(obj, attr, _default){
         }
         break
       case '__mro__':
-        if(klass === $B.$factory || obj.$is_class){
+        if(obj.$is_class){
             // The attribute __mro__ of class objects doesn't include the
             // class itself
             return _b_.tuple.$factory([obj].concat(obj.__mro__))
@@ -854,8 +854,7 @@ $B.$getattr = function(obj, attr, _default){
         if(attr_func === undefined){
             var mro = klass.__mro__
             if(mro === undefined){
-                console.log(obj, attr, "no mro, klass", klass,
-                    klass.__class__ === $B.$factory)
+                console.log(obj, attr, "no mro, klass", klass)
             }
             for(var i = 0, len = mro.length; i < len; i++){
                 attr_func = mro[i]['__getattribute__']
@@ -922,7 +921,7 @@ function hash(obj){
     if(obj.__hashvalue__ !== undefined){return obj.__hashvalue__}
     if(isinstance(obj, _b_.int)){return obj.valueOf()}
     if(isinstance(obj, _b_.bool)){return _b_.int.$factory(obj)}
-    if(obj.__class__ === $B.$factory || obj.$is_class ||
+    if(obj.$is_class ||
             obj.__class__ === _b_.type ||
             obj.__class__ === $B.Function){
         return obj.__hashvalue__ = $B.$py_next_hash--
@@ -1511,15 +1510,6 @@ function repr(obj){
     check_no_kw('repr', obj)
     check_nb_args('repr', 1, arguments.length)
 
-    if(obj.__class__ === $B.$factory){ // XXX old style
-        // obj is a class (the factory function)
-        // In this case, repr() doesn't use the attribute __repr__ of the
-        // class or its subclasses, but the attribute __repr__ of the
-        // class metaclass (usually "type") or its subclasses (usually
-        // "object")
-        // The metaclass is the attribute __class__ of the class dictionary
-        return _b_.object.__repr__(obj)
-    }
     if(obj.$is_class || obj.$factory){
         // obj is a class
         // In this case, repr() doesn't use the attribute __repr__ of the
@@ -1816,7 +1806,7 @@ $$super.__getattribute__ = function(self, attr){
 
     var sc = self.__self_class__
     if(sc !== undefined){
-        if(sc.__class__ !== $B.$factory && !sc.$is_class){
+        if(!sc.$is_class){
             sc = sc.__class__
         }
         // Go up its parent classes until self.__thisclass__ and use

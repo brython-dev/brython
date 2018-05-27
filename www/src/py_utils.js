@@ -740,7 +740,6 @@ $B.$call = function(callable){
         // Use metaclass __call__, cache result in callable.$factory
         return callable.$factory = $B.$instance_creator(callable)
     }
-    else if(callable.__class__ === $B.$factory){return callable} // XXX old style
     try{
         return $B.$getattr(callable, "__call__")
     }catch(err){
@@ -1029,7 +1028,7 @@ $B.$GetInt = function(value) {
   else if(typeof value === "boolean"){return value ? 1 : 0}
   else if(_b_.isinstance(value, _b_.int)){return value}
   else if(_b_.isinstance(value, _b_.float)){return value.valueOf()}
-  if(value.__class__ !== $B.$factory && ! value.$is_class){
+  if(! value.$is_class){
       try{var v = _b_.getattr(value, "__int__")(); return v}catch(e){}
       try{var v = _b_.getattr(value, "__index__")(); return v}catch(e){}
   }

@@ -191,8 +191,6 @@ object.__getattribute__ = function(obj, attr){
                 // class A, its method __init__ must be called without B's
                 // self as first argument
 
-                if(res1.__class__ === $B.$factory) return res /// XXX old style
-
                 // Same thing if the attribute is a method of an instance
                 // =================
                 // class myRepr:
@@ -209,7 +207,7 @@ object.__getattribute__ = function(obj, attr){
                 // In function myfunc, self.repr is an instance of MyRepr,
                 // it must be used as is, not transformed into a method
 
-                else if(res1.__class__ === $B.method){
+                if(res1.__class__ === $B.method){
                     return res
                 }
 
