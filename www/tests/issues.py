@@ -1837,7 +1837,16 @@ class A:
     def x(self):
         pass
     assert callable(x)
-    
+
+# issue 836
+def f():
+    if False:
+        wxc = 0
+    else:
+        print(wxc)
+
+assertRaises(UnboundLocalError, f)
+
 # issue 838
 import sys
 import random

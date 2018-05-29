@@ -3875,11 +3875,29 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                 if($B._globals[scope.id] && $B._globals[scope.id][val]){
                     val = global_ns + '["' + val + '"]'
                 }else if(!this.bound && !this.augm_assign){
-                    var bind_level
-                    if(this_node.locals && this_node.locals[val]){
-                        bind_level = this_node.locals[val].level
+                    // Search all the lines in the scope where the name is
+                    // bound. If it is not "above" the current line when going
+                    // up the code tree, use $check_def_local which will
+                    // check at run time if the name is defined or not.
+                    // Cf. issue #836
+                    var this_line_num = $get_line_num(this),
+                        pnode = this_node.parent,
+                        module = $get_module(this),
+                        scope = this.scope,
+                        lbs = scope.line_bindings,
+                        lnum = this_line_num - 1,
+                        indent = module.line_level[lnum],
+                        found = false
+                    while(lnum > 0){
+                        if(lbs[lnum] && lbs[lnum].indexOf(val) > -1){
+                            found = true
+                            break
+                        }
+                        lnum--
+                        while(module.line_level[lnum] > indent){lnum--}
+                        indent = module.line_level[lnum]
                     }
-                    if(bind_level !== undefined && bind_level <= this.level){
+                    if(found){
                         val = '$locals["' + val + '"]'
                     }else{
                         val = '$B.$check_def_local("' + val + '",$locals["' +
@@ -5760,16 +5778,10 @@ $B.$add_line_num = $add_line_num
 var $bind = $B.parser.$bind = function(name, scope, level, context){
     // Bind a name in scope
 
-    if(context === window){console.log("context window", name, scope)}
-    var ctx_node = $get_node(context)
-    if(ctx_node.line_num===undefined){
-        ctx_node = ctx_node.parent
-        while(ctx_node && ctx_node.line_num === undefined){
-            ctx_node = ctx_node.parent
-        }
-        if(ctx_node.line_num){}
-        else{console.log("c'est l'échec")}
-    }
+    var line_num = $get_line_num(context)
+    scope.line_bindings = scope.line_bindings || {}
+    scope.line_bindings[line_num] = scope.line_bindings[line_num] || []
+    scope.line_bindings[line_num].push(name)
 
     if(scope.binding[name] !== undefined){
         // If the name is already bound, use the smallest level
@@ -5845,6 +5857,21 @@ var $get_level = $B.parser.$get_level = function(ctx){
         nd = nd.parent
     }
     return level
+}
+
+var $get_line_num = $B.parser.$get_line_num = function(context){
+    var ctx_node = $get_node(context),
+        line_num = ctx_node.line_num
+    if(ctx_node.line_num===undefined){
+        ctx_node = ctx_node.parent
+        while(ctx_node && ctx_node.line_num === undefined){
+            ctx_node = ctx_node.parent
+        }
+        if(ctx_node && ctx_node.line_num){
+            line_num = ctx_node.line_num
+        }
+    }
+    return line_num
 }
 
 var $get_module = $B.parser.$get_module = function(context){
@@ -7813,6 +7840,8 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
 
     var module = root.module
 
+    root.line_level = root.line_level || {}
+
     var lnum = 1
     while(pos < src.length){
         var car = src.charAt(pos)
@@ -7842,6 +7871,8 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
             new_node.indent = indent
             new_node.line_num = lnum
             new_node.module = module
+            root.line_level[lnum] = indent
+
             // attach new node to node with indentation immediately smaller
             if(indent > current.indent){
                 // control that parent ended with ':'

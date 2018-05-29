@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.5.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-05-27 15:15:57.134437"
-__BRYTHON__.timestamp=1527426957134
+__BRYTHON__.compiled_date="2018-05-29 16:50:27.016920"
+__BRYTHON__.timestamp=1527605427016
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -378,7 +378,7 @@ var scope=$get_scope(this),level=$get_level(this)
 if(C.type=='expr' && C.tree[0].type=='call'){$_SyntaxError(C,["can't assign to function call "])}else if(C.type=='list_or_tuple' ||
 (C.type=='expr' && C.tree[0].type=='list_or_tuple')){if(C.type=='expr'){C=C.tree[0]}
 C.bind_ids(scope,level)}else if(C.type=='assign'){C.tree.forEach(function(elt){var assigned=elt.tree[0]
-if(assigned.type=='id'){$bind(assigned.value,scope,level,this)}})}else{var assigned=C.tree[0]
+if(assigned.type=='id'){$bind(assigned.value,scope,level,this)}},this)}else{var assigned=C.tree[0]
 if(assigned && assigned.type=='id'){if(noassign[assigned.value]===true){$_SyntaxError(C,["can't assign to keyword"])}
 assigned.bound=true
 if(!$B._globals[scope.id]||
@@ -697,6 +697,7 @@ parent.insert(rank + offset,new_node)
 offset++
 var aa1=new $Node()
 aa1.id=this.scope.id
+aa1.line_num=node.line_num
 new_node.add(aa1)
 var ctx1=new $NodeCtx(aa1)
 var expr1=new $ExprCtx(ctx1,'clone',false)
@@ -1852,9 +1853,14 @@ this.result='$B.$search("' + val + '")'
 return this.result}else{if(scope.level <=2){
 val=scope_ns + '["' + val + '"]'}else{
 val='$B.$check_def("' + val + '",' +
-scope_ns + '["' + val + '"])'}}}}else{val=scope_ns + '["' + val + '"]'}}else if(scope===innermost){if($B._globals[scope.id]&& $B._globals[scope.id][val]){val=global_ns + '["' + val + '"]'}else if(!this.bound && !this.augm_assign){var bind_level
-if(this_node.locals && this_node.locals[val]){bind_level=this_node.locals[val].level}
-if(bind_level !==undefined && bind_level <=this.level){val='$locals["' + val + '"]'}else{val='$B.$check_def_local("' + val + '",$locals["' +
+scope_ns + '["' + val + '"])'}}}}else{val=scope_ns + '["' + val + '"]'}}else if(scope===innermost){if($B._globals[scope.id]&& $B._globals[scope.id][val]){val=global_ns + '["' + val + '"]'}else if(!this.bound && !this.augm_assign){
+var this_line_num=$get_line_num(this),pnode=this_node.parent,module=$get_module(this),scope=this.scope,lbs=scope.line_bindings,lnum=this_line_num - 1,indent=module.line_level[lnum],found=false
+while(lnum > 0){if(lbs[lnum]&& lbs[lnum].indexOf(val)> -1){found=true
+break}
+lnum--
+while(module.line_level[lnum]> indent){lnum--}
+indent=module.line_level[lnum]}
+if(found){val='$locals["' + val + '"]'}else{val='$B.$check_def_local("' + val + '",$locals["' +
 val + '"])'}}else{val='$locals["' + val + '"]'}}else if(!this.bound && !this.augm_assign){
 if(scope.ntype=='generator'){
 var up=0,
@@ -2734,6 +2740,10 @@ if((elt.type=='condition' && elt.token=="while")
 return offset}else{return 1}}
 $B.$add_line_num=$add_line_num
 var $bind=$B.parser.$bind=function(name,scope,level,C){
+var line_num=$get_line_num(C)
+scope.line_bindings=scope.line_bindings ||{}
+scope.line_bindings[line_num]=scope.line_bindings[line_num]||[]
+scope.line_bindings[line_num].push(name)
 if(scope.binding[name]!==undefined){
 if(level < scope.binding[name].level){scope.binding[name].level=level}}else{scope.binding[name]={level: level}}}
 var $previous=$B.parser.$previous=function(C){var previous=C.node.parent.children[C.node.parent.children.length - 2]
@@ -2768,6 +2778,11 @@ var $get_level=$B.parser.$get_level=function(ctx){var nd=$get_node(ctx),level=0
 while(nd.parent !==undefined){level++
 nd=nd.parent}
 return level}
+var $get_line_num=$B.parser.$get_line_num=function(C){var ctx_node=$get_node(C),line_num=ctx_node.line_num
+if(ctx_node.line_num===undefined){ctx_node=ctx_node.parent
+while(ctx_node && ctx_node.line_num===undefined){ctx_node=ctx_node.parent}
+if(ctx_node && ctx_node.line_num){line_num=ctx_node.line_num}}
+return line_num}
 var $get_module=$B.parser.$get_module=function(C){
 var ctx_node=C.parent
 while(ctx_node.type !=='node'){ctx_node=ctx_node.parent}
@@ -4017,6 +4032,7 @@ var int_pattern=new RegExp("^\\d+(j|J)?"),float_pattern1=new RegExp("^\\d+\\.\\d
 var C=null
 var new_node=new $Node(),current=root,name="",_type=null,pos=0,indent=null,string_modifier=false
 var module=root.module
+root.line_level=root.line_level ||{}
 var lnum=1
 while(pos < src.length){var car=src.charAt(pos)
 if(indent===null){var indent=0
@@ -4037,6 +4053,7 @@ continue}
 new_node.indent=indent
 new_node.line_num=lnum
 new_node.module=module
+root.line_level[lnum]=indent
 if(indent > current.indent){
 if(C !==null){if($indented.indexOf(C.tree[0].type)==-1){$pos=pos
 $_SyntaxError(C,'unexpected indent',pos)}}
