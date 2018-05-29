@@ -742,7 +742,7 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context){
             if(assigned.type == 'id'){
                 $bind(assigned.value, scope, level, this)
             }
-        })
+        }, this)
     }else{
         var assigned = context.tree[0]
         if(assigned && assigned.type == 'id'){
@@ -1350,6 +1350,7 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
         // create node for "foo = foo + bar"
         var aa1 = new $Node()
         aa1.id = this.scope.id
+        aa1.line_num = node.line_num
         new_node.add(aa1)
         var ctx1 = new $NodeCtx(aa1)
         var expr1 = new $ExprCtx(ctx1, 'clone', false)
@@ -5758,7 +5759,7 @@ $B.$add_line_num = $add_line_num
 
 var $bind = $B.parser.$bind = function(name, scope, level, context){
     // Bind a name in scope
-    /*
+
     if(context === window){console.log("context window", name, scope)}
     var ctx_node = $get_node(context)
     if(ctx_node.line_num===undefined){
@@ -5769,7 +5770,7 @@ var $bind = $B.parser.$bind = function(name, scope, level, context){
         if(ctx_node.line_num){}
         else{console.log("c'est l'échec")}
     }
-    */
+
     if(scope.binding[name] !== undefined){
         // If the name is already bound, use the smallest level
         if(level < scope.binding[name].level){
