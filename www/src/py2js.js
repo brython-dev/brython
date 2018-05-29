@@ -2285,7 +2285,6 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         if($B._globals[this.scope.id] !== undefined &&
                 $B._globals[this.scope.id][name] !== undefined){
             // function name was declared global
-            console.log("bind global name", name, this)
             $bind(name, this.root, this.level, this)
             //this.root.binding[name] = this
         }else{
