@@ -10,6 +10,7 @@ def coroutine(func):
     func.__coroutinefunction__ = True
     return func
 
+"""
     def coro(*a, **k):
         res = func(*a, **k)
         if isinstance(res, Future) or _isgenerator(res):
@@ -18,7 +19,7 @@ def coroutine(func):
             return res
     coro.__coroutinefunction__ = True
     return coro
-
+"""
 
 def run_async(loop=None):
     @decorator
