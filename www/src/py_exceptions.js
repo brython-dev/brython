@@ -108,7 +108,7 @@ traceback.__getattribute__ = function(self, attr){
                 }else{return "<unknown>"}
             }
         case "tb_next":
-            if(self.$stack.length <= 1){return None}
+            if(self.$stack.length <= 2){return None}
             else{
                 return traceback.$factory(self.exc,
                     self.$stack.slice(0, self.$stack.length - 2))
