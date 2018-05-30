@@ -54,6 +54,10 @@ a.selected_header{
   border-bottom-color:var(--selected-header-color);
 }
 
+#content a{
+    text-decoration: underline;
+}
+
 #banner {
   padding-bottom:15px;
   width:100%
