@@ -8,38 +8,31 @@ def _restore_current(exc):
     __BRYTHON__.current_exception = exc
 
 def print_exc(file=sys.stderr):
+    file.write(format_exc())
+
+def format_exc(limit=None, chain=True):
     exc = __BRYTHON__.current_exception
+    return format_exception(exc.__class__, exc, exc.traceback)
+
+def format_exception(_type, exc, tb, limit=None, chain=True):
+    res = '';
     if isinstance(exc, SyntaxError):
-        file.write('\n module %s line %s' %(exc.args[1], exc.args[2]))
+        res += '\n module %s line %s' %(exc.args[1], exc.args[2])
         offset = exc.args[3]
-        file.write('\n  '+exc.args[4])
-        file.write('\n  '+offset*' '+'^')
+        res += '\n  '+exc.args[4]
+        res += '\n  '+offset*' '+'^'
     else:
-        file.write(exc.info)
+        res += exc.info
     msg = exc.__class__.__name__ + ': '
     try:
         msg += str(exc)
     except:
         msg += '<unprintable {} object>'.format(exc.__class__.__name__)
-    file.write('\n'+msg+'\n')
+    res = '\n' + msg + '\n' + res
+    if not res.endswith('\n'):
+        res += '\n'
     _restore_current(exc)
-
-def format_exc(limit=None, chain=True):
-    exc = __BRYTHON__.current_exception
-    res = exc.info
-    if isinstance(exc, SyntaxError):
-        offset = exc.args[3]
-        res += '\n    '+offset*' '+'^'
-    res += '\n' + exc.__class__.__name__ + ': '
-    try:
-        res += str(exc)
-    except:
-        res += '<unprintable {} object>'.format(exc.__class__.__name__)
-    _restore_current(exc)
-    return res+'\n'
-
-def format_exception(_type, value, tb, limit=None, chain=True):
-    return ['%s\n' %_type,'%s\n' %value]
+    return res
 
 def extract_tb(tb, limit=None):
     return tb
