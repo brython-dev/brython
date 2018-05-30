@@ -179,7 +179,7 @@ Attributes.__iter__ = function(self){
     var attrs = self.elt.attributes,
         items = []
     for(var i = 0; i < attrs.length; i++){
-        items.push([attrs[i].name, attrs[i].value])
+        items.push(attrs[i].name)
     }
     self.$items = items
     return self
@@ -223,6 +223,32 @@ Attributes.get = function(){
             throw err
         }
     }
+}
+
+Attributes.keys = function(){
+    return Attributes.__iter__.apply(null, arguments)
+}
+
+Attributes.items = function(){
+    var $ = $B.args("values", 1, {self: null},
+        ["self"], arguments, {}, null, null),
+        attrs = $.self.elt.attributes,
+        values = []
+    for(var i = 0; i < attrs.length; i++){
+        values.push([attrs[i].name, attrs[i].value])
+    }
+    return _b_.list.__iter__(values)
+}
+
+Attributes.values = function(){
+    var $ = $B.args("values", 1, {self: null},
+        ["self"], arguments, {}, null, null),
+        attrs = $.self.elt.attributes,
+        values = []
+    for(var i = 0; i < attrs.length; i++){
+        values.push(attrs[i].value)
+    }
+    return _b_.list.__iter__(values)
 }
 $B.set_func_names(Attributes, "<dom>")
 
