@@ -1,11 +1,77 @@
-Elements attributes and methods
--------------------------------
+Elements attributes, properties and methods
+-------------------------------------------
 
-The elements in a page have attributes and methods that depend on the element
-type ; they are defined by the W3C and can be found on many Internet sites.
+### DOM attributes and properties
 
-Since their name may vary depending on the browser, Brython defines additional
-attributes that work in all cases :
+The DOM defines two different concepts for elements :
+
+- _attributes_, which are defined in the HTML (or SVG) tag : for instance,
+  `<img src="icon.png">` defines the attribute `src` of the element created
+  by the `<img>` tag
+- _properties_, that can be attached to an element by the dotted syntax : set
+  by `element.property_name = value`, read by `value = element.property_name`
+
+The DOM also defines a relation between _some_ attributes and _some_
+properties. Generally, for the attributes that are expected for a given tag
+(eg "id" or "class" for any kind of tag, "src" for IMG tags, "href" for A
+tags, etc), when the attribute is set, the property is also set. Most of the
+time, the property name is the same as the attribute name, but there are
+exceptions : the property for the attribute "class" is "className". Generally,
+the property value is the same as the attribute value, but not always : for
+instance, for an element defined by `<INPUT type="checkbox" checked="checked">`,
+the value of attribute "checked" is "checked", and the value of property
+"checked" is the boolean "true".
+
+Besides the attributes defined by the specification for a given tag, custom
+attributes can be defined (template engine use this a lot) ; for these
+attributes, the property of the same name is not set. Custom properties can
+also be defined for an element, and this doesn't set the attribute of the
+same name.
+
+Attribute values are always strings, while property values can be of any type.
+Attributes are case-insensitive for HTML elements and case-sensitive for SVG
+elements ; properties are always case-sensitive.
+
+### Attributes and properties management in Brython
+
+Brython manages DOM attributes with the attribute `attrs` of `DOMNode`
+instances ; it manages properties with the dotted syntax.
+
+`element.attrs` is a dictionary-like object.
+
+```python
+# set a value to an attribute
+element.attrs[name] = value
+
+# get an attribute value
+value = element.attrs[name] # raises KeyError if element has no attribute
+                            # "name"
+value = element.attrs.get(name, default)
+
+# test if an attribute is present
+if name in element.attrs:
+    ...
+
+# remove an attribute
+del element.attrs[name]
+
+# iterate on the attributes of an element
+for name in element.attrs:
+    ...
+
+for attr in element.attrs.keys():
+    ...
+
+for value in element.attrs.values():
+    ...
+
+for attr, value in element.attrs.items():
+    ...
+```
+
+### Brython-specific properties and methods
+
+For convenience, Brython defines a few additional properties and methods:
 
 <table border=1 cellpadding=3>
 <tr>
@@ -19,6 +85,10 @@ read + write</th>
 
 <tr>
 <td>*abs_top*</td><td>integer</td><td>position of the element relatively to the window top border</td><td>R</td>
+</tr>
+
+<tr>
+<td>*bind*</td><td>method</td><td>event binding, see the section [events](events.html)</td><td>-</td>
 </tr>
 
 <tr>
@@ -118,17 +188,21 @@ with `px`.
 To add a child to an element, use the operator __<=__ (think of it as a left
 arrow for assignment)
 
->    from browser import document, html
->    document['zone'] <= html.INPUT(Id="data")
+```python
+from browser import document, html
+document['zone'] <= html.INPUT(Id="data")
+```
 
 Iterating on an element's children can be done using the usual Python syntax :
-
->    for child in element:
->        (...)
-
+```python
+for child in element:
+    ...
+```
 To destroy an element, use the keyword `del`
->    zone = document['zone']
->    del zone
+```python
+zone = document['zone']
+del zone
+```
 
 The `options` collection associated with a SELECT object has an interface of a
  Python list :
@@ -137,5 +211,3 @@ The `options` collection associated with a SELECT object has an interface of a
 - insertion of an option at the _index_ position : `elt.options.insert(index,option)`
 - insertion of an option at the end of the list : `elt.options.append(option)`
 - deleting an option : `del elt.options[index]`
-
-
