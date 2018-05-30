@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.5.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-05-29 21:11:57.869638"
-__BRYTHON__.timestamp=1527621117869
+__BRYTHON__.compiled_date="2018-05-30 14:00:41.391254"
+__BRYTHON__.timestamp=1527681641391
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -10921,7 +10921,7 @@ $.self.elt.hasAttribute($.key)){return $.self.elt.getAttribute($.key)}
 throw _b_.KeyError.$factory($.key)}
 Attributes.__iter__=function(self){self.$counter=0
 var attrs=self.elt.attributes,items=[]
-for(var i=0;i < attrs.length;i++){items.push([attrs[i].name,attrs[i].value])}
+for(var i=0;i < attrs.length;i++){items.push(attrs[i].name)}
 self.$items=items
 return self}
 Attributes.__next__=function(){var $=$B.args("__next__",1,{self: null},["self"],arguments,{},null,null)
@@ -10936,6 +10936,13 @@ return _b_.None}
 throw _b_.TypeError.$factory("Can't set attributes on element")}
 Attributes.get=function(){var $=$B.args("get",3,{self: null,key:null,deflt: null},["self","key","deflt"],arguments,{deflt:_b_.None},null,null)
 try{return Attributes.__getitem__($.self,$.key)}catch(err){if(err.__class__===_b_.KeyError){return $B.deflt}else{throw err}}}
+Attributes.keys=function(){return Attributes.__iter__.apply(null,arguments)}
+Attributes.items=function(){var $=$B.args("values",1,{self: null},["self"],arguments,{},null,null),attrs=$.self.elt.attributes,values=[]
+for(var i=0;i < attrs.length;i++){values.push([attrs[i].name,attrs[i].value])}
+return _b_.list.__iter__(values)}
+Attributes.values=function(){var $=$B.args("values",1,{self: null},["self"],arguments,{},null,null),attrs=$.self.elt.attributes,values=[]
+for(var i=0;i < attrs.length;i++){values.push(attrs[i].value)}
+return _b_.list.__iter__(values)}
 $B.set_func_names(Attributes,"<dom>")
 var DOMEvent=$B.DOMEvent={__class__: _b_.type,__mro__:[object],__name__: "DOMEvent"}
 DOMEvent.__new__=function(cls,evt_name){var ev=new Event(evt_name)
