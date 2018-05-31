@@ -190,7 +190,21 @@ function make_mro(bases){
                     __mro__: [_b_.object],
                     __name__: js_func.name,
                     __init__: function(instance, ...args){
-                        return js_func.apply(instance, args)
+                        args.forEach(function(arg, i){
+                            args[i] = $B.pyobj2jsobj(arg)
+                        })
+                        js_func.apply(instance, args)
+                        // Transform function attributes into methods
+                        for(var attr in instance){
+                            if(typeof instance[attr] == "function"){
+                                instance[attr] = (function(f){
+                                    return function(){
+                                        var res = f.apply(instance, arguments)
+                                        return $B.jsobj2pyobj(res)
+                                    }
+                                })(instance[attr])
+                            }
+                        }
                     }
                 }
                 bases[i].__init__.$infos = {

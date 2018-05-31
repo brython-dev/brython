@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.5.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-05-31 10:46:14.453782"
-__BRYTHON__.timestamp=1527756374453
+__BRYTHON__.compiled_date="2018-05-31 11:12:46.333956"
+__BRYTHON__.timestamp=1527757966333
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -4863,7 +4863,10 @@ var bmro=[],pos=0
 if(bases[i]===undefined ||
 bases[i].__mro__===undefined){if(bases[i].__class__===$B.JSObject){
 var js_func=bases[i].js_func
-bases[i]={__class__: _b_.type,__mro__:[_b_.object],__name__: js_func.name,__init__: function(instance,...args){return js_func.apply(instance,args)}}
+bases[i]={__class__: _b_.type,__mro__:[_b_.object],__name__: js_func.name,__init__: function(instance,...args){args.forEach(function(arg,i){args[i]=$B.pyobj2jsobj(arg)})
+js_func.apply(instance,args)
+for(var attr in instance){if(typeof instance[attr]=="function"){instance[attr]=(function(f){return function(){var res=f.apply(instance,arguments)
+return $B.jsobj2pyobj(res)}})(instance[attr])}}}}
 bases[i].__init__.$infos={__name__: bases[i].__name__}}else{throw _b_.TypeError.$factory(
 "Object passed as base class is not a class")}}
 bmro[pos++]=bases[i]
