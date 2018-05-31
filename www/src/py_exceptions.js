@@ -247,6 +247,9 @@ BaseException.__getattr__ = function(self, attr){
             var module = line_info[1];
             if(module.charAt(0) == "$"){module = "<module>"}
             info += "\n  module " + module + " line " + line_info[0]
+            if (frame.length > 4 && frame[4].$infos) {
+                info += ', in ' + frame[4].$infos.__name__
+            }
 
             var src = $B.$py_src[line_info[1]];
             if(src === undefined && self.module == line_info[1]){
@@ -257,8 +260,6 @@ BaseException.__getattr__ = function(self, attr){
                 var line = lines[parseInt(line_info[0]) - 1]
                 if(line){line = line.replace(/^[ ]+/g, "")}
                 info += "\n    " + line
-            } else {
-                info += '\n    <No source available>'
             }
         }
         return info
