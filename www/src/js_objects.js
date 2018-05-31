@@ -22,7 +22,6 @@ JSConstructor.__call__ = function(self){
     // self.func is a constructor
     // It takes Javascript arguments so we must convert
     // those passed to the Python function
-    console.log("JSConstructor __call__")
     return function(){
         var args = [null]
         for(var i = 0, len = arguments.length; i < len; i++){
@@ -31,7 +30,7 @@ JSConstructor.__call__ = function(self){
         var factory = self.func.bind.apply(self.func, args)
         var res = new factory()
         // res is a Javascript object
-        console.log("call JSConstructor", self.func, res)
+        console.log("call JSConstructor", self.func, res, $B.$JS2Py(res))
         return $B.$JS2Py(res)
     }
 }

@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.5.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-05-30 14:00:41.391254"
-__BRYTHON__.timestamp=1527681641391
+__BRYTHON__.compiled_date="2018-05-31 10:41:17.926380"
+__BRYTHON__.timestamp=1527756077926
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -4819,7 +4819,7 @@ metaclass=val}else{
 extra_kwargs.$string_dict[key]=val}}
 var mro0=class_obj}else{var cl_dict=class_obj ,
 mro0=cl_dict.$string_dict }
-if(metaclass===undefined){if(bases && bases.length > 0){metaclass=bases[0].__class__}else{metaclass=_b_.type}}
+if(metaclass===undefined){if(bases && bases.length > 0 && bases[0].__class__ !==$B.JSObject){metaclass=bases[0].__class__}else{metaclass=_b_.type}}
 var class_dict={__name__: class_name.replace("$$",""),__bases__: bases,__class__: metaclass,__dict__: cl_dict}
 for(key in cl_dict.$string_dict){class_dict[key]=cl_dict.$string_dict[key]}
 class_dict.__slots__=mro0.__slots__
@@ -4861,9 +4861,11 @@ if(bases[i]===_b_.str){bases[i]=$B.StringSubclass}
 else if(bases[i]===_b_.float){bases[i]=$B.FloatSubclass}
 var bmro=[],pos=0
 if(bases[i]===undefined ||
-bases[i].__mro__===undefined){console.log("not a class",bases[i])
-throw _b_.TypeError.$factory(
-"Object passed as base class is not a class")}
+bases[i].__mro__===undefined){if(bases[i].__class__===$B.JSObject){
+var js_func=bases[i].js_func
+bases[i]={__class__: _b_.type,__mro__:[_b_.object],__name__: js_func.name,__init__: function(instance,...args){return js_func.apply(instance,args)}}
+bases[i].__init__.$infos={__name__: bases[i].__name__}}else{throw _b_.TypeError.$factory(
+"Object passed as base class is not a class")}}
 bmro[pos++]=bases[i]
 var _tmp=bases[i].__mro__
 if(_tmp[0]===bases[i]){_tmp.splice(0,1)}
@@ -7162,12 +7164,11 @@ var object=_b_.object
 var _window=self;
 var JSConstructor={__class__: _b_.type,__module__: "<javascript>",__mro__:[object],__name__: 'JSConstructor',$is_class: true}
 JSConstructor.__call__=function(self){
-console.log("JSConstructor __call__")
 return function(){var args=[null]
 for(var i=0,len=arguments.length;i < len;i++){args.push(pyobj2jsobj(arguments[i]))}
 var factory=self.func.bind.apply(self.func,args)
 var res=new factory()
-console.log("call JSConstructor",self.func,res)
+console.log("call JSConstructor",self.func,res,$B.$JS2Py(res))
 return $B.$JS2Py(res)}}
 JSConstructor.__getattribute__=function(self,attr){
 if(attr=="__call__"){return function(){var args=[null]
