@@ -30,7 +30,6 @@ JSConstructor.__call__ = function(self){
         var factory = self.func.bind.apply(self.func, args)
         var res = new factory()
         // res is a Javascript object
-        console.log("call JSConstructor", self.func, res, $B.$JS2Py(res))
         return $B.$JS2Py(res)
     }
 }
