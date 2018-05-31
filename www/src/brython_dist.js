@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.5.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-05-31 11:12:46.333956"
-__BRYTHON__.timestamp=1527757966333
+__BRYTHON__.compiled_date="2018-05-31 13:45:14.507505"
+__BRYTHON__.timestamp=1527767114507
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -1763,23 +1763,24 @@ _ctx=_ctx.parent}
 if(C.type=='expr' && C.parent.type=='comp_if'){
 return}else if(C.type=='global'){if(scope.globals===undefined){scope.globals=[value]}else if(scope.globals.indexOf(value)==-1){scope.globals.push(value)}}}
 this.toString=function(){return '(id) ' + this.value + ':' +(this.tree ||'')}
+this.bindings=function(){var scope=this.scope,found=[],nb=0
+while(scope && nb++ < 20){if(this.isBoundInScope(scope)){found.push(scope.id)}
+scope=scope.parent}
+return found}
 this.isBoundInScope=function(scope){scope=scope ||this.scope
-var this_line_num=$get_line_num(this),module=$get_module(this),lbs=scope.line_bindings,lnum=this_line_num - 1,indent=module.line_level[lnum],found=false
+var lnum=$get_line_num(this),module=$get_module(this),lbs=scope.line_bindings,indent=module.line_level[lnum],found=false
 if(lbs===undefined){return false}
 while(lnum > 0){if(lbs[lnum]&& lbs[lnum].indexOf(this.value)> -1){found=true
 break}
 lnum--
 while(module.line_level[lnum]> indent){lnum--}
 indent=module.line_level[lnum]}
-if(false){
-console.log("scope",scope)
-console.log(lbs)
-console.log(this.value,found)}
 return found}
 this.to_js=function(arg){
 if(this.result !==undefined && this.scope.ntype=='generator'){return this.result}
 this.js_processed=true
 var val=this.value
+if(val=="wxc"){console.log(val,"bindings",this.bindings())}
 var is_local=this.scope.binding[val]!==undefined,this_node=$get_node(this),bound_before=this_node.bound_before
 if(this.scope.nonlocals && this.scope.nonlocals[val]!==undefined){this.nonlocal=true}
 this.unbound=this.unbound ||(is_local && !this.bound &&
@@ -7171,7 +7172,6 @@ return function(){var args=[null]
 for(var i=0,len=arguments.length;i < len;i++){args.push(pyobj2jsobj(arguments[i]))}
 var factory=self.func.bind.apply(self.func,args)
 var res=new factory()
-console.log("call JSConstructor",self.func,res,$B.$JS2Py(res))
 return $B.$JS2Py(res)}}
 JSConstructor.__getattribute__=function(self,attr){
 if(attr=="__call__"){return function(){var args=[null]

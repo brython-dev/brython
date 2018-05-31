@@ -1847,6 +1847,13 @@ def f():
 
 assertRaises(UnboundLocalError, f)
 
+def g():
+    if False:
+        vbn = 0
+    print(vbn)
+
+assertRaises(UnboundLocalError, f)
+
 # issue 838
 import sys
 import random

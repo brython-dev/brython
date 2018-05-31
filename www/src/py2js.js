@@ -3426,7 +3426,7 @@ var $FuncArgIdCtx = $B.parser.$FuncArgIdCtx = function(context,name){
             ["duplicate argument '" + name + "' in function definition"])
     }
     $bind(name, node, this)
-    
+
     this.tree = []
     context.tree[context.tree.length] = this
     // add to locals of function
@@ -3476,7 +3476,7 @@ var $FuncStarArgCtx = $B.parser.$FuncStarArgCtx = function(context,op){
                 ["duplicate argument '" + name + "' in function definition"])
         }
         $bind(name, this.node, this)
-        
+
         // add to locals of function
         var ctx = context
         while(ctx.parent !== undefined){
@@ -3586,12 +3586,24 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         return '(id) ' + this.value + ':' + (this.tree || '')
     }
 
+    this.bindings = function(){
+        var scope = this.scope,
+            found = [],
+            nb = 0
+        while(scope && nb++ < 20){
+            if(this.isBoundInScope(scope)){
+                found.push(scope.id)
+            }
+            scope = scope.parent
+        }
+        return found
+    }
+
     this.isBoundInScope = function(scope){
         scope = scope || this.scope
-        var this_line_num = $get_line_num(this),
+        var lnum = $get_line_num(this),
             module = $get_module(this),
             lbs = scope.line_bindings,
-            lnum = this_line_num - 1,
             indent = module.line_level[lnum],
             found = false
         if(lbs === undefined){return false}
@@ -3604,11 +3616,6 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
             while(module.line_level[lnum] > indent){lnum--}
             indent = module.line_level[lnum]
         }
-        if(false){ //this.value == "re"){
-            console.log("scope", scope)
-            console.log(lbs)
-            console.log(this.value, found)
-        }
         return found
     }
 
@@ -3616,13 +3623,14 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
 
         // Store the result in this.result
         // For generator expressions, to_js() is called in $make_node
-
         if(this.result !== undefined && this.scope.ntype == 'generator'){
             return this.result
         }
 
         this.js_processed = true
         var val = this.value
+
+        if(val == "wxc"){console.log(val, "bindings", this.bindings())}
 
         var is_local = this.scope.binding[val] !== undefined,
             this_node = $get_node(this),
