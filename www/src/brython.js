@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.5.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-05-31 10:41:17.926380"
-__BRYTHON__.timestamp=1527756077926
+__BRYTHON__.compiled_date="2018-05-31 10:46:14.453782"
+__BRYTHON__.timestamp=1527756374453
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -6554,8 +6554,8 @@ else{var info=line_info.split(",")
 var src=$B.$py_src[info[1]]
 if(src !==undefined){return src.split("\n")[parseInt(info[0]- 1)].trim()}else{return "<unknown>"}}
 case "tb_next":
-if(self.$stack.length <=1){return None}
-else{return traceback.$factory(self.exc,self.exc.$stack.slice(0,self.exc.$stack.length - 2))}
+if(self.$stack.length <=2){return None}
+else{return traceback.$factory(self.exc,self.$stack.slice(0,self.$stack.length - 2))}
 default:
 return _b_.object.__getattribute__(traceback,attr)}}
 $B.set_func_names(traceback,"builtins")
