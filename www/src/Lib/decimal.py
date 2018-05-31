@@ -153,9 +153,6 @@ try:
 except ImportError:
     DecimalTuple = lambda *args: args
 
-# Moved from below as it is used globally
-import _jsre as re
-
 # Rounding
 ROUND_DOWN = 'ROUND_DOWN'
 ROUND_HALF_UP = 'ROUND_HALF_UP'
@@ -622,7 +619,7 @@ class Decimal(object):
                self._is_special = True
                return self
 
-            #import _jsre as re
+            import _jsre as re
             _m=re.match("^\d*\.?\d*(e\+?\d*)?$", value)
             if not _m:
                self._is_special = True
@@ -6190,7 +6187,7 @@ ExtendedContext = Context(
 #    \Z
 #""", re.VERBOSE | re.IGNORECASE).match
 
-#import _jsre as re
+import _jsre as re
 _all_zeros = re.compile('0*$').match
 _exact_half = re.compile('50*$').match
 

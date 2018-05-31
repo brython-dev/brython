@@ -1,9 +1,81 @@
 Attributs et méthodes des éléments
 ----------------------------------
 
-Les éléments de la page possèdent des attributs et des méthodes qui dépendent du type de l'objet ; ils sont définis dans les spécifications du W3C et on peut les trouver sur de nombreux sites Internet.
+### Attributs et propriétés DOM
 
-Comme le nom des attributs peut être différent d'un navigateur à l'autre, Brython définit des attributs supplémentaires qui fonctionnent dans tous les cas :
+Le DOM définit deux concepts différents pour les éléments d'une page:
+
+- les _attributs_, qui sont définis dans une balise HTML (ou SVG) : par
+  exemple, `<img src="icon.png">` définit l'attribut `src` de l'élément créé
+  par la balise `<img>`
+- les _propriétés_, qui peuvent être attachés à l'élément par la syntaxe
+  pointée : affectation par `element.nom_propriete = valeur`, lecture par
+  `valeur = element.nom_propriete`
+
+Le DOM définit également une relation entre _certains_ attributs et
+_certaines_ propriétés. En général, en ce qui concerne les attributs attendus
+pour une balise donnée (par exemple "id" ou "class" pour n'importe quel type
+de balise, "src" pour une balise IMG, "href" pour une balise A, etc), quand on
+affecte une valeur à l'attribut, une propriété correspondante reçoit aussi une
+valeur. Dans la plupart des cas, le nom de la propriété est le même que celui
+de l'attribut, mais il y a des exceptions : la propriété pour l'attribut
+"class" est "className". En général, la valeur de la propriété est la même que
+celle de l'attribut, mais pas toujours : par exemple, dans le cas d'un élément
+défini par `<INPUT type="checkbox" checked="checked">`, la valeur de
+l'attribut "checked" est "checked", et la valeur de la propriété "checked" est
+le booléen "true".
+
+En plus des attributs définis par la spécification pour une balise donnée, des
+attributs additionnels peuvent être définis (les moteurs de template en
+utilisent souvent) ; pour ces attributs, il n'y a pas de propriété du même
+nom. Des propriétés spécifiques peuvent aussi être définies pour un élément,
+et ceci ne définit pas d'attribut du même nom.
+
+Les valeurs des attributs sont toujours des chaines de caractères, alors que
+les valeurs des propriétés peuvent être de n'importe quel type. Les attributs
+sont insensibles à la casse pour les éléments HTML et sensibles à la casse
+pour les éléments SVG ; les propriétés sont toujours sensibles à la casse.
+
+### Gestion des attributs et des propriétés en Brython
+
+Brython gère les attributs DOM à travers l'attribut `attrs` des instances de
+`DOMNode` ; et les propriétés par la syntaxe pointée.
+
+`element.attrs` est un objet qui se comporte comme un dictionnaire.
+
+```python
+# affecte une valeur à un attribut
+element.attrs[nom] = valeur
+
+# lit la valeur d'un attribut
+valeur = element.attrs[nom] # déclenche une KeyError si l'élément n'a pas
+                            # l'attribut "nom"
+valeur = element.attrs.get(nom, defaut)
+
+# teste si un attribut est présent
+if nom in element.attrs:
+    ...
+
+# enlève un attribut
+del element.attrs[nom]
+
+# itère sur les attributs d'un élément
+for nom in element.attrs:
+    ...
+
+for nom in element.attrs.keys():
+    ...
+
+for valeur in element.attrs.values():
+    ...
+
+for nom, valeur in element.attrs.items():
+    ...
+```
+
+### Propriétés et méthodes propres à Brython
+
+Par commodité, Brython définit un certain nombre de propriétés et de méthodes:
 
 <table border=1 cellpadding=3>
 <tr>
@@ -16,6 +88,10 @@ Comme le nom des attributs peut être différent d'un navigateur à l'autre, Bry
 
 <tr>
 <td>*abs_top*</td><td>entier</td><td>position de l'élément par rapport au bord supérieur de l'écran</td><td>L</td>
+</tr>
+
+<tr>
+<td>*bind*</td><td>méthode</td><td>gestionnaire d'événements, voir la section [événements](events.html)</td><td>-</td>
 </tr>
 
 <tr>

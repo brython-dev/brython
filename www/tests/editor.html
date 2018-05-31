@@ -73,7 +73,7 @@ for key in trans:
 # link to test page
 tplink = doc['test_page']
 if qs_lang:
-    tplink.href += '?lang=%s' %qs_lang
+    tplink.attrs["href"] += '?lang=%s' %qs_lang
 
 def set_debug(ev):
     if ev.target.checked:

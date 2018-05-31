@@ -60,7 +60,7 @@ $B.$class_constructor = function(class_name, class_obj, bases,
     // - if the class has parents, inherit the class of the first parent
     // - otherwise default to type
     if(metaclass === undefined){
-        if(bases && bases.length > 0){
+        if(bases && bases.length > 0 && bases[0].__class__ !== $B.JSObject){
             metaclass = bases[0].__class__
         }else{
             metaclass = _b_.type
@@ -181,9 +181,39 @@ function make_mro(bases){
             pos = 0
         if(bases[i] === undefined ||
                 bases[i].__mro__ === undefined){
-            console.log("not a class", bases[i])
-            throw _b_.TypeError.$factory(
-                "Object passed as base class is not a class")
+            if(bases[i].__class__ === $B.JSObject){
+                // Brython class inherits a Javascript constructor. The
+                // constructor is the attribute js_func
+                var js_func = bases[i].js_func
+                bases[i] = {
+                    __class__: _b_.type,
+                    __mro__: [_b_.object],
+                    __name__: js_func.name,
+                    __init__: function(instance, ...args){
+                        args.forEach(function(arg, i){
+                            args[i] = $B.pyobj2jsobj(arg)
+                        })
+                        js_func.apply(instance, args)
+                        // Transform function attributes into methods
+                        for(var attr in instance){
+                            if(typeof instance[attr] == "function"){
+                                instance[attr] = (function(f){
+                                    return function(){
+                                        var res = f.apply(instance, arguments)
+                                        return $B.jsobj2pyobj(res)
+                                    }
+                                })(instance[attr])
+                            }
+                        }
+                    }
+                }
+                bases[i].__init__.$infos = {
+                    __name__: bases[i].__name__
+                }
+            }else{
+                throw _b_.TypeError.$factory(
+                    "Object passed as base class is not a class")
+            }
         }
         bmro[pos++] = bases[i]
         var _tmp = bases[i].__mro__
@@ -203,7 +233,7 @@ function make_mro(bases){
     for(var i = 0; i < bases.length; i++){seqs[pos1++] = bases[i]}
 
     var mro = [],
-        mpos  =0
+        mpos = 0
     while(1){
         var non_empty = [],
             pos = 0
@@ -240,7 +270,6 @@ function make_mro(bases){
     }
 
     return mro
-
 }
 
 var type = $B.make_class("type",
@@ -291,8 +320,6 @@ type.__new__ = function(meta, name, bases, cl_dict){
 
 type.__init__ = function(){
     // Returns nothing
-    // Performs initialization of cls which is the class created by the
-    // metaclass __new__ (either from type or custom
 }
 
 type.__call__ = function(klass, ...extra_args){

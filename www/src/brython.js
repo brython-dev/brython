@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.5.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-05-29 16:50:27.016920"
-__BRYTHON__.timestamp=1527605427016
+__BRYTHON__.compiled_date="2018-05-31 13:45:14.507505"
+__BRYTHON__.timestamp=1527767114507
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -374,20 +374,20 @@ C.parent.tree.pop()
 C.parent.tree[C.parent.tree.length]=this
 this.parent=C.parent
 this.tree=[C]
-var scope=$get_scope(this),level=$get_level(this)
+var scope=$get_scope(this)
 if(C.type=='expr' && C.tree[0].type=='call'){$_SyntaxError(C,["can't assign to function call "])}else if(C.type=='list_or_tuple' ||
 (C.type=='expr' && C.tree[0].type=='list_or_tuple')){if(C.type=='expr'){C=C.tree[0]}
-C.bind_ids(scope,level)}else if(C.type=='assign'){C.tree.forEach(function(elt){var assigned=elt.tree[0]
-if(assigned.type=='id'){$bind(assigned.value,scope,level,this)}},this)}else{var assigned=C.tree[0]
+C.bind_ids(scope)}else if(C.type=='assign'){C.tree.forEach(function(elt){var assigned=elt.tree[0]
+if(assigned.type=='id'){$bind(assigned.value,scope,this)}},this)}else{var assigned=C.tree[0]
 if(assigned && assigned.type=='id'){if(noassign[assigned.value]===true){$_SyntaxError(C,["can't assign to keyword"])}
 assigned.bound=true
 if(!$B._globals[scope.id]||
 $B._globals[scope.id][assigned.value]===undefined){
 var node=$get_node(this)
 node.bound_before=$B.keys(scope.binding)
-$bind(assigned.value,scope,level,this)}else{
+$bind(assigned.value,scope,this)}else{
 var module=$get_module(C)
-$bind(assigned.value,module,level,this)}}else if(["str","int","float","complex"].indexOf(assigned.type)> -1){$_SyntaxError(C,["can't assign to literal"])}}
+$bind(assigned.value,module,this)}}else if(["str","int","float","complex"].indexOf(assigned.type)> -1){$_SyntaxError(C,["can't assign to literal"])}}
 this.guess_type=function(){return}
 this.toString=function(){return '(assign) ' + this.tree[0]+ '=' + this.tree[1]}
 this.transform=function(node,rank){
@@ -901,8 +901,7 @@ while(parent_block.C &&
 'def' !=parent_block.C.tree[0].type &&
 'generator' !=parent_block.C.tree[0].type){parent_block=parent_block.parent}
 this.parent.node.parent_block=parent_block
-this.level=this.scope.level
-$bind(name,this.scope,this.level,this)
+$bind(name,this.scope,this)
 if(scope.is_function){if(scope.C.tree[0].locals.indexOf(name)==-1){scope.C.tree[0].locals.push(name)}}}
 this.transform=function(node,rank){
 this.doc_string=$get_docstring(node)
@@ -1066,7 +1065,7 @@ var res=ref + ' = '
 decorators.forEach(function(elt,i){res +='$B.$call(' + this.dec_ids[i]+ ')('
 tail +=')'},this)
 res +=(obj.decorated ? obj.alias : ref)+ tail + ';'
-$bind(obj.name,scope,$get_level(this),this)
+$bind(obj.name,scope,this)
 node.parent.insert(func_rank + 1,$NodeJS(res))
 this.decorators=decorators}
 this.to_js=function(){this.js_processed=true
@@ -1133,11 +1132,9 @@ this.id +='_' + $B.UUID()
 this.parent.node.id=this.id
 this.parent.node.module=this.module
 this.binding={}
-this.level=this.scope.level
 if($B._globals[this.scope.id]!==undefined &&
 $B._globals[this.scope.id][name]!==undefined){
-console.log("bind global name",name,this)
-$bind(name,this.root,this.level,this)}else{$bind(name,this.scope,this.level,this)}
+$bind(name,this.root,this)}else{$bind(name,this.scope,this)}
 id_ctx.bound=true
 if(scope.is_function){if(scope.C.tree[0].locals.indexOf(name)==-1){scope.C.tree[0].locals.push(name)}}}
 this.toString=function(){return 'def ' + this.name + '(' + this.tree + ')'}
@@ -1430,7 +1427,7 @@ this.expect='id'
 this.scope=$get_scope(this)
 this.toString=function(){return '(except) '}
 this.set_alias=function(alias){this.tree[0].alias=$mangle(alias,this)
-$bind(alias,this.scope,this.scope.level,this)}
+$bind(alias,this.scope,this)}
 this.to_js=function(){
 this.js_processed=true
 switch(this.tree.length){case 0:
@@ -1633,7 +1630,7 @@ if(name=='*'){this.scope.blurred=true}}
 this.bind_names=function(){
 var scope=$get_scope(this)
 this.names.forEach(function(name){name=this.aliases[name]||name
-$bind(name,scope,scope.level,this)},this)}
+$bind(name,scope,this)},this)}
 this.toString=function(){return '(from) ' + this.module + ' (import) ' + this.names +
 '(as)' + this.aliases}
 this.to_js=function(){this.js_processed=true
@@ -1688,7 +1685,7 @@ this.parent=C
 if(C.has_star_arg){C.parent.after_star.push(name)}else{C.parent.positional_list.push(name)}
 var node=$get_node(this)
 if(node.binding[name]){$_SyntaxError(C,["duplicate argument '" + name + "' in function definition"])}
-$bind(name,node,1,this)
+$bind(name,node,this)
 this.tree=[]
 C.tree[C.tree.length]=this
 var ctx=C
@@ -1711,7 +1708,7 @@ this.toString=function(){return '(func star arg ' + this.op + ') ' + this.name}
 this.set_name=function(name){this.name=name
 if(name=='$dummy'){return}
 if(this.node.binding[name]){$_SyntaxError(C,["duplicate argument '" + name + "' in function definition"])}
-$bind(name,this.node,1,this)
+$bind(name,this.node,this)
 var ctx=C
 while(ctx.parent !==undefined){if(ctx.type=='def'){ctx.locals.push(name)
 break}
@@ -1740,10 +1737,9 @@ var scope=this.scope=$get_scope(this)
 this.blurred_scope=this.scope.blurred
 this.env=clone(this.scope.binding)
 if(C.parent.type=='call_arg'){this.call_arg=true}
-this.level=$get_level(this)
 var ctx=C
 while(ctx.parent !==undefined){switch(ctx.type){case 'ctx_manager_alias':
-$bind(value,scope,$get_level(this),this)
+$bind(value,scope,this)
 break
 case 'list_or_tuple':
 case 'dict_or_set':
@@ -1757,7 +1753,7 @@ else{ctx.locals.push(value)}}}
 ctx=ctx.parent}
 if(C.type=='target_list' ||
 (C.type=='expr' && C.parent.type=='target_list')){
-$bind(value,scope,$get_level(this),this)
+$bind(value,scope,this)
 this.bound=true}
 if(scope.ntype=='def' ||scope.ntype=='generator'){
 var _ctx=this.parent
@@ -1767,10 +1763,24 @@ _ctx=_ctx.parent}
 if(C.type=='expr' && C.parent.type=='comp_if'){
 return}else if(C.type=='global'){if(scope.globals===undefined){scope.globals=[value]}else if(scope.globals.indexOf(value)==-1){scope.globals.push(value)}}}
 this.toString=function(){return '(id) ' + this.value + ':' +(this.tree ||'')}
+this.bindings=function(){var scope=this.scope,found=[],nb=0
+while(scope && nb++ < 20){if(this.isBoundInScope(scope)){found.push(scope.id)}
+scope=scope.parent}
+return found}
+this.isBoundInScope=function(scope){scope=scope ||this.scope
+var lnum=$get_line_num(this),module=$get_module(this),lbs=scope.line_bindings,indent=module.line_level[lnum],found=false
+if(lbs===undefined){return false}
+while(lnum > 0){if(lbs[lnum]&& lbs[lnum].indexOf(this.value)> -1){found=true
+break}
+lnum--
+while(module.line_level[lnum]> indent){lnum--}
+indent=module.line_level[lnum]}
+return found}
 this.to_js=function(arg){
 if(this.result !==undefined && this.scope.ntype=='generator'){return this.result}
 this.js_processed=true
 var val=this.value
+if(val=="wxc"){console.log(val,"bindings",this.bindings())}
 var is_local=this.scope.binding[val]!==undefined,this_node=$get_node(this),bound_before=this_node.bound_before
 if(this.scope.nonlocals && this.scope.nonlocals[val]!==undefined){this.nonlocal=true}
 this.unbound=this.unbound ||(is_local && !this.bound &&
@@ -1850,16 +1860,11 @@ this.result='$B.builtins.' + val +
 $to_js(this.tree,'')
 return this.result}}
 this.result='$B.$search("' + val + '")'
-return this.result}else{if(scope.level <=2){
+return this.result}else{if(this.isBoundInScope(scope)){
 val=scope_ns + '["' + val + '"]'}else{
 val='$B.$check_def("' + val + '",' +
 scope_ns + '["' + val + '"])'}}}}else{val=scope_ns + '["' + val + '"]'}}else if(scope===innermost){if($B._globals[scope.id]&& $B._globals[scope.id][val]){val=global_ns + '["' + val + '"]'}else if(!this.bound && !this.augm_assign){
-var this_line_num=$get_line_num(this),pnode=this_node.parent,module=$get_module(this),scope=this.scope,lbs=scope.line_bindings,lnum=this_line_num - 1,indent=module.line_level[lnum],found=false
-while(lnum > 0){if(lbs[lnum]&& lbs[lnum].indexOf(val)> -1){found=true
-break}
-lnum--
-while(module.line_level[lnum]> indent){lnum--}
-indent=module.line_level[lnum]}
+var found=this.isBoundInScope()
 if(found){val='$locals["' + val + '"]'}else{val='$B.$check_def_local("' + val + '",$locals["' +
 val + '"])'}}else{val='$locals["' + val + '"]'}}else if(!this.bound && !this.augm_assign){
 if(scope.ntype=='generator'){
@@ -1896,7 +1901,7 @@ this.bind_names=function(){
 var scope=$get_scope(this)
 this.tree.forEach(function(item){if(item.name==item.alias){var name=item.name,parts=name.split('.'),bound=name
 if(parts.length>1){bound=parts[0]}}else{bound=item.alias}
-$bind(bound,scope,scope.level,this)},this)}
+$bind(bound,scope,this)},this)}
 this.to_js=function(){this.js_processed=true
 var scope=$get_scope(this),res=[]
 module=$get_module(this)
@@ -2002,14 +2007,14 @@ scope.comments.forEach(function(comment){var start=comment[0],len=comment[1]
 src=src.substr(0,start)+ ' '.repeat(len + 1)+
 src.substr(start + len + 1)})
 return src}
-this.bind_ids=function(scope,level){
-this.tree.forEach(function(item){if(item.type=='id'){$bind(item.value,scope,level,this)
-item.bound=true}else if(item.type=='expr' && item.tree[0].type=="id"){$bind(item.tree[0].value,scope,level,this)
-item.tree[0].bound=true}else if(item.type=='expr' && item.tree[0].type=="packed"){if(item.tree[0].tree[0].type=='id'){$bind(item.tree[0].tree[0].value,scope,level,this)
+this.bind_ids=function(scope){
+this.tree.forEach(function(item){if(item.type=='id'){$bind(item.value,scope,this)
+item.bound=true}else if(item.type=='expr' && item.tree[0].type=="id"){$bind(item.tree[0].value,scope,this)
+item.tree[0].bound=true}else if(item.type=='expr' && item.tree[0].type=="packed"){if(item.tree[0].tree[0].type=='id'){$bind(item.tree[0].tree[0].value,scope,this)
 item.tree[0].tree[0].bound=true}}else if(item.type=='list_or_tuple' ||
 (item.type=="expr" &&
 item.tree[0].type=='list_or_tuple')){if(item.type=="expr"){item=item.tree[0]}
-item.bind_ids(scope,level)}},this)}
+item.bind_ids(scope)}},this)}
 this.to_js=function(){this.js_processed=true
 var scope=$get_scope(this),sc=scope,scope_id=scope.id.replace(/\//g, '_'),
             pos = 0
@@ -2593,7 +2598,7 @@ this.expect='as'
 this.scope=$get_scope(this)
 this.toString=function(){return '(with) ' + this.tree}
 this.set_alias=function(arg){this.tree[this.tree.length - 1].alias=arg
-$bind(arg,this.scope,this.scope.level,this)
+$bind(arg,this.scope,this)
 if(this.scope.ntype !=='module'){
 this.scope.C.tree[0].locals.push(arg)}}
 this.transform=function(node,rank){while(this.tree.length > 1){
@@ -2739,13 +2744,12 @@ if((elt.type=='condition' && elt.token=="while")
 ',' + mod_id + '";'))}}
 return offset}else{return 1}}
 $B.$add_line_num=$add_line_num
-var $bind=$B.parser.$bind=function(name,scope,level,C){
+var $bind=$B.parser.$bind=function(name,scope,C){
 var line_num=$get_line_num(C)
 scope.line_bindings=scope.line_bindings ||{}
 scope.line_bindings[line_num]=scope.line_bindings[line_num]||[]
 scope.line_bindings[line_num].push(name)
-if(scope.binding[name]!==undefined){
-if(level < scope.binding[name].level){scope.binding[name].level=level}}else{scope.binding[name]={level: level}}}
+if(scope.binding[name]===undefined){scope.binding[name]=true}}
 var $previous=$B.parser.$previous=function(C){var previous=C.node.parent.children[C.node.parent.children.length - 2]
 if(!previous ||!previous.C){$_SyntaxError(C,'keyword not following correct keyword')}
 return previous.C.tree[0]}
@@ -2758,7 +2762,7 @@ return doc_string}
 var $get_scope=$B.parser.$get_scope=function(C){
 var ctx_node=C.parent
 while(ctx_node.type !=='node'){ctx_node=ctx_node.parent}
-var tree_node=ctx_node.node,scope=null,level=1
+var tree_node=ctx_node.node,scope=null
 while(tree_node.parent && tree_node.parent.type !=='module'){var ntype=tree_node.parent.C.tree[0].type
 switch(ntype){case 'def':
 case 'class':
@@ -2766,18 +2770,11 @@ case 'generator':
 var scope=tree_node.parent
 scope.ntype=ntype
 scope.is_function=ntype !='class'
-scope.level=level
 return scope}
-tree_node=tree_node.parent
-level++}
+tree_node=tree_node.parent}
 var scope=tree_node.parent ||tree_node 
 scope.ntype="module"
-scope.level=level
 return scope}
-var $get_level=$B.parser.$get_level=function(ctx){var nd=$get_node(ctx),level=0
-while(nd.parent !==undefined){level++
-nd=nd.parent}
-return level}
 var $get_line_num=$B.parser.$get_line_num=function(C){var ctx_node=$get_node(C),line_num=ctx_node.line_num
 if(ctx_node.line_num===undefined){ctx_node=ctx_node.parent
 while(ctx_node && ctx_node.line_num===undefined){ctx_node=ctx_node.parent}
@@ -2798,12 +2795,8 @@ var node=$get_node(C)
 while(node.parent !==undefined){node=node.parent}
 return node.src}
 var $get_node=$B.parser.$get_node=function(C){if(C===window){console.log("C = window !")}
-var ctx=C,nb=0
-while(ctx.parent){ctx=ctx.parent
-nb++
-if(nb > 50){console.log("bizarre",C,ctx)
-throw Error("échec get ndode")
-break}}
+var ctx=C
+while(ctx.parent){ctx=ctx.parent}
 return ctx.node}
 var $to_js_map=$B.parser.$to_js_map=function(tree_element){if(tree_element.to_js !==undefined){return tree_element.to_js()}
 throw Error('no to_js() for ' + tree_element)}
@@ -4827,7 +4820,7 @@ metaclass=val}else{
 extra_kwargs.$string_dict[key]=val}}
 var mro0=class_obj}else{var cl_dict=class_obj ,
 mro0=cl_dict.$string_dict }
-if(metaclass===undefined){if(bases && bases.length > 0){metaclass=bases[0].__class__}else{metaclass=_b_.type}}
+if(metaclass===undefined){if(bases && bases.length > 0 && bases[0].__class__ !==$B.JSObject){metaclass=bases[0].__class__}else{metaclass=_b_.type}}
 var class_dict={__name__: class_name.replace("$$",""),__bases__: bases,__class__: metaclass,__dict__: cl_dict}
 for(key in cl_dict.$string_dict){class_dict[key]=cl_dict.$string_dict[key]}
 class_dict.__slots__=mro0.__slots__
@@ -4869,9 +4862,14 @@ if(bases[i]===_b_.str){bases[i]=$B.StringSubclass}
 else if(bases[i]===_b_.float){bases[i]=$B.FloatSubclass}
 var bmro=[],pos=0
 if(bases[i]===undefined ||
-bases[i].__mro__===undefined){console.log("not a class",bases[i])
-throw _b_.TypeError.$factory(
-"Object passed as base class is not a class")}
+bases[i].__mro__===undefined){if(bases[i].__class__===$B.JSObject){
+var js_func=bases[i].js_func
+bases[i]={__class__: _b_.type,__mro__:[_b_.object],__name__: js_func.name,__init__: function(instance,...args){args.forEach(function(arg,i){args[i]=$B.pyobj2jsobj(arg)})
+js_func.apply(instance,args)
+for(var attr in instance){if(typeof instance[attr]=="function"){instance[attr]=(function(f){return function(){var res=f.apply(instance,arguments)
+return $B.jsobj2pyobj(res)}})(instance[attr])}}}}
+bases[i].__init__.$infos={__name__: bases[i].__name__}}else{throw _b_.TypeError.$factory(
+"Object passed as base class is not a class")}}
 bmro[pos++]=bases[i]
 var _tmp=bases[i].__mro__
 if(_tmp[0]===bases[i]){_tmp.splice(0,1)}
@@ -6560,8 +6558,8 @@ else{var info=line_info.split(",")
 var src=$B.$py_src[info[1]]
 if(src !==undefined){return src.split("\n")[parseInt(info[0]- 1)].trim()}else{return "<unknown>"}}
 case "tb_next":
-if(self.$stack.length <=1){return None}
-else{return traceback.$factory(self.exc,self.exc.$stack.slice(0,self.exc.$stack.length - 2))}
+if(self.$stack.length <=2){return None}
+else{return traceback.$factory(self.exc,self.$stack.slice(0,self.$stack.length - 2))}
 default:
 return _b_.object.__getattribute__(traceback,attr)}}
 $B.set_func_names(traceback,"builtins")
@@ -7170,12 +7168,10 @@ var object=_b_.object
 var _window=self;
 var JSConstructor={__class__: _b_.type,__module__: "<javascript>",__mro__:[object],__name__: 'JSConstructor',$is_class: true}
 JSConstructor.__call__=function(self){
-console.log("JSConstructor __call__")
 return function(){var args=[null]
 for(var i=0,len=arguments.length;i < len;i++){args.push(pyobj2jsobj(arguments[i]))}
 var factory=self.func.bind.apply(self.func,args)
 var res=new factory()
-console.log("call JSConstructor",self.func,res)
 return $B.$JS2Py(res)}}
 JSConstructor.__getattribute__=function(self,attr){
 if(attr=="__call__"){return function(){var args=[null]
@@ -10929,7 +10925,7 @@ $.self.elt.hasAttribute($.key)){return $.self.elt.getAttribute($.key)}
 throw _b_.KeyError.$factory($.key)}
 Attributes.__iter__=function(self){self.$counter=0
 var attrs=self.elt.attributes,items=[]
-for(var i=0;i < attrs.length;i++){items.push([attrs[i].name,attrs[i].value])}
+for(var i=0;i < attrs.length;i++){items.push(attrs[i].name)}
 self.$items=items
 return self}
 Attributes.__next__=function(){var $=$B.args("__next__",1,{self: null},["self"],arguments,{},null,null)
@@ -10944,6 +10940,13 @@ return _b_.None}
 throw _b_.TypeError.$factory("Can't set attributes on element")}
 Attributes.get=function(){var $=$B.args("get",3,{self: null,key:null,deflt: null},["self","key","deflt"],arguments,{deflt:_b_.None},null,null)
 try{return Attributes.__getitem__($.self,$.key)}catch(err){if(err.__class__===_b_.KeyError){return $B.deflt}else{throw err}}}
+Attributes.keys=function(){return Attributes.__iter__.apply(null,arguments)}
+Attributes.items=function(){var $=$B.args("values",1,{self: null},["self"],arguments,{},null,null),attrs=$.self.elt.attributes,values=[]
+for(var i=0;i < attrs.length;i++){values.push([attrs[i].name,attrs[i].value])}
+return _b_.list.__iter__(values)}
+Attributes.values=function(){var $=$B.args("values",1,{self: null},["self"],arguments,{},null,null),attrs=$.self.elt.attributes,values=[]
+for(var i=0;i < attrs.length;i++){values.push(attrs[i].value)}
+return _b_.list.__iter__(values)}
 $B.set_func_names(Attributes,"<dom>")
 var DOMEvent=$B.DOMEvent={__class__: _b_.type,__mro__:[object],__name__: "DOMEvent"}
 DOMEvent.__new__=function(cls,evt_name){var ev=new Event(evt_name)

@@ -1,0 +1,12 @@
+[[source]]
+verify_ssl = true
+name = "pypi"
+url = "https://pypi.python.org/simple"
+
+[dev-packages]
+plumbum = "*"
+
+[packages]
+
+[requires]
+python_version = "3.5"

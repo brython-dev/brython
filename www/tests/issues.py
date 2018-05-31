@@ -1847,6 +1847,13 @@ def f():
 
 assertRaises(UnboundLocalError, f)
 
+def g():
+    if False:
+        vbn = 0
+    print(vbn)
+
+assertRaises(UnboundLocalError, f)
+
 # issue 838
 import sys
 import random
@@ -1887,6 +1894,14 @@ try:
     raise CustomException
 except CustomException:
     pass
+
+# Make sure that accessing tb.tb_next doesn't lead to an infinite loop
+try:
+    raise Exception()
+except:
+    (_, _, tb) = sys.exc_info()
+    while tb:
+        tb = tb.tb_next
 
 # ==========================================
 # Finally, report that all tests have passed
