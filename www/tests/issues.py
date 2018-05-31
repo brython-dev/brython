@@ -1888,6 +1888,14 @@ try:
 except CustomException:
     pass
 
+# Make sure that accessing tb.tb_next doesn't lead to an infinite loop
+try:
+    raise Exception()
+except:
+    (_, _, tb) = sys.exc_info()
+    while tb:
+        tb = tb.tb_next
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
