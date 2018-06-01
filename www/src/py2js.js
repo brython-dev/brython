@@ -3587,19 +3587,37 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
     }
 
     this.bindings = function(){
+        // Returns a list of the id of the scopes where this.name is bound
         var scope = this.scope,
             found = [],
             nb = 0
         while(scope && nb++ < 20){
-            if(this.isBoundInScope(scope)){
-                found.push(scope.id)
+            for(lnum in scope.line_bindings){
+                if(scope.line_bindings[lnum].indexOf(this.value) > -1){
+                    found.push(scope.id)
+                }
             }
             scope = scope.parent
         }
         return found
     }
 
-    this.isBoundInScope = function(scope){
+    this.boundBefore = function(scope){
+        // Returns true if we are sure that the id is bound in the scope,
+        // because there is at least one binding when going up the code tree.
+        // This is used to avoid checking that the name exists at run time.
+        // Example:
+        //
+        // def f():
+        //     if some_condition():
+        //         x = 9
+        //     print(x)
+        //
+        // For the second "x", this.boundBefore() will return false because
+        // the binding "x = 9" is not in the lines found when going up the
+        // code tree. It will be translated to $local_search("x"), which will
+        // check at run time if the name "x" exists and if not, raise an
+        // UnboundLocalError.
         scope = scope || this.scope
         var lnum = $get_line_num(this),
             module = $get_module(this),
@@ -3630,15 +3648,12 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         this.js_processed = true
         var val = this.value
 
-        if(val == "wxc"){console.log(val, "bindings", this.bindings())}
-
         var is_local = this.scope.binding[val] !== undefined,
             this_node = $get_node(this),
             bound_before = this_node.bound_before
 
-        if(this.scope.nonlocals && this.scope.nonlocals[val] !== undefined){
-            this.nonlocal = true
-        }
+        this.nonlocal = this.scope.nonlocals &&
+            this.scope.nonlocals[val] !== undefined
 
         // If name is bound in the scope, but not yet bound when this
         // instance of $IdCtx was created, it is resolved by a call to
@@ -3682,6 +3697,21 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         }
         search_ids = "[" + search_ids.join(", ") + "]"
 
+        var si1 = this.bindings()
+
+        //console.log(si1, search_ids)
+        if(this.nonlocal){
+            var bscope = si1[0]
+            return "$locals_" + bscope.replace(/\./g, "_") + '["' +
+                val + '"]'
+        }
+
+        if(this.bound){
+            var bscope = si1[0]
+            return "$locals_" + bscope.replace(/\./g, "_") + '["' +
+                val + '"]'
+        }
+
         var global_ns = '$locals_' + gs.id.replace(/\./g, '_')
 
         // Build the list of scopes where the variable name is bound
@@ -3707,9 +3737,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                 // Handle the case when the same name is used at both sides
                 // of an assignment and the right side is defined in an
                 // upper scope, eg "range = range"
-                var bound_before = this_node.bound_before
-
-                if(bound_before && !this.bound){
+                if(bound_before){
                     if(bound_before.indexOf(val) > -1){found.push(scope)}
                     else if(scope.context &&
                             scope.context.tree[0].type == 'def' &&
@@ -3719,7 +3747,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                 }else{
                     if(scope.binding[val]){
                         // the name is bound somewhere in the local scope
-                        if(!this.bound && this_node.locals[val] === undefined){
+                        if(this_node.locals[val] === undefined){
                             // the name is referenced (not bound) but it was
                             // not bound before the current statement
                             if(!scope.is_comp &&
@@ -3768,7 +3796,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
             //         elif i == 0:
             //             x = 'ok'
 
-            if(!this.bound && found[0].context && found[0] === innermost
+            if(found[0].context && found[0] === innermost
                     && val.charAt(0) != '$'){
                 var locs = $get_node(this).locals || {},
                     nonlocs = innermost.nonlocals
@@ -3785,7 +3813,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
             }
             if(found.length > 1 && found[0].context){
 
-                if(found[0].context.tree[0].type == 'class' && !this.bound){
+                if(found[0].context.tree[0].type == 'class'){
                     var ns0 = '$locals_' + found[0].id.replace(/\./g, '_'),
                         ns1 = '$locals_' + found[1].id.replace(/\./g, '_'),
                         res
@@ -3872,7 +3900,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                             this.result = '$B.$search("' + val + '")'
                             return this.result
                         }else{
-                            if(this.isBoundInScope(scope)){
+                            if(this.boundBefore(scope)){
                                 // We are sure that the name is defined in the
                                 // scope
                                 val = scope_ns + '["' + val + '"]'
@@ -3899,25 +3927,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                     // up the code tree, use $check_def_local which will
                     // check at run time if the name is defined or not.
                     // Cf. issue #836
-                    var found = this.isBoundInScope()
-                    /*
-                    var this_line_num = $get_line_num(this),
-                        module = $get_module(this),
-                        lbs = this.scope.line_bindings,
-                        lnum = this_line_num - 1,
-                        indent = module.line_level[lnum],
-                        found = false
-                    while(lnum > 0){
-                        if(lbs[lnum] && lbs[lnum].indexOf(val) > -1){
-                            found = true
-                            break
-                        }
-                        lnum--
-                        while(module.line_level[lnum] > indent){lnum--}
-                        indent = module.line_level[lnum]
-                    }
-                    */
-                    if(found){
+                    if(this.boundBefore()){
                         val = '$locals["' + val + '"]'
                     }else{
                         val = '$B.$check_def_local("' + val + '",$locals["' +
@@ -3926,7 +3936,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                 }else{
                     val = '$locals["' + val + '"]'
                 }
-            }else if(!this.bound && !this.augm_assign){
+            }else if(!this.augm_assign){
                 // name was found between innermost and the global of builtins
                 // namespace
                 if(scope.ntype == 'generator'){
@@ -4455,8 +4465,10 @@ var $NonlocalCtx = $B.parser.$NonlocalCtx = function(context){
         }else{
             while(pscope !== undefined && pscope.context !== undefined){
                 for(var name in this.names){
-                    if(pscope.binding[name] !== undefined){
-                        this.names[name] = [true]
+                    for(var lnum in pscope.line_bindings){
+                        if(pscope.line_bindings[lnum].indexOf(name) > -1){
+                            this.names[name] = [true]
+                        }
                     }
                 }
                 pscope = pscope.parent_block
@@ -5796,6 +5808,10 @@ $B.$add_line_num = $add_line_num
 var $bind = $B.parser.$bind = function(name, scope, context){
     // Bind a name in scope
 
+    if(scope.nonlocals && scope.nonlocals[name]){
+        // name is declared nonlocal in the scope : don't bind
+        return
+    }
     var line_num = $get_line_num(context)
     scope.line_bindings = scope.line_bindings || {}
     scope.line_bindings[line_num] = scope.line_bindings[line_num] || []
