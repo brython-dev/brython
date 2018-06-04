@@ -244,6 +244,11 @@ BaseException.__getattr__ = function(self, attr){
                 $line_info = self.$line_info
             }
             var line_info = $line_info.split(',');
+            var src = $B.$py_src[line_info[1]];
+            if(src === undefined && self.module == line_info[1]){
+                src = self.src
+            }
+            if (src === undefined){continue}
             var module = line_info[1];
             if(module.charAt(0) == "$"){module = "<module>"}
             info += "\n  module " + module + " line " + line_info[0]
@@ -251,16 +256,10 @@ BaseException.__getattr__ = function(self, attr){
                 info += ', in ' + frame[4].$infos.__name__
             }
 
-            var src = $B.$py_src[line_info[1]];
-            if(src === undefined && self.module == line_info[1]){
-                src = self.src
-            }
-            if(src !== undefined){
-                var lines = src.split("\n");
-                var line = lines[parseInt(line_info[0]) - 1]
-                if(line){line = line.replace(/^[ ]+/g, "")}
-                info += "\n    " + line
-            }
+            var lines = src.split("\n");
+            var line = lines[parseInt(line_info[0]) - 1]
+            if(line){line = line.replace(/^[ ]+/g, "")}
+            info += "\n    " + line
         }
         return info
 
