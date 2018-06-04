@@ -965,7 +965,8 @@ DOMNode.__setattr__ = function(self, attr, value){
             if(!!descriptors &&
                     typeof descriptors.hasOwnProperty == "function"){
                 if(descriptors.hasOwnProperty(attr)){
-                    if(!descriptors[attr].writable){
+                    if(!descriptors[attr].writable &&
+                            descriptors[attr].set === undefined){
                         warn("Warning: property '" + attr +
                             "' is not writable. Use element.attrs['" +
                             attr +"'] instead.")
