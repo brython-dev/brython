@@ -100,7 +100,7 @@ condition (`if`, `elif`, `else`).
 ```
 ```python
 teams = ["FC Barcelona", "Real Madrid CF", "Liverpool FC"]
-Template("team_list").render(teams)
+Template("team-list").render(teams=teams)
 ```
 
 Code blocks can be nested. For instance, the following code generates a line

@@ -76,7 +76,7 @@ L'attribut spécial `b-code` permet de définir un bloc de code : une boucle
 ```
 ```python
 teams = ["FC Barcelona", "Real Madrid CF", "Liverpool FC"]
-Template("team_list").render(teams)
+Template("team-list").render(teams=teams)
 ```
 
 Les blocs de code peuvent être imbriqués. Par exemple le code suivant génère
