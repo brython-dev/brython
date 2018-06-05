@@ -405,17 +405,21 @@ function $$eval(src, _globals, _locals){
 
         var local_scope = {
             id: current_locals_id,
-            binding: {}
+            binding: {},
+            bindings: {}
         }
         for(var attr in current_frame[1]){
             local_scope.binding[attr] = true
+            local_scope.bindings[attr] = true
         }
         var global_scope = {
             id: current_globals_id,
-            binding: {}
+            binding: {},
+            bindings: {}
         }
         for(var attr in current_frame[3]){
             global_scope.binding[attr] = true
+            global_scope.bindings[attr] = true
         }
         local_scope.parent_block = global_scope
         global_scope.parent_block = $B.builtins_scope

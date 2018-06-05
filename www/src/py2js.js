@@ -123,6 +123,8 @@ var replace_node = $B.parser.replace_node = function(replace_what, replace_with)
     var pos = get_rank_in_parent(replace_what)
     parent.children[pos] = replace_with
     replace_with.parent = parent
+    // Save node bindings
+    replace_with.bindings = replace_what.bindings
 }
 
 /*
@@ -282,10 +284,13 @@ var $add_yield_from_code = $B.parser.$add_yield_from_code = function(yield_ctx) 
         _m : create_temp_name('__m'),
     }
 
-    for(attr in repl)
+    pnode.bindings = pnode.bindings || {}
+
+    for(attr in repl){
         replace_with = replace_with.replace(new RegExp(attr, 'g'), repl[attr])
-
-
+        // Add internal names to node bindings
+        pnode.bindings[repl[attr]] = true
+    }
     $tokenize(pnode, replace_with)
 
     params = {
@@ -549,9 +554,10 @@ var $Node = $B.parser.$Node = function(type){
                         '"] = $B.genfunc("' +
                         def_ctx.name + '", ' + blocks + ',[' + g + '],' +
                         def_ctx.default_str + ')'
+                var new_node = $NodeJS(res)
+                new_node.bindings = this.bindings
                 this.parent.children.splice(rank, 1)
-                this.parent.insert(rank + offset - 1,
-                    $NodeJS(res))
+                this.parent.insert(rank + offset - 1, new_node)
             }
 
             return ctx_offset
@@ -582,7 +588,7 @@ var $YieldFromMarkerNode = $B.parser.$YieldFromMarkerNode = function(params) {
             var expr_ctx = new $ExprCtx(assign_ctx, 'id', true)
             var idctx = new $IdCtx(expr_ctx, params.result_var_name)
             assign_ctx.tree[1] = expr_ctx
-            add_jscode(this.parent, params.save_result_rank+rank+1,
+            var new_node = add_jscode(this.parent, params.save_result_rank+rank+1,
                 assign_ctx.to_js()
             )
         }
@@ -2444,9 +2450,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         enter_frame_nodes.forEach(function(node){
             node.enter_frame = true
         })
-        //enter_frame_node.enter_frame = true
-        //new $NodeJSCtx(enter_frame_node, js)
-        //nodes.push(enter_frame_node)
+
         nodes = nodes.concat(enter_frame_nodes)
         this.env = []
 
@@ -2680,7 +2684,6 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
             h1 + 'co_name: "' + this.name + '"' +
             h1 + 'co_nlocals: ' + co_varnames.length +
             h1 + 'co_varnames: [' + co_varnames.join(', ') + ']' +
-            //h1 + 'co_code:  unescape("'+CODE_MARKER +'")' +
             h + '}\n    };'
 
         // End with None for interactive interpreter
@@ -2727,8 +2730,6 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         }
 
         this.transformed = true
-
-        this._func_marker = CODE_MARKER
 
         return offset
     }
@@ -3088,7 +3089,7 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
                 num + ',1)}'))
             // Add the loop body
             children.forEach(function(child){
-                for_node.add(child.clone())
+                for_node.add(child)
             })
             // Add a line to reset the line number
             for_node.add($NodeJS('$locals.$line_info = "' + node.line_num +
@@ -3152,6 +3153,7 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
                     node.parent.insert(rank + k, child)
                 })
                 node.parent.children[rank].line_num = node.line_num
+                node.parent.children[rank].bindings = node.bindings
                 node.children = []
                 return 0
             }
@@ -3177,7 +3179,8 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
         var it_js = iterable.to_js()
             iterable_name = '$iter'+num
             js = 'var ' + iterable_name + ' = ' + it_js + ';' +
-                 '$locals["$next' + num + '"]' + ' = $B.$getattr($B.$iter('+iterable_name+'),"__next__")'
+                 '$locals["$next' + num + '"]' + ' = $B.$getattr($B.$iter(' +
+                 iterable_name + '),"__next__")'
         new $NodeJSCtx(new_node,js)
         new_nodes[pos++] = new_node
 
@@ -3231,14 +3234,15 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
             ' changed size during iteration")}'))
 
         var try_node = $NodeJS("try")
+        // Copy attribute "bindings" in try node, so that it is at the same
+        // level in the code tree as the instructions that use the target
+        // names
+        try_node.bindings = node.bindings
         while_node.add(try_node)
 
         try_node.add($NodeJS("var ce = $B.current_exception"))
 
         var iter_node = new $Node()
-        // Parent of iter_node must be the same as current node, otherwise
-        // targets are bound in global scope
-        iter_node.parent = $get_node(this).parent
         iter_node.id = this.module
         var context = new $NodeCtx(iter_node) // create ordinary node
         var target_expr = new $ExprCtx(context, 'left', true)
@@ -3260,7 +3264,7 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
 
         // set new loop children
         children.forEach(function(child){
-            while_node.add(child.clone())
+            while_node.add(child)
         })
 
         node.children = []
@@ -3592,10 +3596,8 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
             found = [],
             nb = 0
         while(scope && nb++ < 20){
-            for(lnum in scope.line_bindings){
-                if(scope.line_bindings[lnum].indexOf(this.value) > -1){
-                    found.push(scope.id)
-                }
+            if(scope.binding && scope.binding[this.value]){
+                found.push(scope.id)
             }
             scope = scope.parent
         }
@@ -3634,7 +3636,37 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
             while(module.line_level[lnum] > indent){lnum--}
             indent = module.line_level[lnum]
         }
-        return found
+        var nb = 0,
+            node = $get_node(this),
+            found1 = false
+        var trace = "XXXx"
+        if(this.value == trace){console.log(this.value, node)}
+        while(!found1 && node.parent && nb++ < 100){
+            pnode = node.parent
+            if(this.value == trace){console.log("up")}
+            if(pnode.bindings && pnode.bindings[this.value]){
+                found1 = true
+                if(this.value == trace){console.log("found1 in", pnode)}
+                break
+            }
+            for(var i = 0; i < pnode.children.length; i++){
+                var child = pnode.children[i]
+                if(child === node){break}
+                if(child.bindings && child.bindings[this.value]){
+                    found1 = true
+                    if(this.value == trace){console.log("found1 in child", i, child)}
+                    break
+                }
+            }
+            if(pnode === scope){
+                break
+            }
+            node = pnode
+        }
+        if(found1 !== found){console.log("bizarre", this.value, "found", found,
+            "found1", found1, scope.module, $get_line_num(this))}
+
+        return found1
     }
 
     this.to_js = function(arg){
@@ -3700,13 +3732,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         var si1 = this.bindings()
 
         //console.log(si1, search_ids)
-        if(this.nonlocal){
-            var bscope = si1[0]
-            return "$locals_" + bscope.replace(/\./g, "_") + '["' +
-                val + '"]'
-        }
-
-        if(this.bound){
+        if(this.nonlocal || this.bound){
             var bscope = si1[0]
             return "$locals_" + bscope.replace(/\./g, "_") + '["' +
                 val + '"]'
@@ -3723,14 +3749,11 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                 // in the global namespace.
                 // Else return a call to a function that searches the name in
                 // globals, and throws NameError if not found.
-                if(gs.binding[val] !== undefined ||
-                        this.bound){
-                    this.result = global_ns + '["' + val + '"]'
-                    return this.result
+                if(gs.binding[val] !== undefined){
+                    return global_ns + '["' + val + '"]'
                 }else{
-                    this.result = '$B.$global_search("' + val + '", ' +
+                    return '$B.$global_search("' + val + '", ' +
                         search_ids + ')'
-                    return this.result
                 }
             }
             if(scope === innermost){
@@ -4315,7 +4338,6 @@ var $ListOrTupleCtx = $B.parser.$ListOrTupleCtx = function(context,real){
                             ix = lc[1],
                             listcomp_name = 'lc' + ix,
                             save_pos = $pos
-
                         var root = $B.py2js({src:py, is_comp:true},
                             listcomp_name, listcomp_name, scope, line_num)
 
@@ -4465,10 +4487,8 @@ var $NonlocalCtx = $B.parser.$NonlocalCtx = function(context){
         }else{
             while(pscope !== undefined && pscope.context !== undefined){
                 for(var name in this.names){
-                    for(var lnum in pscope.line_bindings){
-                        if(pscope.line_bindings[lnum].indexOf(name) > -1){
-                            this.names[name] = [true]
-                        }
+                    if(pscope.binding[name] !== undefined){
+                        this.names[name] = [true]
                     }
                 }
                 pscope = pscope.parent_block
@@ -5806,8 +5826,8 @@ var $add_line_num = $B.parser.$add_line_num = function(node,rank){
 $B.$add_line_num = $add_line_num
 
 var $bind = $B.parser.$bind = function(name, scope, context){
+    // if(name == "x"){console.log("bind", name, "scope", scope, "context", context)}
     // Bind a name in scope
-
     if(scope.nonlocals && scope.nonlocals[name]){
         // name is declared nonlocal in the scope : don't bind
         return
@@ -5816,6 +5836,10 @@ var $bind = $B.parser.$bind = function(name, scope, context){
     scope.line_bindings = scope.line_bindings || {}
     scope.line_bindings[line_num] = scope.line_bindings[line_num] || []
     scope.line_bindings[line_num].push(name)
+
+    var node = $get_node(context)
+    node.bindings = node.bindings || {}
+    node.bindings[name] = true
 
     if(scope.binding[name] === undefined){
         scope.binding[name] = true
@@ -5913,7 +5937,6 @@ var $get_src = $B.parser.$get_src = function(context){
 }
 
 var $get_node = $B.parser.$get_node = function(context){
-    if(context === window){console.log("context = window !")}
     var ctx = context
     while(ctx.parent){
         ctx = ctx.parent
@@ -9106,7 +9129,7 @@ $B.run_script = function(src, name){
                 src: src,
                 url: $B.script_path
             }
-            if($B.debug > 1){console.log(js)}
+            if($B.debug > 1){$log(js)}
     }catch(err){
         handle_error(err)
     }
@@ -9146,6 +9169,11 @@ $B.run_script = function(src, name){
     $B.tasks.push(["execute", script])
 }
 
+function $log(js){
+    js.split("\n").forEach(function(line, i){
+        console.log(i + 1, ":", line)
+    })
+}
 var _run_scripts = $B.parser._run_scripts = function(options) {
     // Save initial Javascript namespace
     var kk = Object.keys(_window)
@@ -9187,7 +9215,9 @@ var _run_scripts = $B.parser._run_scripts = function(options) {
 
             root = $B.py2js($src, module_name, module_name)
             js = root.to_js()
-            if($B.debug > 1){console.log(js)}
+            if($B.debug > 1){
+                $log(js)
+            }
 
             // Run resulting Javascript
             eval(js)
