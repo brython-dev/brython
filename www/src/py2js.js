@@ -3590,18 +3590,17 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         return '(id) ' + this.value + ':' + (this.tree || '')
     }
 
-    this.bindings = function(){
-        // Returns a list of the id of the scopes where this.name is bound
+    this.firstBindingScopeId = function(){
+        // Returns the id of the first scope where this.name is bound
         var scope = this.scope,
             found = [],
             nb = 0
         while(scope && nb++ < 20){
             if(scope.binding && scope.binding[this.value]){
-                found.push(scope.id)
+                return scope.id
             }
             scope = scope.parent
         }
-        return found
     }
 
     this.boundBefore = function(scope){
@@ -3620,42 +3619,20 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         // code tree. It will be translated to $local_search("x"), which will
         // check at run time if the name "x" exists and if not, raise an
         // UnboundLocalError.
-        scope = scope || this.scope
-        var lnum = $get_line_num(this),
-            module = $get_module(this),
-            lbs = scope.line_bindings,
-            indent = module.line_level[lnum],
-            found = false
-        if(lbs === undefined){return false}
-        while(lnum > 0){
-            if(lbs[lnum] && lbs[lnum].indexOf(this.value) > -1){
-                found = true
-                break
-            }
-            lnum--
-            while(module.line_level[lnum] > indent){lnum--}
-            indent = module.line_level[lnum]
-        }
         var nb = 0,
             node = $get_node(this),
-            found1 = false
-        var trace = "XXXx"
-        if(this.value == trace){console.log(this.value, node)}
-        while(!found1 && node.parent && nb++ < 100){
+            found = false
+
+        while(!found && node.parent && nb++ < 100){
             pnode = node.parent
-            if(this.value == trace){console.log("up")}
             if(pnode.bindings && pnode.bindings[this.value]){
-                found1 = true
-                if(this.value == trace){console.log("found1 in", pnode)}
-                break
+                return true
             }
             for(var i = 0; i < pnode.children.length; i++){
                 var child = pnode.children[i]
                 if(child === node){break}
                 if(child.bindings && child.bindings[this.value]){
-                    found1 = true
-                    if(this.value == trace){console.log("found1 in child", i, child)}
-                    break
+                    return true
                 }
             }
             if(pnode === scope){
@@ -3663,10 +3640,8 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
             }
             node = pnode
         }
-        if(found1 !== found){console.log("bizarre", this.value, "found", found,
-            "found1", found1, scope.module, $get_line_num(this))}
 
-        return found1
+        return found
     }
 
     this.to_js = function(arg){
@@ -3729,11 +3704,8 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         }
         search_ids = "[" + search_ids.join(", ") + "]"
 
-        var si1 = this.bindings()
-
-        //console.log(si1, search_ids)
         if(this.nonlocal || this.bound){
-            var bscope = si1[0]
+            var bscope = this.firstBindingScopeId()
             return "$locals_" + bscope.replace(/\./g, "_") + '["' +
                 val + '"]'
         }
@@ -5826,18 +5798,14 @@ var $add_line_num = $B.parser.$add_line_num = function(node,rank){
 $B.$add_line_num = $add_line_num
 
 var $bind = $B.parser.$bind = function(name, scope, context){
-    // if(name == "x"){console.log("bind", name, "scope", scope, "context", context)}
     // Bind a name in scope
     if(scope.nonlocals && scope.nonlocals[name]){
         // name is declared nonlocal in the scope : don't bind
         return
     }
-    var line_num = $get_line_num(context)
-    scope.line_bindings = scope.line_bindings || {}
-    scope.line_bindings[line_num] = scope.line_bindings[line_num] || []
-    scope.line_bindings[line_num].push(name)
 
     var node = $get_node(context)
+    // Add name to attribute "bindings" of node. Used in $IdCtx.boundBefore()
     node.bindings = node.bindings || {}
     node.bindings[name] = true
 

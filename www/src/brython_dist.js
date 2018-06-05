@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.5.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-05-31 13:45:14.507505"
-__BRYTHON__.timestamp=1527767114507
+__BRYTHON__.compiled_date="2018-06-05 17:37:00.412152"
+__BRYTHON__.timestamp=1528213020412
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -109,7 +109,8 @@ return _prefix + $loop_num ++;}
 var replace_node=$B.parser.replace_node=function(replace_what,replace_with){var parent=replace_what.parent
 var pos=get_rank_in_parent(replace_what)
 parent.children[pos]=replace_with
-replace_with.parent=parent}
+replace_with.parent=parent
+replace_with.bindings=replace_what.bindings}
 var get_rank_in_parent=$B.parser.get_rank_in_parent=function(node){return node.parent.children.indexOf(node)}
 var add_jscode=$B.parser.add_jscode=function(parent,insert_at,code){var new_node=new $NodeJS(code)
 if(insert_at===-1)
@@ -179,8 +180,9 @@ INDENT + "            except StopIteration as _e:" + "\n" +
 INDENT + "                _r = _e.value" + "\n" +
 INDENT + "                break" + "\n";
 var repl={_i : create_temp_name('__i'),_y : create_temp_name('__y'),_r : create_temp_name('__r'),_e : create_temp_name('__e'),_s : create_temp_name('__s'),_m : create_temp_name('__m'),}
-for(attr in repl)
-replace_with=replace_with.replace(new RegExp(attr,'g'),repl[attr])
+pnode.bindings=pnode.bindings ||{}
+for(attr in repl){replace_with=replace_with.replace(new RegExp(attr,'g'),repl[attr])
+pnode.bindings[repl[attr]]=true}
 $tokenize(pnode,replace_with)
 params={iter_name: repl._i,result_var_name: repl._r,yield_expr: yield_ctx,}
 if(yield_ctx.parent.type==='assign'){params.save_result=true
@@ -299,8 +301,10 @@ def_ctx.name + def_ctx.num,res='var ' + def_ctx.name + def_ctx.num + ' = ' +
 '"] = $B.genfunc("' +
 def_ctx.name + '", ' + blocks + ',[' + g + '],' +
 def_ctx.default_str + ')'
+var new_node=$NodeJS(res)
+new_node.bindings=this.bindings
 this.parent.children.splice(rank,1)
-this.parent.insert(rank + offset - 1,$NodeJS(res))}
+this.parent.insert(rank + offset - 1,new_node)}
 return ctx_offset}}
 this.clone=function(){var res=new $Node(this.type)
 for(var attr in this){res[attr]=this[attr]}
@@ -316,7 +320,7 @@ assign_ctx.tree.pop()
 var expr_ctx=new $ExprCtx(assign_ctx,'id',true)
 var idctx=new $IdCtx(expr_ctx,params.result_var_name)
 assign_ctx.tree[1]=expr_ctx
-add_jscode(this.parent,params.save_result_rank+rank+1,assign_ctx.to_js()
+var new_node=add_jscode(this.parent,params.save_result_rank+rank+1,assign_ctx.to_js()
 )}
 return 2}}
 var $MarkerNode=$B.parser.$MarkerNode=function(name){$Node.apply(this,['marker'])
@@ -1332,7 +1336,6 @@ var except_node=$NodeJS('catch(err)')
 except_node.add($NodeJS('$B.leave_frame($local_name);throw err'))
 parent.add(except_node)}
 this.transformed=true
-this._func_marker=CODE_MARKER
 return offset}
 this.to_js=function(func_name){this.js_processed=true
 func_name=func_name ||this.tree[0].to_js()
@@ -1526,7 +1529,7 @@ for_node.add($NodeJS('if($safe' + num + '){$next' + num +
 ' += 1}'))
 for_node.add($NodeJS('else{$next' + num + ' = $B.add($next' +
 num + ',1)}'))
-children.forEach(function(child){for_node.add(child.clone())})
+children.forEach(function(child){for_node.add(child)})
 for_node.add($NodeJS('$locals.$line_info = "' + node.line_num +
 ',' + scope.id + '"; None;'))
 var in_loop=false
@@ -1553,6 +1556,7 @@ if(this.has_break){node.parent.insert(rank,new_nodes[0])
 k++}
 new_nodes[k].children.forEach(function(child){node.parent.insert(rank + k,child)})
 node.parent.children[rank].line_num=node.line_num
+node.parent.children[rank].bindings=node.bindings
 node.children=[]
 return 0}
 var else_node=$NodeJS("else")
@@ -1565,7 +1569,8 @@ new_node.line_num=$get_node(this).line_num
 var it_js=iterable.to_js()
 iterable_name='$iter'+num
 js='var ' + iterable_name + ' = ' + it_js + ';' +
-'$locals["$next' + num + '"]' + ' = $B.$getattr($B.$iter('+iterable_name+'),"__next__")'
+'$locals["$next' + num + '"]' + ' = $B.$getattr($B.$iter(' +
+iterable_name + '),"__next__")'
 new $NodeJSCtx(new_node,js)
 new_nodes[pos++]=new_node
 var js='if(isinstance(' + iterable_name + ', dict)){$locals.$len_func' +
@@ -1593,10 +1598,10 @@ while_node.add($NodeJS('if($locals.$len' + num +
 num + '()){throw RuntimeError.$factory("dictionary' +
 ' changed size during iteration")}'))
 var try_node=$NodeJS("try")
+try_node.bindings=node.bindings
 while_node.add(try_node)
 try_node.add($NodeJS("var ce = $B.current_exception"))
 var iter_node=new $Node()
-iter_node.parent=$get_node(this).parent
 iter_node.id=this.module
 var C=new $NodeCtx(iter_node)
 var target_expr=new $ExprCtx(C,'left',true)
@@ -1610,7 +1615,7 @@ try_node.add(iter_node)
 while_node.add(
 $NodeJS('catch($err){if($B.is_exc($err, [StopIteration]))' +
 '{$B.current_exception = ce;break;}else{throw($err)}}'))
-children.forEach(function(child){while_node.add(child.clone())})
+children.forEach(function(child){while_node.add(child)})
 node.children=[]
 return 0}
 this.to_js=function(){this.js_processed=true
@@ -1763,26 +1768,27 @@ _ctx=_ctx.parent}
 if(C.type=='expr' && C.parent.type=='comp_if'){
 return}else if(C.type=='global'){if(scope.globals===undefined){scope.globals=[value]}else if(scope.globals.indexOf(value)==-1){scope.globals.push(value)}}}
 this.toString=function(){return '(id) ' + this.value + ':' +(this.tree ||'')}
-this.bindings=function(){var scope=this.scope,found=[],nb=0
-while(scope && nb++ < 20){if(this.isBoundInScope(scope)){found.push(scope.id)}
-scope=scope.parent}
-return found}
-this.isBoundInScope=function(scope){scope=scope ||this.scope
-var lnum=$get_line_num(this),module=$get_module(this),lbs=scope.line_bindings,indent=module.line_level[lnum],found=false
-if(lbs===undefined){return false}
-while(lnum > 0){if(lbs[lnum]&& lbs[lnum].indexOf(this.value)> -1){found=true
-break}
-lnum--
-while(module.line_level[lnum]> indent){lnum--}
-indent=module.line_level[lnum]}
+this.firstBindingScopeId=function(){
+var scope=this.scope,found=[],nb=0
+while(scope && nb++ < 20){if(scope.binding && scope.binding[this.value]){return scope.id}
+scope=scope.parent}}
+this.boundBefore=function(scope){
+var nb=0,node=$get_node(this),found=false
+while(!found && node.parent && nb++ < 100){pnode=node.parent
+if(pnode.bindings && pnode.bindings[this.value]){return true}
+for(var i=0;i < pnode.children.length;i++){var child=pnode.children[i]
+if(child===node){break}
+if(child.bindings && child.bindings[this.value]){return true}}
+if(pnode===scope){break}
+node=pnode}
 return found}
 this.to_js=function(arg){
 if(this.result !==undefined && this.scope.ntype=='generator'){return this.result}
 this.js_processed=true
 var val=this.value
-if(val=="wxc"){console.log(val,"bindings",this.bindings())}
 var is_local=this.scope.binding[val]!==undefined,this_node=$get_node(this),bound_before=this_node.bound_before
-if(this.scope.nonlocals && this.scope.nonlocals[val]!==undefined){this.nonlocal=true}
+this.nonlocal=this.scope.nonlocals &&
+this.scope.nonlocals[val]!==undefined
 this.unbound=this.unbound ||(is_local && !this.bound &&
 bound_before && bound_before.indexOf(val)==-1)
 if((!this.bound)&& this.scope.C
@@ -1799,21 +1805,20 @@ else if(gs.parent_block.id===undefined){break}
 gs=gs.parent_block}
 search_ids.push('"' + gs.id + '"')}
 search_ids="[" + search_ids.join(", ")+ "]"
+if(this.nonlocal ||this.bound){var bscope=this.firstBindingScopeId()
+return "$locals_" + bscope.replace(/\./g,"_")+ '["' +
+val + '"]'}
 var global_ns='$locals_' + gs.id.replace(/\./g,'_')
 while(1){if($B._globals[scope.id]!==undefined &&
 $B._globals[scope.id][val]!==undefined){
-if(gs.binding[val]!==undefined ||
-this.bound){this.result=global_ns + '["' + val + '"]'
-return this.result}else{this.result='$B.$global_search("' + val + '", ' +
-search_ids + ')'
-return this.result}}
+if(gs.binding[val]!==undefined){return global_ns + '["' + val + '"]'}else{return '$B.$global_search("' + val + '", ' +
+search_ids + ')'}}
 if(scope===innermost){
-var bound_before=this_node.bound_before
-if(bound_before && !this.bound){if(bound_before.indexOf(val)> -1){found.push(scope)}
+if(bound_before){if(bound_before.indexOf(val)> -1){found.push(scope)}
 else if(scope.C &&
 scope.C.tree[0].type=='def' &&
 scope.C.tree[0].env.indexOf(val)> -1){found.push(scope)}}else{if(scope.binding[val]){
-if(!this.bound && this_node.locals[val]===undefined){
+if(this_node.locals[val]===undefined){
 if(!scope.is_comp &&
 (!scope.parent_block ||
 !scope.parent_block.is_comp)){
@@ -1824,7 +1829,7 @@ else{break}}
 this.found=found
 if(this.nonlocal && found[0]===innermost){found.shift()}
 if(found.length > 0){
-if(!this.bound && found[0].C && found[0]===innermost
+if(found[0].C && found[0]===innermost
 && val.charAt(0)!='$'){var locs=$get_node(this).locals ||{},nonlocs=innermost.nonlocals
 if(locs[val]===undefined &&
 ((innermost.type !='def' ||
@@ -1833,7 +1838,7 @@ innermost.ntype !='class' &&
 innermost.C.tree[0].args.indexOf(val)==-1)&&
 (nonlocs===undefined ||nonlocs[val]===undefined)){this.result='$B.$local_search("' + val + '")'
 return this.result}}
-if(found.length > 1 && found[0].C){if(found[0].C.tree[0].type=='class' && !this.bound){var ns0='$locals_' + found[0].id.replace(/\./g,'_'),ns1='$locals_' + found[1].id.replace(/\./g,'_'),res
+if(found.length > 1 && found[0].C){if(found[0].C.tree[0].type=='class'){var ns0='$locals_' + found[0].id.replace(/\./g,'_'),ns1='$locals_' + found[1].id.replace(/\./g,'_'),res
 if(bound_before){if(bound_before.indexOf(val)> -1){this.found=found[0].binding[val]
 res=ns0}else{this.found=found[1].binding[val]
 res=ns1}
@@ -1860,13 +1865,12 @@ this.result='$B.builtins.' + val +
 $to_js(this.tree,'')
 return this.result}}
 this.result='$B.$search("' + val + '")'
-return this.result}else{if(this.isBoundInScope(scope)){
+return this.result}else{if(this.boundBefore(scope)){
 val=scope_ns + '["' + val + '"]'}else{
 val='$B.$check_def("' + val + '",' +
 scope_ns + '["' + val + '"])'}}}}else{val=scope_ns + '["' + val + '"]'}}else if(scope===innermost){if($B._globals[scope.id]&& $B._globals[scope.id][val]){val=global_ns + '["' + val + '"]'}else if(!this.bound && !this.augm_assign){
-var found=this.isBoundInScope()
-if(found){val='$locals["' + val + '"]'}else{val='$B.$check_def_local("' + val + '",$locals["' +
-val + '"])'}}else{val='$locals["' + val + '"]'}}else if(!this.bound && !this.augm_assign){
+if(this.boundBefore()){val='$locals["' + val + '"]'}else{val='$B.$check_def_local("' + val + '",$locals["' +
+val + '"])'}}else{val='$locals["' + val + '"]'}}else if(!this.augm_assign){
 if(scope.ntype=='generator'){
 var up=0,
 sc=innermost
@@ -2745,10 +2749,11 @@ if((elt.type=='condition' && elt.token=="while")
 return offset}else{return 1}}
 $B.$add_line_num=$add_line_num
 var $bind=$B.parser.$bind=function(name,scope,C){
-var line_num=$get_line_num(C)
-scope.line_bindings=scope.line_bindings ||{}
-scope.line_bindings[line_num]=scope.line_bindings[line_num]||[]
-scope.line_bindings[line_num].push(name)
+if(scope.nonlocals && scope.nonlocals[name]){
+return}
+var node=$get_node(C)
+node.bindings=node.bindings ||{}
+node.bindings[name]=true
 if(scope.binding[name]===undefined){scope.binding[name]=true}}
 var $previous=$B.parser.$previous=function(C){var previous=C.node.parent.children[C.node.parent.children.length - 2]
 if(!previous ||!previous.C){$_SyntaxError(C,'keyword not following correct keyword')}
@@ -2794,8 +2799,7 @@ var $get_src=$B.parser.$get_src=function(C){
 var node=$get_node(C)
 while(node.parent !==undefined){node=node.parent}
 return node.src}
-var $get_node=$B.parser.$get_node=function(C){if(C===window){console.log("C = window !")}
-var ctx=C
+var $get_node=$B.parser.$get_node=function(C){var ctx=C
 while(ctx.parent){ctx=ctx.parent}
 return ctx.node}
 var $to_js_map=$B.parser.$to_js_map=function(tree_element){if(tree_element.to_js !==undefined){return tree_element.to_js()}
@@ -4583,7 +4587,7 @@ if(nb_added){required_stdlib_imports(imports,imports.length - nb_added)}
 return imports}
 $B.run_script=function(src,name){$B.$py_module_path[name]=$B.script_path
 try{var root=$B.py2js(src,name,name),js=root.to_js(),script={js: js,name: name,src: src,url: $B.script_path}
-if($B.debug > 1){console.log(js)}}catch(err){handle_error(err)}
+if($B.debug > 1){$log(js)}}catch(err){handle_error(err)}
 if($B.hasOwnProperty("VFS")&& $B.has_indexedDB){
 var imports1=Object.keys(root.imports).slice(),imports=imports1.filter(function(item){return $B.VFS.hasOwnProperty(item)})
 Object.keys(imports).forEach(function(name){if($B.VFS.hasOwnProperty(name)){var submodule=$B.VFS[name],type=submodule[0]
@@ -4593,6 +4597,7 @@ required_stdlib_imports(subimports)}
 subimports.forEach(function(mod){if(imports.indexOf(mod)==-1){imports.push(mod)}})}}})
 for(var j=0;j<imports.length;j++){$B.tasks.push([$B.inImported,imports[j]])}}
 $B.tasks.push(["execute",script])}
+function $log(js){js.split("\n").forEach(function(line,i){console.log(i + 1,":",line)})}
 var _run_scripts=$B.parser._run_scripts=function(options){
 var kk=Object.keys(_window)
 if(options.ipy_id !==undefined){var $elts=[]
@@ -4607,7 +4612,7 @@ $elts.forEach(function(elt){$src +=(elt.innerHTML ||elt.textContent)})
 try{
 root=$B.py2js($src,module_name,module_name)
 js=root.to_js()
-if($B.debug > 1){console.log(js)}
+if($B.debug > 1){$log(js)}
 eval(js)
 $B.clear_ns(module_name)
 root=null
@@ -5794,10 +5799,12 @@ src=src.source}else if(typeof src !=='string'){throw _b_.TypeError.$factory("eva
 "or code object")}
 var globals_id='$exec_' + $B.UUID(),locals_id='$exec_' + $B.UUID(),parent_scope,ce=$B.current_exception
 if(_globals===undefined){if(current_locals_id==current_globals_id){locals_id=globals_id}
-var local_scope={id: current_locals_id,binding:{}}
-for(var attr in current_frame[1]){local_scope.binding[attr]=true}
-var global_scope={id: current_globals_id,binding:{}}
-for(var attr in current_frame[3]){global_scope.binding[attr]=true}
+var local_scope={id: current_locals_id,binding:{},bindings:{}}
+for(var attr in current_frame[1]){local_scope.binding[attr]=true
+local_scope.bindings[attr]=true}
+var global_scope={id: current_globals_id,binding:{},bindings:{}}
+for(var attr in current_frame[3]){global_scope.binding[attr]=true
+global_scope.bindings[attr]=true}
 local_scope.parent_block=global_scope
 global_scope.parent_block=$B.builtins_scope
 parent_scope=local_scope
@@ -11226,7 +11233,8 @@ console.log(src.split("\n")[parseInt(info[0])- 1])}}else{console.log("module",fr
 var proto=Object.getPrototypeOf(self.elt),nb=0
 while(!!proto && proto !==Object.prototype && nb++ < 10){var descriptors=Object.getOwnPropertyDescriptors(proto)
 if(!!descriptors &&
-typeof descriptors.hasOwnProperty=="function"){if(descriptors.hasOwnProperty(attr)){if(!descriptors[attr].writable){warn("Warning: property '" + attr +
+typeof descriptors.hasOwnProperty=="function"){if(descriptors.hasOwnProperty(attr)){if(!descriptors[attr].writable &&
+descriptors[attr].set===undefined){warn("Warning: property '" + attr +
 "' is not writable. Use element.attrs['" +
 attr +"'] instead.")}
 break}}else{break}
