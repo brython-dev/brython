@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,6,0,'dev',0]
 __BRYTHON__.__MAGIC__="3.6.0"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-06-06 16:18:12.369996"
-__BRYTHON__.timestamp=1528294692369
+__BRYTHON__.compiled_date="2018-06-06 17:43:31.759456"
+__BRYTHON__.timestamp=1528299811759
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -4479,6 +4479,9 @@ if(!isWebWorker){_run_scripts(options)}}
 var idb_cx
 function idb_load(evt,module){
 var res=evt.target.result
+var timestamp=$B.timestamp
+if($B.VFS_timestamp && $B.VFS_timestamp > $B.timestamp){
+$B.timestamp=$B.VFS_timestamp}
 if(res===undefined ||res.timestamp !=$B.timestamp){
 if($B.VFS[module]!==undefined){var elts=$B.VFS[module],ext=elts[0],source=elts[1],is_package=elts.length==4,__package__
 if(ext==".py"){

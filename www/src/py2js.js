@@ -8777,8 +8777,16 @@ function idb_load(evt, module){
     // name as key.
     // If the module is precompiled and its timestamp is the same as in
     // brython_stdlib, use the precompiled Javascript.
-    // Otherwise, get the source code from brython_stdlib.js. If
+    // Otherwise, get the source code from brython_stdlib.js.
     var res = evt.target.result
+
+    var timestamp = $B.timestamp
+
+    if($B.VFS_timestamp && $B.VFS_timestamp > $B.timestamp){
+        // A VFS created by python -m brython --modules has its own
+        // timestamp. If it is after the one in brython.js, use it
+        $B.timestamp = $B.VFS_timestamp
+    }
 
     if(res === undefined || res.timestamp != $B.timestamp){
         // Not found or not with the same date as in brython_stdlib.js:
