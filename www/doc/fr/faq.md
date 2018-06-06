@@ -40,6 +40,8 @@ __R__ : Brython est conçu pour être aussi simple à utiliser que Javascript : 
 
 Une autre raison pour laquelle ce n'est pas une bonne idée de précompiler est que le code généré est typiquement 10 fois plus gros que le source Python de départ - c'est le prix à payer pour une compatibilité avec la spécification du langage. La page prendrait donc plus longtemps à se charger, et nous n'avons pas trouvé que cela ferait gagner du temps par rapport à une compilation à la volée.
 
+En revanche, depuis la version 3.5.2, une version précompilée de scripts de la librairie standard est stockée dans une base de données indexedDB locale à chaque navigateur. La compilation se fait la première fois qu'un script est importé, ou si la version de Brython a changé depuis la précédente compilation. Cela permet d'améliorer sensiblement le temps de chargement des imports.
+
 __Q__ : _pourquoi utiliser l'opérateur `<=` pour construire l'arbre des éléments DOM ? Ce n'est pas pythonique !_
 
 __R__ : Python ne possède pas de structure intégrée pour manipuler les arbres, c'est-à-dire pour ajouter des éléments "enfants" ou "frères" à un noeud de l'arbre. Pour ces opérations, on peut utiliser des fonctions ; la syntaxe favorisée par Brython est d'utiliser des opérateurs : c'est plus facile à saisir (pas de parenthèses) et plus lisible
