@@ -90,10 +90,13 @@ class ImportsFinder(ast.NodeVisitor):
                     elts.pop()
 
     def visit_ImportFrom(self, node):
-        package = self.package.split('.')
-        for _ in range(node.level - 1):
-            package.pop()
-        package = '.'.join(package)
+        if node.level == 0:
+            package = ""
+        else:
+            parts = self.package.split('.')
+            for _ in range(node.level - 1):
+                parts.pop()
+            package = '.'.join(parts)
         if package:
             package += '.'
         if node.module is None:
@@ -129,7 +132,13 @@ class ModulesFinder:
                 if module in module_dict:
                     self.modules.add(module)
                     if module_dict[module][0] == '.py':
-                        imports = self.get_imports(module_dict[module][1])
+                        is_package = len(module_dict[module]) == 4
+                        if is_package:
+                            package = module
+                        else:
+                            package = module[:module.rfind(".")]
+                        imports = self.get_imports(module_dict[module][1],
+                            package)
 
         return finder.imports
 
@@ -182,6 +191,8 @@ class ModulesFinder:
                             print('syntax error', path)
                             traceback.print_exc(file=sys.stderr)
                 elif ext.lower() == '.py':
+                    if filename == "list_modules.py":
+                        continue
                     if dirname != self.directory and not is_package(dirname):
                         continue
                     # get package name
@@ -366,7 +377,7 @@ print('finding packages...')
 for dirname, dirnames, filenames in os.walk(os.getcwd()):
     for filename in filenames:
         name, ext = os.path.splitext(filename)
-        if not ext == ".py":
+        if not ext == ".py" or filename == "list_modules.py":
             continue
         if dirname == os.getcwd():
             # modules in the same directory
@@ -493,4 +504,6 @@ class VFSReplacementParser(html.parser.HTMLParser):
 
 
 if __name__ == "__main__":
-    ModulesFinder().inspect()
+    finder = ModulesFinder()
+    finder.inspect()
+    print(sorted(list(finder.modules)))
