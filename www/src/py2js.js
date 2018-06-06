@@ -5804,6 +5804,12 @@ var $bind = $B.parser.$bind = function(name, scope, context){
         return
     }
 
+    if(scope.globals && scope.globals.indexOf(name) > -1){
+        var module = $get_module(context)
+        module.binding[name] = true
+        return
+    }
+
     var node = $get_node(context)
     // Add name to attribute "bindings" of node. Used in $IdCtx.boundBefore()
     node.bindings = node.bindings || {}

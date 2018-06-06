@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,5,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.5.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-06-05 17:37:00.412152"
-__BRYTHON__.timestamp=1528213020412
+__BRYTHON__.compiled_date="2018-06-06 14:57:55.560431"
+__BRYTHON__.timestamp=1528289875576
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -2750,6 +2750,9 @@ return offset}else{return 1}}
 $B.$add_line_num=$add_line_num
 var $bind=$B.parser.$bind=function(name,scope,C){
 if(scope.nonlocals && scope.nonlocals[name]){
+return}
+if(scope.globals && scope.globals.indexOf(name)> -1){var module=$get_module(C)
+module.binding[name]=true
 return}
 var node=$get_node(C)
 node.bindings=node.bindings ||{}
