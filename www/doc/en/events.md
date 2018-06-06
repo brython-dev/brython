@@ -77,7 +77,7 @@ For events management, the elements of a page have the following methods :
 
 Using the decorator `browser.bind`
 ----------------------------------
-_New in version 3.5.2_
+_New in version 3.6.0_
 
 The **browser** module defines a function `bind` that can be used as a
 decorator for an event handler. Its syntax is

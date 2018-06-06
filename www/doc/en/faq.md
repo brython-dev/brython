@@ -40,7 +40,7 @@ __A__ : Brython is designed to be as simple to run as Javascript : put Python co
 
 Another reason why it is a not a good idea to precompile Brython is that the generated code is typically 10 times bigger than the original Python source - this is the price to pay for compliance with the language specification. The page would take longer to load, and we haven't found that this would be faster than compiling on the fly.
 
-However, since version 3.5.2, a precompiled version of the scripts in the standard library is stored in an indexedDB database attached to the browser where the code is executed. The compilation is performed the first time a script is imported, or if the Brytohn version changed since the last compilation. This improves dramatically the imports loading time.
+However, since version 3.6.0, a precompiled version of the scripts in the standard library is stored in an indexedDB database attached to the browser where the code is executed. The compilation is performed the first time a script is imported, or if the Brytohn version changed since the last compilation. This improves dramatically the imports loading time.
 
 __Q__ : _why use the operator `<=` to build the tree of DOM elements ? This is not pythonic !_
 

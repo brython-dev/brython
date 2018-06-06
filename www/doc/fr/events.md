@@ -79,7 +79,7 @@ _nom_evt_ se produit sur l'élément.
 
 Utilisation du décorateur `browser.bind`
 ----------------------------------------
-_Nouveau en version 3.5.2_
+_Nouveau en version 3.6.0_
 
 Le module **browser** définit une fonction `bind` qui peut être utilisée comme
 décorateur pour un gestionnaire d'événement. Sa syntaxe est
