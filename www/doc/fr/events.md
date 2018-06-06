@@ -77,6 +77,36 @@ _nom_evt_ se produit sur l'élément.
 
 > renvoie la liste des fonctions qui gèrent l'événement de nom _nom\_evt_
 
+Utilisation du décorateur `browser.bind`
+----------------------------------------
+_Nouveau en version 3.5.2_
+
+Le module **browser** définit une fonction `bind` qui peut être utilisée comme
+décorateur pour un gestionnaire d'événement. Sa syntaxe est
+
+<code>@bind(_cible, evt_)</code>
+
+Si _cible_ est une instance de `DOMNode`, la fonction décorée gère l'événement
+_evt_ sur cet élément.
+
+Si _cible_ est une chaine de caractères, elle est interprétée comme un
+sélecteur CSS ; pour tous les éléments de la page qui correspondent à ce
+sélecteur, l'événement _evt_ est géré par la fonction décorée.
+
+Exemples:
+
+```python
+from browser import document, bind
+
+@bind(document[element_id], "mouseover")
+def mouseover(ev):
+    ...
+
+@bind("div.foo", "enter") # tous les éléments DIV avec l'attribut class="foo"
+def enter(ev):
+    ...
+```
+
 Objets `DOMEvent`
 -----------------
 Quel que soit le type d'événement géré, les instances de la classe `DOMEvent`

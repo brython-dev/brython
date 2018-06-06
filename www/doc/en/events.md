@@ -75,6 +75,36 @@ For events management, the elements of a page have the following methods :
 
 > returns the list of functions that handle the event named _evt\_name_
 
+Using the decorator `browser.bind`
+----------------------------------
+_New in version 3.5.2_
+
+The **browser** module defines a function `bind` that can be used as a
+decorator for an event handler. Its syntax is
+
+<code>@bind(_target, evt_)</code>
+
+If _target_ is a `DOMNode` instance, the decorated function handles the
+event _evt_ on this element.
+
+If _target_ is a string, it is interpreted as a CSS selector ; for all
+the elements in the page that match this selector, the event _evt_ is
+managed by the decorated function.
+
+Examples:
+
+```python
+from browser import document, bind
+
+@bind(document[element_id], "mouseover")
+def mouseover(ev):
+    ...
+
+@bind("div.foo", "enter") # all the DIV elements with attribute class="foo"
+def enter(ev):
+    ...
+```
+
 `DOMEvent` objects
 ------------------
 (information by Mozilla Contributors, found at [https://developer.mozilla.org/en-US/docs/Web/API/event](https://developer.mozilla.org/en-US/docs/Web/API/event))

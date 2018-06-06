@@ -3,6 +3,9 @@ The package **browser** groups the built-in Brython-specific names and modules
 **browser**.`alert(`_message_`)`
 > a function that prints the _message_ in a pop-up window. Returns `None`
 
+**browser**.`bind(`_target, event_`)`
+> a function used as a decorator for event binding. Cf. section [events](events.html).
+
 **browser**.`confirm(`_message_`)`
 > a function that print the _message_ in a window, and two buttons (ok/cancel). Returns `True` if ok, `False` if cancel
 
@@ -36,7 +39,7 @@ The package **browser** groups the built-in Brython-specific names and modules
 
 **browser**.`prompt(`_message[,default]_`)`
 > a function that prints the _message_ in a window, and an entry field.
-> Returns the entered value ; if no value was entered, return _default_ if 
+> Returns the entered value ; if no value was entered, return _default_ if
 > defined, else the empty string
 
 **browser**.`window`

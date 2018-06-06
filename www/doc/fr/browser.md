@@ -3,6 +3,9 @@ Le paquetage **browser** définit les noms et les modules intégrés spécifique
 **browser**.`alert(`_message_`)`
 > une fonction qui affiche le _message_ dans une fenêtre. Retourne la valeur `None`
 
+**browser**.`bind(`_cible, evenement_`)`
+> une fonction utilisée comme décorateur pour définir des gestionnaires d'événement. Cf. la section [Evénements](events.html).
+
 **browser**.`confirm(`_message_`)`
 > une fonction qui affiche le _message_ dans une fenêtre et deux boutons de réponse (ok/annuler). Retourne `True` si ok, `False` sinon
 
