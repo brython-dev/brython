@@ -2424,7 +2424,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         // Push id in frames stack
         var enter_frame_nodes = [
             $NodeJS('var $top_frame = [$local_name, $locals,' +
-                '"' + global_scope.id + '", ' + global_ns + ']'),
+                '"' + global_scope.id + '", ' + global_ns + ',' + name + ']'),
             $NodeJS('$B.frames_stack.push($top_frame)'),
             $NodeJS('var $stack_length = $B.frames_stack.length')
         ]

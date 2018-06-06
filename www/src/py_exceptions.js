@@ -84,13 +84,20 @@ var traceback = $B.make_class("traceback",
 )
 
 traceback.__getattribute__ = function(self, attr){
-    if(self.$stack.length == 0){alert("no stack", attr)}
-    var last_frame = $B.last(self.$stack)
-    if(last_frame === undefined){
-        alert("last frame undef ")
-        console.log(self.$stack, Object.keys(self.$stack))
+    var line_info;
+    if (attr === 'tb_frame' ||
+        attr === 'tb_lineno' ||
+        attr === 'tb_lasti' ||
+        attr === 'tb_next') {
+        if(self.$stack.length == 0){
+            console.log("no stack", attr)
+        }
+        var last_frame = $B.last(self.$stack)
+        if(last_frame === undefined){
+            console.log("last frame undef", self.$stack, Object.keys(self.$stack))
+        }
+        var line_info = last_frame[1].$line_info
     }
-    var line_info = last_frame[1].$line_info
 
     switch(attr){
         case "tb_frame":
@@ -221,18 +228,13 @@ BaseException.__getattr__ = function(self, attr){
             }
         }
 
-        var info = "Traceback (most recent call last):"
-
+        var info = '';
+        if(self.$js_exc !== undefined){
+            info += "\nJS stack:\n" + self.$js_exc.stack + "\n"
+        }
+        info += "Traceback (most recent call last):"
         var line_info = self.$line_info
 
-        if(self.$js_exc !== undefined){
-            for(var attr in self.$js_exc){
-                if(attr == "message"){continue}
-                try{info += "\n    " + attr + " : " + self.$js_exc[attr]}
-                catch(_err){}
-            }
-            info += "\n"
-        }
         for(var i = 0; i < self.$stack.length; i++){
             var frame = self.$stack[i]
             //console.log('frame', i, frame, frame[3].$line_info)
@@ -241,22 +243,22 @@ BaseException.__getattr__ = function(self, attr){
             if(i == self.$stack.length - 1 && self.$line_info){
                 $line_info = self.$line_info
             }
-            var line_info = $line_info.split(','),
-                src = $B.$py_src[line_info[1]]
+            var line_info = $line_info.split(',');
+            var src = $B.$py_src[line_info[1]];
             if(src === undefined && self.module == line_info[1]){
                 src = self.src
             }
-            if(src === undefined){continue}
-            var lines = src.split("\n"),
-                module = line_info[1]
+            if (src === undefined){continue}
+            var module = line_info[1];
             if(module.charAt(0) == "$"){module = "<module>"}
             info += "\n  module " + module + " line " + line_info[0]
+            if (frame.length > 4 && frame[4].$infos) {
+                info += ', in ' + frame[4].$infos.__name__
+            }
+
+            var lines = src.split("\n");
             var line = lines[parseInt(line_info[0]) - 1]
             if(line){line = line.replace(/^[ ]+/g, "")}
-            if(line === undefined){
-                console.log("line undef...", line_info,
-                    $B.$py_src[line_info[1]])
-            }
             info += "\n    " + line
         }
         return info
@@ -325,7 +327,6 @@ $B.exception = function(js_exc){
         }
         var $message = js_exc.msg || "<" + js_exc + ">"
         exc.args = _b_.tuple.$factory([$message])
-        exc.info = ""
         exc.$py_error = true
         exc.$stack = $B.frames_stack.slice()
     }else{
