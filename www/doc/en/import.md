@@ -69,6 +69,12 @@ execute
 
 `python -m brython --modules`
 
+Note that this program parses the Brython code in all the scripts, modules
+and HTML pages of the directory and its sub-directories. The CPython version
+used must be compliant with this Brython code : for instance if there are
+f-strings in the Brython code, CPython 3.6+ is required, otherwise you would
+get syntax errors.
+
 You can then replace all the occurrences of
 
     <script type="text/javascript" src="brython_stdlib.js"></script>
