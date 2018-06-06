@@ -252,8 +252,8 @@ def init(*args):
     # Simulate permutations to make sure we have a valid game
     for i in range(300):
         movable = []
-        for row,col in [(erow-1, ecol), (erow+1, ecol),
-            (erow, ecol-1), (erow, ecol+1)]:
+        for row, col in [(erow - 1, ecol), (erow + 1, ecol),
+            (erow, ecol - 1), (erow, ecol + 1)]:
                 if row in range(4) and col in range(4):
                     movable.append((row, col))
         row, col = random.choice(movable)
