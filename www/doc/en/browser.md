@@ -42,6 +42,13 @@ The package **browser** groups the built-in Brython-specific names and modules
 > Returns the entered value ; if no value was entered, return _default_ if
 > defined, else the empty string
 
+**browser**.`run_script(`_src[, nom]_`)`
+> this function executes the Python source code in _src_ with an optional
+> _name_. It can be used as an alternative to `exec()`, with the benefit
+> that the indexedDB cache is used for importing modules from the standard
+> library.
+
+
 **browser**.`window`
 > an object that represents the browser window
 

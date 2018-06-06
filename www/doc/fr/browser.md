@@ -41,5 +41,11 @@ Le paquetage **browser** définit les noms et les modules intégrés spécifique
 **browser**.`prompt(`_message[,defaut]_`)`
 > une fonction qui affiche le _message_ dans une fenêtre et une zone de saisie. Retourne la valeur saisie ; si aucune valeur n'est saisie, retourne _defaut_, ou la chaine vide si _defaut_ n'est pas fourni
 
+**browser**.`run_script(`_src[, nom]_`)`
+> cette fonction exécute le code source Python dans _src_ avec un _nom_
+> optionnel. Elle peut être utilisée comme une alternative à `exec()`, avec
+> l'avantage de bénéficier du cache indexedDB pour l'import de modules de la
+> bibliothèque standard.
+
 **browser**.`window`
 > un objet représentant la fenêtre du navigateur
