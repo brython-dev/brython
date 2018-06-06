@@ -42,7 +42,7 @@ with open(os.path.join(data_dir, "demo.html"), "w", encoding="utf-8") as out:
 setup(
     name='brython',
 
-    version='3.5.2',
+    version='3.5.2'
 
     description='Brython is an implementation of Python 3 running in the browser',
 
