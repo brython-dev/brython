@@ -63,7 +63,7 @@ either choose the latest stable release :
 
 ```xml
 <script type="text/javascript"
-    src="https://cdn.rawgit.com/brython-dev/brython/3.5.1/www/src/brython.js">
+    src="https://cdn.rawgit.com/brython-dev/brython/3.6.0/www/src/brython.js">
 </script>
 ```
 
@@ -82,7 +82,7 @@ with the [available stdlib](https://github.com/brython-dev/brython/tree/master/w
 
 ```xml
 <script type="text/javascript"
-    src="https://cdn.rawgit.com/brython-dev/brython/3.5.1/www/src/brython_stdlib.js">
+    src="https://cdn.rawgit.com/brython-dev/brython/3.6.0/www/src/brython_stdlib.js">
 </script>
 ```
 
