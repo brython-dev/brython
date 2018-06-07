@@ -379,4 +379,13 @@ class A:
 assert A(5).__dict__ == {'x': 5}
 assert vars(A(5)) == {'x': 5}
 
+# PEP 448
+assert dict(**{'x': 1}, y=2, **{'z': 3}) == {"x": 1, "y": 2, "z": 3}
+
+try:
+    d = dict(**{'x': 1}, y=2, **{'z': 3, 'x': 9})
+    raise Exception("should have raised TypeError")
+except TypeError:
+    pass
+
 print('passed all tests...')

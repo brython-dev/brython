@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,6,0,'dev',0]
 __BRYTHON__.__MAGIC__="3.6.0"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-06-06 17:43:31.759456"
-__BRYTHON__.timestamp=1528299811759
+__BRYTHON__.compiled_date="2018-06-07 08:30:04.609707"
+__BRYTHON__.timestamp=1528353004609
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -869,7 +869,7 @@ args_str=p[0]
 for(var i=1;i < p.length;i++){args_str +='.concat(' + p[i]+ ')'}}else{for(var i=0,len=positional.length;i < len;i++){positional[i]=positional[i][0]}
 args_str=positional.join(', ')}
 var kw_args_str='{' + kw_args.join(', ')+ '}'
-if(dstar_args.length){kw_args_str='{$nat:"kw",kw:$B.extend("' + this.func.name +
+if(dstar_args.length){kw_args_str='{$nat:"kw",kw:$B.extend("' + this.func.value +
 '",' + kw_args_str + ',' + dstar_args.join(', ')+ ')}'}else if(kw_args_str !='{}'){kw_args_str='{$nat:"kw",kw:' + kw_args_str + '}'}else{kw_args_str=''}
 if(star_args && kw_args_str){args_str +='.concat([' + kw_args_str + '])'}else{if(args_str && kw_args_str){args_str +=',' + kw_args_str}
 else if(!args_str){args_str=kw_args_str}}
@@ -2952,7 +2952,6 @@ case '{':
 case '.':
 case 'not':
 case 'lambda':
-if(C.has_dstar){$_SyntaxError(C,token)}
 C.expect=','
 return $transition(new $CallArgCtx(C),token,value)
 case ')':
