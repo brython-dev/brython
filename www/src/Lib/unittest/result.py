@@ -149,7 +149,7 @@ class TestResult(object):
         "Indicates that the tests should be aborted"
         self.shouldStop = True
 
-    def _exc_info_to_string(self, err, test):
+    def _exc_info_to_string(self, err, test, includeInternal=False):
         """Converts a sys.exc_info()-style tuple of values into a string."""
         exctype, value, tb = err
         # Skip test runner traceback levels
@@ -159,9 +159,9 @@ class TestResult(object):
         if exctype is test.failureException:
             # Skip assert*() traceback levels
             length = self._count_relevant_tb_levels(tb)
-            msgLines = traceback.format_exception(exctype, value, tb, length)
+            msgLines = traceback.format_exception(exctype, value, tb, length, includeInternal=includeInternal)
         else:
-            msgLines = traceback.format_exception(exctype, value, tb)
+            msgLines = traceback.format_exception(exctype, value, tb, includeInternal=includeInternal)
 
         if self.buffer:
             output = sys.stdout.getvalue()

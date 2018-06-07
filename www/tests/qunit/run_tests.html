@@ -87,12 +87,17 @@ def qunit_add_tests(suite):
         if isinstance(test, unittest.BaseTestSuite):
             pend.append(test)
         else:
-            _QUnit.test(test.shortDescription(), test_utils.qunit_test(test, result))
+            testName = test.shortDescription() or test.id()
+            _QUnit.test(testName, test_utils.qunit_test(testName, test, result))
     for suite in pend:
         qunit_add_tests(suite)
 
-
 qunit_add_tests(test_utils.load_brython_test_cases('..'))
+
+from unittest.loader import TestLoader
+import test.test_dict
+qunit_add_tests(TestLoader().loadTestsFromModule(test.test_dict))
+
 </script>
 
   </body>

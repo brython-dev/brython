@@ -213,56 +213,62 @@ BaseException.__new__ = function(cls){
     return err
 }
 
-BaseException.__getattr__ = function(self, attr){
+var getExceptionTrace = function(exc, includeInternal) {
+    if(exc.__class__ === undefined){
+        console.log("no class", exc)
+        return exc + ''
+    }else{
+        var name = exc.__class__.__name__
+        if(name == "SyntaxError" || name == "IndentationError"){
+            return 'File "' + exc.args[1] + '", line ' + exc.args[2] +
+                "\n    " + exc.args[4]
+        }
+    }
 
-    if(attr == "info"){
+    var info = '';
+    if(exc.$js_exc !== undefined && includeInternal){
+        info += "\nJS stack:\n" + exc.$js_exc.stack + "\n"
+    }
+    info += "Traceback (most recent call last):"
+    var line_info = exc.$line_info
 
-        if(self.__class__ === undefined){
-            console.log("no class", self)
-            return self + ''
-        }else{
-            var name = self.__class__.__name__
-            if(name == "SyntaxError" || name == "IndentationError"){
-                return 'File "' + self.args[1] + '", line ' + self.args[2] +
-                    "\n    " + self.args[4]
-            }
+    for(var i = 0; i < exc.$stack.length; i++){
+        var frame = exc.$stack[i]
+        //console.log('frame', i, frame, frame[3].$line_info)
+        if(! frame[1] || ! frame[1].$line_info){continue}
+        var $line_info = frame[1].$line_info
+        if(i == exc.$stack.length - 1 && exc.$line_info){
+            $line_info = exc.$line_info
+        }
+        var line_info = $line_info.split(',');
+        var src = $B.$py_src[line_info[1]];
+        if(src === undefined && exc.module == line_info[1]){
+            src = exc.src
+        }
+        if (src === undefined && !includeInternal){continue}
+        var module = line_info[1];
+        if(module.charAt(0) == "$"){module = "<module>"}
+        info += "\n  module " + module + " line " + line_info[0]
+        if (frame.length > 4 && frame[4].$infos) {
+            info += ', in ' + frame[4].$infos.__name__
         }
 
-        var info = '';
-        if(self.$js_exc !== undefined){
-            info += "\nJS stack:\n" + self.$js_exc.stack + "\n"
-        }
-        info += "Traceback (most recent call last):"
-        var line_info = self.$line_info
-
-        for(var i = 0; i < self.$stack.length; i++){
-            var frame = self.$stack[i]
-            //console.log('frame', i, frame, frame[3].$line_info)
-            if(! frame[1] || ! frame[1].$line_info){continue}
-            var $line_info = frame[1].$line_info
-            if(i == self.$stack.length - 1 && self.$line_info){
-                $line_info = self.$line_info
-            }
-            var line_info = $line_info.split(',');
-            var src = $B.$py_src[line_info[1]];
-            if(src === undefined && self.module == line_info[1]){
-                src = self.src
-            }
-            if (src === undefined){continue}
-            var module = line_info[1];
-            if(module.charAt(0) == "$"){module = "<module>"}
-            info += "\n  module " + module + " line " + line_info[0]
-            if (frame.length > 4 && frame[4].$infos) {
-                info += ', in ' + frame[4].$infos.__name__
-            }
-
+        if (src !== undefined) {
             var lines = src.split("\n");
             var line = lines[parseInt(line_info[0]) - 1]
             if(line){line = line.replace(/^[ ]+/g, "")}
             info += "\n    " + line
         }
-        return info
+    }
+    return info
+};
 
+BaseException.__getattr__ = function(self, attr){
+
+    if(attr == "info"){
+        return getExceptionTrace(self, false);
+    } else if (attr == "infoWithInternal") {
+        return getExceptionTrace(self, true);
     }else if(attr == "traceback"){
         // Return traceback object
         return traceback.$factory(self)

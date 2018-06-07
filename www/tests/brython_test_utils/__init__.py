@@ -56,7 +56,8 @@ def discover_brython_test_modules():
           ("test_urllib.py", "urllib"),
           #("test_indexedDB.py", "indexedDB"),
           #("test_time.py", "time"),
-        ])]
+        ])
+    ]
 
 def populate_testmod_input(elem, selected=None):
     """Build a multiple selection control including test modules
