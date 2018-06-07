@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,6,0,'dev',0]
 __BRYTHON__.__MAGIC__="3.6.0"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-06-07 08:30:04.609707"
-__BRYTHON__.timestamp=1528353004609
+__BRYTHON__.compiled_date="2018-06-07 10:09:47.669554"
+__BRYTHON__.timestamp=1528358987669
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -2019,6 +2019,12 @@ item.tree[0].tree[0].bound=true}}else if(item.type=='list_or_tuple' ||
 (item.type=="expr" &&
 item.tree[0].type=='list_or_tuple')){if(item.type=="expr"){item=item.tree[0]}
 item.bind_ids(scope)}},this)}
+this.packed_indices=function(){var ixs=[]
+for(var i=0;i < this.tree.length;i++){var t=this.tree[i]
+if(t.type=="expr"){t=t.tree[0]
+if(t.type=="packed" ||
+(t.type=="call" && t.func.type=="packed")){ixs.push(i)}}}
+return ixs}
 this.to_js=function(){this.js_processed=true
 var scope=$get_scope(this),sc=scope,scope_id=scope.id.replace(/\//g, '_'),
             pos = 0
@@ -2066,6 +2072,12 @@ if(this.expression.length==1){return $B.$gen_expr(module_name,scope,items,line_n
 return $B.$dict_comp(module_name,scope,items,line_num)}
 return $B.$gen_expr(module_name,scope,items,line_num)
 case 'tuple':
+var packed=this.packed_indices()
+if(packed.length > 0){var js="",res
+for(var i=0;i < this.tree.length;i++){if(packed.indexOf(i)> -1){res="_b_.list.$factory(" + this.tree[i].to_js()+")"}else{res="[" + this.tree[i].to_js()+ "]"}
+if(i > 0){res=".concat(" + res + ")"}
+js +=res}
+return 'tuple.$factory(' + js + ')'}
 if(this.tree.length==1 && this.has_comma===undefined){return this.tree[0].to_js()}
 return 'tuple.$factory([' + $to_js(this.tree)+ '])'}}}
 var $NodeCtx=$B.parser.$NodeCtx=function(node){
@@ -2302,7 +2314,9 @@ sjs(this.tree[1])+ ')'}else if(op=='/'){return '$B.div(' + sjs(this.tree[0])+ ',
 sjs(this.tree[1])+ ')'}else{return sjs(this.tree[0])+ op + sjs(this.tree[1])}}}
 var $PackedCtx=$B.parser.$PackedCtx=function(C){
 this.type='packed'
-if(C.parent.type=='list_or_tuple'){for(var i=0;i < C.parent.tree.length;i++){var child=C.parent.tree[i]
+if(C.parent.type=='list_or_tuple' &&
+C.parent.parent.type=="node"){
+for(var i=0;i < C.parent.tree.length;i++){var child=C.parent.tree[i]
 if(child.type=='expr' && child.tree.length > 0
 && child.tree[0].type=='packed'){$_SyntaxError(C,["two starred expressions in assignment"])}}}
 this.parent=C

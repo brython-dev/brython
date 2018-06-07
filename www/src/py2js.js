@@ -4250,6 +4250,21 @@ var $ListOrTupleCtx = $B.parser.$ListOrTupleCtx = function(context,real){
         }, this)
     }
 
+    this.packed_indices = function(){
+        var ixs = []
+        for(var i = 0; i < this.tree.length; i++){
+            var t = this.tree[i]
+            if(t.type == "expr"){
+                t = t.tree[0]
+                if(t.type == "packed" ||
+                        (t.type == "call" && t.func.type == "packed")){
+                    ixs.push(i)
+                }
+            }
+        }
+        return ixs
+    }
+
     this.to_js = function(){
         this.js_processed = true
         var scope = $get_scope(this),
@@ -4340,6 +4355,20 @@ var $ListOrTupleCtx = $B.parser.$ListOrTupleCtx = function(context,real){
                 return $B.$gen_expr(module_name, scope, items, line_num)
 
             case 'tuple':
+                var packed = this.packed_indices()
+                if(packed.length > 0){
+                    var js = "", res
+                    for(var i = 0; i < this.tree.length; i++){
+                        if(packed.indexOf(i) > -1){
+                            res = "_b_.list.$factory(" + this.tree[i].to_js() +")"
+                        }else{
+                            res = "[" + this.tree[i].to_js() + "]"
+                        }
+                        if(i > 0){res = ".concat(" + res + ")"}
+                        js += res
+                    }
+                    return 'tuple.$factory(' + js + ')'
+                }
                 if(this.tree.length == 1 && this.has_comma === undefined){
                     return this.tree[0].to_js()
                 }
@@ -4821,7 +4850,9 @@ var $PackedCtx = $B.parser.$PackedCtx = function(context){
     // used for packed tuples in expressions, eg
     //     a, *b, c = [1, 2, 3, 4]
     this.type = 'packed'
-    if(context.parent.type == 'list_or_tuple'){
+    if(context.parent.type == 'list_or_tuple' &&
+            context.parent.parent.type == "node"){
+        // SyntaxError for a, *b, *c = ...
         for(var i = 0; i < context.parent.tree.length; i++){
             var child = context.parent.tree[i]
             if(child.type == 'expr' && child.tree.length > 0

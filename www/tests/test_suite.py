@@ -388,4 +388,11 @@ try:
 except TypeError:
     pass
 
+def f():
+    return [5, 6]
+r = [3, 4]
+t = 3, *r, *f(), 4
+
+assert t == (3, 3, 4, 5, 6, 4)
+
 print('passed all tests...')
