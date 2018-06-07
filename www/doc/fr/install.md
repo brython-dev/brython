@@ -1,3 +1,6 @@
+Première installation
+---------------------
+
 Pour installer Brython :
 
 - si votre PC peut utiliser CPython et pip, installez le package `brython` par
@@ -8,7 +11,7 @@ Pour installer Brython :
 
 > puis dans un répertoire vide, exécutez
 
-```
+```bash
     python -m brython --install
 ```
 
@@ -33,3 +36,40 @@ inclure __brython_stdlib.js__ en plus de __brython.js__:
 <script type="text/javascript" src="brython.js"></script>
 <script type="text/javascript" src="brython_stdlib.js"></script>
 ```
+
+Mises à jour
+------------
+Quand une nouvelle version de Brython est publiée, la mise à jour s'effectue
+par la commande habituelle:
+
+```
+pip install brython --upgrade
+```
+
+Dans le répertoire de l'application, vous pouvez ensuite mettre à jour les
+fichiers Brython (__brython.js__ et __brython_stdlib.js__) par:
+
+```
+python -m brython --update
+```
+
+Serveur web
+-----------
+Les fichiers HTML peuvent être ouverts directement dans le navigateur, mais il
+est préférable de lancer un serveur web dans le répertoire de l'application.
+
+Pour cela vous pouvez utiliser le module **http.server** de la distribution
+standard:
+
+```bash
+python -m http.server
+```
+
+Par défaut le port utilisé est 8000. Pour choisir un autre port:
+
+```bash
+python -m http.server 8001
+```
+
+Vous pouvez alors accéder aux pages en entrant _http://localhost:8001/demo.html_
+dans la barre d'adresse du navigateur.
