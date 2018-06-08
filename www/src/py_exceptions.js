@@ -282,7 +282,15 @@ BaseException.$factory = function (){
     err.args = _b_.tuple.$factory(Array.prototype.slice.call(arguments))
     err.__class__ = _b_.BaseException
     err.$py_error = true
+    // Make a copy of the current frame stack array
     err.$stack = $B.frames_stack.slice()
+    for (var i = 0; i < err.$stack.length; i++) {
+        // Then copy each frame
+        err.$stack[i] = err.$stack[i].slice()
+        // Then create a new object that retains only
+        // the $line_info from the frame's locals
+        err.$stack[i][1] = {$line_info: err.$stack[i][1].$line_info}
+    }
     if($B.frames_stack.length){
         err.$line_info = $B.last($B.frames_stack)[1].$line_info
     }

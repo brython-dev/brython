@@ -1903,6 +1903,20 @@ except:
     while tb:
         tb = tb.tb_next
 
+
+# Issue 859
+import traceback as tb
+
+def f():
+    return 1 / 0
+
+try:
+    f()
+except Exception:
+    exception_info = tb.format_exc()
+    assert 'f()' in exception_info
+    assert '1 / 0' in exception_info
+
 # PEP 448
 assert dict(**{'x': 1}, y=2, **{'z': 3}) == {"x": 1, "y": 2, "z": 3}
 try:
