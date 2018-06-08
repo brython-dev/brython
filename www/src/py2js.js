@@ -2824,11 +2824,76 @@ var $DictOrSetCtx = $B.parser.$DictOrSetCtx = function(context){
         return '(dict_or_set) {' + this.tree + '}'
     }
 
+    this.nb_dict_items = function(){
+        var nb = 0
+        this.tree.forEach(function(item){
+            if(item.packed){nb += 2}
+            else{nb++}
+        })
+        return nb
+    }
+
+    this.packed_indices = function(){
+        var ixs = []
+        this.items.forEach(function(t, i){
+            if(t.type == "expr" && t.packed){
+                ixs.push(i)
+            }
+        })
+        return ixs
+    }
+
+    this.unpack_dict = function(packed){
+        var js = "",
+            res,
+            first,
+            i = 0,
+            item,
+            elts = []
+        while(i < this.items.length){
+            item = this.items[i]
+            first = i == 0
+            if(item.type == "expr" && item.packed){
+                res = "_b_.list.$factory(_b_.dict.items(" + item.to_js() + "))"
+                i++
+            }else{
+                res = "[[" + item.to_js() + "," +
+                    this.items[i + 1].to_js() + "]]"
+                i += 2
+            }
+            if(! first){
+                res = ".concat(" + res + ")"
+            }
+            js += res
+        }
+        return js
+    }
+
+    this.unpack_set = function(packed){
+        var js = "", res
+        this.items.forEach(function(t, i){
+            if(packed.indexOf(i) > -1){
+                res = "_b_.list.$factory(" + t.to_js() +")"
+            }else{
+                res = "[" + t.to_js() + "]"
+            }
+            if(i > 0){res = ".concat(" + res + ")"}
+            js += res
+        })
+        return js
+    }
+
+
     this.to_js = function(){
         this.js_processed = true
 
         switch(this.real){
             case 'dict':
+                var packed = this.packed_indices()
+                if(packed.length > 0){
+                    return 'dict.$factory(' + this.unpack_dict(packed) +
+                        ')' + $to_js(this.tree)
+                }
                 var res = []
                 for(var i = 0; i < this.items.length; i += 2){
                     res.push('[' + this.items[i].to_js() + ',' +
@@ -2842,6 +2907,10 @@ var $DictOrSetCtx = $B.parser.$DictOrSetCtx = function(context){
             case 'dict_comp':
                 return 'dict.$factory(' + $to_js(this.items) + ')' +
                     $to_js(this.tree)
+        }
+        var packed = this.packed_indices()
+        if(packed.length > 0){
+            return 'set.$factory(' + this.unpack_set(packed) + ')'
         }
         return 'set.$factory([' + $to_js(this.items) + '])' + $to_js(this.tree)
     }
@@ -2929,6 +2998,7 @@ var $ExprCtx = $B.parser.$ExprCtx = function(context, name, with_commas){
     this.with_commas = with_commas
     this.expect = ',' // can be 'expr' or ','
     this.parent = context
+    this.packed = context.packed
     this.tree = []
     context.tree[context.tree.length] = this
 
@@ -4265,6 +4335,20 @@ var $ListOrTupleCtx = $B.parser.$ListOrTupleCtx = function(context,real){
         return ixs
     }
 
+    this.unpack = function(packed){
+        var js = "", res
+        for(var i = 0; i < this.tree.length; i++){
+            if(packed.indexOf(i) > -1){
+                res = "_b_.list.$factory(" + this.tree[i].to_js() +")"
+            }else{
+                res = "[" + this.tree[i].to_js() + "]"
+            }
+            if(i > 0){res = ".concat(" + res + ")"}
+            js += res
+        }
+        return js
+    }
+
     this.to_js = function(){
         this.js_processed = true
         var scope = $get_scope(this),
@@ -4276,6 +4360,10 @@ var $ListOrTupleCtx = $B.parser.$ListOrTupleCtx = function(context,real){
 
         switch(this.real) {
             case 'list':
+                var packed = this.packed_indices()
+                if(packed.length > 0){
+                    return '$B.$list(' + this.unpack(packed) + ')'
+                }
                 return '$B.$list([' + $to_js(this.tree) + '])'
             case 'list_comp':
             case 'gen_expr':
@@ -4357,17 +4445,7 @@ var $ListOrTupleCtx = $B.parser.$ListOrTupleCtx = function(context,real){
             case 'tuple':
                 var packed = this.packed_indices()
                 if(packed.length > 0){
-                    var js = "", res
-                    for(var i = 0; i < this.tree.length; i++){
-                        if(packed.indexOf(i) > -1){
-                            res = "_b_.list.$factory(" + this.tree[i].to_js() +")"
-                        }else{
-                            res = "[" + this.tree[i].to_js() + "]"
-                        }
-                        if(i > 0){res = ".concat(" + res + ")"}
-                        js += res
-                    }
-                    return 'tuple.$factory(' + js + ')'
+                    return 'tuple.$factory(' + this.unpack(packed) + ')'
                 }
                 if(this.tree.length == 1 && this.has_comma === undefined){
                     return this.tree[0].to_js()
@@ -5991,6 +6069,8 @@ var $transition = $B.parser.$transition = function(context, token, value){
     switch(context.type){
         case 'abstract_expr':
 
+          var packed = context.packed
+
           switch(token) {
               case 'id':
               case 'imaginary':
@@ -6008,6 +6088,7 @@ var $transition = $B.parser.$transition = function(context, token, value){
                   context.parent.tree.pop() // remove abstract expression
                   var commas = context.with_commas
                   context = context.parent
+                  context.packed = packed
           }
 
           switch(token) {
@@ -6437,7 +6518,7 @@ var $transition = $B.parser.$transition = function(context, token, value){
                                      context.closed = true
                                      return context
                                 case 'dict':
-                                    if(context.tree.length % 2 == 0){
+                                    if(context.nb_dict_items() % 2 == 0){
                                         context.items = context.tree
                                         context.tree = []
                                         context.closed = true
@@ -6448,7 +6529,8 @@ var $transition = $B.parser.$transition = function(context, token, value){
                                   ' after ' + context)
                         case ',':
                             if(context.real == 'dict_or_set'){context.real = 'set'}
-                            if(context.real == 'dict' && context.tree.length % 2){
+                            if(context.real == 'dict' &&
+                                    context.nb_dict_items() % 2){
                                 $_SyntaxError(context, 'token ' + token +
                                     ' after ' + context)
                             }
@@ -6506,6 +6588,21 @@ var $transition = $B.parser.$transition = function(context, token, value){
                             return $transition(expr, token, value)
                         case 'op':
                             switch(value) {
+                                case '*':
+                                case '**':
+                                    context.expect = ","
+                                    var expr = new $AbstractExprCtx(context, false)
+                                    expr.packed = value.length // 1 for x, 2 for **
+                                    if(context.real == "dict_or_set"){
+                                        context.real = value == "*" ? "set" :
+                                            "dict"
+                                    }else if(
+                                            (context.real == "set" && value == "**") ||
+                                            (context.real == "dict" && value == "*")){
+                                        $_SyntaxError(context, 'token ' + token +
+                                            ' after ' + context)
+                                    }
+                                    return expr
                                 case '+':
                                     // ignore unary +
                                     return context
@@ -6884,6 +6981,14 @@ var $transition = $B.parser.$transition = function(context, token, value){
                     }
                 }
                 return new $AbstractExprCtx(new $TernaryCtx(ctx), false)
+            case 'eol':
+                if(["dict_or_set", "list_or_tuple"].indexOf(context.parent.type) == -1){
+                    var t = context.tree[0]
+                    if(t.type == "packed" ||
+                            (t.type == "call" && t.func.type == "packed")){
+                        $_SyntaxError(context, ["can't use starred expression here"])
+                    }
+                }
           }
           return $transition(context.parent,token)
 
@@ -7563,7 +7668,11 @@ var $transition = $B.parser.$transition = function(context, token, value){
                 new $IdCtx(context, value)
                 context.parent.expect = ','
                 return context.parent
+            }else if(token=="["){
+                context.parent.expect = ','
+                return new $ListOrTupleCtx(context, value)
             }
+            console.log("syntax error", context, token)
             $_SyntaxError(context, 'token ' + token + ' after ' + context)
         case 'pass':
             if(token == 'eol'){return context.parent}
