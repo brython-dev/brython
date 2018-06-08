@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,6,2,'final',0]
 __BRYTHON__.__MAGIC__="3.6.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-06-08 09:22:38.151740"
-__BRYTHON__.timestamp=1528442558151
+__BRYTHON__.compiled_date="2018-06-08 13:27:04.623833"
+__BRYTHON__.timestamp=1528457224623
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -6712,6 +6712,9 @@ err.args=_b_.tuple.$factory(Array.prototype.slice.call(arguments))
 err.__class__=_b_.BaseException
 err.$py_error=true
 err.$stack=$B.frames_stack.slice()
+for(var i=0;i < err.$stack.length;i++){
+err.$stack[i]=err.$stack[i].slice()
+err.$stack[i][1]={$line_info: err.$stack[i][1].$line_info}}
 if($B.frames_stack.length){err.$line_info=$B.last($B.frames_stack)[1].$line_info}
 $B.current_exception=err
 eval("//placeholder//")
