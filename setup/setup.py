@@ -3,46 +3,53 @@ from setuptools import setup, find_packages
 
 import os
 import shutil
+import sys
 
 with open('README.rst', encoding='utf-8') as fobj:
     LONG_DESCRIPTION = fobj.read()
 
-this_dir = os.getcwd()
-root_dir = os.path.dirname(this_dir)
-src_dir = os.path.join(root_dir, "www", "src")
-data_dir = os.path.join(this_dir, "data")
+command = sys.argv[1]
 
-# copy files from /www/src
-for fname in ["brython.js", "brython_stdlib.js", "unicode.txt"]:
-    shutil.copyfile(os.path.join(src_dir, fname),
-        os.path.join(data_dir, fname))
+if command == "sdist":
+    # before creating the distribution, copy files from other locations in
+    # the repository
+    print("copying files...")
+    this_dir = os.getcwd()
+    root_dir = os.path.dirname(this_dir)
+    src_dir = os.path.join(root_dir, "www", "src")
+    data_dir = os.path.join(this_dir, "data")
 
-# copy demo.html
-with open(os.path.join(root_dir, 'www', 'demo.html'), encoding="utf-8") as f:
-    demo = f.read()
-start_tag = "<!-- start copy -->"
-end_tag = "<!-- end copy -->"
-start = demo.find(start_tag)
-if start == -1:
-    raise Exception("No tag <!-- start copy --> in demo.html")
-end = demo.find(end_tag)
-if end == -1:
-    raise Exception("No tag <!-- end copy --> in demo.html")
-body = demo[start + len(start_tag) : end].strip()
+    # copy files from /www/src
+    for fname in ["brython.js", "brython_stdlib.js", "unicode.txt"]:
+        shutil.copyfile(os.path.join(src_dir, fname),
+            os.path.join(data_dir, fname))
 
-with open(os.path.join(data_dir, "demo.tmpl"), encoding="utf-8") as f:
-    template = f.read()
+    # copy demo.html
+    with open(os.path.join(root_dir, 'www', 'demo.html'), encoding="utf-8") as f:
+        demo = f.read()
+    start_tag = "<!-- start copy -->"
+    end_tag = "<!-- end copy -->"
+    start = demo.find(start_tag)
+    if start == -1:
+        raise Exception("No tag <!-- start copy --> in demo.html")
+    end = demo.find(end_tag)
+    if end == -1:
+        raise Exception("No tag <!-- end copy --> in demo.html")
+    body = demo[start + len(start_tag) : end].strip()
 
-demo = template.replace("{{body}}", body)
+    with open(os.path.join(data_dir, "demo.tmpl"), encoding="utf-8") as f:
+        template = f.read()
 
-with open(os.path.join(data_dir, "demo.html"), "w", encoding="utf-8") as out:
-    out.write(demo)
+    demo = template.replace("{{body}}", body)
+
+    with open(os.path.join(data_dir, "demo.html"), "w", encoding="utf-8") as out:
+        out.write(demo)
 
 
 setup(
     name='brython',
 
-    version='3.6.0',
+    version='3.6.1',
     description='Brython is an implementation of Python 3 running in the browser',
 
     long_description = LONG_DESCRIPTION,

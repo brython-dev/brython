@@ -1903,6 +1903,7 @@ except:
     while tb:
         tb = tb.tb_next
 
+
 # Issue 859
 import traceback as tb
 
@@ -1915,6 +1916,37 @@ except Exception:
     exception_info = tb.format_exc()
     assert 'f()' in exception_info
     assert '1 / 0' in exception_info
+
+# PEP 448
+assert dict(**{'x': 1}, y=2, **{'z': 3}) == {"x": 1, "y": 2, "z": 3}
+try:
+    d = dict(**{'x': 1}, y=2, **{'z': 3, 'x': 9})
+    raise Exception("should have raised TypeError")
+except TypeError:
+    pass
+
+r = range(2)
+t = *r, *range(2), 4
+assert t == (0, 1, 0, 1, 4)
+
+t = [*range(4), 4]
+assert t == [0, 1, 2, 3, 4]
+
+assert {*range(4), 4} == {0, 1, 2, 3, 4}
+assert {*[0, 1], 2} == {0, 1, 2}
+assert {*(0, 1), 2} == {0, 1, 2}
+assert {4, *t} == {0, 1, 2, 3, 4}
+
+assert {'x': 1, **{'y': 2, 'z': 3}} == {'x': 1, 'y': 2, 'z': 3}
+
+assert {'x': 1, **{'x': 2}} == {'x': 2}
+assert {**{'x': 2}, 'x': 1} == {'x': 1}
+
+assertRaises(SyntaxError, exec, "d = {'x': 1, *[1]}")
+assertRaises(SyntaxError, exec, "d = {'x', **{'y': 1}}")
+assertRaises(SyntaxError, exec, "d = {*[1], 'x': 2}")
+assertRaises(SyntaxError, exec, "d = {**{'x': 1}, 2}")
+assertRaises(SyntaxError, exec, "t = *range(4)")
 
 # ==========================================
 # Finally, report that all tests have passed
