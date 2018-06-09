@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,6,2,'final',0]
 __BRYTHON__.__MAGIC__="3.6.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-06-08 13:27:04.623833"
-__BRYTHON__.timestamp=1528457224623
+__BRYTHON__.compiled_date="2018-06-09 11:55:21.875595"
+__BRYTHON__.timestamp=1528538121875
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -199,7 +199,7 @@ var module=tree_node.module
 var line_num=tree_node.line_num
 if(root.line_info){line_num=root.line_info}
 if(indent !==undefined){line_num++}
-if(indent===undefined){if(Array.isArray(msg)){$B.$SyntaxError(module,msg[0],$pos)}
+if(indent===undefined){if(Array.isArray(msg)){$B.$SyntaxError(module,msg[0],$pos,line_num)}
 if(msg==="Triple string end not found"){
 $B.$SyntaxError(module,'invalid syntax : triple string end not found',$pos,line_num,root)}
 $B.$SyntaxError(module,'invalid syntax',$pos,line_num,root)}else{throw $B.$IndentationError(module,msg,$pos)}}
@@ -4556,7 +4556,8 @@ else{var parts=module.split(".")
 parts.pop()
 __package__=parts.join(".")}
 $B.imported[module]=$B.module.$factory(module,"",__package__)
-var root=$B.py2js(source,module,module),js=root.to_js()
+try{var root=$B.py2js(source,module,module),js=root.to_js()}catch(err){handle_error(err)
+throw err}
 delete $B.imported[module]
 var imports=elts[2]
 imports=imports.join(",")

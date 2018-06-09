@@ -332,7 +332,7 @@ var $_SyntaxError = $B.parser.$_SyntaxError = function (context,msg,indent){
     }
     if(indent !== undefined){line_num++}
     if(indent === undefined){
-        if(Array.isArray(msg)){$B.$SyntaxError(module, msg[0], $pos)}
+        if(Array.isArray(msg)){$B.$SyntaxError(module, msg[0], $pos, line_num)}
         if(msg === "Triple string end not found"){
             // add an extra argument : used in interactive mode to
             // prompt for the rest of the triple-quoted string
@@ -8948,10 +8948,13 @@ function idb_load(evt, module){
                 }
                 $B.imported[module] = $B.module.$factory(module, "",
                     __package__)
-
-                var root = $B.py2js(source, module, module),
-                    js = root.to_js()
-
+                try{
+                    var root = $B.py2js(source, module, module),
+                        js = root.to_js()
+                }catch(err){
+                    handle_error(err)
+                    throw err
+                }
                 // Delete temporary import
                 delete $B.imported[module]
 
