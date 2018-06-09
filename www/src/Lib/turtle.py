@@ -672,7 +672,7 @@ class TNavigator:
         """Move turtle to an absolute position.
         """
         if y is None:
-            x, y = *x
+            x, y = x[0], x[1] # "*x" here raises SyntaxError
         # distance only needed to calculate the duration of
         # the animation which is based on "distance" and "speed" as well. 
         # We use the Manhattan distance here as it is *much* faster on Chrome, 
