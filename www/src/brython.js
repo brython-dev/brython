@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,6,2,'final',0]
 __BRYTHON__.__MAGIC__="3.6.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-06-09 11:55:21.875595"
-__BRYTHON__.timestamp=1528538121875
+__BRYTHON__.compiled_date="2018-06-10 09:44:52.287616"
+__BRYTHON__.timestamp=1528616692303
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -1309,7 +1309,8 @@ var CODE_MARKER='___%%%-CODE-%%%___' + this.name + this.num;
 var h='\n' + ' '.repeat(indent + 8)
 js='    __code__:{' + h + '    co_argcount:' + this.argcount
 var h1=',' + h + ' '.repeat(4)
-js +=h1 + 'co_filename:$locals_' + scope.module.replace(/\./g,'_')+
+var module=$get_module(this).module
+js +=h1 + 'co_filename:$locals_' + module.replace(/\./g,'_')+
 '["__file__"]' +
 h1 + 'co_firstlineno:' + node.line_num +
 h1 + 'co_flags:' + flags +
@@ -5872,10 +5873,10 @@ src=src.source}else if(typeof src !=='string'){throw _b_.TypeError.$factory("eva
 "or code object")}
 var globals_id='$exec_' + $B.UUID(),locals_id='$exec_' + $B.UUID(),parent_scope,ce=$B.current_exception
 if(_globals===undefined){if(current_locals_id==current_globals_id){locals_id=globals_id}
-var local_scope={id: current_locals_id,binding:{},bindings:{}}
+var local_scope={module: globals_id,id: current_locals_id,binding:{},bindings:{}}
 for(var attr in current_frame[1]){local_scope.binding[attr]=true
 local_scope.bindings[attr]=true}
-var global_scope={id: current_globals_id,binding:{},bindings:{}}
+var global_scope={module: globals_id,id: current_globals_id,binding:{},bindings:{}}
 for(var attr in current_frame[3]){global_scope.binding[attr]=true
 global_scope.bindings[attr]=true}
 local_scope.parent_block=global_scope

@@ -404,6 +404,7 @@ function $$eval(src, _globals, _locals){
         }
 
         var local_scope = {
+            module: globals_id,
             id: current_locals_id,
             binding: {},
             bindings: {}
@@ -413,6 +414,7 @@ function $$eval(src, _globals, _locals){
             local_scope.bindings[attr] = true
         }
         var global_scope = {
+            module: globals_id,
             id: current_globals_id,
             binding: {},
             bindings: {}

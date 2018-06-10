@@ -2676,7 +2676,8 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         var h = '\n' + ' '.repeat(indent + 8)
         js = '    __code__:{' + h + '    co_argcount:' + this.argcount
         var h1 = ',' + h + ' '.repeat(4)
-        js += h1 + 'co_filename:$locals_' + scope.module.replace(/\./g,'_') +
+        var module = $get_module(this).module
+        js += h1 + 'co_filename:$locals_' + module.replace(/\./g,'_') +
             '["__file__"]' +
             h1 + 'co_firstlineno:' + node.line_num +
             h1 + 'co_flags:' + flags +
