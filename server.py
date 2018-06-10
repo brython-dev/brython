@@ -61,6 +61,7 @@ class RequestHandler(CGIHTTPRequestHandler):
         and must be closed by the caller under all circumstances), or
         None, in which case the caller has nothing further to do.
         """
+        print(self.client_address)
         if self.is_cgi():
             return self.run_cgi()
 
@@ -144,6 +145,8 @@ class RequestHandler(CGIHTTPRequestHandler):
 
     def do_POST(self):
         if self.path == '/time_cpython':
+            if self.client_address[0] != '127.0.0.1':
+                return self.send_error(403, "Forbidden")
             data = self.rfile.read(int(self.headers.get('Content-Length')))
             src = data.decode('utf-8')
 
@@ -162,7 +165,7 @@ class RequestHandler(CGIHTTPRequestHandler):
         else:
             super(RequestHandler, self).do_POST()
 
-server_address, handler = ('0.0.0.0', port), RequestHandler
+server_address, handler = ('', port), RequestHandler
 httpd = socketserver.ThreadingTCPServer(server_address, handler)
 httpd.server_name = "Brython built-in server"
 httpd.server_port = port
