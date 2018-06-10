@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,6,2,'final',0]
 __BRYTHON__.__MAGIC__="3.6.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-06-10 09:44:52.287616"
-__BRYTHON__.timestamp=1528616692303
+__BRYTHON__.compiled_date="2018-06-10 17:05:38.956104"
+__BRYTHON__.timestamp=1528643138956
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -2495,7 +2495,8 @@ var parsed_fmt=$B.parse_fstring(fmt)
 if(parsed_fmt.length > 1){fmt=fstring(parsed_fmt)}else{fmt="'" + fmt + "'"}
 var res1="$B.builtins.str.format('{0:' + " +
 fmt + " + '}', " + expr1 + ")"
-elts.push(res1)}else{elts.push(expr1)}}else{var re=new RegExp("'","g")
+elts.push(res1)}else{if(parsed_fstring[i].conversion===null){expr1='$B.builtins.str.$factory(' + expr1 + ')'}
+elts.push(expr1)}}else{var re=new RegExp("'","g")
 elts.push("'" + parsed_fstring[i].replace(re,"\\'")+ "'")}}
 return elts.join(' + ')}
 for(var i=0;i < this.tree.length;i++){if(this.tree[i].type=="call"){

@@ -5198,7 +5198,7 @@ var $StringCtx = $B.parser.$StringCtx = function(context,value){
                                 node.context.tree[0] == "try"){
                             // node is the first "try" node
                             for(var k = 0; k < node.children.length; k++){
-                                // Tgnore line num children if any
+                                // Ignore line num children if any
                                 if(node.children[k].is_line_num){continue}
                                 // This is the node with the translation of the
                                 // f-string expression. It has the attribute js
@@ -5238,6 +5238,9 @@ var $StringCtx = $B.parser.$StringCtx = function(context,value){
                             fmt + " + '}', " + expr1 + ")"
                         elts.push(res1)
                     }else{
+                        if(parsed_fstring[i].conversion === null){
+                            expr1 = '$B.builtins.str.$factory(' + expr1 + ')'
+                        }
                         elts.push(expr1)
                     }
                 }else{
@@ -8918,6 +8921,7 @@ function idb_load(evt, module){
     // If the module is precompiled and its timestamp is the same as in
     // brython_stdlib, use the precompiled Javascript.
     // Otherwise, get the source code from brython_stdlib.js.
+
     var res = evt.target.result
 
     var timestamp = $B.timestamp
