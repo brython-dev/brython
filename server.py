@@ -61,7 +61,6 @@ class RequestHandler(CGIHTTPRequestHandler):
         and must be closed by the caller under all circumstances), or
         None, in which case the caller has nothing further to do.
         """
-        print(self.client_address)
         if self.is_cgi():
             return self.run_cgi()
 
