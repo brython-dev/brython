@@ -45,7 +45,6 @@ def handleFileSelect(evt):
     _ul = html.UL()
     for f in files:
         last_mod = Date(f.lastModified) if f.lastModified else "n/a"
-        print(last_mod)
         _ul <= html.LI(f'{f.name}({f.type or "n/a"}) - {f.size} bytes, ' +
             f'last modified: {last_mod}')
 
@@ -56,14 +55,10 @@ def handleDragOver(evt):
     evt.preventDefault()
     evt.dataTransfer.dropEffect = 'copy' # Explicitly show this is a copy.
 
-def click(evt):
-    print("click")
-
 # Setup the dnd listeners.
 dropZone = document['drop_zone']
-dropZone.bind('dragover', handleDragOver )
-dropZone.bind('drop', handleFileSelect )
-dropZone.bind("click", click)
+dropZone.bind('dragover', handleDragOver)
+dropZone.bind('drop', handleFileSelect)
 </script>
 
 </body>
