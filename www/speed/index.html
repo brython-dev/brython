@@ -97,8 +97,11 @@ def test_next():
         for result in results:
             row = TR()
             row <= TD(result['test'])
-            row <= TD(int(100*float(result['Brython'])/float(result['CPython'])),
-                align="right")
+            if "Brython" in result and "CPython" in result:
+                row <= TD(int(100*float(result['Brython'])/float(result['CPython'])),
+                    align="right")
+            else:
+                row <= TD("missing result")
             table <= row
         version = '.'.join(str(x) for x in __BRYTHON__.implementation[:3])
         body <= H1("Brython {} performance (base 100 = CPython)".format(version))

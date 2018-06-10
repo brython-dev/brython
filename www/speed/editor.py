@@ -125,8 +125,8 @@ def run(in_globals=False):
 
     # run with CPython
     req = ajax.ajax()
-    req.bind('complete',on_complete)
-    req.set_timeout(4,err_msg)
+    req.bind('complete', on_complete)
+    req.set_timeout(4, err_msg)
     req.open('POST', '/time_cpython', False)
     req.set_header('content-type','text/plain')
     req.send(src)
@@ -143,7 +143,7 @@ def run(in_globals=False):
         window.eval(js_src)
         js_time = (time.perf_counter() - t0) * 1000.0
         print(TIME_FORMAT_STRING % ('JS', js_time))
-        result = {'JS': '%6.2f' % js_time}
+        result['JS'] = '%6.2f' % js_time
     else:
         print('\nStore Javascript code in a global named JS_CODE and I will run it for you')
 
