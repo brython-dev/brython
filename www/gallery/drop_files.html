@@ -28,35 +28,43 @@
 <output id="list"></output>
 
 <script type="text/python">
-from browser import document as doc, alert
+from browser import document, alert, window
 import browser.html as html
 
+Date = window.Date.new
+
 def handleFileSelect(evt):
-  evt.stopPropagation()
-  evt.preventDefault()
+    evt.stopPropagation()
+    evt.preventDefault()
 
-  files = evt.dataTransfer.files # FileList object.
-  print(files)
+    files = evt.dataTransfer.files # FileList object.
+    print(files)
 
-  # files is a FileList of File objects. List some properties.
-  output = []
-  _ul=html.UL()
-  for f in files:
-    _ul<= html.LI('%s(%s) - %s bytes, last modified: %s' % 
-                                                  (f.name,
-                                                   f.type or 'n/a',
-                                                   f.size,
-                                                   f.lastModifiedDate if f.lastModifiedDate else 'n/a'))
-  
-  doc['list'] <= _ul
+    # files is a FileList of File objects. List some properties.
+    output = []
+    _ul = html.UL()
+    for f in files:
+        last_mod = Date(f.lastModified) if f.lastModified else "n/a"
+        print(last_mod)
+        _ul <= html.LI(f'{f.name}({f.type or "n/a"}) - {f.size} bytes, ' +
+            f'last modified: {last_mod}')
+
+    document['list'] <= _ul
 
 def handleDragOver(evt):
     evt.stopPropagation()
     evt.preventDefault()
     evt.dataTransfer.dropEffect = 'copy' # Explicitly show this is a copy.
 
+def click(evt):
+    print("click")
+
 # Setup the dnd listeners.
-dropZone = doc['drop_zone']
+dropZone = document['drop_zone']
 dropZone.bind('dragover', handleDragOver )
 dropZone.bind('drop', handleFileSelect )
+dropZone.bind("click", click)
 </script>
+
+</body>
+</html>
