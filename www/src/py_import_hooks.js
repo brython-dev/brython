@@ -62,7 +62,7 @@ if($B.is_none(module)){
     if(!$B.is_none(_loader)){
         var create_module = _b_.getattr(_loader, "create_module", _b_.None)
         if(!$B.is_none(create_module)){
-            module = $B.$call(create_module)(_loader, spec)
+            module = $B.$call(create_module)(spec)
         }
     }
     if(module === undefined){throw _b_.ImportError.$factory(mod_name)}
