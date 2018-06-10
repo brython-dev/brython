@@ -449,7 +449,7 @@ Random.gammavariate = function(self, alpha, beta){
         }
     }else if(alpha == 1.0){
         // expovariate(1)
-        var u = _random()
+        var u = self._random()
         while(u <= 1e-7){u = self._random()}
         return -Math.log(u) * beta
     }else{
