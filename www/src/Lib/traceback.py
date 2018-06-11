@@ -10,11 +10,16 @@ def _restore_current(exc):
 def print_exc(file=sys.stderr):
     file.write(format_exc())
 
-def format_exc(limit=None, chain=True):
+def format_exc(limit=None, chain=True, includeInternal=False):
     exc = __BRYTHON__.current_exception
-    return format_exception(exc.__class__, exc, exc.traceback)
+    return format_exception(exc.__class__, exc, exc.traceback,
+                            limit=limit, chain=chain, includeInternal=includeInternal)
 
-def format_exception(_type, exc, tb, limit=None, chain=True):
+def format_exception(_type, exc, tb, limit=None, chain=True, includeInternal=False):
+    """
+    Pass includeInternal=True to include frames in the stack trace
+    even if they lack source code and are internal to Brython.
+    """
     res = '';
     if isinstance(exc, SyntaxError):
         res += '\n module %s line %s' %(exc.args[1], exc.args[2])
@@ -22,7 +27,10 @@ def format_exception(_type, exc, tb, limit=None, chain=True):
         res += '\n  '+exc.args[4]
         res += '\n  '+offset*' '+'^'
     else:
-        res += exc.info
+        if includeInternal:
+            res += exc.infoWithInternal
+        else:
+            res += exc.info
     msg = exc.__class__.__name__ + ': '
     try:
         msg += str(exc)
