@@ -1,7 +1,8 @@
 import sys
 import traceback
 
-from browser import document, window, alert, console, prompt, html, highlight
+from browser import (document, window, alert, console, prompt, html,
+    highlight, bind, run_script)
 from browser.template import Template
 
 # name of currently edited script
@@ -11,6 +12,9 @@ docs = {}
 
 # current number of lines
 current_nb_lines = 1
+
+# boolean for code highlighting
+is_highlighted = False
 
 IDB = window.indexedDB
 
@@ -170,7 +174,7 @@ def delete(evt, elt):
     dialog <= html.P()
     dialog <= html.BUTTON("Ok") + html.BUTTON("Cancel")
 
-    @dialog.select("button")[0].bind("click")
+    @bind(dialog.select("button")[0], "click")
     def confirm_delete(evt):
         db = request.result
         tx = db.transaction("scripts", "readwrite")
@@ -185,9 +189,9 @@ def delete(evt, elt):
             print_line_nums()
             draw_file_browser()
 
-        cursor.bind('success', ok)
+        cursor.bind("success", ok)
 
-    @dialog.select("button")[1].bind("click")
+    @bind(dialog.select("button")[1], "click")
     def cancel_delete(evt):
         dialog_window.style.display = "none"
 
@@ -208,8 +212,13 @@ def size_down(evt, elt):
     document.body.style.fontSize = f"{fsize}px"
 
 def syntax_highlight(evt, elt):
-    colored = highlight.highlight(editor.text)
-    editor.html = colored.html
+    global is_highlighted
+    if not is_highlighted:
+        colored = highlight.highlight(editor.text)
+        editor.html = colored.html
+    else:
+        editor.html = editor.text
+    is_highlighted = not is_highlighted
 
 def run(evt, elt):
     """Execute current script."""
@@ -220,9 +229,7 @@ def run(evt, elt):
     output_window.style.display = "block"
     output.text = ""
     try:
-        exec(editor.text)
-    except:
-        traceback.print_exc(stdout)
+        run_script(editor.text, current)
     finally:
         sys.stdout = save_stdout
         sys.stderr = save_stderr
@@ -337,7 +344,7 @@ def insert_spaces(nb):
     sel.removeAllRanges()
     sel.addRange(_range)
 
-@editor.bind("keyup")
+@bind(editor, "keyup")
 def keyup(evt):
     if evt.keyCode in [8, 13, 17, 46]:
         # cr, delete, ctrl, backspace
@@ -348,7 +355,7 @@ def keyup(evt):
     if evt.keyCode == 13:
         insert_spaces(indent)
 
-@editor.bind('keypress')
+@bind(editor, "keypress")
 def keypress(evt):
     if evt.keyCode == 9: # tab key
         sel = document.getSelection()
@@ -358,7 +365,7 @@ def keypress(evt):
         # store indent
         get_indent()
 
-@editor.bind("scroll")
+@bind(editor, "scroll")
 def scroll(evt):
     document["linenum_wrapper"].scrollTo(0, evt.target.scrollTop)
 
