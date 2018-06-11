@@ -16,9 +16,9 @@ assert [x for x in foo()]==[]
 
 def foo(n):
     for i in range(2):
-        if (n < 3): 
+        if (n < 3):
             yield 1
-        else: 
+        else:
             return
         yield 2
 
@@ -154,7 +154,7 @@ except ZeroDivisionError:
 assert list(k)==[]
 
 # Specification: Try/Except/Finally
-    
+
 def f():
     try:
         yield 1
@@ -394,7 +394,7 @@ g.close()           # close normally
 def get_list_values_as_int(lst):
     for value in lst:
         yield int(value)
-        
+
 def get_list_values_as_str(lst):
     for value in lst:
         yield str(value)
@@ -405,12 +405,12 @@ def get_list_values_as_float(lst):
 
 
 def get_list_values(lst):
-  for sub in [get_list_values_as_int, 
-              get_list_values_as_str, 
+  for sub in [get_list_values_as_int,
+              get_list_values_as_str,
               get_list_values_as_float]:
     yield from sub(lst)
 
-assert list(get_list_values(["12",6,20.4])) == [12, 
+assert list(get_list_values(["12",6,20.4])) == [12,
     6, 20, '12', '6', '20.4', 12.0, 6.0, 20.4]
 
 # yield inside a "if" or a "else"
@@ -472,4 +472,25 @@ except StopIteration as exc:
 # issue 470
 assert eval('bytes(0 for x in [])') == b''
 
+# issue 857
+def f():
+    def x():
+        return 'hello from x'
+    def y():
+        return x()
+    def z():
+        return y()
+    yield z()
+
+g = f()
+
+x = g # if remove this line, there is no error
+
+assert next(x) == "hello from x"
+try:
+    next(x)
+except StopIteration as stop:
+    pass
+ 
+print('passed all tests...')
 print('passed all tests...')

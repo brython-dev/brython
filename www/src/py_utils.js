@@ -367,6 +367,23 @@ $B.$check_def_free = function(name, value){
         "' referenced before assignment in enclosing scope")
 }
 
+$B.$check_def_free1 = function(name, scope_id){
+    // Check if value is not undefined
+    var res
+    for(var i = $B.frames_stack.length - 1; i >= 0; i--){
+        var frame = $B.frames_stack[i]
+        res = frame[1][name]
+        if(res !== undefined){return res}
+        if(frame[2] == scope_id){
+            res = frame[3][name]
+            if(res !== undefined){return res}
+        }
+    }
+    throw _b_.NameError.$factory("free variable '" + name +
+        "' referenced before assignment in enclosing scope")
+}
+
+
 // transform native JS types into Brython types
 $B.$JS2Py = function(src){
     if(typeof src === "number"){

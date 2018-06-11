@@ -32,7 +32,7 @@ function rstrip(s, strip_chars) {
 // Code to store/restore local namespace
 //
 // In generators, the namespace is stored in an attribute of the
-// object __BRYTHON__ until the iterator is exhausted, so that it
+// generator function until the iterator is exhausted, so that it
 // can be restored in the next iteration
 function jscode_namespace(iter_name, action) {
     var _clean= '';
@@ -63,12 +63,12 @@ function make_node(top_node, node){
     var is_cond = false, is_except = false,is_else = false, is_continue
 
     if(node.locals_def){
-        // Transforms the node where local namespace is reset
-        // In generators, the namespace is stored in an attribute of the
-        // object __BRYTHON__ until the iterator is exhausted, so that it
-        // can be restored in the next iteration
-        var iter_name = top_node.iter_id
-        ctx_js = jscode_namespace(iter_name, 'store')
+        if(node.yield_atoms.length > 0 || node.context.$genjs !== undefined){
+            // If the function is a generator, transforms the node where local
+            // namespace is reset
+            var iter_name = top_node.iter_id
+            ctx_js = jscode_namespace(iter_name, 'store')
+        }
     }
 
     // Mark some node types (try, except, finally, if, elif, else)
@@ -274,7 +274,7 @@ $B.genNode = function(data, parent){
         for(var i = 0, len = this.children.length; i < len; i++){
             res[pos++] = this.children[i].src(indent + 1)
             // If child is a "yield" node, the Javascript code is a "return"
-            // so it's no use adding followin nodes (and it raises a
+            // so it's no use adding following nodes (and it raises a
             // SyntaxError on Firefox)
             if(this.children[i].is_yield){break}
         }
@@ -350,6 +350,7 @@ $B.$BRgenerator = function(func_name, blocks, def_id, def_node){
 
     // Creates a function that will return an iterator
     // func_name : function name
+    // blocks : the id of the surrounding code blocks
     // def_id : generator function identifier
     // def_node : instance of Node for the function
 
@@ -590,7 +591,6 @@ generator.__next__ = function(self){
     }
 
     try{
-        //console.log("self.next", self.next, self.next+"", self.args)
         var res = self.next.apply(self, self.args)
     }catch(err){
         /*

@@ -2424,7 +2424,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         // Push id in frames stack
         var enter_frame_nodes = [
             $NodeJS('var $top_frame = [$local_name, $locals,' +
-                '"' + global_scope.id + '", ' + global_ns + ',' + name + ']'),
+                '"' + global_scope.id + '", ' + global_ns + ']'),
             $NodeJS('$B.frames_stack.push($top_frame)'),
             $NodeJS('var $stack_length = $B.frames_stack.length')
         ]
@@ -2581,7 +2581,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         }
 
         nodes.push(
-          $NodeJS('$B.frames_stack[$B.frames_stack.length-1][1] = $locals;'))
+          $NodeJS('$top_frame[1] = $locals;'))
 
         // set __BRYTHON__.js_this to Javascript "this"
         // To use some JS libraries it may be necessary to know what "this"
@@ -2613,7 +2613,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
             if(this.id.substr(0,5) == '$exec'){
                 js += '_exec'
             }
-            node.add($NodeJS(js + '($local_name);return None'))
+            node.add($NodeJS(js + '();return None'))
         }
 
         // Add the new function definition
@@ -2725,7 +2725,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
             parent.children.splice(pos + 2, parent.children.length)
 
             var except_node = $NodeJS('catch(err)')
-            except_node.add($NodeJS('$B.leave_frame($local_name);throw err'))
+            except_node.add($NodeJS('$B.leave_frame();throw err'))
 
             parent.add(except_node)
         }
@@ -4016,8 +4016,8 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                     while(sc !== scope){up++; sc = sc.parent_block}
                     var scope_name = "$B.frames_stack[$B.frames_stack.length-1-" +
                         up + "][1]"
-                    val = '$B.$check_def_free("' + val + '",' + scope_name +
-                        '["' + val + '"])'
+                    val = '$B.$check_def_free1("' + val + '", "' + 
+                        scope.id.replace(/\./g, "_") + '")'
                 }else{
                     val = '$B.$check_def_free("' + val + '",' + scope_ns +
                         '["' + val + '"])'
@@ -5044,7 +5044,7 @@ var $ReturnCtx = $B.parser.$ReturnCtx = function(context){
         // will be restored when entering "finally"
         var js = 'var $res = ' + $to_js(this.tree) + ';' + '$B.leave_frame'
         if(scope.id.substr(0, 6) == '$exec_'){js += '_exec'}
-        return js + '($local_name);return $res'
+        return js + '();return $res'
     }
 }
 
@@ -5102,7 +5102,7 @@ var $SingleKwCtx = $B.parser.$SingleKwCtx = function(context,token){
                 // final line
                 if(last_child.context.tree[0].type != "return"){
                     add_jscode(node, -1,
-                        'if($exit){$B.leave_frame("' + scope_id + '")}'
+                        'if($exit){$B.leave_frame()}'
                     )
                 }
             }
@@ -8696,7 +8696,7 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_info){
     var enter_frame_pos = offset,
         js = 'var $top_frame = ["' + locals_id.replace(/\./g, '_') + '", ' +
             local_ns + ', "' + module.replace(/\./g, '_') + '", ' +
-            global_ns + ', "a"]; $B.frames_stack.push($top_frame); ' +
+            global_ns + ']; $B.frames_stack.push($top_frame); ' +
             'var $stack_length = $B.frames_stack.length;'
     root.insert(offset++, $NodeJS(js))
 
@@ -8712,12 +8712,12 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_info){
         try_node.add(child)
     })
     // add node to exit frame in case no exception was raised
-    try_node.add($NodeJS('$B.leave_frame("' + locals_id + '")'))
+    try_node.add($NodeJS('$B.leave_frame()'))
 
     root.children.splice(enter_frame_pos + 2, root.children.length)
 
     var catch_node = new $NodeJS('catch(err)')
-    catch_node.add($NodeJS('$B.leave_frame("' + locals_id + '")'))
+    catch_node.add($NodeJS('$B.leave_frame()'))
     catch_node.add($NodeJS('throw err'))
 
     root.add(catch_node)
@@ -9099,7 +9099,7 @@ function ajax_load_script(script){
     var url = script.url,
         name = script.name
     var req = new XMLHttpRequest()
-    req.open("GET", url, true)
+    req.open("GET", url + "?" + Date.now(), true)
     req.onreadystatechange = function(){
         if(this.readyState==4){
             if(this.status==200){
