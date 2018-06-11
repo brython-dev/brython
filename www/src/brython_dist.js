@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,6,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.6.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-06-11 16:26:15.546519"
-__BRYTHON__.timestamp=1528727175546
+__BRYTHON__.compiled_date="2018-06-11 20:44:04.946553"
+__BRYTHON__.timestamp=1528742644962
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -11644,7 +11644,8 @@ var res="return [" + ctx_js + ", " + yield_node_id + "]"
 new_node.data=res
 top_node.yields.push(new_node)}else if(node.is_set_yield_value){
 var yield_node_id=top_node.yields.length
-var js="var sent_value = this.sent_value || None;"
+var js="var sent_value = this.sent_value === undefined ? " +
+"None : this.sent_value;"
 js +="if(sent_value.__class__ === $B.$GeneratorSendError)"+
 "{throw sent_value.err}"
 js +="var $yield_value" + ctx_js + " = sent_value;"

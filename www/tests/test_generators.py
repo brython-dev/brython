@@ -484,13 +484,22 @@ def f():
 
 g = f()
 
-x = g # if remove this line, there is no error
+x = g
 
 assert next(x) == "hello from x"
 try:
     next(x)
 except StopIteration as stop:
     pass
- 
-print('passed all tests...')
+
+# issue 858
+def f():
+    v = 1 + (yield 0)
+    yield v
+
+g = f()
+k = next(g)
+assert k == 0
+assert g.send(k) == 1
+
 print('passed all tests...')

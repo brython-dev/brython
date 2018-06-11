@@ -123,7 +123,8 @@ function make_node(top_node, node){
             // invoked
 
             var yield_node_id = top_node.yields.length
-            var js = "var sent_value = this.sent_value || None;"
+            var js = "var sent_value = this.sent_value === undefined ? " +
+                "None : this.sent_value;"
 
             // If method throw was called, raise the exception
             js += "if(sent_value.__class__ === $B.$GeneratorSendError)"+
