@@ -216,7 +216,11 @@ object.__getattribute__ = function(obj, attr){
                 else{
                     var self = res.$type == "classmethod" ? klass : obj
                     function method(){
-                        return res(self, ...arguments)
+                        var args = [self]
+                        for(var i = 0; i < arguments.length; i++){
+                            args.push(arguments[i])
+                        }
+                        return res.apply(null, args)
                     }
                     method.__class__ = $B.method
                     method.$infos = {

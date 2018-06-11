@@ -526,19 +526,25 @@ var $instance_creator = $B.$instance_creator = function(klass){
         if(klass.hasOwnProperty("__new__")){
             if(klass.hasOwnProperty("__init__")){
                 factory = function(){
-                    var obj = klass.__new__(klass, ...arguments)
-                    klass.__init__(obj, ...arguments)
+                    var args = []
+                    for(var i = 0; i < arguments.length; i++){args.push(arguments[i])}
+                    var obj = klass.__new__.apply(null, [klass].concat(args))
+                    klass.__init__.apply(null, [obj].concat(args))
                     return obj
                 }
             }else{
                 factory = function(){
-                    return klass.__new__(klass, ...arguments)
+                    var args = [klass]
+                    for(var i = 0; i < arguments.length; i++){args.push(arguments[i])}
+                    return klass.__new__.apply(null, args)
                 }
             }
         }else if(klass.hasOwnProperty("__init__")){
             factory = function(){
                 var obj = {__class__: klass}
-                klass.__init__(obj, ...arguments)
+                var args = [obj]
+                for(var i = 0; i < arguments.length; i++){args.push(arguments[i])}
+                klass.__init__.apply(null, args)
                 return obj
             }
         }else{
@@ -552,7 +558,9 @@ var $instance_creator = $B.$instance_creator = function(klass){
     }else{
         call_func = _b_.type.__getattribute__(metaclass, "__call__")
         var factory = function(){
-            return call_func(klass, ...arguments)
+            var args = [klass]
+            for(var i = 0; i < arguments.length; i++){args.push(arguments[i])}
+            return call_func.apply(null, args)
         }
     }
     factory.__class__ = $B.Function
