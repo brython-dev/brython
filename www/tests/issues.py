@@ -1916,6 +1916,7 @@ except Exception:
     exception_info = tb.format_exc()
     assert 'f()' in exception_info
     assert '1 / 0' in exception_info
+    assert ', in f' in exception_info
 
 # PEP 448
 assert dict(**{'x': 1}, y=2, **{'z': 3}) == {"x": 1, "y": 2, "z": 3}

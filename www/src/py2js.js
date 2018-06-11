@@ -2424,7 +2424,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         // Push id in frames stack
         var enter_frame_nodes = [
             $NodeJS('var $top_frame = [$local_name, $locals,' +
-                '"' + global_scope.id + '", ' + global_ns + ']'),
+                '"' + global_scope.id + '", ' + global_ns + ', ' + name + ']'),
             $NodeJS('$B.frames_stack.push($top_frame)'),
             $NodeJS('var $stack_length = $B.frames_stack.length')
         ]
@@ -4016,7 +4016,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                     while(sc !== scope){up++; sc = sc.parent_block}
                     var scope_name = "$B.frames_stack[$B.frames_stack.length-1-" +
                         up + "][1]"
-                    val = '$B.$check_def_free1("' + val + '", "' + 
+                    val = '$B.$check_def_free1("' + val + '", "' +
                         scope.id.replace(/\./g, "_") + '")'
                 }else{
                     val = '$B.$check_def_free("' + val + '",' + scope_ns +
