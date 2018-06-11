@@ -67,8 +67,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,6,2,'final',0]
 __BRYTHON__.__MAGIC__="3.6.2"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-06-10 22:34:16.430266"
-__BRYTHON__.timestamp=1528662856430
+__BRYTHON__.compiled_date="2018-06-11 07:52:44.534464"
+__BRYTHON__.timestamp=1528696364534
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -5057,8 +5057,14 @@ var $instance_creator=$B.$instance_creator=function(klass){
 if(klass.$instanciable !==undefined){return function(){throw _b_.TypeError.$factory(
 "Can't instantiate abstract class interface " +
 "with abstract methods")}}
-var metaclass=klass.__class__,call_func=_b_.type.__getattribute__(metaclass,"__call__")
-var factory=function(){return call_func(klass,...arguments)}
+var metaclass=klass.__class__,call_func,factory
+if(metaclass===_b_.type && klass.__bases__.length==0){if(klass.hasOwnProperty("__new__")){if(klass.hasOwnProperty("__init__")){factory=function(){var obj=klass.__new__(klass,...arguments)
+klass.__init__(obj,...arguments)
+return obj}}else{factory=function(){return klass.__new__(klass,...arguments)}}}else if(klass.hasOwnProperty("__init__")){factory=function(){var obj={__class__: klass}
+klass.__init__(obj,...arguments)
+return obj}}else{factory=function(){if(arguments.length > 0){throw _b_.TypeError.$factory("object() takes no parameters")}
+return{__class__: klass}}}}else{call_func=_b_.type.__getattribute__(metaclass,"__call__")
+var factory=function(){return call_func(klass,...arguments)}}
 factory.__class__=$B.Function
 factory.$infos={__name__: klass.__name__,__module__: klass.__module__}
 return factory}
@@ -6681,31 +6687,32 @@ return self.__class__.__name__}
 BaseException.__new__=function(cls){var err=_b_.BaseException.$factory()
 err.__class__=cls
 return err}
-BaseException.__getattr__=function(self,attr){if(attr=="info"){if(self.__class__===undefined){console.log("no class",self)
-return self + ''}else{var name=self.__class__.__name__
-if(name=="SyntaxError" ||name=="IndentationError"){return 'File "' + self.args[1]+ '", line ' + self.args[2]+
-"\n    " + self.args[4]}}
+var getExceptionTrace=function(exc,includeInternal){if(exc.__class__===undefined){console.log("no class",exc)
+return exc + ''}else{var name=exc.__class__.__name__
+if(name=="SyntaxError" ||name=="IndentationError"){return 'File "' + exc.args[1]+ '", line ' + exc.args[2]+
+"\n    " + exc.args[4]}}
 var info='';
-if(self.$js_exc !==undefined){info +="\nJS stack:\n" + self.$js_exc.stack + "\n"}
+if(exc.$js_exc !==undefined && includeInternal){info +="\nJS stack:\n" + exc.$js_exc.stack + "\n"}
 info +="Traceback (most recent call last):"
-var line_info=self.$line_info
-for(var i=0;i < self.$stack.length;i++){var frame=self.$stack[i]
+var line_info=exc.$line_info
+for(var i=0;i < exc.$stack.length;i++){var frame=exc.$stack[i]
 if(! frame[1]||! frame[1].$line_info){continue}
 var $line_info=frame[1].$line_info
-if(i==self.$stack.length - 1 && self.$line_info){$line_info=self.$line_info}
+if(i==exc.$stack.length - 1 && exc.$line_info){$line_info=exc.$line_info}
 var line_info=$line_info.split(',');
 var src=$B.$py_src[line_info[1]];
-if(src===undefined && self.module==line_info[1]){src=self.src}
-if(src===undefined){continue}
+if(src===undefined && exc.module==line_info[1]){src=exc.src}
+if(src===undefined && !includeInternal){continue}
 var module=line_info[1];
 if(module.charAt(0)=="$"){module="<module>"}
 info +="\n  module " + module + " line " + line_info[0]
 if(frame.length > 4 && frame[4].$infos){info +=', in ' + frame[4].$infos.__name__}
-var lines=src.split("\n");
+if(src !==undefined){var lines=src.split("\n");
 var line=lines[parseInt(line_info[0])- 1]
 if(line){line=line.replace(/^[ ]+/g,"")}
-info +="\n    " + line}
-return info}else if(attr=="traceback"){
+info +="\n    " + line}}
+return info};
+BaseException.__getattr__=function(self,attr){if(attr=="info"){return getExceptionTrace(self,false);}else if(attr=="infoWithInternal"){return getExceptionTrace(self,true);}else if(attr=="traceback"){
 return traceback.$factory(self)}else{throw _b_.AttributeError.$factory(self.__class__.__name__ +
 " has no attribute '" + attr + "'")}}
 BaseException.with_traceback=function(self,tb){self.traceback=tb

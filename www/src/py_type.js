@@ -519,10 +519,41 @@ var $instance_creator = $B.$instance_creator = function(klass){
                 "with abstract methods")}
     }
     var metaclass = klass.__class__,
-        call_func = _b_.type.__getattribute__(metaclass, "__call__")
+        call_func,
+        factory
 
-    var factory = function(){
-        return call_func(klass, ...arguments)
+    if(metaclass === _b_.type && klass.__bases__.length == 0){
+        if(klass.hasOwnProperty("__new__")){
+            if(klass.hasOwnProperty("__init__")){
+                factory = function(){
+                    var obj = klass.__new__(klass, ...arguments)
+                    klass.__init__(obj, ...arguments)
+                    return obj
+                }
+            }else{
+                factory = function(){
+                    return klass.__new__(klass, ...arguments)
+                }
+            }
+        }else if(klass.hasOwnProperty("__init__")){
+            factory = function(){
+                var obj = {__class__: klass}
+                klass.__init__(obj, ...arguments)
+                return obj
+            }
+        }else{
+            factory = function(){
+                if(arguments.length > 0){
+                    throw _b_.TypeError.$factory("object() takes no parameters")
+                }
+                return {__class__: klass}
+            }
+        }
+    }else{
+        call_func = _b_.type.__getattribute__(metaclass, "__call__")
+        var factory = function(){
+            return call_func(klass, ...arguments)
+        }
     }
     factory.__class__ = $B.Function
     factory.$infos = {
