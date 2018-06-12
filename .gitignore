@@ -78,12 +78,6 @@ nosetests.xml
 # Temporary QUnit folder
 #qunit/
 
-# Node modules (for testem & friends)
-node_modules/
-
 # Files created by make_dist
 npm/*.js
 setup/data/*.js
-
-# Files created by make_doc
-www/static_doc

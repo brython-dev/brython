@@ -5,9 +5,7 @@
 
 import time
 import datetime
-import json
 import os
-import pathlib
 import re
 import sys
 import tarfile
@@ -19,13 +17,11 @@ import javascript_minifier
 if sys.version_info[0] != 3:
     raise ValueError("This script only works with Python 3")
 
-BRYTHON_DIR = pathlib.Path(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-MANIFEST = json.load(open(str(BRYTHON_DIR / 'manifest.json')))
-
 # path of parent directory
 pdir = os.path.dirname(os.getcwd())
 # version info
-version, implementation = MANIFEST['meta']['version'], MANIFEST['meta']['implementation']
+version = [3, 3, 0, "alpha", 0]
+implementation = [3, 5, 2, "dev", 0]
 
 # version name
 vname = '.'.join(str(x) for x in implementation[:3])
@@ -93,7 +89,15 @@ def run():
 
     import make_stdlib_static
     # build brython.js from base Javascript files
-    sources = MANIFEST['sources']['core']
+    sources = [
+        'unicode.min',
+        'brython_builtins', 'version_info', 'py2js',
+        'py_object', 'py_type', 'py_utils', 'py_builtin_functions',
+        'py_exceptions', 'py_range_slice', 'py_bytes', 'js_objects',
+        'stdlib_paths', 'py_import', 'py_float', 'py_int', 'py_long_int',
+        'py_complex', 'py_sort', 'py_list', 'py_string', 'py_dict', 'py_set',
+        'py_dom', 'py_generator', 'builtin_modules', 'py_import_hooks'
+    ]
 
     res = """// brython.js brython.info
 // version {}
@@ -176,9 +180,12 @@ def run():
     dist3 = zipfile.ZipFile(dest_path + '.zip', mode='w',
                             compression=zipfile.ZIP_DEFLATED)
 
+    paths = ['README.txt', 'demo.html', 'brython.js', 'brython_stdlib.js',
+        'unicode.txt']
+
     for arc, wfunc in ((dist1, dist1.add), (dist2, dist2.add),
             (dist3, dist3.write)):
-        for path in MANIFEST['setup_data']:
+        for path in paths:
             wfunc(os.path.join(sdir, path),
                 arcname=os.path.join(name, path))
 
