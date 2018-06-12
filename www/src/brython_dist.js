@@ -29,7 +29,6 @@ $B.async_enabled=false
 if($B.async_enabled){$B.block={}}
 $B.imported={}
 $B.precompiled={}
-$B.vars={}
 $B._globals={}
 $B.frames_stack=[]
 $B.builtins={__repr__:function(){return "<module 'builtins>'"},__str__:function(){return "<module 'builtins'>"},}
@@ -48,7 +47,6 @@ $B.min_int=-$B.max_int
 $B.$py_next_hash=Math.pow(2,53)- 1
 $B.$py_UUID=0
 $B.lambda_magic=Math.random().toString(36).substr(2,8)
-$B.callbacks={}
 $B.set_func_names=function(klass,module){var name=klass.__name__
 klass.__module__=module
 for(var attr in klass){if(typeof klass[attr]=='function'){klass[attr].$infos={__doc__: klass[attr].__doc__ ||"",__module__: module,__qualname__ : name + '.' + attr,__name__: attr}
@@ -67,8 +65,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,6,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.6.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-06-11 20:44:04.946553"
-__BRYTHON__.timestamp=1528742644962
+__BRYTHON__.compiled_date="2018-06-12 21:34:45.111273"
+__BRYTHON__.timestamp=1528832085111
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -616,6 +614,7 @@ this.tree[0].tree[0].augm_assign=true
 if($B.debug > 0){var check_node=$NodeJS('if(' + this.tree[0].to_js()+
 ' === undefined){throw NameError.$factory("name \'' +
                     this.tree[0].tree[0].value + '\' is not defined")}')
+check_node.forced_line_num=node.line_num
 node.parent.insert(rank,check_node)
 offset++}
 var left_id=this.tree[0].tree[0].value,was_bound=this.scope.binding[left_id]!==undefined,left_id_unbound=this.tree[0].tree[0].unbound}
@@ -1203,7 +1202,7 @@ new_node.locals_def=true
 new $NodeJSCtx(new_node,js)
 nodes.push(new_node)
 var enter_frame_nodes=[$NodeJS('var $top_frame = [$local_name, $locals,' +
-'"' + global_scope.id + '", ' + global_ns + ']'),$NodeJS('$B.frames_stack.push($top_frame)'),$NodeJS('var $stack_length = $B.frames_stack.length')
+'"' + global_scope.id + '", ' + global_ns + ', ' + name + ']'),$NodeJS('$B.frames_stack.push($top_frame)'),$NodeJS('var $stack_length = $B.frames_stack.length')
 ]
 if($B.profile > 1){if(this.scope.ntype=='class'){fname=this.scope.C.tree[0].name + '.' + this.name}
 else{fname=this.name}
@@ -1835,8 +1834,8 @@ gs=gs.parent_block}
 search_ids.push('"' + gs.id + '"')}
 search_ids="[" + search_ids.join(", ")+ "]"
 if(this.nonlocal ||this.bound){var bscope=this.firstBindingScopeId()
-return "$locals_" + bscope.replace(/\./g,"_")+ '["' +
-val + '"]'}
+if(bscope!==undefined){return "$locals_" + bscope.replace(/\./g,"_")+ '["' +
+val + '"]'}}
 var global_ns='$locals_' + gs.id.replace(/\./g,'_')
 while(1){if($B._globals[scope.id]!==undefined &&
 $B._globals[scope.id][val]!==undefined){
@@ -1906,7 +1905,7 @@ sc=innermost
 while(sc !==scope){up++;sc=sc.parent_block}
 var scope_name="$B.frames_stack[$B.frames_stack.length-1-" +
 up + "][1]"
-val='$B.$check_def_free1("' + val + '", "' + 
+val='$B.$check_def_free1("' + val + '", "' +
 scope.id.replace(/\./g,"_")+ '")'}else{val='$B.$check_def_free("' + val + '",' + scope_ns +
 '["' + val + '"])'}}else{val=scope_ns + '["' + val + '"]'}
 this.result=val + $to_js(this.tree,'')
@@ -2778,12 +2777,13 @@ var $add_line_num=$B.parser.$add_line_num=function(node,rank){if(node.type=='mod
 while(i < node.children.length){i +=$add_line_num(node.children[i],i)}}else if(node.type !=='marker'){var elt=node.C.tree[0],offset=1,flag=true,pnode=node
 while(pnode.parent !==undefined){pnode=pnode.parent}
 var mod_id=pnode.id
-if(node.line_num===undefined){flag=false}
+line_num=node.line_num ||node.forced_line_num
+if(line_num===undefined){flag=false}
 if(elt.type=='condition' && elt.token=='elif'){flag=false}
 else if(elt.type=='except'){flag=false}
 else if(elt.type=='single_kw'){flag=false}
 if(flag){
-var js=';$locals.$line_info = "' + node.line_num + ',' +
+var js=';$locals.$line_info = "' + line_num + ',' +
 mod_id + '";'
 var new_node=new $Node()
 new_node.is_line_num=true 
@@ -2793,7 +2793,7 @@ offset=2}
 var i=0
 while(i < node.children.length){i +=$add_line_num(node.children[i],i)}
 if((elt.type=='condition' && elt.token=="while")
-||node.C.type=='for'){if($B.last(node.children).C.tree[0].type !="return"){node.add($NodeJS('$locals.$line_info = "' + node.line_num +
+||node.C.type=='for'){if($B.last(node.children).C.tree[0].type !="return"){node.add($NodeJS('$locals.$line_info = "' + line_num +
 ',' + mod_id + '";'))}}
 return offset}else{return 1}}
 $B.$add_line_num=$add_line_num

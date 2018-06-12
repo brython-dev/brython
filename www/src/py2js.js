@@ -1215,6 +1215,9 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
                 var check_node = $NodeJS('if(' + this.tree[0].to_js() +
                     ' === undefined){throw NameError.$factory("name \'' +
                     this.tree[0].tree[0].value + '\' is not defined")}')
+                // Add attribute forced_line_num instead of line_num because
+                // it would break on profile mode
+                check_node.forced_line_num = node.line_num
                 node.parent.insert(rank, check_node)
                 offset++
             }
@@ -3777,8 +3780,11 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
 
         if(this.nonlocal || this.bound){
             var bscope = this.firstBindingScopeId()
-            return "$locals_" + bscope.replace(/\./g, "_") + '["' +
-                val + '"]'
+            // Might be undefined, for augmented assignments
+            if(bscope !== undefined){
+                return "$locals_" + bscope.replace(/\./g, "_") + '["' +
+                    val + '"]'
+            }
         }
 
         var global_ns = '$locals_' + gs.id.replace(/\./g, '_')
@@ -5871,7 +5877,8 @@ var $add_line_num = $B.parser.$add_line_num = function(node,rank){
         while(pnode.parent !== undefined){pnode = pnode.parent}
         var mod_id = pnode.id
         // ignore lines added in transform()
-        if(node.line_num === undefined){flag = false}
+        line_num = node.line_num || node.forced_line_num
+        if(line_num === undefined){flag = false}
         // Don't add line num before try,finally,else,elif
         // because it would throw a syntax error in Javascript
         if(elt.type == 'condition' && elt.token == 'elif'){flag = false}
@@ -5879,7 +5886,7 @@ var $add_line_num = $B.parser.$add_line_num = function(node,rank){
         else if(elt.type == 'single_kw'){flag = false}
         if(flag){
             // add a trailing None for interactive mode
-            var js = ';$locals.$line_info = "' + node.line_num + ',' +
+            var js = ';$locals.$line_info = "' + line_num + ',' +
                 mod_id + '";'
 
             var new_node = new $Node()
@@ -5897,7 +5904,7 @@ var $add_line_num = $B.parser.$add_line_num = function(node,rank){
         if((elt.type == 'condition' && elt.token == "while")
                 || node.context.type == 'for'){
             if($B.last(node.children).context.tree[0].type != "return"){
-                node.add($NodeJS('$locals.$line_info = "' + node.line_num +
+                node.add($NodeJS('$locals.$line_info = "' + line_num +
                     ',' + mod_id + '";'))
             }
         }

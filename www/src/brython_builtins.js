@@ -60,9 +60,6 @@ $B.imported = {}
 // Maps the name of modules to the matching Javascript code
 $B.precompiled = {}
 
-// Distionary used to save the loval variables of a generator
-$B.vars = {}
-
 // Maps block names to a dictionary indexed by names defined as global
 // inside the block
 $B._globals = {}
@@ -103,12 +100,12 @@ if(isWebWorker){
 }
 
 // minimum and maximum safe integers
-$B.max_int = Math.pow(2,53) - 1
+$B.max_int = Math.pow(2, 53) - 1
 $B.min_int = -$B.max_int
 
 // Used to compute the hash value of some objects (see
 // py_builtin_functions.js)
-$B.$py_next_hash = Math.pow(2,53) - 1
+$B.$py_next_hash = Math.pow(2, 53) - 1
 
 // $py_UUID guarantees a unique id.  Do not use this variable
 // directly, use the $B.UUID function defined in py_utils.js
@@ -116,11 +113,6 @@ $B.$py_UUID = 0
 
 // Magic name used in lambdas
 $B.lambda_magic = Math.random().toString(36).substr(2, 8)
-
-// Callback functions indexed by their name
-// Used to print a traceback if an exception is raised when the function
-// is triggered by a DOM event
-$B.callbacks = {}
 
 // Set __name__ attribute of klass methods
 $B.set_func_names = function(klass, module){
