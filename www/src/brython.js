@@ -65,8 +65,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,6,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.6.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-06-13 10:33:48.954452"
-__BRYTHON__.timestamp=1528878828954
+__BRYTHON__.compiled_date="2018-06-13 14:07:07.935124"
+__BRYTHON__.timestamp=1528891627935
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -11608,21 +11608,24 @@ function rstrip(s,strip_chars){var _chars=strip_chars ||" \t\n";
 var nstrip=0,len=s.length;
 while(nstrip < len && _chars.indexOf(s.charAt(len-1-nstrip))> -1 )nstrip ++;
 return s.substr(0,len-nstrip)}
-function jscode_namespace(iter_name,action){var _clean='';
+function jscode_namespace(iter_name,action,parent_id){var _clean='';
 if(action==='store'){_clean=' = {}'}
-return 'for(var attr in this.blocks){' +
+var res='for(var attr in this.blocks){' +
 'eval("var " + attr + " = this.blocks[attr]")'+
 '};' +
 'var $locals_' + iter_name + ' = this.env' + _clean + ', '+
 '$local_name = "' + iter_name + '", ' +
-'$locals = $locals_' + iter_name + ';'}
+'$locals = $locals_' + iter_name + ';'
+if(parent_id){res +='$locals.$parent = $locals_' + parent_id + ';'}
+return res}
 function make_node(top_node,node){
 if(node.type==="marker")return
 if(node.C.$genjs){var ctx_js=node.C.$genjs}else{var ctx_js=node.C.$genjs=node.C.to_js()}
 var is_cond=false,is_except=false,is_else=false,is_continue
-if(node.locals_def){if(node.func_node.ntype=="generator"){
+if(node.locals_def){var parent_id=node.func_node.parent_block.id
+if(node.func_node.ntype=="generator"){
 var iter_name=top_node.iter_id
-ctx_js=jscode_namespace(iter_name,'store')}else{ctx_js +="$locals.$parent = $locals_" + top_node.iter_id + ";"}}
+ctx_js=jscode_namespace(iter_name,'store',parent_id)}else{ctx_js +="$locals.$parent = $locals_" + parent_id + ";"}}
 if(node.is_catch){is_except=true;is_cond=true}
 if(node.is_except){is_except=true}
 if(node.C.type=="node"){var ctx=node.C.tree[0]

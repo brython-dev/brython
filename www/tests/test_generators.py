@@ -523,4 +523,44 @@ next(gins)
 
 assert reg() == "hello from x"
 
+# issue 866
+reg = None
+
+def g():
+    x = 'hello from here'
+
+    def y():
+        print(x)
+        yield 0
+
+    global reg
+    reg = y
+
+    yield 0
+
+
+gins = g()
+next(gins)
+
+next(reg())
+
+reg = None
+
+def g():
+    x = 'hello 3'
+
+    def y():
+        yield x
+
+    global reg
+    reg = y
+
+    yield 0
+
+
+gins = g()
+next(gins)
+
+assert next(reg()) == "hello 3"
+
 print('passed all tests...')
