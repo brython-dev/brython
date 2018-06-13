@@ -65,8 +65,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,6,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.6.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-06-13 14:07:07.935124"
-__BRYTHON__.timestamp=1528891627935
+__BRYTHON__.compiled_date="2018-06-13 14:45:49.743644"
+__BRYTHON__.timestamp=1528893949743
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -4675,7 +4675,7 @@ required_stdlib_imports(subimports)}
 subimports.forEach(function(mod){if(imports.indexOf(mod)==-1){imports.push(mod)}})}}})
 for(var j=0;j<imports.length;j++){$B.tasks.push([$B.inImported,imports[j]])}}
 $B.tasks.push(["execute",script])}
-function $log(js){js.split("\n").forEach(function(line,i){console.log(i + 1,":",line)})}
+$B.$log=function $log(js){js.split("\n").forEach(function(line,i){console.log(i + 1,":",line)})}
 var _run_scripts=$B.parser._run_scripts=function(options){
 var kk=Object.keys(_window)
 if(options.ipy_id !==undefined){var $elts=[]
@@ -6149,7 +6149,8 @@ check_nb_args('hex',1,arguments.length)
 return $builtin_base_convert_helper(x,16)}
 function id(obj){check_no_kw('id',obj)
 check_nb_args('id',1,arguments.length)
-if(isinstance(obj,[_b_.str,_b_.int,_b_.float])){return getattr(_b_.str.$factory(obj),'__hash__')()}else if(obj.$id !==undefined){return obj.$id}
+if(isinstance(obj,[_b_.str,_b_.int,_b_.float])&&
+!isinstance(obj,$B.long_int)){return getattr(_b_.str.$factory(obj),'__hash__')()}else if(obj.$id !==undefined){return obj.$id}
 else{return obj.$id=$B.UUID()}}
 function __import__(mod_name,globals,locals,fromlist,level){
 var $=$B.args('__import__',5,{name: null,globals: null,locals: null,fromlist: null,level: null},['name','globals','locals','fromlist','level'],arguments,{globals:None,locals:None,fromlist:_b_.tuple.$factory(),level:0},null,null)
@@ -11616,7 +11617,8 @@ var res='for(var attr in this.blocks){' +
 'var $locals_' + iter_name + ' = this.env' + _clean + ', '+
 '$local_name = "' + iter_name + '", ' +
 '$locals = $locals_' + iter_name + ';'
-if(parent_id){res +='$locals.$parent = $locals_' + parent_id + ';'}
+if(parent_id){res +='$locals.$parent = $locals_' + parent_id.replace(/\./g,"_")+
+';'}
 return res}
 function make_node(top_node,node){
 if(node.type==="marker")return

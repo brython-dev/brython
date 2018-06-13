@@ -1027,7 +1027,8 @@ function hex(x) {
 function id(obj) {
    check_no_kw('id', obj)
    check_nb_args('id', 1, arguments.length)
-   if(isinstance(obj, [_b_.str, _b_.int, _b_.float])){
+   if(isinstance(obj, [_b_.str, _b_.int, _b_.float]) &&
+           !isinstance(obj, $B.long_int)){
        return getattr(_b_.str.$factory(obj), '__hash__')()
    }else if(obj.$id !== undefined){return obj.$id}
    else{return obj.$id = $B.UUID()}

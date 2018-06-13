@@ -146,4 +146,9 @@ try:
 except FloatCompError:
     pass
 
+# issue 840
+x = 123 ** 20
+y = 123 ** 20
+assert (id(x) != id(y) or x is y)
+
 print('passed all tests...')
