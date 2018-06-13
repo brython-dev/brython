@@ -65,8 +65,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,6,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.6.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-06-12 21:34:45.111273"
-__BRYTHON__.timestamp=1528832085111
+__BRYTHON__.compiled_date="2018-06-13 10:33:48.954452"
+__BRYTHON__.timestamp=1528878828954
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -1199,6 +1199,7 @@ js='var ' + local_ns + ' = {}, ' + '$local_name = "' + this.id +
 '",$locals = ' + local_ns + ';'
 var new_node=new $Node()
 new_node.locals_def=true
+new_node.func_node=node
 new $NodeJSCtx(new_node,js)
 nodes.push(new_node)
 var enter_frame_nodes=[$NodeJS('var $top_frame = [$local_name, $locals,' +
@@ -1834,7 +1835,7 @@ gs=gs.parent_block}
 search_ids.push('"' + gs.id + '"')}
 search_ids="[" + search_ids.join(", ")+ "]"
 if(this.nonlocal ||this.bound){var bscope=this.firstBindingScopeId()
-if(bscope!==undefined){return "$locals_" + bscope.replace(/\./g,"_")+ '["' +
+if(bscope !==undefined){return "$locals_" + bscope.replace(/\./g,"_")+ '["' +
 val + '"]'}}
 var global_ns='$locals_' + gs.id.replace(/\./g,'_')
 while(1){if($B._globals[scope.id]!==undefined &&
@@ -4096,7 +4097,7 @@ var kwdict=["class","return","break","for","lambda","try","finally","raise","def
 var unsupported=[]
 var $indented=["class","def","for","condition","single_kw","try","except","with"
 ]
-var int_pattern=new RegExp("^\\d+(j|J)?"),float_pattern1=new RegExp("^\\d+\\.\\d*([eE][+-]?\\d+)?(j|J)?"),float_pattern2=new RegExp("^\\d+([eE][+-]?\\d+)(j|J)?"),hex_pattern=new RegExp("^0[xX]([0-9a-fA-F]+)"),octal_pattern=new RegExp("^0[oO]([0-7]+)"),binary_pattern=new RegExp("^0[bB]([01]+)")
+var int_pattern=new RegExp("^\\d[0-9_]*(j|J)?"),float_pattern1=new RegExp("^\\d[0-9_]*\\.\\d*([eE][+-]?\\d+)?(j|J)?"),float_pattern2=new RegExp("^\\d[0-9_]*([eE][+-]?\\d+)(j|J)?"),hex_pattern=new RegExp("^0[xX]([0-9a-fA-F][0-9a-fA-F_]*)"),octal_pattern=new RegExp("^0[oO]([0-7][0-7_]*)"),binary_pattern=new RegExp("^0[bB]([01][01_]*)")
 var C=null
 var new_node=new $Node(),current=root,name="",_type=null,pos=0,indent=null,string_modifier=false
 var module=root.module
@@ -4258,6 +4259,8 @@ $pos=pos - name.length
 C=$transition(C,'id',name)}
 name=""
 continue}}
+function rmu(numeric_literal){
+return numeric_literal.replace(/_/g,"")}
 switch(car){case ' ':
 case '\t':
 pos++
@@ -4276,21 +4279,21 @@ pos++
 break
 case '0':
 var res=hex_pattern.exec(src.substr(pos))
-if(res){C=$transition(C,'int',[16,res[1]])
+if(res){C=$transition(C,'int',[16,rmu(res[1])])
 pos +=res[0].length
 break}
 var res=octal_pattern.exec(src.substr(pos))
-if(res){C=$transition(C,'int',[8,res[1]])
+if(res){C=$transition(C,'int',[8,rmu(res[1])])
 pos +=res[0].length
 break}
 var res=binary_pattern.exec(src.substr(pos))
-if(res){C=$transition(C,'int',[2,res[1]])
+if(res){C=$transition(C,'int',[2,rmu(res[1])])
 pos +=res[0].length
 break}
 if(src.charAt(pos + 1).search(/\d/)> -1){
 if(parseInt(src.substr(pos))===0){res=int_pattern.exec(src.substr(pos))
 $pos=pos
-C=$transition(C,'int',[10,res[0]])
+C=$transition(C,'int',[10,rmu(res[0])])
 pos +=res[0].length
 break}else{$_SyntaxError(C,'invalid literal starting with 0')}}
 case '0':
@@ -4305,11 +4308,11 @@ case '8':
 case '9':
 var res=float_pattern1.exec(src.substr(pos))
 if(res){$pos=pos
-if(res[2]!==undefined){C=$transition(C,'imaginary',res[0].substr(0,res[0].length - 1))}else{C=$transition(C,'float',res[0])}}else{res=float_pattern2.exec(src.substr(pos))
+if(res[2]!==undefined){C=$transition(C,'imaginary',rmu(res[0].substr(0,res[0].length - 1)))}else{C=$transition(C,'float',rmu(res[0]))}}else{res=float_pattern2.exec(src.substr(pos))
 if(res){$pos=pos
-if(res[2]!==undefined){C=$transition(C,'imaginary',res[0].substr(0,res[0].length - 1))}else{C=$transition(C,'float',res[0])}}else{res=int_pattern.exec(src.substr(pos))
+if(res[2]!==undefined){C=$transition(C,'imaginary',rmu(res[0].substr(0,res[0].length - 1)))}else{C=$transition(C,'float',rmu(res[0]))}}else{res=int_pattern.exec(src.substr(pos))
 $pos=pos
-if(res[1]!==undefined){C=$transition(C,'imaginary',res[0].substr(0,res[0].length - 1))}else{C=$transition(C,'int',[10,res[0]])}}}
+if(res[1]!==undefined){C=$transition(C,'imaginary',rmu(res[0].substr(0,res[0].length - 1)))}else{C=$transition(C,'int',[10,rmu(res[0])])}}}
 pos +=res[0].length
 break
 case '\n':
@@ -5263,6 +5266,8 @@ var res
 for(var i=$B.frames_stack.length - 1;i >=0;i--){var frame=$B.frames_stack[i]
 res=frame[1][name]
 if(res !==undefined){return res}
+if(frame[1].$parent){res=frame[1].$parent[name]
+if(res !==undefined){return res}}
 if(frame[2]==scope_id){res=frame[3][name]
 if(res !==undefined){return res}}}
 throw _b_.NameError.$factory("free variable '" + name +
@@ -11615,9 +11620,9 @@ function make_node(top_node,node){
 if(node.type==="marker")return
 if(node.C.$genjs){var ctx_js=node.C.$genjs}else{var ctx_js=node.C.$genjs=node.C.to_js()}
 var is_cond=false,is_except=false,is_else=false,is_continue
-if(node.locals_def){if(node.yield_atoms.length > 0 ||node.C.$genjs !==undefined){
+if(node.locals_def){if(node.func_node.ntype=="generator"){
 var iter_name=top_node.iter_id
-ctx_js=jscode_namespace(iter_name,'store')}}
+ctx_js=jscode_namespace(iter_name,'store')}else{ctx_js +="$locals.$parent = $locals_" + top_node.iter_id + ";"}}
 if(node.is_catch){is_except=true;is_cond=true}
 if(node.is_except){is_except=true}
 if(node.C.type=="node"){var ctx=node.C.tree[0]

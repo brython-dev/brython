@@ -374,6 +374,10 @@ $B.$check_def_free1 = function(name, scope_id){
         var frame = $B.frames_stack[i]
         res = frame[1][name]
         if(res !== undefined){return res}
+        if(frame[1].$parent){
+            res = frame[1].$parent[name]
+            if(res !== undefined){return res}
+        }
         if(frame[2] == scope_id){
             res = frame[3][name]
             if(res !== undefined){return res}

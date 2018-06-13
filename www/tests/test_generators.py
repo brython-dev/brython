@@ -502,4 +502,25 @@ k = next(g)
 assert k == 0
 assert g.send(k) == 1
 
+# issue 865
+reg = None
+
+def g():
+    def x():
+        return 'hello from x'
+
+    def y():
+        return x()
+
+    global reg
+    reg = y
+
+    yield 0
+
+
+gins = g()
+next(gins)
+
+assert reg() == "hello from x"
+
 print('passed all tests...')

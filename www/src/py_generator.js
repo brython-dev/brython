@@ -63,11 +63,13 @@ function make_node(top_node, node){
     var is_cond = false, is_except = false,is_else = false, is_continue
 
     if(node.locals_def){
-        if(node.yield_atoms.length > 0 || node.context.$genjs !== undefined){
+        if(node.func_node.ntype == "generator"){
             // If the function is a generator, transforms the node where local
             // namespace is reset
             var iter_name = top_node.iter_id
             ctx_js = jscode_namespace(iter_name, 'store')
+        }else{
+            ctx_js += "$locals.$parent = $locals_" + top_node.iter_id + ";"
         }
     }
 
