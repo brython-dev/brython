@@ -2421,6 +2421,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
 
         var new_node = new $Node()
         new_node.locals_def = true
+        new_node.func_node = node
         new $NodeJSCtx(new_node, js)
         nodes.push(new_node)
 
@@ -2589,7 +2590,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         // set __BRYTHON__.js_this to Javascript "this"
         // To use some JS libraries it may be necessary to know what "this"
         // is set to ; in Brython it is available as the result of function
-        // __this__() in module javascript
+        // this() in module javascript
         nodes.push($NodeJS('$B.js_this = this;'))
 
         // remove children of original node
@@ -7978,12 +7979,12 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
     ]
     // from https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Reserved_Words
 
-    var int_pattern = new RegExp("^\\d+(j|J)?"),
-        float_pattern1 = new RegExp("^\\d+\\.\\d*([eE][+-]?\\d+)?(j|J)?"),
-        float_pattern2 = new RegExp("^\\d+([eE][+-]?\\d+)(j|J)?"),
-        hex_pattern = new RegExp("^0[xX]([0-9a-fA-F]+)"),
-        octal_pattern = new RegExp("^0[oO]([0-7]+)"),
-        binary_pattern = new RegExp("^0[bB]([01]+)")
+    var int_pattern = new RegExp("^\\d[0-9_]*(j|J)?"),
+        float_pattern1 = new RegExp("^\\d[0-9_]*\\.\\d*([eE][+-]?\\d+)?(j|J)?"),
+        float_pattern2 = new RegExp("^\\d[0-9_]*([eE][+-]?\\d+)(j|J)?"),
+        hex_pattern = new RegExp("^0[xX]([0-9a-fA-F][0-9a-fA-F_]*)"),
+        octal_pattern = new RegExp("^0[oO]([0-7][0-7_]*)"),
+        binary_pattern = new RegExp("^0[bB]([01][01_]*)")
 
     var context = null
     var new_node = new $Node(),
@@ -8335,6 +8336,11 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
             }
         }
 
+        function rmu(numeric_literal){
+            // Remove underscores inside a numeric literal (PEP 515)
+            return numeric_literal.replace(/_/g, "")
+        }
+
         switch(car) {
             case ' ':
             case '\t':
@@ -8360,19 +8366,19 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
               // octal, hexadecimal, binary
               var res = hex_pattern.exec(src.substr(pos))
               if(res){
-                  context = $transition(context, 'int', [16, res[1]])
+                  context = $transition(context, 'int', [16, rmu(res[1])])
                   pos += res[0].length
                   break
               }
               var res = octal_pattern.exec(src.substr(pos))
               if(res){
-                  context = $transition(context, 'int', [8, res[1]])
+                  context = $transition(context, 'int', [8, rmu(res[1])])
                   pos += res[0].length
                   break
               }
               var res = binary_pattern.exec(src.substr(pos))
               if(res){
-                  context = $transition(context, 'int', [2, res[1]])
+                  context = $transition(context, 'int', [2, rmu(res[1])])
                   pos += res[0].length
                   break
               }
@@ -8382,7 +8388,8 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
                   if(parseInt(src.substr(pos)) === 0){
                       res = int_pattern.exec(src.substr(pos))
                       $pos = pos
-                      context = $transition(context, 'int', [10, res[0]])
+                      context = $transition(context, 'int',
+                          [10, rmu(res[0])])
                       pos += res[0].length
                       break
                   }else{$_SyntaxError(context,
@@ -8404,24 +8411,25 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
                     $pos = pos
                     if(res[2] !== undefined){
                         context = $transition(context, 'imaginary',
-                            res[0].substr(0,res[0].length - 1))
-                    }else{context = $transition(context, 'float', res[0])}
+                            rmu(res[0].substr(0,res[0].length - 1)))
+                    }else{context = $transition(context, 'float', rmu(res[0]))}
                 }else{
                     res = float_pattern2.exec(src.substr(pos))
                     if(res){
-                        $pos =pos
+                        $pos = pos
                         if(res[2] !== undefined){
                             context = $transition(context, 'imaginary',
-                                res[0].substr(0,res[0].length - 1))
-                        }else{context = $transition(context, 'float', res[0])}
+                                rmu(res[0].substr(0,res[0].length - 1)))
+                        }else{context = $transition(context, 'float', rmu(res[0]))}
                     }else{
                         res = int_pattern.exec(src.substr(pos))
                         $pos = pos
                         if(res[1] !== undefined){
                             context = $transition(context, 'imaginary',
-                                res[0].substr(0, res[0].length - 1))
+                                rmu(res[0].substr(0, res[0].length - 1)))
                         }else{
-                            context = $transition(context, 'int', [10, res[0]])
+                            context = $transition(context, 'int',
+                                [10, rmu(res[0])])
                          }
                     }
                 }
