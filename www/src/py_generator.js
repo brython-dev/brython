@@ -46,7 +46,8 @@ function jscode_namespace(iter_name, action, parent_id) {
                '$local_name = "' + iter_name + '", ' +
                '$locals = $locals_' + iter_name + ';'
     if(parent_id){
-        res += '$locals.$parent = $locals_' + parent_id + ';'
+        res += '$locals.$parent = $locals_' + parent_id.replace(/\./g, "_") +
+            ';'
     }
     return res
 }
@@ -602,10 +603,14 @@ generator.__next__ = function(self){
         var res = self.next.apply(self, self.args)
     }catch(err){
         /*
-        console.log('error in __next__ of', self.name)
-        console.log(self.next + '')
+        var src = self.next + '',
+            line_num = err.lineNumber,
+            lines = src.split("\n")
+        console.log(line_num, lines.length)
         console.log(err)
+        $B.$log(src)
         */
+        
         self.$finished = true
         throw err
     }finally{
