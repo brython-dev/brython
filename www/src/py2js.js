@@ -9313,7 +9313,7 @@ $B.run_script = function(src, name){
     $B.tasks.push(["execute", script])
 }
 
-function $log(js){
+$B.$log = function $log(js){
     js.split("\n").forEach(function(line, i){
         console.log(i + 1, ":", line)
     })
