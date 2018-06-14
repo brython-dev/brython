@@ -134,7 +134,6 @@ $B.$class_constructor = function(class_name, class_obj, bases,
     var meta_new = _b_.type.__getattribute__(metaclass, "__new__")
     var kls = meta_new(metaclass, class_name, bases, cl_dict)
     kls.__module__ = module
-    kls.__annotations__ = _b_.dict.$factory
     kls.$subclasses = []
 
     if(kls.__class__ === metaclass){
