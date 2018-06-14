@@ -3734,10 +3734,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         var annotation = ""
         if(this.parent.type == "expr" && this.parent.parent.type == "node" &&
                 this.parent.hasOwnProperty("annotation")){
-            console.log("annotation", this)
             var js = this.parent.annotation.tree[0].to_js()
-            console.log("annotation", js)
-            console.log("parent tree", this.parent.parent.tree)
             annotation = "$locals.__annotations__.$string_dict['" + value + "'] = " +
                 js +"; "
             if(this.parent.parent.tree[0] == this.parent){
@@ -6958,7 +6955,6 @@ var $transition = $B.parser.$transition = function(context, token, value){
                 }else if(context.parent.type == "node"){
                     // Annotation
                     return new $AbstractExprCtx(new $AnnotationCtx(context), false)
-                    //console.log(": after expr", context)
                 }
                 break
             case '=':
