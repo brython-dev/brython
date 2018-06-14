@@ -65,8 +65,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,6,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.6.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-06-13 14:45:49.743644"
-__BRYTHON__.timestamp=1528893949743
+__BRYTHON__.compiled_date="2018-06-14 10:29:21.670079"
+__BRYTHON__.timestamp=1528964961670
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -4097,7 +4097,7 @@ var kwdict=["class","return","break","for","lambda","try","finally","raise","def
 var unsupported=[]
 var $indented=["class","def","for","condition","single_kw","try","except","with"
 ]
-var int_pattern=new RegExp("^\\d[0-9_]*(j|J)?"),float_pattern1=new RegExp("^\\d[0-9_]*\\.\\d*([eE][+-]?\\d+)?(j|J)?"),float_pattern2=new RegExp("^\\d[0-9_]*([eE][+-]?\\d+)(j|J)?"),hex_pattern=new RegExp("^0[xX]([0-9a-fA-F][0-9a-fA-F_]*)"),octal_pattern=new RegExp("^0[oO]([0-7][0-7_]*)"),binary_pattern=new RegExp("^0[bB]([01][01_]*)")
+var int_pattern=new RegExp("^\\d[0-9_]*(j|J)?"),float_pattern1=new RegExp("^\\d[0-9_]*\\.\\d*([eE][+-]?\\d+)?(j|J)?"),float_pattern2=new RegExp("^\\d[0-9_]*([eE][+-]?\\d+)(j|J)?"),hex_pattern=new RegExp("^0[xX]([0-9a-fA-F_]+)"),octal_pattern=new RegExp("^0[oO]([0-7_]+)"),binary_pattern=new RegExp("^0[bB]([01_]+)")
 var C=null
 var new_node=new $Node(),current=root,name="",_type=null,pos=0,indent=null,string_modifier=false
 var module=root.module
@@ -8181,6 +8181,7 @@ return -Number.NaN
 case "":
 throw _b_.ValueError.$factory("count not convert string to float")
 default:
+value=value.charAt(0)+ value.substr(1).replace(/_/g,"")
 value=to_digits(value)
 if(isFinite(value))return $FloatClass(eval(value))
 else{
@@ -8479,17 +8480,18 @@ if(_value.length >2){var _pre=_value.substr(0,2).toUpperCase()
 if(base==0){if(_pre=="0B"){base=2}
 if(_pre=="0O"){base=8}
 if(_pre=="0X"){base=16}}
-if(_pre=="0B" ||_pre=="0O" ||_pre=="0X"){_value=_value.substr(2)}}
-var _digits=$valid_digits(base)
-var _re=new RegExp("^[+-]?[" + _digits + "]+$","i")
-if(! _re.test(_value)){throw _b_.ValueError.$factory(
+if(_pre=="0B" ||_pre=="0O" ||_pre=="0X"){_value=_value.substr(2)
+while(_value.startsWith("_")){_value=_value.substr(1)}}}
+var _digits=$valid_digits(base),_re=new RegExp("^[+-]?[" + _digits + "]" +
+"[" + _digits + "_]*$","i"),match=_re.exec(_value)
+if(match===null){throw _b_.ValueError.$factory(
 "invalid literal for int() with base " + base + ": '" +
-_b_.str.$factory(value)+ "'")}
+_b_.str.$factory(value)+ "'")}else{value=_value.replace(/_/g,"")}
 if(base <=10 && ! isFinite(value)){throw _b_.ValueError.$factory(
 "invalid literal for int() with base " + base + ": '" +
 _b_.str.$factory(value)+ "'")}
-var res=parseInt(_value,base)
-if(res < $B.min_int ||res > $B.max_int){return $B.long_int.$factory(_value,base)}
+var res=parseInt(value,base)
+if(res < $B.min_int ||res > $B.max_int){return $B.long_int.$factory(value,base)}
 return res}
 if(isinstance(value,[_b_.bytes,_b_.bytearray])){var _digits=$valid_digits(base)
 for(var i=0;i < value.source.length;i++){if(_digits.indexOf(String.fromCharCode(value.source[i]))==-1){throw _b_.ValueError.$factory(
@@ -8933,18 +8935,27 @@ complex.__ne__=function(self,other){return ! complex.__eq__(self,other)}
 complex.__neg__=function(self){return make_complex(-self.$real,-self.$imag)}
 complex.__new__=function(cls){if(cls===undefined){throw _b_.TypeError.$factory('complex.__new__(): not enough arguments')}
 var res,args=$B.args("complex",3,{cls: null,real: null,imag: null},["cls","real","imag"],arguments,{real: 0,imag: 0},null,null),$real=args.real,$imag=args.imag
-if(typeof $real=="string"){if(arguments.length > 1 ||arguments[0].$nat !==undefined){throw _b_.TypeError.$factory("complex() can't take second arg " +
+if(typeof $real=="string"){if(arguments.length > 2 &&
+arguments[2].$nat !==undefined &&
+Object.keys(arguments[2].kw).length > 0){console.log(arguments)
+throw _b_.TypeError.$factory("complex() can't take second arg " +
 "if first is a string")}
+var arg=$real
 $real=$real.trim()
 if($real.startsWith("(")&& $real.endsWith(")")){$real=$real.substr(1)
 $real=$real.substr(0,$real.length - 1)}
+var complex_re=/^\s*([\+\-]*[0-9_]*\.?[0-9_]*(e[\+\-]*[0-9_]*)?)([\+\-]?)([0-9_]*\.?[0-9_]*(e[\+\-]*[0-9_]*)?)(j?)\s*$/i
 var parts=complex_re.exec($real)
+function to_num(s){var res=parseFloat(s.charAt(0)+ s.substr(1).replace(/_/g,""))
+if(isNaN(res)){throw _b_.ValueError.$factory("could not convert string " +
+"to complex: '" + arg +"'")}
+return res}
 if(parts===null){throw _b_.ValueError.$factory("complex() arg is a malformed string")}else if(parts[_real]=="." ||parts[_imag]=="." ||
 parts[_real]==".e" ||parts[_imag]==".e" ||
 parts[_real]=="e" ||parts[_imag]=="e"){throw _b_.ValueError.$factory("complex() arg is a malformed string")}else if(parts[_j]!=""){if(parts[_sign]==""){$real=0
-if(parts[_real]=="+" ||parts[_real]==""){$imag=1}else if(parts[_real]=='-'){$imag=-1}else{$imag=parseFloat(parts[_real])}}else{$real=parseFloat(parts[_real])
-$imag=parts[_imag]=="" ? 1 : parseFloat(parts[_imag])
-$imag=parts[_sign]=="-" ? -$imag : $imag}}else{$real=parseFloat(parts[_real])
+if(parts[_real]=="+" ||parts[_real]==""){$imag=1}else if(parts[_real]=='-'){$imag=-1}else{$imag=to_num(parts[_real])}}else{$real=to_num(parts[_real])
+$imag=parts[_imag]=="" ? 1 : to_num(parts[_imag])
+$imag=parts[_sign]=="-" ? -$imag : $imag}}else{$real=to_num(parts[_real])
 $imag=0}
 res={__class__: complex,$real: $real ||0,$imag: $imag ||0}
 return res}
@@ -9025,7 +9036,6 @@ complex.real=function(self){return new Number(self.$real)}
 complex.real.setter=function(){throw _b_.AttributeError.$factory("readonly attribute")}
 complex.imag=function(self){return new Number(self.$imag)}
 complex.imag.setter=function(){throw _b_.AttributeError.$factory("readonly attribute")}
-var complex_re=/^\s*([\+\-]*\d*\.?\d*(e[\+\-]*\d*)?)([\+\-]?)(\d*\.?\d*(e[\+\-]*\d*)?)(j?)\s*$/i
 var _real=1,_real_mantissa=2,_sign=3,_imag=4,_imag_mantissa=5,_j=6
 var type_conversions=["__complex__","__float__","__int__"]
 var _convert=function(num){for(i=0;i < type_conversions.length;i++){if(hasattr(num,type_conversions[i])){return getattr(num,type_conversions[i])()}}

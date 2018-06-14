@@ -7982,9 +7982,9 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
     var int_pattern = new RegExp("^\\d[0-9_]*(j|J)?"),
         float_pattern1 = new RegExp("^\\d[0-9_]*\\.\\d*([eE][+-]?\\d+)?(j|J)?"),
         float_pattern2 = new RegExp("^\\d[0-9_]*([eE][+-]?\\d+)(j|J)?"),
-        hex_pattern = new RegExp("^0[xX]([0-9a-fA-F][0-9a-fA-F_]*)"),
-        octal_pattern = new RegExp("^0[oO]([0-7][0-7_]*)"),
-        binary_pattern = new RegExp("^0[bB]([01][01_]*)")
+        hex_pattern = new RegExp("^0[xX]([0-9a-fA-F_]+)"),
+        octal_pattern = new RegExp("^0[oO]([0-7_]+)"),
+        binary_pattern = new RegExp("^0[bB]([01_]+)")
 
     var context = null
     var new_node = new $Node(),
