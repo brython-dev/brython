@@ -375,7 +375,7 @@ function $$eval(src, _globals, _locals){
 
     if(_globals === undefined){_globals = _b_.None}
     if(_locals === undefined){_locals = _b_.None}
-    
+
     var current_frame = $B.frames_stack[$B.frames_stack.length - 1]
 
     if(current_frame !== undefined){
@@ -774,7 +774,10 @@ $B.$getattr = function(obj, attr, _default){
     switch(attr) {
       case '__call__':
         if(typeof obj == 'function'){
-            return obj
+            var res = function(){return obj.apply(null, arguments)}
+            res.__class__ = method_wrapper
+            res.$infos = {__name__: "__call__"}
+            return res
         }
         break
       case '__class__':
@@ -2204,6 +2207,20 @@ $B.builtin_funcs = [
     "sorted", "sum", "vars"
 ]
 
+var builtin_function = $B.make_class("builtin_function_or_method")
+
+builtin_function.__repr__ = builtin_function.__str__ = function(self){
+    return '<built-in function ' + self.$infos.__name__ + '>'
+}
+$B.set_func_names(builtin_function, "builtins")
+
+var method_wrapper = $B.make_class("method_wrapper")
+
+method_wrapper.__repr__ = method_wrapper.__str__ = function(self){
+    return "<method wrapper '" + self.$infos.__name__ + "' of function object>"
+}
+$B.set_func_names(method_wrapper, "builtins")
+
 $B.builtin_classes = [
     "bool", "bytearray", "bytes", "classmethod", "complex", "dict", "enumerate",
     "filter", "float", "frozenset", "int", "list", "map", "memoryview",
@@ -2231,15 +2248,18 @@ for(var i = 0; i < builtin_names.length; i++){
     try{
         _b_[name] = eval(name1)
         if($B.builtin_funcs.indexOf(orig_name) > -1){
+            _b_[name].__class__ = builtin_function
+            /*
             if(_b_[name].__repr__ === undefined){
                 _b_[name].__repr__ = _b_[name].__str__ = (function(x){
                     return function(){return '<built-in function ' + x + '>'}
                 })(orig_name)
             }
+            */
             // used by inspect module
             _b_[name].$infos = {
                 __module__: 'builtins',
-                __name__: name
+                __name__: orig_name
             }
         }
 

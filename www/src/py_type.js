@@ -511,6 +511,12 @@ $B.set_func_names(type, "builtins")
 
 _b_.type = type
 
+var wrapper_descriptor = $B.make_class("wrapper_descriptor")
+
+$B.set_func_names(wrapper_descriptor, "builtins")
+
+type.__call__.__class__ = wrapper_descriptor
+
 // class of constructors
 $B.$factory = {
     __class__: type,
