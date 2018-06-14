@@ -9,7 +9,8 @@ var module = $B.module = {
     __class__ : _b_.type,
     __module__: "builtins",
     __mro__: [_b_.object],
-    __name__ : "module"
+    __name__ : "module",
+    $is_class: true
 }
 
 module.__init__ = function(){}

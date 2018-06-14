@@ -35,7 +35,7 @@ object.__dir__ = function(self) {
         var klass = self.__class__ || $B.get_class(self)
         objects = [self, klass].concat(klass.__mro__)
     }
-    
+
     var res = []
     for(var i = 0, len = objects.length; i < len; i++){
         for(var attr in objects[i]){

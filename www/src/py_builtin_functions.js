@@ -1059,7 +1059,7 @@ function input(src) {
     return val
 }
 
-function isinstance(obj,arg){
+function isinstance(obj, arg){
     check_no_kw('isinstance', obj, arg)
     check_nb_args('isinstance', 2, arguments.length)
 
@@ -1102,9 +1102,8 @@ function isinstance(obj,arg){
     }
 
     // Search __instancecheck__ on arg
-
     var hook = getattr(arg, '__instancecheck__', _b_.None)
-    if(hook!==_b_.None){
+    if(hook !== _b_.None){
         return hook(obj)
     }
     return false

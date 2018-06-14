@@ -610,7 +610,7 @@ generator.__next__ = function(self){
         console.log(err)
         $B.$log(src)
         */
-        
+
         self.$finished = true
         throw err
     }finally{

@@ -1750,8 +1750,10 @@ var $ClassCtx = $B.parser.$ClassCtx = function(context){
     this.parent.node.parent_block = scope
     this.parent.node.bound = {} // will store the names bound in the function
 
-    this.parent.node.binding = {} // stores names bound in the class scope
-
+    // stores names bound in the class scope
+    this.parent.node.binding = {
+        __annotations__: true
+    }
     this.toString = function(){
         return '(class) ' + this.name + ' ' + this.tree + ' args ' + this.args
     }
@@ -1795,7 +1797,7 @@ var $ClassCtx = $B.parser.$ClassCtx = function(context){
 
         var instance_decl = new $Node(),
             local_ns = '$locals_' + this.id.replace(/\./g, '_'),
-            js = ';var ' + local_ns + ' = {$type:"class"}, $locals = ' +
+            js = ';var ' + local_ns + ' = {$type: "class", __annotations__: _b_.dict.$factory()}, $locals = ' +
                 local_ns + ', $local_name = "' + local_ns + '";'
         new $NodeJSCtx(instance_decl, js)
         node.insert(0, instance_decl)
@@ -3720,7 +3722,6 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
     }
 
     this.to_js = function(arg){
-
         // Store the result in this.result
         // For generator expressions, to_js() is called in $make_node
         if(this.result !== undefined && this.scope.ntype == 'generator'){
@@ -3730,6 +3731,19 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         this.js_processed = true
         var val = this.value
 
+        var annotation = ""
+        if(this.parent.type == "expr" && this.parent.parent.type == "node" &&
+                this.parent.hasOwnProperty("annotation")){
+            console.log("annotation", this)
+            var js = this.parent.annotation.tree[0].to_js()
+            console.log("annotation", js)
+            console.log("parent tree", this.parent.parent.tree)
+            annotation = "$locals.__annotations__.$string_dict['" + value + "'] = " +
+                js +"; "
+            if(this.parent.parent.tree[0] == this.parent){
+                return annotation
+            }
+        }
         var is_local = this.scope.binding[val] !== undefined,
             this_node = $get_node(this),
             bound_before = this_node.bound_before
@@ -3747,14 +3761,14 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                 && this.scope.ntype == 'class' &&
                 this.scope.context.tree[0].name == val){
             // Name of class referenced inside the class. Cf. issue #649
-            return '$B.$search("' + val + '")'
+            return annotation + '$B.$search("' + val + '")'
         }
 
         if(this.unbound && !this.nonlocal){
             if(this.scope.ntype == 'def' || this.scope.ntype == 'generator'){
-                return '$B.$local_search("' + val + '")'
+                return annotation + '$B.$local_search("' + val + '")'
             }else{
-                return '$B.$search("' + val + '")'
+                return annotation + '$B.$search("' + val + '")'
             }
         }
 
@@ -3783,7 +3797,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
             var bscope = this.firstBindingScopeId()
             // Might be undefined, for augmented assignments
             if(bscope !== undefined){
-                return "$locals_" + bscope.replace(/\./g, "_") + '["' +
+                return annotation + "$locals_" + bscope.replace(/\./g, "_") + '["' +
                     val + '"]'
             }
         }
@@ -3800,9 +3814,9 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                 // Else return a call to a function that searches the name in
                 // globals, and throws NameError if not found.
                 if(gs.binding[val] !== undefined){
-                    return global_ns + '["' + val + '"]'
+                    return annotation + global_ns + '["' + val + '"]'
                 }else{
-                    return '$B.$global_search("' + val + '", ' +
+                    return annotation + '$B.$global_search("' + val + '", ' +
                         search_ids + ')'
                 }
             }
@@ -3881,7 +3895,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                         innermost.context.tree[0].args.indexOf(val) == -1) &&
                         (nonlocs === undefined || nonlocs[val] === undefined)){
                     this.result = '$B.$local_search("' + val + '")'
-                    return this.result
+                    return annotation + this.result
                 }
             }
             if(found.length > 1 && found[0].context){
@@ -3913,13 +3927,13 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                             res = ns1
                         }
                         this.result = res + '["' + val + '"]'
-                        return this.result
+                        return annotation + this.result
                     }else{
                         this.found = false
                         var res = ns0 + '["' + val + '"] !== undefined ? '
                         res += ns0 + '["' + val + '"] : '
                         this.result = "(" + res + ns1 + '["' + val + '"])'
-                        return this.result
+                        return annotation + this.result
                     }
                 }
             }
@@ -3964,14 +3978,14 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                                     this.is_builtin = true
                                     this.result = '$B.builtins.' + val +
                                         $to_js(this.tree, '')
-                                    return this.result
+                                    return annotation + this.result
                                 }
                             }
                             // Call a function to return the value if it is
                             // defined in locals or globals, or raise a
                             // NameError
                             this.result = '$B.$search("' + val + '")'
-                            return this.result
+                            return annotation + this.result
                         }else{
                             if(this.boundBefore(scope)){
                                 // We are sure that the name is defined in the
@@ -4033,7 +4047,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                 val = scope_ns + '["' + val + '"]'
             }
             this.result = val + $to_js(this.tree, '')
-            return this.result
+            return annotation + this.result
         }else{
             // Name was not found in bound names
             // It may have been introduced in the globals namespace by an exec,
@@ -4048,7 +4062,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
             // Function $search is defined in py_utils.js
 
             this.result = '$B.$global_search("' + val + '", ' + search_ids + ')'
-            return this.result
+            return annotation + this.result
         }
     }
 }
@@ -4291,9 +4305,9 @@ var $ListOrTupleCtx = $B.parser.$ListOrTupleCtx = function(context,real){
 
     this.get_src = function(){
         // Return the Python source code
-        var scope = $get_scope(this)
+        var src = $get_module(this).src
         // replace comments by whitespace, cf. issue #658
-        var src = $B.$py_src[scope.module]
+        var scope = $get_scope(this)
         if(scope.comments === undefined){return src}
         scope.comments.forEach(function(comment){
             var start = comment[0],
@@ -6941,6 +6955,10 @@ var $transition = $B.parser.$transition = function(context, token, value){
                     return new $AbstractExprCtx(new $SliceCtx(context.parent), false)
                 }else if(context.parent.type == "slice"){
                     return $transition(context.parent, token, value)
+                }else if(context.parent.type == "node"){
+                    // Annotation
+                    return new $AbstractExprCtx(new $AnnotationCtx(context), false)
+                    //console.log(": after expr", context)
                 }
                 break
             case '=':
@@ -8602,7 +8620,8 @@ var $create_root_node = $B.parser.$create_root_node = function(src, module, loca
         __doc__: true,
         __name__: true,
         __file__: true,
-        __package__: true
+        __package__: true,
+        __annotations__: true
     }
 
     root.parent_block = parent_block
@@ -8695,6 +8714,10 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_info){
     root.insert(offset++,
         $NodeJS(local_ns + '["__package__"] = ' + local_ns +
             '["__package__"]'))
+
+    // annotations
+    root.insert(offset++,
+        $NodeJS('$locals.__annotations__ = _b_.dict.$factory()'))
 
     // file
     root.insert(offset++,
@@ -9313,7 +9336,7 @@ $B.run_script = function(src, name){
     $B.tasks.push(["execute", script])
 }
 
-$B.$log = function $log(js){
+$B.$log = $log = function(js){
     js.split("\n").forEach(function(line, i){
         console.log(i + 1, ":", line)
     })
