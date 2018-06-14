@@ -9,5 +9,5 @@ mkdir "$DEST"
 cp -r www/src/brython.js www/src/brython_stdlib.js www/src/libs www/src/Lib setup "$DEST"
 
 # Remove package archives
-rm "$DEST/setup/data/Brython-*"
+rm $DEST/setup/data/Brython-*
 rm -rf "$DEST/Lib/test"
