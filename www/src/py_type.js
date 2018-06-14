@@ -134,6 +134,7 @@ $B.$class_constructor = function(class_name, class_obj, bases,
     var meta_new = _b_.type.__getattribute__(metaclass, "__new__")
     var kls = meta_new(metaclass, class_name, bases, cl_dict)
     kls.__module__ = module
+    kls.__annotations__ = _b_.dict.$factory
     kls.$subclasses = []
 
     if(kls.__class__ === metaclass){
@@ -365,7 +366,6 @@ type.__repr__ = type.__str__ = function(kls){
 
 type.__getattribute__ = function(klass, attr){
 
-    //console.log("attr", attr, "de la classe", klass)
     switch(attr) {
         case "__class__":
             return klass.__class__
@@ -496,6 +496,17 @@ type.__getattribute__ = function(klass, attr){
     }
 }
 
+type.__instancecheck__ = function(cls, instance){
+    var kl = instance.__class__ || $B.get_class(instance)
+    if(kl === cls){return true}
+    else{
+        for(var i = 0; i < kl.__mro__.length; i++){
+            if(kl.__mro__[i] === cls){return true}
+        }
+    }
+    return false
+}
+type.__instancecheck__.$type = "classmethod"
 
 $B.set_func_names(type, "builtins")
 
