@@ -80,4 +80,10 @@ nosetests.xml
 
 # Files created by make_dist
 npm/*.js
+npm/unicode.txt
 setup/data/*.js
+setup/data/demo.html
+www/static_doc
+
+# virtualenv
+venv/
