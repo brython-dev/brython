@@ -446,12 +446,20 @@ function $$eval(src, _globals, _locals){
             parent_scope = $B.builtins_scope
         }else{
             // The parent block of locals must be set to globals
-            parent_scope = {
+            var grandparent_scope = {
                 id: globals_id,
                 parent_block: $B.builtins_scope,
                 binding: {}
             }
+            parent_scope = {
+                id: locals_id,
+                parent_block: grandparent_scope,
+                binding: {}
+            }
             for(var attr in _globals.$string_dict){
+                grandparent_scope.binding[attr] = true
+            }
+            for(var attr in _locals.$string_dict){
                 parent_scope.binding[attr] = true
             }
         }
@@ -459,7 +467,6 @@ function $$eval(src, _globals, _locals){
 
     // set module path
     $B.$py_module_path[globals_id] = $B.$py_module_path[current_globals_id]
-
     // Initialise the object for block namespaces
     eval('var $locals_' + globals_id + ' = {}\nvar $locals_' +
         locals_id + ' = {}')
@@ -501,13 +508,12 @@ function $$eval(src, _globals, _locals){
             eval(ex)
         }
     }else{
-        var items = _b_.dict.items(_locals), item
         if(_locals.$jsobj){var items = _locals.$jsobj}
         else{var items = _locals.$string_dict}
         for(var item in items){
             item1 = to_alias(item)
             try{
-                eval('$locals_' + locals_id + '["' + item[0] + '"] = item[1]')
+                eval('$locals_' + locals_id + '["' + item + '"] = items.' + item)
             }catch(err){
                 console.log(err)
                 console.log('error setting', item)

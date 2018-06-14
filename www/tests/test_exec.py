@@ -15,19 +15,19 @@ except:
     raise ValueError('should have raised AttributeError')
 
 # issue 183
-x=4
-cd=dict(globals())
+x = 4
+cd = dict(globals())
 cd.update(locals())
-exec("x=x+4",cd)
+exec("x = x + 4",cd)
 
 assert x == 4
 assert cd['x'] == 8
 
-y=5
-yd=dict(globals())
+y = 5
+yd = dict(globals())
 yd.update(locals())
-co=compile("y=y+4","","exec")
-exec(co,yd)
+co=compile("y = y + 4", "", "exec")
+exec(co, yd)
 
 assert yd['y'] == 9
 assert y == 5
@@ -68,3 +68,13 @@ try:
 except NameError:
     pass
 
+# globals and locals
+glob = {"y": 9}
+loc = {"x": 2}
+exec("z = y", glob, loc)
+assert loc["z"] == 9
+exec("z = x", glob, loc)
+assert loc["z"] == 2
+
+exec("z = y", glob)
+assert glob["z"] == 9

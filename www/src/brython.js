@@ -65,8 +65,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,6,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.6.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-06-14 16:27:06.576274"
-__BRYTHON__.timestamp=1528986426576
+__BRYTHON__.compiled_date="2018-06-14 21:00:11.620148"
+__BRYTHON__.timestamp=1529002811620
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -1817,10 +1817,7 @@ this.js_processed=true
 var val=this.value
 var annotation=""
 if(this.parent.type=="expr" && this.parent.parent.type=="node" &&
-this.parent.hasOwnProperty("annotation")){console.log("annotation",this)
-var js=this.parent.annotation.tree[0].to_js()
-console.log("annotation",js)
-console.log("parent tree",this.parent.parent.tree)
+this.parent.hasOwnProperty("annotation")){var js=this.parent.annotation.tree[0].to_js()
 annotation="$locals.__annotations__.$string_dict['" + value + "'] = " +
 js +"; "
 if(this.parent.parent.tree[0]==this.parent){return annotation}}
@@ -2874,7 +2871,8 @@ while(true){if(scope.ntype=="module"){return name}
 else if(scope.ntype=="class"){var class_name=scope.C.tree[0].name
 while(class_name.charAt(0)=='_'){class_name=class_name.substr(1)}
 return '_' + class_name + name}else{if(scope.parent && scope.parent.C){scope=$get_scope(scope.C.tree[0])}else{return name}}}}else{return name}}
-var $transition=$B.parser.$transition=function(C,token,value){switch(C.type){case 'abstract_expr':
+var $transition=$B.parser.$transition=function(C,token,value){
+switch(C.type){case 'abstract_expr':
 var packed=C.packed
 switch(token){case 'id':
 case 'imaginary':
@@ -4400,7 +4398,8 @@ case '=':
 case '|':
 case '~':
 case '!':
-if(car=='-' && src.charAt(pos + 1)=='>'){C=$transition(C,'annotation')
+if(car=='-' && src.charAt(pos + 1)=='>'){console.log("annotation ->",C)
+C=$transition(C,'annotation')
 pos +=2
 continue}
 var op_match=""
@@ -4937,7 +4936,6 @@ break}}
 var meta_new=_b_.type.__getattribute__(metaclass,"__new__")
 var kls=meta_new(metaclass,class_name,bases,cl_dict)
 kls.__module__=module
-kls.__annotations__=_b_.dict.$factory
 kls.$subclasses=[]
 if(kls.__class__===metaclass){
 var meta_init=_b_.type.__getattribute__(metaclass,"__init__")
@@ -5935,8 +5933,10 @@ _globals.globals_id=_globals.globals_id ||globals_id
 globals_id=_globals.globals_id
 if(_locals===_globals ||_locals===undefined){locals_id=globals_id
 parent_scope=$B.builtins_scope}else{
-parent_scope={id: globals_id,parent_block: $B.builtins_scope,binding:{}}
-for(var attr in _globals.$string_dict){parent_scope.binding[attr]=true}}}
+var grandparent_scope={id: globals_id,parent_block: $B.builtins_scope,binding:{}}
+parent_scope={id: locals_id,parent_block: grandparent_scope,binding:{}}
+for(var attr in _globals.$string_dict){grandparent_scope.binding[attr]=true}
+for(var attr in _locals.$string_dict){parent_scope.binding[attr]=true}}}
 $B.$py_module_path[globals_id]=$B.$py_module_path[current_globals_id]
 eval('var $locals_' + globals_id + ' = {}\nvar $locals_' +
 locals_id + ' = {}')
@@ -5953,11 +5953,10 @@ break}}}
 if(_locals===undefined){if(_globals !==undefined){eval('var $locals_' + locals_id + ' = $locals_' + globals_id)}else{var lobj=current_frame[1],ex=''
 for(var attr in current_frame[1]){ex +='$locals_' + locals_id + '["' + attr +
 '"] = current_frame[1]["' + attr + '"];'}
-eval(ex)}}else{var items=_b_.dict.items(_locals),item
-if(_locals.$jsobj){var items=_locals.$jsobj}
+eval(ex)}}else{if(_locals.$jsobj){var items=_locals.$jsobj}
 else{var items=_locals.$string_dict}
 for(var item in items){item1=to_alias(item)
-try{eval('$locals_' + locals_id + '["' + item[0]+ '"] = item[1]')}catch(err){console.log(err)
+try{eval('$locals_' + locals_id + '["' + item + '"] = items.' + item)}catch(err){console.log(err)
 console.log('error setting',item)
 break}}}
 $B.current_exception=ce
