@@ -65,8 +65,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,6,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.6.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-06-14 10:29:21.670079"
-__BRYTHON__.timestamp=1528964961670
+__BRYTHON__.compiled_date="2018-06-14 10:55:32.616457"
+__BRYTHON__.timestamp=1528966532616
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -4737,10 +4737,9 @@ var opsigns=["+","-","*","/","//","%","**","<<",">>","&","^","|"]
 object.__delattr__=function(self,attr){_b_.getattr(self,attr)
 delete self[attr]
 return _b_.None}
-object.__dir__=function(self){var objects=[self],pos=1,klass=self.__class__ ||$B.get_class(self)
-objects[pos++]=klass
-var mro=klass.__mro__
-for(var i=0,len=mro.length;i < len;i++){objects[pos++]=mro[i]}
+object.__dir__=function(self){var objects
+if(self.$is_class){objects=[self].concat(self.__mro__)}else{var klass=self.__class__ ||$B.get_class(self)
+objects=[self,klass].concat(klass.__mro__)}
 var res=[]
 for(var i=0,len=objects.length;i < len;i++){for(var attr in objects[i]){if(attr=="toString"){console.log(attr,objects[i][attr])}
 if(attr.charAt(0)=="$"){
