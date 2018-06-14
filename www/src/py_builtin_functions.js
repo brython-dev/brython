@@ -373,6 +373,9 @@ function $$eval(src, _globals, _locals){
         return attr
     }
 
+    if(_globals === undefined){_globals = _b_.None}
+    if(_locals === undefined){_locals = _b_.None}
+    
     var current_frame = $B.frames_stack[$B.frames_stack.length - 1]
 
     if(current_frame !== undefined){
@@ -398,7 +401,7 @@ function $$eval(src, _globals, _locals){
         parent_scope,
         ce = $B.current_exception
 
-    if(_globals === undefined){
+    if(_globals === _b_.None){
         if(current_locals_id == current_globals_id){
             locals_id = globals_id
         }
@@ -441,7 +444,7 @@ function $$eval(src, _globals, _locals){
         _globals.globals_id = _globals.globals_id || globals_id
         globals_id = _globals.globals_id
 
-        if(_locals === _globals || _locals === undefined){
+        if(_locals === _globals || _locals === _b_.None){
             locals_id = globals_id
             parent_scope = $B.builtins_scope
         }else{
@@ -472,7 +475,7 @@ function $$eval(src, _globals, _locals){
         locals_id + ' = {}')
 
     // Initialise block globals
-    if(_globals === undefined){
+    if(_globals === _b_.None){
         var gobj = current_frame[3],
             ex = ''
         ex += 'var $locals_' + current_globals_id + '=gobj;' // needed for generators
@@ -495,8 +498,8 @@ function $$eval(src, _globals, _locals){
     }
 
     // Initialise block locals
-    if(_locals === undefined){
-        if(_globals !== undefined){
+    if(_locals === _b_.None){
+        if(_globals !== _b_.None){
             eval('var $locals_' + locals_id + ' = $locals_' + globals_id)
         }else{
             var lobj = current_frame[1],
@@ -577,7 +580,7 @@ function $$eval(src, _globals, _locals){
         }
 
         // Update _locals with the namespace after execution
-        if(_locals !== undefined){
+        if(_locals !== _b_.None){
             lns = eval('$locals_' + locals_id)
             for(var attr in lns){
                 attr1 = from_alias(attr)
@@ -592,7 +595,7 @@ function $$eval(src, _globals, _locals){
             }
         }
 
-        if(_globals !== undefined){
+        if(_globals !== _b_.None){
             // Update _globals with the namespace after execution
             for(var attr in gns){
                 attr1 = from_alias(attr)
@@ -637,10 +640,10 @@ function exec(src, globals, locals){
     var missing = {}
     var $ = $B.args("exec", 3, {src: null, globals: null, locals: null},
         ["src", "globals", "locals"], arguments,
-        {globals: missing, locals: missing}, null, null),
+        {globals: _b_.None, locals: _b_.None}, null, null),
         src = $.src,
-        globals = $.globals === missing ? undefined : $.globals,
-        locals = $.locals === missing ? undefined : $.locals
+        globals = $.globals,
+        locals = $.locals
     return $$eval(src, globals, locals, 'exec') || _b_.None
 }
 

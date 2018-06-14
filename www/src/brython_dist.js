@@ -65,8 +65,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,6,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.6.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-06-14 21:00:11.620148"
-__BRYTHON__.timestamp=1529002811620
+__BRYTHON__.compiled_date="2018-06-14 21:19:24.458517"
+__BRYTHON__.timestamp=1529003964458
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -2871,8 +2871,7 @@ while(true){if(scope.ntype=="module"){return name}
 else if(scope.ntype=="class"){var class_name=scope.C.tree[0].name
 while(class_name.charAt(0)=='_'){class_name=class_name.substr(1)}
 return '_' + class_name + name}else{if(scope.parent && scope.parent.C){scope=$get_scope(scope.C.tree[0])}else{return name}}}}else{return name}}
-var $transition=$B.parser.$transition=function(C,token,value){
-switch(C.type){case 'abstract_expr':
+var $transition=$B.parser.$transition=function(C,token,value){switch(C.type){case 'abstract_expr':
 var packed=C.packed
 switch(token){case 'id':
 case 'imaginary':
@@ -4398,8 +4397,7 @@ case '=':
 case '|':
 case '~':
 case '!':
-if(car=='-' && src.charAt(pos + 1)=='>'){console.log("annotation ->",C)
-C=$transition(C,'annotation')
+if(car=='-' && src.charAt(pos + 1)=='>'){C=$transition(C,'annotation')
 pos +=2
 continue}
 var op_match=""
@@ -5908,6 +5906,8 @@ function $$eval(src,_globals,_locals){function from_alias(attr){if(attr.substr(0
 return attr}
 function to_alias(attr){if($B.aliased_names[attr]){return '$$' + attr}
 return attr}
+if(_globals===undefined){_globals=_b_.None}
+if(_locals===undefined){_locals=_b_.None}
 var current_frame=$B.frames_stack[$B.frames_stack.length - 1]
 if(current_frame !==undefined){var current_locals_id=current_frame[0].replace(/\./,'_'),current_globals_id=current_frame[2].replace(/\./,'_')}
 var stack_len=$B.frames_stack.length
@@ -5916,7 +5916,7 @@ if(src.__class__===code){is_exec=src.mode=="exec"
 src=src.source}else if(typeof src !=='string'){throw _b_.TypeError.$factory("eval() arg 1 must be a string, bytes "+
 "or code object")}
 var globals_id='$exec_' + $B.UUID(),locals_id='$exec_' + $B.UUID(),parent_scope,ce=$B.current_exception
-if(_globals===undefined){if(current_locals_id==current_globals_id){locals_id=globals_id}
+if(_globals===_b_.None){if(current_locals_id==current_globals_id){locals_id=globals_id}
 var local_scope={module: globals_id,id: current_locals_id,binding:{},bindings:{}}
 for(var attr in current_frame[1]){local_scope.binding[attr]=true
 local_scope.bindings[attr]=true}
@@ -5931,7 +5931,7 @@ if(_globals.__class__ !=_b_.dict){throw _b_.TypeError.$factory("exec() globals m
 _globals.__class__.__name__)}
 _globals.globals_id=_globals.globals_id ||globals_id
 globals_id=_globals.globals_id
-if(_locals===_globals ||_locals===undefined){locals_id=globals_id
+if(_locals===_globals ||_locals===_b_.None){locals_id=globals_id
 parent_scope=$B.builtins_scope}else{
 var grandparent_scope={id: globals_id,parent_block: $B.builtins_scope,binding:{}}
 parent_scope={id: locals_id,parent_block: grandparent_scope,binding:{}}
@@ -5940,7 +5940,7 @@ for(var attr in _locals.$string_dict){parent_scope.binding[attr]=true}}}
 $B.$py_module_path[globals_id]=$B.$py_module_path[current_globals_id]
 eval('var $locals_' + globals_id + ' = {}\nvar $locals_' +
 locals_id + ' = {}')
-if(_globals===undefined){var gobj=current_frame[3],ex=''
+if(_globals===_b_.None){var gobj=current_frame[3],ex=''
 ex +='var $locals_' + current_globals_id + '=gobj;' 
 ex +='var $locals_' + globals_id + '=gobj;'
 eval(ex)}else{if(_globals.$jsobj){var items=_globals.$jsobj}
@@ -5950,7 +5950,7 @@ try{eval('$locals_' + globals_id + '["' + item1 +
 '"] = items[item]')}catch(err){console.log(err)
 console.log('error setting',item)
 break}}}
-if(_locals===undefined){if(_globals !==undefined){eval('var $locals_' + locals_id + ' = $locals_' + globals_id)}else{var lobj=current_frame[1],ex=''
+if(_locals===_b_.None){if(_globals !==_b_.None){eval('var $locals_' + locals_id + ' = $locals_' + globals_id)}else{var lobj=current_frame[1],ex=''
 for(var attr in current_frame[1]){ex +='$locals_' + locals_id + '["' + attr +
 '"] = current_frame[1]["' + attr + '"];'}
 eval(ex)}}else{if(_locals.$jsobj){var items=_locals.$jsobj}
@@ -5979,11 +5979,11 @@ js=root.to_js()
 var res=eval(js)
 gns=eval('$locals_' + globals_id)
 if($B.frames_stack[$B.frames_stack.length - 1][2]==globals_id){gns=$B.frames_stack[$B.frames_stack.length - 1][3]}
-if(_locals !==undefined){lns=eval('$locals_' + locals_id)
+if(_locals !==_b_.None){lns=eval('$locals_' + locals_id)
 for(var attr in lns){attr1=from_alias(attr)
 if(attr1.charAt(0)!='$'){if(_locals.$jsobj){_locals.$jsobj[attr]=lns[attr]}
 else{_locals.$string_dict[attr1]=lns[attr]}}}}else{for(var attr in lns){current_frame[1][attr]=lns[attr]}}
-if(_globals !==undefined){
+if(_globals !==_b_.None){
 for(var attr in gns){attr1=from_alias(attr)
 if(attr1.charAt(0)!='$'){if(_globals.$jsobj){_globals.$jsobj[attr]=gns[attr]}
 else{_globals.$string_dict[attr1]=gns[attr]}}}}else{for(var attr in gns){current_frame[3][attr]=gns[attr]}}
@@ -6001,7 +6001,7 @@ $B.clear_ns(globals_id)
 $B.clear_ns(locals_id)}}
 $$eval.$is_func=true
 function exec(src,globals,locals){var missing={}
-var $=$B.args("exec",3,{src: null,globals: null,locals: null},["src","globals","locals"],arguments,{globals: missing,locals: missing},null,null),src=$.src,globals=$.globals===missing ? undefined : $.globals,locals=$.locals===missing ? undefined : $.locals
+var $=$B.args("exec",3,{src: null,globals: null,locals: null},["src","globals","locals"],arguments,{globals: _b_.None,locals: _b_.None},null,null),src=$.src,globals=$.globals,locals=$.locals
 return $$eval(src,globals,locals,'exec')||_b_.None}
 exec.$is_func=true
 function exit(){throw _b_.SystemExit}
