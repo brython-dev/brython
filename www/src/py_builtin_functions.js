@@ -2207,7 +2207,7 @@ $B.builtin_funcs = [
     "sorted", "sum", "vars"
 ]
 
-var builtin_function = $B.make_class("builtin_function_or_method")
+var builtin_function = $B.builtin_function = $B.make_class("builtin_function_or_method")
 
 builtin_function.__repr__ = builtin_function.__str__ = function(self){
     return '<built-in function ' + self.$infos.__name__ + '>'

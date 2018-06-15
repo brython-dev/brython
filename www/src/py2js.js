@@ -1345,7 +1345,7 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
             return
         }
 
-        // insert node 'if(!hasattr(foo,"__iadd__"))
+        // insert node 'if(!hasattr(x, "__iadd__"))
         var new_node = new $Node()
         if(!lnum_set){new_node.line_num = line_num; lnum_set = true}
         var js = ''
@@ -1355,7 +1355,7 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
         parent.insert(rank + offset, new_node)
         offset++
 
-        // create node for "foo = foo + bar"
+        // create node for "x = x + y"
         var aa1 = new $Node()
         aa1.id = this.scope.id
         aa1.line_num = node.line_num
@@ -1379,12 +1379,29 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
         expr1.parent.tree.push(assign1)
 
         // create node for "else"
-        var aa2 = $NodeJS("else")
-        parent.insert(rank + offset, aa2)
+        var else_node = $NodeJS("else")
+        parent.insert(rank + offset, else_node)
 
-        // create node for "foo.__iadd__(bar)"
-        aa2.add($NodeJS(left + ' = $B.$getattr(' + context.to_js() + ',"' +
+        // create node for "x = x.__iadd__(y)"
+        var aa2 = new $Node()
+        aa2.line_num = node.line_num
+        else_node.add(aa2)
+
+        var ctx2 = new $NodeCtx(aa2)
+        var expr2 = new $ExprCtx(ctx2, 'clone', false)
+        if(left_id_unbound){
+            new $RawJSCtx(expr2, '$locals["' + left_id + '"]')
+        }else{
+            expr2.tree = context.tree
+            expr2.tree.forEach(function(elt){
+                elt.parent = expr2
+            })
+        }
+        var assign2 = new $AssignCtx(expr2)
+        assign2.tree.push($NodeJS('$B.$getattr(' + context.to_js() + ',"' +
             func + '")(' + right + ')'))
+        expr2.parent.tree.pop()
+        expr2.parent.tree.push(assign2)
 
         // Augmented assignment doesn't bind names ; if the variable name has
         // been bound in the code above (by a call to $AssignCtx), remove it

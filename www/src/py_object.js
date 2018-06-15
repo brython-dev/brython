@@ -404,7 +404,6 @@ object.__str__ = function(self){
 
 object.__subclasshook__ = function(){return _b_.NotImplemented}
 
-
 // constructor of the built-in class 'object'
 object.$factory = function(){
     var res = {__class__:object},

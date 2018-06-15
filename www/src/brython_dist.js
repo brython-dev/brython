@@ -65,8 +65,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,6,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.6.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-06-14 22:22:17.431483"
-__BRYTHON__.timestamp=1529007737431
+__BRYTHON__.compiled_date="2018-06-15 08:35:53.490806"
+__BRYTHON__.timestamp=1529044553490
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -713,10 +713,20 @@ new $RawJSCtx(new_op,right)
 assign1.tree.push(new_op)
 expr1.parent.tree.pop()
 expr1.parent.tree.push(assign1)
-var aa2=$NodeJS("else")
-parent.insert(rank + offset,aa2)
-aa2.add($NodeJS(left + ' = $B.$getattr(' + C.to_js()+ ',"' +
+var else_node=$NodeJS("else")
+parent.insert(rank + offset,else_node)
+var aa2=new $Node()
+aa2.line_num=node.line_num
+else_node.add(aa2)
+var ctx2=new $NodeCtx(aa2)
+var expr2=new $ExprCtx(ctx2,'clone',false)
+if(left_id_unbound){new $RawJSCtx(expr2,'$locals["' + left_id + '"]')}else{expr2.tree=C.tree
+expr2.tree.forEach(function(elt){elt.parent=expr2})}
+var assign2=new $AssignCtx(expr2)
+assign2.tree.push($NodeJS('$B.$getattr(' + C.to_js()+ ',"' +
 func + '")(' + right + ')'))
+expr2.parent.tree.pop()
+expr2.parent.tree.push(assign2)
 if(left_is_id && !was_bound && !this.scope.blurred){this.scope.binding[left_id]=undefined}
 return offset}
 this.to_js=function(){return ''}}
@@ -6624,7 +6634,7 @@ $B.set_func_names(Function,"builtins")
 _b_.__BRYTHON__=__BRYTHON__
 $B.builtin_funcs=["abs","all","any","ascii","bin","callable","chr","compile","delattr","dir","divmod","eval","exec","exit","format","getattr","globals","hasattr","hash","help","hex","id","input","isinstance","issubclass","iter","len","locals","max","min","next","oct","open","ord","pow","print","quit","repr","round","setattr","sorted","sum","vars"
 ]
-var builtin_function=$B.make_class("builtin_function_or_method")
+var builtin_function=$B.builtin_function=$B.make_class("builtin_function_or_method")
 builtin_function.__repr__=builtin_function.__str__=function(self){return '<built-in function ' + self.$infos.__name__ + '>'}
 $B.set_func_names(builtin_function,"builtins")
 var method_wrapper=$B.make_class("method_wrapper")
