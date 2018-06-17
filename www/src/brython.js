@@ -65,8 +65,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,6,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.6.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-06-17 14:32:37.730357"
-__BRYTHON__.timestamp=1529238757730
+__BRYTHON__.compiled_date="2018-06-17 15:42:04.355141"
+__BRYTHON__.timestamp=1529242924355
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -7412,8 +7412,7 @@ var new_this=self.js
 if(self.js_func){
 new_this=self.js_func;}
 if(this !==null && this !==undefined && this !==_window){new_this=this}
-try{var result=js_attr.apply(new_this,args)}catch(err){console.log(js_attr+'')
-throw err}
+var result=js_attr.apply(new_this,args)
 if(result===undefined){result=this}
 return $B.$JS2Py(result)}
 res.__repr__=function(){return '<function ' + attr + '>'}
@@ -7524,6 +7523,8 @@ return parts.join(".")}
 function $importer(){
 var $xmlhttp=new XMLHttpRequest()
 var fake_qs
+return[$xmlhttp,fake_qs,timer]}
+function $download_module(module,url,$package){var $xmlhttp=new XMLHttpRequest(),fake_qs
 switch($B.$options.cache){case "version":
 fake_qs="?v=" + $B.version_info[2]
 break
@@ -7532,13 +7533,12 @@ fake_qs=""
 break
 default:
 fake_qs="?v=" +(new Date().getTime())}
-var timer=setTimeout(function(){$xmlhttp.abort()
+var timer=_window.setTimeout(function(){$xmlhttp.abort()
 throw _b_.ImportError.$factory("No module named '" + module + "'")},5000)
-return[$xmlhttp,fake_qs,timer]}
-function $download_module(module,url,$package){var imp=$importer(),$xmlhttp=imp[0],fake_qs=imp[1],timer=imp[2],res=null,mod_name=module.__name__,res,t0=new Date()
+var res=null,mod_name=module.__name__,res,t0=new Date()
 $B.download_time=$B.download_time ||0
 $xmlhttp.open("GET",url + fake_qs,false)
-if($B.$CORS){$xmlhttp.onload=function(){if($xmlhttp.status==200 ||$xmlhttp.status==0){res=$xmlhttp.responseText}else{res=_b_.FileNotFoundError.$factory("No module named '" +
+if($B.$CORS){$xmlhttp.onload=function(){if(this.status==200 ||this.status==0){res=this.responseText}else{res=_b_.FileNotFoundError.$factory("No module named '" +
 mod_name + "'")}}
 $xmlhttp.onerror=function(){res=_b_.FileNotFoundError.$factory("No module named '" +
 mod_name + "'")}}else{$xmlhttp.onreadystatechange=function(){if(this.readyState==4){_window.clearTimeout(timer)
@@ -7552,6 +7552,7 @@ res=_b_.FileNotFoundError.$factory("No module named '" +
 mod_name + "'")}}}}
 if("overrideMimeType" in $xmlhttp){$xmlhttp.overrideMimeType("text/plain")}
 $xmlhttp.send()
+_window.clearTimeout(timer)
 if(res==null){throw _b_.FileNotFoundError.$factory("No module named '" +
 mod_name + "' (res is null)")}
 if(res.constructor===Error){throw res}
