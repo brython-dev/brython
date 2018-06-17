@@ -1,7 +1,8 @@
 var $module = (function($B){
 
-var _b_ = $B.builtins
-var $s = []
+var _b_ = $B.builtins,
+    $s = [],
+    i
 for(var $b in _b_){$s.push('var ' + $b +' = _b_["'+$b+'"]')}
 eval($s.join(';'))
 
@@ -442,7 +443,7 @@ var _mod = {
            return _b_.tuple.$factory([0.0, float.$factory('inf')])
        }
        if(isNaN(x)){
-           return _b_.tuple.$factory([float.$factory('nan'), 
+           return _b_.tuple.$factory([float.$factory('nan'),
                float.$factory('nan')])
        }
 

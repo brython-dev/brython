@@ -485,7 +485,7 @@ function $$eval(src, _globals, _locals){
         if(_globals.$jsobj){var items = _globals.$jsobj}
         else{var items = _globals.$string_dict}
         for(var item in items){
-            item1 = to_alias(item)
+            var item1 = to_alias(item)
             try{
                 eval('$locals_' + globals_id + '["' + item1 +
                     '"] = items[item]')
@@ -514,7 +514,7 @@ function $$eval(src, _globals, _locals){
         if(_locals.$jsobj){var items = _locals.$jsobj}
         else{var items = _locals.$string_dict}
         for(var item in items){
-            item1 = to_alias(item)
+            var item1 = to_alias(item)
             try{
                 eval('$locals_' + locals_id + '["' + item + '"] = items.' + item)
             }catch(err){
@@ -583,7 +583,7 @@ function $$eval(src, _globals, _locals){
         if(_locals !== _b_.None){
             lns = eval('$locals_' + locals_id)
             for(var attr in lns){
-                attr1 = from_alias(attr)
+                var attr1 = from_alias(attr)
                 if(attr1.charAt(0) != '$'){
                     if(_locals.$jsobj){_locals.$jsobj[attr] = lns[attr]}
                     else{_locals.$string_dict[attr1] = lns[attr]}
@@ -1831,7 +1831,7 @@ $$super.__getattribute__ = function(self, attr){
         // the classes of its __mro__ above self.__thisclass__.
         // Is this documented anywhere ?
         var sc_mro = [sc].concat(sc.__mro__)
-        for(i = 0; i < sc_mro.length; i++){
+        for(var i = 0; i < sc_mro.length; i++){
             if(sc_mro[i] === self.__thisclass__){
                 mro = sc_mro.slice(i + 1)
                 break

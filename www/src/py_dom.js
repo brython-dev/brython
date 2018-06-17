@@ -321,7 +321,7 @@ DOMEvent.$factory = function(evt_name){
 }
 
 // Function to transform a DOM event into an instance of DOMEvent
-$B.$DOMEvent = $DOMEvent = function(ev){
+var $DOMEvent = $B.$DOMEvent = function(ev){
     ev.__class__ = DOMEvent
     if(ev.preventDefault === undefined){
         ev.preventDefault = function(){ev.returnValue = false}
@@ -519,7 +519,7 @@ $B.set_func_names(Style, "<dom>")
 
 // Class for DOM nodes
 
-DOMNode = {
+var DOMNode = {
     __class__ : _b_.type,
     __mro__: [object],
     __name__ : "DOMNode"

@@ -3,7 +3,8 @@
 
 var $module = (function($B){
 
-_b_ = $B.builtins
+var _b_ = $B.builtins,
+    i
 
 var VERSION = 3
 
@@ -962,7 +963,7 @@ Random.weibullvariate = function(){
 
     */
     // Jain, pg. 499; bug fix courtesy Bill Arms
-    var $ = $B.args("weibullvariate", 3, 
+    var $ = $B.args("weibullvariate", 3,
         {self: null, alpha: null, beta: null},
         ["self", "alpha", "beta"], arguments, {}, null, null)
 

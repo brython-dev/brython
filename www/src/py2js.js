@@ -293,7 +293,7 @@ var $add_yield_from_code = $B.parser.$add_yield_from_code = function(yield_ctx) 
     }
     $tokenize(pnode, replace_with)
 
-    params = {
+    var params = {
         iter_name: repl._i,
         result_var_name: repl._r,
         yield_expr: yield_ctx,
@@ -811,7 +811,7 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context){
             ctx.tree = []
             var nleft = new $RawJSCtx(ctx, 'var $temp' + $loop_num)
             nleft.tree = ctx.tree
-            nassign = new $AssignCtx(nleft)
+            var nassign = new $AssignCtx(nleft)
             nassign.tree[1] = right
 
             // create nodes with target set to right, from left to right
@@ -3270,8 +3270,8 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
         // the iterable
         var new_node = new $Node()
         new_node.line_num = $get_node(this).line_num
-        var it_js = iterable.to_js()
-            iterable_name = '$iter'+num
+        var it_js = iterable.to_js(),
+            iterable_name = '$iter'+num,
             js = 'var ' + iterable_name + ' = ' + it_js + ';' +
                  '$locals["$next' + num + '"]' + ' = $B.$getattr($B.$iter(' +
                  iterable_name + '),"__next__")'
@@ -3718,7 +3718,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
             found = false
 
         while(!found && node.parent && nb++ < 100){
-            pnode = node.parent
+            var pnode = node.parent
             if(pnode.bindings && pnode.bindings[this.value]){
                 return true
             }
@@ -4128,7 +4128,7 @@ var $ImportCtx = $B.parser.$ImportCtx = function(context){
     this.to_js = function(){
         this.js_processed = true
         var scope = $get_scope(this),
-            res = []
+            res = [],
             module = $get_module(this)
         this.tree.forEach(function(item){
             var mod_name = item.name,
@@ -5906,7 +5906,7 @@ var $add_line_num = $B.parser.$add_line_num = function(node,rank){
         while(pnode.parent !== undefined){pnode = pnode.parent}
         var mod_id = pnode.id
         // ignore lines added in transform()
-        line_num = node.line_num || node.forced_line_num
+        var line_num = node.line_num || node.forced_line_num
         if(line_num === undefined){flag = false}
         // Don't add line num before try,finally,else,elif
         // because it would throw a syntax error in Javascript
@@ -9302,7 +9302,7 @@ $B.run_script = function(src, name){
     $B.$py_module_path[name] = $B.script_path
     try{
         var root = $B.py2js(src, name, name),
-            js = root.to_js(),
+            js = "(function(){" + root.to_js() + "})()",
             script = {
                 js: js,
                 name: name,
@@ -9349,7 +9349,7 @@ $B.run_script = function(src, name){
     $B.tasks.push(["execute", script])
 }
 
-$B.$log = $log = function(js){
+var $log = $B.$log = function(js){
     js.split("\n").forEach(function(line, i){
         console.log(i + 1, ":", line)
     })

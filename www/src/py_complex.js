@@ -184,7 +184,7 @@ complex.__new__ = function(cls){
         return res
     }
 
-    for(i = 0; i < type_conversions.length; i++){
+    for(var i = 0; i < type_conversions.length; i++){
         if(hasattr($real, type_conversions[i])){
 
         }
@@ -386,7 +386,7 @@ var _real = 1,
     _j = 6
 var type_conversions = ["__complex__", "__float__", "__int__"]
 var _convert = function(num){
-    for(i = 0; i < type_conversions.length; i++) {
+    for(var i = 0; i < type_conversions.length; i++) {
         if(hasattr(num, type_conversions[i])) {
             return getattr(num, type_conversions[i])()
         }
@@ -394,7 +394,7 @@ var _convert = function(num){
     return num
 }
 
-$B.make_complex = make_complex = function(real, imag){
+var make_complex = $B.make_complex = function(real, imag){
     return {
         __class__: complex,
         $real: real,

@@ -313,7 +313,7 @@ function run_py(module_contents, path, module, compiled) {
         $B.imported[module.__name__] = module
         return true
     }catch(err){
-        console.log("" + err + " " + " for module " + module.name)
+        console.log("" + err + " " + " for module " + module.__name__)
         for(var attr in err){console.log(attr + " " + err[attr])}
 
         if($B.debug > 0){console.log("line info " + __BRYTHON__.line_info)}
@@ -804,7 +804,7 @@ var _sys_paths = [[$B.script_dir + "/", "py"],
                   [$B.brython_path + "Lib/site-packages/", "py"],
                   [$B.brython_path + "libs/", "js"]]
 
-for(i = 0; i < _sys_paths.length; ++i){
+for(var i = 0; i < _sys_paths.length; ++i){
     var _path = _sys_paths[i],
         _type = _path[1]
     _path = _path[0]
@@ -1077,7 +1077,7 @@ var Loader = {__class__:$B.$type,
     __name__ : "Loader"
 }
 
-_importlib_module = {
+var _importlib_module = {
     __class__ : module,
     __name__ : "_importlib",
     Loader: Loader,

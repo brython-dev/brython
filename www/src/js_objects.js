@@ -317,7 +317,7 @@ JSObject.__getattribute__ = function(self,attr){
             return function(){
                 var args = [self]
                 for(var i = 0, len = arguments.length; i < len; i++){
-                    arg = arguments[i]
+                    var arg = arguments[i]
                     if(arg && (arg.__class__ === JSObject ||
                             arg.__class__ === JSConstructor)){
                         args.push(arg.js)
