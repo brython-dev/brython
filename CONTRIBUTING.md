@@ -139,7 +139,7 @@ To run the same tests locally you first have to install the
 Assuming you have `node.js` and `npm`/`yarn` this can be done via
 
 ```bash
-    $ npm install testem
+    $ (cd npm && npm install testem)
 ```
 or
 ```bash
@@ -156,7 +156,7 @@ Running the tests is then just a matter of
 ```
 or
 ```bash
-    $ ./node_modules/.bin/testem -t www/tests/qunit/run_tests.html ci
+    $ ./npm/node_modules/.bin/testem -t www/tests/qunit/run_tests.html ci
 ```
 
 ### Writing tests
