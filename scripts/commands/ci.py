@@ -37,7 +37,8 @@ def get_phantomjs():
 def get_testem():
     """Install the testem javascript testing library"""
     try:
-        local['npm']('install', 'testem')
+        with local.cwd(local.cwd / "npm"):
+            local['npm']('install', 'testem')
     except:
         status.error("Unable to install testem (is npm installed and on your path?).")
 
@@ -45,7 +46,8 @@ def get_testem():
 @M.command()
 def run_tests():
     """Run CI tests using testem."""
-    if not pathlib.Path('./node_modules/.bin/testem').exists():
+    testem_executable = './npm/node_modules/.bin/testem'
+    if not pathlib.Path(testem_executable).exists():
         status.error("Please install testem (./manage.py ci get_testem)")
     else:
-        local['./node_modules/.bin/testem']('--skip', 'PhantomJS', '-t', 'www/tests/qunit/run_tests.html', 'ci', stdout=sys.stdout, stderr=sys.stderr)
+        local[testem_executable]('--skip', 'PhantomJS', '-t', 'www/tests/qunit/run_tests.html', 'ci', stdout=sys.stdout, stderr=sys.stderr)
