@@ -4483,7 +4483,7 @@ var $ListOrTupleCtx = $B.parser.$ListOrTupleCtx = function(context,real){
                             listcomp_name = 'lc' + ix,
                             save_pos = $pos
                         var root = $B.py2js({src:py, is_comp:true},
-                            listcomp_name, listcomp_name, scope, line_num)
+                            module_name, listcomp_name, scope, line_num)
 
                         $pos = save_pos
 
@@ -5248,8 +5248,25 @@ var $StringCtx = $B.parser.$StringCtx = function(context,value){
             var elts = []
             for(var i = 0; i < parsed_fstring.length; i++){
                 if(parsed_fstring[i].type == 'expression'){
-                    var expr = parsed_fstring[i].expression,
-                        parts = expr.split(':')
+                    var expr = parsed_fstring[i].expression
+                    // search specifier
+                    var pos = 0,
+                        br_stack = [],
+                        parts = [expr]
+
+                    while(pos < expr.length){
+                        var car = expr.charAt(pos)
+                        if(car == ":" && br_stack.length == 0){
+                            parts = [expr.substr(0, pos),
+                                expr.substr(pos + 1)]
+                            break
+                        }else if("{[(".indexOf(car) > -1){
+                            br_stack.push(car)
+                        }else if(")]}".indexOf(car) > -1){
+                            br_stack.pop()
+                        }
+                        pos++
+                    }
                     expr = parts[0]
                     // We transform the source code of the expression using py2js.
                     // This gives us a node whose structure is always the same.
