@@ -2221,6 +2221,13 @@ method_wrapper.__repr__ = method_wrapper.__str__ = function(self){
 }
 $B.set_func_names(method_wrapper, "builtins")
 
+var wrapper_descriptor = $B.make_class("wrapper_descriptor")
+
+wrapper_descriptor.__repr__ = wrapper_descriptor.__str__ = function(self){
+    return "<slot wrapper '" + self.$infos.__name__ + "' of function object>"
+}
+$B.set_func_names(wrapper_descriptor, "builtins")
+
 $B.builtin_classes = [
     "bool", "bytearray", "bytes", "classmethod", "complex", "dict", "enumerate",
     "filter", "float", "frozenset", "int", "list", "map", "memoryview",
@@ -2274,6 +2281,7 @@ _b_['open'] = $url_open
 _b_['print'] = $print
 _b_['$$super'] = $$super
 
+_b_.object.__init__.__class__ = wrapper_descriptor
 _b_.object.__new__.__class__ = builtin_function
 
 })(__BRYTHON__)
