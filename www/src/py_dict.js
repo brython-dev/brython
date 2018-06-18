@@ -794,7 +794,9 @@ function jsobj2dict(x){
     var d = dict.$factory()
     for(var attr in x){
         if(attr.charAt(0) != "$" && attr !== "__class__"){
-            if(x[attr].$jsobj === x){
+            if(x[attr] === undefined){
+                continue
+            }else if(x[attr].$jsobj === x){
                 d.$string_dict[attr] = d
             }else{
                 d.$string_dict[attr] = x[attr]

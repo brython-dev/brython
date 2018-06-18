@@ -65,8 +65,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,6,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.6.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-06-18 15:16:05.279991"
-__BRYTHON__.timestamp=1529327765279
+__BRYTHON__.compiled_date="2018-06-18 22:47:39.037804"
+__BRYTHON__.timestamp=1529354859037
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -2120,7 +2120,7 @@ var line_num=$get_node(this).line_num
 switch(this.real){case 'list_comp':
 var lc=$B.$list_comp(items),
 py=lc[0],ix=lc[1],listcomp_name='lc' + ix,save_pos=$pos
-var root=$B.py2js({src:py,is_comp:true},listcomp_name,listcomp_name,scope,line_num)
+var root=$B.py2js({src:py,is_comp:true},module_name,listcomp_name,scope,line_num)
 $pos=save_pos
 var js=root.to_js()
 root=null
@@ -2489,7 +2489,12 @@ this.to_js=function(){this.js_processed=true
 var res='',type=null,scope=$get_scope(this)
 function fstring(parsed_fstring){
 var elts=[]
-for(var i=0;i < parsed_fstring.length;i++){if(parsed_fstring[i].type=='expression'){var expr=parsed_fstring[i].expression,parts=expr.split(':')
+for(var i=0;i < parsed_fstring.length;i++){if(parsed_fstring[i].type=='expression'){var expr=parsed_fstring[i].expression
+var pos=0,br_stack=[],parts=[expr]
+while(pos < expr.length){var car=expr.charAt(pos)
+if(car==":" && br_stack.length==0){parts=[expr.substr(0,pos),expr.substr(pos + 1)]
+break}else if("{[(".indexOf(car)> -1){br_stack.push(car)}else if(")]}".indexOf(car)> -1){br_stack.pop()}
+pos++}
 expr=parts[0]
 var save_pos=$pos,temp_id="temp" + $B.UUID()
 var expr_node=$B.py2js(expr,scope.module,temp_id,scope)
@@ -6654,6 +6659,9 @@ $B.set_func_names(builtin_function,"builtins")
 var method_wrapper=$B.make_class("method_wrapper")
 method_wrapper.__repr__=method_wrapper.__str__=function(self){return "<method wrapper '" + self.$infos.__name__ + "' of function object>"}
 $B.set_func_names(method_wrapper,"builtins")
+var wrapper_descriptor=$B.make_class("wrapper_descriptor")
+wrapper_descriptor.__repr__=wrapper_descriptor.__str__=function(self){return "<slot wrapper '" + self.$infos.__name__ + "' of function object>"}
+$B.set_func_names(wrapper_descriptor,"builtins")
 $B.builtin_classes=["bool","bytearray","bytes","classmethod","complex","dict","enumerate","filter","float","frozenset","int","list","map","memoryview","object","property","range","reversed","set","slice","staticmethod","str","super","tuple","type","zip"
 ]
 var other_builtins=['Ellipsis','False','None','True','__debug__','__import__','copyright','credits','license','NotImplemented'
@@ -6673,6 +6681,7 @@ catch(err){}}
 _b_['open']=$url_open
 _b_['print']=$print
 _b_['$$super']=$$super
+_b_.object.__init__.__class__=wrapper_descriptor
 _b_.object.__new__.__class__=builtin_function})(__BRYTHON__)
 ;(function($B){eval($B.InjectBuiltins())
 $B.$raise=function(arg){
@@ -7517,7 +7526,7 @@ __class__: JSObject,js: obj}}
 $B.JSObject=JSObject
 $B.JSConstructor=JSConstructor})(__BRYTHON__)
 ;(function($B){$B.stdlib={}
-var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','argparse','atexit','base64','bdb','binascii','bisect','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','Clib','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','gettext','glob','heapq','imp','inspect','io','ipaddress','itertools','keyword','linecache','locale','marshal','numbers','opcode','operator','optparse','os','pdb','pickle','platform','posix','posixpath','pprint','profile','pwd','pydoc','queue','re','reprlib','select','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','uuid','warnings','weakref','webbrowser','zipfile','zlib']
+var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','argparse','atexit','base64','bdb','binascii','bisect','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','Clib','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','gettext','glob','heapq','imp','inspect','io','ipaddress','itertools','keyword','linecache','locale','marshal','numbers','opcode','operator','optparse','os','pdb','pickle','platform','posix','posixpath','pprint','profile','pwd','pydoc','queue','re','reprlib','select','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uuid','warnings','weakref','webbrowser','zipfile','zlib']
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
 var js=['_ajax','_base64','_jsre','_multiprocessing','_posixsubprocess','_profile','_svg','_sys','aes','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','json','long_int','math','md5','modulefinder','pbkdf2','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
@@ -10779,7 +10788,7 @@ mappingproxy.__setitem__=function(){throw _b_.TypeError.$factory("'mappingproxy'
 "item assignment")}
 $B.set_func_names(mappingproxy,"builtins")
 function jsobj2dict(x){var d=dict.$factory()
-for(var attr in x){if(attr.charAt(0)!="$" && attr !=="__class__"){if(x[attr].$jsobj===x){d.$string_dict[attr]=d}else{d.$string_dict[attr]=x[attr]}}}
+for(var attr in x){if(attr.charAt(0)!="$" && attr !=="__class__"){if(x[attr]===undefined){continue}else if(x[attr].$jsobj===x){d.$string_dict[attr]=d}else{d.$string_dict[attr]=x[attr]}}}
 return d}
 $B.obj_dict=function(obj){var klass=$B.get_class(obj)
 if(klass !==undefined && klass.$native){throw _b_.AttributeError.$factory(klass.__name__ +
