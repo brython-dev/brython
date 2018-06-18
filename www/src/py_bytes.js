@@ -173,11 +173,11 @@ bytes.__getitem__ = function(self, arg){
         if(step > 0){
           stop = Math.min(stop, self.source.length)
           if(stop <= start){return bytes.$factory([])}
-          for(i = start; i < stop; i += step){res[pos++] = self.source[i]}
+          for(var i = start; i < stop; i += step){res[pos++] = self.source[i]}
         }else{
             if(stop >= start){return bytes.$factory([])}
             stop = Math.max(0, stop)
-            for(i = start; i >= stop; i += step){res[pos++] = self.source[i]}
+            for(var i = start; i >= stop; i += step){res[pos++] = self.source[i]}
         }
         return bytes.$factory(res)
     }else if(isinstance(arg, bool)){

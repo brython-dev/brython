@@ -34,17 +34,22 @@ function rstrip(s, strip_chars) {
 // In generators, the namespace is stored in an attribute of the
 // generator function until the iterator is exhausted, so that it
 // can be restored in the next iteration
-function jscode_namespace(iter_name, action) {
+function jscode_namespace(iter_name, action, parent_id) {
     var _clean= '';
     if (action === 'store') {
         _clean = ' = {}'
     }
-    return 'for(var attr in this.blocks){' +
+    var res = 'for(var attr in this.blocks){' +
               'eval("var " + attr + " = this.blocks[attr]")'+
            '};' +
            'var $locals_' + iter_name + ' = this.env' + _clean + ', '+
                '$local_name = "' + iter_name + '", ' +
                '$locals = $locals_' + iter_name + ';'
+    if(parent_id){
+        res += '$locals.$parent = $locals_' + parent_id.replace(/\./g, "_") +
+            ';'
+    }
+    return res
 }
 
 function make_node(top_node, node){
@@ -63,11 +68,14 @@ function make_node(top_node, node){
     var is_cond = false, is_except = false,is_else = false, is_continue
 
     if(node.locals_def){
-        if(node.yield_atoms.length > 0 || node.context.$genjs !== undefined){
+        var parent_id = node.func_node.parent_block.id
+        if(node.func_node.ntype == "generator"){
             // If the function is a generator, transforms the node where local
             // namespace is reset
             var iter_name = top_node.iter_id
-            ctx_js = jscode_namespace(iter_name, 'store')
+            ctx_js = jscode_namespace(iter_name, 'store', parent_id)
+        }else{
+            ctx_js += "$locals.$parent = $locals_" + parent_id + ";"
         }
     }
 
@@ -595,10 +603,14 @@ generator.__next__ = function(self){
         var res = self.next.apply(self, self.args)
     }catch(err){
         /*
-        console.log('error in __next__ of', self.name)
-        console.log(self.next + '')
+        var src = self.next + '',
+            line_num = err.lineNumber,
+            lines = src.split("\n")
+        console.log(line_num, lines.length)
         console.log(err)
+        $B.$log(src)
         */
+
         self.$finished = true
         throw err
     }finally{

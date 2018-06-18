@@ -641,23 +641,30 @@ int.$factory = function(value, base){
             }
             if(_pre == "0B" || _pre == "0O" || _pre == "0X"){
                 _value = _value.substr(2)
+                while(_value.startsWith("_")){
+                    _value = _value.substr(1)
+                }
             }
         }
-        var _digits = $valid_digits(base)
-        var _re = new RegExp("^[+-]?[" + _digits + "]+$", "i")
-        if(! _re.test(_value)){
+        var _digits = $valid_digits(base),
+            _re = new RegExp("^[+-]?[" + _digits + "]" +
+            "[" + _digits + "_]*$", "i"),
+            match = _re.exec(_value)
+        if(match === null){
             throw _b_.ValueError.$factory(
                 "invalid literal for int() with base " + base + ": '" +
                 _b_.str.$factory(value) + "'")
+        }else{
+            value = _value.replace(/_/g, "")
         }
         if(base <= 10 && ! isFinite(value)){
             throw _b_.ValueError.$factory(
                 "invalid literal for int() with base " + base + ": '" +
                 _b_.str.$factory(value) + "'")
         }
-        var res = parseInt(_value, base)
+        var res = parseInt(value, base)
         if(res < $B.min_int || res > $B.max_int){
-            return $B.long_int.$factory(_value, base)
+            return $B.long_int.$factory(value, base)
         }
         return res
     }

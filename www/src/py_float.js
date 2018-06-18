@@ -684,6 +684,7 @@ float.$factory = function (value){
            case "":
                throw _b_.ValueError.$factory("count not convert string to float")
            default:
+               value = value.charAt(0) + value.substr(1).replace(/_/g, "") // PEP 515
                value = to_digits(value) // convert arabic-indic digits to latin
                if (isFinite(value)) return $FloatClass(eval(value))
                else {

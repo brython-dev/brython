@@ -373,6 +373,9 @@ function $$eval(src, _globals, _locals){
         return attr
     }
 
+    if(_globals === undefined){_globals = _b_.None}
+    if(_locals === undefined){_locals = _b_.None}
+
     var current_frame = $B.frames_stack[$B.frames_stack.length - 1]
 
     if(current_frame !== undefined){
@@ -398,7 +401,7 @@ function $$eval(src, _globals, _locals){
         parent_scope,
         ce = $B.current_exception
 
-    if(_globals === undefined){
+    if(_globals === _b_.None){
         if(current_locals_id == current_globals_id){
             locals_id = globals_id
         }
@@ -441,17 +444,25 @@ function $$eval(src, _globals, _locals){
         _globals.globals_id = _globals.globals_id || globals_id
         globals_id = _globals.globals_id
 
-        if(_locals === _globals || _locals === undefined){
+        if(_locals === _globals || _locals === _b_.None){
             locals_id = globals_id
             parent_scope = $B.builtins_scope
         }else{
             // The parent block of locals must be set to globals
-            parent_scope = {
+            var grandparent_scope = {
                 id: globals_id,
                 parent_block: $B.builtins_scope,
                 binding: {}
             }
+            parent_scope = {
+                id: locals_id,
+                parent_block: grandparent_scope,
+                binding: {}
+            }
             for(var attr in _globals.$string_dict){
+                grandparent_scope.binding[attr] = true
+            }
+            for(var attr in _locals.$string_dict){
                 parent_scope.binding[attr] = true
             }
         }
@@ -459,13 +470,12 @@ function $$eval(src, _globals, _locals){
 
     // set module path
     $B.$py_module_path[globals_id] = $B.$py_module_path[current_globals_id]
-
     // Initialise the object for block namespaces
     eval('var $locals_' + globals_id + ' = {}\nvar $locals_' +
         locals_id + ' = {}')
 
     // Initialise block globals
-    if(_globals === undefined){
+    if(_globals === _b_.None){
         var gobj = current_frame[3],
             ex = ''
         ex += 'var $locals_' + current_globals_id + '=gobj;' // needed for generators
@@ -475,7 +485,7 @@ function $$eval(src, _globals, _locals){
         if(_globals.$jsobj){var items = _globals.$jsobj}
         else{var items = _globals.$string_dict}
         for(var item in items){
-            item1 = to_alias(item)
+            var item1 = to_alias(item)
             try{
                 eval('$locals_' + globals_id + '["' + item1 +
                     '"] = items[item]')
@@ -488,8 +498,8 @@ function $$eval(src, _globals, _locals){
     }
 
     // Initialise block locals
-    if(_locals === undefined){
-        if(_globals !== undefined){
+    if(_locals === _b_.None){
+        if(_globals !== _b_.None){
             eval('var $locals_' + locals_id + ' = $locals_' + globals_id)
         }else{
             var lobj = current_frame[1],
@@ -501,13 +511,12 @@ function $$eval(src, _globals, _locals){
             eval(ex)
         }
     }else{
-        var items = _b_.dict.items(_locals), item
         if(_locals.$jsobj){var items = _locals.$jsobj}
         else{var items = _locals.$string_dict}
         for(var item in items){
-            item1 = to_alias(item)
+            var item1 = to_alias(item)
             try{
-                eval('$locals_' + locals_id + '["' + item[0] + '"] = item[1]')
+                eval('$locals_' + locals_id + '["' + item + '"] = items.' + item)
             }catch(err){
                 console.log(err)
                 console.log('error setting', item)
@@ -571,10 +580,10 @@ function $$eval(src, _globals, _locals){
         }
 
         // Update _locals with the namespace after execution
-        if(_locals !== undefined){
+        if(_locals !== _b_.None){
             lns = eval('$locals_' + locals_id)
             for(var attr in lns){
-                attr1 = from_alias(attr)
+                var attr1 = from_alias(attr)
                 if(attr1.charAt(0) != '$'){
                     if(_locals.$jsobj){_locals.$jsobj[attr] = lns[attr]}
                     else{_locals.$string_dict[attr1] = lns[attr]}
@@ -586,7 +595,7 @@ function $$eval(src, _globals, _locals){
             }
         }
 
-        if(_globals !== undefined){
+        if(_globals !== _b_.None){
             // Update _globals with the namespace after execution
             for(var attr in gns){
                 attr1 = from_alias(attr)
@@ -631,10 +640,10 @@ function exec(src, globals, locals){
     var missing = {}
     var $ = $B.args("exec", 3, {src: null, globals: null, locals: null},
         ["src", "globals", "locals"], arguments,
-        {globals: missing, locals: missing}, null, null),
+        {globals: _b_.None, locals: _b_.None}, null, null),
         src = $.src,
-        globals = $.globals === missing ? undefined : $.globals,
-        locals = $.locals === missing ? undefined : $.locals
+        globals = $.globals,
+        locals = $.locals
     return $$eval(src, globals, locals, 'exec') || _b_.None
 }
 
@@ -765,7 +774,10 @@ $B.$getattr = function(obj, attr, _default){
     switch(attr) {
       case '__call__':
         if(typeof obj == 'function'){
-            return obj
+            var res = function(){return obj.apply(null, arguments)}
+            res.__class__ = method_wrapper
+            res.$infos = {__name__: "__call__"}
+            return res
         }
         break
       case '__class__':
@@ -1027,7 +1039,8 @@ function hex(x) {
 function id(obj) {
    check_no_kw('id', obj)
    check_nb_args('id', 1, arguments.length)
-   if(isinstance(obj, [_b_.str, _b_.int, _b_.float])){
+   if(isinstance(obj, [_b_.str, _b_.int, _b_.float]) &&
+           !isinstance(obj, $B.long_int)){
        return getattr(_b_.str.$factory(obj), '__hash__')()
    }else if(obj.$id !== undefined){return obj.$id}
    else{return obj.$id = $B.UUID()}
@@ -1058,7 +1071,7 @@ function input(src) {
     return val
 }
 
-function isinstance(obj,arg){
+function isinstance(obj, arg){
     check_no_kw('isinstance', obj, arg)
     check_nb_args('isinstance', 2, arguments.length)
 
@@ -1101,9 +1114,8 @@ function isinstance(obj,arg){
     }
 
     // Search __instancecheck__ on arg
-
     var hook = getattr(arg, '__instancecheck__', _b_.None)
-    if(hook!==_b_.None){
+    if(hook !== _b_.None){
         return hook(obj)
     }
     return false
@@ -1819,7 +1831,7 @@ $$super.__getattribute__ = function(self, attr){
         // the classes of its __mro__ above self.__thisclass__.
         // Is this documented anywhere ?
         var sc_mro = [sc].concat(sc.__mro__)
-        for(i = 0; i < sc_mro.length; i++){
+        for(var i = 0; i < sc_mro.length; i++){
             if(sc_mro[i] === self.__thisclass__){
                 mro = sc_mro.slice(i + 1)
                 break
@@ -2195,6 +2207,20 @@ $B.builtin_funcs = [
     "sorted", "sum", "vars"
 ]
 
+var builtin_function = $B.builtin_function = $B.make_class("builtin_function_or_method")
+
+builtin_function.__repr__ = builtin_function.__str__ = function(self){
+    return '<built-in function ' + self.$infos.__name__ + '>'
+}
+$B.set_func_names(builtin_function, "builtins")
+
+var method_wrapper = $B.make_class("method_wrapper")
+
+method_wrapper.__repr__ = method_wrapper.__str__ = function(self){
+    return "<method wrapper '" + self.$infos.__name__ + "' of function object>"
+}
+$B.set_func_names(method_wrapper, "builtins")
+
 $B.builtin_classes = [
     "bool", "bytearray", "bytes", "classmethod", "complex", "dict", "enumerate",
     "filter", "float", "frozenset", "int", "list", "map", "memoryview",
@@ -2222,15 +2248,18 @@ for(var i = 0; i < builtin_names.length; i++){
     try{
         _b_[name] = eval(name1)
         if($B.builtin_funcs.indexOf(orig_name) > -1){
+            _b_[name].__class__ = builtin_function
+            /*
             if(_b_[name].__repr__ === undefined){
                 _b_[name].__repr__ = _b_[name].__str__ = (function(x){
                     return function(){return '<built-in function ' + x + '>'}
                 })(orig_name)
             }
+            */
             // used by inspect module
             _b_[name].$infos = {
                 __module__: 'builtins',
-                __name__: name
+                __name__: orig_name
             }
         }
 
@@ -2244,5 +2273,7 @@ for(var i = 0; i < builtin_names.length; i++){
 _b_['open'] = $url_open
 _b_['print'] = $print
 _b_['$$super'] = $$super
+
+_b_.object.__new__.__class__ = builtin_function
 
 })(__BRYTHON__)

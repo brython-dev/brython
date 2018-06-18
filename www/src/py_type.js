@@ -163,6 +163,8 @@ $B.$class_constructor = function(class_name, class_obj, bases,
 
     init_subclass(kls, extra_kwargs)
 
+    kls.__qualname__ = module + '.' + class_name.replace("$$", "")
+
     return kls
 }
 
@@ -365,7 +367,6 @@ type.__repr__ = type.__str__ = function(kls){
 
 type.__getattribute__ = function(klass, attr){
 
-    //console.log("attr", attr, "de la classe", klass)
     switch(attr) {
         case "__class__":
             return klass.__class__
@@ -496,10 +497,27 @@ type.__getattribute__ = function(klass, attr){
     }
 }
 
+type.__instancecheck__ = function(cls, instance){
+    var kl = instance.__class__ || $B.get_class(instance)
+    if(kl === cls){return true}
+    else{
+        for(var i = 0; i < kl.__mro__.length; i++){
+            if(kl.__mro__[i] === cls){return true}
+        }
+    }
+    return false
+}
+type.__instancecheck__.$type = "classmethod"
 
 $B.set_func_names(type, "builtins")
 
 _b_.type = type
+
+var wrapper_descriptor = $B.make_class("wrapper_descriptor")
+
+$B.set_func_names(wrapper_descriptor, "builtins")
+
+type.__call__.__class__ = wrapper_descriptor
 
 // class of constructors
 $B.$factory = {

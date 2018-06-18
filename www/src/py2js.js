@@ -293,7 +293,7 @@ var $add_yield_from_code = $B.parser.$add_yield_from_code = function(yield_ctx) 
     }
     $tokenize(pnode, replace_with)
 
-    params = {
+    var params = {
         iter_name: repl._i,
         result_var_name: repl._r,
         yield_expr: yield_ctx,
@@ -811,7 +811,7 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context){
             ctx.tree = []
             var nleft = new $RawJSCtx(ctx, 'var $temp' + $loop_num)
             nleft.tree = ctx.tree
-            nassign = new $AssignCtx(nleft)
+            var nassign = new $AssignCtx(nleft)
             nassign.tree[1] = right
 
             // create nodes with target set to right, from left to right
@@ -1215,6 +1215,9 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
                 var check_node = $NodeJS('if(' + this.tree[0].to_js() +
                     ' === undefined){throw NameError.$factory("name \'' +
                     this.tree[0].tree[0].value + '\' is not defined")}')
+                // Add attribute forced_line_num instead of line_num because
+                // it would break on profile mode
+                check_node.forced_line_num = node.line_num
                 node.parent.insert(rank, check_node)
                 offset++
             }
@@ -1342,7 +1345,7 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
             return
         }
 
-        // insert node 'if(!hasattr(foo,"__iadd__"))
+        // insert node 'if(!hasattr(x, "__iadd__"))
         var new_node = new $Node()
         if(!lnum_set){new_node.line_num = line_num; lnum_set = true}
         var js = ''
@@ -1352,7 +1355,7 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
         parent.insert(rank + offset, new_node)
         offset++
 
-        // create node for "foo = foo + bar"
+        // create node for "x = x + y"
         var aa1 = new $Node()
         aa1.id = this.scope.id
         aa1.line_num = node.line_num
@@ -1376,12 +1379,29 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
         expr1.parent.tree.push(assign1)
 
         // create node for "else"
-        var aa2 = $NodeJS("else")
-        parent.insert(rank + offset, aa2)
+        var else_node = $NodeJS("else")
+        parent.insert(rank + offset, else_node)
 
-        // create node for "foo.__iadd__(bar)"
-        aa2.add($NodeJS(left + ' = $B.$getattr(' + context.to_js() + ',"' +
+        // create node for "x = x.__iadd__(y)"
+        var aa2 = new $Node()
+        aa2.line_num = node.line_num
+        else_node.add(aa2)
+
+        var ctx2 = new $NodeCtx(aa2)
+        var expr2 = new $ExprCtx(ctx2, 'clone', false)
+        if(left_id_unbound){
+            new $RawJSCtx(expr2, '$locals["' + left_id + '"]')
+        }else{
+            expr2.tree = context.tree
+            expr2.tree.forEach(function(elt){
+                elt.parent = expr2
+            })
+        }
+        var assign2 = new $AssignCtx(expr2)
+        assign2.tree.push($NodeJS('$B.$getattr(' + context.to_js() + ',"' +
             func + '")(' + right + ')'))
+        expr2.parent.tree.pop()
+        expr2.parent.tree.push(assign2)
 
         // Augmented assignment doesn't bind names ; if the variable name has
         // been bound in the code above (by a call to $AssignCtx), remove it
@@ -1747,8 +1767,10 @@ var $ClassCtx = $B.parser.$ClassCtx = function(context){
     this.parent.node.parent_block = scope
     this.parent.node.bound = {} // will store the names bound in the function
 
-    this.parent.node.binding = {} // stores names bound in the class scope
-
+    // stores names bound in the class scope
+    this.parent.node.binding = {
+        __annotations__: true
+    }
     this.toString = function(){
         return '(class) ' + this.name + ' ' + this.tree + ' args ' + this.args
     }
@@ -1792,7 +1814,7 @@ var $ClassCtx = $B.parser.$ClassCtx = function(context){
 
         var instance_decl = new $Node(),
             local_ns = '$locals_' + this.id.replace(/\./g, '_'),
-            js = ';var ' + local_ns + ' = {$type:"class"}, $locals = ' +
+            js = ';var ' + local_ns + ' = {$type: "class", __annotations__: _b_.dict.$factory()}, $locals = ' +
                 local_ns + ', $local_name = "' + local_ns + '";'
         new $NodeJSCtx(instance_decl, js)
         node.insert(0, instance_decl)
@@ -2339,6 +2361,8 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
             defs1 = []
         this.argcount = 0
         this.kwonlyargcount = 0 // number of args after a star arg
+        this.kwonlyargsdefaults = []
+        this.otherdefaults = []
         this.varnames = {}
         this.args = []
         this.__defaults__ = []
@@ -2354,8 +2378,18 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
             this.args.push(arg.name)
             this.varnames[arg.name] = true
             if(arg.type == 'func_arg_id'){
-                if(this.star_arg){this.kwonlyargcount++}
-                else{this.argcount++}
+                if(this.star_arg){
+                    this.kwonlyargcount++
+                    if(arg.has_default){
+                        this.kwonlyargsdefaults.push(arg.name)
+                    }
+                }
+                else{
+                    this.argcount++
+                    if(arg.has_default){
+                        this.otherdefaults.push(arg.name)
+                    }
+                }
                 this.slots.push(arg.name + ':null')
                 slot_list.push('"' + arg.name + '"')
                 if(arg.tree.length > 0){
@@ -2418,6 +2452,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
 
         var new_node = new $Node()
         new_node.locals_def = true
+        new_node.func_node = node
         new $NodeJSCtx(new_node, js)
         nodes.push(new_node)
 
@@ -2586,7 +2621,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         // set __BRYTHON__.js_this to Javascript "this"
         // To use some JS libraries it may be necessary to know what "this"
         // is set to ; in Brython it is available as the result of function
-        // __this__() in module javascript
+        // this() in module javascript
         nodes.push($NodeJS('$B.js_this = this;'))
 
         // remove children of original node
@@ -2645,13 +2680,34 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         js = '    __qualname__:"' + __qualname__ + '",'
         node.parent.insert(rank + offset++, $NodeJS(js))
 
-        // Add attribute __defaults__
-        var def_names = []
-        this.default_list.forEach(function(_default){
-            def_names.push('"' + _default + '"')
-        })
-        node.parent.insert(rank + offset++, $NodeJS('    __defaults__ : [' +
-            def_names.join(', ') + '],'))
+        if(this.type != "generator"){
+            // Add attribute __defaults__
+            if(this.otherdefaults.length > 0){
+                var def_names = []
+                this.otherdefaults.forEach(function(_default){
+                    def_names.push('$defaults.' + _default)
+                })
+                node.parent.insert(rank + offset++, $NodeJS('    __defaults__ : ' +
+                    '_b_.tuple.$factory([' + def_names.join(', ') + ']),'))
+            }else{
+                node.parent.insert(rank + offset++, $NodeJS('    __defaults__ : ' +
+                    '_b_.None,'))
+            }
+
+            // Add attribute __kwdefaults__ for default values of
+            // keyword-only parameters
+            if(this.kwonlyargsdefaults.lengh > 0){
+                var def_names = []
+                this.kwonlyargsdefaults.forEach(function(_default){
+                    def_names.push('$defaults.' + _default)
+                })
+                node.parent.insert(rank + offset++, $NodeJS('    __kwdefaults__ : ' +
+                    '_b_.tuple.$factory([' + def_names.join(', ') + ']),'))
+            }else{
+                node.parent.insert(rank + offset++, $NodeJS('    __kwdefaults__ : ' +
+                    '_b_.None,'))
+            }
+        }
 
         // Add attribute __module__
         var root = $get_module(this)
@@ -3247,8 +3303,8 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
         // the iterable
         var new_node = new $Node()
         new_node.line_num = $get_node(this).line_num
-        var it_js = iterable.to_js()
-            iterable_name = '$iter'+num
+        var it_js = iterable.to_js(),
+            iterable_name = '$iter'+num,
             js = 'var ' + iterable_name + ' = ' + it_js + ';' +
                  '$locals["$next' + num + '"]' + ' = $B.$getattr($B.$iter(' +
                  iterable_name + '),"__next__")'
@@ -3695,7 +3751,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
             found = false
 
         while(!found && node.parent && nb++ < 100){
-            pnode = node.parent
+            var pnode = node.parent
             if(pnode.bindings && pnode.bindings[this.value]){
                 return true
             }
@@ -3716,7 +3772,6 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
     }
 
     this.to_js = function(arg){
-
         // Store the result in this.result
         // For generator expressions, to_js() is called in $make_node
         if(this.result !== undefined && this.scope.ntype == 'generator'){
@@ -3726,6 +3781,16 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         this.js_processed = true
         var val = this.value
 
+        var annotation = ""
+        if(this.parent.type == "expr" && this.parent.parent.type == "node" &&
+                this.parent.hasOwnProperty("annotation")){
+            var js = this.parent.annotation.tree[0].to_js()
+            annotation = "$locals.__annotations__.$string_dict['" + value + "'] = " +
+                js +"; "
+            if(this.parent.parent.tree[0] == this.parent){
+                return annotation
+            }
+        }
         var is_local = this.scope.binding[val] !== undefined,
             this_node = $get_node(this),
             bound_before = this_node.bound_before
@@ -3743,14 +3808,14 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                 && this.scope.ntype == 'class' &&
                 this.scope.context.tree[0].name == val){
             // Name of class referenced inside the class. Cf. issue #649
-            return '$B.$search("' + val + '")'
+            return annotation + '$B.$search("' + val + '")'
         }
 
         if(this.unbound && !this.nonlocal){
             if(this.scope.ntype == 'def' || this.scope.ntype == 'generator'){
-                return '$B.$local_search("' + val + '")'
+                return annotation + '$B.$local_search("' + val + '")'
             }else{
-                return '$B.$search("' + val + '")'
+                return annotation + '$B.$search("' + val + '")'
             }
         }
 
@@ -3777,8 +3842,11 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
 
         if(this.nonlocal || this.bound){
             var bscope = this.firstBindingScopeId()
-            return "$locals_" + bscope.replace(/\./g, "_") + '["' +
-                val + '"]'
+            // Might be undefined, for augmented assignments
+            if(bscope !== undefined){
+                return annotation + "$locals_" + bscope.replace(/\./g, "_") + '["' +
+                    val + '"]'
+            }
         }
 
         var global_ns = '$locals_' + gs.id.replace(/\./g, '_')
@@ -3793,9 +3861,9 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                 // Else return a call to a function that searches the name in
                 // globals, and throws NameError if not found.
                 if(gs.binding[val] !== undefined){
-                    return global_ns + '["' + val + '"]'
+                    return annotation + global_ns + '["' + val + '"]'
                 }else{
-                    return '$B.$global_search("' + val + '", ' +
+                    return annotation + '$B.$global_search("' + val + '", ' +
                         search_ids + ')'
                 }
             }
@@ -3874,7 +3942,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                         innermost.context.tree[0].args.indexOf(val) == -1) &&
                         (nonlocs === undefined || nonlocs[val] === undefined)){
                     this.result = '$B.$local_search("' + val + '")'
-                    return this.result
+                    return annotation + this.result
                 }
             }
             if(found.length > 1 && found[0].context){
@@ -3906,13 +3974,13 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                             res = ns1
                         }
                         this.result = res + '["' + val + '"]'
-                        return this.result
+                        return annotation + this.result
                     }else{
                         this.found = false
                         var res = ns0 + '["' + val + '"] !== undefined ? '
                         res += ns0 + '["' + val + '"] : '
                         this.result = "(" + res + ns1 + '["' + val + '"])'
-                        return this.result
+                        return annotation + this.result
                     }
                 }
             }
@@ -3957,14 +4025,14 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                                     this.is_builtin = true
                                     this.result = '$B.builtins.' + val +
                                         $to_js(this.tree, '')
-                                    return this.result
+                                    return annotation + this.result
                                 }
                             }
                             // Call a function to return the value if it is
                             // defined in locals or globals, or raise a
                             // NameError
                             this.result = '$B.$search("' + val + '")'
-                            return this.result
+                            return annotation + this.result
                         }else{
                             if(this.boundBefore(scope)){
                                 // We are sure that the name is defined in the
@@ -4026,7 +4094,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                 val = scope_ns + '["' + val + '"]'
             }
             this.result = val + $to_js(this.tree, '')
-            return this.result
+            return annotation + this.result
         }else{
             // Name was not found in bound names
             // It may have been introduced in the globals namespace by an exec,
@@ -4041,7 +4109,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
             // Function $search is defined in py_utils.js
 
             this.result = '$B.$global_search("' + val + '", ' + search_ids + ')'
-            return this.result
+            return annotation + this.result
         }
     }
 }
@@ -4093,7 +4161,7 @@ var $ImportCtx = $B.parser.$ImportCtx = function(context){
     this.to_js = function(){
         this.js_processed = true
         var scope = $get_scope(this),
-            res = []
+            res = [],
             module = $get_module(this)
         this.tree.forEach(function(item){
             var mod_name = item.name,
@@ -4284,9 +4352,9 @@ var $ListOrTupleCtx = $B.parser.$ListOrTupleCtx = function(context,real){
 
     this.get_src = function(){
         // Return the Python source code
-        var scope = $get_scope(this)
+        var src = $get_module(this).src
         // replace comments by whitespace, cf. issue #658
-        var src = $B.$py_src[scope.module]
+        var scope = $get_scope(this)
         if(scope.comments === undefined){return src}
         scope.comments.forEach(function(comment){
             var start = comment[0],
@@ -5191,6 +5259,7 @@ var $StringCtx = $B.parser.$StringCtx = function(context,value){
                         temp_id = "temp" + $B.UUID()
                     var expr_node = $B.py2js(expr, scope.module, temp_id, scope)
                     expr_node.to_js()
+                    delete $B.$py_src[temp_id]
                     $pos = save_pos
                     for(var j = 0; j < expr_node.children.length; j++){
                         var node = expr_node.children[j]
@@ -5871,7 +5940,8 @@ var $add_line_num = $B.parser.$add_line_num = function(node,rank){
         while(pnode.parent !== undefined){pnode = pnode.parent}
         var mod_id = pnode.id
         // ignore lines added in transform()
-        if(node.line_num === undefined){flag = false}
+        var line_num = node.line_num || node.forced_line_num
+        if(line_num === undefined){flag = false}
         // Don't add line num before try,finally,else,elif
         // because it would throw a syntax error in Javascript
         if(elt.type == 'condition' && elt.token == 'elif'){flag = false}
@@ -5879,7 +5949,7 @@ var $add_line_num = $B.parser.$add_line_num = function(node,rank){
         else if(elt.type == 'single_kw'){flag = false}
         if(flag){
             // add a trailing None for interactive mode
-            var js = ';$locals.$line_info = "' + node.line_num + ',' +
+            var js = ';$locals.$line_info = "' + line_num + ',' +
                 mod_id + '";'
 
             var new_node = new $Node()
@@ -5897,7 +5967,7 @@ var $add_line_num = $B.parser.$add_line_num = function(node,rank){
         if((elt.type == 'condition' && elt.token == "while")
                 || node.context.type == 'for'){
             if($B.last(node.children).context.tree[0].type != "return"){
-                node.add($NodeJS('$locals.$line_info = "' + node.line_num +
+                node.add($NodeJS('$locals.$line_info = "' + line_num +
                     ',' + mod_id + '";'))
             }
         }
@@ -6933,6 +7003,9 @@ var $transition = $B.parser.$transition = function(context, token, value){
                     return new $AbstractExprCtx(new $SliceCtx(context.parent), false)
                 }else if(context.parent.type == "slice"){
                     return $transition(context.parent, token, value)
+                }else if(context.parent.type == "node"){
+                    // Annotation
+                    return new $AbstractExprCtx(new $AnnotationCtx(context), false)
                 }
                 break
             case '=':
@@ -7971,12 +8044,12 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
     ]
     // from https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Reserved_Words
 
-    var int_pattern = new RegExp("^\\d+(j|J)?"),
-        float_pattern1 = new RegExp("^\\d+\\.\\d*([eE][+-]?\\d+)?(j|J)?"),
-        float_pattern2 = new RegExp("^\\d+([eE][+-]?\\d+)(j|J)?"),
-        hex_pattern = new RegExp("^0[xX]([0-9a-fA-F]+)"),
-        octal_pattern = new RegExp("^0[oO]([0-7]+)"),
-        binary_pattern = new RegExp("^0[bB]([01]+)")
+    var int_pattern = new RegExp("^\\d[0-9_]*(j|J)?"),
+        float_pattern1 = new RegExp("^\\d[0-9_]*\\.\\d*([eE][+-]?\\d+)?(j|J)?"),
+        float_pattern2 = new RegExp("^\\d[0-9_]*([eE][+-]?\\d+)(j|J)?"),
+        hex_pattern = new RegExp("^0[xX]([0-9a-fA-F_]+)"),
+        octal_pattern = new RegExp("^0[oO]([0-7_]+)"),
+        binary_pattern = new RegExp("^0[bB]([01_]+)")
 
     var context = null
     var new_node = new $Node(),
@@ -8328,6 +8401,11 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
             }
         }
 
+        function rmu(numeric_literal){
+            // Remove underscores inside a numeric literal (PEP 515)
+            return numeric_literal.replace(/_/g, "")
+        }
+
         switch(car) {
             case ' ':
             case '\t':
@@ -8353,19 +8431,19 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
               // octal, hexadecimal, binary
               var res = hex_pattern.exec(src.substr(pos))
               if(res){
-                  context = $transition(context, 'int', [16, res[1]])
+                  context = $transition(context, 'int', [16, rmu(res[1])])
                   pos += res[0].length
                   break
               }
               var res = octal_pattern.exec(src.substr(pos))
               if(res){
-                  context = $transition(context, 'int', [8, res[1]])
+                  context = $transition(context, 'int', [8, rmu(res[1])])
                   pos += res[0].length
                   break
               }
               var res = binary_pattern.exec(src.substr(pos))
               if(res){
-                  context = $transition(context, 'int', [2, res[1]])
+                  context = $transition(context, 'int', [2, rmu(res[1])])
                   pos += res[0].length
                   break
               }
@@ -8375,7 +8453,8 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
                   if(parseInt(src.substr(pos)) === 0){
                       res = int_pattern.exec(src.substr(pos))
                       $pos = pos
-                      context = $transition(context, 'int', [10, res[0]])
+                      context = $transition(context, 'int',
+                          [10, rmu(res[0])])
                       pos += res[0].length
                       break
                   }else{$_SyntaxError(context,
@@ -8397,24 +8476,25 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
                     $pos = pos
                     if(res[2] !== undefined){
                         context = $transition(context, 'imaginary',
-                            res[0].substr(0,res[0].length - 1))
-                    }else{context = $transition(context, 'float', res[0])}
+                            rmu(res[0].substr(0,res[0].length - 1)))
+                    }else{context = $transition(context, 'float', rmu(res[0]))}
                 }else{
                     res = float_pattern2.exec(src.substr(pos))
                     if(res){
-                        $pos =pos
+                        $pos = pos
                         if(res[2] !== undefined){
                             context = $transition(context, 'imaginary',
-                                res[0].substr(0,res[0].length - 1))
-                        }else{context = $transition(context, 'float', res[0])}
+                                rmu(res[0].substr(0,res[0].length - 1)))
+                        }else{context = $transition(context, 'float', rmu(res[0]))}
                     }else{
                         res = int_pattern.exec(src.substr(pos))
                         $pos = pos
                         if(res[1] !== undefined){
                             context = $transition(context, 'imaginary',
-                                res[0].substr(0, res[0].length - 1))
+                                rmu(res[0].substr(0, res[0].length - 1)))
                         }else{
-                            context = $transition(context, 'int', [10, res[0]])
+                            context = $transition(context, 'int',
+                                [10, rmu(res[0])])
                          }
                     }
                 }
@@ -8587,7 +8667,8 @@ var $create_root_node = $B.parser.$create_root_node = function(src, module, loca
         __doc__: true,
         __name__: true,
         __file__: true,
-        __package__: true
+        __package__: true,
+        __annotations__: true
     }
 
     root.parent_block = parent_block
@@ -8666,6 +8747,12 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_info){
     root.insert(0, $NodeJS(js.join('')))
     offset++
 
+    // set attribute $src of module object to Python source
+    root.insert(offset++, $NodeJS(global_ns +
+        ".$src = " + global_ns + ".$src || $B.$py_src['" +
+        module +"']; delete $B.$py_src['" + module +
+        "'];"))
+
     // module doc string
     root.insert(offset++,
         $NodeJS(local_ns + '["__doc__"] = ' + (root.doc_string || 'None') +
@@ -8680,6 +8767,10 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_info){
     root.insert(offset++,
         $NodeJS(local_ns + '["__package__"] = ' + local_ns +
             '["__package__"]'))
+
+    // annotations
+    root.insert(offset++,
+        $NodeJS('$locals.__annotations__ = _b_.dict.$factory()'))
 
     // file
     root.insert(offset++,
@@ -9251,7 +9342,7 @@ $B.run_script = function(src, name){
     $B.$py_module_path[name] = $B.script_path
     try{
         var root = $B.py2js(src, name, name),
-            js = root.to_js(),
+            js = "(function(){" + root.to_js() + "})()",
             script = {
                 js: js,
                 name: name,
@@ -9298,7 +9389,7 @@ $B.run_script = function(src, name){
     $B.tasks.push(["execute", script])
 }
 
-function $log(js){
+var $log = $B.$log = function(js){
     js.split("\n").forEach(function(line, i){
         console.log(i + 1, ":", line)
     })

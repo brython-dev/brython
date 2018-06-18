@@ -28,13 +28,12 @@ object.__delattr__ = function(self, attr){
 }
 
 object.__dir__ = function(self) {
-    var objects = [self],
-        pos = 1,
-        klass = self.__class__ || $B.get_class(self)
-    objects[pos++] = klass
-    var mro = klass.__mro__
-    for(var i = 0, len = mro.length; i < len; i++){
-        objects[pos++] = mro[i]
+    var objects
+    if(self.$is_class){
+        objects = [self].concat(self.__mro__)
+    }else{
+        var klass = self.__class__ || $B.get_class(self)
+        objects = [self, klass].concat(klass.__mro__)
     }
 
     var res = []
@@ -404,7 +403,6 @@ object.__str__ = function(self){
 }
 
 object.__subclasshook__ = function(){return _b_.NotImplemented}
-
 
 // constructor of the built-in class 'object'
 object.$factory = function(){

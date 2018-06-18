@@ -234,19 +234,25 @@ var getExceptionTrace = function(exc, includeInternal) {
 
     for(var i = 0; i < exc.$stack.length; i++){
         var frame = exc.$stack[i]
-        //console.log('frame', i, frame, frame[3].$line_info)
-        if(! frame[1] || ! frame[1].$line_info){continue}
+        if(! frame[1] || ! frame[1].$line_info){
+            continue
+        }
         var $line_info = frame[1].$line_info
         if(i == exc.$stack.length - 1 && exc.$line_info){
             $line_info = exc.$line_info
         }
-        var line_info = $line_info.split(',');
-        var src = $B.$py_src[line_info[1]];
-        if(src === undefined && exc.module == line_info[1]){
+        var line_info = $line_info.split(','),
+            src
+        if(exc.module == line_info[1]){
             src = exc.src
         }
-        if (src === undefined && !includeInternal){continue}
-        var module = line_info[1];
+        if(!includeInternal){
+            var src = frame[3].$src
+            if(src === undefined){
+                continue
+            }
+        }
+        var module = line_info[1]
         if(module.charAt(0) == "$"){module = "<module>"}
         info += "\n  module " + module + " line " + line_info[0]
         if (frame.length > 4 && frame[4].$infos) {

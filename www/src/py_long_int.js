@@ -443,13 +443,15 @@ long_int.__lt__ = function(self, other){
 }
 
 long_int.__lshift__ = function(self, shift){
-    var is_long = shift.__class__ === long_int
+    var is_long = shift.__class__ === long_int,
+        shift_safe
     if(is_long){
         var shift_value = parseInt(shift.value)
         if(shift_value < 0){
             throw _b_.ValueError.$factory('negative shift count')
         }
-        if(shift_value < $B.max_int){shift_safe = true;shift = shift_value}
+        if(shift_value < $B.max_int){
+            shift_safe = true;shift = shift_value}
     }
     if(shift_safe){
         if(shift_value == 0){return self}

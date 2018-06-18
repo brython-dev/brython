@@ -422,7 +422,7 @@ list.count = function(){
 list.extend = function(){
     var $ = $B.args("extend", 2, {self: null, t: null}, ["self", "t"],
         arguments, {}, null, null)
-    other = list.$factory($B.$iter($.t))
+    var other = list.$factory($B.$iter($.t))
     for(var i = 0; i < other.length; i++){$.self.push(other[i])}
     return $N
 }

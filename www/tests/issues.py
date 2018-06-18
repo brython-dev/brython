@@ -1949,6 +1949,40 @@ assertRaises(SyntaxError, exec, "d = {*[1], 'x': 2}")
 assertRaises(SyntaxError, exec, "d = {**{'x': 1}, 2}")
 assertRaises(SyntaxError, exec, "t = *range(4)")
 
+# issue 854
+class A(object):
+
+    def __init__(self):
+        self.x = 0
+
+    def f():
+        pass
+
+class B(A): pass
+
+assert 'f' in dir(A)
+assert 'f' in dir(B)
+
+assert 'x' in dir(A())
+assert 'x' in dir(B())
+
+# issue 869
+class A(object):
+    def __init__(self):
+        self.value = 0
+
+    def __iadd__(self, val):
+        self.value += val
+        return self.value
+
+class B(object):
+    def __init__(self):
+        self.a = A()
+
+b = B()
+b.a += 10
+assert b.a == 10
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

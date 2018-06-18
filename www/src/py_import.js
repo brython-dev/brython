@@ -9,7 +9,8 @@ var module = $B.module = {
     __class__ : _b_.type,
     __module__: "builtins",
     __mro__: [_b_.object],
-    __name__ : "module"
+    __name__ : "module",
+    $is_class: true
 }
 
 module.__init__ = function(){}
@@ -62,6 +63,13 @@ function $importer(){
     var $xmlhttp = new XMLHttpRequest()
 
     var fake_qs
+    return [$xmlhttp, fake_qs, timer]
+}
+
+function $download_module(module, url, $package){
+    var $xmlhttp = new XMLHttpRequest(),
+        fake_qs
+
     switch ($B.$options.cache) {
         case "version":
             fake_qs = "?v=" + $B.version_info[2]
@@ -73,19 +81,12 @@ function $importer(){
             fake_qs = "?v=" + (new Date().getTime())
     }
 
-    var timer = setTimeout(function(){
-        $xmlhttp.abort()
-        throw _b_.ImportError.$factory("No module named '" + module + "'")
+    var timer = _window.setTimeout(function(){
+            $xmlhttp.abort()
+            throw _b_.ImportError.$factory("No module named '" + module + "'")
         }, 5000)
-    return [$xmlhttp, fake_qs, timer]
-}
 
-function $download_module(module, url, $package){
-    var imp = $importer(),
-        $xmlhttp = imp[0],
-        fake_qs = imp[1],
-        timer = imp[2],
-        res = null,
+    var res = null,
         mod_name = module.__name__,
         res,
         t0 = new Date()
@@ -96,8 +97,8 @@ function $download_module(module, url, $package){
 
     if($B.$CORS){
       $xmlhttp.onload = function() {
-         if($xmlhttp.status == 200 || $xmlhttp.status == 0){
-            res = $xmlhttp.responseText
+         if(this.status == 200 || this.status == 0){
+            res = this.responseText
          }else{
             res = _b_.FileNotFoundError.$factory("No module named '" +
                 mod_name + "'")
@@ -130,6 +131,7 @@ function $download_module(module, url, $package){
     if("overrideMimeType" in $xmlhttp){$xmlhttp.overrideMimeType("text/plain")}
     $xmlhttp.send()
 
+    _window.clearTimeout(timer)
     // sometimes chrome doesn't set res correctly, so if res == null,
     // assume no module found
     if(res == null){
@@ -312,7 +314,7 @@ function run_py(module_contents, path, module, compiled) {
         $B.imported[module.__name__] = module
         return true
     }catch(err){
-        console.log("" + err + " " + " for module " + module.name)
+        console.log("" + err + " " + " for module " + module.__name__)
         for(var attr in err){console.log(attr + " " + err[attr])}
 
         if($B.debug > 0){console.log("line info " + __BRYTHON__.line_info)}
@@ -803,7 +805,7 @@ var _sys_paths = [[$B.script_dir + "/", "py"],
                   [$B.brython_path + "Lib/site-packages/", "py"],
                   [$B.brython_path + "libs/", "js"]]
 
-for(i = 0; i < _sys_paths.length; ++i){
+for(var i = 0; i < _sys_paths.length; ++i){
     var _path = _sys_paths[i],
         _type = _path[1]
     _path = _path[0]
@@ -1076,7 +1078,7 @@ var Loader = {__class__:$B.$type,
     __name__ : "Loader"
 }
 
-_importlib_module = {
+var _importlib_module = {
     __class__ : module,
     __name__ : "_importlib",
     Loader: Loader,

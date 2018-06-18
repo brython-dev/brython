@@ -114,16 +114,33 @@ complex.__new__ = function(cls){
         $real = args.real,
         $imag = args.imag
     if(typeof $real == "string"){
-        if(arguments.length > 1 || arguments[0].$nat !== undefined){
+        if(arguments.length > 2 &&
+                arguments[2].$nat !== undefined &&
+                Object.keys(arguments[2].kw).length > 0){
+            console.log(arguments)
             throw _b_.TypeError.$factory("complex() can't take second arg " +
                 "if first is a string")
         }
+        var arg = $real
         $real = $real.trim()
         if($real.startsWith("(") && $real.endsWith(")")){
             $real = $real.substr(1)
             $real = $real.substr(0, $real.length - 1)
         }
+        // Regular expression for literal complex string. Includes underscores
+        // for PEP 515
+        var complex_re = /^\s*([\+\-]*[0-9_]*\.?[0-9_]*(e[\+\-]*[0-9_]*)?)([\+\-]?)([0-9_]*\.?[0-9_]*(e[\+\-]*[0-9_]*)?)(j?)\s*$/i
+
         var parts = complex_re.exec($real)
+
+        function to_num(s){
+            var res = parseFloat(s.charAt(0) + s.substr(1).replace(/_/g, ""))
+            if(isNaN(res)){
+                throw _b_.ValueError.$factory("could not convert string " +
+                    "to complex: '" + arg +"'")
+            }
+            return res
+        }
         if(parts === null){
             throw _b_.ValueError.$factory("complex() arg is a malformed string")
         }else if(parts[_real] == "." || parts[_imag] == "." ||
@@ -137,14 +154,14 @@ complex.__new__ = function(cls){
                     $imag = 1
                 }else if (parts[_real] == '-'){
                     $imag = -1
-                }else{$imag = parseFloat(parts[_real])}
+                }else{$imag = to_num(parts[_real])}
             }else{
-                $real = parseFloat(parts[_real])
-                $imag = parts[_imag] == "" ? 1 : parseFloat(parts[_imag])
+                $real = to_num(parts[_real])
+                $imag = parts[_imag] == "" ? 1 : to_num(parts[_imag])
                 $imag = parts[_sign] == "-" ? -$imag : $imag
             }
         }else{
-            $real = parseFloat(parts[_real])
+            $real = to_num(parts[_real])
             $imag = 0
         }
         res = {
@@ -167,7 +184,7 @@ complex.__new__ = function(cls){
         return res
     }
 
-    for(i = 0; i < type_conversions.length; i++){
+    for(var i = 0; i < type_conversions.length; i++){
         if(hasattr($real, type_conversions[i])){
 
         }
@@ -361,7 +378,6 @@ complex.imag.setter = function(){
     throw _b_.AttributeError.$factory("readonly attribute")
 }
 
-var complex_re = /^\s*([\+\-]*\d*\.?\d*(e[\+\-]*\d*)?)([\+\-]?)(\d*\.?\d*(e[\+\-]*\d*)?)(j?)\s*$/i
 var _real = 1,
     _real_mantissa = 2,
     _sign = 3,
@@ -370,7 +386,7 @@ var _real = 1,
     _j = 6
 var type_conversions = ["__complex__", "__float__", "__int__"]
 var _convert = function(num){
-    for(i = 0; i < type_conversions.length; i++) {
+    for(var i = 0; i < type_conversions.length; i++) {
         if(hasattr(num, type_conversions[i])) {
             return getattr(num, type_conversions[i])()
         }
@@ -378,7 +394,7 @@ var _convert = function(num){
     return num
 }
 
-$B.make_complex = make_complex = function(real, imag){
+var make_complex = $B.make_complex = function(real, imag){
     return {
         __class__: complex,
         $real: real,

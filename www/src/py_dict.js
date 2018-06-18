@@ -50,7 +50,7 @@ var $item_generator = function(d) {
         this.items = []
         for(var attr in d.$jsobj){
             if(attr.charAt(0) != "$"){
-                val = d.$jsobj[attr]
+                var val = d.$jsobj[attr]
                 if(val === undefined){val = _b_.NotImplemented}
                 else if(val === null){val = $N}
                 this.items.push([attr, val])

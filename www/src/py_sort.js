@@ -15,24 +15,24 @@ eval($B.InjectBuiltins())
 /**
  * Default minimum size of a run.
  */
-DEFAULT_MIN_MERGE = 32
+var DEFAULT_MIN_MERGE = 32
 
 /**
  * Minimum ordered subsequece required to do galloping.
  */
-DEFAULT_MIN_GALLOPING = 7
+var DEFAULT_MIN_GALLOPING = 7
 
 /**
  * Default tmp storage length. Can increase depending on the size of the
  * smallest run to merge.
  */
-DEFAULT_TMP_STORAGE_LENGTH = 256
+var DEFAULT_TMP_STORAGE_LENGTH = 256
 
 /**
  * Pre-computed powers of 10 for efficient lexicographic comparison of
  * small integers.
  */
-POWERS_OF_TEN = [1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9]
+var POWERS_OF_TEN = [1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9]
 
 /**
  * Estimate the logarithm base 10 of a small integer.
@@ -430,7 +430,7 @@ var TimSortAssertion = function(message) {
 }
 
 
-TimSort = function(array, compare){
+var TimSort = function(array, compare){
     self = {
         array: array,
         compare: compare,
@@ -565,7 +565,7 @@ TimSort = function(array, compare){
                 tmp = this.tmp,
                 i = 0
 
-            for(i = 0; i < length1; i++){
+            for(var i = 0; i < length1; i++){
                 tmp[i] = array[start1 + i]
             }
 
@@ -576,14 +576,14 @@ TimSort = function(array, compare){
             array[dest++] = array[cursor2++]
 
             if(--length2 === 0){
-                for(i = 0; i < length1; i++){
+                for(var i = 0; i < length1; i++){
                     array[dest + i] = tmp[cursor1 + i]
                 }
                 return
             }
 
             if(length1 === 1){
-                for(i = 0; i < length2; i++){
+                for(var i = 0; i < length2; i++){
                     array[dest + i] = array[cursor2 + i]
                 }
                 array[dest + length2] = tmp[cursor1]
@@ -627,7 +627,7 @@ TimSort = function(array, compare){
                         length1, 0, compare)
 
                     if(count1 !== 0){
-                        for(i = 0; i < count1; i++){
+                        for(var i = 0; i < count1; i++){
                             array[dest + i] = tmp[cursor1 + i]
                         }
 
@@ -651,7 +651,7 @@ TimSort = function(array, compare){
                         0, compare)
 
                     if(count2 !== 0){
-                        for(i = 0; i < count2; i++){
+                        for(var i = 0; i < count2; i++){
                             array[dest + i] = array[cursor2 + i]
                         }
 
@@ -694,14 +694,14 @@ TimSort = function(array, compare){
             }
 
             if(length1 === 1){
-                for(i = 0; i < length2; i++){
+                for(var i = 0; i < length2; i++){
                     array[dest + i] = array[cursor2 + i]
                 }
                 array[dest + length2] = tmp[cursor1]
             }else if(length1 === 0){
                 throw new TimSortAssertion('mergeLow preconditions were not respected')
             }else{
-                for(i = 0; i < length1; i++){
+                for(var i = 0; i < length1; i++){
                     array[dest + i] = tmp[cursor1 + i]
                 }
             }
@@ -726,7 +726,7 @@ TimSort = function(array, compare){
                 tmp = this.tmp,
                 i = 0
 
-            for(i = 0; i < length2; i++){
+            for(var i = 0; i < length2; i++){
                 tmp[i] = array[start2 + i]
             }
 
@@ -741,7 +741,7 @@ TimSort = function(array, compare){
             if(--length1 === 0){
                 customCursor = dest - (length2 - 1)
 
-                for(i = 0; i < length2; i++){
+                for(var i = 0; i < length2; i++){
                     array[customCursor + i] = tmp[i]
                 }
 
@@ -754,7 +754,7 @@ TimSort = function(array, compare){
                 customDest = dest + 1
                 customCursor = cursor1 + 1
 
-                for(i = length1 - 1; i >= 0; i--){
+                for(var i = length1 - 1; i >= 0; i--){
                     array[customDest + i] = array[customCursor + i]
                 }
 
@@ -802,7 +802,7 @@ TimSort = function(array, compare){
                         customDest = dest + 1
                         customCursor = cursor1 + 1
 
-                        for(i = count1 - 1; i >= 0; i--){
+                        for(var i = count1 - 1; i >= 0; i--){
                             array[customDest + i] = array[customCursor + i]
                         }
 
@@ -829,7 +829,7 @@ TimSort = function(array, compare){
                         customDest = dest + 1
                         customCursor = cursor2 + 1
 
-                        for(i = 0; i < count2; i++){
+                        for(var i = 0; i < count2; i++){
                             array[customDest + i] = tmp[customCursor + i]
                         }
 
@@ -870,7 +870,7 @@ TimSort = function(array, compare){
                 customDest = dest + 1
                 customCursor = cursor1 + 1
 
-                for(i = length1 - 1; i >= 0; i--){
+                for(var i = length1 - 1; i >= 0; i--){
                     array[customDest + i] = array[customCursor + i]
                 }
 
@@ -879,7 +879,7 @@ TimSort = function(array, compare){
                 throw new TimSortAssertion("mergeHigh preconditions were not respected")
             }else{
                 customCursor = dest - (length2 - 1)
-                for(i = 0; i < length2; i++){
+                for(var i = 0; i < length2; i++){
                     array[customCursor + i] = tmp[i]
                 }
             }

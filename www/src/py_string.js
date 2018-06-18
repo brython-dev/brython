@@ -1620,7 +1620,7 @@ str.startswith = function(){
 
     var s = $.self.substring($.start, $.end)
     for(var i = 0, len = prefixes.length; i < len; i++){
-        prefix = prefixes[i]
+        var prefix = prefixes[i]
         if(! _b_.isinstance(prefix, str)){throw _b_.TypeError.$factory(
             "endswith first arg must be str or a tuple of str, not int")}
         if(s.substr(0, prefix.length) == prefix){return true}
