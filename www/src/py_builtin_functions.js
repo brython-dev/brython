@@ -2274,4 +2274,6 @@ _b_['open'] = $url_open
 _b_['print'] = $print
 _b_['$$super'] = $$super
 
+_b_.object.__new__.__class__ = builtin_function
+
 })(__BRYTHON__)

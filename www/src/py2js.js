@@ -2361,6 +2361,8 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
             defs1 = []
         this.argcount = 0
         this.kwonlyargcount = 0 // number of args after a star arg
+        this.kwonlyargsdefaults = []
+        this.otherdefaults = []
         this.varnames = {}
         this.args = []
         this.__defaults__ = []
@@ -2376,8 +2378,18 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
             this.args.push(arg.name)
             this.varnames[arg.name] = true
             if(arg.type == 'func_arg_id'){
-                if(this.star_arg){this.kwonlyargcount++}
-                else{this.argcount++}
+                if(this.star_arg){
+                    this.kwonlyargcount++
+                    if(arg.has_default){
+                        this.kwonlyargsdefaults.push(arg.name)
+                    }
+                }
+                else{
+                    this.argcount++
+                    if(arg.has_default){
+                        this.otherdefaults.push(arg.name)
+                    }
+                }
                 this.slots.push(arg.name + ':null')
                 slot_list.push('"' + arg.name + '"')
                 if(arg.tree.length > 0){
@@ -2668,13 +2680,34 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         js = '    __qualname__:"' + __qualname__ + '",'
         node.parent.insert(rank + offset++, $NodeJS(js))
 
-        // Add attribute __defaults__
-        var def_names = []
-        this.default_list.forEach(function(_default){
-            def_names.push('"' + _default + '"')
-        })
-        node.parent.insert(rank + offset++, $NodeJS('    __defaults__ : [' +
-            def_names.join(', ') + '],'))
+        if(this.type != "generator"){
+            // Add attribute __defaults__
+            if(this.otherdefaults.length > 0){
+                var def_names = []
+                this.otherdefaults.forEach(function(_default){
+                    def_names.push('$defaults.' + _default)
+                })
+                node.parent.insert(rank + offset++, $NodeJS('    __defaults__ : ' +
+                    '_b_.tuple.$factory([' + def_names.join(', ') + ']),'))
+            }else{
+                node.parent.insert(rank + offset++, $NodeJS('    __defaults__ : ' +
+                    '_b_.None,'))
+            }
+
+            // Add attribute __kwdefaults__ for default values of
+            // keyword-only parameters
+            if(this.kwonlyargsdefaults.lengh > 0){
+                var def_names = []
+                this.kwonlyargsdefaults.forEach(function(_default){
+                    def_names.push('$defaults.' + _default)
+                })
+                node.parent.insert(rank + offset++, $NodeJS('    __kwdefaults__ : ' +
+                    '_b_.tuple.$factory([' + def_names.join(', ') + ']),'))
+            }else{
+                node.parent.insert(rank + offset++, $NodeJS('    __kwdefaults__ : ' +
+                    '_b_.None,'))
+            }
+        }
 
         // Add attribute __module__
         var root = $get_module(this)
@@ -5226,6 +5259,7 @@ var $StringCtx = $B.parser.$StringCtx = function(context,value){
                         temp_id = "temp" + $B.UUID()
                     var expr_node = $B.py2js(expr, scope.module, temp_id, scope)
                     expr_node.to_js()
+                    delete $B.$py_src[temp_id]
                     $pos = save_pos
                     for(var j = 0; j < expr_node.children.length; j++){
                         var node = expr_node.children[j]
@@ -8712,6 +8746,12 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_info){
 
     root.insert(0, $NodeJS(js.join('')))
     offset++
+
+    // set attribute $src of module object to Python source
+    root.insert(offset++, $NodeJS(global_ns +
+        ".$src = " + global_ns + ".$src || $B.$py_src['" +
+        module +"']; delete $B.$py_src['" + module +
+        "'];"))
 
     // module doc string
     root.insert(offset++,

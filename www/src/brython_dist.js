@@ -65,8 +65,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,6,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.6.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-06-17 15:42:04.355141"
-__BRYTHON__.timestamp=1529242924355
+__BRYTHON__.compiled_date="2018-06-18 15:16:05.279991"
+__BRYTHON__.timestamp=1529327765279
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -1165,6 +1165,8 @@ pnode=pnode.parent.parent}
 var defaults=[],defs1=[]
 this.argcount=0
 this.kwonlyargcount=0 
+this.kwonlyargsdefaults=[]
+this.otherdefaults=[]
 this.varnames={}
 this.args=[]
 this.__defaults__=[]
@@ -1175,8 +1177,10 @@ if(this.annotation){annotations.push('"return":' + this.annotation.to_js())}
 var func_args=this.tree[1].tree
 func_args.forEach(function(arg){this.args.push(arg.name)
 this.varnames[arg.name]=true
-if(arg.type=='func_arg_id'){if(this.star_arg){this.kwonlyargcount++}
-else{this.argcount++}
+if(arg.type=='func_arg_id'){if(this.star_arg){this.kwonlyargcount++
+if(arg.has_default){this.kwonlyargsdefaults.push(arg.name)}}
+else{this.argcount++
+if(arg.has_default){this.otherdefaults.push(arg.name)}}
 this.slots.push(arg.name + ':null')
 slot_list.push('"' + arg.name + '"')
 if(arg.tree.length > 0){defaults.push('"' + arg.name + '"')
@@ -1304,10 +1308,17 @@ var __qualname__=__name__
 if(this.class_name){__qualname__=this.class_name + '.' + __name__}
 js='    __qualname__:"' + __qualname__ + '",'
 node.parent.insert(rank + offset++,$NodeJS(js))
-var def_names=[]
-this.default_list.forEach(function(_default){def_names.push('"' + _default + '"')})
-node.parent.insert(rank + offset++,$NodeJS('    __defaults__ : [' +
-def_names.join(', ')+ '],'))
+if(this.type !="generator"){
+if(this.otherdefaults.length > 0){var def_names=[]
+this.otherdefaults.forEach(function(_default){def_names.push('$defaults.' + _default)})
+node.parent.insert(rank + offset++,$NodeJS('    __defaults__ : ' +
+'_b_.tuple.$factory([' + def_names.join(', ')+ ']),'))}else{node.parent.insert(rank + offset++,$NodeJS('    __defaults__ : ' +
+'_b_.None,'))}
+if(this.kwonlyargsdefaults.lengh > 0){var def_names=[]
+this.kwonlyargsdefaults.forEach(function(_default){def_names.push('$defaults.' + _default)})
+node.parent.insert(rank + offset++,$NodeJS('    __kwdefaults__ : ' +
+'_b_.tuple.$factory([' + def_names.join(', ')+ ']),'))}else{node.parent.insert(rank + offset++,$NodeJS('    __kwdefaults__ : ' +
+'_b_.None,'))}}
 var root=$get_module(this)
 node.parent.insert(rank + offset++,$NodeJS('    __module__ : "' + root.module + '",'))
 node.parent.insert(rank + offset++,$NodeJS('    __doc__: ' +(this.doc_string ||'None')+ ','))
@@ -2483,6 +2494,7 @@ expr=parts[0]
 var save_pos=$pos,temp_id="temp" + $B.UUID()
 var expr_node=$B.py2js(expr,scope.module,temp_id,scope)
 expr_node.to_js()
+delete $B.$py_src[temp_id]
 $pos=save_pos
 for(var j=0;j < expr_node.children.length;j++){var node=expr_node.children[j]
 if(node.C.tree && node.C.tree.length==1 &&
@@ -4471,6 +4483,10 @@ js[pos]+='$locals = ' + local_ns + ';'
 var offset=0
 root.insert(0,$NodeJS(js.join('')))
 offset++
+root.insert(offset++,$NodeJS(global_ns +
+".$src = " + global_ns + ".$src || $B.$py_src['" +
+module +"']; delete $B.$py_src['" + module +
+"'];"))
 root.insert(offset++,$NodeJS(local_ns + '["__doc__"] = ' +(root.doc_string ||'None')+
 ';'))
 root.insert(offset++,$NodeJS(local_ns + '["__name__"] = ' + local_ns +
@@ -4953,6 +4969,7 @@ Object.keys(abstract_methods).join(", "))}
 kls.$factory=nofactory}
 var first_parent=mro[0],init_subclass=_b_.type.__getattribute__(first_parent,"__init_subclass__")
 init_subclass(kls,extra_kwargs)
+kls.__qualname__=module + '.' + class_name.replace("$$","")
 return kls}
 function make_mro(bases){
 var seqs=[],pos1=0
@@ -6655,7 +6672,8 @@ _b_[name].$infos={__module__: 'builtins',__name__: orig_name}}}
 catch(err){}}
 _b_['open']=$url_open
 _b_['print']=$print
-_b_['$$super']=$$super})(__BRYTHON__)
+_b_['$$super']=$$super
+_b_.object.__new__.__class__=builtin_function})(__BRYTHON__)
 ;(function($B){eval($B.InjectBuiltins())
 $B.$raise=function(arg){
 if(arg===undefined){var es=$B.current_exception
@@ -6757,11 +6775,11 @@ for(var i=0;i < exc.$stack.length;i++){var frame=exc.$stack[i]
 if(! frame[1]||! frame[1].$line_info){continue}
 var $line_info=frame[1].$line_info
 if(i==exc.$stack.length - 1 && exc.$line_info){$line_info=exc.$line_info}
-var line_info=$line_info.split(',');
-var src=$B.$py_src[line_info[1]];
-if(src===undefined && exc.module==line_info[1]){src=exc.src}
-if(src===undefined && !includeInternal){continue}
-var module=line_info[1];
+var line_info=$line_info.split(','),src
+if(exc.module==line_info[1]){src=exc.src}
+if(!includeInternal){var src=frame[3].$src
+if(src===undefined){continue}}
+var module=line_info[1]
 if(module.charAt(0)=="$"){module="<module>"}
 info +="\n  module " + module + " line " + line_info[0]
 if(frame.length > 4 && frame[4].$infos){info +=', in ' + frame[4].$infos.__name__}

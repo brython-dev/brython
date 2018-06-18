@@ -163,6 +163,8 @@ $B.$class_constructor = function(class_name, class_obj, bases,
 
     init_subclass(kls, extra_kwargs)
 
+    kls.__qualname__ = module + '.' + class_name.replace("$$", "")
+
     return kls
 }
 
