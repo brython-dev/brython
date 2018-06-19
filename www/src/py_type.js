@@ -142,10 +142,15 @@ $B.$class_constructor = function(class_name, class_obj, bases,
         meta_init(kls, class_name, bases, cl_dict)
     }
 
+    $B.$getattr(metaclass, "__init_subclass__")(kls, extra_kwargs)
     // Set new class as subclass of its parents
     for(var i = 0; i < bases.length; i++){
         bases[i].$subclasses  = bases[i].$subclasses || []
         bases[i].$subclasses.push(kls)
+        // call __init_subclass__ with the extra keyword arguments
+        init_subclass = _b_.type.__getattribute__(bases[i],
+            "__init_subclass__")
+        init_subclass(kls, extra_kwargs)
     }
 
     if(!is_instanciable){
@@ -155,13 +160,6 @@ $B.$class_constructor = function(class_name, class_obj, bases,
                 Object.keys(abstract_methods).join(", "))}
         kls.$factory = nofactory
     }
-
-    // call __init_subclass__ with the extra keyword arguments
-    var first_parent = mro[0],
-        init_subclass = _b_.type.__getattribute__(first_parent,
-            "__init_subclass__")
-
-    init_subclass(kls, extra_kwargs)
 
     kls.__qualname__ = module + '.' + class_name.replace("$$", "")
 

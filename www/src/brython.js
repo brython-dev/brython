@@ -65,8 +65,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,6,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.6.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-06-18 22:47:39.037804"
-__BRYTHON__.timestamp=1529354859037
+__BRYTHON__.compiled_date="2018-06-19 21:53:27.607449"
+__BRYTHON__.timestamp=1529438007607
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -4463,7 +4463,7 @@ root.src=src
 return root}
 $B.py2js=function(src,module,locals_id,parent_scope,line_info){
 if(typeof module=="object"){var __package__=module.__package__
-module=module.__name__}
+module=module.__name__}else{var __package__=""}
 parent_scope=parent_scope ||$B.builtins_scope
 var t0=new Date().getTime(),is_comp=false
 if(typeof src=='object'){is_comp=src.is_comp
@@ -4496,8 +4496,7 @@ root.insert(offset++,$NodeJS(local_ns + '["__doc__"] = ' +(root.doc_string ||'No
 ';'))
 root.insert(offset++,$NodeJS(local_ns + '["__name__"] = ' + local_ns +
 '["__name__"] || "' + locals_id + '";'))
-root.insert(offset++,$NodeJS(local_ns + '["__package__"] = ' + local_ns +
-'["__package__"]'))
+root.insert(offset++,$NodeJS(local_ns + '["__package__"] = "' + __package__ +'"'))
 root.insert(offset++,$NodeJS('$locals.__annotations__ = _b_.dict.$factory()'))
 root.insert(offset++,$NodeJS(local_ns + '["__file__"] = "' + $B.$py_module_path[module]+
 '";None;\n'))
@@ -4966,14 +4965,15 @@ kls.$subclasses=[]
 if(kls.__class__===metaclass){
 var meta_init=_b_.type.__getattribute__(metaclass,"__init__")
 meta_init(kls,class_name,bases,cl_dict)}
+$B.$getattr(metaclass,"__init_subclass__")(kls,extra_kwargs)
 for(var i=0;i < bases.length;i++){bases[i].$subclasses=bases[i].$subclasses ||[]
-bases[i].$subclasses.push(kls)}
+bases[i].$subclasses.push(kls)
+init_subclass=_b_.type.__getattribute__(bases[i],"__init_subclass__")
+init_subclass(kls,extra_kwargs)}
 if(!is_instanciable){function nofactory(){throw _b_.TypeError.$factory("Can't instantiate abstract class " +
 "interface with abstract methods " +
 Object.keys(abstract_methods).join(", "))}
 kls.$factory=nofactory}
-var first_parent=mro[0],init_subclass=_b_.type.__getattribute__(first_parent,"__init_subclass__")
-init_subclass(kls,extra_kwargs)
 kls.__qualname__=module + '.' + class_name.replace("$$","")
 return kls}
 function make_mro(bases){
@@ -6524,7 +6524,7 @@ return method}
 throw _b_.AttributeError.$factory("object 'super' has no attribute '" +
 attr + "'")}
 $$super.__repr__=$$super.__str__=function(self){var res="<super: <class '" + self.__thisclass__.__name__ + "'>"
-if(self.__self_class__ !==undefined){res +=', <' + self.__self_class__.__class__.__name__ + ' object>'}else{res +=', NULL'}
+if(self.__self_class__ !==undefined){res +=', <' + self.__self_class__.__name__ + ' object>'}else{res +=', NULL'}
 return res + '>'}
 $B.set_func_names($$super,"builtins")
 function vars(){var def={},$=$B.args('vars',1,{obj: null},['obj'],arguments,{obj: def},null,null)
@@ -12128,3 +12128,14 @@ catch(e){delete _sys_modules[_spec_name]
 throw e}}}
 return _sys_modules[_spec_name]}
 $B.import_hooks=import_hooks})(__BRYTHON__)
+;(function($B){var _b_=$B.builtins
+var awaitable=$B.make_class("awaitable")
+var coroutine=$B.make_class("coroutine")
+coroutine.close=function(self){}
+coroutine.send=function(self){var res=self.$func()
+if(res.__class__ !==awaitable){throw _b_.StopIteration(res)}}
+$B.make_async=function(func){var res=function(){return{
+__class__: coroutine,$func: func,close: function(){},send: function(){var res=func()
+if(res.__class__ !==awaitable){throw _b_.StopIteration(res)}}}}
+res.$infos=func.$infos
+return res}})(__BRYTHON__)
