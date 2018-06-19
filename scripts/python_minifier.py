@@ -10,7 +10,7 @@ The function returns a string with a minified version of the original :
   if the next line doesn't start with the same indent, like in
       # --------------------------------
       def f():
-          'function with docstring only'      
+          'function with docstring only'
       print('ok')
       # --------------------------------
 """
@@ -22,26 +22,31 @@ import re
 import io
 from keyword import kwlist
 
+for kw in ["async", "await"]:
+    if kw not in kwlist:
+        kwlist.append(kw)
+
 def minify(src, preserve_lines=False):
-    
+
     # tokenize expects method readline of file in binary mode
     file_obj = io.BytesIO(src.encode('utf-8'))
     token_generator = tokenize.tokenize(file_obj.readline)
-    
+
     out = '' # minified source
     line = 0
     last_type = None
     indent = 0 # current indentation level
     brackets = [] # stack for brackets
 
-    # first token is script encoding    
+    # first token is script encoding
     encoding = next(token_generator).string
-    
+
     file_obj = io.BytesIO(src.encode(encoding))
-    token_generator = tokenize.tokenize(file_obj.readline)    
+    token_generator = tokenize.tokenize(file_obj.readline)
 
     for item in token_generator:
-        
+        print(item)
+
         # update brackets stack if necessary
         if token.tok_name[item.type]=='OP':
             if item.string in '([{':
@@ -61,7 +66,7 @@ def minify(src, preserve_lines=False):
             continue
 
         if sline>line: # first token in a line
-            
+
             if not brackets and item.type==tokenize.STRING:
                 if last_type in [tokenize.NEWLINE, tokenize.INDENT, None]:
                     # If not inside a bracket, replace a string starting a
@@ -91,8 +96,13 @@ def minify(src, preserve_lines=False):
                 if preserve_lines:
                     out += '\n'*item.string.count('\n')
                 continue
+            previous_types = [tokenize.NAME, tokenize.NUMBER]
+            if hasattr(tokenize, "ASYNC"):
+                previous_types.append(tokenize.ASYNC)
+            if hasattr(tokenize, "AWAIT"):
+                previous_types.append(tokenize.AWAIT)
             if item.type in [tokenize.NAME, tokenize.NUMBER, tokenize.OP] and \
-                last_type in [tokenize.NAME, tokenize.NUMBER]:
+                last_type in previous_types:
                 # insert a space when needed
                 if item.type != tokenize.OP \
                     or item.string not in ',()[].=:{}+&' \
@@ -123,16 +133,16 @@ def minify(src, preserve_lines=False):
     if not preserve_lines:
         # remove empty line at the start of the script (doc string)
         out = re.sub("^''\n", '', out)
-            
+
         # remove consecutive empty lines
         out = re.sub('\n( *\n)+', '\n', out)
-    
-        # remove lines with an empty string followed by a line that starts with 
+
+        # remove lines with an empty string followed by a line that starts with
         # the same indent
         def repl(mo):
             if mo.groups()[0]==mo.groups()[1]:
                 return '\n'+mo.groups()[1]
             return mo.string[mo.start(): mo.end()]
         out = re.sub("\n( *)''\n( *)", repl, out)
-    
+
     return out
