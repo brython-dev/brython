@@ -1867,7 +1867,7 @@ $$super.__getattribute__ = function(self, attr){
 $$super.__repr__ = $$super.__str__ = function(self){
     var res = "<super: <class '" + self.__thisclass__.__name__ + "'>"
     if(self.__self_class__ !== undefined){
-        res += ', <' + self.__self_class__.__class__.__name__ + ' object>'
+        res += ', <' + self.__self_class__.__name__ + ' object>'
     }else{
         res += ', NULL'
     }
