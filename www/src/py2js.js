@@ -8713,6 +8713,8 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_info){
     if(typeof module == "object"){
         var __package__ = module.__package__
         module = module.__name__
+    }else{
+        var __package__ = ""
     }
 
     parent_scope = parent_scope || $B.builtins_scope
@@ -8782,8 +8784,7 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_info){
 
     // package, if available
     root.insert(offset++,
-        $NodeJS(local_ns + '["__package__"] = ' + local_ns +
-            '["__package__"]'))
+        $NodeJS(local_ns + '["__package__"] = "' + __package__ +'"'))
 
     // annotations
     root.insert(offset++,
