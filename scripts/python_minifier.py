@@ -45,8 +45,6 @@ def minify(src, preserve_lines=False):
     token_generator = tokenize.tokenize(file_obj.readline)
 
     for item in token_generator:
-        print(item)
-
         # update brackets stack if necessary
         if token.tok_name[item.type]=='OP':
             if item.string in '([{':
