@@ -27,6 +27,8 @@ $B.$class_constructor = function(class_name, class_obj, bases,
         }
     }
 
+    // Keyword arguments passed to the class
+    var extra_kwargs = {}
     if(kwargs !== undefined){
         var cl_dict = _b_.dict.$factory()
         // transform class object into a dictionary
@@ -36,9 +38,7 @@ $B.$class_constructor = function(class_name, class_obj, bases,
             }
         }
 
-        // get keyword arguments passed to the class
-        var extra_kwargs = _b_.dict.$factory()
-        for(var  i =0; i < kwargs.length; i++){
+        for(var  i = 0; i < kwargs.length; i++){
             var key = kwargs[i][0],
                 val = kwargs[i][1]
             if(key == "metaclass"){
@@ -46,7 +46,7 @@ $B.$class_constructor = function(class_name, class_obj, bases,
                 metaclass = val
             }else{
                 // other keyword arguments will be passed to __init_subclass__
-                extra_kwargs.$string_dict[key] = val
+                extra_kwargs[key] = val
             }
         }
         var mro0 = class_obj
@@ -141,16 +141,20 @@ $B.$class_constructor = function(class_name, class_obj, bases,
         var meta_init = _b_.type.__getattribute__(metaclass, "__init__")
         meta_init(kls, class_name, bases, cl_dict)
     }
-
-    $B.$getattr(metaclass, "__init_subclass__")(kls, extra_kwargs)
+    
+    $B.$getattr(metaclass, "__init_subclass__")(kls,
+        {$nat: "kw", kw:extra_kwargs})
     // Set new class as subclass of its parents
     for(var i = 0; i < bases.length; i++){
         bases[i].$subclasses  = bases[i].$subclasses || []
         bases[i].$subclasses.push(kls)
         // call __init_subclass__ with the extra keyword arguments
-        init_subclass = _b_.type.__getattribute__(bases[i],
-            "__init_subclass__")
-        init_subclass(kls, extra_kwargs)
+        if(i == 0){
+            //console.log("call initsubclass of", bases[i].__name__, extra_kwargs)
+            init_subclass = _b_.type.__getattribute__(bases[i],
+                "__init_subclass__")
+            init_subclass(kls, {$nat: "kw", kw: extra_kwargs})
+        }
     }
 
     if(!is_instanciable){
@@ -385,7 +389,10 @@ type.__getattribute__ = function(klass, attr){
                 function(key){delete klass[key]})
     }
     var res = klass[attr]
-
+    var $test = false //attr=="__init_subclass__" && klass.__name__ == "Iterable"
+    if($test){
+        console.log("attr", attr, "of", klass)
+    }
     if(res === undefined){
         // search in classes hierarchy, following method resolution order
 
@@ -405,9 +412,17 @@ type.__getattribute__ = function(klass, attr){
 
         if(res === undefined){
             // search in metaclass
-            var meta = klass.__class__
-            if(meta[attr] !== undefined){
+            var meta = klass.__class__,
                 res = meta[attr]
+            if($test){console.log("search in meta", meta)}
+            if(res === undefined){
+                var meta_mro = meta.__mro__
+                for(var i = 0; i < meta_mro.length; i++){
+                    var res = meta_mro[i][attr]
+                    if(res !== undefined){break}
+                }
+            }
+            if(res !== undefined){
                 if(typeof res == "function"){
                     var meta_method = function(){
                         return res(klass, ...arguments)
@@ -493,6 +508,20 @@ type.__getattribute__ = function(klass, attr){
         }
 
     }
+}
+
+type.__init_subclass__ = function(cls, kwargs){
+    // Default implementation only checks that no keyword arguments were passed
+    var $ = $B.args("__init_subclass__", 1, {cls: null}, ["cls"],
+        arguments, {}, "args", "kwargs")
+    if($.kwargs !== undefined){
+        if($.kwargs.__class__ !== _b_.dict ||
+                Object.keys($.kwargs.$string_dict).length > 0){
+            throw _b_.TypeError.$factory(
+                "__init_subclass__() takes no keyword arguments")
+        }
+    }
+    return _b_.None
 }
 
 type.__instancecheck__ = function(cls, instance){

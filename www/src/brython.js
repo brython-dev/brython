@@ -65,8 +65,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,6,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.6.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-06-19 21:53:27.607449"
-__BRYTHON__.timestamp=1529438007607
+__BRYTHON__.compiled_date="2018-06-20 11:06:33.019751"
+__BRYTHON__.timestamp=1529485593019
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -4867,11 +4867,6 @@ return self.__hashvalue__=$B.$py_next_hash--}
 object.__init__=function(){if(arguments.length==0){throw _b_.TypeError.$factory("descriptor '__init__' of 'object' " +
 "object needs an argument")}
 return _b_.None}
-object.__init_subclass__=function(cls,kwargs){
-if(kwargs !==undefined){if(kwargs.__class__ !==_b_.dict ||
-Object.keys(kwargs.$string_dict).length > 0){throw _b_.TypeError.$factory(
-"__init_subclass__() takes no keyword arguments")}}
-return _b_.None}
 object.__le__=function(){return _b_.NotImplemented}
 object.__lt__=function(){return _b_.NotImplemented}
 object.__mro__=[]
@@ -4930,13 +4925,13 @@ for(var i=0;i < bases.length;i++){if(bases[i]===undefined){
 $B.line_info=class_obj.$def_line
 throw _b_.NameError.$factory("name '" + parents_names[i]+
 "' is not defined")}}
+var extra_kwargs={}
 if(kwargs !==undefined){var cl_dict=_b_.dict.$factory()
 for(var attr in class_obj){if(attr.charAt(0)!="$" ||attr.substr(0,2)=="$$"){cl_dict.$string_dict[attr]=class_obj[attr]}}
-var extra_kwargs=_b_.dict.$factory()
 for(var i=0;i < kwargs.length;i++){var key=kwargs[i][0],val=kwargs[i][1]
 if(key=="metaclass"){
 metaclass=val}else{
-extra_kwargs.$string_dict[key]=val}}
+extra_kwargs[key]=val}}
 var mro0=class_obj}else{var cl_dict=class_obj ,
 mro0=cl_dict.$string_dict }
 if(metaclass===undefined){if(bases && bases.length > 0 && bases[0].__class__ !==$B.JSObject){metaclass=bases[0].__class__}else{metaclass=_b_.type}}
@@ -4965,11 +4960,12 @@ kls.$subclasses=[]
 if(kls.__class__===metaclass){
 var meta_init=_b_.type.__getattribute__(metaclass,"__init__")
 meta_init(kls,class_name,bases,cl_dict)}
-$B.$getattr(metaclass,"__init_subclass__")(kls,extra_kwargs)
+$B.$getattr(metaclass,"__init_subclass__")(kls,{$nat: "kw",kw:extra_kwargs})
 for(var i=0;i < bases.length;i++){bases[i].$subclasses=bases[i].$subclasses ||[]
 bases[i].$subclasses.push(kls)
+if(i==0){
 init_subclass=_b_.type.__getattribute__(bases[i],"__init_subclass__")
-init_subclass(kls,extra_kwargs)}
+init_subclass(kls,{$nat: "kw",kw: extra_kwargs})}}
 if(!is_instanciable){function nofactory(){throw _b_.TypeError.$factory("Can't instantiate abstract class " +
 "interface with abstract methods " +
 Object.keys(abstract_methods).join(", "))}
@@ -5054,6 +5050,8 @@ case "__delattr__":
 if(klass["__delattr__"]!==undefined){return klass["__delattr__"]}
 return method_wrapper(attr,klass,function(key){delete klass[key]})}
 var res=klass[attr]
+var $test=false 
+if($test){console.log("attr",attr,"of",klass)}
 if(res===undefined){
 var v=klass[attr]
 if(v===undefined){var mro=klass.__mro__
@@ -5061,9 +5059,12 @@ for(var i=0;i < mro.length;i++){var v=mro[i][attr]
 if(v !==undefined){res=v
 break}}}else{res=v}
 if(res===undefined){
-var meta=klass.__class__
-if(meta[attr]!==undefined){res=meta[attr]
-if(typeof res=="function"){var meta_method=function(){return res(klass,...arguments)}
+var meta=klass.__class__,res=meta[attr]
+if($test){console.log("search in meta",meta)}
+if(res===undefined){var meta_mro=meta.__mro__
+for(var i=0;i < meta_mro.length;i++){var res=meta_mro[i][attr]
+if(res !==undefined){break}}}
+if(res !==undefined){if(typeof res=="function"){var meta_method=function(){return res(klass,...arguments)}
 meta_method.__class__=$B.method
 meta_method.$infos={__self__: klass,__func__: res,__name__: attr,__qualname__: klass.__name__ + "." + attr,__module__: res.$infos ? res.$infos.__module__ : ""}
 return meta_method}}}
@@ -5089,6 +5090,12 @@ var cl_method=function(){return res(klass,...arguments)}
 cl_method.__class__=$B.method
 cl_method.$infos={__self__: klass,__func__: res,__name__: attr,__qualname__: klass.__name__ + "." + attr,__module__: res.$infos ? res.$infos.__module__ : ""}
 return cl_method}}else{return res}}}
+type.__init_subclass__=function(cls,kwargs){
+var $=$B.args("__init_subclass__",1,{cls: null},["cls"],arguments,{},"args","kwargs")
+if($.kwargs !==undefined){if($.kwargs.__class__ !==_b_.dict ||
+Object.keys($.kwargs.$string_dict).length > 0){throw _b_.TypeError.$factory(
+"__init_subclass__() takes no keyword arguments")}}
+return _b_.None}
 type.__instancecheck__=function(cls,instance){var kl=instance.__class__ ||$B.get_class(instance)
 if(kl===cls){return true}
 else{for(var i=0;i < kl.__mro__.length;i++){if(kl.__mro__[i]===cls){return true}}}
