@@ -110,16 +110,14 @@ $B.$class_constructor = function(class_name, class_obj, bases,
     }
 
     // Check if class has __slots__
-    for(var i = 0; i < mro.length; i++){
-        var _slots = mro[i].__slots__
-        if(_slots !== undefined){
-            if(typeof _slots == "string"){_slots = [_slots]}
-            else{_slots = _b_.list.$factory(_slots)}
-            for(var j = 0; j < _slots.length; j++){
-                cl_dict.$slots = cl_dict.$slots || {}
-                cl_dict.$slots[_slots[j]] = class_dict.__mro__[i]
-            }
+    var _slots = class_obj.__slots__
+    if(_slots !== undefined){
+        if(typeof _slots == "string"){
+            _slots = [_slots]
+        }else{
+            _slots = _b_.list.$factory(_slots)
         }
+        cl_dict.__slots__ = _slots
     }
 
     // Check if class has __setattr__
@@ -306,7 +304,6 @@ type.__new__ = function(meta, name, bases, cl_dict){
         __bases__ : bases,
         __dict__ : cl_dict,
         $is_class: true,
-        $slots: cl_dict.$slots,
         $has_setattr: cl_dict.$has_setattr
     }
 
@@ -394,6 +391,11 @@ type.__getattribute__ = function(klass, attr){
     if($test){
         console.log("attr", attr, "of", klass)
     }
+    if(res === undefined && klass.__slots__ &&
+            klass.__slots__.indexOf(attr) > -1){
+        return member_descriptor.$factory(attr, klass)
+    }
+
     if(res === undefined){
         // search in classes hierarchy, following method resolution order
 
@@ -468,10 +470,6 @@ type.__getattribute__ = function(klass, attr){
         }
     }
 
-    if(res === undefined && klass.$slots && klass.$slots[attr] !== undefined){
-        return member_descriptor.$factory(klass.$slots[attr], attr)
-    }
-
     if(res !== undefined){
         // If the attribute is a property, return it
         if(typeof res == "function"){
@@ -518,7 +516,6 @@ type.__init_subclass__ = function(cls, kwargs){
     if($.kwargs !== undefined){
         if($.kwargs.__class__ !== _b_.dict ||
                 Object.keys($.kwargs.$string_dict).length > 0){
-            console.log("type initsubclass", cls, kwargs)
             throw _b_.TypeError.$factory(
                 "__init_subclass__() takes no keyword arguments")
         }
@@ -621,14 +618,19 @@ var $instance_creator = $B.$instance_creator = function(klass){
 
 // Used for class members, defined in __slots__
 var member_descriptor = $B.make_class("member_descriptor",
-    function(klass, attr){
+    function(attr, cls){
         return{
             __class__: member_descriptor,
-            klass: klass,
+            cls: cls,
             attr: attr
         }
     }
 )
+
+member_descriptor.__str__ = member_descriptor.__repr__ = function(self){
+    return "<member '" + self.attr + "' of '" + self.cls.__name__ +
+        "' objects>"
+}
 
 $B.set_func_names(member_descriptor, "builtins")
 

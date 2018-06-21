@@ -1718,21 +1718,9 @@ $B.$setattr = function(obj, attr, value){
     }
 
     // Use __slots__ if defined
-    if(klass && klass.$slots){
-        // "When inheriting from a class without __slots__ (...)
-        // a __slots__ definition in the subclass is meaningless."
-        var has_slots = true,
-            slots = klass.$slots,
-            parent
-        for(var i = 0; i < klass.__mro__.length - 1; i++){
-            parent = klass.__mro__[i]
-            if(parent.$slots === undefined){has_slots = false;break}
-            for(var k in parent.$slots){slots[k] = true}
-        }
-        if(has_slots && slots[attr] === undefined){
-            throw _b_.AttributeError.$factory("'"  +klass.__name__ +
-                "' object has no attribute '" + attr + "'")
-        }
+    if(klass && klass.__slots__ && klass.__slots__.indexOf(attr) == -1){
+        throw _b_.AttributeError.$factory("'"  + klass.__name__ +
+            "' object has no attribute '" + attr + "'")
     }
 
     // Search the __setattr__ method
