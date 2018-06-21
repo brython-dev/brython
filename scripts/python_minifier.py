@@ -26,6 +26,12 @@ for kw in ["async", "await"]:
     if kw not in kwlist:
         kwlist.append(kw)
 
+async_types = []
+if hasattr(tokenize, "ASYNC"):
+    async_types.append(tokenize.ASYNC)
+if hasattr(tokenize, "AWAIT"):
+    async_types.append(tokenize.AWAIT)
+
 def minify(src, preserve_lines=False):
 
     # tokenize expects method readline of file in binary mode
@@ -34,6 +40,7 @@ def minify(src, preserve_lines=False):
 
     out = '' # minified source
     line = 0
+    last_item = None
     last_type = None
     indent = 0 # current indentation level
     brackets = [] # stack for brackets
@@ -94,11 +101,7 @@ def minify(src, preserve_lines=False):
                 if preserve_lines:
                     out += '\n'*item.string.count('\n')
                 continue
-            previous_types = [tokenize.NAME, tokenize.NUMBER]
-            if hasattr(tokenize, "ASYNC"):
-                previous_types.append(tokenize.ASYNC)
-            if hasattr(tokenize, "AWAIT"):
-                previous_types.append(tokenize.AWAIT)
+            previous_types = [tokenize.NAME, tokenize.NUMBER] + async_types
             if item.type in [tokenize.NAME, tokenize.NUMBER, tokenize.OP] and \
                 last_type in previous_types:
                 # insert a space when needed
@@ -114,6 +117,9 @@ def minify(src, preserve_lines=False):
             elif item.type == tokenize.NAME \
                 and last_item.type == tokenize.OP and last_item.string == '.':
                 # special case : from . import X
+                out += ' '
+            elif (item.type in async_types and 
+                    last_item.type in previous_types):
                 out += ' '
             out += item.string
 

@@ -1415,6 +1415,18 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
     this.to_js = function(){return ''}
 }
 
+var $AwaitCtx = $B.parser.$AwaitCtx = function(context){
+    // Class for "await"
+    this.type = 'await'
+    this.parent = context
+    this.tree = []
+    context.tree.push(this)
+
+    this.to_js = function(){
+        return $to_js(this.tree)
+    }
+}
+
 var $BodyCtx = $B.parser.$BodyCtx = function(context){
     // inline body for def, class, if, elif, else, try...
     // creates a new node, child of context node
@@ -5854,39 +5866,54 @@ var $YieldCtx = $B.parser.$YieldCtx = function(context){
     this.tree = []
     context.tree[context.tree.length] = this
 
-    // Syntax control : 'yield' can start a 'yield expression'
-    switch(context.type) {
-        case 'node':
-            break;
-
-        // or start a 'yield atom'
-        // a 'yield atom' without enclosing "(" and ")" is only allowed as the
-        // right-hand side of an assignment
-
-        case 'assign':
-        case 'tuple':
-        case 'list_or_tuple':
-            // mark the node as containing a yield atom
-            var ctx = context
-            while(ctx.parent){ctx = ctx.parent}
-            ctx.node.yield_atoms.push(this)
+    var in_lambda = false,
+        parent = context
+    while(parent){
+        if(parent.type == "lambda"){
+            in_lambda = true
             break
-       default:
-            // else it is a SyntaxError
-            $_SyntaxError(context, 'yield atom must be inside ()')
+        }
+        parent = parent.parent
+    }
+
+    // Syntax control : 'yield' can start a 'yield expression'
+    if(! in_lambda){
+        switch(context.type) {
+            case 'node':
+                break;
+
+            // or start a 'yield atom'
+            // a 'yield atom' without enclosing "(" and ")" is only allowed as the
+            // right-hand side of an assignment
+
+            case 'assign':
+            case 'tuple':
+            case 'list_or_tuple':
+                // mark the node as containing a yield atom
+                var ctx = context
+                while(ctx.parent){ctx = ctx.parent}
+                ctx.node.yield_atoms.push(this)
+                break
+           default:
+                // else it is a SyntaxError
+                $_SyntaxError(context, 'yield atom must be inside ()')
+        }
     }
 
     var scope = this.scope = $get_scope(this)
-    if(!scope.is_function){
+
+    if(! scope.is_function && ! in_lambda){
         $_SyntaxError(context, ["'yield' outside function"])
     }
 
     // Change type of function to generator
-    var def = scope.context.tree[0]
-    def.type = 'generator'
+    if(! in_lambda){
+        var def = scope.context.tree[0]
+        def.type = 'generator'
 
-    // Add to list of "yields" in function
-    def.yields.push(this)
+        // Add to list of "yields" in function
+        def.yields.push(this)
+    }
 
     this.toString = function(){
         return '(yield) ' + (this.from ? '(from) ' : '') + this.tree
@@ -6156,7 +6183,7 @@ var $mangle = $B.parser.$mangle = function(name, context){
 // Python source code
 
 var $transition = $B.parser.$transition = function(context, token, value){
-
+    //console.log("context", context, "token", token, value)
     switch(context.type){
         case 'abstract_expr':
 
@@ -6183,6 +6210,8 @@ var $transition = $B.parser.$transition = function(context, token, value){
           }
 
           switch(token) {
+              case 'await':
+                  return new $AwaitCtx(context)
               case 'id':
                   return new $IdCtx(new $ExprCtx(context, 'id', commas),
                       value)
@@ -6324,6 +6353,9 @@ var $transition = $B.parser.$transition = function(context, token, value){
                 return $transition(context.parent, 'eol')
             }
             $_SyntaxError(context, 'token ' + token + ' after ' + context)
+
+        case 'await':
+            return $transition(context.parent, token, value)
 
         case 'break':
             if(token == 'eol'){return $transition(context.parent, 'eol')}
@@ -7599,6 +7631,10 @@ var $transition = $B.parser.$transition = function(context, token, value){
                             return $transition(expr, token, value)
                     }
                     break
+                case 'async':
+                    return new $AsyncCtx(context)
+                case 'await':
+                    return new $AwaitCtx(context)
                 case 'class':
                     return new $ClassCtx(context)
                 case 'continue':
@@ -8052,7 +8088,8 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
         "class", "return", "break", "for", "lambda", "try", "finally",
         "raise", "def", "from", "nonlocal", "while", "del", "global",
         "with", "as", "elif", "else", "if", "yield", "assert", "import",
-        "except", "raise", "in", "pass", "with", "continue", "__debugger__"
+        "except", "raise", "in", "pass", "with", "continue", "__debugger__",
+        "async", "await"
         ]
     var unsupported = []
     var $indented = [

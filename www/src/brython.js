@@ -65,8 +65,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,6,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.6.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-06-21 16:39:27.684931"
-__BRYTHON__.timestamp=1529591967684
+__BRYTHON__.compiled_date="2018-06-21 22:42:31.517524"
+__BRYTHON__.timestamp=1529613751517
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -730,6 +730,12 @@ expr2.parent.tree.push(assign2)
 if(left_is_id && !was_bound && !this.scope.blurred){this.scope.binding[left_id]=undefined}
 return offset}
 this.to_js=function(){return ''}}
+var $AwaitCtx=$B.parser.$AwaitCtx=function(C){
+this.type='await'
+this.parent=C
+this.tree=[]
+C.tree.push(this)
+this.to_js=function(){return $to_js(this.tree)}}
 var $BodyCtx=$B.parser.$BodyCtx=function(C){
 var ctx_node=C.parent
 while(ctx_node.type !=='node'){ctx_node=ctx_node.parent}
@@ -2766,7 +2772,11 @@ this.toString=function(){return '(yield) ' + this.tree}
 this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this
-switch(C.type){case 'node':
+var in_lambda=false,parent=C
+while(parent){if(parent.type=="lambda"){in_lambda=true
+break}
+parent=parent.parent}
+if(! in_lambda){switch(C.type){case 'node':
 break;
 case 'assign':
 case 'tuple':
@@ -2776,12 +2786,12 @@ while(ctx.parent){ctx=ctx.parent}
 ctx.node.yield_atoms.push(this)
 break
 default:
-$_SyntaxError(C,'yield atom must be inside ()')}
+$_SyntaxError(C,'yield atom must be inside ()')}}
 var scope=this.scope=$get_scope(this)
-if(!scope.is_function){$_SyntaxError(C,["'yield' outside function"])}
-var def=scope.C.tree[0]
+if(! scope.is_function && ! in_lambda){$_SyntaxError(C,["'yield' outside function"])}
+if(! in_lambda){var def=scope.C.tree[0]
 def.type='generator'
-def.yields.push(this)
+def.yields.push(this)}
 this.toString=function(){return '(yield) ' +(this.from ? '(from) ' : '')+ this.tree}
 this.transform=function(node,rank){add_jscode(node.parent,rank + 1,'// placeholder for generator sent value'
 ).set_yield_value=true}
@@ -2895,7 +2905,8 @@ while(true){if(scope.ntype=="module"){return name}
 else if(scope.ntype=="class"){var class_name=scope.C.tree[0].name
 while(class_name.charAt(0)=='_'){class_name=class_name.substr(1)}
 return '_' + class_name + name}else{if(scope.parent && scope.parent.C){scope=$get_scope(scope.C.tree[0])}else{return name}}}}else{return name}}
-var $transition=$B.parser.$transition=function(C,token,value){switch(C.type){case 'abstract_expr':
+var $transition=$B.parser.$transition=function(C,token,value){
+switch(C.type){case 'abstract_expr':
 var packed=C.packed
 switch(token){case 'id':
 case 'imaginary':
@@ -2914,7 +2925,9 @@ C.parent.tree.pop()
 var commas=C.with_commas
 C=C.parent
 C.packed=packed}
-switch(token){case 'id':
+switch(token){case 'await':
+return new $AwaitCtx(C)
+case 'id':
 return new $IdCtx(new $ExprCtx(C,'id',commas),value)
 case 'str':
 return new $StringCtx(new $ExprCtx(C,'str',commas),value)
@@ -3014,6 +3027,8 @@ if(token=='eol'){if(C.tree[1].type=='abstract_expr'){$_SyntaxError(C,'token ' + 
 C)}
 return $transition(C.parent,'eol')}
 $_SyntaxError(C,'token ' + token + ' after ' + C)
+case 'await':
+return $transition(C.parent,token,value)
 case 'break':
 if(token=='eol'){return $transition(C.parent,'eol')}
 $_SyntaxError(C,token)
@@ -3808,6 +3823,10 @@ case '~':
 var expr=new $AbstractExprCtx(C,true)
 return $transition(expr,token,value)}
 break
+case 'async':
+return new $AsyncCtx(C)
+case 'await':
+return new $AwaitCtx(C)
 case 'class':
 return new $ClassCtx(C)
 case 'continue':
@@ -4123,7 +4142,7 @@ $B.aliased_names=$B.list2obj($B.forbidden)
 var s_escaped='abfnrtvxuU"0123456789' + "'" + '\\',is_escaped={}
 for(var i=0;i < s_escaped.length;i++){is_escaped[s_escaped.charAt(i)]=true}
 var $tokenize=$B.parser.$tokenize=function(root,src){var br_close={")": "(","]": "[","}": "{"},br_stack="",br_pos=[]
-var kwdict=["class","return","break","for","lambda","try","finally","raise","def","from","nonlocal","while","del","global","with","as","elif","else","if","yield","assert","import","except","raise","in","pass","with","continue","__debugger__"
+var kwdict=["class","return","break","for","lambda","try","finally","raise","def","from","nonlocal","while","del","global","with","as","elif","else","if","yield","assert","import","except","raise","in","pass","with","continue","__debugger__","async","await"
 ]
 var unsupported=[]
 var $indented=["class","def","for","condition","single_kw","try","except","with"
@@ -6480,8 +6499,8 @@ return None}}else if(klass && klass.$descriptors !==undefined &&
 klass[attr]!==undefined){var setter=klass[attr].setter
 if(typeof setter=='function'){setter(obj,value)
 return None}else{throw _b_.AttributeError.$factory('readonly attribute')}}}
-if(klass && klass.__slots__){if(klass.__slots__.indexOf(attr)==-1){throw _b_.AttributeError.$factory("'" +klass.__name__ +
-"' object has no attribute '" + attr + "'")}}
+if(klass && klass.__slots__ && klass.__slots__.indexOf(attr)==-1){throw _b_.AttributeError.$factory("'" + klass.__name__ +
+"' object has no attribute '" + attr + "'")}
 var _setattr=false
 if(klass !==undefined){_setattr=klass.__setattr__
 if(_setattr===undefined){var mro=klass.__mro__
@@ -7529,7 +7548,7 @@ __class__: JSObject,js: obj}}
 $B.JSObject=JSObject
 $B.JSConstructor=JSConstructor})(__BRYTHON__)
 ;(function($B){$B.stdlib={}
-var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','argparse','atexit','base64','bdb','binascii','bisect','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','Clib','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','gettext','glob','heapq','imp','inspect','io','ipaddress','itertools','keyword','linecache','locale','marshal','numbers','opcode','operator','optparse','os','pdb','pickle','platform','posix','posixpath','pprint','profile','pwd','pydoc','queue','re','reprlib','select','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uuid','warnings','weakref','webbrowser','zipfile','zlib']
+var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_collections_abc','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','argparse','atexit','base64','bdb','binascii','bisect','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','Clib','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','gettext','glob','heapq','imp','inspect','io','ipaddress','itertools','keyword','linecache','locale','marshal','numbers','opcode','operator','optparse','os','pdb','pickle','platform','posix','posixpath','pprint','profile','pwd','pydoc','queue','re','reprlib','select','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uuid','warnings','weakref','webbrowser','zipfile','zlib']
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
 var js=['_ajax','_base64','_jsre','_multiprocessing','_posixsubprocess','_profile','_svg','_sys','aes','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','json','long_int','math','md5','modulefinder','pbkdf2','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
