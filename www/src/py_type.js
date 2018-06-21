@@ -141,9 +141,7 @@ $B.$class_constructor = function(class_name, class_obj, bases,
         var meta_init = _b_.type.__getattribute__(metaclass, "__init__")
         meta_init(kls, class_name, bases, cl_dict)
     }
-    
-    $B.$getattr(metaclass, "__init_subclass__")(kls,
-        {$nat: "kw", kw:extra_kwargs})
+
     // Set new class as subclass of its parents
     for(var i = 0; i < bases.length; i++){
         bases[i].$subclasses  = bases[i].$subclasses || []
@@ -156,7 +154,10 @@ $B.$class_constructor = function(class_name, class_obj, bases,
             init_subclass(kls, {$nat: "kw", kw: extra_kwargs})
         }
     }
-
+    if(bases.length == 0){
+        $B.$getattr(metaclass, "__init_subclass__")(kls,
+            {$nat: "kw", kw:extra_kwargs})
+    }
     if(!is_instanciable){
         function nofactory(){
             throw _b_.TypeError.$factory("Can't instantiate abstract class " +
@@ -517,6 +518,7 @@ type.__init_subclass__ = function(cls, kwargs){
     if($.kwargs !== undefined){
         if($.kwargs.__class__ !== _b_.dict ||
                 Object.keys($.kwargs.$string_dict).length > 0){
+            console.log("type initsubclass", cls, kwargs)
             throw _b_.TypeError.$factory(
                 "__init_subclass__() takes no keyword arguments")
         }
@@ -534,7 +536,8 @@ type.__instancecheck__ = function(cls, instance){
     }
     return false
 }
-type.__instancecheck__.$type = "classmethod"
+
+type.__instancecheck__.$type = "staticmethod"
 
 $B.set_func_names(type, "builtins")
 

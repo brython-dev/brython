@@ -1071,52 +1071,53 @@ function input(src) {
     return val
 }
 
-function isinstance(obj, arg){
-    check_no_kw('isinstance', obj, arg)
+function isinstance(obj, cls){
+    check_no_kw('isinstance', obj, cls)
     check_nb_args('isinstance', 2, arguments.length)
 
-    if(obj === null){return arg === None}
+    if(obj === null){return cls === None}
     if(obj === undefined){return false}
-    if(arg.constructor === Array){
-        for(var i = 0; i < arg.length; i++){
-            if(isinstance(obj, arg[i])){return true}
+    if(cls.constructor === Array){
+        for(var i = 0; i < cls.length; i++){
+            if(isinstance(obj, cls[i])){return true}
         }
         return false
     }
-    if(arg === _b_.int && (obj === True || obj === False)){return True}
+    if(cls === _b_.int && (obj === True || obj === False)){return True}
 
     var klass = obj.__class__
 
     if(klass == undefined){
-        if(typeof obj == 'string' && arg == _b_.str){return true}
-        if(obj.contructor == Number && arg == _b_.float){return true}
-        if(typeof obj == 'number' && arg == _b_.int){return true}
+        if(typeof obj == 'string' && cls == _b_.str){return true}
+        if(obj.contructor == Number && cls == _b_.float){return true}
+        if(typeof obj == 'number' && cls == _b_.int){return true}
         klass = $B.get_class(obj)
     }
 
     if(klass === undefined){return false}
 
-    // Return true if one of the parents of obj class is arg
+    // Return true if one of the parents of obj class is cls
     // If one of the parents is the class used to inherit from str, obj is an
     // instance of str ; same for list
 
-    function check(kl, arg){
-        if(kl === arg){return true}
-        else if(arg === _b_.str &&
+    function check(kl, cls){
+        if(kl === cls){return true}
+        else if(cls === _b_.str &&
             kl === $B.StringSubclass){return true}
-        else if(arg === _b_.float &&
+        else if(cls === _b_.float &&
             kl === $B.FloatSubclass){return true}
     }
-    if(check(klass, arg)){return true}
+    if(check(klass, cls)){return true}
     var mro = klass.__mro__
     for(var i = 0; i < mro.length; i++){
-       if(check(mro[i], arg)){return true}
+       if(check(mro[i], cls)){return true}
     }
 
-    // Search __instancecheck__ on arg
-    var hook = getattr(arg, '__instancecheck__', _b_.None)
-    if(hook !== _b_.None){
-        return hook(obj)
+    // Search __instancecheck__ on cls's class (ie its metaclass)
+    var instancecheck = getattr(cls.__class__ || $B.get_class(cls),
+        '__instancecheck__', _b_.None)
+    if(instancecheck !== _b_.None){
+        return instancecheck(cls, obj)
     }
     return false
 }

@@ -65,8 +65,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,6,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.6.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-06-20 11:06:33.019751"
-__BRYTHON__.timestamp=1529485593019
+__BRYTHON__.compiled_date="2018-06-21 10:38:29.504294"
+__BRYTHON__.timestamp=1529570309504
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -4960,12 +4960,12 @@ kls.$subclasses=[]
 if(kls.__class__===metaclass){
 var meta_init=_b_.type.__getattribute__(metaclass,"__init__")
 meta_init(kls,class_name,bases,cl_dict)}
-$B.$getattr(metaclass,"__init_subclass__")(kls,{$nat: "kw",kw:extra_kwargs})
 for(var i=0;i < bases.length;i++){bases[i].$subclasses=bases[i].$subclasses ||[]
 bases[i].$subclasses.push(kls)
 if(i==0){
 init_subclass=_b_.type.__getattribute__(bases[i],"__init_subclass__")
 init_subclass(kls,{$nat: "kw",kw: extra_kwargs})}}
+if(bases.length==0){$B.$getattr(metaclass,"__init_subclass__")(kls,{$nat: "kw",kw:extra_kwargs})}
 if(!is_instanciable){function nofactory(){throw _b_.TypeError.$factory("Can't instantiate abstract class " +
 "interface with abstract methods " +
 Object.keys(abstract_methods).join(", "))}
@@ -5093,14 +5093,15 @@ return cl_method}}else{return res}}}
 type.__init_subclass__=function(cls,kwargs){
 var $=$B.args("__init_subclass__",1,{cls: null},["cls"],arguments,{},"args","kwargs")
 if($.kwargs !==undefined){if($.kwargs.__class__ !==_b_.dict ||
-Object.keys($.kwargs.$string_dict).length > 0){throw _b_.TypeError.$factory(
+Object.keys($.kwargs.$string_dict).length > 0){console.log("type initsubclass",cls,kwargs)
+throw _b_.TypeError.$factory(
 "__init_subclass__() takes no keyword arguments")}}
 return _b_.None}
 type.__instancecheck__=function(cls,instance){var kl=instance.__class__ ||$B.get_class(instance)
 if(kl===cls){return true}
 else{for(var i=0;i < kl.__mro__.length;i++){if(kl.__mro__[i]===cls){return true}}}
 return false}
-type.__instancecheck__.$type="classmethod"
+type.__instancecheck__.$type="staticmethod"
 $B.set_func_names(type,"builtins")
 _b_.type=type
 var wrapper_descriptor=$B.make_class("wrapper_descriptor")
@@ -6217,29 +6218,29 @@ var val=_b_.getattr(stdin,'readline')()
 val=val.split('\n')[0]
 if(stdin.len===stdin.pos){_b_.getattr(stdin,'close')()}
 return val}
-function isinstance(obj,arg){check_no_kw('isinstance',obj,arg)
+function isinstance(obj,cls){check_no_kw('isinstance',obj,cls)
 check_nb_args('isinstance',2,arguments.length)
-if(obj===null){return arg===None}
+if(obj===null){return cls===None}
 if(obj===undefined){return false}
-if(arg.constructor===Array){for(var i=0;i < arg.length;i++){if(isinstance(obj,arg[i])){return true}}
+if(cls.constructor===Array){for(var i=0;i < cls.length;i++){if(isinstance(obj,cls[i])){return true}}
 return false}
-if(arg===_b_.int &&(obj===True ||obj===False)){return True}
+if(cls===_b_.int &&(obj===True ||obj===False)){return True}
 var klass=obj.__class__
-if(klass==undefined){if(typeof obj=='string' && arg==_b_.str){return true}
-if(obj.contructor==Number && arg==_b_.float){return true}
-if(typeof obj=='number' && arg==_b_.int){return true}
+if(klass==undefined){if(typeof obj=='string' && cls==_b_.str){return true}
+if(obj.contructor==Number && cls==_b_.float){return true}
+if(typeof obj=='number' && cls==_b_.int){return true}
 klass=$B.get_class(obj)}
 if(klass===undefined){return false}
-function check(kl,arg){if(kl===arg){return true}
-else if(arg===_b_.str &&
+function check(kl,cls){if(kl===cls){return true}
+else if(cls===_b_.str &&
 kl===$B.StringSubclass){return true}
-else if(arg===_b_.float &&
+else if(cls===_b_.float &&
 kl===$B.FloatSubclass){return true}}
-if(check(klass,arg)){return true}
+if(check(klass,cls)){return true}
 var mro=klass.__mro__
-for(var i=0;i < mro.length;i++){if(check(mro[i],arg)){return true}}
-var hook=getattr(arg,'__instancecheck__',_b_.None)
-if(hook !==_b_.None){return hook(obj)}
+for(var i=0;i < mro.length;i++){if(check(mro[i],cls)){return true}}
+var instancecheck=getattr(cls.__class__ ||$B.get_class(cls),'__instancecheck__',_b_.None)
+if(instancecheck !==_b_.None){return instancecheck(cls,obj)}
 return false}
 function issubclass(klass,classinfo){check_no_kw('issubclass',klass,classinfo)
 check_nb_args('issubclass',2,arguments.length)

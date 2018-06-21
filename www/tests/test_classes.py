@@ -251,7 +251,7 @@ class B(A):
 
 assert type(B) == Meta
 
-
+# name mangling
 class TestMangling:
     def test(self):
         try:
@@ -261,6 +261,17 @@ class TestMangling:
 
 t = TestMangling()
 t.test()
+
+# call __instancecheck__ for isinstance()
+class Enumeration(type):
+    def __instancecheck__(self, other):
+        return True
+
+
+class EnumInt(int, metaclass=Enumeration):
+    pass
+
+assert isinstance('foo', EnumInt)
 
 
 print('passed all tests..')
