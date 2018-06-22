@@ -55,6 +55,23 @@ $B.$class_constructor = function(class_name, class_obj, bases,
             mro0 = cl_dict.$string_dict  // to replace class_obj in method creation
     }
 
+    // Replace non-class bases that have a __mro_entries__ (PEP 560)
+    var orig_bases = bases.slice()
+    for(var i = 0; i < bases.length; i++){
+        if(bases[i] === undefined ||
+                (bases[i].__mro__ === undefined &&
+                bases[i].__class__ !== $B.JSObject)){
+            var mro_entries = $B.$getattr(bases[i], "__mro_entries__",
+                _b_.None)
+            if(mro_entries !== _b_.None){
+                var entries = _b_.list.$factory(mro_entries.apply(null, bases))
+                bases.splice(i, 1, ...entries)
+                cl_dict.$string_dict.__orig_bases__ = _b_.tuple.$factory(orig_bases)
+                i--
+                continue
+            }
+        }
+    }
     // If the metaclass is not explicitely set by passing the keyword
     // argument "metaclass" in the class definition:
     // - if the class has parents, inherit the class of the first parent
@@ -78,11 +95,7 @@ $B.$class_constructor = function(class_name, class_obj, bases,
     for(key in cl_dict.$string_dict){
         class_dict[key] = cl_dict.$string_dict[key]
     }
-
-    // DRo - slots will have been defined in class dict during type
-    // or in class definition in class_obj. mro0 simplifies the choosing
-    class_dict.__slots__ = mro0.__slots__
-
+    
     class_dict.__mro__ = make_mro(bases)
 
     // Check if at least one method is abstract (cf PEP 3119)
@@ -387,7 +400,7 @@ type.__getattribute__ = function(klass, attr){
                 function(key){delete klass[key]})
     }
     var res = klass[attr]
-    var $test = false //attr=="__init_subclass__" && klass.__name__ == "Iterable"
+    var $test = false //attr=="__class_getitem__" //&& klass.__name__ == "Iterable"
     if($test){
         console.log("attr", attr, "of", klass)
     }
@@ -479,6 +492,7 @@ type.__getattribute__ = function(klass, attr){
             }
 
             if(attr == "__new__"){res.$type = "staticmethod"}
+            if(attr == "__class_getitem__"){res.$type = "classmethod"}
 
             switch (res.$type) {
                 case "staticmethod":

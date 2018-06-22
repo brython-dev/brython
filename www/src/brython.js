@@ -65,9 +65,9 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,6,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.6.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-06-21 22:42:31.517524"
-__BRYTHON__.timestamp=1529613751517
-__BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
+__BRYTHON__.compiled_date="2018-06-22 08:17:21.386068"
+__BRYTHON__.timestamp=1529648241386
+__BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_py_abc","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
 isFinite(value)&&
@@ -4953,10 +4953,18 @@ metaclass=val}else{
 extra_kwargs[key]=val}}
 var mro0=class_obj}else{var cl_dict=class_obj ,
 mro0=cl_dict.$string_dict }
+var orig_bases=bases.slice()
+for(var i=0;i < bases.length;i++){if(bases[i]===undefined ||
+(bases[i].__mro__===undefined &&
+bases[i].__class__ !==$B.JSObject)){var mro_entries=$B.$getattr(bases[i],"__mro_entries__",_b_.None)
+if(mro_entries !==_b_.None){var entries=_b_.list.$factory(mro_entries.apply(null,bases))
+bases.splice(i,1,...entries)
+cl_dict.$string_dict.__orig_bases__=_b_.tuple.$factory(orig_bases)
+i--
+continue}}}
 if(metaclass===undefined){if(bases && bases.length > 0 && bases[0].__class__ !==$B.JSObject){metaclass=bases[0].__class__}else{metaclass=_b_.type}}
 var class_dict={__name__: class_name.replace("$$",""),__bases__: bases,__class__: metaclass,__dict__: cl_dict}
 for(key in cl_dict.$string_dict){class_dict[key]=cl_dict.$string_dict[key]}
-class_dict.__slots__=mro0.__slots__
 class_dict.__mro__=make_mro(bases)
 var is_instanciable=true,non_abstract_methods={},abstract_methods={},mro=[class_dict].concat(class_dict.__mro__)
 for(var i=0;i < mro.length;i++){var kdict=i==0 ? mro0 : mro[i]
@@ -5097,6 +5105,7 @@ if(res !==undefined){
 if(typeof res=="function"){
 if(res.$infos===undefined){console.log("warning: no attribute $infos for",res)}
 if(attr=="__new__"){res.$type="staticmethod"}
+if(attr=="__class_getitem__"){res.$type="classmethod"}
 switch(res.$type){case "staticmethod":
 return res
 case undefined:
@@ -5390,7 +5399,13 @@ if((Array.isArray(obj)||typeof obj=="string")
 && typeof item=="number"){item=item >=0 ? item : obj.length + item
 if(obj[item]!==undefined){return obj[item]}
 else{index_error(obj)}}
-return _b_.getattr(obj,"__getitem__")(item)}
+if(obj.$is_class){var class_gi=$B.$getattr(obj,"__class_getitem__",_b_.None)
+if(class_gi !==_b_.None){return class_gi(item)}else if(obj.__class__){class_gi=$B.$getattr(obj.__class__,"__getitem__",_b_.None)
+if(class_gi !==_b_.None){return class_gi(obj,item)}}}
+var gi=$B.$getattr(obj,"__getitem__",_b_.None)
+if(gi !==_b_.None){return gi(item)}
+throw _b_.TypeError.$factory("'" + $B.get_class(obj).__name__ +
+"' object is not subscriptable")}
 $B.set_list_key=function(obj,key,value){try{key=$B.$GetInt(key)}
 catch(err){if(_b_.isinstance(key,_b_.slice)){var s=_b_.slice.$conv_for_seq(key,obj.length)
 return $B.set_list_slice_step(obj,s.start,s.stop,s.step,value)}}
@@ -7548,7 +7563,7 @@ __class__: JSObject,js: obj}}
 $B.JSObject=JSObject
 $B.JSConstructor=JSConstructor})(__BRYTHON__)
 ;(function($B){$B.stdlib={}
-var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_collections_abc','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','argparse','atexit','base64','bdb','binascii','bisect','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','Clib','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','gettext','glob','heapq','imp','inspect','io','ipaddress','itertools','keyword','linecache','locale','marshal','numbers','opcode','operator','optparse','os','pdb','pickle','platform','posix','posixpath','pprint','profile','pwd','pydoc','queue','re','reprlib','select','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uuid','warnings','weakref','webbrowser','zipfile','zlib']
+var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_collections_abc','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_py_abc','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','argparse','atexit','base64','bdb','binascii','bisect','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','Clib','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','gettext','glob','heapq','imp','inspect','io','ipaddress','itertools','keyword','linecache','locale','marshal','numbers','opcode','operator','optparse','os','pdb','pickle','platform','posix','posixpath','pprint','profile','pwd','pydoc','queue','re','reprlib','select','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uuid','warnings','weakref','webbrowser','zipfile','zlib']
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
 var js=['_ajax','_base64','_jsre','_multiprocessing','_posixsubprocess','_profile','_svg','_sys','aes','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','json','long_int','math','md5','modulefinder','pbkdf2','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}

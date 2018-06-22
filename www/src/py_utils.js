@@ -495,7 +495,25 @@ $B.$getitem = function(obj, item){
         if(obj[item] !== undefined){return obj[item]}
         else{index_error(obj)}
     }
-    return _b_.getattr(obj, "__getitem__")(item)
+
+    // PEP 560
+    if(obj.$is_class){
+        var class_gi = $B.$getattr(obj, "__class_getitem__", _b_.None)
+        if(class_gi !== _b_.None){
+            return class_gi(item)
+        }else if(obj.__class__){
+            class_gi = $B.$getattr(obj.__class__, "__getitem__", _b_.None)
+            if(class_gi !== _b_.None){
+                return class_gi(obj, item)
+            }
+        }
+    }
+
+    var gi = $B.$getattr(obj, "__getitem__", _b_.None)
+    if(gi !== _b_.None){return gi(item)}
+
+    throw _b_.TypeError.$factory("'" + $B.get_class(obj).__name__ +
+        "' object is not subscriptable")
 }
 
 // Set list key or slice
