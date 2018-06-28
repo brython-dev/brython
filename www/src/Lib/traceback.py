@@ -7,7 +7,10 @@ def _restore_current(exc):
     """
     __BRYTHON__.current_exception = exc
 
-def print_exc(file=sys.stderr):
+def print_exc(file=None):
+    """Print the last exception."""
+    if file is None:
+        file = sys.stderr
     file.write(format_exc())
 
 def format_exc(limit=None, chain=True, includeInternal=False):
