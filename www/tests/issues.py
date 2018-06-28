@@ -1983,6 +1983,9 @@ b = B()
 b.a += 10
 assert b.a == 10
 
+# issue 873
+str(globals())
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
