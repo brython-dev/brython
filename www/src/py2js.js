@@ -1599,7 +1599,10 @@ var $CallCtx = $B.parser.$CallCtx = function(context){
                        if(scope.ntype == 'def' || scope.ntype == 'generator'){
                           var args = scope.context.tree[0].args
                           if(args.length > 0){
-                             new $IdCtx(this, args[0])
+                             var missing_id = new $IdCtx(this, args[0])
+                             missing_id.to_js = function(){
+                                 return "[$locals['" + args[0] + "']]"
+                             }
                           }
                        }
                     }
