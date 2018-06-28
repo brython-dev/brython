@@ -147,12 +147,12 @@ or
 ```
 or
 ```bash
-    $ ./manage,py ci get_testem
+    $ ./manage.py ci get_testem
 ```
 
 Running the tests is then just a matter of
 ```bash
-    $ ./manage,py ci run_tests
+    $ ./manage.py ci run_tests
 ```
 or
 ```bash
