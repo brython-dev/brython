@@ -447,16 +447,18 @@ var finder_VFS = {
     }
 }
 
-finder_VFS.create_module.$type = "classmethod"
-finder_VFS.exec_module.$type = "classmethod"
-finder_VFS.find_module.$type = "classmethod"
-finder_VFS.find_spec.$type = "classmethod"
+$B.set_func_names(finder_VFS, "<import>")
+
+for(var method in finder_VFS){
+    if(typeof finder_VFS[method] == "function"){
+        finder_VFS[method] = _b_.classmethod.$factory(
+            finder_VFS[method])
+    }
+}
 
 finder_VFS.$factory = function(){
     return {__class__: finder_VFS}
 }
-
-$B.set_func_names(finder_VFS, "<import>")
 
 /**
  * Module importer optimizing module lookups via stdlib_paths.js
@@ -542,16 +544,19 @@ var finder_stdlib_static = {
     }
 }
 
-finder_stdlib_static.create_module.$type = "classmethod"
-finder_stdlib_static.exec_module.$type = "classmethod"
-finder_stdlib_static.find_module.$type = "classmethod"
-finder_stdlib_static.find_spec.$type = "classmethod"
+$B.set_func_names(finder_stdlib_static, "<import>")
+
+for(var method in finder_stdlib_static){
+    if(typeof finder_stdlib_static[method] == "function"){
+        finder_stdlib_static[method] = _b_.classmethod.$factory(
+            finder_stdlib_static[method])
+    }
+}
 
 finder_stdlib_static.$factory = function (){
     return {__class__: finder_stdlib_static}
 }
 
-$B.set_func_names(finder_stdlib_static, "<import>")
 /**
  * Search an import path for .py modules
  */
@@ -626,16 +631,19 @@ var finder_path = {
     }
 }
 
-finder_path.create_module.$type = "classmethod"
-finder_path.exec_module.$type = "classmethod"
-finder_path.find_module.$type = "classmethod"
-finder_path.find_spec.$type = "classmethod"
+$B.set_func_names(finder_path, "<import>")
+
+for(var method in finder_path){
+    if(typeof finder_path[method] == "function"){
+        finder_path[method] = _b_.classmethod.$factory(
+            finder_path[method])
+    }
+}
 
 finder_path.$factory = function(){
     return {__class__: finder_path}
 }
 
-$B.set_func_names(finder_path, "<import>")
 
 /**
  * Find modules packaged in a js script to be used as a virtual file system
@@ -693,6 +701,7 @@ var vfs_hook = {
 
     invalidate_caches: function(self){self.vfs = undefined}
 }
+
 vfs_hook.$factory = function(path) {
     if(path.substr(-1) == '/'){
         path = path.slice(0, -1)
@@ -702,7 +711,6 @@ vfs_hook.$factory = function(path) {
         throw _b_.ImportError.$factory('VFS file URL must end with .vfs.js extension');
     }
     self = {__class__: vfs_hook, path: path}
-    vfs_hook.load_vfs(self)
     return self
 }
 
@@ -990,7 +998,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
         if(alias){
             locals[alias] = $B.imported[mod_name]
         }else{
-            locals[norm_parts[0]] = modobj
+            locals[$B.to_alias(norm_parts[0])] = modobj
             // TODO: After binding 'a' should we also bind 'a.b' , 'a.b.c' , ... ?
         }
     }else{

@@ -571,7 +571,6 @@ dict.fromkeys = function(){
         }
     }
 }
-dict.fromkeys.$type = "classmethod"
 
 dict.get = function(){
     var $ = $B.args("get", 3, {self: null, key: null, _default: null},
@@ -761,6 +760,10 @@ dict.$factory = function(args, second){
 _b_.dict = dict
 
 $B.set_func_names(dict, "builtins")
+
+// This must be done after set_func_names, otherwise dict.fromkeys doesn't
+// have the attribute $infos
+dict.fromkeys = _b_.classmethod.$factory(dict.fromkeys)
 
 // following are used for faster access elsewhere
 $B.$dict_iterator = function(d){return new $item_generator(d)}

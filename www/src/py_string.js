@@ -1674,7 +1674,6 @@ str.zfill = function(self, width){
 }
 
 str.$factory = function(arg){
-    //console.log("str", arg)
     if(arg === undefined){console.log("undef"); return "<undefined>"}
     switch(typeof arg) {
         case "string":
@@ -1693,12 +1692,12 @@ str.$factory = function(arg){
             var func = $B.$getattr(arg.__class__, "__str__")
             return func(arg)
         }
-        var f = getattr(arg,"__str__")
+        var f = $B.$getattr(arg, "__str__")
         // XXX fix : if not better than object.__str__, try __repr__
         //return f()
     }
     catch(err){
-        console.log("pas de __str__ pour", arg)
+        console.log("no __str__ for", arg)
         console.log("err ", err)
         try{ // try __repr__
              var f = getattr(arg,"__repr__")
