@@ -273,5 +273,54 @@ class EnumInt(int, metaclass=Enumeration):
 
 assert isinstance('foo', EnumInt)
 
+# metaclass with multiple inheritance
+class Meta(type):
+    pass
+
+class A(metaclass=Meta):
+    pass
+
+class B(str, A):
+    pass
+
+assert B.__class__ == Meta
+
+class C:
+    pass
+
+class D(A, C):
+    pass
+
+assert D.__class__ == Meta
+
+class Meta1(type):
+    pass
+class Meta2(type):
+    pass
+
+class A1(metaclass=Meta1):
+    pass
+class A2(metaclass=Meta2):
+    pass
+
+try:
+    class B(A1, A2):
+        pass
+    raise Exception("should have raised TypeError")
+except TypeError:
+    pass
+
+class Meta3(Meta1):
+    pass
+
+class A3(metaclass=Meta3):
+    pass
+
+class C(A3, A1):
+    pass
+
+assert C.__class__ == Meta3
+
+
 
 print('passed all tests..')
