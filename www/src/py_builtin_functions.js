@@ -874,7 +874,7 @@ $B.$getattr = function(obj, attr, _default){
 
             if(func.$type == "staticmethod"){return func}
 
-            var self = klass[attr].$type == "classmethod" ? klass : obj
+            var self = klass[attr].__class__ == $B.method ? klass : obj
             function method(){
                 return klass[attr](self, ...arguments)
             }

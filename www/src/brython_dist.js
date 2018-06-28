@@ -65,8 +65,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,6,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.6.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-06-28 11:35:31.654241"
-__BRYTHON__.timestamp=1530178531654
+__BRYTHON__.compiled_date="2018-06-28 11:48:21.716384"
+__BRYTHON__.timestamp=1530179301716
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_py_abc","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -5142,7 +5142,7 @@ if(typeof res=="function"){
 if(res.$infos===undefined){console.log("warning: no attribute $infos for",res)}
 if($test){console.log("res is function",res)}
 if(attr=="__new__"){res.$type="staticmethod"}
-if(attr=="__class_getitem__"){res=_b_.classmethod.$factory(res)}
+if(attr=="__class_getitem__" && res.__class__ !==$B.method){res=_b_.classmethod.$factory(res)}
 if(res.__class__==$B.method){return res.__get__(null,klass)}else{return res}}else{return res}}}
 type.__init_subclass__=function(cls,kwargs){
 var $=$B.args("__init_subclass__",1,{cls: null},["cls"],arguments,{},"args","kwargs")
@@ -6207,7 +6207,7 @@ if(klass.$descriptors && klass.$descriptors[attr]!==undefined){return klass[attr
 if(typeof klass[attr]=='function'){var func=klass[attr]
 if(attr=='__new__'){func.$type="staticmethod"}
 if(func.$type=="staticmethod"){return func}
-var self=klass[attr].$type=="classmethod" ? klass : obj
+var self=klass[attr].__class__==$B.method ? klass : obj
 function method(){return klass[attr](self,...arguments)}
 method.__class__=$B.method
 method.$infos={__func__: func,__name__: attr,__self__: self,__qualname__: klass.__name__ + "." + attr}

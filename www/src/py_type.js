@@ -553,7 +553,7 @@ type.__getattribute__ = function(klass, attr){
             if($test){console.log("res is function", res)}
 
             if(attr == "__new__"){res.$type = "staticmethod"}
-            if(attr == "__class_getitem__"){
+            if(attr == "__class_getitem__" && res.__class__ !== $B.method){
                 res = _b_.classmethod.$factory(res)
             }
             if(res.__class__ == $B.method){
@@ -561,28 +561,6 @@ type.__getattribute__ = function(klass, attr){
             }else{
                 return res
             }
-            /*
-            switch (res.$type) {
-                case "staticmethod":
-                    return res
-                case undefined:
-                case "function":
-                case "instancemethod":
-                    return res
-                case "classmethod":
-                    // class method : called with the class as first argument
-                    cl_method = _b_.classmethod.$factory(res)
-                    cl_method.$infos = {
-                        __self__: klass,
-                        __func__: res,
-                        __name__: attr,
-                        __qualname__: klass.__name__ + "." + attr,
-                        __module__: res.$infos ? res.$infos.__module__ : ""
-                    }
-                    if($test){console.log("return classmethod", cl_method)}
-                    return cl_method
-            }
-            */
         }else{
             return res
         }
