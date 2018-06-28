@@ -195,11 +195,33 @@ var classmethod = $B.make_class("classmethod",
     function(func) {
         check_nb_args('classmethod', 1, arguments.length)
         check_no_kw('classmethod', func)
-
-        func.$type = 'classmethod'
-        return func
+        var f = function(){
+                    return func.apply(null, arguments)
+                }
+        f.__class__ = $B.method
+        f.$infos = {
+            __func__: func,
+            __name__: func.$infos.__name__
+        }
+        f.__get__ = function(obj, cls){
+            var method = function(){
+                return f(cls, ...arguments)
+            }
+            method.__class__ = $B.method
+            method.$infos = {
+                __self__: cls,
+                __func__: f,
+                __name__: func.$infos.__name__,
+                __qualname__: cls.__name__ + "." + func.$infos.__name__
+            }
+            return method
+        }
+        f.__get__.__class__ = $B.method_wrapper
+        f.__get__.$infos = func.$infos
+        return f
     }
 )
+
 $B.set_func_names(classmethod, "builtins")
 
 //compile() (built in function)
@@ -359,19 +381,19 @@ var enumerate = $B.make_class("enumerate",
 
 $B.set_func_names(enumerate, "builtins")
 
+$B.from_alias = function(attr){
+    if(attr.substr(0, 2) == '$$' && $B.aliased_names[attr.substr(2)]){
+        return attr.substr(2)
+    }
+    return attr
+}
+$B.to_alias = function(attr){
+    if($B.aliased_names[attr]){return '$$' + attr}
+    return attr
+}
+
 //eval() (built in function)
 function $$eval(src, _globals, _locals){
-
-    function from_alias(attr){
-        if(attr.substr(0, 2) == '$$' && $B.aliased_names[attr.substr(2)]){
-            return attr.substr(2)
-        }
-        return attr
-    }
-    function to_alias(attr){
-        if($B.aliased_names[attr]){return '$$' + attr}
-        return attr
-    }
 
     if(_globals === undefined){_globals = _b_.None}
     if(_locals === undefined){_locals = _b_.None}
@@ -485,7 +507,7 @@ function $$eval(src, _globals, _locals){
         if(_globals.$jsobj){var items = _globals.$jsobj}
         else{var items = _globals.$string_dict}
         for(var item in items){
-            var item1 = to_alias(item)
+            var item1 = $B.to_alias(item)
             try{
                 eval('$locals_' + globals_id + '["' + item1 +
                     '"] = items[item]')
@@ -514,7 +536,7 @@ function $$eval(src, _globals, _locals){
         if(_locals.$jsobj){var items = _locals.$jsobj}
         else{var items = _locals.$string_dict}
         for(var item in items){
-            var item1 = to_alias(item)
+            var item1 = $B.to_alias(item)
             try{
                 eval('$locals_' + locals_id + '["' + item + '"] = items.' + item)
             }catch(err){
@@ -583,7 +605,7 @@ function $$eval(src, _globals, _locals){
         if(_locals !== _b_.None){
             lns = eval('$locals_' + locals_id)
             for(var attr in lns){
-                var attr1 = from_alias(attr)
+                var attr1 = $B.from_alias(attr)
                 if(attr1.charAt(0) != '$'){
                     if(_locals.$jsobj){_locals.$jsobj[attr] = lns[attr]}
                     else{_locals.$string_dict[attr1] = lns[attr]}
@@ -598,7 +620,7 @@ function $$eval(src, _globals, _locals){
         if(_globals !== _b_.None){
             // Update _globals with the namespace after execution
             for(var attr in gns){
-                attr1 = from_alias(attr)
+                attr1 = $B.from_alias(attr)
                 if(attr1.charAt(0) != '$'){
                     if(_globals.$jsobj){_globals.$jsobj[attr] = gns[attr]}
                     else{_globals.$string_dict[attr1] = gns[attr]}
@@ -726,11 +748,14 @@ $B.$getattr = function(obj, attr, _default){
 
     var rawname = attr
     if($B.aliased_names[attr]){attr = '$$' + attr}
-
+    if(obj===undefined){
+        console.log("attr", attr, "of obj undefined", $B.last($B.frames_stack))
+    }
     var is_class = obj.$is_class || obj.$factory
 
     var klass = obj.__class__
 
+    var $test = false // attr == "__str__"
     // Shortcut for classes without parents
     if(klass !== undefined && klass.__bases__ && klass.__bases__.length == 0){
         if(obj.hasOwnProperty(attr)){
@@ -743,6 +768,7 @@ $B.$getattr = function(obj, attr, _default){
         }
     }
 
+    if($test){console.log("attr", attr, "of", obj, "class", klass, "isclass", is_class)}
     if(klass === undefined){
         // avoid calling $B.get_class in simple cases for performance
         if(typeof obj == 'string'){klass = _b_.str}
@@ -752,6 +778,7 @@ $B.$getattr = function(obj, attr, _default){
             klass = _b_.float
         }else{
             klass = $B.get_class(obj)
+            if($test){console.log("from getclass", klass)}
         }
     }
 
@@ -883,15 +910,18 @@ $B.$getattr = function(obj, attr, _default){
     if(typeof attr_func !== 'function'){
         console.log(attr + ' is not a function ' + attr_func, klass)
     }
-
+    if($test){console.log("attr_func is odga", attr_func === odga, obj[attr])}
     if(attr_func === odga){
         var res = obj[attr]
         if(res === null){return null}
         else if(res === undefined && obj.hasOwnProperty(attr)){
             return res
-        }else if(res !== undefined && res.__set__ === undefined){
-            return obj[attr]
+        }else if(res !== undefined){
+            if(res.__set__ === undefined || res.$is_class)
+            return res
         }
+    }else if($test){
+        console.log("use attr_func", attr_func)
     }
 
     try{
@@ -1476,46 +1506,44 @@ $print.__name__ = 'print'
 $print.is_func = true
 
 // property (built in function)
-var property = $B.make_class("property",
-    function(fget, fset, fdel, doc) {
-        var p = {
-            __class__ : property,
-            __doc__ : doc || "",
-            $type: fget.$type,
-            fget: fget,
-            fset: fset,
-            fdel: fdel,
-            toString:function(){return '<property>'}
-        }
-        p.__get__ = function(self, obj, objtype) {
-            if(obj === undefined){return self}
-            if(self.fget === undefined){
-                throw _b_.AttributeError.$factory("unreadable attribute")
-            }
-            return $B.$call(self.fget)(obj)
-        }
-        if(fset !== undefined){
-            p.__set__ = function(self, obj, value){
-                if(self.fset === undefined){
-                    throw _b_.AttributeError.$factory("can't set attribute")
-                }
-                getattr(self.fset, '__call__')(obj, value)
-            }
-        }
-        p.__delete__ = fdel;
+var property = $B.make_class("property")
 
-        p.getter = function(fget){
-            return property.$factory(fget, p.fset, p.fdel, p.__doc__)
+property.__init__ = function(self, fget, fset, fdel, doc) {
+
+    self.__doc__ = doc || ""
+    self.$type = fget.$type
+    self.fget = fget
+    self.fset = fset
+    self.fdel = fdel
+
+    self.__get__ = function(self, obj, objtype) {
+        if(obj === undefined){return self}
+        if(self.fget === undefined){
+            throw _b_.AttributeError.$factory("unreadable attribute")
         }
-        p.setter = function(fset){
-            return property.$factory(p.fget, fset, p.fdel, p.__doc__)
-        }
-        p.deleter = function(fdel){
-            return property.$factory(p.fget, p.fset, fdel, p.__doc__)
-        }
-        return p
+        return $B.$call(self.fget)(obj)
     }
-)
+    if(fset !== undefined){
+        self.__set__ = function(self, obj, value){
+            if(self.fset === undefined){
+                throw _b_.AttributeError.$factory("can't set attribute")
+            }
+            getattr(self.fset, '__call__')(obj, value)
+        }
+    }
+    self.__delete__ = fdel;
+
+    self.getter = function(fget){
+        return property.$factory(fget, self.fset, self.fdel, self.__doc__)
+    }
+    self.setter = function(fset){
+        return property.$factory(self.fget, fset, self.fdel, self.__doc__)
+    }
+    self.deleter = function(fdel){
+        return property.$factory(self.fget, self.fset, fdel, self.__doc__)
+    }
+
+}
 $B.set_func_names(property, "builtins")
 
 function quit(){
@@ -1735,7 +1763,12 @@ $B.$setattr = function(obj, attr, value){
             }
         }
     }
-    if(!_setattr){obj[attr] = value}else{_setattr(obj, attr, value)}
+    if(!_setattr){
+        obj[attr] = value
+    }else{
+        _setattr(obj, attr, value)
+    }
+
     return None
 }
 
@@ -1752,10 +1785,19 @@ function sorted () {
 // staticmethod() built in function
 var staticmethod = $B.make_class("staticmethod",
     function(func) {
-        func.$type = 'staticmethod'
-        return func
+        var f = {
+            $infos: func.$infos,
+            __get__: function(){
+                return func
+            }
+        }
+        f.__get__.__class__ = $B.method_wrapper
+        f.__get__.$infos = func.$infos
+        return f
     }
 )
+
+
 $B.set_func_names(staticmethod, "builtins")
 
 // str() defined in py_string.js
@@ -1797,11 +1839,23 @@ function sum(iterable,start){
 }
 
 // super() built in function
+$B.missing_super2 = function(obj){
+    obj.$missing = true
+    return obj
+}
+
 var $$super = $B.make_class("super",
     function (_type1, _type2){
+        var missing2 = false
+        if(Array.isArray(_type2)){
+            _type2 = _type2[0]
+            missing2 = true
+        }
+
         return {__class__: $$super,
             __thisclass__: _type1,
-            __self_class__: _type2
+            __self_class__: _type2,
+            $missing2: missing2
         }
     }
 )
@@ -1830,18 +1884,27 @@ $$super.__getattribute__ = function(self, attr){
 
     if(attr == "__repr__" || attr == "__str__"){
         // Special cases
-        return function(){return $$super[attr](self)}
+        return function(){return $$super.__repr__(self)}
     }
     var f = _b_.type.__getattribute__(mro[0], attr)
 
+    var $test = false //attr == "__setattr__"
+    if($test){console.log("super", attr, self, f)}
     if(f.$type == "staticmethod"){return f}
     else{
+        if(f.__class__ === $B.method){
+            // If the function is a bound method, use the underlying function
+            f = f.$infos.__func__
+        }
         var method = function(){
-            return f(self.__self_class__, ...arguments)
+            var res = f(self.__self_class__, ...arguments)
+            if($test){console.log("calling super", self.__self_class__, attr, f, "res", res)}
+            return res
         }
         method.__class__ = $B.method
         method.$infos = {
             __self__: self.__self_class__,
+            __func__: f,
             __name__: attr,
             __module__: f.$infos.__module__,
             __qualname__: self.__thisclass__.__name__ + "." + attr
@@ -1856,7 +1919,7 @@ $$super.__getattribute__ = function(self, attr){
 $$super.__repr__ = $$super.__str__ = function(self){
     var res = "<super: <class '" + self.__thisclass__.__name__ + "'>"
     if(self.__self_class__ !== undefined){
-        res += ', <' + self.__self_class__.__name__ + ' object>'
+        res += ', <' + self.__self_class__.__class__.__name__ + ' object>'
     }else{
         res += ', NULL'
     }
@@ -2142,6 +2205,21 @@ Function.__dir__ = function(self){
 
 Function.__eq__ = function(self, other){
     return self === other
+}
+
+Function.__get__ = function(self, obj){
+    if(obj === _b_.None){
+        return self
+    }
+    var method = function(){return self(obj, ...arguments)}
+    method.__class__ = $B.method
+    method.$infos = {
+        __name__: self.$infos.__name__,
+        __qualname__: obj.__class__.__name__ + "." + self.$infos.__name__,
+        __self__: obj,
+        __func__: self
+    }
+    return method
 }
 
 Function.__getattribute__ = function(self, attr){
