@@ -17,10 +17,9 @@ this_url=scripts[scripts.length - 1].src}
 var elts=this_url.split('/')
 elts.pop()
 $path=$B.brython_path=elts.join('/')+ '/'}else{$path=$B.brython_path}
-var $href=$B.script_path=_window.location.href
-var $href_elts=$href.split('/')
-$href_elts.pop()
-var $script_dir=$B.script_dir=$href_elts.join('/')
+var path=_window.location.origin + _window.location.pathname,path_elts=path.split("/")
+path_elts.pop()
+var $script_dir=$B.script_dir=path_elts.join("/")
 $B.__ARGV=[]
 $B.$py_module_path={}
 $B.$py_src={}
@@ -65,8 +64,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,6,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.6.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-06-28 13:11:52.199386"
-__BRYTHON__.timestamp=1530184312199
+__BRYTHON__.compiled_date="2018-06-28 15:27:58.834679"
+__BRYTHON__.timestamp=1530192478834
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_py_abc","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
