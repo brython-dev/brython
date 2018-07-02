@@ -69,14 +69,15 @@ var $operators = {
     "%": "mod", "&": "and", "|": "or", "~": "invert", "^": "xor",
     "<": "lt", ">": "gt", "<=": "le", ">=": "ge", "==": "eq", "!=": "ne",
     "or": "or", "and": "and", "in": "in", "not": "not", "is": "is",
-    "not_in": "not_in", "is_not": "is_not" // fake
+    "not_in": "not_in", "is_not": "is_not", // fake
+    "@": "matmul", "@=": "imatmul" // PEP 465
 }
 
 // Mapping between augmented assignment operators and method names
 var $augmented_assigns = $B.augmented_assigns = {
     "//=": "ifloordiv", ">>=": "irshift", "<<=": "ilshift", "**=": "ipow",
     "+=": "iadd","-=": "isub", "*=": "imul", "/=": "itruediv", "%=": "imod",
-    "&=": "iand","|=": "ior","^=": "ixor"
+    "&=": "iand","|=": "ior","^=": "ixor", "@=": "imatmul"
 }
 
 // Names that can't be assigned to
@@ -92,7 +93,7 @@ var $op_order = [['or'], ['and'], ['not'],
     ['>>', '<<'],
     ['+'],
     ['-'],
-    ['*','/','//','%'],
+    ['*', '@', '/', '//', '%'],
     ['unary_neg', 'unary_inv', 'unary_pos'],
     ['**']
 ]
@@ -8652,20 +8653,31 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
             case '-':
             case '+':
             case '*':
+            case '@':
             case '/':
             case '^':
             case '=':
             case '|':
             case '~':
             case '!':
-                // operators
+                // Operators
 
-                // special case for annotation syntax
+                // Special case for annotation syntax
                 if(car == '-' && src.charAt(pos + 1) == '>'){
                     context = $transition(context, 'annotation')
                     pos += 2
                     continue
                 }
+
+                // Special case for @ : decorator if it's the first character
+                // in the instruction
+                if(car == '@' && context.type == "node"){
+                    $pos = pos
+                    context = $transition(context, car)
+                    pos++
+                    break
+                }
+
                 // find longest match
                 var op_match = ""
                 for(var op_sign in $operators){
@@ -8692,11 +8704,6 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
                   pos += 2
                   break
                 }
-            case '@':
-                $pos = pos
-                context = $transition(context, car)
-                pos++
-                break
             default:
                 $pos = pos
                 $_SyntaxError(context, 'unknown token [' + car + ']')

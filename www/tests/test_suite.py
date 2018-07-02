@@ -379,4 +379,38 @@ class A:
 assert A(5).__dict__ == {'x': 5}
 assert vars(A(5)) == {'x': 5}
 
+# @ operator (PEP 465)
+class A:
+    def __init__(self, a, b, c, d):
+        self.a = a
+        self.b = b
+        self.c = c
+        self.d = d
+
+    def __matmul__(self, other):
+        return A(
+            self.a * other.a + self.b * other.c,
+            self.a * other.b + self.b * other.d,
+            self.c + other.a + self.d + other.c,
+            self.c * other.b + self.d * other.d)
+
+    def __str__(self):
+        return "({} {})\n({} {})".format(self.a, self.b,
+            self.c, self.d)
+
+
+    def __eq__(self, other):
+        return (self.a == other.a and
+            self.b == other.b and
+            self.c == other.c and
+            self.d == other.d)
+
+a1 = A(1, 2, 3, 4)
+a2 = A(2, 3, 4, 5)
+a3 = A(10, 13, 13, 29)
+
+assert a1 @ a2 == a3
+
+a1 @= a2
+assert a1 == a3
 print('passed all tests...')

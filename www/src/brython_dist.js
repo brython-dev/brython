@@ -64,8 +64,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,6,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.6.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-06-28 15:27:58.834679"
-__BRYTHON__.timestamp=1530192478834
+__BRYTHON__.compiled_date="2018-07-02 08:46:13.051094"
+__BRYTHON__.timestamp=1530513973051
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_py_abc","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -92,10 +92,11 @@ $B.list2obj=function(list,value){var res={},i=list.length
 if(value===undefined){value=true}
 while(i-- > 0){res[list[i]]=value}
 return res}
-var $operators={"//=": "ifloordiv",">>=": "irshift","<<=": "ilshift","**=": "ipow","**": "pow","//": "floordiv","<<": "lshift",">>": "rshift","+=": "iadd","-=": "isub","*=": "imul","/=": "itruediv","%=": "imod","&=": "iand","|=": "ior","^=": "ixor","+": "add","-": "sub","*": "mul","/": "truediv","%": "mod","&": "and","|": "or","~": "invert","^": "xor","<": "lt",">": "gt","<=": "le",">=": "ge","==": "eq","!=": "ne","or": "or","and": "and","in": "in","not": "not","is": "is","not_in": "not_in","is_not": "is_not" }
-var $augmented_assigns=$B.augmented_assigns={"//=": "ifloordiv",">>=": "irshift","<<=": "ilshift","**=": "ipow","+=": "iadd","-=": "isub","*=": "imul","/=": "itruediv","%=": "imod","&=": "iand","|=": "ior","^=": "ixor"}
+var $operators={"//=": "ifloordiv",">>=": "irshift","<<=": "ilshift","**=": "ipow","**": "pow","//": "floordiv","<<": "lshift",">>": "rshift","+=": "iadd","-=": "isub","*=": "imul","/=": "itruediv","%=": "imod","&=": "iand","|=": "ior","^=": "ixor","+": "add","-": "sub","*": "mul","/": "truediv","%": "mod","&": "and","|": "or","~": "invert","^": "xor","<": "lt",">": "gt","<=": "le",">=": "ge","==": "eq","!=": "ne","or": "or","and": "and","in": "in","not": "not","is": "is","not_in": "not_in","is_not": "is_not",
+"@": "matmul","@=": "imatmul" }
+var $augmented_assigns=$B.augmented_assigns={"//=": "ifloordiv",">>=": "irshift","<<=": "ilshift","**=": "ipow","+=": "iadd","-=": "isub","*=": "imul","/=": "itruediv","%=": "imod","&=": "iand","|=": "ior","^=": "ixor","@=": "imatmul"}
 var noassign=$B.list2obj(['True','False','None','__debug__'])
-var $op_order=[['or'],['and'],['not'],['in','not_in'],['<','<=','>','>=','!=','==','is','is_not'],['|'],['^'],['&'],['>>','<<'],['+'],['-'],['*','/','//','%'],['unary_neg','unary_inv','unary_pos'],['**']
+var $op_order=[['or'],['and'],['not'],['in','not_in'],['<','<=','>','>=','!=','==','is','is_not'],['|'],['^'],['&'],['>>','<<'],['+'],['-'],['*','@','/','//','%'],['unary_neg','unary_inv','unary_pos'],['**']
 ]
 var $op_weight={},$weight=1
 $op_order.forEach(function(_tmp){_tmp.forEach(function(item){$op_weight[item]=$weight})
@@ -4434,6 +4435,7 @@ case '<':
 case '-':
 case '+':
 case '*':
+case '@':
 case '/':
 case '^':
 case '=':
@@ -4443,6 +4445,10 @@ case '!':
 if(car=='-' && src.charAt(pos + 1)=='>'){C=$transition(C,'annotation')
 pos +=2
 continue}
+if(car=='@' && C.type=="node"){$pos=pos
+C=$transition(C,car)
+pos++
+break}
 var op_match=""
 for(var op_sign in $operators){if(op_sign==src.substr(pos,op_sign.length)
 && op_sign.length > op_match.length){op_match=op_sign}}
@@ -4454,11 +4460,6 @@ case '\\':
 if(src.charAt(pos + 1)=='\n'){lnum++
 pos +=2
 break}
-case '@':
-$pos=pos
-C=$transition(C,car)
-pos++
-break
 default:
 $pos=pos
 $_SyntaxError(C,'unknown token [' + car + ']')}}
@@ -6291,8 +6292,11 @@ else{return obj.$id=$B.UUID()}}
 function __import__(mod_name,globals,locals,fromlist,level){
 var $=$B.args('__import__',5,{name: null,globals: null,locals: null,fromlist: null,level: null},['name','globals','locals','fromlist','level'],arguments,{globals:None,locals:None,fromlist:_b_.tuple.$factory(),level:0},null,null)
 return $B.$__import__($.name,$.globals,$.locals,$.fromlist)}
-function input(src){var stdin=($B.imported.sys && $B.imported.sys.stdin ||$B.stdin);
-if(stdin.__original__){return prompt(src ||'')||''}
+function input(msg){var stdin=($B.imported.sys && $B.imported.sys.stdin ||$B.stdin);
+if(stdin.__original__){return prompt(msg ||'')||''}
+msg=msg ||""
+if(msg){$B.stdout.write(msg)}
+stdin.msg=msg
 var val=_b_.getattr(stdin,'readline')()
 val=val.split('\n')[0]
 if(stdin.len===stdin.pos){_b_.getattr(stdin,'close')()}
