@@ -1,6 +1,8 @@
 from .futures import Future, CancelledError
 from ._utils import decorator, _isgenerator
 
+import types
+import dis
 
 @decorator
 def coroutine(func):
@@ -33,8 +35,8 @@ def run_async(loop=None):
 
 
 def iscoroutinefunction(fun):
-    return hasattr(fun, '__coroutinefunction__')
-
+    return (hasattr(fun, '__coroutinefunction__') or
+        fun.__code__.co_flags & dis.COROUTINE)
 
 def iscoroutine(obj):
     return _isgenerator(obj)
