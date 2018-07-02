@@ -2427,6 +2427,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         if(this.star_arg){flags |= 4}
         if(this.kw_arg){flags |= 8}
         if(this.type == 'generator'){flags |= 32}
+        if(this.async){flags |= 128}
 
         // String to pass positional arguments
         var positional_str = [],
@@ -5862,8 +5863,9 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
     }
 }
 
-var $YieldCtx = $B.parser.$YieldCtx = function(context){
+var $YieldCtx = $B.parser.$YieldCtx = function(context, is_await){
     // Class for keyword "yield"
+    // "await" is implemented as "yield from", for this case is_await is set
     this.type = 'yield'
     this.toString = function(){return '(yield) ' + this.tree}
     this.parent = context
@@ -5894,9 +5896,7 @@ var $YieldCtx = $B.parser.$YieldCtx = function(context){
             case 'tuple':
             case 'list_or_tuple':
                 // mark the node as containing a yield atom
-                var ctx = context
-                while(ctx.parent){ctx = ctx.parent}
-                ctx.node.yield_atoms.push(this)
+                $get_node(context).yield_atoms.push(this)
                 break
            default:
                 // else it is a SyntaxError
@@ -5913,8 +5913,9 @@ var $YieldCtx = $B.parser.$YieldCtx = function(context){
     // Change type of function to generator
     if(! in_lambda){
         var def = scope.context.tree[0]
-        def.type = 'generator'
-
+        if(! is_await){
+            def.type = 'generator'
+        }
         // Add to list of "yields" in function
         def.yields.push(this)
     }
@@ -7638,7 +7639,10 @@ var $transition = $B.parser.$transition = function(context, token, value){
                 case 'async':
                     return new $AsyncCtx(context)
                 case 'await':
-                    return new $AwaitCtx(context)
+                    //return new $AwaitCtx(context)
+                    var yexpr = new $AbstractExprCtx(
+                        new $YieldCtx(context, true), true)
+                    return $transition(yexpr, "from")
                 case 'class':
                     return new $ClassCtx(context)
                 case 'continue':

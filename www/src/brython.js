@@ -64,8 +64,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,6,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.6.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-07-02 08:46:13.051094"
-__BRYTHON__.timestamp=1530513973051
+__BRYTHON__.compiled_date="2018-07-02 15:32:34.055947"
+__BRYTHON__.timestamp=1530538354071
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_py_abc","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -1199,6 +1199,7 @@ var flags=67
 if(this.star_arg){flags |=4}
 if(this.kw_arg){flags |=8}
 if(this.type=='generator'){flags |=32}
+if(this.async){flags |=128}
 var positional_str=[],positional_obj=[],pos=0
 this.positional_list.forEach(function(elt){positional_str.push('"' + elt + '"')
 positional_obj.push(elt + ':null')},this)
@@ -2767,7 +2768,7 @@ h + 'var ' + cme_name + ' = $B.$getattr('+cm_name+',"__exit__")\n' +
 h + 'var ' + val_name + ' = $B.$getattr('+cm_name+',"__enter__")()\n' +
 h + 'var ' + exc_name + ' = true\n'+
 h + 'try'}}
-var $YieldCtx=$B.parser.$YieldCtx=function(C){
+var $YieldCtx=$B.parser.$YieldCtx=function(C,is_await){
 this.type='yield'
 this.toString=function(){return '(yield) ' + this.tree}
 this.parent=C
@@ -2782,16 +2783,14 @@ break;
 case 'assign':
 case 'tuple':
 case 'list_or_tuple':
-var ctx=C
-while(ctx.parent){ctx=ctx.parent}
-ctx.node.yield_atoms.push(this)
+$get_node(C).yield_atoms.push(this)
 break
 default:
 $_SyntaxError(C,'yield atom must be inside ()')}}
 var scope=this.scope=$get_scope(this)
 if(! scope.is_function && ! in_lambda){$_SyntaxError(C,["'yield' outside function"])}
 if(! in_lambda){var def=scope.C.tree[0]
-def.type='generator'
+if(! is_await){def.type='generator'}
 def.yields.push(this)}
 this.toString=function(){return '(yield) ' +(this.from ? '(from) ' : '')+ this.tree}
 this.transform=function(node,rank){add_jscode(node.parent,rank + 1,'// placeholder for generator sent value'
@@ -3827,7 +3826,9 @@ break
 case 'async':
 return new $AsyncCtx(C)
 case 'await':
-return new $AwaitCtx(C)
+var yexpr=new $AbstractExprCtx(
+new $YieldCtx(C,true),true)
+return $transition(yexpr,"from")
 case 'class':
 return new $ClassCtx(C)
 case 'continue':
