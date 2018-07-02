@@ -76,12 +76,37 @@ def flush():
     CODE_ELT.value += OUT_BUFFER
     OUT_BUFFER = ''
 
+def dontwrite(data):
+    return
+
 sys.stdout.write = sys.stderr.write = write
 sys.stdout.__len__ = sys.stderr.__len__ = lambda: len(OUT_BUFFER)
+
+class Stdin:
+
+    value = None
+
+    def close(self):
+        pass
+
+    def readline(self, *args):
+        global mode
+        if Stdin.value is None:
+            mode = "input"
+            return ""
+        else:
+            value = Stdin.value
+            Stdin.value = None
+            return value
+
+
+sys.stdin = Stdin()
 
 history = []
 current = 0
 _status = "main"  # or "block" if typing inside a block
+mode = "editor"
+entry = None
 
 # execution namespace
 editor_ns = {'credits':credits,
@@ -104,7 +129,7 @@ def get_col(area):
 
 
 def myKeyPress(event):
-    global _status, current
+    global _status, current, entry, mode
     if event.keyCode == 9:  # tab key
         event.preventDefault()
         doc['code'].value += "    "
@@ -125,6 +150,16 @@ def myKeyPress(event):
         history.append(currentLine)
         current = len(history)
         if _status == "main" or _status == "3string":
+            if mode == "input":
+                currentLine, entry = currentLine.split("\n")
+                if hasattr(sys.stdin, "msg"):
+                    entry = entry[len(sys.stdin.msg):]
+                    sys.stdin.msg = ""
+                Stdin.value = entry
+                # Temporarily disable write: currentLine will be run a second
+                # time and we don't want the prompt message to be printed
+                sys.stdout.write = dontwrite
+                mode = "editor"
             try:
                 _ = editor_ns['_'] = eval(currentLine, editor_ns)
                 flush()
@@ -147,7 +182,8 @@ def myKeyPress(event):
                     except:
                         traceback.print_exc()
                     flush()
-                    doc['code'].value += '>>> '
+                    if mode != "input":
+                        doc['code'].value += '>>> '
                     _status = "main"
                 elif str(msg) == 'decorator expects function':
                     doc['code'].value += '... '
@@ -181,6 +217,7 @@ def myKeyPress(event):
 
         cursorToEnd()
         event.preventDefault()
+        sys.stdout.write = write
 
 def myKeyDown(event):
     global _status, current

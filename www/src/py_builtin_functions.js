@@ -1089,9 +1089,14 @@ function __import__(mod_name, globals, locals, fromlist, level) {
 }
 
 //not a direct alias of prompt: input has no default value
-function input(src) {
+function input(msg) {
     var stdin = ($B.imported.sys && $B.imported.sys.stdin || $B.stdin);
-    if(stdin.__original__){return prompt(src || '') || ''}
+    if(stdin.__original__){return prompt(msg || '') || ''}
+    msg = msg || ""
+    if(msg){
+        $B.stdout.write(msg)
+    }
+    stdin.msg = msg
     var val = _b_.getattr(stdin, 'readline')()
     val = val.split('\n')[0]
     if(stdin.len === stdin.pos){
