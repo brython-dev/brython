@@ -11,9 +11,9 @@ Mots clés et fonctions intégrées
 
 Brython supporte la plupart des mots-clés et des fonctions de Python 3 :
 
-- mots clés : `as, assert, break, class, continue, def, del, elif, else, `
-  `except, False, finally, for, from, global, if, import, is, lambda, None, `
-  `nonlocal, pass, return, True, try, while, with, yield`
+- mots clés : `and, as, assert, async, await, break, class, continue, def, del, elif, else, `
+  `except, False, finally, for, from, global, if, import, in, is, lambda, None, `
+  `nonlocal, not, or, pass, raise, return, True, try, while, with, yield`
 - fonctions et classes intégrées : `abs, all, any, ascii, bin, bool, bytes,`
   `callable, chr, classmethod, delattr, dict, dir, divmod, `
   `enumerate, eval, exec, filter, float, frozenset, getattr, `
@@ -29,7 +29,9 @@ Quelques particularités liées au contexte d'exécution dans un navigateur :
 - la fonction `open()` prend comme argument l'url du fichier à ouvrir ; comme
   on utilise un appel Ajax, elle doit être dans le même domaine que le script.
   L'objet retourné par `open()` possède les méthodes de lecture et d'accès
-  habituelles : `read, readlines, seek, tell, close`
+  habituelles : `read, readlines, seek, tell, close`. Seul le mode texte est
+  pris en compte: l'appel Ajax est bloquant et dans ce mode, on ne peut pas
+  donner de valeur à l'attribut `responseType`
 
 - par défaut, `print()` affiche sur la console du navigateur, et les messages
   d'erreur sont également affichés sur cette console. `sys.stderr` et

@@ -11,9 +11,9 @@ Keywords and built-in functions
 
 Brython supports most of the keywords and functions of Python 3 :
 
-- keywords : `as, assert, break, class, continue, def, del, elif, else,`
-  `except, False, finally, for, from, global, if, import, is, lambda, `
-  `None, nonlocal, pass, return, True, try, while, with, yield`
+- keywords : `and, as, assert, async, await, break, class, continue, def, del, elif, else,`
+  `except, False, finally, for, from, global, if, import, in, is, lambda, `
+  `None, nonlocal, not, or, pass, raise, return, True, try, while, with, yield`
 - built-in functions and classes : `abs, all, any, ascii, bin, bool, bytes,`
   `callable, chr, classmethod, delattr, dict, dir, divmod, `
   `enumerate, eval, exec, filter, float, frozenset, getattr, `
@@ -28,7 +28,9 @@ Here are a few features and limitations imposed by the browser and Javascript :
 - the built-in function `open()` takes as argument the url of the file to
   open. Since it is read with an Ajax call, it must be in the same domain as
   the script. The object returned by `open()` has the usual reading and access
-  methods : `read, readlines, seek, tell, close`
+  methods : `read, readlines, seek, tell, close`. Only text mode is supported:
+  the Ajax call is blocking and in this mode the `responseType` attribute 
+  can't be set
 
 - by default, `print()` will output to the web browser console and so are the
   error messages. `sys.stderr` and `sys.stdout` can be assigned to an object
