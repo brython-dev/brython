@@ -39,7 +39,7 @@ def iscoroutinefunction(fun):
         fun.__code__.co_flags & dis.COROUTINE)
 
 def iscoroutine(obj):
-    return _isgenerator(obj)
+    return isinstance(obj, types.CoroutineType) or _isgenerator(obj)
 
 
 class Task(Future):
@@ -49,9 +49,9 @@ class Task(Future):
     def __init__(self, coro_object, *, loop=None, task_name=None):
         super().__init__(loop)
         self._coro_obj = coro_object
-        self._loop.call_soon(self._step)
         self._name = task_name
-
+        self._loop.call_soon(self._step)
+        
     def _step(self, val=None, exc=None):
         if self.done():
             return
@@ -97,7 +97,9 @@ def ensure_future(fut_or_coroutine_obj, *, loop=None):
             raise ValueError('loop argument must agree with Future')
         return fut_or_coroutine_obj
     elif iscoroutine(fut_or_coroutine_obj):
-        return Task(fut_or_coroutine_obj, loop=loop, task_name=fut_or_coroutine_obj.__name__)
+        return Task(fut_or_coroutine_obj, loop=loop,
+            task_name=fut_or_coroutine_obj.__name__)
     else:
-        raise TypeError('Expecting coroutine object or Future got '+str(fut_or_coroutine_obj)+' instead.')
+        raise TypeError('Expecting coroutine object or Future, got ' +
+            str(fut_or_coroutine_obj) + ' instead.')
 
