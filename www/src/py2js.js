@@ -9336,9 +9336,39 @@ var loop = $B.loop = function(){
 
             // If the error was not caught by the Python runtime, build an
             // instance of a Python exception
-            if(err.$py_error===undefined){
+            if(err.$py_error === undefined){
                 console.log('Javascript error', err)
-                err=_b_.RuntimeError.$factory(err+'')
+                if(err.name == "Input"){
+                    var frame = $B.last(err.frames),
+                        rest = err.message
+                    var popup = document.createElement("INPUT")
+                    popup.addEventListener("blur", function(){
+                        console.log("run rest", rest)
+                        var root = $B.py2js(rest, frame[0], frame[2])
+                        for(var attr in frame[1]){
+                            if(! attr.startsWith("$")){
+                                root.binding[attr] = true
+                            }
+                        }
+                        for(var attr in frame[3]){
+                            if(! attr.startsWith("$")){
+                                root.binding[attr] = true
+                            }
+                        }
+                        var js = root.to_js()
+                        console.log("root", root, "js", js)
+                        // restore global namespace
+                        $B.imported[frame[2]] = frame[3]
+                        // restore frames stack
+                        $B.frames_stack = err.frames
+                        eval("var $locals_" + frame[0] + " = frame[1]")
+                        eval("var $locals_" + frame[2] + " = frame[3]")
+                        eval(js)
+                    })
+                    document.body.appendChild(popup)
+                    return
+                }
+                err = _b_.RuntimeError.$factory(err+'')
             }
 
             handle_error(err)
