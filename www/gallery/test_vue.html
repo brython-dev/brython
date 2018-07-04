@@ -80,6 +80,12 @@
   </ol>
 </div>
 
+<div id="pyapp">
+  <ol>
+    <li v-for="todo in todos" v-bind:key="todo.id">{{ todo.text }}</li>
+  </ol>
+</div>
+
 <script type="text/python">
 from browser import document, window
 from javascript import this
@@ -149,6 +155,17 @@ app7 = Vue({
   }
 })
 
+def created():
+    this().todos.append({"id":1, "text": "ADDED"})
+
+window.Vue.new({
+    "created": created,
+    "el": "#pyapp",
+    "data": {
+        "todos": [{"id":0, "text": "TODO"}],
+    }
+})
+    
 </script>
 </body>
 </html>

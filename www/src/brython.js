@@ -64,8 +64,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,6,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.6.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-07-02 15:32:34.055947"
-__BRYTHON__.timestamp=1530538354071
+__BRYTHON__.compiled_date="2018-07-04 17:32:00.891781"
+__BRYTHON__.timestamp=1530718320891
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_py_abc","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -4692,6 +4692,21 @@ if(func=="execute"){try{var script=task[1],src=script.src,name=script.name,url=s
 eval(js)}catch(err){if($B.debug > 1){console.log(err)
 for(var attr in err){console.log(attr+' : ',err[attr])}}
 if(err.$py_error===undefined){console.log('Javascript error',err)
+if(err.name=="Input"){var frame=$B.last(err.frames),rest=err.message
+var popup=document.createElement("INPUT")
+popup.addEventListener("blur",function(){console.log("run rest",rest)
+var root=$B.py2js(rest,frame[0],frame[2])
+for(var attr in frame[1]){if(! attr.startsWith("$")){root.binding[attr]=true}}
+for(var attr in frame[3]){if(! attr.startsWith("$")){root.binding[attr]=true}}
+var js=root.to_js()
+console.log("root",root,"js",js)
+$B.imported[frame[2]]=frame[3]
+$B.frames_stack=err.frames
+eval("var $locals_" + frame[0]+ " = frame[1]")
+eval("var $locals_" + frame[2]+ " = frame[3]")
+eval(js)})
+document.body.appendChild(popup)
+return}
 err=_b_.RuntimeError.$factory(err+'')}
 handle_error(err)}
 loop()}else{
@@ -5018,7 +5033,7 @@ for(var i=0;i < bases.length;i++){bases[i].$subclasses=bases[i].$subclasses ||[]
 bases[i].$subclasses.push(kls)
 if(i==0){
 init_subclass=_b_.type.__getattribute__(bases[i],"__init_subclass__")
-init_subclass(kls,{$nat: "kw",kw: extra_kwargs})}}
+if(init_subclass.$infos.__func__ !==undefined){init_subclass.$infos.__func__(kls,{$nat: "kw",kw: extra_kwargs})}else{init_subclass(kls,{$nat: "kw",kw: extra_kwargs})}}}
 if(bases.length==0){$B.$getattr(metaclass,"__init_subclass__")(kls,{$nat: "kw",kw:extra_kwargs})}
 if(!is_instanciable){function nofactory(){throw _b_.TypeError.$factory("Can't instantiate abstract class " +
 "interface with abstract methods " +
@@ -6789,6 +6804,10 @@ catch(err){}}
 _b_['open']=$url_open
 _b_['print']=$print
 _b_['$$super']=$$super
+_b_.binput=function(msg){var frame=$B.last($B.frames_stack),line_info=frame[3].$line_info,line_num=parseInt(line_info.split(",")[0]),src=frame[3].$src,line=src.split("\n")[line_num - 1],rest=src.split("\n").slice(line_num).join("\n")
+console.log("binput frame",frame)
+throw{
+name: "Input",level: "Show Stopper",message: rest,toString: function(){return this.name + ": " + this.message;},frames: $B.frames_stack.slice()}}
 _b_.object.__init__.__class__=wrapper_descriptor
 _b_.object.__new__.__class__=builtin_function})(__BRYTHON__)
 ;(function($B){eval($B.InjectBuiltins())
@@ -7553,7 +7572,7 @@ return $B.$JS2Py(result)}
 res.__repr__=function(){return '<function ' + attr + '>'}
 res.__str__=function(){return '<function ' + attr + '>'}
 res.prototype=js_attr.prototype
-return{__class__: JSObject,js: res,js_func: js_attr}}else{if(Array.isArray(js_attr)){return js_attr}
+return{__class__: JSObject,js: res,js_func: js_attr}}else{if(Array.isArray(js_attr)){return $B.js_list.$factory(js_attr)}
 return $B.$JS2Py(js_attr)}}else if(self.js===_window && attr==='$$location'){
 return $Location()}
 var res=self.__class__[attr]
@@ -9822,6 +9841,13 @@ break}
 else{throw err}}}
 return self}
 $B.set_func_names(tuple,"builtins")
+$B.js_list=$B.make_class("js_list",function(obj){console.log("make js list",obj)
+return{
+__class__: $B.js_list,obj: obj}}
+)
+for(var key in list){if((! key.startsWith("$"))&& typeof list[key]=="function"){$B.js_list[key]=(function(k){return function(){var args=[arguments[0].obj]
+for(var i=1;i< arguments.length;i++){args.push($B.pyobj2jsobj(arguments[i]))}
+return list[k].apply(null,args)}})(key)}}
 _b_.list=list
 _b_.tuple=tuple
 _b_.object.__bases__=tuple.$factory()})(__BRYTHON__)

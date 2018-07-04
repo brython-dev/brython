@@ -289,7 +289,9 @@ JSObject.__getattribute__ = function(self,attr){
             res.prototype = js_attr.prototype
             return {__class__: JSObject, js: res, js_func: js_attr}
         }else{
-            if(Array.isArray(js_attr)){return js_attr}
+            if(Array.isArray(js_attr)){
+                return $B.js_list.$factory(js_attr)
+            }
             return $B.$JS2Py(js_attr)
         }
     }else if(self.js === _window && attr === '$$location'){
