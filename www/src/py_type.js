@@ -192,7 +192,11 @@ $B.$class_constructor = function(class_name, class_obj, bases,
             //console.log("call initsubclass of", bases[i].__name__, extra_kwargs)
             init_subclass = _b_.type.__getattribute__(bases[i],
                 "__init_subclass__")
-            init_subclass(kls, {$nat: "kw", kw: extra_kwargs})
+            if(init_subclass.$infos.__func__ !== undefined){
+                init_subclass.$infos.__func__(kls, {$nat: "kw", kw: extra_kwargs})
+            }else{
+                init_subclass(kls, {$nat: "kw", kw: extra_kwargs})
+            }
         }
     }
     if(bases.length == 0){
