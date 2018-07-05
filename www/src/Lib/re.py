@@ -123,10 +123,8 @@ import enum
 import sre_compile
 import sre_parse
 import functools
-try:
-    import _locale
-except ImportError:
-    _locale = None
+
+_locale = None
 
 
 # public symbols
