@@ -64,8 +64,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,6,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.6.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-07-04 17:32:00.891781"
-__BRYTHON__.timestamp=1530718320891
+__BRYTHON__.compiled_date="2018-07-05 10:33:13.219005"
+__BRYTHON__.timestamp=1530779593219
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_py_abc","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -6766,7 +6766,7 @@ res.filename=self.$infos.__code__.co_filename
 res.co_code=self + "" 
 return res}else if(attr=='__annotations__'){
 return $B.obj_dict(self.$infos[attr])}else{return self.$infos[attr]}}else if(self.$attrs && self.$attrs[attr]!==undefined){return self.$attrs[attr]}else{return _b_.object.__getattribute__(self,attr)}}
-Function.__repr__=Function.__str__=function(self){if(self.$infos===undefined){console.log(self)}
+Function.__repr__=Function.__str__=function(self){
 return '<function ' + self.$infos.__qualname__ + '>'}
 Function.__mro__=[object]
 Function.__setattr__=function(self,attr,value){if(self.$infos[attr]!==undefined){self.$infos[attr]=value}
@@ -7528,7 +7528,7 @@ return pyobj.valueOf()}else if(klass===$B.Function ||klass===$B.method){
 return function(){try{var args=[]
 for(var i=0;i < arguments.length;i++){if(arguments[i]===undefined){args.push(_b_.None)}
 else{args.push(jsobj2pyobj(arguments[i]))}}
-return pyobj2jsobj(pyobj.apply(this,args))}catch(err){console.log(err)
+return jsobj2pyobj(pyobj.apply(this,args))}catch(err){console.log(err)
 console.log(_b_.getattr(err,'info'))
 console.log(err.__class__.__name__ + ':',err.args.length > 0 ? err.args[0]: '' )
 throw err}}}else{
@@ -7572,8 +7572,7 @@ return $B.$JS2Py(result)}
 res.__repr__=function(){return '<function ' + attr + '>'}
 res.__str__=function(){return '<function ' + attr + '>'}
 res.prototype=js_attr.prototype
-return{__class__: JSObject,js: res,js_func: js_attr}}else{if(Array.isArray(js_attr)){return $B.js_list.$factory(js_attr)}
-return $B.$JS2Py(js_attr)}}else if(self.js===_window && attr==='$$location'){
+return{__class__: JSObject,js: res,js_func: js_attr}}else{return $B.$JS2Py(js_attr)}}else if(self.js===_window && attr==='$$location'){
 return $Location()}
 var res=self.__class__[attr]
 if(res===undefined){
@@ -7916,6 +7915,7 @@ $B.path_importer_cache[self.path + "/"]=self},find_spec: function(self,fullname,
 catch(e){console.log("Could not load VFS while importing '" +
 fullname + "'")
 return _b_.None}}
+self.__class__.vfs=self.vfs
 var stored=self.vfs[fullname]
 if(stored===undefined){return _b_.None}
 var is_package=stored[2]
@@ -9155,7 +9155,7 @@ if(typeof $imag=="string"){throw _b_.TypeError.$factory("complex() second arg ca
 if(! isinstance($imag,_b_.float)&& ! isinstance($imag,_b_.int)&&
 ! isinstance($imag,_b_.complex)&& $imag !==undefined){throw _b_.TypeError.$factory("complex() argument must be a string " +
 "or a number")}
-$imag=complex.__mul__(complex("1j"),$imag)
+$imag=complex.__mul__(complex.$factory("1j"),$imag)
 return complex.__add__($imag,$real)}
 complex.__pos__=function(self){return self}
 function complex2expo(cx){var norm=Math.sqrt((cx.$real * cx.$real)+(cx.$imag * cx.$imag)),sin=cx.$imag / norm,cos=cx.$real / norm,angle
@@ -9207,7 +9207,7 @@ complex.__sub__=$op_func
 $op_func +='' 
 $op_func=$op_func.replace(/-/gm,"+").replace(/sub/gm,"add")
 eval("complex.__add__ = " + $op_func)
-var $comp_func=function(self,other){if(other===undefined ||other==_b_.None){throw _b_.NotImplemented("")}
+var $comp_func=function(self,other){if(other===undefined ||other==_b_.None){throw _b_.NotImplemented.$factory("")}
 throw _b_.TypeError.$factory("TypeError: no ordering relation " +
 "is defined for complex numbers")}
 $comp_func +='' 
@@ -9841,13 +9841,6 @@ break}
 else{throw err}}}
 return self}
 $B.set_func_names(tuple,"builtins")
-$B.js_list=$B.make_class("js_list",function(obj){console.log("make js list",obj)
-return{
-__class__: $B.js_list,obj: obj}}
-)
-for(var key in list){if((! key.startsWith("$"))&& typeof list[key]=="function"){$B.js_list[key]=(function(k){return function(){var args=[arguments[0].obj]
-for(var i=1;i< arguments.length;i++){args.push($B.pyobj2jsobj(arguments[i]))}
-return list[k].apply(null,args)}})(key)}}
 _b_.list=list
 _b_.tuple=tuple
 _b_.object.__bases__=tuple.$factory()})(__BRYTHON__)

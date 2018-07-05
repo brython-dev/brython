@@ -2250,7 +2250,7 @@ Function.__getattribute__ = function(self, attr){
 }
 
 Function.__repr__ = Function.__str__ = function(self){
-    if(self.$infos === undefined){console.log(self)}
+    //if(self.$infos === undefined){console.log(self)}
     return '<function ' + self.$infos.__qualname__ + '>'
 }
 

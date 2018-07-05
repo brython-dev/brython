@@ -841,29 +841,6 @@ tuple.__new__ = function(cls, ...args){
 // set method names
 $B.set_func_names(tuple, "builtins")
 
-$B.js_list = $B.make_class("js_list",
-    function(obj){
-        console.log("make js list", obj)
-        return {
-            __class__: $B.js_list,
-            obj: obj
-        }
-    }
-)
-for(var key in list){
-    if((! key.startsWith("$")) && typeof list[key] == "function"){
-        $B.js_list[key] = (function(k){
-            return function(){
-                var args = [arguments[0].obj]
-                for(var i = 1; i< arguments.length; i++){
-                    args.push($B.pyobj2jsobj(arguments[i]))
-                }
-                return list[k].apply(null, args)
-            }
-        })(key)
-    }
-}
-
 _b_.list = list
 _b_.tuple = tuple
 
