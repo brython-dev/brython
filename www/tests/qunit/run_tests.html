@@ -67,6 +67,21 @@
     <!-- Javascript code needed to run JSObject tests -->
     <script type="text/javascript" src="../jsobj_tests.js"></script>
 
+<script>
+QUnit.test('web_worker', function(assert) {
+    var w = new Worker('../../tests/web_worker_tests.js');
+    done = assert.async();
+
+    w.onmessage = function(e) {
+        assert.equal(e.data, 'world');
+        done();
+    }
+
+    w.onerror = function(e) {
+        assert.ok(false, 'Error in webworker');
+    }
+});
+</script>
 
 <script type="text/python3">
 from javascript import JSObject
@@ -76,6 +91,7 @@ from   brython_test_utils import unittest as test_utils
 import unittest
 
 _QUnit = window.QUnit
+
 # TODO: Arg values e.g. verbosity level ?
 result = test_utils.OneTimeTestResult()
 
@@ -97,7 +113,6 @@ qunit_add_tests(test_utils.load_brython_test_cases('..'))
 from unittest.loader import TestLoader
 import test.test_dict
 qunit_add_tests(TestLoader().loadTestsFromModule(test.test_dict))
-
 </script>
 
   </body>

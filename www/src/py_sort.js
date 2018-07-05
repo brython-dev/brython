@@ -431,7 +431,7 @@ var TimSortAssertion = function(message) {
 
 
 var TimSort = function(array, compare){
-    self = {
+    var self = {
         array: array,
         compare: compare,
         minGallop: DEFAULT_MIN_GALLOPING,
@@ -956,7 +956,7 @@ function tim_sort(array, compare, lo, hi){
               force = minRun
             }
 
-            binaryInsertionSort(array, lo, lo + force, lo + runLength, 
+            binaryInsertionSort(array, lo, lo + force, lo + runLength,
                 compare)
             runLength = force
         }
