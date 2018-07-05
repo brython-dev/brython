@@ -27,6 +27,7 @@ before_script:
   # - export PATH=$PWD/travis_phantomjs/phantomjs-2.1.1-linux-x86_64/bin:$PATH
 
 script:
+  - (cd scripts && python make_dist.py)
   - ./node_modules/.bin/testem --skip PhantomJS,Chromium -t www/tests/qunit/run_tests.html ci
   #- phantomjs phantomjs/examples/run-qunit.js www/tests/qunit/run_tests.html
 
