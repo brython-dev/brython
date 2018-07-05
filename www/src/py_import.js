@@ -680,6 +680,7 @@ var vfs_hook = {
                 return _b_.None
             }
         }
+        self.__class__.vfs = self.vfs
         var stored = self.vfs[fullname]
         if(stored === undefined){return _b_.None}
         var is_package = stored[2]
