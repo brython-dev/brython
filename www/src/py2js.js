@@ -9349,7 +9349,7 @@ var loop = $B.loop = function(){
 }
 
 $B.tasks = []
-$B.has_indexedDB = window.indexedDB !== undefined
+$B.has_indexedDB = self.indexedDB !== undefined
 
 function handle_error(err){
     // Print the error traceback on the standard error stream
