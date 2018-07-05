@@ -78,12 +78,18 @@ nosetests.xml
 # Temporary QUnit folder
 #qunit/
 
+# virtualenv
+venv/
+
 # Files created by make_dist
 npm/*.js
 npm/unicode.txt
+setup/data/unicode.txt
+setup/data/changelog_*.txt
 setup/data/*.js
 setup/data/demo.html
 www/static_doc
-
-# virtualenv
-venv/
+www/src/brython.js
+www/src/brython_stdlib.js
+www/src/brython_dist.js
+www/src/version_info.js
