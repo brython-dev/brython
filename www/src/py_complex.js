@@ -204,7 +204,7 @@ complex.__new__ = function(cls){
         throw _b_.TypeError.$factory("complex() argument must be a string " +
             "or a number")
     }
-    $imag = complex.__mul__(complex("1j"), $imag)
+    $imag = complex.__mul__(complex.$factory("1j"), $imag)
     return complex.__add__($imag, $real)
 }
 
@@ -354,7 +354,7 @@ eval("complex.__add__ = " + $op_func)
 // comparison methods
 var $comp_func = function(self, other){
     if(other === undefined || other == _b_.None){
-        throw _b_.NotImplemented("")
+        throw _b_.NotImplemented.$factory("")
     }
     throw _b_.TypeError.$factory("TypeError: no ordering relation " +
         "is defined for complex numbers")
