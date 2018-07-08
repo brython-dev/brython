@@ -2324,13 +2324,6 @@ for(var i = 0; i < builtin_names.length; i++){
         _b_[name] = eval(name1)
         if($B.builtin_funcs.indexOf(orig_name) > -1){
             _b_[name].__class__ = builtin_function
-            /*
-            if(_b_[name].__repr__ === undefined){
-                _b_[name].__repr__ = _b_[name].__str__ = (function(x){
-                    return function(){return '<built-in function ' + x + '>'}
-                })(orig_name)
-            }
-            */
             // used by inspect module
             _b_[name].$infos = {
                 __module__: 'builtins',
@@ -2348,23 +2341,6 @@ for(var i = 0; i < builtin_names.length; i++){
 _b_['open'] = $url_open
 _b_['print'] = $print
 _b_['$$super'] = $$super
-
-_b_.binput = function(msg){
-    var frame = $B.last($B.frames_stack),
-        line_info = frame[3].$line_info,
-        line_num = parseInt(line_info.split(",")[0]),
-        src = frame[3].$src,
-        line = src.split("\n")[line_num - 1],
-        rest = src.split("\n").slice(line_num).join("\n")
-    console.log("binput frame", frame)
-    throw {
-        name:        "Input",
-        level:       "Show Stopper",
-        message:     rest,
-        toString:    function(){return this.name + ": " + this.message;},
-        frames:      $B.frames_stack.slice()
-    }
-}
 
 _b_.object.__init__.__class__ = wrapper_descriptor
 _b_.object.__new__.__class__ = builtin_function

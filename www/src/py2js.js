@@ -286,7 +286,7 @@ var $add_yield_from_code = $B.parser.$add_yield_from_code = function(yield_ctx) 
     }
 
     pnode.bindings = pnode.bindings || {}
-
+    
     for(attr in repl){
         replace_with = replace_with.replace(new RegExp(attr, 'g'), repl[attr])
         // Add internal names to node bindings
@@ -8124,8 +8124,6 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
 
     var module = root.module
 
-    root.line_level = root.line_level || {}
-
     var lnum = 1
     while(pos < src.length){
         var car = src.charAt(pos)
@@ -8155,8 +8153,7 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
             new_node.indent = indent
             new_node.line_num = lnum
             new_node.module = module
-            root.line_level[lnum] = indent
-
+            
             // attach new node to node with indentation immediately smaller
             if(indent > current.indent){
                 // control that parent ended with ':'
@@ -8727,7 +8724,8 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
 
 }
 
-var $create_root_node = $B.parser.$create_root_node = function(src, module, locals_id, parent_block, line_info){
+var $create_root_node = $B.parser.$create_root_node = function(src, module,
+        locals_id, parent_block, line_info){
     var root = new $Node('module')
     root.module = module
     root.id = locals_id
@@ -9337,37 +9335,7 @@ var loop = $B.loop = function(){
             // If the error was not caught by the Python runtime, build an
             // instance of a Python exception
             if(err.$py_error === undefined){
-                console.log('Javascript error', err)
-                if(err.name == "Input"){
-                    var frame = $B.last(err.frames),
-                        rest = err.message
-                    var popup = document.createElement("INPUT")
-                    popup.addEventListener("blur", function(){
-                        console.log("run rest", rest)
-                        var root = $B.py2js(rest, frame[0], frame[2])
-                        for(var attr in frame[1]){
-                            if(! attr.startsWith("$")){
-                                root.binding[attr] = true
-                            }
-                        }
-                        for(var attr in frame[3]){
-                            if(! attr.startsWith("$")){
-                                root.binding[attr] = true
-                            }
-                        }
-                        var js = root.to_js()
-                        console.log("root", root, "js", js)
-                        // restore global namespace
-                        $B.imported[frame[2]] = frame[3]
-                        // restore frames stack
-                        $B.frames_stack = err.frames
-                        eval("var $locals_" + frame[0] + " = frame[1]")
-                        eval("var $locals_" + frame[2] + " = frame[3]")
-                        eval(js)
-                    })
-                    document.body.appendChild(popup)
-                    return
-                }
+                //console.log('Javascript error', err)
                 err = _b_.RuntimeError.$factory(err+'')
             }
 
