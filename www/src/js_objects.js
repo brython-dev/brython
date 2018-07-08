@@ -162,7 +162,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
                     if(arguments[i] === undefined){args.push(_b_.None)}
                     else{args.push(jsobj2pyobj(arguments[i]))}
                 }
-                return jsobj2pyobj(pyobj.apply(this, args))
+                return pyobj2jsobj(pyobj.apply(this, args))
             }catch(err){
                 console.log(err)
                 console.log(_b_.getattr(err,'info'))
