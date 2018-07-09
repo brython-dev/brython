@@ -249,7 +249,11 @@ var getExceptionTrace = function(exc, includeInternal) {
         if(!includeInternal){
             var src = frame[3].$src
             if(src === undefined){
-                continue
+                if($B.VFS && $B.VFS.hasOwnProperty(frame[2])){
+                    src = $B.VFS[frame[2]][1]
+                }else{
+                    continue
+                }
             }
         }
         var module = line_info[1]
@@ -264,7 +268,7 @@ var getExceptionTrace = function(exc, includeInternal) {
             var line = lines[parseInt(line_info[0]) - 1]
             if(line){line = line.replace(/^[ ]+/g, "")}
             info += "\n    " + line
-        }
+        }else{    console.log("src undefined for", frame[3]) }
     }
     return info
 };
