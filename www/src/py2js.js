@@ -286,7 +286,7 @@ var $add_yield_from_code = $B.parser.$add_yield_from_code = function(yield_ctx) 
     }
 
     pnode.bindings = pnode.bindings || {}
-    
+
     for(attr in repl){
         replace_with = replace_with.replace(new RegExp(attr, 'g'), repl[attr])
         // Add internal names to node bindings
@@ -8153,7 +8153,7 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
             new_node.indent = indent
             new_node.line_num = lnum
             new_node.module = module
-            
+
             // attach new node to node with indentation immediately smaller
             if(indent > current.indent){
                 // control that parent ended with ':'

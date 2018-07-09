@@ -1750,7 +1750,9 @@ $B.$setattr = function(obj, attr, value){
     }
 
     // Use __slots__ if defined
-    if(klass && klass.__slots__ && klass.__slots__.indexOf(attr) == -1){
+    var special_attrs = ["__module__"]
+    if(klass && klass.__slots__ && klass.__slots__.indexOf(attr) == -1 &&
+            special_attrs.indexOf(attr) == -1){
         throw _b_.AttributeError.$factory("'"  + klass.__name__ +
             "' object has no attribute '" + attr + "'")
     }

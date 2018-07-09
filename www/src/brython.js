@@ -64,9 +64,9 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,6,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.6.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-07-08 01:17:16.940060"
-__BRYTHON__.timestamp=1531005436940
-__BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_py_abc","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
+__BRYTHON__.compiled_date="2018-07-09 08:48:42.330559"
+__BRYTHON__.timestamp=1531118922330
+__BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
 isFinite(value)&&
@@ -4153,7 +4153,6 @@ var int_pattern=new RegExp("^\\d[0-9_]*(j|J)?"),float_pattern1=new RegExp("^\\d[
 var C=null
 var new_node=new $Node(),current=root,name="",_type=null,pos=0,indent=null,string_modifier=false
 var module=root.module
-root.line_level=root.line_level ||{}
 var lnum=1
 while(pos < src.length){var car=src.charAt(pos)
 if(indent===null){var indent=0
@@ -4174,7 +4173,6 @@ continue}
 new_node.indent=indent
 new_node.line_num=lnum
 new_node.module=module
-root.line_level[lnum]=indent
 if(indent > current.indent){
 if(C !==null){if($indented.indexOf(C.tree[0].type)==-1){$pos=pos
 $_SyntaxError(C,'unexpected indent',pos)}}
@@ -4691,22 +4689,7 @@ var task=$B.tasks.shift(),func=task[0],args=task.slice(1)
 if(func=="execute"){try{var script=task[1],src=script.src,name=script.name,url=script.url,js=script.js
 eval(js)}catch(err){if($B.debug > 1){console.log(err)
 for(var attr in err){console.log(attr+' : ',err[attr])}}
-if(err.$py_error===undefined){console.log('Javascript error',err)
-if(err.name=="Input"){var frame=$B.last(err.frames),rest=err.message
-var popup=document.createElement("INPUT")
-popup.addEventListener("blur",function(){console.log("run rest",rest)
-var root=$B.py2js(rest,frame[0],frame[2])
-for(var attr in frame[1]){if(! attr.startsWith("$")){root.binding[attr]=true}}
-for(var attr in frame[3]){if(! attr.startsWith("$")){root.binding[attr]=true}}
-var js=root.to_js()
-console.log("root",root,"js",js)
-$B.imported[frame[2]]=frame[3]
-$B.frames_stack=err.frames
-eval("var $locals_" + frame[0]+ " = frame[1]")
-eval("var $locals_" + frame[2]+ " = frame[3]")
-eval(js)})
-document.body.appendChild(popup)
-return}
+if(err.$py_error===undefined){
 err=_b_.RuntimeError.$factory(err+'')}
 handle_error(err)}
 loop()}else{
@@ -6582,7 +6565,9 @@ return None}}else if(klass && klass.$descriptors !==undefined &&
 klass[attr]!==undefined){var setter=klass[attr].setter
 if(typeof setter=='function'){setter(obj,value)
 return None}else{throw _b_.AttributeError.$factory('readonly attribute')}}}
-if(klass && klass.__slots__ && klass.__slots__.indexOf(attr)==-1){throw _b_.AttributeError.$factory("'" + klass.__name__ +
+var special_attrs=["__module__"]
+if(klass && klass.__slots__ && klass.__slots__.indexOf(attr)==-1 &&
+special_attrs.indexOf(attr)==-1){throw _b_.AttributeError.$factory("'" + klass.__name__ +
 "' object has no attribute '" + attr + "'")}
 var _setattr=false
 if(klass !==undefined){_setattr=klass.__setattr__
@@ -6804,10 +6789,6 @@ catch(err){}}
 _b_['open']=$url_open
 _b_['print']=$print
 _b_['$$super']=$$super
-_b_.binput=function(msg){var frame=$B.last($B.frames_stack),line_info=frame[3].$line_info,line_num=parseInt(line_info.split(",")[0]),src=frame[3].$src,line=src.split("\n")[line_num - 1],rest=src.split("\n").slice(line_num).join("\n")
-console.log("binput frame",frame)
-throw{
-name: "Input",level: "Show Stopper",message: rest,toString: function(){return this.name + ": " + this.message;},frames: $B.frames_stack.slice()}}
 _b_.object.__init__.__class__=wrapper_descriptor
 _b_.object.__new__.__class__=builtin_function})(__BRYTHON__)
 ;(function($B){eval($B.InjectBuiltins())
@@ -6914,7 +6895,7 @@ if(i==exc.$stack.length - 1 && exc.$line_info){$line_info=exc.$line_info}
 var line_info=$line_info.split(','),src
 if(exc.module==line_info[1]){src=exc.src}
 if(!includeInternal){var src=frame[3].$src
-if(src===undefined){continue}}
+if(src===undefined){if($B.VFS && $B.VFS.hasOwnProperty(frame[2])){src=$B.VFS[frame[2]][1]}else{continue}}}
 var module=line_info[1]
 if(module.charAt(0)=="$"){module="<module>"}
 info +="\n  module " + module + " line " + line_info[0]
@@ -6922,7 +6903,7 @@ if(frame.length > 4 && frame[4].$infos){info +=', in ' + frame[4].$infos.__name_
 if(src !==undefined){var lines=src.split("\n");
 var line=lines[parseInt(line_info[0])- 1]
 if(line){line=line.replace(/^[ ]+/g,"")}
-info +="\n    " + line}}
+info +="\n    " + line}else{console.log("src undefined for",frame[3])}}
 return info};
 BaseException.__getattr__=function(self,attr){if(attr=="info"){return getExceptionTrace(self,false);}else if(attr=="infoWithInternal"){return getExceptionTrace(self,true);}else if(attr=="traceback"){
 return traceback.$factory(self)}else{throw _b_.AttributeError.$factory(self.__class__.__name__ +
