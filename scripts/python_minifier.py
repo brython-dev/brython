@@ -44,6 +44,7 @@ def minify(src, preserve_lines=False):
     last_type = None
     indent = 0 # current indentation level
     brackets = [] # stack for brackets
+    orig_lines = src.split("\n")
 
     # first token is script encoding
     encoding = next(token_generator).string
@@ -53,7 +54,7 @@ def minify(src, preserve_lines=False):
 
     for item in token_generator:
         # update brackets stack if necessary
-        if token.tok_name[item.type]=='OP':
+        if token.tok_name[item.type] == 'OP':
             if item.string in '([{':
                 brackets.append(item.string)
             elif item.string in '}])':
@@ -64,37 +65,42 @@ def minify(src, preserve_lines=False):
             continue
 
         # udpdate indentation level
-        if item.type==tokenize.INDENT:
+        if item.type == tokenize.INDENT:
             indent += 1
-        elif item.type==tokenize.DEDENT:
+        elif item.type == tokenize.DEDENT:
             indent -= 1
             continue
 
-        if sline>line: # first token in a line
+        if sline > line: # first token in a line
 
-            if not brackets and item.type==tokenize.STRING:
+            while out.count("\n") < sline - 1:
+                if last_item.line.rstrip().endswith("\\"):
+                    out += "\\"
+                out += "\n"
+
+            if not brackets and item.type == tokenize.STRING:
                 if last_type in [tokenize.NEWLINE, tokenize.INDENT, None]:
                     # If not inside a bracket, replace a string starting a
                     # line by the empty string.
                     # It will be removed if the next line has the same
                     # indentation.
-                    out += ' '*indent+"''"
+                    out += ' ' * indent + "''"
                     if preserve_lines:
-                        out += '\n'*item.string.count('\n')
+                        out += '\n' * item.string.count('\n')
                     continue
-            out += ' '*indent # start with current indentation
+            out += ' ' * indent # start with current indentation
             if item.type not in [tokenize.INDENT, tokenize.COMMENT]:
                 out += item.string
-            elif item.type==tokenize.COMMENT and \
-                line<=2 and item.line.startswith('#!'):
+            elif (item.type == tokenize.COMMENT and
+                    line <= 2 and item.line.startswith('#!')):
                 # Ignore comments starting a line, except in one of the first
                 # 2 lines, for interpreter path and/or encoding declaration
                 out += item.string
         else:
             if item.type == tokenize.COMMENT: # ignore comments in a line
                 continue
-            if not brackets and item.type == tokenize.STRING and \
-                last_type in [tokenize.NEWLINE, tokenize.INDENT]:
+            if (not brackets and item.type == tokenize.STRING and
+                    last_type in [tokenize.NEWLINE, tokenize.INDENT]):
                 # If not inside a bracket, ignore string after newline or
                 # indent
                 out += "''"
@@ -105,27 +111,29 @@ def minify(src, preserve_lines=False):
             if item.type in [tokenize.NAME, tokenize.NUMBER, tokenize.OP] and \
                 last_type in previous_types:
                 # insert a space when needed
-                if item.type != tokenize.OP \
-                    or item.string not in ',()[].=:{}+&' \
-                    or (last_type == tokenize.NAME and last_item.string in kwlist):
-                        out += ' '
-            elif item.type == tokenize.STRING and \
-                item.string[0] in 'rbu' and \
-                last_type in [tokenize.NAME, tokenize.NUMBER]:
+                if (item.type != tokenize.OP \
+                        or item.string not in ',()[].=:{}+&' \
+                        or (last_type == tokenize.NAME and
+                        last_item.string in kwlist)):
+                    out += ' '
+            elif (item.type == tokenize.STRING and
+                    last_type in [tokenize.NAME, tokenize.NUMBER]):
                 # for cases like "return b'x'"
                 out += ' '
-            elif item.type == tokenize.NAME \
-                and last_item.type == tokenize.OP and last_item.string == '.':
+            elif (item.type == tokenize.NAME and
+                    item.string == "import" and
+                    last_item.type == tokenize.OP and
+                    last_item.string == '.'):
                 # special case : from . import X
                 out += ' '
-            elif (item.type in async_types and 
+            elif (item.type in async_types and
                     last_item.type in previous_types):
                 out += ' '
             out += item.string
 
         line = item.end[0]
         last_item = item
-        if item.type==tokenize.NL and last_type==tokenize.COMMENT:
+        if item.type == tokenize.NL and last_type == tokenize.COMMENT:
             # NL after COMMENT is interpreted as NEWLINE
             last_type = tokenize.NEWLINE
         else:
