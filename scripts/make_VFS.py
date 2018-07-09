@@ -6,6 +6,7 @@ import os
 import re
 
 import python_minifier
+import git
 
 class Visitor(ast.NodeVisitor):
     """Used to list all the modules imported by a script."""
@@ -76,6 +77,8 @@ def process(filename, exclude_dirs=['test','site-packages']):
                 if ext not in ('.js', '.py'):
                     continue
                 if re.match(r'^module\d+\..*$', _file):
+                    continue
+                if not git.in_index(_file):
                     continue
                 nb += 1
 
