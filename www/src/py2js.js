@@ -3518,7 +3518,7 @@ var $FromCtx = $B.parser.$FromCtx = function(context){
             // 'from X import *' : this will make name resolution harder :-(
             scope.blurred = true
             res[pos++] = '\n' + head + 'for(var $attr in $B.imported["' +
-                mod_name + '"]){if($attr.charAt(0) !== "_")' +
+                mod_name + '"]){if($attr.charAt(0) !== "_" && $attr.charAt(0) !== "$")' +
                 '{$locals[$attr] = $B.imported["' + mod_name + '"][$attr]}};'
         }else{
             this.names.forEach(function(name){
