@@ -21,7 +21,7 @@ if sys.version_info[0] != 3:
 pdir = os.path.dirname(os.getcwd())
 # version info
 version = [3, 3, 0, "alpha", 0]
-implementation = [3, 6, 3, "dev", 0]
+implementation = [3, 5, 2, "dev", 0]
 
 # version name
 vname = '.'.join(str(x) for x in implementation[:3])
@@ -96,8 +96,7 @@ def run():
         'py_exceptions', 'py_range_slice', 'py_bytes', 'js_objects',
         'stdlib_paths', 'py_import', 'py_float', 'py_int', 'py_long_int',
         'py_complex', 'py_sort', 'py_list', 'py_string', 'py_dict', 'py_set',
-        'py_dom', 'py_generator', 'builtin_modules', 'py_import_hooks',
-        'async'
+        'py_dom', 'py_generator', 'builtin_modules', 'py_import_hooks'
     ]
 
     res = """// brython.js brython.info
