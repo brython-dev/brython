@@ -93,3 +93,5 @@ www/src/brython.js
 www/src/brython_stdlib.js
 www/src/brython_dist.js
 www/src/version_info.js
+
+node_modules/
