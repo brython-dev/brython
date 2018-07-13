@@ -8800,7 +8800,7 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_info){
     // Create internal variables
     var js = ['var $B = __BRYTHON__;\n'], pos = 1
 
-    js[pos++] = 'eval(__BRYTHON__.InjectBuiltins());\n\n'
+    js[pos++] = 'var $bltns = __BRYTHON__.InjectBuiltins();eval($bltns);\n\n'
 
     js[pos] = 'var '
     if(locals_is_module){
@@ -9267,6 +9267,7 @@ function ajax_load_script(script){
                     js = root.to_js()
                     $B.tasks.splice(0, 0, ["execute",
                         {js: js, src: src, name: name, url: url}])
+                    root = null
                 }catch(err){
                     handle_error(err)
                 }
@@ -9323,7 +9324,7 @@ var loop = $B.loop = function(){
                 name = script.name,
                 url = script.url,
                 js = script.js
-            eval(js)
+            new Function(js)()
         }catch(err){
             if($B.debug > 1){
                 console.log(err)
@@ -9335,7 +9336,7 @@ var loop = $B.loop = function(){
             // If the error was not caught by the Python runtime, build an
             // instance of a Python exception
             if(err.$py_error === undefined){
-                //console.log('Javascript error', err)
+                console.log('Javascript error', err)
                 err = _b_.RuntimeError.$factory(err+'')
             }
 
@@ -9409,7 +9410,7 @@ $B.run_script = function(src, name){
     $B.$py_module_path[name] = $B.script_path
     try{
         var root = $B.py2js(src, name, name),
-            js = "(function(){" + root.to_js() + "})()",
+            js = root.to_js(),
             script = {
                 js: js,
                 name: name,
@@ -9452,6 +9453,7 @@ $B.run_script = function(src, name){
         for(var j=0; j<imports.length;j++){
            $B.tasks.push([$B.inImported, imports[j]])
         }
+        root = null
     }
     $B.tasks.push(["execute", script])
 }

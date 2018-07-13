@@ -1,7 +1,8 @@
 // built-in functions
 ;(function($B){
 
-eval($B.InjectBuiltins())
+var bltns = $B.InjectBuiltins()
+eval(bltns)
 
 _b_.__debug__ = false
 
@@ -594,16 +595,36 @@ function $$eval(src, _globals, _locals){
         }
 
         js = root.to_js()
-        var res = eval(js)
 
-        gns = eval('$locals_' + globals_id)
+        if(is_exec){
+            var locals_obj = eval("$locals_" + locals_id),
+                globals_obj = eval("$locals_" + globals_id)
+            if(_globals === _b_.None){
+                var res = new Function("$locals_" + globals_id,
+                    "$locals_" + locals_id, js)(globals_obj, locals_obj)
+
+            }else{
+                current_globals_obj = current_frame[3]
+                current_locals_obj = current_frame[1]
+                var res = new Function("$locals_" + globals_id,
+                    "$locals_" + locals_id,
+                    "$locals_" + current_globals_id,
+                    "$locals_" + current_locals_id,
+                    js)(globals_obj, locals_obj,
+                        current_globals_obj, current_locals_obj)
+            }
+        }else{
+            var res = eval(js)
+        }
+
+        gns = eval("$locals_" + globals_id)
         if($B.frames_stack[$B.frames_stack.length - 1][2] == globals_id){
             gns = $B.frames_stack[$B.frames_stack.length - 1][3]
         }
 
         // Update _locals with the namespace after execution
         if(_locals !== _b_.None){
-            lns = eval('$locals_' + locals_id)
+            lns = eval("$locals_" + locals_id)
             for(var attr in lns){
                 var attr1 = $B.from_alias(attr)
                 if(attr1.charAt(0) != '$'){
@@ -634,7 +655,7 @@ function $$eval(src, _globals, _locals){
 
         // fixme: some extra variables are bleeding into locals...
         /*  This also causes issues for unittests */
-        if(res === undefined) return _b_.None
+        if(res === undefined){return _b_.None}
         return res
     }catch(err){
         err.src = src
@@ -2189,7 +2210,7 @@ var FunctionCode = $B.make_class("function code")
 
 var FunctionGlobals = $B.make_class("function globals")
 
-var Function = $B.Function = {
+$B.Function = {
     __class__: _b_.type,
     __code__: {__class__: FunctionCode, __name__: 'function code'},
     __globals__: {__class__: FunctionGlobals, __name__: 'function globals'},
@@ -2199,18 +2220,18 @@ var Function = $B.Function = {
     $is_class: true
 }
 
-Function.__dir__ = function(self){
+$B.Function.__dir__ = function(self){
     var infos = self.$infos || {},
         attrs = self.$attrs || {}
 
     return Object.keys(infos).concat(Object.keys(attrs))
 }
 
-Function.__eq__ = function(self, other){
+$B.Function.__eq__ = function(self, other){
     return self === other
 }
 
-Function.__get__ = function(self, obj){
+$B.Function.__get__ = function(self, obj){
     if(obj === _b_.None){
         return self
     }
@@ -2225,7 +2246,7 @@ Function.__get__ = function(self, obj){
     return method
 }
 
-Function.__getattribute__ = function(self, attr){
+$B.Function.__getattribute__ = function(self, attr){
     // Internal attributes __name__, __module__, __doc__ etc.
     // are stored in self.$infos
     if(self.$infos && self.$infos[attr] !== undefined){
@@ -2251,20 +2272,20 @@ Function.__getattribute__ = function(self, attr){
     }
 }
 
-Function.__repr__ = Function.__str__ = function(self){
+$B.Function.__repr__ = $B.Function.__str__ = function(self){
     //if(self.$infos === undefined){console.log(self)}
     return '<function ' + self.$infos.__qualname__ + '>'
 }
 
-Function.__mro__ = [object]
-Function.__setattr__ = function(self, attr, value){
+$B.Function.__mro__ = [object]
+$B.Function.__setattr__ = function(self, attr, value){
     if(self.$infos[attr] !== undefined){self.$infos[attr] = value}
     else{self.$attrs = self.$attrs || {}; self.$attrs[attr] = value}
 }
 
-Function.$factory = function(){}
+$B.Function.$factory = function(){}
 
-$B.set_func_names(Function, "builtins")
+$B.set_func_names($B.Function, "builtins")
 
 _b_.__BRYTHON__ = __BRYTHON__
 

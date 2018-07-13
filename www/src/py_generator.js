@@ -20,7 +20,8 @@
 //   yielding node
 
 var _b_ = $B.builtins
-eval($B.InjectBuiltins())
+var bltns = $B.InjectBuiltins()
+eval(bltns)
 
 function rstrip(s, strip_chars) {
     var _chars = strip_chars || " \t\n";
