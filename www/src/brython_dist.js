@@ -64,8 +64,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,6,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.6.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-07-13 18:38:46.514047"
-__BRYTHON__.timestamp=1531499926514
+__BRYTHON__.compiled_date="2018-07-14 15:10:41.221064"
+__BRYTHON__.timestamp=1531573841221
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_py_abc","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -1545,6 +1545,7 @@ this.toString=function(){return '(for) ' + this.tree}
 this.transform=function(node,rank){var scope=$get_scope(this),target=this.tree[0],target_is_1_tuple=target.tree.length==1 && target.expect=='id',iterable=this.tree[1],num=this.loop_num,local_ns='$locals_' + scope.id.replace(/\./g,'_'),h='\n' + ' '.repeat(node.indent + 4)
 var $range=false
 if(target.tree.length==1 &&
+! scope.blurred &&
 target.expct !='id' &&
 iterable.type=='expr' &&
 iterable.tree[0].type=='expr' &&
@@ -1558,13 +1559,12 @@ if($range && scope.ntype !='generator'){if(this.has_break){
 new_node=new $Node()
 new $NodeJSCtx(new_node,local_ns + '["$no_break' + num + '"] = true')
 new_nodes[pos++]=new_node}
-var range_is_builtin=false
-if(!scope.blurred){var _scope=$get_scope(this),found=[]
+var range_is_builtin=false,_scope=$get_scope(this),found=[]
 while(1){if(_scope.binding["range"]){found.push(_scope.id)}
 if(_scope.parent_block){_scope=_scope.parent_block}
 else{break}}
 range_is_builtin=found.length==1 &&
-found[0]=="__builtins__"}
+found[0]=="__builtins__"
 var test_range_node=new $Node()
 if(range_is_builtin){new $NodeJSCtx(test_range_node,'if(1)')}else{new $NodeJSCtx(test_range_node,'if(' + call.func.to_js()+ ' === $B.builtins.range)')}
 new_nodes[pos++]=test_range_node
@@ -1842,6 +1842,7 @@ this.to_js=function(arg){
 if(this.result !==undefined && this.scope.ntype=='generator'){return this.result}
 this.js_processed=true
 var val=this.value
+var $test=val=="_"
 var annotation=""
 if(this.parent.type=="expr" && this.parent.parent.type=="node" &&
 this.parent.hasOwnProperty("annotation")){var js=this.parent.annotation.tree[0].to_js()
@@ -1867,6 +1868,7 @@ else if(gs.parent_block.id===undefined){break}
 gs=gs.parent_block}
 search_ids.push('"' + gs.id + '"')}
 search_ids="[" + search_ids.join(", ")+ "]"
+if($test){console.log(val,search_ids)}
 if(this.nonlocal ||this.bound){var bscope=this.firstBindingScopeId()
 if(bscope !==undefined){return annotation + "$locals_" + bscope.replace(/\./g,"_")+ '["' +
 val + '"]'}}

@@ -3148,10 +3148,11 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
         // "range"
         var $range = false
         if(target.tree.length == 1 &&
-            target.expct != 'id' &&
-            iterable.type == 'expr' &&
-            iterable.tree[0].type == 'expr' &&
-            iterable.tree[0].tree[0].type == 'call'){
+                ! scope.blurred &&
+                target.expct != 'id' &&
+                iterable.type == 'expr' &&
+                iterable.tree[0].type == 'expr' &&
+                iterable.tree[0].tree[0].type == 'call'){
             var call = iterable.tree[0].tree[0]
             if(call.func.type == 'id'){
                 var func_name = call.func.value
@@ -3180,18 +3181,16 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
             }
 
             // Check that range is the built-in function
-            var range_is_builtin = false
-            if(!scope.blurred){
-                var _scope = $get_scope(this),
-                    found = []
-                while(1){
-                    if(_scope.binding["range"]){found.push(_scope.id)}
-                    if(_scope.parent_block){_scope = _scope.parent_block}
-                    else{break}
-                }
-                range_is_builtin = found.length == 1 &&
-                    found[0] == "__builtins__"
+            var range_is_builtin = false,
+                _scope = $get_scope(this),
+                found = []
+            while(1){
+                if(_scope.binding["range"]){found.push(_scope.id)}
+                if(_scope.parent_block){_scope = _scope.parent_block}
+                else{break}
             }
+            range_is_builtin = found.length == 1 &&
+                found[0] == "__builtins__"
 
             // Line to test if the callable "range" is the built-in "range"
             var test_range_node = new $Node()
@@ -3798,6 +3797,8 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         this.js_processed = true
         var val = this.value
 
+        var $test = false //val == "_"
+
         var annotation = ""
         if(this.parent.type == "expr" && this.parent.parent.type == "node" &&
                 this.parent.hasOwnProperty("annotation")){
@@ -3856,6 +3857,10 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
             search_ids.push('"' + gs.id + '"')
         }
         search_ids = "[" + search_ids.join(", ") + "]"
+
+        if($test){
+            console.log(val, search_ids)
+        }
 
         if(this.nonlocal || this.bound){
             var bscope = this.firstBindingScopeId()
