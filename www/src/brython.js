@@ -64,8 +64,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,6,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.6.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-07-15 10:54:56.278881"
-__BRYTHON__.timestamp=1531644896278
+__BRYTHON__.compiled_date="2018-07-15 11:46:03.634899"
+__BRYTHON__.timestamp=1531647963634
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_py_abc","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -6835,7 +6835,7 @@ stack=exc.$stack
 return{
 __class__ : traceback,$stack: stack,exc: exc}}
 )
-traceback.__getattribute__=function(self,attr){var line_info;
+traceback.__getattribute__=function(self,attr){var line_info
 if(attr==='tb_frame' ||
 attr==='tb_lineno' ||
 attr==='tb_lasti' ||
@@ -6896,7 +6896,7 @@ var getExceptionTrace=function(exc,includeInternal){if(exc.__class__===undefined
 return exc + ''}else{var name=exc.__class__.__name__
 if(name=="SyntaxError" ||name=="IndentationError"){return 'File "' + exc.args[1]+ '", line ' + exc.args[2]+
 "\n    " + exc.args[4]}}
-var info='';
+var info=''
 if(exc.$js_exc !==undefined && includeInternal){info +="\nJS stack:\n" + exc.$js_exc.stack + "\n"}
 info +="Traceback (most recent call last):"
 var line_info=exc.$line_info
@@ -6916,7 +6916,7 @@ if(src !==undefined){var lines=src.split("\n");
 var line=lines[parseInt(line_info[0])- 1]
 if(line){line=line.replace(/^[ ]+/g,"")}
 info +="\n    " + line}else{console.log("src undefined for",frame[3])}}
-return info};
+return info}
 BaseException.__getattr__=function(self,attr){if(attr=="info"){return getExceptionTrace(self,false);}else if(attr=="infoWithInternal"){return getExceptionTrace(self,true);}else if(attr=="traceback"){
 return traceback.$factory(self)}else{throw _b_.AttributeError.$factory(self.__class__.__name__ +
 " has no attribute '" + attr + "'")}}
@@ -6972,16 +6972,13 @@ var code=name[1],name=name[0]}
 $B.builtins_scope[name]=true
 var $exc=(BaseException.$factory + "").replace(/BaseException/g,name)
 $exc=$exc.replace("//placeholder//",code)
-_str[pos++]="_b_." + name + '={__class__:_b_.type,__name__:"' +
-name + '"}'
-_str[pos++]="_b_." + name + ".__bases__ = [parent]"
-_str[pos++]="_b_." + name + '.__module__ = "builtins"'
-_str[pos++]='_b_.' + name + ".__mro__ = [_b_." + parent.__name__ +
-"].concat(parent.__mro__)"
+_str[pos++]="_b_." + name + ' = {__class__:_b_.type, __name__:"' +
+name + '", __bases__: [parent], __module__: "builtins", '+
+'__mro__: [_b_.' + parent.__name__ + 
+"].concat(parent.__mro__), $is_class: true}"
 _str[pos++]="_b_." + name + ".$factory = " + $exc
 _str[pos++]="_b_." + name + '.$factory.$infos = {__name__: "' +
-name + '", __qualname__: "' + name + '"}'
-_str[pos++]="_b_." + name + ".$is_class = true"}
+name + '", __qualname__: "' + name + '"}'}
 try{eval(_str.join(";"))}catch(err){console.log("--err" + err)
 throw err}}
 $make_exc(["SystemExit","KeyboardInterrupt","GeneratorExit","Exception"],BaseException)
@@ -6999,8 +6996,6 @@ $make_exc(["UnicodeError"],_b_.ValueError)
 $make_exc(["UnicodeDecodeError","UnicodeEncodeError","UnicodeTranslateError"],_b_.UnicodeError)
 $make_exc(["DeprecationWarning","PendingDeprecationWarning","RuntimeWarning","SyntaxWarning","UserWarning","FutureWarning","ImportWarning","UnicodeWarning","BytesWarning","ResourceWarning"],_b_.Warning)
 $make_exc(["EnvironmentError","IOError","VMSError","WindowsError"],_b_.OSError)
-$B.$NameError=function(name){
-throw _b_.NameError.$factory("name '" + name + "' is not defined")}
 $B.$TypeError=function(msg){throw _b_.TypeError.$factory(msg)}})(__BRYTHON__)
 
 ;(function($B){var _b_=$B.builtins,None=_b_.None,range={__class__: _b_.type,__module__: "builtins",__mro__:[_b_.object],__name__: "range",$is_class: true,$native: true,$descriptors:{start: true,step: true,stop: true}}
