@@ -64,8 +64,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,6,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.6.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-07-14 15:10:41.221064"
-__BRYTHON__.timestamp=1531573841221
+__BRYTHON__.compiled_date="2018-07-15 10:54:56.278881"
+__BRYTHON__.timestamp=1531644896278
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_py_abc","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -1842,7 +1842,7 @@ this.to_js=function(arg){
 if(this.result !==undefined && this.scope.ntype=='generator'){return this.result}
 this.js_processed=true
 var val=this.value
-var $test=val=="_"
+var $test=false 
 var annotation=""
 if(this.parent.type=="expr" && this.parent.parent.type=="node" &&
 this.parent.hasOwnProperty("annotation")){var js=this.parent.annotation.tree[0].to_js()
@@ -6099,7 +6099,8 @@ js=root.to_js()
 if(is_exec){var locals_obj=eval("$locals_" + locals_id),globals_obj=eval("$locals_" + globals_id)
 if(_globals===_b_.None){var res=new Function("$locals_" + globals_id,"$locals_" + locals_id,js)(globals_obj,locals_obj)}else{current_globals_obj=current_frame[3]
 current_locals_obj=current_frame[1]
-var res=new Function("$locals_" + globals_id,"$locals_" + locals_id,"$locals_" + current_globals_id,"$locals_" + current_locals_id,js)(globals_obj,locals_obj,current_globals_obj,current_locals_obj)}}else{var res=eval(js)}
+var res=new Function("$locals_" + globals_id,"$locals_" + locals_id,"$locals_" + current_globals_id,"$locals_" + current_locals_id,js)(globals_obj,locals_obj,current_globals_obj,current_locals_obj)}}else{console.log("use eval")
+var res=eval(js)}
 gns=eval("$locals_" + globals_id)
 if($B.frames_stack[$B.frames_stack.length - 1][2]==globals_id){gns=$B.frames_stack[$B.frames_stack.length - 1][3]}
 if(_locals !==_b_.None){lns=eval("$locals_" + locals_id)
@@ -7534,6 +7535,8 @@ return _b_.None}
 JSObject.__dir__=function(self){return Object.keys(self.js)}
 JSObject.__getattribute__=function(self,attr){if(attr.substr(0,2)=='$$'){attr=attr.substr(2)}
 if(self.js===null){return object.__getattribute__(None,attr)}
+var $test=attr=="thisReturnsUndefined"
+if($test){console.log(attr,self)}
 if(attr=="__class__"){return JSObject}
 if(attr=="__call__"){if(typeof self.js=="function"){return function(){
 var args=[]
@@ -7560,8 +7563,7 @@ if(self.js_func){
 new_this=self.js_func;}
 if(this !==null && this !==undefined && this !==_window){new_this=this}
 var result=js_attr.apply(new_this,args)
-if(result===undefined){result=this}
-return $B.$JS2Py(result)}
+return jsobj2pyobj(result)}
 res.__repr__=function(){return '<function ' + attr + '>'}
 res.__str__=function(){return '<function ' + attr + '>'}
 res.prototype=js_attr.prototype

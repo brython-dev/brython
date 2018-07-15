@@ -614,6 +614,7 @@ function $$eval(src, _globals, _locals){
                         current_globals_obj, current_locals_obj)
             }
         }else{
+            console.log("use eval")
             var res = eval(js)
         }
 

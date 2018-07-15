@@ -205,6 +205,8 @@ JSObject.__dir__ = function(self){
 JSObject.__getattribute__ = function(self,attr){
     if(attr.substr(0,2) == '$$'){attr = attr.substr(2)}
     if(self.js === null){return object.__getattribute__(None, attr)}
+    var $test = attr == "thisReturnsUndefined"
+    if($test){console.log(attr, self)}
     if(attr == "__class__"){return JSObject}
     if(attr == "__call__"){
         if(typeof self.js == "function"){
@@ -276,13 +278,7 @@ JSObject.__getattribute__ = function(self,attr){
 
                 var result = js_attr.apply(new_this, args)
 
-                // NOTE: fix for situations when wrapped function is constructor (thus it does not return and value is lost)
-                // this has side effect that non-constructor functions returning nothing will return `this` instead, which can break something
-                //
-                if(result === undefined){
-                    result = this
-                }
-                return $B.$JS2Py(result)
+                return jsobj2pyobj(result)
             }
             res.__repr__ = function(){return '<function ' + attr + '>'}
             res.__str__ = function(){return '<function ' + attr + '>'}
