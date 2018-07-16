@@ -1987,12 +1987,19 @@ assert b.a == 10
 str(globals())
 
 
+# issue 885
 from traceback import *
 try:
     1/0
 except:
     import traceback
     assert '1/0' in traceback.format_exc()
+
+# issue 883
+for _ in range(2):
+    for _ in range(2):
+        pass
+
 
 # ==========================================
 # Finally, report that all tests have passed

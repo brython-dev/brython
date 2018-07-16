@@ -205,8 +205,6 @@ JSObject.__dir__ = function(self){
 JSObject.__getattribute__ = function(self,attr){
     if(attr.substr(0,2) == '$$'){attr = attr.substr(2)}
     if(self.js === null){return object.__getattribute__(None, attr)}
-    var $test = attr == "thisReturnsUndefined"
-    if($test){console.log(attr, self)}
     if(attr == "__class__"){return JSObject}
     if(attr == "__call__"){
         if(typeof self.js == "function"){

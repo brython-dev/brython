@@ -3797,8 +3797,6 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         this.js_processed = true
         var val = this.value
 
-        var $test = false //val == "_"
-
         var annotation = ""
         if(this.parent.type == "expr" && this.parent.parent.type == "node" &&
                 this.parent.hasOwnProperty("annotation")){
@@ -3857,10 +3855,6 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
             search_ids.push('"' + gs.id + '"')
         }
         search_ids = "[" + search_ids.join(", ") + "]"
-
-        if($test){
-            console.log(val, search_ids)
-        }
 
         if(this.nonlocal || this.bound){
             var bscope = this.firstBindingScopeId()

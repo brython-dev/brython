@@ -69,3 +69,6 @@ try:
     raise Exception("should have raised AttributeError")
 except AttributeError:
     pass
+
+# issue 888
+assert window.jsReturnsUndefined() is None
