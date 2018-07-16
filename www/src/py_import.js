@@ -58,16 +58,9 @@ function parent_package(mod_name) {
     return parts.join(".")
 }
 
-function $importer(){
-    // returns the XMLHTTP object to handle imports
-    var $xmlhttp = new XMLHttpRequest()
-
-    var fake_qs
-    return [$xmlhttp, fake_qs, timer]
-}
-
 function $download_module(module, url, $package){
-    var $xmlhttp = new XMLHttpRequest(),
+    $B.xhr = $B.xhr || new XMLHttpRequest()
+    var xhr = $B.xhr,
         fake_qs
 
     switch ($B.$options.cache) {
@@ -82,7 +75,7 @@ function $download_module(module, url, $package){
     }
 
     var timer = _window.setTimeout(function(){
-            $xmlhttp.abort()
+            xhr.abort()
             throw _b_.ImportError.$factory("No module named '" + module + "'")
         }, 5000)
 
@@ -93,43 +86,33 @@ function $download_module(module, url, $package){
 
     $B.download_time = $B.download_time || 0
 
-    $xmlhttp.open("GET", url + fake_qs, false)
+    xhr.open("GET", url + fake_qs, false)
+    xhr.send()
 
     if($B.$CORS){
-      $xmlhttp.onload = function() {
-         if(this.status == 200 || this.status == 0){
-            res = this.responseText
-         }else{
-            res = _b_.FileNotFoundError.$factory("No module named '" +
-                mod_name + "'")
-         }
-      }
-      $xmlhttp.onerror = function() {
-         res = _b_.FileNotFoundError.$factory("No module named '" +
-             mod_name + "'")
-      }
+        if(xhr.status == 200 || xhr.status == 0){
+           res = xhr.responseText
+        }else{
+           res = _b_.FileNotFoundError.$factory("No module named '" +
+               mod_name + "'")
+        }
     }else{
-        $xmlhttp.onreadystatechange = function(){
-            if(this.readyState == 4){
-                _window.clearTimeout(timer)
-                if(this.status == 200 || $xmlhttp.status == 0){
-                    res = this.responseText
-                    module.$last_modified =
-                        this.getResponseHeader("Last-Modified")
-                }else{
-                    // don't throw an exception here, it will not be caught
-                    // (issue #30)
-                    console.log("Error " + this.status +
-                        " means that Python module " + mod_name +
-                        " was not found at url " + url)
-                    res = _b_.FileNotFoundError.$factory("No module named '" +
-                        mod_name + "'")
-                }
+        if(xhr.readyState == 4){
+            if(xhr.status == 200 || xhr.status == 0){
+                res = xhr.responseText
+                module.$last_modified =
+                    xhr.getResponseHeader("Last-Modified")
+            }else{
+                // don't throw an exception here, it will not be caught
+                // (issue #30)
+                console.log("Error " + xhr.status +
+                    " means that Python module " + mod_name +
+                    " was not found at url " + url)
+                res = _b_.FileNotFoundError.$factory("No module named '" +
+                    mod_name + "'")
             }
         }
     }
-    if("overrideMimeType" in $xmlhttp){$xmlhttp.overrideMimeType("text/plain")}
-    $xmlhttp.send()
 
     _window.clearTimeout(timer)
     // sometimes chrome doesn't set res correctly, so if res == null,
@@ -159,7 +142,7 @@ function import_js(module, path) {
 function run_js(module_contents, path, _module){
     // FIXME : Enhanced module isolation e.g. run_js arg names , globals ...
     try{
-        eval(module_contents)
+        var $module = new Function(module_contents + ";\nreturn $module")()
         if($B.$options.store){_module.$js = module_contents}
     }catch(err){
         console.log(err)
@@ -273,7 +256,8 @@ function run_py(module_contents, path, module, compiled) {
            console.log("code for module " + module.__name__)
            console.log(js)
         }
-        eval(js)
+        js += "; return $module"
+        var $module = (new Function(js))() //eval(js)
     }catch(err){
         console.log(err + " for module " + module.__name__)
         console.log("module", module)
@@ -376,18 +360,13 @@ var finder_VFS = {
                    $B.imported[parent].__package__ = elts.join(".")
                }
                try{
-                   eval(mod_js)
+                   mod_js += "return $locals_" + parent.replace(/\./g, "_")
+                   var $module = new Function(mod_js)()
                }catch(err){
                    console.log(mod_js)
                    console.log(err)
                    for(var k in err){console.log(k, err[k])}
                    console.log(Object.keys($B.imported))
-                   throw err
-               }
-               try{
-                   var $module = eval("$locals_" +parent.replace(/\./g, "_"))
-               }catch(err){
-                   console.log("error", parent, mod_js)
                    throw err
                }
                for(var attr in $module){

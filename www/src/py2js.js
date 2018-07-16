@@ -3148,10 +3148,11 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
         // "range"
         var $range = false
         if(target.tree.length == 1 &&
-            target.expct != 'id' &&
-            iterable.type == 'expr' &&
-            iterable.tree[0].type == 'expr' &&
-            iterable.tree[0].tree[0].type == 'call'){
+                ! scope.blurred &&
+                target.expct != 'id' &&
+                iterable.type == 'expr' &&
+                iterable.tree[0].type == 'expr' &&
+                iterable.tree[0].tree[0].type == 'call'){
             var call = iterable.tree[0].tree[0]
             if(call.func.type == 'id'){
                 var func_name = call.func.value
@@ -3180,18 +3181,16 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
             }
 
             // Check that range is the built-in function
-            var range_is_builtin = false
-            if(!scope.blurred){
-                var _scope = $get_scope(this),
-                    found = []
-                while(1){
-                    if(_scope.binding["range"]){found.push(_scope.id)}
-                    if(_scope.parent_block){_scope = _scope.parent_block}
-                    else{break}
-                }
-                range_is_builtin = found.length == 1 &&
-                    found[0] == "__builtins__"
+            var range_is_builtin = false,
+                _scope = $get_scope(this),
+                found = []
+            while(1){
+                if(_scope.binding["range"]){found.push(_scope.id)}
+                if(_scope.parent_block){_scope = _scope.parent_block}
+                else{break}
             }
+            range_is_builtin = found.length == 1 &&
+                found[0] == "__builtins__"
 
             // Line to test if the callable "range" is the built-in "range"
             var test_range_node = new $Node()
@@ -3798,6 +3797,8 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         this.js_processed = true
         var val = this.value
 
+        var $test = false //val == "_"
+
         var annotation = ""
         if(this.parent.type == "expr" && this.parent.parent.type == "node" &&
                 this.parent.hasOwnProperty("annotation")){
@@ -3856,6 +3857,10 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
             search_ids.push('"' + gs.id + '"')
         }
         search_ids = "[" + search_ids.join(", ") + "]"
+
+        if($test){
+            console.log(val, search_ids)
+        }
 
         if(this.nonlocal || this.bound){
             var bscope = this.firstBindingScopeId()
@@ -8800,7 +8805,7 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_info){
     // Create internal variables
     var js = ['var $B = __BRYTHON__;\n'], pos = 1
 
-    js[pos++] = 'eval(__BRYTHON__.InjectBuiltins());\n\n'
+    js[pos++] = 'var $bltns = __BRYTHON__.InjectBuiltins();eval($bltns);\n\n'
 
     js[pos] = 'var '
     if(locals_is_module){
@@ -9267,6 +9272,7 @@ function ajax_load_script(script){
                     js = root.to_js()
                     $B.tasks.splice(0, 0, ["execute",
                         {js: js, src: src, name: name, url: url}])
+                    root = null
                 }catch(err){
                     handle_error(err)
                 }
@@ -9323,7 +9329,7 @@ var loop = $B.loop = function(){
                 name = script.name,
                 url = script.url,
                 js = script.js
-            eval(js)
+            new Function(js)()
         }catch(err){
             if($B.debug > 1){
                 console.log(err)
@@ -9335,7 +9341,7 @@ var loop = $B.loop = function(){
             // If the error was not caught by the Python runtime, build an
             // instance of a Python exception
             if(err.$py_error === undefined){
-                //console.log('Javascript error', err)
+                console.log('Javascript error', err)
                 err = _b_.RuntimeError.$factory(err+'')
             }
 
@@ -9409,7 +9415,7 @@ $B.run_script = function(src, name){
     $B.$py_module_path[name] = $B.script_path
     try{
         var root = $B.py2js(src, name, name),
-            js = "(function(){" + root.to_js() + "})()",
+            js = root.to_js(),
             script = {
                 js: js,
                 name: name,
@@ -9452,6 +9458,7 @@ $B.run_script = function(src, name){
         for(var j=0; j<imports.length;j++){
            $B.tasks.push([$B.inImported, imports[j]])
         }
+        root = null
     }
     $B.tasks.push(["execute", script])
 }

@@ -1053,7 +1053,9 @@ $B.make_rmethods = function(klass){
 // the variable $B.py_UUID is defined in py2js.js (in the brython function)
 $B.UUID = function() {return $B.$py_UUID++}
 
+$B.nb_inject = 0
 $B.InjectBuiltins = function() {
+    $B.nb_inject++
    var _str = ["var _b_ = $B.builtins"],
        pos = 1
    for(var $b in $B.builtins){

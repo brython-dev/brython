@@ -1,6 +1,7 @@
 ;(function($B){
 
-eval($B.InjectBuiltins())
+var bltns = $B.InjectBuiltins()
+eval(bltns)
 
 var object = _b_.object
 

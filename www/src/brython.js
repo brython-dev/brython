@@ -64,9 +64,9 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,6,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.6.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-07-09 08:48:42.330559"
-__BRYTHON__.timestamp=1531118922330
-__BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
+__BRYTHON__.compiled_date="2018-07-15 11:46:03.634899"
+__BRYTHON__.timestamp=1531647963634
+__BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_py_abc","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
 isFinite(value)&&
@@ -1545,6 +1545,7 @@ this.toString=function(){return '(for) ' + this.tree}
 this.transform=function(node,rank){var scope=$get_scope(this),target=this.tree[0],target_is_1_tuple=target.tree.length==1 && target.expect=='id',iterable=this.tree[1],num=this.loop_num,local_ns='$locals_' + scope.id.replace(/\./g,'_'),h='\n' + ' '.repeat(node.indent + 4)
 var $range=false
 if(target.tree.length==1 &&
+! scope.blurred &&
 target.expct !='id' &&
 iterable.type=='expr' &&
 iterable.tree[0].type=='expr' &&
@@ -1558,13 +1559,12 @@ if($range && scope.ntype !='generator'){if(this.has_break){
 new_node=new $Node()
 new $NodeJSCtx(new_node,local_ns + '["$no_break' + num + '"] = true')
 new_nodes[pos++]=new_node}
-var range_is_builtin=false
-if(!scope.blurred){var _scope=$get_scope(this),found=[]
+var range_is_builtin=false,_scope=$get_scope(this),found=[]
 while(1){if(_scope.binding["range"]){found.push(_scope.id)}
 if(_scope.parent_block){_scope=_scope.parent_block}
 else{break}}
 range_is_builtin=found.length==1 &&
-found[0]=="__builtins__"}
+found[0]=="__builtins__"
 var test_range_node=new $Node()
 if(range_is_builtin){new $NodeJSCtx(test_range_node,'if(1)')}else{new $NodeJSCtx(test_range_node,'if(' + call.func.to_js()+ ' === $B.builtins.range)')}
 new_nodes[pos++]=test_range_node
@@ -1842,6 +1842,7 @@ this.to_js=function(arg){
 if(this.result !==undefined && this.scope.ntype=='generator'){return this.result}
 this.js_processed=true
 var val=this.value
+var $test=false 
 var annotation=""
 if(this.parent.type=="expr" && this.parent.parent.type=="node" &&
 this.parent.hasOwnProperty("annotation")){var js=this.parent.annotation.tree[0].to_js()
@@ -1867,6 +1868,7 @@ else if(gs.parent_block.id===undefined){break}
 gs=gs.parent_block}
 search_ids.push('"' + gs.id + '"')}
 search_ids="[" + search_ids.join(", ")+ "]"
+if($test){console.log(val,search_ids)}
 if(this.nonlocal ||this.bound){var bscope=this.firstBindingScopeId()
 if(bscope !==undefined){return annotation + "$locals_" + bscope.replace(/\./g,"_")+ '["' +
 val + '"]'}}
@@ -4500,7 +4502,7 @@ $tokenize(root,src)
 root.is_comp=is_comp
 root.transform()
 var js=['var $B = __BRYTHON__;\n'],pos=1
-js[pos++]='eval(__BRYTHON__.InjectBuiltins());\n\n'
+js[pos++]='var $bltns = __BRYTHON__.InjectBuiltins();eval($bltns);\n\n'
 js[pos]='var '
 if(locals_is_module){js[pos]+=local_ns + ' = $locals_' + module + ', '}else if(!internal){js[pos]+=local_ns + ' = $B.imported["' + locals_id + '"] || {}, '}
 js[pos]+='$locals = ' + local_ns + ';'
@@ -4670,7 +4672,8 @@ var req=new XMLHttpRequest()
 req.open("GET",url + "?" + Date.now(),true)
 req.onreadystatechange=function(){if(this.readyState==4){if(this.status==200){var src=this.responseText
 try{var root=$B.py2js(src,name,name),js=root.to_js()
-$B.tasks.splice(0,0,["execute",{js: js,src: src,name: name,url: url}])}catch(err){handle_error(err)}}else if(this.status==404){throw Error(url+" not found")}
+$B.tasks.splice(0,0,["execute",{js: js,src: src,name: name,url: url}])
+root=null}catch(err){handle_error(err)}}else if(this.status==404){throw Error(url+" not found")}
 loop()}}
 req.send()}
 function add_jsmodule(module,source){
@@ -4687,9 +4690,9 @@ if(idb_cx){idb_cx.result.close()}
 return}
 var task=$B.tasks.shift(),func=task[0],args=task.slice(1)
 if(func=="execute"){try{var script=task[1],src=script.src,name=script.name,url=script.url,js=script.js
-eval(js)}catch(err){if($B.debug > 1){console.log(err)
+new Function(js)()}catch(err){if($B.debug > 1){console.log(err)
 for(var attr in err){console.log(attr+' : ',err[attr])}}
-if(err.$py_error===undefined){
+if(err.$py_error===undefined){console.log('Javascript error',err)
 err=_b_.RuntimeError.$factory(err+'')}
 handle_error(err)}
 loop()}else{
@@ -4718,7 +4721,7 @@ nb_added++}}})}}
 if(nb_added){required_stdlib_imports(imports,imports.length - nb_added)}
 return imports}
 $B.run_script=function(src,name){$B.$py_module_path[name]=$B.script_path
-try{var root=$B.py2js(src,name,name),js="(function(){" + root.to_js()+ "})()",script={js: js,name: name,src: src,url: $B.script_path}
+try{var root=$B.py2js(src,name,name),js=root.to_js(),script={js: js,name: name,src: src,url: $B.script_path}
 if($B.debug > 1){$log(js)}}catch(err){handle_error(err)}
 if($B.hasOwnProperty("VFS")&& $B.has_indexedDB){
 var imports1=Object.keys(root.imports).slice(),imports=imports1.filter(function(item){return $B.VFS.hasOwnProperty(item)})
@@ -4727,7 +4730,8 @@ if(type==".py"){var src=submodule[1],subimports=submodule[2],is_package=submodul
 if(type==".py"){
 required_stdlib_imports(subimports)}
 subimports.forEach(function(mod){if(imports.indexOf(mod)==-1){imports.push(mod)}})}}})
-for(var j=0;j<imports.length;j++){$B.tasks.push([$B.inImported,imports[j]])}}
+for(var j=0;j<imports.length;j++){$B.tasks.push([$B.inImported,imports[j]])}
+root=null}
 $B.tasks.push(["execute",script])}
 var $log=$B.$log=function(js){js.split("\n").forEach(function(line,i){console.log(i + 1,":",line)})}
 var _run_scripts=$B.parser._run_scripts=function(options){
@@ -5631,7 +5635,9 @@ var ropsigns=["+","-","*","/","//","%","**","<<",">>","&","^","|"]
 $B.make_rmethods=function(klass){for(var j=0,_len_j=ropnames.length;j < _len_j;j++){if(klass["__" + ropnames[j]+ "__"]===undefined){klass["__" + ropnames[j]+ "__"]=(function(name,sign){return function(self,other){try{return _b_.getattr(other,"__r" + name + "__")(self)}
 catch(err){$err(sign,klass,other)}}})(ropnames[j],ropsigns[j])}}}
 $B.UUID=function(){return $B.$py_UUID++}
-$B.InjectBuiltins=function(){var _str=["var _b_ = $B.builtins"],pos=1
+$B.nb_inject=0
+$B.InjectBuiltins=function(){$B.nb_inject++
+var _str=["var _b_ = $B.builtins"],pos=1
 for(var $b in $B.builtins){_str[pos++]="var " + $b + '=_b_["' + $b + '"]'}
 return _str.join(";")}
 $B.$GetInt=function(value){
@@ -5860,7 +5866,8 @@ while(count > 1){if(count & 1){result +=pattern}
 count >>=1,pattern +=pattern}
 return result + pattern}}
 
-;(function($B){eval($B.InjectBuiltins())
+;(function($B){var bltns=$B.InjectBuiltins()
+eval(bltns)
 _b_.__debug__=false
 var object=_b_.object,odga=object.__getattribute__
 $B.$comps={'>':'gt','>=':'ge','<':'lt','<=':'le'}
@@ -6089,10 +6096,14 @@ default:
 if(!is_exec){throw _b_.SyntaxError.$factory(
 "eval() argument must be an expression",'<string>',1,1,src)}}
 js=root.to_js()
-var res=eval(js)
-gns=eval('$locals_' + globals_id)
+if(is_exec){var locals_obj=eval("$locals_" + locals_id),globals_obj=eval("$locals_" + globals_id)
+if(_globals===_b_.None){var res=new Function("$locals_" + globals_id,"$locals_" + locals_id,js)(globals_obj,locals_obj)}else{current_globals_obj=current_frame[3]
+current_locals_obj=current_frame[1]
+var res=new Function("$locals_" + globals_id,"$locals_" + locals_id,"$locals_" + current_globals_id,"$locals_" + current_locals_id,js)(globals_obj,locals_obj,current_globals_obj,current_locals_obj)}}else{console.log("use eval")
+var res=eval(js)}
+gns=eval("$locals_" + globals_id)
 if($B.frames_stack[$B.frames_stack.length - 1][2]==globals_id){gns=$B.frames_stack[$B.frames_stack.length - 1][3]}
-if(_locals !==_b_.None){lns=eval('$locals_' + locals_id)
+if(_locals !==_b_.None){lns=eval("$locals_" + locals_id)
 for(var attr in lns){var attr1=$B.from_alias(attr)
 if(attr1.charAt(0)!='$'){if(_locals.$jsobj){_locals.$jsobj[attr]=lns[attr]}
 else{_locals.$string_dict[attr1]=lns[attr]}}}}else{for(var attr in lns){current_frame[1][attr]=lns[attr]}}
@@ -6100,7 +6111,7 @@ if(_globals !==_b_.None){
 for(var attr in gns){attr1=$B.from_alias(attr)
 if(attr1.charAt(0)!='$'){if(_globals.$jsobj){_globals.$jsobj[attr]=gns[attr]}
 else{_globals.$string_dict[attr1]=gns[attr]}}}}else{for(var attr in gns){current_frame[3][attr]=gns[attr]}}
-if(res===undefined)return _b_.None
+if(res===undefined){return _b_.None}
 return res}catch(err){err.src=src
 err.module=globals_id
 if(err.$py_error===undefined){throw $B.exception(err)}
@@ -6734,16 +6745,16 @@ for(var $func in Ellipsis){if(typeof Ellipsis[$func]=='function'){Ellipsis[$func
 $B.set_func_names(ellipsis)
 var FunctionCode=$B.make_class("function code")
 var FunctionGlobals=$B.make_class("function globals")
-var Function=$B.Function={__class__: _b_.type,__code__:{__class__: FunctionCode,__name__: 'function code'},__globals__:{__class__: FunctionGlobals,__name__: 'function globals'},__module__: "builtins",__mro__:[object],__name__: 'function',$is_class: true}
-Function.__dir__=function(self){var infos=self.$infos ||{},attrs=self.$attrs ||{}
+$B.Function={__class__: _b_.type,__code__:{__class__: FunctionCode,__name__: 'function code'},__globals__:{__class__: FunctionGlobals,__name__: 'function globals'},__module__: "builtins",__mro__:[object],__name__: 'function',$is_class: true}
+$B.Function.__dir__=function(self){var infos=self.$infos ||{},attrs=self.$attrs ||{}
 return Object.keys(infos).concat(Object.keys(attrs))}
-Function.__eq__=function(self,other){return self===other}
-Function.__get__=function(self,obj){if(obj===_b_.None){return self}
+$B.Function.__eq__=function(self,other){return self===other}
+$B.Function.__get__=function(self,obj){if(obj===_b_.None){return self}
 var method=function(){return self(obj,...arguments)}
 method.__class__=$B.method
 method.$infos={__name__: self.$infos.__name__,__qualname__: obj.__class__.__name__ + "." + self.$infos.__name__,__self__: obj,__func__: self}
 return method}
-Function.__getattribute__=function(self,attr){
+$B.Function.__getattribute__=function(self,attr){
 if(self.$infos && self.$infos[attr]!==undefined){if(attr=='__code__'){var res={__class__: code}
 for(var attr in self.$infos.__code__){res[attr]=self.$infos.__code__[attr]}
 res.name=self.$infos.__name__
@@ -6751,13 +6762,13 @@ res.filename=self.$infos.__code__.co_filename
 res.co_code=self + "" 
 return res}else if(attr=='__annotations__'){
 return $B.obj_dict(self.$infos[attr])}else{return self.$infos[attr]}}else if(self.$attrs && self.$attrs[attr]!==undefined){return self.$attrs[attr]}else{return _b_.object.__getattribute__(self,attr)}}
-Function.__repr__=Function.__str__=function(self){
+$B.Function.__repr__=$B.Function.__str__=function(self){
 return '<function ' + self.$infos.__qualname__ + '>'}
-Function.__mro__=[object]
-Function.__setattr__=function(self,attr,value){if(self.$infos[attr]!==undefined){self.$infos[attr]=value}
+$B.Function.__mro__=[object]
+$B.Function.__setattr__=function(self,attr,value){if(self.$infos[attr]!==undefined){self.$infos[attr]=value}
 else{self.$attrs=self.$attrs ||{};self.$attrs[attr]=value}}
-Function.$factory=function(){}
-$B.set_func_names(Function,"builtins")
+$B.Function.$factory=function(){}
+$B.set_func_names($B.Function,"builtins")
 _b_.__BRYTHON__=__BRYTHON__
 $B.builtin_funcs=["abs","all","any","ascii","bin","callable","chr","compile","delattr","dir","divmod","eval","exec","exit","format","getattr","globals","hasattr","hash","help","hex","id","input","isinstance","issubclass","iter","len","locals","max","min","next","oct","open","ord","pow","print","quit","repr","round","setattr","sorted","sum","vars"
 ]
@@ -6791,7 +6802,8 @@ _b_['print']=$print
 _b_['$$super']=$$super
 _b_.object.__init__.__class__=wrapper_descriptor
 _b_.object.__new__.__class__=builtin_function})(__BRYTHON__)
-;(function($B){eval($B.InjectBuiltins())
+;(function($B){var bltns=$B.InjectBuiltins()
+eval(bltns)
 $B.$raise=function(arg){
 if(arg===undefined){var es=$B.current_exception
 if(es !==undefined){throw es}
@@ -6823,7 +6835,7 @@ stack=exc.$stack
 return{
 __class__ : traceback,$stack: stack,exc: exc}}
 )
-traceback.__getattribute__=function(self,attr){var line_info;
+traceback.__getattribute__=function(self,attr){var line_info
 if(attr==='tb_frame' ||
 attr==='tb_lineno' ||
 attr==='tb_lasti' ||
@@ -6884,7 +6896,7 @@ var getExceptionTrace=function(exc,includeInternal){if(exc.__class__===undefined
 return exc + ''}else{var name=exc.__class__.__name__
 if(name=="SyntaxError" ||name=="IndentationError"){return 'File "' + exc.args[1]+ '", line ' + exc.args[2]+
 "\n    " + exc.args[4]}}
-var info='';
+var info=''
 if(exc.$js_exc !==undefined && includeInternal){info +="\nJS stack:\n" + exc.$js_exc.stack + "\n"}
 info +="Traceback (most recent call last):"
 var line_info=exc.$line_info
@@ -6904,7 +6916,7 @@ if(src !==undefined){var lines=src.split("\n");
 var line=lines[parseInt(line_info[0])- 1]
 if(line){line=line.replace(/^[ ]+/g,"")}
 info +="\n    " + line}else{console.log("src undefined for",frame[3])}}
-return info};
+return info}
 BaseException.__getattr__=function(self,attr){if(attr=="info"){return getExceptionTrace(self,false);}else if(attr=="infoWithInternal"){return getExceptionTrace(self,true);}else if(attr=="traceback"){
 return traceback.$factory(self)}else{throw _b_.AttributeError.$factory(self.__class__.__name__ +
 " has no attribute '" + attr + "'")}}
@@ -6960,16 +6972,13 @@ var code=name[1],name=name[0]}
 $B.builtins_scope[name]=true
 var $exc=(BaseException.$factory + "").replace(/BaseException/g,name)
 $exc=$exc.replace("//placeholder//",code)
-_str[pos++]="_b_." + name + '={__class__:_b_.type,__name__:"' +
-name + '"}'
-_str[pos++]="_b_." + name + ".__bases__ = [parent]"
-_str[pos++]="_b_." + name + '.__module__ = "builtins"'
-_str[pos++]='_b_.' + name + ".__mro__ = [_b_." + parent.__name__ +
-"].concat(parent.__mro__)"
+_str[pos++]="_b_." + name + ' = {__class__:_b_.type, __name__:"' +
+name + '", __bases__: [parent], __module__: "builtins", '+
+'__mro__: [_b_.' + parent.__name__ + 
+"].concat(parent.__mro__), $is_class: true}"
 _str[pos++]="_b_." + name + ".$factory = " + $exc
 _str[pos++]="_b_." + name + '.$factory.$infos = {__name__: "' +
-name + '", __qualname__: "' + name + '"}'
-_str[pos++]="_b_." + name + ".$is_class = true"}
+name + '", __qualname__: "' + name + '"}'}
 try{eval(_str.join(";"))}catch(err){console.log("--err" + err)
 throw err}}
 $make_exc(["SystemExit","KeyboardInterrupt","GeneratorExit","Exception"],BaseException)
@@ -6987,8 +6996,6 @@ $make_exc(["UnicodeError"],_b_.ValueError)
 $make_exc(["UnicodeDecodeError","UnicodeEncodeError","UnicodeTranslateError"],_b_.UnicodeError)
 $make_exc(["DeprecationWarning","PendingDeprecationWarning","RuntimeWarning","SyntaxWarning","UserWarning","FutureWarning","ImportWarning","UnicodeWarning","BytesWarning","ResourceWarning"],_b_.Warning)
 $make_exc(["EnvironmentError","IOError","VMSError","WindowsError"],_b_.OSError)
-$B.$NameError=function(name){
-throw _b_.NameError.$factory("name '" + name + "' is not defined")}
 $B.$TypeError=function(msg){throw _b_.TypeError.$factory(msg)}})(__BRYTHON__)
 
 ;(function($B){var _b_=$B.builtins,None=_b_.None,range={__class__: _b_.type,__module__: "builtins",__mro__:[_b_.object],__name__: "range",$is_class: true,$native: true,$descriptors:{start: true,step: true,stop: true}}
@@ -7450,7 +7457,8 @@ $B.set_func_names(bytes,"builtins")
 $B.set_func_names(bytearray,"builtins")
 _b_.bytes=bytes
 _b_.bytearray=bytearray})(__BRYTHON__)
-;(function($B){eval($B.InjectBuiltins())
+;(function($B){var bltns=$B.InjectBuiltins()
+eval(bltns)
 var object=_b_.object
 var _window=self;
 var JSConstructor={__class__: _b_.type,__module__: "<javascript>",__mro__:[object],__name__: 'JSConstructor',$is_class: true}
@@ -7522,6 +7530,8 @@ return _b_.None}
 JSObject.__dir__=function(self){return Object.keys(self.js)}
 JSObject.__getattribute__=function(self,attr){if(attr.substr(0,2)=='$$'){attr=attr.substr(2)}
 if(self.js===null){return object.__getattribute__(None,attr)}
+var $test=attr=="thisReturnsUndefined"
+if($test){console.log(attr,self)}
 if(attr=="__class__"){return JSObject}
 if(attr=="__call__"){if(typeof self.js=="function"){return function(){
 var args=[]
@@ -7548,8 +7558,7 @@ if(self.js_func){
 new_this=self.js_func;}
 if(this !==null && this !==undefined && this !==_window){new_this=this}
 var result=js_attr.apply(new_this,args)
-if(result===undefined){result=this}
-return $B.$JS2Py(result)}
+return jsobj2pyobj(result)}
 res.__repr__=function(){return '<function ' + attr + '>'}
 res.__str__=function(){return '<function ' + attr + '>'}
 res.prototype=js_attr.prototype
@@ -7654,11 +7663,8 @@ $B.set_func_names(module,"builtins")
 function parent_package(mod_name){var parts=mod_name.split(".")
 parts.pop()
 return parts.join(".")}
-function $importer(){
-var $xmlhttp=new XMLHttpRequest()
-var fake_qs
-return[$xmlhttp,fake_qs,timer]}
-function $download_module(module,url,$package){var $xmlhttp=new XMLHttpRequest(),fake_qs
+function $download_module(module,url,$package){$B.xhr=$B.xhr ||new XMLHttpRequest()
+var xhr=$B.xhr,fake_qs
 switch($B.$options.cache){case "version":
 fake_qs="?v=" + $B.version_info[2]
 break
@@ -7667,25 +7673,21 @@ fake_qs=""
 break
 default:
 fake_qs="?v=" +(new Date().getTime())}
-var timer=_window.setTimeout(function(){$xmlhttp.abort()
+var timer=_window.setTimeout(function(){xhr.abort()
 throw _b_.ImportError.$factory("No module named '" + module + "'")},5000)
 var res=null,mod_name=module.__name__,res,t0=new Date()
 $B.download_time=$B.download_time ||0
-$xmlhttp.open("GET",url + fake_qs,false)
-if($B.$CORS){$xmlhttp.onload=function(){if(this.status==200 ||this.status==0){res=this.responseText}else{res=_b_.FileNotFoundError.$factory("No module named '" +
-mod_name + "'")}}
-$xmlhttp.onerror=function(){res=_b_.FileNotFoundError.$factory("No module named '" +
-mod_name + "'")}}else{$xmlhttp.onreadystatechange=function(){if(this.readyState==4){_window.clearTimeout(timer)
-if(this.status==200 ||$xmlhttp.status==0){res=this.responseText
+xhr.open("GET",url + fake_qs,false)
+xhr.send()
+if($B.$CORS){if(xhr.status==200 ||xhr.status==0){res=xhr.responseText}else{res=_b_.FileNotFoundError.$factory("No module named '" +
+mod_name + "'")}}else{if(xhr.readyState==4){if(xhr.status==200 ||xhr.status==0){res=xhr.responseText
 module.$last_modified=
-this.getResponseHeader("Last-Modified")}else{
-console.log("Error " + this.status +
+xhr.getResponseHeader("Last-Modified")}else{
+console.log("Error " + xhr.status +
 " means that Python module " + mod_name +
 " was not found at url " + url)
 res=_b_.FileNotFoundError.$factory("No module named '" +
-mod_name + "'")}}}}
-if("overrideMimeType" in $xmlhttp){$xmlhttp.overrideMimeType("text/plain")}
-$xmlhttp.send()
+mod_name + "'")}}}
 _window.clearTimeout(timer)
 if(res==null){throw _b_.FileNotFoundError.$factory("No module named '" +
 mod_name + "' (res is null)")}
@@ -7697,7 +7699,7 @@ function import_js(module,path){try{var module_contents=$download_module(module,
 run_js(module_contents,path,module)
 return true}
 function run_js(module_contents,path,_module){
-try{eval(module_contents)
+try{var $module=new Function(module_contents + ";\nreturn $module")()
 if($B.$options.store){_module.$js=module_contents}}catch(err){console.log(err)
 console.log(path,_module)
 throw err}
@@ -7752,7 +7754,8 @@ root.add(ex_node)}
 try{js=compiled ? module_contents : root.to_js()
 if($B.$options.debug==10){console.log("code for module " + module.__name__)
 console.log(js)}
-eval(js)}catch(err){console.log(err + " for module " + module.__name__)
+js +="; return $module"
+var $module=(new Function(js))()}catch(err){console.log(err + " for module " + module.__name__)
 console.log("module",module)
 console.log(root)
 console.log(err)
@@ -7800,12 +7803,11 @@ if(is_package){$B.imported[parent].__path__="<stdlib>"
 $B.imported[parent].__package__=parent}else{var elts=parent.split(".")
 elts.pop()
 $B.imported[parent].__package__=elts.join(".")}
-try{eval(mod_js)}catch(err){console.log(mod_js)
+try{mod_js +="return $locals_" + parent.replace(/\./g,"_")
+var $module=new Function(mod_js)()}catch(err){console.log(mod_js)
 console.log(err)
 for(var k in err){console.log(k,err[k])}
 console.log(Object.keys($B.imported))
-throw err}
-try{var $module=eval("$locals_" +parent.replace(/\./g,"_"))}catch(err){console.log("error",parent,mod_js)
 throw err}
 for(var attr in $module){$B.imported[parent][attr]=$module[attr]}
 if(i>0){
@@ -8025,7 +8027,8 @@ var Loader={__class__:$B.$type,__mro__:[_b_.object],__name__ : "Loader"}
 var _importlib_module={__class__ : module,__name__ : "_importlib",Loader: Loader,VFSFinder: finder_VFS,StdlibStatic: finder_stdlib_static,ImporterPath: finder_path,VFSPathFinder : vfs_hook,UrlPathFinder: url_hook,optimize_import_for_path : optimize_import_for_path}
 _importlib_module.__repr__=_importlib_module.__str__=function(){return "<module '_importlib' (built-in)>"}
 $B.imported["_importlib"]=_importlib_module})(__BRYTHON__)
-;(function($B){eval($B.InjectBuiltins())
+;(function($B){var bltns=$B.InjectBuiltins()
+eval(bltns)
 var object=_b_.object
 function $err(op,other){var msg="unsupported operand type(s) for " + op +
 ": 'float' and '" + $B.get_class(other).__name__ + "'"
@@ -8365,7 +8368,8 @@ for(var i=1,len=arguments.length;i < len;i++){args[pos++]=arguments[i]}}
 return float[attr].apply(null,args)}})($attr)}}
 $B.set_func_names(FloatSubclass,"builtins")
 _b_.float=float})(__BRYTHON__)
-;(function($B){eval($B.InjectBuiltins())
+;(function($B){var bltns=$B.InjectBuiltins()
+eval(bltns)
 var object=_b_.object,$N=_b_.None
 function $err(op,other){var msg="unsupported operand type(s) for " + op +
 ": 'int' and '" + $B.get_class(other).__name__ + "'"
@@ -8715,7 +8719,8 @@ return $B.$bool($.x)}
 _b_.bool=bool
 $B.set_func_names(bool,"builtins")})(__BRYTHON__)
 ;(function($B){
-eval($B.InjectBuiltins())
+var bltns=$B.InjectBuiltins()
+eval(bltns)
 var long_int={__class__: _b_.type,__module__: "builtins",__mro__:[int,object],__name__: "int",$is_class: true}
 function add_pos(v1,v2){
 var res="",carry=0,iself=v1.length,sv=0,x
@@ -9061,7 +9066,8 @@ return v10}
 return{__class__: long_int,value: value,pos: pos}}
 $B.set_func_names(long_int,"builtins")
 $B.long_int=long_int})(__BRYTHON__)
-;(function($B){eval($B.InjectBuiltins())
+;(function($B){var bltns=$B.InjectBuiltins()
+eval(bltns)
 var object=_b_.object
 function $UnsupportedOpType(op,class1,class2){throw _b_.TypeError.$factory("unsupported operand type(s) for " +
 op + ": '" + class1 + "' and '" + class2 + "'")}
@@ -9209,7 +9215,8 @@ complex.$factory=function(){return complex.__new__(complex,...arguments)}
 $B.set_func_names(complex,"builtins")
 _b_.complex=complex})(__BRYTHON__)
 ;(function($B){
-eval($B.InjectBuiltins())
+var bltns=$B.InjectBuiltins()
+eval(bltns)
 var DEFAULT_MIN_MERGE=32
 var DEFAULT_MIN_GALLOPING=7
 var DEFAULT_TMP_STORAGE_LENGTH=256
@@ -9491,7 +9498,8 @@ tim_sort(array,compare,0,array.length)}catch(e){if(e.name==TIM_SORT_ASSERTION){a
 throw e;}}}
 $B.$TimSort=tim_sort_safe
 $B.$AlphabeticalCompare=alphabeticalCompare})(__BRYTHON__)
-;(function($B){eval($B.InjectBuiltins())
+;(function($B){var bltns=$B.InjectBuiltins()
+eval(bltns)
 var object=_b_.object,$N=_b_.None
 function $list(){
 return list.$factory.apply(null,arguments)}
@@ -9825,7 +9833,8 @@ $B.set_func_names(tuple,"builtins")
 _b_.list=list
 _b_.tuple=tuple
 _b_.object.__bases__=tuple.$factory()})(__BRYTHON__)
-;(function($B){eval($B.InjectBuiltins())
+;(function($B){var bltns=$B.InjectBuiltins()
+eval(bltns)
 if(!String.prototype.trim){
 String.prototype.trim=function(){var c
 for(var i=0;i < this.length;i++){c=this.charCodeAt(i)
@@ -10590,7 +10599,8 @@ i++}}
 if(nb_braces > 0){throw Error("f-string: expected '}'")}}}
 if(current.length > 0){elts.push(current)}
 return elts}})(__BRYTHON__)
-;(function($B){eval($B.InjectBuiltins())
+;(function($B){var bltns=$B.InjectBuiltins()
+eval(bltns)
 var object=_b_.object,str_hash=_b_.str.__hash__,$N=_b_.None
 function $DictClass($keys,$values){this.iter=null
 this.__class__=dict
@@ -11147,10 +11157,8 @@ return res}
 $B.set_func_names(frozenset,"builtins")
 _b_.set=set
 _b_.frozenset=frozenset})(__BRYTHON__)
-;(function($B){eval($B.InjectBuiltins())
-var object=_b_.object
-var JSObject=$B.JSObject
-var _window=window 
+;(function($B){
+var _b_=$B.builtins,object=_b_.object,JSObject=$B.JSObject,_window=window 
 function $getMouseOffset(target,ev){ev=ev ||_window.event;
 var docPos=$getPosition(target);
 var mousePos=$mouseCoords(ev);
@@ -11325,7 +11333,7 @@ case "left":
 case "height":
 case "width":
 case "borderWidth":
-if(isinstance(value,_b_.int)){value=value + "px"}}
+if(_b_.isinstance(value,_b_.int)){value=value + "px"}}
 self.js[attr]=value}}
 Style.$factory=function(style){
 return{__class__: Style,js: style}}
@@ -11347,8 +11355,8 @@ __class__: DOMNode,elt: elt}}
 DOMNode.__add__=function(self,other){
 var res=TagSum.$factory()
 res.children=[self],pos=1
-if(isinstance(other,TagSum)){res.children=res.children.concat(other.children)}else if(isinstance(other,[_b_.str,_b_.int,_b_.float,_b_.list,_b_.dict,_b_.set,_b_.tuple])){res.children[pos++]=DOMNode.$factory(
-document.createTextNode(_b_.str.$factory(other)))}else if(isinstance(other,DOMNode)){res.children[pos++]=other}else{
+if(_b_.isinstance(other,TagSum)){res.children=res.children.concat(other.children)}else if(_b_.isinstance(other,[_b_.str,_b_.int,_b_.float,_b_.list,_b_.dict,_b_.set,_b_.tuple])){res.children[pos++]=DOMNode.$factory(
+document.createTextNode(_b_.str.$factory(other)))}else if(_b_.isinstance(other,DOMNode)){res.children[pos++]=other}else{
 try{res.children=res.children.concat(_b_.list.$factory(other))}
 catch(err){throw _b_.TypeError.$factory("can't add '" +
 $B.get_class(other).__name__ + "' object to DOMNode instance")}}
@@ -11360,7 +11368,7 @@ key=key.elt !==undefined ? key.elt : key
 if(self.elt.length !==undefined && typeof self.elt.item=="function"){for(var i=0,len=self.elt.length;i < len;i++){if(self.elt.item(i)===key){return true}}}
 return false}
 DOMNode.__del__=function(self){
-if(!self.elt.parentNode){throw _b_.ValueError.$factory("can't delete " + str.$factory(self.elt))}
+if(!self.elt.parentNode){throw _b_.ValueError.$factory("can't delete " + _b_.str.$factory(self.elt))}
 self.elt.parentNode.removeChild(self.elt)}
 DOMNode.__delitem__=function(self,key){if(self.elt.nodeType==9){
 var res=self.elt.getElementById(key)
@@ -11389,7 +11397,7 @@ case "width":
 if(self.elt.tagName=="CANVAS" && self.elt[attr]){return self.elt[attr]}
 if(self.elt instanceof SVGElement){return self.elt.getAttributeNS(null,attr)}
 if(self.elt.style[attr]){return parseInt(self.elt.style[attr])}else{throw _b_.AttributeError.$factory("style." + attr +
-" is not set for " + str.$factory(self))}
+" is not set for " + _b_.str.$factory(self))}
 case "clear":
 case "closest":
 return function(){return DOMNode[attr](self,arguments[0])}
@@ -11422,15 +11430,15 @@ if(typeof res==="function"){var func=(function(f,elt){return function(){var args
 for(var i=0;i < arguments.length;i++){var arg=arguments[i]
 if(typeof arg=="function"){var f1=function(dest_fn){return function(){try{return dest_fn.apply(null,arguments)}
 catch(err){console.log(dest_fn,typeof dest_fn,err)
-if(err.__class__ !==undefined){var msg=_b_.getattr(err,'info')+
+if(err.__class__ !==undefined){var msg=$B.$getattr(err,'info')+
 '\n' + err.__class__.__name__
 if(err.args){msg +=': ' + err.args[0]}
-try{getattr($B.stderr,"write")(msg)}
-catch(err){console.log(msg)}}else{try{getattr($B.stderr,"write")(err)}
+try{$B.$getattr($B.stderr,"write")(msg)}
+catch(err){console.log(msg)}}else{try{$B.$getattr($B.stderr,"write")(err)}
 catch(err1){console.log(err)}}
 throw err}}}(arg)
 args[pos++]=f1}
-else if(isinstance(arg,JSObject)){args[pos++]=arg.js}else if(isinstance(arg,DOMNode)){args[pos++]=arg.elt}else if(arg===_b_.None){args[pos++]=null}else{args[pos++]=arg}}
+else if(_b_.isinstance(arg,JSObject)){args[pos++]=arg.js}else if(_b_.isinstance(arg,DOMNode)){args[pos++]=arg.elt}else if(arg===_b_.None){args[pos++]=null}else{args[pos++]=arg}}
 var result=f.apply(elt,args)
 return $B.$JS2Py(result)}})(res,self.elt)
 func.$infos={__name__ : attr}
@@ -11446,7 +11454,7 @@ if(typeof key=="string"){var res=self.elt.getElementById(key)
 if(res){return DOMNode.$factory(res)}
 throw KeyError.$factory(key)}else{try{var elts=self.elt.getElementsByTagName(key.__name__),res=[]
 for(var i=0;i < elts.length;i++){res.push(DOMNode.$factory(elts[i]))}
-return res}catch(err){throw KeyError.$factory(str.$factory(key))}}}else{if((typeof key=="number" ||typeof key=="boolean")&&
+return res}catch(err){throw KeyError.$factory(_b_.str.$factory(key))}}}else{if((typeof key=="number" ||typeof key=="boolean")&&
 typeof self.elt.item=="function"){var key_to_int=_b_.int.$factory(key)
 if(key_to_int < 0){key_to_int +=self.elt.length}
 var res=DOMNode.$factory(self.elt.item(key_to_int))
@@ -11464,14 +11472,14 @@ return $B.$iter(items)}
 DOMNode.__le__=function(self,other){
 var elt=self.elt
 if(self.elt.nodeType==9){elt=self.elt.body}
-if(isinstance(other,TagSum)){for(var i=0;i < other.children.length;i++){elt.appendChild(other.children[i].elt)}}else if(typeof other=="string" ||typeof other=="number"){var $txt=document.createTextNode(other.toString())
-elt.appendChild($txt)}else if(isinstance(other,DOMNode)){
+if(_b_.isinstance(other,TagSum)){for(var i=0;i < other.children.length;i++){elt.appendChild(other.children[i].elt)}}else if(typeof other=="string" ||typeof other=="number"){var $txt=document.createTextNode(other.toString())
+elt.appendChild($txt)}else if(_b_.isinstance(other,DOMNode)){
 elt.appendChild(other.elt)}else{try{
 var items=_b_.list.$factory(other)
 items.forEach(function(item){DOMNode.__le__(self,item)})}catch(err){throw _b_.TypeError.$factory("can't add '" +
 $B.get_class(other).__name__ + "' object to DOMNode instance")}}}
 DOMNode.__len__=function(self){return self.elt.length}
-DOMNode.__mul__=function(self,other){if(isinstance(other,_b_.int)&& other.valueOf()> 0){var res=TagSum.$factory()
+DOMNode.__mul__=function(self,other){if(_b_.isinstance(other,_b_.int)&& other.valueOf()> 0){var res=TagSum.$factory()
 var pos=res.children.length
 for(var i=0;i < other.valueOf();i++){res.children[pos++]=DOMNode.clone(self)()}
 return res}
@@ -11537,11 +11545,11 @@ return(function(obj,evt){function f(callback){DOMNode.bind(obj,evt,callback)
 return callback}
 return f})(self,event)}
 for(var i=2;i < arguments.length;i++){var func=arguments[i]
-var callback=(function(f){return function(ev){try{return f($DOMEvent(ev))}catch(err){if(err.__class__ !==undefined){var msg=_b_.getattr(err,"info")+
+var callback=(function(f){return function(ev){try{return f($DOMEvent(ev))}catch(err){if(err.__class__ !==undefined){var msg=$B.$getattr(err,"info")+
 "\n" + err.__class__.__name__
 if(err.args){msg +=": " + err.args[0]}
-try{getattr($B.stderr,"write")(msg)}
-catch(err){console.log(msg)}}else{try{getattr($B.stderr,"write")(err)}
+try{$B.$getattr($B.stderr,"write")(msg)}
+catch(err){console.log(msg)}}else{try{$B.$getattr($B.stderr,"write")(err)}
 catch(err1){console.log(err)}}}}}
 )(func)
 callback.$infos=func.$infos
@@ -11562,7 +11570,7 @@ var elt=self.elt
 if(elt.nodeType==9){elt=elt.body}
 while(elt.firstChild){elt.removeChild(elt.firstChild)}}
 DOMNode.Class=function(self){if(self.elt.className !==undefined){return self.elt.className}
-return None}
+return _b_.None}
 DOMNode.class_name=function(self){return DOMNode.Class(self)}
 DOMNode.clone=function(self){var res=DOMNode.$factory(self.elt.cloneNode(true))
 var events=self.elt.$events ||{}
@@ -11618,7 +11626,7 @@ if(res===undefined){if(self.elt.nodeType==9){res=self.elt.body.innerHTML}
 else{res=_b_.None}}
 return res}
 DOMNode.id=function(self){if(self.elt.id !==undefined){return self.elt.id}
-return None}
+return _b_.None}
 DOMNode.index=function(self,selector){var items
 if(selector===undefined){items=self.elt.parentElement.childNodes}else{items=self.elt.parentElement.querySelectorAll(selector)}
 var rank=-1
@@ -11633,7 +11641,7 @@ if(! elt){return false}}}
 DOMNode.options=function(self){
 return new $OptionsClass(self.elt)}
 DOMNode.parent=function(self){if(self.elt.parentElement){return DOMNode.$factory(self.elt.parentElement)}
-return None}
+return _b_.None}
 DOMNode.reset=function(self){
 return function(){self.elt.reset()}}
 DOMNode.select=function(self,selector){
@@ -11644,7 +11652,7 @@ DOMNode.select_one=function(self,selector){
 if(self.elt.querySelector===undefined){throw _b_.TypeError.$factory("DOMNode object doesn't support " +
 "selection by selector")}
 var res=self.elt.querySelector(selector)
-if(res===null){return None}
+if(res===null){return _b_.None}
 return DOMNode.$factory(res)}
 DOMNode.style=function(self){
 self.elt.style.float=self.elt.style.cssFloat ||self.style.styleFloat
@@ -11659,7 +11667,7 @@ range.select()}})(this)}}
 DOMNode.set_class_name=function(self,arg){self.elt.setAttribute("class",arg)}
 DOMNode.set_html=function(self,value){var elt=self.elt
 if(elt.nodeType==9){elt=elt.body}
-elt.innerHTML=str.$factory(value)}
+elt.innerHTML=_b_.str.$factory(value)}
 DOMNode.set_style=function(self,style){
 if(!_b_.isinstance(style,_b_.dict)){throw TypeError.$factory("style must be dict, not " +
 $B.get_class(style).__name__)}
@@ -11670,13 +11678,13 @@ self.elt.style.styleFloat=value}else{switch(key){case "top":
 case "left":
 case "width":
 case "borderWidth":
-if(isinstance(value,_b_.int)){value=value + "px"}}
+if(_b_.isinstance(value,_b_.int)){value=value + "px"}}
 self.elt.style[key]=value}}}
 DOMNode.set_text=function(self,value){var elt=self.elt
 if(elt.nodeType==9){elt=elt.body}
-elt.innerText=str.$factory(value)
-elt.textContent=str.$factory(value)}
-DOMNode.set_value=function(self,value){self.elt.value=str.$factory(value)}
+elt.innerText=_b_.str.$factory(value)
+elt.textContent=_b_.str.$factory(value)}
+DOMNode.set_value=function(self,value){self.elt.value=_b_.str.$factory(value)}
 DOMNode.submit=function(self){
 return function(){self.elt.submit()}}
 DOMNode.text=function(self){var elt=self.elt
@@ -11709,7 +11717,7 @@ var found=false
 for(var j=0;j < events.length;j++){if(events[j][0]===callback){var func=callback,found=true
 break}}
 if(!found){throw _b_.TypeError.$factory("function is not an event callback")}}
-for(var j=0;j < events.length;j++){if(getattr(func,'__eq__')(events[j][0])){var callback=events[j][1]
+for(var j=0;j < events.length;j++){if($B.$getattr(func,'__eq__')(events[j][0])){var callback=events[j][1]
 self.elt.removeEventListener(event,callback,false)
 events.splice(j,1)
 flag=true
@@ -11728,7 +11736,7 @@ Query.__iter__=function(self){return $B.$iterator(self._keys,Query_iterator)}
 Query.__mro__=[object]
 Query.getfirst=function(self,key,_default){
 var result=self._values[key]
-if(result===undefined){if(_default===undefined){return None}
+if(result===undefined){if(_default===undefined){return _b_.None}
 return _default}
 return result[0]}
 Query.getlist=function(self,key){
@@ -11736,7 +11744,7 @@ var result=self._values[key]
 if(result===undefined){return[]}
 return result}
 Query.getvalue=function(self,key,_default){try{return Query.__getitem__(self,key)}
-catch(err){if(_default===undefined){return None}
+catch(err){if(_default===undefined){return _b_.None}
 return _default}}
 Query.keys=function(self){return self._keys}
 DOMNode.query=function(self){var res={__class__: Query,_keys :[],_values :{}}
@@ -11748,7 +11756,7 @@ res._values[key]=[value]}}
 return res}
 var TagSum={__class__ : _b_.type,__mro__:[object],__name__: "TagSum"}
 TagSum.appendChild=function(self,child){self.children.push(child)}
-TagSum.__add__=function(self,other){if($B.get_class(other)===TagSum){self.children=self.children.concat(other.children)}else if(isinstance(other,[_b_.str,_b_.int,_b_.float,_b_.dict,_b_.set,_b_.list])){self.children=self.children.concat(
+TagSum.__add__=function(self,other){if($B.get_class(other)===TagSum){self.children=self.children.concat(other.children)}else if(_b_.isinstance(other,[_b_.str,_b_.int,_b_.float,_b_.dict,_b_.set,_b_.list])){self.children=self.children.concat(
 DOMNode.$factory(document.createTextNode(other)))}else{self.children.push(other)}
 return self}
 TagSum.__radd__=function(self,other){var res=TagSum.$factory()
@@ -11768,7 +11776,7 @@ __class__: TagSum,children:[],toString: function(){return "(TagSum)"}}}
 $B.set_func_names(TagSum,"<dom>")
 $B.TagSum=TagSum 
 var win=JSObject.$factory(_window)
-win.get_postMessage=function(msg,targetOrigin){if(isinstance(msg,dict)){var temp={__class__:"dict"},items=_b_.list.$factory(_b_.dict.items(msg))
+win.get_postMessage=function(msg,targetOrigin){if(_b_.isinstance(msg,dict)){var temp={__class__:"dict"},items=_b_.list.$factory(_b_.dict.items(msg))
 items.forEach(function(item){temp[item[0]]=item[1]})
 msg=temp}
 return _window.postMessage(msg,targetOrigin)}
@@ -11776,7 +11784,8 @@ $B.DOMNode=DOMNode
 $B.win=win})(__BRYTHON__)
 ;(function($B){
 var _b_=$B.builtins
-eval($B.InjectBuiltins())
+var bltns=$B.InjectBuiltins()
+eval(bltns)
 function rstrip(s,strip_chars){var _chars=strip_chars ||" \t\n";
 var nstrip=0,len=s.length;
 while(nstrip < len && _chars.indexOf(s.charAt(len-1-nstrip))> -1 )nstrip ++;

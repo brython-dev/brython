@@ -1,6 +1,7 @@
 ;(function($B){
 
-eval($B.InjectBuiltins())
+var bltns = $B.InjectBuiltins()
+eval(bltns)
 
 if(!String.prototype.trim){
     // Polyfill for older browsers
