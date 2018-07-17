@@ -64,9 +64,9 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,6,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.6.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-07-15 11:46:03.634899"
-__BRYTHON__.timestamp=1531647963634
-__BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_py_abc","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
+__BRYTHON__.compiled_date="2018-07-17 10:31:03.564118"
+__BRYTHON__.timestamp=1531816263564
+__BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
 isFinite(value)&&
@@ -110,12 +110,6 @@ parent.children[pos]=replace_with
 replace_with.parent=parent
 replace_with.bindings=replace_what.bindings}
 var get_rank_in_parent=$B.parser.get_rank_in_parent=function(node){return node.parent.children.indexOf(node)}
-var add_jscode=$B.parser.add_jscode=function(parent,insert_at,code){var new_node=new $NodeJS(code)
-if(insert_at===-1)
-parent.add(new_node)
-else
-parent.insert(insert_at,new_node)
-return new_node}
 var add_identnode=$B.parser.add_identnode=function(parent,insert_at,name,val){var new_node=new $Node()
 new_node.parent=parent
 new_node.locals=parent.locals
@@ -318,7 +312,7 @@ assign_ctx.tree.pop()
 var expr_ctx=new $ExprCtx(assign_ctx,'id',true)
 var idctx=new $IdCtx(expr_ctx,params.result_var_name)
 assign_ctx.tree[1]=expr_ctx
-var new_node=add_jscode(this.parent,params.save_result_rank+rank+1,assign_ctx.to_js()
+var new_node=this.parent.insert(params.save_result_rank+rank+1,$NodeJS(assign_ctx.to_js())
 )}
 return 2}}
 var $MarkerNode=$B.parser.$MarkerNode=function(name){$Node.apply(this,['marker'])
@@ -464,16 +458,19 @@ $loop_num++}else{
 node.parent.children.splice(rank,1)
 var rname=create_temp_name('$right')
 var rlname=create_temp_name('$rlist');
-add_jscode(node.parent,rank++,'var ' + rname + ' = ' + '$B.$getattr($B.$iter(' + right.to_js()+ '), "__next__");'
-).line_num=node.line_num 
-add_jscode(node.parent,rank++,'var '+rlname+'=[], $pos=0;'+
+var new_node=$NodeJS('var ' + rname + ' = ' +
+'$B.$getattr($B.$iter(' + right.to_js()+
+'), "__next__");')
+new_node.line_num=node.line_num 
+node.parent.insert(rank++,new_node)
+node.parent.insert(rank++,$NodeJS('var '+rlname+'=[], $pos=0;'+
 'while(1){'+
 'try{' +
 rlname + '[$pos++] = ' + rname +'()' +
 '}catch(err){'+
 'break'+
 '}'+
-'}'
+'}')
 )
 var packed=null
 var min_length=left_items.length
@@ -482,19 +479,19 @@ if(expr.type=='packed' ||
 (expr.type=='expr' && expr.tree[0].type=='packed')){packed=i
 min_length--
 break}}
-add_jscode(node.parent,rank++,'if(' + rlname + '.length<' + min_length + '){' +
+node.parent.insert(rank++,$NodeJS('if(' + rlname + '.length<' + min_length + '){' +
 'throw ValueError.$factory('+
-'"need more than " +' + rlname + '.length + " value" + (' +
-rlname + '.length > 1 ?' + ' "s" : "") + " to unpack"'+
-')'+
-'}'
+'"need more than " +' + rlname +
+'.length + " value" + (' + rlname +
+'.length > 1 ?' + ' "s" : "") + " to unpack")}'
 )
-if(packed==null){add_jscode(node.parent,rank++,'if(' + rlname + '.length>' + min_length + '){' +
+)
+if(packed==null){node.parent.insert(rank++,$NodeJS('if(' + rlname + '.length>' + min_length + '){' +
 'throw ValueError.$factory(' +
 '"too many values to unpack ' +
 '(expected ' + left_items.length + ')"'+
 ')'+
-'}'
+'}')
 )}
 left_items.forEach(function(left_item,i){var new_node=new $Node()
 new_node.id=scope.id
@@ -2457,16 +2454,15 @@ this.loop_num=elt.loop_num}}}
 this.toString=function(){return this.token}
 this.transform=function(node,rank){
 if(this.token=='finally'){var scope=$get_scope(this)
-if(scope.ntype !='generator'){add_jscode(node,0,'var $exit;'+
+if(scope.ntype !='generator'){node.insert(0,$NodeJS('var $exit;'+
 'if($B.frames_stack.length<$stack_length){' +
 '$exit = true;'+
 '$B.frames_stack.push($top_frame)'+
-'}'
+'}')
 )
 var scope_id=scope.id.replace(/\./g,'_')
 var last_child=node.children[node.children.length - 1]
-if(last_child.C.tree[0].type !="return"){add_jscode(node,-1,'if($exit){$B.leave_frame()}'
-)}}}}
+if(last_child.C.tree[0].type !="return"){node.add($NodeJS('if($exit){$B.leave_frame()}'))}}}}
 this.to_js=function(){this.js_processed=true
 if(this.token=='finally'){return this.token}
 if(this.loop_num !==undefined){var scope=$get_scope(this)
@@ -2628,12 +2624,12 @@ var js='var '+failed_name + ' = false;\n' + ' '.repeat(node.indent + 8)+ 'try'
 new $NodeJSCtx(node,js)
 node.is_try=true 
 node.has_return=this.has_return
-var catch_node=add_jscode(node.parent,rank + 1,'catch('+ error_name + ')'
-)
+var catch_node=$NodeJS('catch('+ error_name + ')')
 catch_node.is_catch=true
-add_jscode(catch_node,0,'var '+ failed_name + ' = true;' +
+node.parent.insert(rank + 1,catch_node)
+catch_node.insert(0,$NodeJS('var '+ failed_name + ' = true;' +
 '$B.pmframe = $B.last($B.frames_stack);'+
-'if(0){}'
+'if(0){}')
 )
 var pos=rank + 2
 var has_default=false 
@@ -2648,7 +2644,8 @@ ctx.error_name=error_name
 if(ctx.tree.length > 0 && ctx.tree[0].alias !==null
 && ctx.tree[0].alias !==undefined){
 var alias=ctx.tree[0].alias
-add_jscode(node.parent.children[pos],0,'$locals["' + alias + '"] = $B.exception(' + error_name + ')'
+node.parent.children[pos].insert(0,$NodeJS('$locals["' + alias + '"] = $B.exception(' + 
+error_name + ')')
 )}
 catch_node.insert(catch_node.children.length,node.parent.children[pos])
 if(ctx.tree.length==0){if(has_default){$_SyntaxError(C,'more than one except: line')}
@@ -2732,14 +2729,14 @@ try_node.is_try=true
 new $NodeJSCtx(try_node,'try')
 node.add(try_node)
 if(this.tree[0].alias){var alias=this.tree[0].alias.tree[0].tree[0].value
-add_jscode(try_node,-1,'$locals' + '["' + alias + '"] = ' + val_name
-)}
+try_node.add($NodeJS('$locals' + '["' + alias + '"] = ' +
+val_name))}
 block.forEach(function(elt){try_node.add(elt)})
 var catch_node=new $Node()
 catch_node.is_catch=true 
 new $NodeJSCtx(catch_node,'catch(' + err_name + ')')
-add_jscode(catch_node,-1,exc_name + ' = false;' +
-err_name + ' = $B.exception(' + err_name + ')\n' + ' '.repeat(node.indent+4)+
+catch_node.add($NodeJS(exc_name + ' = false;' + err_name +
+' = $B.exception(' + err_name + ')\n' + ' '.repeat(node.indent+4)+
 'if(!$B.$bool('+cme_name+'('+
 err_name + '.__class__,' +
 err_name + ','+
@@ -2749,7 +2746,7 @@ err_name + ','+
 '){' +
 'throw ' + err_name +
 '}'
-)
+))
 node.add(catch_node)
 var finally_node=new $Node()
 new $NodeJSCtx(finally_node,'finally')
@@ -2758,7 +2755,8 @@ finally_node.C.token='finally'
 finally_node.C.in_ctx_manager=true
 finally_node.is_except=true
 finally_node.in_ctx_manager=true
-add_jscode(finally_node,-1,'if(' + exc_name + ')'+ cme_name+'(None,None,None);'
+finally_node.add($NodeJS('if(' + exc_name + ')'+ cme_name +
+'(None,None,None);')
 )
 node.parent.insert(rank + 1,finally_node)
 this.transformed=true}
@@ -2795,8 +2793,9 @@ if(! in_lambda){var def=scope.C.tree[0]
 if(! is_await){def.type='generator'}
 def.yields.push(this)}
 this.toString=function(){return '(yield) ' +(this.from ? '(from) ' : '')+ this.tree}
-this.transform=function(node,rank){add_jscode(node.parent,rank + 1,'// placeholder for generator sent value'
-).set_yield_value=true}
+this.transform=function(node,rank){var new_node=$NodeJS('// placeholder for generator sent value')
+new_node.set_yield_value=true
+node.parent.insert(rank + 1,new_node)}
 this.to_js=function(){this.js_processed=true
 if(this.from===undefined){return $to_js(this.tree)||'None'}
 return $to_js(this.tree)}}

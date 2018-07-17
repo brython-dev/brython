@@ -135,19 +135,6 @@ var get_rank_in_parent = $B.parser.get_rank_in_parent = function(node) {
     return node.parent.children.indexOf(node)
 }
 
-// Adds a new block of javascript to :param:`parent` at position :param:`insert_at`.
-// Position may also be '-1' in which case the node is added at the end. Other
-// negative positions are not supported.
-// Returns the created $Node.
-var add_jscode = $B.parser.add_jscode = function(parent, insert_at, code) {
-    var new_node = new $NodeJS(code)
-    if (insert_at === -1)
-        parent.add(new_node)
-    else
-        parent.insert(insert_at, new_node)
-    return new_node
-}
-
 // Adds a new identifier node to :param:`parent` at position :param:`insert_at`.
 // The identifier will be named :param:`name` and it will be assigned the value
 // :param:`val`, which should be a node.
@@ -368,7 +355,7 @@ var $Node = $B.parser.$Node = function(type){
         child.module = this.module
     }
 
-    this.insert = function(pos,child){
+    this.insert = function(pos, child){
         // Insert child at position pos
         this.children.splice(pos, 0, child)
         child.parent = this
@@ -589,8 +576,8 @@ var $YieldFromMarkerNode = $B.parser.$YieldFromMarkerNode = function(params) {
             var expr_ctx = new $ExprCtx(assign_ctx, 'id', true)
             var idctx = new $IdCtx(expr_ctx, params.result_var_name)
             assign_ctx.tree[1] = expr_ctx
-            var new_node = add_jscode(this.parent, params.save_result_rank+rank+1,
-                assign_ctx.to_js()
+            var new_node = this.parent.insert(params.save_result_rank+rank+1,
+                $NodeJS(assign_ctx.to_js())
             )
         }
         return 2
@@ -917,19 +904,22 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context){
             var rname = create_temp_name('$right')
             var rlname = create_temp_name('$rlist');
 
-            add_jscode(node.parent, rank++,
-                'var ' + rname + ' = ' + '$B.$getattr($B.$iter(' + right.to_js() + '), "__next__");'
-            ).line_num = node.line_num // set attribute line_num for debugging
+            var new_node = $NodeJS('var ' + rname + ' = ' +
+                    '$B.$getattr($B.$iter(' + right.to_js() +
+                    '), "__next__");')
 
-            add_jscode(node.parent, rank++,
-                'var '+rlname+'=[], $pos=0;'+
+            new_node.line_num = node.line_num // set attribute line_num for debugging
+            node.parent.insert(rank++, new_node)
+
+            node.parent.insert(rank++,
+                $NodeJS('var '+rlname+'=[], $pos=0;'+
                 'while(1){'+
                     'try{' +
                         rlname + '[$pos++] = ' + rname +'()' +
                     '}catch(err){'+
                        'break'+
                     '}'+
-                '}'
+                '}')
             )
 
             // If there is a packed tuple in the list of left items, store
@@ -947,24 +937,24 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context){
             }
 
             // Test if there were enough values in the right part
-            add_jscode(node.parent, rank++,
-                'if(' + rlname + '.length<' + min_length + '){' +
+            node.parent.insert(rank++,
+                $NodeJS('if(' + rlname + '.length<' + min_length + '){' +
                     'throw ValueError.$factory('+
-                       '"need more than " +' + rlname + '.length + " value" + (' +
-                        rlname + '.length > 1 ?' + ' "s" : "") + " to unpack"'+
-                    ')'+
-                '}'
+                       '"need more than " +' + rlname +
+                       '.length + " value" + (' + rlname +
+                       '.length > 1 ?' + ' "s" : "") + " to unpack")}'
+               )
             )
 
              // Test if there were enough variables in the left part
             if(packed == null){
-                add_jscode(node.parent, rank++,
-                    'if(' + rlname + '.length>' + min_length + '){' +
+                node.parent.insert(rank++,
+                    $NodeJS('if(' + rlname + '.length>' + min_length + '){' +
                         'throw ValueError.$factory(' +
                            '"too many values to unpack ' +
                            '(expected ' + left_items.length + ')"'+
                         ')'+
-                    '}'
+                    '}')
                 )
             }
 
@@ -5177,12 +5167,12 @@ var $SingleKwCtx = $B.parser.$SingleKwCtx = function(context,token){
         if(this.token == 'finally'){
             var scope = $get_scope(this)
             if(scope.ntype != 'generator'){
-                add_jscode(node, 0,
-                    'var $exit;'+
+                node.insert(0,
+                    $NodeJS('var $exit;'+
                     'if($B.frames_stack.length<$stack_length){' +
                         '$exit = true;'+
                         '$B.frames_stack.push($top_frame)'+
-                    '}'
+                    '}')
                 )
 
                 var scope_id = scope.id.replace(/\./g, '_')
@@ -5191,9 +5181,7 @@ var $SingleKwCtx = $B.parser.$SingleKwCtx = function(context,token){
                 // If the finally block ends with "return", don't add the
                 // final line
                 if(last_child.context.tree[0].type != "return"){
-                    add_jscode(node, -1,
-                        'if($exit){$B.leave_frame()}'
-                    )
+                    node.add($NodeJS('if($exit){$B.leave_frame()}'))
                 }
             }
         }
@@ -5541,20 +5529,19 @@ var $TryCtx = $B.parser.$TryCtx = function(context){
         node.has_return = this.has_return
 
         // Insert new 'catch' clause
-        var catch_node = add_jscode(node.parent, rank + 1,
-            'catch('+ error_name + ')'
-        )
+        var catch_node = $NodeJS('catch('+ error_name + ')')
         catch_node.is_catch = true
+        node.parent.insert(rank + 1, catch_node)
 
         // Set the boolean $failed to true
         // Set attribute "pmframe" (post mortem frame) to $B in case an error
         // happens in a callback function ; in this case the frame would be
         // lost at the time the exception is handled by $B.exception
-        add_jscode(catch_node, 0,
-            'var '+ failed_name + ' = true;' +
+        catch_node.insert(0,
+            $NodeJS('var '+ failed_name + ' = true;' +
             '$B.pmframe = $B.last($B.frames_stack);'+
             // Fake line to start the 'else if' clauses
-            'if(0){}'
+            'if(0){}')
         )
 
         var pos = rank + 2
@@ -5577,8 +5564,9 @@ var $TryCtx = $B.parser.$TryCtx = function(context){
                         && ctx.tree[0].alias !== undefined){
                     // syntax "except ErrorName as Alias"
                     var alias = ctx.tree[0].alias
-                    add_jscode(node.parent.children[pos], 0,
-                        '$locals["' + alias + '"] = $B.exception(' + error_name + ')'
+                    node.parent.children[pos].insert(0,
+                        $NodeJS('$locals["' + alias + '"] = $B.exception(' + 
+                            error_name + ')')
                     )
                 }
                 catch_node.insert(catch_node.children.length,
@@ -5809,9 +5797,8 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
         // if there is an alias, insert the value
         if(this.tree[0].alias){
             var alias = this.tree[0].alias.tree[0].tree[0].value
-            add_jscode(try_node, -1,
-                '$locals' + '["' + alias + '"] = ' + val_name
-            )
+            try_node.add($NodeJS('$locals' + '["' + alias + '"] = ' +
+                val_name))
         }
 
         // place block inside a try clause
@@ -5821,19 +5808,18 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
         catch_node.is_catch = true // for generators
         new $NodeJSCtx(catch_node, 'catch(' + err_name + ')')
 
-        add_jscode(catch_node, -1,
-            exc_name + ' = false;' +
-            err_name + ' = $B.exception(' + err_name + ')\n' + ' '.repeat(node.indent+4) +
+        catch_node.add($NodeJS(exc_name + ' = false;' + err_name +
+            ' = $B.exception(' + err_name + ')\n' + ' '.repeat(node.indent+4) +
                 'if(!$B.$bool('+cme_name+'('+
-                                    err_name + '.__class__,' +
-                                    err_name + ','+
-                                    '$B.$getattr('+err_name + ', "traceback")'+
-                                ')'+
-                            ')'+
+                            err_name + '.__class__,' +
+                            err_name + ','+
+                            '$B.$getattr('+err_name + ', "traceback")'+
+                        ')'+
+                    ')'+
                 '){' +
                    'throw ' + err_name +
                 '}'
-        )
+        ))
         node.add(catch_node)
 
         var finally_node = new $Node()
@@ -5843,8 +5829,8 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
         finally_node.context.in_ctx_manager = true
         finally_node.is_except = true
         finally_node.in_ctx_manager = true
-        add_jscode(finally_node, -1,
-            'if(' + exc_name + ')'+ cme_name+'(None,None,None);'
+        finally_node.add($NodeJS('if(' + exc_name + ')'+ cme_name +
+            '(None,None,None);')
         )
         node.parent.insert(rank + 1, finally_node)
 
@@ -5930,9 +5916,9 @@ var $YieldCtx = $B.parser.$YieldCtx = function(context, is_await){
     }
 
     this.transform = function(node, rank){
-        add_jscode(node.parent, rank + 1,
-            '// placeholder for generator sent value'
-        ).set_yield_value = true
+        var new_node = $NodeJS('// placeholder for generator sent value')
+        new_node.set_yield_value = true
+        node.parent.insert(rank + 1, new_node)
     }
 
     this.to_js = function(){
