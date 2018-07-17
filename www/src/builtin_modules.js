@@ -352,6 +352,17 @@
         Getframe : function(depth){
             return $B._frame.$factory($B.frames_stack, depth)
         },
+        exc_info: function(){
+            for(var i = $B.frames_stack.length - 1; i >=0; i--){
+                var frame = $B.frames_stack[i],
+                    exc = frame[1].$current_exception
+                if(exc){
+                    return _b_.tuple.$factory([exc.__class__, exc,
+                        $B.$getattr(exc, "traceback")])
+                }
+            }
+            return _b_.tuple.$factory([_b_.None, _b_.None, _b_.None])
+        },
         modules: {
             __get__: function(){
                 return $B.obj_dict($B.imported)

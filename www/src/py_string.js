@@ -1235,8 +1235,7 @@ str.join = function(){
 
     var iterable = _b_.iter($.iterable),
         res = [],
-        count = 0,
-        ce = $B.current_exception
+        count = 0
     while(1){
         try{
             var obj2 = _b_.next(iterable)
@@ -1246,7 +1245,6 @@ str.join = function(){
             res.push(obj2)
         }catch(err){
             if(_b_.isinstance(err, _b_.StopIteration)){
-                $B.current_exception = ce
                 break
             }
             else{throw err}

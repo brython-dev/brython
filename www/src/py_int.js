@@ -716,10 +716,8 @@ $B.$bool = function(obj){ // return true or false
             if(obj){return true}
             return false
         default:
-            var ce = $B.current_exception
             try{return getattr(obj, "__bool__")()}
             catch(err){
-                $B.current_exception = ce
                 try{return getattr(obj, "__len__")() > 0}
                 catch(err){return true}
             }

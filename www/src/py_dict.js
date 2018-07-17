@@ -363,8 +363,7 @@ dict.__init__ = function(self){
                 si = dict.__setitem__
             while(i-- > 0){si(self, src[i - 1][0], src[i - 1][1])}
         }else{
-            var iterable = $B.$iter(args[0]),
-                ce = $B.current_exception
+            var iterable = $B.$iter(args[0])
             while(1){
                 try{
                    var elt = next(iterable),
@@ -373,7 +372,6 @@ dict.__init__ = function(self){
                    dict.__setitem__(self, key, value)
                 }catch(err){
                    if(err.__class__ === _b_.StopIteration){
-                       $B.current_exception = ce
                        break
                    }
                    throw err
@@ -555,8 +553,7 @@ dict.fromkeys = function(){
     // class method
     var klass = $.cls,
         res = $B.$call(klass)(),
-        keys_iter = $B.$iter(keys),
-        ce = $B.current_exception
+        keys_iter = $B.$iter(keys)
 
     while(1){
         try{
@@ -565,7 +562,6 @@ dict.fromkeys = function(){
             else{_b_.getattr(res, "__setitem__")(key, value)}
         }catch(err){
             if($B.is_exc(err, [_b_.StopIteration])){
-                $B.current_exception = ce
                 return res
             }
             throw err
@@ -628,14 +624,12 @@ dict.pop = function(){
 }
 
 dict.popitem = function(self){
-    var ce = $B.current_exception
     try{
         var itm = new $item_iterator(self).next()
         dict.__delitem__(self, itm[0])
         return _b_.tuple.$factory(itm)
     }catch(err) {
         if (err.__class__ == _b_.StopIteration) {
-            $B.current_exception = ce
             throw KeyError.$factory("'popitem(): dictionary is empty'")
         }
     }

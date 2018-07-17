@@ -64,8 +64,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,6,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.6.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-07-17 10:31:03.564118"
-__BRYTHON__.timestamp=1531816263564
+__BRYTHON__.compiled_date="2018-07-17 22:44:10.194879"
+__BRYTHON__.timestamp=1531860250194
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -1485,6 +1485,11 @@ this.scope=$get_scope(this)
 this.toString=function(){return '(except) '}
 this.set_alias=function(alias){this.tree[0].alias=$mangle(alias,this)
 $bind(alias,this.scope,this)}
+this.transform=function(node,rank){
+var last_child=$B.last(node.children)
+if(last_child.C.tree && last_child.C.tree[0]&&
+last_child.C.tree[0].type=="return"){}
+else{node.add($NodeJS("$B.del_exc()"))}}
 this.to_js=function(){
 this.js_processed=true
 switch(this.tree.length){case 0:
@@ -1653,7 +1658,6 @@ num + '()){throw RuntimeError.$factory("dictionary' +
 var try_node=$NodeJS("try")
 try_node.bindings=node.bindings
 while_node.add(try_node)
-try_node.add($NodeJS("var ce = $B.current_exception"))
 var iter_node=new $Node()
 iter_node.id=this.module
 var C=new $NodeCtx(iter_node)
@@ -1667,7 +1671,7 @@ assign.tree[1]=new $JSCode('$locals["$next' + num + '"]()')
 try_node.add(iter_node)
 while_node.add(
 $NodeJS('catch($err){if($B.is_exc($err, [StopIteration]))' +
-'{$B.current_exception = ce;break;}else{throw($err)}}'))
+'{break;}else{throw($err)}}'))
 children.forEach(function(child){while_node.add(child)})
 node.children=[]
 return 0}
@@ -2620,21 +2624,23 @@ $_SyntaxError(C,"missing clause after 'try'")}}
 var scope=$get_scope(this)
 var error_name=create_temp_name('$err')
 var failed_name=create_temp_name('$failed')
-var js='var '+failed_name + ' = false;\n' + ' '.repeat(node.indent + 8)+ 'try'
+var js='var '+failed_name + ' = false;\n' +
+' '.repeat(node.indent + 4)+ 'try'
 new $NodeJSCtx(node,js)
 node.is_try=true 
 node.has_return=this.has_return
 var catch_node=$NodeJS('catch('+ error_name + ')')
 catch_node.is_catch=true
 node.parent.insert(rank + 1,catch_node)
-catch_node.insert(0,$NodeJS('var '+ failed_name + ' = true;' +
+catch_node.add($NodeJS("$B.set_exc(" + error_name + ")"))
+catch_node.add(
+$NodeJS('var '+ failed_name + ' = true;' +
 '$B.pmframe = $B.last($B.frames_stack);'+
 'if(0){}')
 )
-var pos=rank + 2
-var has_default=false 
-var has_else=false 
-var has_finally=false
+var pos=rank + 2,has_default=false,
+has_else=false,
+has_finally=false
 while(1){if(pos==node.parent.children.length){break}
 var ctx=node.parent.children[pos].C.tree[0]
 if(ctx.type=='except'){
@@ -2644,7 +2650,7 @@ ctx.error_name=error_name
 if(ctx.tree.length > 0 && ctx.tree[0].alias !==null
 && ctx.tree[0].alias !==undefined){
 var alias=ctx.tree[0].alias
-node.parent.children[pos].insert(0,$NodeJS('$locals["' + alias + '"] = $B.exception(' + 
+node.parent.children[pos].insert(0,$NodeJS('$locals["' + alias + '"] = $B.exception(' +
 error_name + ')')
 )}
 catch_node.insert(catch_node.children.length,node.parent.children[pos])
@@ -5427,8 +5433,7 @@ throw _b_.IndexError.$factory(type + " index out of range")}
 $B.$getitem=function(obj,item){if(typeof item=="number"){if(Array.isArray(obj)||typeof obj=="string"){item=item >=0 ? item : obj.length + item
 if(obj[item]!==undefined){return obj[item]}
 else{index_error(obj)}}}
-var ce=$B.current_exception
-try{item=$B.$GetInt(item)}catch(err){$B.current_exception=ce}
+try{item=$B.$GetInt(item)}catch(err){}
 if((Array.isArray(obj)||typeof obj=="string")
 && typeof item=="number"){item=item >=0 ? item : obj.length + item
 if(obj[item]!==undefined){return obj[item]}
@@ -5495,21 +5500,19 @@ augm_code=augm_code.replace(/\+=/g,augm_ops[i][0])
 eval("$B.augm_item_" + augm_ops[i][1]+ "=" + augm_code)}
 $B.extend=function(fname,arg){
 for(var i=2;i < arguments.length;i++){var mapping=arguments[i]
-var it=_b_.iter(mapping),getter=_b_.getattr(mapping,"__getitem__"),ce=$B.current_exception
+var it=_b_.iter(mapping),getter=_b_.getattr(mapping,"__getitem__")
 while(true){try{var key=_b_.next(it)
 if(typeof key !=="string"){throw _b_.TypeError.$factory(fname +
 "() keywords must be strings")}
 if(arg[key]!==undefined){throw _b_.TypeError.$factory(fname +
 "() got multiple values for argument '" + key + "'")}
-arg[key]=getter(key)}catch(err){if(_b_.isinstance(err,[_b_.StopIteration])){$B.current_exception=ce
-break}
+arg[key]=getter(key)}catch(err){if(_b_.isinstance(err,[_b_.StopIteration])){break}
 throw err}}}
 return arg}
 $B.extend_list=function(){
 var res=Array.prototype.slice.call(arguments,0,arguments.length - 1),last=$B.last(arguments)
-var it=_b_.iter(last),ce=$B.current_exception
-while(true){try{res.push(_b_.next(it))}catch(err){if(_b_.isinstance(err,[_b_.StopIteration])){$B.current_exception=ce
-break}
+var it=_b_.iter(last)
+while(true){try{res.push(_b_.next(it))}catch(err){if(_b_.isinstance(err,[_b_.StopIteration])){break}
 throw err}}
 return res}
 $B.$test_item=function(expr){
@@ -5522,15 +5525,13 @@ if(a instanceof Number && b instanceof Number){return a.valueOf()==b.valueOf()}
 return a===b}
 $B.$is_member=function(item,_set){
 var f,_iter
-var ce=$B.current_exception
 try{f=_b_.getattr(_set,"__contains__")}
-catch(err){$B.current_exception=ce}
+catch(err){}
 if(f){return f(item)}
 try{_iter=_b_.iter(_set)}
-catch(err){$B.current_exception=ce}
+catch(err){}
 if(_iter){while(1){try{var elt=_b_.next(_iter)
-if($B.rich_comp("__eq__",elt,item)){return true}}catch(err){if(err.__class__===_b_.StopIteration){$B.current_exception=ce
-return false}
+if($B.rich_comp("__eq__",elt,item)){return true}}catch(err){if(err.__class__===_b_.StopIteration){return false}
 throw err}}}
 try{f=_b_.getattr(_set,"__getitem__")}
 catch(err){throw _b_.TypeError.$factory("'" + $B.get_class(_set).__name__ +
@@ -5588,9 +5589,8 @@ for(var i=0,len=items.length;i < len;i++){res[$B.pyobject2jsobject(items[i][0])]
 $B.pyobject2jsobject(items[i][1])}
 return res}
 if(_b_.hasattr(obj,"__iter__")){
-var _a=[],pos=0,ce=$B.current_exception
+var _a=[],pos=0
 while(1){try{_a[pos++]=$B.pyobject2jsobject(_b_.next(obj))}catch(err){if(err.__class__ !==_b_.StopIteration){throw err}
-$B.current_exception=ce
 break}}
 return{"_type_": "iter",data: _a}}
 if(_b_.hasattr(obj,"__getstate__")){return _b_.getattr(obj,"__getstate__")()}
@@ -5605,9 +5605,8 @@ throw _b_.StopIteration.$factory("StopIteration")},__repr__: function(){return "
 res.__str__=res.toString=res.__repr__
 return res}
 $B.$iterator_class=function(name){var res={__class__: _b_.type,__name__: name,__module__: "builtins",__mro__:[_b_.object],$is_class: true}
-function as_array(s){var _a=[],pos=0,_it=_b_.iter(s),ce=$B.current_exception
-while(1){try{_a[pos++]=_b_.next(_it)}catch(err){if(err.__class__===_b_.StopIteration){$B.current_exception=ce
-break}}}
+function as_array(s){var _a=[],pos=0,_it=_b_.iter(s)
+while(1){try{_a[pos++]=_b_.next(_it)}catch(err){if(err.__class__===_b_.StopIteration){break}}}
 return _a}
 function as_list(s){return _b_.list.$factory(as_array(s))}
 function as_set(s){return _b_.set.$factory(as_array(s))}
@@ -5681,6 +5680,7 @@ $B.frames_stack.push(frame)}
 $B.leave_frame=function(arg){
 if($B.profile > 0){$B.$profile.return()}
 if($B.frames_stack.length==0){console.log("empty stack");return}
+$B.del_exc()
 $B.frames_stack.pop()}
 $B.leave_frame_exec=function(arg){
 if($B.profile > 0){$B.$profile.return()}
@@ -5902,14 +5902,14 @@ throw _b_.TypeError.$factory("Bad operand type for abs(): '" +
 $B.get_class(obj)+ "'")}
 function all(obj){check_nb_args('all',1,arguments.length)
 check_no_kw('all',obj)
-var iterable=iter(obj),ce=$B.current_exception
+var iterable=iter(obj)
 while(1){try{var elt=next(iterable)
-if(!$B.$bool(elt)){return false}}catch(err){$B.current_exception=ce;return true}}}
+if(!$B.$bool(elt)){return false}}catch(err){return true}}}
 function any(obj){check_nb_args('any',1,arguments.length)
 check_no_kw('any',obj)
-var iterable=iter(obj),ce=$B.current_exception
+var iterable=iter(obj)
 while(1){try{var elt=next(iterable)
-if($B.$bool(elt)){return true}}catch(err){$B.current_exception=ce;return false}}}
+if($B.$bool(elt)){return true}}catch(err){return false}}}
 function ascii(obj){check_nb_args('ascii',1,arguments.length)
 check_no_kw('ascii',obj)
 var res=repr(obj),res1='',cp
@@ -5993,7 +5993,7 @@ _b_.list.sort(res)
 return res}
 check_nb_args('dir',1,arguments.length)
 check_no_kw('dir',obj)
-var klass=obj.__class__ ||$B.get_class(obj),ce=$B.current_exception
+var klass=obj.__class__ ||$B.get_class(obj)
 if(obj.$is_class){
 var dir_func=$B.$getattr(obj.__class__,"__dir__")
 return $B.$call(dir_func)(obj)}
@@ -6002,7 +6002,6 @@ res=_b_.list.$factory(res)
 res.sort()
 return res}catch(err){
 console.log(err)}
-$B.current_exception=ce
 var res=[],pos=0
 for(var attr in obj){if(attr.charAt(0)!=='$' && attr !=='__class__' &&
 obj[attr]!==undefined){res[pos++]=attr}}
@@ -6034,7 +6033,7 @@ var is_exec=arguments[3]=='exec',leave=false
 if(src.__class__===code){is_exec=src.mode=="exec"
 src=src.source}else if(typeof src !=='string'){throw _b_.TypeError.$factory("eval() arg 1 must be a string, bytes "+
 "or code object")}
-var globals_id='$exec_' + $B.UUID(),locals_id='$exec_' + $B.UUID(),parent_scope,ce=$B.current_exception
+var globals_id='$exec_' + $B.UUID(),locals_id='$exec_' + $B.UUID(),parent_scope
 if(_globals===_b_.None){if(current_locals_id==current_globals_id){locals_id=globals_id}
 var local_scope={module: globals_id,id: current_locals_id,binding:{},bindings:{}}
 for(var attr in current_frame[1]){local_scope.binding[attr]=true
@@ -6078,7 +6077,6 @@ for(var item in items){var item1=$B.to_alias(item)
 try{eval('$locals_' + locals_id + '["' + item + '"] = items.' + item)}catch(err){console.log(err)
 console.log('error setting',item)
 break}}}
-$B.current_exception=ce
 var root=$B.py2js(src,globals_id,locals_id,parent_scope),js,gns,lns
 try{
 var try_node=root.children[root.children.length - 2],instr=try_node.children[try_node.children.length - 2]
@@ -6098,8 +6096,7 @@ js=root.to_js()
 if(is_exec){var locals_obj=eval("$locals_" + locals_id),globals_obj=eval("$locals_" + globals_id)
 if(_globals===_b_.None){var res=new Function("$locals_" + globals_id,"$locals_" + locals_id,js)(globals_obj,locals_obj)}else{current_globals_obj=current_frame[3]
 current_locals_obj=current_frame[1]
-var res=new Function("$locals_" + globals_id,"$locals_" + locals_id,"$locals_" + current_globals_id,"$locals_" + current_locals_id,js)(globals_obj,locals_obj,current_globals_obj,current_locals_obj)}}else{console.log("use eval")
-var res=eval(js)}
+var res=new Function("$locals_" + globals_id,"$locals_" + locals_id,"$locals_" + current_globals_id,"$locals_" + current_locals_id,js)(globals_obj,locals_obj,current_globals_obj,current_locals_obj)}}else{var res=eval(js)}
 gns=eval("$locals_" + globals_id)
 if($B.frames_stack[$B.frames_stack.length - 1][2]==globals_id){gns=$B.frames_stack[$B.frames_stack.length - 1][3]}
 if(_locals !==_b_.None){lns=eval("$locals_" + locals_id)
@@ -6234,10 +6231,8 @@ if(attr_func===odga){var res=obj[attr]
 if(res===null){return null}
 else if(res===undefined && obj.hasOwnProperty(attr)){return res}else if(res !==undefined){if(res.__set__===undefined ||res.$is_class)
 return res}}else if($test){console.log("use attr_func",attr_func)}
-try{var ce=$B.current_exception
-var res=attr_func(obj,attr)}
-catch(err){if(_default !==undefined){$B.current_exception=ce
-return _default}
+try{var res=attr_func(obj,attr)}
+catch(err){if(_default !==undefined){return _default}
 throw err}
 if(res !==undefined){return res}
 if(_default !==undefined){return _default}
@@ -6249,9 +6244,8 @@ check_nb_args('globals',0,arguments.length)
 return $B.obj_dict($B.last($B.frames_stack)[3])}
 function hasattr(obj,attr){check_no_kw('hasattr',obj,attr)
 check_nb_args('hasattr',2,arguments.length)
-var ce=$B.current_exception
 try{getattr(obj,attr);return true}
-catch(err){$B.current_exception=ce;return false}}
+catch(err){return false}}
 function hash(obj){check_no_kw('hash',obj)
 check_nb_args('hash',1,arguments.length)
 if(obj.__hashvalue__ !==undefined){return obj.__hashvalue__}
@@ -6285,9 +6279,8 @@ if(typeof obj=='string'){$B.$import("pydoc");
 var pydoc=$B.imported["pydoc"]
 getattr(getattr(pydoc,"help"),"__call__")(obj)
 return}
-var ce=$B.current_exception
 try{return getattr(obj,'__doc__')}
-catch(err){$B.current_exception=ce;return ''}}
+catch(err){return ''}}
 help.__repr__=help.__str__=function(){return "Type help() for interactive help, or help(object) " +
 "for help about object."}
 function hex(x){check_no_kw('hex',x)
@@ -6361,12 +6354,11 @@ if(gi !==-1){if(ln !==-1){var len=getattr(ln,'__call__')()
 return iterator_class.$factory(gi,len)}else{return iterator_class.$factory(gi,null)}}
 throw _b_.TypeError.$factory("'" + $B.get_class(obj).__name__ +
 "' object is not iterable")}
-var res=$B.$call(_iter)(),ce=$B.current_exception
+var res=$B.$call(_iter)()
 try{getattr(res,'__next__')}
 catch(err){if(isinstance(err,_b_.AttributeError)){throw _b_.TypeError.$factory(
 "iter() returned non-iterator of type '" +
 $B.get_class(res).__name__ + "'")}}
-$B.current_exception=ce
 return res}
 function iter(){
 var $=$B.args('iter',1,{obj: null},['obj'],arguments,null,'kw')
@@ -6410,10 +6402,9 @@ throw _b_.TypeError.$factory("'" + attr +
 "' is an invalid keyword argument for this function")}}}
 if(!func){func=function(x){return x}}
 if(nb_args==0){throw _b_.TypeError.$factory($op_name + " expected 1 argument, got 0")}else if(nb_args==1){
-var $iter=iter(args[0]),res=null,ce=$B.current_exception
+var $iter=iter(args[0]),res=null
 while(true){try{var x=next($iter)
-if(res===null ||$B.$bool(getattr(func(x),op)(func(res)))){res=x}}catch(err){if(err.__class__==_b_.StopIteration){$B.current_exception=ce
-if(res===null){if(has_default){return default_value}
+if(res===null ||$B.$bool(getattr(func(x),op)(func(res)))){res=x}}catch(err){if(err.__class__==_b_.StopIteration){if(res===null){if(has_default){return default_value}
 else{throw _b_.ValueError.$factory($op_name +
 "() arg is an empty sequence")}}else{return res}}
 throw err}}}else{if(has_default){throw _b_.TypeError.$factory("Cannot specify a default for " +
@@ -6514,10 +6505,8 @@ throw _b_.AttributeError.$factory("object has no attribute __repr__")}
 var reversed=$B.make_class("reversed",function(seq){
 check_no_kw('reversed',seq)
 check_nb_args('reversed',1,arguments.length)
-var ce=$B.current_exception
 try{return getattr(seq,'__reversed__')()}
 catch(err){if(err.__class__ !=_b_.AttributeError){throw err}}
-$B.current_exception=ce
 try{var res={__class__: reversed,$counter : getattr(seq,'__len__')(),getter: getattr(seq,'__getitem__')}
 return res}catch(err){throw _b_.TypeError.$factory("argument to reversed() must be a sequence")}}
 )
@@ -6602,10 +6591,9 @@ if(start===undefined){start=0}else{if(typeof start==='str'){throw _b_.TypeError.
 " [use ''.join(seq) instead]")}
 if(_b_.isinstance(start,_b_.bytes)){throw _b_.TypeError.$factory("TypeError: sum() can't sum bytes" +
 " [use b''.join(seq) instead]")}}
-var res=start,iterable=iter(iterable),ce=$B.current_exception
+var res=start,iterable=iter(iterable)
 while(1){try{var _item=next(iterable)
-res=getattr(res,'__add__')(_item)}catch(err){if(err.__class__===_b_.StopIteration){$B.current_exception=ce
-break}else{throw err}}}
+res=getattr(res,'__add__')(_item)}catch(err){if(err.__class__===_b_.StopIteration){break}else{throw err}}}
 return res}
 $B.missing_super2=function(obj){obj.$missing=true
 return obj}
@@ -6709,13 +6697,12 @@ var $ns=$B.args('zip',0,{},[],arguments,{},'args','kw')
 var _args=$ns['args']
 var args=[]
 for(var i=0;i < _args.length;i++){args.push(iter(_args[i]))}
-var rank=0,items=[],ce=$B.current_exception
+var rank=0,items=[]
 while(1){var line=[],flag=true
 for(var i=0;i < args.length;i++){try{line.push(next(args[i]))}catch(err){if(err.__class__==_b_.StopIteration){flag=false
 break}else{throw err}}}
 if(!flag){break}
 items[rank++]=_b_.tuple.$factory(line)}
-$B.current_exception=ce
 res.items=items
 return res}
 )
@@ -6803,8 +6790,14 @@ _b_.object.__init__.__class__=wrapper_descriptor
 _b_.object.__new__.__class__=builtin_function})(__BRYTHON__)
 ;(function($B){var bltns=$B.InjectBuiltins()
 eval(bltns)
+$B.del_exc=function(){var frame=$B.last($B.frames_stack)
+frame[1].$current_exception=undefined}
+$B.set_exc=function(exc){var frame=$B.last($B.frames_stack)
+frame[1].$current_exception=exc}
+$B.get_exc=function(){var frame=$B.last($B.frames_stack)
+return frame[1].current_exception }
 $B.$raise=function(arg){
-if(arg===undefined){var es=$B.current_exception
+if(arg===undefined){var es=$B.get_exc()
 if(es !==undefined){throw es}
 throw _b_.RuntimeError.$factory("No active exception to reraise")}else if(isinstance(arg,BaseException)){throw arg}else if(arg.$is_class && issubclass(arg,BaseException)){throw $B.$call(arg)()}else{throw _b_.TypeError.$factory("exceptions must derive from BaseException")}}
 $B.$syntax_err_line=function(exc,module,pos,line_num){
@@ -6930,7 +6923,6 @@ for(var i=0;i < err.$stack.length;i++){
 err.$stack[i]=err.$stack[i].slice()
 err.$stack[i][1]={$line_info: err.$stack[i][1].$line_info}}
 if($B.frames_stack.length){err.$line_info=$B.last($B.frames_stack)[1].$line_info}
-$B.current_exception=err
 eval("//placeholder//")
 return err}
 BaseException.$factory.$infos={__name__: "BaseException",__qualname__: "BaseException"}
@@ -6953,7 +6945,6 @@ var $message=js_exc.msg ||"<" + js_exc + ">"
 exc.args=_b_.tuple.$factory([$message])
 exc.$py_error=true
 exc.$stack=$B.frames_stack.slice()}else{var exc=js_exc}
-$B.current_exception=exc
 return exc}
 $B.is_exc=function(exc,exc_list){
 if(exc.__class__===undefined){exc=$B.exception(exc)}
@@ -6962,7 +6953,6 @@ for(var i=0;i < exc_list.length;i++){var exc_class=exc_list[i]
 if(this_exc_class===undefined){console.log("exc class undefined",exc)}
 if(issubclass(this_exc_class,exc_class)){return true}}
 return false}
-$B.clear_exc=function(){$B.current_exception=null}
 function $make_exc(names,parent){
 var _str=[],pos=0
 for(var i=0;i < names.length;i++){var name=names[i],code=""
@@ -6973,7 +6963,7 @@ var $exc=(BaseException.$factory + "").replace(/BaseException/g,name)
 $exc=$exc.replace("//placeholder//",code)
 _str[pos++]="_b_." + name + ' = {__class__:_b_.type, __name__:"' +
 name + '", __bases__: [parent], __module__: "builtins", '+
-'__mro__: [_b_.' + parent.__name__ + 
+'__mro__: [_b_.' + parent.__name__ +
 "].concat(parent.__mro__), $is_class: true}"
 _str[pos++]="_b_." + name + ".$factory = " + $exc
 _str[pos++]="_b_." + name + '.$factory.$infos = {__name__: "' +
@@ -7061,9 +7051,8 @@ return res + ")"}
 range.__setattr__=function(self,attr,value){throw _b_.AttributeError.$factory("readonly attribute")}
 range.start=function(self){return self.start}
 range.step=function(self){return self.step},range.stop=function(self){return self.stop}
-range.count=function(self,ob){if(_b_.isinstance(ob,[_b_.int,_b_.float,_b_.bool])){return _b_.int.$factory(range.__contains__(self,ob))}else{var comp=function(other){return $B.rich_comp("__eq__",ob,other)},it=range.__iter__(self),_next=RangeIterator.__next__,nb=0,ce=$B.current_exception
-while(true){try{if(comp(_next(it))){nb++}}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){$B.current_exception=ce
-return nb}
+range.count=function(self,ob){if(_b_.isinstance(ob,[_b_.int,_b_.float,_b_.bool])){return _b_.int.$factory(range.__contains__(self,ob))}else{var comp=function(other){return $B.rich_comp("__eq__",ob,other)},it=range.__iter__(self),_next=RangeIterator.__next__,nb=0
+while(true){try{if(comp(_next(it))){nb++}}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){return nb}
 throw err}}}}
 range.index=function(self,other){var $=$B.args("index",2,{self: null,other: null},["self","other"],arguments,{},null,null),self=$.self,other=$.other
 try{other=$B.int_or_bool(other)}catch(err){var comp=function(x){return $B.rich_comp("__eq__",other,x)},it=range.__iter__(self),_next=RangeIterator.__next__,nb=0
@@ -7254,12 +7243,11 @@ case 'backslashreplace':
 return decode(self.source,encoding,errors)
 default:}}
 bytes.join=function(){var $ns=$B.args('join',2,{self: null,iterable: null},['self','iterable'],arguments,{}),self=$ns['self'],iterable=$ns['iterable']
-var next_func=_b_.getattr(_b_.iter(iterable),'__next__'),res=self.__class__.$factory(),empty=true,ce=$B.current_exception
+var next_func=_b_.getattr(_b_.iter(iterable),'__next__'),res=self.__class__.$factory(),empty=true
 while(true){try{var item=next_func()
 if(empty){empty=false}
 else{res=bytes.__add__(res,self)}
-res=bytes.__add__(res,item)}catch(err){if(isinstance(err,_b_.StopIteration)){$B.current_exception=ce
-break}
+res=bytes.__add__(res,item)}catch(err){if(isinstance(err,_b_.StopIteration)){break}
 throw err}}
 return res}
 bytes.maketrans=function(from,to){var _t=[]
@@ -8687,10 +8675,8 @@ case "string":
 if(obj){return true}
 return false
 default:
-var ce=$B.current_exception
 try{return getattr(obj,"__bool__")()}
-catch(err){$B.current_exception=ce
-try{return getattr(obj,"__len__")()> 0}
+catch(err){try{return getattr(obj,"__len__")()> 0}
 catch(err){return true}}}}
 var bool={__class__: _b_.type,__module__: "builtins",__mro__:[int,object],__name__: "bool",$is_class: true,$native: true}
 bool.__add__=function(self,other){return(other ? 1 : 0)+(self ? 1 : 0)}
@@ -9596,10 +9582,9 @@ list.__init__=function(self,arg){var len_func=$B.$call(getattr(self,"__len__")),
 if(pop_func !==_b_.None){pop_func=$B.$call(pop_func)
 while(len_func()){pop_func()}}
 if(arg===undefined){return $N}
-var arg=$B.$iter(arg),next_func=$B.$call(getattr(arg,"__next__")),pos=len_func(),ce=$B.current_exception
+var arg=$B.$iter(arg),next_func=$B.$call(getattr(arg,"__next__")),pos=len_func()
 while(1){try{var res=next_func()
-self[pos++]=res}catch(err){if(err.__class__===_b_.StopIteration){$B.current_exception=ce
-break}
+self[pos++]=res}catch(err){if(err.__class__===_b_.StopIteration){break}
 else{throw err}}}
 return $N}
 var $list_iterator=$B.$iterator_class("list_iterator")
@@ -9776,10 +9761,9 @@ if(obj.__class__==tuple){var res=obj.slice()
 res.__class__=list
 return res}
 return obj}
-var res=[],pos=0,arg=$B.$iter(obj),next_func=$B.$call(getattr(arg,"__next__")),ce=$B.current_exception
+var res=[],pos=0,arg=$B.$iter(obj),next_func=$B.$call(getattr(arg,"__next__"))
 while(1){try{res[pos++]=next_func()}
 catch(err){if(!isinstance(err,_b_.StopIteration)){throw err}
-$B.current_exception=ce
 break}}
 res.__brython__=true 
 return res}
@@ -9821,11 +9805,10 @@ tuple.__new__=function(cls,...args){if(cls===undefined){throw _b_.TypeError.$fac
 var self=[]
 self.__class__=cls
 self.__brython__=true
-var arg=$B.$iter(args[0]),next_func=$B.$call(getattr(arg,"__next__")),ce=$B.current_exception
+var arg=$B.$iter(args[0]),next_func=$B.$call(getattr(arg,"__next__"))
 while(1){try{var item=next_func()
 self.push(item)}
-catch(err){if(err.__class__===_b_.StopIteration){$B.current_exception=ce
-break}
+catch(err){if(err.__class__===_b_.StopIteration){break}
 else{throw err}}}
 return self}
 $B.set_func_names(tuple,"builtins")
@@ -10272,13 +10255,12 @@ var res=str.find.apply(null,arguments)
 if(res===-1){throw _b_.ValueError.$factory("substring not found")}
 return res}
 str.join=function(){var $=$B.args("join",2,{self: null,iterable: null},["self","iterable"],arguments,{},null,null)
-var iterable=_b_.iter($.iterable),res=[],count=0,ce=$B.current_exception
+var iterable=_b_.iter($.iterable),res=[],count=0
 while(1){try{var obj2=_b_.next(iterable)
 if(! isinstance(obj2,str)){throw _b_.TypeError.$factory(
 "sequence item " + count + ": expected str instance, " +
 $B.get_class(obj2).__name__ + " found")}
-res.push(obj2)}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){$B.current_exception=ce
-break}
+res.push(obj2)}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){break}
 else{throw err}}}
 return res.join($.self)}
 str.ljust=function(self){var $=$B.args("ljust",3,{self: null,width: null,fillchar:null},["self","width","fillchar"],arguments,{fillchar: " "},null,null)
@@ -10732,10 +10714,9 @@ var $ns=$B.args("dict",0,{},[],args,{},"args","kw"),args=$ns["args"],kw=$ns["kw"
 if(args.length > 0){if(isinstance(args[0],dict)){$B.$copy_dict(self,args[0])
 return $N}
 if(Array.isArray(args[0])){var src=args[0],i=src.length - 1,si=dict.__setitem__
-while(i-- > 0){si(self,src[i - 1][0],src[i - 1][1])}}else{var iterable=$B.$iter(args[0]),ce=$B.current_exception
+while(i-- > 0){si(self,src[i - 1][0],src[i - 1][1])}}else{var iterable=$B.$iter(args[0])
 while(1){try{var elt=next(iterable),key=getattr(elt,"__getitem__")(0),value=getattr(elt,"__getitem__")(1)
-dict.__setitem__(self,key,value)}catch(err){if(err.__class__===_b_.StopIteration){$B.current_exception=ce
-break}
+dict.__setitem__(self,key,value)}catch(err){if(err.__class__===_b_.StopIteration){break}
 throw err}}}}
 if(dict.__len__(kw)> 0){$copy_dict(self,kw)}
 return $N}
@@ -10799,11 +10780,10 @@ var $=$B.args("copy",1,{self: null},["self"],arguments,{},null,null),self=$.self
 $copy_dict(res,self)
 return res}
 dict.fromkeys=function(){var $=$B.args("fromkeys",3,{cls: null,keys: null,value: null},["cls","keys","value"],arguments,{value: _b_.None},null,null),keys=$.keys,value=$.value
-var klass=$.cls,res=$B.$call(klass)(),keys_iter=$B.$iter(keys),ce=$B.current_exception
+var klass=$.cls,res=$B.$call(klass)(),keys_iter=$B.$iter(keys)
 while(1){try{var key=_b_.next(keys_iter)
 if(klass===dict){dict.__setitem__(res,key,value)}
-else{_b_.getattr(res,"__setitem__")(key,value)}}catch(err){if($B.is_exc(err,[_b_.StopIteration])){$B.current_exception=ce
-return res}
+else{_b_.getattr(res,"__setitem__")(key,value)}}catch(err){if($B.is_exc(err,[_b_.StopIteration])){return res}
 throw err}}}
 dict.get=function(){var $=$B.args("get",3,{self: null,key: null,_default: null},["self","key","_default"],arguments,{_default: $N},null,null)
 try{return dict.__getitem__($.self,$.key)}
@@ -10823,11 +10803,9 @@ dict.__delitem__(self,key)
 return res}catch(err){if(err.__class__===_b_.KeyError){if(_default !==undefined){return _default}
 throw err}
 throw err}}
-dict.popitem=function(self){var ce=$B.current_exception
-try{var itm=new $item_iterator(self).next()
+dict.popitem=function(self){try{var itm=new $item_iterator(self).next()
 dict.__delitem__(self,itm[0])
-return _b_.tuple.$factory(itm)}catch(err){if(err.__class__==_b_.StopIteration){$B.current_exception=ce
-throw KeyError.$factory("'popitem(): dictionary is empty'")}}}
+return _b_.tuple.$factory(itm)}catch(err){if(err.__class__==_b_.StopIteration){throw KeyError.$factory("'popitem(): dictionary is empty'")}}}
 dict.setdefault=function(){var $=$B.args("setdefault",3,{self: null,key: null,_default: null},["self","key","_default"],arguments,{_default: $N},null,null),self=$.self,key=$.key,_default=$._default
 try{return dict.__getitem__(self,key)}
 catch(err){if(_default===undefined){_default=$N}
@@ -12167,7 +12145,9 @@ eval(content)},NULL: null,py2js: function(src,module_name){if(module_name===unde
 return $B.py2js(src,module_name,module_name,$B.builtins_scope).to_js()},pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},jsobj2pyobj:function(obj){return $B.jsobj2pyobj(obj)},UNDEFINED: undefined}
 var _b_=$B.builtins
 modules['_sys']={__file__:$B.brython_path + '/libs/_sys.js',
-Getframe : function(depth){return $B._frame.$factory($B.frames_stack,depth)},modules:{
+Getframe : function(depth){return $B._frame.$factory($B.frames_stack,depth)},exc_info: function(){for(var i=$B.frames_stack.length - 1;i >=0;i--){var frame=$B.frames_stack[i],exc=frame[1].$current_exception
+if(exc){return _b_.tuple.$factory([exc.__class__,exc,$B.$getattr(exc,"traceback")])}}
+return _b_.tuple.$factory([_b_.None,_b_.None,_b_.None])},modules:{
 __get__: function(){return $B.obj_dict($B.imported)},__set__: function(self,obj,value){throw _b_.TypeError.$factory("Read only property 'sys.modules'")}},path:{
 __get__: function(){return $B.path},__set__: function(self,obj,value){$B.path=value;}},meta_path:{
 __get__: function(){return $B.meta_path},__set__: function(self,obj,value){$B.meta_path=value }},path_hooks:{

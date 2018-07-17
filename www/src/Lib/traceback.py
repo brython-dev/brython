@@ -1,12 +1,6 @@
 import sys
 from browser import console
 
-def _restore_current(exc):
-    """Restore internal attribute current_exception, it may have been modified
-    by the code inside functions of this module.
-    """
-    __BRYTHON__.current_exception = exc
-
 def print_exc(file=None):
     """Print the last exception."""
     if file is None:
@@ -14,11 +8,13 @@ def print_exc(file=None):
     file.write(format_exc())
 
 def format_exc(limit=None, chain=True, includeInternal=False):
-    exc = __BRYTHON__.current_exception
+    exc = sys.exc_info()[1]
     return format_exception(exc.__class__, exc, exc.traceback,
-                            limit=limit, chain=chain, includeInternal=includeInternal)
+                            limit=limit, chain=chain,
+                            includeInternal=includeInternal)
 
-def format_exception(_type, exc, tb, limit=None, chain=True, includeInternal=False):
+def format_exception(_type, exc, tb, limit=None, chain=True, 
+        includeInternal=False):
     """
     Pass includeInternal=True to include frames in the stack trace
     even if they lack source code and are internal to Brython.
@@ -42,7 +38,6 @@ def format_exception(_type, exc, tb, limit=None, chain=True, includeInternal=Fal
     res = '\n' + msg + '\n' + res
     if not res.endswith('\n'):
         res += '\n'
-    _restore_current(exc)
     return res
 
 def extract_tb(tb, limit=None):

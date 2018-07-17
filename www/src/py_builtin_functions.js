@@ -96,26 +96,24 @@ function abs(obj){
 function all(obj){
     check_nb_args('all', 1, arguments.length)
     check_no_kw('all', obj)
-    var iterable = iter(obj),
-        ce = $B.current_exception
+    var iterable = iter(obj)
     while(1){
         try{
             var elt = next(iterable)
             if(!$B.$bool(elt)){return false}
-        }catch(err){$B.current_exception = ce; return true}
+        }catch(err){return true}
     }
 }
 
 function any(obj){
     check_nb_args('any', 1, arguments.length)
     check_no_kw('any', obj)
-    var iterable = iter(obj),
-        ce = $B.current_exception
+    var iterable = iter(obj)
     while(1){
         try{
             var elt = next(iterable)
             if($B.$bool(elt)){return true}
-        }catch(err){$B.current_exception = ce; return false}
+        }catch(err){return false}
     }
 }
 
@@ -307,8 +305,7 @@ function dir(obj){
     check_nb_args('dir', 1, arguments.length)
     check_no_kw('dir', obj)
 
-    var klass = obj.__class__ || $B.get_class(obj),
-        ce = $B.current_exception
+    var klass = obj.__class__ || $B.get_class(obj)
 
     if(obj.$is_class){
         // Use metaclass __dir__
@@ -326,7 +323,6 @@ function dir(obj){
         console.log(err)
     }
 
-    $B.current_exception = ce
     var res = [], pos = 0
     for(var attr in obj){
         if(attr.charAt(0) !== '$' && attr !== '__class__' &&
@@ -421,8 +417,7 @@ function $$eval(src, _globals, _locals){
     // code will be run in a specific block
     var globals_id = '$exec_' + $B.UUID(),
         locals_id = '$exec_' + $B.UUID(),
-        parent_scope,
-        ce = $B.current_exception
+        parent_scope
 
     if(_globals === _b_.None){
         if(current_locals_id == current_globals_id){
@@ -548,8 +543,6 @@ function $$eval(src, _globals, _locals){
         }
     }
 
-    $B.current_exception = ce
-
     var root = $B.py2js(src, globals_id, locals_id, parent_scope),
         js, gns, lns
 
@@ -614,7 +607,6 @@ function $$eval(src, _globals, _locals){
                         current_globals_obj, current_locals_obj)
             }
         }else{
-            console.log("use eval")
             var res = eval(js)
         }
 
@@ -946,12 +938,10 @@ $B.$getattr = function(obj, attr, _default){
     }
 
     try{
-        var ce = $B.current_exception
         var res = attr_func(obj, attr)
     }
     catch(err){
         if(_default !== undefined){
-            $B.current_exception = ce
             return _default
         }
         throw err
@@ -978,9 +968,8 @@ function globals(){
 function hasattr(obj,attr){
     check_no_kw('hasattr', obj, attr)
     check_nb_args('hasattr', 2, arguments.length)
-    var ce = $B.current_exception
     try{getattr(obj,attr);return true}
-    catch(err){$B.current_exception = ce;return false}
+    catch(err){return false}
 }
 
 function hash(obj){
@@ -1071,9 +1060,8 @@ function help(obj){
         getattr(getattr(pydoc, "help"), "__call__")(obj)
         return
     }
-    var ce = $B.current_exception
     try{return getattr(obj, '__doc__')}
-    catch(err){$B.current_exception = ce;return ''}
+    catch(err){return ''}
 }
 
 help.__repr__ = help.__str__ = function(){
@@ -1249,15 +1237,13 @@ $B.$iter = function(obj){
       throw _b_.TypeError.$factory("'" + $B.get_class(obj).__name__ +
           "' object is not iterable")
     }
-    var res = $B.$call(_iter)(),
-        ce = $B.current_exception
+    var res = $B.$call(_iter)()
     try{getattr(res, '__next__')}
     catch(err){
         if(isinstance(err, _b_.AttributeError)){throw _b_.TypeError.$factory(
             "iter() returned non-iterator of type '" +
              $B.get_class(res).__name__ + "'")}
     }
-    $B.current_exception = ce
     return res
 }
 
@@ -1353,8 +1339,7 @@ function $extreme(args, op){ // used by min() and max()
     }else if(nb_args == 1){
         // Only one positional argument : it must be an iterable
         var $iter = iter(args[0]),
-            res = null,
-            ce = $B.current_exception
+            res = null
         while(true){
             try{
                 var x = next($iter)
@@ -1363,7 +1348,6 @@ function $extreme(args, op){ // used by min() and max()
                 }
             }catch(err){
                 if(err.__class__ == _b_.StopIteration){
-                    $B.current_exception = ce
                     if(res === null){
                         if(has_default){return default_value}
                         else{throw _b_.ValueError.$factory($op_name +
@@ -1609,14 +1593,11 @@ var reversed = $B.make_class("reversed",
         check_no_kw('reversed', seq)
         check_nb_args('reversed', 1, arguments.length)
 
-        var ce = $B.current_exception
-
         try{return getattr(seq, '__reversed__')()}
         catch(err){
             if(err.__class__ != _b_.AttributeError){throw err}
         }
-        $B.current_exception = ce
-
+        
         try{
             var res = {
                 __class__: reversed,
@@ -1850,15 +1831,13 @@ function sum(iterable,start){
     }
 
     var res = start,
-        iterable = iter(iterable),
-        ce = $B.current_exception
+        iterable = iter(iterable)
     while(1){
         try{
             var _item = next(iterable)
             res = getattr(res, '__add__')(_item)
         }catch(err){
            if(err.__class__ === _b_.StopIteration){
-               $B.current_exception = ce
                break
            }else{throw err}
         }
@@ -2122,8 +2101,7 @@ var zip = $B.make_class("zip",
         var args = []
         for(var i = 0; i < _args.length; i++){args.push(iter(_args[i]))}
         var rank = 0,
-            items = [],
-            ce = $B.current_exception
+            items = []
         while(1){
             var line = [], flag = true
             for(var i = 0; i < args.length; i++){
@@ -2139,7 +2117,6 @@ var zip = $B.make_class("zip",
             if(!flag){break}
             items[rank++] = _b_.tuple.$factory(line)
         }
-        $B.current_exception = ce
         res.items = items
         return res
     }

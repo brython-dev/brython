@@ -487,8 +487,7 @@ $B.$getitem = function(obj, item){
         }
     }
 
-    var ce = $B.current_exception
-    try{item = $B.$GetInt(item)}catch(err){$B.current_exception = ce}
+    try{item = $B.$GetInt(item)}catch(err){}
     if((Array.isArray(obj) || typeof obj == "string")
         && typeof item == "number"){
         item = item >=0 ? item : obj.length + item
@@ -645,8 +644,7 @@ $B.extend = function(fname, arg){
     for(var i = 2; i < arguments.length; i++){
         var mapping = arguments[i]
         var it = _b_.iter(mapping),
-            getter = _b_.getattr(mapping, "__getitem__"),
-            ce = $B.current_exception
+            getter = _b_.getattr(mapping, "__getitem__")
         while (true){
             try{
                 var key = _b_.next(it)
@@ -661,7 +659,6 @@ $B.extend = function(fname, arg){
                 arg[key] = getter(key)
             }catch(err){
                 if(_b_.isinstance(err, [_b_.StopIteration])){
-                    $B.current_exception = ce
                     break
                 }
                 throw err
@@ -676,14 +673,12 @@ $B.extend_list = function(){
     // The last argument is the iterable to unpack
     var res = Array.prototype.slice.call(arguments, 0, arguments.length - 1),
         last = $B.last(arguments)
-    var it = _b_.iter(last),
-        ce = $B.current_exception
+    var it = _b_.iter(last)
     while (true){
         try{
             res.push(_b_.next(it))
         }catch(err){
             if(_b_.isinstance(err, [_b_.StopIteration])){
-                $B.current_exception = ce
                 break
             }
             throw err
@@ -721,15 +716,14 @@ $B.$is_member = function(item, _set){
     var f, _iter
 
     // use __contains__ if defined
-    var ce = $B.current_exception
     try{f = _b_.getattr(_set, "__contains__")}
-    catch(err){$B.current_exception = ce}
+    catch(err){}
 
     if(f){return f(item)}
 
     // use __iter__ if defined
     try{_iter = _b_.iter(_set)}
-    catch(err){$B.current_exception = ce}
+    catch(err){}
     if(_iter){
         while(1){
             try{
@@ -737,7 +731,6 @@ $B.$is_member = function(item, _set){
                 if($B.rich_comp("__eq__", elt, item)){return true}
             }catch(err){
                 if(err.__class__ === _b_.StopIteration){
-                    $B.current_exception = ce
                     return false
                 }
                 throw err
@@ -899,14 +892,12 @@ $B.pyobject2jsobject = function(obj){
     if(_b_.hasattr(obj, "__iter__")){
        // this is an iterator..
        var _a = [],
-           pos = 0,
-           ce = $B.current_exception
+           pos = 0
        while(1) {
           try{
            _a[pos++] = $B.pyobject2jsobject(_b_.next(obj))
           }catch(err){
             if(err.__class__ !== _b_.StopIteration){throw err}
-            $B.current_exception = ce
             break
           }
        }
@@ -959,14 +950,12 @@ $B.$iterator_class = function(name){
     function as_array(s) {
        var _a = [],
            pos = 0,
-           _it = _b_.iter(s),
-           ce = $B.current_exception
+           _it = _b_.iter(s)
        while (1) {
          try{
               _a[pos++] = _b_.next(_it)
          }catch(err){
               if(err.__class__ === _b_.StopIteration){
-                  $B.current_exception = ce
                   break
               }
          }
@@ -1144,6 +1133,7 @@ $B.leave_frame = function(arg){
     // Leave execution frame
     if($B.profile > 0){$B.$profile.return()}
     if($B.frames_stack.length == 0){console.log("empty stack"); return}
+    $B.del_exc()
     $B.frames_stack.pop()
 }
 

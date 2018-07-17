@@ -312,8 +312,7 @@ bytes.join = function(){
         iterable = $ns['iterable']
     var next_func = _b_.getattr(_b_.iter(iterable), '__next__'),
         res = self.__class__.$factory(),
-        empty = true,
-        ce = $B.current_exception
+        empty = true
     while(true){
         try{
             var item = next_func()
@@ -322,7 +321,6 @@ bytes.join = function(){
             res = bytes.__add__(res, item)
         }catch(err){
             if(isinstance(err, _b_.StopIteration)){
-                $B.current_exception = ce
                 break
             }
             throw err

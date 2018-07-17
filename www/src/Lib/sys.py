@@ -13,13 +13,7 @@ base_prefix = __BRYTHON__.brython_path
 
 builtin_module_names=__BRYTHON__.builtin_module_names
 
-byteorder='little'
-
-def exc_info():
-    exc = __BRYTHON__.current_exception
-    if exc is None:
-        return(None, None, None)
-    return (exc.__class__,exc,exc.traceback)
+byteorder = 'little'
 
 exec_prefix = __BRYTHON__.brython_path
 

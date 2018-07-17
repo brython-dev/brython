@@ -3,12 +3,27 @@
 var bltns = $B.InjectBuiltins()
 eval(bltns)
 
+$B.del_exc = function(){
+    var frame = $B.last($B.frames_stack)
+    frame[1].$current_exception = undefined
+}
+
+$B.set_exc = function(exc){
+    var frame = $B.last($B.frames_stack)
+    frame[1].$current_exception = exc
+}
+
+$B.get_exc = function(){
+    var frame = $B.last($B.frames_stack)
+    return frame[1].current_exception //$B.cuex
+}
+
 $B.$raise = function(arg){
     // Used for "raise" without specifying an exception.
     // If there is an exception in the stack, use it, else throw a simple
     // Exception
     if(arg === undefined){
-        var es = $B.current_exception
+        var es = $B.get_exc()
         if(es !== undefined){throw es}
         throw _b_.RuntimeError.$factory("No active exception to reraise")
     }else if(isinstance(arg, BaseException)){
@@ -313,7 +328,6 @@ BaseException.$factory = function (){
     if($B.frames_stack.length){
         err.$line_info = $B.last($B.frames_stack)[1].$line_info
     }
-    $B.current_exception = err
     eval("//placeholder//")
     return err
 }
@@ -359,7 +373,6 @@ $B.exception = function(js_exc){
     }else{
         var exc = js_exc
     }
-    $B.current_exception = exc
     return exc
 }
 
@@ -377,10 +390,6 @@ $B.is_exc = function(exc, exc_list){
         if(issubclass(this_exc_class, exc_class)){return true}
     }
     return false
-}
-
-$B.clear_exc = function(){
-    $B.current_exception = null
 }
 
 function $make_exc(names, parent){
@@ -404,7 +413,7 @@ function $make_exc(names, parent){
         // class dictionary
         _str[pos++] = "_b_." + name + ' = {__class__:_b_.type, __name__:"' +
             name + '", __bases__: [parent], __module__: "builtins", '+
-            '__mro__: [_b_.' + parent.__name__ + 
+            '__mro__: [_b_.' + parent.__name__ +
             "].concat(parent.__mro__), $is_class: true}"
         _str[pos++] = "_b_." + name + ".$factory = " + $exc
         _str[pos++] = "_b_." + name + '.$factory.$infos = {__name__: "' +

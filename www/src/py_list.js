@@ -250,15 +250,13 @@ list.__init__ = function(self, arg){
     if(arg === undefined){return $N}
     var arg = $B.$iter(arg),
         next_func = $B.$call(getattr(arg, "__next__")),
-        pos = len_func(),
-        ce = $B.current_exception
+        pos = len_func()
     while(1){
         try{
             var res = next_func()
             self[pos++] = res
         }catch(err){
             if(err.__class__ === _b_.StopIteration){
-                $B.current_exception = ce
                 break
             }
             else{throw err}
@@ -713,14 +711,12 @@ list.$factory = function(){
     var res = [],
         pos = 0,
         arg = $B.$iter(obj),
-        next_func = $B.$call(getattr(arg, "__next__")),
-        ce = $B.current_exception
+        next_func = $B.$call(getattr(arg, "__next__"))
 
     while(1){
         try{res[pos++] = next_func()}
         catch(err){
             if(!isinstance(err, _b_.StopIteration)){throw err}
-            $B.current_exception = ce
             break
         }
     }
@@ -822,8 +818,7 @@ tuple.__new__ = function(cls, ...args){
     self.__class__ = cls
     self.__brython__ = true
     var arg = $B.$iter(args[0]),
-        next_func = $B.$call(getattr(arg, "__next__")),
-        ce = $B.current_exception
+        next_func = $B.$call(getattr(arg, "__next__"))
     while(1){
         try{
             var item = next_func()
@@ -831,7 +826,6 @@ tuple.__new__ = function(cls, ...args){
         }
         catch(err){
             if(err.__class__ === _b_.StopIteration){
-                $B.current_exception = ce
                 break
             }
             else{throw err}

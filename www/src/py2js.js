@@ -3026,6 +3026,18 @@ var $ExceptCtx = $B.parser.$ExceptCtx = function(context){
         $bind(alias, this.scope, this)
     }
 
+    this.transform = function(node, rank){
+        // Add instruction to delete current exception, except if the last
+        // instruction in the except block is a return (to avoid the
+        // message "unreachable code after return statement")
+        var last_child = $B.last(node.children)
+        if(last_child.context.tree && last_child.context.tree[0] &&
+                last_child.context.tree[0].type == "return"){}
+        else{
+            node.add($NodeJS("$B.del_exc()"))
+        }
+    }
+
     this.to_js = function(){
         // in method "transform" of $TryCtx instances, related
         // $ExceptCtx instances receive an attribute __name__
@@ -3373,8 +3385,6 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
         try_node.bindings = node.bindings
         while_node.add(try_node)
 
-        try_node.add($NodeJS("var ce = $B.current_exception"))
-
         var iter_node = new $Node()
         iter_node.id = this.module
         var context = new $NodeCtx(iter_node) // create ordinary node
@@ -3393,7 +3403,7 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
 
         while_node.add(
             $NodeJS('catch($err){if($B.is_exc($err, [StopIteration]))' +
-                 '{$B.current_exception = ce;break;}else{throw($err)}}'))
+                 '{break;}else{throw($err)}}'))
 
         // set new loop children
         children.forEach(function(child){
@@ -5523,7 +5533,8 @@ var $TryCtx = $B.parser.$TryCtx = function(context){
         // Transform node into Javascript 'try' (necessary if
         // "try" inside a "for" loop)
         // Add a boolean $failed, used to run the 'else' clause
-        var js = 'var '+failed_name + ' = false;\n' + ' '.repeat(node.indent + 8) + 'try'
+        var js = 'var '+failed_name + ' = false;\n' +
+            ' '.repeat(node.indent + 4) + 'try'
         new $NodeJSCtx(node, js)
         node.is_try = true // used in generators
         node.has_return = this.has_return
@@ -5533,21 +5544,24 @@ var $TryCtx = $B.parser.$TryCtx = function(context){
         catch_node.is_catch = true
         node.parent.insert(rank + 1, catch_node)
 
+        // Store exception as __BRYTHON__.cuex (for "current exception")
+        catch_node.add($NodeJS("$B.set_exc(" + error_name + ")"))
+
         // Set the boolean $failed to true
         // Set attribute "pmframe" (post mortem frame) to $B in case an error
         // happens in a callback function ; in this case the frame would be
         // lost at the time the exception is handled by $B.exception
-        catch_node.insert(0,
+        catch_node.add(
             $NodeJS('var '+ failed_name + ' = true;' +
             '$B.pmframe = $B.last($B.frames_stack);'+
             // Fake line to start the 'else if' clauses
             'if(0){}')
         )
 
-        var pos = rank + 2
-        var has_default = false // is there an "except:" ?
-        var has_else = false // is there an "else" clause ?
-        var has_finally = false
+        var pos = rank + 2,
+            has_default = false, // is there an "except:" ?
+            has_else = false, // is there an "else" clause ?
+            has_finally = false
         while(1){
             if(pos == node.parent.children.length){break}
             var ctx = node.parent.children[pos].context.tree[0]
@@ -5565,7 +5579,7 @@ var $TryCtx = $B.parser.$TryCtx = function(context){
                     // syntax "except ErrorName as Alias"
                     var alias = ctx.tree[0].alias
                     node.parent.children[pos].insert(0,
-                        $NodeJS('$locals["' + alias + '"] = $B.exception(' + 
+                        $NodeJS('$locals["' + alias + '"] = $B.exception(' +
                             error_name + ')')
                     )
                 }
