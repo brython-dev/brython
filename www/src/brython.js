@@ -64,8 +64,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,6,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.6.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-07-17 22:44:10.194879"
-__BRYTHON__.timestamp=1531860250194
+__BRYTHON__.compiled_date="2018-07-18 08:10:33.280074"
+__BRYTHON__.timestamp=1531894233280
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -1720,7 +1720,7 @@ res[pos++]='}, {}, true);'
 if(this.names[0]=='*'){
 scope.blurred=true
 res[pos++]='\n' + head + 'for(var $attr in $B.imported["' +
-mod_name + '"]){if($attr.charAt(0) !== "_")' +
+mod_name + '"]){if($attr.charAt(0) !== "_" && $attr.charAt(0) !== "$")' +
 '{$locals[$attr] = $B.imported["' + mod_name + '"][$attr]}};'}else{this.names.forEach(function(name){module.imports[this.module + '.' + name]=true
 res[pos++]='\n' + head + '$locals["' +
 (this.aliases[name]||name)+ '"] = $B.imported["' +
@@ -1843,7 +1843,6 @@ this.to_js=function(arg){
 if(this.result !==undefined && this.scope.ntype=='generator'){return this.result}
 this.js_processed=true
 var val=this.value
-var $test=false 
 var annotation=""
 if(this.parent.type=="expr" && this.parent.parent.type=="node" &&
 this.parent.hasOwnProperty("annotation")){var js=this.parent.annotation.tree[0].to_js()
@@ -1869,7 +1868,6 @@ else if(gs.parent_block.id===undefined){break}
 gs=gs.parent_block}
 search_ids.push('"' + gs.id + '"')}
 search_ids="[" + search_ids.join(", ")+ "]"
-if($test){console.log(val,search_ids)}
 if(this.nonlocal ||this.bound){var bscope=this.firstBindingScopeId()
 if(bscope !==undefined){return annotation + "$locals_" + bscope.replace(/\./g,"_")+ '["' +
 val + '"]'}}
@@ -6907,7 +6905,7 @@ if(frame.length > 4 && frame[4].$infos){info +=', in ' + frame[4].$infos.__name_
 if(src !==undefined){var lines=src.split("\n");
 var line=lines[parseInt(line_info[0])- 1]
 if(line){line=line.replace(/^[ ]+/g,"")}
-info +="\n    " + line}else{console.log("src undefined for",frame[3])}}
+info +="\n    " + line}}
 return info}
 BaseException.__getattr__=function(self,attr){if(attr=="info"){return getExceptionTrace(self,false);}else if(attr=="infoWithInternal"){return getExceptionTrace(self,true);}else if(attr=="traceback"){
 return traceback.$factory(self)}else{throw _b_.AttributeError.$factory(self.__class__.__name__ +
@@ -7517,8 +7515,6 @@ return _b_.None}
 JSObject.__dir__=function(self){return Object.keys(self.js)}
 JSObject.__getattribute__=function(self,attr){if(attr.substr(0,2)=='$$'){attr=attr.substr(2)}
 if(self.js===null){return object.__getattribute__(None,attr)}
-var $test=attr=="thisReturnsUndefined"
-if($test){console.log(attr,self)}
 if(attr=="__class__"){return JSObject}
 if(attr=="__call__"){if(typeof self.js=="function"){return function(){
 var args=[]
