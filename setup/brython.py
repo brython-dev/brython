@@ -98,12 +98,12 @@ if args.server:
     server.run(int(args.port))
 
 if args.modules:
-    print('Create brython_modules.js for cmu_graphics')
+    print('Create brython_modules.js for cmu_graphics_bry')
     import list_modules
 
     finder = list_modules.ModulesFinder()
     # finder.inspect()
-    finder.modules = {'cmu_graphics', 'sys', 'traceback', 'hashlib', 'time', 'random', 'math'}
+    finder.modules = {'cmu_graphics_bry', 'sys', 'traceback', 'hashlib', 'time', 'random', 'math'}
     finder.make_brython_modules()
 
 if args.make_dist:

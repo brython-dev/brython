@@ -222,6 +222,7 @@ class ModulesFinder:
 
         # save in brython_modules.js
         path = os.path.join(stdlib_dir, "brython_modules.js")
+        print('Saving in %s' % path)
         with open(path, "w", encoding="utf-8") as out:
             # Add VFS_timestamp ; used to test if the indexedDB must be
             # refreshed
