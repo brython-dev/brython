@@ -78,6 +78,8 @@ nosetests.xml
 # Temporary QUnit folder
 #qunit/
 
+# Node modules (for testem & friends)
+node_modules/
 # virtualenv
 venv/
 
