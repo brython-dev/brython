@@ -269,8 +269,6 @@ var getExceptionTrace = function(exc, includeInternal) {
             var line = lines[parseInt(line_info[0]) - 1]
             if(line){line = line.replace(/^[ ]+/g, "")}
             info += "\n    " + line
-        }else{
-            console.log("src undefined for", frame[3])
         }
     }
     return info

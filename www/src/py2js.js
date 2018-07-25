@@ -3517,7 +3517,7 @@ var $FromCtx = $B.parser.$FromCtx = function(context){
             // 'from X import *' : this will make name resolution harder :-(
             scope.blurred = true
             res[pos++] = '\n' + head + 'for(var $attr in $B.imported["' +
-                mod_name + '"]){if($attr.charAt(0) !== "_")' +
+                mod_name + '"]){if($attr.charAt(0) !== "_" && $attr.charAt(0) !== "$")' +
                 '{$locals[$attr] = $B.imported["' + mod_name + '"][$attr]}};'
         }else{
             this.names.forEach(function(name){
@@ -3797,8 +3797,6 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         this.js_processed = true
         var val = this.value
 
-        var $test = false //val == "_"
-
         var annotation = ""
         if(this.parent.type == "expr" && this.parent.parent.type == "node" &&
                 this.parent.hasOwnProperty("annotation")){
@@ -3857,10 +3855,6 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
             search_ids.push('"' + gs.id + '"')
         }
         search_ids = "[" + search_ids.join(", ") + "]"
-
-        if($test){
-            console.log(val, search_ids)
-        }
 
         if(this.nonlocal || this.bound){
             var bscope = this.firstBindingScopeId()
