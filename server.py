@@ -8,7 +8,6 @@ served from subdirectory cgi-bin
 
 
 import os
-import sys
 import time
 from webbrowser import open_new_tab
 import argparse

@@ -1,10 +1,11 @@
 ;(function($B){
 
-eval($B.InjectBuiltins())
+//eval($B.InjectBuiltins())
 
-var object = _b_.object
-var JSObject = $B.JSObject
-var _window = self;
+var _b_ = $B.builtins,
+    object = _b_.object,
+    JSObject = $B.JSObject,
+    _window = self;
 
 // cross-browser utility functions
 function $getMouseOffset(target, ev){
@@ -502,7 +503,7 @@ Style.__setattr__ = function(self,attr,value){
           case "height":
           case "width":
           case "borderWidth":
-            if (isinstance(value,_b_.int)){value = value + "px"}
+            if (_b_.isinstance(value,_b_.int)){value = value + "px"}
         }
         self.js[attr] = value
     }
@@ -572,13 +573,13 @@ DOMNode.__add__ = function(self, other){
     // adding another element to self returns an instance of TagSum
     var res = TagSum.$factory()
     res.children = [self], pos = 1
-    if(isinstance(other, TagSum)){
+    if(_b_.isinstance(other, TagSum)){
         res.children = res.children.concat(other.children)
-    }else if(isinstance(other,[_b_.str, _b_.int, _b_.float, _b_.list,
+    }else if(_b_.isinstance(other,[_b_.str, _b_.int, _b_.float, _b_.list,
                                 _b_.dict, _b_.set, _b_.tuple])){
         res.children[pos++] = DOMNode.$factory(
             document.createTextNode(_b_.str.$factory(other)))
-    }else if(isinstance(other, DOMNode)){
+    }else if(_b_.isinstance(other, DOMNode)){
         res.children[pos++] = other
     }else{
         // If other is iterable, add all items
@@ -611,7 +612,7 @@ DOMNode.__del__ = function(self){
     // if element has a parent, calling __del__ removes object
     // from the parent's children
     if(!self.elt.parentNode){
-        throw _b_.ValueError.$factory("can't delete " + str.$factory(self.elt))
+        throw _b_.ValueError.$factory("can't delete " + _b_.str.$factory(self.elt))
     }
     self.elt.parentNode.removeChild(self.elt)
 }
@@ -674,7 +675,7 @@ DOMNode.__getattribute__ = function(self, attr){
                 return parseInt(self.elt.style[attr])
             }else{
                 throw _b_.AttributeError.$factory("style." + attr +
-                    " is not set for " + str.$factory(self))
+                    " is not set for " + _b_.str.$factory(self))
             }
         case "clear":
         case "closest":
@@ -743,13 +744,13 @@ DOMNode.__getattribute__ = function(self, attr){
                                 catch(err){
                                     console.log(dest_fn, typeof dest_fn, err)
                                     if(err.__class__ !== undefined){
-                                        var msg = _b_.getattr(err, 'info') +
+                                        var msg = $B.$getattr(err, 'info') +
                                             '\n' + err.__class__.__name__
                                         if(err.args){msg += ': ' + err.args[0]}
-                                        try{getattr($B.stderr, "write")(msg)}
+                                        try{$B.$getattr($B.stderr, "write")(msg)}
                                         catch(err){console.log(msg)}
                                     }else{
-                                        try{getattr($B.stderr, "write")(err)}
+                                        try{$B.$getattr($B.stderr, "write")(err)}
                                         catch(err1){console.log(err)}
                                     }
                                     throw err
@@ -757,9 +758,9 @@ DOMNode.__getattribute__ = function(self, attr){
                             }}(arg)
                             args[pos++] = f1
                         }
-                        else if(isinstance(arg, JSObject)){
+                        else if(_b_.isinstance(arg, JSObject)){
                             args[pos++] = arg.js
-                        }else if(isinstance(arg, DOMNode)){
+                        }else if(_b_.isinstance(arg, DOMNode)){
                             args[pos++] = arg.elt
                         }else if(arg === _b_.None){
                             args[pos++] = null
@@ -799,7 +800,7 @@ DOMNode.__getitem__ = function(self, key){
                     }
                     return res
             }catch(err){
-                throw KeyError.$factory(str.$factory(key))
+                throw KeyError.$factory(_b_.str.$factory(key))
             }
         }
     }else{
@@ -840,14 +841,14 @@ DOMNode.__le__ = function(self, other){
     // for document, append child to document.body
     var elt = self.elt
     if(self.elt.nodeType == 9){elt = self.elt.body}
-    if(isinstance(other, TagSum)){
+    if(_b_.isinstance(other, TagSum)){
         for(var i = 0; i < other.children.length; i++){
             elt.appendChild(other.children[i].elt)
         }
     }else if(typeof other == "string" || typeof other == "number"){
         var $txt = document.createTextNode(other.toString())
         elt.appendChild($txt)
-    }else if(isinstance(other, DOMNode)){
+    }else if(_b_.isinstance(other, DOMNode)){
         // other is a DOMNode instance
         elt.appendChild(other.elt)
     }else{
@@ -867,7 +868,7 @@ DOMNode.__le__ = function(self, other){
 DOMNode.__len__ = function(self){return self.elt.length}
 
 DOMNode.__mul__ = function(self,other){
-    if(isinstance(other, _b_.int) && other.valueOf() > 0){
+    if(_b_.isinstance(other, _b_.int) && other.valueOf() > 0){
         var res = TagSum.$factory()
         var pos = res.children.length
         for(var i = 0; i < other.valueOf(); i++){
@@ -1046,13 +1047,13 @@ DOMNode.bind = function(self, event){
                     return f($DOMEvent(ev))
                 }catch(err){
                     if(err.__class__ !== undefined){
-                        var msg = _b_.getattr(err, "info") +
+                        var msg = $B.$getattr(err, "info") +
                             "\n" + err.__class__.__name__
                         if(err.args){msg += ": " + err.args[0]}
-                        try{getattr($B.stderr, "write")(msg)}
+                        try{$B.$getattr($B.stderr, "write")(msg)}
                         catch(err){console.log(msg)}
                     }else{
-                        try{getattr($B.stderr, "write")(err)}
+                        try{$B.$getattr($B.stderr, "write")(err)}
                         catch(err1){console.log(err)}
                     }
                 }
@@ -1091,7 +1092,7 @@ DOMNode.clear = function(self){
 
 DOMNode.Class = function(self){
     if(self.elt.className !== undefined){return self.elt.className}
-    return None
+    return _b_.None
 }
 
 DOMNode.class_name = function(self){return DOMNode.Class(self)}
@@ -1230,7 +1231,7 @@ DOMNode.html = function(self){
 
 DOMNode.id = function(self){
     if(self.elt.id !== undefined){return self.elt.id}
-    return None
+    return _b_.None
 }
 
 DOMNode.index = function(self, selector){
@@ -1266,7 +1267,7 @@ DOMNode.parent = function(self){
     if(self.elt.parentElement){
         return DOMNode.$factory(self.elt.parentElement)
     }
-    return None
+    return _b_.None
 }
 
 DOMNode.reset = function(self){ // for FORM
@@ -1290,7 +1291,7 @@ DOMNode.select_one = function(self, selector){
     }
     var res = self.elt.querySelector(selector)
     if(res === null) {
-        return None
+        return _b_.None
     }
     return DOMNode.$factory(res)
 }
@@ -1328,7 +1329,7 @@ DOMNode.set_class_name = function(self, arg){
 DOMNode.set_html = function(self, value){
     var elt = self.elt
     if(elt.nodeType == 9){elt = elt.body}
-    elt.innerHTML = str.$factory(value)
+    elt.innerHTML = _b_.str.$factory(value)
 }
 
 DOMNode.set_style = function(self, style){ // style is a dict
@@ -1349,7 +1350,7 @@ DOMNode.set_style = function(self, style){ // style is a dict
                 case "left":
                 case "width":
                 case "borderWidth":
-                    if(isinstance(value,_b_.int)){value = value + "px"}
+                    if(_b_.isinstance(value,_b_.int)){value = value + "px"}
             }
             self.elt.style[key] = value
         }
@@ -1359,11 +1360,11 @@ DOMNode.set_style = function(self, style){ // style is a dict
 DOMNode.set_text = function(self,value){
     var elt = self.elt
     if(elt.nodeType == 9){elt = elt.body}
-    elt.innerText = str.$factory(value)
-    elt.textContent = str.$factory(value)
+    elt.innerText = _b_.str.$factory(value)
+    elt.textContent = _b_.str.$factory(value)
 }
 
-DOMNode.set_value = function(self, value){self.elt.value = str.$factory(value)}
+DOMNode.set_value = function(self, value){self.elt.value = _b_.str.$factory(value)}
 
 DOMNode.submit = function(self){ // for FORM
     return function(){self.elt.submit()}
@@ -1445,7 +1446,7 @@ DOMNode.unbind = function(self, event){
             }
         }
         for(var j = 0; j < events.length; j++){
-            if(getattr(func, '__eq__')(events[j][0])){
+            if($B.$getattr(func, '__eq__')(events[j][0])){
                 var callback = events[j][1]
                 self.elt.removeEventListener(event, callback, false)
                 events.splice(j, 1)
@@ -1493,7 +1494,7 @@ Query.getfirst = function(self, key, _default){
     // returns the first value associated with key
     var result = self._values[key]
     if(result === undefined){
-       if(_default === undefined){return None}
+       if(_default === undefined){return _b_.None}
        return _default
     }
     return result[0]
@@ -1509,7 +1510,7 @@ Query.getlist = function(self, key){
 Query.getvalue = function(self, key, _default){
     try{return Query.__getitem__(self, key)}
     catch(err){
-        if(_default === undefined){return None}
+        if(_default === undefined){return _b_.None}
         return _default
     }
 }
@@ -1553,7 +1554,7 @@ TagSum.appendChild = function(self, child){
 TagSum.__add__ = function(self, other){
     if($B.get_class(other) === TagSum){
         self.children = self.children.concat(other.children)
-    }else if(isinstance(other, [_b_.str, _b_.int, _b_.float,
+    }else if(_b_.isinstance(other, [_b_.str, _b_.int, _b_.float,
                                _b_.dict, _b_.set, _b_.list])){
         self.children = self.children.concat(
             DOMNode.$factory(document.createTextNode(other)))
@@ -1604,7 +1605,7 @@ $B.TagSum = TagSum // used in _html.js and _svg.js
 var win =  JSObject.$factory(_window) //{__class__:$WinDict}
 
 win.get_postMessage = function(msg,targetOrigin){
-    if(isinstance(msg, dict)){
+    if(_b_.isinstance(msg, dict)){
         var temp = {__class__:"dict"},
             items = _b_.list.$factory(_b_.dict.items(msg))
         items.forEach(function(item){

@@ -31,10 +31,10 @@ if($B.brython_path === undefined){
 
 
 // Get the URL of the directory where the script stands
-var $href = $B.script_path = _window.location.href
-var $href_elts = $href.split('/')
-$href_elts.pop()
-var $script_dir = $B.script_dir = $href_elts.join('/')
+var path = _window.location.origin + _window.location.pathname,
+    path_elts = path.split("/")
+path_elts.pop()
+var $script_dir = $B.script_dir = path_elts.join("/")
 
 // Populated in py2js.brython(), used for sys.argv
 $B.__ARGV = []

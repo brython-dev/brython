@@ -139,7 +139,7 @@ class BrowserEventLoop:
             if len(self._pending) > 0:
                 print("Warning, pending futures", self._pending)
 
-    def stop(self):
+    def stop(self, *args):
         if self._running:
             for handle in self._scheduled:
                 handle.pause()

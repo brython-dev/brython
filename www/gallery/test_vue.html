@@ -80,6 +80,19 @@
   </ol>
 </div>
 
+<div id="pyapp1">
+  <ol>
+    <li v-for="todo in todos" v-bind:key="todo.id">{{ todo.text }}</li>
+  </ol>
+</div>
+
+<div id="pyapp2">
+  <button @click="add_item">add</button>
+  <ol>
+    <li v-for="todo in todos" v-bind:key="todo.id">{{ todo.text }}</li>
+  </ol>
+</div>
+
 <script type="text/python">
 from browser import document, window
 from javascript import this
@@ -147,6 +160,30 @@ app7 = Vue({
       { 'id': 2, 'text': 'Whatever else humans are supposed to eat' }
     ]
   }
+})
+
+def created():
+    this().todos.push({"id":1, "text": "ADDED"})
+
+window.Vue.new({
+    "created": created,
+    "el": "#pyapp1",
+    "data": {
+        "todos": [{"id":0, "text": "TODO"}],
+    }
+})
+
+def add_item(*args):
+    this().todos.push({"id":1, "text": "ADDED"})
+
+window.Vue.new({
+    "methods": {
+        "add_item": add_item
+    },
+    "el": "#pyapp2",
+    "data": {
+        "todos": [{"id":0, "text": "TODO"}],
+    }
 })
 
 </script>

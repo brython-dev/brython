@@ -27,18 +27,11 @@ $B.$class_constructor = function(class_name, class_obj, bases,
         }
     }
 
-    if(kwargs !== undefined){
-        var cl_dict = _b_.dict.$factory()
-        // transform class object into a dictionary
-        for(var attr in class_obj){
-            if(attr.charAt(0) != "$" || attr.substr(0,2) == "$$"){
-                cl_dict.$string_dict[attr] = class_obj[attr]
-            }
-        }
-
-        // get keyword arguments passed to the class
-        var extra_kwargs = _b_.dict.$factory()
-        for(var  i =0; i < kwargs.length; i++){
+    // Keyword arguments passed to the class
+    var extra_kwargs = {},
+        prepare_kwargs = {} // used by __prepare__, includes the metaclass
+    if(kwargs){
+        for(var  i = 0; i < kwargs.length; i++){
             var key = kwargs[i][0],
                 val = kwargs[i][1]
             if(key == "metaclass"){
@@ -46,13 +39,31 @@ $B.$class_constructor = function(class_name, class_obj, bases,
                 metaclass = val
             }else{
                 // other keyword arguments will be passed to __init_subclass__
-                extra_kwargs.$string_dict[key] = val
+                extra_kwargs[key] = val
+            }
+            prepare_kwargs[key] = val
+        }
+    }
+
+    var mro0 = class_obj
+
+    // Replace non-class bases that have a __mro_entries__ (PEP 560)
+    var orig_bases = bases.slice(),
+        use_mro_entries = false
+    for(var i = 0; i < bases.length; i++){
+        if(bases[i] === undefined ||
+                (bases[i].__mro__ === undefined &&
+                bases[i].__class__ !== $B.JSObject)){
+            var mro_entries = $B.$getattr(bases[i], "__mro_entries__",
+                _b_.None)
+            if(mro_entries !== _b_.None){
+                var entries = _b_.list.$factory(mro_entries(bases))
+                bases.splice(i, 1, ...entries)
+                use_mro_entries = true
+                i--
+                continue
             }
         }
-        var mro0 = class_obj
-    }else{
-        var cl_dict = class_obj , // already a dict
-            mro0 = cl_dict.$string_dict  // to replace class_obj in method creation
     }
 
     // If the metaclass is not explicitely set by passing the keyword
@@ -62,9 +73,39 @@ $B.$class_constructor = function(class_name, class_obj, bases,
     if(metaclass === undefined){
         if(bases && bases.length > 0 && bases[0].__class__ !== $B.JSObject){
             metaclass = bases[0].__class__
+            for(var i = 1; i < bases.length; i++){
+                var mc = bases[i].__class__
+                if(mc === metaclass){
+                    // same metaclass, do nothing
+                }else if(mc.__bases__ &&
+                        mc.__bases__.indexOf(metaclass) > -1){
+                    metaclass = mc
+                }else if(metaclass.__bases__ &&
+                        metaclass.__bases__.indexOf(mc) == -1){
+                    throw _b_.TypeError.$factory("metaclass conflict: the " +
+                        "metaclass of a derived class must be a (non-" +
+                        "strict) subclass of the metaclasses of all its bases")
+                }
+            }
         }else{
             metaclass = _b_.type
         }
+    }
+    // Use __prepare__ (PEP 3115)
+    var prepare = $B.$getattr(metaclass, "__prepare__", _b_.None),
+        cl_dict = prepare(class_name, bases), // dict or dict-like
+        get_class_item = $B.$getattr(cl_dict, "__getitem__"),
+        set_class_item = $B.$getattr(cl_dict, "__setitem__")
+
+    // Transform class object into a dictionary
+    for(var attr in class_obj){
+        if(attr.charAt(0) != "$" || attr.substr(0,2) == "$$"){
+            set_class_item(attr, class_obj[attr])
+        }
+    }
+
+    if(use_mro_entries){
+        set_class_item("__orig_bases__", _b_.tuple.$factory(orig_bases))
     }
 
     // Create the class dictionary
@@ -75,15 +116,17 @@ $B.$class_constructor = function(class_name, class_obj, bases,
         __dict__: cl_dict
     }
 
-    for(key in cl_dict.$string_dict){
-        class_dict[key] = cl_dict.$string_dict[key]
+    var it = _b_.iter(cl_dict)
+    while(true){
+        try{
+            var key = _b_.next(it)
+            class_dict[key] = get_class_item(key)
+        }catch(err){
+            break
+        }
     }
 
-    // DRo - slots will have been defined in class dict during type
-    // or in class definition in class_obj. mro0 simplifies the choosing
-    class_dict.__slots__ = mro0.__slots__
-
-    class_dict.__mro__ = make_mro(bases)
+    class_dict.__mro__ = _b_.type.mro(class_dict)
 
     // Check if at least one method is abstract (cf PEP 3119)
     // If this is the case, the class cannot be instanciated
@@ -110,16 +153,14 @@ $B.$class_constructor = function(class_name, class_obj, bases,
     }
 
     // Check if class has __slots__
-    for(var i = 0; i < mro.length; i++){
-        var _slots = mro[i].__slots__
-        if(_slots !== undefined){
-            if(typeof _slots == "string"){_slots = [_slots]}
-            else{_slots = _b_.list.$factory(_slots)}
-            for(var j = 0; j < _slots.length; j++){
-                cl_dict.$slots = cl_dict.$slots || {}
-                cl_dict.$slots[_slots[j]] = class_dict.__mro__[i]
-            }
+    var _slots = class_obj.__slots__
+    if(_slots !== undefined){
+        if(typeof _slots == "string"){
+            _slots = [_slots]
+        }else{
+            _slots = _b_.list.$factory(_slots)
         }
+        cl_dict.__slots__ = _slots
     }
 
     // Check if class has __setattr__
@@ -146,8 +187,22 @@ $B.$class_constructor = function(class_name, class_obj, bases,
     for(var i = 0; i < bases.length; i++){
         bases[i].$subclasses  = bases[i].$subclasses || []
         bases[i].$subclasses.push(kls)
+        // call __init_subclass__ with the extra keyword arguments
+        if(i == 0){
+            //console.log("call initsubclass of", bases[i].__name__, extra_kwargs)
+            init_subclass = _b_.type.__getattribute__(bases[i],
+                "__init_subclass__")
+            if(init_subclass.$infos.__func__ !== undefined){
+                init_subclass.$infos.__func__(kls, {$nat: "kw", kw: extra_kwargs})
+            }else{
+                init_subclass(kls, {$nat: "kw", kw: extra_kwargs})
+            }
+        }
     }
-
+    if(bases.length == 0){
+        $B.$getattr(metaclass, "__init_subclass__")(kls,
+            {$nat: "kw", kw:extra_kwargs})
+    }
     if(!is_instanciable){
         function nofactory(){
             throw _b_.TypeError.$factory("Can't instantiate abstract class " +
@@ -156,23 +211,28 @@ $B.$class_constructor = function(class_name, class_obj, bases,
         kls.$factory = nofactory
     }
 
-    // call __init_subclass__ with the extra keyword arguments
-    var first_parent = mro[0],
-        init_subclass = _b_.type.__getattribute__(first_parent,
-            "__init_subclass__")
-
-    init_subclass(kls, extra_kwargs)
-
     kls.__qualname__ = module + '.' + class_name.replace("$$", "")
 
     return kls
 }
 
-function make_mro(bases){
+var type = $B.make_class("type",
+    function(obj, bases, cl_dict){
+        if(arguments.length == 1){
+            return obj.__class__ || $B.get_class(obj)
+        }
+        return type.__new__(type, obj, bases, cl_dict)
+    }
+)
+
+type.__class__ = type
+
+type.mro = function(cls){
     // method resolution order
     // copied from http://code.activestate.com/recipes/577748-calculate-the-mro-of-a-class/
     // by Steve d'Aprano
-    var seqs = [],
+    var bases = cls.__bases__,
+        seqs = [],
         pos1 = 0
     for(var i = 0; i < bases.length; i++){
         // we can't simply push bases[i].__mro__
@@ -274,16 +334,6 @@ function make_mro(bases){
     return mro
 }
 
-var type = $B.make_class("type",
-    function(obj, bases, cl_dict){
-        if(arguments.length == 1){
-            return obj.__class__ || $B.get_class(obj)
-        }
-            return $B.$class_constructor(obj, cl_dict, bases)
-    }
-)
-
-type.__class__ = type
 
 type.__new__ = function(meta, name, bases, cl_dict){
     // DRo - cls changed to meta to reflect that the class (cls) hasn't
@@ -303,7 +353,6 @@ type.__new__ = function(meta, name, bases, cl_dict){
         __bases__ : bases,
         __dict__ : cl_dict,
         $is_class: true,
-        $slots: cl_dict.$slots,
         $has_setattr: cl_dict.$has_setattr
     }
 
@@ -315,8 +364,8 @@ type.__new__ = function(meta, name, bases, cl_dict){
         class_dict[key] = v
     }
 
-    class_dict.__mro__ = make_mro(bases)
-
+    class_dict.__mro__ = type.mro(class_dict)
+    if(name == "kls"){console.log("type.__new__ returns", class_dict)}
     return class_dict
 }
 
@@ -345,16 +394,20 @@ type.__format__ = function(klass, fmt_spec){
     return _b_.str.$factory(klass)
 }
 
-function method_wrapper(attr, klass, method){
-    // add __str__ and __repr__ to special methods
-    method.__str__ = method.__repr__ = function(self){
-        return "<method '" + attr + "' of '" + klass.__name__ + "' objects>"
+var method_wrapper = $B.method_wrapper = $B.make_class("method_wrapper",
+    function(attr, klass, method){
+        var f = function(){
+            return method.apply(null, arguments)
+        }
+        f.$infos = {
+            __name__: attr,
+            __module__: klass.__module__
+        }
+        return f
     }
-    method.$infos = {
-        __name__: attr,
-        __module__: klass.__module__
-    }
-    return method
+)
+method_wrapper.__str__ = method_wrapper.__repr__ = function(self){
+    return "<method '" + self.$infos.__name__ + "' of function object>"
 }
 
 type.__repr__ = type.__str__ = function(kls){
@@ -376,17 +429,27 @@ type.__getattribute__ = function(klass, attr){
             if(klass["__setattr__"] !== undefined){
                 var func = klass["__setattr__"]
             }else{
-                var func = function(key,value){klass[key] = value}
+                var func = function(obj, key, value){
+                    obj[key] = value
+                }
             }
-            return method_wrapper(attr, klass, func)
+            return method_wrapper.$factory(attr, klass, func)
         case "__delattr__":
             if(klass["__delattr__"] !== undefined){
                 return klass["__delattr__"]
             }
-            return method_wrapper(attr, klass,
+            return method_wrapper.$factory(attr, klass,
                 function(key){delete klass[key]})
     }
     var res = klass[attr]
+    var $test = false //attr=="__class_getitem__"
+    if($test){
+        console.log("attr", attr, "of", klass, res)
+    }
+    if(res === undefined && klass.__slots__ &&
+            klass.__slots__.indexOf(attr) > -1){
+        return member_descriptor.$factory(attr, klass)
+    }
 
     if(res === undefined){
         // search in classes hierarchy, following method resolution order
@@ -407,9 +470,21 @@ type.__getattribute__ = function(klass, attr){
 
         if(res === undefined){
             // search in metaclass
-            var meta = klass.__class__
-            if(meta[attr] !== undefined){
+            var meta = klass.__class__,
                 res = meta[attr]
+            if($test){console.log("search in meta", meta, res)}
+            if(res === undefined){
+                var meta_mro = meta.__mro__
+                for(var i = 0; i < meta_mro.length; i++){
+                    var res = meta_mro[i][attr]
+                    if(res !== undefined){break}
+                }
+            }
+            if(res !== undefined){
+                if($test){console.log("found in meta", res, typeof res)}
+                if(res.__class__ === _b_.property){
+                    return res.fget(klass)
+                }
                 if(typeof res == "function"){
                     var meta_method = function(){
                         return res(klass, ...arguments)
@@ -454,47 +529,61 @@ type.__getattribute__ = function(klass, attr){
         }
     }
 
-    if(res === undefined && klass.$slots && klass.$slots[attr] !== undefined){
-        return member_descriptor.$factory(klass.$slots[attr], attr)
-    }
-
     if(res !== undefined){
-        // If the attribute is a property, return it
+        if($test){console.log("res", res)}
+        // If the attribute is a property, return the result of fget()
+        if(res.__class__ === _b_.property){
+            return res //.fget(klass)
+        }
+        if(res.__get__){
+            if(res.__class__ === method){
+                var result = res.__get__(res.__func__, klass)
+                result.$infos = {
+                    __func__: res,
+                    __name__: res.$infos.__name__,
+                    __qualname__: klass.__name__ + "." + res.$infos.__name__,
+                    __self__: klass
+                }
+            }else{
+                result = res.__get__(klass)
+            }
+            return result
+        }
         if(typeof res == "function"){
             // method
             if(res.$infos === undefined){
                 console.log("warning: no attribute $infos for", res)
             }
+            if($test){console.log("res is function", res)}
 
             if(attr == "__new__"){res.$type = "staticmethod"}
-
-            switch (res.$type) {
-                case "staticmethod":
-                    return res
-                case undefined:
-                case "function":
-                case "instancemethod":
-                    return res
-                case "classmethod":
-                    // class method : called with the class as first argument
-                    var cl_method = function(){
-                        return res(klass, ...arguments)
-                    }
-                    cl_method.__class__ = $B.method
-                    cl_method.$infos = {
-                        __self__: klass,
-                        __func__: res,
-                        __name__: attr,
-                        __qualname__: klass.__name__ + "." + attr,
-                        __module__: res.$infos ? res.$infos.__module__ : ""
-                    }
-                    return cl_method
+            if(attr == "__class_getitem__" && res.__class__ !== $B.method){
+                res = _b_.classmethod.$factory(res)
+            }
+            if(res.__class__ == $B.method){
+                return res.__get__(null, klass)
+            }else{
+                return res
             }
         }else{
             return res
         }
 
     }
+}
+
+type.__init_subclass__ = function(cls, kwargs){
+    // Default implementation only checks that no keyword arguments were passed
+    var $ = $B.args("__init_subclass__", 1, {cls: null}, ["cls"],
+        arguments, {}, "args", "kwargs")
+    if($.kwargs !== undefined){
+        if($.kwargs.__class__ !== _b_.dict ||
+                Object.keys($.kwargs.$string_dict).length > 0){
+            throw _b_.TypeError.$factory(
+                "__init_subclass__() takes no keyword arguments")
+        }
+    }
+    return _b_.None
 }
 
 type.__instancecheck__ = function(cls, instance){
@@ -507,7 +596,12 @@ type.__instancecheck__ = function(cls, instance){
     }
     return false
 }
-type.__instancecheck__.$type = "classmethod"
+
+type.__instancecheck__.$type = "staticmethod"
+
+type.__prepare__ = function(){
+    return _b_.dict.$factory()
+}
 
 $B.set_func_names(type, "builtins")
 
@@ -539,8 +633,7 @@ var $instance_creator = $B.$instance_creator = function(klass){
     var metaclass = klass.__class__,
         call_func,
         factory
-
-    if(metaclass === _b_.type && klass.__bases__.length == 0){
+    if(metaclass === _b_.type && (!klass.__bases__ || klass.__bases__.length == 0)){
         if(klass.hasOwnProperty("__new__")){
             if(klass.hasOwnProperty("__init__")){
                 factory = function(){
@@ -591,14 +684,19 @@ var $instance_creator = $B.$instance_creator = function(klass){
 
 // Used for class members, defined in __slots__
 var member_descriptor = $B.make_class("member_descriptor",
-    function(klass, attr){
+    function(attr, cls){
         return{
             __class__: member_descriptor,
-            klass: klass,
+            cls: cls,
             attr: attr
         }
     }
 )
+
+member_descriptor.__str__ = member_descriptor.__repr__ = function(self){
+    return "<member '" + self.attr + "' of '" + self.cls.__name__ +
+        "' objects>"
+}
 
 $B.set_func_names(member_descriptor, "builtins")
 
@@ -615,6 +713,13 @@ method.__eq__ = function(self, other){
 
 method.__ne__ = function(self, other){
     return ! $B.method.__eq__(self, other)
+}
+
+method.__get__ = function(self){
+    var f = function(){return self(arguments)}
+    f.__class__ = $B.method_wrapper
+    f.$infos = method.$infos
+    return f
 }
 
 method.__getattribute__ = function(self, attr){
