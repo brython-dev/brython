@@ -294,20 +294,25 @@ BaseException.with_traceback = function(self, tb){
     return self
 }
 
+function deep_copy_frames_stack() {
+    var result = $B.frames_stack.slice();
+    for (var i = 0; i < result.length; i++) {
+        // Then copy each frame
+        result[i] = result[i].slice()
+        // Then create a new object that retains only
+        // the $line_info from the frame's locals
+        result[i][1] = {$line_info: result[i][1].$line_info}
+    }
+    return result;
+}
+
 BaseException.$factory = function (){
     var err = Error()
     err.args = _b_.tuple.$factory(Array.prototype.slice.call(arguments))
     err.__class__ = _b_.BaseException
     err.$py_error = true
     // Make a copy of the current frame stack array
-    err.$stack = $B.frames_stack.slice()
-    for (var i = 0; i < err.$stack.length; i++) {
-        // Then copy each frame
-        err.$stack[i] = err.$stack[i].slice()
-        // Then create a new object that retains only
-        // the $line_info from the frame's locals
-        err.$stack[i][1] = {$line_info: err.$stack[i][1].$line_info}
-    }
+    err.$stack = deep_copy_frames_stack();
     if($B.frames_stack.length){
         err.$line_info = $B.last($B.frames_stack)[1].$line_info
     }
@@ -353,7 +358,7 @@ $B.exception = function(js_exc){
         var $message = js_exc.msg || "<" + js_exc + ">"
         exc.args = _b_.tuple.$factory([$message])
         exc.$py_error = true
-        exc.$stack = $B.frames_stack.slice()
+        exc.$stack = deep_copy_frames_stack();
     }else{
         var exc = js_exc
     }
@@ -402,7 +407,7 @@ function $make_exc(names, parent){
         // class dictionary
         _str[pos++] = "_b_." + name + ' = {__class__:_b_.type, __name__:"' +
             name + '", __bases__: [parent], __module__: "builtins", '+
-            '__mro__: [_b_.' + parent.__name__ + 
+            '__mro__: [_b_.' + parent.__name__ +
             "].concat(parent.__mro__), $is_class: true}"
         _str[pos++] = "_b_." + name + ".$factory = " + $exc
         _str[pos++] = "_b_." + name + '.$factory.$infos = {__name__: "' +
