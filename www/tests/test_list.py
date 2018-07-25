@@ -44,3 +44,11 @@ assert d == { (1, 3): None,
     (1, -3): None,
     (-1, -3): None
 }
+
+# list subclass - issue 893
+class List(list):
+      def __getitem__(self, item):
+        return "TEST"
+lst = List()
+assert lst.__getitem__(100) == "TEST"
+assert lst[100] == "TEST"
