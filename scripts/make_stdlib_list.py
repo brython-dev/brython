@@ -46,6 +46,8 @@ doc_folder = os.path.join(os.path.dirname(os.getcwd()),
 static_doc_folder = os.path.join(os.path.dirname(os.getcwd()),
     'www', 'static_doc')
 
+if not os.path.exists(static_doc_folder):
+    import make_doc
 
 for lang in 'en','es','fr':
     index = open(os.path.join(doc_folder,lang,'index_static.html'), 'r', encoding="utf-8").read()

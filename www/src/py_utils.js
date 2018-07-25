@@ -495,7 +495,25 @@ $B.$getitem = function(obj, item){
         if(obj[item] !== undefined){return obj[item]}
         else{index_error(obj)}
     }
-    return _b_.getattr(obj, "__getitem__")(item)
+
+    // PEP 560
+    if(obj.$is_class){
+        var class_gi = $B.$getattr(obj, "__class_getitem__", _b_.None)
+        if(class_gi !== _b_.None){
+            return class_gi(item)
+        }else if(obj.__class__){
+            class_gi = $B.$getattr(obj.__class__, "__getitem__", _b_.None)
+            if(class_gi !== _b_.None){
+                return class_gi(obj, item)
+            }
+        }
+    }
+
+    var gi = $B.$getattr(obj, "__getitem__", _b_.None)
+    if(gi !== _b_.None){return gi(item)}
+
+    throw _b_.TypeError.$factory("'" + $B.get_class(obj).__name__ +
+        "' object is not subscriptable")
 }
 
 // Set list key or slice
@@ -749,6 +767,7 @@ $B.$is_member = function(item, _set){
 }
 
 $B.$call = function(callable){
+
     if(callable.__class__ === $B.method){
         return callable
     }
@@ -1034,7 +1053,9 @@ $B.make_rmethods = function(klass){
 // the variable $B.py_UUID is defined in py2js.js (in the brython function)
 $B.UUID = function() {return $B.$py_UUID++}
 
+$B.nb_inject = 0
 $B.InjectBuiltins = function() {
+    $B.nb_inject++
    var _str = ["var _b_ = $B.builtins"],
        pos = 1
    for(var $b in $B.builtins){

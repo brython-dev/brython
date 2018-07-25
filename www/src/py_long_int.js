@@ -3,7 +3,8 @@
 Module to manipulate long integers
 */
 
-eval($B.InjectBuiltins())
+var bltns = $B.InjectBuiltins()
+eval(bltns)
 
 var long_int = {
     __class__: _b_.type,

@@ -1,6 +1,7 @@
 ;(function($B){
 
-eval($B.InjectBuiltins())
+var bltns = $B.InjectBuiltins()
+eval(bltns)
 
 var object = _b_.object,
     str_hash = _b_.str.__hash__,
@@ -571,7 +572,6 @@ dict.fromkeys = function(){
         }
     }
 }
-dict.fromkeys.$type = "classmethod"
 
 dict.get = function(){
     var $ = $B.args("get", 3, {self: null, key: null, _default: null},
@@ -762,6 +762,10 @@ _b_.dict = dict
 
 $B.set_func_names(dict, "builtins")
 
+// This must be done after set_func_names, otherwise dict.fromkeys doesn't
+// have the attribute $infos
+dict.fromkeys = _b_.classmethod.$factory(dict.fromkeys)
+
 // following are used for faster access elsewhere
 $B.$dict_iterator = function(d){return new $item_generator(d)}
 $B.$dict_length = dict.__len__
@@ -794,7 +798,9 @@ function jsobj2dict(x){
     var d = dict.$factory()
     for(var attr in x){
         if(attr.charAt(0) != "$" && attr !== "__class__"){
-            if(x[attr].$jsobj === x){
+            if(x[attr] === undefined){
+                continue
+            }else if(x[attr].$jsobj === x){
                 d.$string_dict[attr] = d
             }else{
                 d.$string_dict[attr] = x[attr]

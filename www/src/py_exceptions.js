@@ -1,6 +1,7 @@
 ;(function($B){
 
-eval($B.InjectBuiltins())
+var bltns = $B.InjectBuiltins()
+eval(bltns)
 
 $B.$raise = function(arg){
     // Used for "raise" without specifying an exception.
@@ -73,8 +74,8 @@ $B.$IndentationError = function(module, msg, pos) {
 // class of traceback objects
 var traceback = $B.make_class("traceback",
     function(exc, stack){
-        if(stack===undefined)
-            stack=exc.$stack
+        if(stack === undefined)
+            stack = exc.$stack
         return {
             __class__ : traceback,
             $stack: stack,
@@ -84,11 +85,11 @@ var traceback = $B.make_class("traceback",
 )
 
 traceback.__getattribute__ = function(self, attr){
-    var line_info;
-    if (attr === 'tb_frame' ||
-        attr === 'tb_lineno' ||
-        attr === 'tb_lasti' ||
-        attr === 'tb_next') {
+    var line_info
+    if(attr === 'tb_frame' ||
+            attr === 'tb_lineno' ||
+            attr === 'tb_lasti' ||
+            attr === 'tb_next'){
         if(self.$stack.length == 0){
             console.log("no stack", attr)
         }
@@ -225,7 +226,7 @@ var getExceptionTrace = function(exc, includeInternal) {
         }
     }
 
-    var info = '';
+    var info = ''
     if(exc.$js_exc !== undefined && includeInternal){
         info += "\nJS stack:\n" + exc.$js_exc.stack + "\n"
     }
@@ -249,7 +250,11 @@ var getExceptionTrace = function(exc, includeInternal) {
         if(!includeInternal){
             var src = frame[3].$src
             if(src === undefined){
-                continue
+                if($B.VFS && $B.VFS.hasOwnProperty(frame[2])){
+                    src = $B.VFS[frame[2]][1]
+                }else{
+                    continue
+                }
             }
         }
         var module = line_info[1]
@@ -267,13 +272,13 @@ var getExceptionTrace = function(exc, includeInternal) {
         }
     }
     return info
-};
+}
 
 BaseException.__getattr__ = function(self, attr){
 
     if(attr == "info"){
         return getExceptionTrace(self, false);
-    } else if (attr == "infoWithInternal") {
+    }else if (attr == "infoWithInternal"){
         return getExceptionTrace(self, true);
     }else if(attr == "traceback"){
         // Return traceback object
@@ -289,20 +294,25 @@ BaseException.with_traceback = function(self, tb){
     return self
 }
 
+function deep_copy_frames_stack() {
+    var result = $B.frames_stack.slice();
+    for (var i = 0; i < result.length; i++) {
+        // Then copy each frame
+        result[i] = result[i].slice()
+        // Then create a new object that retains only
+        // the $line_info from the frame's locals
+        result[i][1] = {$line_info: result[i][1].$line_info}
+    }
+    return result;
+}
+
 BaseException.$factory = function (){
     var err = Error()
     err.args = _b_.tuple.$factory(Array.prototype.slice.call(arguments))
     err.__class__ = _b_.BaseException
     err.$py_error = true
     // Make a copy of the current frame stack array
-    err.$stack = $B.frames_stack.slice()
-    for (var i = 0; i < err.$stack.length; i++) {
-        // Then copy each frame
-        err.$stack[i] = err.$stack[i].slice()
-        // Then create a new object that retains only
-        // the $line_info from the frame's locals
-        err.$stack[i][1] = {$line_info: err.$stack[i][1].$line_info}
-    }
+    err.$stack = deep_copy_frames_stack();
     if($B.frames_stack.length){
         err.$line_info = $B.last($B.frames_stack)[1].$line_info
     }
@@ -348,7 +358,7 @@ $B.exception = function(js_exc){
         var $message = js_exc.msg || "<" + js_exc + ">"
         exc.args = _b_.tuple.$factory([$message])
         exc.$py_error = true
-        exc.$stack = $B.frames_stack.slice()
+        exc.$stack = deep_copy_frames_stack();
     }else{
         var exc = js_exc
     }
@@ -395,16 +405,13 @@ function $make_exc(names, parent){
         var $exc = (BaseException.$factory + "").replace(/BaseException/g,name)
         $exc = $exc.replace("//placeholder//", code)
         // class dictionary
-        _str[pos++] = "_b_." + name + '={__class__:_b_.type,__name__:"' +
-            name + '"}'
-        _str[pos++] = "_b_." + name + ".__bases__ = [parent]"
-        _str[pos++] = "_b_." + name + '.__module__ = "builtins"'
-        _str[pos++] = '_b_.' + name + ".__mro__ = [_b_." + parent.__name__ +
-            "].concat(parent.__mro__)"
+        _str[pos++] = "_b_." + name + ' = {__class__:_b_.type, __name__:"' +
+            name + '", __bases__: [parent], __module__: "builtins", '+
+            '__mro__: [_b_.' + parent.__name__ +
+            "].concat(parent.__mro__), $is_class: true}"
         _str[pos++] = "_b_." + name + ".$factory = " + $exc
         _str[pos++] = "_b_." + name + '.$factory.$infos = {__name__: "' +
             name + '", __qualname__: "' + name + '"}'
-        _str[pos++] = "_b_." + name + ".$is_class = true"
     }
     try{
         eval(_str.join(";"))
@@ -446,13 +453,6 @@ $make_exc(["DeprecationWarning", "PendingDeprecationWarning",
 $make_exc(["EnvironmentError", "IOError", "VMSError", "WindowsError"],
     _b_.OSError)
 
-$B.$NameError = function(name){
-    // Used if a name is not found in the bound names
-    // It is converted into
-    // $globals[name] !== undefined ? $globals[name] :
-    //    __BRYTHON__.$NameError.$factory(name)
-    throw _b_.NameError.$factory("name '" + name + "' is not defined")
-}
 $B.$TypeError = function(msg){
     throw _b_.TypeError.$factory(msg)
 }

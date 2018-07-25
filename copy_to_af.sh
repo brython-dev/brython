@@ -1,4 +1,4 @@
-set -x
+set -xe
 
 DEST=../cs1-v2/animation-framework/brython
 
@@ -6,8 +6,8 @@ DEST=../cs1-v2/animation-framework/brython
 
 rm -rf "$DEST"
 mkdir "$DEST"
-cp -r www/src/brython.js www/src/brython_stdlib.js www/src/libs www/src/Lib setup "$DEST"
+cp -r www/src/libs www/src/Lib setup "$DEST"
 
 # Remove package archives
-rm $DEST/setup/data/Brython-*
+rm $DEST/setup/data/Brython-* $DEST/setup/data/changelog_*
 rm -rf "$DEST/Lib/test"

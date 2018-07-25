@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html>
 <head>
 <meta charset="iso-8859-1">
@@ -84,7 +84,7 @@ def choose_test(event):
 def show_test(event):
     sel = document['test']
     module = sel.options[sel.selectedIndex].value
-    
+
     if module == '':
        return
 
@@ -166,44 +166,45 @@ Brython version: <span id="version"></span>
 </div>
 </div>
 
-<div id="msgbox" 
-    style="position:absolute; left:100px; top:200px; width: 200px; 
+<div id="msgbox"
+    style="position:absolute; left:100px; top:200px; width: 200px;
     height:auto; background-color:#9ed5d5; padding:40px; color:#000">
     Loading...</div>
 
 <div id="container" style="clear:both; width:100%;height:50%;overflow:auto">
 </div>
 
-<script type="text/javascript" src="../../src/unicode.min.js"></script>
-<script type="text/javascript" src="../../src/brython_builtins.js"></script>
-<script type="text/javascript" src="../../src/version_info.js"></script>
-<script type="text/javascript" src="../../src/py2js.js"></script>
-<script type="text/javascript" src="../../src/py_object.js"></script>
-<script type="text/javascript" src="../../src/py_type.js"></script>
-<script type="text/javascript" src="../../src/py_utils.js"></script>
-<script type="text/javascript" src="../../src/py_sort.js"></script>
-<script type="text/javascript" src="../../src/py_builtin_functions.js"></script>
-<script type="text/javascript" src="../../src/py_exceptions.js"></script>
-<script type="text/javascript" src="../../src/py_range_slice.js"></script>
-<script type="text/javascript" src="../../src/py_bytes.js"></script>
-<script type="text/javascript" src="../../src/py_set.js"></script>
-<script type="text/javascript" src="../../src/js_objects.js"></script>
-<script type="text/javascript" src="../../src/stdlib_paths.js"></script>
-<script type="text/javascript" src="../../src/py_import.js"></script>
+<script type="text/javascript" src="/src/brython_builtins.js"></script>
+<script type="text/javascript" src="/src/version_info.js"></script>
+<script type="text/javascript" src="/src/py2js.js"></script>
+<script type="text/javascript" src="/src/py_object.js"></script>
+<script type="text/javascript" src="/src/py_type.js"></script>
+<script type="text/javascript" src="/src/py_utils.js"></script>
+<script type="text/javascript" src="/src/py_sort.js"></script>
+<script type="text/javascript" src="/src/py_builtin_functions.js"></script>
+<script type="text/javascript" src="/src/py_exceptions.js"></script>
+<script type="text/javascript" src="/src/py_range_slice.js"></script>
+<script type="text/javascript" src="/src/py_bytes.js"></script>
+<script type="text/javascript" src="/src/py_set.js"></script>
+<script type="text/javascript" src="/src/js_objects.js"></script>
+<script type="text/javascript" src="/src/stdlib_paths.js"></script>
+<script type="text/javascript" src="/src/py_import.js"></script>
+<script type="text/javascript" src="/src/unicode.min.js"></script>
+<script type="text/javascript" src="/src/py_string.js"></script>
+<script type="text/javascript" src="/src/py_int.js"></script>
+<script type="text/javascript" src="/src/py_long_int.js"></script>
+<script type="text/javascript" src="/src/py_float.js"></script>
+<script type="text/javascript" src="/src/py_complex.js"></script>
+<script type="text/javascript" src="/src/py_dict.js"></script>
+<script type="text/javascript" src="/src/py_list.js"></script>
+<script type="text/javascript" src="/src/py_generator.js"></script>
+<script type="text/javascript" src="/src/py_dom.js"></script>
 
-<script type="text/javascript" src="../../src/py_string.js"></script>
-<script type="text/javascript" src="../../src/py_int.js"></script>
-<script type="text/javascript" src="../../src/py_long_int.js"></script>
-<script type="text/javascript" src="../../src/py_float.js"></script>
-<script type="text/javascript" src="../../src/py_complex.js"></script>
-<script type="text/javascript" src="../../src/py_dict.js"></script>
-<script type="text/javascript" src="../../src/py_list.js"></script>
-<script type="text/javascript" src="../../src/py_generator.js"></script>
-<script type="text/javascript" src="../../src/py_dom.js"></script>
+<script type="text/javascript" src="/src/builtin_modules.js"></script>
+<script type="text/javascript" src="/src/py_import_hooks.js"></script>
+<script type="text/javascript" src="/src/async.js"></script>
 
-<script type="text/javascript" src="../../src/builtin_modules.js"></script>
-<script type="text/javascript" src="../../src/py_import_hooks.js"></script>
-
+<script type="text/javascript" src="/src/brython_stdlib.js"></script>
 
 <!--<script type="text/javascript" src="/src/brython.js"></script>
 <script type="text/javascript" src="/src/brython_stdlib.js"></script>-->

@@ -33,3 +33,7 @@ base_class.extend = function() {
         return parent.apply(this, arguments);
     }
 }
+
+function jsReturnsUndefined() {
+    return undefined;
+}
