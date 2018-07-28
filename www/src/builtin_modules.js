@@ -444,7 +444,7 @@
     _b_.__builtins__ = $B.module.$factory('__builtins__',
         'Python builtins')
 
-    for(var attr in $B.builtins){
+    for(var attr in _b_){
         _b_.__builtins__[attr] = _b_[attr]
         $B.builtins_scope.binding[attr] = true
     }
@@ -452,4 +452,23 @@
         _b_[attr] = value
     }
 
+    // Set type of methods of builtin classes
+    for(var name in _b_){
+        if(_b_[name].__class__ === _b_.type){
+            for(var key in _b_[name]){
+                var value = _b_[name][key]
+                if(value === undefined){continue}
+                else if(value.__class__){continue}
+                else if(key == "__new__"){
+                    value.__class__ = $B.builtin_function
+                }else if(key.startsWith("__")){
+                    value.__class__ = $B.wrapper_descriptor
+                }else{
+                    value.__class__ = $B.method_descriptor
+                }
+            }
+            _b_[name].__qualname__ = _b_[name].__qualname__ ||
+                _b_[name].__name__
+        }
+    }
 })(__BRYTHON__)
