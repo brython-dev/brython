@@ -15,7 +15,7 @@ $B.set_exc = function(exc){
 
 $B.get_exc = function(){
     var frame = $B.last($B.frames_stack)
-    return frame[1].current_exception //$B.cuex
+    return frame[1].$current_exception
 }
 
 $B.$raise = function(arg){
