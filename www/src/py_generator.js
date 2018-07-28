@@ -585,6 +585,10 @@ var generator = {
 generator.__enter__ = function(self){console.log("generator.__enter__ called")}
 generator.__exit__ = function(self){console.log("generator.__exit__ called")}
 
+generator.__str__ = function(self){
+    return "<generator object " + self.name + ">"
+}
+
 generator.__iter__ = function(self){
     return self
 }
