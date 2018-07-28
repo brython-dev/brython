@@ -1672,7 +1672,7 @@ str.zfill = function(self, width){
     }
 }
 
-str.$factory = function(arg){
+str.$factory = function(arg, encoding, errors){
     if(arg === undefined){console.log("undef"); return "<undefined>"}
     switch(typeof arg) {
         case "string":
@@ -1690,6 +1690,13 @@ str.$factory = function(arg){
             // The metaclass is the attribute __class__ of the class dictionary
             var func = $B.$getattr(arg.__class__, "__str__")
             return func(arg)
+        }
+        if(arg.__class__ && arg.__class__ === _b_.bytes &&
+                encoding !== undefined){
+            // str(bytes, encoding, errors) is equal to
+            // bytes.decode(encoding, errors)
+            return _b_.bytes.decode(arg, encoding || "utf-8",
+                errors || "strict")
         }
         var f = $B.$getattr(arg, "__str__")
         // XXX fix : if not better than object.__str__, try __repr__
