@@ -53,7 +53,6 @@ class List(list):
         return "TEST"
 lst = List()
 assert lst.__getitem__(100) == "TEST"
-<<<<<<< HEAD
 assert lst[100] == "TEST"
 
 x = ['a','r','bg','Z']
@@ -131,6 +130,5 @@ assert z.foo == 5
 
 print("passed all tests..")
 
-=======
 assert lst[100] == "TEST"
->>>>>>> 5522f5902fd426f4dc5299887da899594704fefa
+
