@@ -18,7 +18,7 @@ def discover_brython_test_modules():
           ("test_import.py", "imports"),
           ("test_iterators.py", "iterators"),
           ("test_generators.py", "generators"),
-          ("test_list_methods.py", "lists"),
+          ("test_list.py", "lists"),
           ("test_memoryview.py", "memoryview"),
           ("test_numbers.py", "numbers"),
           ("test_print.py", "print"),

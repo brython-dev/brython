@@ -48,4 +48,8 @@ assert b''.join([b'bar', memoryview(b'foo')]) == b'barfoo'
 assert b''.join([bytearray(b'foo'), b'bar']) == b'foobar'
 assert b''.join([b'bar', bytearray(b'foo')]) == b'barfoo'
 
+charmap = bytearray(256)
+assert charmap.find(1, 0) == -1
+assert charmap.find(0, 0) == 0
+
 print('passed all tests...')

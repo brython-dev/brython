@@ -1,4 +1,4 @@
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
 a = Decimal('5.1')
 b = Decimal('3.14')
@@ -10,7 +10,7 @@ assert a - b == Decimal('1.96')
 assert a * b == Decimal('16.014')
 
 # test below gives a different result in CPython because precision is set to
-# 26 in the CPython decimal module and 17 in the Brython version, because of 
+# 26 in the CPython decimal module and 17 in the Brython version, because of
 # Javascript precision
 
 # fix me
@@ -44,13 +44,22 @@ for n in range(0, 32):
             assert str(d) == str(i)
 
 #empty
-assert str(Decimal('')) == 'NaN'
+try:
+    str(Decimal(''))
+    raise Exception("should have raised decimal.InvalidOperation")
+except InvalidOperation:
+    pass
+
 assert str(Decimal('45')) == '45'
 assert str(Decimal('45.34')), '45.34'
 assert str(Decimal('45e2')) == '4.5E+3'
 
 #just not a number
-assert str(Decimal('ugly')) == 'NaN'
+try:
+    str(Decimal('ugly'))
+    raise Exception("should have raised decimal.InvalidOperation")
+except InvalidOperation:
+    pass
 
 #leading and trailing whitespace permitted
 assert str(Decimal('1.3E4 \n')) == '1.3E+4'
