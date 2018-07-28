@@ -479,8 +479,9 @@ function index_error(obj){
 }
 
 $B.$getitem = function(obj, item){
+    var is_list = Array.isArray(obj) && obj.__class__ === _b_.list
     if(typeof item == "number"){
-        if(Array.isArray(obj) || typeof obj == "string"){
+        if(is_list || typeof obj == "string"){
             item = item >=0 ? item : obj.length + item
             if(obj[item] !== undefined){return obj[item]}
             else{index_error(obj)}
@@ -488,7 +489,7 @@ $B.$getitem = function(obj, item){
     }
 
     try{item = $B.$GetInt(item)}catch(err){}
-    if((Array.isArray(obj) || typeof obj == "string")
+    if((is_list || typeof obj == "string")
         && typeof item == "number"){
         item = item >=0 ? item : obj.length + item
         if(obj[item] !== undefined){return obj[item]}
@@ -514,6 +515,7 @@ $B.$getitem = function(obj, item){
     throw _b_.TypeError.$factory("'" + $B.get_class(obj).__name__ +
         "' object is not subscriptable")
 }
+
 
 // Set list key or slice
 $B.set_list_key = function(obj, key, value){
