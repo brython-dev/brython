@@ -239,6 +239,7 @@ type.mro = function(cls){
         // because it would be modified in the algorithm
         if(bases[i] === _b_.str){bases[i] = $B.StringSubclass}
         else if(bases[i] === _b_.float){bases[i] = $B.FloatSubclass}
+        // else if(bases[i] === _b_.int){bases[i] = $B.IntSubclass}
         var bmro = [],
             pos = 0
         if(bases[i] === undefined ||
@@ -359,7 +360,7 @@ type.__new__ = function(meta, name, bases, cl_dict){
     // set class attributes for faster lookups
     var items = $B.$dict_items(cl_dict)
     for(var i = 0; i < items.length; i++){
-        var key = items[i][0],
+        var key = $B.to_alias(items[i][0]),
             v = items[i][1]
         class_dict[key] = v
     }
@@ -442,7 +443,7 @@ type.__getattribute__ = function(klass, attr){
                 function(key){delete klass[key]})
     }
     var res = klass[attr]
-    var $test = false //attr=="__class_getitem__"
+    var $test = false //attr=="__init__" && klass.__name__ == "Point"
     if($test){
         console.log("attr", attr, "of", klass, res)
     }
@@ -560,9 +561,10 @@ type.__getattribute__ = function(klass, attr){
             if(attr == "__class_getitem__" && res.__class__ !== $B.method){
                 res = _b_.classmethod.$factory(res)
             }
-            if(res.__class__ == $B.method){
+            if(res.__class__ === $B.method){
                 return res.__get__(null, klass)
             }else{
+                if($test){console.log("return res", res)}
                 return res
             }
         }else{
@@ -661,7 +663,11 @@ var $instance_creator = $B.$instance_creator = function(klass){
         }else{
             factory = function(){
                 if(arguments.length > 0){
-                    throw _b_.TypeError.$factory("object() takes no parameters")
+                    if(arguments.length == 1 && arguments[0].$nat &&
+                        Object.keys(arguments[0].kw).length == 0){
+                    }else{
+                        throw _b_.TypeError.$factory("object() takes no parameters")
+                    }
                 }
                 return {__class__: klass}
             }
@@ -702,7 +708,7 @@ $B.set_func_names(member_descriptor, "builtins")
 
 // used as the factory for method objects
 
-var method = $B.make_class("method")
+var method = $B.method = $B.make_class("method")
 
 method.__eq__ = function(self, other){
     return self.$infos !== undefined &&
@@ -749,9 +755,13 @@ method.__repr__ = method.__str__ = function(self){
        " of " + _b_.str.$factory(self.$infos.__self__) + ">"
 }
 
-$B.method = method
-
 $B.set_func_names(method, "builtins")
+
+method_descriptor = $B.method_descriptor =
+    $B.make_class("method_descriptor")
+
+classmethod_descriptor = $B.classmethod_descriptor =
+    $B.make_class("classmethod_descriptor")
 
 // this could not be done before $type and $factory are defined
 _b_.object.__class__ = type
