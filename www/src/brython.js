@@ -64,15 +64,9 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,6,3,'dev',0]
 __BRYTHON__.__MAGIC__="3.6.3"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-<<<<<<< HEAD
-__BRYTHON__.compiled_date="2018-07-27 19:45:52.039014"
-__BRYTHON__.timestamp=1532713552039
+__BRYTHON__.compiled_date="2018-07-28 11:38:12.838683"
+__BRYTHON__.timestamp=1532770692838
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_Cvars","_csv","_functools","_imp","_io","_random","_socket","_sre","_sre1","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
-=======
-__BRYTHON__.compiled_date="2018-07-25 07:26:32.114983"
-__BRYTHON__.timestamp=1532496392114
-__BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
->>>>>>> 5522f5902fd426f4dc5299887da899594704fefa
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
 isFinite(value)&&
@@ -7466,8 +7460,7 @@ else{$UnicodeEncodeError(encoding,i)}}
 break
 default:
 try{load_encoder(enc)}
-catch(err){console.log(err)
-throw _b_.LookupError.$factory("unknown encoding: " + enc)}
+catch(err){throw _b_.LookupError.$factory("unknown encoding: " + enc)}
 for(var i=0,len=s.length;i < len;i++){var cp=s.charCodeAt(i)
 if(from_unicode[enc][cp]===undefined){$UnicodeEncodeError(encoding,cp,i)}
 t[pos++]=from_unicode[enc][cp]}
@@ -9583,7 +9576,6 @@ return true}}
 return false}
 list.__getitem__=function(self,arg){var $=$B.args("__getitem__",2,{self: null,key: null},["self","key"],arguments,{},null,null),self=$.self,key=$.key
 var factory=$B.get_class(self).$factory
-console.log("list __getitem__",self,key)
 if(isinstance(key,_b_.int)){var items=self.valueOf(),pos=key
 if(key < 0){pos=items.length + pos}
 if(pos >=0 && pos < items.length){return items[pos]}
