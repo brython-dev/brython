@@ -259,6 +259,7 @@ function run_py(module_contents, path, module, compiled) {
         js += "; return $module"
         var $module = (new Function(js))() //eval(js)
     }catch(err){
+        /*
         console.log(err + " for module " + module.__name__)
         console.log("module", module)
         console.log(root)
@@ -277,6 +278,7 @@ function run_py(module_contents, path, module, compiled) {
         console.log("filename: " + err.fileName)
         console.log("linenum: " + err.lineNumber)
         if($B.debug > 0){console.log("line info " + $B.line_info)}
+        */
         throw err
     }finally{
         root = null
@@ -844,7 +846,8 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
        // [Import spec] Stop loading loop right away
        throw _b_.ImportError.$factory(mod_name)
    }
-
+    var $test = false //mod_name == "_locale"
+    if($test){console.log("__import__", mod_name, modobj, fromlist)}
    if(modobj === undefined){
        // [Import spec] Argument defaults and preconditions
        // get name of module this was called in
@@ -858,6 +861,7 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
             _mod_name += modsep + parsed_name[i]
             modsep = "."
             var modobj = $B.imported[_mod_name]
+            if($test){console.log(_mod_name, modobj)}
             if(modobj == _b_.None){
                 // [Import spec] Stop loading loop right away
                 throw _b_.ImportError.$factory(_mod_name)
@@ -866,7 +870,6 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
                     $B.import_hooks(_mod_name, __path__, undefined)
                 }catch(err){
                     delete $B.imported[_mod_name]
-                    $B.imported[_mod_name] = null
                     throw err
                 }
 
@@ -876,8 +879,12 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
                     // [Import spec] Preserve module invariant
                     // FIXME : Better do this in import_hooks ?
                     if(_parent_name){
+                        if($test){console.log("set attr", parsed_name[i],
+                            "to", _parent_name, $B.imported[_mod_name])}
                         _b_.setattr($B.imported[_parent_name], parsed_name[i],
                                     $B.imported[_mod_name])
+                        if($test){console.log("attr", parsed_name[i],
+                            $B.imported[_parent_name][parsed_name[i]])}
                     }
                 }
             }
@@ -900,7 +907,16 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
                 }
             }
        }
-   }
+    }else{
+        if($B.imported[parsed_name[0]]){
+            try{
+                $B.$setattr($B.imported[parsed_name[0]], parsed_name[1], modobj)
+            }catch(err){
+                console.log("error", parsed_name, modobj)
+                throw err
+            }
+        }
+    }
    // else { } // [Import spec] Module cache hit . Nothing to do.
 
    if(fromlist.length > 0){
@@ -927,6 +943,10 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
  * @return None
  */
 $B.$import = function(mod_name, fromlist, aliases, locals){
+    var $test = false //mod_name == "collections"
+    if($test){
+        console.log(mod_name, fromlist)
+    }
     var parts = mod_name.split(".")
     // For . , .. and so on , remove one relative step
     if(mod_name[mod_name.length - 1] == "."){parts.pop()}
@@ -1002,6 +1022,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
         }else{
             // from mod_name import N1 [as V1], ... Nn [as Vn]
             // from modname import * ... when __all__ is defined
+            if($test){console.log("__all__", __all__)}
             for(var i = 0, l = __all__.length; i < l; ++i){
                 var name = __all__[i]
                 var alias = aliases[name] || name
@@ -1015,8 +1036,10 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                         _b_.getattr(__import__, '__call__')(mod_name + '.' + name,
                             globals, undefined, [], 0);
                         // [Import spec] ... then check imported module again for name
+                        if($test){console.log("import", mod_name+'.'+name, "ok, modobj", modobj)}
                         locals[alias] = _b_.getattr(modobj, name);
                     }catch($err3){
+                        if($test){console.log($err3)}
                         // [Import spec] Attribute not found
                         if(mod_name === "__future__"){
                             // special case for __future__, cf issue #584
