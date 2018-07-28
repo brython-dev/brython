@@ -761,7 +761,7 @@ $B.$getattr = function(obj, attr, _default){
     // Used internally to avoid having to parse the arguments
 
     var rawname = attr
-    if($B.aliased_names[attr]){attr = '$$' + attr}
+    attr = $B.to_alias(attr)
     if(obj===undefined){
         console.log("attr", attr, "of obj undefined", $B.last($B.frames_stack))
     }
@@ -769,7 +769,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false //attr == "append"
+    var $test = false //attr == "__init__" && obj.__name__ == "Point"
     // Shortcut for classes without parents
     if(klass !== undefined && klass.__bases__ && klass.__bases__.length == 0){
         if(obj.hasOwnProperty(attr)){
@@ -1146,10 +1146,9 @@ function isinstance(obj, cls){
 
     function check(kl, cls){
         if(kl === cls){return true}
-        else if(cls === _b_.str &&
-            kl === $B.StringSubclass){return true}
-        else if(cls === _b_.float &&
-            kl === $B.FloatSubclass){return true}
+        else if(cls === _b_.str && kl === $B.StringSubclass){return true}
+        else if(cls === _b_.float && kl === $B.FloatSubclass){return true}
+        else if(cls === _b_.int && kl === $B.IntSubclass){return true}
     }
     if(check(klass, cls)){return true}
     var mro = klass.__mro__
@@ -1413,6 +1412,24 @@ memoryview.__getitem__ = function(self, key){
     if(key.__class__ === _b_.slice){return memoryview.$factory(res)}
     return res
 }
+
+memoryview.__len__ = function(self){
+    return len(self.obj) / self.itemsize
+}
+
+memoryview.cast = function(self, format){
+    if(format == "I"){
+        var res = memoryview.$factory(self.obj),
+            objlen = len(self.obj)
+        res.itemsize = 4
+        res.format = "I"
+        if(objlen % 4 != 0){
+            throw _b_.TypeError.$factory("memoryview: length is not " +
+                "a multiple of itemsize")
+        }
+        return res
+    }
+}
 memoryview.hex = function(self){
     var res = '',
         bytes = _b_.bytes.$factory(self)
@@ -1425,7 +1442,23 @@ memoryview.tobytes = function(self){
     return _b_.bytes.$factory(self.obj)
 }
 memoryview.tolist = function(self){
-    return _b_.list.$factory(_b_.bytes.$factory(self.obj))
+    if(self.itemsize == 1){
+        return _b_.list.$factory(_b_.bytes.$factory(self.obj))
+    }else if(self.itemsize == 4){
+        if(self.format == "I"){
+            var res = []
+            for(var i = 0; i < self.obj.size; i += 4){
+                var item = self.obj[i + 3],
+                    coef = 256
+                for(var j = 2; j >= 0; j--){
+                    item += coef * self.obj[i + j]
+                    coef *= 256
+                }
+                res.push(item)
+            }
+            return res
+        }
+    }
 }
 
 $B.set_func_names(memoryview, "builtins")
@@ -1508,8 +1541,11 @@ function $print(){
         sep = (ks['sep'] === undefined || ks['sep'] === None) ? ' ' : ks['sep'],
         file = ks['file'] === undefined ? $B.stdout : ks['file'],
         args = $ns['args']
-
-    getattr(file, 'write')(args.map(_b_.str.$factory).join(sep) + end)
+    var items = []
+    args.forEach(function(arg){
+        items.push(_b_.str.$factory(arg))
+    })
+    getattr(file, 'write')(items.join(sep) + end)
     return None
 }
 $print.__name__ = 'print'
@@ -1597,7 +1633,7 @@ var reversed = $B.make_class("reversed",
         catch(err){
             if(err.__class__ != _b_.AttributeError){throw err}
         }
-        
+
         try{
             var res = {
                 __class__: reversed,
@@ -1754,10 +1790,23 @@ $B.$setattr = function(obj, attr, value){
 
     // Use __slots__ if defined
     var special_attrs = ["__module__"]
-    if(klass && klass.__slots__ && klass.__slots__.indexOf(attr) == -1 &&
-            special_attrs.indexOf(attr) == -1){
-        throw _b_.AttributeError.$factory("'"  + klass.__name__ +
+    if(klass && klass.__slots__ && special_attrs.indexOf(attr) == -1){
+        var has_slot = false
+        if(klass.__slots__.indexOf(attr) > -1){
+            has_slot = true
+        }else{
+            for(var i = 0; i < klass.__mro__.length; i++){
+                var kl = klass.__mro__[i]
+                if(kl.__slots__ && kl.__slots__.indexOf(attr) > - 1){
+                    has_slot = true
+                    break
+                }
+            }
+        }
+        if(! has_slot){
+            throw _b_.AttributeError.$factory("'"  + klass.__name__ +
             "' object has no attribute '" + attr + "'")
+        }
     }
 
     // Search the __setattr__ method
@@ -2290,7 +2339,8 @@ method_wrapper.__repr__ = method_wrapper.__str__ = function(self){
 }
 $B.set_func_names(method_wrapper, "builtins")
 
-var wrapper_descriptor = $B.make_class("wrapper_descriptor")
+var wrapper_descriptor = $B.wrapper_descriptor =
+    $B.make_class("wrapper_descriptor")
 
 wrapper_descriptor.__repr__ = wrapper_descriptor.__str__ = function(self){
     return "<slot wrapper '" + self.$infos.__name__ + "' of function object>"
