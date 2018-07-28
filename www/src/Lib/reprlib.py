@@ -4,10 +4,7 @@ __all__ = ["Repr", "repr", "recursive_repr"]
 
 import builtins
 from itertools import islice
-try:
-    from _thread import get_ident
-except ImportError:
-    from _dummy_thread import get_ident
+from _thread import get_ident
 
 def recursive_repr(fillvalue='...'):
     'Decorator to make a repr function return fillvalue for a recursive call'
@@ -30,6 +27,7 @@ def recursive_repr(fillvalue='...'):
         wrapper.__module__ = getattr(user_function, '__module__')
         wrapper.__doc__ = getattr(user_function, '__doc__')
         wrapper.__name__ = getattr(user_function, '__name__')
+        wrapper.__qualname__ = getattr(user_function, '__qualname__')
         wrapper.__annotations__ = getattr(user_function, '__annotations__', {})
         return wrapper
 
@@ -83,16 +81,22 @@ class Repr:
         return self._repr_iterable(x, level, '[', ']', self.maxlist)
 
     def repr_array(self, x, level):
+        if not x:
+            return "array('%s')" % x.typecode
         header = "array('%s', [" % x.typecode
         return self._repr_iterable(x, level, header, '])', self.maxarray)
 
     def repr_set(self, x, level):
+        if not x:
+            return 'set()'
         x = _possibly_sorted(x)
-        return self._repr_iterable(x, level, 'set([', '])', self.maxset)
+        return self._repr_iterable(x, level, '{', '}', self.maxset)
 
     def repr_frozenset(self, x, level):
+        if not x:
+            return 'frozenset()'
         x = _possibly_sorted(x)
-        return self._repr_iterable(x, level, 'frozenset([', '])',
+        return self._repr_iterable(x, level, 'frozenset({', '})',
                                    self.maxfrozenset)
 
     def repr_deque(self, x, level):
@@ -136,7 +140,7 @@ class Repr:
             # Bugs in x.__repr__() can cause arbitrary
             # exceptions -- then make up something
         except Exception:
-            return '<%s instance at %x>' % (x.__class__.__name__, id(x))
+            return '<%s instance at %#x>' % (x.__class__.__name__, id(x))
         if len(s) > self.maxother:
             i = max(0, (self.maxother-3)//2)
             j = max(0, self.maxother-3-i)

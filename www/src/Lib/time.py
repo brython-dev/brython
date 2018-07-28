@@ -417,4 +417,4 @@ def get_clock_info(cl):
         _clock_xx("https://docs.python.org/3/library/time.html#time.get_clock_info")
 
 def tzset():
-    raise NotImplementedError()
+    pass

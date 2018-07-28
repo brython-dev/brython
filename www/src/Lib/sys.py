@@ -53,8 +53,14 @@ def getfilesystemencoding(*args,**kw):
     operating system filenames."""
     return 'utf-8'
 
+def getfilesystemencodeerrors():
+    return "utf-8"
+
 def getrecursionlimit():
     return 200
+
+def intern(string):
+    return string
 
 maxsize=2**63-1
 

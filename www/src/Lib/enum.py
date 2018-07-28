@@ -1,6 +1,12 @@
 import sys
 from types import MappingProxyType, DynamicClassAttribute
 
+# try _collections first to reduce startup cost
+try:
+    from _collections import OrderedDict
+except ImportError:
+    from collections import OrderedDict
+
 
 __all__ = [
         'EnumMeta',
@@ -162,7 +168,7 @@ class EnumMeta(type):
         # create our new Enum type
         enum_class = super().__new__(metacls, cls, bases, classdict)
         enum_class._member_names_ = []               # names in definition order
-        enum_class._member_map_ = {}                 # name->value map
+        enum_class._member_map_ = OrderedDict()      # name->value map
         enum_class._member_type_ = member_type
 
         # save attributes from super classes so we know if we can take
@@ -303,6 +309,12 @@ class EnumMeta(type):
         return cls._create_(value, names, module=module, qualname=qualname, type=type, start=start)
 
     def __contains__(cls, member):
+        if not isinstance(member, Enum):
+            import warnings
+            warnings.warn(
+                    "using non-Enums in containment checks will raise "
+                    "TypeError in Python 3.8",
+                    DeprecationWarning, 2)
         return isinstance(member, cls) and member._name_ in cls._member_map_
 
     def __delattr__(cls, attr):
@@ -624,12 +636,14 @@ class Enum(metaclass=EnumMeta):
             source = vars(source)
         else:
             source = module_globals
-        # _value2member_map_ is populated in the same order every time
+        # We use an OrderedDict of sorted source keys so that the
+        # _value2member_map is populated in the same order every time
         # for a consistent reverse mapping of number to name when there
-        # are multiple names for the same number.
+        # are multiple names for the same number rather than varying
+        # between runs due to hash randomization of the module dictionary.
         members = [
-                (name, value)
-                for name, value in source.items()
+                (name, source[name])
+                for name in source.keys()
                 if filter(name)]
         try:
             # sort by value
@@ -705,7 +719,12 @@ class Flag(Enum):
 
     def __contains__(self, other):
         if not isinstance(other, self.__class__):
-            return NotImplemented
+            import warnings
+            warnings.warn(
+                    "using non-Flags in containment checks will raise "
+                    "TypeError in Python 3.8",
+                    DeprecationWarning, 2)
+            return False
         return other._value_ & self._value_ == other._value_
 
     def __repr__(self):

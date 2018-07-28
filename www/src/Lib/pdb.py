@@ -52,7 +52,8 @@ If a file ".pdbrc" exists in your home directory or in the current
 directory, it is read in and executed as if it had been typed at the
 debugger prompt.  This is particularly useful for aliases.  If both
 files exist, the one in the home directory is read first and aliases
-defined there can be overriden by the local file.
+defined there can be overridden by the local file.  This behavior can be
+disabled by passing the "readrc=False" argument to the Pdb constructor.
 
 Aside from aliases, the debugger is not directly programmable; but it
 is implemented as a class from which you can derive your own debugger
@@ -134,8 +135,10 @@ line_prefix = '\n-> '   # Probably a better default
 
 class Pdb(bdb.Bdb, cmd.Cmd):
 
+    _previous_sigint_handler = None
+
     def __init__(self, completekey='tab', stdin=None, stdout=None, skip=None,
-                 nosigint=False):
+                 nosigint=False, readrc=True):
         bdb.Bdb.__init__(self, skip=skip)
         cmd.Cmd.__init__(self, completekey, stdin, stdout)
         if stdout:
@@ -158,18 +161,19 @@ class Pdb(bdb.Bdb, cmd.Cmd):
 
         # Read $HOME/.pdbrc and ./.pdbrc
         self.rcLines = []
-        if 'HOME' in os.environ:
-            envHome = os.environ['HOME']
+        if readrc:
+            if 'HOME' in os.environ:
+                envHome = os.environ['HOME']
+                try:
+                    with open(os.path.join(envHome, ".pdbrc")) as rcFile:
+                        self.rcLines.extend(rcFile)
+                except OSError:
+                    pass
             try:
-                with open(os.path.join(envHome, ".pdbrc")) as rcFile:
+                with open(".pdbrc") as rcFile:
                     self.rcLines.extend(rcFile)
             except OSError:
                 pass
-        try:
-            with open(".pdbrc") as rcFile:
-                self.rcLines.extend(rcFile)
-        except OSError:
-            pass
 
         self.commands = {} # associates a command list to breakpoint numbers
         self.commands_doprompt = {} # for each bp num, tells if the prompt
@@ -187,8 +191,6 @@ class Pdb(bdb.Bdb, cmd.Cmd):
         self.message("\nProgram interrupted. (Use 'cont' to resume).")
         self.set_step()
         self.set_trace(frame)
-        # restore previous signal handler
-        signal.signal(signal.SIGINT, self._previous_sigint_handler)
 
     def reset(self):
         bdb.Bdb.reset(self)
@@ -300,7 +302,7 @@ class Pdb(bdb.Bdb, cmd.Cmd):
 
         # An 'Internal StopIteration' exception is an exception debug event
         # issued by the interpreter when handling a subgenerator run with
-        # 'yield from' or a generator controled by a for loop. No exception has
+        # 'yield from' or a generator controlled by a for loop. No exception has
         # actually occurred in this case. The debugger uses this debug event to
         # stop when the debuggee is returning from such generators.
         prefix = 'Internal ' if (not exc_traceback
@@ -337,6 +339,10 @@ class Pdb(bdb.Bdb, cmd.Cmd):
                                  (expr, newvalue, oldvalue))
 
     def interaction(self, frame, traceback):
+        # Restore the previous signal handler at the Pdb prompt.
+        if Pdb._previous_sigint_handler:
+            signal.signal(signal.SIGINT, Pdb._previous_sigint_handler)
+            Pdb._previous_sigint_handler = None
         if self.setup(frame, traceback):
             # no interaction desired at this time (happens if .pdbrc contains
             # a command like "continue")
@@ -1037,7 +1043,7 @@ class Pdb(bdb.Bdb, cmd.Cmd):
         """
         if not self.nosigint:
             try:
-                self._previous_sigint_handler = \
+                Pdb._previous_sigint_handler = \
                     signal.signal(signal.SIGINT, self.sigint_handler)
             except ValueError:
                 # ValueError happens when do_continue() is invoked from
@@ -1316,7 +1322,7 @@ class Pdb(bdb.Bdb, cmd.Cmd):
             return
         # Is it a class?
         if value.__class__ is type:
-            self.message('Class %s.%s' % (value.__module__, value.__name__))
+            self.message('Class %s.%s' % (value.__module__, value.__qualname__))
             return
         # None of the above...
         self.message(type(value))
@@ -1515,6 +1521,24 @@ class Pdb(bdb.Bdb, cmd.Cmd):
                 return fullname
         return None
 
+    def _runmodule(self, module_name):
+        self._wait_for_mainpyfile = True
+        self._user_requested_quit = False
+        import runpy
+        mod_name, mod_spec, code = runpy._get_module_details(module_name)
+        self.mainpyfile = self.canonic(code.co_filename)
+        import __main__
+        __main__.__dict__.clear()
+        __main__.__dict__.update({
+            "__name__": "__main__",
+            "__file__": self.mainpyfile,
+            "__package__": mod_spec.parent,
+            "__loader__": mod_spec.loader,
+            "__spec__": mod_spec,
+            "__builtins__": __builtins__,
+        })
+        self.run(code)
+
     def _runscript(self, filename):
         # The script has to run in __main__ namespace (or imports from
         # __main__ will break).
@@ -1575,8 +1599,11 @@ def runctx(statement, globals, locals):
 def runcall(*args, **kwds):
     return Pdb().runcall(*args, **kwds)
 
-def set_trace():
-    Pdb().set_trace(sys._getframe().f_back)
+def set_trace(*, header=None):
+    pdb = Pdb()
+    if header is not None:
+        pdb.message(header)
+    pdb.set_trace(sys._getframe().f_back)
 
 # Post-Mortem interface
 
@@ -1611,9 +1638,11 @@ def help():
     pydoc.pager(__doc__)
 
 _usage = """\
-usage: pdb.py [-c command] ... pyfile [arg] ...
+usage: pdb.py [-c command] ... [-m module | pyfile] [arg] ...
 
-Debug the Python program given by pyfile.
+Debug the Python program given by pyfile. Alternatively,
+an executable module or package to debug can be specified using
+the -m switch.
 
 Initial commands are read from .pdbrc files in your home directory
 and in the current directory, if they exist.  Commands supplied with
@@ -1626,29 +1655,33 @@ To let the script run up to a given line X in the debugged file, use
 def main():
     import getopt
 
-    opts, args = getopt.getopt(sys.argv[1:], 'hc:', ['--help', '--command='])
+    opts, args = getopt.getopt(sys.argv[1:], 'mhc:', ['--help', '--command='])
 
     if not args:
         print(_usage)
         sys.exit(2)
 
     commands = []
+    run_as_module = False
     for opt, optarg in opts:
         if opt in ['-h', '--help']:
             print(_usage)
             sys.exit()
         elif opt in ['-c', '--command']:
             commands.append(optarg)
+        elif opt in ['-m']:
+            run_as_module = True
 
     mainpyfile = args[0]     # Get script filename
-    if not os.path.exists(mainpyfile):
+    if not run_as_module and not os.path.exists(mainpyfile):
         print('Error:', mainpyfile, 'does not exist')
         sys.exit(1)
 
     sys.argv[:] = args      # Hide "pdb.py" and pdb options from argument list
 
     # Replace pdb's dir with script's dir in front of module search path.
-    sys.path[0] = os.path.dirname(mainpyfile)
+    if not run_as_module:
+        sys.path[0] = os.path.dirname(mainpyfile)
 
     # Note on saving/restoring sys.argv: it's a good idea when sys.argv was
     # modified by the script being debugged. It's a bad idea when it was
@@ -1658,7 +1691,10 @@ def main():
     pdb.rcLines.extend(commands)
     while True:
         try:
-            pdb._runscript(mainpyfile)
+            if run_as_module:
+                pdb._runmodule(mainpyfile)
+            else:
+                pdb._runscript(mainpyfile)
             if pdb._user_requested_quit:
                 break
             print("The program finished and will be restarted")
@@ -1669,6 +1705,9 @@ def main():
             # In most cases SystemExit does not warrant a post-mortem session.
             print("The program exited via sys.exit(). Exit status:", end=' ')
             print(sys.exc_info()[1])
+        except SyntaxError:
+            traceback.print_exc()
+            sys.exit(1)
         except:
             traceback.print_exc()
             print("Uncaught exception. Entering post mortem debugging")

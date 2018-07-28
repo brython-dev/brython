@@ -5,9 +5,10 @@ Written by Marc-Andre Lemburg (mal@lemburg.com).
 
 (c) Copyright CNRI, All Rights Reserved. NO WARRANTY.
 
-"""#"
+"""
 
-import builtins, sys
+import builtins
+import sys
 
 ### Registry and builtin stateless codec functions
 
@@ -20,8 +21,15 @@ __all__ = ["register", "lookup", "open", "EncodedFile", "BOM", "BOM_BE",
            "BOM_LE", "BOM32_BE", "BOM32_LE", "BOM64_BE", "BOM64_LE",
            "BOM_UTF8", "BOM_UTF16", "BOM_UTF16_LE", "BOM_UTF16_BE",
            "BOM_UTF32", "BOM_UTF32_LE", "BOM_UTF32_BE",
+           "CodecInfo", "Codec", "IncrementalEncoder", "IncrementalDecoder",
+           "StreamReader", "StreamWriter",
+           "StreamReaderWriter", "StreamRecoder",
+           "getencoder", "getdecoder", "getincrementalencoder",
+           "getincrementaldecoder", "getreader", "getwriter",
+           "encode", "decode", "iterencode", "iterdecode",
            "strict_errors", "ignore_errors", "replace_errors",
            "xmlcharrefreplace_errors",
+           "backslashreplace_errors", "namereplace_errors",
            "register_error", "lookup_error"]
 
 ### Constants
@@ -73,9 +81,19 @@ BOM64_BE = BOM_UTF32_BE
 ### Codec base classes (defining the API)
 
 class CodecInfo(tuple):
+    """Codec details when looking up the codec registry"""
+
+    # Private API to allow Python 3.4 to blacklist the known non-Unicode
+    # codecs in the standard library. A more general mechanism to
+    # reliably distinguish test encodings from other codecs will hopefully
+    # be defined for Python 3.5
+    #
+    # See http://bugs.python.org/issue19619
+    _is_text_encoding = True # Assume codecs are text encodings by default
 
     def __new__(cls, encode, decode, streamreader=None, streamwriter=None,
-        incrementalencoder=None, incrementaldecoder=None, name=None):
+        incrementalencoder=None, incrementaldecoder=None, name=None,
+        *, _is_text_encoding=None):
         self = tuple.__new__(cls, (encode, decode, streamreader, streamwriter))
         self.name = name
         self.encode = encode
@@ -84,11 +102,13 @@ class CodecInfo(tuple):
         self.incrementaldecoder = incrementaldecoder
         self.streamwriter = streamwriter
         self.streamreader = streamreader
+        if _is_text_encoding is not None:
+            self._is_text_encoding = _is_text_encoding
         return self
 
     def __repr__(self):
-        return "<%s.%s object for encoding %s at 0x%x>" % \
-                (self.__class__.__module__, self.__class__.__name__,
+        return "<%s.%s object for encoding %s at %#x>" % \
+                (self.__class__.__module__, self.__class__.__qualname__,
                  self.name, id(self))
 
 class Codec:
@@ -105,10 +125,11 @@ class Codec:
                     Python will use the official U+FFFD REPLACEMENT
                     CHARACTER for the builtin Unicode codecs on
                     decoding and '?' on encoding.
-         'surrogateescape' - replace with private codepoints U+DCnn.
+         'surrogateescape' - replace with private code points U+DCnn.
          'xmlcharrefreplace' - Replace with the appropriate XML
                                character reference (only for encoding).
-         'backslashreplace'  - Replace with backslashed escape sequences
+         'backslashreplace'  - Replace with backslashed escape sequences.
+         'namereplace'       - Replace with \\N{...} escape sequences
                                (only for encoding).
 
         The set of allowed values can be extended via register_error.
@@ -123,8 +144,8 @@ class Codec:
             'strict' handling.
 
             The method may not store state in the Codec instance. Use
-            StreamCodec for codecs which have to keep state in order to
-            make encoding/decoding efficient.
+            StreamWriter for codecs which have to keep state in order to
+            make encoding efficient.
 
             The encoder must be able to handle zero length input and
             return an empty object of the output object type in this
@@ -146,8 +167,8 @@ class Codec:
             'strict' handling.
 
             The method may not store state in the Codec instance. Use
-            StreamCodec for codecs which have to keep state in order to
-            make encoding/decoding efficient.
+            StreamReader for codecs which have to keep state in order to
+            make decoding efficient.
 
             The decoder must be able to handle zero length input and
             return an empty object of the output object type in this
@@ -238,7 +259,7 @@ class IncrementalDecoder(object):
     """
     def __init__(self, errors='strict'):
         """
-        Create a IncrementalDecoder instance.
+        Create an IncrementalDecoder instance.
 
         The IncrementalDecoder may use different error handling schemes by
         providing the errors keyword argument. See the module docstring
@@ -328,8 +349,7 @@ class StreamWriter(Codec):
 
         """ Creates a StreamWriter instance.
 
-            stream must be a file-like object open for writing
-            (binary) data.
+            stream must be a file-like object open for writing.
 
             The StreamWriter may use different error handling
             schemes by providing the errors keyword argument. These
@@ -341,7 +361,8 @@ class StreamWriter(Codec):
              'xmlcharrefreplace' - Replace with the appropriate XML
                                    character reference.
              'backslashreplace'  - Replace with backslashed escape
-                                   sequences (only for encoding).
+                                   sequences.
+             'namereplace'       - Replace with \\N{...} escape sequences.
 
             The set of allowed parameter values can be extended via
             register_error.
@@ -403,8 +424,7 @@ class StreamReader(Codec):
 
         """ Creates a StreamReader instance.
 
-            stream must be a file-like object open for reading
-            (binary) data.
+            stream must be a file-like object open for reading.
 
             The StreamReader may use different error handling
             schemes by providing the errors keyword argument. These
@@ -412,7 +432,8 @@ class StreamReader(Codec):
 
              'strict' - raise a ValueError (or a subclass)
              'ignore' - ignore the character and continue with the next
-             'replace'- replace with a suitable replacement character;
+             'replace'- replace with a suitable replacement character
+             'backslashreplace' - Replace with backslashed escape sequences;
 
             The set of allowed parameter values can be extended via
             register_error.
@@ -432,13 +453,12 @@ class StreamReader(Codec):
         """ Decodes data from the stream self.stream and returns the
             resulting object.
 
-            chars indicates the number of characters to read from the
-            stream. read() will never return more than chars
-            characters, but it might return less, if there are not enough
-            characters available.
+            chars indicates the number of decoded code points or bytes to
+            return. read() will never return more data than requested,
+            but it might return less, if there is not enough available.
 
-            size indicates the approximate maximum number of bytes to
-            read from the stream for decoding purposes. The decoder
+            size indicates the approximate maximum number of decoded
+            bytes or code points to read for decoding. The decoder
             can modify this setting as appropriate. The default value
             -1 indicates to read and decode as much as possible.  size
             is intended to prevent having to decode huge files in one
@@ -449,7 +469,7 @@ class StreamReader(Codec):
             will be returned, the rest of the input will be kept until the
             next call to read().
 
-            The method should use a greedy read strategy meaning that
+            The method should use a greedy read strategy, meaning that
             it should read as much data as is allowed within the
             definition of the encoding and the given size, e.g.  if
             optional encoding endings or state markers are available
@@ -460,16 +480,15 @@ class StreamReader(Codec):
             self.charbuffer = self._empty_charbuffer.join(self.linebuffer)
             self.linebuffer = None
 
+        if chars < 0:
+            # For compatibility with other read() methods that take a
+            # single argument
+            chars = size
+
         # read until we get the required number of characters (if available)
         while True:
             # can the request be satisfied from the character buffer?
-            if chars < 0:
-                if size < 0:
-                    if self.charbuffer:
-                        break
-                elif len(self.charbuffer) >= size:
-                    break
-            else:
+            if chars >= 0:
                 if len(self.charbuffer) >= chars:
                     break
             # we need more data
@@ -479,6 +498,8 @@ class StreamReader(Codec):
                 newdata = self.stream.read(size)
             # decode bytes (those remaining from the last call included)
             data = self.bytebuffer + newdata
+            if not data:
+                break
             try:
                 newchars, decodedbytes = self.decode(data, self.errors)
             except UnicodeDecodeError as exc:
@@ -585,7 +606,7 @@ class StreamReader(Codec):
     def readlines(self, sizehint=None, keepends=True):
 
         """ Read all lines available on the input stream
-            and return them as list of lines.
+            and return them as a list.
 
             Line breaks are implemented using the codec's decoder
             method and are included in the list entries.
@@ -721,7 +742,7 @@ class StreamReaderWriter:
         """
         return getattr(self.stream, name)
 
-    # these are needed to make "with codecs.open(...)" work properly
+    # these are needed to make "with StreamReaderWriter(...)" work properly
 
     def __enter__(self):
         return self
@@ -733,19 +754,18 @@ class StreamReaderWriter:
 
 class StreamRecoder:
 
-    """ StreamRecoder instances provide a frontend - backend
-        view of encoding data.
+    """ StreamRecoder instances translate data from one encoding to another.
 
         They use the complete set of APIs returned by the
         codecs.lookup() function to implement their task.
 
-        Data written to the stream is first decoded into an
-        intermediate format (which is dependent on the given codec
-        combination) and then written to the stream using an instance
-        of the provided Writer class.
+        Data written to the StreamRecoder is first decoded into an
+        intermediate format (depending on the "decode" codec) and then
+        written to the underlying stream using an instance of the provided
+        Writer class.
 
-        In the other direction, data is read from the stream using a
-        Reader instance and then return encoded data to the caller.
+        In the other direction, data is read from the underlying stream using
+        a Reader instance and then encoded and returned to the caller.
 
     """
     # Optional attributes set by the file wrappers below
@@ -757,22 +777,17 @@ class StreamRecoder:
 
         """ Creates a StreamRecoder instance which implements a two-way
             conversion: encode and decode work on the frontend (the
-            input to .read() and output of .write()) while
-            Reader and Writer work on the backend (reading and
-            writing to the stream).
+            data visible to .read() and .write()) while Reader and Writer
+            work on the backend (the data in stream).
 
-            You can use these objects to do transparent direct
-            recodings from e.g. latin-1 to utf-8 and back.
+            You can use these objects to do transparent
+            transcodings from e.g. latin-1 to utf-8 and back.
 
             stream must be a file-like object.
 
-            encode, decode must adhere to the Codec interface, Reader,
+            encode and decode must adhere to the Codec interface; Reader and
             Writer must be factory functions or classes providing the
-            StreamReader, StreamWriter interface resp.
-
-            encode and decode are needed for the frontend translation,
-            Reader and Writer for the backend translation. Unicode is
-            used as intermediate encoding.
+            StreamReader and StreamWriter interfaces resp.
 
             Error handling is done in the same way as defined for the
             StreamWriter/Readers.
@@ -847,7 +862,7 @@ class StreamRecoder:
 
 ### Shortcuts
 
-def open(filename, mode='rb', encoding=None, errors='strict', buffering=1):
+def open(filename, mode='r', encoding=None, errors='strict', buffering=1):
 
     """ Open an encoded file using the given mode and return
         a wrapped version providing transparent encoding/decoding.
@@ -857,10 +872,8 @@ def open(filename, mode='rb', encoding=None, errors='strict', buffering=1):
         codecs. Output is also codec dependent and will usually be
         Unicode as well.
 
-        Files are always opened in binary mode, even if no binary mode
-        was specified. This is done to avoid data loss due to encodings
-        using 8-bit values. The default file mode is 'rb' meaning to
-        open the file in binary read mode.
+        Underlying encoded files are always opened in binary mode.
+        The default file mode is 'r', meaning to open the file in read mode.
 
         encoding specifies the encoding which is to be used for the
         file.
@@ -896,13 +909,13 @@ def EncodedFile(file, data_encoding, file_encoding=None, errors='strict'):
     """ Return a wrapped version of file which provides transparent
         encoding translation.
 
-        Strings written to the wrapped file are interpreted according
-        to the given data_encoding and then written to the original
-        file as string using file_encoding. The intermediate encoding
+        Data written to the wrapped file is decoded according
+        to the given data_encoding and then encoded to the underlying
+        file using file_encoding. The intermediate data type
         will usually be Unicode but depends on the specified codecs.
 
-        Strings are read from the file using file_encoding and then
-        passed back to the caller as string using data_encoding.
+        Bytes read from the file are decoded using file_encoding and then
+        passed back to the caller encoded using data_encoding.
 
         If file_encoding is not given, it defaults to data_encoding.
 
@@ -1001,7 +1014,7 @@ def iterencode(iterator, encoding, errors='strict', **kwargs):
     """
     Encoding iterator.
 
-    Encodes the input strings from the iterator using a IncrementalEncoder.
+    Encodes the input strings from the iterator using an IncrementalEncoder.
 
     errors and kwargs are passed through to the IncrementalEncoder
     constructor.
@@ -1019,7 +1032,7 @@ def iterdecode(iterator, encoding, errors='strict', **kwargs):
     """
     Decoding iterator.
 
-    Decodes the input strings from the iterator using a IncrementalDecoder.
+    Decodes the input strings from the iterator using an IncrementalDecoder.
 
     errors and kwargs are passed through to the IncrementalDecoder
     constructor.
@@ -1055,7 +1068,7 @@ def make_encoding_map(decoding_map):
         during translation.
 
         One example where this happens is cp875.py which decodes
-        multiple character to \u001a.
+        multiple character to \\u001a.
 
     """
     m = {}
@@ -1074,6 +1087,7 @@ try:
     replace_errors = lookup_error("replace")
     xmlcharrefreplace_errors = lookup_error("xmlcharrefreplace")
     backslashreplace_errors = lookup_error("backslashreplace")
+    namereplace_errors = lookup_error("namereplace")
 except LookupError:
     # In --disable-unicode builds, these error handler are missing
     strict_errors = None
@@ -1081,6 +1095,7 @@ except LookupError:
     replace_errors = None
     xmlcharrefreplace_errors = None
     backslashreplace_errors = None
+    namereplace_errors = None
 
 # Tell modulefinder that using codecs probably needs the encodings
 # package

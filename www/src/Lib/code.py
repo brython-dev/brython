@@ -136,25 +136,18 @@ class InteractiveInterpreter:
         The output is written by self.write(), below.
 
         """
+        sys.last_type, sys.last_value, last_tb = ei = sys.exc_info()
+        sys.last_traceback = last_tb
         try:
-            type, value, tb = sys.exc_info()
-            sys.last_type = type
-            sys.last_value = value
-            sys.last_traceback = tb
-            tblist = traceback.extract_tb(tb)
-            del tblist[:1]
-            lines = traceback.format_list(tblist)
-            if lines:
-                lines.insert(0, "Traceback (most recent call last):\n")
-            lines.extend(traceback.format_exception_only(type, value))
+            lines = traceback.format_exception(ei[0], ei[1], last_tb.tb_next)
+            if sys.excepthook is sys.__excepthook__:
+                self.write(''.join(lines))
+            else:
+                # If someone has set sys.excepthook, we let that take precedence
+                # over self.write
+                sys.excepthook(ei[0], ei[1], last_tb)
         finally:
-            tblist = tb = None
-        if sys.excepthook is sys.__excepthook__:
-            self.write(''.join(lines))
-        else:
-            # If someone has set sys.excepthook, we let that take precedence
-            # over self.write
-            sys.excepthook(type, value, tb)
+            last_tb = ei = None
 
     def write(self, data):
         """Write a string.
@@ -192,7 +185,7 @@ class InteractiveConsole(InteractiveInterpreter):
         """Reset the input buffer."""
         self.buffer = []
 
-    def interact(self, banner=None):
+    def interact(self, banner=None, exitmsg=None):
         """Closely emulate the interactive Python console.
 
         The optional banner argument specifies the banner to print
@@ -201,6 +194,11 @@ class InteractiveConsole(InteractiveInterpreter):
         followed by the current class name in parentheses (so as not
         to confuse this with the real interpreter -- since it's so
         close!).
+
+        The optional exitmsg argument specifies the exit message
+        printed when exiting. Pass the empty string to suppress
+        printing an exit message. If exitmsg is not given or None,
+        a default message is printed.
 
         """
         try:
@@ -236,6 +234,10 @@ class InteractiveConsole(InteractiveInterpreter):
                 self.write("\nKeyboardInterrupt\n")
                 self.resetbuffer()
                 more = 0
+        if exitmsg is None:
+            self.write('now exiting %s...\n' % self.__class__.__name__)
+        elif exitmsg != '':
+            self.write('%s\n' % exitmsg)
 
     def push(self, line):
         """Push a line to the interpreter.
@@ -273,7 +275,7 @@ class InteractiveConsole(InteractiveInterpreter):
 
 
 
-def interact(banner=None, readfunc=None, local=None):
+def interact(banner=None, readfunc=None, local=None, exitmsg=None):
     """Closely emulate the interactive Python interpreter.
 
     This is a backwards compatible interface to the InteractiveConsole
@@ -285,6 +287,7 @@ def interact(banner=None, readfunc=None, local=None):
     banner -- passed to InteractiveConsole.interact()
     readfunc -- if not None, replaces InteractiveConsole.raw_input()
     local -- passed to InteractiveInterpreter.__init__()
+    exitmsg -- passed to InteractiveConsole.interact()
 
     """
     console = InteractiveConsole(local)
@@ -295,8 +298,18 @@ def interact(banner=None, readfunc=None, local=None):
             import readline
         except ImportError:
             pass
-    console.interact(banner)
+    console.interact(banner, exitmsg)
 
 
 if __name__ == "__main__":
-    interact()
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-q', action='store_true',
+                       help="don't print version and copyright messages")
+    args = parser.parse_args()
+    if args.q or sys.flags.quiet:
+        banner = ''
+    else:
+        banner = None
+    interact(banner)

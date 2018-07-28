@@ -11,13 +11,15 @@ from _csv import Error, __version__, writer, reader, register_dialect, \
                  __doc__
 from _csv import Dialect as _Dialect
 
+from collections import OrderedDict
 from io import StringIO
 
-__all__ = [ "QUOTE_MINIMAL", "QUOTE_ALL", "QUOTE_NONNUMERIC", "QUOTE_NONE",
-            "Error", "Dialect", "__doc__", "excel", "excel_tab",
-            "field_size_limit", "reader", "writer",
-            "register_dialect", "get_dialect", "list_dialects", "Sniffer",
-            "unregister_dialect", "__version__", "DictReader", "DictWriter" ]
+__all__ = ["QUOTE_MINIMAL", "QUOTE_ALL", "QUOTE_NONNUMERIC", "QUOTE_NONE",
+           "Error", "Dialect", "__doc__", "excel", "excel_tab",
+           "field_size_limit", "reader", "writer",
+           "register_dialect", "get_dialect", "list_dialects", "Sniffer",
+           "unregister_dialect", "__version__", "DictReader", "DictWriter",
+           "unix_dialect"]
 
 class Dialect:
     """Describe a CSV dialect.
@@ -115,7 +117,7 @@ class DictReader:
         # values
         while row == []:
             row = next(self.reader)
-        d = dict(zip(self.fieldnames, row))
+        d = OrderedDict(zip(self.fieldnames, row))
         lf = len(self.fieldnames)
         lr = len(row)
         if lf < lr:
@@ -143,20 +145,17 @@ class DictWriter:
 
     def _dict_to_list(self, rowdict):
         if self.extrasaction == "raise":
-            wrong_fields = [k for k in rowdict if k not in self.fieldnames]
+            wrong_fields = rowdict.keys() - self.fieldnames
             if wrong_fields:
                 raise ValueError("dict contains fields not in fieldnames: "
-                                 + ", ".join(wrong_fields))
-        return [rowdict.get(key, self.restval) for key in self.fieldnames]
+                                 + ", ".join([repr(x) for x in wrong_fields]))
+        return (rowdict.get(key, self.restval) for key in self.fieldnames)
 
     def writerow(self, rowdict):
         return self.writer.writerow(self._dict_to_list(rowdict))
 
     def writerows(self, rowdicts):
-        rows = []
-        for rowdict in rowdicts:
-            rows.append(self._dict_to_list(rowdict))
-        return self.writer.writerows(rows)
+        return self.writer.writerows(map(self._dict_to_list, rowdicts))
 
 # Guard Sniffer's type checking against builds that exclude complex()
 try:
@@ -216,10 +215,10 @@ class Sniffer:
         """
 
         matches = []
-        for restr in ('(?P<delim>[^\w\n"\'])(?P<space> ?)(?P<quote>["\']).*?(?P=quote)(?P=delim)', # ,".*?",
-                      '(?:^|\n)(?P<quote>["\']).*?(?P=quote)(?P<delim>[^\w\n"\'])(?P<space> ?)',   #  ".*?",
-                      '(?P<delim>>[^\w\n"\'])(?P<space> ?)(?P<quote>["\']).*?(?P=quote)(?:$|\n)',  # ,".*?"
-                      '(?:^|\n)(?P<quote>["\']).*?(?P=quote)(?:$|\n)'):                            #  ".*?" (no delim, no space)
+        for restr in (r'(?P<delim>[^\w\n"\'])(?P<space> ?)(?P<quote>["\']).*?(?P=quote)(?P=delim)', # ,".*?",
+                      r'(?:^|\n)(?P<quote>["\']).*?(?P=quote)(?P<delim>[^\w\n"\'])(?P<space> ?)',   #  ".*?",
+                      r'(?P<delim>[^\w\n"\'])(?P<space> ?)(?P<quote>["\']).*?(?P=quote)(?:$|\n)',   # ,".*?"
+                      r'(?:^|\n)(?P<quote>["\']).*?(?P=quote)(?:$|\n)'):                            #  ".*?" (no delim, no space)
             regexp = re.compile(restr, re.DOTALL | re.MULTILINE)
             matches = regexp.findall(data)
             if matches:
@@ -231,20 +230,21 @@ class Sniffer:
         quotes = {}
         delims = {}
         spaces = 0
+        groupindex = regexp.groupindex
         for m in matches:
-            n = regexp.groupindex['quote'] - 1
+            n = groupindex['quote'] - 1
             key = m[n]
             if key:
                 quotes[key] = quotes.get(key, 0) + 1
             try:
-                n = regexp.groupindex['delim'] - 1
+                n = groupindex['delim'] - 1
                 key = m[n]
             except KeyError:
                 continue
             if key and (delimiters is None or key in delimiters):
                 delims[key] = delims.get(key, 0) + 1
             try:
-                n = regexp.groupindex['space'] - 1
+                n = groupindex['space'] - 1
             except KeyError:
                 continue
             if m[n]:
@@ -307,7 +307,7 @@ class Sniffer:
         charFrequency = {}
         modes = {}
         delims = {}
-        start, end = 0, min(chunkLength, len(data))
+        start, end = 0, chunkLength
         while start < len(data):
             iteration += 1
             for line in data[start:end]:
@@ -336,7 +336,7 @@ class Sniffer:
 
             # build a list of possible delimiters
             modeList = modes.items()
-            total = float(chunkLength * iteration)
+            total = float(min(chunkLength * iteration, len(data)))
             # (rows of consistent data) / (number of rows) = 100%
             consistency = 1.0
             # minimum consistency threshold

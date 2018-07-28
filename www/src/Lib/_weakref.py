@@ -33,6 +33,8 @@ def getweakrefcount(obj):
 def getweakrefs(obj):
     return obj
 
+def _remove_dead_weakref(*args):
+    pass
 
 def proxy(obj,callback=None):
     return ProxyType(obj)

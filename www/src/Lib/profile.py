@@ -1,441 +1,590 @@
-# Module for profiling brython code.
+#! /usr/bin/env python3
 #
-# Written by Jonathan L. Verner
+# Class for profiling python code. rev 1.0  6/2/94
 #
-# Interface tries to follow the official python profile module by Sjoerd Mullender...
-# which was hacked somewhat by: Guido van Rossum
+# Written by James Roskind
+# Based on prior profile module by Sjoerd Mullender...
+#   which was hacked somewhat by: Guido van Rossum
 
-"""
-    Module for profiling Python code run in the browser via Brython.
+"""Class for profiling Python code."""
 
-    The module tries to provide interface which is as similar to the official python
-    profile module. The notable difference is that it does not allow user-defined
-    timers and does not do any callibration. Methods which in the standard module
-    save the data to a file save a JSON-serialized version of the data to the browser's
-    local storage instead.
+# Copyright Disney Enterprises, Inc.  All Rights Reserved.
+# Licensed to PSF under a Contributor Agreement
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied.  See the License for the specific language
+# governing permissions and limitations under the License.
 
-    Basic usage:
 
-        from profile import Profile
+import sys
+import time
+import marshal
 
-        p = Profile()
-        p.enable()
-        do_something()
-        do_something_else()
-        p.create_stats()
+__all__ = ["run", "runctx", "Profile"]
 
-    Which will print out something like:
+# Sample timer for use with
+#i_count = 0
+#def integer_timer():
+#       global i_count
+#       i_count = i_count + 1
+#       return i_count
+#itimes = integer_timer # replace with C coded timer returning integers
 
-            1 run in 0.249 seconds
+class _Utils:
+    """Support class for utility functions which are shared by
+    profile.py and cProfile.py modules.
+    Not supposed to be used directly.
+    """
 
-        Ordered by: standard name (averaged over 1 run)
+    def __init__(self, profiler):
+        self.profiler = profiler
 
-        ncalls  tottime  percall  cumtime  var percall  module.function:lineno
-         101/1    0.023    0.000    1.012        0.010               .fact:180
+    def run(self, statement, filename, sort):
+        prof = self.profiler()
+        try:
+            prof.run(statement)
+        except SystemExit:
+            pass
+        finally:
+            self._show(prof, filename, sort)
 
-    where each line corresponds to a function and the different columns correspond  to
+    def runctx(self, statement, globals, locals, filename, sort):
+        prof = self.profiler()
+        try:
+            prof.runctx(statement, globals, locals)
+        except SystemExit:
+            pass
+        finally:
+            self._show(prof, filename, sort)
 
-        ncalls      is the total number number of times the function was called
-                    (if the function was called non-recursively, the second number
-                    behind the backslash indicates how many calls were top-level calls
-                    in the recursion)
-
-        tottime     is the total time (in seconds) spent in the function not including subcalls
-
-        percall     is the average time spent in the function per call, not including subcalls
-
-        cumtime     is the total time spent in function including subcalls
-
-        var percall is the average time spent in function per one non-recursive call
-
-        standard name is the name of the function in the form module.function_name:line_number
-
-    Optionally one can also use the following form, taking advantage of running the code
-    several times and averaging it out:
-
-        from profile import Profile
-
-        p = Profile()
-        p.call(function_to_profile,200,arg1,arg2,kwarg1=v1)
-
-    which will print out something like:
-
-            200 runs in 0.249 seconds
-
-        Ordered by: standard name (averaged over 1 run)
-
-        ncalls  tottime  percall  cumtime  var percall  module.function:lineno
-         101/1    0.023    0.000    1.012        0.010  function_to_profile:16
-
-    Collected profile data can be saved to local storage for later use:
-
-        p.dump_stats('run1')
-
-    Profile data can also be read back:
-
-        data = Stats('run1')
-
-    And aggregated together
-
-        data.add(p.dump_stats())
-        print(data)
-"""
-
-import _profile
-import json
-from browser.local_storage import storage
-
-__all__ = ["run","runctx","status","Stats","Profile"]
-
-class Stats:
-    @classmethod
-    def current_stats(cls):
-        return Stats(_profile.data,1)
-
-    def __init__(self,data,nruns=None):
-        """
-           If data is a string, it should be a JSON-serialized version of Stats.
-
-           Otherwise it should be a javascript object containing the collected profile data.
-           This other form is not meant for public use.
-        """
-        self._ordering = "standard name"
-        self._reverse_order = False
-        self._sk = None
-
-        if isinstance(data,str):
-            self.from_json(data)
+    def _show(self, prof, filename, sort):
+        if filename is not None:
+            prof.dump_stats(filename)
         else:
-            self._data = data
-            self.nruns = nruns
-            self.line_counts = {k:data.line_counts[k] for k in dir(data.line_counts)}
-            if hasattr(self._data,'profile_duration'):
-                self.duration = self._data.profile_duration
-            else:
-                self.duration = _profile.elapsed()
-            self.function_totals = {k:data.call_times_proper[k] for k in dir(data.call_times_proper)}
-            self.function_cumulated_totals = {k:data.call_times[k] for k in dir(data.call_times)}
-            self.function_counts = {k:data.call_counts[k] for k in dir(data.call_counts)}
-            self.function_counts_nonrec = {k:data.call_counts_norec[k] for k in dir(data.call_counts)}
-            self.callers = {}
-            for func in dir(data.callers):
-                func_data = data.callers[func]
-                fd = {}
-                for caller in dir(func_data):
-                    cumulated,total,count,count_norec = func_data[caller]
-                    fd[caller] = {'cumulated':cumulated,'total':total,'count':count,'count_norec':count_norec}
-                self.callers[func] = fd
-
-    def __json__(self):
-        return json.dumps({
-            'nruns':self.nruns,
-            'line_counts':self.line_counts,
-            'duration':self.duration,
-            'function_counts':self.function_counts,
-            'function_counts_nonrec':self.function_counts_nonrec,
-            'function_cumulated_totals':self.function_cumulated_totals,
-            'function_totals':self.function_totals,
-            'callers':self.callers
-        })
-
-    def from_json(self,json_data):
-        self._data=None
-        data = json.loads(json_data)
-        self.nruns = data['nruns']
-        self.line_counts = data['line_counts']
-        self.duration = data['duration']
-        self.function_counts = data['function_counts']
-        self.function_counts_nonrec = data['function_counts_nonrec']
-        self.function_cumulated_totals = data['function_cumulated_totals']
-        self.function_totals = data['function_totals']
-        self.callers = data['callers']
+            prof.print_stats(sort)
 
 
-    def add(self,*stats):
-        """
-            Add profile data from other Stats objects or from
-            Stats objects serialized into JSON and saved under
-            in browser's local storage under the given keys.
+#**************************************************************************
+# The following are the static member functions for the profiler class
+# Note that an instance of Profile() is *not* needed to call them.
+#**************************************************************************
 
-            @stats should be a sequence of items where each item is
-            either (a) Stats instance (b) a key under which a Stats
-            instance is saved in JSON-serialized form in local storage
-            (c) a JSON-serialized instance of a Stats object.
-        """
-        for s in stats:
-            if isinstance(s,Stats):
-                self._add_stat(s)
-            else:
-                if s in storage:
-                    st = Stats(storage[s])
-                else:
-                    st = Stats(s)
-                self._add_stat(st)
+def run(statement, filename=None, sort=-1):
+    """Run statement under profiler optionally saving results in filename
 
-    def _add_stat(self,stat):
-        for f in stat.function_totals.keys():
-            if f not in self.function_counts.keys():
-                self.function_totals[f] = 0
-                self.function_cumulated_totals[f]=0
-                self.function_counts[f] = 0
-                self.function_counts_nonrec[f] = 0
-            self.function_totals[f] += stat.function_totals[f]
-            self.function_cumulated_totals[f] += stat.function_cumulated_totals[f]
-            self.function_counts[f] += stat.function_counts[f]
-            self.function_counts_nonrec[f] += stat.function_counts_nonrec[f]
-        for (f,callers) in stat.callers.items():
-            if f not in self.callers:
-                sc = self.callers[f] = {}
-            for (caller,values) in callers.items():
-                if caller not in sc:
-                    sc[caller] = {'cumulated':0,'total':0,'count':0,'count_norec':0}
-                sc[caller] = { k:sc[caller][k]+values[k] for k in ['cumulated','total','count','count_norec'] }
-        if self._sk is not None:
-            self.sort()
+    This function takes a single argument that can be passed to the
+    "exec" statement, and an optional file name.  In all cases this
+    routine attempts to "exec" its first argument and gather profiling
+    statistics from the execution. If no file name is present, then this
+    function automatically prints a simple profiling report, sorted by the
+    standard name string (file/line/function-name) that is presented in
+    each line.
+    """
+    return _Utils(Profile).run(statement, filename, sort)
 
+def runctx(statement, globals, locals, filename=None, sort=-1):
+    """Run statement under profiler, supplying your own globals and locals,
+    optionally saving results in filename.
 
-    def called_by_data(self, standard_calee_name):
-        """
-            Returns a dict indexed by standard function names
-            (or module names in case of top-level calls).
-            For each such function `f`, the dict contains
-            data about time spent in the function argument:`standard_calee_name`
-            when called from `f`.
+    statement and filename have the same semantics as profile.run
+    """
+    return _Utils(Profile).runctx(statement, globals, locals, filename, sort)
 
-            The data available is 'cumulated', 'total', 'count', 'count_norec'
-            (see documentation of the method:`sort` for meaning of the keys)
-        """
-        call_data = self.callers[standard_calee_name]
-        ret = {}
-        for key, data in call_data.items():
-            if ':' in key:
-                location, func_name, func_def_line = key.split(':')
-                standard_caller_name = func_name+':'+func_def_line
-            else:
-                ln, mod = key.split(',')
-                standard_caller_name = mod
-
-            if not standard_caller_name in ret:
-                ret[standard_caller_name] = {'cumulated':0,'total':0,'count':0,'count_norec':0}
-            for k, v in data.items():
-                ret[standard_caller_name][k] += v
-        return ret
-
-    def relative_data(self, standard_name, relative_to):
-        """
-            Returns data how much time was spent in the funcition argument:`standard_name`
-            relative to the time spent in argument:`relative_to`.
-
-            The data available is 'cumulated', 'total', 'count', 'count_norec'
-            (see documentation of the method:`sort` for meaning of the keys)
-        """
-
-        baseline = {
-            'total':self.function_totals[relative_to],
-            'cumulated':self.function_cumulated_totals[relative_to],
-            'counts':self.function_counts[relative_to],
-            'counts_nonrec':self.function_counts_nonrec[relative_to]
-        }
-        callers = self.called_by_data(standard_name)
-        if relative_to in callers:
-            ret = {}
-            data = callers[relative_to]
-            for key, v in data.items():
-                if baseline[key] == 0:
-                    ret[key] = float('inf')
-                else:
-                    ret[key] = data[key]/float(baseline[key])
-        else:
-            ret = {'cumulated':0,'total':0,'count':0,'count_norec':0}
-        return ret
-
-
-
-    def sort(self,key='standard name'):
-        """
-            Sort the stats according to key. Key can be any of the columns
-            in the table resulting from converting Stats to a string, i.e.:
-
-             - standard name (module.function:line_number)
-             - ncalls        (number of calls the function is called)
-             - tottime       (total time spent in function not including subcalls)
-             - percall       (average time spent per call, not including subcalls)
-             - cumtime       (total time spent in function including subcalls)
-             - var percall   (average time spent in function per one non-recursive call)
-
-        """
-        self._ordering = key
-        self._sk = self._sorted_keys()
-
-    def _sorted_keys(self):
-        if self._ordering == 'standard name':
-            return sorted(self.function_totals.keys())
-        if self._ordering == 'ncalls':
-            keys = self.function_counts.items()
-        elif self._ordering == 'tottime':
-            keys = self.function_totals.items()
-        elif self._ordering == 'percall':
-            keys = [ (k,self.function_totals[k]/self.function_counts[k]) for k in self.function_counts.keys() ]
-        elif self._ordering == 'cumtime':
-            keys = self.function_cumulated_totals.items()
-        elif self._ordering == 'var percall':
-            keys = [ (k,self.function_cumulated_totals[k]/self.function_counts_nonrec[k]) for k in self.function_counts_nonrec.keys() ]
-        return [k for k,v in sorted(keys,key=lambda x:x[1], reverse=not self._reverse_order)]
-
-    def __str__(self):
-        if self.nruns == 1:
-            nruns = " 1 run"
-        else:
-            nruns = " "+str(self.nruns)+" runs"
-
-        summary = " "*8+nruns+" in " + str(self.duration/1000) + " seconds"
-        headers = [" ncalls"," tottime"," percall"," cumtime", " var percall", " module.function:lineno"]
-        cols = []
-        if self._sk is None:
-            self.sort()
-        for func in self._sk:
-            ncalls = "{:.0f}".format(self.function_counts[func]/self.nruns)
-            if self.function_counts[func] > self.function_counts_nonrec[func]:
-                ncalls +="/{:.0f}".format(self.function_counts_nonrec[func]/self.nruns)
-            tottime = self.function_totals[func]/self.nruns
-            percall = (tottime/self.function_counts[func])/self.nruns
-            cumtime = self.function_cumulated_totals[func]/self.nruns
-            varpercall = (cumtime/self.function_counts_nonrec[func])/self.nruns
-            cols.append((ncalls,"{:.3f}".format(tottime/1000),"{:.3f}".format(percall/1000),"{:.3f}".format(cumtime/1000),"{:.3f}".format(varpercall/1000),func))
-        header = ' '.join(headers)
-        table = [summary,"","Ordered by: "+self._ordering+" (averaged over "+nruns+")","",header]
-        for col in cols:
-            ln = []
-            for pos in range(len(headers)):
-                ln.append(col[pos].rjust(len(headers[pos])))
-            table.append(' '.join(ln))
-        return "\n".join(table)
-
-    def __repr__(self):
-        return self.__str__()
 
 class Profile:
-    def __init__(self):
-        self._profile = None
+    """Profiler class.
 
-    def enable(self):
-        """
-            Start collecting profile data.
-        """
-        _profile.start()
+    self.cur is always a tuple.  Each such tuple corresponds to a stack
+    frame that is currently active (self.cur[-2]).  The following are the
+    definitions of its members.  We use this external "parallel stack" to
+    avoid contaminating the program that we are profiling. (old profiler
+    used to write into the frames local dictionary!!) Derived classes
+    can change the definition of some entries, as long as they leave
+    [-2:] intact (frame and previous tuple).  In case an internal error is
+    detected, the -3 element is used as the function name.
 
-    def disable(self):
-        """
-            Stop collecting profile data.
-        """
-        _profile.pause()
+    [ 0] = Time that needs to be charged to the parent frame's function.
+           It is used so that a function call will not have to access the
+           timing data for the parent frame.
+    [ 1] = Total time spent in this frame's function, excluding time in
+           subfunctions (this latter is tallied in cur[2]).
+    [ 2] = Total time spent in subfunctions, excluding time executing the
+           frame's function (this latter is tallied in cur[1]).
+    [-3] = Name of the function that corresponds to this frame.
+    [-2] = Actual frame that we correspond to (used to sync exception handling).
+    [-1] = Our parent 6-tuple (corresponds to frame.f_back).
 
-    def clear(self):
-        """
-            Reset all profile counters (clear collected data) & stop collecting.
-        """
-        _profile.clear()
+    Timing data for each function is stored as a 5-tuple in the dictionary
+    self.timings[].  The index is always the name stored in self.cur[-3].
+    The following are the definitions of the members:
+
+    [0] = The number of times this function was called, not counting direct
+          or indirect recursion,
+    [1] = Number of times this function appears on the stack, minus one
+    [2] = Total time spent internal to this function
+    [3] = Cumulative time that this function was present on the stack.  In
+          non-recursive functions, this is the total execution time from start
+          to finish of each invocation of a function, including time spent in
+          all subfunctions.
+    [4] = A dictionary indicating for each function name, the number of times
+          it was called by us.
+    """
+
+    bias = 0  # calibration constant
+
+    def __init__(self, timer=None, bias=None):
+        self.timings = {}
+        self.cur = None
+        self.cmd = ""
+        self.c_func_name = ""
+
+        if bias is None:
+            bias = self.bias
+        self.bias = bias     # Materialize in local dict for lookup speed.
+
+        if not timer:
+            self.timer = self.get_time = time.process_time
+            self.dispatcher = self.trace_dispatch_i
+        else:
+            self.timer = timer
+            t = self.timer() # test out timer function
+            try:
+                length = len(t)
+            except TypeError:
+                self.get_time = timer
+                self.dispatcher = self.trace_dispatch_i
+            else:
+                if length == 2:
+                    self.dispatcher = self.trace_dispatch
+                else:
+                    self.dispatcher = self.trace_dispatch_l
+                # This get_time() implementation needs to be defined
+                # here to capture the passed-in timer in the parameter
+                # list (for performance).  Note that we can't assume
+                # the timer() result contains two values in all
+                # cases.
+                def get_time_timer(timer=timer, sum=sum):
+                    return sum(timer())
+                self.get_time = get_time_timer
+        self.t = self.get_time()
+        self.simulate_call('profiler')
+
+    # Heavily optimized dispatch routine for time.process_time() timer
+
+    def trace_dispatch(self, frame, event, arg):
+        timer = self.timer
+        t = timer()
+        t = t[0] + t[1] - self.t - self.bias
+
+        if event == "c_call":
+            self.c_func_name = arg.__name__
+
+        if self.dispatch[event](self, frame,t):
+            t = timer()
+            self.t = t[0] + t[1]
+        else:
+            r = timer()
+            self.t = r[0] + r[1] - t # put back unrecorded delta
+
+    # Dispatch routine for best timer program (return = scalar, fastest if
+    # an integer but float works too -- and time.process_time() relies on that).
+
+    def trace_dispatch_i(self, frame, event, arg):
+        timer = self.timer
+        t = timer() - self.t - self.bias
+
+        if event == "c_call":
+            self.c_func_name = arg.__name__
+
+        if self.dispatch[event](self, frame, t):
+            self.t = timer()
+        else:
+            self.t = timer() - t  # put back unrecorded delta
+
+    # Dispatch routine for macintosh (timer returns time in ticks of
+    # 1/60th second)
+
+    def trace_dispatch_mac(self, frame, event, arg):
+        timer = self.timer
+        t = timer()/60.0 - self.t - self.bias
+
+        if event == "c_call":
+            self.c_func_name = arg.__name__
+
+        if self.dispatch[event](self, frame, t):
+            self.t = timer()/60.0
+        else:
+            self.t = timer()/60.0 - t  # put back unrecorded delta
+
+    # SLOW generic dispatch routine for timer returning lists of numbers
+
+    def trace_dispatch_l(self, frame, event, arg):
+        get_time = self.get_time
+        t = get_time() - self.t - self.bias
+
+        if event == "c_call":
+            self.c_func_name = arg.__name__
+
+        if self.dispatch[event](self, frame, t):
+            self.t = get_time()
+        else:
+            self.t = get_time() - t # put back unrecorded delta
+
+    # In the event handlers, the first 3 elements of self.cur are unpacked
+    # into vrbls w/ 3-letter names.  The last two characters are meant to be
+    # mnemonic:
+    #     _pt  self.cur[0] "parent time"   time to be charged to parent frame
+    #     _it  self.cur[1] "internal time" time spent directly in the function
+    #     _et  self.cur[2] "external time" time spent in subfunctions
+
+    def trace_dispatch_exception(self, frame, t):
+        rpt, rit, ret, rfn, rframe, rcur = self.cur
+        if (rframe is not frame) and rcur:
+            return self.trace_dispatch_return(rframe, t)
+        self.cur = rpt, rit+t, ret, rfn, rframe, rcur
+        return 1
+
+
+    def trace_dispatch_call(self, frame, t):
+        if self.cur and frame.f_back is not self.cur[-2]:
+            rpt, rit, ret, rfn, rframe, rcur = self.cur
+            if not isinstance(rframe, Profile.fake_frame):
+                assert rframe.f_back is frame.f_back, ("Bad call", rfn,
+                                                       rframe, rframe.f_back,
+                                                       frame, frame.f_back)
+                self.trace_dispatch_return(rframe, 0)
+                assert (self.cur is None or \
+                        frame.f_back is self.cur[-2]), ("Bad call",
+                                                        self.cur[-3])
+        fcode = frame.f_code
+        fn = (fcode.co_filename, fcode.co_firstlineno, fcode.co_name)
+        self.cur = (t, 0, 0, fn, frame, self.cur)
+        timings = self.timings
+        if fn in timings:
+            cc, ns, tt, ct, callers = timings[fn]
+            timings[fn] = cc, ns + 1, tt, ct, callers
+        else:
+            timings[fn] = 0, 0, 0, 0, {}
+        return 1
+
+    def trace_dispatch_c_call (self, frame, t):
+        fn = ("", 0, self.c_func_name)
+        self.cur = (t, 0, 0, fn, frame, self.cur)
+        timings = self.timings
+        if fn in timings:
+            cc, ns, tt, ct, callers = timings[fn]
+            timings[fn] = cc, ns+1, tt, ct, callers
+        else:
+            timings[fn] = 0, 0, 0, 0, {}
+        return 1
+
+    def trace_dispatch_return(self, frame, t):
+        if frame is not self.cur[-2]:
+            assert frame is self.cur[-2].f_back, ("Bad return", self.cur[-3])
+            self.trace_dispatch_return(self.cur[-2], 0)
+
+        # Prefix "r" means part of the Returning or exiting frame.
+        # Prefix "p" means part of the Previous or Parent or older frame.
+
+        rpt, rit, ret, rfn, frame, rcur = self.cur
+        rit = rit + t
+        frame_total = rit + ret
+
+        ppt, pit, pet, pfn, pframe, pcur = rcur
+        self.cur = ppt, pit + rpt, pet + frame_total, pfn, pframe, pcur
+
+        timings = self.timings
+        cc, ns, tt, ct, callers = timings[rfn]
+        if not ns:
+            # This is the only occurrence of the function on the stack.
+            # Else this is a (directly or indirectly) recursive call, and
+            # its cumulative time will get updated when the topmost call to
+            # it returns.
+            ct = ct + frame_total
+            cc = cc + 1
+
+        if pfn in callers:
+            callers[pfn] = callers[pfn] + 1  # hack: gather more
+            # stats such as the amount of time added to ct courtesy
+            # of this specific call, and the contribution to cc
+            # courtesy of this call.
+        else:
+            callers[pfn] = 1
+
+        timings[rfn] = cc, ns - 1, tt + rit, ct, callers
+
+        return 1
+
+
+    dispatch = {
+        "call": trace_dispatch_call,
+        "exception": trace_dispatch_exception,
+        "return": trace_dispatch_return,
+        "c_call": trace_dispatch_c_call,
+        "c_exception": trace_dispatch_return,  # the C function returned
+        "c_return": trace_dispatch_return,
+        }
+
+
+    # The next few functions play with self.cmd. By carefully preloading
+    # our parallel stack, we can force the profiled result to include
+    # an arbitrary string as the name of the calling function.
+    # We use self.cmd as that string, and the resulting stats look
+    # very nice :-).
+
+    def set_cmd(self, cmd):
+        if self.cur[-1]: return   # already set
+        self.cmd = cmd
+        self.simulate_call(cmd)
+
+    class fake_code:
+        def __init__(self, filename, line, name):
+            self.co_filename = filename
+            self.co_line = line
+            self.co_name = name
+            self.co_firstlineno = 0
+
+        def __repr__(self):
+            return repr((self.co_filename, self.co_line, self.co_name))
+
+    class fake_frame:
+        def __init__(self, code, prior):
+            self.f_code = code
+            self.f_back = prior
+
+    def simulate_call(self, name):
+        code = self.fake_code('profile', 0, name)
+        if self.cur:
+            pframe = self.cur[-2]
+        else:
+            pframe = None
+        frame = self.fake_frame(code, pframe)
+        self.dispatch['call'](self, frame, 0)
+
+    # collect stats from pending stack, including getting final
+    # timings for self.cmd frame.
+
+    def simulate_cmd_complete(self):
+        get_time = self.get_time
+        t = get_time() - self.t
+        while self.cur[-1]:
+            # We *can* cause assertion errors here if
+            # dispatch_trace_return checks for a frame match!
+            self.dispatch['return'](self, self.cur[-2], t)
+            t = 0
+        self.t = get_time() - t
+
+
+    def print_stats(self, sort=-1):
+        import pstats
+        pstats.Stats(self).strip_dirs().sort_stats(sort). \
+                  print_stats()
+
+    def dump_stats(self, file):
+        with open(file, 'wb') as f:
+            self.create_stats()
+            marshal.dump(self.stats, f)
 
     def create_stats(self):
-        """
-            Stop collecting profile data and load them into
-            a Stats object (which is returned).
-        """
-        _profile.stop()
-        self._profile = Stats(_profile.data,1)
-        return self._profile
+        self.simulate_cmd_complete()
+        self.snapshot_stats()
 
-    def status(self):
-        return _profile.status()
+    def snapshot_stats(self):
+        self.stats = {}
+        for func, (cc, ns, tt, ct, callers) in self.timings.items():
+            callers = callers.copy()
+            nc = 0
+            for callcnt in callers.values():
+                nc += callcnt
+            self.stats[func] = cc, nc, tt, ct, callers
 
-    def print_stats(self,sort='standard name'):
-        """
-            Print stats ordered according to the sort key @sort:
-            The key can be any of the columns in the table
-            which is printed out, i.e.:
 
-             - standard name (module.function:line_number)
-             - ncalls        (number of calls the function is called)
-             - tottime       (total time spent in function not including subcalls)
-             - percall       (average time spent per call, not including subcalls)
-             - cumtime       (total time spent in function including subcalls)
-             - var percall   (average time spent in function per one non-recursive call)
+    # The following two methods can be called by clients to use
+    # a profiler to profile a statement, given as a string.
 
-        """
-        if self._profile is None:
-            print("No profile available. Need to collect profile data first using the enable() and disable() methods.")
-        else:
-            self._profile.sort(sort)
-            print(str(self._profile))
+    def run(self, cmd):
+        import __main__
+        dict = __main__.__dict__
+        return self.runctx(cmd, dict, dict)
 
-    def dump_stats(self,storage_key=None):
-        """
-            Saves a JSON-serialized version of the Stats object
-            to local storage under the @storage_key key.
-        """
-        if storage_key is not None:
-            storage[storage_key]=self._profile.__json__()
-        else:
-            return self._profile
+    def runctx(self, cmd, globals, locals):
+        self.set_cmd(cmd)
+        sys.setprofile(self.dispatcher)
+        try:
+            exec(cmd, globals, locals)
+        finally:
+            sys.setprofile(None)
+        return self
 
-    def run(self,cmd,nruns=200):
-        """
-            Runs the command @cmd and collects profile data.
-            The command is run @ntimes (200 by default) and
-            the data is averaged over these runs.
-        """
-        self.runctx(cmd,globals(),locals(),ntimes=nruns)
+    # This method is more useful to profile a single function call.
+    def runcall(self, func, *args, **kw):
+        self.set_cmd(repr(func))
+        sys.setprofile(self.dispatcher)
+        try:
+            return func(*args, **kw)
+        finally:
+            sys.setprofile(None)
 
-    def runctx(self,cmd,globals,locals,nruns=200):
-        """
-            Runs the command @cmd with the given @globlas and @locals
-            and collects profile data. The command is run @ntimes (200 by default) and
-            the data is averaged over these runs.
-        """
-        _profile.stop()
-        _profile.clear()
-        _profile.start()
-        for i in range(nruns):
-            _profile.run(cmd,globals=globals,locals=locals)
-        _profile.stop()
-        self._profile = Stats(_profile.data,nruns)
 
-    def runcall(self,func,ntimes,*args,**kwargs):
-        """
-            Calls the function @func with arguments @args, @kwargs
-            and collects profile data. The function is called @ntimes
-            and the data is averaged over these runs.
-        """
-        _profile.stop()
-        _profile.clear()
-        _profile.start()
-        for i in range(ntimes):
-            ret=func(*args,**kwargs)
-        _profile.stop()
-        self._profile = Stats(_profile.data,ntimes)
-        return self._profile
+    #******************************************************************
+    # The following calculates the overhead for using a profiler.  The
+    # problem is that it takes a fair amount of time for the profiler
+    # to stop the stopwatch (from the time it receives an event).
+    # Similarly, there is a delay from the time that the profiler
+    # re-starts the stopwatch before the user's code really gets to
+    # continue.  The following code tries to measure the difference on
+    # a per-event basis.
+    #
+    # Note that this difference is only significant if there are a lot of
+    # events, and relatively little user code per event.  For example,
+    # code with small functions will typically benefit from having the
+    # profiler calibrated for the current platform.  This *could* be
+    # done on the fly during init() time, but it is not worth the
+    # effort.  Also note that if too large a value specified, then
+    # execution time on some functions will actually appear as a
+    # negative number.  It is *normal* for some functions (with very
+    # low call counts) to have such negative stats, even if the
+    # calibration figure is "correct."
+    #
+    # One alternative to profile-time calibration adjustments (i.e.,
+    # adding in the magic little delta during each event) is to track
+    # more carefully the number of events (and cumulatively, the number
+    # of events during sub functions) that are seen.  If this were
+    # done, then the arithmetic could be done after the fact (i.e., at
+    # display time).  Currently, we track only call/return events.
+    # These values can be deduced by examining the callees and callers
+    # vectors for each functions.  Hence we *can* almost correct the
+    # internal time figure at print time (note that we currently don't
+    # track exception event processing counts).  Unfortunately, there
+    # is currently no similar information for cumulative sub-function
+    # time.  It would not be hard to "get all this info" at profiler
+    # time.  Specifically, we would have to extend the tuples to keep
+    # counts of this in each frame, and then extend the defs of timing
+    # tuples to include the significant two figures. I'm a bit fearful
+    # that this additional feature will slow the heavily optimized
+    # event/time ratio (i.e., the profiler would run slower, fur a very
+    # low "value added" feature.)
+    #**************************************************************
 
-def run(cmd,nruns=200):
-    """
-        Runs the command @cmd and collects profile data.
-        The command is run @ntimes (200 by default) and
-        the data is averaged over these runs. Returns
-        a Stats object with the collected data.
-    """
-    return runctx(cmd,globals(),locals(),nruns=nruns)
+    def calibrate(self, m, verbose=0):
+        if self.__class__ is not Profile:
+            raise TypeError("Subclasses must override .calibrate().")
 
-def runctx(cmd,globals=None,locals=None,nruns=200):
-    """
-        Runs the command @cmd with with the given @globlas and @locals
-        and collects profile data. The command is run @nruns (200 by default) and
-        the data is averaged over these runs. Returns
-        a Stats object with the collected data.
-    """
-    _locals = locals or {}
-    _globals = globals or {}
-    _profile.start()
-    _profile.run(cmd,_globals,_locals,nruns)
-    _profile.stop()
-    return Stats(_profile.data,nruns)
+        saved_bias = self.bias
+        self.bias = 0
+        try:
+            return self._calibrate_inner(m, verbose)
+        finally:
+            self.bias = saved_bias
 
-status = _profile.status
+    def _calibrate_inner(self, m, verbose):
+        get_time = self.get_time
+
+        # Set up a test case to be run with and without profiling.  Include
+        # lots of calls, because we're trying to quantify stopwatch overhead.
+        # Do not raise any exceptions, though, because we want to know
+        # exactly how many profile events are generated (one call event, +
+        # one return event, per Python-level call).
+
+        def f1(n):
+            for i in range(n):
+                x = 1
+
+        def f(m, f1=f1):
+            for i in range(m):
+                f1(100)
+
+        f(m)    # warm up the cache
+
+        # elapsed_noprofile <- time f(m) takes without profiling.
+        t0 = get_time()
+        f(m)
+        t1 = get_time()
+        elapsed_noprofile = t1 - t0
+        if verbose:
+            print("elapsed time without profiling =", elapsed_noprofile)
+
+        # elapsed_profile <- time f(m) takes with profiling.  The difference
+        # is profiling overhead, only some of which the profiler subtracts
+        # out on its own.
+        p = Profile()
+        t0 = get_time()
+        p.runctx('f(m)', globals(), locals())
+        t1 = get_time()
+        elapsed_profile = t1 - t0
+        if verbose:
+            print("elapsed time with profiling =", elapsed_profile)
+
+        # reported_time <- "CPU seconds" the profiler charged to f and f1.
+        total_calls = 0.0
+        reported_time = 0.0
+        for (filename, line, funcname), (cc, ns, tt, ct, callers) in \
+                p.timings.items():
+            if funcname in ("f", "f1"):
+                total_calls += cc
+                reported_time += tt
+
+        if verbose:
+            print("'CPU seconds' profiler reported =", reported_time)
+            print("total # calls =", total_calls)
+        if total_calls != m + 1:
+            raise ValueError("internal error: total calls = %d" % total_calls)
+
+        # reported_time - elapsed_noprofile = overhead the profiler wasn't
+        # able to measure.  Divide by twice the number of calls (since there
+        # are two profiler events per call in this test) to get the hidden
+        # overhead per event.
+        mean = (reported_time - elapsed_noprofile) / 2.0 / total_calls
+        if verbose:
+            print("mean stopwatch overhead per profile event =", mean)
+        return mean
+
+#****************************************************************************
+
+def main():
+    import os
+    from optparse import OptionParser
+
+    usage = "profile.py [-o output_file_path] [-s sort] scriptfile [arg] ..."
+    parser = OptionParser(usage=usage)
+    parser.allow_interspersed_args = False
+    parser.add_option('-o', '--outfile', dest="outfile",
+        help="Save stats to <outfile>", default=None)
+    parser.add_option('-s', '--sort', dest="sort",
+        help="Sort order when printing to stdout, based on pstats.Stats class",
+        default=-1)
+
+    if not sys.argv[1:]:
+        parser.print_usage()
+        sys.exit(2)
+
+    (options, args) = parser.parse_args()
+    sys.argv[:] = args
+
+    if len(args) > 0:
+        progname = args[0]
+        sys.path.insert(0, os.path.dirname(progname))
+        with open(progname, 'rb') as fp:
+            code = compile(fp.read(), progname, 'exec')
+        globs = {
+            '__file__': progname,
+            '__name__': '__main__',
+            '__package__': None,
+            '__cached__': None,
+        }
+        runctx(code, globs, None, options.outfile, options.sort)
+    else:
+        parser.print_usage()
+    return parser
+
+# When invoked as main program, invoke the profiler on a script
+if __name__ == '__main__':
+    main()
