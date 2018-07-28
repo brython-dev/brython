@@ -205,11 +205,11 @@ var $get_closest_ancestor_node = $B.parser.$get_closest_ancestor_node = function
  * but must post-pone it to the transform method of $YieldFromMarkerNode.
  */
 var $add_yield_from_code = $B.parser.$add_yield_from_code = function(yield_ctx) {
+
     var pnode = $get_closest_ancestor_node(yield_ctx)
     var generator = $get_scope(yield_ctx).context.tree[0]
 
-
-    pnode.yield_atoms.splice(pnode.yield_atoms.indexOf(this),1)
+    pnode.yield_atoms.splice(pnode.yield_atoms.indexOf(this), 1)
     generator.yields.splice(generator.yields.indexOf(this), 1)
 
     /*
@@ -279,6 +279,7 @@ var $add_yield_from_code = $B.parser.$add_yield_from_code = function(yield_ctx) 
         // Add internal names to node bindings
         pnode.bindings[repl[attr]] = true
     }
+
     $tokenize(pnode, replace_with)
 
     var params = {
@@ -290,10 +291,12 @@ var $add_yield_from_code = $B.parser.$add_yield_from_code = function(yield_ctx) 
     if (yield_ctx.parent.type === 'assign') {
         params.save_result = true
         params.assign_ctx = yield_ctx.parent
-        params.save_result_rank = pnode.parent.children.length-pnode.parent.children.indexOf(pnode)
+        params.save_result_rank = pnode.parent.children.length -
+            pnode.parent.children.indexOf(pnode)
     }
 
-    replace_node(pnode, new $YieldFromMarkerNode(params))
+    var new_node = new $YieldFromMarkerNode(params)
+    replace_node(pnode, new_node)
 
 }
 
@@ -5559,6 +5562,10 @@ var $TryCtx = $B.parser.$TryCtx = function(context){
         while(1){
             if(pos == node.parent.children.length){break}
             var ctx = node.parent.children[pos].context.tree[0]
+            if(ctx === undefined){
+                // This is the case for "marker" nodes in yield from
+                break
+            }
             if(ctx.type == 'except'){
                 // move the except clauses below catch_node
                 if(has_else){
@@ -8412,7 +8419,8 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
                             "Unsupported Python keyword '" + name + "'")
                     }
                     context = $transition(context, name)
-                }else if(typeof $operators[name] == 'string'){
+                }else if(typeof $operators[name] == 'string' &&
+                        ['is_not', 'not_in'].indexOf(name) == -1){
                     // Literal operators : "and", "or", "is", "not"
                     // The additional test is to exclude the name "constructor"
                     if(name == 'is'){
