@@ -12,10 +12,9 @@ import inspect
 import types
 
 
-stdlib_name = 'pyexpat'
+stdlib_name = '_contextvars'
 ns = {}
 exec('import %s;print(dir(%s))' % (stdlib_name, stdlib_name), ns)
-print(dir(ns["pyexpat"]))
 
 if('.') in stdlib_name:
     package, name = stdlib_name.split('.')
