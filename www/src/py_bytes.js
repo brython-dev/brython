@@ -222,11 +222,17 @@ bytes.__lt__ = function(self, other){
 bytes.__mul__ = function(){
     var $ = $B.args('__mul__', 2, {self: null, other: null}, ['self', 'other'],
         arguments, {}, null, null),
-        other = $B.PyNumber_Index($.other),
-        res = bytes.$factory()
+        other = $B.PyNumber_Index($.other)
+    var t = [],
+        source = $.self.source,
+        slen = source.length
     for(var i = 0; i < other; i++){
-        res.source = res.source.concat($.self.source)
+        for(var j = 0; j < slen; j++){
+            t.push(source[j])
+        }
     }
+    var res = bytes.$factory()
+    res.source = t
     return res
 }
 
@@ -351,7 +357,12 @@ bytes.find = function() {
         arguments, {start: 0, end: -1}, null, null),
         sub = $.sub,
         start = $.start
-    if(! sub.__class__){
+    if(typeof sub == "number"){
+        if(sub < 0 || sub > 255){
+            throw _b_.ValueError.$factory("byte must be in range(0, 256)")
+        }
+        return $.self.source.indexOf(sub)
+    }else if(! sub.__class__){
         throw _b_.TypeError.$factory("first argument must be a bytes-like " +
             "object, not '" + $B.get_class($.sub).__name__ + "'")
     }else if(! sub.__class__.$buffer_protocol){
@@ -595,8 +606,8 @@ function load_decoder(enc){
 function load_encoder(enc){
     // load table from encodings/<enc>.py
     if(from_unicode[enc] === undefined){
-        var mod = _b_.__import__("encodings." + enc),
-            table = mod[enc].decoding_table
+        var mod = _b_.__import__("encodings." + enc)
+        table = mod[enc].decoding_table
         from_unicode[enc] = {}
         for(var i = 0; i < table.length; i++){
             from_unicode[enc][table.charCodeAt(i)] = i
@@ -778,8 +789,9 @@ function encode(s, encoding){
           break
         default:
             try{load_encoder(enc)}
-            catch(err){throw _b_.LookupError.$factory("unknown encoding: " +
-                enc)}
+            catch(err){
+                throw _b_.LookupError.$factory("unknown encoding: " + enc)
+            }
 
             for(var i = 0, len = s.length; i < len; i++){
                 var cp = s.charCodeAt(i) // code point
