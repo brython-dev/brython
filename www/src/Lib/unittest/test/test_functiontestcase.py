@@ -1,6 +1,6 @@
 import unittest
 
-from .support import LoggingResult
+from unittest.test.support import LoggingResult
 
 
 class Test_FunctionTestCase(unittest.TestCase):
@@ -142,3 +142,7 @@ class Test_FunctionTestCase(unittest.TestCase):
         test = unittest.FunctionTestCase(lambda: None, description=desc)
 
         self.assertEqual(test.shortDescription(), "this tests foo")
+
+
+if __name__ == "__main__":
+    unittest.main()

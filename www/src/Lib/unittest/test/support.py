@@ -1,13 +1,5 @@
 import unittest
 
-## take from support/__init__.py, and modified.
-## eventually will need to take full functionality from support/__init__.py
-def run_with_locale(catstr, *locales):
-    pass
-
-def cpython_only(test):
-    return unittest.skip('')
-
 
 class TestEquality(object):
     """Used as a mixin for TestCase"""
@@ -33,8 +25,6 @@ class TestHashing(object):
             try:
                 if not hash(obj_1) == hash(obj_2):
                     self.fail("%r and %r do not hash equal" % (obj_1, obj_2))
-            except KeyboardInterrupt:
-                raise
             except Exception as e:
                 self.fail("Problem hashing %r and %r: %s" % (obj_1, obj_2, e))
 
@@ -43,13 +33,11 @@ class TestHashing(object):
                 if hash(obj_1) == hash(obj_2):
                     self.fail("%s and %s hash equal, but shouldn't" %
                               (obj_1, obj_2))
-            except KeyboardInterrupt:
-                raise
             except Exception as e:
                 self.fail("Problem hashing %s and %s: %s" % (obj_1, obj_2, e))
 
 
-class LoggingResult(unittest.TestResult):
+class _BaseLoggingResult(unittest.TestResult):
     def __init__(self, log):
         self._events = log
         super().__init__()
@@ -60,7 +48,7 @@ class LoggingResult(unittest.TestResult):
 
     def startTestRun(self):
         self._events.append('startTestRun')
-        super(LoggingResult, self).startTestRun()
+        super().startTestRun()
 
     def stopTest(self, test):
         self._events.append('stopTest')
@@ -68,7 +56,7 @@ class LoggingResult(unittest.TestResult):
 
     def stopTestRun(self):
         self._events.append('stopTestRun')
-        super(LoggingResult, self).stopTestRun()
+        super().stopTestRun()
 
     def addFailure(self, *args):
         self._events.append('addFailure')
@@ -76,7 +64,7 @@ class LoggingResult(unittest.TestResult):
 
     def addSuccess(self, *args):
         self._events.append('addSuccess')
-        super(LoggingResult, self).addSuccess(*args)
+        super().addSuccess(*args)
 
     def addError(self, *args):
         self._events.append('addError')
@@ -84,15 +72,39 @@ class LoggingResult(unittest.TestResult):
 
     def addSkip(self, *args):
         self._events.append('addSkip')
-        super(LoggingResult, self).addSkip(*args)
+        super().addSkip(*args)
 
     def addExpectedFailure(self, *args):
         self._events.append('addExpectedFailure')
-        super(LoggingResult, self).addExpectedFailure(*args)
+        super().addExpectedFailure(*args)
 
     def addUnexpectedSuccess(self, *args):
         self._events.append('addUnexpectedSuccess')
-        super(LoggingResult, self).addUnexpectedSuccess(*args)
+        super().addUnexpectedSuccess(*args)
+
+
+class LegacyLoggingResult(_BaseLoggingResult):
+    """
+    A legacy TestResult implementation, without an addSubTest method,
+    which records its method calls.
+    """
+
+    @property
+    def addSubTest(self):
+        raise AttributeError
+
+
+class LoggingResult(_BaseLoggingResult):
+    """
+    A TestResult implementation which records its method calls.
+    """
+
+    def addSubTest(self, test, subtest, err):
+        if err is None:
+            self._events.append('addSubTestSuccess')
+        else:
+            self._events.append('addSubTestFailure')
+        super().addSubTest(test, subtest, err)
 
 
 class ResultWithNoStartTestRunStopTestRun(object):

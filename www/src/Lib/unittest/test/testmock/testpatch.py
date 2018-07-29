@@ -10,7 +10,7 @@ from unittest.test.testmock import support
 from unittest.test.testmock.support import SomeClass, is_instance
 
 from unittest.mock import (
-    NonCallableMock, CallableMixin, patch, sentinel,
+    NonCallableMock, CallableMixin, sentinel,
     MagicMock, Mock, NonCallableMagicMock, patch, _patch,
     DEFAULT, call, _get_target
 )
@@ -377,7 +377,7 @@ class PatchTest(unittest.TestCase):
 
     def test_patchobject_wont_create_by_default(self):
         try:
-            @patch.object(SomeClass, 'frooble', sentinel.Frooble)
+            @patch.object(SomeClass, 'ord', sentinel.Frooble)
             def test():
                 self.fail('Patching non existent attributes should fail')
 
@@ -386,7 +386,27 @@ class PatchTest(unittest.TestCase):
             pass
         else:
             self.fail('Patching non existent attributes should fail')
-        self.assertFalse(hasattr(SomeClass, 'frooble'))
+        self.assertFalse(hasattr(SomeClass, 'ord'))
+
+
+    def test_patch_builtins_without_create(self):
+        @patch(__name__+'.ord')
+        def test_ord(mock_ord):
+            mock_ord.return_value = 101
+            return ord('c')
+
+        @patch(__name__+'.open')
+        def test_open(mock_open):
+            m = mock_open.return_value
+            m.read.return_value = 'abcd'
+
+            fobj = open('doesnotexists.txt')
+            data = fobj.read()
+            fobj.close()
+            return data
+
+        self.assertEqual(test_ord(), 101)
+        self.assertEqual(test_open(), 'abcd')
 
 
     def test_patch_with_static_methods(self):
@@ -949,8 +969,14 @@ class PatchTest(unittest.TestCase):
     def test_autospec_function(self):
         @patch('%s.function' % __name__, autospec=True)
         def test(mock):
+            function.assert_not_called()
+            self.assertRaises(AssertionError, function.assert_called)
+            self.assertRaises(AssertionError, function.assert_called_once)
             function(1)
+            self.assertRaises(AssertionError, function.assert_not_called)
             function.assert_called_with(1)
+            function.assert_called()
+            function.assert_called_once()
             function(2, 3)
             function.assert_called_with(2, 3)
 
@@ -1779,7 +1805,49 @@ class PatchTest(unittest.TestCase):
         patched()
         self.assertIs(os.path, path)
 
+    def test_stopall_lifo(self):
+        stopped = []
+        class thing(object):
+            one = two = three = None
 
+        def get_patch(attribute):
+            class mypatch(_patch):
+                def stop(self):
+                    stopped.append(attribute)
+                    return super(mypatch, self).stop()
+            return mypatch(lambda: thing, attribute, None, None,
+                           False, None, None, None, {})
+        [get_patch(val).start() for val in ("one", "two", "three")]
+        patch.stopall()
+
+        self.assertEqual(stopped, ["three", "two", "one"])
+
+
+    def test_special_attrs(self):
+        def foo(x=0):
+            """TEST"""
+            return x
+        with patch.object(foo, '__defaults__', (1, )):
+            self.assertEqual(foo(), 1)
+        self.assertEqual(foo(), 0)
+
+        with patch.object(foo, '__doc__', "FUN"):
+            self.assertEqual(foo.__doc__, "FUN")
+        self.assertEqual(foo.__doc__, "TEST")
+
+        with patch.object(foo, '__module__', "testpatch2"):
+            self.assertEqual(foo.__module__, "testpatch2")
+        self.assertEqual(foo.__module__, 'unittest.test.testmock.testpatch')
+
+        with patch.object(foo, '__annotations__', dict([('s', 1, )])):
+            self.assertEqual(foo.__annotations__, dict([('s', 1, )]))
+        self.assertEqual(foo.__annotations__, dict())
+
+        def foo(*a, x=0):
+            return x
+        with patch.object(foo, '__kwdefaults__', dict([('x', 1, )])):
+            self.assertEqual(foo(), 1)
+        self.assertEqual(foo(), 0)
 
 if __name__ == '__main__':
     unittest.main()
