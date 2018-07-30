@@ -49,10 +49,10 @@ if command == "sdist":
 setup(
     name='brython',
 
-    version='3.6.2',
+    version='3.7.0rc1',
     description='Brython is an implementation of Python 3 running in the browser',
 
-    long_description = LONG_DESCRIPTION,
+    long_description=LONG_DESCRIPTION,
 
     # The project's main homepage.
     url='http://brython.info',
