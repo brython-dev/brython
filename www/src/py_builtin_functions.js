@@ -507,6 +507,7 @@ function $$eval(src, _globals, _locals){
     }else{
         if(_globals.$jsobj){var items = _globals.$jsobj}
         else{var items = _globals.$string_dict}
+        eval("$locals_" + globals_id + " = _globals.$string_dict")
         for(var item in items){
             var item1 = $B.to_alias(item)
             try{
