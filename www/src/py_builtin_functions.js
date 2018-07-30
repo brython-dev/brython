@@ -426,7 +426,7 @@ function $$eval(src, _globals, _locals){
 
         var local_scope = {
             module: globals_id,
-            id: current_locals_id,
+            id: globals_id,
             binding: {},
             bindings: {}
         }
@@ -436,7 +436,7 @@ function $$eval(src, _globals, _locals){
         }
         var global_scope = {
             module: globals_id,
-            id: current_globals_id,
+            id: globals_id,
             binding: {},
             bindings: {}
         }
@@ -497,8 +497,13 @@ function $$eval(src, _globals, _locals){
         var gobj = current_frame[3],
             ex = ''
         ex += 'var $locals_' + current_globals_id + '=gobj;' // needed for generators
-        ex += 'var $locals_' + globals_id + '=gobj;'
+        //ex += 'var $locals_' + globals_id + '=gobj;'
         eval(ex)
+        for(var attr in gobj){
+            if(! attr.startsWith("$")){
+                eval("$locals_" + locals_id +"[attr] = gobj[attr]")
+            }
+        }
     }else{
         if(_globals.$jsobj){var items = _globals.$jsobj}
         else{var items = _globals.$string_dict}
@@ -516,6 +521,7 @@ function $$eval(src, _globals, _locals){
     }
 
     // Initialise block locals
+
     if(_locals === _b_.None){
         if(_globals !== _b_.None){
             eval('var $locals_' + locals_id + ' = $locals_' + globals_id)
@@ -523,10 +529,11 @@ function $$eval(src, _globals, _locals){
             var lobj = current_frame[1],
                 ex = ''
             for(var attr in current_frame[1]){
+                if(attr.startsWith("$")){continue}
                 ex += '$locals_' + locals_id + '["' + attr +
                     '"] = current_frame[1]["' + attr + '"];'
+                eval(ex)
             }
-            eval(ex)
         }
     }else{
         if(_locals.$jsobj){var items = _locals.$jsobj}
@@ -542,7 +549,8 @@ function $$eval(src, _globals, _locals){
             }
         }
     }
-
+    eval("$locals_" + locals_id + ".$src = src")
+    
     var root = $B.py2js(src, globals_id, locals_id, parent_scope),
         js, gns, lns
 
@@ -627,7 +635,9 @@ function $$eval(src, _globals, _locals){
             }
         }else{
             for(var attr in lns){
-                current_frame[1][attr] = lns[attr]
+                if(attr !== "$src"){
+                    current_frame[1][attr] = lns[attr]
+                }
             }
         }
 
@@ -642,7 +652,9 @@ function $$eval(src, _globals, _locals){
             }
         }else{
             for(var attr in gns){
-                current_frame[3][attr] = gns[attr]
+                if(attr !== "$src"){
+                    current_frame[3][attr] = gns[attr]
+                }
             }
         }
 
