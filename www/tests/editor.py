@@ -82,7 +82,10 @@ def to_str(xx):
     return str(xx)
 
 info = sys.implementation.version
-doc['version'].text = '%s.%s.%s' % (info.major, info.minor, info.micro)
+version = '%s.%s.%s' % (info.major, info.minor, info.micro)
+if info.releaselevel == "rc":
+    version += f"rc{info.serial}"
+doc['version'].text = version
 
 output = ''
 
