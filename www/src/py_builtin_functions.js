@@ -507,6 +507,7 @@ function $$eval(src, _globals, _locals){
     }else{
         if(_globals.$jsobj){var items = _globals.$jsobj}
         else{var items = _globals.$string_dict}
+        eval("$locals_" + globals_id + " = _globals.$string_dict")
         for(var item in items){
             var item1 = $B.to_alias(item)
             try{
@@ -550,7 +551,7 @@ function $$eval(src, _globals, _locals){
         }
     }
     eval("$locals_" + locals_id + ".$src = src")
-    
+
     var root = $B.py2js(src, globals_id, locals_id, parent_scope),
         js, gns, lns
 
@@ -596,7 +597,7 @@ function $$eval(src, _globals, _locals){
         }
 
         js = root.to_js()
-
+        
         if(is_exec){
             var locals_obj = eval("$locals_" + locals_id),
                 globals_obj = eval("$locals_" + globals_id)
