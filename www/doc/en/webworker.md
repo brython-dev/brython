@@ -68,7 +68,7 @@ Then we need to tie these methods to the relevant messages. This is done through
 `WorkerCommon.bind_message` method. Its first argument is the name of the message and
 the second argument is the method which will be called when a message arrives.
 
-```
+```python
 current_worker.bind_message('ping', pong)
 current_worker.bind_message('quit', quit)
 ```
