@@ -1602,7 +1602,7 @@ $B.set_func_names(TagSum, "<dom>")
 
 $B.TagSum = TagSum // used in _html.js and _svg.js
 
-var win =  JSObject.$factory(_window) //{__class__:$WinDict}
+var win = JSObject.$factory(_window) //{__class__:$WinDict}
 
 win.get_postMessage = function(msg,targetOrigin){
     if(_b_.isinstance(msg, dict)){

@@ -28,7 +28,10 @@
                 var $ = $B.args("bind", 2, {elt: null, evt: null}, ["elt", "evt"],
                     arguments, {}, null, null)
                 return function(callback){
-                    if(_b_.isinstance($.elt, $B.DOMNode)){
+                    if($.elt.__class__ === $B.JSObject){ // eg window
+                        $B.$call($B.$getattr($.elt, "bind"))($.evt, callback)
+                        return callback
+                    }else if(_b_.isinstance($.elt, $B.DOMNode)){
                         // DOM element
                         $B.DOMNode.bind($.elt, $.evt, callback)
                         return callback

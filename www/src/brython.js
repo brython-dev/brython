@@ -64,8 +64,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',1]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-07-31 13:58:19.425822"
-__BRYTHON__.timestamp=1533038299425
+__BRYTHON__.compiled_date="2018-07-31 18:45:25.111516"
+__BRYTHON__.timestamp=1533055525111
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_Cvars","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -12089,7 +12089,9 @@ var browser={$package: true,$is_package: true,__initialized__: true,__package__:
 browser.__path__=browser.__file__
 if(! $B.isa_web_worker ){update(browser,{$$alert:function(message){window.alert($B.builtins.str.$factory(message))},bind:function(){
 var $=$B.args("bind",2,{elt: null,evt: null},["elt","evt"],arguments,{},null,null)
-return function(callback){if(_b_.isinstance($.elt,$B.DOMNode)){
+return function(callback){if($.elt.__class__===$B.JSObject){
+$B.$call($B.$getattr($.elt,"bind"))($.evt,callback)
+return callback}else if(_b_.isinstance($.elt,$B.DOMNode)){
 $B.DOMNode.bind($.elt,$.evt,callback)
 return callback}else if(_b_.isinstance($.elt,_b_.str)){
 var items=document.querySelectorAll($.elt)
