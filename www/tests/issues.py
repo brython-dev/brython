@@ -2000,6 +2000,16 @@ for _ in range(2):
     for _ in range(2):
         pass
 
+
+# issue 887
+try:
+    exec('def f(): return 1/0\nf()')
+except ZeroDivisionError:
+    stack_trace = tb.format_exc()
+    assert 'exec(\'def f(): return 1/0\\nf()\')\n' in stack_trace
+    assert 'f()\n' in stack_trace
+    assert 'def f(): return 1/0\n' in stack_trace
+
 # issue 900
 "".format(**globals())
 
