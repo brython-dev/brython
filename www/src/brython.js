@@ -64,8 +64,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',1]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-07-31 12:54:04.058647"
-__BRYTHON__.timestamp=1533034444058
+__BRYTHON__.compiled_date="2018-07-31 13:08:54.222835"
+__BRYTHON__.timestamp=1533035334222
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_Cvars","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -4963,8 +4963,7 @@ A.$factory=factory
 return A}
 return object})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins
-$B.$class_constructor=function(class_name,class_obj,bases,parents_names,kwargs){
-bases=bases ||[]
+$B.$class_constructor=function(class_name,class_obj,bases,parents_names,kwargs){bases=bases ||[]
 var metaclass
 var module=class_obj.__module__
 if(module===undefined){
@@ -5105,7 +5104,13 @@ method_wrapper.__str__=method_wrapper.__repr__=function(self){return "<method '"
 type.__repr__=type.__str__=function(kls){var qualname=kls.__name__
 if(kls.__module__ !="builtins"){qualname=kls.__module__ + "." + qualname}
 return "<class '" + qualname + "'>"}
-type.__getattribute__=function(klass,attr){switch(attr){case "__bases__":
+type.__getattribute__=function(klass,attr){switch(attr){case "__annotations__":
+var mro=[klass].concat(klass.__mro__)
+var res=_b_.dict.$factory()
+for(var i=mro.length - 1;i >=0;i--){var ann=mro[i].__annotations__
+if(ann){for(var key in ann.$string_dict){res.$string_dict[key]=ann.$string_dict[key]}}}
+return res
+case "__bases__":
 var res=klass.__bases__ ||_b_.tuple.$factory()
 if(res.indexOf(_b_.object)==-1){res.push(_b_.object)}
 return res
