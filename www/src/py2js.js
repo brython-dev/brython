@@ -1706,8 +1706,8 @@ var $CallCtx = $B.parser.$CallCtx = function(context){
 
             var kw_args_str = '{' + kw_args.join(', ') + '}'
             if(dstar_args.length){
-                kw_args_str = '{$nat:"kw",kw:$B.extend("' + this.func.value +
-                    '",' + kw_args_str + ',' + dstar_args.join(', ') + ')}'
+                kw_args_str = '{$nat:"kw",kw:[' + kw_args_str + ',' +
+                    dstar_args.join(', ') + ']}'
             }else if(kw_args_str != '{}'){
                 kw_args_str = '{$nat:"kw",kw:' + kw_args_str + '}'
             }else{

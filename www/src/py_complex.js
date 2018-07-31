@@ -110,18 +110,16 @@ complex.__new__ = function(cls){
         throw _b_.TypeError.$factory('complex.__new__(): not enough arguments')
     }
     var res,
+        missing = {},
         args = $B.args("complex", 3, {cls: null, real: null, imag: null},
-        ["cls", "real", "imag"], arguments, {real: 0, imag: 0}, null, null),
+            ["cls", "real", "imag"], arguments, {real: 0, imag: missing}, null, null),
         $real = args.real,
         $imag = args.imag
-    if(typeof $real == "string"){
-        if(arguments.length > 2 &&
-                arguments[2].$nat !== undefined &&
-                Object.keys(arguments[2].kw).length > 0){
-            console.log(arguments)
-            throw _b_.TypeError.$factory("complex() can't take second arg " +
-                "if first is a string")
-        }
+
+    if(typeof $real == "string" && $imag !== missing){
+        throw _b_.TypeError.$factory("complex() can't take second arg " +
+            "if first is a string")
+    }else{
         var arg = $real
         $real = $real.trim()
         if($real.startsWith("(") && $real.endsWith(")")){

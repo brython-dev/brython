@@ -2000,6 +2000,8 @@ for _ in range(2):
     for _ in range(2):
         pass
 
+# issue 900
+"".format(**globals())
 
 # ==========================================
 # Finally, report that all tests have passed

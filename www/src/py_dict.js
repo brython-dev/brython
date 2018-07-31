@@ -261,7 +261,6 @@ dict.__getitem__ = function(){
         ["self", "arg"], arguments, {}, null, null),
         self = $.self,
         arg = $.arg
-
     if(self.$jsobj){
         if(!self.$jsobj.hasOwnProperty(arg)){
             throw _b_.KeyError.$factory(str.$factory(arg))
@@ -316,70 +315,77 @@ dict.__getitem__ = function(){
 
 dict.__hash__ = None
 
-dict.__init__ = function(self){
-    var args = []
-    for(var i = 1; i < arguments.length; i++){args.push(arguments[i])}
+dict.__init__ = function(self, first, second){
 
-    switch(args.length){
-        case 0:
-            return
-        case 1:
-            var obj = args[0]
-            if(Array.isArray(obj)){
-                var i = obj.length,
-                    si = dict.__setitem__
-                while(i-- > 0){si(self, obj[i - 1][0], obj[i - 1][1])}
-                return $N
-            }else if(obj.$nat === undefined && isinstance(obj, dict)){
-                $copy_dict(self, obj)
-                return $N
+    if(first === undefined){return $N}
+    if(second === undefined){
+        if(first.__class__ === $B.JSObject){
+            self.$jsobj = first.js
+            return $N
+        }else if(first.$jsobj){
+            self.$jsobj = {}
+            for(var attr in first.$jsobj){
+                self.$jsobj[attr] = first.$jsobj[attr]
             }
-
-            if(obj.__class__ === $B.JSObject){
-                // convert a JSObject into a Python dictionary
-
-                // Attribute $jsobj is used to update the original JS object
-                // when the dictionary is modified
-                self.$jsobj = obj.js
-                return $N
-            }
-    }
-
-    var $ns = $B.args("dict", 0, {}, [], args, {}, "args", "kw"),
-        args = $ns["args"],
-        kw = $ns["kw"]
-
-    if(args.length > 0){
-        if(isinstance(args[0], dict)){
-            $B.$copy_dict(self, args[0])
             return $N
         }
+    }
 
-        // format dict([(k1,v1),(k2,v2)...])
-
-        if(Array.isArray(args[0])){
-            var src = args[0],
-                i = src.length - 1,
-                si = dict.__setitem__
-            while(i-- > 0){si(self, src[i - 1][0], src[i - 1][1])}
+    var $ = $B.args("dict", 1, {self:null}, ["self"],
+        arguments, {}, "first", "second")
+    var args = $.first
+    if(args.length > 1){
+        throw _b_.TypeError.$factory("dict expected at most 1 argument" +
+            ", got 2")
+    }else if(args.length == 1){
+        args = args[0]
+        if(args.__class__ === dict){
+            ['$string_dict', '$str_hash', '$numeric_dict', '$object_dict'].
+                forEach(function(d){
+                    for(key in args[d]){self[d][key] = args[d][key]}
+                })
+        }else if(isinstance(args, dict)){
+            $copy_dict(self, args)
         }else{
-            var iterable = $B.$iter(args[0])
-            while(1){
-                try{
-                   var elt = next(iterable),
-                       key = getattr(elt, "__getitem__")(0),
-                       value = getattr(elt,"__getitem__")(1)
-                   dict.__setitem__(self, key, value)
-                }catch(err){
-                   if(err.__class__ === _b_.StopIteration){
-                       break
-                   }
-                   throw err
+            if(! Array.isArray(args)){
+                args = _b_.list.$factory(args)
+            }
+            // Form "dict([[key1, value1], [key2,value2], ...])"
+            var i = -1,
+                stop = args.length - 1,
+                si = dict.__setitem__
+            while(i++ < stop){
+                var item = args[i]
+                switch(typeof item[0]) {
+                    case 'string':
+                        self.$string_dict[item[0]] = item[1]
+                        self.$str_hash[str_hash(item[0])] = item[0]
+                        break
+                    case 'number':
+                        self.$numeric_dict[item[0]] = item[1]
+                        break
+                    default:
+                        si(self, item[0], item[1])
+                        break
                 }
             }
         }
     }
-    if(dict.__len__(kw) > 0){$copy_dict(self, kw)}
+    var kw = $.second.$string_dict
+    for(var attr in kw){
+        switch(typeof attr){
+            case "string":
+                self.$string_dict[attr] = kw[attr]
+                self.$str_hash[str_hash(attr)] = attr
+                break
+            case "number":
+                self.$numeric_dict[attr] = kw[attr]
+                break
+            default:
+                si(self, attr, kw[attr])
+                break
+        }
+    }
     return $N
 }
 
@@ -689,65 +695,8 @@ dict.values = function(self){
     return $iterator_wrapper(new $value_iterator(self), $dict_valuesDict)
 }
 
-dict.$factory = function(args, second){
-
-    var res = {__class__: dict,
-        $numeric_dict : {},
-        $object_dict : {},
-        $string_dict : {},
-        $str_hash: {}
-    }
-
-    if(args === undefined){return res}
-
-    if(second === undefined){
-        if(Array.isArray(args)){
-            // Form "dict([[key1, value1], [key2,value2], ...])"
-            var i = -1,
-                stop = args.length - 1,
-                si = dict.__setitem__
-            while(i++ < stop){
-                var item = args[i]
-                switch(typeof item[0]) {
-                    case 'string':
-                        res.$string_dict[item[0]] = item[1]
-                        res.$str_hash[str_hash(item[0])] = item[0]
-                        break
-                    case 'number':
-                        res.$numeric_dict[item[0]] = item[1]
-                        break
-                    default:
-                        si(res, item[0], item[1])
-                        break
-                }
-            }
-            return res
-        }else if(args.$nat == "kw"){
-            // Form dict(k1=v1, k2=v2...)
-            var kw = args["kw"]
-            for(var attr in kw){
-                switch(typeof attr){
-                    case "string":
-                        res.$string_dict[attr] = kw[attr]
-                        res.$str_hash[str_hash(attr)] = attr
-                        break
-                    case "number":
-                        res.$numeric_dict[attr] = kw[attr]
-                        break
-                    default:
-                        si(res, attr, kw[attr])
-                        break
-                }
-            }
-            return res
-        }else if(args.$jsobj){
-            res.$jsobj = {}
-            for(var attr in args.$jsobj){res.$jsobj[attr] = args.$jsobj[attr]}
-            return res
-        }
-    }
-
-    // apply __init__ with arguments of dict()
+dict.$factory = function(){
+    var res = dict.__new__(dict)
     dict.__init__(res, ...arguments)
     return res
 }

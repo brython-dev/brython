@@ -627,7 +627,6 @@ int.$factory = function(value, base){
     if(isinstance(value, _b_.complex)){
         throw TypeError.$factory("can't convert complex to int")
     }
-
     var $ns = $B.args("int", 2, {x:null, base:null}, ["x", "base"], arguments,
         {"base": 10}, null, null),
         value = $ns["x"],

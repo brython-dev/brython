@@ -64,8 +64,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',1]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-07-30 21:18:24.479032"
-__BRYTHON__.timestamp=1532978304479
+__BRYTHON__.compiled_date="2018-07-31 10:29:31.025082"
+__BRYTHON__.timestamp=1533025771025
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_Cvars","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -884,8 +884,8 @@ args_str=p[0]
 for(var i=1;i < p.length;i++){args_str +='.concat(' + p[i]+ ')'}}else{for(var i=0,len=positional.length;i < len;i++){positional[i]=positional[i][0]}
 args_str=positional.join(', ')}
 var kw_args_str='{' + kw_args.join(', ')+ '}'
-if(dstar_args.length){kw_args_str='{$nat:"kw",kw:$B.extend("' + this.func.value +
-'",' + kw_args_str + ',' + dstar_args.join(', ')+ ')}'}else if(kw_args_str !='{}'){kw_args_str='{$nat:"kw",kw:' + kw_args_str + '}'}else{kw_args_str=''}
+if(dstar_args.length){kw_args_str='{$nat:"kw",kw:[' + kw_args_str + ',' +
+dstar_args.join(', ')+ ']}'}else if(kw_args_str !='{}'){kw_args_str='{$nat:"kw",kw:' + kw_args_str + '}'}else{kw_args_str=''}
 if(star_args && kw_args_str){args_str +='.concat([' + kw_args_str + '])'}else{if(args_str && kw_args_str){args_str +=',' + kw_args_str}
 else if(!args_str){args_str=kw_args_str}}
 if(star_args){
@@ -5236,7 +5236,8 @@ $B.args=function($fname,argcount,slots,var_names,$args,$dobj,extra_pos_args,extr
 var has_kw_args=false,nb_pos=$args.length
 if(nb_pos > 0 && $args[nb_pos - 1]&& $args[nb_pos - 1].$nat){nb_pos--
 if(Object.keys($args[nb_pos].kw).length > 0){has_kw_args=true
-var kw_args=$args[nb_pos].kw}}
+var kw_args=$args[nb_pos].kw
+if(Array.isArray(kw_args)){kw_args=$B.extend($fname,...kw_args)}}}
 if(extra_pos_args){slots[extra_pos_args]=[]
 slots[extra_pos_args].__class__=_b_.tuple}
 if(extra_kw_args){
@@ -9135,13 +9136,9 @@ complex.__name__="complex"
 complex.__ne__=function(self,other){return ! complex.__eq__(self,other)}
 complex.__neg__=function(self){return make_complex(-self.$real,-self.$imag)}
 complex.__new__=function(cls){if(cls===undefined){throw _b_.TypeError.$factory('complex.__new__(): not enough arguments')}
-var res,args=$B.args("complex",3,{cls: null,real: null,imag: null},["cls","real","imag"],arguments,{real: 0,imag: 0},null,null),$real=args.real,$imag=args.imag
-if(typeof $real=="string"){if(arguments.length > 2 &&
-arguments[2].$nat !==undefined &&
-Object.keys(arguments[2].kw).length > 0){console.log(arguments)
-throw _b_.TypeError.$factory("complex() can't take second arg " +
-"if first is a string")}
-var arg=$real
+var res,missing={},args=$B.args("complex",3,{cls: null,real: null,imag: null},["cls","real","imag"],arguments,{real: 0,imag: missing},null,null),$real=args.real,$imag=args.imag
+if(typeof $real=="string" && $imag !==missing){throw _b_.TypeError.$factory("complex() can't take second arg " +
+"if first is a string")}else{var arg=$real
 $real=$real.trim()
 if($real.startsWith("(")&& $real.endsWith(")")){$real=$real.substr(1)
 $real=$real.substr(0,$real.length - 1)}
@@ -10747,28 +10744,40 @@ if(self.__class__ !==dict){try{var missing_method=getattr(self.__class__,"__miss
 return missing_method(self,arg)}catch(err){}}
 throw KeyError.$factory(_b_.str.$factory(arg))}
 dict.__hash__=None
-dict.__init__=function(self){var args=[]
-for(var i=1;i < arguments.length;i++){args.push(arguments[i])}
-switch(args.length){case 0:
-return
-case 1:
-var obj=args[0]
-if(Array.isArray(obj)){var i=obj.length,si=dict.__setitem__
-while(i-- > 0){si(self,obj[i - 1][0],obj[i - 1][1])}
-return $N}else if(obj.$nat===undefined && isinstance(obj,dict)){$copy_dict(self,obj)
-return $N}
-if(obj.__class__===$B.JSObject){
-self.$jsobj=obj.js
+dict.__init__=function(self,first,second){if(first===undefined){return $N}
+if(second===undefined){if(first.__class__===$B.JSObject){self.$jsobj=first.js
+return $N}else if(first.$jsobj){self.$jsobj={}
+for(var attr in first.$jsobj){self.$jsobj[attr]=first.$jsobj[attr]}
 return $N}}
-var $ns=$B.args("dict",0,{},[],args,{},"args","kw"),args=$ns["args"],kw=$ns["kw"]
-if(args.length > 0){if(isinstance(args[0],dict)){$B.$copy_dict(self,args[0])
-return $N}
-if(Array.isArray(args[0])){var src=args[0],i=src.length - 1,si=dict.__setitem__
-while(i-- > 0){si(self,src[i - 1][0],src[i - 1][1])}}else{var iterable=$B.$iter(args[0])
-while(1){try{var elt=next(iterable),key=getattr(elt,"__getitem__")(0),value=getattr(elt,"__getitem__")(1)
-dict.__setitem__(self,key,value)}catch(err){if(err.__class__===_b_.StopIteration){break}
-throw err}}}}
-if(dict.__len__(kw)> 0){$copy_dict(self,kw)}
+var $=$B.args("dict",1,{self:null},["self"],arguments,{},"first","second")
+var args=$.first
+if(args.length > 1){throw _b_.TypeError.$factory("dict expected at most 1 argument" +
+", got 2")}else if(args.length==1){args=args[0]
+if(args.__class__===dict){['$string_dict','$str_hash','$numeric_dict','$object_dict'].
+forEach(function(d){for(key in args[d]){self[d][key]=args[d][key]}})}else if(isinstance(args,dict)){$copy_dict(self,args)}else{if(! Array.isArray(args)){args=_b_.list.$factory(args)}
+var i=-1,stop=args.length - 1,si=dict.__setitem__
+while(i++ < stop){var item=args[i]
+switch(typeof item[0]){case 'string':
+self.$string_dict[item[0]]=item[1]
+self.$str_hash[str_hash(item[0])]=item[0]
+break
+case 'number':
+self.$numeric_dict[item[0]]=item[1]
+break
+default:
+si(self,item[0],item[1])
+break}}}}
+var kw=$.second.$string_dict
+for(var attr in kw){switch(typeof attr){case "string":
+self.$string_dict[attr]=kw[attr]
+self.$str_hash[str_hash(attr)]=attr
+break
+case "number":
+self.$numeric_dict[attr]=kw[attr]
+break
+default:
+si(self,attr,kw[attr])
+break}}
 return $N}
 var $dict_iterator=$B.$iterator_class("dict iterator")
 dict.__iter__=function(self){return dict.keys(self)}
@@ -10873,36 +10882,7 @@ var $dict_valuesDict=$B.$iterator_class("dict_values")
 dict.values=function(self){if(arguments.length > 1){var _len=arguments.length - 1,_msg="values() takes no arguments (" + _len + " given)"
 throw _b_.TypeError.$factory(_msg)}
 return $iterator_wrapper(new $value_iterator(self),$dict_valuesDict)}
-dict.$factory=function(args,second){var res={__class__: dict,$numeric_dict :{},$object_dict :{},$string_dict :{},$str_hash:{}}
-if(args===undefined){return res}
-if(second===undefined){if(Array.isArray(args)){
-var i=-1,stop=args.length - 1,si=dict.__setitem__
-while(i++ < stop){var item=args[i]
-switch(typeof item[0]){case 'string':
-res.$string_dict[item[0]]=item[1]
-res.$str_hash[str_hash(item[0])]=item[0]
-break
-case 'number':
-res.$numeric_dict[item[0]]=item[1]
-break
-default:
-si(res,item[0],item[1])
-break}}
-return res}else if(args.$nat=="kw"){
-var kw=args["kw"]
-for(var attr in kw){switch(typeof attr){case "string":
-res.$string_dict[attr]=kw[attr]
-res.$str_hash[str_hash(attr)]=attr
-break
-case "number":
-res.$numeric_dict[attr]=kw[attr]
-break
-default:
-si(res,attr,kw[attr])
-break}}
-return res}else if(args.$jsobj){res.$jsobj={}
-for(var attr in args.$jsobj){res.$jsobj[attr]=args.$jsobj[attr]}
-return res}}
+dict.$factory=function(){var res=dict.__new__(dict)
 dict.__init__(res,...arguments)
 return res}
 _b_.dict=dict
