@@ -83,7 +83,9 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj) {
     if(jsobj === undefined){return $B.Undefined}
     else if(jsobj === null){return _b_.None}
 
-    if(Array.isArray(jsobj)){return _b_.list.$factory(jsobj)}
+    if(Array.isArray(jsobj)){
+        return _b_.list.$factory(jsobj.map(jsobj2pyobj))
+    }
 
     if(typeof jsobj === 'number'){
        if(jsobj.toString().indexOf('.') == -1){return _b_.int.$factory(jsobj)}

@@ -64,8 +64,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',1]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-07-31 10:29:31.025082"
-__BRYTHON__.timestamp=1533025771025
+__BRYTHON__.compiled_date="2018-07-31 11:12:57.510967"
+__BRYTHON__.timestamp=1533028377510
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_Cvars","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -6071,7 +6071,7 @@ locals_id + ' = {}')
 if(_globals===_b_.None){var gobj=current_frame[3],ex=''
 ex +='var $locals_' + current_globals_id + '=gobj;' 
 eval(ex)
-for(var attr in gobj){if(! attr.startsWith("$")){eval("$locals_" + locals_id +"[attr] = gobj[attr]")}}}else{if(_globals.$jsobj){var items=_globals.$jsobj}
+for(var attr in gobj){if((! attr.startsWith("$"))||attr.startsWith('$$')){eval("$locals_" + locals_id +"[attr] = gobj[attr]")}}}else{if(_globals.$jsobj){var items=_globals.$jsobj}
 else{var items=_globals.$string_dict}
 eval("$locals_" + globals_id + " = _globals.$string_dict")
 for(var item in items){var item1=$B.to_alias(item)
@@ -6080,7 +6080,7 @@ try{eval('$locals_' + globals_id + '["' + item1 +
 console.log('error setting',item)
 break}}}
 if(_locals===_b_.None){if(_globals !==_b_.None){eval('var $locals_' + locals_id + ' = $locals_' + globals_id)}else{var lobj=current_frame[1],ex=''
-for(var attr in current_frame[1]){if(attr.startsWith("$")){continue}
+for(var attr in current_frame[1]){if(attr.startsWith("$")&& !attr.startsWith("$$")){continue}
 ex +='$locals_' + locals_id + '["' + attr +
 '"] = current_frame[1]["' + attr + '"];'
 eval(ex)}}}else{if(_locals.$jsobj){var items=_locals.$jsobj}
@@ -7508,7 +7508,7 @@ case false:
 return jsobj}
 if(jsobj===undefined){return $B.Undefined}
 else if(jsobj===null){return _b_.None}
-if(Array.isArray(jsobj)){return _b_.list.$factory(jsobj)}
+if(Array.isArray(jsobj)){return _b_.list.$factory(jsobj.map(jsobj2pyobj))}
 if(typeof jsobj==='number'){if(jsobj.toString().indexOf('.')==-1){return _b_.int.$factory(jsobj)}
 return _b_.float.$factory(jsobj)}
 if(jsobj.$nat==='kw'){return jsobj}

@@ -500,7 +500,7 @@ function $$eval(src, _globals, _locals){
         //ex += 'var $locals_' + globals_id + '=gobj;'
         eval(ex)
         for(var attr in gobj){
-            if(! attr.startsWith("$")){
+            if((! attr.startsWith("$")) || attr.startsWith('$$')){
                 eval("$locals_" + locals_id +"[attr] = gobj[attr]")
             }
         }
@@ -530,7 +530,7 @@ function $$eval(src, _globals, _locals){
             var lobj = current_frame[1],
                 ex = ''
             for(var attr in current_frame[1]){
-                if(attr.startsWith("$")){continue}
+                if(attr.startsWith("$") && !attr.startsWith("$$")){continue}
                 ex += '$locals_' + locals_id + '["' + attr +
                     '"] = current_frame[1]["' + attr + '"];'
                 eval(ex)
@@ -597,7 +597,7 @@ function $$eval(src, _globals, _locals){
         }
 
         js = root.to_js()
-        
+
         if(is_exec){
             var locals_obj = eval("$locals_" + locals_id),
                 globals_obj = eval("$locals_" + globals_id)
@@ -782,7 +782,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false //attr == "__init__" && obj.__name__ == "Point"
+    var $test = false //attr == "__class__" && obj.__name__ == "Point"
     // Shortcut for classes without parents
     if(klass !== undefined && klass.__bases__ && klass.__bases__.length == 0){
         if(obj.hasOwnProperty(attr)){
