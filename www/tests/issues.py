@@ -1988,12 +1988,10 @@ str(globals())
 
 
 # issue 885
-from traceback import *
 try:
     1/0
 except:
-    import traceback
-    assert '1/0' in traceback.format_exc()
+    assert '1/0' in tb.format_exc()
 
 # issue 883
 for _ in range(2):
@@ -2006,9 +2004,9 @@ try:
     exec('def f(): return 1/0\nf()')
 except ZeroDivisionError:
     stack_trace = tb.format_exc()
-    assert 'exec(\'def f(): return 1/0\\nf()\')\n' in stack_trace
-    assert 'f()\n' in stack_trace
-    assert 'def f(): return 1/0\n' in stack_trace
+    assert 'exec(\'def f(): return 1/0\\nf()\')' in stack_trace
+    assert 'f()' in stack_trace
+    assert 'def f(): return 1/0\\n' in stack_trace
 
 # issue 900
 "".format(**globals())
