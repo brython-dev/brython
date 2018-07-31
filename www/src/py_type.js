@@ -422,6 +422,12 @@ type.__repr__ = type.__str__ = function(kls){
 type.__getattribute__ = function(klass, attr){
 
     switch(attr) {
+        case "__bases__":
+            var res = klass.__bases__ || _b_.tuple.$factory()
+            if(res.indexOf(_b_.object) == -1){
+                res.push(_b_.object)
+            }
+            return res
         case "__class__":
             return klass.__class__
         case "__doc__":
