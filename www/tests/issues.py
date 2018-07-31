@@ -2000,6 +2000,7 @@ for _ in range(2):
     for _ in range(2):
         pass
 
+
 # issue 887
 try:
     exec('def f(): return 1/0\nf()')
@@ -2008,6 +2009,37 @@ except ZeroDivisionError:
     assert 'exec(\'def f(): return 1/0\\nf()\')\n' in stack_trace
     assert 'f()\n' in stack_trace
     assert 'def f(): return 1/0\n' in stack_trace
+
+# issue 900
+"".format(**globals())
+
+# issue 901 : _jsre's SRE_Pattern lacking methods: .sub(), .subn(), .split(), and .fullmatch()
+import _jsre as re
+
+regex = re.compile('a|b')
+
+# These methods work!
+assert regex.match('ab') is not None
+assert regex.search(' ab') is not None
+assert regex.findall('ab') == ['a', 'b']
+
+def switch(m):
+    return 'a' if m.group(0) == 'b' else 'b'
+
+# Missing: .sub()
+assert regex.sub(switch, 'ba') == 'ab'
+
+# Missing: .fullmatch()
+# assert regex.fullmatch('b') is not None
+
+# Missing: .split()
+#assert regex.split('cacbca', maxsplit=2) == ['c', 'c', 'ca']
+
+# Missing: .subn()
+#assert regex.subn(switch, 'ba') == ('ab', 2)
+
+# Broken: .finditer()
+#assert [m.group(0) for m in regex.finditer('ab')] == ['a', 'b']
 
 # ==========================================
 # Finally, report that all tests have passed

@@ -28,6 +28,9 @@ $B.args = function($fname, argcount, slots, var_names, $args, $dobj,
         if(Object.keys($args[nb_pos].kw).length > 0){
             has_kw_args = true
             var kw_args = $args[nb_pos].kw
+            if(Array.isArray(kw_args)){
+                kw_args = $B.extend($fname, ...kw_args)
+            }
         }
     }
 

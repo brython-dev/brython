@@ -570,6 +570,12 @@ var finder_path = {
     },
 
     find_spec : function(cls, fullname, path, prev_module) {
+        var current_module = $B.last($B.frames_stack)[2]
+        if($B.VFS && $B.VFS[current_module]){
+            // If current module is in VFS (ie standard library) it's 
+            // pointless to search in other locations
+            return _b_.None
+        }
         if($B.is_none(path)){
             // [Import spec] Top-level import , use sys.path
             path = $B.path

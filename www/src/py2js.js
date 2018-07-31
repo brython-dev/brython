@@ -1706,8 +1706,8 @@ var $CallCtx = $B.parser.$CallCtx = function(context){
 
             var kw_args_str = '{' + kw_args.join(', ') + '}'
             if(dstar_args.length){
-                kw_args_str = '{$nat:"kw",kw:$B.extend("' + this.func.value +
-                    '",' + kw_args_str + ',' + dstar_args.join(', ') + ')}'
+                kw_args_str = '{$nat:"kw",kw:[' + kw_args_str + ',' +
+                    dstar_args.join(', ') + ']}'
             }else if(kw_args_str != '{}'){
                 kw_args_str = '{$nat:"kw",kw:' + kw_args_str + '}'
             }else{
@@ -9266,20 +9266,12 @@ function ajax_load_script(script){
     var req = new XMLHttpRequest()
     req.open("GET", url + "?" + Date.now(), true)
     req.onreadystatechange = function(){
-        if(this.readyState==4){
-            if(this.status==200){
+        if(this.readyState == 4){
+            if(this.status == 200){
                 var src = this.responseText
-                try{
-                    var root = $B.py2js(src, name, name),
-                    js = root.to_js()
-                    $B.tasks.splice(0, 0, ["execute",
-                        {js: js, src: src, name: name, url: url}])
-                    root = null
-                }catch(err){
-                    handle_error(err)
-                }
-            }else if(this.status==404){
-                throw Error(url+" not found")
+                $B.tasks.splice(0, 0, [$B.run_script, src, name, true])
+            }else if(this.status == 404){
+                throw Error(url + " not found")
             }
             loop()
         }
@@ -9315,7 +9307,7 @@ var inImported = $B.inImported = function(module){
 }
 
 var loop = $B.loop = function(){
-    if($B.tasks.length==0){
+    if($B.tasks.length == 0){
         // No more task to process.
         if(idb_cx){idb_cx.result.close()}
         return
@@ -9357,7 +9349,7 @@ var loop = $B.loop = function(){
 }
 
 $B.tasks = []
-$B.has_indexedDB = window.indexedDB !== undefined
+$B.has_indexedDB = self.indexedDB !== undefined
 
 function handle_error(err){
     // Print the error traceback on the standard error stream
@@ -9413,7 +9405,9 @@ function required_stdlib_imports(imports, start){
     return imports
 }
 
-$B.run_script = function(src, name){
+$B.run_script = function(src, name, run_loop){
+    // run_loop is set to true if run_script is added to tasks in
+    // ajax_load_script
     $B.$py_module_path[name] = $B.script_path
     try{
         var root = $B.py2js(src, name, name),
@@ -9463,6 +9457,9 @@ $B.run_script = function(src, name){
         root = null
     }
     $B.tasks.push(["execute", script])
+    if(run_loop){
+        loop()
+    }
 }
 
 var $log = $B.$log = function(js){

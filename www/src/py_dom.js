@@ -2,10 +2,10 @@
 
 //eval($B.InjectBuiltins())
 
-var _b_ = $B.builtins,
-    object = _b_.object,
-    JSObject = $B.JSObject,
-    _window = window //self;
+var _b_ = $B.builtins;
+var object = _b_.object
+var JSObject = $B.JSObject
+var _window = self;
 
 // cross-browser utility functions
 function $getMouseOffset(target, ev){
@@ -1602,7 +1602,7 @@ $B.set_func_names(TagSum, "<dom>")
 
 $B.TagSum = TagSum // used in _html.js and _svg.js
 
-var win =  JSObject.$factory(_window) //{__class__:$WinDict}
+var win = JSObject.$factory(_window) //{__class__:$WinDict}
 
 win.get_postMessage = function(msg,targetOrigin){
     if(_b_.isinstance(msg, dict)){

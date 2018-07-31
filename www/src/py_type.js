@@ -6,8 +6,6 @@ var _b_ = $B.builtins
 $B.$class_constructor = function(class_name, class_obj, bases,
         parents_names, kwargs){
 
-    // XXX todo : handle the __prepare__ method
-
     bases = bases || []
     var metaclass
 
@@ -422,6 +420,24 @@ type.__repr__ = type.__str__ = function(kls){
 type.__getattribute__ = function(klass, attr){
 
     switch(attr) {
+        case "__annotations__":
+            var mro = [klass].concat(klass.__mro__)
+            var res = _b_.dict.$factory()
+            for(var i = mro.length - 1; i >= 0; i--){
+                var ann = mro[i].__annotations__
+                if(ann){
+                    for(var key in ann.$string_dict){
+                        res.$string_dict[key] = ann.$string_dict[key]
+                    }
+                }
+            }
+            return res
+        case "__bases__":
+            var res = klass.__bases__ || _b_.tuple.$factory()
+            if(res.indexOf(_b_.object) == -1){
+                res.push(_b_.object)
+            }
+            return res
         case "__class__":
             return klass.__class__
         case "__doc__":

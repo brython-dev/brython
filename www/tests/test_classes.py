@@ -321,6 +321,14 @@ class C(A3, A1):
 
 assert C.__class__ == Meta3
 
+# issue 905
+class A:
+    prop: str
+
+class B(A):
+    pass
+
+assert {'prop': str} == B.__annotations__
 
 
 print('passed all tests..')

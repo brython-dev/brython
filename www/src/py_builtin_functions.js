@@ -500,13 +500,14 @@ function $$eval(src, _globals, _locals){
         //ex += 'var $locals_' + globals_id + '=gobj;'
         eval(ex)
         for(var attr in gobj){
-            if(! attr.startsWith("$")){
+            if((! attr.startsWith("$")) || attr.startsWith('$$')){
                 eval("$locals_" + locals_id +"[attr] = gobj[attr]")
             }
         }
     }else{
         if(_globals.$jsobj){var items = _globals.$jsobj}
         else{var items = _globals.$string_dict}
+        eval("$locals_" + globals_id + " = _globals.$string_dict")
         for(var item in items){
             var item1 = $B.to_alias(item)
             try{
@@ -529,7 +530,7 @@ function $$eval(src, _globals, _locals){
             var lobj = current_frame[1],
                 ex = ''
             for(var attr in current_frame[1]){
-                if(attr.startsWith("$")){continue}
+                if(attr.startsWith("$") && !attr.startsWith("$$")){continue}
                 ex += '$locals_' + locals_id + '["' + attr +
                     '"] = current_frame[1]["' + attr + '"];'
                 eval(ex)
@@ -550,7 +551,7 @@ function $$eval(src, _globals, _locals){
         }
     }
     eval("$locals_" + locals_id + ".$src = src")
-    
+
     var root = $B.py2js(src, globals_id, locals_id, parent_scope),
         js, gns, lns
 
@@ -781,7 +782,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false //attr == "__init__" && obj.__name__ == "Point"
+    var $test = false //attr == "__class__" && obj.__name__ == "Point"
     // Shortcut for classes without parents
     if(klass !== undefined && klass.__bases__ && klass.__bases__.length == 0){
         if(obj.hasOwnProperty(attr)){
