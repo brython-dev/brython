@@ -64,8 +64,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',1]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-07-31 13:08:54.222835"
-__BRYTHON__.timestamp=1533035334222
+__BRYTHON__.compiled_date="2018-07-31 13:58:19.425822"
+__BRYTHON__.timestamp=1533038299425
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_Cvars","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -4679,9 +4679,7 @@ function ajax_load_script(script){var url=script.url,name=script.name
 var req=new XMLHttpRequest()
 req.open("GET",url + "?" + Date.now(),true)
 req.onreadystatechange=function(){if(this.readyState==4){if(this.status==200){var src=this.responseText
-try{var root=$B.py2js(src,name,name),js=root.to_js()
-$B.tasks.splice(0,0,["execute",{js: js,src: src,name: name,url: url}])
-root=null}catch(err){handle_error(err)}}else if(this.status==404){throw Error(url+" not found")}
+$B.tasks.splice(0,0,[$B.run_script,src,name,true])}else if(this.status==404){throw Error(url + " not found")}
 loop()}}
 req.send()}
 function add_jsmodule(module,source){
@@ -4728,7 +4726,8 @@ imports.indexOf(subimport)==-1){if($B.VFS.hasOwnProperty(subimport)){imports.pus
 nb_added++}}})}}
 if(nb_added){required_stdlib_imports(imports,imports.length - nb_added)}
 return imports}
-$B.run_script=function(src,name){$B.$py_module_path[name]=$B.script_path
+$B.run_script=function(src,name,run_loop){
+$B.$py_module_path[name]=$B.script_path
 try{var root=$B.py2js(src,name,name),js=root.to_js(),script={js: js,name: name,src: src,url: $B.script_path}
 if($B.debug > 1){$log(js)}}catch(err){handle_error(err)}
 if($B.hasOwnProperty("VFS")&& $B.has_indexedDB){
@@ -4740,7 +4739,8 @@ required_stdlib_imports(subimports)}
 subimports.forEach(function(mod){if(imports.indexOf(mod)==-1){imports.push(mod)}})}}})
 for(var j=0;j<imports.length;j++){$B.tasks.push([$B.inImported,imports[j]])}
 root=null}
-$B.tasks.push(["execute",script])}
+$B.tasks.push(["execute",script])
+if(run_loop){loop()}}
 var $log=$B.$log=function(js){js.split("\n").forEach(function(line,i){console.log(i + 1,":",line)})}
 var _run_scripts=$B.parser._run_scripts=function(options){
 var kk=Object.keys(_window)
@@ -7882,7 +7882,10 @@ return _b_.None},exec_module : function(cls,module){var _spec=_b_.getattr(module
 module.$is_package=_spec.loader_state.is_package,delete _spec.loader_state["code"]
 var src_type=_spec.loader_state.type
 if(src_type=="py" ||src_type=="pyc.js"){run_py(code,_spec.origin,module,src_type=="pyc.js")}
-else if(_spec.loader_state.type=="js"){run_js(code,_spec.origin,module)}},find_module: function(cls,name,path){return finder_path.find_spec(cls,name,path)},find_spec : function(cls,fullname,path,prev_module){if($B.is_none(path)){
+else if(_spec.loader_state.type=="js"){run_js(code,_spec.origin,module)}},find_module: function(cls,name,path){return finder_path.find_spec(cls,name,path)},find_spec : function(cls,fullname,path,prev_module){var current_module=$B.last($B.frames_stack)[2]
+if($B.VFS && $B.VFS[current_module]){
+return _b_.None}
+if($B.is_none(path)){
 path=$B.path}
 for(var i=0,li=path.length;i < li;++i){var path_entry=path[i]
 if(path_entry[path_entry.length - 1]!="/"){path_entry +="/"}
