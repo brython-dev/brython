@@ -198,10 +198,6 @@ strong {
   padding:5px
 }
 
-textarea{
-    color: #fff;
-}
-
 
 /* Breakpoint for all color devices of < 999px width */
 @media all and (color) and (max-width: 999px) {
