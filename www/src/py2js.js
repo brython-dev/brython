@@ -7494,11 +7494,14 @@ var $transition = $B.parser.$transition = function(context, token, value){
                         case 'tuple':
                         case 'gen_expr':
                             if(token == ')'){
-                               context.closed = true
-                               if(context.real == 'gen_expr'){
-                                   context.intervals.push($pos)
-                               }
-                               return context.parent
+                                context.closed = true
+                                if(context.real == 'gen_expr'){
+                                    context.intervals.push($pos)
+                                }
+                                if(context.parent.type == "packed"){
+                                    return context.parent.parent
+                                }
+                                return context.parent
                             }
                             break
                         case 'list':
@@ -7508,7 +7511,10 @@ var $transition = $B.parser.$transition = function(context, token, value){
                                  if(context.real == 'list_comp'){
                                      context.intervals.push($pos)
                                  }
-                                 return context
+                                 if(context.parent.type == "packed"){
+                                     return context.parent.parent
+                                 }
+                                 return context.parent
                             }
                             break
                         case 'dict_or_set_comp':
@@ -7812,9 +7818,12 @@ var $transition = $B.parser.$transition = function(context, token, value){
                 new $IdCtx(context, value)
                 context.parent.expect = ','
                 return context.parent
-            }else if(token=="["){
+            }else if(token == "["){
                 context.parent.expect = ','
-                return new $ListOrTupleCtx(context, value)
+                return new $ListOrTupleCtx(context, "list")
+            }else if(token == "("){
+                context.parent.expect = ','
+                return new $ListOrTupleCtx(context, "tuple")
             }
             console.log("syntax error", context, token)
             $_SyntaxError(context, 'token ' + token + ' after ' + context)

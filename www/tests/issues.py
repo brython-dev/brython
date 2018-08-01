@@ -1949,6 +1949,12 @@ assertRaises(SyntaxError, exec, "d = {*[1], 'x': 2}")
 assertRaises(SyntaxError, exec, "d = {**{'x': 1}, 2}")
 assertRaises(SyntaxError, exec, "t = *range(4)")
 
+# issue 909
+t1 = [*[1]]
+assert t1 == [1]
+t2 = [*(1, 2)]
+assert t2 == [1, 2]
+
 # issue 854
 class A(object):
 
