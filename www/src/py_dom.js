@@ -377,7 +377,7 @@ function $EventsList(elt, evt, arg){
                 break
             }
         }
-        if(! found){throw KeyError.$factory("not found")}
+        if(! found){throw _b_.KeyError.$factory("not found")}
     }
 }
 
@@ -621,7 +621,7 @@ DOMNode.__delitem__ = function(self, key){
     if(self.elt.nodeType == 9){ // document : remove by id
         var res = self.elt.getElementById(key)
         if(res){res.parentNode.removeChild(res)}
-        else{throw KeyError.$factory(key)}
+        else{throw _b_.KeyError.$factory(key)}
     }else{ // other node : remove by rank in child nodes
         self.elt.parentNode.removeChild(self.elt)
     }
@@ -790,7 +790,7 @@ DOMNode.__getitem__ = function(self, key){
         if(typeof key == "string"){
             var res = self.elt.getElementById(key)
             if(res){return DOMNode.$factory(res)}
-            throw KeyError.$factory(key)
+            throw _b_.KeyError.$factory(key)
         }else{
             try{
                 var elts = self.elt.getElementsByTagName(key.__name__),
@@ -800,7 +800,7 @@ DOMNode.__getitem__ = function(self, key){
                     }
                     return res
             }catch(err){
-                throw KeyError.$factory(_b_.str.$factory(key))
+                throw _b_.KeyError.$factory(_b_.str.$factory(key))
             }
         }
     }else{
@@ -1456,7 +1456,7 @@ DOMNode.unbind = function(self, event){
         }
         // The indicated func was not found, error is thrown
         if(!flag){
-            throw KeyError.$factory('missing callback for event ' + event)
+            throw _b_.KeyError.$factory('missing callback for event ' + event)
         }
     }
 }
@@ -1478,7 +1478,7 @@ Query.__getitem__ = function(self, key){
     // returns a single value or a list of values
     // associated with key, or raise KeyError
     var result = self._values[key]
-    if(result === undefined){throw KeyError.$factory(key)}
+    if(result === undefined){throw _b_.KeyError.$factory(key)}
     if(result.length == 1){return result[0]}
     return result
 }

@@ -64,8 +64,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',1]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-07-31 18:45:25.111516"
-__BRYTHON__.timestamp=1533055525111
+__BRYTHON__.compiled_date="2018-07-31 22:22:15.792659"
+__BRYTHON__.timestamp=1533068535792
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_Cvars","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -11323,7 +11323,7 @@ for(var i=0;i < this.callbacks.length;i++){if(this.callbacks[i]===callback){foun
 this.callback.splice(i,1)
 this.elt.removeEventListener(this.evt,callback,false)
 break}}
-if(! found){throw KeyError.$factory("not found")}}}
+if(! found){throw _b_.KeyError.$factory("not found")}}}
 var OpenFile=$B.OpenFile={__class__: _b_.type,
 __name__: "OpenFile",__mro__:[object]}
 OpenFile.$factory=function(file,mode,encoding){var res={__class__: $OpenFileDict,file: file,reader: new FileReader()}
@@ -11395,7 +11395,7 @@ self.elt.parentNode.removeChild(self.elt)}
 DOMNode.__delitem__=function(self,key){if(self.elt.nodeType==9){
 var res=self.elt.getElementById(key)
 if(res){res.parentNode.removeChild(res)}
-else{throw KeyError.$factory(key)}}else{
+else{throw _b_.KeyError.$factory(key)}}else{
 self.elt.parentNode.removeChild(self.elt)}}
 DOMNode.__dir__=function(self){var res=[]
 for(var attr in self.elt){if(attr.charAt(0)!="$"){res.push(attr)}}
@@ -11474,9 +11474,9 @@ return object.__getattribute__(self,attr)}
 DOMNode.__getitem__=function(self,key){if(self.elt.nodeType==9){
 if(typeof key=="string"){var res=self.elt.getElementById(key)
 if(res){return DOMNode.$factory(res)}
-throw KeyError.$factory(key)}else{try{var elts=self.elt.getElementsByTagName(key.__name__),res=[]
+throw _b_.KeyError.$factory(key)}else{try{var elts=self.elt.getElementsByTagName(key.__name__),res=[]
 for(var i=0;i < elts.length;i++){res.push(DOMNode.$factory(elts[i]))}
-return res}catch(err){throw KeyError.$factory(_b_.str.$factory(key))}}}else{if((typeof key=="number" ||typeof key=="boolean")&&
+return res}catch(err){throw _b_.KeyError.$factory(_b_.str.$factory(key))}}}else{if((typeof key=="number" ||typeof key=="boolean")&&
 typeof self.elt.item=="function"){var key_to_int=_b_.int.$factory(key)
 if(key_to_int < 0){key_to_int +=self.elt.length}
 var res=DOMNode.$factory(self.elt.item(key_to_int))
@@ -11744,13 +11744,13 @@ self.elt.removeEventListener(event,callback,false)
 events.splice(j,1)
 flag=true
 break}}
-if(!flag){throw KeyError.$factory('missing callback for event ' + event)}}}
+if(!flag){throw _b_.KeyError.$factory('missing callback for event ' + event)}}}
 $B.set_func_names(DOMNode,"<dom>")
 var Query={__class__: _b_.type,__name__: "query"}
 Query.__contains__=function(self,key){return self._keys.indexOf(key)> -1}
 Query.__getitem__=function(self,key){
 var result=self._values[key]
-if(result===undefined){throw KeyError.$factory(key)}
+if(result===undefined){throw _b_.KeyError.$factory(key)}
 if(result.length==1){return result[0]}
 return result}
 var Query_iterator=$B.$iterator_class("query string iterator")
