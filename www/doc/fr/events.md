@@ -194,7 +194,8 @@ doc['_target'].bind('click',lambda ev:alert('target : %s ' %ev.target))
 </tr>
 
 <tr><td>`timeStamp`
-> la date/heure à laquelle l'événement s'est produit (en millisecondes depuis le 1/1/1970 à 0h)
+> la date/heure à laquelle l'événement s'est produit (en millisecondes depuis
+> début du temps de vie du document courant)
 </td>
 <td>
 <button id="_timeStamp">test</button>
