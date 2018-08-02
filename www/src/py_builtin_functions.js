@@ -782,7 +782,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false //attr == "__class__" && obj.__name__ == "Point"
+    var $test = false //attr == "__lt__" //&& obj.__name__ == "Point"
     // Shortcut for classes without parents
     if(klass !== undefined && klass.__bases__ && klass.__bases__.length == 0){
         if(obj.hasOwnProperty(attr)){
@@ -838,8 +838,11 @@ $B.$getattr = function(obj, attr, _default){
         // attribute __class__ is set for all Python objects
         return klass
       case '__dict__':
-        // attribute __dict__ returns a dictionary wrapping obj
-        return $B.obj_dict(obj) // defined in py_dict.js
+          if(is_class){
+              return $B.mappingproxy.$factory(obj) // defined in py_dict.js
+          }else{
+              return $B.obj_dict(obj)
+          }
       case '__doc__':
         // for builtins objects, use $B.builtins_doc
         for(var i = 0; i < builtin_names.length; i++){
@@ -952,6 +955,7 @@ $B.$getattr = function(obj, attr, _default){
 
     try{
         var res = attr_func(obj, attr)
+        if($test){console.log("result of attr_func", res)}
     }
     catch(err){
         if(_default !== undefined){
@@ -2356,7 +2360,8 @@ var wrapper_descriptor = $B.wrapper_descriptor =
     $B.make_class("wrapper_descriptor")
 
 wrapper_descriptor.__repr__ = wrapper_descriptor.__str__ = function(self){
-    return "<slot wrapper '" + self.$infos.__name__ + "' of function object>"
+    return "<slot wrapper '" + self.$infos.__name__ + "' of '" +
+        self.__objclass__.__name__ +"' object>"
 }
 $B.set_func_names(wrapper_descriptor, "builtins")
 

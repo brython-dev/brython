@@ -462,6 +462,7 @@
                 var value = _b_[name][key]
                 if(value === undefined){continue}
                 else if(value.__class__){continue}
+                else if(typeof value != "function"){continue}
                 else if(key == "__new__"){
                     value.__class__ = $B.builtin_function
                 }else if(key.startsWith("__")){
@@ -469,9 +470,11 @@
                 }else{
                     value.__class__ = $B.method_descriptor
                 }
+                value.__objclass__ = _b_[name]
             }
             _b_[name].__qualname__ = _b_[name].__qualname__ ||
                 _b_[name].__name__
         }
     }
+
 })(__BRYTHON__)

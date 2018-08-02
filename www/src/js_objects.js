@@ -277,7 +277,7 @@ JSObject.__getattribute__ = function(self,attr){
                 }
 
                 var result = js_attr.apply(new_this, args)
-
+                
                 return jsobj2pyobj(result)
             }
             res.__repr__ = function(){return '<function ' + attr + '>'}

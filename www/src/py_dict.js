@@ -513,7 +513,7 @@ dict.$setitem = function(self, key, value){
     return $N
 }
 
-dict.__str__ = dict.__repr__
+dict.__str__ = function(){return dict.__repr__.apply(null, arguments)}
 
 // add "reflected" methods
 $B.make_rmethods(dict)
@@ -664,20 +664,19 @@ dict.update = function(self){
         self = $.self,
         args = $.args,
         kw = $.kw
-
     if(args.length > 0){
         var o = args[0]
         if(isinstance(o, dict)){
-           if(o.$jsobj){o = jsobj2dict(o)}
-           $copy_dict(self, o)
+            if(o.$jsobj){o = jsobj2dict(o)}
+            $copy_dict(self, o)
         }else if(hasattr(o, "__getitem__") && hasattr(o, "keys")){
-           var _keys = _b_.list.$factory(getattr(o, "keys")()),
-               si = dict.__setitem__,
-               i = _keys.length
-           while(i--){
-               var _value = getattr(o, "__getitem__")(_keys[i])
-               si(self, _keys[i], _value)
-           }
+            var _keys = _b_.list.$factory(getattr(o, "keys")()),
+                si = dict.__setitem__,
+                i = _keys.length
+            while(i--){
+                var _value = getattr(o, "__getitem__")(_keys[i])
+                si(self, _keys[i], _value)
+            }
         }
     }
     $copy_dict(self, kw)
@@ -722,9 +721,14 @@ $B.$dict_get_copy = dict.copy  // return a shallow copy
 
 
 // Class for attribute __dict__ of classes
-var mappingproxy = $B.make_class("mappingproxy",
+var mappingproxy = $B.mappingproxy = $B.make_class("mappingproxy",
     function(obj){
-        var res = obj_dict(obj)
+        if(_b_.isinstance(obj, dict)){
+            // Should be a dictionary
+            var res = $B.obj_dict(obj.$string_dict)
+        }else{
+            var res = $B.obj_dict(obj)
+        }
         res.__class__ = mappingproxy
         return res
     }
@@ -733,6 +737,24 @@ var mappingproxy = $B.make_class("mappingproxy",
 mappingproxy.__setitem__ = function(){
     throw _b_.TypeError.$factory("'mappingproxy' object does not support " +
         "item assignment")
+}
+
+for(var attr in dict){
+    if(mappingproxy[attr] !== undefined ||
+            ["__class__", "__mro__", "__new__", "__init__", "__delitem__",
+                "clear", "fromkeys", "pop", "popitem", "setdefault",
+                "update"].indexOf(attr) > -1){
+        continue
+    }
+    if(typeof dict[attr] == "function"){
+        mappingproxy[attr] = (function(key){
+            return function(){
+                return dict[key].apply(null, arguments)
+            }
+        })(attr)
+    }else{
+        mappingproxy[attr] = dict[attr]
+    }
 }
 
 $B.set_func_names(mappingproxy, "builtins")

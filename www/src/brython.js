@@ -64,8 +64,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',1]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-08-01 08:38:06.288238"
-__BRYTHON__.timestamp=1533105486288
+__BRYTHON__.compiled_date="2018-08-02 20:08:30.003781"
+__BRYTHON__.timestamp=1533233310003
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_Cvars","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -6212,7 +6212,7 @@ break
 case '__class__':
 return klass
 case '__dict__':
-return $B.obj_dict(obj)
+if(is_class){return $B.mappingproxy.$factory(obj)}else{return $B.obj_dict(obj)}
 case '__doc__':
 for(var i=0;i < builtin_names.length;i++){if(obj===_b_[builtin_names[i]]){_get_builtins_doc()
 return $B.builtins_doc[builtin_names[i]]}}
@@ -6256,7 +6256,8 @@ if(attr_func===odga){var res=obj[attr]
 if(res===null){return null}
 else if(res===undefined && obj.hasOwnProperty(attr)){return res}else if(res !==undefined){if(res.__set__===undefined ||res.$is_class)
 return res}}else if($test){console.log("use attr_func",attr_func)}
-try{var res=attr_func(obj,attr)}
+try{var res=attr_func(obj,attr)
+if($test){console.log("result of attr_func",res)}}
 catch(err){if(_default !==undefined){return _default}
 throw err}
 if(res !==undefined){return res}
@@ -6807,7 +6808,8 @@ method_wrapper.__repr__=method_wrapper.__str__=function(self){return "<method wr
 $B.set_func_names(method_wrapper,"builtins")
 var wrapper_descriptor=$B.wrapper_descriptor=
 $B.make_class("wrapper_descriptor")
-wrapper_descriptor.__repr__=wrapper_descriptor.__str__=function(self){return "<slot wrapper '" + self.$infos.__name__ + "' of function object>"}
+wrapper_descriptor.__repr__=wrapper_descriptor.__str__=function(self){return "<slot wrapper '" + self.$infos.__name__ + "' of '" +
+self.__objclass__.__name__ +"' object>"}
 $B.set_func_names(wrapper_descriptor,"builtins")
 $B.builtin_classes=["bool","bytearray","bytes","classmethod","complex","dict","enumerate","filter","float","frozenset","int","list","map","memoryview","object","property","range","reversed","set","slice","staticmethod","str","super","tuple","type","zip"
 ]
@@ -8502,7 +8504,8 @@ for(var i=0;i < nb;i++){chunks.push(rest.substring(len - 3 * i - 3,len - 3 * i))
 chunks.reverse()
 res=sign + chunks.join(",")}
 return $B.format_width(res,fmt)}
-int.__floordiv__=function(self,other){if(isinstance(other,int)){other=int_value(other)
+int.__floordiv__=function(self,other){if(other.__class__==$B.long_int){return $B.long_int.__floordiv__($B.long_int.$factory(self),other)}
+if(isinstance(other,int)){other=int_value(other)
 if(other==0){throw ZeroDivisionError.$factory("division by zero")}
 return Math.floor(self / other)}
 if(isinstance(other,_b_.float)){if(!other.valueOf()){throw ZeroDivisionError.$factory("division by zero")}
@@ -8524,6 +8527,7 @@ if(rlshift !==None){return rlshift(self)}
 $err("<<",other)}
 int.__mod__=function(self,other){
 if(isinstance(other,_b_.tuple)&& other.length==1){other=other[0]}
+if(other.__class__===$B.long_int){return $B.long_int.__mod__($B.long_int.$factory(self),other)}
 if(isinstance(other,[int,_b_.float,bool])){other=int_value(other)
 if(other===false){other=0}
 else if(other===true){other=1}
@@ -9650,7 +9654,16 @@ var $list_iterator=$B.$iterator_class("list_iterator")
 list.__iter__=function(self){return $B.$iterator(self,$list_iterator)}
 list.__le__=function(self,other){return ! list.__gt__(self,other)}
 list.__len__=function(self){return self.length}
-list.__lt__=function(self,other){return ! list.__ge__(self,other)}
+list.__lt__=function(self,other){if(! isinstance(other,[list,_b_.tuple])){throw _b_.TypeError.$factory("unorderable types: list() >= "+
+$B.get_class(other).__name__ + "()")}
+var i=0
+while(i < self.length){if(i >=other.length){return true}
+if($B.rich_comp("__eq__",self[i],other[i])){i++}
+else{res=getattr(self[i],"__lt__")(other[i])
+if(res===_b_.NotImplemented){throw _b_.TypeError.$factory("unorderable types: " +
+$B.get_class(self[i]).__name__ + "() >= " +
+$B.get_class(other[i]).__name__ + "()")}else{return res}}}
+return other.length==self.length}
 list.__mul__=function(self,other){if(isinstance(other,_b_.int)){
 var res=[],$temp=self.slice(),len=$temp.length
 for(var i=0;i < other;i++){for(var j=0;j < len;j++){res.push($temp[j])}}
@@ -9800,7 +9813,7 @@ $B.get_class(a).__name__ + "()")}
 if(res){if(_a==_b){return 0}
 return -1}
 return 1}}else{cmp=function(a,b){var _a=func(a),_b=func(b)
-res=getattr(_a,"__le__")(_b)
+res=$B.$getattr(_a,"__lt__")(_b)
 if(res===_b_.NotImplemented){throw _b_.TypeError.$factory("unorderable types: " +
 $B.get_class(a).__name__ + "() <=" +
 $B.get_class(b).__name__ + "()")}
@@ -10839,7 +10852,7 @@ if(obj_ref !==undefined){
 _eq(self.$object_dict[_key][0])}
 self.$object_dict[_key]=[key,value]
 return $N}
-dict.__str__=dict.__repr__
+dict.__str__=function(){return dict.__repr__.apply(null,arguments)}
 $B.make_rmethods(dict)
 dict.clear=function(){
 var $=$B.args("clear",1,{self: null},["self"],arguments,{},null,null),self=$.self
@@ -10912,12 +10925,16 @@ $B.$dict_contains=dict.__contains__
 $B.$dict_items=function(d){return new $item_generator(d).as_list()}
 $B.$copy_dict=$copy_dict 
 $B.$dict_get_copy=dict.copy 
-var mappingproxy=$B.make_class("mappingproxy",function(obj){var res=obj_dict(obj)
+var mappingproxy=$B.mappingproxy=$B.make_class("mappingproxy",function(obj){if(_b_.isinstance(obj,dict)){
+var res=$B.obj_dict(obj.$string_dict)}else{var res=$B.obj_dict(obj)}
 res.__class__=mappingproxy
 return res}
 )
 mappingproxy.__setitem__=function(){throw _b_.TypeError.$factory("'mappingproxy' object does not support " +
 "item assignment")}
+for(var attr in dict){if(mappingproxy[attr]!==undefined ||
+["__class__","__mro__","__new__","__init__","__delitem__","clear","fromkeys","pop","popitem","setdefault","update"].indexOf(attr)> -1){continue}
+if(typeof dict[attr]=="function"){mappingproxy[attr]=(function(key){return function(){return dict[key].apply(null,arguments)}})(attr)}else{mappingproxy[attr]=dict[attr]}}
 $B.set_func_names(mappingproxy,"builtins")
 function jsobj2dict(x){var d=dict.$factory()
 for(var attr in x){if(attr.charAt(0)!="$" && attr !=="__class__"){if(x[attr]===undefined){continue}else if(x[attr].$jsobj===x){d.$string_dict[attr]=d}else{d.$string_dict[attr]=x[attr]}}}
@@ -12227,7 +12244,9 @@ _b_.__builtins__.__setattr__=function(attr,value){_b_[attr]=value}
 for(var name in _b_){if(_b_[name].__class__===_b_.type){for(var key in _b_[name]){var value=_b_[name][key]
 if(value===undefined){continue}
 else if(value.__class__){continue}
-else if(key=="__new__"){value.__class__=$B.builtin_function}else if(key.startsWith("__")){value.__class__=$B.wrapper_descriptor}else{value.__class__=$B.method_descriptor}}
+else if(typeof value !="function"){continue}
+else if(key=="__new__"){value.__class__=$B.builtin_function}else if(key.startsWith("__")){value.__class__=$B.wrapper_descriptor}else{value.__class__=$B.method_descriptor}
+value.__objclass__=_b_[name]}
 _b_[name].__qualname__=_b_[name].__qualname__ ||
 _b_[name].__name__}}})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins
