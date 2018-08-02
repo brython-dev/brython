@@ -279,7 +279,24 @@ list.__len__ = function(self){
 }
 
 list.__lt__ = function(self, other){
-    return ! list.__ge__(self, other)
+    if(! isinstance(other, [list, _b_.tuple])){
+        throw _b_.TypeError.$factory("unorderable types: list() >= "+
+            $B.get_class(other).__name__ + "()")
+    }
+    var i = 0
+    while(i < self.length){
+        if(i >= other.length){return true}
+        if($B.rich_comp("__eq__", self[i], other[i])){i++}
+        else{
+            res = getattr(self[i], "__lt__")(other[i])
+            if(res === _b_.NotImplemented){
+                throw _b_.TypeError.$factory("unorderable types: " +
+                    $B.get_class(self[i]).__name__  + "() >= " +
+                    $B.get_class(other[i]).__name__ + "()")
+            }else{return res}
+        }
+    }
+    return other.length == self.length
 }
 
 list.__mul__ = function(self, other){
@@ -663,7 +680,7 @@ list.sort = function(self){
                 cmp = function(a, b){
                     var _a = func(a),
                         _b = func(b)
-                    res = getattr(_a, "__le__")(_b)
+                    res = $B.$getattr(_a, "__lt__")(_b)
                     if(res === _b_.NotImplemented){
                         throw _b_.TypeError.$factory("unorderable types: " +
                             $B.get_class(a).__name__ + "() <=" +
