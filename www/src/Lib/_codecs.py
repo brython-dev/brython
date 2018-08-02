@@ -62,7 +62,6 @@ def lookup(encoding):
 
     if encoding in ('utf-8', 'utf_8'):
        from browser import console
-       console.log('encoding', encoding)
        import encodings.utf_8
        return encodings.utf_8.getregentry()
 
@@ -169,13 +168,12 @@ def utf_7_encode(*args,**kw):
 def utf_8_decode(*args,**kw):
     pass
 
-def utf_8_encode(*args,**kw):
-    input=args[0]
+def utf_8_encode(*args, **kw):
+    input = args[0]
     if len(args) == 2:
        errors = args[1]
     else:
-       errors=kw.get('errors', 'strict')
+       errors = kw.get('errors', 'strict')
 
     #todo need to deal with errors, but for now assume all is well.
-
-    return (bytes([_f for _f in input], 'utf-8'), len(input))
+    return (bytes(input, 'utf-8'), len(input))
