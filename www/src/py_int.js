@@ -224,6 +224,9 @@ int.__format__ = function(self, format_spec){
 }
 
 int.__floordiv__ = function(self,other){
+    if(other.__class__ == $B.long_int){
+        return $B.long_int.__floordiv__($B.long_int.$factory(self), other)
+    }
     if(isinstance(other, int)){
         other = int_value(other)
         if(other == 0){throw ZeroDivisionError.$factory("division by zero")}
@@ -277,6 +280,9 @@ int.__lshift__ = function(self, other){
 int.__mod__ = function(self, other) {
     // can't use Javascript % because it works differently for negative numbers
     if(isinstance(other,_b_.tuple) && other.length == 1){other = other[0]}
+    if(other.__class__ === $B.long_int){
+        return $B.long_int.__mod__($B.long_int.$factory(self), other)
+    }
     if(isinstance(other, [int, _b_.float, bool])){
         other = int_value(other)
         if(other === false){other = 0}
