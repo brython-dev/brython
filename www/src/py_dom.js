@@ -482,42 +482,6 @@ Options.$factory = function(parent){
 
 $B.set_func_names(Options, "<dom>")
 
-// Class for DOM element style
-
-var Style = {__class__: _b_.type, __name__: "CSSProperty"}
-
-Style.__mro__ = [object]
-
-Style.__getattr__ = function(self, attr){
-    return object.__getattribute__(self.js, attr)
-}
-
-Style.__setattr__ = function(self,attr,value){
-    if(attr.toLowerCase() === "float"){
-        self.js.cssFloat = value
-        self.js.styleFloat = value
-    }else{
-        switch(attr) {
-          case "top":
-          case "left":
-          case "height":
-          case "width":
-          case "borderWidth":
-            if (_b_.isinstance(value,_b_.int)){value = value + "px"}
-        }
-        self.js[attr] = value
-    }
-}
-
-Style.$factory = function(style){
-    // property "style"
-    return {__class__: Style,
-        js: style
-    }
-}
-
-$B.set_func_names(Style, "<dom>")
-
 // Class for DOM nodes
 
 var DOMNode = {
@@ -777,7 +741,7 @@ DOMNode.__getattribute__ = function(self, attr){
             return func
         }
         if(attr == 'options'){return Options.$factory(self.elt)}
-        if(attr == 'style'){return Style.$factory(self.elt[attr])}
+        if(attr == 'style'){return $B.JSObject.$factory(self.elt[attr])}
         if(Array.isArray(res)){return res} // issue #619
 
         return $B.$JS2Py(res)

@@ -606,6 +606,9 @@ $B.$setitem = function(obj, item, value){
     }else if(obj.__class__ === _b_.dict){
         _b_.dict.$setitem(obj, item, value)
         return
+    }else if(obj.__class__ === $B.JSObject){
+        $B.JSObject.__setattr__(obj, item, value)
+        return
     }
     _b_.getattr(obj, "__setitem__")(item, value)
 }
@@ -777,6 +780,13 @@ $B.$call = function(callable){
     else if(callable.$is_class){
         // Use metaclass __call__, cache result in callable.$factory
         return callable.$factory = $B.$instance_creator(callable)
+    }else if(callable.__class__ === $B.JSObject){
+        if(typeof(callable.js == "function")){
+            return callable.js
+        }else{
+            throw _b_.TypeError.$factory("'" + $B.get_class(callable).__name__ +
+                "' object is not callable")
+        }
     }
     try{
         return $B.$getattr(callable, "__call__")

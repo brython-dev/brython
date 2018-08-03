@@ -64,8 +64,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',1]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'alpha',0]
-__BRYTHON__.compiled_date="2018-08-02 20:08:30.003781"
-__BRYTHON__.timestamp=1533233310003
+__BRYTHON__.compiled_date="2018-08-03 10:07:49.367185"
+__BRYTHON__.timestamp=1533283669367
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_Cvars","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -5505,6 +5505,7 @@ $B.$setitem=function(obj,item,value){if(Array.isArray(obj)&& typeof item=="numbe
 if(obj[item]===undefined){throw _b_.IndexError.$factory("list assignment index out of range")}
 obj[item]=value
 return}else if(obj.__class__===_b_.dict){_b_.dict.$setitem(obj,item,value)
+return}else if(obj.__class__===$B.JSObject){$B.JSObject.__setattr__(obj,item,value)
 return}
 _b_.getattr(obj,"__setitem__")(item,value)}
 $B.augm_item_add=function(obj,item,incr){if(Array.isArray(obj)&& typeof item=="number" &&
@@ -5566,7 +5567,8 @@ throw err}}}}
 $B.$call=function(callable){if(callable.__class__===$B.method){return callable}
 else if(callable.$is_func ||typeof callable=="function"){return callable}else if(callable.$factory){return callable.$factory}
 else if(callable.$is_class){
-return callable.$factory=$B.$instance_creator(callable)}
+return callable.$factory=$B.$instance_creator(callable)}else if(callable.__class__===$B.JSObject){if(typeof(callable.js=="function")){return callable.js}else{throw _b_.TypeError.$factory("'" + $B.get_class(callable).__name__ +
+"' object is not callable")}}
 try{return $B.$getattr(callable,"__call__")}catch(err){throw _b_.TypeError.$factory("'" + $B.get_class(callable).__name__ +
 "' object is not callable")}}
 var $io={__class__: _b_.type,__name__: "io"}
@@ -11366,20 +11368,6 @@ else{self.parent.options.add(element.elt,index)}},item: function(self,index){ret
 Options.$factory=function(parent){return{
 __class__: Options,parent: parent}}
 $B.set_func_names(Options,"<dom>")
-var Style={__class__: _b_.type,__name__: "CSSProperty"}
-Style.__mro__=[object]
-Style.__getattr__=function(self,attr){return object.__getattribute__(self.js,attr)}
-Style.__setattr__=function(self,attr,value){if(attr.toLowerCase()==="float"){self.js.cssFloat=value
-self.js.styleFloat=value}else{switch(attr){case "top":
-case "left":
-case "height":
-case "width":
-case "borderWidth":
-if(_b_.isinstance(value,_b_.int)){value=value + "px"}}
-self.js[attr]=value}}
-Style.$factory=function(style){
-return{__class__: Style,js: style}}
-$B.set_func_names(Style,"<dom>")
 var DOMNode={__class__ : _b_.type,__mro__:[object],__name__ : "DOMNode"}
 DOMNode.$factory=function(elt,fromtag){if(elt.__class__===DOMNode){return elt}
 if(typeof elt=="number" ||typeof elt=="boolean" ||
@@ -11487,7 +11475,7 @@ func.$infos={__name__ : attr}
 func.$is_func=true
 return func}
 if(attr=='options'){return Options.$factory(self.elt)}
-if(attr=='style'){return Style.$factory(self.elt[attr])}
+if(attr=='style'){return $B.JSObject.$factory(self.elt[attr])}
 if(Array.isArray(res)){return res}
 return $B.$JS2Py(res)}
 return object.__getattribute__(self,attr)}
