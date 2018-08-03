@@ -233,8 +233,10 @@ class Template:
         nothing otherwise.
         If the value is of another type, add its string representation.
         """
-        if isinstance(value, bool):
-            self.html += "" if not value else " " + name
+        if value == "False":
+            return
+        elif value == "True":
+            self.html += " " + name
         else:
             self.html += " " + name + '="' + str(value) + '"'
 
@@ -244,7 +246,7 @@ class Template:
         """
         # Set attribute "data" to an instance of class ElementData.
         self.data = ElementData(**ns)
-
+        
         # Add names "__write__" and "__render_attr__" to namespace.
         ns.update({"__write__": self.write,
             "__render_attr__": self.render_attr})
@@ -287,6 +289,7 @@ class Template:
             parent = self.element.parent
             self.element.outerHTML = self.html
             self.element = parent.childNodes[rank]
+
         else:
             # If the template is the document, only reset (inner)html
             self.element.html = self.html
