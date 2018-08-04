@@ -778,6 +778,7 @@ $B.$bool = function(obj){ // return true or false
 }
 
 var bool = {
+    __bases__: [int],
     __class__: _b_.type,
     __module__: "builtins",
     __mro__: [int, object],
