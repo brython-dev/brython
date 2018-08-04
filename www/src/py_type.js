@@ -434,7 +434,8 @@ type.__getattribute__ = function(klass, attr){
             return res
         case "__bases__":
             var res = klass.__bases__ || _b_.tuple.$factory()
-            if(res.indexOf(_b_.object) == -1){
+            res.__class__ = _b_.tuple
+            if(res.length == 0){
                 res.push(_b_.object)
             }
             return res
