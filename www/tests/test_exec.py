@@ -78,3 +78,11 @@ assert loc["z"] == 2
 
 exec("z = y", glob)
 assert glob["z"] == 9
+
+# issue 894
+def f():
+    assert 'foo' in g
+
+g = {'f': f}
+
+exec('def foo(): pass\nf()', g)
