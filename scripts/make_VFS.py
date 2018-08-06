@@ -6,6 +6,7 @@ import os
 import re
 
 import python_minifier
+import git
 
 class Visitor(ast.NodeVisitor):
     """Used to list all the modules imported by a script."""
@@ -77,6 +78,8 @@ def process(filename, exclude_dirs=['test','site-packages']):
                     continue
                 if re.match(r'^module\d+\..*$', _file):
                     continue
+                if not git.in_index(_file):
+                    continue
                 nb += 1
 
                 file_name = os.path.join(root, _file)
@@ -115,7 +118,7 @@ def process(filename, exclude_dirs=['test','site-packages']):
                         VFS[mod_name] = [ext, data, imports]
                 else:
                    VFS[mod_name] = [ext, data]
-                print("adding {}".format(mod_name))
+                # print("adding {}".format(mod_name))
 
     print('{} files, {} errors'.format(nb, nb_err))
     with open(filename, "w") as out:

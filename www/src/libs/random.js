@@ -533,7 +533,7 @@ Random.getrandbits = function(){
         throw _b_.ValueError.$factory('number of bits must be greater than zero')
     }
     if(k != _b_.int.$factory(k)){
-        throw _b_.TypeError('number of bits should be an integer')
+        throw _b_.TypeError.$factory('number of bits should be an integer')
     }
     var numbytes = (k + 7), // bits / 8 and rounded up
         x = _b_.int.from_bytes(Random._urandom(self, numbytes), 'big')
@@ -710,7 +710,7 @@ Random.sample = function(){
         k = $.k
 
     if(!_b_.hasattr(population, '__len__')){
-        throw _b_.TypeError("Population must be a sequence or set. " +
+        throw _b_.TypeError.$factory("Population must be a sequence or set. " +
             "For dicts, use list(d).")
     }
     var n = _b_.getattr(population, '__len__')()
@@ -771,7 +771,7 @@ Random.seed = function(){
         }else if(_b_.isinstance(a, [_b_.bytes, _b_.bytearray])){
             a = _b_.int.from_bytes(a, 'big')
         }else if(!_b_.isinstance(a, _b_.int)){
-            throw _b_.TypeError('wrong argument')
+            throw _b_.TypeError.$factory('wrong argument')
         }
         if(a.__class__ === $B.long_int){
             // In this implementation, seed() only accepts safe integers
@@ -803,7 +803,7 @@ Random.setstate = function(state){
         self = $.self
     var state = self._random.getstate()
     if(! Array.isArray($.state)){
-        throw _b_.TypeError('state must be a list, not '+
+        throw _b_.TypeError.$factory('state must be a list, not '+
             $B.get_class($.state).__name__)
     }
     if($.state.length < state.length){
@@ -989,7 +989,7 @@ var SystemRandom = $B.make_class("SystemRandom",
     }
 )
 SystemRandom.__getattribute__ = function(){
-    throw $B.builtins.NotImplementedError()
+    throw $B.builtins.NotImplementedError.$factory()
 }
 
 $module.SystemRandom = SystemRandom

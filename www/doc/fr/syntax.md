@@ -11,9 +11,9 @@ Mots clés et fonctions intégrées
 
 Brython supporte la plupart des mots-clés et des fonctions de Python 3 :
 
-- mots clés : `as, assert, break, class, continue, def, del, elif, else, `
-  `except, False, finally, for, from, global, if, import, is, lambda, None, `
-  `nonlocal, pass, return, True, try, while, with, yield`
+- mots clés : `and, as, assert, async, await, break, class, continue, def, del, elif, else, `
+  `except, False, finally, for, from, global, if, import, in, is, lambda, None, `
+  `nonlocal, not, or, pass, raise, return, True, try, while, with, yield`
 - fonctions et classes intégrées : `abs, all, any, ascii, bin, bool, bytes,`
   `callable, chr, classmethod, delattr, dict, dir, divmod, `
   `enumerate, eval, exec, filter, float, frozenset, getattr, `
@@ -26,10 +26,22 @@ Brython supporte la plupart des mots-clés et des fonctions de Python 3 :
 
 Quelques particularités liées au contexte d'exécution dans un navigateur :
 
+- les fonctions Javascript ne peuvent pas bloquer l'exécution pendant une 
+  durée donnée, ou en attendant qu'un événement se produise, avant de passer à
+  l'instruction suivante. Pour cette raison, on ne peut pas utiliser
+  `time.sleep()` (il faut utiliser à la place les fonctions du module
+  **browser.timer** telles que `set_timeout()` ou `set_interval()`) ; la
+  fonction intégrée `input()` est simulée par la fonction Javascript
+  `prompt()` ; les méthodes bloquantes du module `asyncio` ne sont en fait
+  pas bloquantes, c'est-à-dire que les instructions qui suivent sont
+  exécutées immédiatement.
+
 - la fonction `open()` prend comme argument l'url du fichier à ouvrir ; comme
   on utilise un appel Ajax, elle doit être dans le même domaine que le script.
   L'objet retourné par `open()` possède les méthodes de lecture et d'accès
-  habituelles : `read, readlines, seek, tell, close`
+  habituelles : `read, readlines, seek, tell, close`. Seul le mode texte est
+  pris en compte: l'appel Ajax est bloquant et dans ce mode, on ne peut pas
+  donner de valeur à l'attribut `responseType`
 
 - par défaut, `print()` affiche sur la console du navigateur, et les messages
   d'erreur sont également affichés sur cette console. `sys.stderr` et
@@ -54,13 +66,6 @@ window.print(text)
   Brython ne gère pas le comptage de référence comme CPython, donc la
   méthode `__del__()` n'est pas appelée quand une instance de classe n'est
   plus référencée.
-
-- les fonctions comme `time.sleep()` qui bloquent l'exécution pendant une
-  durée donnée, ou en attendant qu'un événement se produise, ne sont pas
-  gérées parce qu'il n'y a pas d'équivalent en Javascript : il faut utiliser
-  dans ce cas les fonctions du module **browser.timer** telles que
-  `set_timeout()` ou `set_interval()`, ou des gestionnaires d'événements
-  (méthode `bind()` des éléments DOM).
 
 - le parseur JSON réutilise celui de Javascript ; à cause de cela, les
   nombres réels égaux à des entiers (par exemple 1.0) sont convertis en

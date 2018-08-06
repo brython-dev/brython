@@ -58,16 +58,9 @@ function parent_package(mod_name) {
     return parts.join(".")
 }
 
-function $importer(){
-    // returns the XMLHTTP object to handle imports
-    var $xmlhttp = new XMLHttpRequest()
-
-    var fake_qs
-    return [$xmlhttp, fake_qs, timer]
-}
-
 function $download_module(module, url, $package){
-    var $xmlhttp = new XMLHttpRequest(),
+    $B.xhr = $B.xhr || new XMLHttpRequest()
+    var xhr = $B.xhr,
         fake_qs
 
     switch ($B.$options.cache) {
@@ -82,7 +75,7 @@ function $download_module(module, url, $package){
     }
 
     var timer = _window.setTimeout(function(){
-            $xmlhttp.abort()
+            xhr.abort()
             throw _b_.ImportError.$factory("No module named '" + module + "'")
         }, 5000)
 
@@ -93,43 +86,33 @@ function $download_module(module, url, $package){
 
     $B.download_time = $B.download_time || 0
 
-    $xmlhttp.open("GET", url + fake_qs, false)
+    xhr.open("GET", url + fake_qs, false)
+    xhr.send()
 
     if($B.$CORS){
-      $xmlhttp.onload = function() {
-         if(this.status == 200 || this.status == 0){
-            res = this.responseText
-         }else{
-            res = _b_.FileNotFoundError.$factory("No module named '" +
-                mod_name + "'")
-         }
-      }
-      $xmlhttp.onerror = function() {
-         res = _b_.FileNotFoundError.$factory("No module named '" +
-             mod_name + "'")
-      }
+        if(xhr.status == 200 || xhr.status == 0){
+           res = xhr.responseText
+        }else{
+           res = _b_.FileNotFoundError.$factory("No module named '" +
+               mod_name + "'")
+        }
     }else{
-        $xmlhttp.onreadystatechange = function(){
-            if(this.readyState == 4){
-                _window.clearTimeout(timer)
-                if(this.status == 200 || $xmlhttp.status == 0){
-                    res = this.responseText
-                    module.$last_modified =
-                        this.getResponseHeader("Last-Modified")
-                }else{
-                    // don't throw an exception here, it will not be caught
-                    // (issue #30)
-                    console.log("Error " + this.status +
-                        " means that Python module " + mod_name +
-                        " was not found at url " + url)
-                    res = _b_.FileNotFoundError.$factory("No module named '" +
-                        mod_name + "'")
-                }
+        if(xhr.readyState == 4){
+            if(xhr.status == 200 || xhr.status == 0){
+                res = xhr.responseText
+                module.$last_modified =
+                    xhr.getResponseHeader("Last-Modified")
+            }else{
+                // don't throw an exception here, it will not be caught
+                // (issue #30)
+                console.log("Error " + xhr.status +
+                    " means that Python module " + mod_name +
+                    " was not found at url " + url)
+                res = _b_.FileNotFoundError.$factory("No module named '" +
+                    mod_name + "'")
             }
         }
     }
-    if("overrideMimeType" in $xmlhttp){$xmlhttp.overrideMimeType("text/plain")}
-    $xmlhttp.send()
 
     _window.clearTimeout(timer)
     // sometimes chrome doesn't set res correctly, so if res == null,
@@ -159,7 +142,7 @@ function import_js(module, path) {
 function run_js(module_contents, path, _module){
     // FIXME : Enhanced module isolation e.g. run_js arg names , globals ...
     try{
-        eval(module_contents)
+        var $module = new Function(module_contents + ";\nreturn $module")()
         if($B.$options.store){_module.$js = module_contents}
     }catch(err){
         console.log(err)
@@ -273,7 +256,8 @@ function run_py(module_contents, path, module, compiled) {
            console.log("code for module " + module.__name__)
            console.log(js)
         }
-        eval(js)
+        js += "; return $module"
+        var $module = (new Function(js))() //eval(js)
     }catch(err){
         console.log(err + " for module " + module.__name__)
         console.log("module", module)
@@ -376,18 +360,13 @@ var finder_VFS = {
                    $B.imported[parent].__package__ = elts.join(".")
                }
                try{
-                   eval(mod_js)
+                   mod_js += "return $locals_" + parent.replace(/\./g, "_")
+                   var $module = new Function(mod_js)()
                }catch(err){
                    console.log(mod_js)
                    console.log(err)
                    for(var k in err){console.log(k, err[k])}
                    console.log(Object.keys($B.imported))
-                   throw err
-               }
-               try{
-                   var $module = eval("$locals_" +parent.replace(/\./g, "_"))
-               }catch(err){
-                   console.log("error", parent, mod_js)
                    throw err
                }
                for(var attr in $module){
@@ -447,16 +426,18 @@ var finder_VFS = {
     }
 }
 
-finder_VFS.create_module.$type = "classmethod"
-finder_VFS.exec_module.$type = "classmethod"
-finder_VFS.find_module.$type = "classmethod"
-finder_VFS.find_spec.$type = "classmethod"
+$B.set_func_names(finder_VFS, "<import>")
+
+for(var method in finder_VFS){
+    if(typeof finder_VFS[method] == "function"){
+        finder_VFS[method] = _b_.classmethod.$factory(
+            finder_VFS[method])
+    }
+}
 
 finder_VFS.$factory = function(){
     return {__class__: finder_VFS}
 }
-
-$B.set_func_names(finder_VFS, "<import>")
 
 /**
  * Module importer optimizing module lookups via stdlib_paths.js
@@ -542,16 +523,19 @@ var finder_stdlib_static = {
     }
 }
 
-finder_stdlib_static.create_module.$type = "classmethod"
-finder_stdlib_static.exec_module.$type = "classmethod"
-finder_stdlib_static.find_module.$type = "classmethod"
-finder_stdlib_static.find_spec.$type = "classmethod"
+$B.set_func_names(finder_stdlib_static, "<import>")
+
+for(var method in finder_stdlib_static){
+    if(typeof finder_stdlib_static[method] == "function"){
+        finder_stdlib_static[method] = _b_.classmethod.$factory(
+            finder_stdlib_static[method])
+    }
+}
 
 finder_stdlib_static.$factory = function (){
     return {__class__: finder_stdlib_static}
 }
 
-$B.set_func_names(finder_stdlib_static, "<import>")
 /**
  * Search an import path for .py modules
  */
@@ -626,16 +610,19 @@ var finder_path = {
     }
 }
 
-finder_path.create_module.$type = "classmethod"
-finder_path.exec_module.$type = "classmethod"
-finder_path.find_module.$type = "classmethod"
-finder_path.find_spec.$type = "classmethod"
+$B.set_func_names(finder_path, "<import>")
+
+for(var method in finder_path){
+    if(typeof finder_path[method] == "function"){
+        finder_path[method] = _b_.classmethod.$factory(
+            finder_path[method])
+    }
+}
 
 finder_path.$factory = function(){
     return {__class__: finder_path}
 }
 
-$B.set_func_names(finder_path, "<import>")
 
 /**
  * Find modules packaged in a js script to be used as a virtual file system
@@ -672,6 +659,7 @@ var vfs_hook = {
                 return _b_.None
             }
         }
+        self.__class__.vfs = self.vfs
         var stored = self.vfs[fullname]
         if(stored === undefined){return _b_.None}
         var is_package = stored[2]
@@ -693,6 +681,7 @@ var vfs_hook = {
 
     invalidate_caches: function(self){self.vfs = undefined}
 }
+
 vfs_hook.$factory = function(path) {
     if(path.substr(-1) == '/'){
         path = path.slice(0, -1)
@@ -702,7 +691,6 @@ vfs_hook.$factory = function(path) {
         throw _b_.ImportError.$factory('VFS file URL must end with .vfs.js extension');
     }
     self = {__class__: vfs_hook, path: path}
-    vfs_hook.load_vfs(self)
     return self
 }
 
@@ -990,7 +978,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
         if(alias){
             locals[alias] = $B.imported[mod_name]
         }else{
-            locals[norm_parts[0]] = modobj
+            locals[$B.to_alias(norm_parts[0])] = modobj
             // TODO: After binding 'a' should we also bind 'a.b' , 'a.b.c' , ... ?
         }
     }else{

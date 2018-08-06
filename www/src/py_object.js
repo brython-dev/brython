@@ -92,8 +92,8 @@ object.__getattribute__ = function(obj, attr){
 
     var klass = obj.__class__ || $B.get_class(obj)
 
-    var trace = undefined
-    if(attr == trace){console.log("attr", attr, "de", obj, "klass", klass)}
+    var $test = false //attr == "mytest"
+    if($test){console.log("attr", attr, "de", obj, "klass", klass)}
     if(attr === "__class__"){
         return klass
     }
@@ -126,9 +126,14 @@ object.__getattribute__ = function(obj, attr){
     }
 
     if(res !== undefined){
-
+        if($test){console.log(res)}
         if(res.__class__ === _b_.property){
             return res.__get__(res, obj, klass)
+        }
+        if(res.__class__ === $B.method){
+            if($test){console.log("res is method")}
+            if(res.__get__ === undefined){console.log("bizarre", obj, attr, res)}
+            return res.__get__(obj, klass)
         }
 
         var get = res.__get__
@@ -139,6 +144,7 @@ object.__getattribute__ = function(obj, attr){
                 get = res.__class__.__mro__[i].__get__
             }
         }
+        if($test){console.log("get", get)}
         var __get__ = get === undefined ? null :
             _b_.getattr(res, "__get__", null)
 
@@ -169,6 +175,7 @@ object.__getattribute__ = function(obj, attr){
             // __new__ is a static method
             if(attr == "__new__"){res.$type = "staticmethod"}
             var res1 = __get__.apply(null, [res, obj, klass])
+            if($test){console.log("res", res, "res1", res1)}
 
             if(typeof res1 == "function"){
                 // If attribute is a class then return it unchanged
@@ -213,21 +220,40 @@ object.__getattribute__ = function(obj, attr){
                 // instance method object
                 if(res.$type == "staticmethod"){return res}
                 else{
-                    var self = res.$type == "classmethod" ? klass : obj
+                    var self = res.__class__ === $B.method ? klass : obj
                     function method(){
                         var args = [self]
                         for(var i = 0; i < arguments.length; i++){
                             args.push(arguments[i])
                         }
-                        return res.apply(null, args)
+                        if($test){console.log("inside method", res, args)}
+                        var result = res.apply(null, args)
+                        if($test){console.log("result", result)}
+                        return result
                     }
                     method.__class__ = $B.method
+                    method.__get__ = function(obj, cls){
+                        var clmethod = function(){
+                            return res(cls, ...arguments)
+                        }
+                        clmethod.__class__ = $B.method
+                        clmethod.$infos = {
+                            __self__: cls,
+                            __func__: res,
+                            __name__: res.$infos.__name__,
+                            __qualname__: cls.__name__ + "." + res.$infos.__name__
+                        }
+                        return clmethod
+                    }
+                    method.__get__.__class__ = $B.method_wrapper
+                    method.__get__.$infos = res.$infos
                     method.$infos = {
                         __self__: self,
                         __func__: res,
                         __name__: attr,
                         __qualname__: klass.__name__ + "." + attr
                     }
+                    if($test){console.log("return method", method)}
                     return method
                 }
             }else{
@@ -301,18 +327,6 @@ object.__init__ = function(){
     return _b_.None
 }
 
-object.__init_subclass__ = function(cls, kwargs){
-    // Default implementation only checks that no keyword arguments were passed
-    if(kwargs !== undefined){
-        if(kwargs.__class__ !== _b_.dict ||
-                Object.keys(kwargs.$string_dict).length > 0){
-            throw _b_.TypeError.$factory(
-                "__init_subclass__() takes no keyword arguments")
-        }
-    }
-    return _b_.None
-}
-
 object.__le__ = function(){return _b_.NotImplemented}
 
 object.__lt__ = function(){return _b_.NotImplemented}
@@ -362,7 +376,8 @@ object.__repr__ = function(self){
     if(self.__class__ === _b_.type) {
         return "<class '" + self.__name__ + "'>"
     }
-    if(self.__class__.__module__ !== undefined){
+    if(self.__class__.__module__ !== undefined &&
+            self.__class__.__module__ !== "builtins"){
         return "<" + self.__class__.__module__ + "." +
             self.__class__.__name__ + " object>"
     }else{

@@ -3,12 +3,7 @@
 
 import os
 
-gitindex = os.path.join(os.path.dirname(os.getcwd()), '.git', 'index')
-try:
-    with open(gitindex, 'rb') as f:
-        gitindex = f.read()
-except IOError:
-    gitindex = None
+import git
 
 libfolder = os.path.join(os.path.dirname(os.getcwd()), 'www', 'src')
 simple_javascript_template_string = """;(function($B){\n
@@ -39,8 +34,7 @@ with open(os.path.join(libfolder, 'stdlib_paths.js'), 'w') as out:
             if filename == '__init__.py':
                 mod_name = '.'.join(path[:-1]).lstrip('.')
             mod_path = 'Lib/'+'/'.join(path)
-            if (gitindex is not None
-                    and not mod_path.encode('ascii', 'ignore') in gitindex):
+            if not git.in_index(mod_path):
                 print(mod_path, 'not in index')
                 continue
             if filename == '__init__.py':
