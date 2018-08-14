@@ -24,7 +24,7 @@ Here is a simple example of an HTML page running Python:
 
             def echo(event):
                 alert(document["zone"].value)
-            
+
             document["mybutton"].bind("click", echo)
             </script>
 
@@ -158,6 +158,9 @@ If you find a bug/issue or do you want to see a new feature in Brython, please,
 [open a new issue](https://github.com/brython-dev/brython/issues "Brython GitHub Issues").
 
 There's a [Brython Community on Google Plus](https://plus.google.com/communities/114694456237115550531).
+
+If you want to contribute to Brython, please read the [contributing guide]
+(https://github.com/brython-dev/brython/blob/master/CONTRIBUTING.md).
 
 Agile Development
 =================
