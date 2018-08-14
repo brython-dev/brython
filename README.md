@@ -159,8 +159,7 @@ If you find a bug/issue or do you want to see a new feature in Brython, please,
 
 There's a [Brython Community on Google Plus](https://plus.google.com/communities/114694456237115550531).
 
-If you want to contribute to Brython, please read the [contributing guide]
-(https://github.com/brython-dev/brython/blob/master/CONTRIBUTING.md).
+If you want to contribute to Brython, please read the [contributing guide](https://github.com/brython-dev/brython/blob/master/CONTRIBUTING.md).
 
 Agile Development
 =================
