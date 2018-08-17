@@ -813,9 +813,16 @@ str.__mul__ = function(){
 str.__ne__ = function(self,other){return other !== self.valueOf()}
 
 str.__repr__ = function(self){
-    var res = self.replace(/\n/g,"\\\\n")
+    var res = self
     // escape the escape char
-    res = res.replace(/\\/g, "\\\\")
+    res = self.replace(/\\/g, "\\\\")
+    // special cases
+    res = res.replace(new RegExp("\u0007", "g"), "\\x07").
+              replace(new RegExp("\b", "g"), "\\x08").
+              replace(new RegExp("\f", "g"), "\\x0c").
+              replace(new RegExp("\n", "g"), "\\n").
+              replace(new RegExp("\r", "g"), "\\r").
+              replace(new RegExp("\t", "g"), "\\t")
     if(res.search('"') == -1 && res.search("'") == -1){
         return "'" + res + "'"
     }else if(self.search('"') == -1){
@@ -830,9 +837,9 @@ str.__setitem__ = function(self, attr, value){
     throw _b_.TypeError.$factory(
         "'str' object does not support item assignment")
 }
+
 str.__str__ = function(self){
-    if(self === undefined){return "<class 'str'>"}
-    return self.toString()
+    return self
 }
 str.toString = function(){return "string!"}
 

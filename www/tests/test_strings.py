@@ -147,4 +147,14 @@ assert not "1x".isidentifier()
 s = "ess\N{LATIN CAPITAL LETTER A}i"
 assert s == "essAi"
 
+# repr() of escaped characters
+
+assert repr("a\ab") == "'a\\x07b'"
+assert repr("a\bb") == "'a\\x08b'"
+assert repr("a\fb") == "'a\\x0cb'"
+assert repr("a\nb") == "'a\\nb'"
+assert repr("a\rb") == "'a\\rb'"
+assert repr("a\tb") == "'a\\tb'"
+assert repr("a\\b") == "'a\\\\b'"
+
 print("passed all tests...")

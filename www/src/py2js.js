@@ -8255,8 +8255,12 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
                 found = false
             while(end < src.length){
                 if(escaped){
-                    zone += src.charAt(end)
-                    if(raw && src.charAt(end) == '\\'){zone += '\\'}
+                    if(src.charAt(end) == "a"){
+                        zone = zone.substr(0, zone.length - 1) + "\u0007"
+                    }else{
+                        zone += src.charAt(end)
+                        if(raw && src.charAt(end) == '\\'){zone += '\\'}
+                    }
                     escaped = false
                     end++
                 }else if(src.charAt(end) == "\\"){

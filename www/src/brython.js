@@ -64,9 +64,9 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',1]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-08-04 21:51:09.644779"
-__BRYTHON__.timestamp=1533412269644
-__BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_Cvars","_csv","_functools","_imp","_io","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
+__BRYTHON__.compiled_date="2018-08-17 11:52:45.922172"
+__BRYTHON__.timestamp=1534499565922
+__BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_Cvars","_csv","_functools","_imp","_io","_py_abc","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
 isFinite(value)&&
@@ -4232,8 +4232,8 @@ if(src.substr(pos,3)==car + car + car){_type="triple_string"
 end=pos + 3}else{_type="string"
 end=pos + 1}
 var escaped=false,zone=car,found=false
-while(end < src.length){if(escaped){zone +=src.charAt(end)
-if(raw && src.charAt(end)=='\\'){zone +='\\'}
+while(end < src.length){if(escaped){if(src.charAt(end)=="a"){zone=zone.substr(0,zone.length - 1)+ "\u0007"}else{zone +=src.charAt(end)
+if(raw && src.charAt(end)=='\\'){zone +='\\'}}
 escaped=false
 end++}else if(src.charAt(end)=="\\"){if(raw){if(end < src.length - 1 &&
 src.charAt(end + 1)==car){zone +='\\\\' + car
@@ -6514,7 +6514,10 @@ var ks=$ns['kw'].$string_dict
 var end=(ks['end']===undefined ||ks['end']===None)? '\n' : ks['end'],sep=(ks['sep']===undefined ||ks['sep']===None)? ' ' : ks['sep'],file=ks['file']===undefined ? $B.stdout : ks['file'],args=$ns['args']
 var items=[]
 args.forEach(function(arg){items.push(_b_.str.$factory(arg))})
-getattr(file,'write')(items.join(sep)+ end)
+var res=items.join(sep)+ end
+res=res.replace(new RegExp("\u0007","g"),"").
+replace(new RegExp("(.)\b","g"),"")
+getattr(file,'write')(res)
 return None}
 $print.__name__='print'
 $print.is_func=true
@@ -7383,8 +7386,8 @@ function _hex(_int){return _int.toString(16)}
 function _int(hex){return parseInt(hex,16)}
 function normalise(encoding){var enc=encoding.toLowerCase()
 if(enc.substr(0,7)=="windows"){enc="cp" + enc.substr(7)}
-enc=enc.replace("-","")
-enc=enc.replace("-","_")
+if(enc.startsWith("cp")||enc.startsWith("iso")){enc=enc.replace("-","")}
+enc=enc.replace(/-/g,"_")
 return enc}
 function load_decoder(enc){
 if(to_unicode[enc]===undefined){load_encoder(enc)
@@ -7429,6 +7432,24 @@ case "latin1":
 case "L1":
 b.forEach(function(item){s +=String.fromCharCode(item)})
 break
+case "unicode_escape":
+console.log("unicode_escape",b)
+var rank=0
+while(rank < b.length){var item=b[rank]
+if(item=="\\".charCodeAt(0)){switch(String.fromCharCode(b[rank + 1])){case "b":
+s=s.substr(0,s.length - 1)
+rank ++
+break
+case "n":
+s +="\n"
+rank++
+break
+case "t":
+s +="\t"
+rank++
+break}}else{s +=String.fromCharCode(item)}
+rank++}
+break
 case "ascii":
 for(var i=0,len=b.length;i < len;i++){var cp=b[i]
 if(cp <=127){s +=String.fromCharCode(cp)}
@@ -7439,7 +7460,8 @@ throw _b_.UnicodeDecodeError.$factory(msg)}}
 break
 default:
 try{load_decoder(enc)}
-catch(err){throw _b_.LookupError.$factory("unknown encoding: " + enc)}
+catch(err){console.log("error load_decoder",err)
+throw _b_.LookupError.$factory("unknown encoding: " + enc)}
 b.forEach(function(item){var u=to_unicode[enc][item]
 if(u !==undefined){s +=String.fromCharCode(u)}
 else{s +=String.fromCharCode(item)}})
@@ -7448,6 +7470,7 @@ return s}
 function encode(s,encoding){var $=$B.args("encode",2,{s:null,encoding:null},["s","encoding"],arguments,{},null,null),s=$.s,encoding=$.encoding
 var t=[],pos=0,enc=normalise(encoding)
 switch(enc){case "utf-8":
+case "utf_8":
 case "utf8":
 var _int_800=_int("800"),_int_c2=_int("c2"),_int_1000=_int("1000"),_int_e0=_int("e0"),_int_e1=_int("e1"),_int_a0=_int("a0"),_int_80=_int("80"),_int_2000=_int("2000"),_int_D000=_int("D000")
 for(var i=0,len=s.length;i < len;i++){var cp=s.charCodeAt(i)
@@ -10164,16 +10187,21 @@ var $res=""
 for(var i=0;i< $.other;i++){$res +=$.self.valueOf()}
 return $res}
 str.__ne__=function(self,other){return other !==self.valueOf()}
-str.__repr__=function(self){var res=self.replace(/\n/g,"\\\\n")
-res=res.replace(/\\/g,"\\\\")
+str.__repr__=function(self){var res=self
+res=self.replace(/\\/g,"\\\\")
+res=res.replace(new RegExp("\u0007","g"),"\\x07").
+replace(new RegExp("\b","g"),"\\x08").
+replace(new RegExp("\f","g"),"\\x0c").
+replace(new RegExp("\n","g"),"\\n").
+replace(new RegExp("\r","g"),"\\r").
+replace(new RegExp("\t","g"),"\\t")
 if(res.search('"')==-1 && res.search("'")==-1){return "'" + res + "'"}else if(self.search('"')==-1){return '"' + res + '"'}
 var qesc=new RegExp("'","g")
 res="'" + res.replace(qesc,"\\'")+ "'"
 return res}
 str.__setitem__=function(self,attr,value){throw _b_.TypeError.$factory(
 "'str' object does not support item assignment")}
-str.__str__=function(self){if(self===undefined){return "<class 'str'>"}
-return self.toString()}
+str.__str__=function(self){return self}
 str.toString=function(){return "string!"}
 var $comp_func=function(self,other){if(typeof other !=="string"){throw _b_.TypeError.$factory(
 "unorderable types: 'str' > " + $B.get_class(other).__name__ + "()")}

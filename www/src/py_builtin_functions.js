@@ -1562,7 +1562,11 @@ function $print(){
     args.forEach(function(arg){
         items.push(_b_.str.$factory(arg))
     })
-    getattr(file, 'write')(items.join(sep) + end)
+    // Special handling of \a and \b
+    var res = items.join(sep) + end
+    res = res.replace(new RegExp("\u0007", "g"), "").
+              replace(new RegExp("(.)\b", "g"), "")
+    getattr(file, 'write')(res)
     return None
 }
 $print.__name__ = 'print'
