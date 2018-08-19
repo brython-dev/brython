@@ -157,4 +157,32 @@ assert repr("a\rb") == "'a\\rb'"
 assert repr("a\tb") == "'a\\tb'"
 assert repr("a\\b") == "'a\\\\b'"
 
+# unicode-escape encoding
+# https://groups.google.com/forum/?fromgroups=#!topic/brython/jI66k55_zSk
+import codecs
+
+d = codecs.decode("Hello,\\nworld!", "unicode-escape")
+assert d == "Hello,\nworld!"
+
+d = codecs.decode("Hello,\\tworld!", "unicode-escape")
+assert d == "Hello,\tworld!"
+
+d = codecs.decode("Hello,\\bworld!", "unicode-escape")
+assert d == "Hello,\bworld!"
+
+d = codecs.decode("Hello,\\'world!", "unicode-escape")
+assert d == "Hello,'world!"
+d = codecs.decode('Hello,\\"world!', "unicode-escape")
+assert d == 'Hello,"world!'
+
+
+s = bytes("Hello,\\nworld!", "utf-8").decode("unicode-escape")
+assert s == "Hello,\nworld!"
+
+s = bytes("Hello,\\tworld!", "utf-8").decode("unicode-escape")
+assert s == "Hello,\tworld!"
+
+s = bytes("Hello,\\bworld!", "utf-8").decode("unicode-escape")
+assert s == "Hello,\bworld!"
+
 print("passed all tests...")

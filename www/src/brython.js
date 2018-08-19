@@ -64,8 +64,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',1]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-08-17 11:52:45.922172"
-__BRYTHON__.timestamp=1534499565922
+__BRYTHON__.compiled_date="2018-08-19 11:22:21.895954"
+__BRYTHON__.timestamp=1534670541895
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_Cvars","_csv","_functools","_imp","_io","_py_abc","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -7398,7 +7398,7 @@ if(from_unicode[enc]===undefined){var mod=_b_.__import__("encodings." + enc)
 table=mod[enc].decoding_table
 from_unicode[enc]={}
 for(var i=0;i < table.length;i++){from_unicode[enc][table.charCodeAt(i)]=i}}}
-function decode(b,encoding,errors){var s="",enc=normalise(encoding)
+var decode=$B.decode=function(b,encoding,errors){var s="",enc=normalise(encoding)
 switch(enc){case "utf_8":
 case "utf-8":
 case "utf8":
@@ -7433,23 +7433,14 @@ case "L1":
 b.forEach(function(item){s +=String.fromCharCode(item)})
 break
 case "unicode_escape":
-console.log("unicode_escape",b)
-var rank=0
-while(rank < b.length){var item=b[rank]
-if(item=="\\".charCodeAt(0)){switch(String.fromCharCode(b[rank + 1])){case "b":
-s=s.substr(0,s.length - 1)
-rank ++
-break
-case "n":
-s +="\n"
-rank++
-break
-case "t":
-s +="\t"
-rank++
-break}}else{s +=String.fromCharCode(item)}
-rank++}
-break
+if(Array.isArray(b)){b=decode(b,"latin-1","strict")}
+return b.replace(/\\n/g,"\n").
+replace(/\\a/g,"\u0007").
+replace(/\\b/g,"\b").
+replace(/\\f/g,"\f").
+replace(/\\t/g,"\t").
+replace(/\\'/g,"'").
+replace(/\\"/g,'"')
 case "ascii":
 for(var i=0,len=b.length;i < len;i++){var cp=b[i]
 if(cp <=127){s +=String.fromCharCode(cp)}
@@ -7467,7 +7458,7 @@ if(u !==undefined){s +=String.fromCharCode(u)}
 else{s +=String.fromCharCode(item)}})
 break}
 return s}
-function encode(s,encoding){var $=$B.args("encode",2,{s:null,encoding:null},["s","encoding"],arguments,{},null,null),s=$.s,encoding=$.encoding
+var encode=$B.encode=function(s,encoding){var $=$B.args("encode",2,{s:null,encoding:null},["s","encoding"],arguments,{},null,null),s=$.s,encoding=$.encoding
 var t=[],pos=0,enc=normalise(encoding)
 switch(enc){case "utf-8":
 case "utf_8":

@@ -587,8 +587,10 @@ function _int(hex){return parseInt(hex, 16)}
 function normalise(encoding){
     var enc = encoding.toLowerCase()
     if(enc.substr(0, 7) == "windows"){enc = "cp" + enc.substr(7)}
-    enc = enc.replace("-", "") // first hyphen, like in cp-1250
-    enc = enc.replace("-", "_") // second, like in iso-8859-1
+    if(enc.startsWith("cp") || enc.startsWith("iso")){
+        enc = enc.replace("-", "") // first hyphen, like in cp-1250
+    }
+    enc = enc.replace(/-/g, "_") // second, like in iso-8859-1
     return enc
 }
 
@@ -615,7 +617,7 @@ function load_encoder(enc){
     }
 }
 
-function decode(b, encoding, errors){
+var decode = $B.decode = function(b, encoding, errors){
     var s = "",
         enc = normalise(encoding)
 
@@ -692,6 +694,18 @@ function decode(b, encoding, errors){
               s += String.fromCharCode(item)
           })
           break
+      case "unicode_escape":
+          if(Array.isArray(b)){
+              b = decode(b, "latin-1", "strict")
+          }
+          return b.replace(/\\n/g, "\n").
+                   replace(/\\a/g, "\u0007").
+                   replace(/\\b/g, "\b").
+                   replace(/\\f/g, "\f").
+                   replace(/\\t/g, "\t").
+                   replace(/\\'/g, "'").
+                   replace(/\\"/g, '"')
+
       case "ascii":
           for(var i = 0, len = b.length; i < len; i++){
               var cp = b[i]
@@ -707,6 +721,7 @@ function decode(b, encoding, errors){
       default:
           try{load_decoder(enc)}
           catch(err){
+              console.log("error load_decoder", err)
               throw _b_.LookupError.$factory("unknown encoding: " + enc)
           }
           b.forEach(function(item){
@@ -719,7 +734,7 @@ function decode(b, encoding, errors){
     return s
 }
 
-function encode(s, encoding){
+var encode = $B.encode = function(s, encoding){
     var $ = $B.args("encode", 2, {s:null, encoding:null}, ["s", "encoding"],
         arguments, {}, null, null),
         s = $.s,
@@ -730,6 +745,7 @@ function encode(s, encoding){
 
     switch(enc) {
         case "utf-8":
+        case "utf_8":
         case "utf8":
             //optimize by creating constants..
             var _int_800 = _int("800"),
