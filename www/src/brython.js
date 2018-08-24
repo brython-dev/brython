@@ -64,8 +64,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',1]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-08-20 10:25:53.873465"
-__BRYTHON__.timestamp=1534753553873
+__BRYTHON__.compiled_date="2018-08-24 13:14:25.979552"
+__BRYTHON__.timestamp=1535109265979
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_Cvars","_csv","_functools","_imp","_io","_py_abc","_queue","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -12098,7 +12098,7 @@ if(res !==_b_.None){throw _b_.RuntimeError.$factory("closed generator returned a
 throw err}}
 generator.send=function(self,value){self.sent_value=value
 return generator.__next__(self)}
-generator.$$throw=function(self,value){if(_b_.isinstance(value,_b_.type)){value=value()}
+generator.$$throw=function(self,value){if(_b_.isinstance(value,_b_.type)){value=$B.$call(value)()}
 self.sent_value={__class__: $B.$GeneratorSendError,err: value}
 return generator.__next__(self)}
 generator.$factory=$B.genfunc=function(name,blocks,funcs,$defaults){

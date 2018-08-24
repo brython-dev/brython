@@ -662,7 +662,7 @@ generator.send = function(self, value){
 }
 
 generator.$$throw = function(self, value){
-    if(_b_.isinstance(value, _b_.type)){value = value()}
+    if(_b_.isinstance(value, _b_.type)){value = $B.$call(value)()}
     self.sent_value = {__class__: $B.$GeneratorSendError, err: value}
     return generator.__next__(self)
 }
