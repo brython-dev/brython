@@ -117,6 +117,7 @@ assert not b''.isdigit()
 
 assert b'ABCabc'.isalpha()
 assert not b'ABCabc1'.isalpha()
+assert not b''.isalpha()
 
 assert b'ABCabc1'.isalnum()
 assert not b'ABC abc1'.isalnum()
