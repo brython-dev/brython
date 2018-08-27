@@ -361,7 +361,7 @@ bytes.find = function() {
         if(sub < 0 || sub > 255){
             throw _b_.ValueError.$factory("byte must be in range(0, 256)")
         }
-        return $.self.source.indexOf(sub)
+        return $.self.source.slice(0, $.end == -1 ? undefined : $.end).indexOf(sub, start)
     }else if(! sub.__class__){
         throw _b_.TypeError.$factory("first argument must be a bytes-like " +
             "object, not '" + $B.get_class($.sub).__name__ + "'")
@@ -385,11 +385,12 @@ bytes.rfind = function() {
         arguments, {start: 0, end: -1}, null, null),
         sub = $.sub,
         start = $.start
+
     if (typeof sub == "number"){
         if(sub < 0 || sub > 255){
             throw _b_.ValueError.$factory("byte must be in range(0, 256)")
         }
-        return $.self.source.lastIndexOf(sub)
+        return $.self.source.slice(start, $.end == -1 ? undefined : $.end).lastIndexOf(sub) + start
     } else if(! sub.__class__){
         throw _b_.TypeError.$factory("first argument must be a bytes-like " +
             "object, not '" + $B.get_class($.sub).__name__ + "'")
@@ -431,6 +432,36 @@ bytes.rindex = function() {
         throw _b_.ValueError.$factory("subsection not found")
 
     return index
+}
+
+bytes.count = function() {
+    var $ = $B.args('count', 4,
+        {self: null, sub: null, start: null, end: null},
+        ['self', 'sub', 'start', 'end'],
+        arguments, {start: 0, end: -1}, null, null)
+
+    var n = 0, index = -1, len = 0
+
+    if (typeof $.sub == "number"){
+        if ($.sub < 0 || $.sub > 255)
+            throw _b_.ValueError.$factory("byte must be in range(0, 256)")
+        len = 1
+    } else if (!$.sub.__class__) {
+        throw _b_.TypeError.$factory("first argument must be a bytes-like " +
+            "object, not '" + $B.get_class($.sub).__name__ + "'")
+    } else if (!$.sub.__class__.$buffer_protocol) {
+        throw _b_.TypeError.$factory("first argument must be a bytes-like " +
+            "object, not '" + $.sub.__class__.__name__ + "'")
+    } else {
+        len = $.sub.source.length
+    }
+
+    do {
+        index = bytes.find($.self, $.sub, Math.max(index + len, $.start), $.end)
+        if (index != -1) n++
+    } while (index != -1)
+
+    return n
 }
 
 bytes.replace = function(){

@@ -1532,9 +1532,10 @@ $B.is_none = function(o){
 })(__BRYTHON__)
 
 // IE doesn't implement indexOf on Arrays
-if(!Array.indexOf){
-  Array.prototype.indexOf = function(obj){
-    for(var i = 0, len = this.length; i < len; i++){
+if(!Array.prototype.indexOf){
+  Array.prototype.indexOf = function(obj, fromIndex){
+    if (fromIndex < 0) fromIndex += this.length
+    for(var i = fromIndex || 0, len = this.length; i < len; i++){
         if(this[i] == obj){return i}
     }
     return -1

@@ -149,4 +149,10 @@ assert b'45'.center(5) == b'  45 '
 assert b'45'.center(4) == b' 45 '
 assert b''.center(4) == b'    '
 
+assert b'122333444455555'.count(b'4') == 4
+assert b'122333444455555'.count(b'#') == 0
+assert b''.count(b'#') == 0
+b'1 22 333 4444 55555'.count(b' ') == 4
+b'1 22 333 4444 55555'.count(32) == 4
+
 print('passed all tests...')
