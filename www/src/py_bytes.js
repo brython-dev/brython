@@ -645,6 +645,17 @@ bytes.isspace = function(self) {
     return true
 }
 
+bytes.isdigit = function(self) {
+    var src = self.source,
+        len = src.length,
+        res = len > 0
+
+    for (let i = 0; i < len && res; ++i)
+        res = src[i] > 47 && src[i] < 58
+
+    return res
+}
+
 bytes.title = function(self) {
     var src = self.source,
         len = src.length

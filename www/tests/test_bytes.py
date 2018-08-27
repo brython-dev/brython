@@ -111,4 +111,8 @@ assert b'+45'.zfill(5) == b'+0045'
 assert b'-45'.zfill(5) == b'-0045'
 assert b''.zfill(5) == b'00000'
 
+assert b'1234'.isdigit()
+assert not b'1.23'.isdigit()
+assert not b''.isdigit()
+
 print('passed all tests...')
