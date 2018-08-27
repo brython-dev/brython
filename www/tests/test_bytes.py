@@ -103,4 +103,7 @@ assert b' \t\n\r\x0b\f'.isspace()
 
 assert b"they're bill's friends from the UK".title() == b"They'Re Bill'S Friends From The Uk"
 
+assert b"They'Re Bill'S Friends From The Uk".istitle()
+assert not b"They're Bill's Friends from the Uk".istitle()
+
 print('passed all tests...')
