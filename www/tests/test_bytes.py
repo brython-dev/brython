@@ -58,4 +58,7 @@ assert charmap.rfind(0, 0) == 255
 assertRaises(ValueError, charmap.index, 1)
 assert charmap.index(0) == 0
 
+assertRaises(ValueError, charmap.rindex, 1)
+assert charmap.rindex(0) == 255
+
 print('passed all tests...')
