@@ -67,4 +67,7 @@ assert b'www.example.com'.partition(b'example') == (b'www.', b'example', b'.com'
 assert b'www.example.com'.rpartition(b'.') == (b'www.example', b'.', b'com')
 assert b'www.example.com'.rpartition(b'example') == (b'www.', b'example', b'.com')
 
+assert b'aBCDEZ'.capitalize() == b'Abcdez'
+assert b'zEDCBA'.capitalize() == b'Zedcba'
+
 print('passed all tests...')
