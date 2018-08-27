@@ -574,22 +574,17 @@ bytes.swapcase = function(self) {
     return bytes.$factory(buffer)
 }
 
-bytes.capitalize = function() {
-    var $ = $B.args('capitalize', 1, {self:null}, ['self'],
-        arguments, {}, null, null)
-
-    var src = $.self.source,
-        blen = src.length
-
-    var buffer = src.slice()
+bytes.capitalize = function(self) {
+    var src = self.source,
+        len = src.length,
+        buffer = src.slice()
 
     if (buffer[0] > 96 && buffer[0] < 123)
-        buffer[0] -= 32;
+        buffer[0] -= 32
 
-    for (var i = 1, len = buffer.length; i < len; ++i) {
+    for (var i = 1; i < len; ++i)
         if (buffer[i] > 64 && buffer[i] < 91)
-            buffer[i] += 32;
-    }
+            buffer[i] += 32
 
     return bytes.$factory(buffer)
 }
