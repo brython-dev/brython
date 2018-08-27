@@ -87,4 +87,9 @@ assert b'test\x09\x09test'.expandtabs(2) == b'test    test'
 
 assert b'Hello World'.swapcase() == b'hELLO wORLD'
 
+assert b'threewordsalluppercase'.islower()
+assert not b'ONE WORD ALL LOWERCASE'.islower()
+assert not b''.islower(b'')
+assert not b''.islower(b'aA')
+
 print('passed all tests...')

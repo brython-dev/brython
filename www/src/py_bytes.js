@@ -589,6 +589,23 @@ bytes.capitalize = function(self) {
     return bytes.$factory(buffer)
 }
 
+bytes.islower = function(self) {
+    var src = self.source,
+        len = src.length,
+        res = false
+
+    for (let i = 0; i < len; ++i) {
+        // Check for at least 1 lowercase ascii character
+        res = res || (src[i] > 96 && src[i] < 123)
+
+        // Don't allow any uppercase ascii characters
+        if (src[i] > 64 && src[i] < 91)
+            return false
+    }
+
+    return res
+}
+
 function _strip(self, cars, lr){
     if(cars === undefined){
         cars = []
