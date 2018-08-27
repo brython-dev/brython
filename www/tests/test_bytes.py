@@ -106,4 +106,9 @@ assert b"they're bill's friends from the UK".title() == b"They'Re Bill'S Friends
 assert b"They'Re Bill'S Friends From The Uk".istitle()
 assert not b"They're Bill's Friends from the Uk".istitle()
 
+assert b'45'.zfill(5) == b'00045'
+assert b'+45'.zfill(5) == b'+0045'
+assert b'-45'.zfill(5) == b'-0045'
+assert b''.zfill(5) == b'00000'
+
 print('passed all tests...')

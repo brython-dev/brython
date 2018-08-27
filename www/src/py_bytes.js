@@ -697,6 +697,19 @@ bytes.istitle = function(self) {
     return true
 }
 
+bytes.zfill = function(self, width) {
+    var buffer = self.source.slice(),
+        prefix_offset = (buffer[0] == 43 || buffer[0] == 45) ? 1 : 0
+
+    var count = width - self.source.length
+    var padding = []
+    for (var i = 0; i < count; ++i)
+        padding.push(48)
+    buffer.splice.apply(buffer, [prefix_offset, 0].concat(padding))
+
+    return bytes.$factory(buffer)
+}
+
 function _strip(self, cars, lr){
     if(cars === undefined){
         cars = []
