@@ -530,10 +530,10 @@ bytes.split = function(){
         stop = 0
     if(! $.sep.__class__ ){
         throw _b_.TypeError.$factory("a bytes-like object is required, " +
-            "not '" + $B.get_class($.start).__name__ + "'")
+            "not '" + $B.get_class($.sep).__name__ + "'")
     }else if(! $.sep.__class__.$buffer_protocol){
         throw _b_.TypeError.$factory("a bytes-like object is required, " +
-            "not '" + $.sep.__class__.__name_ + "'")
+            "not '" + $.sep.__class__.__name__ + "'")
     }
     var seps = $.sep.source,
         len = seps.length,
@@ -630,7 +630,7 @@ bytes.startswith = function(){
         var prefix = bytes.$factory(items)
         return bytes.startswith($.self, prefix, start)
     }else{
-        throw _b_.TypeError.$factory("startsswith first arg must be bytes " +
+        throw _b_.TypeError.$factory("startswith first arg must be bytes " +
             "or a tuple of bytes, not " + $B.get_class($.prefix).__name__)
     }
 }
