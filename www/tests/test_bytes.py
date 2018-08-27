@@ -144,4 +144,9 @@ assert b'45'.ljust(2) == b'45'
 assert b'45'.ljust(1) == b'45'
 assert b'45'.ljust(0) == b'45'
 
+assert b'45'.center(6) == b'  45  '
+assert b'45'.center(5) == b'  45 '
+assert b'45'.center(4) == b' 45 '
+assert b''.center(4) == b'    '
+
 print('passed all tests...')

@@ -811,6 +811,18 @@ bytes.rjust = function() {
     return bytes.$factory(padding.concat($.self.source))
 }
 
+bytes.center = function() {
+    var $ = $B.args('center', 3, {self: null, width: null, fillbyte: null},
+    ['self', 'width', 'fillbyte'], arguments, {fillbyte: bytes.$factory([32])}, null, null)
+
+    var diff = $.width - $.self.source.length
+    if (diff <= 0)
+        return bytes.$factory($.self.source)
+
+    var ljust = bytes.ljust($.self, $.self.source.length + Math.floor(diff / 2), $.fillbyte)
+    return bytes.rjust(ljust, $.width, $.fillbyte)
+}
+
 function _strip(self, cars, lr){
     if(cars === undefined){
         cars = []
