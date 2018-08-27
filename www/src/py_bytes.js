@@ -623,6 +623,28 @@ bytes.isupper = function(self) {
     return res
 }
 
+bytes.isspace = function(self) {
+    var src = self.source,
+        len = src.length
+
+    for (let i = 0; i < len; ++i) {
+        switch (src[i]) {
+            case 9:  // Horizontal tab
+            case 10: // Line feed
+            case 11: // Vertical tab
+            case 12: // Form feed
+            case 13: // Carriage return
+            case 32: // Space
+                break
+
+            default:
+                return false
+        }
+    }
+
+    return true
+}
+
 function _strip(self, cars, lr){
     if(cars === undefined){
         cars = []

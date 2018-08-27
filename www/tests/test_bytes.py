@@ -97,4 +97,8 @@ assert b'ONE WORD ALL LOWERCASE'.isupper()
 assert not b''.isupper(b'')
 assert not b''.isupper(b'aA')
 
+assert b'   '.isspace()
+assert not b'  -  '.isspace()
+assert b' \t\n\r\x0b\f'.isspace()
+
 print('passed all tests...')
