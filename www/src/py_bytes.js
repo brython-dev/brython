@@ -773,6 +773,25 @@ bytes.zfill = function(self, width) {
     return bytes.$factory(buffer)
 }
 
+bytes.ljust = function() {
+    var $ = $B.args('ljust', 3, {self: null, width: null, fillbyte: null},
+        ['self', 'width', 'fillbyte'], arguments, {fillbyte: bytes.$factory([32])}, null, null)
+
+    if (!$.fillbyte.__class__) {
+        throw _b_.TypeError.$factory("argument 2 must be a byte string of length 1, " +
+            "not '" + $B.get_class($.fillbyte).__name__ + "'")
+    } else if (!$.fillbyte.__class__.$buffer_protocol) {
+        throw _b_.TypeError.$factory("argument 2 must be a byte string of length 1, " +
+            "not '" + $.fillbyte.__class__.__name__ + "'")
+    }
+
+    var padding = [],
+        count = $.width - $.self.source.length
+    for (var i = 0; i < count; ++i)
+        padding.push($.fillbyte.source[0])
+    return bytes.$factory($.self.source.concat(padding))
+}
+
 bytes.rjust = function() {
     var $ = $B.args('rjust', 3, {self: null, width: null, fillbyte: null},
         ['self', 'width', 'fillbyte'], arguments, {fillbyte: bytes.$factory([32])}, null, null)

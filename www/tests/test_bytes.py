@@ -138,4 +138,10 @@ assert b'45'.rjust(2) == b'45'
 assert b'45'.rjust(1) == b'45'
 assert b'45'.rjust(0) == b'45'
 
+assert b'45'.ljust(5) == b'45   '
+assert b'45'.ljust(5, b'#') == b'45###'
+assert b'45'.ljust(2) == b'45'
+assert b'45'.ljust(1) == b'45'
+assert b'45'.ljust(0) == b'45'
+
 print('passed all tests...')
