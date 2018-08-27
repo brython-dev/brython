@@ -378,6 +378,19 @@ bytes.find = function() {
     return -1
 }
 
+bytes.index = function() {
+    var $ = $B.args('rfind', 4,
+        {self: null, sub: null, start: null, end: null},
+        ['self', 'sub', 'start', 'end'],
+        arguments, {start: 0, end: -1}, null, null)
+
+    var index = bytes.find($.self, $.sub, $.start, $.end)
+    if (index == -1)
+        throw _b_.ValueError.$factory("subsection not found")
+
+    return index
+}
+
 bytes.replace = function(){
     var $ = $B.args('replace', 4,
         {self: null, old: null, new: null, count: null},
