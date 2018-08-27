@@ -645,6 +645,33 @@ bytes.isspace = function(self) {
     return true
 }
 
+bytes.title = function(self) {
+    var src = self.source,
+        len = src.length
+        buffer = src.slice(),
+        current_char_is_letter = false,
+        prev_char_was_letter = false,
+        is_uppercase = false,
+        is_lowercase = false
+
+    for (var i = 0; i < len; ++i) {
+        is_lowercase = buffer[i] > 96 && buffer[i] < 123
+        is_uppercase = buffer[i] > 64 && buffer[i] < 91
+        current_char_is_letter = is_lowercase || is_uppercase
+
+        if (current_char_is_letter) {
+            if (prev_char_was_letter && is_uppercase)
+                buffer[i] += 32
+            else if (!prev_char_was_letter && is_lowercase)
+                buffer[i] -= 32
+        }
+
+        prev_char_was_letter = current_char_is_letter
+    }
+
+    return bytes.$factory(buffer)
+}
+
 function _strip(self, cars, lr){
     if(cars === undefined){
         cars = []
