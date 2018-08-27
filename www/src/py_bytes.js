@@ -665,6 +665,22 @@ bytes.endswith = function() {
     }
 }
 
+bytes.expandtabs = function() {
+    var $ = $B.args('expandtabs', 2, {self: null, tabsize: null},
+        ['self', 'tabsize'], arguments, {tabsize: 8}, null, null)
+
+    var tab_spaces = []
+    for (var i = 0; i < $.tabsize; ++i)
+        tab_spaces.push(32)
+
+    var buffer = $.self.source.slice()
+    for (let i = 0; i < buffer.length; ++i)
+        if (buffer[i] === 9)
+            buffer.splice.apply(buffer, [i, 1].concat(tab_spaces))
+
+    return _b_.bytes.$factory(buffer)
+}
+
 bytes.strip = function(self, cars){
     var res = bytes.lstrip(self, cars)
     return bytes.rstrip(res, cars)

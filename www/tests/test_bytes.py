@@ -80,4 +80,9 @@ assert     b'0123456789'.endswith((b'123', b'456'), 1, 4)
 assert     b'0123456789'.endswith((b'123', b'456'), 4, 7)
 assert     b'0123456789'.endswith((b'123', b'456'), 1)
 
+assert b'test\x09test'.expandtabs() == b'test        test'
+assert b'test\x09test'.expandtabs(4) == b'test    test'
+assert b'test\x09test'.expandtabs(2) == b'test  test'
+assert b'test\x09\x09test'.expandtabs(2) == b'test    test'
+
 print('passed all tests...')
