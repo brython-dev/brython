@@ -123,4 +123,13 @@ assert b'ABCabc1'.isalnum()
 assert not b'ABC abc1'.isalnum()
 assert not b''.isalnum()
 
+assert b'one\ntwo\nthree'.splitlines() == [b'one', b'two', b'three']
+assert b'one\rtwo\rthree'.splitlines() == [b'one', b'two', b'three']
+assert b'one\r\ntwo\r\nthree'.splitlines() == [b'one', b'two', b'three']
+assert b'one\ntwo\nthree'.splitlines(True) == [b'one\x0a', b'two\x0a', b'three']
+assert b'one\rtwo\rthree'.splitlines(True) == [b'one\x0d', b'two\x0d', b'three']
+assert b'one\r\ntwo\r\nthree'.splitlines(True) == [b'one\x0d\x0a', b'two\x0d\x0a', b'three']
+assert b''.splitlines() == []
+assert b''.splitlines(True) == []
+
 print('passed all tests...')

@@ -559,6 +559,35 @@ bytes.split = function(){
     return res
 }
 
+bytes.splitlines = function() {
+    var $ = $B.args('splitlines', 2, {self: null, keepends: null},
+        ['self', 'keepends'], arguments, {keepends:false}, null, null),
+        lines = [],
+        src = $.self.source,
+        start = 0,
+        end = -1,
+        newline_end = -1
+
+    for (var i = 0; i < src.length; ++i) {
+        var newline_end = -1
+        if (src[i] === 13) {
+            end = i
+            newline_end = ++i
+        }
+        if (src[i] === 10) {
+            end = newline_end == -1 ? i : i - 1
+            newline_end = ++i
+        }
+        if (newline_end != -1) {
+            lines.push(bytes.$factory(src.slice(start, $.keepends ? newline_end : end)))
+            start = i
+        }
+    }
+    if (src.length > 0)
+        lines.push(bytes.$factory(src.slice(start)))
+    return lines
+}
+
 bytes.swapcase = function(self) {
     var src = self.source,
         len = src.length,
