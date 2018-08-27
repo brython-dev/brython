@@ -92,4 +92,9 @@ assert not b'ONE WORD ALL LOWERCASE'.islower()
 assert not b''.islower(b'')
 assert not b''.islower(b'aA')
 
+assert not b'threewordsalluppercase'.isupper()
+assert b'ONE WORD ALL LOWERCASE'.isupper()
+assert not b''.isupper(b'')
+assert not b''.isupper(b'aA')
+
 print('passed all tests...')

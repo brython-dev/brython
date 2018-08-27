@@ -606,6 +606,23 @@ bytes.islower = function(self) {
     return res
 }
 
+bytes.isupper = function(self) {
+    var src = self.source,
+        len = src.length,
+        res = false
+
+    for (let i = 0; i < len; ++i) {
+        // Check for at least 1 uppercase ascii character
+        res = res || (src[i] > 64 && src[i] < 91)
+
+        // Don't allow any lowercase ascii characters
+        if (src[i] > 96 && src[i] < 123)
+            return false
+    }
+
+    return res
+}
+
 function _strip(self, cars, lr){
     if(cars === undefined){
         cars = []
