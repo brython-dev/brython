@@ -559,6 +559,21 @@ bytes.split = function(){
     return res
 }
 
+bytes.swapcase = function(self) {
+    var src = self.source,
+        len = src.length,
+        buffer = src.slice()
+
+    for (var i = 0; i < len; ++i) {
+        if (buffer[i] > 96 && buffer[i] < 123)
+            buffer[i] -= 32
+        else if (buffer[i] > 64 && buffer[i] < 91)
+            buffer[i] += 32
+    }
+
+    return bytes.$factory(buffer)
+}
+
 bytes.capitalize = function() {
     var $ = $B.args('capitalize', 1, {self:null}, ['self'],
         arguments, {}, null, null)

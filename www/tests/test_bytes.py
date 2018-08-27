@@ -85,4 +85,6 @@ assert b'test\x09test'.expandtabs(4) == b'test    test'
 assert b'test\x09test'.expandtabs(2) == b'test  test'
 assert b'test\x09\x09test'.expandtabs(2) == b'test    test'
 
+assert b'Hello World'.swapcase() == b'hELLO wORLD'
+
 print('passed all tests...')
