@@ -70,4 +70,14 @@ assert b'www.example.com'.rpartition(b'example') == (b'www.', b'example', b'.com
 assert b'aBCDEZ'.capitalize() == b'Abcdez'
 assert b'zEDCBA'.capitalize() == b'Zedcba'
 
+assert     b'0123456789'.endswith(b'789')
+assert not b'0123456789'.endswith(b'7895')
+assert not b'0123456789'.endswith(b'78')
+assert     b'0123456789'.endswith(b'123', 1, 4)
+assert not b'0123456789'.endswith(b'123', 1, 5)
+assert not b'0123456789'.endswith(b'123', 1, 3)
+assert     b'0123456789'.endswith((b'123', b'456'), 1, 4)
+assert     b'0123456789'.endswith((b'123', b'456'), 4, 7)
+assert     b'0123456789'.endswith((b'123', b'456'), 1)
+
 print('passed all tests...')

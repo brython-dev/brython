@@ -635,6 +635,36 @@ bytes.startswith = function(){
     }
 }
 
+bytes.endswith = function() {
+    var $ = $B.args('endswith', 4, {self: null, suffix: null, start: null, end: null},
+        ['self', 'suffix', 'start', 'end'], arguments, {start: -1, end: -1}, null, null)
+
+    if (_b_.isinstance($.suffix, bytes)) {
+        var start = $.start == -1 ? $.self.source.length - $.suffix.source.length
+                                  : Math.min($.self.source.length - $.suffix.source.length, $.start)
+        var end = $.end == -1 ? ($.start == -1 ? $.self.source.length : start + $.suffix.source.length)
+                              : Math.min($.self.source.length - 1, $.end)
+        var res = true
+        for (var i = $.suffix.source.length - 1, len = $.suffix.source.length; i && res; --i)
+            res = $.self.source[end - len + i] == $.suffix.source[i]
+        return res
+    } else if (_b_.isinstance($.suffix, _b_.tuple)) {
+        for (var i = 0; i < $.suffix.length; ++i) {
+            if (_b_.isinstance($.suffix[i], bytes)) {
+                if (bytes.endswith($.self, $.suffix[i], $.start, $.end))
+                    return true
+            } else {
+                throw _b_.TypeError.$factory("endswith first arg must be " +
+                    "bytes or a tuple of bytes, not " + $B.get_class($.suffix).__name__)
+            }
+        }
+        return false
+    } else {
+        throw _b_.TypeError.$factory("endswith first arg must be bytes " +
+            "or a tuple of bytes, not " + $B.get_class($.suffix).__name__)
+    }
+}
+
 bytes.strip = function(self, cars){
     var res = bytes.lstrip(self, cars)
     return bytes.rstrip(res, cars)
