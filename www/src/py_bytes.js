@@ -696,16 +696,15 @@ bytes.isalpha = function(self) {
 
 bytes.istitle = function(self) {
     var src = self.source,
-        len = src.length
-        buffer = src.slice(),
+        len = src.length,
         current_char_is_letter = false,
         prev_char_was_letter = false,
         is_uppercase = false,
         is_lowercase = false
 
     for (var i = 0; i < len; ++i) {
-        is_lowercase = buffer[i] > 96 && buffer[i] < 123
-        is_uppercase = buffer[i] > 64 && buffer[i] < 91
+        is_lowercase = src[i] > 96 && src[i] < 123
+        is_uppercase = src[i] > 64 && src[i] < 91
         current_char_is_letter = is_lowercase || is_uppercase
 
         if (current_char_is_letter &&
