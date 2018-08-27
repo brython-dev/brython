@@ -683,6 +683,17 @@ bytes.title = function(self) {
     return bytes.$factory(buffer)
 }
 
+bytes.isalpha = function(self) {
+    var src = self.source,
+        len = src.length,
+        res = len > 0
+
+    for (var i = 0; i < len && res; ++i)
+        res = (src[i] > 96 && src[i] < 123) || (src[i] > 64 && src[i] < 91)
+
+    return res
+}
+
 bytes.istitle = function(self) {
     var src = self.source,
         len = src.length

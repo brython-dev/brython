@@ -115,4 +115,7 @@ assert b'1234'.isdigit()
 assert not b'1.23'.isdigit()
 assert not b''.isdigit()
 
+assert b'ABCabc'.isalpha()
+assert not b'ABCabc1'.isalpha()
+
 print('passed all tests...')
