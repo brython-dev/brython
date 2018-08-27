@@ -132,4 +132,10 @@ assert b'one\r\ntwo\r\nthree'.splitlines(True) == [b'one\x0d\x0a', b'two\x0d\x0a
 assert b''.splitlines() == []
 assert b''.splitlines(True) == []
 
+assert b'45'.rjust(5) == b'   45'
+assert b'45'.rjust(5, b'#') == b'###45'
+assert b'45'.rjust(2) == b'45'
+assert b'45'.rjust(1) == b'45'
+assert b'45'.rjust(0) == b'45'
+
 print('passed all tests...')
