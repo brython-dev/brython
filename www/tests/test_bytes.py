@@ -52,6 +52,9 @@ charmap = bytearray(256)
 assert charmap.find(1, 0) == -1
 assert charmap.find(0, 0) == 0
 
+assert charmap.rfind(1, 0) == -1
+assert charmap.rfind(0, 0) == 255
+
 assertRaises(ValueError, charmap.index, 1)
 assert charmap.index(0) == 0
 

@@ -378,6 +378,35 @@ bytes.find = function() {
     return -1
 }
 
+bytes.rfind = function() {
+    var $ = $B.args('rfind', 4,
+        {self: null, sub: null, start: null, end: null},
+        ['self', 'sub', 'start', 'end'],
+        arguments, {start: 0, end: -1}, null, null),
+        sub = $.sub,
+        start = $.start
+    if (typeof sub == "number"){
+        if(sub < 0 || sub > 255){
+            throw _b_.ValueError.$factory("byte must be in range(0, 256)")
+        }
+        return $.self.source.lastIndexOf(sub)
+    } else if(! sub.__class__){
+        throw _b_.TypeError.$factory("first argument must be a bytes-like " +
+            "object, not '" + $B.get_class($.sub).__name__ + "'")
+    } else if(! sub.__class__.$buffer_protocol){
+        throw _b_.TypeError.$factory("first argument must be a bytes-like " +
+            "object, not '" + sub.__class__.__name__ + "'")
+    }
+    var end = $.end == -1 ? $.self.source.length - sub.source.length :
+        Math.min($.self.source.length - sub.source.length, $.end)
+
+    for (var i = end - 1; i >= start; --i)
+        if (bytes.startswith($.self, sub, i))
+            return i
+
+    return -1
+}
+
 bytes.index = function() {
     var $ = $B.args('rfind', 4,
         {self: null, sub: null, start: null, end: null},
