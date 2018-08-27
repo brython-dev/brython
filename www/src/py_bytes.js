@@ -694,6 +694,19 @@ bytes.isalpha = function(self) {
     return res
 }
 
+bytes.isalnum = function(self) {
+    var src = self.source,
+        len = src.length,
+        res = len > 0
+
+    for (var i = 0; i < len && res; ++i)
+        res = (src[i] > 96 && src[i] < 123) || // Lowercase
+              (src[i] > 64 && src[i] < 91) ||  // Uppercase
+              (src[i] > 47 && src[i] < 58)     // Digit
+
+    return res
+}
+
 bytes.istitle = function(self) {
     var src = self.source,
         len = src.length,
