@@ -476,6 +476,29 @@ bytes.replace = function(){
     return bytes.$factory(res)
 }
 
+bytes.partition = function() {
+    var $ = $B.args('partition', 2, {self:null, sep:null}, ['self', 'sep'],
+            arguments, {}, null, null)
+
+    if (! $.sep.__class__) {
+        throw _b_.TypeError.$factory("a bytes-like object is required, " +
+            "not '" + $B.get_class($.sep).__name__ + "'")
+    } else if (! $.sep.__class__.$buffer_protocol) {
+        throw _b_.TypeError.$factory("a bytes-like object is required, " +
+            "not '" + $.sep.__class__.__name__ + "'")
+    }
+
+    var len = $.sep.source.length,
+        src = $.self.source,
+        i = bytes.find($.self, $.sep)
+
+    return _b_.tuple.$factory([
+        bytes.$factory(src.slice(0, i)),
+        bytes.$factory(src.slice(i, i + len)),
+        bytes.$factory(src.slice(i + len))
+    ])
+}
+
 bytes.split = function(){
     var $ = $B.args('split', 2, {self:null, sep:null}, ['self', 'sep'],
         arguments, {}, null, null),

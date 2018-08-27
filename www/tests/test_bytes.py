@@ -61,4 +61,7 @@ assert charmap.index(0) == 0
 assertRaises(ValueError, charmap.rindex, 1)
 assert charmap.rindex(0) == 255
 
+assert b'www.example.com'.partition(b'.') == (b'www', b'.', b'example.com')
+assert b'www.example.com'.partition(b'example') == (b'www.', b'example', b'.com')
+
 print('passed all tests...')
