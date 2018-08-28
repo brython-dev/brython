@@ -35,11 +35,10 @@ $B.$raise = function(arg){
     }
 }
 
-$B.$syntax_err_line = function(exc, module, pos, line_num){
+$B.$syntax_err_line = function(exc, module, src, pos, line_num){
     // map position to line number
     var pos2line = {},
         lnum = 1,
-        src = $B.$py_src[module],
         module = module.charAt(0) == "$" ? "<string>" : module
     if(src === undefined){
         console.log("no src for", module)
@@ -69,19 +68,19 @@ $B.$syntax_err_line = function(exc, module, pos, line_num){
     }
 }
 
-$B.$SyntaxError = function(module, msg, pos, line_num, root) {
+$B.$SyntaxError = function(module, msg, src, pos, line_num, root) {
     if(root !== undefined && root.line_info !== undefined){
         // this may happen for syntax errors inside a lambda
         line_num = root.line_info
     }
     var exc = _b_.SyntaxError.$factory(msg)
-    $B.$syntax_err_line(exc, module, pos, line_num)
+    $B.$syntax_err_line(exc, module, src, pos, line_num)
     throw exc
 }
 
-$B.$IndentationError = function(module, msg, pos) {
+$B.$IndentationError = function(module, msg, src, pos) {
     var exc = _b_.IndentationError.$factory(msg)
-    $B.$syntax_err_line(exc, module, pos)
+    $B.$syntax_err_line(exc, module, src, pos)
     throw exc
 }
 

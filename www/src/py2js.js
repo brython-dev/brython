@@ -310,29 +310,31 @@ Function called in case of SyntaxError
 */
 
 var $_SyntaxError = $B.parser.$_SyntaxError = function (context,msg,indent){
-    //console.log("syntax error", context, msg)
     var ctx_node = context
     while(ctx_node.type !== 'node'){ctx_node = ctx_node.parent}
     var tree_node = ctx_node.node,
         root = tree_node
     while(root.parent !== undefined){root = root.parent}
-    var module = tree_node.module
-    var line_num = tree_node.line_num
+    var module = tree_node.module,
+        src = root.src,
+        line_num = tree_node.line_num
     if(root.line_info){
         line_num = root.line_info
     }
     if(indent !== undefined){line_num++}
     if(indent === undefined){
-        if(Array.isArray(msg)){$B.$SyntaxError(module, msg[0], $pos, line_num)}
+        if(Array.isArray(msg)){
+            $B.$SyntaxError(module, msg[0], src, $pos, line_num)
+        }
         if(msg === "Triple string end not found"){
             // add an extra argument : used in interactive mode to
             // prompt for the rest of the triple-quoted string
             $B.$SyntaxError(module,
                 'invalid syntax : triple string end not found',
-                $pos, line_num, root)
+                src, $pos, line_num, root)
         }
-        $B.$SyntaxError(module, 'invalid syntax', $pos, line_num, root)
-    }else{throw $B.$IndentationError(module, msg, $pos)}
+        $B.$SyntaxError(module, 'invalid syntax', src, $pos, line_num, root)
+    }else{throw $B.$IndentationError(module, msg, src, $pos)}
 }
 
 /*

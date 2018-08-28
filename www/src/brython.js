@@ -64,8 +64,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',1]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-08-28 11:08:29.323731"
-__BRYTHON__.timestamp=1535447309323
+__BRYTHON__.compiled_date="2018-08-28 11:28:41.349120"
+__BRYTHON__.timestamp=1535448521349
 __BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_Cvars","_csv","_functools","_imp","_io","_queue","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -184,19 +184,17 @@ pnode.parent.children.indexOf(pnode)}
 var new_node=new $YieldFromMarkerNode(params)
 replace_node(pnode,new_node)}
 var chained_comp_num=0
-var $_SyntaxError=$B.parser.$_SyntaxError=function(C,msg,indent){
-var ctx_node=C
+var $_SyntaxError=$B.parser.$_SyntaxError=function(C,msg,indent){var ctx_node=C
 while(ctx_node.type !=='node'){ctx_node=ctx_node.parent}
 var tree_node=ctx_node.node,root=tree_node
 while(root.parent !==undefined){root=root.parent}
-var module=tree_node.module
-var line_num=tree_node.line_num
+var module=tree_node.module,src=root.src,line_num=tree_node.line_num
 if(root.line_info){line_num=root.line_info}
 if(indent !==undefined){line_num++}
-if(indent===undefined){if(Array.isArray(msg)){$B.$SyntaxError(module,msg[0],$pos,line_num)}
+if(indent===undefined){if(Array.isArray(msg)){$B.$SyntaxError(module,msg[0],src,$pos,line_num)}
 if(msg==="Triple string end not found"){
-$B.$SyntaxError(module,'invalid syntax : triple string end not found',$pos,line_num,root)}
-$B.$SyntaxError(module,'invalid syntax',$pos,line_num,root)}else{throw $B.$IndentationError(module,msg,$pos)}}
+$B.$SyntaxError(module,'invalid syntax : triple string end not found',src,$pos,line_num,root)}
+$B.$SyntaxError(module,'invalid syntax',src,$pos,line_num,root)}else{throw $B.$IndentationError(module,msg,src,$pos)}}
 var $Node=$B.parser.$Node=function(type){this.type=type
 this.children=[]
 this.yield_atoms=[]
@@ -6846,8 +6844,8 @@ $B.$raise=function(arg){
 if(arg===undefined){var es=$B.get_exc()
 if(es !==undefined){throw es}
 throw _b_.RuntimeError.$factory("No active exception to reraise")}else if(isinstance(arg,BaseException)){throw arg}else if(arg.$is_class && issubclass(arg,BaseException)){throw $B.$call(arg)()}else{throw _b_.TypeError.$factory("exceptions must derive from BaseException")}}
-$B.$syntax_err_line=function(exc,module,pos,line_num){
-var pos2line={},lnum=1,src=$B.$py_src[module],module=module.charAt(0)=="$" ? "<string>" : module
+$B.$syntax_err_line=function(exc,module,src,pos,line_num){
+var pos2line={},lnum=1,module=module.charAt(0)=="$" ? "<string>" : module
 if(src===undefined){console.log("no src for",module)
 exc.$line_info=line_num + ',' + module
 exc.args=_b_.tuple.$factory([$B.$getitem(exc.args,0),module,line_num,0,0])}else{var line_pos={1:0}
@@ -6860,13 +6858,13 @@ var lines=src.split("\n"),line=lines[line_num - 1],lpos=pos - line_pos[line_num]
 line=line.replace(/^\s*/,'')
 lpos -=len - line.length
 exc.args=_b_.tuple.$factory([$B.$getitem(exc.args,0),module,line_num,lpos,line])}}
-$B.$SyntaxError=function(module,msg,pos,line_num,root){if(root !==undefined && root.line_info !==undefined){
+$B.$SyntaxError=function(module,msg,src,pos,line_num,root){if(root !==undefined && root.line_info !==undefined){
 line_num=root.line_info}
 var exc=_b_.SyntaxError.$factory(msg)
-$B.$syntax_err_line(exc,module,pos,line_num)
+$B.$syntax_err_line(exc,module,src,pos,line_num)
 throw exc}
-$B.$IndentationError=function(module,msg,pos){var exc=_b_.IndentationError.$factory(msg)
-$B.$syntax_err_line(exc,module,pos)
+$B.$IndentationError=function(module,msg,src,pos){var exc=_b_.IndentationError.$factory(msg)
+$B.$syntax_err_line(exc,module,src,pos)
 throw exc}
 var traceback=$B.make_class("traceback",function(exc,stack){if(stack===undefined)
 stack=exc.$stack
@@ -8057,7 +8055,7 @@ if($test){console.log("import",mod_name+'.'+name,"ok, modobj",modobj)}
 locals[alias]=_b_.getattr(modobj,name);}catch($err3){if($test){console.log($err3)}
 if(mod_name==="__future__"){
 var frame=$B.last($B.frames_stack),line_info=frame[3].$line_info,line_elts=line_info.split(','),line_num=parseInt(line_elts[0])
-$B.$SyntaxError(frame[2],"future feature " + name + " is not defined",undefined,line_num)}
+$B.$SyntaxError(frame[2],"future feature " + name + " is not defined",current_frame[3].src,undefined,line_num)}
 if($err3.$py_error){var msg=$err3.__class__.__name__ + "\n" +
 _b_.getattr($err3,"info")
 throw _b_.ImportError.$factory("cannot import name '"+

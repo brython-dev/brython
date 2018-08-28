@@ -1055,7 +1055,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                                 line_num = parseInt(line_elts[0])
                             $B.$SyntaxError(frame[2],
                                 "future feature " + name + " is not defined",
-                                undefined, line_num)
+                                current_frame[3].src, undefined, line_num)
                         }
                         // For other modules, raise ImportError
                         if($err3.$py_error){
