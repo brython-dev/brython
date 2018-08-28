@@ -64,9 +64,9 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',1]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-08-24 13:14:25.979552"
-__BRYTHON__.timestamp=1535109265979
-__BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_Cvars","_csv","_functools","_imp","_io","_py_abc","_queue","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
+__BRYTHON__.compiled_date="2018-08-28 11:08:29.323731"
+__BRYTHON__.timestamp=1535447309323
+__BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_Cvars","_csv","_functools","_imp","_io","_queue","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
 isFinite(value)&&
@@ -1865,6 +1865,7 @@ if(val=='__BRYTHON__' ||val=='$B'){return val}
 var innermost=$get_scope(this),scope=innermost,found=[]
 var search_ids=['"' + innermost.id + '"']
 var gs=innermost
+var $test=val=="open"
 while(true){if(gs.parent_block){if(gs.parent_block==$B.builtins_scope){break}
 else if(gs.parent_block.id===undefined){break}
 gs=gs.parent_block}
@@ -1922,13 +1923,7 @@ val='(' + global_ns + '["' + val + '"] || ' + val + ')'}else{
 if(val !=='__builtins__'){val='$B.builtins.' + val}
 this.is_builtin=true}}else if(scope.id==scope.module){
 if(this.bound ||this.augm_assign){
-val=scope_ns + '["' + val + '"]'}else{if(scope===innermost && this.env[val]===undefined){var locs=this_node.locals ||{}
-if(locs[val]===undefined){
-if(found.length > 1 &&
-found[1].id=='__builtins__'){this.is_builtin=true
-this.result='$B.builtins.' + val +
-$to_js(this.tree,'')
-return annotation + this.result}}
+val=scope_ns + '["' + val + '"]'}else{if(scope===innermost && this.env[val]===undefined){
 this.result='$B.$search("' + val + '")'
 return annotation + this.result}else{if(this.boundBefore(scope)){
 val=scope_ns + '["' + val + '"]'}else{
@@ -6106,6 +6101,7 @@ console.log('error setting',item)
 break}}}
 eval("$locals_" + locals_id + ".$src = src")
 var root=$B.py2js(src,globals_id,locals_id,parent_scope),js,gns,lns
+if(_globals !==_b_.None && _locals==_b_.None){for(var attr in _globals.$string_dict){root.binding[attr]=true}}
 try{
 var try_node=root.children[root.children.length - 2],instr=try_node.children[try_node.children.length - 2]
 var type=instr.C.tree[0].type

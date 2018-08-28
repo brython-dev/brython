@@ -555,6 +555,12 @@ function $$eval(src, _globals, _locals){
     var root = $B.py2js(src, globals_id, locals_id, parent_scope),
         js, gns, lns
 
+    if(_globals !== _b_.None && _locals == _b_.None){
+        for(var attr in _globals.$string_dict){
+            root.binding[attr] = true
+        }
+    }
+
     try{
         // The result of py2js ends with
         // try{

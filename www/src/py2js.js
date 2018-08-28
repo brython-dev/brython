@@ -3849,6 +3849,8 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         // get global scope
         var gs = innermost
 
+        var $test = val == "open"
+
         while(true){
             if(gs.parent_block){
                 if(gs.parent_block == $B.builtins_scope){break}
@@ -4033,20 +4035,6 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                         val = scope_ns + '["' + val + '"]'
                     }else{
                         if(scope === innermost && this.env[val] === undefined){
-                            var locs = this_node.locals || {}
-                            if(locs[val] === undefined){
-                                // Name is bound in scope, but after the
-                                // current node.
-                                // If it is a builtin name, use the builtin.
-                                // Cf issue #311
-                                if(found.length > 1 &&
-                                        found[1].id == '__builtins__'){
-                                    this.is_builtin = true
-                                    this.result = '$B.builtins.' + val +
-                                        $to_js(this.tree, '')
-                                    return annotation + this.result
-                                }
-                            }
                             // Call a function to return the value if it is
                             // defined in locals or globals, or raise a
                             // NameError
