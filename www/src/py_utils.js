@@ -1536,7 +1536,7 @@ if(!Array.prototype.indexOf){
   Array.prototype.indexOf = function(obj, fromIndex){
     if (fromIndex < 0) fromIndex += this.length
     for(var i = fromIndex || 0, len = this.length; i < len; i++){
-        if(this[i] == obj){return i}
+        if(this[i] === obj){return i}
     }
     return -1
   }
