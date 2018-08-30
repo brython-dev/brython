@@ -204,7 +204,10 @@ def dup2(*args,**kw):
     Duplicate file descriptor."""
     pass
 
-environ = {'PYTHONUSERBASE': ' '}
+environ = {
+    'PYTHONPATH': __BRYTHON__.brython_path,
+    'PYTHONUSERBASE': ' '
+}
 
 error = OSError
 
