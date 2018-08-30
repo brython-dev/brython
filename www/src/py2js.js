@@ -8715,6 +8715,9 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
                   pos += 2
                   break
                 }
+            case String.fromCharCode(12): // Form Feed : ignore
+                pos += 1
+                break
             default:
                 $pos = pos
                 $_SyntaxError(context, 'unknown token [' + car + ']')
