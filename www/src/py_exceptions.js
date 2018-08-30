@@ -346,6 +346,7 @@ $B.exception = function(js_exc){
     if(! js_exc.$py_error){
         // Print complete Javascript traceback in console
         console.log("js exc", js_exc)
+        console.log($B.frames_stack.slice())
 
         if(js_exc.info === undefined){
             js_exc.msg = BaseException.__getattr__(js_exc, "info")
