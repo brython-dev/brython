@@ -1244,8 +1244,7 @@ $B.$iter = function(obj){
     try{
         var _iter = getattr(obj, '__iter__')
         _iter = $B.$call(_iter)
-        }
-    catch(err){
+    }catch(err){
         var gi = getattr(obj, '__getitem__', -1),
             ln = getattr(obj, '__len__', -1)
         if(gi !== -1){

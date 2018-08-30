@@ -64,9 +64,9 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',1]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-08-30 13:58:33.150511"
-__BRYTHON__.timestamp=1535630313150
-__BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_svg","_sys","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_Cvars","_csv","_functools","_imp","_io","_queue","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
+__BRYTHON__.compiled_date="2018-08-30 18:54:23.445883"
+__BRYTHON__.timestamp=1535648063445
+__BRYTHON__.builtin_module_names=["posix","sys","errno","time","_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_svg","_sys","array","builtins","dis","hashlib","json","long_int","math","modulefinder","random","_abcoll","_codecs","_collections","_Cvars","_csv","_functools","_imp","_io","_queue","_random","_socket","_sre","_string","_struct","_sysconfigdata","_testcapi","_thread","_warnings","_weakref"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
 isFinite(value)&&
@@ -6371,8 +6371,7 @@ try{return self.getitem(self.counter)}
 catch(err){throw _b_.StopIteration.$factory('')}}
 $B.$iter=function(obj){
 try{var _iter=getattr(obj,'__iter__')
-_iter=$B.$call(_iter)}
-catch(err){var gi=getattr(obj,'__getitem__',-1),ln=getattr(obj,'__len__',-1)
+_iter=$B.$call(_iter)}catch(err){var gi=getattr(obj,'__getitem__',-1),ln=getattr(obj,'__len__',-1)
 if(gi !==-1){if(ln !==-1){var len=getattr(ln,'__call__')()
 return iterator_class.$factory(gi,len)}else{return iterator_class.$factory(gi,null)}}
 throw _b_.TypeError.$factory("'" + $B.get_class(obj).__name__ +
@@ -7872,7 +7871,7 @@ $B.JSConstructor=JSConstructor})(__BRYTHON__)
 ;(function($B){$B.stdlib={}
 var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_collections_abc','_compat_pickle','_Cvars','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_py_abc','_pydecimal','_queue','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_testcapi','_thread','_threading_local','_warnings','_weakref','_weakrefset','abc','antigravity','argparse','atexit','base64','bdb','binascii','bisect','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','Clib','Cvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','gettext','glob','heapq','imp','inspect','io','ipaddress','itertools','keyword','linecache','locale','marshal','numbers','opcode','operator','optparse','os','pdb','pickle','platform','posix','posixpath','pprint','profile','pwd','pydoc','queue','re','reprlib','select','selectors','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uuid','warnings','weakref','webbrowser','zipfile','zlib']
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
-var js=['_ajax','_base64','_jsre','_multiprocessing','_posixsubprocess','_profile','_sre_utils','_svg','_sys','aes','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','json','long_int','math','md5','modulefinder','pbkdf2','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes']
+var js=['_ajax','_base64','_jsre','_multiprocessing','_posixsubprocess','_profile','_sre_utils','_svg','_sys','aes','array','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','json','long_int','math','md5','modulefinder','pbkdf2','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
 var pkglist=['asyncio','browser','collections','concurrent','concurrent.futures','encodings','html','http','importlib','jqueryui','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib','xml','xml.etree','xml.parsers','xml.sax']
 for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}})(__BRYTHON__)
