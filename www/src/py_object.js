@@ -226,9 +226,7 @@ object.__getattribute__ = function(obj, attr){
                         for(var i = 0; i < arguments.length; i++){
                             args.push(arguments[i])
                         }
-                        if($test){console.log("inside method", res, args)}
                         var result = res.apply(null, args)
-                        if($test){console.log("result", result)}
                         return result
                     }
                     method.__class__ = $B.method
