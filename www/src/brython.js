@@ -64,8 +64,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',1]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-09-03 07:59:02.335912"
-__BRYTHON__.timestamp=1535954342335
+__BRYTHON__.compiled_date="2018-09-03 08:01:22.854019"
+__BRYTHON__.timestamp=1535954482854
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","random"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -6961,14 +6961,16 @@ return traceback.$factory(self)}else{throw _b_.AttributeError.$factory(self.__cl
 " has no attribute '" + attr + "'")}}
 BaseException.with_traceback=function(self,tb){self.traceback=tb
 return self}
+function deep_copy_frames_stack(){var result=$B.frames_stack.slice();
+for(var i=0;i < result.length;i++){
+result[i]=result[i].slice()
+result[i][1]={$line_info: result[i][1].$line_info}}
+return result;}
 BaseException.$factory=function(){var err=Error()
 err.args=_b_.tuple.$factory(Array.prototype.slice.call(arguments))
 err.__class__=_b_.BaseException
 err.$py_error=true
-err.$stack=$B.frames_stack.slice()
-for(var i=0;i < err.$stack.length;i++){
-err.$stack[i]=err.$stack[i].slice()
-err.$stack[i][1]={$line_info: err.$stack[i][1].$line_info}}
+err.$stack=deep_copy_frames_stack();
 if($B.frames_stack.length){err.$line_info=$B.last($B.frames_stack)[1].$line_info}
 eval("//placeholder//")
 return err}
@@ -6992,7 +6994,7 @@ exc.__class__=_b_.RuntimeError}
 var $message=js_exc.msg ||"<" + js_exc + ">"
 exc.args=_b_.tuple.$factory([$message])
 exc.$py_error=true
-exc.$stack=$B.frames_stack.slice()}else{var exc=js_exc}
+exc.$stack=deep_copy_frames_stack();}else{var exc=js_exc}
 return exc}
 $B.is_exc=function(exc,exc_list){
 if(exc.__class__===undefined){exc=$B.exception(exc)}
