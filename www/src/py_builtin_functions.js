@@ -56,7 +56,6 @@ var None = {
 
 NoneType.$factory = function(){return None}
 
-$B.set_func_names(NoneType, "builtins")
 
 for(var $op in $B.$comps){ // None is not orderable with any type
     var key = $B.$comps[$op]
@@ -66,9 +65,7 @@ for(var $op in $B.$comps){ // None is not orderable with any type
       case 'le':
       case 'lt':
         NoneType['__' + key + '__'] = (function(op){
-            return function(other){
-            throw _b_.TypeError.$factory("unorderable types: NoneType() " +
-                op + " " + $B.get_class(other).__name__ + "()")}
+            return function(other){return _b_.NotImplemented}
         })($op)
     }
 }
@@ -81,6 +78,8 @@ for(var $func in None){
         })($func)
     }
 }
+
+$B.set_func_names(NoneType, "builtins")
 
 function abs(obj){
     check_nb_args('abs', 1, arguments.length)

@@ -587,10 +587,6 @@ var $comp_func = function(self, other){
     var inv_op = getattr(other, "__le__", None)
     if(inv_op !== None){return inv_op(self)}
 
-    // See if other has the opposite operator, eg <= for >
-    var inv_op = getattr(other, "__le__", None)
-    if(inv_op !== None){return inv_op(self)}
-
     throw _b_.TypeError.$factory(
         "unorderable types: float() > " + $B.get_class(other).__name__ + "()")
 }

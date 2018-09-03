@@ -64,8 +64,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-09-03 08:03:59.602050"
-__BRYTHON__.timestamp=1535954639602
+__BRYTHON__.compiled_date="2018-09-03 09:00:16.400790"
+__BRYTHON__.timestamp=1535958016400
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","random"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -4871,9 +4871,7 @@ if(res.$type=="staticmethod"){return res}
 else{var self=res.__class__===$B.method ? klass : obj
 function method(){var args=[self]
 for(var i=0;i < arguments.length;i++){args.push(arguments[i])}
-if($test){console.log("inside method",res,args)}
 var result=res.apply(null,args)
-if($test){console.log("result",result)}
 return result}
 method.__class__=$B.method
 method.__get__=function(obj,cls){var clmethod=function(){return res(cls,...arguments)}
@@ -5904,17 +5902,16 @@ var NoneType={__class__: _b_.type,__name__: "NoneType",__module__: "builtins",__
 NoneType.__setattr__=function(self,attr){return no_set_attr(NoneType,attr)}
 var None={__bool__: function(){return False},__class__: NoneType,__hash__: function(){return 0},__repr__: function(){return 'None'},__str__: function(){return 'None'},toString: function(){return 'None'}}
 NoneType.$factory=function(){return None}
-$B.set_func_names(NoneType,"builtins")
 for(var $op in $B.$comps){
 var key=$B.$comps[$op]
 switch(key){case 'ge':
 case 'gt':
 case 'le':
 case 'lt':
-NoneType['__' + key + '__']=(function(op){return function(other){throw _b_.TypeError.$factory("unorderable types: NoneType() " +
-op + " " + $B.get_class(other).__name__ + "()")}})($op)}}
+NoneType['__' + key + '__']=(function(op){return function(other){return _b_.NotImplemented}})($op)}}
 for(var $func in None){if(typeof None[$func]=='function'){None[$func].__str__=(function(f){return function(){return "<method-wrapper " + f +
 " of NoneType object>"}})($func)}}
+$B.set_func_names(NoneType,"builtins")
 function abs(obj){check_nb_args('abs',1,arguments.length)
 check_no_kw('abs',obj)
 if(isinstance(obj,_b_.int)){return _b_.int.$factory(Math.abs(obj))}
@@ -8520,8 +8517,6 @@ return self > other.valueOf()}
 if(isinstance(other,float)){return self > other}
 if(isinstance(other,bool)){return self.valueOf()> bool.__hash__(other)}
 if(hasattr(other,"__int__")||hasattr(other,"__index__")){return _b_.int.__gt__(self,$B.$GetInt(other))}
-var inv_op=getattr(other,"__le__",None)
-if(inv_op !==None){return inv_op(self)}
 var inv_op=getattr(other,"__le__",None)
 if(inv_op !==None){return inv_op(self)}
 throw _b_.TypeError.$factory(
