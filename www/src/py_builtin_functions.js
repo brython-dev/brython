@@ -66,7 +66,7 @@ for(var $op in $B.$comps){ // None is not orderable with any type
       case 'le':
       case 'lt':
         NoneType['__' + key + '__'] = (function(op){
-            return function(other){
+            return function(self, other){
             throw _b_.TypeError.$factory("unorderable types: NoneType() " +
                 op + " " + $B.get_class(other).__name__ + "()")}
         })($op)
