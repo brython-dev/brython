@@ -8853,10 +8853,11 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_info){
         $NodeJS('$locals.__annotations__ = _b_.dict.$factory()'))
 
     // file
-    root.insert(offset++,
-        $NodeJS(local_ns + '["__file__"] = "' + $B.$py_module_path[module] +
-            '";None;\n'))
-
+    if($B.$py_module_path[module] !== undefined){
+        root.insert(offset++,
+            $NodeJS(local_ns + '["__file__"] = "' + $B.$py_module_path[module] +
+                '";None;\n'))
+    }
     // if line_info is provided, store it
     if(line_info !== undefined){
         root.insert(offset++,
