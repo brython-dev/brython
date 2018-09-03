@@ -25,7 +25,9 @@ module.__new__ = function(cls, name, doc, $package){
 }
 
 module.__repr__ = module.__str__ = function(self){
-    return "<module " + self.__name__ + ">"
+    var res = "<module " + self.__name__
+    if(self.__file__ === undefined){ res += " (built-in)"}
+    return res + ">"
 }
 
 
@@ -156,6 +158,8 @@ function run_js(module_contents, path, _module){
         throw _b_.ImportError.$factory("name '$module' is not defined in module")
     }
 
+    $module.__name__ = _module.__name__
+
     if(_module !== undefined){
         // FIXME : This might not be efficient . Refactor js modules instead.
         // Overwrite original module object . Needed e.g. for reload()
@@ -167,12 +171,12 @@ function run_js(module_contents, path, _module){
     }else{
         // add class and __str__
         $module.__class__ = module
-        $module.__name__ = _module.name
+        $module.__name__ = _module.__name__
         $module.__repr__ = $module.__str__ = function(){
           if($B.builtin_module_names.indexOf(_module.name) > -1){
-             return "<module '" + _module.name + "' (built-in)>"
+             return "<module '" + _module.__name__ + "' (built-in)>"
           }
-          return "<module '" + _module.name + "' from " + path + " >"
+          return "<module '" + _module.__name__ + "' from " + path + " >"
         }
 
         if(_module.name != "builtins") { // builtins do not have a __file__ attribute
@@ -338,8 +342,9 @@ var finder_VFS = {
         var path = $B.brython_path + "Lib/" + modobj.__name__
         if(modobj.$is_package){path += "/__init__.py"}
         modobj.__file__ = path
-        if(ext == '.js'){run_js(module_contents, modobj.__path__, modobj)}
-        else if($B.precompiled.hasOwnProperty(modobj.__name__)){
+        if(ext == '.js'){
+            run_js(module_contents, modobj.__path__, modobj)
+        }else if($B.precompiled.hasOwnProperty(modobj.__name__)){
            var parts = modobj.__name__.split(".")
            for(var i = 0; i < parts.length; i++){
                var parent = parts.slice(0, i + 1).join(".")
@@ -353,6 +358,9 @@ var finder_VFS = {
                if(is_package){mod_js=mod_js[0]}
                $B.imported[parent] = module.$factory(parent, undefined, is_package)
                $B.imported[parent].__initialized__ = true
+               $B.imported[parent].__file__ =
+                   $B.imported[parent].__cached__ = $B.brython_path + "/Lib/" +
+                   parts.join("/") + ".py"
                if(is_package){
                    $B.imported[parent].__path__ = "<stdlib>"
                    $B.imported[parent].__package__ = parent
@@ -365,7 +373,6 @@ var finder_VFS = {
                    mod_js += "return $locals_" + parent.replace(/\./g, "_")
                    var $module = new Function(mod_js)()
                }catch(err){
-                   console.log(mod_js)
                    console.log(err)
                    for(var k in err){console.log(k, err[k])}
                    console.log(Object.keys($B.imported))
@@ -572,7 +579,7 @@ var finder_path = {
     find_spec : function(cls, fullname, path, prev_module) {
         var current_module = $B.last($B.frames_stack)[2]
         if($B.VFS && $B.VFS[current_module]){
-            // If current module is in VFS (ie standard library) it's 
+            // If current module is in VFS (ie standard library) it's
             // pointless to search in other locations
             return _b_.None
         }
@@ -811,6 +818,12 @@ delete _path
 delete _type
 delete _sys_paths
 
+function import_error(mod_name){
+    var exc = _b_.ImportError.$factory(mod_name)
+    exc.name = mod_name
+    throw exc
+}
+
 // Default __import__ function
 // TODO: Include at runtime in importlib.__import__
 $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
@@ -850,10 +863,8 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
        parsed_name = mod_name.split('.')
    if(modobj == _b_.None){
        // [Import spec] Stop loading loop right away
-       throw _b_.ImportError.$factory(mod_name)
+       import_error(mod_name)
    }
-    var $test = false //mod_name == "_locale"
-    if($test){console.log("__import__", mod_name, modobj, fromlist)}
    if(modobj === undefined){
        // [Import spec] Argument defaults and preconditions
        // get name of module this was called in
@@ -867,10 +878,9 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
             _mod_name += modsep + parsed_name[i]
             modsep = "."
             var modobj = $B.imported[_mod_name]
-            if($test){console.log(_mod_name, modobj)}
             if(modobj == _b_.None){
                 // [Import spec] Stop loading loop right away
-                throw _b_.ImportError.$factory(_mod_name)
+                import_error(_mod_name)
             }else if (modobj === undefined){
                 try{
                     $B.import_hooks(_mod_name, __path__, undefined)
@@ -880,17 +890,13 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
                 }
 
                 if($B.is_none($B.imported[_mod_name])){
-                    throw _b_.ImportError.$factory(_mod_name)
+                    import_error(_mod_name)
                 }else{
                     // [Import spec] Preserve module invariant
                     // FIXME : Better do this in import_hooks ?
                     if(_parent_name){
-                        if($test){console.log("set attr", parsed_name[i],
-                            "to", _parent_name, $B.imported[_mod_name])}
                         _b_.setattr($B.imported[_parent_name], parsed_name[i],
                                     $B.imported[_mod_name])
-                        if($test){console.log("attr", parsed_name[i],
-                            $B.imported[_parent_name][parsed_name[i]])}
                     }
                 }
             }
@@ -909,7 +915,7 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
                                 module){
                         return $B.imported[_mod_name][parsed_name[len]]
                     }
-                    throw _b_.ImportError.$factory(_mod_name)
+                    import_error(_mod_name)
                 }
             }
        }
@@ -949,10 +955,6 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
  * @return None
  */
 $B.$import = function(mod_name, fromlist, aliases, locals){
-    var $test = false //mod_name == "collections"
-    if($test){
-        console.log(mod_name, fromlist)
-    }
     var parts = mod_name.split(".")
     // For . , .. and so on , remove one relative step
     if(mod_name[mod_name.length - 1] == "."){parts.pop()}
@@ -1028,7 +1030,6 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
         }else{
             // from mod_name import N1 [as V1], ... Nn [as Vn]
             // from modname import * ... when __all__ is defined
-            if($test){console.log("__all__", __all__)}
             for(var i = 0, l = __all__.length; i < l; ++i){
                 var name = __all__[i]
                 var alias = aliases[name] || name
@@ -1042,10 +1043,8 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                         _b_.getattr(__import__, '__call__')(mod_name + '.' + name,
                             globals, undefined, [], 0);
                         // [Import spec] ... then check imported module again for name
-                        if($test){console.log("import", mod_name+'.'+name, "ok, modobj", modobj)}
                         locals[alias] = _b_.getattr(modobj, name);
                     }catch($err3){
-                        if($test){console.log($err3)}
                         // [Import spec] Attribute not found
                         if(mod_name === "__future__"){
                             // special case for __future__, cf issue #584
@@ -1060,11 +1059,12 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                         // For other modules, raise ImportError
                         if($err3.$py_error){
                             var msg = $err3.__class__.__name__ + "\n" +
-                                _b_.getattr($err3, "info")
-                            throw _b_.ImportError.$factory("cannot import name '"+
-                                name + "'\n\n" + msg)
+                                _b_.getattr($err3, "info"),
+                                exc = _b_.ImportError.$factory("cannot import name '"+
+                                    name + "'\n\n" + msg)
+                                exc.name = name
+                                throw exc
                         }
-                        console.log($err3)
                         throw _b_.ImportError.$factory(
                             "cannot import name '" + name + "'")
                     }
