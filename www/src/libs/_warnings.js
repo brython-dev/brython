@@ -12,10 +12,10 @@ return  {
         ['ignore', _b_.None, _b_.DeprecationWarning, _b_.None, 0],
         ['ignore', _b_.None, _b_.PendingDeprecationWarning, _b_.None, 0],
         ['ignore', _b_.None, _b_.ImportWarning, _b_.None, 0],
-        ['ignore', _b_.None, _b_.BytesWarning, _b_.None, 0)].map(
+        ['ignore', _b_.None, _b_.BytesWarning, _b_.None, 0]].map(
             function(x){return _b_.tuple.$factory(x)}),
 
-    once_registry: _b_.dic.$factory(),
+    once_registry: _b_.dict.$factory(),
 
     warn: function(){},
 
