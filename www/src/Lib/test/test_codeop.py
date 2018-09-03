@@ -3,7 +3,7 @@
    Nick Mathewson
 """
 import unittest
-from test.support import run_unittest, is_jython
+from test.support import is_jython
 
 from codeop import compile_command, PyCF_DONT_IMPLY_DEDENT
 import io
@@ -282,7 +282,6 @@ class CodeopTests(unittest.TestCase):
         ai("if (a == 1 and b = 2): pass")
 
         ai("del 1")
-        ai("del ()")
         ai("del (1,)")
         ai("del [1]")
         ai("del '1'")
@@ -296,9 +295,5 @@ class CodeopTests(unittest.TestCase):
                             compile("a = 1\n", "def", 'single').co_filename)
 
 
-def test_main():
-    run_unittest(CodeopTests)
-
-
 if __name__ == "__main__":
-    test_main()
+    unittest.main()

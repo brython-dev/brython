@@ -8,7 +8,7 @@ import unittest
 import glob
 import os.path
 import test.support
-from test.script_helper import assert_python_failure
+from test.support.script_helper import assert_python_failure
 
 CRASHER_DIR = os.path.join(os.path.dirname(__file__), "crashers")
 CRASHER_FILES = os.path.join(CRASHER_DIR, "*.py")
@@ -30,9 +30,8 @@ class CrasherTest(unittest.TestCase):
             assert_python_failure(fname)
 
 
-def test_main():
-    test.support.run_unittest(CrasherTest)
+def tearDownModule():
     test.support.reap_children()
 
 if __name__ == "__main__":
-    test_main()
+    unittest.main()

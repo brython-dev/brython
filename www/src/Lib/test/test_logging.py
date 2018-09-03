@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-#
-# Copyright 2001-2013 by Vinay Sajip. All Rights Reserved.
+# Copyright 2001-2017 by Vinay Sajip. All Rights Reserved.
 #
 # Permission to use, copy, modify, and distribute this software and its
 # documentation for any purpose and without fee is hereby granted,
@@ -18,7 +16,7 @@
 
 """Test harness for the logging module. Run all tests.
 
-Copyright (C) 2001-2013 Vinay Sajip. All Rights Reserved.
+Copyright (C) 2001-2017 Vinay Sajip. All Rights Reserved.
 """
 
 import logging
@@ -26,7 +24,9 @@ import logging.handlers
 import logging.config
 
 import codecs
+import configparser
 import datetime
+import pathlib
 import pickle
 import io
 import gc
@@ -35,65 +35,57 @@ import os
 import queue
 import random
 import re
-import select
 import socket
 import struct
 import sys
 import tempfile
-from test.support import (captured_stdout, run_with_locale, run_unittest,
-                          patch, requires_zlib, TestHandler, Matcher)
+from test.support.script_helper import assert_python_ok
+from test import support
 import textwrap
+import threading
 import time
 import unittest
 import warnings
 import weakref
+
+import asyncore
+from http.server import HTTPServer, BaseHTTPRequestHandler
+import smtpd
+from urllib.parse import urlparse, parse_qs
+from socketserver import (ThreadingUDPServer, DatagramRequestHandler,
+                          ThreadingTCPServer, StreamRequestHandler)
+
 try:
-    import threading
-    # The following imports are needed only for tests which
-    # require threading
-    import asynchat
-    import asyncore
-    import errno
-    from http.server import HTTPServer, BaseHTTPRequestHandler
-    import smtpd
-    from urllib.parse import urlparse, parse_qs
-    from socketserver import (ThreadingUDPServer, DatagramRequestHandler,
-                              ThreadingTCPServer, StreamRequestHandler)
+    import win32evtlog, win32evtlogutil, pywintypes
 except ImportError:
-    threading = None
-try:
-    import win32evtlog
-except ImportError:
-    win32evtlog = None
-try:
-    import win32evtlogutil
-except ImportError:
-    win32evtlogutil = None
-    win32evtlog = None
+    win32evtlog = win32evtlogutil = pywintypes = None
+
 try:
     import zlib
 except ImportError:
     pass
-
 
 class BaseTest(unittest.TestCase):
 
     """Base class for logging tests."""
 
     log_format = "%(name)s -> %(levelname)s: %(message)s"
-    expected_log_pat = r"^([\w.]+) -> ([\w]+): ([\d]+)$"
+    expected_log_pat = r"^([\w.]+) -> (\w+): (\d+)$"
     message_num = 0
 
     def setUp(self):
         """Setup the default logging stream to an internal StringIO instance,
         so that we can examine log output as we want."""
+        self._threading_key = support.threading_setup()
+
         logger_dict = logging.getLogger().manager.loggerDict
         logging._acquireLock()
         try:
             self.saved_handlers = logging._handlers.copy()
             self.saved_handler_list = logging._handlerList[:]
             self.saved_loggers = saved_loggers = logger_dict.copy()
-            self.saved_level_names = logging._levelNames.copy()
+            self.saved_name_to_level = logging._nameToLevel.copy()
+            self.saved_level_to_name = logging._levelToName.copy()
             self.logger_states = logger_states = {}
             for name in saved_loggers:
                 logger_states[name] = getattr(saved_loggers[name],
@@ -135,12 +127,16 @@ class BaseTest(unittest.TestCase):
         self.root_logger.setLevel(self.original_logging_level)
         logging._acquireLock()
         try:
-            logging._levelNames.clear()
-            logging._levelNames.update(self.saved_level_names)
+            logging._levelToName.clear()
+            logging._levelToName.update(self.saved_level_to_name)
+            logging._nameToLevel.clear()
+            logging._nameToLevel.update(self.saved_name_to_level)
             logging._handlers.clear()
             logging._handlers.update(self.saved_handlers)
             logging._handlerList[:] = self.saved_handler_list
-            loggerDict = logging.getLogger().manager.loggerDict
+            manager = logging.getLogger().manager
+            manager.disable = 0
+            loggerDict = manager.loggerDict
             loggerDict.clear()
             loggerDict.update(self.saved_loggers)
             logger_states = self.logger_states
@@ -150,12 +146,15 @@ class BaseTest(unittest.TestCase):
         finally:
             logging._releaseLock()
 
-    def assert_log_lines(self, expected_values, stream=None):
+        self.doCleanups()
+        support.threading_cleanup(*self._threading_key)
+
+    def assert_log_lines(self, expected_values, stream=None, pat=None):
         """Match the collected log lines against the regular expression
         self.expected_log_pat, and compare the extracted group values to
         the expected_values list of tuples."""
         stream = stream or self.stream
-        pat = re.compile(self.expected_log_pat)
+        pat = re.compile(pat or self.expected_log_pat)
         actual_lines = stream.getvalue().splitlines()
         self.assertEqual(len(actual_lines), len(expected_values))
         for actual, expected in zip(actual_lines, expected_values):
@@ -179,7 +178,7 @@ class BuiltinLevelsTest(BaseTest):
     """Test builtin levels and their inheritance."""
 
     def test_flat(self):
-        #Logging levels in a flat logger namespace.
+        # Logging levels in a flat logger namespace.
         m = self.next_message
 
         ERR = logging.getLogger("ERR")
@@ -249,7 +248,7 @@ class BuiltinLevelsTest(BaseTest):
         ])
 
     def test_nested_inherited(self):
-        #Logging levels in a nested namespace, inherited from parent loggers.
+        # Logging levels in a nested namespace, inherited from parent loggers.
         m = self.next_message
 
         INF = logging.getLogger("INF")
@@ -309,6 +308,28 @@ class BuiltinLevelsTest(BaseTest):
             ('INF.BADPARENT', 'INFO', '4'),
         ])
 
+    def test_regression_22386(self):
+        """See issue #22386 for more information."""
+        self.assertEqual(logging.getLevelName('INFO'), logging.INFO)
+        self.assertEqual(logging.getLevelName(logging.INFO), 'INFO')
+
+    def test_regression_29220(self):
+        """See issue #29220 for more information."""
+        logging.addLevelName(logging.INFO, '')
+        self.addCleanup(logging.addLevelName, logging.INFO, 'INFO')
+        self.assertEqual(logging.getLevelName(logging.INFO), '')
+
+    def test_issue27935(self):
+        fatal = logging.getLevelName('FATAL')
+        self.assertEqual(fatal, logging.FATAL)
+
+    def test_regression_29220(self):
+        """See issue #29220 for more information."""
+        logging.addLevelName(logging.INFO, '')
+        self.addCleanup(logging.addLevelName, logging.INFO, 'INFO')
+        self.assertEqual(logging.getLevelName(logging.INFO), '')
+        self.assertEqual(logging.getLevelName(logging.NOTSET), 'NOTSET')
+        self.assertEqual(logging.getLevelName('NOTSET'), logging.NOTSET)
 
 class BasicFilterTest(BaseTest):
 
@@ -430,7 +451,7 @@ class CustomLevelsAndFiltersTest(BaseTest):
     """Test various filtering possibilities with custom logging levels."""
 
     # Skip the logger name group.
-    expected_log_pat = r"^[\w.]+ -> ([\w]+): ([\d]+)$"
+    expected_log_pat = r"^[\w.]+ -> (\w+): (\d+)$"
 
     def setUp(self):
         BaseTest.setUp(self)
@@ -560,7 +581,7 @@ class HandlerTest(BaseTest):
                 self.assertEqual(h.facility, h.LOG_USER)
                 self.assertTrue(h.unixsocket)
                 h.close()
-            except socket.error: # syslogd might not be available
+            except OSError: # syslogd might not be available
                 pass
         for method in ('GET', 'POST', 'PUT'):
             if method == 'PUT':
@@ -577,20 +598,46 @@ class HandlerTest(BaseTest):
         self.assertFalse(h.shouldFlush(r))
         h.close()
 
+    def test_path_objects(self):
+        """
+        Test that Path objects are accepted as filename arguments to handlers.
+
+        See Issue #27493.
+        """
+        fd, fn = tempfile.mkstemp()
+        os.close(fd)
+        os.unlink(fn)
+        pfn = pathlib.Path(fn)
+        cases = (
+                    (logging.FileHandler, (pfn, 'w')),
+                    (logging.handlers.RotatingFileHandler, (pfn, 'a')),
+                    (logging.handlers.TimedRotatingFileHandler, (pfn, 'h')),
+                )
+        if sys.platform in ('linux', 'darwin'):
+            cases += ((logging.handlers.WatchedFileHandler, (pfn, 'w')),)
+        for cls, args in cases:
+            h = cls(*args)
+            self.assertTrue(os.path.exists(fn))
+            h.close()
+            os.unlink(fn)
+
     @unittest.skipIf(os.name == 'nt', 'WatchedFileHandler not appropriate for Windows.')
-    @unittest.skipUnless(threading, 'Threading required for this test.')
     def test_race(self):
         # Issue #14632 refers.
         def remove_loop(fname, tries):
             for _ in range(tries):
                 try:
                     os.unlink(fname)
+                    self.deletion_time = time.time()
                 except OSError:
                     pass
                 time.sleep(0.004 * random.randint(0, 4))
 
         del_count = 500
         log_count = 500
+
+        self.handle_time = None
+        self.deletion_time = None
 
         for delay in (False, True):
             fd, fn = tempfile.mkstemp('.log', 'test_logging-3-')
@@ -605,7 +652,14 @@ class HandlerTest(BaseTest):
                 for _ in range(log_count):
                     time.sleep(0.005)
                     r = logging.makeLogRecord({'msg': 'testing' })
-                    h.handle(r)
+                    try:
+                        self.handle_time = time.time()
+                        h.handle(r)
+                    except Exception:
+                        print('Deleted at %s, '
+                              'opened at %s' % (self.deletion_time,
+                                                self.handle_time))
+                        raise
             finally:
                 remover.join()
                 h.close()
@@ -626,352 +680,313 @@ class StreamHandlerTest(BaseTest):
         h = TestStreamHandler(BadStream())
         r = logging.makeLogRecord({})
         old_raise = logging.raiseExceptions
-        old_stderr = sys.stderr
+
         try:
             h.handle(r)
             self.assertIs(h.error_record, r)
+
             h = logging.StreamHandler(BadStream())
-            sys.stderr = sio = io.StringIO()
-            h.handle(r)
-            self.assertIn('\nRuntimeError: deliberate mistake\n',
-                          sio.getvalue())
+            with support.captured_stderr() as stderr:
+                h.handle(r)
+                msg = '\nRuntimeError: deliberate mistake\n'
+                self.assertIn(msg, stderr.getvalue())
+
             logging.raiseExceptions = False
-            sys.stderr = sio = io.StringIO()
-            h.handle(r)
-            self.assertEqual('', sio.getvalue())
+            with support.captured_stderr() as stderr:
+                h.handle(r)
+                self.assertEqual('', stderr.getvalue())
         finally:
             logging.raiseExceptions = old_raise
-            sys.stderr = old_stderr
+
+    def test_stream_setting(self):
+        """
+        Test setting the handler's stream
+        """
+        h = logging.StreamHandler()
+        stream = io.StringIO()
+        old = h.setStream(stream)
+        self.assertIs(old, sys.stderr)
+        actual = h.setStream(old)
+        self.assertIs(actual, stream)
+        # test that setting to existing value returns None
+        actual = h.setStream(old)
+        self.assertIsNone(actual)
 
 # -- The following section could be moved into a server_helper.py module
 # -- if it proves to be of wider utility than just test_logging
 
-if threading:
-    class TestSMTPChannel(smtpd.SMTPChannel):
-        """
-        This derived class has had to be created because smtpd does not
-        support use of custom channel maps, although they are allowed by
-        asyncore's design. Issue #11959 has been raised to address this,
-        and if resolved satisfactorily, some of this code can be removed.
-        """
-        def __init__(self, server, conn, addr, sockmap):
-            asynchat.async_chat.__init__(self, conn, sockmap)
-            self.smtp_server = server
-            self.conn = conn
-            self.addr = addr
-            self.data_size_limit = None
-            self.received_lines = []
-            self.smtp_state = self.COMMAND
-            self.seen_greeting = ''
-            self.mailfrom = None
-            self.rcpttos = []
-            self.received_data = ''
-            self.fqdn = socket.getfqdn()
-            self.num_bytes = 0
-            try:
-                self.peer = conn.getpeername()
-            except socket.error as err:
-                # a race condition  may occur if the other end is closing
-                # before we can get the peername
-                self.close()
-                if err.args[0] != errno.ENOTCONN:
-                    raise
-                return
-            self.push('220 %s %s' % (self.fqdn, smtpd.__version__))
-            self.set_terminator(b'\r\n')
-            self.extended_smtp = False
+class TestSMTPServer(smtpd.SMTPServer):
+    """
+    This class implements a test SMTP server.
 
+    :param addr: A (host, port) tuple which the server listens on.
+                 You can specify a port value of zero: the server's
+                 *port* attribute will hold the actual port number
+                 used, which can be used in client connections.
+    :param handler: A callable which will be called to process
+                    incoming messages. The handler will be passed
+                    the client address tuple, who the message is from,
+                    a list of recipients and the message data.
+    :param poll_interval: The interval, in seconds, used in the underlying
+                          :func:`select` or :func:`poll` call by
+                          :func:`asyncore.loop`.
+    :param sockmap: A dictionary which will be used to hold
+                    :class:`asyncore.dispatcher` instances used by
+                    :func:`asyncore.loop`. This avoids changing the
+                    :mod:`asyncore` module's global state.
+    """
 
-    class TestSMTPServer(smtpd.SMTPServer):
+    def __init__(self, addr, handler, poll_interval, sockmap):
+        smtpd.SMTPServer.__init__(self, addr, None, map=sockmap,
+                                  decode_data=True)
+        self.port = self.socket.getsockname()[1]
+        self._handler = handler
+        self._thread = None
+        self.poll_interval = poll_interval
+
+    def process_message(self, peer, mailfrom, rcpttos, data):
         """
-        This class implements a test SMTP server.
+        Delegates to the handler passed in to the server's constructor.
 
-        :param addr: A (host, port) tuple which the server listens on.
-                     You can specify a port value of zero: the server's
-                     *port* attribute will hold the actual port number
-                     used, which can be used in client connections.
-        :param handler: A callable which will be called to process
-                        incoming messages. The handler will be passed
-                        the client address tuple, who the message is from,
-                        a list of recipients and the message data.
+        Typically, this will be a test case method.
+        :param peer: The client (host, port) tuple.
+        :param mailfrom: The address of the sender.
+        :param rcpttos: The addresses of the recipients.
+        :param data: The message.
+        """
+        self._handler(peer, mailfrom, rcpttos, data)
+
+    def start(self):
+        """
+        Start the server running on a separate daemon thread.
+        """
+        self._thread = t = threading.Thread(target=self.serve_forever,
+                                            args=(self.poll_interval,))
+        t.setDaemon(True)
+        t.start()
+
+    def serve_forever(self, poll_interval):
+        """
+        Run the :mod:`asyncore` loop until normal termination
+        conditions arise.
         :param poll_interval: The interval, in seconds, used in the underlying
                               :func:`select` or :func:`poll` call by
                               :func:`asyncore.loop`.
-        :param sockmap: A dictionary which will be used to hold
-                        :class:`asyncore.dispatcher` instances used by
-                        :func:`asyncore.loop`. This avoids changing the
-                        :mod:`asyncore` module's global state.
         """
-        channel_class = TestSMTPChannel
+        asyncore.loop(poll_interval, map=self._map)
 
-        def __init__(self, addr, handler, poll_interval, sockmap):
-            self._localaddr = addr
-            self._remoteaddr = None
-            self.data_size_limit = None
-            self.sockmap = sockmap
-            asyncore.dispatcher.__init__(self, map=sockmap)
-            try:
-                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                sock.setblocking(0)
-                self.set_socket(sock, map=sockmap)
-                # try to re-use a server port if possible
-                self.set_reuse_addr()
-                self.bind(addr)
-                self.port = sock.getsockname()[1]
-                self.listen(5)
-            except:
-                self.close()
-                raise
-            self._handler = handler
+    def stop(self, timeout=None):
+        """
+        Stop the thread by closing the server instance.
+        Wait for the server thread to terminate.
+
+        :param timeout: How long to wait for the server thread
+                        to terminate.
+        """
+        self.close()
+        support.join_thread(self._thread, timeout)
+        self._thread = None
+        asyncore.close_all(map=self._map, ignore_all=True)
+
+
+class ControlMixin(object):
+    """
+    This mixin is used to start a server on a separate thread, and
+    shut it down programmatically. Request handling is simplified - instead
+    of needing to derive a suitable RequestHandler subclass, you just
+    provide a callable which will be passed each received request to be
+    processed.
+
+    :param handler: A handler callable which will be called with a
+                    single parameter - the request - in order to
+                    process the request. This handler is called on the
+                    server thread, effectively meaning that requests are
+                    processed serially. While not quite Web scale ;-),
+                    this should be fine for testing applications.
+    :param poll_interval: The polling interval in seconds.
+    """
+    def __init__(self, handler, poll_interval):
+        self._thread = None
+        self.poll_interval = poll_interval
+        self._handler = handler
+        self.ready = threading.Event()
+
+    def start(self):
+        """
+        Create a daemon thread to run the server, and start it.
+        """
+        self._thread = t = threading.Thread(target=self.serve_forever,
+                                            args=(self.poll_interval,))
+        t.setDaemon(True)
+        t.start()
+
+    def serve_forever(self, poll_interval):
+        """
+        Run the server. Set the ready flag before entering the
+        service loop.
+        """
+        self.ready.set()
+        super(ControlMixin, self).serve_forever(poll_interval)
+
+    def stop(self, timeout=None):
+        """
+        Tell the server thread to stop, and wait for it to do so.
+
+        :param timeout: How long to wait for the server thread
+                        to terminate.
+        """
+        self.shutdown()
+        if self._thread is not None:
+            support.join_thread(self._thread, timeout)
             self._thread = None
-            self.poll_interval = poll_interval
+        self.server_close()
+        self.ready.clear()
 
-        def handle_accepted(self, conn, addr):
-            """
-            Redefined only because the base class does not pass in a
-            map, forcing use of a global in :mod:`asyncore`.
-            """
-            channel = self.channel_class(self, conn, addr, self.sockmap)
+class TestHTTPServer(ControlMixin, HTTPServer):
+    """
+    An HTTP server which is controllable using :class:`ControlMixin`.
 
-        def process_message(self, peer, mailfrom, rcpttos, data):
-            """
-            Delegates to the handler passed in to the server's constructor.
+    :param addr: A tuple with the IP address and port to listen on.
+    :param handler: A handler callable which will be called with a
+                    single parameter - the request - in order to
+                    process the request.
+    :param poll_interval: The polling interval in seconds.
+    :param log: Pass ``True`` to enable log messages.
+    """
+    def __init__(self, addr, handler, poll_interval=0.5,
+                 log=False, sslctx=None):
+        class DelegatingHTTPRequestHandler(BaseHTTPRequestHandler):
+            def __getattr__(self, name, default=None):
+                if name.startswith('do_'):
+                    return self.process_request
+                raise AttributeError(name)
 
-            Typically, this will be a test case method.
-            :param peer: The client (host, port) tuple.
-            :param mailfrom: The address of the sender.
-            :param rcpttos: The addresses of the recipients.
-            :param data: The message.
-            """
-            self._handler(peer, mailfrom, rcpttos, data)
+            def process_request(self):
+                self.server._handler(self)
 
-        def start(self):
-            """
-            Start the server running on a separate daemon thread.
-            """
-            self._thread = t = threading.Thread(target=self.serve_forever,
-                                                args=(self.poll_interval,))
-            t.setDaemon(True)
-            t.start()
+            def log_message(self, format, *args):
+                if log:
+                    super(DelegatingHTTPRequestHandler,
+                          self).log_message(format, *args)
+        HTTPServer.__init__(self, addr, DelegatingHTTPRequestHandler)
+        ControlMixin.__init__(self, handler, poll_interval)
+        self.sslctx = sslctx
 
-        def serve_forever(self, poll_interval):
-            """
-            Run the :mod:`asyncore` loop until normal termination
-            conditions arise.
-            :param poll_interval: The interval, in seconds, used in the underlying
-                                  :func:`select` or :func:`poll` call by
-                                  :func:`asyncore.loop`.
-            """
-            try:
-                asyncore.loop(poll_interval, map=self.sockmap)
-            except select.error:
-                # On FreeBSD 8, closing the server repeatably
-                # raises this error. We swallow it if the
-                # server has been closed.
-                if self.connected or self.accepting:
-                    raise
+    def get_request(self):
+        try:
+            sock, addr = self.socket.accept()
+            if self.sslctx:
+                sock = self.sslctx.wrap_socket(sock, server_side=True)
+        except OSError as e:
+            # socket errors are silenced by the caller, print them here
+            sys.stderr.write("Got an error:\n%s\n" % e)
+            raise
+        return sock, addr
 
-        def stop(self, timeout=None):
-            """
-            Stop the thread by closing the server instance.
-            Wait for the server thread to terminate.
+class TestTCPServer(ControlMixin, ThreadingTCPServer):
+    """
+    A TCP server which is controllable using :class:`ControlMixin`.
 
-            :param timeout: How long to wait for the server thread
-                            to terminate.
-            """
-            self.close()
-            self._thread.join(timeout)
-            self._thread = None
+    :param addr: A tuple with the IP address and port to listen on.
+    :param handler: A handler callable which will be called with a single
+                    parameter - the request - in order to process the request.
+    :param poll_interval: The polling interval in seconds.
+    :bind_and_activate: If True (the default), binds the server and starts it
+                        listening. If False, you need to call
+                        :meth:`server_bind` and :meth:`server_activate` at
+                        some later time before calling :meth:`start`, so that
+                        the server will set up the socket and listen on it.
+    """
 
-    class ControlMixin(object):
-        """
-        This mixin is used to start a server on a separate thread, and
-        shut it down programmatically. Request handling is simplified - instead
-        of needing to derive a suitable RequestHandler subclass, you just
-        provide a callable which will be passed each received request to be
-        processed.
+    allow_reuse_address = True
 
-        :param handler: A handler callable which will be called with a
-                        single parameter - the request - in order to
-                        process the request. This handler is called on the
-                        server thread, effectively meaning that requests are
-                        processed serially. While not quite Web scale ;-),
-                        this should be fine for testing applications.
-        :param poll_interval: The polling interval in seconds.
-        """
-        def __init__(self, handler, poll_interval):
-            self._thread = None
-            self.poll_interval = poll_interval
-            self._handler = handler
-            self.ready = threading.Event()
+    def __init__(self, addr, handler, poll_interval=0.5,
+                 bind_and_activate=True):
+        class DelegatingTCPRequestHandler(StreamRequestHandler):
 
-        def start(self):
-            """
-            Create a daemon thread to run the server, and start it.
-            """
-            self._thread = t = threading.Thread(target=self.serve_forever,
-                                                args=(self.poll_interval,))
-            t.setDaemon(True)
-            t.start()
+            def handle(self):
+                self.server._handler(self)
+        ThreadingTCPServer.__init__(self, addr, DelegatingTCPRequestHandler,
+                                    bind_and_activate)
+        ControlMixin.__init__(self, handler, poll_interval)
 
-        def serve_forever(self, poll_interval):
-            """
-            Run the server. Set the ready flag before entering the
-            service loop.
-            """
-            self.ready.set()
-            super(ControlMixin, self).serve_forever(poll_interval)
+    def server_bind(self):
+        super(TestTCPServer, self).server_bind()
+        self.port = self.socket.getsockname()[1]
 
-        def stop(self, timeout=None):
-            """
-            Tell the server thread to stop, and wait for it to do so.
+class TestUDPServer(ControlMixin, ThreadingUDPServer):
+    """
+    A UDP server which is controllable using :class:`ControlMixin`.
 
-            :param timeout: How long to wait for the server thread
-                            to terminate.
-            """
-            self.shutdown()
-            if self._thread is not None:
-                self._thread.join(timeout)
-                self._thread = None
-            self.server_close()
-            self.ready.clear()
+    :param addr: A tuple with the IP address and port to listen on.
+    :param handler: A handler callable which will be called with a
+                    single parameter - the request - in order to
+                    process the request.
+    :param poll_interval: The polling interval for shutdown requests,
+                          in seconds.
+    :bind_and_activate: If True (the default), binds the server and
+                        starts it listening. If False, you need to
+                        call :meth:`server_bind` and
+                        :meth:`server_activate` at some later time
+                        before calling :meth:`start`, so that the server will
+                        set up the socket and listen on it.
+    """
+    def __init__(self, addr, handler, poll_interval=0.5,
+                 bind_and_activate=True):
+        class DelegatingUDPRequestHandler(DatagramRequestHandler):
 
-    class TestHTTPServer(ControlMixin, HTTPServer):
-        """
-        An HTTP server which is controllable using :class:`ControlMixin`.
+            def handle(self):
+                self.server._handler(self)
 
-        :param addr: A tuple with the IP address and port to listen on.
-        :param handler: A handler callable which will be called with a
-                        single parameter - the request - in order to
-                        process the request.
-        :param poll_interval: The polling interval in seconds.
-        :param log: Pass ``True`` to enable log messages.
-        """
-        def __init__(self, addr, handler, poll_interval=0.5,
-                     log=False, sslctx=None):
-            class DelegatingHTTPRequestHandler(BaseHTTPRequestHandler):
-                def __getattr__(self, name, default=None):
-                    if name.startswith('do_'):
-                        return self.process_request
-                    raise AttributeError(name)
+            def finish(self):
+                data = self.wfile.getvalue()
+                if data:
+                    try:
+                        super(DelegatingUDPRequestHandler, self).finish()
+                    except OSError:
+                        if not self.server._closed:
+                            raise
 
-                def process_request(self):
-                    self.server._handler(self)
+        ThreadingUDPServer.__init__(self, addr,
+                                    DelegatingUDPRequestHandler,
+                                    bind_and_activate)
+        ControlMixin.__init__(self, handler, poll_interval)
+        self._closed = False
 
-                def log_message(self, format, *args):
-                    if log:
-                        super(DelegatingHTTPRequestHandler,
-                              self).log_message(format, *args)
-            HTTPServer.__init__(self, addr, DelegatingHTTPRequestHandler)
-            ControlMixin.__init__(self, handler, poll_interval)
-            self.sslctx = sslctx
+    def server_bind(self):
+        super(TestUDPServer, self).server_bind()
+        self.port = self.socket.getsockname()[1]
 
-        def get_request(self):
-            try:
-                sock, addr = self.socket.accept()
-                if self.sslctx:
-                    sock = self.sslctx.wrap_socket(sock, server_side=True)
-            except socket.error as e:
-                # socket errors are silenced by the caller, print them here
-                sys.stderr.write("Got an error:\n%s\n" % e)
-                raise
-            return sock, addr
+    def server_close(self):
+        super(TestUDPServer, self).server_close()
+        self._closed = True
 
-    class TestTCPServer(ControlMixin, ThreadingTCPServer):
-        """
-        A TCP server which is controllable using :class:`ControlMixin`.
+if hasattr(socket, "AF_UNIX"):
+    class TestUnixStreamServer(TestTCPServer):
+        address_family = socket.AF_UNIX
 
-        :param addr: A tuple with the IP address and port to listen on.
-        :param handler: A handler callable which will be called with a single
-                        parameter - the request - in order to process the request.
-        :param poll_interval: The polling interval in seconds.
-        :bind_and_activate: If True (the default), binds the server and starts it
-                            listening. If False, you need to call
-                            :meth:`server_bind` and :meth:`server_activate` at
-                            some later time before calling :meth:`start`, so that
-                            the server will set up the socket and listen on it.
-        """
-
-        allow_reuse_address = True
-
-        def __init__(self, addr, handler, poll_interval=0.5,
-                     bind_and_activate=True):
-            class DelegatingTCPRequestHandler(StreamRequestHandler):
-
-                def handle(self):
-                    self.server._handler(self)
-            ThreadingTCPServer.__init__(self, addr, DelegatingTCPRequestHandler,
-                                        bind_and_activate)
-            ControlMixin.__init__(self, handler, poll_interval)
-
-        def server_bind(self):
-            super(TestTCPServer, self).server_bind()
-            self.port = self.socket.getsockname()[1]
-
-    class TestUDPServer(ControlMixin, ThreadingUDPServer):
-        """
-        A UDP server which is controllable using :class:`ControlMixin`.
-
-        :param addr: A tuple with the IP address and port to listen on.
-        :param handler: A handler callable which will be called with a
-                        single parameter - the request - in order to
-                        process the request.
-        :param poll_interval: The polling interval for shutdown requests,
-                              in seconds.
-        :bind_and_activate: If True (the default), binds the server and
-                            starts it listening. If False, you need to
-                            call :meth:`server_bind` and
-                            :meth:`server_activate` at some later time
-                            before calling :meth:`start`, so that the server will
-                            set up the socket and listen on it.
-        """
-        def __init__(self, addr, handler, poll_interval=0.5,
-                     bind_and_activate=True):
-            class DelegatingUDPRequestHandler(DatagramRequestHandler):
-
-                def handle(self):
-                    self.server._handler(self)
-
-                def finish(self):
-                    data = self.wfile.getvalue()
-                    if data:
-                        try:
-                            super(DelegatingUDPRequestHandler, self).finish()
-                        except socket.error:
-                            if not self.server._closed:
-                                raise
-
-            ThreadingUDPServer.__init__(self, addr,
-                                        DelegatingUDPRequestHandler,
-                                        bind_and_activate)
-            ControlMixin.__init__(self, handler, poll_interval)
-            self._closed = False
-
-        def server_bind(self):
-            super(TestUDPServer, self).server_bind()
-            self.port = self.socket.getsockname()[1]
-
-        def server_close(self):
-            super(TestUDPServer, self).server_close()
-            self._closed = True
+    class TestUnixDatagramServer(TestUDPServer):
+        address_family = socket.AF_UNIX
 
 # - end of server_helper section
 
-@unittest.skipUnless(threading, 'Threading required for this test.')
 class SMTPHandlerTest(BaseTest):
+    TIMEOUT = 8.0
+
     def test_basic(self):
         sockmap = {}
-        server = TestSMTPServer(('localhost', 0), self.process_message, 0.001,
+        server = TestSMTPServer((support.HOST, 0), self.process_message, 0.001,
                                 sockmap)
         server.start()
-        addr = ('localhost', server.port)
-        h = logging.handlers.SMTPHandler(addr, 'me', 'you', 'Log', timeout=5.0)
+        addr = (support.HOST, server.port)
+        h = logging.handlers.SMTPHandler(addr, 'me', 'you', 'Log',
+                                         timeout=self.TIMEOUT)
         self.assertEqual(h.toaddrs, ['you'])
         self.messages = []
-        r = logging.makeLogRecord({'msg': 'Hello'})
+        r = logging.makeLogRecord({'msg': 'Hello \u2713'})
         self.handled = threading.Event()
         h.handle(r)
-        self.handled.wait(5.0)  # 14314: don't wait forever
+        self.handled.wait(self.TIMEOUT)  # 14314: don't wait forever
         server.stop()
         self.assertTrue(self.handled.is_set())
         self.assertEqual(len(self.messages), 1)
@@ -979,7 +994,7 @@ class SMTPHandlerTest(BaseTest):
         self.assertEqual(mailfrom, 'me')
         self.assertEqual(rcpttos, ['you'])
         self.assertIn('\nSubject: Log\n', data)
-        self.assertTrue(data.endswith('\n\nHello'))
+        self.assertTrue(data.endswith('\n\nHello \u2713'))
         h.close()
 
     def process_message(self, *args):
@@ -991,12 +1006,12 @@ class MemoryHandlerTest(BaseTest):
     """Tests for the MemoryHandler."""
 
     # Do not bother with a logger name group.
-    expected_log_pat = r"^[\w.]+ -> ([\w]+): ([\d]+)$"
+    expected_log_pat = r"^[\w.]+ -> (\w+): (\d+)$"
 
     def setUp(self):
         BaseTest.setUp(self)
         self.mem_hdlr = logging.handlers.MemoryHandler(10, logging.WARNING,
-                                                        self.root_hdlr)
+                                                       self.root_hdlr)
         self.mem_logger = logging.getLogger('mem')
         self.mem_logger.propagate = 0
         self.mem_logger.addHandler(self.mem_hdlr)
@@ -1033,6 +1048,36 @@ class MemoryHandlerTest(BaseTest):
         self.mem_logger.debug(self.next_message())
         self.assert_log_lines(lines)
 
+    def test_flush_on_close(self):
+        """
+        Test that the flush-on-close configuration works as expected.
+        """
+        self.mem_logger.debug(self.next_message())
+        self.assert_log_lines([])
+        self.mem_logger.info(self.next_message())
+        self.assert_log_lines([])
+        self.mem_logger.removeHandler(self.mem_hdlr)
+        # Default behaviour is to flush on close. Check that it happens.
+        self.mem_hdlr.close()
+        lines = [
+            ('DEBUG', '1'),
+            ('INFO', '2'),
+        ]
+        self.assert_log_lines(lines)
+        # Now configure for flushing not to be done on close.
+        self.mem_hdlr = logging.handlers.MemoryHandler(10, logging.WARNING,
+                                                       self.root_hdlr,
+                                                       False)
+        self.mem_logger.addHandler(self.mem_hdlr)
+        self.mem_logger.debug(self.next_message())
+        self.assert_log_lines(lines)  # no change
+        self.mem_logger.info(self.next_message())
+        self.assert_log_lines(lines)  # no change
+        self.mem_logger.removeHandler(self.mem_hdlr)
+        self.mem_hdlr.close()
+        # assert that no new lines have been added
+        self.assert_log_lines(lines)  # no change
+
 
 class ExceptionFormatter(logging.Formatter):
     """A special exception formatter."""
@@ -1044,7 +1089,7 @@ class ConfigFileTest(BaseTest):
 
     """Reading logging config from a .ini-style config file."""
 
-    expected_log_pat = r"^([\w]+) \+\+ ([\w]+)$"
+    expected_log_pat = r"^(\w+) \+\+ (\w+)$"
 
     # config0 is a standard configuration.
     config0 = """
@@ -1214,7 +1259,7 @@ class ConfigFileTest(BaseTest):
     datefmt=
     """
 
-    # config7 adds a compiler logger.
+    # config7 adds a compiler logger, and uses kwargs instead of args.
     config7 = """
     [loggers]
     keys=root,parser,compiler
@@ -1245,7 +1290,7 @@ class ConfigFileTest(BaseTest):
     class=StreamHandler
     level=NOTSET
     formatter=form1
-    args=(sys.stdout,)
+    kwargs={'stream': sys.stdout,}
 
     [formatter_form1]
     format=%(levelname)s ++ %(message)s
@@ -1279,8 +1324,26 @@ class ConfigFileTest(BaseTest):
 
     def test_config0_ok(self):
         # A simple config file which overrides the default settings.
-        with captured_stdout() as output:
+        with support.captured_stdout() as output:
             self.apply_config(self.config0)
+            logger = logging.getLogger()
+            # Won't output anything
+            logger.info(self.next_message())
+            # Outputs a message
+            logger.error(self.next_message())
+            self.assert_log_lines([
+                ('ERROR', '2'),
+            ], stream=output)
+            # Original logger output is empty.
+            self.assert_log_lines([])
+
+    def test_config0_using_cp_ok(self):
+        # A simple config file which overrides the default settings.
+        with support.captured_stdout() as output:
+            file = io.StringIO(textwrap.dedent(self.config0))
+            cp = configparser.ConfigParser()
+            cp.read_file(file)
+            logging.config.fileConfig(cp)
             logger = logging.getLogger()
             # Won't output anything
             logger.info(self.next_message())
@@ -1294,7 +1357,7 @@ class ConfigFileTest(BaseTest):
 
     def test_config1_ok(self, config=config1):
         # A config file defining a sub-parser as well.
-        with captured_stdout() as output:
+        with support.captured_stdout() as output:
             self.apply_config(config)
             logger = logging.getLogger("compiler.parser")
             # Both will output a message
@@ -1317,7 +1380,7 @@ class ConfigFileTest(BaseTest):
 
     def test_config4_ok(self):
         # A config file specifying a custom formatter class.
-        with captured_stdout() as output:
+        with support.captured_stdout() as output:
             self.apply_config(self.config4)
             logger = logging.getLogger()
             try:
@@ -1337,7 +1400,7 @@ class ConfigFileTest(BaseTest):
         self.test_config1_ok(config=self.config6)
 
     def test_config7_ok(self):
-        with captured_stdout() as output:
+        with support.captured_stdout() as output:
             self.apply_config(self.config1a)
             logger = logging.getLogger("compiler.parser")
             # See issue #11424. compiler-hyphenated sorts
@@ -1357,7 +1420,7 @@ class ConfigFileTest(BaseTest):
             ], stream=output)
             # Original logger output is empty.
             self.assert_log_lines([])
-        with captured_stdout() as output:
+        with support.captured_stdout() as output:
             self.apply_config(self.config7)
             logger = logging.getLogger("compiler.parser")
             self.assertFalse(logger.disabled)
@@ -1381,30 +1444,85 @@ class ConfigFileTest(BaseTest):
 
     def test_logger_disabling(self):
         self.apply_config(self.disable_test)
-        logger = logging.getLogger('foo')
+        logger = logging.getLogger('some_pristine_logger')
         self.assertFalse(logger.disabled)
         self.apply_config(self.disable_test)
         self.assertTrue(logger.disabled)
         self.apply_config(self.disable_test, disable_existing_loggers=False)
         self.assertFalse(logger.disabled)
 
+    def test_defaults_do_no_interpolation(self):
+        """bpo-33802 defaults should not get interpolated"""
+        ini = textwrap.dedent("""
+            [formatters]
+            keys=default
 
-@unittest.skipUnless(threading, 'Threading required for this test.')
+            [formatter_default]
+
+            [handlers]
+            keys=console
+
+            [handler_console]
+            class=logging.StreamHandler
+            args=tuple()
+
+            [loggers]
+            keys=root
+
+            [logger_root]
+            formatter=default
+            handlers=console
+            """).strip()
+        fd, fn = tempfile.mkstemp(prefix='test_logging_', suffix='.ini')
+        try:
+            os.write(fd, ini.encode('ascii'))
+            os.close(fd)
+            logging.config.fileConfig(
+                fn,
+                defaults=dict(
+                    version=1,
+                    disable_existing_loggers=False,
+                    formatters={
+                        "generic": {
+                            "format": "%(asctime)s [%(process)d] [%(levelname)s] %(message)s",
+                            "datefmt": "[%Y-%m-%d %H:%M:%S %z]",
+                            "class": "logging.Formatter"
+                        },
+                    },
+                )
+            )
+        finally:
+            os.unlink(fn)
+
+
 class SocketHandlerTest(BaseTest):
 
     """Test for SocketHandler objects."""
+
+    server_class = TestTCPServer
+    address = ('localhost', 0)
 
     def setUp(self):
         """Set up a TCP server to receive log messages, and a SocketHandler
         pointing to that server's address and port."""
         BaseTest.setUp(self)
-        addr = ('localhost', 0)
-        self.server = server = TestTCPServer(addr, self.handle_socket,
-                                                0.01)
-        server.start()
+        # Issue #29177: deal with errors that happen during setup
+        self.server = self.sock_hdlr = self.server_exception = None
+        try:
+            self.server = server = self.server_class(self.address,
+                                                     self.handle_socket, 0.01)
+            server.start()
+            # Uncomment next line to test error recovery in setUp()
+            # raise OSError('dummy error raised')
+        except OSError as e:
+            self.server_exception = e
+            return
         server.ready.wait()
-        self.sock_hdlr = logging.handlers.SocketHandler('localhost',
-                                                        server.port)
+        hcls = logging.handlers.SocketHandler
+        if isinstance(server.server_address, tuple):
+            self.sock_hdlr = hcls('localhost', server.port)
+        else:
+            self.sock_hdlr = hcls(server.server_address, None)
         self.log_output = ''
         self.root_logger.removeHandler(self.root_logger.handlers[0])
         self.root_logger.addHandler(self.sock_hdlr)
@@ -1413,9 +1531,11 @@ class SocketHandlerTest(BaseTest):
     def tearDown(self):
         """Shutdown the TCP server."""
         try:
-            self.server.stop(2.0)
-            self.root_logger.removeHandler(self.sock_hdlr)
-            self.sock_hdlr.close()
+            if self.sock_hdlr:
+                self.root_logger.removeHandler(self.sock_hdlr)
+                self.sock_hdlr.close()
+            if self.server:
+                self.server.stop(2.0)
         finally:
             BaseTest.tearDown(self)
 
@@ -1436,6 +1556,8 @@ class SocketHandlerTest(BaseTest):
 
     def test_output(self):
         # The log message sent to the SocketHandler is properly received.
+        if self.server_exception:
+            self.skipTest(self.server_exception)
         logger = logging.getLogger("tcp")
         logger.error("spam")
         self.handled.acquire()
@@ -1444,35 +1566,77 @@ class SocketHandlerTest(BaseTest):
         self.assertEqual(self.log_output, "spam\neggs\n")
 
     def test_noserver(self):
+        if self.server_exception:
+            self.skipTest(self.server_exception)
+        # Avoid timing-related failures due to SocketHandler's own hard-wired
+        # one-second timeout on socket.create_connection() (issue #16264).
+        self.sock_hdlr.retryStart = 2.5
         # Kill the server
         self.server.stop(2.0)
-        #The logging call should try to connect, which should fail
+        # The logging call should try to connect, which should fail
         try:
             raise RuntimeError('Deliberate mistake')
         except RuntimeError:
             self.root_logger.exception('Never sent')
         self.root_logger.error('Never sent, either')
         now = time.time()
-        self.assertTrue(self.sock_hdlr.retryTime > now)
+        self.assertGreater(self.sock_hdlr.retryTime, now)
         time.sleep(self.sock_hdlr.retryTime - now + 0.001)
         self.root_logger.error('Nor this')
 
+def _get_temp_domain_socket():
+    fd, fn = tempfile.mkstemp(prefix='test_logging_', suffix='.sock')
+    os.close(fd)
+    # just need a name - file can't be present, or we'll get an
+    # 'address already in use' error.
+    os.remove(fn)
+    return fn
 
-@unittest.skipUnless(threading, 'Threading required for this test.')
+@unittest.skipUnless(hasattr(socket, "AF_UNIX"), "Unix sockets required")
+class UnixSocketHandlerTest(SocketHandlerTest):
+
+    """Test for SocketHandler with unix sockets."""
+
+    if hasattr(socket, "AF_UNIX"):
+        server_class = TestUnixStreamServer
+
+    def setUp(self):
+        # override the definition in the base class
+        self.address = _get_temp_domain_socket()
+        SocketHandlerTest.setUp(self)
+
+    def tearDown(self):
+        SocketHandlerTest.tearDown(self)
+        support.unlink(self.address)
+
 class DatagramHandlerTest(BaseTest):
 
     """Test for DatagramHandler."""
+
+    server_class = TestUDPServer
+    address = ('localhost', 0)
 
     def setUp(self):
         """Set up a UDP server to receive log messages, and a DatagramHandler
         pointing to that server's address and port."""
         BaseTest.setUp(self)
-        addr = ('localhost', 0)
-        self.server = server = TestUDPServer(addr, self.handle_datagram, 0.01)
-        server.start()
+        # Issue #29177: deal with errors that happen during setup
+        self.server = self.sock_hdlr = self.server_exception = None
+        try:
+            self.server = server = self.server_class(self.address,
+                                                     self.handle_datagram, 0.01)
+            server.start()
+            # Uncomment next line to test error recovery in setUp()
+            # raise OSError('dummy error raised')
+        except OSError as e:
+            self.server_exception = e
+            return
         server.ready.wait()
-        self.sock_hdlr = logging.handlers.DatagramHandler('localhost',
-                                                          server.port)
+        hcls = logging.handlers.DatagramHandler
+        if isinstance(server.server_address, tuple):
+            self.sock_hdlr = hcls('localhost', server.port)
+        else:
+            self.sock_hdlr = hcls(server.server_address, None)
         self.log_output = ''
         self.root_logger.removeHandler(self.root_logger.handlers[0])
         self.root_logger.addHandler(self.sock_hdlr)
@@ -1481,9 +1645,11 @@ class DatagramHandlerTest(BaseTest):
     def tearDown(self):
         """Shutdown the UDP server."""
         try:
-            self.server.stop(2.0)
-            self.root_logger.removeHandler(self.sock_hdlr)
-            self.sock_hdlr.close()
+            if self.server:
+                self.server.stop(2.0)
+            if self.sock_hdlr:
+                self.root_logger.removeHandler(self.sock_hdlr)
+                self.sock_hdlr.close()
         finally:
             BaseTest.tearDown(self)
 
@@ -1497,6 +1663,8 @@ class DatagramHandlerTest(BaseTest):
 
     def test_output(self):
         # The log message sent to the DatagramHandler is properly received.
+        if self.server_exception:
+            self.skipTest(self.server_exception)
         logger = logging.getLogger("udp")
         logger.error("spam")
         self.handled.wait()
@@ -1505,34 +1673,64 @@ class DatagramHandlerTest(BaseTest):
         self.handled.wait()
         self.assertEqual(self.log_output, "spam\neggs\n")
 
+@unittest.skipUnless(hasattr(socket, "AF_UNIX"), "Unix sockets required")
+class UnixDatagramHandlerTest(DatagramHandlerTest):
 
-@unittest.skipUnless(threading, 'Threading required for this test.')
+    """Test for DatagramHandler using Unix sockets."""
+
+    if hasattr(socket, "AF_UNIX"):
+        server_class = TestUnixDatagramServer
+
+    def setUp(self):
+        # override the definition in the base class
+        self.address = _get_temp_domain_socket()
+        DatagramHandlerTest.setUp(self)
+
+    def tearDown(self):
+        DatagramHandlerTest.tearDown(self)
+        support.unlink(self.address)
+
 class SysLogHandlerTest(BaseTest):
 
     """Test for SysLogHandler using UDP."""
+
+    server_class = TestUDPServer
+    address = ('localhost', 0)
 
     def setUp(self):
         """Set up a UDP server to receive log messages, and a SysLogHandler
         pointing to that server's address and port."""
         BaseTest.setUp(self)
-        addr = ('localhost', 0)
-        self.server = server = TestUDPServer(addr, self.handle_datagram,
-                                                0.01)
-        server.start()
+        # Issue #29177: deal with errors that happen during setup
+        self.server = self.sl_hdlr = self.server_exception = None
+        try:
+            self.server = server = self.server_class(self.address,
+                                                     self.handle_datagram, 0.01)
+            server.start()
+            # Uncomment next line to test error recovery in setUp()
+            # raise OSError('dummy error raised')
+        except OSError as e:
+            self.server_exception = e
+            return
         server.ready.wait()
-        self.sl_hdlr = logging.handlers.SysLogHandler(('localhost',
-                                                       server.port))
+        hcls = logging.handlers.SysLogHandler
+        if isinstance(server.server_address, tuple):
+            self.sl_hdlr = hcls((server.server_address[0], server.port))
+        else:
+            self.sl_hdlr = hcls(server.server_address)
         self.log_output = ''
         self.root_logger.removeHandler(self.root_logger.handlers[0])
         self.root_logger.addHandler(self.sl_hdlr)
         self.handled = threading.Event()
 
     def tearDown(self):
-        """Shutdown the UDP server."""
+        """Shutdown the server."""
         try:
-            self.server.stop(2.0)
-            self.root_logger.removeHandler(self.sl_hdlr)
-            self.sl_hdlr.close()
+            if self.server:
+                self.server.stop(2.0)
+            if self.sl_hdlr:
+                self.root_logger.removeHandler(self.sl_hdlr)
+                self.sl_hdlr.close()
         finally:
             BaseTest.tearDown(self)
 
@@ -1541,6 +1739,8 @@ class SysLogHandlerTest(BaseTest):
         self.handled.set()
 
     def test_output(self):
+        if self.server_exception:
+            self.skipTest(self.server_exception)
         # The log message sent to the SysLogHandler is properly received.
         logger = logging.getLogger("slh")
         logger.error("sp\xe4m")
@@ -1557,40 +1757,42 @@ class SysLogHandlerTest(BaseTest):
         self.handled.wait()
         self.assertEqual(self.log_output, b'<11>h\xc3\xa4m-sp\xc3\xa4m')
 
+@unittest.skipUnless(hasattr(socket, "AF_UNIX"), "Unix sockets required")
+class UnixSysLogHandlerTest(SysLogHandlerTest):
 
-@unittest.skipUnless(threading, 'Threading required for this test.')
+    """Test for SysLogHandler with Unix sockets."""
+
+    if hasattr(socket, "AF_UNIX"):
+        server_class = TestUnixDatagramServer
+
+    def setUp(self):
+        # override the definition in the base class
+        self.address = _get_temp_domain_socket()
+        SysLogHandlerTest.setUp(self)
+
+    def tearDown(self):
+        SysLogHandlerTest.tearDown(self)
+        support.unlink(self.address)
+
+@unittest.skipUnless(support.IPV6_ENABLED,
+                     'IPv6 support required for this test.')
+class IPv6SysLogHandlerTest(SysLogHandlerTest):
+
+    """Test for SysLogHandler with IPv6 host."""
+
+    server_class = TestUDPServer
+    address = ('::1', 0)
+
+    def setUp(self):
+        self.server_class.address_family = socket.AF_INET6
+        super(IPv6SysLogHandlerTest, self).setUp()
+
+    def tearDown(self):
+        self.server_class.address_family = socket.AF_INET
+        super(IPv6SysLogHandlerTest, self).tearDown()
+
 class HTTPHandlerTest(BaseTest):
     """Test for HTTPHandler."""
-
-    PEMFILE = """-----BEGIN RSA PRIVATE KEY-----
-MIICXQIBAAKBgQDGT4xS5r91rbLJQK2nUDenBhBG6qFk+bVOjuAGC/LSHlAoBnvG
-zQG3agOG+e7c5z2XT8m2ktORLqG3E4mYmbxgyhDrzP6ei2Anc+pszmnxPoK3Puh5
-aXV+XKt0bU0C1m2+ACmGGJ0t3P408art82nOxBw8ZHgIg9Dtp6xIUCyOqwIDAQAB
-AoGBAJFTnFboaKh5eUrIzjmNrKsG44jEyy+vWvHN/FgSC4l103HxhmWiuL5Lv3f7
-0tMp1tX7D6xvHwIG9VWvyKb/Cq9rJsDibmDVIOslnOWeQhG+XwJyitR0pq/KlJIB
-5LjORcBw795oKWOAi6RcOb1ON59tysEFYhAGQO9k6VL621gRAkEA/Gb+YXULLpbs
-piXN3q4zcHzeaVANo69tUZ6TjaQqMeTxE4tOYM0G0ZoSeHEdaP59AOZGKXXNGSQy
-2z/MddcYGQJBAMkjLSYIpOLJY11ja8OwwswFG2hEzHe0cS9bzo++R/jc1bHA5R0Y
-i6vA5iPi+wopPFvpytdBol7UuEBe5xZrxWMCQQCWxELRHiP2yWpEeLJ3gGDzoXMN
-PydWjhRju7Bx3AzkTtf+D6lawz1+eGTuEss5i0JKBkMEwvwnN2s1ce+EuF4JAkBb
-E96h1lAzkVW5OAfYOPY8RCPA90ZO/hoyg7PpSxR0ECuDrgERR8gXIeYUYfejBkEa
-rab4CfRoVJKKM28Yq/xZAkBvuq670JRCwOgfUTdww7WpdOQBYPkzQccsKNCslQW8
-/DyW6y06oQusSENUvynT6dr3LJxt/NgZPhZX2+k1eYDV
------END RSA PRIVATE KEY-----
------BEGIN CERTIFICATE-----
-MIICGzCCAYSgAwIBAgIJAIq84a2Q/OvlMA0GCSqGSIb3DQEBBQUAMBQxEjAQBgNV
-BAMTCWxvY2FsaG9zdDAeFw0xMTA1MjExMDIzMzNaFw03NTAzMjEwMzU1MTdaMBQx
-EjAQBgNVBAMTCWxvY2FsaG9zdDCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEA
-xk+MUua/da2yyUCtp1A3pwYQRuqhZPm1To7gBgvy0h5QKAZ7xs0Bt2oDhvnu3Oc9
-l0/JtpLTkS6htxOJmJm8YMoQ68z+notgJ3PqbM5p8T6Ctz7oeWl1flyrdG1NAtZt
-vgAphhidLdz+NPGq7fNpzsQcPGR4CIPQ7aesSFAsjqsCAwEAAaN1MHMwHQYDVR0O
-BBYEFLWaUPO6N7efGiuoS9i3DVYcUwn0MEQGA1UdIwQ9MDuAFLWaUPO6N7efGiuo
-S9i3DVYcUwn0oRikFjAUMRIwEAYDVQQDEwlsb2NhbGhvc3SCCQCKvOGtkPzr5TAM
-BgNVHRMEBTADAQH/MA0GCSqGSIb3DQEBBQUAA4GBAMK5whPjLNQK1Ivvk88oqJqq
-4f889OwikGP0eUhOBhbFlsZs+jq5YZC2UzHz+evzKBlgAP1u4lP/cB85CnjvWqM+
-1c/lywFHQ6HOdDeQ1L72tSYMrNOG4XNmLn0h7rx6GoTU7dcFRfseahBCq8mv0IDt
-IRbTpvlHWPjsSvHz0ZOH
------END CERTIFICATE-----"""
 
     def setUp(self):
         """Set up an HTTP server to receive log messages, and a HTTPHandler
@@ -1621,17 +1823,18 @@ IRbTpvlHWPjsSvHz0ZOH
             if secure:
                 try:
                     import ssl
-                    fd, fn = tempfile.mkstemp()
-                    os.close(fd)
-                    with open(fn, 'w') as f:
-                        f.write(self.PEMFILE)
-                    sslctx = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
-                    sslctx.load_cert_chain(fn)
-                    os.unlink(fn)
                 except ImportError:
                     sslctx = None
+                else:
+                    here = os.path.dirname(__file__)
+                    localhost_cert = os.path.join(here, "keycert.pem")
+                    sslctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+                    sslctx.load_cert_chain(localhost_cert)
+
+                    context = ssl.create_default_context(cafile=localhost_cert)
             else:
                 sslctx = None
+                context = None
             self.server = server = TestHTTPServer(addr, self.handle_request,
                                                     0.01, sslctx=sslctx)
             server.start()
@@ -1639,7 +1842,9 @@ IRbTpvlHWPjsSvHz0ZOH
             host = 'localhost:%d' % server.server_port
             secure_client = secure and sslctx
             self.h_hdlr = logging.handlers.HTTPHandler(host, '/frob',
-                                                       secure=secure_client)
+                                                       secure=secure_client,
+                                                       context=context,
+                                                       credentials=('foo', 'bar'))
             self.log_data = None
             root_logger.addHandler(self.h_hdlr)
 
@@ -1744,9 +1949,9 @@ class EncodingTest(BaseTest):
 
     def test_encoding_cyrillic_unicode(self):
         log = logging.getLogger("test")
-        #Get a message in Unicode: Do svidanya in Cyrillic (meaning goodbye)
+        # Get a message in Unicode: Do svidanya in Cyrillic (meaning goodbye)
         message = '\u0434\u043e \u0441\u0432\u0438\u0434\u0430\u043d\u0438\u044f'
-        #Ensure it's written in a Cyrillic encoding
+        # Ensure it's written in a Cyrillic encoding
         writer_class = codecs.getwriter('cp1251')
         writer_class.encoding = 'cp1251'
         stream = io.BytesIO()
@@ -1760,7 +1965,7 @@ class EncodingTest(BaseTest):
             handler.close()
         # check we wrote exactly those bytes, ignoring trailing \n etc
         s = stream.getvalue()
-        #Compare against what the data should be when encoded in CP-1251
+        # Compare against what the data should be when encoded in CP-1251
         self.assertEqual(s, b'\xe4\xee \xf1\xe2\xe8\xe4\xe0\xed\xe8\xff\n')
 
 
@@ -1779,9 +1984,9 @@ class WarningsTest(BaseTest):
             logger.removeHandler(h)
             s = stream.getvalue()
             h.close()
-            self.assertTrue(s.find("UserWarning: I'm warning you...\n") > 0)
+            self.assertGreater(s.find("UserWarning: I'm warning you...\n"), 0)
 
-            #See if an explicit file uses the original implementation
+            # See if an explicit file uses the original implementation
             a_file = io.StringIO()
             warnings.showwarning("Explicit", UserWarning, "dummy.py", 42,
                                  a_file, "Dummy line")
@@ -1817,7 +2022,7 @@ class ConfigDictTest(BaseTest):
 
     """Reading logging config from a dictionary."""
 
-    expected_log_pat = r"^([\w]+) \+\+ ([\w]+)$"
+    expected_log_pat = r"^(\w+) \+\+ (\w+)$"
 
     # config0 is a standard configuration.
     config0 = {
@@ -1922,7 +2127,7 @@ class ConfigDictTest(BaseTest):
         },
     }
 
-    #As config1 but with a misspelt level on a handler
+    # As config1 but with a misspelt level on a handler
     config2a = {
         'version': 1,
         'formatters': {
@@ -1950,7 +2155,7 @@ class ConfigDictTest(BaseTest):
     }
 
 
-    #As config1 but with a misspelt level on a logger
+    # As config1 but with a misspelt level on a logger
     config2b = {
         'version': 1,
         'formatters': {
@@ -2117,8 +2322,8 @@ class ConfigDictTest(BaseTest):
         },
     }
 
-    #config 7 does not define compiler.parser but defines compiler.lexer
-    #so compiler.parser should be disabled after applying it
+    # config 7 does not define compiler.parser but defines compiler.lexer
+    # so compiler.parser should be disabled after applying it
     config7 = {
         'version': 1,
         'formatters': {
@@ -2263,7 +2468,7 @@ class ConfigDictTest(BaseTest):
         },
     }
 
-    #As config1 but with a filter added
+    # As config1 but with a filter added
     config10 = {
         'version': 1,
         'formatters': {
@@ -2297,7 +2502,7 @@ class ConfigDictTest(BaseTest):
         },
     }
 
-    #As config1 but using cfg:// references
+    # As config1 but using cfg:// references
     config11 = {
         'version': 1,
         'true_formatters': {
@@ -2328,7 +2533,7 @@ class ConfigDictTest(BaseTest):
         },
     }
 
-    #As config11 but missing the version key
+    # As config11 but missing the version key
     config12 = {
         'true_formatters': {
             'form1' : {
@@ -2358,7 +2563,7 @@ class ConfigDictTest(BaseTest):
         },
     }
 
-    #As config11 but using an unsupported version
+    # As config11 but using an unsupported version
     config13 = {
         'version': 2,
         'true_formatters': {
@@ -2386,6 +2591,32 @@ class ConfigDictTest(BaseTest):
         },
         'root' : {
             'level' : 'WARNING',
+        },
+    }
+
+    # As config0, but with properties
+    config14 = {
+        'version': 1,
+        'formatters': {
+            'form1' : {
+                'format' : '%(levelname)s ++ %(message)s',
+            },
+        },
+        'handlers' : {
+            'hand1' : {
+                'class' : 'logging.StreamHandler',
+                'formatter' : 'form1',
+                'level' : 'NOTSET',
+                'stream'  : 'ext://sys.stdout',
+                '.': {
+                    'foo': 'bar',
+                    'terminator': '!\n',
+                }
+            },
+        },
+        'root' : {
+            'level' : 'WARNING',
+            'handlers' : ['hand1'],
         },
     }
 
@@ -2425,7 +2656,7 @@ class ConfigDictTest(BaseTest):
 
     def test_config0_ok(self):
         # A simple config which overrides the default settings.
-        with captured_stdout() as output:
+        with support.captured_stdout() as output:
             self.apply_config(self.config0)
             logger = logging.getLogger()
             # Won't output anything
@@ -2440,7 +2671,7 @@ class ConfigDictTest(BaseTest):
 
     def test_config1_ok(self, config=config1):
         # A config defining a sub-parser as well.
-        with captured_stdout() as output:
+        with support.captured_stdout() as output:
             self.apply_config(config)
             logger = logging.getLogger("compiler.parser")
             # Both will output a message
@@ -2471,7 +2702,7 @@ class ConfigDictTest(BaseTest):
 
     def test_config4_ok(self):
         # A config specifying a custom formatter class.
-        with captured_stdout() as output:
+        with support.captured_stdout() as output:
             self.apply_config(self.config4)
             #logger = logging.getLogger()
             try:
@@ -2486,7 +2717,7 @@ class ConfigDictTest(BaseTest):
 
     def test_config4a_ok(self):
         # A config specifying a custom formatter class.
-        with captured_stdout() as output:
+        with support.captured_stdout() as output:
             self.apply_config(self.config4a)
             #logger = logging.getLogger()
             try:
@@ -2506,7 +2737,7 @@ class ConfigDictTest(BaseTest):
         self.assertRaises(Exception, self.apply_config, self.config6)
 
     def test_config7_ok(self):
-        with captured_stdout() as output:
+        with support.captured_stdout() as output:
             self.apply_config(self.config1)
             logger = logging.getLogger("compiler.parser")
             # Both will output a message
@@ -2518,7 +2749,7 @@ class ConfigDictTest(BaseTest):
             ], stream=output)
             # Original logger output is empty.
             self.assert_log_lines([])
-        with captured_stdout() as output:
+        with support.captured_stdout() as output:
             self.apply_config(self.config7)
             logger = logging.getLogger("compiler.parser")
             self.assertTrue(logger.disabled)
@@ -2533,9 +2764,9 @@ class ConfigDictTest(BaseTest):
             # Original logger output is empty.
             self.assert_log_lines([])
 
-    #Same as test_config_7_ok but don't disable old loggers.
+    # Same as test_config_7_ok but don't disable old loggers.
     def test_config_8_ok(self):
-        with captured_stdout() as output:
+        with support.captured_stdout() as output:
             self.apply_config(self.config1)
             logger = logging.getLogger("compiler.parser")
             # All will output a message
@@ -2547,7 +2778,7 @@ class ConfigDictTest(BaseTest):
             ], stream=output)
             # Original logger output is empty.
             self.assert_log_lines([])
-        with captured_stdout() as output:
+        with support.captured_stdout() as output:
             self.apply_config(self.config8)
             logger = logging.getLogger("compiler.parser")
             self.assertFalse(logger.disabled)
@@ -2568,7 +2799,7 @@ class ConfigDictTest(BaseTest):
             self.assert_log_lines([])
 
     def test_config_8a_ok(self):
-        with captured_stdout() as output:
+        with support.captured_stdout() as output:
             self.apply_config(self.config1a)
             logger = logging.getLogger("compiler.parser")
             # See issue #11424. compiler-hyphenated sorts
@@ -2588,7 +2819,7 @@ class ConfigDictTest(BaseTest):
             ], stream=output)
             # Original logger output is empty.
             self.assert_log_lines([])
-        with captured_stdout() as output:
+        with support.captured_stdout() as output:
             self.apply_config(self.config8a)
             logger = logging.getLogger("compiler.parser")
             self.assertFalse(logger.disabled)
@@ -2611,36 +2842,36 @@ class ConfigDictTest(BaseTest):
             self.assert_log_lines([])
 
     def test_config_9_ok(self):
-        with captured_stdout() as output:
+        with support.captured_stdout() as output:
             self.apply_config(self.config9)
             logger = logging.getLogger("compiler.parser")
-            #Nothing will be output since both handler and logger are set to WARNING
+            # Nothing will be output since both handler and logger are set to WARNING
             logger.info(self.next_message())
             self.assert_log_lines([], stream=output)
             self.apply_config(self.config9a)
-            #Nothing will be output since both handler is still set to WARNING
+            # Nothing will be output since handler is still set to WARNING
             logger.info(self.next_message())
             self.assert_log_lines([], stream=output)
             self.apply_config(self.config9b)
-            #Message should now be output
+            # Message should now be output
             logger.info(self.next_message())
             self.assert_log_lines([
                 ('INFO', '3'),
             ], stream=output)
 
     def test_config_10_ok(self):
-        with captured_stdout() as output:
+        with support.captured_stdout() as output:
             self.apply_config(self.config10)
             logger = logging.getLogger("compiler.parser")
             logger.warning(self.next_message())
             logger = logging.getLogger('compiler')
-            #Not output, because filtered
+            # Not output, because filtered
             logger.warning(self.next_message())
             logger = logging.getLogger('compiler.lexer')
-            #Not output, because filtered
+            # Not output, because filtered
             logger.warning(self.next_message())
             logger = logging.getLogger("compiler.parser.codegen")
-            #Output, as not filtered
+            # Output, as not filtered
             logger.error(self.next_message())
             self.assert_log_lines([
                 ('WARNING', '1'),
@@ -2656,11 +2887,19 @@ class ConfigDictTest(BaseTest):
     def test_config13_failure(self):
         self.assertRaises(Exception, self.apply_config, self.config13)
 
-    @unittest.skipUnless(threading, 'listen() needs threading to work')
-    def setup_via_listener(self, text):
+    def test_config14_ok(self):
+        with support.captured_stdout() as output:
+            self.apply_config(self.config14)
+            h = logging._handlers['hand1']
+            self.assertEqual(h.foo, 'bar')
+            self.assertEqual(h.terminator, '!\n')
+            logging.warning('Exclamation')
+            self.assertTrue(output.getvalue().endswith('Exclamation!\n'))
+
+    def setup_via_listener(self, text, verify=None):
         text = text.encode("utf-8")
         # Ask for a randomly assigned port (by using port 0)
-        t = logging.config.listen(0)
+        t = logging.config.listen(0, verify)
         t.start()
         t.ready.wait()
         # Now get the port allocated
@@ -2683,31 +2922,29 @@ class ConfigDictTest(BaseTest):
         finally:
             t.ready.wait(2.0)
             logging.config.stopListening()
-            t.join(2.0)
+            support.join_thread(t, 2.0)
 
-    @unittest.skipUnless(threading, 'Threading required for this test.')
     def test_listen_config_10_ok(self):
-        with captured_stdout() as output:
+        with support.captured_stdout() as output:
             self.setup_via_listener(json.dumps(self.config10))
             logger = logging.getLogger("compiler.parser")
             logger.warning(self.next_message())
             logger = logging.getLogger('compiler')
-            #Not output, because filtered
+            # Not output, because filtered
             logger.warning(self.next_message())
             logger = logging.getLogger('compiler.lexer')
-            #Not output, because filtered
+            # Not output, because filtered
             logger.warning(self.next_message())
             logger = logging.getLogger("compiler.parser.codegen")
-            #Output, as not filtered
+            # Output, as not filtered
             logger.error(self.next_message())
             self.assert_log_lines([
                 ('WARNING', '1'),
                 ('ERROR', '4'),
             ], stream=output)
 
-    @unittest.skipUnless(threading, 'Threading required for this test.')
     def test_listen_config_1_ok(self):
-        with captured_stdout() as output:
+        with support.captured_stdout() as output:
             self.setup_via_listener(textwrap.dedent(ConfigFileTest.config1))
             logger = logging.getLogger("compiler.parser")
             # Both will output a message
@@ -2719,6 +2956,68 @@ class ConfigDictTest(BaseTest):
             ], stream=output)
             # Original logger output is empty.
             self.assert_log_lines([])
+
+    def test_listen_verify(self):
+
+        def verify_fail(stuff):
+            return None
+
+        def verify_reverse(stuff):
+            return stuff[::-1]
+
+        logger = logging.getLogger("compiler.parser")
+        to_send = textwrap.dedent(ConfigFileTest.config1)
+        # First, specify a verification function that will fail.
+        # We expect to see no output, since our configuration
+        # never took effect.
+        with support.captured_stdout() as output:
+            self.setup_via_listener(to_send, verify_fail)
+            # Both will output a message
+            logger.info(self.next_message())
+            logger.error(self.next_message())
+        self.assert_log_lines([], stream=output)
+        # Original logger output has the stuff we logged.
+        self.assert_log_lines([
+            ('INFO', '1'),
+            ('ERROR', '2'),
+        ], pat=r"^[\w.]+ -> (\w+): (\d+)$")
+
+        # Now, perform no verification. Our configuration
+        # should take effect.
+
+        with support.captured_stdout() as output:
+            self.setup_via_listener(to_send)    # no verify callable specified
+            logger = logging.getLogger("compiler.parser")
+            # Both will output a message
+            logger.info(self.next_message())
+            logger.error(self.next_message())
+        self.assert_log_lines([
+            ('INFO', '3'),
+            ('ERROR', '4'),
+        ], stream=output)
+        # Original logger output still has the stuff we logged before.
+        self.assert_log_lines([
+            ('INFO', '1'),
+            ('ERROR', '2'),
+        ], pat=r"^[\w.]+ -> (\w+): (\d+)$")
+
+        # Now, perform verification which transforms the bytes.
+
+        with support.captured_stdout() as output:
+            self.setup_via_listener(to_send[::-1], verify_reverse)
+            logger = logging.getLogger("compiler.parser")
+            # Both will output a message
+            logger.info(self.next_message())
+            logger.error(self.next_message())
+        self.assert_log_lines([
+            ('INFO', '5'),
+            ('ERROR', '6'),
+        ], stream=output)
+        # Original logger output still has the stuff we logged before.
+        self.assert_log_lines([
+            ('INFO', '1'),
+            ('ERROR', '2'),
+        ], pat=r"^[\w.]+ -> (\w+): (\d+)$")
 
     def test_out_of_order(self):
         self.apply_config(self.out_of_order)
@@ -2779,14 +3078,14 @@ class ChildLoggerTest(BaseTest):
         l2 = logging.getLogger('def.ghi')
         c1 = r.getChild('xyz')
         c2 = r.getChild('uvw.xyz')
-        self.assertTrue(c1 is logging.getLogger('xyz'))
-        self.assertTrue(c2 is logging.getLogger('uvw.xyz'))
+        self.assertIs(c1, logging.getLogger('xyz'))
+        self.assertIs(c2, logging.getLogger('uvw.xyz'))
         c1 = l1.getChild('def')
         c2 = c1.getChild('ghi')
         c3 = l1.getChild('def.ghi')
-        self.assertTrue(c1 is logging.getLogger('abc.def'))
-        self.assertTrue(c2 is logging.getLogger('abc.def.ghi'))
-        self.assertTrue(c2 is c3)
+        self.assertIs(c1, logging.getLogger('abc.def'))
+        self.assertIs(c2, logging.getLogger('abc.def.ghi'))
+        self.assertIs(c2, c3)
 
 
 class DerivedLogRecord(logging.LogRecord):
@@ -2829,12 +3128,13 @@ class LogRecordFactoryTest(BaseTest):
 
 class QueueHandlerTest(BaseTest):
     # Do not bother with a logger name group.
-    expected_log_pat = r"^[\w.]+ -> ([\w]+): ([\d]+)$"
+    expected_log_pat = r"^[\w.]+ -> (\w+): (\d+)$"
 
     def setUp(self):
         BaseTest.setUp(self)
         self.queue = queue.Queue(-1)
         self.que_hdlr = logging.handlers.QueueHandler(self.queue)
+        self.name = 'que'
         self.que_logger = logging.getLogger('que')
         self.que_logger.propagate = False
         self.que_logger.setLevel(logging.WARNING)
@@ -2856,10 +3156,23 @@ class QueueHandlerTest(BaseTest):
         self.assertEqual(data.name, self.que_logger.name)
         self.assertEqual((data.msg, data.args), (msg, None))
 
+    def test_formatting(self):
+        msg = self.next_message()
+        levelname = logging.getLevelName(logging.WARNING)
+        log_format_str = '{name} -> {levelname}: {message}'
+        formatted_msg = log_format_str.format(name=self.name,
+                                              levelname=levelname, message=msg)
+        formatter = logging.Formatter(self.log_format)
+        self.que_hdlr.setFormatter(formatter)
+        self.que_logger.warning(msg)
+        log_record = self.queue.get_nowait()
+        self.assertEqual(formatted_msg, log_record.msg)
+        self.assertEqual(formatted_msg, log_record.message)
+
     @unittest.skipUnless(hasattr(logging.handlers, 'QueueListener'),
                          'logging.handlers.QueueListener required for this test')
     def test_queue_listener(self):
-        handler = TestHandler(Matcher())
+        handler = support.TestHandler(support.Matcher())
         listener = logging.handlers.QueueListener(self.queue, handler)
         listener.start()
         try:
@@ -2871,6 +3184,114 @@ class QueueHandlerTest(BaseTest):
         self.assertTrue(handler.matches(levelno=logging.WARNING, message='1'))
         self.assertTrue(handler.matches(levelno=logging.ERROR, message='2'))
         self.assertTrue(handler.matches(levelno=logging.CRITICAL, message='3'))
+        handler.close()
+
+        # Now test with respect_handler_level set
+
+        handler = support.TestHandler(support.Matcher())
+        handler.setLevel(logging.CRITICAL)
+        listener = logging.handlers.QueueListener(self.queue, handler,
+                                                  respect_handler_level=True)
+        listener.start()
+        try:
+            self.que_logger.warning(self.next_message())
+            self.que_logger.error(self.next_message())
+            self.que_logger.critical(self.next_message())
+        finally:
+            listener.stop()
+        self.assertFalse(handler.matches(levelno=logging.WARNING, message='4'))
+        self.assertFalse(handler.matches(levelno=logging.ERROR, message='5'))
+        self.assertTrue(handler.matches(levelno=logging.CRITICAL, message='6'))
+
+if hasattr(logging.handlers, 'QueueListener'):
+    import multiprocessing
+    from unittest.mock import patch
+
+    class QueueListenerTest(BaseTest):
+        """
+        Tests based on patch submitted for issue #27930. Ensure that
+        QueueListener handles all log messages.
+        """
+
+        repeat = 20
+
+        @staticmethod
+        def setup_and_log(log_queue, ident):
+            """
+            Creates a logger with a QueueHandler that logs to a queue read by a
+            QueueListener. Starts the listener, logs five messages, and stops
+            the listener.
+            """
+            logger = logging.getLogger('test_logger_with_id_%s' % ident)
+            logger.setLevel(logging.DEBUG)
+            handler = logging.handlers.QueueHandler(log_queue)
+            logger.addHandler(handler)
+            listener = logging.handlers.QueueListener(log_queue)
+            listener.start()
+
+            logger.info('one')
+            logger.info('two')
+            logger.info('three')
+            logger.info('four')
+            logger.info('five')
+
+            listener.stop()
+            logger.removeHandler(handler)
+            handler.close()
+
+        @patch.object(logging.handlers.QueueListener, 'handle')
+        def test_handle_called_with_queue_queue(self, mock_handle):
+            for i in range(self.repeat):
+                log_queue = queue.Queue()
+                self.setup_and_log(log_queue, '%s_%s' % (self.id(), i))
+            self.assertEqual(mock_handle.call_count, 5 * self.repeat,
+                             'correct number of handled log messages')
+
+        @patch.object(logging.handlers.QueueListener, 'handle')
+        def test_handle_called_with_mp_queue(self, mock_handle):
+            # Issue 28668: The multiprocessing (mp) module is not functional
+            # when the mp.synchronize module cannot be imported.
+            support.import_module('multiprocessing.synchronize')
+            for i in range(self.repeat):
+                log_queue = multiprocessing.Queue()
+                self.setup_and_log(log_queue, '%s_%s' % (self.id(), i))
+                log_queue.close()
+                log_queue.join_thread()
+            self.assertEqual(mock_handle.call_count, 5 * self.repeat,
+                             'correct number of handled log messages')
+
+        @staticmethod
+        def get_all_from_queue(log_queue):
+            try:
+                while True:
+                    yield log_queue.get_nowait()
+            except queue.Empty:
+                return []
+
+        def test_no_messages_in_queue_after_stop(self):
+            """
+            Five messages are logged then the QueueListener is stopped. This
+            test then gets everything off the queue. Failure of this test
+            indicates that messages were not registered on the queue until
+            _after_ the QueueListener stopped.
+            """
+            # Issue 28668: The multiprocessing (mp) module is not functional
+            # when the mp.synchronize module cannot be imported.
+            support.import_module('multiprocessing.synchronize')
+            for i in range(self.repeat):
+                queue = multiprocessing.Queue()
+                self.setup_and_log(queue, '%s_%s' %(self.id(), i))
+                # time.sleep(1)
+                items = list(self.get_all_from_queue(queue))
+                queue.close()
+                queue.join_thread()
+
+                expected = [[], [logging.handlers.QueueListener._sentinel]]
+                self.assertIn(items, expected,
+                              'Found unexpected messages in queue: %s' % (
+                                    [m.msg if isinstance(m, logging.LogRecord)
+                                     else m for m in items]))
+
 
 ZERO = datetime.timedelta(0)
 
@@ -3027,32 +3448,35 @@ class LastResortTest(BaseTest):
         # Test the last resort handler
         root = self.root_logger
         root.removeHandler(self.root_hdlr)
-        old_stderr = sys.stderr
         old_lastresort = logging.lastResort
         old_raise_exceptions = logging.raiseExceptions
+
         try:
-            sys.stderr = sio = io.StringIO()
-            root.debug('This should not appear')
-            self.assertEqual(sio.getvalue(), '')
-            root.warning('This is your final chance!')
-            self.assertEqual(sio.getvalue(), 'This is your final chance!\n')
-            #No handlers and no last resort, so 'No handlers' message
+            with support.captured_stderr() as stderr:
+                root.debug('This should not appear')
+                self.assertEqual(stderr.getvalue(), '')
+                root.warning('Final chance!')
+                self.assertEqual(stderr.getvalue(), 'Final chance!\n')
+
+            # No handlers and no last resort, so 'No handlers' message
             logging.lastResort = None
-            sys.stderr = sio = io.StringIO()
-            root.warning('This is your final chance!')
-            self.assertEqual(sio.getvalue(), 'No handlers could be found for logger "root"\n')
+            with support.captured_stderr() as stderr:
+                root.warning('Final chance!')
+                msg = 'No handlers could be found for logger "root"\n'
+                self.assertEqual(stderr.getvalue(), msg)
+
             # 'No handlers' message only printed once
-            sys.stderr = sio = io.StringIO()
-            root.warning('This is your final chance!')
-            self.assertEqual(sio.getvalue(), '')
+            with support.captured_stderr() as stderr:
+                root.warning('Final chance!')
+                self.assertEqual(stderr.getvalue(), '')
+
+            # If raiseExceptions is False, no message is printed
             root.manager.emittedNoHandlerWarning = False
-            #If raiseExceptions is False, no message is printed
             logging.raiseExceptions = False
-            sys.stderr = sio = io.StringIO()
-            root.warning('This is your final chance!')
-            self.assertEqual(sio.getvalue(), '')
+            with support.captured_stderr() as stderr:
+                root.warning('Final chance!')
+                self.assertEqual(stderr.getvalue(), '')
         finally:
-            sys.stderr = old_stderr
             root.addHandler(self.root_hdlr)
             logging.lastResort = old_lastresort
             logging.raiseExceptions = old_raise_exceptions
@@ -3123,13 +3547,13 @@ class ShutdownTest(BaseTest):
         self.assertEqual('0 - release', self.called[-1])
 
     def test_with_ioerror_in_acquire(self):
-        self._test_with_failure_in_method('acquire', IOError)
+        self._test_with_failure_in_method('acquire', OSError)
 
     def test_with_ioerror_in_flush(self):
-        self._test_with_failure_in_method('flush', IOError)
+        self._test_with_failure_in_method('flush', OSError)
 
     def test_with_ioerror_in_close(self):
-        self._test_with_failure_in_method('close', IOError)
+        self._test_with_failure_in_method('close', OSError)
 
     def test_with_valueerror_in_acquire(self):
         self._test_with_failure_in_method('acquire', ValueError)
@@ -3181,10 +3605,15 @@ class ModuleLevelMiscTest(BaseTest):
         logging.disable(83)
         self.assertEqual(logging.root.manager.disable, 83)
 
+        # test the default value introduced in 3.7
+        # (Issue #28524)
+        logging.disable()
+        self.assertEqual(logging.root.manager.disable, logging.CRITICAL)
+
     def _test_log(self, method, level=None):
         called = []
-        patch(self, logging, 'basicConfig',
-              lambda *a, **kw: called.append((a, kw)))
+        support.patch(self, logging, 'basicConfig',
+                      lambda *a, **kw: called.append((a, kw)))
 
         recording = RecordingHandler()
         logging.root.addHandler(recording)
@@ -3235,6 +3664,26 @@ class ModuleLevelMiscTest(BaseTest):
         logging.setLoggerClass(logging.Logger)
         self.assertEqual(logging.getLoggerClass(), logging.Logger)
 
+    @support.requires_type_collecting
+    def test_logging_at_shutdown(self):
+        # Issue #20037
+        code = """if 1:
+            import logging
+
+            class A:
+                def __del__(self):
+                    try:
+                        raise ValueError("some error")
+                    except Exception:
+                        logging.exception("exception in __del__")
+
+            a = A()"""
+        rc, out, err = assert_python_ok("-c", code)
+        err = err.decode()
+        self.assertIn("exception in __del__", err)
+        self.assertIn("ValueError: some error", err)
+
+
 class LogRecordTest(BaseTest):
     def test_str_rep(self):
         r = logging.makeLogRecord({})
@@ -3266,9 +3715,8 @@ class LogRecordTest(BaseTest):
     def test_optional(self):
         r = logging.makeLogRecord({})
         NOT_NONE = self.assertIsNotNone
-        if threading:
-            NOT_NONE(r.thread)
-            NOT_NONE(r.threadName)
+        NOT_NONE(r.thread)
+        NOT_NONE(r.threadName)
         NOT_NONE(r.process)
         NOT_NONE(r.processName)
         log_threads = logging.logThreads
@@ -3335,7 +3783,29 @@ class BasicConfigTest(unittest.TestCase):
         # level is not explicitly set
         self.assertEqual(logging.root.level, self.original_logging_level)
 
+    def test_strformatstyle(self):
+        with support.captured_stdout() as output:
+            logging.basicConfig(stream=sys.stdout, style="{")
+            logging.error("Log an error")
+            sys.stdout.seek(0)
+            self.assertEqual(output.getvalue().strip(),
+                "ERROR:root:Log an error")
+
+    def test_stringtemplatestyle(self):
+        with support.captured_stdout() as output:
+            logging.basicConfig(stream=sys.stdout, style="$")
+            logging.error("Log an error")
+            sys.stdout.seek(0)
+            self.assertEqual(output.getvalue().strip(),
+                "ERROR:root:Log an error")
+
     def test_filename(self):
+
+        def cleanup(h1, h2, fn):
+            h1.close()
+            h2.close()
+            os.remove(fn)
+
         logging.basicConfig(filename='test.log')
 
         self.assertEqual(len(logging.root.handlers), 1)
@@ -3343,17 +3813,23 @@ class BasicConfigTest(unittest.TestCase):
         self.assertIsInstance(handler, logging.FileHandler)
 
         expected = logging.FileHandler('test.log', 'a')
-        self.addCleanup(expected.close)
         self.assertEqual(handler.stream.mode, expected.stream.mode)
         self.assertEqual(handler.stream.name, expected.stream.name)
+        self.addCleanup(cleanup, handler, expected, 'test.log')
 
     def test_filemode(self):
+
+        def cleanup(h1, h2, fn):
+            h1.close()
+            h2.close()
+            os.remove(fn)
+
         logging.basicConfig(filename='test.log', filemode='wb')
 
         handler = logging.root.handlers[0]
         expected = logging.FileHandler('test.log', 'wb')
-        self.addCleanup(expected.close)
         self.assertEqual(handler.stream.mode, expected.stream.mode)
+        self.addCleanup(cleanup, handler, expected, 'test.log')
 
     def test_stream(self):
         stream = io.StringIO()
@@ -3403,6 +3879,10 @@ class BasicConfigTest(unittest.TestCase):
                                                      handlers=handlers)
         assertRaises(ValueError, logging.basicConfig, stream=stream,
                                                      handlers=handlers)
+        # Issue 23207: test for invalid kwargs
+        assertRaises(ValueError, logging.basicConfig, loglevel=logging.INFO)
+        # Should pop both filename and filemode even if filename is None
+        logging.basicConfig(filename=None, filemode='a')
 
     def test_handlers(self):
         handlers = [
@@ -3433,7 +3913,7 @@ class BasicConfigTest(unittest.TestCase):
             self.addCleanup(logging.root.setLevel, old_level)
             called.append((a, kw))
 
-        patch(self, logging, 'basicConfig', my_basic_config)
+        support.patch(self, logging, 'basicConfig', my_basic_config)
 
         log_method = getattr(logging, method)
         if level is not None:
@@ -3464,7 +3944,6 @@ class BasicConfigTest(unittest.TestCase):
 
 
 class LoggerAdapterTest(unittest.TestCase):
-
     def setUp(self):
         super(LoggerAdapterTest, self).setUp()
         old_handler_list = logging._handlerList[:]
@@ -3499,6 +3978,19 @@ class LoggerAdapterTest(unittest.TestCase):
         self.assertEqual(record.exc_info,
                          (exc.__class__, exc, exc.__traceback__))
 
+    def test_exception_excinfo(self):
+        try:
+            1 / 0
+        except ZeroDivisionError as e:
+            exc = e
+
+        self.adapter.exception('exc_info test', exc_info=exc)
+
+        self.assertEqual(len(self.recording.records), 1)
+        record = self.recording.records[0]
+        self.assertEqual(record.exc_info,
+                         (exc.__class__, exc, exc.__traceback__))
+
     def test_critical(self):
         msg = 'critical test! %r'
         self.adapter.critical(msg, self.recording)
@@ -3524,6 +4016,39 @@ class LoggerAdapterTest(unittest.TestCase):
 
         self.assertFalse(self.logger.hasHandlers())
         self.assertFalse(self.adapter.hasHandlers())
+
+    def test_nested(self):
+        class Adapter(logging.LoggerAdapter):
+            prefix = 'Adapter'
+
+            def process(self, msg, kwargs):
+                return f"{self.prefix} {msg}", kwargs
+
+        msg = 'Adapters can be nested, yo.'
+        adapter = Adapter(logger=self.logger, extra=None)
+        adapter_adapter = Adapter(logger=adapter, extra=None)
+        adapter_adapter.prefix = 'AdapterAdapter'
+        self.assertEqual(repr(adapter), repr(adapter_adapter))
+        adapter_adapter.log(logging.CRITICAL, msg, self.recording)
+        self.assertEqual(len(self.recording.records), 1)
+        record = self.recording.records[0]
+        self.assertEqual(record.levelno, logging.CRITICAL)
+        self.assertEqual(record.msg, f"Adapter AdapterAdapter {msg}")
+        self.assertEqual(record.args, (self.recording,))
+        orig_manager = adapter_adapter.manager
+        self.assertIs(adapter.manager, orig_manager)
+        self.assertIs(self.logger.manager, orig_manager)
+        temp_manager = object()
+        try:
+            adapter_adapter.manager = temp_manager
+            self.assertIs(adapter_adapter.manager, temp_manager)
+            self.assertIs(adapter.manager, temp_manager)
+            self.assertIs(self.logger.manager, temp_manager)
+        finally:
+            adapter_adapter.manager = orig_manager
+        self.assertIs(adapter_adapter.manager, orig_manager)
+        self.assertIs(adapter.manager, orig_manager)
+        self.assertIs(self.logger.manager, orig_manager)
 
 
 class LoggerTest(BaseTest):
@@ -3558,23 +4083,17 @@ class LoggerTest(BaseTest):
                          (exc.__class__, exc, exc.__traceback__))
 
     def test_log_invalid_level_with_raise(self):
-        old_raise = logging.raiseExceptions
-        self.addCleanup(setattr, logging, 'raiseExecptions', old_raise)
-
-        logging.raiseExceptions = True
-        self.assertRaises(TypeError, self.logger.log, '10', 'test message')
+        with support.swap_attr(logging, 'raiseExceptions', True):
+            self.assertRaises(TypeError, self.logger.log, '10', 'test message')
 
     def test_log_invalid_level_no_raise(self):
-        old_raise = logging.raiseExceptions
-        self.addCleanup(setattr, logging, 'raiseExecptions', old_raise)
-
-        logging.raiseExceptions = False
-        self.logger.log('10', 'test message')  # no exception happens
+        with support.swap_attr(logging, 'raiseExceptions', False):
+            self.logger.log('10', 'test message')  # no exception happens
 
     def test_find_caller_with_stack_info(self):
         called = []
-        patch(self, logging.traceback, 'print_stack',
-              lambda f, file: called.append(file.getvalue()))
+        support.patch(self, logging.traceback, 'print_stack',
+                      lambda f, file: called.append(file.getvalue()))
 
         self.logger.findCaller(stack_info=True)
 
@@ -3636,6 +4155,70 @@ class LoggerTest(BaseTest):
     def test_invalid_names(self):
         self.assertRaises(TypeError, logging.getLogger, any)
         self.assertRaises(TypeError, logging.getLogger, b'foo')
+
+    def test_pickling(self):
+        for proto in range(pickle.HIGHEST_PROTOCOL + 1):
+            for name in ('', 'root', 'foo', 'foo.bar', 'baz.bar'):
+                logger = logging.getLogger(name)
+                s = pickle.dumps(logger, proto)
+                unpickled = pickle.loads(s)
+                self.assertIs(unpickled, logger)
+
+    def test_caching(self):
+        root = self.root_logger
+        logger1 = logging.getLogger("abc")
+        logger2 = logging.getLogger("abc.def")
+
+        # Set root logger level and ensure cache is empty
+        root.setLevel(logging.ERROR)
+        self.assertEqual(logger2.getEffectiveLevel(), logging.ERROR)
+        self.assertEqual(logger2._cache, {})
+
+        # Ensure cache is populated and calls are consistent
+        self.assertTrue(logger2.isEnabledFor(logging.ERROR))
+        self.assertFalse(logger2.isEnabledFor(logging.DEBUG))
+        self.assertEqual(logger2._cache, {logging.ERROR: True, logging.DEBUG: False})
+        self.assertEqual(root._cache, {})
+        self.assertTrue(logger2.isEnabledFor(logging.ERROR))
+
+        # Ensure root cache gets populated
+        self.assertEqual(root._cache, {})
+        self.assertTrue(root.isEnabledFor(logging.ERROR))
+        self.assertEqual(root._cache, {logging.ERROR: True})
+
+        # Set parent logger level and ensure caches are emptied
+        logger1.setLevel(logging.CRITICAL)
+        self.assertEqual(logger2.getEffectiveLevel(), logging.CRITICAL)
+        self.assertEqual(logger2._cache, {})
+
+        # Ensure logger2 uses parent logger's effective level
+        self.assertFalse(logger2.isEnabledFor(logging.ERROR))
+
+        # Set level to NOTSET and ensure caches are empty
+        logger2.setLevel(logging.NOTSET)
+        self.assertEqual(logger2.getEffectiveLevel(), logging.CRITICAL)
+        self.assertEqual(logger2._cache, {})
+        self.assertEqual(logger1._cache, {})
+        self.assertEqual(root._cache, {})
+
+        # Verify logger2 follows parent and not root
+        self.assertFalse(logger2.isEnabledFor(logging.ERROR))
+        self.assertTrue(logger2.isEnabledFor(logging.CRITICAL))
+        self.assertFalse(logger1.isEnabledFor(logging.ERROR))
+        self.assertTrue(logger1.isEnabledFor(logging.CRITICAL))
+        self.assertTrue(root.isEnabledFor(logging.ERROR))
+
+        # Disable logging in manager and ensure caches are clear
+        logging.disable()
+        self.assertEqual(logger2.getEffectiveLevel(), logging.CRITICAL)
+        self.assertEqual(logger2._cache, {})
+        self.assertEqual(logger1._cache, {})
+        self.assertEqual(root._cache, {})
+
+        # Ensure no loggers are enabled
+        self.assertFalse(logger1.isEnabledFor(logging.CRITICAL))
+        self.assertFalse(logger2.isEnabledFor(logging.CRITICAL))
+        self.assertFalse(root.isEnabledFor(logging.CRITICAL))
 
 
 class BaseFileTest(BaseTest):
@@ -3711,7 +4294,7 @@ class RotatingFileHandlerTest(BaseFileTest):
         self.assertFalse(os.path.exists(namer(self.fn + ".3")))
         rh.close()
 
-    @requires_zlib
+    @support.requires_zlib
     def test_rotator(self):
         def namer(name):
             return name + ".gz"
@@ -3788,7 +4371,7 @@ class TimedRotatingFileHandlerTest(BaseFileTest):
                 break
         msg = 'No rotated files found, went back %d seconds' % GO_BACK
         if not found:
-            #print additional diagnostics
+            # print additional diagnostics
             dn, fn = os.path.split(self.fn)
             files = [f for f in os.listdir(dn) if f.startswith(fn)]
             print('Test time: %s' % now.strftime("%Y-%m-%d %H-%M-%S"), file=sys.stderr)
@@ -3808,6 +4391,63 @@ class TimedRotatingFileHandlerTest(BaseFileTest):
                      self.fn, 'W', delay=True)
         assertRaises(ValueError, logging.handlers.TimedRotatingFileHandler,
                      self.fn, 'W7', delay=True)
+
+    def test_compute_rollover_daily_attime(self):
+        currentTime = 0
+        atTime = datetime.time(12, 0, 0)
+        rh = logging.handlers.TimedRotatingFileHandler(
+            self.fn, when='MIDNIGHT', interval=1, backupCount=0, utc=True,
+            atTime=atTime)
+        try:
+            actual = rh.computeRollover(currentTime)
+            self.assertEqual(actual, currentTime + 12 * 60 * 60)
+
+            actual = rh.computeRollover(currentTime + 13 * 60 * 60)
+            self.assertEqual(actual, currentTime + 36 * 60 * 60)
+        finally:
+            rh.close()
+
+    #@unittest.skipIf(True, 'Temporarily skipped while failures investigated.')
+    def test_compute_rollover_weekly_attime(self):
+        currentTime = int(time.time())
+        today = currentTime - currentTime % 86400
+
+        atTime = datetime.time(12, 0, 0)
+
+        wday = time.gmtime(today).tm_wday
+        for day in range(7):
+            rh = logging.handlers.TimedRotatingFileHandler(
+                self.fn, when='W%d' % day, interval=1, backupCount=0, utc=True,
+                atTime=atTime)
+            try:
+                if wday > day:
+                    # The rollover day has already passed this week, so we
+                    # go over into next week
+                    expected = (7 - wday + day)
+                else:
+                    expected = (day - wday)
+                # At this point expected is in days from now, convert to seconds
+                expected *= 24 * 60 * 60
+                # Add in the rollover time
+                expected += 12 * 60 * 60
+                # Add in adjustment for today
+                expected += today
+                actual = rh.computeRollover(today)
+                if actual != expected:
+                    print('failed in timezone: %d' % time.timezone)
+                    print('local vars: %s' % locals())
+                self.assertEqual(actual, expected)
+                if day == wday:
+                    # goes into following week
+                    expected += 7 * 24 * 60 * 60
+                actual = rh.computeRollover(today + 13 * 60 * 60)
+                if actual != expected:
+                    print('failed in timezone: %d' % time.timezone)
+                    print('local vars: %s' % locals())
+                self.assertEqual(actual, expected)
+            finally:
+                rh.close()
+
 
 def secs(**kw):
     return datetime.timedelta(**kw) // datetime.timedelta(seconds=1)
@@ -3856,18 +4496,25 @@ for when, exp in (('S', 1),
     setattr(TimedRotatingFileHandlerTest, "test_compute_rollover_%s" % when, test_compute_rollover)
 
 
-@unittest.skipUnless(win32evtlog, 'win32evtlog/win32evtlogutil required for this test.')
+@unittest.skipUnless(win32evtlog, 'win32evtlog/win32evtlogutil/pywintypes required for this test.')
 class NTEventLogHandlerTest(BaseTest):
     def test_basic(self):
         logtype = 'Application'
         elh = win32evtlog.OpenEventLog(None, logtype)
         num_recs = win32evtlog.GetNumberOfEventLogRecords(elh)
-        h = logging.handlers.NTEventLogHandler('test_logging')
+
+        try:
+            h = logging.handlers.NTEventLogHandler('test_logging')
+        except pywintypes.error as e:
+            if e.winerror == 5:  # access denied
+                raise unittest.SkipTest('Insufficient privileges to run test')
+            raise
+
         r = logging.makeLogRecord({'msg': 'Test Log Message'})
         h.handle(r)
         h.close()
         # Now see if the event is recorded
-        self.assertTrue(num_recs < win32evtlog.GetNumberOfEventLogRecords(elh))
+        self.assertLess(num_recs, win32evtlog.GetNumberOfEventLogRecords(elh))
         flags = win32evtlog.EVENTLOG_BACKWARDS_READ | \
                 win32evtlog.EVENTLOG_SEQUENTIAL_READ
         found = False
@@ -3884,24 +4531,39 @@ class NTEventLogHandlerTest(BaseTest):
         msg = 'Record not found in event log, went back %d records' % GO_BACK
         self.assertTrue(found, msg=msg)
 
+
+class MiscTestCase(unittest.TestCase):
+    def test__all__(self):
+        blacklist = {'logThreads', 'logMultiprocessing',
+                     'logProcesses', 'currentframe',
+                     'PercentStyle', 'StrFormatStyle', 'StringTemplateStyle',
+                     'Filterer', 'PlaceHolder', 'Manager', 'RootLogger',
+                     'root', 'threading'}
+        support.check__all__(self, logging, blacklist=blacklist)
+
+
 # Set the locale to the platform-dependent default.  I have no idea
 # why the test does this, but in any case we save the current locale
 # first and restore it at the end.
-@run_with_locale('LC_ALL', '')
+@support.run_with_locale('LC_ALL', '')
 def test_main():
-    run_unittest(BuiltinLevelsTest, BasicFilterTest,
-                 CustomLevelsAndFiltersTest, HandlerTest, MemoryHandlerTest,
-                 ConfigFileTest, SocketHandlerTest, DatagramHandlerTest,
-                 MemoryTest, EncodingTest, WarningsTest, ConfigDictTest,
-                 ManagerTest, FormatterTest, BufferingFormatterTest,
-                 StreamHandlerTest, LogRecordFactoryTest, ChildLoggerTest,
-                 QueueHandlerTest, ShutdownTest, ModuleLevelMiscTest,
-                 BasicConfigTest, LoggerAdapterTest, LoggerTest,
-                 SMTPHandlerTest, FileHandlerTest, RotatingFileHandlerTest,
-                 LastResortTest, LogRecordTest, ExceptionTest,
-                 SysLogHandlerTest, HTTPHandlerTest, NTEventLogHandlerTest,
-                 TimedRotatingFileHandlerTest
-                )
+    tests = [
+        BuiltinLevelsTest, BasicFilterTest, CustomLevelsAndFiltersTest,
+        HandlerTest, MemoryHandlerTest, ConfigFileTest, SocketHandlerTest,
+        DatagramHandlerTest, MemoryTest, EncodingTest, WarningsTest,
+        ConfigDictTest, ManagerTest, FormatterTest, BufferingFormatterTest,
+        StreamHandlerTest, LogRecordFactoryTest, ChildLoggerTest,
+        QueueHandlerTest, ShutdownTest, ModuleLevelMiscTest, BasicConfigTest,
+        LoggerAdapterTest, LoggerTest, SMTPHandlerTest, FileHandlerTest,
+        RotatingFileHandlerTest,  LastResortTest, LogRecordTest,
+        ExceptionTest, SysLogHandlerTest, IPv6SysLogHandlerTest, HTTPHandlerTest,
+        NTEventLogHandlerTest, TimedRotatingFileHandlerTest,
+        UnixSocketHandlerTest, UnixDatagramHandlerTest, UnixSysLogHandlerTest,
+        MiscTestCase
+    ]
+    if hasattr(logging.handlers, 'QueueListener'):
+        tests.append(QueueListenerTest)
+    support.run_unittest(*tests)
 
 if __name__ == "__main__":
     test_main()

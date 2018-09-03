@@ -1,21 +1,26 @@
-from __future__ import nested_scopes    # Backward compat for 2.1
+from unittest import mock
+from test import support
+from test.test_httpservers import NoLogRequestHandler
 from unittest import TestCase
 from wsgiref.util import setup_testing_defaults
 from wsgiref.headers import Headers
-from wsgiref.handlers import BaseHandler, BaseCGIHandler
+from wsgiref.handlers import BaseHandler, BaseCGIHandler, SimpleHandler
 from wsgiref import util
 from wsgiref.validate import validator
-from wsgiref.simple_server import WSGIServer, WSGIRequestHandler, demo_app
+from wsgiref.simple_server import WSGIServer, WSGIRequestHandler
 from wsgiref.simple_server import make_server
+from http.client import HTTPConnection
 from io import StringIO, BytesIO, BufferedReader
 from socketserver import BaseServer
 from platform import python_implementation
 
 import os
 import re
+import signal
 import sys
+import threading
+import unittest
 
-from test import support
 
 class MockServer(WSGIServer):
     """Non-socket HTTP server"""
@@ -47,6 +52,18 @@ def hello_app(environ,start_response):
         ('Date','Mon, 05 Jun 2006 18:49:54 GMT')
     ])
     return [b"Hello, world!"]
+
+
+def header_app(environ, start_response):
+    start_response("200 OK", [
+        ('Content-Type', 'text/plain'),
+        ('Date', 'Mon, 05 Jun 2006 18:49:54 GMT')
+    ])
+    return [';'.join([
+        environ['HTTP_X_TEST_HEADER'], environ['QUERY_STRING'],
+        environ['PATH_INFO']
+    ]).encode('iso-8859-1')]
+
 
 def run_amock(app=hello_app, data=b"GET / HTTP/1.0\n\n"):
     server = make_server("", 80, app, MockServer, MockHandler)
@@ -118,6 +135,24 @@ class IntegrationTests(TestCase):
         out, err = run_amock()
         self.check_hello(out)
 
+    def test_environ(self):
+        request = (
+            b"GET /p%61th/?query=test HTTP/1.0\n"
+            b"X-Test-Header: Python test \n"
+            b"X-Test-Header: Python test 2\n"
+            b"Content-Length: 0\n\n"
+        )
+        out, err = run_amock(header_app, request)
+        self.assertEqual(
+            out.splitlines()[-1],
+            b"Python test,Python test 2;query=test;/path/"
+        )
+
+    def test_request_length(self):
+        out, err = run_amock(data=b"GET " + (b"x" * 65537) + b" HTTP/1.0\n\n")
+        self.assertEqual(out.splitlines()[0],
+                         b"HTTP/1.0 414 Request-URI Too Long")
+
     def test_validated_hello(self):
         out, err = run_amock(validator(hello_app))
         # the middleware doesn't support len(), so content-length isn't there
@@ -136,6 +171,27 @@ class IntegrationTests(TestCase):
             "AssertionError: Headers (('Content-Type', 'text/plain')) must"
             " be of type list: <class 'tuple'>"
         )
+
+    def test_status_validation_errors(self):
+        def create_bad_app(status):
+            def bad_app(environ, start_response):
+                start_response(status, [("Content-Type", "text/plain; charset=utf-8")])
+                return [b"Hello, world!"]
+            return bad_app
+
+        tests = [
+            ('200', 'AssertionError: Status must be at least 4 characters'),
+            ('20X OK', 'AssertionError: Status message must begin w/3-digit code'),
+            ('200OK', 'AssertionError: Status message must have a space after code'),
+        ]
+
+        for status, exc_message in tests:
+            with self.subTest(status=status):
+                out, err = run_amock(create_bad_app(status))
+                self.assertTrue(out.endswith(
+                    b"A server error occurred.  Please contact the administrator."
+                ))
+                self.assertEqual(err.splitlines()[-2], exc_message)
 
     def test_wsgi_input(self):
         def bad_app(e,s):
@@ -171,6 +227,78 @@ class IntegrationTests(TestCase):
                 b"data",
                 out)
 
+    def test_cp1252_url(self):
+        def app(e, s):
+            s("200 OK", [
+                ("Content-Type", "text/plain"),
+                ("Date", "Wed, 24 Dec 2008 13:29:32 GMT"),
+                ])
+            # PEP3333 says environ variables are decoded as latin1.
+            # Encode as latin1 to get original bytes
+            return [e["PATH_INFO"].encode("latin1")]
+
+        out, err = run_amock(
+            validator(app), data=b"GET /\x80%80 HTTP/1.0")
+        self.assertEqual(
+            [
+                b"HTTP/1.0 200 OK",
+                mock.ANY,
+                b"Content-Type: text/plain",
+                b"Date: Wed, 24 Dec 2008 13:29:32 GMT",
+                b"",
+                b"/\x80\x80",
+            ],
+            out.splitlines())
+
+    def test_interrupted_write(self):
+        # BaseHandler._write() and _flush() have to write all data, even if
+        # it takes multiple send() calls.  Test this by interrupting a send()
+        # call with a Unix signal.
+        pthread_kill = support.get_attribute(signal, "pthread_kill")
+
+        def app(environ, start_response):
+            start_response("200 OK", [])
+            return [b'\0' * support.SOCK_MAX_SIZE]
+
+        class WsgiHandler(NoLogRequestHandler, WSGIRequestHandler):
+            pass
+
+        server = make_server(support.HOST, 0, app, handler_class=WsgiHandler)
+        self.addCleanup(server.server_close)
+        interrupted = threading.Event()
+
+        def signal_handler(signum, frame):
+            interrupted.set()
+
+        original = signal.signal(signal.SIGUSR1, signal_handler)
+        self.addCleanup(signal.signal, signal.SIGUSR1, original)
+        received = None
+        main_thread = threading.get_ident()
+
+        def run_client():
+            http = HTTPConnection(*server.server_address)
+            http.request("GET", "/")
+            with http.getresponse() as response:
+                response.read(100)
+                # The main thread should now be blocking in a send() system
+                # call.  But in theory, it could get interrupted by other
+                # signals, and then retried.  So keep sending the signal in a
+                # loop, in case an earlier signal happens to be delivered at
+                # an inconvenient moment.
+                while True:
+                    pthread_kill(main_thread, signal.SIGUSR1)
+                    if interrupted.wait(timeout=float(1)):
+                        break
+                nonlocal received
+                received = len(response.read())
+            http.close()
+
+        background = threading.Thread(target=run_client)
+        background.start()
+        server.handle_request()
+        background.join()
+        self.assertEqual(received, support.SOCK_MAX_SIZE - 100)
+
 
 class UtilityTests(TestCase):
 
@@ -196,7 +324,7 @@ class UtilityTests(TestCase):
         # Check existing value
         env = {key:alt}
         util.setup_testing_defaults(env)
-        self.assertTrue(env[key] is alt)
+        self.assertIs(env[key], alt)
 
     def checkCrossDefault(self,key,value,**kw):
         util.setup_testing_defaults(kw)
@@ -286,7 +414,7 @@ class UtilityTests(TestCase):
     def testAppURIs(self):
         self.checkAppURI("http://127.0.0.1/")
         self.checkAppURI("http://127.0.0.1/spam", SCRIPT_NAME="/spam")
-        self.checkAppURI("http://127.0.0.1/sp%C3%A4m", SCRIPT_NAME="/späm")
+        self.checkAppURI("http://127.0.0.1/sp%E4m", SCRIPT_NAME="/sp\xe4m")
         self.checkAppURI("http://spam.example.com:2071/",
             HTTP_HOST="spam.example.com:2071", SERVER_PORT="2071")
         self.checkAppURI("http://spam.example.com/",
@@ -300,15 +428,19 @@ class UtilityTests(TestCase):
     def testReqURIs(self):
         self.checkReqURI("http://127.0.0.1/")
         self.checkReqURI("http://127.0.0.1/spam", SCRIPT_NAME="/spam")
-        self.checkReqURI("http://127.0.0.1/sp%C3%A4m", SCRIPT_NAME="/späm")
+        self.checkReqURI("http://127.0.0.1/sp%E4m", SCRIPT_NAME="/sp\xe4m")
         self.checkReqURI("http://127.0.0.1/spammity/spam",
             SCRIPT_NAME="/spammity", PATH_INFO="/spam")
+        self.checkReqURI("http://127.0.0.1/spammity/sp%E4m",
+            SCRIPT_NAME="/spammity", PATH_INFO="/sp\xe4m")
         self.checkReqURI("http://127.0.0.1/spammity/spam;ham",
             SCRIPT_NAME="/spammity", PATH_INFO="/spam;ham")
         self.checkReqURI("http://127.0.0.1/spammity/spam;cookie=1234,5678",
             SCRIPT_NAME="/spammity", PATH_INFO="/spam;cookie=1234,5678")
         self.checkReqURI("http://127.0.0.1/spammity/spam?say=ni",
             SCRIPT_NAME="/spammity", PATH_INFO="/spam",QUERY_STRING="say=ni")
+        self.checkReqURI("http://127.0.0.1/spammity/spam?s%E4y=ni",
+            SCRIPT_NAME="/spammity", PATH_INFO="/spam",QUERY_STRING="s%E4y=ni")
         self.checkReqURI("http://127.0.0.1/spammity/spam", 0,
             SCRIPT_NAME="/spammity", PATH_INFO="/spam",QUERY_STRING="say=ni")
 
@@ -334,14 +466,15 @@ class HeaderTests(TestCase):
 
     def testMappingInterface(self):
         test = [('x','y')]
+        self.assertEqual(len(Headers()), 0)
         self.assertEqual(len(Headers([])),0)
         self.assertEqual(len(Headers(test[:])),1)
         self.assertEqual(Headers(test[:]).keys(), ['x'])
         self.assertEqual(Headers(test[:]).values(), ['y'])
         self.assertEqual(Headers(test[:]).items(), test)
-        self.assertFalse(Headers(test).items() is test)  # must be copy!
+        self.assertIsNot(Headers(test).items(), test)  # must be copy!
 
-        h=Headers([])
+        h = Headers()
         del h['foo']   # should not raise an error
 
         h['Foo'] = 'bar'
@@ -366,9 +499,8 @@ class HeaderTests(TestCase):
     def testRequireList(self):
         self.assertRaises(TypeError, Headers, "foo")
 
-
     def testExtras(self):
-        h = Headers([])
+        h = Headers()
         self.assertEqual(str(h),'\r\n')
 
         h.add_header('foo','bar',baz="spam")
@@ -623,9 +755,31 @@ class HandlerTests(TestCase):
         h.run(error_app)
         self.assertEqual(side_effects['close_called'], True)
 
+    def testPartialWrite(self):
+        written = bytearray()
 
-def test_main():
-    support.run_unittest(__name__)
+        class PartialWriter:
+            def write(self, b):
+                partial = b[:7]
+                written.extend(partial)
+                return len(partial)
+
+            def flush(self):
+                pass
+
+        environ = {"SERVER_PROTOCOL": "HTTP/1.0"}
+        h = SimpleHandler(BytesIO(), PartialWriter(), sys.stderr, environ)
+        msg = "should not do partial writes"
+        with self.assertWarnsRegex(DeprecationWarning, msg):
+            h.run(hello_app)
+        self.assertEqual(b"HTTP/1.0 200 OK\r\n"
+            b"Content-Type: text/plain\r\n"
+            b"Date: Mon, 05 Jun 2006 18:49:54 GMT\r\n"
+            b"Content-Length: 13\r\n"
+            b"\r\n"
+            b"Hello, world!",
+            written)
+
 
 if __name__ == "__main__":
-    test_main()
+    unittest.main()

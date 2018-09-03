@@ -21,8 +21,13 @@ class MockFile:
     """
     def __init__(self, lines):
         self.lines = lines
-    def readline(self):
-        return self.lines.pop(0) + b'\r\n'
+    def readline(self, limit=-1):
+        result = self.lines.pop(0) + b'\r\n'
+        if limit >= 0:
+            # Re-insert the line, removing the \r\n we added.
+            self.lines.insert(0, result[limit:-2])
+            result = result[:limit]
+        return result
     def close(self):
         pass
 
@@ -30,8 +35,9 @@ class MockFile:
 class MockSocket:
     """Mock socket object used by smtpd and smtplib tests.
     """
-    def __init__(self):
+    def __init__(self, family=None):
         global _reply_data
+        self.family = family
         self.output = []
         self.lines = []
         if _reply_data:
@@ -96,15 +102,14 @@ class MockSocket:
         return len(data)
 
     def getpeername(self):
-        return 'peer'
+        return ('peer-address', 'peer-port')
 
     def close(self):
         pass
 
 
 def socket(family=None, type=None, proto=None):
-    return MockSocket()
-
+    return MockSocket(family)
 
 def create_connection(address, timeout=socket_module._GLOBAL_DEFAULT_TIMEOUT,
                       source_address=None):
@@ -139,17 +144,16 @@ def gethostname():
 def gethostbyname(name):
     return ""
 
+def getaddrinfo(*args, **kw):
+    return socket_module.getaddrinfo(*args, **kw)
 
-class gaierror(Exception):
-    pass
-
-
-class error(Exception):
-    pass
+gaierror = socket_module.gaierror
+error = socket_module.error
 
 
 # Constants
-AF_INET = None
-SOCK_STREAM = None
+AF_INET = socket_module.AF_INET
+AF_INET6 = socket_module.AF_INET6
+SOCK_STREAM = socket_module.SOCK_STREAM
 SOL_SOCKET = None
 SO_REUSEADDR = None

@@ -1,16 +1,9 @@
 import unittest
-
 from test.support import import_module
 
-# Skip tests if _ctypes module was not built.
-import_module('_ctypes')
+ctypes_test = import_module('ctypes.test')
 
-import ctypes.test
-
-def load_tests(*args):
-    skipped, testcases = ctypes.test.get_tests(ctypes.test, "test_*.py", verbosity=0)
-    suites = [unittest.makeSuite(t) for t in testcases]
-    return unittest.TestSuite(suites)
+load_tests = ctypes_test.load_tests
 
 if __name__ == "__main__":
     unittest.main()

@@ -8,6 +8,7 @@ import re
 import fileinput
 import collections
 import builtins
+import tempfile
 import unittest
 
 try:
@@ -19,45 +20,79 @@ try:
 except ImportError:
     gzip = None
 
-from io import StringIO
+from io import BytesIO, StringIO
 from fileinput import FileInput, hook_encoded
+from pathlib import Path
 
-from test.support import verbose, TESTFN, run_unittest
+from test.support import verbose, TESTFN, check_warnings
 from test.support import unlink as safe_unlink
+from test import support
+from unittest import mock
 
 
 # The fileinput module has 2 interfaces: the FileInput class which does
 # all the work, and a few functions (input, etc.) that use a global _state
 # variable.
 
-# Write lines (a list of lines) to temp file number i, and return the
-# temp file's name.
-def writeTmp(i, lines, mode='w'):  # opening in text mode is the default
-    name = TESTFN + str(i)
-    f = open(name, mode)
-    for line in lines:
-        f.write(line)
-    f.close()
-    return name
+class BaseTests:
+    # Write a content (str or bytes) to temp file, and return the
+    # temp file's name.
+    def writeTmp(self, content, *, mode='w'):  # opening in text mode is the default
+        fd, name = tempfile.mkstemp()
+        self.addCleanup(support.unlink, name)
+        with open(fd, mode) as f:
+            f.write(content)
+        return name
 
-def remove_tempfiles(*names):
-    for name in names:
-        if name:
-            safe_unlink(name)
+class LineReader:
 
-class BufferSizesTests(unittest.TestCase):
+    def __init__(self):
+        self._linesread = []
+
+    @property
+    def linesread(self):
+        try:
+            return self._linesread[:]
+        finally:
+            self._linesread = []
+
+    def openhook(self, filename, mode):
+        self.it = iter(filename.splitlines(True))
+        return self
+
+    def readline(self, size=None):
+        line = next(self.it, '')
+        self._linesread.append(line)
+        return line
+
+    def readlines(self, hint=-1):
+        lines = []
+        size = 0
+        while True:
+            line = self.readline()
+            if not line:
+                return lines
+            lines.append(line)
+            size += len(line)
+            if size >= hint:
+                return lines
+
+    def close(self):
+        pass
+
+class BufferSizesTests(BaseTests, unittest.TestCase):
     def test_buffer_sizes(self):
         # First, run the tests with default and teeny buffer size.
         for round, bs in (0, 0), (1, 30):
-            t1 = t2 = t3 = t4 = None
-            try:
-                t1 = writeTmp(1, ["Line %s of file 1\n" % (i+1) for i in range(15)])
-                t2 = writeTmp(2, ["Line %s of file 2\n" % (i+1) for i in range(10)])
-                t3 = writeTmp(3, ["Line %s of file 3\n" % (i+1) for i in range(5)])
-                t4 = writeTmp(4, ["Line %s of file 4\n" % (i+1) for i in range(1)])
+            t1 = self.writeTmp(''.join("Line %s of file 1\n" % (i+1) for i in range(15)))
+            t2 = self.writeTmp(''.join("Line %s of file 2\n" % (i+1) for i in range(10)))
+            t3 = self.writeTmp(''.join("Line %s of file 3\n" % (i+1) for i in range(5)))
+            t4 = self.writeTmp(''.join("Line %s of file 4\n" % (i+1) for i in range(1)))
+            if bs:
+                with self.assertWarns(DeprecationWarning):
+                    self.buffer_size_test(t1, t2, t3, t4, bs, round)
+            else:
                 self.buffer_size_test(t1, t2, t3, t4, bs, round)
-            finally:
-                remove_tempfiles(t1, t2, t3, t4)
 
     def buffer_size_test(self, t1, t2, t3, t4, bs=0, round=0):
         pat = re.compile(r'LINE (\d+) OF FILE (\d+)')
@@ -144,74 +179,59 @@ class UnconditionallyRaise:
         self.invoked = True
         raise self.exception_type()
 
-class FileInputTests(unittest.TestCase):
+class FileInputTests(BaseTests, unittest.TestCase):
 
     def test_zero_byte_files(self):
-        t1 = t2 = t3 = t4 = None
-        try:
-            t1 = writeTmp(1, [""])
-            t2 = writeTmp(2, [""])
-            t3 = writeTmp(3, ["The only line there is.\n"])
-            t4 = writeTmp(4, [""])
-            fi = FileInput(files=(t1, t2, t3, t4))
+        t1 = self.writeTmp("")
+        t2 = self.writeTmp("")
+        t3 = self.writeTmp("The only line there is.\n")
+        t4 = self.writeTmp("")
+        fi = FileInput(files=(t1, t2, t3, t4))
 
-            line = fi.readline()
-            self.assertEqual(line, 'The only line there is.\n')
-            self.assertEqual(fi.lineno(), 1)
-            self.assertEqual(fi.filelineno(), 1)
-            self.assertEqual(fi.filename(), t3)
+        line = fi.readline()
+        self.assertEqual(line, 'The only line there is.\n')
+        self.assertEqual(fi.lineno(), 1)
+        self.assertEqual(fi.filelineno(), 1)
+        self.assertEqual(fi.filename(), t3)
 
-            line = fi.readline()
-            self.assertFalse(line)
-            self.assertEqual(fi.lineno(), 1)
-            self.assertEqual(fi.filelineno(), 0)
-            self.assertEqual(fi.filename(), t4)
-            fi.close()
-        finally:
-            remove_tempfiles(t1, t2, t3, t4)
+        line = fi.readline()
+        self.assertFalse(line)
+        self.assertEqual(fi.lineno(), 1)
+        self.assertEqual(fi.filelineno(), 0)
+        self.assertEqual(fi.filename(), t4)
+        fi.close()
 
     def test_files_that_dont_end_with_newline(self):
-        t1 = t2 = None
-        try:
-            t1 = writeTmp(1, ["A\nB\nC"])
-            t2 = writeTmp(2, ["D\nE\nF"])
-            fi = FileInput(files=(t1, t2))
-            lines = list(fi)
-            self.assertEqual(lines, ["A\n", "B\n", "C", "D\n", "E\n", "F"])
-            self.assertEqual(fi.filelineno(), 3)
-            self.assertEqual(fi.lineno(), 6)
-        finally:
-            remove_tempfiles(t1, t2)
+        t1 = self.writeTmp("A\nB\nC")
+        t2 = self.writeTmp("D\nE\nF")
+        fi = FileInput(files=(t1, t2))
+        lines = list(fi)
+        self.assertEqual(lines, ["A\n", "B\n", "C", "D\n", "E\n", "F"])
+        self.assertEqual(fi.filelineno(), 3)
+        self.assertEqual(fi.lineno(), 6)
 
 ##     def test_unicode_filenames(self):
 ##         # XXX A unicode string is always returned by writeTmp.
 ##         #     So is this needed?
-##         try:
-##             t1 = writeTmp(1, ["A\nB"])
-##             encoding = sys.getfilesystemencoding()
-##             if encoding is None:
-##                 encoding = 'ascii'
-##             fi = FileInput(files=str(t1, encoding))
-##             lines = list(fi)
-##             self.assertEqual(lines, ["A\n", "B"])
-##         finally:
-##             remove_tempfiles(t1)
+##         t1 = self.writeTmp("A\nB")
+##         encoding = sys.getfilesystemencoding()
+##         if encoding is None:
+##             encoding = 'ascii'
+##         fi = FileInput(files=str(t1, encoding))
+##         lines = list(fi)
+##         self.assertEqual(lines, ["A\n", "B"])
 
     def test_fileno(self):
-        t1 = t2 = None
-        try:
-            t1 = writeTmp(1, ["A\nB"])
-            t2 = writeTmp(2, ["C\nD"])
-            fi = FileInput(files=(t1, t2))
-            self.assertEqual(fi.fileno(), -1)
-            line =next( fi)
-            self.assertNotEqual(fi.fileno(), -1)
-            fi.nextfile()
-            self.assertEqual(fi.fileno(), -1)
-            line = list(fi)
-            self.assertEqual(fi.fileno(), -1)
-        finally:
-            remove_tempfiles(t1, t2)
+        t1 = self.writeTmp("A\nB")
+        t2 = self.writeTmp("C\nD")
+        fi = FileInput(files=(t1, t2))
+        self.assertEqual(fi.fileno(), -1)
+        line = next(fi)
+        self.assertNotEqual(fi.fileno(), -1)
+        fi.nextfile()
+        self.assertEqual(fi.fileno(), -1)
+        line = list(fi)
+        self.assertEqual(fi.fileno(), -1)
 
     def test_opening_mode(self):
         try:
@@ -220,15 +240,31 @@ class FileInputTests(unittest.TestCase):
             self.fail("FileInput should reject invalid mode argument")
         except ValueError:
             pass
-        t1 = None
-        try:
-            # try opening in universal newline mode
-            t1 = writeTmp(1, [b"A\nB\r\nC\rD"], mode="wb")
+        # try opening in universal newline mode
+        t1 = self.writeTmp(b"A\nB\r\nC\rD", mode="wb")
+        with check_warnings(('', DeprecationWarning)):
             fi = FileInput(files=t1, mode="U")
+        with check_warnings(('', DeprecationWarning)):
             lines = list(fi)
-            self.assertEqual(lines, ["A\n", "B\n", "C\n", "D"])
+        self.assertEqual(lines, ["A\n", "B\n", "C\n", "D"])
+
+    def test_stdin_binary_mode(self):
+        with mock.patch('sys.stdin') as m_stdin:
+            m_stdin.buffer = BytesIO(b'spam, bacon, sausage, and spam')
+            fi = FileInput(files=['-'], mode='rb')
+            lines = list(fi)
+            self.assertEqual(lines, [b'spam, bacon, sausage, and spam'])
+
+    def test_detached_stdin_binary_mode(self):
+        orig_stdin = sys.stdin
+        try:
+            sys.stdin = BytesIO(b'spam, bacon, sausage, and spam')
+            self.assertFalse(hasattr(sys.stdin, 'buffer'))
+            fi = FileInput(files=['-'], mode='rb')
+            lines = list(fi)
+            self.assertEqual(lines, [b'spam, bacon, sausage, and spam'])
         finally:
-            remove_tempfiles(t1)
+            sys.stdin = orig_stdin
 
     def test_file_opening_hook(self):
         try:
@@ -251,35 +287,65 @@ class FileInputTests(unittest.TestCase):
                 self.invoked = True
                 return open(*args)
 
-        t = writeTmp(1, ["\n"])
-        self.addCleanup(remove_tempfiles, t)
+        t = self.writeTmp("\n")
         custom_open_hook = CustomOpenHook()
         with FileInput([t], openhook=custom_open_hook) as fi:
             fi.readline()
         self.assertTrue(custom_open_hook.invoked, "openhook not invoked")
 
+    def test_readline(self):
+        with open(TESTFN, 'wb') as f:
+            f.write(b'A\nB\r\nC\r')
+            # Fill TextIOWrapper buffer.
+            f.write(b'123456789\n' * 1000)
+            # Issue #20501: readline() shouldn't read whole file.
+            f.write(b'\x80')
+        self.addCleanup(safe_unlink, TESTFN)
+
+        with FileInput(files=TESTFN,
+                       openhook=hook_encoded('ascii')) as fi:
+            try:
+                self.assertEqual(fi.readline(), 'A\n')
+                self.assertEqual(fi.readline(), 'B\n')
+                self.assertEqual(fi.readline(), 'C\n')
+            except UnicodeDecodeError:
+                self.fail('Read to end of file')
+            with self.assertRaises(UnicodeDecodeError):
+                # Read to the end of file.
+                list(fi)
+            self.assertEqual(fi.readline(), '')
+            self.assertEqual(fi.readline(), '')
+
+    def test_readline_binary_mode(self):
+        with open(TESTFN, 'wb') as f:
+            f.write(b'A\nB\r\nC\rD')
+        self.addCleanup(safe_unlink, TESTFN)
+
+        with FileInput(files=TESTFN, mode='rb') as fi:
+            self.assertEqual(fi.readline(), b'A\n')
+            self.assertEqual(fi.readline(), b'B\r\n')
+            self.assertEqual(fi.readline(), b'C\rD')
+            # Read to the end of file.
+            self.assertEqual(fi.readline(), b'')
+            self.assertEqual(fi.readline(), b'')
+
     def test_context_manager(self):
-        try:
-            t1 = writeTmp(1, ["A\nB\nC"])
-            t2 = writeTmp(2, ["D\nE\nF"])
-            with FileInput(files=(t1, t2)) as fi:
-                lines = list(fi)
-            self.assertEqual(lines, ["A\n", "B\n", "C", "D\n", "E\n", "F"])
-            self.assertEqual(fi.filelineno(), 3)
-            self.assertEqual(fi.lineno(), 6)
-            self.assertEqual(fi._files, ())
-        finally:
-            remove_tempfiles(t1, t2)
+        t1 = self.writeTmp("A\nB\nC")
+        t2 = self.writeTmp("D\nE\nF")
+        with FileInput(files=(t1, t2)) as fi:
+            lines = list(fi)
+        self.assertEqual(lines, ["A\n", "B\n", "C", "D\n", "E\n", "F"])
+        self.assertEqual(fi.filelineno(), 3)
+        self.assertEqual(fi.lineno(), 6)
+        self.assertEqual(fi._files, ())
 
     def test_close_on_exception(self):
+        t1 = self.writeTmp("")
         try:
-            t1 = writeTmp(1, [""])
             with FileInput(files=t1) as fi:
-                raise IOError
-        except IOError:
+                raise OSError
+        except OSError:
             self.assertEqual(fi._files, ())
-        finally:
-            remove_tempfiles(t1)
 
     def test_empty_files_list_specified_to_constructor(self):
         with FileInput(files=[]) as fi:
@@ -288,8 +354,7 @@ class FileInputTests(unittest.TestCase):
     def test__getitem__(self):
         """Tests invoking FileInput.__getitem__() with the current
            line number"""
-        t = writeTmp(1, ["line1\n", "line2\n"])
-        self.addCleanup(remove_tempfiles, t)
+        t = self.writeTmp("line1\nline2\n")
         with FileInput(files=[t]) as fi:
             retval1 = fi[0]
             self.assertEqual(retval1, "line1\n")
@@ -299,8 +364,7 @@ class FileInputTests(unittest.TestCase):
     def test__getitem__invalid_key(self):
         """Tests invoking FileInput.__getitem__() with an index unequal to
            the line number"""
-        t = writeTmp(1, ["line1\n", "line2\n"])
-        self.addCleanup(remove_tempfiles, t)
+        t = self.writeTmp("line1\nline2\n")
         with FileInput(files=[t]) as fi:
             with self.assertRaises(RuntimeError) as cm:
                 fi[1]
@@ -309,8 +373,7 @@ class FileInputTests(unittest.TestCase):
     def test__getitem__eof(self):
         """Tests invoking FileInput.__getitem__() with the line number but at
            end-of-input"""
-        t = writeTmp(1, [])
-        self.addCleanup(remove_tempfiles, t)
+        t = self.writeTmp('')
         with FileInput(files=[t]) as fi:
             with self.assertRaises(IndexError) as cm:
                 fi[0]
@@ -324,8 +387,8 @@ class FileInputTests(unittest.TestCase):
         os_unlink_orig = os.unlink
         os_unlink_replacement = UnconditionallyRaise(OSError)
         try:
-            t = writeTmp(1, ["\n"])
-            self.addCleanup(remove_tempfiles, t)
+            t = self.writeTmp("\n")
+            self.addCleanup(support.unlink, t + '.bak')
             with FileInput(files=[t], inplace=True) as fi:
                 next(fi) # make sure the file is opened
                 os.unlink = os_unlink_replacement
@@ -344,8 +407,7 @@ class FileInputTests(unittest.TestCase):
         os_fstat_orig = os.fstat
         os_fstat_replacement = UnconditionallyRaise(OSError)
         try:
-            t = writeTmp(1, ["\n"])
-            self.addCleanup(remove_tempfiles, t)
+            t = self.writeTmp("\n")
             with FileInput(files=[t], inplace=True) as fi:
                 os.fstat = os_fstat_replacement
                 fi.readline()
@@ -364,8 +426,7 @@ class FileInputTests(unittest.TestCase):
         os_chmod_orig = os.chmod
         os_chmod_replacement = UnconditionallyRaise(OSError)
         try:
-            t = writeTmp(1, ["\n"])
-            self.addCleanup(remove_tempfiles, t)
+            t = self.writeTmp("\n")
             with FileInput(files=[t], inplace=True) as fi:
                 os.chmod = os_chmod_replacement
                 fi.readline()
@@ -384,8 +445,7 @@ class FileInputTests(unittest.TestCase):
                 self.__call__()
 
         unconditionally_raise_ValueError = FilenoRaisesValueError()
-        t = writeTmp(1, ["\n"])
-        self.addCleanup(remove_tempfiles, t)
+        t = self.writeTmp("\n")
         with FileInput(files=[t]) as fi:
             file_backup = fi._file
             try:
@@ -399,6 +459,57 @@ class FileInputTests(unittest.TestCase):
                         "_file.fileno() was not invoked")
 
         self.assertEqual(result, -1, "fileno() should return -1")
+
+    def test_readline_buffering(self):
+        src = LineReader()
+        with FileInput(files=['line1\nline2', 'line3\n'],
+                       openhook=src.openhook) as fi:
+            self.assertEqual(src.linesread, [])
+            self.assertEqual(fi.readline(), 'line1\n')
+            self.assertEqual(src.linesread, ['line1\n'])
+            self.assertEqual(fi.readline(), 'line2')
+            self.assertEqual(src.linesread, ['line2'])
+            self.assertEqual(fi.readline(), 'line3\n')
+            self.assertEqual(src.linesread, ['', 'line3\n'])
+            self.assertEqual(fi.readline(), '')
+            self.assertEqual(src.linesread, [''])
+            self.assertEqual(fi.readline(), '')
+            self.assertEqual(src.linesread, [])
+
+    def test_iteration_buffering(self):
+        src = LineReader()
+        with FileInput(files=['line1\nline2', 'line3\n'],
+                       openhook=src.openhook) as fi:
+            self.assertEqual(src.linesread, [])
+            self.assertEqual(next(fi), 'line1\n')
+            self.assertEqual(src.linesread, ['line1\n'])
+            self.assertEqual(next(fi), 'line2')
+            self.assertEqual(src.linesread, ['line2'])
+            self.assertEqual(next(fi), 'line3\n')
+            self.assertEqual(src.linesread, ['', 'line3\n'])
+            self.assertRaises(StopIteration, next, fi)
+            self.assertEqual(src.linesread, [''])
+            self.assertRaises(StopIteration, next, fi)
+            self.assertEqual(src.linesread, [])
+
+    def test_pathlib_file(self):
+        t1 = Path(self.writeTmp("Pathlib file."))
+        with FileInput(t1) as fi:
+            line = fi.readline()
+            self.assertEqual(line, 'Pathlib file.')
+            self.assertEqual(fi.lineno(), 1)
+            self.assertEqual(fi.filelineno(), 1)
+            self.assertEqual(fi.filename(), os.fspath(t1))
+
+    def test_pathlib_file_inplace(self):
+        t1 = Path(self.writeTmp('Pathlib file.'))
+        with FileInput(t1, inplace=True) as fi:
+            line = fi.readline()
+            self.assertEqual(line, 'Pathlib file.')
+            print('Modified %s' % line)
+        with open(t1) as f:
+            self.assertEqual(f.read(), 'Modified Pathlib file.\n')
+
 
 class MockFileInput:
     """A class that mocks out fileinput.FileInput for use during unit tests"""
@@ -815,7 +926,8 @@ class Test_hook_encoded(unittest.TestCase):
 
     def test(self):
         encoding = object()
-        result = fileinput.hook_encoded(encoding)
+        errors = object()
+        result = fileinput.hook_encoded(encoding, errors=errors)
 
         fake_open = InvocationRecorder()
         original_open = builtins.open
@@ -833,24 +945,52 @@ class Test_hook_encoded(unittest.TestCase):
         self.assertIs(args[0], filename)
         self.assertIs(args[1], mode)
         self.assertIs(kwargs.pop('encoding'), encoding)
+        self.assertIs(kwargs.pop('errors'), errors)
         self.assertFalse(kwargs)
 
-def test_main():
-    run_unittest(
-        BufferSizesTests,
-        FileInputTests,
-        Test_fileinput_input,
-        Test_fileinput_close,
-        Test_fileinput_nextfile,
-        Test_fileinput_filename,
-        Test_fileinput_lineno,
-        Test_fileinput_filelineno,
-        Test_fileinput_fileno,
-        Test_fileinput_isfirstline,
-        Test_fileinput_isstdin,
-        Test_hook_compressed,
-        Test_hook_encoded,
-    )
+    def test_errors(self):
+        with open(TESTFN, 'wb') as f:
+            f.write(b'\x80abc')
+        self.addCleanup(safe_unlink, TESTFN)
+
+        def check(errors, expected_lines):
+            with FileInput(files=TESTFN, mode='r',
+                           openhook=hook_encoded('utf-8', errors=errors)) as fi:
+                lines = list(fi)
+            self.assertEqual(lines, expected_lines)
+
+        check('ignore', ['abc'])
+        with self.assertRaises(UnicodeDecodeError):
+            check('strict', ['abc'])
+        check('replace', ['\ufffdabc'])
+        check('backslashreplace', ['\\x80abc'])
+
+    def test_modes(self):
+        with open(TESTFN, 'wb') as f:
+            # UTF-7 is a convenient, seldom used encoding
+            f.write(b'A\nB\r\nC\rD+IKw-')
+        self.addCleanup(safe_unlink, TESTFN)
+
+        def check(mode, expected_lines):
+            with FileInput(files=TESTFN, mode=mode,
+                           openhook=hook_encoded('utf-7')) as fi:
+                lines = list(fi)
+            self.assertEqual(lines, expected_lines)
+
+        check('r', ['A\n', 'B\n', 'C\n', 'D\u20ac'])
+        with self.assertWarns(DeprecationWarning):
+            check('rU', ['A\n', 'B\n', 'C\n', 'D\u20ac'])
+        with self.assertWarns(DeprecationWarning):
+            check('U', ['A\n', 'B\n', 'C\n', 'D\u20ac'])
+        with self.assertRaises(ValueError):
+            check('rb', ['A\n', 'B\r\n', 'C\r', 'D\u20ac'])
+
+
+class MiscTest(unittest.TestCase):
+
+    def test_all(self):
+        support.check__all__(self, fileinput)
+
 
 if __name__ == "__main__":
-    test_main()
+    unittest.main()

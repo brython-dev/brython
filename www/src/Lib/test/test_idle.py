@@ -1,31 +1,24 @@
 import unittest
-from test import support
-from test.support import import_module, use_resources
+from test.support import import_module
 
-# Skip test if _thread or _tkinter wasn't built or idlelib was deleted.
-import_module('threading')  # imported by PyShell, imports _thread
-tk = import_module('tkinter')  # imports _tkinter
-idletest = import_module('idlelib.idle_test')
+# Skip test_idle if _tkinter wasn't built, if tkinter is missing,
+# if tcl/tk is not the 8.5+ needed for ttk widgets,
+# or if idlelib is missing (not installed).
+tk = import_module('tkinter')  # Also imports _tkinter.
+if tk.TkVersion < 8.5:
+    raise unittest.SkipTest("IDLE requires tk 8.5 or later.")
+idlelib = import_module('idlelib')
 
-# If buildbot improperly sets gui resource (#18365, #18441), remove it
-# so requires('gui') tests are skipped while non-gui tests still run.
-# If there is a problem with Macs, see #18441, msg 193805
-if use_resources and 'gui' in use_resources:
-    try:
-        root = tk.Tk()
-        root.destroy()
-    except tk.TclError:
-        while 'gui' in use_resources:
-            use_resources.remove('gui')
+# Before importing and executing more of idlelib,
+# tell IDLE to avoid changing the environment.
+idlelib.testing = True
 
-# Without test_main present, regrtest.runtest_inner (line1219) calls
-# unittest.TestLoader().loadTestsFromModule(this_module) which calls
-# load_tests() if it finds it. (Unittest.main does the same.)
-load_tests = idletest.load_tests
+# Unittest.main and test.libregrtest.runtest.runtest_inner
+# call load_tests, when present here, to discover tests to run.
+from idlelib.idle_test import load_tests
 
 if __name__ == '__main__':
-    # Until unittest supports resources, we emulate regrtest's -ugui
-    # so loaded tests run the same as if textually present here.
-    # If any Idle test ever needs another resource, add it to the list.
-    support.use_resources = ['gui']  # use_resources is initially None
-    unittest.main(verbosity=2, exit=False)
+    tk.NoDefaultRoot()
+    unittest.main(exit=False)
+    tk._support_default_root = 1
+    tk._default_root = None

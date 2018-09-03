@@ -5,7 +5,6 @@ import gc
 import weakref
 import copy
 import pickle
-from io import StringIO
 import random
 import struct
 
@@ -164,6 +163,26 @@ class TestBasic(unittest.TestCase):
                 self.assertEqual(x >  y, list(x) >  list(y), (x,y))
                 self.assertEqual(x >= y, list(x) >= list(y), (x,y))
 
+    def test_contains(self):
+        n = 200
+
+        d = deque(range(n))
+        for i in range(n):
+            self.assertTrue(i in d)
+        self.assertTrue((n+1) not in d)
+
+        # Test detection of mutation during iteration
+        d = deque(range(n))
+        d[n//2] = MutateCmp(d, False)
+        with self.assertRaises(RuntimeError):
+            n in d
+
+        # Test detection of comparison exceptions
+        d = deque(range(n))
+        d[n//2] = BadCmp()
+        with self.assertRaises(RuntimeError):
+            n in d
+
     def test_extend(self):
         d = deque('a')
         self.assertRaises(TypeError, d.extend, 1)
@@ -171,6 +190,26 @@ class TestBasic(unittest.TestCase):
         self.assertEqual(list(d), list('abcd'))
         d.extend(d)
         self.assertEqual(list(d), list('abcdabcd'))
+
+    def test_add(self):
+        d = deque()
+        e = deque('abc')
+        f = deque('def')
+        self.assertEqual(d + d, deque())
+        self.assertEqual(e + f, deque('abcdef'))
+        self.assertEqual(e + e, deque('abcabc'))
+        self.assertEqual(e + d, deque('abc'))
+        self.assertEqual(d + e, deque('abc'))
+        self.assertIsNot(d + d, deque())
+        self.assertIsNot(e + d, deque('abc'))
+        self.assertIsNot(d + e, deque('abc'))
+
+        g = deque('abcdef', maxlen=4)
+        h = deque('gh')
+        self.assertEqual(g + h, deque('efgh'))
+
+        with self.assertRaises(TypeError):
+            deque('abc') + 'def'
 
     def test_iadd(self):
         d = deque('a')
@@ -210,6 +249,131 @@ class TestBasic(unittest.TestCase):
         d = deque()
         self.assertRaises(IndexError, d.__getitem__, 0)
         self.assertRaises(IndexError, d.__getitem__, -1)
+
+    def test_index(self):
+        for n in 1, 2, 30, 40, 200:
+
+            d = deque(range(n))
+            for i in range(n):
+                self.assertEqual(d.index(i), i)
+
+            with self.assertRaises(ValueError):
+                d.index(n+1)
+
+            # Test detection of mutation during iteration
+            d = deque(range(n))
+            d[n//2] = MutateCmp(d, False)
+            with self.assertRaises(RuntimeError):
+                d.index(n)
+
+            # Test detection of comparison exceptions
+            d = deque(range(n))
+            d[n//2] = BadCmp()
+            with self.assertRaises(RuntimeError):
+                d.index(n)
+
+        # Test start and stop arguments behavior matches list.index()
+        elements = 'ABCDEFGHI'
+        nonelement = 'Z'
+        d = deque(elements * 2)
+        s = list(elements * 2)
+        for start in range(-5 - len(s)*2, 5 + len(s) * 2):
+            for stop in range(-5 - len(s)*2, 5 + len(s) * 2):
+                for element in elements + 'Z':
+                    try:
+                        target = s.index(element, start, stop)
+                    except ValueError:
+                        with self.assertRaises(ValueError):
+                            d.index(element, start, stop)
+                    else:
+                        self.assertEqual(d.index(element, start, stop), target)
+
+    def test_index_bug_24913(self):
+        d = deque('A' * 3)
+        with self.assertRaises(ValueError):
+            i = d.index("Hello world", 0, 4)
+
+    def test_insert(self):
+        # Test to make sure insert behaves like lists
+        elements = 'ABCDEFGHI'
+        for i in range(-5 - len(elements)*2, 5 + len(elements) * 2):
+            d = deque('ABCDEFGHI')
+            s = list('ABCDEFGHI')
+            d.insert(i, 'Z')
+            s.insert(i, 'Z')
+            self.assertEqual(list(d), s)
+
+    def test_insert_bug_26194(self):
+        data = 'ABC'
+        d = deque(data, maxlen=len(data))
+        with self.assertRaises(IndexError):
+            d.insert(2, None)
+
+        elements = 'ABCDEFGHI'
+        for i in range(-len(elements), len(elements)):
+            d = deque(elements, maxlen=len(elements)+1)
+            d.insert(i, 'Z')
+            if i >= 0:
+                self.assertEqual(d[i], 'Z')
+            else:
+                self.assertEqual(d[i-1], 'Z')
+
+    def test_imul(self):
+        for n in (-10, -1, 0, 1, 2, 10, 1000):
+            d = deque()
+            d *= n
+            self.assertEqual(d, deque())
+            self.assertIsNone(d.maxlen)
+
+        for n in (-10, -1, 0, 1, 2, 10, 1000):
+            d = deque('a')
+            d *= n
+            self.assertEqual(d, deque('a' * n))
+            self.assertIsNone(d.maxlen)
+
+        for n in (-10, -1, 0, 1, 2, 10, 499, 500, 501, 1000):
+            d = deque('a', 500)
+            d *= n
+            self.assertEqual(d, deque('a' * min(n, 500)))
+            self.assertEqual(d.maxlen, 500)
+
+        for n in (-10, -1, 0, 1, 2, 10, 1000):
+            d = deque('abcdef')
+            d *= n
+            self.assertEqual(d, deque('abcdef' * n))
+            self.assertIsNone(d.maxlen)
+
+        for n in (-10, -1, 0, 1, 2, 10, 499, 500, 501, 1000):
+            d = deque('abcdef', 500)
+            d *= n
+            self.assertEqual(d, deque(('abcdef' * n)[-500:]))
+            self.assertEqual(d.maxlen, 500)
+
+    def test_mul(self):
+        d = deque('abc')
+        self.assertEqual(d * -5, deque())
+        self.assertEqual(d * 0, deque())
+        self.assertEqual(d * 1, deque('abc'))
+        self.assertEqual(d * 2, deque('abcabc'))
+        self.assertEqual(d * 3, deque('abcabcabc'))
+        self.assertIsNot(d * 1, d)
+
+        self.assertEqual(deque() * 0, deque())
+        self.assertEqual(deque() * 1, deque())
+        self.assertEqual(deque() * 5, deque())
+
+        self.assertEqual(-5 * d, deque())
+        self.assertEqual(0 * d, deque())
+        self.assertEqual(1 * d, deque('abc'))
+        self.assertEqual(2 * d, deque('abcabc'))
+        self.assertEqual(3 * d, deque('abcabcabc'))
+
+        d = deque('abc', maxlen=5)
+        self.assertEqual(d * -5, deque())
+        self.assertEqual(d * 0, deque())
+        self.assertEqual(d * 1, deque('abc'))
+        self.assertEqual(d * 2, deque('bcabc'))
+        self.assertEqual(d * 30, deque('bcabc'))
 
     def test_setitem(self):
         n = 200
@@ -329,7 +493,7 @@ class TestBasic(unittest.TestCase):
         d.clear()
         self.assertEqual(len(d), 0)
         self.assertEqual(list(d), [])
-        d.clear()               # clear an emtpy deque
+        d.clear()               # clear an empty deque
         self.assertEqual(list(d), [])
 
     def test_remove(self):
@@ -457,33 +621,63 @@ class TestBasic(unittest.TestCase):
         self.assertEqual(list(d), list(e))
 
     def test_pickle(self):
-        d = deque(range(200))
-        for i in range(pickle.HIGHEST_PROTOCOL + 1):
-            s = pickle.dumps(d, i)
-            e = pickle.loads(s)
-            self.assertNotEqual(id(d), id(e))
-            self.assertEqual(list(d), list(e))
+        for d in deque(range(200)), deque(range(200), 100):
+            for i in range(pickle.HIGHEST_PROTOCOL + 1):
+                s = pickle.dumps(d, i)
+                e = pickle.loads(s)
+                self.assertNotEqual(id(e), id(d))
+                self.assertEqual(list(e), list(d))
+                self.assertEqual(e.maxlen, d.maxlen)
 
-##    def test_pickle_recursive(self):
-##        d = deque('abc')
-##        d.append(d)
-##        for i in range(pickle.HIGHEST_PROTOCOL + 1):
-##            e = pickle.loads(pickle.dumps(d, i))
-##            self.assertNotEqual(id(d), id(e))
-##            self.assertEqual(id(e), id(e[-1]))
+    def test_pickle_recursive(self):
+        for d in deque('abc'), deque('abc', 3):
+            d.append(d)
+            for i in range(pickle.HIGHEST_PROTOCOL + 1):
+                e = pickle.loads(pickle.dumps(d, i))
+                self.assertNotEqual(id(e), id(d))
+                self.assertEqual(id(e[-1]), id(e))
+                self.assertEqual(e.maxlen, d.maxlen)
 
     def test_iterator_pickle(self):
-        data = deque(range(200))
-        it = itorg = iter(data)
-        d = pickle.dumps(it)
-        it = pickle.loads(d)
-        self.assertEqual(type(itorg), type(it))
-        self.assertEqual(list(it), list(data))
+        orig = deque(range(200))
+        data = [i*1.01 for i in orig]
+        for proto in range(pickle.HIGHEST_PROTOCOL + 1):
+            # initial iterator
+            itorg = iter(orig)
+            dump = pickle.dumps((itorg, orig), proto)
+            it, d = pickle.loads(dump)
+            for i, x in enumerate(data):
+                d[i] = x
+            self.assertEqual(type(it), type(itorg))
+            self.assertEqual(list(it), data)
 
-        it = pickle.loads(d)
-        next(it)
-        d = pickle.dumps(it)
-        self.assertEqual(list(it), list(data)[1:])
+            # running iterator
+            next(itorg)
+            dump = pickle.dumps((itorg, orig), proto)
+            it, d = pickle.loads(dump)
+            for i, x in enumerate(data):
+                d[i] = x
+            self.assertEqual(type(it), type(itorg))
+            self.assertEqual(list(it), data[1:])
+
+            # empty iterator
+            for i in range(1, len(data)):
+                next(itorg)
+            dump = pickle.dumps((itorg, orig), proto)
+            it, d = pickle.loads(dump)
+            for i, x in enumerate(data):
+                d[i] = x
+            self.assertEqual(type(it), type(itorg))
+            self.assertEqual(list(it), [])
+
+            # exhausted iterator
+            self.assertRaises(StopIteration, next, itorg)
+            dump = pickle.dumps((itorg, orig), proto)
+            it, d = pickle.loads(dump)
+            for i, x in enumerate(data):
+                d[i] = x
+            self.assertEqual(type(it), type(itorg))
+            self.assertEqual(list(it), [])
 
     def test_deepcopy(self):
         mut = [10]
@@ -503,9 +697,32 @@ class TestBasic(unittest.TestCase):
         self.assertNotEqual(id(d), id(e))
         self.assertEqual(list(d), list(e))
 
+        for i in range(5):
+            for maxlen in range(-1, 6):
+                s = [random.random() for j in range(i)]
+                d = deque(s) if maxlen == -1 else deque(s, maxlen)
+                e = d.copy()
+                self.assertEqual(d, e)
+                self.assertEqual(d.maxlen, e.maxlen)
+                self.assertTrue(all(x is y for x, y in zip(d, e)))
+
+    def test_copy_method(self):
+        mut = [10]
+        d = deque([mut])
+        e = d.copy()
+        self.assertEqual(list(d), list(e))
+        mut[0] = 11
+        self.assertNotEqual(id(d), id(e))
+        self.assertEqual(list(d), list(e))
+
     def test_reversed(self):
         for s in ('abcd', range(2000)):
             self.assertEqual(list(reversed(deque(s))), list(reversed(s)))
+
+    def test_reversed_new(self):
+        klass = type(reversed(deque()))
+        for s in ('abcd', range(2000)):
+            self.assertEqual(list(klass(deque(s))), list(reversed(s)))
 
     def test_gc_doesnt_blowup(self):
         import gc
@@ -536,15 +753,15 @@ class TestBasic(unittest.TestCase):
 
     @support.cpython_only
     def test_sizeof(self):
-        BLOCKLEN = 62
-        basesize = support.calcobjsize('2P4nlP')
-        blocksize = struct.calcsize('2P%dP' % BLOCKLEN)
+        BLOCKLEN = 64
+        basesize = support.calcvobjsize('2P4nP')
+        blocksize = struct.calcsize('P%dPP' % BLOCKLEN)
         self.assertEqual(object.__sizeof__(deque()), basesize)
         check = self.check_sizeof
         check(deque(), basesize + blocksize)
         check(deque('a'), basesize + blocksize)
-        check(deque('a' * (BLOCKLEN // 2)), basesize + blocksize)
-        check(deque('a' * (BLOCKLEN // 2 + 1)), basesize + 2 * blocksize)
+        check(deque('a' * (BLOCKLEN - 1)), basesize + blocksize)
+        check(deque('a' * BLOCKLEN), basesize + 2 * blocksize)
         check(deque('a' * (42 * BLOCKLEN)), basesize + 43 * blocksize)
 
 class TestVariousIteratorArgs(unittest.TestCase):
@@ -614,11 +831,12 @@ class TestSubclass(unittest.TestCase):
         self.assertEqual(type(d), type(e))
         self.assertEqual(list(d), list(e))
 
-        s = pickle.dumps(d)
-        e = pickle.loads(s)
-        self.assertNotEqual(id(d), id(e))
-        self.assertEqual(type(d), type(e))
-        self.assertEqual(list(d), list(e))
+        for proto in range(pickle.HIGHEST_PROTOCOL + 1):
+            s = pickle.dumps(d, proto)
+            e = pickle.loads(s)
+            self.assertNotEqual(id(d), id(e))
+            self.assertEqual(type(d), type(e))
+            self.assertEqual(list(d), list(e))
 
         d = Deque('abcde', maxlen=4)
 
@@ -630,30 +848,33 @@ class TestSubclass(unittest.TestCase):
         self.assertEqual(type(d), type(e))
         self.assertEqual(list(d), list(e))
 
-        s = pickle.dumps(d)
-        e = pickle.loads(s)
-        self.assertNotEqual(id(d), id(e))
-        self.assertEqual(type(d), type(e))
-        self.assertEqual(list(d), list(e))
+        for proto in range(pickle.HIGHEST_PROTOCOL + 1):
+            s = pickle.dumps(d, proto)
+            e = pickle.loads(s)
+            self.assertNotEqual(id(d), id(e))
+            self.assertEqual(type(d), type(e))
+            self.assertEqual(list(d), list(e))
 
-##    def test_pickle(self):
-##        d = Deque('abc')
-##        d.append(d)
-##
-##        e = pickle.loads(pickle.dumps(d))
-##        self.assertNotEqual(id(d), id(e))
-##        self.assertEqual(type(d), type(e))
-##        dd = d.pop()
-##        ee = e.pop()
-##        self.assertEqual(id(e), id(ee))
-##        self.assertEqual(d, e)
-##
-##        d.x = d
-##        e = pickle.loads(pickle.dumps(d))
-##        self.assertEqual(id(e), id(e.x))
-##
-##        d = DequeWithBadIter('abc')
-##        self.assertRaises(TypeError, pickle.dumps, d)
+    def test_pickle_recursive(self):
+        for proto in range(pickle.HIGHEST_PROTOCOL + 1):
+            for d in Deque('abc'), Deque('abc', 3):
+                d.append(d)
+
+                e = pickle.loads(pickle.dumps(d, proto))
+                self.assertNotEqual(id(e), id(d))
+                self.assertEqual(type(e), type(d))
+                self.assertEqual(e.maxlen, d.maxlen)
+                dd = d.pop()
+                ee = e.pop()
+                self.assertEqual(id(ee), id(e))
+                self.assertEqual(e, d)
+
+                d.x = d
+                e = pickle.loads(pickle.dumps(d, proto))
+                self.assertEqual(id(e.x), id(e))
+
+            for d in DequeWithBadIter('abc'), DequeWithBadIter('abc', 2):
+                self.assertRaises(TypeError, pickle.dumps, d, proto)
 
     def test_weakref(self):
         d = deque('gallahad')
@@ -680,6 +901,25 @@ class TestSubclassWithKwargs(unittest.TestCase):
     def test_subclass_with_kwargs(self):
         # SF bug #1486663 -- this used to erroneously raise a TypeError
         SubclassWithKwargs(newarg=1)
+
+class TestSequence(seq_tests.CommonTest):
+    type2test = deque
+
+    def test_getitem(self):
+        # For now, bypass tests that require slicing
+        pass
+
+    def test_getslice(self):
+        # For now, bypass tests that require slicing
+        pass
+
+    def test_subscript(self):
+        # For now, bypass tests that require slicing
+        pass
+
+    def test_free_after_iterating(self):
+        # For now, bypass tests that require slicing
+        self.skipTest("Exhausted deque iterator doesn't free a deque")
 
 #==============================================================================
 
@@ -795,6 +1035,7 @@ def test_main(verbose=None):
         TestVariousIteratorArgs,
         TestSubclass,
         TestSubclassWithKwargs,
+        TestSequence,
     )
 
     support.run_unittest(*test_classes)

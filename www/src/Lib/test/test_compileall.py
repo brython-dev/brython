@@ -1,28 +1,37 @@
 import sys
 import compileall
-import imp
+import importlib.util
+import test.test_importlib.util
 import os
+import pathlib
 import py_compile
 import shutil
 import struct
-import subprocess
 import tempfile
 import time
 import unittest
 import io
 
-from test import support, script_helper
+from unittest import mock, skipUnless
+try:
+    from concurrent.futures import ProcessPoolExecutor
+    _have_multiprocessing = True
+except ImportError:
+    _have_multiprocessing = False
+
+from test import support
+from test.support import script_helper
 
 class CompileallTests(unittest.TestCase):
 
     def setUp(self):
         self.directory = tempfile.mkdtemp()
         self.source_path = os.path.join(self.directory, '_test.py')
-        self.bc_path = imp.cache_from_source(self.source_path)
+        self.bc_path = importlib.util.cache_from_source(self.source_path)
         with open(self.source_path, 'w') as file:
             file.write('x = 123\n')
         self.source_path2 = os.path.join(self.directory, '_test2.py')
-        self.bc_path2 = imp.cache_from_source(self.source_path2)
+        self.bc_path2 = importlib.util.cache_from_source(self.source_path2)
         shutil.copyfile(self.source_path, self.source_path2)
         self.subdirectory = os.path.join(self.directory, '_subdir')
         os.mkdir(self.subdirectory)
@@ -32,18 +41,22 @@ class CompileallTests(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.directory)
 
+    def add_bad_source_file(self):
+        self.bad_source_path = os.path.join(self.directory, '_test_bad.py')
+        with open(self.bad_source_path, 'w') as file:
+            file.write('x (\n')
+
     def data(self):
         with open(self.bc_path, 'rb') as file:
-            data = file.read(8)
+            data = file.read(12)
         mtime = int(os.stat(self.source_path).st_mtime)
-        compare = struct.pack('<4sl', imp.get_magic(), mtime)
+        compare = struct.pack('<4sll', importlib.util.MAGIC_NUMBER, 0, mtime)
         return data, compare
 
+    @unittest.skipUnless(hasattr(os, 'stat'), 'test needs os.stat()')
     def recreation_check(self, metadata):
         """Check that compileall recreates bytecode when the new metadata is
         used."""
-        if not hasattr(os, 'stat'):
-            return
         py_compile.compile(self.source_path)
         self.assertEqual(*self.data())
         with open(self.bc_path, 'rb') as file:
@@ -57,7 +70,8 @@ class CompileallTests(unittest.TestCase):
 
     def test_mtime(self):
         # Test a change in mtime leads to a new .pyc.
-        self.recreation_check(struct.pack('<4sl', imp.get_magic(), 1))
+        self.recreation_check(struct.pack('<4sll', importlib.util.MAGIC_NUMBER,
+                                          0, 1))
 
     def test_magic_number(self):
         # Test a change in mtime leads to a new .pyc.
@@ -70,15 +84,47 @@ class CompileallTests(unittest.TestCase):
                 os.unlink(fn)
             except:
                 pass
-        compileall.compile_file(self.source_path, force=False, quiet=True)
+        self.assertTrue(compileall.compile_file(self.source_path,
+                                                force=False, quiet=True))
         self.assertTrue(os.path.isfile(self.bc_path) and
                         not os.path.isfile(self.bc_path2))
         os.unlink(self.bc_path)
-        compileall.compile_dir(self.directory, force=False, quiet=True)
+        self.assertTrue(compileall.compile_dir(self.directory, force=False,
+                                               quiet=True))
         self.assertTrue(os.path.isfile(self.bc_path) and
                         os.path.isfile(self.bc_path2))
         os.unlink(self.bc_path)
         os.unlink(self.bc_path2)
+        # Test against bad files
+        self.add_bad_source_file()
+        self.assertFalse(compileall.compile_file(self.bad_source_path,
+                                                 force=False, quiet=2))
+        self.assertFalse(compileall.compile_dir(self.directory,
+                                                force=False, quiet=2))
+
+    def test_compile_file_pathlike(self):
+        self.assertFalse(os.path.isfile(self.bc_path))
+        # we should also test the output
+        with support.captured_stdout() as stdout:
+            self.assertTrue(compileall.compile_file(pathlib.Path(self.source_path)))
+        self.assertRegex(stdout.getvalue(), r'Compiling ([^WindowsPath|PosixPath].*)')
+        self.assertTrue(os.path.isfile(self.bc_path))
+
+    def test_compile_file_pathlike_ddir(self):
+        self.assertFalse(os.path.isfile(self.bc_path))
+        self.assertTrue(compileall.compile_file(pathlib.Path(self.source_path),
+                                                ddir=pathlib.Path('ddir_path'),
+                                                quiet=2))
+        self.assertTrue(os.path.isfile(self.bc_path))
+
+    def test_compile_path(self):
+        with test.test_importlib.util.import_state(path=[self.directory]):
+            self.assertTrue(compileall.compile_path(quiet=2))
+
+        with test.test_importlib.util.import_state(path=[self.directory]):
+            self.add_bad_source_file()
+            self.assertFalse(compileall.compile_path(skip_curdir=False,
+                                                     force=True, quiet=2))
 
     def test_no_pycache_in_non_package(self):
         # Bug 8563 reported that __pycache__ directories got created by
@@ -95,18 +141,53 @@ class CompileallTests(unittest.TestCase):
     def test_optimize(self):
         # make sure compiling with different optimization settings than the
         # interpreter's creates the correct file names
-        optimize = 1 if __debug__ else 0
+        optimize, opt = (1, 1) if __debug__ else (0, '')
         compileall.compile_dir(self.directory, quiet=True, optimize=optimize)
-        cached = imp.cache_from_source(self.source_path,
-                                       debug_override=not optimize)
+        cached = importlib.util.cache_from_source(self.source_path,
+                                                  optimization=opt)
         self.assertTrue(os.path.isfile(cached))
-        cached2 = imp.cache_from_source(self.source_path2,
-                                       debug_override=not optimize)
+        cached2 = importlib.util.cache_from_source(self.source_path2,
+                                                   optimization=opt)
         self.assertTrue(os.path.isfile(cached2))
-        cached3 = imp.cache_from_source(self.source_path3,
-                                       debug_override=not optimize)
+        cached3 = importlib.util.cache_from_source(self.source_path3,
+                                                   optimization=opt)
         self.assertTrue(os.path.isfile(cached3))
 
+    def test_compile_dir_pathlike(self):
+        self.assertFalse(os.path.isfile(self.bc_path))
+        with support.captured_stdout() as stdout:
+            compileall.compile_dir(pathlib.Path(self.directory))
+        line = stdout.getvalue().splitlines()[0]
+        self.assertRegex(line, r'Listing ([^WindowsPath|PosixPath].*)')
+        self.assertTrue(os.path.isfile(self.bc_path))
+
+    @mock.patch('compileall.ProcessPoolExecutor')
+    def test_compile_pool_called(self, pool_mock):
+        compileall.compile_dir(self.directory, quiet=True, workers=5)
+        self.assertTrue(pool_mock.called)
+
+    def test_compile_workers_non_positive(self):
+        with self.assertRaisesRegex(ValueError,
+                                    "workers must be greater or equal to 0"):
+            compileall.compile_dir(self.directory, workers=-1)
+
+    @mock.patch('compileall.ProcessPoolExecutor')
+    def test_compile_workers_cpu_count(self, pool_mock):
+        compileall.compile_dir(self.directory, quiet=True, workers=0)
+        self.assertEqual(pool_mock.call_args[1]['max_workers'], None)
+
+    @mock.patch('compileall.ProcessPoolExecutor')
+    @mock.patch('compileall.compile_file')
+    def test_compile_one_worker(self, compile_file_mock, pool_mock):
+        compileall.compile_dir(self.directory, quiet=True)
+        self.assertFalse(pool_mock.called)
+        self.assertTrue(compile_file_mock.called)
+
+    @mock.patch('compileall.ProcessPoolExecutor', new=None)
+    @mock.patch('compileall.compile_file')
+    def test_compile_missing_multiprocessing(self, compile_file_mock):
+        compileall.compile_dir(self.directory, quiet=True, workers=5)
+        self.assertTrue(compile_file_mock.called)
 
 class EncodingTest(unittest.TestCase):
     """Issue 6716: compileall should escape source code when printing errors
@@ -134,11 +215,37 @@ class EncodingTest(unittest.TestCase):
 class CommandLineTests(unittest.TestCase):
     """Test compileall's CLI."""
 
+    @classmethod
+    def setUpClass(cls):
+        for path in filter(os.path.isdir, sys.path):
+            directory_created = False
+            directory = pathlib.Path(path) / '__pycache__'
+            path = directory / 'test.try'
+            try:
+                if not directory.is_dir():
+                    directory.mkdir()
+                    directory_created = True
+                with path.open('w') as file:
+                    file.write('# for test_compileall')
+            except OSError:
+                sys_path_writable = False
+                break
+            finally:
+                support.unlink(str(path))
+                if directory_created:
+                    directory.rmdir()
+        else:
+            sys_path_writable = True
+        cls._sys_path_writable = sys_path_writable
+
+    def _skip_if_sys_path_not_writable(self):
+        if not self._sys_path_writable:
+            raise unittest.SkipTest('not all entries on sys.path are writable')
+
     def _get_run_args(self, args):
-        interp_args = ['-S']
-        if sys.flags.optimize:
-            interp_args.append({1 : '-O', 2 : '-OO'}[sys.flags.optimize])
-        return interp_args + ['-m', 'compileall'] + list(args)
+        return [*support.optim_args_from_interpreter_flags(),
+                '-S', '-m', 'compileall',
+                *args]
 
     def assertRunOK(self, *args, **env_vars):
         rc, out, err = script_helper.assert_python_ok(
@@ -152,14 +259,16 @@ class CommandLineTests(unittest.TestCase):
         return rc, out, err
 
     def assertCompiled(self, fn):
-        self.assertTrue(os.path.exists(imp.cache_from_source(fn)))
+        path = importlib.util.cache_from_source(fn)
+        self.assertTrue(os.path.exists(path))
 
     def assertNotCompiled(self, fn):
-        self.assertFalse(os.path.exists(imp.cache_from_source(fn)))
+        path = importlib.util.cache_from_source(fn)
+        self.assertFalse(os.path.exists(path))
 
     def setUp(self):
-        self.addCleanup(self._cleanup)
         self.directory = tempfile.mkdtemp()
+        self.addCleanup(support.rmtree, self.directory)
         self.pkgdir = os.path.join(self.directory, 'foo')
         os.mkdir(self.pkgdir)
         self.pkgdir_cachedir = os.path.join(self.pkgdir, '__pycache__')
@@ -167,31 +276,54 @@ class CommandLineTests(unittest.TestCase):
         self.initfn = script_helper.make_script(self.pkgdir, '__init__', '')
         self.barfn = script_helper.make_script(self.pkgdir, 'bar', '')
 
-    def _cleanup(self):
-        support.rmtree(self.directory)
-
     def test_no_args_compiles_path(self):
         # Note that -l is implied for the no args case.
+        self._skip_if_sys_path_not_writable()
         bazfn = script_helper.make_script(self.directory, 'baz', '')
         self.assertRunOK(PYTHONPATH=self.directory)
         self.assertCompiled(bazfn)
         self.assertNotCompiled(self.initfn)
         self.assertNotCompiled(self.barfn)
 
+    def test_no_args_respects_force_flag(self):
+        self._skip_if_sys_path_not_writable()
+        bazfn = script_helper.make_script(self.directory, 'baz', '')
+        self.assertRunOK(PYTHONPATH=self.directory)
+        pycpath = importlib.util.cache_from_source(bazfn)
+        # Set atime/mtime backward to avoid file timestamp resolution issues
+        os.utime(pycpath, (time.time()-60,)*2)
+        mtime = os.stat(pycpath).st_mtime
+        # Without force, no recompilation
+        self.assertRunOK(PYTHONPATH=self.directory)
+        mtime2 = os.stat(pycpath).st_mtime
+        self.assertEqual(mtime, mtime2)
+        # Now force it.
+        self.assertRunOK('-f', PYTHONPATH=self.directory)
+        mtime2 = os.stat(pycpath).st_mtime
+        self.assertNotEqual(mtime, mtime2)
+
+    def test_no_args_respects_quiet_flag(self):
+        self._skip_if_sys_path_not_writable()
+        script_helper.make_script(self.directory, 'baz', '')
+        noisy = self.assertRunOK(PYTHONPATH=self.directory)
+        self.assertIn(b'Listing ', noisy)
+        quiet = self.assertRunOK('-q', PYTHONPATH=self.directory)
+        self.assertNotIn(b'Listing ', quiet)
+
     # Ensure that the default behavior of compileall's CLI is to create
-    # PEP 3147 pyc/pyo files.
+    # PEP 3147/PEP 488 pyc files.
     for name, ext, switch in [
         ('normal', 'pyc', []),
-        ('optimize', 'pyo', ['-O']),
-        ('doubleoptimize', 'pyo', ['-OO']),
+        ('optimize', 'opt-1.pyc', ['-O']),
+        ('doubleoptimize', 'opt-2.pyc', ['-OO']),
     ]:
         def f(self, ext=ext, switch=switch):
             script_helper.assert_python_ok(*(switch +
                 ['-m', 'compileall', '-q', self.pkgdir]))
             # Verify the __pycache__ directory contents.
             self.assertTrue(os.path.exists(self.pkgdir_cachedir))
-            expected = sorted(base.format(imp.get_tag(), ext) for base in
-                              ('__init__.{}.{}', 'bar.{}.{}'))
+            expected = sorted(base.format(sys.implementation.cache_tag, ext)
+                              for base in ('__init__.{}.{}', 'bar.{}.{}'))
             self.assertEqual(sorted(os.listdir(self.pkgdir_cachedir)), expected)
             # Make sure there are no .pyc files in the source directory.
             self.assertFalse([fn for fn in os.listdir(self.pkgdir)
@@ -200,13 +332,12 @@ class CommandLineTests(unittest.TestCase):
 
     def test_legacy_paths(self):
         # Ensure that with the proper switch, compileall leaves legacy
-        # pyc/pyo files, and no __pycache__ directory.
+        # pyc files, and no __pycache__ directory.
         self.assertRunOK('-b', '-q', self.pkgdir)
         # Verify the __pycache__ directory contents.
         self.assertFalse(os.path.exists(self.pkgdir_cachedir))
-        opt = 'c' if __debug__ else 'o'
-        expected = sorted(['__init__.py', '__init__.py' + opt, 'bar.py',
-                           'bar.py' + opt])
+        expected = sorted(['__init__.py', '__init__.pyc', 'bar.py',
+                           'bar.pyc'])
         self.assertEqual(sorted(os.listdir(self.pkgdir)), expected)
 
     def test_multiple_runs(self):
@@ -224,7 +355,7 @@ class CommandLineTests(unittest.TestCase):
 
     def test_force(self):
         self.assertRunOK('-q', self.pkgdir)
-        pycpath = imp.cache_from_source(self.barfn)
+        pycpath = importlib.util.cache_from_source(self.barfn)
         # set atime/mtime backward to avoid file timestamp resolution issues
         os.utime(pycpath, (time.time()-60,)*2)
         mtime = os.stat(pycpath).st_mtime
@@ -249,11 +380,52 @@ class CommandLineTests(unittest.TestCase):
         self.assertCompiled(subinitfn)
         self.assertCompiled(hamfn)
 
+    def test_recursion_limit(self):
+        subpackage = os.path.join(self.pkgdir, 'spam')
+        subpackage2 = os.path.join(subpackage, 'ham')
+        subpackage3 = os.path.join(subpackage2, 'eggs')
+        for pkg in (subpackage, subpackage2, subpackage3):
+            script_helper.make_pkg(pkg)
+
+        subinitfn = os.path.join(subpackage, '__init__.py')
+        hamfn = script_helper.make_script(subpackage, 'ham', '')
+        spamfn = script_helper.make_script(subpackage2, 'spam', '')
+        eggfn = script_helper.make_script(subpackage3, 'egg', '')
+
+        self.assertRunOK('-q', '-r 0', self.pkgdir)
+        self.assertNotCompiled(subinitfn)
+        self.assertFalse(
+            os.path.exists(os.path.join(subpackage, '__pycache__')))
+
+        self.assertRunOK('-q', '-r 1', self.pkgdir)
+        self.assertCompiled(subinitfn)
+        self.assertCompiled(hamfn)
+        self.assertNotCompiled(spamfn)
+
+        self.assertRunOK('-q', '-r 2', self.pkgdir)
+        self.assertCompiled(subinitfn)
+        self.assertCompiled(hamfn)
+        self.assertCompiled(spamfn)
+        self.assertNotCompiled(eggfn)
+
+        self.assertRunOK('-q', '-r 5', self.pkgdir)
+        self.assertCompiled(subinitfn)
+        self.assertCompiled(hamfn)
+        self.assertCompiled(spamfn)
+        self.assertCompiled(eggfn)
+
     def test_quiet(self):
         noisy = self.assertRunOK(self.pkgdir)
         quiet = self.assertRunOK('-q', self.pkgdir)
         self.assertNotEqual(b'', noisy)
         self.assertEqual(b'', quiet)
+
+    def test_silent(self):
+        script_helper.make_script(self.pkgdir, 'crunchyfrog', 'bad(syntax')
+        _, quiet, _ = self.assertRunNotOK('-q', self.pkgdir)
+        _, silent, _ = self.assertRunNotOK('-qq', self.pkgdir)
+        self.assertNotEqual(b'', quiet)
+        self.assertEqual(b'', silent)
 
     def test_regexp(self):
         self.assertRunOK('-q', '-x', r'ba[^\\/]*$', self.pkgdir)
@@ -271,14 +443,6 @@ class CommandLineTests(unittest.TestCase):
         self.assertCompiled(init2fn)
         self.assertCompiled(bar2fn)
 
-    def test_d_takes_exactly_one_dir(self):
-        rc, out, err = self.assertRunNotOK('-d', 'foo')
-        self.assertEqual(out, b'')
-        self.assertRegex(err, b'-d')
-        rc, out, err = self.assertRunNotOK('-d', 'foo', 'bar')
-        self.assertEqual(out, b'')
-        self.assertRegex(err, b'-d')
-
     def test_d_compile_error(self):
         script_helper.make_script(self.pkgdir, 'crunchyfrog', 'bad(syntax')
         rc, out, err = self.assertRunNotOK('-q', '-d', 'dinsdale', self.pkgdir)
@@ -288,10 +452,10 @@ class CommandLineTests(unittest.TestCase):
         bazfn = script_helper.make_script(self.pkgdir, 'baz', 'raise Exception')
         self.assertRunOK('-q', '-d', 'dinsdale', self.pkgdir)
         fn = script_helper.make_script(self.pkgdir, 'bing', 'import baz')
-        pyc = imp.cache_from_source(bazfn)
+        pyc = importlib.util.cache_from_source(bazfn)
         os.rename(pyc, os.path.join(self.pkgdir, 'baz.pyc'))
         os.remove(bazfn)
-        rc, out, err = script_helper.assert_python_failure(fn)
+        rc, out, err = script_helper.assert_python_failure(fn, __isolated=False)
         self.assertRegex(err, b'File "dinsdale')
 
     def test_include_bad_file(self):
@@ -299,7 +463,7 @@ class CommandLineTests(unittest.TestCase):
             '-i', os.path.join(self.directory, 'nosuchfile'), self.pkgdir)
         self.assertRegex(out, b'rror.*nosuchfile')
         self.assertNotRegex(err, b'Traceback')
-        self.assertFalse(os.path.exists(imp.cache_from_source(
+        self.assertFalse(os.path.exists(importlib.util.cache_from_source(
                                             self.pkgdir_cachedir)))
 
     def test_include_file_with_arg(self):
@@ -355,14 +519,42 @@ class CommandLineTests(unittest.TestCase):
         out = self.assertRunOK('badfilename')
         self.assertRegex(out, b"Can't list 'badfilename'")
 
+    def test_pyc_invalidation_mode(self):
+        script_helper.make_script(self.pkgdir, 'f1', '')
+        pyc = importlib.util.cache_from_source(
+            os.path.join(self.pkgdir, 'f1.py'))
+        self.assertRunOK('--invalidation-mode=checked-hash', self.pkgdir)
+        with open(pyc, 'rb') as fp:
+            data = fp.read()
+        self.assertEqual(int.from_bytes(data[4:8], 'little'), 0b11)
+        self.assertRunOK('--invalidation-mode=unchecked-hash', self.pkgdir)
+        with open(pyc, 'rb') as fp:
+            data = fp.read()
+        self.assertEqual(int.from_bytes(data[4:8], 'little'), 0b01)
 
-def test_main():
-    support.run_unittest(
-        CommandLineTests,
-        CompileallTests,
-        EncodingTest,
-        )
+    @skipUnless(_have_multiprocessing, "requires multiprocessing")
+    def test_workers(self):
+        bar2fn = script_helper.make_script(self.directory, 'bar2', '')
+        files = []
+        for suffix in range(5):
+            pkgdir = os.path.join(self.directory, 'foo{}'.format(suffix))
+            os.mkdir(pkgdir)
+            fn = script_helper.make_script(pkgdir, '__init__', '')
+            files.append(script_helper.make_script(pkgdir, 'bar2', ''))
+
+        self.assertRunOK(self.directory, '-j', '0')
+        self.assertCompiled(bar2fn)
+        for file in files:
+            self.assertCompiled(file)
+
+    @mock.patch('compileall.compile_dir')
+    def test_workers_available_cores(self, compile_dir):
+        with mock.patch("sys.argv",
+                        new=[sys.executable, self.directory, "-j0"]):
+            compileall.main()
+            self.assertTrue(compile_dir.called)
+            self.assertEqual(compile_dir.call_args[-1]['workers'], None)
 
 
 if __name__ == "__main__":
-    test_main()
+    unittest.main()

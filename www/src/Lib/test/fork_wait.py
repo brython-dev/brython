@@ -10,8 +10,9 @@ active threads survive in the child after a fork(); this is an error.
 """
 
 import os, sys, time, unittest
+import threading
 import test.support as support
-_thread = support.import_module('_thread')
+
 
 LONGSLEEP = 2
 SHORTSLEEP = 0.5
@@ -20,15 +21,26 @@ NUM_THREADS = 4
 class ForkWait(unittest.TestCase):
 
     def setUp(self):
+        self._threading_key = support.threading_setup()
         self.alive = {}
         self.stop = 0
+        self.threads = []
+
+    def tearDown(self):
+        # Stop threads
+        self.stop = 1
+        for thread in self.threads:
+            thread.join()
+        thread = None
+        self.threads.clear()
+        support.threading_cleanup(*self._threading_key)
 
     def f(self, id):
         while not self.stop:
             self.alive[id] = os.getpid()
             try:
                 time.sleep(SHORTSLEEP)
-            except IOError:
+            except OSError:
                 pass
 
     def wait_impl(self, cpid):
@@ -43,12 +55,18 @@ class ForkWait(unittest.TestCase):
         self.assertEqual(spid, cpid)
         self.assertEqual(status, 0, "cause = %d, exit = %d" % (status&0xff, status>>8))
 
-    @support.reap_threads
     def test_wait(self):
         for i in range(NUM_THREADS):
-            _thread.start_new(self.f, (i,))
+            thread = threading.Thread(target=self.f, args=(i,))
+            thread.start()
+            self.threads.append(thread)
 
-        time.sleep(LONGSLEEP)
+        # busy-loop to wait for threads
+        deadline = time.monotonic() + 10.0
+        while len(self.alive) < NUM_THREADS:
+            time.sleep(0.1)
+            if deadline < time.monotonic():
+                break
 
         a = sorted(self.alive.keys())
         self.assertEqual(a, list(range(NUM_THREADS)))
@@ -70,8 +88,4 @@ class ForkWait(unittest.TestCase):
             os._exit(n)
         else:
             # Parent
-            try:
-                self.wait_impl(cpid)
-            finally:
-                # Tell threads to die
-                self.stop = 1
+            self.wait_impl(cpid)

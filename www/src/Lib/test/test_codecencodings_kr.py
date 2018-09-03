@@ -1,10 +1,8 @@
-#!/usr/bin/env python3
 #
 # test_codecencodings_kr.py
 #   Codec encoding tests for ROK encodings.
 #
 
-from test import support
 from test import multibytecodec_support
 import unittest
 
@@ -67,8 +65,5 @@ class Test_JOHAB(multibytecodec_support.TestBase, unittest.TestCase):
         (b"\x8CBxy", "replace",  "\uFFFDBxy"),
     )
 
-def test_main():
-    support.run_unittest(__name__)
-
 if __name__ == "__main__":
-    test_main()
+    unittest.main()

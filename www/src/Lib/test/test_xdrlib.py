@@ -1,4 +1,3 @@
-from test import support
 import unittest
 
 import xdrlib
@@ -51,8 +50,28 @@ class XDRTest(unittest.TestCase):
         up.done()
         self.assertRaises(EOFError, up.unpack_uint)
 
-def test_main():
-    support.run_unittest(XDRTest)
+class ConversionErrorTest(unittest.TestCase):
+
+    def setUp(self):
+        self.packer = xdrlib.Packer()
+
+    def assertRaisesConversion(self, *args):
+        self.assertRaises(xdrlib.ConversionError, *args)
+
+    def test_pack_int(self):
+        self.assertRaisesConversion(self.packer.pack_int, 'string')
+
+    def test_pack_uint(self):
+        self.assertRaisesConversion(self.packer.pack_uint, 'string')
+
+    def test_float(self):
+        self.assertRaisesConversion(self.packer.pack_float, 'string')
+
+    def test_double(self):
+        self.assertRaisesConversion(self.packer.pack_double, 'string')
+
+    def test_uhyper(self):
+        self.assertRaisesConversion(self.packer.pack_uhyper, 'string')
 
 if __name__ == "__main__":
-    test_main()
+    unittest.main()

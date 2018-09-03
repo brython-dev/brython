@@ -7,6 +7,7 @@ import time
 from _thread import start_new_thread, TIMEOUT_MAX
 import threading
 import unittest
+import weakref
 
 from test import support
 
@@ -30,6 +31,9 @@ class Bunch(object):
         self.started = []
         self.finished = []
         self._can_exit = not wait_before_exit
+        self.wait_thread = support.wait_threads_exit()
+        self.wait_thread.__enter__()
+
         def task():
             tid = threading.get_ident()
             self.started.append(tid)
@@ -39,8 +43,13 @@ class Bunch(object):
                 self.finished.append(tid)
                 while not self._can_exit:
                     _wait()
-        for i in range(n):
-            start_new_thread(task, ())
+
+        try:
+            for i in range(n):
+                start_new_thread(task, ())
+        except:
+            self._can_exit = True
+            raise
 
     def wait_for_started(self):
         while len(self.started) < self.n:
@@ -49,6 +58,8 @@ class Bunch(object):
     def wait_for_finished(self):
         while len(self.finished) < self.n:
             _wait()
+        # Wait for threads exit
+        self.wait_thread.__exit__(None, None, None)
 
     def do_finish(self):
         self._can_exit = True
@@ -78,6 +89,17 @@ class BaseLockTests(BaseTestCase):
 
     def test_constructor(self):
         lock = self.locktype()
+        del lock
+
+    def test_repr(self):
+        lock = self.locktype()
+        self.assertRegex(repr(lock), "<unlocked .* object (.*)?at .*>")
+        del lock
+
+    def test_locked_repr(self):
+        lock = self.locktype()
+        lock.acquire()
+        self.assertRegex(repr(lock), "<locked .* object (.*)?at .*>")
         del lock
 
     def test_acquire_destroy(self):
@@ -183,6 +205,17 @@ class BaseLockTests(BaseTestCase):
         self.assertFalse(results[0])
         self.assertTimeout(results[1], 0.5)
 
+    def test_weakref_exists(self):
+        lock = self.locktype()
+        ref = weakref.ref(lock)
+        self.assertIsNotNone(ref())
+
+    def test_weakref_deleted(self):
+        lock = self.locktype()
+        ref = weakref.ref(lock)
+        del lock
+        self.assertIsNone(ref())
+
 
 class LockTests(BaseLockTests):
     """
@@ -193,20 +226,23 @@ class LockTests(BaseLockTests):
         # Lock needs to be released before re-acquiring.
         lock = self.locktype()
         phase = []
+
         def f():
             lock.acquire()
             phase.append(None)
             lock.acquire()
             phase.append(None)
-        start_new_thread(f, ())
-        while len(phase) == 0:
+
+        with support.wait_threads_exit():
+            start_new_thread(f, ())
+            while len(phase) == 0:
+                _wait()
             _wait()
-        _wait()
-        self.assertEqual(len(phase), 1)
-        lock.release()
-        while len(phase) == 1:
-            _wait()
-        self.assertEqual(len(phase), 2)
+            self.assertEqual(len(phase), 1)
+            lock.release()
+            while len(phase) == 1:
+                _wait()
+            self.assertEqual(len(phase), 2)
 
     def test_different_thread(self):
         # Lock can be released from a different thread.
@@ -277,6 +313,7 @@ class RLockTests(BaseLockTests):
             self.assertRaises(RuntimeError, lock.release)
         finally:
             b.do_finish()
+        b.wait_for_finished()
 
     def test__is_owned(self):
         lock = self.locktype()
@@ -379,6 +416,15 @@ class EventTests(BaseTestCase):
         b.wait_for_finished()
         self.assertEqual(results, [True] * N)
 
+    def test_reset_internal_locks(self):
+        # ensure that condition is still using a Lock after reset
+        evt = self.eventtype()
+        with evt._cond:
+            self.assertFalse(evt._cond.acquire(False))
+        evt._reset_internal_locks()
+        with evt._cond:
+            self.assertFalse(evt._cond.acquire(False))
+
 
 class ConditionTests(BaseTestCase):
     """
@@ -413,22 +459,40 @@ class ConditionTests(BaseTestCase):
         self.assertRaises(RuntimeError, cond.notify)
 
     def _check_notify(self, cond):
+        # Note that this test is sensitive to timing.  If the worker threads
+        # don't execute in a timely fashion, the main thread may think they
+        # are further along then they are.  The main thread therefore issues
+        # _wait() statements to try to make sure that it doesn't race ahead
+        # of the workers.
+        # Secondly, this test assumes that condition variables are not subject
+        # to spurious wakeups.  The absence of spurious wakeups is an implementation
+        # detail of Condition Cariables in current CPython, but in general, not
+        # a guaranteed property of condition variables as a programming
+        # construct.  In particular, it is possible that this can no longer
+        # be conveniently guaranteed should their implementation ever change.
         N = 5
+        ready = []
         results1 = []
         results2 = []
         phase_num = 0
         def f():
             cond.acquire()
+            ready.append(phase_num)
             result = cond.wait()
             cond.release()
             results1.append((result, phase_num))
             cond.acquire()
+            ready.append(phase_num)
             result = cond.wait()
             cond.release()
             results2.append((result, phase_num))
         b = Bunch(f, N)
         b.wait_for_started()
-        _wait()
+        # first wait, to ensure all workers settle into cond.wait() before
+        # we continue. See issues #8799 and #30727.
+        while len(ready) < 5:
+            _wait()
+        ready.clear()
         self.assertEqual(results1, [])
         # Notify 3 threads at first
         cond.acquire()
@@ -440,6 +504,9 @@ class ConditionTests(BaseTestCase):
             _wait()
         self.assertEqual(results1, [(True, 1)] * 3)
         self.assertEqual(results2, [])
+        # make sure all awaken workers settle into cond.wait()
+        while len(ready) < 3:
+            _wait()
         # Notify 5 threads: they might be in their first or second wait
         cond.acquire()
         cond.notify(5)
@@ -450,6 +517,9 @@ class ConditionTests(BaseTestCase):
             _wait()
         self.assertEqual(results1, [(True, 1)] * 3 + [(True, 2)] * 2)
         self.assertEqual(results2, [(True, 2)] * 3)
+        # make sure all workers settle into cond.wait()
+        while len(ready) < 5:
+            _wait()
         # Notify all threads: they are all in their second wait
         cond.acquire()
         cond.notify_all()
@@ -559,13 +629,14 @@ class BaseSemaphoreTests(BaseTestCase):
         sem = self.semtype(7)
         sem.acquire()
         N = 10
+        sem_results = []
         results1 = []
         results2 = []
         phase_num = 0
         def f():
-            sem.acquire()
+            sem_results.append(sem.acquire())
             results1.append(phase_num)
-            sem.acquire()
+            sem_results.append(sem.acquire())
             results2.append(phase_num)
         b = Bunch(f, 10)
         b.wait_for_started()
@@ -589,6 +660,7 @@ class BaseSemaphoreTests(BaseTestCase):
         # Final release, to let the last thread finish
         sem.release()
         b.wait_for_finished()
+        self.assertEqual(sem_results, [True] * (6 + 7 + 6 + 1))
 
     def test_try_acquire(self):
         sem = self.semtype(2)

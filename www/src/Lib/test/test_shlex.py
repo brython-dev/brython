@@ -3,7 +3,6 @@ import shlex
 import string
 import unittest
 
-from test import support
 
 
 # The original test data set was from shellwords, by Hartmut Goebel.
@@ -174,6 +173,126 @@ class ShlexTest(unittest.TestCase):
                              "%s: %s != %s" %
                              (self.data[i][0], l, self.data[i][1:]))
 
+    def testSyntaxSplitAmpersandAndPipe(self):
+        """Test handling of syntax splitting of &, |"""
+        # Could take these forms: &&, &, |&, ;&, ;;&
+        # of course, the same applies to | and ||
+        # these should all parse to the same output
+        for delimiter in ('&&', '&', '|&', ';&', ';;&',
+                          '||', '|', '&|', ';|', ';;|'):
+            src = ['echo hi %s echo bye' % delimiter,
+                   'echo hi%secho bye' % delimiter]
+            ref = ['echo', 'hi', delimiter, 'echo', 'bye']
+            for ss in src:
+                s = shlex.shlex(ss, punctuation_chars=True)
+                result = list(s)
+                self.assertEqual(ref, result, "While splitting '%s'" % ss)
+
+    def testSyntaxSplitSemicolon(self):
+        """Test handling of syntax splitting of ;"""
+        # Could take these forms: ;, ;;, ;&, ;;&
+        # these should all parse to the same output
+        for delimiter in (';', ';;', ';&', ';;&'):
+            src = ['echo hi %s echo bye' % delimiter,
+                   'echo hi%s echo bye' % delimiter,
+                   'echo hi%secho bye' % delimiter]
+            ref = ['echo', 'hi', delimiter, 'echo', 'bye']
+            for ss in src:
+                s = shlex.shlex(ss, punctuation_chars=True)
+                result = list(s)
+                self.assertEqual(ref, result, "While splitting '%s'" % ss)
+
+    def testSyntaxSplitRedirect(self):
+        """Test handling of syntax splitting of >"""
+        # of course, the same applies to <, |
+        # these should all parse to the same output
+        for delimiter in ('<', '|'):
+            src = ['echo hi %s out' % delimiter,
+                   'echo hi%s out' % delimiter,
+                   'echo hi%sout' % delimiter]
+            ref = ['echo', 'hi', delimiter, 'out']
+            for ss in src:
+                s = shlex.shlex(ss, punctuation_chars=True)
+                result = list(s)
+                self.assertEqual(ref, result, "While splitting '%s'" % ss)
+
+    def testSyntaxSplitParen(self):
+        """Test handling of syntax splitting of ()"""
+        # these should all parse to the same output
+        src = ['( echo hi )',
+               '(echo hi)']
+        ref = ['(', 'echo', 'hi', ')']
+        for ss in src:
+            s = shlex.shlex(ss, punctuation_chars=True)
+            result = list(s)
+            self.assertEqual(ref, result, "While splitting '%s'" % ss)
+
+    def testSyntaxSplitCustom(self):
+        """Test handling of syntax splitting with custom chars"""
+        ref = ['~/a', '&', '&', 'b-c', '--color=auto', '||', 'd', '*.py?']
+        ss = "~/a && b-c --color=auto || d *.py?"
+        s = shlex.shlex(ss, punctuation_chars="|")
+        result = list(s)
+        self.assertEqual(ref, result, "While splitting '%s'" % ss)
+
+    def testTokenTypes(self):
+        """Test that tokens are split with types as expected."""
+        for source, expected in (
+                                ('a && b || c',
+                                 [('a', 'a'), ('&&', 'c'), ('b', 'a'),
+                                  ('||', 'c'), ('c', 'a')]),
+                              ):
+            s = shlex.shlex(source, punctuation_chars=True)
+            observed = []
+            while True:
+                t = s.get_token()
+                if t == s.eof:
+                    break
+                if t[0] in s.punctuation_chars:
+                    tt = 'c'
+                else:
+                    tt = 'a'
+                observed.append((t, tt))
+            self.assertEqual(observed, expected)
+
+    def testPunctuationInWordChars(self):
+        """Test that any punctuation chars are removed from wordchars"""
+        s = shlex.shlex('a_b__c', punctuation_chars='_')
+        self.assertNotIn('_', s.wordchars)
+        self.assertEqual(list(s), ['a', '_', 'b', '__', 'c'])
+
+    def testPunctuationWithWhitespaceSplit(self):
+        """Test that with whitespace_split, behaviour is as expected"""
+        s = shlex.shlex('a  && b  ||  c', punctuation_chars='&')
+        # whitespace_split is False, so splitting will be based on
+        # punctuation_chars
+        self.assertEqual(list(s), ['a', '&&', 'b', '|', '|', 'c'])
+        s = shlex.shlex('a  && b  ||  c', punctuation_chars='&')
+        s.whitespace_split = True
+        # whitespace_split is True, so splitting will be based on
+        # white space
+        self.assertEqual(list(s), ['a', '&&', 'b', '||', 'c'])
+
+    def testPunctuationWithPosix(self):
+        """Test that punctuation_chars and posix behave correctly together."""
+        # see Issue #29132
+        s = shlex.shlex('f >"abc"', posix=True, punctuation_chars=True)
+        self.assertEqual(list(s), ['f', '>', 'abc'])
+        s = shlex.shlex('f >\\"abc\\"', posix=True, punctuation_chars=True)
+        self.assertEqual(list(s), ['f', '>', '"abc"'])
+
+    def testEmptyStringHandling(self):
+        """Test that parsing of empty strings is correctly handled."""
+        # see Issue #21999
+        expected = ['', ')', 'abc']
+        for punct in (False, True):
+            s = shlex.shlex("'')abc", posix=True, punctuation_chars=punct)
+            slist = list(s)
+            self.assertEqual(slist, expected)
+        expected = ["''", ')', 'abc']
+        s = shlex.shlex("'')abc", punctuation_chars=True)
+        self.assertEqual(list(s), expected)
+
     def testQuote(self):
         safeunquoted = string.ascii_letters + string.digits + '@%_-+=:,./'
         unicode_sample = '\xe9\xe0\xdf'  # e + acute accent, a + grave, sharp s
@@ -195,8 +314,5 @@ if not getattr(shlex, "split", None):
         if methname.startswith("test") and methname != "testCompat":
             delattr(ShlexTest, methname)
 
-def test_main():
-    support.run_unittest(ShlexTest)
-
 if __name__ == "__main__":
-    test_main()
+    unittest.main()

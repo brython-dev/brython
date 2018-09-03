@@ -1,7 +1,6 @@
-from test import support
 import unittest
 
-import sys, os, io, subprocess
+import sys, io, subprocess
 import quopri
 
 
@@ -138,6 +137,13 @@ zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz''')
             self.assertEqual(quopri.decodestring(e), p)
 
     @withpythonimplementation
+    def test_decodestring_double_equals(self):
+        # Issue 21511 - Ensure that byte string is compared to byte string
+        # instead of int byte value
+        decoded_value, encoded_value = (b"123=four", b"123==four")
+        self.assertEqual(quopri.decodestring(encoded_value), decoded_value)
+
+    @withpythonimplementation
     def test_idempotent_string(self):
         for p, e in self.STRINGS:
             self.assertEqual(quopri.decodestring(quopri.encodestring(e)), e)
@@ -200,9 +206,5 @@ zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz''')
         p = p.decode('latin-1')
         self.assertEqual(cout.splitlines(), p.splitlines())
 
-def test_main():
-    support.run_unittest(QuopriTestCase)
-
-
 if __name__ == "__main__":
-    test_main()
+    unittest.main()

@@ -34,7 +34,7 @@ class BufferSizeTest:
             line = f.readline()
             self.assertEqual(line, s)
             line = f.readline()
-            self.assertTrue(not line) # Must be at EOF
+            self.assertFalse(line) # Must be at EOF
             f.close()
         finally:
             support.unlink(support.TESTFN)
@@ -59,7 +59,7 @@ class BufferSizeTest:
         self.drive_one(b"1234567890\00\01\02\03\04\05\06")
 
     def test_nullpat(self):
-        self.drive_one(bytes(1000))
+        self.drive_one(b'\0' * 1000)
 
 
 class CBufferSizeTest(BufferSizeTest, unittest.TestCase):

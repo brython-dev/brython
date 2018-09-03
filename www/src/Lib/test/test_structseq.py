@@ -1,7 +1,6 @@
 import os
 import time
 import unittest
-from test import support
 
 
 class StructSeqTest(unittest.TestCase):
@@ -38,7 +37,7 @@ class StructSeqTest(unittest.TestCase):
         # os.stat() gives a complicated struct sequence.
         st = os.stat(__file__)
         rep = repr(st)
-        self.assertTrue(rep.startswith(os.name + ".stat_result"))
+        self.assertTrue(rep.startswith("os.stat_result"))
         self.assertIn("st_mode=", rep)
         self.assertIn("st_ino=", rep)
         self.assertIn("st_dev=", rep)
@@ -98,7 +97,7 @@ class StructSeqTest(unittest.TestCase):
         class Exc(Exception):
             pass
 
-        # Devious code could crash structseqs' contructors
+        # Devious code could crash structseqs' constructors
         class C:
             def __getitem__(self, i):
                 raise Exc
@@ -123,8 +122,5 @@ class StructSeqTest(unittest.TestCase):
                     self.assertEqual(list(t[start:stop:step]),
                                      L[start:stop:step])
 
-def test_main():
-    support.run_unittest(StructSeqTest)
-
 if __name__ == "__main__":
-    test_main()
+    unittest.main()

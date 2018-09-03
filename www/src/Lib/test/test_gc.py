@@ -1,15 +1,23 @@
 import unittest
 from test.support import (verbose, refcount_test, run_unittest,
-                            strip_python_stderr)
+                          strip_python_stderr, cpython_only, start_threads,
+                          temp_dir, requires_type_collecting)
+from test.support.script_helper import assert_python_ok, make_script
+
 import sys
 import time
 import gc
 import weakref
+import threading
 
 try:
-    import threading
+    from _testcapi import with_tp_del
 except ImportError:
-    threading = None
+    def with_tp_del(cls):
+        class C(object):
+            def __new__(cls, *args, **kwargs):
+                raise TypeError('requires _testcapi.with_tp_del')
+        return C
 
 ### Support code
 ###############################################################################
@@ -38,6 +46,7 @@ class GC_Detector(object):
         # gc collects it.
         self.wr = weakref.ref(C1055820(666), it_happened)
 
+@with_tp_del
 class Uncollectable(object):
     """Create a reference cycle with multiple __del__ methods.
 
@@ -50,7 +59,7 @@ class Uncollectable(object):
             self.partner = Uncollectable(partner=self)
         else:
             self.partner = partner
-    def __del__(self):
+    def __tp_del__(self):
         pass
 
 ### Tests
@@ -105,6 +114,7 @@ class GCTests(unittest.TestCase):
         del a
         self.assertNotEqual(gc.collect(), 0)
 
+    @requires_type_collecting
     def test_newinstance(self):
         class A(object):
             pass
@@ -139,11 +149,13 @@ class GCTests(unittest.TestCase):
         del a
         self.assertNotEqual(gc.collect(), 0)
 
-    def test_finalizer(self):
+    @cpython_only
+    def test_legacy_finalizer(self):
         # A() is uncollectable if it is part of a cycle, make sure it shows up
         # in gc.garbage.
+        @with_tp_del
         class A:
-            def __del__(self): pass
+            def __tp_del__(self): pass
         class B:
             pass
         a = A()
@@ -163,11 +175,13 @@ class GCTests(unittest.TestCase):
             self.fail("didn't find obj in garbage (finalizer)")
         gc.garbage.remove(obj)
 
-    def test_finalizer_newclass(self):
+    @cpython_only
+    def test_legacy_finalizer_newclass(self):
         # A() is uncollectable if it is part of a cycle, make sure it shows up
         # in gc.garbage.
+        @with_tp_del
         class A(object):
-            def __del__(self): pass
+            def __tp_del__(self): pass
         class B(object):
             pass
         a = A()
@@ -334,7 +348,6 @@ class GCTests(unittest.TestCase):
                 v = {1: v, 2: Ouch()}
         gc.disable()
 
-    @unittest.skipUnless(threading, "test meaningless on builds without threads")
     def test_trashcan_threads(self):
         # Issue #13992: trashcan mechanism should be thread-safe
         NESTING = 60
@@ -381,17 +394,13 @@ class GCTests(unittest.TestCase):
         old_switchinterval = sys.getswitchinterval()
         sys.setswitchinterval(1e-5)
         try:
-            exit = False
+            exit = []
             threads = []
             for i in range(N_THREADS):
                 t = threading.Thread(target=run_thread)
                 threads.append(t)
-            for t in threads:
-                t.start()
-            time.sleep(1.0)
-            exit = True
-            for t in threads:
-                t.join()
+            with start_threads(threads, lambda: exit.append(1)):
+                time.sleep(1.0)
         finally:
             sys.setswitchinterval(old_switchinterval)
         gc.collect()
@@ -534,11 +543,31 @@ class GCTests(unittest.TestCase):
 
         class UserClass:
             pass
+
+        class UserInt(int):
+            pass
+
+        # Base class is object; no extra fields.
+        class UserClassSlots:
+            __slots__ = ()
+
+        # Base class is fixed size larger than object; no extra fields.
+        class UserFloatSlots(float):
+            __slots__ = ()
+
+        # Base class is variable size; no extra fields.
+        class UserIntSlots(int):
+            __slots__ = ()
+
         self.assertTrue(gc.is_tracked(gc))
         self.assertTrue(gc.is_tracked(UserClass))
         self.assertTrue(gc.is_tracked(UserClass()))
+        self.assertTrue(gc.is_tracked(UserInt()))
         self.assertTrue(gc.is_tracked([]))
         self.assertTrue(gc.is_tracked(set()))
+        self.assertFalse(gc.is_tracked(UserClassSlots()))
+        self.assertFalse(gc.is_tracked(UserFloatSlots()))
+        self.assertFalse(gc.is_tracked(UserIntSlots()))
 
     def test_bug1055820b(self):
         # Corresponds to temp2b.py in the bug report.
@@ -564,16 +593,51 @@ class GCTests(unittest.TestCase):
             # would be damaged, with an empty __dict__.
             self.assertEqual(x, None)
 
+    def test_bug21435(self):
+        # This is a poor test - its only virtue is that it happened to
+        # segfault on Tim's Windows box before the patch for 21435 was
+        # applied.  That's a nasty bug relying on specific pieces of cyclic
+        # trash appearing in exactly the right order in finalize_garbage()'s
+        # input list.
+        # But there's no reliable way to force that order from Python code,
+        # so over time chances are good this test won't really be testing much
+        # of anything anymore.  Still, if it blows up, there's _some_
+        # problem ;-)
+        gc.collect()
+
+        class A:
+            pass
+
+        class B:
+            def __init__(self, x):
+                self.x = x
+
+            def __del__(self):
+                self.attr = None
+
+        def do_work():
+            a = A()
+            b = B(A())
+
+            a.attr = b
+            b.attr = a
+
+        do_work()
+        gc.collect() # this blows up (bad C pointer) when it fails
+
+    @cpython_only
     def test_garbage_at_shutdown(self):
         import subprocess
         code = """if 1:
             import gc
+            import _testcapi
+            @_testcapi.with_tp_del
             class X:
                 def __init__(self, name):
                     self.name = name
                 def __repr__(self):
                     return "<X %%r>" %% self.name
-                def __del__(self):
+                def __tp_del__(self):
                     pass
 
             x = X('first')
@@ -609,6 +673,72 @@ class GCTests(unittest.TestCase):
         # references, and its elements get printed at runtime anyway).
         stderr = run_command(code % "gc.DEBUG_SAVEALL")
         self.assertNotIn(b"uncollectable objects at shutdown", stderr)
+
+    @requires_type_collecting
+    def test_gc_main_module_at_shutdown(self):
+        # Create a reference cycle through the __main__ module and check
+        # it gets collected at interpreter shutdown.
+        code = """if 1:
+            class C:
+                def __del__(self):
+                    print('__del__ called')
+            l = [C()]
+            l.append(l)
+            """
+        rc, out, err = assert_python_ok('-c', code)
+        self.assertEqual(out.strip(), b'__del__ called')
+
+    @requires_type_collecting
+    def test_gc_ordinary_module_at_shutdown(self):
+        # Same as above, but with a non-__main__ module.
+        with temp_dir() as script_dir:
+            module = """if 1:
+                class C:
+                    def __del__(self):
+                        print('__del__ called')
+                l = [C()]
+                l.append(l)
+                """
+            code = """if 1:
+                import sys
+                sys.path.insert(0, %r)
+                import gctest
+                """ % (script_dir,)
+            make_script(script_dir, 'gctest', module)
+            rc, out, err = assert_python_ok('-c', code)
+            self.assertEqual(out.strip(), b'__del__ called')
+
+    def test_get_stats(self):
+        stats = gc.get_stats()
+        self.assertEqual(len(stats), 3)
+        for st in stats:
+            self.assertIsInstance(st, dict)
+            self.assertEqual(set(st),
+                             {"collected", "collections", "uncollectable"})
+            self.assertGreaterEqual(st["collected"], 0)
+            self.assertGreaterEqual(st["collections"], 0)
+            self.assertGreaterEqual(st["uncollectable"], 0)
+        # Check that collection counts are incremented correctly
+        if gc.isenabled():
+            self.addCleanup(gc.enable)
+            gc.disable()
+        old = gc.get_stats()
+        gc.collect(0)
+        new = gc.get_stats()
+        self.assertEqual(new[0]["collections"], old[0]["collections"] + 1)
+        self.assertEqual(new[1]["collections"], old[1]["collections"])
+        self.assertEqual(new[2]["collections"], old[2]["collections"])
+        gc.collect(2)
+        new = gc.get_stats()
+        self.assertEqual(new[0]["collections"], old[0]["collections"] + 1)
+        self.assertEqual(new[1]["collections"], old[1]["collections"])
+        self.assertEqual(new[2]["collections"], old[2]["collections"] + 1)
+
+    def test_freeze(self):
+        gc.freeze()
+        self.assertGreater(gc.get_freeze_count(), 0)
+        gc.unfreeze()
+        self.assertEqual(gc.get_freeze_count(), 0)
 
 
 class GCCallbackTests(unittest.TestCase):
@@ -696,6 +826,7 @@ class GCCallbackTests(unittest.TestCase):
             info = v[2]
             self.assertEqual(info["generation"], 2)
 
+    @cpython_only
     def test_collect_garbage(self):
         self.preclean()
         # Each of these cause four objects to be garbage: Two

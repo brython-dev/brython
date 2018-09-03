@@ -1,6 +1,7 @@
 # tests common to dict and UserDict
 import unittest
 import collections
+import sys
 
 
 class BasicTestMappingProtocol(unittest.TestCase):
@@ -64,7 +65,7 @@ class BasicTestMappingProtocol(unittest.TestCase):
         self.assertEqual(d, d)
         self.assertNotEqual(p, d)
         self.assertNotEqual(d, p)
-        #__non__zero__
+        #bool
         if p: self.fail("Empty mapping must compare to False")
         if not d: self.fail("Full mapping must compare to True")
         # keys(), items(), iterkeys() ...
@@ -87,7 +88,6 @@ class BasicTestMappingProtocol(unittest.TestCase):
         self.assertEqual(d.get(knownkey, knownvalue), knownvalue)
         self.assertNotIn(knownkey, d)
 
-    @unittest.skip('Fails in Brython -- still needs to be investigated')
     def test_write(self):
         # Test for write operations on mapping
         p = self._empty_mapping()
@@ -170,7 +170,6 @@ class BasicTestMappingProtocol(unittest.TestCase):
 
         self.assertRaises(TypeError, d.__getitem__)
 
-    @unittest.skip('Fails in Brython -- still needs to be investigated')
     def test_update(self):
         # mapping argument
         d = self._empty_mapping()
@@ -286,13 +285,11 @@ class BasicTestMappingProtocol(unittest.TestCase):
         d = self._empty_mapping()
         self.assertRaises(TypeError, d.setdefault)
 
-    @unittest.skip('Fails in Brython -- still needs to be investigated')
     def test_popitem(self):
         d = self._empty_mapping()
         self.assertRaises(KeyError, d.popitem)
         self.assertRaises(TypeError, d.popitem, 42)
 
-    @unittest.skip('Fails in Brython -- still needs to be investigated')
     def test_pop(self):
         d = self._empty_mapping()
         k, v = list(self.inmapping.items())[0]
@@ -622,6 +619,14 @@ class TestHashMappingProtocol(TestMappingProtocol):
 
         d = self._full_mapping({1: BadRepr()})
         self.assertRaises(Exc, repr, d)
+
+    def test_repr_deep(self):
+        d = self._empty_mapping()
+        for i in range(sys.getrecursionlimit() + 100):
+            d0 = d
+            d = self._empty_mapping()
+            d[1] = d0
+        self.assertRaises(RecursionError, repr, d)
 
     def test_eq(self):
         self.assertEqual(self._empty_mapping(), self._empty_mapping())

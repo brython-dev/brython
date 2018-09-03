@@ -1,16 +1,12 @@
 from xmlrpc.server import DocXMLRPCServer
 import http.client
 import sys
+import threading
 from test import support
-threading = support.import_module('threading')
-import time
-import socket
 import unittest
 
-PORT = None
-
 def make_request_and_skipIf(condition, reason):
-    # If we skip the test, we have to make a request because the
+    # If we skip the test, we have to make a request because
     # the server created in setUp blocks expecting one to come in.
     if not condition:
         return lambda func: func
@@ -23,13 +19,10 @@ def make_request_and_skipIf(condition, reason):
     return decorator
 
 
-def server(evt, numrequests):
+def make_server():
     serv = DocXMLRPCServer(("localhost", 0), logRequests=False)
 
     try:
-        global PORT
-        PORT = serv.socket.getsockname()[1]
-
         # Add some documentation
         serv.set_server_title("DocXMLRPCServer Test Documentation")
         serv.set_server_name("DocXMLRPCServer Test Docs")
@@ -66,42 +59,31 @@ def server(evt, numrequests):
         serv.register_function(lambda x, y: x-y)
         serv.register_function(annotation)
         serv.register_instance(ClassWithAnnotation())
-
-        while numrequests > 0:
-            serv.handle_request()
-            numrequests -= 1
-    except socket.timeout:
-        pass
-    finally:
+        return serv
+    except:
         serv.server_close()
-        PORT = None
-        evt.set()
+        raise
 
 class DocXMLRPCHTTPGETServer(unittest.TestCase):
     def setUp(self):
-        self._threads = support.threading_setup()
         # Enable server feedback
         DocXMLRPCServer._send_traceback_header = True
 
-        self.evt = threading.Event()
-        threading.Thread(target=server, args=(self.evt, 1)).start()
+        self.serv = make_server()
+        self.thread = threading.Thread(target=self.serv.serve_forever)
+        self.thread.start()
 
-        # wait for port to be assigned
-        n = 1000
-        while n > 0 and PORT is None:
-            time.sleep(0.001)
-            n -= 1
-
+        PORT = self.serv.server_address[1]
         self.client = http.client.HTTPConnection("localhost:%d" % PORT)
 
     def tearDown(self):
         self.client.close()
 
-        self.evt.wait()
-
         # Disable server feedback
         DocXMLRPCServer._send_traceback_header = False
-        support.threading_cleanup(*self._threads)
+        self.serv.shutdown()
+        self.thread.join()
+        self.serv.server_close()
 
     def test_valid_get_response(self):
         self.client.request("GET", "/")
@@ -163,7 +145,7 @@ class DocXMLRPCHTTPGETServer(unittest.TestCase):
     @make_request_and_skipIf(sys.flags.optimize >= 2,
                      "Docstrings are omitted with -O2 and above")
     def test_system_methods(self):
-        """Test the precense of three consecutive system.* methods.
+        """Test the presence of three consecutive system.* methods.
 
         This also tests their use of parameter type recognition and the
         systems related to that process.
@@ -202,16 +184,15 @@ class DocXMLRPCHTTPGETServer(unittest.TestCase):
         """ Test that annotations works as expected """
         self.client.request("GET", "/")
         response = self.client.getresponse()
+        docstring = (b'' if sys.flags.optimize >= 2 else
+                     b'<dd><tt>Use&nbsp;function&nbsp;annotations.</tt></dd>')
         self.assertIn(
             (b'<dl><dt><a name="-annotation"><strong>annotation</strong></a>'
-             b'(x: int)</dt><dd><tt>Use&nbsp;function&nbsp;annotations.</tt>'
-             b'</dd></dl>\n<dl><dt><a name="-method_annotation"><strong>'
+             b'(x: int)</dt>' + docstring + b'</dl>\n'
+             b'<dl><dt><a name="-method_annotation"><strong>'
              b'method_annotation</strong></a>(x: bytes)</dt></dl>'),
             response.read())
 
 
-def test_main():
-    support.run_unittest(DocXMLRPCHTTPGETServer)
-
 if __name__ == '__main__':
-    test_main()
+    unittest.main()

@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """Unit tests for the with statement specified in PEP 343."""
 
 
@@ -10,12 +8,11 @@ import sys
 import unittest
 from collections import deque
 from contextlib import _GeneratorContextManager, contextmanager
-from test.support import run_unittest
 
 
 class MockContextManager(_GeneratorContextManager):
-    def __init__(self, func, *args, **kwds):
-        super().__init__(func, *args, **kwds)
+    def __init__(self, *args):
+        super().__init__(*args)
         self.enter_called = False
         self.exit_called = False
         self.exit_args = None
@@ -33,7 +30,7 @@ class MockContextManager(_GeneratorContextManager):
 
 def mock_contextmanager(func):
     def helper(*args, **kwds):
-        return MockContextManager(func, *args, **kwds)
+        return MockContextManager(func, args, kwds)
     return helper
 
 
@@ -112,7 +109,7 @@ class FailureTestCase(unittest.TestCase):
             with foo: pass
         self.assertRaises(NameError, fooNotDeclared)
 
-    def testEnterAttributeError(self):
+    def testEnterAttributeError1(self):
         class LacksEnter(object):
             def __exit__(self, type, value, traceback):
                 pass
@@ -120,7 +117,16 @@ class FailureTestCase(unittest.TestCase):
         def fooLacksEnter():
             foo = LacksEnter()
             with foo: pass
-        self.assertRaises(AttributeError, fooLacksEnter)
+        self.assertRaisesRegex(AttributeError, '__enter__', fooLacksEnter)
+
+    def testEnterAttributeError2(self):
+        class LacksEnterAndExit(object):
+            pass
+
+        def fooLacksEnterAndExit():
+            foo = LacksEnterAndExit()
+            with foo: pass
+        self.assertRaisesRegex(AttributeError, '__enter__', fooLacksEnterAndExit)
 
     def testExitAttributeError(self):
         class LacksExit(object):
@@ -130,7 +136,7 @@ class FailureTestCase(unittest.TestCase):
         def fooLacksExit():
             foo = LacksExit()
             with foo: pass
-        self.assertRaises(AttributeError, fooLacksExit)
+        self.assertRaisesRegex(AttributeError, '__exit__', fooLacksExit)
 
     def assertRaisesSyntaxError(self, codestr):
         def shouldRaiseSyntaxError(s):
@@ -141,11 +147,6 @@ class FailureTestCase(unittest.TestCase):
         self.assertRaisesSyntaxError('with mock as None:\n  pass')
         self.assertRaisesSyntaxError(
             'with mock as (None):\n'
-            '  pass')
-
-    def testAssignmentToEmptyTupleError(self):
-        self.assertRaisesSyntaxError(
-            'with mock as ():\n'
             '  pass')
 
     def testAssignmentToTupleOnlyContainingNoneError(self):
@@ -457,7 +458,8 @@ class ExceptionalTestCase(ContextmanagerAssertionMixin, unittest.TestCase):
             with cm():
                 raise StopIteration("from with")
 
-        self.assertRaises(StopIteration, shouldThrow)
+        with self.assertRaisesRegex(StopIteration, 'from with'):
+            shouldThrow()
 
     def testRaisedStopIteration2(self):
         # From bug 1462485
@@ -471,7 +473,8 @@ class ExceptionalTestCase(ContextmanagerAssertionMixin, unittest.TestCase):
             with cm():
                 raise StopIteration("from with")
 
-        self.assertRaises(StopIteration, shouldThrow)
+        with self.assertRaisesRegex(StopIteration, 'from with'):
+            shouldThrow()
 
     def testRaisedStopIteration3(self):
         # Another variant where the exception hasn't been instantiated
@@ -484,7 +487,8 @@ class ExceptionalTestCase(ContextmanagerAssertionMixin, unittest.TestCase):
             with cm():
                 raise next(iter([]))
 
-        self.assertRaises(StopIteration, shouldThrow)
+        with self.assertRaises(StopIteration):
+            shouldThrow()
 
     def testRaisedGeneratorExit1(self):
         # From bug 1462485
@@ -739,14 +743,5 @@ class NestedWith(unittest.TestCase):
             self.assertEqual(10, b1)
             self.assertEqual(20, b2)
 
-def test_main():
-    run_unittest(FailureTestCase, NonexceptionalTestCase,
-                 NestedNonexceptionalTestCase, ExceptionalTestCase,
-                 NonLocalFlowControlTestCase,
-                 AssignmentTargetTestCase,
-                 ExitSwallowsExceptionTestCase,
-                 NestedWith)
-
-
 if __name__ == '__main__':
-    test_main()
+    unittest.main()

@@ -1,9 +1,14 @@
 import unittest
 import os
-from test.support import TESTFN, run_unittest, import_fresh_module
-import stat
+import sys
+from test.support import TESTFN, import_fresh_module
 
-class TestFilemode(unittest.TestCase):
+c_stat = import_fresh_module('stat', fresh=['_stat'])
+py_stat = import_fresh_module('stat', blocked=['_stat'])
+
+class TestFilemode:
+    statmod = None
+
     file_flags = {'SF_APPEND', 'SF_ARCHIVED', 'SF_IMMUTABLE', 'SF_NOUNLINK',
                   'SF_SNAPSHOT', 'UF_APPEND', 'UF_COMPRESSED', 'UF_HIDDEN',
                   'UF_IMMUTABLE', 'UF_NODUMP', 'UF_NOUNLINK', 'UF_OPAQUE'}
@@ -48,6 +53,26 @@ class TestFilemode(unittest.TestCase):
         'S_IWOTH': 0o002,
         'S_IXOTH': 0o001}
 
+    # defined by the Windows API documentation
+    file_attributes = {
+        'FILE_ATTRIBUTE_ARCHIVE': 32,
+        'FILE_ATTRIBUTE_COMPRESSED': 2048,
+        'FILE_ATTRIBUTE_DEVICE': 64,
+        'FILE_ATTRIBUTE_DIRECTORY': 16,
+        'FILE_ATTRIBUTE_ENCRYPTED': 16384,
+        'FILE_ATTRIBUTE_HIDDEN': 2,
+        'FILE_ATTRIBUTE_INTEGRITY_STREAM': 32768,
+        'FILE_ATTRIBUTE_NORMAL': 128,
+        'FILE_ATTRIBUTE_NOT_CONTENT_INDEXED': 8192,
+        'FILE_ATTRIBUTE_NO_SCRUB_DATA': 131072,
+        'FILE_ATTRIBUTE_OFFLINE': 4096,
+        'FILE_ATTRIBUTE_READONLY': 1,
+        'FILE_ATTRIBUTE_REPARSE_POINT': 1024,
+        'FILE_ATTRIBUTE_SPARSE_FILE': 512,
+        'FILE_ATTRIBUTE_SYSTEM': 4,
+        'FILE_ATTRIBUTE_TEMPORARY': 256,
+        'FILE_ATTRIBUTE_VIRTUAL': 65536}
+
     def setUp(self):
         try:
             os.remove(TESTFN)
@@ -63,17 +88,17 @@ class TestFilemode(unittest.TestCase):
             st_mode = os.lstat(fname).st_mode
         else:
             st_mode = os.stat(fname).st_mode
-        modestr = stat.filemode(st_mode)
+        modestr = self.statmod.filemode(st_mode)
         return st_mode, modestr
 
     def assertS_IS(self, name, mode):
         # test format, lstrip is for S_IFIFO
-        fmt = getattr(stat, "S_IF" + name.lstrip("F"))
-        self.assertEqual(stat.S_IFMT(mode), fmt)
+        fmt = getattr(self.statmod, "S_IF" + name.lstrip("F"))
+        self.assertEqual(self.statmod.S_IFMT(mode), fmt)
         # test that just one function returns true
         testname = "S_IS" + name
         for funcname in self.format_funcs:
-            func = getattr(stat, funcname, None)
+            func = getattr(self.statmod, funcname, None)
             if func is None:
                 if funcname == testname:
                     raise ValueError(funcname)
@@ -91,35 +116,35 @@ class TestFilemode(unittest.TestCase):
             st_mode, modestr = self.get_mode()
             self.assertEqual(modestr, '-rwx------')
             self.assertS_IS("REG", st_mode)
-            self.assertEqual(stat.S_IMODE(st_mode),
-                             stat.S_IRWXU)
+            self.assertEqual(self.statmod.S_IMODE(st_mode),
+                             self.statmod.S_IRWXU)
 
             os.chmod(TESTFN, 0o070)
             st_mode, modestr = self.get_mode()
             self.assertEqual(modestr, '----rwx---')
             self.assertS_IS("REG", st_mode)
-            self.assertEqual(stat.S_IMODE(st_mode),
-                             stat.S_IRWXG)
+            self.assertEqual(self.statmod.S_IMODE(st_mode),
+                             self.statmod.S_IRWXG)
 
             os.chmod(TESTFN, 0o007)
             st_mode, modestr = self.get_mode()
             self.assertEqual(modestr, '-------rwx')
             self.assertS_IS("REG", st_mode)
-            self.assertEqual(stat.S_IMODE(st_mode),
-                             stat.S_IRWXO)
+            self.assertEqual(self.statmod.S_IMODE(st_mode),
+                             self.statmod.S_IRWXO)
 
             os.chmod(TESTFN, 0o444)
             st_mode, modestr = self.get_mode()
             self.assertS_IS("REG", st_mode)
             self.assertEqual(modestr, '-r--r--r--')
-            self.assertEqual(stat.S_IMODE(st_mode), 0o444)
+            self.assertEqual(self.statmod.S_IMODE(st_mode), 0o444)
         else:
             os.chmod(TESTFN, 0o700)
             st_mode, modestr = self.get_mode()
             self.assertEqual(modestr[:3], '-rw')
             self.assertS_IS("REG", st_mode)
-            self.assertEqual(stat.S_IFMT(st_mode),
-                             stat.S_IFREG)
+            self.assertEqual(self.statmod.S_IFMT(st_mode),
+                             self.statmod.S_IFREG)
 
     def test_directory(self):
         os.mkdir(TESTFN)
@@ -144,7 +169,10 @@ class TestFilemode(unittest.TestCase):
 
     @unittest.skipUnless(hasattr(os, 'mkfifo'), 'os.mkfifo not available')
     def test_fifo(self):
-        os.mkfifo(TESTFN, 0o700)
+        try:
+            os.mkfifo(TESTFN, 0o700)
+        except PermissionError as e:
+            self.skipTest('os.mkfifo(): %s' % e)
         st_mode, modestr = self.get_mode()
         self.assertEqual(modestr, 'prwx------')
         self.assertS_IS("FIFO", st_mode)
@@ -165,25 +193,42 @@ class TestFilemode(unittest.TestCase):
 
     def test_module_attributes(self):
         for key, value in self.stat_struct.items():
-            modvalue = getattr(stat, key)
+            modvalue = getattr(self.statmod, key)
             self.assertEqual(value, modvalue, key)
         for key, value in self.permission_bits.items():
-            modvalue = getattr(stat, key)
+            modvalue = getattr(self.statmod, key)
             self.assertEqual(value, modvalue, key)
         for key in self.file_flags:
-            modvalue = getattr(stat, key)
+            modvalue = getattr(self.statmod, key)
             self.assertIsInstance(modvalue, int)
         for key in self.formats:
-            modvalue = getattr(stat, key)
+            modvalue = getattr(self.statmod, key)
             self.assertIsInstance(modvalue, int)
         for key in self.format_funcs:
-            func = getattr(stat, key)
+            func = getattr(self.statmod, key)
             self.assertTrue(callable(func))
             self.assertEqual(func(0), 0)
 
+    @unittest.skipUnless(sys.platform == "win32",
+                         "FILE_ATTRIBUTE_* constants are Win32 specific")
+    def test_file_attribute_constants(self):
+        for key, value in sorted(self.file_attributes.items()):
+            self.assertTrue(hasattr(self.statmod, key), key)
+            modvalue = getattr(self.statmod, key)
+            self.assertEqual(value, modvalue, key)
 
-def test_main():
-    run_unittest(TestFilemode)
+
+class TestFilemodeCStat(TestFilemode, unittest.TestCase):
+    statmod = c_stat
+
+    formats = TestFilemode.formats | {'S_IFDOOR', 'S_IFPORT', 'S_IFWHT'}
+    format_funcs = TestFilemode.format_funcs | {'S_ISDOOR', 'S_ISPORT',
+                                                'S_ISWHT'}
+
+
+class TestFilemodePyStat(TestFilemode, unittest.TestCase):
+    statmod = py_stat
+
 
 if __name__ == '__main__':
-    test_main()
+    unittest.main()

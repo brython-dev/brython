@@ -1,7 +1,11 @@
-import operator
 import unittest
+import pickle
+import sys
 
 from test import support
+
+py_operator = support.import_fresh_module('operator', blocked=['_operator'])
+c_operator = support.import_fresh_module('operator', fresh=['_operator'])
 
 class Seq1:
     def __init__(self, lst):
@@ -32,8 +36,9 @@ class Seq2(object):
         return other * self.lst
 
 
-class OperatorTestCase(unittest.TestCase):
+class OperatorTestCase:
     def test_lt(self):
+        operator = self.module
         self.assertRaises(TypeError, operator.lt)
         self.assertRaises(TypeError, operator.lt, 1j, 2j)
         self.assertFalse(operator.lt(1, 0))
@@ -44,6 +49,7 @@ class OperatorTestCase(unittest.TestCase):
         self.assertTrue(operator.lt(1, 2.0))
 
     def test_le(self):
+        operator = self.module
         self.assertRaises(TypeError, operator.le)
         self.assertRaises(TypeError, operator.le, 1j, 2j)
         self.assertFalse(operator.le(1, 0))
@@ -54,6 +60,7 @@ class OperatorTestCase(unittest.TestCase):
         self.assertTrue(operator.le(1, 2.0))
 
     def test_eq(self):
+        operator = self.module
         class C(object):
             def __eq__(self, other):
                 raise SyntaxError
@@ -67,6 +74,7 @@ class OperatorTestCase(unittest.TestCase):
         self.assertFalse(operator.eq(1, 2.0))
 
     def test_ne(self):
+        operator = self.module
         class C(object):
             def __ne__(self, other):
                 raise SyntaxError
@@ -80,6 +88,7 @@ class OperatorTestCase(unittest.TestCase):
         self.assertTrue(operator.ne(1, 2.0))
 
     def test_ge(self):
+        operator = self.module
         self.assertRaises(TypeError, operator.ge)
         self.assertRaises(TypeError, operator.ge, 1j, 2j)
         self.assertTrue(operator.ge(1, 0))
@@ -90,6 +99,7 @@ class OperatorTestCase(unittest.TestCase):
         self.assertFalse(operator.ge(1, 2.0))
 
     def test_gt(self):
+        operator = self.module
         self.assertRaises(TypeError, operator.gt)
         self.assertRaises(TypeError, operator.gt, 1j, 2j)
         self.assertTrue(operator.gt(1, 0))
@@ -100,88 +110,112 @@ class OperatorTestCase(unittest.TestCase):
         self.assertFalse(operator.gt(1, 2.0))
 
     def test_abs(self):
+        operator = self.module
         self.assertRaises(TypeError, operator.abs)
         self.assertRaises(TypeError, operator.abs, None)
         self.assertEqual(operator.abs(-1), 1)
         self.assertEqual(operator.abs(1), 1)
 
     def test_add(self):
+        operator = self.module
         self.assertRaises(TypeError, operator.add)
         self.assertRaises(TypeError, operator.add, None, None)
-        self.assertTrue(operator.add(3, 4) == 7)
+        self.assertEqual(operator.add(3, 4), 7)
 
     def test_bitwise_and(self):
+        operator = self.module
         self.assertRaises(TypeError, operator.and_)
         self.assertRaises(TypeError, operator.and_, None, None)
-        self.assertTrue(operator.and_(0xf, 0xa) == 0xa)
+        self.assertEqual(operator.and_(0xf, 0xa), 0xa)
 
     def test_concat(self):
+        operator = self.module
         self.assertRaises(TypeError, operator.concat)
         self.assertRaises(TypeError, operator.concat, None, None)
-        self.assertTrue(operator.concat('py', 'thon') == 'python')
-        self.assertTrue(operator.concat([1, 2], [3, 4]) == [1, 2, 3, 4])
-        self.assertTrue(operator.concat(Seq1([5, 6]), Seq1([7])) == [5, 6, 7])
-        self.assertTrue(operator.concat(Seq2([5, 6]), Seq2([7])) == [5, 6, 7])
+        self.assertEqual(operator.concat('py', 'thon'), 'python')
+        self.assertEqual(operator.concat([1, 2], [3, 4]), [1, 2, 3, 4])
+        self.assertEqual(operator.concat(Seq1([5, 6]), Seq1([7])), [5, 6, 7])
+        self.assertEqual(operator.concat(Seq2([5, 6]), Seq2([7])), [5, 6, 7])
         self.assertRaises(TypeError, operator.concat, 13, 29)
 
     def test_countOf(self):
+        operator = self.module
         self.assertRaises(TypeError, operator.countOf)
         self.assertRaises(TypeError, operator.countOf, None, None)
-        self.assertTrue(operator.countOf([1, 2, 1, 3, 1, 4], 3) == 1)
-        self.assertTrue(operator.countOf([1, 2, 1, 3, 1, 4], 5) == 0)
+        self.assertEqual(operator.countOf([1, 2, 1, 3, 1, 4], 3), 1)
+        self.assertEqual(operator.countOf([1, 2, 1, 3, 1, 4], 5), 0)
 
     def test_delitem(self):
+        operator = self.module
         a = [4, 3, 2, 1]
         self.assertRaises(TypeError, operator.delitem, a)
         self.assertRaises(TypeError, operator.delitem, a, None)
-        self.assertTrue(operator.delitem(a, 1) is None)
-        self.assertTrue(a == [4, 2, 1])
+        self.assertIsNone(operator.delitem(a, 1))
+        self.assertEqual(a, [4, 2, 1])
 
     def test_floordiv(self):
+        operator = self.module
         self.assertRaises(TypeError, operator.floordiv, 5)
         self.assertRaises(TypeError, operator.floordiv, None, None)
-        self.assertTrue(operator.floordiv(5, 2) == 2)
+        self.assertEqual(operator.floordiv(5, 2), 2)
 
     def test_truediv(self):
+        operator = self.module
         self.assertRaises(TypeError, operator.truediv, 5)
         self.assertRaises(TypeError, operator.truediv, None, None)
-        self.assertTrue(operator.truediv(5, 2) == 2.5)
+        self.assertEqual(operator.truediv(5, 2), 2.5)
 
     def test_getitem(self):
+        operator = self.module
         a = range(10)
         self.assertRaises(TypeError, operator.getitem)
         self.assertRaises(TypeError, operator.getitem, a, None)
-        self.assertTrue(operator.getitem(a, 2) == 2)
+        self.assertEqual(operator.getitem(a, 2), 2)
 
     def test_indexOf(self):
+        operator = self.module
         self.assertRaises(TypeError, operator.indexOf)
         self.assertRaises(TypeError, operator.indexOf, None, None)
-        self.assertTrue(operator.indexOf([4, 3, 2, 1], 3) == 1)
+        self.assertEqual(operator.indexOf([4, 3, 2, 1], 3), 1)
         self.assertRaises(ValueError, operator.indexOf, [4, 3, 2, 1], 0)
 
     def test_invert(self):
+        operator = self.module
         self.assertRaises(TypeError, operator.invert)
         self.assertRaises(TypeError, operator.invert, None)
         self.assertEqual(operator.inv(4), -5)
 
     def test_lshift(self):
+        operator = self.module
         self.assertRaises(TypeError, operator.lshift)
         self.assertRaises(TypeError, operator.lshift, None, 42)
-        self.assertTrue(operator.lshift(5, 1) == 10)
-        self.assertTrue(operator.lshift(5, 0) == 5)
+        self.assertEqual(operator.lshift(5, 1), 10)
+        self.assertEqual(operator.lshift(5, 0), 5)
         self.assertRaises(ValueError, operator.lshift, 2, -1)
 
     def test_mod(self):
+        operator = self.module
         self.assertRaises(TypeError, operator.mod)
         self.assertRaises(TypeError, operator.mod, None, 42)
-        self.assertTrue(operator.mod(5, 2) == 1)
+        self.assertEqual(operator.mod(5, 2), 1)
 
     def test_mul(self):
+        operator = self.module
         self.assertRaises(TypeError, operator.mul)
         self.assertRaises(TypeError, operator.mul, None, None)
-        self.assertTrue(operator.mul(5, 2) == 10)
+        self.assertEqual(operator.mul(5, 2), 10)
+
+    def test_matmul(self):
+        operator = self.module
+        self.assertRaises(TypeError, operator.matmul)
+        self.assertRaises(TypeError, operator.matmul, 42, 42)
+        class M:
+            def __matmul__(self, other):
+                return other - 1
+        self.assertEqual(M() @ 42, 41)
 
     def test_neg(self):
+        operator = self.module
         self.assertRaises(TypeError, operator.neg)
         self.assertRaises(TypeError, operator.neg, None)
         self.assertEqual(operator.neg(5), -5)
@@ -190,11 +224,13 @@ class OperatorTestCase(unittest.TestCase):
         self.assertEqual(operator.neg(-0), 0)
 
     def test_bitwise_or(self):
+        operator = self.module
         self.assertRaises(TypeError, operator.or_)
         self.assertRaises(TypeError, operator.or_, None, None)
-        self.assertTrue(operator.or_(0xa, 0x5) == 0xf)
+        self.assertEqual(operator.or_(0xa, 0x5), 0xf)
 
     def test_pos(self):
+        operator = self.module
         self.assertRaises(TypeError, operator.pos)
         self.assertRaises(TypeError, operator.pos, None)
         self.assertEqual(operator.pos(5), 5)
@@ -203,40 +239,45 @@ class OperatorTestCase(unittest.TestCase):
         self.assertEqual(operator.pos(-0), 0)
 
     def test_pow(self):
+        operator = self.module
         self.assertRaises(TypeError, operator.pow)
         self.assertRaises(TypeError, operator.pow, None, None)
         self.assertEqual(operator.pow(3,5), 3**5)
-        self.assertEqual(operator.__pow__(3,5), 3**5)
         self.assertRaises(TypeError, operator.pow, 1)
         self.assertRaises(TypeError, operator.pow, 1, 2, 3)
 
     def test_rshift(self):
+        operator = self.module
         self.assertRaises(TypeError, operator.rshift)
         self.assertRaises(TypeError, operator.rshift, None, 42)
-        self.assertTrue(operator.rshift(5, 1) == 2)
-        self.assertTrue(operator.rshift(5, 0) == 5)
+        self.assertEqual(operator.rshift(5, 1), 2)
+        self.assertEqual(operator.rshift(5, 0), 5)
         self.assertRaises(ValueError, operator.rshift, 2, -1)
 
     def test_contains(self):
+        operator = self.module
         self.assertRaises(TypeError, operator.contains)
         self.assertRaises(TypeError, operator.contains, None, None)
         self.assertTrue(operator.contains(range(4), 2))
         self.assertFalse(operator.contains(range(4), 5))
 
     def test_setitem(self):
+        operator = self.module
         a = list(range(3))
         self.assertRaises(TypeError, operator.setitem, a)
         self.assertRaises(TypeError, operator.setitem, a, None, None)
-        self.assertTrue(operator.setitem(a, 0, 2) is None)
-        self.assertTrue(a == [2, 1, 2])
+        self.assertIsNone(operator.setitem(a, 0, 2))
+        self.assertEqual(a, [2, 1, 2])
         self.assertRaises(IndexError, operator.setitem, a, 4, 2)
 
     def test_sub(self):
+        operator = self.module
         self.assertRaises(TypeError, operator.sub)
         self.assertRaises(TypeError, operator.sub, None, None)
-        self.assertTrue(operator.sub(5, 2) == 3)
+        self.assertEqual(operator.sub(5, 2), 3)
 
     def test_truth(self):
+        operator = self.module
         class C(object):
             def __bool__(self):
                 raise SyntaxError
@@ -248,32 +289,38 @@ class OperatorTestCase(unittest.TestCase):
         self.assertFalse(operator.truth([]))
 
     def test_bitwise_xor(self):
+        operator = self.module
         self.assertRaises(TypeError, operator.xor)
         self.assertRaises(TypeError, operator.xor, None, None)
-        self.assertTrue(operator.xor(0xb, 0xc) == 0x7)
-    
+        self.assertEqual(operator.xor(0xb, 0xc), 0x7)
+
     def test_is(self):
+        operator = self.module
         a = b = 'xyzpdq'
         c = a[:3] + b[3:]
         self.assertRaises(TypeError, operator.is_)
         self.assertTrue(operator.is_(a, b))
         self.assertFalse(operator.is_(a,c))
-    
-    #brython fix me  (syntax error)
-    #def test_is_not(self):
-    #    a = b = 'xyzpdq'
-    #    c = a[:3] + b[3:]
-    #    self.assertRaises(TypeError, operator.is_not)
-    #    self.assertFalse(operator.is_not(a, b))
-    #    self.assertTrue(operator.is_not(a,c))
-    
+
+    def test_is_not(self):
+        operator = self.module
+        a = b = 'xyzpdq'
+        c = a[:3] + b[3:]
+        self.assertRaises(TypeError, operator.is_not)
+        self.assertFalse(operator.is_not(a, b))
+        self.assertTrue(operator.is_not(a,c))
+
     def test_attrgetter(self):
+        operator = self.module
         class A:
             pass
         a = A()
         a.name = 'arthur'
         f = operator.attrgetter('name')
         self.assertEqual(f(a), 'arthur')
+        self.assertRaises(TypeError, f)
+        self.assertRaises(TypeError, f, a, 'dent')
+        self.assertRaises(TypeError, f, a, surname='dent')
         f = operator.attrgetter('rank')
         self.assertRaises(AttributeError, f, a)
         self.assertRaises(TypeError, operator.attrgetter, 2)
@@ -317,9 +364,13 @@ class OperatorTestCase(unittest.TestCase):
         self.assertEqual(f(a), ('arthur', 'thomas', 'johnson'))
 
     def test_itemgetter(self):
+        operator = self.module
         a = 'ABCDE'
         f = operator.itemgetter(2)
         self.assertEqual(f(a), 'C')
+        self.assertRaises(TypeError, f)
+        self.assertRaises(TypeError, f, a, 3)
+        self.assertRaises(TypeError, f, a, size=3)
         f = operator.itemgetter(10)
         self.assertRaises(IndexError, f, a)
 
@@ -351,24 +402,34 @@ class OperatorTestCase(unittest.TestCase):
         self.assertRaises(TypeError, operator.itemgetter(2, 'x', 5), data)
 
     def test_methodcaller(self):
+        operator = self.module
         self.assertRaises(TypeError, operator.methodcaller)
+        self.assertRaises(TypeError, operator.methodcaller, 12)
         class A:
             def foo(self, *args, **kwds):
                 return args[0] + args[1]
             def bar(self, f=42):
                 return f
+            def baz(*args, **kwds):
+                return kwds['name'], kwds['self']
         a = A()
         f = operator.methodcaller('foo')
         self.assertRaises(IndexError, f, a)
         f = operator.methodcaller('foo', 1, 2)
         self.assertEqual(f(a), 3)
+        self.assertRaises(TypeError, f)
+        self.assertRaises(TypeError, f, a, 3)
+        self.assertRaises(TypeError, f, a, spam=3)
         f = operator.methodcaller('bar')
         self.assertEqual(f(a), 42)
         self.assertRaises(TypeError, f, a, a)
         f = operator.methodcaller('bar', f=5)
         self.assertEqual(f(a), 5)
+        f = operator.methodcaller('baz', name='spam', self='eggs')
+        self.assertEqual(f(a), ('spam', 'eggs'))
 
     def test_inplace(self):
+        operator = self.module
         class C(object):
             def __iadd__     (self, other): return "iadd"
             def __iand__     (self, other): return "iand"
@@ -376,6 +437,7 @@ class OperatorTestCase(unittest.TestCase):
             def __ilshift__  (self, other): return "ilshift"
             def __imod__     (self, other): return "imod"
             def __imul__     (self, other): return "imul"
+            def __imatmul__  (self, other): return "imatmul"
             def __ior__      (self, other): return "ior"
             def __ipow__     (self, other): return "ipow"
             def __irshift__  (self, other): return "irshift"
@@ -390,6 +452,7 @@ class OperatorTestCase(unittest.TestCase):
         self.assertEqual(operator.ilshift  (c, 5), "ilshift")
         self.assertEqual(operator.imod     (c, 5), "imod")
         self.assertEqual(operator.imul     (c, 5), "imul")
+        self.assertEqual(operator.imatmul  (c, 5), "imatmul")
         self.assertEqual(operator.ior      (c, 5), "ior")
         self.assertEqual(operator.ipow     (c, 5), "ipow")
         self.assertEqual(operator.irshift  (c, 5), "irshift")
@@ -397,37 +460,150 @@ class OperatorTestCase(unittest.TestCase):
         self.assertEqual(operator.itruediv (c, 5), "itruediv")
         self.assertEqual(operator.ixor     (c, 5), "ixor")
         self.assertEqual(operator.iconcat  (c, c), "iadd")
-        self.assertEqual(operator.__iadd__     (c, 5), "iadd")
-        self.assertEqual(operator.__iand__     (c, 5), "iand")
-        self.assertEqual(operator.__ifloordiv__(c, 5), "ifloordiv")
-        self.assertEqual(operator.__ilshift__  (c, 5), "ilshift")
-        self.assertEqual(operator.__imod__     (c, 5), "imod")
-        self.assertEqual(operator.__imul__     (c, 5), "imul")
-        self.assertEqual(operator.__ior__      (c, 5), "ior")
-        self.assertEqual(operator.__ipow__     (c, 5), "ipow")
-        self.assertEqual(operator.__irshift__  (c, 5), "irshift")
-        self.assertEqual(operator.__isub__     (c, 5), "isub")
-        self.assertEqual(operator.__itruediv__ (c, 5), "itruediv")
-        self.assertEqual(operator.__ixor__     (c, 5), "ixor")
-        self.assertEqual(operator.__iconcat__  (c, c), "iadd")
 
-def test_main(verbose=None):
-    import sys
-    test_classes = (
-        OperatorTestCase,
-    )
+    def test_length_hint(self):
+        operator = self.module
+        class X(object):
+            def __init__(self, value):
+                self.value = value
 
-    support.run_unittest(*test_classes)
+            def __length_hint__(self):
+                if type(self.value) is type:
+                    raise self.value
+                else:
+                    return self.value
 
-    # verify reference counting
-    if verbose and hasattr(sys, "gettotalrefcount"):
-        import gc
-        counts = [None] * 5
-        for i in range(len(counts)):
-            support.run_unittest(*test_classes)
-            gc.collect()
-            counts[i] = sys.gettotalrefcount()
-        print(counts)
+        self.assertEqual(operator.length_hint([], 2), 0)
+        self.assertEqual(operator.length_hint(iter([1, 2, 3])), 3)
+
+        self.assertEqual(operator.length_hint(X(2)), 2)
+        self.assertEqual(operator.length_hint(X(NotImplemented), 4), 4)
+        self.assertEqual(operator.length_hint(X(TypeError), 12), 12)
+        with self.assertRaises(TypeError):
+            operator.length_hint(X("abc"))
+        with self.assertRaises(ValueError):
+            operator.length_hint(X(-2))
+        with self.assertRaises(LookupError):
+            operator.length_hint(X(LookupError))
+
+    def test_dunder_is_original(self):
+        operator = self.module
+
+        names = [name for name in dir(operator) if not name.startswith('_')]
+        for name in names:
+            orig = getattr(operator, name)
+            dunder = getattr(operator, '__' + name.strip('_') + '__', None)
+            if dunder:
+                self.assertIs(dunder, orig)
+
+class PyOperatorTestCase(OperatorTestCase, unittest.TestCase):
+    module = py_operator
+
+@unittest.skipUnless(c_operator, 'requires _operator')
+class COperatorTestCase(OperatorTestCase, unittest.TestCase):
+    module = c_operator
+
+
+class OperatorPickleTestCase:
+    def copy(self, obj, proto):
+        with support.swap_item(sys.modules, 'operator', self.module):
+            pickled = pickle.dumps(obj, proto)
+        with support.swap_item(sys.modules, 'operator', self.module2):
+            return pickle.loads(pickled)
+
+    def test_attrgetter(self):
+        attrgetter = self.module.attrgetter
+        class A:
+            pass
+        a = A()
+        a.x = 'X'
+        a.y = 'Y'
+        a.z = 'Z'
+        a.t = A()
+        a.t.u = A()
+        a.t.u.v = 'V'
+        for proto in range(pickle.HIGHEST_PROTOCOL + 1):
+            with self.subTest(proto=proto):
+                f = attrgetter('x')
+                f2 = self.copy(f, proto)
+                self.assertEqual(repr(f2), repr(f))
+                self.assertEqual(f2(a), f(a))
+                # multiple gets
+                f = attrgetter('x', 'y', 'z')
+                f2 = self.copy(f, proto)
+                self.assertEqual(repr(f2), repr(f))
+                self.assertEqual(f2(a), f(a))
+                # recursive gets
+                f = attrgetter('t.u.v')
+                f2 = self.copy(f, proto)
+                self.assertEqual(repr(f2), repr(f))
+                self.assertEqual(f2(a), f(a))
+
+    def test_itemgetter(self):
+        itemgetter = self.module.itemgetter
+        a = 'ABCDE'
+        for proto in range(pickle.HIGHEST_PROTOCOL + 1):
+            with self.subTest(proto=proto):
+                f = itemgetter(2)
+                f2 = self.copy(f, proto)
+                self.assertEqual(repr(f2), repr(f))
+                self.assertEqual(f2(a), f(a))
+                # multiple gets
+                f = itemgetter(2, 0, 4)
+                f2 = self.copy(f, proto)
+                self.assertEqual(repr(f2), repr(f))
+                self.assertEqual(f2(a), f(a))
+
+    def test_methodcaller(self):
+        methodcaller = self.module.methodcaller
+        class A:
+            def foo(self, *args, **kwds):
+                return args[0] + args[1]
+            def bar(self, f=42):
+                return f
+            def baz(*args, **kwds):
+                return kwds['name'], kwds['self']
+        a = A()
+        for proto in range(pickle.HIGHEST_PROTOCOL + 1):
+            with self.subTest(proto=proto):
+                f = methodcaller('bar')
+                f2 = self.copy(f, proto)
+                self.assertEqual(repr(f2), repr(f))
+                self.assertEqual(f2(a), f(a))
+                # positional args
+                f = methodcaller('foo', 1, 2)
+                f2 = self.copy(f, proto)
+                self.assertEqual(repr(f2), repr(f))
+                self.assertEqual(f2(a), f(a))
+                # keyword args
+                f = methodcaller('bar', f=5)
+                f2 = self.copy(f, proto)
+                self.assertEqual(repr(f2), repr(f))
+                self.assertEqual(f2(a), f(a))
+                f = methodcaller('baz', self='eggs', name='spam')
+                f2 = self.copy(f, proto)
+                # Can't test repr consistently with multiple keyword args
+                self.assertEqual(f2(a), f(a))
+
+class PyPyOperatorPickleTestCase(OperatorPickleTestCase, unittest.TestCase):
+    module = py_operator
+    module2 = py_operator
+
+@unittest.skipUnless(c_operator, 'requires _operator')
+class PyCOperatorPickleTestCase(OperatorPickleTestCase, unittest.TestCase):
+    module = py_operator
+    module2 = c_operator
+
+@unittest.skipUnless(c_operator, 'requires _operator')
+class CPyOperatorPickleTestCase(OperatorPickleTestCase, unittest.TestCase):
+    module = c_operator
+    module2 = py_operator
+
+@unittest.skipUnless(c_operator, 'requires _operator')
+class CCOperatorPickleTestCase(OperatorPickleTestCase, unittest.TestCase):
+    module = c_operator
+    module2 = c_operator
+
 
 if __name__ == "__main__":
-    test_main(verbose=True)
+    unittest.main()

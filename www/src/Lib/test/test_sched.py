@@ -1,14 +1,10 @@
-#!/usr/bin/env python
-
 import queue
 import sched
+import threading
 import time
 import unittest
 from test import support
-try:
-    import threading
-except ImportError:
-    threading = None
+
 
 TIMEOUT = 10
 
@@ -61,7 +57,6 @@ class TestCase(unittest.TestCase):
         scheduler.run()
         self.assertEqual(l, [0.01, 0.02, 0.03, 0.04, 0.05])
 
-    @unittest.skipUnless(threading, 'Threading required for this test.')
     def test_enter_concurrent(self):
         q = queue.Queue()
         fun = q.put
@@ -87,8 +82,7 @@ class TestCase(unittest.TestCase):
         self.assertEqual(q.get(timeout=TIMEOUT), 5)
         self.assertTrue(q.empty())
         timer.advance(1000)
-        t.join(timeout=TIMEOUT)
-        self.assertFalse(t.is_alive())
+        support.join_thread(t, timeout=TIMEOUT)
         self.assertTrue(q.empty())
         self.assertEqual(timer.time(), 5)
 
@@ -116,7 +110,6 @@ class TestCase(unittest.TestCase):
         scheduler.run()
         self.assertEqual(l, [0.02, 0.03, 0.04])
 
-    @unittest.skipUnless(threading, 'Threading required for this test.')
     def test_cancel_concurrent(self):
         q = queue.Queue()
         fun = q.put
@@ -144,8 +137,7 @@ class TestCase(unittest.TestCase):
         self.assertEqual(q.get(timeout=TIMEOUT), 4)
         self.assertTrue(q.empty())
         timer.advance(1000)
-        t.join(timeout=TIMEOUT)
-        self.assertFalse(t.is_alive())
+        support.join_thread(t, timeout=TIMEOUT)
         self.assertTrue(q.empty())
         self.assertEqual(timer.time(), 4)
 
@@ -175,17 +167,23 @@ class TestCase(unittest.TestCase):
         self.assertEqual(scheduler.queue, [e1, e2, e3, e4, e5])
 
     def test_args_kwargs(self):
-        flag = []
-
+        seq = []
         def fun(*a, **b):
-            flag.append(None)
-            self.assertEqual(a, (1,2,3))
-            self.assertEqual(b, {"foo":1})
+            seq.append((a, b))
 
+        now = time.time()
         scheduler = sched.scheduler(time.time, time.sleep)
-        z = scheduler.enterabs(0.01, 1, fun, argument=(1,2,3), kwargs={"foo":1})
+        scheduler.enterabs(now, 1, fun)
+        scheduler.enterabs(now, 1, fun, argument=(1, 2))
+        scheduler.enterabs(now, 1, fun, argument=('a', 'b'))
+        scheduler.enterabs(now, 1, fun, argument=(1, 2), kwargs={"foo": 3})
         scheduler.run()
-        self.assertEqual(flag, [None])
+        self.assertCountEqual(seq, [
+            ((), {}),
+            ((1, 2), {}),
+            (('a', 'b'), {}),
+            ((1, 2), {'foo': 3})
+        ])
 
     def test_run_non_blocking(self):
         l = []
@@ -197,8 +195,5 @@ class TestCase(unittest.TestCase):
         self.assertEqual(l, [])
 
 
-def test_main():
-    support.run_unittest(TestCase)
-
 if __name__ == "__main__":
-    test_main()
+    unittest.main()

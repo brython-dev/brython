@@ -26,8 +26,10 @@ class GroupDatabaseTestCase(unittest.TestCase):
         for e in entries:
             self.check_value(e)
 
+    def test_values_extended(self):
+        entries = grp.getgrall()
         if len(entries) > 1000:  # Huge group file (NIS?) -- skip the rest
-            return
+            self.skipTest('huge group file, extended test skipped')
 
         for e in entries:
             e2 = grp.getgrgid(e.gr_gid)
@@ -48,6 +50,8 @@ class GroupDatabaseTestCase(unittest.TestCase):
         self.assertRaises(TypeError, grp.getgrgid)
         self.assertRaises(TypeError, grp.getgrnam)
         self.assertRaises(TypeError, grp.getgrall, 42)
+        # embedded null character
+        self.assertRaises(ValueError, grp.getgrnam, 'a\x00b')
 
         # try to get some errors
         bynames = {}
@@ -90,8 +94,15 @@ class GroupDatabaseTestCase(unittest.TestCase):
 
         self.assertRaises(KeyError, grp.getgrgid, fakegid)
 
-def test_main():
-    support.run_unittest(GroupDatabaseTestCase)
+    def test_noninteger_gid(self):
+        entries = grp.getgrall()
+        if not entries:
+            self.skipTest('no groups')
+        # Choose an existent gid.
+        gid = entries[0][2]
+        self.assertWarns(DeprecationWarning, grp.getgrgid, float(gid))
+        self.assertWarns(DeprecationWarning, grp.getgrgid, str(gid))
+
 
 if __name__ == "__main__":
-    test_main()
+    unittest.main()

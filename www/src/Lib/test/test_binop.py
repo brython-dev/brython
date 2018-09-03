@@ -1,8 +1,8 @@
 """Tests for binary operators on subtypes of built-in types."""
 
 import unittest
-from test import support
-from operator import eq, ne, lt, gt, le, ge
+from operator import eq, le, ne
+from abc import ABCMeta
 
 def gcd(a, b):
     """Greatest common divisor using Euclid's algorithm."""
@@ -22,7 +22,7 @@ def isnum(x):
     return 0
 
 def isRat(x):
-    """Test wheter an object is an instance of the Rat class."""
+    """Test whether an object is an instance of the Rat class."""
     return isinstance(x, Rat)
 
 class Rat(object):
@@ -57,7 +57,7 @@ class Rat(object):
     den = property(_get_den, None)
 
     def __repr__(self):
-        """Convert a Rat to an string resembling a Rat constructor call."""
+        """Convert a Rat to a string resembling a Rat constructor call."""
         return "Rat(%d, %d)" % (self.__num, self.__den)
 
     def __str__(self):
@@ -194,10 +194,6 @@ class Rat(object):
             return float(self) == other
         return NotImplemented
 
-    def __ne__(self, other):
-        """Compare two Rats for inequality."""
-        return not self == other
-
 class RatTestCase(unittest.TestCase):
     """Unit tests for Rat class and its support utilities."""
 
@@ -238,10 +234,7 @@ class RatTestCase(unittest.TestCase):
             pass
         else:
             self.fail("Rat(1, 0) didn't raise ZeroDivisionError")
-        #brython fix me
-        #for bad in "0", 0.0, 0j, (), [], {}, None, Rat, unittest:
-        #for bad in "0", 0.0, (), [], {}, None, Rat, unittest:
-        for bad in "0", 0.0, 0j, (): #, []:#, {}: #, None, Rat, unittest:
+        for bad in "0", 0.0, 0j, (), [], {}, None, Rat, unittest:
             try:
                 a = Rat(bad)
             except TypeError:
@@ -339,7 +332,7 @@ class A(OperationLogger):
         self.log_operation('A.__ge__')
         return NotImplemented
 
-class B(OperationLogger):
+class B(OperationLogger, metaclass=ABCMeta):
     def __eq__(self, other):
         self.log_operation('B.__eq__')
         return NotImplemented
@@ -361,6 +354,20 @@ class C(B):
         self.log_operation('C.__ge__')
         return NotImplemented
 
+class V(OperationLogger):
+    """Virtual subclass of B"""
+    def __eq__(self, other):
+        self.log_operation('V.__eq__')
+        return NotImplemented
+    def __le__(self, other):
+        self.log_operation('V.__le__')
+        return NotImplemented
+    def __ge__(self, other):
+        self.log_operation('V.__ge__')
+        return NotImplemented
+B.register(V)
+
+
 class OperationOrderTests(unittest.TestCase):
     def test_comparison_orders(self):
         self.assertEqual(op_sequence(eq, A, A), ['A.__eq__', 'A.__eq__'])
@@ -376,8 +383,58 @@ class OperationOrderTests(unittest.TestCase):
         self.assertEqual(op_sequence(le, B, C), ['C.__ge__', 'B.__le__'])
         self.assertEqual(op_sequence(le, C, B), ['C.__le__', 'B.__ge__'])
 
-def test_main():
-    support.run_unittest(RatTestCase, OperationOrderTests)
+        self.assertTrue(issubclass(V, B))
+        self.assertEqual(op_sequence(eq, B, V), ['B.__eq__', 'V.__eq__'])
+        self.assertEqual(op_sequence(le, B, V), ['B.__le__', 'V.__ge__'])
+
+class SupEq(object):
+    """Class that can test equality"""
+    def __eq__(self, other):
+        return True
+
+class S(SupEq):
+    """Subclass of SupEq that should fail"""
+    __eq__ = None
+
+class F(object):
+    """Independent class that should fall back"""
+
+class X(object):
+    """Independent class that should fail"""
+    __eq__ = None
+
+class SN(SupEq):
+    """Subclass of SupEq that can test equality, but not non-equality"""
+    __ne__ = None
+
+class XN:
+    """Independent class that can test equality, but not non-equality"""
+    def __eq__(self, other):
+        return True
+    __ne__ = None
+
+class FallbackBlockingTests(unittest.TestCase):
+    """Unit tests for None method blocking"""
+
+    def test_fallback_rmethod_blocking(self):
+        e, f, s, x = SupEq(), F(), S(), X()
+        self.assertEqual(e, e)
+        self.assertEqual(e, f)
+        self.assertEqual(f, e)
+        # left operand is checked first
+        self.assertEqual(e, x)
+        self.assertRaises(TypeError, eq, x, e)
+        # S is a subclass, so it's always checked first
+        self.assertRaises(TypeError, eq, e, s)
+        self.assertRaises(TypeError, eq, s, e)
+
+    def test_fallback_ne_blocking(self):
+        e, sn, xn = SupEq(), SN(), XN()
+        self.assertFalse(e != e)
+        self.assertRaises(TypeError, ne, e, sn)
+        self.assertRaises(TypeError, ne, sn, e)
+        self.assertFalse(e != xn)
+        self.assertRaises(TypeError, ne, xn, e)
 
 if __name__ == "__main__":
-    test_main()
+    unittest.main()

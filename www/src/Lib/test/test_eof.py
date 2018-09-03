@@ -1,4 +1,3 @@
-#! /usr/bin/env python3
 """test script for a few new invalid token catches"""
 
 import unittest
@@ -25,8 +24,5 @@ class EOFTestCase(unittest.TestCase):
         else:
             raise support.TestFailed
 
-def test_main():
-    support.run_unittest(EOFTestCase)
-
 if __name__ == "__main__":
-    test_main()
+    unittest.main()

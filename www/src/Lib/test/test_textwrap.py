@@ -9,9 +9,8 @@
 #
 
 import unittest
-from test import support
 
-from textwrap import TextWrapper, wrap, fill, dedent, indent
+from textwrap import TextWrapper, wrap, fill, dedent, indent, shorten
 
 
 class BaseTestCase(unittest.TestCase):
@@ -185,6 +184,16 @@ What a mess!
         self.check_wrap(text, 42,
                         ["this-is-a-useful-feature-for-reformatting-",
                          "posts-from-tim-peters'ly"])
+        # The test tests current behavior but is not testing parts of the API.
+        expect = ("this-|is-|a-|useful-|feature-|for-|"
+                  "reformatting-|posts-|from-|tim-|peters'ly").split('|')
+        self.check_wrap(text, 1, expect, break_long_words=False)
+        self.check_split(text, expect)
+
+        self.check_split('e-mail', ['e-mail'])
+        self.check_split('Jelly-O', ['Jelly-O'])
+        # The test tests current behavior but is not testing parts of the API.
+        self.check_split('half-a-crown', 'half-|a-|crown'.split('|'))
 
     def test_hyphenated_numbers(self):
         # Test that hyphenated numbers (eg. dates) are not broken like words.
@@ -196,6 +205,7 @@ What a mess!
                                    'released on 1994-02-15.'])
         self.check_wrap(text, 40, ['Python 1.0.0 was released on 1994-01-26.',
                                    'Python 1.0.1 was released on 1994-02-15.'])
+        self.check_wrap(text, 1, text.split(), break_long_words=False)
 
         text = "I do all my shopping at 7-11."
         self.check_wrap(text, 25, ["I do all my shopping at",
@@ -203,6 +213,7 @@ What a mess!
         self.check_wrap(text, 27, ["I do all my shopping at",
                                    "7-11."])
         self.check_wrap(text, 29, ["I do all my shopping at 7-11."])
+        self.check_wrap(text, 1, text.split(), break_long_words=False)
 
     def test_em_dash(self):
         # Test text with em-dashes
@@ -327,6 +338,10 @@ What a mess!
         self.check_split("the ['wibble-wobble'] widget",
                          ['the', ' ', "['wibble-", "wobble']", ' ', 'widget'])
 
+        # The test tests current behavior but is not testing parts of the API.
+        self.check_split("what-d'you-call-it.",
+                         "what-d'you-|call-|it.".split('|'))
+
     def test_funky_parens (self):
         # Second part of SF bug #596434: long option strings inside
         # parentheses.
@@ -429,6 +444,132 @@ What a mess!
         text = "aa \xe4\xe4-\xe4\xe4"
         self.check_wrap(text, 7, ["aa \xe4\xe4-", "\xe4\xe4"])
 
+    def test_non_breaking_space(self):
+        text = 'This is a sentence with non-breaking\N{NO-BREAK SPACE}space.'
+
+        self.check_wrap(text, 20,
+                        ['This is a sentence',
+                         'with non-',
+                         'breaking\N{NO-BREAK SPACE}space.'],
+                        break_on_hyphens=True)
+
+        self.check_wrap(text, 20,
+                        ['This is a sentence',
+                         'with',
+                         'non-breaking\N{NO-BREAK SPACE}space.'],
+                        break_on_hyphens=False)
+
+    def test_narrow_non_breaking_space(self):
+        text = ('This is a sentence with non-breaking'
+                '\N{NARROW NO-BREAK SPACE}space.')
+
+        self.check_wrap(text, 20,
+                        ['This is a sentence',
+                         'with non-',
+                         'breaking\N{NARROW NO-BREAK SPACE}space.'],
+                        break_on_hyphens=True)
+
+        self.check_wrap(text, 20,
+                        ['This is a sentence',
+                         'with',
+                         'non-breaking\N{NARROW NO-BREAK SPACE}space.'],
+                        break_on_hyphens=False)
+
+
+class MaxLinesTestCase(BaseTestCase):
+    text = "Hello there, how are you this fine day?  I'm glad to hear it!"
+
+    def test_simple(self):
+        self.check_wrap(self.text, 12,
+                        ["Hello [...]"],
+                        max_lines=0)
+        self.check_wrap(self.text, 12,
+                        ["Hello [...]"],
+                        max_lines=1)
+        self.check_wrap(self.text, 12,
+                        ["Hello there,",
+                         "how [...]"],
+                        max_lines=2)
+        self.check_wrap(self.text, 13,
+                        ["Hello there,",
+                         "how are [...]"],
+                        max_lines=2)
+        self.check_wrap(self.text, 80, [self.text], max_lines=1)
+        self.check_wrap(self.text, 12,
+                        ["Hello there,",
+                         "how are you",
+                         "this fine",
+                         "day?  I'm",
+                         "glad to hear",
+                         "it!"],
+                        max_lines=6)
+
+    def test_spaces(self):
+        # strip spaces before placeholder
+        self.check_wrap(self.text, 12,
+                        ["Hello there,",
+                         "how are you",
+                         "this fine",
+                         "day? [...]"],
+                        max_lines=4)
+        # placeholder at the start of line
+        self.check_wrap(self.text, 6,
+                        ["Hello",
+                         "[...]"],
+                        max_lines=2)
+        # final spaces
+        self.check_wrap(self.text + ' ' * 10, 12,
+                        ["Hello there,",
+                         "how are you",
+                         "this fine",
+                         "day?  I'm",
+                         "glad to hear",
+                         "it!"],
+                        max_lines=6)
+
+    def test_placeholder(self):
+        self.check_wrap(self.text, 12,
+                        ["Hello..."],
+                        max_lines=1,
+                        placeholder='...')
+        self.check_wrap(self.text, 12,
+                        ["Hello there,",
+                         "how are..."],
+                        max_lines=2,
+                        placeholder='...')
+        # long placeholder and indentation
+        with self.assertRaises(ValueError):
+            wrap(self.text, 16, initial_indent='    ',
+                 max_lines=1, placeholder=' [truncated]...')
+        with self.assertRaises(ValueError):
+            wrap(self.text, 16, subsequent_indent='    ',
+                 max_lines=2, placeholder=' [truncated]...')
+        self.check_wrap(self.text, 16,
+                        ["    Hello there,",
+                         "  [truncated]..."],
+                        max_lines=2,
+                        initial_indent='    ',
+                        subsequent_indent='  ',
+                        placeholder=' [truncated]...')
+        self.check_wrap(self.text, 16,
+                        ["  [truncated]..."],
+                        max_lines=1,
+                        initial_indent='  ',
+                        subsequent_indent='    ',
+                        placeholder=' [truncated]...')
+        self.check_wrap(self.text, 80, [self.text], placeholder='.' * 1000)
+
+    def test_placeholder_backtrack(self):
+        # Test special case when max_lines insufficient, but what
+        # would be last wrapped line so long the placeholder cannot
+        # be added there without violence. So, textwrap backtracks,
+        # adding placeholder to the penultimate line.
+        text = 'Good grief Python features are advancing quickly!'
+        self.check_wrap(text, 12,
+                        ['Good grief', 'Python*****'],
+                        max_lines=3,
+                        placeholder='*****')
+
 
 class LongWordTestCase (BaseTestCase):
     def setUp(self):
@@ -489,6 +630,14 @@ How *do* you spell that odd word, anyways?
         # Same thing with kwargs passed to standalone wrap() function.
         result = wrap(self.text, width=30, break_long_words=0)
         self.check(result, expect)
+
+    def test_max_lines_long(self):
+        self.check_wrap(self.text, 12,
+                        ['Did you say ',
+                         '"supercalifr',
+                         'agilisticexp',
+                         '[...]'],
+                        max_lines=4)
 
 
 class IndentTestCases(BaseTestCase):
@@ -605,6 +754,22 @@ def foo():
         expect = "Foo\n  Bar\n\n Baz\n"
         self.assertEqual(expect, dedent(text))
 
+    def test_dedent_declining(self):
+        # Uneven indentation with declining indent level.
+        text = "     Foo\n    Bar\n"  # 5 spaces, then 4
+        expect = " Foo\nBar\n"
+        self.assertEqual(expect, dedent(text))
+
+        # Declining indent level with blank line.
+        text = "     Foo\n\n    Bar\n"  # 5 spaces, blank, then 4
+        expect = " Foo\n\nBar\n"
+        self.assertEqual(expect, dedent(text))
+
+        # Declining indent level with whitespace only line.
+        text = "     Foo\n    \n    Bar\n"  # 5 spaces, then 4, then 4
+        expect = " Foo\n\nBar\n"
+        self.assertEqual(expect, dedent(text))
+
     # dedent() should not mangle internal tabs
     def test_dedent_preserve_internal_tabs(self):
         text = "  hello\tthere\n  how are\tyou?"
@@ -639,6 +804,11 @@ def foo():
 
         text = "  \thello there\n  \t  how are you?"
         expect = "hello there\n  how are you?"
+        self.assertEqual(expect, dedent(text))
+
+        # test margin is smaller than smallest indent
+        text = "  \thello there\n   \thow are you?\n \tI'm fine, thanks"
+        expect = " \thello there\n  \thow are you?\n\tI'm fine, thanks"
         self.assertEqual(expect, dedent(text))
 
 
@@ -777,12 +947,62 @@ class IndentTestCase(unittest.TestCase):
             self.assertEqual(indent(text, prefix, predicate), expect)
 
 
-def test_main():
-    support.run_unittest(WrapTestCase,
-                              LongWordTestCase,
-                              IndentTestCases,
-                              DedentTestCase,
-                              IndentTestCase)
+class ShortenTestCase(BaseTestCase):
+
+    def check_shorten(self, text, width, expect, **kwargs):
+        result = shorten(text, width, **kwargs)
+        self.check(result, expect)
+
+    def test_simple(self):
+        # Simple case: just words, spaces, and a bit of punctuation
+        text = "Hello there, how are you this fine day? I'm glad to hear it!"
+
+        self.check_shorten(text, 18, "Hello there, [...]")
+        self.check_shorten(text, len(text), text)
+        self.check_shorten(text, len(text) - 1,
+            "Hello there, how are you this fine day? "
+            "I'm glad to [...]")
+
+    def test_placeholder(self):
+        text = "Hello there, how are you this fine day? I'm glad to hear it!"
+
+        self.check_shorten(text, 17, "Hello there,$$", placeholder='$$')
+        self.check_shorten(text, 18, "Hello there, how$$", placeholder='$$')
+        self.check_shorten(text, 18, "Hello there, $$", placeholder=' $$')
+        self.check_shorten(text, len(text), text, placeholder='$$')
+        self.check_shorten(text, len(text) - 1,
+            "Hello there, how are you this fine day? "
+            "I'm glad to hear$$", placeholder='$$')
+
+    def test_empty_string(self):
+        self.check_shorten("", 6, "")
+
+    def test_whitespace(self):
+        # Whitespace collapsing
+        text = """
+            This is a  paragraph that  already has
+            line breaks and \t tabs too."""
+        self.check_shorten(text, 62,
+                             "This is a paragraph that already has line "
+                             "breaks and tabs too.")
+        self.check_shorten(text, 61,
+                             "This is a paragraph that already has line "
+                             "breaks and [...]")
+
+        self.check_shorten("hello      world!  ", 12, "hello world!")
+        self.check_shorten("hello      world!  ", 11, "hello [...]")
+        # The leading space is trimmed from the placeholder
+        # (it would be ugly otherwise).
+        self.check_shorten("hello      world!  ", 10, "[...]")
+
+    def test_width_too_small_for_placeholder(self):
+        shorten("x" * 20, width=8, placeholder="(......)")
+        with self.assertRaises(ValueError):
+            shorten("x" * 20, width=8, placeholder="(.......)")
+
+    def test_first_word_too_long_but_placeholder_fits(self):
+        self.check_shorten("Helloo", 5, "[...]")
+
 
 if __name__ == '__main__':
-    test_main()
+    unittest.main()
