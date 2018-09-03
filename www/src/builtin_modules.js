@@ -304,7 +304,7 @@
     modules['browser'] = browser
 
     modules['javascript'] = {
-        __file__:$B.brython_path + '/libs/javascript.js',
+        //__file__:$B.brython_path + '/libs/javascript.js',
         $$this: function(){
             // returns the content of Javascript "this"
             // $B.js_this is set to "this" at the beginning of each function
@@ -349,7 +349,7 @@
     // see https://docs.python.org/3/reference/toplevel_components.html#programs
     var _b_ = $B.builtins
     modules['_sys'] = {
-        __file__:$B.brython_path + '/libs/_sys.js',
+        //__file__:$B.brython_path + '/src/builtin_modules.js',
         // Called "Getframe" because "_getframe" wouldn't be imported in
         // sys.py with "from _sys import *"
         Getframe : function(depth){
@@ -424,9 +424,12 @@
         module_obj.__class__ = $B.module
         //module_obj.__file__ = '<builtin>'
         module_obj.__name__ = name
+        /*
         module_obj.__repr__ = module_obj.__str__ = function(){
+            console.log("use module_obj __repr__")
             return "<module '" + name + "' (built-in)>"
         }
+        */
         $B.imported[name] = module_obj
         // set attribute "name" of functions
         for(var attr in module_obj){
