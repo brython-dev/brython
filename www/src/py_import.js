@@ -373,9 +373,11 @@ var finder_VFS = {
                    mod_js += "return $locals_" + parent.replace(/\./g, "_")
                    var $module = new Function(mod_js)()
                }catch(err){
-                   console.log(err)
-                   for(var k in err){console.log(k, err[k])}
-                   console.log(Object.keys($B.imported))
+                   if($B.debug > 1){
+                       console.log(err)
+                       for(var k in err){console.log(k, err[k])}
+                       console.log(Object.keys($B.imported))
+                   }
                    throw err
                }
                for(var attr in $module){
@@ -1058,8 +1060,9 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                         }
                         // For other modules, raise ImportError
                         if($err3.$py_error){
-                            var msg = $err3.__class__.__name__ + "\n" +
-                                _b_.getattr($err3, "info"),
+                            var msg = _b_.getattr($err3, "info") + "\n" +
+                                    $err3.__class__.__name__ + ": " + 
+                                    $err3.args[0],
                                 exc = _b_.ImportError.$factory("cannot import name '"+
                                     name + "'\n\n" + msg)
                                 exc.name = name
