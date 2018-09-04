@@ -5,6 +5,8 @@ _getframe = Getframe
 from javascript import JSObject
 from browser import window
 
+abiflags = 0 # required in sysconfig
+
 brython_debug_mode = __BRYTHON__.debug
 
 base_exec_prefix = __BRYTHON__.brython_path
