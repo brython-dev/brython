@@ -310,6 +310,7 @@ Function called in case of SyntaxError
 */
 
 var $_SyntaxError = $B.parser.$_SyntaxError = function (context,msg,indent){
+    // console.log("syntax error", context, msg)
     var ctx_node = context
     while(ctx_node.type !== 'node'){ctx_node = ctx_node.parent}
     var tree_node = ctx_node.node,
@@ -4460,9 +4461,10 @@ var $ListOrTupleCtx = $B.parser.$ListOrTupleCtx = function(context,real){
                     comments.forEach(function(comment){
                         if(comment[0] > start && comment[0] < end){
                             // If there is a comment inside the interval,
-                            // remove it. Cf issue #776
+                            // replace it by spaces. Cf issue #776
                             var pos = comment[0] - start
                             txt = txt.substr(0, pos) +
+                                ' '.repeat(comment[1]) +
                                 txt.substr(pos + comment[1] + 1)
                         }
                     })
@@ -4492,7 +4494,7 @@ var $ListOrTupleCtx = $B.parser.$ListOrTupleCtx = function(context,real){
                             listcomp_name = 'lc' + ix,
                             save_pos = $pos
                         var root = $B.py2js({src:py, is_comp:true},
-                            module_name, listcomp_name, scope, line_num)
+                            module_name, listcomp_name, scope, 1)
 
                         $pos = save_pos
 
@@ -8803,7 +8805,7 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_info){
 
     var global_ns = '$locals_' + module.replace(/\./g,'_')
 
-    $B.$py_src[locals_id] = src
+    //$B.$py_src[locals_id] = src
     var root = $create_root_node({src: src, is_comp: is_comp},
         module, locals_id, parent_scope, line_info)
     $tokenize(root, src)
@@ -9332,18 +9334,12 @@ var loop = $B.loop = function(){
                 js = script.js
             new Function(js)()
         }catch(err){
-            if($B.debug > 1){
-                console.log(err)
-                for(var attr in err){
-                   console.log(attr+' : ', err[attr])
-                }
-            }
-
             // If the error was not caught by the Python runtime, build an
             // instance of a Python exception
             if(err.$py_error === undefined){
                 console.log('Javascript error', err)
-                err = _b_.RuntimeError.$factory(err+'')
+                console.log($B.frames_stack.slice())
+                err = _b_.RuntimeError.$factory(err + '')
             }
 
             handle_error(err)
@@ -9362,7 +9358,7 @@ function handle_error(err){
     // Print the error traceback on the standard error stream
     if(err.__class__ !== undefined){
         var name = err.__class__.__name__,
-            trace = _b_.getattr(err,'info')
+            trace = _b_.getattr(err, 'info')
         if(name=='SyntaxError' || name=='IndentationError'){
             var offset = err.args[3]
             trace += '\n    ' + ' '.repeat(offset) + '^' +
