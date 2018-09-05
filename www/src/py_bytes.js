@@ -180,7 +180,7 @@ bytes.__getitem__ = function(self, arg){
             for(var i = start; i >= stop; i += step){res[pos++] = self.source[i]}
         }
         return bytes.$factory(res)
-    }else if(isinstance(arg, bool)){
+    }else if(isinstance(arg, _b_.bool)){
         return self.source.__getitem__(_b_.int.$factory(arg))
     }
 }
