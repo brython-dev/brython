@@ -491,7 +491,7 @@ var $Node = $B.parser.$Node = function(type){
 
         if(this.type === 'module'){
             // module doc string
-            this.doc_string = $get_docstring(this)
+            this.__doc__ = $get_docstring(this)
             var i = 0
             while(i < this.children.length){
                 var offset = this.children[i].transform(i)
@@ -2460,8 +2460,8 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
 
         // Declare object holding local variables
         var local_ns = '$locals_' + this.id
-        js = 'var ' + local_ns + ' = {}, ' + '$local_name = "' + this.id +
-            '",$locals = ' + local_ns + ';'
+        js = 'var ' + local_ns + ' = {$name: "' + this.name + '"}, ' +
+            '$local_name = "' + this.id + '",$locals = ' + local_ns + ';'
 
         var new_node = new $Node()
         new_node.locals_def = true
@@ -4313,7 +4313,8 @@ var $LambdaCtx = $B.parser.$LambdaCtx = function(context){
         var js = $B.py2js(py, module_name, lambda_name, scope,
             node.line_num).to_js()
 
-        js = '(function(){\n' + js + '\nreturn $locals.' + func_name + '\n})()'
+        js = '(function($locals_' + lambda_name + '){\n' + js +
+            '\nreturn $locals.' + func_name + '\n})({})'
 
         $B.clear_ns(lambda_name)
         $B.$py_src[lambda_name] = null
@@ -4505,7 +4506,8 @@ var $ListOrTupleCtx = $B.parser.$ListOrTupleCtx = function(context,real){
                         delete $B.$py_src[listcomp_name]
 
                         js += 'return $locals_lc' + ix + '["x' + ix + '"]'
-                        js = '(function(){' + js + '})()'
+                        js = '(function($locals_' + listcomp_name + '){' +
+                            js + '})({})'
                         return js
 
                     case 'dict_or_set_comp':
@@ -5817,13 +5819,13 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
 
         catch_node.add($NodeJS(exc_name + ' = false;' + err_name +
             ' = $B.exception(' + err_name + ')\n' + ' '.repeat(node.indent+4) +
-                'if(!$B.$bool('+cme_name+'('+
+                'var $b = '+cme_name+'('+
                             err_name + '.__class__,' +
                             err_name + ','+
                             '$B.$getattr('+err_name + ', "traceback")'+
                         ')'+
-                    ')'+
-                '){' +
+                    //')'+
+                ';if(!$B.$bool($b)){' +
                    'throw ' + err_name +
                 '}'
         ))
@@ -5924,7 +5926,7 @@ var $YieldCtx = $B.parser.$YieldCtx = function(context, is_await){
 
     this.transform = function(node, rank){
         var new_node = $NodeJS('// placeholder for generator sent value')
-        new_node.set_yield_value = true
+        new_node.is_set_yield_value = true
         node.parent.insert(rank + 1, new_node)
     }
 
@@ -8817,34 +8819,12 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_info){
 
     js[pos++] = 'var $bltns = __BRYTHON__.InjectBuiltins();eval($bltns);\n\n'
 
-    js[pos] = 'var '
-    if(locals_is_module){
-        js[pos] += local_ns + ' = $locals_' + module + ', '
-    }else if(!internal){
-        js[pos] += local_ns + ' = $B.imported["' + locals_id + '"] || {}, '
-    }
-    js[pos] += '$locals = ' + local_ns + ';'
+    js[pos] = 'var $locals = ' + local_ns + ';'
 
     var offset = 0
 
     root.insert(0, $NodeJS(js.join('')))
     offset++
-
-    // set attribute $src of module object to Python source
-    root.insert(offset++, $NodeJS(global_ns +
-        ".$src = " + global_ns + ".$src || $B.$py_src['" +
-        module +"']; delete $B.$py_src['" + module +
-        "'];"))
-
-    // module doc string
-    root.insert(offset++,
-        $NodeJS(local_ns + '["__doc__"] = ' + (root.doc_string || 'None') +
-            ';'))
-
-    // name
-    root.insert(offset++,
-        $NodeJS(local_ns + '["__name__"] = ' + local_ns +
-            '["__name__"] || "' + locals_id + '";'))
 
     // package, if available
     root.insert(offset++,
@@ -8854,12 +8834,6 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_info){
     root.insert(offset++,
         $NodeJS('$locals.__annotations__ = _b_.dict.$factory()'))
 
-    // file
-    if($B.$py_module_path[module] !== undefined){
-        root.insert(offset++,
-            $NodeJS(local_ns + '["__file__"] = "' + $B.$py_module_path[module] +
-                '";None;\n'))
-    }
     // if line_info is provided, store it
     if(line_info !== undefined){
         root.insert(offset++,
@@ -9328,11 +9302,10 @@ var loop = $B.loop = function(){
     if(func == "execute"){
         try{
             var script = task[1],
-                src = script.src,
-                name = script.name,
-                url = script.url,
-                js = script.js
-            new Function(js)()
+                script_id = script.__name__.replace(/\./g, "_")
+            $B.imported[script_id] = {$src: script.$src}
+            new Function("$locals_" + script_id, script.js)(script)
+
         }catch(err){
             // If the error was not caught by the Python runtime, build an
             // instance of a Python exception
@@ -9416,11 +9389,13 @@ $B.run_script = function(src, name, run_loop){
         var root = $B.py2js(src, name, name),
             js = root.to_js(),
             script = {
+                __doc__: root.__doc__,
                 js: js,
-                name: name,
-                src: src,
-                url: $B.script_path
+                __name__: name,
+                $src: src,
+                __file__: $B.script_path + "/" + name
             }
+            $B.file_cache[script.__file__] = src
             if($B.debug > 1){$log(js)}
     }catch(err){
         handle_error(err)
