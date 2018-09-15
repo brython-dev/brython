@@ -53,7 +53,6 @@ def lookup(encoding):
     """lookup(encoding) -> CodecInfo
     Looks up a codec tuple in the Python codec registry and returns
     a CodecInfo object."""
-
     if encoding in ('utf-8', 'utf_8'):
        from browser import console
        import encodings.utf_8
@@ -159,8 +158,8 @@ def utf_7_decode(*args,**kw):
 def utf_7_encode(*args,**kw):
     pass
 
-def utf_8_decode(*args,**kw):
-    pass
+def utf_8_decode(decoder, bytes_obj, errors, *args):
+    return (bytes_obj.decode("utf-8"), len(bytes_obj))
 
 def utf_8_encode(*args, **kw):
     input = args[0]
