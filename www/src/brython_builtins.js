@@ -42,6 +42,9 @@ $B.__ARGV = []
 // Mapping between a module name and its path (url)
 $B.$py_module_path = {}
 
+// File cache
+$B.file_cache = {}
+
 // Mapping between a Python module name and its source code
 $B.$py_src = {}
 

@@ -787,7 +787,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false //attr == "__lt__" //&& obj.__name__ == "Point"
+    var $test = false //attr == "flush" //&& obj.__name__ == "Point"
     // Shortcut for classes without parents
     if(klass !== undefined && klass.__bases__ && klass.__bases__.length == 0){
         if(obj.hasOwnProperty(attr)){
@@ -951,8 +951,11 @@ $B.$getattr = function(obj, attr, _default){
         else if(res === undefined && obj.hasOwnProperty(attr)){
             return res
         }else if(res !== undefined){
-            if(res.__set__ === undefined || res.$is_class)
-            return res
+            if(res.__set__ === undefined || res.$is_class){
+                if($test){console.log("return", res, res+'',
+                    res.__set__, res.$is_class)}
+                return res
+            }
         }
     }else if($test){
         console.log("use attr_func", attr_func)
@@ -1193,14 +1196,13 @@ function issubclass(klass,classinfo){
 
     if(!klass.__class__ ||
             !(klass.$factory !== undefined || klass.$is_class !== undefined)){
-                console.log('not a class', klass,"\n", klass + "")
-      throw _b_.TypeError.$factory("issubclass() arg 1 must be a class")
+        throw _b_.TypeError.$factory("issubclass() arg 1 must be a class")
     }
     if(isinstance(classinfo, _b_.tuple)){
-      for(var i = 0; i < classinfo.length; i++){
-         if(issubclass(klass, classinfo[i])){return true}
-      }
-      return false
+        for(var i = 0; i < classinfo.length; i++){
+           if(issubclass(klass, classinfo[i])){return true}
+        }
+        return false
     }
     if(classinfo.$factory || classinfo.$is_class){
         if(klass === classinfo ||
@@ -1571,6 +1573,7 @@ function $print(){
     res = res.replace(new RegExp("\u0007", "g"), "").
               replace(new RegExp("(.)\b", "g"), "")
     getattr(file, 'write')(res)
+    getattr(file, 'flush')()
     return None
 }
 $print.__name__ = 'print'
@@ -2040,14 +2043,24 @@ $Reader.__mro__ = [object]
 
 $Reader.close = function(self){self.closed = true}
 
+$Reader.flush = function(self){
+    return None
+}
+
 $Reader.read = function(self, nb){
     if(self.closed === true){
         throw _b_.ValueError.$factory('I/O operation on closed file')
     }
     if(nb === undefined){return self.$content}
 
+    if(self.$content.__class__ === _b_.bytes){
+        res = _b_.bytes.$factory(self.$content.source.slice(self.$counter,
+            self.$counter + nb))
+    }else{
+        res = self.$content.substr(self.$counter - nb, nb)
+    }
     self.$counter += nb
-    return self.$content.substr(self.$counter - nb, nb)
+    return res
 }
 
 $Reader.readable = function(self){return true}
@@ -2097,9 +2110,13 @@ var $BufferedReader = {__class__: _b_.type, __name__: '_io.BufferedReader'}
 
 $BufferedReader.__mro__ = [$Reader, object]
 
-var $TextIOWrapper = {__class__: _b_.type, __name__: '_io.TextIOWrapper'}
+var $TextIOWrapper = $B.make_class('_io.TextIOWrapper')
 
 $TextIOWrapper.__mro__ = [$Reader, object]
+
+$B.set_func_names($TextIOWrapper, "builtins")
+
+$B.TextIOWrapper = $TextIOWrapper
 
 function $url_open(){
     // first argument is file : can be a string, or an instance of a DOM File object
@@ -2110,52 +2127,66 @@ function $url_open(){
     for(var attr in $ns){eval('var ' + attr + '=$ns["' + attr + '"]')}
     if(args.length > 0){var mode = args[0]}
     if(args.length > 1){var encoding = args[1]}
-    var is_binary = mode.search('b') > -1
-    if(is_binary){
-        throw _b_.IOError.$factory("open() in binary mode is not supported")
-    }
     if(isinstance(file, $B.JSObject)){
         return $B.OpenFile.$factory(file.js, mode, encoding) // defined in py_dom.js
     }
     if(isinstance(file, _b_.str)){
         // read the file content and return an object with file object methods
-        var req = new XMLHttpRequest();
-        req.onreadystatechange = function(){
-            try{
-                var status = this.status
-                if(status == 404){
-                    $res = _b_.IOError.$factory('File ' + file + ' not found')
-                }else if(status != 200){
-                    $res = _b_.IOError.$factory('Could not open file ' +
-                        file + ' : status ' + status)
-                }else{
-                    $res = this.responseText
-                }
-            }catch (err){
-                $res = _b_.IOError.$factory('Could not open file ' + file +
-                    ' : error ' + err)
+        var is_binary = mode.search('b') > -1
+        if($ns.file == "<string>"){console.log($ns.file, $B.file_cache[$ns.file])}
+        if($B.file_cache.hasOwnProperty($ns.file)){
+            var str_content = $B.file_cache[$ns.file]
+            if(is_binary){
+                $res =  _b_.str.encode(str_content, "utf-8")
+            }else{
+                $res = str_content
             }
+        }else{
+            if(is_binary){
+                throw _b_.IOError.$factory("open() in binary mode is not supported")
+            }
+
+            var req = new XMLHttpRequest();
+            req.onreadystatechange = function(){
+                try{
+                    var status = this.status
+                    if(status == 404){
+                        $res = _b_.IOError.$factory('File ' + file + ' not found')
+                    }else if(status != 200){
+                        $res = _b_.IOError.$factory('Could not open file ' +
+                            file + ' : status ' + status)
+                    }else{
+                        $res = this.responseText
+                    }
+                }catch (err){
+                    $res = _b_.IOError.$factory('Could not open file ' + file +
+                        ' : error ' + err)
+                }
+            }
+            // add fake query string to avoid caching
+            var fake_qs = '?foo=' + (new Date().getTime())
+            req.open('GET', file + fake_qs, false)
+            req.overrideMimeType('text/plain; charset=utf-8')
+            req.send()
+
+            if($res.constructor === Error){throw $res}
         }
-        // add fake query string to avoid caching
-        var fake_qs = '?foo=' + (new Date().getTime())
-        req.open('GET', file + fake_qs, false)
-        req.overrideMimeType('text/plain; charset=utf-8')
-        req.send()
 
-        if($res.constructor === Error){throw $res}
-
-        var lines = $res.split('\n')
-        for(var i = 0; i < lines.length - 1; i++){lines[i] += '\n'}
-
+        if(typeof $res == "string"){
+            var lines = $res.split('\n')
+            for(var i = 0; i < lines.length - 1; i++){lines[i] += '\n'}
+        }else{
+            var lines = _b_.bytes.split($res, _b_.bytes.$factory([10]))
+        }
         // return the file-like object
         var res = {
-            $content:$res,
-            $counter:0,
-            $lines:lines,
-            closed:False,
-            encoding:encoding,
-            mode:mode,
-            name:file
+            $content: $res,
+            $counter: 0,
+            $lines: lines,
+            closed: False,
+            encoding: encoding,
+            mode: mode,
+            name: file
         }
         res.__class__ = is_binary ? $BufferedReader : $TextIOWrapper
 

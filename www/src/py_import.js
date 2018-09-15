@@ -181,6 +181,7 @@ function run_js(module_contents, path, _module){
 
         if(_module.name != "builtins") { // builtins do not have a __file__ attribute
             $module.__file__ = path
+            $B.file_cache[path] = module_contents
         }
     }
     $B.imported[_module.__name__] = $module
@@ -201,6 +202,7 @@ function import_py(module, path, $package){
     // import Python module at specified path
     var mod_name = module.__name__,
         module_contents = $download_module(module, path, $package)
+    module.$src = module_contents
     $B.imported[mod_name].$is_package = module.$is_package
     $B.imported[mod_name].$last_modified = module.$last_modified
     if(path.substr(path.length - 12) == "/__init__.py"){
@@ -220,6 +222,8 @@ function import_py(module, path, $package){
 
 //$B.run_py is needed for import hooks..
 function run_py(module_contents, path, module, compiled) {
+    // set file cache for path ; used in built-in function open()
+    $B.file_cache[path] = module_contents
     var root, js
     if(! compiled){
         var $Node = $B.$Node,
@@ -261,7 +265,8 @@ function run_py(module_contents, path, module, compiled) {
            console.log(js)
         }
         js += "; return $module"
-        var $module = (new Function(js))() //eval(js)
+        var module_id = "$locals_" + module.__name__.replace(/\./g, '_')
+        var $module = (new Function(module_id, js))(module) //eval(js)
     }catch(err){
         /*
         console.log(err + " for module " + module.__name__)
@@ -359,8 +364,9 @@ var finder_VFS = {
                $B.imported[parent] = module.$factory(parent, undefined, is_package)
                $B.imported[parent].__initialized__ = true
                $B.imported[parent].__file__ =
-                   $B.imported[parent].__cached__ = $B.brython_path + "/Lib/" +
-                   parts.join("/") + ".py"
+                   $B.imported[parent].__cached__ = "VFS." +
+                       modobj.__name__ + ".py"
+               $B.file_cache[$B.imported[parent].__file__] = module_contents
                if(is_package){
                    $B.imported[parent].__path__ = "<stdlib>"
                    $B.imported[parent].__package__ = parent
@@ -370,8 +376,10 @@ var finder_VFS = {
                    $B.imported[parent].__package__ = elts.join(".")
                }
                try{
-                   mod_js += "return $locals_" + parent.replace(/\./g, "_")
-                   var $module = new Function(mod_js)()
+                   var parent_id = parent.replace(/\./g, "_")
+                   mod_js += "return $locals_" + parent_id
+                   var $module = new Function("$locals_" + parent_id, mod_js)(
+                       $B.imported[parent])
                }catch(err){
                    if($B.debug > 1){
                        console.log(err)
@@ -1061,7 +1069,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                         // For other modules, raise ImportError
                         if($err3.$py_error){
                             var msg = _b_.getattr($err3, "info") + "\n" +
-                                    $err3.__class__.__name__ + ": " + 
+                                    $err3.__class__.__name__ + ": " +
                                     $err3.args[0],
                                 exc = _b_.ImportError.$factory("cannot import name '"+
                                     name + "'\n\n" + msg)
