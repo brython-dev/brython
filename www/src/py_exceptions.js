@@ -130,13 +130,13 @@ traceback.__getattribute__ = function(self, attr){
                 }else{return "<unknown>"}
             }
         case "tb_next":
-            if(self.$stack.length <= 2){return None}
+            if(self.$stack.length <= 1){return None}
             else{
                 return traceback.$factory(self.exc,
-                    self.$stack.slice(0, self.$stack.length - 2))
+                    self.$stack.slice(0, self.$stack.length - 1))
             }
         default:
-            return _b_.object.__getattribute__(traceback, attr)
+            return _b_.object.__getattribute__(self, attr)
     }
 }
 
@@ -167,14 +167,29 @@ var frame = $B.make_class("frame",
             if(_frame[1].$line_info === undefined){res.f_lineno = -1}
             else{res.f_lineno = parseInt(_frame[1].$line_info.split(',')[0])}
 
+            var co_name = locals_id
+            if(_frame[0].$name){
+                co_name = _frame[0].$name
+            }else if(_frame.length > 4){
+                if(_frame[4].$infos){
+                    co_name = _frame[4].$infos.__name__ + "()"
+                }else{
+                    co_name = _frame[4].name
+                }
+            }
+
             res.f_code = {__class__: $B.code,
                 co_code: None, // XXX fix me
-                co_name: locals_id, // idem
-                co_filename: _frame[3].__name__ // idem
+                co_name: co_name, // idem
+                co_filename: _frame[3].__file__ // idem
             }
             if(res.f_code.co_filename === undefined){
-                console.log(_frame[0], _frame[1], _frame[2], _frame[3])
-                alert("no cofilename")
+                if(_frame[3].$src){
+                    res.f_code.co_filename = "string"
+                    $B.file_cache[res.f_code.co_filename] = _frame[3].$src
+                }else{
+                    console.log("pas de src")
+                }
             }
         }
         return res
@@ -283,6 +298,8 @@ var getExceptionTrace = function(exc, includeInternal) {
             var line = lines[parseInt(line_info[0]) - 1]
             if(line){line = line.replace(/^[ ]+/g, "")}
             info += "\n    " + line
+        }else{
+            console.log("src undef", line_info)
         }
     }
     return info
@@ -331,6 +348,9 @@ BaseException.$factory = function (){
         err.$line_info = $B.last($B.frames_stack)[1].$line_info
     }
     eval("//placeholder//")
+    err.__cause__ = _b_.None // XXX fix me
+    err.__context__ = _b_.None // XXX fix me
+    err.__suppress_context__ = false // XXX fix me
     return err
 }
 
