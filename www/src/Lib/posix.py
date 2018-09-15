@@ -93,10 +93,6 @@ def WTERMSIG(status):
     """Return the signal which caused the process to exit."""
     return None
 
-
-class __loader__:
-    pass
-
 def _exit(*args,**kw):
     """_exit(status)
     Exit to the system with specified status, without normal exit processing."""
