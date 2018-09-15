@@ -228,7 +228,7 @@ $B.$dict_comp = function(module_name, parent_scope, items, line_num){
         js = root.to_js()
     js += '\nreturn $locals["' + res + '"]\n'
 
-    js = "(function(){" + js + "})()"
+    js = "(function($locals_" + dictcomp_name + "){" + js + "})({})"
     $B.clear_ns(dictcomp_name)
     delete $B.$py_src[dictcomp_name]
 
@@ -257,7 +257,7 @@ $B.$gen_expr = function(module_name, parent_scope, items, line_num){
     js = lines.join("\n")
     js += "\nvar $res = $locals_" + genexpr_name + '["' + genexpr_name +
         '"]();\n$res.is_gen_expr = true;\nreturn $res\n'
-    js = "(function(){" + js + "})()\n"
+    js = "(function($locals_" + genexpr_name +"){" + js + "})({})\n"
 
     //$B.clear_ns(genexpr_name)
     delete $B.$py_src[genexpr_name]
@@ -595,7 +595,8 @@ $B.set_list_slice_step = function(obj, start, stop, step, value){
 
 
 $B.$setitem = function(obj, item, value){
-    if(Array.isArray(obj) && typeof item == "number" &&
+    if(Array.isArray(obj) && obj.__class__ === undefined &&
+            typeof item == "number" &&
             !_b_.isinstance(obj, _b_.tuple)){
         if(item < 0){item += obj.length}
         if(obj[item] === undefined){
@@ -1508,6 +1509,7 @@ $B.rich_comp = function(op, x, y){
             compared = true
         }
     }
+
     res = $B.$call(_b_.getattr(x, op))(y)
 
     if(res !== _b_.NotImplemented){return res}
