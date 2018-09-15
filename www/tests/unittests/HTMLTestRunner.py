@@ -129,8 +129,8 @@ class _TestResult(TestResult):
         test.lineno = method.__code__.co_firstlineno
 
     def ident(self, test):
-        return [html.TD(test.__class__.__name__), 
-            html.TD(test._testMethodName), 
+        return [html.TD(test.__class__.__name__),
+            html.TD(test._testMethodName),
             html.TD(test.lineno, Class="number"),
             html.TD(round(1000*(time.time()-test.startTime)), Class="number")]
 
@@ -171,9 +171,9 @@ class _TestResult(TestResult):
         except:
             alert(err[1])
             alert(type(err[1]))
-        return [html.TD("line %s - %s: %s" %(infos[-1], 
-            err[0].__name__, 
-            str(err[1]).splitlines()[0].replace('<', '&lt;')), 
+        return [html.TD("line %s - %s: %s" %(infos[-1],
+            err[0].__name__,
+            str(err[1]).splitlines()[0].replace('<', '&lt;')),
                 Class="error_message")]
 
 class HTMLTestRunner:
@@ -186,8 +186,8 @@ class HTMLTestRunner:
     def run(self, test):
         "Run the given test case or test suite."
         t = html.TABLE(Id="report")
-        t <= html.TR(html.TH(x, Class="header") 
-            for x in ('Test class', 'Method', 'Line', 'Duration (ms)', 'Result', 
+        t <= html.TR(html.TH(x, Class="header")
+            for x in ('Test class', 'Method', 'Line', 'Duration (ms)', 'Result',
             'Error message'))
         document["container"] <= t
         result = _TestResult(self.verbosity)
