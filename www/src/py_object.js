@@ -39,7 +39,6 @@ object.__dir__ = function(self) {
     var res = []
     for(var i = 0, len = objects.length; i < len; i++){
         for(var attr in objects[i]){
-            if(attr == "toString"){console.log(attr, objects[i][attr])}
             if(attr.charAt(0) == "$") {
                 // exclude internal attributes set by Brython
                 continue
