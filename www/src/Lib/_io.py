@@ -942,6 +942,9 @@ class BufferedReader(_BufferedIOMixin):
         self._read_buf = b""
         self._read_pos = 0
 
+    def flush(self):
+        pass
+
     def read(self, n=None):
         """Read n bytes.
 
