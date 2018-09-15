@@ -903,7 +903,7 @@ class _OpcodeDispatcher(_Dispatcher):
                 #print('_sre.py:line891, update context.has_matched variable')
                 yield True
             ctx.skip_char(count)
-        if ctx.peek_code(ctx.peek_code(1) + 1) == OPCODES["success"]:
+        if OPCODES[ctx.peek_code(ctx.peek_code(1) + 1)].name == "success":
             # tail is empty.  we're finished
             ctx.state.string_position = ctx.string_position
             ctx.has_matched = True
