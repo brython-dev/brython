@@ -65,8 +65,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-09-18 15:37:15.258543"
-__BRYTHON__.timestamp=1537277835258
+__BRYTHON__.compiled_date="2018-09-18 17:11:23.838059"
+__BRYTHON__.timestamp=1537283483838
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -5033,6 +5033,9 @@ var bases=cls.__bases__,seqs=[],pos1=0
 for(var i=0;i < bases.length;i++){
 if(bases[i]===_b_.str){bases[i]=$B.StringSubclass}
 else if(bases[i]===_b_.float){bases[i]=$B.FloatSubclass}
+else if(bases[i]===_b_.list){for(var attr in _b_.list){if(attr=="$factory"){continue}
+if(cls[attr]===undefined){cls[attr]=_b_.list[attr]}}
+cls.$native=true}
 var bmro=[],pos=0
 if(bases[i]===undefined ||
 bases[i].__mro__===undefined){if(bases[i].__class__===$B.JSObject){
@@ -6223,7 +6226,8 @@ if(typeof obj=='function'){var value=obj[attr]
 if(value !==undefined){if(attr=='__module__'){return value}}}
 if(klass.$native){if(klass[attr]===undefined){var object_attr=_b_.object[attr]
 if(object_attr !==undefined){klass[attr]=object_attr}
-else{if(_default===undefined){attr_error(attr,klass.__name__)}
+else{if(obj[attr]!==undefined){return obj[attr]}
+if(_default===undefined){attr_error(attr,klass.__name__)}
 return _default}}
 if(klass.$descriptors && klass.$descriptors[attr]!==undefined){return klass[attr](obj)}
 if(typeof klass[attr]=='function'){var func=klass[attr]
@@ -6568,6 +6572,7 @@ function setattr(){var $=$B.args('setattr',3,{obj: null,attr: null,value: null},
 if(!(typeof attr=='string')){throw _b_.TypeError.$factory("setattr(): attribute name must be string")}
 return $B.$setattr(obj,attr,value)}
 $B.$setattr=function(obj,attr,value){
+var test=false 
 if($B.aliased_names[attr]){attr='$$' + attr}else if(attr=='__dict__'){
 if(!value.__class__===_b_.dict){throw _b_.TypeError.$factory("__dict__ must be set to a dictionary, " +
 "not a '" + value.__class__.__name + "'")}
@@ -6579,6 +6584,7 @@ if(attr=="__init__" ||attr=="__new__"){
 obj.$factory=$B.$instance_creator(obj)}
 return None}
 var res=obj[attr],klass=obj.__class__ ||$B.get_class(obj)
+if(test){console.log('set attr',attr,'to',obj,'class',klass)}
 if(res===undefined && klass){res=klass[attr]
 if(res===undefined){var mro=klass.__mro__,_len=mro.length
 for(var i=0;i < _len;i++){res=mro[i][attr]
@@ -6911,8 +6917,7 @@ if(_frame[0].$name){co_name=_frame[0].$name}else if(_frame.length > 4){if(_frame
 res.f_code={__class__: $B.code,co_code: None,
 co_name: co_name,
 co_filename: _frame[3].__file__ }
-if(res.f_code.co_filename===undefined){if(_frame[3].$src){res.f_code.co_filename="string"
-$B.file_cache[res.f_code.co_filename]=_frame[3].$src}else{console.log("pas de src")}}}
+if(res.f_code.co_filename===undefined){if(_frame[3].$src){res.f_code.co_filename="<string>"}else{console.log("pas de src")}}}
 return res}
 )
 frame.__getattr__=function(self,attr){

@@ -8,7 +8,7 @@ assert str(z) == "[1, 2, 3]"
 a = ['spam', 'eggs', 100, 1234]
 assert a[:2] + ['bacon', 2 * 2] == ['spam', 'eggs', 'bacon', 4]
 assert 3 * a[:3] + ['Boo!'] == ['spam', 'eggs', 100,
-    'spam', 'eggs', 100, 
+    'spam', 'eggs', 100,
     'spam', 'eggs', 100, 'Boo!']
 assert a[:] == ['spam', 'eggs', 100, 1234]
 a[2] = a[2] + 23
@@ -117,6 +117,9 @@ assert z == [1, 2, 3]
 assert len(z) == 3
 assert list.__len__(z) == 3
 
+z.foo = 5
+assert z.foo == 5
+
 # issue 724
 t = [2]
 try:
@@ -125,8 +128,30 @@ try:
 except AttributeError:
     pass
 
-z.foo = 5
-assert z.foo == 5
+class List(list):
+
+    counter = 0
+
+    def pop(self, index=-1):
+        return "POP"
+
+    def reverse(self):
+        return "REVERSE"
+
+    def __setitem__(self, k, v):
+        List.counter = 1
+
+    def sort(self, key=None, reverse=False):
+        return "SORT"
+
+t = List([2, 1])
+assert t.sort() == "SORT"
+t2 = List()
+List()[0] = 0
+assert List.counter == 1
+assert List().reverse() == "REVERSE"
+assert List().pop() == "POP"
+
 
 print("passed all tests..")
 
