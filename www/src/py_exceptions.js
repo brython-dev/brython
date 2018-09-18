@@ -107,11 +107,11 @@ traceback.__getattribute__ = function(self, attr){
         if(self.$stack.length == 0){
             console.log("no stack", attr)
         }
-        var last_frame = $B.last(self.$stack)
-        if(last_frame === undefined){
+        var first_frame = self.$stack[0]
+        if(first_frame === undefined){
             console.log("last frame undef", self.$stack, Object.keys(self.$stack))
         }
-        var line_info = last_frame[1].$line_info
+        var line_info = first_frame[1].$line_info
     }
 
     switch(attr){
@@ -133,7 +133,7 @@ traceback.__getattribute__ = function(self, attr){
             if(self.$stack.length <= 1){return None}
             else{
                 return traceback.$factory(self.exc,
-                    self.$stack.slice(0, self.$stack.length - 1))
+                    self.$stack.slice(1))
             }
         default:
             return _b_.object.__getattribute__(self, attr)
@@ -151,7 +151,7 @@ var frame = $B.make_class("frame",
             f_builtins : {}, // XXX fix me
             $stack: stack,
         }
-        if(pos === undefined){pos = fs.length - 1}
+        if(pos === undefined){pos = 0}
         res.$pos = pos
         if(fs.length){
             var _frame = fs[pos]
@@ -172,7 +172,7 @@ var frame = $B.make_class("frame",
                 co_name = _frame[0].$name
             }else if(_frame.length > 4){
                 if(_frame[4].$infos){
-                    co_name = _frame[4].$infos.__name__ + "()"
+                    co_name = _frame[4].$infos.__name__
                 }else{
                     co_name = _frame[4].name
                 }

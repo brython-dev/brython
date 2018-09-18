@@ -65,8 +65,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-09-15 17:09:00.179680"
-__BRYTHON__.timestamp=1537024140179
+__BRYTHON__.compiled_date="2018-09-18 15:37:15.258543"
+__BRYTHON__.timestamp=1537277835258
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -6875,9 +6875,9 @@ if(attr==='tb_frame' ||
 attr==='tb_lineno' ||
 attr==='tb_lasti' ||
 attr==='tb_next'){if(self.$stack.length==0){console.log("no stack",attr)}
-var last_frame=$B.last(self.$stack)
-if(last_frame===undefined){console.log("last frame undef",self.$stack,Object.keys(self.$stack))}
-var line_info=last_frame[1].$line_info}
+var first_frame=self.$stack[0]
+if(first_frame===undefined){console.log("last frame undef",self.$stack,Object.keys(self.$stack))}
+var line_info=first_frame[1].$line_info}
 switch(attr){case "tb_frame":
 return frame.$factory(self.$stack)
 case "tb_lineno":
@@ -6890,14 +6890,14 @@ var src=$B.$py_src[info[1]]
 if(src !==undefined){return src.split("\n")[parseInt(info[0]- 1)].trim()}else{return "<unknown>"}}
 case "tb_next":
 if(self.$stack.length <=1){return None}
-else{return traceback.$factory(self.exc,self.$stack.slice(0,self.$stack.length - 1))}
+else{return traceback.$factory(self.exc,self.$stack.slice(1))}
 default:
 return _b_.object.__getattribute__(self,attr)}}
 $B.set_func_names(traceback,"builtins")
 var frame=$B.make_class("frame",function(stack,pos){var fs=stack
 var res={__class__: frame,f_builtins :{},
 $stack: stack,}
-if(pos===undefined){pos=fs.length - 1}
+if(pos===undefined){pos=0}
 res.$pos=pos
 if(fs.length){var _frame=fs[pos]
 var locals_id=_frame[0]
@@ -6907,7 +6907,7 @@ res.f_globals=$B.obj_dict(_frame[3])
 if(_frame[1].$line_info===undefined){res.f_lineno=-1}
 else{res.f_lineno=parseInt(_frame[1].$line_info.split(',')[0])}
 var co_name=locals_id
-if(_frame[0].$name){co_name=_frame[0].$name}else if(_frame.length > 4){if(_frame[4].$infos){co_name=_frame[4].$infos.__name__ + "()"}else{co_name=_frame[4].name}}
+if(_frame[0].$name){co_name=_frame[0].$name}else if(_frame.length > 4){if(_frame[4].$infos){co_name=_frame[4].$infos.__name__}else{co_name=_frame[4].name}}
 res.f_code={__class__: $B.code,co_code: None,
 co_name: co_name,
 co_filename: _frame[3].__file__ }
