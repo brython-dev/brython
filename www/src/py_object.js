@@ -348,14 +348,10 @@ object.__ne__ = function(self, other){
 }
 
 object.__reduce__ = function(self){
-    function _reconstructor(){
-        console.log("reconstructor args", arguments)
-        args = []
-        var cls = arguments[0],
-            obj = $B.$call(cls).apply(null, args)
-
-        return obj
+    function _reconstructor(cls){
+        return $B.$call(cls)()
     }
+    _reconstructor.$infos = {__qualname__: "_reconstructor"}
     var res = [_reconstructor]
     res.push(_b_.tuple.$factory([self.__class__].
         concat(self.__class__.__mro__)))
@@ -364,7 +360,21 @@ object.__reduce__ = function(self){
         d.$string_dict[attr] = self[attr]
     }
     res.push(d)
-    console.log('reduce', res)
+    return _b_.tuple.$factory(res)
+}
+
+object.__reduce_ex__ = function(self){
+    function __newobj__(cls){
+        return $B.$getattr(cls, "__new__").apply(null, arguments)
+    }
+    __newobj__.$infos = {__qualname__: "__newobj__"}
+    var res = [__newobj__]
+    res.push(_b_.tuple.$factory([self.__class__]))
+    var d = _b_.dict.$factory()
+    for(var attr in self){
+        d.$string_dict[attr] = self[attr]
+    }
+    res.push(d)
     return _b_.tuple.$factory(res)
 }
 

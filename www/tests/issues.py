@@ -2051,6 +2051,17 @@ assert regex.sub(switch, 'ba') == 'ab'
 # Broken: .finditer()
 #assert [m.group(0) for m in regex.finditer('ab')] == ['a', 'b']
 
+# issue 918
+import copy
+
+class MyClass:
+    def __init__(self, some_param):
+        self.x = some_param
+
+obj = MyClass("aaa")
+obj2 = copy.copy(obj)
+assert obj2.x == "aaa"
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

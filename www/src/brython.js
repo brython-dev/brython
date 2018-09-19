@@ -65,8 +65,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-09-18 17:11:23.838059"
-__BRYTHON__.timestamp=1537283483838
+__BRYTHON__.compiled_date="2018-09-19 16:43:00.783908"
+__BRYTHON__.timestamp=1537368180783
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -4911,17 +4911,22 @@ var init_func=$B.$getattr(cls,"__init__")
 if(init_func===object.__init__){if(args.length > 0){throw _b_.TypeError.$factory("object() takes no parameters")}}
 return{__class__ : cls}}
 object.__ne__=function(self,other){return ! $B.rich_comp("__eq__",self,other)}
-object.__reduce__=function(self){function _reconstructor(){console.log("reconstructor args",arguments)
-args=[]
-var cls=arguments[0],obj=$B.$call(cls).apply(null,args)
-return obj}
+object.__reduce__=function(self){function _reconstructor(cls){return $B.$call(cls)()}
+_reconstructor.$infos={__qualname__: "_reconstructor"}
 var res=[_reconstructor]
 res.push(_b_.tuple.$factory([self.__class__].
 concat(self.__class__.__mro__)))
 var d=_b_.dict.$factory()
 for(var attr in self){d.$string_dict[attr]=self[attr]}
 res.push(d)
-console.log('reduce',res)
+return _b_.tuple.$factory(res)}
+object.__reduce_ex__=function(self){function __newobj__(cls){return $B.$getattr(cls,"__new__").apply(null,arguments)}
+__newobj__.$infos={__qualname__: "__newobj__"}
+var res=[__newobj__]
+res.push(_b_.tuple.$factory([self.__class__]))
+var d=_b_.dict.$factory()
+for(var attr in self){d.$string_dict[attr]=self[attr]}
+res.push(d)
 return _b_.tuple.$factory(res)}
 object.__repr__=function(self){if(self===object){return "<class 'object'>"}
 if(self.__class__===_b_.type){return "<class '" + self.__name__ + "'>"}
@@ -6795,7 +6800,7 @@ res.filename=self.$infos.__code__.co_filename
 res.co_code=self + "" 
 return res}else if(attr=='__annotations__'){
 return $B.obj_dict(self.$infos[attr])}else{return self.$infos[attr]}}else if(self.$attrs && self.$attrs[attr]!==undefined){return self.$attrs[attr]}else{return _b_.object.__getattribute__(self,attr)}}
-$B.Function.__repr__=$B.Function.__str__=function(self){
+$B.Function.__repr__=$B.Function.__str__=function(self){if(self.$infos===undefined){console.log("pas de $infos",self)}
 return '<function ' + self.$infos.__qualname__ + '>'}
 $B.Function.__mro__=[object]
 $B.Function.__setattr__=function(self,attr,value){if(self.$infos[attr]!==undefined){self.$infos[attr]=value}
