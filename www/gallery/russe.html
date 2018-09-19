@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<script src="../src/brython.js"></script>
+<style>
+.rTable{
+    display: table;
+}
+.rTableRow{
+    display: table-row;
+}
+.rTableCell{
+    display: table-cell;
+}
+
+#zone{
+    border-color: #555;
+    border-style: solid;
+    border-width: 1px;
+    background-color: #ddd;
+    width: 30em;
+    height: 20em;
+    font-size: 1.5em;
+}
+#trans{
+  vertical-align: top;
+  font-family: Consolas;
+  font-size: 1.5em;
+  padding-left: 1em;
+}
+</style>
+</head>
+<body onload="brython(1)">
+<h1>Clavier russe</h1>
+<script type="text/python">
+from browser import document, window, bind
+from browser.html import *
+
+zone = document["zone"]
+
+# correspondance entre lettres françaises et russes
+ru = "АБЦДЕФГЧИЙКЛМНОПЯРСТУВЖХЫЗШЩЭЮЁабцдефгчийклмнопярстувжхызшщэюё"
+fr = "ABCDEFGQIÎKLMNOPÀRSTYVJXUZHWÈÙËabcdefgqiîklmnopàrstyvjxuzhwèùë"
+
+# signe dur et mou
+signes_ru = "ьъЬЪ"
+signes_fr = "éç"
+
+def printkey(letter):
+    document.execCommand("insertHTML", False, letter)
+
+@bind(document, "keypress")
+def keypress(e):
+    if not e.ctrlKey:
+        char = chr(e.charCode)
+        pos = fr.find(char)
+        if pos > -1:
+            printkey(ru[pos])
+            if e.altKey:
+                printkey("&#x301;")
+            e.preventDefault()
+            e.stopPropagation()
+        elif char in signes_fr:
+            pos = signes_fr.find(char)
+            if e.altKey:
+                pos += 2
+            printkey(signes_ru[pos])
+            e.preventDefault()
+            e.stopPropagation()
+
+@bind(document["undo"], "click")
+def undo(ev):
+  document.execCommand("undo", False)
+
+@bind(document["redo"], "click")
+def redo(ev):
+  document.execCommand("redo", False)
+
+# truc pour mettre le focus dans la zone de saisie
+# https://stackoverflow.com/questions/2388164/set-focus-on-div-contenteditable-element
+
+s = window.getSelection()
+r = document.createRange()
+zone.innerHTML = '\u00a0'
+r.selectNodeContents(zone)
+s.removeAllRanges()
+s.addRange(r)
+document.execCommand('delete', False)
+</script>
+<button id="undo">défaire</button>
+<button id="redo">refaire</button>
+<p>
+<div class="rTable">
+  <div class="rTableRow">
+    <div class="rTableCell" id="zone" contenteditable="true"></div>
+    <div class="rTableCell" id="trans"><pre>
+Pour  ц ч й я c y ы ш щ э ю ь ъ
+taper c q î à s y u h w è ù é ç
+
+<small>Voyelles accentuées : ALT + voyelle
+
+Pour ь / ъ majuscule : ALT + é / ç</small>
+</pre></div>
+  </div>
+</div>
+</body>
+</html>
