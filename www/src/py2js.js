@@ -9302,9 +9302,14 @@ var loop = $B.loop = function(){
     if(func == "execute"){
         try{
             var script = task[1],
-                script_id = script.__name__.replace(/\./g, "_")
-            $B.imported[script_id] = {$src: script.$src}
-            new Function("$locals_" + script_id, script.js)(script)
+                script_id = script.__name__.replace(/\./g, "_"),
+                module = $B.module.$factory(script.__name__)
+
+            module.$src = script.$src
+            module.__file__ = script.__file__
+            $B.imported[script_id] = module
+
+            new Function("$locals_" + script_id, script.js)(module)
 
         }catch(err){
             // If the error was not caught by the Python runtime, build an
