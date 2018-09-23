@@ -363,18 +363,30 @@ object.__reduce__ = function(self){
     return _b_.tuple.$factory(res)
 }
 
+function __newobj__(cls){
+    return $B.$getattr(cls, "__new__").apply(null, arguments)
+}
+__newobj__.$infos = {
+    __name__: "__newobj__",
+    __qualname__: "__newobj__"
+}
+_b_.__newobj__ = __newobj__
+
 object.__reduce_ex__ = function(self){
-    function __newobj__(cls){
-        return $B.$getattr(cls, "__new__").apply(null, arguments)
-    }
-    __newobj__.$infos = {__qualname__: "__newobj__"}
     var res = [__newobj__]
     res.push(_b_.tuple.$factory([self.__class__]))
-    var d = _b_.dict.$factory()
+    var d = _b_.dict.$factory(),
+        nb = 0
     for(var attr in self){
+        if(attr == "__class__" || attr.startsWith("$")){
+            continue
+        }
         d.$string_dict[attr] = self[attr]
+        nb++
     }
+    if(nb == 0){d = _b_.None}
     res.push(d)
+    res.push(_b_.None)
     return _b_.tuple.$factory(res)
 }
 
