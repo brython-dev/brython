@@ -123,8 +123,7 @@ var bytes = {
 
 bytes.__add__ = function(self, other){
     if(isinstance(other, bytes)){
-        self.source = self.source.concat(other.source)
-        return self
+        return self.__class__.$factory(self.source.concat(other.source))
     }else if(isinstance(other, bytearray)){
         return self.__class__.$factory(bytes.__add__(self, bytes.$factory(other)))
     }else if(isinstance(other, _b_.memoryview)){
@@ -281,7 +280,9 @@ bytes.__repr__ = bytes.__str__ = function(self){
     var res = "b'"
     for(var i = 0, len = self.source.length; i < len; i++){
         var s = self.source[i]
-        if(s < 32 || s >= 128){
+        if(s == 10){
+            res += '\\n'
+        }else if(s < 32 || s >= 128){
             var hx = s.toString(16)
             hx = (hx.length == 1 ? '0' : '') + hx
             res += '\\x' + hx
@@ -303,6 +304,7 @@ bytes.decode = function(self, encoding,errors){
       case 'ignore':
       case 'replace':
       case 'surrogateescape':
+      case 'surrogatepass':
       case 'xmlcharrefreplace':
       case 'backslashreplace':
         return decode(self.source, encoding, errors)
@@ -913,15 +915,15 @@ bytes.startswith = function(){
 bytes.endswith = function() {
     var $ = $B.args('endswith', 4, {self: null, suffix: null, start: null, end: null},
         ['self', 'suffix', 'start', 'end'], arguments, {start: -1, end: -1}, null, null)
-
     if (_b_.isinstance($.suffix, bytes)) {
         var start = $.start == -1 ? $.self.source.length - $.suffix.source.length
                                   : Math.min($.self.source.length - $.suffix.source.length, $.start)
         var end = $.end == -1 ? ($.start == -1 ? $.self.source.length : start + $.suffix.source.length)
                               : Math.min($.self.source.length - 1, $.end)
         var res = true
-        for (var i = $.suffix.source.length - 1, len = $.suffix.source.length; i && res; --i)
+        for (var i = $.suffix.source.length - 1, len = $.suffix.source.length; i >= 0 && res; --i){
             res = $.self.source[end - len + i] == $.suffix.source[i]
+        }
         return res
     } else if (_b_.isinstance($.suffix, _b_.tuple)) {
         for (var i = 0; i < $.suffix.length; ++i) {
@@ -1275,7 +1277,9 @@ bytes.$is_class = true
 for(var attr in bytes){
     if(bytearray[attr] === undefined && typeof bytes[attr] == "function"){
         bytearray[attr] = (function(_attr){
-            return function(){return bytes[_attr].apply(null, arguments)}
+            return function(){
+                return bytes[_attr].apply(null, arguments)
+            }
         })(attr)
     }
 }
