@@ -65,8 +65,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-09-19 16:43:00.783908"
-__BRYTHON__.timestamp=1537368180783
+__BRYTHON__.compiled_date="2018-09-23 09:42:29.502066"
+__BRYTHON__.timestamp=1537688549502
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -4685,9 +4685,11 @@ var loop=$B.loop=function(){if($B.tasks.length==0){
 if(idb_cx){idb_cx.result.close()}
 return}
 var task=$B.tasks.shift(),func=task[0],args=task.slice(1)
-if(func=="execute"){try{var script=task[1],script_id=script.__name__.replace(/\./g,"_")
-$B.imported[script_id]={$src: script.$src}
-new Function("$locals_" + script_id,script.js)(script)}catch(err){
+if(func=="execute"){try{var script=task[1],script_id=script.__name__.replace(/\./g,"_"),module=$B.module.$factory(script.__name__)
+module.$src=script.$src
+module.__file__=script.__file__
+$B.imported[script_id]=module
+new Function("$locals_" + script_id,script.js)(module)}catch(err){
 if(err.$py_error===undefined){console.log('Javascript error',err)
 console.log($B.frames_stack.slice())
 err=_b_.RuntimeError.$factory(err + '')}
@@ -4920,13 +4922,18 @@ var d=_b_.dict.$factory()
 for(var attr in self){d.$string_dict[attr]=self[attr]}
 res.push(d)
 return _b_.tuple.$factory(res)}
-object.__reduce_ex__=function(self){function __newobj__(cls){return $B.$getattr(cls,"__new__").apply(null,arguments)}
-__newobj__.$infos={__qualname__: "__newobj__"}
-var res=[__newobj__]
+function __newobj__(cls){return $B.$getattr(cls,"__new__").apply(null,arguments)}
+__newobj__.$infos={__name__: "__newobj__",__qualname__: "__newobj__"}
+_b_.__newobj__=__newobj__
+object.__reduce_ex__=function(self){var res=[__newobj__]
 res.push(_b_.tuple.$factory([self.__class__]))
-var d=_b_.dict.$factory()
-for(var attr in self){d.$string_dict[attr]=self[attr]}
+var d=_b_.dict.$factory(),nb=0
+for(var attr in self){if(attr=="__class__" ||attr.startsWith("$")){continue}
+d.$string_dict[attr]=self[attr]
+nb++}
+if(nb==0){d=_b_.None}
 res.push(d)
+res.push(_b_.None)
 return _b_.tuple.$factory(res)}
 object.__repr__=function(self){if(self===object){return "<class 'object'>"}
 if(self.__class__===_b_.type){return "<class '" + self.__name__ + "'>"}
@@ -5027,7 +5034,7 @@ if(!is_instanciable){function nofactory(){throw _b_.TypeError.$factory("Can't in
 "interface with abstract methods " +
 Object.keys(abstract_methods).join(", "))}
 kls.$factory=nofactory}
-kls.__qualname__=module + '.' + class_name.replace("$$","")
+kls.__qualname__=class_name.replace("$$","")
 return kls}
 var type=$B.make_class("type",function(obj,bases,cl_dict){if(arguments.length==1){return obj.__class__ ||$B.get_class(obj)}
 return type.__new__(type,obj,bases,cl_dict)}
@@ -7230,8 +7237,7 @@ if(b > 255){throw ValueError.$factory("byte must be in range(0, 256)")}
 _b_.list.insert(self.source,pos,b)}
 bytearray.$factory=function(source,encoding,errors){return bytearray.__new__(bytearray,source,encoding,errors)}
 var bytes={__class__ : _b_.type,__mro__:[object],__name__ : 'bytes',$buffer_protocol: true,$is_class: true}
-bytes.__add__=function(self,other){if(isinstance(other,bytes)){self.source=self.source.concat(other.source)
-return self}else if(isinstance(other,bytearray)){return self.__class__.$factory(bytes.__add__(self,bytes.$factory(other)))}else if(isinstance(other,_b_.memoryview)){return self.__class__.$factory(bytes.__add__(self,_b_.memoryview.tobytes(other)))}
+bytes.__add__=function(self,other){if(isinstance(other,bytes)){return self.__class__.$factory(self.source.concat(other.source))}else if(isinstance(other,bytearray)){return self.__class__.$factory(bytes.__add__(self,bytes.$factory(other)))}else if(isinstance(other,_b_.memoryview)){return self.__class__.$factory(bytes.__add__(self,_b_.memoryview.tobytes(other)))}
 throw _b_.TypeError.$factory("can't concat bytes to " +
 _b_.str.$factory(other))}
 var $bytes_iterator=$B.$iterator_class('bytes_iterator')
@@ -7291,7 +7297,7 @@ self.errors=errors
 return self}
 bytes.__repr__=bytes.__str__=function(self){var res="b'"
 for(var i=0,len=self.source.length;i < len;i++){var s=self.source[i]
-if(s < 32 ||s >=128){var hx=s.toString(16)
+if(s==10){res +='\\n'}else if(s < 32 ||s >=128){var hx=s.toString(16)
 hx=(hx.length==1 ? '0' : '')+ hx
 res +='\\x' + hx}else{res +=String.fromCharCode(s)}}
 return res + "'"}
@@ -7302,6 +7308,7 @@ switch(errors){case 'strict':
 case 'ignore':
 case 'replace':
 case 'surrogateescape':
+case 'surrogatepass':
 case 'xmlcharrefreplace':
 case 'backslashreplace':
 return decode(self.source,encoding,errors)
@@ -7536,8 +7543,7 @@ if(_b_.isinstance($.suffix,bytes)){var start=$.start==-1 ? $.self.source.length 
 var end=$.end==-1 ?($.start==-1 ? $.self.source.length : start + $.suffix.source.length)
 : Math.min($.self.source.length - 1,$.end)
 var res=true
-for(var i=$.suffix.source.length - 1,len=$.suffix.source.length;i && res;--i)
-res=$.self.source[end - len + i]==$.suffix.source[i]
+for(var i=$.suffix.source.length - 1,len=$.suffix.source.length;i >=0 && res;--i){res=$.self.source[end - len + i]==$.suffix.source[i]}
 return res}else if(_b_.isinstance($.suffix,_b_.tuple)){for(var i=0;i < $.suffix.length;++i){if(_b_.isinstance($.suffix[i],bytes)){if(bytes.endswith($.self,$.suffix[i],$.start,$.end))
 return true}else{
 throw _b_.TypeError.$factory("endswith first arg must be " +
