@@ -209,7 +209,7 @@ $B.$class_constructor = function(class_name, class_obj, bases,
         kls.$factory = nofactory
     }
 
-    kls.__qualname__ = module + '.' + class_name.replace("$$", "")
+    kls.__qualname__ = class_name.replace("$$", "")
 
     return kls
 }
