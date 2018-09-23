@@ -298,12 +298,13 @@ def strftime(_format,t = None):
 
 class struct_time:
 
-    def __init__(self, args):
+    def __init__(self, *args, **kw):
 
-        if len(args) != 9:
+        time_tuple = args[0]
+        if len(time_tuple) != 9:
             raise TypeError("time.struct_time() takes a 9-sequence (%s-sequence given)" %len(args))
 
-        self.args = args
+        self.args = time_tuple
 
     @property
     def tm_year(self):
@@ -341,11 +342,17 @@ class struct_time:
     def tm_isdst(self):
         return self.args[8]
 
+    def __eq__(self, other):
+        return self.args == other.args
+
     def __getitem__(self, i):
         return self.args[i]
 
     def __iter__(self):
         return iter(self.args)
+
+    def __reduce_ex__(self, protocol):
+        return (struct_time, (self.args, {}))
 
     def __repr__(self):
         return ("time.structime(tm_year={}, tm_mon={}, tm_day={}, "+\
