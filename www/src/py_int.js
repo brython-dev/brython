@@ -582,12 +582,7 @@ var $comp_func = function(self, other){
        return int.__gt__(self, $B.$GetInt(other))
     }
 
-    // See if other has the opposite operator, eg < for >
-    var inv_op = $B.$getattr(other, "__lt__", None)
-    if(inv_op !== None){return inv_op(self)}
-
-    throw _b_.TypeError.$factory(
-        "unorderable types: int() > " + $B.get_class(other).__name__ + "()")
+    return _b_.NotImplemented
 }
 $comp_func += "" // source code
 

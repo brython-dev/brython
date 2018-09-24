@@ -1511,7 +1511,7 @@ $B.rich_comp = function(op, x, y){
     }
 
     res = $B.$call(_b_.getattr(x, op))(y)
-
+    
     if(res !== _b_.NotImplemented){return res}
     if(compared){return false}
     rev_op = reversed_op[op] || op

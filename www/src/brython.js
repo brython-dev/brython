@@ -65,8 +65,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-09-24 11:11:34.938797"
-__BRYTHON__.timestamp=1537780294938
+__BRYTHON__.compiled_date="2018-09-24 11:26:25.721336"
+__BRYTHON__.timestamp=1537781185721
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -8877,10 +8877,7 @@ var $comp_func=function(self,other){if(other.__class__===$B.long_int){return $B.
 if(isinstance(other,int)){other=int_value(other)
 return self.valueOf()> other.valueOf()}else if(isinstance(other,_b_.float)){return self.valueOf()> other.valueOf()}else if(isinstance(other,_b_.bool)){return self.valueOf()> _b_.bool.__hash__(other)}
 if(hasattr(other,"__int__")||hasattr(other,"__index__")){return int.__gt__(self,$B.$GetInt(other))}
-var inv_op=$B.$getattr(other,"__lt__",None)
-if(inv_op !==None){return inv_op(self)}
-throw _b_.TypeError.$factory(
-"unorderable types: int() > " + $B.get_class(other).__name__ + "()")}
+return _b_.NotImplemented}
 $comp_func +="" 
 for(var $op in $B.$comps){eval("int.__"+$B.$comps[$op]+ "__ = " +
 $comp_func.replace(/>/gm,$op).

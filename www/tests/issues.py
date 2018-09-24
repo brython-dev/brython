@@ -2071,6 +2071,16 @@ try:
 except NameError:
     pass
 
+# issue 925
+class A():
+    def __lt__(self, other):
+        return 1
+    def __gt__(self, other):
+        return 2
+
+assert (1 < A()) == 2
+assert (A() < 1) == 1
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
