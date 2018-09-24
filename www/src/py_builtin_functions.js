@@ -1822,9 +1822,23 @@ $B.$setattr = function(obj, attr, value){
         }
     }
 
+    // Search the __setattr__ method
+    var _setattr = false
+    if(klass !== undefined){
+        _setattr = klass.__setattr__
+        if(_setattr === undefined){
+            var mro = klass.__mro__
+            for(var i = 0, _len = mro.length; i < _len; i++){
+                _setattr = mro[i].__setattr__
+                if(_setattr){break}
+            }
+        }
+    }
+
     // Use __slots__ if defined
     var special_attrs = ["__module__"]
-    if(klass && klass.__slots__ && special_attrs.indexOf(attr) == -1){
+    if(klass && klass.__slots__ && special_attrs.indexOf(attr) == -1 &&
+            ! _setattr){
         var has_slot = false
         if(klass.__slots__.indexOf(attr) > -1){
             has_slot = true
@@ -1843,18 +1857,6 @@ $B.$setattr = function(obj, attr, value){
         }
     }
 
-    // Search the __setattr__ method
-    var _setattr = false
-    if(klass !== undefined){
-        _setattr = klass.__setattr__
-        if(_setattr === undefined){
-            var mro = klass.__mro__
-            for(var i = 0, _len = mro.length; i < _len; i++){
-                _setattr = mro[i].__setattr__
-                if(_setattr){break}
-            }
-        }
-    }
     if(!_setattr){
         obj[attr] = value
     }else{

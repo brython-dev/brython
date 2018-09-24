@@ -65,8 +65,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-09-23 09:42:29.502066"
-__BRYTHON__.timestamp=1537688549502
+__BRYTHON__.compiled_date="2018-09-24 09:27:22.285363"
+__BRYTHON__.timestamp=1537774042285
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -6614,18 +6614,19 @@ return None}}else if(klass && klass.$descriptors !==undefined &&
 klass[attr]!==undefined){var setter=klass[attr].setter
 if(typeof setter=='function'){setter(obj,value)
 return None}else{throw _b_.AttributeError.$factory('readonly attribute')}}}
-var special_attrs=["__module__"]
-if(klass && klass.__slots__ && special_attrs.indexOf(attr)==-1){var has_slot=false
-if(klass.__slots__.indexOf(attr)> -1){has_slot=true}else{for(var i=0;i < klass.__mro__.length;i++){var kl=klass.__mro__[i]
-if(kl.__slots__ && kl.__slots__.indexOf(attr)> - 1){has_slot=true
-break}}}
-if(! has_slot){throw _b_.AttributeError.$factory("'" + klass.__name__ +
-"' object has no attribute '" + attr + "'")}}
 var _setattr=false
 if(klass !==undefined){_setattr=klass.__setattr__
 if(_setattr===undefined){var mro=klass.__mro__
 for(var i=0,_len=mro.length;i < _len;i++){_setattr=mro[i].__setattr__
 if(_setattr){break}}}}
+var special_attrs=["__module__"]
+if(klass && klass.__slots__ && special_attrs.indexOf(attr)==-1 &&
+! _setattr){var has_slot=false
+if(klass.__slots__.indexOf(attr)> -1){has_slot=true}else{for(var i=0;i < klass.__mro__.length;i++){var kl=klass.__mro__[i]
+if(kl.__slots__ && kl.__slots__.indexOf(attr)> - 1){has_slot=true
+break}}}
+if(! has_slot){throw _b_.AttributeError.$factory("'" + klass.__name__ +
+"' object has no attribute '" + attr + "'")}}
 if(!_setattr){obj[attr]=value}else{_setattr(obj,attr,value)}
 return None}
 function sorted(){var $=$B.args('sorted',1,{iterable: null},['iterable'],arguments,{},null,'kw')

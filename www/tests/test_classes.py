@@ -330,5 +330,19 @@ class B(A):
 
 assert {'prop': str} == B.__annotations__
 
+# issue 922
+class A:
+    __slots__ = ['_r']
+    x = 0
+    def __getattr__(self, name):
+        A.x = "getattr"
+    def __setattr__(self,name,value):
+        A.x = "setattr"
+
+a = A()
+a.b
+assert A.x == "getattr"
+a.b = 9
+assert A.x == "setattr"
 
 print('passed all tests..')
