@@ -1091,8 +1091,8 @@ $B.PyNumber_Index = function(item){
             return item
         case "object":
             if(item.__class__ === $B.long_int){return item}
-            var method = _b_.getattr(item, "__index__", null)
-            if(method !== null){
+            var method = _b_.getattr(item, "__index__", _b_.None)
+            if(method !== _b_.None){
                 method = typeof method == "function" ?
                             method : _b_.getattr(method, "__call__")
                 return $B.int_or_bool(method)

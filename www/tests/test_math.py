@@ -77,7 +77,7 @@ assert math.trunc(1.9) == 1.0
 class foo(object):
   def __trunc__(self):
       return "truncated"
-        
+
 assert math.trunc(foo()) == "truncated"
 
 assert math.copysign(1.0, -5) == -1.0
@@ -94,9 +94,9 @@ assert almost_equal(math.ceil(-1.5), -1)
 class TestCeil:
   def __ceil__(self):
       return 42
-        
+
 assert almost_equal(math.ceil(TestCeil()), 42)
- 
+
 class StrangeCeil:
   def __ceil__(self):
       return "this is a string"
@@ -126,4 +126,6 @@ expected = [False, False, False, False, True, True, False, False, False]
 for case, result in zip(cases, expected):
     assert math.isclose(**case) == result
 
+# issue 924
+assert math.gcd(234, 78) == 78
 print("passed all tests..")
