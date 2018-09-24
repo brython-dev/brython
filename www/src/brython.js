@@ -65,8 +65,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-09-24 09:27:22.285363"
-__BRYTHON__.timestamp=1537774042285
+__BRYTHON__.compiled_date="2018-09-24 09:44:40.184005"
+__BRYTHON__.timestamp=1537775080184
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -1387,7 +1387,9 @@ C.tree.pop()})
 this.tree=[]
 return res.join(';')}else{var expr=this.tree[0].tree[0]
 switch(expr.type){case 'id':
-return 'delete ' + expr.to_js()+ ';'
+var res='delete ' + expr.to_js()+ ';'
+delete $get_scope(this).binding[expr.value]
+return res
 case 'list_or_tuple':
 var res=[]
 expr.tree.forEach(function(elt){res.push('delete ' + elt.to_js())})

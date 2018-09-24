@@ -2843,7 +2843,10 @@ var $DelCtx = $B.parser.$DelCtx = function(context){
 
             switch(expr.type) {
                 case 'id':
-                    return 'delete ' + expr.to_js() + ';'
+                    // cf issue #923
+                    var res = 'delete ' + expr.to_js() + ';'
+                    delete $get_scope(this).binding[expr.value]
+                    return res
                 case 'list_or_tuple':
                     var res = []
                     expr.tree.forEach(function(elt){

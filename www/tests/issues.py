@@ -2062,6 +2062,15 @@ obj = MyClass("aaa")
 obj2 = copy.copy(obj)
 assert obj2.x == "aaa"
 
+# issue 923
+v = 1
+del v
+try:
+    print(v)
+    raise Exception("should have raised NameError")
+except NameError:
+    pass
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
