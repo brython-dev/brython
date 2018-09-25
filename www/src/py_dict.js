@@ -404,7 +404,7 @@ dict.__len__ = function(self) {
 
     for(var k in self.$numeric_dict){_count++}
     for(var k in self.$string_dict){_count++}
-    for(var k in self.$object_dict){_count += self.$object_dict[k].length}
+    for(var k in self.$object_dict){_count++}
 
     return _count
 }
