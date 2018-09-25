@@ -65,8 +65,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-09-24 11:26:25.721336"
-__BRYTHON__.timestamp=1537781185721
+__BRYTHON__.compiled_date="2018-09-25 11:53:04.286137"
+__BRYTHON__.timestamp=1537869184287
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -4546,7 +4546,6 @@ $B.compile_time +=t1 - t0
 return root}
 var brython=$B.parser.brython=function(options){
 if($B.meta_path===undefined){$B.meta_path=[]}
-$B.$options={}
 if(options===undefined){options={'debug': 0}}
 if(typeof options=='number'){options={'debug': options}}
 if(options.debug===undefined){options.debug=0}
@@ -4555,6 +4554,7 @@ _b_.__debug__=$B.debug > 0
 $B.compile_time=0
 if(options.profile===undefined){options.profile=0}
 $B.profile=options.profile
+if(options.indexedDB===undefined){options.indexedDB=true}
 if(options.static_stdlib_import===undefined){options.static_stdlib_import=true}
 $B.static_stdlib_import=options.static_stdlib_import
 if(options.open !==undefined){_b_.open=options.open
@@ -4681,7 +4681,7 @@ $B.precompiled[module]=source}
 var inImported=$B.inImported=function(module){if($B.imported.hasOwnProperty(module)){}else if(__BRYTHON__.VFS && __BRYTHON__.VFS.hasOwnProperty(module)){var elts=__BRYTHON__.VFS[module]
 if(elts===undefined){console.log('bizarre',module)}
 var ext=elts[0],source=elts[1],is_package=elts.length==4
-if(ext==".py"){$B.tasks.splice(0,0,[idb_get,module])}else{add_jsmodule(module,source)}}else{console.log("bizarre",module)}
+if(ext==".py"){if(idb_cx){$B.tasks.splice(0,0,[idb_get,module])}}else{add_jsmodule(module,source)}}else{console.log("bizarre",module)}
 loop()}
 var loop=$B.loop=function(){if($B.tasks.length==0){
 if(idb_cx){idb_cx.result.close()}
@@ -4766,7 +4766,8 @@ $err=_b_.RuntimeError.$factory($err + '')}
 var $trace=_b_.getattr($err,'info')+ '\n' + $err.__name__ +
 ': ' + $err.args
 try{_b_.getattr($B.stderr,'write')($trace)}catch(print_exc_err){console.log($trace)}
-throw $err}}else{if($elts.length > 0){if($B.has_indexedDB && $B.hasOwnProperty("VFS")){$B.tasks.push([$B.idb_open])}}
+throw $err}}else{if($elts.length > 0){if(options.indexedDB && $B.has_indexedDB &&
+$B.hasOwnProperty("VFS")){$B.tasks.push([$B.idb_open])}}
 var defined_ids={}
 for(var i=0;i < $elts.length;i++){var elt=$elts[i]
 if(elt.id){if(defined_ids[elt.id]){throw Error("Brython error : Found 2 scripts with the " +

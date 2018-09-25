@@ -8898,9 +8898,6 @@ var brython = $B.parser.brython = function(options){
         $B.meta_path = []
     }
 
-    // Options passed to brython(), with default values
-    $B.$options = {}
-
     // By default, only set debug level
     if(options === undefined){options = {'debug': 0}}
 
@@ -8916,6 +8913,11 @@ var brython = $B.parser.brython = function(options){
 
     if(options.profile === undefined){options.profile = 0}
     $B.profile = options.profile
+
+    // If a VFS is present, Brython normally stores a precompiled version
+    // in an indexedDB database. Setting options.indexedDB to false disables
+    // this feature (cf issue #927)
+    if(options.indexedDB === undefined){options.indexedDB = true}
 
     // For imports, default mode is to search modules of the standard library
     // using a static mapping stored in stdlib_paths.js
@@ -9282,7 +9284,9 @@ var inImported = $B.inImported = function(module){
             source = elts[1],
             is_package = elts.length == 4
         if(ext==".py"){
-            $B.tasks.splice(0, 0, [idb_get, module])
+            if(idb_cx){
+                $B.tasks.splice(0, 0, [idb_get, module])
+            }
         }else{
             add_jsmodule(module, source)
         }
@@ -9536,7 +9540,8 @@ var _run_scripts = $B.parser._run_scripts = function(options) {
         }
     }else{
         if($elts.length > 0){
-            if($B.has_indexedDB && $B.hasOwnProperty("VFS")){
+            if(options.indexedDB && $B.has_indexedDB &&
+                    $B.hasOwnProperty("VFS")){
                 $B.tasks.push([$B.idb_open])
             }
         }
