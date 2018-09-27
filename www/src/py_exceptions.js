@@ -149,9 +149,9 @@ var frame = $B.make_class("frame",
         var res = {
             __class__: frame,
             f_builtins : {}, // XXX fix me
-            $stack: stack,
+            $stack: deep_copy(stack)
         }
-        if(pos === undefined){pos = 0}
+        if(pos === undefined){pos = fs.length - 1}
         res.$pos = pos
         if(fs.length){
             var _frame = fs[pos]
@@ -201,7 +201,9 @@ frame.__getattr__ = function(self, attr){
     // is initialised
     if(attr == "f_back"){
         if(self.$pos > 0){
-            return frame.$factory(self.$stack, self.$pos - 1)
+            return frame.$factory(self.$stack.slice(0, self.$stack.length - 1))
+        }else{
+            return _b_.None
         }
     }
 }
@@ -325,8 +327,8 @@ BaseException.with_traceback = function(self, tb){
     return self
 }
 
-function deep_copy_frames_stack() {
-    var result = $B.frames_stack.slice();
+function deep_copy(stack) {
+    var result = stack.slice();
     for (var i = 0; i < result.length; i++) {
         // Then copy each frame
         result[i] = result[i].slice()
@@ -343,7 +345,7 @@ BaseException.$factory = function (){
     err.__class__ = _b_.BaseException
     err.$py_error = true
     // Make a copy of the current frame stack array
-    err.$stack = deep_copy_frames_stack();
+    err.$stack = deep_copy($B.frames_stack);
     if($B.frames_stack.length){
         err.$line_info = $B.last($B.frames_stack)[1].$line_info
     }
@@ -392,7 +394,7 @@ $B.exception = function(js_exc){
         var $message = js_exc.msg || "<" + js_exc + ">"
         exc.args = _b_.tuple.$factory([$message])
         exc.$py_error = true
-        exc.$stack = deep_copy_frames_stack();
+        exc.$stack = deep_copy($B.frames_stack);
     }else{
         var exc = js_exc
     }
