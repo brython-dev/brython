@@ -2364,8 +2364,11 @@ $B.Function.__getattribute__ = function(self, attr){
 }
 
 $B.Function.__repr__ = $B.Function.__str__ = function(self){
-    if(self.$infos === undefined){console.log("pas de $infos", self)}
-    return '<function ' + self.$infos.__qualname__ + '>'
+    if(self.$infos === undefined){
+        return '<function ' + self.name + '>'
+    }else{
+        return '<function ' + self.$infos.__qualname__ + '>'
+    }
 }
 
 $B.Function.__mro__ = [object]
