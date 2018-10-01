@@ -22,11 +22,11 @@ var stat_result = $B.make_class("stat_result",
             st_ino: -1,
             st_mode: 0,
             st_size: 1
-        }
+        };
         ["mtime", "ctime", "atime_ns", "mtime_ns", "ctime_ns"].
             forEach(function(item){
                 res["st_" + item] = res.st_atime
-            })
+            });
         return res
     }
 )
