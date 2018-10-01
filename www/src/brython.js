@@ -65,8 +65,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-10-01 09:01:59.841713"
-__BRYTHON__.timestamp=1538377319841
+__BRYTHON__.compiled_date="2018-10-01 15:27:20.203484"
+__BRYTHON__.timestamp=1538400440203
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -12321,6 +12321,9 @@ if(traceback !==undefined){exc.$traceback=traceback}
 self.sent_value={__class__: $B.$GeneratorSendError,err: exc}
 return generator.__next__(self)}
 generator.$factory=$B.genfunc=function(name,blocks,funcs,$defaults){
+if(name.startsWith("__ge")){
+for(var block_id in blocks){if(block_id=="$locals_" + name){continue}
+for(var attr in blocks[block_id]){blocks["$locals_" + name][attr]=blocks[block_id][attr]}}}
 return function(){var iter_id="$gen" + $B.gen_counter++,gfuncs=[]
 gfuncs.push(funcs[0]($defaults))
 for(var i=1;i < funcs.length;i++){gfuncs.push(funcs[i])}

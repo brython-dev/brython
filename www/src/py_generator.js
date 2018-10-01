@@ -672,6 +672,16 @@ generator.$$throw = function(self, type, value, traceback){
 generator.$factory = $B.genfunc = function(name, blocks, funcs, $defaults){
     // Transform a list of functions into a generator object, ie a function
     // that returns an iterator
+    if(name.startsWith("__ge")){
+        // Copy all names in surrounding scopes in namespace of generator
+        // expression (issue #935)
+        for(var block_id in blocks){
+            if(block_id == "$locals_" + name){continue}
+            for(var attr in blocks[block_id]){
+                blocks["$locals_" + name][attr] = blocks[block_id][attr]
+            }
+        }
+    }
     return function(){
         var iter_id = "$gen" + $B.gen_counter++,
             gfuncs = []
