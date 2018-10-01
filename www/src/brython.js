@@ -65,8 +65,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-10-01 15:27:20.203484"
-__BRYTHON__.timestamp=1538400440203
+__BRYTHON__.compiled_date="2018-10-01 15:46:49.158584"
+__BRYTHON__.timestamp=1538401609158
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -1707,8 +1707,7 @@ var _mod=this.module.replace(/\$/g,''),$package,packages=[]
 while(_mod.length > 0){if(_mod.charAt(0)=='.'){if($package===undefined){if($B.imported[mod]!==undefined){$package=$B.imported[mod].__package__
 packages=$package.split('.')}}else{$package=$B.imported[$package]
 packages.pop()}
-if($package===undefined){console.log("throw system error",this.module,$package)
-return 'throw SystemError.$factory("Parent module \'\' ' +
+if($package===undefined){return 'throw SystemError.$factory("Parent module \'\' ' +
 'not loaded, cannot perform relative import")'}else if($package=='None'){console.log('package is None !')}
 _mod=_mod.substr(1)}else{break}}
 if(_mod){packages.push(_mod)}
@@ -8079,9 +8078,8 @@ throw err}
 for(var attr in $module){$B.imported[parent][attr]=$module[attr]}
 if(i>0){
 $B.builtins.setattr($B.imported[parts.slice(0,i).join(".")],parts[i],$module)}}
-return $module}else{console.log("run Python code from VFS",modobj.__name__)
-run_py(module_contents,modobj.__path__,modobj,ext=='.pyc.js')}
-if($B.debug > 1){console.log("import " + modobj.__name__ + " from VFS")}},find_module: function(cls,name,path){return{
+return $module}else{if($B.debug > 1){console.log("run Python code from VFS",modobj.__name__)}
+run_py(module_contents,modobj.__path__,modobj,ext=='.pyc.js')}},find_module: function(cls,name,path){return{
 __class__: Loader,load_module: function(name,path){var spec=cls.find_spec(cls,name,path)
 var mod=module.$factory(name)
 $B.imported[name]=mod

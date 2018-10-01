@@ -402,11 +402,10 @@ var finder_VFS = {
 
 
         }else{
-            console.log("run Python code from VFS", modobj.__name__)
+            if($B.debug > 1){
+                console.log("run Python code from VFS", modobj.__name__)
+            }
             run_py(module_contents, modobj.__path__, modobj, ext == '.pyc.js')
-        }
-        if($B.debug > 1){
-            console.log("import " + modobj.__name__ + " from VFS")
         }
     },
 

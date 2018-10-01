@@ -3492,7 +3492,6 @@ var $FromCtx = $B.parser.$FromCtx = function(context){
                     packages.pop()
                 }
                 if($package === undefined){
-                    console.log("throw system error", this.module, $package)
                     return 'throw SystemError.$factory("Parent module \'\' ' +
                         'not loaded, cannot perform relative import")'
                 }else if($package == 'None'){
