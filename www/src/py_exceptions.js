@@ -41,7 +41,6 @@ $B.$syntax_err_line = function(exc, module, src, pos, line_num){
         lnum = 1,
         module = module.charAt(0) == "$" ? "<string>" : module
     if(src === undefined){
-        console.log("no src for", module)
         exc.$line_info = line_num + ',' + module
         exc.args = _b_.tuple.$factory([$B.$getitem(exc.args, 0), module,
             line_num, 0, 0])
@@ -61,14 +60,21 @@ $B.$syntax_err_line = function(exc, module, src, pos, line_num){
             line = lines[line_num - 1],
             lpos = pos - line_pos[line_num],
             len = line.length
+        exc.text = line
         line = line.replace(/^\s*/,'')
         lpos -= len - line.length
+        exc.offset = lpos
         exc.args = _b_.tuple.$factory([$B.$getitem(exc.args, 0), module,
             line_num, lpos, line])
     }
+    exc.lineno = line_num
+    exc.msg = exc.args[0]
+    exc.filename = module
 }
 
 $B.$SyntaxError = function(module, msg, src, pos, line_num, root) {
+    //$B.frames_stack.push([module, {$line_info: line_num + "," + module},
+    //    module, {$src: src}])
     if(root !== undefined && root.line_info !== undefined){
         // this may happen for syntax errors inside a lambda
         line_num = root.line_info
@@ -78,9 +84,16 @@ $B.$SyntaxError = function(module, msg, src, pos, line_num, root) {
     throw exc
 }
 
-$B.$IndentationError = function(module, msg, src, pos) {
+$B.$IndentationError = function(module, msg, src, pos, line_num, root) {
+    $B.frames_stack.push([module, {$line_info: line_num + "," + module},
+        module, {$src: src}])
+    if(root !== undefined && root.line_info !== undefined){
+        // this may happen for syntax errors inside a lambda
+        line_num = root.line_info
+    }
     var exc = _b_.IndentationError.$factory(msg)
-    $B.$syntax_err_line(exc, module, src, pos)
+    $B.$syntax_err_line(exc, module, src, pos, line_num)
+    console.log("indentation error", exc)
     throw exc
 }
 
@@ -151,11 +164,12 @@ var frame = $B.make_class("frame",
             f_builtins : {}, // XXX fix me
             $stack: deep_copy(stack)
         }
-        if(pos === undefined){pos = fs.length - 1}
+        if(pos === undefined){pos = 0}
         res.$pos = pos
         if(fs.length){
-            var _frame = fs[pos]
-            var locals_id = _frame[0]
+            var _frame = fs[pos],
+                locals_id = _frame[0],
+                filename
             try{
                 res.f_locals = $B.obj_dict(_frame[1])
             }catch(err){
@@ -165,23 +179,34 @@ var frame = $B.make_class("frame",
             res.f_globals = $B.obj_dict(_frame[3])
 
             if(_frame[1].$line_info === undefined){res.f_lineno = -1}
-            else{res.f_lineno = parseInt(_frame[1].$line_info.split(',')[0])}
-
-            var co_name = locals_id
-            if(_frame[0].$name){
-                co_name = _frame[0].$name
-            }else if(_frame.length > 4){
-                if(_frame[4].$infos){
-                    co_name = _frame[4].$infos.__name__
-                }else{
-                    co_name = _frame[4].name
+            else{
+                var line_info = _frame[1].$line_info.split(",")
+                res.f_lineno = parseInt(line_info[0])
+                var module_name = line_info[1]
+                if($B.imported.hasOwnProperty(module_name)){
+                    filename = $B.imported[module_name].__file__
                 }
+                res.f_lineno = parseInt(_frame[1].$line_info.split(',')[0])
             }
 
+            var co_name = locals_id
+            if(locals_id == _frame[2]){
+                co_name = "<module>"
+            }else{
+                if(_frame[0].$name){
+                    co_name = _frame[0].$name
+                }else if(_frame.length > 4){
+                    if(_frame[4].$infos){
+                        co_name = _frame[4].$infos.__name__
+                    }else{
+                        co_name = _frame[4].name
+                    }
+                }
+            }
             res.f_code = {__class__: $B.code,
                 co_code: None, // XXX fix me
                 co_name: co_name, // idem
-                co_filename: _frame[3].__file__ // idem
+                co_filename: filename // idem
             }
             if(res.f_code.co_filename === undefined){
                 if(_frame[3].$src){
@@ -249,12 +274,6 @@ var getExceptionTrace = function(exc, includeInternal) {
     if(exc.__class__ === undefined){
         console.log("no class", exc)
         return exc + ''
-    }else{
-        var name = exc.__class__.__name__
-        if(name == "SyntaxError" || name == "IndentationError"){
-            return 'File "' + exc.args[1] + '", line ' + exc.args[2] +
-                "\n    " + exc.args[4]
-        }
     }
 
     var info = ''
@@ -315,6 +334,7 @@ BaseException.__getattr__ = function(self, attr){
         return getExceptionTrace(self, true);
     }else if(attr == "traceback"){
         // Return traceback object
+        if(self.$traceback !== undefined){return self.$traceback}
         return traceback.$factory(self)
     }else{
         throw _b_.AttributeError.$factory(self.__class__.__name__ +
