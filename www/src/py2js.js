@@ -275,7 +275,8 @@ var $add_yield_from_code = $B.parser.$add_yield_from_code = function(yield_ctx) 
     pnode.bindings = pnode.bindings || {}
 
     for(attr in repl){
-        replace_with = replace_with.replace(new RegExp(attr, 'g'), repl[attr])
+        replace_with = replace_with.replace(new RegExp("\\b" + attr + "\\b", 'g'),
+            repl[attr])
         // Add internal names to node bindings
         pnode.bindings[repl[attr]] = true
     }
@@ -296,6 +297,7 @@ var $add_yield_from_code = $B.parser.$add_yield_from_code = function(yield_ctx) 
     }
 
     var new_node = new $YieldFromMarkerNode(params)
+
     replace_node(pnode, new_node)
 
 }
@@ -335,7 +337,7 @@ var $_SyntaxError = $B.parser.$_SyntaxError = function (context,msg,indent){
                 src, $pos, line_num, root)
         }
         $B.$SyntaxError(module, 'invalid syntax', src, $pos, line_num, root)
-    }else{throw $B.$IndentationError(module, msg, src, $pos)}
+    }else{throw $B.$IndentationError(module, msg, src, $pos, line_num, root)}
 }
 
 /*
@@ -9299,7 +9301,10 @@ var inImported = $B.inImported = function(module){
 var loop = $B.loop = function(){
     if($B.tasks.length == 0){
         // No more task to process.
-        if(idb_cx){idb_cx.result.close()}
+        if(idb_cx){
+            idb_cx.result.close()
+            idb_cx.$closed = true
+        }
         return
     }
     var task = $B.tasks.shift(),
@@ -9396,6 +9401,11 @@ function required_stdlib_imports(imports, start){
 $B.run_script = function(src, name, run_loop){
     // run_loop is set to true if run_script is added to tasks in
     // ajax_load_script
+    if(run_loop){
+        if(idb_cx.$closed){
+            $B.tasks.push([$B.idb_open])
+        }
+    }
     $B.$py_module_path[name] = $B.script_path
     try{
         var root = $B.py2js(src, name, name),
@@ -9408,7 +9418,7 @@ $B.run_script = function(src, name, run_loop){
                 __file__: $B.script_path + "/" + name
             }
             $B.file_cache[script.__file__] = src
-            if($B.debug > 1){$log(js)}
+            if($B.debug > 1){console.log(js)}
     }catch(err){
         handle_error(err)
     }
