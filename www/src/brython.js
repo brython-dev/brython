@@ -65,9 +65,9 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-09-25 16:37:33.187762"
-__BRYTHON__.timestamp=1537886253187
-__BRYTHON__.builtin_module_names=["_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","random","zlib"]
+__BRYTHON__.compiled_date="2018-10-01 09:01:59.841713"
+__BRYTHON__.timestamp=1538377319841
+__BRYTHON__.builtin_module_names=["_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
 isFinite(value)&&
@@ -174,7 +174,7 @@ INDENT + "                _r = _e.value" + "\n" +
 INDENT + "                break" + "\n";
 var repl={_i : create_temp_name('__i'),_y : create_temp_name('__y'),_r : create_temp_name('__r'),_e : create_temp_name('__e'),_s : create_temp_name('__s'),_m : create_temp_name('__m'),}
 pnode.bindings=pnode.bindings ||{}
-for(attr in repl){replace_with=replace_with.replace(new RegExp(attr,'g'),repl[attr])
+for(attr in repl){replace_with=replace_with.replace(new RegExp("\\b" + attr + "\\b",'g'),repl[attr])
 pnode.bindings[repl[attr]]=true}
 $tokenize(pnode,replace_with)
 var params={iter_name: repl._i,result_var_name: repl._r,yield_expr: yield_ctx,}
@@ -196,7 +196,7 @@ if(indent !==undefined){line_num++}
 if(indent===undefined){if(Array.isArray(msg)){$B.$SyntaxError(module,msg[0],src,$pos,line_num)}
 if(msg==="Triple string end not found"){
 $B.$SyntaxError(module,'invalid syntax : triple string end not found',src,$pos,line_num,root)}
-$B.$SyntaxError(module,'invalid syntax',src,$pos,line_num,root)}else{throw $B.$IndentationError(module,msg,src,$pos)}}
+$B.$SyntaxError(module,'invalid syntax',src,$pos,line_num,root)}else{throw $B.$IndentationError(module,msg,src,$pos,line_num,root)}}
 var $Node=$B.parser.$Node=function(type){this.type=type
 this.children=[]
 this.yield_atoms=[]
@@ -4684,7 +4684,8 @@ var ext=elts[0],source=elts[1],is_package=elts.length==4
 if(ext==".py"){if(idb_cx){$B.tasks.splice(0,0,[idb_get,module])}}else{add_jsmodule(module,source)}}else{console.log("bizarre",module)}
 loop()}
 var loop=$B.loop=function(){if($B.tasks.length==0){
-if(idb_cx){idb_cx.result.close()}
+if(idb_cx){idb_cx.result.close()
+idb_cx.$closed=true}
 return}
 var task=$B.tasks.shift(),func=task[0],args=task.slice(1)
 if(func=="execute"){try{var script=task[1],script_id=script.__name__.replace(/\./g,"_"),module=$B.module.$factory(script.__name__)
@@ -4722,10 +4723,11 @@ nb_added++}}})}}
 if(nb_added){required_stdlib_imports(imports,imports.length - nb_added)}
 return imports}
 $B.run_script=function(src,name,run_loop){
+if(run_loop){if(idb_cx.$closed){$B.tasks.push([$B.idb_open])}}
 $B.$py_module_path[name]=$B.script_path
 try{var root=$B.py2js(src,name,name),js=root.to_js(),script={__doc__: root.__doc__,js: js,__name__: name,$src: src,__file__: $B.script_path + "/" + name}
 $B.file_cache[script.__file__]=src
-if($B.debug > 1){$log(js)}}catch(err){handle_error(err)}
+if($B.debug > 1){console.log(js)}}catch(err){handle_error(err)}
 if($B.hasOwnProperty("VFS")&& $B.has_indexedDB){
 var imports1=Object.keys(root.imports).slice(),imports=imports1.filter(function(item){return $B.VFS.hasOwnProperty(item)})
 Object.keys(imports).forEach(function(name){if($B.VFS.hasOwnProperty(name)){var submodule=$B.VFS[name],type=submodule[0]
@@ -6811,8 +6813,7 @@ res.filename=self.$infos.__code__.co_filename
 res.co_code=self + "" 
 return res}else if(attr=='__annotations__'){
 return $B.obj_dict(self.$infos[attr])}else{return self.$infos[attr]}}else if(self.$attrs && self.$attrs[attr]!==undefined){return self.$attrs[attr]}else{return _b_.object.__getattribute__(self,attr)}}
-$B.Function.__repr__=$B.Function.__str__=function(self){if(self.$infos===undefined){console.log("pas de $infos",self)}
-return '<function ' + self.$infos.__qualname__ + '>'}
+$B.Function.__repr__=$B.Function.__str__=function(self){if(self.$infos===undefined){return '<function ' + self.name + '>'}else{return '<function ' + self.$infos.__qualname__ + '>'}}
 $B.Function.__mro__=[object]
 $B.Function.__setattr__=function(self,attr,value){if(self.$infos[attr]!==undefined){self.$infos[attr]=value}
 else{self.$attrs=self.$attrs ||{};self.$attrs[attr]=value}}
@@ -6867,8 +6868,7 @@ if(es !==undefined){throw es}
 throw _b_.RuntimeError.$factory("No active exception to reraise")}else if(isinstance(arg,BaseException)){throw arg}else if(arg.$is_class && issubclass(arg,BaseException)){throw $B.$call(arg)()}else{throw _b_.TypeError.$factory("exceptions must derive from BaseException")}}
 $B.$syntax_err_line=function(exc,module,src,pos,line_num){
 var pos2line={},lnum=1,module=module.charAt(0)=="$" ? "<string>" : module
-if(src===undefined){console.log("no src for",module)
-exc.$line_info=line_num + ',' + module
+if(src===undefined){exc.$line_info=line_num + ',' + module
 exc.args=_b_.tuple.$factory([$B.$getitem(exc.args,0),module,line_num,0,0])}else{var line_pos={1:0}
 for(var i=0,len=src.length;i < len;i++){pos2line[i]=lnum
 if(src.charAt(i)=="\n"){line_pos[++lnum]=i}}
@@ -6876,16 +6876,26 @@ while(line_num===undefined){line_num=pos2line[pos]
 pos--}
 exc.$line_info=line_num + "," + module
 var lines=src.split("\n"),line=lines[line_num - 1],lpos=pos - line_pos[line_num],len=line.length
+exc.text=line
 line=line.replace(/^\s*/,'')
 lpos -=len - line.length
-exc.args=_b_.tuple.$factory([$B.$getitem(exc.args,0),module,line_num,lpos,line])}}
-$B.$SyntaxError=function(module,msg,src,pos,line_num,root){if(root !==undefined && root.line_info !==undefined){
+exc.offset=lpos
+exc.args=_b_.tuple.$factory([$B.$getitem(exc.args,0),module,line_num,lpos,line])}
+exc.lineno=line_num
+exc.msg=exc.args[0]
+exc.filename=module}
+$B.$SyntaxError=function(module,msg,src,pos,line_num,root){
+if(root !==undefined && root.line_info !==undefined){
 line_num=root.line_info}
 var exc=_b_.SyntaxError.$factory(msg)
 $B.$syntax_err_line(exc,module,src,pos,line_num)
 throw exc}
-$B.$IndentationError=function(module,msg,src,pos){var exc=_b_.IndentationError.$factory(msg)
-$B.$syntax_err_line(exc,module,src,pos)
+$B.$IndentationError=function(module,msg,src,pos,line_num,root){$B.frames_stack.push([module,{$line_info: line_num + "," + module},module,{$src: src}])
+if(root !==undefined && root.line_info !==undefined){
+line_num=root.line_info}
+var exc=_b_.IndentationError.$factory(msg)
+$B.$syntax_err_line(exc,module,src,pos,line_num)
+console.log("indentation error",exc)
 throw exc}
 var traceback=$B.make_class("traceback",function(exc,stack){if(stack===undefined)
 stack=exc.$stack
@@ -6918,26 +6928,29 @@ return _b_.object.__getattribute__(self,attr)}}
 $B.set_func_names(traceback,"builtins")
 var frame=$B.make_class("frame",function(stack,pos){var fs=stack
 var res={__class__: frame,f_builtins :{},
-$stack: stack,}
+$stack: deep_copy(stack)}
 if(pos===undefined){pos=0}
 res.$pos=pos
-if(fs.length){var _frame=fs[pos]
-var locals_id=_frame[0]
+if(fs.length){var _frame=fs[pos],locals_id=_frame[0],filename
 try{res.f_locals=$B.obj_dict(_frame[1])}catch(err){console.log("err " + err)
 throw err}
 res.f_globals=$B.obj_dict(_frame[3])
 if(_frame[1].$line_info===undefined){res.f_lineno=-1}
-else{res.f_lineno=parseInt(_frame[1].$line_info.split(',')[0])}
+else{var line_info=_frame[1].$line_info.split(",")
+res.f_lineno=parseInt(line_info[0])
+var module_name=line_info[1]
+if($B.imported.hasOwnProperty(module_name)){filename=$B.imported[module_name].__file__}
+res.f_lineno=parseInt(_frame[1].$line_info.split(',')[0])}
 var co_name=locals_id
-if(_frame[0].$name){co_name=_frame[0].$name}else if(_frame.length > 4){if(_frame[4].$infos){co_name=_frame[4].$infos.__name__}else{co_name=_frame[4].name}}
+if(locals_id==_frame[2]){co_name="<module>"}else{if(_frame[0].$name){co_name=_frame[0].$name}else if(_frame.length > 4){if(_frame[4].$infos){co_name=_frame[4].$infos.__name__}else{co_name=_frame[4].name}}}
 res.f_code={__class__: $B.code,co_code: None,
 co_name: co_name,
-co_filename: _frame[3].__file__ }
+co_filename: filename }
 if(res.f_code.co_filename===undefined){if(_frame[3].$src){res.f_code.co_filename="<string>"}else{console.log("pas de src")}}}
 return res}
 )
 frame.__getattr__=function(self,attr){
-if(attr=="f_back"){if(self.$pos > 0){return frame.$factory(self.$stack,self.$pos - 1)}}}
+if(attr=="f_back"){if(self.$pos > 0){return frame.$factory(self.$stack.slice(0,self.$stack.length - 1))}else{return _b_.None}}}
 $B.set_func_names(frame,"builtins")
 $B._frame=frame 
 var BaseException=_b_.BaseException={__class__: _b_.type,__bases__ :[_b_.object],__module__: "builtins",__mro__:[_b_.object],__name__: "BaseException",args:[],$is_class: true}
@@ -6951,9 +6964,7 @@ BaseException.__new__=function(cls){var err=_b_.BaseException.$factory()
 err.__class__=cls
 return err}
 var getExceptionTrace=function(exc,includeInternal){if(exc.__class__===undefined){console.log("no class",exc)
-return exc + ''}else{var name=exc.__class__.__name__
-if(name=="SyntaxError" ||name=="IndentationError"){return 'File "' + exc.args[1]+ '", line ' + exc.args[2]+
-"\n    " + exc.args[4]}}
+return exc + ''}
 var info=''
 if(exc.$js_exc !==undefined && includeInternal){info +="\nJS stack:\n" + exc.$js_exc.stack + "\n"}
 info +="Traceback (most recent call last):"
@@ -6976,11 +6987,12 @@ if(line){line=line.replace(/^[ ]+/g,"")}
 info +="\n    " + line}else{console.log("src undef",line_info)}}
 return info}
 BaseException.__getattr__=function(self,attr){if(attr=="info"){return getExceptionTrace(self,false);}else if(attr=="infoWithInternal"){return getExceptionTrace(self,true);}else if(attr=="traceback"){
+if(self.$traceback !==undefined){return self.$traceback}
 return traceback.$factory(self)}else{throw _b_.AttributeError.$factory(self.__class__.__name__ +
 " has no attribute '" + attr + "'")}}
 BaseException.with_traceback=function(self,tb){self.traceback=tb
 return self}
-function deep_copy_frames_stack(){var result=$B.frames_stack.slice();
+function deep_copy(stack){var result=stack.slice();
 for(var i=0;i < result.length;i++){
 result[i]=result[i].slice()
 result[i][1]={$line_info: result[i][1].$line_info}}
@@ -6989,7 +7001,7 @@ BaseException.$factory=function(){var err=Error()
 err.args=_b_.tuple.$factory(Array.prototype.slice.call(arguments))
 err.__class__=_b_.BaseException
 err.$py_error=true
-err.$stack=deep_copy_frames_stack();
+err.$stack=deep_copy($B.frames_stack);
 if($B.frames_stack.length){err.$line_info=$B.last($B.frames_stack)[1].$line_info}
 eval("//placeholder//")
 err.__cause__=_b_.None 
@@ -7016,7 +7028,7 @@ exc.__class__=_b_.RuntimeError}
 var $message=js_exc.msg ||"<" + js_exc + ">"
 exc.args=_b_.tuple.$factory([$message])
 exc.$py_error=true
-exc.$stack=deep_copy_frames_stack();}else{var exc=js_exc}
+exc.$stack=deep_copy($B.frames_stack);}else{var exc=js_exc}
 return exc}
 $B.is_exc=function(exc,exc_list){
 if(exc.__class__===undefined){exc=$B.exception(exc)}
@@ -7895,9 +7907,9 @@ __class__: JSObject,js: obj}}
 $B.JSObject=JSObject
 $B.JSConstructor=JSConstructor})(__BRYTHON__)
 ;(function($B){$B.stdlib={}
-var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_collections_abc','_compat_pickle','_Cvars','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_py_abc','_pydecimal','_queue','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_weakref','_weakrefset','abc','antigravity','argparse','atexit','base64','bdb','binascii','bisect','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','Clib','Cvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','gettext','glob','heapq','imp','inspect','io','ipaddress','itertools','keyword','linecache','locale','nntplib','numbers','opcode','operator','optparse','os','pdb','pickle','platform','posix','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','re','reprlib','select','selectors','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uuid','warnings','weakref','webbrowser','zipfile']
+var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_collections_abc','_compat_pickle','_Cvars','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_py_abc','_pydecimal','_queue','_random','_socket','_sre','_string','_strptime','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_weakref','_weakrefset','abc','antigravity','argparse','atexit','base64','bdb','binascii','bisect','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','Clib','Cvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','gettext','glob','heapq','imp','inspect','io','ipaddress','itertools','keyword','linecache','locale','nntplib','numbers','opcode','operator','optparse','os','pdb','pickle','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','re','reprlib','select','selectors','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uuid','warnings','weakref','webbrowser','zipfile']
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
-var js=['_ajax','_base64','_jsre','_multiprocessing','_posixsubprocess','_profile','_sre_utils','_svg','_sys','_warnings','aes','array','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','json','long_int','marshal','math','md5','modulefinder','pbkdf2','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','zlib']
+var js=['_ajax','_base64','_jsre','_multiprocessing','_posixsubprocess','_profile','_sre_utils','_svg','_sys','_warnings','aes','array','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','json','long_int','marshal','math','md5','modulefinder','pbkdf2','posix','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','zlib']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
 var pkglist=['asyncio','browser','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','jqueryui','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib','xml','xml.etree','xml.parsers','xml.sax']
 for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}})(__BRYTHON__)
@@ -12303,8 +12315,10 @@ if(res !==_b_.None){throw _b_.RuntimeError.$factory("closed generator returned a
 throw err}}
 generator.send=function(self,value){self.sent_value=value
 return generator.__next__(self)}
-generator.$$throw=function(self,value){if(_b_.isinstance(value,_b_.type)){value=$B.$call(value)()}
-self.sent_value={__class__: $B.$GeneratorSendError,err: value}
+generator.$$throw=function(self,type,value,traceback){var exc=type
+if(value !==undefined){exc=$B.$call(exc)(value)}
+if(traceback !==undefined){exc.$traceback=traceback}
+self.sent_value={__class__: $B.$GeneratorSendError,err: exc}
 return generator.__next__(self)}
 generator.$factory=$B.genfunc=function(name,blocks,funcs,$defaults){
 return function(){var iter_id="$gen" + $B.gen_counter++,gfuncs=[]
@@ -12346,9 +12360,7 @@ script.type=='text/javascript'){js_scripts.push(script)
 if(script.src){console.log(script.src)}}})
 console.log(js_scripts)
 for(var mod in $B.imported){if($B.imported[mod].$last_modified){console.log('check',mod,$B.imported[mod].__file__,$B.imported[mod].$last_modified)}else{console.log('no date for mod',mod)}}},run_script: function(){var $=$B.args("run_script",2,{src: null,name: null},["src","name"],arguments,{name: "script_" + $B.UUID()},null,null)
-if($B.hasOwnProperty("VFS")&& $B.has_indexedDB){$B.tasks.push([$B.idb_open])}
-$B.run_script($.src,$.name)
-$B.loop()},URLParameter:function(name){name=name.replace(/[\[]/,"\\[").replace(/[\]]/,"\\]");
+$B.run_script($.src,$.name,true)},URLParameter:function(name){name=name.replace(/[\[]/,"\\[").replace(/[\]]/,"\\]");
 var regex=new RegExp("[\\?&]" + name + "=([^&#]*)"),results=regex.exec(location.search);
 results=results===null ? "" :
 decodeURIComponent(results[1].replace(/\+/g," "));
