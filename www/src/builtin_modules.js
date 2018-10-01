@@ -109,11 +109,7 @@
                 var $ = $B.args("run_script", 2, {src: null, name: null},
                     ["src", "name"], arguments, {name: "script_" + $B.UUID()},
                     null, null)
-                if($B.hasOwnProperty("VFS") && $B.has_indexedDB){
-                    $B.tasks.push([$B.idb_open])
-                }
-                $B.run_script($.src, $.name)
-                $B.loop()
+                $B.run_script($.src, $.name, true)
             },
             URLParameter:function(name) {
             name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
