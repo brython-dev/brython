@@ -611,11 +611,11 @@ generator.__next__ = function(self){
         var src = self.next + '',
             line_num = err.lineNumber,
             lines = src.split("\n")
+        console.log(src)
         console.log(line_num, lines.length)
+        console.log(lines[line_num - 1])
         console.log(err)
-        $B.$log(src)
         */
-
         self.$finished = true
         throw err
     }finally{
@@ -661,9 +661,11 @@ generator.send = function(self, value){
     return generator.__next__(self)
 }
 
-generator.$$throw = function(self, value){
-    if(_b_.isinstance(value, _b_.type)){value = $B.$call(value)()}
-    self.sent_value = {__class__: $B.$GeneratorSendError, err: value}
+generator.$$throw = function(self, type, value, traceback){
+    var exc = type
+    if(value !== undefined){exc = $B.$call(exc)(value)}
+    if(traceback !== undefined){exc.$traceback = traceback}
+    self.sent_value = {__class__: $B.$GeneratorSendError, err: exc}
     return generator.__next__(self)
 }
 
