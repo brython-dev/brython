@@ -1,6 +1,10 @@
 from browser import console
 import asyncio
 
+from async_manager import AsyncTestManager
+
+aio = AsyncTestManager()
+
 async def wait_secs(s, result):
     await asyncio.sleep(s)
     console.log("Returning result", result)
