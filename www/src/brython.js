@@ -65,8 +65,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-10-01 15:46:49.158584"
-__BRYTHON__.timestamp=1538401609158
+__BRYTHON__.compiled_date="2018-10-03 11:39:27.311663"
+__BRYTHON__.timestamp=1538559567311
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -4665,7 +4665,7 @@ loop()}}
 idb_cx.onupgradeneeded=function(){console.log("upgrade needed")
 var db=idb_cx.result,store=db.createObjectStore("modules",{"keyPath": "name"})
 store.onsuccess=loop}
-idb_cx.onerror=function(){console.log('erreur open')}}
+idb_cx.onerror=function(){console.log('could not open indexedDB database')}}
 function ajax_load_script(script){var url=script.url,name=script.name
 var req=new XMLHttpRequest()
 req.open("GET",url + "?" + Date.now(),true)

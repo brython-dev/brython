@@ -9245,7 +9245,7 @@ $B.idb_open = function(obj){
         store.onsuccess = loop
     }
     idb_cx.onerror = function(){
-        console.log('erreur open')
+        console.log('could not open indexedDB database')
     }
 }
 
