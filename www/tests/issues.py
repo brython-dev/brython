@@ -2081,6 +2081,17 @@ class A():
 assert (1 < A()) == 2
 assert (A() < 1) == 1
 
+# issue 936
+assert not (2 == "2")
+assert 2 != "2"
+assert not ("2" == 2)
+assert "2" != 2
+
+try:
+    2 <= "2"
+except TypeError as exc:
+    assert "<=" in exc.args[0]
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

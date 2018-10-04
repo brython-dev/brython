@@ -65,8 +65,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-10-03 11:39:27.311663"
-__BRYTHON__.timestamp=1538559567311
+__BRYTHON__.compiled_date="2018-10-04 08:36:59.649081"
+__BRYTHON__.timestamp=1538635019649
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -2242,7 +2242,13 @@ this.tree[0].to_js()+ ',"__' +
 method + '__")(' +
 this.tree[1].to_js()+ ')'}
 case 'str':
-return '$B.$TypeError("unorderable types: int() < str()")'
+switch(this.op){case "==":
+return "false"
+case "!=":
+return "true"
+default:
+return '$B.$TypeError("unorderable types: '+
+" int() " + this.op + ' str()")'}
 case 'id':
 return 'typeof ' + js0 + ' == "number" ? ' +
 js0 + this.op + js1 + ' : $B.rich_comp("__' +
@@ -2253,7 +2259,13 @@ case 'str':
 switch(t0.type){case 'str':
 return js0 + this.op + js1
 case 'int':
-return '$B.$TypeError("unorderable types: str() < int()")'
+switch(this.op){case "==":
+return "false"
+case "!=":
+return "true"
+default:
+return '$B.$TypeError("unorderable types: '+
+' str() ' + this.op + ' int()")'}
 case 'id':
 return 'typeof ' + js0 + ' == "string" ? ' +
 js0 + this.op + js1 + ' : $B.rich_comp("__' +

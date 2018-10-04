@@ -4743,7 +4743,15 @@ var $OpCtx = $B.parser.$OpCtx = function(context,op){
                                         this.tree[1].to_js() + ')'
                                 }
                             case 'str':
-                                return '$B.$TypeError("unorderable types: int() < str()")'
+                                switch(this.op){
+                                    case "==":
+                                        return "false"
+                                    case "!=":
+                                        return "true"
+                                    default:
+                                        return '$B.$TypeError("unorderable types: '+
+                                            " int() " + this.op + ' str()")'
+                                }
                             case 'id':
                                 return 'typeof ' + js0 + ' == "number" ? ' +
                                     js0 + this.op + js1 + ' : $B.rich_comp("__' +
@@ -4757,7 +4765,15 @@ var $OpCtx = $B.parser.$OpCtx = function(context,op){
                           case 'str':
                               return js0 + this.op + js1
                           case 'int':
-                              return '$B.$TypeError("unorderable types: str() < int()")'
+                              switch(this.op){
+                                  case "==":
+                                      return "false"
+                                  case "!=":
+                                      return "true"
+                                  default:
+                                      return '$B.$TypeError("unorderable types: '+
+                                          ' str() ' + this.op + ' int()")'
+                              }
                           case 'id':
                               return 'typeof ' + js0 + ' == "string" ? ' +
                                   js0 + this.op + js1 + ' : $B.rich_comp("__' +
