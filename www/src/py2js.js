@@ -8914,11 +8914,6 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_info){
 
 var brython = $B.parser.brython = function(options){
 
-    // meta_path used in py_import.js
-    if($B.meta_path === undefined){
-        $B.meta_path = []
-    }
-
     // By default, only set debug level
     if(options === undefined){options = {'debug': 0}}
 
