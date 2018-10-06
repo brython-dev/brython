@@ -8624,10 +8624,12 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
             case ']':
             case '}':
                 if(br_stack == ""){
+                    $pos = pos
                     $_SyntaxError(context, "Unexpected closing bracket")
                 }else if(br_close[car] !=
                         br_stack.charAt(br_stack.length - 1)){
-                    $_SyntaxError(context,"Unbalanced bracket")
+                    $pos = pos
+                    $_SyntaxError(context, "Unbalanced bracket")
                 }else{
                     br_stack = br_stack.substr(0, br_stack.length - 1)
                     $pos = pos
@@ -8795,6 +8797,8 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_info){
     // line_info = [line_num, parent_block_id] if debug mode is set
     //
     // Returns a tree structure representing the Python source code
+
+    $pos = 0
 
     if(typeof module == "object"){
         var __package__ = module.__package__

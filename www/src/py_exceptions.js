@@ -61,8 +61,9 @@ $B.$syntax_err_line = function(exc, module, src, pos, line_num){
             lpos = pos - line_pos[line_num],
             len = line.length
         exc.text = line
-        line = line.replace(/^\s*/,'')
         lpos -= len - line.length
+        if(lpos < 0){lpos = 0}
+        line = line.replace(/^\s*/,'')
         exc.offset = lpos
         exc.args = _b_.tuple.$factory([$B.$getitem(exc.args, 0), module,
             line_num, lpos, line])
@@ -289,9 +290,6 @@ var getExceptionTrace = function(exc, includeInternal) {
             continue
         }
         var $line_info = frame[1].$line_info
-        if(i == exc.$stack.length - 1 && exc.$line_info){
-            $line_info = exc.$line_info
-        }
         var line_info = $line_info.split(','),
             src
         if(exc.module == line_info[1]){
@@ -322,6 +320,11 @@ var getExceptionTrace = function(exc, includeInternal) {
         }else{
             console.log("src undef", line_info)
         }
+    }
+    if(exc.__class__ === _b_.SyntaxError){
+        info += "\n  File " + exc.args[1] + ", line " + exc.args[2] +
+            "\n    " + exc.text
+
     }
     return info
 }

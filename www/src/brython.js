@@ -65,8 +65,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-10-04 08:36:59.649081"
-__BRYTHON__.timestamp=1538635019649
+__BRYTHON__.compiled_date="2018-10-06 14:42:27.253334"
+__BRYTHON__.timestamp=1538829747253
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_jsre","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -4409,8 +4409,10 @@ break
 case ')':
 case ']':
 case '}':
-if(br_stack==""){$_SyntaxError(C,"Unexpected closing bracket")}else if(br_close[car]!=
-br_stack.charAt(br_stack.length - 1)){$_SyntaxError(C,"Unbalanced bracket")}else{br_stack=br_stack.substr(0,br_stack.length - 1)
+if(br_stack==""){$pos=pos
+$_SyntaxError(C,"Unexpected closing bracket")}else if(br_close[car]!=
+br_stack.charAt(br_stack.length - 1)){$pos=pos
+$_SyntaxError(C,"Unbalanced bracket")}else{br_stack=br_stack.substr(0,br_stack.length - 1)
 $pos=pos
 C=$transition(C,car)
 pos++}
@@ -4507,6 +4509,7 @@ src=src.src}
 root.src=src
 return root}
 $B.py2js=function(src,module,locals_id,parent_scope,line_info){
+$pos=0
 if(typeof module=="object"){var __package__=module.__package__
 module=module.__name__}else{var __package__=""}
 parent_scope=parent_scope ||$B.builtins_scope
@@ -6888,8 +6891,9 @@ pos--}
 exc.$line_info=line_num + "," + module
 var lines=src.split("\n"),line=lines[line_num - 1],lpos=pos - line_pos[line_num],len=line.length
 exc.text=line
-line=line.replace(/^\s*/,'')
 lpos -=len - line.length
+if(lpos < 0){lpos=0}
+line=line.replace(/^\s*/,'')
 exc.offset=lpos
 exc.args=_b_.tuple.$factory([$B.$getitem(exc.args,0),module,line_num,lpos,line])}
 exc.lineno=line_num
@@ -6983,7 +6987,6 @@ var line_info=exc.$line_info
 for(var i=0;i < exc.$stack.length;i++){var frame=exc.$stack[i]
 if(! frame[1]||! frame[1].$line_info){continue}
 var $line_info=frame[1].$line_info
-if(i==exc.$stack.length - 1 && exc.$line_info){$line_info=exc.$line_info}
 var line_info=$line_info.split(','),src
 if(exc.module==line_info[1]){src=exc.src}
 if(!includeInternal){var src=frame[3].$src
@@ -6996,6 +6999,8 @@ if(src !==undefined){var lines=src.split("\n");
 var line=lines[parseInt(line_info[0])- 1]
 if(line){line=line.replace(/^[ ]+/g,"")}
 info +="\n    " + line}else{console.log("src undef",line_info)}}
+if(exc.__class__===_b_.SyntaxError){info +="\n  File " + exc.args[1]+ ", line " + exc.args[2]+
+"\n    " + exc.text}
 return info}
 BaseException.__getattr__=function(self,attr){if(attr=="info"){return getExceptionTrace(self,false);}else if(attr=="infoWithInternal"){return getExceptionTrace(self,true);}else if(attr=="traceback"){
 if(self.$traceback !==undefined){return self.$traceback}
