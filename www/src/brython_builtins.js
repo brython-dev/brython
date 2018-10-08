@@ -164,27 +164,18 @@ $B.globals = function(){
 }
 
 $B.$options = {}
-$B.meta_path = []
 
 // Can be used in Javascript programs to run Python code
-$B.run_from_js = function(src, script_id){
+$B.python_to_js = function(src, script_id){
+    $B.meta_path = $B.$meta_path.slice()
+    if(!$B.use_VFS){$B.meta_path.shift()}
     if(script_id === undefined){script_id = "__main__"}
-    var save_meta_path = $B.meta_path
 
     var root = __BRYTHON__.py2js(src, script_id, script_id),
         js = root.to_js()
 
-    if($B.use_VFS){
-        $B.meta_path.push($B.$meta_path[0])
-    }
-    $B.meta_path = $B.meta_path.concat($B.$meta_path.slice(1))
-
-    eval("var $locals_" + script_id + " = {}")
-    try{
-        eval(js)
-    }finally{
-        $B.meta_path = save_meta_path
-    }
+    js = "var $locals_" + script_id + " = {}\n" + js
+    return js
 }
 
 // copied from https://raw.githubusercontent.com/mathiasbynens/mothereff.in/master/js-variables/eff.js
