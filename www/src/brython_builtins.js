@@ -95,6 +95,8 @@ $B.__setattr__ = function(attr,value){
 // cf http://stackoverflow.com/questions/1043339/javascript-for-detecting-browser-language-preference
 $B.language = _window.navigator.userLanguage || _window.navigator.language
 
+$B.locale = $B.language // can be reset by locale.setlocale
+
 if(isWebWorker){
     $B.charset = "utf-8"
 }else{

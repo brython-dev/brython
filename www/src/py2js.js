@@ -9416,7 +9416,7 @@ $B.run_script = function(src, name, run_loop){
     // run_loop is set to true if run_script is added to tasks in
     // ajax_load_script
     if(run_loop){
-        if(idb_cx.$closed){
+        if(idb_cx && idb_cx.$closed){
             $B.tasks.push([$B.idb_open])
         }
     }
