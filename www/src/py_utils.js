@@ -613,7 +613,7 @@ $B.$setitem = function(obj, item, value){
         $B.JSObject.__setattr__(obj, item, value)
         return
     }
-    _b_.getattr(obj, "__setitem__")(item, value)
+    $B.$getattr(obj, "__setitem__")(item, value)
 }
 // augmented item
 $B.augm_item_add = function(obj, item, incr){
@@ -629,7 +629,7 @@ $B.augm_item_add = function(obj, item, incr){
             return
         }
     }
-    var ga = _b_.getattr
+    var ga = $B.$getattr
     try{
         var augm_func = ga(ga(obj, "__getitem__")(item), "__iadd__")
     }catch(err){
@@ -655,7 +655,7 @@ $B.extend = function(fname, arg){
     for(var i = 2; i < arguments.length; i++){
         var mapping = arguments[i]
         var it = _b_.iter(mapping),
-            getter = _b_.getattr(mapping, "__getitem__")
+            getter = $B.$getattr(mapping, "__getitem__")
         while (true){
             try{
                 var key = _b_.next(it)
@@ -727,7 +727,7 @@ $B.$is_member = function(item, _set){
     var f, _iter
 
     // use __contains__ if defined
-    try{f = _b_.getattr(_set, "__contains__")}
+    try{f = $B.$getattr(_set, "__contains__")}
     catch(err){}
 
     if(f){return f(item)}
@@ -750,7 +750,7 @@ $B.$is_member = function(item, _set){
     }
 
     // use __getitem__ if defined
-    try{f = _b_.getattr(_set, "__getitem__")}
+    try{f = $B.$getattr(_set, "__getitem__")}
     catch(err){
         throw _b_.TypeError.$factory("'" + $B.get_class(_set).__name__ +
             "' object is not iterable")
@@ -877,61 +877,6 @@ $B.jsobject2pyobject = function(obj){
     return $B.JSObject.$factory(obj)
 }
 
-$B.pyobject2jsobject = function(obj){
-    // obj is a Python object
-    switch(obj) {
-        case _b_.None:
-            return null
-        case _b_.True:
-            return true
-        case _b_.False:
-            return false
-    }
-
-    if(_b_.isinstance(obj, [_b_.int, _b_.float, _b_.str])){return obj}
-    if(_b_.isinstance(obj, [_b_.list, _b_.tuple])){
-        var res = [],
-            pos = 0
-        for(var i = 0, len = obj.length; i < len; i++){
-           res[pos++] = $B.pyobject2jsobject(obj[i])
-        }
-        return res
-    }
-    if(_b_.isinstance(obj, _b_.dict)){
-        var res = {},
-            items = _b_.list.$factory(_b_.dict.items(obj))
-        for(var i = 0, len = items.length; i < len; i++){
-            res[$B.pyobject2jsobject(items[i][0])] =
-                $B.pyobject2jsobject(items[i][1])
-        }
-        return res
-    }
-
-    if(_b_.hasattr(obj, "__iter__")){
-       // this is an iterator..
-       var _a = [],
-           pos = 0
-       while(1) {
-          try{
-           _a[pos++] = $B.pyobject2jsobject(_b_.next(obj))
-          }catch(err){
-            if(err.__class__ !== _b_.StopIteration){throw err}
-            break
-          }
-       }
-       return {"_type_": "iter", data: _a}
-    }
-
-    if(_b_.hasattr(obj, "__getstate__")){
-       return _b_.getattr(obj, "__getstate__")()
-    }
-    if(_b_.hasattr(obj, "__dict__")){
-       return $B.pyobject2jsobject(_b_.getattr(obj, "__dict__"))
-    }
-    throw _b_.TypeError.$factory(_b_.str.$factory(obj) +
-        " is not JSON serializable")
-}
-
 $B.set_line = function(line_num, module_name){
     $B.line_info = line_num + "," + module_name
     return _b_.None
@@ -986,11 +931,11 @@ $B.$iterator_class = function(name){
 
     res.__eq__ = function(self,other){
        if(_b_.isinstance(other, [_b_.tuple, _b_.set, _b_.list])){
-          return _b_.getattr(as_list(self), "__eq__")(other)
+          return $B.$getattr(as_list(self), "__eq__")(other)
        }
 
        if(_b_.hasattr(other, "__iter__")){
-          return _b_.getattr(as_list(self), "__eq__")(as_list(other))
+          return $B.$getattr(as_list(self), "__eq__")(as_list(other))
        }
 
        _b_.NotImplementedError.$factory(
@@ -1007,11 +952,11 @@ $B.$iterator_class = function(name){
 
     res.__or__ = function(self, other){
        if(_b_.isinstance(other, [_b_.tuple, _b_.set, _b_.list])){
-          return _b_.getattr(as_set(self), "__or__")(other)
+          return $B.$getattr(as_set(self), "__or__")(other)
        }
 
        if(_b_.hasattr(other, "__iter__")){
-          return _b_.getattr(as_set(self), "__or__")(as_set(other))
+          return $B.$getattr(as_set(self), "__or__")(as_set(other))
        }
 
        _b_.NotImplementedError.$factory(
@@ -1048,7 +993,7 @@ $B.make_rmethods = function(klass){
         if(klass["__" + ropnames[j] + "__"] === undefined){
             klass["__" + ropnames[j] + "__"] = (function(name, sign){
                 return function(self, other){
-                    try{return _b_.getattr(other, "__r" + name + "__")(self)}
+                    try{return $B.$getattr(other, "__r" + name + "__")(self)}
                     catch(err){$err(sign, klass, other)}
                 }
             })(ropnames[j], ropsigns[j])
@@ -1078,8 +1023,8 @@ $B.$GetInt = function(value) {
   else if(_b_.isinstance(value, _b_.int)){return value}
   else if(_b_.isinstance(value, _b_.float)){return value.valueOf()}
   if(! value.$is_class){
-      try{var v = _b_.getattr(value, "__int__")(); return v}catch(e){}
-      try{var v = _b_.getattr(value, "__index__")(); return v}catch(e){}
+      try{var v = $B.$getattr(value, "__int__")(); return v}catch(e){}
+      try{var v = $B.$getattr(value, "__index__")(); return v}catch(e){}
   }
   throw _b_.TypeError.$factory("'" + $B.get_class(value).__name__ +
       "' object cannot be interpreted as an integer")
@@ -1093,10 +1038,10 @@ $B.PyNumber_Index = function(item){
             return item
         case "object":
             if(item.__class__ === $B.long_int){return item}
-            var method = _b_.getattr(item, "__index__", _b_.None)
+            var method = $B.$getattr(item, "__index__", _b_.None)
             if(method !== _b_.None){
                 method = typeof method == "function" ?
-                            method : _b_.getattr(method, "__call__")
+                            method : $B.$getattr(method, "__call__")
                 return $B.int_or_bool(method)
             }
         default:
@@ -1506,18 +1451,18 @@ $B.rich_comp = function(op, x, y){
         // left operand’s method has priority."
         if(y.__class__.__mro__.indexOf(x.__class__) > -1){
             rev_op = reversed_op[op] || op
-            res = _b_.getattr(y, rev_op)(x)
+            res = $B.$getattr(y, rev_op)(x)
             if(res !== _b_.NotImplemented){return res}
             compared = true
         }
     }
 
-    res = $B.$call(_b_.getattr(x, op))(y)
+    res = $B.$call($B.$getattr(x, op))(y)
 
     if(res !== _b_.NotImplemented){return res}
     if(compared){return false}
     rev_op = reversed_op[op] || op
-    res = _b_.getattr(y, rev_op)(x)
+    res = $B.$getattr(y, rev_op)(x)
     if(res !== _b_.NotImplemented ){return res}
     // If both operands return NotImplemented, return False if the operand is
     // __eq__, True if it is __ne__, raise TypeError otherwise
