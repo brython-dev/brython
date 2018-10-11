@@ -8116,7 +8116,6 @@ for(var i = 0; i < s_escaped.length; i++){
     is_escaped[s_escaped.charAt(i)] = true
 }
 
-
 var $tokenize = $B.parser.$tokenize = function(root, src) {
     var br_close = {")": "(", "]": "[", "}": "{"},
         br_stack = "",
