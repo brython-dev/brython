@@ -1,3 +1,5 @@
+import _strptime
+
 from browser import window
 
 # Javascript Date constructor
@@ -30,7 +32,7 @@ def _get_day_of_year(arg):
     int with the correct day of the year starting from 1
     """
     ml = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-    if arg[0] %4 == 0:
+    if arg[0] % 4 == 0:
         ml[1] += 1
     i = 1
     yday = 0
@@ -216,16 +218,16 @@ def mktime(t):
     return (d1 - d2) / 1000.
 
 def monotonic():
-    return now()/1000.
+    return now() / 1000.
 
 def perf_counter():
-    return now()/1000.
+    return now() / 1000.
 
 def process_time():
-    return now()/1000.
+    return now() / 1000.
 
 def time():
-    return float(date().getTime()/1000)
+    return float(date().getTime() / 1000)
 
 def sleep(secs):
     """Javascript can't block execution for a given time, expect by an
@@ -236,7 +238,6 @@ def sleep(secs):
         "instead.")
 
 def strftime(_format,t = None):
-
     def ns(t, nb):
         # left padding with 0
         res = str(t)
@@ -272,6 +273,19 @@ def strftime(_format,t = None):
         'July', 'August', 'September', 'October', 'November', 'December']
 
     res = _format
+    if __BRYTHON__.locale == "C":
+        res = res.replace("%c", abb_weekdays[w] + ' ' + abb_months[int(mm) - 1]+
+            ' ' + dd + ' ' + HH24 + ':' + MM + ':' + SS + ' ' + YY)
+    else:
+        c_format = _strptime._locale_c_format()
+        if isinstance(c_format, list):
+            # for formats with AM / PM
+            if HH >= 12:
+                c_format = c_format[1]
+                HH = HH12
+            else:
+                c_format = c_format[0]
+        res = res.replace("%c", c_format)
     res = res.replace("%H", HH24)
     res = res.replace("%I", HH12)
     res = res.replace("%p", AMPM)
@@ -290,8 +304,6 @@ def strftime(_format,t = None):
     res = res.replace("%W", W)
     res = res.replace("%x", mm + '/' + dd + '/' + yy)
     res = res.replace("%X", HH24 + ':' + MM + ':' + SS)
-    res = res.replace("%c", abb_weekdays[w] + ' ' + abb_months[int(mm) - 1]+
-        ' ' + dd + ' ' + HH24 + ':' + MM + ':' + SS + ' ' + YY)
     res = res.replace("%%", '%')
 
     return res
