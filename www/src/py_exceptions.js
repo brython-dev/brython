@@ -231,6 +231,10 @@ frame.__getattr__ = function(self, attr){
         }else{
             return _b_.None
         }
+    }else if(attr == "clear"){
+        return function(){
+            // XXX fix me
+        }
     }
 }
 
