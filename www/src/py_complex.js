@@ -172,6 +172,10 @@ complex.__new__ = function(cls){
             return res
         }
     }
+
+    // If first argument is not a string, the second argument defaults to 0
+    $imag = $imag === missing ? 0 : $imag
+
     if(arguments.length == 1 && $real.__class__ === complex && $imag == 0){
         return $real
     }
@@ -201,7 +205,7 @@ complex.__new__ = function(cls){
         throw _b_.TypeError.$factory("complex() second arg can't be a string")
     }
     if(! isinstance($imag, _b_.float) && ! isinstance($imag, _b_.int) &&
-            ! isinstance($imag, _b_.complex) && $imag !== undefined){
+            ! isinstance($imag, _b_.complex) && $imag !== missing){
         throw _b_.TypeError.$factory("complex() argument must be a string " +
             "or a number")
     }
