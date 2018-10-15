@@ -293,6 +293,8 @@ def calcsize(fmt):
     """calcsize(fmt) -> int
     Return size of C struct described by format string fmt.
     See struct.__doc__ for more on format strings."""
+    if isinstance(fmt, bytes):
+        fmt = fmt.decode("ascii")
 
     formatdef,endianness,i,alignment = getmode(fmt)
     num = 0
