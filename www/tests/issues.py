@@ -2092,6 +2092,24 @@ try:
 except TypeError as exc:
     assert "<=" in exc.args[0]
 
+# issue 939
+class A:
+    def __bool__(self):
+        raise TypeError("Not a bool!")
+
+try:
+    if A():
+        pass
+    raise Exception("should have raised TypeError")
+except TypeError as exc:
+    assert exc.args[0] == "Not a bool!"
+
+try:
+    bool(A())
+    raise Exception("should have raised TypeError")
+except TypeError as exc:
+    assert exc.args[0] == "Not a bool!"
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

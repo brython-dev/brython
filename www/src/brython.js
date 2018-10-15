@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-10-15 15:26:22.257247"
-__BRYTHON__.timestamp=1539609982257
+__BRYTHON__.compiled_date="2018-10-15 16:11:04.677731"
+__BRYTHON__.timestamp=1539612664677
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -8982,9 +8982,9 @@ case "string":
 if(obj){return true}
 return false
 default:
-try{return getattr(obj,"__bool__")()}
-catch(err){try{return getattr(obj,"__len__")()> 0}
-catch(err){return true}}}}
+var missing={},bool_func=$B.$getattr(obj,"__bool__",missing)
+if(bool_func===missing){try{return getattr(obj,"__len__")()> 0}
+catch(err){return true}}else{return bool_func()}}}
 var bool={__bases__:[int],__class__: _b_.type,__module__: "builtins",__mro__:[int,object],__name__: "bool",$is_class: true,$native: true}
 bool.__add__=function(self,other){return(other ? 1 : 0)+(self ? 1 : 0)}
 bool.__and__=function(self,other){return $B.$bool(int.__and__(self,other))}

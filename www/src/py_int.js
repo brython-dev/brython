@@ -764,10 +764,13 @@ $B.$bool = function(obj){ // return true or false
             if(obj){return true}
             return false
         default:
-            try{return getattr(obj, "__bool__")()}
-            catch(err){
+            var missing = {},
+                bool_func = $B.$getattr(obj, "__bool__", missing)
+            if(bool_func === missing){
                 try{return getattr(obj, "__len__")() > 0}
                 catch(err){return true}
+            }else{
+                return bool_func()
             }
     }
 }
