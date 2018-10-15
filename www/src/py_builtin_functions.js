@@ -207,6 +207,13 @@ var classmethod = $B.make_class("classmethod",
                     return func.apply(null, arguments)
                 }
         f.__class__ = $B.method
+        // Set same attributes as those set to func by setattr
+        // Used for instance by @abc.abstractclassmethod
+        if(func.$attrs){
+            for(var key in func.$attrs){
+                f[key] = func.$attrs[key]
+            }
+        }
         f.$infos = {
             __func__: func,
             __name__: func.$infos.__name__
@@ -799,6 +806,7 @@ $B.$getattr = function(obj, attr, _default){
     if(obj===undefined){
         console.log("attr", attr, "of obj undefined", $B.last($B.frames_stack))
     }
+    
     var is_class = obj.$is_class || obj.$factory
 
     var klass = obj.__class__
@@ -2004,17 +2012,26 @@ $$super.__getattribute__ = function(self, attr){
             // If the function is a bound method, use the underlying function
             f = f.$infos.__func__
         }
+        var callable = $B.$call(f) // f might be a class object
         var method = function(){
-            var res = f(self.__self_class__, ...arguments)
+            var res = callable(self.__self_class__, ...arguments)
             if($test){console.log("calling super", self.__self_class__, attr, f, "res", res)}
             return res
         }
         method.__class__ = $B.method
+        var module
+        if(f.$infos !== undefined){
+            module = f.$infos.__module__
+        }else if(f.__class__ === property){
+            module = f.fget.$infos.__module
+        }else if(f.$is_class){
+            module = f.__module__
+        }
         method.$infos = {
             __self__: self.__self_class__,
             __func__: f,
             __name__: attr,
-            __module__: f.$infos.__module__,
+            __module__: module,
             __qualname__: self.__thisclass__.__name__ + "." + attr
         }
         return method
