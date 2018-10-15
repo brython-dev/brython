@@ -1,4 +1,4 @@
-import _strptime
+import _locale
 
 from browser import window
 
@@ -276,18 +276,20 @@ def strftime(_format,t = None):
     if __BRYTHON__.locale == "C":
         res = res.replace("%c", abb_weekdays[w] + ' ' + abb_months[int(mm) - 1]+
             ' ' + dd + ' ' + HH24 + ':' + MM + ':' + SS + ' ' + YY)
+        res = res.replace("%x", mm + '/' + dd + '/' + yy)
+        res = res.replace("%X", HH24 + ':' + MM + ':' + SS)
     else:
-        c_format = _strptime._locale_c_format()
-        if isinstance(c_format, list):
-            # for formats with AM / PM
-            if HH >= 12:
-                c_format = c_format[1]
-                HH = HH12
-            else:
-                c_format = c_format[0]
+        formatter = _locale._date_format
+        c_format = formatter("x") + " " + formatter("X")
         res = res.replace("%c", c_format)
+        x_format = formatter("x")
+        res = res.replace("%x", x_format)
+        X_format = formatter("X")
+        res = res.replace("%X", X_format)
+
     res = res.replace("%H", HH24)
     res = res.replace("%I", HH12)
+    res = res.replace("%i", HH12.lstrip("0"))
     res = res.replace("%p", AMPM)
     res = res.replace("%M", MM)
     res = res.replace("%S", SS)
@@ -302,8 +304,6 @@ def strftime(_format,t = None):
     res = res.replace("%j", DoY)
     res = res.replace("%w", str(w))
     res = res.replace("%W", W)
-    res = res.replace("%x", mm + '/' + dd + '/' + yy)
-    res = res.replace("%X", HH24 + ':' + MM + ':' + SS)
     res = res.replace("%%", '%')
 
     return res

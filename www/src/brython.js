@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-10-11 10:57:17.892348"
-__BRYTHON__.timestamp=1539248237892
+__BRYTHON__.compiled_date="2018-10-15 15:26:22.257247"
+__BRYTHON__.timestamp=1539609982257
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -5982,6 +5982,7 @@ var classmethod=$B.make_class("classmethod",function(func){check_nb_args('classm
 check_no_kw('classmethod',func)
 var f=function(){return func.apply(null,arguments)}
 f.__class__=$B.method
+if(func.$attrs){for(var key in func.$attrs){f[key]=func.$attrs[key]}}
 f.$infos={__func__: func,__name__: func.$infos.__name__}
 f.__get__=function(obj,cls){var method=function(){return f(cls,...arguments)}
 method.__class__=$B.method
@@ -6676,11 +6677,14 @@ if($test){console.log("super",attr,self,f)}
 if(f.$type=="staticmethod"){return f}
 else{if(f.__class__===$B.method){
 f=f.$infos.__func__}
-var method=function(){var res=f(self.__self_class__,...arguments)
+var callable=$B.$call(f)
+var method=function(){var res=callable(self.__self_class__,...arguments)
 if($test){console.log("calling super",self.__self_class__,attr,f,"res",res)}
 return res}
 method.__class__=$B.method
-method.$infos={__self__: self.__self_class__,__func__: f,__name__: attr,__module__: f.$infos.__module__,__qualname__: self.__thisclass__.__name__ + "." + attr}
+var module
+if(f.$infos !==undefined){module=f.$infos.__module__}else if(f.__class__===property){module=f.fget.$infos.__module}else if(f.$is_class){module=f.__module__}
+method.$infos={__self__: self.__self_class__,__func__: f,__name__: attr,__module__: module,__qualname__: self.__thisclass__.__name__ + "." + attr}
 return method}
 throw _b_.AttributeError.$factory("object 'super' has no attribute '" +
 attr + "'")}
