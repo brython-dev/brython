@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-10-15 16:11:04.677731"
-__BRYTHON__.timestamp=1539612664677
+__BRYTHON__.compiled_date="2018-10-16 18:05:02.937861"
+__BRYTHON__.timestamp=1539705902937
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -8757,7 +8757,7 @@ if(hasattr(other,"__rfloordiv__")){return getattr(other,"__rfloordiv__")(self)}
 $err("//",other)}
 int.__hash__=function(self){if(self===undefined){return int.__hashvalue__ ||$B.$py_next_hash-- }
 return self.valueOf()}
-int.__index__=function(self){return self}
+int.__index__=function(self){return int_value(self)}
 int.__init__=function(self,value){if(value===undefined){value=0}
 self.toString=function(){return value}
 return $N}
@@ -9213,9 +9213,13 @@ if($B.rich_comp("__eq__",other,0)){return NaN}
 else if(_b_.getattr(other,"__gt__")(0)){return self}
 else{return -self}}
 if(isinstance(other,_b_.float)){return _b_.float.$factory(parseInt(self.value)* other)}
-if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}
-var res=mul_pos(self.value,other.value)
-if(self.pos==other.pos){return intOrLong(res)}
+other_value=other.value
+other_pos=other.pos
+if(isinstance(other,int)){
+other_value=_b_.str.$factory(int.__index__(other))
+other_pos=other_value > 0}
+var res=mul_pos(self.value,other_value)
+if(self.pos==other_pos){return intOrLong(res)}
 res.pos=false
 return intOrLong(res)}
 long_int.__neg__=function(obj){return{__class__: long_int,value: obj.value,pos: ! obj.pos}}
@@ -9330,7 +9334,8 @@ else if(value.constructor==Number){value=value.toString()}
 else{throw ValueError.$factory(
 "argument of long_int is not a safe integer")}}else if(value.__class__===long_int){return value}
 else if(isinstance(value,_b_.bool)){value=_b_.bool.__int__(value)+ ""}
-else if(typeof value !="string"){throw ValueError.$factory(
+else if(typeof value !="string"){console.log("error",value)
+throw ValueError.$factory(
 "argument of long_int must be a string, not " +
 $B.get_class(value).__name__)}
 var has_prefix=false,pos=true,start=0

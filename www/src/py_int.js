@@ -253,9 +253,11 @@ int.__hash__ = function(self){
 
 //int.__ior__ = function(self,other){return self | other} // bitwise OR
 
-int.__index__ = function(self){return self}
+int.__index__ = function(self){
+    return int_value(self)
+}
 
-int.__init__ = function(self,value){
+int.__init__ = function(self, value){
     if(value === undefined){value = 0}
     self.toString = function(){return value}
     return $N
