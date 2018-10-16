@@ -71,12 +71,13 @@ padding = int(dim / 25) # Board padding
 
 # Adapt container and zone dimensions to browser window dimensions
 container.top = container.left = d
-container.style.width = container.style.height = dim - 2 * d - 2 * padding
-container.style.padding = f'{padding}px'
 
 zwidth = dim - 2 * d - 2 * padding
+container.style.width = container.style.height = f'{zwidth}px'
+container.style.padding = f'{padding}px'
+
 side = int(zwidth / 4)
-zone.style.width = zone.style.height = 4 * side
+zone.style.width = zone.style.height = f'{4 * side}px'
 
 zone.style.fontSize = f'{int(side / 2)}px'
 
