@@ -91,7 +91,7 @@ object.__getattribute__ = function(obj, attr){
 
     var klass = obj.__class__ || $B.get_class(obj)
 
-    var $test = false //attr == "mytest"
+    var $test = false //attr == "draggable"
     if($test){console.log("attr", attr, "de", obj, "klass", klass)}
     if(attr === "__class__"){
         return klass
@@ -275,9 +275,10 @@ object.__getattribute__ = function(obj, attr){
                 }
             }
         }
+        if($test){console.log("use __getattr__", _ga)}
         if(_ga !== undefined){
             try{return _ga(obj, attr)}
-            catch(err){}
+            catch(err){console.log(err)}
         }
         // for special methods such as __mul__, look for __rmul__ on operand
         if(attr.substr(0,2) == "__" && attr.substr(attr.length - 2) == "__"){

@@ -792,13 +792,7 @@ function getattr(){
         $._default === missing ? undefined : $._default)
 }
 
-$B.nb_getattr = {}
 $B.$getattr = function(obj, attr, _default){
-    if($B.nb_getattr[attr] === undefined){
-        $B.nb_getattr[attr] = 1
-    }else{
-        $B.nb_getattr[attr] += 1
-    }
     // Used internally to avoid having to parse the arguments
 
     var rawname = attr
@@ -811,11 +805,17 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false //attr == "foo" //&& obj.__name__ == "Point"
+    var $test = false // attr == "item" //&& obj.__name__ == "Point"
+    if($test){console.log("$getattr", attr, klass)}
     // Shortcut for classes without parents
     if(klass !== undefined && klass.__bases__ && klass.__bases__.length == 0){
         if(obj.hasOwnProperty(attr)){
-            return obj[attr]
+            var res1 = obj[attr],
+                res2 = $B.jsobj2pyobj(res1)
+            if(Array.isArray(res1)){
+                return res1
+            }
+            return res2
         }else if(klass.hasOwnProperty(attr)){
             if(typeof klass[attr] != "function" && attr != "__dict__" &&
                     klass[attr].__get__ === undefined){

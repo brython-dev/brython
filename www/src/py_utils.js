@@ -771,7 +771,6 @@ $B.$is_member = function(item, _set){
 }
 
 $B.$call = function(callable){
-
     if(callable.__class__ === $B.method){
         return callable
     }

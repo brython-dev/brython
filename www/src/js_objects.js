@@ -73,6 +73,8 @@ var Undefined = {
     __class__: UndefinedClass
 }
 
+$B.set_func_names("UndefinedClass", "<javascript>")
+
 var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj) {
     switch(jsobj) {
       case true:

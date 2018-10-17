@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-10-17 09:27:39.138335"
-__BRYTHON__.timestamp=1539761259138
+__BRYTHON__.compiled_date="2018-10-17 17:09:56.247169"
+__BRYTHON__.timestamp=1539788996247
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -4911,8 +4911,9 @@ if(_ga===undefined){_ga=klass["__getattr__"]
 if(_ga===undefined){var mro=klass.__mro__
 for(var i=0,len=mro.length;i < len;i++){_ga=mro[i]["__getattr__"]
 if(_ga !==undefined){break}}}}
+if($test){console.log("use __getattr__",_ga)}
 if(_ga !==undefined){try{return _ga(obj,attr)}
-catch(err){}}
+catch(err){console.log(err)}}
 if(attr.substr(0,2)=="__" && attr.substr(attr.length - 2)=="__"){var attr1=attr.substr(2,attr.length - 4)
 var rank=opnames.indexOf(attr1)
 if(rank > -1){var rop="__r" + opnames[rank]+ "__" 
@@ -6197,15 +6198,17 @@ throw _b_.AttributeError.$factory("'" + cname +
 function getattr(){var missing={}
 var $=$B.args("getattr",3,{obj: null,attr: null,_default: null},["obj","attr","_default"],arguments,{_default: missing},null,null)
 return $B.$getattr($.obj,$.attr,$._default===missing ? undefined : $._default)}
-$B.nb_getattr={}
-$B.$getattr=function(obj,attr,_default){if($B.nb_getattr[attr]===undefined){$B.nb_getattr[attr]=1}else{$B.nb_getattr[attr]+=1}
+$B.$getattr=function(obj,attr,_default){
 var rawname=attr
 attr=$B.to_alias(attr)
 if(obj===undefined){console.log("attr",attr,"of obj undefined",$B.last($B.frames_stack))}
 var is_class=obj.$is_class ||obj.$factory
 var klass=obj.__class__
 var $test=false 
-if(klass !==undefined && klass.__bases__ && klass.__bases__.length==0){if(obj.hasOwnProperty(attr)){return obj[attr]}else if(klass.hasOwnProperty(attr)){if(typeof klass[attr]!="function" && attr !="__dict__" &&
+if($test){console.log("$getattr",attr,klass)}
+if(klass !==undefined && klass.__bases__ && klass.__bases__.length==0){if(obj.hasOwnProperty(attr)){var res1=obj[attr],res2=$B.jsobj2pyobj(res1)
+if(Array.isArray(res1)){return res1}
+return res2}else if(klass.hasOwnProperty(attr)){if(typeof klass[attr]!="function" && attr !="__dict__" &&
 klass[attr].__get__===undefined){return klass[attr]}}}
 if($test){console.log("attr",attr,"of",obj,"class",klass,"isclass",is_class)}
 if(klass===undefined){
@@ -7758,6 +7761,7 @@ var UndefinedClass=$B.make_class("undefined",function(){return Undefined}
 UndefinedClass.__bool__=function(){return false}
 UndefinedClass.__repr__=function(){return "undefined"}
 var Undefined={__class__: UndefinedClass}
+$B.set_func_names("UndefinedClass","<javascript>")
 var jsobj2pyobj=$B.jsobj2pyobj=function(jsobj){switch(jsobj){case true:
 case false:
 return jsobj}
