@@ -806,7 +806,7 @@ $B.$getattr = function(obj, attr, _default){
     if(obj===undefined){
         console.log("attr", attr, "of obj undefined", $B.last($B.frames_stack))
     }
-    
+
     var is_class = obj.$is_class || obj.$factory
 
     var klass = obj.__class__
@@ -1598,7 +1598,10 @@ function $print(){
     res = res.replace(new RegExp("\u0007", "g"), "").
               replace(new RegExp("(.)\b", "g"), "")
     $B.$getattr(file, 'write')(res)
-    $B.$getattr(file, 'flush')()
+    var flush = $B.$getattr(file, 'flush', None)
+    if(flush !== None){
+        flush()
+    }
     return None
 }
 $print.__name__ = 'print'
