@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-10-16 18:05:02.937861"
-__BRYTHON__.timestamp=1539705902937
+__BRYTHON__.compiled_date="2018-10-17 09:07:01.939750"
+__BRYTHON__.timestamp=1539760021939
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -3496,9 +3496,10 @@ repl.parent=expr
 var new_op=new $OpCtx(repl,op)
 return new $AbstractExprCtx(new_op,false)
 case 'augm_assign':
+if(C.parent.type=="assign"){$_SyntaxError(C,"augmented assign inside assign")}
 if(C.expect==','){return new $AbstractExprCtx(
 new $AugmentedAssignCtx(C,value),true)}
-break
+return $transition(C.parent,token,value)
 case ":": 
 if(C.parent.type=="sub" ||
 (C.parent.type=="list_or_tuple" &&
@@ -3509,7 +3510,7 @@ case '=':
 if(C.expect==','){if(C.parent.type=="call_arg"){
 if(C.tree[0].type !='id'){$_SyntaxError(C,["keyword can't be an expression"])}
 return new $AbstractExprCtx(new $KwArgCtx(C),true)}else if(C.parent.type=="annotation"){return $transition(C.parent.parent,token,value)}else if(C.parent.type=="op"){
-$_SyntaxError(C,["can't assign to operator"])}
+$_SyntaxError(C,["can't assign to operator"])}else if(C.parent.type=="augm_assign"){$_SyntaxError(C,"assign inside augmented assign")}
 while(C.parent !==undefined){C=C.parent
 if(C.type=='condition'){$_SyntaxError(C,'token ' + token + ' after '
 + C)}}
@@ -6527,7 +6528,8 @@ var res=items.join(sep)+ end
 res=res.replace(new RegExp("\u0007","g"),"").
 replace(new RegExp("(.)\b","g"),"")
 $B.$getattr(file,'write')(res)
-$B.$getattr(file,'flush')()
+var flush=$B.$getattr(file,'flush',None)
+if(flush !==None){flush()}
 return None}
 $print.__name__='print'
 $print.is_func=true
@@ -9108,7 +9110,8 @@ if(pos=="+"){if(n2===undefined){v=n1 + "0".repeat(exp - 1)}else{v=n1 + n2 + "0".
 return{__class__: long_int,value: v,pos: value >=0}}
 long_int.__abs__=function(self){return{__class__: long_int,value: self.value,pos: true}}
 long_int.__add__=function(self,other){if(isinstance(other,_b_.float)){return _b_.float.$factory(parseInt(self.value)+ other.value)}
-if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}
+if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}else if(other.__class__ !==long_int && isinstance(other,int)){
+other=long_int.$factory(_b_.str.$factory(_b_.int.__index__(other)))}
 var res
 if(self.pos && other.pos){
 return add_pos(self.value,other.value)}else if(! self.pos && ! other.pos){
@@ -9215,9 +9218,10 @@ else{return -self}}
 if(isinstance(other,_b_.float)){return _b_.float.$factory(parseInt(self.value)* other)}
 other_value=other.value
 other_pos=other.pos
-if(isinstance(other,int)){
-other_value=_b_.str.$factory(int.__index__(other))
-other_pos=other_value > 0}
+if(other.__class__ !==long_int && isinstance(other,int)){
+var value=int.__index__(other)
+other_value=_b_.str.$factory(value)
+other_pos=value > 0}
 var res=mul_pos(self.value,other_value)
 if(self.pos==other_pos){return intOrLong(res)}
 res.pos=false
@@ -9233,7 +9237,8 @@ for(var i=0;i < v2.length;i++){if(v1.charAt(start+i)=="1" ||v2.charAt(i)=="1"){r
 else{res +="0"}}
 return intOrLong(long_int.$factory(res,2))}
 long_int.__pos__=function(self){return self}
-long_int.__pow__=function(self,power,z){if(typeof power=="number"){power=long_int.$factory(_b_.str.$factory(power))}else if(! isinstance(power,long_int)){var msg="power must be a LongDict, not '"
+long_int.__pow__=function(self,power,z){if(typeof power=="number"){power=long_int.$factory(_b_.str.$factory(power))}else if(isinstance(power,int)){
+power=long_int.$factory(_b_.str.$factory(_b_.int.__index__(power)))}else if(! isinstance(power,long_int)){var msg="power must be a LongDict, not '"
 throw TypeError.$factory(msg + $B.get_class(power).__name__ + "'")}
 if(! power.pos){if(self.value=="1"){return self}
 return long_int.$factory("0")}else if(power.value=="0"){return long_int.$factory("1")}
@@ -9332,10 +9337,7 @@ return int.$factory(0)}
 if(typeof value=="number"){if(isSafeInteger(value)){value=value.toString()}
 else if(value.constructor==Number){value=value.toString()}
 else{throw ValueError.$factory(
-"argument of long_int is not a safe integer")}}else if(value.__class__===long_int){return value}
-else if(isinstance(value,_b_.bool)){value=_b_.bool.__int__(value)+ ""}
-else if(typeof value !="string"){console.log("error",value)
-throw ValueError.$factory(
+"argument of long_int is not a safe integer")}}else if(value.__class__===long_int){return value}else if(isinstance(value,_b_.bool)){value=_b_.bool.__int__(value)+ ""}else if(typeof value !="string"){throw ValueError.$factory(
 "argument of long_int must be a string, not " +
 $B.get_class(value).__name__)}
 var has_prefix=false,pos=true,start=0
@@ -9355,8 +9357,8 @@ else if(! is_digits[value.charAt(i)]){throw ValueError.$factory(
 'long_int argument is not a valid number: "' + value + '"')}}
 if(point !=-1){value=value.substr(0,point)}
 if(base !=10){
-var coef="1",v10=long_int.$factory(0),pos=value.length
-while(pos--){var digit_base10=parseInt(value.charAt(pos),base).toString(),digit_by_coef=mul_pos(coef,digit_base10).value
+var coef="1",v10=long_int.$factory(0),ix=value.length
+while(ix--){var digit_base10=parseInt(value.charAt(ix),base).toString(),digit_by_coef=mul_pos(coef,digit_base10).value
 v10=add_pos(v10.value,digit_by_coef)
 coef=mul_pos(coef,base.toString()).value}
 return v10}

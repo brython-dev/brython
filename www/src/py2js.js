@@ -6926,8 +6926,8 @@ var $transition = $B.parser.$transition = function(context, token, value){
                        }
                   }
                   return $transition(context.parent,token)
-            case '.':
-                return new $AttrCtx(context)
+              case '.':
+                  return new $AttrCtx(context)
             case '[':
                 return new $AbstractExprCtx(new $SubCtx(context), true)
             case '(':
@@ -7063,11 +7063,14 @@ var $transition = $B.parser.$transition = function(context, token, value){
                 var new_op = new $OpCtx(repl,op) // replace old operation
                 return new $AbstractExprCtx(new_op,false)
             case 'augm_assign':
+                if(context.parent.type == "assign"){
+                    $_SyntaxError(context, "augmented assign inside assign")
+                }
                 if(context.expect == ','){
                      return new $AbstractExprCtx(
                          new $AugmentedAssignCtx(context, value), true)
                 }
-                break
+                return $transition(context.parent, token, value)
             case ":": // slice
                 // valid only if expr is parent is a subscription, or a tuple
                 // inside a subscription, or a slice
@@ -7097,6 +7100,8 @@ var $transition = $B.parser.$transition = function(context, token, value){
                    }else if(context.parent.type == "op"){
                         // issue 811
                         $_SyntaxError(context, ["can't assign to operator"])
+                   }else if(context.parent.type == "augm_assign"){
+                       $_SyntaxError(context, "assign inside augmented assign")
                    }
 
                    while(context.parent !== undefined){
