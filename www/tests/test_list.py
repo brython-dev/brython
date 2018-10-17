@@ -104,8 +104,6 @@ assert x[1] == 'r'
 assert 'r' in x
 assert 'rty' not in x
 
-
-
 # issue 364
 class A(list):
     def __init__(self, x):
@@ -152,6 +150,14 @@ assert List.counter == 1
 assert List().reverse() == "REVERSE"
 assert List().pop() == "POP"
 
+# issue 941
+assert not [1] < [1]
+assert [1] < [1, 2]
+assert [0] < [1]
+assert not [3] < [1, 2]
+
+assert not ['a'] < ['a']
+assert ['a'] < ['a', 2]
 
 print("passed all tests..")
 

@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-10-17 09:07:01.939750"
-__BRYTHON__.timestamp=1539760021939
+__BRYTHON__.compiled_date="2018-10-17 09:27:39.138335"
+__BRYTHON__.timestamp=1539761259138
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -9906,12 +9906,11 @@ list.__lt__=function(self,other){if(! isinstance(other,[list,_b_.tuple])){throw 
 $B.get_class(other).__name__ + "()")}
 var i=0
 while(i < self.length){if(i >=other.length){return true}
-if($B.rich_comp("__eq__",self[i],other[i])){i++}
-else{res=getattr(self[i],"__lt__")(other[i])
+if($B.rich_comp("__eq__",self[i],other[i])){i++}else{res=getattr(self[i],"__lt__")(other[i])
 if(res===_b_.NotImplemented){throw _b_.TypeError.$factory("unorderable types: " +
 $B.get_class(self[i]).__name__ + "() >= " +
 $B.get_class(other[i]).__name__ + "()")}else{return res}}}
-return other.length==self.length}
+return other.length > self.length}
 list.__mul__=function(self,other){if(isinstance(other,_b_.int)){
 var res=[],$temp=self.slice(),len=$temp.length
 for(var i=0;i < other;i++){for(var j=0;j < len;j++){res.push($temp[j])}}

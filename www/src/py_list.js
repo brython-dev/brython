@@ -286,8 +286,9 @@ list.__lt__ = function(self, other){
     var i = 0
     while(i < self.length){
         if(i >= other.length){return true}
-        if($B.rich_comp("__eq__", self[i], other[i])){i++}
-        else{
+        if($B.rich_comp("__eq__", self[i], other[i])){
+            i++
+        }else{
             res = getattr(self[i], "__lt__")(other[i])
             if(res === _b_.NotImplemented){
                 throw _b_.TypeError.$factory("unorderable types: " +
@@ -296,7 +297,9 @@ list.__lt__ = function(self, other){
             }else{return res}
         }
     }
-    return other.length == self.length
+    // If all items are equal, return True if other is longer
+    // Cf. issue #941
+    return other.length > self.length
 }
 
 list.__mul__ = function(self, other){
