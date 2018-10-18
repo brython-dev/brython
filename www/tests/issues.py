@@ -2110,6 +2110,10 @@ try:
 except TypeError as exc:
     assert exc.args[0] == "Not a bool!"
 
+# issue 940
+assertRaises(SyntaxError, lambda: exec('a.foo = x += 3', {'a': A(), 'x': 10}))
+assertRaises(SyntaxError, lambda: exec('x = a.foo += 3', {'a': A(), 'x': 10}))
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
