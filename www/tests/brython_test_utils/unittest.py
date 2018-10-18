@@ -15,8 +15,7 @@ class BrythonModuleTestCase(unittest.TestCase):
         return "Brython test module '%s'" % self.caption
 
     def runTest(self):
-        status, tstart, tend, msg, aio_manager = utils.run_test_module(self.modname,
-                                                     self.base_path)
+        status, tstart, tend, msg = utils.run_test_module(self.modname, self.base_path)
         # TODO: Record and output generated traceback
         if not status == 1:
             raise self.failureException("Failure detected for module '%s'\n\n"
@@ -62,7 +61,7 @@ class OneTimeTestResult(unittest.TestResult):
 
     def _addUnexpected(self, test, err, status):
         self.lastOutcome = status;
-        self.details = self._exc_info_to_string(err, test, includeInternal=True)
+        self.details = self._exc_info_to_string(err, test)
 
     def addError(self, test, err):
         self._addUnexpected(test, err, 'ERROR')
