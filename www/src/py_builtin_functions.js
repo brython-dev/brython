@@ -513,7 +513,7 @@ function $$eval(src, _globals, _locals){
         var gobj = current_frame[3],
             ex = ''
         ex += 'var $locals_' + current_globals_id + '=gobj;' // needed for generators
-        //ex += 'var $locals_' + globals_id + '=gobj;'
+        ex += 'var $locals_' + globals_id + '=gobj;'
         eval(ex)
         for(var attr in gobj){
             if((! attr.startsWith("$")) || attr.startsWith('$$')){
