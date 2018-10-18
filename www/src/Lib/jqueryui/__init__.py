@@ -8,7 +8,7 @@ This object supports :
 - a method get(**kw). The only keyword currently supported is "selector". The
   method returns a list of instances of the class Element, each instance wraps
   the elements matching the CSS selector passed
-  
+
   jq(selector="button") : returns instances of Element for all button tags
 
   The value can be a list or tuple of CSS selector strings :
@@ -17,7 +17,7 @@ This object supports :
   "input" tags with attribute "type" set to "submit" + "a" tags (anchors)
 
 Instances of Element have the same interface as the selections made by the
-jQuery function $, with the additional methods provided by jQuery UI. For 
+jQuery function $, with the additional methods provided by jQuery UI. For
 instance, to turn an element into a dialog :
 
 jq[elt_id].dialog()
@@ -35,14 +35,14 @@ _path = __file__[:__file__.rfind('/')]+'/'
 document <= html.LINK(rel="stylesheet",
     href=_path+'css/smoothness/jquery-ui.css')
 
-# The scripts must be loaded in blocking mode, by using the function 
+# The scripts must be loaded in blocking mode, by using the function
 # load(script_url[, names]) in module javascript
 # If we just add them to the document with script tags, eg :
 #
 # document <= html.SCRIPT(sciprt_url)
 # _jqui = window.jQuery.noConflict(True)
 #
-# the name "jQuery" is not in the Javascript namespace until the script is 
+# the name "jQuery" is not in the Javascript namespace until the script is
 # fully loaded in the page, so "window.jQuery" raises an exception
 
 # Load jQuery and put name 'jQuery' in the global Javascript namespace
@@ -83,7 +83,7 @@ class JQFunction:
 
     def __init__(self, func):
         self.func = func
-    
+
     def __call__(self, *args, **kw):
         if kw:
             # keyword arguments are passed as a single Javascript object
@@ -126,8 +126,7 @@ class jq:
             elif k=='element':
                 items = Element(_jqui(v))
         return items
-    
+
     @staticmethod
     def __getitem__(element_id):
         return jq.get(selector='#'+element_id)[0]
-    
