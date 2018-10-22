@@ -1904,7 +1904,12 @@ except:
         tb = tb.tb_next
 
 
-# Issue 859
+
+# XXX These tests are removed : since the test script is run in an exec(), the
+# traceback doesn't give information taken from the source code.
+# The tests should pass when run inside a <script> tag in an HTML page.
+"""
+# issue 859
 import traceback as tb
 
 def f():
@@ -1917,6 +1922,24 @@ except Exception:
     assert 'f()' in exception_info
     assert '1 / 0' in exception_info
     assert ', in f' in exception_info
+
+
+# issue 885
+try:
+    1/0
+except:
+    assert '1/0' in tb.format_exc()
+
+
+# issue 887
+try:
+    exec('def f(): return 1/0\nf()')
+except ZeroDivisionError:
+    stack_trace = tb.format_exc()
+    assert 'exec(\'def f(): return 1/0\\nf()\')' in stack_trace
+    assert 'f()' in stack_trace
+    assert 'def f(): return 1/0\\n' in stack_trace
+"""
 
 # PEP 448
 assert dict(**{'x': 1}, y=2, **{'z': 3}) == {"x": 1, "y": 2, "z": 3}
@@ -1948,6 +1971,12 @@ assertRaises(SyntaxError, exec, "d = {'x', **{'y': 1}}")
 assertRaises(SyntaxError, exec, "d = {*[1], 'x': 2}")
 assertRaises(SyntaxError, exec, "d = {**{'x': 1}, 2}")
 assertRaises(SyntaxError, exec, "t = *range(4)")
+
+# issue 909
+t1 = [*[1]]
+assert t1 == [1]
+t2 = [*(1, 2)]
+assert t2 == [1, 2]
 
 # issue 854
 class A(object):
@@ -1986,20 +2015,104 @@ assert b.a == 10
 # issue 873
 str(globals())
 
-
-# issue 885
-from traceback import *
-try:
-    1/0
-except:
-    import traceback
-    assert '1/0' in traceback.format_exc()
-
 # issue 883
 for _ in range(2):
     for _ in range(2):
         pass
 
+# issue 900
+"".format(**globals())
+
+# issue 901 : _jsre's SRE_Pattern lacking methods: .sub(), .subn(), .split(), and .fullmatch()
+import _jsre as re
+
+regex = re.compile('a|b')
+
+# These methods work!
+assert regex.match('ab') is not None
+assert regex.search(' ab') is not None
+assert regex.findall('ab') == ['a', 'b']
+
+def switch(m):
+    return 'a' if m.group(0) == 'b' else 'b'
+
+# Missing: .sub()
+assert regex.sub(switch, 'ba') == 'ab'
+
+# Missing: .fullmatch()
+# assert regex.fullmatch('b') is not None
+
+# Missing: .split()
+#assert regex.split('cacbca', maxsplit=2) == ['c', 'c', 'ca']
+
+# Missing: .subn()
+#assert regex.subn(switch, 'ba') == ('ab', 2)
+
+# Broken: .finditer()
+#assert [m.group(0) for m in regex.finditer('ab')] == ['a', 'b']
+
+# issue 918
+import copy
+
+class MyClass:
+    def __init__(self, some_param):
+        self.x = some_param
+
+obj = MyClass("aaa")
+obj2 = copy.copy(obj)
+assert obj2.x == "aaa"
+
+# issue 923
+v = 1
+del v
+try:
+    print(v)
+    raise Exception("should have raised NameError")
+except NameError:
+    pass
+
+# issue 925
+class A():
+    def __lt__(self, other):
+        return 1
+    def __gt__(self, other):
+        return 2
+
+assert (1 < A()) == 2
+assert (A() < 1) == 1
+
+# issue 936
+assert not (2 == "2")
+assert 2 != "2"
+assert not ("2" == 2)
+assert "2" != 2
+
+try:
+    2 <= "2"
+except TypeError as exc:
+    assert "<=" in exc.args[0]
+
+# issue 939
+class A:
+    def __bool__(self):
+        raise TypeError("Not a bool!")
+
+try:
+    if A():
+        pass
+    raise Exception("should have raised TypeError")
+except TypeError as exc:
+    assert exc.args[0] == "Not a bool!"
+
+try:
+    bool(A())
+    raise Exception("should have raised TypeError")
+except TypeError as exc:
+    assert exc.args[0] == "Not a bool!"
+
+# issue 940
+assertRaises(SyntaxError, lambda: exec('a.foo = x += 3', {'a': A(), 'x': 10}))
+assertRaises(SyntaxError, lambda: exec('x = a.foo += 3', {'a': A(), 'x': 10}))
 
 # ==========================================
 # Finally, report that all tests have passed

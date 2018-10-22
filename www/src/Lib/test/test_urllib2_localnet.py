@@ -1,21 +1,26 @@
-#!/usr/bin/env python3
-
+import base64
 import os
 import email
 import urllib.parse
 import urllib.request
 import http.server
+import threading
 import unittest
 import hashlib
-from test import support
-threading = support.import_module('threading')
 
+from test import support
+
+try:
+    import ssl
+except ImportError:
+    ssl = None
 
 here = os.path.dirname(__file__)
 # Self-signed cert file for 'localhost'
 CERT_localhost = os.path.join(here, 'keycert.pem')
 # Self-signed cert file for 'fakehostname'
 CERT_fakehostname = os.path.join(here, 'keycert2.pem')
+
 
 # Loopback http server infrastructure
 
@@ -55,14 +60,11 @@ class LoopbackHttpServerThread(threading.Thread):
         request_handler.protocol_version = "HTTP/1.0"
         self.httpd = LoopbackHttpServer(("127.0.0.1", 0),
                                         request_handler)
-        #print "Serving HTTP on %s port %s" % (self.httpd.server_name,
-        #                                      self.httpd.server_port)
         self.port = self.httpd.server_port
 
     def stop(self):
         """Stops the webserver if it's currently running."""
 
-        # Set the stop flag.
         self._stop_server = True
 
         self.join()
@@ -195,6 +197,49 @@ class DigestAuthHandler:
                 return self._return_auth_challenge(request_handler)
             return True
 
+
+class BasicAuthHandler(http.server.BaseHTTPRequestHandler):
+    """Handler for performing basic authentication."""
+    # Server side values
+    USER = 'testUser'
+    PASSWD = 'testPass'
+    REALM = 'Test'
+    USER_PASSWD = "%s:%s" % (USER, PASSWD)
+    ENCODED_AUTH = base64.b64encode(USER_PASSWD.encode('ascii')).decode('ascii')
+
+    def __init__(self, *args, **kwargs):
+        http.server.BaseHTTPRequestHandler.__init__(self, *args, **kwargs)
+
+    def log_message(self, format, *args):
+        # Suppress console log message
+        pass
+
+    def do_HEAD(self):
+        self.send_response(200)
+        self.send_header("Content-type", "text/html")
+        self.end_headers()
+
+    def do_AUTHHEAD(self):
+        self.send_response(401)
+        self.send_header("WWW-Authenticate", "Basic realm=\"%s\"" % self.REALM)
+        self.send_header("Content-type", "text/html")
+        self.end_headers()
+
+    def do_GET(self):
+        if not self.headers.get("Authorization", ""):
+            self.do_AUTHHEAD()
+            self.wfile.write(b"No Auth header received")
+        elif self.headers.get(
+                "Authorization", "") == "Basic " + self.ENCODED_AUTH:
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(b"It works")
+        else:
+            # Request Unauthorized
+            self.do_AUTHHEAD()
+
+
+
 # Proxy test infrastructure
 
 class FakeProxyHandler(http.server.BaseHTTPRequestHandler):
@@ -230,6 +275,46 @@ class FakeProxyHandler(http.server.BaseHTTPRequestHandler):
 
 # Test cases
 
+class BasicAuthTests(unittest.TestCase):
+    USER = "testUser"
+    PASSWD = "testPass"
+    INCORRECT_PASSWD = "Incorrect"
+    REALM = "Test"
+
+    def setUp(self):
+        super(BasicAuthTests, self).setUp()
+        # With Basic Authentication
+        def http_server_with_basic_auth_handler(*args, **kwargs):
+            return BasicAuthHandler(*args, **kwargs)
+        self.server = LoopbackHttpServerThread(http_server_with_basic_auth_handler)
+        self.addCleanup(self.stop_server)
+        self.server_url = 'http://127.0.0.1:%s' % self.server.port
+        self.server.start()
+        self.server.ready.wait()
+
+    def stop_server(self):
+        self.server.stop()
+        self.server = None
+
+    def tearDown(self):
+        super(BasicAuthTests, self).tearDown()
+
+    def test_basic_auth_success(self):
+        ah = urllib.request.HTTPBasicAuthHandler()
+        ah.add_password(self.REALM, self.server_url, self.USER, self.PASSWD)
+        urllib.request.install_opener(urllib.request.build_opener(ah))
+        try:
+            self.assertTrue(urllib.request.urlopen(self.server_url))
+        except urllib.error.HTTPError:
+            self.fail("Basic auth failed for the url: %s", self.server_url)
+
+    def test_basic_auth_httperror(self):
+        ah = urllib.request.HTTPBasicAuthHandler()
+        ah.add_password(self.REALM, self.server_url, self.USER, self.INCORRECT_PASSWD)
+        urllib.request.install_opener(urllib.request.build_opener(ah))
+        self.assertRaises(urllib.error.HTTPError, urllib.request.urlopen, self.server_url)
+
+
 class ProxyAuthTests(unittest.TestCase):
     URL = "http://localhost"
 
@@ -239,13 +324,23 @@ class ProxyAuthTests(unittest.TestCase):
 
     def setUp(self):
         super(ProxyAuthTests, self).setUp()
+        # Ignore proxy bypass settings in the environment.
+        def restore_environ(old_environ):
+            os.environ.clear()
+            os.environ.update(old_environ)
+        self.addCleanup(restore_environ, os.environ.copy())
+        os.environ['NO_PROXY'] = ''
+        os.environ['no_proxy'] = ''
+
         self.digest_auth_handler = DigestAuthHandler()
         self.digest_auth_handler.set_users({self.USER: self.PASSWD})
         self.digest_auth_handler.set_realm(self.REALM)
+        # With Digest Authentication.
         def create_fake_proxy_handler(*args, **kwargs):
             return FakeProxyHandler(self.digest_auth_handler, *args, **kwargs)
 
         self.server = LoopbackHttpServerThread(create_fake_proxy_handler)
+        self.addCleanup(self.stop_server)
         self.server.start()
         self.server.ready.wait()
         proxy_url = "http://127.0.0.1:%d" % self.server.port
@@ -254,9 +349,9 @@ class ProxyAuthTests(unittest.TestCase):
         self.opener = urllib.request.build_opener(
             handler, self.proxy_digest_handler)
 
-    def tearDown(self):
+    def stop_server(self):
         self.server.stop()
-        super(ProxyAuthTests, self).tearDown()
+        self.server = None
 
     def test_proxy_with_bad_password_raises_httperror(self):
         self.proxy_digest_handler.add_password(self.REALM, self.URL,
@@ -352,14 +447,14 @@ class TestUrlopen(unittest.TestCase):
 
     def setUp(self):
         super(TestUrlopen, self).setUp()
-        # Ignore proxies for localhost tests.
-        os.environ['NO_PROXY'] = '*'
-        self.server = None
 
-    def tearDown(self):
-        if self.server is not None:
-            self.server.stop()
-        super(TestUrlopen, self).tearDown()
+        # Ignore proxies for localhost tests.
+        def restore_environ(old_environ):
+            os.environ.clear()
+            os.environ.update(old_environ)
+        self.addCleanup(restore_environ, os.environ.copy())
+        os.environ['NO_PROXY'] = '*'
+        os.environ['no_proxy'] = '*'
 
     def urlopen(self, url, data=None, **kwargs):
         l = []
@@ -374,26 +469,31 @@ class TestUrlopen(unittest.TestCase):
             f.close()
         return b"".join(l)
 
+    def stop_server(self):
+        self.server.stop()
+        self.server = None
+
     def start_server(self, responses=None):
         if responses is None:
             responses = [(200, [], b"we don't care")]
         handler = GetRequestHandler(responses)
 
         self.server = LoopbackHttpServerThread(handler)
+        self.addCleanup(self.stop_server)
         self.server.start()
         self.server.ready.wait()
         port = self.server.port
         handler.port = port
         return handler
 
-    def start_https_server(self, responses=None, certfile=CERT_localhost):
+    def start_https_server(self, responses=None, **kwargs):
         if not hasattr(urllib.request, 'HTTPSHandler'):
             self.skipTest('ssl support required')
         from test.ssl_servers import make_https_server
         if responses is None:
             responses = [(200, [], b"we care a bit")]
         handler = GetRequestHandler(responses)
-        server = make_https_server(self, certfile=certfile, handler_class=handler)
+        server = make_https_server(self, handler_class=handler, **kwargs)
         handler.port = server.port
         return handler
 
@@ -456,38 +556,57 @@ class TestUrlopen(unittest.TestCase):
 
     def test_https(self):
         handler = self.start_https_server()
-        data = self.urlopen("https://localhost:%s/bizarre" % handler.port)
+        context = ssl.create_default_context(cafile=CERT_localhost)
+        data = self.urlopen("https://localhost:%s/bizarre" % handler.port, context=context)
         self.assertEqual(data, b"we care a bit")
 
     def test_https_with_cafile(self):
         handler = self.start_https_server(certfile=CERT_localhost)
-        import ssl
-        # Good cert
-        data = self.urlopen("https://localhost:%s/bizarre" % handler.port,
-                            cafile=CERT_localhost)
-        self.assertEqual(data, b"we care a bit")
-        # Bad cert
-        with self.assertRaises(urllib.error.URLError) as cm:
-            self.urlopen("https://localhost:%s/bizarre" % handler.port,
-                         cafile=CERT_fakehostname)
-        # Good cert, but mismatching hostname
-        handler = self.start_https_server(certfile=CERT_fakehostname)
-        with self.assertRaises(ssl.CertificateError) as cm:
-            self.urlopen("https://localhost:%s/bizarre" % handler.port,
-                         cafile=CERT_fakehostname)
+        with support.check_warnings(('', DeprecationWarning)):
+            # Good cert
+            data = self.urlopen("https://localhost:%s/bizarre" % handler.port,
+                                cafile=CERT_localhost)
+            self.assertEqual(data, b"we care a bit")
+            # Bad cert
+            with self.assertRaises(urllib.error.URLError) as cm:
+                self.urlopen("https://localhost:%s/bizarre" % handler.port,
+                             cafile=CERT_fakehostname)
+            # Good cert, but mismatching hostname
+            handler = self.start_https_server(certfile=CERT_fakehostname)
+            with self.assertRaises(urllib.error.URLError) as cm:
+                self.urlopen("https://localhost:%s/bizarre" % handler.port,
+                             cafile=CERT_fakehostname)
 
     def test_https_with_cadefault(self):
         handler = self.start_https_server(certfile=CERT_localhost)
         # Self-signed cert should fail verification with system certificate store
-        with self.assertRaises(urllib.error.URLError) as cm:
-            self.urlopen("https://localhost:%s/bizarre" % handler.port,
-                         cadefault=True)
+        with support.check_warnings(('', DeprecationWarning)):
+            with self.assertRaises(urllib.error.URLError) as cm:
+                self.urlopen("https://localhost:%s/bizarre" % handler.port,
+                             cadefault=True)
+
+    def test_https_sni(self):
+        if ssl is None:
+            self.skipTest("ssl module required")
+        if not ssl.HAS_SNI:
+            self.skipTest("SNI support required in OpenSSL")
+        sni_name = None
+        def cb_sni(ssl_sock, server_name, initial_context):
+            nonlocal sni_name
+            sni_name = server_name
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        context.set_servername_callback(cb_sni)
+        handler = self.start_https_server(context=context, certfile=CERT_localhost)
+        context = ssl.create_default_context(cafile=CERT_localhost)
+        self.urlopen("https://localhost:%s" % handler.port, context=context)
+        self.assertEqual(sni_name, "localhost")
 
     def test_sending_headers(self):
         handler = self.start_server()
         req = urllib.request.Request("http://localhost:%s/" % handler.port,
                                      headers={"Range": "bytes=20-39"})
-        urllib.request.urlopen(req)
+        with urllib.request.urlopen(req):
+            pass
         self.assertEqual(handler.headers_received["Range"], "bytes=20-39")
 
     def test_basic(self):
@@ -503,52 +622,22 @@ class TestUrlopen(unittest.TestCase):
 
     def test_info(self):
         handler = self.start_server()
-        try:
-            open_url = urllib.request.urlopen(
-                "http://localhost:%s" % handler.port)
+        open_url = urllib.request.urlopen(
+            "http://localhost:%s" % handler.port)
+        with open_url:
             info_obj = open_url.info()
-            self.assertIsInstance(info_obj, email.message.Message,
-                                  "object returned by 'info' is not an "
-                                  "instance of email.message.Message")
-            self.assertEqual(info_obj.get_content_subtype(), "plain")
-        finally:
-            self.server.stop()
+        self.assertIsInstance(info_obj, email.message.Message,
+                              "object returned by 'info' is not an "
+                              "instance of email.message.Message")
+        self.assertEqual(info_obj.get_content_subtype(), "plain")
 
     def test_geturl(self):
         # Make sure same URL as opened is returned by geturl.
         handler = self.start_server()
         open_url = urllib.request.urlopen("http://localhost:%s" % handler.port)
-        url = open_url.geturl()
+        with open_url:
+            url = open_url.geturl()
         self.assertEqual(url, "http://localhost:%s" % handler.port)
-
-    def test_bad_address(self):
-        # Make sure proper exception is raised when connecting to a bogus
-        # address.
-
-        # as indicated by the comment below, this might fail with some ISP,
-        # so we run the test only when -unetwork/-uall is specified to
-        # mitigate the problem a bit (see #17564)
-        support.requires('network')
-        self.assertRaises(IOError,
-                          # Given that both VeriSign and various ISPs have in
-                          # the past or are presently hijacking various invalid
-                          # domain name requests in an attempt to boost traffic
-                          # to their own sites, finding a domain name to use
-                          # for this test is difficult.  RFC2606 leads one to
-                          # believe that '.invalid' should work, but experience
-                          # seemed to indicate otherwise.  Single character
-                          # TLDs are likely to remain invalid, so this seems to
-                          # be the best choice. The trailing '.' prevents a
-                          # related problem: The normal DNS resolver appends
-                          # the domain names from the search path if there is
-                          # no '.' the end and, and if one of those domains
-                          # implements a '*' rule a result is returned.
-                          # However, none of this will prevent the test from
-                          # failing if the ISP hijacks all invalid domain
-                          # requests.  The real solution would be to be able to
-                          # parameterize the framework with a mock resolver.
-                          urllib.request.urlopen,
-                          "http://sadflkjsasf.i.nvali.d./")
 
     def test_iteration(self):
         expected_response = b"pycon 2008..."
@@ -570,9 +659,17 @@ class TestUrlopen(unittest.TestCase):
         self.assertEqual(index + 1, len(lines))
 
 
-@support.reap_threads
-def test_main():
-    support.run_unittest(ProxyAuthTests, TestUrlopen)
+threads_key = None
+
+def setUpModule():
+    # Store the threading_setup in a key and ensure that it is cleaned up
+    # in the tearDown
+    global threads_key
+    threads_key = support.threading_setup()
+
+def tearDownModule():
+    if threads_key:
+        support.threading_cleanup(*threads_key)
 
 if __name__ == "__main__":
-    test_main()
+    unittest.main()

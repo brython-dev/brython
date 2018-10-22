@@ -250,15 +250,13 @@ list.__init__ = function(self, arg){
     if(arg === undefined){return $N}
     var arg = $B.$iter(arg),
         next_func = $B.$call(getattr(arg, "__next__")),
-        pos = len_func(),
-        ce = $B.current_exception
+        pos = len_func()
     while(1){
         try{
             var res = next_func()
             self[pos++] = res
         }catch(err){
             if(err.__class__ === _b_.StopIteration){
-                $B.current_exception = ce
                 break
             }
             else{throw err}
@@ -281,7 +279,27 @@ list.__len__ = function(self){
 }
 
 list.__lt__ = function(self, other){
-    return ! list.__ge__(self, other)
+    if(! isinstance(other, [list, _b_.tuple])){
+        throw _b_.TypeError.$factory("unorderable types: list() >= "+
+            $B.get_class(other).__name__ + "()")
+    }
+    var i = 0
+    while(i < self.length){
+        if(i >= other.length){return true}
+        if($B.rich_comp("__eq__", self[i], other[i])){
+            i++
+        }else{
+            res = getattr(self[i], "__lt__")(other[i])
+            if(res === _b_.NotImplemented){
+                throw _b_.TypeError.$factory("unorderable types: " +
+                    $B.get_class(self[i]).__name__  + "() >= " +
+                    $B.get_class(other[i]).__name__ + "()")
+            }else{return res}
+        }
+    }
+    // If all items are equal, return True if other is longer
+    // Cf. issue #941
+    return other.length > self.length
 }
 
 list.__mul__ = function(self, other){
@@ -665,7 +683,7 @@ list.sort = function(self){
                 cmp = function(a, b){
                     var _a = func(a),
                         _b = func(b)
-                    res = getattr(_a, "__le__")(_b)
+                    res = $B.$getattr(_a, "__lt__")(_b)
                     if(res === _b_.NotImplemented){
                         throw _b_.TypeError.$factory("unorderable types: " +
                             $B.get_class(a).__name__ + "() <=" +
@@ -713,14 +731,12 @@ list.$factory = function(){
     var res = [],
         pos = 0,
         arg = $B.$iter(obj),
-        next_func = $B.$call(getattr(arg, "__next__")),
-        ce = $B.current_exception
+        next_func = $B.$call(getattr(arg, "__next__"))
 
     while(1){
         try{res[pos++] = next_func()}
         catch(err){
             if(!isinstance(err, _b_.StopIteration)){throw err}
-            $B.current_exception = ce
             break
         }
     }
@@ -822,8 +838,7 @@ tuple.__new__ = function(cls, ...args){
     self.__class__ = cls
     self.__brython__ = true
     var arg = $B.$iter(args[0]),
-        next_func = $B.$call(getattr(arg, "__next__")),
-        ce = $B.current_exception
+        next_func = $B.$call(getattr(arg, "__next__"))
     while(1){
         try{
             var item = next_func()
@@ -831,7 +846,6 @@ tuple.__new__ = function(cls, ...args){
         }
         catch(err){
             if(err.__class__ === _b_.StopIteration){
-                $B.current_exception = ce
                 break
             }
             else{throw err}

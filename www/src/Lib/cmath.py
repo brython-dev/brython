@@ -1,5 +1,5 @@
 #############################################################################################################
-# The code below was ported by Jonathan L. Verner from CPython's C implementation in Modules/cmathmodule.c 
+# The code below was ported by Jonathan L. Verner from CPython's C implementation in Modules/cmathmodule.c
 # (https://github.com/python/cpython/blob/84e6311dee71bb104e1779c89cf22ff703799086/Modules/cmathmodule.c)
 #
 # It is Licensed under the same license as the above file, i.e. PSF License Version 2
@@ -45,13 +45,13 @@ def isfinite(x):
 def phase(x):
     """Return phase, also known as the argument, of a complex."""
     return math.atan2(x.imag, x.real)
-    
+
 @takes_complex
 def polar(x):
-    """ 
-        Convert a complex from rectangular coordinates to polar coordinates. 
-        
-        The function returns a tuple with the two elements r and phi. 
+    """
+        Convert a complex from rectangular coordinates to polar coordinates.
+
+        The function returns a tuple with the two elements r and phi.
         r is the distance from 0 and phi the phase angle.
     """
     phi = math.atan2(x.imag, x.real)
@@ -67,7 +67,7 @@ def rect(r, phi):
         # is infinite
         if math.isinf(phi) and r != .0 and not math.isnan(r):
             raise ValueError("math domain error")
-        
+
         # if r is +/-infinity and phi is finite but nonzero then
         # result is (+-INF +-INF i), but we need to compute cos(phi)
         # and sin(phi) to figure out the signs.
@@ -84,17 +84,17 @@ def rect(r, phi):
     else:
         if phi == .0:
             # TODO: Not sure this applies to Brython ??
-            # Workaround for buggy results with phi=-0.0 on OS X 10.8.  
+            # Workaround for buggy results with phi=-0.0 on OS X 10.8.
             # See bugs.python.org/issue18513.
             return complex(r, phi*r)
         else:
             return complex(r*math.cos(phi), r*math.sin(phi))
-            
+
 @takes_complex
 def sqrt(x):
     """
-       Return the square root of x. 
-       
+       Return the square root of x.
+
        This has the same branch cut as log().
     """
     #   Method: use symmetries to reduce to the case when x = z.real and y
@@ -120,7 +120,7 @@ def sqrt(x):
     #   x and y by a sufficiently large power of 2 to ensure that x and y
     #   are normal.
     s, d, ax, ay = .0, .0, math.fabs(x.real), math.fabs(x.imag)
-    
+
     ret = _SPECIAL_VALUE(x, _sqrt_special_values)
     if ret is not None:
         return ret
@@ -137,7 +137,7 @@ def sqrt(x):
     else:
         ax /= 8.0;
         s = 2.0*math.sqrt(ax + math.hypot(ax, ay/8.0));
-    
+
     d = ay/(2.0*s)
 
     if x.real >= .0:
@@ -146,27 +146,27 @@ def sqrt(x):
     else:
         _real = d;
         _imag = math.copysign(s, x.imag)
-    
+
     return complex(_real,_imag)
 
 @takes_complex
 def acos(x):
-    """ 
-        Return the arc cosine of x. 
-    
-        There are two branch cuts: One extends right from 1 along the real axis to ∞, continuous from below. 
+    """
+        Return the arc cosine of x.
+
+        There are two branch cuts: One extends right from 1 along the real axis to ∞, continuous from below.
         The other extends left from -1 along the real axis to -∞, continuous from above.
     """
-    
+
     ret = _SPECIAL_VALUE(x, _acos_special_values)
     if ret is not None:
         return ret
-    
+
     if math.fabs(x.real) > _CM_LARGE_DOUBLE or math.fabs(x.imag) > _CM_LARGE_DOUBLE:
-        
+
         # avoid unnecessary overflow for large arguments
         _real = math.atan2(math.fabs(x.imag), x.real)
-        
+
         # split into cases to make sure that the branch cut has the
         # correct continuity on systems with unsigned zeros
         if x.real < 0:
@@ -180,20 +180,20 @@ def acos(x):
         s2 = sqrt(s2)
         _real = 2.0*math.atan2(s1.real, s2.real);
         _imag = math.asinh(s2.real*s1.imag - s2.imag*s1.real)
-    
+
     return complex(_real,_imag)
 
 @takes_complex
 def acosh(x):
     """
-        Return the hyperbolic arc cosine of x. 
-        
+        Return the hyperbolic arc cosine of x.
+
         There is one branch cut, extending left from 1 along the real axis to -∞, continuous from above.
     """
     ret = _SPECIAL_VALUE(x, _acosh_special_values)
     if ret is not None:
         return ret
-    
+
     if math.fabs(x.real) > _CM_LARGE_DOUBLE or math.fabs(x.imag) > _CM_LARGE_DOUBLE:
         # avoid unnecessary overflow for large arguments
         _real = math.log(math.hypot(x.real/2.0, x.imag/2.0)) + _M_LN2*2.0
@@ -209,8 +209,8 @@ def acosh(x):
 @takes_complex
 def asin(x):
     """
-        Return the arc sine of x. 
-    
+        Return the arc sine of x.
+
         This has the same branch cuts as acos().
     """
     # asin(z) == -i asinh(iz)
@@ -221,9 +221,9 @@ def asin(x):
 @takes_complex
 def asinh(x):
     """
-        Return the hyperbolic arc sine of x. 
-        
-        There are two branch cuts: One extends from 1j along the imaginary axis to ∞j, continuous from the right. 
+        Return the hyperbolic arc sine of x.
+
+        There are two branch cuts: One extends from 1j along the imaginary axis to ∞j, continuous from the right.
         The other extends from -1j along the imaginary axis to -∞j, continuous from the left.
     """
     ret = _SPECIAL_VALUE(x, _asinh_special_values)
@@ -246,9 +246,9 @@ def asinh(x):
 @takes_complex
 def atan(x):
     """
-        Return the arc tangent of x. 
-        
-        There are two branch cuts: One extends from 1j along the imaginary axis to ∞j, continuous from the right. 
+        Return the arc tangent of x.
+
+        There are two branch cuts: One extends from 1j along the imaginary axis to ∞j, continuous from the right.
         The other extends from -1j along the imaginary axis to -∞j, continuous from the left.
     """
     s = atanh(complex(-x.imag, x.real))
@@ -257,9 +257,9 @@ def atan(x):
 @takes_complex
 def atanh(x):
     """
-        Return the hyperbolic arc tangent of x. 
-        
-        There are two branch cuts: One extends from 1 along the real axis to ∞, continuous from below. 
+        Return the hyperbolic arc tangent of x.
+
+        There are two branch cuts: One extends from 1 along the real axis to ∞, continuous from below.
         The other extends from -1 along the real axis to -∞, continuous from above.
     """
 
@@ -272,38 +272,38 @@ def atanh(x):
         return -(atanh(-x))
 
     ay = math.fabs(x.imag)
-    
+
     if x.real > _CM_SQRT_LARGE_DOUBLE or ay > _CM_SQRT_LARGE_DOUBLE:
-        
+
         #   if math.fabs(z) is large then we use the approximation
         #   atanh(z) ~ 1/z +/- i*pi/2 (+/- depending on the sign
         #   of x.imag)
-        
+
         h = math.hypot(x.real/2., x.imag/2.)  # safe from overflow
         _real = x.real/4./h/h
-        
+
         #   the two negations in the next line cancel each other out
         #   except when working with unsigned zeros: they're there to
         #   ensure that the branch cut has the correct continuity on
         #   systems that don't support signed zeros
-        
+
         _imag = -math.copysign(math.pi/2., -x.imag)
-    
+
     elif x.real == 1.0 and ay < _CM_SQRT_DBL_MIN:
-    
+
         # C99 standard says:  atanh(1+/-0.) should be inf +/- 0i
         if (ay == .0):
             raise ValueError("math domain error")
         else:
             _real = -math.log(math.sqrt(ay)/math.sqrt(math.hypot(ay, 2.)))
             _imag = math.copysign(math.atan2(2.0, -ay)/2, x.imag)
-    
+
     else:
-    
+
         _real = math.log1p(4.*x.real/((1-x.real)*(1-x.real) + ay*ay))/4.
         _imag = -math.atan2(-2.*x.imag, (1-x.real)*(1+x.real) - ay*ay)/2.
         errno = 0
-    
+
     return complex(_real,_imag)
 
 @takes_complex
@@ -314,7 +314,7 @@ def cos(x):
 @takes_complex
 def cosh(x):
     """Return the hyperbolic cosine of x."""
-    
+
     # special treatment for cosh(+/-inf + iy) if y is not a NaN
     if isinf(x):
         if -_INF < x.imag < _INF and x.imag != .0:
@@ -330,19 +330,19 @@ def cosh(x):
             if x.imag != .0 and not math.isnan(x.real):
                 raise ValueError("math domain error")
             return _SPECIAL_VALUE(x,_cosh_special_values)
-    
+
     if math.fabs(x.real) > _CM_LOG_LARGE_DOUBLE:
         #  deal correctly with cases where cosh(x.real) overflows but
-        #  cosh(z) does not. 
+        #  cosh(z) does not.
         x_minus_one = x.real - math.copysign(1.0, x.real)
         _real = cos(x.imag) * math.cosh(x_minus_one) * math.e
         _imag = sin(x.imag) * math.sinh(x_minus_one) * math.e
     else:
         _real = math.cos(x.imag) * math.cosh(x.real)
         _imag = math.sin(x.imag) * math.sinh(x.real)
-    
+
     ret = complex(_real, _imag)
-    #  detect overflow 
+    #  detect overflow
     if isinf(ret):
         raise OverflowError()
     return ret
@@ -354,7 +354,7 @@ def exp(x):
         # need to raise DomainError if y is +/- infinity and x is not -infinity or NaN
         if math.isinf(x.imag) and (-_INF < x.real < _INF or math.isinf(x.real) and x.real > 0):
             raise ValueError("math domain error")
-        
+
         if math.isinf(x.real) and -_INF < x.imag < _INF and x.imag != .0:
             if x.real > 0:
                 _real = math.copysign(_INF, cos(x.imag))
@@ -363,9 +363,9 @@ def exp(x):
                 _real = math.copysign(.0, cos(x.imag))
                 _imag = math.copysign(.0, sin(x.imag))
             return complex(_real, _imag)
- 
-        return _SPECIAL_VALUE(x, _exp_special_values)    
- 
+
+        return _SPECIAL_VALUE(x, _exp_special_values)
+
 
     if x.real > _CM_LOG_LARGE_DOUBLE:
         l = math.exp(x.real-1.);
@@ -378,8 +378,13 @@ def exp(x):
 
     if math.isinf(_real) or math.isinf(_imag):
         raise OverflowError()
-    
+
     return complex(_real, _imag)
+
+def isclose(x, y, rel_tol=1e-09, abs_tol=0.0):
+    rel_tol = float(rel_tol)
+    abs_tol = float(abs_tol)
+    return abs(x - y) <= max(rel_tol * max(abs(x), abs(y)), abs_tol)
 
 @takes_complex
 def isinf(x):
@@ -398,8 +403,8 @@ def _to_complex(x):
 
 def log(x, base=None):
     """
-        Returns the logarithm of x to the given base. If the base is not specified, returns the natural logarithm of x. 
-        
+        Returns the logarithm of x to the given base. If the base is not specified, returns the natural logarithm of x.
+
         There is one branch cut, from 0 along the negative real axis to -∞, continuous from above.
     """
     #    The usual formula for the real part is log(hypot(z.real, z.imag)).
@@ -426,11 +431,11 @@ def log(x, base=None):
     #    (returning -infinity, signaling a floating-point exception, setting
     #    errno, or whatever) determine that of c_log.  So the usual formula
     #    is fine here.
-    
+
     x = _to_complex(x)
     #if type(x) == str:
         #raise TypeError("A complex number is required")
-    
+
     #if type(x) != complex:
         #x = complex(x)
 
@@ -445,12 +450,12 @@ def log(x, base=None):
 
     ax = math.fabs(x.real)
     ay = math.fabs(x.imag)
-    
+
     if ax > _CM_LARGE_DOUBLE or ay > _CM_LARGE_DOUBLE:
         _real = math.log(math.hypot(ax/2.0, ay/2.0)) + _M_LN2
     elif ax < sys.float_info.min and ay < sys.float_info.min:
         if ax > .0 or ay > .0:
-            # catch cases where math.hypot(ax, ay) is subnormal 
+            # catch cases where math.hypot(ax, ay) is subnormal
             _real = math.log(math.hypot(math.ldexp(ax, sys.float_info.mant_dig), math.ldexp(ay, sys.float_info.mant_dig))) - sys.float_info.mant_dig*_M_LN2
         else:
             # math.log(+/-0. +/- 0i)
@@ -471,8 +476,8 @@ def log(x, base=None):
 @takes_complex
 def log10(x):
     """
-        Return the base-10 logarithm of x. 
-        
+        Return the base-10 logarithm of x.
+
         This has the same branch cut as log().
     """
     ret = log(x);
@@ -491,13 +496,13 @@ def sin(x):
 @takes_complex
 def sinh(x):
     """ Return the hyperbolic sine of x. """
-    
+
     if math.isinf(x.real) or math.isinf(x.imag):
         # need to raise DomainError if y is +/- infinity and x is not
         # a NaN and not -infinity
         if math.isinf(x.imag) and not math.isnan(x.real):
             raise ValueError("math domain error")
-        
+
         if math.isinf(x.real) and -_INF < x.imag < _INF and x.imag != .0:
             if x.real > 0:
                 _real = math.copysign(_INF, cos(x.imag))
@@ -506,7 +511,7 @@ def sinh(x):
                 _real = -math.copysign(_INF, cos(x.imag))
                 _imag = math.copysign(_INF, sin(x.imag))
             return complex(_real, _imag)
-        
+
         return  _SPECIAL_VALUE(x,_sinh_special_values)
 
     if math.fabs(x.real) > _CM_LOG_LARGE_DOUBLE:
@@ -519,15 +524,15 @@ def sinh(x):
 
     if math.isinf(_real) or math.isinf(_imag):
         raise OverflowError()
-    
-    return complex(_real, _imag)  
+
+    return complex(_real, _imag)
 
 @takes_complex
 def tan(x):
     """ Return the tangent of x. """
     s = atanh(complex(-x.imag, x.real))
     return complex(s.imag, -s.real)
-    
+
 @takes_complex
 def tanh(x):
     """ Return the hyperbolic tangent of x. """
@@ -543,13 +548,13 @@ def tanh(x):
     #       as 1/cosh(x)^2.  When math.fabs(x) is large, we approximate 1-tanh(x)^2
     #       by 4 exp(-2*x) instead, to avoid possible overflow in the
     #       computation of cosh(x).
-    #    
-    
+    #
+
     if isinf(x):
         if math.isinf(x.imag) and -_INF < x.real < _INF:
             raise ValueError("math domain error")
-        
-        # special treatment for tanh(+/-inf + iy) if y is finite and nonzero 
+
+        # special treatment for tanh(+/-inf + iy) if y is finite and nonzero
         if math.isinf(x.real) and -_INF < x.imag < _INF and x.imag != .0:
             if x.real > 0:
                 _real = 1.0

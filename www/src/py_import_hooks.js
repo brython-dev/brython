@@ -51,7 +51,9 @@ for(var i = 0, len = _meta_path.length; i < len; i++){
 
 if(_loader === undefined){
     // No import spec found
-    throw _b_.ImportError.$factory("No module named " + mod_name)
+    var exc = _b_.ImportError.$factory("No module named " + mod_name)
+    exc.name = mod_name
+    throw exc
 }
 
 // Import spec represents a match

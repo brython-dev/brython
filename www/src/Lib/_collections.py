@@ -399,9 +399,9 @@ class defaultdict(dict):
                 raise TypeError("first argument must be callable")
         else:
             default_factory = None
-        dict.__init__(self, args, kwds)
+        dict.__init__(self, *args, **kwds)
         self.default_factory = default_factory
-        self.update(args, kwds)
+        self.update(*args, **kwds)
         super(defaultdict, self).__init__(*args, **kwds)
 
     def __missing__(self, key):

@@ -38,7 +38,8 @@ __all__ = ['Option',
            'OptionError',
            'OptionConflictError',
            'OptionValueError',
-           'BadOptionError']
+           'BadOptionError',
+           'check_choice']
 
 __copyright__ = """
 Copyright (c) 2001-2006 Gregory P. Ward.  All rights reserved.
@@ -209,7 +210,6 @@ class HelpFormatter:
                  short_first):
         self.parser = None
         self.indent_increment = indent_increment
-        self.help_position = self.max_help_position = max_help_position
         if width is None:
             try:
                 width = int(os.environ['COLUMNS'])
@@ -217,6 +217,8 @@ class HelpFormatter:
                 width = 80
             width -= 2
         self.width = width
+        self.help_position = self.max_help_position = \
+                min(max_help_position, max(width - 20, indent_increment * 2))
         self.current_indent = 0
         self.level = 0
         self.help_width = None          # computed later
@@ -261,7 +263,7 @@ class HelpFormatter:
         Format a paragraph of free-form text for inclusion in the
         help output at the current indentation level.
         """
-        text_width = self.width - self.current_indent
+        text_width = max(self.width - self.current_indent, 11)
         indent = " "*self.current_indent
         return textwrap.fill(text,
                              text_width,
@@ -342,7 +344,7 @@ class HelpFormatter:
         self.dedent()
         self.dedent()
         self.help_position = min(max_len + 2, self.max_help_position)
-        self.help_width = self.width - self.help_position
+        self.help_width = max(self.width - self.help_position, 11)
 
     def format_option_strings(self, option):
         """Return a comma-separated list of option strings & metavariables."""
@@ -644,14 +646,8 @@ class Option:
                     self.type = "string"
         else:
             # Allow type objects or builtin type conversion functions
-            # (int, str, etc.) as an alternative to their names.  (The
-            # complicated check of builtins is only necessary for
-            # Python 2.1 and earlier, and is short-circuited by the
-            # first check on modern Pythons.)
-            import builtins
-            if ( isinstance(self.type, type) or
-                 (hasattr(self.type, "__name__") and
-                  getattr(builtins, self.type.__name__, None) is self.type) ):
+            # (int, str, etc.) as an alternative to their names.
+            if isinstance(self.type, type):
                 self.type = self.type.__name__
 
             if self.type == "str":
@@ -905,7 +901,7 @@ class OptionContainer:
       _short_opt : { string : Option }
         dictionary mapping short option strings, eg. "-f" or "-X",
         to the Option instances that implement them.  If an Option
-        has multiple short option strings, it will appears in this
+        has multiple short option strings, it will appear in this
         dictionary multiple times. [1]
       _long_opt : { string : Option }
         dictionary mapping long option strings, eg. "--file" or
@@ -1366,7 +1362,7 @@ class OptionParser (OptionContainer):
         sys.argv[1:]).  Any errors result in a call to 'error()', which
         by default prints the usage message to stderr and calls
         sys.exit() with an error message.  On success returns a pair
-        (values, args) where 'values' is an Values instance (with all
+        (values, args) where 'values' is a Values instance (with all
         your option values) and 'args' is the list of arguments left
         over after parsing options.
         """

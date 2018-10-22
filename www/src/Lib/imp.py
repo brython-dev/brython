@@ -8,28 +8,29 @@ functionality over this module.
 # (Probably) need to stay in _imp
 from _imp import (lock_held, acquire_lock, release_lock,
                   get_frozen_object, is_frozen_package,
-                  init_builtin, init_frozen, is_builtin, is_frozen,
+                  init_frozen, is_builtin, is_frozen,
                   _fix_co_filename)
 try:
-    from _imp import load_dynamic
+    from _imp import create_dynamic
 except ImportError:
     # Platform doesn't support dynamic loading.
-    load_dynamic = None
+    create_dynamic = None
 
-# Directly exposed by this module
-from importlib._bootstrap import new_module
-from importlib._bootstrap import cache_from_source, source_from_cache
+from importlib._bootstrap import _ERR_MSG, _exec, _load, _builtin_from_name
+from importlib._bootstrap_external import SourcelessFileLoader
 
-
-from importlib import _bootstrap
-#fixme brython
-#from importlib import machinery
-import importlib.machinery as machinery
+from importlib import machinery
+from importlib import util
+import importlib
 import os
 import sys
 import tokenize
+import types
 import warnings
 
+warnings.warn("the imp module is deprecated in favour of importlib; "
+              "see the module's documentation for alternative uses",
+              DeprecationWarning, stacklevel=2)
 
 # DEPRECATED
 SEARCH_ERROR = 0
@@ -44,22 +45,67 @@ PY_CODERESOURCE = 8
 IMP_HOOK = 9
 
 
+def new_module(name):
+    """**DEPRECATED**
+
+    Create a new module.
+
+    The module is not entered into sys.modules.
+
+    """
+    return types.ModuleType(name)
+
+
 def get_magic():
-    """Return the magic number for .pyc or .pyo files."""
-    return _bootstrap._MAGIC_BYTES
+    """**DEPRECATED**
+
+    Return the magic number for .pyc files.
+    """
+    return util.MAGIC_NUMBER
 
 
 def get_tag():
-    """Return the magic tag for .pyc or .pyo files."""
+    """Return the magic tag for .pyc files."""
     return sys.implementation.cache_tag
 
 
+def cache_from_source(path, debug_override=None):
+    """**DEPRECATED**
+
+    Given the path to a .py file, return the path to its .pyc file.
+
+    The .py file does not need to exist; this simply returns the path to the
+    .pyc file calculated as if the .py file were imported.
+
+    If debug_override is not None, then it must be a boolean and is used in
+    place of sys.flags.optimize.
+
+    If sys.implementation.cache_tag is None then NotImplementedError is raised.
+
+    """
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        return util.cache_from_source(path, debug_override)
+
+
+def source_from_cache(path):
+    """**DEPRECATED**
+
+    Given the path to a .pyc. file, return the path to its .py file.
+
+    The .pyc file does not need to exist; this simply returns the path to
+    the .py file calculated to correspond to the .pyc file.  If path does
+    not conform to PEP 3147 format, ValueError will be raised. If
+    sys.implementation.cache_tag is None then NotImplementedError is raised.
+
+    """
+    return util.source_from_cache(path)
+
+
 def get_suffixes():
-    warnings.warn('imp.get_suffixes() is deprecated; use the constants '
-                  'defined on importlib.machinery instead',
-                  DeprecationWarning, 2)
+    """**DEPRECATED**"""
     extensions = [(s, 'rb', C_EXTENSION) for s in machinery.EXTENSION_SUFFIXES]
-    source = [(s, 'U', PY_SOURCE) for s in machinery.SOURCE_SUFFIXES]
+    source = [(s, 'r', PY_SOURCE) for s in machinery.SOURCE_SUFFIXES]
     bytecode = [(s, 'rb', PY_COMPILED) for s in machinery.BYTECODE_SUFFIXES]
 
     return extensions + source + bytecode
@@ -67,7 +113,11 @@ def get_suffixes():
 
 class NullImporter:
 
-    """Null import object."""
+    """**DEPRECATED**
+
+    Null import object.
+
+    """
 
     def __init__(self, path):
         if path == '':
@@ -82,7 +132,7 @@ class NullImporter:
 
 class _HackedGetData:
 
-    """Compatibiilty support for 'file' arguments of various load_*()
+    """Compatibility support for 'file' arguments of various load_*()
     functions."""
 
     def __init__(self, fullname, path, file=None):
@@ -108,60 +158,63 @@ class _HackedGetData:
             return super().get_data(path)
 
 
-class _LoadSourceCompatibility(_HackedGetData, _bootstrap.SourceFileLoader):
+class _LoadSourceCompatibility(_HackedGetData, machinery.SourceFileLoader):
 
     """Compatibility support for implementing load_source()."""
-    #brython fix me
-    pass
+
 
 def load_source(name, pathname, file=None):
-    msg = ('imp.load_source() is deprecated; use '
-           'importlib.machinery.SourceFileLoader(name, pathname).load_module()'
-           ' instead')
-    warnings.warn(msg, DeprecationWarning, 2)
-    _LoadSourceCompatibility(name, pathname, file).load_module(name)
-    module = sys.modules[name]
+    loader = _LoadSourceCompatibility(name, pathname, file)
+    spec = util.spec_from_file_location(name, pathname, loader=loader)
+    if name in sys.modules:
+        module = _exec(spec, sys.modules[name])
+    else:
+        module = _load(spec)
     # To allow reloading to potentially work, use a non-hacked loader which
     # won't rely on a now-closed file object.
-    module.__loader__ = _bootstrap.SourceFileLoader(name, pathname)
+    module.__loader__ = machinery.SourceFileLoader(name, pathname)
+    module.__spec__.loader = module.__loader__
     return module
 
 
-class _LoadCompiledCompatibility(_HackedGetData,
-        _bootstrap.SourcelessFileLoader):
+class _LoadCompiledCompatibility(_HackedGetData, SourcelessFileLoader):
 
     """Compatibility support for implementing load_compiled()."""
-    #brython fix me
-    pass
+
 
 def load_compiled(name, pathname, file=None):
-    msg = ('imp.load_compiled() is deprecated; use '
-           'importlib.machinery.SourcelessFileLoader(name, pathname).'
-           'load_module() instead ')
-    warnings.warn(msg, DeprecationWarning, 2)
-    _LoadCompiledCompatibility(name, pathname, file).load_module(name)
-    module = sys.modules[name]
+    """**DEPRECATED**"""
+    loader = _LoadCompiledCompatibility(name, pathname, file)
+    spec = util.spec_from_file_location(name, pathname, loader=loader)
+    if name in sys.modules:
+        module = _exec(spec, sys.modules[name])
+    else:
+        module = _load(spec)
     # To allow reloading to potentially work, use a non-hacked loader which
     # won't rely on a now-closed file object.
-    module.__loader__ = _bootstrap.SourcelessFileLoader(name, pathname)
+    module.__loader__ = SourcelessFileLoader(name, pathname)
+    module.__spec__.loader = module.__loader__
     return module
 
 
 def load_package(name, path):
-    msg = ('imp.load_package() is deprecated; use either '
-           'importlib.machinery.SourceFileLoader() or '
-           'importlib.machinery.SourcelessFileLoader() instead')
-    warnings.warn(msg, DeprecationWarning, 2)
+    """**DEPRECATED**"""
     if os.path.isdir(path):
         extensions = (machinery.SOURCE_SUFFIXES[:] +
                       machinery.BYTECODE_SUFFIXES[:])
         for extension in extensions:
-            path = os.path.join(path, '__init__'+extension)
-            if os.path.exists(path):
+            init_path = os.path.join(path, '__init__' + extension)
+            if os.path.exists(init_path):
+                path = init_path
                 break
         else:
             raise ValueError('{!r} is not a package'.format(path))
-    return _bootstrap.SourceFileLoader(name, path).load_module(name)
+    spec = util.spec_from_file_location(name, path,
+                                        submodule_search_locations=[])
+    if name in sys.modules:
+        return _exec(spec, sys.modules[name])
+    else:
+        return _load(spec)
 
 
 def load_module(name, file, filename, details):
@@ -173,32 +226,30 @@ def load_module(name, file, filename, details):
 
     """
     suffix, mode, type_ = details
-    with warnings.catch_warnings():
-        warnings.simplefilter('ignore')
-        if mode and (not mode.startswith(('r', 'U')) or '+' in mode):
-            raise ValueError('invalid file open mode {!r}'.format(mode))
-        elif file is None and type_ in {PY_SOURCE, PY_COMPILED}:
-            msg = 'file object required for import (type code {})'.format(type_)
-            raise ValueError(msg)
-        elif type_ == PY_SOURCE:
-            return load_source(name, filename, file)
-        elif type_ == PY_COMPILED:
-            return load_compiled(name, filename, file)
-        elif type_ == C_EXTENSION and load_dynamic is not None:
-            if file is None:
-                with open(filename, 'rb') as opened_file:
-                    return load_dynamic(name, filename, opened_file)
-            else:
-                return load_dynamic(name, filename, file)
-        elif type_ == PKG_DIRECTORY:
-            return load_package(name, filename)
-        elif type_ == C_BUILTIN:
-            return init_builtin(name)
-        elif type_ == PY_FROZEN:
-            return init_frozen(name)
+    if mode and (not mode.startswith(('r', 'U')) or '+' in mode):
+        raise ValueError('invalid file open mode {!r}'.format(mode))
+    elif file is None and type_ in {PY_SOURCE, PY_COMPILED}:
+        msg = 'file object required for import (type code {})'.format(type_)
+        raise ValueError(msg)
+    elif type_ == PY_SOURCE:
+        return load_source(name, filename, file)
+    elif type_ == PY_COMPILED:
+        return load_compiled(name, filename, file)
+    elif type_ == C_EXTENSION and load_dynamic is not None:
+        if file is None:
+            with open(filename, 'rb') as opened_file:
+                return load_dynamic(name, filename, opened_file)
         else:
-            msg =  "Don't know how to import {} (type code {})".format(name, type_)
-            raise ImportError(msg, name=name)
+            return load_dynamic(name, filename, file)
+    elif type_ == PKG_DIRECTORY:
+        return load_package(name, filename)
+    elif type_ == C_BUILTIN:
+        return init_builtin(name)
+    elif type_ == PY_FROZEN:
+        return init_frozen(name)
+    else:
+        msg =  "Don't know how to import {} (type code {})".format(name, type_)
+        raise ImportError(msg, name=name)
 
 
 def find_module(name, path=None):
@@ -216,8 +267,8 @@ def find_module(name, path=None):
         raise TypeError("'name' must be a str, not {}".format(type(name)))
     elif not isinstance(path, (type(None), list)):
         # Backwards-compatibility
-        raise RuntimeError("'list' must be None or a list, "
-                           "not {}".format(type(name)))
+        raise RuntimeError("'path' must be None or a list, "
+                           "not {}".format(type(path)))
 
     if path is None:
         if is_builtin(name):
@@ -234,54 +285,62 @@ def find_module(name, path=None):
             file_path = os.path.join(package_directory, package_file_name)
             if os.path.isfile(file_path):
                 return None, package_directory, ('', '', PKG_DIRECTORY)
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore')
-            for suffix, mode, type_ in get_suffixes():
-                file_name = name + suffix
-                file_path = os.path.join(entry, file_name)
-                if os.path.isfile(file_path):
-                    break
-            else:
-                continue
-            break  # Break out of outer loop when breaking out of inner loop.
+        for suffix, mode, type_ in get_suffixes():
+            file_name = name + suffix
+            file_path = os.path.join(entry, file_name)
+            if os.path.isfile(file_path):
+                break
+        else:
+            continue
+        break  # Break out of outer loop when breaking out of inner loop.
     else:
-        raise ImportError(_bootstrap._ERR_MSG.format(name), name=name)
+        raise ImportError(_ERR_MSG.format(name), name=name)
 
     encoding = None
-    if mode == 'U':
+    if 'b' not in mode:
         with open(file_path, 'rb') as file:
             encoding = tokenize.detect_encoding(file.readline)[0]
     file = open(file_path, mode, encoding=encoding)
     return file, file_path, (suffix, mode, type_)
 
 
-_RELOADING = {}
-
 def reload(module):
-    """Reload the module and return it.
+    """**DEPRECATED**
+
+    Reload the module and return it.
 
     The module must have been successfully imported before.
 
     """
-    if not module or type(module) != type(sys):
-        raise TypeError("reload() argument must be module")
-    name = module.__name__
-    if name not in sys.modules:
-        msg = "module {} not in sys.modules"
-        raise ImportError(msg.format(name), name=name)
-    if name in _RELOADING:
-        return _RELOADING[name]
-    _RELOADING[name] = module
+    return importlib.reload(module)
+
+
+def init_builtin(name):
+    """**DEPRECATED**
+
+    Load and return a built-in module by name, or None is such module doesn't
+    exist
+    """
     try:
-        parent_name = name.rpartition('.')[0]
-        if parent_name and parent_name not in sys.modules:
-            msg = "parent {!r} not in sys.modules"
-            raise ImportError(msg.format(parent_name), name=parent_name)
-        module.__loader__.load_module(name)
-        # The module may have replaced itself in sys.modules!
-        return sys.modules[module.__name__]
-    finally:
-        try:
-            del _RELOADING[name]
-        except KeyError:
-            pass
+        return _builtin_from_name(name)
+    except ImportError:
+        return None
+
+
+if create_dynamic:
+    def load_dynamic(name, path, file=None):
+        """**DEPRECATED**
+
+        Load an extension module.
+        """
+        import importlib.machinery
+        loader = importlib.machinery.ExtensionFileLoader(name, path)
+
+        # Issue #24748: Skip the sys.modules check in _load_module_shim;
+        # always load new extension
+        spec = importlib.machinery.ModuleSpec(
+            name=name, loader=loader, origin=path)
+        return _load(spec)
+
+else:
+    load_dynamic = None

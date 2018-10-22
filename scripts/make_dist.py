@@ -20,8 +20,8 @@ if sys.version_info[0] != 3:
 # path of parent directory
 pdir = os.path.dirname(os.getcwd())
 # version info
-version = [3, 3, 0, "alpha", 0]
-implementation = [3, 6, 3, "dev", 0]
+version = [3, 7, 0, "final", 0]
+implementation = [3, 7, 0, "rc", 2]
 
 # version name
 vname = '.'.join(str(x) for x in implementation[:3])
@@ -57,29 +57,14 @@ def run():
         vinfo_file_out.write('__BRYTHON__.timestamp = {}\n'.format(
             int(1000*time.time())))
         # builtin module names = list of scripts in src/libs
-        vinfo_file_out.write('__BRYTHON__.builtin_module_names = ["posix",'
-            '"sys", "errno", "time",')
-        _modules=['"%s"' % fname.split('.')[0]
+        vinfo_file_out.write('__BRYTHON__.builtin_module_names = [')
+        _modules = ['"%s"' % fname.split('.')[0]
                    for fname in os.listdir(abs_path('libs'))
                    if fname.endswith('.js')]
 
         # Sort modules so that git diff's don't change between runs
         _modules.sort()
         vinfo_file_out.write(',\n    '.join(_modules))
-
-        # Add Python scripts in Lib that start with _ and aren't found in
-        # CPython Lib.
-        # Using sys.executable to find stdlib dir doesn't work under linux.
-        stdlib_path = os.path.dirname(os.__file__)
-        stdlib_mods = [f for f in os.listdir(stdlib_path) if f.startswith('_')]
-        stdlib_mods.sort()
-        brython_mods = [f for f in os.listdir(abs_path('Lib'))
-                        if f.startswith('_') and f != '__pycache__']
-        brython_py_builtins = [os.path.splitext(x)[0]
-                               for x in brython_mods if x not in stdlib_mods]
-        brython_py_builtins.sort()
-        vinfo_file_out.write(',\n    ' + ',\n    '.join(
-                         ['"%s"' % f for f in brython_py_builtins]))
         vinfo_file_out.write(']\n')
 
         #log.info("Finished Writing file: " + abs_path('version_info.js'))

@@ -42,6 +42,9 @@ $B.__ARGV = []
 // Mapping between a module name and its path (url)
 $B.$py_module_path = {}
 
+// File cache
+$B.file_cache = {}
+
 // Mapping between a Python module name and its source code
 $B.$py_src = {}
 
@@ -91,6 +94,8 @@ $B.__setattr__ = function(attr,value){
 // system language ( _not_ the one set in browser settings)
 // cf http://stackoverflow.com/questions/1043339/javascript-for-detecting-browser-language-preference
 $B.language = _window.navigator.userLanguage || _window.navigator.language
+
+$B.locale = $B.language.substr(0, 2) // can be reset by locale.setlocale
 
 if(isWebWorker){
     $B.charset = "utf-8"
@@ -158,6 +163,21 @@ if(has_storage){
 $B.globals = function(){
     // Can be used in Javascript console to inspect global namespace
     return $B.frames_stack[$B.frames_stack.length - 1][3]
+}
+
+$B.$options = {}
+
+// Can be used in Javascript programs to run Python code
+$B.python_to_js = function(src, script_id){
+    $B.meta_path = $B.$meta_path.slice()
+    if(!$B.use_VFS){$B.meta_path.shift()}
+    if(script_id === undefined){script_id = "__main__"}
+
+    var root = __BRYTHON__.py2js(src, script_id, script_id),
+        js = root.to_js()
+
+    js = "var $locals_" + script_id + " = {}\n" + js
+    return js
 }
 
 // copied from https://raw.githubusercontent.com/mathiasbynens/mothereff.in/master/js-variables/eff.js

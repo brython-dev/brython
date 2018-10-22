@@ -1,8 +1,21 @@
+import binascii
+import functools
 import hmac
 import hashlib
 import unittest
+import unittest.mock
 import warnings
-from test import support
+
+
+def ignore_warning(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore",
+                                    category=DeprecationWarning)
+            return func(*args, **kwargs)
+    return wrapper
+
 
 class TestVectorsTestCase(unittest.TestCase):
 
@@ -10,8 +23,29 @@ class TestVectorsTestCase(unittest.TestCase):
         # Test the HMAC module against test vectors from the RFC.
 
         def md5test(key, data, digest):
-            h = hmac.HMAC(key, data)
+            h = hmac.HMAC(key, data, digestmod=hashlib.md5)
             self.assertEqual(h.hexdigest().upper(), digest.upper())
+            self.assertEqual(h.digest(), binascii.unhexlify(digest))
+            self.assertEqual(h.name, "hmac-md5")
+            self.assertEqual(h.digest_size, 16)
+            self.assertEqual(h.block_size, 64)
+
+            h = hmac.HMAC(key, data, digestmod='md5')
+            self.assertEqual(h.hexdigest().upper(), digest.upper())
+            self.assertEqual(h.digest(), binascii.unhexlify(digest))
+            self.assertEqual(h.name, "hmac-md5")
+            self.assertEqual(h.digest_size, 16)
+            self.assertEqual(h.block_size, 64)
+
+            self.assertEqual(
+                hmac.digest(key, data, digest='md5'),
+                binascii.unhexlify(digest)
+            )
+            with unittest.mock.patch('hmac._openssl_md_meths', {}):
+                self.assertEqual(
+                    hmac.digest(key, data, digest='md5'),
+                    binascii.unhexlify(digest)
+                )
 
         md5test(b"\x0b" * 16,
                 b"Hi There",
@@ -46,6 +80,23 @@ class TestVectorsTestCase(unittest.TestCase):
         def shatest(key, data, digest):
             h = hmac.HMAC(key, data, digestmod=hashlib.sha1)
             self.assertEqual(h.hexdigest().upper(), digest.upper())
+            self.assertEqual(h.digest(), binascii.unhexlify(digest))
+            self.assertEqual(h.name, "hmac-sha1")
+            self.assertEqual(h.digest_size, 20)
+            self.assertEqual(h.block_size, 64)
+
+            h = hmac.HMAC(key, data, digestmod='sha1')
+            self.assertEqual(h.hexdigest().upper(), digest.upper())
+            self.assertEqual(h.digest(), binascii.unhexlify(digest))
+            self.assertEqual(h.name, "hmac-sha1")
+            self.assertEqual(h.digest_size, 20)
+            self.assertEqual(h.block_size, 64)
+
+            self.assertEqual(
+                hmac.digest(key, data, digest='sha1'),
+                binascii.unhexlify(digest)
+            )
+
 
         shatest(b"\x0b" * 20,
                 b"Hi There",
@@ -76,10 +127,39 @@ class TestVectorsTestCase(unittest.TestCase):
                  b"and Larger Than One Block-Size Data"),
                 "e8e99d0f45237d786d6bbaa7965c7808bbff1a91")
 
-    def _rfc4231_test_cases(self, hashfunc):
+    def _rfc4231_test_cases(self, hashfunc, hash_name, digest_size, block_size):
         def hmactest(key, data, hexdigests):
+            hmac_name = "hmac-" + hash_name
             h = hmac.HMAC(key, data, digestmod=hashfunc)
             self.assertEqual(h.hexdigest().lower(), hexdigests[hashfunc])
+            self.assertEqual(h.name, hmac_name)
+            self.assertEqual(h.digest_size, digest_size)
+            self.assertEqual(h.block_size, block_size)
+
+            h = hmac.HMAC(key, data, digestmod=hash_name)
+            self.assertEqual(h.hexdigest().lower(), hexdigests[hashfunc])
+            self.assertEqual(h.name, hmac_name)
+            self.assertEqual(h.digest_size, digest_size)
+            self.assertEqual(h.block_size, block_size)
+
+            self.assertEqual(
+                hmac.digest(key, data, digest=hashfunc),
+                binascii.unhexlify(hexdigests[hashfunc])
+            )
+            self.assertEqual(
+                hmac.digest(key, data, digest=hash_name),
+                binascii.unhexlify(hexdigests[hashfunc])
+            )
+
+            with unittest.mock.patch('hmac._openssl_md_meths', {}):
+                self.assertEqual(
+                    hmac.digest(key, data, digest=hashfunc),
+                    binascii.unhexlify(hexdigests[hashfunc])
+                )
+                self.assertEqual(
+                    hmac.digest(key, data, digest=hash_name),
+                    binascii.unhexlify(hexdigests[hashfunc])
+                )
 
         # 4.2.  Test Case 1
         hmactest(key = b'\x0b'*20,
@@ -189,16 +269,16 @@ class TestVectorsTestCase(unittest.TestCase):
                  })
 
     def test_sha224_rfc4231(self):
-        self._rfc4231_test_cases(hashlib.sha224)
+        self._rfc4231_test_cases(hashlib.sha224, 'sha224', 28, 64)
 
     def test_sha256_rfc4231(self):
-        self._rfc4231_test_cases(hashlib.sha256)
+        self._rfc4231_test_cases(hashlib.sha256, 'sha256', 32, 64)
 
     def test_sha384_rfc4231(self):
-        self._rfc4231_test_cases(hashlib.sha384)
+        self._rfc4231_test_cases(hashlib.sha384, 'sha384', 48, 128)
 
     def test_sha512_rfc4231(self):
-        self._rfc4231_test_cases(hashlib.sha512)
+        self._rfc4231_test_cases(hashlib.sha512, 'sha512', 64, 128)
 
     def test_legacy_block_size_warnings(self):
         class MockCrazyHash(object):
@@ -222,46 +302,74 @@ class TestVectorsTestCase(unittest.TestCase):
                 hmac.HMAC(b'a', b'b', digestmod=MockCrazyHash)
                 self.fail('Expected warning about small block_size')
 
+    def test_with_digestmod_warning(self):
+        with self.assertWarns(DeprecationWarning):
+            key = b"\x0b" * 16
+            data = b"Hi There"
+            digest = "9294727A3638BB1C13F48EF8158BFC9D"
+            h = hmac.HMAC(key, data)
+            self.assertEqual(h.hexdigest().upper(), digest)
 
 
 class ConstructorTestCase(unittest.TestCase):
 
+    @ignore_warning
     def test_normal(self):
         # Standard constructor call.
         failed = 0
         try:
             h = hmac.HMAC(b"key")
-        except:
+        except Exception:
             self.fail("Standard constructor call raised exception.")
 
+    @ignore_warning
     def test_with_str_key(self):
         # Pass a key of type str, which is an error, because it expects a key
         # of type bytes
         with self.assertRaises(TypeError):
             h = hmac.HMAC("key")
 
+    @ignore_warning
     def test_dot_new_with_str_key(self):
         # Pass a key of type str, which is an error, because it expects a key
         # of type bytes
         with self.assertRaises(TypeError):
             h = hmac.new("key")
 
+    @ignore_warning
     def test_withtext(self):
         # Constructor call with text.
         try:
             h = hmac.HMAC(b"key", b"hash this!")
-        except:
+        except Exception:
             self.fail("Constructor call with text argument raised exception.")
+        self.assertEqual(h.hexdigest(), '34325b639da4cfd95735b381e28cb864')
+
+    def test_with_bytearray(self):
+        try:
+            h = hmac.HMAC(bytearray(b"key"), bytearray(b"hash this!"),
+                          digestmod="md5")
+        except Exception:
+            self.fail("Constructor call with bytearray arguments raised exception.")
+        self.assertEqual(h.hexdigest(), '34325b639da4cfd95735b381e28cb864')
+
+    def test_with_memoryview_msg(self):
+        try:
+            h = hmac.HMAC(b"key", memoryview(b"hash this!"), digestmod="md5")
+        except Exception:
+            self.fail("Constructor call with memoryview msg raised exception.")
+        self.assertEqual(h.hexdigest(), '34325b639da4cfd95735b381e28cb864')
 
     def test_withmodule(self):
         # Constructor call with text and digest module.
         try:
             h = hmac.HMAC(b"key", b"", hashlib.sha1)
-        except:
+        except Exception:
             self.fail("Constructor call with hashlib.sha1 raised exception.")
 
 class SanityTestCase(unittest.TestCase):
 
+    @ignore_warning
     def test_default_is_md5(self):
         # Testing if HMAC defaults to MD5 algorithm.
         # NOTE: this whitebox test depends on the hmac class internals
@@ -272,19 +380,19 @@ class SanityTestCase(unittest.TestCase):
         # Exercising all methods once.
         # This must not raise any exceptions
         try:
-            h = hmac.HMAC(b"my secret key")
+            h = hmac.HMAC(b"my secret key", digestmod="md5")
             h.update(b"compute the hash of this text!")
             dig = h.digest()
             dig = h.hexdigest()
             h2 = h.copy()
-        except:
+        except Exception:
             self.fail("Exception raised during normal usage of HMAC class.")
 
 class CopyTestCase(unittest.TestCase):
 
     def test_attributes(self):
         # Testing if attributes are of same type.
-        h1 = hmac.HMAC(b"key")
+        h1 = hmac.HMAC(b"key", digestmod="md5")
         h2 = h1.copy()
         self.assertTrue(h1.digest_cons == h2.digest_cons,
             "digest constructors don't match.")
@@ -295,7 +403,7 @@ class CopyTestCase(unittest.TestCase):
 
     def test_realcopy(self):
         # Testing if the copy method created a real copy.
-        h1 = hmac.HMAC(b"key")
+        h1 = hmac.HMAC(b"key", digestmod="md5")
         h2 = h1.copy()
         # Using id() in case somebody has overridden __eq__/__ne__.
         self.assertTrue(id(h1) != id(h2), "No real copy of the HMAC instance.")
@@ -306,7 +414,7 @@ class CopyTestCase(unittest.TestCase):
 
     def test_equality(self):
         # Testing if the copy has the same digests.
-        h1 = hmac.HMAC(b"key")
+        h1 = hmac.HMAC(b"key", digestmod="md5")
         h1.update(b"some random text")
         h2 = h1.copy()
         self.assertEqual(h1.digest(), h2.digest(),
@@ -422,14 +530,5 @@ class CompareDigestTestCase(unittest.TestCase):
         self.assertFalse(hmac.compare_digest(a, b))
 
 
-def test_main():
-    support.run_unittest(
-        TestVectorsTestCase,
-        ConstructorTestCase,
-        SanityTestCase,
-        CopyTestCase,
-        CompareDigestTestCase
-    )
-
 if __name__ == "__main__":
-    test_main()
+    unittest.main()

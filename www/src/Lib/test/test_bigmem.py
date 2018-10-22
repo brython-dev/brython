@@ -14,7 +14,6 @@ from test.support import bigmemtest, _1G, _2G, _4G
 import unittest
 import operator
 import sys
-import functools
 
 # These tests all use one of the bigmemtest decorators to indicate how much
 # memory they use and how much memory they need to be even meaningful.  The
@@ -737,7 +736,7 @@ class StrTest(unittest.TestCase, BaseStrTest):
         finally:
             r = s = None
 
-    # The original test_translate is overriden here, so as to get the
+    # The original test_translate is overridden here, so as to get the
     # correct size estimate: str.translate() uses an intermediate Py_UCS4
     # representation.
 

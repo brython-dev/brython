@@ -65,6 +65,10 @@ def fsdecode(filename):
         return filename.decode(encoding, errors)
     else:
         raise TypeError("expect bytes or str, not %s" % type(filename).__name__)
+
+def fspath(path):
+    return path
+
 def getcwd():
     return __BRYTHON__.curdir
 

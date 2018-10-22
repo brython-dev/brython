@@ -29,17 +29,22 @@ class AllTest(unittest.TestCase):
         if not hasattr(sys.modules[modname], "__all__"):
             raise NoAll(modname)
         names = {}
-        try:
-            exec("from %s import *" % modname, names)
-        except Exception as e:
-            # Include the module name in the exception string
-            self.fail("__all__ failure in {}: {}: {}".format(
-                      modname, e.__class__.__name__, e))
-        if "__builtins__" in names:
-            del names["__builtins__"]
-        keys = set(names)
-        all = set(sys.modules[modname].__all__)
-        self.assertEqual(keys, all)
+        with self.subTest(module=modname):
+            try:
+                exec("from %s import *" % modname, names)
+            except Exception as e:
+                # Include the module name in the exception string
+                self.fail("__all__ failure in {}: {}: {}".format(
+                          modname, e.__class__.__name__, e))
+            if "__builtins__" in names:
+                del names["__builtins__"]
+            if '__annotations__' in names:
+                del names['__annotations__']
+            keys = set(names)
+            all_list = sys.modules[modname].__all__
+            all_set = set(all_list)
+            self.assertCountEqual(all_set, all_list, "in module {}".format(modname))
+            self.assertEqual(keys, all_set, "in module {}".format(modname))
 
     def walk_modules(self, basedir, modpath):
         for fn in sorted(os.listdir(basedir)):
@@ -66,16 +71,6 @@ class AllTest(unittest.TestCase):
             # In case _socket fails to build, make this test fail more gracefully
             # than an AttributeError somewhere deep in CGIHTTPServer.
             import _socket
-
-        # rlcompleter needs special consideration; it import readline which
-        # initializes GNU readline which calls setlocale(LC_CTYPE, "")... :-(
-        try:
-            import rlcompleter
-            import locale
-        except ImportError:
-            pass
-        else:
-            locale.setlocale(locale.LC_CTYPE, 'C')
 
         ignored = []
         failed_imports = []
@@ -110,8 +105,5 @@ class AllTest(unittest.TestCase):
             print('Following modules failed to be imported:', failed_imports)
 
 
-def test_main():
-    support.run_unittest(AllTest)
-
 if __name__ == "__main__":
-    test_main()
+    unittest.main()

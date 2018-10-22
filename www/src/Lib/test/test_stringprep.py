@@ -1,8 +1,7 @@
 # To fully test this module, we would need a copy of the stringprep tables.
-# Since we don't have them, this test checks only a few codepoints.
+# Since we don't have them, this test checks only a few code points.
 
 import unittest
-from test import support
 
 from stringprep import *
 
@@ -89,8 +88,5 @@ class StringprepTests(unittest.TestCase):
         #     h.update(data)
         #     print p, h.hexdigest()
 
-def test_main():
-    support.run_unittest(StringprepTests)
-
 if __name__ == '__main__':
-    test_main()
+    unittest.main()

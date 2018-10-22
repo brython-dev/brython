@@ -60,11 +60,18 @@ DOUBLESTAREQUAL = 46
 DOUBLESLASH = 47
 DOUBLESLASHEQUAL = 48
 AT = 49
-RARROW = 50
-ELLIPSIS = 51
-OP = 52
-ERRORTOKEN = 53
-N_TOKENS = 54
+ATEQUAL = 50
+RARROW = 51
+ELLIPSIS = 52
+# Don't forget to update the table _PyParser_TokenNames in tokenizer.c!
+OP = 53
+ERRORTOKEN = 54
+# These aren't used by the C tokenizer but are needed for tokenize.py
+COMMENT = 55
+NL = 56
+ENCODING = 57
+N_TOKENS = 58
+# Special definitions for cooperation with parser
 NT_OFFSET = 256
 #--end constants--
 
@@ -93,30 +100,41 @@ def _main():
         outFileName = args[1]
     try:
         fp = open(inFileName)
-    except IOError as err:
+    except OSError as err:
         sys.stdout.write("I/O error: %s\n" % str(err))
         sys.exit(1)
-    lines = fp.read().split("\n")
-    fp.close()
+    with fp:
+        lines = fp.read().split("\n")
     prog = re.compile(
-        "#define[ \t][ \t]*([A-Z0-9][A-Z0-9_]*)[ \t][ \t]*([0-9][0-9]*)",
+        r"#define[ \t][ \t]*([A-Z0-9][A-Z0-9_]*)[ \t][ \t]*([0-9][0-9]*)",
         re.IGNORECASE)
+    comment_regex = re.compile(
+        r"^\s*/\*\s*(.+?)\s*\*/\s*$",
+        re.IGNORECASE)
+
     tokens = {}
+    prev_val = None
     for line in lines:
         match = prog.match(line)
         if match:
             name, val = match.group(1, 2)
             val = int(val)
-            tokens[val] = name          # reverse so we can sort them...
+            tokens[val] = {'token': name}          # reverse so we can sort them...
+            prev_val = val
+        else:
+            comment_match = comment_regex.match(line)
+            if comment_match and prev_val is not None:
+                comment = comment_match.group(1)
+                tokens[prev_val]['comment'] = comment
     keys = sorted(tokens.keys())
     # load the output skeleton from the target:
     try:
         fp = open(outFileName)
-    except IOError as err:
+    except OSError as err:
         sys.stderr.write("I/O error: %s\n" % str(err))
         sys.exit(2)
-    format = fp.read().split("\n")
-    fp.close()
+    with fp:
+        format = fp.read().split("\n")
     try:
         start = format.index("#--start constants--") + 1
         end = format.index("#--end constants--")
@@ -124,16 +142,18 @@ def _main():
         sys.stderr.write("target does not contain format markers")
         sys.exit(3)
     lines = []
-    for val in keys:
-        lines.append("%s = %d" % (tokens[val], val))
+    for key in keys:
+        lines.append("%s = %d" % (tokens[key]["token"], key))
+        if "comment" in tokens[key]:
+            lines.append("# %s" % tokens[key]["comment"])
     format[start:end] = lines
     try:
         fp = open(outFileName, 'w')
-    except IOError as err:
+    except OSError as err:
         sys.stderr.write("I/O error: %s\n" % str(err))
         sys.exit(4)
-    fp.write("\n".join(format))
-    fp.close()
+    with fp:
+        fp.write("\n".join(format))
 
 
 if __name__ == "__main__":

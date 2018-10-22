@@ -585,6 +585,10 @@ var generator = {
 generator.__enter__ = function(self){console.log("generator.__enter__ called")}
 generator.__exit__ = function(self){console.log("generator.__exit__ called")}
 
+generator.__str__ = function(self){
+    return "<generator object " + self.name + ">"
+}
+
 generator.__iter__ = function(self){
     return self
 }
@@ -607,11 +611,11 @@ generator.__next__ = function(self){
         var src = self.next + '',
             line_num = err.lineNumber,
             lines = src.split("\n")
+        console.log(src)
         console.log(line_num, lines.length)
+        console.log(lines[line_num - 1])
         console.log(err)
-        $B.$log(src)
         */
-
         self.$finished = true
         throw err
     }finally{
@@ -657,15 +661,27 @@ generator.send = function(self, value){
     return generator.__next__(self)
 }
 
-generator.$$throw = function(self, value){
-    if(_b_.isinstance(value, _b_.type)){value = value()}
-    self.sent_value = {__class__: $B.$GeneratorSendError, err: value}
+generator.$$throw = function(self, type, value, traceback){
+    var exc = type
+    if(value !== undefined){exc = $B.$call(exc)(value)}
+    if(traceback !== undefined){exc.$traceback = traceback}
+    self.sent_value = {__class__: $B.$GeneratorSendError, err: exc}
     return generator.__next__(self)
 }
 
 generator.$factory = $B.genfunc = function(name, blocks, funcs, $defaults){
     // Transform a list of functions into a generator object, ie a function
     // that returns an iterator
+    if(name.startsWith("__ge")){
+        // Copy all names in surrounding scopes in namespace of generator
+        // expression (issue #935)
+        for(var block_id in blocks){
+            if(block_id == "$locals_" + name){continue}
+            for(var attr in blocks[block_id]){
+                blocks["$locals_" + name][attr] = blocks[block_id][attr]
+            }
+        }
+    }
     return function(){
         var iter_id = "$gen" + $B.gen_counter++,
             gfuncs = []

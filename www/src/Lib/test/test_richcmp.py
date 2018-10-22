@@ -228,30 +228,55 @@ class MiscTest(unittest.TestCase):
         b = UserList()
         a.append(b)
         b.append(a)
-        self.assertRaises(RuntimeError, operator.eq, a, b)
-        self.assertRaises(RuntimeError, operator.ne, a, b)
-        self.assertRaises(RuntimeError, operator.lt, a, b)
-        self.assertRaises(RuntimeError, operator.le, a, b)
-        self.assertRaises(RuntimeError, operator.gt, a, b)
-        self.assertRaises(RuntimeError, operator.ge, a, b)
+        self.assertRaises(RecursionError, operator.eq, a, b)
+        self.assertRaises(RecursionError, operator.ne, a, b)
+        self.assertRaises(RecursionError, operator.lt, a, b)
+        self.assertRaises(RecursionError, operator.le, a, b)
+        self.assertRaises(RecursionError, operator.gt, a, b)
+        self.assertRaises(RecursionError, operator.ge, a, b)
 
         b.append(17)
         # Even recursive lists of different lengths are different,
         # but they cannot be ordered
         self.assertTrue(not (a == b))
         self.assertTrue(a != b)
-        self.assertRaises(RuntimeError, operator.lt, a, b)
-        self.assertRaises(RuntimeError, operator.le, a, b)
-        self.assertRaises(RuntimeError, operator.gt, a, b)
-        self.assertRaises(RuntimeError, operator.ge, a, b)
+        self.assertRaises(RecursionError, operator.lt, a, b)
+        self.assertRaises(RecursionError, operator.le, a, b)
+        self.assertRaises(RecursionError, operator.gt, a, b)
+        self.assertRaises(RecursionError, operator.ge, a, b)
         a.append(17)
-        self.assertRaises(RuntimeError, operator.eq, a, b)
-        self.assertRaises(RuntimeError, operator.ne, a, b)
+        self.assertRaises(RecursionError, operator.eq, a, b)
+        self.assertRaises(RecursionError, operator.ne, a, b)
         a.insert(0, 11)
         b.insert(0, 12)
         self.assertTrue(not (a == b))
         self.assertTrue(a != b)
         self.assertTrue(a < b)
+
+    def test_exception_message(self):
+        class Spam:
+            pass
+
+        tests = [
+            (lambda: 42 < None, r"'<' .* of 'int' and 'NoneType'"),
+            (lambda: None < 42, r"'<' .* of 'NoneType' and 'int'"),
+            (lambda: 42 > None, r"'>' .* of 'int' and 'NoneType'"),
+            (lambda: "foo" < None, r"'<' .* of 'str' and 'NoneType'"),
+            (lambda: "foo" >= 666, r"'>=' .* of 'str' and 'int'"),
+            (lambda: 42 <= None, r"'<=' .* of 'int' and 'NoneType'"),
+            (lambda: 42 >= None, r"'>=' .* of 'int' and 'NoneType'"),
+            (lambda: 42 < [], r"'<' .* of 'int' and 'list'"),
+            (lambda: () > [], r"'>' .* of 'tuple' and 'list'"),
+            (lambda: None >= None, r"'>=' .* of 'NoneType' and 'NoneType'"),
+            (lambda: Spam() < 42, r"'<' .* of 'Spam' and 'int'"),
+            (lambda: 42 < Spam(), r"'<' .* of 'int' and 'Spam'"),
+            (lambda: Spam() <= Spam(), r"'<=' .* of 'Spam' and 'Spam'"),
+        ]
+        for i, test in enumerate(tests):
+            with self.subTest(test=i):
+                with self.assertRaisesRegex(TypeError, test[1]):
+                    test[0]()
+
 
 class DictTest(unittest.TestCase):
 
@@ -326,8 +351,5 @@ class ListTest(unittest.TestCase):
             self.assertIs(op(x, y), True)
 
 
-def test_main():
-    support.run_unittest(VectorTest, NumberTest, MiscTest, DictTest, ListTest)
-
 if __name__ == "__main__":
-    test_main()
+    unittest.main()

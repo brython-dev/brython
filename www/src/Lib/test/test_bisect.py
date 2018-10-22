@@ -7,7 +7,7 @@ py_bisect = support.import_fresh_module('bisect', blocked=['_bisect'])
 c_bisect = support.import_fresh_module('bisect', fresh=['_bisect'])
 
 class Range(object):
-    """A trivial range()-like object without any integer width limitations."""
+    """A trivial range()-like object that has an insert() method."""
     def __init__(self, start, stop):
         self.start = start
         self.stop = stop
@@ -120,10 +120,10 @@ class TestBisect:
     def test_negative_lo(self):
         # Issue 3301
         mod = self.module
-        self.assertRaises(ValueError, mod.bisect_left, [1, 2, 3], 5, -1, 3),
-        self.assertRaises(ValueError, mod.bisect_right, [1, 2, 3], 5, -1, 3),
-        self.assertRaises(ValueError, mod.insort_left, [1, 2, 3], 5, -1, 3),
-        self.assertRaises(ValueError, mod.insort_right, [1, 2, 3], 5, -1, 3),
+        self.assertRaises(ValueError, mod.bisect_left, [1, 2, 3], 5, -1, 3)
+        self.assertRaises(ValueError, mod.bisect_right, [1, 2, 3], 5, -1, 3)
+        self.assertRaises(ValueError, mod.insort_left, [1, 2, 3], 5, -1, 3)
+        self.assertRaises(ValueError, mod.insort_right, [1, 2, 3], 5, -1, 3)
 
     def test_large_range(self):
         # Issue 13496

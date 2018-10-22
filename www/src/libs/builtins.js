@@ -27,7 +27,9 @@ var $module = (function(){
     'memoryview', 'min', 'next', 'object', 'oct', 'open', 'ord', 'pow', 'print',
     'property', 'quit', 'range', 'repr', 'reversed', 'round', 'set', 'setattr',
     'slice', 'sorted', 'staticmethod', 'str', 'sum', 'super', 'tuple', 'type',
-    'vars', 'zip']
+    'vars', 'zip',
+    '__newobj__' // defined in py_objects.js ; required for pickle
+    ]
     for(var i = 0, len = builtin_names.length; i < len; i++){
         try{eval("obj['" + builtin_names[i] + "'] = __BRYTHON__.builtins." +
             builtin_names[i])}

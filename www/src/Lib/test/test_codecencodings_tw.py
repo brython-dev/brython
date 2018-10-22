@@ -1,10 +1,8 @@
-#!/usr/bin/env python3
 #
 # test_codecencodings_tw.py
 #   Codec encoding tests for ROC encodings.
 #
 
-from test import support
 from test import multibytecodec_support
 import unittest
 
@@ -20,8 +18,5 @@ class Test_Big5(multibytecodec_support.TestBase, unittest.TestCase):
         (b"abc\x80\x80\xc1\xc4", "ignore",  "abc\u8b10"),
     )
 
-def test_main():
-    support.run_unittest(__name__)
-
 if __name__ == "__main__":
-    test_main()
+    unittest.main()

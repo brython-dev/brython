@@ -113,8 +113,7 @@ class ImportsFinder(ast.NodeVisitor):
                 if name.name != "*":
                     self.imports.add('{}{}.{}'.format(package, node.module,
                         name.name))
-
-
+        
 class ModulesFinder:
 
     def __init__(self, directory=os.getcwd()):
@@ -219,7 +218,6 @@ class ModulesFinder:
                 pkg = '.'.join(elts[:i])
                 if not pkg in vfs:
                     vfs[pkg] = dico[pkg]
-
         # save in brython_modules.js
         path = os.path.join(stdlib_dir, "brython_modules.js")
         print('Saving in %s' % path)
@@ -404,7 +402,8 @@ for dirname, dirnames, filenames in os.walk(os.getcwd()):
             with open(path, encoding="utf-8") as fobj:
                 src = fobj.read()
             mf = ModulesFinder(dirname)
-            imports = sorted(list(mf.get_imports(src)))
+            imports = mf.get_imports(src, package or None)
+            imports = sorted(list(imports))
             user_modules[module_name] = [ext, src, imports]
             if module_name == package:
                 user_modules[module_name].append(1)
@@ -513,3 +512,4 @@ if __name__ == "__main__":
     finder = ModulesFinder()
     finder.inspect()
     print(sorted(list(finder.modules)))
+

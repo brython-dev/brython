@@ -1,17 +1,23 @@
-from test.support import findfile, TESTFN, unlink
+from test.support import check_no_resource_warning, findfile, TESTFN, unlink
 import unittest
+from unittest import mock
 from test import audiotests
-import os
+from audioop import byteswap
 import io
 import sys
 import struct
 import aifc
+import warnings
 
 
-class AifcPCM8Test(audiotests.AudioWriteTests,
-        audiotests.AudioTestsWithSourceFile,
-        unittest.TestCase):
+class AifcTest(audiotests.AudioWriteTests,
+               audiotests.AudioTestsWithSourceFile):
     module = aifc
+    close_fd = True
+    test_unseekable_read = None
+
+
+class AifcPCM8Test(AifcTest, unittest.TestCase):
     sndfilename = 'pluck-pcm8.aiff'
     sndfilenframes = 3307
     nchannels = 2
@@ -26,13 +32,9 @@ class AifcPCM8Test(audiotests.AudioWriteTests,
       11FA 3EFB BCFC 66FF CF04 4309 C10E 5112 EE17 8216 7F14 8012 \
       490E 520D EF0F CE0F E40C 630A 080A 2B0B 510E 8B11 B60E 440A \
       """)
-    close_fd = True
 
 
-class AifcPCM16Test(audiotests.AudioWriteTests,
-        audiotests.AudioTestsWithSourceFile,
-        unittest.TestCase):
-    module = aifc
+class AifcPCM16Test(AifcTest, unittest.TestCase):
     sndfilename = 'pluck-pcm16.aiff'
     sndfilenframes = 3307
     nchannels = 2
@@ -49,13 +51,9 @@ class AifcPCM16Test(audiotests.AudioWriteTests,
       EEE21753 82071665 7FFF1443 8004128F 49A20EAF 52BB0DBA EFB40F60 CE3C0FBF \
       E4B30CEC 63430A5C 08C80A20 2BBB0B08 514A0E43 8BCF1139 B6F60EEB 44120A5E \
       """)
-    close_fd = True
 
 
-class AifcPCM24Test(audiotests.AudioWriteTests,
-        audiotests.AudioTestsWithSourceFile,
-        unittest.TestCase):
-    module = aifc
+class AifcPCM24Test(AifcTest, unittest.TestCase):
     sndfilename = 'pluck-pcm24.aiff'
     sndfilenframes = 3307
     nchannels = 2
@@ -78,13 +76,9 @@ class AifcPCM24Test(audiotests.AudioWriteTests,
       E4B49C0CEA2D 6344A80A5A7C 08C8FE0A1FFE 2BB9860B0A0E \
       51486F0E44E1 8BCC64113B05 B6F4EC0EEB36 4413170A5B48 \
       """)
-    close_fd = True
 
 
-class AifcPCM32Test(audiotests.AudioWriteTests,
-        audiotests.AudioTestsWithSourceFile,
-        unittest.TestCase):
-    module = aifc
+class AifcPCM32Test(AifcTest, unittest.TestCase):
     sndfilename = 'pluck-pcm32.aiff'
     sndfilenframes = 3307
     nchannels = 2
@@ -107,13 +101,9 @@ class AifcPCM32Test(audiotests.AudioWriteTests,
       E4B49CC00CEA2D90 6344A8800A5A7CA0 08C8FE800A1FFEE0 2BB986C00B0A0E00 \
       51486F800E44E190 8BCC6480113B0580 B6F4EC000EEB3630 441317800A5B48A0 \
       """)
-    close_fd = True
 
 
-class AifcULAWTest(audiotests.AudioWriteTests,
-        audiotests.AudioTestsWithSourceFile,
-        unittest.TestCase):
-    module = aifc
+class AifcULAWTest(AifcTest, unittest.TestCase):
     sndfilename = 'pluck-ulaw.aifc'
     sndfilenframes = 3307
     nchannels = 2
@@ -131,14 +121,10 @@ class AifcULAWTest(audiotests.AudioWriteTests,
       E5040CBC 617C0A3C 08BC0A3C 2C7C0B3C 517C0E3C 8A8410FC B6840EBC 457C0A3C \
       """)
     if sys.byteorder != 'big':
-        frames = audiotests.byteswap2(frames)
-    close_fd = True
+        frames = byteswap(frames, 2)
 
 
-class AifcALAWTest(audiotests.AudioWriteTests,
-        audiotests.AudioTestsWithSourceFile,
-        unittest.TestCase):
-    module = aifc
+class AifcALAWTest(AifcTest, unittest.TestCase):
     sndfilename = 'pluck-alaw.aifc'
     sndfilenframes = 3307
     nchannels = 2
@@ -156,15 +142,46 @@ class AifcALAWTest(audiotests.AudioWriteTests,
       E4800CC0 62000A40 08C00A40 2B000B40 52000E40 8A001180 B6000EC0 46000A40 \
       """)
     if sys.byteorder != 'big':
-        frames = audiotests.byteswap2(frames)
-    close_fd = True
+        frames = byteswap(frames, 2)
 
 
-class AifcMiscTest(audiotests.AudioTests, unittest.TestCase):
+class AifcMiscTest(audiotests.AudioMiscTests, unittest.TestCase):
+    module = aifc
+
     def test_skipunknown(self):
         #Issue 2245
         #This file contains chunk types aifc doesn't recognize.
         self.f = aifc.open(findfile('Sine-1000Hz-300ms.aif'))
+
+    def test_close_opened_files_on_error(self):
+        non_aifc_file = findfile('pluck-pcm8.wav', subdir='audiodata')
+        with check_no_resource_warning(self):
+            with self.assertRaises(aifc.Error):
+                # Try opening a non-AIFC file, with the expectation that
+                # `aifc.open` will fail (without raising a ResourceWarning)
+                self.f = aifc.open(non_aifc_file, 'rb')
+
+            # Aifc_write.initfp() won't raise in normal case.  But some errors
+            # (e.g. MemoryError, KeyboardInterrupt, etc..) can happen.
+            with mock.patch.object(aifc.Aifc_write, 'initfp',
+                                   side_effect=RuntimeError):
+                with self.assertRaises(RuntimeError):
+                    self.fout = aifc.open(TESTFN, 'wb')
+
+    def test_params_added(self):
+        f = self.f = aifc.open(TESTFN, 'wb')
+        f.aiff()
+        f.setparams((1, 1, 1, 1, b'NONE', b''))
+        f.close()
+
+        f = self.f = aifc.open(TESTFN, 'rb')
+        params = f.getparams()
+        self.assertEqual(params.nchannels, f.getnchannels())
+        self.assertEqual(params.sampwidth, f.getsampwidth())
+        self.assertEqual(params.framerate, f.getframerate())
+        self.assertEqual(params.nframes, f.getnframes())
+        self.assertEqual(params.comptype, f.getcomptype())
+        self.assertEqual(params.compname, f.getcompname())
 
     def test_write_header_comptype_sampwidth(self):
         for comptype in (b'ULAW', b'ulaw', b'ALAW', b'alaw', b'G722'):
@@ -249,15 +266,46 @@ class AIFCLowLevelTest(unittest.TestCase):
         b = io.BytesIO(b'FORM' + struct.pack('>L', 4) + b'AIFF')
         self.assertRaises(aifc.Error, aifc.open, b)
 
+    def test_read_no_ssnd_chunk(self):
+        b = b'FORM' + struct.pack('>L', 4) + b'AIFC'
+        b += b'COMM' + struct.pack('>LhlhhLL', 38, 1, 0, 8,
+                                   0x4000 | 12, 11025<<18, 0)
+        b += b'NONE' + struct.pack('B', 14) + b'not compressed' + b'\x00'
+        with self.assertRaisesRegex(aifc.Error, 'COMM chunk and/or SSND chunk'
+                                                ' missing'):
+            aifc.open(io.BytesIO(b))
+
     def test_read_wrong_compression_type(self):
         b = b'FORM' + struct.pack('>L', 4) + b'AIFC'
-        b += b'COMM' + struct.pack('>LhlhhLL', 23, 0, 0, 0, 0, 0, 0)
+        b += b'COMM' + struct.pack('>LhlhhLL', 23, 1, 0, 8,
+                                   0x4000 | 12, 11025<<18, 0)
         b += b'WRNG' + struct.pack('B', 0)
         self.assertRaises(aifc.Error, aifc.open, io.BytesIO(b))
 
+    def test_read_wrong_number_of_channels(self):
+        for nchannels in 0, -1:
+            b = b'FORM' + struct.pack('>L', 4) + b'AIFC'
+            b += b'COMM' + struct.pack('>LhlhhLL', 38, nchannels, 0, 8,
+                                       0x4000 | 12, 11025<<18, 0)
+            b += b'NONE' + struct.pack('B', 14) + b'not compressed' + b'\x00'
+            b += b'SSND' + struct.pack('>L', 8) + b'\x00' * 8
+            with self.assertRaisesRegex(aifc.Error, 'bad # of channels'):
+                aifc.open(io.BytesIO(b))
+
+    def test_read_wrong_sample_width(self):
+        for sampwidth in 0, -1:
+            b = b'FORM' + struct.pack('>L', 4) + b'AIFC'
+            b += b'COMM' + struct.pack('>LhlhhLL', 38, 1, 0, sampwidth,
+                                       0x4000 | 12, 11025<<18, 0)
+            b += b'NONE' + struct.pack('B', 14) + b'not compressed' + b'\x00'
+            b += b'SSND' + struct.pack('>L', 8) + b'\x00' * 8
+            with self.assertRaisesRegex(aifc.Error, 'bad sample width'):
+                aifc.open(io.BytesIO(b))
+
     def test_read_wrong_marks(self):
         b = b'FORM' + struct.pack('>L', 4) + b'AIFF'
-        b += b'COMM' + struct.pack('>LhlhhLL', 18, 0, 0, 0, 0, 0, 0)
+        b += b'COMM' + struct.pack('>LhlhhLL', 18, 1, 0, 8,
+                                   0x4000 | 12, 11025<<18, 0)
         b += b'SSND' + struct.pack('>L', 8) + b'\x00' * 8
         b += b'MARK' + struct.pack('>LhB', 3, 1, 1)
         with self.assertWarns(UserWarning) as cm:
@@ -268,7 +316,8 @@ class AIFCLowLevelTest(unittest.TestCase):
 
     def test_read_comm_kludge_compname_even(self):
         b = b'FORM' + struct.pack('>L', 4) + b'AIFC'
-        b += b'COMM' + struct.pack('>LhlhhLL', 18, 0, 0, 0, 0, 0, 0)
+        b += b'COMM' + struct.pack('>LhlhhLL', 18, 1, 0, 8,
+                                   0x4000 | 12, 11025<<18, 0)
         b += b'NONE' + struct.pack('B', 4) + b'even' + b'\x00'
         b += b'SSND' + struct.pack('>L', 8) + b'\x00' * 8
         with self.assertWarns(UserWarning) as cm:
@@ -278,7 +327,8 @@ class AIFCLowLevelTest(unittest.TestCase):
 
     def test_read_comm_kludge_compname_odd(self):
         b = b'FORM' + struct.pack('>L', 4) + b'AIFC'
-        b += b'COMM' + struct.pack('>LhlhhLL', 18, 0, 0, 0, 0, 0, 0)
+        b += b'COMM' + struct.pack('>LhlhhLL', 18, 1, 0, 8,
+                                   0x4000 | 12, 11025<<18, 0)
         b += b'NONE' + struct.pack('B', 3) + b'odd'
         b += b'SSND' + struct.pack('>L', 8) + b'\x00' * 8
         with self.assertWarns(UserWarning) as cm:
@@ -369,12 +419,14 @@ class AIFCLowLevelTest(unittest.TestCase):
 
     def test_write_aiff_by_extension(self):
         sampwidth = 2
-        fout = self.fout = aifc.open(TESTFN + '.aiff', 'wb')
+        filename = TESTFN + '.aiff'
+        fout = self.fout = aifc.open(filename, 'wb')
+        self.addCleanup(unlink, filename)
         fout.setparams((1, sampwidth, 1, 1, b'ULAW', b''))
         frames = b'\x00' * fout.getnchannels() * sampwidth
         fout.writeframes(frames)
         fout.close()
-        f = self.f = aifc.open(TESTFN + '.aiff', 'rb')
+        f = self.f = aifc.open(filename, 'rb')
         self.assertEqual(f.getcomptype(), b'NONE')
         f.close()
 

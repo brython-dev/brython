@@ -1,6 +1,6 @@
 import unittest
 
-from .support import LoggingResult
+from unittest.test.support import LoggingResult
 
 
 class Test_TestSkipping(unittest.TestCase):
@@ -28,6 +28,31 @@ class Test_TestSkipping(unittest.TestCase):
         self.assertEqual(events, ['startTest', 'addSkip', 'stopTest'])
         self.assertEqual(result.skipped, [(test, "testing")])
         self.assertEqual(result.testsRun, 1)
+
+    def test_skipping_subtests(self):
+        class Foo(unittest.TestCase):
+            def test_skip_me(self):
+                with self.subTest(a=1):
+                    with self.subTest(b=2):
+                        self.skipTest("skip 1")
+                    self.skipTest("skip 2")
+                self.skipTest("skip 3")
+        events = []
+        result = LoggingResult(events)
+        test = Foo("test_skip_me")
+        test.run(result)
+        self.assertEqual(events, ['startTest', 'addSkip', 'addSkip',
+                                  'addSkip', 'stopTest'])
+        self.assertEqual(len(result.skipped), 3)
+        subtest, msg = result.skipped[0]
+        self.assertEqual(msg, "skip 1")
+        self.assertIsInstance(subtest, unittest.TestCase)
+        self.assertIsNot(subtest, test)
+        subtest, msg = result.skipped[1]
+        self.assertEqual(msg, "skip 2")
+        self.assertIsInstance(subtest, unittest.TestCase)
+        self.assertIsNot(subtest, test)
+        self.assertEqual(result.skipped[2], (test, "skip 3"))
 
     def test_skipping_decorators(self):
         op_table = ((unittest.skipUnless, False, True),
@@ -95,6 +120,64 @@ class Test_TestSkipping(unittest.TestCase):
         self.assertEqual(result.expectedFailures[0][0], test)
         self.assertTrue(result.wasSuccessful())
 
+    def test_expected_failure_with_wrapped_class(self):
+        @unittest.expectedFailure
+        class Foo(unittest.TestCase):
+            def test_1(self):
+                self.assertTrue(False)
+
+        events = []
+        result = LoggingResult(events)
+        test = Foo("test_1")
+        test.run(result)
+        self.assertEqual(events,
+                         ['startTest', 'addExpectedFailure', 'stopTest'])
+        self.assertEqual(result.expectedFailures[0][0], test)
+        self.assertTrue(result.wasSuccessful())
+
+    def test_expected_failure_with_wrapped_subclass(self):
+        class Foo(unittest.TestCase):
+            def test_1(self):
+                self.assertTrue(False)
+
+        @unittest.expectedFailure
+        class Bar(Foo):
+            pass
+
+        events = []
+        result = LoggingResult(events)
+        test = Bar("test_1")
+        test.run(result)
+        self.assertEqual(events,
+                         ['startTest', 'addExpectedFailure', 'stopTest'])
+        self.assertEqual(result.expectedFailures[0][0], test)
+        self.assertTrue(result.wasSuccessful())
+
+    def test_expected_failure_subtests(self):
+        # A failure in any subtest counts as the expected failure of the
+        # whole test.
+        class Foo(unittest.TestCase):
+            @unittest.expectedFailure
+            def test_die(self):
+                with self.subTest():
+                    # This one succeeds
+                    pass
+                with self.subTest():
+                    self.fail("help me!")
+                with self.subTest():
+                    # This one doesn't get executed
+                    self.fail("shouldn't come here")
+        events = []
+        result = LoggingResult(events)
+        test = Foo("test_die")
+        test.run(result)
+        self.assertEqual(events,
+                         ['startTest', 'addSubTestSuccess',
+                          'addExpectedFailure', 'stopTest'])
+        self.assertEqual(len(result.expectedFailures), 1)
+        self.assertIs(result.expectedFailures[0][0], test)
+        self.assertTrue(result.wasSuccessful())
+
     def test_unexpected_success(self):
         class Foo(unittest.TestCase):
             @unittest.expectedFailure
@@ -108,7 +191,31 @@ class Test_TestSkipping(unittest.TestCase):
                          ['startTest', 'addUnexpectedSuccess', 'stopTest'])
         self.assertFalse(result.failures)
         self.assertEqual(result.unexpectedSuccesses, [test])
-        self.assertTrue(result.wasSuccessful())
+        self.assertFalse(result.wasSuccessful())
+
+    def test_unexpected_success_subtests(self):
+        # Success in all subtests counts as the unexpected success of
+        # the whole test.
+        class Foo(unittest.TestCase):
+            @unittest.expectedFailure
+            def test_die(self):
+                with self.subTest():
+                    # This one succeeds
+                    pass
+                with self.subTest():
+                    # So does this one
+                    pass
+        events = []
+        result = LoggingResult(events)
+        test = Foo("test_die")
+        test.run(result)
+        self.assertEqual(events,
+                         ['startTest',
+                          'addSubTestSuccess', 'addSubTestSuccess',
+                          'addUnexpectedSuccess', 'stopTest'])
+        self.assertFalse(result.failures)
+        self.assertEqual(result.unexpectedSuccesses, [test])
+        self.assertFalse(result.wasSuccessful())
 
     def test_skip_doesnt_run_setup(self):
         class Foo(unittest.TestCase):
@@ -147,3 +254,7 @@ class Test_TestSkipping(unittest.TestCase):
         suite = unittest.TestSuite([test])
         suite.run(result)
         self.assertEqual(result.skipped, [(test, "testing")])
+
+
+if __name__ == "__main__":
+    unittest.main()

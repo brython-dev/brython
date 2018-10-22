@@ -86,8 +86,8 @@ tests = [
     (r'\a[\b]\f\n\r\t\v', '\a\b\f\n\r\t\v', SUCCEED, 'found', '\a\b\f\n\r\t\v'),
     (r'[\a][\b][\f][\n][\r][\t][\v]', '\a\b\f\n\r\t\v', SUCCEED, 'found', '\a\b\f\n\r\t\v'),
     # NOTE: not an error under PCRE/PRE:
-    # (r'\u', '', SYNTAX_ERROR),    # A Perl escape
-    (r'\c\e\g\h\i\j\k\m\o\p\q\y\z', 'ceghijkmopqyz', SUCCEED, 'found', 'ceghijkmopqyz'),
+    (r'\u', '', SYNTAX_ERROR),    # A Perl escape
+    # (r'\c\e\g\h\i\j\k\m\o\p\q\y\z', 'ceghijkmopqyz', SUCCEED, 'found', 'ceghijkmopqyz'),
     (r'\xff', '\377', SUCCEED, 'found', chr(255)),
     # new \x semantics
     (r'\x00ffffffffffffff', '\377', FAIL, 'found', chr(255)),
@@ -106,8 +106,8 @@ tests = [
     ('a.*b', 'acc\nccb', FAIL),
     ('a.{4,5}b', 'acc\nccb', FAIL),
     ('a.b', 'a\rb', SUCCEED, 'found', 'a\rb'),
-    ('a.b(?s)', 'a\nb', SUCCEED, 'found', 'a\nb'),
-    ('a.*(?s)b', 'acc\nccb', SUCCEED, 'found', 'acc\nccb'),
+    ('(?s)a.b', 'a\nb', SUCCEED, 'found', 'a\nb'),
+    ('(?s)a.*b', 'acc\nccb', SUCCEED, 'found', 'acc\nccb'),
     ('(?s)a.{4,5}b', 'acc\nccb', SUCCEED, 'found', 'acc\nccb'),
     ('(?s)a.b', 'a\nb', SUCCEED, 'found', 'a\nb'),
 
@@ -158,7 +158,7 @@ tests = [
     ('(abc', '-', SYNTAX_ERROR),
     ('a]', 'a]', SUCCEED, 'found', 'a]'),
     ('a[]]b', 'a]b', SUCCEED, 'found', 'a]b'),
-    ('a[\]]b', 'a]b', SUCCEED, 'found', 'a]b'),
+    ('a[\\]]b', 'a]b', SUCCEED, 'found', 'a]b'),
     ('a[^bc]d', 'aed', SUCCEED, 'found', 'aed'),
     ('a[^bc]d', 'abd', FAIL),
     ('a[^-b]c', 'adc', SUCCEED, 'found', 'adc'),
@@ -551,7 +551,7 @@ tests = [
     # lookbehind: split by : but not if it is escaped by -.
     ('(?<!-):(.*?)(?<!-):', 'a:bc-:de:f', SUCCEED, 'g1', 'bc-:de' ),
     # escaping with \ as we know it
-    ('(?<!\\\):(.*?)(?<!\\\):', 'a:bc\\:de:f', SUCCEED, 'g1', 'bc\\:de' ),
+    ('(?<!\\\\):(.*?)(?<!\\\\):', 'a:bc\\:de:f', SUCCEED, 'g1', 'bc\\:de' ),
     # terminating with ' and escaping with ? as in edifact
     ("(?<!\\?)'(.*?)(?<!\\?)'", "a'bc?'de'f", SUCCEED, 'g1', "bc?'de" ),
 
@@ -563,7 +563,7 @@ tests = [
     # Check odd placement of embedded pattern modifiers
 
     # not an error under PCRE/PRE:
-    ('w(?i)', 'W', SUCCEED, 'found', 'W'),
+    ('(?i)w', 'W', SUCCEED, 'found', 'W'),
     # ('w(?i)', 'W', SYNTAX_ERROR),
 
     # Comments using the x embedded pattern modifier
@@ -607,8 +607,8 @@ xyzabc
     # new \x semantics
     (r'\x00ff', '\377', FAIL),
     # (r'\x00ff', '\377', SUCCEED, 'found', chr(255)),
-    (r'\t\n\v\r\f\a\g', '\t\n\v\r\f\ag', SUCCEED, 'found', '\t\n\v\r\f\ag'),
-    ('\t\n\v\r\f\a\g', '\t\n\v\r\f\ag', SUCCEED, 'found', '\t\n\v\r\f\ag'),
+    (r'\t\n\v\r\f\a', '\t\n\v\r\f\a', SUCCEED, 'found', '\t\n\v\r\f\a'),
+    ('\t\n\v\r\f\a', '\t\n\v\r\f\a', SUCCEED, 'found', '\t\n\v\r\f\a'),
     (r'\t\n\v\r\f\a', '\t\n\v\r\f\a', SUCCEED, 'found', chr(9)+chr(10)+chr(11)+chr(13)+chr(12)+chr(7)),
     (r'[\t][\n][\v][\r][\f][\b]', '\t\n\v\r\f\b', SUCCEED, 'found', '\t\n\v\r\f\b'),
 
@@ -627,7 +627,7 @@ xyzabc
     # bug 114033: nothing to repeat
     (r'(x?)?', 'x', SUCCEED, 'found', 'x'),
     # bug 115040: rescan if flags are modified inside pattern
-    (r' (?x)foo ', 'foo', SUCCEED, 'found', 'foo'),
+    (r'(?x) foo ', 'foo', SUCCEED, 'found', 'foo'),
     # bug 115618: negative lookahead
     (r'(?<!abc)(d.f)', 'abcdefdof', SUCCEED, 'found', 'dof'),
     # bug 116251: character class bug

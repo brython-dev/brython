@@ -1,19 +1,19 @@
 """Unittests for heapq."""
 
-import sys
 import random
 import unittest
 
 from test import support
 from unittest import TestCase, skipUnless
+from operator import itemgetter
 
 py_heapq = support.import_fresh_module('heapq', blocked=['_heapq'])
 c_heapq = support.import_fresh_module('heapq', fresh=['_heapq'])
 
 # _heapq.nlargest/nsmallest are saved in heapq._nlargest/_smallest when
 # _heapq is imported, so check them there
-func_names = ['heapify', 'heappop', 'heappush', 'heappushpop',
-              'heapreplace', '_nlargest', '_nsmallest']
+func_names = ['heapify', 'heappop', 'heappush', 'heappushpop', 'heapreplace',
+              '_heappop_max', '_heapreplace_max', '_heapify_max']
 
 class TestModules(TestCase):
     def test_py_functions(self):
@@ -64,7 +64,7 @@ class TestHeap:
                 self.assertTrue(heap[parentpos] <= item)
 
     def test_heapify(self):
-        for size in range(30):
+        for size in list(range(30)) + [20000]:
             heap = [random.random() for dummy in range(size)]
             self.module.heapify(heap)
             self.check_invariant(heap)
@@ -152,11 +152,21 @@ class TestHeap:
 
     def test_merge(self):
         inputs = []
-        for i in range(random.randrange(5)):
-            row = sorted(random.randrange(1000) for j in range(random.randrange(10)))
+        for i in range(random.randrange(25)):
+            row = []
+            for j in range(random.randrange(100)):
+                tup = random.choice('ABC'), random.randrange(-500, 500)
+                row.append(tup)
             inputs.append(row)
-        self.assertEqual(sorted(chain(*inputs)), list(self.module.merge(*inputs)))
-        self.assertEqual(list(self.module.merge()), [])
+
+        for key in [None, itemgetter(0), itemgetter(1), itemgetter(1, 0)]:
+            for reverse in [False, True]:
+                seqs = []
+                for seq in inputs:
+                    seqs.append(sorted(seq, key=key, reverse=reverse))
+                self.assertEqual(sorted(chain(*inputs), key=key, reverse=reverse),
+                                 list(self.module.merge(*seqs, key=key, reverse=reverse)))
+                self.assertEqual(list(self.module.merge()), [])
 
     def test_merge_does_not_suppress_index_error(self):
         # Issue 19018: Heapq.merge suppresses IndexError from user generator

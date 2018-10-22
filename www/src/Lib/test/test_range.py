@@ -1,8 +1,6 @@
 # Python test set -- built-in functions
 
 import unittest
-from test import support
-
 import sys
 import pickle
 import itertools
@@ -100,20 +98,24 @@ class RangeTest(unittest.TestCase):
         x = range(10**20+10, 10**20, 3)
         self.assertEqual(len(x), 0)
         self.assertEqual(len(list(x)), 0)
+        self.assertFalse(x)
 
         x = range(10**20, 10**20+10, -3)
         self.assertEqual(len(x), 0)
         self.assertEqual(len(list(x)), 0)
+        self.assertFalse(x)
 
         x = range(10**20+10, 10**20, -3)
         self.assertEqual(len(x), 4)
         self.assertEqual(len(list(x)), 4)
+        self.assertTrue(x)
 
         # Now test range() with longs
-        self.assertEqual(list(range(-2**100)), [])
-        self.assertEqual(list(range(0, -2**100)), [])
-        self.assertEqual(list(range(0, 2**100, -1)), [])
-        self.assertEqual(list(range(0, 2**100, -1)), [])
+        for x in [range(-2**100),
+                  range(0, -2**100),
+                  range(0, 2**100, -1)]:
+            self.assertEqual(list(x), [])
+            self.assertFalse(x)
 
         a = int(10 * sys.maxsize)
         b = int(100 * sys.maxsize)
@@ -154,13 +156,15 @@ class RangeTest(unittest.TestCase):
                 step = x[1] - x[0]
                 length = 1 + ((x[-1] - x[0]) // step)
             return length
+
         a = -sys.maxsize
         b = sys.maxsize
         expected_len = b - a
         x = range(a, b)
         self.assertIn(a, x)
         self.assertNotIn(b, x)
-        #self.assertRaises(OverflowError, len, x)
+        self.assertRaises(OverflowError, len, x)
+        self.assertTrue(x)
         self.assertEqual(_range_len(x), expected_len)
         self.assertEqual(x[0], a)
         idx = sys.maxsize+1
@@ -177,7 +181,8 @@ class RangeTest(unittest.TestCase):
         x = range(a, b)
         self.assertIn(a, x)
         self.assertNotIn(b, x)
-        #self.assertRaises(OverflowError, len, x)
+        self.assertRaises(OverflowError, len, x)
+        self.assertTrue(x)
         self.assertEqual(_range_len(x), expected_len)
         self.assertEqual(x[0], a)
         idx = sys.maxsize+1
@@ -195,7 +200,8 @@ class RangeTest(unittest.TestCase):
         x = range(a, b, c)
         self.assertIn(a, x)
         self.assertNotIn(b, x)
-        #self.assertRaises(OverflowError, len, x)
+        self.assertRaises(OverflowError, len, x)
+        self.assertTrue(x)
         self.assertEqual(_range_len(x), expected_len)
         self.assertEqual(x[0], a)
         idx = sys.maxsize+1
@@ -213,7 +219,8 @@ class RangeTest(unittest.TestCase):
         x = range(a, b, c)
         self.assertIn(a, x)
         self.assertNotIn(b, x)
-        #self.assertRaises(OverflowError, len, x)
+        self.assertRaises(OverflowError, len, x)
+        self.assertTrue(x)
         self.assertEqual(_range_len(x), expected_len)
         self.assertEqual(x[0], a)
         idx = sys.maxsize+1
@@ -315,7 +322,7 @@ class RangeTest(unittest.TestCase):
         self.assertRaises(TypeError, range, IN())
 
         # Test use of user-defined classes in slice indices.
-        self.assertEqual(list(range(10)[:I(5)]), list(range(5)))
+        self.assertEqual(range(10)[:I(5)], range(5))
 
         with self.assertRaises(RuntimeError):
             range(0, 10)[:IX()]
@@ -350,16 +357,17 @@ class RangeTest(unittest.TestCase):
         self.assertEqual(repr(range(1, 2)), 'range(1, 2)')
         self.assertEqual(repr(range(1, 2, 3)), 'range(1, 2, 3)')
 
-    def _test_pickling(self):
+    def test_pickling(self):
         testcases = [(13,), (0, 11), (-22, 10), (20, 3, -1),
                      (13, 21, 3), (-2, 2, 2), (2**65, 2**65+2)]
         for proto in range(pickle.HIGHEST_PROTOCOL + 1):
             for t in testcases:
-                r = range(*t)
-                self.assertEqual(list(pickle.loads(pickle.dumps(r, proto))),
-                                 list(r))
+                with self.subTest(proto=proto, test=t):
+                    r = range(*t)
+                    self.assertEqual(list(pickle.loads(pickle.dumps(r, proto))),
+                                     list(r))
 
-    def _test_iterator_pickling(self):
+    def test_iterator_pickling(self):
         testcases = [(13,), (0, 11), (-22, 10), (20, 3, -1),
                      (13, 21, 3), (-2, 2, 2), (2**65, 2**65+2)]
         for proto in range(pickle.HIGHEST_PROTOCOL + 1):
@@ -367,7 +375,7 @@ class RangeTest(unittest.TestCase):
                 it = itorg = iter(range(*t))
                 data = list(range(*t))
 
-                d = pickle.dumps(it)
+                d = pickle.dumps(it, proto)
                 it = pickle.loads(d)
                 self.assertEqual(type(itorg), type(it))
                 self.assertEqual(list(it), data)
@@ -377,9 +385,35 @@ class RangeTest(unittest.TestCase):
                     next(it)
                 except StopIteration:
                     continue
-                d = pickle.dumps(it)
+                d = pickle.dumps(it, proto)
                 it = pickle.loads(d)
                 self.assertEqual(list(it), data[1:])
+
+    def test_exhausted_iterator_pickling(self):
+        for proto in range(pickle.HIGHEST_PROTOCOL + 1):
+            r = range(2**65, 2**65+2)
+            i = iter(r)
+            while True:
+                r = next(i)
+                if r == 2**65+1:
+                    break
+            d = pickle.dumps(i, proto)
+            i2 = pickle.loads(d)
+            self.assertEqual(list(i), [])
+            self.assertEqual(list(i2), [])
+
+    def test_large_exhausted_iterator_pickling(self):
+        for proto in range(pickle.HIGHEST_PROTOCOL + 1):
+            r = range(20)
+            i = iter(r)
+            while True:
+                r = next(i)
+                if r == 19:
+                    break
+            d = pickle.dumps(i, proto)
+            i2 = pickle.loads(d)
+            self.assertEqual(list(i), [])
+            self.assertEqual(list(i2), [])
 
     def test_odd_bug(self):
         # This used to raise a "SystemError: NULL result without error"
@@ -467,6 +501,14 @@ class RangeTest(unittest.TestCase):
             iter2 = pyrange_reversed(start, end, step)
             test_id = "reversed(range({}, {}, {}))".format(start, end, step)
             self.assert_iterators_equal(iter1, iter2, test_id, limit=100)
+
+    def test_range_iterators_invocation(self):
+        # verify range iterators instances cannot be created by
+        # calling their type
+        rangeiter_type = type(iter(range(0)))
+        self.assertRaises(TypeError, rangeiter_type, 1, 3, 1)
+        long_rangeiter_type = type(iter(range(1 << 1000)))
+        self.assertRaises(TypeError, long_rangeiter_type, 1, 3, 1)
 
     def test_slice(self):
         def check(start, stop, step=None):
@@ -622,9 +664,5 @@ class RangeTest(unittest.TestCase):
         with self.assertRaises(AttributeError):
             del rangeobj.step
 
-def test_main():
-    support.run_unittest(RangeTest)
-
 if __name__ == "__main__":
-    test_main()
-
+    unittest.main()

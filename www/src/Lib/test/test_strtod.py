@@ -248,6 +248,37 @@ class StrtodTests(unittest.TestCase):
                     else:
                         assert False, "expected ValueError"
 
+    @test.support.bigmemtest(size=test.support._2G+10, memuse=3, dry_run=False)
+    def test_oversized_digit_strings(self, maxsize):
+        # Input string whose length doesn't fit in an INT.
+        s = "1." + "1" * maxsize
+        with self.assertRaises(ValueError):
+            float(s)
+        del s
+
+        s = "0." + "0" * maxsize + "1"
+        with self.assertRaises(ValueError):
+            float(s)
+        del s
+
+    def test_large_exponents(self):
+        # Verify that the clipping of the exponent in strtod doesn't affect the
+        # output values.
+        def positive_exp(n):
+            """ Long string with value 1.0 and exponent n"""
+            return '0.{}1e+{}'.format('0'*(n-1), n)
+
+        def negative_exp(n):
+            """ Long string with value 1.0 and exponent -n"""
+            return '1{}e-{}'.format('0'*n, n)
+
+        self.assertEqual(float(positive_exp(10000)), 1.0)
+        self.assertEqual(float(positive_exp(20000)), 1.0)
+        self.assertEqual(float(positive_exp(30000)), 1.0)
+        self.assertEqual(float(negative_exp(10000)), 1.0)
+        self.assertEqual(float(negative_exp(20000)), 1.0)
+        self.assertEqual(float(negative_exp(30000)), 1.0)
+
     def test_particular(self):
         # inputs that produced crashes or incorrectly rounded results with
         # previous versions of dtoa.c, for various reasons
@@ -398,8 +429,5 @@ class StrtodTests(unittest.TestCase):
         for s in test_strings:
             self.check_strtod(s)
 
-def test_main():
-    test.support.run_unittest(StrtodTests)
-
 if __name__ == "__main__":
-    test_main()
+    unittest.main()

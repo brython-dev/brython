@@ -4,12 +4,11 @@ from test import support
 
 pwd = support.import_module('pwd')
 
+@unittest.skipUnless(hasattr(pwd, 'getpwall'), 'Does not have getpwall()')
 class PwdTest(unittest.TestCase):
 
     def test_values(self):
         entries = pwd.getpwall()
-        entriesbyname = {}
-        entriesbyuid = {}
 
         for e in entries:
             self.assertEqual(len(e), 7)
@@ -32,12 +31,19 @@ class PwdTest(unittest.TestCase):
             # for one uid
             #    self.assertEqual(pwd.getpwuid(e.pw_uid), e)
             # instead of this collect all entries for one uid
-            # and check afterwards
+            # and check afterwards (done in test_values_extended)
+
+    def test_values_extended(self):
+        entries = pwd.getpwall()
+        entriesbyname = {}
+        entriesbyuid = {}
+
+        if len(entries) > 1000:  # Huge passwd file (NIS?) -- skip this test
+            self.skipTest('passwd file is huge; extended test skipped')
+
+        for e in entries:
             entriesbyname.setdefault(e.pw_name, []).append(e)
             entriesbyuid.setdefault(e.pw_uid, []).append(e)
-
-        if len(entries) > 1000:  # Huge passwd file (NIS?) -- skip the rest
-            return
 
         # check whether the entry returned by getpwuid()
         # for each uid is among those from getpwall() for this uid
@@ -102,8 +108,5 @@ class PwdTest(unittest.TestCase):
         self.assertRaises(KeyError, pwd.getpwuid, 2**128)
         self.assertRaises(KeyError, pwd.getpwuid, -2**128)
 
-def test_main():
-    support.run_unittest(PwdTest)
-
 if __name__ == "__main__":
-    test_main()
+    unittest.main()

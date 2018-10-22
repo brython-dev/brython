@@ -37,6 +37,7 @@
 
 <script type="text/javascript" src="../src/builtin_modules.js"></script>
 <script type="text/javascript" src="../src/py_import_hooks.js"></script>
+<script type="text/javascript" src="../src/async.js"></script>
 
 <script type="text/javascript" src="../src/brython_stdlib.js"></script>
 
@@ -84,7 +85,6 @@ def set_debug(ev):
 __BRYTHON__.debug = int(doc['set_debug'].checked)
 
 # bindings
-doc['run_js'].bind('click', window.run_js)
 doc['set_debug'].bind('change',set_debug)
 
 # next functions are defined in editor.py
@@ -159,7 +159,6 @@ function run_js(){
 <div style="padding: 3px 3px 3px 3px;">
   <div style="float:left">
     <button id="run"> ▶ Run</button>
-    <button id="run_js"> ▶ Run Javascript</button>
     Debug<input type="checkbox" id="set_debug" checked>
   </div>
 

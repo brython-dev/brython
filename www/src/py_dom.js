@@ -2,10 +2,10 @@
 
 //eval($B.InjectBuiltins())
 
-var _b_ = $B.builtins,
-    object = _b_.object,
-    JSObject = $B.JSObject,
-    _window = self;
+var _b_ = $B.builtins;
+var object = _b_.object
+var JSObject = $B.JSObject
+var _window = self;
 
 // cross-browser utility functions
 function $getMouseOffset(target, ev){
@@ -377,7 +377,7 @@ function $EventsList(elt, evt, arg){
                 break
             }
         }
-        if(! found){throw KeyError.$factory("not found")}
+        if(! found){throw _b_.KeyError.$factory("not found")}
     }
 }
 
@@ -482,42 +482,6 @@ Options.$factory = function(parent){
 
 $B.set_func_names(Options, "<dom>")
 
-// Class for DOM element style
-
-var Style = {__class__: _b_.type, __name__: "CSSProperty"}
-
-Style.__mro__ = [object]
-
-Style.__getattr__ = function(self, attr){
-    return object.__getattribute__(self.js, attr)
-}
-
-Style.__setattr__ = function(self,attr,value){
-    if(attr.toLowerCase() === "float"){
-        self.js.cssFloat = value
-        self.js.styleFloat = value
-    }else{
-        switch(attr) {
-          case "top":
-          case "left":
-          case "height":
-          case "width":
-          case "borderWidth":
-            if (_b_.isinstance(value,_b_.int)){value = value + "px"}
-        }
-        self.js[attr] = value
-    }
-}
-
-Style.$factory = function(style){
-    // property "style"
-    return {__class__: Style,
-        js: style
-    }
-}
-
-$B.set_func_names(Style, "<dom>")
-
 // Class for DOM nodes
 
 var DOMNode = {
@@ -621,7 +585,7 @@ DOMNode.__delitem__ = function(self, key){
     if(self.elt.nodeType == 9){ // document : remove by id
         var res = self.elt.getElementById(key)
         if(res){res.parentNode.removeChild(res)}
-        else{throw KeyError.$factory(key)}
+        else{throw _b_.KeyError.$factory(key)}
     }else{ // other node : remove by rank in child nodes
         self.elt.parentNode.removeChild(self.elt)
     }
@@ -777,7 +741,7 @@ DOMNode.__getattribute__ = function(self, attr){
             return func
         }
         if(attr == 'options'){return Options.$factory(self.elt)}
-        if(attr == 'style'){return Style.$factory(self.elt[attr])}
+        if(attr == 'style'){return $B.JSObject.$factory(self.elt[attr])}
         if(Array.isArray(res)){return res} // issue #619
 
         return $B.$JS2Py(res)
@@ -790,7 +754,7 @@ DOMNode.__getitem__ = function(self, key){
         if(typeof key == "string"){
             var res = self.elt.getElementById(key)
             if(res){return DOMNode.$factory(res)}
-            throw KeyError.$factory(key)
+            throw _b_.KeyError.$factory(key)
         }else{
             try{
                 var elts = self.elt.getElementsByTagName(key.__name__),
@@ -800,7 +764,7 @@ DOMNode.__getitem__ = function(self, key){
                     }
                     return res
             }catch(err){
-                throw KeyError.$factory(_b_.str.$factory(key))
+                throw _b_.KeyError.$factory(_b_.str.$factory(key))
             }
         }
     }else{
@@ -1456,7 +1420,7 @@ DOMNode.unbind = function(self, event){
         }
         // The indicated func was not found, error is thrown
         if(!flag){
-            throw KeyError.$factory('missing callback for event ' + event)
+            throw _b_.KeyError.$factory('missing callback for event ' + event)
         }
     }
 }
@@ -1478,7 +1442,7 @@ Query.__getitem__ = function(self, key){
     // returns a single value or a list of values
     // associated with key, or raise KeyError
     var result = self._values[key]
-    if(result === undefined){throw KeyError.$factory(key)}
+    if(result === undefined){throw _b_.KeyError.$factory(key)}
     if(result.length == 1){return result[0]}
     return result
 }
@@ -1602,7 +1566,7 @@ $B.set_func_names(TagSum, "<dom>")
 
 $B.TagSum = TagSum // used in _html.js and _svg.js
 
-var win =  JSObject.$factory(_window) //{__class__:$WinDict}
+var win = JSObject.$factory(_window) //{__class__:$WinDict}
 
 win.get_postMessage = function(msg,targetOrigin){
     if(_b_.isinstance(msg, dict)){

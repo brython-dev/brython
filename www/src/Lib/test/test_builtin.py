@@ -3,19 +3,26 @@
 import ast
 import builtins
 import collections
+import decimal
+import fractions
 import io
 import locale
 import os
 import pickle
 import platform
 import random
+import re
 import sys
 import traceback
 import types
 import unittest
 import warnings
+from contextlib import ExitStack
 from operator import neg
-from test.support import TESTFN, unlink,  run_unittest, check_warnings
+from test.support import (
+    EnvironmentVarGuard, TESTFN, check_warnings, swap_attr, unlink)
+from test.support.script_helper import assert_python_ok
+from unittest.mock import MagicMock, patch
 try:
     import pty, signal
 except ImportError:
@@ -78,7 +85,7 @@ test_conv_no_sign = [
         ('', ValueError),
         (' ', ValueError),
         ('  \t\t  ', ValueError),
-        (str(b'\u0663\u0661\u0664 ','raw-unicode-escape'), 314),
+        (str(br'\u0663\u0661\u0664 ','raw-unicode-escape'), 314),
         (chr(0x200), ValueError),
 ]
 
@@ -100,7 +107,7 @@ test_conv_sign = [
         ('', ValueError),
         (' ', ValueError),
         ('  \t\t  ', ValueError),
-        (str(b'\u0663\u0661\u0664 ','raw-unicode-escape'), 314),
+        (str(br'\u0663\u0661\u0664 ','raw-unicode-escape'), 314),
         (chr(0x200), ValueError),
 ]
 
@@ -120,9 +127,9 @@ def map_char(arg):
 
 class BuiltinTest(unittest.TestCase):
     # Helper to check picklability
-    def check_iter_pickle(self, it, seq):
+    def check_iter_pickle(self, it, seq, proto):
         itorg = it
-        d = pickle.dumps(it)
+        d = pickle.dumps(it, proto)
         it = pickle.loads(d)
         self.assertEqual(type(itorg), type(it))
         self.assertEqual(list(it), seq)
@@ -133,7 +140,7 @@ class BuiltinTest(unittest.TestCase):
             next(it)
         except StopIteration:
             return
-        d = pickle.dumps(it)
+        d = pickle.dumps(it, proto)
         it = pickle.loads(d)
         self.assertEqual(list(it), seq[1:])
 
@@ -147,6 +154,8 @@ class BuiltinTest(unittest.TestCase):
         self.assertRaises(TypeError, __import__, 1, 2, 3, 4)
         self.assertRaises(ValueError, __import__, '')
         self.assertRaises(TypeError, __import__, 'sys', name='sys')
+        # embedded null character
+        self.assertRaises(ModuleNotFoundError, __import__, 'string\x00')
 
     def test_abs(self):
         # int
@@ -311,30 +320,33 @@ class BuiltinTest(unittest.TestCase):
         self.assertRaises(TypeError, compile)
         self.assertRaises(ValueError, compile, 'print(42)\n', '<string>', 'badmode')
         self.assertRaises(ValueError, compile, 'print(42)\n', '<string>', 'single', 0xff)
-        self.assertRaises(TypeError, compile, chr(0), 'f', 'exec')
+        self.assertRaises(ValueError, compile, chr(0), 'f', 'exec')
         self.assertRaises(TypeError, compile, 'pass', '?', 'exec',
                           mode='eval', source='0', filename='tmp')
         compile('print("\xe5")\n', '', 'exec')
-        self.assertRaises(TypeError, compile, chr(0), 'f', 'exec')
+        self.assertRaises(ValueError, compile, chr(0), 'f', 'exec')
         self.assertRaises(ValueError, compile, str('a = 1'), 'f', 'bad')
 
         # test the optimize argument
 
         codestr = '''def f():
         """doc"""
+        debug_enabled = False
+        if __debug__:
+            debug_enabled = True
         try:
             assert False
         except AssertionError:
-            return (True, f.__doc__)
+            return (True, f.__doc__, debug_enabled, __debug__)
         else:
-            return (False, f.__doc__)
+            return (False, f.__doc__, debug_enabled, __debug__)
         '''
         def f(): """doc"""
-        values = [(-1, __debug__, f.__doc__),
-                  (0, True, 'doc'),
-                  (1, False, 'doc'),
-                  (2, False, None)]
-        for optval, debugval, docstring in values:
+        values = [(-1, __debug__, f.__doc__, __debug__, __debug__),
+                  (0, True, 'doc', True, True),
+                  (1, False, 'doc', False, False),
+                  (2, False, None, False, False)]
+        for optval, *expected in values:
             # test both direct compilation and compilation via AST
             codeobjs = []
             codeobjs.append(compile(codestr, "<test>", "exec", optimize=optval))
@@ -344,7 +356,7 @@ class BuiltinTest(unittest.TestCase):
                 ns = {}
                 exec(code, ns)
                 rv = ns['f']()
-                self.assertEqual(rv, (debugval, docstring))
+                self.assertEqual(rv, tuple(expected))
 
     def test_delattr(self):
         sys.spam = 1
@@ -464,6 +476,11 @@ class BuiltinTest(unittest.TestCase):
         self.assertRaises(TypeError, eval, ())
         self.assertRaises(SyntaxError, eval, bom[:2] + b'a')
 
+        class X:
+            def __getitem__(self, key):
+                raise ValueError
+        self.assertRaises(ValueError, eval, "foo", {}, X())
+
     def test_general_eval(self):
         # Tests that general mappings can be used for the locals argument
 
@@ -579,7 +596,10 @@ class BuiltinTest(unittest.TestCase):
                 raise frozendict_error("frozendict is readonly")
 
         # read-only builtins
-        frozen_builtins = frozendict(__builtins__)
+        if isinstance(__builtins__, types.ModuleType):
+            frozen_builtins = frozendict(__builtins__.__dict__)
+        else:
+            frozen_builtins = frozendict(__builtins__)
         code = compile("__builtins__['superglobal']=2; print(superglobal)", "test", "exec")
         self.assertRaises(frozendict_error,
                           exec, code, {'__builtins__': frozen_builtins})
@@ -627,9 +647,10 @@ class BuiltinTest(unittest.TestCase):
         self.assertRaises(TypeError, list, filter(42, (1, 2)))
 
     def test_filter_pickle(self):
-        f1 = filter(filter_char, "abcdeabcde")
-        f2 = filter(filter_char, "abcdeabcde")
-        self.check_iter_pickle(f1, list(f2))
+        for proto in range(pickle.HIGHEST_PROTOCOL + 1):
+            f1 = filter(filter_char, "abcdeabcde")
+            f2 = filter(filter_char, "abcdeabcde")
+            self.check_iter_pickle(f1, list(f2), proto)
 
     def test_getattr(self):
         self.assertTrue(getattr(sys, 'stdout') is sys.stdout)
@@ -757,10 +778,18 @@ class BuiltinTest(unittest.TestCase):
             def __len__(self):
                 return 4.5
         self.assertRaises(TypeError, len, FloatLen())
+        class NegativeLen:
+            def __len__(self):
+                return -10
+        self.assertRaises(ValueError, len, NegativeLen())
         class HugeLen:
             def __len__(self):
                 return sys.maxsize + 1
         self.assertRaises(OverflowError, len, HugeLen())
+        class HugeNegativeLen:
+            def __len__(self):
+                return -sys.maxsize-10
+        self.assertRaises(ValueError, len, HugeNegativeLen())
         class NoLenMethod(object): pass
         self.assertRaises(TypeError, len, NoLenMethod())
 
@@ -825,9 +854,10 @@ class BuiltinTest(unittest.TestCase):
         self.assertRaises(RuntimeError, list, map(badfunc, range(5)))
 
     def test_map_pickle(self):
-        m1 = map(map_char, "Is this the real life?")
-        m2 = map(map_char, "Is this the real life?")
-        self.check_iter_pickle(m1, list(m2))
+        for proto in range(pickle.HIGHEST_PROTOCOL + 1):
+            m1 = map(map_char, "Is this the real life?")
+            m2 = map(map_char, "Is this the real life?")
+            self.check_iter_pickle(m1, list(m2), proto)
 
     def test_max(self):
         self.assertEqual(max('123123'), '3')
@@ -839,8 +869,19 @@ class BuiltinTest(unittest.TestCase):
         self.assertEqual(max(1, 2.0, 3), 3)
         self.assertEqual(max(1.0, 2, 3), 3)
 
+        self.assertRaises(TypeError, max)
+        self.assertRaises(TypeError, max, 42)
+        self.assertRaises(ValueError, max, ())
+        class BadSeq:
+            def __getitem__(self, index):
+                raise ValueError
+        self.assertRaises(ValueError, max, BadSeq())
+
         for stmt in (
             "max(key=int)",                 # no args
+            "max(default=None)",
+            "max(1, 2, default=None)",      # require container for default
+            "max(default=None, key=int)",
             "max(1, key=int)",              # single arg not iterable
             "max(1, 2, keystone=int)",      # wrong keyword
             "max(1, 2, key=int, abc=int)",  # two many keywords
@@ -856,6 +897,13 @@ class BuiltinTest(unittest.TestCase):
         self.assertEqual(max((1,), key=neg), 1)     # one elem iterable
         self.assertEqual(max((1,2), key=neg), 1)    # two elem iterable
         self.assertEqual(max(1, 2, key=neg), 1)     # two elems
+
+        self.assertEqual(max((), default=None), None)    # zero elem iterable
+        self.assertEqual(max((1,), default=None), 1)     # one elem iterable
+        self.assertEqual(max((1,2), default=None), 2)    # two elem iterable
+
+        self.assertEqual(max((), default=1, key=neg), 1)
+        self.assertEqual(max((1, 2), default=3, key=neg), 1)
 
         data = [random.randrange(200) for i in range(100)]
         keys = dict((elem, random.randrange(50)) for elem in data)
@@ -883,6 +931,9 @@ class BuiltinTest(unittest.TestCase):
 
         for stmt in (
             "min(key=int)",                 # no args
+            "min(default=None)",
+            "min(1, 2, default=None)",      # require container for default
+            "min(default=None, key=int)",
             "min(1, key=int)",              # single arg not iterable
             "min(1, 2, keystone=int)",      # wrong keyword
             "min(1, 2, key=int, abc=int)",  # two many keywords
@@ -898,6 +949,13 @@ class BuiltinTest(unittest.TestCase):
         self.assertEqual(min((1,), key=neg), 1)     # one elem iterable
         self.assertEqual(min((1,2), key=neg), 2)    # two elem iterable
         self.assertEqual(min(1, 2, key=neg), 2)     # two elems
+
+        self.assertEqual(min((), default=None), None)    # zero elem iterable
+        self.assertEqual(min((1,), default=None), 1)     # one elem iterable
+        self.assertEqual(min((1,2), default=None), 1)    # two elem iterable
+
+        self.assertEqual(min((), default=1, key=neg), 1)
+        self.assertEqual(min((1, 2), default=1, key=neg), 2)
 
         data = [random.randrange(200) for i in range(100)]
         keys = dict((elem, random.randrange(50)) for elem in data)
@@ -940,30 +998,31 @@ class BuiltinTest(unittest.TestCase):
     def write_testfile(self):
         # NB the first 4 lines are also used to test input, below
         fp = open(TESTFN, 'w')
-        try:
+        self.addCleanup(unlink, TESTFN)
+        with fp:
             fp.write('1+1\n')
             fp.write('The quick brown fox jumps over the lazy dog')
             fp.write('.\n')
             fp.write('Dear John\n')
             fp.write('XXX'*100)
             fp.write('YYY'*100)
-        finally:
-            fp.close()
 
     def test_open(self):
         self.write_testfile()
         fp = open(TESTFN, 'r')
-        try:
+        with fp:
             self.assertEqual(fp.readline(4), '1+1\n')
             self.assertEqual(fp.readline(), 'The quick brown fox jumps over the lazy dog.\n')
             self.assertEqual(fp.readline(4), 'Dear')
             self.assertEqual(fp.readline(100), ' John\n')
             self.assertEqual(fp.read(300), 'XXX'*100)
             self.assertEqual(fp.read(1000), 'YYY'*100)
-        finally:
-            fp.close()
-            unlink(TESTFN)
 
+        # embedded null bytes and characters
+        self.assertRaises(ValueError, open, 'a\x00b')
+        self.assertRaises(ValueError, open, b'a\x00b')
+
+    @unittest.skipIf(sys.flags.utf8_mode, "utf-8 mode is enabled")
     def test_open_default_encoding(self):
         old_environ = dict(os.environ)
         try:
@@ -977,14 +1036,16 @@ class BuiltinTest(unittest.TestCase):
             self.write_testfile()
             current_locale_encoding = locale.getpreferredencoding(False)
             fp = open(TESTFN, 'w')
-            try:
+            with fp:
                 self.assertEqual(fp.encoding, current_locale_encoding)
-            finally:
-                fp.close()
-                unlink(TESTFN)
         finally:
             os.environ.clear()
             os.environ.update(old_environ)
+
+    def test_open_non_inheritable(self):
+        fileobj = open(__file__)
+        with fileobj:
+            self.assertFalse(os.get_inheritable(fileobj.fileno()))
 
     def test_ord(self):
         self.assertEqual(ord(' '), 32)
@@ -1057,7 +1118,7 @@ class BuiltinTest(unittest.TestCase):
         self.assertAlmostEqual(pow(-1, 0.5), 1j)
         self.assertAlmostEqual(pow(-1, 1/3), 0.5 + 0.8660254037844386j)
 
-        self.assertRaises(TypeError, pow, -1, -2, 3)
+        self.assertRaises(ValueError, pow, -1, -2, 3)
         self.assertRaises(ValueError, pow, 1, 2, 0)
 
         self.assertRaises(TypeError, pow)
@@ -1096,83 +1157,6 @@ class BuiltinTest(unittest.TestCase):
             sys.stdin = savestdin
             sys.stdout = savestdout
             fp.close()
-            unlink(TESTFN)
-
-    @unittest.skipUnless(pty, "the pty and signal modules must be available")
-    def check_input_tty(self, prompt, terminal_input, stdio_encoding=None):
-        if not sys.stdin.isatty() or not sys.stdout.isatty():
-            self.skipTest("stdin and stdout must be ttys")
-        r, w = os.pipe()
-        try:
-            pid, fd = pty.fork()
-        except (OSError, AttributeError) as e:
-            os.close(r)
-            os.close(w)
-            self.skipTest("pty.fork() raised {}".format(e))
-        if pid == 0:
-            # Child
-            try:
-                # Make sure we don't get stuck if there's a problem
-                signal.alarm(2)
-                os.close(r)
-                # Check the error handlers are accounted for
-                if stdio_encoding:
-                    sys.stdin = io.TextIOWrapper(sys.stdin.detach(),
-                                                 encoding=stdio_encoding,
-                                                 errors='surrogateescape')
-                    sys.stdout = io.TextIOWrapper(sys.stdout.detach(),
-                                                  encoding=stdio_encoding,
-                                                  errors='replace')
-                with open(w, "w") as wpipe:
-                    print("tty =", sys.stdin.isatty() and sys.stdout.isatty(), file=wpipe)
-                    print(ascii(input(prompt)), file=wpipe)
-            except:
-                traceback.print_exc()
-            finally:
-                # We don't want to return to unittest...
-                os._exit(0)
-        # Parent
-        os.close(w)
-        os.write(fd, terminal_input + b"\r\n")
-        # Get results from the pipe
-        with open(r, "r") as rpipe:
-            lines = []
-            while True:
-                line = rpipe.readline().strip()
-                if line == "":
-                    # The other end was closed => the child exited
-                    break
-                lines.append(line)
-        # Check the result was got and corresponds to the user's terminal input
-        if len(lines) != 2:
-            # Something went wrong, try to get at stderr
-            with open(fd, "r", encoding="ascii", errors="ignore") as child_output:
-                self.fail("got %d lines in pipe but expected 2, child output was:\n%s"
-                          % (len(lines), child_output.read()))
-        os.close(fd)
-        # Check we did exercise the GNU readline path
-        self.assertIn(lines[0], {'tty = True', 'tty = False'})
-        if lines[0] != 'tty = True':
-            self.skipTest("standard IO in should have been a tty")
-        input_result = eval(lines[1])   # ascii() -> eval() roundtrip
-        if stdio_encoding:
-            expected = terminal_input.decode(stdio_encoding, 'surrogateescape')
-        else:
-            expected = terminal_input.decode(sys.stdin.encoding)  # what else?
-        self.assertEqual(input_result, expected)
-
-    def test_input_tty(self):
-        # Test input() functionality when wired to a tty (the code path
-        # is different and invokes GNU readline if available).
-        self.check_input_tty("prompt", b"quux")
-
-    def test_input_tty_non_ascii(self):
-        # Check stdin/stdout encoding is used when invoking GNU readline
-        self.check_input_tty("prompté", b"quux\xe9", "utf-8")
-
-    def test_input_tty_non_ascii_unicode_errors(self):
-        # Check stdin/stdout error handler is used when invoking GNU readline
-        self.check_input_tty("prompté", b"quux\xe9", "ascii")
 
     # test_int(): see test_int.py for tests of built-in function int().
 
@@ -1283,6 +1267,15 @@ class BuiltinTest(unittest.TestCase):
         self.assertEqual(round(5e15+1), 5e15+1)
         self.assertEqual(round(5e15+2), 5e15+2)
         self.assertEqual(round(5e15+3), 5e15+3)
+
+    def test_bug_27936(self):
+        # Verify that ndigits=None means the same as passing in no argument
+        for x in [1234,
+                  1234.56,
+                  decimal.Decimal('1234.56'),
+                  fractions.Fraction(123456, 100)]:
+            self.assertEqual(round(x, None), round(x))
+            self.assertEqual(type(round(x, None)), type(round(x)))
 
     def test_setattr(self):
         setattr(sys, 'spam', 1)
@@ -1399,8 +1392,9 @@ class BuiltinTest(unittest.TestCase):
         a = (1, 2, 3)
         b = (4, 5, 6)
         t = [(1, 4), (2, 5), (3, 6)]
-        z1 = zip(a, b)
-        self.check_iter_pickle(z1, t)
+        for proto in range(pickle.HIGHEST_PROTOCOL + 1):
+            z1 = zip(a, b)
+            self.check_iter_pickle(z1, t, proto)
 
     def test_format(self):
         # Test the basic machinery of the format() builtin.  Don't test
@@ -1475,27 +1469,14 @@ class BuiltinTest(unittest.TestCase):
 
         # --------------------------------------------------------------------
         # Issue #7994: object.__format__ with a non-empty format string is
-        #  deprecated
-        def test_deprecated_format_string(obj, fmt_str, should_raise_warning):
-            with warnings.catch_warnings(record=True) as w:
-                warnings.simplefilter("always", DeprecationWarning)
-                format(obj, fmt_str)
-            if should_raise_warning:
-                self.assertEqual(len(w), 1)
-                self.assertIsInstance(w[0].message, DeprecationWarning)
-                self.assertIn('object.__format__ with a non-empty format '
-                              'string', str(w[0].message))
-            else:
-                self.assertEqual(len(w), 0)
-
-        fmt_strs = ['', 's']
-
+        # disallowed
         class A:
             def __format__(self, fmt_str):
                 return format('', fmt_str)
 
-        for fmt_str in fmt_strs:
-            test_deprecated_format_string(A(), fmt_str, False)
+        self.assertEqual(format(A()), '')
+        self.assertEqual(format(A(), ''), '')
+        self.assertEqual(format(A(), 's'), '')
 
         class B:
             pass
@@ -1504,8 +1485,12 @@ class BuiltinTest(unittest.TestCase):
             pass
 
         for cls in [object, B, C]:
-            for fmt_str in fmt_strs:
-                test_deprecated_format_string(cls(), fmt_str, len(fmt_str) != 0)
+            obj = cls()
+            self.assertEqual(format(obj), str(obj))
+            self.assertEqual(format(obj, ''), str(obj))
+            with self.assertRaisesRegex(TypeError,
+                                        r'\b%s\b' % re.escape(cls.__name__)):
+                format(obj, 's')
         # --------------------------------------------------------------------
 
         # make sure we can take a subclass of str as a format spec
@@ -1533,6 +1518,228 @@ class BuiltinTest(unittest.TestCase):
             self.assertRaises(TypeError, tp, 1, 2)
             self.assertRaises(TypeError, tp, a=1, b=2)
 
+
+class TestBreakpoint(unittest.TestCase):
+    def setUp(self):
+        # These tests require a clean slate environment.  For example, if the
+        # test suite is run with $PYTHONBREAKPOINT set to something else, it
+        # will mess up these tests.  Similarly for sys.breakpointhook.
+        # Cleaning the slate here means you can't use breakpoint() to debug
+        # these tests, but I think that's okay.  Just use pdb.set_trace() if
+        # you must.
+        self.resources = ExitStack()
+        self.addCleanup(self.resources.close)
+        self.env = self.resources.enter_context(EnvironmentVarGuard())
+        del self.env['PYTHONBREAKPOINT']
+        self.resources.enter_context(
+            swap_attr(sys, 'breakpointhook', sys.__breakpointhook__))
+
+    def test_breakpoint(self):
+        with patch('pdb.set_trace') as mock:
+            breakpoint()
+        mock.assert_called_once()
+
+    def test_breakpoint_with_breakpointhook_set(self):
+        my_breakpointhook = MagicMock()
+        sys.breakpointhook = my_breakpointhook
+        breakpoint()
+        my_breakpointhook.assert_called_once_with()
+
+    def test_breakpoint_with_breakpointhook_reset(self):
+        my_breakpointhook = MagicMock()
+        sys.breakpointhook = my_breakpointhook
+        breakpoint()
+        my_breakpointhook.assert_called_once_with()
+        # Reset the hook and it will not be called again.
+        sys.breakpointhook = sys.__breakpointhook__
+        with patch('pdb.set_trace') as mock:
+            breakpoint()
+            mock.assert_called_once_with()
+        my_breakpointhook.assert_called_once_with()
+
+    def test_breakpoint_with_args_and_keywords(self):
+        my_breakpointhook = MagicMock()
+        sys.breakpointhook = my_breakpointhook
+        breakpoint(1, 2, 3, four=4, five=5)
+        my_breakpointhook.assert_called_once_with(1, 2, 3, four=4, five=5)
+
+    def test_breakpoint_with_passthru_error(self):
+        def my_breakpointhook():
+            pass
+        sys.breakpointhook = my_breakpointhook
+        self.assertRaises(TypeError, breakpoint, 1, 2, 3, four=4, five=5)
+
+    @unittest.skipIf(sys.flags.ignore_environment, '-E was given')
+    def test_envar_good_path_builtin(self):
+        self.env['PYTHONBREAKPOINT'] = 'int'
+        with patch('builtins.int') as mock:
+            breakpoint('7')
+            mock.assert_called_once_with('7')
+
+    @unittest.skipIf(sys.flags.ignore_environment, '-E was given')
+    def test_envar_good_path_other(self):
+        self.env['PYTHONBREAKPOINT'] = 'sys.exit'
+        with patch('sys.exit') as mock:
+            breakpoint()
+            mock.assert_called_once_with()
+
+    @unittest.skipIf(sys.flags.ignore_environment, '-E was given')
+    def test_envar_good_path_noop_0(self):
+        self.env['PYTHONBREAKPOINT'] = '0'
+        with patch('pdb.set_trace') as mock:
+            breakpoint()
+            mock.assert_not_called()
+
+    def test_envar_good_path_empty_string(self):
+        # PYTHONBREAKPOINT='' is the same as it not being set.
+        self.env['PYTHONBREAKPOINT'] = ''
+        with patch('pdb.set_trace') as mock:
+            breakpoint()
+            mock.assert_called_once_with()
+
+    @unittest.skipIf(sys.flags.ignore_environment, '-E was given')
+    def test_envar_unimportable(self):
+        for envar in (
+                '.', '..', '.foo', 'foo.', '.int', 'int.'
+                'nosuchbuiltin',
+                'nosuchmodule.nosuchcallable',
+                ):
+            with self.subTest(envar=envar):
+                self.env['PYTHONBREAKPOINT'] = envar
+                mock = self.resources.enter_context(patch('pdb.set_trace'))
+                w = self.resources.enter_context(check_warnings(quiet=True))
+                breakpoint()
+                self.assertEqual(
+                    str(w.message),
+                    f'Ignoring unimportable $PYTHONBREAKPOINT: "{envar}"')
+                self.assertEqual(w.category, RuntimeWarning)
+                mock.assert_not_called()
+
+    def test_envar_ignored_when_hook_is_set(self):
+        self.env['PYTHONBREAKPOINT'] = 'sys.exit'
+        with patch('sys.exit') as mock:
+            sys.breakpointhook = int
+            breakpoint()
+            mock.assert_not_called()
+
+
+@unittest.skipUnless(pty, "the pty and signal modules must be available")
+class PtyTests(unittest.TestCase):
+    """Tests that use a pseudo terminal to guarantee stdin and stdout are
+    terminals in the test environment"""
+
+    def run_child(self, child, terminal_input):
+        r, w = os.pipe()  # Pipe test results from child back to parent
+        try:
+            pid, fd = pty.fork()
+        except (OSError, AttributeError) as e:
+            os.close(r)
+            os.close(w)
+            self.skipTest("pty.fork() raised {}".format(e))
+            raise
+        if pid == 0:
+            # Child
+            try:
+                # Make sure we don't get stuck if there's a problem
+                signal.alarm(2)
+                os.close(r)
+                with open(w, "w") as wpipe:
+                    child(wpipe)
+            except:
+                traceback.print_exc()
+            finally:
+                # We don't want to return to unittest...
+                os._exit(0)
+        # Parent
+        os.close(w)
+        os.write(fd, terminal_input)
+        # Get results from the pipe
+        with open(r, "r") as rpipe:
+            lines = []
+            while True:
+                line = rpipe.readline().strip()
+                if line == "":
+                    # The other end was closed => the child exited
+                    break
+                lines.append(line)
+        # Check the result was got and corresponds to the user's terminal input
+        if len(lines) != 2:
+            # Something went wrong, try to get at stderr
+            # Beware of Linux raising EIO when the slave is closed
+            child_output = bytearray()
+            while True:
+                try:
+                    chunk = os.read(fd, 3000)
+                except OSError:  # Assume EIO
+                    break
+                if not chunk:
+                    break
+                child_output.extend(chunk)
+            os.close(fd)
+            child_output = child_output.decode("ascii", "ignore")
+            self.fail("got %d lines in pipe but expected 2, child output was:\n%s"
+                      % (len(lines), child_output))
+        os.close(fd)
+
+        # Wait until the child process completes
+        os.waitpid(pid, 0)
+
+        return lines
+
+    def check_input_tty(self, prompt, terminal_input, stdio_encoding=None):
+        if not sys.stdin.isatty() or not sys.stdout.isatty():
+            self.skipTest("stdin and stdout must be ttys")
+        def child(wpipe):
+            # Check the error handlers are accounted for
+            if stdio_encoding:
+                sys.stdin = io.TextIOWrapper(sys.stdin.detach(),
+                                             encoding=stdio_encoding,
+                                             errors='surrogateescape')
+                sys.stdout = io.TextIOWrapper(sys.stdout.detach(),
+                                              encoding=stdio_encoding,
+                                              errors='replace')
+            print("tty =", sys.stdin.isatty() and sys.stdout.isatty(), file=wpipe)
+            print(ascii(input(prompt)), file=wpipe)
+        lines = self.run_child(child, terminal_input + b"\r\n")
+        # Check we did exercise the GNU readline path
+        self.assertIn(lines[0], {'tty = True', 'tty = False'})
+        if lines[0] != 'tty = True':
+            self.skipTest("standard IO in should have been a tty")
+        input_result = eval(lines[1])   # ascii() -> eval() roundtrip
+        if stdio_encoding:
+            expected = terminal_input.decode(stdio_encoding, 'surrogateescape')
+        else:
+            expected = terminal_input.decode(sys.stdin.encoding)  # what else?
+        self.assertEqual(input_result, expected)
+
+    def test_input_tty(self):
+        # Test input() functionality when wired to a tty (the code path
+        # is different and invokes GNU readline if available).
+        self.check_input_tty("prompt", b"quux")
+
+    def test_input_tty_non_ascii(self):
+        # Check stdin/stdout encoding is used when invoking GNU readline
+        self.check_input_tty("prompté", b"quux\xe9", "utf-8")
+
+    def test_input_tty_non_ascii_unicode_errors(self):
+        # Check stdin/stdout error handler is used when invoking GNU readline
+        self.check_input_tty("prompté", b"quux\xe9", "ascii")
+
+    def test_input_no_stdout_fileno(self):
+        # Issue #24402: If stdin is the original terminal but stdout.fileno()
+        # fails, do not use the original stdout file descriptor
+        def child(wpipe):
+            print("stdin.isatty():", sys.stdin.isatty(), file=wpipe)
+            sys.stdout = io.StringIO()  # Does not support fileno()
+            input("prompt")
+            print("captured:", ascii(sys.stdout.getvalue()), file=wpipe)
+        lines = self.run_child(child, b"quux\r")
+        expected = (
+            "stdin.isatty(): True",
+            "captured: 'prompt'",
+        )
+        self.assertSequenceEqual(lines, expected)
+
 class TestSorted(unittest.TestCase):
 
     def test_basic(self):
@@ -1550,6 +1757,16 @@ class TestSorted(unittest.TestCase):
         self.assertEqual(data, sorted(copy, reverse=1))
         self.assertNotEqual(data, copy)
 
+    def test_bad_arguments(self):
+        # Issue #29327: The first argument is positional-only.
+        sorted([])
+        with self.assertRaises(TypeError):
+            sorted(iterable=[])
+        # Other arguments are keyword-only
+        sorted([], key=None)
+        with self.assertRaises(TypeError):
+            sorted([], None)
+
     def test_inputtypes(self):
         s = 'abracadabra'
         types = [list, tuple, str]
@@ -1565,21 +1782,190 @@ class TestSorted(unittest.TestCase):
         data = 'The quick Brown fox Jumped over The lazy Dog'.split()
         self.assertRaises(TypeError, sorted, data, None, lambda x,y: 0)
 
-def test_main(verbose=None):
-    test_classes = (BuiltinTest, TestSorted)
 
-    run_unittest(*test_classes)
+class ShutdownTest(unittest.TestCase):
 
-    # verify reference counting
-    if verbose and hasattr(sys, "gettotalrefcount"):
-        import gc
-        counts = [None] * 5
-        for i in range(len(counts)):
-            run_unittest(*test_classes)
-            gc.collect()
-            counts[i] = sys.gettotalrefcount()
-        print(counts)
+    def test_cleanup(self):
+        # Issue #19255: builtins are still available at shutdown
+        code = """if 1:
+            import builtins
+            import sys
 
+            class C:
+                def __del__(self):
+                    print("before")
+                    # Check that builtins still exist
+                    len(())
+                    print("after")
+
+            c = C()
+            # Make this module survive until builtins and sys are cleaned
+            builtins.here = sys.modules[__name__]
+            sys.here = sys.modules[__name__]
+            # Create a reference loop so that this module needs to go
+            # through a GC phase.
+            here = sys.modules[__name__]
+            """
+        # Issue #20599: Force ASCII encoding to get a codec implemented in C,
+        # otherwise the codec may be unloaded before C.__del__() is called, and
+        # so print("before") fails because the codec cannot be used to encode
+        # "before" to sys.stdout.encoding. For example, on Windows,
+        # sys.stdout.encoding is the OEM code page and these code pages are
+        # implemented in Python
+        rc, out, err = assert_python_ok("-c", code,
+                                        PYTHONIOENCODING="ascii")
+        self.assertEqual(["before", "after"], out.decode().splitlines())
+
+
+class TestType(unittest.TestCase):
+    def test_new_type(self):
+        A = type('A', (), {})
+        self.assertEqual(A.__name__, 'A')
+        self.assertEqual(A.__qualname__, 'A')
+        self.assertEqual(A.__module__, __name__)
+        self.assertEqual(A.__bases__, (object,))
+        self.assertIs(A.__base__, object)
+        x = A()
+        self.assertIs(type(x), A)
+        self.assertIs(x.__class__, A)
+
+        class B:
+            def ham(self):
+                return 'ham%d' % self
+        C = type('C', (B, int), {'spam': lambda self: 'spam%s' % self})
+        self.assertEqual(C.__name__, 'C')
+        self.assertEqual(C.__qualname__, 'C')
+        self.assertEqual(C.__module__, __name__)
+        self.assertEqual(C.__bases__, (B, int))
+        self.assertIs(C.__base__, int)
+        self.assertIn('spam', C.__dict__)
+        self.assertNotIn('ham', C.__dict__)
+        x = C(42)
+        self.assertEqual(x, 42)
+        self.assertIs(type(x), C)
+        self.assertIs(x.__class__, C)
+        self.assertEqual(x.ham(), 'ham42')
+        self.assertEqual(x.spam(), 'spam42')
+        self.assertEqual(x.to_bytes(2, 'little'), b'\x2a\x00')
+
+    def test_type_nokwargs(self):
+        with self.assertRaises(TypeError):
+            type('a', (), {}, x=5)
+        with self.assertRaises(TypeError):
+            type('a', (), dict={})
+
+    def test_type_name(self):
+        for name in 'A', '\xc4', '\U0001f40d', 'B.A', '42', '':
+            with self.subTest(name=name):
+                A = type(name, (), {})
+                self.assertEqual(A.__name__, name)
+                self.assertEqual(A.__qualname__, name)
+                self.assertEqual(A.__module__, __name__)
+        with self.assertRaises(ValueError):
+            type('A\x00B', (), {})
+        with self.assertRaises(ValueError):
+            type('A\udcdcB', (), {})
+        with self.assertRaises(TypeError):
+            type(b'A', (), {})
+
+        C = type('C', (), {})
+        for name in 'A', '\xc4', '\U0001f40d', 'B.A', '42', '':
+            with self.subTest(name=name):
+                C.__name__ = name
+                self.assertEqual(C.__name__, name)
+                self.assertEqual(C.__qualname__, 'C')
+                self.assertEqual(C.__module__, __name__)
+
+        A = type('C', (), {})
+        with self.assertRaises(ValueError):
+            A.__name__ = 'A\x00B'
+        self.assertEqual(A.__name__, 'C')
+        with self.assertRaises(ValueError):
+            A.__name__ = 'A\udcdcB'
+        self.assertEqual(A.__name__, 'C')
+        with self.assertRaises(TypeError):
+            A.__name__ = b'A'
+        self.assertEqual(A.__name__, 'C')
+
+    def test_type_qualname(self):
+        A = type('A', (), {'__qualname__': 'B.C'})
+        self.assertEqual(A.__name__, 'A')
+        self.assertEqual(A.__qualname__, 'B.C')
+        self.assertEqual(A.__module__, __name__)
+        with self.assertRaises(TypeError):
+            type('A', (), {'__qualname__': b'B'})
+        self.assertEqual(A.__qualname__, 'B.C')
+
+        A.__qualname__ = 'D.E'
+        self.assertEqual(A.__name__, 'A')
+        self.assertEqual(A.__qualname__, 'D.E')
+        with self.assertRaises(TypeError):
+            A.__qualname__ = b'B'
+        self.assertEqual(A.__qualname__, 'D.E')
+
+    def test_type_doc(self):
+        for doc in 'x', '\xc4', '\U0001f40d', 'x\x00y', b'x', 42, None:
+            A = type('A', (), {'__doc__': doc})
+            self.assertEqual(A.__doc__, doc)
+        with self.assertRaises(UnicodeEncodeError):
+            type('A', (), {'__doc__': 'x\udcdcy'})
+
+        A = type('A', (), {})
+        self.assertEqual(A.__doc__, None)
+        for doc in 'x', '\xc4', '\U0001f40d', 'x\x00y', 'x\udcdcy', b'x', 42, None:
+            A.__doc__ = doc
+            self.assertEqual(A.__doc__, doc)
+
+    def test_bad_args(self):
+        with self.assertRaises(TypeError):
+            type()
+        with self.assertRaises(TypeError):
+            type('A', ())
+        with self.assertRaises(TypeError):
+            type('A', (), {}, ())
+        with self.assertRaises(TypeError):
+            type('A', (), dict={})
+        with self.assertRaises(TypeError):
+            type('A', [], {})
+        with self.assertRaises(TypeError):
+            type('A', (), types.MappingProxyType({}))
+        with self.assertRaises(TypeError):
+            type('A', (None,), {})
+        with self.assertRaises(TypeError):
+            type('A', (bool,), {})
+        with self.assertRaises(TypeError):
+            type('A', (int, str), {})
+
+    def test_bad_slots(self):
+        with self.assertRaises(TypeError):
+            type('A', (), {'__slots__': b'x'})
+        with self.assertRaises(TypeError):
+            type('A', (int,), {'__slots__': 'x'})
+        with self.assertRaises(TypeError):
+            type('A', (), {'__slots__': ''})
+        with self.assertRaises(TypeError):
+            type('A', (), {'__slots__': '42'})
+        with self.assertRaises(TypeError):
+            type('A', (), {'__slots__': 'x\x00y'})
+        with self.assertRaises(ValueError):
+            type('A', (), {'__slots__': 'x', 'x': 0})
+        with self.assertRaises(TypeError):
+            type('A', (), {'__slots__': ('__dict__', '__dict__')})
+        with self.assertRaises(TypeError):
+            type('A', (), {'__slots__': ('__weakref__', '__weakref__')})
+
+        class B:
+            pass
+        with self.assertRaises(TypeError):
+            type('A', (B,), {'__slots__': '__dict__'})
+        with self.assertRaises(TypeError):
+            type('A', (B,), {'__slots__': '__weakref__'})
+
+
+def load_tests(loader, tests, pattern):
+    from doctest import DocTestSuite
+    tests.addTest(DocTestSuite(builtins))
+    return tests
 
 if __name__ == "__main__":
-    test_main(verbose=True)
+    unittest.main()

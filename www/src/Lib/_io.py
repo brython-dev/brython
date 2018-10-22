@@ -12,9 +12,6 @@ try:
 except ImportError:
     from _dummy_thread import allocate_lock as Lock
 
-import io
-#brython fix me
-#from io import (__all__, SEEK_SET, SEEK_CUR, SEEK_END)
 SEEK_SET=0
 SEEK_CUR=1
 SEEK_END=2
@@ -229,6 +226,7 @@ def __open(file, mode="r", buffering=-1, encoding=None, errors=None,
     text.mode = mode
     return text
 
+open = __open
 
 class DocDescriptor:
     """Helper for builtins.open.__doc__
@@ -255,11 +253,8 @@ class OpenWrapper:
 
 # In normal operation, both `UnsupportedOperation`s should be bound to the
 # same object.
-try:
-    UnsupportedOperation = io.UnsupportedOperation
-except AttributeError:
-    class UnsupportedOperation(ValueError, IOError):
-        pass
+class UnsupportedOperation(ValueError, IOError):
+    pass
 
 
 class IOBase(metaclass=abc.ABCMeta):
@@ -946,6 +941,9 @@ class BufferedReader(_BufferedIOMixin):
     def _reset_read_buf(self):
         self._read_buf = b""
         self._read_pos = 0
+
+    def flush(self):
+        pass
 
     def read(self, n=None):
         """Read n bytes.
@@ -2086,3 +2084,11 @@ class StringIO(TextIOWrapper):
     def detach(self):
         # This doesn't make sense on StringIO.
         self._unsupported("detach")
+
+class FileIO(RawIOBase):
+    pass
+
+_IOBase = IOBase
+_RawIOBase = RawIOBase
+_BufferedIOBase = BufferedIOBase
+_TextIOBase = TextIOBase

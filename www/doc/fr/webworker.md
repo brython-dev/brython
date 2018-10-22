@@ -82,7 +82,7 @@ fait par la méthode `WorkerCommon.bind_message`. Son premier argument est le
 nom du message et le second est la méthode à appeler quand le message
 arrive.
 
-```
+```python
 current_worker.bind_message('ping', pong)
 current_worker.bind_message('quit', quit)
 ```

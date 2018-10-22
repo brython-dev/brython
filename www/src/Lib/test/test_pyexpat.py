@@ -2,33 +2,56 @@
 # handler, are obscure and unhelpful.
 
 from io import BytesIO
+import os
+import sys
+import sysconfig
 import unittest
+import traceback
 
 from xml.parsers import expat
 from xml.parsers.expat import errors
 
-from test.support import sortdict, run_unittest
+from test.support import sortdict
 
 
 class SetAttributeTest(unittest.TestCase):
     def setUp(self):
         self.parser = expat.ParserCreate(namespace_separator='!')
-        self.set_get_pairs = [
-            [0, 0],
-            [1, 1],
-            [2, 1],
-            [0, 0],
-            ]
+
+    def test_buffer_text(self):
+        self.assertIs(self.parser.buffer_text, False)
+        for x in 0, 1, 2, 0:
+            self.parser.buffer_text = x
+            self.assertIs(self.parser.buffer_text, bool(x))
+
+    def test_namespace_prefixes(self):
+        self.assertIs(self.parser.namespace_prefixes, False)
+        for x in 0, 1, 2, 0:
+            self.parser.namespace_prefixes = x
+            self.assertIs(self.parser.namespace_prefixes, bool(x))
 
     def test_ordered_attributes(self):
-        for x, y in self.set_get_pairs:
+        self.assertIs(self.parser.ordered_attributes, False)
+        for x in 0, 1, 2, 0:
             self.parser.ordered_attributes = x
-            self.assertEqual(self.parser.ordered_attributes, y)
+            self.assertIs(self.parser.ordered_attributes, bool(x))
 
     def test_specified_attributes(self):
-        for x, y in self.set_get_pairs:
+        self.assertIs(self.parser.specified_attributes, False)
+        for x in 0, 1, 2, 0:
             self.parser.specified_attributes = x
-            self.assertEqual(self.parser.specified_attributes, y)
+            self.assertIs(self.parser.specified_attributes, bool(x))
+
+    def test_invalid_attributes(self):
+        with self.assertRaises(AttributeError):
+            self.parser.returns_unicode = 1
+        with self.assertRaises(AttributeError):
+            self.parser.returns_unicode
+
+        # Issue #25019
+        self.assertRaises(TypeError, setattr, self.parser, range(0xF), 0)
+        self.assertRaises(TypeError, self.parser.__setattr__, range(0xF), 0)
+        self.assertRaises(TypeError, getattr, self.parser, range(0xF))
 
 
 data = b'''\
@@ -236,6 +259,18 @@ class ParseTest(unittest.TestCase):
         operations = out.out
         self._verify_parse_output(operations)
 
+    def test_parse_again(self):
+        parser = expat.ParserCreate()
+        file = BytesIO(data)
+        parser.ParseFile(file)
+        # Issue 6676: ensure a meaningful exception is raised when attempting
+        # to parse more than one XML document per xmlparser instance,
+        # a limitation of the Expat library.
+        with self.assertRaises(expat.error) as cm:
+            parser.ParseFile(file)
+        self.assertEqual(expat.ErrorString(cm.exception.code),
+                          expat.errors.XML_ERROR_FINISHED)
+
 class NamespaceSeparatorTest(unittest.TestCase):
     def test_legal(self):
         # Tests that make sure we get errors when the namespace_separator value
@@ -407,7 +442,11 @@ class HandlerExceptionTest(unittest.TestCase):
     def StartElementHandler(self, name, attrs):
         raise RuntimeError(name)
 
-    def test(self):
+    def check_traceback_entry(self, entry, filename, funcname):
+        self.assertEqual(os.path.basename(entry[0]), filename)
+        self.assertEqual(entry[2], funcname)
+
+    def test_exception(self):
         parser = expat.ParserCreate()
         parser.StartElementHandler = self.StartElementHandler
         try:
@@ -417,6 +456,17 @@ class HandlerExceptionTest(unittest.TestCase):
             self.assertEqual(e.args[0], 'a',
                              "Expected RuntimeError for element 'a', but" + \
                              " found %r" % e.args[0])
+            # Check that the traceback contains the relevant line in pyexpat.c
+            entries = traceback.extract_tb(e.__traceback__)
+            self.assertEqual(len(entries), 3)
+            self.check_traceback_entry(entries[0],
+                                       "test_pyexpat.py", "test_exception")
+            self.check_traceback_entry(entries[1],
+                                       "pyexpat.c", "StartElement")
+            self.check_traceback_entry(entries[2],
+                                       "test_pyexpat.py", "StartElementHandler")
+            if sysconfig.is_python_build():
+                self.assertIn('call_with_frame("StartElement"', entries[1][3])
 
 
 # Test Current* members:
@@ -484,11 +534,14 @@ class ChardataBufferTest(unittest.TestCase):
     def test_wrong_size(self):
         parser = expat.ParserCreate()
         parser.buffer_text = 1
-        def f(size):
-            parser.buffer_size = size
-
-        self.assertRaises(ValueError, f, -1)
-        self.assertRaises(ValueError, f, 0)
+        with self.assertRaises(ValueError):
+            parser.buffer_size = -1
+        with self.assertRaises(ValueError):
+            parser.buffer_size = 0
+        with self.assertRaises((ValueError, OverflowError)):
+            parser.buffer_size = sys.maxsize + 1
+        with self.assertRaises(TypeError):
+            parser.buffer_size = 512.0
 
     def test_unchanged_size(self):
         xml1 = b"<?xml version='1.0' encoding='iso8859'?><s>" + b'a' * 512
@@ -603,11 +656,9 @@ class MalformedInputTest(unittest.TestCase):
         # \xc2\x85 is UTF-8 encoded U+0085 (NEXT LINE)
         xml = b"<?xml version\xc2\x85='1.0'?>\r\n"
         parser = expat.ParserCreate()
-        try:
+        err_pattern = r'XML declaration not well-formed: line 1, column \d+'
+        with self.assertRaisesRegex(expat.ExpatError, err_pattern):
             parser.Parse(xml, True)
-            self.fail()
-        except expat.ExpatError as e:
-            self.assertEqual(str(e), 'XML declaration not well-formed: line 1, column 14')
 
 class ErrorMessageTest(unittest.TestCase):
     def test_codes(self):
@@ -678,19 +729,5 @@ class ForeignDTDTests(unittest.TestCase):
         self.assertEqual(handler_call_args, [("bar", "baz")])
 
 
-def test_main():
-    run_unittest(SetAttributeTest,
-                 ParseTest,
-                 NamespaceSeparatorTest,
-                 InterningTest,
-                 BufferTextTest,
-                 HandlerExceptionTest,
-                 PositionTest,
-                 sf1296433Test,
-                 ChardataBufferTest,
-                 MalformedInputTest,
-                 ErrorMessageTest,
-                 ForeignDTDTests)
-
 if __name__ == "__main__":
-    test_main()
+    unittest.main()

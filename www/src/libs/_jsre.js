@@ -72,9 +72,17 @@ var $module=(function($B){
     $SRE_PatternDict.search = function(self, string){
         return obj.search(self.pattern, string, self.flags)
     }
+    $SRE_PatternDict.sub = function(self,repl,string){
+        return obj.sub(self.pattern,repl,string,self.flags)
+    }
+    // TODO: groups
+    // TODO: groupindex
     function normflags(flags){
         return ((flags & obj.I)? 'i' : '') + ((flags & obj.M)? 'm' : '');
     }
+    // TODO: fullmatch()
+    // TODO: split()
+    // TODO: subn()
     obj.compile = function(pattern, flags){
         return {
             __class__: $SRE_PatternDict,
@@ -213,8 +221,9 @@ var $module=(function($B){
             var $repl1 = function(){
                 var mo = Object()
                 mo.string = arguments[arguments.length - 1]
+                var matched = arguments[0];
                 var start = arguments[arguments.length - 2]
-                var end = start + arguments[0].length
+                var end = start + matched.length
                 mo.start = function(){return start}
                 mo.end = function(){return end}
                 groups = []
@@ -229,6 +238,10 @@ var $module=(function($B){
                         else{res.push(groups[i])}
                     }
                     return res
+                }
+                mo.group = function(i){
+                    if(i==0){return matched}
+                    return groups[i-1]
                 }
                 return repl(JSObject.$factory(mo))
             }

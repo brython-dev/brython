@@ -6,9 +6,10 @@
 @viewport{width:device-width}
 
 :root {
-  --main-bg-color: #729f98;
-  --header-color: #283018;
-  --selected-header-color: #aa863a;
+  --main-bg-color: #dae8c0;
+  --header-color: #0f1b07;
+  --selected-header-color: #c6d166;
+  --text-color: #5c821a;
 }
 
 html {
@@ -23,7 +24,7 @@ body {
 }
 
 a.navig:link,a:link,a:hover,a:visited,a.navig:visited {
-  color:var(--header-color);
+  color:var(--text-color);
   text-decoration:none;
 }
 
@@ -35,9 +36,9 @@ a.banner{
 
 a.banner:link,a.banner:visited {
   background-color:var(--header-color);
-  color:#FFF;
+  color:var(--selected-header-color);
   display:block;
-  font-size:0.9em;
+  font-size:1em;
   line-height:30px;
   padding:1.3em;
   text-align:center;
@@ -47,7 +48,7 @@ a.banner:link,a.banner:visited {
 a.banner:hover,a.banner:active {
   background-color:var(--header-color);
   border-bottom-color:var(--selected-header-color);
-  color:#FFF
+  color:var(--main-bg-color);
 }
 
 a.selected_header{
@@ -66,7 +67,7 @@ a.selected_header{
 button{
     background-color: var(--header-color);
     border-color: var(--header-color);
-    color: #fff;
+    color: var(--selected-header-color);
     border: 1px solid;
     padding: 0.2em;
 }
@@ -75,7 +76,7 @@ button:hover{
 }
 #console {
   background-color:#000;
-  color:#FFF;
+  color:var(--text-color);
   font-size:12px;
   font-weight:700
 }
@@ -115,7 +116,7 @@ td.language {
 
 select.language {
   border-width:0;
-  color:#000;
+  color:var(--text-color);
   font-size:0.8em;
   margin-left:2em;
   background-color: var(--main-bg-color);
@@ -196,7 +197,6 @@ strong {
   min-width:200px;
   padding:5px
 }
-
 
 
 /* Breakpoint for all color devices of < 999px width */

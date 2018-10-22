@@ -5,13 +5,14 @@ import os.path
 import sys
 import re
 import tempfile
-import importlib
+import importlib, importlib.machinery, importlib.util
 import py_compile
+import warnings
 from test.support import (
-    forget, make_legacy_pyc, run_unittest, unload, verbose, no_tracing,
-    create_empty_file)
-from test.script_helper import (
-    make_pkg, make_script, make_zip_pkg, make_zip_script, temp_dir)
+    forget, make_legacy_pyc, unload, verbose, no_tracing,
+    create_empty_file, temp_dir)
+from test.support.script_helper import (
+    make_pkg, make_script, make_zip_pkg, make_zip_script)
 
 
 import runpy
@@ -47,6 +48,7 @@ implicit_namespace = {
     "__cached__": None,
     "__package__": None,
     "__doc__": None,
+    "__spec__": None
 }
 example_namespace =  {
     "sys": sys,
@@ -67,11 +69,19 @@ class CodeExecutionMixin:
     # testing occurs at those upper layers as well, not just at the utility
     # layer
 
+    # Figuring out the loader details in advance is hard to do, so we skip
+    # checking the full details of loader and loader_state
+    CHECKED_SPEC_ATTRIBUTES = ["name", "parent", "origin", "cached",
+                               "has_location", "submodule_search_locations"]
+
     def assertNamespaceMatches(self, result_ns, expected_ns):
         """Check two namespaces match.
 
            Ignores any unspecified interpreter created names
         """
+        # Avoid side effects
+        result_ns = result_ns.copy()
+        expected_ns = expected_ns.copy()
         # Impls are permitted to add extra names, so filter them out
         for k in list(result_ns):
             if k.startswith("__") and k.endswith("__"):
@@ -79,7 +89,25 @@ class CodeExecutionMixin:
                     result_ns.pop(k)
                 if k not in expected_ns["nested"]:
                     result_ns["nested"].pop(k)
-        # Don't use direct dict comparison - the diffs are too hard to debug
+        # Spec equality includes the loader, so we take the spec out of the
+        # result namespace and check that separately
+        result_spec = result_ns.pop("__spec__")
+        expected_spec = expected_ns.pop("__spec__")
+        if expected_spec is None:
+            self.assertIsNone(result_spec)
+        else:
+            # If an expected loader is set, we just check we got the right
+            # type, rather than checking for full equality
+            if expected_spec.loader is not None:
+                self.assertEqual(type(result_spec.loader),
+                                 type(expected_spec.loader))
+            for attr in self.CHECKED_SPEC_ATTRIBUTES:
+                k = "__spec__." + attr
+                actual = (k, getattr(result_spec, attr))
+                expected = (k, getattr(expected_spec, attr))
+                self.assertEqual(actual, expected)
+        # For the rest, we still don't use direct dict comparison on the
+        # namespace, as the diffs are too hard to debug if anything breaks
         self.assertEqual(set(result_ns), set(expected_ns))
         for k in result_ns:
             actual = (k, result_ns[k])
@@ -130,12 +158,16 @@ class ExecutionLayerTestCase(unittest.TestCase, CodeExecutionMixin):
         mod_fname = "Some other nonsense"
         mod_loader = "Now you're just being silly"
         mod_package = '' # Treat as a top level module
+        mod_spec = importlib.machinery.ModuleSpec(mod_name,
+                                                  origin=mod_fname,
+                                                  loader=mod_loader)
         expected_ns = example_namespace.copy()
         expected_ns.update({
             "__name__": mod_name,
             "__file__": mod_fname,
             "__loader__": mod_loader,
             "__package__": mod_package,
+            "__spec__": mod_spec,
             "run_argv0": mod_fname,
             "run_name_in_sys_modules": True,
             "module_in_sys_modules": True,
@@ -144,9 +176,7 @@ class ExecutionLayerTestCase(unittest.TestCase, CodeExecutionMixin):
             return _run_module_code(example_source,
                                     init_globals,
                                     mod_name,
-                                    mod_fname,
-                                    mod_loader,
-                                    mod_package)
+                                    mod_spec)
         self.check_code_execution(create_ns, expected_ns)
 
 # TODO: Use self.addCleanup to get rid of a lot of try-finally blocks
@@ -168,41 +198,56 @@ class RunModuleTestCase(unittest.TestCase, CodeExecutionMixin):
         self.expect_import_error("sys.imp.eric")
         self.expect_import_error("os.path.half")
         self.expect_import_error("a.bee")
+        # Relative names not allowed
         self.expect_import_error(".howard")
         self.expect_import_error("..eaten")
+        self.expect_import_error(".test_runpy")
+        self.expect_import_error(".unittest")
         # Package without __main__.py
         self.expect_import_error("multiprocessing")
 
     def test_library_module(self):
         self.assertEqual(run_module("runpy")["__name__"], "runpy")
 
-    def _add_pkg_dir(self, pkg_dir):
+    def _add_pkg_dir(self, pkg_dir, namespace=False):
         os.mkdir(pkg_dir)
+        if namespace:
+            return None
         pkg_fname = os.path.join(pkg_dir, "__init__.py")
         create_empty_file(pkg_fname)
         return pkg_fname
 
-    def _make_pkg(self, source, depth, mod_base="runpy_test"):
+    def _make_pkg(self, source, depth, mod_base="runpy_test",
+                     *, namespace=False, parent_namespaces=False):
+        # Enforce a couple of internal sanity checks on test cases
+        if (namespace or parent_namespaces) and not depth:
+            raise RuntimeError("Can't mark top level module as a "
+                               "namespace package")
         pkg_name = "__runpy_pkg__"
         test_fname = mod_base+os.extsep+"py"
         pkg_dir = sub_dir = os.path.realpath(tempfile.mkdtemp())
         if verbose > 1: print("  Package tree in:", sub_dir)
         sys.path.insert(0, pkg_dir)
         if verbose > 1: print("  Updated sys.path:", sys.path[0])
-        for i in range(depth):
-            sub_dir = os.path.join(sub_dir, pkg_name)
-            pkg_fname = self._add_pkg_dir(sub_dir)
-            if verbose > 1: print("  Next level in:", sub_dir)
-            if verbose > 1: print("  Created:", pkg_fname)
+        if depth:
+            namespace_flags = [parent_namespaces] * depth
+            namespace_flags[-1] = namespace
+            for namespace_flag in namespace_flags:
+                sub_dir = os.path.join(sub_dir, pkg_name)
+                pkg_fname = self._add_pkg_dir(sub_dir, namespace_flag)
+                if verbose > 1: print("  Next level in:", sub_dir)
+                if verbose > 1: print("  Created:", pkg_fname)
         mod_fname = os.path.join(sub_dir, test_fname)
         mod_file = open(mod_fname, "w")
         mod_file.write(source)
         mod_file.close()
         if verbose > 1: print("  Created:", mod_fname)
         mod_name = (pkg_name+".")*depth + mod_base
-        return pkg_dir, mod_fname, mod_name
+        mod_spec = importlib.util.spec_from_file_location(mod_name,
+                                                          mod_fname)
+        return pkg_dir, mod_fname, mod_name, mod_spec
 
-    def _del_pkg(self, top, depth, mod_name):
+    def _del_pkg(self, top):
         for entry in list(sys.modules):
             if entry.startswith("__runpy_pkg__"):
                 del sys.modules[entry]
@@ -228,21 +273,31 @@ class RunModuleTestCase(unittest.TestCase, CodeExecutionMixin):
             if verbose > 1: print(ex) # Persist with cleaning up
 
     def _fix_ns_for_legacy_pyc(self, ns, alter_sys):
-        char_to_add = "c" if __debug__ else "o"
+        char_to_add = "c"
         ns["__file__"] += char_to_add
+        ns["__cached__"] = ns["__file__"]
+        spec = ns["__spec__"]
+        new_spec = importlib.util.spec_from_file_location(spec.name,
+                                                          ns["__file__"])
+        ns["__spec__"] = new_spec
         if alter_sys:
             ns["run_argv0"] += char_to_add
 
 
-    def _check_module(self, depth, alter_sys=False):
-        pkg_dir, mod_fname, mod_name = (
-               self._make_pkg(example_source, depth))
+    def _check_module(self, depth, alter_sys=False,
+                         *, namespace=False, parent_namespaces=False):
+        pkg_dir, mod_fname, mod_name, mod_spec = (
+               self._make_pkg(example_source, depth,
+                              namespace=namespace,
+                              parent_namespaces=parent_namespaces))
         forget(mod_name)
         expected_ns = example_namespace.copy()
         expected_ns.update({
             "__name__": mod_name,
             "__file__": mod_fname,
+            "__cached__": mod_spec.cached,
             "__package__": mod_name.rpartition(".")[0],
+            "__spec__": mod_spec,
         })
         if alter_sys:
             expected_ns.update({
@@ -266,19 +321,24 @@ class RunModuleTestCase(unittest.TestCase, CodeExecutionMixin):
                 self._fix_ns_for_legacy_pyc(expected_ns, alter_sys)
                 self.check_code_execution(create_ns, expected_ns)
         finally:
-            self._del_pkg(pkg_dir, depth, mod_name)
+            self._del_pkg(pkg_dir)
         if verbose > 1: print("Module executed successfully")
 
-    def _check_package(self, depth, alter_sys=False):
-        pkg_dir, mod_fname, mod_name = (
-               self._make_pkg(example_source, depth, "__main__"))
+    def _check_package(self, depth, alter_sys=False,
+                          *, namespace=False, parent_namespaces=False):
+        pkg_dir, mod_fname, mod_name, mod_spec = (
+               self._make_pkg(example_source, depth, "__main__",
+                              namespace=namespace,
+                              parent_namespaces=parent_namespaces))
         pkg_name = mod_name.rpartition(".")[0]
         forget(mod_name)
         expected_ns = example_namespace.copy()
         expected_ns.update({
             "__name__": mod_name,
             "__file__": mod_fname,
+            "__cached__": importlib.util.cache_from_source(mod_fname),
             "__package__": pkg_name,
+            "__spec__": mod_spec,
         })
         if alter_sys:
             expected_ns.update({
@@ -302,7 +362,7 @@ class RunModuleTestCase(unittest.TestCase, CodeExecutionMixin):
                 self._fix_ns_for_legacy_pyc(expected_ns, alter_sys)
                 self.check_code_execution(create_ns, expected_ns)
         finally:
-            self._del_pkg(pkg_dir, depth, pkg_name)
+            self._del_pkg(pkg_dir)
         if verbose > 1: print("Package executed successfully")
 
     def _add_relative_modules(self, base_dir, source, depth):
@@ -334,7 +394,7 @@ from __future__ import absolute_import
 from . import sibling
 from ..uncle.cousin import nephew
 """
-        pkg_dir, mod_fname, mod_name = (
+        pkg_dir, mod_fname, mod_name, mod_spec = (
                self._make_pkg(contents, depth))
         if run_name is None:
             expected_name = mod_name
@@ -365,7 +425,7 @@ from ..uncle.cousin import nephew
                 self.assertIn("nephew", d2)
                 del d2 # Ensure __loader__ entry doesn't keep file open
         finally:
-            self._del_pkg(pkg_dir, depth, mod_name)
+            self._del_pkg(pkg_dir)
         if verbose > 1: print("Module executed successfully")
 
     def test_run_module(self):
@@ -373,10 +433,83 @@ from ..uncle.cousin import nephew
             if verbose > 1: print("Testing package depth:", depth)
             self._check_module(depth)
 
+    def test_run_module_in_namespace_package(self):
+        for depth in range(1, 4):
+            if verbose > 1: print("Testing package depth:", depth)
+            self._check_module(depth, namespace=True, parent_namespaces=True)
+
     def test_run_package(self):
         for depth in range(1, 4):
             if verbose > 1: print("Testing package depth:", depth)
             self._check_package(depth)
+
+    def test_run_package_init_exceptions(self):
+        # These were previously wrapped in an ImportError; see Issue 14285
+        result = self._make_pkg("", 1, "__main__")
+        pkg_dir, _, mod_name, _ = result
+        mod_name = mod_name.replace(".__main__", "")
+        self.addCleanup(self._del_pkg, pkg_dir)
+        init = os.path.join(pkg_dir, "__runpy_pkg__", "__init__.py")
+
+        exceptions = (ImportError, AttributeError, TypeError, ValueError)
+        for exception in exceptions:
+            name = exception.__name__
+            with self.subTest(name):
+                source = "raise {0}('{0} in __init__.py.')".format(name)
+                with open(init, "wt", encoding="ascii") as mod_file:
+                    mod_file.write(source)
+                try:
+                    run_module(mod_name)
+                except exception as err:
+                    self.assertNotIn("finding spec", format(err))
+                else:
+                    self.fail("Nothing raised; expected {}".format(name))
+                try:
+                    run_module(mod_name + ".submodule")
+                except exception as err:
+                    self.assertNotIn("finding spec", format(err))
+                else:
+                    self.fail("Nothing raised; expected {}".format(name))
+
+    def test_submodule_imported_warning(self):
+        pkg_dir, _, mod_name, _ = self._make_pkg("", 1)
+        try:
+            __import__(mod_name)
+            with self.assertWarnsRegex(RuntimeWarning,
+                    r"found in sys\.modules"):
+                run_module(mod_name)
+        finally:
+            self._del_pkg(pkg_dir)
+
+    def test_package_imported_no_warning(self):
+        pkg_dir, _, mod_name, _ = self._make_pkg("", 1, "__main__")
+        self.addCleanup(self._del_pkg, pkg_dir)
+        package = mod_name.replace(".__main__", "")
+        # No warning should occur if we only imported the parent package
+        __import__(package)
+        self.assertIn(package, sys.modules)
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", RuntimeWarning)
+            run_module(package)
+        # But the warning should occur if we imported the __main__ submodule
+        __import__(mod_name)
+        with self.assertWarnsRegex(RuntimeWarning, r"found in sys\.modules"):
+            run_module(package)
+
+    def test_run_package_in_namespace_package(self):
+        for depth in range(1, 4):
+            if verbose > 1: print("Testing package depth:", depth)
+            self._check_package(depth, parent_namespaces=True)
+
+    def test_run_namespace_package(self):
+        for depth in range(1, 4):
+            if verbose > 1: print("Testing package depth:", depth)
+            self._check_package(depth, namespace=True)
+
+    def test_run_namespace_package_in_namespace_package(self):
+        for depth in range(1, 4):
+            if verbose > 1: print("Testing package depth:", depth)
+            self._check_package(depth, namespace=True, parent_namespaces=True)
 
     def test_run_module_alter_sys(self):
         for depth in range(4):
@@ -401,21 +534,23 @@ from ..uncle.cousin import nephew
     def test_run_name(self):
         depth = 1
         run_name = "And now for something completely different"
-        pkg_dir, mod_fname, mod_name = (
+        pkg_dir, mod_fname, mod_name, mod_spec = (
                self._make_pkg(example_source, depth))
         forget(mod_name)
         expected_ns = example_namespace.copy()
         expected_ns.update({
             "__name__": run_name,
             "__file__": mod_fname,
+            "__cached__": importlib.util.cache_from_source(mod_fname),
             "__package__": mod_name.rpartition(".")[0],
+            "__spec__": mod_spec,
         })
         def create_ns(init_globals):
             return run_module(mod_name, init_globals, run_name)
         try:
             self.check_code_execution(create_ns, expected_ns)
         finally:
-            self._del_pkg(pkg_dir, depth, mod_name)
+            self._del_pkg(pkg_dir)
 
     def test_pkgutil_walk_packages(self):
         # This is a dodgy hack to use the test_runpy infrastructure to test
@@ -437,39 +572,58 @@ from ..uncle.cousin import nephew
         pkg_name = ".".join([base_name] * max_depth)
         expected_packages.add(pkg_name)
         expected_modules.add(pkg_name + ".runpy_test")
-        pkg_dir, mod_fname, mod_name = (
+        pkg_dir, mod_fname, mod_name, mod_spec = (
                self._make_pkg("", max_depth))
-        self.addCleanup(self._del_pkg, pkg_dir, max_depth, mod_name)
+        self.addCleanup(self._del_pkg, pkg_dir)
         for depth in range(2, max_depth+1):
             self._add_relative_modules(pkg_dir, "", depth)
-        for finder, mod_name, ispkg in pkgutil.walk_packages([pkg_dir]):
-            self.assertIsInstance(finder,
+        for moduleinfo in pkgutil.walk_packages([pkg_dir]):
+            self.assertIsInstance(moduleinfo, pkgutil.ModuleInfo)
+            self.assertIsInstance(moduleinfo.module_finder,
                                   importlib.machinery.FileFinder)
-            if ispkg:
-                expected_packages.remove(mod_name)
+            if moduleinfo.ispkg:
+                expected_packages.remove(moduleinfo.name)
             else:
-                expected_modules.remove(mod_name)
+                expected_modules.remove(moduleinfo.name)
         self.assertEqual(len(expected_packages), 0, expected_packages)
         self.assertEqual(len(expected_modules), 0, expected_modules)
 
 class RunPathTestCase(unittest.TestCase, CodeExecutionMixin):
     """Unit tests for runpy.run_path"""
 
-    def _make_test_script(self, script_dir, script_basename, source=None):
+    def _make_test_script(self, script_dir, script_basename,
+                          source=None, omit_suffix=False):
         if source is None:
             source = example_source
-        return make_script(script_dir, script_basename, source)
+        return make_script(script_dir, script_basename,
+                           source, omit_suffix)
 
     def _check_script(self, script_name, expected_name, expected_file,
-                            expected_argv0):
+                            expected_argv0, mod_name=None,
+                            expect_spec=True, check_loader=True):
         # First check is without run_name
         def create_ns(init_globals):
             return run_path(script_name, init_globals)
         expected_ns = example_namespace.copy()
+        if mod_name is None:
+            spec_name = expected_name
+        else:
+            spec_name = mod_name
+        if expect_spec:
+            mod_spec = importlib.util.spec_from_file_location(spec_name,
+                                                              expected_file)
+            mod_cached = mod_spec.cached
+            if not check_loader:
+                mod_spec.loader = None
+        else:
+            mod_spec = mod_cached = None
+
         expected_ns.update({
             "__name__": expected_name,
             "__file__": expected_file,
+            "__cached__": mod_cached,
             "__package__": "",
+            "__spec__": mod_spec,
             "run_argv0": expected_argv0,
             "run_name_in_sys_modules": True,
             "module_in_sys_modules": True,
@@ -479,6 +633,12 @@ class RunPathTestCase(unittest.TestCase, CodeExecutionMixin):
         run_name = "prove.issue15230.is.fixed"
         def create_ns(init_globals):
             return run_path(script_name, init_globals, run_name)
+        if expect_spec and mod_name is None:
+            mod_spec = importlib.util.spec_from_file_location(run_name,
+                                                              expected_file)
+            if not check_loader:
+                mod_spec.loader = None
+            expected_ns["__spec__"] = mod_spec
         expected_ns["__name__"] = run_name
         expected_ns["__package__"] = run_name.rpartition(".")[0]
         self.check_code_execution(create_ns, expected_ns)
@@ -492,7 +652,15 @@ class RunPathTestCase(unittest.TestCase, CodeExecutionMixin):
             mod_name = 'script'
             script_name = self._make_test_script(script_dir, mod_name)
             self._check_script(script_name, "<run_path>", script_name,
-                               script_name)
+                               script_name, expect_spec=False)
+
+    def test_basic_script_no_suffix(self):
+        with temp_dir() as script_dir:
+            mod_name = 'script'
+            script_name = self._make_test_script(script_dir, mod_name,
+                                                 omit_suffix=True)
+            self._check_script(script_name, "<run_path>", script_name,
+                               script_name, expect_spec=False)
 
     def test_script_compiled(self):
         with temp_dir() as script_dir:
@@ -501,14 +669,14 @@ class RunPathTestCase(unittest.TestCase, CodeExecutionMixin):
             compiled_name = py_compile.compile(script_name, doraise=True)
             os.remove(script_name)
             self._check_script(compiled_name, "<run_path>", compiled_name,
-                               compiled_name)
+                               compiled_name, expect_spec=False)
 
     def test_directory(self):
         with temp_dir() as script_dir:
             mod_name = '__main__'
             script_name = self._make_test_script(script_dir, mod_name)
             self._check_script(script_dir, "<run_path>", script_name,
-                               script_dir)
+                               script_dir, mod_name=mod_name)
 
     def test_directory_compiled(self):
         with temp_dir() as script_dir:
@@ -519,7 +687,7 @@ class RunPathTestCase(unittest.TestCase, CodeExecutionMixin):
             if not sys.dont_write_bytecode:
                 legacy_pyc = make_legacy_pyc(script_name)
                 self._check_script(script_dir, "<run_path>", legacy_pyc,
-                                   script_dir)
+                                   script_dir, mod_name=mod_name)
 
     def test_directory_error(self):
         with temp_dir() as script_dir:
@@ -533,7 +701,8 @@ class RunPathTestCase(unittest.TestCase, CodeExecutionMixin):
             mod_name = '__main__'
             script_name = self._make_test_script(script_dir, mod_name)
             zip_name, fname = make_zip_script(script_dir, 'test_zip', script_name)
-            self._check_script(zip_name, "<run_path>", fname, zip_name)
+            self._check_script(zip_name, "<run_path>", fname, zip_name,
+                               mod_name=mod_name, check_loader=False)
 
     def test_zipfile_compiled(self):
         with temp_dir() as script_dir:
@@ -542,7 +711,8 @@ class RunPathTestCase(unittest.TestCase, CodeExecutionMixin):
             compiled_name = py_compile.compile(script_name, doraise=True)
             zip_name, fname = make_zip_script(script_dir, 'test_zip',
                                               compiled_name)
-            self._check_script(zip_name, "<run_path>", fname, zip_name)
+            self._check_script(zip_name, "<run_path>", fname, zip_name,
+                               mod_name=mod_name, check_loader=False)
 
     def test_zipfile_error(self):
         with temp_dir() as script_dir:
@@ -561,7 +731,7 @@ class RunPathTestCase(unittest.TestCase, CodeExecutionMixin):
             script_name = self._make_test_script(script_dir, mod_name, source)
             zip_name, fname = make_zip_script(script_dir, 'test_zip', script_name)
             msg = "recursion depth exceeded"
-            self.assertRaisesRegex(RuntimeError, msg, run_path, zip_name)
+            self.assertRaisesRegex(RecursionError, msg, run_path, zip_name)
 
     def test_encoding(self):
         with temp_dir() as script_dir:
@@ -575,12 +745,5 @@ s = "non-ASCII: h\xe9"
             self.assertEqual(result['s'], "non-ASCII: h\xe9")
 
 
-def test_main():
-    run_unittest(
-                 ExecutionLayerTestCase,
-                 RunModuleTestCase,
-                 RunPathTestCase
-                 )
-
 if __name__ == "__main__":
-    test_main()
+    unittest.main()
