@@ -2114,6 +2114,17 @@ except TypeError as exc:
 assertRaises(SyntaxError, lambda: exec('a.foo = x += 3', {'a': A(), 'x': 10}))
 assertRaises(SyntaxError, lambda: exec('x = a.foo += 3', {'a': A(), 'x': 10}))
 
+# issue 944
+src = """def f():
+    pass
+f():
+"""
+try:
+    exec(src)
+    raise Exception("should have raised SyntaxError")
+except SyntaxError:
+    pass
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

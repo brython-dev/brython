@@ -6334,6 +6334,10 @@ var $transition = $B.parser.$transition = function(context, token, value){
           return $transition(context.parent, token, value)
 
         case 'annotation':
+            if(token == "eol" && context.tree.length == 1 &&
+                    context.tree[0].tree.length == 0){
+                $_SyntaxError(context, "empty annotation")
+            }
             return $transition(context.parent, token)
 
         case 'assert':
@@ -7072,7 +7076,7 @@ var $transition = $B.parser.$transition = function(context, token, value){
                 }
                 return $transition(context.parent, token, value)
             case ":": // slice
-                // valid only if expr is parent is a subscription, or a tuple
+                // valid only if expr parent is a subscription, or a tuple
                 // inside a subscription, or a slice
                 if(context.parent.type=="sub" ||
                         (context.parent.type == "list_or_tuple" &&
