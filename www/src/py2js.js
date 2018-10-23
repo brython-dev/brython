@@ -8608,7 +8608,7 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
                     // implicit line joining inside brackets
                     pos++
                 }else{
-                    if(current.context.tree.length > 0){
+                    if(current.context.tree.length > 0 || current.context.async){
                         $pos = pos
                         context = $transition(context, 'eol')
                         indent = null
@@ -8763,6 +8763,12 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
         $pos = br_err[1]
         $_SyntaxError(br_err[0],
             ["Unbalanced bracket " + br_stack.charAt(br_stack.length - 1)])
+    }
+    if(context !== null && context.type == "async"){
+        // issue 941
+        console.log("error with async", pos, src, src.substr(pos))
+        $pos = pos - 7
+        throw $_SyntaxError(context, "car " + car + "after async", pos)
     }
     if(context !== null && context.tree[0] && $indented.indexOf(context.tree[0].type) > -1){
         $pos = pos - 1

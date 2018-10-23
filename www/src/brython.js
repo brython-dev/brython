@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-10-23 08:31:33.212964"
-__BRYTHON__.timestamp=1540276293212
+__BRYTHON__.compiled_date="2018-10-23 22:00:45.603232"
+__BRYTHON__.timestamp=1540324845603
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -4402,7 +4402,7 @@ break
 case '\n':
 lnum++
 if(br_stack.length > 0){
-pos++}else{if(current.C.tree.length > 0){$pos=pos
+pos++}else{if(current.C.tree.length > 0 ||current.C.async){$pos=pos
 C=$transition(C,'eol')
 indent=null
 new_node=new $Node()}else{new_node.line_num=lnum}
@@ -4504,6 +4504,10 @@ $_SyntaxError(C,'unknown token [' + car + ']')}}
 if(br_stack.length !=0){var br_err=br_pos[0]
 $pos=br_err[1]
 $_SyntaxError(br_err[0],["Unbalanced bracket " + br_stack.charAt(br_stack.length - 1)])}
+if(C !==null && C.type=="async"){
+console.log("error with async",pos,src,src.substr(pos))
+$pos=pos - 7
+throw $_SyntaxError(C,"car " + car + "after async",pos)}
 if(C !==null && C.tree[0]&& $indented.indexOf(C.tree[0].type)> -1){$pos=pos - 1
 $_SyntaxError(C,'expected an indented block',pos)}}
 var $create_root_node=$B.parser.$create_root_node=function(src,module,locals_id,parent_block,line_info){var root=new $Node('module')
