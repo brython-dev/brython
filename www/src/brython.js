@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-10-24 08:41:59.831063"
-__BRYTHON__.timestamp=1540363319831
+__BRYTHON__.compiled_date="2018-10-24 09:13:23.172864"
+__BRYTHON__.timestamp=1540365203172
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -7915,7 +7915,7 @@ JSObject.bind=function(self,evt,func){var js_func=function(ev){return func(jsobj
 self.js.addEventListener(evt,js_func)
 return _b_.None}
 JSObject.to_dict=function(self){
-return $B.obj_dict(self.js)}
+return $B.obj_dict(self.js,true)}
 JSObject.$factory=function(obj){if(obj===null){return _b_.None}
 if(typeof obj=='function'){return{__class__: JSObject,js: obj,js_func: obj}}
 var klass=$B.get_class(obj)
@@ -11092,9 +11092,11 @@ items.forEach(function(item){if((!self.$jsobj && item[1]===self)||
 return "{" + res.join(", ")+ "}"}
 dict.__setitem__=function(self,key,value){var $=$B.args("__setitem__",3,{self: null,key: null,value: null},["self","key","value"],arguments,{},null,null)
 return dict.$setitem($.self,$.key,$.value)}
-dict.$setitem=function(self,key,value){if(self.$jsobj){if(self.$jsobj.__class__===_b_.type){self.$jsobj[key]=$B.pyobj2jsobj(value)
+dict.$setitem=function(self,key,value){if(self.$jsobj){if(self.$from_js){
+value=$B.pyobj2jsobj(value)}
+if(self.$jsobj.__class__===_b_.type){self.$jsobj[key]=value
 if(key=="__init__" ||key=="__new__"){
-self.$jsobj.$factory=$B.$instance_creator(self.$jsobj)}}else{self.$jsobj[key]=$B.pyobj2jsobj(value)}
+self.$jsobj.$factory=$B.$instance_creator(self.$jsobj)}}else{self.$jsobj[key]=value}
 return $N}
 switch(typeof key){case "string":
 self.$string_dict[key]=value
@@ -11201,11 +11203,12 @@ $B.set_func_names(mappingproxy,"builtins")
 function jsobj2dict(x){var d=dict.$factory()
 for(var attr in x){if(attr.charAt(0)!="$" && attr !=="__class__"){if(x[attr]===undefined){continue}else if(x[attr].$jsobj===x){d.$string_dict[attr]=d}else{d.$string_dict[attr]=x[attr]}}}
 return d}
-$B.obj_dict=function(obj){var klass=$B.get_class(obj)
+$B.obj_dict=function(obj,from_js){var klass=$B.get_class(obj)
 if(klass !==undefined && klass.$native){throw _b_.AttributeError.$factory(klass.__name__ +
 " has no attribute '__dict__'")}
 var res=dict.$factory()
 res.$jsobj=obj
+res.$from_js=from_js 
 return res}})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins,object=_b_.object,$N=_b_.None
 function create_type(obj){return $B.get_class(obj).$factory()}

@@ -2144,6 +2144,14 @@ try:
 except AttributeError:
     pass
 
+# issue 951
+class A(object):
+        pass
+
+a = A()
+a.__dict__['_x'] = {1: 2}
+a._x[3] = 4
+assert len(a._x) == 2
 
 # ==========================================
 # Finally, report that all tests have passed
