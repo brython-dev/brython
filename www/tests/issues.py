@@ -2131,7 +2131,20 @@ try:
     raise Exception("should have raised SyntaxError")
 except SyntaxError as exc:
     assert exc.args[0] == "can't assign to operator"
-    
+
+# issue 949
+class A(object):
+
+    def __getattr__(self, name):
+        return 'A-%s' % name
+
+try:
+    A.foo
+    raise Exception("should have raised AttributeError")
+except AttributeError:
+    pass
+
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

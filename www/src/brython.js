@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-10-24 08:21:16.788628"
-__BRYTHON__.timestamp=1540362076788
+__BRYTHON__.compiled_date="2018-10-24 08:41:59.831063"
+__BRYTHON__.timestamp=1540363319831
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -5185,13 +5185,12 @@ if(res.__class__===_b_.property){return res.fget(klass)}
 if(typeof res=="function"){var meta_method=function(){return res(klass,...arguments)}
 meta_method.__class__=$B.method
 meta_method.$infos={__self__: klass,__func__: res,__name__: attr,__qualname__: klass.__name__ + "." + attr,__module__: res.$infos ? res.$infos.__module__ : ""}
-return meta_method}}}
+return meta_method}}
 if(res===undefined){
-var getattr=null,v=klass.__getattr__
-if(v===undefined){if(klass.__class__.__getattr__ !==undefined){getattr=klass.__class__.__getattr__}else{for(var i=0;i < mro.length;i++){if(mro[i].__getattr__ !==undefined){getattr=mro[i].__getattr__
-break}else if(mro[i].__class__.__getattr__ !==undefined){getattr=mro[i].__class__.__getattr__
-break}}}}else{getattr=v}
-if(getattr !==null){return getattr(klass,attr)}}}
+var getattr=meta.__getattr__
+if(getattr===undefined){for(var i=0;i < meta_mro.length;i++){if(meta_mro[i].__getattr__ !==undefined){getattr=meta_mro[i].__getattr__
+break}}}
+if(getattr !==undefined){return getattr(klass,attr)}}}}
 if(res !==undefined){if($test){console.log("res",res)}
 if(res.__class__===_b_.property){return res }
 if(res.__get__){if(res.__class__===method){var result=res.__get__(res.__func__,klass)
