@@ -2125,6 +2125,13 @@ try:
 except SyntaxError:
     pass
 
+# issue 948
+try:
+    exec("a = +25, b = 25")
+    raise Exception("should have raised SyntaxError")
+except SyntaxError as exc:
+    assert exc.args[0] == "can't assign to operator"
+    
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

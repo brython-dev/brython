@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-10-23 22:00:45.603232"
-__BRYTHON__.timestamp=1540324845603
+__BRYTHON__.compiled_date="2018-10-24 08:21:16.788628"
+__BRYTHON__.timestamp=1540362076788
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -393,7 +393,7 @@ var node=$get_node(this)
 node.bound_before=$B.keys(scope.binding)
 $bind(assigned.value,scope,this)}else{
 var module=$get_module(C)
-$bind(assigned.value,module,this)}}else if(["str","int","float","complex"].indexOf(assigned.type)> -1){$_SyntaxError(C,["can't assign to literal"])}}
+$bind(assigned.value,module,this)}}else if(["str","int","float","complex"].indexOf(assigned.type)> -1){$_SyntaxError(C,["can't assign to literal"])}else if(assigned.type=="unary"){$_SyntaxError(C,["can't assign to operator"])}}
 this.guess_type=function(){return}
 this.toString=function(){return '(assign) ' + this.tree[0]+ '=' + this.tree[1]}
 this.transform=function(node,rank){

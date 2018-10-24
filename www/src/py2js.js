@@ -776,6 +776,8 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context){
             }
         }else if(["str", "int", "float", "complex"].indexOf(assigned.type) > -1){
             $_SyntaxError(context, ["can't assign to literal"])
+        }else if(assigned.type == "unary"){
+            $_SyntaxError(context, ["can't assign to operator"])
         }
     }
 
