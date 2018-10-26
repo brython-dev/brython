@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-10-24 09:13:23.172864"
-__BRYTHON__.timestamp=1540365203172
+__BRYTHON__.compiled_date="2018-10-26 08:47:50.273612"
+__BRYTHON__.timestamp=1540536470273
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -3498,7 +3498,9 @@ repl.parent=expr
 var new_op=new $OpCtx(repl,op)
 return new $AbstractExprCtx(new_op,false)
 case 'augm_assign':
-if(C.parent.type=="assign"){$_SyntaxError(C,"augmented assign inside assign")}
+var parent=C.parent
+while(parent){if(parent.type=="assign"){$_SyntaxError(C,"augmented assign inside assign")}
+parent=parent.parent}
 if(C.expect==','){return new $AbstractExprCtx(
 new $AugmentedAssignCtx(C,value),true)}
 return $transition(C.parent,token,value)
@@ -3512,10 +3514,10 @@ case '=':
 if(C.expect==','){if(C.parent.type=="call_arg"){
 if(C.tree[0].type !='id'){$_SyntaxError(C,["keyword can't be an expression"])}
 return new $AbstractExprCtx(new $KwArgCtx(C),true)}else if(C.parent.type=="annotation"){return $transition(C.parent.parent,token,value)}else if(C.parent.type=="op"){
-$_SyntaxError(C,["can't assign to operator"])}else if(C.parent.type=="augm_assign"){$_SyntaxError(C,"assign inside augmented assign")}
+$_SyntaxError(C,["can't assign to operator"])}
 while(C.parent !==undefined){C=C.parent
 if(C.type=='condition'){$_SyntaxError(C,'token ' + token + ' after '
-+ C)}}
++ C)}else if(C.type=="augm_assign"){$_SyntaxError(C,"assign inside augmented assign")}}
 C=C.tree[0]
 return new $AbstractExprCtx(new $AssignCtx(C),true)}
 break
@@ -4919,7 +4921,7 @@ for(var i=0,len=mro.length;i < len;i++){_ga=mro[i]["__getattr__"]
 if(_ga !==undefined){break}}}}
 if($test){console.log("use __getattr__",_ga)}
 if(_ga !==undefined){try{return _ga(obj,attr)}
-catch(err){console.log(err)}}
+catch(err){if($B.debug > 1){console.log(err)}}}
 if(attr.substr(0,2)=="__" && attr.substr(attr.length - 2)=="__"){var attr1=attr.substr(2,attr.length - 4)
 var rank=opnames.indexOf(attr1)
 if(rank > -1){var rop="__r" + opnames[rank]+ "__" 

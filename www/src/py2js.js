@@ -7069,8 +7069,12 @@ var $transition = $B.parser.$transition = function(context, token, value){
                 var new_op = new $OpCtx(repl,op) // replace old operation
                 return new $AbstractExprCtx(new_op,false)
             case 'augm_assign':
-                if(context.parent.type == "assign"){
-                    $_SyntaxError(context, "augmented assign inside assign")
+                var parent = context.parent
+                while(parent){
+                    if(parent.type == "assign"){
+                        $_SyntaxError(context, "augmented assign inside assign")
+                    }
+                    parent = parent.parent
                 }
                 if(context.expect == ','){
                      return new $AbstractExprCtx(
@@ -7106,8 +7110,6 @@ var $transition = $B.parser.$transition = function(context, token, value){
                    }else if(context.parent.type == "op"){
                         // issue 811
                         $_SyntaxError(context, ["can't assign to operator"])
-                   }else if(context.parent.type == "augm_assign"){
-                       $_SyntaxError(context, "assign inside augmented assign")
                    }
 
                    while(context.parent !== undefined){
@@ -7115,6 +7117,8 @@ var $transition = $B.parser.$transition = function(context, token, value){
                        if(context.type == 'condition'){
                            $_SyntaxError(context, 'token ' + token + ' after '
                                + context)
+                       }else if(context.type == "augm_assign"){
+                           $_SyntaxError(context, "assign inside augmented assign")
                        }
                    }
                    context = context.tree[0]

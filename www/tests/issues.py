@@ -2153,6 +2153,14 @@ a.__dict__['_x'] = {1: 2}
 a._x[3] = 4
 assert len(a._x) == 2
 
+# issue 952
+try:
+    exec("x += 1, y = 2")
+    raise Exception("should have raised SyntaxError")
+except SyntaxError as exc:
+    print(exc.args[0]) # == "can't assign to operator"
+
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
