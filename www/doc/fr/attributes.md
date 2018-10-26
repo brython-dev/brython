@@ -13,17 +13,20 @@ Le DOM définit deux concepts différents pour les éléments d'une page:
   `valeur = element.nom_propriete`
 
 Le DOM définit également une relation entre _certains_ attributs et
-_certaines_ propriétés. En général, en ce qui concerne les attributs attendus
-pour une balise donnée (par exemple "id" ou "class" pour n'importe quel type
-de balise, "src" pour une balise IMG, "href" pour une balise A, etc), quand on
-affecte une valeur à l'attribut, une propriété correspondante reçoit aussi une
-valeur. Dans la plupart des cas, le nom de la propriété est le même que celui
-de l'attribut, mais il y a des exceptions : la propriété pour l'attribut
-"class" est "className". En général, la valeur de la propriété est la même que
-celle de l'attribut, mais pas toujours : par exemple, dans le cas d'un élément
-défini par `<INPUT type="checkbox" checked="checked">`, la valeur de
-l'attribut "checked" est "checked", et la valeur de la propriété "checked" est
-le booléen "true".
+_certaines_ propriétés:
+
+- en général, en ce qui concerne les attributs attendus pour une balise donnée
+  (par exemple "id" ou "class" pour n'importe quel type de balise, "src" pour
+  une balise IMG, "href" pour une balise A, etc), quand on affecte une valeur
+  à l'attribut, une propriété correspondante reçoit aussi une valeur
+- dans la plupart des cas, le nom de la propriété est le même que celui de
+  l'attribut, mais il y a des exceptions : la propriété pour l'attribut
+  "class" est "className"
+- en général, la valeur de la propriété est la même que celle de l'attribut,
+  mais pas toujours : par exemple, dans le cas d'un élément défini par
+  `<INPUT type="checkbox" checked="checked">`, la valeur de l'attribut
+  "checked" est la chaine de caractères "checked", et la valeur de la
+  propriété "checked" est le booléen `true`.
 
 En plus des attributs définis par la spécification pour une balise donnée, des
 attributs additionnels peuvent être définis (les moteurs de template en
@@ -32,9 +35,11 @@ nom. Des propriétés spécifiques peuvent aussi être définies pour un éléme
 et ceci ne définit pas d'attribut du même nom.
 
 Les valeurs des attributs sont toujours des chaines de caractères, alors que
-les valeurs des propriétés peuvent être de n'importe quel type. Les attributs
-sont insensibles à la casse pour les éléments HTML et sensibles à la casse
-pour les éléments SVG ; les propriétés sont toujours sensibles à la casse.
+les valeurs des propriétés peuvent être de n'importe quel type.
+
+Les attributs sont insensibles à la casse pour les éléments HTML et sensibles
+à la casse pour les éléments SVG ; les propriétés sont toujours sensibles à la 
+casse.
 
 ### Gestion des attributs et des propriétés en Brython
 
