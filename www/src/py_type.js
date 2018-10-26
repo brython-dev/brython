@@ -468,7 +468,7 @@ type.__getattribute__ = function(klass, attr){
                 function(key){delete klass[key]})
     }
     var res = klass[attr]
-    var $test = false //attr=="__init__" && klass.__name__ == "Point"
+    var $test = false // attr=="spam" //&& klass.__name__ == "Point"
     if($test){
         console.log("attr", attr, "of", klass, res)
     }
@@ -526,31 +526,21 @@ type.__getattribute__ = function(klass, attr){
                     return meta_method
                 }
             }
-        }
-
-        if(res === undefined){
-            // search a method __getattr__
-            var getattr = null,
-                v = klass.__getattr__
-            if(v === undefined){
-                if(klass.__class__.__getattr__ !== undefined){
-                    getattr = klass.__class__.__getattr__
-                }else{
-                    for(var i = 0; i < mro.length; i++){
-                        if(mro[i].__getattr__ !== undefined){
-                            getattr = mro[i].__getattr__
-                            break
-                        }else if(mro[i].__class__.__getattr__ !== undefined){
-                            getattr = mro[i].__class__.__getattr__
+            if(res === undefined){
+                // search a method __getattr__ in metaclass
+                // (issues #126 and #949)
+                var getattr = meta.__getattr__
+                if(getattr === undefined){
+                    for(var i = 0; i < meta_mro.length; i++){
+                        if(meta_mro[i].__getattr__ !== undefined){
+                            getattr = meta_mro[i].__getattr__
                             break
                         }
                     }
                 }
-            }else{
-                getattr = v
-            }
-            if(getattr !== null){
-                return getattr(klass, attr)
+                if(getattr !== undefined){
+                    return getattr(klass, attr)
+                }
             }
         }
     }

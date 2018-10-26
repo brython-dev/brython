@@ -465,7 +465,7 @@ JSObject.bind = function(self, evt, func){
 
 JSObject.to_dict = function(self){
     // Returns a Python dictionary based on the underlying Javascript object
-    return $B.obj_dict(self.js)
+    return $B.obj_dict(self.js, true)
 }
 
 JSObject.$factory = function(obj){

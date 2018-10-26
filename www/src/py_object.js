@@ -278,7 +278,7 @@ object.__getattribute__ = function(obj, attr){
         if($test){console.log("use __getattr__", _ga)}
         if(_ga !== undefined){
             try{return _ga(obj, attr)}
-            catch(err){console.log(err)}
+            catch(err){if($B.debug > 1){console.log(err)}}
         }
         // for special methods such as __mul__, look for __rmul__ on operand
         if(attr.substr(0,2) == "__" && attr.substr(attr.length - 2) == "__"){

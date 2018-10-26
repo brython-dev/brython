@@ -2114,6 +2114,62 @@ except TypeError as exc:
 assertRaises(SyntaxError, lambda: exec('a.foo = x += 3', {'a': A(), 'x': 10}))
 assertRaises(SyntaxError, lambda: exec('x = a.foo += 3', {'a': A(), 'x': 10}))
 
+# issue 944
+src = """def f():
+    pass
+f():
+"""
+try:
+    exec(src)
+    raise Exception("should have raised SyntaxError")
+except SyntaxError:
+    pass
+
+# issue 948
+try:
+    exec("a = +25, b = 25")
+    raise Exception("should have raised SyntaxError")
+except SyntaxError as exc:
+    assert exc.args[0] == "can't assign to operator"
+
+# issue 949
+class A(object):
+
+    def __getattr__(self, name):
+        return 'A-%s' % name
+
+try:
+    A.foo
+    raise Exception("should have raised AttributeError")
+except AttributeError:
+    pass
+
+# issue 951
+class A(object):
+        pass
+
+a = A()
+a.__dict__['_x'] = {1: 2}
+a._x[3] = 4
+assert len(a._x) == 2
+
+# issue 952
+try:
+    exec("x += 1, y = 2")
+    raise Exception("should have raised SyntaxError")
+except SyntaxError as exc:
+    print(exc.args[0]) # == "can't assign to operator"
+
+# issue 953
+adk = 4
+def f():
+    if False:
+        adk = 1
+    else:
+        print(adk)
+
+assertRaises(UnboundLocalError, f)
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

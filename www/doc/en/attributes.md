@@ -12,23 +12,27 @@ The DOM defines two different concepts for elements :
   by `element.property_name = value`, read by `value = element.property_name`
 
 The DOM also defines a relation between _some_ attributes and _some_
-properties. Generally, for the attributes that are expected for a given tag
-(eg "id" or "class" for any kind of tag, "src" for IMG tags, "href" for A
-tags, etc), when the attribute is set, the property is also set. Most of the
-time, the property name is the same as the attribute name, but there are
-exceptions : the property for the attribute "class" is "className". Generally,
-the property value is the same as the attribute value, but not always : for
-instance, for an element defined by `<INPUT type="checkbox" checked="checked">`,
-the value of attribute "checked" is "checked", and the value of property
-"checked" is the boolean "true".
+properties:
+
+- generally, for the attributes that are expected for a given tag
+  (eg "id" or "class" for any kind of tag, "src" for IMG tags, "href" for A
+  tags, etc), when the attribute is set, the property is also set
+- most of the time, the property name is the same as the attribute name, but
+  there are exceptions : the property for the attribute "class" is "className"
+- generally, the property value is the same as the attribute value, but not
+  always : for instance, for an element defined by
+  `<INPUT type="checkbox" checked="checked">`, the value of attribute
+  "checked" is the string "checked", and the value of property "checked" is
+  the boolean `true`
 
 Besides the attributes defined by the specification for a given tag, custom
-attributes can be defined (template engine use this a lot) ; for these
+attributes can be defined (template engines use this a lot) ; for these
 attributes, the property of the same name is not set. Custom properties can
 also be defined for an element, and this doesn't set the attribute of the
 same name.
 
 Attribute values are always strings, while property values can be of any type.
+
 Attributes are case-insensitive for HTML elements and case-sensitive for SVG
 elements ; properties are always case-sensitive.
 
@@ -180,7 +184,7 @@ the upper border of the first positioned parent (1)</td><td>R/W</td>
 
 (1) When going up the DOM tree, we stop at the first parent whose attribute
 `style.position` is set to a value different of "static". `left` and `top` are
-computed like `style.left` and `style.top` but are integer, not strings ending
+computed like `style.left` and `style.top` but are integers, not strings ending
 with `px`.
 
 (2) Same as `style.height` and `style.width` but as integers.

@@ -457,7 +457,6 @@ dict.__repr__ = function(self){
 }
 
 dict.__setitem__ = function(self, key, value){
-
     var $ = $B.args("__setitem__", 3, {self: null, key: null, value: null},
         ["self", "key", "value"], arguments, {}, null, null)
     return dict.$setitem($.self, $.key, $.value)
@@ -465,15 +464,19 @@ dict.__setitem__ = function(self, key, value){
 
 dict.$setitem = function(self, key, value){
     if(self.$jsobj){
+        if(self.$from_js){
+            // dictionary created by method to_dict of JSObject instances
+            value = $B.pyobj2jsobj(value)
+        }
         if(self.$jsobj.__class__ === _b_.type){
-            self.$jsobj[key] = $B.pyobj2jsobj(value)
+            self.$jsobj[key] = value
             if(key == "__init__" || key == "__new__"){
                 // If class attribute __init__ or __new__ are reset,
                 // the factory function has to change
                 self.$jsobj.$factory = $B.$instance_creator(self.$jsobj)
             }
         }else{
-            self.$jsobj[key] = $B.pyobj2jsobj(value)
+            self.$jsobj[key] = value
         }
         return $N
     }
@@ -774,13 +777,14 @@ function jsobj2dict(x){
     }
     return d
 }
-$B.obj_dict = function(obj){
+$B.obj_dict = function(obj, from_js){
     var klass = $B.get_class(obj)
     if(klass !== undefined && klass.$native){
         throw _b_.AttributeError.$factory(klass.__name__ +
             " has no attribute '__dict__'")}
     var res = dict.$factory()
     res.$jsobj = obj
+    res.$from_js = from_js // set to true if created by JSObject.to_dict()
     return res
 }
 

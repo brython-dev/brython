@@ -776,6 +776,8 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context){
             }
         }else if(["str", "int", "float", "complex"].indexOf(assigned.type) > -1){
             $_SyntaxError(context, ["can't assign to literal"])
+        }else if(assigned.type == "unary"){
+            $_SyntaxError(context, ["can't assign to operator"])
         }
     }
 
@@ -3856,7 +3858,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         // get global scope
         var gs = innermost
 
-        var $test = val == "open"
+        var $test = val == "adk"
 
         while(true){
             if(gs.parent_block){
@@ -3960,7 +3962,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
 
             if(found[0].context && found[0] === innermost
                     && val.charAt(0) != '$'){
-                var locs = $get_node(this).locals || {},
+                var locs = this_node.locals || {},
                     nonlocs = innermost.nonlocals
 
                 if(locs[val] === undefined &&
@@ -4075,7 +4077,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                     // up the code tree, use $check_def_local which will
                     // check at run time if the name is defined or not.
                     // Cf. issue #836
-                    if(this.boundBefore()){
+                    if(this.boundBefore(scope)){
                         val = '$locals["' + val + '"]'
                     }else{
                         val = '$B.$check_def_local("' + val + '",$locals["' +
@@ -6334,6 +6336,10 @@ var $transition = $B.parser.$transition = function(context, token, value){
           return $transition(context.parent, token, value)
 
         case 'annotation':
+            if(token == "eol" && context.tree.length == 1 &&
+                    context.tree[0].tree.length == 0){
+                $_SyntaxError(context, "empty annotation")
+            }
             return $transition(context.parent, token)
 
         case 'assert':
@@ -7063,8 +7069,12 @@ var $transition = $B.parser.$transition = function(context, token, value){
                 var new_op = new $OpCtx(repl,op) // replace old operation
                 return new $AbstractExprCtx(new_op,false)
             case 'augm_assign':
-                if(context.parent.type == "assign"){
-                    $_SyntaxError(context, "augmented assign inside assign")
+                var parent = context.parent
+                while(parent){
+                    if(parent.type == "assign"){
+                        $_SyntaxError(context, "augmented assign inside assign")
+                    }
+                    parent = parent.parent
                 }
                 if(context.expect == ','){
                      return new $AbstractExprCtx(
@@ -7072,7 +7082,7 @@ var $transition = $B.parser.$transition = function(context, token, value){
                 }
                 return $transition(context.parent, token, value)
             case ":": // slice
-                // valid only if expr is parent is a subscription, or a tuple
+                // valid only if expr parent is a subscription, or a tuple
                 // inside a subscription, or a slice
                 if(context.parent.type=="sub" ||
                         (context.parent.type == "list_or_tuple" &&
@@ -7100,8 +7110,6 @@ var $transition = $B.parser.$transition = function(context, token, value){
                    }else if(context.parent.type == "op"){
                         // issue 811
                         $_SyntaxError(context, ["can't assign to operator"])
-                   }else if(context.parent.type == "augm_assign"){
-                       $_SyntaxError(context, "assign inside augmented assign")
                    }
 
                    while(context.parent !== undefined){
@@ -7109,6 +7117,8 @@ var $transition = $B.parser.$transition = function(context, token, value){
                        if(context.type == 'condition'){
                            $_SyntaxError(context, 'token ' + token + ' after '
                                + context)
+                       }else if(context.type == "augm_assign"){
+                           $_SyntaxError(context, "assign inside augmented assign")
                        }
                    }
                    context = context.tree[0]
@@ -8604,7 +8614,7 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
                     // implicit line joining inside brackets
                     pos++
                 }else{
-                    if(current.context.tree.length > 0){
+                    if(current.context.tree.length > 0 || current.context.async){
                         $pos = pos
                         context = $transition(context, 'eol')
                         indent = null
@@ -8759,6 +8769,12 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
         $pos = br_err[1]
         $_SyntaxError(br_err[0],
             ["Unbalanced bracket " + br_stack.charAt(br_stack.length - 1)])
+    }
+    if(context !== null && context.type == "async"){
+        // issue 941
+        console.log("error with async", pos, src, src.substr(pos))
+        $pos = pos - 7
+        throw $_SyntaxError(context, "car " + car + "after async", pos)
     }
     if(context !== null && context.tree[0] && $indented.indexOf(context.tree[0].type) > -1){
         $pos = pos - 1
