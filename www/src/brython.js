@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-10-26 09:05:23.742863"
-__BRYTHON__.timestamp=1540537523742
+__BRYTHON__.compiled_date="2018-10-26 14:24:00.043367"
+__BRYTHON__.timestamp=1540556640043
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -11806,9 +11806,9 @@ DOMNode.bind(self,attr.substr(2),value)}}else{switch(attr){case "left":
 case "top":
 case "width":
 case "height":
-if(self.elt.tagName=="CANVAS"){self.elt.style[attr]=value
-return _b_.None}else if(self.elt.nodeType==1){self.elt.style[attr]=value + "px"
-return _b_.None}
+if(_b_.isinstance(value,_b_.int)&& self.elt.nodeType==1){self.elt.style[attr]=value + "px"
+return _b_.None}else{throw _b_.ValueError.$factory(attr + " value should be" +
+" an integer, not " + $B.get_class(value).__name__)}
 break}
 if(DOMNode["set_" + attr]!==undefined){return DOMNode["set_" + attr](self,value)}
 function warn(msg){console.log(msg)

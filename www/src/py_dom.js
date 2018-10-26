@@ -893,12 +893,12 @@ DOMNode.__setattr__ = function(self, attr, value){
             case "top":
             case "width":
             case "height":
-                if(self.elt.tagName == "CANVAS"){
-                    self.elt.style[attr] = value
-                    return _b_.None
-                }else if(self.elt.nodeType == 1){
+                if(_b_.isinstance(value, _b_.int) && self.elt.nodeType == 1){
                     self.elt.style[attr] = value + "px"
                     return _b_.None
+                }else{
+                    throw _b_.ValueError.$factory(attr + " value should be" +
+                        " an integer, not " + $B.get_class(value).__name__)
                 }
                 break
         }
