@@ -3858,7 +3858,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         // get global scope
         var gs = innermost
 
-        var $test = val == "open"
+        var $test = val == "adk"
 
         while(true){
             if(gs.parent_block){
@@ -3962,7 +3962,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
 
             if(found[0].context && found[0] === innermost
                     && val.charAt(0) != '$'){
-                var locs = $get_node(this).locals || {},
+                var locs = this_node.locals || {},
                     nonlocs = innermost.nonlocals
 
                 if(locs[val] === undefined &&
@@ -4077,7 +4077,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                     // up the code tree, use $check_def_local which will
                     // check at run time if the name is defined or not.
                     // Cf. issue #836
-                    if(this.boundBefore()){
+                    if(this.boundBefore(scope)){
                         val = '$locals["' + val + '"]'
                     }else{
                         val = '$B.$check_def_local("' + val + '",$locals["' +

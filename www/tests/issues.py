@@ -2160,6 +2160,15 @@ try:
 except SyntaxError as exc:
     print(exc.args[0]) # == "can't assign to operator"
 
+# issue 953
+adk = 4
+def f():
+    if False:
+        adk = 1
+    else:
+        print(adk)
+
+assertRaises(UnboundLocalError, f)
 
 # ==========================================
 # Finally, report that all tests have passed

@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-10-26 08:47:50.273612"
-__BRYTHON__.timestamp=1540536470273
+__BRYTHON__.compiled_date="2018-10-26 09:05:23.742863"
+__BRYTHON__.timestamp=1540537523742
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -1874,7 +1874,7 @@ if(val=='__BRYTHON__' ||val=='$B'){return val}
 var innermost=$get_scope(this),scope=innermost,found=[]
 var search_ids=['"' + innermost.id + '"']
 var gs=innermost
-var $test=val=="open"
+var $test=val=="adk"
 while(true){if(gs.parent_block){if(gs.parent_block==$B.builtins_scope){break}
 else if(gs.parent_block.id===undefined){break}
 gs=gs.parent_block}
@@ -1905,7 +1905,7 @@ this.found=found
 if(this.nonlocal && found[0]===innermost){found.shift()}
 if(found.length > 0){
 if(found[0].C && found[0]===innermost
-&& val.charAt(0)!='$'){var locs=$get_node(this).locals ||{},nonlocs=innermost.nonlocals
+&& val.charAt(0)!='$'){var locs=this_node.locals ||{},nonlocs=innermost.nonlocals
 if(locs[val]===undefined &&
 ((innermost.type !='def' ||
 innermost.type !='generator')&&
@@ -1938,7 +1938,7 @@ return annotation + this.result}else{if(this.boundBefore(scope)){
 val=scope_ns + '["' + val + '"]'}else{
 val='$B.$check_def("' + val + '",' +
 scope_ns + '["' + val + '"])'}}}}else{val=scope_ns + '["' + val + '"]'}}else if(scope===innermost){if($B._globals[scope.id]&& $B._globals[scope.id][val]){val=global_ns + '["' + val + '"]'}else if(!this.bound && !this.augm_assign){
-if(this.boundBefore()){val='$locals["' + val + '"]'}else{val='$B.$check_def_local("' + val + '",$locals["' +
+if(this.boundBefore(scope)){val='$locals["' + val + '"]'}else{val='$B.$check_def_local("' + val + '",$locals["' +
 val + '"])'}}else{val='$locals["' + val + '"]'}}else if(!this.augm_assign){
 if(scope.ntype=='generator'){
 var up=0,
