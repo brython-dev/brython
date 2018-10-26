@@ -34,6 +34,5 @@ self.myPost = function(val) {
 
 brython({debug:1});
 
-var jsRoot = __BRYTHON__.py2js("from browser import window\nd = dict({'x': 'world'})\nwindow.myPost(d['x'])\n", '__main__', '__main__');
-var jsCode = jsRoot.to_js();
+var jsCode = __BRYTHON__.python_to_js("from browser import window\nd = dict({'x': 'world'})\nwindow.myPost(d['x'])\n");
 eval(jsCode);
