@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-10-26 14:24:00.043367"
-__BRYTHON__.timestamp=1540556640043
+__BRYTHON__.compiled_date="2018-10-27 13:58:10.563994"
+__BRYTHON__.timestamp=1540641490563
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -9016,7 +9016,8 @@ bool.__neg__=function(self){return -$B.int_or_bool(self)}
 bool.__or__=function(self,other){return $B.$bool(int.__or__(self,other))}
 bool.__pos__=$B.int_or_bool
 bool.__repr__=bool.__str__=function(self){return self ? "True" : "False"}
-bool.__setattr__=function(self,attr){return no_set_attr(bool,attr)}
+bool.__setattr__=function(self,attr){if(_b_.dir(self).indexOf(attr)> -1){var msg="attribute '" + attr + "' of 'int' objects is not writable"}else{var msg="'bool' object has no attribute '" + attr + "'"}
+throw _b_.AttributeError.$factory(msg)}
 bool.__sub__=function(self,other){return(self ? 1 : 0)-(other ? 1 : 0)}
 bool.__xor__=function(self,other){return self.valueOf()!=other.valueOf()}
 bool.$factory=function(){

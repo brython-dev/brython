@@ -839,7 +839,12 @@ bool.__repr__ = bool.__str__ = function(self){
 }
 
 bool.__setattr__ = function(self, attr){
-    return no_set_attr(bool, attr)
+    if(_b_.dir(self).indexOf(attr) > -1){
+        var msg = "attribute '" + attr + "' of 'int' objects is not writable"
+    }else{
+        var msg = "'bool' object has no attribute '" + attr + "'"
+    }
+    throw _b_.AttributeError.$factory(msg)
 }
 
 bool.__sub__ = function(self,other){
