@@ -1,7 +1,7 @@
 """Extract, format and print information about Python stack traces."""
 
-import collections
-import itertools
+# import collections
+# import itertools
 import linecache
 import sys
 
@@ -327,11 +327,11 @@ class StackSummary(list):
             limit = getattr(sys, 'tracebacklimit', None)
             if limit is not None and limit < 0:
                 limit = 0
-        if limit is not None:
-            if limit >= 0:
-                frame_gen = itertools.islice(frame_gen, limit)
-            else:
-                frame_gen = collections.deque(frame_gen, maxlen=-limit)
+        # if limit is not None:
+            # if limit >= 0:
+            #     frame_gen = itertools.islice(frame_gen, limit)
+            # else:
+            #     frame_gen = collections.deque(frame_gen, maxlen=-limit)
 
         result = klass()
         fnames = set()

@@ -5,10 +5,10 @@ is not found, it will look down the module search path for a file by
 that name.
 """
 
-import functools
-import sys
-import os
-import tokenize
+# import functools
+# import sys
+# import os
+# import tokenize
 
 __all__ = ["getline", "clearcache", "checkcache"]
 
@@ -53,30 +53,30 @@ def getlines(filename, module_globals=None):
 def checkcache(filename=None):
     """Discard cache entries that are out of date.
     (This is not checked upon each call!)"""
+    pass
+    # if filename is None:
+    #     filenames = list(cache.keys())
+    # else:
+    #     if filename in cache:
+    #         filenames = [filename]
+    #     else:
+    #         return
 
-    if filename is None:
-        filenames = list(cache.keys())
-    else:
-        if filename in cache:
-            filenames = [filename]
-        else:
-            return
-
-    for filename in filenames:
-        entry = cache[filename]
-        if len(entry) == 1:
-            # lazy cache entry, leave it lazy.
-            continue
-        size, mtime, lines, fullname = entry
-        if mtime is None:
-            continue   # no-op for files loaded via a __loader__
-        try:
-            stat = os.stat(fullname)
-        except OSError:
-            del cache[filename]
-            continue
-        if size != stat.st_size or mtime != stat.st_mtime:
-            del cache[filename]
+    # for filename in filenames:
+    #     entry = cache[filename]
+    #     if len(entry) == 1:
+    #         # lazy cache entry, leave it lazy.
+    #         continue
+    #     size, mtime, lines, fullname = entry
+    #     if mtime is None:
+    #         continue   # no-op for files loaded via a __loader__
+    #     try:
+    #         stat = os.stat(fullname)
+    #     except OSError:
+    #         del cache[filename]
+    #         continue
+    #     if size != stat.st_size or mtime != stat.st_mtime:
+    #         del cache[filename]
 
 
 def updatecache(filename, module_globals=None):
@@ -91,56 +91,56 @@ def updatecache(filename, module_globals=None):
         return []
 
     fullname = filename
+    # try:
+    #     stat = os.stat(fullname)
+    # except OSError:
+    #     basename = filename
+
+    #     # Realise a lazy loader based lookup if there is one
+    #     # otherwise try to lookup right now.
+    #     if lazycache(filename, module_globals):
+    #         try:
+    #             data = cache[filename][0]()
+    #         except (ImportError, OSError):
+    #             pass
+    #         else:
+    #             if data is None:
+    #                 # No luck, the PEP302 loader cannot find the source
+    #                 # for this module.
+    #                 return []
+    #             cache[filename] = (
+    #                 len(data), None,
+    #                 [line+'\n' for line in data.splitlines()], fullname
+    #             )
+    #             return cache[filename][2]
+
+    #     # Try looking through the module search path, which is only useful
+    #     # when handling a relative filename.
+    #     if os.path.isabs(filename):
+    #         return []
+
+    #     for dirname in sys.path:
+    #         try:
+    #             fullname = os.path.join(dirname, basename)
+    #         except (TypeError, AttributeError):
+    #             # Not sufficiently string-like to do anything useful with.
+    #             continue
+    #         try:
+    #             stat = os.stat(fullname)
+    #             break
+    #         except OSError:
+    #             pass
+    #     else:
+    #         return []
     try:
-        stat = os.stat(fullname)
-    except OSError:
-        basename = filename
-
-        # Realise a lazy loader based lookup if there is one
-        # otherwise try to lookup right now.
-        if lazycache(filename, module_globals):
-            try:
-                data = cache[filename][0]()
-            except (ImportError, OSError):
-                pass
-            else:
-                if data is None:
-                    # No luck, the PEP302 loader cannot find the source
-                    # for this module.
-                    return []
-                cache[filename] = (
-                    len(data), None,
-                    [line+'\n' for line in data.splitlines()], fullname
-                )
-                return cache[filename][2]
-
-        # Try looking through the module search path, which is only useful
-        # when handling a relative filename.
-        if os.path.isabs(filename):
-            return []
-
-        for dirname in sys.path:
-            try:
-                fullname = os.path.join(dirname, basename)
-            except (TypeError, AttributeError):
-                # Not sufficiently string-like to do anything useful with.
-                continue
-            try:
-                stat = os.stat(fullname)
-                break
-            except OSError:
-                pass
-        else:
-            return []
-    try:
-        with tokenize.open(fullname) as fp:
+        with open(fullname, 'r') as fp:
             lines = fp.readlines()
     except OSError:
         return []
     if lines and not lines[-1].endswith('\n'):
         lines[-1] += '\n'
-    size, mtime = stat.st_size, stat.st_mtime
-    cache[filename] = size, mtime, lines, fullname
+    # size, mtime = stat.st_size, stat.st_mtime
+    cache[filename] = len(lines), None, lines, fullname
     return lines
 
 
@@ -171,7 +171,7 @@ def lazycache(filename, module_globals):
         get_source = getattr(loader, 'get_source', None)
 
         if name and get_source:
-            get_lines = functools.partial(get_source, name)
+            get_lines = lambda: get_source(name)
             cache[filename] = (get_lines,)
             return True
     return False
