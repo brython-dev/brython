@@ -94,7 +94,6 @@ $B.$IndentationError = function(module, msg, src, pos, line_num, root) {
     }
     var exc = _b_.IndentationError.$factory(msg)
     $B.$syntax_err_line(exc, module, src, pos, line_num)
-    console.log("indentation error", exc)
     throw exc
 }
 
@@ -400,8 +399,7 @@ $B.exception = function(js_exc){
     if(! js_exc.$py_error){
         // Print complete Javascript traceback in console
         console.log("js exc", js_exc)
-        console.log($B.frames_stack.slice())
-
+        
         if(js_exc.info === undefined){
             js_exc.msg = BaseException.__getattr__(js_exc, "info")
         }
