@@ -357,8 +357,10 @@ class SRE_Match:
 class _State:
 
     def __init__(self, string, start, end, flags):
+        if isinstance(string, bytearray):
+            string = str(bytes(string), "latin1")
         if isinstance(string, bytes):
-            string = str(string, "latin1") 
+            string = str(string, "latin1")
         self.string = string
         if start < 0:
             start = 0
