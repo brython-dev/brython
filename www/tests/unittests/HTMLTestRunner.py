@@ -162,7 +162,7 @@ class _TestResult(TestResult):
         infos = []
         while tb:
             fname = tb.tb_frame.f_code.co_filename
-            if fname == test.__class__.__module__:
+            if fname == sys.modules[test.__class__.__module__].__file__:
                 infos.append(tb.tb_lineno)
             tb = tb.tb_next
         infos = infos or ['<nc>']
@@ -171,7 +171,8 @@ class _TestResult(TestResult):
         except:
             alert(err[1])
             alert(type(err[1]))
-        return [html.TD("line %s - %s: %s" %(infos[-1],
+        lines = "\n".join(f"line {line}" for line in infos[:-1])
+        return [html.TD(lines + "\nline %s - %s: %s" %(infos[-1],
             err[0].__name__,
             str(err[1]).splitlines()[0].replace('<', '&lt;')),
                 Class="error_message")]

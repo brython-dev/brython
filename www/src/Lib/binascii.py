@@ -8,6 +8,8 @@ PyPy provides an RPython version too.
 
 import _base64 # Javascript module in libs
 
+from _binascii import *
+
 class Error(ValueError):
     def __init__(self, msg=''):
         self._msg = msg
@@ -54,30 +56,6 @@ def a2b_uu(s):
     if len(result) < length:
         result += ((length - len(result)) * '\x00')
     return bytes(result, __BRYTHON__.charset)
-
-
-def b2a_uu(s):
-    length = len(s)
-    if length > 45:
-        raise Error('At most 45 bytes at once')
-
-    def triples_gen(s):
-        while s:
-            try:
-                yield ord(s[0]), ord(s[1]), ord(s[2])
-            except IndexError:
-                s += '\0\0'
-                yield ord(s[0]), ord(s[1]), ord(s[2])
-                return
-            s = s[3:]
-
-    result = [''.join(
-        [chr(0x20 + (( A >> 2                    ) & 0x3F)),
-         chr(0x20 + (((A << 4) | ((B >> 4) & 0xF)) & 0x3F)),
-         chr(0x20 + (((B << 2) | ((C >> 6) & 0x3)) & 0x3F)),
-         chr(0x20 + (( C                         ) & 0x3F))])
-              for A, B, C in triples_gen(s)]
-    return chr(ord(' ') + (length & 0o77)) + ''.join(result) + '\n'
 
 
 table_a2b_base64 = {
@@ -149,13 +127,13 @@ table_a2b_base64 = {
 }
 
 
-def a2b_base64(s):
+def XXXa2b_base64(s):
     return _base64.Base64.decode(s)
 
 table_b2a_base64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"\
     "0123456789+/"
 
-def b2a_base64(s, newline=True):
+def XXXb2a_base64(s, newline=True):
     length = len(s)
     final_length = length % 3
 
@@ -637,35 +615,6 @@ def crc32(s, crc=0):
         result = ((result + 2**31) % 2**32) - 2**31
 
     return result
-
-def b2a_hex(s):
-    if isinstance(s, bytes) or isinstance(s, bytearray):
-        conv = lambda x:x
-        unconv = lambda x:x
-    else:
-        conv = lambda x:ord(x)
-        unconv = lambda x:chr(x)
-    result = []
-    for char in s:
-        c = (conv(char) >> 4) & 0xf
-        if c > 9:
-            c = c + ord('a') - 10
-        else:
-            c = c + ord('0')
-        result.append(unconv(c))
-        c = conv(char) & 0xf
-        if c > 9:
-            c = c + ord('a') - 10
-        else:
-            c = c + ord('0')
-        result.append(unconv(c))
-    if isinstance(s, bytes):
-        return bytes(result,encoding='ascii')
-    if isinstance(s, bytearray):
-        return bytearray(result,encoding='ascii')
-    return ''.join(result)
-
-hexlify = b2a_hex
 
 table_hex = [
     -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,

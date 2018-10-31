@@ -56,6 +56,18 @@ var array = $B.make_class("array",
     }
 )
 
+array.$buffer_protocol = true
+
+var array_iterator = $B.$iterator_class("array_iterator")
+
+array.__iter__ = function(self){
+    return $B.$iterator(self.obj, array_iterator)
+}
+
+array.__len__ = function(self){
+    return self.obj.length
+}
+
 array.__str__ = function(self){
     $B.args("__str__", 1, {self: null},
         ["self"], arguments, {}, null, null)

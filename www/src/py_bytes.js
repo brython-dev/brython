@@ -9,6 +9,23 @@ var _b_ = $B.builtins,
 var from_unicode = {},
     to_unicode = {}
 
+// Conversion of byte-like objects (bytes, bytearray, memoryview, array.array...)
+// into a list of bytes
+// Make the function an attribute of $B, it is used in libs/_binascii.js
+$B.to_bytes = function(obj){
+    var res
+    if(_b_.isinstance(obj, [bytes, bytearray])){
+        res = obj.source
+    }else{
+        var ga = $B.$getattr(obj, "tobytes", null)
+        if(ga !== null){res = $B.$call(ga)().source}
+        else{
+            throw _b_.TypeError.$factory("object doesn't support the buffer protocol")
+        }
+    }
+    return res
+}
+
 //bytearray() (built in class)
 var bytearray = {
     __class__: _b_.type,
@@ -338,14 +355,15 @@ bytes.join = function(){
 }
 
 bytes.maketrans = function(from, to) {
-    var _t = []
+    var _t = [],
+        to = $B.to_bytes(to)
     // make 'default' translate table
     for(var i = 0; i < 256; i++){_t[i] = i}
 
     // make substitution in the translation table
     for(var i = 0, len = from.source.length; i < len; i++) {
        var _ndx = from.source[i]     //retrieve ascii code of char
-       _t[_ndx] = to.source[i]
+       _t[_ndx] = to[i]
     }
 
     // return the bytes object associated to the 256-elt list
