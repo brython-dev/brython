@@ -58,16 +58,14 @@ sys.path.append(os.path.join(os.environ['PYTHONPATH'], "Lib", "test"))
 
 def flush(*args):
     from browser import console
-    console.log(args)
 
 # a submodule of unittest expects the output object to have a flush function
-sys.stdout.flush=flush
+sys.stdout.flush = flush
 
 def choose_test(event):
     import time
-    _start=time.time()
+    _start = time.time()
     document["container"].clear()
-    print(document["container"].children)
     sel = document['test']
     module = sel.options[sel.selectedIndex].value
 
