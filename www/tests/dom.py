@@ -71,4 +71,5 @@ except AttributeError:
     pass
 
 # issue 888
-assert window.jsReturnsUndefined() is None
+import javascript
+assert window.jsReturnsUndefined() is javascript.UNDEFINED

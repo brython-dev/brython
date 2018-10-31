@@ -1,13 +1,12 @@
-from test.support import run_unittest, open_urlresource
+from test.support import open_urlresource
 import unittest
 
 from http.client import HTTPException
 import sys
-import os
 from unicodedata import normalize, unidata_version
 
 TESTDATAFILE = "NormalizationTest.txt"
-TESTDATAURL = "http://www.unicode.org/Public/" + unidata_version + "/ucd/" + TESTDATAFILE
+TESTDATAURL = "http://www.pythontest.net/unicode/" + unidata_version + "/" + TESTDATAFILE
 
 def check_version(testfile):
     hdr = testfile.readline()
@@ -37,15 +36,23 @@ def unistr(data):
 
 class NormalizationTest(unittest.TestCase):
     def test_main(self):
-        part = None
-        part1_data = {}
         # Hit the exception early
         try:
             testdata = open_urlresource(TESTDATAURL, encoding="utf-8",
                                         check=check_version)
-        except (IOError, HTTPException):
-            self.skipTest("Could not retrieve " + TESTDATAURL)
-        self.addCleanup(testdata.close)
+        except PermissionError:
+            self.skipTest(f"Permission error when downloading {TESTDATAURL} "
+                          f"into the test data directory")
+        except (OSError, HTTPException):
+            self.fail(f"Could not retrieve {TESTDATAURL}")
+
+        with testdata:
+            self.run_normalization_tests(testdata)
+
+    def run_normalization_tests(self, testdata):
+        part = None
+        part1_data = {}
+
         for line in testdata:
             if '#' in line:
                 line = line.split('#')[0]
@@ -97,8 +104,5 @@ class NormalizationTest(unittest.TestCase):
         normalize('NFC', '\ud55c\uae00')
 
 
-def test_main():
-    run_unittest(NormalizationTest)
-
 if __name__ == "__main__":
-    test_main()
+    unittest.main()

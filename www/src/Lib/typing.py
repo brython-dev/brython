@@ -248,7 +248,6 @@ def _tp_cache(func):
             return cached(*args, **kwds)
         except TypeError:
             pass  # All real errors (not unhashable args) are raised below.
-        print("typing 251", args, kwds)
         return func(*args, **kwds)
     return inner
 
@@ -1311,6 +1310,7 @@ class SupportsAbs(_Protocol[T_co]):
     @abstractmethod
     def __abs__(self) -> T_co:
         pass
+
 
 class SupportsRound(_Protocol[T_co]):
     __slots__ = ()

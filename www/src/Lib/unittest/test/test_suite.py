@@ -1,7 +1,9 @@
 import unittest
 
+import gc
 import sys
-from .support import LoggingResult, TestEquality
+import weakref
+from unittest.test.support import LoggingResult, TestEquality
 
 
 ### Support code for Test_TestSuite
@@ -49,6 +51,9 @@ class Test_TestSuite(unittest.TestCase, TestEquality):
         suite = unittest.TestSuite()
 
         self.assertEqual(suite.countTestCases(), 0)
+        # countTestCases() still works after tests are run
+        suite.run(unittest.TestResult())
+        self.assertEqual(suite.countTestCases(), 0)
 
     # "class TestSuite([tests])"
     # ...
@@ -60,6 +65,9 @@ class Test_TestSuite(unittest.TestCase, TestEquality):
     def test_init__empty_tests(self):
         suite = unittest.TestSuite([])
 
+        self.assertEqual(suite.countTestCases(), 0)
+        # countTestCases() still works after tests are run
+        suite.run(unittest.TestResult())
         self.assertEqual(suite.countTestCases(), 0)
 
     # "class TestSuite([tests])"
@@ -82,6 +90,14 @@ class Test_TestSuite(unittest.TestCase, TestEquality):
         suite_3 = unittest.TestSuite(set(suite_1))
         self.assertEqual(suite_3.countTestCases(), 2)
 
+        # countTestCases() still works after tests are run
+        suite_1.run(unittest.TestResult())
+        self.assertEqual(suite_1.countTestCases(), 2)
+        suite_2.run(unittest.TestResult())
+        self.assertEqual(suite_2.countTestCases(), 2)
+        suite_3.run(unittest.TestResult())
+        self.assertEqual(suite_3.countTestCases(), 2)
+
     # "class TestSuite([tests])"
     # ...
     # "If tests is given, it must be an iterable of individual test cases
@@ -96,6 +112,9 @@ class Test_TestSuite(unittest.TestCase, TestEquality):
             yield unittest.FunctionTestCase(lambda: None)
 
         suite = unittest.TestSuite(tests())
+        self.assertEqual(suite.countTestCases(), 2)
+        # countTestCases() still works after tests are run
+        suite.run(unittest.TestResult())
         self.assertEqual(suite.countTestCases(), 2)
 
     ################################################################
@@ -143,6 +162,9 @@ class Test_TestSuite(unittest.TestCase, TestEquality):
         suite = unittest.TestSuite((test1, test2))
 
         self.assertEqual(suite.countTestCases(), 2)
+        # countTestCases() still works after tests are run
+        suite.run(unittest.TestResult())
+        self.assertEqual(suite.countTestCases(), 2)
 
     # "Return the number of tests represented by the this test object.
     # ...this method is also implemented by the TestSuite class, which can
@@ -160,6 +182,10 @@ class Test_TestSuite(unittest.TestCase, TestEquality):
         parent = unittest.TestSuite((test3, child, Test1('test1')))
 
         self.assertEqual(parent.countTestCases(), 4)
+        # countTestCases() still works after tests are run
+        parent.run(unittest.TestResult())
+        self.assertEqual(parent.countTestCases(), 4)
+        self.assertEqual(child.countTestCases(), 2)
 
     # "Run the tests associated with this suite, collecting the result into
     # the test result object passed as result."
@@ -218,6 +244,9 @@ class Test_TestSuite(unittest.TestCase, TestEquality):
 
         self.assertEqual(suite.countTestCases(), 1)
         self.assertEqual(list(suite), [test])
+        # countTestCases() still works after tests are run
+        suite.run(unittest.TestResult())
+        self.assertEqual(suite.countTestCases(), 1)
 
     # "Add a ... TestSuite to the suite"
     def test_addTest__TestSuite(self):
@@ -231,6 +260,9 @@ class Test_TestSuite(unittest.TestCase, TestEquality):
 
         self.assertEqual(suite.countTestCases(), 1)
         self.assertEqual(list(suite), [suite_2])
+        # countTestCases() still works after tests are run
+        suite.run(unittest.TestResult())
+        self.assertEqual(suite.countTestCases(), 1)
 
     # "Add all the tests from an iterable of TestCase and TestSuite
     # instances to this test suite."
@@ -300,7 +332,54 @@ class Test_TestSuite(unittest.TestCase, TestEquality):
         # when the bug is fixed this line will not crash
         suite.run(unittest.TestResult())
 
+    def test_remove_test_at_index(self):
+        if not unittest.BaseTestSuite._cleanup:
+            raise unittest.SkipTest("Suite cleanup is disabled")
 
+        suite = unittest.TestSuite()
+
+        suite._tests = [1, 2, 3]
+        suite._removeTestAtIndex(1)
+
+        self.assertEqual([1, None, 3], suite._tests)
+
+    def test_remove_test_at_index_not_indexable(self):
+        if not unittest.BaseTestSuite._cleanup:
+            raise unittest.SkipTest("Suite cleanup is disabled")
+
+        suite = unittest.TestSuite()
+        suite._tests = None
+
+        # if _removeAtIndex raises for noniterables this next line will break
+        suite._removeTestAtIndex(2)
+
+    def assert_garbage_collect_test_after_run(self, TestSuiteClass):
+        if not unittest.BaseTestSuite._cleanup:
+            raise unittest.SkipTest("Suite cleanup is disabled")
+
+        class Foo(unittest.TestCase):
+            def test_nothing(self):
+                pass
+
+        test = Foo('test_nothing')
+        wref = weakref.ref(test)
+
+        suite = TestSuiteClass([wref()])
+        suite.run(unittest.TestResult())
+
+        del test
+
+        # for the benefit of non-reference counting implementations
+        gc.collect()
+
+        self.assertEqual(suite._tests, [None])
+        self.assertIsNone(wref())
+
+    def test_garbage_collect_test_after_run_BaseTestSuite(self):
+        self.assert_garbage_collect_test_after_run(unittest.BaseTestSuite)
+
+    def test_garbage_collect_test_after_run_TestSuite(self):
+        self.assert_garbage_collect_test_after_run(unittest.TestSuite)
 
     def test_basetestsuite(self):
         class Test(unittest.TestCase):
@@ -343,6 +422,7 @@ class Test_TestSuite(unittest.TestCase, TestEquality):
         self.assertEqual(len(result.errors), 1)
         self.assertEqual(len(result.failures), 0)
         self.assertEqual(result.testsRun, 2)
+        self.assertEqual(suite.countTestCases(), 2)
 
 
     def test_overriding_call(self):
@@ -361,7 +441,6 @@ class Test_TestSuite(unittest.TestCase, TestEquality):
 
         # reusing results should be permitted even if abominable
         self.assertFalse(result._testRunEntered)
-
 
 
 if __name__ == '__main__':

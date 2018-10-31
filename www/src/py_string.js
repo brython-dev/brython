@@ -813,9 +813,16 @@ str.__mul__ = function(){
 str.__ne__ = function(self,other){return other !== self.valueOf()}
 
 str.__repr__ = function(self){
-    var res = self.replace(/\n/g,"\\\\n")
+    var res = self
     // escape the escape char
-    res = res.replace(/\\/g, "\\\\")
+    res = self.replace(/\\/g, "\\\\")
+    // special cases
+    res = res.replace(new RegExp("\u0007", "g"), "\\x07").
+              replace(new RegExp("\b", "g"), "\\x08").
+              replace(new RegExp("\f", "g"), "\\x0c").
+              replace(new RegExp("\n", "g"), "\\n").
+              replace(new RegExp("\r", "g"), "\\r").
+              replace(new RegExp("\t", "g"), "\\t")
     if(res.search('"') == -1 && res.search("'") == -1){
         return "'" + res + "'"
     }else if(self.search('"') == -1){
@@ -830,9 +837,9 @@ str.__setitem__ = function(self, attr, value){
     throw _b_.TypeError.$factory(
         "'str' object does not support item assignment")
 }
+
 str.__str__ = function(self){
-    if(self === undefined){return "<class 'str'>"}
-    return self.toString()
+    return self
 }
 str.toString = function(){return "string!"}
 
@@ -1235,8 +1242,7 @@ str.join = function(){
 
     var iterable = _b_.iter($.iterable),
         res = [],
-        count = 0,
-        ce = $B.current_exception
+        count = 0
     while(1){
         try{
             var obj2 = _b_.next(iterable)
@@ -1246,7 +1252,6 @@ str.join = function(){
             res.push(obj2)
         }catch(err){
             if(_b_.isinstance(err, _b_.StopIteration)){
-                $B.current_exception = ce
                 break
             }
             else{throw err}
@@ -1674,7 +1679,7 @@ str.zfill = function(self, width){
     }
 }
 
-str.$factory = function(arg){
+str.$factory = function(arg, encoding, errors){
     if(arg === undefined){console.log("undef"); return "<undefined>"}
     switch(typeof arg) {
         case "string":
@@ -1692,6 +1697,13 @@ str.$factory = function(arg){
             // The metaclass is the attribute __class__ of the class dictionary
             var func = $B.$getattr(arg.__class__, "__str__")
             return func(arg)
+        }
+        if(arg.__class__ && arg.__class__ === _b_.bytes &&
+                encoding !== undefined){
+            // str(bytes, encoding, errors) is equal to
+            // bytes.decode(encoding, errors)
+            return _b_.bytes.decode(arg, encoding || "utf-8",
+                errors || "strict")
         }
         var f = $B.$getattr(arg, "__str__")
         // XXX fix : if not better than object.__str__, try __repr__

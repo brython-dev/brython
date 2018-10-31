@@ -20,6 +20,17 @@ def gcd(a, b):
     Unless b==0, the result will have the same sign as b (so that when
     b is divided by it, the result comes out positive).
     """
+    import warnings
+    warnings.warn('fractions.gcd() is deprecated. Use math.gcd() instead.',
+                  DeprecationWarning, 2)
+    if type(a) is int is type(b):
+        if (b or a) < 0:
+            return -math.gcd(a, b)
+        return math.gcd(a, b)
+    return _gcd(a, b)
+
+def _gcd(a, b):
+    # Supports non-integers for backward compatibility.
     while b:
         a, b = b, a%b
     return a
@@ -70,7 +81,7 @@ class Fraction(numbers.Rational):
     __slots__ = ('_numerator', '_denominator')
 
     # We're immutable, so use __new__ not __init__
-    def __new__(cls, numerator=0, denominator=None):
+    def __new__(cls, numerator=0, denominator=None, *, _normalize=True):
         """Constructs a Rational.
 
         Takes a string like '3/2' or '1.5', another Rational instance, a
@@ -104,22 +115,19 @@ class Fraction(numbers.Rational):
         self = super(Fraction, cls).__new__(cls)
 
         if denominator is None:
-            if isinstance(numerator, numbers.Rational):
+            if type(numerator) is int:
+                self._numerator = numerator
+                self._denominator = 1
+                return self
+
+            elif isinstance(numerator, numbers.Rational):
                 self._numerator = numerator.numerator
                 self._denominator = numerator.denominator
                 return self
 
-            elif isinstance(numerator, float):
-                # Exact conversion from float
-                value = Fraction.from_float(numerator)
-                self._numerator = value._numerator
-                self._denominator = value._denominator
-                return self
-
-            elif isinstance(numerator, Decimal):
-                value = Fraction.from_decimal(numerator)
-                self._numerator = value._numerator
-                self._denominator = value._denominator
+            elif isinstance(numerator, (float, Decimal)):
+                # Exact conversion
+                self._numerator, self._denominator = numerator.as_integer_ratio()
                 return self
 
             elif isinstance(numerator, str):
@@ -153,6 +161,9 @@ class Fraction(numbers.Rational):
                 raise TypeError("argument should be a string "
                                 "or a Rational instance")
 
+        elif type(numerator) is int is type(denominator):
+            pass # *very* normal case
+
         elif (isinstance(numerator, numbers.Rational) and
             isinstance(denominator, numbers.Rational)):
             numerator, denominator = (
@@ -165,9 +176,18 @@ class Fraction(numbers.Rational):
 
         if denominator == 0:
             raise ZeroDivisionError('Fraction(%s, 0)' % numerator)
-        g = gcd(numerator, denominator)
-        self._numerator = numerator // g
-        self._denominator = denominator // g
+        if _normalize:
+            if type(numerator) is int is type(denominator):
+                # *very* normal case
+                g = math.gcd(numerator, denominator)
+                if denominator < 0:
+                    g = -g
+            else:
+                g = _gcd(numerator, denominator)
+            numerator //= g
+            denominator //= g
+        self._numerator = numerator
+        self._denominator = denominator
         return self
 
     @classmethod
@@ -182,10 +202,6 @@ class Fraction(numbers.Rational):
         elif not isinstance(f, float):
             raise TypeError("%s.from_float() only takes floats, not %r (%s)" %
                             (cls.__name__, f, type(f).__name__))
-        if math.isnan(f):
-            raise ValueError("Cannot convert %r to %s." % (f, cls.__name__))
-        if math.isinf(f):
-            raise OverflowError("Cannot convert %r to %s." % (f, cls.__name__))
         return cls(*f.as_integer_ratio())
 
     @classmethod
@@ -198,19 +214,7 @@ class Fraction(numbers.Rational):
             raise TypeError(
                 "%s.from_decimal() only takes Decimals, not %r (%s)" %
                 (cls.__name__, dec, type(dec).__name__))
-        if dec.is_infinite():
-            raise OverflowError(
-                "Cannot convert %s to %s." % (dec, cls.__name__))
-        if dec.is_nan():
-            raise ValueError("Cannot convert %s to %s." % (dec, cls.__name__))
-        sign, digits, exp = dec.as_tuple()
-        digits = int(''.join(map(str, digits)))
-        if sign:
-            digits = -digits
-        if exp >= 0:
-            return cls(digits * 10 ** exp)
-        else:
-            return cls(digits, 10 ** -exp)
+        return cls(*dec.as_integer_ratio())
 
     def limit_denominator(self, max_denominator=1000000):
         """Closest Fraction to self with denominator at most max_denominator.
@@ -277,7 +281,8 @@ class Fraction(numbers.Rational):
 
     def __repr__(self):
         """repr(self)"""
-        return ('Fraction(%s, %s)' % (self._numerator, self._denominator))
+        return '%s(%s, %s)' % (self.__class__.__name__,
+                               self._numerator, self._denominator)
 
     def __str__(self):
         """str(self)"""
@@ -395,17 +400,17 @@ class Fraction(numbers.Rational):
 
     def _add(a, b):
         """a + b"""
-        return Fraction(a.numerator * b.denominator +
-                        b.numerator * a.denominator,
-                        a.denominator * b.denominator)
+        da, db = a.denominator, b.denominator
+        return Fraction(a.numerator * db + b.numerator * da,
+                        da * db)
 
     __add__, __radd__ = _operator_fallbacks(_add, operator.add)
 
     def _sub(a, b):
         """a - b"""
-        return Fraction(a.numerator * b.denominator -
-                        b.numerator * a.denominator,
-                        a.denominator * b.denominator)
+        da, db = a.denominator, b.denominator
+        return Fraction(a.numerator * db - b.numerator * da,
+                        da * db)
 
     __sub__, __rsub__ = _operator_fallbacks(_sub, operator.sub)
 
@@ -453,10 +458,16 @@ class Fraction(numbers.Rational):
                 power = b.numerator
                 if power >= 0:
                     return Fraction(a._numerator ** power,
-                                    a._denominator ** power)
-                else:
+                                    a._denominator ** power,
+                                    _normalize=False)
+                elif a._numerator >= 0:
                     return Fraction(a._denominator ** -power,
-                                    a._numerator ** -power)
+                                    a._numerator ** -power,
+                                    _normalize=False)
+                else:
+                    return Fraction((-a._denominator) ** -power,
+                                    (-a._numerator) ** -power,
+                                    _normalize=False)
             else:
                 # A fractional power will generally produce an
                 # irrational number.
@@ -480,15 +491,15 @@ class Fraction(numbers.Rational):
 
     def __pos__(a):
         """+a: Coerces a subclass instance to Fraction"""
-        return Fraction(a._numerator, a._denominator)
+        return Fraction(a._numerator, a._denominator, _normalize=False)
 
     def __neg__(a):
         """-a"""
-        return Fraction(-a._numerator, a._denominator)
+        return Fraction(-a._numerator, a._denominator, _normalize=False)
 
     def __abs__(a):
         """abs(a)"""
-        return Fraction(abs(a._numerator), a._denominator)
+        return Fraction(abs(a._numerator), a._denominator, _normalize=False)
 
     def __trunc__(a):
         """trunc(a)"""
@@ -555,6 +566,8 @@ class Fraction(numbers.Rational):
 
     def __eq__(a, b):
         """a == b"""
+        if type(b) is int:
+            return a._numerator == b and a._denominator == 1
         if isinstance(b, numbers.Rational):
             return (a._numerator == b.numerator and
                     a._denominator == b.denominator)

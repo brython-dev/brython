@@ -1,11 +1,9 @@
-#! /usr/bin/env python3
 """Test script for the binhex C module
 
    Uses the mechanism of the python binhex module
    Based on an original test by Roger E. Masse.
 """
 import binhex
-import os
 import unittest
 from test import support
 

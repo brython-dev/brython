@@ -39,7 +39,6 @@ object.__dir__ = function(self) {
     var res = []
     for(var i = 0, len = objects.length; i < len; i++){
         for(var attr in objects[i]){
-            if(attr == "toString"){console.log(attr, objects[i][attr])}
             if(attr.charAt(0) == "$") {
                 // exclude internal attributes set by Brython
                 continue
@@ -92,7 +91,7 @@ object.__getattribute__ = function(obj, attr){
 
     var klass = obj.__class__ || $B.get_class(obj)
 
-    var $test = false //attr == "mytest"
+    var $test = false //attr == "draggable"
     if($test){console.log("attr", attr, "de", obj, "klass", klass)}
     if(attr === "__class__"){
         return klass
@@ -226,9 +225,7 @@ object.__getattribute__ = function(obj, attr){
                         for(var i = 0; i < arguments.length; i++){
                             args.push(arguments[i])
                         }
-                        if($test){console.log("inside method", res, args)}
                         var result = res.apply(null, args)
-                        if($test){console.log("result", result)}
                         return result
                     }
                     method.__class__ = $B.method
@@ -278,9 +275,10 @@ object.__getattribute__ = function(obj, attr){
                 }
             }
         }
+        if($test){console.log("use __getattr__", _ga)}
         if(_ga !== undefined){
             try{return _ga(obj, attr)}
-            catch(err){}
+            catch(err){if($B.debug > 1){console.log(err)}}
         }
         // for special methods such as __mul__, look for __rmul__ on operand
         if(attr.substr(0,2) == "__" && attr.substr(attr.length - 2) == "__"){
@@ -351,14 +349,10 @@ object.__ne__ = function(self, other){
 }
 
 object.__reduce__ = function(self){
-    function _reconstructor(){
-        console.log("reconstructor args", arguments)
-        args = []
-        var cls = arguments[0],
-            obj = $B.$call(cls).apply(null, args)
-
-        return obj
+    function _reconstructor(cls){
+        return $B.$call(cls)()
     }
+    _reconstructor.$infos = {__qualname__: "_reconstructor"}
     var res = [_reconstructor]
     res.push(_b_.tuple.$factory([self.__class__].
         concat(self.__class__.__mro__)))
@@ -367,7 +361,33 @@ object.__reduce__ = function(self){
         d.$string_dict[attr] = self[attr]
     }
     res.push(d)
-    console.log('reduce', res)
+    return _b_.tuple.$factory(res)
+}
+
+function __newobj__(cls){
+    return $B.$getattr(cls, "__new__").apply(null, arguments)
+}
+__newobj__.$infos = {
+    __name__: "__newobj__",
+    __qualname__: "__newobj__"
+}
+_b_.__newobj__ = __newobj__
+
+object.__reduce_ex__ = function(self){
+    var res = [__newobj__]
+    res.push(_b_.tuple.$factory([self.__class__]))
+    var d = _b_.dict.$factory(),
+        nb = 0
+    for(var attr in self){
+        if(attr == "__class__" || attr.startsWith("$")){
+            continue
+        }
+        d.$string_dict[attr] = self[attr]
+        nb++
+    }
+    if(nb == 0){d = _b_.None}
+    res.push(d)
+    res.push(_b_.None)
     return _b_.tuple.$factory(res)
 }
 

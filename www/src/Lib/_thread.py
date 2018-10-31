@@ -26,6 +26,9 @@ TIMEOUT_MAX = 2**31
 
 error = RuntimeError
 
+def _set_sentinel(*args, **kw):
+    return LockType()
+
 def start_new_thread(function, args, kwargs={}):
     """Dummy implementation of _thread.start_new_thread().
 
@@ -153,3 +156,5 @@ def interrupt_main():
 # Brython-specific to avoid circular references between threading and _threading_local
 class _local:
     pass
+
+RLock = LockType

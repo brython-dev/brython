@@ -64,6 +64,28 @@ def license():
     print(_license)
 license.__repr__ = lambda:_license
 
+class Trace:
+
+    def __init__(self):
+        self.buf = ""
+
+    def write(self, data):
+        self.buf += str(data)
+
+    def format(self):
+        """Remove calls to function in this script from the traceback."""
+        lines = self.buf.split("\n")
+        stripped = [lines[0]]
+        for i in range(1, len(lines), 2):
+            if __file__ in lines[i]:
+                continue
+            stripped += lines[i: i+2]
+        return "\n".join(stripped)
+
+def print_tb():
+    trace = Trace()
+    traceback.print_exc(file=trace)
+    CODE_ELT.value += trace.format()
 
 OUT_BUFFER = ''
 
@@ -101,7 +123,6 @@ def get_col(area):
     for line in lines[:-1]:
         sel -= len(line) + 1
     return sel
-
 
 def myKeyPress(event):
     global _status, current
@@ -145,7 +166,7 @@ def myKeyPress(event):
                     try:
                         exec(currentLine, editor_ns)
                     except:
-                        traceback.print_exc()
+                        print_tb()
                     flush()
                     doc['code'].value += '>>> '
                     _status = "main"
@@ -153,13 +174,19 @@ def myKeyPress(event):
                     doc['code'].value += '... '
                     _status = "block"
                 else:
-                    traceback.print_exc()
+                    info, filename, lineno, offset, line = msg.args
+                    print(f"  File <stdin>, line {lineno}")
+                    print("    " + line)
+                    print("    " + offset * " " + "^")
+                    print("SyntaxError:", info)
                     flush()
                     doc['code'].value += '>>> '
                     _status = "main"
             except:
-                traceback.print_exc()
-                flush()
+                # the full traceback includes the call to eval(); to
+                # remove it, it is stored in a buffer and the 2nd and 3rd
+                # lines are removed
+                print_tb()
                 doc['code'].value += '>>> '
                 _status = "main"
         elif currentLine == "":  # end of block
@@ -173,7 +200,7 @@ def myKeyPress(event):
                 if _ is not None:
                     print(repr(_))
             except:
-                traceback.print_exc()
+                print_tb()
             flush()
             doc['code'].value += '>>> '
         else:

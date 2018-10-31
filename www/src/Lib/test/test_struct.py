@@ -1,4 +1,7 @@
+from collections import abc
 import array
+import math
+import operator
 import unittest
 import struct
 import sys
@@ -6,7 +9,6 @@ import sys
 from test import support
 
 ISBIGENDIAN = sys.byteorder == "big"
-IS32BIT = sys.maxsize == 0x7fffffff
 
 integer_codes = 'b', 'B', 'h', 'H', 'i', 'I', 'l', 'L', 'q', 'Q', 'n', 'N'
 byteorders = '', '@', '=', '<', '>', '!'
@@ -14,21 +16,9 @@ byteorders = '', '@', '=', '<', '>', '!'
 def iter_integer_formats(byteorders=byteorders):
     for code in integer_codes:
         for byteorder in byteorders:
-            if (byteorder in ('', '@') and code in ('q', 'Q') and
-                not HAVE_LONG_LONG):
-                continue
             if (byteorder not in ('', '@') and code in ('n', 'N')):
                 continue
             yield code, byteorder
-
-# Native 'q' packing isn't available on systems that don't have the C
-# long long type.
-try:
-    struct.pack('q', 5)
-except struct.error:
-    HAVE_LONG_LONG = False
-else:
-    HAVE_LONG_LONG = True
 
 def string_reverse(s):
     return s[::-1]
@@ -157,9 +147,7 @@ class StructTest(unittest.TestCase):
             self.assertEqual(size, expected_size[code])
 
         # native integer sizes
-        native_pairs = 'bB', 'hH', 'iI', 'lL', 'nN'
-        if HAVE_LONG_LONG:
-            native_pairs += 'qQ',
+        native_pairs = 'bB', 'hH', 'iI', 'lL', 'nN', 'qQ'
         for format_pair in native_pairs:
             for byteorder in '', '@':
                 signed_size = struct.calcsize(byteorder + format_pair[0])
@@ -172,9 +160,8 @@ class StructTest(unittest.TestCase):
         self.assertLessEqual(4, struct.calcsize('l'))
         self.assertLessEqual(struct.calcsize('h'), struct.calcsize('i'))
         self.assertLessEqual(struct.calcsize('i'), struct.calcsize('l'))
-        if HAVE_LONG_LONG:
-            self.assertLessEqual(8, struct.calcsize('q'))
-            self.assertLessEqual(struct.calcsize('l'), struct.calcsize('q'))
+        self.assertLessEqual(8, struct.calcsize('q'))
+        self.assertLessEqual(struct.calcsize('l'), struct.calcsize('q'))
         self.assertGreaterEqual(struct.calcsize('n'), struct.calcsize('i'))
         self.assertGreaterEqual(struct.calcsize('n'), struct.calcsize('P'))
 
@@ -365,8 +352,6 @@ class StructTest(unittest.TestCase):
         # SF bug 705836.  "<f" and ">f" had a severe rounding bug, where a carry
         # from the low-order discarded bits could propagate into the exponent
         # field, causing the result to be wrong by a factor of 2.
-        import math
-
         for base in range(1, 33):
             # smaller <- largest representable float less than base.
             delta = 0.5
@@ -426,6 +411,10 @@ class StructTest(unittest.TestCase):
                 self.assertEqual(struct.unpack_from(fmt, data, i), (data[i:i+4],))
             for i in range(6, len(test_string) + 1):
                 self.assertRaises(struct.error, struct.unpack_from, fmt, data, i)
+
+        # keyword arguments
+        self.assertEqual(s.unpack_from(buffer=test_string, offset=2),
+                         (b'cd01',))
 
     def test_pack_into(self):
         test_string = b'Reykjavik rocks, eow!'
@@ -489,7 +478,7 @@ class StructTest(unittest.TestCase):
     def test_bool(self):
         class ExplodingBool(object):
             def __bool__(self):
-                raise IOError
+                raise OSError
         for prefix in tuple("<>!=")+('',):
             false = (), [], [], '', 0
             true = [1], 'test', 5, -1, 0xffffffff+1, 0xffffffff/2
@@ -520,10 +509,10 @@ class StructTest(unittest.TestCase):
 
             try:
                 struct.pack(prefix + '?', ExplodingBool())
-            except IOError:
+            except OSError:
                 pass
             else:
-                self.fail("Expected IOError: struct.pack(%r, "
+                self.fail("Expected OSError: struct.pack(%r, "
                           "ExplodingBool())" % (prefix + '?'))
 
         for c in [b'\x01', b'\x7f', b'\xff', b'\x0f', b'\xf0']:
@@ -536,22 +525,18 @@ class StructTest(unittest.TestCase):
         hugecount2 = '{}b{}H'.format(sys.maxsize//2, sys.maxsize//2)
         self.assertRaises(struct.error, struct.calcsize, hugecount2)
 
-    if IS32BIT:
-        def test_crasher(self):
-            self.assertRaises(MemoryError, struct.pack, "357913941b", "a")
-
     def test_trailing_counter(self):
         store = array.array('b', b' '*100)
 
         # format lists containing only count spec should result in an error
         self.assertRaises(struct.error, struct.pack, '12345')
-        self.assertRaises(struct.error, struct.unpack, '12345', '')
+        self.assertRaises(struct.error, struct.unpack, '12345', b'')
         self.assertRaises(struct.error, struct.pack_into, '12345', store, 0)
         self.assertRaises(struct.error, struct.unpack_from, '12345', store, 0)
 
         # Format lists with trailing count spec should result in an error
         self.assertRaises(struct.error, struct.pack, 'c12345', 'x')
-        self.assertRaises(struct.error, struct.unpack, 'c12345', 'x')
+        self.assertRaises(struct.error, struct.unpack, 'c12345', b'x')
         self.assertRaises(struct.error, struct.pack_into, 'c12345', store, 0,
                            'x')
         self.assertRaises(struct.error, struct.unpack_from, 'c12345', store,
@@ -560,7 +545,7 @@ class StructTest(unittest.TestCase):
         # Mixed format tests
         self.assertRaises(struct.error, struct.pack, '14s42', 'spam and eggs')
         self.assertRaises(struct.error, struct.unpack, '14s42',
-                          'spam and eggs')
+                          b'spam and eggs')
         self.assertRaises(struct.error, struct.pack_into, '14s42', store, 0,
                           'spam and eggs')
         self.assertRaises(struct.error, struct.unpack_from, '14s42', store, 0)
@@ -576,7 +561,7 @@ class StructTest(unittest.TestCase):
         # The size of 'PyStructObject'
         totalsize = support.calcobjsize('2n3P')
         # The size taken up by the 'formatcode' dynamic array
-        totalsize += struct.calcsize('P2n0P') * (number_of_codes + 1)
+        totalsize += struct.calcsize('P3n0P') * (number_of_codes + 1)
         support.check_sizeof(self, struct.Struct(format_str), totalsize)
 
     @support.cpython_only
@@ -587,14 +572,233 @@ class StructTest(unittest.TestCase):
         self.check_sizeof('B' * 1234, 1234)
         self.check_sizeof('fd', 2)
         self.check_sizeof('xxxxxxxxxxxxxx', 0)
-        self.check_sizeof('100H', 100)
+        self.check_sizeof('100H', 1)
         self.check_sizeof('187s', 1)
         self.check_sizeof('20p', 1)
         self.check_sizeof('0s', 1)
         self.check_sizeof('0c', 0)
 
-def test_main():
-    support.run_unittest(StructTest)
+    def test_boundary_error_message(self):
+        regex = (
+            r'pack_into requires a buffer of at least 6 '
+            r'bytes for packing 1 bytes at offset 5 '
+            r'\(actual buffer size is 1\)'
+        )
+        with self.assertRaisesRegex(struct.error, regex):
+            struct.pack_into('b', bytearray(1), 5, 1)
+
+    def test_boundary_error_message_with_negative_offset(self):
+        byte_list = bytearray(10)
+        with self.assertRaisesRegex(
+                struct.error,
+                r'no space to pack 4 bytes at offset -2'):
+            struct.pack_into('<I', byte_list, -2, 123)
+
+        with self.assertRaisesRegex(
+                struct.error,
+                'offset -11 out of range for 10-byte buffer'):
+            struct.pack_into('<B', byte_list, -11, 123)
+
+    def test_boundary_error_message_with_large_offset(self):
+        # Test overflows cause by large offset and value size (issue 30245)
+        regex = (
+            r'pack_into requires a buffer of at least ' + str(sys.maxsize + 4) +
+            r' bytes for packing 4 bytes at offset ' + str(sys.maxsize) +
+            r' \(actual buffer size is 10\)'
+        )
+        with self.assertRaisesRegex(struct.error, regex):
+            struct.pack_into('<I', bytearray(10), sys.maxsize, 1)
+
+    def test_issue29802(self):
+        # When the second argument of struct.unpack() was of wrong type
+        # the Struct object was decrefed twice and the reference to
+        # deallocated object was left in a cache.
+        with self.assertRaises(TypeError):
+            struct.unpack('b', 0)
+        # Shouldn't crash.
+        self.assertEqual(struct.unpack('b', b'a'), (b'a'[0],))
+
+    def test_format_attr(self):
+        s = struct.Struct('=i2H')
+        self.assertEqual(s.format, '=i2H')
+
+        # use a bytes string
+        s2 = struct.Struct(s.format.encode())
+        self.assertEqual(s2.format, s.format)
+
+
+class UnpackIteratorTest(unittest.TestCase):
+    """
+    Tests for iterative unpacking (struct.Struct.iter_unpack).
+    """
+
+    def test_construct(self):
+        def _check_iterator(it):
+            self.assertIsInstance(it, abc.Iterator)
+            self.assertIsInstance(it, abc.Iterable)
+        s = struct.Struct('>ibcp')
+        it = s.iter_unpack(b"")
+        _check_iterator(it)
+        it = s.iter_unpack(b"1234567")
+        _check_iterator(it)
+        # Wrong bytes length
+        with self.assertRaises(struct.error):
+            s.iter_unpack(b"123456")
+        with self.assertRaises(struct.error):
+            s.iter_unpack(b"12345678")
+        # Zero-length struct
+        s = struct.Struct('>')
+        with self.assertRaises(struct.error):
+            s.iter_unpack(b"")
+        with self.assertRaises(struct.error):
+            s.iter_unpack(b"12")
+
+    def test_iterate(self):
+        s = struct.Struct('>IB')
+        b = bytes(range(1, 16))
+        it = s.iter_unpack(b)
+        self.assertEqual(next(it), (0x01020304, 5))
+        self.assertEqual(next(it), (0x06070809, 10))
+        self.assertEqual(next(it), (0x0b0c0d0e, 15))
+        self.assertRaises(StopIteration, next, it)
+        self.assertRaises(StopIteration, next, it)
+
+    def test_arbitrary_buffer(self):
+        s = struct.Struct('>IB')
+        b = bytes(range(1, 11))
+        it = s.iter_unpack(memoryview(b))
+        self.assertEqual(next(it), (0x01020304, 5))
+        self.assertEqual(next(it), (0x06070809, 10))
+        self.assertRaises(StopIteration, next, it)
+        self.assertRaises(StopIteration, next, it)
+
+    def test_length_hint(self):
+        lh = operator.length_hint
+        s = struct.Struct('>IB')
+        b = bytes(range(1, 16))
+        it = s.iter_unpack(b)
+        self.assertEqual(lh(it), 3)
+        next(it)
+        self.assertEqual(lh(it), 2)
+        next(it)
+        self.assertEqual(lh(it), 1)
+        next(it)
+        self.assertEqual(lh(it), 0)
+        self.assertRaises(StopIteration, next, it)
+        self.assertEqual(lh(it), 0)
+
+    def test_module_func(self):
+        # Sanity check for the global struct.iter_unpack()
+        it = struct.iter_unpack('>IB', bytes(range(1, 11)))
+        self.assertEqual(next(it), (0x01020304, 5))
+        self.assertEqual(next(it), (0x06070809, 10))
+        self.assertRaises(StopIteration, next, it)
+        self.assertRaises(StopIteration, next, it)
+
+    def test_half_float(self):
+        # Little-endian examples from:
+        # http://en.wikipedia.org/wiki/Half_precision_floating-point_format
+        format_bits_float__cleanRoundtrip_list = [
+            (b'\x00\x3c', 1.0),
+            (b'\x00\xc0', -2.0),
+            (b'\xff\x7b', 65504.0), #  (max half precision)
+            (b'\x00\x04', 2**-14), # ~= 6.10352 * 10**-5 (min pos normal)
+            (b'\x01\x00', 2**-24), # ~= 5.96046 * 10**-8 (min pos subnormal)
+            (b'\x00\x00', 0.0),
+            (b'\x00\x80', -0.0),
+            (b'\x00\x7c', float('+inf')),
+            (b'\x00\xfc', float('-inf')),
+            (b'\x55\x35', 0.333251953125), # ~= 1/3
+        ]
+
+        for le_bits, f in format_bits_float__cleanRoundtrip_list:
+            be_bits = le_bits[::-1]
+            self.assertEqual(f, struct.unpack('<e', le_bits)[0])
+            self.assertEqual(le_bits, struct.pack('<e', f))
+            self.assertEqual(f, struct.unpack('>e', be_bits)[0])
+            self.assertEqual(be_bits, struct.pack('>e', f))
+            if sys.byteorder == 'little':
+                self.assertEqual(f, struct.unpack('e', le_bits)[0])
+                self.assertEqual(le_bits, struct.pack('e', f))
+            else:
+                self.assertEqual(f, struct.unpack('e', be_bits)[0])
+                self.assertEqual(be_bits, struct.pack('e', f))
+
+        # Check for NaN handling:
+        format_bits__nan_list = [
+            ('<e', b'\x01\xfc'),
+            ('<e', b'\x00\xfe'),
+            ('<e', b'\xff\xff'),
+            ('<e', b'\x01\x7c'),
+            ('<e', b'\x00\x7e'),
+            ('<e', b'\xff\x7f'),
+        ]
+
+        for formatcode, bits in format_bits__nan_list:
+            self.assertTrue(math.isnan(struct.unpack('<e', bits)[0]))
+            self.assertTrue(math.isnan(struct.unpack('>e', bits[::-1])[0]))
+
+        # Check that packing produces a bit pattern representing a quiet NaN:
+        # all exponent bits and the msb of the fraction should all be 1.
+        packed = struct.pack('<e', math.nan)
+        self.assertEqual(packed[1] & 0x7e, 0x7e)
+        packed = struct.pack('<e', -math.nan)
+        self.assertEqual(packed[1] & 0x7e, 0x7e)
+
+        # Checks for round-to-even behavior
+        format_bits_float__rounding_list = [
+            ('>e', b'\x00\x01', 2.0**-25 + 2.0**-35), # Rounds to minimum subnormal
+            ('>e', b'\x00\x00', 2.0**-25), # Underflows to zero (nearest even mode)
+            ('>e', b'\x00\x00', 2.0**-26), # Underflows to zero
+            ('>e', b'\x03\xff', 2.0**-14 - 2.0**-24), # Largest subnormal.
+            ('>e', b'\x03\xff', 2.0**-14 - 2.0**-25 - 2.0**-65),
+            ('>e', b'\x04\x00', 2.0**-14 - 2.0**-25),
+            ('>e', b'\x04\x00', 2.0**-14), # Smallest normal.
+            ('>e', b'\x3c\x01', 1.0+2.0**-11 + 2.0**-16), # rounds to 1.0+2**(-10)
+            ('>e', b'\x3c\x00', 1.0+2.0**-11), # rounds to 1.0 (nearest even mode)
+            ('>e', b'\x3c\x00', 1.0+2.0**-12), # rounds to 1.0
+            ('>e', b'\x7b\xff', 65504), # largest normal
+            ('>e', b'\x7b\xff', 65519), # rounds to 65504
+            ('>e', b'\x80\x01', -2.0**-25 - 2.0**-35), # Rounds to minimum subnormal
+            ('>e', b'\x80\x00', -2.0**-25), # Underflows to zero (nearest even mode)
+            ('>e', b'\x80\x00', -2.0**-26), # Underflows to zero
+            ('>e', b'\xbc\x01', -1.0-2.0**-11 - 2.0**-16), # rounds to 1.0+2**(-10)
+            ('>e', b'\xbc\x00', -1.0-2.0**-11), # rounds to 1.0 (nearest even mode)
+            ('>e', b'\xbc\x00', -1.0-2.0**-12), # rounds to 1.0
+            ('>e', b'\xfb\xff', -65519), # rounds to 65504
+        ]
+
+        for formatcode, bits, f in format_bits_float__rounding_list:
+            self.assertEqual(bits, struct.pack(formatcode, f))
+
+        # This overflows, and so raises an error
+        format_bits_float__roundingError_list = [
+            # Values that round to infinity.
+            ('>e', 65520.0),
+            ('>e', 65536.0),
+            ('>e', 1e300),
+            ('>e', -65520.0),
+            ('>e', -65536.0),
+            ('>e', -1e300),
+            ('<e', 65520.0),
+            ('<e', 65536.0),
+            ('<e', 1e300),
+            ('<e', -65520.0),
+            ('<e', -65536.0),
+            ('<e', -1e300),
+        ]
+
+        for formatcode, f in format_bits_float__roundingError_list:
+            self.assertRaises(OverflowError, struct.pack, formatcode, f)
+
+        # Double rounding
+        format_bits_float__doubleRoundingError_list = [
+            ('>e', b'\x67\xff', 0x1ffdffffff * 2**-26), # should be 2047, if double-rounded 64>32>16, becomes 2048
+        ]
+
+        for formatcode, bits, f in format_bits_float__doubleRoundingError_list:
+            self.assertEqual(bits, struct.pack(formatcode, f))
+
 
 if __name__ == '__main__':
-    test_main()
+    unittest.main()

@@ -1,4 +1,3 @@
-#! /usr/bin/env python3
 """Basic tests for os.popen()
 
   Particularly useful for platforms that fake popen.
@@ -58,8 +57,9 @@ class PopenTest(unittest.TestCase):
         with os.popen("echo hello") as f:
             self.assertEqual(list(f), ["hello\n"])
 
-def test_main():
-    support.run_unittest(PopenTest)
+    def test_keywords(self):
+        with os.popen(cmd="exit 0", mode="w", buffering=-1):
+            pass
 
 if __name__ == "__main__":
-    test_main()
+    unittest.main()

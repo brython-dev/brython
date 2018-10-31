@@ -79,6 +79,7 @@ QUnit.test('web_worker', function(assert) {
 
     w.onerror = function(e) {
         assert.ok(false, 'Error in webworker');
+        done();
     }
 });
 </script>

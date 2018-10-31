@@ -1,54 +1,71 @@
 """(Extremely) low-level import machinery bits as used by importlib and imp."""
-
-
-class __loader__(object):pass
+import sys
 
 def _fix_co_filename(*args,**kw):
-    raise NotImplementedError("%s:not implemented" % ('_imp.py:_fix_co_filename'))
+    """Changes code.co_filename to specify the passed-in file path.
+      code
+        Code object to change.
+      path
+        File path to use."""
+    pass
 
 def acquire_lock(*args,**kw):
-    """acquire_lock() -> None    Acquires the interpreter's import lock for the current thread.
-    This lock should be used by import hooks to ensure thread-safety
-    when importing modules.
-    On platforms without threads, this function does nothing."""
-    pass   #assume we are a platform without threads
-    #raise NotImplementedError("%s:not implemented" % ('_imp.py:acquire_lock'))
+    """Acquires the interpreter's import lock for the current thread.
+    This lock should be used by import hooks to ensure thread-safety when importing
+    modules. On platforms without threads, this function does nothing."""
+    pass
+
+check_hash_based_pycs = """default"""
+
+def create_builtin(spec):
+    """Create an extension module."""
+    __import__(spec.name)
+
+def create_dynamic(*args,**kw):
+    """Create an extension module."""
+    pass
+
+def exec_builtin(*args,**kw):
+    """Initialize a built-in module."""
+    pass
+
+def exec_dynamic(*args,**kw):
+    """Initialize an extension module."""
+    pass
 
 def extension_suffixes(*args,**kw):
-    """extension_suffixes() -> list of strings    Returns the list of file suffixes used to identify extension modules."""
-    return ['.pyd']
+    """Returns the list of file suffixes used to identify extension modules."""
+    return []
 
 def get_frozen_object(*args,**kw):
-    raise NotImplementedError("%s:not implemented" % ('_imp.py:get_frozen_object'))
-
-def init_builtin(module,*args,**kw):
-    return __import__(module)
+    """Create a code object for a frozen module."""
+    pass
 
 def init_frozen(*args,**kw):
-    raise NotImplementedError("%s:not implemented" % ('_imp.py:init_frozen'))
+    """Initializes a frozen module."""
+    pass
 
-def is_builtin(*args,**kw):
-    raise NotImplementedError("%s:not implemented" % ('_imp.py:is_builtin'))
+def is_builtin(module_name):
+
+    return module_name in __BRYTHON__.builtin_module_names
 
 def is_frozen(*args,**kw):
-    raise NotImplementedError("%s:not implemented" % ('_imp.py:is_frozen'))
+    """Returns True if the module name corresponds to a frozen module."""
+    return False
 
 def is_frozen_package(*args,**kw):
-    raise NotImplementedError("%s:not implemented" % ('_imp.py:is_frozen_package'))
-
-def load_dynamic(*args,**kw):
-    raise NotImplementedError("%s:not implemented" % ('_imp.py:load_dynamic'))
+    """Returns True if the module name is of a frozen package."""
+    pass
 
 def lock_held(*args,**kw):
-    """lock_held() -> boolean    Return True if the import lock is currently held, else False.
+    """Return True if the import lock is currently held, else False.
     On platforms without threads, return False."""
-
     return False
-    #raise NotImplementedError("%s:not implemented" % ('_imp.py:lock_held'))
 
 def release_lock(*args,**kw):
-    """release_lock() -> None    Release the interpreter's import lock.
+    """Release the interpreter's import lock.
     On platforms without threads, this function does nothing."""
+    pass
 
-    pass  #assume no threads
-    #raise NotImplementedError("%s:not implemented" % ('_imp.py:release_lock'))
+def source_hash(*args,**kw):
+    pass

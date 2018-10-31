@@ -1,11 +1,14 @@
 # Python test set -- part 6, built-in types
 
-from test.support import run_unittest, run_with_locale
-import collections
+from test.support import run_with_locale
+import collections.abc
+import inspect
+import pickle
 import locale
 import sys
 import types
-import unittest
+import unittest.mock
+import weakref
 
 class TypesTests(unittest.TestCase):
 
@@ -45,6 +48,7 @@ class TypesTests(unittest.TestCase):
     def test_float_constructor(self):
         self.assertRaises(ValueError, float, '')
         self.assertRaises(ValueError, float, '5\0')
+        self.assertRaises(ValueError, float, '5_5\0')
 
     def test_zero_division(self):
         try: 5.0 / 0.0
@@ -342,6 +346,8 @@ class TypesTests(unittest.TestCase):
         self.assertRaises(ValueError, 3 .__format__, ",n")
         # can't have ',' with 'c'
         self.assertRaises(ValueError, 3 .__format__, ",c")
+        # can't have '#' with 'c'
+        self.assertRaises(ValueError, 3 .__format__, "#c")
 
         # ensure that only int and float type specifiers work
         for format_spec in ([chr(x) for x in range(ord('a'), ord('z')+1)] +
@@ -375,8 +381,8 @@ class TypesTests(unittest.TestCase):
 
         for i in range(-10, 10):
             x = 1234567890.0 * (10.0 ** i)
-            self.assertEqual(locale.format('%g', x, grouping=True), format(x, 'n'))
-            self.assertEqual(locale.format('%.10g', x, grouping=True), format(x, '.10n'))
+            self.assertEqual(locale.format_string('%g', x, grouping=True), format(x, 'n'))
+            self.assertEqual(locale.format_string('%.10g', x, grouping=True), format(x, '.10n'))
 
     @run_with_locale('LC_NUMERIC', 'en_US.UTF8')
     def test_int__format__locale(self):
@@ -384,7 +390,7 @@ class TypesTests(unittest.TestCase):
 
         x = 123456789012345678901234567890
         for i in range(0, 30):
-            self.assertEqual(locale.format('%d', x, grouping=True), format(x, 'n'))
+            self.assertEqual(locale.format_string('%d', x, grouping=True), format(x, 'n'))
 
             # move to the next integer to test
             x = x // 10
@@ -569,6 +575,28 @@ class TypesTests(unittest.TestCase):
     def test_internal_sizes(self):
         self.assertGreater(object.__basicsize__, 0)
         self.assertGreater(tuple.__itemsize__, 0)
+
+    def test_slot_wrapper_types(self):
+        self.assertIsInstance(object.__init__, types.WrapperDescriptorType)
+        self.assertIsInstance(object.__str__, types.WrapperDescriptorType)
+        self.assertIsInstance(object.__lt__, types.WrapperDescriptorType)
+        self.assertIsInstance(int.__lt__, types.WrapperDescriptorType)
+
+    def test_method_wrapper_types(self):
+        self.assertIsInstance(object().__init__, types.MethodWrapperType)
+        self.assertIsInstance(object().__str__, types.MethodWrapperType)
+        self.assertIsInstance(object().__lt__, types.MethodWrapperType)
+        self.assertIsInstance((42).__lt__, types.MethodWrapperType)
+
+    def test_method_descriptor_types(self):
+        self.assertIsInstance(str.join, types.MethodDescriptorType)
+        self.assertIsInstance(list.append, types.MethodDescriptorType)
+        self.assertIsInstance(''.join, types.BuiltinMethodType)
+        self.assertIsInstance([].append, types.BuiltinMethodType)
+
+        self.assertIsInstance(int.__dict__['from_bytes'], types.ClassMethodDescriptorType)
+        self.assertIsInstance(int.from_bytes, types.BuiltinMethodType)
+        self.assertIsInstance(int.__new__, types.BuiltinMethodType)
 
 
 class MappingProxyTests(unittest.TestCase):
@@ -820,6 +848,68 @@ class ClassCreationTests(unittest.TestCase):
         self.assertEqual(C.y, 1)
         self.assertEqual(C.z, 2)
 
+    def test_new_class_with_mro_entry(self):
+        class A: pass
+        class C:
+            def __mro_entries__(self, bases):
+                return (A,)
+        c = C()
+        D = types.new_class('D', (c,), {})
+        self.assertEqual(D.__bases__, (A,))
+        self.assertEqual(D.__orig_bases__, (c,))
+        self.assertEqual(D.__mro__, (D, A, object))
+
+    def test_new_class_with_mro_entry_none(self):
+        class A: pass
+        class B: pass
+        class C:
+            def __mro_entries__(self, bases):
+                return ()
+        c = C()
+        D = types.new_class('D', (A, c, B), {})
+        self.assertEqual(D.__bases__, (A, B))
+        self.assertEqual(D.__orig_bases__, (A, c, B))
+        self.assertEqual(D.__mro__, (D, A, B, object))
+
+    def test_new_class_with_mro_entry_error(self):
+        class A: pass
+        class C:
+            def __mro_entries__(self, bases):
+                return A
+        c = C()
+        with self.assertRaises(TypeError):
+            types.new_class('D', (c,), {})
+
+    def test_new_class_with_mro_entry_multiple(self):
+        class A1: pass
+        class A2: pass
+        class B1: pass
+        class B2: pass
+        class A:
+            def __mro_entries__(self, bases):
+                return (A1, A2)
+        class B:
+            def __mro_entries__(self, bases):
+                return (B1, B2)
+        D = types.new_class('D', (A(), B()), {})
+        self.assertEqual(D.__bases__, (A1, A2, B1, B2))
+
+    def test_new_class_with_mro_entry_multiple_2(self):
+        class A1: pass
+        class A2: pass
+        class A3: pass
+        class B1: pass
+        class B2: pass
+        class A:
+            def __mro_entries__(self, bases):
+                return (A1, A2, A3)
+        class B:
+            def __mro_entries__(self, bases):
+                return (B1, B2)
+        class C: pass
+        D = types.new_class('D', (A(), C, B()), {})
+        self.assertEqual(D.__bases__, (A1, A2, A3, C, B1, B2))
+
     # Many of the following tests are derived from test_descr.py
     def test_prepare_class(self):
         # Basic test of metaclass derivation
@@ -839,6 +929,50 @@ class ClassCreationTests(unittest.TestCase):
         self.assertIs(meta, A)
         self.assertIs(ns, expected_ns)
         self.assertEqual(len(kwds), 0)
+
+    def test_bad___prepare__(self):
+        # __prepare__() must return a mapping.
+        class BadMeta(type):
+            @classmethod
+            def __prepare__(*args):
+                return None
+        with self.assertRaisesRegex(TypeError,
+                                    r'^BadMeta\.__prepare__\(\) must '
+                                    r'return a mapping, not NoneType$'):
+            class Foo(metaclass=BadMeta):
+                pass
+        # Also test the case in which the metaclass is not a type.
+        class BadMeta:
+            @classmethod
+            def __prepare__(*args):
+                return None
+        with self.assertRaisesRegex(TypeError,
+                                    r'^<metaclass>\.__prepare__\(\) must '
+                                    r'return a mapping, not NoneType$'):
+            class Bar(metaclass=BadMeta()):
+                pass
+
+    def test_resolve_bases(self):
+        class A: pass
+        class B: pass
+        class C:
+            def __mro_entries__(self, bases):
+                if A in bases:
+                    return ()
+                return (A,)
+        c = C()
+        self.assertEqual(types.resolve_bases(()), ())
+        self.assertEqual(types.resolve_bases((c,)), (A,))
+        self.assertEqual(types.resolve_bases((C,)), (C,))
+        self.assertEqual(types.resolve_bases((A, C)), (A, C))
+        self.assertEqual(types.resolve_bases((c, A)), (A,))
+        self.assertEqual(types.resolve_bases((A, c)), (A,))
+        x = (A,)
+        y = (C,)
+        z = (A, C)
+        t = (A, C, B)
+        for bases in [x, y, z, t]:
+            self.assertIs(types.resolve_bases(bases), bases)
 
     def test_metaclass_derivation(self):
         # issue1294232: correct metaclass calculation
@@ -995,6 +1129,24 @@ class ClassCreationTests(unittest.TestCase):
         with self.assertRaises(TypeError):
             X = types.new_class("X", (int(), C))
 
+    def test_one_argument_type(self):
+        expected_message = 'type.__new__() takes exactly 3 arguments (1 given)'
+
+        # Only type itself can use the one-argument form (#27157)
+        self.assertIs(type(5), int)
+
+        class M(type):
+            pass
+        with self.assertRaises(TypeError) as cm:
+            M(5)
+        self.assertEqual(str(cm.exception), expected_message)
+
+        class N(type, metaclass=M):
+            pass
+        with self.assertRaises(TypeError) as cm:
+            N(5)
+        self.assertEqual(str(cm.exception), expected_message)
+
 
 class SimpleNamespaceTests(unittest.TestCase):
 
@@ -1005,6 +1157,8 @@ class SimpleNamespaceTests(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             types.SimpleNamespace(1, 2, 3)
+        with self.assertRaises(TypeError):
+            types.SimpleNamespace(**{1: 2})
 
         self.assertEqual(len(ns1.__dict__), 0)
         self.assertEqual(vars(ns1), {})
@@ -1077,9 +1231,19 @@ class SimpleNamespaceTests(unittest.TestCase):
         ns2 = types.SimpleNamespace()
         ns2.x = "spam"
         ns2._y = 5
+        name = "namespace"
 
-        self.assertEqual(repr(ns1), "namespace(w=3, x=1, y=2)")
-        self.assertEqual(repr(ns2), "namespace(_y=5, x='spam')")
+        self.assertEqual(repr(ns1), "{name}(w=3, x=1, y=2)".format(name=name))
+        self.assertEqual(repr(ns2), "{name}(_y=5, x='spam')".format(name=name))
+
+    def test_equal(self):
+        ns1 = types.SimpleNamespace(x=1)
+        ns2 = types.SimpleNamespace()
+        ns2.x = 1
+
+        self.assertEqual(types.SimpleNamespace(), types.SimpleNamespace())
+        self.assertEqual(ns1, ns2)
+        self.assertNotEqual(ns2, types.SimpleNamespace())
 
     def test_nested(self):
         ns1 = types.SimpleNamespace(a=1, b=2)
@@ -1117,11 +1281,12 @@ class SimpleNamespaceTests(unittest.TestCase):
         ns1.spam = ns1
         ns2.spam = ns3
         ns3.spam = ns2
+        name = "namespace"
+        repr1 = "{name}(c='cookie', spam={name}(...))".format(name=name)
+        repr2 = "{name}(spam={name}(spam={name}(...), x=1))".format(name=name)
 
-        self.assertEqual(repr(ns1),
-                         "namespace(c='cookie', spam=namespace(...))")
-        self.assertEqual(repr(ns2),
-                         "namespace(spam=namespace(spam=namespace(...), x=1))")
+        self.assertEqual(repr(ns1), repr1)
+        self.assertEqual(repr(ns2), repr2)
 
     def test_as_dict(self):
         ns = types.SimpleNamespace(spam='spamspamspam')
@@ -1144,10 +1309,348 @@ class SimpleNamespaceTests(unittest.TestCase):
         self.assertIs(type(spam), Spam)
         self.assertEqual(vars(spam), {'ham': 8, 'eggs': 9})
 
+    def test_pickle(self):
+        ns = types.SimpleNamespace(breakfast="spam", lunch="spam")
 
-def test_main():
-    run_unittest(TypesTests, MappingProxyTests, ClassCreationTests,
-                 SimpleNamespaceTests)
+        for protocol in range(pickle.HIGHEST_PROTOCOL + 1):
+            pname = "protocol {}".format(protocol)
+            try:
+                ns_pickled = pickle.dumps(ns, protocol)
+            except TypeError as e:
+                raise TypeError(pname) from e
+            ns_roundtrip = pickle.loads(ns_pickled)
+
+            self.assertEqual(ns, ns_roundtrip, pname)
+
+    def test_fake_namespace_compare(self):
+        # Issue #24257: Incorrect use of PyObject_IsInstance() caused
+        # SystemError.
+        class FakeSimpleNamespace(str):
+            __class__ = types.SimpleNamespace
+        self.assertFalse(types.SimpleNamespace() == FakeSimpleNamespace())
+        self.assertTrue(types.SimpleNamespace() != FakeSimpleNamespace())
+        with self.assertRaises(TypeError):
+            types.SimpleNamespace() < FakeSimpleNamespace()
+        with self.assertRaises(TypeError):
+            types.SimpleNamespace() <= FakeSimpleNamespace()
+        with self.assertRaises(TypeError):
+            types.SimpleNamespace() > FakeSimpleNamespace()
+        with self.assertRaises(TypeError):
+            types.SimpleNamespace() >= FakeSimpleNamespace()
+
+
+class CoroutineTests(unittest.TestCase):
+    def test_wrong_args(self):
+        samples = [None, 1, object()]
+        for sample in samples:
+            with self.assertRaisesRegex(TypeError,
+                                        'types.coroutine.*expects a callable'):
+                types.coroutine(sample)
+
+    def test_non_gen_values(self):
+        @types.coroutine
+        def foo():
+            return 'spam'
+        self.assertEqual(foo(), 'spam')
+
+        class Awaitable:
+            def __await__(self):
+                return ()
+        aw = Awaitable()
+        @types.coroutine
+        def foo():
+            return aw
+        self.assertIs(aw, foo())
+
+        # decorate foo second time
+        foo = types.coroutine(foo)
+        self.assertIs(aw, foo())
+
+    def test_async_def(self):
+        # Test that types.coroutine passes 'async def' coroutines
+        # without modification
+
+        async def foo(): pass
+        foo_code = foo.__code__
+        foo_flags = foo.__code__.co_flags
+        decorated_foo = types.coroutine(foo)
+        self.assertIs(foo, decorated_foo)
+        self.assertEqual(foo.__code__.co_flags, foo_flags)
+        self.assertIs(decorated_foo.__code__, foo_code)
+
+        foo_coro = foo()
+        def bar(): return foo_coro
+        for _ in range(2):
+            bar = types.coroutine(bar)
+            coro = bar()
+            self.assertIs(foo_coro, coro)
+            self.assertEqual(coro.cr_code.co_flags, foo_flags)
+            coro.close()
+
+    def test_duck_coro(self):
+        class CoroLike:
+            def send(self): pass
+            def throw(self): pass
+            def close(self): pass
+            def __await__(self): return self
+
+        coro = CoroLike()
+        @types.coroutine
+        def foo():
+            return coro
+        self.assertIs(foo(), coro)
+        self.assertIs(foo().__await__(), coro)
+
+    def test_duck_corogen(self):
+        class CoroGenLike:
+            def send(self): pass
+            def throw(self): pass
+            def close(self): pass
+            def __await__(self): return self
+            def __iter__(self): return self
+            def __next__(self): pass
+
+        coro = CoroGenLike()
+        @types.coroutine
+        def foo():
+            return coro
+        self.assertIs(foo(), coro)
+        self.assertIs(foo().__await__(), coro)
+
+    def test_duck_gen(self):
+        class GenLike:
+            def send(self): pass
+            def throw(self): pass
+            def close(self): pass
+            def __iter__(self): pass
+            def __next__(self): pass
+
+        # Setup generator mock object
+        gen = unittest.mock.MagicMock(GenLike)
+        gen.__iter__ = lambda gen: gen
+        gen.__name__ = 'gen'
+        gen.__qualname__ = 'test.gen'
+        self.assertIsInstance(gen, collections.abc.Generator)
+        self.assertIs(gen, iter(gen))
+
+        @types.coroutine
+        def foo(): return gen
+
+        wrapper = foo()
+        self.assertIsInstance(wrapper, types._GeneratorWrapper)
+        self.assertIs(wrapper.__await__(), wrapper)
+        # Wrapper proxies duck generators completely:
+        self.assertIs(iter(wrapper), wrapper)
+
+        self.assertIsInstance(wrapper, collections.abc.Coroutine)
+        self.assertIsInstance(wrapper, collections.abc.Awaitable)
+
+        self.assertIs(wrapper.__qualname__, gen.__qualname__)
+        self.assertIs(wrapper.__name__, gen.__name__)
+
+        # Test AttributeErrors
+        for name in {'gi_running', 'gi_frame', 'gi_code', 'gi_yieldfrom',
+                     'cr_running', 'cr_frame', 'cr_code', 'cr_await'}:
+            with self.assertRaises(AttributeError):
+                getattr(wrapper, name)
+
+        # Test attributes pass-through
+        gen.gi_running = object()
+        gen.gi_frame = object()
+        gen.gi_code = object()
+        gen.gi_yieldfrom = object()
+        self.assertIs(wrapper.gi_running, gen.gi_running)
+        self.assertIs(wrapper.gi_frame, gen.gi_frame)
+        self.assertIs(wrapper.gi_code, gen.gi_code)
+        self.assertIs(wrapper.gi_yieldfrom, gen.gi_yieldfrom)
+        self.assertIs(wrapper.cr_running, gen.gi_running)
+        self.assertIs(wrapper.cr_frame, gen.gi_frame)
+        self.assertIs(wrapper.cr_code, gen.gi_code)
+        self.assertIs(wrapper.cr_await, gen.gi_yieldfrom)
+
+        wrapper.close()
+        gen.close.assert_called_once_with()
+
+        wrapper.send(1)
+        gen.send.assert_called_once_with(1)
+        gen.reset_mock()
+
+        next(wrapper)
+        gen.__next__.assert_called_once_with()
+        gen.reset_mock()
+
+        wrapper.throw(1, 2, 3)
+        gen.throw.assert_called_once_with(1, 2, 3)
+        gen.reset_mock()
+
+        wrapper.throw(1, 2)
+        gen.throw.assert_called_once_with(1, 2)
+        gen.reset_mock()
+
+        wrapper.throw(1)
+        gen.throw.assert_called_once_with(1)
+        gen.reset_mock()
+
+        # Test exceptions propagation
+        error = Exception()
+        gen.throw.side_effect = error
+        try:
+            wrapper.throw(1)
+        except Exception as ex:
+            self.assertIs(ex, error)
+        else:
+            self.fail('wrapper did not propagate an exception')
+
+        # Test invalid args
+        gen.reset_mock()
+        with self.assertRaises(TypeError):
+            wrapper.throw()
+        self.assertFalse(gen.throw.called)
+        with self.assertRaises(TypeError):
+            wrapper.close(1)
+        self.assertFalse(gen.close.called)
+        with self.assertRaises(TypeError):
+            wrapper.send()
+        self.assertFalse(gen.send.called)
+
+        # Test that we do not double wrap
+        @types.coroutine
+        def bar(): return wrapper
+        self.assertIs(wrapper, bar())
+
+        # Test weakrefs support
+        ref = weakref.ref(wrapper)
+        self.assertIs(ref(), wrapper)
+
+    def test_duck_functional_gen(self):
+        class Generator:
+            """Emulates the following generator (very clumsy):
+
+              def gen(fut):
+                  result = yield fut
+                  return result * 2
+            """
+            def __init__(self, fut):
+                self._i = 0
+                self._fut = fut
+            def __iter__(self):
+                return self
+            def __next__(self):
+                return self.send(None)
+            def send(self, v):
+                try:
+                    if self._i == 0:
+                        assert v is None
+                        return self._fut
+                    if self._i == 1:
+                        raise StopIteration(v * 2)
+                    if self._i > 1:
+                        raise StopIteration
+                finally:
+                    self._i += 1
+            def throw(self, tp, *exc):
+                self._i = 100
+                if tp is not GeneratorExit:
+                    raise tp
+            def close(self):
+                self.throw(GeneratorExit)
+
+        @types.coroutine
+        def foo(): return Generator('spam')
+
+        wrapper = foo()
+        self.assertIsInstance(wrapper, types._GeneratorWrapper)
+
+        async def corofunc():
+            return await foo() + 100
+        coro = corofunc()
+
+        self.assertEqual(coro.send(None), 'spam')
+        try:
+            coro.send(20)
+        except StopIteration as ex:
+            self.assertEqual(ex.args[0], 140)
+        else:
+            self.fail('StopIteration was expected')
+
+    def test_gen(self):
+        def gen_func():
+            yield 1
+            return (yield 2)
+        gen = gen_func()
+        @types.coroutine
+        def foo(): return gen
+        wrapper = foo()
+        self.assertIsInstance(wrapper, types._GeneratorWrapper)
+        self.assertIs(wrapper.__await__(), gen)
+
+        for name in ('__name__', '__qualname__', 'gi_code',
+                     'gi_running', 'gi_frame'):
+            self.assertIs(getattr(foo(), name),
+                          getattr(gen, name))
+        self.assertIs(foo().cr_code, gen.gi_code)
+
+        self.assertEqual(next(wrapper), 1)
+        self.assertEqual(wrapper.send(None), 2)
+        with self.assertRaisesRegex(StopIteration, 'spam'):
+            wrapper.send('spam')
+
+        gen = gen_func()
+        wrapper = foo()
+        wrapper.send(None)
+        with self.assertRaisesRegex(Exception, 'ham'):
+            wrapper.throw(Exception, Exception('ham'))
+
+        # decorate foo second time
+        foo = types.coroutine(foo)
+        self.assertIs(foo().__await__(), gen)
+
+    def test_returning_itercoro(self):
+        @types.coroutine
+        def gen():
+            yield
+
+        gencoro = gen()
+
+        @types.coroutine
+        def foo():
+            return gencoro
+
+        self.assertIs(foo(), gencoro)
+
+        # decorate foo second time
+        foo = types.coroutine(foo)
+        self.assertIs(foo(), gencoro)
+
+    def test_genfunc(self):
+        def gen(): yield
+        self.assertIs(types.coroutine(gen), gen)
+        self.assertIs(types.coroutine(types.coroutine(gen)), gen)
+
+        self.assertTrue(gen.__code__.co_flags & inspect.CO_ITERABLE_COROUTINE)
+        self.assertFalse(gen.__code__.co_flags & inspect.CO_COROUTINE)
+
+        g = gen()
+        self.assertTrue(g.gi_code.co_flags & inspect.CO_ITERABLE_COROUTINE)
+        self.assertFalse(g.gi_code.co_flags & inspect.CO_COROUTINE)
+
+        self.assertIs(types.coroutine(gen), gen)
+
+    def test_wrapper_object(self):
+        def gen():
+            yield
+        @types.coroutine
+        def coro():
+            return gen()
+
+        wrapper = coro()
+        self.assertIn('GeneratorWrapper', repr(wrapper))
+        self.assertEqual(repr(wrapper), str(wrapper))
+        self.assertTrue(set(dir(wrapper)).issuperset({
+            '__await__', '__iter__', '__next__', 'cr_code', 'cr_running',
+            'cr_frame', 'gi_code', 'gi_frame', 'gi_running', 'send',
+            'close', 'throw'}))
+
 
 if __name__ == '__main__':
-    test_main()
+    unittest.main()

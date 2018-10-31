@@ -11,13 +11,13 @@
 # memoryview tests is now in this module.
 #
 
+import contextlib
 import unittest
 from test import support
 from itertools import permutations, product
 from random import randrange, sample, choice
-from sysconfig import get_config_var
 import warnings
-import sys, array, io
+import sys, array, io, os
 from decimal import Decimal
 from fractions import Fraction
 
@@ -37,7 +37,8 @@ except ImportError:
     ctypes = None
 
 try:
-    with warnings.catch_warnings():
+    with support.EnvironmentVarGuard() as os.environ, \
+         warnings.catch_warnings():
         from numpy import ndarray as numpy_array
 except ImportError:
     numpy_array = None
@@ -149,15 +150,15 @@ def randrange_fmt(mode, char, obj):
        format character."""
     x = randrange(*fmtdict[mode][char])
     if char == 'c':
-        x = bytes(chr(x), 'latin1')
+        x = bytes([x])
+        if obj == 'numpy' and x == b'\x00':
+            # http://projects.scipy.org/numpy/ticket/1925
+            x = b'\x01'
     if char == '?':
         x = bool(x)
     if char == 'f' or char == 'd':
         x = struct.pack(char, x)
         x = struct.unpack(char, x)[0]
-    if obj == 'numpy' and x == b'\x00':
-        # http://projects.scipy.org/numpy/ticket/1925
-        x = b'\x01'
     return x
 
 def gen_item(fmt, obj):
@@ -216,7 +217,7 @@ def iter_format(nitems, testobj='ndarray'):
     for t in iter_mode(nitems, testobj):
         yield t
     if testobj != 'ndarray':
-        raise StopIteration
+        return
     yield struct_items(nitems, testobj)
 
 
@@ -840,6 +841,11 @@ class TestBufferProtocol(unittest.TestCase):
                 # test tobytes()
                 self.assertEqual(result.tobytes(), b)
 
+                # test hex()
+                m = memoryview(result)
+                h = "".join("%02x" % c for c in b)
+                self.assertEqual(m.hex(), h)
+
                 # lst := expected multi-dimensional logical representation
                 # flatten(lst) := elements in C-order
                 ff = fmt if fmt else 'B'
@@ -1007,6 +1013,7 @@ class TestBufferProtocol(unittest.TestCase):
         # shape, strides, offset
         structure = (
             ([], [], 0),
+            ([1,3,1], [], 0),
             ([12], [], 0),
             ([12], [-1], 11),
             ([6], [2], 0),
@@ -1077,6 +1084,18 @@ class TestBufferProtocol(unittest.TestCase):
         self.assertRaises(BufferError, ndarray, ex, getbuf=PyBUF_F_CONTIGUOUS)
         self.assertRaises(BufferError, ndarray, ex, getbuf=PyBUF_ANY_CONTIGUOUS)
         nd = ndarray(ex, getbuf=PyBUF_SIMPLE)
+
+        # Issue #22445: New precise contiguity definition.
+        for shape in [1,12,1], [7,0,7]:
+            for order in 0, ND_FORTRAN:
+                ex = ndarray(items, shape=shape, flags=order|ND_WRITABLE)
+                self.assertTrue(is_contiguous(ex, 'F'))
+                self.assertTrue(is_contiguous(ex, 'C'))
+
+                for flags in requests:
+                    nd = ndarray(ex, getbuf=flags)
+                    self.assertTrue(is_contiguous(nd, 'F'))
+                    self.assertTrue(is_contiguous(nd, 'C'))
 
     def test_ndarray_exceptions(self):
         nd = ndarray([9], [1])
@@ -2449,6 +2468,21 @@ class TestBufferProtocol(unittest.TestCase):
             self.assertEqual(m.tobytes(), b'')
             self.assertEqual(m.tolist(), [])
 
+    check_sizeof = support.check_sizeof
+
+    def test_memoryview_sizeof(self):
+        check = self.check_sizeof
+        vsize = support.calcvobjsize
+        base_struct = 'Pnin 2P2n2i5P P'
+        per_dim = '3n'
+
+        items = list(range(8))
+        check(memoryview(b''), vsize(base_struct + 1 * per_dim))
+        a = ndarray(items, shape=[2, 4], format="b")
+        check(memoryview(a), vsize(base_struct + 2 * per_dim))
+        a = ndarray(items, shape=[2, 2, 2], format="b")
+        check(memoryview(a), vsize(base_struct + 3 * per_dim))
+
     def test_memoryview_struct_module(self):
 
         class INT(object):
@@ -2530,8 +2564,7 @@ class TestBufferProtocol(unittest.TestCase):
             ex = ndarray(sitems, shape=[1], format=sfmt)
             msrc = memoryview(ex)
             for dfmt, _, _ in iter_format(1):
-                if (not is_memoryview_format(sfmt) or
-                    not is_memoryview_format(dfmt)):
+                if not is_memoryview_format(dfmt):
                     self.assertRaises(ValueError, msrc.cast, dfmt,
                                       [32//dsize])
                 else:
@@ -2744,6 +2777,32 @@ class TestBufferProtocol(unittest.TestCase):
                                 ndim=ndim, shape=shape, strides=strides,
                                 lst=lst, cast=True)
 
+        if ctypes:
+            # format: "T{>l:x:>d:y:}"
+            class BEPoint(ctypes.BigEndianStructure):
+                _fields_ = [("x", ctypes.c_long), ("y", ctypes.c_double)]
+            point = BEPoint(100, 200.1)
+            m1 = memoryview(point)
+            m2 = m1.cast('B')
+            self.assertEqual(m2.obj, point)
+            self.assertEqual(m2.itemsize, 1)
+            self.assertEqual(m2.readonly, 0)
+            self.assertEqual(m2.ndim, 1)
+            self.assertEqual(m2.shape, (m2.nbytes,))
+            self.assertEqual(m2.strides, (1,))
+            self.assertEqual(m2.suboffsets, ())
+
+            x = ctypes.c_double(1.2)
+            m1 = memoryview(x)
+            m2 = m1.cast('c')
+            self.assertEqual(m2.obj, x)
+            self.assertEqual(m2.itemsize, 1)
+            self.assertEqual(m2.readonly, 0)
+            self.assertEqual(m2.ndim, 1)
+            self.assertEqual(m2.shape, (m2.nbytes,))
+            self.assertEqual(m2.strides, (1,))
+            self.assertEqual(m2.suboffsets, ())
+
     def test_memoryview_tolist(self):
 
         # Most tolist() tests are in self.verify() etc.
@@ -2797,6 +2856,13 @@ class TestBufferProtocol(unittest.TestCase):
         m = memoryview(ex)
         self.assertRaises(TypeError, eval, "9.0 in m", locals())
 
+    @contextlib.contextmanager
+    def assert_out_of_bounds_error(self, dim):
+        with self.assertRaises(IndexError) as cm:
+            yield
+        self.assertEqual(str(cm.exception),
+                         "index out of bounds on dimension %d" % (dim,))
+
     def test_memoryview_index(self):
 
         # ndim = 0
@@ -2823,12 +2889,31 @@ class TestBufferProtocol(unittest.TestCase):
         self.assertRaises(IndexError, m.__getitem__, -8)
         self.assertRaises(IndexError, m.__getitem__, 8)
 
-        # Not implemented: multidimensional sub-views
+        # multi-dimensional
         ex = ndarray(list(range(12)), shape=[3,4], flags=ND_WRITABLE)
         m = memoryview(ex)
 
-        self.assertRaises(NotImplementedError, m.__getitem__, 0)
-        self.assertRaises(NotImplementedError, m.__setitem__, 0, 9)
+        self.assertEqual(m[0, 0], 0)
+        self.assertEqual(m[2, 0], 8)
+        self.assertEqual(m[2, 3], 11)
+        self.assertEqual(m[-1, -1], 11)
+        self.assertEqual(m[-3, -4], 0)
+
+        # out of bounds
+        for index in (3, -4):
+            with self.assert_out_of_bounds_error(dim=1):
+                m[index, 0]
+        for index in (4, -5):
+            with self.assert_out_of_bounds_error(dim=2):
+                m[0, index]
+        self.assertRaises(IndexError, m.__getitem__, (2**64, 0))
+        self.assertRaises(IndexError, m.__getitem__, (0, 2**64))
+
+        self.assertRaises(TypeError, m.__getitem__, (0, 0, 0))
+        self.assertRaises(TypeError, m.__getitem__, (0.0, 0.0))
+
+        # Not implemented: multidimensional sub-views
+        self.assertRaises(NotImplementedError, m.__getitem__, ())
         self.assertRaises(NotImplementedError, m.__getitem__, 0)
 
     def test_memoryview_assign(self):
@@ -2917,10 +3002,27 @@ class TestBufferProtocol(unittest.TestCase):
         m = memoryview(ex)
         self.assertRaises(NotImplementedError, m.__setitem__, 0, 1)
 
-        # Not implemented: multidimensional sub-views
+        # multi-dimensional
         ex = ndarray(list(range(12)), shape=[3,4], flags=ND_WRITABLE)
         m = memoryview(ex)
+        m[0,1] = 42
+        self.assertEqual(ex[0][1], 42)
+        m[-1,-1] = 43
+        self.assertEqual(ex[2][3], 43)
+        # errors
+        for index in (3, -4):
+            with self.assert_out_of_bounds_error(dim=1):
+                m[index, 0] = 0
+        for index in (4, -5):
+            with self.assert_out_of_bounds_error(dim=2):
+                m[0, index] = 0
+        self.assertRaises(IndexError, m.__setitem__, (2**64, 0), 0)
+        self.assertRaises(IndexError, m.__setitem__, (0, 2**64), 0)
 
+        self.assertRaises(TypeError, m.__setitem__, (0, 0, 0), 0)
+        self.assertRaises(TypeError, m.__setitem__, (0.0, 0.0), 0)
+
+        # Not implemented: multidimensional sub-views
         self.assertRaises(NotImplementedError, m.__setitem__, 0, [2, 3])
 
     def test_memoryview_slice(self):
@@ -2933,8 +3035,8 @@ class TestBufferProtocol(unittest.TestCase):
         self.assertRaises(ValueError, m.__setitem__, slice(0,2,0),
                           bytearray([1,2]))
 
-        # invalid slice key
-        self.assertRaises(TypeError, m.__getitem__, ())
+        # 0-dim slicing (identity function)
+        self.assertRaises(NotImplementedError, m.__getitem__, ())
 
         # multidimensional slices
         ex = ndarray(list(range(12)), shape=[12], flags=ND_WRITABLE)
@@ -4290,9 +4392,5 @@ class TestBufferProtocol(unittest.TestCase):
         self.assertRaises(BufferError, memoryview, x)
 
 
-def test_main():
-    support.run_unittest(TestBufferProtocol)
-
-
 if __name__ == "__main__":
-    test_main()
+    unittest.main()

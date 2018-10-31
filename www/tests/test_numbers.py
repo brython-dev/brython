@@ -178,4 +178,19 @@ assert complex("8_7.6+2_67J") == (87.6+267j)
 assertRaises(ValueError, complex, "_8_7.6+2_67J")
 assertRaises(ValueError, complex, "8_7.6+_2_67J")
 
+# issue 955
+x = True
+
+try:
+    x.real = 2
+    raise Exception("should have raised AttributeError")
+except AttributeError as exc:
+    assert "is not writable" in exc.args[0]
+
+try:
+    x.foo = "a"
+    raise Exception("should have raised AttributeError")
+except AttributeError as exc:
+    assert "has no attribute 'foo'" in exc.args[0]
+    
 print('passed all tests...')

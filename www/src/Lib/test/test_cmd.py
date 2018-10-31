@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Test script for the 'cmd' module
 Original by Michael Schneider
@@ -7,7 +6,6 @@ Original by Michael Schneider
 
 import cmd
 import sys
-import re
 import unittest
 import io
 from test import support
@@ -53,7 +51,7 @@ class samplecmdclass(cmd.Cmd):
 
     Test for the function completedefault():
     >>> mycmd.completedefault()
-    This is the completedefault methode
+    This is the completedefault method
     >>> mycmd.completenames("a")
     ['add']
 
@@ -111,7 +109,7 @@ class samplecmdclass(cmd.Cmd):
     5  12  19
     6  13
 
-    This is a interactive test, put some commands in the cmdqueue attribute
+    This is an interactive test, put some commands in the cmdqueue attribute
     and let it execute
     This test includes the preloop(), postloop(), default(), emptyline(),
     parseline(), do_help() functions
@@ -142,7 +140,7 @@ class samplecmdclass(cmd.Cmd):
         print("Hello from postloop")
 
     def completedefault(self, *ignored):
-        print("This is the completedefault methode")
+        print("This is the completedefault method")
 
     def complete_command(self):
         print("complete command")
@@ -230,7 +228,7 @@ def test_coverage(coverdir):
     trace = support.import_module('trace')
     tracer=trace.Trace(ignoredirs=[sys.base_prefix, sys.base_exec_prefix,],
                         trace=0, count=1)
-    tracer.run('reload(cmd);test_main()')
+    tracer.run('import importlib; importlib.reload(cmd); test_main()')
     r=tracer.results()
     print("Writing coverage results...")
     r.write_results(show_missing=True, summary=True, coverdir=coverdir)

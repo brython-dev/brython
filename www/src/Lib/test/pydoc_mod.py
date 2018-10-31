@@ -12,8 +12,18 @@ class A:
         pass
 
 class B(object):
-    NO_MEANING = "eggs"
+    NO_MEANING: str = "eggs"
     pass
+
+class C(object):
+    def say_no(self):
+        return "no"
+    def get_answer(self):
+        """ Return say_no() """
+        return self.say_no()
+    def is_it_true(self):
+        """ Return self.get_answer() """
+        return self.get_answer()
 
 def doc_func():
     """

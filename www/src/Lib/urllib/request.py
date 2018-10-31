@@ -10,14 +10,14 @@ class FileIO:
 
 def urlopen(url, data=None, timeout=None):
     global result
-    result=None
+    result = None
 
     def on_complete(req):
         global result
         if req.status == 200:
-            result=req
+            result = req
 
-    _ajax=ajax.ajax()
+    _ajax = ajax.ajax()
     _ajax.bind('complete', on_complete)
     if timeout is not None:
        _ajax.set_timeout(timeout)

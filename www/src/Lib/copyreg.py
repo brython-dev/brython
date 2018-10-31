@@ -70,7 +70,7 @@ def _reduce_ex(self, proto):
     except AttributeError:
         if getattr(self, "__slots__", None):
             raise TypeError("a class that defines __slots__ without "
-                            "defining __getstate__ cannot be pickled")
+                            "defining __getstate__ cannot be pickled") from None
         try:
             dict = self.__dict__
         except AttributeError:
@@ -86,6 +86,12 @@ def _reduce_ex(self, proto):
 
 def __newobj__(cls, *args):
     return cls.__new__(cls, *args)
+
+def __newobj_ex__(cls, args, kwargs):
+    """Used by pickle protocol 4, instead of __newobj__ to allow classes with
+    keyword-only arguments to be pickled correctly.
+    """
+    return cls.__new__(cls, *args, **kwargs)
 
 def _slotnames(cls):
     """Return a list of slot names for a given class.
@@ -122,7 +128,11 @@ def _slotnames(cls):
                         continue
                     # mangled names
                     elif name.startswith('__') and not name.endswith('__'):
-                        names.append('_%s%s' % (c.__name__, name))
+                        stripped = c.__name__.lstrip('_')
+                        if stripped:
+                            names.append('_%s%s' % (stripped, name))
+                        else:
+                            names.append(name)
                     else:
                         names.append(name)
 

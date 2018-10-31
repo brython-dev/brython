@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 from test import support
 import array
 import io
@@ -8,6 +6,11 @@ import sys
 import unittest
 import os
 import types
+
+try:
+    import _testcapi
+except ImportError:
+    _testcapi = None
 
 class HelperMixin:
     def helper(self, sample, *extra):
@@ -24,36 +27,35 @@ class HelperMixin:
 
 class IntTestCase(unittest.TestCase, HelperMixin):
     def test_ints(self):
-        # Test the full range of Python ints.
-        n = sys.maxsize
+        # Test a range of Python ints larger than the machine word size.
+        n = sys.maxsize ** 2
         while n:
             for expected in (-n, n):
                 self.helper(expected)
             n = n >> 1
 
     def test_int64(self):
-        # Simulate int marshaling on a 64-bit box.  This is most interesting if
-        # we're running the test on a 32-bit box, of course.
-
-        def to_little_endian_string(value, nbytes):
-            b = bytearray()
-            for i in range(nbytes):
-                b.append(value & 0xff)
-                value >>= 8
-            return b
-
+        # Simulate int marshaling with TYPE_INT64.
         maxint64 = (1 << 63) - 1
         minint64 = -maxint64-1
-
         for base in maxint64, minint64, -maxint64, -(minint64 >> 1):
             while base:
-                s = b'I' + to_little_endian_string(base, 8)
+                s = b'I' + int.to_bytes(base, 8, 'little', signed=True)
                 got = marshal.loads(s)
                 self.assertEqual(base, got)
                 if base == -1:  # a fixed-point for shifting right 1
                     base = 0
                 else:
                     base >>= 1
+
+        got = marshal.loads(b'I\xfe\xdc\xba\x98\x76\x54\x32\x10')
+        self.assertEqual(got, 0x1032547698badcfe)
+        got = marshal.loads(b'I\x01\x23\x45\x67\x89\xab\xcd\xef')
+        self.assertEqual(got, -0x1032547698badcff)
+        got = marshal.loads(b'I\x08\x19\x2a\x3b\x4c\x5d\x6e\x7f')
+        self.assertEqual(got, 0x7f6e5d4c3b2a1908)
+        got = marshal.loads(b'I\xf7\xe6\xd5\xc4\xb3\xa2\x91\x80')
+        self.assertEqual(got, -0x7f6e5d4c3b2a1909)
 
     def test_bool(self):
         for b in (True, False):
@@ -156,6 +158,13 @@ class ContainerTestCase(unittest.TestCase, HelperMixin):
         for constructor in (set, frozenset):
             self.helper(constructor(self.d.keys()))
 
+    @support.cpython_only
+    def test_empty_frozenset_singleton(self):
+        # marshal.loads() must reuse the empty frozenset singleton
+        obj = frozenset()
+        obj2 = marshal.loads(marshal.dumps(obj))
+        self.assertIs(obj2, obj)
+
 
 class BufferTestCase(unittest.TestCase, HelperMixin):
 
@@ -201,16 +210,23 @@ class BugsTestCase(unittest.TestCase):
             except Exception:
                 pass
 
-    def test_loads_recursion(self):
+    def test_loads_2x_code(self):
         s = b'c' + (b'X' * 4*4) + b'{' * 2**20
+        self.assertRaises(ValueError, marshal.loads, s)
+
+    def test_loads_recursion(self):
+        s = b'c' + (b'X' * 4*5) + b'{' * 2**20
         self.assertRaises(ValueError, marshal.loads, s)
 
     def test_recursion_limit(self):
         # Create a deeply nested structure.
         head = last = []
         # The max stack depth should match the value in Python/marshal.c.
-        if os.name == 'nt' and hasattr(sys, 'gettotalrefcount'):
-            MAX_MARSHAL_STACK_DEPTH = 1500
+        # BUG: https://bugs.python.org/issue33720
+        # Windows always limits the maximum depth on release and debug builds
+        #if os.name == 'nt' and hasattr(sys, 'gettotalrefcount'):
+        if os.name == 'nt':
+            MAX_MARSHAL_STACK_DEPTH = 1000
         else:
             MAX_MARSHAL_STACK_DEPTH = 2000
         for i in range(MAX_MARSHAL_STACK_DEPTH - 2):
@@ -282,14 +298,19 @@ class BugsTestCase(unittest.TestCase):
 
     def test_bad_reader(self):
         class BadReader(io.BytesIO):
-            def read(self, n=-1):
-                b = super().read(n)
+            def readinto(self, buf):
+                n = super().readinto(buf)
                 if n is not None and n > 4:
-                    b += b' ' * 10**6
-                return b
+                    n += 10**6
+                return n
         for value in (1.0, 1j, b'0123456789', '0123456789'):
             self.assertRaises(ValueError, marshal.load,
                               BadReader(marshal.dumps(value)))
+
+    def _test_eof(self):
+        data = marshal.dumps(("hello", "dolly", None))
+        for i in range(len(data)):
+            self.assertRaises(EOFError, marshal.loads, data[0: i])
 
 LARGE_SIZE = 2**31
 pointer_size = 8 if sys.maxsize > 0xFFFFFFFF else 4
@@ -303,19 +324,19 @@ class LargeValuesTestCase(unittest.TestCase):
     def check_unmarshallable(self, data):
         self.assertRaises(ValueError, marshal.dump, data, NullWriter())
 
-    @support.bigmemtest(size=LARGE_SIZE, memuse=1, dry_run=False)
+    @support.bigmemtest(size=LARGE_SIZE, memuse=2, dry_run=False)
     def test_bytes(self, size):
         self.check_unmarshallable(b'x' * size)
 
-    @support.bigmemtest(size=LARGE_SIZE, memuse=1, dry_run=False)
+    @support.bigmemtest(size=LARGE_SIZE, memuse=2, dry_run=False)
     def test_str(self, size):
         self.check_unmarshallable('x' * size)
 
-    @support.bigmemtest(size=LARGE_SIZE, memuse=pointer_size, dry_run=False)
+    @support.bigmemtest(size=LARGE_SIZE, memuse=pointer_size + 1, dry_run=False)
     def test_tuple(self, size):
         self.check_unmarshallable((None,) * size)
 
-    @support.bigmemtest(size=LARGE_SIZE, memuse=pointer_size, dry_run=False)
+    @support.bigmemtest(size=LARGE_SIZE, memuse=pointer_size + 1, dry_run=False)
     def test_list(self, size):
         self.check_unmarshallable([None] * size)
 
@@ -331,22 +352,208 @@ class LargeValuesTestCase(unittest.TestCase):
     def test_frozenset(self, size):
         self.check_unmarshallable(frozenset(range(size)))
 
-    @support.bigmemtest(size=LARGE_SIZE, memuse=1, dry_run=False)
+    @support.bigmemtest(size=LARGE_SIZE, memuse=2, dry_run=False)
     def test_bytearray(self, size):
         self.check_unmarshallable(bytearray(size))
 
+def CollectObjectIDs(ids, obj):
+    """Collect object ids seen in a structure"""
+    if id(obj) in ids:
+        return
+    ids.add(id(obj))
+    if isinstance(obj, (list, tuple, set, frozenset)):
+        for e in obj:
+            CollectObjectIDs(ids, e)
+    elif isinstance(obj, dict):
+        for k, v in obj.items():
+            CollectObjectIDs(ids, k)
+            CollectObjectIDs(ids, v)
+    return len(ids)
 
-def test_main():
-    support.run_unittest(IntTestCase,
-                         FloatTestCase,
-                         StringTestCase,
-                         CodeTestCase,
-                         ContainerTestCase,
-                         ExceptionTestCase,
-                         BufferTestCase,
-                         BugsTestCase,
-                         LargeValuesTestCase,
-                        )
+class InstancingTestCase(unittest.TestCase, HelperMixin):
+    intobj = 123321
+    floatobj = 1.2345
+    strobj = "abcde"*3
+    dictobj = {"hello":floatobj, "goodbye":floatobj, floatobj:"hello"}
+
+    def helper3(self, rsample, recursive=False, simple=False):
+        #we have two instances
+        sample = (rsample, rsample)
+
+        n0 = CollectObjectIDs(set(), sample)
+
+        s3 = marshal.dumps(sample, 3)
+        n3 = CollectObjectIDs(set(), marshal.loads(s3))
+
+        #same number of instances generated
+        self.assertEqual(n3, n0)
+
+        if not recursive:
+            #can compare with version 2
+            s2 = marshal.dumps(sample, 2)
+            n2 = CollectObjectIDs(set(), marshal.loads(s2))
+            #old format generated more instances
+            self.assertGreater(n2, n0)
+
+            #if complex objects are in there, old format is larger
+            if not simple:
+                self.assertGreater(len(s2), len(s3))
+            else:
+                self.assertGreaterEqual(len(s2), len(s3))
+
+    def testInt(self):
+        self.helper(self.intobj)
+        self.helper3(self.intobj, simple=True)
+
+    def testFloat(self):
+        self.helper(self.floatobj)
+        self.helper3(self.floatobj)
+
+    def testStr(self):
+        self.helper(self.strobj)
+        self.helper3(self.strobj)
+
+    def testDict(self):
+        self.helper(self.dictobj)
+        self.helper3(self.dictobj)
+
+    def testModule(self):
+        with open(__file__, "rb") as f:
+            code = f.read()
+        if __file__.endswith(".py"):
+            code = compile(code, __file__, "exec")
+        self.helper(code)
+        self.helper3(code)
+
+    def testRecursion(self):
+        d = dict(self.dictobj)
+        d["self"] = d
+        self.helper3(d, recursive=True)
+        l = [self.dictobj]
+        l.append(l)
+        self.helper3(l, recursive=True)
+
+class CompatibilityTestCase(unittest.TestCase):
+    def _test(self, version):
+        with open(__file__, "rb") as f:
+            code = f.read()
+        if __file__.endswith(".py"):
+            code = compile(code, __file__, "exec")
+        data = marshal.dumps(code, version)
+        marshal.loads(data)
+
+    def test0To3(self):
+        self._test(0)
+
+    def test1To3(self):
+        self._test(1)
+
+    def test2To3(self):
+        self._test(2)
+
+    def test3To3(self):
+        self._test(3)
+
+class InterningTestCase(unittest.TestCase, HelperMixin):
+    strobj = "this is an interned string"
+    strobj = sys.intern(strobj)
+
+    def testIntern(self):
+        s = marshal.loads(marshal.dumps(self.strobj))
+        self.assertEqual(s, self.strobj)
+        self.assertEqual(id(s), id(self.strobj))
+        s2 = sys.intern(s)
+        self.assertEqual(id(s2), id(s))
+
+    def testNoIntern(self):
+        s = marshal.loads(marshal.dumps(self.strobj, 2))
+        self.assertEqual(s, self.strobj)
+        self.assertNotEqual(id(s), id(self.strobj))
+        s2 = sys.intern(s)
+        self.assertNotEqual(id(s2), id(s))
+
+@support.cpython_only
+@unittest.skipUnless(_testcapi, 'requires _testcapi')
+class CAPI_TestCase(unittest.TestCase, HelperMixin):
+
+    def test_write_long_to_file(self):
+        for v in range(marshal.version + 1):
+            _testcapi.pymarshal_write_long_to_file(0x12345678, support.TESTFN, v)
+            with open(support.TESTFN, 'rb') as f:
+                data = f.read()
+            support.unlink(support.TESTFN)
+            self.assertEqual(data, b'\x78\x56\x34\x12')
+
+    def test_write_object_to_file(self):
+        obj = ('\u20ac', b'abc', 123, 45.6, 7+8j, 'long line '*1000)
+        for v in range(marshal.version + 1):
+            _testcapi.pymarshal_write_object_to_file(obj, support.TESTFN, v)
+            with open(support.TESTFN, 'rb') as f:
+                data = f.read()
+            support.unlink(support.TESTFN)
+            self.assertEqual(marshal.loads(data), obj)
+
+    def test_read_short_from_file(self):
+        with open(support.TESTFN, 'wb') as f:
+            f.write(b'\x34\x12xxxx')
+        r, p = _testcapi.pymarshal_read_short_from_file(support.TESTFN)
+        support.unlink(support.TESTFN)
+        self.assertEqual(r, 0x1234)
+        self.assertEqual(p, 2)
+
+        with open(support.TESTFN, 'wb') as f:
+            f.write(b'\x12')
+        with self.assertRaises(EOFError):
+            _testcapi.pymarshal_read_short_from_file(support.TESTFN)
+        support.unlink(support.TESTFN)
+
+    def test_read_long_from_file(self):
+        with open(support.TESTFN, 'wb') as f:
+            f.write(b'\x78\x56\x34\x12xxxx')
+        r, p = _testcapi.pymarshal_read_long_from_file(support.TESTFN)
+        support.unlink(support.TESTFN)
+        self.assertEqual(r, 0x12345678)
+        self.assertEqual(p, 4)
+
+        with open(support.TESTFN, 'wb') as f:
+            f.write(b'\x56\x34\x12')
+        with self.assertRaises(EOFError):
+            _testcapi.pymarshal_read_long_from_file(support.TESTFN)
+        support.unlink(support.TESTFN)
+
+    def test_read_last_object_from_file(self):
+        obj = ('\u20ac', b'abc', 123, 45.6, 7+8j)
+        for v in range(marshal.version + 1):
+            data = marshal.dumps(obj, v)
+            with open(support.TESTFN, 'wb') as f:
+                f.write(data + b'xxxx')
+            r, p = _testcapi.pymarshal_read_last_object_from_file(support.TESTFN)
+            support.unlink(support.TESTFN)
+            self.assertEqual(r, obj)
+
+            with open(support.TESTFN, 'wb') as f:
+                f.write(data[:1])
+            with self.assertRaises(EOFError):
+                _testcapi.pymarshal_read_last_object_from_file(support.TESTFN)
+            support.unlink(support.TESTFN)
+
+    def test_read_object_from_file(self):
+        obj = ('\u20ac', b'abc', 123, 45.6, 7+8j)
+        for v in range(marshal.version + 1):
+            data = marshal.dumps(obj, v)
+            with open(support.TESTFN, 'wb') as f:
+                f.write(data + b'xxxx')
+            r, p = _testcapi.pymarshal_read_object_from_file(support.TESTFN)
+            support.unlink(support.TESTFN)
+            self.assertEqual(r, obj)
+            self.assertEqual(p, len(data))
+
+            with open(support.TESTFN, 'wb') as f:
+                f.write(data[:1])
+            with self.assertRaises(EOFError):
+                _testcapi.pymarshal_read_object_from_file(support.TESTFN)
+            support.unlink(support.TESTFN)
+
 
 if __name__ == "__main__":
-    test_main()
+    unittest.main()

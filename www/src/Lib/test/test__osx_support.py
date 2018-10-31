@@ -4,7 +4,6 @@ Test suite for _osx_support: shared OS X support functions.
 
 import os
 import platform
-import shutil
 import stat
 import sys
 import unittest
@@ -109,7 +108,9 @@ class Test_OSXSupport(unittest.TestCase):
 
     def test__supports_universal_builds(self):
         import platform
-        self.assertEqual(platform.mac_ver()[0].split('.') >= ['10', '4'],
+        mac_ver_tuple = tuple(int(i) for i in
+                            platform.mac_ver()[0].split('.')[0:2])
+        self.assertEqual(mac_ver_tuple >= (10, 4),
                             _osx_support._supports_universal_builds())
 
     def test__find_appropriate_compiler(self):
@@ -271,9 +272,5 @@ class Test_OSXSupport(unittest.TestCase):
         result = _osx_support.get_platform_osx(config_vars, ' ', ' ', ' ')
         self.assertEqual(('macosx', '10.6', 'fat'), result)
 
-def test_main():
-    if sys.platform == 'darwin':
-        test.support.run_unittest(Test_OSXSupport)
-
 if __name__ == "__main__":
-    test_main()
+    unittest.main()

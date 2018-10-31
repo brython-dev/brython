@@ -88,8 +88,6 @@ var $module=(function($B) {
              //var nb_modules = Object.keys(__BRYTHON__.modules).length
              //console.log('before exec', nb_modules)
 
-            $B.current_exception = ce
-
             console.log("call py2js", src, globals_id, locals_id, parent_scope)
             var root = $B.py2js(src, globals_id, locals_id, parent_scope),
                 js, gns, lns

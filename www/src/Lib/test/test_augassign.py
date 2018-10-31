@@ -1,6 +1,5 @@
 # Augmented assignment test.
 
-from test.support import run_unittest
 import unittest
 
 
@@ -84,6 +83,10 @@ class AugAssignTest(unittest.TestCase):
             def __iadd__(self, val):
                 return aug_test3(self.val + val)
 
+        class aug_test4(aug_test3):
+            """Blocks inheritance, and fallback to __add__"""
+            __iadd__ = None
+
         x = aug_test(1)
         y = x
         x += 10
@@ -106,6 +109,10 @@ class AugAssignTest(unittest.TestCase):
         self.assertIsInstance(x, aug_test3)
         self.assertTrue(y is not x)
         self.assertEqual(x.val, 13)
+
+        x = aug_test4(4)
+        with self.assertRaises(TypeError):
+            x += 10
 
 
     def testCustomMethods2(test_self):
@@ -136,12 +143,12 @@ class AugAssignTest(unittest.TestCase):
                 output.append("__imul__ called")
                 return self
 
-            def __div__(self, val):
-                output.append("__div__ called")
-            def __rdiv__(self, val):
-                output.append("__rdiv__ called")
-            def __idiv__(self, val):
-                output.append("__idiv__ called")
+            def __matmul__(self, val):
+                output.append("__matmul__ called")
+            def __rmatmul__(self, val):
+                output.append("__rmatmul__ called")
+            def __imatmul__(self, val):
+                output.append("__imatmul__ called")
                 return self
 
             def __floordiv__(self, val):
@@ -233,6 +240,10 @@ class AugAssignTest(unittest.TestCase):
         1 * x
         x *= 1
 
+        x @ 1
+        1 @ x
+        x @= 1
+
         x / 1
         1 / x
         x /= 1
@@ -279,6 +290,9 @@ __isub__ called
 __mul__ called
 __rmul__ called
 __imul__ called
+__matmul__ called
+__rmatmul__ called
+__imatmul__ called
 __truediv__ called
 __rtruediv__ called
 __itruediv__ called
@@ -308,8 +322,5 @@ __rlshift__ called
 __ilshift__ called
 '''.splitlines())
 
-def test_main():
-    run_unittest(AugAssignTest)
-
 if __name__ == '__main__':
-    test_main()
+    unittest.main()

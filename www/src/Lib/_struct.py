@@ -5,7 +5,7 @@
 # because pypy.module.struct is not ootype-backend-friendly yet.
 #
 
-# this module 'borrowed' from 
+# this module 'borrowed' from
 # https://bitbucket.org/pypy/pypy/src/18626459a9b2/lib_pypy/_struct.py?at=py3k-listview_str
 # with many bug fixes
 
@@ -293,6 +293,8 @@ def calcsize(fmt):
     """calcsize(fmt) -> int
     Return size of C struct described by format string fmt.
     See struct.__doc__ for more on format strings."""
+    if isinstance(fmt, bytes):
+        fmt = fmt.decode("ascii")
 
     formatdef,endianness,i,alignment = getmode(fmt)
     num = 0
@@ -440,10 +442,10 @@ def _clearcache():
     # No cache in this implementation
 
 class Struct:
-    
+
     def __init__(self, fmt):
         self.format = fmt
-    
+
     def pack(self, *args):
         return pack(self.format, *args)
 
@@ -461,5 +463,4 @@ if __name__=='__main__':
     print(t, len(t))
     print(unpack('Bf', t))
     print(calcsize('Bf'))
-    
-    
+

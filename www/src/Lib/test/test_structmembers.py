@@ -1,3 +1,8 @@
+import unittest
+from test import support
+
+# Skip this test if the _testcapi module isn't available.
+support.import_module('_testcapi')
 from _testcapi import _test_structmembersType, \
     CHAR_MAX, CHAR_MIN, UCHAR_MAX, \
     SHRT_MAX, SHRT_MIN, USHRT_MAX, \
@@ -5,9 +10,6 @@ from _testcapi import _test_structmembersType, \
     LONG_MAX, LONG_MIN, ULONG_MAX, \
     LLONG_MAX, LLONG_MIN, ULLONG_MAX, \
     PY_SSIZE_T_MAX, PY_SSIZE_T_MIN
-
-import unittest
-from test import support
 
 ts=_test_structmembersType(False,  # T_BOOL
                           1,      # T_BYTE
@@ -138,8 +140,5 @@ class TestWarnings(unittest.TestCase):
             ts.T_USHORT = USHRT_MAX+1
 
 
-def test_main(verbose=None):
-    support.run_unittest(__name__)
-
 if __name__ == "__main__":
-    test_main(verbose=True)
+    unittest.main()

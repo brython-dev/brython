@@ -34,17 +34,41 @@ Argument list examples
     (1, 2, 3, 4, 5) {}
     >>> f(1, 2, 3, *[4, 5])
     (1, 2, 3, 4, 5) {}
+    >>> f(*[1, 2, 3], 4, 5)
+    (1, 2, 3, 4, 5) {}
     >>> f(1, 2, 3, *UserList([4, 5]))
     (1, 2, 3, 4, 5) {}
+    >>> f(1, 2, 3, *[4, 5], *[6, 7])
+    (1, 2, 3, 4, 5, 6, 7) {}
+    >>> f(1, *[2, 3], 4, *[5, 6], 7)
+    (1, 2, 3, 4, 5, 6, 7) {}
+    >>> f(*UserList([1, 2]), *UserList([3, 4]), 5, *UserList([6, 7]))
+    (1, 2, 3, 4, 5, 6, 7) {}
 
 Here we add keyword arguments
 
     >>> f(1, 2, 3, **{'a':4, 'b':5})
     (1, 2, 3) {'a': 4, 'b': 5}
+    >>> f(1, 2, **{'a': -1, 'b': 5}, **{'a': 4, 'c': 6})
+    Traceback (most recent call last):
+        ...
+    TypeError: f() got multiple values for keyword argument 'a'
+    >>> f(1, 2, **{'a': -1, 'b': 5}, a=4, c=6)
+    Traceback (most recent call last):
+        ...
+    TypeError: f() got multiple values for keyword argument 'a'
+    >>> f(1, 2, a=3, **{'a': 4}, **{'a': 5})
+    Traceback (most recent call last):
+        ...
+    TypeError: f() got multiple values for keyword argument 'a'
     >>> f(1, 2, 3, *[4, 5], **{'a':6, 'b':7})
     (1, 2, 3, 4, 5) {'a': 6, 'b': 7}
     >>> f(1, 2, 3, x=4, y=5, *(6, 7), **{'a':8, 'b': 9})
     (1, 2, 3, 6, 7) {'a': 8, 'b': 9, 'x': 4, 'y': 5}
+    >>> f(1, 2, 3, *[4, 5], **{'c': 8}, **{'a':6, 'b':7})
+    (1, 2, 3, 4, 5) {'a': 6, 'b': 7, 'c': 8}
+    >>> f(1, 2, 3, *(4, 5), x=6, y=7, **{'a':8, 'b': 9})
+    (1, 2, 3, 4, 5) {'a': 8, 'b': 9, 'x': 6, 'y': 7}
 
     >>> f(1, 2, 3, **UserDict(a=4, b=5))
     (1, 2, 3) {'a': 4, 'b': 5}
@@ -52,6 +76,8 @@ Here we add keyword arguments
     (1, 2, 3, 4, 5) {'a': 6, 'b': 7}
     >>> f(1, 2, 3, x=4, y=5, *(6, 7), **UserDict(a=8, b=9))
     (1, 2, 3, 6, 7) {'a': 8, 'b': 9, 'x': 4, 'y': 5}
+    >>> f(1, 2, 3, *(4, 5), x=6, y=7, **UserDict(a=8, b=9))
+    (1, 2, 3, 4, 5) {'a': 8, 'b': 9, 'x': 6, 'y': 7}
 
 Examples with invalid arguments (TypeErrors). We're also testing the function
 names in the exception messages.
@@ -92,7 +118,7 @@ Verify clearing of SF bug #733667
     >>> g(*Nothing())
     Traceback (most recent call last):
       ...
-    TypeError: g() argument after * must be a sequence, not Nothing
+    TypeError: g() argument after * must be an iterable, not Nothing
 
     >>> class Nothing:
     ...     def __len__(self): return 5
@@ -101,7 +127,7 @@ Verify clearing of SF bug #733667
     >>> g(*Nothing())
     Traceback (most recent call last):
       ...
-    TypeError: g() argument after * must be a sequence, not Nothing
+    TypeError: g() argument after * must be an iterable, not Nothing
 
     >>> class Nothing():
     ...     def __len__(self): return 5
@@ -126,6 +152,61 @@ Verify clearing of SF bug #733667
 
     >>> g(*Nothing())
     0 (1, 2, 3) {}
+
+Check for issue #4806: Does a TypeError in a generator get propagated with the
+right error message? (Also check with other iterables.)
+
+    >>> def broken(): raise TypeError("myerror")
+    ...
+
+    >>> g(*(broken() for i in range(1)))
+    Traceback (most recent call last):
+      ...
+    TypeError: myerror
+    >>> g(*range(1), *(broken() for i in range(1)))
+    Traceback (most recent call last):
+      ...
+    TypeError: myerror
+
+    >>> class BrokenIterable1:
+    ...     def __iter__(self):
+    ...         raise TypeError('myerror')
+    ...
+    >>> g(*BrokenIterable1())
+    Traceback (most recent call last):
+      ...
+    TypeError: myerror
+    >>> g(*range(1), *BrokenIterable1())
+    Traceback (most recent call last):
+      ...
+    TypeError: myerror
+
+    >>> class BrokenIterable2:
+    ...     def __iter__(self):
+    ...         yield 0
+    ...         raise TypeError('myerror')
+    ...
+    >>> g(*BrokenIterable2())
+    Traceback (most recent call last):
+      ...
+    TypeError: myerror
+    >>> g(*range(1), *BrokenIterable2())
+    Traceback (most recent call last):
+      ...
+    TypeError: myerror
+
+    >>> class BrokenSequence:
+    ...     def __getitem__(self, idx):
+    ...         raise TypeError('myerror')
+    ...
+    >>> g(*BrokenSequence())
+    Traceback (most recent call last):
+      ...
+    TypeError: myerror
+    >>> g(*range(1), *BrokenSequence())
+    Traceback (most recent call last):
+      ...
+    TypeError: myerror
 
 Make sure that the function doesn't stomp the dictionary
 
@@ -166,23 +247,58 @@ What about willful misconduct?
     >>> h(*h)
     Traceback (most recent call last):
       ...
-    TypeError: h() argument after * must be a sequence, not function
+    TypeError: h() argument after * must be an iterable, not function
+
+    >>> h(1, *h)
+    Traceback (most recent call last):
+      ...
+    TypeError: h() argument after * must be an iterable, not function
+
+    >>> h(*[1], *h)
+    Traceback (most recent call last):
+      ...
+    TypeError: h() argument after * must be an iterable, not function
 
     >>> dir(*h)
     Traceback (most recent call last):
       ...
-    TypeError: dir() argument after * must be a sequence, not function
+    TypeError: dir() argument after * must be an iterable, not function
 
     >>> None(*h)
     Traceback (most recent call last):
       ...
-    TypeError: NoneType object argument after * must be a sequence, \
+    TypeError: NoneType object argument after * must be an iterable, \
 not function
 
     >>> h(**h)
     Traceback (most recent call last):
       ...
     TypeError: h() argument after ** must be a mapping, not function
+
+    >>> h(**[])
+    Traceback (most recent call last):
+      ...
+    TypeError: h() argument after ** must be a mapping, not list
+
+    >>> h(a=1, **h)
+    Traceback (most recent call last):
+      ...
+    TypeError: h() argument after ** must be a mapping, not function
+
+    >>> h(a=1, **[])
+    Traceback (most recent call last):
+      ...
+    TypeError: h() argument after ** must be a mapping, not list
+
+    >>> h(**{'a': 1}, **h)
+    Traceback (most recent call last):
+      ...
+    TypeError: h() argument after ** must be a mapping, not function
+
+    >>> h(**{'a': 1}, **[])
+    Traceback (most recent call last):
+      ...
+    TypeError: h() argument after ** must be a mapping, not list
 
     >>> dir(**h)
     Traceback (most recent call last):

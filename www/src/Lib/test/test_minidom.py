@@ -1,7 +1,8 @@
 # test for xml.dom.minidom
 
+import copy
 import pickle
-from test.support import run_unittest, findfile
+from test.support import findfile
 import unittest
 
 import xml.dom.minidom
@@ -11,6 +12,13 @@ from xml.dom.minidom import getDOMImplementation
 
 
 tstfile = findfile("test.xml", subdir="xmltestdata")
+sample = ("<?xml version='1.0' encoding='us-ascii'?>\n"
+          "<!DOCTYPE doc PUBLIC 'http://xml.python.org/public'"
+          " 'http://xml.python.org/system' [\n"
+          "  <!ELEMENT e EMPTY>\n"
+          "  <!ENTITY ent SYSTEM 'http://xml.python.org/entity'>\n"
+          "]><doc attr='value'> text\n"
+          "<?pi sample?> <!-- comment --> <e/> </doc>")
 
 # The tests of DocumentType importing use these helpers to construct
 # the documents to work with, since not all DOM builders actually
@@ -49,8 +57,19 @@ class MinidomTest(unittest.TestCase):
         t = node.wholeText
         self.confirm(t == s, "looking for %r, found %r" % (s, t))
 
-    def testParseFromFile(self):
-        with open(tstfile) as file:
+    def testDocumentAsyncAttr(self):
+        doc = Document()
+        self.assertFalse(doc.async_)
+        self.assertFalse(Document.async_)
+
+    def testParseFromBinaryFile(self):
+        with open(tstfile, 'rb') as file:
+            dom = parse(file)
+            dom.unlink()
+            self.confirm(isinstance(dom, Document))
+
+    def testParseFromTextFile(self):
+        with open(tstfile, 'r', encoding='iso-8859-1') as file:
             dom = parse(file)
             dom.unlink()
             self.confirm(isinstance(dom, Document))
@@ -1460,51 +1479,54 @@ class MinidomTest(unittest.TestCase):
         self.confirm(e.isSameNode(doc.getElementById("w"))
                 and a2.isId)
 
-    def testPickledDocument(self):
-        doc = parseString("<?xml version='1.0' encoding='us-ascii'?>\n"
-                    "<!DOCTYPE doc PUBLIC 'http://xml.python.org/public'"
-                    " 'http://xml.python.org/system' [\n"
-                    "  <!ELEMENT e EMPTY>\n"
-                    "  <!ENTITY ent SYSTEM 'http://xml.python.org/entity'>\n"
-                    "]><doc attr='value'> text\n"
-                    "<?pi sample?> <!-- comment --> <e/> </doc>")
-        s = pickle.dumps(doc)
-        doc2 = pickle.loads(s)
+    def assert_recursive_equal(self, doc, doc2):
         stack = [(doc, doc2)]
         while stack:
             n1, n2 = stack.pop()
-            self.confirm(n1.nodeType == n2.nodeType
-                    and len(n1.childNodes) == len(n2.childNodes)
-                    and n1.nodeName == n2.nodeName
-                    and not n1.isSameNode(n2)
-                    and not n2.isSameNode(n1))
+            self.assertEqual(n1.nodeType, n2.nodeType)
+            self.assertEqual(len(n1.childNodes), len(n2.childNodes))
+            self.assertEqual(n1.nodeName, n2.nodeName)
+            self.assertFalse(n1.isSameNode(n2))
+            self.assertFalse(n2.isSameNode(n1))
             if n1.nodeType == Node.DOCUMENT_TYPE_NODE:
                 len(n1.entities)
                 len(n2.entities)
                 len(n1.notations)
                 len(n2.notations)
-                self.confirm(len(n1.entities) == len(n2.entities)
-                        and len(n1.notations) == len(n2.notations))
+                self.assertEqual(len(n1.entities), len(n2.entities))
+                self.assertEqual(len(n1.notations), len(n2.notations))
                 for i in range(len(n1.notations)):
                     # XXX this loop body doesn't seem to be executed?
                     no1 = n1.notations.item(i)
                     no2 = n1.notations.item(i)
-                    self.confirm(no1.name == no2.name
-                            and no1.publicId == no2.publicId
-                            and no1.systemId == no2.systemId)
+                    self.assertEqual(no1.name, no2.name)
+                    self.assertEqual(no1.publicId, no2.publicId)
+                    self.assertEqual(no1.systemId, no2.systemId)
                     stack.append((no1, no2))
                 for i in range(len(n1.entities)):
                     e1 = n1.entities.item(i)
                     e2 = n2.entities.item(i)
-                    self.confirm(e1.notationName == e2.notationName
-                            and e1.publicId == e2.publicId
-                            and e1.systemId == e2.systemId)
+                    self.assertEqual(e1.notationName, e2.notationName)
+                    self.assertEqual(e1.publicId, e2.publicId)
+                    self.assertEqual(e1.systemId, e2.systemId)
                     stack.append((e1, e2))
             if n1.nodeType != Node.DOCUMENT_NODE:
-                self.confirm(n1.ownerDocument.isSameNode(doc)
-                        and n2.ownerDocument.isSameNode(doc2))
+                self.assertTrue(n1.ownerDocument.isSameNode(doc))
+                self.assertTrue(n2.ownerDocument.isSameNode(doc2))
             for i in range(len(n1.childNodes)):
                 stack.append((n1.childNodes[i], n2.childNodes[i]))
+
+    def testPickledDocument(self):
+        doc = parseString(sample)
+        for proto in range(2, pickle.HIGHEST_PROTOCOL + 1):
+            s = pickle.dumps(doc, proto)
+            doc2 = pickle.loads(s)
+            self.assert_recursive_equal(doc, doc2)
+
+    def testDeepcopiedDocument(self):
+        doc = parseString(sample)
+        doc2 = copy.deepcopy(doc)
+        self.assert_recursive_equal(doc, doc2)
 
     def testSerializeCommentNodeWithDoubleHyphen(self):
         doc = create_doc_without_doctype()
@@ -1518,6 +1540,10 @@ class MinidomTest(unittest.TestCase):
         doc2 = parseString(doc.toxml())
         self.confirm(doc2.namespaceURI == xml.dom.EMPTY_NAMESPACE)
 
+    def testExceptionOnSpacesInXMLNSValue(self):
+        with self.assertRaisesRegex(ValueError, 'Unsupported syntax'):
+            parseString('<element xmlns:abc="http:abc.com/de f g/hi/j k"><abc:foo /></element>')
+
     def testDocRemoveChild(self):
         doc = parse(tstfile)
         title_tag = doc.documentElement.getElementsByTagName("TITLE")[0]
@@ -1527,8 +1553,12 @@ class MinidomTest(unittest.TestCase):
         num_children_after = len(doc.childNodes)
         self.assertTrue(num_children_after == num_children_before - 1)
 
-def test_main():
-    run_unittest(MinidomTest)
+    def testProcessingInstructionNameError(self):
+        # wrong variable in .nodeValue property will
+        # lead to "NameError: name 'data' is not defined"
+        doc = parse(tstfile)
+        pi = doc.createProcessingInstruction("y", "z")
+        pi.nodeValue = "crash"
 
 if __name__ == "__main__":
-    test_main()
+    unittest.main()

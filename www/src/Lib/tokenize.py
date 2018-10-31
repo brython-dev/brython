@@ -24,27 +24,24 @@ __author__ = 'Ka-Ping Yee <ping@lfw.org>'
 __credits__ = ('GvR, ESR, Tim Peters, Thomas Wouters, Fred Drake, '
                'Skip Montanaro, Raymond Hettinger, Trent Nelson, '
                'Michael Foord')
-import builtins
-import re
-import sys
-from token import *
+from builtins import open as _builtin_open
 from codecs import lookup, BOM_UTF8
 import collections
 from io import TextIOWrapper
-cookie_re = re.compile(r'^[ \t\f]*#.*coding[:=][ \t]*([-\w.]+)', re.ASCII)
+from itertools import chain
+import itertools as _itertools
+import re
+import sys
+from token import *
+
+cookie_re = re.compile(r'^[ \t\f]*#.*?coding[:=][ \t]*([-\w.]+)', re.ASCII)
+blank_re = re.compile(br'^[ \t\f]*(?:[#\r\n]|$)', re.ASCII)
 
 import token
-__all__ = token.__all__ + ["COMMENT", "tokenize", "detect_encoding",
-                           "NL", "untokenize", "ENCODING", "TokenInfo"]
+__all__ = token.__all__ + ["tokenize", "detect_encoding",
+                           "untokenize", "TokenInfo"]
 del token
 
-COMMENT = N_TOKENS
-tok_name[COMMENT] = 'COMMENT'
-NL = N_TOKENS + 1
-tok_name[NL] = 'NL'
-ENCODING = N_TOKENS + 2
-tok_name[ENCODING] = 'ENCODING'
-N_TOKENS += 3
 EXACT_TOKEN_TYPES = {
     '(':   LPAR,
     ')':   RPAR,
@@ -82,13 +79,16 @@ EXACT_TOKEN_TYPES = {
     '%=':  PERCENTEQUAL,
     '&=':  AMPEREQUAL,
     '|=':  VBAREQUAL,
-    '^=': CIRCUMFLEXEQUAL,
+    '^=':  CIRCUMFLEXEQUAL,
     '<<=': LEFTSHIFTEQUAL,
     '>>=': RIGHTSHIFTEQUAL,
     '**=': DOUBLESTAREQUAL,
     '//':  DOUBLESLASH,
     '//=': DOUBLESLASHEQUAL,
-    '@':   AT
+    '...': ELLIPSIS,
+    '->':  RARROW,
+    '@':   AT,
+    '@=':  ATEQUAL,
 }
 
 class TokenInfo(collections.namedtuple('TokenInfo', 'type string start end line')):
@@ -115,19 +115,41 @@ Comment = r'#[^\r\n]*'
 Ignore = Whitespace + any(r'\\\r?\n' + Whitespace) + maybe(Comment)
 Name = r'\w+'
 
-Hexnumber = r'0[xX][0-9a-fA-F]+'
-Binnumber = r'0[bB][01]+'
-Octnumber = r'0[oO][0-7]+'
-Decnumber = r'(?:0+|[1-9][0-9]*)'
+Hexnumber = r'0[xX](?:_?[0-9a-fA-F])+'
+Binnumber = r'0[bB](?:_?[01])+'
+Octnumber = r'0[oO](?:_?[0-7])+'
+Decnumber = r'(?:0(?:_?0)*|[1-9](?:_?[0-9])*)'
 Intnumber = group(Hexnumber, Binnumber, Octnumber, Decnumber)
-Exponent = r'[eE][-+]?[0-9]+'
-Pointfloat = group(r'[0-9]+\.[0-9]*', r'\.[0-9]+') + maybe(Exponent)
-Expfloat = r'[0-9]+' + Exponent
+Exponent = r'[eE][-+]?[0-9](?:_?[0-9])*'
+Pointfloat = group(r'[0-9](?:_?[0-9])*\.(?:[0-9](?:_?[0-9])*)?',
+                   r'\.[0-9](?:_?[0-9])*') + maybe(Exponent)
+Expfloat = r'[0-9](?:_?[0-9])*' + Exponent
 Floatnumber = group(Pointfloat, Expfloat)
-Imagnumber = group(r'[0-9]+[jJ]', Floatnumber + r'[jJ]')
+Imagnumber = group(r'[0-9](?:_?[0-9])*[jJ]', Floatnumber + r'[jJ]')
 Number = group(Imagnumber, Floatnumber, Intnumber)
 
-StringPrefix = r'(?:[bB][rR]?|[rR][bB]?|[uU])?'
+# Return the empty string, plus all of the valid string prefixes.
+def _all_string_prefixes():
+    # The valid string prefixes. Only contain the lower case versions,
+    #  and don't contain any permuations (include 'fr', but not
+    #  'rf'). The various permutations will be generated.
+    _valid_string_prefixes = ['b', 'r', 'u', 'f', 'br', 'fr']
+    # if we add binary f-strings, add: ['fb', 'fbr']
+    result = {''}
+    for prefix in _valid_string_prefixes:
+        for t in _itertools.permutations(prefix):
+            # create a list with upper and lower versions of each
+            #  character
+            for u in _itertools.product(*[(c, c.upper()) for c in t]):
+                result.add(''.join(u))
+    return result
+
+def _compile(expr):
+    return re.compile(expr, re.UNICODE)
+
+# Note that since _all_string_prefixes includes the empty string,
+#  StringPrefix can be the empty string (making it optional).
+StringPrefix = group(*_all_string_prefixes())
 
 # Tail end of ' string.
 Single = r"[^'\\]*(?:\\.[^'\\]*)*'"
@@ -147,7 +169,7 @@ String = group(StringPrefix + r"'[^\n'\\]*(?:\\.[^\n'\\]*)*'",
 # recognized as two instances of =).
 Operator = group(r"\*\*=?", r">>=?", r"<<=?", r"!=",
                  r"//=?", r"->",
-                 r"[+\-*/%&|^=<>]=?",
+                 r"[+\-*/%&@|^=<>]=?",
                  r"~")
 
 Bracket = '[][(){}]'
@@ -165,51 +187,25 @@ ContStr = group(StringPrefix + r"'[^\n'\\]*(?:\\.[^\n'\\]*)*" +
 PseudoExtras = group(r'\\\r?\n|\Z', Comment, Triple)
 PseudoToken = Whitespace + group(PseudoExtras, Number, Funny, ContStr, Name)
 
-def _compile(expr):
-    return re.compile(expr, re.UNICODE)
+# For a given string prefix plus quotes, endpats maps it to a regex
+#  to match the remainder of that string. _prefix can be empty, for
+#  a normal single or triple quoted string (with no prefix).
+endpats = {}
+for _prefix in _all_string_prefixes():
+    endpats[_prefix + "'"] = Single
+    endpats[_prefix + '"'] = Double
+    endpats[_prefix + "'''"] = Single3
+    endpats[_prefix + '"""'] = Double3
 
-endpats = {"'": Single, '"': Double,
-           "'''": Single3, '"""': Double3,
-           "r'''": Single3, 'r"""': Double3,
-           "b'''": Single3, 'b"""': Double3,
-           "R'''": Single3, 'R"""': Double3,
-           "B'''": Single3, 'B"""': Double3,
-           "br'''": Single3, 'br"""': Double3,
-           "bR'''": Single3, 'bR"""': Double3,
-           "Br'''": Single3, 'Br"""': Double3,
-           "BR'''": Single3, 'BR"""': Double3,
-           "rb'''": Single3, 'rb"""': Double3,
-           "Rb'''": Single3, 'Rb"""': Double3,
-           "rB'''": Single3, 'rB"""': Double3,
-           "RB'''": Single3, 'RB"""': Double3,
-           "u'''": Single3, 'u"""': Double3,
-           "R'''": Single3, 'R"""': Double3,
-           "U'''": Single3, 'U"""': Double3,
-           'r': None, 'R': None, 'b': None, 'B': None,
-           'u': None, 'U': None}
-
-triple_quoted = {}
-for t in ("'''", '"""',
-          "r'''", 'r"""', "R'''", 'R"""',
-          "b'''", 'b"""', "B'''", 'B"""',
-          "br'''", 'br"""', "Br'''", 'Br"""',
-          "bR'''", 'bR"""', "BR'''", 'BR"""',
-          "rb'''", 'rb"""', "rB'''", 'rB"""',
-          "Rb'''", 'Rb"""', "RB'''", 'RB"""',
-          "u'''", 'u"""', "U'''", 'U"""',
-          ):
-    triple_quoted[t] = t
-single_quoted = {}
-for t in ("'", '"',
-          "r'", 'r"', "R'", 'R"',
-          "b'", 'b"', "B'", 'B"',
-          "br'", 'br"', "Br'", 'Br"',
-          "bR'", 'bR"', "BR'", 'BR"' ,
-          "rb'", 'rb"', "rB'", 'rB"',
-          "Rb'", 'Rb"', "RB'", 'RB"' ,
-          "u'", 'u"', "U'", 'U"',
-          ):
-    single_quoted[t] = t
+# A set of all of the single and triple quoted string prefixes,
+#  including the opening quotes.
+single_quoted = set()
+triple_quoted = set()
+for t in _all_string_prefixes():
+    for u in (t + '"', t + "'"):
+        single_quoted.add(u)
+    for u in (t + '"""', t + "'''"):
+        triple_quoted.add(u)
 
 tabsize = 8
 
@@ -228,20 +224,46 @@ class Untokenizer:
 
     def add_whitespace(self, start):
         row, col = start
-        assert row <= self.prev_row
+        if row < self.prev_row or row == self.prev_row and col < self.prev_col:
+            raise ValueError("start ({},{}) precedes previous end ({},{})"
+                             .format(row, col, self.prev_row, self.prev_col))
+        row_offset = row - self.prev_row
+        if row_offset:
+            self.tokens.append("\\\n" * row_offset)
+            self.prev_col = 0
         col_offset = col - self.prev_col
         if col_offset:
             self.tokens.append(" " * col_offset)
 
     def untokenize(self, iterable):
-        for t in iterable:
+        it = iter(iterable)
+        indents = []
+        startline = False
+        for t in it:
             if len(t) == 2:
-                self.compat(t, iterable)
+                self.compat(t, it)
                 break
             tok_type, token, start, end, line = t
             if tok_type == ENCODING:
                 self.encoding = token
                 continue
+            if tok_type == ENDMARKER:
+                break
+            if tok_type == INDENT:
+                indents.append(token)
+                continue
+            elif tok_type == DEDENT:
+                indents.pop()
+                self.prev_row, self.prev_col = end
+                continue
+            elif tok_type in (NEWLINE, NL):
+                startline = True
+            elif startline and indents:
+                indent = indents[-1]
+                if start[1] >= len(indent):
+                    self.tokens.append(indent)
+                    self.prev_col = len(indent)
+                startline = False
             self.add_whitespace(start)
             self.tokens.append(token)
             self.prev_row, self.prev_col = end
@@ -251,17 +273,12 @@ class Untokenizer:
         return "".join(self.tokens)
 
     def compat(self, token, iterable):
-        startline = False
         indents = []
         toks_append = self.tokens.append
-        toknum, tokval = token
-
-        if toknum in (NAME, NUMBER):
-            tokval += ' '
-        if toknum in (NEWLINE, NL):
-            startline = True
+        startline = token[0] in (NEWLINE, NL)
         prevstring = False
-        for tok in iterable:
+
+        for tok in chain([token], iterable):
             toknum, tokval = tok[:2]
             if toknum == ENCODING:
                 self.encoding = tokval
@@ -304,8 +321,8 @@ def untokenize(iterable):
     Round-trip invariant for full input:
         Untokenized source will match input source exactly
 
-    Round-trip invariant for limited intput:
-        # Output bytes will tokenize the back to the input
+    Round-trip invariant for limited input:
+        # Output bytes will tokenize back to the input
         t1 = [tok[:2] for tok in tokenize(f.readline)]
         newcode = untokenize(t1)
         readline = BytesIO(newcode).readline
@@ -333,7 +350,7 @@ def _get_normal_name(orig_enc):
 def detect_encoding(readline):
     """
     The detect_encoding() function is used to detect the encoding that should
-    be used to decode a Python source file.  It requires one argment, readline,
+    be used to decode a Python source file.  It requires one argument, readline,
     in the same way as the tokenize() generator.
 
     It will call readline a maximum of twice, and return the encoding used
@@ -409,6 +426,8 @@ def detect_encoding(readline):
     encoding = find_cookie(first)
     if encoding:
         return encoding, [first]
+    if not blank_re.match(first):
+        return default, [first]
 
     second = read_or_stop()
     if not second:
@@ -425,20 +444,24 @@ def open(filename):
     """Open a file in read only mode using the encoding detected by
     detect_encoding().
     """
-    buffer = builtins.open(filename, 'rb')
-    encoding, lines = detect_encoding(buffer.readline)
-    buffer.seek(0)
-    text = TextIOWrapper(buffer, encoding, line_buffering=True)
-    text.mode = 'r'
-    return text
+    buffer = _builtin_open(filename, 'rb')
+    try:
+        encoding, lines = detect_encoding(buffer.readline)
+        buffer.seek(0)
+        text = TextIOWrapper(buffer, encoding, line_buffering=True)
+        text.mode = 'r'
+        return text
+    except:
+        buffer.close()
+        raise
 
 
 def tokenize(readline):
     """
-    The tokenize() generator requires one argment, readline, which
+    The tokenize() generator requires one argument, readline, which
     must be a callable object which provides the same interface as the
     readline() method of built-in file objects.  Each call to the function
-    should return one line of input as bytes.  Alternately, readline
+    should return one line of input as bytes.  Alternatively, readline
     can be a callable function terminating with StopIteration:
         readline = open(myfile, 'rb').__next__  # Example of alternate readline
 
@@ -524,13 +547,11 @@ def _tokenize(readline, encoding):
             if line[pos] in '#\r\n':           # skip comments or blank lines
                 if line[pos] == '#':
                     comment_token = line[pos:].rstrip('\r\n')
-                    nl_pos = pos + len(comment_token)
                     yield TokenInfo(COMMENT, comment_token,
                            (lnum, pos), (lnum, pos + len(comment_token)), line)
-                    yield TokenInfo(NL, line[nl_pos:],
-                           (lnum, nl_pos), (lnum, len(line)), line)
-                else:
-                    yield TokenInfo((NL, COMMENT)[line[pos] == '#'], line[pos:],
+                    pos += len(comment_token)
+
+                yield TokenInfo(NL, line[pos:],
                            (lnum, pos), (lnum, len(line)), line)
                 continue
 
@@ -543,6 +564,7 @@ def _tokenize(readline, encoding):
                         "unindent does not match any outer indentation level",
                         ("<tokenize>", lnum, pos, line))
                 indents = indents[:-1]
+
                 yield TokenInfo(DEDENT, '', (lnum, pos), (lnum, pos), line)
 
         else:                                  # continued statement
@@ -563,11 +585,15 @@ def _tokenize(readline, encoding):
                     (initial == '.' and token != '.' and token != '...')):
                     yield TokenInfo(NUMBER, token, spos, epos, line)
                 elif initial in '\r\n':
-                    yield TokenInfo(NL if parenlev > 0 else NEWLINE,
-                           token, spos, epos, line)
+                    if parenlev > 0:
+                        yield TokenInfo(NL, token, spos, epos, line)
+                    else:
+                        yield TokenInfo(NEWLINE, token, spos, epos, line)
+
                 elif initial == '#':
                     assert not token.endswith("\n")
                     yield TokenInfo(COMMENT, token, spos, epos, line)
+
                 elif token in triple_quoted:
                     endprog = _compile(endpats[token])
                     endmatch = endprog.match(line, pos)
@@ -580,19 +606,37 @@ def _tokenize(readline, encoding):
                         contstr = line[start:]
                         contline = line
                         break
-                elif initial in single_quoted or \
-                    token[:2] in single_quoted or \
-                    token[:3] in single_quoted:
+
+                # Check up to the first 3 chars of the token to see if
+                #  they're in the single_quoted set. If so, they start
+                #  a string.
+                # We're using the first 3, because we're looking for
+                #  "rb'" (for example) at the start of the token. If
+                #  we switch to longer prefixes, this needs to be
+                #  adjusted.
+                # Note that initial == token[:1].
+                # Also note that single quote checking must come after
+                #  triple quote checking (above).
+                elif (initial in single_quoted or
+                      token[:2] in single_quoted or
+                      token[:3] in single_quoted):
                     if token[-1] == '\n':                  # continued string
                         strstart = (lnum, start)
-                        endprog = _compile(endpats[initial] or
-                                           endpats[token[1]] or
-                                           endpats[token[2]])
+                        # Again, using the first 3 chars of the
+                        #  token. This is looking for the matching end
+                        #  regex for the correct type of quote
+                        #  character. So it's really looking for
+                        #  endpats["'"] or endpats['"'], by trying to
+                        #  skip string prefix characters, if any.
+                        endprog = _compile(endpats.get(initial) or
+                                           endpats.get(token[1]) or
+                                           endpats.get(token[2]))
                         contstr, needcont = line[start:], 1
                         contline = line
                         break
                     else:                                  # ordinary string
                         yield TokenInfo(STRING, token, spos, epos, line)
+
                 elif initial.isidentifier():               # ordinary name
                     yield TokenInfo(NAME, token, spos, epos, line)
                 elif initial == '\\':                      # continued stmt
@@ -648,7 +692,7 @@ def main():
         # Tokenize the input
         if args.filename:
             filename = args.filename
-            with builtins.open(filename, 'rb') as f:
+            with _builtin_open(filename, 'rb') as f:
                 tokens = list(tokenize(f.readline))
         else:
             filename = "<stdin>"
@@ -670,7 +714,7 @@ def main():
         error(err.args[0], filename, (line, column))
     except SyntaxError as err:
         error(err, filename)
-    except IOError as err:
+    except OSError as err:
         error(err)
     except KeyboardInterrupt:
         print("interrupted\n")

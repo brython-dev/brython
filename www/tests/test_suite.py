@@ -132,7 +132,7 @@ assert x.upper() == 'AZJHKHZYUY'
 # list examples
 a = ['spam', 'eggs', 100, 1234]
 assert a[:2] + ['bacon', 2 * 2] == ['spam', 'eggs', 'bacon', 4]
-assert 3 * a[:3] + ['Boo!'] == ['spam', 'eggs', 100, 'spam', 'eggs', 100, 
+assert 3 * a[:3] + ['Boo!'] == ['spam', 'eggs', 100, 'spam', 'eggs', 100,
     'spam', 'eggs', 100, 'Boo!']
 assert a[:] == ['spam', 'eggs', 100, 1234]
 
@@ -413,4 +413,23 @@ assert a1 @ a2 == a3
 
 a1 @= a2
 assert a1 == a3
+
+# sys.exc_info
+import sys
+
+try:
+    1 / 0
+except:
+    exc_class, exc, tb = sys.exc_info()
+    assert exc_class is ZeroDivisionError
+
+assert sys.exc_info() == (None, None, None)
+
+try:
+    1 / 0
+except ZeroDivisionError:
+    assert sys.exc_info()[0] is ZeroDivisionError
+finally:
+    assert sys.exc_info() == (None, None, None)
+    
 print('passed all tests...')

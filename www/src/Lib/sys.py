@@ -5,25 +5,21 @@ _getframe = Getframe
 from javascript import JSObject
 from browser import window
 
+abiflags = 0 # required in sysconfig
+
 brython_debug_mode = __BRYTHON__.debug
 
 base_exec_prefix = __BRYTHON__.brython_path
 
 base_prefix = __BRYTHON__.brython_path
 
-builtin_module_names=__BRYTHON__.builtin_module_names
+builtin_module_names = __BRYTHON__.builtin_module_names
 
-byteorder='little'
-
-def exc_info():
-    exc = __BRYTHON__.current_exception
-    if exc is None:
-        return(None, None, None)
-    return (exc.__class__,exc,exc.traceback)
+byteorder = 'little'
 
 exec_prefix = __BRYTHON__.brython_path
 
-executable = __BRYTHON__.brython_path+'/brython.js'
+executable = __BRYTHON__.brython_path + '/brython.js'
 
 argv = __BRYTHON__.__ARGV
 
@@ -31,19 +27,20 @@ def exit(i=None):
     raise SystemExit('')
 
 class flag_class:
+
   def __init__(self):
-      self.debug=0
-      self.inspect=0
-      self.interactive=0
-      self.optimize=0
-      self.dont_write_bytecode=0
-      self.no_user_site=0
-      self.no_site=0
-      self.ignore_environment=0
-      self.verbose=0
-      self.bytes_warning=0
-      self.quiet=0
-      self.hash_randomization=1
+      self.debug = 0
+      self.inspect = 0
+      self.interactive = 0
+      self.optimize = 0
+      self.dont_write_bytecode = 0
+      self.no_user_site = 0
+      self.no_site = 0
+      self.ignore_environment = 0
+      self.verbose = 0
+      self.bytes_warning = 0
+      self.quiet = 0
+      self.hash_randomization = 1
 
 flags = flag_class()
 
@@ -53,33 +50,39 @@ class float_info:
     min = window.Number.MIN_VALUE
     radix = 2
 
-def getfilesystemencoding(*args,**kw):
+def getfilesystemencoding(*args, **kw):
     """getfilesystemencoding() -> string
     Return the encoding used to convert Unicode filenames in
     operating system filenames."""
     return 'utf-8'
 
+def getfilesystemencodeerrors():
+    return "utf-8"
+
 def getrecursionlimit():
     return 200
 
-maxsize=2**63-1
+def intern(string):
+    return string
 
-maxunicode=1114111
+maxsize = 2 ** 63 - 1
 
-# Imported from _sys
-# path = __BRYTHON__.path
-# #path_hooks = list(JSObject(__BRYTHON__.path_hooks))
-# meta_path=__BRYTHON__.meta_path
+maxunicode = 1114111
 
 platform = "brython"
 
 prefix = __BRYTHON__.brython_path
 
+def settrace(tracefunc):
+    print("set trace")
+    
 version = '.'.join(str(x) for x in __BRYTHON__.version_info[:3])
-version += " (default, %s) \n[Javascript 1.5] on Brython" % __BRYTHON__.compiled_date
-hexversion = 0x03000000   # python 3.0
+version += " (default, %s) \n[Javascript 1.5] on Brython" \
+    % __BRYTHON__.compiled_date
+hexversion = 0x03070000   # python 3.7
 
-class _version_info(object):
+class _version_info:
+
     def __init__(self, version_info):
         self.version_info = version_info
         self.major = version_info[0]
@@ -95,47 +98,47 @@ class _version_info(object):
 
     def hexversion(self):
         try:
-          return '0%d0%d0%d' % (self.major, self.minor, self.micro)
+            return '0%d0%d0%d' % (self.major, self.minor, self.micro)
         finally:  #probably some invalid char in minor (rc, etc)
-          return '0%d0000' % (self.major)
+            return '0%d0000' % (self.major)
 
     def __str__(self):
-        _s="sys.version(major=%d, minor=%d, micro=%d, releaselevel='%s', serial=%d)"
+        _s = "sys.version(major=%d, minor=%d, micro=%d, releaselevel='%s', " \
+            "serial=%d)"
         return _s % (self.major, self.minor, self.micro,
                      self.releaselevel, self.serial)
-        #return str(self.version_info)
 
-    def __eq__(self,other):
+    def __eq__(self, other):
         if isinstance(other, tuple):
            return (self.major, self.minor, self.micro) == other
 
         raise Error("Error! I don't know how to compare!")
 
-    def __ge__(self,other):
+    def __ge__(self, other):
         if isinstance(other, tuple):
            return (self.major, self.minor, self.micro) >= other
 
         raise Error("Error! I don't know how to compare!")
 
-    def __gt__(self,other):
+    def __gt__(self, other):
         if isinstance(other, tuple):
            return (self.major, self.minor, self.micro) > other
 
         raise Error("Error! I don't know how to compare!")
 
-    def __le__(self,other):
+    def __le__(self, other):
         if isinstance(other, tuple):
            return (self.major, self.minor, self.micro) <= other
 
         raise Error("Error! I don't know how to compare!")
 
-    def __lt__(self,other):
+    def __lt__(self, other):
         if isinstance(other, tuple):
            return (self.major, self.minor, self.micro) < other
 
         raise Error("Error! I don't know how to compare!")
 
-    def __ne__(self,other):
+    def __ne__(self, other):
         if isinstance(other, tuple):
            return (self.major, self.minor, self.micro) != other
 
@@ -146,37 +149,43 @@ class _version_info(object):
 version_info = _version_info(__BRYTHON__.version_info)
 
 class _implementation:
+
   def __init__(self):
-      self.name='brython'
+      self.name = 'brython'
       self.version = _version_info(__BRYTHON__.implementation)
       self.hexversion = self.version.hexversion()
-      self.cache_tag=None
+      self.cache_tag = None
 
   def __repr__(self):
-      return "namespace(name='%s' version=%s hexversion='%s')" % (self.name, self.version, self.hexversion)
+      return "namespace(name='%s' version=%s hexversion='%s')" % (self.name,
+          self.version, self.hexversion)
 
   def __str__(self):
-      return "namespace(name='%s' version=%s hexversion='%s')" % (self.name, self.version, self.hexversion)
+      return "namespace(name='%s' version=%s hexversion='%s')" % (self.name,
+          self.version, self.hexversion)
 
-implementation=_implementation()
+implementation = _implementation()
 
 class _hash_info:
+
   def __init__(self):
-      self.width=32,
-      self.modulus=2147483647
-      self.inf=314159
-      self.nan=0
-      self.imag=1000003
-      self.algorithm='siphash24'
-      self.hash_bits=64
-      self.seed_bits=128
+      self.width = 32,
+      self.modulus = 2147483647
+      self.inf = 314159
+      self.nan = 0
+      self.imag = 1000003
+      self.algorithm = 'siphash24'
+      self.hash_bits = 64
+      self.seed_bits = 128
       cutoff=0
 
   def __repr__(self):
       #fix me
-      return "sys.hash_info(width=32, modulus=2147483647, inf=314159, nan=0, imag=1000003, algorithm='siphash24', hash_bits=64, seed_bits=128, cutoff=0)"
+      return "sys.hash_info(width=32, modulus=2147483647, inf=314159, " \
+          "nan=0, imag=1000003, algorithm='siphash24', hash_bits=64, " \
+          "seed_bits=128, cutoff=0)"
 
-hash_info=_hash_info()
+hash_info = _hash_info()
 
 class _float_info:
     """
@@ -230,17 +239,19 @@ class _float_info:
     def __init__(self):
         _number = window.Number
         self.dig = 15
-        self.epsilon = 2**-52
+        self.epsilon = 2 ** -52
         self.mant_dig = 53
         self.max = _number.MAX_VALUE
-        self.max_exp=2**10
+        self.max_exp = 2 ** 10
         self.max_10_exp = 308
-        self.min = 2**(-1022)
+        self.min = 2 ** (-1022)
         self.min_exp = -1021
         self.min_10_exp = -307
         self.radix=2
         self.rounds=1
-        self._tuple = (self.max, self.max_exp, self.max_10_exp, self.min, self.min_exp, self.min_10_exp, self.dig, self.mant_dig, self.epsilon, self.radix, self.rounds)
+        self._tuple = (self.max, self.max_exp, self.max_10_exp, self.min,
+            self.min_exp, self.min_10_exp, self.dig, self.mant_dig, self.epsilon,
+            self.radix, self.rounds)
 
     def __getitem__(self, k):
         return self._tuple[k]
@@ -250,7 +261,7 @@ class _float_info:
 
 float_info = _float_info()
 
-warnoptions=[]
+warnoptions = []
 
 def getfilesystemencoding():
     return 'utf-8'

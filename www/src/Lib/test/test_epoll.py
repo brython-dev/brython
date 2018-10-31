@@ -21,19 +21,19 @@
 """
 Tests for epoll wrapper.
 """
-import socket
 import errno
-import time
+import os
 import select
+import socket
+import time
 import unittest
 
-from test import support
 if not hasattr(select, "epoll"):
     raise unittest.SkipTest("test works only on Linux 2.6")
 
 try:
     select.epoll()
-except IOError as e:
+except OSError as e:
     if e.errno == errno.ENOSYS:
         raise unittest.SkipTest("kernel doesn't support epoll()")
     raise
@@ -43,9 +43,8 @@ class TestEPoll(unittest.TestCase):
     def setUp(self):
         self.serverSocket = socket.socket()
         self.serverSocket.bind(('127.0.0.1', 0))
-        self.serverSocket.listen(1)
+        self.serverSocket.listen()
         self.connections = [self.serverSocket]
-
 
     def tearDown(self):
         for skt in self.connections:
@@ -56,7 +55,7 @@ class TestEPoll(unittest.TestCase):
         client.setblocking(False)
         try:
             client.connect(('127.0.0.1', self.serverSocket.getsockname()[1]))
-        except socket.error as e:
+        except OSError as e:
             self.assertEqual(e.args[0], errno.EINPROGRESS)
         else:
             raise AssertionError("Connect should have raised EINPROGRESS")
@@ -77,6 +76,8 @@ class TestEPoll(unittest.TestCase):
         self.assertRaises(ValueError, ep.fileno)
         if hasattr(select, "EPOLL_CLOEXEC"):
             select.epoll(select.EPOLL_CLOEXEC).close()
+            select.epoll(flags=select.EPOLL_CLOEXEC).close()
+            select.epoll(flags=0).close()
             self.assertRaises(OSError, select.epoll, flags=12356)
 
     def test_badcreate(self):
@@ -86,6 +87,13 @@ class TestEPoll(unittest.TestCase):
         self.assertRaises(TypeError, select.epoll, ())
         self.assertRaises(TypeError, select.epoll, ['foo'])
         self.assertRaises(TypeError, select.epoll, {})
+
+    def test_context_manager(self):
+        with select.epoll(16) as ep:
+            self.assertGreater(ep.fileno(), 0)
+            self.assertFalse(ep.closed)
+        self.assertTrue(ep.closed)
+        self.assertRaises(ValueError, ep.fileno)
 
     def test_add(self):
         server, client = self._connected_pair()
@@ -115,12 +123,12 @@ class TestEPoll(unittest.TestCase):
             # ValueError: file descriptor cannot be a negative integer (-1)
             self.assertRaises(ValueError, ep.register, -1,
                 select.EPOLLIN | select.EPOLLOUT)
-            # IOError: [Errno 9] Bad file descriptor
-            self.assertRaises(IOError, ep.register, 10000,
+            # OSError: [Errno 9] Bad file descriptor
+            self.assertRaises(OSError, ep.register, 10000,
                 select.EPOLLIN | select.EPOLLOUT)
             # registering twice also raises an exception
             ep.register(server, select.EPOLLIN | select.EPOLLOUT)
-            self.assertRaises(IOError, ep.register, server,
+            self.assertRaises(OSError, ep.register, server,
                 select.EPOLLIN | select.EPOLLOUT)
         finally:
             ep.close()
@@ -142,7 +150,7 @@ class TestEPoll(unittest.TestCase):
         ep.close()
         try:
             ep2.poll(1, 4)
-        except IOError as e:
+        except OSError as e:
             self.assertEqual(e.args[0], errno.EBADF, e)
         else:
             self.fail("epoll on closed fd didn't raise EBADF")
@@ -156,9 +164,9 @@ class TestEPoll(unittest.TestCase):
         ep.register(client.fileno(),
                    select.EPOLLIN | select.EPOLLOUT | select.EPOLLET)
 
-        now = time.time()
+        now = time.monotonic()
         events = ep.poll(1, 4)
-        then = time.time()
+        then = time.monotonic()
         self.assertFalse(then - now > 0.1, then - now)
 
         events.sort()
@@ -167,19 +175,16 @@ class TestEPoll(unittest.TestCase):
         expected.sort()
 
         self.assertEqual(events, expected)
-        self.assertFalse(then - now > 0.01, then - now)
 
-        now = time.time()
         events = ep.poll(timeout=2.1, maxevents=4)
-        then = time.time()
         self.assertFalse(events)
 
         client.send(b"Hello!")
         server.send(b"world!!!")
 
-        now = time.time()
+        now = time.monotonic()
         events = ep.poll(1, 4)
-        then = time.time()
+        then = time.monotonic()
         self.assertFalse(then - now > 0.01)
 
         events.sort()
@@ -191,9 +196,9 @@ class TestEPoll(unittest.TestCase):
 
         ep.unregister(client.fileno())
         ep.modify(server.fileno(), select.EPOLLOUT)
-        now = time.time()
+        now = time.monotonic()
         events = ep.poll(1, 4)
-        then = time.time()
+        then = time.monotonic()
         self.assertFalse(then - now > 0.01)
 
         expected = [(server.fileno(), select.EPOLLOUT)]
@@ -210,16 +215,43 @@ class TestEPoll(unittest.TestCase):
         ep = select.epoll(16)
         ep.register(server)
 
-        now = time.time()
+        now = time.monotonic()
         events = ep.poll(1, 4)
-        then = time.time()
+        then = time.monotonic()
         self.assertFalse(then - now > 0.01)
 
         server.close()
         ep.unregister(fd)
 
-def test_main():
-    support.run_unittest(TestEPoll)
+    def test_close(self):
+        open_file = open(__file__, "rb")
+        self.addCleanup(open_file.close)
+        fd = open_file.fileno()
+        epoll = select.epoll()
+
+        # test fileno() method and closed attribute
+        self.assertIsInstance(epoll.fileno(), int)
+        self.assertFalse(epoll.closed)
+
+        # test close()
+        epoll.close()
+        self.assertTrue(epoll.closed)
+        self.assertRaises(ValueError, epoll.fileno)
+
+        # close() can be called more than once
+        epoll.close()
+
+        # operations must fail with ValueError("I/O operation on closed ...")
+        self.assertRaises(ValueError, epoll.modify, fd, select.EPOLLIN)
+        self.assertRaises(ValueError, epoll.poll, 1.0)
+        self.assertRaises(ValueError, epoll.register, fd, select.EPOLLIN)
+        self.assertRaises(ValueError, epoll.unregister, fd)
+
+    def test_fd_non_inheritable(self):
+        epoll = select.epoll()
+        self.addCleanup(epoll.close)
+        self.assertEqual(os.get_inheritable(epoll.fileno()), False)
+
 
 if __name__ == "__main__":
-    test_main()
+    unittest.main()

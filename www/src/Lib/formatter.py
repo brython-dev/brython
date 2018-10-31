@@ -19,6 +19,9 @@ manage and inserting data into the output.
 """
 
 import sys
+import warnings
+warnings.warn('the formatter module is deprecated', DeprecationWarning,
+              stacklevel=2)
 
 
 AS_IS = None
@@ -433,11 +436,15 @@ def test(file = None):
         fp = open(sys.argv[1])
     else:
         fp = sys.stdin
-    for line in fp:
-        if line == '\n':
-            f.end_paragraph(1)
-        else:
-            f.add_flowing_data(line)
+    try:
+        for line in fp:
+            if line == '\n':
+                f.end_paragraph(1)
+            else:
+                f.add_flowing_data(line)
+    finally:
+        if fp is not sys.stdin:
+            fp.close()
     f.end_paragraph(0)
 
 

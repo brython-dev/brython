@@ -1,7 +1,9 @@
 # Test iterators.
 
+import sys
 import unittest
 from test.support import run_unittest, TESTFN, unlink, cpython_only
+from test.support import check_free_after_iterating
 import pickle
 import collections.abc
 
@@ -48,6 +50,18 @@ class SequenceClass:
         else:
             raise IndexError
 
+class UnlimitedSequenceClass:
+    def __getitem__(self, i):
+        return i
+
+class DefaultIterClass:
+    pass
+
+class NoIterClass:
+    def __getitem__(self, i):
+        return i
+    __iter__ = None
+
 # Main test suite
 
 class TestCase(unittest.TestCase):
@@ -76,22 +90,23 @@ class TestCase(unittest.TestCase):
 
     # Helper to check picklability
     def check_pickle(self, itorg, seq):
-        d = pickle.dumps(itorg)
-        it = pickle.loads(d)
-        # Cannot assert type equality because dict iterators unpickle as list
-        # iterators.
-        # self.assertEqual(type(itorg), type(it))
-        self.assertTrue(isinstance(it, collections.abc.Iterator))
-        self.assertEqual(list(it), seq)
+        for proto in range(pickle.HIGHEST_PROTOCOL + 1):
+            d = pickle.dumps(itorg, proto)
+            it = pickle.loads(d)
+            # Cannot assert type equality because dict iterators unpickle as list
+            # iterators.
+            # self.assertEqual(type(itorg), type(it))
+            self.assertTrue(isinstance(it, collections.abc.Iterator))
+            self.assertEqual(list(it), seq)
 
-        it = pickle.loads(d)
-        try:
-            next(it)
-        except StopIteration:
-            return
-        d = pickle.dumps(it)
-        it = pickle.loads(d)
-        self.assertEqual(list(it), seq[1:])
+            it = pickle.loads(d)
+            try:
+                next(it)
+            except StopIteration:
+                continue
+            d = pickle.dumps(it, proto)
+            it = pickle.loads(d)
+            self.assertEqual(list(it), seq[1:])
 
     # Test basic use of iter() function
     def test_iter_basic(self):
@@ -146,6 +161,53 @@ class TestCase(unittest.TestCase):
     # Test iter() on a sequence class without __iter__
     def test_seq_class_iter(self):
         self.check_iterator(iter(SequenceClass(10)), list(range(10)))
+
+    def test_mutating_seq_class_iter_pickle(self):
+        orig = SequenceClass(5)
+        for proto in range(pickle.HIGHEST_PROTOCOL + 1):
+            # initial iterator
+            itorig = iter(orig)
+            d = pickle.dumps((itorig, orig), proto)
+            it, seq = pickle.loads(d)
+            seq.n = 7
+            self.assertIs(type(it), type(itorig))
+            self.assertEqual(list(it), list(range(7)))
+
+            # running iterator
+            next(itorig)
+            d = pickle.dumps((itorig, orig), proto)
+            it, seq = pickle.loads(d)
+            seq.n = 7
+            self.assertIs(type(it), type(itorig))
+            self.assertEqual(list(it), list(range(1, 7)))
+
+            # empty iterator
+            for i in range(1, 5):
+                next(itorig)
+            d = pickle.dumps((itorig, orig), proto)
+            it, seq = pickle.loads(d)
+            seq.n = 7
+            self.assertIs(type(it), type(itorig))
+            self.assertEqual(list(it), list(range(5, 7)))
+
+            # exhausted iterator
+            self.assertRaises(StopIteration, next, itorig)
+            d = pickle.dumps((itorig, orig), proto)
+            it, seq = pickle.loads(d)
+            seq.n = 7
+            self.assertTrue(isinstance(it, collections.abc.Iterator))
+            self.assertEqual(list(it), [])
+
+    def test_mutating_seq_class_exhausted_iter(self):
+        a = SequenceClass(5)
+        exhit = iter(a)
+        empit = iter(a)
+        for x in exhit:  # exhaust the iterator
+            next(empit)  # not exhausted
+        a.n = 7
+        self.assertEqual(list(exhit), [])
+        self.assertEqual(list(empit), [5, 6])
+        self.assertEqual(list(a), [0, 1, 2, 3, 4, 5, 6])
 
     # Test a new_style class with __iter__ but no next() method
     def test_new_style_iter_class(self):
@@ -917,6 +979,33 @@ class TestCase(unittest.TestCase):
             lst.pop(0)
         lst.extend(gen())
         self.assertEqual(len(lst), 760)
+
+    @cpython_only
+    def test_iter_overflow(self):
+        # Test for the issue 22939
+        it = iter(UnlimitedSequenceClass())
+        # Manually set `it_index` to PY_SSIZE_T_MAX-2 without a loop
+        it.__setstate__(sys.maxsize - 2)
+        self.assertEqual(next(it), sys.maxsize - 2)
+        self.assertEqual(next(it), sys.maxsize - 1)
+        with self.assertRaises(OverflowError):
+            next(it)
+        # Check that Overflow error is always raised
+        with self.assertRaises(OverflowError):
+            next(it)
+
+    def test_iter_neg_setstate(self):
+        it = iter(UnlimitedSequenceClass())
+        it.__setstate__(-42)
+        self.assertEqual(next(it), 0)
+        self.assertEqual(next(it), 1)
+
+    def test_free_after_iterating(self):
+        check_free_after_iterating(self, iter, SequenceClass, (0,))
+
+    def test_error_iter(self):
+        for typ in (DefaultIterClass, NoIterClass):
+            self.assertRaises(TypeError, iter, typ())
 
 
 def test_main():

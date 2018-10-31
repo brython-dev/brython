@@ -13,11 +13,19 @@ abyss = json.loads(xx)
 assert abyss["result"][0]=='memit/logo00.png'
 assert abyss["status"]==0
 
+assert json.dumps(None) == "null"
+
 # issue 148
 jsondata = {'home': {'record001': ['date1', 'task1', 'relevance1'],
   'record002': ['date2', 'task2', 'relevance2'],
   'record003': ['date3', 'task3', 'relevance3']}}
 
 assert jsondata == json.loads(json.dumps(jsondata))
+
+# nested dicts
+s = json.dumps({"x": {"y": 1}})
+assert json.loads(s) == {"x": {"y": 1}}
+
+assert json.loads("null") == None
 
 print('all tests ok..')

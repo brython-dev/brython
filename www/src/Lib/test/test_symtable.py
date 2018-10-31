@@ -4,7 +4,6 @@ Test the API of the symtable module.
 import symtable
 import unittest
 
-from test import support
 
 
 TEST_CODE = """
@@ -134,6 +133,17 @@ class SymtableTest(unittest.TestCase):
         self.assertTrue(self.Mine.lookup("a_method").is_assigned())
         self.assertFalse(self.internal.lookup("x").is_assigned())
 
+    def test_annotated(self):
+        st1 = symtable.symtable('def f():\n    x: int\n', 'test', 'exec')
+        st2 = st1.get_children()[0]
+        self.assertTrue(st2.lookup('x').is_local())
+        self.assertTrue(st2.lookup('x').is_annotated())
+        self.assertFalse(st2.lookup('x').is_global())
+        st3 = symtable.symtable('def f():\n    x = 1\n', 'test', 'exec')
+        st4 = st3.get_children()[0]
+        self.assertTrue(st4.lookup('x').is_local())
+        self.assertFalse(st4.lookup('x').is_annotated())
+
     def test_imported(self):
         self.assertTrue(self.top.lookup("sys").is_imported())
 
@@ -149,15 +159,25 @@ class SymtableTest(unittest.TestCase):
     def test_filename_correct(self):
         ### Bug tickler: SyntaxError file name correct whether error raised
         ### while parsing or building symbol table.
-        def checkfilename(brokencode):
+        def checkfilename(brokencode, offset):
             try:
                 symtable.symtable(brokencode, "spam", "exec")
             except SyntaxError as e:
                 self.assertEqual(e.filename, "spam")
+                self.assertEqual(e.lineno, 1)
+                self.assertEqual(e.offset, offset)
             else:
                 self.fail("no SyntaxError for %r" % (brokencode,))
-        checkfilename("def f(x): foo)(")  # parse-time
-        checkfilename("def f(x): global x")  # symtable-build-time
+        checkfilename("def f(x): foo)(", 14)  # parse-time
+        checkfilename("def f(x): global x", 10)  # symtable-build-time
+        symtable.symtable("pass", b"spam", "exec")
+        with self.assertWarns(DeprecationWarning), \
+             self.assertRaises(TypeError):
+            symtable.symtable("pass", bytearray(b"spam"), "exec")
+        with self.assertWarns(DeprecationWarning):
+            symtable.symtable("pass", memoryview(b"spam"), "exec")
+        with self.assertRaises(TypeError):
+            symtable.symtable("pass", list(b"spam"), "exec")
 
     def test_eval(self):
         symbols = symtable.symtable("42", "?", "eval")
@@ -169,8 +189,5 @@ class SymtableTest(unittest.TestCase):
         symbols = symtable.symtable("def f(x): return x", "?", "exec")
 
 
-def test_main():
-    support.run_unittest(SymtableTest)
-
 if __name__ == '__main__':
-    test_main()
+    unittest.main()

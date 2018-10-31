@@ -69,7 +69,7 @@ def get_ident():
     available, it is safe to assume that the current process is the
     only thread.  Thus a constant can be safely returned.
     """
-    return -1
+    return 1
 
 def allocate_lock():
     """Dummy implementation of _thread.allocate_lock()."""
@@ -80,6 +80,10 @@ def stack_size(size=None):
     if size is not None:
         raise error("setting thread stack size not supported")
     return 0
+
+def _set_sentinel():
+    """Dummy implementation of _thread._set_sentinel()."""
+    return LockType()
 
 class LockType(object):
     """Class implementing dummy implementation of _thread.LockType.
@@ -135,6 +139,14 @@ class LockType(object):
 
     def locked(self):
         return self.locked_status
+
+    def __repr__(self):
+        return "<%s %s.%s object at %s>" % (
+            "locked" if self.locked_status else "unlocked",
+            self.__class__.__module__,
+            self.__class__.__qualname__,
+            hex(id(self))
+        )
 
 # Used to signal that interrupt_main was called in a "thread"
 _interrupt = False

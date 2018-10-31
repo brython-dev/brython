@@ -73,6 +73,8 @@ var Undefined = {
     __class__: UndefinedClass
 }
 
+$B.set_func_names("UndefinedClass", "<javascript>")
+
 var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj) {
     switch(jsobj) {
       case true:
@@ -83,7 +85,9 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj) {
     if(jsobj === undefined){return $B.Undefined}
     else if(jsobj === null){return _b_.None}
 
-    if(Array.isArray(jsobj)){return _b_.list.$factory(jsobj)}
+    if(Array.isArray(jsobj)){
+        return _b_.list.$factory(jsobj.map(jsobj2pyobj))
+    }
 
     if(typeof jsobj === 'number'){
        if(jsobj.toString().indexOf('.') == -1){return _b_.int.$factory(jsobj)}
@@ -461,7 +465,7 @@ JSObject.bind = function(self, evt, func){
 
 JSObject.to_dict = function(self){
     // Returns a Python dictionary based on the underlying Javascript object
-    return $B.obj_dict(self.js)
+    return $B.obj_dict(self.js, true)
 }
 
 JSObject.$factory = function(obj){

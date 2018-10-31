@@ -194,7 +194,9 @@ document["_eventPhase"].bind("click",
 <tr>
 <td>
 `target`
-> `DOMNode` instance ; the object the event was dispatched on. It is different than `event.currentTarget` when the event handler is called in bubbling or capturing phase of the event
+> `DOMNode` instance ; the object the event was dispatched on. It is different
+> from `event.currentTarget` when the event handler is called in bubbling or
+> capturing phase of the event
 </td>
 <td>
 <button id="_target">test</button>
@@ -207,7 +209,8 @@ document["_target"].bind("click", lambda ev:alert("target : %s " %ev.target))
 </tr>
 
 <tr><td>`timeStamp`
-> integer, the time (in milliseconds since Jan. 1st, 1970 at 0h) at which the event was created
+> integer, the time (in milliseconds from the beginning of the current
+> document's lifetime) at which the event was created
 </td>
 <td>
 <button id="_timeStamp">test</button>

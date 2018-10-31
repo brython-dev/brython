@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 #
 # multibytecodec_support.py
 #   Common Unittest Routines for CJK codecs
@@ -22,7 +21,7 @@ class TestBase:
     roundtriptest   = 1    # set if roundtrip is possible with unicode
     has_iso10646    = 0    # set if this encoding contains whole iso10646 map
     xmlcharnametest = None # string to test xmlcharrefreplace
-    unmappedunicode = '\udeee' # a unicode codepoint that is not mapped.
+    unmappedunicode = '\udeee' # a unicode code point that is not mapped.
 
     def setUp(self):
         if self.codec is None:
@@ -73,7 +72,7 @@ class TestBase:
 
     def test_xmlcharrefreplace(self):
         if self.has_iso10646:
-            return
+            self.skipTest('encoding contains full ISO 10646 map')
 
         s = "\u0b13\u0b23\u0b60 nd eggs"
         self.assertEqual(
@@ -83,7 +82,7 @@ class TestBase:
 
     def test_customreplace_encode(self):
         if self.has_iso10646:
-            return
+            self.skipTest('encoding contains full ISO 10646 map')
 
         from html.entities import codepoint2name
 
@@ -271,6 +270,13 @@ class TestBase:
 
                 self.assertEqual(ostream.getvalue(), self.tstring[0])
 
+    def test_streamwriter_reset_no_pending(self):
+        # Issue #23247: Calling reset() on a fresh StreamWriter instance
+        # (without pending data) must not crash
+        stream = BytesIO()
+        writer = self.writer(stream)
+        writer.reset()
+
 
 class TestBase_Mapping(unittest.TestCase):
     pass_enctest = []
@@ -278,11 +284,10 @@ class TestBase_Mapping(unittest.TestCase):
     supmaps = []
     codectests = []
 
-    def __init__(self, *args, **kw):
-        unittest.TestCase.__init__(self, *args, **kw)
+    def setUp(self):
         try:
             self.open_mapping_file().close() # test it to report the error early
-        except (IOError, HTTPException):
+        except (OSError, HTTPException):
             self.skipTest("Could not retrieve "+self.mapfileurl)
 
     def open_mapping_file(self):
@@ -333,7 +338,7 @@ class TestBase_Mapping(unittest.TestCase):
         uc = re.findall('<a u="([A-F0-9]{4})" b="([0-9A-F ]+)"/>', ucmdata)
         for uni, coded in uc:
             unich = chr(int(uni, 16))
-            codech = bytes(int(c, 16) for c in coded.split())
+            codech = bytes.fromhex(coded)
             self._testpoint(codech, unich)
 
     def test_mapping_supplemental(self):

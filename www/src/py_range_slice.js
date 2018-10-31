@@ -192,14 +192,12 @@ range.count = function(self, ob){
         var comp = function(other){return $B.rich_comp("__eq__", ob, other)},
             it = range.__iter__(self),
             _next = RangeIterator.__next__,
-            nb = 0,
-            ce = $B.current_exception
+            nb = 0
         while(true){
             try{
                 if(comp(_next(it))){nb++}
             }catch(err){
                 if(_b_.isinstance(err, _b_.StopIteration)){
-                    $B.current_exception = ce
                     return nb
                 }
                 throw err

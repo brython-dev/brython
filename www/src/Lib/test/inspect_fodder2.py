@@ -109,3 +109,31 @@ def annotated(arg1: list):
 #line 109
 def keyword_only_arg(*, arg):
     pass
+
+@wrap(lambda: None)
+def func114():
+    return 115
+
+class ClassWithMethod:
+    def method(self):
+        pass
+
+from functools import wraps
+
+def decorator(func):
+    @wraps(func)
+    def fake():
+        return 42
+    return fake
+
+#line 129
+@decorator
+def real():
+    return 20
+
+#line 134
+class cls135:
+    def func136():
+        def func137():
+            never_reached1
+            never_reached2

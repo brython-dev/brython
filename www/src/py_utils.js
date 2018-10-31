@@ -28,6 +28,9 @@ $B.args = function($fname, argcount, slots, var_names, $args, $dobj,
         if(Object.keys($args[nb_pos].kw).length > 0){
             has_kw_args = true
             var kw_args = $args[nb_pos].kw
+            if(Array.isArray(kw_args)){
+                kw_args = $B.extend($fname, ...kw_args)
+            }
         }
     }
 
@@ -225,7 +228,7 @@ $B.$dict_comp = function(module_name, parent_scope, items, line_num){
         js = root.to_js()
     js += '\nreturn $locals["' + res + '"]\n'
 
-    js = "(function(){" + js + "})()"
+    js = "(function($locals_" + dictcomp_name + "){" + js + "})({})"
     $B.clear_ns(dictcomp_name)
     delete $B.$py_src[dictcomp_name]
 
@@ -254,7 +257,7 @@ $B.$gen_expr = function(module_name, parent_scope, items, line_num){
     js = lines.join("\n")
     js += "\nvar $res = $locals_" + genexpr_name + '["' + genexpr_name +
         '"]();\n$res.is_gen_expr = true;\nreturn $res\n'
-    js = "(function(){" + js + "})()\n"
+    js = "(function($locals_" + genexpr_name +"){" + js + "})({})\n"
 
     //$B.clear_ns(genexpr_name)
     delete $B.$py_src[genexpr_name]
@@ -373,7 +376,9 @@ $B.$check_def_free1 = function(name, scope_id){
     for(var i = $B.frames_stack.length - 1; i >= 0; i--){
         var frame = $B.frames_stack[i]
         res = frame[1][name]
-        if(res !== undefined){return res}
+        if(res !== undefined){
+            return res
+        }
         if(frame[1].$parent){
             res = frame[1].$parent[name]
             if(res !== undefined){return res}
@@ -479,17 +484,17 @@ function index_error(obj){
 }
 
 $B.$getitem = function(obj, item){
+    var is_list = Array.isArray(obj) && obj.__class__ === _b_.list
     if(typeof item == "number"){
-        if(Array.isArray(obj) || typeof obj == "string"){
+        if(is_list || typeof obj == "string"){
             item = item >=0 ? item : obj.length + item
             if(obj[item] !== undefined){return obj[item]}
             else{index_error(obj)}
         }
     }
 
-    var ce = $B.current_exception
-    try{item = $B.$GetInt(item)}catch(err){$B.current_exception = ce}
-    if((Array.isArray(obj) || typeof obj == "string")
+    try{item = $B.$GetInt(item)}catch(err){}
+    if((is_list || typeof obj == "string")
         && typeof item == "number"){
         item = item >=0 ? item : obj.length + item
         if(obj[item] !== undefined){return obj[item]}
@@ -515,6 +520,7 @@ $B.$getitem = function(obj, item){
     throw _b_.TypeError.$factory("'" + $B.get_class(obj).__name__ +
         "' object is not subscriptable")
 }
+
 
 // Set list key or slice
 $B.set_list_key = function(obj, key, value){
@@ -591,7 +597,8 @@ $B.set_list_slice_step = function(obj, start, stop, step, value){
 
 
 $B.$setitem = function(obj, item, value){
-    if(Array.isArray(obj) && typeof item == "number" &&
+    if(Array.isArray(obj) && obj.__class__ === undefined &&
+            typeof item == "number" &&
             !_b_.isinstance(obj, _b_.tuple)){
         if(item < 0){item += obj.length}
         if(obj[item] === undefined){
@@ -602,8 +609,11 @@ $B.$setitem = function(obj, item, value){
     }else if(obj.__class__ === _b_.dict){
         _b_.dict.$setitem(obj, item, value)
         return
+    }else if(obj.__class__ === $B.JSObject){
+        $B.JSObject.__setattr__(obj, item, value)
+        return
     }
-    _b_.getattr(obj, "__setitem__")(item, value)
+    $B.$getattr(obj, "__setitem__")(item, value)
 }
 // augmented item
 $B.augm_item_add = function(obj, item, incr){
@@ -619,7 +629,7 @@ $B.augm_item_add = function(obj, item, incr){
             return
         }
     }
-    var ga = _b_.getattr
+    var ga = $B.$getattr
     try{
         var augm_func = ga(ga(obj, "__getitem__")(item), "__iadd__")
     }catch(err){
@@ -645,8 +655,7 @@ $B.extend = function(fname, arg){
     for(var i = 2; i < arguments.length; i++){
         var mapping = arguments[i]
         var it = _b_.iter(mapping),
-            getter = _b_.getattr(mapping, "__getitem__"),
-            ce = $B.current_exception
+            getter = $B.$getattr(mapping, "__getitem__")
         while (true){
             try{
                 var key = _b_.next(it)
@@ -661,7 +670,6 @@ $B.extend = function(fname, arg){
                 arg[key] = getter(key)
             }catch(err){
                 if(_b_.isinstance(err, [_b_.StopIteration])){
-                    $B.current_exception = ce
                     break
                 }
                 throw err
@@ -676,14 +684,12 @@ $B.extend_list = function(){
     // The last argument is the iterable to unpack
     var res = Array.prototype.slice.call(arguments, 0, arguments.length - 1),
         last = $B.last(arguments)
-    var it = _b_.iter(last),
-        ce = $B.current_exception
+    var it = _b_.iter(last)
     while (true){
         try{
             res.push(_b_.next(it))
         }catch(err){
             if(_b_.isinstance(err, [_b_.StopIteration])){
-                $B.current_exception = ce
                 break
             }
             throw err
@@ -721,15 +727,14 @@ $B.$is_member = function(item, _set){
     var f, _iter
 
     // use __contains__ if defined
-    var ce = $B.current_exception
-    try{f = _b_.getattr(_set, "__contains__")}
-    catch(err){$B.current_exception = ce}
+    try{f = $B.$getattr(_set, "__contains__")}
+    catch(err){}
 
     if(f){return f(item)}
 
     // use __iter__ if defined
     try{_iter = _b_.iter(_set)}
-    catch(err){$B.current_exception = ce}
+    catch(err){}
     if(_iter){
         while(1){
             try{
@@ -737,7 +742,6 @@ $B.$is_member = function(item, _set){
                 if($B.rich_comp("__eq__", elt, item)){return true}
             }catch(err){
                 if(err.__class__ === _b_.StopIteration){
-                    $B.current_exception = ce
                     return false
                 }
                 throw err
@@ -746,7 +750,7 @@ $B.$is_member = function(item, _set){
     }
 
     // use __getitem__ if defined
-    try{f = _b_.getattr(_set, "__getitem__")}
+    try{f = $B.$getattr(_set, "__getitem__")}
     catch(err){
         throw _b_.TypeError.$factory("'" + $B.get_class(_set).__name__ +
             "' object is not iterable")
@@ -767,7 +771,6 @@ $B.$is_member = function(item, _set){
 }
 
 $B.$call = function(callable){
-
     if(callable.__class__ === $B.method){
         return callable
     }
@@ -779,6 +782,13 @@ $B.$call = function(callable){
     else if(callable.$is_class){
         // Use metaclass __call__, cache result in callable.$factory
         return callable.$factory = $B.$instance_creator(callable)
+    }else if(callable.__class__ === $B.JSObject){
+        if(typeof(callable.js == "function")){
+            return callable.js
+        }else{
+            throw _b_.TypeError.$factory("'" + $B.get_class(callable).__name__ +
+                "' object is not callable")
+        }
     }
     try{
         return $B.$getattr(callable, "__call__")
@@ -866,63 +876,6 @@ $B.jsobject2pyobject = function(obj){
     return $B.JSObject.$factory(obj)
 }
 
-$B.pyobject2jsobject = function(obj){
-    // obj is a Python object
-    switch(obj) {
-        case _b_.None:
-            return null
-        case _b_.True:
-            return true
-        case _b_.False:
-            return false
-    }
-
-    if(_b_.isinstance(obj, [_b_.int, _b_.float, _b_.str])){return obj}
-    if(_b_.isinstance(obj, [_b_.list, _b_.tuple])){
-        var res = [],
-            pos = 0
-        for(var i = 0, len = obj.length; i < len; i++){
-           res[pos++] = $B.pyobject2jsobject(obj[i])
-        }
-        return res
-    }
-    if(_b_.isinstance(obj, _b_.dict)){
-        var res = {},
-            items = _b_.list.$factory(_b_.dict.items(obj))
-        for(var i = 0, len = items.length; i < len; i++){
-            res[$B.pyobject2jsobject(items[i][0])] =
-                $B.pyobject2jsobject(items[i][1])
-        }
-        return res
-    }
-
-    if(_b_.hasattr(obj, "__iter__")){
-       // this is an iterator..
-       var _a = [],
-           pos = 0,
-           ce = $B.current_exception
-       while(1) {
-          try{
-           _a[pos++] = $B.pyobject2jsobject(_b_.next(obj))
-          }catch(err){
-            if(err.__class__ !== _b_.StopIteration){throw err}
-            $B.current_exception = ce
-            break
-          }
-       }
-       return {"_type_": "iter", data: _a}
-    }
-
-    if(_b_.hasattr(obj, "__getstate__")){
-       return _b_.getattr(obj, "__getstate__")()
-    }
-    if(_b_.hasattr(obj, "__dict__")){
-       return $B.pyobject2jsobject(_b_.getattr(obj, "__dict__"))
-    }
-    throw _b_.TypeError.$factory(_b_.str.$factory(obj) +
-        " is not JSON serializable")
-}
-
 $B.set_line = function(line_num, module_name){
     $B.line_info = line_num + "," + module_name
     return _b_.None
@@ -959,14 +912,12 @@ $B.$iterator_class = function(name){
     function as_array(s) {
        var _a = [],
            pos = 0,
-           _it = _b_.iter(s),
-           ce = $B.current_exception
+           _it = _b_.iter(s)
        while (1) {
          try{
               _a[pos++] = _b_.next(_it)
          }catch(err){
               if(err.__class__ === _b_.StopIteration){
-                  $B.current_exception = ce
                   break
               }
          }
@@ -979,11 +930,11 @@ $B.$iterator_class = function(name){
 
     res.__eq__ = function(self,other){
        if(_b_.isinstance(other, [_b_.tuple, _b_.set, _b_.list])){
-          return _b_.getattr(as_list(self), "__eq__")(other)
+          return $B.$getattr(as_list(self), "__eq__")(other)
        }
 
        if(_b_.hasattr(other, "__iter__")){
-          return _b_.getattr(as_list(self), "__eq__")(as_list(other))
+          return $B.$getattr(as_list(self), "__eq__")(as_list(other))
        }
 
        _b_.NotImplementedError.$factory(
@@ -1000,11 +951,11 @@ $B.$iterator_class = function(name){
 
     res.__or__ = function(self, other){
        if(_b_.isinstance(other, [_b_.tuple, _b_.set, _b_.list])){
-          return _b_.getattr(as_set(self), "__or__")(other)
+          return $B.$getattr(as_set(self), "__or__")(other)
        }
 
        if(_b_.hasattr(other, "__iter__")){
-          return _b_.getattr(as_set(self), "__or__")(as_set(other))
+          return $B.$getattr(as_set(self), "__or__")(as_set(other))
        }
 
        _b_.NotImplementedError.$factory(
@@ -1041,7 +992,7 @@ $B.make_rmethods = function(klass){
         if(klass["__" + ropnames[j] + "__"] === undefined){
             klass["__" + ropnames[j] + "__"] = (function(name, sign){
                 return function(self, other){
-                    try{return _b_.getattr(other, "__r" + name + "__")(self)}
+                    try{return $B.$getattr(other, "__r" + name + "__")(self)}
                     catch(err){$err(sign, klass, other)}
                 }
             })(ropnames[j], ropsigns[j])
@@ -1071,8 +1022,8 @@ $B.$GetInt = function(value) {
   else if(_b_.isinstance(value, _b_.int)){return value}
   else if(_b_.isinstance(value, _b_.float)){return value.valueOf()}
   if(! value.$is_class){
-      try{var v = _b_.getattr(value, "__int__")(); return v}catch(e){}
-      try{var v = _b_.getattr(value, "__index__")(); return v}catch(e){}
+      try{var v = $B.$getattr(value, "__int__")(); return v}catch(e){}
+      try{var v = $B.$getattr(value, "__index__")(); return v}catch(e){}
   }
   throw _b_.TypeError.$factory("'" + $B.get_class(value).__name__ +
       "' object cannot be interpreted as an integer")
@@ -1086,10 +1037,10 @@ $B.PyNumber_Index = function(item){
             return item
         case "object":
             if(item.__class__ === $B.long_int){return item}
-            var method = _b_.getattr(item, "__index__", null)
-            if(method !== null){
+            var method = $B.$getattr(item, "__index__", _b_.None)
+            if(method !== _b_.None){
                 method = typeof method == "function" ?
-                            method : _b_.getattr(method, "__call__")
+                            method : $B.$getattr(method, "__call__")
                 return $B.int_or_bool(method)
             }
         default:
@@ -1144,6 +1095,7 @@ $B.leave_frame = function(arg){
     // Leave execution frame
     if($B.profile > 0){$B.$profile.return()}
     if($B.frames_stack.length == 0){console.log("empty stack"); return}
+    $B.del_exc()
     $B.frames_stack.pop()
 }
 
@@ -1498,17 +1450,18 @@ $B.rich_comp = function(op, x, y){
         // left operand’s method has priority."
         if(y.__class__.__mro__.indexOf(x.__class__) > -1){
             rev_op = reversed_op[op] || op
-            res = _b_.getattr(y, rev_op)(x)
+            res = $B.$getattr(y, rev_op)(x)
             if(res !== _b_.NotImplemented){return res}
             compared = true
         }
     }
-    res = $B.$call(_b_.getattr(x, op))(y)
+
+    res = $B.$call($B.$getattr(x, op))(y)
 
     if(res !== _b_.NotImplemented){return res}
     if(compared){return false}
     rev_op = reversed_op[op] || op
-    res = _b_.getattr(y, rev_op)(x)
+    res = $B.$getattr(y, rev_op)(x)
     if(res !== _b_.NotImplemented ){return res}
     // If both operands return NotImplemented, return False if the operand is
     // __eq__, True if it is __ne__, raise TypeError otherwise
@@ -1527,10 +1480,11 @@ $B.is_none = function(o){
 })(__BRYTHON__)
 
 // IE doesn't implement indexOf on Arrays
-if(!Array.indexOf){
-  Array.prototype.indexOf = function(obj){
-    for(var i = 0, len = this.length; i < len; i++){
-        if(this[i] == obj){return i}
+if(!Array.prototype.indexOf){
+  Array.prototype.indexOf = function(obj, fromIndex){
+    if (fromIndex < 0) fromIndex += this.length
+    for(var i = fromIndex || 0, len = this.length; i < len; i++){
+        if(this[i] === obj){return i}
     }
     return -1
   }

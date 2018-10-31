@@ -10,8 +10,6 @@ https://bitbucket.org/jython/jython/raw/28a66ba038620292520470a0bb4dc9bb8ac2e403
 
 import errno
 import os
-import queue
-import socket
 
 class error(Exception): pass
 

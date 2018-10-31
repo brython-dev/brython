@@ -5,7 +5,7 @@ import sys
 import unittest
 from test import support
 
-@unittest.skipIf(sys.platform[:3] in ('win', 'os2', 'riscos'),
+@unittest.skipIf((sys.platform[:3]=='win'),
                  "can't easily test on this system")
 class SelectTestCase(unittest.TestCase):
 
@@ -32,7 +32,7 @@ class SelectTestCase(unittest.TestCase):
             fp.close()
             try:
                 select.select([fd], [], [], 0)
-            except select.error as err:
+            except OSError as err:
                 self.assertEqual(err.errno, errno.EBADF)
             else:
                 self.fail("exception not raised")
@@ -75,9 +75,8 @@ class SelectTestCase(unittest.TestCase):
         a[:] = [F()] * 10
         self.assertEqual(select.select([], a, []), ([], a[:5], []))
 
-def test_main():
-    support.run_unittest(SelectTestCase)
+def tearDownModule():
     support.reap_children()
 
 if __name__ == "__main__":
-    test_main()
+    unittest.main()

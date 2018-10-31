@@ -6,6 +6,8 @@ PyPy provides an RPython version too.
 
 # borrowed from https://bitbucket.org/pypy/pypy/src/f2bf94943a41/lib_pypy/binascii.py
 
+import _base64 # Javascript module in libs
+
 class Error(ValueError):
     def __init__(self, msg=''):
         self._msg = msg
@@ -23,7 +25,7 @@ class Incomplete(Error):
 def a2b_uu(s):
     if not s:
         return ''
-    
+
     length = (ord(s[0]) - 0x20) % 64
 
     def quadruplets_gen(s):
@@ -148,58 +150,12 @@ table_a2b_base64 = {
 
 
 def a2b_base64(s):
-    if not isinstance(s, (str, bytes, bytearray)):
-        raise TypeError("expected string, bytes or a bytearray, got %r" % (s,))
-    s = s.rstrip()
-    # clean out all invalid characters, this also strips the final '=' padding
-    # check for correct padding
+    return _base64.Base64.decode(s)
 
-    def next_valid_char(s, pos):
-        for i in range(pos + 1, len(s)):
-            c = s[i]
-            if c < 0x7f:
-                try:
-                    table_a2b_base64[chr(c)]
-                    return chr(c)
-                except KeyError:
-                    pass
-        return None
-    
-    quad_pos = 0
-    leftbits = 0
-    leftchar = 0
-    res = []
-    for i, c in enumerate(s):
-        if isinstance(c, int):
-            c = chr(c)
-        if c > '\x7f' or c == '\n' or c == '\r' or c == ' ':
-            continue
-        if c == '=':
-            if quad_pos < 2 or (quad_pos == 2 and next_valid_char(s, i) != '='):
-                continue
-            else:
-                leftbits = 0
-                break
-        try:
-            next_c = table_a2b_base64[c]
-        except KeyError:
-            continue
-        quad_pos = (quad_pos + 1) & 0x03
-        leftchar = (leftchar << 6) | next_c
-        leftbits += 6
-        if leftbits >= 8:
-            leftbits -= 8
-            res.append((leftchar >> leftbits & 0xff))
-            leftchar &= ((1 << leftbits) - 1)
-    if leftbits != 0:
-        raise Error('Incorrect padding')
-
-    return bytes(''.join([chr(i) for i in res]),__BRYTHON__.charset)
-    
 table_b2a_base64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"\
     "0123456789+/"
 
-def b2a_base64(s):
+def b2a_base64(s, newline=True):
     length = len(s)
     final_length = length % 3
 
@@ -235,7 +191,11 @@ def b2a_base64(s):
         snippet = table_b2a_base64[(a >> 2) & 0x3F] + \
                   table_b2a_base64[((a << 4) | (b >> 4) & 0xF) & 0x3F] + \
                   table_b2a_base64[(b << 2) & 0x3F] + '='
-    return bytes(''.join(result) + snippet + '\n', __BRYTHON__.charset)
+
+    result = ''.join(result) + snippet
+    if newline:
+        result += '\n'
+    return bytes(result, __BRYTHON__.charset)
 
 def a2b_qp(s, header=False):
     inp = 0
@@ -344,7 +304,7 @@ hex_numbers = '0123456789ABCDEF'
 def hex(n):
     if n == 0:
         return '0'
-    
+
     if n < 0:
         n = -n
         sign = '-'
@@ -364,7 +324,7 @@ def hex(n):
 
 def two_hex_digits(n):
     return hex_numbers[n / 0x10] + hex_numbers[n % 0x10]
-    
+
 
 def strhex_to_int(s):
     i = 0
@@ -377,39 +337,39 @@ hqx_encoding = '!"#$%&\'()*+,-012345689@ABCDEFGHIJKLMNPQRSTUVXYZ[`abcdefhijklmpq
 DONE = 0x7f
 SKIP = 0x7e
 FAIL = 0x7d
-    
+
 table_a2b_hqx = [
-    #^@    ^A    ^B    ^C    ^D    ^E    ^F    ^G   
+    #^@    ^A    ^B    ^C    ^D    ^E    ^F    ^G
     FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL,
-    #\b    \t    \n    ^K    ^L    \r    ^N    ^O   
+    #\b    \t    \n    ^K    ^L    \r    ^N    ^O
     FAIL, FAIL, SKIP, FAIL, FAIL, SKIP, FAIL, FAIL,
-    #^P    ^Q    ^R    ^S    ^T    ^U    ^V    ^W   
+    #^P    ^Q    ^R    ^S    ^T    ^U    ^V    ^W
     FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL,
-    #^X    ^Y    ^Z    ^[    ^\    ^]    ^^    ^_   
+    #^X    ^Y    ^Z    ^[    ^\    ^]    ^^    ^_
     FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL,
-    #      !     "     #     $     %     &     '   
+    #      !     "     #     $     %     &     '
     FAIL, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
-    #(     )     *     +     ,     -     .     /   
+    #(     )     *     +     ,     -     .     /
     0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, FAIL, FAIL,
-    #0     1     2     3     4     5     6     7   
+    #0     1     2     3     4     5     6     7
     0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13, FAIL,
-    #8     9     :     ;     <     =     >     ?   
+    #8     9     :     ;     <     =     >     ?
     0x14, 0x15, DONE, FAIL, FAIL, FAIL, FAIL, FAIL,
-    #@     A     B     C     D     E     F     G   
+    #@     A     B     C     D     E     F     G
     0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D,
-    #H     I     J     K     L     M     N     O   
+    #H     I     J     K     L     M     N     O
     0x1E, 0x1F, 0x20, 0x21, 0x22, 0x23, 0x24, FAIL,
-    #P     Q     R     S     T     U     V     W   
+    #P     Q     R     S     T     U     V     W
     0x25, 0x26, 0x27, 0x28, 0x29, 0x2A, 0x2B, FAIL,
-    #X     Y     Z     [     \     ]     ^     _   
+    #X     Y     Z     [     \     ]     ^     _
     0x2C, 0x2D, 0x2E, 0x2F, FAIL, FAIL, FAIL, FAIL,
-    #`     a     b     c     d     e     f     g   
+    #`     a     b     c     d     e     f     g
     0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, FAIL,
-    #h     i     j     k     l     m     n     o   
+    #h     i     j     k     l     m     n     o
     0x37, 0x38, 0x39, 0x3A, 0x3B, 0x3C, FAIL, FAIL,
-    #p     q     r     s     t     u     v     w   
+    #p     q     r     s     t     u     v     w
     0x3D, 0x3E, 0x3F, FAIL, FAIL, FAIL, FAIL, FAIL,
-    #x     y     z     {     |     }     ~    ^?   
+    #x     y     z     {     |     }     ~    ^?
     FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL,
     FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL,
     FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL,
@@ -449,20 +409,20 @@ def a2b_hqx(s):
                 yield t
                 t = []
         yield t
-        
+
     done = 0
     try:
         for snippet in quadruples_gen(s):
             length = len(snippet)
             if length == 4:
-                result.append(chr(((snippet[0] & 0x3f) << 2) | (snippet[1] >> 4))) 
-                result.append(chr(((snippet[1] & 0x0f) << 4) | (snippet[2] >> 2))) 
-                result.append(chr(((snippet[2] & 0x03) << 6) | (snippet[3]))) 
+                result.append(chr(((snippet[0] & 0x3f) << 2) | (snippet[1] >> 4)))
+                result.append(chr(((snippet[1] & 0x0f) << 4) | (snippet[2] >> 2)))
+                result.append(chr(((snippet[2] & 0x03) << 6) | (snippet[3])))
             elif length == 3:
-                result.append(chr(((snippet[0] & 0x3f) << 2) | (snippet[1] >> 4))) 
-                result.append(chr(((snippet[1] & 0x0f) << 4) | (snippet[2] >> 2))) 
+                result.append(chr(((snippet[0] & 0x3f) << 2) | (snippet[1] >> 4)))
+                result.append(chr(((snippet[1] & 0x0f) << 4) | (snippet[2] >> 2)))
             elif length == 2:
-                result.append(chr(((snippet[0] & 0x3f) << 2) | (snippet[1] >> 4))) 
+                result.append(chr(((snippet[0] & 0x3f) << 2) | (snippet[1] >> 4)))
     except Done:
         done = 1
     except Error:
@@ -566,7 +526,7 @@ def rlecode_hqx(s):
         s = s[1:] + '?'
     else:
         s = s[1:] + '!'
-        
+
     for c in s:
         if c == prev and count < 255:
             count += 1
@@ -585,10 +545,10 @@ def rlecode_hqx(s):
                 if prev != '\x90':
                     result.extend([prev, '\x90', chr(count)])
                 else:
-                    result.extend(['\x90', '\x00', '\x90', chr(count)]) 
+                    result.extend(['\x90', '\x00', '\x90', chr(count)])
             count = 1
             prev = c
-        
+
     return ''.join(result)
 
 def rledecode_hqx(s):
@@ -672,7 +632,7 @@ def crc32(s, crc=0):
         #/* Note:  (crc >> 8) MUST zero fill on left
 
     result = crc ^ 0xffffffff
-    
+
     if result > 2**31:
         result = ((result + 2**31) % 2**32) - 2**31
 
@@ -741,6 +701,6 @@ def a2b_hex(t):
             raise TypeError('Non-hexadecimal digit found')
         result.append(chr((a << 4) + b))
     return bytes(''.join(result), __BRYTHON__.charset)
-    
+
 
 unhexlify = a2b_hex

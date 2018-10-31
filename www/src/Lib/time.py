@@ -1,3 +1,5 @@
+import _locale
+
 from browser import window
 
 # Javascript Date constructor
@@ -30,7 +32,7 @@ def _get_day_of_year(arg):
     int with the correct day of the year starting from 1
     """
     ml = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-    if arg[0] %4 == 0:
+    if arg[0] % 4 == 0:
         ml[1] += 1
     i = 1
     yday = 0
@@ -216,16 +218,16 @@ def mktime(t):
     return (d1 - d2) / 1000.
 
 def monotonic():
-    return now()/1000.
+    return now() / 1000.
 
 def perf_counter():
-    return now()/1000.
+    return now() / 1000.
 
 def process_time():
-    return now()/1000.
+    return now() / 1000.
 
 def time():
-    return float(date().getTime()/1000)
+    return float(date().getTime() / 1000)
 
 def sleep(secs):
     """Javascript can't block execution for a given time, expect by an
@@ -236,7 +238,6 @@ def sleep(secs):
         "instead.")
 
 def strftime(_format,t = None):
-
     def ns(t, nb):
         # left padding with 0
         res = str(t)
@@ -272,8 +273,23 @@ def strftime(_format,t = None):
         'July', 'August', 'September', 'October', 'November', 'December']
 
     res = _format
+    if __BRYTHON__.locale == "C":
+        res = res.replace("%c", abb_weekdays[w] + ' ' + abb_months[int(mm) - 1]+
+            ' ' + dd + ' ' + HH24 + ':' + MM + ':' + SS + ' ' + YY)
+        res = res.replace("%x", mm + '/' + dd + '/' + yy)
+        res = res.replace("%X", HH24 + ':' + MM + ':' + SS)
+    else:
+        formatter = _locale._date_format
+        c_format = formatter("x") + " " + formatter("X")
+        res = res.replace("%c", c_format)
+        x_format = formatter("x")
+        res = res.replace("%x", x_format)
+        X_format = formatter("X")
+        res = res.replace("%X", X_format)
+
     res = res.replace("%H", HH24)
     res = res.replace("%I", HH12)
+    res = res.replace("%i", HH12.lstrip("0"))
     res = res.replace("%p", AMPM)
     res = res.replace("%M", MM)
     res = res.replace("%S", SS)
@@ -288,22 +304,19 @@ def strftime(_format,t = None):
     res = res.replace("%j", DoY)
     res = res.replace("%w", str(w))
     res = res.replace("%W", W)
-    res = res.replace("%x", mm + '/' + dd + '/' + yy)
-    res = res.replace("%X", HH24 + ':' + MM + ':' + SS)
-    res = res.replace("%c", abb_weekdays[w] + ' ' + abb_months[int(mm) - 1]+
-        ' ' + dd + ' ' + HH24 + ':' + MM + ':' + SS + ' ' + YY)
     res = res.replace("%%", '%')
 
     return res
 
 class struct_time:
 
-    def __init__(self, args):
+    def __init__(self, *args, **kw):
 
-        if len(args) != 9:
+        time_tuple = args[0]
+        if len(time_tuple) != 9:
             raise TypeError("time.struct_time() takes a 9-sequence (%s-sequence given)" %len(args))
 
-        self.args = args
+        self.args = time_tuple
 
     @property
     def tm_year(self):
@@ -341,11 +354,17 @@ class struct_time:
     def tm_isdst(self):
         return self.args[8]
 
+    def __eq__(self, other):
+        return self.args == other.args
+
     def __getitem__(self, i):
         return self.args[i]
 
     def __iter__(self):
         return iter(self.args)
+
+    def __reduce_ex__(self, protocol):
+        return (struct_time, (self.args, {}))
 
     def __repr__(self):
         return ("time.structime(tm_year={}, tm_mon={}, tm_day={}, "+\
@@ -417,4 +436,4 @@ def get_clock_info(cl):
         _clock_xx("https://docs.python.org/3/library/time.html#time.get_clock_info")
 
 def tzset():
-    raise NotImplementedError()
+    pass

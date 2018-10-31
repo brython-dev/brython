@@ -1,7 +1,7 @@
 import os
 import base64
-import shutil
 import gettext
+import locale
 import unittest
 
 from test import support
@@ -33,6 +33,55 @@ IHNiZSBsYmhlIENsZ3ViYSBjZWJ0ZW56ZiBvbCBjZWJpdnF2YXQgbmEgdmFncmVzbnByIGdiIGd1
 ciBUQUgKdHJnZ3JrZyB6cmZmbnRyIHBuZ255YnQgeXZvZW5lbC4AYmFjb24Ad2luayB3aW5rAA==
 '''
 
+# This data contains an invalid major version number (5)
+# An unexpected major version number should be treated as an error when
+# parsing a .mo file
+
+GNU_MO_DATA_BAD_MAJOR_VERSION = b'''\
+3hIElQAABQAGAAAAHAAAAEwAAAALAAAAfAAAAAAAAACoAAAAFQAAAKkAAAAjAAAAvwAAAKEAAADj
+AAAABwAAAIUBAAALAAAAjQEAAEUBAACZAQAAFgAAAN8CAAAeAAAA9gIAAKEAAAAVAwAABQAAALcD
+AAAJAAAAvQMAAAEAAAADAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAABQAAAAYAAAACAAAAAFJh
+eW1vbmQgTHV4dXJ5IFlhY2gtdABUaGVyZSBpcyAlcyBmaWxlAFRoZXJlIGFyZSAlcyBmaWxlcwBU
+aGlzIG1vZHVsZSBwcm92aWRlcyBpbnRlcm5hdGlvbmFsaXphdGlvbiBhbmQgbG9jYWxpemF0aW9u
+CnN1cHBvcnQgZm9yIHlvdXIgUHl0aG9uIHByb2dyYW1zIGJ5IHByb3ZpZGluZyBhbiBpbnRlcmZh
+Y2UgdG8gdGhlIEdOVQpnZXR0ZXh0IG1lc3NhZ2UgY2F0YWxvZyBsaWJyYXJ5LgBtdWxsdXNrAG51
+ZGdlIG51ZGdlAFByb2plY3QtSWQtVmVyc2lvbjogMi4wClBPLVJldmlzaW9uLURhdGU6IDIwMDAt
+MDgtMjkgMTI6MTktMDQ6MDAKTGFzdC1UcmFuc2xhdG9yOiBKLiBEYXZpZCBJYsOhw7FleiA8ai1k
+YXZpZEBub29zLmZyPgpMYW5ndWFnZS1UZWFtOiBYWCA8cHl0aG9uLWRldkBweXRob24ub3JnPgpN
+SU1FLVZlcnNpb246IDEuMApDb250ZW50LVR5cGU6IHRleHQvcGxhaW47IGNoYXJzZXQ9aXNvLTg4
+NTktMQpDb250ZW50LVRyYW5zZmVyLUVuY29kaW5nOiBub25lCkdlbmVyYXRlZC1CeTogcHlnZXR0
+ZXh0LnB5IDEuMQpQbHVyYWwtRm9ybXM6IG5wbHVyYWxzPTI7IHBsdXJhbD1uIT0xOwoAVGhyb2F0
+d29iYmxlciBNYW5ncm92ZQBIYXkgJXMgZmljaGVybwBIYXkgJXMgZmljaGVyb3MAR3V2ZiB6YnFo
+eXIgY2ViaXZxcmYgdmFncmVhbmd2YmFueXZtbmd2YmEgbmFxIHlicG55dm1uZ3ZiYQpmaGNjYmVn
+IHNiZSBsYmhlIENsZ3ViYSBjZWJ0ZW56ZiBvbCBjZWJpdnF2YXQgbmEgdmFncmVzbnByIGdiIGd1
+ciBUQUgKdHJnZ3JrZyB6cmZmbnRyIHBuZ255YnQgeXZvZW5lbC4AYmFjb24Ad2luayB3aW5rAA==
+'''
+
+# This data contains an invalid minor version number (7)
+# An unexpected minor version number only indicates that some of the file's
+# contents may not be able to be read. It does not indicate an error.
+
+GNU_MO_DATA_BAD_MINOR_VERSION = b'''\
+3hIElQcAAAAGAAAAHAAAAEwAAAALAAAAfAAAAAAAAACoAAAAFQAAAKkAAAAjAAAAvwAAAKEAAADj
+AAAABwAAAIUBAAALAAAAjQEAAEUBAACZAQAAFgAAAN8CAAAeAAAA9gIAAKEAAAAVAwAABQAAALcD
+AAAJAAAAvQMAAAEAAAADAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAABQAAAAYAAAACAAAAAFJh
+eW1vbmQgTHV4dXJ5IFlhY2gtdABUaGVyZSBpcyAlcyBmaWxlAFRoZXJlIGFyZSAlcyBmaWxlcwBU
+aGlzIG1vZHVsZSBwcm92aWRlcyBpbnRlcm5hdGlvbmFsaXphdGlvbiBhbmQgbG9jYWxpemF0aW9u
+CnN1cHBvcnQgZm9yIHlvdXIgUHl0aG9uIHByb2dyYW1zIGJ5IHByb3ZpZGluZyBhbiBpbnRlcmZh
+Y2UgdG8gdGhlIEdOVQpnZXR0ZXh0IG1lc3NhZ2UgY2F0YWxvZyBsaWJyYXJ5LgBtdWxsdXNrAG51
+ZGdlIG51ZGdlAFByb2plY3QtSWQtVmVyc2lvbjogMi4wClBPLVJldmlzaW9uLURhdGU6IDIwMDAt
+MDgtMjkgMTI6MTktMDQ6MDAKTGFzdC1UcmFuc2xhdG9yOiBKLiBEYXZpZCBJYsOhw7FleiA8ai1k
+YXZpZEBub29zLmZyPgpMYW5ndWFnZS1UZWFtOiBYWCA8cHl0aG9uLWRldkBweXRob24ub3JnPgpN
+SU1FLVZlcnNpb246IDEuMApDb250ZW50LVR5cGU6IHRleHQvcGxhaW47IGNoYXJzZXQ9aXNvLTg4
+NTktMQpDb250ZW50LVRyYW5zZmVyLUVuY29kaW5nOiBub25lCkdlbmVyYXRlZC1CeTogcHlnZXR0
+ZXh0LnB5IDEuMQpQbHVyYWwtRm9ybXM6IG5wbHVyYWxzPTI7IHBsdXJhbD1uIT0xOwoAVGhyb2F0
+d29iYmxlciBNYW5ncm92ZQBIYXkgJXMgZmljaGVybwBIYXkgJXMgZmljaGVyb3MAR3V2ZiB6YnFo
+eXIgY2ViaXZxcmYgdmFncmVhbmd2YmFueXZtbmd2YmEgbmFxIHlicG55dm1uZ3ZiYQpmaGNjYmVn
+IHNiZSBsYmhlIENsZ3ViYSBjZWJ0ZW56ZiBvbCBjZWJpdnF2YXQgbmEgdmFncmVzbnByIGdiIGd1
+ciBUQUgKdHJnZ3JrZyB6cmZmbnRyIHBuZ255YnQgeXZvZW5lbC4AYmFjb24Ad2luayB3aW5rAA==
+'''
+
+
 UMO_DATA = b'''\
 3hIElQAAAAACAAAAHAAAACwAAAAFAAAAPAAAAAAAAABQAAAABAAAAFEAAAAPAQAAVgAAAAQAAABm
 AQAAAQAAAAIAAAAAAAAAAAAAAAAAAAAAYWLDngBQcm9qZWN0LUlkLVZlcnNpb246IDIuMApQTy1S
@@ -56,6 +105,8 @@ bGUKR2VuZXJhdGVkLUJ5OiBweWdldHRleHQucHkgMS4zCgA=
 
 LOCALEDIR = os.path.join('xx', 'LC_MESSAGES')
 MOFILE = os.path.join(LOCALEDIR, 'gettext.mo')
+MOFILE_BAD_MAJOR_VERSION = os.path.join(LOCALEDIR, 'gettext_bad_major_version.mo')
+MOFILE_BAD_MINOR_VERSION = os.path.join(LOCALEDIR, 'gettext_bad_minor_version.mo')
 UMOFILE = os.path.join(LOCALEDIR, 'ugettext.mo')
 MMOFILE = os.path.join(LOCALEDIR, 'metadata.mo')
 
@@ -66,6 +117,10 @@ class GettextBaseTest(unittest.TestCase):
             os.makedirs(LOCALEDIR)
         with open(MOFILE, 'wb') as fp:
             fp.write(base64.decodebytes(GNU_MO_DATA))
+        with open(MOFILE_BAD_MAJOR_VERSION, 'wb') as fp:
+            fp.write(base64.decodebytes(GNU_MO_DATA_BAD_MAJOR_VERSION))
+        with open(MOFILE_BAD_MINOR_VERSION, 'wb') as fp:
+            fp.write(base64.decodebytes(GNU_MO_DATA_BAD_MINOR_VERSION))
         with open(UMOFILE, 'wb') as fp:
             fp.write(base64.decodebytes(UMO_DATA))
         with open(MMOFILE, 'wb') as fp:
@@ -77,8 +132,14 @@ class GettextBaseTest(unittest.TestCase):
     def tearDown(self):
         self.env.__exit__()
         del self.env
-        shutil.rmtree(os.path.split(LOCALEDIR)[0])
+        support.rmtree(os.path.split(LOCALEDIR)[0])
 
+GNU_MO_DATA_ISSUE_17898 = b'''\
+3hIElQAAAAABAAAAHAAAACQAAAAAAAAAAAAAAAAAAAAsAAAAggAAAC0AAAAAUGx1cmFsLUZvcm1z
+OiBucGx1cmFscz0yOyBwbHVyYWw9KG4gIT0gMSk7CiMtIy0jLSMtIyAgbWVzc2FnZXMucG8gKEVk
+WCBTdHVkaW8pICAjLSMtIy0jLSMKQ29udGVudC1UeXBlOiB0ZXh0L3BsYWluOyBjaGFyc2V0PVVU
+Ri04CgA=
+'''
 
 class GettextTestCase1(GettextBaseTest):
     def setUp(self):
@@ -166,6 +227,21 @@ class GettextTestCase2(GettextBaseTest):
     def test_textdomain(self):
         self.assertEqual(gettext.textdomain(), 'gettext')
 
+    def test_bad_major_version(self):
+        with open(MOFILE_BAD_MAJOR_VERSION, 'rb') as fp:
+            with self.assertRaises(OSError) as cm:
+                gettext.GNUTranslations(fp)
+
+            exception = cm.exception
+            self.assertEqual(exception.errno, 0)
+            self.assertEqual(exception.strerror, "Bad version number 5")
+            self.assertEqual(exception.filename, MOFILE_BAD_MAJOR_VERSION)
+
+    def test_bad_minor_version(self):
+        with open(MOFILE_BAD_MINOR_VERSION, 'rb') as fp:
+            # Check that no error is thrown with a bad minor version number
+            gettext.GNUTranslations(fp)
+
     def test_some_translations(self):
         eq = self.assertEqual
         # test some translations
@@ -230,7 +306,9 @@ class PluralFormsTestCase(GettextBaseTest):
         x = t.ngettext('There is %s file', 'There are %s files', 2)
         eq(x, 'Hay %s ficheros')
 
-    def test_hu(self):
+    # Examples from http://www.gnu.org/software/gettext/manual/gettext.html
+
+    def test_ja(self):
         eq = self.assertEqual
         f = gettext.c2py('0')
         s = ''.join([ str(f(x)) for x in range(200) ])
@@ -248,6 +326,12 @@ class PluralFormsTestCase(GettextBaseTest):
         s = ''.join([ str(f(x)) for x in range(200) ])
         eq(s, "00111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111")
 
+    def test_lv(self):
+        eq = self.assertEqual
+        f = gettext.c2py('n%10==1 && n%100!=11 ? 0 : n != 0 ? 1 : 2')
+        s = ''.join([ str(f(x)) for x in range(200) ])
+        eq(s, "20111111111111111111101111111110111111111011111111101111111110111111111011111111101111111110111111111011111111111111111110111111111011111111101111111110111111111011111111101111111110111111111011111111")
+
     def test_gd(self):
         eq = self.assertEqual
         f = gettext.c2py('n==1 ? 0 : n==2 ? 1 : 2')
@@ -261,6 +345,12 @@ class PluralFormsTestCase(GettextBaseTest):
         s = ''.join([ str(f(x)) for x in range(200) ])
         eq(s, "20122222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222")
 
+    def test_ro(self):
+        eq = self.assertEqual
+        f = gettext.c2py('n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < 20)) ? 1 : 2')
+        s = ''.join([ str(f(x)) for x in range(200) ])
+        eq(s, "10111111111111111111222222222222222222222222222222222222222222222222222222222222222222222222222222222111111111111111111122222222222222222222222222222222222222222222222222222222222222222222222222222222")
+
     def test_lt(self):
         eq = self.assertEqual
         f = gettext.c2py('n%10==1 && n%100!=11 ? 0 : n%10>=2 && (n%100<10 || n%100>=20) ? 1 : 2')
@@ -272,6 +362,12 @@ class PluralFormsTestCase(GettextBaseTest):
         f = gettext.c2py('n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2')
         s = ''.join([ str(f(x)) for x in range(200) ])
         eq(s, "20111222222222222222201112222220111222222011122222201112222220111222222011122222201112222220111222222011122222222222222220111222222011122222201112222220111222222011122222201112222220111222222011122222")
+
+    def test_cs(self):
+        eq = self.assertEqual
+        f = gettext.c2py('(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2')
+        s = ''.join([ str(f(x)) for x in range(200) ])
+        eq(s, "20111222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222")
 
     def test_pl(self):
         eq = self.assertEqual
@@ -285,10 +381,204 @@ class PluralFormsTestCase(GettextBaseTest):
         s = ''.join([ str(f(x)) for x in range(200) ])
         eq(s, "30122333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333012233333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333")
 
+    def test_ar(self):
+        eq = self.assertEqual
+        f = gettext.c2py('n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 ? 4 : 5')
+        s = ''.join([ str(f(x)) for x in range(200) ])
+        eq(s, "01233333333444444444444444444444444444444444444444444444444444444444444444444444444444444444444444445553333333344444444444444444444444444444444444444444444444444444444444444444444444444444444444444444")
+
     def test_security(self):
         raises = self.assertRaises
         # Test for a dangerous expression
         raises(ValueError, gettext.c2py, "os.chmod('/etc/passwd',0777)")
+        # issue28563
+        raises(ValueError, gettext.c2py, '"(eval(foo) && ""')
+        raises(ValueError, gettext.c2py, 'f"{os.system(\'sh\')}"')
+        # Maximum recursion depth exceeded during compilation
+        raises(ValueError, gettext.c2py, 'n+'*10000 + 'n')
+        self.assertEqual(gettext.c2py('n+'*100 + 'n')(1), 101)
+        # MemoryError during compilation
+        raises(ValueError, gettext.c2py, '('*100 + 'n' + ')'*100)
+        # Maximum recursion depth exceeded in C to Python translator
+        raises(ValueError, gettext.c2py, '('*10000 + 'n' + ')'*10000)
+        self.assertEqual(gettext.c2py('('*20 + 'n' + ')'*20)(1), 1)
+
+    def test_chained_comparison(self):
+        # C doesn't chain comparison as Python so 2 == 2 == 2 gets different results
+        f = gettext.c2py('n == n == n')
+        self.assertEqual(''.join(str(f(x)) for x in range(3)), '010')
+        f = gettext.c2py('1 < n == n')
+        self.assertEqual(''.join(str(f(x)) for x in range(3)), '100')
+        f = gettext.c2py('n == n < 2')
+        self.assertEqual(''.join(str(f(x)) for x in range(3)), '010')
+        f = gettext.c2py('0 < n < 2')
+        self.assertEqual(''.join(str(f(x)) for x in range(3)), '111')
+
+    def test_decimal_number(self):
+        self.assertEqual(gettext.c2py('0123')(1), 123)
+
+    def test_invalid_syntax(self):
+        invalid_expressions = [
+            'x>1', '(n>1', 'n>1)', '42**42**42', '0xa', '1.0', '1e2',
+            'n>0x1', '+n', '-n', 'n()', 'n(1)', '1+', 'nn', 'n n',
+        ]
+        for expr in invalid_expressions:
+            with self.assertRaises(ValueError):
+                gettext.c2py(expr)
+
+    def test_nested_condition_operator(self):
+        self.assertEqual(gettext.c2py('n?1?2:3:4')(0), 4)
+        self.assertEqual(gettext.c2py('n?1?2:3:4')(1), 2)
+        self.assertEqual(gettext.c2py('n?1:3?4:5')(0), 4)
+        self.assertEqual(gettext.c2py('n?1:3?4:5')(1), 1)
+
+    def test_division(self):
+        f = gettext.c2py('2/n*3')
+        self.assertEqual(f(1), 6)
+        self.assertEqual(f(2), 3)
+        self.assertEqual(f(3), 0)
+        self.assertEqual(f(-1), -6)
+        self.assertRaises(ZeroDivisionError, f, 0)
+
+    def test_plural_number(self):
+        f = gettext.c2py('n != 1')
+        self.assertEqual(f(1), 0)
+        self.assertEqual(f(2), 1)
+        with self.assertWarns(DeprecationWarning):
+            self.assertEqual(f(1.0), 0)
+        with self.assertWarns(DeprecationWarning):
+            self.assertEqual(f(2.0), 1)
+        with self.assertWarns(DeprecationWarning):
+            self.assertEqual(f(1.1), 1)
+        self.assertRaises(TypeError, f, '2')
+        self.assertRaises(TypeError, f, b'2')
+        self.assertRaises(TypeError, f, [])
+        self.assertRaises(TypeError, f, object())
+
+
+class LGettextTestCase(GettextBaseTest):
+    def setUp(self):
+        GettextBaseTest.setUp(self)
+        self.mofile = MOFILE
+
+    def test_lgettext(self):
+        lgettext = gettext.lgettext
+        ldgettext = gettext.ldgettext
+        self.assertEqual(lgettext('mullusk'), b'bacon')
+        self.assertEqual(lgettext('spam'), b'spam')
+        self.assertEqual(ldgettext('gettext', 'mullusk'), b'bacon')
+        self.assertEqual(ldgettext('gettext', 'spam'), b'spam')
+
+    def test_lgettext_2(self):
+        with open(self.mofile, 'rb') as fp:
+            t = gettext.GNUTranslations(fp)
+        lgettext = t.lgettext
+        self.assertEqual(lgettext('mullusk'), b'bacon')
+        self.assertEqual(lgettext('spam'), b'spam')
+
+    def test_lgettext_bind_textdomain_codeset(self):
+        lgettext = gettext.lgettext
+        ldgettext = gettext.ldgettext
+        saved_codeset = gettext.bind_textdomain_codeset('gettext')
+        try:
+            gettext.bind_textdomain_codeset('gettext', 'utf-16')
+            self.assertEqual(lgettext('mullusk'), 'bacon'.encode('utf-16'))
+            self.assertEqual(lgettext('spam'), 'spam'.encode('utf-16'))
+            self.assertEqual(ldgettext('gettext', 'mullusk'), 'bacon'.encode('utf-16'))
+            self.assertEqual(ldgettext('gettext', 'spam'), 'spam'.encode('utf-16'))
+        finally:
+            del gettext._localecodesets['gettext']
+            gettext.bind_textdomain_codeset('gettext', saved_codeset)
+
+    def test_lgettext_output_encoding(self):
+        with open(self.mofile, 'rb') as fp:
+            t = gettext.GNUTranslations(fp)
+        lgettext = t.lgettext
+        t.set_output_charset('utf-16')
+        self.assertEqual(lgettext('mullusk'), 'bacon'.encode('utf-16'))
+        self.assertEqual(lgettext('spam'), 'spam'.encode('utf-16'))
+
+    def test_lngettext(self):
+        lngettext = gettext.lngettext
+        ldngettext = gettext.ldngettext
+        x = lngettext('There is %s file', 'There are %s files', 1)
+        self.assertEqual(x, b'Hay %s fichero')
+        x = lngettext('There is %s file', 'There are %s files', 2)
+        self.assertEqual(x, b'Hay %s ficheros')
+        x = lngettext('There is %s directory', 'There are %s directories', 1)
+        self.assertEqual(x, b'There is %s directory')
+        x = lngettext('There is %s directory', 'There are %s directories', 2)
+        self.assertEqual(x, b'There are %s directories')
+        x = ldngettext('gettext', 'There is %s file', 'There are %s files', 1)
+        self.assertEqual(x, b'Hay %s fichero')
+        x = ldngettext('gettext', 'There is %s file', 'There are %s files', 2)
+        self.assertEqual(x, b'Hay %s ficheros')
+        x = ldngettext('gettext', 'There is %s directory', 'There are %s directories', 1)
+        self.assertEqual(x, b'There is %s directory')
+        x = ldngettext('gettext', 'There is %s directory', 'There are %s directories', 2)
+        self.assertEqual(x, b'There are %s directories')
+
+    def test_lngettext_2(self):
+        with open(self.mofile, 'rb') as fp:
+            t = gettext.GNUTranslations(fp)
+        lngettext = t.lngettext
+        x = lngettext('There is %s file', 'There are %s files', 1)
+        self.assertEqual(x, b'Hay %s fichero')
+        x = lngettext('There is %s file', 'There are %s files', 2)
+        self.assertEqual(x, b'Hay %s ficheros')
+        x = lngettext('There is %s directory', 'There are %s directories', 1)
+        self.assertEqual(x, b'There is %s directory')
+        x = lngettext('There is %s directory', 'There are %s directories', 2)
+        self.assertEqual(x, b'There are %s directories')
+
+    def test_lngettext_bind_textdomain_codeset(self):
+        lngettext = gettext.lngettext
+        ldngettext = gettext.ldngettext
+        saved_codeset = gettext.bind_textdomain_codeset('gettext')
+        try:
+            gettext.bind_textdomain_codeset('gettext', 'utf-16')
+            x = lngettext('There is %s file', 'There are %s files', 1)
+            self.assertEqual(x, 'Hay %s fichero'.encode('utf-16'))
+            x = lngettext('There is %s file', 'There are %s files', 2)
+            self.assertEqual(x, 'Hay %s ficheros'.encode('utf-16'))
+            x = lngettext('There is %s directory', 'There are %s directories', 1)
+            self.assertEqual(x, 'There is %s directory'.encode('utf-16'))
+            x = lngettext('There is %s directory', 'There are %s directories', 2)
+            self.assertEqual(x, 'There are %s directories'.encode('utf-16'))
+            x = ldngettext('gettext', 'There is %s file', 'There are %s files', 1)
+            self.assertEqual(x, 'Hay %s fichero'.encode('utf-16'))
+            x = ldngettext('gettext', 'There is %s file', 'There are %s files', 2)
+            self.assertEqual(x, 'Hay %s ficheros'.encode('utf-16'))
+            x = ldngettext('gettext', 'There is %s directory', 'There are %s directories', 1)
+            self.assertEqual(x, 'There is %s directory'.encode('utf-16'))
+            x = ldngettext('gettext', 'There is %s directory', 'There are %s directories', 2)
+            self.assertEqual(x, 'There are %s directories'.encode('utf-16'))
+        finally:
+            del gettext._localecodesets['gettext']
+            gettext.bind_textdomain_codeset('gettext', saved_codeset)
+
+    def test_lngettext_output_encoding(self):
+        with open(self.mofile, 'rb') as fp:
+            t = gettext.GNUTranslations(fp)
+        lngettext = t.lngettext
+        t.set_output_charset('utf-16')
+        x = lngettext('There is %s file', 'There are %s files', 1)
+        self.assertEqual(x, 'Hay %s fichero'.encode('utf-16'))
+        x = lngettext('There is %s file', 'There are %s files', 2)
+        self.assertEqual(x, 'Hay %s ficheros'.encode('utf-16'))
+        x = lngettext('There is %s directory', 'There are %s directories', 1)
+        self.assertEqual(x, 'There is %s directory'.encode('utf-16'))
+        x = lngettext('There is %s directory', 'There are %s directories', 2)
+        self.assertEqual(x, 'There are %s directories'.encode('utf-16'))
+
+
+class GNUTranslationParsingTest(GettextBaseTest):
+    def test_plural_form_error_issue17898(self):
+        with open(MOFILE, 'wb') as fp:
+            fp.write(base64.decodebytes(GNU_MO_DATA_ISSUE_17898))
+        with open(MOFILE, 'rb') as fp:
+            # If this runs cleanly, the bug is fixed.
+            t = gettext.GNUTranslations(fp)
 
 
 class UnicodeTranslationsTest(GettextBaseTest):
@@ -299,13 +589,10 @@ class UnicodeTranslationsTest(GettextBaseTest):
         self._ = self.t.gettext
 
     def test_unicode_msgid(self):
-        unless = self.assertTrue
-        unless(isinstance(self._(''), str))
-        unless(isinstance(self._(''), str))
+        self.assertIsInstance(self._(''), str)
 
     def test_unicode_msgstr(self):
-        eq = self.assertEqual
-        eq(self._('ab\xde'), '\xa4yz')
+        self.assertEqual(self._('ab\xde'), '\xa4yz')
 
 
 class WeirdMetadataTest(GettextBaseTest):
@@ -356,6 +643,12 @@ class GettextCacheTestCase(GettextBaseTest):
         self.assertEqual(t.__class__, DummyGNUTranslations)
 
 
+class MiscTestCase(unittest.TestCase):
+    def test__all__(self):
+        blacklist = {'c2py', 'ENOENT'}
+        support.check__all__(self, gettext, blacklist=blacklist)
+
+
 def test_main():
     support.run_unittest(__name__)
 
@@ -368,7 +661,7 @@ if __name__ == '__main__':
 # The original version was automatically generated from the sources with
 # pygettext. Later it was manually modified to add plural forms support.
 
-'''
+b'''
 # Dummy translation for the Python test_gettext.py module.
 # Copyright (C) 2001 Python Software Foundation
 # Barry Warsaw <barry@python.org>, 2000.
@@ -428,7 +721,7 @@ msgstr[1] "Hay %s ficheros"
 # Here's the second example po file example, used to generate the UMO_DATA
 # containing utf-8 encoded Unicode strings
 
-'''
+b'''
 # Dummy translation for the Python test_gettext.py module.
 # Copyright (C) 2001 Python Software Foundation
 # Barry Warsaw <barry@python.org>, 2000.
@@ -451,7 +744,7 @@ msgstr "\xc2\xa4yz"
 
 # Here's the third example po file, used to generate MMO_DATA
 
-'''
+b'''
 msgid ""
 msgstr ""
 "Project-Id-Version: No Project 0.0\n"
@@ -464,4 +757,17 @@ msgstr ""
 "Content-Type: text/plain; charset=iso-8859-15\n"
 "Content-Transfer-Encoding: quoted-printable\n"
 "Generated-By: pygettext.py 1.3\n"
+'''
+
+#
+# messages.po, used for bug 17898
+#
+
+b'''
+# test file for http://bugs.python.org/issue17898
+msgid ""
+msgstr ""
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"#-#-#-#-#  messages.po (EdX Studio)  #-#-#-#-#\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 '''

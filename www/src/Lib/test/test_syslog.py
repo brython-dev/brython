@@ -32,8 +32,9 @@ class Test(unittest.TestCase):
     def test_log_upto(self):
         syslog.LOG_UPTO(syslog.LOG_INFO)
 
-def test_main():
-    support.run_unittest(__name__)
+    def test_openlog_noargs(self):
+        syslog.openlog()
+        syslog.syslog('test message from python test_syslog')
 
 if __name__ == "__main__":
-    test_main()
+    unittest.main()

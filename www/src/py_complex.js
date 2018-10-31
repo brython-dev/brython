@@ -110,68 +110,72 @@ complex.__new__ = function(cls){
         throw _b_.TypeError.$factory('complex.__new__(): not enough arguments')
     }
     var res,
+        missing = {},
         args = $B.args("complex", 3, {cls: null, real: null, imag: null},
-        ["cls", "real", "imag"], arguments, {real: 0, imag: 0}, null, null),
+            ["cls", "real", "imag"], arguments, {real: 0, imag: missing}, null, null),
         $real = args.real,
         $imag = args.imag
+
     if(typeof $real == "string"){
-        if(arguments.length > 2 &&
-                arguments[2].$nat !== undefined &&
-                Object.keys(arguments[2].kw).length > 0){
-            console.log(arguments)
+        if($imag !== missing){
             throw _b_.TypeError.$factory("complex() can't take second arg " +
                 "if first is a string")
-        }
-        var arg = $real
-        $real = $real.trim()
-        if($real.startsWith("(") && $real.endsWith(")")){
-            $real = $real.substr(1)
-            $real = $real.substr(0, $real.length - 1)
-        }
-        // Regular expression for literal complex string. Includes underscores
-        // for PEP 515
-        var complex_re = /^\s*([\+\-]*[0-9_]*\.?[0-9_]*(e[\+\-]*[0-9_]*)?)([\+\-]?)([0-9_]*\.?[0-9_]*(e[\+\-]*[0-9_]*)?)(j?)\s*$/i
+        }else{
+            var arg = $real
+            $real = $real.trim()
+            if($real.startsWith("(") && $real.endsWith(")")){
+                $real = $real.substr(1)
+                $real = $real.substr(0, $real.length - 1)
+            }
+            // Regular expression for literal complex string. Includes underscores
+            // for PEP 515
+            var complex_re = /^\s*([\+\-]*[0-9_]*\.?[0-9_]*(e[\+\-]*[0-9_]*)?)([\+\-]?)([0-9_]*\.?[0-9_]*(e[\+\-]*[0-9_]*)?)(j?)\s*$/i
 
-        var parts = complex_re.exec($real)
+            var parts = complex_re.exec($real)
 
-        function to_num(s){
-            var res = parseFloat(s.charAt(0) + s.substr(1).replace(/_/g, ""))
-            if(isNaN(res)){
-                throw _b_.ValueError.$factory("could not convert string " +
-                    "to complex: '" + arg +"'")
+            function to_num(s){
+                var res = parseFloat(s.charAt(0) + s.substr(1).replace(/_/g, ""))
+                if(isNaN(res)){
+                    throw _b_.ValueError.$factory("could not convert string " +
+                        "to complex: '" + arg +"'")
+                }
+                return res
+            }
+            if(parts === null){
+                throw _b_.ValueError.$factory("complex() arg is a malformed string")
+            }else if(parts[_real] == "." || parts[_imag] == "." ||
+                    parts[_real] == ".e" || parts[_imag] == ".e" ||
+                    parts[_real] == "e" || parts[_imag] == "e"){
+                throw _b_.ValueError.$factory("complex() arg is a malformed string")
+            }else if(parts[_j] != ""){
+                if(parts[_sign] == ""){
+                    $real = 0
+                    if(parts[_real] == "+" || parts[_real] == ""){
+                        $imag = 1
+                    }else if (parts[_real] == '-'){
+                        $imag = -1
+                    }else{$imag = to_num(parts[_real])}
+                }else{
+                    $real = to_num(parts[_real])
+                    $imag = parts[_imag] == "" ? 1 : to_num(parts[_imag])
+                    $imag = parts[_sign] == "-" ? -$imag : $imag
+                }
+            }else{
+                $real = to_num(parts[_real])
+                $imag = 0
+            }
+            res = {
+                __class__: complex,
+                $real: $real || 0,
+                $imag: $imag || 0
             }
             return res
         }
-        if(parts === null){
-            throw _b_.ValueError.$factory("complex() arg is a malformed string")
-        }else if(parts[_real] == "." || parts[_imag] == "." ||
-                parts[_real] == ".e" || parts[_imag] == ".e" ||
-                parts[_real] == "e" || parts[_imag] == "e"){
-            throw _b_.ValueError.$factory("complex() arg is a malformed string")
-        }else if(parts[_j] != ""){
-            if(parts[_sign] == ""){
-                $real = 0
-                if(parts[_real] == "+" || parts[_real] == ""){
-                    $imag = 1
-                }else if (parts[_real] == '-'){
-                    $imag = -1
-                }else{$imag = to_num(parts[_real])}
-            }else{
-                $real = to_num(parts[_real])
-                $imag = parts[_imag] == "" ? 1 : to_num(parts[_imag])
-                $imag = parts[_sign] == "-" ? -$imag : $imag
-            }
-        }else{
-            $real = to_num(parts[_real])
-            $imag = 0
-        }
-        res = {
-            __class__: complex,
-            $real: $real || 0,
-            $imag: $imag || 0
-        }
-        return res
     }
+
+    // If first argument is not a string, the second argument defaults to 0
+    $imag = $imag === missing ? 0 : $imag
+
     if(arguments.length == 1 && $real.__class__ === complex && $imag == 0){
         return $real
     }
@@ -201,7 +205,7 @@ complex.__new__ = function(cls){
         throw _b_.TypeError.$factory("complex() second arg can't be a string")
     }
     if(! isinstance($imag, _b_.float) && ! isinstance($imag, _b_.int) &&
-            ! isinstance($imag, _b_.complex) && $imag !== undefined){
+            ! isinstance($imag, _b_.complex) && $imag !== missing){
         throw _b_.TypeError.$factory("complex() argument must be a string " +
             "or a number")
     }
