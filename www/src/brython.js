@@ -73,9 +73,9 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-10-27 13:58:10.563994"
-__BRYTHON__.timestamp=1540641490563
-__BRYTHON__.builtin_module_names=["_ajax","_base64","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
+__BRYTHON__.compiled_date="2018-10-31 11:33:41.416667"
+__BRYTHON__.timestamp=1540982021416
+__BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
 isFinite(value)&&
@@ -6465,18 +6465,27 @@ return res}}
 function max(){return $extreme(arguments,'__gt__')}
 var memoryview=$B.make_class('memoryview',function(obj){check_no_kw('memoryview',obj)
 check_nb_args('memoryview',1,arguments)
+if(obj.__class__===memoryview){return obj}
 if($B.get_class(obj).$buffer_protocol){return{
 __class__: memoryview,obj: obj,
-format: 'B',itemsize: 1,ndim: 1,shape: _b_.tuple.$factory([obj.source.length]),strides: _b_.tuple.$factory([1]),suboffsets: _b_.tuple.$factory([]),c_contiguous: true,f_contiguous: true,contiguous: true}}else{throw _b_.TypeError.$factory("memoryview: a bytes-like object " +
+format: 'B',itemsize: 1,ndim: 1,shape: _b_.tuple.$factory([_b_.len(obj)]),strides: _b_.tuple.$factory([1]),suboffsets: _b_.tuple.$factory([]),c_contiguous: true,f_contiguous: true,contiguous: true}}else{throw _b_.TypeError.$factory("memoryview: a bytes-like object " +
 "is required, not '" + $B.get_class(obj).__name__ + "'")}}
 )
 memoryview.__eq__=function(self,other){if(other.__class__ !==memoryview){return false}
 return $B.$getattr(self.obj,'__eq__')(other.obj)}
-memoryview.__getitem__=function(self,key){var res=self.obj.__class__.__getitem__(self.obj,key)
-if(key.__class__===_b_.slice){return memoryview.$factory(res)}
-return res}
+memoryview.__getitem__=function(self,key){if(isinstance(key,_b_.int)){var start=key * self.itemsize
+if(self.format=="I"){var res=self.obj.source[start],coef=256
+for(var i=1;i < 4;i++){res +=self.obj.source[start + i]* coef
+coef *=256}
+return res}else if("B".indexOf(self.format)> -1){return self.obj.source[key]}else{
+return self.obj.source[key]}}
+var res=self.obj.__class__.__getitem__(self.obj,key)
+if(key.__class__===_b_.slice){return memoryview.$factory(res)}}
 memoryview.__len__=function(self){return len(self.obj)/ self.itemsize}
-memoryview.cast=function(self,format){if(format=="I"){var res=memoryview.$factory(self.obj),objlen=len(self.obj)
+memoryview.cast=function(self,format){switch(format){case "B":
+return memoryview.$factory(self.obj)
+case "I":
+var res=memoryview.$factory(self.obj),objlen=len(self.obj)
 res.itemsize=4
 res.format="I"
 if(objlen % 4 !=0){throw _b_.TypeError.$factory("memoryview: length is not " +
@@ -6487,8 +6496,8 @@ bytes.source.forEach(function(item){res +=item.toString(16)})
 return res}
 memoryview.tobytes=function(self){return _b_.bytes.$factory(self.obj)}
 memoryview.tolist=function(self){if(self.itemsize==1){return _b_.list.$factory(_b_.bytes.$factory(self.obj))}else if(self.itemsize==4){if(self.format=="I"){var res=[]
-for(var i=0;i < self.obj.size;i +=4){var item=self.obj[i + 3],coef=256
-for(var j=2;j >=0;j--){item +=coef * self.obj[i + j]
+for(var i=0;i < self.obj.source.length;i +=4){var item=self.obj.source[i],coef=256
+for(var j=1;j < 4;j++){item +=coef * self.obj.source[i + j]
 coef *=256}
 res.push(item)}
 return res}}}
@@ -6914,7 +6923,6 @@ if(root !==undefined && root.line_info !==undefined){
 line_num=root.line_info}
 var exc=_b_.IndentationError.$factory(msg)
 $B.$syntax_err_line(exc,module,src,pos,line_num)
-console.log("indentation error",exc)
 throw exc}
 var traceback=$B.make_class("traceback",function(exc,stack){if(stack===undefined)
 stack=exc.$stack
@@ -7034,7 +7042,6 @@ _b_.BaseException=BaseException
 $B.exception=function(js_exc){
 if(! js_exc.$py_error){
 console.log("js exc",js_exc)
-console.log($B.frames_stack.slice())
 if(js_exc.info===undefined){js_exc.msg=BaseException.__getattr__(js_exc,"info")}
 var exc=Error()
 exc.__name__="Internal Javascript error: " +
@@ -7237,6 +7244,11 @@ _b_.range=range
 _b_.slice=slice})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins,object=_b_.object,isinstance=_b_.isinstance,getattr=_b_.getattr,None=_b_.None
 var from_unicode={},to_unicode={}
+$B.to_bytes=function(obj){var res
+if(_b_.isinstance(obj,[_b_.bytes,_b_.bytearray])){res=obj.source}else{var ga=$B.$getattr(obj,"tobytes",null)
+if(ga !==null){res=$B.$call(ga)().source}
+else{throw _b_.TypeError.$factory("object doesn't support the buffer protocol")}}
+return res}
 var bytearray={__class__: _b_.type,__mro__:[object],__name__: 'bytearray',$buffer_protocol: true,$is_class: true}
 var mutable_methods=["__delitem__","clear","copy","count","index","pop","remove","reverse","sort"]
 mutable_methods.forEach(function(method){bytearray[method]=(function(m){return function(self){var args=[self.source],pos=1
@@ -7357,7 +7369,7 @@ else{res=bytes.__add__(res,self)}
 res=bytes.__add__(res,item)}catch(err){if(isinstance(err,_b_.StopIteration)){break}
 throw err}}
 return res}
-bytes.maketrans=function(from,to){var _t=[]
+bytes.maketrans=function(from,to){var _t=[],to=$B.to_bytes(to)
 for(var i=0;i < 256;i++){_t[i]=i}
 for(var i=0,len=from.source.length;i < len;i++){var _ndx=from.source[i]
 _t[_ndx]=to.source[i]}
@@ -7930,7 +7942,7 @@ $B.JSConstructor=JSConstructor})(__BRYTHON__)
 ;(function($B){$B.stdlib={}
 var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_collections_abc','_compat_pickle','_Cvars','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_py_abc','_pydecimal','_queue','_random','_socket','_sre','_string','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_weakref','_weakrefset','abc','antigravity','argparse','atexit','base64','bdb','binascii','bisect','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','Clib','Cvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','gettext','glob','heapq','imp','inspect','io','ipaddress','itertools','keyword','linecache','locale','nntplib','numbers','opcode','operator','optparse','os','pdb','pickle','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','re','reprlib','select','selectors','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uuid','warnings','weakref','webbrowser','zipfile']
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
-var js=['_ajax','_base64','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_sre_utils','_strptime','_svg','_sys','_warnings','aes','array','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','json','long_int','marshal','math','md5','modulefinder','pbkdf2','posix','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','zlib']
+var js=['_ajax','_base64','_binascii','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_sre_utils','_strptime','_svg','_sys','_warnings','aes','array','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','json','long_int','marshal','math','md5','modulefinder','pbkdf2','posix','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','zlib']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
 var pkglist=['asyncio','browser','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','jqueryui','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib','xml','xml.etree','xml.parsers','xml.sax']
 for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}})(__BRYTHON__)

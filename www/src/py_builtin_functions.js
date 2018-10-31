@@ -1429,6 +1429,7 @@ var memoryview = $B.make_class('memoryview',
     function(obj){
         check_no_kw('memoryview', obj)
         check_nb_args('memoryview', 1, arguments)
+        if(obj.__class__ === memoryview){return obj}
         if($B.get_class(obj).$buffer_protocol){
             return {
                 __class__: memoryview,
@@ -1437,7 +1438,7 @@ var memoryview = $B.make_class('memoryview',
                 format: 'B',
                 itemsize: 1,
                 ndim: 1,
-                shape: _b_.tuple.$factory([obj.source.length]),
+                shape: _b_.tuple.$factory([_b_.len(obj)]),
                 strides: _b_.tuple.$factory([1]),
                 suboffsets: _b_.tuple.$factory([]),
                 c_contiguous: true,
@@ -1456,9 +1457,26 @@ memoryview.__eq__ = function(self, other){
 }
 
 memoryview.__getitem__ = function(self, key){
+    if(isinstance(key, _b_.int)){
+        var start = key * self.itemsize
+        if(self.format == "I"){
+            var res = self.obj.source[start],
+                coef = 256
+            for(var i = 1; i < 4; i++){
+                res += self.obj.source[start + i] * coef
+                coef *= 256
+            }
+            return res
+        }else if("B".indexOf(self.format) > -1){
+            return self.obj.source[key]
+        }else{
+            // fix me
+            return self.obj.source[key]
+        }
+    }
+    // fix me : add slice support for other formats than B
     var res = self.obj.__class__.__getitem__(self.obj, key)
     if(key.__class__ === _b_.slice){return memoryview.$factory(res)}
-    return res
 }
 
 memoryview.__len__ = function(self){
@@ -1466,16 +1484,19 @@ memoryview.__len__ = function(self){
 }
 
 memoryview.cast = function(self, format){
-    if(format == "I"){
-        var res = memoryview.$factory(self.obj),
-            objlen = len(self.obj)
-        res.itemsize = 4
-        res.format = "I"
-        if(objlen % 4 != 0){
-            throw _b_.TypeError.$factory("memoryview: length is not " +
-                "a multiple of itemsize")
-        }
-        return res
+    switch(format){
+        case "B":
+            return memoryview.$factory(self.obj)
+        case "I":
+            var res = memoryview.$factory(self.obj),
+                objlen = len(self.obj)
+            res.itemsize = 4
+            res.format = "I"
+            if(objlen % 4 != 0){
+                throw _b_.TypeError.$factory("memoryview: length is not " +
+                    "a multiple of itemsize")
+            }
+            return res
     }
 }
 memoryview.hex = function(self){
@@ -1495,11 +1516,11 @@ memoryview.tolist = function(self){
     }else if(self.itemsize == 4){
         if(self.format == "I"){
             var res = []
-            for(var i = 0; i < self.obj.size; i += 4){
-                var item = self.obj[i + 3],
+            for(var i = 0; i < self.obj.source.length; i += 4){
+                var item = self.obj.source[i],
                     coef = 256
-                for(var j = 2; j >= 0; j--){
-                    item += coef * self.obj[i + j]
+                for(var j = 1; j < 4; j++){
+                    item += coef * self.obj.source[i + j]
                     coef *= 256
                 }
                 res.push(item)
