@@ -209,12 +209,7 @@ var frame = $B.make_class("frame",
                 co_filename: filename // idem
             }
             if(res.f_code.co_filename === undefined){
-                if(_frame[3].$src){
-                    res.f_code.co_filename = "<string>"
-                    //$B.file_cache[res.f_code.co_filename] = _frame[3].$src
-                }else{
-                    console.log("pas de src")
-                }
+              res.f_code.co_filename = "<string>"
             }
         }
         return res
