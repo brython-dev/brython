@@ -1705,21 +1705,21 @@ str.$factory = function(arg, encoding, errors){
             return _b_.bytes.decode(arg, encoding || "utf-8",
                 errors || "strict")
         }
-        var f = $B.$getattr(arg, "__str__")
-        // XXX fix : if not better than object.__str__, try __repr__
-        //return f()
+        var f = $B.$getattr(arg, "__str__", null)
+        if(f === null ||
+                // if not better than object.__str__, try __repr__
+                (arg.__class__ && arg.__class__ !== _b_.object &&
+                f.$infos && f.$infos.__func__ === _b_.object.__str__)){
+            var f = $B.$getattr(arg, "__repr__")
+        }
     }
     catch(err){
         console.log("no __str__ for", arg)
         console.log("err ", err)
-        try{ // try __repr__
-             var f = getattr(arg,"__repr__")
-        }catch(err){
-             if($B.debug > 1){console.log(err)}
-             console.log("Warning - no method __str__ or __repr__, " +
-                 "default to toString", arg)
-             return arg.toString()
-        }
+        if($B.debug > 1){console.log(err)}
+        console.log("Warning - no method __str__ or __repr__, " +
+            "default to toString", arg)
+        return arg.toString()
     }
     return $B.$call(f)()
 }
