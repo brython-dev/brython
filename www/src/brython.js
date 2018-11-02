@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-11-02 18:24:51.923699"
-__BRYTHON__.timestamp=1541179491923
+__BRYTHON__.compiled_date="2018-11-02 18:29:51.664827"
+__BRYTHON__.timestamp=1541179791664
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -751,7 +751,7 @@ var body_node=new $Node()
 body_node.line_num=tree_node.line_num
 tree_node.insert(0,body_node)
 return new $NodeCtx(body_node)}
-var set_loop_C=$B.parser.set_loop_C=function(C,kw){
+var set_loop_context=$B.parser.set_loop_context=function(C,kw){
 var ctx_node=C
 while(ctx_node.type !=='node'){ctx_node=ctx_node.parent}
 var tree_node=ctx_node.node
@@ -778,7 +778,7 @@ var $BreakCtx=$B.parser.$BreakCtx=function(C){
 this.type='break'
 this.parent=C
 C.tree[C.tree.length]=this
-set_loop_C.apply(this,[C,'break'])
+set_loop_context.apply(this,[C,'break'])
 this.toString=function(){return 'break '}
 this.to_js=function(){this.js_processed=true
 var scope=$get_scope(this)
@@ -1056,7 +1056,7 @@ this.type='continue'
 this.parent=C
 $get_node(this).is_continue=true
 C.tree[C.tree.length]=this
-set_loop_C.apply(this,[C,'continue'])
+set_loop_context.apply(this,[C,'continue'])
 this.toString=function(){return '(continue)'}
 this.to_js=function(){this.js_processed=true
 return 'continue'}}
@@ -7034,8 +7034,8 @@ err.$stack=deep_copy($B.frames_stack);
 if($B.frames_stack.length){err.$line_info=$B.last($B.frames_stack)[1].$line_info}
 eval("//placeholder//")
 err.__cause__=_b_.None 
-err.__C__=_b_.None 
-err.__suppress_C__=false 
+err.__context__=_b_.None 
+err.__suppress_context__=false 
 return err}
 BaseException.$factory.$infos={__name__: "BaseException",__qualname__: "BaseException"}
 $B.set_func_names(BaseException)
@@ -7941,7 +7941,7 @@ __class__: JSObject,js: obj}}
 $B.JSObject=JSObject
 $B.JSConstructor=JSConstructor})(__BRYTHON__)
 ;(function($B){$B.stdlib={}
-var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_collections_abc','_compat_pickle','_Cvars','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_py_abc','_pydecimal','_queue','_random','_socket','_sre','_string','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_weakref','_weakrefset','abc','antigravity','argparse','atexit','base64','bdb','binascii','bisect','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','Clib','Cvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','gettext','glob','heapq','imp','inspect','io','ipaddress','itertools','keyword','linecache','locale','nntplib','numbers','opcode','operator','optparse','os','pdb','pickle','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','re','reprlib','select','selectors','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uuid','warnings','weakref','webbrowser','zipfile']
+var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_collections_abc','_compat_pickle','_contextvars','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_py_abc','_pydecimal','_queue','_random','_socket','_sre','_string','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_weakref','_weakrefset','abc','antigravity','argparse','atexit','base64','bdb','binascii','bisect','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','gettext','glob','heapq','imp','inspect','io','ipaddress','itertools','keyword','linecache','locale','nntplib','numbers','opcode','operator','optparse','os','pdb','pickle','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','re','reprlib','select','selectors','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uuid','warnings','weakref','webbrowser','zipfile']
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
 var js=['_ajax','_base64','_binascii','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_sre_utils','_strptime','_svg','_sys','_warnings','aes','array','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','json','long_int','marshal','math','md5','modulefinder','pbkdf2','posix','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','zlib']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
