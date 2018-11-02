@@ -750,6 +750,9 @@ long_int.$factory = function(value, base){
         }
     }else if(value.__class__ === long_int){
         return value
+    }else if(isinstance(value, int)){
+        // int subclass
+        value = value.$value + ""
     }else if(isinstance(value, _b_.bool)){
         value = _b_.bool.__int__(value) + ""
     }else if(typeof value != "string"){
