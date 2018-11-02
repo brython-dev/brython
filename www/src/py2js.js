@@ -7073,6 +7073,8 @@ var $transition = $B.parser.$transition = function(context, token, value){
                 while(parent){
                     if(parent.type == "assign"){
                         $_SyntaxError(context, "augmented assign inside assign")
+                    }else if(parent.type == "op"){
+                        $_SyntaxError(context, ["can't assign to operator"])
                     }
                     parent = parent.parent
                 }

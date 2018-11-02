@@ -1706,9 +1706,10 @@ var reversed = $B.make_class("reversed",
         check_no_kw('reversed', seq)
         check_nb_args('reversed', 1, arguments)
 
-        try{return $B.$getattr(seq, '__reversed__')()}
-        catch(err){
-            if(err.__class__ != _b_.AttributeError){throw err}
+        var rev_method = $B.$getattr(seq, '__reversed__', null)
+        if(rev_method !== null){
+            //console.log("rev method", rev_method)
+            return rev_method()
         }
 
         try{

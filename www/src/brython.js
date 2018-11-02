@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-10-31 11:33:41.416667"
-__BRYTHON__.timestamp=1540982021416
+__BRYTHON__.compiled_date="2018-11-02 18:24:51.923699"
+__BRYTHON__.timestamp=1541179491923
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -3499,7 +3499,7 @@ var new_op=new $OpCtx(repl,op)
 return new $AbstractExprCtx(new_op,false)
 case 'augm_assign':
 var parent=C.parent
-while(parent){if(parent.type=="assign"){$_SyntaxError(C,"augmented assign inside assign")}
+while(parent){if(parent.type=="assign"){$_SyntaxError(C,"augmented assign inside assign")}else if(parent.type=="op"){$_SyntaxError(C,["can't assign to operator"])}
 parent=parent.parent}
 if(C.expect==','){return new $AbstractExprCtx(
 new $AugmentedAssignCtx(C,value),true)}
@@ -4174,7 +4174,7 @@ C.from=true
 $add_yield_from_code(C)
 return C.tree[0]}
 return $transition(C.parent,token)}}
-$B.forbidden=["alert","arguments","case","catch","constructor","Date","delete","default","document","enum","eval","extends","Error","history","function","length","location","Math","new","null","Number","RegExp","super","this","throw","var","window","toLocaleString","toString","message"]
+$B.forbidden=["alert","arguments","case","catch","constructor","Date","delete","default","document","enum","eval","extends","Error","history","function","keys","length","location","Math","new","null","Number","RegExp","super","this","throw","var","window","toLocaleString","toString","message"]
 $B.aliased_names=$B.list2obj($B.forbidden)
 var s_escaped='abfnrtvxuU"0123456789' + "'" + '\\',is_escaped={}
 for(var i=0;i < s_escaped.length;i++){is_escaped[s_escaped.charAt(i)]=true}
@@ -6582,8 +6582,9 @@ throw _b_.AttributeError.$factory("object has no attribute __repr__")}
 var reversed=$B.make_class("reversed",function(seq){
 check_no_kw('reversed',seq)
 check_nb_args('reversed',1,arguments)
-try{return $B.$getattr(seq,'__reversed__')()}
-catch(err){if(err.__class__ !=_b_.AttributeError){throw err}}
+var rev_method=$B.$getattr(seq,'__reversed__',null)
+if(rev_method !==null){
+return rev_method()}
 try{var res={__class__: reversed,$counter : $B.$getattr(seq,'__len__')(),getter: $B.$getattr(seq,'__getitem__')}
 return res}catch(err){throw _b_.TypeError.$factory("argument to reversed() must be a sequence")}}
 )
@@ -7245,7 +7246,7 @@ _b_.slice=slice})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins,object=_b_.object,isinstance=_b_.isinstance,getattr=_b_.getattr,None=_b_.None
 var from_unicode={},to_unicode={}
 $B.to_bytes=function(obj){var res
-if(_b_.isinstance(obj,[_b_.bytes,_b_.bytearray])){res=obj.source}else{var ga=$B.$getattr(obj,"tobytes",null)
+if(_b_.isinstance(obj,[bytes,bytearray])){res=obj.source}else{var ga=$B.$getattr(obj,"tobytes",null)
 if(ga !==null){res=$B.$call(ga)().source}
 else{throw _b_.TypeError.$factory("object doesn't support the buffer protocol")}}
 return res}
@@ -7372,7 +7373,7 @@ return res}
 bytes.maketrans=function(from,to){var _t=[],to=$B.to_bytes(to)
 for(var i=0;i < 256;i++){_t[i]=i}
 for(var i=0,len=from.source.length;i < len;i++){var _ndx=from.source[i]
-_t[_ndx]=to.source[i]}
+_t[_ndx]=to[i]}
 return bytes.$factory(_t)}
 bytes.find=function(){var $=$B.args('find',4,{self: null,sub: null,start: null,end: null},['self','sub','start','end'],arguments,{start: 0,end: -1},null,null),sub=$.sub,start=$.start
 if(typeof sub=="number"){if(sub < 0 ||sub > 255){throw _b_.ValueError.$factory("byte must be in range(0, 256)")}
@@ -9362,7 +9363,8 @@ return int.$factory(0)}
 if(typeof value=="number"){if(isSafeInteger(value)){value=value.toString()}
 else if(value.constructor==Number){value=value.toString()}
 else{throw ValueError.$factory(
-"argument of long_int is not a safe integer")}}else if(value.__class__===long_int){return value}else if(isinstance(value,_b_.bool)){value=_b_.bool.__int__(value)+ ""}else if(typeof value !="string"){throw ValueError.$factory(
+"argument of long_int is not a safe integer")}}else if(value.__class__===long_int){return value}else if(isinstance(value,int)){
+value=value.$value + ""}else if(isinstance(value,_b_.bool)){value=_b_.bool.__int__(value)+ ""}else if(typeof value !="string"){throw ValueError.$factory(
 "argument of long_int must be a string, not " +
 $B.get_class(value).__name__)}
 var has_prefix=false,pos=true,start=0
@@ -10056,7 +10058,7 @@ var cl=$B.get_class(self[0]),i=self.length
 while(i--){if($B.get_class(self[i])!==cl){return false}}
 return cl}
 list.sort=function(self){var $=$B.args("sort",1,{self: null},["self"],arguments,{},null,"kw")
-var func=null,reverse=false,kw_args=$.kw,keys=_b_.list.$factory(_b_.dict.keys(kw_args))
+var func=null,reverse=false,kw_args=$.kw,keys=_b_.list.$factory(_b_.dict.$$keys(kw_args))
 for(var i=0;i < keys.length;i++){if(keys[i]=="key"){func=kw_args.$string_dict[keys[i]]}
 else if(keys[i]=="reverse"){reverse=kw_args.$string_dict[keys[i]]}
 else{throw _b_.TypeError.$factory("'" + keys[i]+
@@ -10788,14 +10790,16 @@ return func(arg)}
 if(arg.__class__ && arg.__class__===_b_.bytes &&
 encoding !==undefined){
 return _b_.bytes.decode(arg,encoding ||"utf-8",errors ||"strict")}
-var f=$B.$getattr(arg,"__str__")}
+var f=$B.$getattr(arg,"__str__",null)
+if(f===null ||
+(arg.__class__ && arg.__class__ !==_b_.object &&
+f.$infos && f.$infos.__func__===_b_.object.__str__)){var f=$B.$getattr(arg,"__repr__")}}
 catch(err){console.log("no __str__ for",arg)
 console.log("err ",err)
-try{
-var f=getattr(arg,"__repr__")}catch(err){if($B.debug > 1){console.log(err)}
+if($B.debug > 1){console.log(err)}
 console.log("Warning - no method __str__ or __repr__, " +
 "default to toString",arg)
-return arg.toString()}}
+return arg.toString()}
 return $B.$call(f)()}
 str.__new__=function(cls){if(cls===undefined){throw _b_.TypeError.$factory("str.__new__(): not enough arguments")}
 return{__class__: cls}}
@@ -11059,7 +11063,16 @@ var args=$.first
 if(args.length > 1){throw _b_.TypeError.$factory("dict expected at most 1 argument" +
 ", got 2")}else if(args.length==1){args=args[0]
 if(args.__class__===dict){['$string_dict','$str_hash','$numeric_dict','$object_dict'].
-forEach(function(d){for(key in args[d]){self[d][key]=args[d][key]}})}else if(isinstance(args,dict)){$copy_dict(self,args)}else{if(! Array.isArray(args)){args=_b_.list.$factory(args)}
+forEach(function(d){for(key in args[d]){self[d][key]=args[d][key]}})}else if(isinstance(args,dict)){$copy_dict(self,args)}else{var keys=$B.$getattr(args,"keys",null)
+if(keys !==null){var gi=$B.$getattr(args,"__getitem__",null)
+if(gi !==null){
+gi=$B.$call(gi)
+var kiter=_b_.iter($B.$call(keys)())
+while(true){try{var key=_b_.next(kiter),value=gi(key)
+dict.__setitem__(self,key,value)}catch(err){if(err.__class__===_b_.StopIteration){break}
+throw err}}
+return $N}}
+if(! Array.isArray(args)){args=_b_.list.$factory(args)}
 var i=-1,stop=args.length - 1,si=dict.__setitem__
 while(i++ < stop){var item=args[i]
 switch(typeof item[0]){case 'string':
@@ -11085,7 +11098,7 @@ si(self,attr,kw[attr])
 break}}
 return $N}
 var $dict_iterator=$B.$iterator_class("dict iterator")
-dict.__iter__=function(self){return dict.keys(self)}
+dict.__iter__=function(self){return dict.$$keys(self)}
 dict.__len__=function(self){var _count=0
 if(self.$jsobj){for(var attr in self.$jsobj){if(attr.charAt(0)!="$"){_count++}}
 return _count}
@@ -11160,7 +11173,7 @@ dict.items=function(self){if(arguments.length > 1){var _len=arguments.length - 1
 throw _b_.TypeError.$factory(_msg)}
 return $iterator_wrapper(new $item_iterator(self),$dict_itemsDict)}
 var $dict_keysDict=$B.$iterator_class("dict_keys")
-dict.keys=function(self){if(arguments.length > 1){var _len=arguments.length - 1,_msg="keys() takes no arguments (" + _len + " given)"
+dict.$$keys=function(self){if(arguments.length > 1){var _len=arguments.length - 1,_msg="keys() takes no arguments (" + _len + " given)"
 throw _b_.TypeError.$factory(_msg)}
 return $iterator_wrapper(new $key_iterator(self),$dict_keysDict)}
 dict.pop=function(){var $=$B.args("pop",3,{self: null,key: null,_default: null},["self","key","_default"],arguments,{_default: $N},null,null),self=$.self,key=$.key,_default=$._default
