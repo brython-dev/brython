@@ -98,7 +98,7 @@ def run():
         src_size += len(src)
         res += javascript_minifier.minify(src)
 
-    res = res.replace('context', 'C')
+    res = re.sub(r'\bcontext\b', 'C', res)
 
     with open(abs_path('brython.js'), 'w') as out:
         out.write(res)
