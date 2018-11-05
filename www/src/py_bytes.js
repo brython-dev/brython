@@ -965,7 +965,7 @@ bytes.expandtabs = function() {
         ['self', 'tabsize'], arguments, {tabsize: 8}, null, null)
 
     var tab_spaces = []
-    for (var i = 0; i < $.tabsize; ++i)
+    for (let i = 0; i < $.tabsize; ++i)
         tab_spaces.push(32)
 
     var buffer = $.self.source.slice()
