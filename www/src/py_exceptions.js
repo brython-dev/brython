@@ -131,7 +131,14 @@ traceback.__getattribute__ = function(self, attr){
         case "tb_frame":
             return frame.$factory(self.$stack)
         case "tb_lineno":
-            if(line_info === undefined){return -1}
+            if(line_info === undefined ||
+                    first_frame[0].search($B.lambda_magic) > -1){
+                if(first_frame[4] && first_frame[4].$infos &&
+                        first_frame[4].$infos.__code__){
+                    return first_frame[4].$infos.__code__.co_firstlineno
+                }
+                return -1
+            }
             else{return parseInt(line_info.split(",")[0])}
         case "tb_lasti":
             if(line_info === undefined){return "<unknown>"}
@@ -178,8 +185,12 @@ var frame = $B.make_class("frame",
             }
             res.f_globals = $B.obj_dict(_frame[3])
 
-            if(_frame[1].$line_info === undefined){res.f_lineno = -1}
-            else{
+            if(locals_id.startsWith("$exec")){
+                filename = "<string>"
+            }
+            if(_frame[1].$line_info === undefined){
+                res.f_lineno = -1
+            }else{
                 var line_info = _frame[1].$line_info.split(",")
                 res.f_lineno = parseInt(line_info[0])
                 var module_name = line_info[1]
@@ -201,6 +212,10 @@ var frame = $B.make_class("frame",
                     }else{
                         co_name = _frame[4].name
                     }
+                    if(filename === undefined && _frame[4].$infos.__code__){
+                        filename = _frame[4].$infos.__code__.co_filename
+                        res.f_lineno = _frame[4].$infos.__code__.co_firstlineno
+                    }
                 }
             }
             res.f_code = {__class__: $B.code,
@@ -209,12 +224,7 @@ var frame = $B.make_class("frame",
                 co_filename: filename // idem
             }
             if(res.f_code.co_filename === undefined){
-                if(_frame[3].$src){
-                    res.f_code.co_filename = "<string>"
-                    //$B.file_cache[res.f_code.co_filename] = _frame[3].$src
-                }else{
-                    console.log("pas de src")
-                }
+                res.f_code.co_filename = "<string>"
             }
         }
         return res
@@ -399,7 +409,7 @@ $B.exception = function(js_exc){
     if(! js_exc.$py_error){
         // Print complete Javascript traceback in console
         console.log("js exc", js_exc)
-        
+
         if(js_exc.info === undefined){
             js_exc.msg = BaseException.__getattr__(js_exc, "info")
         }
