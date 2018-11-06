@@ -2158,7 +2158,7 @@ try:
     exec("x += 1, y = 2")
     raise Exception("should have raised SyntaxError")
 except SyntaxError as exc:
-    print(exc.args[0]) # == "can't assign to operator"
+    assert exc.args[0] == "invalid syntax"
 
 # issue 953
 adk = 4
@@ -2169,6 +2169,19 @@ def f():
         print(adk)
 
 assertRaises(UnboundLocalError, f)
+
+# issue 959
+try:
+    exec("x + x += 10")
+    raise Exception("should have raised SyntaxError")
+except SyntaxError as exc:
+    assert exc.args[0] == "can't assign to operator"
+
+# issue 965
+assertRaises(SyntaxError, exec, "if:x=2")
+assertRaises(SyntaxError, exec, "while:x=2")
+assertRaises(SyntaxError, exec, "for x in:x")
+
 
 # ==========================================
 # Finally, report that all tests have passed

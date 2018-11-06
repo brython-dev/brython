@@ -2480,6 +2480,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
             $NodeJS('$B.frames_stack.push($top_frame)'),
             $NodeJS('var $stack_length = $B.frames_stack.length')
         ]
+
         if($B.profile > 1){
             if(this.scope.ntype == 'class'){
                 fname = this.scope.context.tree[0].name + '.' + this.name
@@ -4316,9 +4317,8 @@ var $LambdaCtx = $B.parser.$LambdaCtx = function(context){
         var lambda_name = 'lambda' + rand,
             module_name = module.id.replace(/\./g, '_')
 
-        var js = $B.py2js(py, module_name, lambda_name, scope,
-            node.line_num).to_js()
-
+        var root = $B.py2js(py, module_name, lambda_name, scope, node.line_num)
+        var js = root.to_js()
         js = '(function($locals_' + lambda_name + '){\n' + js +
             '\nreturn $locals.' + func_name + '\n})({})'
 
@@ -6569,7 +6569,13 @@ var $transition = $B.parser.$transition = function(context, token, value){
             return $transition(context.parent,token,value)
 
         case 'condition':
-            if(token == ':'){return $BodyCtx(context)}
+            if(token == ':'){
+                if(context.tree[0].type == "abstract_expr" &&
+                        context.tree[0].tree.length == 0){ // issue #965
+                    $_SyntaxError(context, 'token ' + token + ' after ' + context)
+                }
+                return $BodyCtx(context)
+            }
             $_SyntaxError(context, 'token ' + token + ' after ' + context)
 
         case 'continue':
@@ -7073,6 +7079,8 @@ var $transition = $B.parser.$transition = function(context, token, value){
                 while(parent){
                     if(parent.type == "assign"){
                         $_SyntaxError(context, "augmented assign inside assign")
+                    }else if(parent.type == "op"){
+                        $_SyntaxError(context, ["can't assign to operator"])
                     }
                     parent = parent.parent
                 }
@@ -7172,7 +7180,8 @@ var $transition = $B.parser.$transition = function(context, token, value){
                     return new $AbstractExprCtx(
                         new $ExprCtx(context,'target list', true), false)
                 case ':':
-                    if(context.tree.length < 2){ // issue 638
+                    if(context.tree.length < 2 // issue 638
+                            || context.tree[1].tree[0].type == "abstract_expr"){
                         $_SyntaxError(context, 'token ' + token + ' after ' +
                             context)
                     }
@@ -8120,7 +8129,7 @@ var $transition = $B.parser.$transition = function(context, token, value){
 // Names that can't be given to variable names or attributes
 $B.forbidden = ["alert", "arguments", "case", "catch", "constructor", "Date",
     "delete", "default", "document", "enum", "eval", "extends", "Error",
-    "history", "function", "length", "location", "Math", "new", "null",
+    "history", "function", "keys", "length", "location", "Math", "new", "null",
     "Number", "RegExp", "super", "this","throw", "var", "window",
     "toLocaleString", "toString", "message"]
 $B.aliased_names = $B.list2obj($B.forbidden)
@@ -8167,7 +8176,7 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
 
     var module = root.module
 
-    var lnum = 1
+    var lnum = root.line_num || 1
     while(pos < src.length){
         var car = src.charAt(pos)
         // build tree structure from indentation
@@ -8784,7 +8793,7 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
 }
 
 var $create_root_node = $B.parser.$create_root_node = function(src, module,
-        locals_id, parent_block, line_info){
+        locals_id, parent_block, line_num){
     var root = new $Node('module')
     root.module = module
     root.id = locals_id
@@ -8797,7 +8806,7 @@ var $create_root_node = $B.parser.$create_root_node = function(src, module,
     }
 
     root.parent_block = parent_block
-    root.line_info = line_info
+    root.line_num = line_num
     root.indent = -1
     root.comments = []
     root.imports = {}
@@ -8809,7 +8818,7 @@ var $create_root_node = $B.parser.$create_root_node = function(src, module,
     return root
 }
 
-$B.py2js = function(src, module, locals_id, parent_scope, line_info){
+$B.py2js = function(src, module, locals_id, parent_scope, line_num){
     // src = Python source (string)
     // module = module name (string)
     // locals_id = the id of the block that will be created
@@ -8853,7 +8862,7 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_info){
 
     //$B.$py_src[locals_id] = src
     var root = $create_root_node({src: src, is_comp: is_comp},
-        module, locals_id, parent_scope, line_info)
+        module, locals_id, parent_scope, line_num)
     $tokenize(root, src)
     root.is_comp = is_comp
     root.transform()
@@ -8877,12 +8886,6 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_info){
     // annotations
     root.insert(offset++,
         $NodeJS('$locals.__annotations__ = _b_.dict.$factory()'))
-
-    // if line_info is provided, store it
-    if(line_info !== undefined){
-        root.insert(offset++,
-            $NodeJS(local_ns + '.$line = "' + line_info + '";None;\n'))
-    }
 
     // Code to create the execution frame and store it on the frames stack
     var enter_frame_pos = offset,
