@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-11-02 18:29:51.664827"
-__BRYTHON__.timestamp=1541179791664
+__BRYTHON__.compiled_date="2018-11-06 08:23:54.495187"
+__BRYTHON__.timestamp=1541489034495
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -2043,7 +2043,8 @@ var scope=$get_scope(this)
 var rand=$B.UUID(),func_name='lambda_' + $B.lambda_magic + '_' + rand,py='def ' + func_name + '(' + args + '):\n'
 py +='    return ' + body
 var lambda_name='lambda' + rand,module_name=module.id.replace(/\./g,'_')
-var js=$B.py2js(py,module_name,lambda_name,scope,node.line_num).to_js()
+var root=$B.py2js(py,module_name,lambda_name,scope,node.line_num)
+var js=root.to_js()
 js='(function($locals_' + lambda_name + '){\n' + js +
 '\nreturn $locals.' + func_name + '\n})({})'
 $B.clear_ns(lambda_name)
@@ -4188,7 +4189,7 @@ var int_pattern=new RegExp("^\\d[0-9_]*(j|J)?"),float_pattern1=new RegExp("^\\d[
 var C=null
 var new_node=new $Node(),current=root,name="",_type=null,pos=0,indent=null,string_modifier=false
 var module=root.module
-var lnum=1
+var lnum=root.line_num ||1
 while(pos < src.length){var car=src.charAt(pos)
 if(indent===null){var indent=0
 while(pos < src.length){var _s=src.charAt(pos)
@@ -4512,12 +4513,12 @@ $pos=pos - 7
 throw $_SyntaxError(C,"car " + car + "after async",pos)}
 if(C !==null && C.tree[0]&& $indented.indexOf(C.tree[0].type)> -1){$pos=pos - 1
 $_SyntaxError(C,'expected an indented block',pos)}}
-var $create_root_node=$B.parser.$create_root_node=function(src,module,locals_id,parent_block,line_info){var root=new $Node('module')
+var $create_root_node=$B.parser.$create_root_node=function(src,module,locals_id,parent_block,line_num){var root=new $Node('module')
 root.module=module
 root.id=locals_id
 root.binding={__doc__: true,__name__: true,__file__: true,__package__: true,__annotations__: true}
 root.parent_block=parent_block
-root.line_info=line_info
+root.line_num=line_num
 root.indent=-1
 root.comments=[]
 root.imports={}
@@ -4525,7 +4526,7 @@ if(typeof src=="object"){root.is_comp=src.is_comp
 src=src.src}
 root.src=src
 return root}
-$B.py2js=function(src,module,locals_id,parent_scope,line_info){
+$B.py2js=function(src,module,locals_id,parent_scope,line_num){
 $pos=0
 if(typeof module=="object"){var __package__=module.__package__
 module=module.__name__}else{var __package__=""}
@@ -4540,7 +4541,7 @@ if(locals_is_module){locals_id=locals_id[0]}
 var internal=locals_id.charAt(0)=='$'
 var local_ns='$locals_' + locals_id.replace(/\./g,'_')
 var global_ns='$locals_' + module.replace(/\./g,'_')
-var root=$create_root_node({src: src,is_comp: is_comp},module,locals_id,parent_scope,line_info)
+var root=$create_root_node({src: src,is_comp: is_comp},module,locals_id,parent_scope,line_num)
 $tokenize(root,src)
 root.is_comp=is_comp
 root.transform()
@@ -4552,7 +4553,6 @@ root.insert(0,$NodeJS(js.join('')))
 offset++
 root.insert(offset++,$NodeJS(local_ns + '["__package__"] = "' + __package__ +'"'))
 root.insert(offset++,$NodeJS('$locals.__annotations__ = _b_.dict.$factory()'))
-if(line_info !==undefined){root.insert(offset++,$NodeJS(local_ns + '.$line = "' + line_info + '";None;\n'))}
 var enter_frame_pos=offset,js='var $top_frame = ["' + locals_id.replace(/\./g,'_')+ '", ' +
 local_ns + ', "' + module.replace(/\./g,'_')+ '", ' +
 global_ns + ']; $B.frames_stack.push($top_frame); ' +
@@ -4921,7 +4921,7 @@ for(var i=0,len=mro.length;i < len;i++){_ga=mro[i]["__getattr__"]
 if(_ga !==undefined){break}}}}
 if($test){console.log("use __getattr__",_ga)}
 if(_ga !==undefined){try{return _ga(obj,attr)}
-catch(err){if($B.debug > 1){console.log(err)}}}
+catch(err){if($B.debug > 2){console.log(err)}}}
 if(attr.substr(0,2)=="__" && attr.substr(attr.length - 2)=="__"){var attr1=attr.substr(2,attr.length - 4)
 var rank=opnames.indexOf(attr1)
 if(rank > -1){var rop="__r" + opnames[rank]+ "__" 
@@ -6100,11 +6100,10 @@ for(var attr in _locals.$string_dict){parent_scope.binding[attr]=true}}}
 $B.$py_module_path[globals_id]=$B.$py_module_path[current_globals_id]
 eval('var $locals_' + globals_id + ' = {}\nvar $locals_' +
 locals_id + ' = {}')
-if(_globals===_b_.None){var gobj=current_frame[3],ex=''
-ex +='var $locals_' + current_globals_id + '=gobj;' 
-ex +='var $locals_' + globals_id + '=gobj;'
+if(_globals===_b_.None){var gobj=current_frame[3],ex='var $locals_' + current_globals_id + ' = gobj;' 
 eval(ex)
-for(var attr in gobj){if((! attr.startsWith("$"))||attr.startsWith('$$')){eval("$locals_" + locals_id +"[attr] = gobj[attr]")}}}else{if(_globals.$jsobj){var items=_globals.$jsobj}
+for(var attr in gobj){if((! attr.startsWith("$"))||attr.startsWith('$$')){eval("$locals_" + globals_id +"[attr] = gobj[attr]")
+eval("$locals_" + locals_id +"[attr] = gobj[attr]")}}}else{if(_globals.$jsobj){var items=_globals.$jsobj}
 else{var items=_globals.$string_dict}
 eval("$locals_" + globals_id + " = _globals.$string_dict")
 for(var item in items){var item1=$B.to_alias(item)
@@ -6941,7 +6940,10 @@ var line_info=first_frame[1].$line_info}
 switch(attr){case "tb_frame":
 return frame.$factory(self.$stack)
 case "tb_lineno":
-if(line_info===undefined){return -1}
+if(line_info===undefined ||
+first_frame[0].search($B.lambda_magic)> -1){if(first_frame[4]&& first_frame[4].$infos &&
+first_frame[4].$infos.__code__){return first_frame[4].$infos.__code__.co_firstlineno}
+return -1}
 else{return parseInt(line_info.split(",")[0])}
 case "tb_lasti":
 if(line_info===undefined){return "<unknown>"}
@@ -6963,18 +6965,20 @@ if(fs.length){var _frame=fs[pos],locals_id=_frame[0],filename
 try{res.f_locals=$B.obj_dict(_frame[1])}catch(err){console.log("err " + err)
 throw err}
 res.f_globals=$B.obj_dict(_frame[3])
-if(_frame[1].$line_info===undefined){res.f_lineno=-1}
-else{var line_info=_frame[1].$line_info.split(",")
+if(locals_id.startsWith("$exec")){filename="<string>"}
+if(_frame[1].$line_info===undefined){res.f_lineno=-1}else{var line_info=_frame[1].$line_info.split(",")
 res.f_lineno=parseInt(line_info[0])
 var module_name=line_info[1]
 if($B.imported.hasOwnProperty(module_name)){filename=$B.imported[module_name].__file__}
 res.f_lineno=parseInt(_frame[1].$line_info.split(',')[0])}
 var co_name=locals_id
-if(locals_id==_frame[2]){co_name="<module>"}else{if(_frame[0].$name){co_name=_frame[0].$name}else if(_frame.length > 4){if(_frame[4].$infos){co_name=_frame[4].$infos.__name__}else{co_name=_frame[4].name}}}
+if(locals_id==_frame[2]){co_name="<module>"}else{if(_frame[0].$name){co_name=_frame[0].$name}else if(_frame.length > 4){if(_frame[4].$infos){co_name=_frame[4].$infos.__name__}else{co_name=_frame[4].name}
+if(filename===undefined && _frame[4].$infos.__code__){filename=_frame[4].$infos.__code__.co_filename
+res.f_lineno=_frame[4].$infos.__code__.co_firstlineno}}}
 res.f_code={__class__: $B.code,co_code: None,
 co_name: co_name,
 co_filename: filename }
-if(res.f_code.co_filename===undefined){if(_frame[3].$src){res.f_code.co_filename="<string>"}else{console.log("pas de src")}}}
+if(res.f_code.co_filename===undefined){res.f_code.co_filename="<string>"}}
 return res}
 )
 frame.__getattr__=function(self,attr){
