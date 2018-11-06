@@ -884,7 +884,7 @@ var from_unicode = [
     "swapcase",
     "upper"
 ]
-
+// uses the object unicode, defined in unicode.min.js
 from_unicode.forEach(function(name){
     str[name] = unicode[name]
 })
