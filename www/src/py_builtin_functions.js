@@ -511,12 +511,11 @@ function $$eval(src, _globals, _locals){
     // Initialise block globals
     if(_globals === _b_.None){
         var gobj = current_frame[3],
-            ex = ''
-        ex += 'var $locals_' + current_globals_id + '=gobj;' // needed for generators
-        ex += 'var $locals_' + globals_id + '=gobj;'
-        eval(ex)
+            ex = 'var $locals_' + current_globals_id + ' = gobj;' 
+        eval(ex) // needed for generators
         for(var attr in gobj){
             if((! attr.startsWith("$")) || attr.startsWith('$$')){
+                eval("$locals_" + globals_id +"[attr] = gobj[attr]")
                 eval("$locals_" + locals_id +"[attr] = gobj[attr]")
             }
         }
