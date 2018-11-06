@@ -6569,7 +6569,13 @@ var $transition = $B.parser.$transition = function(context, token, value){
             return $transition(context.parent,token,value)
 
         case 'condition':
-            if(token == ':'){return $BodyCtx(context)}
+            if(token == ':'){
+                if(context.tree[0].type == "abstract_expr" &&
+                        context.tree[0].tree.length == 0){ // issue #965
+                    $_SyntaxError(context, 'token ' + token + ' after ' + context)
+                }
+                return $BodyCtx(context)
+            }
             $_SyntaxError(context, 'token ' + token + ' after ' + context)
 
         case 'continue':
@@ -7174,7 +7180,8 @@ var $transition = $B.parser.$transition = function(context, token, value){
                     return new $AbstractExprCtx(
                         new $ExprCtx(context,'target list', true), false)
                 case ':':
-                    if(context.tree.length < 2){ // issue 638
+                    if(context.tree.length < 2 // issue 638
+                            || context.tree[1].tree[0].type == "abstract_expr"){
                         $_SyntaxError(context, 'token ' + token + ' after ' +
                             context)
                     }

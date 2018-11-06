@@ -2176,6 +2176,13 @@ try:
     raise Exception("should have raised SyntaxError")
 except SyntaxError as exc:
     assert exc.args[0] == "can't assign to operator"
+
+# issue 965
+assertRaises(SyntaxError, exec, "if:x=2")
+assertRaises(SyntaxError, exec, "while:x=2")
+assertRaises(SyntaxError, exec, "for x in:x")
+
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

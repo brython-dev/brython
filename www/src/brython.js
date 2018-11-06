@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-11-06 08:23:54.495187"
-__BRYTHON__.timestamp=1541489034495
+__BRYTHON__.compiled_date="2018-11-06 11:02:33.826314"
+__BRYTHON__.timestamp=1541498553826
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -3189,7 +3189,10 @@ case 'for':
 return new $TargetListCtx(new $CompForCtx(C))}
 return $transition(C.parent,token,value)
 case 'condition':
-if(token==':'){return $BodyCtx(C)}
+if(token==':'){if(C.tree[0].type=="abstract_expr" &&
+C.tree[0].tree.length==0){
+$_SyntaxError(C,'token ' + token + ' after ' + C)}
+return $BodyCtx(C)}
 $_SyntaxError(C,'token ' + token + ' after ' + C)
 case 'continue':
 if(token=='eol'){return C.parent}
@@ -3549,8 +3552,8 @@ switch(token){case 'in':
 return new $AbstractExprCtx(
 new $ExprCtx(C,'target list',true),false)
 case ':':
-if(C.tree.length < 2){
-$_SyntaxError(C,'token ' + token + ' after ' +
+if(C.tree.length < 2 
+||C.tree[1].tree[0].type=="abstract_expr"){$_SyntaxError(C,'token ' + token + ' after ' +
 C)}
 return $BodyCtx(C)}
 $_SyntaxError(C,'token ' + token + ' after ' + C)
