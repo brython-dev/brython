@@ -57,7 +57,7 @@ financially, consider donating to the
 ```
 * Make commits of logical units.
 * For Javascript code, there is a 
-  [Javascript coding style](https://github.com/brython-dev/brython/wiki/Javascript-coding-style). 
+  [Javascript coding style](https://github.com/brython-dev/brython/wiki/Javascript-coding-style-for-Brython-scripts). 
   It is not mandatory and pull requests won't be rejected for this reason, but 
   it helps having a uniform style for all scripts.
 * Check for unnecessary whitespace with `git diff --check` before committing.
