@@ -93,7 +93,7 @@ $B.__setattr__ = function(attr,value){
 
 // system language ( _not_ the one set in browser settings)
 // cf http://stackoverflow.com/questions/1043339/javascript-for-detecting-browser-language-preference
-$B.language = _window.navigator.userLanguage || _window.navigator.language || 'en';
+$B.language = _window.navigator.userLanguage || _window.navigator.language || 'en'
 
 $B.locale = $B.language.substr(0, 2) // can be reset by locale.setlocale
 
