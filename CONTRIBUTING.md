@@ -45,7 +45,7 @@ financially, consider donating to the
 ```bash
     $ pipenv shell
 ```
-  from the terminal. This will allow you to use the `./manage.py` command in your terminal.
+  from the terminal.
 
 
 ## Making Changes
@@ -56,6 +56,10 @@ financially, consider donating to the
     $ git checkout -b fix/master/my_contribution master
 ```
 * Make commits of logical units.
+* For Javascript code, there is a 
+  [Javascript coding style](https://github.com/brython-dev/brython/wiki/Javascript-coding-style-for-Brython-scripts). 
+  It is not mandatory and pull requests won't be rejected for this reason, but 
+  it helps having a uniform style for all scripts.
 * Check for unnecessary whitespace with `git diff --check` before committing.
 * Make sure your commit messages are in the proper format. If the commit
   addresses an issue on Github, start the first line of the commit with the
@@ -66,7 +70,6 @@ financially, consider donating to the
 
 ## Repository Layout
 
-  - `manage.py` - plays the role of a "Makefile", use it to run tests, build documentation, etc. (needs the python plumbum package: `pipenv install --dev && pipenv shell`)
   - `scripts`   - miscellaneous release helper scripts
   - `www`
     - `doc` - directory with documentation (as visible [here](http://www.brython.info/static_doc/en/intro.html?lang=en)); documentation is generated using the `scripts/make_doc.py` script.
