@@ -62,7 +62,7 @@ bytearray.__repr__ = bytearray.__str__ = function(self){
 
 bytearray.__setitem__ = function(self, arg, value){
     if(isinstance(arg, _b_.int)){
-        if(!isinstance(value, _b_.int)){
+        if(! isinstance(value, _b_.int)){
             throw _b_.TypeError.$factory('an integer is required')
         }else if(value > 255){
             throw _b_.ValueError.$factory("byte must be in range(0, 256)")
@@ -71,7 +71,7 @@ bytearray.__setitem__ = function(self, arg, value){
         if(arg < 0){pos = self.source.length + pos}
         if(pos >= 0 && pos < self.source.length){self.source[pos] = value}
         else{throw _b_.IndexError.$factory('list index out of range')}
-    } else if(isinstance(arg, _b_.slice)){
+    }else if(isinstance(arg, _b_.slice)){
         var start = arg.start === None ? 0 : arg.start
         var stop = arg.stop === None ? self.source.length : arg.stop
 
@@ -85,7 +85,7 @@ bytearray.__setitem__ = function(self, arg, value){
         if(_b_.hasattr(value, '__iter__')){
             var $temp = _b_.list.$factory(value)
             for(var i = $temp.length - 1; i >= 0; i--){
-                if(!isinstance($temp[i], _b_.int)){
+                if(! isinstance($temp[i], _b_.int)){
                     throw _b_.TypeError.$factory('an integer is required')
                 }else if($temp[i] > 255){
                     throw ValueError.$factory("byte must be in range(0, 256)")
@@ -106,14 +106,14 @@ bytearray.append = function(self, b){
         "append takes exactly one argument (" + (arguments.length - 1) +
         " given)")
     }
-    if(!isinstance(b, _b_.int)){
+    if(! isinstance(b, _b_.int)){
         throw _b_.TypeError.$factory("an integer is required")
     }
     if(b > 255){throw ValueError.$factory("byte must be in range(0, 256)")}
     self.source[self.source.length] = b
 }
 
-bytearray.insert = function(self,pos,b){
+bytearray.insert = function(self, pos, b){
     if(arguments.length != 3){throw _b_.TypeError.$factory(
         "insert takes exactly 2 arguments (" + (arguments.length - 1) +
         " given)")
@@ -133,7 +133,7 @@ bytearray.$factory = function(source, encoding, errors) {
 var bytes = {
     __class__ : _b_.type,
     __mro__: [object],
-    __name__ : 'bytes',
+    __name__ : "bytes",
     $buffer_protocol: true,
     $is_class: true
 }
@@ -150,17 +150,17 @@ bytes.__add__ = function(self, other){
         _b_.str.$factory(other))
 }
 
-var $bytes_iterator = $B.$iterator_class('bytes_iterator')
+var $bytes_iterator = $B.$iterator_class("bytes_iterator")
 bytes.__iter__ = function(self){
-    return $B.$iterator(self.source,$bytes_iterator)
+    return $B.$iterator(self.source, $bytes_iterator)
 }
 
-bytes.__eq__ = function(self,other){
-    return getattr(self.source,'__eq__')(other.source)
+bytes.__eq__ = function(self, other){
+    return getattr(self.source, '__eq__')(other.source)
 }
 
-bytes.__ge__ = function(self,other){
-    return _b_.list.__ge__(self.source,other.source)
+bytes.__ge__ = function(self, other){
+    return _b_.list.__ge__(self.source, other.source)
 }
 
 // borrowed from py_string.js.
@@ -171,7 +171,7 @@ bytes.__getitem__ = function(self, arg){
         if(arg < 0){pos = self.source.length + pos}
 
         if(pos >= 0 && pos < self.source.length){return self.source[pos]}
-        throw _b_.IndexError.$factory('index out of range')
+        throw _b_.IndexError.$factory("index out of range")
     }else if(isinstance(arg, _b_.slice)){
         var step = arg.step === None ? 1 : arg.step
         if(step > 0){
@@ -185,7 +185,9 @@ bytes.__getitem__ = function(self, arg){
         }
         if(start < 0){start = self.source.length + start}
         if(stop < 0){stop = self.source.length + stop}
-        var res = [], i = null, pos = 0
+        var res = [],
+            i = null,
+            pos = 0
         if(step > 0){
           stop = Math.min(stop, self.source.length)
           if(stop <= start){return bytes.$factory([])}
@@ -206,19 +208,19 @@ bytes.__gt__ = function(self, other){
     return _b_.list.__gt__(self.source, other.source)
 }
 
-bytes.__hash__ = function(self) {
-  if(self === undefined){
-     return bytes.__hashvalue__ || $B.$py_next_hash--  // for hash of str$
-  }
+bytes.__hash__ = function(self){
+    if(self === undefined){
+        return bytes.__hashvalue__ || $B.$py_next_hash--  // for hash of str$
+    }
 
-  //http://stackoverflow.com/questions/2909106/python-whats-a-correct-and-good-$
-  // this implementation for strings maybe good enough for us..
-  var hash = 1
-  for(var i = 0, len = self.source.length; i < len; i++) {
-      hash = (101 * hash + self.source[i]) & 0xFFFFFFFF
-  }
+    //http://stackoverflow.com/questions/2909106/python-whats-a-correct-and-good-$
+    // this implementation for strings maybe good enough for us..
+    var hash = 1
+    for(var i = 0, len = self.source.length; i < len; i++){
+        hash = (101 * hash + self.source[i]) & 0xFFFFFFFF
+    }
 
-  return hash
+    return hash
 }
 
 bytes.__init__ = function(){
@@ -256,8 +258,9 @@ bytes.__ne__ = function(self,other){return ! bytes.__eq__(self, other)}
 
 bytes.__new__ = function(cls, source, encoding, errors){
     // Create an instance of bytes
-    var self = {__class__: cls}
-    var int_list = [], pos = 0
+    var self = {__class__: cls},
+        int_list = [],
+        pos = 0
     if(source === undefined){
         // empty list
     }else if(isinstance(source, _b_.int)){
@@ -361,7 +364,7 @@ bytes.maketrans = function(from, to) {
     for(var i = 0; i < 256; i++){_t[i] = i}
 
     // make substitution in the translation table
-    for(var i = 0, len = from.source.length; i < len; i++) {
+    for(var i = 0, len = from.source.length; i < len; i++){
        var _ndx = from.source[i]     //retrieve ascii code of char
        _t[_ndx] = to[i]
     }
@@ -406,25 +409,27 @@ bytes.rfind = function() {
         sub = $.sub,
         start = $.start
 
-    if (typeof sub == "number"){
+    if(typeof sub == "number"){
         if(sub < 0 || sub > 255){
             throw _b_.ValueError.$factory("byte must be in range(0, 256)")
         }
-        return $.self.source.slice(start, $.end == -1 ? undefined : $.end).lastIndexOf(sub) + start
-    } else if(! sub.__class__){
+        return $.self.source.slice(start, $.end == -1 ? undefined : $.end).
+            lastIndexOf(sub) + start
+    }else if(! sub.__class__){
         throw _b_.TypeError.$factory("first argument must be a bytes-like " +
             "object, not '" + $B.get_class($.sub).__name__ + "'")
-    } else if(! sub.__class__.$buffer_protocol){
+    }else if(! sub.__class__.$buffer_protocol){
         throw _b_.TypeError.$factory("first argument must be a bytes-like " +
             "object, not '" + sub.__class__.__name__ + "'")
     }
     var end = $.end == -1 ? $.self.source.length - sub.source.length :
         Math.min($.self.source.length - sub.source.length, $.end)
 
-    for (var i = end - 1; i >= start; --i)
-        if (bytes.startswith($.self, sub, i))
+    for(var i = end - 1; i >= start; --i){
+        if(bytes.startswith($.self, sub, i)){
             return i
-
+        }
+    }
     return -1
 }
 
@@ -435,9 +440,9 @@ bytes.index = function() {
         arguments, {start: 0, end: -1}, null, null)
 
     var index = bytes.find($.self, $.sub, $.start, $.end)
-    if (index == -1)
+    if(index == -1){
         throw _b_.ValueError.$factory("subsection not found")
-
+    }
     return index
 }
 
@@ -448,9 +453,9 @@ bytes.rindex = function() {
         arguments, {start: 0, end: -1}, null, null)
 
     var index = bytes.rfind($.self, $.sub, $.start, $.end)
-    if (index == -1)
+    if(index == -1){
         throw _b_.ValueError.$factory("subsection not found")
-
+    }
     return index
 }
 
@@ -460,26 +465,28 @@ bytes.count = function() {
         ['self', 'sub', 'start', 'end'],
         arguments, {start: 0, end: -1}, null, null)
 
-    var n = 0, index = -1, len = 0
+    var n = 0,
+        index = -1,
+        len = 0
 
-    if (typeof $.sub == "number"){
+    if(typeof $.sub == "number"){
         if ($.sub < 0 || $.sub > 255)
             throw _b_.ValueError.$factory("byte must be in range(0, 256)")
         len = 1
-    } else if (!$.sub.__class__) {
+    }else if(!$.sub.__class__){
         throw _b_.TypeError.$factory("first argument must be a bytes-like " +
             "object, not '" + $B.get_class($.sub).__name__ + "'")
-    } else if (!$.sub.__class__.$buffer_protocol) {
+    }else if(!$.sub.__class__.$buffer_protocol){
         throw _b_.TypeError.$factory("first argument must be a bytes-like " +
             "object, not '" + $.sub.__class__.__name__ + "'")
-    } else {
+    }else{
         len = $.sub.source.length
     }
 
-    do {
+    do{
         index = bytes.find($.self, $.sub, Math.max(index + len, $.start), $.end)
-        if (index != -1) n++
-    } while (index != -1)
+        if(index != -1){n++}
+    }while(index != -1)
 
     return n
 }
@@ -489,7 +496,7 @@ bytes.replace = function(){
         {self: null, old: null, new: null, count: null},
         ['self', 'old', 'new', 'count'],
         arguments, {count: -1}, null, null),
-        res = [];
+        res = []
     var self = $.self,
         src = self.source,
         len = src.length,
@@ -531,10 +538,10 @@ bytes.partition = function() {
     var $ = $B.args('partition', 2, {self:null, sep:null}, ['self', 'sep'],
             arguments, {}, null, null)
 
-    if (! $.sep.__class__) {
+    if(! $.sep.__class__){
         throw _b_.TypeError.$factory("a bytes-like object is required, " +
             "not '" + $B.get_class($.sep).__name__ + "'")
-    } else if (! $.sep.__class__.$buffer_protocol) {
+    }else if (! $.sep.__class__.$buffer_protocol){
         throw _b_.TypeError.$factory("a bytes-like object is required, " +
             "not '" + $.sep.__class__.__name__ + "'")
     }
@@ -554,10 +561,10 @@ bytes.rpartition = function() {
     var $ = $B.args('rpartition', 2, {self:null, sep:null}, ['self', 'sep'],
             arguments, {}, null, null)
 
-    if (!$.sep.__class__) {
+    if(!$.sep.__class__){
         throw _b_.TypeError.$factory("a bytes-like object is required, " +
                 "not '" + $B.get_class($.sep).__name__ + "'")
-    } else if (!$.sep.__class__.$buffer_protocol) {
+    }else if (!$.sep.__class__.$buffer_protocol){
         throw _b_.TypeError.$factory("a bytes-like object is required, " +
                 "not '" + $.sep.__class__.__name__ + "'")
     }
@@ -619,23 +626,25 @@ bytes.splitlines = function() {
         end = -1,
         newline_end = -1
 
-    for (var i = 0; i < src.length; ++i) {
+    for(var i = 0; i < src.length; ++i){
         var newline_end = -1
-        if (src[i] === 13) {
+        if(src[i] === 13){
             end = i
             newline_end = ++i
         }
-        if (src[i] === 10) {
+        if(src[i] === 10){
             end = newline_end == -1 ? i : i - 1
             newline_end = ++i
         }
-        if (newline_end != -1) {
-            lines.push(bytes.$factory(src.slice(start, $.keepends ? newline_end : end)))
+        if(newline_end != -1){
+            lines.push(bytes.$factory(src.slice(start, $.keepends ?
+                newline_end : end)))
             start = i
         }
     }
-    if (src.length > 0)
+    if(src.length > 0){
         lines.push(bytes.$factory(src.slice(start)))
+    }
     return lines
 }
 
@@ -644,11 +653,12 @@ bytes.swapcase = function(self) {
         len = src.length,
         buffer = src.slice()
 
-    for (var i = 0; i < len; ++i) {
-        if (buffer[i] > 96 && buffer[i] < 123)
+    for(var i = 0; i < len; ++i){
+        if(buffer[i] > 96 && buffer[i] < 123){
             buffer[i] -= 32
-        else if (buffer[i] > 64 && buffer[i] < 91)
+        }else if (buffer[i] > 64 && buffer[i] < 91){
             buffer[i] += 32
+        }
     }
 
     return bytes.$factory(buffer)
@@ -659,13 +669,13 @@ bytes.capitalize = function(self) {
         len = src.length,
         buffer = src.slice()
 
-    if (buffer[0] > 96 && buffer[0] < 123)
-        buffer[0] -= 32
+    if(buffer[0] > 96 && buffer[0] < 123){buffer[0] -= 32}
 
-    for (var i = 1; i < len; ++i)
-        if (buffer[i] > 64 && buffer[i] < 91)
+    for(var i = 1; i < len; ++i){
+        if(buffer[i] > 64 && buffer[i] < 91){
             buffer[i] += 32
-
+        }
+    }
     return bytes.$factory(buffer)
 }
 
@@ -674,13 +684,12 @@ bytes.islower = function(self) {
         len = src.length,
         res = false
 
-    for (let i = 0; i < len; ++i) {
+    for(let i = 0; i < len; ++i){
         // Check for at least 1 lowercase ascii character
         res = res || (src[i] > 96 && src[i] < 123)
 
         // Don't allow any uppercase ascii characters
-        if (src[i] > 64 && src[i] < 91)
-            return false
+        if(src[i] > 64 && src[i] < 91){return false}
     }
 
     return res
@@ -691,13 +700,12 @@ bytes.isupper = function(self) {
         len = src.length,
         res = false
 
-    for (let i = 0; i < len; ++i) {
+    for(let i = 0; i < len; ++i){
         // Check for at least 1 uppercase ascii character
         res = res || (src[i] > 64 && src[i] < 91)
 
         // Don't allow any lowercase ascii characters
-        if (src[i] > 96 && src[i] < 123)
-            return false
+        if(src[i] > 96 && src[i] < 123){return false}
     }
 
     return res
@@ -707,8 +715,8 @@ bytes.isspace = function(self) {
     var src = self.source,
         len = src.length
 
-    for (let i = 0; i < len; ++i) {
-        switch (src[i]) {
+    for(let i = 0; i < len; ++i){
+        switch(src[i]){
             case 9:  // Horizontal tab
             case 10: // Line feed
             case 11: // Vertical tab
@@ -730,9 +738,9 @@ bytes.isdigit = function(self) {
         len = src.length,
         res = len > 0
 
-    for (let i = 0; i < len && res; ++i)
+    for(let i = 0; i < len && res; ++i){
         res = src[i] > 47 && src[i] < 58
-
+    }
     return res
 }
 
@@ -745,16 +753,17 @@ bytes.title = function(self) {
         is_uppercase = false,
         is_lowercase = false
 
-    for (var i = 0; i < len; ++i) {
+    for(var i = 0; i < len; ++i){
         is_lowercase = buffer[i] > 96 && buffer[i] < 123
         is_uppercase = buffer[i] > 64 && buffer[i] < 91
         current_char_is_letter = is_lowercase || is_uppercase
 
-        if (current_char_is_letter) {
-            if (prev_char_was_letter && is_uppercase)
+        if(current_char_is_letter){
+            if(prev_char_was_letter && is_uppercase){
                 buffer[i] += 32
-            else if (!prev_char_was_letter && is_lowercase)
+            }else if(! prev_char_was_letter && is_lowercase){
                 buffer[i] -= 32
+            }
         }
 
         prev_char_was_letter = current_char_is_letter
@@ -768,9 +777,9 @@ bytes.isalpha = function(self) {
         len = src.length,
         res = len > 0
 
-    for (var i = 0; i < len && res; ++i)
+    for(var i = 0; i < len && res; ++i){
         res = (src[i] > 96 && src[i] < 123) || (src[i] > 64 && src[i] < 91)
-
+    }
     return res
 }
 
@@ -779,11 +788,11 @@ bytes.isalnum = function(self) {
         len = src.length,
         res = len > 0
 
-    for (var i = 0; i < len && res; ++i)
+    for(var i = 0; i < len && res; ++i){
         res = (src[i] > 96 && src[i] < 123) || // Lowercase
               (src[i] > 64 && src[i] < 91) ||  // Uppercase
               (src[i] > 47 && src[i] < 58)     // Digit
-
+    }
     return res
 }
 
@@ -795,16 +804,16 @@ bytes.istitle = function(self) {
         is_uppercase = false,
         is_lowercase = false
 
-    for (var i = 0; i < len; ++i) {
+    for(var i = 0; i < len; ++i){
         is_lowercase = src[i] > 96 && src[i] < 123
         is_uppercase = src[i] > 64 && src[i] < 91
         current_char_is_letter = is_lowercase || is_uppercase
 
-        if (current_char_is_letter &&
-            ( prev_char_was_letter && is_uppercase) ||
-            (!prev_char_was_letter && is_lowercase))
+        if(current_char_is_letter &&
+                (prev_char_was_letter && is_uppercase) ||
+                (! prev_char_was_letter && is_lowercase)){
             return false
-
+        }
         prev_char_was_letter = current_char_is_letter
     }
 
@@ -817,8 +826,9 @@ bytes.zfill = function(self, width) {
 
     var count = width - self.source.length
     var padding = []
-    for (var i = 0; i < count; ++i)
+    for(var i = 0; i < count; ++i){
         padding.push(48)
+    }
     buffer.splice.apply(buffer, [prefix_offset, 0].concat(padding))
 
     return bytes.$factory(buffer)
@@ -826,51 +836,57 @@ bytes.zfill = function(self, width) {
 
 bytes.ljust = function() {
     var $ = $B.args('ljust', 3, {self: null, width: null, fillbyte: null},
-        ['self', 'width', 'fillbyte'], arguments, {fillbyte: bytes.$factory([32])}, null, null)
+        ['self', 'width', 'fillbyte'], arguments,
+        {fillbyte: bytes.$factory([32])}, null, null)
 
-    if (!$.fillbyte.__class__) {
+    if(!$.fillbyte.__class__){
         throw _b_.TypeError.$factory("argument 2 must be a byte string of length 1, " +
             "not '" + $B.get_class($.fillbyte).__name__ + "'")
-    } else if (!$.fillbyte.__class__.$buffer_protocol) {
+    }else if (!$.fillbyte.__class__.$buffer_protocol){
         throw _b_.TypeError.$factory("argument 2 must be a byte string of length 1, " +
             "not '" + $.fillbyte.__class__.__name__ + "'")
     }
 
     var padding = [],
         count = $.width - $.self.source.length
-    for (var i = 0; i < count; ++i)
+    for(var i = 0; i < count; ++i){
         padding.push($.fillbyte.source[0])
+    }
     return bytes.$factory($.self.source.concat(padding))
 }
 
 bytes.rjust = function() {
     var $ = $B.args('rjust', 3, {self: null, width: null, fillbyte: null},
-        ['self', 'width', 'fillbyte'], arguments, {fillbyte: bytes.$factory([32])}, null, null)
+        ['self', 'width', 'fillbyte'], arguments,
+        {fillbyte: bytes.$factory([32])}, null, null)
 
-    if (!$.fillbyte.__class__) {
+    if (!$.fillbyte.__class__){
         throw _b_.TypeError.$factory("argument 2 must be a byte string of length 1, " +
             "not '" + $B.get_class($.fillbyte).__name__ + "'")
-    } else if (!$.fillbyte.__class__.$buffer_protocol) {
+    }else if (!$.fillbyte.__class__.$buffer_protocol){
         throw _b_.TypeError.$factory("argument 2 must be a byte string of length 1, " +
             "not '" + $.fillbyte.__class__.__name__ + "'")
     }
 
     var padding = [],
         count = $.width - $.self.source.length
-    for (var i = 0; i < count; ++i)
+    for(var i = 0; i < count; ++i){
         padding.push($.fillbyte.source[0])
+    }
     return bytes.$factory(padding.concat($.self.source))
 }
 
 bytes.center = function() {
     var $ = $B.args('center', 3, {self: null, width: null, fillbyte: null},
-    ['self', 'width', 'fillbyte'], arguments, {fillbyte: bytes.$factory([32])}, null, null)
+            ['self', 'width', 'fillbyte'], arguments,
+            {fillbyte: bytes.$factory([32])}, null, null)
 
     var diff = $.width - $.self.source.length
-    if (diff <= 0)
+    if(diff <= 0){
         return bytes.$factory($.self.source)
-
-    var ljust = bytes.ljust($.self, $.self.source.length + Math.floor(diff / 2), $.fillbyte)
+    }
+    var ljust = bytes.ljust($.self, $.self.source.length + Math.floor(diff / 2),
+        $.fillbyte)
     return bytes.rjust(ljust, $.width, $.fillbyte)
 }
 
@@ -913,7 +929,7 @@ bytes.startswith = function(){
         return res
     }else if(_b_.isinstance($.prefix, _b_.tuple)){
         var items = []
-        for(var i  =0; i < $.prefix.length; i++){
+        for(var i = 0; i < $.prefix.length; i++){
             if(_b_.isinstance($.prefix[i], bytes)){
                 items = items.concat($.prefix[i].source)
             }else{
@@ -933,28 +949,33 @@ bytes.startswith = function(){
 bytes.endswith = function() {
     var $ = $B.args('endswith', 4, {self: null, suffix: null, start: null, end: null},
         ['self', 'suffix', 'start', 'end'], arguments, {start: -1, end: -1}, null, null)
-    if (_b_.isinstance($.suffix, bytes)) {
-        var start = $.start == -1 ? $.self.source.length - $.suffix.source.length
-                                  : Math.min($.self.source.length - $.suffix.source.length, $.start)
-        var end = $.end == -1 ? ($.start == -1 ? $.self.source.length : start + $.suffix.source.length)
-                              : Math.min($.self.source.length - 1, $.end)
+    if(_b_.isinstance($.suffix, bytes)){
+        var start = $.start == -1 ?
+            $.self.source.length - $.suffix.source.length :
+            Math.min($.self.source.length - $.suffix.source.length, $.start)
+        var end = $.end == -1 ?
+            ($.start == -1 ? $.self.source.length : start + $.suffix.source.length) :
+            Math.min($.self.source.length - 1, $.end)
         var res = true
-        for (var i = $.suffix.source.length - 1, len = $.suffix.source.length; i >= 0 && res; --i){
+        for (var i = $.suffix.source.length - 1, len = $.suffix.source.length;
+                i >= 0 && res; --i){
             res = $.self.source[end - len + i] == $.suffix.source[i]
         }
         return res
-    } else if (_b_.isinstance($.suffix, _b_.tuple)) {
-        for (var i = 0; i < $.suffix.length; ++i) {
-            if (_b_.isinstance($.suffix[i], bytes)) {
-                if (bytes.endswith($.self, $.suffix[i], $.start, $.end))
+    }else if (_b_.isinstance($.suffix, _b_.tuple)){
+        for(var i = 0; i < $.suffix.length; ++i){
+            if(_b_.isinstance($.suffix[i], bytes)){
+                if(bytes.endswith($.self, $.suffix[i], $.start, $.end)){
                     return true
-            } else {
+                }
+            }else{
                 throw _b_.TypeError.$factory("endswith first arg must be " +
-                    "bytes or a tuple of bytes, not " + $B.get_class($.suffix).__name__)
+                    "bytes or a tuple of bytes, not " +
+                    $B.get_class($.suffix).__name__)
             }
         }
         return false
-    } else {
+    }else{
         throw _b_.TypeError.$factory("endswith first arg must be bytes " +
             "or a tuple of bytes, not " + $B.get_class($.suffix).__name__)
     }
@@ -965,14 +986,16 @@ bytes.expandtabs = function() {
         ['self', 'tabsize'], arguments, {tabsize: 8}, null, null)
 
     var tab_spaces = []
-    for (let i = 0; i < $.tabsize; ++i)
+    for(let i = 0; i < $.tabsize; ++i){
         tab_spaces.push(32)
+    }
 
     var buffer = $.self.source.slice()
-    for (let i = 0; i < buffer.length; ++i)
-        if (buffer[i] === 9)
+    for(let i = 0; i < buffer.length; ++i){
+        if(buffer[i] === 9){
             buffer.splice.apply(buffer, [i, 1].concat(tab_spaces))
-
+        }
+    }
     return _b_.bytes.$factory(buffer)
 }
 
@@ -990,9 +1013,10 @@ bytes.translate = function(self, table, _delete) {
         throw _b_.TypeError.$factory("Type " +
             $B.get_class(_delete).__name + " doesn't support the buffer API")
     }
-    var res = [], pos = 0
+    var res = [],
+        pos = 0
     if(isinstance(table, bytes) && table.source.length == 256){
-       for (var i = 0, len = self.source.length; i < len; i++) {
+       for(var i = 0, len = self.source.length; i < len; i++){
            if(_delete.indexOf(self.source[i]) > -1){continue}
            res[pos++] = table.source[self.source[i]]
        }
@@ -1000,7 +1024,7 @@ bytes.translate = function(self, table, _delete) {
     return bytes.$factory(res)
 }
 
-var _upper = function(char_code) {
+var _upper = function(char_code){
     if(char_code >= 97 && char_code <= 122){
         return char_code - 32
     }else{
@@ -1017,7 +1041,8 @@ var _lower = function(char_code) {
 }
 
 bytes.upper = function(self) {
-    var _res = [], pos = 0
+    var _res = [],
+        pos = 0
     for(var i = 0, len = self.source.length; i < len; i++){
         if(self.source[i]){_res[pos++] = _upper(self.source[i])}
     }
@@ -1025,7 +1050,8 @@ bytes.upper = function(self) {
 }
 
 bytes.lower = function(self) {
-    var _res = [], pos = 0
+    var _res = [],
+        pos = 0
     for(var i = 0, len = self.source.length; i < len; i++){
         if(self.source[i]){_res[pos++] = _lower(self.source[i])}
     }
@@ -1110,21 +1136,27 @@ var decode = $B.decode = function(b, encoding, errors){
                     cp = b[i + 1] + 64 * (b[i] - _int_c2)
                     s += String.fromCharCode(cp)
                     i += 2
-                }else{$UnicodeDecodeError(encoding, i)}
+                }else{
+                    $UnicodeDecodeError(encoding, i)
+                }
             }else if(b[i] == _int_e0){
                 if(i < b.length - 2){
                     var zone = b[i + 1] - _int_a0
                     cp = b[i + 2] - _int_80 + _int_800 + 64 * zone
                     s += String.fromCharCode(cp)
                     i += 3
-                }else{$UnicodeDecodeError(encoding, i)}
+                }else{
+                    $UnicodeDecodeError(encoding, i)
+                }
             }else if(b[i] < _int_e3){
                 if(i < b.length - 2){
                     var zone = b[i + 1] - _int_80
                     cp = b[i + 2] - _int_80 + _int_1000 + 64 * zone
                     s += String.fromCharCode(cp)
                     i += 3
-                }else{$UnicodeDecodeError(encoding, i)}
+                }else{
+                    $UnicodeDecodeError(encoding, i)
+                }
             }else{
                 if(i < b.length - 2){
                     var zone1 = b[i] - _int_e1 - 1
@@ -1171,8 +1203,9 @@ var decode = $B.decode = function(b, encoding, errors){
       case "ascii":
           for(var i = 0, len = b.length; i < len; i++){
               var cp = b[i]
-              if(cp <= 127){s += String.fromCharCode(cp)}
-              else{
+              if(cp <= 127){
+                  s += String.fromCharCode(cp)
+              }else{
                   var msg = "'ascii' codec can't decode byte 0x" +
                     cp.toString(16) + " in position " + i +
                     ": ordinal not in range(128)"
@@ -1181,8 +1214,9 @@ var decode = $B.decode = function(b, encoding, errors){
           }
           break
       default:
-          try{load_decoder(enc)}
-          catch(err){
+          try{
+              load_decoder(enc)
+          }catch(err){
               console.log("error load_decoder", err)
               throw _b_.LookupError.$factory("unknown encoding: " + enc)
           }
@@ -1266,8 +1300,9 @@ var encode = $B.encode = function(s, encoding){
           }
           break
         default:
-            try{load_encoder(enc)}
-            catch(err){
+            try{
+                load_encoder(enc)
+            }catch(err){
                 throw _b_.LookupError.$factory("unknown encoding: " + enc)
             }
 
