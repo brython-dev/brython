@@ -795,12 +795,22 @@ bool.__and__ = function(self, other){
     return $B.$bool(int.__and__(self, other))
 }
 
-bool.__eq__ = function(self,other){
-    return self ? $B.$bool(other) : !$B.$bool(other)
+bool.__eq__ = function(self, other){
+    if(other === self){return True}
+    else if(typeof other == "number"){
+        return self ? other == 1 : other == 0
+    }else if(isinstance(other, _b_.int)){
+        return self ? other.$value == 1 : other.$value == 0
+    }else if(other instanceof Number){
+        return self ? other == 1 : other == 0
+    }else{
+        return false
+    }
+    //return self ? $B.$bool(other) : !$B.$bool(other)
 }
 
 bool.__ne__ = function(self,other){
-    return self ? !$B.$bool(other) : $B.$bool(other)
+    return ! bool.__eq__(self, other)
 }
 
 bool.__ge__ = function(self,other){
