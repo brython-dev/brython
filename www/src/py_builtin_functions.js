@@ -441,8 +441,8 @@ function $$eval(src, _globals, _locals){
         }
 
         var local_scope = {
-            module: globals_id,
-            id: globals_id,
+            module: locals_id,
+            id: locals_id,
             binding: {},
             bindings: {}
         }
@@ -511,12 +511,11 @@ function $$eval(src, _globals, _locals){
     // Initialise block globals
     if(_globals === _b_.None){
         var gobj = current_frame[3],
-            ex = 'var $locals_' + current_globals_id + ' = gobj;' 
+            ex = 'var $locals_' + current_globals_id + ' = gobj;'
         eval(ex) // needed for generators
         for(var attr in gobj){
             if((! attr.startsWith("$")) || attr.startsWith('$$')){
                 eval("$locals_" + globals_id +"[attr] = gobj[attr]")
-                eval("$locals_" + locals_id +"[attr] = gobj[attr]")
             }
         }
     }else{
@@ -618,7 +617,7 @@ function $$eval(src, _globals, _locals){
         }
 
         js = root.to_js()
-
+        
         if(is_exec){
             var locals_obj = eval("$locals_" + locals_id),
                 globals_obj = eval("$locals_" + globals_id)

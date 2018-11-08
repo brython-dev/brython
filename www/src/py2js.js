@@ -3859,7 +3859,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         // get global scope
         var gs = innermost
 
-        var $test = val == "adk"
+        var $test = false // val == "x"
 
         while(true){
             if(gs.parent_block){
@@ -3870,6 +3870,8 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
             search_ids.push('"' + gs.id + '"')
         }
         search_ids = "[" + search_ids.join(", ") + "]"
+
+        if($test){console.log("search ids", search_ids)}
 
         if(this.nonlocal || this.bound){
             var bscope = this.firstBindingScopeId()
@@ -3939,6 +3941,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
             else{break}
         }
         this.found = found
+        if($test){console.log("found", found)}
 
         if(this.nonlocal && found[0] === innermost){found.shift()}
 
@@ -4061,6 +4064,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                                 // in code like :
                                 //     if False:
                                 //         x = 0
+                                if($test){console.log("use check def")}
                                 val = '$B.$check_def("' + val + '",' +
                                     scope_ns + '["' + val + '"])'
                             }

@@ -40,7 +40,7 @@ if(['debug','stdout','stderr'].indexOf(attr)> -1){$B[attr]=value}
 else{throw $B.builtins.AttributeError.$factory(
 '__BRYTHON__ object has no attribute ' + attr)}}
 $B.language=_window.navigator.userLanguage ||_window.navigator.language
-$B.locale=$B.language.substr(0,2)
+$B.locale="C" 
 if(isWebWorker){$B.charset="utf-8"}else{
 $B.charset=document.characterSet ||document.inputEncoding ||"utf-8"}
 $B.max_int=Math.pow(2,53)- 1
@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-11-08 16:35:03.717033"
-__BRYTHON__.timestamp=1541691303717
+__BRYTHON__.compiled_date="2018-11-08 22:21:33.599324"
+__BRYTHON__.timestamp=1541712093599
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -1874,12 +1874,13 @@ if(val=='__BRYTHON__' ||val=='$B'){return val}
 var innermost=$get_scope(this),scope=innermost,found=[]
 var search_ids=['"' + innermost.id + '"']
 var gs=innermost
-var $test=val=="adk"
+var $test=false 
 while(true){if(gs.parent_block){if(gs.parent_block==$B.builtins_scope){break}
 else if(gs.parent_block.id===undefined){break}
 gs=gs.parent_block}
 search_ids.push('"' + gs.id + '"')}
 search_ids="[" + search_ids.join(", ")+ "]"
+if($test){console.log("search ids",search_ids)}
 if(this.nonlocal ||this.bound){var bscope=this.firstBindingScopeId()
 if(bscope !==undefined){return annotation + "$locals_" + bscope.replace(/\./g,"_")+ '["' +
 val + '"]'}}
@@ -1902,6 +1903,7 @@ if(scope.binding[val]){found.push(scope)}}
 if(scope.parent_block){scope=scope.parent_block}
 else{break}}
 this.found=found
+if($test){console.log("found",found)}
 if(this.nonlocal && found[0]===innermost){found.shift()}
 if(found.length > 0){
 if(found[0].C && found[0]===innermost
@@ -1936,6 +1938,7 @@ val=scope_ns + '["' + val + '"]'}else{if(scope===innermost && this.env[val]===un
 this.result='$B.$search("' + val + '")'
 return annotation + this.result}else{if(this.boundBefore(scope)){
 val=scope_ns + '["' + val + '"]'}else{
+if($test){console.log("use check def")}
 val='$B.$check_def("' + val + '",' +
 scope_ns + '["' + val + '"])'}}}}else{val=scope_ns + '["' + val + '"]'}}else if(scope===innermost){if($B._globals[scope.id]&& $B._globals[scope.id][val]){val=global_ns + '["' + val + '"]'}else if(!this.bound && !this.augm_assign){
 if(this.boundBefore(scope)){val='$locals["' + val + '"]'}else{val='$B.$check_def_local("' + val + '",$locals["' +
@@ -6080,7 +6083,7 @@ src=src.source}else if(typeof src !=='string'){throw _b_.TypeError.$factory("eva
 "or code object")}
 var globals_id='$exec_' + $B.UUID(),locals_id='$exec_' + $B.UUID(),parent_scope
 if(_globals===_b_.None){if(current_locals_id==current_globals_id){locals_id=globals_id}
-var local_scope={module: globals_id,id: globals_id,binding:{},bindings:{}}
+var local_scope={module: locals_id,id: locals_id,binding:{},bindings:{}}
 for(var attr in current_frame[1]){local_scope.binding[attr]=true
 local_scope.bindings[attr]=true}
 var global_scope={module: globals_id,id: globals_id,binding:{},bindings:{}}
@@ -6103,10 +6106,9 @@ for(var attr in _locals.$string_dict){parent_scope.binding[attr]=true}}}
 $B.$py_module_path[globals_id]=$B.$py_module_path[current_globals_id]
 eval('var $locals_' + globals_id + ' = {}\nvar $locals_' +
 locals_id + ' = {}')
-if(_globals===_b_.None){var gobj=current_frame[3],ex='var $locals_' + current_globals_id + ' = gobj;' 
+if(_globals===_b_.None){var gobj=current_frame[3],ex='var $locals_' + current_globals_id + ' = gobj;'
 eval(ex)
-for(var attr in gobj){if((! attr.startsWith("$"))||attr.startsWith('$$')){eval("$locals_" + globals_id +"[attr] = gobj[attr]")
-eval("$locals_" + locals_id +"[attr] = gobj[attr]")}}}else{if(_globals.$jsobj){var items=_globals.$jsobj}
+for(var attr in gobj){if((! attr.startsWith("$"))||attr.startsWith('$$')){eval("$locals_" + globals_id +"[attr] = gobj[attr]")}}}else{if(_globals.$jsobj){var items=_globals.$jsobj}
 else{var items=_globals.$string_dict}
 eval("$locals_" + globals_id + " = _globals.$string_dict")
 for(var item in items){var item1=$B.to_alias(item)
