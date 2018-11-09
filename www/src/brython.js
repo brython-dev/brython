@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-11-09 10:21:28.832195"
-__BRYTHON__.timestamp=1541755288832
+__BRYTHON__.compiled_date="2018-11-09 16:32:49.498595"
+__BRYTHON__.timestamp=1541777569498
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -6893,7 +6893,7 @@ eval(bltns)
 $B.del_exc=function(){var frame=$B.last($B.frames_stack)
 frame[1].$current_exception=undefined}
 $B.set_exc=function(exc){var frame=$B.last($B.frames_stack)
-frame[1].$current_exception=exc}
+frame[1].$current_exception=$B.exception(exc)}
 $B.get_exc=function(){var frame=$B.last($B.frames_stack)
 return frame[1].$current_exception}
 $B.$raise=function(arg){
@@ -7002,7 +7002,7 @@ return self.__class__.__name__}
 BaseException.__new__=function(cls){var err=_b_.BaseException.$factory()
 err.__class__=cls
 return err}
-var getExceptionTrace=function(exc,includeInternal){if(exc.__class__===undefined){console.log("no class",exc)
+var getExceptionTrace=function(exc,includeInternal){if(exc.__class__===undefined){if($B.debug > 1){console.log("no class",exc)}
 return exc + ''}
 var info=''
 if(exc.$js_exc !==undefined && includeInternal){info +="\nJS stack:\n" + exc.$js_exc.stack + "\n"}
@@ -7052,9 +7052,7 @@ BaseException.$factory.$infos={__name__: "BaseException",__qualname__: "BaseExce
 $B.set_func_names(BaseException)
 _b_.BaseException=BaseException
 $B.exception=function(js_exc){
-if(! js_exc.$py_error){
-console.log("js exc",js_exc)
-if(js_exc.info===undefined){js_exc.msg=BaseException.__getattr__(js_exc,"info")}
+if(! js_exc.$py_error){console.log("Javascript exception:",js_exc)
 var exc=Error()
 exc.__name__="Internal Javascript error: " +
 (js_exc.__name__ ||js_exc.name)
@@ -7064,7 +7062,11 @@ if(js_exc.name=="ReferenceError"){exc.__name__="NameError"
 exc.__class__=_b_.NameError
 js_exc.message=js_exc.message.replace("$$","")}else if(js_exc.name=="InternalError"){exc.__name__="RuntimeError"
 exc.__class__=_b_.RuntimeError}
-var $message=js_exc.msg ||"<" + js_exc + ">"
+exc.__cause__=_b_.None
+exc.__context__=_b_.None
+exc.__suppress_context__=false
+var $message="<Javascript " + js_exc.name + ">: " +
+(js_exc.message ||"<" + js_exc + ">")
 exc.args=_b_.tuple.$factory([$message])
 exc.$py_error=true
 exc.$stack=deep_copy($B.frames_stack);}else{var exc=js_exc}

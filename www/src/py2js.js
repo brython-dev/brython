@@ -8872,7 +8872,7 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
 
     var root = $create_root_node({src: src, is_comp: is_comp},
         module, locals_id, parent_scope, line_num)
-    
+
     $tokenize(root, src)
 
     root.is_comp = is_comp
