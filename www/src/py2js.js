@@ -502,6 +502,9 @@ var $Node = $B.parser.$Node = function(type){
             }
         }else{
             var elt = this.context.tree[0], ctx_offset
+            if(elt === undefined){
+                console.log(this)
+            }
             if(elt.transform !== undefined){
                 ctx_offset = elt.transform(this, rank)
             }
@@ -8850,8 +8853,11 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
         src = src.src
     }
 
-    // Normalise line ends and script end
+    // Normalise line ends
     src = src.replace(/\r\n/gm, "\n")
+    // Remove trailing \, cf issue 970
+    while(src.endsWith("\\")){src = src.substr(0, src.length - 1)}
+    // Normalise script end
     if(src.charAt(src.length - 1) != "\n"){src += "\n"}
 
     var locals_is_module = Array.isArray(locals_id)
@@ -8864,10 +8870,11 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
 
     var global_ns = '$locals_' + module.replace(/\./g,'_')
 
-    //$B.$py_src[locals_id] = src
     var root = $create_root_node({src: src, is_comp: is_comp},
         module, locals_id, parent_scope, line_num)
+    
     $tokenize(root, src)
+
     root.is_comp = is_comp
     root.transform()
 

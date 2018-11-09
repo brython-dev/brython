@@ -101,3 +101,6 @@ def test():
     assert y == 6
 
 test()
+
+# issue 970
+exec("\\")
