@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-11-09 16:32:49.498595"
-__BRYTHON__.timestamp=1541777569498
+__BRYTHON__.compiled_date="2018-11-10 17:27:01.774319"
+__BRYTHON__.timestamp=1541867221774
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -1855,12 +1855,6 @@ this.to_js=function(arg){
 if(this.result !==undefined && this.scope.ntype=='generator'){return this.result}
 this.js_processed=true
 var val=this.value
-var annotation=""
-if(this.parent.type=="expr" && this.parent.parent.type=="node" &&
-this.parent.hasOwnProperty("annotation")){var js=this.parent.annotation.tree[0].to_js()
-annotation="$locals.__annotations__.$string_dict['" + value + "'] = " +
-js +"; "
-if(this.parent.parent.tree[0]==this.parent){return annotation}}
 var is_local=this.scope.binding[val]!==undefined,this_node=$get_node(this),bound_before=this_node.bound_before
 this.nonlocal=this.scope.nonlocals &&
 this.scope.nonlocals[val]!==undefined
@@ -1869,8 +1863,8 @@ bound_before && bound_before.indexOf(val)==-1)
 if((!this.bound)&& this.scope.C
 && this.scope.ntype=='class' &&
 this.scope.C.tree[0].name==val){
-return annotation + '$B.$search("' + val + '")'}
-if(this.unbound && !this.nonlocal){if(this.scope.ntype=='def' ||this.scope.ntype=='generator'){return annotation + '$B.$local_search("' + val + '")'}else{return annotation + '$B.$search("' + val + '")'}}
+return '$B.$search("' + val + '")'}
+if(this.unbound && !this.nonlocal){if(this.scope.ntype=='def' ||this.scope.ntype=='generator'){return '$B.$local_search("' + val + '")'}else{return '$B.$search("' + val + '")'}}
 if(val=='__BRYTHON__' ||val=='$B'){return val}
 var innermost=$get_scope(this),scope=innermost,found=[]
 var search_ids=['"' + innermost.id + '"']
@@ -1883,12 +1877,12 @@ search_ids.push('"' + gs.id + '"')}
 search_ids="[" + search_ids.join(", ")+ "]"
 if($test){console.log("search ids",search_ids)}
 if(this.nonlocal ||this.bound){var bscope=this.firstBindingScopeId()
-if(bscope !==undefined){return annotation + "$locals_" + bscope.replace(/\./g,"_")+ '["' +
+if(bscope !==undefined){return "$locals_" + bscope.replace(/\./g,"_")+ '["' +
 val + '"]'}}
 var global_ns='$locals_' + gs.id.replace(/\./g,'_')
 while(1){if($B._globals[scope.id]!==undefined &&
 $B._globals[scope.id][val]!==undefined){
-if(gs.binding[val]!==undefined){return annotation + global_ns + '["' + val + '"]'}else{return annotation + '$B.$global_search("' + val + '", ' +
+if(gs.binding[val]!==undefined){return global_ns + '["' + val + '"]'}else{return '$B.$global_search("' + val + '", ' +
 search_ids + ')'}}
 if(scope===innermost){
 if(bound_before){if(bound_before.indexOf(val)> -1){found.push(scope)}
@@ -1915,17 +1909,17 @@ innermost.type !='generator')&&
 innermost.ntype !='class' &&
 innermost.C.tree[0].args.indexOf(val)==-1)&&
 (nonlocs===undefined ||nonlocs[val]===undefined)){this.result='$B.$local_search("' + val + '")'
-return annotation + this.result}}
+return this.result}}
 if(found.length > 1 && found[0].C){if(found[0].C.tree[0].type=='class'){var ns0='$locals_' + found[0].id.replace(/\./g,'_'),ns1='$locals_' + found[1].id.replace(/\./g,'_'),res
 if(bound_before){if(bound_before.indexOf(val)> -1){this.found=found[0].binding[val]
 res=ns0}else{this.found=found[1].binding[val]
 res=ns1}
 this.result=res + '["' + val + '"]'
-return annotation + this.result}else{this.found=false
+return this.result}else{this.found=false
 var res=ns0 + '["' + val + '"] !== undefined ? '
 res +=ns0 + '["' + val + '"] : '
 this.result="(" + res + ns1 + '["' + val + '"])'
-return annotation + this.result}}}
+return this.result}}}
 var scope=found[0]
 this.found=scope.binding[val]
 var scope_ns='$locals_' + scope.id.replace(/\./g,'_')
@@ -1937,7 +1931,7 @@ this.is_builtin=true}}else if(scope.id==scope.module){
 if(this.bound ||this.augm_assign){
 val=scope_ns + '["' + val + '"]'}else{if(scope===innermost && this.env[val]===undefined){
 this.result='$B.$search("' + val + '")'
-return annotation + this.result}else{if(this.boundBefore(scope)){
+return this.result}else{if(this.boundBefore(scope)){
 val=scope_ns + '["' + val + '"]'}else{
 if($test){console.log("use check def")}
 val='$B.$check_def("' + val + '",' +
@@ -1954,10 +1948,10 @@ val='$B.$check_def_free1("' + val + '", "' +
 scope.id.replace(/\./g,"_")+ '")'}else{val='$B.$check_def_free("' + val + '",' + scope_ns +
 '["' + val + '"])'}}else{val=scope_ns + '["' + val + '"]'}
 this.result=val + $to_js(this.tree,'')
-return annotation + this.result}else{
+return this.result}else{
 this.unknown_binding=true
 this.result='$B.$global_search("' + val + '", ' + search_ids + ')'
-return annotation + this.result}}}
+return this.result}}}
 var $ImaginaryCtx=$B.parser.$ImaginaryCtx=function(C,value){
 this.type='imaginary'
 this.value=value
@@ -2187,7 +2181,20 @@ ctx.tree=[this.tree[1]]
 new_node.indent=node.indent + 4
 this.tree.pop()
 node.add(new_node)}
-if(node.children.length==0){this.js=$to_js(this.tree)+ ';'}else{this.js=$to_js(this.tree)}
+this.js=""
+if(this.tree[0]){if(this.tree[0].annotation){
+if(this.tree[0].type=="expr" &&
+this.tree[0].tree[0].type=="id"){return "$locals.__annotations__.$string_dict['" +
+this.tree[0].tree[0].value + "'] = " +
+this.tree[0].annotation.to_js()+ ";"}else{
+this.js=this.tree[0].annotation.to_js()+ ";"}}else if(this.tree[0].type=="assign" &&
+this.tree[0].tree[0].annotation){
+var left=this.tree[0].tree[0]
+if(left.tree[0]&& left.tree[0].type=="id"){this.js="$locals.__annotations__.$string_dict['" +
+left.tree[0].value + "'] = " +
+left.annotation.to_js()+ ";"}else{
+this.js=left.annotation.to_js()+ ";"}}}
+if(node.children.length==0){this.js +=$to_js(this.tree)+ ';'}else{this.js +=$to_js(this.tree)}
 return this.js}}
 var $NodeJS=$B.parser.$NodeJS=function(js){var node=new $Node()
 new $NodeJSCtx(node,js)

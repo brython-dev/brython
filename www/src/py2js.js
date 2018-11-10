@@ -3813,16 +3813,6 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         this.js_processed = true
         var val = this.value
 
-        var annotation = ""
-        if(this.parent.type == "expr" && this.parent.parent.type == "node" &&
-                this.parent.hasOwnProperty("annotation")){
-            var js = this.parent.annotation.tree[0].to_js()
-            annotation = "$locals.__annotations__.$string_dict['" + value + "'] = " +
-                js +"; "
-            if(this.parent.parent.tree[0] == this.parent){
-                return annotation
-            }
-        }
         var is_local = this.scope.binding[val] !== undefined,
             this_node = $get_node(this),
             bound_before = this_node.bound_before
@@ -3840,14 +3830,14 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                 && this.scope.ntype == 'class' &&
                 this.scope.context.tree[0].name == val){
             // Name of class referenced inside the class. Cf. issue #649
-            return annotation + '$B.$search("' + val + '")'
+            return '$B.$search("' + val + '")'
         }
 
         if(this.unbound && !this.nonlocal){
             if(this.scope.ntype == 'def' || this.scope.ntype == 'generator'){
-                return annotation + '$B.$local_search("' + val + '")'
+                return '$B.$local_search("' + val + '")'
             }else{
-                return annotation + '$B.$search("' + val + '")'
+                return '$B.$search("' + val + '")'
             }
         }
 
@@ -3880,7 +3870,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
             var bscope = this.firstBindingScopeId()
             // Might be undefined, for augmented assignments
             if(bscope !== undefined){
-                return annotation + "$locals_" + bscope.replace(/\./g, "_") + '["' +
+                return "$locals_" + bscope.replace(/\./g, "_") + '["' +
                     val + '"]'
             }
         }
@@ -3897,9 +3887,9 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                 // Else return a call to a function that searches the name in
                 // globals, and throws NameError if not found.
                 if(gs.binding[val] !== undefined){
-                    return annotation + global_ns + '["' + val + '"]'
+                    return global_ns + '["' + val + '"]'
                 }else{
-                    return annotation + '$B.$global_search("' + val + '", ' +
+                    return '$B.$global_search("' + val + '", ' +
                         search_ids + ')'
                 }
             }
@@ -3979,7 +3969,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                         innermost.context.tree[0].args.indexOf(val) == -1) &&
                         (nonlocs === undefined || nonlocs[val] === undefined)){
                     this.result = '$B.$local_search("' + val + '")'
-                    return annotation + this.result
+                    return this.result
                 }
             }
             if(found.length > 1 && found[0].context){
@@ -4011,13 +4001,13 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                             res = ns1
                         }
                         this.result = res + '["' + val + '"]'
-                        return annotation + this.result
+                        return this.result
                     }else{
                         this.found = false
                         var res = ns0 + '["' + val + '"] !== undefined ? '
                         res += ns0 + '["' + val + '"] : '
                         this.result = "(" + res + ns1 + '["' + val + '"])'
-                        return annotation + this.result
+                        return this.result
                     }
                 }
             }
@@ -4055,7 +4045,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                             // defined in locals or globals, or raise a
                             // NameError
                             this.result = '$B.$search("' + val + '")'
-                            return annotation + this.result
+                            return this.result
                         }else{
                             if(this.boundBefore(scope)){
                                 // We are sure that the name is defined in the
@@ -4118,7 +4108,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                 val = scope_ns + '["' + val + '"]'
             }
             this.result = val + $to_js(this.tree, '')
-            return annotation + this.result
+            return this.result
         }else{
             // Name was not found in bound names
             // It may have been introduced in the globals namespace by an exec,
@@ -4133,7 +4123,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
             // Function $search is defined in py_utils.js
 
             this.result = '$B.$global_search("' + val + '", ' + search_ids + ')'
-            return annotation + this.result
+            return this.result
         }
     }
 }
@@ -4595,10 +4585,37 @@ var $NodeCtx = $B.parser.$NodeCtx = function(node){
             this.tree.pop()
             node.add(new_node)
         }
+        this.js = ""
+        if(this.tree[0]){
+            if(this.tree[0].annotation){
+                // Node is annotation
+                if(this.tree[0].type == "expr" &&
+                        this.tree[0].tree[0].type == "id"){
+                    return "$locals.__annotations__.$string_dict['" +
+                        this.tree[0].tree[0].value + "'] = " +
+                        this.tree[0].annotation.to_js() + ";"
+                }else{
+                    // Evaluate annotation
+                    this.js = this.tree[0].annotation.to_js() + ";"
+                }
+            }else if(this.tree[0].type == "assign" &&
+                    this.tree[0].tree[0].annotation){
+                // Left side of assignment is annoted
+                var left = this.tree[0].tree[0]
+                if(left.tree[0] && left.tree[0].type == "id"){
+                    this.js = "$locals.__annotations__.$string_dict['" +
+                        left.tree[0].value + "'] = " +
+                        left.annotation.to_js() + ";"
+                }else{
+                    // Evaluate annotation
+                    this.js =  left.annotation.to_js() + ";"
+                }
+            }
+        }
         if(node.children.length == 0){
-            this.js = $to_js(this.tree) + ';'
+            this.js += $to_js(this.tree) + ';'
         }else{
-            this.js = $to_js(this.tree)
+            this.js += $to_js(this.tree)
         }
         return this.js
     }
@@ -7096,17 +7113,17 @@ var $transition = $B.parser.$transition = function(context, token, value){
                          new $AugmentedAssignCtx(context, value), true)
                 }
                 return $transition(context.parent, token, value)
-            case ":": // slice
-                // valid only if expr parent is a subscription, or a tuple
+            case ":": // slice or annotation
+                // slice only if expr parent is a subscription, or a tuple
                 // inside a subscription, or a slice
-                if(context.parent.type=="sub" ||
+                if(context.parent.type == "sub" ||
                         (context.parent.type == "list_or_tuple" &&
                         context.parent.parent.type == "sub")){
                     return new $AbstractExprCtx(new $SliceCtx(context.parent), false)
                 }else if(context.parent.type == "slice"){
                     return $transition(context.parent, token, value)
                 }else if(context.parent.type == "node"){
-                    // Annotation
+                    // annotation
                     return new $AbstractExprCtx(new $AnnotationCtx(context), false)
                 }
                 break
