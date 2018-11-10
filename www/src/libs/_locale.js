@@ -889,13 +889,22 @@ var $module=(function($B){
                 var LANG = ($B.language || "").substr(0, 2)
                 if(am.hasOwnProperty(LANG)){
                     $B.locale = LANG
+                    return LANG
                 }else{
                     console.log("Unknown locale: " + LANG)
                 }
+            }else if($.locale === _b_.None){
+                // return current locale
+                return $B.locale
             }else{
                 // Only use 2 first characters
+                try{$.locale.substr(0, 2)}
+                catch(err){
+                    throw $module.Error.$factory("Invalid locale: " + $.locale)
+                }
                 if(am.hasOwnProperty($.locale.substr(0, 2))){
                     $B.locale = $.locale
+                    return $.locale
                 }else{
                     throw $module.Error.$factory("Unknown locale: " + $.locale)
                 }
