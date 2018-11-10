@@ -1904,43 +1904,6 @@ except:
         tb = tb.tb_next
 
 
-
-# XXX These tests are removed : since the test script is run in an exec(), the
-# traceback doesn't give information taken from the source code.
-# The tests should pass when run inside a <script> tag in an HTML page.
-"""
-# issue 859
-import traceback as tb
-
-def f():
-    return 1 / 0
-
-try:
-    f()
-except Exception:
-    exception_info = tb.format_exc()
-    assert 'f()' in exception_info
-    assert '1 / 0' in exception_info
-    assert ', in f' in exception_info
-
-
-# issue 885
-try:
-    1/0
-except:
-    assert '1/0' in tb.format_exc()
-
-
-# issue 887
-try:
-    exec('def f(): return 1/0\nf()')
-except ZeroDivisionError:
-    stack_trace = tb.format_exc()
-    assert 'exec(\'def f(): return 1/0\\nf()\')' in stack_trace
-    assert 'f()' in stack_trace
-    assert 'def f(): return 1/0\\n' in stack_trace
-"""
-
 # PEP 448
 assert dict(**{'x': 1}, y=2, **{'z': 3}) == {"x": 1, "y": 2, "z": 3}
 try:

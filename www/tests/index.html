@@ -143,10 +143,6 @@ def test_all(ev):
     failed = []
     test_next()
 
-@bind("#test_exc", "click")
-def test_exceptions(ev):
-    window.open("test_exceptions.html")
-
 @bind("#set_debug", "change")
 def set_debug(ev):
     if ev.target.checked:
@@ -217,7 +213,6 @@ Test:
 <select name="filename" id="files">
 </select>
 <button id="test_all">Run all tests</button>
-<button id="test_exc">Test exceptions</button>
 
 </div>
   <div id="editor" style="width:100%;"></div>
