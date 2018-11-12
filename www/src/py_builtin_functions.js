@@ -134,7 +134,11 @@ function ascii(obj) {
         cp = res.charCodeAt(i)
         if(cp < 128){res1 += res.charAt(i)}
         else if(cp < 256){res1 += '\\x' + cp.toString(16)}
-        else{res1 += '\\u' + cp.toString(16)}
+        else{
+            var s = cp.toString(16)
+            if(s.length % 2 == 1){s = "0" + s}
+            res1 += '\\u' + s
+        }
     }
     return res1
 }
@@ -617,7 +621,7 @@ function $$eval(src, _globals, _locals){
         }
 
         js = root.to_js()
-        
+
         if(is_exec){
             var locals_obj = eval("$locals_" + locals_id),
                 globals_obj = eval("$locals_" + globals_id)
