@@ -1039,7 +1039,7 @@ str.find = function(){
 
 // Next function used by method .format()
 
-function parse_format(fmt_string){
+$B.parse_format = function(fmt_string){
 
     // Parse a "format string", as described in the Python documentation
     // Return a format object. For the format string
@@ -1069,9 +1069,6 @@ function parse_format(fmt_string){
     if(elts.length > 1){
         name = elts[0]
         conv = elts[1] // conversion flag
-        if(conv.length !== 1 || "ras".search(conv) == -1){
-            throw _b_.ValueError.$factory("wrong conversion flag " + conv)
-        }
     }
 
     if(name !== undefined){
@@ -1086,13 +1083,10 @@ function parse_format(fmt_string){
     }
 
     return {name: name, name_ext: name_ext,
-        conv: conv, spec: spec || ""}
+        conv: conv, spec: spec || "", string: fmt_string}
 }
 
-str.format = function(self) {
-    var $ = $B.args("format", 1, {self: null}, ["self"],
-        arguments, {}, "$args", "$kw")
-
+$B.split_format = function(self){
     // Parse self to detect formatting instructions
     // Create a list "parts" made of sections of the string :
     // - elements of even rank are literal text
@@ -1136,7 +1130,9 @@ str.format = function(self) {
                         var fmt_string = self.substring(pos + 1, end - 1)
 
                         // Create a format object, by function parse_format
-                        var fmt_obj = parse_format(fmt_string)
+                        var fmt_obj = $B.parse_format(fmt_string)
+                        fmt_obj.raw_name = fmt_obj.name
+                        fmt_obj.raw_spec = fmt_obj.spec
 
                         // If no name is explicitely provided, use the rank
                         if(!fmt_obj.name){
@@ -1146,20 +1142,16 @@ str.format = function(self) {
 
                         if(fmt_obj.spec !== undefined){
                             // "spec" may contain "nested replacement fields"
-                            // In this case, evaluate them using the positional
-                            // or keyword arguments passed to format()
+                            // Replace empty fields by the rank in positional
+                            // arguments
                             function replace_nested(name, key){
-                                if(/\d+/.exec(key)){
-                                    // If key is numeric, search in positional
-                                    // arguments
-                                    return _b_.tuple.__getitem__($.$args,
-                                        parseInt(key))
-                                }else{
-                                    // Else try in keyword arguments
-                                    return _b_.dict.__getitem__($.$kw, key)
+                                if(key == ""){
+                                    // Use implicit rank
+                                    return "{" + rank++ + "}"
                                 }
+                                return "{" + key + "}"
                             }
-                            fmt_obj.spec = fmt_obj.spec.replace(/\{(.+?)\}/g,
+                            fmt_obj.spec = fmt_obj.spec.replace(/\{(.*?)\}/g,
                                 replace_nested)
                         }
 
@@ -1175,15 +1167,44 @@ str.format = function(self) {
         }else{text += car; pos++}
     }
     if(text){parts.push(text)}
+    return parts
+}
+
+str.format = function(self) {
+    var $ = $B.args("format", 1, {self: null}, ["self"],
+        arguments, {}, "$args", "$kw")
+
+    var parts = $B.split_format($.self)
+
     // Apply formatting to the values passed to format()
     var res = "",
         fmt
+
     for(var i = 0; i < parts.length; i++){
         // Literal text is added unchanged
         if(typeof parts[i] == "string"){res += parts[i]; continue}
 
         // Format objects
         fmt = parts[i]
+
+        if(fmt.spec !== undefined){
+            // "spec" may contain "nested replacement fields"
+            // In this case, evaluate them using the positional
+            // or keyword arguments passed to format()
+            function replace_nested(name, key){
+                if(/\d+/.exec(key)){
+                    // If key is numeric, search in positional
+                    // arguments
+                    return _b_.tuple.__getitem__($.$args,
+                        parseInt(key))
+                }else{
+                    // Else try in keyword arguments
+                    return _b_.dict.__getitem__($.$kw, key)
+                }
+            }
+            fmt.spec = fmt.spec.replace(/\{(.*?)\}/g,
+                replace_nested)
+        }
         if(fmt.name.charAt(0).search(/\d/) > -1){
             // Numerical reference : use positional arguments
             var pos = parseInt(fmt.name),
@@ -1771,7 +1792,6 @@ _b_.str = str
 
 // Function to parse the 2nd argument of format()
 $B.parse_format_spec = function(spec){
-
     if(spec == ""){this.empty = true}
     else{
         var pos = 0,
@@ -1822,6 +1842,13 @@ $B.parse_format_spec = function(spec){
             car = spec.charAt(pos)
         }
         if(this.width !== undefined){this.width = parseInt(this.width)}
+        if(this.width === undefined && car == "{"){
+            // Width is determined by a parameter
+            var end_param_pos = spec.substr(pos).search("}")
+            this.width = spec.substring(pos, end_param_pos)
+            console.log("width", "[" + this.width + "]")
+            pos += end_param_pos + 1
+        }
         if(car == ","){this.comma = true; pos++; car = spec.charAt(pos)}
         if(car == "."){
             if(digits.indexOf(spec.charAt(pos + 1)) == -1){
@@ -1844,7 +1871,7 @@ $B.parse_format_spec = function(spec){
             car = spec.charAt(pos)
         }
         if(pos !== spec.length){
-            throw _b_.ValueError.$factory("Invalid format specifier")
+            throw _b_.ValueError.$factory("Invalid format specifier: " + spec)
         }
     }
     this.toString = function(){
