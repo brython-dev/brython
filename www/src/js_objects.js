@@ -380,9 +380,9 @@ JSObject.__iter__ = function(self){
         return $B.$iterator(items, $JSObject_iterator)
     }else if(self.js.length !== undefined && self.js.item !== undefined){
         // collection
-        self.js.forEach(function(item){
-            items.push(JSObject.$factory(item))
-        })
+        for(var i = 0; i < self.js.length; i++){
+            items.push(JSObject.$factory(self.js.item(i)))
+        }
         return $B.$iterator(items, $JSObject_iterator)
     }
     // Else iterate on the dictionary built from the JS object

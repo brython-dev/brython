@@ -316,7 +316,6 @@ dict.__getitem__ = function(){
 dict.__hash__ = None
 
 dict.__init__ = function(self, first, second){
-
     if(first === undefined){return $N}
     if(second === undefined){
         if(first.__class__ === $B.JSObject){
@@ -347,6 +346,29 @@ dict.__init__ = function(self, first, second){
         }else if(isinstance(args, dict)){
             $copy_dict(self, args)
         }else{
+            var keys = $B.$getattr(args, "keys", null)
+            if(keys !== null){
+                var gi = $B.$getattr(args, "__getitem__", null)
+                if(gi !== null){
+                    // has keys and __getitem__ : it's a mapping, iterate on
+                    // keys and values
+                    gi = $B.$call(gi)
+                    var kiter = _b_.iter($B.$call(keys)())
+                    while(true){
+                        try{
+                            var key = _b_.next(kiter),
+                                value = gi(key)
+                                dict.__setitem__(self, key, value)
+                        }catch(err){
+                            if(err.__class__ === _b_.StopIteration){
+                                break
+                            }
+                            throw err
+                        }
+                    }
+                    return $N
+                }
+            }
             if(! Array.isArray(args)){
                 args = _b_.list.$factory(args)
             }
@@ -391,7 +413,7 @@ dict.__init__ = function(self, first, second){
 
 var $dict_iterator = $B.$iterator_class("dict iterator")
 dict.__iter__ = function(self) {
-    return dict.keys(self)
+    return dict.$$keys(self)
 }
 
 dict.__len__ = function(self) {
@@ -602,7 +624,7 @@ dict.items = function(self){
 
 var $dict_keysDict = $B.$iterator_class("dict_keys")
 
-dict.keys = function(self){
+dict.$$keys = function(self){
     if(arguments.length > 1){
        var _len = arguments.length - 1,
            _msg = "keys() takes no arguments (" + _len + " given)"

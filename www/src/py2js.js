@@ -502,6 +502,9 @@ var $Node = $B.parser.$Node = function(type){
             }
         }else{
             var elt = this.context.tree[0], ctx_offset
+            if(elt === undefined){
+                console.log(this)
+            }
             if(elt.transform !== undefined){
                 ctx_offset = elt.transform(this, rank)
             }
@@ -2480,6 +2483,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
             $NodeJS('$B.frames_stack.push($top_frame)'),
             $NodeJS('var $stack_length = $B.frames_stack.length')
         ]
+
         if($B.profile > 1){
             if(this.scope.ntype == 'class'){
                 fname = this.scope.context.tree[0].name + '.' + this.name
@@ -3809,16 +3813,6 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         this.js_processed = true
         var val = this.value
 
-        var annotation = ""
-        if(this.parent.type == "expr" && this.parent.parent.type == "node" &&
-                this.parent.hasOwnProperty("annotation")){
-            var js = this.parent.annotation.tree[0].to_js()
-            annotation = "$locals.__annotations__.$string_dict['" + value + "'] = " +
-                js +"; "
-            if(this.parent.parent.tree[0] == this.parent){
-                return annotation
-            }
-        }
         var is_local = this.scope.binding[val] !== undefined,
             this_node = $get_node(this),
             bound_before = this_node.bound_before
@@ -3836,14 +3830,14 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                 && this.scope.ntype == 'class' &&
                 this.scope.context.tree[0].name == val){
             // Name of class referenced inside the class. Cf. issue #649
-            return annotation + '$B.$search("' + val + '")'
+            return '$B.$search("' + val + '")'
         }
 
         if(this.unbound && !this.nonlocal){
             if(this.scope.ntype == 'def' || this.scope.ntype == 'generator'){
-                return annotation + '$B.$local_search("' + val + '")'
+                return '$B.$local_search("' + val + '")'
             }else{
-                return annotation + '$B.$search("' + val + '")'
+                return '$B.$search("' + val + '")'
             }
         }
 
@@ -3858,7 +3852,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         // get global scope
         var gs = innermost
 
-        var $test = val == "adk"
+        var $test = false // val == "x"
 
         while(true){
             if(gs.parent_block){
@@ -3870,11 +3864,13 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         }
         search_ids = "[" + search_ids.join(", ") + "]"
 
+        if($test){console.log("search ids", search_ids)}
+
         if(this.nonlocal || this.bound){
             var bscope = this.firstBindingScopeId()
             // Might be undefined, for augmented assignments
             if(bscope !== undefined){
-                return annotation + "$locals_" + bscope.replace(/\./g, "_") + '["' +
+                return "$locals_" + bscope.replace(/\./g, "_") + '["' +
                     val + '"]'
             }
         }
@@ -3891,9 +3887,9 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                 // Else return a call to a function that searches the name in
                 // globals, and throws NameError if not found.
                 if(gs.binding[val] !== undefined){
-                    return annotation + global_ns + '["' + val + '"]'
+                    return global_ns + '["' + val + '"]'
                 }else{
-                    return annotation + '$B.$global_search("' + val + '", ' +
+                    return '$B.$global_search("' + val + '", ' +
                         search_ids + ')'
                 }
             }
@@ -3938,6 +3934,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
             else{break}
         }
         this.found = found
+        if($test){console.log("found", found)}
 
         if(this.nonlocal && found[0] === innermost){found.shift()}
 
@@ -3972,7 +3969,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                         innermost.context.tree[0].args.indexOf(val) == -1) &&
                         (nonlocs === undefined || nonlocs[val] === undefined)){
                     this.result = '$B.$local_search("' + val + '")'
-                    return annotation + this.result
+                    return this.result
                 }
             }
             if(found.length > 1 && found[0].context){
@@ -4004,13 +4001,13 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                             res = ns1
                         }
                         this.result = res + '["' + val + '"]'
-                        return annotation + this.result
+                        return this.result
                     }else{
                         this.found = false
                         var res = ns0 + '["' + val + '"] !== undefined ? '
                         res += ns0 + '["' + val + '"] : '
                         this.result = "(" + res + ns1 + '["' + val + '"])'
-                        return annotation + this.result
+                        return this.result
                     }
                 }
             }
@@ -4048,7 +4045,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                             // defined in locals or globals, or raise a
                             // NameError
                             this.result = '$B.$search("' + val + '")'
-                            return annotation + this.result
+                            return this.result
                         }else{
                             if(this.boundBefore(scope)){
                                 // We are sure that the name is defined in the
@@ -4060,6 +4057,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                                 // in code like :
                                 //     if False:
                                 //         x = 0
+                                if($test){console.log("use check def")}
                                 val = '$B.$check_def("' + val + '",' +
                                     scope_ns + '["' + val + '"])'
                             }
@@ -4110,7 +4108,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                 val = scope_ns + '["' + val + '"]'
             }
             this.result = val + $to_js(this.tree, '')
-            return annotation + this.result
+            return this.result
         }else{
             // Name was not found in bound names
             // It may have been introduced in the globals namespace by an exec,
@@ -4125,7 +4123,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
             // Function $search is defined in py_utils.js
 
             this.result = '$B.$global_search("' + val + '", ' + search_ids + ')'
-            return annotation + this.result
+            return this.result
         }
     }
 }
@@ -4316,9 +4314,8 @@ var $LambdaCtx = $B.parser.$LambdaCtx = function(context){
         var lambda_name = 'lambda' + rand,
             module_name = module.id.replace(/\./g, '_')
 
-        var js = $B.py2js(py, module_name, lambda_name, scope,
-            node.line_num).to_js()
-
+        var root = $B.py2js(py, module_name, lambda_name, scope, node.line_num)
+        var js = root.to_js()
         js = '(function($locals_' + lambda_name + '){\n' + js +
             '\nreturn $locals.' + func_name + '\n})({})'
 
@@ -4588,10 +4585,37 @@ var $NodeCtx = $B.parser.$NodeCtx = function(node){
             this.tree.pop()
             node.add(new_node)
         }
+        this.js = ""
+        if(this.tree[0]){
+            if(this.tree[0].annotation){
+                // Node is annotation
+                if(this.tree[0].type == "expr" &&
+                        this.tree[0].tree[0].type == "id"){
+                    return "$locals.__annotations__.$string_dict['" +
+                        this.tree[0].tree[0].value + "'] = " +
+                        this.tree[0].annotation.to_js() + ";"
+                }else{
+                    // Evaluate annotation
+                    this.js = this.tree[0].annotation.to_js() + ";"
+                }
+            }else if(this.tree[0].type == "assign" &&
+                    this.tree[0].tree[0].annotation){
+                // Left side of assignment is annoted
+                var left = this.tree[0].tree[0]
+                if(left.tree[0] && left.tree[0].type == "id"){
+                    this.js = "$locals.__annotations__.$string_dict['" +
+                        left.tree[0].value + "'] = " +
+                        left.annotation.to_js() + ";"
+                }else{
+                    // Evaluate annotation
+                    this.js =  left.annotation.to_js() + ";"
+                }
+            }
+        }
         if(node.children.length == 0){
-            this.js = $to_js(this.tree) + ';'
+            this.js += $to_js(this.tree) + ';'
         }else{
-            this.js = $to_js(this.tree)
+            this.js += $to_js(this.tree)
         }
         return this.js
     }
@@ -6569,7 +6593,13 @@ var $transition = $B.parser.$transition = function(context, token, value){
             return $transition(context.parent,token,value)
 
         case 'condition':
-            if(token == ':'){return $BodyCtx(context)}
+            if(token == ':'){
+                if(context.tree[0].type == "abstract_expr" &&
+                        context.tree[0].tree.length == 0){ // issue #965
+                    $_SyntaxError(context, 'token ' + token + ' after ' + context)
+                }
+                return $BodyCtx(context)
+            }
             $_SyntaxError(context, 'token ' + token + ' after ' + context)
 
         case 'continue':
@@ -7073,6 +7103,8 @@ var $transition = $B.parser.$transition = function(context, token, value){
                 while(parent){
                     if(parent.type == "assign"){
                         $_SyntaxError(context, "augmented assign inside assign")
+                    }else if(parent.type == "op"){
+                        $_SyntaxError(context, ["can't assign to operator"])
                     }
                     parent = parent.parent
                 }
@@ -7081,17 +7113,17 @@ var $transition = $B.parser.$transition = function(context, token, value){
                          new $AugmentedAssignCtx(context, value), true)
                 }
                 return $transition(context.parent, token, value)
-            case ":": // slice
-                // valid only if expr parent is a subscription, or a tuple
+            case ":": // slice or annotation
+                // slice only if expr parent is a subscription, or a tuple
                 // inside a subscription, or a slice
-                if(context.parent.type=="sub" ||
+                if(context.parent.type == "sub" ||
                         (context.parent.type == "list_or_tuple" &&
                         context.parent.parent.type == "sub")){
                     return new $AbstractExprCtx(new $SliceCtx(context.parent), false)
                 }else if(context.parent.type == "slice"){
                     return $transition(context.parent, token, value)
                 }else if(context.parent.type == "node"){
-                    // Annotation
+                    // annotation
                     return new $AbstractExprCtx(new $AnnotationCtx(context), false)
                 }
                 break
@@ -7172,7 +7204,8 @@ var $transition = $B.parser.$transition = function(context, token, value){
                     return new $AbstractExprCtx(
                         new $ExprCtx(context,'target list', true), false)
                 case ':':
-                    if(context.tree.length < 2){ // issue 638
+                    if(context.tree.length < 2 // issue 638
+                            || context.tree[1].tree[0].type == "abstract_expr"){
                         $_SyntaxError(context, 'token ' + token + ' after ' +
                             context)
                     }
@@ -8120,7 +8153,7 @@ var $transition = $B.parser.$transition = function(context, token, value){
 // Names that can't be given to variable names or attributes
 $B.forbidden = ["alert", "arguments", "case", "catch", "constructor", "Date",
     "delete", "default", "document", "enum", "eval", "extends", "Error",
-    "history", "function", "length", "location", "Math", "new", "null",
+    "history", "function", "keys", "length", "location", "Math", "new", "null",
     "Number", "RegExp", "super", "this","throw", "var", "window",
     "toLocaleString", "toString", "message"]
 $B.aliased_names = $B.list2obj($B.forbidden)
@@ -8167,7 +8200,7 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
 
     var module = root.module
 
-    var lnum = 1
+    var lnum = root.line_num || 1
     while(pos < src.length){
         var car = src.charAt(pos)
         // build tree structure from indentation
@@ -8784,7 +8817,7 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
 }
 
 var $create_root_node = $B.parser.$create_root_node = function(src, module,
-        locals_id, parent_block, line_info){
+        locals_id, parent_block, line_num){
     var root = new $Node('module')
     root.module = module
     root.id = locals_id
@@ -8797,7 +8830,7 @@ var $create_root_node = $B.parser.$create_root_node = function(src, module,
     }
 
     root.parent_block = parent_block
-    root.line_info = line_info
+    root.line_num = line_num
     root.indent = -1
     root.comments = []
     root.imports = {}
@@ -8809,7 +8842,7 @@ var $create_root_node = $B.parser.$create_root_node = function(src, module,
     return root
 }
 
-$B.py2js = function(src, module, locals_id, parent_scope, line_info){
+$B.py2js = function(src, module, locals_id, parent_scope, line_num){
     // src = Python source (string)
     // module = module name (string)
     // locals_id = the id of the block that will be created
@@ -8837,8 +8870,11 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_info){
         src = src.src
     }
 
-    // Normalise line ends and script end
+    // Normalise line ends
     src = src.replace(/\r\n/gm, "\n")
+    // Remove trailing \, cf issue 970
+    while(src.endsWith("\\")){src = src.substr(0, src.length - 1)}
+    // Normalise script end
     if(src.charAt(src.length - 1) != "\n"){src += "\n"}
 
     var locals_is_module = Array.isArray(locals_id)
@@ -8851,10 +8887,11 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_info){
 
     var global_ns = '$locals_' + module.replace(/\./g,'_')
 
-    //$B.$py_src[locals_id] = src
     var root = $create_root_node({src: src, is_comp: is_comp},
-        module, locals_id, parent_scope, line_info)
+        module, locals_id, parent_scope, line_num)
+
     $tokenize(root, src)
+
     root.is_comp = is_comp
     root.transform()
 
@@ -8877,12 +8914,6 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_info){
     // annotations
     root.insert(offset++,
         $NodeJS('$locals.__annotations__ = _b_.dict.$factory()'))
-
-    // if line_info is provided, store it
-    if(line_info !== undefined){
-        root.insert(offset++,
-            $NodeJS(local_ns + '.$line = "' + line_info + '";None;\n'))
-    }
 
     // Code to create the execution frame and store it on the frames stack
     var enter_frame_pos = offset,

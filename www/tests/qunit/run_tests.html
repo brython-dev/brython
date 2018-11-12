@@ -90,8 +90,54 @@ from browser import window
 import brython_test_utils as utils
 from   brython_test_utils import unittest as test_utils
 import unittest
+import traceback
+
+def testTraceback(qunit):
+    """ Traceback tests for source code printing """
+    # issue 859
+    def f():
+        return 1 / 0
+
+    try:
+        f()
+    except Exception:
+        exception_info = traceback.format_exc()
+        assert 'f()' in exception_info
+        assert '1 / 0' in exception_info
+        assert ', in f' in exception_info
+
+    # issue 885
+    try:
+        1/0
+    except:
+        assert '1/0' in traceback.format_exc()
+
+    # issue 887
+    try:
+        exec('def f(): return 1/0\nf()')
+    except ZeroDivisionError:
+        traceback.print_exc()
+        trace = traceback.format_exc()
+        assert 'exec(\'def f(): return 1/0\\nf()\')' in trace
+        assert 'f()' in trace
+        assert 'def f(): return 1/0\\n' in trace
+
+    # issue 961
+    from z import f
+
+    try:
+        f()
+    except ZeroDivisionError:
+        trace = traceback.format_exc()
+        assert "line 9, in f" in trace
+        assert "line 6, in h" in trace
+        assert "line 5, in <lambda>" in trace
+        assert "line 2, in g" in trace
+
+    qunit.ok(True)
 
 _QUnit = window.QUnit
+_QUnit.test('testTraceback', testTraceback)
 
 # TODO: Arg values e.g. verbosity level ?
 result = test_utils.OneTimeTestResult()

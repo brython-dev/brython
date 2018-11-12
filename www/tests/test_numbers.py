@@ -192,5 +192,18 @@ try:
     raise Exception("should have raised AttributeError")
 except AttributeError as exc:
     assert "has no attribute 'foo'" in exc.args[0]
-    
+
+# issue 967
+assert not (True == "Toggle")
+assert True == True
+assert True == 1
+assert not (True == 8)
+assert True == 1.0
+assert not (True == 1.1)
+assert not (False == "Toggle")
+assert False == False
+assert False == 0
+assert False == 0.0
+assert not (False == 8)
+
 print('passed all tests...')

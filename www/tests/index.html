@@ -59,7 +59,7 @@ import sys
 import traceback
 import dis
 
-from browser import document as doc, window, alert, console, prompt
+from browser import document as doc, window, alert, console, prompt, bind
 from browser import timer
 from browser.local_storage import storage
 
@@ -135,6 +135,7 @@ def test_next():
         print('failed : %s' %failed)
     sys.stdout.flush()
 
+@bind("#test_all", "click")
 def test_all(ev):
     global script_num,failed,t_start
     script_num = -1
@@ -142,6 +143,7 @@ def test_all(ev):
     failed = []
     test_next()
 
+@bind("#set_debug", "change")
 def set_debug(ev):
     if ev.target.checked:
         __BRYTHON__.debug = 1
@@ -151,9 +153,6 @@ def set_debug(ev):
 __BRYTHON__.debug = int(doc['set_debug'].checked)
 
 # bindings
-doc['test_all'].bind('click',test_all)
-doc['set_debug'].bind('change',set_debug)
-
 doc['show_js'].bind('click',editor.show_js)
 doc['run'].bind('click',lambda ev:run())
 doc['show_console'].bind('click',editor.show_console)
