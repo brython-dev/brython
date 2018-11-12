@@ -828,7 +828,7 @@ var $module=(function($B){
 
         _date_format: function(spec, hour){
             var t,
-                locale = __BRYTHON__.locale
+                locale = __BRYTHON__.locale.substr(0, 2)
 
             if(spec == "p"){
                 var res = hours < 12 ? am[locale] : pm[locale]
@@ -884,8 +884,31 @@ var $module=(function($B){
                 ["category", "locale"], arguments, {locale: _b_.None},
                 null, null)
             /// XXX category is currently ignored
-            $B.locale = $.locale
-
+            if($.locale == ""){
+                // use browser language setting, if it is set
+                var LANG = ($B.language || "").substr(0, 2)
+                if(am.hasOwnProperty(LANG)){
+                    $B.locale = LANG
+                    return LANG
+                }else{
+                    console.log("Unknown locale: " + LANG)
+                }
+            }else if($.locale === _b_.None){
+                // return current locale
+                return $B.locale
+            }else{
+                // Only use 2 first characters
+                try{$.locale.substr(0, 2)}
+                catch(err){
+                    throw $module.Error.$factory("Invalid locale: " + $.locale)
+                }
+                if(am.hasOwnProperty($.locale.substr(0, 2))){
+                    $B.locale = $.locale
+                    return $.locale
+                }else{
+                    throw $module.Error.$factory("Unknown locale: " + $.locale)
+                }
+            }
         }
     }
 })(__BRYTHON__)

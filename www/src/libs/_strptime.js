@@ -13,12 +13,17 @@ var $module = (function($B){
 
             var locale = __BRYTHON__.locale,
                 shortdays = [],
-                longdays = []
+                longdays = [],
+                conv_func = locale == "C" ?
+                    function(d){return d.toDateString()} :
+                    function(d, options){
+                        return d.toLocaleDateString(locale, options)
+                    }
 
             for(var day = 16; day < 23; day++){
                 var d = new Date(Date.UTC(2012, 11, day, 3, 0, 0))
-                shortdays.push(d.toLocaleDateString(locale, {weekday: 'short'}))
-                longdays.push(d.toLocaleDateString(locale, {weekday: 'long'}))
+                shortdays.push(conv_func(d, {weekday: 'short'}))
+                longdays.push(conv_func(d, {weekday: 'long'}))
             }
 
             var shortmonths = [],
@@ -26,8 +31,8 @@ var $module = (function($B){
 
             for(var month = 0; month < 12; month++){
                 var d = new Date(Date.UTC(2012, month, 1, 3, 0, 0))
-                shortmonths.push(d.toLocaleDateString(locale, {month: 'short'}))
-                longmonths.push(d.toLocaleDateString(locale, {month: 'long'}))
+                shortmonths.push(conv_func(d, {month: 'short'}))
+                longmonths.push(conv_func(d, {month: 'long'}))
             }
 
             var shortdays_re = new RegExp(shortdays.join("|").replace(".", "\\.")),

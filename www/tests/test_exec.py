@@ -93,3 +93,14 @@ def f():
 
 f()
 exec('def foo(): pass\nf()', g)
+
+# issue 969
+def test():
+    x = 3
+    y = eval('x+3')
+    assert y == 6
+
+test()
+
+# issue 970
+exec("\\")
