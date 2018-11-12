@@ -155,4 +155,7 @@ assert b''.count(b'#') == 0
 b'1 22 333 4444 55555'.count(b' ') == 4
 b'1 22 333 4444 55555'.count(32) == 4
 
+# issue 972
+assert b'a' in b'a'
+
 print('passed all tests...')
