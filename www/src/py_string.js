@@ -1308,9 +1308,7 @@ str.maketrans = function() {
         ["x", "y", "z"], arguments, {y: null, z: null}, null, null)
 
     var _t = _b_.dict.$factory()
-    // make 'default' translate table
-    for(var i  =0; i < 256; i++){_t.$numeric_dict[i] = i}
-
+    
     if($.y === null && $.z === null){
         // If there is only one argument, it must be a dictionary mapping
         // Unicode ordinals (integers) or characters (strings of length 1) to
@@ -1361,7 +1359,7 @@ str.maketrans = function() {
             }
             for(var i = 0, len = $.x.length; i < len; i++){
                 _t.$numeric_dict[_b_.ord($.x.charAt(i))] =
-                    _b_.ord($.y.charAt(i))
+                    $.y.charAt(i)
             }
             for(var k in toNone){
                 _t.$numeric_dict[k] = _b_.None
@@ -1673,15 +1671,18 @@ str.strip = function(){
     return $.self.substring(i, j + 1)
 }
 
-str.translate = function(self,table){
+str.translate = function(self, table){
     var res = [],
-        pos = 0
-    if(isinstance(table, _b_.dict)){
-       for(var i = 0, len = self.length; i < len; i++){
-           var repl = _b_.dict.get(table,self.charCodeAt(i), -1)
-           if(repl == -1){res[pos++] = self.charAt(i)}
-           else if(repl !== None){res[pos++] = _b_.chr(repl)}
-       }
+        getitem = $B.$getattr(table, "__getitem__")
+    for(var i = 0, len = self.length; i < len; i++){
+        try{
+            var repl = getitem(self.charCodeAt(i))
+            if(repl !== _b_.None){
+                res.push(repl)
+            }
+        }catch(err){
+            res.push(self.charAt(i))
+        }
     }
     return res.join("")
 }
