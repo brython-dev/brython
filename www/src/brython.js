@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-11-12 22:29:31.196580"
-__BRYTHON__.timestamp=1542058171196
+__BRYTHON__.compiled_date="2018-11-14 09:08:54.162594"
+__BRYTHON__.timestamp=1542182934162
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -10632,7 +10632,6 @@ for(var i=0;i < $.self.length;i++){if($.chars.indexOf($.self.charAt(i))===-1){re
 return ""}
 str.maketrans=function(){var $=$B.args("maketrans",3,{x: null,y: null,z: null},["x","y","z"],arguments,{y: null,z: null},null,null)
 var _t=_b_.dict.$factory()
-for(var i=0;i < 256;i++){_t.$numeric_dict[i]=i}
 if($.y===null && $.z===null){
 if(! _b_.isinstance($.x,_b_.dict)){throw _b_.TypeError.$factory(
 "maketrans only argument must be a dict")}
@@ -10651,7 +10650,7 @@ if(! _b_.isinstance($.z,_b_.str)){throw _b_.TypeError.$factory(
 "maketrans third argument must be a string")}
 for(var i=0,len=$.z.length;i < len;i++){toNone[_b_.ord($.z.charAt(i))]=true}}
 for(var i=0,len=$.x.length;i < len;i++){_t.$numeric_dict[_b_.ord($.x.charAt(i))]=
-_b_.ord($.y.charAt(i))}
+$.y.charAt(i)}
 for(var k in toNone){_t.$numeric_dict[k]=_b_.None}
 return _t}}}
 str.partition=function(){var $=$B.args("partition",2,{self: null,sep: null},["self","sep"],arguments,{},null,null)
@@ -10775,10 +10774,9 @@ if($.chars===_b_.None){return $.self.trim()}
 for(var i=0;i < $.self.length;i++){if($.chars.indexOf($.self.charAt(i))==-1){break}}
 for(var j=$.self.length - 1;j >=i;j--){if($.chars.indexOf($.self.charAt(j))==-1){break}}
 return $.self.substring(i,j + 1)}
-str.translate=function(self,table){var res=[],pos=0
-if(isinstance(table,_b_.dict)){for(var i=0,len=self.length;i < len;i++){var repl=_b_.dict.get(table,self.charCodeAt(i),-1)
-if(repl==-1){res[pos++]=self.charAt(i)}
-else if(repl !==None){res[pos++]=_b_.chr(repl)}}}
+str.translate=function(self,table){var res=[],getitem=$B.$getattr(table,"__getitem__")
+for(var i=0,len=self.length;i < len;i++){try{var repl=getitem(self.charCodeAt(i))
+if(repl !==_b_.None){res.push(repl)}}catch(err){res.push(self.charAt(i))}}
 return res.join("")}
 str.zfill=function(self,width){var $=$B.args("zfill",2,{self: null,width: null},["self","width"],arguments,{},null,null)
 if($.width <=self.length){return self}
