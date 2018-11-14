@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-11-14 15:42:15.012208"
-__BRYTHON__.timestamp=1542206535012
+__BRYTHON__.compiled_date="2018-11-14 19:55:04.043890"
+__BRYTHON__.timestamp=1542221704043
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -4863,10 +4863,8 @@ res=_b_.list.$factory(_b_.set.$factory(res))
 _b_.list.sort(res)
 return res}
 object.__eq__=function(self,other){
-var _class=$B.get_class(self)
-if(_class.$native ||_class.__name__=="function"){var _class1=$B.get_class(other)
-if(!_class1.$native && _class1.__name__ !="function"){return $B.rich_comp("__eq__",other,self)}}
-return self===other}
+if(self===other){return true}
+return _b_.NotImplemented}
 object.__format__=function(){var $=$B.args("__format__",2,{self: null,spec: null},["self","spec"],arguments,{},null,null)
 if($.spec !==""){throw _b_.TypeError.$factory(
 "non-empty format string passed to object.__format__")}
@@ -4963,7 +4961,13 @@ object.__new__=function(cls,...args){if(cls===undefined){throw _b_.TypeError.$fa
 var init_func=$B.$getattr(cls,"__init__")
 if(init_func===object.__init__){if(args.length > 0){throw _b_.TypeError.$factory("object() takes no parameters")}}
 return{__class__ : cls}}
-object.__ne__=function(self,other){return ! $B.rich_comp("__eq__",self,other)}
+object.__ne__=function(self,other){
+if(self===other){return false}
+var eq=$B.$getattr(self,"__eq__",null)
+if(eq !==null){var res=$B.$call(eq)(other)
+if(res===_b_.NotImplemented){return res}
+return ! $B.$bool(res)}
+return _b_.NotImplemented}
 object.__reduce__=function(self){function _reconstructor(cls){return $B.$call(cls)()}
 _reconstructor.$infos={__qualname__: "_reconstructor"}
 var res=[_reconstructor]
@@ -5895,7 +5899,8 @@ if(x.$is_class ||x.$factory){if(op=="__eq__"){return(x===y)}else if(op=="__ne__"
 "' not supported between types")}}
 if(x.__class__ && y.__class__){
 if(y.__class__.__mro__.indexOf(x.__class__)> -1){rev_op=reversed_op[op]||op
-res=$B.$getattr(y,rev_op)(x)
+var rev_func=$B.$getattr(y,rev_op)
+res=$B.$call($B.$getattr(y,rev_op))(x)
 if(res !==_b_.NotImplemented){return res}
 compared=true}}
 res=$B.$call($B.$getattr(x,op))(y)
@@ -6526,8 +6531,8 @@ throw _b_.TypeError.$factory("'" + $B.get_class(obj).__name__ +
 "' object is not an iterator")}
 var NotImplementedType=$B.make_class("NotImplementedType",function(){return NotImplemented}
 )
-NotImplementedType.__repr__=NotImplementedType.__str__=function(){return "NotImplemented"}
-var NotImplemented={__class__: NotImplementedType,}
+NotImplementedType.__repr__=NotImplementedType.__str__=function(self){return "NotImplemented"}
+var NotImplemented={__class__: NotImplementedType}
 function $not(obj){return !$B.$bool(obj)}
 function oct(x){return $builtin_base_convert_helper(x,8)}
 function ord(c){check_no_kw('ord',c)
@@ -6574,6 +6579,7 @@ self.$type=fget.$type
 self.fget=fget
 self.fset=fset
 self.fdel=fdel
+if(fget && fget.$attrs){for(var key in fget.$attrs){self[key]=fget.$attrs[key]}}
 self.__get__=function(self,obj,objtype){if(obj===undefined){return self}
 if(self.fget===undefined){throw _b_.AttributeError.$factory("unreadable attribute")}
 return $B.$call(self.fget)(obj)}
@@ -8368,8 +8374,7 @@ if(isinstance(other,float)){
 return self.valueOf()==other.valueOf()}
 if(isinstance(other,_b_.complex)){if(other.$imag !=0){return false}
 return self==other.$real}
-if(_b_.hasattr(other,"__eq__")){return _b_.getattr(other,"__eq__")(self.value)}
-return self.value===other}
+return _b_.NotImplemented}
 float.__floordiv__=function(self,other){if(isinstance(other,[_b_.int,float])){if(other.valueOf()==0){throw ZeroDivisionError.$factory('division by zero')}
 return float.$factory(Math.floor(self / other))}
 if(hasattr(other,"__rfloordiv__")){return getattr(other,"__rfloordiv__")(self)}
@@ -8734,8 +8739,7 @@ if(isinstance(other,int)){return self.valueOf()==int_value(other).valueOf()}
 if(isinstance(other,_b_.float)){return self.valueOf()==other.valueOf()}
 if(isinstance(other,_b_.complex)){if(other.$imag !=0){return False}
 return self.valueOf()==other.$real}
-if(hasattr(other,"__eq__")){return getattr(other,"__eq__")(self)}
-return self.valueOf()===other}
+return _b_.NotImplemented}
 int.__float__=function(self){return new Number(self)}
 function preformat(self,fmt){if(fmt.empty){return _b_.str.$factory(self)}
 if(fmt.type && 'bcdoxXn'.indexOf(fmt.type)==-1){throw _b_.ValueError.$factory("Unknown format code '" + fmt.type +

@@ -150,10 +150,7 @@ int.__eq__ = function(self, other){
         if(other.$imag != 0){return False}
         return self.valueOf() == other.$real
     }
-
-    if(hasattr(other, "__eq__")){return getattr(other, "__eq__")(self)}
-
-    return self.valueOf() === other
+    return _b_.NotImplemented
 }
 
 int.__float__ = function(self){

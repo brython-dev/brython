@@ -66,14 +66,8 @@ object.__dir__ = function(self) {
 object.__eq__ = function(self, other){
     // equality test defaults to identity of objects
     //test_issue_1393
-    var _class = $B.get_class(self)
-    if(_class.$native || _class.__name__ == "function"){
-       var _class1 = $B.get_class(other)
-       if(!_class1.$native && _class1.__name__ != "function"){
-           return $B.rich_comp("__eq__", other, self)
-       }
-    }
-    return self === other
+    if(self === other){return true}
+    return _b_.NotImplemented
 }
 
 object.__format__ = function(){
@@ -345,7 +339,15 @@ object.__new__ = function(cls, ...args){
 }
 
 object.__ne__ = function(self, other){
-    return ! $B.rich_comp("__eq__", self, other)
+    //return ! $B.rich_comp("__eq__", self, other)
+    if(self === other){return false}
+    var eq = $B.$getattr(self, "__eq__", null)
+    if(eq !== null){
+        var res = $B.$call(eq)(other)
+        if(res === _b_.NotImplemented){return res}
+        return ! $B.$bool(res)
+    }
+    return _b_.NotImplemented
 }
 
 object.__reduce__ = function(self){
