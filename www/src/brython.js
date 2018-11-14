@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-11-14 09:08:54.162594"
-__BRYTHON__.timestamp=1542182934162
+__BRYTHON__.compiled_date="2018-11-14 15:42:15.012208"
+__BRYTHON__.timestamp=1542206535012
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -7311,7 +7311,8 @@ var bytes={__class__ : _b_.type,__mro__:[object],__name__ : "bytes",$buffer_prot
 bytes.__add__=function(self,other){if(isinstance(other,bytes)){return self.__class__.$factory(self.source.concat(other.source))}else if(isinstance(other,bytearray)){return self.__class__.$factory(bytes.__add__(self,bytes.$factory(other)))}else if(isinstance(other,_b_.memoryview)){return self.__class__.$factory(bytes.__add__(self,_b_.memoryview.tobytes(other)))}
 throw _b_.TypeError.$factory("can't concat bytes to " +
 _b_.str.$factory(other))}
-bytes.__contains__=function(self,other){if(self.source.length > other.source.length){return false}
+bytes.__contains__=function(self,other){if(typeof other=="number"){return self.source.indexOf(other)> -1}
+if(self.source.length > other.source.length){return false}
 var len=self.source.length
 for(var i=0;i < other.source.length - self.source.length + 1;i++){var flag=true
 for(var j=0;j < len;j++){if(other.source[i + j]!=self.source[j]){flag=false

@@ -151,6 +151,9 @@ bytes.__add__ = function(self, other){
 }
 
 bytes.__contains__ = function(self, other){
+    if(typeof other == "number"){
+        return self.source.indexOf(other) > -1
+    }
     if(self.source.length > other.source.length){return false}
     var len = self.source.length
     for(var i = 0; i < other.source.length - self.source.length + 1; i++){
