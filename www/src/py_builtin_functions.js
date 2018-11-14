@@ -1552,11 +1552,11 @@ function next(obj){
 var NotImplementedType = $B.make_class("NotImplementedType",
     function(){return NotImplemented}
 )
-NotImplementedType.__repr__ = NotImplementedType.__str__ = function(){
+NotImplementedType.__repr__ = NotImplementedType.__str__ = function(self){
     return "NotImplemented"
 }
 var NotImplemented = {
-    __class__: NotImplementedType,
+    __class__: NotImplementedType
 }
 
 function $not(obj){return !$B.$bool(obj)}
@@ -1640,6 +1640,12 @@ property.__init__ = function(self, fget, fset, fdel, doc) {
     self.fget = fget
     self.fset = fset
     self.fdel = fdel
+
+    if(fget && fget.$attrs){
+        for(var key in fget.$attrs){
+            self[key] = fget.$attrs[key]
+        }
+    }
 
     self.__get__ = function(self, obj, objtype) {
         if(obj === undefined){return self}
