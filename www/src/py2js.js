@@ -3631,7 +3631,7 @@ var $FuncStarArgCtx = $B.parser.$FuncStarArgCtx = function(context,op){
 
     this.set_name = function(name){
         this.name = name
-        if(name == '$dummy'){return}
+        //if(name == '$dummy'){return}
 
         // bind name to function scope
         if(this.node.binding[name]){
