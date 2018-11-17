@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-11-15 13:21:18.868320"
-__BRYTHON__.timestamp=1542284478868
+__BRYTHON__.compiled_date="2018-11-17 16:34:57.872914"
+__BRYTHON__.timestamp=1542468897872
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -3526,11 +3526,13 @@ return new $AbstractExprCtx(new $AnnotationCtx(C),false)}
 break
 case '=':
 if(C.expect==','){if(C.parent.type=="call_arg"){
-if(C.tree[0].type !='id'){$_SyntaxError(C,["keyword can't be an expression"])}
+if(C.tree[0].type !="id"){$_SyntaxError(C,["keyword can't be an expression"])}
 return new $AbstractExprCtx(new $KwArgCtx(C),true)}else if(C.parent.type=="annotation"){return $transition(C.parent.parent,token,value)}else if(C.parent.type=="op"){
-$_SyntaxError(C,["can't assign to operator"])}
+$_SyntaxError(C,["can't assign to operator"])}else if(C.parent.type=="list_or_tuple"){
+for(var i=0;i < C.parent.tree.length;i++){var item=C.parent.tree[i]
+if(item.type=="expr" && item.name=="operand"){$_SyntaxError(C,["can't assign to operator"])}}}
 while(C.parent !==undefined){C=C.parent
-if(C.type=='condition'){$_SyntaxError(C,'token ' + token + ' after '
+if(C.type=="condition"){$_SyntaxError(C,'token ' + token + ' after '
 + C)}else if(C.type=="augm_assign"){$_SyntaxError(C,"assign inside augmented assign")}}
 C=C.tree[0]
 return new $AbstractExprCtx(new $AssignCtx(C),true)}

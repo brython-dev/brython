@@ -7131,7 +7131,7 @@ var $transition = $B.parser.$transition = function(context, token, value){
                if(context.expect == ','){
                    if(context.parent.type == "call_arg"){
                        // issue 708
-                       if(context.tree[0].type != 'id'){
+                       if(context.tree[0].type != "id"){
                            $_SyntaxError(context,
                                ["keyword can't be an expression"])
                        }
@@ -7142,11 +7142,18 @@ var $transition = $B.parser.$transition = function(context, token, value){
                    }else if(context.parent.type == "op"){
                         // issue 811
                         $_SyntaxError(context, ["can't assign to operator"])
+                   }else if(context.parent.type == "list_or_tuple"){
+                       // issue 973
+                       for(var i = 0; i < context.parent.tree.length; i++){
+                           var item = context.parent.tree[i]
+                           if(item.type == "expr" && item.name == "operand"){
+                               $_SyntaxError(context, ["can't assign to operator"])
+                           }
+                       }
                    }
-
                    while(context.parent !== undefined){
                        context = context.parent
-                       if(context.type == 'condition'){
+                       if(context.type == "condition"){
                            $_SyntaxError(context, 'token ' + token + ' after '
                                + context)
                        }else if(context.type == "augm_assign"){
