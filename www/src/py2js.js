@@ -7128,6 +7128,15 @@ var $transition = $B.parser.$transition = function(context, token, value){
                 }
                 break
             case '=':
+                function has_parent(ctx, type){
+                    // Tests if one of ctx parents is of specified type
+                    while(ctx.parent){
+                        if(ctx.parent.type == type){return ctx.parent}
+                        ctx = ctx.parent
+                    }
+                    return false
+                }
+                var annotation
                if(context.expect == ','){
                    if(context.parent.type == "call_arg"){
                        // issue 708
@@ -7135,10 +7144,9 @@ var $transition = $B.parser.$transition = function(context, token, value){
                            $_SyntaxError(context,
                                ["keyword can't be an expression"])
                        }
-                      return new $AbstractExprCtx(new $KwArgCtx(context), true)
-                   }else if(context.parent.type == "annotation"){
-                       return $transition(context.parent.parent, token,
-                           value)
+                       return new $AbstractExprCtx(new $KwArgCtx(context), true)
+                   }else if(annotation = has_parent(context, "annotation")){
+                       return $transition(annotation, token, value)
                    }else if(context.parent.type == "op"){
                         // issue 811
                         $_SyntaxError(context, ["can't assign to operator"])
@@ -7331,6 +7339,9 @@ var $transition = $B.parser.$transition = function(context, token, value){
         case 'func_args':
             switch (token) {
                 case 'id':
+                    if(context.has_kw_arg){
+                        $_SyntaxError(context,'duplicate kw arg')
+                    }
                     if(context.expect == 'id'){
                         context.expect = ','
                         if(context.names.indexOf(value) > -1){
@@ -7341,9 +7352,6 @@ var $transition = $B.parser.$transition = function(context, token, value){
                     }
                     return new $FuncArgIdCtx(context, value)
                 case ',':
-                    if(context.has_kw_arg){
-                        $_SyntaxError(context,'duplicate kw arg')
-                    }
                     if(context.expect == ','){
                         context.expect = 'id'
                         return context
@@ -7353,6 +7361,9 @@ var $transition = $B.parser.$transition = function(context, token, value){
                 case ')':
                     return context.parent
                 case 'op':
+                    if(context.has_kw_arg){
+                        $_SyntaxError(context,'duplicate kw arg')
+                    }
                     var op = value
                     context.expect = ','
                     if(op == '*'){

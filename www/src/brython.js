@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-11-18 09:53:45.378606"
-__BRYTHON__.timestamp=1542531225378
+__BRYTHON__.compiled_date="2018-11-18 14:37:51.517202"
+__BRYTHON__.timestamp=1542548271517
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -3525,9 +3525,14 @@ C.parent.parent.type=="sub")){return new $AbstractExprCtx(new $SliceCtx(C.parent
 return new $AbstractExprCtx(new $AnnotationCtx(C),false)}
 break
 case '=':
+function has_parent(ctx,type){
+while(ctx.parent){if(ctx.parent.type==type){return ctx.parent}
+ctx=ctx.parent}
+return false}
+var annotation
 if(C.expect==','){if(C.parent.type=="call_arg"){
 if(C.tree[0].type !="id"){$_SyntaxError(C,["keyword can't be an expression"])}
-return new $AbstractExprCtx(new $KwArgCtx(C),true)}else if(C.parent.type=="annotation"){return $transition(C.parent.parent,token,value)}else if(C.parent.type=="op"){
+return new $AbstractExprCtx(new $KwArgCtx(C),true)}else if(annotation=has_parent(C,"annotation")){return $transition(annotation,token,value)}else if(C.parent.type=="op"){
 $_SyntaxError(C,["can't assign to operator"])}else if(C.parent.type=="list_or_tuple"){
 for(var i=0;i < C.parent.tree.length;i++){var item=C.parent.tree[i]
 if(item.type=="expr" && item.name=="operand"){$_SyntaxError(C,["can't assign to operator"])}}}
@@ -3634,12 +3639,12 @@ return new $AbstractExprCtx(new $AnnotationCtx(C),false)}
 $_SyntaxError(C,'token ' + token + ' after ' + C)
 case 'func_args':
 switch(token){case 'id':
+if(C.has_kw_arg){$_SyntaxError(C,'duplicate kw arg')}
 if(C.expect=='id'){C.expect=','
 if(C.names.indexOf(value)> -1){$_SyntaxError(C,['duplicate argument ' + value +
 ' in function definition'])}}
 return new $FuncArgIdCtx(C,value)
 case ',':
-if(C.has_kw_arg){$_SyntaxError(C,'duplicate kw arg')}
 if(C.expect==','){C.expect='id'
 return C}
 $_SyntaxError(C,'token ' + token + ' after ' +
@@ -3647,6 +3652,7 @@ C)
 case ')':
 return C.parent
 case 'op':
+if(C.has_kw_arg){$_SyntaxError(C,'duplicate kw arg')}
 var op=value
 C.expect=','
 if(op=='*'){if(C.has_star_arg){$_SyntaxError(C,'duplicate star arg')}
