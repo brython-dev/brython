@@ -217,4 +217,13 @@ except TypeError:
 else:
     assert 0, "expected TypeError"
 
+# issue 974
+assert frozenset({1, 2}) == {1,2}
+assert frozenset({1, 2}) == frozenset({1,2})
+assert {1, 2} == {1,2}
+
+assert frozenset({1, 2}) != (1,2)
+assert frozenset({1, 2}) != [1,2]
+assert (1,2) != {1,2}
+assert {1,2} != [1,2]
 print("passed all tests..")

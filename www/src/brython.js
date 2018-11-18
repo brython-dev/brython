@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-11-17 16:34:57.872914"
-__BRYTHON__.timestamp=1542468897872
+__BRYTHON__.compiled_date="2018-11-18 09:37:34.617164"
+__BRYTHON__.timestamp=1542530254617
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -9873,7 +9873,7 @@ list.__eq__=function(self,other){if(isinstance(self,list)){var klass=list}else{v
 if(isinstance(other,klass)){if(other.length==self.length){var i=self.length
 while(i--){if(! $B.rich_comp("__eq__",self[i],other[i])){return false}}
 return true}}
-return false}
+return _b_.NotImplemented}
 list.__getitem__=function(self,arg){var $=$B.args("__getitem__",2,{self: null,key: null},["self","key"],arguments,{},null,null),self=$.self,key=$.key
 var factory=$B.get_class(self).$factory
 if(isinstance(key,_b_.int)){var items=self.valueOf(),pos=key
@@ -9955,7 +9955,6 @@ if(rmul !==NotImplemented){return rmul(self)}
 throw _b_.TypeError.$factory(
 "can't multiply sequence by non-int of type '" +
 $B.get_class(other).__name__ + "'")}
-list.__ne__=function(self,other){return ! list.__eq__(self,other)}
 list.__new__=function(cls,...args){if(cls===undefined){throw _b_.TypeError.$factory("list.__new__(): not enough arguments")}
 var res=[]
 res.__class__=cls
@@ -11277,21 +11276,10 @@ for(var i=0,len=self.$items.length;i < len;i++){if($B.rich_comp("__eq__",self.$i
 return false}
 set.__eq__=function(self,other){
 if(other===undefined){return self===set}
-if(_b_.isinstance(other,_b_.set)){if(other.$items.length==self.$items.length){for(var i=0,len=self.$items.length;i < len;i++){if(set.__contains__(self,other.$items[i])===false){return false}}
+if(_b_.isinstance(other,[_b_.set,_b_.frozenset])){if(other.$items.length==self.$items.length){for(var i=0,len=self.$items.length;i < len;i++){if(set.__contains__(self,other.$items[i])===false){return false}}
 return true}
 return false}
-if(_b_.isinstance(other,[_b_.list])){if(_b_.len(other)!=self.$items.length){return false}
-for(var i=0,len=_b_.len(other);i < len;i++){var _value=_b_.getattr(other,"__getitem__")(i)
-if(set.__contains__(self,_value)===false){return false}}
-return true}
-if(_b_.hasattr(other,"__iter__")){
-if(_b_.len(other)!=self.$items.length){return false}
-var _it=$B.$iter(other)
-while(1){try{var e=_b_.next(_it)
-if(!set.__contains__(self,e)){return false}}catch(err){if(err.__class__===_b_.StopIteration){break}
-throw err}}
-return true}
-return false}
+return _b_.NotImplemented}
 set.__format__=function(self,format_string){return set.__str__(self)}
 set.__ge__=function(self,other){if(_b_.isinstance(other,[set,frozenset])){return ! set.__lt__(self,other)}else{return _b_.object.__ge__(self,other)}}
 set.__gt__=function(self,other){if(_b_.isinstance(other,[set,frozenset])){return ! set.__le__(self,other)}else{return _b_.object.__gt__(self,other)}}
@@ -11316,7 +11304,6 @@ set.__len__=function(self){return self.$items.length}
 set.__lt__=function(self,other){if(_b_.isinstance(other,[set,frozenset])){return set.__le__(self,other)&&
 set.__len__(self)<_b_.getattr(other,"__len__")()}else{return _b_.object["__lt__"](self,other)}}
 set.__mro__=[_b_.object]
-set.__ne__=function(self,other){return ! set.__eq__(self,other)}
 set.__new__=function(cls){if(cls===undefined){throw _b_.TypeError.$factory("set.__new__(): not enough arguments")}
 return{
 __class__: cls,$str: true,$num: true,$items:[]}}
