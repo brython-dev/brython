@@ -1308,7 +1308,7 @@ str.maketrans = function() {
         ["x", "y", "z"], arguments, {y: null, z: null}, null, null)
 
     var _t = _b_.dict.$factory()
-    
+
     if($.y === null && $.z === null){
         // If there is only one argument, it must be a dictionary mapping
         // Unicode ordinals (integers) or characters (strings of length 1) to

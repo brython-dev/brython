@@ -359,7 +359,7 @@ eval("complex.__add__ = " + $op_func)
 // comparison methods
 var $comp_func = function(self, other){
     if(other === undefined || other == _b_.None){
-        throw _b_.NotImplemented.$factory("")
+        return _b_.NotImplemented
     }
     throw _b_.TypeError.$factory("TypeError: no ordering relation " +
         "is defined for complex numbers")
