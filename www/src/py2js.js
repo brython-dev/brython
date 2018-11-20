@@ -175,15 +175,6 @@ var add_identnode = $B.parser.add_identnode = function(parent, insert_at, name, 
     return new_node
 }
 
-
-// Returns the node owning this context (as a descendant)
-var $get_closest_ancestor_node = $B.parser.$get_closest_ancestor_node = function(ctx) {
-    while(ctx.parent)
-        ctx = ctx.parent
-    return ctx.node
-}
-
-
 /*
  * This helper function is used to convert `yield from` statements into
  * blocks of code using only `yield` (see PEP 808). When a yield from
@@ -205,8 +196,7 @@ var $get_closest_ancestor_node = $B.parser.$get_closest_ancestor_node = function
  * but must post-pone it to the transform method of $YieldFromMarkerNode.
  */
 var $add_yield_from_code = $B.parser.$add_yield_from_code = function(yield_ctx) {
-
-    var pnode = $get_closest_ancestor_node(yield_ctx)
+    var pnode = $get_node(yield_ctx)
     var generator = $get_scope(yield_ctx).context.tree[0]
 
     pnode.yield_atoms.splice(pnode.yield_atoms.indexOf(this), 1)
@@ -312,7 +302,7 @@ Function called in case of SyntaxError
 */
 
 var $_SyntaxError = $B.parser.$_SyntaxError = function (context,msg,indent){
-    // console.log("syntax error", context, msg)
+    //console.log("syntax error", context, msg)
     var ctx_node = context
     while(ctx_node.type !== 'node'){ctx_node = ctx_node.parent}
     var tree_node = ctx_node.node,
@@ -1438,6 +1428,7 @@ var $BodyCtx = $B.parser.$BodyCtx = function(context){
     while(ctx_node.type !== 'node'){ctx_node = ctx_node.parent}
     var tree_node = ctx_node.node
     var body_node = new $Node()
+    body_node.is_body_node = true
     body_node.line_num = tree_node.line_num
     tree_node.insert(0, body_node)
     return new $NodeCtx(body_node)
@@ -5950,7 +5941,7 @@ var $YieldCtx = $B.parser.$YieldCtx = function(context, is_await){
         }
     }
 
-    var scope = this.scope = $get_scope(this)
+    var scope = this.scope = $get_scope(this, true)
 
     if(! scope.is_function && ! in_lambda){
         $_SyntaxError(context, ["'yield' outside function"])
@@ -6098,6 +6089,26 @@ var $bind = $B.parser.$bind = function(name, scope, context){
     }
 }
 
+function $parent_match(ctx, obj){
+    // If any of context's parents has the same properties as obj,
+    // return this parent; else return false
+    var flag
+    while(ctx.parent){
+        flag = true
+        for(var attr in obj){
+            if(ctx.parent[attr] != obj[attr]){
+                flag = false
+                break
+            }
+        }
+        if(flag){
+            return ctx.parent
+        }
+        ctx = ctx.parent
+    }
+    return false
+}
+
 var $previous = $B.parser.$previous = function(context){
     var previous = context.node.parent.children[
             context.node.parent.children.length - 2]
@@ -6123,14 +6134,13 @@ var $get_docstring = $B.parser.$get_docstring = function(node){
     return doc_string
 }
 
-var $get_scope = $B.parser.$get_scope = function(context){
+var $get_scope = $B.parser.$get_scope = function(context, flag){
     // Return the instance of $Node indicating the scope of context
     // Return null for the root node
     var ctx_node = context.parent
     while(ctx_node.type !== 'node'){ctx_node = ctx_node.parent}
     var tree_node = ctx_node.node,
         scope = null
-
     while(tree_node.parent && tree_node.parent.type !== 'module'){
         var ntype = tree_node.parent.context.tree[0].type
 
@@ -6669,7 +6679,9 @@ var $transition = $B.parser.$transition = function(context, token, value){
                 case 'annotation':
                     return new $AbstractExprCtx(new $AnnotationCtx(context), true)
                 case ':':
-                    if(context.has_args){return $BodyCtx(context)}
+                    if(context.has_args){
+                        return $BodyCtx(context)
+                    }
             }
             $_SyntaxError(context, 'token ' + token + ' after ' + context)
 
@@ -6950,6 +6962,9 @@ var $transition = $B.parser.$transition = function(context, token, value){
               case ',':
                   if(context.expect == ','){
                       if(context.with_commas){
+                          if($parent_match(context, {type: "yield", "from": true})){
+                              $_SyntaxError(context, "no implicit tuple for yield from")
+                          }
                            // implicit tuple
                            context.parent.tree.pop()
                            var tuple = new $ListOrTupleCtx(context.parent,
@@ -8247,6 +8262,13 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
             new_node.indent = indent
             new_node.line_num = lnum
             new_node.module = module
+
+            if(current.is_body_node){
+                // eg in "def f(): yield from A"
+                // A "body node" starts after the ":" and has no indent
+                // initially set, so we take the number of spaces after the ":"
+                current.indent = indent
+            }
 
             // attach new node to node with indentation immediately smaller
             if(indent > current.indent){

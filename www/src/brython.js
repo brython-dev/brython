@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-11-18 14:37:51.517202"
-__BRYTHON__.timestamp=1542548271517
+__BRYTHON__.compiled_date="2018-11-20 12:25:25.920615"
+__BRYTHON__.timestamp=1542713125920
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -133,10 +133,7 @@ else
 parent.insert(insert_at,new_node)
 assign.tree[1]=val
 return new_node}
-var $get_closest_ancestor_node=$B.parser.$get_closest_ancestor_node=function(ctx){while(ctx.parent)
-ctx=ctx.parent
-return ctx.node}
-var $add_yield_from_code=$B.parser.$add_yield_from_code=function(yield_ctx){var pnode=$get_closest_ancestor_node(yield_ctx)
+var $add_yield_from_code=$B.parser.$add_yield_from_code=function(yield_ctx){var pnode=$get_node(yield_ctx)
 var generator=$get_scope(yield_ctx).C.tree[0]
 pnode.yield_atoms.splice(pnode.yield_atoms.indexOf(this),1)
 generator.yields.splice(generator.yields.indexOf(this),1)
@@ -749,6 +746,7 @@ var ctx_node=C.parent
 while(ctx_node.type !=='node'){ctx_node=ctx_node.parent}
 var tree_node=ctx_node.node
 var body_node=new $Node()
+body_node.is_body_node=true
 body_node.line_num=tree_node.line_num
 tree_node.insert(0,body_node)
 return new $NodeCtx(body_node)}
@@ -2824,7 +2822,7 @@ $get_node(C).yield_atoms.push(this)
 break
 default:
 $_SyntaxError(C,'yield atom must be inside ()')}}
-var scope=this.scope=$get_scope(this)
+var scope=this.scope=$get_scope(this,true)
 if(! scope.is_function && ! in_lambda){$_SyntaxError(C,["'yield' outside function"])}
 if(! in_lambda){var def=scope.C.tree[0]
 if(! is_await){def.type='generator'}
@@ -2886,6 +2884,14 @@ var node=$get_node(C)
 node.bindings=node.bindings ||{}
 node.bindings[name]=true
 if(scope.binding[name]===undefined){scope.binding[name]=true}}
+function $parent_match(ctx,obj){
+var flag
+while(ctx.parent){flag=true
+for(var attr in obj){if(ctx.parent[attr]!=obj[attr]){flag=false
+break}}
+if(flag){return ctx.parent}
+ctx=ctx.parent}
+return false}
 var $previous=$B.parser.$previous=function(C){var previous=C.node.parent.children[C.node.parent.children.length - 2]
 if(!previous ||!previous.C){$_SyntaxError(C,'keyword not following correct keyword')}
 return previous.C.tree[0]}
@@ -2895,7 +2901,7 @@ if(firstchild.C.tree && firstchild.C.tree.length > 0 &&
 firstchild.C.tree[0].type=='expr'){var expr=firstchild.C.tree[0].tree[0]
 if(expr.type=='str' && !Array.isArray(expr.tree[0])){doc_string=firstchild.C.tree[0].tree[0].to_js()}}}
 return doc_string}
-var $get_scope=$B.parser.$get_scope=function(C){
+var $get_scope=$B.parser.$get_scope=function(C,flag){
 var ctx_node=C.parent
 while(ctx_node.type !=='node'){ctx_node=ctx_node.parent}
 var tree_node=ctx_node.node,scope=null
@@ -3431,7 +3437,7 @@ return $transition(C.parent,token)}
 if(C.expect==','){return $transition(C,'op','in')}
 break
 case ',':
-if(C.expect==','){if(C.with_commas){
+if(C.expect==','){if(C.with_commas){if($parent_match(C,{type: "yield","from": true})){$_SyntaxError(C,"no implicit tuple for yield from")}
 C.parent.tree.pop()
 var tuple=new $ListOrTupleCtx(C.parent,'tuple')
 tuple.implicit=true
@@ -4230,6 +4236,8 @@ continue}
 new_node.indent=indent
 new_node.line_num=lnum
 new_node.module=module
+if(current.is_body_node){
+current.indent=indent}
 if(indent > current.indent){
 if(C !==null){if($indented.indexOf(C.tree[0].type)==-1){$pos=pos
 $_SyntaxError(C,'unexpected indent',pos)}}
@@ -6040,6 +6048,7 @@ var module_name='$exec_' + $B.UUID()
 $B.clear_ns(module_name)
 $.__class__=code
 $.co_flags=$.flags
+$B.py2js($.source,module_name,module_name)
 return $}
 var __debug__=$B.debug > 0
 function delattr(obj,attr){

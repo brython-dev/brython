@@ -266,6 +266,8 @@ function compile() {
     $B.clear_ns(module_name)
     $.__class__ = code
     $.co_flags = $.flags
+    // Run py2js to detect potential syntax errors
+    $B.py2js($.source, module_name, module_name)
     return $
 }
 
