@@ -1815,6 +1815,13 @@ $B.$setattr = function(obj, attr, value){
             obj[attr] = value.$string_dict[attr]
         }
         return None
+    }else if(attr == "__class__"){
+        // __class__ assignment only supported for heap types or ModuleType
+        // subclasses
+        if(! isinstance(obj, $B.module)){
+            throw _b_.TypeError.$factory("__class__ assignment only " +
+                "supported for heap types or ModuleType subclasses")
+        }
     }
 
     if(obj.$factory || obj.$is_class){
@@ -2441,6 +2448,9 @@ $B.Function.__repr__ = $B.Function.__str__ = function(self){
 
 $B.Function.__mro__ = [object]
 $B.Function.__setattr__ = function(self, attr, value){
+    if(attr == "__closure__"){
+        throw _b_.AttributeError.$factory("readonly attribute")
+    }
     if(self.$infos[attr] !== undefined){self.$infos[attr] = value}
     else{self.$attrs = self.$attrs || {}; self.$attrs[attr] = value}
 }

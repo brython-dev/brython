@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-11-22 16:07:50.716180"
-__BRYTHON__.timestamp=1542899270716
+__BRYTHON__.compiled_date="2018-11-22 16:51:44.552108"
+__BRYTHON__.timestamp=1542901904552
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -1334,10 +1334,11 @@ this.kwonlyargsdefaults.forEach(function(_default){def_names.push('$defaults.' +
 node.parent.insert(rank + offset++,$NodeJS('    __kwdefaults__ : ' +
 '_b_.tuple.$factory([' + def_names.join(', ')+ ']),'))}else{node.parent.insert(rank + offset++,$NodeJS('    __kwdefaults__ : ' +
 '_b_.None,'))}}
+node.parent.insert(rank + offset++,$NodeJS('    __annotations__: {' + annotations.join(',')+ '},'))
+node.parent.insert(rank + offset++,$NodeJS('    __closure__: None ,'))
+node.parent.insert(rank + offset++,$NodeJS('    __doc__: ' +(this.doc_string ||'None')+ ','))
 var root=$get_module(this)
 node.parent.insert(rank + offset++,$NodeJS('    __module__ : "' + root.module + '",'))
-node.parent.insert(rank + offset++,$NodeJS('    __doc__: ' +(this.doc_string ||'None')+ ','))
-node.parent.insert(rank + offset++,$NodeJS('    __annotations__: {' + annotations.join(',')+ '},'))
 for(var attr in this.binding){this.varnames[attr]=true}
 var co_varnames=[]
 for(var attr in this.varnames){co_varnames.push('"' + attr + '"')}
@@ -5308,6 +5309,9 @@ infos.__func__.$infos[attr]){
 return infos.__func__.$infos[attr]}else{return _b_.object.__getattribute__(self,attr)}}
 method.__repr__=method.__str__=function(self){return "<bound method " + self.$infos.__qualname__ +
 " of " + _b_.str.$factory(self.$infos.__self__)+ ">"}
+method.__setattr__=function(self,key,value){
+throw _b_.AttributeError.$factory("'method' object has no attribute '" +
+key + "'")}
 $B.set_func_names(method,"builtins")
 method_descriptor=$B.method_descriptor=
 $B.make_class("method_descriptor")
@@ -6659,7 +6663,9 @@ if(!value.__class__===_b_.dict){throw _b_.TypeError.$factory("__dict__ must be s
 "not a '" + value.__class__.__name + "'")}
 for(var attr in obj){if(attr !=="__class__"){delete obj[attr]}}
 for(var attr in value.$string_dict){obj[attr]=value.$string_dict[attr]}
-return None}
+return None}else if(attr=="__class__"){
+if(! isinstance(obj,$B.module)){throw _b_.TypeError.$factory("__class__ assignment only " +
+"supported for heap types or ModuleType subclasses")}}
 if(obj.$factory ||obj.$is_class){obj[attr]=value
 if(attr=="__init__" ||attr=="__new__"){
 obj.$factory=$B.$instance_creator(obj)}
@@ -6882,7 +6888,8 @@ return res}else if(attr=='__annotations__'){
 return $B.obj_dict(self.$infos[attr])}else{return self.$infos[attr]}}else if(self.$attrs && self.$attrs[attr]!==undefined){return self.$attrs[attr]}else{return _b_.object.__getattribute__(self,attr)}}
 $B.Function.__repr__=$B.Function.__str__=function(self){if(self.$infos===undefined){return '<function ' + self.name + '>'}else{return '<function ' + self.$infos.__qualname__ + '>'}}
 $B.Function.__mro__=[object]
-$B.Function.__setattr__=function(self,attr,value){if(self.$infos[attr]!==undefined){self.$infos[attr]=value}
+$B.Function.__setattr__=function(self,attr,value){if(attr=="__closure__"){throw _b_.AttributeError.$factory("readonly attribute")}
+if(self.$infos[attr]!==undefined){self.$infos[attr]=value}
 else{self.$attrs=self.$attrs ||{};self.$attrs[attr]=value}}
 $B.Function.$factory=function(){}
 $B.set_func_names($B.Function,"builtins")
