@@ -2152,6 +2152,14 @@ try:
 except SyntaxError as exc:
     assert exc.args[0] == "can't assign to operator"
 
+# issue 975
+l = [1, 2, 3]
+try:
+    l[:,:]
+    raise Exception("should have raised TypeError")
+except TypeError:
+    pass
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

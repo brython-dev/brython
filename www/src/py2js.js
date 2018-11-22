@@ -6358,6 +6358,7 @@ var $transition = $B.parser.$transition = function(context, token, value){
               case ')':
               case ',':
                   switch(context.parent.type) {
+                      case 'slice':
                       case 'list_or_tuple':
                       case 'call_arg':
                       case 'op':
