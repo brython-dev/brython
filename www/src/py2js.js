@@ -2724,18 +2724,22 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
             }
         }
 
-        // Add attribute __module__
-        var root = $get_module(this)
+        // Add attribute __annotations__
         node.parent.insert(rank + offset++,
-            $NodeJS('    __module__ : "' + root.module + '",'))
+            $NodeJS('    __annotations__: {' + annotations.join(',') + '},'))
+
+        // Add attribute __closure__
+        node.parent.insert(rank + offset++,
+            $NodeJS('    __closure__: None ,'))
 
         // Add attribute __doc__
         node.parent.insert(rank + offset++,
             $NodeJS('    __doc__: ' + (this.doc_string || 'None') + ','))
 
-        // Add attribute __annotations__
+        // Add attribute __module__
+        var root = $get_module(this)
         node.parent.insert(rank + offset++,
-            $NodeJS('    __annotations__: {' + annotations.join(',') + '},'))
+            $NodeJS('    __module__ : "' + root.module + '",'))
 
         for(var attr in this.binding){this.varnames[attr] = true}
         var co_varnames = []
