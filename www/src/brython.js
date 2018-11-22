@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-11-20 12:25:25.920615"
-__BRYTHON__.timestamp=1542713125920
+__BRYTHON__.compiled_date="2018-11-22 16:07:50.716180"
+__BRYTHON__.timestamp=1542899270716
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -196,6 +196,7 @@ while(ctx_node.type !=='node'){ctx_node=ctx_node.parent}
 var tree_node=ctx_node.node,root=tree_node
 while(root.parent !==undefined){root=root.parent}
 var module=tree_node.module,src=root.src,line_num=tree_node.line_num
+if(src){line_num=src.substr(0,$pos).split("\n").length}
 if(root.line_info){line_num=root.line_info}
 if(indent !==undefined){line_num++}
 if(indent===undefined){if(Array.isArray(msg)){$B.$SyntaxError(module,msg[0],src,$pos,line_num)}
@@ -3037,7 +3038,8 @@ C.parent.parent.type=="sub")){return new $AbstractExprCtx(new $SliceCtx(C.parent
 return $transition(C.parent,token,value)
 case ')':
 case ',':
-switch(C.parent.type){case 'list_or_tuple':
+switch(C.parent.type){case 'slice':
+case 'list_or_tuple':
 case 'call_arg':
 case 'op':
 case 'yield':

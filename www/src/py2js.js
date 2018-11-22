@@ -301,8 +301,8 @@ Function called in case of SyntaxError
 ======================================
 */
 
-var $_SyntaxError = $B.parser.$_SyntaxError = function (context,msg,indent){
-    //console.log("syntax error", context, msg)
+var $_SyntaxError = $B.parser.$_SyntaxError = function (context, msg, indent){
+    //console.log("syntax error", context, "msg", msg, "indent", indent)
     var ctx_node = context
     while(ctx_node.type !== 'node'){ctx_node = ctx_node.parent}
     var tree_node = ctx_node.node,
@@ -311,6 +311,9 @@ var $_SyntaxError = $B.parser.$_SyntaxError = function (context,msg,indent){
     var module = tree_node.module,
         src = root.src,
         line_num = tree_node.line_num
+    if(src){
+        line_num = src.substr(0, $pos).split("\n").length
+    }
     if(root.line_info){
         line_num = root.line_info
     }
