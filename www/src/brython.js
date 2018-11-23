@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-11-23 11:23:25.050645"
-__BRYTHON__.timestamp=1542968605050
+__BRYTHON__.compiled_date="2018-11-23 15:52:53.750029"
+__BRYTHON__.timestamp=1542984773750
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -6925,6 +6925,7 @@ _b_.__BRYTHON__=__BRYTHON__
 $B.builtin_funcs=["abs","all","any","ascii","bin","callable","chr","compile","delattr","dir","divmod","eval","exec","exit","format","getattr","globals","hasattr","hash","help","hex","id","input","isinstance","issubclass","iter","len","locals","max","min","next","oct","open","ord","pow","print","quit","repr","round","setattr","sorted","sum","vars"
 ]
 var builtin_function=$B.builtin_function=$B.make_class("builtin_function_or_method")
+builtin_function.__getattribute__=$B.Function.__getattribute__
 builtin_function.__repr__=builtin_function.__str__=function(self){return '<built-in function ' + self.$infos.__name__ + '>'}
 $B.set_func_names(builtin_function,"builtins")
 var method_wrapper=$B.make_class("method_wrapper")
@@ -6932,6 +6933,7 @@ method_wrapper.__repr__=method_wrapper.__str__=function(self){return "<method wr
 $B.set_func_names(method_wrapper,"builtins")
 var wrapper_descriptor=$B.wrapper_descriptor=
 $B.make_class("wrapper_descriptor")
+wrapper_descriptor.__getattribute__=$B.Function.__getattribute__
 wrapper_descriptor.__repr__=wrapper_descriptor.__str__=function(self){return "<slot wrapper '" + self.$infos.__name__ + "' of '" +
 self.__objclass__.__name__ +"' object>"}
 $B.set_func_names(wrapper_descriptor,"builtins")
@@ -6949,7 +6951,7 @@ if(name=='eval'){name=name1='$$eval'}
 if(name=='print'){name1='$print'}
 try{_b_[name]=eval(name1)
 if($B.builtin_funcs.indexOf(orig_name)> -1){_b_[name].__class__=builtin_function
-_b_[name].$infos={__module__: 'builtins',__name__: orig_name}}}
+_b_[name].$infos={__module__: 'builtins',__name__: orig_name,__qualname__: orig_name}}}
 catch(err){}}
 _b_['open']=$url_open
 _b_['print']=$print
@@ -12579,6 +12581,8 @@ _b_.__builtins__=$B.module.$factory('__builtins__','Python builtins')
 for(var attr in _b_){_b_.__builtins__[attr]=_b_[attr]
 $B.builtins_scope.binding[attr]=true}
 _b_.__builtins__.__setattr__=function(attr,value){_b_[attr]=value}
+$B.method_descriptor.__getattribute__=$B.Function.__getattribute__
+$B.wrapper_descriptor.__getattribute__=$B.Function.__getattribute__
 for(var name in _b_){if(_b_[name].__class__===_b_.type){for(var key in _b_[name]){var value=_b_[name][key]
 if(value===undefined){continue}
 else if(value.__class__){continue}

@@ -2545,6 +2545,7 @@ $B.builtin_funcs = [
 
 var builtin_function = $B.builtin_function = $B.make_class("builtin_function_or_method")
 
+builtin_function.__getattribute__ = $B.Function.__getattribute__
 builtin_function.__repr__ = builtin_function.__str__ = function(self){
     return '<built-in function ' + self.$infos.__name__ + '>'
 }
@@ -2560,6 +2561,7 @@ $B.set_func_names(method_wrapper, "builtins")
 var wrapper_descriptor = $B.wrapper_descriptor =
     $B.make_class("wrapper_descriptor")
 
+wrapper_descriptor.__getattribute__ = $B.Function.__getattribute__
 wrapper_descriptor.__repr__ = wrapper_descriptor.__str__ = function(self){
     return "<slot wrapper '" + self.$infos.__name__ + "' of '" +
         self.__objclass__.__name__ +"' object>"
@@ -2597,7 +2599,8 @@ for(var i = 0; i < builtin_names.length; i++){
             // used by inspect module
             _b_[name].$infos = {
                 __module__: 'builtins',
-                __name__: orig_name
+                __name__: orig_name,
+                __qualname__: orig_name
             }
         }
 
