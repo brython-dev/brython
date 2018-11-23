@@ -773,6 +773,10 @@ method.__repr__ = method.__str__ = function(self){
 method.__setattr__ = function(self, key, value){
     // Attempting to set an attribute on a method results in an AttributeError
     // being raised.
+    if(key == "__class__"){
+        throw _b_.TypeError.$factory("__class__ assignment only supported " +
+            "for heap types or ModuleType subclasses")
+    }
     throw _b_.AttributeError.$factory("'method' object has no attribute '" +
         key + "'")
 }
