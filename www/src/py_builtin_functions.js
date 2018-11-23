@@ -2513,7 +2513,6 @@ $comps.forEach(function(comp){
     var op = "__" + comp + "__"
     $B.cell[op] = (function(op){
         return function(self, other){
-            console.log(op, self, other)
             if(! _b_.isinstance(other, $B.cell)){
                 return NotImplemented
             }
@@ -2521,10 +2520,10 @@ $comps.forEach(function(comp){
                 if(other.$cell_contents === null){
                     return op == "__eq__"
                 }else{
-                    return ["__ne__", "__lt__"].indexOf(op) > -1
+                    return ["__ne__", "__lt__", "__le__"].indexOf(op) > -1
                 }
             }else if(other.$cell_contents === null){
-                return ["__ne__", "__gt__"].indexOf(op) > -1
+                return ["__ne__", "__gt__", "__ge__"].indexOf(op) > -1
             }
             return $B.rich_comp(op, self.$cell_contents, other.$cell_contents)
         }

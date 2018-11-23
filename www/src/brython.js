@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-11-23 11:12:14.780615"
-__BRYTHON__.timestamp=1542967934780
+__BRYTHON__.compiled_date="2018-11-23 11:23:25.050645"
+__BRYTHON__.timestamp=1542968605050
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -6917,9 +6917,8 @@ return self.$cell_contents},function(self,value){self.$cell_contents=value}
 )
 var $comps=Object.values($B.$comps).concat(["eq","ne"])
 $comps.forEach(function(comp){var op="__" + comp + "__"
-$B.cell[op]=(function(op){return function(self,other){console.log(op,self,other)
-if(! _b_.isinstance(other,$B.cell)){return NotImplemented}
-if(self.$cell_contents===null){if(other.$cell_contents===null){return op=="__eq__"}else{return["__ne__","__lt__"].indexOf(op)> -1}}else if(other.$cell_contents===null){return["__ne__","__gt__"].indexOf(op)> -1}
+$B.cell[op]=(function(op){return function(self,other){if(! _b_.isinstance(other,$B.cell)){return NotImplemented}
+if(self.$cell_contents===null){if(other.$cell_contents===null){return op=="__eq__"}else{return["__ne__","__lt__","__le__"].indexOf(op)> -1}}else if(other.$cell_contents===null){return["__ne__","__gt__","__ge__"].indexOf(op)> -1}
 return $B.rich_comp(op,self.$cell_contents,other.$cell_contents)}})(op)})
 $B.set_func_names($B.cell,"builtins")
 _b_.__BRYTHON__=__BRYTHON__
