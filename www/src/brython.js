@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-11-22 16:51:44.552108"
-__BRYTHON__.timestamp=1542901904552
+__BRYTHON__.compiled_date="2018-11-23 11:12:14.780615"
+__BRYTHON__.timestamp=1542967934780
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -1335,13 +1335,14 @@ node.parent.insert(rank + offset++,$NodeJS('    __kwdefaults__ : ' +
 '_b_.tuple.$factory([' + def_names.join(', ')+ ']),'))}else{node.parent.insert(rank + offset++,$NodeJS('    __kwdefaults__ : ' +
 '_b_.None,'))}}
 node.parent.insert(rank + offset++,$NodeJS('    __annotations__: {' + annotations.join(',')+ '},'))
-node.parent.insert(rank + offset++,$NodeJS('    __closure__: None ,'))
 node.parent.insert(rank + offset++,$NodeJS('    __doc__: ' +(this.doc_string ||'None')+ ','))
 var root=$get_module(this)
 node.parent.insert(rank + offset++,$NodeJS('    __module__ : "' + root.module + '",'))
 for(var attr in this.binding){this.varnames[attr]=true}
 var co_varnames=[]
 for(var attr in this.varnames){co_varnames.push('"' + attr + '"')}
+var free_vars=[]
+if(this.parent.node.referenced){for(var attr in this.parent.node.referenced){if(! this.parent.node.binding[attr]){free_vars.push('"' + attr + '"')}}}
 var CODE_MARKER='___%%%-CODE-%%%___' + this.name + this.num;
 var h='\n' + ' '.repeat(indent + 8)
 js='    __code__:{' + h + '    co_argcount:' + this.argcount
@@ -1351,6 +1352,7 @@ js +=h1 + 'co_filename:$locals_' + module.replace(/\./g,'_')+
 '["__file__"]' +
 h1 + 'co_firstlineno:' + node.line_num +
 h1 + 'co_flags:' + flags +
+h1 + 'co_freevars: [' + free_vars + ']' +
 h1 + 'co_kwonlyargcount:' + this.kwonlyargcount +
 h1 + 'co_name: "' + this.name + '"' +
 h1 + 'co_nlocals: ' + co_varnames.length +
@@ -1809,6 +1811,8 @@ C.tree[C.tree.length]=this
 var scope=this.scope=$get_scope(this)
 this.blurred_scope=this.scope.blurred
 this.env=clone(this.scope.binding)
+if(scope.ntype=="def" ||scope.ntype=="generator"){scope.referenced=scope.referenced ||{}
+if(! $B.builtins[this.value]){scope.referenced[this.value]=true}}
 if(C.parent.type=='call_arg'){this.call_arg=true}
 var ctx=C
 while(ctx.parent !==undefined){switch(ctx.type){case 'ctx_manager_alias':
@@ -5310,6 +5314,8 @@ return infos.__func__.$infos[attr]}else{return _b_.object.__getattribute__(self,
 method.__repr__=method.__str__=function(self){return "<bound method " + self.$infos.__qualname__ +
 " of " + _b_.str.$factory(self.$infos.__self__)+ ">"}
 method.__setattr__=function(self,key,value){
+if(key=="__class__"){throw _b_.TypeError.$factory("__class__ assignment only supported " +
+"for heap types or ModuleType subclasses")}
 throw _b_.AttributeError.$factory("'method' object has no attribute '" +
 key + "'")}
 $B.set_func_names(method,"builtins")
@@ -6664,8 +6670,12 @@ if(!value.__class__===_b_.dict){throw _b_.TypeError.$factory("__dict__ must be s
 for(var attr in obj){if(attr !=="__class__"){delete obj[attr]}}
 for(var attr in value.$string_dict){obj[attr]=value.$string_dict[attr]}
 return None}else if(attr=="__class__"){
-if(! isinstance(obj,$B.module)){throw _b_.TypeError.$factory("__class__ assignment only " +
-"supported for heap types or ModuleType subclasses")}}
+function error(msg){throw _b_.TypeError.$factory(msg)}
+if(value.__class__){if(value.__module__=="builtins"){error("__class__ assignement only " +
+"supported for heap types or ModuleType subclasses")}else if(Array.isArray(value.__bases__)){for(var i=0;i < value.__bases__.length;i++){if(value.__bases__[i].__module__=="builtins"){error("__class__ assignment: '" +
+obj.__class__.__name__ + "' object layout " +
+"differs from '" + value.__class__.__name__ +
+"'")}}}}}
 if(obj.$factory ||obj.$is_class){obj[attr]=value
 if(attr=="__init__" ||attr=="__new__"){
 obj.$factory=$B.$instance_creator(obj)}
@@ -6885,7 +6895,12 @@ res.name=self.$infos.__name__
 res.filename=self.$infos.__code__.co_filename
 res.co_code=self + "" 
 return res}else if(attr=='__annotations__'){
-return $B.obj_dict(self.$infos[attr])}else{return self.$infos[attr]}}else if(self.$attrs && self.$attrs[attr]!==undefined){return self.$attrs[attr]}else{return _b_.object.__getattribute__(self,attr)}}
+return $B.obj_dict(self.$infos[attr])}else{return self.$infos[attr]}}else if(attr=="__closure__"){var free_vars=self.$infos.__code__.co_freevars
+if(free_vars.length==0){return None}
+var cells=[]
+for(var i=0;i < free_vars.length;i++){try{cells.push($B.cell.$factory($B.$check_def_free(free_vars[i])))}catch(err){
+cells.push($B.cell.$factory(null))}}
+return _b_.tuple.$factory(cells)}else if(self.$attrs && self.$attrs[attr]!==undefined){return self.$attrs[attr]}else{return _b_.object.__getattribute__(self,attr)}}
 $B.Function.__repr__=$B.Function.__str__=function(self){if(self.$infos===undefined){return '<function ' + self.name + '>'}else{return '<function ' + self.$infos.__qualname__ + '>'}}
 $B.Function.__mro__=[object]
 $B.Function.__setattr__=function(self,attr,value){if(attr=="__closure__"){throw _b_.AttributeError.$factory("readonly attribute")}
@@ -6893,6 +6908,20 @@ if(self.$infos[attr]!==undefined){self.$infos[attr]=value}
 else{self.$attrs=self.$attrs ||{};self.$attrs[attr]=value}}
 $B.Function.$factory=function(){}
 $B.set_func_names($B.Function,"builtins")
+$B.cell=$B.make_class("cell",function(value){return{
+__class__: $B.cell,$cell_contents: value}}
+)
+$B.cell.cell_contents=$B.$call(property)(
+function(self){if(self.$cell_contents===null){throw _b_.ValueError.$factory("empty cell")}
+return self.$cell_contents},function(self,value){self.$cell_contents=value}
+)
+var $comps=Object.values($B.$comps).concat(["eq","ne"])
+$comps.forEach(function(comp){var op="__" + comp + "__"
+$B.cell[op]=(function(op){return function(self,other){console.log(op,self,other)
+if(! _b_.isinstance(other,$B.cell)){return NotImplemented}
+if(self.$cell_contents===null){if(other.$cell_contents===null){return op=="__eq__"}else{return["__ne__","__lt__"].indexOf(op)> -1}}else if(other.$cell_contents===null){return["__ne__","__gt__"].indexOf(op)> -1}
+return $B.rich_comp(op,self.$cell_contents,other.$cell_contents)}})(op)})
+$B.set_func_names($B.cell,"builtins")
 _b_.__BRYTHON__=__BRYTHON__
 $B.builtin_funcs=["abs","all","any","ascii","bin","callable","chr","compile","delattr","dir","divmod","eval","exec","exit","format","getattr","globals","hasattr","hash","help","hex","id","input","isinstance","issubclass","iter","len","locals","max","min","next","oct","open","ord","pow","print","quit","repr","round","setattr","sorted","sum","vars"
 ]

@@ -1818,9 +1818,23 @@ $B.$setattr = function(obj, attr, value){
     }else if(attr == "__class__"){
         // __class__ assignment only supported for heap types or ModuleType
         // subclasses
-        if(! isinstance(obj, $B.module)){
-            throw _b_.TypeError.$factory("__class__ assignment only " +
+        function error(msg){
+            throw _b_.TypeError.$factory(msg)
+        }
+        if(value.__class__){
+            if(value.__module__ == "builtins"){
+                error("__class__ assignement only " +
                 "supported for heap types or ModuleType subclasses")
+            }else if(Array.isArray(value.__bases__)){
+                for(var i = 0; i < value.__bases__.length; i++){
+                    if(value.__bases__[i].__module__ == "builtins"){
+                        error("__class__ assignment: '" +
+                            obj.__class__.__name__ + "' object layout " +
+                            "differs from '" + value.__class__.__name__ +
+                            "'")
+                    }
+                }
+            }
         }
     }
 
@@ -2431,6 +2445,19 @@ $B.Function.__getattribute__ = function(self, attr){
         }else{
             return self.$infos[attr]
         }
+    }else if(attr == "__closure__"){
+        var free_vars = self.$infos.__code__.co_freevars
+        if(free_vars.length == 0){return None}
+        var cells = []
+        for(var i = 0; i < free_vars.length; i++){
+            try{
+                cells.push($B.cell.$factory($B.$check_def_free(free_vars[i])))
+            }catch(err){
+                // empty cell
+                cells.push($B.cell.$factory(null))
+            }
+        }
+        return _b_.tuple.$factory(cells)
     }else if(self.$attrs && self.$attrs[attr] !== undefined){
         return self.$attrs[attr]
     }else{
@@ -2458,6 +2485,53 @@ $B.Function.__setattr__ = function(self, attr, value){
 $B.Function.$factory = function(){}
 
 $B.set_func_names($B.Function, "builtins")
+
+// Cell objects, for free variables in functions
+$B.cell = $B.make_class("cell",
+    function(value){
+        return {
+            __class__: $B.cell,
+            $cell_contents: value
+        }
+    }
+)
+
+$B.cell.cell_contents = $B.$call(property)(
+    function(self){
+        if(self.$cell_contents === null){
+            throw _b_.ValueError.$factory("empty cell")
+        }
+        return self.$cell_contents
+    },
+    function(self, value){
+        self.$cell_contents = value
+    }
+)
+
+var $comps = Object.values($B.$comps).concat(["eq", "ne"])
+$comps.forEach(function(comp){
+    var op = "__" + comp + "__"
+    $B.cell[op] = (function(op){
+        return function(self, other){
+            console.log(op, self, other)
+            if(! _b_.isinstance(other, $B.cell)){
+                return NotImplemented
+            }
+            if(self.$cell_contents === null){
+                if(other.$cell_contents === null){
+                    return op == "__eq__"
+                }else{
+                    return ["__ne__", "__lt__"].indexOf(op) > -1
+                }
+            }else if(other.$cell_contents === null){
+                return ["__ne__", "__gt__"].indexOf(op) > -1
+            }
+            return $B.rich_comp(op, self.$cell_contents, other.$cell_contents)
+        }
+    })(op)
+})
+
+$B.set_func_names($B.cell, "builtins")
 
 _b_.__BRYTHON__ = __BRYTHON__
 

@@ -2728,10 +2728,6 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         node.parent.insert(rank + offset++,
             $NodeJS('    __annotations__: {' + annotations.join(',') + '},'))
 
-        // Add attribute __closure__
-        node.parent.insert(rank + offset++,
-            $NodeJS('    __closure__: None ,'))
-
         // Add attribute __doc__
         node.parent.insert(rank + offset++,
             $NodeJS('    __doc__: ' + (this.doc_string || 'None') + ','))
@@ -2745,6 +2741,17 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         var co_varnames = []
         for(var attr in this.varnames){co_varnames.push('"' + attr + '"')}
 
+        // Get "free variables" (referenced in function but not bound inside
+        // it)
+        var free_vars = []
+        if(this.parent.node.referenced){
+            for(var attr in this.parent.node.referenced){
+                if(! this.parent.node.binding[attr]){
+                    free_vars.push('"' + attr + '"')
+                }
+            }
+        }
+
         // CODE_MARKER is a placeholder which will be replaced
         // by the javascript code of the function
         var CODE_MARKER = '___%%%-CODE-%%%___' + this.name + this.num;
@@ -2756,6 +2763,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
             '["__file__"]' +
             h1 + 'co_firstlineno:' + node.line_num +
             h1 + 'co_flags:' + flags +
+            h1 + 'co_freevars: [' + free_vars + ']' +
             h1 + 'co_kwonlyargcount:' + this.kwonlyargcount +
             h1 + 'co_name: "' + this.name + '"' +
             h1 + 'co_nlocals: ' + co_varnames.length +
@@ -3687,6 +3695,13 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
     this.blurred_scope = this.scope.blurred
     this.env = clone(this.scope.binding)
 
+    // Store variables referenced in scope
+    if(scope.ntype == "def" || scope.ntype == "generator"){
+        scope.referenced = scope.referenced || {}
+        if(! $B.builtins[this.value]){
+            scope.referenced[this.value] = true
+        }
+    }
     if(context.parent.type == 'call_arg') {
         this.call_arg = true
     }
