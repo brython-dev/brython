@@ -1122,8 +1122,10 @@ var $AttrCtx = $B.parser.$AttrCtx = function(context){
                         // set attr to instance of a class without a parent
                         this.assign_self = true
                         return [js + ".__class__ && !" +
-                            js + ".__class__.$has_setattr ? " + js + "." +
-                            this.name + " = ", " : $B.$setattr(" + js +
+                            js + ".__class__.$has_setattr && ! " + js +
+                            ".$is_class ? " + js + 
+                            ".__dict__.$string_dict['" + this.name +
+                            "'] = ", " : $B.$setattr(" + js +
                             ', "' + this.name + '", ']
                     }
                 }
@@ -2727,6 +2729,10 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         // Add attribute __annotations__
         node.parent.insert(rank + offset++,
             $NodeJS('    __annotations__: {' + annotations.join(',') + '},'))
+
+        // Add attribute __dict__
+        node.parent.insert(rank + offset++,
+            $NodeJS('    __dict__: _b_.dict.$factory(),'))
 
         // Add attribute __doc__
         node.parent.insert(rank + offset++,

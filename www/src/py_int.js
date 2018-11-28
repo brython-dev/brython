@@ -348,6 +348,7 @@ int.__new__ = function(cls, value){
     if(cls === int){return int.$factory(value)}
     return {
         __class__: cls,
+        __dict__: _b_.dict.$factory(),
         $value: value || 0
     }
 }
