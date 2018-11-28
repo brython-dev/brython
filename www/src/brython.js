@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-11-28 11:04:41.346173"
-__BRYTHON__.timestamp=1543399481346
+__BRYTHON__.compiled_date="2018-11-28 11:22:41.774138"
+__BRYTHON__.timestamp=1543400561774
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -9029,6 +9029,8 @@ if(value.__class__===$B.long_int){var z=parseInt(value.value)
 if(z > $B.min_int && z < $B.max_int){return z}
 else{return value}}
 base=$B.$GetInt(base)
+function invalid(value,base){throw _b_.ValueError.$factory("invalid literal for int() with base " +
+base + ": '" + _b_.str.$factory(value)+ "'")}
 if(isinstance(value,_b_.str)){value=value.valueOf()}
 if(typeof value=="string"){var _value=value.trim()
 if(_value.length==2 && base==0 &&
@@ -9036,24 +9038,21 @@ if(_value.length==2 && base==0 &&
 if(_value.length >2){var _pre=_value.substr(0,2).toUpperCase()
 if(base==0){if(_pre=="0B"){base=2}
 if(_pre=="0O"){base=8}
-if(_pre=="0X"){base=16}}
+if(_pre=="0X"){base=16}}else if(_pre=="0X" && base !=16){invalid(_value,base)}
+else if(_pre=="0O" && base !=8){invalid(_value,base)}
+else if(_pre=="0B" && base !=2){invalid(_value,base)}
 if(_pre=="0B" ||_pre=="0O" ||_pre=="0X"){_value=_value.substr(2)
 while(_value.startsWith("_")){_value=_value.substr(1)}}}
 var _digits=$valid_digits(base),_re=new RegExp("^[+-]?[" + _digits + "]" +
 "[" + _digits + "_]*$","i"),match=_re.exec(_value)
-if(match===null){throw _b_.ValueError.$factory(
-"invalid literal for int() with base " + base + ": '" +
-_b_.str.$factory(value)+ "'")}else{value=_value.replace(/_/g,"")}
-if(base <=10 && ! isFinite(value)){throw _b_.ValueError.$factory(
-"invalid literal for int() with base " + base + ": '" +
-_b_.str.$factory(value)+ "'")}
+if(match===null){invalid(value,base)}
+else{value=_value.replace(/_/g,"")}
+if(base <=10 && ! isFinite(value)){invalid(_value,base)}
 var res=parseInt(value,base)
 if(res < $B.min_int ||res > $B.max_int){return $B.long_int.$factory(value,base)}
 return res}
 if(isinstance(value,[_b_.bytes,_b_.bytearray])){var _digits=$valid_digits(base)
-for(var i=0;i < value.source.length;i++){if(_digits.indexOf(String.fromCharCode(value.source[i]))==-1){throw _b_.ValueError.$factory(
-"invalid literal for int() with base " + base + ": " +
-_b_.repr(value))}}
+for(var i=0;i < value.source.length;i++){if(_digits.indexOf(String.fromCharCode(value.source[i]))==-1){invalid(value,base)}}
 return Number(parseInt(getattr(value,"decode")("latin-1"),base))}
 if(hasattr(value,"__int__")){return getattr(value,"__int__")()}
 if(hasattr(value,"__index__")){return getattr(value,"__index__")()}
