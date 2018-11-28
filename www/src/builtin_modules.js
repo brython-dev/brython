@@ -214,6 +214,7 @@
                         res._wrapped = false  // not wrapped
                     }
                     res.__class__ = cls
+                    res.__dict__ = _b_.dict.$factory()
                     return res
                 }
                 $B.set_func_names(dict, "browser.html")
@@ -456,7 +457,7 @@
 
     $B.method_descriptor.__getattribute__ = $B.Function.__getattribute__
     $B.wrapper_descriptor.__getattribute__ = $B.Function.__getattribute__
-    
+
     // Set type of methods of builtin classes
     for(var name in _b_){
         if(_b_[name].__class__ === _b_.type){
@@ -478,5 +479,54 @@
                 _b_[name].__name__
         }
     }
+
+    // Cell objects, for free variables in functions
+    // Must be defined after dict, because property uses it
+    $B.cell = $B.make_class("cell",
+        function(value){
+            return {
+                __class__: $B.cell,
+                $cell_contents: value
+            }
+        }
+    )
+
+    $B.cell.cell_contents = $B.$call(_b_.property)(
+        function(self){
+            if(self.$cell_contents === null){
+                throw _b_.ValueError.$factory("empty cell")
+            }
+            return self.$cell_contents
+        },
+        function(self, value){
+            self.$cell_contents = value
+        }
+    )
+
+    var $comps = Object.values($B.$comps).concat(["eq", "ne"])
+    $comps.forEach(function(comp){
+        var op = "__" + comp + "__"
+        $B.cell[op] = (function(op){
+            return function(self, other){
+                if(! _b_.isinstance(other, $B.cell)){
+                    return NotImplemented
+                }
+                if(self.$cell_contents === null){
+                    if(other.$cell_contents === null){
+                        return op == "__eq__"
+                    }else{
+                        return ["__ne__", "__lt__", "__le__"].indexOf(op) > -1
+                    }
+                }else if(other.$cell_contents === null){
+                    return ["__ne__", "__gt__", "__ge__"].indexOf(op) > -1
+                }
+                return $B.rich_comp(op, self.$cell_contents, other.$cell_contents)
+            }
+        })(op)
+    })
+
+    $B.set_func_names($B.cell, "builtins")
+
+
 
 })(__BRYTHON__)
