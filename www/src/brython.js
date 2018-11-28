@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-11-28 11:22:41.774138"
-__BRYTHON__.timestamp=1543400561774
+__BRYTHON__.compiled_date="2018-11-28 12:11:07.478705"
+__BRYTHON__.timestamp=1543403467478
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -590,7 +590,7 @@ parent.C.tree[0].args===undefined){
 this.assign_self=true
 return[js + ".__class__ && !" +
 js + ".__class__.$has_setattr && ! " + js +
-".$is_class ? " + js + 
+".$is_class ? " + js +
 ".__dict__.$string_dict['" + this.name +
 "'] = "," : $B.$setattr(" + js +
 ', "' + this.name + '", ']}}}}
@@ -4775,7 +4775,7 @@ function handle_error(err){
 if(err.__class__ !==undefined){var name=err.__class__.__name__,trace=_b_.getattr(err,'info')
 if(name=='SyntaxError' ||name=='IndentationError'){var offset=err.args[3]
 trace +='\n    ' + ' '.repeat(offset)+ '^' +
-'\n' + name+': '+err.args[0]}else{trace +='\n'+name+': ' + err.args}}else{console.log(err)
+'\n' + name + ': '+err.args[0]}else{trace +='\n' + name + ': ' + err.args}}else{console.log(err)
 trace=err + ""}
 try{_b_.getattr($B.stderr,'write')(trace)}catch(print_exc_err){console.log(trace)}
 throw err}
@@ -7093,7 +7093,7 @@ var $line_info=frame[1].$line_info
 var line_info=$line_info.split(','),src
 if(exc.module==line_info[1]){src=exc.src}
 if(!includeInternal){var src=frame[3].$src
-if(src===undefined){if($B.VFS && $B.VFS.hasOwnProperty(frame[2])){src=$B.VFS[frame[2]][1]}else{continue}}}
+if(src===undefined){if($B.VFS && $B.VFS.hasOwnProperty(frame[2])){src=$B.VFS[frame[2]][1]}else if(src=$B.file_cache[frame[3].__file__]){}else{continue}}}
 var module=line_info[1]
 if(module.charAt(0)=="$"){module="<module>"}
 info +="\n  module " + module + " line " + line_info[0]

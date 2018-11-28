@@ -1123,7 +1123,7 @@ var $AttrCtx = $B.parser.$AttrCtx = function(context){
                         this.assign_self = true
                         return [js + ".__class__ && !" +
                             js + ".__class__.$has_setattr && ! " + js +
-                            ".$is_class ? " + js + 
+                            ".$is_class ? " + js +
                             ".__dict__.$string_dict['" + this.name +
                             "'] = ", " : $B.$setattr(" + js +
                             ', "' + this.name + '", ']
@@ -9483,19 +9483,19 @@ function handle_error(err){
     if(err.__class__ !== undefined){
         var name = err.__class__.__name__,
             trace = _b_.getattr(err, 'info')
-        if(name=='SyntaxError' || name=='IndentationError'){
+        if(name == 'SyntaxError' || name == 'IndentationError'){
             var offset = err.args[3]
             trace += '\n    ' + ' '.repeat(offset) + '^' +
-                '\n' + name+': '+err.args[0]
+                '\n' + name + ': '+err.args[0]
         }else{
-            trace += '\n'+name+': ' + err.args
+            trace += '\n' + name + ': ' + err.args
         }
     }else{
         console.log(err)
         trace = err + ""
     }
     try{
-        _b_.getattr($B.stderr,'write')(trace)
+        _b_.getattr($B.stderr, 'write')(trace)
     }catch(print_exc_err){
         console.log(trace)
     }
