@@ -45,7 +45,7 @@ def discover_brython_test_modules():
           ("test_functools.py", "functools"),
           ("test_hashlib.py", "hashlib"),
           ("test_itertools.py", "itertools"),
-          ("test_json.py", "JSON"),
+          ("test_json.py", "json"),
           ("test_math.py", "math"),
           ("test_random.py", "random"),
           ("test_re.py", "re"),
