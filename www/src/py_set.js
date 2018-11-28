@@ -198,6 +198,15 @@ set.__or__ = function(self, other, accept_iter){
     return res
 }
 
+set.__reduce__ = function(self){
+    return _b_.tuple.$factory([self.__class__, 
+        _b_.tuple.$factory([self.$items]), _b_.None])
+}
+
+set.__reduce_ex__ = function(self, protocol){
+    return set.__reduce__(self)
+}
+
 set.__str__ = set.__repr__ = function(self){
     var frozen = self.$real === "frozen"
     self.$cycle = self.$cycle === undefined ? 0 : self.$cycle + 1
@@ -551,7 +560,12 @@ set.$factory = function(){
     // $str is true if all the elements in the set are string, $num if
     // all the elements are integers
     // They are used to speed up operations on sets
-    var res = {__class__: set, $str: true, $num: true, $items: []}
+    var res = {
+        __class__: set,
+        $str: true,
+        $num: true,
+        $items: []
+    }
     // apply __init__ with arguments of set()
     var args = [res].concat(Array.prototype.slice.call(arguments))
     set.__init__(res, ...arguments)
