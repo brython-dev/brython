@@ -2145,6 +2145,20 @@ assertRaises(SyntaxError, exec, "if:x=2")
 assertRaises(SyntaxError, exec, "while:x=2")
 assertRaises(SyntaxError, exec, "for x in:x")
 
+# issue 973
+try:
+    exec("x = 400 - a, y = 400 - b")
+    raise Exception("should have raised SyntaxError")
+except SyntaxError as exc:
+    assert exc.args[0] == "can't assign to operator"
+
+# issue 975
+l = [1, 2, 3]
+try:
+    l[:,:]
+    raise Exception("should have raised TypeError")
+except TypeError:
+    pass
 
 # ==========================================
 # Finally, report that all tests have passed

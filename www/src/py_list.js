@@ -114,7 +114,7 @@ list.__eq__ = function(self, other){
             return true
        }
     }
-    return false
+    return _b_.NotImplemented
 }
 
 list.__getitem__ = function(self, arg){
@@ -327,9 +327,6 @@ list.__mul__ = function(self, other){
         "can't multiply sequence by non-int of type '" +
         $B.get_class(other).__name__ + "'")
 }
-
-
-list.__ne__ = function(self,other){return ! list.__eq__(self,other)}
 
 list.__new__ = function(cls, ...args){
     if(cls === undefined){

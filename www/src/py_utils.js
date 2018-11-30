@@ -1450,14 +1450,14 @@ $B.rich_comp = function(op, x, y){
         // left operand’s method has priority."
         if(y.__class__.__mro__.indexOf(x.__class__) > -1){
             rev_op = reversed_op[op] || op
-            res = $B.$getattr(y, rev_op)(x)
+            var rev_func = $B.$getattr(y, rev_op)
+            res = $B.$call($B.$getattr(y, rev_op))(x)
             if(res !== _b_.NotImplemented){return res}
             compared = true
         }
     }
 
     res = $B.$call($B.$getattr(x, op))(y)
-
     if(res !== _b_.NotImplemented){return res}
     if(compared){return false}
     rev_op = reversed_op[op] || op
