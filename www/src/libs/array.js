@@ -60,6 +60,13 @@ array.$buffer_protocol = true
 
 var array_iterator = $B.$iterator_class("array_iterator")
 
+array.__getitem__ = function(self, key){
+    if(self.obj && self.obj[key] !== undefined){
+        return self.obj[key]
+    }
+    throw _b_.IndexError("array index out of range")
+}
+
 array.__iter__ = function(self){
     return $B.$iterator(self.obj, array_iterator)
 }
@@ -76,28 +83,6 @@ array.__str__ = function(self){
         res += ", [" + self.obj + "]"
     }
     return res + ")"
-}
-
-function check_value(type, value){
-    // check value
-    var elt_size = type.BYTES_PER_ELEMENT,
-        max,
-        min
-    if(type.name.startsWith("I")){
-        min = - (1 << (8 * elt_size)) / 2
-        max = -min - 1
-    }else if(type.name.startsWith("U")){
-        min = 0
-        max = 1 << (8 * elt_size)
-    }
-
-    if(min !== undefined){
-        if(value > max){
-            throw _b_.OverflowError.$factory("value greater than maximum")
-        }else if(value < min){
-            throw _b_.OverflowError.$factory("value less than minimum")
-        }
-    }
 }
 
 function normalize_index(self, i){
@@ -181,6 +166,7 @@ array.fromlist = function(self, list){
             try{
                 array.append(self, item)
             }catch(err){
+                console.log(err)
                 return _b_.None
             }
         }catch(err){
@@ -191,6 +177,8 @@ array.fromlist = function(self, list){
         }
     }
 }
+
+array.fromstring = array.frombytes
 
 array.index = function(self, x){
     $B.args("index", 2, {self: null, x: null},
@@ -205,22 +193,10 @@ array.index = function(self, x){
 array.insert = function(self, i, value){
     $B.args("insert", 3, {self: null, i: null, value: null},
         ["self", "i", "value"], arguments, {}, null, null)
-    var type = typecodes[self.typecode]
-    check_value(type, value)
     if(self.obj === null){
-        self.obj = type.from([value])
+        self.obj = [value]
     }else{
-        // create new TypedArray of length + 1
-        i = normalize_index(self, i)
-        var newobj = new typecodes[self.typecode](self.obj.length + 1)
-        // copy previous values
-        newobj.set(self.obj.slice(0, i))
-        // append new value
-        newobj[i] = value
-        // copy values after position
-        newobj.set(self.obj.slice(i), i + 1)
-        // reset self.obj
-        self.obj = newobj
+        self.obj.splice(i, 0, value)
     }
     return _b_.None
 }
@@ -277,7 +253,15 @@ array.reverse = function(self){
 array.tobytes = function(self){
     $B.args("tobytes", 1, {self: null},
         ["self"], arguments, {}, null, null)
-    var res = Array.slice.call(null, self.obj)
+    var items = Array.slice.call(null, self.obj),
+        res = []
+    items.forEach(function(item){
+        while(item > 256){
+            res.push(item % 256)
+            item = Math.floor(item / 256)
+        }
+        res.push(item)
+    })
     return _b_.bytes.$factory(res)
 }
 
@@ -286,6 +270,8 @@ array.tolist = function(self){
         ["self"], arguments, {}, null, null)
     return Array.slice.call(null, self.obj)
 }
+
+array.tostring = array.tobytes
 
 array.typecode = function(self){
     return self.typecode

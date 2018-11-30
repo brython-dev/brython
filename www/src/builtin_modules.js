@@ -454,6 +454,9 @@
         _b_[attr] = value
     }
 
+    $B.method_descriptor.__getattribute__ = $B.Function.__getattribute__
+    $B.wrapper_descriptor.__getattribute__ = $B.Function.__getattribute__
+    
     // Set type of methods of builtin classes
     for(var name in _b_){
         if(_b_[name].__class__ === _b_.type){

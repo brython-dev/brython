@@ -85,12 +85,7 @@ float.__eq__ = function(self, other){
       if (other.$imag != 0){return false}
       return self == other.$real
     }
-
-    if(_b_.hasattr(other, "__eq__")){
-       return _b_.getattr(other, "__eq__")(self.value)
-    }
-
-    return self.value === other
+    return _b_.NotImplemented
 }
 
 float.__floordiv__ = function(self, other){

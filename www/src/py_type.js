@@ -770,6 +770,17 @@ method.__repr__ = method.__str__ = function(self){
        " of " + _b_.str.$factory(self.$infos.__self__) + ">"
 }
 
+method.__setattr__ = function(self, key, value){
+    // Attempting to set an attribute on a method results in an AttributeError
+    // being raised.
+    if(key == "__class__"){
+        throw _b_.TypeError.$factory("__class__ assignment only supported " +
+            "for heap types or ModuleType subclasses")
+    }
+    throw _b_.AttributeError.$factory("'method' object has no attribute '" +
+        key + "'")
+}
+
 $B.set_func_names(method, "builtins")
 
 method_descriptor = $B.method_descriptor =
