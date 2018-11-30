@@ -54,9 +54,11 @@ object.__dir__ = function(self) {
     }
 
     // add object's own attributes
-    for(var attr in self){
-        if(attr.substr(0, 2) == "$$"){res.push(attr.substr(2))}
-        else if(attr.charAt(0) != "$"){res.push(attr)}
+    if(self.__dict__){
+        for(var attr in self.__dict__.$string_dict){
+            if(attr.substr(0, 2) == "$$"){res.push(attr.substr(2))}
+            else if(attr.charAt(0) != "$"){res.push(attr)}
+        }
     }
     res = _b_.list.$factory(_b_.set.$factory(res))
     _b_.list.sort(res)
@@ -66,14 +68,8 @@ object.__dir__ = function(self) {
 object.__eq__ = function(self, other){
     // equality test defaults to identity of objects
     //test_issue_1393
-    var _class = $B.get_class(self)
-    if(_class.$native || _class.__name__ == "function"){
-       var _class1 = $B.get_class(other)
-       if(!_class1.$native && _class1.__name__ != "function"){
-           return $B.rich_comp("__eq__", other, self)
-       }
-    }
-    return self === other
+    if(self === other){return true}
+    return _b_.NotImplemented
 }
 
 object.__format__ = function(){
@@ -91,12 +87,16 @@ object.__getattribute__ = function(obj, attr){
 
     var klass = obj.__class__ || $B.get_class(obj)
 
-    var $test = false //attr == "draggable"
+    var $test = false //attr == "info"
     if($test){console.log("attr", attr, "de", obj, "klass", klass)}
     if(attr === "__class__"){
         return klass
     }
     var res = obj[attr]
+    if(res === undefined && obj.__dict__ &&
+            obj.__dict__.$string_dict.hasOwnProperty(attr)){
+        return obj.__dict__.$string_dict[attr]
+    }
 
     if(res === undefined){
         // search in classes hierarchy, following method resolution order
@@ -147,9 +147,12 @@ object.__getattribute__ = function(obj, attr){
         var __get__ = get === undefined ? null :
             _b_.getattr(res, "__get__", null)
 
+        if($test){console.log("__get__", __get__)}
         // For descriptors, attribute resolution is done by applying __get__
         if(__get__ !== null){
-            try{return __get__.apply(null, [obj, klass])}
+            try{
+                return __get__.apply(null, [obj, klass])
+            }
             catch(err){
                 console.log('error in get.apply', err)
                 console.log("get attr", attr, "of", obj)
@@ -228,6 +231,7 @@ object.__getattribute__ = function(obj, attr){
                         var result = res.apply(null, args)
                         return result
                     }
+                    if(attr == "a"){console.log("make method from res", res)}
                     method.__class__ = $B.method
                     method.__get__ = function(obj, cls){
                         var clmethod = function(){
@@ -275,7 +279,6 @@ object.__getattribute__ = function(obj, attr){
                 }
             }
         }
-        if($test){console.log("use __getattr__", _ga)}
         if(_ga !== undefined){
             try{return _ga(obj, attr)}
             catch(err){if($B.debug > 2){console.log(err)}}
@@ -341,11 +344,22 @@ object.__new__ = function(cls, ...args){
             throw _b_.TypeError.$factory("object() takes no parameters")
         }
     }
-    return {__class__ : cls}
+    return {
+        __class__ : cls,
+        __dict__: _b_.dict.$factory()
+        }
 }
 
 object.__ne__ = function(self, other){
-    return ! $B.rich_comp("__eq__", self, other)
+    //return ! $B.rich_comp("__eq__", self, other)
+    if(self === other){return false}
+    var eq = $B.$getattr(self, "__eq__", null)
+    if(eq !== null){
+        var res = $B.$call(eq)(other)
+        if(res === _b_.NotImplemented){return res}
+        return ! $B.$bool(res)
+    }
+    return _b_.NotImplemented
 }
 
 object.__reduce__ = function(self){
@@ -357,9 +371,10 @@ object.__reduce__ = function(self){
     res.push(_b_.tuple.$factory([self.__class__].
         concat(self.__class__.__mro__)))
     var d = _b_.dict.$factory()
-    for(var attr in self){
-        d.$string_dict[attr] = self[attr]
+    for(var attr in self.__dict__.$string_dict){
+        d.$string_dict[attr] = self.__dict__.$string_dict[attr]
     }
+    console.log("object.__reduce__, d", d)
     res.push(d)
     return _b_.tuple.$factory(res)
 }
@@ -378,11 +393,11 @@ object.__reduce_ex__ = function(self){
     res.push(_b_.tuple.$factory([self.__class__]))
     var d = _b_.dict.$factory(),
         nb = 0
-    for(var attr in self){
+    for(var attr in self.__dict__.$string_dict){
         if(attr == "__class__" || attr.startsWith("$")){
             continue
         }
-        d.$string_dict[attr] = self[attr]
+        d.$string_dict[attr] = self.__dict__.$string_dict[attr]
         nb++
     }
     if(nb == 0){d = _b_.None}
@@ -406,6 +421,9 @@ object.__repr__ = function(self){
 }
 
 object.__setattr__ = function(self, attr, val){
+    if(val == "DISPATCH_TABLE"){
+        console.log("object.__setattr__", self, attr, val)
+    }
     if(val === undefined){
         // setting an attribute to 'object' type is not allowed
         throw _b_.TypeError.$factory(
@@ -421,7 +439,12 @@ object.__setattr__ = function(self, attr, val){
         }
     }
     if($B.aliased_names[attr]){attr = "$$"+attr}
-    self[attr] = val
+    if(self.__dict__){
+        self.__dict__.$string_dict[attr] = val
+    }else{
+        console.log("set attr without __dict__", self, attr, val)
+        self[attr] = val
+    }
     return _b_.None
 }
 object.__setattr__.__get__ = function(obj){

@@ -313,6 +313,8 @@ var getExceptionTrace = function(exc, includeInternal) {
             if(src === undefined){
                 if($B.VFS && $B.VFS.hasOwnProperty(frame[2])){
                     src = $B.VFS[frame[2]][1]
+                }else if(src = $B.file_cache[frame[3].__file__]){
+                    // For imported modules, cf. issue 981
                 }else{
                     continue
                 }
@@ -504,7 +506,6 @@ $make_exc(["BlockingIOError", "ChildProcessError", "ConnectionError",
 $make_exc(["BrokenPipeError", "ConnectionAbortedError",
     "ConnectionRefusedError", "ConnectionResetError"], _b_.ConnectionError)
 $make_exc(["NotImplementedError"], _b_.RuntimeError)
-$make_exc(["NotImplemented"], _b_.RuntimeError)
 $make_exc(["IndentationError"], _b_.SyntaxError)
 $make_exc(["TabError"], _b_.IndentationError)
 $make_exc(["UnicodeError"], _b_.ValueError)

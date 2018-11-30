@@ -381,7 +381,7 @@ def exp(x):
 
     return complex(_real, _imag)
 
-def isclose(x, y, rel_tol=1e-09, abs_tol=0.0):
+def isclose(x, y, *, rel_tol=1e-09, abs_tol=0.0):
     rel_tol = float(rel_tol)
     abs_tol = float(abs_tol)
     return abs(x - y) <= max(rel_tol * max(abs(x), abs(y)), abs_tol)

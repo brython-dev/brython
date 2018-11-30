@@ -206,4 +206,11 @@ assert False == 0
 assert False == 0.0
 assert not (False == 8)
 
+# issue 982
+try:
+    int("0x505")
+    raise Exception("should have raised ValueError")
+except ValueError:
+    pass
+
 print('passed all tests...')

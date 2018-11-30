@@ -81,7 +81,6 @@ global_loop = asyncio.new_event_loop()
 def run():
     global output
     import sys
-    doc["console"].value = ''
     src = editor.editor.getValue()
     if storage is not None:
        storage["py_src"] = src
@@ -117,10 +116,11 @@ def test_next():
     if script_num < len(options):
         try:
             option = doc['files'].options[script_num]
+            doc["console"].value = ''
             print('Running tests in', option.innerText)
             sys.stdout.flush()
             src = open(option.value).read()
-            doc['files'].attrs["selectedIndex"] = script_num
+            doc['files'].selectedIndex = script_num
             editor.editor.setValue(src)
             state = yield from run()
             if state == 0:

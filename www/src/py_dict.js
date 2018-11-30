@@ -437,13 +437,17 @@ dict.__new__ = function(cls){
     if(cls === undefined){
         throw _b_.TypeError.$factory("int.__new__(): not enough arguments")
     }
-    return {
+    var instance = {
         __class__: cls,
         $numeric_dict : {},
         $object_dict : {},
         $string_dict : {},
         $str_hash: {}
     }
+    if(cls !== dict){
+        instance.__dict__ = _b_.dict.$factory()
+    }
+    return instance
 }
 
 dict.__next__ = function(self){
@@ -800,7 +804,7 @@ function jsobj2dict(x){
     return d
 }
 $B.obj_dict = function(obj, from_js){
-    var klass = $B.get_class(obj)
+    var klass = obj.__class__ || $B.get_class(obj)
     if(klass !== undefined && klass.$native){
         throw _b_.AttributeError.$factory(klass.__name__ +
             " has no attribute '__dict__'")}

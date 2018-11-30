@@ -74,7 +74,7 @@ set.__eq__ = function(self, other){
     // compare class set
     if(other === undefined){return self === set}
 
-    if(_b_.isinstance(other, _b_.set)){
+    if(_b_.isinstance(other, [_b_.set, _b_.frozenset])){
       if(other.$items.length == self.$items.length){
         for(var i = 0, len = self.$items.length; i < len; i++){
            if(set.__contains__(self, other.$items[i]) === false){return false}
@@ -84,33 +84,7 @@ set.__eq__ = function(self, other){
       return false
     }
 
-    if(_b_.isinstance(other, [_b_.list])){
-      if(_b_.len(other) != self.$items.length){return false}
-
-      for(var i = 0, len = _b_.len(other); i < len; i++){
-         var _value = _b_.getattr(other, "__getitem__")(i)
-         if(set.__contains__(self, _value) === false){return false}
-      }
-      return true
-    }
-
-    if(_b_.hasattr(other, "__iter__")) { // is an iterator
-      if(_b_.len(other) != self.$items.length){return false}
-
-      var _it = $B.$iter(other)
-
-      while(1){
-         try{
-           var e = _b_.next(_it)
-           if(!set.__contains__(self, e)){return false}
-         }catch(err){
-           if(err.__class__ === _b_.StopIteration){break}
-           throw err
-         }
-      }
-      return true
-    }
-    return false
+    return _b_.NotImplemented
 }
 
 set.__format__ = function(self, format_string){
@@ -197,8 +171,6 @@ set.__lt__ = function(self,other){
 
 set.__mro__ = [_b_.object]
 
-set.__ne__ = function(self,other){return ! set.__eq__(self, other)}
-
 set.__new__ = function(cls){
     if(cls === undefined){
         throw _b_.TypeError.$factory("set.__new__(): not enough arguments")
@@ -224,6 +196,15 @@ set.__or__ = function(self, other, accept_iter){
     }
     res.__class__ = self.__class__
     return res
+}
+
+set.__reduce__ = function(self){
+    return _b_.tuple.$factory([self.__class__, 
+        _b_.tuple.$factory([self.$items]), _b_.None])
+}
+
+set.__reduce_ex__ = function(self, protocol){
+    return set.__reduce__(self)
 }
 
 set.__str__ = set.__repr__ = function(self){
@@ -579,7 +560,12 @@ set.$factory = function(){
     // $str is true if all the elements in the set are string, $num if
     // all the elements are integers
     // They are used to speed up operations on sets
-    var res = {__class__: set, $str: true, $num: true, $items: []}
+    var res = {
+        __class__: set,
+        $str: true,
+        $num: true,
+        $items: []
+    }
     // apply __init__ with arguments of set()
     var args = [res].concat(Array.prototype.slice.call(arguments))
     set.__init__(res, ...arguments)

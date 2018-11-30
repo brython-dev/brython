@@ -10,7 +10,7 @@ copyrighted by: Copyright (c) 1997-2001 by Secret Labs AB
 MAXREPEAT = 2147483648
 MAXGROUPS = 2147483647
 
-#import array
+import array
 import operator, sys
 from sre_constants import ATCODES, OPCODES, CHCODES
 from sre_constants import SRE_INFO_PREFIX, SRE_INFO_LITERAL
@@ -1225,9 +1225,7 @@ class _CharsetDispatcher(_Dispatcher):
         self.ok = not self.ok
         ctx.skip_code(1)
 
-    #fixme brython.   array module doesn't exist
     def set_bigcharset(self, ctx):
-        raise NotImplementedError("_sre.py: set_bigcharset, array not implemented")
         # <BIGCHARSET> <blockcount> <256 blockindices> <blocks>
         char_code = self.char
         count = ctx.peek_code(1)

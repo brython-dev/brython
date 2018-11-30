@@ -150,6 +150,25 @@ bytes.__add__ = function(self, other){
         _b_.str.$factory(other))
 }
 
+bytes.__contains__ = function(self, other){
+    if(typeof other == "number"){
+        return self.source.indexOf(other) > -1
+    }
+    if(self.source.length > other.source.length){return false}
+    var len = self.source.length
+    for(var i = 0; i < other.source.length - self.source.length + 1; i++){
+        var flag = true
+        for(var j = 0; j < len; j++){
+            if(other.source[i + j] != self.source[j]){
+                flag = false
+                break
+            }
+        }
+        if(flag){return true}
+    }
+    return false
+}
+
 var $bytes_iterator = $B.$iterator_class("bytes_iterator")
 bytes.__iter__ = function(self){
     return $B.$iterator(self.source, $bytes_iterator)

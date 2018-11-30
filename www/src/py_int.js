@@ -150,10 +150,7 @@ int.__eq__ = function(self, other){
         if(other.$imag != 0){return False}
         return self.valueOf() == other.$real
     }
-
-    if(hasattr(other, "__eq__")){return getattr(other, "__eq__")(self)}
-
-    return self.valueOf() === other
+    return _b_.NotImplemented
 }
 
 int.__float__ = function(self){
@@ -351,6 +348,7 @@ int.__new__ = function(cls, value){
     if(cls === int){return int.$factory(value)}
     return {
         __class__: cls,
+        __dict__: _b_.dict.$factory(),
         $value: value || 0
     }
 }
@@ -675,6 +673,10 @@ int.$factory = function(value, base){
     }
 
     base = $B.$GetInt(base)
+    function invalid(value, base){
+        throw _b_.ValueError.$factory("invalid literal for int() with base " +
+            base + ": '" + _b_.str.$factory(value) + "'")
+    }
 
     if(isinstance(value, _b_.str)){value = value.valueOf()}
     if(typeof value == "string") {
@@ -689,6 +691,9 @@ int.$factory = function(value, base){
                 if(_pre == "0B"){base = 2}
                 if(_pre == "0O"){base = 8}
                 if(_pre == "0X"){base = 16}
+            }else if(_pre == "0X" && base != 16){invalid(_value, base)}
+            else if(_pre == "0O" && base != 8){invalid(_value, base)}
+            else if(_pre == "0B" && base != 2){invalid(_value, base)
             }
             if(_pre == "0B" || _pre == "0O" || _pre == "0X"){
                 _value = _value.substr(2)
@@ -701,18 +706,11 @@ int.$factory = function(value, base){
             _re = new RegExp("^[+-]?[" + _digits + "]" +
             "[" + _digits + "_]*$", "i"),
             match = _re.exec(_value)
-        if(match === null){
-            throw _b_.ValueError.$factory(
-                "invalid literal for int() with base " + base + ": '" +
-                _b_.str.$factory(value) + "'")
-        }else{
+        if(match === null){invalid(value, base)}
+        else{
             value = _value.replace(/_/g, "")
         }
-        if(base <= 10 && ! isFinite(value)){
-            throw _b_.ValueError.$factory(
-                "invalid literal for int() with base " + base + ": '" +
-                _b_.str.$factory(value) + "'")
-        }
+        if(base <= 10 && ! isFinite(value)){invalid(_value, base)}
         var res = parseInt(value, base)
         if(res < $B.min_int || res > $B.max_int){
             return $B.long_int.$factory(value, base)
@@ -724,9 +722,7 @@ int.$factory = function(value, base){
         var _digits = $valid_digits(base)
         for(var i = 0; i < value.source.length; i++){
             if(_digits.indexOf(String.fromCharCode(value.source[i])) == -1){
-                throw _b_.ValueError.$factory(
-                    "invalid literal for int() with base " + base + ": " +
-                    _b_.repr(value))
+                invalid(value, base)
             }
         }
         return Number(parseInt(getattr(value, "decode")("latin-1"), base))
