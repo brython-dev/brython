@@ -11,4 +11,5 @@ cp -r www/src/brython.js www/src/brython_stdlib.js www/src/libs www/src/Lib setu
 git log -n 1 --pretty=format:"%H" > $DEST/git-sha.txt
 
 # Remove files that we don't need
-rm -rf "$DEST/setup/data" "$DEST/Lib/test" "$DEST/setup/changelog.txt"
+rm -rf "$DEST/setup/data" "$DEST/Lib/test" "$DEST/setup/changelog.txt" \
+  "$DEST/Lib/.bundle-ignore" "$DEST/Lib/email/architecture.rst"
