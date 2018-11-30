@@ -100,7 +100,13 @@ function $download_module(module, url, $package){
         }
     }else{
         if(xhr.readyState == 4){
-            if(xhr.status == 200 || xhr.status == 0){
+            // When serving Brython using a single-page-webapp setup, the server
+            // never returns 404, but instead returns the default index.html when
+            // a matching file is not found. Check the content type so that we
+            // can treat HTML files as a 404.
+            const contentType = xhr.getResponseHeader("Content-Type") || "";
+            if ((xhr.status == 200 || xhr.status == 0)
+                && (contentType.indexOf("html") === -1)) {
                 res = xhr.responseText
                 module.$last_modified =
                     xhr.getResponseHeader("Last-Modified")
