@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-11-28 12:11:07.478705"
-__BRYTHON__.timestamp=1543403467478
+__BRYTHON__.compiled_date="2018-11-30 07:53:24.486748"
+__BRYTHON__.timestamp=1543560804486
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -11787,7 +11787,7 @@ case "left":
 case "top":
 case "width":
 if(self.elt.tagName=="CANVAS" && self.elt[attr]){return self.elt[attr]}
-if(self.elt instanceof SVGElement){return self.elt.getAttributeNS(null,attr)}
+if(self.elt instanceof SVGElement){return self.elt[attr].baseVal.value}
 if(self.elt.style[attr]){return parseInt(self.elt.style[attr])}else{throw _b_.AttributeError.$factory("style." + attr +
 " is not set for " + _b_.str.$factory(self))}
 case "clear":
