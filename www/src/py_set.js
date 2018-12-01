@@ -45,21 +45,22 @@ set.__and__ = function(self, other, accept_iter){
 }
 
 set.__contains__ = function(self,item){
-    if(self.$num && (typeof item == "number")){
-        if(isNaN(item)){ // special case for NaN
-            for(var i = self.$items.length-1; i >= 0; i--){
-                if(isNaN(self.$items[i])){return true}
+    if(self.$simple){
+        if(typeof item == "number" || item instanceof Number){
+            if(isNaN(item)){ // special case for NaN
+                for(var i = self.$items.length-1; i >= 0; i--){
+                    if(isNaN(self.$items[i])){return true}
+                }
+                return false
+            }else{
+                return self.$items.indexOf(item) > -1
             }
-            return false
-        }else{
+        }else if(typeof item == "string"){
             return self.$items.indexOf(item) > -1
         }
     }
-    if(self.$str && (typeof item == "string")){
-        return self.$items.indexOf(item) > -1
-    }
     if(! _b_.isinstance(item, set)){
-        _b_.hash(item) // raises TypeError if item is not hashable
+        $B.$getattr(item, "__hash__") // raises TypeError if item is not hashable
         // If item is a set, "item in self" is True if item compares equal to
         // one of the set items
     }
@@ -107,7 +108,16 @@ set.__gt__ = function(self, other){
     }
 }
 
-set.__init__ = function(self){
+set.__init__ = function(self, iterable, second){
+    if(second === undefined){
+        if(Array.isArray(iterable)){
+            for(var i = 0, len= iterable.length; i < len; i++){
+                set.add(self, iterable[i])
+            }
+            return _b_.None
+        }
+    }
+
     var $ = $B.args("__init__", 2, {self:null, iterable:null},
         ["self", "iterable"], arguments, {iterable:[]}, null,null),
         self = $.self,
@@ -118,7 +128,7 @@ set.__init__ = function(self){
         return $N
     }
     var it = $B.$iter(iterable),
-        obj = {$items: [], $str: true, $num: true}
+        obj = {$items: [], $simple: true}
     while(1){
         try{
             var item = _b_.next(it)
@@ -177,8 +187,7 @@ set.__new__ = function(cls){
     }
     return {
         __class__: cls,
-        $str: true,
-        $num: true,
+        $simple: true,
         $items: []
         }
 }
@@ -199,7 +208,7 @@ set.__or__ = function(self, other, accept_iter){
 }
 
 set.__reduce__ = function(self){
-    return _b_.tuple.$factory([self.__class__, 
+    return _b_.tuple.$factory([self.__class__,
         _b_.tuple.$factory([self.$items]), _b_.None])
 }
 
@@ -275,15 +284,13 @@ function $test(accept_iter, other, op){
 // add "reflected" methods
 $B.make_rmethods(set)
 
-set.add = function(){
-    var $ = $B.args("add", 2, {self: null, item: null}, ["self", "item"],
-        arguments, {}, null, null),
-        self = $.self,
-        item = $.item
-    _b_.hash(item)
-    if(self.$str && !(typeof item == 'string')){self.$str = false}
-    if(self.$num && !(typeof item == 'number')){self.$num = false}
-    if(self.$num || self.$str){
+function $add(self, item){
+    if(typeof item !== "string" && typeof item !== "number" &&
+        !(item instanceof Number)){
+        self.$simple = false
+        $B.$getattr(item, "__hash__")
+    }
+    if(self.$simple){
         var ix = self.$items.indexOf(item)
         if(ix == -1){self.$items.push(item)}
         else{
@@ -299,6 +306,14 @@ set.add = function(){
     }
     self.$items.push(item)
     return $N
+}
+
+set.add = function(){
+    var $ = $B.args("add", 2, {self: null, item: null}, ["self", "item"],
+        arguments, {}, null, null),
+        self = $.self,
+        item = $.item
+    return $add(self, item)
 }
 
 set.clear = function(){
@@ -556,19 +571,18 @@ set.__ixor__ = $accept_only_set(set.symmetric_difference_update, "^=")
 set.__ior__ = $accept_only_set(set.update, "|=")
 
 set.$factory = function(){
-    // Instances of set have attributes $str and $num
+    // Instances of set have attribute $str and $num
     // $str is true if all the elements in the set are string, $num if
     // all the elements are integers
     // They are used to speed up operations on sets
     var res = {
         __class__: set,
-        $str: true,
-        $num: true,
+        $simple: true,
         $items: []
     }
     // apply __init__ with arguments of set()
     var args = [res].concat(Array.prototype.slice.call(arguments))
-    set.__init__(res, ...arguments)
+    set.__init__.apply(null, args)
     return res
 }
 
@@ -642,8 +656,7 @@ frozenset.__new__ = function(cls){
     }
     return {
         __class__: cls,
-        $str: true,
-        $num: true,
+        $simple: true,
         $items: []
         }
 }
