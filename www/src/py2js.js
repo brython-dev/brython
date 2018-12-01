@@ -1304,7 +1304,7 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
 
         var left = context.tree[0].to_js()
 
-        if(left_bound_to_int && right_is_int){
+        if(false){ //left_bound_to_int && right_is_int){
             parent.insert(rank + offset, $NodeJS(left + " "+ op + " " + right))
             return offset++
         }
@@ -3914,7 +3914,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         // Build the list of scopes where the variable name is bound
         while(1){
             if($B._globals[scope.id] !== undefined &&
-                $B._globals[scope.id][val] !== undefined){
+                    $B._globals[scope.id][val] !== undefined){
                 // Variable is declared as global. If the name is bound in the
                 // global scope, use it ; if the name is being bound, bind it
                 // in the global namespace.
