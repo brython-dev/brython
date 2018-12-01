@@ -270,7 +270,6 @@ dict.__getitem__ = function(){
         return self.$jsobj[arg]
     }
 
-
     switch(typeof arg){
         case "string":
             if(self.$string_dict[arg] !== undefined){
@@ -281,6 +280,7 @@ dict.__getitem__ = function(){
             if(self.$numeric_dict[arg] !== undefined){
                 return self.$numeric_dict[arg]
             }
+            break
     }
 
     // since the key is more complex use 'default' method of getting item
@@ -295,7 +295,11 @@ dict.__getitem__ = function(){
     if(self.$numeric_dict[_key] !== undefined && _eq(_key)){
          return self.$numeric_dict[_key]
     }
-
+    if(isinstance(arg, _b_.str)){
+        // string subclass
+        var res = self.$string_dict[arg.valueOf()]
+        if(res !== undefined){return res}
+    }
 
     var obj_ref = self.$object_dict[_key]
     if(obj_ref !== undefined){
@@ -315,7 +319,29 @@ dict.__getitem__ = function(){
 
 dict.__hash__ = None
 
+function init_from_list(self, args){
+    var i = -1,
+        stop = args.length - 1,
+        si = dict.__setitem__
+    while(i++ < stop){
+        var item = args[i]
+        switch(typeof item[0]) {
+            case 'string':
+                self.$string_dict[item[0]] = item[1]
+                self.$str_hash[str_hash(item[0])] = item[0]
+                break
+            case 'number':
+                self.$numeric_dict[item[0]] = item[1]
+                break
+            default:
+                si(self, item[0], item[1])
+                break
+        }
+    }
+}
+
 dict.__init__ = function(self, first, second){
+    var $
     if(first === undefined){return $N}
     if(second === undefined){
         if(first.__class__ === $B.JSObject){
@@ -327,10 +353,13 @@ dict.__init__ = function(self, first, second){
                 self.$jsobj[attr] = first.$jsobj[attr]
             }
             return $N
+        }else if(Array.isArray(first)){
+            init_from_list(self, first)
+            return $N
         }
     }
 
-    var $ = $B.args("dict", 1, {self:null}, ["self"],
+    $ = $ || $B.args("dict", 1, {self:null}, ["self"],
         arguments, {}, "first", "second")
     var args = $.first
     if(args.length > 1){
@@ -373,24 +402,7 @@ dict.__init__ = function(self, first, second){
                 args = _b_.list.$factory(args)
             }
             // Form "dict([[key1, value1], [key2,value2], ...])"
-            var i = -1,
-                stop = args.length - 1,
-                si = dict.__setitem__
-            while(i++ < stop){
-                var item = args[i]
-                switch(typeof item[0]) {
-                    case 'string':
-                        self.$string_dict[item[0]] = item[1]
-                        self.$str_hash[str_hash(item[0])] = item[0]
-                        break
-                    case 'number':
-                        self.$numeric_dict[item[0]] = item[1]
-                        break
-                    default:
-                        si(self, item[0], item[1])
-                        break
-                }
-            }
+            init_from_list(self, args)
         }
     }
     var kw = $.second.$string_dict
@@ -725,7 +737,11 @@ dict.values = function(self){
 
 dict.$factory = function(){
     var res = dict.__new__(dict)
-    dict.__init__(res, ...arguments)
+    var args = [res]
+    for(var i = 0, len = arguments.length; i < len ; i++){
+        args.push(arguments[i])
+    }
+    dict.__init__.apply(null, args)
     return res
 }
 

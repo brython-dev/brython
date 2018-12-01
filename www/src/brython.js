@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-11-30 07:53:24.486748"
-__BRYTHON__.timestamp=1543560804486
+__BRYTHON__.compiled_date="2018-12-01 08:43:47.607747"
+__BRYTHON__.timestamp=1543650227607
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -427,8 +427,10 @@ break
 case 'target_list':
 case 'list_or_tuple':
 left_items=left.tree}
-if(left_items===null){return}
 var right=this.tree[1]
+if(left_items===null){if(left.tree[0].bound){if(right.type=="expr" && right.name=="int"){node.bindings=node.bindings ||{}
+node.bindings[left.tree[0].value]="int"}}
+return}
 var right_items=null
 if(right.type=='list' ||right.type=='tuple'||
 (right.type=='expr' && right.tree.length > 1)){right_items=right.tree}
@@ -617,7 +619,8 @@ this.transform=function(node,rank){var func='__' + $operators[op]+ '__',offset=0
 parent.children.splice(rank,1)
 var left_is_id=(this.tree[0].type=='expr' &&
 this.tree[0].tree[0].type=='id')
-if(left_is_id){
+if(left_is_id){var left_bound_to_int=
+this.tree[0].tree[0].boundBefore(this.scope)=="int"
 this.tree[0].tree[0].augm_assign=true
 if($B.debug > 0){var check_node=$NodeJS('if(' + this.tree[0].to_js()+
 ' === undefined){throw NameError.$factory("name \'' +
@@ -670,6 +673,8 @@ parent.insert(rank + offset,new_node)
 in_class=true
 offset++}}}
 var left=C.tree[0].to_js()
+if(left_bound_to_int && right_is_int){parent.insert(rank + offset,$NodeJS(left + " "+ op + " " + right))
+return offset++}
 prefix=prefix && !C.tree[0].unknown_binding && !left_id_unbound
 var op1=op.charAt(0)
 if(prefix){var left1=in_class ? '$left' : left
@@ -1850,10 +1855,10 @@ scope=scope.parent}}
 this.boundBefore=function(scope){
 var nb=0,node=$get_node(this),found=false
 while(!found && node.parent && nb++ < 100){var pnode=node.parent
-if(pnode.bindings && pnode.bindings[this.value]){return true}
+if(pnode.bindings && pnode.bindings[this.value]){return pnode.bindings[this.value]}
 for(var i=0;i < pnode.children.length;i++){var child=pnode.children[i]
 if(child===node){break}
-if(child.bindings && child.bindings[this.value]){return true}}
+if(child.bindings && child.bindings[this.value]){return child.bindings[this.value]}}
 if(pnode===scope){break}
 node=pnode}
 return found}
@@ -11120,11 +11125,15 @@ switch(typeof arg){case "string":
 if(self.$string_dict[arg]!==undefined){return self.$string_dict[arg]}
 break
 case "number":
-if(self.$numeric_dict[arg]!==undefined){return self.$numeric_dict[arg]}}
+if(self.$numeric_dict[arg]!==undefined){return self.$numeric_dict[arg]}
+break}
 var _key=_b_.hash(arg),_eq=function(other){return $B.rich_comp("__eq__",arg,other)}
 var sk=self.$str_hash[_key]
 if(sk !==undefined && _eq(sk)){return self.$string_dict[sk]}
 if(self.$numeric_dict[_key]!==undefined && _eq(_key)){return self.$numeric_dict[_key]}
+if(isinstance(arg,_b_.str)){
+var res=self.$string_dict[arg.valueOf()]
+if(res !==undefined){return res}}
 var obj_ref=self.$object_dict[_key]
 if(obj_ref !==undefined){
 _eq(self.$object_dict[_key][0])
@@ -11133,12 +11142,26 @@ if(self.__class__ !==dict){try{var missing_method=getattr(self.__class__,"__miss
 return missing_method(self,arg)}catch(err){}}
 throw KeyError.$factory(_b_.str.$factory(arg))}
 dict.__hash__=None
-dict.__init__=function(self,first,second){if(first===undefined){return $N}
+function init_from_list(self,args){var i=-1,stop=args.length - 1,si=dict.__setitem__
+while(i++ < stop){var item=args[i]
+switch(typeof item[0]){case 'string':
+self.$string_dict[item[0]]=item[1]
+self.$str_hash[str_hash(item[0])]=item[0]
+break
+case 'number':
+self.$numeric_dict[item[0]]=item[1]
+break
+default:
+si(self,item[0],item[1])
+break}}}
+dict.__init__=function(self,first,second){var $
+if(first===undefined){return $N}
 if(second===undefined){if(first.__class__===$B.JSObject){self.$jsobj=first.js
 return $N}else if(first.$jsobj){self.$jsobj={}
 for(var attr in first.$jsobj){self.$jsobj[attr]=first.$jsobj[attr]}
+return $N}else if(Array.isArray(first)){init_from_list(self,first)
 return $N}}
-var $=$B.args("dict",1,{self:null},["self"],arguments,{},"first","second")
+$=$ ||$B.args("dict",1,{self:null},["self"],arguments,{},"first","second")
 var args=$.first
 if(args.length > 1){throw _b_.TypeError.$factory("dict expected at most 1 argument" +
 ", got 2")}else if(args.length==1){args=args[0]
@@ -11153,18 +11176,7 @@ dict.__setitem__(self,key,value)}catch(err){if(err.__class__===_b_.StopIteration
 throw err}}
 return $N}}
 if(! Array.isArray(args)){args=_b_.list.$factory(args)}
-var i=-1,stop=args.length - 1,si=dict.__setitem__
-while(i++ < stop){var item=args[i]
-switch(typeof item[0]){case 'string':
-self.$string_dict[item[0]]=item[1]
-self.$str_hash[str_hash(item[0])]=item[0]
-break
-case 'number':
-self.$numeric_dict[item[0]]=item[1]
-break
-default:
-si(self,item[0],item[1])
-break}}}}
+init_from_list(self,args)}}
 var kw=$.second.$string_dict
 for(var attr in kw){switch(typeof attr){case "string":
 self.$string_dict[attr]=kw[attr]
@@ -11284,7 +11296,9 @@ dict.values=function(self){if(arguments.length > 1){var _len=arguments.length - 
 throw _b_.TypeError.$factory(_msg)}
 return $iterator_wrapper(new $value_iterator(self),$dict_valuesDict)}
 dict.$factory=function(){var res=dict.__new__(dict)
-dict.__init__(res,...arguments)
+var args=[res]
+for(var i=0,len=arguments.length;i < len ;i++){args.push(arguments[i])}
+dict.__init__.apply(null,args)
 return res}
 _b_.dict=dict
 $B.set_func_names(dict,"builtins")
@@ -11331,11 +11345,10 @@ set.__and__=function(self,other,accept_iter){$test(accept_iter,other)
 var res=create_type(self)
 for(var i=0,len=self.$items.length;i < len;i++){if(_b_.getattr(other,"__contains__")(self.$items[i])){set.add(res,self.$items[i])}}
 return res}
-set.__contains__=function(self,item){if(self.$num &&(typeof item=="number")){if(isNaN(item)){
+set.__contains__=function(self,item){if(self.$simple){if(typeof item=="number" ||item instanceof Number){if(isNaN(item)){
 for(var i=self.$items.length-1;i >=0;i--){if(isNaN(self.$items[i])){return true}}
-return false}else{return self.$items.indexOf(item)> -1}}
-if(self.$str &&(typeof item=="string")){return self.$items.indexOf(item)> -1}
-if(! _b_.isinstance(item,set)){_b_.hash(item)}
+return false}else{return self.$items.indexOf(item)> -1}}else if(typeof item=="string"){return self.$items.indexOf(item)> -1}}
+if(! _b_.isinstance(item,set)){$B.$getattr(item,"__hash__")}
 for(var i=0,len=self.$items.length;i < len;i++){if($B.rich_comp("__eq__",self.$items[i],item)){return true}}
 return false}
 set.__eq__=function(self,other){
@@ -11347,10 +11360,12 @@ return _b_.NotImplemented}
 set.__format__=function(self,format_string){return set.__str__(self)}
 set.__ge__=function(self,other){if(_b_.isinstance(other,[set,frozenset])){return ! set.__lt__(self,other)}else{return _b_.object.__ge__(self,other)}}
 set.__gt__=function(self,other){if(_b_.isinstance(other,[set,frozenset])){return ! set.__le__(self,other)}else{return _b_.object.__gt__(self,other)}}
-set.__init__=function(self){var $=$B.args("__init__",2,{self:null,iterable:null},["self","iterable"],arguments,{iterable:[]},null,null),self=$.self,iterable=$.iterable
+set.__init__=function(self,iterable,second){if(second===undefined){if(Array.isArray(iterable)){for(var i=0,len=iterable.length;i < len;i++){set.add(self,iterable[i])}
+return _b_.None}}
+var $=$B.args("__init__",2,{self:null,iterable:null},["self","iterable"],arguments,{iterable:[]},null,null),self=$.self,iterable=$.iterable
 if(_b_.isinstance(iterable,[set,frozenset])){self.$items=iterable.$items.slice()
 return $N}
-var it=$B.$iter(iterable),obj={$items:[],$str: true,$num: true}
+var it=$B.$iter(iterable),obj={$items:[],$simple: true}
 while(1){try{var item=_b_.next(it)
 set.add(obj,item)}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){break}
 throw err}}
@@ -11370,7 +11385,7 @@ set.__len__(self)<_b_.getattr(other,"__len__")()}else{return _b_.object["__lt__"
 set.__mro__=[_b_.object]
 set.__new__=function(cls){if(cls===undefined){throw _b_.TypeError.$factory("set.__new__(): not enough arguments")}
 return{
-__class__: cls,$str: true,$num: true,$items:[]}}
+__class__: cls,$simple: true,$items:[]}}
 set.__or__=function(self,other,accept_iter){
 var res=clone(self),func=_b_.getattr($B.$iter(other),"__next__")
 while(1){try{set.add(res,func())}
@@ -11410,11 +11425,10 @@ function $test(accept_iter,other,op){if(accept_iter===undefined &&
 ! _b_.isinstance(other,[set,frozenset])){throw _b_.TypeError.$factory("unsupported operand type(s) for " + op +
 ": 'set' and '" + $B.get_class(other).__name__ + "'")}}
 $B.make_rmethods(set)
-set.add=function(){var $=$B.args("add",2,{self: null,item: null},["self","item"],arguments,{},null,null),self=$.self,item=$.item
-_b_.hash(item)
-if(self.$str && !(typeof item=='string')){self.$str=false}
-if(self.$num && !(typeof item=='number')){self.$num=false}
-if(self.$num ||self.$str){var ix=self.$items.indexOf(item)
+function $add(self,item){if(typeof item !=="string" && typeof item !=="number" &&
+!(item instanceof Number)){self.$simple=false
+$B.$getattr(item,"__hash__")}
+if(self.$simple){var ix=self.$items.indexOf(item)
 if(ix==-1){self.$items.push(item)}
 else{
 if(item !==self.$items[ix]){self.$items.push(item)}}
@@ -11423,6 +11437,8 @@ var cfunc=function(other){return $B.rich_comp("__eq__",item,other)}
 for(var i=0,len=self.$items.length;i < len;i++){if(cfunc(self.$items[i])){return $N}}
 self.$items.push(item)
 return $N}
+set.add=function(){var $=$B.args("add",2,{self: null,item: null},["self","item"],arguments,{},null,null),self=$.self,item=$.item
+return $add(self,item)}
 set.clear=function(){var $=$B.args("clear",1,{self: null},["self"],arguments,{},null,null)
 $.self.$items=[]
 return $N}
@@ -11517,9 +11533,9 @@ set.__isub__=$accept_only_set(set.difference_update,"-=")
 set.__ixor__=$accept_only_set(set.symmetric_difference_update,"^=")
 set.__ior__=$accept_only_set(set.update,"|=")
 set.$factory=function(){
-var res={__class__: set,$str: true,$num: true,$items:[]}
+var res={__class__: set,$simple: true,$items:[]}
 var args=[res].concat(Array.prototype.slice.call(arguments))
-set.__init__(res,...arguments)
+set.__init__.apply(null,args)
 return res}
 $B.set_func_names(set,"builtins")
 var frozenset={__class__: _b_.type,__module__: "builtins",__mro__:[object],__name__: "frozenset",$is_class: true,$native: true}
@@ -11546,7 +11562,7 @@ return $N}
 frozenset.__new__=function(cls){if(cls===undefined){throw _b_.TypeError.$factory(
 "frozenset.__new__(): not enough arguments")}
 return{
-__class__: cls,$str: true,$num: true,$items:[]}}
+__class__: cls,$simple: true,$items:[]}}
 var singleton_id=Math.floor(Math.random()* Math.pow(2,40))
 function empty_frozenset(){return{
 __class__: frozenset,$items:[],$id: singleton_id}}
