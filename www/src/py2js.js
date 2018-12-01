@@ -846,8 +846,17 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context){
             case 'list_or_tuple':
                 left_items = left.tree
         }
-        if(left_items === null){return}
+
         var right = this.tree[1]
+        if(left_items === null){
+            if(left.tree[0].bound){
+                if(right.type == "expr" && right.name == "int"){
+                    node.bindings = node.bindings || {}
+                    node.bindings[left.tree[0].value] = "int"
+                }
+            }
+            return
+        }
 
         var right_items = null
         if(right.type == 'list' || right.type == 'tuple'||
@@ -1183,7 +1192,6 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
     this.toString = function(){return '(augm assign) ' + this.tree}
 
     this.transform = function(node, rank){
-
         var func = '__' + $operators[op] + '__',
             offset = 0,
             parent = node.parent,
@@ -1197,6 +1205,8 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
             this.tree[0].tree[0].type == 'id')
 
         if(left_is_id){
+            var left_bound_to_int =
+                this.tree[0].tree[0].boundBefore(this.scope) == "int"
             // Set attribute "augm_assign" of $IdCtx instance, so that
             // the id will not be resolved with $B.$check_undef()
             this.tree[0].tree[0].augm_assign = true
@@ -1293,6 +1303,11 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
         }
 
         var left = context.tree[0].to_js()
+
+        if(left_bound_to_int && right_is_int){
+            parent.insert(rank + offset, $NodeJS(left + " "+ op + " " + right))
+            return offset++
+        }
 
         // Generate code to use Javascript operator if the object type is
         // str, int or float
@@ -3804,13 +3819,13 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         while(!found && node.parent && nb++ < 100){
             var pnode = node.parent
             if(pnode.bindings && pnode.bindings[this.value]){
-                return true
+                return pnode.bindings[this.value]
             }
             for(var i = 0; i < pnode.children.length; i++){
                 var child = pnode.children[i]
                 if(child === node){break}
                 if(child.bindings && child.bindings[this.value]){
-                    return true
+                    return child.bindings[this.value]
                 }
             }
             if(pnode === scope){
