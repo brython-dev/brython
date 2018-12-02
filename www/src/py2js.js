@@ -1304,7 +1304,7 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
 
         var left = context.tree[0].to_js()
 
-        if(false){ //left_bound_to_int && right_is_int){
+        if(left_bound_to_int && right_is_int){
             parent.insert(rank + offset, $NodeJS(left + " "+ op + " " + right))
             return offset++
         }
@@ -3920,7 +3920,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                 // in the global namespace.
                 // Else return a call to a function that searches the name in
                 // globals, and throws NameError if not found.
-                if(gs.binding[val] !== undefined){
+                if(this.boundBefore(gs)){
                     return global_ns + '["' + val + '"]'
                 }else{
                     return '$B.$global_search("' + val + '", ' +

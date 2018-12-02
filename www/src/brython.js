@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-12-01 08:55:54.381976"
-__BRYTHON__.timestamp=1543650954381
+__BRYTHON__.compiled_date="2018-12-01 17:52:32.467114"
+__BRYTHON__.timestamp=1543683152467
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -673,8 +673,7 @@ parent.insert(rank + offset,new_node)
 in_class=true
 offset++}}}
 var left=C.tree[0].to_js()
-if(false){
-parent.insert(rank + offset,$NodeJS(left + " "+ op + " " + right))
+if(left_bound_to_int && right_is_int){parent.insert(rank + offset,$NodeJS(left + " "+ op + " " + right))
 return offset++}
 prefix=prefix && !C.tree[0].unknown_binding && !left_id_unbound
 var op1=op.charAt(0)
@@ -1894,7 +1893,7 @@ val + '"]'}}
 var global_ns='$locals_' + gs.id.replace(/\./g,'_')
 while(1){if($B._globals[scope.id]!==undefined &&
 $B._globals[scope.id][val]!==undefined){
-if(gs.binding[val]!==undefined){return global_ns + '["' + val + '"]'}else{return '$B.$global_search("' + val + '", ' +
+if(this.boundBefore(gs)){return global_ns + '["' + val + '"]'}else{return '$B.$global_search("' + val + '", ' +
 search_ids + ')'}}
 if(scope===innermost){
 if(bound_before){if(bound_before.indexOf(val)> -1){found.push(scope)}

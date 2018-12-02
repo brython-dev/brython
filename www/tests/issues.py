@@ -2160,6 +2160,20 @@ try:
 except TypeError:
     pass
 
+def f():
+    global x985
+    print(x985)
+
+def g():
+    global x985
+    x985 = 1
+
+try:
+    f()
+    raise Exception("should have raised NameError")
+except NameError:
+    pass
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
