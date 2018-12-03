@@ -798,12 +798,8 @@ function getattr(){
 
 $B.$getattr = function(obj, attr, _default){
     // Used internally to avoid having to parse the arguments
-
     var rawname = attr
     attr = $B.to_alias(attr)
-    if(obj===undefined){
-        console.log("attr", attr, "of obj undefined", $B.last($B.frames_stack))
-    }
 
     var is_class = obj.$is_class || obj.$factory
 
@@ -816,14 +812,9 @@ $B.$getattr = function(obj, attr, _default){
         if($test){console.log("$getattr shortcut", obj.__dict__.$string_dict)}
         if(obj.hasOwnProperty(attr)){
             return obj[attr]
-        }else if(obj.__dict__ && obj.__dict__.$string_dict.hasOwnProperty(attr)){
-            var res1 = obj.__dict__.$string_dict[attr],
-                res2 = $B.jsobj2pyobj(res1)
-            if($test){console.log(res1, res2)}
-            if(Array.isArray(res1)){
-                return res1
-            }
-            return res1 //res2
+        }else if(obj.__dict__ && 
+                obj.__dict__.$string_dict.hasOwnProperty(attr)){
+            return obj.__dict__.$string_dict[attr]
         }else if(klass.hasOwnProperty(attr)){
             if(typeof klass[attr] != "function" && attr != "__dict__" &&
                     klass[attr].__get__ === undefined){

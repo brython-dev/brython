@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-12-01 17:52:32.467114"
-__BRYTHON__.timestamp=1543683152467
+__BRYTHON__.compiled_date="2018-12-03 08:00:40.730906"
+__BRYTHON__.timestamp=1543820440730
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -6271,16 +6271,13 @@ return $B.$getattr($.obj,$.attr,$._default===missing ? undefined : $._default)}
 $B.$getattr=function(obj,attr,_default){
 var rawname=attr
 attr=$B.to_alias(attr)
-if(obj===undefined){console.log("attr",attr,"of obj undefined",$B.last($B.frames_stack))}
 var is_class=obj.$is_class ||obj.$factory
 var klass=obj.__class__
 var $test=false 
 if($test){console.log("$getattr",attr,obj,klass)}
 if(klass !==undefined && klass.__bases__ && klass.__bases__.length==0){if($test){console.log("$getattr shortcut",obj.__dict__.$string_dict)}
-if(obj.hasOwnProperty(attr)){return obj[attr]}else if(obj.__dict__ && obj.__dict__.$string_dict.hasOwnProperty(attr)){var res1=obj.__dict__.$string_dict[attr],res2=$B.jsobj2pyobj(res1)
-if($test){console.log(res1,res2)}
-if(Array.isArray(res1)){return res1}
-return res1 }else if(klass.hasOwnProperty(attr)){if(typeof klass[attr]!="function" && attr !="__dict__" &&
+if(obj.hasOwnProperty(attr)){return obj[attr]}else if(obj.__dict__ && 
+obj.__dict__.$string_dict.hasOwnProperty(attr)){return obj.__dict__.$string_dict[attr]}else if(klass.hasOwnProperty(attr)){if(typeof klass[attr]!="function" && attr !="__dict__" &&
 klass[attr].__get__===undefined){return klass[attr]}}}
 if($test){console.log("attr",attr,"of",obj,"class",klass,"isclass",is_class)}
 if(klass===undefined){
@@ -10041,7 +10038,7 @@ attr + "' is read-only")}else{throw _b_.AttributeError.$factory(
 self[attr]=value
 return $N}
 list.__setitem__=function(){var $=$B.args("__setitem__",3,{self: null,key: null,value: null},["self","key","value"],arguments,{},null,null),self=$.self,arg=$.key,value=$.value
-if(isinstance(arg,_b_.int)){var pos=arg
+if(typeof arg=="number" ||isinstance(arg,_b_.int)){var pos=arg
 if(arg < 0){pos=self.length + pos}
 if(pos >=0 && pos < self.length){self[pos]=value}
 else{throw _b_.IndexError.$factory("list index out of range")}

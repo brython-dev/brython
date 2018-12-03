@@ -375,7 +375,7 @@ list.__setitem__ = function(){
         self = $.self,
         arg = $.key,
         value = $.value
-    if(isinstance(arg, _b_.int)){
+    if(typeof arg == "number" || isinstance(arg, _b_.int)){
         var pos = arg
         if(arg < 0) {pos = self.length + pos}
         if(pos >= 0 && pos < self.length){self[pos] = value}
