@@ -159,6 +159,15 @@ function run_js(module_contents, path, _module){
     }
 
     $module.__name__ = _module.__name__
+    for(var attr in $module){
+        if(typeof $module[attr] == "function"){
+            $module[attr].$infos = {
+                __module__: _module.__name__,
+                __name__: attr,
+                __qualname__: attr
+            }
+        }
+    }
 
     if(_module !== undefined){
         // FIXME : This might not be efficient . Refactor js modules instead.
@@ -929,7 +938,8 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
             }
        }
     }else{
-        if($B.imported[parsed_name[0]]){
+        if($B.imported[parsed_name[0]] &&
+                parsed_name.length > 1){
             try{
                 $B.$setattr($B.imported[parsed_name[0]], parsed_name[1], modobj)
             }catch(err){

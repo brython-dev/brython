@@ -78,16 +78,16 @@ t_start = None
 global_loop = asyncio.new_event_loop()
 
 @asyncio.run_async(loop=global_loop)
-def run():
+def run(reset = True):
     global output
     import sys
-    doc["console"].value = ''
     src = editor.editor.getValue()
     if storage is not None:
        storage["py_src"] = src
     state, t0, t1, _ = utils.run(src)
     sys.stdout.flush()
-    output = doc["console"].value
+    if reset:
+        doc["console"].value = ""
     print('<sync tests completed in %6.2f ms>' % ((t1 - t0) * 1000.0))
     sys.stdout.flush()
     if aio.count_tests(pending_only=True) > 0:
@@ -117,12 +117,13 @@ def test_next():
     if script_num < len(options):
         try:
             option = doc['files'].options[script_num]
+            doc["console"].value = ''
             print('Running tests in', option.innerText)
             sys.stdout.flush()
             src = open(option.value).read()
-            doc['files'].attrs["selectedIndex"] = script_num
+            doc['files'].selectedIndex = script_num
             editor.editor.setValue(src)
-            state = yield from run()
+            state = yield from run(False)
             if state == 0:
                 failed.append(option.text)
             sys.stdout.flush()

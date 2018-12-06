@@ -640,7 +640,7 @@ $B.$factory.__mro__ = [type, _b_.object]
 
 var $instance_creator = $B.$instance_creator = function(klass){
     // return the function to initalise a class instance
-
+    
     // The class may not be instanciable if it has at least one abstract method
     if(klass.$instanciable !== undefined){
         return function(){throw _b_.TypeError.$factory(
@@ -669,7 +669,10 @@ var $instance_creator = $B.$instance_creator = function(klass){
             }
         }else if(klass.hasOwnProperty("__init__")){
             factory = function(){
-                var obj = {__class__: klass}
+                var obj = {
+                    __class__: klass,
+                    __dict__: _b_.dict.$factory()
+                }
                 var args = [obj]
                 for(var i = 0; i < arguments.length; i++){args.push(arguments[i])}
                 klass.__init__.apply(null, args)
@@ -684,7 +687,7 @@ var $instance_creator = $B.$instance_creator = function(klass){
                         throw _b_.TypeError.$factory("object() takes no parameters")
                     }
                 }
-                return {__class__: klass}
+                return {__class__: klass, __dict__:_b_.dict.$factory()}
             }
         }
     }else{
@@ -757,17 +760,27 @@ method.__getattribute__ = function(self, attr){
         }else{
             return infos[attr]
         }
-    }else if(infos && infos.__func__ && infos.__func__.$infos &&
-            infos.__func__.$infos[attr]){ // eg __doc__
-        return infos.__func__.$infos[attr]
-    }else{
+    }else if(method.hasOwnProperty(attr)){
         return _b_.object.__getattribute__(self, attr)
+    }else{ // use attributes of underlying function __func__
+        return $B.Function.__getattribute__(self.$infos.__func__, attr)
     }
 }
 
 method.__repr__ = method.__str__ = function(self){
     return "<bound method " + self.$infos.__qualname__ +
        " of " + _b_.str.$factory(self.$infos.__self__) + ">"
+}
+
+method.__setattr__ = function(self, key, value){
+    // Attempting to set an attribute on a method results in an AttributeError
+    // being raised.
+    if(key == "__class__"){
+        throw _b_.TypeError.$factory("__class__ assignment only supported " +
+            "for heap types or ModuleType subclasses")
+    }
+    throw _b_.AttributeError.$factory("'method' object has no attribute '" +
+        key + "'")
 }
 
 $B.set_func_names(method, "builtins")

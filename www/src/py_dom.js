@@ -633,7 +633,7 @@ DOMNode.__getattribute__ = function(self, attr){
             }
 
             if(self.elt instanceof SVGElement){
-                return self.elt.getAttributeNS(null, attr)
+                return self.elt[attr].baseVal.value
             }
             if(self.elt.style[attr]){
                 return parseInt(self.elt.style[attr])

@@ -109,6 +109,10 @@ assert span.style.backgroundColor == "red", span.style.backgroundColor
 assert len(document.get(selector="#test")) == 1
 assert len(document.select("#test")) == 1
 
+# issue 984
+s = html.SVG(height=100)
+assert isinstance(s.height, int)
+
 print("all tests ok")
 
 </script>

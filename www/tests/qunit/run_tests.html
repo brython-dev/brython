@@ -1,6 +1,7 @@
 <!doctype html>
 <html>
   <head>
+    <meta charset="utf-8">
     <!-- Online install -->
     <link rel="stylesheet" type="text/css" href="//code.jquery.com/qunit/qunit-1.18.0.css" />
     <!-- Local install for Travis-CI -->
@@ -67,6 +68,7 @@
     <!-- Javascript code needed to run JSObject tests -->
     <script type="text/javascript" src="../jsobj_tests.js"></script>
 
+    <script type="text/javascript" src="/src/brython_stdlib.js"></script>
 
 <script type="text/python3">
 from javascript import JSObject
@@ -117,6 +119,16 @@ def testTraceback(qunit):
         assert "line 6, in h" in trace
         assert "line 5, in <lambda>" in trace
         assert "line 2, in g" in trace
+
+    # issue 976
+    try:
+        exec("""t = (
+                     1, 2, 3,
+                     4, 5 6
+                )""")
+        raise Exception("should have raised SyntaxError")
+    except SyntaxError as exc:
+        assert exc.lineno == 3
 
     qunit.ok(True)
 

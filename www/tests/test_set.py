@@ -226,4 +226,11 @@ assert frozenset({1, 2}) != (1,2)
 assert frozenset({1, 2}) != [1,2]
 assert (1,2) != {1,2}
 assert {1,2} != [1,2]
+
+# issue 979
+from copy import deepcopy
+a = {1}
+b = deepcopy(a)
+assert b == {1}
+
 print("passed all tests..")

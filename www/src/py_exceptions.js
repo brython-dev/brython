@@ -313,6 +313,8 @@ var getExceptionTrace = function(exc, includeInternal) {
             if(src === undefined){
                 if($B.VFS && $B.VFS.hasOwnProperty(frame[2])){
                     src = $B.VFS[frame[2]][1]
+                }else if(src = $B.file_cache[frame[3].__file__]){
+                    // For imported modules, cf. issue 981
                 }else{
                     continue
                 }
