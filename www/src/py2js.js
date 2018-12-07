@@ -1206,7 +1206,7 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
 
         if(left_is_id){
             var left_bound_to_int =
-                this.tree[0].tree[0].boundBefore(this.scope) == "int"
+                this.tree[0].tree[0].bindingType(this.scope) == "int"
             // Set attribute "augm_assign" of $IdCtx instance, so that
             // the id will not be resolved with $B.$check_undef()
             this.tree[0].tree[0].augm_assign = true
@@ -3249,8 +3249,21 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
             new_nodes[pos++] = test_range_node
 
             // Build the block with the Javascript "for" loop
-            var idt = target.to_js()
+            var idt = target.to_js(),
+                shortcut = false
             if($range.tree.length == 1){
+                var stop = $range.tree[0].tree[0]
+                if(stop.tree[0].type == "int"){
+                    stop = parseInt(stop.to_js())
+                    if(0 < stop < $B.max_int){
+                        shortcut = true
+                        var varname = "$i" + $B.UUID()
+
+                        var for_node = $NodeJS("for (var " + varname + " = 0; " +
+                            varname + " < " + stop + "; " + varname + "++)")
+                        for_node.add($NodeJS(idt + " = " + varname))
+                    }
+                }
                 var start = 0,
                     stop = $range.tree[0].to_js()
             }else{
@@ -3258,24 +3271,27 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
                     stop = $range.tree[1].to_js()
             }
 
-            var js = 'var $stop_' + num + ' = $B.int_or_bool(' + stop + ');' +
-                h + idt + ' = ' + start + ';' +
-                h + '    var $next' + num + ' = ' + idt + ',' +
-                h + '    $safe' + num + ' = typeof $next' + num +
-                ' == "number" && typeof ' + '$stop_' + num + ' == "number";' +
-                h + 'while(true)'
-            var for_node = new $Node()
-            new $NodeJSCtx(for_node, js)
+            if(!shortcut){
 
-            for_node.add($NodeJS('if($safe' + num + ' && $next' + num +
-                '>= $stop_' + num + '){break}'))
-            for_node.add($NodeJS('else if(!$safe' + num + ' && $B.ge($next' +
-                num + ', $stop_' + num + ')){break}'))
-            for_node.add($NodeJS(idt + ' = $next' + num))
-            for_node.add($NodeJS('if($safe' + num + '){$next' + num +
-                ' += 1}'))
-            for_node.add($NodeJS('else{$next' + num + ' = $B.add($next' +
-                num + ',1)}'))
+                var js = 'var $stop_' + num + ' = $B.int_or_bool(' + stop + ');' +
+                    h + idt + ' = ' + start + ';' +
+                    h + '    var $next' + num + ' = ' + idt + ',' +
+                    h + '    $safe' + num + ' = typeof $next' + num +
+                    ' == "number" && typeof ' + '$stop_' + num + ' == "number";' +
+                    h + 'while(true)'
+                var for_node = new $Node()
+                new $NodeJSCtx(for_node, js)
+
+                for_node.add($NodeJS('if($safe' + num + ' && $next' + num +
+                    '>= $stop_' + num + '){break}'))
+                for_node.add($NodeJS('else if(!$safe' + num + ' && $B.ge($next' +
+                    num + ', $stop_' + num + ')){break}'))
+                for_node.add($NodeJS(idt + ' = $next' + num))
+                for_node.add($NodeJS('if($safe' + num + '){$next' + num +
+                    ' += 1}'))
+                for_node.add($NodeJS('else{$next' + num + ' = $B.add($next' +
+                    num + ',1)}'))
+            }
             // Add the loop body
             children.forEach(function(child){
                 for_node.add(child)
@@ -3827,6 +3843,67 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                 if(child.bindings && child.bindings[this.value]){
                     return child.bindings[this.value]
                 }
+            }
+            if(pnode === scope){
+                break
+            }
+            node = pnode
+        }
+
+        return found
+    }
+
+    this.bindingType = function(scope){
+        // If a binding explicitely sets the type of a variable (eg "x = 1")
+        // the next references can use this type if there is no block
+        // inbetween.
+        // For code like:
+        //
+        //     x = 1
+        //     x += 2
+        //
+        // for the id "x" in the second line, this.bindingType will return
+        // "int".
+        //
+        // A block might reset the type, like in
+        //
+        //     x = 1
+        //     if True:
+        //         x = "a"
+        //     x += 2
+        //
+        // For the id "x" in the last line, this.bindingType will just return
+        // "true"
+        var nb = 0,
+            node = $get_node(this),
+            found = false,
+            unknown,
+            ix
+
+        while(!found && node.parent && nb++ < 100){
+            var pnode = node.parent
+            if(pnode.bindings && pnode.bindings[this.value]){
+                return pnode.bindings[this.value]
+            }
+            for(var i = 0; i < pnode.children.length; i++){
+                var child = pnode.children[i]
+                if(child === node){break}
+                if(child.bindings && child.bindings[this.value]){
+                    found = child.bindings[this.value]
+                    ix = i
+                }
+            }
+            if(found){
+                for(var j = ix + 1; j < pnode.children.length; j++){
+                    child = pnode.children[j]
+                    if(child.children.length > 0){
+                        unknown = true
+                        break
+                    }else if(child === node){
+                        break
+                    }
+                }
+                return unknown || found
             }
             if(pnode === scope){
                 break

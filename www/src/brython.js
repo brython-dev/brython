@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-12-03 08:00:40.730906"
-__BRYTHON__.timestamp=1543820440730
+__BRYTHON__.compiled_date="2018-12-03 16:46:19.266881"
+__BRYTHON__.timestamp=1543851979266
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -1593,9 +1593,16 @@ found[0]=="__builtins__"
 var test_range_node=new $Node()
 if(range_is_builtin){new $NodeJSCtx(test_range_node,'if(1)')}else{new $NodeJSCtx(test_range_node,'if(' + call.func.to_js()+ ' === $B.builtins.range)')}
 new_nodes[pos++]=test_range_node
-var idt=target.to_js()
-if($range.tree.length==1){var start=0,stop=$range.tree[0].to_js()}else{var start=$range.tree[0].to_js(),stop=$range.tree[1].to_js()}
-var js='var $stop_' + num + ' = $B.int_or_bool(' + stop + ');' +
+var idt=target.to_js(),shortcut=false
+if($range.tree.length==1){var stop=$range.tree[0].tree[0]
+if(stop.tree[0].type=="int"){stop=parseInt(stop.to_js())
+if(0 < stop < $B.max_int){shortcut=true
+var varname="$i" + $B.UUID()
+var for_node=$NodeJS("for (var " + varname + " = 0; " +
+varname + " < " + stop + "; " + varname + "++)")
+for_node.add($NodeJS(idt + " = " + varname))}}
+var start=0,stop=$range.tree[0].to_js()}else{var start=$range.tree[0].to_js(),stop=$range.tree[1].to_js()}
+if(!shortcut){var js='var $stop_' + num + ' = $B.int_or_bool(' + stop + ');' +
 h + idt + ' = ' + start + ';' +
 h + '    var $next' + num + ' = ' + idt + ',' +
 h + '    $safe' + num + ' = typeof $next' + num +
@@ -1611,7 +1618,7 @@ for_node.add($NodeJS(idt + ' = $next' + num))
 for_node.add($NodeJS('if($safe' + num + '){$next' + num +
 ' += 1}'))
 for_node.add($NodeJS('else{$next' + num + ' = $B.add($next' +
-num + ',1)}'))
+num + ',1)}'))}
 children.forEach(function(child){for_node.add(child)})
 for_node.add($NodeJS('$locals.$line_info = "' + node.line_num +
 ',' + scope.id + '"; None;'))
@@ -6276,19 +6283,18 @@ var klass=obj.__class__
 var $test=false 
 if($test){console.log("$getattr",attr,obj,klass)}
 if(klass !==undefined && klass.__bases__ && klass.__bases__.length==0){if($test){console.log("$getattr shortcut",obj.__dict__.$string_dict)}
-if(obj.hasOwnProperty(attr)){return obj[attr]}else if(obj.__dict__ && 
+if(obj.hasOwnProperty(attr)){return obj[attr]}else if(obj.__dict__ &&
 obj.__dict__.$string_dict.hasOwnProperty(attr)){return obj.__dict__.$string_dict[attr]}else if(klass.hasOwnProperty(attr)){if(typeof klass[attr]!="function" && attr !="__dict__" &&
 klass[attr].__get__===undefined){return klass[attr]}}}
 if($test){console.log("attr",attr,"of",obj,"class",klass,"isclass",is_class)}
 if(klass===undefined){
 if(typeof obj=='string'){klass=_b_.str}
 else if(typeof obj=='number'){klass=obj % 1==0 ? _b_.int : _b_.float}else if(obj instanceof Number){klass=_b_.float}else{klass=$B.get_class(obj)
-if($test){console.log("from getclass",klass)}}}
 if(klass===undefined){
 if(obj.hasOwnProperty(attr)){if(typeof obj[attr]=="function"){return function(){
 return obj[attr].apply(obj,arguments)}}else{return $B.$JS2Py(obj[attr])}}
 if(_default !==undefined){return _default}
-throw _b_.AttributeError.$factory('object has no attribute ' + rawname)}
+throw _b_.AttributeError.$factory('object has no attribute ' + rawname)}}}
 switch(attr){case '__call__':
 if(typeof obj=='function'){var res=function(){return obj.apply(null,arguments)}
 res.__class__=method_wrapper
@@ -6327,7 +6333,9 @@ if(typeof klass[attr]=='function'){var func=klass[attr]
 if(attr=='__new__'){func.$type="staticmethod"}
 if(func.$type=="staticmethod"){return func}
 var self=klass[attr].__class__==$B.method ? klass : obj
-function method(){return klass[attr](self,...arguments)}
+function method(){var args=[self]
+for(var i=0,len=arguments.length;i < len;i++){args.push(arguments[i])}
+return klass[attr].apply(null,args)}
 method.__class__=$B.method
 method.$infos={__func__: func,__name__: attr,__self__: self,__qualname__: klass.__name__ + "." + attr}
 return method}
@@ -6343,10 +6351,9 @@ if($test){console.log("attr_func is odga",attr_func===odga,obj[attr])}
 if(attr_func===odga){var res=obj[attr]
 if(res===null){return null}
 else if(res===undefined && obj.hasOwnProperty(attr)){return res}else if(res !==undefined){if(res.__set__===undefined ||res.$is_class){if($test){console.log("return",res,res+'',res.__set__,res.$is_class)}
-return res}}}else if($test){console.log("use attr_func",attr_func)}
+return res}}}
 try{var res=attr_func(obj,attr)
-if($test){console.log("result of attr_func",res)}}
-catch(err){if(_default !==undefined){return _default}
+if($test){console.log("result of attr_func",res)}}catch(err){if(_default !==undefined){return _default}
 throw err}
 if(res !==undefined){return res}
 if(_default !==undefined){return _default}
