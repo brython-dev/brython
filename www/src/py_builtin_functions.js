@@ -1035,8 +1035,8 @@ function hash(obj){
     check_nb_args('hash', 1, arguments)
 
     if(obj.__hashvalue__ !== undefined){return obj.__hashvalue__}
-    if(isinstance(obj, _b_.int)){return obj.valueOf()}
     if(isinstance(obj, _b_.bool)){return _b_.int.$factory(obj)}
+    if(isinstance(obj, _b_.int)){return obj.valueOf()}
     if(obj.$is_class ||
             obj.__class__ === _b_.type ||
             obj.__class__ === $B.Function){

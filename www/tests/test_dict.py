@@ -73,4 +73,11 @@ assert d[f] == 1
 assert d[g] == 2
 assert hash(f) != hash(g)
 
+# issue 994
+d = {False: "Test", True: "Test2"}
+assert d[False] == "Test"
+assert d[0] == "Test"
+assert d[True] == "Test2"
+assert d[1] == "Test2"
+
 print("passed all tests..")
