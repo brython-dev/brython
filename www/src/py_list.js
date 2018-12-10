@@ -597,7 +597,7 @@ list.sort = function(self){
     var $ = $B.args("sort", 1, {self: null}, ["self"],
         arguments, {}, null, "kw")
 
-    var func = null,
+    var func = _b_.None,
         reverse = false,
         kw_args = $.kw,
         keys = _b_.list.$factory(_b_.dict.$$keys(kw_args))
@@ -610,26 +610,26 @@ list.sort = function(self){
     }
     if(self.length == 0){return}
 
-    if(func !== null){
+    if(func !== _b_.None){
         func = $B.$call(func) // func can be an object with method __call__
     }
 
     self.$cl = $elts_class(self)
     var cmp = null;
-    if(func === null && self.$cl === _b_.str){
+    if(func === _b_.None && self.$cl === _b_.str){
         if(reverse){
             cmp = function(b, a){return $B.$AlphabeticalCompare(a, b)}
         }else{
             cmp = function(a, b){return $B.$AlphabeticalCompare(a, b)}
         }
-    }else if(func === null && self.$cl === _b_.int){
+    }else if(func === _b_.None && self.$cl === _b_.int){
         if(reverse){
             cmp = function(b, a){return a - b}
         }else{
             cmp = function(a, b){return a - b}
         }
     }else{
-        if(func === null){
+        if(func === _b_.None){
             if(reverse){
                 cmp = function(b, a) {
                     res = getattr(a, "__le__")(b)

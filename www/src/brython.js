@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-12-10 09:16:16.653690"
-__BRYTHON__.timestamp=1544429776653
+__BRYTHON__.compiled_date="2018-12-10 09:28:39.976628"
+__BRYTHON__.timestamp=1544430519976
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -10164,16 +10164,16 @@ var cl=$B.get_class(self[0]),i=self.length
 while(i--){if($B.get_class(self[i])!==cl){return false}}
 return cl}
 list.sort=function(self){var $=$B.args("sort",1,{self: null},["self"],arguments,{},null,"kw")
-var func=null,reverse=false,kw_args=$.kw,keys=_b_.list.$factory(_b_.dict.$$keys(kw_args))
+var func=_b_.None,reverse=false,kw_args=$.kw,keys=_b_.list.$factory(_b_.dict.$$keys(kw_args))
 for(var i=0;i < keys.length;i++){if(keys[i]=="key"){func=kw_args.$string_dict[keys[i]]}
 else if(keys[i]=="reverse"){reverse=kw_args.$string_dict[keys[i]]}
 else{throw _b_.TypeError.$factory("'" + keys[i]+
 "' is an invalid keyword argument for this function")}}
 if(self.length==0){return}
-if(func !==null){func=$B.$call(func)}
+if(func !==_b_.None){func=$B.$call(func)}
 self.$cl=$elts_class(self)
 var cmp=null;
-if(func===null && self.$cl===_b_.str){if(reverse){cmp=function(b,a){return $B.$AlphabeticalCompare(a,b)}}else{cmp=function(a,b){return $B.$AlphabeticalCompare(a,b)}}}else if(func===null && self.$cl===_b_.int){if(reverse){cmp=function(b,a){return a - b}}else{cmp=function(a,b){return a - b}}}else{if(func===null){if(reverse){cmp=function(b,a){res=getattr(a,"__le__")(b)
+if(func===_b_.None && self.$cl===_b_.str){if(reverse){cmp=function(b,a){return $B.$AlphabeticalCompare(a,b)}}else{cmp=function(a,b){return $B.$AlphabeticalCompare(a,b)}}}else if(func===_b_.None && self.$cl===_b_.int){if(reverse){cmp=function(b,a){return a - b}}else{cmp=function(a,b){return a - b}}}else{if(func===_b_.None){if(reverse){cmp=function(b,a){res=getattr(a,"__le__")(b)
 if(res===_b_.NotImplemented){throw _b_.TypeError.$factory("unorderable types: " +
 $B.get_class(b).__name__ + "() <=" +
 $B.get_class(a).__name__ + "()")}
