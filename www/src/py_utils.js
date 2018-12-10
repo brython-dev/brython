@@ -42,9 +42,11 @@ $B.args = function($fname, argcount, slots, var_names, $args, $dobj,
         // Build a dict object faster than with _b_.dict()
         slots[extra_kw_args] = {
             __class__: _b_.dict,
+            $numeric_dict: {},
+            $object_dict: {},
             $string_dict : {},
-            $str_keys: true,
-            $items: []
+            $str_hash: {},
+            length: 0
         }
     }
 
