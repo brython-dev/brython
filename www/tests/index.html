@@ -78,7 +78,7 @@ t_start = None
 global_loop = asyncio.new_event_loop()
 
 @asyncio.run_async(loop=global_loop)
-def run(reset = True):
+def run(reset = False):
     global output
     import sys
     src = editor.editor.getValue()
@@ -126,8 +126,9 @@ def test_next():
             state = yield from run(False)
             if state == 0:
                 failed.append(option.text)
-            sys.stdout.flush()
-            global_loop.call_later(0.5, test_next)
+            else:
+                sys.stdout.flush()
+                global_loop.call_later(0.5, test_next)
         except Exception as exc:
             traceback.print_exc(file=sys.stderr)
     else:
