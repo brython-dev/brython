@@ -142,7 +142,7 @@ str.__eq__ = function(self,other){
     if(_b_.isinstance(other, _b_.str)){
        return other.valueOf() == self.valueOf()
     }
-    return other === self.valueOf()
+    return _b_.NotImplemented
 }
 
 function preformat(self, fmt){
@@ -1332,7 +1332,7 @@ str.maketrans = function() {
                 throw _b_.TypeError.$factory("dictionary value " + v +
                     " is not None, integer or string")
             }
-            _t.$numeric_dict[k] = v
+            _b_.dict.$setitem(_t, k, v)
         }
         return _t
     }else{
@@ -1358,11 +1358,12 @@ str.maketrans = function() {
                 }
             }
             for(var i = 0, len = $.x.length; i < len; i++){
-                _t.$numeric_dict[_b_.ord($.x.charAt(i))] =
-                    $.y.charAt(i)
+                var key = _b_.ord($.x.charAt(i)),
+                    value = $.y.charAt(i)
+                _b_.dict.$setitem(_t, key, value)
             }
             for(var k in toNone){
-                _t.$numeric_dict[k] = _b_.None
+                _b_.dict.$setitem(_t, parseInt(k), _b_.None)
             }
             return _t
         }
