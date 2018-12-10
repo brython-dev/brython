@@ -87,7 +87,7 @@ object.__getattribute__ = function(obj, attr){
 
     var klass = obj.__class__ || $B.get_class(obj)
 
-    var $test = false //attr == "info"
+    var $test = false //attr == "ASCII"
     if($test){console.log("attr", attr, "de", obj, "klass", klass)}
     if(attr === "__class__"){
         return klass
@@ -393,6 +393,12 @@ object.__reduce_ex__ = function(self){
     res.push(_b_.tuple.$factory([self.__class__]))
     var d = _b_.dict.$factory(),
         nb = 0
+    if(self.__dict__ === undefined){
+        console.log("no dict", self)
+        $B.frames_stack.forEach(function(frame){
+            console.log(frame[0], frame[1], frame[2])
+        })
+    }
     for(var attr in self.__dict__.$string_dict){
         if(attr == "__class__" || attr.startsWith("$")){
             continue
