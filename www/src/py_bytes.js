@@ -325,6 +325,8 @@ bytes.__repr__ = bytes.__str__ = function(self){
             var hx = s.toString(16)
             hx = (hx.length == 1 ? '0' : '') + hx
             res += '\\x' + hx
+        }else if(s == "\\".charCodeAt(0)){
+            res += "\\\\"
         }else{
             res += String.fromCharCode(s)
         }
@@ -1318,11 +1320,27 @@ var encode = $B.encode = function(s, encoding){
               else{$UnicodeEncodeError(encoding, i)}
           }
           break
+        case "raw_unicode_escape":
+          for(var i = 0, len = s.length; i < len; i++){
+              var cp = s.charCodeAt(i) // code point
+              if(cp < 256){
+                  t[pos++] = cp
+              }else{
+                  var s = cp.toString(16)
+                  if(s.length % 2){ s = "0" + s}
+                  s = "\\u" + s
+                  for(var j = 0; j < s.length; j++){
+                      t[pos++] = s.charCodeAt(j)
+                  }
+              }
+          }
+          break
+
         default:
             try{
                 load_encoder(enc)
             }catch(err){
-                throw _b_.LookupError.$factory("unknown encoding: " + enc)
+                throw _b_.LookupError.$factory("unknown encoding: " + encoding)
             }
 
             for(var i = 0, len = s.length; i < len; i++){
