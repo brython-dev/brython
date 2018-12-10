@@ -1029,6 +1029,7 @@ function hasattr(obj,attr){
     catch(err){return false}
 }
 
+var hash_cache = {}
 function hash(obj){
     check_no_kw('hash', obj)
     check_nb_args('hash', 1, arguments)
@@ -1044,6 +1045,14 @@ function hash(obj){
     if(obj.__hash__ !== undefined) {
        return obj.__hashvalue__ = obj.__hash__()
     }
+    if(typeof obj == "string"){
+        var cached = hash_cache[obj]
+        if(cached !== undefined){return cached}
+        else{
+            return hash_cache[obj] = _b_.str.__hash__(obj)
+        }
+    }
+
     var hashfunc = $B.$getattr(obj, '__hash__', _b_.None)
 
     if(hashfunc == _b_.None){
@@ -2528,6 +2537,9 @@ $B.builtin_funcs = [
 var builtin_function = $B.builtin_function = $B.make_class("builtin_function_or_method")
 
 builtin_function.__getattribute__ = $B.Function.__getattribute__
+builtin_function.__reduce_ex__ = builtin_function.__reduce__ = function(self){
+    return self.$infos.__name__
+}
 builtin_function.__repr__ = builtin_function.__str__ = function(self){
     return '<built-in function ' + self.$infos.__name__ + '>'
 }
