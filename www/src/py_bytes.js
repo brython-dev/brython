@@ -82,7 +82,7 @@ bytearray.__setitem__ = function(self, arg, value){
 
         // copy items in a temporary JS array
         // otherwise, a[:0] = a fails
-        if(_b_.hasattr(value, '__iter__')){
+        try{
             var $temp = _b_.list.$factory(value)
             for(var i = $temp.length - 1; i >= 0; i--){
                 if(! isinstance($temp[i], _b_.int)){
@@ -92,7 +92,7 @@ bytearray.__setitem__ = function(self, arg, value){
                 }
                 self.source.splice(start, 0, $temp[i])
             }
-        }else{
+        }catch(err){
             throw _b_.TypeError.$factory("can only assign an iterable")
         }
     }else{
@@ -1220,7 +1220,15 @@ var decode = $B.decode = function(b, encoding, errors){
                    replace(/\\t/g, "\t").
                    replace(/\\'/g, "'").
                    replace(/\\"/g, '"')
-
+      case "raw_unicode_escape":
+          if(Array.isArray(b)){
+              b = decode(b, "latin-1", "strict")
+          }
+          b = b.replace(/\\u([a-fA-F0-9]{4})/g, function(mo){
+              var cp = parseInt(mo.substr(2), 16)
+              return String.fromCharCode(cp)
+          })
+          return b
       case "ascii":
           for(var i = 0, len = b.length; i < len; i++){
               var cp = b[i]
@@ -1238,7 +1246,7 @@ var decode = $B.decode = function(b, encoding, errors){
           try{
               load_decoder(enc)
           }catch(err){
-              console.log("error load_decoder", err)
+              console.log(b, encoding, "error load_decoder", err)
               throw _b_.LookupError.$factory("unknown encoding: " + enc)
           }
           b.forEach(function(item){
@@ -1326,16 +1334,15 @@ var encode = $B.encode = function(s, encoding){
               if(cp < 256){
                   t[pos++] = cp
               }else{
-                  var s = cp.toString(16)
-                  if(s.length % 2){ s = "0" + s}
-                  s = "\\u" + s
-                  for(var j = 0; j < s.length; j++){
-                      t[pos++] = s.charCodeAt(j)
+                  var us = cp.toString(16)
+                  if(us.length % 2){us = "0" + us}
+                  us = "\\u" + us
+                  for(var j = 0; j < us.length; j++){
+                      t[pos++] = us.charCodeAt(j)
                   }
               }
           }
           break
-
         default:
             try{
                 load_encoder(enc)
