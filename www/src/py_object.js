@@ -427,9 +427,6 @@ object.__repr__ = function(self){
 }
 
 object.__setattr__ = function(self, attr, val){
-    if(val == "DISPATCH_TABLE"){
-        console.log("object.__setattr__", self, attr, val)
-    }
     if(val === undefined){
         // setting an attribute to 'object' type is not allowed
         throw _b_.TypeError.$factory(
@@ -449,6 +446,7 @@ object.__setattr__ = function(self, attr, val){
         self.__dict__.$string_dict[attr] = val
     }else{
         console.log("set attr without __dict__", self, attr, val)
+        console.log($B.last($B.frames_stack))
         self[attr] = val
     }
     return _b_.None

@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-12-10 10:30:04.717029"
-__BRYTHON__.timestamp=1544434204717
+__BRYTHON__.compiled_date="2018-12-11 14:57:30.261271"
+__BRYTHON__.timestamp=1544536650261
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -5054,8 +5054,7 @@ if(self.__class__===_b_.type){return "<class '" + self.__name__ + "'>"}
 if(self.__class__.__module__ !==undefined &&
 self.__class__.__module__ !=="builtins"){return "<" + self.__class__.__module__ + "." +
 self.__class__.__name__ + " object>"}else{return "<" + self.__class__.__name__ + " object>"}}
-object.__setattr__=function(self,attr,val){if(val=="DISPATCH_TABLE"){console.log("object.__setattr__",self,attr,val)}
-if(val===undefined){
+object.__setattr__=function(self,attr,val){if(val===undefined){
 throw _b_.TypeError.$factory(
 "can't set attributes of built-in/extension type 'object'")}else if(self.__class__===object){
 if(object[attr]===undefined){throw _b_.AttributeError.$factory(
@@ -5063,6 +5062,7 @@ if(object[attr]===undefined){throw _b_.AttributeError.$factory(
 "'object' object attribute '" + attr + "' is read-only")}}
 if($B.aliased_names[attr]){attr="$$"+attr}
 if(self.__dict__){self.__dict__.$string_dict[attr]=val}else{console.log("set attr without __dict__",self,attr,val)
+console.log($B.last($B.frames_stack))
 self[attr]=val}
 return _b_.None}
 object.__setattr__.__get__=function(obj){return function(attr,val){object.__setattr__(obj,attr,val)}}
@@ -7111,6 +7111,7 @@ return _b_.str.$factory(self.args[0])
 return self.__class__.__name__}
 BaseException.__new__=function(cls){var err=_b_.BaseException.$factory()
 err.__class__=cls
+err.__dict__=_b_.dict.$factory()
 return err}
 var getExceptionTrace=function(exc,includeInternal){if(exc.__class__===undefined){if($B.debug > 1){console.log("no class",exc)}
 return exc + ''}
@@ -7390,9 +7391,9 @@ var stop=arg.stop===None ? self.source.length : arg.stop
 if(start < 0){start=self.source.length + start}
 if(stop < 0){stop=self.source.length + stop}
 self.source.splice(start,stop - start)
-if(_b_.hasattr(value,'__iter__')){var $temp=_b_.list.$factory(value)
+try{var $temp=_b_.list.$factory(value)
 for(var i=$temp.length - 1;i >=0;i--){if(! isinstance($temp[i],_b_.int)){throw _b_.TypeError.$factory('an integer is required')}else if($temp[i]> 255){throw ValueError.$factory("byte must be in range(0, 256)")}
-self.source.splice(start,0,$temp[i])}}else{throw _b_.TypeError.$factory("can only assign an iterable")}}else{throw _b_.TypeError.$factory('list indices must be integer, not ' +
+self.source.splice(start,0,$temp[i])}}catch(err){throw _b_.TypeError.$factory("can only assign an iterable")}}else{throw _b_.TypeError.$factory('list indices must be integer, not ' +
 $B.get_class(arg).__name__)}}
 bytearray.append=function(self,b){if(arguments.length !=2){throw _b_.TypeError.$factory(
 "append takes exactly one argument (" +(arguments.length - 1)+
@@ -7792,6 +7793,11 @@ replace(/\\f/g,"\f").
 replace(/\\t/g,"\t").
 replace(/\\'/g,"'").
 replace(/\\"/g,'"')
+case "raw_unicode_escape":
+if(Array.isArray(b)){b=decode(b,"latin-1","strict")}
+b=b.replace(/\\u([a-fA-F0-9]{4})/g,function(mo){var cp=parseInt(mo.substr(2),16)
+return String.fromCharCode(cp)})
+return b
 case "ascii":
 for(var i=0,len=b.length;i < len;i++){var cp=b[i]
 if(cp <=127){s +=String.fromCharCode(cp)}else{var msg="'ascii' codec can't decode byte 0x" +
@@ -7800,7 +7806,7 @@ cp.toString(16)+ " in position " + i +
 throw _b_.UnicodeDecodeError.$factory(msg)}}
 break
 default:
-try{load_decoder(enc)}catch(err){console.log("error load_decoder",err)
+try{load_decoder(enc)}catch(err){console.log(b,encoding,"error load_decoder",err)
 throw _b_.LookupError.$factory("unknown encoding: " + enc)}
 b.forEach(function(item){var u=to_unicode[enc][item]
 if(u !==undefined){s +=String.fromCharCode(u)}
@@ -7844,10 +7850,10 @@ else{$UnicodeEncodeError(encoding,i)}}
 break
 case "raw_unicode_escape":
 for(var i=0,len=s.length;i < len;i++){var cp=s.charCodeAt(i)
-if(cp < 256){t[pos++]=cp}else{var s=cp.toString(16)
-if(s.length % 2){s="0" + s}
-s="\\u" + s
-for(var j=0;j < s.length;j++){t[pos++]=s.charCodeAt(j)}}}
+if(cp < 256){t[pos++]=cp}else{var us=cp.toString(16)
+if(us.length % 2){us="0" + us}
+us="\\u" + us
+for(var j=0;j < us.length;j++){t[pos++]=us.charCodeAt(j)}}}
 break
 default:
 try{load_encoder(enc)}catch(err){throw _b_.LookupError.$factory("unknown encoding: " + encoding)}
@@ -9080,18 +9086,17 @@ if(_pre=="0X"){base=16}}else if(_pre=="0X" && base !=16){invalid(_value,base)}
 else if(_pre=="0O" && base !=8){invalid(_value,base)}
 else if(_pre=="0B" && base !=2){invalid(_value,base)}
 if(_pre=="0B" ||_pre=="0O" ||_pre=="0X"){_value=_value.substr(2)
-while(_value.startsWith("_")){_value=_value.substr(1)}}}
+while(_value.startsWith("_")){_value=_value.substr(1)}}}else if(base==0){
+base=10}
 var _digits=$valid_digits(base),_re=new RegExp("^[+-]?[" + _digits + "]" +
 "[" + _digits + "_]*$","i"),match=_re.exec(_value)
-if(match===null){invalid(value,base)}
-else{value=_value.replace(/_/g,"")}
+if(match===null){console.log("no match",_digits,_value)
+invalid(value,base)}else{value=_value.replace(/_/g,"")}
 if(base <=10 && ! isFinite(value)){invalid(_value,base)}
 var res=parseInt(value,base)
 if(res < $B.min_int ||res > $B.max_int){return $B.long_int.$factory(value,base)}
 return res}
-if(isinstance(value,[_b_.bytes,_b_.bytearray])){var _digits=$valid_digits(base)
-for(var i=0;i < value.source.length;i++){if(_digits.indexOf(String.fromCharCode(value.source[i]))==-1){invalid(value,base)}}
-return Number(parseInt(getattr(value,"decode")("latin-1"),base))}
+if(isinstance(value,[_b_.bytes,_b_.bytearray])){return int.$factory($B.$getattr(value,"decode")("latin-1"),base)}
 if(hasattr(value,"__int__")){return getattr(value,"__int__")()}
 if(hasattr(value,"__index__")){return getattr(value,"__index__")()}
 if(hasattr(value,"__trunc__")){var res=getattr(value,"__trunc__")(),int_func=_b_.getattr(res,"__int__",null)
@@ -11105,6 +11110,7 @@ return $B.rich_comp("__eq__",toSet(items),other)},__iter__: function(){items.ite
 for(var i=0,len=items.length();i < len;i++){s.push(_b_.repr(items.next()))}
 return klass.__name__ + "(["+ s.join(",")+ "])"},}
 res.__str__=res.toString=res.__repr__
+klass.__reduce_ex__=klass.__reduce__=function(self){return _b_.tuple.$factory([_b_.iter,_b_.tuple.$factory([_b_.list.$factory(self)])])}
 return res}
 dict.__bool__=function(){var $=$B.args("__bool__",1,{self: null},["self"],arguments,{},null,null)
 return dict.__len__($.self)> 0}
@@ -11149,7 +11155,12 @@ if((self.$numeric_dict.length !=other.$numeric_dict.length)||
 (self.$object_dict.length !=other.$object_dict.length)){return false}
 for(var k in self.$numeric_dict){if(!$B.rich_comp("__eq__",other.$numeric_dict[k],self.$numeric_dict[k])){return false}}
 for(var k in self.$string_dict){if(!$B.rich_comp("__eq__",other.$string_dict[k],self.$string_dict[k])){return false}}
-for(var k in self.$object_dict){if(!$B.rich_comp("__eq__",other.$object_dict[k][1],self.$object_dict[k][1])){return false}}
+for(var hash in self.$object_dict){self_obj=self.$object_dict[hash][0]
+self_value=self.$object_dict[hash][1]
+if(other.$object_dict[hash]!==undefined){if(!$B.rich_comp("__eq__",other.$object_dict[hash][1],self_value)){return false}}else{
+var num_value=other.$numeric_dict[hash]
+if(num_value !==undefined){if($B.rich_comp("__eq__",self_obj,hash)&&
+! $B.rich_comp("__eq__",num_value,self_value)){return false}}else{return false}}}
 return true}
 dict.__getitem__=function(){var $=$B.args("__getitem__",2,{self: null,arg: null},["self","arg"],arguments,{},null,null),self=$.self,arg=$.arg
 if(self.$jsobj){if(!self.$jsobj.hasOwnProperty(arg)){throw _b_.KeyError.$factory(str.$factory(arg))}else if(self.$jsobj[arg]===undefined){return _b_.NotImplemented}else if(self.$jsobj[arg]===null){return $N}
@@ -11171,8 +11182,8 @@ var obj_ref=self.$object_dict[_key]
 if(obj_ref !==undefined){
 _eq(self.$object_dict[_key][0])
 return self.$object_dict[_key][1]}
-if(self.__class__ !==dict){try{var missing_method=getattr(self.__class__,"__missing__")
-return missing_method(self,arg)}catch(err){}}
+if(self.__class__ !==dict){try{var missing_method=getattr(self.__class__,"__missing__",_b_.None)}catch(err){console.log(err)}
+if(missing_method !==_b_.None){return missing_method(self,arg)}}
 throw KeyError.$factory(_b_.str.$factory(arg))}
 dict.__hash__=None
 function init_from_list(self,args){var i=-1,stop=args.length - 1,si=dict.__setitem__
