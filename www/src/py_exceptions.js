@@ -281,6 +281,7 @@ BaseException.__str__ = function(self){
 BaseException.__new__ = function(cls){
     var err = _b_.BaseException.$factory()
     err.__class__ = cls
+    err.__dict__ = _b_.dict.$factory()
     return err
 }
 
