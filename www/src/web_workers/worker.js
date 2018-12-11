@@ -101,9 +101,9 @@ var wget = function(url) {
 
 var init_os = function(data, $B) {
     var _b_=$B.builtins
-    $B.__ENV = $B.jsobj2pyobj(data.env)
-    $B.__WORKER = $B.jsobj2pyobj(self)
-    $B.__WORKER_CLASS = data.worker_class
+    $B._ENV = $B.jsobj2pyobj(data.env)
+    $B._WORKER = $B.jsobj2pyobj(self)
+    $B._WORKER_CLASS = data.worker_class
 }
 
 var start_handler = function(evt) {
