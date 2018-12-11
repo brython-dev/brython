@@ -130,6 +130,10 @@ var $iterator_wrapper = function(items, klass){
         },
     }
     res.__str__ = res.toString = res.__repr__
+    klass.__reduce_ex__ = klass.__reduce__ = function(self){
+        return _b_.tuple.$factory([_b_.iter,
+            _b_.tuple.$factory([_b_.list.$factory(self)])])
+    }
     return res
 }
 
@@ -245,10 +249,25 @@ dict.__eq__ = function(){
             return false
         }
     }
-    for(var k in self.$object_dict){
-        if(!$B.rich_comp("__eq__", other.$object_dict[k][1],
-                self.$object_dict[k][1])){
-            return false
+    for(var hash in self.$object_dict){
+        self_obj = self.$object_dict[hash][0]
+        self_value = self.$object_dict[hash][1]
+        if(other.$object_dict[hash] !== undefined){
+            if(!$B.rich_comp("__eq__", other.$object_dict[hash][1],
+                    self_value)){
+                return false
+            }
+        }else{
+            // Is hash of object a key of numeric dict ?
+            var num_value = other.$numeric_dict[hash]
+            if(num_value !== undefined){
+                if($B.rich_comp("__eq__", self_obj, hash) &&
+                        ! $B.rich_comp("__eq__", num_value, self_value)){
+                    return false
+                }
+            }else{
+                return false
+            }
         }
     }
 
@@ -310,9 +329,14 @@ dict.__getitem__ = function(){
     }
     if(self.__class__ !== dict){
         try{
-            var missing_method = getattr(self.__class__, "__missing__")
+            var missing_method = getattr(self.__class__, "__missing__", _b_.None)
+        }catch(err){
+            console.log(err)
+
+        }
+        if(missing_method !== _b_.None){
             return missing_method(self, arg)
-        }catch(err){}
+        }
     }
     throw KeyError.$factory(_b_.str.$factory(arg))
 }
