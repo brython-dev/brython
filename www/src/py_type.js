@@ -91,9 +91,15 @@ $B.$class_constructor = function(class_name, class_obj, bases,
     }
     // Use __prepare__ (PEP 3115)
     var prepare = $B.$getattr(metaclass, "__prepare__", _b_.None),
-        cl_dict = prepare(class_name, bases), // dict or dict-like
-        get_class_item = $B.$getattr(cl_dict, "__getitem__"),
+        cl_dict = prepare(class_name, bases) // dict or dict-like
+
+    if(cl_dict.__class__ !== _b_.dict){
         set_class_item = $B.$getattr(cl_dict, "__setitem__")
+    }else{
+        set_class_item = function(attr, value){
+            cl_dict.$string_dict[attr] = value
+        }
+    }
 
     // Transform class object into a dictionary
     for(var attr in class_obj){
@@ -113,17 +119,22 @@ $B.$class_constructor = function(class_name, class_obj, bases,
         __class__: metaclass,
         __dict__: cl_dict
     }
-
-    var it = _b_.iter(cl_dict)
-    while(true){
-        try{
-            var key = _b_.next(it)
-            class_dict[key] = get_class_item(key)
-        }catch(err){
-            break
+    if(cl_dict.__class__ === _b_.dict){
+        for(var key in cl_dict.$string_dict){
+            class_dict[key] = cl_dict.$string_dict[key]
+        }
+    }else{
+        var get_class_item = $B.$getattr(cl_dict, "__getitem__")
+        var it = _b_.iter(cl_dict)
+        while(true){
+            try{
+                var key = _b_.next(it)
+                class_dict[key] = get_class_item(key)
+            }catch(err){
+                break
+            }
         }
     }
-
     class_dict.__mro__ = _b_.type.mro(class_dict)
 
     // Check if at least one method is abstract (cf PEP 3119)
@@ -640,7 +651,7 @@ $B.$factory.__mro__ = [type, _b_.object]
 
 var $instance_creator = $B.$instance_creator = function(klass){
     // return the function to initalise a class instance
-    
+
     // The class may not be instanciable if it has at least one abstract method
     if(klass.$instanciable !== undefined){
         return function(){throw _b_.TypeError.$factory(

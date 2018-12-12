@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-12-11 15:14:35.182202"
-__BRYTHON__.timestamp=1544537675182
+__BRYTHON__.compiled_date="2018-12-12 08:03:33.740632"
+__BRYTHON__.timestamp=1544598213740
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -1334,15 +1334,16 @@ if(this.type !="generator"){
 if(this.otherdefaults.length > 0){var def_names=[]
 this.otherdefaults.forEach(function(_default){def_names.push('$defaults.' + _default)})
 node.parent.insert(rank + offset++,$NodeJS('    __defaults__ : ' +
-'_b_.tuple.$factory([' + def_names.join(', ')+ ']),'))}else{node.parent.insert(rank + offset++,$NodeJS('    __defaults__ : ' +
+'$B.fast_tuple([' + def_names.join(', ')+ ']),'))}else{node.parent.insert(rank + offset++,$NodeJS('    __defaults__ : ' +
 '_b_.None,'))}
 if(this.kwonlyargsdefaults.lengh > 0){var def_names=[]
 this.kwonlyargsdefaults.forEach(function(_default){def_names.push('$defaults.' + _default)})
 node.parent.insert(rank + offset++,$NodeJS('    __kwdefaults__ : ' +
-'_b_.tuple.$factory([' + def_names.join(', ')+ ']),'))}else{node.parent.insert(rank + offset++,$NodeJS('    __kwdefaults__ : ' +
+'$B.fast_tuple([' + def_names.join(', ')+ ']),'))}else{node.parent.insert(rank + offset++,$NodeJS('    __kwdefaults__ : ' +
 '_b_.None,'))}}
 node.parent.insert(rank + offset++,$NodeJS('    __annotations__: {' + annotations.join(',')+ '},'))
-node.parent.insert(rank + offset++,$NodeJS('    __dict__: _b_.dict.$factory(),'))
+node.parent.insert(rank + offset++,$NodeJS('    __dict__: {__class__: _b_.dict, $string_dict: {},' +
+'$str_hash: {}, $numeric_dict: {}, $object_dict:{}},'))
 node.parent.insert(rank + offset++,$NodeJS('    __doc__: ' +(this.doc_string ||'None')+ ','))
 var root=$get_module(this)
 node.parent.insert(rank + offset++,$NodeJS('    __module__ : "' + root.module + '",'))
@@ -5161,14 +5162,15 @@ mc.__bases__.indexOf(metaclass)> -1){metaclass=mc}else if(metaclass.__bases__ &&
 metaclass.__bases__.indexOf(mc)==-1){throw _b_.TypeError.$factory("metaclass conflict: the " +
 "metaclass of a derived class must be a (non-" +
 "strict) subclass of the metaclasses of all its bases")}}}else{metaclass=_b_.type}}
-var prepare=$B.$getattr(metaclass,"__prepare__",_b_.None),cl_dict=prepare(class_name,bases),
-get_class_item=$B.$getattr(cl_dict,"__getitem__"),set_class_item=$B.$getattr(cl_dict,"__setitem__")
+var prepare=$B.$getattr(metaclass,"__prepare__",_b_.None),cl_dict=prepare(class_name,bases)
+if(cl_dict.__class__ !==_b_.dict){set_class_item=$B.$getattr(cl_dict,"__setitem__")}else{set_class_item=function(attr,value){cl_dict.$string_dict[attr]=value}}
 for(var attr in class_obj){if(attr.charAt(0)!="$" ||attr.substr(0,2)=="$$"){set_class_item(attr,class_obj[attr])}}
 if(use_mro_entries){set_class_item("__orig_bases__",_b_.tuple.$factory(orig_bases))}
 var class_dict={__name__: class_name.replace("$$",""),__bases__: bases,__class__: metaclass,__dict__: cl_dict}
+if(cl_dict.__class__===_b_.dict){for(var key in cl_dict.$string_dict){class_dict[key]=cl_dict.$string_dict[key]}}else{var get_class_item=$B.$getattr(cl_dict,"__getitem__")
 var it=_b_.iter(cl_dict)
 while(true){try{var key=_b_.next(it)
-class_dict[key]=get_class_item(key)}catch(err){break}}
+class_dict[key]=get_class_item(key)}catch(err){break}}}
 class_dict.__mro__=_b_.type.mro(class_dict)
 var is_instanciable=true,non_abstract_methods={},abstract_methods={},mro=[class_dict].concat(class_dict.__mro__)
 for(var i=0;i < mro.length;i++){var kdict=i==0 ? mro0 : mro[i]
@@ -10281,6 +10283,9 @@ var $tuple_iterator=$B.$iterator_class("tuple_iterator")
 tuple.$factory=function(){var obj=list.$factory(...arguments)
 obj.__class__=tuple
 return obj}
+$B.fast_tuple=function(array){array.__class__=tuple
+array.__brython__=true
+return array}
 for(var attr in list){switch(attr){case "__delitem__":
 case "__iadd__":
 case "__imul__":

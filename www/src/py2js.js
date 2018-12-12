@@ -2720,7 +2720,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
                     def_names.push('$defaults.' + _default)
                 })
                 node.parent.insert(rank + offset++, $NodeJS('    __defaults__ : ' +
-                    '_b_.tuple.$factory([' + def_names.join(', ') + ']),'))
+                    '$B.fast_tuple([' + def_names.join(', ') + ']),'))
             }else{
                 node.parent.insert(rank + offset++, $NodeJS('    __defaults__ : ' +
                     '_b_.None,'))
@@ -2734,7 +2734,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
                     def_names.push('$defaults.' + _default)
                 })
                 node.parent.insert(rank + offset++, $NodeJS('    __kwdefaults__ : ' +
-                    '_b_.tuple.$factory([' + def_names.join(', ') + ']),'))
+                    '$B.fast_tuple([' + def_names.join(', ') + ']),'))
             }else{
                 node.parent.insert(rank + offset++, $NodeJS('    __kwdefaults__ : ' +
                     '_b_.None,'))
@@ -2747,7 +2747,8 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
 
         // Add attribute __dict__
         node.parent.insert(rank + offset++,
-            $NodeJS('    __dict__: _b_.dict.$factory(),'))
+            $NodeJS('    __dict__: {__class__: _b_.dict, $string_dict: {},' +
+                '$str_hash: {}, $numeric_dict: {}, $object_dict:{}},'))
 
         // Add attribute __doc__
         node.parent.insert(rank + offset++,

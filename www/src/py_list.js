@@ -771,6 +771,11 @@ tuple.$factory = function(){
     return obj
 }
 
+$B.fast_tuple = function(array){
+    array.__class__ = tuple
+    array.__brython__ = true
+    return array
+}
 // add tuple methods
 for(var attr in list){
     switch(attr) {
