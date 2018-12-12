@@ -167,7 +167,8 @@ class WorkerCommon:
     def _post_queued_messages(self, *_, **kwargs):
         for payload in self._queued_messages:
             self._worker.postMessage(payload)
-            
+        self._queued_messages.clear()
+
     def bind_event(self, event, handler):
         """
             Registers `handler` to be called whenever the `event` is emitted
