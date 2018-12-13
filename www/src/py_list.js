@@ -266,6 +266,10 @@ list.__init__ = function(self, arg){
 }
 
 var $list_iterator = $B.$iterator_class("list_iterator")
+$list_iterator.__reduce__ = $list_iterator.__reduce_ex__ = function(self){
+    return $B.fast_tuple([_b_.iter, $B.fast_tuple([list.$factory(self)]), 0])
+}
+
 list.__iter__ = function(self){
     return $B.$iterator(self, $list_iterator)
 }
