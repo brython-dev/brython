@@ -74,7 +74,7 @@ set.__contains__ = function(self,item){
 set.__eq__ = function(self, other){
     // compare class set
     if(other === undefined){return self === set}
-
+    
     if(_b_.isinstance(other, [_b_.set, _b_.frozenset])){
       if(other.$items.length == self.$items.length){
         for(var i = 0, len = self.$items.length; i < len; i++){
@@ -84,7 +84,6 @@ set.__eq__ = function(self, other){
       }
       return false
     }
-
     return _b_.NotImplemented
 }
 
@@ -93,19 +92,11 @@ set.__format__ = function(self, format_string){
 }
 
 set.__ge__ = function(self, other){
-    if(_b_.isinstance(other, [set, frozenset])){
-        return ! set.__lt__(self, other)
-    }else{
-        return _b_.object.__ge__(self, other)
-    }
+    return set.__le__(other, self)
 }
 
 set.__gt__ = function(self, other){
-    if(_b_.isinstance(other, [set, frozenset])){
-        return ! set.__le__(self, other)
-    }else{
-        return _b_.object.__gt__(self, other)
-    }
+    return set.__lt__(other, self)
 }
 
 set.__init__ = function(self, iterable, second){
@@ -158,7 +149,7 @@ set.__iter__ = function(self){
 
 set.__le__ = function(self, other){
     if(_b_.isinstance(other, [set, frozenset])){
-        var cfunc = _b_.getattr(other,"__contains__")
+        var cfunc = _b_.getattr(other, "__contains__")
         for(var i = 0, len = self.$items.length; i < len; i++){
             if(! cfunc(self.$items[i])){return false}
         }
