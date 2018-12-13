@@ -1042,9 +1042,11 @@ function hash(obj){
             obj.__class__ === $B.Function){
         return obj.__hashvalue__ = $B.$py_next_hash--
     }
+    /*
     if(obj.__hash__ !== undefined) {
        return obj.__hashvalue__ = obj.__hash__()
     }
+    */
     if(typeof obj == "string"){
         var cached = hash_cache[obj]
         if(cached !== undefined){return cached}
@@ -1083,7 +1085,7 @@ function hash(obj){
             return _b_.object.__hash__(obj)
         }
     }else{
-        return obj.__hashvalue__ = hashfunc()
+        return hashfunc()
     }
 }
 
