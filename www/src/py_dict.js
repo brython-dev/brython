@@ -94,9 +94,16 @@ $item_iterator.prototype.next = function(){
 
 var $copy_dict = function(left, right){
     var _l = new $item_generator(right).as_list(),
-        si = dict.__setitem__,
+        si = dict.$setitem,
         i = _l.length
-    while(i--){si(left, _l[i][0], _l[i][1])}
+    right.$version = right.$version || 0
+    var right_version = right.$version || 0
+    while(i--){
+        si(left, _l[i][0], _l[i][1])
+        if(right.$version != right_version){
+            throw _b_.RuntimeError.$factory("dict mutated during update")
+        }
+    }
 }
 
 function toSet(items){
@@ -114,7 +121,8 @@ var $iterator_wrapper = function(items, klass){
         __class__: klass,
         __eq__: function(other){
             // compare set of items to other
-            return $B.rich_comp("__eq__", toSet(items), other)
+            return $B.rich_comp("__eq__", _b_.set.$factory(res),
+                _b_.set.$factory(other))
         },
         __iter__: function(){items.iter.i = 0; return res},
         __len__: function(){return items.length()},
@@ -123,13 +131,14 @@ var $iterator_wrapper = function(items, klass){
         },
         __repr__:function(){
             var s = []
+            items.iter.i = 0
             for(var i = 0, len = items.length(); i < len; i++){
                 s.push(_b_.repr(items.next()))
             }
             return klass.__name__ + "(["+ s.join(",") + "])"
         },
     }
-    res.__str__ = res.toString = res.__repr__
+    res.__str__ = res.__repr__
     klass.__reduce_ex__ = klass.__reduce__ = function(self){
         return _b_.tuple.$factory([_b_.iter,
             _b_.tuple.$factory([_b_.list.$factory(self)])])
@@ -199,12 +208,14 @@ dict.__delitem__ = function(){
             }
             delete self.$string_dict[arg]
             delete self.$str_hash[str_hash(arg)]
+            self.$version++
             return $N
         case "number":
             if(self.$numeric_dict[arg] === undefined){
                 throw KeyError.$factory(_b_.str.$factory(arg))
             }
             delete self.$numeric_dict[arg]
+            self.$version++
             return $N
     }
     // go with defaults
@@ -216,6 +227,7 @@ dict.__delitem__ = function(){
     }
 
     if(self.$jsobj){delete self.$jsobj[arg]}
+    self.$version++
     return $N
 }
 
@@ -338,7 +350,7 @@ dict.__getitem__ = function(){
             return missing_method(self, arg)
         }
     }
-    throw KeyError.$factory(_b_.str.$factory(arg))
+    throw KeyError.$factory(arg)
 }
 
 dict.__hash__ = None
@@ -478,7 +490,8 @@ dict.__new__ = function(cls){
         $numeric_dict : {},
         $object_dict : {},
         $string_dict : {},
-        $str_hash: {}
+        $str_hash: {},
+        $version: 0
     }
     if(cls !== dict){
         instance.__dict__ = _b_.dict.$factory()
@@ -508,11 +521,7 @@ dict.__repr__ = function(self){
                 (self.$jsobj && item[1] === self.$jsobj)){
             res.push(repr(item[0]) + ": {...}")
         }else{
-            try{
-                res.push(repr(item[0]) + ": " + repr(item[1]))
-            }catch(err){
-                res.push(repr(item[0]) + ": <unprintable object>")
-            }
+            res.push(repr(item[0]) + ": " + repr(item[1]))
         }
     })
     return "{" + res.join(", ") + "}"
@@ -547,9 +556,11 @@ dict.$setitem = function(self, key, value){
         case "string":
             self.$string_dict[key] = value
             self.$str_hash[str_hash(key)] = key
+            self.$version++
             return $N
         case "number":
             self.$numeric_dict[key] = value
+            self.$version++
             return $N
     }
 
@@ -560,11 +571,13 @@ dict.$setitem = function(self, key, value){
 
     if(self.$numeric_dict[_key] !== undefined && _eq(_key)){
         self.$numeric_dict[_key] = value
+        self.$version++
         return $N
     }
     var sk = self.$str_hash[_key]
     if(sk !== undefined && _eq(sk)){
         self.$string_dict[sk] = value
+        self.$version++
         return $N
     }
 
@@ -575,6 +588,7 @@ dict.$setitem = function(self, key, value){
         _eq(self.$object_dict[_key][0])
     }
     self.$object_dict[_key] = [key, value]
+    self.$version++
     return $N
 }
 
@@ -601,6 +615,7 @@ dict.clear = function(){
             }
         }
     }
+    self.$version++
     return $N
 }
 
@@ -675,8 +690,9 @@ dict.$$keys = function(self){
 
 dict.pop = function(){
 
-    var $ = $B.args("pop", 3, {self: null, key: null, _default: null},
-        ["self", "key", "_default"], arguments, {_default: $N}, null, null),
+    var missing = {},
+        $ = $B.args("pop", 3, {self: null, key: null, _default: null},
+        ["self", "key", "_default"], arguments, {_default: missing}, null, null),
         self = $.self,
         key = $.key,
         _default = $._default
@@ -687,7 +703,7 @@ dict.pop = function(){
         return res
     }catch(err){
         if(err.__class__ === _b_.KeyError){
-            if(_default !== undefined){return _default}
+            if(_default !== missing){return _default}
             throw err
         }
         throw err
@@ -717,7 +733,7 @@ dict.setdefault = function(){
     try{return dict.__getitem__(self, key)}
     catch(err){
         if(_default === undefined){_default = $N}
-        dict.__setitem__(self, key, _default)
+        dict.$setitem(self, key, _default)
         return _default
     }
 }
@@ -734,17 +750,41 @@ dict.update = function(self){
         if(isinstance(o, dict)){
             if(o.$jsobj){o = jsobj2dict(o)}
             $copy_dict(self, o)
-        }else if(hasattr(o, "__getitem__") && hasattr(o, "keys")){
-            var _keys = _b_.list.$factory(getattr(o, "keys")()),
-                si = dict.__setitem__,
+        }else if(hasattr(o, "keys")){
+            var _keys = _b_.list.$factory($B.$call($B.$getattr(o, "keys"))()),
                 i = _keys.length
             while(i--){
                 var _value = getattr(o, "__getitem__")(_keys[i])
-                si(self, _keys[i], _value)
+                dict.$setitem(self, _keys[i], _value)
+            }
+        }else{
+            var it = _b_.iter(o),
+                i = 0
+            while(true){
+                try{
+                    var item = _b_.next(it)
+                }catch(err){
+                    if(err.__class__ === _b_.StopIteration){break}
+                    throw err
+                }
+                try{
+                    key_value = _b_.list.$factory(item)
+                }catch(err){
+                    throw _b_.TypeError.$factory("cannot convert dictionary" +
+                        " update sequence element #" + i + " to a sequence")
+                }
+                if(key_value.length !== 2){
+                    throw _b_.ValueError.$factory("dictionary update " +
+                        "sequence element #" + i + " has length " +
+                        key_value.length + "; 2 is required")
+                }
+                dict.$setitem(self, key_value[0], key_value[1])
+                i++
             }
         }
     }
     $copy_dict(self, kw)
+    self.$version++
     return $N
 }
 

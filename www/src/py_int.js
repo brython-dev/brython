@@ -710,7 +710,6 @@ int.$factory = function(value, base){
             "[" + _digits + "_]*$", "i"),
             match = _re.exec(_value)
         if(match === null){
-            console.log("no match", _digits, _value)
             invalid(value, base)
         }else{
             value = _value.replace(/_/g, "")
@@ -726,25 +725,6 @@ int.$factory = function(value, base){
     if(isinstance(value, [_b_.bytes, _b_.bytearray])){
         return int.$factory($B.$getattr(value, "decode")("latin-1"), base)
     }
-    /*
-        var _digits = $valid_digits(base),
-            b = value.source
-        console.log("int of bytes", b)
-        // remove trailing whitespace
-        while([9, 10, 13, 20].indexOf(b[b.length - 1]) > -1){
-            b = b.slice(0, b.length -1)
-        }
-        console.log("after trim", b)
-        for(var i = 0; i < b.length; i++){
-            if(_digits.indexOf(String.fromCharCode(b[i])) == -1){
-                console.log("base", base, "_digits", _digits,
-                    String.fromCharCode(b[i]))
-                invalid(value, base)
-            }
-        }
-        return Number(parseInt(getattr(value, "decode")("latin-1"), base))
-    }
-    */
 
     if(hasattr(value, "__int__")){return getattr(value, "__int__")()}
     if(hasattr(value, "__index__")){return getattr(value, "__index__")()}

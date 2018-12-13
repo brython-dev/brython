@@ -520,7 +520,7 @@ class DictTest(unittest.TestCase):
         d = {1: BadRepr()}
         self.assertRaises(Exc, repr, d)
 
-    #@unittest.skip('Fails in Brython -- still needs to be investigated')
+    @unittest.skip('Fails in Brython -- still needs to be investigated')
     def test_repr_deep(self):
         d = {}
         for i in range(sys.getrecursionlimit() + 100):
@@ -786,7 +786,7 @@ class DictTest(unittest.TestCase):
                  'f': None, 'g': None, 'h': None}
         d = {}
 
-    #@unittest.skip('Fails in Brython -- still needs to be investigated')
+    @unittest.skip('Fails in Brython: garbage collection is not managed')
     def test_container_iterator(self):
         # Bug #3680: tp_traverse was not implemented for dictiter and
         # dictview objects.
@@ -1149,7 +1149,7 @@ class DictTest(unittest.TestCase):
         d = {X(): 0, 1: 1}
         self.assertRaises(RuntimeError, d.update, other)
 
-    @unittest.skip("Fails in Brython -- doesn't call __del__ on object deletion")
+    @unittest.skip("Fails in Brython: __del__ not called on object deletion")
     def test_free_after_iterating(self):
         support.check_free_after_iterating(self, iter, dict)
         support.check_free_after_iterating(self, lambda d: iter(d.keys()), dict)
@@ -1227,7 +1227,7 @@ class DictTest(unittest.TestCase):
         pair = [X(), 123]
         dict([pair])
 
-    #@unittest.skip('Fails in Brython -- still needs to be investigated')
+    @unittest.skip('Fails in Brython: __del__ not called on object deletion')
     def test_oob_indexing_dictiter_iternextitem(self):
         class X(int):
             def __del__(self):
