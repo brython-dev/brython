@@ -44,6 +44,13 @@ b = a._replace(**d)
 assert b.x == 1
 
 # iteration on deque
-
 d = collections.deque([1, 6, 2, 4])
 assert list(d) == [1, 6, 2, 4]
+
+# issue 998
+d = collections.OrderedDict()
+d['a'] = 2
+d['b'] = 3
+assert list(d.keys()) == ["a", "b"]
+assert list(d.values()) == [2, 3]
+assert list(d.items()) == [("a", 2), ("b", 3)]
