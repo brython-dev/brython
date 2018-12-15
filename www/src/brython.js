@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-12-14 21:36:52.013046"
-__BRYTHON__.timestamp=1544819812013
+__BRYTHON__.compiled_date="2018-12-15 18:07:39.762250"
+__BRYTHON__.timestamp=1544893659762
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -6072,7 +6072,8 @@ for(var $func in None){if(typeof None[$func]=='function'){None[$func].__str__=(f
 $B.set_func_names(NoneType,"builtins")
 function abs(obj){check_nb_args('abs',1,arguments)
 check_no_kw('abs',obj)
-if(isinstance(obj,_b_.int)){return _b_.int.$factory(Math.abs(obj))}
+if(isinstance(obj,_b_.int)){if(obj.__class__===$B.long_int){return{
+__class__: $B.long_int,value: obj.value,pos: true}}else{return _b_.int.$factory(Math.abs(obj))}}
 if(isinstance(obj,_b_.float)){return _b_.float.$factory(Math.abs(obj))}
 if(hasattr(obj,'__abs__')){return $B.$getattr(obj,'__abs__')()}
 throw _b_.TypeError.$factory("Bad operand type for abs(): '" +
@@ -9297,8 +9298,8 @@ if(pos=="+"){if(n2===undefined){v=n1 + "0".repeat(exp - 1)}else{v=n1 + n2 + "0".
 return{__class__: long_int,value: v,pos: value >=0}}
 long_int.__abs__=function(self){return{__class__: long_int,value: self.value,pos: true}}
 long_int.__add__=function(self,other){if(isinstance(other,_b_.float)){return _b_.float.$factory(parseInt(self.value)+ other.value)}
-if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}else if(other.__class__ !==long_int && isinstance(other,int)){
-other=long_int.$factory(_b_.str.$factory(_b_.int.__index__(other)))}
+if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}else if(other.__class__ !==long_int){if(isinstance(other,_b_.bool)){other=long_int.$factory(other ? 1 : 0)}else if(isinstance(other,int)){
+other=long_int.$factory(_b_.str.$factory(_b_.int.__index__(other)))}}
 var res
 if(self.pos && other.pos){
 return add_pos(self.value,other.value)}else if(! self.pos && ! other.pos){

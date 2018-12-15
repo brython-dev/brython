@@ -94,7 +94,18 @@ $B.set_func_names(NoneType, "builtins")
 function abs(obj){
     check_nb_args('abs', 1, arguments)
     check_no_kw('abs', obj)
-    if(isinstance(obj, _b_.int)){return _b_.int.$factory(Math.abs(obj))}
+
+    if(isinstance(obj, _b_.int)){
+        if(obj.__class__ === $B.long_int){
+            return {
+                __class__: $B.long_int,
+                value: obj.value,
+                pos: true
+            }
+        }else{
+            return _b_.int.$factory(Math.abs(obj))
+        }
+    }
     if(isinstance(obj, _b_.float)){return _b_.float.$factory(Math.abs(obj))}
     if(hasattr(obj, '__abs__')){return $B.$getattr(obj, '__abs__')()}
 
