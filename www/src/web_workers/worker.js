@@ -22,42 +22,10 @@ var init_brython = function(options) {
     worker_url.pop()
     var base_url = worker_url.join('/')
     
-    // The following scripts make up the brython distribution
     var scripts = [
-        '/brython_builtins.js', 
-        '/version_info.js',
-        '/py2js.js',
-        '/py_object.js', 
-        '/py_type.js', 
-        '/py_utils.js',
-        '/py_sort.js',
-        '/py_builtin_functions.js', 
-        '/py_exceptions.js',
-        '/py_range_slice.js',
-        '/py_bytes.js',
-        '/py_set.js',
-        '/js_objects.js',
-        '/stdlib_paths.js',
-        '/py_import.js',
-        '/unicode.min.js',
-        '/py_string.js',
-        '/py_int.js', 
-        '/py_long_int.js',
-        '/py_float.js',
-        '/py_complex.js',
-        '/py_dict.js', 
-        '/py_list.js',
-        '/py_generator.js',
-        '/py_dom.js',
-        '/builtin_modules.js',
-        '/py_import_hooks.js',
-        '/async.js'
+        '/brython.js',
+        '/brython_stdlib.js'
     ]
-    
-    self.__BRYTHON__ = { 
-        isa_web_worker: true, 
-        brython_path:base_url
-    }
     
     // Determine which Brython scripts to load
     if (options.imports) scripts = options.imports;
@@ -70,8 +38,11 @@ var init_brython = function(options) {
     importScripts.apply(null,scripts)
     
     self.__BRYTHON__.brython(options)
-    self.__BRYTHON__ = __BRYTHON__
-    console.log("BRYTHON PATH", __BRYTHON__.brython_path)
+    if(options.indexedDB && __BRYTHON__.has_indexedDB &&
+            __BRYTHON__.hasOwnProperty("VFS")){
+        __BRYTHON__.tasks.push([__BRYTHON__.idb_open])
+    }
+    console.log("BRYTHON PATH", __BRYTHON__.brython_path + " " + base_url)
 }
 
 var run_python = function(src, url) {
