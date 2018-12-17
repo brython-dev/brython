@@ -75,11 +75,7 @@ var init_brython = function(options) {
 }
 
 var run_python = function(src, url) {
-    self.__BRYTHON__._load_scripts([{
-        name:'__main__',
-        src:src,
-        url:url
-    }])
+    self.__BRYTHON__.run_script(src, '__main__', true)
 }
 
 var wget = function(url) {
