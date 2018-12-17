@@ -241,22 +241,31 @@ dict.__eq__ = function(){
 
     if(self.$jsobj){self = jsobj2dict(self.$jsobj)}
     if(other.$jsobj){other = jsobj2dict(other.$jsobj)}
-
     if(dict.__len__(self) != dict.__len__(other)){return false}
 
-    if((self.$numeric_dict.length != other.$numeric_dict.length) ||
-            (self.$string_dict.length != other.$string_dict.length) ||
-            (self.$object_dict.length != other.$object_dict.length)){
+    if(self.$string_dict.length != other.$string_dict.length){
         return false
     }
+
     for(var k in self.$numeric_dict){
-        if(!$B.rich_comp("__eq__", other.$numeric_dict[k],
-                self.$numeric_dict[k])){
+        if(other.$numeric_dict.hasOwnProperty(k)){
+            if(!$B.rich_comp("__eq__", other.$numeric_dict[k],
+                    self.$numeric_dict[k])){
+                return false
+            }
+        }else if(other.$object_dict.hasOwnProperty(k)){
+            if(!$B.rich_comp("__eq__", k, other.$object_dict[k][0]) ||
+                    !$B.rich_comp("__eq__", self.$numeric_dict[k],
+                    other.$object_dict[k][1])){
+                return false
+            }
+        }else{
             return false
         }
     }
     for(var k in self.$string_dict){
-        if(!$B.rich_comp("__eq__", other.$string_dict[k],
+        if(!other.$string_dict.hasOwnProperty(k) ||
+                !$B.rich_comp("__eq__", other.$string_dict[k],
                 self.$string_dict[k])){
             return false
         }

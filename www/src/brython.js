@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-12-15 18:07:39.762250"
-__BRYTHON__.timestamp=1544893659762
+__BRYTHON__.compiled_date="2018-12-17 09:25:11.629680"
+__BRYTHON__.timestamp=1545035111629
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -11211,11 +11211,11 @@ if(! isinstance(other,dict)){return false}
 if(self.$jsobj){self=jsobj2dict(self.$jsobj)}
 if(other.$jsobj){other=jsobj2dict(other.$jsobj)}
 if(dict.__len__(self)!=dict.__len__(other)){return false}
-if((self.$numeric_dict.length !=other.$numeric_dict.length)||
-(self.$string_dict.length !=other.$string_dict.length)||
-(self.$object_dict.length !=other.$object_dict.length)){return false}
-for(var k in self.$numeric_dict){if(!$B.rich_comp("__eq__",other.$numeric_dict[k],self.$numeric_dict[k])){return false}}
-for(var k in self.$string_dict){if(!$B.rich_comp("__eq__",other.$string_dict[k],self.$string_dict[k])){return false}}
+if(self.$string_dict.length !=other.$string_dict.length){return false}
+for(var k in self.$numeric_dict){if(other.$numeric_dict.hasOwnProperty(k)){if(!$B.rich_comp("__eq__",other.$numeric_dict[k],self.$numeric_dict[k])){return false}}else if(other.$object_dict.hasOwnProperty(k)){if(!$B.rich_comp("__eq__",k,other.$object_dict[k][0])||
+!$B.rich_comp("__eq__",self.$numeric_dict[k],other.$object_dict[k][1])){return false}}else{return false}}
+for(var k in self.$string_dict){if(!other.$string_dict.hasOwnProperty(k)||
+!$B.rich_comp("__eq__",other.$string_dict[k],self.$string_dict[k])){return false}}
 for(var hash in self.$object_dict){self_obj=self.$object_dict[hash][0]
 self_value=self.$object_dict[hash][1]
 if(other.$object_dict[hash]!==undefined){if(!$B.rich_comp("__eq__",other.$object_dict[hash][1],self_value)){return false}}else{

@@ -80,4 +80,23 @@ assert d[0] == "Test"
 assert d[True] == "Test2"
 assert d[1] == "Test2"
 
+# issue 1000
+main = {
+    3: 1
+}
+
+diff = {
+    4: 1
+}
+
+class A:
+    def __hash__(self):
+        return 4
+    def __eq__(self, other):
+        return True
+
+assert not (main == diff)
+assert diff == {A(): 1}
+assert not (main == {A(): 1})
+
 print("passed all tests..")
