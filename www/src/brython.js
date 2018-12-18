@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-12-17 09:25:11.629680"
-__BRYTHON__.timestamp=1545035111629
+__BRYTHON__.compiled_date="2018-12-18 08:18:12.732666"
+__BRYTHON__.timestamp=1545117492732
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -7215,6 +7215,7 @@ $B.set_func_names(BaseException)
 _b_.BaseException=BaseException
 $B.exception=function(js_exc){
 if(! js_exc.$py_error){console.log("Javascript exception:",js_exc)
+console.log($B.last($B.frames_stack))
 var exc=Error()
 exc.__name__="Internal Javascript error: " +
 (js_exc.__name__ ||js_exc.name)
@@ -9656,9 +9657,9 @@ var _num=self.$real * other.$real + self.$imag * other.$imag,_div=other.$real * 
 var _num2=self.$imag * other.$real - self.$real * other.$imag
 return make_complex(_num / _div,_num2 / _div)}
 if(isinstance(other,_b_.int)){if(! other.valueOf()){throw ZeroDivisionError.$factory('division by zero')}
-return complex.__truediv__(self,complex(other.valueOf()))}
-if(isinstance(other,_b_.float)){if(! other.value){throw ZeroDivisionError.$factory("division by zero")}
-return complex.__truediv__(self,complex(other.value))}
+return complex.__truediv__(self,complex.$factory(other.valueOf()))}
+if(isinstance(other,_b_.float)){if(! other.valueOf()){throw ZeroDivisionError.$factory("division by zero")}
+return complex.__truediv__(self,complex.$factory(other.valueOf()))}
 $UnsupportedOpType("//","complex",other.__class__)}
 complex.conjugate=function(self){return make_complex(self.$real,-self.$imag)}
 var $op_func=function(self,other){throw _b_.TypeError.$factory("TypeError: unsupported operand type(s) " +
@@ -11481,7 +11482,7 @@ return _b_.NotImplemented}
 set.__format__=function(self,format_string){return set.__str__(self)}
 set.__ge__=function(self,other){return set.__le__(other,self)}
 set.__gt__=function(self,other){return set.__lt__(other,self)}
-set.__init__=function(self,iterable,second){if(second===undefined){if(Array.isArray(iterable)){for(var i=0,len=iterable.length;i < len;i++){set.add(self,iterable[i])}
+set.__init__=function(self,iterable,second){if(second===undefined){if(Array.isArray(iterable)){for(var i=0,len=iterable.length;i < len;i++){$add(self,iterable[i])}
 return _b_.None}}
 var $=$B.args("__init__",2,{self:null,iterable:null},["self","iterable"],arguments,{iterable:[]},null,null),self=$.self,iterable=$.iterable
 if(_b_.isinstance(iterable,[set,frozenset])){self.$items=iterable.$items.slice()

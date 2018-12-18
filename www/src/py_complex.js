@@ -302,13 +302,13 @@ complex.__truediv__ = function(self, other){
         if(! other.valueOf()){
             throw ZeroDivisionError.$factory('division by zero')
         }
-        return complex.__truediv__(self, complex(other.valueOf()))
+        return complex.__truediv__(self, complex.$factory(other.valueOf()))
     }
     if(isinstance(other, _b_.float)){
-        if(! other.value){
+        if(! other.valueOf()){
             throw ZeroDivisionError.$factory("division by zero")
         }
-        return complex.__truediv__(self, complex(other.value))
+        return complex.__truediv__(self, complex.$factory(other.valueOf()))
     }
     $UnsupportedOpType("//", "complex", other.__class__)
 }
