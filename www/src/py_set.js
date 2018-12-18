@@ -74,7 +74,7 @@ set.__contains__ = function(self,item){
 set.__eq__ = function(self, other){
     // compare class set
     if(other === undefined){return self === set}
-    
+
     if(_b_.isinstance(other, [_b_.set, _b_.frozenset])){
       if(other.$items.length == self.$items.length){
         for(var i = 0, len = self.$items.length; i < len; i++){
@@ -102,8 +102,8 @@ set.__gt__ = function(self, other){
 set.__init__ = function(self, iterable, second){
     if(second === undefined){
         if(Array.isArray(iterable)){
-            for(var i = 0, len= iterable.length; i < len; i++){
-                set.add(self, iterable[i])
+            for(var i = 0, len = iterable.length; i < len; i++){
+                $add(self, iterable[i])
             }
             return _b_.None
         }
