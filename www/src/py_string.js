@@ -142,7 +142,7 @@ str.__eq__ = function(self,other){
     if(_b_.isinstance(other, _b_.str)){
        return other.valueOf() == self.valueOf()
     }
-    return other === self.valueOf()
+    return _b_.NotImplemented
 }
 
 function preformat(self, fmt){
@@ -192,20 +192,30 @@ str.__getitem__ = function(self,arg){
     throw _b_.TypeError.$factory("string indices must be integers")
 }
 
+var prefix = 2,
+    suffix = 3,
+    mask = (2 ** 32 - 1)
+function fnv(p){
+    if(p.length == 0){
+        return 0
+    }
+
+    var x = prefix
+    x = (x ^ (p.charCodeAt(0) << 7)) & mask
+    for(var i = 0, len = p.length; i < len; i++){
+        x = ((1000003 * x) ^ p.charCodeAt(i)) & mask
+    }
+    x = (x ^ p.length) & mask
+    x = (x ^ suffix) & mask
+
+    if(x == -1){
+        x = -2
+    }
+    return x
+}
+    
 str.__hash__ = function(self) {
-  if(self === undefined){
-     return str.__hashvalue__ || $B.$py_next_hash--  // for hash of string type (not instance of string)
-  }
-
-  //http://stackoverflow.com/questions/2909106/python-whats-a-correct-and-good-way-to-implement-hash
-  // this implementation for strings maybe good enough for us..
-
-  var hash = 1
-  for(var i = 0, len = self.length; i < len; i++){
-      hash = (101 * hash + self.charCodeAt(i)) & 0xFFFFFFFF
-  }
-
-  return hash
+  return fnv(self)
 }
 
 str.__init__ = function(self, arg){
@@ -1332,7 +1342,7 @@ str.maketrans = function() {
                 throw _b_.TypeError.$factory("dictionary value " + v +
                     " is not None, integer or string")
             }
-            _t.$numeric_dict[k] = v
+            _b_.dict.$setitem(_t, k, v)
         }
         return _t
     }else{
@@ -1358,11 +1368,12 @@ str.maketrans = function() {
                 }
             }
             for(var i = 0, len = $.x.length; i < len; i++){
-                _t.$numeric_dict[_b_.ord($.x.charAt(i))] =
-                    $.y.charAt(i)
+                var key = _b_.ord($.x.charAt(i)),
+                    value = $.y.charAt(i)
+                _b_.dict.$setitem(_t, key, value)
             }
             for(var k in toNone){
-                _t.$numeric_dict[k] = _b_.None
+                _b_.dict.$setitem(_t, parseInt(k), _b_.None)
             }
             return _t
         }

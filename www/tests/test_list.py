@@ -159,7 +159,16 @@ assert not [3] < [1, 2]
 assert not ['a'] < ['a']
 assert ['a'] < ['a', 2]
 
+# issue 993
+assert sorted(['b3', 'a2', 'c1']) == ['a2', 'b3', 'c1']
+assert sorted(['a2', 'b3', 'c1'], key=lambda a:a[1]) == ['c1', 'a2', 'b3']
+assert sorted(['a2', 'b3', 'c1'], key=None) == ['a2', 'b3', 'c1']
+
+ls = ['b3', 'a2', 'c1']; ls.sort()
+assert ls == ['a2', 'b3', 'c1']
+ls = ['a2', 'b3', 'c1']; ls.sort(key=lambda a:a[1])
+assert ls == ['c1', 'a2', 'b3']
+ls = ['a2', 'b3', 'c1']; ls.sort(key=None)
+assert ls == ['a2', 'b3', 'c1']
+
 print("passed all tests..")
-
-assert lst[100] == "TEST"
-

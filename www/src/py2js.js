@@ -1206,7 +1206,7 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
 
         if(left_is_id){
             var left_bound_to_int =
-                this.tree[0].tree[0].boundBefore(this.scope) == "int"
+                this.tree[0].tree[0].bindingType(this.scope) == "int"
             // Set attribute "augm_assign" of $IdCtx instance, so that
             // the id will not be resolved with $B.$check_undef()
             this.tree[0].tree[0].augm_assign = true
@@ -2720,7 +2720,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
                     def_names.push('$defaults.' + _default)
                 })
                 node.parent.insert(rank + offset++, $NodeJS('    __defaults__ : ' +
-                    '_b_.tuple.$factory([' + def_names.join(', ') + ']),'))
+                    '$B.fast_tuple([' + def_names.join(', ') + ']),'))
             }else{
                 node.parent.insert(rank + offset++, $NodeJS('    __defaults__ : ' +
                     '_b_.None,'))
@@ -2734,7 +2734,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
                     def_names.push('$defaults.' + _default)
                 })
                 node.parent.insert(rank + offset++, $NodeJS('    __kwdefaults__ : ' +
-                    '_b_.tuple.$factory([' + def_names.join(', ') + ']),'))
+                    '$B.fast_tuple([' + def_names.join(', ') + ']),'))
             }else{
                 node.parent.insert(rank + offset++, $NodeJS('    __kwdefaults__ : ' +
                     '_b_.None,'))
@@ -2747,7 +2747,8 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
 
         // Add attribute __dict__
         node.parent.insert(rank + offset++,
-            $NodeJS('    __dict__: _b_.dict.$factory(),'))
+            $NodeJS('    __dict__: {__class__: _b_.dict, $string_dict: {},' +
+                '$str_hash: {}, $numeric_dict: {}, $object_dict:{}},'))
 
         // Add attribute __doc__
         node.parent.insert(rank + offset++,
@@ -2789,7 +2790,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
             h1 + 'co_name: "' + this.name + '"' +
             h1 + 'co_nlocals: ' + co_varnames.length +
             h1 + 'co_varnames: [' + co_varnames.join(', ') + ']' +
-            h + '}\n    };'
+            h + '}\n' + ' '.repeat(indent + 4) +'};'
 
         // End with None for interactive interpreter
         js += 'None;'
@@ -3249,8 +3250,21 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
             new_nodes[pos++] = test_range_node
 
             // Build the block with the Javascript "for" loop
-            var idt = target.to_js()
+            var idt = target.to_js(),
+                shortcut = false
             if($range.tree.length == 1){
+                var stop = $range.tree[0].tree[0]
+                if(stop.tree[0].type == "int"){
+                    stop = parseInt(stop.to_js())
+                    if(0 < stop < $B.max_int){
+                        shortcut = true
+                        var varname = "$i" + $B.UUID()
+
+                        var for_node = $NodeJS("for (var " + varname + " = 0; " +
+                            varname + " < " + stop + "; " + varname + "++)")
+                        for_node.add($NodeJS(idt + " = " + varname))
+                    }
+                }
                 var start = 0,
                     stop = $range.tree[0].to_js()
             }else{
@@ -3258,24 +3272,27 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
                     stop = $range.tree[1].to_js()
             }
 
-            var js = 'var $stop_' + num + ' = $B.int_or_bool(' + stop + ');' +
-                h + idt + ' = ' + start + ';' +
-                h + '    var $next' + num + ' = ' + idt + ',' +
-                h + '    $safe' + num + ' = typeof $next' + num +
-                ' == "number" && typeof ' + '$stop_' + num + ' == "number";' +
-                h + 'while(true)'
-            var for_node = new $Node()
-            new $NodeJSCtx(for_node, js)
+            if(!shortcut){
 
-            for_node.add($NodeJS('if($safe' + num + ' && $next' + num +
-                '>= $stop_' + num + '){break}'))
-            for_node.add($NodeJS('else if(!$safe' + num + ' && $B.ge($next' +
-                num + ', $stop_' + num + ')){break}'))
-            for_node.add($NodeJS(idt + ' = $next' + num))
-            for_node.add($NodeJS('if($safe' + num + '){$next' + num +
-                ' += 1}'))
-            for_node.add($NodeJS('else{$next' + num + ' = $B.add($next' +
-                num + ',1)}'))
+                var js = 'var $stop_' + num + ' = $B.int_or_bool(' + stop + ');' +
+                    h + idt + ' = ' + start + ';' +
+                    h + '    var $next' + num + ' = ' + idt + ',' +
+                    h + '    $safe' + num + ' = typeof $next' + num +
+                    ' == "number" && typeof ' + '$stop_' + num + ' == "number";' +
+                    h + 'while(true)'
+                var for_node = new $Node()
+                new $NodeJSCtx(for_node, js)
+
+                for_node.add($NodeJS('if($safe' + num + ' && $next' + num +
+                    '>= $stop_' + num + '){break}'))
+                for_node.add($NodeJS('else if(!$safe' + num + ' && $B.ge($next' +
+                    num + ', $stop_' + num + ')){break}'))
+                for_node.add($NodeJS(idt + ' = $next' + num))
+                for_node.add($NodeJS('if($safe' + num + '){$next' + num +
+                    ' += 1}'))
+                for_node.add($NodeJS('else{$next' + num + ' = $B.add($next' +
+                    num + ',1)}'))
+            }
             // Add the loop body
             children.forEach(function(child){
                 for_node.add(child)
@@ -3827,6 +3844,67 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                 if(child.bindings && child.bindings[this.value]){
                     return child.bindings[this.value]
                 }
+            }
+            if(pnode === scope){
+                break
+            }
+            node = pnode
+        }
+
+        return found
+    }
+
+    this.bindingType = function(scope){
+        // If a binding explicitely sets the type of a variable (eg "x = 1")
+        // the next references can use this type if there is no block
+        // inbetween.
+        // For code like:
+        //
+        //     x = 1
+        //     x += 2
+        //
+        // for the id "x" in the second line, this.bindingType will return
+        // "int".
+        //
+        // A block might reset the type, like in
+        //
+        //     x = 1
+        //     if True:
+        //         x = "a"
+        //     x += 2
+        //
+        // For the id "x" in the last line, this.bindingType will just return
+        // "true"
+        var nb = 0,
+            node = $get_node(this),
+            found = false,
+            unknown,
+            ix
+
+        while(!found && node.parent && nb++ < 100){
+            var pnode = node.parent
+            if(pnode.bindings && pnode.bindings[this.value]){
+                return pnode.bindings[this.value]
+            }
+            for(var i = 0; i < pnode.children.length; i++){
+                var child = pnode.children[i]
+                if(child === node){break}
+                if(child.bindings && child.bindings[this.value]){
+                    found = child.bindings[this.value]
+                    ix = i
+                }
+            }
+            if(found){
+                for(var j = ix + 1; j < pnode.children.length; j++){
+                    child = pnode.children[j]
+                    if(child.children.length > 0){
+                        unknown = true
+                        break
+                    }else if(child === node){
+                        break
+                    }
+                }
+                return unknown || found
             }
             if(pnode === scope){
                 break
@@ -9046,6 +9124,143 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
 
     return root
 }
+
+var load_scripts = $B.parser.load_scripts = function(scripts, run_script, onerror){
+    // Loads and runs the scripts in the order they are placed in the page
+    // Script can be internal (code inside the <script></script> tag) or
+    // external (<script src="external_script.py"></script>)
+
+    if(run_script === undefined){
+      run_script = $B._run_script
+    }
+
+    // Callback function when an external script is loaded
+    function callback(ev, script){
+        var ok = false,
+            skip = false
+        if(ev !== null){
+            var req = ev.target
+            if(req.readyState == 4){
+                if(req.status == 200){
+                    ok = true;
+                    var script = {
+                        name: req.module_name,
+                        url: req.responseURL,
+                        src: req.responseText
+                    }
+                }
+            }else{
+                // AJAX request with readyState !== 4 => NOP
+                skip = true
+            }
+        }else{
+            // All data is supplied in script arg
+            ok = true
+        }
+        if(skip){return}
+        if(ok){
+            try{
+                run_script(script)
+            }catch(e){
+                if(onerror === undefined){throw e}
+                else{onerror(e)}
+            }
+            if(scripts.length > 0){
+                load_scripts(scripts)
+            }
+        }else{
+            try{
+                throw Error("cannot load script "+
+                    req.module_name + ' at ' + req.responseURL +
+                    ': error ' + req.status)
+            }catch(e){
+                if(onerror === undefined) {throw e}
+                else{onerror(e)}
+            }
+        }
+    }
+
+    var noajax = true
+    // Loop for efficient usage of the calling stack (faster than recursion?)
+    while(scripts.length > 0 && noajax){
+        var script = scripts.shift()
+        if(script['src'] === undefined){
+            // External script : load it by an Ajax call
+            noajax = false;
+            var req = new XMLHttpRequest()
+            req.onreadystatechange = callback
+            req.module_name = script.name
+            req.open('GET', script.url, true)
+            req.send()
+        }else{
+            // Internal script : execute it
+            callback(null, script)
+            load_scripts(scripts)
+        }
+    }
+}
+
+$B._load_scripts = load_scripts
+
+var run_script = $B.parser.run_script = function(script){
+    // script has attributes url, src, name
+
+    $B.$py_module_path[script.name] = script.url
+    var root, js
+
+    try{
+        // Conversion of Python source code to Javascript
+        root = $B.py2js(script.src, script.name, script.name)
+        js = root.to_js()
+        js = "var $locals_" + script.name + " = {}\n" + js
+        //console.log('imports in', script.name, root.imports)
+        if($B.debug > 1){console.log(js)}
+        // Run resulting Javascript
+        eval(js)
+
+    }catch(err){
+        if($B.debug > 1){
+            console.log(err)
+            for(var attr in err){
+               console.log(attr + ' : ', err[attr])
+            }
+        }
+
+        // If the error was not caught by the Python runtime, build an
+        // instance of a Python exception
+        if(err.$py_error === undefined){
+            console.log('Javascript error', err)
+            //console.log(js)
+            //for(var attr in err){console.log(attr+': '+err[attr])}
+            err = _b_.RuntimeError.$factory(err + '')
+        }
+
+        // Print the error traceback on the standard error stream
+        var name = err.__class__.__name__
+        var $trace = _b_.getattr(err, 'info')
+        if(name == 'SyntaxError' || name == 'IndentationError'){
+            var offset = err.args[3]
+            $trace += '\n    ' + ' '.repeat(offset) + '^' +
+                '\n' + name + ': ' + err.args[0]
+
+        }else{
+            $trace += '\n' + name + ': ' + err.args
+        }
+        try{
+            _b_.getattr($B.stderr, 'write')($trace)
+        }catch(print_exc_err){
+            console.log($trace)
+        }
+        // Throw the error to stop execution
+        throw err
+    }finally{
+        root = null
+        js = null
+        $B.clear_ns(script.name)
+    }
+}
+
+$B._run_script = run_script
 
 var brython = $B.parser.brython = function(options){
 

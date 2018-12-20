@@ -265,15 +265,18 @@ long_int.__abs__ = function(self){
 }
 
 long_int.__add__ = function(self, other){
-
     if(isinstance(other, _b_.float)){
         return _b_.float.$factory(parseInt(self.value) + other.value)
     }
     if(typeof other == "number"){
         other = long_int.$factory(_b_.str.$factory(other))
-    }else if(other.__class__ !== long_int && isinstance(other, int)){
-        // int subclass
-        other = long_int.$factory(_b_.str.$factory(_b_.int.__index__(other)))
+    }else if(other.__class__ !== long_int){
+        if(isinstance(other, _b_.bool)){
+            other = long_int.$factory(other ? 1 : 0)
+        }else if(isinstance(other, int)){
+            // int subclass
+            other = long_int.$factory(_b_.str.$factory(_b_.int.__index__(other)))
+        }
     }
 
     // Addition of "self" and "other"
@@ -720,6 +723,7 @@ long_int.$factory = function(value, base){
         throw _b_.TypeError.$factory("long_int takes at most 2 arguments (" +
             arguments.length + " given)")
     }
+    //    console.log("long int", value, typeof value, base)
     // base defaults to 10
     if(base === undefined){base = 10}
     else if(!isinstance(base, int)){

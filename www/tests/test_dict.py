@@ -73,4 +73,55 @@ assert d[f] == 1
 assert d[g] == 2
 assert hash(f) != hash(g)
 
+# issue 994
+d = {False: "Test", True: "Test2"}
+assert d[False] == "Test"
+assert d[0] == "Test"
+assert d[True] == "Test2"
+assert d[1] == "Test2"
+
+# issue 1000
+main = {
+    3: 1
+}
+
+diff = {
+    4: 1
+}
+
+class A:
+    def __hash__(self):
+        return 4
+    def __eq__(self, other):
+        return True
+
+assert not (main == diff)
+assert diff == {A(): 1}
+assert not (main == {A(): 1})
+
+# issue 1003
+jsobj = window.JSON.parse('{"foo": "bar"}')
+
+for k, v in dict(jsobj).items():
+    print(k, v) # Prints foo bar as would be expected
+
+test = {}
+try:
+    test.update(jsobj)
+    raise Exception("should have raised ValueError")
+except ValueError:
+    pass
+
+test.update(dict(jsobj))
+assert test == {"foo": "bar"}
+
+test = {}
+test.update(jsobj.to_dict())
+assert test == {"foo": "bar"}
+
+test = {}
+for k, v in dict(jsobj).items():
+    test[k] = v
+assert test == {"foo": "bar"}
+
 print("passed all tests..")

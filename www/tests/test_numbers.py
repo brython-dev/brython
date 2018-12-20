@@ -213,4 +213,7 @@ try:
 except ValueError:
     pass
 
+# issue 1001
+assert 1j / 1 == 1j
+assert 1j / 1.0 == 1j
 print('passed all tests...')

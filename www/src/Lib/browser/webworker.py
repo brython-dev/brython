@@ -345,9 +345,9 @@ class WorkerChild(WorkerCommon):
         by the `WorkerParent` class.
     """
     def __init__(self):
-        super().__init__(__BRYTHON__.__WORKER)
+        super().__init__(__BRYTHON__._WORKER)
         self._argv = sys.argv
-        self._environ = __BRYTHON__.__ENV
+        self._environ = __BRYTHON__._ENV
         self._status = S_LOADED
         
     def exec(self):
@@ -425,7 +425,7 @@ class RPCWorkerChild(WorkerChild):
             self.post_reply(message, msg)
 
 if __BRYTHON__.isa_web_worker:
-    w_cls = __BRYTHON__.__WORKER_CLASS
+    w_cls = __BRYTHON__._WORKER_CLASS
     elements = w_cls.split('.')
     cls_name = elements[-1]
     cls_module = '.'.join(elements[:-1])
@@ -434,8 +434,8 @@ if __BRYTHON__.isa_web_worker:
         current_worker = getattr(mod, cls_name)()
     except Exception as ex:
         print("Error importing child worker class", ex)
-        __BRYTHON__.__WORKER.postMessage({'type':'status', 'status':S_TERMINATED, 'error':str(ex)})
-        __BRYTHON__.__WORKER.close()
+        __BRYTHON__._WORKER.postMessage({'type':'status', 'status':S_TERMINATED, 'error':str(ex)})
+        __BRYTHON__._WORKER.close()
     #sys.argv = current_worker._argv
     os.environ.update(dict(current_worker._environ))
 else:

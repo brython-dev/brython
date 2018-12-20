@@ -87,7 +87,7 @@ object.__getattribute__ = function(obj, attr){
 
     var klass = obj.__class__ || $B.get_class(obj)
 
-    var $test = false //attr == "info"
+    var $test = false //attr == "ASCII"
     if($test){console.log("attr", attr, "de", obj, "klass", klass)}
     if(attr === "__class__"){
         return klass
@@ -393,6 +393,12 @@ object.__reduce_ex__ = function(self){
     res.push(_b_.tuple.$factory([self.__class__]))
     var d = _b_.dict.$factory(),
         nb = 0
+    if(self.__dict__ === undefined){
+        console.log("no dict", self)
+        $B.frames_stack.forEach(function(frame){
+            console.log(frame[0], frame[1], frame[2])
+        })
+    }
     for(var attr in self.__dict__.$string_dict){
         if(attr == "__class__" || attr.startsWith("$")){
             continue
@@ -421,9 +427,6 @@ object.__repr__ = function(self){
 }
 
 object.__setattr__ = function(self, attr, val){
-    if(val == "DISPATCH_TABLE"){
-        console.log("object.__setattr__", self, attr, val)
-    }
     if(val === undefined){
         // setting an attribute to 'object' type is not allowed
         throw _b_.TypeError.$factory(
@@ -443,6 +446,7 @@ object.__setattr__ = function(self, attr, val){
         self.__dict__.$string_dict[attr] = val
     }else{
         console.log("set attr without __dict__", self, attr, val)
+        console.log($B.last($B.frames_stack))
         self[attr] = val
     }
     return _b_.None

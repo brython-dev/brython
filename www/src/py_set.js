@@ -84,7 +84,6 @@ set.__eq__ = function(self, other){
       }
       return false
     }
-
     return _b_.NotImplemented
 }
 
@@ -93,26 +92,18 @@ set.__format__ = function(self, format_string){
 }
 
 set.__ge__ = function(self, other){
-    if(_b_.isinstance(other, [set, frozenset])){
-        return ! set.__lt__(self, other)
-    }else{
-        return _b_.object.__ge__(self, other)
-    }
+    return set.__le__(other, self)
 }
 
 set.__gt__ = function(self, other){
-    if(_b_.isinstance(other, [set, frozenset])){
-        return ! set.__le__(self, other)
-    }else{
-        return _b_.object.__gt__(self, other)
-    }
+    return set.__lt__(other, self)
 }
 
 set.__init__ = function(self, iterable, second){
     if(second === undefined){
         if(Array.isArray(iterable)){
-            for(var i = 0, len= iterable.length; i < len; i++){
-                set.add(self, iterable[i])
+            for(var i = 0, len = iterable.length; i < len; i++){
+                $add(self, iterable[i])
             }
             return _b_.None
         }
@@ -127,18 +118,16 @@ set.__init__ = function(self, iterable, second){
         self.$items = iterable.$items.slice()
         return $N
     }
-    var it = $B.$iter(iterable),
-        obj = {$items: [], $simple: true}
+    var it = $B.$iter(iterable)
     while(1){
         try{
             var item = _b_.next(it)
-            set.add(obj, item)
+            set.add(self, item)
         }catch(err){
             if(_b_.isinstance(err, _b_.StopIteration)){break}
             throw err
         }
     }
-    self.$items = obj.$items
     return $N
 }
 
@@ -158,7 +147,7 @@ set.__iter__ = function(self){
 
 set.__le__ = function(self, other){
     if(_b_.isinstance(other, [set, frozenset])){
-        var cfunc = _b_.getattr(other,"__contains__")
+        var cfunc = _b_.getattr(other, "__contains__")
         for(var i = 0, len = self.$items.length; i < len; i++){
             if(! cfunc(self.$items[i])){return false}
         }

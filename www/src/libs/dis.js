@@ -19,18 +19,18 @@ var mod = {
     ASYNC_GENERATOR: 512,
     COMPILER_FLAG_NAMES: $B.builtins.dict.$factory()
 }
-mod.COMPILER_FLAG_NAMES.$numeric_dict = {
-     1: "OPTIMIZED",
-     2: "NEWLOCALS",
-     4: "VARARGS",
-     8: "VARKEYWORDS",
-    16: "NESTED",
-    32: "GENERATOR",
-    64: "NOFREE",
-   128: "COROUTINE",
-   256: "ITERABLE_COROUTINE",
-   512: "ASYNC_GENERATOR"
-}
+mod.COMPILER_FLAG_NAMES = dict.$factory([
+     [1, "OPTIMIZED"],
+     [2, "NEWLOCALS"],
+     [4, "VARARGS"],
+     [8, "VARKEYWORDS"],
+    [16, "NESTED"],
+    [32, "GENERATOR"],
+    [64, "NOFREE"],
+   [128, "COROUTINE"],
+   [256, "ITERABLE_COROUTINE"],
+   [512, "ASYNC_GENERATOR"]
+])
 
 return mod
 

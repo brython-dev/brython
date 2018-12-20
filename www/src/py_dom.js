@@ -27,8 +27,15 @@ function $getPosition(e){
         e = e.offsetParent
     }
 
-    left += e.offsetLeft
-    top  += e.offsetTop
+    left += e.offsetLeft || 0
+    top  += e.offsetTop || 0
+
+    if(e.parentElement){
+        // eg SVG element inside an HTML element
+        var parent_pos = $getPosition(e.parentElement)
+        left += parent_pos.left
+        top += parent_pos.top
+    }
 
     return {left: left, top: top, width: width, height: height}
 }
