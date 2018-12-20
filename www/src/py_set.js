@@ -118,18 +118,16 @@ set.__init__ = function(self, iterable, second){
         self.$items = iterable.$items.slice()
         return $N
     }
-    var it = $B.$iter(iterable),
-        obj = {$items: [], $simple: true}
+    var it = $B.$iter(iterable)
     while(1){
         try{
             var item = _b_.next(it)
-            set.add(obj, item)
+            set.add(self, item)
         }catch(err){
             if(_b_.isinstance(err, _b_.StopIteration)){break}
             throw err
         }
     }
-    self.$items = obj.$items
     return $N
 }
 
