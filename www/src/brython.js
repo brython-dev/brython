@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-12-18 08:18:12.732666"
-__BRYTHON__.timestamp=1545117492732
+__BRYTHON__.compiled_date="2018-12-20 11:34:06.216682"
+__BRYTHON__.timestamp=1545302046216
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -10398,10 +10398,16 @@ for(var i=start;i > stop;i +=step){res +=self.charAt(i)}}
 return res}
 if(isinstance(arg,_b_.bool)){return self.__getitem__(_b_.int.$factory(arg))}
 throw _b_.TypeError.$factory("string indices must be integers")}
-str.__hash__=function(self){if(self===undefined){return str.__hashvalue__ ||$B.$py_next_hash-- }
-var hash=1
-for(var i=0,len=self.length;i < len;i++){hash=(101 * hash + self.charCodeAt(i))& 0xFFFFFFFF}
-return hash}
+var prefix=2,suffix=3,mask=(2 ** 32 - 1)
+function fnv(p){if(p.length==0){return 0}
+var x=prefix
+x=(x ^(p.charCodeAt(0)<< 7))& mask
+for(var i=0,len=p.length;i < len;i++){x=((1000003 * x)^ p.charCodeAt(i))& mask}
+x=(x ^ p.length)& mask
+x=(x ^ suffix)& mask
+if(x==-1){x=-2}
+return x}
+str.__hash__=function(self){return fnv(self)}
 str.__init__=function(self,arg){self.valueOf=function(){return arg}
 self.toString=function(){return arg}
 return _b_.None}
@@ -11397,7 +11403,7 @@ dict.$setitem(self,key,_default)
 return _default}}
 dict.update=function(self){var $=$B.args("update",1,{"self": null},["self"],arguments,{},"args","kw"),self=$.self,args=$.args,kw=$.kw
 if(args.length > 0){var o=args[0]
-if(isinstance(o,dict)){if(o.$jsobj){o=jsobj2dict(o)}
+if(isinstance(o,dict)){if(o.$jsobj){o=jsobj2dict(o.$jsobj)}
 $copy_dict(self,o)}else if(hasattr(o,"keys")){var _keys=_b_.list.$factory($B.$call($B.$getattr(o,"keys"))()),i=_keys.length
 while(i--){var _value=getattr(o,"__getitem__")(_keys[i])
 dict.$setitem(self,_keys[i],_value)}}else{var it=_b_.iter(o),i=0
@@ -11487,11 +11493,10 @@ return _b_.None}}
 var $=$B.args("__init__",2,{self:null,iterable:null},["self","iterable"],arguments,{iterable:[]},null,null),self=$.self,iterable=$.iterable
 if(_b_.isinstance(iterable,[set,frozenset])){self.$items=iterable.$items.slice()
 return $N}
-var it=$B.$iter(iterable),obj={$items:[],$simple: true}
+var it=$B.$iter(iterable)
 while(1){try{var item=_b_.next(it)
-set.add(obj,item)}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){break}
+set.add(self,item)}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){break}
 throw err}}
-self.$items=obj.$items
 return $N}
 var $set_iterator=$B.$iterator_class("set iterator")
 set.__iter__=function(self){var it=$B.$iterator(self.$items,$set_iterator),len=self.$items.length,nxt=it.__next__

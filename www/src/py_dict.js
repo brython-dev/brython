@@ -757,7 +757,9 @@ dict.update = function(self){
     if(args.length > 0){
         var o = args[0]
         if(isinstance(o, dict)){
-            if(o.$jsobj){o = jsobj2dict(o)}
+            if(o.$jsobj){
+                o = jsobj2dict(o.$jsobj)
+            }
             $copy_dict(self, o)
         }else if(hasattr(o, "keys")){
             var _keys = _b_.list.$factory($B.$call($B.$getattr(o, "keys"))()),
@@ -892,6 +894,7 @@ function jsobj2dict(x){
     }
     return d
 }
+
 $B.obj_dict = function(obj, from_js){
     var klass = obj.__class__ || $B.get_class(obj)
     if(klass !== undefined && klass.$native){

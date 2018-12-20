@@ -99,4 +99,29 @@ assert not (main == diff)
 assert diff == {A(): 1}
 assert not (main == {A(): 1})
 
+# issue 1003
+jsobj = window.JSON.parse('{"foo": "bar"}')
+
+for k, v in dict(jsobj).items():
+    print(k, v) # Prints foo bar as would be expected
+
+test = {}
+try:
+    test.update(jsobj)
+    raise Exception("should have raised ValueError")
+except ValueError:
+    pass
+
+test.update(dict(jsobj))
+assert test == {"foo": "bar"}
+
+test = {}
+test.update(jsobj.to_dict())
+assert test == {"foo": "bar"}
+
+test = {}
+for k, v in dict(jsobj).items():
+    test[k] = v
+assert test == {"foo": "bar"}
+
 print("passed all tests..")

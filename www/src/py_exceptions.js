@@ -411,6 +411,7 @@ $B.exception = function(js_exc){
     // or by the Javascript interpreter (ReferenceError for instance)
     if(! js_exc.$py_error){
         console.log("Javascript exception:", js_exc)
+        console.log($B.last($B.frames_stack))
         var exc = Error()
         exc.__name__ = "Internal Javascript error: " +
             (js_exc.__name__ || js_exc.name)
