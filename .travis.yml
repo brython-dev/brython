@@ -10,6 +10,18 @@ cache:
   directories:
     - "travis_phantomjs"
 
+matrix:
+  include:
+    - python: 3.7
+      dist: xenial  # required for Python >= 3.7 (travis-ci/travis-ci#9069)
+      language: python
+      before_install: pip install --upgrade pip
+      before_script: pip install flake8
+      script:
+        - EXCLUDE=.git,www/src/Lib/test/badsyntax_3131.py
+        # stop the build if there are Python syntax errors
+        - flake8 . --exclude=$EXCLUDE --exit-zero --select=E999 --show-source --statistics
+
 before_install:
   - mkdir qunit
   - wget -O qunit/qunit-1.18.0.css http://code.jquery.com/qunit/qunit-1.18.0.css
