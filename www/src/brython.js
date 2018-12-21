@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-12-20 11:34:06.216682"
-__BRYTHON__.timestamp=1545302046216
+__BRYTHON__.compiled_date="2018-12-21 10:25:23.706868"
+__BRYTHON__.timestamp=1545384323706
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -8489,6 +8489,8 @@ $err3.args[0],exc=_b_.ImportError.$factory("cannot import name '"+
 name + "'\n\n" + msg)
 exc.name=name
 throw exc}
+console.log($err3)
+console.log($B.last($B.frames_stack))
 throw _b_.ImportError.$factory(
 "cannot import name '" + name + "'")}}}}}}
 $B.$path_hooks=[vfs_hook,url_hook]
@@ -11149,7 +11151,7 @@ return}
 var items=[]
 for(var k in d.$numeric_dict){items.push([parseFloat(k),d.$numeric_dict[k]])}
 for(var k in d.$string_dict){items.push([k,d.$string_dict[k]])}
-for(var k in d.$object_dict){items.push(d.$object_dict[k])}
+for(var k in d.$object_dict){d.$object_dict[k].forEach(function(item){items.push(item)})}
 this.items=items}
 $item_generator.prototype.next=function(){if(this.i < this.items.length){return this.items[this.i++]}
 throw _b_.StopIteration.$factory("StopIteration")}
@@ -11177,22 +11179,24 @@ return klass.__name__ + "(["+ s.join(",")+ "])"},}
 res.__str__=res.__repr__
 klass.__reduce_ex__=klass.__reduce__=function(self){return _b_.tuple.$factory([_b_.iter,_b_.tuple.$factory([_b_.list.$factory(self)])])}
 return res}
+function rank(self,hash,key){
+var pairs=self.$object_dict[hash]
+if(pairs !==undefined){for(var i=0,len=pairs.length;i < len;i++){if($B.rich_comp("__eq__",key,pairs[i][0])){return i}}}
+return -1}
 dict.__bool__=function(){var $=$B.args("__bool__",1,{self: null},["self"],arguments,{},null,null)
 return dict.__len__($.self)> 0}
-dict.__contains__=function(){var $=$B.args("__contains__",2,{self: null,item: null},["self","item"],arguments,{},null,null),self=$.self,item=$.item
-if(self.$jsobj){return self.$jsobj[item]!==undefined}
-switch(typeof item){case "string":
-return self.$string_dict[item]!==undefined
+dict.__contains__=function(){var $=$B.args("__contains__",2,{self: null,key: null},["self","key"],arguments,{},null,null),self=$.self,key=$.key
+if(self.$jsobj){return self.$jsobj[key]!==undefined}
+switch(typeof key){case "string":
+return self.$string_dict[key]!==undefined
 case "number":
-return self.$numeric_dict[item]!==undefined}
-var _key=hash(item)
-if(self.$str_hash[_key]!==undefined &&
-$B.rich_comp("__eq__",item,self.$str_hash[_key])){return true}
-if(self.$numeric_dict[_key]!==undefined &&
-$B.rich_comp("__eq__",item,_key)){return true}
-if(self.$object_dict[_key]!==undefined){
-return $B.rich_comp("__eq__",item,self.$object_dict[_key][0])}
-return false}
+return self.$numeric_dict[key]!==undefined}
+var hash=_b_.hash(key)
+if(self.$str_hash[hash]!==undefined &&
+$B.rich_comp("__eq__",key,self.$str_hash[hash])){return true}
+if(self.$numeric_dict[hash]!==undefined &&
+$B.rich_comp("__eq__",key,hash)){return true}
+return rank(self,hash,key)> -1}
 dict.__delitem__=function(){var $=$B.args("__eq__",2,{self: null,arg: null},["self","arg"],arguments,{},null,null),self=$.self,arg=$.arg
 if(self.$jsobj){if(self.$jsobj[arg]===undefined){throw KeyError.$factory(arg)}
 delete self.$jsobj[arg]
@@ -11208,9 +11212,8 @@ if(self.$numeric_dict[arg]===undefined){throw KeyError.$factory(_b_.str.$factory
 delete self.$numeric_dict[arg]
 self.$version++
 return $N}
-var _key=hash(arg)
-if(self.$object_dict[_key]!==undefined){delete self.$object_dict[_key]}
-if(self.$jsobj){delete self.$jsobj[arg]}
+var hash=_b_.hash(arg),ix
+if((ix=rank(self,hash,arg))> -1){self.$object_dict[hash].splice(ix,1)}else{throw KeyError.$factory(_b_.str.$factory(arg))}
 self.$version++
 return $N}
 dict.__eq__=function(){var $=$B.args("__eq__",2,{self: null,other: null},["self","other"],arguments,{},null,null),self=$.self,other=$.other
@@ -11219,16 +11222,24 @@ if(self.$jsobj){self=jsobj2dict(self.$jsobj)}
 if(other.$jsobj){other=jsobj2dict(other.$jsobj)}
 if(dict.__len__(self)!=dict.__len__(other)){return false}
 if(self.$string_dict.length !=other.$string_dict.length){return false}
-for(var k in self.$numeric_dict){if(other.$numeric_dict.hasOwnProperty(k)){if(!$B.rich_comp("__eq__",other.$numeric_dict[k],self.$numeric_dict[k])){return false}}else if(other.$object_dict.hasOwnProperty(k)){if(!$B.rich_comp("__eq__",k,other.$object_dict[k][0])||
-!$B.rich_comp("__eq__",self.$numeric_dict[k],other.$object_dict[k][1])){return false}}else{return false}}
+for(var k in self.$numeric_dict){if(other.$numeric_dict.hasOwnProperty(k)){if(!$B.rich_comp("__eq__",other.$numeric_dict[k],self.$numeric_dict[k])){return false}}else if(other.$object_dict.hasOwnProperty(k)){var pairs=other.$object_dict[k],flag=false
+for(var i=0,len=pairs.length;i < len;i++){if($B.rich_comp("__eq__",k,pairs[i][0])&&
+$B.rich_comp("__eq__",self.$numeric_dict[k],pairs[i][1])){flag=true
+break}}
+if(! flag){return false}}else{return false}}
 for(var k in self.$string_dict){if(!other.$string_dict.hasOwnProperty(k)||
 !$B.rich_comp("__eq__",other.$string_dict[k],self.$string_dict[k])){return false}}
-for(var hash in self.$object_dict){self_obj=self.$object_dict[hash][0]
-self_value=self.$object_dict[hash][1]
-if(other.$object_dict[hash]!==undefined){if(!$B.rich_comp("__eq__",other.$object_dict[hash][1],self_value)){return false}}else{
-var num_value=other.$numeric_dict[hash]
-if(num_value !==undefined){if($B.rich_comp("__eq__",self_obj,hash)&&
-! $B.rich_comp("__eq__",num_value,self_value)){return false}}else{return false}}}
+for(var hash in self.$object_dict){var pairs=self.$object_dict[hash]
+var other_pairs=[]
+if(other.$numeric_dict[hash]!==undefined){other_pairs.push([hash,other.$numeric_dict[hash]])}
+if(other.$object_dict[hash]!==undefined){other_pairs=other_pairs.concat(other.$object_dict[hash])}
+if(other_pairs.length==0){return false}
+for(var i=0,len_i=pairs.length;i < len_i;i++){var flag=false
+var key=pairs[i][0],value=pairs[i][1]
+for(var j=0,len_j=other_pairs.length;j < len_j;j++){if($B.rich_comp("__eq__",key,other_pairs[j][0])&&
+$B.rich_comp("__eq__",value,other_pairs[j][1])){flag=true
+break}}
+if(! flag){return false}}}
 return true}
 dict.__getitem__=function(){var $=$B.args("__getitem__",2,{self: null,arg: null},["self","arg"],arguments,{},null,null),self=$.self,arg=$.arg
 if(self.$jsobj){if(!self.$jsobj.hasOwnProperty(arg)){throw _b_.KeyError.$factory(str.$factory(arg))}else if(self.$jsobj[arg]===undefined){return _b_.NotImplemented}else if(self.$jsobj[arg]===null){return $N}
@@ -11239,17 +11250,16 @@ break
 case "number":
 if(self.$numeric_dict[arg]!==undefined){return self.$numeric_dict[arg]}
 break}
-var _key=_b_.hash(arg),_eq=function(other){return $B.rich_comp("__eq__",arg,other)}
-var sk=self.$str_hash[_key]
+var hash=_b_.hash(arg),_eq=function(other){return $B.rich_comp("__eq__",arg,other)}
+arg.$hash=hash 
+var sk=self.$str_hash[hash]
 if(sk !==undefined && _eq(sk)){return self.$string_dict[sk]}
-if(self.$numeric_dict[_key]!==undefined && _eq(_key)){return self.$numeric_dict[_key]}
+if(self.$numeric_dict[hash]!==undefined && _eq(hash)){return self.$numeric_dict[hash]}
 if(isinstance(arg,_b_.str)){
 var res=self.$string_dict[arg.valueOf()]
 if(res !==undefined){return res}}
-var obj_ref=self.$object_dict[_key]
-if(obj_ref !==undefined){
-_eq(self.$object_dict[_key][0])
-return self.$object_dict[_key][1]}
+var ix=rank(self,hash,arg)
+if(ix > -1){return self.$object_dict[hash][ix][1]}
 if(self.__class__ !==dict){try{var missing_method=getattr(self.__class__,"__missing__",_b_.None)}catch(err){console.log(err)}
 if(missing_method !==_b_.None){return missing_method(self,arg)}}
 throw KeyError.$factory(arg)}
@@ -11308,7 +11318,7 @@ if(self.$jsobj){for(var attr in self.$jsobj){if(attr.charAt(0)!="$"){_count++}}
 return _count}
 for(var k in self.$numeric_dict){_count++}
 for(var k in self.$string_dict){_count++}
-for(var k in self.$object_dict){_count++}
+for(var hash in self.$object_dict){_count +=self.$object_dict[hash].length}
 return _count}
 dict.__ne__=function(self,other){return ! dict.__eq__(self,other)}
 dict.__new__=function(cls){if(cls===undefined){throw _b_.TypeError.$factory("int.__new__(): not enough arguments")}
@@ -11325,7 +11335,8 @@ items.forEach(function(item){if((!self.$jsobj && item[1]===self)||
 return "{" + res.join(", ")+ "}"}
 dict.__setitem__=function(self,key,value){var $=$B.args("__setitem__",3,{self: null,key: null,value: null},["self","key","value"],arguments,{},null,null)
 return dict.$setitem($.self,$.key,$.value)}
-dict.$setitem=function(self,key,value){if(self.$jsobj){if(self.$from_js){
+dict.$setitem=function(self,key,value,$hash){
+if(self.$jsobj){if(self.$from_js){
 value=$B.pyobj2jsobj(value)}
 if(self.$jsobj.__class__===_b_.type){self.$jsobj[key]=value
 if(key=="__init__" ||key=="__new__"){
@@ -11340,18 +11351,21 @@ case "number":
 self.$numeric_dict[key]=value
 self.$version++
 return $N}
-var _key=hash(key),_eq=function(other){return $B.rich_comp("__eq__",key,other)}
-if(self.$numeric_dict[_key]!==undefined && _eq(_key)){self.$numeric_dict[_key]=value
+var hash=$hash===undefined ? _b_.hash(key): $hash,_eq=function(other){return $B.rich_comp("__eq__",key,other)}
+if(self.$numeric_dict[hash]!==undefined && _eq(hash)){self.$numeric_dict[hash]=value
 self.$version++
 return $N}
-var sk=self.$str_hash[_key]
+var sk=self.$str_hash[hash]
 if(sk !==undefined && _eq(sk)){self.$string_dict[sk]=value
 self.$version++
 return $N}
-var obj_ref=self.$object_dict[_key]
-if(obj_ref !==undefined){
-_eq(self.$object_dict[_key][0])}
-self.$object_dict[_key]=[key,value]
+if($hash){if(self.$object_dict[$hash]!==undefined){self.$object_dict[$hash].push([key,value])}else{self.$object_dict[$hash]=[[key,value]]}
+self.$version++
+return $N}
+var ix=rank(self,hash,key)
+if(ix > -1){
+self.$object_dict[hash][ix][1]=value
+return $N}else if(self.$object_dict.hasOwnProperty(hash)){self.$object_dict[hash].push([key,value])}else{self.$object_dict[hash]=[[key,value]]}
 self.$version++
 return $N}
 dict.__str__=function(){return dict.__repr__.apply(null,arguments)}
@@ -11372,8 +11386,8 @@ return res}
 dict.fromkeys=function(){var $=$B.args("fromkeys",3,{cls: null,keys: null,value: null},["cls","keys","value"],arguments,{value: _b_.None},null,null),keys=$.keys,value=$.value
 var klass=$.cls,res=$B.$call(klass)(),keys_iter=$B.$iter(keys)
 while(1){try{var key=_b_.next(keys_iter)
-if(klass===dict){dict.__setitem__(res,key,value)}
-else{_b_.getattr(res,"__setitem__")(key,value)}}catch(err){if($B.is_exc(err,[_b_.StopIteration])){return res}
+if(klass===dict){dict.$setitem(res,key,value)}
+else{$B.$getattr(res,"__setitem__")(key,value)}}catch(err){if($B.is_exc(err,[_b_.StopIteration])){return res}
 throw err}}}
 dict.get=function(){var $=$B.args("get",3,{self: null,key: null,_default: null},["self","key","_default"],arguments,{_default: $N},null,null)
 try{return dict.__getitem__($.self,$.key)}
@@ -11398,8 +11412,11 @@ dict.__delitem__(self,itm[0])
 return _b_.tuple.$factory(itm)}catch(err){if(err.__class__==_b_.StopIteration){throw KeyError.$factory("'popitem(): dictionary is empty'")}}}
 dict.setdefault=function(){var $=$B.args("setdefault",3,{self: null,key: null,_default: null},["self","key","_default"],arguments,{_default: $N},null,null),self=$.self,key=$.key,_default=$._default
 try{return dict.__getitem__(self,key)}
-catch(err){if(_default===undefined){_default=$N}
-dict.$setitem(self,key,_default)
+catch(err){if(err.__class__ !==_b_.KeyError){throw err}
+if(_default===undefined){_default=$N}
+var hash=key.$hash
+key.$hash=undefined
+dict.$setitem(self,key,_default,hash)
 return _default}}
 dict.update=function(self){var $=$B.args("update",1,{"self": null},["self"],arguments,{},"args","kw"),self=$.self,args=$.args,kw=$.kw
 if(args.length > 0){var o=args[0]
