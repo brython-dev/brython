@@ -113,7 +113,7 @@ class ImportsFinder(ast.NodeVisitor):
                 if name.name != "*":
                     self.imports.add('{}{}.{}'.format(package, node.module,
                         name.name))
-        
+
 class ModulesFinder:
 
     def __init__(self, directory=os.getcwd()):
@@ -354,6 +354,9 @@ for dirname, dirnames, filenames in os.walk(os.getcwd()):
                 modules = modules[modules.find('{'):]
                 stdlib = json.loads(modules)
 
+if stdlib_dir is None:
+    raise FileNotFoundError("Could not find brython_stdlib.js in this"
+        " directory or below")
 
 # get all Python modules and packages
 user_modules = {}
