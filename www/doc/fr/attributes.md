@@ -196,8 +196,7 @@ for child in element:
 
 Pour détruire un élément, utiliser le mot-clé `del`
 ```python
-zone = document['zone']
-del zone
+del document['zone']
 ```
 
 La collection `options` associée à un objet SELECT a l'interface d'une liste Python :
