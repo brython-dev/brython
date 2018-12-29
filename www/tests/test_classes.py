@@ -345,4 +345,24 @@ assert A.x == "getattr"
 a.b = 9
 assert A.x == "setattr"
 
+# issue 1012
+class test:
+
+    nb_set = 0
+
+    def __init__(self):
+        self.x = 1
+
+    @property
+    def x(self):
+        return 'a'
+
+    @x.setter
+    def x(self, val):
+        test.nb_set += 1
+
+t = test()
+assert t.x == "a"
+assert test.nb_set == 1, test.nb_set
+
 print('passed all tests..')

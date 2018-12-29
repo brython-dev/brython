@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-12-29 16:53:01.385882"
-__BRYTHON__.timestamp=1546098781385
+__BRYTHON__.compiled_date="2018-12-29 21:10:42.898508"
+__BRYTHON__.timestamp=1546114242898
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -5182,8 +5182,9 @@ abstract_methods[attr]=true}else{non_abstract_methods[attr]=true}}}}
 var _slots=class_obj.__slots__
 if(_slots !==undefined){if(typeof _slots=="string"){_slots=[_slots]}else{_slots=_b_.list.$factory(_slots)}
 cl_dict.__slots__=_slots}
-for(var i=0;i < mro.length - 1;i++){if(mro[i].hasOwnProperty("__setattr__")){cl_dict.$has_setattr=true
-break}}
+for(var i=0;i < mro.length - 1;i++){for(var attr in mro[i]){if(attr=="__setattr__"){cl_dict.$has_setattr=true
+break}else if(mro[i][attr]&& mro[i][attr].__get__){cl_dict.$has_setattr=true
+break}}}
 var meta_new=_b_.type.__getattribute__(metaclass,"__new__")
 var kls=meta_new(metaclass,class_name,bases,cl_dict)
 kls.__module__=module
@@ -5255,7 +5256,6 @@ var items=$B.$dict_items(cl_dict)
 for(var i=0;i < items.length;i++){var key=$B.to_alias(items[i][0]),v=items[i][1]
 class_dict[key]=v}
 class_dict.__mro__=type.mro(class_dict)
-if(name=="kls"){console.log("type.__new__ returns",class_dict)}
 return class_dict}
 type.__init__=function(){}
 type.__call__=function(klass,...extra_args){var new_func=_b_.type.__getattribute__(klass,"__new__")
@@ -6344,6 +6344,11 @@ throw _b_.AttributeError.$factory("'" + cname +
 function getattr(){var missing={}
 var $=$B.args("getattr",3,{obj: null,attr: null,_default: null},["obj","attr","_default"],arguments,{_default: missing},null,null)
 return $B.$getattr($.obj,$.attr,$._default===missing ? undefined : $._default)}
+function in_mro(klass,attr){if(klass===undefined){return false}
+if(klass.hasOwnProperty(attr)){return klass[attr]}
+var mro=klass.__mro__
+for(var i=0,len=mro.length;i < len;i++){if(mro[i].hasOwnProperty(attr)){return mro[i][attr]}}
+return false}
 $B.$getattr=function(obj,attr,_default){
 var rawname=attr
 attr=$B.to_alias(attr)
@@ -6351,10 +6356,19 @@ var is_class=obj.$is_class ||obj.$factory
 var klass=obj.__class__
 var $test=false 
 if($test){console.log("$getattr",attr,obj,klass)}
-if(klass !==undefined && klass.__bases__ && klass.__bases__.length==0){if($test){console.log("$getattr shortcut",obj.__dict__.$string_dict)}
-if(obj.hasOwnProperty(attr)){return obj[attr]}else if(obj.__dict__ &&
-obj.__dict__.$string_dict.hasOwnProperty(attr)){return obj.__dict__.$string_dict[attr]}else if(klass.hasOwnProperty(attr)){if(typeof klass[attr]!="function" && attr !="__dict__" &&
-klass[attr].__get__===undefined){return klass[attr]}}}
+if(klass !==undefined && klass.__bases__ &&
+(klass.__bases__.length==0 ||
+(klass.__bases__.length==1 &&
+klass.__bases__[0]===_b_.object))){if(obj.hasOwnProperty(attr)){if($test){console.log("shortcut 1")}
+return obj[attr]}else if(obj.__dict__ &&
+obj.__dict__.$string_dict.hasOwnProperty(attr)&&
+!(klass.hasOwnProperty(attr)&&
+klass[attr].__get__)){if($test){console.log("shortcut 2")}
+return obj.__dict__.$string_dict[attr]}else if(klass.hasOwnProperty(attr)){if(typeof klass[attr]!="function" &&
+attr !="__dict__" &&
+klass[attr].__get__===undefined){var kl=klass[attr].__class__
+if(! in_mro(kl,"__get__")){if($test){console.log("shortcut 3",obj)}
+return klass[attr]}}}}
 if($test){console.log("attr",attr,"of",obj,"class",klass,"isclass",is_class)}
 if(klass===undefined){
 if(typeof obj=='string'){klass=_b_.str}

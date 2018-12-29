@@ -172,11 +172,16 @@ $B.$class_constructor = function(class_name, class_obj, bases,
         cl_dict.__slots__ = _slots
     }
 
-    // Check if class has __setattr__
+    // Check if class has __setattr__ or descriptors
     for(var i = 0; i < mro.length - 1; i++){
-        if(mro[i].hasOwnProperty("__setattr__")){
-            cl_dict.$has_setattr = true
-            break
+        for(var attr in mro[i]){
+            if(attr == "__setattr__"){
+                cl_dict.$has_setattr = true
+                break
+            }else if(mro[i][attr] && mro[i][attr].__get__){
+                cl_dict.$has_setattr = true
+                break
+            }
         }
     }
 
@@ -383,7 +388,6 @@ type.__new__ = function(meta, name, bases, cl_dict){
     }
 
     class_dict.__mro__ = type.mro(class_dict)
-    if(name == "kls"){console.log("type.__new__ returns", class_dict)}
     return class_dict
 }
 
