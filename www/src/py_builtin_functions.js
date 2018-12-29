@@ -1293,41 +1293,72 @@ iterator_class.__next__ = function(self){
     catch(err){throw _b_.StopIteration.$factory('')}
 }
 
-$B.$iter = function(obj){
-    // Function used internally by core Brython modules, to avoid the cost
-    // of arguments control
-    try{
-        var _iter = $B.$getattr(obj, '__iter__')
-        _iter = $B.$call(_iter)
-    }catch(err){
-        var gi = $B.$getattr(obj, '__getitem__', -1),
-            ln = $B.$getattr(obj, '__len__', -1)
-        if(gi !== -1){
-            if(ln !== -1){
-                var len = $B.$getattr(ln, '__call__')()
-                return iterator_class.$factory(gi, len)
-            }else{
-                return iterator_class.$factory(gi, null)
-            }
-      }
-      throw _b_.TypeError.$factory("'" + $B.get_class(obj).__name__ +
-          "' object is not iterable")
+callable_iterator = $B.make_class("callable_iterator",
+    function(func, sentinel){
+        return {
+            __class__: callable_iterator,
+            func: func,
+            sentinel: sentinel
+        }
     }
-    var res = $B.$call(_iter)()
-    try{$B.$getattr(res, '__next__')}
-    catch(err){
-        if(isinstance(err, _b_.AttributeError)){throw _b_.TypeError.$factory(
-            "iter() returned non-iterator of type '" +
-             $B.get_class(res).__name__ + "'")}
+)
+
+callable_iterator.__iter__ = function(self){
+    return self
+}
+
+callable_iterator.__next__ = function(self){
+    var res = self.func()
+    if($B.rich_comp("__eq__", res, self.sentinel)){
+        throw _b_.StopIteration.$factory()
     }
     return res
+}
+
+$B.$iter = function(obj, sentinel){
+    // Function used internally by core Brython modules, to avoid the cost
+    // of arguments control
+    if(sentinel === undefined){
+        try{
+            var _iter = $B.$getattr(obj, '__iter__')
+            _iter = $B.$call(_iter)
+        }catch(err){
+            var gi = $B.$getattr(obj, '__getitem__', -1),
+                ln = $B.$getattr(obj, '__len__', -1)
+            if(gi !== -1){
+                if(ln !== -1){
+                    var len = $B.$getattr(ln, '__call__')()
+                    return iterator_class.$factory(gi, len)
+                }else{
+                    return iterator_class.$factory(gi, null)
+                }
+          }
+          throw _b_.TypeError.$factory("'" + $B.get_class(obj).__name__ +
+              "' object is not iterable")
+        }
+        var res = $B.$call(_iter)()
+        try{$B.$getattr(res, '__next__')}
+        catch(err){
+            if(isinstance(err, _b_.AttributeError)){throw _b_.TypeError.$factory(
+                "iter() returned non-iterator of type '" +
+                 $B.get_class(res).__name__ + "'")}
+        }
+        return res
+    }else{
+        console.log("iter with sentinel")
+        return callable_iterator.$factory(obj, sentinel)
+    }
 }
 
 function iter(){
     // Function exposed to Brython programs, with arguments control
     var $ = $B.args('iter', 1, {obj: null}, ['obj'], arguments,
-        null, 'kw')
-    return $B.$iter($.obj)
+        {}, 'args', 'kw'),
+        sentinel
+    if($.args.length > 0){
+        var sentinel = $.args[0]
+    }
+    return $B.$iter($.obj, sentinel)
 }
 
 function len(obj){
