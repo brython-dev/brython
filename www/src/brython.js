@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-12-21 10:25:23.706868"
-__BRYTHON__.timestamp=1545384323706
+__BRYTHON__.compiled_date="2018-12-29 16:53:01.385882"
+__BRYTHON__.timestamp=1546098781385
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -6537,8 +6537,15 @@ iterator_class.__next__=function(self){self.counter++
 if(self.len !==null && self.counter==self.len){throw _b_.StopIteration.$factory('')}
 try{return self.getitem(self.counter)}
 catch(err){throw _b_.StopIteration.$factory('')}}
-$B.$iter=function(obj){
-try{var _iter=$B.$getattr(obj,'__iter__')
+callable_iterator=$B.make_class("callable_iterator",function(func,sentinel){return{
+__class__: callable_iterator,func: func,sentinel: sentinel}}
+)
+callable_iterator.__iter__=function(self){return self}
+callable_iterator.__next__=function(self){var res=self.func()
+if($B.rich_comp("__eq__",res,self.sentinel)){throw _b_.StopIteration.$factory()}
+return res}
+$B.$iter=function(obj,sentinel){
+if(sentinel===undefined){try{var _iter=$B.$getattr(obj,'__iter__')
 _iter=$B.$call(_iter)}catch(err){var gi=$B.$getattr(obj,'__getitem__',-1),ln=$B.$getattr(obj,'__len__',-1)
 if(gi !==-1){if(ln !==-1){var len=$B.$getattr(ln,'__call__')()
 return iterator_class.$factory(gi,len)}else{return iterator_class.$factory(gi,null)}}
@@ -6549,10 +6556,12 @@ try{$B.$getattr(res,'__next__')}
 catch(err){if(isinstance(err,_b_.AttributeError)){throw _b_.TypeError.$factory(
 "iter() returned non-iterator of type '" +
 $B.get_class(res).__name__ + "'")}}
-return res}
+return res}else{console.log("iter with sentinel")
+return callable_iterator.$factory(obj,sentinel)}}
 function iter(){
-var $=$B.args('iter',1,{obj: null},['obj'],arguments,null,'kw')
-return $B.$iter($.obj)}
+var $=$B.args('iter',1,{obj: null},['obj'],arguments,{},'args','kw'),sentinel
+if($.args.length > 0){var sentinel=$.args[0]}
+return $B.$iter($.obj,sentinel)}
 function len(obj){check_no_kw('len',obj)
 check_nb_args('len',1,arguments)
 try{return $B.$getattr(obj,'__len__')()}
@@ -12437,15 +12446,21 @@ return res}
 this.clone_tree=function(exit_node,head){
 var res=new $B.genNode(this.data)
 if(this.replaced && ! in_loop(this)){
+console.log("already replaced",this)
 res.data="void(0)"}
 if(this===exit_node &&(this.parent.is_cond ||! in_loop(this))){
 if(! exit_node.replaced){
+console.log("replace by void(0)",this)
 res=new $B.genNode("void(0)")}else{res=new $B.genNode(exit_node.data)}
 exit_node.replaced=true}
-if(head && this.is_break){res.data='$locals["$no_break' + this.loop_num + '"] = false;' +
+if(head && this.is_break){var parent=this.parent
+while(parent){if(parent.loop_start !==undefined){break}
+parent=parent.parent}
+var loop=in_loop(this)
+if(loop.has("yield")){res.data='$locals["$no_break' + this.loop_num + '"] = false;' +
 'var err = new Error("break"); ' +
 "err.__class__ = $B.GeneratorBreak; throw err;"
-res.is_break=true}
+res.is_break=true}else{res.is_break=true}}
 res.is_continue=this.is_continue
 res.has_child=this.has_child
 res.is_cond=this.is_cond
@@ -12478,7 +12493,7 @@ if(this.children[i].is_yield){break}}
 if(this.has_child){res[pos++]="\n" + this.indent_src(indent)+ "}\n"}
 return res.join("")}
 this.toString=function(){return "<Node " + this.data + ">"}}
-$B.GeneratorBreak={}
+$B.GeneratorBreak=$B.make_class("GeneratorBreak")
 $B.$GeneratorSendError={}
 var $GeneratorReturn={}
 $B.generator_return=function(value){return{__class__: $GeneratorReturn,value: value}}

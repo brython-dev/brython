@@ -215,12 +215,14 @@ $B.genNode = function(data, parent){
         var res = new $B.genNode(this.data)
         if(this.replaced && ! in_loop(this)){
             // cloning a node that was already replaced by "void(0)"
+            console.log("already replaced", this)
             res.data = "void(0)"
         }
         if(this === exit_node && (this.parent.is_cond || ! in_loop(this))){
             // If we have to clone the exit node and its parent was
             // a condition, replace code by 'void(0)'
             if(! exit_node.replaced){ // replace only once
+                console.log("replace by void(0)", this)
                 res = new $B.genNode("void(0)")
             }else{
                 res = new $B.genNode(exit_node.data)
@@ -229,10 +231,22 @@ $B.genNode = function(data, parent){
         }
 
         if(head && this.is_break){
-            res.data = '$locals["$no_break' + this.loop_num + '"] = false;' +
-                'var err = new Error("break"); ' +
-                "err.__class__ = $B.GeneratorBreak; throw err;"
-            res.is_break = true
+            var parent = this.parent
+            while(parent){
+                if(parent.loop_start !== undefined){
+                    break
+                }
+                parent = parent.parent
+            }
+            var loop = in_loop(this)
+            if(loop.has("yield")){
+                res.data = '$locals["$no_break' + this.loop_num + '"] = false;' +
+                    'var err = new Error("break"); ' +
+                    "err.__class__ = $B.GeneratorBreak; throw err;"
+                res.is_break = true
+            }else{
+                res.is_break = true
+            }
         }
         res.is_continue = this.is_continue
         res.has_child = this.has_child
@@ -274,9 +288,7 @@ $B.genNode = function(data, parent){
     }
 
     this.src = function(indent){
-
         // Returns the indented Javascript source code starting at "this"
-
         indent = indent || 0
         var res = [this.indent_src(indent) + this.data], pos = 1
         if(this.has_child){res[pos++] = "{"}
@@ -301,7 +313,7 @@ $B.genNode = function(data, parent){
 
 // Object used as the attribute "__class__" of an error thrown in case of a
 // "break" inside a loop
-$B.GeneratorBreak = {}
+$B.GeneratorBreak = $B.make_class("GeneratorBreak")
 
 // Class for errors sent to an iterator by "throw"
 $B.$GeneratorSendError = {}
@@ -315,7 +327,6 @@ $B.generator_return = function(value){
 function in_loop(node){
 
     // Tests if node is inside a "for" or "while" loop
-
     while(node){
         if(node.loop_start !== undefined){return node}
         node = node.parent
@@ -477,7 +488,7 @@ function make_next(self, yield_node_id){
         // "start" is the position where the rest of the block starts
         // By default it is the node of rank exit_node.rank + 1
         var start = exit_node.rank + 1
-
+        
         if(exit_node.loop_start !== undefined){
             // If exit_node is a loop, run it again
             start = exit_node.rank
@@ -497,12 +508,14 @@ function make_next(self, yield_node_id){
                 start++
             }
         }
-
+        
         for(var i = start, len = exit_parent.children.length; i < len; i++){
             var clone = exit_parent.children[i].clone_tree(null, true)
             if(clone.has("continue")){has_continue = true; break}
             rest[pos++] = clone
-            if(clone.has("break")){has_break = true}
+            if(clone.has("break")){
+                has_break = true
+            }
         }
 
         // add rest of block to new function
