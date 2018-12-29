@@ -818,6 +818,7 @@ function in_mro(klass, attr){
     }
     return false
 }
+
 $B.$getattr = function(obj, attr, _default){
     // Used internally to avoid having to parse the arguments
     var rawname = attr
@@ -836,13 +837,11 @@ $B.$getattr = function(obj, attr, _default){
                 (klass.__bases__.length == 1 &&
                  klass.__bases__[0] === _b_.object))){
         if(obj.hasOwnProperty(attr)){
-            if($test){console.log("shortcut 1")}
             return obj[attr]
         }else if(obj.__dict__ &&
                 obj.__dict__.$string_dict.hasOwnProperty(attr) &&
                 ! (klass.hasOwnProperty(attr) &&
                    klass[attr].__get__)){
-            if($test){console.log("shortcut 2")}
             return obj.__dict__.$string_dict[attr]
         }else if(klass.hasOwnProperty(attr)){
             if(typeof klass[attr] != "function" &&
@@ -850,7 +849,6 @@ $B.$getattr = function(obj, attr, _default){
                     klass[attr].__get__ === undefined){
                 var kl = klass[attr].__class__
                 if(! in_mro(kl, "__get__")){
-                    if($test){console.log("shortcut 3", obj)}
                     return klass[attr]
                 }
             }
