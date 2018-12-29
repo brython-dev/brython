@@ -81,13 +81,12 @@ global_loop = asyncio.new_event_loop()
 def run(reset = False):
     global output
     import sys
+    doc["console"].value = ""
     src = editor.editor.getValue()
     if storage is not None:
        storage["py_src"] = src
     state, t0, t1, _ = utils.run(src)
     sys.stdout.flush()
-    if reset:
-        doc["console"].value = ""
     print('<sync tests completed in %6.2f ms>' % ((t1 - t0) * 1000.0))
     sys.stdout.flush()
     if aio.count_tests(pending_only=True) > 0:
