@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-12-29 21:10:42.898508"
-__BRYTHON__.timestamp=1546114242898
+__BRYTHON__.compiled_date="2018-12-30 09:24:37.960662"
+__BRYTHON__.timestamp=1546158277960
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -5468,10 +5468,8 @@ return _b_.int}
 obj.__class__=_b_.float
 return _b_.float
 case "string":
-obj.__class__=_b_.str
 return _b_.str
 case "boolean":
-obj.__class__=_b_.bool
 return _b_.bool
 case "function":
 obj.__class__=$B.Function
@@ -6359,16 +6357,13 @@ if($test){console.log("$getattr",attr,obj,klass)}
 if(klass !==undefined && klass.__bases__ &&
 (klass.__bases__.length==0 ||
 (klass.__bases__.length==1 &&
-klass.__bases__[0]===_b_.object))){if(obj.hasOwnProperty(attr)){if($test){console.log("shortcut 1")}
-return obj[attr]}else if(obj.__dict__ &&
+klass.__bases__[0]===_b_.object))){if(obj.hasOwnProperty(attr)){return obj[attr]}else if(obj.__dict__ &&
 obj.__dict__.$string_dict.hasOwnProperty(attr)&&
 !(klass.hasOwnProperty(attr)&&
-klass[attr].__get__)){if($test){console.log("shortcut 2")}
-return obj.__dict__.$string_dict[attr]}else if(klass.hasOwnProperty(attr)){if(typeof klass[attr]!="function" &&
+klass[attr].__get__)){return obj.__dict__.$string_dict[attr]}else if(klass.hasOwnProperty(attr)){if(typeof klass[attr]!="function" &&
 attr !="__dict__" &&
 klass[attr].__get__===undefined){var kl=klass[attr].__class__
-if(! in_mro(kl,"__get__")){if($test){console.log("shortcut 3",obj)}
-return klass[attr]}}}}
+if(! in_mro(kl,"__get__")){return klass[attr]}}}}
 if($test){console.log("attr",attr,"of",obj,"class",klass,"isclass",is_class)}
 if(klass===undefined){
 if(typeof obj=='string'){klass=_b_.str}

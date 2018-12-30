@@ -156,10 +156,8 @@ $B.get_class = function(obj){
                 obj.__class__ = _b_.float
                 return _b_.float
             case "string":
-                obj.__class__ = _b_.str
                 return _b_.str
             case "boolean":
-                obj.__class__ = _b_.bool
                 return _b_.bool
             case "function":
                 obj.__class__ = $B.Function
