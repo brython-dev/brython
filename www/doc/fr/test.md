@@ -11,9 +11,9 @@ Pour le développement et le test de Brython, un certain nombre de scripts de te
 Quel que soit le niveau de débogage, les erreurs de syntaxe sont signalées dans la console du navigateur (ou à l'endroit défini par `sys.stderr`)
 
 Par exemple, le code
-
->    x = $a
-
+```python
+x = $a
+```
 génère le message
 
 >    SyntaxError: unknown token [$]
@@ -24,10 +24,10 @@ génère le message
 En mettant le niveau de débogage à 1 dans l'appel de la fonction <code>brython(_debug\_mode_)</code>, les exceptions levées à l'exécution et non interceptées par un `except` produisent également un message d'erreur, aussi proche que possible de celui généré par Python
 
 Ce code :
-
->    x = [1,2]
->    x[3]
-
+```python
+x = [1, 2]
+x[3]
+```
 genère :
 
 >    IndexError: list index out of range
@@ -141,93 +141,3 @@ plus détaillés dans le code à www/tests/debugger/main.js.
 **Brython_Debugger**.`on_step_update(cb)`
 > `cb` est appelé quand un état est changé par `setState`
 
-
-### Profilage de scripts
-
-Pour permettre le profilage il faut passer l'option "profile" à la fonction 
-`brython()`:
-
-> brython({'profile':1})
-
-Quand l'option `profile` est > 0 le compilateur ajoute du code additionel qui
-récupère des informations de profilage. Le module `profile` donne accès à ces 
-informations. Il fournit une interface très proche de celle du module `profile` 
-de la distribution standard Python.
-
-La principale différence est qu'il ne permet pas à l'utilisateur de définir
-des chronomètres et ne fait aucun calibrage. Les méthodes du module standard
-qui enregistrent des données sur disque enregistrent un version sérialisée en 
-JSON de ces données dans le stockage local du navigateur.
-
-#### Usage basique:
-
->       from profile import Profile
->
->       p = Profile()
->       p.enable()
->       do_something()
->       do_something_else()
->       p.create_stats()
-
-Ceci imprimera quelque chose comme:
-
->           1 run in 0.249 seconds
->
->       Ordered by: standard name (averaged over 1 run)
->
->       ncalls  tottime  percall  cumtime  var percall  module.function:lineno
->        101/1    0.023    0.000    1.012        0.010               .fact:180
-
-où chaque ligne correspond à une fonction et les colonnes correspondent à
-
-    ncalls      le nombre total de fois où la fonction a été appelée
-                (si la fonction a été appelée de façon non récursive, le 
-                deuxième nombre après la barre oblique indique combien 
-                d'appels étaient des appels de premier niveau dans la 
-                récursion)
-
-    tottime     la durée totale (en secondes) passée dans la fonction, sans 
-                inclure les sous-appels
-
-    percall     le temps moyen passée dans la fonction par appel, sans inclure
-                les sous-appels
-
-    cumtime     le temps total passé dans la fonction, en comptant les
-                sous-appels
-
-    var percall le tempas moyen passé dans la fonction pour chaque appel
-                non récursif
-
-    standard name est le nom de la fonction sous la forme 
-                module.nom_fonction:numero_ligne
-
-Il est aussi possible d'utiliser la forme suivante pour exécuter le code 
-plusieurs fois et prendre la moyenne :
-
->       from profile import Profile
->
->       p = Profile()
->       p.call(function_to_profile, 200, arg1, arg2, kwarg1=v1)
-
-qui imprimera quelque chose comme:
-
->           200 runs in 0.249 seconds
->
->       Ordered by: standard name (averaged over 1 run)
->
->       ncalls  tottime  percall  cumtime  var percall  module.function:lineno
->        101/1    0.023    0.000    1.012        0.010  function_to_profile:16
-
-Les données de profilage collectées peuvent être enregistrées dans le
-stockage local pour utilisation ultérieure:
-
->        p.dump_stats('run1')
-
-Pour relire les données de profilage:
-
->        data = Stats('run1')
-
-et sous forme agrégée
-
->        data.add(p.dump_stats())
->        print(data)
