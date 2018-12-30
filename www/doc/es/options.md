@@ -18,7 +18,6 @@ Para ejecutar scripts Python en la página, deberás llamar a la función `bryth
 - *static\_stdlib\_import* : booleano, indica si, para importar módulos o paquetes de la librería estándar, la tabla estática de mapeo en el script script **stdlib_paths.js** debería ser usada. El valor por defecto es `true`.
 - *pythonpath* : una lista de rutas (*paths*) donde se debería buscar a los módulos importados.
 - *ipy_id* : por defecto, la función `brython()` ejecuta todos los scripts de la página. Esta opción permite especificar una lista de elementos con determinada `id` (atributo `id` de una etiqueta HTML) cuyo contenido de texto pueda ser ejecutado como código Python. Ver [brythonmagic](https://github.com/kikocorreoso/brythonmagic) para más información.
-- *profile* : Cuando la opción `profile` es > 0 el compilador añade código opcional al código Javascript generado que recolecta información del profiling. El módulo `profile` provee de acceso a esta finformación. Intenta proveer una interfaz similar al módulo `profile` de la distribución estándar de CPython. Ver (Pruebas, depuración y profiling)[http://brython.info/static_doc/es/test.html] para más información
 
 
 Ejemplo de uso de las opciones de la función `brython`:
