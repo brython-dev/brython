@@ -828,7 +828,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false //attr == "property" //&& obj.__name__ == "Point"
+    var $test = false //attr == "datepicker" //&& obj.__name__ == "Point"
     if($test){console.log("$getattr", attr, obj, klass)}
 
     // Shortcut for classes without parents
@@ -836,6 +836,7 @@ $B.$getattr = function(obj, attr, _default){
             (klass.__bases__.length == 0 ||
                 (klass.__bases__.length == 1 &&
                  klass.__bases__[0] === _b_.object))){
+        if($test){console.log("try shortcut", attr)}
         if(obj.hasOwnProperty(attr)){
             return obj[attr]
         }else if(obj.__dict__ &&
@@ -867,14 +868,16 @@ $B.$getattr = function(obj, attr, _default){
             klass = $B.get_class(obj)
             if(klass === undefined){
                 // for native JS objects used in Python code
-                if(obj.hasOwnProperty(attr)){
-                    if(typeof obj[attr] == "function"){
+                if($test){console.log("no class", attr, obj.hasOwnProperty(attr), obj[attr])}
+                var res = obj[attr]
+                if(res !== undefined){
+                    if(typeof res == "function"){
                         return function(){
                             // In function, "this" is set to the object
-                            return obj[attr].apply(obj, arguments)
+                            return res.apply(obj, arguments)
                         }
                     }else{
-                        return $B.$JS2Py(obj[attr])
+                        return $B.$JS2Py(res)
                     }
                 }
                 if(_default !== undefined){return _default}

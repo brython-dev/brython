@@ -73,8 +73,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'rc',2]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2018-12-30 09:24:37.960662"
-__BRYTHON__.timestamp=1546158277960
+__BRYTHON__.compiled_date="2018-12-30 09:57:43.042846"
+__BRYTHON__.timestamp=1546160263042
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -6357,7 +6357,8 @@ if($test){console.log("$getattr",attr,obj,klass)}
 if(klass !==undefined && klass.__bases__ &&
 (klass.__bases__.length==0 ||
 (klass.__bases__.length==1 &&
-klass.__bases__[0]===_b_.object))){if(obj.hasOwnProperty(attr)){return obj[attr]}else if(obj.__dict__ &&
+klass.__bases__[0]===_b_.object))){if($test){console.log("try shortcut",attr)}
+if(obj.hasOwnProperty(attr)){return obj[attr]}else if(obj.__dict__ &&
 obj.__dict__.$string_dict.hasOwnProperty(attr)&&
 !(klass.hasOwnProperty(attr)&&
 klass[attr].__get__)){return obj.__dict__.$string_dict[attr]}else if(klass.hasOwnProperty(attr)){if(typeof klass[attr]!="function" &&
@@ -6369,8 +6370,10 @@ if(klass===undefined){
 if(typeof obj=='string'){klass=_b_.str}
 else if(typeof obj=='number'){klass=obj % 1==0 ? _b_.int : _b_.float}else if(obj instanceof Number){klass=_b_.float}else{klass=$B.get_class(obj)
 if(klass===undefined){
-if(obj.hasOwnProperty(attr)){if(typeof obj[attr]=="function"){return function(){
-return obj[attr].apply(obj,arguments)}}else{return $B.$JS2Py(obj[attr])}}
+if($test){console.log("no class",attr,obj.hasOwnProperty(attr),obj[attr])}
+var res=obj[attr]
+if(res !==undefined){if(typeof res=="function"){return function(){
+return res.apply(obj,arguments)}}else{return $B.$JS2Py(res)}}
 if(_default !==undefined){return _default}
 throw _b_.AttributeError.$factory('object has no attribute ' + rawname)}}}
 switch(attr){case '__call__':
