@@ -17,7 +17,6 @@ class AsyncTestManager:
 
     def async_test(self, timeout_sec=None):
         def _decorator(coro_func):
-            console.log("Registering test", coro_func.__name__)
             fut = asyncio.ensure_future(coro_func())
             self._tests.append((coro_func.__name__, fut))
             if timeout_sec is not None:
