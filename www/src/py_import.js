@@ -7,9 +7,11 @@ var _b_ = $B.builtins,
 
 var module = $B.module = {
     __class__ : _b_.type,
-    __module__: "builtins",
     __mro__: [_b_.object],
-    __name__ : "module",
+    $infos: {
+        __module__: "builtins",
+        __name__: "module"
+    },
     $is_class: true
 }
 
@@ -339,7 +341,10 @@ function new_spec(fields) {
 var finder_VFS = {
     __class__: _b_.type,
     __mro__: [_b_.object],
-    __name__: "VFSFinder",
+    $infos: {
+        __module__: "builtins",
+        __name__: "VFSFinder"
+    },
 
     create_module : function(cls, spec) {
         // Fallback to default module creation
@@ -474,7 +479,10 @@ var finder_stdlib_static = {
     $factory : finder_stdlib_static,
     __class__ : _b_.type,
     __mro__: [_b_.object],
-    __name__ : "StdlibStatic",
+    $infos: {
+        __module__: "builtins",
+        __name__: "StdlibStatic"
+    },
 
     create_module : function(cls, spec) {
         // Fallback to default module creation
@@ -569,7 +577,10 @@ finder_stdlib_static.$factory = function (){
 var finder_path = {
     __class__: _b_.type,
     __mro__: [_b_.object],
-    __name__: "ImporterPath",
+    $infos: {
+        __module__: "builtins",
+        __name__: "ImporterPath"
+    },
 
     create_module : function(cls, spec) {
         // Fallback to default module creation
@@ -666,7 +677,10 @@ finder_path.$factory = function(){
 var vfs_hook = {
     __class__: _b_.type,
     __mro__: [_b_.object],
-    __name__: "VfsPathFinder",
+    $infos: {
+        __module__: "builtins",
+        __name__: "VfsPathFinder"
+    },
 
     load_vfs: function(self) {
         try{var code = $download_module({__name__: "<VFS>"}, self.path)}
@@ -739,10 +753,13 @@ $B.set_func_names(vfs_hook, "<import>")
 var url_hook = {
     __class__: _b_.type,
     __mro__: [_b_.object],
-    __name__ : "UrlPathFinder",
     __repr__: function(self) {
         return "<UrlPathFinder" + (self.hint? " for '" + self.hint + "'":
                                    "(unbound)") + " at " + self.path_entry + '>'
+    },
+    $infos: {
+        __module__: "builtins",
+        __name__: "UrlPathFinder"
     },
 
     find_spec : function(self, fullname, module) {

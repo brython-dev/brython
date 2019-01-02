@@ -131,7 +131,10 @@
                 // return the dictionary for the class associated with tagName
                 var dict = {
                     __class__: _b_.type,
-                    __name__: tagName
+                    $infos:{
+                        __name__: tagName,
+                        __module__: "browser.html"
+                    }
                 }
 
                 dict.__init__ = function(){
@@ -230,10 +233,10 @@
                         var res = $B.DOMNode.$factory(elt, true)  // generate the wrapped DOMNode
                         res._wrapped = true  // marked as wrapped
                     }else{
-                        if(klass.__name__ == 'SVG'){
+                        if(klass.$infos.__name__ == 'SVG'){
                             var res = $B.DOMNode.$factory(document.createElementNS("http://www.w3.org/2000/svg", "svg"), true)
                         }else{
-                            var res = $B.DOMNode.$factory(document.createElement(klass.__name__), true)
+                            var res = $B.DOMNode.$factory(document.createElement(klass.$infos.__name__), true)
                         }
                         res._wrapped = false  // not wrapped
                     }
@@ -469,8 +472,6 @@
                 }
                 value.__objclass__ = _b_[name]
             }
-            _b_[name].__qualname__ = _b_[name].__qualname__ ||
-                _b_[name].__name__
         }
     }
 

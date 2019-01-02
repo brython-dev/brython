@@ -57,7 +57,9 @@ var $module=(function($B){
     }
     var $SRE_PatternDict = {
         __class__:_b_.type,
-        __name__:'SRE_Pattern'
+        $infos:{
+            __name__:'SRE_Pattern'
+        }
     }
     $SRE_PatternDict.__mro__ = [object]
     $SRE_PatternDict.findall = function(self, string){

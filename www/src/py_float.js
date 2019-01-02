@@ -15,7 +15,10 @@ function $err(op, other){
 var float = {
     __class__: _b_.type,
     __dir__: object.__dir__,
-    __name__: "float",
+    $infos: {
+        __module__: "builtins",
+        __name__: "float"
+    },
     $is_class: true,
     $native: true,
     $descriptors: {
@@ -706,7 +709,10 @@ $B.set_func_names(float, "builtins")
 var FloatSubclass = $B.FloatSubclass  = {
     __class__: _b_.type,
     __mro__: [object],
-    __name__: "float",
+    $infos: {
+        __module__: "builtins",
+        __name__: "float"
+    },
     $is_class: true
 }
 

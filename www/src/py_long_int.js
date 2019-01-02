@@ -8,9 +8,11 @@ eval(bltns)
 
 var long_int = {
     __class__: _b_.type,
-    __module__: "builtins",
     __mro__: [int, object],
-    __name__: "int",
+    $infos: {
+        __module__: "builtins",
+        __name__: "int"
+    },
     $is_class: true
 }
 

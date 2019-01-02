@@ -22,8 +22,10 @@ function clone(obj){
 
 var set = {
     __class__: _b_.type,
-    __module__: "builtins",
-    __name__: "set",
+    $infos: {
+        __module__: "builtins",
+        __name__: "set"
+    },
     $is_class: true,
     $native: true
 }
@@ -212,7 +214,7 @@ set.__str__ = set.__repr__ = function(self){
         if(frozen) {return "frozenset()"}
         return "set()"
     }
-    var klass_name = $B.get_class(self).__name__,
+    var klass_name = $B.get_class(self).$infos.__name__,
         head = klass_name + "({",
         tail = "})"
     if(head == "set({"){head = "{"; tail = "}"}
@@ -579,9 +581,11 @@ $B.set_func_names(set, "builtins")
 
 var frozenset = {
     __class__: _b_.type,
-    __module__: "builtins",
     __mro__: [object],
-    __name__: "frozenset",
+    $infos: {
+        __module__: "builtins",
+        __name__: "frozenset"
+    },
     $is_class: true,
     $native: true
 }

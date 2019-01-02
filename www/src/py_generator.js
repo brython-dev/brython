@@ -488,7 +488,7 @@ function make_next(self, yield_node_id){
         // "start" is the position where the rest of the block starts
         // By default it is the node of rank exit_node.rank + 1
         var start = exit_node.rank + 1
-        
+
         if(exit_node.loop_start !== undefined){
             // If exit_node is a loop, run it again
             start = exit_node.rank
@@ -508,7 +508,7 @@ function make_next(self, yield_node_id){
                 start++
             }
         }
-        
+
         for(var i = start, len = exit_parent.children.length; i < len; i++){
             var clone = exit_parent.children[i].clone_tree(null, true)
             if(clone.has("continue")){has_continue = true; break}
@@ -589,9 +589,11 @@ function make_next(self, yield_node_id){
 
 var generator = {
     __class__: _b_.type,
-    __module__: "builtins",
     __mro__: [_b_.object],
-    __name__: "generator",
+    $infos: {
+        __module__: "builtins",
+        __name__: "generator"
+    }
 }
 
 //fix me, need to investigate __enter__ and __exit__ and what they do
@@ -599,7 +601,7 @@ generator.__enter__ = function(self){console.log("generator.__enter__ called")}
 generator.__exit__ = function(self){console.log("generator.__exit__ called")}
 
 generator.__str__ = function(self){
-    return "<generator object " + self.name + ">"
+    return "<generator object " + self.__name__ + ">"
 }
 
 generator.__iter__ = function(self){
@@ -706,6 +708,7 @@ generator.$factory = $B.genfunc = function(name, blocks, funcs, $defaults){
 
         var res = {
             __class__: generator,
+            __name__: name,
             args: Array.prototype.slice.call(arguments),
             blocks: blocks,
             env: {},

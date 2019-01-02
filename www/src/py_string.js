@@ -67,7 +67,10 @@ var object = _b_.object
 var str = {
     __class__: _b_.type,
     __dir__: object.__dir__,
-    __name__: "str",
+    $infos: {
+        __module__: "builtins",
+        __name__: "str"
+    },
     $is_class: true,
     $native: true
 }
@@ -99,7 +102,7 @@ function reverse(s){
 function check_str(obj){
     if(! _b_.isinstance(obj, str)){
         throw _b_.TypeError.$factory("can't convert '" +
-            $B.get_class(obj).__name__ + "' object to str implicitly")
+            $B.get_class(obj).$infos.__name__ + "' object to str implicitly")
     }
 }
 
@@ -108,7 +111,7 @@ str.__add__ = function(self,other){
         try{return getattr(other, "__radd__")(self)}
         catch(err){
             throw _b_.TypeError.$factory("Can't convert " +
-                $B.get_class(other).__name__ + " to str implicitly")}
+                $B.get_class(other).$infos.__name__ + " to str implicitly")}
     }
     return self + other
 }
@@ -1770,7 +1773,10 @@ $B.set_func_names(str, "builtins")
 var StringSubclass = $B.StringSubclass = {
     __class__: _b_.type,
     __mro__: [object],
-    __name__: "str",
+    $infos: {
+        __module__: "builtins",
+        __name__: "str"
+    },
     $is_class: true
 }
 

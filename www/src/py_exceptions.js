@@ -256,10 +256,12 @@ $B._frame = frame // used in builtin_modules.js
 var BaseException = _b_.BaseException =  {
     __class__: _b_.type,
     __bases__ : [_b_.object],
-    __module__: "builtins",
     __mro__: [_b_.object],
-    __name__: "BaseException",
     args: [],
+    $infos:{
+        __name__: "BaseException",
+        __module__: "builtins"
+    },
     $is_class: true
 }
 
@@ -474,13 +476,14 @@ function $make_exc(names, parent){
         var $exc = (BaseException.$factory + "").replace(/BaseException/g,name)
         $exc = $exc.replace("//placeholder//", code)
         // class dictionary
-        _str[pos++] = "_b_." + name + ' = {__class__:_b_.type, __name__:"' +
-            name + '", __bases__: [parent], __module__: "builtins", '+
-            '__mro__: [_b_.' + parent.__name__ +
-            "].concat(parent.__mro__), $is_class: true}"
+        _str[pos++] = "_b_." + name + ' = {__class__:_b_.type, ' +
+            '__mro__: [_b_.' + parent.$infos.__name__ +
+            "].concat(parent.__mro__), $is_class: true," +
+            "$infos: {__name__:'" + name + "'}}"
         _str[pos++] = "_b_." + name + ".$factory = " + $exc
         _str[pos++] = "_b_." + name + '.$factory.$infos = {__name__: "' +
             name + '", __qualname__: "' + name + '"}'
+        _str[pos++] = "$B.set_func_names(_b_." + name + ", 'builtins')"
     }
     try{
         eval(_str.join(";"))

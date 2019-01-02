@@ -15,9 +15,11 @@ function $list(){
 
 var list = {
     __class__: _b_.type,
-    __module__: "builtins",
     __mro__: [object],
-    __name__: "list",
+    $infos: {
+        __module__: "builtins",
+        __name__: "list"
+    },
     $is_class: true,
     $native: true,
     __dir__: object.__dir__
@@ -180,8 +182,8 @@ list.__ge__ = function(self, other){
             res = getattr(self[i], "__ge__")(other[i])
             if(res === _b_.NotImplemented){
                 throw _b_.TypeError.$factory("unorderable types: " +
-                    $B.get_class(self[i]).__name__  + "() >= " +
-                    $B.get_class(other[i]).__name__ + "()")
+                    $B.get_class(self[i]).$infos.__name__  + "() >= " +
+                    $B.get_class(other[i]).$infos.__name__ + "()")
             }else{return res}
         }
     }
@@ -202,8 +204,8 @@ list.__gt__ = function(self, other){
             res = getattr(self[i], "__gt__")(other[i])
             if(res === _b_.NotImplemented){
                 throw _b_.TypeError.$factory("unorderable types: " +
-                    $B.get_class(self[i]).__name__ + "() > " +
-                    $B.get_class(other[i]).__name__ + "()")
+                    $B.get_class(self[i]).$infos.__name__ + "() > " +
+                    $B.get_class(other[i]).$infos.__name__ + "()")
             }else return res
         }
     }
@@ -296,8 +298,8 @@ list.__lt__ = function(self, other){
             res = getattr(self[i], "__lt__")(other[i])
             if(res === _b_.NotImplemented){
                 throw _b_.TypeError.$factory("unorderable types: " +
-                    $B.get_class(self[i]).__name__  + "() >= " +
-                    $B.get_class(other[i]).__name__ + "()")
+                    $B.get_class(self[i]).$infos.__name__  + "() >= " +
+                    $B.get_class(other[i]).$infos.__name__ + "()")
             }else{return res}
         }
     }
@@ -752,9 +754,11 @@ function $tuple(arg){return arg} // used for parenthesed expressions
 
 var tuple = {
     __class__: _b_.type,
-    __module__: "builtins",
     __mro__: [object],
-    __name__: "tuple",
+    $infos: {
+        __module__: "builtins",
+        __name__: "tuple"
+    },
     $is_class: true,
     $native: true
 }

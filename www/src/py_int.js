@@ -20,8 +20,11 @@ function int_value(obj){
 
 // dictionary for built-in class 'int'
 var int = {__class__: _b_.type,
-    __name__: "int",
     __dir__: object.__dir__,
+    $infos: {
+        __module__: "builtins",
+        __name__: "int"
+    },
     $is_class: true,
     $native: true,
     $descriptors: {
@@ -774,9 +777,11 @@ $B.$bool = function(obj){ // return true or false
 var bool = {
     __bases__: [int],
     __class__: _b_.type,
-    __module__: "builtins",
     __mro__: [int, object],
-    __name__: "bool",
+    $infos:{
+        __name__: "bool",
+        __module__: "builtins"
+    },
     $is_class: true,
     $native: true
 }

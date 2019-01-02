@@ -265,7 +265,9 @@ $B.set_func_names(Attributes, "<dom>")
 var DOMEvent = $B.DOMEvent = {
     __class__: _b_.type,
     __mro__: [object],
-    __name__: "DOMEvent"
+    $infos:{
+        __name__: "DOMEvent"
+    }
 }
 
 DOMEvent.__new__ = function(cls, evt_name){
@@ -344,7 +346,10 @@ $B.set_func_names(DOMEvent, "<dom>")
 
 var Clipboard = {
     __class__: _b_.type,
-    __name__: "Clipboard"
+    $infos: {
+        __module__: "<pydom>",
+        __name__: "Clipboard"
+    }
 }
 
 Clipboard.__getitem__ = function(self, name){
@@ -359,8 +364,9 @@ Clipboard.__setitem__ = function(self, name, value){
 
 Clipboard.$factory = function(data){ // drag and drop dataTransfer
     return {
-        data : data,
-        __class__ : Clipboard
+        __class__ : Clipboard,
+        __dict__: _b_.dict.$factory(),
+        data : data
     }
 }
 
@@ -390,8 +396,11 @@ function $EventsList(elt, evt, arg){
 
 var OpenFile = $B.OpenFile = {
     __class__: _b_.type,  // metaclass type
-    __name__: "OpenFile",
-    __mro__: [object]
+    __mro__: [object],
+    $infos: {
+        __module__: "<pydom>",
+        __name__: "OpenFile"
+    }
 }
 
 OpenFile.$factory = function(file, mode, encoding) {
@@ -442,7 +451,6 @@ dom.FileReader.__str__ = function(){return "<class 'FileReader'>"}
 
 var Options = {
     __class__: _b_.type,
-    __name__: 'Options',
     __delitem__: function(self, arg){
         self.parent.options.remove(arg.elt)
     },
@@ -477,6 +485,10 @@ var Options = {
     },
     remove: function(self, arg){
         self.parent.options.remove(arg.elt)
+    },
+    $infos: {
+        __module__: "<pydom>",
+        __name__: "Options"
     }
 }
 
@@ -494,7 +506,10 @@ $B.set_func_names(Options, "<dom>")
 var DOMNode = {
     __class__ : _b_.type,
     __mro__: [object],
-    __name__ : "DOMNode"
+    $infos: {
+        __module__: "<pydom>",
+        __name__: "DOMNode"
+    }
 }
 
 DOMNode.$factory = function(elt, fromtag){
@@ -1438,7 +1453,9 @@ $B.set_func_names(DOMNode, "<dom>")
 // same interface as cgi.FieldStorage, with getvalue / getlist / getfirst
 var Query = {
     __class__: _b_.type,
-    __name__: "query"
+    $infos:{
+        __name__: "query"
+    }
 }
 
 Query.__contains__ = function(self, key){
@@ -1515,7 +1532,10 @@ DOMNode.query = function(self){
 var TagSum = {
     __class__ : _b_.type,
     __mro__: [object],
-    __name__: "TagSum"
+    $infos: {
+        __module__: "<pydom>",
+        __name__: "TagSum"
+    }
 }
 
 TagSum.appendChild = function(self, child){

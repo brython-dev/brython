@@ -73,7 +73,9 @@ function bytes2WordArray(obj){
 var hash = {
     __class__: _b_.type,
     __mro__: [_b_.object],
-    __name__: 'hash'
+    $infos:{
+        __name__: 'hash'
+    }
 }
 
 hash.update = function(self, msg){

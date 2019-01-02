@@ -45,8 +45,7 @@ var add_to_res = function(res, key, val) {
 var ajax = {
     __class__: _b_.type,
     __mro__: [$B.JSObject, _b_.object],
-    __name__: 'ajax',
-
+    
     __getattribute__ : function(self, attr){
         // Special case for send : accept dict as parameters
         if(attr == 'send'){
@@ -60,6 +59,11 @@ var ajax = {
 
     __repr__ : function(self){return '<object Ajax>'},
     __str__ : function(self){return '<object Ajax>'},
+
+    $infos: {
+        __module__: "builtins",
+        __name__: "ajax"
+    },
 
     bind : function(self, evt, func){
         // req.bind(evt,func) is the same as req.onevt = func

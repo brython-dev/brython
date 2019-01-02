@@ -1844,7 +1844,8 @@ var $ClassCtx = $B.parser.$ClassCtx = function(context){
 
         var instance_decl = new $Node(),
             local_ns = '$locals_' + this.id.replace(/\./g, '_'),
-            js = ';var ' + local_ns + ' = {$type: "class", __annotations__: _b_.dict.$factory()}, $locals = ' +
+            js = ';var ' + local_ns + ' = {$type: "class", ' +
+            '__annotations__: _b_.dict.$factory()}, $locals = ' +
                 local_ns + ', $local_name = "' + local_ns + '";'
         new $NodeJSCtx(instance_decl, js)
         node.insert(0, instance_decl)
@@ -3964,7 +3965,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         // get global scope
         var gs = innermost
 
-        var $test = false // val == "x"
+        var $test = false //val == "__name__"
 
         while(true){
             if(gs.parent_block){
@@ -3980,6 +3981,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
 
         if(this.nonlocal || this.bound){
             var bscope = this.firstBindingScopeId()
+            if($test){console.log("binding", bscope)}
             // Might be undefined, for augmented assignments
             if(bscope !== undefined){
                 return "$locals_" + bscope.replace(/\./g, "_") + '["' +

@@ -20,9 +20,11 @@ function $DictClass($keys,$values){
 
 var dict = {
     __class__: _b_.type,
-    __module__: "builtins",
     __mro__: [object],
-    __name__ : "dict",
+    $infos: {
+        __module__: "builtins",
+        __name__: "dict"
+    },
     $is_class: true,
     $native: true
 }

@@ -904,6 +904,10 @@ $B.$iterator_class = function(name){
         __name__: name,
         __module__: "builtins",
         __mro__: [_b_.object],
+        $infos:{
+            __name__: name,
+            __module__: "builtins"
+        },
         $is_class: true
     }
 

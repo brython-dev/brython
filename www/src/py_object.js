@@ -6,7 +6,9 @@ var _b_ = $B.builtins
 var object = {
     //__class__:$type, : not here, added in py_type.js after $type is defined
     // __bases__ : set to an empty tuple in py_list.js after tuple is defined
-    __name__: "object",
+    $infos:{
+        __name__: "object"
+    },
     $is_class: true,
     $native: true
 }
@@ -87,7 +89,7 @@ object.__getattribute__ = function(obj, attr){
 
     var klass = obj.__class__ || $B.get_class(obj)
 
-    var $test = false //attr == "ASCII"
+    var $test = false //attr == "f"
     if($test){console.log("attr", attr, "de", obj, "klass", klass)}
     if(attr === "__class__"){
         return klass
@@ -112,7 +114,10 @@ object.__getattribute__ = function(obj, attr){
             var mro = klass.__mro__
             for(var i = 0, len = mro.length; i < len; i++){
                 res = check(obj, mro[i], attr)
-                if(res !== undefined){break}
+                if(res !== undefined){
+                    if($test){console.log("found in", mro[i])}
+                    break
+                }
             }
         }
 
@@ -248,11 +253,15 @@ object.__getattribute__ = function(obj, attr){
                     }
                     method.__get__.__class__ = $B.method_wrapper
                     method.__get__.$infos = res.$infos
+                    if(klass.$infos===undefined){
+                        console.log("no $infos", klass)
+                        console.log($B.last($B.frames_stack))
+                    }
                     method.$infos = {
                         __self__: self,
                         __func__: res,
                         __name__: attr,
-                        __qualname__: klass.__name__ + "." + attr
+                        __qualname__: klass.$infos.__name__ + "." + attr
                     }
                     if($test){console.log("return method", method)}
                     return method
@@ -299,7 +308,7 @@ object.__getattribute__ = function(obj, attr){
                     }catch(err){
                         var msg = "unsupported operand types for " +
                             opsigns[rank] + ": '" + klass.__name__ +
-                            "' and '" + $B.get_class(arguments[0]).__name__ +
+                            "' and '" + $B.get_class(arguments[0]).$infos.__name__ +
                             "'"
                         throw _b_.TypeError.$factory(msg)
                     }
@@ -417,12 +426,12 @@ object.__repr__ = function(self){
     if(self.__class__ === _b_.type) {
         return "<class '" + self.__name__ + "'>"
     }
-    if(self.__class__.__module__ !== undefined &&
-            self.__class__.__module__ !== "builtins"){
-        return "<" + self.__class__.__module__ + "." +
-            self.__class__.__name__ + " object>"
+    if(self.__class__.$infos.__module__ !== undefined &&
+            self.__class__.$infos.__module__ !== "builtins"){
+        return "<" + self.__class__.$infos.__module__ + "." +
+            self.__class__.$infos.__name__ + " object>"
     }else{
-        return "<" + self.__class__.__name__ + " object>"
+        return "<" + self.__class__.$infos.__name__ + " object>"
     }
 }
 
@@ -477,12 +486,15 @@ object.$factory = function(){
 $B.set_func_names(object, "builtins")
 
 $B.make_class = function(name, factory){
-    // Buils a basic class object
+    // Builds a basic class object
 
     var A = {
         __class__: _b_.type,
         __mro__: [object],
         __name__: name,
+        $infos:{
+            __name__: name
+        },
         $is_class: true
     }
 

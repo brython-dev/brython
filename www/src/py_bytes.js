@@ -30,8 +30,11 @@ $B.to_bytes = function(obj){
 var bytearray = {
     __class__: _b_.type,
     __mro__: [object],
-    __name__: 'bytearray',
     $buffer_protocol: true,
+    $infos: {
+        __module__: "builtins",
+        __name__: "bytearray"
+    },
     $is_class: true
 }
 
@@ -133,8 +136,11 @@ bytearray.$factory = function(source, encoding, errors) {
 var bytes = {
     __class__ : _b_.type,
     __mro__: [object],
-    __name__ : "bytes",
     $buffer_protocol: true,
+    $infos: {
+        __module__: "builtins",
+        __name__: "bytes"
+    },
     $is_class: true
 }
 
@@ -299,7 +305,7 @@ bytes.__new__ = function(cls, source, encoding, errors){
                     var item = _b_.int.$factory(int_list[i])
                 }catch(err){
                     throw _b_.TypeError.$factory("'" +
-                        $B.get_class(int_list[i]).__name__ + "' object " +
+                        $B.get_class(int_list[i]).$infos.__name__ + "' object " +
                         "cannot be interpreted as an integer")
                 }
                 if(item < 0 || item > 255){
