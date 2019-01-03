@@ -350,8 +350,10 @@ function in_try(node){
 
 var $BRGeneratorDict = {
     __class__: _b_.type,
-    __name__: "generator",
-    __module__: "builtins",
+    $infos: {
+        __name__: "generator",
+        __module__: "builtins"
+    },
     $is_class: true
 }
 

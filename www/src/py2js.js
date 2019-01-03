@@ -9238,7 +9238,7 @@ var run_script = $B.parser.run_script = function(script){
         }
 
         // Print the error traceback on the standard error stream
-        var name = err.__class__.__name__
+        var name = err.__class__.$infos.__name__
         var $trace = _b_.getattr(err, 'info')
         if(name == 'SyntaxError' || name == 'IndentationError'){
             var offset = err.args[3]
@@ -9713,7 +9713,7 @@ $B.has_indexedDB = self.indexedDB !== undefined
 function handle_error(err){
     // Print the error traceback on the standard error stream
     if(err.__class__ !== undefined){
-        var name = err.__class__.__name__,
+        var name = err.__class__.$infos.__name__,
             trace = _b_.getattr(err, 'info')
         if(name == 'SyntaxError' || name == 'IndentationError'){
             var offset = err.args[3]

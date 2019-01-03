@@ -102,7 +102,7 @@ function reverse(s){
 function check_str(obj){
     if(! _b_.isinstance(obj, str)){
         throw _b_.TypeError.$factory("can't convert '" +
-            $B.get_class(obj).$infos.__name__ + "' object to str implicitly")
+            $B.class_name(obj) + "' object to str implicitly")
     }
 }
 
@@ -111,7 +111,7 @@ str.__add__ = function(self,other){
         try{return getattr(other, "__radd__")(self)}
         catch(err){
             throw _b_.TypeError.$factory("Can't convert " +
-                $B.get_class(other).$infos.__name__ + " to str implicitly")}
+                $B.class_name(other) + " to str implicitly")}
     }
     return self + other
 }
@@ -757,7 +757,7 @@ str.__mod__ = function(self, args) {
                             cls = typeof(self)
                         }
                     }else{
-                        cls = cls.__name__
+                        cls = cls.$infos.__name__
                     }
                     throw _b_.TypeError.$factory("%" + try_char +
                         " format: a number is required, not " + cls)
@@ -817,7 +817,7 @@ str.__mul__ = function(){
         ["self", "other"], arguments, {}, null, null)
     if(! isinstance($.other, _b_.int)){throw _b_.TypeError.$factory(
         "Can't multiply sequence by non-int of type '" +
-            $B.get_class($.other).__name__ + "'")}
+            $B.class_name($.other) + "'")}
     var $res = ""
     for(var i = 0; i< $.other; i++){$res += $.self.valueOf()}
     return $res
@@ -859,7 +859,7 @@ str.toString = function(){return "string!"}
 // generate comparison methods
 var $comp_func = function(self,other){
     if(typeof other !== "string"){throw _b_.TypeError.$factory(
-        "unorderable types: 'str' > " + $B.get_class(other).__name__ + "()")}
+        "unorderable types: 'str' > " + $B.class_name(other) + "()")}
     return self > other
 }
 $comp_func += "" // source code
@@ -922,7 +922,7 @@ str.count = function(){
         ["self", "sub", "start", "stop"], arguments, {start:null, stop:null},
         null, null)
     if(!(typeof $.sub == "string")){throw _b_.TypeError.$factory(
-        "Can't convert '" + $B.get_class($.sub).__name__ +
+        "Can't convert '" + $B.class_name($.sub) +
         "' object to str implicitly")}
     var substr = $.self
     if($.start !== null){
@@ -1282,7 +1282,7 @@ str.join = function(){
             var obj2 = _b_.next(iterable)
             if(! isinstance(obj2, str)){throw _b_.TypeError.$factory(
                 "sequence item " + count + ": expected str instance, " +
-                $B.get_class(obj2).__name__ + " found")}
+                $B.class_name(obj2) + " found")}
             res.push(obj2)
         }catch(err){
             if(_b_.isinstance(err, _b_.StopIteration)){
@@ -1420,7 +1420,7 @@ str.replace = function(self, old, _new, count) {
     check_str(_new)
     // Validate instance type of 'count'
     if(! isinstance(count,[_b_.int, _b_.float])){
-        throw _b_.TypeError.$factory("'" + $B.get_class(count).__name__ +
+        throw _b_.TypeError.$factory("'" + $B.class_name(count) +
             "' object cannot be interpreted as an integer")
     }else if(isinstance(count, _b_.float)){
         throw _b_.TypeError.$factory("integer argument expected, got float")

@@ -175,6 +175,10 @@ $B.get_class = function(obj){
     return klass
 }
 
+$B.class_name = function(obj){
+    return $B.get_class(obj).$infos.__name__
+}
+
 $B.$mkdict = function(glob, loc){
     var res = {}
     for(var arg in glob){res[arg] = glob[arg]}
@@ -515,7 +519,7 @@ $B.$getitem = function(obj, item){
     var gi = $B.$getattr(obj, "__getitem__", _b_.None)
     if(gi !== _b_.None){return gi(item)}
 
-    throw _b_.TypeError.$factory("'" + $B.get_class(obj).__name__ +
+    throw _b_.TypeError.$factory("'" + $B.class_name(obj) +
         "' object is not subscriptable")
 }
 
@@ -750,7 +754,7 @@ $B.$is_member = function(item, _set){
     // use __getitem__ if defined
     try{f = $B.$getattr(_set, "__getitem__")}
     catch(err){
-        throw _b_.TypeError.$factory("'" + $B.get_class(_set).__name__ +
+        throw _b_.TypeError.$factory("'" + $B.class_name(_set) +
             "' object is not iterable")
     }
     if(f){
@@ -784,21 +788,21 @@ $B.$call = function(callable){
         if(typeof(callable.js == "function")){
             return callable.js
         }else{
-            throw _b_.TypeError.$factory("'" + $B.get_class(callable).__name__ +
+            throw _b_.TypeError.$factory("'" + $B.class_name(callable) +
                 "' object is not callable")
         }
     }
     try{
         return $B.$getattr(callable, "__call__")
     }catch(err){
-        throw _b_.TypeError.$factory("'" + $B.get_class(callable).__name__ +
+        throw _b_.TypeError.$factory("'" + $B.class_name(callable) +
             "' object is not callable")
     }
 }
 
 // default standard output and error
 // can be reset by sys.stdout or sys.stderr
-var $io = {__class__: _b_.type, __name__: "io"}
+var $io = {__class__: _b_.type, $infos:{__name__: "io"}}
 $io.__mro__ = [_b_.object]
 
 $B.stderr = {
@@ -890,7 +894,7 @@ $B.$iterator = function(items, klass){
             if(res.counter < items.length){return items[res.counter]}
             throw _b_.StopIteration.$factory("StopIteration")
         },
-        __repr__: function(){return "<" + klass.__name__ + " object>"},
+        __repr__: function(){return "<" + klass.$infos.__name__ + " object>"},
         counter: -1
     }
     res.__str__ = res.toString = res.__repr__
@@ -901,8 +905,6 @@ $B.$iterator_class = function(name){
 
     var res = {
         __class__: _b_.type,
-        __name__: name,
-        __module__: "builtins",
         __mro__: [_b_.object],
         $infos:{
             __name__: name,
@@ -977,7 +979,7 @@ $B.$iterator_class = function(name){
 
 function $err(op, klass, other){
     var msg = "unsupported operand type(s) for " + op + ": '" +
-        klass.__name__ + "' and '" + $B.get_class(other).__name__ + "'"
+        klass.$infos.__name__ + "' and '" + $B.class_name(other) + "'"
     throw _b_.TypeError.$factory(msg)
 }
 
@@ -1027,7 +1029,7 @@ $B.$GetInt = function(value) {
       try{var v = $B.$getattr(value, "__int__")(); return v}catch(e){}
       try{var v = $B.$getattr(value, "__index__")(); return v}catch(e){}
   }
-  throw _b_.TypeError.$factory("'" + $B.get_class(value).__name__ +
+  throw _b_.TypeError.$factory("'" + $B.class_name(value) +
       "' object cannot be interpreted as an integer")
 }
 
@@ -1046,7 +1048,7 @@ $B.PyNumber_Index = function(item){
                 return $B.int_or_bool(method)
             }
         default:
-            throw _b_.TypeError.$factory("'" + $B.get_class(item).__name__ +
+            throw _b_.TypeError.$factory("'" + $B.class_name(item) +
                 "' object cannot be interpreted as an integer")
     }
 }
@@ -1060,11 +1062,11 @@ $B.int_or_bool = function(v){
         case "object":
             if(v.__class__ === $B.long_int){return v}
             else{
-                throw _b_.TypeError.$factory("'" + $B.get_class(v).__name__ +
+                throw _b_.TypeError.$factory("'" + $B.class_name(v) +
                 "' object cannot be interpreted as an integer")
             }
         default:
-            throw _b_.TypeError.$factory("'" + $B.get_class(v).__name__ +
+            throw _b_.TypeError.$factory("'" + $B.class_name(v) +
                 "' object cannot be interpreted as an integer")
     }
 }
@@ -1082,7 +1084,7 @@ $B.int_value = function(v){
         }else if(isinstance(v, _b_.float) && v == Math.floor(v)){
             return Math.floor(v)
         }else{
-            throw _b_.TypeError.$factory("'" + $B.get_class(v).__name__ +
+            throw _b_.TypeError.$factory("'" + $B.class_name(v) +
                 "' object cannot be interpreted as an integer")
         }
     }
@@ -1471,8 +1473,8 @@ $B.rich_comp = function(op, x, y){
     else if(op == "__ne__"){return _b_.True}
 
     throw _b_.TypeError.$factory("'" + method2comp[op] +
-        "' not supported between instances of '" + $B.get_class(x).__name__ +
-        "' and '" + $B.get_class(y).__name__ + "'")
+        "' not supported between instances of '" + $B.class_name(x) +
+        "' and '" + $B.class_name(y) + "'")
 }
 
 $B.is_none = function(o){

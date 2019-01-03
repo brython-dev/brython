@@ -250,7 +250,7 @@ complex.__pow__ = function(self, other){
     }else{
         throw _b_.TypeError.$factory("unsupported operand type(s) " +
             "for ** or pow(): 'complex' and '" +
-            $B.get_class(other).__name__ + "'")
+            $B.class_name(other) + "'")
     }
 }
 
@@ -323,7 +323,7 @@ complex.conjugate = function(self) {
 // operators
 var $op_func = function(self, other){
     throw _b_.TypeError.$factory("TypeError: unsupported operand type(s) " +
-        "for -: 'complex' and '" + $B.get_class(other).__name__ + "'")
+        "for -: 'complex' and '" + $B.class_name(other) + "'")
 }
 $op_func += "" // source code
 var $ops = {"&": "and", "|": "ior", "<<": "lshift", ">>": "rshift",
@@ -351,7 +351,7 @@ var $op_func = function(self,other){
          return make_complex(self.$real - bool_value, self.$imag)
     }
     throw _b_.TypeError.$factory("unsupported operand type(s) for -: " +
-        self.__repr__() + " and '" + $B.get_class(other).__name__ + "'")
+        self.__repr__() + " and '" + $B.class_name(other) + "'")
 }
 complex.__sub__ = $op_func
 

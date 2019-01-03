@@ -30,7 +30,7 @@ list.__add__ = function(self, other){
         var radd = getattr(other, "__radd__", NotImplemented)
         if(radd !== NotImplemented){return radd(self)}
         throw TypeError.$factory('can only concatenate list (not "' +
-            $B.get_class(other).__name__ + '") to list')
+            $B.class_name(other) + '") to list')
     }
     var res = self.valueOf().concat(other.valueOf())
     if(isinstance(self, tuple)){res = tuple.$factory(res)}
@@ -166,13 +166,13 @@ list.__getitem__ = function(self, arg){
     }
 
     throw _b_.TypeError.$factory("list indices must be integer, not " +
-        $B.get_class(key).__name__)
+        $B.class_name(key))
 }
 
 list.__ge__ = function(self, other){
     if(! isinstance(other, [list, _b_.tuple])){
         throw _b_.TypeError.$factory("unorderable types: list() >= "+
-            $B.get_class(other).__name__ + "()")
+            $B.class_name(other) + "()")
     }
     var i = 0
     while(i < self.length){
@@ -182,8 +182,8 @@ list.__ge__ = function(self, other){
             res = getattr(self[i], "__ge__")(other[i])
             if(res === _b_.NotImplemented){
                 throw _b_.TypeError.$factory("unorderable types: " +
-                    $B.get_class(self[i]).$infos.__name__  + "() >= " +
-                    $B.get_class(other[i]).$infos.__name__ + "()")
+                    $B.class_name(self[i])  + "() >= " +
+                    $B.class_name(other[i]) + "()")
             }else{return res}
         }
     }
@@ -194,7 +194,7 @@ list.__ge__ = function(self, other){
 list.__gt__ = function(self, other){
     if(! isinstance(other, [list, _b_.tuple])){
         throw _b_.TypeError.$factory("unorderable types: list() > " +
-            $B.get_class(other).__name__ + "()")
+            $B.class_name(other) + "()")
     }
     var i = 0
     while(i < self.length){
@@ -204,8 +204,8 @@ list.__gt__ = function(self, other){
             res = getattr(self[i], "__gt__")(other[i])
             if(res === _b_.NotImplemented){
                 throw _b_.TypeError.$factory("unorderable types: " +
-                    $B.get_class(self[i]).$infos.__name__ + "() > " +
-                    $B.get_class(other[i]).$infos.__name__ + "()")
+                    $B.class_name(self[i]) + "() > " +
+                    $B.class_name(other[i]) + "()")
             }else return res
         }
     }
@@ -287,7 +287,7 @@ list.__len__ = function(self){
 list.__lt__ = function(self, other){
     if(! isinstance(other, [list, _b_.tuple])){
         throw _b_.TypeError.$factory("unorderable types: list() >= "+
-            $B.get_class(other).__name__ + "()")
+            $B.class_name(other) + "()")
     }
     var i = 0
     while(i < self.length){
@@ -298,8 +298,8 @@ list.__lt__ = function(self, other){
             res = getattr(self[i], "__lt__")(other[i])
             if(res === _b_.NotImplemented){
                 throw _b_.TypeError.$factory("unorderable types: " +
-                    $B.get_class(self[i]).$infos.__name__  + "() >= " +
-                    $B.get_class(other[i]).$infos.__name__ + "()")
+                    $B.class_name(self[i])  + "() >= " +
+                    $B.class_name(other[i]) + "()")
             }else{return res}
         }
     }
@@ -331,7 +331,7 @@ list.__mul__ = function(self, other){
 
     throw _b_.TypeError.$factory(
         "can't multiply sequence by non-int of type '" +
-        $B.get_class(other).__name__ + "'")
+        $B.class_name(other) + "'")
 }
 
 list.__new__ = function(cls, ...args){
@@ -401,7 +401,7 @@ list.__setitem__ = function(){
     }
 
     throw _b_.TypeError.$factory("list indices must be integer, not " +
-        arg.__class__.__name__)
+        $B.class_name(arg))
 }
 
 // there is no list.__str__
@@ -641,8 +641,8 @@ list.sort = function(self){
                     res = getattr(a, "__le__")(b)
                     if(res === _b_.NotImplemented){
                         throw _b_.TypeError.$factory("unorderable types: " +
-                            $B.get_class(b).__name__ + "() <=" +
-                            $B.get_class(a).__name__ + "()")
+                            $B.class_name(b) + "() <=" +
+                            $B.class_name(a) + "()")
                     }
                     if(res){
                         if(a == b){return 0}
@@ -655,8 +655,8 @@ list.sort = function(self){
                     res = getattr(a, "__le__")(b)
                     if(res === _b_.NotImplemented){
                         throw _b_.TypeError.$factory("unorderable types: " +
-                            $B.get_class(a).__name__ + "() <=" +
-                            $B.get_class(b).__name__ + "()")
+                            $B.class_name(a) + "() <=" +
+                            $B.class_name(b) + "()")
                     }
                     if(res){
                         if(a == b){return 0}
@@ -673,8 +673,8 @@ list.sort = function(self){
                     res = getattr(_a, "__le__")(_b)
                     if(res === _b_.NotImplemented){
                         throw _b_.TypeError.$factory("unorderable types: " +
-                            $B.get_class(b).__name__ + "() <=" +
-                            $B.get_class(a).__name__ + "()")
+                            $B.class_name(b) + "() <=" +
+                            $B.class_name(a) + "()")
                     }
                     if(res){
                         if(_a == _b){return 0}
@@ -689,8 +689,8 @@ list.sort = function(self){
                     res = $B.$getattr(_a, "__lt__")(_b)
                     if(res === _b_.NotImplemented){
                         throw _b_.TypeError.$factory("unorderable types: " +
-                            $B.get_class(a).__name__ + "() <=" +
-                            $B.get_class(b).__name__ + "()")
+                            $B.class_name(a) + "() <=" +
+                            $B.class_name(b) + "()")
                     }
                     if(res){
                         if(_a == _b){return 0}

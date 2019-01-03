@@ -271,13 +271,14 @@ BaseException.__init__ = function(self){
 }
 
 BaseException.__repr__ = function(self){
-    return self.__class__.__name__ + repr(self.args)
+    return self.__class__.$infos.__name__ + repr(self.args)
 }
 
 BaseException.__str__ = function(self){
-    if (self.args.length > 0)
+    if(self.args.length > 0){
         return _b_.str.$factory(self.args[0])
-    return self.__class__.__name__
+    }
+    return self.__class__.$infos.__name__
 }
 
 BaseException.__new__ = function(cls){
@@ -358,7 +359,7 @@ BaseException.__getattr__ = function(self, attr){
         if(self.$traceback !== undefined){return self.$traceback}
         return traceback.$factory(self)
     }else{
-        throw _b_.AttributeError.$factory(self.__class__.__name__ +
+        throw _b_.AttributeError.$factory(self.__class__.$infos.__name__ +
             " has no attribute '" + attr + "'")
     }
 }

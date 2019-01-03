@@ -571,7 +571,7 @@ DOMNode.__add__ = function(self, other){
         // If other is iterable, add all items
         try{res.children = res.children.concat(_b_.list.$factory(other))}
         catch(err){throw _b_.TypeError.$factory("can't add '" +
-            $B.get_class(other).__name__ + "' object to DOMNode instance")
+            $B.class_name(other) + "' object to DOMNode instance")
         }
     }
     return res
@@ -731,7 +731,7 @@ DOMNode.__getattribute__ = function(self, attr){
                                     console.log(dest_fn, typeof dest_fn, err)
                                     if(err.__class__ !== undefined){
                                         var msg = $B.$getattr(err, 'info') +
-                                            '\n' + err.__class__.__name__
+                                            '\n' + $B.class_name(err)
                                         if(err.args){msg += ': ' + err.args[0]}
                                         try{$B.$getattr($B.stderr, "write")(msg)}
                                         catch(err){console.log(msg)}
@@ -779,7 +779,7 @@ DOMNode.__getitem__ = function(self, key){
             throw _b_.KeyError.$factory(key)
         }else{
             try{
-                var elts = self.elt.getElementsByTagName(key.__name__),
+                var elts = self.elt.getElementsByTagName(key.$infos.__name__),
                     res = []
                     for(var i = 0; i < elts.length; i++){
                         res.push(DOMNode.$factory(elts[i]))
@@ -846,7 +846,7 @@ DOMNode.__le__ = function(self, other){
             })
         }catch(err){
             throw _b_.TypeError.$factory("can't add '" +
-                $B.get_class(other).__name__ + "' object to DOMNode instance")
+                $B.class_name(other) + "' object to DOMNode instance")
         }
     }
 }
@@ -920,7 +920,7 @@ DOMNode.__setattr__ = function(self, attr, value){
                     return _b_.None
                 }else{
                     throw _b_.ValueError.$factory(attr + " value should be" +
-                        " an integer, not " + $B.get_class(value).__name__)
+                        " an integer, not " + $B.class_name(value))
                 }
                 break
         }
@@ -1034,7 +1034,7 @@ DOMNode.bind = function(self, event){
                 }catch(err){
                     if(err.__class__ !== undefined){
                         var msg = $B.$getattr(err, "info") +
-                            "\n" + err.__class__.__name__
+                            "\n" + $B.class_name(err)
                         if(err.args){msg += ": " + err.args[0]}
                         try{$B.$getattr($B.stderr, "write")(msg)}
                         catch(err){console.log(msg)}
@@ -1321,7 +1321,7 @@ DOMNode.set_html = function(self, value){
 DOMNode.set_style = function(self, style){ // style is a dict
     if(!_b_.isinstance(style, _b_.dict)){
         throw TypeError.$factory("style must be dict, not " +
-            $B.get_class(style).__name__)
+            $B.class_name(style))
     }
     var items = _b_.list.$factory(_b_.dict.items(style))
     for(var i = 0; i < items.length; i++){

@@ -209,7 +209,6 @@ $B.$class_constructor = function(class_name, class_obj, bases,
         bases[i].$subclasses.push(kls)
         // call __init_subclass__ with the extra keyword arguments
         if(i == 0){
-            //console.log("call initsubclass of", bases[i].__name__, extra_kwargs)
             init_subclass = _b_.type.__getattribute__(bases[i],
                 "__init_subclass__")
             if(init_subclass.$infos.__func__ !== undefined){
@@ -371,7 +370,7 @@ type.__getattribute__ = function(klass, attr){
                         __self__: klass,
                         __func__: res,
                         __name__: attr,
-                        __qualname__: klass.__name__ + "." + attr,
+                        __qualname__: klass.$infos.__name__ + "." + attr,
                         __module__: res.$infos ? res.$infos.__module__ : ""
                     }
                     return meta_method
@@ -408,7 +407,7 @@ type.__getattribute__ = function(klass, attr){
                 result.$infos = {
                     __func__: res,
                     __name__: res.$infos.__name__,
-                    __qualname__: klass.__name__ + "." + res.$infos.__name__,
+                    __qualname__: klass.$infos.__name__ + "." + res.$infos.__name__,
                     __self__: klass
                 }
             }else{
@@ -593,7 +592,7 @@ type.mro = function(cls){
                     }
                 }
                 bases[i].__init__.$infos = {
-                    __name__: bases[i].__name__
+                    __name__: bases[i].$infos.__name__
                 }
             }else{
                 throw _b_.TypeError.$factory(
@@ -738,8 +737,8 @@ var $instance_creator = $B.$instance_creator = function(klass){
     }
     factory.__class__ = $B.Function
     factory.$infos = {
-        __name__: klass.__name__,
-        __module__: klass.__module__
+        __name__: klass.$infos.__name__,
+        __module__: klass.$infos.__module__
     }
     return factory
 }
@@ -772,7 +771,7 @@ var member_descriptor = $B.make_class("member_descriptor",
 )
 
 member_descriptor.__str__ = member_descriptor.__repr__ = function(self){
-    return "<member '" + self.attr + "' of '" + self.cls.__name__ +
+    return "<member '" + self.attr + "' of '" + self.cls.$infos.__name__ +
         "' objects>"
 }
 

@@ -141,7 +141,7 @@ var $iterator_wrapper = function(items, klass){
             for(var i = 0, len = items.length(); i < len; i++){
                 s.push(_b_.repr(items.next()))
             }
-            return klass.__name__ + "(["+ s.join(",") + "])"
+            return klass.$infos.__name__ + "(["+ s.join(",") + "])"
         },
     }
     res.__str__ = res.__repr__

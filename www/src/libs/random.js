@@ -803,8 +803,8 @@ Random.setstate = function(state){
         self = $.self
     var state = self._random.getstate()
     if(! Array.isArray($.state)){
-        throw _b_.TypeError.$factory('state must be a list, not '+
-            $B.get_class($.state).__name__)
+        throw _b_.TypeError.$factory('state must be a list, not ' +
+            $B.class_name($.state))
     }
     if($.state.length < state.length){
         throw _b_.ValueError.$factory("need more than " + $.state.length +

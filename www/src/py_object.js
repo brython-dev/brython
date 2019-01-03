@@ -247,7 +247,7 @@ object.__getattribute__ = function(obj, attr){
                             __self__: cls,
                             __func__: res,
                             __name__: res.$infos.__name__,
-                            __qualname__: cls.__name__ + "." + res.$infos.__name__
+                            __qualname__: cls.$infos.__name__ + "." + res.$infos.__name__
                         }
                         return clmethod
                     }
@@ -307,13 +307,13 @@ object.__getattribute__ = function(obj, attr){
                         return _b_.getattr(arguments[0], rop)(obj)
                     }catch(err){
                         var msg = "unsupported operand types for " +
-                            opsigns[rank] + ": '" + klass.__name__ +
-                            "' and '" + $B.get_class(arguments[0]).$infos.__name__ +
+                            opsigns[rank] + ": '" + klass.$infos.__name__ +
+                            "' and '" + $B.class_name(arguments[0]) +
                             "'"
                         throw _b_.TypeError.$factory(msg)
                     }
                 }
-                func.$infos = {__name__ : klass.__name__ + "." + attr}
+                func.$infos = {__name__ : klass.$infos.__name__ + "." + attr}
                 return func
             }
         }
@@ -454,8 +454,7 @@ object.__setattr__ = function(self, attr, val){
     if(self.__dict__){
         self.__dict__.$string_dict[attr] = val
     }else{
-        console.log("set attr without __dict__", self, attr, val)
-        console.log($B.last($B.frames_stack))
+        // for
         self[attr] = val
     }
     return _b_.None
@@ -491,7 +490,6 @@ $B.make_class = function(name, factory){
     var A = {
         __class__: _b_.type,
         __mro__: [object],
-        __name__: name,
         $infos:{
             __name__: name
         },

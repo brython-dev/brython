@@ -214,7 +214,7 @@ set.__str__ = set.__repr__ = function(self){
         if(frozen) {return "frozenset()"}
         return "set()"
     }
-    var klass_name = $B.get_class(self).$infos.__name__,
+    var klass_name = $B.class_name(self),
         head = klass_name + "({",
         tail = "})"
     if(head == "set({"){head = "{"; tail = "}"}
@@ -268,7 +268,7 @@ function $test(accept_iter, other, op){
     if(accept_iter === undefined &&
             ! _b_.isinstance(other, [set, frozenset])){
         throw _b_.TypeError.$factory("unsupported operand type(s) for " + op +
-            ": 'set' and '" + $B.get_class(other).__name__ + "'")
+            ": 'set' and '" + $B.class_name(other) + "'")
     }
 }
 

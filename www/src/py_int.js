@@ -8,7 +8,7 @@ var object = _b_.object,
 
 function $err(op, other){
     var msg = "unsupported operand type(s) for " + op +
-        ": 'int' and '" + $B.get_class(other).__name__ + "'"
+        ": 'int' and '" + $B.class_name(other) + "'"
     throw _b_.TypeError.$factory(msg)
 }
 
@@ -95,7 +95,7 @@ int.to_bytes = function(){
         kwargs = $.kw
     if(! _b_.isinstance(len, _b_.int)){
         throw _b_.TypeError.$factory("integer argument expected, got " +
-            $B.get_class(len).__name__)
+            $B.class_name(len))
     }
     if(["little", "big"].indexOf(byteorder) == -1){
         throw _b_.ValueError.$factory("byteorder must be either 'little' or 'big'")
@@ -736,16 +736,16 @@ int.$factory = function(value, base){
             int_func = _b_.getattr(res, "__int__", null)
         if(int_func === null){
             throw TypeError.$factory("__trunc__ returned non-Integral (type "+
-                $B.get_class(res).__name__ + ")")
+                $B.class_name(res) + ")")
         }
         var res = int_func()
         if(isinstance(res, int)){return int_value(res)}
         throw TypeError.$factory("__trunc__ returned non-Integral (type "+
-                $B.get_class(res).__name__ + ")")
+                $B.class_name(res) + ")")
     }
     throw _b_.TypeError.$factory(
         "int() argument must be a string, a bytes-like " +
-        "object or a number, not '" + $B.get_class(value).__name__ + "'")
+        "object or a number, not '" + $B.class_name(value) + "'")
 }
 
 $B.set_func_names(int, "builtins")

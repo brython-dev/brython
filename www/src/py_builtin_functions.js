@@ -244,7 +244,7 @@ var classmethod = $B.make_class("classmethod",
                 __self__: cls,
                 __func__: f,
                 __name__: func.$infos.__name__,
-                __qualname__: cls.__name__ + "." + func.$infos.__name__
+                __qualname__: cls.$infos.__name__ + "." + func.$infos.__name__
             }
             return method
         }
@@ -297,7 +297,7 @@ function delattr(obj, attr) {
     check_nb_args('delattr', 2, arguments)
     if(typeof attr != 'string'){
         throw _b_.TypeError.$factory("attribute name must be string, not '" +
-            $B.get_class(attr).__name__ + "'")
+            $B.class_name(attr) + "'")
     }
     var klass = $B.get_class(obj)
     var res = obj[attr]
@@ -492,7 +492,7 @@ function $$eval(src, _globals, _locals){
         // globals_id
         if(_globals.__class__ != _b_.dict){
             throw _b_.TypeError.$factory("exec() globals must be a dict, not "+
-                _globals.__class__.__name__)
+                _globals.__class__.$infos.__name__)
         }
         _globals.globals_id = _globals.globals_id || globals_id
         globals_id = _globals.globals_id
@@ -964,7 +964,7 @@ $B.$getattr = function(obj, attr, _default){
             else{
                 if(obj[attr] !== undefined){return obj[attr]}
                 if(_default === undefined){
-                    attr_error(attr, klass.__name__)
+                    attr_error(attr, klass.$infos.__name__)
                 }
                 return _default
             }
@@ -992,7 +992,7 @@ $B.$getattr = function(obj, attr, _default){
                 __func__: func,
                 __name__: attr,
                 __self__: self,
-                __qualname__: klass.__name__ + "." + attr
+                __qualname__: klass.$infos.__name__ + "." + attr
             }
             return method
         }
@@ -1048,8 +1048,8 @@ $B.$getattr = function(obj, attr, _default){
     if(res !== undefined){return res}
     if(_default !== undefined){return _default}
 
-    var cname = klass.__name__
-    if(is_class){cname = obj.__name__}
+    var cname = klass.$infos.__name__
+    if(is_class){cname = obj.$infos.__name__}
 
     attr_error(rawname, cname)
 }
@@ -1100,7 +1100,7 @@ function hash(obj){
 
     if(hashfunc == _b_.None){
         throw _b_.TypeError.$factory("unhashable type: '" +
-                $B.get_class(obj).__name__ + "'", 'hash')
+                $B.class_name(obj) + "'", 'hash')
     }
 
     if(hashfunc.$infos === undefined){
@@ -1121,7 +1121,7 @@ function hash(obj){
     if(hashfunc.$infos.__func__ === _b_.object.__hash__){
         if($B.$getattr(obj,'__eq__').$infos.__func__ !== _b_.object.__eq__){
             throw _b_.TypeError.$factory("unhashable type: '" +
-                $B.get_class(obj).__name__ + "'", 'hash')
+                $B.class_name(obj) + "'", 'hash')
         }else{
             return _b_.object.__hash__(obj)
         }
@@ -1363,7 +1363,7 @@ $B.$iter = function(obj, sentinel){
                     return iterator_class.$factory(gi, null)
                 }
           }
-          throw _b_.TypeError.$factory("'" + $B.get_class(obj).__name__ +
+          throw _b_.TypeError.$factory("'" + $B.class_name(obj) +
               "' object is not iterable")
         }
         var res = $B.$call(_iter)()
@@ -1371,7 +1371,7 @@ $B.$iter = function(obj, sentinel){
         catch(err){
             if(isinstance(err, _b_.AttributeError)){throw _b_.TypeError.$factory(
                 "iter() returned non-iterator of type '" +
-                 $B.get_class(res).__name__ + "'")}
+                 $B.class_name(res) + "'")}
         }
         return res
     }else{
@@ -1398,7 +1398,7 @@ function len(obj){
     try{return $B.$getattr(obj, '__len__')()}
     catch(err){
         throw _b_.TypeError.$factory("object of type '" +
-            $B.get_class(obj).__name__ + "' has no len()")
+            $B.class_name(obj) + "' has no len()")
     }
 }
 
@@ -1537,7 +1537,7 @@ var memoryview = $B.make_class('memoryview',
             }
         }else{
             throw _b_.TypeError.$factory("memoryview: a bytes-like object " +
-                "is required, not '" + $B.get_class(obj).__name__ + "'")
+                "is required, not '" + $B.class_name(obj) + "'")
         }
     }
 )
@@ -1633,7 +1633,7 @@ function next(obj){
     if(ga !== undefined){
         return $B.$call(ga)()
     }
-    throw _b_.TypeError.$factory("'" + $B.get_class(obj).__name__ +
+    throw _b_.TypeError.$factory("'" + $B.class_name(obj) +
         "' object is not an iterator")
 }
 
@@ -1673,7 +1673,7 @@ function ord(c) {
             'string of length ' + c.source.length + ' found')
       default:
         throw _b_.TypeError.$factory('ord() expected a character, but ' +
-            $B.get_class(c).__name__ + ' was found')
+            $B.class_name(c) + ' was found')
     }
 }
 
@@ -1892,7 +1892,7 @@ $B.$setattr = function(obj, attr, value){
         // remove previous attributes
         if(! isinstance(value, _b_.dict)){
             throw _b_.TypeError.$factory("__dict__ must be set to a dictionary, " +
-                "not a '" + $B.get_class(value).__name__ + "'")
+                "not a '" + $B.class_name(value) + "'")
         }
         if(obj.$infos){
             obj.$infos.__dict__ = value
@@ -1914,8 +1914,8 @@ $B.$setattr = function(obj, attr, value){
                 for(var i = 0; i < value.__bases__.length; i++){
                     if(value.__bases__[i].__module__ == "builtins"){
                         error("__class__ assignment: '" +
-                            obj.__class__.__name__ + "' object layout " +
-                            "differs from '" + value.__class__.__name__ +
+                            obj.__class__.$infos.__name__ + "' object layout " +
+                            "differs from '" + value.__class__.$infos.__name__ +
                             "'")
                     }
                 }
@@ -2032,7 +2032,7 @@ $B.$setattr = function(obj, attr, value){
             }
         }
         if(! has_slot){
-            throw _b_.AttributeError.$factory("'"  + klass.__name__ +
+            throw _b_.AttributeError.$factory("'"  + klass.$infos.__name__ +
             "' object has no attribute '" + attr + "'")
         }
     }
@@ -2192,7 +2192,7 @@ $$super.__getattribute__ = function(self, attr){
             __func__: f,
             __name__: attr,
             __module__: module,
-            __qualname__: self.__thisclass__.__name__ + "." + attr
+            __qualname__: self.__thisclass__.$infos.__name__ + "." + attr
         }
         return method
     }
@@ -2202,9 +2202,9 @@ $$super.__getattribute__ = function(self, attr){
 }
 
 $$super.__repr__ = $$super.__str__ = function(self){
-    var res = "<super: <class '" + self.__thisclass__.__name__ + "'>"
+    var res = "<super: <class '" + self.__thisclass__.$infos.__name__ + "'>"
     if(self.__self_class__ !== undefined){
-        res += ', <' + self.__self_class__.__class__.__name__ + ' object>'
+        res += ', <' + self.__self_class__.__class__.$infos.__name__ + ' object>'
     }else{
         res += ', NULL'
     }
@@ -2230,7 +2230,12 @@ function vars(){
     }
 }
 
-var $Reader = {__class__: _b_.type, __name__: 'reader'}
+var $Reader = {
+    __class__: _b_.type,
+    $infos: {
+        __name__: 'reader'
+    }
+}
 
 $Reader.__enter__ = function(self){return self}
 
@@ -2441,10 +2446,10 @@ $B.set_func_names(zip, "builtins")
 
 function no_set_attr(klass, attr){
     if(klass[attr] !== undefined){
-        throw _b_.AttributeError.$factory("'" + klass.__name__ +
+        throw _b_.AttributeError.$factory("'" + klass.$infos.__name__ +
             "' object attribute '" + attr + "' is read-only")
     }else{
-        throw _b_.AttributeError.$factory("'" + klass.__name__ +
+        throw _b_.AttributeError.$factory("'" + klass.$infos.__name__ +
             "' object has no attribute '" + attr + "'")
     }
 }
@@ -2471,7 +2476,7 @@ for(var $key in $B.$comps){ // Ellipsis is not orderable with any type
         ellipsis['__' + $B.$comps[$key] + '__'] = (function(k){
             return function(other){
                 throw _b_.TypeError.$factory("unorderable types: ellipsis() " +
-                    k + " " + $B.get_class(other).__name__)
+                    k + " " + $B.class_name(other))
             }
         })($key)
     }
@@ -2643,7 +2648,7 @@ var wrapper_descriptor = $B.wrapper_descriptor =
 wrapper_descriptor.__getattribute__ = $B.Function.__getattribute__
 wrapper_descriptor.__repr__ = wrapper_descriptor.__str__ = function(self){
     return "<slot wrapper '" + self.$infos.__name__ + "' of '" +
-        self.__objclass__.__name__ +"' object>"
+        self.__objclass__.$infos.__name__ +"' object>"
 }
 $B.set_func_names(wrapper_descriptor, "builtins")
 

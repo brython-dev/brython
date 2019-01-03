@@ -13,9 +13,11 @@ var _window = self;
 
 var JSConstructor = {
     __class__: _b_.type,
-    __module__: "<javascript>",
     __mro__: [object],
-    __name__: 'JSConstructor',
+    $infos: {
+        __module__: "<javascript>",
+        __name__: 'JSConstructor'
+    },
     $is_class: true
 }
 
@@ -171,7 +173,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
             }catch(err){
                 console.log(err)
                 console.log(_b_.getattr(err,'info'))
-                console.log(err.__class__.__name__ + ':',
+                console.log(err.__class__.$infos.__name__ + ':',
                     err.args.length > 0 ? err.args[0] : '' )
                 throw err
             }
@@ -187,9 +189,11 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
 
 var JSObject = {
     __class__: _b_.type,
-    __module__: "<javascript>",
     __mro__: [object],
-    __name__: 'JSObject'
+    $infos:{
+        __module__: "<javascript>",
+        __name__: 'JSObject'
+    }
 }
 
 JSObject.__bool__ = function(self){
@@ -432,12 +436,12 @@ JSObject.__setattr__ = function(self,attr,value){
                     var info = _b_.getattr(err, 'info')
                     if(err.args.length > 0){
                         err.toString = function(){
-                            return info + '\n' + err.__class__.__name__ +
+                            return info + '\n' + err.__class__.$infos.__name__ +
                             ': ' + _b_.repr(err.args[0])
                         }
                     }else{
                         err.toString = function(){
-                            return info + '\n' + err.__class__.__name__
+                            return info + '\n' + err.__class__.$infos.__name__
                         }
                     }
                     console.log(err + '')

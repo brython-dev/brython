@@ -100,7 +100,7 @@ bytearray.__setitem__ = function(self, arg, value){
         }
     }else{
         throw _b_.TypeError.$factory('list indices must be integer, not ' +
-            $B.get_class(arg).__name__)
+            $B.class_name(arg))
     }
 }
 
@@ -305,7 +305,7 @@ bytes.__new__ = function(cls, source, encoding, errors){
                     var item = _b_.int.$factory(int_list[i])
                 }catch(err){
                     throw _b_.TypeError.$factory("'" +
-                        $B.get_class(int_list[i]).$infos.__name__ + "' object " +
+                        $B.class_name(int_list[i]) + "' object " +
                         "cannot be interpreted as an integer")
                 }
                 if(item < 0 || item > 255){
@@ -414,10 +414,10 @@ bytes.find = function() {
         return $.self.source.slice(0, $.end == -1 ? undefined : $.end).indexOf(sub, start)
     }else if(! sub.__class__){
         throw _b_.TypeError.$factory("first argument must be a bytes-like " +
-            "object, not '" + $B.get_class($.sub).__name__ + "'")
+            "object, not '" + $B.class_name(sub) + "'")
     }else if(! sub.__class__.$buffer_protocol){
         throw _b_.TypeError.$factory("first argument must be a bytes-like " +
-            "object, not '" + sub.__class__.__name__ + "'")
+            "object, not '" + $B.class_name(sub) + "'")
     }
     var end = $.end == -1 ? $.self.source.length - sub.source.length :
         Math.min($.self.source.length - sub.source.length, $.end)
@@ -444,10 +444,10 @@ bytes.rfind = function() {
             lastIndexOf(sub) + start
     }else if(! sub.__class__){
         throw _b_.TypeError.$factory("first argument must be a bytes-like " +
-            "object, not '" + $B.get_class($.sub).__name__ + "'")
+            "object, not '" + $B.class_name($.sub) + "'")
     }else if(! sub.__class__.$buffer_protocol){
         throw _b_.TypeError.$factory("first argument must be a bytes-like " +
-            "object, not '" + sub.__class__.__name__ + "'")
+            "object, not '" + $B.class_name(sub) + "'")
     }
     var end = $.end == -1 ? $.self.source.length - sub.source.length :
         Math.min($.self.source.length - sub.source.length, $.end)
@@ -502,10 +502,10 @@ bytes.count = function() {
         len = 1
     }else if(!$.sub.__class__){
         throw _b_.TypeError.$factory("first argument must be a bytes-like " +
-            "object, not '" + $B.get_class($.sub).__name__ + "'")
+            "object, not '" + $B.class_name($.sub) + "'")
     }else if(!$.sub.__class__.$buffer_protocol){
         throw _b_.TypeError.$factory("first argument must be a bytes-like " +
-            "object, not '" + $.sub.__class__.__name__ + "'")
+            "object, not '" + $B.class_name($.sub) + "'")
     }else{
         len = $.sub.source.length
     }
@@ -533,18 +533,18 @@ bytes.replace = function(){
 
     if(! $.old.__class__){
         throw _b_.TypeError.$factory("first argument must be a bytes-like " +
-            "object, not '" + $B.get_class($.old).__name__ + "'")
+            "object, not '" + $B.class_name($.old) + "'")
     }else if(! $.old.__class__.$buffer_protocol){
         throw _b_.TypeError.$factory("first argument must be a bytes-like " +
-            "object, not '" + $.sep.__class__.__name__ + "'")
+            "object, not '" + $B.class_name($.sep) + "'")
     }
 
     if(! $.new.__class__){
         throw _b_.TypeError.$factory("second argument must be a bytes-like " +
-            "object, not '" + $B.get_class($.old).__name__ + "'")
+            "object, not '" + $B.class_name($.old) + "'")
     }else if(! $.new.__class__.$buffer_protocol){
         throw _b_.TypeError.$factory("second argument must be a bytes-like " +
-            "object, not '" + $.sep.__class__.__name__ + "'")
+            "object, not '" + $B.class_name($.sep) + "'")
     }
 
     for(var i = 0; i < len; i++){
@@ -567,10 +567,10 @@ bytes.partition = function() {
 
     if(! $.sep.__class__){
         throw _b_.TypeError.$factory("a bytes-like object is required, " +
-            "not '" + $B.get_class($.sep).__name__ + "'")
+            "not '" + $B.class_name($.sep) + "'")
     }else if (! $.sep.__class__.$buffer_protocol){
         throw _b_.TypeError.$factory("a bytes-like object is required, " +
-            "not '" + $.sep.__class__.__name__ + "'")
+            "not '" + $B.class_name($.sep) + "'")
     }
 
     var len = $.sep.source.length,
@@ -590,10 +590,10 @@ bytes.rpartition = function() {
 
     if(!$.sep.__class__){
         throw _b_.TypeError.$factory("a bytes-like object is required, " +
-                "not '" + $B.get_class($.sep).__name__ + "'")
+                "not '" + $B.class_name($.sep) + "'")
     }else if (!$.sep.__class__.$buffer_protocol){
         throw _b_.TypeError.$factory("a bytes-like object is required, " +
-                "not '" + $.sep.__class__.__name__ + "'")
+                "not '" + $B.class_name($.sep) + "'")
     }
 
     var len = $.sep.source.length,
@@ -615,10 +615,10 @@ bytes.split = function(){
         stop = 0
     if(! $.sep.__class__ ){
         throw _b_.TypeError.$factory("a bytes-like object is required, " +
-            "not '" + $B.get_class($.sep).__name__ + "'")
+            "not '" + $B.class_name($.sep) + "'")
     }else if(! $.sep.__class__.$buffer_protocol){
         throw _b_.TypeError.$factory("a bytes-like object is required, " +
-            "not '" + $.sep.__class__.__name__ + "'")
+            "not '" + $B.class_name($.sep) + "'")
     }
     var seps = $.sep.source,
         len = seps.length,
@@ -868,10 +868,10 @@ bytes.ljust = function() {
 
     if(!$.fillbyte.__class__){
         throw _b_.TypeError.$factory("argument 2 must be a byte string of length 1, " +
-            "not '" + $B.get_class($.fillbyte).__name__ + "'")
+            "not '" + $B.class_name($.fillbyte) + "'")
     }else if (!$.fillbyte.__class__.$buffer_protocol){
         throw _b_.TypeError.$factory("argument 2 must be a byte string of length 1, " +
-            "not '" + $.fillbyte.__class__.__name__ + "'")
+            "not '" + $B.class_name($.fillbyte) + "'")
     }
 
     var padding = [],
@@ -889,10 +889,10 @@ bytes.rjust = function() {
 
     if (!$.fillbyte.__class__){
         throw _b_.TypeError.$factory("argument 2 must be a byte string of length 1, " +
-            "not '" + $B.get_class($.fillbyte).__name__ + "'")
+            "not '" + $B.class_name($.fillbyte) + "'")
     }else if (!$.fillbyte.__class__.$buffer_protocol){
         throw _b_.TypeError.$factory("argument 2 must be a byte string of length 1, " +
-            "not '" + $.fillbyte.__class__.__name__ + "'")
+            "not '" + $B.class_name($.fillbyte) + "'")
     }
 
     var padding = [],
@@ -962,14 +962,14 @@ bytes.startswith = function(){
             }else{
                 throw _b_.TypeError.$factory("startswith first arg must be " +
                     "bytes or a tuple of bytes, not " +
-                    $B.get_class($.prefix).__name__)
+                    $B.class_name($.prefix))
             }
         }
         var prefix = bytes.$factory(items)
         return bytes.startswith($.self, prefix, start)
     }else{
         throw _b_.TypeError.$factory("startswith first arg must be bytes " +
-            "or a tuple of bytes, not " + $B.get_class($.prefix).__name__)
+            "or a tuple of bytes, not " + $B.class_name($.prefix))
     }
 }
 
@@ -998,13 +998,13 @@ bytes.endswith = function() {
             }else{
                 throw _b_.TypeError.$factory("endswith first arg must be " +
                     "bytes or a tuple of bytes, not " +
-                    $B.get_class($.suffix).__name__)
+                    $B.class_name($.suffix))
             }
         }
         return false
     }else{
         throw _b_.TypeError.$factory("endswith first arg must be bytes " +
-            "or a tuple of bytes, not " + $B.get_class($.suffix).__name__)
+            "or a tuple of bytes, not " + $B.class_name($.suffix))
     }
 }
 
