@@ -58,8 +58,8 @@ Getting started
 Zero install !
 --------------
 The most simple way to get started, without anything to install, is to use the
-distribution available online through [rawgit](https://rawgit.com/). You can
-either choose the latest stable release :
+distribution available online through [cdnjs](https://cdnjs.com). You can 
+choose the latest stable release :
 
 ```xml
 <script type="text/javascript"
@@ -67,11 +67,8 @@ either choose the latest stable release :
 </script>
 ```
 
-or the current development version :
-
 The previous code will allow you to use raw python code, but if you import
-modules from the standard library this will be slow as they are implemented
-using ajax calls. Besides __brython.js__ you can load a single javascript file
+modules from the standard library you have to load a single javascript file
 with the [available stdlib](https://github.com/brython-dev/brython/tree/master/www/src/Lib):
 
 ```xml
