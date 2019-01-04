@@ -3,7 +3,7 @@ Implémentation de _import_
 
 Vous pouvez installer des modules ou des paquetages Python dans votre
 application, en les mettant à la racine de l'application ou dans des
-répertoires comportant un fichier __\_\_init.py\_\___.
+répertoires comportant un fichier __\_\_init\_\_.py__.
 
 Noter que les modules doivent être encodés en utf-8 ; la déclaration
 d'encodage en début de module n'est pas prise en compte.

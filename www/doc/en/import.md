@@ -3,7 +3,7 @@ Implementation of _import_
 
 Like in standard Python, you can install modules or packages Python in your
 application by putting them in the root directory, or in directories with a
-file __\_\_init.py\_\___.
+file __\_\_init\_\_.py__.
 
 Note that modules must be encoded in utf-8 ; the encoding declaration at the
 top of the script is ignored.
