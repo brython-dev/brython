@@ -99,8 +99,8 @@ def run():
         res += javascript_minifier.minify(src)
 
     res = re.sub(r'\bcontext\b', 'C', res)
-
-    with open(abs_path('brython.js'), 'w') as out:
+    
+    with open(abs_path('brython.js'), 'w', newline="\n") as out:
         out.write(res)
 
     print(('size : originals %s compact %s gain %.2f' %
