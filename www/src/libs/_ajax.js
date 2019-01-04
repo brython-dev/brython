@@ -45,7 +45,7 @@ var add_to_res = function(res, key, val) {
 var ajax = {
     __class__: _b_.type,
     __mro__: [$B.JSObject, _b_.object],
-    
+
     __getattribute__ : function(self, attr){
         // Special case for send : accept dict as parameters
         if(attr == 'send'){
@@ -86,7 +86,42 @@ var ajax = {
         return $N
     },
 
-    send : function(self,params){
+    get: function(){
+        var $ = $B.args("get", 3, {self:null, url: null, async: null},
+                ["self", "url", "async"], arguments, {async: true},
+                null, "kw"),
+            self = $.self,
+            url = $.url,
+            async = $.async,
+            kw = $.kw
+        self.js.open("GET", url, async)
+        for(var key in kw.$string_dict){
+            ajax.bind(self, key, kw.$string_dict[key])
+        }
+        self.js.send()
+    },
+
+    post: function(){
+        var $ = $B.args("get", 3, {self:null, url: null, async: null},
+                ["self", "url", "async"], arguments, {async: true},
+                null, "kw"),
+            self = $.self,
+            url = $.url,
+            async = $.async,
+            kw = $.kw,
+            params
+        self.js.open("POST", url, async)
+        for(var key in kw.$string_dict){
+            if(key == "data"){
+                params = kw.$string_dict[key]
+            }else{
+                ajax.bind(self, key, kw.$string_dict[key])
+            }
+        }
+        self.js.send(params)
+    },
+
+    send : function(self, params){
         // params can be Python dictionary or string
         //self.js.onreadystatechange = function(ev){console.log(ev.target)}
         var res = ''
@@ -175,6 +210,6 @@ ajax.$factory = function(){
 
 $B.set_func_names(ajax)
 
-return {ajax: ajax, ajax1: ajax1}
+return {ajax: ajax, Ajax: ajax, ajax1: ajax1}
 
 })(__BRYTHON__)

@@ -216,7 +216,7 @@ function fnv(p){
     }
     return x
 }
-    
+
 str.__hash__ = function(self) {
   return fnv(self)
 }
