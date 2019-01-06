@@ -749,6 +749,43 @@ list.$factory = function(){
 
 $B.set_func_names(list, "builtins")
 
+// Wrapper around Javascript arrays
+var JSArray = $B.JSArray = $B.make_class("JSArray",
+    function(array){
+        return {
+            __class__: JSArray,
+            js: array
+        }
+    }
+)
+
+JSArray.__repr__ = JSArray.__str__ = function(){
+    return "<JSArray object>"
+}
+
+// Add list methods to JSArray
+function make_args(args){
+    var res = [args[0].js]
+    for(var i = 1, len = args.length; i < len; i++){
+        res.push(args[i])
+    }
+    return res
+}
+
+for(var attr in list){
+    if($B.JSArray[attr] !== undefined){continue}
+    if(typeof list[attr] == "function"){
+        $B.JSArray[attr] = (function(fname){
+            return function(){
+                return $B.$JS2Py(list[fname].apply(null,
+                    make_args(arguments)))
+            }
+        })(attr)
+    }
+}
+
+$B.set_func_names($B.JSArray, "builtins")
+
 // Tuples
 function $tuple(arg){return arg} // used for parenthesed expressions
 

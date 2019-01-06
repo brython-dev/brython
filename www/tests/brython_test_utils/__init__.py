@@ -16,6 +16,7 @@ def discover_brython_test_modules():
           ("test_exec.py", "exec / eval"),
           ("test_import.py", "imports"),
           ("test_iterators.py", "iterators"),
+          ("test_jsobjects.py", "Javascript objects"),
           ("test_generators.py", "generators"),
           ("test_list.py", "lists"),
           ("test_memoryview.py", "memoryview"),

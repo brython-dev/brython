@@ -242,16 +242,6 @@ assert isinstance(dict(one=1), abc.Mapping)
 assert issubclass(dict, abc.Mapping)
 
 
-# issue 169
-from random import seed, shuffle
-first = list(range(20))
-seed(31416)
-shuffle(first)
-second = list(range(20))
-seed(31416)
-shuffle(second)
-assert first == second, "Same seed does not produce same random results"
-
 # True and False are instances of int
 assert isinstance(True, int)
 assert isinstance(False, int)
@@ -1550,14 +1540,6 @@ assert set([randrange(1, 8, 3) for i in range(100)]) == set([1, 4, 7])
 # issue 743
 def test(msg = 'a', e_type: int = 10):
     pass
-
-# issue 744: Javascript objects should allow integer attribute names.
-from browser import window
-a = window.Uint8ClampedArray.new(10)
-
-for i in range(10):
-    a[i] = i
-    assert a[i] == i
 
 # issue 749
 assert float.__eq__(1.5, 1.5)

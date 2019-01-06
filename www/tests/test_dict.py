@@ -42,24 +42,6 @@ d = {}
 d[1] = d
 assert repr(d) == '{1: {...}}'
 
-# Test dict initialization from native js objects
-from browser import window
-pyobj = window.test_jsobj.to_dict()
-assert pyobj["null_value"] is None
-assert pyobj["undef_value"] is NotImplemented
-assert pyobj["test_num"] == 10
-assert len(list(pyobj.items())) == 3
-assert len(list(pyobj.values())) == 3
-assert len(list(pyobj.keys())) == 3
-
-# Test that setting jsobject dict value to None
-# makes it a javascript undefined
-pyobj['python_none'] = None
-assert window.test_null('python_none')
-
-# Test setdefault
-assert pyobj.setdefault('default') is None
-
 # Test that functions are hashable
 def f(): return 5
 def g(): return 6
@@ -98,30 +80,5 @@ class A:
 assert not (main == diff)
 assert diff == {A(): 1}
 assert not (main == {A(): 1})
-
-# issue 1003
-jsobj = window.JSON.parse('{"foo": "bar"}')
-
-for k, v in dict(jsobj).items():
-    print(k, v) # Prints foo bar as would be expected
-
-test = {}
-try:
-    test.update(jsobj)
-    raise Exception("should have raised ValueError")
-except ValueError:
-    pass
-
-test.update(dict(jsobj))
-assert test == {"foo": "bar"}
-
-test = {}
-test.update(jsobj.to_dict())
-assert test == {"foo": "bar"}
-
-test = {}
-for k, v in dict(jsobj).items():
-    test[k] = v
-assert test == {"foo": "bar"}
 
 print("passed all tests..")

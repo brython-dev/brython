@@ -54,6 +54,16 @@ random.betavariate(10,4)
 random.paretovariate(5)
 random.weibullvariate(10,6)
 
+
+# issue 169
+first = list(range(20))
+random.seed(31416)
+random.shuffle(first)
+second = list(range(20))
+random.seed(31416)
+random.shuffle(second)
+assert first == second, "Same seed does not produce same random results"
+
 # issue 728
 try:
     random.randint(2, 0)
