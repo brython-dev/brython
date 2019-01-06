@@ -1,9 +1,10 @@
 from tester import assertRaises
 
-assert str(bytes("㋰",'utf-8'))==r"b'\xe3\x8b\xb0'"
+assert str(bytes("㋰",'utf-8')) == r"b'\xe3\x8b\xb0'"
 
-assert [hex(c) for c in bytes('abcd','utf-8')] == ['0x61', '0x62', '0x63', '0x64']
-assert [hex(c) for c in bytes('€','utf-8')] == ['0xe2', '0x82', '0xac']
+assert [hex(c) for c in bytes('abcd', 'utf-8')] == \
+    ['0x61', '0x62', '0x63', '0x64']
+assert [hex(c) for c in bytes('€', 'utf-8')] == ['0xe2', '0x82', '0xac']
 
 z = bytes("девушка","utf-8")
 rz = str(z)
@@ -11,28 +12,28 @@ sz = r"b'\xd0\xb4\xd0\xb5\xd0\xb2\xd1\x83\xd1\x88\xd0\xba\xd0\xb0'"
 
 assert rz == sz
 
-b=bytearray('abcd','ascii')
-b[1]=106
+b = bytearray('abcd', 'ascii')
+b[1] = 106
 assert str(b) == "bytearray(b'ajcd')"
 
-b = bytearray([0,1,2,3])
+b = bytearray([0, 1, 2, 3])
 del b[1:2]
-assert b==bytearray([0,2,3])
+assert b == bytearray([0, 2, 3])
 b.reverse()
-assert b==bytearray([3,2,0])
+assert b == bytearray([3, 2, 0])
 b.sort()
-assert b == bytearray([0,2,3])
+assert b == bytearray([0, 2, 3])
 b.pop()
-assert b == bytearray([0,2])
+assert b == bytearray([0, 2])
 b.append(5)
-assert b == bytearray([0,2,5])
-b.insert(1,4)
-assert b == bytearray([0,4,2,5])
+assert b == bytearray([0, 2, 5])
+b.insert(1, 4)
+assert b == bytearray([0, 4, 2, 5])
 
 assert b'-'.join([b'a', b'b']) == b'a-b'
 
 # encoding and decoding
-for word in ['donnée','ήλιος','машина','太陽']:
+for word in ['donnée', 'ήλιος', 'машина', '太陽']:
     b = word.encode('utf-8')
     assert b.decode('utf-8') == word
 
@@ -62,10 +63,12 @@ assertRaises(ValueError, charmap.rindex, 1)
 assert charmap.rindex(0) == 255
 
 assert b'www.example.com'.partition(b'.') == (b'www', b'.', b'example.com')
-assert b'www.example.com'.partition(b'example') == (b'www.', b'example', b'.com')
+assert b'www.example.com'.partition(b'example') == \
+    (b'www.', b'example', b'.com')
 
 assert b'www.example.com'.rpartition(b'.') == (b'www.example', b'.', b'com')
-assert b'www.example.com'.rpartition(b'example') == (b'www.', b'example', b'.com')
+assert b'www.example.com'.rpartition(b'example') == \
+    (b'www.', b'example', b'.com')
 
 assert b'aBCDEZ'.capitalize() == b'Abcdez'
 assert b'zEDCBA'.capitalize() == b'Zedcba'
@@ -101,7 +104,8 @@ assert b'   '.isspace()
 assert not b'  -  '.isspace()
 assert b' \t\n\r\x0b\f'.isspace()
 
-assert b"they're bill's friends from the UK".title() == b"They'Re Bill'S Friends From The Uk"
+assert b"they're bill's friends from the UK".title() == \
+    b"They'Re Bill'S Friends From The Uk"
 
 assert b"They'Re Bill'S Friends From The Uk".istitle()
 assert not b"They're Bill's Friends from the Uk".istitle()
@@ -126,9 +130,12 @@ assert not b''.isalnum()
 assert b'one\ntwo\nthree'.splitlines() == [b'one', b'two', b'three']
 assert b'one\rtwo\rthree'.splitlines() == [b'one', b'two', b'three']
 assert b'one\r\ntwo\r\nthree'.splitlines() == [b'one', b'two', b'three']
-assert b'one\ntwo\nthree'.splitlines(True) == [b'one\x0a', b'two\x0a', b'three']
-assert b'one\rtwo\rthree'.splitlines(True) == [b'one\x0d', b'two\x0d', b'three']
-assert b'one\r\ntwo\r\nthree'.splitlines(True) == [b'one\x0d\x0a', b'two\x0d\x0a', b'three']
+assert b'one\ntwo\nthree'.splitlines(True) == \
+    [b'one\x0a', b'two\x0a', b'three']
+assert b'one\rtwo\rthree'.splitlines(True) == \
+    [b'one\x0d', b'two\x0d', b'three']
+assert b'one\r\ntwo\r\nthree'.splitlines(True) == \
+    [b'one\x0d\x0a', b'two\x0d\x0a', b'three']
 assert b''.splitlines() == []
 assert b''.splitlines(True) == []
 

@@ -34,7 +34,7 @@ assert f'{fn(lst,2)} {fn(lst,3)}' == '0 2'
 assert f'{fn(lst,2)} {fn(lst,3)}' == '5 7'
 assert lst == [10]
 
-d = {0:10, 1:20}
+d = {0: 10, 1: 20}
 for i in range(3):
     if i == 2:
         try:

@@ -4,12 +4,12 @@ import random
 import dis
 import traceback
 
-_rand=random.random()
+_rand = random.random()
 
 from browser import html, markdown
 from browser import document as doc
 
-editor = html.TEXTAREA(rows=20,cols=70)
+editor = html.TEXTAREA(rows=20, cols=70)
 doc <= editor
 
 if sys.has_local_storage:
@@ -29,7 +29,7 @@ def to_str(xx):
 def run():
     src = editor.value
     if storage:
-       storage["markdown_src"]=src
+       storage["markdown_src"] = src
 
     mk,scripts = markdown.mark(src)
     doc['console'].html = mk

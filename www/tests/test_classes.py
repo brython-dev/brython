@@ -1,28 +1,40 @@
 class baz:
-  A = 8
+
+    A = 8
+
+
 class bar(baz):
-  x = 0
-  def test(self):
-    return 'test in bar'
-  def test1(self,x):
-    return x*'test1'
+
+    x = 0
+
+    def test(self):
+        return 'test in bar'
+
+    def test1(self, x):
+        return x * 'test1'
+
 
 class truc:
+
     machin = 99
 
+
 class foo(bar,truc):
- def test(self):
-  return 'test in foo'
- def test2(self):
-   return 'test2'
+
+    def test(self):
+        return 'test in foo'
+
+    def test2(self):
+        return 'test2'
+
 
 obj = foo()
 #assert str(bar.test)=="<function bar.test>"
 assert obj.A == 8
 assert obj.x == 0
-assert obj.test()=='test in foo'
-assert obj.test1(2)=='test1test1'
-assert obj.test2()=='test2'
+assert obj.test() == 'test in foo'
+assert obj.test1(2) == 'test1test1'
+assert obj.test2() == 'test2'
 
 assert obj.machin == 99
 
@@ -32,26 +44,34 @@ class stack(list):
         if len(self):
             self.append(self[-1])
 
-x = stack([1,7])
-assert str(x)=='[1, 7]'
+
+x = stack([1, 7])
+assert str(x) == '[1, 7]'
 x.dup()
-assert str(x)=='[1, 7, 7]'
+assert str(x) == '[1, 7, 7]'
 
 class foo(list):
     pass
+
+
 class bar(foo):
     pass
-assert str(bar())=='[]'
+
+
+assert str(bar()) == '[]'
 
 # subclass method of native JS object (issue #75)
 class myint(int):
+
     def __add__(self, x):
         raise NotImplementedError
+
+
 x = myint(42)
-assert x==42
-assert x-8==34 # instance supports method __sub__
+assert x == 42
+assert x - 8 == 34 # instance supports method __sub__
 try:
-    print(x+10)
+    print(x + 10)
     raise ValueError('__add__ should raise NotImplementedError')
 except NotImplementedError:
     pass
@@ -59,23 +79,27 @@ except NotImplementedError:
 # __call__
 
 class StaticCall():
+
     def __init__(self):
         self.from_init = 88
+
     def __call__(self, *args, **kwargs):
         return 99
+
 
 assert StaticCall().from_init == 88
 assert StaticCall()() == 99
 
 # property and object descriptors
-
 class myclass:
-  def __init__(self):
-    self.a = 2
 
-  @property
-  def getx(self):
-      return self.a + 5
+    def __init__(self):
+        self.a = 2
+
+    @property
+    def getx(self):
+        return self.a + 5
+
 
 assert myclass().getx == 7
 
@@ -90,8 +114,10 @@ assert x.gety is gety
 
 # bug 61
 class A:
+
     def __getattr__(self, x):
         return 2
+
 
 assert A().y == 2
 
@@ -101,7 +127,7 @@ class foo():pass
 a = foo()
 foo.x = 9
 assert 'x' in dir(foo)
-assert a.x==9
+assert a.x == 9
 
 del foo.x
 try:
@@ -110,26 +136,30 @@ try:
 except AttributeError:
     pass
 
-
 class myclass:
-  pass
+    pass
+
 
 class myclass1(myclass):
-  pass
+    pass
 
-a=myclass()
+
+a = myclass()
 assert a.__doc__ == None
 
-b=myclass1()
+b = myclass1()
 assert b.__doc__ == None
 
 # classmethod
 class A:
+
     def __init__(self, arg):
         self.arg = arg
+
     @classmethod
     def foo(cls, x):
         return cls(x)
+
 
 assert A(5).foo(88).arg == 88
 
@@ -137,13 +167,18 @@ assert A(5).foo(88).arg == 88
 # we should retry with the reflected operator of the other object.
 # If that returns NotImplemented too, we should return False.
 class EqualityTester:
+
     count = 0
+
     def __eq__(self, other):
         EqualityTester.count += 1
         return NotImplemented
 
+
 class ReflectedSuccess:
+
     count = 0
+
     def __eq__(self, other):
         if isinstance(other, EqualityTester):
             return True
@@ -153,6 +188,7 @@ class ReflectedSuccess:
                 return True
             else:
                 return NotImplemented
+
 
 a, b = EqualityTester(), EqualityTester()
 c = ReflectedSuccess()
@@ -180,6 +216,7 @@ class Tester:
     def __ge__(self, other):
         return NotImplemented
 
+
 assert not (Tester('a') == Tester('b'))
 assert Tester('a') != Tester('b')
 
@@ -191,16 +228,20 @@ except TypeError:
 
 # singleton
 class Singleton(type):
+
     _instances = {}
+
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
             cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
         return cls._instances[cls]
 
+
 class A(metaclass=Singleton):
 
     def __init__(self):
         self.t = []
+
 
 A().t.append(1)
 assert A().t == [1]
@@ -208,6 +249,7 @@ assert A().t == [1]
 # reset __init__
 class A:
     pass
+
 
 def init(self, x):
     self.x = x
@@ -226,6 +268,7 @@ class A:
     def f_cl(cls, x):
         return x
 
+
 a = A()
 assert str(A.f) == "<function A.f>"
 assert str(type(A.f)) == "<class 'function'>"
@@ -243,27 +286,33 @@ assert a.f_cl(8) == 8
 class Meta(type):
     pass
 
+
 class A(metaclass=Meta):
     pass
 
+
 class B(A):
     pass
+
 
 assert type(B) == Meta
 
 # name mangling
 class TestMangling:
+
     def test(self):
         try:
             raise Exception(10)
         except Exception as __e:
             assert __e == __e
 
+
 t = TestMangling()
 t.test()
 
 # call __instancecheck__ for isinstance()
 class Enumeration(type):
+
     def __instancecheck__(self, other):
         return True
 
@@ -271,37 +320,49 @@ class Enumeration(type):
 class EnumInt(int, metaclass=Enumeration):
     pass
 
+
 assert isinstance('foo', EnumInt)
 
 # metaclass with multiple inheritance
 class Meta(type):
     pass
 
+
 class A(metaclass=Meta):
     pass
 
+
 class B(str, A):
     pass
+
 
 assert B.__class__ == Meta
 
 class C:
     pass
 
+
 class D(A, C):
     pass
+
 
 assert D.__class__ == Meta
 
 class Meta1(type):
     pass
+
+
 class Meta2(type):
     pass
 
+
 class A1(metaclass=Meta1):
     pass
+
+
 class A2(metaclass=Meta2):
     pass
+
 
 try:
     class B(A1, A2):
@@ -313,11 +374,14 @@ except TypeError:
 class Meta3(Meta1):
     pass
 
+
 class A3(metaclass=Meta3):
     pass
 
+
 class C(A3, A1):
     pass
+
 
 assert C.__class__ == Meta3
 
@@ -325,19 +389,25 @@ assert C.__class__ == Meta3
 class A:
     prop: str
 
+
 class B(A):
     pass
+
 
 assert {'prop': str} == B.__annotations__
 
 # issue 922
 class A:
+
     __slots__ = ['_r']
     x = 0
+
     def __getattr__(self, name):
         A.x = "getattr"
-    def __setattr__(self,name,value):
+
+    def __setattr__(self, name, value):
         A.x = "setattr"
+
 
 a = A()
 a.b
@@ -360,6 +430,7 @@ class test:
     @x.setter
     def x(self, val):
         test.nb_set += 1
+
 
 t = test()
 assert t.x == "a"

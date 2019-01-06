@@ -29,19 +29,19 @@ a.extend([1, 2, 33])
 assert a == ['a', 'b', 1, 2, 33]
 
 # tuple
-t = (1,8)
+t = (1, 8)
 assert t.__class__ == tuple
-assert isinstance(t,tuple)
-assert str(t)=='(1, 8)'
+assert isinstance(t, tuple)
+assert str(t) == '(1, 8)'
 
 # bug reported on the mailing list
 d = {}
-d[ (1,3) ] = None
-d[ (-1,3) ] = None
-d[ (1,-3) ] = None
-d[ (-1,-3) ] = None
+d[(1, 3)] = None
+d[(-1, 3)] = None
+d[(1, -3)]  = None
+d[(-1, -3)] = None
 
-assert d == { (1, 3): None,
+assert d == {(1, 3): None,
     (-1, 3): None,
     (1, -3): None,
     (-1, -3): None
@@ -49,55 +49,58 @@ assert d == { (1, 3): None,
 
 # list subclass - issue 893
 class List(list):
+
       def __getitem__(self, item):
         return "TEST"
+
+
 lst = List()
 assert lst.__getitem__(100) == "TEST"
 assert lst[100] == "TEST"
 
-x = ['a','r','bg','Z']
+x = ['a', 'r', 'bg', 'Z']
 x.sort()
-assert x==['Z','a','bg','r']
+assert x == ['Z', 'a', 'bg', 'r']
 
 x.sort(key=str.lower)
-assert x==['a','bg','r','Z']
+assert x == ['a', 'bg', 'r', 'Z']
 
-x.sort(key=str.lower,reverse=True)
-assert x==['Z','r','bg','a']
+x.sort(key=str.lower, reverse=True)
+assert x == ['Z', 'r', 'bg', 'a']
 
 x = ['a']
 x.append('tail')
-assert x == ['a','tail']
+assert x == ['a', 'tail']
 x.append([0,1])
-assert x == ['a','tail',[0,1]]
+assert x == ['a', 'tail', [0, 1]]
 
-assert x.count('a')==1
-x.extend(['u','v'])
+assert x.count('a') == 1
+x.extend(['u', 'v'])
 
-assert x==['a','tail',[0,1],'u','v']
+assert x == ['a', 'tail', [0, 1], 'u', 'v']
 
-assert x.index('u')==3
+assert x.index('u') == 3
 
 x.remove('tail')
-assert x==['a',[0,1],'u','v']
+assert x == ['a', [0, 1], 'u', 'v']
 
 x.pop()
-assert x==['a',[0,1],'u']
+assert x == ['a', [0, 1], 'u']
 
 x.pop(1)
-assert x==['a','u']
+assert x == ['a', 'u']
 
-x = ['a','r','bg','Z']
+x = ['a', 'r', 'bg', 'Z']
 x.reverse()
-assert x==['Z','bg','r','a']
+assert x == ['Z', 'bg', 'r', 'a']
 
 del x[0]
-assert x == ['bg','r','a']
+assert x == ['bg', 'r', 'a']
 del x[-1]
-assert x == ['bg','r']
+assert x == ['bg', 'r']
 
 x += ['zz']
-assert x == ['bg','r','zz']
+assert x == ['bg', 'r', 'zz']
 
 assert x[1] == 'r'
 
@@ -106,10 +109,12 @@ assert 'rty' not in x
 
 # issue 364
 class A(list):
+
     def __init__(self, x):
         list.__init__(self, x)
 
-z = A([1,2,3])
+
+z = A([1, 2, 3])
 assert isinstance(z, A)
 assert z == [1, 2, 3]
 assert len(z) == 3

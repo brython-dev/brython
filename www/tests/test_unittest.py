@@ -1,6 +1,7 @@
 import unittest
 
 class IntegerArithmeticTestCase(unittest.TestCase):
+
     def testAdd(self):  ## test method names begin 'test*'
         self.assertEqual((1 + 2), 3)
         self.assertEqual(0 + 1, 1)
@@ -8,12 +9,15 @@ class IntegerArithmeticTestCase(unittest.TestCase):
         self.assertEqual((0 * 10), 0)
         self.assertEqual((5 * 8), 40)
 
+
 suite = unittest.TestLoader().loadTestsFromTestCase(IntegerArithmeticTestCase)
 unittest.TextTestRunner(verbosity=0).run(suite)
 
 class UserCode():
+
     def add(x, y):
         return x + y
+
 
 class TestUserCode(unittest.TestCase):
 
@@ -26,6 +30,7 @@ class TestUserCode(unittest.TestCase):
     # testing how brython unittest responds to errors
     def test_fails(self):
         self.assertEqual(UserCode.add(2, 2), 5)
+
 
 suite = unittest.TestLoader().loadTestsFromTestCase(TestUserCode)
 unittest.TextTestRunner(verbosity=1).run(suite)

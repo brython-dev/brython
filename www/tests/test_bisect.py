@@ -1,4 +1,4 @@
-from bisect import bisect,bisect_left
+from bisect import bisect, bisect_left
 
 def grade(score, breakpoints=[60, 70, 80, 90], grades='FDCBA'):
     i = bisect(breakpoints, score)
@@ -12,9 +12,9 @@ data = [('red', 5), ('blue', 1), ('yellow', 8), ('black', 0)]
 data.sort(key=lambda r: r[1])
 
 keys = [r[1] for r in data]
-assert data[bisect_left(keys, 0)] == ('black',0)
-assert data[bisect_left(keys, 1)] == ('blue',1)
-assert data[bisect_left(keys, 5)] == ('red',5)
-assert data[bisect_left(keys, 8)] == ('yellow',8)
+assert data[bisect_left(keys, 0)] == ('black', 0)
+assert data[bisect_left(keys, 1)] == ('blue', 1)
+assert data[bisect_left(keys, 5)] == ('red', 5)
+assert data[bisect_left(keys, 8)] == ('yellow', 8)
 
 print("passed all tests...")
