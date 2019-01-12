@@ -7315,8 +7315,15 @@ var $transition = $B.parser.$transition = function(context, token, value){
                 var in_comp = false,
                     ctx = context.parent
                 while(true){
-                    if(ctx.type == 'comp_iterable'){in_comp = true; break}
-                    else if(ctx.parent !== undefined){ctx = ctx.parent}
+                    if(ctx.type == "list_or_tuple"){
+                        // In parenthised expression, eg the second "if" in
+                        // flds=[f for f in fields if (x if y is None else z)]
+                        break
+                    }else if(ctx.type == 'comp_for' || ctx.type == "comp_if"){
+                        in_comp = true
+                        break
+                    }
+                    if(ctx.parent !== undefined){ctx = ctx.parent}
                     else{break}
                 }
                 if(in_comp){break}
@@ -8192,7 +8199,7 @@ var $transition = $B.parser.$transition = function(context, token, value){
                 return new $AbstractExprCtx(context, false)
             }else if(! context.in_else){
                 $_SyntaxError(context, 'token ' + token + ' after ' + context)
-            }        
+            }
             return $transition(context.parent, token, value)
         case 'try':
             if(token == ':'){return $BodyCtx(context)}

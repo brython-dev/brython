@@ -2237,6 +2237,9 @@ try:
 except NameError:
     pass
 
+# issue 1024
+assert [ x for x in range(10) if x % 2 if x % 3 ] == [1, 5, 7]
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
