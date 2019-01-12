@@ -9,9 +9,8 @@ from browser import window
 import asyncio
 import os
 import sys
-      
-DEFAULT_BRYTHON_OPTIONS = {
-}
+
+DEFAULT_BRYTHON_OPTIONS = getattr(__BRYTHON__, '$options')
 
 CHILD_WORKERS = []
 
@@ -274,7 +273,8 @@ class WorkerParent(WorkerCommon):
             The parameter `brython_options` will be passed to the `brython` function when called from
             the webworker. If it contains an `imports` key, this should be a list of javascript files
             to be loaded instead of the standard brython files. If it contains the key `import_dist`,
-            it will load brython from the `brython_webworker_dist.js` script.
+            it will load brython from the `brython_webworker_dist.js` script.  By default it uses the
+            same options passed to the parent `brython` function.
         """
         if not _can_launch_workers:
             raise WorkerError("Cannot spawn workers (webkit based browsers don't support running webworkers inside webworkers)")
