@@ -73,6 +73,25 @@ var init_os = function(data, $B) {
     $B._WORKER_CLASS = data.worker_class
 }
 
+var error_handler = function(evt) {
+    if (evt.error !== undefined) {
+        var err = self.__BRYTHON__.exception(evt.error)
+        var name = self.__BRYTHON__.class_name(err)
+        var trace = self.__BRYTHON__.builtins.getattr(err, 'info')
+        trace += "\n" + name + ": " + err.args
+
+        self.postMessage({'type':'status', 'status':S_TERMINATED, 'error':trace})
+        self.close()
+        evt.preventDefault()
+    } else {
+        // MDN says ErrorEvent.error is experimental and doesn't provide info about browser support;
+        // however the actual specs don't say that
+        console.warn("No error information available for worker error")
+    }
+}
+
+self.addEventListener('error', error_handler, false);
+
 var start_handler = function(evt) {
     self.removeEventListener('message', start_handler);
     var prog = (evt.data.program.src === undefined) ? prog = wget(evt.data.program.url) : evt.data.program.src;
