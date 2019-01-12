@@ -729,7 +729,7 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context){
     if(context.type == 'expr' && context.tree[0].type == 'call'){
           $_SyntaxError(context, ["can't assign to function call "])
     }else if(context.type == 'list_or_tuple' ||
-        (context.type == 'expr' && context.tree[0].type == 'list_or_tuple')){
+            (context.type == 'expr' && context.tree[0].type == 'list_or_tuple')){
         if(context.type == 'expr'){context = context.tree[0]}
         // Bind all the ids in the list or tuple
         context.bind_ids(scope)
@@ -6207,6 +6207,7 @@ var $bind = $B.parser.$bind = function(name, scope, context){
     node.bindings = node.bindings || {}
     node.bindings[name] = true
 
+    scope.binding = scope.binding || {}
     if(scope.binding[name] === undefined){
         scope.binding[name] = true
     }
