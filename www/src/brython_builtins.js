@@ -81,6 +81,9 @@ $B.builtins_scope = {id:'__builtins__',module:'__builtins__', binding:{}}
 // Builtin functions : used in py2js to simplify the code produced by a call
 $B.builtin_funcs = {}
 
+// Builtin classes
+$B.builtin_classes = []
+
 $B.__getattr__ = function(attr){return this[attr]}
 $B.__setattr__ = function(attr,value){
     // limited to some attributes

@@ -458,6 +458,7 @@
     // Set type of methods of builtin classes
     for(var name in _b_){
         if(_b_[name].__class__ === _b_.type){
+            $B.builtin_classes.push(_b_[name]) // defined in brython_builtins.js
             for(var key in _b_[name]){
                 var value = _b_[name][key]
                 if(value === undefined){continue}
