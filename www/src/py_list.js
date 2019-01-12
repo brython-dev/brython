@@ -381,6 +381,11 @@ list.__setitem__ = function(){
         self = $.self,
         arg = $.key,
         value = $.value
+    list.$setitem(self, arg, value)
+}
+
+list.$setitem = function(self, arg, value){
+    // Used internally to avoid using $B.args
     if(typeof arg == "number" || isinstance(arg, _b_.int)){
         var pos = arg
         if(arg < 0) {pos = self.length + pos}
