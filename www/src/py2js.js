@@ -8190,7 +8190,9 @@ var $transition = $B.parser.$transition = function(context, token, value){
             if(token == 'else'){
                 context.in_else = true
                 return new $AbstractExprCtx(context, false)
-            }
+            }else if(! context.in_else){
+                $_SyntaxError(context, 'token ' + token + ' after ' + context)
+            }        
             return $transition(context.parent, token, value)
         case 'try':
             if(token == ':'){return $BodyCtx(context)}

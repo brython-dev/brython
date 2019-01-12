@@ -78,8 +78,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'final',0]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-01-12 08:28:08.440181"
-__BRYTHON__.timestamp=1547278088440
+__BRYTHON__.compiled_date="2019-01-12 08:42:08.011909"
+__BRYTHON__.timestamp=1547278928011
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -4173,7 +4173,7 @@ return $transition(C.parent,token,value)}
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'ternary':
 if(token=='else'){C.in_else=true
-return new $AbstractExprCtx(C,false)}
+return new $AbstractExprCtx(C,false)}else if(! C.in_else){$_SyntaxError(C,'token '+token+' after '+C)}
 return $transition(C.parent,token,value)
 case 'try':
 if(token==':'){return $BodyCtx(C)}
