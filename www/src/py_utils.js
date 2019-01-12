@@ -6,7 +6,7 @@ var _b_ = $B.builtins,
             ("function" === typeof importScripts) &&
             (navigator instanceof WorkerNavigator)
 
-$B.args = function($fname, argcount, slots, var_names, $args, $dobj,
+$B.args = function($fname, argcount, slots, var_names, args, $dobj,
     extra_pos_args, extra_kw_args){
     // builds a namespace from the arguments provided in $args
     // in a function defined like foo(x,y,z=1,*args,u,v,**kw) the parameters are
@@ -18,8 +18,24 @@ $B.args = function($fname, argcount, slots, var_names, $args, $dobj,
     // extra_pos_args = 'args'
     // extra_kw_args = 'kw'
 
+    /*
+    if($B.fargs[$fname] !== undefined){
+        $B.fargs[$fname]++
+    }else{
+        $B.fargs[$fname] = 1
+    }
+    */
+    var $args = []
+    if(Array.isArray(args)){$args = args}
+    else{
+        // Transform "arguments" object into a list (faster)
+        for(var i = 0, len = args.length; i < len; i++){
+            $args.push(args[i])
+        }
+    }
     var has_kw_args = false,
-        nb_pos = $args.length
+        nb_pos = $args.length,
+        filled = 0
 
     // If the function call had keywords arguments, they are in the last
     // element of $args
@@ -70,7 +86,15 @@ $B.args = function($fname, argcount, slots, var_names, $args, $dobj,
     }
 
     // Fill slots with positional (non-extra) arguments
-    for(var i = 0; i < nb_pos; i++){slots[var_names[i]] = $args[i]}
+    for(var i = 0; i < nb_pos; i++){
+        slots[var_names[i]] = $args[i]
+        filled++
+    }
+
+    if(filled == argcount && argcount === var_names.length &&
+            ! has_kw_args){
+        return slots
+    }
 
     // Then fill slots with keyword arguments, if any
     if(has_kw_args){
@@ -120,6 +144,7 @@ $B.args = function($fname, argcount, slots, var_names, $args, $dobj,
         }
 
     }
+
     return slots
 
 }
@@ -595,7 +620,8 @@ $B.set_list_slice_step = function(obj, start, stop, step, value){
     }
 }
 
-
+$B.nbsi = 0
+$B.siklass = {}
 $B.$setitem = function(obj, item, value){
     if(Array.isArray(obj) && obj.__class__ === undefined &&
             typeof item == "number" &&
@@ -612,6 +638,15 @@ $B.$setitem = function(obj, item, value){
     }else if(obj.__class__ === $B.JSObject){
         $B.JSObject.__setattr__(obj, item, value)
         return
+    }else if(obj.__class__ === _b_.list){
+        return _b_.list.$setitem(obj, item, value)
+    }
+    $B.nbsi++
+    var klname = obj.__class__.$infos.__name__
+    if($B.siklass[klname] !== undefined){
+        $B.siklass[klname]++
+    }else{
+        $B.siklass[klname] = 1
     }
     $B.$getattr(obj, "__setitem__")(item, value)
 }
