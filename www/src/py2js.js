@@ -9483,6 +9483,7 @@ function idb_load(evt, module){
                 }
                 // Delete temporary import
                 delete $B.imported[module]
+                if($B.debug > 1){console.log("precompile", module)}
 
                 var imports = elts[2]
                 imports = imports.join(",")

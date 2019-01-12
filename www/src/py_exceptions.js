@@ -97,6 +97,21 @@ $B.$IndentationError = function(module, msg, src, pos, line_num, root) {
     throw exc
 }
 
+$B.print_stack = function(){
+    $B.frames_stack.forEach(function(frame){
+        var line_info = frame[1].$line_info
+        if(line_info !== undefined){
+            var info = line_info.split(",")
+            console.log(info[1] + " line " + info[0])
+            var src = $B.file_cache[frame[3].__file__]
+            if(src){
+                var lines = src.split("\n"),
+                    line = lines[parseInt(info[0]) - 1]
+                console.log("    " + line.trim())
+            }
+        }
+    })
+}
 
 // class of traceback objects
 var traceback = $B.make_class("traceback",
