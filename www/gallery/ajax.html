@@ -47,18 +47,18 @@ a.sort_link{margin-left:10px;text-decoration:none}
 <script id="ascript" type="text/python">
 import time
 
-from browser import document as doc, ajax
+from browser import document, ajax, bind
 
 class Request(ajax.Request):
 
     def success(self):
-        doc["result"].html = self.text
+        document["result"].html = self.text
 
     def error(self):
-        doc["result"].html = "error " + self.text
+        document["result"].html = "error " + self.text
 
     def timeout(self):
-        doc["result"].html = "server didn't reply after %s seconds" %self.timeout_secs
+        document["result"].html = "server didn't reply after %s seconds" %self.timeout_secs
 
 
 def fake_qs(method):
@@ -66,6 +66,10 @@ def fake_qs(method):
         return "?foo=%s" %time.time()
     else:
         return ""
+
+def show(req):
+    print("show", req)
+    document["result"].html = req.text
 
 def go(url, method="GET"):
 
@@ -77,11 +81,23 @@ def go(url, method="GET"):
             data={"foo": 34}
         )
 
+@bind("#get_test", "click")
+def get(ev):
+    ajax.Ajax().get("/cgi-bin/get_test.py",
+             oncomplete=show,
+             data={"foo": 34})
+
+@bind("#post_test", "click")
+def post(ev):
+    req = ajax.Ajax()
+    req.post("/cgi-bin/post_test.py",
+             oncomplete=show,
+             data={"foo": 34})
 # bindings
-doc["get_text"].bind("click", lambda ev:go("ajax_data.txt"))
-doc["i_dont_exist"].bind("click", lambda ev:go("i_dont_exist.txt"))
-doc["get_test"].bind("click", lambda ev:go("/cgi-bin/get_test.py"))
-doc["post_test"].bind("click", lambda ev:go("/cgi-bin/post_test.py", "post"))
+document["get_text"].bind("click", lambda ev:go("ajax_data.txt"))
+document["i_dont_exist"].bind("click", lambda ev:go("i_dont_exist.txt"))
+#document["get_test"].bind("click", lambda ev:go("/cgi-bin/get_test.py"))
+
 </script>
 
 </body>

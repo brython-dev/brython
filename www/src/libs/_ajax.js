@@ -42,6 +42,44 @@ var add_to_res = function(res, key, val) {
     }else{res.append(key,str.$factory(val))}
 }
 
+function handle_kwargs(self, kw, method){
+    var data,
+        headers
+    for(var key in kw.$string_dict){
+        if(key == "data"){
+            var params = kw.$string_dict[key]
+            if(typeof params == "string"){
+                data = params
+            }else{
+                if(params.__class__ !== _b_.dict){
+                    throw _b_.TypeError.$factory("wrong type for data, " +
+                        "expected dict or str, got " + $B.class_name(params))
+                }
+                params = params.$string_dict
+                var items = []
+                for(var key in params){
+                    items.push(encodeURIComponent(key) + "=" +
+                               encodeURIComponent(params[key]))
+                }
+                data = items.join("&")
+            }
+        }else if(key=="headers"){
+            headers = kw.$string_dict[key].$string_dict
+            for(var key in headers){
+                self.js.setRequestHeader(key, headers[key])
+            }
+        }else if(key.startsWith("on")){
+            ajax.bind(self, key.substr(2), kw.$string_dict[key])
+        }
+    }
+    if(method == "post" && ! headers){
+        // For POST requests, set default header
+        self.js.setRequestHeader("Content-type",
+                                 "application/x-www-form-urlencoded")
+    }
+    return data
+}
+
 var ajax = {
     __class__: _b_.type,
     __mro__: [$B.JSObject, _b_.object],
@@ -94,10 +132,11 @@ var ajax = {
             url = $.url,
             async = $.async,
             kw = $.kw
-        self.js.open("GET", url, async)
-        for(var key in kw.$string_dict){
-            ajax.bind(self, key, kw.$string_dict[key])
+        var qs = handle_kwargs(self, kw, "get")
+        if(qs){
+            url += "?" + qs
         }
+        self.js.open("GET", url, async)
         self.js.send()
     },
 
@@ -109,16 +148,10 @@ var ajax = {
             url = $.url,
             async = $.async,
             kw = $.kw,
-            params
+            data
         self.js.open("POST", url, async)
-        for(var key in kw.$string_dict){
-            if(key == "data"){
-                params = kw.$string_dict[key]
-            }else{
-                ajax.bind(self, key, kw.$string_dict[key])
-            }
-        }
-        self.js.send(params)
+        var data = handle_kwargs(self, kw, "post")
+        self.js.send(data)
     },
 
     send : function(self, params){
