@@ -830,7 +830,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false // attr == "_member_names" //&& obj.__name__ == "Point"
+    var $test = false //attr == "version_info" && obj === $B // "Point"
     if($test){console.log("$getattr", attr, obj, klass)}
 
     // Shortcut for classes without parents

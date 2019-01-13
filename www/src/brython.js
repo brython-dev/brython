@@ -78,8 +78,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'final',0]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-01-13 09:41:06.515741"
-__BRYTHON__.timestamp=1547368866515
+__BRYTHON__.compiled_date="2019-01-13 21:21:22.063059"
+__BRYTHON__.timestamp=1547410882063
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -5623,7 +5623,8 @@ $B.$JS2Py=function(src){if(typeof src==="number"){if(src % 1===0){return src}
 return _b_.float.$factory(src)}
 if(src===null ||src===undefined){return _b_.None}
 var klass=$B.get_class(src)
-if(klass !==undefined){if(klass===_b_.list){return $B.JSArray.$factory(src)}else if(klass===$B.JSObject){src=src.js}else{return src}}
+if(klass !==undefined){if(klass===_b_.list){if(src.__class__){return src}
+return $B.JSArray.$factory(src)}else if(klass===$B.JSObject){src=src.js}else{return src}}
 if(typeof src=="object"){if($B.$isNode(src)){return $B.DOMNode.$factory(src)}
 if($B.$isEvent(src)){return $B.$DOMEvent(src)}
 if($B.$isNodeList(src)){return $B.DOMNode.$factory(src)}
@@ -12866,6 +12867,7 @@ else if(value.__class__){continue}
 else if(typeof value !="function"){continue}
 else if(key=="__new__"){value.__class__=$B.builtin_function}else if(key.startsWith("__")){value.__class__=$B.wrapper_descriptor}else{value.__class__=$B.method_descriptor}
 value.__objclass__=_b_[name]}}}
+for(var attr in $B){if(Array.isArray($B[attr])){$B[attr].__class__=_b_.list}}
 $B.cell=$B.make_class("cell",function(value){return{
 __class__:$B.cell,$cell_contents:value}}
 )

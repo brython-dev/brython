@@ -1,4 +1,4 @@
-var __BRYTHON__=__BRYTHON__ || {}  // global object with brython built-ins
+var __BRYTHON__ = __BRYTHON__ || {}  // global object with brython built-ins
 
 ;(function($B) {
 

@@ -430,6 +430,7 @@ $B.$JS2Py = function(src){
     var klass = $B.get_class(src)
     if(klass !== undefined){
         if(klass === _b_.list){
+            if(src.__class__){return src}
             return $B.JSArray.$factory(src) // defined in py_list.js
         }else if(klass === $B.JSObject){
             src = src.js

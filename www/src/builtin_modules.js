@@ -475,6 +475,12 @@
             }
         }
     }
+    // Attributes of __BRYTHON__ are Python lists
+    for(var attr in $B){
+        if(Array.isArray($B[attr])){
+            $B[attr].__class__ = _b_.list
+        }
+    }
 
     // Cell objects, for free variables in functions
     // Must be defined after dict, because property uses it
