@@ -78,8 +78,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'final',0]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-01-12 08:42:08.011909"
-__BRYTHON__.timestamp=1547278928011
+__BRYTHON__.compiled_date="2019-01-13 09:41:06.515741"
+__BRYTHON__.timestamp=1547368866515
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -1714,7 +1714,7 @@ node.children=[]
 return 0}
 this.to_js=function(){this.js_processed=true
 var iterable=this.tree.pop()
-return 'for '+$to_js(this.tree)+' in '+iterable.to_js()}}
+return 'for ('+$to_js(this.tree)+' in '+iterable.to_js()+')'}}
 var $FromCtx=$B.parser.$FromCtx=function(C){
 this.type='from'
 this.parent=C
@@ -2867,8 +2867,13 @@ break
 default:
 $_SyntaxError(C,'yield atom must be inside ()')}}
 var scope=this.scope=$get_scope(this,true)
-if(! scope.is_function && ! in_lambda){$_SyntaxError(C,["'yield' outside function"])}
-if(! in_lambda){var def=scope.C.tree[0]
+if(! in_lambda){var in_func=scope.is_function,func_scope=scope
+if(! in_func && scope.is_comp){var parent=scope.parent_block
+while(parent.is_comp){parent=parent_block}
+in_func=parent.is_function
+func_scope=parent}
+if(! in_func){$_SyntaxError(C,["'yield' outside function"])}}
+if(! in_lambda){var def=func_scope.C.tree[0]
 if(! is_await){def.type='generator'}
 def.yields.push(this)}
 this.toString=function(){return '(yield) '+(this.from ? '(from) ' :'')+this.tree}
@@ -2927,6 +2932,7 @@ return}
 var node=$get_node(C)
 node.bindings=node.bindings ||{}
 node.bindings[name]=true
+scope.binding=scope.binding ||{}
 if(scope.binding[name]===undefined){scope.binding[name]=true}}
 function $parent_match(ctx,obj){
 var flag
@@ -3595,8 +3601,10 @@ return new $AbstractExprCtx(new $AssignCtx(C),true)}
 break
 case 'if':
 var in_comp=false,ctx=C.parent
-while(true){if(ctx.type=='comp_iterable'){in_comp=true;break}
-else if(ctx.parent !==undefined){ctx=ctx.parent}
+while(true){if(ctx.type=="list_or_tuple"){
+break}else if(ctx.type=='comp_for' ||ctx.type=="comp_if"){in_comp=true
+break}
+if(ctx.parent !==undefined){ctx=ctx.parent}
 else{break}}
 if(in_comp){break}
 var ctx=C
@@ -4849,7 +4857,7 @@ module.__file__=script.__file__
 $B.imported[script_id]=module
 new Function("$locals_"+script_id,script.js)(module)}catch(err){
 if(err.$py_error===undefined){console.log('Javascript error',err)
-console.log($B.frames_stack.slice())
+$B.print_stack()
 err=_b_.RuntimeError.$factory(err+'')}
 handle_error(err)}
 loop()}else{

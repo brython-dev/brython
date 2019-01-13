@@ -3479,7 +3479,7 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
     this.to_js = function(){
         this.js_processed = true
         var iterable = this.tree.pop()
-        return 'for ' + $to_js(this.tree) + ' in ' + iterable.to_js()
+        return 'for (' + $to_js(this.tree) + ' in ' + iterable.to_js() + ')'
     }
 }
 
@@ -6066,13 +6066,25 @@ var $YieldCtx = $B.parser.$YieldCtx = function(context, is_await){
 
     var scope = this.scope = $get_scope(this, true)
 
-    if(! scope.is_function && ! in_lambda){
-        $_SyntaxError(context, ["'yield' outside function"])
+    if(! in_lambda){
+        var in_func = scope.is_function,
+            func_scope = scope
+        if(! in_func && scope.is_comp){
+            var parent = scope.parent_block
+            while(parent.is_comp){
+                parent = parent_block
+            }
+            in_func = parent.is_function
+            func_scope = parent
+        }
+        if(! in_func){
+            $_SyntaxError(context, ["'yield' outside function"])
+        }
     }
 
     // Change type of function to generator
     if(! in_lambda){
-        var def = scope.context.tree[0]
+        var def = func_scope.context.tree[0]
         if(! is_await){
             def.type = 'generator'
         }
@@ -9705,7 +9717,7 @@ var loop = $B.loop = function(){
             // instance of a Python exception
             if(err.$py_error === undefined){
                 console.log('Javascript error', err)
-                console.log($B.frames_stack.slice())
+                $B.print_stack()
                 err = _b_.RuntimeError.$factory(err + '')
             }
 

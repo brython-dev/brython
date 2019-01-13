@@ -2240,6 +2240,19 @@ except NameError:
 # issue 1024
 assert [ x for x in range(10) if x % 2 if x % 3 ] == [1, 5, 7]
 
+result = []
+for x, in [(1,), (2,), (3,)]:
+    result.append(x)
+assert result == [1, 2, 3]
+
+assert [x(False)
+        for x in (lambda x: False if x else True, lambda x: True if x else False)
+        if x(False)] == [True]
+
+def test_yield_in_comprehensions(self):
+    # Check yield in comprehensions
+    def g2(): [x for x in [(yield 1)]]
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
