@@ -12,3 +12,10 @@ function test_none(attr) {
 }
 
 a_table = {headers:[{name:"test",type:"string", value: 8, s: "a"}],rows:[]}
+
+class JS_A {
+}
+
+function initClass() {
+    return new JS_A();
+}
