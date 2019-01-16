@@ -3,7 +3,7 @@ Questions fréquemment posées
 
 __Q__ : _que signifie "Brython" ?_
 
-__R__ : <u>Br</u>owser P<u>ython</u> (Python pour le navigateur). C'est aussi le mot gallois pour "breton".
+__R__ : <u>Br</u>owser P<u>ython</u> (Python pour le navigateur). C'est aussi le mot gallois pour "Celte de langue brittonique".
 
 __Q__ : _avec quels navigateurs peut-on utiliser Brython ?_
 

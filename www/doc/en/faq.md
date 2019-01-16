@@ -3,7 +3,7 @@ Frequently asked questions
 
 __Q__ : _what does "Brython" mean ?_
 
-__A__ : <u>Br</u>owser P<u>ython</u>. It's also the Welsh word for "breton".
+__A__ : <u>Br</u>owser P<u>ython</u>. It's also the Welsh word for "brittonic-speaking Celt".
 
 __Q__ : _which browsers support Brython ?_
 
