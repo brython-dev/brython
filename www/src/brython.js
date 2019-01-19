@@ -78,8 +78,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'final',0]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-01-16 14:47:31.083163"
-__BRYTHON__.timestamp=1547646451083
+__BRYTHON__.compiled_date="2019-01-19 16:11:33.932851"
+__BRYTHON__.timestamp=1547910693932
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -3570,7 +3570,7 @@ var new_op=new $OpCtx(repl,op)
 return new $AbstractExprCtx(new_op,false)
 case 'augm_assign':
 var parent=C.parent
-while(parent){if(parent.type=="assign"){$_SyntaxError(C,"augmented assign inside assign")}else if(parent.type=="op"){$_SyntaxError(C,["can't assign to operator"])}
+while(parent){if(parent.type=="assign" ||parent.type=="augm_assign"){$_SyntaxError(C,"augmented assign inside assign")}else if(parent.type=="op"){$_SyntaxError(C,["can't assign to operator"])}
 parent=parent.parent}
 if(C.expect==','){return new $AbstractExprCtx(
 new $AugmentedAssignCtx(C,value),true)}

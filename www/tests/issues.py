@@ -2253,6 +2253,12 @@ def test_yield_in_comprehensions(self):
     # Check yield in comprehensions
     def g2(): [x for x in [(yield 1)]]
 
+# issue 1026
+try:
+    exec("x += y += 5")
+    raise Exception("should have raised SyntaxError")
+except SyntaxError:
+    pass
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
