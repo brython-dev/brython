@@ -78,8 +78,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,0,'final',0]
 __BRYTHON__.__MAGIC__="3.7.0"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-01-19 16:11:33.932851"
-__BRYTHON__.timestamp=1547910693932
+__BRYTHON__.compiled_date="2019-01-19 17:12:57.690317"
+__BRYTHON__.timestamp=1547914377690
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -10078,6 +10078,8 @@ $B.$AlphabeticalCompare=alphabeticalCompare})(__BRYTHON__)
 ;(function($B){var bltns=$B.InjectBuiltins()
 eval(bltns)
 var object=_b_.object,$N=_b_.None
+function check_not_tuple(self,attr){if(self.__class__===tuple){throw _b_.AttributeError.$factory(
+"'tuple' object has no attribute '"+attr+"'")}}
 function $list(){
 return list.$factory.apply(null,arguments)}
 var list={__class__:_b_.type,__mro__:[object],$infos:{__module__:"builtins",__name__:"list"},$is_class:true,$native:true,__dir__:object.__dir__}
@@ -10269,6 +10271,7 @@ list.insert=function(){var $=$B.args("insert",3,{self:null,i:null,item:null},["s
 $.self.splice($.i,0,$.item)
 return $N}
 list.pop=function(){var $=$B.args("pop",2,{self:null,pos:null},["self","pos"],arguments,{pos:null},null,null),self=$.self,pos=$.pos
+check_not_tuple(self,"pop")
 if(pos===null){pos=self.length-1}
 pos=$B.$GetInt(pos)
 if(pos < 0){pos+=self.length}
@@ -10314,6 +10317,7 @@ var cl=$B.get_class(self[0]),i=self.length
 while(i--){if($B.get_class(self[i])!==cl){return false}}
 return cl}
 list.sort=function(self){var $=$B.args("sort",1,{self:null},["self"],arguments,{},null,"kw")
+check_not_tuple(self,"sort")
 var func=_b_.None,reverse=false,kw_args=$.kw,keys=_b_.list.$factory(_b_.dict.$$keys(kw_args))
 for(var i=0;i < keys.length;i++){if(keys[i]=="key"){func=kw_args.$string_dict[keys[i]]}
 else if(keys[i]=="reverse"){reverse=kw_args.$string_dict[keys[i]]}
@@ -10398,9 +10402,7 @@ case "append":
 case "extend":
 case "insert":
 case "remove":
-case "pop":
 case "reverse":
-case "sort":
 break
 default:
 if(tuple[attr]===undefined){if(typeof list[attr]=="function"){tuple[attr]=(function(x){return function(){return list[x].apply(null,arguments)}})(attr)}else{}}}}

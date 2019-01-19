@@ -176,4 +176,18 @@ assert ls == ['c1', 'a2', 'b3']
 ls = ['a2', 'b3', 'c1']; ls.sort(key=None)
 assert ls == ['a2', 'b3', 'c1']
 
+# issue 1027
+t = (4, 5, 6)
+try:
+    t.pop()
+    raise Exception("should have raised AttributeError")
+except AttributeError:
+    pass
+
+try:
+    t.sort()
+    raise Exception("should have raised AttributeError")
+except AttributeError:
+    pass
+
 print("passed all tests..")

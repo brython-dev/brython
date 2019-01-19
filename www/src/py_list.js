@@ -6,6 +6,13 @@ eval(bltns)
 var object = _b_.object,
     $N = _b_.None
 
+function check_not_tuple(self, attr){
+    if(self.__class__ === tuple){
+        throw _b_.AttributeError.$factory(
+            "'tuple' object has no attribute '" + attr +"'")
+    }
+}
+
 function $list(){
     // used for list displays
     // different from list : $list(1) is valid (matches [1])
@@ -494,7 +501,7 @@ list.pop = function(){
         arguments, {pos: null}, null, null),
         self = $.self,
         pos = $.pos
-
+    check_not_tuple(self, "pop")
     if(pos === null){pos = self.length - 1}
     pos = $B.$GetInt(pos)
     if(pos < 0){pos += self.length}
@@ -608,6 +615,7 @@ list.sort = function(self){
     var $ = $B.args("sort", 1, {self: null}, ["self"],
         arguments, {}, null, "kw")
 
+    check_not_tuple(self, "sort")
     var func = _b_.None,
         reverse = false,
         kw_args = $.kw,
@@ -837,9 +845,7 @@ for(var attr in list){
         case "extend":
         case "insert":
         case "remove":
-        case "pop":
         case "reverse":
-        case "sort":
             break
         default:
             if(tuple[attr] === undefined){
