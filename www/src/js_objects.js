@@ -254,7 +254,8 @@ JSObject.__getattribute__ = function(self,attr){
             var res = function(){
                 var args = []
                 for(var i = 0, len = arguments.length; i < len; i++){
-                    if(arguments[i] !== null && arguments[i].$nat !== undefined){
+                    var arg = arguments[i]
+                    if(arg !== undefined && arg !== null && arg.$nat !== undefined){
                         //
                         // Passing keyword arguments to a Javascript function
                         // raises a TypeError : since we don't know the
@@ -266,7 +267,7 @@ JSObject.__getattribute__ = function(self,attr){
                             "A Javascript function can't take " +
                                 "keyword arguments")
                     }else{
-                        args.push(pyobj2jsobj(arguments[i]))
+                        args.push(pyobj2jsobj(arg))
                     }
                 }
                 // IE workaround
