@@ -15,6 +15,7 @@
 <script type="text/javascript" src="../../src/brython_builtins.js"></script>
 <script type="text/javascript" src="../../src/version_info.js"></script>
 <script type="text/javascript" src="../../src/py2js.js"></script>
+<script type="text/javascript" src="../../src/loaders.js"></script>
 <script type="text/javascript" src="../../src/py_object.js"></script>
 <script type="text/javascript" src="../../src/py_type.js"></script>
 <script type="text/javascript" src="../../src/py_utils.js"></script>
@@ -42,120 +43,27 @@
 <script type="text/javascript" src="../../src/py_import_hooks.js"></script>
 <script type="text/javascript" src="../src/async.js"></script>
 
-<script type="text/python3">
-from browser import document as doc, window
-from browser import timer
-from browser.html import *
-import time
-import sys
-
-import editor
-
-script_num = -1
-failed = []
-t_start = None
-
-def set_debug(ev):
-    if ev.target.checked:
-        __BRYTHON__.debug = 1
-    else:
-        __BRYTHON__.debug = 0
-
-__BRYTHON__.debug = int(doc['set_debug'].checked)
-
-results = []
-
-def test_next():
-    global script_num,failed
-    script_num += 1
-    options = doc['files'].options
-    if script_num < len(options):
-        option = doc['files'].options[script_num]
-        src = open(option.value).read()
-        doc['files'].selectedIndex = script_num
-        editor.editor.setValue(src)
-        state, result = editor.run()
-        result['test'] = option.value
-        results.append(result)
-        if state == 0:
-            failed.append(option.text)
-        timer.set_timeout(test_next,500)
-    else:
-        doc['console'].value = ''
-        print('completed all tests in %.2f s' %(time.time()-t_start))
-        print('failed : %s' %failed)
-
-        w = window.open()
-
-        head = w.document.get(selector="head")
-        head[0] <= STYLE("*{font-family: Arial;}")
-
-        body = w.document.body
-        table = TABLE(border=1)
-        table <= TR(TH('test')+TH('Brython'))
-        print(results)
-        for result in results:
-            row = TR()
-            row <= TD(result['test'])
-            if "Brython" in result and "CPython" in result:
-                row <= TD(int(100*float(result['Brython'])/float(result['CPython'])),
-                    align="right")
-            else:
-                row <= TD("missing result")
-            table <= row
-        version = '.'.join(str(x) for x in __BRYTHON__.implementation[:3])
-        body <= H1("Brython {} performance (base 100 = CPython)".format(version))
-        body <= table
-
-def test_all(ev):
-    global script_num, failed, t_start, results
-    script_num = -1
-    t_start = time.time()
-    failed = []
-    results = []
-    test_next()
-
-def set_debug(ev):
-    if ev.target.checked:
-        __BRYTHON__.debug = 1
-    else:
-        __BRYTHON__.debug = 0
-
-# load first script
-_name = doc['files'].options[0].value + '?foo=%s' % time.time()
-editor.editor.setValue(open(_name).read())
-
-# bindings
-doc['test_all'].bind('click',test_all)
-doc['set_debug'].bind('change',set_debug)
-
-# next functions are defined in editor.py
-doc['show_js'].bind('click',editor.show_js)
-# Create a lambda around editor.run() so that the event object is not passed to it
-doc['run'].bind('click',lambda *args: editor.run())
-doc['show_console'].bind('click',editor.show_console)
-doc['files'].bind('change',editor.load_script)
+<script type="text/python3" src="speed.py">
 </script>
+
 <script type="text/python3">
 from browser import document
 import header
 
-qs_lang,language = header.show()
+qs_lang, language = header.show()
 
 # other translations
 
 trans = {
-    'report_bugs':{'en':'Please report bugs in the ',
-                   'es':'Poner los bugs en el ',
-                   'fr':"Signalez les bugs dans l'"},
-    'test_page':{'en':'Tests page','es':'Página de pruebas','fr':'Page de tests'},
     'run':{'en':'run','es':'ejecutar','fr':'exécuter'},
-    'clear':{'en':'clear','es':'borrar','fr':'effacer'}
+    'clear':{'en':'clear','es':'borrar','fr':'effacer'},
+    'test_all':{'en':'Run all tests', 'fr': 'Exécuter tous les tests',
+        'es': 'Ejecutar todas las pruebas'}
 }
 
 for key in trans:
     if key in document:
-        document[key].html = trans[key][language]
+        document[key].text = trans[key][language]
 
 </script>
 
@@ -216,8 +124,8 @@ Test suite:
 <div id="right-div">
 <div style="padding: 3px 3px 3px 3px;">
   <div style="float:left">
-    <button id="run">run</button>
-    <button id="clear_text">clear</button>
+    <button id="run" disabled>run</button>
+    <button id="clear">clear</button>
     debug<input type="checkbox" id="set_debug" checked>
   </div>
   <div style="float:right">
