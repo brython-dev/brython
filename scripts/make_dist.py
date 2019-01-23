@@ -21,7 +21,7 @@ if sys.version_info[0] != 3:
 pdir = os.path.dirname(os.getcwd())
 # version info
 version = [3, 7, 0, "final", 0]
-implementation = [3, 7, 0, "final", 0]
+implementation = [3, 7, 1, "dev", 0]
 
 # version name
 vname = '.'.join(str(x) for x in implementation[:3])
@@ -76,7 +76,7 @@ def run():
     # build brython.js from base Javascript files
     sources = [
         'unicode.min',
-        'brython_builtins', 'version_info', 'py2js',
+        'brython_builtins', 'version_info', 'py2js', 'loaders',
         'py_object', 'py_type', 'py_utils', 'py_builtin_functions',
         'py_exceptions', 'py_range_slice', 'py_bytes', 'js_objects',
         'stdlib_paths', 'py_import', 'py_float', 'py_int', 'py_long_int',
