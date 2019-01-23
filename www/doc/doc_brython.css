@@ -74,6 +74,10 @@ button{
 button:hover{
     border-color: var(--selected-header-color);
 }
+button:disabled{
+    cursor: not-allowed;
+}
+
 #console {
   background-color:#000;
   color:var(--text-color);
