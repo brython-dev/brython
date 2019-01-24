@@ -2,8 +2,9 @@
 var $module = (function($B){
 
 eval($B.InjectBuiltins())
-var $N = $B.builtins.None
-
+var $N = $B.builtins.None,
+    _b_ = $B.builtins
+console.log(_b_)
 var add_to_res = function(res, key, val) {
     if(isinstance(val, list)){
         for (j = 0; j < val.length; j++) {
@@ -14,9 +15,23 @@ var add_to_res = function(res, key, val) {
     }else{res.append(key,str.$factory(val))}
 }
 
+function set_timeout(self, timeout){
+    if(timeout.seconds !== undefined){
+        self.js.$requestTimer = setTimeout(
+            function() {
+                self.js.abort()
+                if(timeout.func){
+                    timeout.func()
+                }
+            },
+            timeout.seconds * 1000)
+    }
+}
+
 function handle_kwargs(self, kw, method){
     var data,
-        headers
+        headers,
+        timeout = {}
     for(var key in kw.$string_dict){
         if(key == "data"){
             var params = kw.$string_dict[key]
@@ -41,7 +56,14 @@ function handle_kwargs(self, kw, method){
                 self.js.setRequestHeader(key, headers[key])
             }
         }else if(key.startsWith("on")){
-            ajax.bind(self, key.substr(2), kw.$string_dict[key])
+            var event = key.substr(2)
+            if(event == "timeout"){
+                timeout.func = kw.$string_dict[key]
+            }else{
+                ajax.bind(self, event, kw.$string_dict[key])
+            }
+        }else if(key == "timeout"){
+            timeout.seconds = kw.$string_dict[key]
         }
     }
     if(method == "post" && ! headers){
@@ -49,7 +71,7 @@ function handle_kwargs(self, kw, method){
         self.js.setRequestHeader("Content-type",
                                  "application/x-www-form-urlencoded")
     }
-    return data
+    return [data, timeout]
 }
 
 var ajax = {
@@ -94,36 +116,6 @@ var ajax = {
             }
         }
         return $N
-    },
-
-    get: function(){
-        var $ = $B.args("get", 3, {self:null, url: null, async: null},
-                ["self", "url", "async"], arguments, {async: true},
-                null, "kw"),
-            self = $.self,
-            url = $.url,
-            async = $.async,
-            kw = $.kw
-        var qs = handle_kwargs(self, kw, "get")
-        if(qs){
-            url += "?" + qs
-        }
-        self.js.open("GET", url, async)
-        self.js.send()
-    },
-
-    post: function(){
-        var $ = $B.args("get", 3, {self:null, url: null, async: null},
-                ["self", "url", "async"], arguments, {async: true},
-                null, "kw"),
-            self = $.self,
-            url = $.url,
-            async = $.async,
-            kw = $.kw,
-            data
-        self.js.open("POST", url, async)
-        var data = handle_kwargs(self, kw, "post")
-        self.js.send(data)
     },
 
     send : function(self, params){
@@ -173,7 +165,7 @@ var ajax = {
         self.headers[key.toLowerCase()] = value.toLowerCase()
     },
 
-    set_timeout : function(self,seconds,func){
+    set_timeout : function(self, seconds, func){
         self.js.$requestTimer = setTimeout(
             function() {self.js.abort();func()},
             seconds * 1000)
@@ -211,9 +203,44 @@ ajax.$factory = function(){
     return res
 }
 
+function get(){
+    var $ = $B.args("get", 2, {url: null, async: null},
+            ["url", "async"], arguments, {async: true},
+            null, "kw"),
+        url = $.url,
+        async = $.async,
+        kw = $.kw
+    var self = ajax.$factory(),
+        items = handle_kwargs(self, kw, "get"),
+        qs = items[0],
+        timeout = items[1]
+    set_timeout(self, timeout)
+    if(qs){
+        url += "?" + qs
+    }
+    self.js.open("GET", url, async)
+    self.js.send()
+}
+
+function post(){
+    var $ = $B.args("get", 2, {url: null, async: null},
+            ["url", "async"], arguments, {async: true},
+            null, "kw"),
+        url = $.url,
+        async = $.async,
+        kw = $.kw,
+        data
+    var self = ajax.$factory()
+    self.js.open("POST", url, async)
+    var items = handle_kwargs(self, kw, "post"),
+        data = items[0],
+        timeout = items[1]
+    set_timeout(self, timeout)
+    self.js.send(data)
+}
 
 $B.set_func_names(ajax)
 
-return {ajax: ajax, Ajax: ajax}
+return {ajax: ajax, Ajax: ajax, get: get, post: post}
 
 })(__BRYTHON__)

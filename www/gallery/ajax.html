@@ -50,54 +50,35 @@ import time
 
 from browser import document, ajax, bind
 
-class Request(ajax.Request):
-
-    def success(self):
-        document["result"].html = self.text
-
-    def error(self):
-        document["result"].html = "error " + self.text
-
-    def timeout(self):
-        document["result"].html = "server didn't reply after %s seconds" %self.timeout_secs
-
-
-def fake_qs(method):
-    if method == "GET":
-        return "?foo=%s" %time.time()
-    else:
-        return ""
+def fake_qs():
+    return "?foo=%s" %time.time()
 
 def show(req):
-    print("show", req)
     document["result"].html = req.text
-
-def go(url, method="GET"):
-
-    if method == "GET":
-        Request(url+fake_qs(method), method=method, timeout=7)
-    else:
-        Request(url+fake_qs(method), method=method, timeout=7,
-            headers={"Content-type":"application/x-www-form-urlencoded"},
-            data={"foo": 34}
-        )
 
 @bind("#get_test", "click")
 def get(ev):
-    ajax.Ajax().get("/cgi-bin/get_test.py",
+    ajax.get("/cgi-bin/get_test.py",
              oncomplete=show,
              data={"foo": 34})
 
 @bind("#post_test", "click")
 def post(ev):
-    req = ajax.Ajax()
-    req.post("/cgi-bin/post_test.py",
+    ajax.post("/cgi-bin/post_test.py",
              oncomplete=show,
              data={"foo": 34})
-# bindings
-document["get_text"].bind("click", lambda ev:go("ajax_data.txt"))
-document["i_dont_exist"].bind("click", lambda ev:go("i_dont_exist.txt"))
-#document["get_test"].bind("click", lambda ev:go("/cgi-bin/get_test.py"))
+
+@bind("#get_text", "click")
+def get_text(ev):
+    ajax.get("ajax_data.txt" + fake_qs(),
+             timeout=7,
+             oncomplete=show)
+
+@bind("#i_dont_exist", "click")
+def i_dont_exist(ev):
+    ajax.get("i_dont_exist.txt" + fake_qs(),
+             timeout=7,
+             oncomplete=show)
 
 </script>
 
