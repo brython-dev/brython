@@ -78,9 +78,9 @@ def run():
         'unicode.min',
         'brython_builtins', 'version_info', 'py2js', 'loaders',
         'py_object', 'py_type', 'py_utils', 'py_builtin_functions',
-        'py_exceptions', 'py_range_slice', 'py_bytes', 'js_objects',
+        'py_exceptions', 'py_range_slice', 'py_bytes', 'py_set', 'js_objects',
         'stdlib_paths', 'py_import', 'py_float', 'py_int', 'py_long_int',
-        'py_complex', 'py_sort', 'py_list', 'py_string', 'py_dict', 'py_set',
+        'py_complex', 'py_sort', 'py_list', 'py_string', 'py_dict', 
         'py_dom', 'py_generator', 'builtin_modules', 'py_import_hooks',
         'async'
     ]
@@ -96,10 +96,10 @@ def run():
     for fname in sources:
         src = open(abs_path(fname)+'.js').read() + '\n'
         src_size += len(src)
-        res += javascript_minifier.minify(src)
+        res += javascript_minifier.minify(src) + ";\n"
 
     res = re.sub(r'\bcontext\b', 'C', res)
-    
+
     with open(abs_path('brython.js'), 'w', newline="\n") as out:
         out.write(res)
 
