@@ -4,34 +4,6 @@ var $module = (function($B){
 eval($B.InjectBuiltins())
 var $N = $B.builtins.None
 
-var ajax1 = $B.make_class("ajax1",
-    function(){
-        if(window.XMLHttpRequest){// code for IE7+, Firefox, Chrome, Opera, Safari
-            var xmlhttp = new XMLHttpRequest()
-        }else{// code for IE6, IE5
-            var xmlhttp = new ActiveXObject("Microsoft.XMLHTTP")
-        }
-        xmlhttp.onreadystatechange = function(){
-            // here, "this" refers to xmlhttp
-            var state = this.readyState
-            var timer = this.$requestTimer
-            if(state == 0 && this.onuninitialized){this.onuninitialized()}
-            else if(state == 1 && this.onloading){this.onloading()}
-            else if(state == 2 && this.onloaded){this.onloaded()}
-            else if(state == 3 && this.oninteractive){this.oninteractive()}
-            else if(state == 4 && this.oncomplete){
-                if(timer !== null){window.clearTimeout(timer)}
-                this.oncomplete()
-            }
-        }
-        return {
-            __class__: ajax,
-            js: xmlhttp,
-            headers: {}
-        }
-    }
-)
-
 var add_to_res = function(res, key, val) {
     if(isinstance(val, list)){
         for (j = 0; j < val.length; j++) {
@@ -156,7 +128,6 @@ var ajax = {
 
     send : function(self, params){
         // params can be Python dictionary or string
-        //self.js.onreadystatechange = function(ev){console.log(ev.target)}
         var res = ''
         if(!params){
             self.js.send()
@@ -243,6 +214,6 @@ ajax.$factory = function(){
 
 $B.set_func_names(ajax)
 
-return {ajax: ajax, Ajax: ajax, ajax1: ajax1}
+return {ajax: ajax, Ajax: ajax}
 
 })(__BRYTHON__)
