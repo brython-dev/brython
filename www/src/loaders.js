@@ -2,6 +2,8 @@
 
 (function($B){
 
+var _b_ = $B.builtins
+
 function idb_load(evt, module){
     // Callback function of a request to the indexedDB database with a module
     // name as key.
@@ -219,7 +221,7 @@ var inImported = $B.inImported = function(module){
             source = elts[1],
             is_package = elts.length == 4
         if(ext==".py"){
-            if(idb_cx){
+            if($B.idb_cx){
                 $B.tasks.splice(0, 0, [idb_get, module])
             }
         }else{
