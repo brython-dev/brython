@@ -9287,7 +9287,6 @@ var run_script = $B.parser.run_script = function(script){
 $B._run_script = run_script
 
 var brython = $B.parser.brython = function(options){
-
     // By default, only set debug level
     if(options === undefined){options = {'debug': 0}}
 
@@ -9474,7 +9473,7 @@ $B.run_script = function(src, name, run_loop){
                 js: js,
                 __name__: name,
                 $src: src,
-                __file__: $B.script_path + 
+                __file__: $B.script_path +
                     ($B.script_path.endsWith("/") ? "" : "/") + name
             }
             $B.file_cache[script.__file__] = src
@@ -9692,4 +9691,7 @@ $B.$NodeJSCtx = $NodeJSCtx
 $B.brython = brython
 
 })(__BRYTHON__)
+
 var brython = __BRYTHON__.brython
+
+
