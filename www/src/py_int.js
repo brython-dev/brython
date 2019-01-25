@@ -763,6 +763,7 @@ $B.$bool = function(obj){ // return true or false
             if(obj){return true}
             return false
         default:
+            if(obj.$is_class){return true}
             var missing = {},
                 bool_func = $B.$getattr(obj, "__bool__", missing)
             if(bool_func === missing){

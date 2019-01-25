@@ -80,8 +80,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.1"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-01-24 13:01:12.677226"
-__BRYTHON__.timestamp=1548331272677
+__BRYTHON__.compiled_date="2019-01-25 09:38:05.457972"
+__BRYTHON__.timestamp=1548405485457
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 ;
 
@@ -4843,7 +4843,8 @@ $B.brython=brython})(__BRYTHON__)
 var brython=__BRYTHON__.brython
 ;
 
-(function($B){function idb_load(evt,module){
+(function($B){var _b_=$B.builtins
+function idb_load(evt,module){
 var res=evt.target.result
 var timestamp=$B.timestamp
 if($B.VFS_timestamp && $B.VFS_timestamp > $B.timestamp){
@@ -4921,7 +4922,7 @@ $B.precompiled[module]=source}
 var inImported=$B.inImported=function(module){if($B.imported.hasOwnProperty(module)){}else if(__BRYTHON__.VFS && __BRYTHON__.VFS.hasOwnProperty(module)){var elts=__BRYTHON__.VFS[module]
 if(elts===undefined){console.log('bizarre',module)}
 var ext=elts[0],source=elts[1],is_package=elts.length==4
-if(ext==".py"){if(idb_cx){$B.tasks.splice(0,0,[idb_get,module])}}else{add_jsmodule(module,source)}}else{console.log("bizarre",module)}
+if(ext==".py"){if($B.idb_cx){$B.tasks.splice(0,0,[idb_get,module])}}else{add_jsmodule(module,source)}}else{console.log("bizarre",module)}
 loop()}
 var loop=$B.loop=function(){if($B.tasks.length==0){
 if($B.idb_cx){$B.idb_cx.result.close()
@@ -9522,6 +9523,7 @@ case "string":
 if(obj){return true}
 return false
 default:
+if(obj.$is_class){return true}
 var missing={},bool_func=$B.$getattr(obj,"__bool__",missing)
 if(bool_func===missing){try{return getattr(obj,"__len__")()> 0}
 catch(err){return true}}else{return bool_func()}}}
