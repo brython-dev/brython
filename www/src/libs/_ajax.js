@@ -4,7 +4,7 @@ var $module = (function($B){
 eval($B.InjectBuiltins())
 var $N = $B.builtins.None,
     _b_ = $B.builtins
-console.log(_b_)
+
 var add_to_res = function(res, key, val) {
     if(isinstance(val, list)){
         for (j = 0; j < val.length; j++) {
