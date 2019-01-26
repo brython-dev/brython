@@ -72,6 +72,28 @@ readyState
 `xml`
 > la réponse du serveur sous forme d'objet DOM.
 
+### Example
+
+On suppose qu'il y a un DIV avec l'id _result_ dans la page HTML.
+
+```python
+from browser import document, ajax
+
+def on_complete(req):
+   if req.status==200 or req.status==0:
+       document["result"].html = req.text
+   else:
+       document["result"].html = "erreur "+req.text
+
+req = ajax.ajax()
+req.bind('complete',on_complete)
+# envoie une requête POST à l'url
+req.open('POST',url,True)
+req.set_header('content-type','application/x-www-form-urlencoded')
+# envoie les données sous forme de dictionnaire
+req.send({'x':0, 'y':1})
+```
+
 ### Raccourcis
 
 Les appels GET et POST peuvent être effectués plus simplement avec les
@@ -94,9 +116,7 @@ _"application/x-www-form-urlencoded"}, timeout=None, data="", **callbacks]_`)`
 > fonction qui gère cet événement. La clé `ontimeout` a pour valeur la
 > fonction à appeler si la durée définie dans _timeout_ est dépassée.
 
-### Exemple
-
-On suppose qu'il y a un DIV avec l'id "result" dans la page HTML
+L'exemple ci-dessus peut être réécrit de la façon suivante:
 
 ```python
 from browser import document, ajax
