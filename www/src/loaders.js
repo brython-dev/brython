@@ -46,7 +46,7 @@ function idb_load(evt, module){
                     var root = $B.py2js(source, module, module),
                         js = root.to_js()
                 }catch(err){
-                    handle_error(err)
+                    $B.handle_error(err)
                     throw err
                 }
                 // Delete temporary import
@@ -267,7 +267,7 @@ var loop = $B.loop = function(){
                 err = _b_.RuntimeError.$factory(err + '')
             }
 
-            handle_error(err)
+            $B.handle_error(err)
         }
         loop()
     }else{
@@ -279,7 +279,7 @@ var loop = $B.loop = function(){
 $B.tasks = []
 $B.has_indexedDB = self.indexedDB !== undefined
 
-function handle_error(err){
+$B.handle_error = function(err){
     // Print the error traceback on the standard error stream
     if(err.__class__ !== undefined){
         var name = err.__class__.$infos.__name__,

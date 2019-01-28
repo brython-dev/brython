@@ -1751,7 +1751,7 @@ var $CallCtx = $B.parser.$CallCtx = function(context){
             }else{
                 args_str = '(' + args_str + ')'
             }
-
+            
             var default_res = "$B.$call(" + func_js + ")" + args_str
 
             if(this.tree.length > -1){
@@ -9340,7 +9340,7 @@ var brython = $B.parser.brython = function(options){
         path_hooks = []
 
     // $B.use_VFS is set to true if the script brython_stdlib.js or
-    // brython_dist.js has been loaded in the page. In this case we use the
+    // brython_modules.js has been loaded in the page. In this case we use the
     // Virtual File System (VFS)
     if($B.use_VFS){
         meta_path.push($B.$meta_path[0])
@@ -9479,7 +9479,7 @@ $B.run_script = function(src, name, run_loop){
             $B.file_cache[script.__file__] = src
             if($B.debug > 1){console.log(js)}
     }catch(err){
-        handle_error(err)
+        $B.handle_error(err) // in loaders.js
     }
     if($B.hasOwnProperty("VFS") && $B.has_indexedDB){
         // Build the list of stdlib modules required by the
