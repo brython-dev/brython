@@ -63,8 +63,7 @@ function parent_package(mod_name) {
 }
 
 function $download_module(module, url, $package){
-    $B.xhr = $B.xhr || new XMLHttpRequest()
-    var xhr = $B.xhr,
+    var xhr = new XMLHttpRequest(),
         fake_qs
 
     switch ($B.$options.cache) {
@@ -80,7 +79,6 @@ function $download_module(module, url, $package){
 
     var timer = _window.setTimeout(function(){
             xhr.abort()
-            throw _b_.ImportError.$factory("No module named '" + module + "'")
         }, 5000)
 
     var res = null,

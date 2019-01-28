@@ -80,8 +80,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.1"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-01-25 09:38:05.457972"
-__BRYTHON__.timestamp=1548405485457
+__BRYTHON__.compiled_date="2019-01-28 09:11:47.693076"
+__BRYTHON__.timestamp=1548663107693
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 ;
 
@@ -913,6 +913,7 @@ if(star_args && kw_args_str){args_str+='.concat(['+kw_args_str+'])'}else{if(args
 else if(!args_str){args_str=kw_args_str}}
 if(star_args){
 args_str='.apply(null,'+args_str+')'}else{args_str='('+args_str+')'}
+if(this.func.value=="ghjk"){console.log("args_str",args_str)}
 var default_res="$B.$call("+func_js+")"+args_str
 if(this.tree.length >-1){if(this.func.type=='id'){if(this.func.is_builtin){
 var classes=["complex","bytes","bytearray","object","memoryview","int","float","str","list","tuple","dict","set","frozenset","range","slice","zip","bool","type","classmethod","staticmethod","enumerate","reversed","property","$$super","zip","map","filter"]
@@ -4774,7 +4775,7 @@ $B.$py_module_path[name]=$B.script_path
 try{var root=$B.py2js(src,name,name),js=root.to_js(),script={__doc__:root.__doc__,js:js,__name__:name,$src:src,__file__:$B.script_path+
 ($B.script_path.endsWith("/")? "" :"/")+name}
 $B.file_cache[script.__file__]=src
-if($B.debug > 1){console.log(js)}}catch(err){handle_error(err)}
+if($B.debug > 1){console.log(js)}}catch(err){$B.handle_error(err)}
 if($B.hasOwnProperty("VFS")&& $B.has_indexedDB){
 var imports1=Object.keys(root.imports).slice(),imports=imports1.filter(function(item){return $B.VFS.hasOwnProperty(item)})
 Object.keys(imports).forEach(function(name){if($B.VFS.hasOwnProperty(name)){var submodule=$B.VFS[name],type=submodule[0]
@@ -4857,7 +4858,7 @@ else{var parts=module.split(".")
 parts.pop()
 __package__=parts.join(".")}
 $B.imported[module]=$B.module.$factory(module,"",__package__)
-try{var root=$B.py2js(source,module,module),js=root.to_js()}catch(err){handle_error(err)
+try{var root=$B.py2js(source,module,module),js=root.to_js()}catch(err){$B.handle_error(err)
 throw err}
 delete $B.imported[module]
 if($B.debug > 1){console.log("precompile",module)}
@@ -4937,12 +4938,12 @@ new Function("$locals_"+script_id,script.js)(module)}catch(err){
 if(err.$py_error===undefined){console.log('Javascript error',err)
 $B.print_stack()
 err=_b_.RuntimeError.$factory(err+'')}
-handle_error(err)}
+$B.handle_error(err)}
 loop()}else{
 func.apply(null,args)}}
 $B.tasks=[]
 $B.has_indexedDB=self.indexedDB !==undefined
-function handle_error(err){
+$B.handle_error=function(err){
 if(err.__class__ !==undefined){var name=err.__class__.$infos.__name__,trace=_b_.getattr(err,'info')
 if(name=='SyntaxError' ||name=='IndentationError'){var offset=err.args[3]
 trace+='\n    '+' '.repeat(offset)+'^'+
@@ -8479,8 +8480,7 @@ $B.set_func_names(module,"builtins")
 function parent_package(mod_name){var parts=mod_name.split(".")
 parts.pop()
 return parts.join(".")}
-function $download_module(module,url,$package){$B.xhr=$B.xhr ||new XMLHttpRequest()
-var xhr=$B.xhr,fake_qs
+function $download_module(module,url,$package){var xhr=new XMLHttpRequest(),fake_qs
 switch($B.$options.cache){case "version":
 fake_qs="?v="+$B.version_info[2]
 break
@@ -8489,8 +8489,7 @@ fake_qs=""
 break
 default:
 fake_qs="?v="+(new Date().getTime())}
-var timer=_window.setTimeout(function(){xhr.abort()
-throw _b_.ImportError.$factory("No module named '"+module+"'")},5000)
+var timer=_window.setTimeout(function(){xhr.abort()},5000)
 var res=null,mod_name=module.__name__,res,t0=new Date()
 $B.download_time=$B.download_time ||0
 xhr.open("GET",url+fake_qs,false)
