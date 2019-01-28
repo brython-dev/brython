@@ -80,8 +80,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.1"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-01-28 09:11:47.693076"
-__BRYTHON__.timestamp=1548663107693
+__BRYTHON__.compiled_date="2019-01-28 09:27:19.151325"
+__BRYTHON__.timestamp=1548664039151
 __BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 ;
 
@@ -913,7 +913,6 @@ if(star_args && kw_args_str){args_str+='.concat(['+kw_args_str+'])'}else{if(args
 else if(!args_str){args_str=kw_args_str}}
 if(star_args){
 args_str='.apply(null,'+args_str+')'}else{args_str='('+args_str+')'}
-if(this.func.value=="ghjk"){console.log("args_str",args_str)}
 var default_res="$B.$call("+func_js+")"+args_str
 if(this.tree.length >-1){if(this.func.type=='id'){if(this.func.is_builtin){
 var classes=["complex","bytes","bytearray","object","memoryview","int","float","str","list","tuple","dict","set","frozenset","range","slice","zip","bool","type","classmethod","staticmethod","enumerate","reversed","property","$$super","zip","map","filter"]
@@ -4662,55 +4661,6 @@ if($B.debug >=2){if(module==locals_id){console.log('module '+module+' translated
 (t1-t0)+' ms')}}
 $B.compile_time+=t1-t0
 return root}
-var load_scripts=$B.parser.load_scripts=function(scripts,run_script,onerror){
-if(run_script===undefined){run_script=$B._run_script}
-function callback(ev,script){var ok=false,skip=false
-if(ev !==null){var req=ev.target
-if(req.readyState==4){if(req.status==200){ok=true;
-var script={name:req.module_name,url:req.responseURL,src:req.responseText}}}else{
-skip=true}}else{
-ok=true}
-if(skip){return}
-if(ok){try{run_script(script)}catch(e){if(onerror===undefined){throw e}
-else{onerror(e)}}
-if(scripts.length > 0){load_scripts(scripts)}}else{try{throw Error("cannot load script "+
-req.module_name+' at '+req.responseURL+
-': error '+req.status)}catch(e){if(onerror===undefined){throw e}
-else{onerror(e)}}}}
-var noajax=true
-while(scripts.length > 0 && noajax){var script=scripts.shift()
-if(script['src']===undefined){
-noajax=false;
-var req=new XMLHttpRequest()
-req.onreadystatechange=callback
-req.module_name=script.name
-req.open('GET',script.url,true)
-req.send()}else{
-callback(null,script)
-load_scripts(scripts)}}}
-$B._load_scripts=load_scripts
-var run_script=$B.parser.run_script=function(script){
-$B.$py_module_path[script.name]=script.url
-var root,js
-try{
-root=$B.py2js(script.src,script.name,script.name)
-js=root.to_js()
-js="var $locals_"+script.name+" = {}\n"+js
-if($B.debug > 1){console.log(js)}
-eval(js)}catch(err){if($B.debug > 1){console.log(err)
-for(var attr in err){console.log(attr+' : ',err[attr])}}
-if(err.$py_error===undefined){console.log('Javascript error',err)
-err=_b_.RuntimeError.$factory(err+'')}
-var name=err.__class__.$infos.__name__
-var $trace=_b_.getattr(err,'info')
-if(name=='SyntaxError' ||name=='IndentationError'){var offset=err.args[3]
-$trace+='\n    '+' '.repeat(offset)+'^'+
-'\n'+name+': '+err.args[0]}else{$trace+='\n'+name+': '+err.args}
-try{_b_.getattr($B.stderr,'write')($trace)}catch(print_exc_err){console.log($trace)}
-throw err}finally{root=null
-js=null
-$B.clear_ns(script.name)}}
-$B._run_script=run_script
 var brython=$B.parser.brython=function(options){
 if(options===undefined){options={'debug':0}}
 if(typeof options=='number'){options={'debug':options}}
@@ -8357,10 +8307,11 @@ if(self.js_func && self.js_func[attr]!==undefined){js_attr=self.js_func[attr]}
 if(js_attr !==undefined){if($test){console.log("jsattr",js_attr)}
 if(typeof js_attr=='function'){
 var res=function(){var args=[]
-for(var i=0,len=arguments.length;i < len;i++){if(arguments[i]!==null && arguments[i].$nat !==undefined){
+for(var i=0,len=arguments.length;i < len;i++){var arg=arguments[i]
+if(arg !==undefined && arg !==null && arg.$nat !==undefined){
 throw TypeError.$factory(
 "A Javascript function can't take "+
-"keyword arguments")}else{args.push(pyobj2jsobj(arguments[i]))}}
+"keyword arguments")}else{args.push(pyobj2jsobj(arg))}}
 if(attr==='replace' && self.js===location){location.replace(args[0])
 return}
 var new_this=self.js
