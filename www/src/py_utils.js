@@ -814,8 +814,7 @@ $B.$call = function(callable){
         return callable
     }else if(callable.$factory){
         return callable.$factory
-    }
-    else if(callable.$is_class){
+    }else if(callable.$is_class){
         // Use metaclass __call__, cache result in callable.$factory
         return callable.$factory = $B.$instance_creator(callable)
     }else if(callable.__class__ === $B.JSObject){

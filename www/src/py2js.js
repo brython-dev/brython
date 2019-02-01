@@ -1437,7 +1437,7 @@ var $AwaitCtx = $B.parser.$AwaitCtx = function(context){
     context.tree.push(this)
 
     this.to_js = function(){
-        return $to_js(this.tree)
+        return 'await $B.promise(' + $to_js(this.tree) + ')'
     }
 }
 
@@ -1751,7 +1751,7 @@ var $CallCtx = $B.parser.$CallCtx = function(context){
             }else{
                 args_str = '(' + args_str + ')'
             }
-            
+
             var default_res = "$B.$call(" + func_js + ")" + args_str
 
             if(this.tree.length > -1){
@@ -2803,12 +2803,12 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         if(this.type == "def"){
             // Add a node to mark the end of the function
             node.parent.insert(rank + offset++, new $MarkerNode('func_end:'+CODE_MARKER))
-            node.parent.insert(rank + offset++,
-                $NodeJS('return ' + name + '})(' + this.default_str + ')'))
+            var res = 'return ' + name
             if(this.async){
-                node.parent.insert(rank + offset++,
-                    $NodeJS(prefix + ' = $B.make_async(' + prefix + ')'))
+                res = 'return $B.make_async(' + name + ')'
             }
+            node.parent.insert(rank + offset++,
+                $NodeJS(res + '})(' + this.default_str + ')'))
         }
 
         // wrap everything in a try/catch to be sure to exit from frame
@@ -2847,7 +2847,8 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         func_name = func_name || this.tree[0].to_js()
         if(this.decorated){func_name = 'var ' + this.alias}
 
-        return func_name + ' = (function ($defaults){function '+
+        return func_name + ' = (function ($defaults){' +
+            (this.async ? 'async ' : '') + 'function '+
             this.name + this.num + '(' + this.params + ')'
     }
 }
@@ -3121,6 +3122,7 @@ var $ExprCtx = $B.parser.$ExprCtx = function(context, name, with_commas){
     this.expect = ',' // can be 'expr' or ','
     this.parent = context
     this.packed = context.packed
+    this.is_await = context.is_await
     this.tree = []
     context.tree[context.tree.length] = this
 
@@ -3129,10 +3131,15 @@ var $ExprCtx = $B.parser.$ExprCtx = function(context, name, with_commas){
     }
 
     this.to_js = function(arg){
+        var res
         this.js_processed = true
-        if(this.type == 'list'){return '[' + $to_js(this.tree) + ']'}
-        if(this.tree.length == 1){return this.tree[0].to_js(arg)}
-        return 'tuple.$factory([' + $to_js(this.tree) + '])'
+        if(this.type == 'list'){res = '[' + $to_js(this.tree) + ']'}
+        else if(this.tree.length == 1){res = this.tree[0].to_js(arg)}
+        else{res = 'tuple.$factory([' + $to_js(this.tree) + '])'}
+        if(this.is_await){
+            res = "await $B.promise(" + res + ")"
+        }
+        return res
     }
 }
 
@@ -6384,7 +6391,8 @@ var $transition = $B.parser.$transition = function(context, token, value){
     switch(context.type){
         case 'abstract_expr':
 
-          var packed = context.packed
+          var packed = context.packed,
+              is_await = context.is_await
 
           switch(token) {
               case 'id':
@@ -6404,6 +6412,7 @@ var $transition = $B.parser.$transition = function(context, token, value){
                   var commas = context.with_commas
                   context = context.parent
                   context.packed = packed
+                  context.is_await = is_await
           }
 
           switch(token) {
@@ -6557,6 +6566,7 @@ var $transition = $B.parser.$transition = function(context, token, value){
             $_SyntaxError(context, 'token ' + token + ' after ' + context)
 
         case 'await':
+            context.parent.is_await = true
             return $transition(context.parent, token, value)
 
         case 'break':
@@ -6569,6 +6579,7 @@ var $transition = $B.parser.$transition = function(context, token, value){
                     if(context.expect == 'id'){$_SyntaxError(context, token)}
                     context.expect = 'id'
                     return context
+                case 'await':
                 case 'id':
                 case 'imaginary':
                 case 'int':
@@ -6610,6 +6621,7 @@ var $transition = $B.parser.$transition = function(context, token, value){
 
         case 'call_arg':
             switch(token) {
+                case 'await':
                 case 'id':
                 case 'imaginary':
                 case 'int':
@@ -7890,10 +7902,12 @@ var $transition = $B.parser.$transition = function(context, token, value){
                 case 'async':
                     return new $AsyncCtx(context)
                 case 'await':
-                    //return new $AwaitCtx(context)
+                    return new $AbstractExprCtx(new $AwaitCtx(context), true)
+                    /*
                     var yexpr = new $AbstractExprCtx(
                         new $YieldCtx(context, true), true)
                     return $transition(yexpr, "from")
+                    */
                 case 'class':
                     return new $ClassCtx(context)
                 case 'continue':

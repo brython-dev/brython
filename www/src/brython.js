@@ -80,9 +80,9 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.1"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-01-28 09:27:19.151325"
-__BRYTHON__.timestamp=1548664039151
-__BRYTHON__.builtin_module_names=["_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
+__BRYTHON__.compiled_date="2019-02-01 17:00:52.664514"
+__BRYTHON__.timestamp=1549036852664
+__BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 ;
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -756,7 +756,7 @@ this.type='await'
 this.parent=C
 this.tree=[]
 C.tree.push(this)
-this.to_js=function(){return $to_js(this.tree)}}
+this.to_js=function(){return 'await $B.promise('+$to_js(this.tree)+')'}}
 var $BodyCtx=$B.parser.$BodyCtx=function(C){
 var ctx_node=C.parent
 while(ctx_node.type !=='node'){ctx_node=ctx_node.parent}
@@ -1381,8 +1381,9 @@ node.parent.insert(rank+offset++,$NodeJS(js))
 this.default_str='{'+defs1.join(', ')+'}'
 if(this.type=="def"){
 node.parent.insert(rank+offset++,new $MarkerNode('func_end:'+CODE_MARKER))
-node.parent.insert(rank+offset++,$NodeJS('return '+name+'})('+this.default_str+')'))
-if(this.async){node.parent.insert(rank+offset++,$NodeJS(prefix+' = $B.make_async('+prefix+')'))}}
+var res='return '+name
+if(this.async){res='return $B.make_async('+name+')'}
+node.parent.insert(rank+offset++,$NodeJS(res+'})('+this.default_str+')'))}
 if(this.type=='def'){var parent=node
 for(var pos=0;pos < parent.children.length &&
 parent.children[pos]!==$B.last(enter_frame_nodes);pos++){}
@@ -1398,7 +1399,8 @@ return offset}
 this.to_js=function(func_name){this.js_processed=true
 func_name=func_name ||this.tree[0].to_js()
 if(this.decorated){func_name='var '+this.alias}
-return func_name+' = (function ($defaults){function '+
+return func_name+' = (function ($defaults){'+
+(this.async ? 'async ' :'')+'function '+
 this.name+this.num+'('+this.params+')'}}
 var $DelCtx=$B.parser.$DelCtx=function(C){
 this.type='del'
@@ -1544,13 +1546,17 @@ this.with_commas=with_commas
 this.expect=',' 
 this.parent=C
 this.packed=C.packed
+this.is_await=C.is_await
 this.tree=[]
 C.tree[C.tree.length]=this
 this.toString=function(){return '(expr '+with_commas+') '+this.tree}
-this.to_js=function(arg){this.js_processed=true
-if(this.type=='list'){return '['+$to_js(this.tree)+']'}
-if(this.tree.length==1){return this.tree[0].to_js(arg)}
-return 'tuple.$factory(['+$to_js(this.tree)+'])'}}
+this.to_js=function(arg){var res
+this.js_processed=true
+if(this.type=='list'){res='['+$to_js(this.tree)+']'}
+else if(this.tree.length==1){res=this.tree[0].to_js(arg)}
+else{res='tuple.$factory(['+$to_js(this.tree)+'])'}
+if(this.is_await){res="await $B.promise("+res+")"}
+return res}}
 var $ExprNot=$B.parser.$ExprNot=function(C){
 this.type='expr_not'
 this.parent=C
@@ -3004,7 +3010,7 @@ while(class_name.charAt(0)=='_'){class_name=class_name.substr(1)}
 return '_'+class_name+name}else{if(scope.parent && scope.parent.C){scope=$get_scope(scope.C.tree[0])}else{return name}}}}else{return name}}
 var $transition=$B.parser.$transition=function(C,token,value){
 switch(C.type){case 'abstract_expr':
-var packed=C.packed
+var packed=C.packed,is_await=C.is_await
 switch(token){case 'id':
 case 'imaginary':
 case 'int':
@@ -3021,7 +3027,8 @@ case 'yield':
 C.parent.tree.pop()
 var commas=C.with_commas
 C=C.parent
-C.packed=packed}
+C.packed=packed
+C.is_await=is_await}
 switch(token){case 'await':
 return new $AwaitCtx(C)
 case 'id':
@@ -3128,6 +3135,7 @@ C)}
 return $transition(C.parent,'eol')}
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'await':
+C.parent.is_await=true
 return $transition(C.parent,token,value)
 case 'break':
 if(token=='eol'){return $transition(C.parent,'eol')}
@@ -3137,6 +3145,7 @@ switch(token){case ',':
 if(C.expect=='id'){$_SyntaxError(C,token)}
 C.expect='id'
 return C
+case 'await':
 case 'id':
 case 'imaginary':
 case 'int':
@@ -3170,7 +3179,8 @@ return new $DoubleStarArgCtx(C)}
 $_SyntaxError(C,token)}
 return $transition(C.parent,token,value)
 case 'call_arg':
-switch(token){case 'id':
+switch(token){case 'await':
+case 'id':
 case 'imaginary':
 case 'int':
 case 'float':
@@ -3944,9 +3954,7 @@ break
 case 'async':
 return new $AsyncCtx(C)
 case 'await':
-var yexpr=new $AbstractExprCtx(
-new $YieldCtx(C,true),true)
-return $transition(yexpr,"from")
+return new $AbstractExprCtx(new $AwaitCtx(C),true)
 case 'class':
 return new $ClassCtx(C)
 case 'continue':
@@ -5739,8 +5747,7 @@ try{var elt=f(i)
 if($B.rich_comp("__eq__",elt,item)){return true}}catch(err){if(err.__class__===_b_.IndexError){return false}
 throw err}}}}
 $B.$call=function(callable){if(callable.__class__===$B.method){return callable}
-else if(callable.$is_func ||typeof callable=="function"){return callable}else if(callable.$factory){return callable.$factory}
-else if(callable.$is_class){
+else if(callable.$is_func ||typeof callable=="function"){return callable}else if(callable.$factory){return callable.$factory}else if(callable.$is_class){
 return callable.$factory=$B.$instance_creator(callable)}else if(callable.__class__===$B.JSObject){if(typeof(callable.js)=="function"){return callable.js}else{throw _b_.TypeError.$factory("'"+$B.class_name(callable)+
 "' object is not callable")}}
 try{return $B.$getattr(callable,"__call__")}catch(err){throw _b_.TypeError.$factory("'"+$B.class_name(callable)+
@@ -8409,7 +8416,7 @@ $B.JSConstructor=JSConstructor})(__BRYTHON__)
 ;(function($B){$B.stdlib={}
 var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_collections_abc','_compat_pickle','_contextvars','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_py_abc','_pydecimal','_queue','_random','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_weakref','_weakrefset','abc','antigravity','argparse','atexit','base64','bdb','binascii','bisect','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','gettext','glob','heapq','imp','inspect','io','ipaddress','itertools','keyword','linecache','locale','nntplib','numbers','opcode','operator','optparse','os','pdb','pickle','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','re','reprlib','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uuid','warnings','weakref','webbrowser','zipfile']
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
-var js=['_ajax','_base64','_binascii','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_sre_utils','_string','_strptime','_svg','_sys','_warnings','aes','array','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','json','long_int','marshal','math','md5','modulefinder','pbkdf2','posix','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','zlib']
+var js=['_aio','_ajax','_base64','_binascii','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_sre_utils','_string','_strptime','_svg','_sys','_warnings','aes','array','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','json','long_int','marshal','math','md5','modulefinder','pbkdf2','posix','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','zlib']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
 var pkglist=['asyncio','browser','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','jqueryui','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib','xml','xml.etree','xml.parsers','xml.sax']
 for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}})(__BRYTHON__)
@@ -12911,13 +12918,17 @@ $B.import_hooks=import_hooks})(__BRYTHON__)
 ;
 ;(function($B){var _b_=$B.builtins
 var awaitable=$B.make_class("awaitable")
-var coroutine=$B.make_class("coroutine")
+var coroutine=$B.coroutine=$B.make_class("coroutine")
 coroutine.close=function(self){}
-coroutine.send=function(self){var res=self.$func()
-if(res.__class__ !==awaitable){throw _b_.StopIteration(res)}}
-$B.make_async=function(func){var res=function(){return{
-__class__:coroutine,$func:func,close:function(){},send:function(){var res=func()
-if(res.__class__ !==awaitable){throw _b_.StopIteration(res)}}}}
-res.$infos=func.$infos
-return res}})(__BRYTHON__)
+coroutine.send=function(self){return self.$func.apply(null,self.$args)}
+$B.set_func_names(coroutine,"builtins")
+$B.make_async=function(func){var f=function(){var args=arguments
+return{
+__class__:coroutine,$args:args,$func:func}}
+f.$infos=func.$infos
+return f}
+$B.promise=function(obj){console.log("promise",obj)
+if(obj.__class__===$B.JSObject){return obj.js}else if(obj.__class__===coroutine){return coroutine.send(obj)}
+if(typeof obj=="function"){return obj()}
+return obj}})(__BRYTHON__)
 ;
