@@ -80,8 +80,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.1"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-02-01 17:00:52.664514"
-__BRYTHON__.timestamp=1549036852664
+__BRYTHON__.compiled_date="2019-02-03 17:21:56.213457"
+__BRYTHON__.timestamp=1549210916213
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 ;
 
@@ -1919,11 +1919,13 @@ var innermost=$get_scope(this),scope=innermost,found=[]
 var search_ids=['"'+innermost.id+'"']
 var gs=innermost
 var $test=false 
+if($test){console.log("innermost",innermost)}
 while(true){if(gs.parent_block){if(gs.parent_block==$B.builtins_scope){break}
 else if(gs.parent_block.id===undefined){break}
 gs=gs.parent_block}
 search_ids.push('"'+gs.id+'"')}
 search_ids="["+search_ids.join(", ")+"]"
+if(innermost.globals && innermost.globals.indexOf(val)>-1){search_ids=['"'+gs.id+'"']}
 if($test){console.log("search ids",search_ids)}
 if(this.nonlocal ||this.bound){var bscope=this.firstBindingScopeId()
 if($test){console.log("binding",bscope)}
@@ -1932,8 +1934,9 @@ val+'"]'}}
 var global_ns='$locals_'+gs.id.replace(/\./g,'_')
 while(1){if($B._globals[scope.id]!==undefined &&
 $B._globals[scope.id][val]!==undefined){
-if(this.boundBefore(gs)){return global_ns+'["'+val+'"]'}else{return '$B.$global_search("'+val+'", '+
-search_ids+')'}}
+if(this.boundBefore(gs)){return global_ns+'["'+val+'"]'}else{if($test){console.log("use global search",this)}
+if(this.augm_assign){return global_ns+'["'+val+'"]'}else{return '$B.$global_search("'+val+'", '+
+search_ids+')'}}}
 if(scope===innermost){
 if(bound_before){if(bound_before.indexOf(val)>-1){found.push(scope)}
 else if(scope.C &&

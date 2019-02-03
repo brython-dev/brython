@@ -1303,7 +1303,7 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
         }
 
         var left = context.tree[0].to_js()
-
+        
         if(left_bound_to_int && right_is_int){
             parent.insert(rank + offset, $NodeJS(left + " "+ op + " " + right))
             return offset++
@@ -3972,7 +3972,9 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         // get global scope
         var gs = innermost
 
-        var $test = false //val == "__name__"
+        var $test = false //val == "x"
+
+        if($test){console.log("innermost", innermost)}
 
         while(true){
             if(gs.parent_block){
@@ -3983,6 +3985,10 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
             search_ids.push('"' + gs.id + '"')
         }
         search_ids = "[" + search_ids.join(", ") + "]"
+
+        if (innermost.globals && innermost.globals.indexOf(val) > -1){
+            search_ids = ['"' + gs.id + '"']
+        }
 
         if($test){console.log("search ids", search_ids)}
 
@@ -4010,8 +4016,13 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                 if(this.boundBefore(gs)){
                     return global_ns + '["' + val + '"]'
                 }else{
-                    return '$B.$global_search("' + val + '", ' +
-                        search_ids + ')'
+                    if($test){console.log("use global search", this)}
+                    if(this.augm_assign){
+                        return global_ns + '["' + val + '"]'
+                    }else{
+                        return '$B.$global_search("' + val + '", ' +
+                            search_ids + ')'
+                    }
                 }
             }
             if(scope === innermost){

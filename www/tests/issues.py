@@ -2259,6 +2259,16 @@ try:
     raise Exception("should have raised SyntaxError")
 except SyntaxError:
     pass
+
+# augmented assignment to a global variable
+def f():
+    global xaz25
+    xaz25 += 1
+
+xaz25 = 8
+f()
+assert xaz25 == 9
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
