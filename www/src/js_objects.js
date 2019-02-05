@@ -410,7 +410,7 @@ JSObject.__len__ = function(self){
     }
 }
 
-JSObject.__Xrepr__ = function(self){
+JSObject.__repr__ = function(self){
     if(self.js instanceof Date){return self.js.toString()}
     var proto = Object.getPrototypeOf(self.js)
     if(proto){
@@ -462,7 +462,7 @@ JSObject.__setattr__ = function(self,attr,value){
 
 JSObject.__setitem__ = JSObject.__setattr__
 
-JSObject.__Xstr__ = JSObject.__repr__
+JSObject.__str__ = JSObject.__repr__
 
 var no_dict = {'string': true, 'function': true, 'number': true,
     'boolean': true}
