@@ -1,11 +1,13 @@
 ;(function($B) {
 var _b_ = $B.builtins
-var awaitable = $B.make_class("awaitable")
+
 var coroutine = $B.coroutine = $B.make_class("coroutine")
+var future = $B.make_class("future")
 
 coroutine.close = function(self){}
 coroutine.send = function(self){
-    return self.$func.apply(null, self.$args)
+    var res = self.$func.apply(null, self.$args)
+    return res
 }
 
 $B.set_func_names(coroutine, "builtins")
@@ -24,14 +26,21 @@ $B.make_async = function(func){
 }
 
 $B.promise = function(obj){
-    console.log("promise", obj)
     if(obj.__class__ === $B.JSObject){
         return obj.js
     }else if(obj.__class__ === coroutine){
-        return coroutine.send(obj)
+        var res = coroutine.send(obj)
+        return res
     }
     if(typeof obj == "function"){
         return obj()
+    }
+    return obj
+}
+
+$B.awaitable = function(obj){
+    if(obj instanceof Response){
+        return $B.JSObject.$factory(obj)
     }
     return obj
 }

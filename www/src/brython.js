@@ -80,8 +80,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.1"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-02-03 17:21:56.213457"
-__BRYTHON__.timestamp=1549210916213
+__BRYTHON__.compiled_date="2019-02-05 21:12:02.792983"
+__BRYTHON__.timestamp=1549397522792
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 ;
 
@@ -756,7 +756,7 @@ this.type='await'
 this.parent=C
 this.tree=[]
 C.tree.push(this)
-this.to_js=function(){return 'await $B.promise('+$to_js(this.tree)+')'}}
+this.to_js=function(){return '$B.awaitable(await $B.promise('+$to_js(this.tree)+'))'}}
 var $BodyCtx=$B.parser.$BodyCtx=function(C){
 var ctx_node=C.parent
 while(ctx_node.type !=='node'){ctx_node=ctx_node.parent}
@@ -1555,7 +1555,7 @@ this.js_processed=true
 if(this.type=='list'){res='['+$to_js(this.tree)+']'}
 else if(this.tree.length==1){res=this.tree[0].to_js(arg)}
 else{res='tuple.$factory(['+$to_js(this.tree)+'])'}
-if(this.is_await){res="await $B.promise("+res+")"}
+if(this.is_await){res="$B.awaitable(await $B.promise("+res+"))"}
 return res}}
 var $ExprNot=$B.parser.$ExprNot=function(C){
 this.type='expr_not'
@@ -6385,8 +6385,10 @@ else if(typeof obj=='number'){klass=obj % 1==0 ? _b_.int :_b_.float}else if(obj 
 if(klass===undefined){
 if($test){console.log("no class",attr,obj.hasOwnProperty(attr),obj[attr])}
 var res=obj[attr]
-if(res !==undefined){if(typeof res=="function"){return function(){
-return res.apply(obj,arguments)}}else{return $B.$JS2Py(res)}}
+if(res !==undefined){if(typeof res=="function"){var f=function(){
+return res.apply(obj,arguments)}
+f.$infos={__name__:attr,__qualname__:attr}
+return f}else{return $B.$JS2Py(res)}}
 if(_default !==undefined){return _default}
 throw _b_.AttributeError.$factory('object has no attribute '+rawname)}}}
 switch(attr){case '__call__':
@@ -7040,6 +7042,7 @@ console.log($B.last($B.frames_stack))}
 method.$infos={__name__:self.$infos.__name__,__qualname__:obj.__class__.$infos.__name__+"."+self.$infos.__name__,__self__:obj,__func__:self}
 return method}
 $B.Function.__getattribute__=function(self,attr){
+console.log("function attribute",self,attr)
 if(attr=="known_attr"){console.log("get function attr",attr,self)}
 if(!self.$infos){console.log("get attr",attr,"from function",self,"no $infos")}
 if(self.$infos && self.$infos[attr]!==undefined){if(attr=='__code__'){var res={__class__:code}
@@ -8376,7 +8379,7 @@ return _b_.dict.__iter__(_dict)}
 JSObject.__len__=function(self){if(typeof self.js.length=='number'){return self.js.length}
 try{return getattr(self.js,'__len__')()}
 catch(err){throw _b_.AttributeError.$factory(self.js+' has no attribute __len__')}}
-JSObject.__Xrepr__=function(self){if(self.js instanceof Date){return self.js.toString()}
+JSObject.__repr__=function(self){if(self.js instanceof Date){return self.js.toString()}
 var proto=Object.getPrototypeOf(self.js)
 if(proto){var name=proto.constructor.name
 if(name===undefined){
@@ -8398,7 +8401,7 @@ if(err.args.length > 0){err.toString=function(){return info+'\n'+err.__class__.$
 console.log(err+'')
 throw err}}}}}
 JSObject.__setitem__=JSObject.__setattr__
-JSObject.__Xstr__=JSObject.__repr__
+JSObject.__str__=JSObject.__repr__
 var no_dict={'string':true,'function':true,'number':true,'boolean':true}
 JSObject.bind=function(self,evt,func){var js_func=function(ev){return func(jsobj2pyobj(ev))}
 self.js.addEventListener(evt,js_func)
@@ -12920,18 +12923,21 @@ return _sys_modules[_spec_name]}
 $B.import_hooks=import_hooks})(__BRYTHON__)
 ;
 ;(function($B){var _b_=$B.builtins
-var awaitable=$B.make_class("awaitable")
 var coroutine=$B.coroutine=$B.make_class("coroutine")
+var future=$B.make_class("future")
 coroutine.close=function(self){}
-coroutine.send=function(self){return self.$func.apply(null,self.$args)}
+coroutine.send=function(self){var res=self.$func.apply(null,self.$args)
+return res}
 $B.set_func_names(coroutine,"builtins")
 $B.make_async=function(func){var f=function(){var args=arguments
 return{
 __class__:coroutine,$args:args,$func:func}}
 f.$infos=func.$infos
 return f}
-$B.promise=function(obj){console.log("promise",obj)
-if(obj.__class__===$B.JSObject){return obj.js}else if(obj.__class__===coroutine){return coroutine.send(obj)}
+$B.promise=function(obj){if(obj.__class__===$B.JSObject){return obj.js}else if(obj.__class__===coroutine){var res=coroutine.send(obj)
+return res}
 if(typeof obj=="function"){return obj()}
+return obj}
+$B.awaitable=function(obj){if(obj instanceof Response){return $B.JSObject.$factory(obj)}
 return obj}})(__BRYTHON__)
 ;

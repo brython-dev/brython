@@ -1,19 +1,16 @@
-// ajax
+// Replacement for asyncio.
+//
+// CPython asyncio can't be implemented for Brython because it relies on
+// blocking function (eg run(), run_until_complete()), and such functions
+// can't be defined in Javascript. It also manages an event loop, and a
+// browser only has its own built-in event loop.
+//
+// This module exposes functions whose result can be "await"-ed inside
+// asynchrounous functions defined by "async def".
+
 var $module = (function($B){
 
-eval($B.InjectBuiltins())
-var $N = $B.builtins.None,
-    _b_ = $B.builtins
-
-var add_to_res = function(res, key, val) {
-    if(isinstance(val, list)){
-        for (j = 0; j < val.length; j++) {
-            add_to_res(res, key, val[j])
-        }
-    }else if (val instanceof File || val instanceof Blob){
-        res.append(key, val)
-    }else{res.append(key,str.$factory(val))}
-}
+var _b_ = $B.builtins
 
 function handle_kwargs(kw, method){
     var data,
@@ -37,7 +34,7 @@ function handle_kwargs(kw, method){
                 }
                 data = items.join("&")
             }
-        }else if(key=="headers"){
+        }else if(key == "headers"){
             headers = kw.$string_dict[key].$string_dict
         }else if(key.startsWith("on")){
             var event = key.substr(2)
@@ -50,13 +47,20 @@ function handle_kwargs(kw, method){
             timeout.seconds = kw.$string_dict[key]
         }
     }
-    if(method == "post" && ! headers){
+    if(method == "post"){
         // For POST requests, set default header
-        headers = {"Content-type": "application/x-www-form-urlencoded"}
+        if(! headers.hasOwnProperty("Content-type")){
+            headers["Content-Type"] = "application/x-www-form-urlencoded"
+        }
+        if(data && !headers.hasOwnProperty("Content-Length")){
+            headers["Content-Length"] = data.length
+        }
     }
-    return {data: data,
-            timeout: timeout,
-            headers: headers}
+    return {
+        body: data,
+        timeout: timeout,
+        headers: headers
+    }
 }
 
 function get(){
@@ -79,7 +83,7 @@ function get(){
         __class__: $B.coroutine,
         $args: [url, init],
         $func: function(){
-            return fetch.apply(null, arguments)
+            return fetch.apply(null, promise.$args)
         }
     }
     return promise
@@ -96,9 +100,16 @@ function post(){
     var init = {
         method: "POST",
         headers: args.headers,
-        data: args.data
+        body: args.body
         }
-    return fetch(url, init)
+    var promise = {
+        __class__: $B.coroutine,
+        $args: [url, init],
+        $func: function(){
+            return fetch.apply(null, promise.$args)
+        }
+    }
+    return promise
 }
 
 function sleep(seconds){
@@ -120,7 +131,6 @@ function run(coro){
         coro = $.coro,
         onsuccess = $.onsuccess,
         onerror = $.onerror
-    console.log("run", coro)
     return $B.coroutine.send(coro).then(onsuccess).catch(onerror)
 }
 

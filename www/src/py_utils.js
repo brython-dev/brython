@@ -190,10 +190,12 @@ $B.get_class = function(obj){
             case "object":
                 if(Array.isArray(obj)){
                     if(Object.getPrototypeOf(obj) === Array.prototype){
-                      obj.__class__ = _b_.list
-                      return _b_.list
+                        obj.__class__ = _b_.list
+                        return _b_.list
                     }
-                }else if(obj.constructor === Number){return _b_.float}
+                }else if(obj.constructor === Number){
+                    return _b_.float
+                }
                 break
         }
     }

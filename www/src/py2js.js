@@ -1437,7 +1437,7 @@ var $AwaitCtx = $B.parser.$AwaitCtx = function(context){
     context.tree.push(this)
 
     this.to_js = function(){
-        return 'await $B.promise(' + $to_js(this.tree) + ')'
+        return '$B.awaitable(await $B.promise(' + $to_js(this.tree) + '))'
     }
 }
 
@@ -3137,7 +3137,7 @@ var $ExprCtx = $B.parser.$ExprCtx = function(context, name, with_commas){
         else if(this.tree.length == 1){res = this.tree[0].to_js(arg)}
         else{res = 'tuple.$factory([' + $to_js(this.tree) + '])'}
         if(this.is_await){
-            res = "await $B.promise(" + res + ")"
+            res = "$B.awaitable(await $B.promise(" + res + "))"
         }
         return res
     }
