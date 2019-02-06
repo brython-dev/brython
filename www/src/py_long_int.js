@@ -13,7 +13,14 @@ var long_int = {
         __module__: "builtins",
         __name__: "int"
     },
-    $is_class: true
+    $is_class: true,
+    $native: true,
+    $descriptors: {
+        "numerator": true,
+        "denominator": true,
+        "imag": true,
+        "real": true
+    }
 }
 
 function add_pos(v1, v2){
@@ -667,6 +674,12 @@ long_int.__xor__ = function(self, other){
     }
     return intOrLong(long_int.$factory(res, 2))
 }
+
+// descriptors
+long_int.numerator = function(self){return self}
+long_int.denominator = function(self){return _b_.int.$factory(1)}
+long_int.imag = function(self){return _b_.int.$factory(0)}
+long_int.real = function(self){return self}
 
 long_int.to_base = function(self, base){
     // Returns the string representation of self in specified base

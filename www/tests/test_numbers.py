@@ -218,4 +218,10 @@ except ValueError:
 # issue 1001
 assert 1j / 1 == 1j
 assert 1j / 1.0 == 1j
+
+# issue 1033
+from fractions import *
+x = Fraction(1,1000000000000000)/10
+assert str(x) == "1/10000000000000000"
+
 print('passed all tests...')

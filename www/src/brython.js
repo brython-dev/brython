@@ -80,8 +80,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.1"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-02-05 21:12:02.792983"
-__BRYTHON__.timestamp=1549397522792
+__BRYTHON__.compiled_date="2019-02-06 09:36:00.435936"
+__BRYTHON__.timestamp=1549442160435
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 ;
 
@@ -7042,7 +7042,6 @@ console.log($B.last($B.frames_stack))}
 method.$infos={__name__:self.$infos.__name__,__qualname__:obj.__class__.$infos.__name__+"."+self.$infos.__name__,__self__:obj,__func__:self}
 return method}
 $B.Function.__getattribute__=function(self,attr){
-console.log("function attribute",self,attr)
 if(attr=="known_attr"){console.log("get function attr",attr,self)}
 if(!self.$infos){console.log("get attr",attr,"from function",self,"no $infos")}
 if(self.$infos && self.$infos[attr]!==undefined){if(attr=='__code__'){var res={__class__:code}
@@ -9521,7 +9520,7 @@ $B.set_func_names(bool,"builtins")})(__BRYTHON__)
 ;(function($B){
 var bltns=$B.InjectBuiltins()
 eval(bltns)
-var long_int={__class__:_b_.type,__mro__:[int,object],$infos:{__module__:"builtins",__name__:"int"},$is_class:true}
+var long_int={__class__:_b_.type,__mro__:[int,object],$infos:{__module__:"builtins",__name__:"int"},$is_class:true,$native:true,$descriptors:{"numerator":true,"denominator":true,"imag":true,"real":true}}
 function add_pos(v1,v2){
 var res="",carry=0,iself=v1.length,sv=0,x
 for(var i=v2.length-1;i >=0 ;i--){iself--
@@ -9803,6 +9802,10 @@ for(var i=0;i < v2.length;i++){if(v1.charAt(start+i)=="1" && v2.charAt(i)=="0"){
 else if(v1.charAt(start+i)=="0" && v2.charAt(i)=="1"){res+="1"}
 else{res+="0"}}
 return intOrLong(long_int.$factory(res,2))}
+long_int.numerator=function(self){return self}
+long_int.denominator=function(self){return _b_.int.$factory(1)}
+long_int.imag=function(self){return _b_.int.$factory(0)}
+long_int.real=function(self){return self}
 long_int.to_base=function(self,base){
 var res="",v=self.value
 while(v > 0){var dm=divmod_pos(v,base.toString())
