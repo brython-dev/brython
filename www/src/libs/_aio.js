@@ -70,15 +70,16 @@ function get(){
         url = $.url,
         async = $.async,
         kw = $.kw
-    var args = handle_kwargs(kw, "get")
-    if(kw.data){
-        url += "?" + kw.data
-    }
-    var init = {
-        method: "GET",
-        headers: args.headers
+    var args = handle_kwargs(kw, "get"),
+        init = {
+            method: "GET",
+            headers: args.headers,
+            cache: "no-cache"
         }
-    if(args.data){url = url + "?" + args.data}
+    if(args.body){
+        url = url + "?" + args.body
+        console.log("add body", args.body)
+    }
     var promise = {
         __class__: $B.coroutine,
         $args: [url, init],
@@ -98,9 +99,9 @@ function post(){
         data
     var args = handle_kwargs(kw, "post")
     var init = {
-        method: "POST",
-        headers: args.headers,
-        body: args.body
+            method: "POST",
+            headers: args.headers,
+            body: args.body
         }
     var promise = {
         __class__: $B.coroutine,
