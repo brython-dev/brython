@@ -80,8 +80,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.1"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-02-06 09:36:00.435936"
-__BRYTHON__.timestamp=1549442160435
+__BRYTHON__.compiled_date="2019-02-07 08:32:44.014299"
+__BRYTHON__.timestamp=1549524764014
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 ;
 
@@ -12541,14 +12541,13 @@ if(! exit_node.replaced){
 console.log("replace by void(0)",this)
 res=new $B.genNode("void(0)")}else{res=new $B.genNode(exit_node.data)}
 exit_node.replaced=true}
-if(head && this.is_break){var parent=this.parent
-while(parent){if(parent.loop_start !==undefined){break}
-parent=parent.parent}
-var loop=in_loop(this)
-if(loop.has("yield")){res.data='$locals["$no_break'+this.loop_num+'"] = false;'+
-'var err = new Error("break"); '+
+if(head &&(this.is_break ||this.is_continue)){var loop=in_loop(this)
+if(loop.has("yield")){res.data=""
+if(this.is_break){res.data+='$locals["$no_break'+this.loop_num+
+'"] = false;'}
+res.data+='var err = new Error("break"); '+
 "err.__class__ = $B.GeneratorBreak; throw err;"
-res.is_break=true}else{res.is_break=true}}
+res.is_break=this.is_break}else{res.is_break=this.is_break}}
 res.is_continue=this.is_continue
 res.has_child=this.has_child
 res.is_cond=this.is_cond
@@ -12560,9 +12559,7 @@ res.loop_start=this.loop_start
 res.no_break=true
 res.is_yield=this.is_yield
 res.line_num=this.line_num
-for(var i=0,len=this.children.length;i < len;i++){if(this.children[i].is_continue){
-res.addChild(new $B.genNode("continue"))
-break}
+for(var i=0,len=this.children.length;i < len;i++){
 res.addChild(this.children[i].clone_tree(exit_node,head))
 if(this.children[i].is_break){res.no_break=false}}
 return res}
@@ -12648,10 +12645,10 @@ while(start < exit_parent.children.length &&
 (exit_parent.children[start].is_except ||
 exit_parent.children[start].is_else)){start++}}
 for(var i=start,len=exit_parent.children.length;i < len;i++){var clone=exit_parent.children[i].clone_tree(null,true)
-if(clone.has("continue")){has_continue=true;break}
+if(clone.has("continue")){has_continue=true;}
 rest[pos++]=clone
 if(clone.has("break")){has_break=true}}
-if(has_break && rest.length > 0){
+if((has_break ||has_continue)&& rest.length > 0){
 var rest_try=new $B.genNode("try")
 for(var i=0,len=rest.length;i < len;i++){rest_try.addChild(rest[i])}
 var catch_test="catch(err)"+

@@ -230,22 +230,19 @@ $B.genNode = function(data, parent){
             exit_node.replaced = true
         }
 
-        if(head && this.is_break){
-            var parent = this.parent
-            while(parent){
-                if(parent.loop_start !== undefined){
-                    break
-                }
-                parent = parent.parent
-            }
+        if(head && (this.is_break || this.is_continue)){
             var loop = in_loop(this)
             if(loop.has("yield")){
-                res.data = '$locals["$no_break' + this.loop_num + '"] = false;' +
-                    'var err = new Error("break"); ' +
+                res.data = ""
+                if(this.is_break){
+                    res.data += '$locals["$no_break' + this.loop_num +
+                        '"] = false;'
+                }
+                res.data += 'var err = new Error("break"); ' +
                     "err.__class__ = $B.GeneratorBreak; throw err;"
-                res.is_break = true
+                res.is_break = this.is_break
             }else{
-                res.is_break = true
+                res.is_break = this.is_break
             }
         }
         res.is_continue = this.is_continue
@@ -260,11 +257,11 @@ $B.genNode = function(data, parent){
         res.is_yield = this.is_yield
         res.line_num = this.line_num
         for(var i = 0, len = this.children.length; i < len; i++){
-            if(this.children[i].is_continue){
-                // If a child is "continue", don't add the following lines
-                res.addChild(new $B.genNode("continue"))
-                break
-            }
+            //if(this.children[i].is_continue){
+            //    // If a child is "continue", don't add the following lines
+            //    res.addChild(new $B.genNode("continue"))
+            //    break
+            //}
             res.addChild(this.children[i].clone_tree(exit_node, head))
             if(this.children[i].is_break){res.no_break = false}
         }
@@ -513,7 +510,9 @@ function make_next(self, yield_node_id){
 
         for(var i = start, len = exit_parent.children.length; i < len; i++){
             var clone = exit_parent.children[i].clone_tree(null, true)
-            if(clone.has("continue")){has_continue = true; break}
+            if(clone.has("continue")){
+                has_continue = true;
+            }
             rest[pos++] = clone
             if(clone.has("break")){
                 has_break = true
@@ -521,7 +520,7 @@ function make_next(self, yield_node_id){
         }
 
         // add rest of block to new function
-        if(has_break && rest.length > 0){
+        if((has_break || has_continue) && rest.length > 0){
             // If the rest had a "break", this "break" is converted into
             // raising an exception with __class__ set to GeneratorBreak
             var rest_try = new $B.genNode("try")
