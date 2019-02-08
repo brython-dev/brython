@@ -505,7 +505,7 @@
         }
     )
 
-    var $comps = Object.values($B.$comps).concat(["eq", "ne"])
+    var $comps = ["gt", "ge", "lt", "le", "eq", "ne"]
     $comps.forEach(function(comp){
         var op = "__" + comp + "__"
         $B.cell[op] = (function(op){
