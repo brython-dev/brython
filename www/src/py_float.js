@@ -405,7 +405,7 @@ float.__mod__ = function(self, other) {
             r = self - other * q
         return new Number(r)
     }
-    if(isinstance(other, bool)){
+    if(isinstance(other, _b_.bool)){
         var bool_value = 0
         if(other.valueOf()){bool_value = 1}
         return new Number((self % bool_value + bool_value) % bool_value)
@@ -424,7 +424,7 @@ float.__mul__ = function(self, other){
         return new Number(self * other)
     }
     if(isinstance(other,float)){return new Number(self * other)}
-    if(isinstance(other, bool)){
+    if(isinstance(other, _b_.bool)){
       var bool_value = 0
       if(other.valueOf()){bool_value = 1}
       return new Number(self * bool_value)
@@ -545,7 +545,7 @@ var $op_func = function(self, other){
         }else{return float.$factory(self - other)}
     }
     if(isinstance(other, float)){return float.$factory(self - other)}
-    if(isinstance(other, bool)){
+    if(isinstance(other, _b_.bool)){
         var bool_value = 0
         if(other.valueOf()){bool_value = 1}
         return float.$factory(self - bool_value)
@@ -574,8 +574,8 @@ var $comp_func = function(self, other){
     }
     if(isinstance(other,float)){return self > other}
 
-    if(isinstance(other, bool)) {
-      return self.valueOf() > bool.__hash__(other)
+    if(isinstance(other, _b_.bool)) {
+      return self.valueOf() > _b_.bool.__hash__(other)
     }
     if(hasattr(other, "__int__") || hasattr(other, "__index__")) {
        return _b_.int.__gt__(self, $B.$GetInt(other))
