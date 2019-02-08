@@ -21,7 +21,7 @@ if sys.version_info[0] != 3:
 pdir = os.path.dirname(os.getcwd())
 # version info
 version = [3, 7, 0, "final", 0]
-implementation = [3, 7, 0, "rc", 2]
+implementation = [3, 7, 1, "dev", 0]
 
 # version name
 vname = '.'.join(str(x) for x in implementation[:3])
@@ -76,11 +76,11 @@ def run():
     # build brython.js from base Javascript files
     sources = [
         'unicode.min',
-        'brython_builtins', 'version_info', 'py2js',
+        'brython_builtins', 'version_info', 'py2js', 'loaders',
         'py_object', 'py_type', 'py_utils', 'py_builtin_functions',
-        'py_exceptions', 'py_range_slice', 'py_bytes', 'js_objects',
+        'py_exceptions', 'py_range_slice', 'py_bytes', 'py_set', 'js_objects',
         'stdlib_paths', 'py_import', 'py_float', 'py_int', 'py_long_int',
-        'py_complex', 'py_sort', 'py_list', 'py_string', 'py_dict', 'py_set',
+        'py_complex', 'py_sort', 'py_list', 'py_string', 'py_dict', 
         'py_dom', 'py_generator', 'builtin_modules', 'py_import_hooks',
         'async'
     ]
@@ -96,11 +96,11 @@ def run():
     for fname in sources:
         src = open(abs_path(fname)+'.js').read() + '\n'
         src_size += len(src)
-        res += javascript_minifier.minify(src)
+        res += javascript_minifier.minify(src) + ";\n"
 
     res = re.sub(r'\bcontext\b', 'C', res)
 
-    with open(abs_path('brython.js'), 'w') as out:
+    with open(abs_path('brython.js'), 'w', newline="\n") as out:
         out.write(res)
 
     print(('size : originals %s compact %s gain %.2f' %

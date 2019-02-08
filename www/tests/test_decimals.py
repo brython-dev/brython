@@ -71,3 +71,7 @@ assert str(Decimal("  3.45679  ")) ==  '3.45679'
 for lead in ["", ' ', '\u00a0', '\u205f']:
     for trail in ["", ' ', '\u00a0', '\u205f']:
         assert str(Decimal(lead + '9.311E+28' + trail)) == '9.311E+28'
+
+# issue 989
+Decimal(2).exp()
+Decimal(2).ln()

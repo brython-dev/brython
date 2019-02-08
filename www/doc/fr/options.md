@@ -31,12 +31,6 @@ lancer la fonction `brython()` au chargement de la page.
   contenu texte doit être exécuté (attribut `id` de la balise). Voir
   [brythonmagic](https://github.com/kikocorreoso/brythonmagic) pour plus
   d'informations
-- *profile* : quand l'option `profile` est > 0 le compilateur ajoute du code
-  additionel qui récupère des informations de profilage. Le module `profile`
-  donne accès à ces informations. Il fournit une interface très proche de
-  celle du module `profile` de la distribution standard Python. Voir la
-  section (Test, débogage et profilage)[http://brython.info/static_doc/fr/test.html]
-  pour plus d'informations
 - *indexedDB* : indique si le programme peut utiliser la base indexedDB pour
   stocker une version précompilée des modules situés dans __brython_stdlib.js__
   ou __brython_modules.js__. Vaut `true` par défaut.

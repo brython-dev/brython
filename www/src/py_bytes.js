@@ -30,8 +30,11 @@ $B.to_bytes = function(obj){
 var bytearray = {
     __class__: _b_.type,
     __mro__: [object],
-    __name__: 'bytearray',
     $buffer_protocol: true,
+    $infos: {
+        __module__: "builtins",
+        __name__: "bytearray"
+    },
     $is_class: true
 }
 
@@ -82,7 +85,7 @@ bytearray.__setitem__ = function(self, arg, value){
 
         // copy items in a temporary JS array
         // otherwise, a[:0] = a fails
-        if(_b_.hasattr(value, '__iter__')){
+        try{
             var $temp = _b_.list.$factory(value)
             for(var i = $temp.length - 1; i >= 0; i--){
                 if(! isinstance($temp[i], _b_.int)){
@@ -92,12 +95,12 @@ bytearray.__setitem__ = function(self, arg, value){
                 }
                 self.source.splice(start, 0, $temp[i])
             }
-        }else{
+        }catch(err){
             throw _b_.TypeError.$factory("can only assign an iterable")
         }
     }else{
         throw _b_.TypeError.$factory('list indices must be integer, not ' +
-            $B.get_class(arg).__name__)
+            $B.class_name(arg))
     }
 }
 
@@ -133,8 +136,11 @@ bytearray.$factory = function(source, encoding, errors) {
 var bytes = {
     __class__ : _b_.type,
     __mro__: [object],
-    __name__ : "bytes",
     $buffer_protocol: true,
+    $infos: {
+        __module__: "builtins",
+        __name__: "bytes"
+    },
     $is_class: true
 }
 
@@ -299,7 +305,7 @@ bytes.__new__ = function(cls, source, encoding, errors){
                     var item = _b_.int.$factory(int_list[i])
                 }catch(err){
                     throw _b_.TypeError.$factory("'" +
-                        $B.get_class(int_list[i]).__name__ + "' object " +
+                        $B.class_name(int_list[i]) + "' object " +
                         "cannot be interpreted as an integer")
                 }
                 if(item < 0 || item > 255){
@@ -325,6 +331,8 @@ bytes.__repr__ = bytes.__str__ = function(self){
             var hx = s.toString(16)
             hx = (hx.length == 1 ? '0' : '') + hx
             res += '\\x' + hx
+        }else if(s == "\\".charCodeAt(0)){
+            res += "\\\\"
         }else{
             res += String.fromCharCode(s)
         }
@@ -406,10 +414,10 @@ bytes.find = function() {
         return $.self.source.slice(0, $.end == -1 ? undefined : $.end).indexOf(sub, start)
     }else if(! sub.__class__){
         throw _b_.TypeError.$factory("first argument must be a bytes-like " +
-            "object, not '" + $B.get_class($.sub).__name__ + "'")
+            "object, not '" + $B.class_name(sub) + "'")
     }else if(! sub.__class__.$buffer_protocol){
         throw _b_.TypeError.$factory("first argument must be a bytes-like " +
-            "object, not '" + sub.__class__.__name__ + "'")
+            "object, not '" + $B.class_name(sub) + "'")
     }
     var end = $.end == -1 ? $.self.source.length - sub.source.length :
         Math.min($.self.source.length - sub.source.length, $.end)
@@ -436,10 +444,10 @@ bytes.rfind = function() {
             lastIndexOf(sub) + start
     }else if(! sub.__class__){
         throw _b_.TypeError.$factory("first argument must be a bytes-like " +
-            "object, not '" + $B.get_class($.sub).__name__ + "'")
+            "object, not '" + $B.class_name($.sub) + "'")
     }else if(! sub.__class__.$buffer_protocol){
         throw _b_.TypeError.$factory("first argument must be a bytes-like " +
-            "object, not '" + sub.__class__.__name__ + "'")
+            "object, not '" + $B.class_name(sub) + "'")
     }
     var end = $.end == -1 ? $.self.source.length - sub.source.length :
         Math.min($.self.source.length - sub.source.length, $.end)
@@ -494,10 +502,10 @@ bytes.count = function() {
         len = 1
     }else if(!$.sub.__class__){
         throw _b_.TypeError.$factory("first argument must be a bytes-like " +
-            "object, not '" + $B.get_class($.sub).__name__ + "'")
+            "object, not '" + $B.class_name($.sub) + "'")
     }else if(!$.sub.__class__.$buffer_protocol){
         throw _b_.TypeError.$factory("first argument must be a bytes-like " +
-            "object, not '" + $.sub.__class__.__name__ + "'")
+            "object, not '" + $B.class_name($.sub) + "'")
     }else{
         len = $.sub.source.length
     }
@@ -525,18 +533,18 @@ bytes.replace = function(){
 
     if(! $.old.__class__){
         throw _b_.TypeError.$factory("first argument must be a bytes-like " +
-            "object, not '" + $B.get_class($.old).__name__ + "'")
+            "object, not '" + $B.class_name($.old) + "'")
     }else if(! $.old.__class__.$buffer_protocol){
         throw _b_.TypeError.$factory("first argument must be a bytes-like " +
-            "object, not '" + $.sep.__class__.__name__ + "'")
+            "object, not '" + $B.class_name($.sep) + "'")
     }
 
     if(! $.new.__class__){
         throw _b_.TypeError.$factory("second argument must be a bytes-like " +
-            "object, not '" + $B.get_class($.old).__name__ + "'")
+            "object, not '" + $B.class_name($.old) + "'")
     }else if(! $.new.__class__.$buffer_protocol){
         throw _b_.TypeError.$factory("second argument must be a bytes-like " +
-            "object, not '" + $.sep.__class__.__name__ + "'")
+            "object, not '" + $B.class_name($.sep) + "'")
     }
 
     for(var i = 0; i < len; i++){
@@ -559,10 +567,10 @@ bytes.partition = function() {
 
     if(! $.sep.__class__){
         throw _b_.TypeError.$factory("a bytes-like object is required, " +
-            "not '" + $B.get_class($.sep).__name__ + "'")
+            "not '" + $B.class_name($.sep) + "'")
     }else if (! $.sep.__class__.$buffer_protocol){
         throw _b_.TypeError.$factory("a bytes-like object is required, " +
-            "not '" + $.sep.__class__.__name__ + "'")
+            "not '" + $B.class_name($.sep) + "'")
     }
 
     var len = $.sep.source.length,
@@ -582,10 +590,10 @@ bytes.rpartition = function() {
 
     if(!$.sep.__class__){
         throw _b_.TypeError.$factory("a bytes-like object is required, " +
-                "not '" + $B.get_class($.sep).__name__ + "'")
+                "not '" + $B.class_name($.sep) + "'")
     }else if (!$.sep.__class__.$buffer_protocol){
         throw _b_.TypeError.$factory("a bytes-like object is required, " +
-                "not '" + $.sep.__class__.__name__ + "'")
+                "not '" + $B.class_name($.sep) + "'")
     }
 
     var len = $.sep.source.length,
@@ -607,10 +615,10 @@ bytes.split = function(){
         stop = 0
     if(! $.sep.__class__ ){
         throw _b_.TypeError.$factory("a bytes-like object is required, " +
-            "not '" + $B.get_class($.sep).__name__ + "'")
+            "not '" + $B.class_name($.sep) + "'")
     }else if(! $.sep.__class__.$buffer_protocol){
         throw _b_.TypeError.$factory("a bytes-like object is required, " +
-            "not '" + $.sep.__class__.__name__ + "'")
+            "not '" + $B.class_name($.sep) + "'")
     }
     var seps = $.sep.source,
         len = seps.length,
@@ -860,10 +868,10 @@ bytes.ljust = function() {
 
     if(!$.fillbyte.__class__){
         throw _b_.TypeError.$factory("argument 2 must be a byte string of length 1, " +
-            "not '" + $B.get_class($.fillbyte).__name__ + "'")
+            "not '" + $B.class_name($.fillbyte) + "'")
     }else if (!$.fillbyte.__class__.$buffer_protocol){
         throw _b_.TypeError.$factory("argument 2 must be a byte string of length 1, " +
-            "not '" + $.fillbyte.__class__.__name__ + "'")
+            "not '" + $B.class_name($.fillbyte) + "'")
     }
 
     var padding = [],
@@ -881,10 +889,10 @@ bytes.rjust = function() {
 
     if (!$.fillbyte.__class__){
         throw _b_.TypeError.$factory("argument 2 must be a byte string of length 1, " +
-            "not '" + $B.get_class($.fillbyte).__name__ + "'")
+            "not '" + $B.class_name($.fillbyte) + "'")
     }else if (!$.fillbyte.__class__.$buffer_protocol){
         throw _b_.TypeError.$factory("argument 2 must be a byte string of length 1, " +
-            "not '" + $.fillbyte.__class__.__name__ + "'")
+            "not '" + $B.class_name($.fillbyte) + "'")
     }
 
     var padding = [],
@@ -954,14 +962,14 @@ bytes.startswith = function(){
             }else{
                 throw _b_.TypeError.$factory("startswith first arg must be " +
                     "bytes or a tuple of bytes, not " +
-                    $B.get_class($.prefix).__name__)
+                    $B.class_name($.prefix))
             }
         }
         var prefix = bytes.$factory(items)
         return bytes.startswith($.self, prefix, start)
     }else{
         throw _b_.TypeError.$factory("startswith first arg must be bytes " +
-            "or a tuple of bytes, not " + $B.get_class($.prefix).__name__)
+            "or a tuple of bytes, not " + $B.class_name($.prefix))
     }
 }
 
@@ -990,13 +998,13 @@ bytes.endswith = function() {
             }else{
                 throw _b_.TypeError.$factory("endswith first arg must be " +
                     "bytes or a tuple of bytes, not " +
-                    $B.get_class($.suffix).__name__)
+                    $B.class_name($.suffix))
             }
         }
         return false
     }else{
         throw _b_.TypeError.$factory("endswith first arg must be bytes " +
-            "or a tuple of bytes, not " + $B.get_class($.suffix).__name__)
+            "or a tuple of bytes, not " + $B.class_name($.suffix))
     }
 }
 
@@ -1218,7 +1226,15 @@ var decode = $B.decode = function(b, encoding, errors){
                    replace(/\\t/g, "\t").
                    replace(/\\'/g, "'").
                    replace(/\\"/g, '"')
-
+      case "raw_unicode_escape":
+          if(Array.isArray(b)){
+              b = decode(b, "latin-1", "strict")
+          }
+          b = b.replace(/\\u([a-fA-F0-9]{4})/g, function(mo){
+              var cp = parseInt(mo.substr(2), 16)
+              return String.fromCharCode(cp)
+          })
+          return b
       case "ascii":
           for(var i = 0, len = b.length; i < len; i++){
               var cp = b[i]
@@ -1236,7 +1252,7 @@ var decode = $B.decode = function(b, encoding, errors){
           try{
               load_decoder(enc)
           }catch(err){
-              console.log("error load_decoder", err)
+              console.log(b, encoding, "error load_decoder", err)
               throw _b_.LookupError.$factory("unknown encoding: " + enc)
           }
           b.forEach(function(item){
@@ -1318,11 +1334,26 @@ var encode = $B.encode = function(s, encoding){
               else{$UnicodeEncodeError(encoding, i)}
           }
           break
+        case "raw_unicode_escape":
+          for(var i = 0, len = s.length; i < len; i++){
+              var cp = s.charCodeAt(i) // code point
+              if(cp < 256){
+                  t[pos++] = cp
+              }else{
+                  var us = cp.toString(16)
+                  if(us.length % 2){us = "0" + us}
+                  us = "\\u" + us
+                  for(var j = 0; j < us.length; j++){
+                      t[pos++] = us.charCodeAt(j)
+                  }
+              }
+          }
+          break
         default:
             try{
                 load_encoder(enc)
             }catch(err){
-                throw _b_.LookupError.$factory("unknown encoding: " + enc)
+                throw _b_.LookupError.$factory("unknown encoding: " + encoding)
             }
 
             for(var i = 0, len = s.length; i < len; i++){

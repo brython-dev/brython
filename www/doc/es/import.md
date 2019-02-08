@@ -3,7 +3,7 @@ Implementación de import
 
 Como en Python estándar, puedes instalar módulos o paquetes en tu
 aplicación colocándolos en el directorio raíz o en directorios con un 
-fichero __\_\_init.py\_\___.
+fichero __\_\_init\_\_.py__.
 
 Destacar que los módulos deben ser codificados en utf-8 ; la declaración de codificación al inicio 
 del script será ignarada.

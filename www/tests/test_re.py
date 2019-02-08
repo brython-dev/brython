@@ -57,16 +57,16 @@ _parser = re.compile(r"""        # A numeric string consists of:
     \Z
 """, re.VERBOSE | re.IGNORECASE).match
 
-_m=_parser("3.0")
+_m = _parser("3.0")
 assert _m.group('int') == '3'
 
-_m=_parser("NaN")
+_m = _parser("NaN")
 assert _m.group('diag') is not None
 
-_m=_parser("Inf")
+_m = _parser("Inf")
 assert _m.group('diag') is None and _m.group('sign') is None
 
-_m=_parser("-Inf")
+_m = _parser("-Inf")
 assert _m.group('diag') is None and _m.group('sign') == '-'
 
 print('all tests ok..')

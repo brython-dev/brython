@@ -22,7 +22,7 @@ try:
 except StopIteration:
     pass
 
-x = {'a': 1,'b': 2}
+x = {'a': 1, 'b': 2}
 z = iter(x)
 
 # in python 3 these are not always in the order of a then b
@@ -63,6 +63,7 @@ class Counter:
         else:
             self.current += 1
             return self.current - 1
+
 
 x = Counter(2, 8)
 assert next(x) == 2

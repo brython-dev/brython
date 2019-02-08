@@ -46,7 +46,7 @@ def handleFileSelect(evt):
     for f in files:
         last_mod = Date(f.lastModified) if f.lastModified else "n/a"
         _ul <= html.LI(f'{f.name}({f.type or "n/a"}) - {f.size} bytes, ' +
-            f'last modified: {last_mod}')
+            f'last modified: {last_mod.toDateString()}')
 
     document['list'] <= _ul
 

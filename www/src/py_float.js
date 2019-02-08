@@ -7,7 +7,7 @@ var object = _b_.object
 
 function $err(op, other){
     var msg = "unsupported operand type(s) for " + op +
-        ": 'float' and '" + $B.get_class(other).__name__ + "'"
+        ": 'float' and '" + $B.class_name(other) + "'"
     throw _b_.TypeError.$factory(msg)
 }
 
@@ -15,7 +15,10 @@ function $err(op, other){
 var float = {
     __class__: _b_.type,
     __dir__: object.__dir__,
-    __name__: "float",
+    $infos: {
+        __module__: "builtins",
+        __name__: "float"
+    },
     $is_class: true,
     $native: true,
     $descriptors: {
@@ -583,7 +586,7 @@ var $comp_func = function(self, other){
     if(inv_op !== None){return inv_op(self)}
 
     throw _b_.TypeError.$factory(
-        "unorderable types: float() > " + $B.get_class(other).__name__ + "()")
+        "unorderable types: float() > " + $B.class_name(other) + "()")
 }
 
 $comp_func += "" // source code
@@ -601,7 +604,7 @@ $B.make_rmethods(float)
 var $notimplemented = function(self, other){
     throw _b_.TypeError.$factory(
         "unsupported operand types for OPERATOR: 'float' and '" +
-            $B.get_class(other).__name__ + "'")
+            $B.class_name(other) + "'")
 }
 $notimplemented += "" // coerce to string
 for(var $op in $B.$operators){
@@ -688,7 +691,7 @@ float.$factory = function (value){
          }
     }
     throw _b_.TypeError.$factory("float() argument must be a string or a " +
-        "number, not '" + $B.get_class(value).__name__ + "'")
+        "number, not '" + $B.class_name(value) + "'")
 }
 
 float.__new__ = function(cls){
@@ -706,7 +709,10 @@ $B.set_func_names(float, "builtins")
 var FloatSubclass = $B.FloatSubclass  = {
     __class__: _b_.type,
     __mro__: [object],
-    __name__: "float",
+    $infos: {
+        __module__: "builtins",
+        __name__: "float"
+    },
     $is_class: true
 }
 

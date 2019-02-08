@@ -9,9 +9,8 @@ from browser import window
 import asyncio
 import os
 import sys
-      
-DEFAULT_BRYTHON_OPTIONS = {
-}
+
+DEFAULT_BRYTHON_OPTIONS = getattr(__BRYTHON__, '$options')
 
 CHILD_WORKERS = []
 
@@ -53,7 +52,7 @@ class Message:
         
     def __str__(self):
         return "MSG("+str(self.name)+":"+str(self.id)+"):"+str(self.data)
-    
+
 class Reply(asyncio.Future):
     """
         A future representing a reply to a message. Not to be used directly
@@ -62,23 +61,25 @@ class Reply(asyncio.Future):
     """
     _LAST_MESSAGE_ID = 0
     _WAITING_REPLIES = {}
-    
+
     @classmethod
     def _next_id(cls):
         cls._LAST_MESSAGE_ID +=1
         return cls._LAST_MESSAGE_ID
-    
+
     @classmethod
-    def terminate(cls, worker):
+    def terminate(cls, worker, reason=None):
         wr = {}
+        text = "Worker Terminated"
+        if reason is not None:
+            text += "\n" + str(reason)
         for id, reply in cls._WAITING_REPLIES.items():
             if reply._worker == worker:
-                reply.set_exception(WorkerError("Worker Terminated"))
+                reply.set_exception(WorkerError(text))
             else:
                 wr[id] = reply
         cls._WAITING_REPLIES = wr
-            
-    
+
     def __init__(self, message, timeout, worker=None):
         super().__init__()
         message.id = self._next_id()
@@ -94,8 +95,10 @@ class Reply(asyncio.Future):
     def finish_waiting(self, *args, **kwargs):
         if self._timeout:
             self._timeout.cancel()
-        del self._WAITING_REPLIES[self._wait_id]
-        
+
+        if self._wait_id in self._WAITING_REPLIES:
+            del self._WAITING_REPLIES[self._wait_id]
+
     def set_result(self, result):
         super().set_result(result)
 
@@ -167,7 +170,8 @@ class WorkerCommon:
     def _post_queued_messages(self, *_, **kwargs):
         for payload in self._queued_messages:
             self._worker.postMessage(payload)
-            
+        self._queued_messages.clear()
+
     def bind_event(self, event, handler):
         """
             Registers `handler` to be called whenever the `event` is emitted
@@ -269,7 +273,8 @@ class WorkerParent(WorkerCommon):
             The parameter `brython_options` will be passed to the `brython` function when called from
             the webworker. If it contains an `imports` key, this should be a list of javascript files
             to be loaded instead of the standard brython files. If it contains the key `import_dist`,
-            it will load brython from the `brython_webworker_dist.js` script.
+            it will load brython from the `brython_webworker_dist.js` script.  By default it uses the
+            same options passed to the parent `brython` function.
         """
         if not _can_launch_workers:
             raise WorkerError("Cannot spawn workers (webkit based browsers don't support running webworkers inside webworkers)")
@@ -278,6 +283,7 @@ class WorkerParent(WorkerCommon):
         self.bind_event('error', self._error_handler)
         self._status_waiters = []
         self._status = S_LOADING
+        self._error = None
         self._worker.postMessage({
                 'program':{'url':url},
                 'brython_options':brython_options,
@@ -297,7 +303,7 @@ class WorkerParent(WorkerCommon):
             raise WorkerError("Invalid state")
         self._worker.terminate()
         self._status = S_TERMINATED
-        Reply.terminate(self)
+        Reply.terminate(self, self._error)
         self._emit_event('exited')
         
     def wait_for_status(self, status):
@@ -325,7 +331,9 @@ class WorkerParent(WorkerCommon):
         self._status_waiters = keep
         if self._status >= S_FINISHED:
             self._emit_event('exited')
-            Reply.terminate(self)
+            if 'error' in data:
+                self._error = data.error
+            Reply.terminate(self, self._error)
             CHILD_WORKERS.remove(self)
         elif self._status == S_LOADED:
             self._emit_event('loaded')
@@ -345,9 +353,9 @@ class WorkerChild(WorkerCommon):
         by the `WorkerParent` class.
     """
     def __init__(self):
-        super().__init__(__BRYTHON__.__WORKER)
+        super().__init__(__BRYTHON__._WORKER)
         self._argv = sys.argv
-        self._environ = __BRYTHON__.__ENV
+        self._environ = __BRYTHON__._ENV
         self._status = S_LOADED
         
     def exec(self):
@@ -425,7 +433,7 @@ class RPCWorkerChild(WorkerChild):
             self.post_reply(message, msg)
 
 if __BRYTHON__.isa_web_worker:
-    w_cls = __BRYTHON__.__WORKER_CLASS
+    w_cls = __BRYTHON__._WORKER_CLASS
     elements = w_cls.split('.')
     cls_name = elements[-1]
     cls_module = '.'.join(elements[:-1])
@@ -434,8 +442,8 @@ if __BRYTHON__.isa_web_worker:
         current_worker = getattr(mod, cls_name)()
     except Exception as ex:
         print("Error importing child worker class", ex)
-        __BRYTHON__.__WORKER.postMessage({'type':'status', 'status':S_TERMINATED, 'error':str(ex)})
-        __BRYTHON__.__WORKER.close()
+        __BRYTHON__._WORKER.postMessage({'type':'status', 'status':S_TERMINATED, 'error':str(ex)})
+        __BRYTHON__._WORKER.close()
     #sys.argv = current_worker._argv
     os.environ.update(dict(current_worker._environ))
 else:

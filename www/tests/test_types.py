@@ -5,7 +5,6 @@ def _f(): pass
 FunctionType = type(_f)
 assert isinstance(_f, FunctionType)
 
-
 LambdaType = type(lambda: None)         # Same as FunctionType
 assert isinstance(lambda: None, LambdaType)
 
@@ -25,7 +24,9 @@ GeneratorType = type(_g())
 assert isinstance(_g(), GeneratorType)
 
 class _C:
+
     def _m(self): pass
+
 
 MethodType = type(_C()._m)
 assert(_C()._m, MethodType)

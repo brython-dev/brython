@@ -48,11 +48,11 @@ assert math.ceil(1.0) == 1
 assert math.ceil(1.5) == 2
 assert math.ceil(-0.5) == 0
 
-assert math.ldexp(float("inf"), -10**20) == float("inf")
+assert math.ldexp(float("inf"), -10 ** 20) == float("inf")
 
-assert almost_equal(math.log1p(1/math.e-1), -1)
+assert almost_equal(math.log1p(1 / math.e-1), -1)
 assert almost_equal(math.log1p(0), 0)
-assert almost_equal(math.log1p(math.e-1), 1)
+assert almost_equal(math.log1p(math.e - 1), 1)
 assert almost_equal(math.log1p(1), math.log(2))
 
 assert almost_equal(math.acosh(1), 0)
@@ -75,8 +75,10 @@ assert math.isnan(math.atanh(float("nan")))
 assert math.trunc(1.9) == 1.0
 
 class foo(object):
-  def __trunc__(self):
-      return "truncated"
+
+    def __trunc__(self):
+        return "truncated"
+
 
 assert math.trunc(foo()) == "truncated"
 
@@ -92,14 +94,18 @@ assert almost_equal(math.ceil(-1.0), -1)
 assert almost_equal(math.ceil(-1.5), -1)
 
 class TestCeil:
+
   def __ceil__(self):
       return 42
+
 
 assert almost_equal(math.ceil(TestCeil()), 42)
 
 class StrangeCeil:
-  def __ceil__(self):
-      return "this is a string"
+
+    def __ceil__(self):
+        return "this is a string"
+
 
 assert math.ceil(StrangeCeil()) == "this is a string"
 

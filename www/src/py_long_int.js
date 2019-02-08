@@ -8,10 +8,19 @@ eval(bltns)
 
 var long_int = {
     __class__: _b_.type,
-    __module__: "builtins",
     __mro__: [int, object],
-    __name__: "int",
-    $is_class: true
+    $infos: {
+        __module__: "builtins",
+        __name__: "int"
+    },
+    $is_class: true,
+    $native: true,
+    $descriptors: {
+        "numerator": true,
+        "denominator": true,
+        "imag": true,
+        "real": true
+    }
 }
 
 function add_pos(v1, v2){
@@ -51,7 +60,7 @@ function check_shift(shift){
     // Check the argument of >> and <<
     if(! isinstance(shift, long_int)){
         throw TypeError.$factory("shift must be int, not '" +
-            $B.get_class(shift).__name__ + "'")
+            $B.class_name(shift) + "'")
     }
     if(! shift.pos){throw ValueError.$factory("negative shift count")}
 }
@@ -265,15 +274,18 @@ long_int.__abs__ = function(self){
 }
 
 long_int.__add__ = function(self, other){
-
     if(isinstance(other, _b_.float)){
         return _b_.float.$factory(parseInt(self.value) + other.value)
     }
     if(typeof other == "number"){
         other = long_int.$factory(_b_.str.$factory(other))
-    }else if(other.__class__ !== long_int && isinstance(other, int)){
-        // int subclass
-        other = long_int.$factory(_b_.str.$factory(_b_.int.__index__(other)))
+    }else if(other.__class__ !== long_int){
+        if(isinstance(other, _b_.bool)){
+            other = long_int.$factory(other ? 1 : 0)
+        }else if(isinstance(other, int)){
+            // int subclass
+            other = long_int.$factory(_b_.str.$factory(_b_.int.__index__(other)))
+        }
     }
 
     // Addition of "self" and "other"
@@ -550,7 +562,7 @@ long_int.__pow__ = function(self, power, z){
         power = long_int.$factory(_b_.str.$factory(_b_.int.__index__(power)))
     }else if(! isinstance(power, long_int)){
         var msg = "power must be a LongDict, not '"
-        throw TypeError.$factory(msg + $B.get_class(power).__name__ + "'")
+        throw TypeError.$factory(msg + $B.class_name(power) + "'")
     }
     if(! power.pos){
         if(self.value == "1"){return self}
@@ -645,7 +657,7 @@ long_int.__truediv__ = function(self, other){
         return _b_.float.$factory(parseInt(self.value)/other)
     }else{throw TypeError.$factory(
         "unsupported operand type(s) for /: 'int' and '" +
-        $B.get_class(other).__name__ + "'")}
+        $B.class_name(other) + "'")}
 }
 
 long_int.__xor__ = function(self, other){
@@ -662,6 +674,12 @@ long_int.__xor__ = function(self, other){
     }
     return intOrLong(long_int.$factory(res, 2))
 }
+
+// descriptors
+long_int.numerator = function(self){return self}
+long_int.denominator = function(self){return _b_.int.$factory(1)}
+long_int.imag = function(self){return _b_.int.$factory(0)}
+long_int.real = function(self){return self}
 
 long_int.to_base = function(self, base){
     // Returns the string representation of self in specified base
@@ -720,10 +738,11 @@ long_int.$factory = function(value, base){
         throw _b_.TypeError.$factory("long_int takes at most 2 arguments (" +
             arguments.length + " given)")
     }
+    //    console.log("long int", value, typeof value, base)
     // base defaults to 10
     if(base === undefined){base = 10}
     else if(!isinstance(base, int)){
-        throw TypeError.$factory("'" + $B.get_class(base).__name__ +
+        throw TypeError.$factory("'" + $B.class_name(base) +
             "' object cannot be interpreted as an integer")
     }
     if(base < 0 || base == 1 || base > 36){
@@ -758,7 +777,7 @@ long_int.$factory = function(value, base){
     }else if(typeof value != "string"){
         throw ValueError.$factory(
             "argument of long_int must be a string, not " +
-            $B.get_class(value).__name__)
+            $B.class_name(value))
     }
     var has_prefix = false,
         pos = true,

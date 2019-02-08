@@ -1,32 +1,48 @@
 ;(function($B) {
 var _b_ = $B.builtins
-var awaitable = $B.make_class("awaitable")
-var coroutine = $B.make_class("coroutine")
+
+var coroutine = $B.coroutine = $B.make_class("coroutine")
+var future = $B.make_class("future")
 
 coroutine.close = function(self){}
 coroutine.send = function(self){
-    var res = self.$func()
-    if(res.__class__ !== awaitable){
-        throw _b_.StopIteration(res)
-    }
+    var res = self.$func.apply(null, self.$args)
+    return res
 }
 
+$B.set_func_names(coroutine, "builtins")
+
 $B.make_async = function(func){
-    var res = function(){
+    var f = function(){
+        var args = arguments
         return {
             __class__: coroutine,
-            $func: func,
-            close: function(){},
-            send: function(){
-                var res = func()
-                if(res.__class__ !== awaitable){
-                    throw _b_.StopIteration(res)
-                }
-            }
+            $args: args,
+            $func: func
         }
     }
-    res.$infos = func.$infos
-    return res
+    f.$infos = func.$infos
+    return f
+}
+
+$B.promise = function(obj){
+    if(obj.__class__ === $B.JSObject){
+        return obj.js
+    }else if(obj.__class__ === coroutine){
+        var res = coroutine.send(obj)
+        return res
+    }
+    if(typeof obj == "function"){
+        return obj()
+    }
+    return obj
+}
+
+$B.awaitable = function(obj){
+    if(obj instanceof Response){
+        return $B.JSObject.$factory(obj)
+    }
+    return obj
 }
 
 })(__BRYTHON__)

@@ -215,12 +215,14 @@ $B.genNode = function(data, parent){
         var res = new $B.genNode(this.data)
         if(this.replaced && ! in_loop(this)){
             // cloning a node that was already replaced by "void(0)"
+            console.log("already replaced", this)
             res.data = "void(0)"
         }
         if(this === exit_node && (this.parent.is_cond || ! in_loop(this))){
             // If we have to clone the exit node and its parent was
             // a condition, replace code by 'void(0)'
             if(! exit_node.replaced){ // replace only once
+                console.log("replace by void(0)", this)
                 res = new $B.genNode("void(0)")
             }else{
                 res = new $B.genNode(exit_node.data)
@@ -228,11 +230,20 @@ $B.genNode = function(data, parent){
             exit_node.replaced = true
         }
 
-        if(head && this.is_break){
-            res.data = '$locals["$no_break' + this.loop_num + '"] = false;' +
-                'var err = new Error("break"); ' +
-                "err.__class__ = $B.GeneratorBreak; throw err;"
-            res.is_break = true
+        if(head && (this.is_break || this.is_continue)){
+            var loop = in_loop(this)
+            if(loop.has("yield")){
+                res.data = ""
+                if(this.is_break){
+                    res.data += '$locals["$no_break' + this.loop_num +
+                        '"] = false;'
+                }
+                res.data += 'var err = new Error("break"); ' +
+                    "err.__class__ = $B.GeneratorBreak; throw err;"
+                res.is_break = this.is_break
+            }else{
+                res.is_break = this.is_break
+            }
         }
         res.is_continue = this.is_continue
         res.has_child = this.has_child
@@ -246,11 +257,11 @@ $B.genNode = function(data, parent){
         res.is_yield = this.is_yield
         res.line_num = this.line_num
         for(var i = 0, len = this.children.length; i < len; i++){
-            if(this.children[i].is_continue){
-                // If a child is "continue", don't add the following lines
-                res.addChild(new $B.genNode("continue"))
-                break
-            }
+            //if(this.children[i].is_continue){
+            //    // If a child is "continue", don't add the following lines
+            //    res.addChild(new $B.genNode("continue"))
+            //    break
+            //}
             res.addChild(this.children[i].clone_tree(exit_node, head))
             if(this.children[i].is_break){res.no_break = false}
         }
@@ -274,9 +285,7 @@ $B.genNode = function(data, parent){
     }
 
     this.src = function(indent){
-
         // Returns the indented Javascript source code starting at "this"
-
         indent = indent || 0
         var res = [this.indent_src(indent) + this.data], pos = 1
         if(this.has_child){res[pos++] = "{"}
@@ -301,7 +310,7 @@ $B.genNode = function(data, parent){
 
 // Object used as the attribute "__class__" of an error thrown in case of a
 // "break" inside a loop
-$B.GeneratorBreak = {}
+$B.GeneratorBreak = $B.make_class("GeneratorBreak")
 
 // Class for errors sent to an iterator by "throw"
 $B.$GeneratorSendError = {}
@@ -315,7 +324,6 @@ $B.generator_return = function(value){
 function in_loop(node){
 
     // Tests if node is inside a "for" or "while" loop
-
     while(node){
         if(node.loop_start !== undefined){return node}
         node = node.parent
@@ -339,8 +347,10 @@ function in_try(node){
 
 var $BRGeneratorDict = {
     __class__: _b_.type,
-    __name__: "generator",
-    __module__: "builtins",
+    $infos: {
+        __name__: "generator",
+        __module__: "builtins"
+    },
     $is_class: true
 }
 
@@ -500,13 +510,17 @@ function make_next(self, yield_node_id){
 
         for(var i = start, len = exit_parent.children.length; i < len; i++){
             var clone = exit_parent.children[i].clone_tree(null, true)
-            if(clone.has("continue")){has_continue = true; break}
+            if(clone.has("continue")){
+                has_continue = true;
+            }
             rest[pos++] = clone
-            if(clone.has("break")){has_break = true}
+            if(clone.has("break")){
+                has_break = true
+            }
         }
 
         // add rest of block to new function
-        if(has_break && rest.length > 0){
+        if((has_break || has_continue) && rest.length > 0){
             // If the rest had a "break", this "break" is converted into
             // raising an exception with __class__ set to GeneratorBreak
             var rest_try = new $B.genNode("try")
@@ -576,9 +590,11 @@ function make_next(self, yield_node_id){
 
 var generator = {
     __class__: _b_.type,
-    __module__: "builtins",
     __mro__: [_b_.object],
-    __name__: "generator",
+    $infos: {
+        __module__: "builtins",
+        __name__: "generator"
+    }
 }
 
 //fix me, need to investigate __enter__ and __exit__ and what they do
@@ -586,7 +602,7 @@ generator.__enter__ = function(self){console.log("generator.__enter__ called")}
 generator.__exit__ = function(self){console.log("generator.__exit__ called")}
 
 generator.__str__ = function(self){
-    return "<generator object " + self.name + ">"
+    return "<generator object " + self.__name__ + ">"
 }
 
 generator.__iter__ = function(self){
@@ -693,6 +709,7 @@ generator.$factory = $B.genfunc = function(name, blocks, funcs, $defaults){
 
         var res = {
             __class__: generator,
+            __name__: name,
             args: Array.prototype.slice.call(arguments),
             blocks: blocks,
             env: {},

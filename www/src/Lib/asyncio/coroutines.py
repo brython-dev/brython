@@ -51,7 +51,7 @@ class Task(Future):
         self._coro_obj = coro_object
         self._name = task_name
         self._loop.call_soon(self._step)
-        
+
     def _step(self, val=None, exc=None):
         if self.done():
             return
@@ -87,8 +87,6 @@ class Task(Future):
         else:
             ret += "pending"
         return ret
-
-
 
 
 def ensure_future(fut_or_coroutine_obj, *, loop=None):

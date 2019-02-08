@@ -11,7 +11,8 @@
       href="https://fonts.googleapis.com/css?family=Montserrat">
 
 <noscript>Please enable Javascript to view this page correctly.</noscript>
-<script type="text/javascript" src="src/brython.js"></script>
+
+<script type="text/javascript" src="/src/brython.js"></script>
 
 <script type="text/python3">
 """Code for the header menu"""
@@ -170,7 +171,7 @@ options:
          'browser' - nothing is appended to request.  A clients browser is responsible for caching actions.
   pythonpath: a list of additional urls/paths to search for modules
 -->
-<body onload="brython({debug:1, cache:'none'})">
+<body onload="brython(1)">
 
 <table id="banner" cellpadding=0 cellspacing=0>
 <tr id="banner_row">

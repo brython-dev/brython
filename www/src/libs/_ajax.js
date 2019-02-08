@@ -2,35 +2,8 @@
 var $module = (function($B){
 
 eval($B.InjectBuiltins())
-var $N = $B.builtins.None
-
-var ajax1 = $B.make_class("ajax1",
-    function(){
-        if(window.XMLHttpRequest){// code for IE7+, Firefox, Chrome, Opera, Safari
-            var xmlhttp = new XMLHttpRequest()
-        }else{// code for IE6, IE5
-            var xmlhttp = new ActiveXObject("Microsoft.XMLHTTP")
-        }
-        xmlhttp.onreadystatechange = function(){
-            // here, "this" refers to xmlhttp
-            var state = this.readyState
-            var timer = this.$requestTimer
-            if(state == 0 && this.onuninitialized){this.onuninitialized()}
-            else if(state == 1 && this.onloading){this.onloading()}
-            else if(state == 2 && this.onloaded){this.onloaded()}
-            else if(state == 3 && this.oninteractive){this.oninteractive()}
-            else if(state == 4 && this.oncomplete){
-                if(timer !== null){window.clearTimeout(timer)}
-                this.oncomplete()
-            }
-        }
-        return {
-            __class__: ajax,
-            js: xmlhttp,
-            headers: {}
-        }
-    }
-)
+var $N = $B.builtins.None,
+    _b_ = $B.builtins
 
 var add_to_res = function(res, key, val) {
     if(isinstance(val, list)){
@@ -42,10 +15,68 @@ var add_to_res = function(res, key, val) {
     }else{res.append(key,str.$factory(val))}
 }
 
+function set_timeout(self, timeout){
+    if(timeout.seconds !== undefined){
+        self.js.$requestTimer = setTimeout(
+            function() {
+                self.js.abort()
+                if(timeout.func){
+                    timeout.func()
+                }
+            },
+            timeout.seconds * 1000)
+    }
+}
+
+function handle_kwargs(self, kw, method){
+    var data,
+        headers,
+        timeout = {}
+    for(var key in kw.$string_dict){
+        if(key == "data"){
+            var params = kw.$string_dict[key]
+            if(typeof params == "string"){
+                data = params
+            }else{
+                if(params.__class__ !== _b_.dict){
+                    throw _b_.TypeError.$factory("wrong type for data, " +
+                        "expected dict or str, got " + $B.class_name(params))
+                }
+                params = params.$string_dict
+                var items = []
+                for(var key in params){
+                    items.push(encodeURIComponent(key) + "=" +
+                               encodeURIComponent(params[key]))
+                }
+                data = items.join("&")
+            }
+        }else if(key=="headers"){
+            headers = kw.$string_dict[key].$string_dict
+            for(var key in headers){
+                self.js.setRequestHeader(key, headers[key])
+            }
+        }else if(key.startsWith("on")){
+            var event = key.substr(2)
+            if(event == "timeout"){
+                timeout.func = kw.$string_dict[key]
+            }else{
+                ajax.bind(self, event, kw.$string_dict[key])
+            }
+        }else if(key == "timeout"){
+            timeout.seconds = kw.$string_dict[key]
+        }
+    }
+    if(method == "post" && ! headers){
+        // For POST requests, set default header
+        self.js.setRequestHeader("Content-type",
+                                 "application/x-www-form-urlencoded")
+    }
+    return [data, timeout]
+}
+
 var ajax = {
     __class__: _b_.type,
     __mro__: [$B.JSObject, _b_.object],
-    __name__: 'ajax',
 
     __getattribute__ : function(self, attr){
         // Special case for send : accept dict as parameters
@@ -61,6 +92,11 @@ var ajax = {
     __repr__ : function(self){return '<object Ajax>'},
     __str__ : function(self){return '<object Ajax>'},
 
+    $infos: {
+        __module__: "builtins",
+        __name__: "ajax"
+    },
+
     bind : function(self, evt, func){
         // req.bind(evt,func) is the same as req.onevt = func
         self.js['on' + evt] = function(){
@@ -69,7 +105,7 @@ var ajax = {
             }catch(err){
                 if(err.__class__ !== undefined){
                     var msg = _b_.getattr(err, 'info') +
-                        '\n' + err.__class__.__name__
+                        '\n' + err.__class__.$infos.__name__
                     if(err.args){msg += ': ' + err.args[0]}
                     try{getattr($B.stderr, "write")(msg)}
                     catch(err){console.log(msg)}
@@ -82,9 +118,8 @@ var ajax = {
         return $N
     },
 
-    send : function(self,params){
+    send : function(self, params){
         // params can be Python dictionary or string
-        //self.js.onreadystatechange = function(ev){console.log(ev.target)}
         var res = ''
         if(!params){
             self.js.send()
@@ -130,7 +165,7 @@ var ajax = {
         self.headers[key.toLowerCase()] = value.toLowerCase()
     },
 
-    set_timeout : function(self,seconds,func){
+    set_timeout : function(self, seconds, func){
         self.js.$requestTimer = setTimeout(
             function() {self.js.abort();func()},
             seconds * 1000)
@@ -168,9 +203,44 @@ ajax.$factory = function(){
     return res
 }
 
+function get(){
+    var $ = $B.args("get", 2, {url: null, async: null},
+            ["url", "async"], arguments, {async: true},
+            null, "kw"),
+        url = $.url,
+        async = $.async,
+        kw = $.kw
+    var self = ajax.$factory(),
+        items = handle_kwargs(self, kw, "get"),
+        qs = items[0],
+        timeout = items[1]
+    set_timeout(self, timeout)
+    if(qs){
+        url += "?" + qs
+    }
+    self.js.open("GET", url, async)
+    self.js.send()
+}
+
+function post(){
+    var $ = $B.args("get", 2, {url: null, async: null},
+            ["url", "async"], arguments, {async: true},
+            null, "kw"),
+        url = $.url,
+        async = $.async,
+        kw = $.kw,
+        data
+    var self = ajax.$factory()
+    self.js.open("POST", url, async)
+    var items = handle_kwargs(self, kw, "post"),
+        data = items[0],
+        timeout = items[1]
+    set_timeout(self, timeout)
+    self.js.send(data)
+}
 
 $B.set_func_names(ajax)
 
-return {ajax: ajax, ajax1: ajax1}
+return {ajax: ajax, Ajax: ajax, get: get, post: post}
 
 })(__BRYTHON__)

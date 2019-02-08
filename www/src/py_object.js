@@ -6,7 +6,9 @@ var _b_ = $B.builtins
 var object = {
     //__class__:$type, : not here, added in py_type.js after $type is defined
     // __bases__ : set to an empty tuple in py_list.js after tuple is defined
-    __name__: "object",
+    $infos:{
+        __name__: "object"
+    },
     $is_class: true,
     $native: true
 }
@@ -54,9 +56,11 @@ object.__dir__ = function(self) {
     }
 
     // add object's own attributes
-    for(var attr in self){
-        if(attr.substr(0, 2) == "$$"){res.push(attr.substr(2))}
-        else if(attr.charAt(0) != "$"){res.push(attr)}
+    if(self.__dict__){
+        for(var attr in self.__dict__.$string_dict){
+            if(attr.substr(0, 2) == "$$"){res.push(attr.substr(2))}
+            else if(attr.charAt(0) != "$"){res.push(attr)}
+        }
     }
     res = _b_.list.$factory(_b_.set.$factory(res))
     _b_.list.sort(res)
@@ -85,12 +89,16 @@ object.__getattribute__ = function(obj, attr){
 
     var klass = obj.__class__ || $B.get_class(obj)
 
-    var $test = false //attr == "draggable"
+    var $test = false //attr == "f"
     if($test){console.log("attr", attr, "de", obj, "klass", klass)}
     if(attr === "__class__"){
         return klass
     }
     var res = obj[attr]
+    if(res === undefined && obj.__dict__ &&
+            obj.__dict__.$string_dict.hasOwnProperty(attr)){
+        return obj.__dict__.$string_dict[attr]
+    }
 
     if(res === undefined){
         // search in classes hierarchy, following method resolution order
@@ -106,7 +114,10 @@ object.__getattribute__ = function(obj, attr){
             var mro = klass.__mro__
             for(var i = 0, len = mro.length; i < len; i++){
                 res = check(obj, mro[i], attr)
-                if(res !== undefined){break}
+                if(res !== undefined){
+                    if($test){console.log("found in", mro[i])}
+                    break
+                }
             }
         }
 
@@ -141,9 +152,12 @@ object.__getattribute__ = function(obj, attr){
         var __get__ = get === undefined ? null :
             _b_.getattr(res, "__get__", null)
 
+        if($test){console.log("__get__", __get__)}
         // For descriptors, attribute resolution is done by applying __get__
         if(__get__ !== null){
-            try{return __get__.apply(null, [obj, klass])}
+            try{
+                return __get__.apply(null, [obj, klass])
+            }
             catch(err){
                 console.log('error in get.apply', err)
                 console.log("get attr", attr, "of", obj)
@@ -222,6 +236,7 @@ object.__getattribute__ = function(obj, attr){
                         var result = res.apply(null, args)
                         return result
                     }
+                    if(attr == "a"){console.log("make method from res", res)}
                     method.__class__ = $B.method
                     method.__get__ = function(obj, cls){
                         var clmethod = function(){
@@ -232,17 +247,21 @@ object.__getattribute__ = function(obj, attr){
                             __self__: cls,
                             __func__: res,
                             __name__: res.$infos.__name__,
-                            __qualname__: cls.__name__ + "." + res.$infos.__name__
+                            __qualname__: cls.$infos.__name__ + "." + res.$infos.__name__
                         }
                         return clmethod
                     }
                     method.__get__.__class__ = $B.method_wrapper
                     method.__get__.$infos = res.$infos
+                    if(klass.$infos===undefined){
+                        console.log("no $infos", klass)
+                        console.log($B.last($B.frames_stack))
+                    }
                     method.$infos = {
                         __self__: self,
                         __func__: res,
                         __name__: attr,
-                        __qualname__: klass.__name__ + "." + attr
+                        __qualname__: klass.$infos.__name__ + "." + attr
                     }
                     if($test){console.log("return method", method)}
                     return method
@@ -269,7 +288,6 @@ object.__getattribute__ = function(obj, attr){
                 }
             }
         }
-        if($test){console.log("use __getattr__", _ga)}
         if(_ga !== undefined){
             try{return _ga(obj, attr)}
             catch(err){if($B.debug > 2){console.log(err)}}
@@ -289,13 +307,13 @@ object.__getattribute__ = function(obj, attr){
                         return _b_.getattr(arguments[0], rop)(obj)
                     }catch(err){
                         var msg = "unsupported operand types for " +
-                            opsigns[rank] + ": '" + klass.__name__ +
-                            "' and '" + $B.get_class(arguments[0]).__name__ +
+                            opsigns[rank] + ": '" + klass.$infos.__name__ +
+                            "' and '" + $B.class_name(arguments[0]) +
                             "'"
                         throw _b_.TypeError.$factory(msg)
                     }
                 }
-                func.$infos = {__name__ : klass.__name__ + "." + attr}
+                func.$infos = {__name__ : klass.$infos.__name__ + "." + attr}
                 return func
             }
         }
@@ -335,7 +353,10 @@ object.__new__ = function(cls, ...args){
             throw _b_.TypeError.$factory("object() takes no parameters")
         }
     }
-    return {__class__ : cls}
+    return {
+        __class__ : cls,
+        __dict__: _b_.dict.$factory()
+        }
 }
 
 object.__ne__ = function(self, other){
@@ -359,9 +380,10 @@ object.__reduce__ = function(self){
     res.push(_b_.tuple.$factory([self.__class__].
         concat(self.__class__.__mro__)))
     var d = _b_.dict.$factory()
-    for(var attr in self){
-        d.$string_dict[attr] = self[attr]
+    for(var attr in self.__dict__.$string_dict){
+        d.$string_dict[attr] = self.__dict__.$string_dict[attr]
     }
+    console.log("object.__reduce__, d", d)
     res.push(d)
     return _b_.tuple.$factory(res)
 }
@@ -380,11 +402,17 @@ object.__reduce_ex__ = function(self){
     res.push(_b_.tuple.$factory([self.__class__]))
     var d = _b_.dict.$factory(),
         nb = 0
-    for(var attr in self){
+    if(self.__dict__ === undefined){
+        console.log("no dict", self)
+        $B.frames_stack.forEach(function(frame){
+            console.log(frame[0], frame[1], frame[2])
+        })
+    }
+    for(var attr in self.__dict__.$string_dict){
         if(attr == "__class__" || attr.startsWith("$")){
             continue
         }
-        d.$string_dict[attr] = self[attr]
+        d.$string_dict[attr] = self.__dict__.$string_dict[attr]
         nb++
     }
     if(nb == 0){d = _b_.None}
@@ -398,12 +426,12 @@ object.__repr__ = function(self){
     if(self.__class__ === _b_.type) {
         return "<class '" + self.__name__ + "'>"
     }
-    if(self.__class__.__module__ !== undefined &&
-            self.__class__.__module__ !== "builtins"){
-        return "<" + self.__class__.__module__ + "." +
-            self.__class__.__name__ + " object>"
+    if(self.__class__.$infos.__module__ !== undefined &&
+            self.__class__.$infos.__module__ !== "builtins"){
+        return "<" + self.__class__.$infos.__module__ + "." +
+            self.__class__.$infos.__name__ + " object>"
     }else{
-        return "<" + self.__class__.__name__ + " object>"
+        return "<" + self.__class__.$infos.__name__ + " object>"
     }
 }
 
@@ -423,7 +451,12 @@ object.__setattr__ = function(self, attr, val){
         }
     }
     if($B.aliased_names[attr]){attr = "$$"+attr}
-    self[attr] = val
+    if(self.__dict__){
+        self.__dict__.$string_dict[attr] = val
+    }else{
+        // for
+        self[attr] = val
+    }
     return _b_.None
 }
 object.__setattr__.__get__ = function(obj){
@@ -452,12 +485,14 @@ object.$factory = function(){
 $B.set_func_names(object, "builtins")
 
 $B.make_class = function(name, factory){
-    // Buils a basic class object
+    // Builds a basic class object
 
     var A = {
         __class__: _b_.type,
         __mro__: [object],
-        __name__: name,
+        $infos:{
+            __name__: name
+        },
         $is_class: true
     }
 

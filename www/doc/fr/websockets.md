@@ -12,15 +12,15 @@ Le module définit un booléen
 et une fonction
 
 `WebSocket(`_hote_`)`
-> _hote_ est l'adresse d'un serveur qui supporte le protocole WebSocket. 
-> Renvoie un objet `WebSocket`. Si le navigateur ne gère pas ce protocole, une exception 
-> `NotImplementedError` est déclenchée. 
+> _hote_ est l'adresse d'un serveur qui supporte le protocole WebSocket.
+> Renvoie un objet `WebSocket`. Si le navigateur ne gère pas ce protocole, une exception
+> `NotImplementedError` est déclenchée.
 
 
 Les objets `WebSocket` possèdent les méthodes suivantes :
 
 `bind(`_evt,fonction_`)`
-> associe la _fonction_ à l'événement _evt_. Les événements gérés et les 
+> associe la _fonction_ à l'événement _evt_. Les événements gérés et les
 > arguments de la fonction sont :
 
 <blockquote>
@@ -31,17 +31,17 @@ Les objets `WebSocket` possèdent les méthodes suivantes :
 </tr>
 <tr>
 <td>`open`</td>
-<td>fonction sans argument, appelée une fois que la connexion avec le serveur 
+<td>fonction sans argument, appelée une fois que la connexion avec le serveur
 est établie</td>
 </tr>
 <tr>
 <td>`error`</td>
-<td>fonction sans argument, appelée si une erreur se produit pendant la 
+<td>fonction sans argument, appelée si une erreur se produit pendant la
 communication</td>
 </tr>
 <tr>
 <td>`message`</td>
-<td>fonction qui prend un argument, une instance de `DOMEvent`. Cette instance 
+<td>fonction qui prend un argument, une instance de `DOMEvent`. Cette instance
 possède un attribut `data` qui contient le message envoyé par le serveur
 </td>
 </tr>
@@ -70,6 +70,7 @@ def on_open(evt):
     doc['sendbtn'].disabled = False
     doc['closebtn'].disabled = False
     doc['openbtn'].disabled = True
+    alert("Connexion ouverte")
 
 def on_message(evt):
     # message reçu du serveur
@@ -91,9 +92,9 @@ def _open(ev):
     # open a web socket
     ws = websocket.WebSocket("wss://echo.websocket.org")
     # attache des fonctions aux événements web sockets
-    ws.bind('open',on_open)
-    ws.bind('message',on_message)
-    ws.bind('close',on_close)
+    ws.bind('open', on_open)
+    ws.bind('message', on_message)
+    ws.bind('close', on_close)
 
 def send(ev):
     data = doc["data"].value

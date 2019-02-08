@@ -404,12 +404,12 @@ def apply_markdown(src):
     src = src.replace(r'\*', '&#42;')
 
     # emphasis
-    strong_patterns = [('STRONG', r'\*\*(.*?)\*\*'), ('B', r'__(.*?)__')]
+    strong_patterns = [('STRONG', r'\*\*(.+?)\*\*'), ('B', r'__(.+?)__')]
     for tag,strong_pattern in strong_patterns:
         src = re.sub(strong_pattern, r'<%s>\1</%s>' %(tag, tag), src)
 
     # EM for *xxx*
-    src = re.sub(r'\*(.*?)\*', r'<%s>\1</%s>' %('EM', 'EM'), src)
+    src = re.sub(r'\*(.+?)\*', r'<%s>\1</%s>' %('EM', 'EM'), src)
 
     # I for _xxx_ where the _ are at the beginning or end of a word
     # An underscore inside a word is ignored.

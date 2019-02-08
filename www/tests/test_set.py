@@ -63,7 +63,6 @@ assert len(x) == 4
 assert 'r' in x
 assert 'rty' not in x
 
-
 class foo(set):
     def show(self):
         return 'show'
@@ -88,10 +87,8 @@ otherword = 'madagascar'
 s = set(word)
 # NOTE: use a function otherwise `s = s | other` is tested (not inplace)
 
-
 def update(s):
     s |= set(otherword)
-
 
 update(s)
 for c in (word + otherword):
@@ -100,10 +97,8 @@ for c in (word + otherword):
 # test __iand__
 s = set(word)
 
-
 def intersection_update(s):
     s &= set(otherword)
-
 
 intersection_update(s)
 for c in (word + otherword):
@@ -115,10 +110,8 @@ for c in (word + otherword):
 # test __isub__
 s = set(word)
 
-
 def difference_update(s):
     s -= set(otherword)
-
 
 difference_update(s)
 for c in (word + otherword):
@@ -130,10 +123,8 @@ for c in (word + otherword):
 # test __ixor__
 s = set(word)
 
-
 def symmetric_difference_update(s):
     s ^= set(otherword)
-
 
 symmetric_difference_update(s)
 for c in (word + otherword):
@@ -146,29 +137,23 @@ for c in (word + otherword):
 s = set(word)
 t = s.copy()
 
-
 def update_self(t):
     t |= t
     assert t == s
 
-
 update_self(t)
 assert t == s
-
 
 def intersection_update_self(t):
     t &= t
     assert t == s
 
-
 intersection_update_self(t)
 assert t == s
-
 
 def difference_update_self(t):
     t -= t
     assert t == set()
-
 
 difference_update_self(t)
 assert t == set()
@@ -218,12 +203,19 @@ else:
     assert 0, "expected TypeError"
 
 # issue 974
-assert frozenset({1, 2}) == {1,2}
-assert frozenset({1, 2}) == frozenset({1,2})
-assert {1, 2} == {1,2}
+assert frozenset({1, 2}) == {1, 2}
+assert frozenset({1, 2}) == frozenset({1, 2})
+assert {1, 2} == {1, 2}
 
-assert frozenset({1, 2}) != (1,2)
-assert frozenset({1, 2}) != [1,2]
-assert (1,2) != {1,2}
-assert {1,2} != [1,2]
+assert frozenset({1, 2}) != (1, 2)
+assert frozenset({1, 2}) != [1, 2]
+assert (1, 2) != {1, 2}
+assert {1, 2} != [1, 2]
+
+# issue 979
+from copy import deepcopy
+a = {1}
+b = deepcopy(a)
+assert b == {1}
+
 print("passed all tests..")

@@ -18,7 +18,7 @@ except:
 x = 4
 cd = dict(globals())
 cd.update(locals())
-exec("x = x + 4",cd)
+exec("x = x + 4", cd)
 
 assert x == 4
 assert cd['x'] == 8
@@ -61,7 +61,7 @@ assert t['x'] == 3
 
 # issue 748
 y = 42
-g = { 'x':0 }
+g = {'x':0}
 try:
     exec('print(y)', g)
     raise Exception("should have raised NameError")

@@ -2,7 +2,7 @@
 import re
 
 def minify(src):
-    
+
     _res, pos = '', 0
     while pos < len(src):
         if src[pos] in ('"', "'") or \
@@ -30,7 +30,7 @@ def minify(src):
         elif src[pos] == '\r':
             pos += 1
         elif src[pos] == ' ':
-            if _res and _res[-1] in '({=[)}];|\n':
+            if _res and _res[-1] in '({=[)}];:+-*/|\n':
                 pos += 1
                 continue
             _res += ' '
@@ -54,6 +54,11 @@ def minify(src):
             while pos < len(src) - 1 and src[pos + 1] in ' \r\n':
                 pos += 1
             pos += 1
+        elif src[pos] in '+-*/':
+            while _res[-1] == " ":
+                _res = _res[:-1]
+            _res += src[pos]
+            pos += 1
         elif src[pos] == '}':
             _res += src[pos]
             nxt = pos + 1
@@ -69,9 +74,8 @@ def minify(src):
     _res = re.sub('\n+', '\n', _res)
     # remove newline followed by }
     _res = re.sub('\n}', '}', _res)
-    
+
     return _res
 
 if __name__=="__main__":
     print(minify(open('test.js').read()))
-    
