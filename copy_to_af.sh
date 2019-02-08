@@ -2,7 +2,7 @@ set -xe
 
 DEST=../cs1-v2/frontend/src/brython
 
-(cd scripts && python make_dist.py)
+(cd scripts && python3.7 make_dist.py)
 
 rm -rf "$DEST"
 mkdir "$DEST"

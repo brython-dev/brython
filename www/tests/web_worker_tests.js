@@ -2,6 +2,7 @@ importScripts("../src/unicode.min.js");
 importScripts("../src/brython_builtins.js");
 importScripts("../src/version_info.js");
 importScripts("../src/py2js.js");
+importScripts("../src/loaders.js");
 importScripts("../src/py_object.js");
 importScripts("../src/py_type.js");
 importScripts("../src/py_utils.js");
