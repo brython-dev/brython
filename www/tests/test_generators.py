@@ -664,4 +664,23 @@ assert next(f) == 1
 assert next(f) == 1
 assert next(f) == 1
 
+# issue 1035
+def f1():
+    while True:
+        x = (yield)
+        if x:
+            break
+    yield (1, 2, 3)
+
+def f2():
+    while True:
+        x, y, z = yield from f1()
+
+g = f2()
+next(g)
+g.send(0)
+g.send(0)
+g.send(0)
+assert g.send(1) == (1, 2, 3)
+
 print('passed all tests...')

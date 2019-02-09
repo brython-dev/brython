@@ -257,11 +257,6 @@ $B.genNode = function(data, parent){
         res.is_yield = this.is_yield
         res.line_num = this.line_num
         for(var i = 0, len = this.children.length; i < len; i++){
-            //if(this.children[i].is_continue){
-            //    // If a child is "continue", don't add the following lines
-            //    res.addChild(new $B.genNode("continue"))
-            //    break
-            //}
             res.addChild(this.children[i].clone_tree(exit_node, head))
             if(this.children[i].is_break){res.no_break = false}
         }

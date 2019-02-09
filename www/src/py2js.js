@@ -580,9 +580,14 @@ var $YieldFromMarkerNode = $B.parser.$YieldFromMarkerNode = function(params) {
             var expr_ctx = new $ExprCtx(assign_ctx, 'id', true)
             var idctx = new $IdCtx(expr_ctx, params.result_var_name)
             assign_ctx.tree[1] = expr_ctx
-            var new_node = this.parent.insert(params.save_result_rank+rank+1,
-                $NodeJS(assign_ctx.to_js())
-            )
+            // create a new node for the assignment
+            var node = new $Node()
+            node.context = assign_ctx
+            assign_ctx.node = node
+            var new_rank = params.save_result_rank + rank + 1
+            this.parent.insert(new_rank, node)
+            // apply "transform" on the assignment, cf issue #1035
+            assign_ctx.transform(node, new_rank)
         }
         return 2
     }
@@ -1303,7 +1308,7 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
         }
 
         var left = context.tree[0].to_js()
-        
+
         if(left_bound_to_int && right_is_int){
             parent.insert(rank + offset, $NodeJS(left + " "+ op + " " + right))
             return offset++

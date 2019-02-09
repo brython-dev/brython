@@ -80,8 +80,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.1"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-02-09 08:24:06.333291"
-__BRYTHON__.timestamp=1549697046333
+__BRYTHON__.compiled_date="2019-02-09 09:12:55.083676"
+__BRYTHON__.timestamp=1549699975083
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 ;
 
@@ -329,8 +329,12 @@ assign_ctx.tree.pop()
 var expr_ctx=new $ExprCtx(assign_ctx,'id',true)
 var idctx=new $IdCtx(expr_ctx,params.result_var_name)
 assign_ctx.tree[1]=expr_ctx
-var new_node=this.parent.insert(params.save_result_rank+rank+1,$NodeJS(assign_ctx.to_js())
-)}
+var node=new $Node()
+node.C=assign_ctx
+assign_ctx.node=node
+var new_rank=params.save_result_rank+rank+1
+this.parent.insert(new_rank,node)
+assign_ctx.transform(node,new_rank)}
 return 2}}
 var $MarkerNode=$B.parser.$MarkerNode=function(name){$Node.apply(this,['marker'])
 new $NodeCtx(this)
@@ -12559,8 +12563,7 @@ res.loop_start=this.loop_start
 res.no_break=true
 res.is_yield=this.is_yield
 res.line_num=this.line_num
-for(var i=0,len=this.children.length;i < len;i++){
-res.addChild(this.children[i].clone_tree(exit_node,head))
+for(var i=0,len=this.children.length;i < len;i++){res.addChild(this.children[i].clone_tree(exit_node,head))
 if(this.children[i].is_break){res.no_break=false}}
 return res}
 this.has=function(keyword){
