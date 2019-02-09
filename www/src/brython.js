@@ -80,8 +80,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.1"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-02-07 08:32:44.014299"
-__BRYTHON__.timestamp=1549524764014
+__BRYTHON__.compiled_date="2019-02-09 08:24:06.333291"
+__BRYTHON__.timestamp=1549697046333
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 ;
 
@@ -9001,7 +9001,7 @@ if(isinstance(other,_b_.int)){return new Number((self % other+other)% other)}
 if(isinstance(other,float)){
 var q=Math.floor(self/other),r=self-other*q
 return new Number(r)}
-if(isinstance(other,bool)){var bool_value=0
+if(isinstance(other,_b_.bool)){var bool_value=0
 if(other.valueOf()){bool_value=1}
 return new Number((self % bool_value+bool_value)% bool_value)}
 if(hasattr(other,"__rmod__")){return getattr(other,"__rmod__")(self)}
@@ -9010,7 +9010,7 @@ float.__mro__=[object]
 float.__mul__=function(self,other){if(isinstance(other,_b_.int)){if(other.__class__==$B.long_int){return new Number(self*parseFloat(other.value))}
 return new Number(self*other)}
 if(isinstance(other,float)){return new Number(self*other)}
-if(isinstance(other,bool)){var bool_value=0
+if(isinstance(other,_b_.bool)){var bool_value=0
 if(other.valueOf()){bool_value=1}
 return new Number(self*bool_value)}
 if(isinstance(other,_b_.complex)){return $B.make_complex(float.$factory(self*other.$real),float.$factory(self*other.$imag))}
@@ -9059,7 +9059,7 @@ if(hasattr(other,"__rtruediv__")){return getattr(other,"__rtruediv__")(self)}
 $err("/",other)}
 var $op_func=function(self,other){if(isinstance(other,_b_.int)){if(typeof other=="boolean"){return other ? self-1 :self}else if(other.__class__===$B.long_int){return float.$factory(self-parseInt(other.value))}else{return float.$factory(self-other)}}
 if(isinstance(other,float)){return float.$factory(self-other)}
-if(isinstance(other,bool)){var bool_value=0
+if(isinstance(other,_b_.bool)){var bool_value=0
 if(other.valueOf()){bool_value=1}
 return float.$factory(self-bool_value)}
 if(isinstance(other,_b_.complex)){return $B.make_complex(self-other.$real,-other.$imag)}
@@ -9073,7 +9073,7 @@ eval("float.__"+$ops[$op]+"__ = "+$opf)}
 var $comp_func=function(self,other){if(isinstance(other,_b_.int)){if(other.__class__===$B.long_int){return self > parseInt(other.value)}
 return self > other.valueOf()}
 if(isinstance(other,float)){return self > other}
-if(isinstance(other,bool)){return self.valueOf()> bool.__hash__(other)}
+if(isinstance(other,_b_.bool)){return self.valueOf()> _b_.bool.__hash__(other)}
 if(hasattr(other,"__int__")||hasattr(other,"__index__")){return _b_.int.__gt__(self,$B.$GetInt(other))}
 var inv_op=getattr(other,"__le__",None)
 if(inv_op !==None){return inv_op(self)}
