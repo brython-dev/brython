@@ -27,7 +27,7 @@ except:
     editor = html.TEXTAREA(rows=20, cols=70)
     doc["editor"] <= editor
     def get_value(): return editor.value
-    def set_value(x):editor.value = x
+    def set_value(x): editor.value = x
     editor.getValue = get_value
     editor.setValue = set_value
     has_ace = False
