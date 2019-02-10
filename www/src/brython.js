@@ -80,8 +80,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.1"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-02-09 09:12:55.083676"
-__BRYTHON__.timestamp=1549699975083
+__BRYTHON__.compiled_date="2019-02-10 17:52:31.843447"
+__BRYTHON__.timestamp=1549817551843
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 ;
 
@@ -1254,6 +1254,8 @@ nodes.push(new_node)
 var enter_frame_nodes=[$NodeJS('var $top_frame = [$local_name, $locals,'+
 '"'+global_scope.id+'", '+global_ns+', '+name+']'),$NodeJS('$B.frames_stack.push($top_frame)'),$NodeJS('var $stack_length = $B.frames_stack.length')
 ]
+if(this.async){enter_frame_nodes.push($NodeJS("var $stack = "+
+"$B.frames_stack.slice()"))}
 if($B.profile > 1){if(this.scope.ntype=='class'){fname=this.scope.C.tree[0].name+'.'+this.name}
 else{fname=this.name}
 if(pnode && pnode.id){fmod=pnode.id.slice(0,pnode.id.indexOf('_'))}else{fmod=''}
@@ -1396,6 +1398,7 @@ parent.insert(pos+1,try_node)
 children.forEach(function(child){if(child.is_def_func){child.children.forEach(function(grand_child){try_node.add(grand_child)})}else{try_node.add(child)}})
 parent.children.splice(pos+2,parent.children.length)
 var except_node=$NodeJS('catch(err)')
+if(this.async){except_node.add($NodeJS('err.$stack = $stack'))}
 except_node.add($NodeJS('$B.leave_frame();throw err'))
 parent.add(except_node)}
 this.transformed=true
@@ -2526,7 +2529,7 @@ var scope=$get_scope(this)
 if(scope.ntype=='generator'){return 'return [$B.generator_return('+$to_js(this.tree)+')]'}
 var js='var $res = '+$to_js(this.tree)+';'+'$B.leave_frame'
 if(scope.id.substr(0,6)=='$exec_'){js+='_exec'}
-return js+'();return $res'}}
+return js+'("'+scope.id+'");return $res'}}
 var $SingleKwCtx=$B.parser.$SingleKwCtx=function(C,token){
 this.type='single_kw'
 this.token=token
@@ -6825,8 +6828,7 @@ if($test){console.log("set attr",attr,"to",obj)}
 if(obj.$factory ||obj.$is_class){var metaclass=obj.__class__
 if($test){console.log("obj is class",metaclass,metaclass[attr])}
 if(metaclass && metaclass[attr]&& metaclass[attr].__get__ &&
-metaclass[attr].__set__){console.log("use data descriptor")
-metaclass[attr].__set__(obj,value)
+metaclass[attr].__set__){metaclass[attr].__set__(obj,value)
 return None}
 obj[attr]=value
 if(attr=="__init__" ||attr=="__new__"){
@@ -7150,12 +7152,16 @@ line_num=root.line_info}
 var exc=_b_.IndentationError.$factory(msg)
 $B.$syntax_err_line(exc,module,src,pos,line_num)
 throw exc}
-$B.print_stack=function(){$B.frames_stack.forEach(function(frame){var line_info=frame[1].$line_info
+$B.print_stack=function(stack){stack=stack ||$B.frames_stack
+var trace=[]
+stack.forEach(function(frame){var line_info=frame[1].$line_info
 if(line_info !==undefined){var info=line_info.split(",")
-console.log(info[1]+" line "+info[0])
+if(info[1].startsWith("$exec")){info[1]="<module>"}
+trace.push(info[1]+" line "+info[0])
 var src=$B.file_cache[frame[3].__file__]
 if(src){var lines=src.split("\n"),line=lines[parseInt(info[0])-1]
-console.log("    "+line.trim())}}})}
+trace.push("  "+line.trim())}}})
+return trace.join("\n")}
 var traceback=$B.make_class("traceback",function(exc,stack){if(stack===undefined)
 stack=exc.$stack
 return{
@@ -12929,16 +12935,15 @@ $B.import_hooks=import_hooks})(__BRYTHON__)
 var coroutine=$B.coroutine=$B.make_class("coroutine")
 var future=$B.make_class("future")
 coroutine.close=function(self){}
-coroutine.send=function(self){var res=self.$func.apply(null,self.$args)
-return res}
+coroutine.send=function(self){
+return self.$func.apply(null,self.$args)}
 $B.set_func_names(coroutine,"builtins")
 $B.make_async=function(func){var f=function(){var args=arguments
 return{
 __class__:coroutine,$args:args,$func:func}}
 f.$infos=func.$infos
 return f}
-$B.promise=function(obj){if(obj.__class__===$B.JSObject){return obj.js}else if(obj.__class__===coroutine){var res=coroutine.send(obj)
-return res}
+$B.promise=function(obj){if(obj.__class__===$B.JSObject){return obj.js}else if(obj.__class__===coroutine){return coroutine.send(obj)}
 if(typeof obj=="function"){return obj()}
 return obj}
 $B.awaitable=function(obj){if(obj instanceof Response){return $B.JSObject.$factory(obj)}

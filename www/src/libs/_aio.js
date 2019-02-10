@@ -78,7 +78,6 @@ function get(){
         }
     if(args.body){
         url = url + "?" + args.body
-        console.log("add body", args.body)
     }
     var promise = {
         __class__: $B.coroutine,
@@ -88,6 +87,14 @@ function get(){
         }
     }
     return promise
+}
+
+function iscoroutine(f){
+    return f.__class__ === $B.coroutine
+}
+
+function iscoroutinefunction(f){
+    return (f.$infos.__code__.co_flags & 128) != 0
 }
 
 function post(){
@@ -124,10 +131,19 @@ function sleep(seconds){
 }
 
 function run(coro){
-    var noop = function(){}
+    var noop = function(){$B.leave_frame()},
+        err = function(ev){
+            var err_msg = "Traceback (most recent call last):\n"
+            err_msg += $B.print_stack(ev.$stack)
+            err_msg += "\n" + ev.__class__.$infos.__name__ +
+                ': ' + ev.args[0]
+            $B.builtins.print(err_msg)
+            throw ev
+        }
+
     var $ = $B.args("run", 3, {coro: null, onsuccess: null, onerror: null},
             ["coro", "onsuccess", "onerror"], arguments,
-            {onsuccess: noop, onerror: noop},
+            {onsuccess: noop, onerror: err},
             null, null),
         coro = $.coro,
         onsuccess = $.onsuccess,
@@ -135,6 +151,13 @@ function run(coro){
     return $B.coroutine.send(coro).then(onsuccess).catch(onerror)
 }
 
-return {get: get, post: post, run: run, sleep: sleep}
+return {
+    get: get,
+    iscoroutine: iscoroutine,
+    iscoroutinefunction: iscoroutinefunction,
+    post: post,
+    run: run,
+    sleep: sleep
+}
 
 })(__BRYTHON__)

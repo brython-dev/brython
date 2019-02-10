@@ -6,8 +6,7 @@ var future = $B.make_class("future")
 
 coroutine.close = function(self){}
 coroutine.send = function(self){
-    var res = self.$func.apply(null, self.$args)
-    return res
+    return self.$func.apply(null, self.$args)
 }
 
 $B.set_func_names(coroutine, "builtins")
@@ -29,8 +28,7 @@ $B.promise = function(obj){
     if(obj.__class__ === $B.JSObject){
         return obj.js
     }else if(obj.__class__ === coroutine){
-        var res = coroutine.send(obj)
-        return res
+        return coroutine.send(obj)
     }
     if(typeof obj == "function"){
         return obj()

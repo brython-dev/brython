@@ -1955,7 +1955,6 @@ $B.$setattr = function(obj, attr, value){
         if($test){console.log("obj is class", metaclass, metaclass[attr])}
         if(metaclass && metaclass[attr] && metaclass[attr].__get__ &&
                 metaclass[attr].__set__){
-            console.log("use data descriptor")
             metaclass[attr].__set__(obj, value)
             return None
         }

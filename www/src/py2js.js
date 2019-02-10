@@ -2500,6 +2500,10 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
             $NodeJS('$B.frames_stack.push($top_frame)'),
             $NodeJS('var $stack_length = $B.frames_stack.length')
         ]
+        if(this.async){
+            enter_frame_nodes.push($NodeJS("var $stack = " +
+                "$B.frames_stack.slice()"))
+        }
 
         if($B.profile > 1){
             if(this.scope.ntype == 'class'){
@@ -2836,6 +2840,9 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
             parent.children.splice(pos + 2, parent.children.length)
 
             var except_node = $NodeJS('catch(err)')
+            if(this.async){
+                except_node.add($NodeJS('err.$stack = $stack'))
+            }
             except_node.add($NodeJS('$B.leave_frame();throw err'))
 
             parent.add(except_node)
@@ -5308,7 +5315,7 @@ var $ReturnCtx = $B.parser.$ReturnCtx = function(context){
         // will be restored when entering "finally"
         var js = 'var $res = ' + $to_js(this.tree) + ';' + '$B.leave_frame'
         if(scope.id.substr(0, 6) == '$exec_'){js += '_exec'}
-        return js + '();return $res'
+        return js + '("' + scope.id +'");return $res'
     }
 }
 
