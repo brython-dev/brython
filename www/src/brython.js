@@ -80,8 +80,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.1"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-02-10 18:26:28.374171"
-__BRYTHON__.timestamp=1549819588374
+__BRYTHON__.compiled_date="2019-02-12 12:02:13.855987"
+__BRYTHON__.timestamp=1549969333855
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 ;
 
@@ -289,7 +289,8 @@ i+=offset}}else{var elt=this.C.tree[0],ctx_offset
 if(elt===undefined){console.log(this)}
 if(elt.transform !==undefined){ctx_offset=elt.transform(this,rank)}
 var i=0
-while(i < this.children.length){var offset=this.children[i].transform(i)
+while(i < this.children.length){try{var offset=this.children[i].transform(i)}catch(err){console.log("error",err,this,this.children[i])
+throw err}
 if(offset===undefined){offset=1}
 i+=offset}
 if(ctx_offset===undefined){ctx_offset=1}
@@ -1590,7 +1591,8 @@ this.loop_num=$loop_num
 this.module=$get_scope(this).module
 $loop_num++
 this.toString=function(){return '(for) '+this.tree}
-this.transform=function(node,rank){var scope=$get_scope(this),target=this.tree[0],target_is_1_tuple=target.tree.length==1 && target.expect=='id',iterable=this.tree[1],num=this.loop_num,local_ns='$locals_'+scope.id.replace(/\./g,'_'),h='\n'+' '.repeat(node.indent+4)
+this.transform=function(node,rank){if(this.async){return this.transform_async(node,rank)}
+var scope=$get_scope(this),target=this.tree[0],target_is_1_tuple=target.tree.length==1 && target.expect=='id',iterable=this.tree[1],num=this.loop_num,local_ns='$locals_'+scope.id.replace(/\./g,'_'),h='\n'+' '.repeat(node.indent+4)
 var $range=false
 if(target.tree.length==1 &&
 ! scope.blurred &&
@@ -1726,6 +1728,42 @@ while_node.add(
 $NodeJS('catch($err){if($B.is_exc($err, [StopIteration]))'+
 '{break;}else{throw($err)}}'))
 children.forEach(function(child){while_node.add(child)})
+node.children=[]
+return 0}
+this.transform_async=function(node,rank){
+var scope=$get_scope(this),target=this.tree[0],target_is_1_tuple=target.tree.length==1 && target.expect=='id',iterable=this.tree[1],num=this.loop_num,local_ns='$locals_'+scope.id.replace(/\./g,'_'),h='\n'+' '.repeat(node.indent+4)
+var new_nodes=[]
+var it_js=iterable.to_js(),iterable_name='$iter'+num,type_name='$type'+num,running_name='$running'+num,anext_name='$anext'+num,target_name='$target'+num,js='var '+iterable_name+' = '+it_js
+new_nodes.push($NodeJS(js))
+new_nodes.push($NodeJS('var '+type_name+' = _b_.type.$factory( '+
+iterable_name+')'))
+js=iterable_name+' = $B.$call($B.$getattr('+type_name+
+', "__aiter__"))('+iterable_name+')'
+new_nodes.push($NodeJS(js))
+new_nodes.push($NodeJS('var '+running_name+' = true'))
+new_nodes.push($NodeJS('var '+anext_name+
+' = $B.$call($B.$getattr('+type_name+', "__anext__"))'))
+var while_node=$NodeJS('while('+running_name+')')
+new_nodes.push(while_node)
+var try_node=$NodeJS('try')
+while_node.add(try_node)
+if(target.tree.length==1){var js=target.to_js()+' = $B.awaitable(await $B.promise('+
+anext_name+'('+iterable_name+')))'
+try_node.add($NodeJS(js))}else{var new_node=new $Node(),ctx=new $NodeCtx(new_node),expr=new $ExprCtx(ctx,"left",false)
+expr.tree.push(target)
+target.parent=expr
+var assign=new $AssignCtx(expr)
+new $RawJSCtx(assign,'$B.awaitable(await $B.promise('+
+anext_name+'('+iterable_name+')))')
+try_node.add(new_node)}
+var catch_node=$NodeJS('catch(err)')
+while_node.add(catch_node)
+var js='if(err.__class__ === _b_.StopAsyncIteration)'+
+'{'+running_name+' = false; continue}else{throw err}'
+catch_node.add($NodeJS(js))
+node.children.forEach(function(child){while_node.add(child)})
+node.parent.children.splice(rank,1)
+for(var i=new_nodes.length-1;i >=0;i--){node.parent.insert(rank,new_nodes[i])}
 node.children=[]
 return 0}
 this.to_js=function(){this.js_processed=true
@@ -3130,7 +3168,9 @@ C.guess_type()
 return $transition(C.parent,'eol')}
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'async':
-if(token=="def"){return $transition(C.parent,token,value)}
+if(token=="def"){return $transition(C.parent,token,value)}else if(token=="for"){var ctx=$transition(C.parent,token,value)
+ctx.parent.async=true 
+return ctx}
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'attribute':
 if(token==='id'){var name=value
@@ -4666,7 +4706,7 @@ var try_node=new $NodeJS('try'),children=root.children.slice(enter_frame_pos+1,r
 root.insert(enter_frame_pos+1,try_node)
 if(children.length==0){children=[$NodeJS('')]}
 children.forEach(function(child){try_node.add(child)})
-try_node.add($NodeJS('$B.leave_frame()'))
+try_node.add($NodeJS('if(!$locals.$run_async){$B.leave_frame()}'))
 root.children.splice(enter_frame_pos+2,root.children.length)
 var catch_node=new $NodeJS('catch(err)')
 catch_node.add($NodeJS('$B.leave_frame()'))
@@ -7329,7 +7369,7 @@ _str[pos++]="$B.set_func_names(_b_."+name+", 'builtins')"}
 try{eval(_str.join(";"))}catch(err){console.log("--err"+err)
 throw err}}
 $make_exc(["SystemExit","KeyboardInterrupt","GeneratorExit","Exception"],BaseException)
-$make_exc([["StopIteration","err.value = arguments[0]"],"ArithmeticError","AssertionError","AttributeError","BufferError","EOFError","ImportError","LookupError","MemoryError","NameError","OSError","ReferenceError","RuntimeError","SyntaxError","SystemError","TypeError","ValueError","Warning"],_b_.Exception)
+$make_exc([["StopIteration","err.value = arguments[0]"],["StopAsyncIteration","err.value = arguments[0]"],"ArithmeticError","AssertionError","AttributeError","BufferError","EOFError","ImportError","LookupError","MemoryError","NameError","OSError","ReferenceError","RuntimeError","SyntaxError","SystemError","TypeError","ValueError","Warning"],_b_.Exception)
 $make_exc(["FloatingPointError","OverflowError","ZeroDivisionError"],_b_.ArithmeticError)
 $make_exc(["IndexError","KeyError"],_b_.LookupError)
 $make_exc(["UnboundLocalError"],_b_.NameError)
@@ -12935,7 +12975,9 @@ $B.import_hooks=import_hooks})(__BRYTHON__)
 var coroutine=$B.coroutine=$B.make_class("coroutine")
 var future=$B.make_class("future")
 coroutine.close=function(self){}
-coroutine.send=function(self){return self.$func.apply(null,self.$args)}
+coroutine.send=function(self){
+$B.last($B.frames_stack)[3].$run_async=true
+return self.$func.apply(null,self.$args)}
 $B.set_func_names(coroutine,"builtins")
 $B.make_async=function(func){var f=function(){var args=arguments
 return{

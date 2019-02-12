@@ -131,8 +131,10 @@ function sleep(seconds){
 }
 
 function run(coro){
-    var noop = function(){$B.leave_frame()},
-        err = function(ev){
+    var handle_success = function(){
+            $B.leave_frame()
+        },
+        handle_error = function(ev){
             var err_msg = "Traceback (most recent call last):\n"
             err_msg += $B.print_stack(ev.$stack)
             err_msg += "\n" + ev.__class__.$infos.__name__ +
@@ -143,12 +145,25 @@ function run(coro){
 
     var $ = $B.args("run", 3, {coro: null, onsuccess: null, onerror: null},
             ["coro", "onsuccess", "onerror"], arguments,
-            {onsuccess: noop, onerror: err},
+            {onsuccess: handle_success, onerror: handle_error},
             null, null),
         coro = $.coro,
         onsuccess = $.onsuccess,
         onerror = $.onerror
-    return $B.coroutine.send(coro).then(onsuccess).catch(onerror)
+
+    if(onerror !== handle_error){
+        function error_func(exc){
+            try{
+                onerror(exc)
+            }catch(err){
+                handle_error(err)
+            }
+        }
+    }else{
+        error_func = handle_error
+    }
+    $B.coroutine.send(coro).then(onsuccess).catch(error_func)
+    return _b_.None
 }
 
 return {

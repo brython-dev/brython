@@ -518,6 +518,7 @@ function $make_exc(names, parent){
 $make_exc(["SystemExit", "KeyboardInterrupt", "GeneratorExit", "Exception"],
     BaseException)
 $make_exc([["StopIteration","err.value = arguments[0]"],
+    ["StopAsyncIteration","err.value = arguments[0]"],
     "ArithmeticError", "AssertionError", "AttributeError",
     "BufferError", "EOFError", "ImportError", "LookupError", "MemoryError",
     "NameError", "OSError", "ReferenceError", "RuntimeError", "SyntaxError",

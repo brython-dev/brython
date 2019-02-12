@@ -574,7 +574,7 @@ var $YieldFromMarkerNode = $B.parser.$YieldFromMarkerNode = function(params) {
                 params.iter_name,
                 new $JSCode('$B.$iter(' + params.yield_expr.tree[0].to_js() + ')')
         )
-        if (params.save_result) {
+        if(params.save_result){
             var assign_ctx = params.assign_ctx
             assign_ctx.tree.pop()
             var expr_ctx = new $ExprCtx(assign_ctx, 'id', true)
@@ -3202,6 +3202,9 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
     this.toString = function(){return '(for) ' + this.tree}
 
     this.transform = function(node,rank){
+        if(this.async){
+            return this.transform_async(node, rank)
+        }
         var scope = $get_scope(this),
             target = this.tree[0],
             target_is_1_tuple = target.tree.length == 1 && target.expect == 'id',
@@ -3491,6 +3494,110 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
             while_node.add(child)
         })
 
+        node.children = []
+        return 0
+    }
+
+    this.transform_async = function(node, rank){
+        /*
+        Transform "async for". As per PEP 492
+
+            async for TARGET in ITER:
+                BLOCK
+
+        is equivalent to
+
+            iter = (ITER)
+            iter = type(iter).__aiter__(iter)
+            running = True
+            while running:
+                try:
+                    TARGET = await type(iter).__anext__(iter)
+                except StopAsyncIteration:
+                    running = False
+                else:
+                    BLOCK
+        */
+
+        var scope = $get_scope(this),
+            target = this.tree[0],
+            target_is_1_tuple = target.tree.length == 1 && target.expect == 'id',
+            iterable = this.tree[1],
+            num = this.loop_num,
+            local_ns = '$locals_' + scope.id.replace(/\./g, '_'),
+            h = '\n' + ' '.repeat(node.indent + 4)
+
+        var new_nodes = []
+        // Line "iter = (ITER)
+        var it_js = iterable.to_js(),
+            iterable_name = '$iter' + num,
+            type_name = '$type' + num,
+            running_name = '$running' + num,
+            anext_name = '$anext' + num,
+            target_name = '$target' + num,
+            js = 'var ' + iterable_name + ' = ' + it_js
+        new_nodes.push($NodeJS(js))
+
+        // iter = type(iter).__aiter__(iter)
+        new_nodes.push($NodeJS('var ' + type_name + ' = _b_.type.$factory( ' +
+            iterable_name + ')'))
+
+        js = iterable_name + ' = $B.$call($B.$getattr(' + type_name +
+            ', "__aiter__"))(' + iterable_name + ')'
+        new_nodes.push($NodeJS(js))
+
+        // running = True
+        new_nodes.push($NodeJS('var ' + running_name + ' = true'))
+
+        new_nodes.push($NodeJS('var ' + anext_name +
+            ' = $B.$call($B.$getattr(' + type_name + ', "__anext__"))'))
+
+        // while running:
+        var while_node = $NodeJS('while(' + running_name + ')')
+        new_nodes.push(while_node)
+
+        // try:
+        var try_node = $NodeJS('try')
+        while_node.add(try_node)
+
+        // TARGET = await type(iter).__anext__(iter)
+        if(target.tree.length == 1){
+            var js = target.to_js() + ' = $B.awaitable(await $B.promise(' +
+                anext_name + '(' + iterable_name + ')))'
+            try_node.add($NodeJS(js))
+        }else{
+            var new_node = new $Node(),
+                ctx = new $NodeCtx(new_node),
+                expr = new $ExprCtx(ctx, "left", false)
+            expr.tree.push(target)
+            target.parent = expr
+            var assign = new $AssignCtx(expr)
+
+            new $RawJSCtx(assign, '$B.awaitable(await $B.promise(' +
+                anext_name + '(' + iterable_name + ')))')
+
+            try_node.add(new_node)
+        }
+
+        // except
+        var catch_node = $NodeJS('catch(err)')
+        while_node.add(catch_node)
+
+        var js = 'if(err.__class__ === _b_.StopAsyncIteration)' +
+            '{' + running_name + ' = false; continue}else{throw err}'
+        catch_node.add($NodeJS(js))
+
+        // else
+        node.children.forEach(function(child){
+            while_node.add(child)
+        })
+
+        // Remove original "for" node
+        node.parent.children.splice(rank, 1)
+
+        for(var i = new_nodes.length - 1; i >= 0; i--){
+            node.parent.insert(rank, new_nodes[i])
+        }
         node.children = []
         return 0
     }
@@ -5258,7 +5365,7 @@ var $RaiseCtx = $B.parser.$RaiseCtx = function(context){
     }
 }
 
-var $RawJSCtx = $B.parser.$RawJSCtx = function(context,js){
+var $RawJSCtx = $B.parser.$RawJSCtx = function(context, js){
     this.type = "raw_js"
     context.tree[context.tree.length] = this
     this.parent = context
@@ -6564,6 +6671,10 @@ var $transition = $B.parser.$transition = function(context, token, value){
         case 'async':
             if(token == "def"){
                 return $transition(context.parent, token, value)
+            }else if(token == "for"){
+                var ctx = $transition(context.parent, token, value)
+                ctx.parent.async = true // set attribute async of "for" context
+                return ctx
             }
             $_SyntaxError(context, 'token ' + token + ' after ' + context)
 
@@ -9158,7 +9269,8 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
         try_node.add(child)
     })
     // add node to exit frame in case no exception was raised
-    try_node.add($NodeJS('$B.leave_frame()'))
+    // See async.js / couroutine.send for an explanation on $run_async
+    try_node.add($NodeJS('if(!$locals.$run_async){$B.leave_frame()}'))
 
     root.children.splice(enter_frame_pos + 2, root.children.length)
 

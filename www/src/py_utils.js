@@ -18,13 +18,6 @@ $B.args = function($fname, argcount, slots, var_names, args, $dobj,
     // extra_pos_args = 'args'
     // extra_kw_args = 'kw'
 
-    /*
-    if($B.fargs[$fname] !== undefined){
-        $B.fargs[$fname]++
-    }else{
-        $B.fargs[$fname] = 1
-    }
-    */
     var $args = []
     if(Array.isArray(args)){$args = args}
     else{

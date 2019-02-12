@@ -1,20 +1,65 @@
-from browser import console, aio
+from browser import html, aio
 
-async def wait_secs(s, result):
-    await aio.sleep(s)
-    console.log("Returning result", result)
-    return result
+results = []
 
-async def test_simple_coroutine():
-    console.log("coro_wait_secs")
-    coro_wait_secs = wait_secs(0.1, 10)
-    console.log("ensuring future")
-    fut = await coro_wait_secs
+async def f(url):
+    req = await aio.get(url)
+    if req.status == 200:
+        txt = await req.text()
+        return (url, len(txt))
+    else:
+        return (url, None)
 
-    console.log("asserting")
-    assert aio.iscoroutine(coro_wait_secs), "Result of running a coroutine function should be a coroutine object"
-    assert aio.iscoroutinefunction(wait_secs), "asyncio.coroutine decorator should return a coroutine function"
-    console.log("asserts ok")
-    assert fut == 10, "Future result different from expected"
+async def g(urls):
+    print("wait 3 seconds...")
+    await aio.sleep(3)
+    for url in urls:
+        r = await f(url)
+        results.append(r)
+    report()
+    await foo()
+    await bar()
 
-aio.run(test_simple_coroutine())
+def report(*args):
+    for url, size in results:
+        if size is not None:
+            print(f"file at {url}: {size} bytes")
+        else:
+            print(f"file at {url}: not found")
+
+
+class Done(Exception):
+    pass
+
+
+class AIter:
+    def __init__(self):
+        self.count = 0
+
+    def __aiter__(self):
+        return self
+
+    async def __anext__(self):
+        self.count += 1
+        if self.count > 3:
+            raise StopAsyncIteration
+        return (0, self.count)
+
+
+async def foo():
+    data = []
+    async for i, j in AIter():
+        data.append([i, j])
+    assert data == [[0, 1], [0, 2], [0, 3]]
+    print("async for test ok")
+
+async def bar():
+    raise Done
+
+def handle(err):
+    assert isinstance(err, Done)
+    print("handle error ok")
+
+print("Start...")
+aio.run(g(["ajax.html", "clock.html", "unknown.txt"]),
+        onerror=handle)
