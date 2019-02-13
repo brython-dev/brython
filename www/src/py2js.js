@@ -4091,9 +4091,12 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         // get global scope
         var gs = innermost
 
-        var $test = false //val == "x"
+        var $test = false //val == "xwq"
 
-        if($test){console.log("innermost", innermost)}
+        if($test){
+            console.log("this", this)
+            console.log("innermost", innermost)
+        }
 
         while(true){
             if(gs.parent_block){
@@ -5963,16 +5966,30 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
 
     this.toString = function(){return '(with) ' + this.tree}
 
-    this.set_alias = function(arg){
-        this.tree[this.tree.length - 1].alias = arg
-        $bind(arg, this.scope, this)
-        if(this.scope.ntype !== 'module'){
-            // add to function local names
-            this.scope.context.tree[0].locals.push(arg)
+    this.set_alias = function(ctx){
+        var ids = []
+        if(ctx.type == "id"){
+            ids = [ctx]
+        }else if(ctx.type == "list_or_tuple"){
+            // Form "with manager as (x, y)"
+            ctx.tree.forEach(function(expr){
+                if(expr.type == "expr" && expr.tree[0].type == "id"){
+                    ids.push(expr.tree[0])
+                }
+            })
+        }
+        for(var i = 0, len = ids.length; i < len; i++){
+            var id_ctx = ids[i]
+            $bind(id_ctx.value, this.scope, this)
+            id_ctx.bound = true
+            if(this.scope.ntype !== 'module'){
+                // add to function local names
+                this.scope.context.tree[0].locals.push(id_ctx.value)
+            }
         }
     }
 
-    this.transform = function(node,rank){
+    this.transform = function(node, rank){
 
         while(this.tree.length > 1){
             /*
@@ -5993,6 +6010,7 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
                 with_ctx = new $WithCtx(ctx)
             item.parent = with_ctx
             with_ctx.tree = [item]
+            with_ctx.async = this.async
             suite.forEach(function(elt){
                 new_node.add(elt)
             })
@@ -6048,6 +6066,7 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
             nw.module = node.module
             nw.indent = node.indent + 4
             var wc = new $WithCtx(ctx)
+            wc.async = this.async
             wc.tree = this.tree.slice(1)
             node.children.forEach(function(elt){
                 nw.add(elt)
@@ -6056,6 +6075,10 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
             this.transformed = true
 
             return
+        }
+
+        if(this.async){
+            return this.transform_async(node, rank)
         }
 
         // Used to create js identifiers:
@@ -6141,6 +6164,124 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
         node.parent.insert(rank + 1, finally_node)
 
         this.transformed = true
+    }
+
+    this.transform_async = function(node, rank){
+        /*
+        PEP 492 says that
+
+            async with EXPR as VAR:
+                BLOCK
+
+        is semantically equivalent to:
+
+            mgr = (EXPR)
+            aexit = type(mgr).__aexit__
+            aenter = type(mgr).__aenter__(mgr)
+
+            VAR = await aenter
+            try:
+                BLOCK
+            except:
+                if not await aexit(mgr, *sys.exc_info()):
+                    raise
+            else:
+                await aexit(mgr, None, None, None)
+        */
+
+        var scope = $get_scope(this),
+            expr = this.tree[0],
+            alias = this.tree[0].alias
+
+        var new_nodes = []
+        var num = this.num = $loop_num++
+        var cm_name  = '$ctx_manager' + num,
+            cmtype_name = '$ctx_mgr_type' + num,
+            cmenter_name = '$ctx_manager_enter' + num,
+            cmexit_name = '$ctx_manager_exit' + num,
+            exc_name = '$exc' + num,
+            err_name = '$err' + num
+
+        // Line mgr = (EXPR)
+        var js = 'var ' + cm_name + ' = ' + expr.to_js() +','
+        new_nodes.push($NodeJS(js))
+
+        // aexit = type(mgr).__aexit__
+        new_nodes.push($NodeJS('    ' + cmtype_name +
+            ' = _b_.type.$factory(' + cm_name + '),'))
+        new_nodes.push($NodeJS('    ' + cmexit_name +
+            ' = $B.$call($B.$getattr(' + cmtype_name + ', "__aexit__")),'))
+
+        // aenter = type(mgr).__aenter__(mgr)
+        new_nodes.push($NodeJS('    ' + cmenter_name +
+            ' = $B.$call($B.$getattr(' + cmtype_name + ', "__aenter__"))' +
+            '(' + cm_name + '),'))
+
+        new_nodes.push($NodeJS("    " + exc_name + " = false"))
+
+        // VAR = await aenter
+        js = ""
+
+        if(alias){
+            if(alias.tree[0].tree[0].type != "list_or_tuple"){
+                var js = alias.tree[0].to_js() + ' = $B.awaitable(' +
+                    'await $B.promise(' + cmenter_name + '))'
+                new_nodes.push($NodeJS(js))
+            }else{
+                // Form "with manager as(x, y)"
+                var new_node = new $Node(),
+                    ctx = new $NodeCtx(new_node),
+                    expr = new $ExprCtx(ctx, "left", false)
+                expr.tree.push(alias.tree[0].tree[0])
+                alias.tree[0].tree[0].parent = expr
+                var assign = new $AssignCtx(expr)
+
+                new $RawJSCtx(assign, '$B.awaitable(await $B.promise(' +
+                    cmenter_name + '))')
+
+                new_nodes.push(new_node)
+            }
+        }
+
+        // try:
+        //     BLOCK
+        var try_node = new $NodeJS('try')
+        node.children.forEach(function(child){
+            try_node.add(child)
+        })
+        new_nodes.push(try_node)
+
+        // except:
+        var catch_node = new $NodeJS('catch(err)')
+        new_nodes.push(catch_node)
+
+        //     if not await aexit(mgr, $sys.exc_info())
+        catch_node.add($NodeJS(exc_name + ' = true'))
+        catch_node.add($NodeJS('var ' + err_name +
+            ' = $B.imported["_sys"].exc_info()'))
+        var if_node = $NodeJS('if(! $B.awaitable(await $B.promise(' +
+            cmexit_name + '(' + cm_name + ', ' + err_name + '[0], ' +
+            err_name + '[1], ' + err_name + '[2]))))')
+        catch_node.add(if_node)
+        //         raise
+        if_node.add($NodeJS('$B.$raise()'))
+
+        // else:
+        var else_node = $NodeJS('if(! ' + exc_name +')')
+        new_nodes.push(else_node)
+        //     await aexit(mgr, None, None, None)
+        else_node.add($NodeJS('$B.awaitable(await $B.promise(' +
+            cm_name + ', _b_.None, _b_.None, _b_.None))'))
+
+        // Remove original "for" node
+        node.parent.children.splice(rank, 1)
+
+        for(var i = new_nodes.length - 1; i >= 0; i--){
+            node.parent.insert(rank, new_nodes[i])
+        }
+        node.children = []
+        return 0
+
     }
 
     this.to_js = function(){
@@ -6671,9 +6812,9 @@ var $transition = $B.parser.$transition = function(context, token, value){
         case 'async':
             if(token == "def"){
                 return $transition(context.parent, token, value)
-            }else if(token == "for"){
+            }else if(token == "for" || token == "with"){
                 var ctx = $transition(context.parent, token, value)
-                ctx.parent.async = true // set attribute async of "for" context
+                ctx.parent.async = true // set attr "async" of for/with context
                 return ctx
             }
             $_SyntaxError(context, 'token ' + token + ' after ' + context)
@@ -6903,6 +7044,10 @@ var $transition = $B.parser.$transition = function(context, token, value){
             switch(token){
                 case ',':
                 case ':':
+                    //if(context.tree[0].type == "expr" &&
+                    //        context.tree[0].tree[0].type == "id"){
+                        context.parent.set_alias(context.tree[0].tree[0])
+                    //}
                     return $transition(context.parent, token, value)
             }
             $_SyntaxError(context, 'token ' + token + ' after ' + context)
@@ -8411,15 +8556,7 @@ var $transition = $B.parser.$transition = function(context, token, value){
                             new $AbstractExprCtx(context, false), token,
                                 value)
                     }
-                    if(context.expect == 'alias'){
-                        if(context.parenth !== undefined){
-                            context.expect = ','
-                        }
-                        else{context.expect = ':'}
-                        context.set_alias(value)
-                        return context
-                    }
-                    break
+                    $_SyntaxError(context, 'token ' + token + ' after ' + context)
                 case 'as':
                     return new $AbstractExprCtx(new $AliasCtx(context))
                 case ':':

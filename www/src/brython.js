@@ -80,8 +80,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.1"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-02-12 12:02:13.855987"
-__BRYTHON__.timestamp=1549969333855
+__BRYTHON__.compiled_date="2019-02-13 09:20:44.334905"
+__BRYTHON__.timestamp=1550046044334
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 ;
 
@@ -289,8 +289,7 @@ i+=offset}}else{var elt=this.C.tree[0],ctx_offset
 if(elt===undefined){console.log(this)}
 if(elt.transform !==undefined){ctx_offset=elt.transform(this,rank)}
 var i=0
-while(i < this.children.length){try{var offset=this.children[i].transform(i)}catch(err){console.log("error",err,this,this.children[i])
-throw err}
+while(i < this.children.length){var offset=this.children[i].transform(i)
 if(offset===undefined){offset=1}
 i+=offset}
 if(ctx_offset===undefined){ctx_offset=1}
@@ -1964,7 +1963,8 @@ var innermost=$get_scope(this),scope=innermost,found=[]
 var search_ids=['"'+innermost.id+'"']
 var gs=innermost
 var $test=false 
-if($test){console.log("innermost",innermost)}
+if($test){console.log("this",this)
+console.log("innermost",innermost)}
 while(true){if(gs.parent_block){if(gs.parent_block==$B.builtins_scope){break}
 else if(gs.parent_block.id===undefined){break}
 gs=gs.parent_block}
@@ -2824,14 +2824,19 @@ this.tree=[]
 this.expect='as'
 this.scope=$get_scope(this)
 this.toString=function(){return '(with) '+this.tree}
-this.set_alias=function(arg){this.tree[this.tree.length-1].alias=arg
-$bind(arg,this.scope,this)
+this.set_alias=function(ctx){var ids=[]
+if(ctx.type=="id"){ids=[ctx]}else if(ctx.type=="list_or_tuple"){
+ctx.tree.forEach(function(expr){if(expr.type=="expr" && expr.tree[0].type=="id"){ids.push(expr.tree[0])}})}
+for(var i=0,len=ids.length;i < len;i++){var id_ctx=ids[i]
+$bind(id_ctx.value,this.scope,this)
+id_ctx.bound=true
 if(this.scope.ntype !=='module'){
-this.scope.C.tree[0].locals.push(arg)}}
+this.scope.C.tree[0].locals.push(id_ctx.value)}}}
 this.transform=function(node,rank){while(this.tree.length > 1){
 var suite=node.children,item=this.tree.pop(),new_node=new $Node(),ctx=new $NodeCtx(new_node),with_ctx=new $WithCtx(ctx)
 item.parent=with_ctx
 with_ctx.tree=[item]
+with_ctx.async=this.async
 suite.forEach(function(elt){new_node.add(elt)})
 node.children=[new_node]}
 node.is_try=true 
@@ -2841,11 +2846,13 @@ nw.parent=node
 nw.module=node.module
 nw.indent=node.indent+4
 var wc=new $WithCtx(ctx)
+wc.async=this.async
 wc.tree=this.tree.slice(1)
 node.children.forEach(function(elt){nw.add(elt)})
 node.children=[nw]
 this.transformed=true
 return}
+if(this.async){return this.transform_async(node,rank)}
 var num=this.num=$loop_num++
 var cm_name='$ctx_manager'+num,cme_name='$ctx_manager_exit'+num,exc_name='$exc'+num,err_name='$err'+num,val_name='$value'+num
 if(this.tree[0].alias===null){this.tree[0].alias='$temp'}
@@ -2896,6 +2903,53 @@ finally_node.add($NodeJS('if('+exc_name+')'+cme_name+
 )
 node.parent.insert(rank+1,finally_node)
 this.transformed=true}
+this.transform_async=function(node,rank){
+var scope=$get_scope(this),expr=this.tree[0],alias=this.tree[0].alias
+var new_nodes=[]
+var num=this.num=$loop_num++
+var cm_name='$ctx_manager'+num,cmtype_name='$ctx_mgr_type'+num,cmenter_name='$ctx_manager_enter'+num,cmexit_name='$ctx_manager_exit'+num,exc_name='$exc'+num,err_name='$err'+num
+var js='var '+cm_name+' = '+expr.to_js()+','
+new_nodes.push($NodeJS(js))
+new_nodes.push($NodeJS('    '+cmtype_name+
+' = _b_.type.$factory('+cm_name+'),'))
+new_nodes.push($NodeJS('    '+cmexit_name+
+' = $B.$call($B.$getattr('+cmtype_name+', "__aexit__")),'))
+new_nodes.push($NodeJS('    '+cmenter_name+
+' = $B.$call($B.$getattr('+cmtype_name+', "__aenter__"))'+
+'('+cm_name+'),'))
+new_nodes.push($NodeJS("    "+exc_name+" = false"))
+js=""
+if(alias){if(alias.tree[0].tree[0].type !="list_or_tuple"){var js=alias.tree[0].to_js()+' = $B.awaitable('+
+'await $B.promise('+cmenter_name+'))'
+new_nodes.push($NodeJS(js))}else{
+var new_node=new $Node(),ctx=new $NodeCtx(new_node),expr=new $ExprCtx(ctx,"left",false)
+expr.tree.push(alias.tree[0].tree[0])
+alias.tree[0].tree[0].parent=expr
+var assign=new $AssignCtx(expr)
+new $RawJSCtx(assign,'$B.awaitable(await $B.promise('+
+cmenter_name+'))')
+new_nodes.push(new_node)}}
+var try_node=new $NodeJS('try')
+node.children.forEach(function(child){try_node.add(child)})
+new_nodes.push(try_node)
+var catch_node=new $NodeJS('catch(err)')
+new_nodes.push(catch_node)
+catch_node.add($NodeJS(exc_name+' = true'))
+catch_node.add($NodeJS('var '+err_name+
+' = $B.imported["_sys"].exc_info()'))
+var if_node=$NodeJS('if(! $B.awaitable(await $B.promise('+
+cmexit_name+'('+cm_name+', '+err_name+'[0], '+
+err_name+'[1], '+err_name+'[2]))))')
+catch_node.add(if_node)
+if_node.add($NodeJS('$B.$raise()'))
+var else_node=$NodeJS('if(! '+exc_name+')')
+new_nodes.push(else_node)
+else_node.add($NodeJS('$B.awaitable(await $B.promise('+
+cm_name+', _b_.None, _b_.None, _b_.None))'))
+node.parent.children.splice(rank,1)
+for(var i=new_nodes.length-1;i >=0;i--){node.parent.insert(rank,new_nodes[i])}
+node.children=[]
+return 0}
 this.to_js=function(){this.js_processed=true
 var indent=$get_node(this).indent,h=' '.repeat(indent+4),num=this.num
 var cm_name='$ctx_manager'+num,cme_name='$ctx_manager_exit'+num,exc_name='$exc'+num,val_name='$value'+num
@@ -3168,7 +3222,7 @@ C.guess_type()
 return $transition(C.parent,'eol')}
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'async':
-if(token=="def"){return $transition(C.parent,token,value)}else if(token=="for"){var ctx=$transition(C.parent,token,value)
+if(token=="def"){return $transition(C.parent,token,value)}else if(token=="for" ||token=="with"){var ctx=$transition(C.parent,token,value)
 ctx.parent.async=true 
 return ctx}
 $_SyntaxError(C,'token '+token+' after '+C)
@@ -3330,6 +3384,7 @@ $_SyntaxError(C,'token '+token+' after '+C)
 case 'ctx_manager_alias':
 switch(token){case ',':
 case ':':
+C.parent.set_alias(C.tree[0].tree[0])
 return $transition(C.parent,token,value)}
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'decorator':
@@ -4276,11 +4331,7 @@ switch(token){case 'id':
 if(C.expect=='id'){C.expect='as'
 return $transition(
 new $AbstractExprCtx(C,false),token,value)}
-if(C.expect=='alias'){if(C.parenth !==undefined){C.expect=','}
-else{C.expect=':'}
-C.set_alias(value)
-return C}
-break
+$_SyntaxError(C,'token '+token+' after '+C)
 case 'as':
 return new $AbstractExprCtx(new $AliasCtx(C))
 case ':':
