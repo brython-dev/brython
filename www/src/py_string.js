@@ -858,8 +858,7 @@ str.toString = function(){return "string!"}
 
 // generate comparison methods
 var $comp_func = function(self,other){
-    if(typeof other !== "string"){throw _b_.TypeError.$factory(
-        "unorderable types: 'str' > " + $B.class_name(other) + "()")}
+    if(typeof other !== "string"){return _b_.NotImplemented}
     return self > other
 }
 $comp_func += "" // source code

@@ -178,8 +178,7 @@ list.__getitem__ = function(self, arg){
 
 list.__ge__ = function(self, other){
     if(! isinstance(other, [list, _b_.tuple])){
-        throw _b_.TypeError.$factory("unorderable types: list() >= "+
-            $B.class_name(other) + "()")
+        return _b_.NotImplemented
     }
     var i = 0
     while(i < self.length){
@@ -200,8 +199,7 @@ list.__ge__ = function(self, other){
 
 list.__gt__ = function(self, other){
     if(! isinstance(other, [list, _b_.tuple])){
-        throw _b_.TypeError.$factory("unorderable types: list() > " +
-            $B.class_name(other) + "()")
+        return _b_.NotImplemented
     }
     var i = 0
     while(i < self.length){
@@ -284,7 +282,9 @@ list.__iter__ = function(self){
 }
 
 list.__le__ = function(self, other){
-    return ! list.__gt__(self, other)
+    var res = list.__ge__(self, other)
+    if(res === _b_.NotImplemented){return res}
+    return ! res
 }
 
 list.__len__ = function(self){
@@ -293,8 +293,7 @@ list.__len__ = function(self){
 
 list.__lt__ = function(self, other){
     if(! isinstance(other, [list, _b_.tuple])){
-        throw _b_.TypeError.$factory("unorderable types: list() >= "+
-            $B.class_name(other) + "()")
+        return _b_.NotImplemented
     }
     var i = 0
     while(i < self.length){

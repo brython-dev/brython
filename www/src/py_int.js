@@ -806,19 +806,20 @@ bool.__eq__ = function(self, other){
     }else{
         return false
     }
-    //return self ? $B.$bool(other) : !$B.$bool(other)
+    return _b_.NotImplemented
 }
 
 bool.__ne__ = function(self,other){
-    return ! bool.__eq__(self, other)
+    var res = bool.__eq__(self, other)
+    return res === _b_.NotImplemented ? res : ! res
 }
 
-bool.__ge__ = function(self,other){
-    return _b_.int.__ge__(bool.__hash__(self),other)
+bool.__ge__ = function(self, other){
+    return _b_.int.__ge__(bool.__hash__(self), other)
 }
 
-bool.__gt__ = function(self,other){
-    return _b_.int.__gt__(bool.__hash__(self),other)
+bool.__gt__ = function(self, other){
+    return _b_.int.__gt__(bool.__hash__(self), other)
 }
 
 bool.__hash__ = bool.__index__ = bool.__int__ = function(self){
@@ -826,11 +827,17 @@ bool.__hash__ = bool.__index__ = bool.__int__ = function(self){
    return 0
 }
 
-bool.__le__ = function(self, other){return ! bool.__gt__(self, other)}
+bool.__le__ = function(self, other){
+    var res = bool.__gt__(self, other)
+    return res === _b_.NotImplemented ? res : ! res
+}
 
 bool.__lshift__ = function(self, other){return self.valueOf() << other}
 
-bool.__lt__ = function(self, other){return ! bool.__ge__(self, other)}
+bool.__lt__ = function(self, other){
+    var res = bool.__ge__(self, other)
+    return res === _b_.NotImplemented ? res : ! res
+}
 
 bool.__mul__ = function(self, other){
     return self ? other : 0

@@ -94,11 +94,13 @@ set.__format__ = function(self, format_string){
 }
 
 set.__ge__ = function(self, other){
-    return set.__le__(other, self)
+    var res = set.__le__(self, other)
+    return res === _b_.NotImplemented ? res : ! res
 }
 
 set.__gt__ = function(self, other){
-    return set.__lt__(other, self)
+    var res = set.__lt__(self, other)
+    return res === _b_.NotImplemented ? res : ! res
 }
 
 set.__init__ = function(self, iterable, second){
@@ -155,18 +157,18 @@ set.__le__ = function(self, other){
         }
         return true
     }else{
-        return _b_.object.__le__(self, other)
+        return _b_.NotImplemented
     }
 }
 
 set.__len__ = function(self){return self.$items.length}
 
-set.__lt__ = function(self,other){
+set.__lt__ = function(self, other){
     if(_b_.isinstance(other, [set, frozenset])){
-        return set.__le__(self,other) &&
-            set.__len__(self)<_b_.getattr(other,"__len__")()
+        return set.__le__(self, other) &&
+            set.__len__(self) < _b_.getattr(other,"__len__")()
     }else{
-        return _b_.object["__lt__"](self, other) // try other > self
+        return _b_.NotImplemented
     }
 }
 
@@ -208,14 +210,12 @@ set.__reduce_ex__ = function(self, protocol){
 }
 
 set.__str__ = set.__repr__ = function(self){
-    var frozen = self.$real === "frozen"
+    var klass_name = $B.class_name(self)
     self.$cycle = self.$cycle === undefined ? 0 : self.$cycle + 1
     if(self.$items.length === 0){
-        if(frozen) {return "frozenset()"}
-        return "set()"
+        return klass_name + "()"
     }
-    var klass_name = $B.class_name(self),
-        head = klass_name + "({",
+    var head = klass_name + "({",
         tail = "})"
     if(head == "set({"){head = "{"; tail = "}"}
     var res = []

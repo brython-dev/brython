@@ -80,8 +80,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.1"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-02-13 09:20:44.334905"
-__BRYTHON__.timestamp=1550046044334
+__BRYTHON__.compiled_date="2019-02-13 14:02:33.221636"
+__BRYTHON__.timestamp=1550062953221
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 ;
 
@@ -6120,8 +6120,10 @@ return x1 >=y1
 case "__gt__":
 return x1 > y1}}
 var res,rev_op,compared=false
-if(x.$is_class ||x.$factory){if(op=="__eq__"){return(x===y)}else if(op=="__ne__"){return !(x===y)}else{throw _b_.TypeError.$factory("'"+op+
-"' not supported between types")}}
+if(x.$is_class ||x.$factory){if(op=="__eq__"){return(x===y)}else if(op=="__ne__"){return !(x===y)}else{throw _b_.TypeError.$factory("'"+method2comp[op]+
+"' not supported between instances of '"+
+$B.get_class(x).$infos.__name__+"' and '"+
+$B.get_class(y).$infos.__name__+"'")}}
 if(x.__class__ && y.__class__){
 if(y.__class__.__mro__.indexOf(x.__class__)>-1){rev_op=reversed_op[op]||op
 var rev_func=$B.$getattr(y,rev_op)
@@ -7587,6 +7589,7 @@ if(_b_.isinstance(obj,[bytes,bytearray])){res=obj.source}else{var ga=$B.$getattr
 if(ga !==null){res=$B.$call(ga)().source}
 else{throw _b_.TypeError.$factory("object doesn't support the buffer protocol")}}
 return res}
+function invalid(other){return ! _b_.isinstance(other,[bytes,bytearray])}
 var bytearray={__class__:_b_.type,__mro__:[object],$buffer_protocol:true,$infos:{__module__:"builtins",__name__:"bytearray"},$is_class:true}
 var mutable_methods=["__delitem__","clear","copy","count","index","pop","remove","reverse","sort"]
 mutable_methods.forEach(function(method){bytearray[method]=(function(m){return function(self){var args=[self.source],pos=1
@@ -7636,8 +7639,10 @@ if(flag){return true}}
 return false}
 var $bytes_iterator=$B.$iterator_class("bytes_iterator")
 bytes.__iter__=function(self){return $B.$iterator(self.source,$bytes_iterator)}
-bytes.__eq__=function(self,other){return getattr(self.source,'__eq__')(other.source)}
-bytes.__ge__=function(self,other){return _b_.list.__ge__(self.source,other.source)}
+bytes.__eq__=function(self,other){if(invalid(other)){return false}
+return getattr(self.source,'__eq__')(other.source)}
+bytes.__ge__=function(self,other){if(invalid(other)){return _b_.NotImplemented}
+return _b_.list.__ge__(self.source,other.source)}
 bytes.__getitem__=function(self,arg){var i
 if(isinstance(arg,_b_.int)){var pos=arg
 if(arg < 0){pos=self.source.length+pos}
@@ -7657,15 +7662,18 @@ for(var i=start;i < stop;i+=step){res[pos++]=self.source[i]}}else{if(stop >=star
 stop=Math.max(0,stop)
 for(var i=start;i >=stop;i+=step){res[pos++]=self.source[i]}}
 return bytes.$factory(res)}else if(isinstance(arg,_b_.bool)){return self.source.__getitem__(_b_.int.$factory(arg))}}
-bytes.__gt__=function(self,other){return _b_.list.__gt__(self.source,other.source)}
+bytes.__gt__=function(self,other){if(invalid(other)){return _b_.NotImplemented}
+return _b_.list.__gt__(self.source,other.source)}
 bytes.__hash__=function(self){if(self===undefined){return bytes.__hashvalue__ ||$B.$py_next_hash--}
 var hash=1
 for(var i=0,len=self.source.length;i < len;i++){hash=(101*hash+self.source[i])& 0xFFFFFFFF}
 return hash}
 bytes.__init__=function(){return _b_.None}
-bytes.__le__=function(self,other){return _b_.list.__le__(self.source,other.source)}
+bytes.__le__=function(self,other){if(invalid(other)){return _b_.NotImplemented}
+return _b_.list.__le__(self.source,other.source)}
 bytes.__len__=function(self){return self.source.length}
-bytes.__lt__=function(self,other){return _b_.list.__lt__(self.source,other.source)}
+bytes.__lt__=function(self,other){if(invalid(other)){return _b_.NotImplemented}
+return _b_.list.__lt__(self.source,other.source)}
 bytes.__mul__=function(){var $=$B.args('__mul__',2,{self:null,other:null},['self','other'],arguments,{},null,null),other=$B.PyNumber_Index($.other)
 var t=[],source=$.self.source,slen=source.length
 for(var i=0;i < other;i++){for(var j=0;j < slen;j++){t.push(source[j])}}
@@ -8110,8 +8118,10 @@ return true}
 return false}
 return _b_.NotImplemented}
 set.__format__=function(self,format_string){return set.__str__(self)}
-set.__ge__=function(self,other){return set.__le__(other,self)}
-set.__gt__=function(self,other){return set.__lt__(other,self)}
+set.__ge__=function(self,other){var res=set.__le__(self,other)
+return res===_b_.NotImplemented ? res :! res}
+set.__gt__=function(self,other){var res=set.__lt__(self,other)
+return res===_b_.NotImplemented ? res :! res}
 set.__init__=function(self,iterable,second){if(second===undefined){if(Array.isArray(iterable)){for(var i=0,len=iterable.length;i < len;i++){$add(self,iterable[i])}
 return _b_.None}}
 var $=$B.args("__init__",2,{self:null,iterable:null},["self","iterable"],arguments,{iterable:[]},null,null),self=$.self,iterable=$.iterable
@@ -8129,10 +8139,10 @@ return nxt()}
 return it}
 set.__le__=function(self,other){if(_b_.isinstance(other,[set,frozenset])){var cfunc=_b_.getattr(other,"__contains__")
 for(var i=0,len=self.$items.length;i < len;i++){if(! cfunc(self.$items[i])){return false}}
-return true}else{return _b_.object.__le__(self,other)}}
+return true}else{return _b_.NotImplemented}}
 set.__len__=function(self){return self.$items.length}
 set.__lt__=function(self,other){if(_b_.isinstance(other,[set,frozenset])){return set.__le__(self,other)&&
-set.__len__(self)<_b_.getattr(other,"__len__")()}else{return _b_.object["__lt__"](self,other)}}
+set.__len__(self)< _b_.getattr(other,"__len__")()}else{return _b_.NotImplemented}}
 set.__mro__=[_b_.object]
 set.__new__=function(cls){if(cls===undefined){throw _b_.TypeError.$factory("set.__new__(): not enough arguments")}
 return{
@@ -8146,11 +8156,10 @@ res.__class__=self.__class__
 return res}
 set.__reduce__=function(self){return _b_.tuple.$factory([self.__class__,_b_.tuple.$factory([self.$items]),_b_.None])}
 set.__reduce_ex__=function(self,protocol){return set.__reduce__(self)}
-set.__str__=set.__repr__=function(self){var frozen=self.$real==="frozen"
+set.__str__=set.__repr__=function(self){var klass_name=$B.class_name(self)
 self.$cycle=self.$cycle===undefined ? 0 :self.$cycle+1
-if(self.$items.length===0){if(frozen){return "frozenset()"}
-return "set()"}
-var klass_name=$B.class_name(self),head=klass_name+"({",tail="})"
+if(self.$items.length===0){return klass_name+"()"}
+var head=klass_name+"({",tail="})"
 if(head=="set({"){head="{";tail="}"}
 var res=[]
 if(self.$cycle){self.$cycle--
@@ -9117,7 +9126,8 @@ return new Number(self*bool_value)}
 if(isinstance(other,_b_.complex)){return $B.make_complex(float.$factory(self*other.$real),float.$factory(self*other.$imag))}
 if(hasattr(other,"__rmul__")){return getattr(other,"__rmul__")(self)}
 $err("*",other)}
-float.__ne__=function(self,other){return ! float.__eq__(self,other)}
+float.__ne__=function(self,other){var res=float.__eq__(self,other)
+return res===_b_.NotImplemented ? res :! res}
 float.__neg__=function(self,other){return float.$factory(-self)}
 float.__pos__=function(self){return self}
 float.__pow__=function(self,other){var other_int=isinstance(other,_b_.int)
@@ -9594,15 +9604,19 @@ var bool={__bases__:[int],__class__:_b_.type,__mro__:[int,object],$infos:{__name
 bool.__add__=function(self,other){return(other ? 1 :0)+(self ? 1 :0)}
 bool.__and__=function(self,other){return $B.$bool(int.__and__(self,other))}
 bool.__eq__=function(self,other){if(other===self){return True}
-else if(typeof other=="number"){return self ? other==1 :other==0}else if(isinstance(other,_b_.int)){return self ? other.$value==1 :other.$value==0}else if(other instanceof Number){return self ? other==1 :other==0}else{return false}}
-bool.__ne__=function(self,other){return ! bool.__eq__(self,other)}
+else if(typeof other=="number"){return self ? other==1 :other==0}else if(isinstance(other,_b_.int)){return self ? other.$value==1 :other.$value==0}else if(other instanceof Number){return self ? other==1 :other==0}else{return false}
+return _b_.NotImplemented}
+bool.__ne__=function(self,other){var res=bool.__eq__(self,other)
+return res===_b_.NotImplemented ? res :! res}
 bool.__ge__=function(self,other){return _b_.int.__ge__(bool.__hash__(self),other)}
 bool.__gt__=function(self,other){return _b_.int.__gt__(bool.__hash__(self),other)}
 bool.__hash__=bool.__index__=bool.__int__=function(self){if(self.valueOf())return 1
 return 0}
-bool.__le__=function(self,other){return ! bool.__gt__(self,other)}
+bool.__le__=function(self,other){var res=bool.__gt__(self,other)
+return res===_b_.NotImplemented ? res :! res}
 bool.__lshift__=function(self,other){return self.valueOf()<< other}
-bool.__lt__=function(self,other){return ! bool.__ge__(self,other)}
+bool.__lt__=function(self,other){var res=bool.__ge__(self,other)
+return res===_b_.NotImplemented ? res :! res}
 bool.__mul__=function(self,other){return self ? other :0}
 bool.__neg__=function(self){return-$B.int_or_bool(self)}
 bool.__or__=function(self,other){return $B.$bool(int.__or__(self,other))}
@@ -9998,7 +10012,7 @@ if(isinstance(other,_b_.int)){if(self.$imag !=0){return False}
 return self.$real==other.valueOf()}
 if(isinstance(other,_b_.float)){if(self.$imag !=0){return False}
 return self.$real==other.valueOf()}
-$UnsupportedOpType("==","complex",$B.get_class(other))}
+return _b_.NotImplemented}
 complex.__floordiv__=function(self,other){$UnsupportedOpType("//","complex",$B.get_class(other))}
 complex.__hash__=function(self){
 if(self===undefined){return complex.__hashvalue__ ||$B.$py_next_hash--}
@@ -10011,7 +10025,8 @@ complex.__mul__=function(self,other){if(isinstance(other,complex)){return make_c
 return make_complex(0,0)}
 $UnsupportedOpType("*",complex,other)}
 complex.__name__="complex"
-complex.__ne__=function(self,other){return ! complex.__eq__(self,other)}
+complex.__ne__=function(self,other){var res=complex.__eq__(self,other)
+return res===_b_.NotImplemented ? res :! res}
 complex.__neg__=function(self){return make_complex(-self.$real,-self.$imag)}
 complex.__new__=function(cls){if(cls===undefined){throw _b_.TypeError.$factory('complex.__new__(): not enough arguments')}
 var res,missing={},args=$B.args("complex",3,{cls:null,real:null,imag:null},["cls","real","imag"],arguments,{real:0,imag:missing},null,null),$real=args.real,$imag=args.imag
@@ -10474,8 +10489,7 @@ return factory(res)}}
 if(hasattr(key,"__int__")||hasattr(key,"__index__")){return list.__getitem__(self,_b_.int.$factory(key))}
 throw _b_.TypeError.$factory("list indices must be integer, not "+
 $B.class_name(key))}
-list.__ge__=function(self,other){if(! isinstance(other,[list,_b_.tuple])){throw _b_.TypeError.$factory("unorderable types: list() >= "+
-$B.class_name(other)+"()")}
+list.__ge__=function(self,other){if(! isinstance(other,[list,_b_.tuple])){return _b_.NotImplemented}
 var i=0
 while(i < self.length){if(i >=other.length){return true}
 if($B.rich_comp("__eq__",self[i],other[i])){i++}
@@ -10484,8 +10498,7 @@ if(res===_b_.NotImplemented){throw _b_.TypeError.$factory("unorderable types: "+
 $B.class_name(self[i])+"() >= "+
 $B.class_name(other[i])+"()")}else{return res}}}
 return other.length==self.length}
-list.__gt__=function(self,other){if(! isinstance(other,[list,_b_.tuple])){throw _b_.TypeError.$factory("unorderable types: list() > "+
-$B.class_name(other)+"()")}
+list.__gt__=function(self,other){if(! isinstance(other,[list,_b_.tuple])){return _b_.NotImplemented}
 var i=0
 while(i < self.length){if(i >=other.length){return true}
 if($B.rich_comp("__eq__",self[i],other[i])){i++}
@@ -10517,10 +10530,11 @@ return $N}
 var $list_iterator=$B.$iterator_class("list_iterator")
 $list_iterator.__reduce__=$list_iterator.__reduce_ex__=function(self){return $B.fast_tuple([_b_.iter,$B.fast_tuple([list.$factory(self)]),0])}
 list.__iter__=function(self){return $B.$iterator(self,$list_iterator)}
-list.__le__=function(self,other){return ! list.__gt__(self,other)}
+list.__le__=function(self,other){var res=list.__ge__(self,other)
+if(res===_b_.NotImplemented){return res}
+return ! res}
 list.__len__=function(self){return self.length}
-list.__lt__=function(self,other){if(! isinstance(other,[list,_b_.tuple])){throw _b_.TypeError.$factory("unorderable types: list() >= "+
-$B.class_name(other)+"()")}
+list.__lt__=function(self,other){if(! isinstance(other,[list,_b_.tuple])){return _b_.NotImplemented}
 var i=0
 while(i < self.length){if(i >=other.length){return true}
 if($B.rich_comp("__eq__",self[i],other[i])){i++}else{res=getattr(self[i],"__lt__")(other[i])
@@ -11062,8 +11076,7 @@ str.__setitem__=function(self,attr,value){throw _b_.TypeError.$factory(
 "'str' object does not support item assignment")}
 str.__str__=function(self){return self}
 str.toString=function(){return "string!"}
-var $comp_func=function(self,other){if(typeof other !=="string"){throw _b_.TypeError.$factory(
-"unorderable types: 'str' > "+$B.class_name(other)+"()")}
+var $comp_func=function(self,other){if(typeof other !=="string"){return _b_.NotImplemented}
 return self > other}
 $comp_func+="" 
 var $comps={">":"gt",">=":"ge","<":"lt","<=":"le"}

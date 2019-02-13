@@ -443,4 +443,53 @@ except ZeroDivisionError:
 finally:
     assert sys.exc_info() == (None, None, None)
 
+# comparisons with None
+msg = "'{}' not supported between instances of '{}' and 'NoneType'"
+
+class X:
+    pass
+
+
+for value in [0.,
+              0,
+              "a",
+              b"a",
+              (bytearray(b'ab'), "bytearray(b'ab')"),
+              ((), "()"),
+              [],
+              ({}, "{{}}"),
+              set(),
+              frozenset(),
+              1j,
+              None,
+              True,
+              False,
+              (SyntaxError, "SyntaxError"),
+              (range(2), "range(2)"),
+              ((x for x in range(2)), "(x for x in range(2))"),
+              (map(len, ["a", "bc"]), 'map(len, ["a", "bc"])'),
+              (zip(["a", "b"], [1, 2]), 'zip(["a", "b"], [1, 2])'),
+              (len, "len"),
+              (X, "X"),
+              (X(), "X()")]:
+
+    if isinstance(value, tuple):
+        value, vrepr = value
+    else:
+        vrepr = repr(value)
+
+    s = f"{vrepr} {{}} None"
+
+    for op in [">", "<", ">=", "<="]:
+        try:
+            eval(s.format(op))
+            raise Exception(f"{op} should have raised TypeError")
+        except Exception as exc:
+            assert exc.args[0] == msg.format(op, type(value).__name__), \
+                (op, exc.args[0], msg.format(op, type(value).__name__))
+
+    if value is not None:
+        assert value != None
+        assert not (value == None)
+
 print('passed all tests...')

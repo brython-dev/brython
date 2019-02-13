@@ -55,7 +55,7 @@ complex.__eq__ = function(self, other){
       if(self.$imag != 0){return False}
       return self.$real == other.valueOf()
     }
-    $UnsupportedOpType("==", "complex", $B.get_class(other))
+    return _b_.NotImplemented
 }
 
 complex.__floordiv__ = function(self,other){
@@ -102,7 +102,10 @@ complex.__mul__ = function(self, other){
 
 complex.__name__ = "complex"
 
-complex.__ne__ = function(self,other){return ! complex.__eq__(self, other)}
+complex.__ne__ = function(self, other){
+    var res = complex.__eq__(self, other)
+    return res === _b_.NotImplemented ? res : ! res
+}
 
 complex.__neg__ = function(self){
     return make_complex(-self.$real, -self.$imag)

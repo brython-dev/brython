@@ -26,6 +26,10 @@ $B.to_bytes = function(obj){
     return res
 }
 
+function invalid(other){
+    return ! _b_.isinstance(other, [bytes, bytearray])
+}
+
 //bytearray() (built in class)
 var bytearray = {
     __class__: _b_.type,
@@ -181,10 +185,12 @@ bytes.__iter__ = function(self){
 }
 
 bytes.__eq__ = function(self, other){
+    if(invalid(other)){return false}
     return getattr(self.source, '__eq__')(other.source)
 }
 
 bytes.__ge__ = function(self, other){
+    if(invalid(other)){return _b_.NotImplemented}
     return _b_.list.__ge__(self.source, other.source)
 }
 
@@ -230,6 +236,7 @@ bytes.__getitem__ = function(self, arg){
 
 
 bytes.__gt__ = function(self, other){
+    if(invalid(other)){return _b_.NotImplemented}
     return _b_.list.__gt__(self.source, other.source)
 }
 
@@ -253,12 +260,14 @@ bytes.__init__ = function(){
 }
 
 bytes.__le__ = function(self, other){
+    if(invalid(other)){return _b_.NotImplemented}
     return _b_.list.__le__(self.source, other.source)
 }
 
 bytes.__len__ = function(self){return self.source.length}
 
 bytes.__lt__ = function(self, other){
+    if(invalid(other)){return _b_.NotImplemented}
     return _b_.list.__lt__(self.source, other.source)
 }
 

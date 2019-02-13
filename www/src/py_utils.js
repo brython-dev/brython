@@ -1465,11 +1465,13 @@ $B.rich_comp = function(op, x, y){
     if(x.$is_class || x.$factory) {
         if(op == "__eq__"){
             return (x === y)
-        }else if ( op == "__ne__"){
+        }else if(op == "__ne__"){
             return !(x === y)
         }else{
-            throw _b_.TypeError.$factory("'" + op +
-                "' not supported between types")
+            throw _b_.TypeError.$factory("'" + method2comp[op] +
+                "' not supported between instances of '" +
+                $B.get_class(x).$infos.__name__ + "' and '" +
+                $B.get_class(y).$infos.__name__ + "'")
         }
     }
 

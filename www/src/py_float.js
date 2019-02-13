@@ -437,7 +437,10 @@ float.__mul__ = function(self, other){
     $err("*", other)
 }
 
-float.__ne__ = function(self, other){return ! float.__eq__(self, other)}
+float.__ne__ = function(self, other){
+    var res = float.__eq__(self, other)
+    return res === _b_.NotImplemented ? res : ! res
+}
 
 float.__neg__ = function(self, other){return float.$factory(-self)}
 
