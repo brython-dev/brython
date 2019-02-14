@@ -1,0 +1,179 @@
+<!doctype html>
+<html>
+<meta charset="utf-8">
+<head>
+<style>
+body,td,th{
+    font-family:sans-serif;
+    font-size:12px;
+}
+td {
+    border-style:solid;
+    border-width: 0px 0px 1px 0px;
+    border-color: #000;
+    padding:3px;
+}
+
+th {
+    border-style:solid;
+    border-width: 1px;
+    border-color: #000;
+    background-color: #61D7A4;
+    padding: 4px;
+}
+
+span{font-size:15px;
+    margin-left:10px;}
+a.sort_link{
+    margin-left:10px;
+    font-size: 15px;
+    text-decoration:none;
+}
+
+</style>
+
+<script type="text/javascript" src="../src/brython_builtins.js"></script>
+<script type="text/javascript" src="../src/version_info.js"></script>
+<script type="text/javascript" src="../src/py2js.js"></script>
+<script type="text/javascript" src="../src/loaders.js"></script>
+<script type="text/javascript" src="../src/py_object.js"></script>
+<script type="text/javascript" src="../src/py_type.js"></script>
+<script type="text/javascript" src="../src/py_utils.js"></script>
+<script type="text/javascript" src="../src/py_sort.js"></script>
+<script type="text/javascript" src="../src/py_builtin_functions.js"></script>
+<script type="text/javascript" src="../src/py_exceptions.js"></script>
+<script type="text/javascript" src="../src/py_range_slice.js"></script>
+<script type="text/javascript" src="../src/py_bytes.js"></script>
+<script type="text/javascript" src="../src/py_set.js"></script>
+<script type="text/javascript" src="../src/js_objects.js"></script>
+<script type="text/javascript" src="../src/stdlib_paths.js"></script>
+<script type="text/javascript" src="../src/py_import.js"></script>
+<script type="text/javascript" src="../src/unicode.min.js"></script>
+<script type="text/javascript" src="../src/py_string.js"></script>
+<script type="text/javascript" src="../src/py_int.js"></script>
+<script type="text/javascript" src="../src/py_long_int.js"></script>
+<script type="text/javascript" src="../src/py_float.js"></script>
+<script type="text/javascript" src="../src/py_complex.js"></script>
+<script type="text/javascript" src="../src/py_dict.js"></script>
+<script type="text/javascript" src="../src/py_list.js"></script>
+<script type="text/javascript" src="../src/py_generator.js"></script>
+<script type="text/javascript" src="../src/py_dom.js"></script>
+
+<script type="text/javascript" src="../src/builtin_modules.js"></script>
+<script type="text/javascript" src="../src/py_import_hooks.js"></script>
+<script type="text/javascript" src="../src/async.js"></script>
+<!-- script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.7.0/brython_stdlib.js"></script -->
+
+</head>
+<body onload="brython(2)">
+
+<script type="text/python">
+from browser import html, aio
+
+results = []
+
+async def f(url):
+    req = await aio.get(url)
+    if req.status == 200:
+        txt = await req.text()
+        return (url, len(txt))
+    else:
+        return (url, None)
+
+async def g(urls):
+    print("wait 3 seconds...")
+    await aio.sleep(3)
+    for url in urls:
+        r = await f(url)
+        results.append(r)
+    report()
+    await test_async_for()
+    await test_async_with()
+    await bar()
+
+def report(*args):
+    for url, size in results:
+        if size is not None:
+            print(f"file at {url}: {size} bytes")
+        else:
+            print(f"file at {url}: not found")
+
+
+class Done(Exception):
+    pass
+
+
+class AIter:
+    def __init__(self):
+        self.count = 0
+
+    def __aiter__(self):
+        return self
+
+    async def __anext__(self):
+        self.count += 1
+        if self.count > 3:
+            raise StopAsyncIteration
+        return (0, self.count)
+
+
+async def test_async_for():
+    data = []
+    async for i, j in AIter():
+        data.append([i, j])
+    assert data == [[0, 1], [0, 2], [0, 3]]
+    print("'async for' test ok")
+
+async def bar():
+    raise Done
+
+class manager:
+
+    async def __aenter__(self):
+        return (1, 2)
+
+    async def __aexit__(self, *exc):
+        return False
+
+
+async def test_async_with():
+
+    async with manager():
+        pass
+
+    r1 = []
+    async with manager() as xwq:
+        r1.append(xwq)
+    assert r1 == [(1, 2)]
+
+    r2 = []
+    async with manager() as (x, y):
+        r2.append(x)
+    assert r2 == [1]
+
+    async with manager(), manager():
+        pass
+
+    r3 = []
+    async with manager() as x, manager() as y:
+        r3.append((x, y))
+    assert r3 == [((1, 2), (1, 2))]
+
+    r4 = []
+    async with manager() as x, manager():
+        r4.append(x)
+    assert r4 == [(1, 2)]
+
+    print("'async with' test ok")
+    
+def handle(err):
+    assert isinstance(err, Done)
+    print("handle error ok")
+
+print("Start...")
+aio.run(g(["ajax.html", "clock.html", "unknown.txt"]),
+        onerror=handle)
+
+</script>
+</body>
+</html>
