@@ -4,15 +4,33 @@ var __BRYTHON__ = __BRYTHON__ || {}  // global object with brython built-ins
 
 // Detect whether we are in a Web Worker
 var isWebWorker = ('undefined' !== typeof WorkerGlobalScope) && ("function" === typeof importScripts) && (navigator instanceof WorkerNavigator)
-var _window = self;
-
+var isNode = (typeof process !=='undefined') && (process.release.name==='node')
+var _window;
+if (isNode) {
+    var dummyWindow = {
+        location: {
+            href: '',
+            origin: '',
+            pathname: '',
+        },
+        navigator: {
+            language: 'english'
+        },
+        console: this.console
+    }
+    _window = dummyWindow
+    self = _window
+    window = _window
+} else {
+    _window = self;
+}
 
 var $path
 
 if($B.brython_path === undefined){
     // Get url of this script brython_builtins.js
     var this_url;
-    if(isWebWorker){
+    if(isWebWorker || isNode){
         this_url = _window.location.href;
     }else{
         var scripts = document.getElementsByTagName('script')
@@ -100,7 +118,7 @@ $B.language = _window.navigator.userLanguage || _window.navigator.language
 
 $B.locale = "C" // can be reset by locale.setlocale
 
-if(isWebWorker){
+if(isWebWorker || isNode){
     $B.charset = "utf-8"
 }else{
     // document charset ; defaults to "utf-8"

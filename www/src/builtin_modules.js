@@ -20,7 +20,7 @@
     }
     browser.__path__ = browser.__file__
 
-    if(! $B.isa_web_worker ){
+    if(!($B.isa_web_worker || $B.is_node)){
         update(browser, {
             $$alert:function(message){window.alert($B.builtins.str.$factory(message))},
             bind:function(){
@@ -436,7 +436,7 @@
     }
 
     for(var attr in modules){load(attr, modules[attr])}
-    if(! $B.isa_web_worker){modules['browser'].html = modules['browser.html']}
+    if(!($B.isa_web_worker || $B.is_node)){modules['browser'].html = modules['browser.html']}
 
     var _b_ = $B.builtins
 
