@@ -31,6 +31,7 @@ function set_timeout(self, timeout){
 function handle_kwargs(self, kw, method){
     var data,
         headers,
+        cache,
         timeout = {}
     for(var key in kw.$string_dict){
         if(key == "data"){
@@ -64,6 +65,8 @@ function handle_kwargs(self, kw, method){
             }
         }else if(key == "timeout"){
             timeout.seconds = kw.$string_dict[key]
+        }else if(key == "cache"){
+            cache = kw.$string_dict[key]
         }
     }
     if(method == "post" && ! headers){
@@ -71,7 +74,7 @@ function handle_kwargs(self, kw, method){
         self.js.setRequestHeader("Content-type",
                                  "application/x-www-form-urlencoded")
     }
-    return [data, timeout]
+    return {cache: cache, data:data, timeout: timeout}
 }
 
 var ajax = {
@@ -212,11 +215,14 @@ function get(){
         kw = $.kw
     var self = ajax.$factory(),
         items = handle_kwargs(self, kw, "get"),
-        qs = items[0],
-        timeout = items[1]
+        qs = items.data,
+        timeout = items.timeout
     set_timeout(self, timeout)
+    if(! (items.cache === true)){
+        url += "?timestamp" + (new Date()).getTime() + "0"
+    }
     if(qs){
-        url += "?" + qs
+        url += (items.cache === true ? "&" : "?") + qs
     }
     self.js.open("GET", url, async)
     self.js.send()
@@ -233,8 +239,8 @@ function post(){
     var self = ajax.$factory()
     self.js.open("POST", url, async)
     var items = handle_kwargs(self, kw, "post"),
-        data = items[0],
-        timeout = items[1]
+        data = items.data,
+        timeout = items.timeout
     set_timeout(self, timeout)
     self.js.send(data)
 }
