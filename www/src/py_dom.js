@@ -1320,7 +1320,7 @@ DOMNode.set_html = function(self, value){
 
 DOMNode.set_style = function(self, style){ // style is a dict
     if(!_b_.isinstance(style, _b_.dict)){
-        throw TypeError.$factory("style must be dict, not " +
+        throw _b_.TypeError.$factory("style must be dict, not " +
             $B.class_name(style))
     }
     var items = _b_.list.$factory(_b_.dict.items(style))
