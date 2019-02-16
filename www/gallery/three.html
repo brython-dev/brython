@@ -4,51 +4,37 @@
     <meta charset="iso-8859-1">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/100/three.min.js"></script>
 <script type="text/javascript" src="../src/brython.js"></script>
+<script type="text/python" src="show_source.py"></script>
+<script type="text/python">
+from browser import document, window
 
-    <script type="text/python">
-        print('start ...')
-        from browser import document as doc
-        from browser import window
-        
-        THREE = window.THREE
+THREE = window.THREE
 
-        cameraC = THREE.PerspectiveCamera.new
-        camera = cameraC( 75, 1, 1, 10000 )
-        camera.position.z = 1000;
+camera = THREE.PerspectiveCamera.new(75, 1, 1, 10000)
+camera.position.z = 1000
+scene = THREE.Scene.new()
+geometry = THREE.CubeGeometry.new(200, 200, 200)
+material = THREE.MeshBasicMaterial.new({"color": "#ff0000", "wireframe": True})
+mesh = THREE.Mesh.new(geometry, material)
+scene.add(mesh)
 
-        sceneC = THREE.Scene.new
-        scene = sceneC()
+renderer = THREE.WebGLRenderer.new()
+renderer.setSize(444, 444)
 
-        geometryC = THREE.CubeGeometry.new
-        geometry = geometryC(200, 200, 200)
-        materialC = THREE.MeshBasicMaterial.new
+document <= renderer.domElement
+renderer.render(scene, camera)
 
-        material = materialC( { "color": "#ff0000", "wireframe": True } )
+def animate(i):
+    # note: three.js includes requestAnimationFrame shim
+    window.requestAnimationFrame(animate)
 
-        meshC = THREE.Mesh.new
-        mesh = meshC( geometry, material )
-        scene.add( mesh );
+    mesh.rotation.x += 0.01
+    mesh.rotation.y += 0.02
 
-        rendererC = THREE.WebGLRenderer.new
-        renderer = rendererC()
-        renderer.setSize( 444,444);
+    renderer.render(scene, camera)   
 
-
-        doc <= renderer.domElement
-        renderer.render( scene, camera )
-
-        def animate(i):
-            # note: three.js includes requestAnimationFrame shim
-            window.requestAnimationFrame( animate );
-
-            mesh.rotation.x += 0.01;
-            mesh.rotation.y += 0.02;
-
-            renderer.render( scene, camera );   
-
-        animate(0)
-
-    </script>
+animate(0)
+</script>
 
 </head>
 <body onload="brython(1)">

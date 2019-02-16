@@ -3,11 +3,15 @@
     <title>Getting Started with bokeh - Brython version</title>
     <meta charset="iso-8859-1">
     <script type="text/javascript" src="https://cdn.pydata.org/bokeh/release/bokeh-0.12.0.min.js"></script>
-    
-  
-    
+    <style>
+    body{
+        font-family: sans-serif;
+    }
+    </style>
+
     <link rel="stylesheet" type="text/css" href="https://cdn.pydata.org/bokeh/release/bokeh-0.12.0.css">
     <script type="text/javascript" src="../src/brython.js"></script>
+    <script type="text/python" src="show_source.py"></script>
 
     <script type="text/python">
         from browser import document, window
@@ -53,7 +57,7 @@
         mydiv = document['myplot']
         # below, as a second parameter you can pass an HTML element like below
         plt.show(p, mydiv.elt)
-        # but also a css selector could be used so the next line would be also 
+        # but also a css selector could be used so the next line would be also
         # valid
         # plt.show(p, '#myplot')
 
