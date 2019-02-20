@@ -8,7 +8,7 @@ var object = _b_.object,
 
 function $err(op, other){
     var msg = "unsupported operand type(s) for " + op +
-        ": 'int' and '" + $B.get_class(other).__name__ + "'"
+        ": 'int' and '" + $B.class_name(other) + "'"
     throw _b_.TypeError.$factory(msg)
 }
 
@@ -20,8 +20,11 @@ function int_value(obj){
 
 // dictionary for built-in class 'int'
 var int = {__class__: _b_.type,
-    __name__: "int",
     __dir__: object.__dir__,
+    $infos: {
+        __module__: "builtins",
+        __name__: "int"
+    },
     $is_class: true,
     $native: true,
     $descriptors: {
@@ -92,7 +95,7 @@ int.to_bytes = function(){
         kwargs = $.kw
     if(! _b_.isinstance(len, _b_.int)){
         throw _b_.TypeError.$factory("integer argument expected, got " +
-            $B.get_class(len).__name__)
+            $B.class_name(len))
     }
     if(["little", "big"].indexOf(byteorder) == -1){
         throw _b_.ValueError.$factory("byteorder must be either 'little' or 'big'")
@@ -348,6 +351,7 @@ int.__new__ = function(cls, value){
     if(cls === int){return int.$factory(value)}
     return {
         __class__: cls,
+        __dict__: _b_.dict.$factory(),
         $value: value || 0
     }
 }
@@ -672,6 +676,10 @@ int.$factory = function(value, base){
     }
 
     base = $B.$GetInt(base)
+    function invalid(value, base){
+        throw _b_.ValueError.$factory("invalid literal for int() with base " +
+            base + ": '" + _b_.str.$factory(value) + "'")
+    }
 
     if(isinstance(value, _b_.str)){value = value.valueOf()}
     if(typeof value == "string") {
@@ -686,6 +694,9 @@ int.$factory = function(value, base){
                 if(_pre == "0B"){base = 2}
                 if(_pre == "0O"){base = 8}
                 if(_pre == "0X"){base = 16}
+            }else if(_pre == "0X" && base != 16){invalid(_value, base)}
+            else if(_pre == "0O" && base != 8){invalid(_value, base)}
+            else if(_pre == "0B" && base != 2){invalid(_value, base)
             }
             if(_pre == "0B" || _pre == "0O" || _pre == "0X"){
                 _value = _value.substr(2)
@@ -693,23 +704,20 @@ int.$factory = function(value, base){
                     _value = _value.substr(1)
                 }
             }
+        }else if(base == 0){
+            // eg int("1\n", 0)
+            base = 10
         }
         var _digits = $valid_digits(base),
             _re = new RegExp("^[+-]?[" + _digits + "]" +
             "[" + _digits + "_]*$", "i"),
             match = _re.exec(_value)
         if(match === null){
-            throw _b_.ValueError.$factory(
-                "invalid literal for int() with base " + base + ": '" +
-                _b_.str.$factory(value) + "'")
+            invalid(value, base)
         }else{
             value = _value.replace(/_/g, "")
         }
-        if(base <= 10 && ! isFinite(value)){
-            throw _b_.ValueError.$factory(
-                "invalid literal for int() with base " + base + ": '" +
-                _b_.str.$factory(value) + "'")
-        }
+        if(base <= 10 && ! isFinite(value)){invalid(_value, base)}
         var res = parseInt(value, base)
         if(res < $B.min_int || res > $B.max_int){
             return $B.long_int.$factory(value, base)
@@ -718,15 +726,7 @@ int.$factory = function(value, base){
     }
 
     if(isinstance(value, [_b_.bytes, _b_.bytearray])){
-        var _digits = $valid_digits(base)
-        for(var i = 0; i < value.source.length; i++){
-            if(_digits.indexOf(String.fromCharCode(value.source[i])) == -1){
-                throw _b_.ValueError.$factory(
-                    "invalid literal for int() with base " + base + ": " +
-                    _b_.repr(value))
-            }
-        }
-        return Number(parseInt(getattr(value, "decode")("latin-1"), base))
+        return int.$factory($B.$getattr(value, "decode")("latin-1"), base)
     }
 
     if(hasattr(value, "__int__")){return getattr(value, "__int__")()}
@@ -736,16 +736,16 @@ int.$factory = function(value, base){
             int_func = _b_.getattr(res, "__int__", null)
         if(int_func === null){
             throw TypeError.$factory("__trunc__ returned non-Integral (type "+
-                $B.get_class(res).__name__ + ")")
+                $B.class_name(res) + ")")
         }
         var res = int_func()
         if(isinstance(res, int)){return int_value(res)}
         throw TypeError.$factory("__trunc__ returned non-Integral (type "+
-                $B.get_class(res).__name__ + ")")
+                $B.class_name(res) + ")")
     }
     throw _b_.TypeError.$factory(
         "int() argument must be a string, a bytes-like " +
-        "object or a number, not '" + $B.get_class(value).__name__ + "'")
+        "object or a number, not '" + $B.class_name(value) + "'")
 }
 
 $B.set_func_names(int, "builtins")
@@ -763,6 +763,7 @@ $B.$bool = function(obj){ // return true or false
             if(obj){return true}
             return false
         default:
+            if(obj.$is_class){return true}
             var missing = {},
                 bool_func = $B.$getattr(obj, "__bool__", missing)
             if(bool_func === missing){
@@ -777,9 +778,11 @@ $B.$bool = function(obj){ // return true or false
 var bool = {
     __bases__: [int],
     __class__: _b_.type,
-    __module__: "builtins",
     __mro__: [int, object],
-    __name__: "bool",
+    $infos:{
+        __name__: "bool",
+        __module__: "builtins"
+    },
     $is_class: true,
     $native: true
 }

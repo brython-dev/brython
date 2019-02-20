@@ -6,7 +6,7 @@ from browser import (document, window, alert, console, prompt, html,
 from browser.template import Template
 
 # name of currently edited script
-current = None
+current = "string"
 
 docs = {}
 
@@ -229,7 +229,7 @@ def run(evt, elt):
     output_window.style.display = "block"
     output.text = ""
     try:
-        run_script(editor.text, current)
+        exec(editor.text)
     finally:
         sys.stdout = save_stdout
         sys.stderr = save_stderr

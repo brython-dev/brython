@@ -11,7 +11,9 @@ eval($s.join(';'))
 var Process = {
     __class__:_b_.type,
     __mro__: [_b_.object],
-    __name__:'Process',
+    $infos:{
+        __name__:'Process'
+    },
     $is_class: true
 }
 

@@ -54,12 +54,39 @@ random.betavariate(10,4)
 random.paretovariate(5)
 random.weibullvariate(10,6)
 
+
+# issue 169
+first = list(range(20))
+random.seed(31416)
+random.shuffle(first)
+second = list(range(20))
+random.seed(31416)
+random.shuffle(second)
+assert first == second, "Same seed does not produce same random results"
+
 # issue 728
 try:
     random.randint(2, 0)
     raise Exception("should have raised ValueError")
 except ValueError:
     pass
+
+# issue 731
+from random import randrange
+assert set([randrange(1, 4, 1) for i in range(100)]) == set([1, 2, 3])
+assert set([randrange(1, 4, 2) for i in range(100)]) == set([1, 3])
+assert set([randrange(0, 4, 2) for i in range(100)]) == set([0, 2])
+assert set([randrange(0, 5, 2) for i in range(100)]) == set([0, 2, 4])
+assert set([randrange(1, 4, 3) for i in range(100)]) == set([1])
+assert set([randrange(0, 4, 3) for i in range(100)]) == set([0, 3])
+assert set([randrange(0, 5, 3) for i in range(100)]) == set([0, 3])
+assert set([randrange(0, 6, 3) for i in range(100)]) == set([0, 3])
+assert set([randrange(0, 7, 3) for i in range(100)]) == set([0, 3, 6])
+assert set([randrange(1, 4, 3) for i in range(100)]) == set([1])
+assert set([randrange(1, 5, 3) for i in range(100)]) == set([1, 4])
+assert set([randrange(1, 6, 3) for i in range(100)]) == set([1, 4])
+assert set([randrange(1, 7, 3) for i in range(100)]) == set([1, 4])
+assert set([randrange(1, 8, 3) for i in range(100)]) == set([1, 4, 7])
 
 # issue 795
 n = 10 ** 3

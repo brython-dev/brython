@@ -563,4 +563,105 @@ next(gins)
 
 assert next(reg()) == "hello 3"
 
+# issue 1034
+def f1():
+    while True:
+        yield 1
+        if True:
+            continue
+        yield 2
+
+f = f1()
+assert next(f) == 1
+assert next(f) == 1
+assert next(f) == 1
+
+def f2():
+    while True:
+        yield 1
+        if False:
+            continue
+        yield 2
+
+f = f2()
+assert next(f) == 1
+assert next(f) == 2
+assert next(f) == 1
+assert next(f) == 2
+
+def f3():
+    while True:
+        yield 1
+        if True:
+            break
+        yield 2
+
+f = f3()
+assert next(f) == 1
+try:
+    next(f)
+    raise Exception("should have raised StopIteration")
+except StopIteration:
+    pass
+
+def f4():
+    while True:
+        yield 1
+        if False:
+            break
+        yield 2
+
+f = f4()
+assert next(f) == 1
+assert next(f) == 2
+assert next(f) == 1
+assert next(f) == 2
+
+def f5():
+    while True:
+        yield 1
+        if True:
+            continue
+
+f = f5()
+assert next(f) == 1
+assert next(f) == 1
+assert next(f) == 1
+
+def f6():
+    while True:
+        yield 1
+        if False:
+            continue
+
+f = f6()
+assert next(f) == 1
+assert next(f) == 1
+
+def f7():
+    while True:
+        yield 1
+        if True:
+            break
+
+f = f7()
+assert next(f) == 1
+try:
+    next(f)
+    raise Exception("should have raised StopIteration")
+except StopIteration:
+    pass
+
+def f8():
+    while True:
+        yield 1
+        if False:
+            break
+
+f = f8()
+assert next(f) == 1
+assert next(f) == 1
+assert next(f) == 1
+assert next(f) == 1
+
 print('passed all tests...')

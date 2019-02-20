@@ -150,7 +150,7 @@ array.frombytes = function(self, s){
         ["self", "s"], arguments, {}, null, null)
     if(! _b_.isinstance(s, _b_.bytes)){
         throw _b_.TypeError.$factory("a bytes-like object is required, " +
-            "not '" + $B.get_class(s).__name__ + "'")
+            "not '" + $B.class_name(s) + "'")
     }
     self.obj = new typecodes[self.typecode](s.source)
     return None

@@ -29,13 +29,6 @@ on page load.
   `id`) whose text content must be run as Python code. See
   [brythonmagic](https://github.com/kikocorreoso/brythonmagic) for more
   information
-- *profile* : when the `profile` option is > 0 the compiler adds additional
-  code to the generated javascript which collects profiling information. To
-  `profile` module provides access to this information. It strives to provide
-  an interface largely similar to the `profile` module from the standard
-  Python distribution. See
-  (Testing, debugging and profiling)[http://brython.info/static_doc/en/test.html]
-  for more information
 - *indexedDB* : specifies if the program can use the indexedDB database to
   store a compiled version of the modules located in __brython_stdlib.js__
   or __brython_modules.js__. Defaults to `true`.

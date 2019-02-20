@@ -13,7 +13,10 @@ function $UnsupportedOpType(op, class1, class2){
 var complex = {
     __class__: _b_.type,
     __dir__: object.__dir__,
-    __name__: "complex",
+    $infos: {
+        __module__: "builtins",
+        __name__: "complex"
+    },
     $is_class: true,
     $native: true,
     $descriptors: {real: true, imag: true}
@@ -247,7 +250,7 @@ complex.__pow__ = function(self, other){
     }else{
         throw _b_.TypeError.$factory("unsupported operand type(s) " +
             "for ** or pow(): 'complex' and '" +
-            $B.get_class(other).__name__ + "'")
+            $B.class_name(other) + "'")
     }
 }
 
@@ -302,13 +305,13 @@ complex.__truediv__ = function(self, other){
         if(! other.valueOf()){
             throw ZeroDivisionError.$factory('division by zero')
         }
-        return complex.__truediv__(self, complex(other.valueOf()))
+        return complex.__truediv__(self, complex.$factory(other.valueOf()))
     }
     if(isinstance(other, _b_.float)){
-        if(! other.value){
+        if(! other.valueOf()){
             throw ZeroDivisionError.$factory("division by zero")
         }
-        return complex.__truediv__(self, complex(other.value))
+        return complex.__truediv__(self, complex.$factory(other.valueOf()))
     }
     $UnsupportedOpType("//", "complex", other.__class__)
 }
@@ -320,7 +323,7 @@ complex.conjugate = function(self) {
 // operators
 var $op_func = function(self, other){
     throw _b_.TypeError.$factory("TypeError: unsupported operand type(s) " +
-        "for -: 'complex' and '" + $B.get_class(other).__name__ + "'")
+        "for -: 'complex' and '" + $B.class_name(other) + "'")
 }
 $op_func += "" // source code
 var $ops = {"&": "and", "|": "ior", "<<": "lshift", ">>": "rshift",
@@ -348,7 +351,7 @@ var $op_func = function(self,other){
          return make_complex(self.$real - bool_value, self.$imag)
     }
     throw _b_.TypeError.$factory("unsupported operand type(s) for -: " +
-        self.__repr__() + " and '" + $B.get_class(other).__name__ + "'")
+        self.__repr__() + " and '" + $B.class_name(other) + "'")
 }
 complex.__sub__ = $op_func
 

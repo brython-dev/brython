@@ -92,7 +92,7 @@ assert len(hello) == 91
 
 word = 'Help' + 'A'
 assert word == 'HelpA'
-assert word*5 == "HelpAHelpAHelpAHelpAHelpA"
+assert word * 5 == "HelpAHelpAHelpAHelpAHelpA"
 
 assert 'str' 'ing' == 'string'
 
@@ -171,7 +171,7 @@ assert x[0](5) == 10
 assert x[1](10) == 30
 
 # inline functions and classes
-def foo(x):return 2*x
+def foo(x):return 2 * x
 assert foo(3) == 6
 class foo(list): pass
 class bar(foo): pass
@@ -215,9 +215,12 @@ assert negative_values == [-1, -2]
 class FooParent():
     const = 0
 
+
 class Foo(FooParent):
+
     def do_something(self):
         pass
+
 
 foo = Foo()
 foo_contents = dir(foo)
@@ -239,8 +242,10 @@ assert 안녕하세요() == "hello"
 
 # functions and methods
 class foo:
+
     def method(self, x):
         return(x)
+
 
 assert foo().method(5) == 5
 a = foo.method
@@ -333,11 +338,13 @@ assert res == ['a', 'b', 'c']
 # __setattr__ defined in a class
 
 class A:
+
     def __init__(self, x):
         self.x = x
 
     def __setattr__(self, k, v):
         object.__setattr__(self, k, 2 * v)
+
 
 a = A(4)
 assert a.x == 8
@@ -373,14 +380,17 @@ except IndexError as exc:
 
 # vars()
 class A:
+
     def __init__(self, x):
         self.x = x
+
 
 assert A(5).__dict__ == {'x': 5}
 assert vars(A(5)) == {'x': 5}
 
 # @ operator (PEP 465)
 class A:
+
     def __init__(self, a, b, c, d):
         self.a = a
         self.b = b
@@ -404,6 +414,7 @@ class A:
             self.b == other.b and
             self.c == other.c and
             self.d == other.d)
+
 
 a1 = A(1, 2, 3, 4)
 a2 = A(2, 3, 4, 5)
@@ -431,5 +442,5 @@ except ZeroDivisionError:
     assert sys.exc_info()[0] is ZeroDivisionError
 finally:
     assert sys.exc_info() == (None, None, None)
-    
+
 print('passed all tests...')

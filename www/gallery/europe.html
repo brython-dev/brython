@@ -10,7 +10,7 @@
 
 <style>
 .rounded-corners {
-     -moz-border-radius: 20px;
+    -moz-border-radius: 20px;
     -webkit-border-radius: 20px;
     -khtml-border-radius: 20px;
     border-radius: 20px;
@@ -29,13 +29,13 @@
 from browser import document, timer
 from browser.html import AREA, DIV
 
-countries = [area.id for area in document[AREA]]
+countries = [area.id for area in document.select("AREA")]
 
 def mouse_over(ev):
     ev.target.style.cursor = "pointer"
 
 def drag_start(ev):
-    ev.data['text']=ev.target.id
+    ev.data['text'] = ev.target.id
     ev.data.effectAllowed = 'move'
 
 def drag_over(ev):
@@ -57,13 +57,13 @@ def drop(ev):
         go_back(elt,ev)
 
 
-for i,area in enumerate(document[AREA]):
+for i, area in enumerate(document.select("AREA")):
     # create a DIV for each AREA (ie each country)
     ctag = DIV(area.id, draggable=True, id=i, Class="rounded-corners")
     left = 10 + 110 * (i // 15)
     _top = 100 + 30 * (i - 15 * (i // 15))
-    ctag.style= {'position': 'absolute','left': left,'top': _top,
-        'width': 80,'height': 16}
+    ctag.style = {'position': 'absolute', 'left': left, 'top': _top,
+        'width': 80, 'height': 16}
     ctag.bind('dragstart', drag_start)
     ctag.bind('mouseover', mouse_over)
     document <= ctag
@@ -80,15 +80,15 @@ def go_back(elt,mouse):
     x0, y0 = mouse.x - elt.clientWidth / 2, mouse.y - elt.clientHeight / 2
     x1, y1 = elt.left, elt.top # return integers (elt.style.left returns a string like "110px")
     step = 0
-    dx,dy = (x1 - x0) / 100, (y1 - y0) / 100
+    dx, dy = (x1 - x0) / 100, (y1 - y0) / 100
     def move():
         global step
-        elt.style.left = x0 + step*dx
-        elt.style.top = y0 + step*dy
+        elt.style.left = x0 + step * dx
+        elt.style.top = y0 + step * dy
         step += 1
-        if step>100:
+        if step > 100:
             timer.clear_interval(_timer)
-    _timer = timer.set_interval(move,10)
+    _timer = timer.set_interval(move, 10)
 
 
 </script>

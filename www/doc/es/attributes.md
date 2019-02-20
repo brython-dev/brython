@@ -90,18 +90,21 @@ computan como `style.left` y `style.top` pero son enteros en lugar de cadenas qu
 
 Para añadir un hijo a un elemento se usa el operador `<=` (piensa en ello como una flecha que indica asignación)
 
->    from browser import document, html
->    document['zone'] <= html.INPUT(Id="data")
+```python
+from browser import document, html
+document['zone'] <= html.INPUT(Id="data")
+```
 
 La iteración sobre los hijos de un elemento se puede hacer usando la sintaxis Python habitual :
-
->    for child in element:
->        (...)
-
+```python
+for child in element:
+     (...)
+```
 Para destruir un elemento se usa la palabra clave `del`
 
->    zone = document['zone']
->    del zone
+```python
+del document['zone']
+```
 
 La colección `options` asociada con un objeto SELECT tiene una interfaz que funciona como una lista Python :
 

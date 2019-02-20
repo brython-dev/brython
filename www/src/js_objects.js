@@ -13,9 +13,11 @@ var _window = self;
 
 var JSConstructor = {
     __class__: _b_.type,
-    __module__: "<javascript>",
     __mro__: [object],
-    __name__: 'JSConstructor',
+    $infos: {
+        __module__: "<javascript>",
+        __name__: 'JSConstructor'
+    },
     $is_class: true
 }
 
@@ -73,7 +75,7 @@ var Undefined = {
     __class__: UndefinedClass
 }
 
-$B.set_func_names("UndefinedClass", "<javascript>")
+$B.set_func_names(UndefinedClass, "<javascript>")
 
 var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj) {
     switch(jsobj) {
@@ -171,7 +173,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
             }catch(err){
                 console.log(err)
                 console.log(_b_.getattr(err,'info'))
-                console.log(err.__class__.__name__ + ':',
+                console.log(err.__class__.$infos.__name__ + ':',
                     err.args.length > 0 ? err.args[0] : '' )
                 throw err
             }
@@ -187,9 +189,11 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
 
 var JSObject = {
     __class__: _b_.type,
-    __module__: "<javascript>",
     __mro__: [object],
-    __name__: 'JSObject'
+    $infos:{
+        __module__: "builtins",
+        __name__: 'JSObject'
+    }
 }
 
 JSObject.__bool__ = function(self){
@@ -207,6 +211,8 @@ JSObject.__dir__ = function(self){
 }
 
 JSObject.__getattribute__ = function(self,attr){
+    var $test = false //attr == "__str__"
+    if($test){console.log("get attr", attr, "of", self)}
     if(attr.substr(0,2) == '$$'){attr = attr.substr(2)}
     if(self.js === null){return object.__getattribute__(None, attr)}
     if(attr == "__class__"){return JSObject}
@@ -240,6 +246,7 @@ JSObject.__getattribute__ = function(self,attr){
     }
 
     if(js_attr !== undefined){
+        if($test){console.log("jsattr", js_attr)}
         if(typeof js_attr == 'function'){
             // If the attribute of a JSObject is a function F, it is converted to a function G
             // where the arguments passed to the Python function G are converted to Javascript
@@ -247,7 +254,8 @@ JSObject.__getattribute__ = function(self,attr){
             var res = function(){
                 var args = []
                 for(var i = 0, len = arguments.length; i < len; i++){
-                    if(arguments[i] !== null && arguments[i].$nat !== undefined){
+                    var arg = arguments[i]
+                    if(arg !== undefined && arg !== null && arg.$nat !== undefined){
                         //
                         // Passing keyword arguments to a Javascript function
                         // raises a TypeError : since we don't know the
@@ -259,7 +267,7 @@ JSObject.__getattribute__ = function(self,attr){
                             "A Javascript function can't take " +
                                 "keyword arguments")
                     }else{
-                        args.push(pyobj2jsobj(arguments[i]))
+                        args.push(pyobj2jsobj(arg))
                     }
                 }
                 // IE workaround
@@ -288,6 +296,7 @@ JSObject.__getattribute__ = function(self,attr){
             res.prototype = js_attr.prototype
             return {__class__: JSObject, js: res, js_func: js_attr}
         }else{
+            if($test){console.log("use JS2Py", $B.$JS2Py(js_attr))}
             return $B.$JS2Py(js_attr)
         }
     }else if(self.js === _window && attr === '$$location'){
@@ -309,6 +318,7 @@ JSObject.__getattribute__ = function(self,attr){
         }
     }
     if(res !== undefined){
+        if($test){console.log("found in klass", res + "")}
         if(typeof res === 'function'){
             // res is the function in one of parent classes
             // return a function that takes self as first argument
@@ -352,7 +362,9 @@ JSObject.__getitem__ = function(self, rank){
     }
     try{return getattr(self.js, '__getitem__')(rank)}
     catch(err){
-        if(self.js[rank] !== undefined){return JSObject.$factory(self.js[rank])}
+        if(self.js[rank] !== undefined){
+            return JSObject.$factory(self.js[rank])
+        }
         throw _b_.KeyError.$factory(rank)
     }
 }
@@ -432,12 +444,12 @@ JSObject.__setattr__ = function(self,attr,value){
                     var info = _b_.getattr(err, 'info')
                     if(err.args.length > 0){
                         err.toString = function(){
-                            return info + '\n' + err.__class__.__name__ +
+                            return info + '\n' + err.__class__.$infos.__name__ +
                             ': ' + _b_.repr(err.args[0])
                         }
                     }else{
                         err.toString = function(){
-                            return info + '\n' + err.__class__.__name__
+                            return info + '\n' + err.__class__.$infos.__name__
                         }
                     }
                     console.log(err + '')
@@ -480,6 +492,10 @@ JSObject.$factory = function(obj){
     var klass = $B.get_class(obj)
     // we need to do this or nan is returned, when doing json.loads(...)
     if(klass === _b_.float){return _b_.float.$factory(obj)}
+    // Javascript array wrapper
+    if(klass === _b_.list){
+        return $B.JSArray.$factory(obj) // defined in py_list.js
+    }
 
     // If obj is a Python object, return it unchanged
     if(klass !== undefined){return obj}
@@ -491,6 +507,9 @@ JSObject.$factory = function(obj){
 
 $B.JSObject = JSObject
 $B.JSConstructor = JSConstructor
+
+
+
 
 })(__BRYTHON__)
 

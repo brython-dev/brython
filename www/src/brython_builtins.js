@@ -1,4 +1,4 @@
-var __BRYTHON__=__BRYTHON__ || {}  // global object with brython built-ins
+var __BRYTHON__ = __BRYTHON__ || {}  // global object with brython built-ins
 
 ;(function($B) {
 
@@ -81,6 +81,9 @@ $B.builtins_scope = {id:'__builtins__',module:'__builtins__', binding:{}}
 // Builtin functions : used in py2js to simplify the code produced by a call
 $B.builtin_funcs = {}
 
+// Builtin classes
+$B.builtin_classes = []
+
 $B.__getattr__ = function(attr){return this[attr]}
 $B.__setattr__ = function(attr,value){
     // limited to some attributes
@@ -121,7 +124,19 @@ $B.lambda_magic = Math.random().toString(36).substr(2, 8)
 
 // Set __name__ attribute of klass methods
 $B.set_func_names = function(klass, module){
-    var name = klass.__name__
+    if(klass.$infos){
+        var name = klass.$infos.__name__
+        klass.$infos.__module__ = module
+        klass.$infos.__qualname__ = name
+    }else{
+        var name = klass.__name__
+        console.log("bizarre", klass)
+        klass.$infos = {
+            __name__: name,
+            __module__: module,
+            __qualname__: name
+        }
+    }
     klass.__module__ = module
     for(var attr in klass){
         if(typeof klass[attr] == 'function'){

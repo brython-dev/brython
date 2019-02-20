@@ -5,9 +5,11 @@ var _b_ = $B.builtins,
     None = _b_.None,
     range = {
         __class__: _b_.type,
-        __module__: "builtins",
         __mro__: [_b_.object],
-        __name__: "range",
+        $infos:{
+            __module__: "builtins",
+            __name__: "range"
+        },
         $is_class: true,
         $native: true,
         $descriptors:{
@@ -96,11 +98,15 @@ range.__hash__ = function(self){
 var RangeIterator = {
     __class__: _b_.type,
     __mro__: [_b_.object],
-    __name__: "range_iterator",
 
     __iter__: function(self){return self},
 
-    __next__: function(self){return _b_.next(self.obj)}
+    __next__: function(self){return _b_.next(self.obj)},
+
+    $infos:{
+        __name__: "range_iterator",
+        __module__: "builtins"
+    }
 }
 
 RangeIterator.$factory = function(obj){
@@ -290,9 +296,11 @@ $B.set_func_names(range, "builtins")
 // slice
 var slice = {
     __class__: _b_.type,
-    __module__: "builtins",
     __mro__: [_b_.object],
-    __name__: "slice",
+    $infos: {
+        __module__: "builtins",
+        __name__: "slice"
+    },
     $is_class: true,
     $native: true,
     $descriptors: {

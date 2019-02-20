@@ -27,8 +27,15 @@ function $getPosition(e){
         e = e.offsetParent
     }
 
-    left += e.offsetLeft
-    top  += e.offsetTop
+    left += e.offsetLeft || 0
+    top  += e.offsetTop || 0
+
+    if(e.parentElement){
+        // eg SVG element inside an HTML element
+        var parent_pos = $getPosition(e.parentElement)
+        left += parent_pos.left
+        top += parent_pos.top
+    }
 
     return {left: left, top: top, width: width, height: height}
 }
@@ -258,7 +265,9 @@ $B.set_func_names(Attributes, "<dom>")
 var DOMEvent = $B.DOMEvent = {
     __class__: _b_.type,
     __mro__: [object],
-    __name__: "DOMEvent"
+    $infos:{
+        __name__: "DOMEvent"
+    }
 }
 
 DOMEvent.__new__ = function(cls, evt_name){
@@ -337,7 +346,10 @@ $B.set_func_names(DOMEvent, "<dom>")
 
 var Clipboard = {
     __class__: _b_.type,
-    __name__: "Clipboard"
+    $infos: {
+        __module__: "<pydom>",
+        __name__: "Clipboard"
+    }
 }
 
 Clipboard.__getitem__ = function(self, name){
@@ -352,8 +364,9 @@ Clipboard.__setitem__ = function(self, name, value){
 
 Clipboard.$factory = function(data){ // drag and drop dataTransfer
     return {
-        data : data,
-        __class__ : Clipboard
+        __class__ : Clipboard,
+        __dict__: _b_.dict.$factory(),
+        data : data
     }
 }
 
@@ -383,8 +396,11 @@ function $EventsList(elt, evt, arg){
 
 var OpenFile = $B.OpenFile = {
     __class__: _b_.type,  // metaclass type
-    __name__: "OpenFile",
-    __mro__: [object]
+    __mro__: [object],
+    $infos: {
+        __module__: "<pydom>",
+        __name__: "OpenFile"
+    }
 }
 
 OpenFile.$factory = function(file, mode, encoding) {
@@ -435,7 +451,6 @@ dom.FileReader.__str__ = function(){return "<class 'FileReader'>"}
 
 var Options = {
     __class__: _b_.type,
-    __name__: 'Options',
     __delitem__: function(self, arg){
         self.parent.options.remove(arg.elt)
     },
@@ -470,6 +485,10 @@ var Options = {
     },
     remove: function(self, arg){
         self.parent.options.remove(arg.elt)
+    },
+    $infos: {
+        __module__: "<pydom>",
+        __name__: "Options"
     }
 }
 
@@ -487,7 +506,10 @@ $B.set_func_names(Options, "<dom>")
 var DOMNode = {
     __class__ : _b_.type,
     __mro__: [object],
-    __name__ : "DOMNode"
+    $infos: {
+        __module__: "<pydom>",
+        __name__: "DOMNode"
+    }
 }
 
 DOMNode.$factory = function(elt, fromtag){
@@ -549,7 +571,7 @@ DOMNode.__add__ = function(self, other){
         // If other is iterable, add all items
         try{res.children = res.children.concat(_b_.list.$factory(other))}
         catch(err){throw _b_.TypeError.$factory("can't add '" +
-            $B.get_class(other).__name__ + "' object to DOMNode instance")
+            $B.class_name(other) + "' object to DOMNode instance")
         }
     }
     return res
@@ -633,7 +655,7 @@ DOMNode.__getattribute__ = function(self, attr){
             }
 
             if(self.elt instanceof SVGElement){
-                return self.elt.getAttributeNS(null, attr)
+                return self.elt[attr].baseVal.value
             }
             if(self.elt.style[attr]){
                 return parseInt(self.elt.style[attr])
@@ -709,7 +731,7 @@ DOMNode.__getattribute__ = function(self, attr){
                                     console.log(dest_fn, typeof dest_fn, err)
                                     if(err.__class__ !== undefined){
                                         var msg = $B.$getattr(err, 'info') +
-                                            '\n' + err.__class__.__name__
+                                            '\n' + $B.class_name(err)
                                         if(err.args){msg += ': ' + err.args[0]}
                                         try{$B.$getattr($B.stderr, "write")(msg)}
                                         catch(err){console.log(msg)}
@@ -757,7 +779,7 @@ DOMNode.__getitem__ = function(self, key){
             throw _b_.KeyError.$factory(key)
         }else{
             try{
-                var elts = self.elt.getElementsByTagName(key.__name__),
+                var elts = self.elt.getElementsByTagName(key.$infos.__name__),
                     res = []
                     for(var i = 0; i < elts.length; i++){
                         res.push(DOMNode.$factory(elts[i]))
@@ -824,7 +846,7 @@ DOMNode.__le__ = function(self, other){
             })
         }catch(err){
             throw _b_.TypeError.$factory("can't add '" +
-                $B.get_class(other).__name__ + "' object to DOMNode instance")
+                $B.class_name(other) + "' object to DOMNode instance")
         }
     }
 }
@@ -898,7 +920,7 @@ DOMNode.__setattr__ = function(self, attr, value){
                     return _b_.None
                 }else{
                     throw _b_.ValueError.$factory(attr + " value should be" +
-                        " an integer, not " + $B.get_class(value).__name__)
+                        " an integer, not " + $B.class_name(value))
                 }
                 break
         }
@@ -1012,7 +1034,7 @@ DOMNode.bind = function(self, event){
                 }catch(err){
                     if(err.__class__ !== undefined){
                         var msg = $B.$getattr(err, "info") +
-                            "\n" + err.__class__.__name__
+                            "\n" + $B.class_name(err)
                         if(err.args){msg += ": " + err.args[0]}
                         try{$B.$getattr($B.stderr, "write")(msg)}
                         catch(err){console.log(msg)}
@@ -1299,7 +1321,7 @@ DOMNode.set_html = function(self, value){
 DOMNode.set_style = function(self, style){ // style is a dict
     if(!_b_.isinstance(style, _b_.dict)){
         throw TypeError.$factory("style must be dict, not " +
-            $B.get_class(style).__name__)
+            $B.class_name(style))
     }
     var items = _b_.list.$factory(_b_.dict.items(style))
     for(var i = 0; i < items.length; i++){
@@ -1431,7 +1453,9 @@ $B.set_func_names(DOMNode, "<dom>")
 // same interface as cgi.FieldStorage, with getvalue / getlist / getfirst
 var Query = {
     __class__: _b_.type,
-    __name__: "query"
+    $infos:{
+        __name__: "query"
+    }
 }
 
 Query.__contains__ = function(self, key){
@@ -1508,7 +1532,10 @@ DOMNode.query = function(self){
 var TagSum = {
     __class__ : _b_.type,
     __mro__: [object],
-    __name__: "TagSum"
+    $infos: {
+        __module__: "<pydom>",
+        __name__: "TagSum"
+    }
 }
 
 TagSum.appendChild = function(self, child){

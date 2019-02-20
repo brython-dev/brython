@@ -6,7 +6,7 @@ var _b_ = $B.builtins,
             ("function" === typeof importScripts) &&
             (navigator instanceof WorkerNavigator)
 
-$B.args = function($fname, argcount, slots, var_names, $args, $dobj,
+$B.args = function($fname, argcount, slots, var_names, args, $dobj,
     extra_pos_args, extra_kw_args){
     // builds a namespace from the arguments provided in $args
     // in a function defined like foo(x,y,z=1,*args,u,v,**kw) the parameters are
@@ -18,8 +18,24 @@ $B.args = function($fname, argcount, slots, var_names, $args, $dobj,
     // extra_pos_args = 'args'
     // extra_kw_args = 'kw'
 
+    /*
+    if($B.fargs[$fname] !== undefined){
+        $B.fargs[$fname]++
+    }else{
+        $B.fargs[$fname] = 1
+    }
+    */
+    var $args = []
+    if(Array.isArray(args)){$args = args}
+    else{
+        // Transform "arguments" object into a list (faster)
+        for(var i = 0, len = args.length; i < len; i++){
+            $args.push(args[i])
+        }
+    }
     var has_kw_args = false,
-        nb_pos = $args.length
+        nb_pos = $args.length,
+        filled = 0
 
     // If the function call had keywords arguments, they are in the last
     // element of $args
@@ -42,8 +58,8 @@ $B.args = function($fname, argcount, slots, var_names, $args, $dobj,
         // Build a dict object faster than with _b_.dict()
         slots[extra_kw_args] = {
             __class__: _b_.dict,
-            $numeric_dict : {},
-            $object_dict : {},
+            $numeric_dict: {},
+            $object_dict: {},
             $string_dict : {},
             $str_hash: {},
             length: 0
@@ -70,7 +86,15 @@ $B.args = function($fname, argcount, slots, var_names, $args, $dobj,
     }
 
     // Fill slots with positional (non-extra) arguments
-    for(var i = 0; i < nb_pos; i++){slots[var_names[i]] = $args[i]}
+    for(var i = 0; i < nb_pos; i++){
+        slots[var_names[i]] = $args[i]
+        filled++
+    }
+
+    if(filled == argcount && argcount === var_names.length &&
+            ! has_kw_args){
+        return slots
+    }
 
     // Then fill slots with keyword arguments, if any
     if(has_kw_args){
@@ -120,6 +144,7 @@ $B.args = function($fname, argcount, slots, var_names, $args, $dobj,
         }
 
     }
+
     return slots
 
 }
@@ -156,10 +181,8 @@ $B.get_class = function(obj){
                 obj.__class__ = _b_.float
                 return _b_.float
             case "string":
-                obj.__class__ = _b_.str
                 return _b_.str
             case "boolean":
-                obj.__class__ = _b_.bool
                 return _b_.bool
             case "function":
                 obj.__class__ = $B.Function
@@ -167,14 +190,20 @@ $B.get_class = function(obj){
             case "object":
                 if(Array.isArray(obj)){
                     if(Object.getPrototypeOf(obj) === Array.prototype){
-                      obj.__class__ = _b_.list
-                      return _b_.list
+                        obj.__class__ = _b_.list
+                        return _b_.list
                     }
-                }else if(obj.constructor === Number){return _b_.float}
+                }else if(obj.constructor === Number){
+                    return _b_.float
+                }
                 break
         }
     }
     return klass
+}
+
+$B.class_name = function(obj){
+    return $B.get_class(obj).$infos.__name__
 }
 
 $B.$mkdict = function(glob, loc){
@@ -403,9 +432,8 @@ $B.$JS2Py = function(src){
     var klass = $B.get_class(src)
     if(klass !== undefined){
         if(klass === _b_.list){
-            for(var i = 0, len = src.length; i< len;i++){
-                src[i] = $B.$JS2Py(src[i])
-            }
+            if(src.__class__){return src}
+            return $B.JSArray.$factory(src) // defined in py_list.js
         }else if(klass === $B.JSObject){
             src = src.js
         }else{
@@ -517,7 +545,7 @@ $B.$getitem = function(obj, item){
     var gi = $B.$getattr(obj, "__getitem__", _b_.None)
     if(gi !== _b_.None){return gi(item)}
 
-    throw _b_.TypeError.$factory("'" + $B.get_class(obj).__name__ +
+    throw _b_.TypeError.$factory("'" + $B.class_name(obj) +
         "' object is not subscriptable")
 }
 
@@ -595,7 +623,8 @@ $B.set_list_slice_step = function(obj, start, stop, step, value){
     }
 }
 
-
+$B.nbsi = 0
+$B.siklass = {}
 $B.$setitem = function(obj, item, value){
     if(Array.isArray(obj) && obj.__class__ === undefined &&
             typeof item == "number" &&
@@ -612,6 +641,15 @@ $B.$setitem = function(obj, item, value){
     }else if(obj.__class__ === $B.JSObject){
         $B.JSObject.__setattr__(obj, item, value)
         return
+    }else if(obj.__class__ === _b_.list){
+        return _b_.list.$setitem(obj, item, value)
+    }
+    $B.nbsi++
+    var klname = obj.__class__.$infos.__name__
+    if($B.siklass[klname] !== undefined){
+        $B.siklass[klname]++
+    }else{
+        $B.siklass[klname] = 1
     }
     $B.$getattr(obj, "__setitem__")(item, value)
 }
@@ -752,7 +790,7 @@ $B.$is_member = function(item, _set){
     // use __getitem__ if defined
     try{f = $B.$getattr(_set, "__getitem__")}
     catch(err){
-        throw _b_.TypeError.$factory("'" + $B.get_class(_set).__name__ +
+        throw _b_.TypeError.$factory("'" + $B.class_name(_set) +
             "' object is not iterable")
     }
     if(f){
@@ -778,29 +816,28 @@ $B.$call = function(callable){
         return callable
     }else if(callable.$factory){
         return callable.$factory
-    }
-    else if(callable.$is_class){
+    }else if(callable.$is_class){
         // Use metaclass __call__, cache result in callable.$factory
         return callable.$factory = $B.$instance_creator(callable)
     }else if(callable.__class__ === $B.JSObject){
-        if(typeof(callable.js == "function")){
+        if(typeof(callable.js) == "function"){
             return callable.js
         }else{
-            throw _b_.TypeError.$factory("'" + $B.get_class(callable).__name__ +
+            throw _b_.TypeError.$factory("'" + $B.class_name(callable) +
                 "' object is not callable")
         }
     }
     try{
         return $B.$getattr(callable, "__call__")
     }catch(err){
-        throw _b_.TypeError.$factory("'" + $B.get_class(callable).__name__ +
+        throw _b_.TypeError.$factory("'" + $B.class_name(callable) +
             "' object is not callable")
     }
 }
 
 // default standard output and error
 // can be reset by sys.stdout or sys.stderr
-var $io = {__class__: _b_.type, __name__: "io"}
+var $io = {__class__: _b_.type, $infos:{__name__: "io"}}
 $io.__mro__ = [_b_.object]
 
 $B.stderr = {
@@ -892,7 +929,7 @@ $B.$iterator = function(items, klass){
             if(res.counter < items.length){return items[res.counter]}
             throw _b_.StopIteration.$factory("StopIteration")
         },
-        __repr__: function(){return "<" + klass.__name__ + " object>"},
+        __repr__: function(){return "<" + klass.$infos.__name__ + " object>"},
         counter: -1
     }
     res.__str__ = res.toString = res.__repr__
@@ -903,9 +940,11 @@ $B.$iterator_class = function(name){
 
     var res = {
         __class__: _b_.type,
-        __name__: name,
-        __module__: "builtins",
         __mro__: [_b_.object],
+        $infos:{
+            __name__: name,
+            __module__: "builtins"
+        },
         $is_class: true
     }
 
@@ -975,7 +1014,7 @@ $B.$iterator_class = function(name){
 
 function $err(op, klass, other){
     var msg = "unsupported operand type(s) for " + op + ": '" +
-        klass.__name__ + "' and '" + $B.get_class(other).__name__ + "'"
+        klass.$infos.__name__ + "' and '" + $B.class_name(other) + "'"
     throw _b_.TypeError.$factory(msg)
 }
 
@@ -1025,7 +1064,7 @@ $B.$GetInt = function(value) {
       try{var v = $B.$getattr(value, "__int__")(); return v}catch(e){}
       try{var v = $B.$getattr(value, "__index__")(); return v}catch(e){}
   }
-  throw _b_.TypeError.$factory("'" + $B.get_class(value).__name__ +
+  throw _b_.TypeError.$factory("'" + $B.class_name(value) +
       "' object cannot be interpreted as an integer")
 }
 
@@ -1044,7 +1083,7 @@ $B.PyNumber_Index = function(item){
                 return $B.int_or_bool(method)
             }
         default:
-            throw _b_.TypeError.$factory("'" + $B.get_class(item).__name__ +
+            throw _b_.TypeError.$factory("'" + $B.class_name(item) +
                 "' object cannot be interpreted as an integer")
     }
 }
@@ -1058,11 +1097,11 @@ $B.int_or_bool = function(v){
         case "object":
             if(v.__class__ === $B.long_int){return v}
             else{
-                throw _b_.TypeError.$factory("'" + $B.get_class(v).__name__ +
+                throw _b_.TypeError.$factory("'" + $B.class_name(v) +
                 "' object cannot be interpreted as an integer")
             }
         default:
-            throw _b_.TypeError.$factory("'" + $B.get_class(v).__name__ +
+            throw _b_.TypeError.$factory("'" + $B.class_name(v) +
                 "' object cannot be interpreted as an integer")
     }
 }
@@ -1080,7 +1119,7 @@ $B.int_value = function(v){
         }else if(isinstance(v, _b_.float) && v == Math.floor(v)){
             return Math.floor(v)
         }else{
-            throw _b_.TypeError.$factory("'" + $B.get_class(v).__name__ +
+            throw _b_.TypeError.$factory("'" + $B.class_name(v) +
                 "' object cannot be interpreted as an integer")
         }
     }
@@ -1469,8 +1508,8 @@ $B.rich_comp = function(op, x, y){
     else if(op == "__ne__"){return _b_.True}
 
     throw _b_.TypeError.$factory("'" + method2comp[op] +
-        "' not supported between instances of '" + $B.get_class(x).__name__ +
-        "' and '" + $B.get_class(y).__name__ + "'")
+        "' not supported between instances of '" + $B.class_name(x) +
+        "' and '" + $B.class_name(y) + "'")
 }
 
 $B.is_none = function(o){

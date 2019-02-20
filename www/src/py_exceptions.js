@@ -97,6 +97,21 @@ $B.$IndentationError = function(module, msg, src, pos, line_num, root) {
     throw exc
 }
 
+$B.print_stack = function(){
+    $B.frames_stack.forEach(function(frame){
+        var line_info = frame[1].$line_info
+        if(line_info !== undefined){
+            var info = line_info.split(",")
+            console.log(info[1] + " line " + info[0])
+            var src = $B.file_cache[frame[3].__file__]
+            if(src){
+                var lines = src.split("\n"),
+                    line = lines[parseInt(info[0]) - 1]
+                console.log("    " + line.trim())
+            }
+        }
+    })
+}
 
 // class of traceback objects
 var traceback = $B.make_class("traceback",
@@ -256,10 +271,12 @@ $B._frame = frame // used in builtin_modules.js
 var BaseException = _b_.BaseException =  {
     __class__: _b_.type,
     __bases__ : [_b_.object],
-    __module__: "builtins",
     __mro__: [_b_.object],
-    __name__: "BaseException",
     args: [],
+    $infos:{
+        __name__: "BaseException",
+        __module__: "builtins"
+    },
     $is_class: true
 }
 
@@ -269,18 +286,20 @@ BaseException.__init__ = function(self){
 }
 
 BaseException.__repr__ = function(self){
-    return self.__class__.__name__ + repr(self.args)
+    return self.__class__.$infos.__name__ + repr(self.args)
 }
 
 BaseException.__str__ = function(self){
-    if (self.args.length > 0)
+    if(self.args.length > 0){
         return _b_.str.$factory(self.args[0])
-    return self.__class__.__name__
+    }
+    return self.__class__.$infos.__name__
 }
 
 BaseException.__new__ = function(cls){
     var err = _b_.BaseException.$factory()
     err.__class__ = cls
+    err.__dict__ = _b_.dict.$factory()
     return err
 }
 
@@ -313,6 +332,8 @@ var getExceptionTrace = function(exc, includeInternal) {
             if(src === undefined){
                 if($B.VFS && $B.VFS.hasOwnProperty(frame[2])){
                     src = $B.VFS[frame[2]][1]
+                }else if(src = $B.file_cache[frame[3].__file__]){
+                    // For imported modules, cf. issue 981
                 }else{
                     continue
                 }
@@ -353,7 +374,7 @@ BaseException.__getattr__ = function(self, attr){
         if(self.$traceback !== undefined){return self.$traceback}
         return traceback.$factory(self)
     }else{
-        throw _b_.AttributeError.$factory(self.__class__.__name__ +
+        throw _b_.AttributeError.$factory(self.__class__.$infos.__name__ +
             " has no attribute '" + attr + "'")
     }
 }
@@ -408,6 +429,7 @@ $B.exception = function(js_exc){
     // or by the Javascript interpreter (ReferenceError for instance)
     if(! js_exc.$py_error){
         console.log("Javascript exception:", js_exc)
+        console.log($B.last($B.frames_stack))
         var exc = Error()
         exc.__name__ = "Internal Javascript error: " +
             (js_exc.__name__ || js_exc.name)
@@ -470,13 +492,14 @@ function $make_exc(names, parent){
         var $exc = (BaseException.$factory + "").replace(/BaseException/g,name)
         $exc = $exc.replace("//placeholder//", code)
         // class dictionary
-        _str[pos++] = "_b_." + name + ' = {__class__:_b_.type, __name__:"' +
-            name + '", __bases__: [parent], __module__: "builtins", '+
-            '__mro__: [_b_.' + parent.__name__ +
-            "].concat(parent.__mro__), $is_class: true}"
+        _str[pos++] = "_b_." + name + ' = {__class__:_b_.type, ' +
+            '__mro__: [_b_.' + parent.$infos.__name__ +
+            "].concat(parent.__mro__), $is_class: true," +
+            "$infos: {__name__:'" + name + "'}}"
         _str[pos++] = "_b_." + name + ".$factory = " + $exc
         _str[pos++] = "_b_." + name + '.$factory.$infos = {__name__: "' +
             name + '", __qualname__: "' + name + '"}'
+        _str[pos++] = "$B.set_func_names(_b_." + name + ", 'builtins')"
     }
     try{
         eval(_str.join(";"))

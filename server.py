@@ -117,13 +117,15 @@ class RequestHandler(CGIHTTPRequestHandler):
             if self.client_address[0] != '127.0.0.1':
                 return self.send_error(403, "Forbidden")
             data = self.rfile.read(int(self.headers.get('Content-Length')))
-            src = data.decode('utf-8')
+            path = data.decode('utf-8')
+            path = os.path.join(os.getcwd(), "speed", path)
 
             t0 = time.perf_counter()
-            exec(src, {})
+            with open(path, encoding="utf-8") as f:
+                exec(f.read(), {})
             t1 = time.perf_counter()
 
-            response = '%f' % ((t1 - t0) * 1000.0)
+            response = '%6.2f' % ((t1 - t0) * 1000.0)
             response_data = response.encode('utf-8')
 
             self.send_response(200)

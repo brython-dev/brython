@@ -56,8 +56,7 @@ function bytes2WordArray(obj){
     // Transform a bytes object into an instance of class WordArray
     // defined in CryptoJS
     if(!_b_.isinstance(obj, _b_.bytes)){
-        throw _b_.TypeError("expected bytes, got " +
-            $B.get_class(obj).__name__)
+        throw _b_.TypeError("expected bytes, got " + $B.class_name(obj))
     }
 
     var words = []
@@ -73,7 +72,9 @@ function bytes2WordArray(obj){
 var hash = {
     __class__: _b_.type,
     __mro__: [_b_.object],
-    __name__: 'hash'
+    $infos:{
+        __name__: 'hash'
+    }
 }
 
 hash.update = function(self, msg){

@@ -7,7 +7,7 @@ var object = _b_.object
 
 function $err(op, other){
     var msg = "unsupported operand type(s) for " + op +
-        ": 'float' and '" + $B.get_class(other).__name__ + "'"
+        ": 'float' and '" + $B.class_name(other) + "'"
     throw _b_.TypeError.$factory(msg)
 }
 
@@ -15,7 +15,10 @@ function $err(op, other){
 var float = {
     __class__: _b_.type,
     __dir__: object.__dir__,
-    __name__: "float",
+    $infos: {
+        __module__: "builtins",
+        __name__: "float"
+    },
     $is_class: true,
     $native: true,
     $descriptors: {
@@ -402,7 +405,7 @@ float.__mod__ = function(self, other) {
             r = self - other * q
         return new Number(r)
     }
-    if(isinstance(other, bool)){
+    if(isinstance(other, _b_.bool)){
         var bool_value = 0
         if(other.valueOf()){bool_value = 1}
         return new Number((self % bool_value + bool_value) % bool_value)
@@ -421,7 +424,7 @@ float.__mul__ = function(self, other){
         return new Number(self * other)
     }
     if(isinstance(other,float)){return new Number(self * other)}
-    if(isinstance(other, bool)){
+    if(isinstance(other, _b_.bool)){
       var bool_value = 0
       if(other.valueOf()){bool_value = 1}
       return new Number(self * bool_value)
@@ -542,7 +545,7 @@ var $op_func = function(self, other){
         }else{return float.$factory(self - other)}
     }
     if(isinstance(other, float)){return float.$factory(self - other)}
-    if(isinstance(other, bool)){
+    if(isinstance(other, _b_.bool)){
         var bool_value = 0
         if(other.valueOf()){bool_value = 1}
         return float.$factory(self - bool_value)
@@ -571,8 +574,8 @@ var $comp_func = function(self, other){
     }
     if(isinstance(other,float)){return self > other}
 
-    if(isinstance(other, bool)) {
-      return self.valueOf() > bool.__hash__(other)
+    if(isinstance(other, _b_.bool)) {
+      return self.valueOf() > _b_.bool.__hash__(other)
     }
     if(hasattr(other, "__int__") || hasattr(other, "__index__")) {
        return _b_.int.__gt__(self, $B.$GetInt(other))
@@ -583,7 +586,7 @@ var $comp_func = function(self, other){
     if(inv_op !== None){return inv_op(self)}
 
     throw _b_.TypeError.$factory(
-        "unorderable types: float() > " + $B.get_class(other).__name__ + "()")
+        "unorderable types: float() > " + $B.class_name(other) + "()")
 }
 
 $comp_func += "" // source code
@@ -601,7 +604,7 @@ $B.make_rmethods(float)
 var $notimplemented = function(self, other){
     throw _b_.TypeError.$factory(
         "unsupported operand types for OPERATOR: 'float' and '" +
-            $B.get_class(other).__name__ + "'")
+            $B.class_name(other) + "'")
 }
 $notimplemented += "" // coerce to string
 for(var $op in $B.$operators){
@@ -688,7 +691,7 @@ float.$factory = function (value){
          }
     }
     throw _b_.TypeError.$factory("float() argument must be a string or a " +
-        "number, not '" + $B.get_class(value).__name__ + "'")
+        "number, not '" + $B.class_name(value) + "'")
 }
 
 float.__new__ = function(cls){
@@ -706,7 +709,10 @@ $B.set_func_names(float, "builtins")
 var FloatSubclass = $B.FloatSubclass  = {
     __class__: _b_.type,
     __mro__: [object],
-    __name__: "float",
+    $infos: {
+        __module__: "builtins",
+        __name__: "float"
+    },
     $is_class: true
 }
 

@@ -6,6 +6,13 @@ eval(bltns)
 var object = _b_.object,
     $N = _b_.None
 
+function check_not_tuple(self, attr){
+    if(self.__class__ === tuple){
+        throw _b_.AttributeError.$factory(
+            "'tuple' object has no attribute '" + attr +"'")
+    }
+}
+
 function $list(){
     // used for list displays
     // different from list : $list(1) is valid (matches [1])
@@ -15,9 +22,11 @@ function $list(){
 
 var list = {
     __class__: _b_.type,
-    __module__: "builtins",
     __mro__: [object],
-    __name__: "list",
+    $infos: {
+        __module__: "builtins",
+        __name__: "list"
+    },
     $is_class: true,
     $native: true,
     __dir__: object.__dir__
@@ -28,7 +37,7 @@ list.__add__ = function(self, other){
         var radd = getattr(other, "__radd__", NotImplemented)
         if(radd !== NotImplemented){return radd(self)}
         throw TypeError.$factory('can only concatenate list (not "' +
-            $B.get_class(other).__name__ + '") to list')
+            $B.class_name(other) + '") to list')
     }
     var res = self.valueOf().concat(other.valueOf())
     if(isinstance(self, tuple)){res = tuple.$factory(res)}
@@ -164,13 +173,13 @@ list.__getitem__ = function(self, arg){
     }
 
     throw _b_.TypeError.$factory("list indices must be integer, not " +
-        $B.get_class(key).__name__)
+        $B.class_name(key))
 }
 
 list.__ge__ = function(self, other){
     if(! isinstance(other, [list, _b_.tuple])){
         throw _b_.TypeError.$factory("unorderable types: list() >= "+
-            $B.get_class(other).__name__ + "()")
+            $B.class_name(other) + "()")
     }
     var i = 0
     while(i < self.length){
@@ -180,8 +189,8 @@ list.__ge__ = function(self, other){
             res = getattr(self[i], "__ge__")(other[i])
             if(res === _b_.NotImplemented){
                 throw _b_.TypeError.$factory("unorderable types: " +
-                    $B.get_class(self[i]).__name__  + "() >= " +
-                    $B.get_class(other[i]).__name__ + "()")
+                    $B.class_name(self[i])  + "() >= " +
+                    $B.class_name(other[i]) + "()")
             }else{return res}
         }
     }
@@ -192,7 +201,7 @@ list.__ge__ = function(self, other){
 list.__gt__ = function(self, other){
     if(! isinstance(other, [list, _b_.tuple])){
         throw _b_.TypeError.$factory("unorderable types: list() > " +
-            $B.get_class(other).__name__ + "()")
+            $B.class_name(other) + "()")
     }
     var i = 0
     while(i < self.length){
@@ -202,8 +211,8 @@ list.__gt__ = function(self, other){
             res = getattr(self[i], "__gt__")(other[i])
             if(res === _b_.NotImplemented){
                 throw _b_.TypeError.$factory("unorderable types: " +
-                    $B.get_class(self[i]).__name__ + "() > " +
-                    $B.get_class(other[i]).__name__ + "()")
+                    $B.class_name(self[i]) + "() > " +
+                    $B.class_name(other[i]) + "()")
             }else return res
         }
     }
@@ -266,6 +275,10 @@ list.__init__ = function(self, arg){
 }
 
 var $list_iterator = $B.$iterator_class("list_iterator")
+$list_iterator.__reduce__ = $list_iterator.__reduce_ex__ = function(self){
+    return $B.fast_tuple([_b_.iter, $B.fast_tuple([list.$factory(self)]), 0])
+}
+
 list.__iter__ = function(self){
     return $B.$iterator(self, $list_iterator)
 }
@@ -281,7 +294,7 @@ list.__len__ = function(self){
 list.__lt__ = function(self, other){
     if(! isinstance(other, [list, _b_.tuple])){
         throw _b_.TypeError.$factory("unorderable types: list() >= "+
-            $B.get_class(other).__name__ + "()")
+            $B.class_name(other) + "()")
     }
     var i = 0
     while(i < self.length){
@@ -292,8 +305,8 @@ list.__lt__ = function(self, other){
             res = getattr(self[i], "__lt__")(other[i])
             if(res === _b_.NotImplemented){
                 throw _b_.TypeError.$factory("unorderable types: " +
-                    $B.get_class(self[i]).__name__  + "() >= " +
-                    $B.get_class(other[i]).__name__ + "()")
+                    $B.class_name(self[i])  + "() >= " +
+                    $B.class_name(other[i]) + "()")
             }else{return res}
         }
     }
@@ -325,7 +338,7 @@ list.__mul__ = function(self, other){
 
     throw _b_.TypeError.$factory(
         "can't multiply sequence by non-int of type '" +
-        $B.get_class(other).__name__ + "'")
+        $B.class_name(other) + "'")
 }
 
 list.__new__ = function(cls, ...args){
@@ -375,7 +388,12 @@ list.__setitem__ = function(){
         self = $.self,
         arg = $.key,
         value = $.value
-    if(isinstance(arg, _b_.int)){
+    list.$setitem(self, arg, value)
+}
+
+list.$setitem = function(self, arg, value){
+    // Used internally to avoid using $B.args
+    if(typeof arg == "number" || isinstance(arg, _b_.int)){
         var pos = arg
         if(arg < 0) {pos = self.length + pos}
         if(pos >= 0 && pos < self.length){self[pos] = value}
@@ -395,7 +413,7 @@ list.__setitem__ = function(){
     }
 
     throw _b_.TypeError.$factory("list indices must be integer, not " +
-        arg.__class__.__name__)
+        $B.class_name(arg))
 }
 
 // there is no list.__str__
@@ -483,7 +501,7 @@ list.pop = function(){
         arguments, {pos: null}, null, null),
         self = $.self,
         pos = $.pos
-
+    check_not_tuple(self, "pop")
     if(pos === null){pos = self.length - 1}
     pos = $B.$GetInt(pos)
     if(pos < 0){pos += self.length}
@@ -597,7 +615,8 @@ list.sort = function(self){
     var $ = $B.args("sort", 1, {self: null}, ["self"],
         arguments, {}, null, "kw")
 
-    var func = null,
+    check_not_tuple(self, "sort")
+    var func = _b_.None,
         reverse = false,
         kw_args = $.kw,
         keys = _b_.list.$factory(_b_.dict.$$keys(kw_args))
@@ -610,33 +629,33 @@ list.sort = function(self){
     }
     if(self.length == 0){return}
 
-    if(func !== null){
+    if(func !== _b_.None){
         func = $B.$call(func) // func can be an object with method __call__
     }
 
     self.$cl = $elts_class(self)
     var cmp = null;
-    if(func === null && self.$cl === _b_.str){
+    if(func === _b_.None && self.$cl === _b_.str){
         if(reverse){
             cmp = function(b, a){return $B.$AlphabeticalCompare(a, b)}
         }else{
             cmp = function(a, b){return $B.$AlphabeticalCompare(a, b)}
         }
-    }else if(func === null && self.$cl === _b_.int){
+    }else if(func === _b_.None && self.$cl === _b_.int){
         if(reverse){
             cmp = function(b, a){return a - b}
         }else{
             cmp = function(a, b){return a - b}
         }
     }else{
-        if(func === null){
+        if(func === _b_.None){
             if(reverse){
                 cmp = function(b, a) {
                     res = getattr(a, "__le__")(b)
                     if(res === _b_.NotImplemented){
                         throw _b_.TypeError.$factory("unorderable types: " +
-                            $B.get_class(b).__name__ + "() <=" +
-                            $B.get_class(a).__name__ + "()")
+                            $B.class_name(b) + "() <=" +
+                            $B.class_name(a) + "()")
                     }
                     if(res){
                         if(a == b){return 0}
@@ -649,8 +668,8 @@ list.sort = function(self){
                     res = getattr(a, "__le__")(b)
                     if(res === _b_.NotImplemented){
                         throw _b_.TypeError.$factory("unorderable types: " +
-                            $B.get_class(a).__name__ + "() <=" +
-                            $B.get_class(b).__name__ + "()")
+                            $B.class_name(a) + "() <=" +
+                            $B.class_name(b) + "()")
                     }
                     if(res){
                         if(a == b){return 0}
@@ -667,8 +686,8 @@ list.sort = function(self){
                     res = getattr(_a, "__le__")(_b)
                     if(res === _b_.NotImplemented){
                         throw _b_.TypeError.$factory("unorderable types: " +
-                            $B.get_class(b).__name__ + "() <=" +
-                            $B.get_class(a).__name__ + "()")
+                            $B.class_name(b) + "() <=" +
+                            $B.class_name(a) + "()")
                     }
                     if(res){
                         if(_a == _b){return 0}
@@ -683,8 +702,8 @@ list.sort = function(self){
                     res = $B.$getattr(_a, "__lt__")(_b)
                     if(res === _b_.NotImplemented){
                         throw _b_.TypeError.$factory("unorderable types: " +
-                            $B.get_class(a).__name__ + "() <=" +
-                            $B.get_class(b).__name__ + "()")
+                            $B.class_name(a) + "() <=" +
+                            $B.class_name(b) + "()")
                     }
                     if(res){
                         if(_a == _b){return 0}
@@ -743,14 +762,53 @@ list.$factory = function(){
 
 $B.set_func_names(list, "builtins")
 
+// Wrapper around Javascript arrays
+var JSArray = $B.JSArray = $B.make_class("JSArray",
+    function(array){
+        return {
+            __class__: JSArray,
+            js: array
+        }
+    }
+)
+
+JSArray.__repr__ = JSArray.__str__ = function(){
+    return "<JSArray object>"
+}
+
+// Add list methods to JSArray
+function make_args(args){
+    var res = [args[0].js]
+    for(var i = 1, len = args.length; i < len; i++){
+        res.push(args[i])
+    }
+    return res
+}
+
+for(var attr in list){
+    if($B.JSArray[attr] !== undefined){continue}
+    if(typeof list[attr] == "function"){
+        $B.JSArray[attr] = (function(fname){
+            return function(){
+                return $B.$JS2Py(list[fname].apply(null,
+                    make_args(arguments)))
+            }
+        })(attr)
+    }
+}
+
+$B.set_func_names($B.JSArray, "builtins")
+
 // Tuples
 function $tuple(arg){return arg} // used for parenthesed expressions
 
 var tuple = {
     __class__: _b_.type,
-    __module__: "builtins",
     __mro__: [object],
-    __name__: "tuple",
+    $infos: {
+        __module__: "builtins",
+        __name__: "tuple"
+    },
     $is_class: true,
     $native: true
 }
@@ -771,6 +829,11 @@ tuple.$factory = function(){
     return obj
 }
 
+$B.fast_tuple = function(array){
+    array.__class__ = tuple
+    array.__brython__ = true
+    return array
+}
 // add tuple methods
 for(var attr in list){
     switch(attr) {
@@ -782,9 +845,7 @@ for(var attr in list){
         case "extend":
         case "insert":
         case "remove":
-        case "pop":
         case "reverse":
-        case "sort":
             break
         default:
             if(tuple[attr] === undefined){

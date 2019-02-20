@@ -17,11 +17,8 @@ class Obj (object):
     property = Descriptor ()
     
     def test (self):
-        
         assert self.property == (self, Obj, None)
-        
         self.property = 'VALUE'
-        
         assert (self.property == (self, Obj, 'VALUE'))
 
 

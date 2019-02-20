@@ -1,0 +1,128 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+body,td,th{
+    font-family:sans-serif;
+    font-size:12px;
+}
+#right{
+    padding-left: 2em;
+}
+</style>
+<script type="text/javascript"
+    src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.7.0/brython.min.js">
+</script>
+
+<script type="text/javascript"
+    src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.7.0/brython_stdlib.js">
+</script>
+</head>
+<body onload="brython(1)">
+
+<table width="100%">
+<tr>
+<td width="25%" style="padding-left:3%;">
+    <h2>Make long-running processes non-blocking</h2>
+    A program that takes a long time to execute might freeze the browser and
+    cause messages to appear in the window, saying that the script takes a
+    long time to run and asking the user if he wants to stop it or continue.
+    <p>In this page, the process consists in building a 1,000,000 element
+    list. Running it without any precaution causes the browser to freeze.
+    <p>To avoid this and keep the page responsive, we use the function
+    <code>set_timeout()</code> defined in module <b><code>
+    <a href="/static_doc/en/timer.html" target="_blank">browser.timer</a>
+    </code></b>. The program defines a function <code>add_rows()</code>
+    that only adds 5,000 elements (we are sure it will not block the
+    browser), and ends with this line:
+    <p><code>timer.set_timeout(add_rows, 0)</code>
+    <p>This instruction tells the program to run the function again in 0
+    seconds, ie almost immediately, but just before it gives control back to
+    the browser, which can for instance print something on the page or
+    react to a click on a button.
+    <p>Although it lasts much longer than the time after which a browser
+    prints a warning, the script remains responsive, for instance you can
+    enter text in the textarea and click on the button to know the text
+    lengths (the browser will of course react a little slower than if no
+    heavy computation was done in the same time).
+</td>
+<td id="right">
+    Elements: <span id="output" style="width:10%;padding: 5px;font-family: arial;"></span>
+    <p>
+    <textarea id="zone" rows="5" cols="50" autocomplete="off">enter text here...</textarea>
+    <br><button id="btn">show text length</button>
+    <span id="txtlen"></span>
+</td>
+</tr>
+</table>
+
+<script type="text/python">
+import random
+import time
+from browser import timer, document, bind
+
+t0 = time.time()
+
+output = document["output"]
+
+letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+
+table = {"headers": [], "rows": []}
+
+table['headers'].append({"name": "row num", "type": "string"})
+
+@bind("#btn", "click")
+def show_length(ev):
+    """Show the length of the text in textarea."""
+    document["txtlen"].text = str(len(document["zone"].value))
+
+N = 1_000_000
+block_size = 5_000
+
+rownum = 0
+def add_rows():
+    """Add block_size rows to table["rows"]."""
+    global rownum
+
+    # display information : shows that the browser is not freezed
+    output.text = str(rownum)
+
+    # add rows
+    for j in range(rownum, rownum + block_size):
+        newRow = []
+        newRow.append("row" + str(j))
+        table["rows"].append(newRow)
+
+    rownum += block_size
+    if rownum < N:
+        # restart a new set of creations, but give the browser engine an
+        # opportunity to handle pending events
+        timer.set_timeout(add_rows, 0)
+    else:
+        table['headers'].append({"name": "Random Letter", "type": "string"})
+        # start the final task
+        add_letter()
+
+nbrows = 0
+def add_letter():
+    """Add a letter to a list of 2 * block_size rows."""
+    global nbrows
+    output.text = f"add letters {nbrows}"
+
+    for row in table["rows"][nbrows:nbrows + 2 * block_size]:
+        row.append(random.choice(letters))
+
+    nbrows += 2 * block_size
+
+    if nbrows < len(table["rows"]):
+        timer.set_timeout(add_letter, 0)
+    else:
+        # program is finished
+        output.text = f"finished in {time.time() - t0:.3f} s."
+
+# start the process
+add_rows()
+</script>
+</body>
+</html>

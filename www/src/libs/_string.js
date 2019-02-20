@@ -46,7 +46,7 @@ return{
 
         if(! _b_.isinstance(format_string, _b_.str)){
             throw _b_.ValueError.$factory("Invalid format string type: " +
-                $B.get_class(format_string).__name__)
+                $B.class_name(format_string))
         }
 
         var result  = []

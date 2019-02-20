@@ -7,9 +7,11 @@ var _b_ = $B.builtins,
 
 var module = $B.module = {
     __class__ : _b_.type,
-    __module__: "builtins",
     __mro__: [_b_.object],
-    __name__ : "module",
+    $infos: {
+        __module__: "builtins",
+        __name__: "module"
+    },
     $is_class: true
 }
 
@@ -61,8 +63,7 @@ function parent_package(mod_name) {
 }
 
 function $download_module(module, url, $package){
-    $B.xhr = $B.xhr || new XMLHttpRequest()
-    var xhr = $B.xhr,
+    var xhr = new XMLHttpRequest(),
         fake_qs
 
     switch ($B.$options.cache) {
@@ -78,7 +79,6 @@ function $download_module(module, url, $package){
 
     var timer = _window.setTimeout(function(){
             xhr.abort()
-            throw _b_.ImportError.$factory("No module named '" + module + "'")
         }, 5000)
 
     var res = null,
@@ -165,6 +165,15 @@ function run_js(module_contents, path, _module){
     }
 
     $module.__name__ = _module.__name__
+    for(var attr in $module){
+        if(typeof $module[attr] == "function"){
+            $module[attr].$infos = {
+                __module__: _module.__name__,
+                __name__: attr,
+                __qualname__: attr
+            }
+        }
+    }
 
     if(_module !== undefined){
         // FIXME : This might not be efficient . Refactor js modules instead.
@@ -336,7 +345,10 @@ function new_spec(fields) {
 var finder_VFS = {
     __class__: _b_.type,
     __mro__: [_b_.object],
-    __name__: "VFSFinder",
+    $infos: {
+        __module__: "builtins",
+        __name__: "VFSFinder"
+    },
 
     create_module : function(cls, spec) {
         // Fallback to default module creation
@@ -471,7 +483,10 @@ var finder_stdlib_static = {
     $factory : finder_stdlib_static,
     __class__ : _b_.type,
     __mro__: [_b_.object],
-    __name__ : "StdlibStatic",
+    $infos: {
+        __module__: "builtins",
+        __name__: "StdlibStatic"
+    },
 
     create_module : function(cls, spec) {
         // Fallback to default module creation
@@ -566,7 +581,10 @@ finder_stdlib_static.$factory = function (){
 var finder_path = {
     __class__: _b_.type,
     __mro__: [_b_.object],
-    __name__: "ImporterPath",
+    $infos: {
+        __module__: "builtins",
+        __name__: "ImporterPath"
+    },
 
     create_module : function(cls, spec) {
         // Fallback to default module creation
@@ -663,7 +681,10 @@ finder_path.$factory = function(){
 var vfs_hook = {
     __class__: _b_.type,
     __mro__: [_b_.object],
-    __name__: "VfsPathFinder",
+    $infos: {
+        __module__: "builtins",
+        __name__: "VfsPathFinder"
+    },
 
     load_vfs: function(self) {
         try{var code = $download_module({__name__: "<VFS>"}, self.path)}
@@ -736,10 +757,13 @@ $B.set_func_names(vfs_hook, "<import>")
 var url_hook = {
     __class__: _b_.type,
     __mro__: [_b_.object],
-    __name__ : "UrlPathFinder",
     __repr__: function(self) {
         return "<UrlPathFinder" + (self.hint? " for '" + self.hint + "'":
                                    "(unbound)") + " at " + self.path_entry + '>'
+    },
+    $infos: {
+        __module__: "builtins",
+        __name__: "UrlPathFinder"
     },
 
     find_spec : function(self, fullname, module) {
@@ -935,7 +959,8 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
             }
        }
     }else{
-        if($B.imported[parsed_name[0]]){
+        if($B.imported[parsed_name[0]] &&
+                parsed_name.length > 1){
             try{
                 $B.$setattr($B.imported[parsed_name[0]], parsed_name[1], modobj)
             }catch(err){
@@ -1081,6 +1106,8 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                                 exc.name = name
                                 throw exc
                         }
+                        console.log($err3)
+                        console.log($B.last($B.frames_stack))
                         throw _b_.ImportError.$factory(
                             "cannot import name '" + name + "'")
                     }

@@ -204,8 +204,7 @@ for child in element:
 ```
 To destroy an element, use the keyword `del`
 ```python
-zone = document['zone']
-del zone
+del document['zone']
 ```
 
 The `options` collection associated with a SELECT object has an interface of a
