@@ -93,7 +93,7 @@ async def run_all():
             doc["console"].value = ''
             print('Running tests in', option.innerText)
             req = await aio.get(option.value, data={"t": time.time()})
-            src = await req.text()
+            src = req.data
             doc['files'].selectedIndex = script_num
             editor.editor.setValue(src)
             state = await run(False)
