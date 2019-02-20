@@ -36,7 +36,7 @@ Th module **browser.aio** defines the following asynchronous functions:
 >> "dataURL" : a string formatted as
 >> [dataURL](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URIs)
 
-> _ headers_ is a dictionary with the HTTP headers to send with the request.
+> _headers_ is a dictionary with the HTTP headers to send with the request.
 
 > _data_ is a string or a dictionary that will be sent with the request to
 > form the query string for a "GET" request, or the request body for "POST".

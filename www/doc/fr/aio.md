@@ -35,7 +35,7 @@ Le module **browser.aio** définit les fonctions asynchrones suivantes:
 >> "dataURL" : une chaine de caractères au format
 >> [dataURL](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URIs)
 
-> _ headers_ est un dictionnaire avec les entêtes HTTP à envoyer avec la
+> _headers_ est un dictionnaire avec les entêtes HTTP à envoyer avec la
 > requête.
 
 > _data_ est une chaine de caractères, ou un dictionnaire qui sera converti en
