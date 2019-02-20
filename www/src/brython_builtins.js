@@ -191,7 +191,7 @@ $B.python_to_js = function(src, script_id){
     var root = __BRYTHON__.py2js(src, script_id, script_id),
         js = root.to_js()
 
-    js = "var $locals_" + script_id + " = {}\n" + js
+    js = "(function() {\n var $locals_" + script_id + " = {}\n" + js + "\n}())"
     return js
 }
 
