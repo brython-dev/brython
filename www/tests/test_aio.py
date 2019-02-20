@@ -2,25 +2,6 @@ from browser import html, aio
 
 results = []
 
-async def f(url):
-    req = await aio.get(url)
-    if req.status == 200:
-        txt = await req.text()
-        return (url, len(txt))
-    else:
-        return (url, None)
-
-async def g(urls):
-    print("wait 2 seconds...")
-    await aio.sleep(2)
-    for url in urls:
-        r = await f(url)
-        results.append(r)
-    report()
-    await test_async_for()
-    await test_async_with()
-    await bar()
-
 def report(*args):
     for url, size in results:
         if size is not None:
@@ -53,9 +34,6 @@ async def test_async_for():
         data.append([i, j])
     assert data == [[0, 1], [0, 2], [0, 3]]
     print("'async for' test ok")
-
-async def bar():
-    raise Done
 
 class manager:
 
@@ -95,11 +73,33 @@ async def test_async_with():
     assert r4 == [(1, 2)]
 
     print("'async with' test ok")
-    
+
 def handle(err):
     assert isinstance(err, Done)
     print("handle error ok")
 
+
+async def raise_error():
+    raise Done
+
+async def ajax_call(url):
+    req = await aio.get(url)
+    if req.status == 200:
+        return (url, len(req.data))
+    else:
+        return (url, None)
+
+async def main(secs, urls):
+    print(f"wait {secs} seconds...")
+    await aio.sleep(secs)
+    for url in urls:
+        r = await ajax_call(url)
+        results.append(r)
+    report()
+    await test_async_for()
+    await test_async_with()
+    await raise_error()
+
 print("Start...")
-aio.run(g(["test_suite.py", "index.html", "unknown.txt"]),
+aio.run(main(1, ["test_suite.py", "index.html", "unknown.txt"]),
         onerror=handle)

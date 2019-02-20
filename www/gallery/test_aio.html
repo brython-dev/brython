@@ -97,14 +97,13 @@ async def raise_error():
 async def ajax_call(url):
     req = await aio.get(url)
     if req.status == 200:
-        txt = await req.text()
-        return (url, len(txt))
+        return (url, len(req.data))
     else:
         return (url, None)
 
-async def main(urls):
-    print("wait 3 seconds...")
-    await aio.sleep(3)
+async def main(secs, urls):
+    print(f"wait {secs} seconds...")
+    await aio.sleep(secs)
     for url in urls:
         r = await ajax_call(url)
         results.append(r)
@@ -114,7 +113,7 @@ async def main(urls):
     await raise_error()
 
 print("Start...")
-aio.run(main(["ajax.html", "clock.html", "unknown.txt"]),
+aio.run(main(1, ["ajax.html", "clock.html", "unknown.txt"]),
         onerror=handle)
 
 </script>
