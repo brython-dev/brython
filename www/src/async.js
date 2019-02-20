@@ -2,7 +2,6 @@
 var _b_ = $B.builtins
 
 var coroutine = $B.coroutine = $B.make_class("coroutine")
-var future = $B.make_class("future")
 
 coroutine.close = function(self){}
 coroutine.send = function(self){
@@ -19,12 +18,13 @@ coroutine.send = function(self){
     // frame is that of the async function currently executing, and
     // $leave_frame() would remove it, which is wrong.
     $B.last($B.frames_stack)[3].$run_async = true
+
     return self.$func.apply(null, self.$args)
 }
 
 $B.set_func_names(coroutine, "builtins")
 
-$B.make_async = function(func){
+$B.make_async = func => {
     var f = function(){
         var args = arguments
         return {
@@ -37,6 +37,8 @@ $B.make_async = function(func){
     return f
 }
 
+// "x = await coro" is translated into "x = await $B.promise(coro)"
+
 $B.promise = function(obj){
     if(obj.__class__ === $B.JSObject){
         return obj.js
@@ -45,13 +47,6 @@ $B.promise = function(obj){
     }
     if(typeof obj == "function"){
         return obj()
-    }
-    return obj
-}
-
-$B.awaitable = function(obj){
-    if(obj instanceof Response){
-        return $B.JSObject.$factory(obj)
     }
     return obj
 }
