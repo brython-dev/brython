@@ -17,7 +17,7 @@ d'en définir une autre comme le fait **asyncio** avec la fonction
 
 Le module **browser.aio** définit les fonctions asynchrones suivantes:
 
-## Requêtes Ajax
+### Requêtes Ajax
 
 `ajax(`_method, url[, format="text", headers=None, data=None, cache=False]_`)`
 
@@ -52,7 +52,7 @@ Le module **browser.aio** définit les fonctions asynchrones suivantes:
 
 > raccourci pour `ajax("POST", url...)`
 
-### Objets `Request`
+#### Objets `Request`
 
 Les instances de la classe `Request`, retournées par `await ajax()`,
 `await get()` ou `await post()`, possèdent les attributs suivants:
@@ -67,7 +67,7 @@ Les instances de la classe `Request`, retournées par `await ajax()`,
 > caractères ("200 Ok", "404 File not found"...)
 
 
-## Autres fonctions
+### Autres fonctions asynchrones
 
 `event(`_element, name_`)`
 
@@ -76,19 +76,23 @@ Les instances de la classe `Request`, retournées par `await ajax()`,
 > valeur de retour est une instance de la classe `DOMEvent` (cf. la section
 > [événements](../events.html))
 
-`run(`_coroutine_`)`
-
-> Exécute une coroutine, c'est-à-dire le résultat de l'appel d'une fonction
-> asynchrone. Cette fonction est _non bloquante_ : s'il y a des instructions
-> sur les lignes suivantes, le moment où elles sont exécutées n'est pas
-> prévisible.
-
 `sleep(`_seconds_`)`
 
 > Dans une fonction asynchrone, `await sleep(n)` rend le contrôle au programme
 > principal, et reprend l'exécution de la fonction au bout de `n` secondes.
 
-## Exemples
+### Exécuter une fonction asynchrone
+
+`run(`_coroutine_`)`
+
+> Exécute une coroutine, c'est-à-dire le résultat de l'appel d'une fonction
+> asynchrone. Cette fonction est _non bloquante_ : elle n'attend pas que la
+> fonction appelée soit terminée pour exécuter les instructions sur les lignes
+> suivantes. Le moment où la ligne suivante est exécutée n'est pas 
+> (facilement) prévisible.
+
+
+### Exemples
 
 Saisie de texte dans un élément INPUT
 
