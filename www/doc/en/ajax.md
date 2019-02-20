@@ -107,10 +107,16 @@ matching functions:
 `post(`_url[, async=True, headers={"Content-Type": _
 _"application/x-www-form-urlencoded"}, timeout=None, data="", **callbacks]_`)`
 
+> _async_ is a boolean to specify if the request is asynchronous
+> (default value) or synchronous (blocking)
+
 > _headers_ is a dictionary with the HTTP headers key / values
 
 > _data_ is either a string, or a dictionary. In the second case, the
 > dictionary is converted into a string of the form `x=1&y=2`.
+
+> _cache_ is a boolean to specify if the GET request should use the browser
+> cache
 
 > _timeout_ is the time in seconds after which the request is canceled
 

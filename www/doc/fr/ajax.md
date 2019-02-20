@@ -99,15 +99,21 @@ req.send({'x':0, 'y':1})
 Les appels GET et POST peuvent être effectués plus simplement avec les
 fonctions correspondantes :
 
-`get(`_url[, async=True, headers={}, timeout=None, data="", **callbacks]_`)`
+`get(`_url[, async=True, headers={}, timeout=None, cache=False, data="", **callbacks]_`)`
 
 `post(`_url[, async=True, headers={"Content-Type": _
 _"application/x-www-form-urlencoded"}, timeout=None, data="", **callbacks]_`)`
 
+> _async_ est un booléen qui indique si la requête doit être asynchrone
+> (valeur par défaut) ou synchrone
+
 > _headers_ est un dictionnaire avec les clés-valeurs des entêtes HTTP
 
+> _cache_ est un booléen qui indique si la requête GET doit utiliser le cache
+> du navigateur
+
 > _data_ est soit une chaine de caractères, soit un dictionnaire. Si c'est un
-> dictionnaire, il est converti en une chaine de la forme `x=1&y=2`.
+> dictionnaire, il est converti en une chaine de la forme `x=1&y=2`
 
 > _timeout_ est la durée en secondes après laquelle la requête est abandonnée
 
