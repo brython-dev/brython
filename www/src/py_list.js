@@ -1,9 +1,9 @@
 ;(function($B){
 
-var bltns = $B.InjectBuiltins()
-eval(bltns)
-
-var object = _b_.object,
+var _b_ = $B.builtins,
+    object = _b_.object,
+    getattr = $B.$getattr,
+    isinstance = _b_.isinstance,
     $N = _b_.None
 
 function check_not_tuple(self, attr){
@@ -34,9 +34,9 @@ var list = {
 
 list.__add__ = function(self, other){
     if($B.get_class(self) !== $B.get_class(other)){
-        var radd = getattr(other, "__radd__", NotImplemented)
-        if(radd !== NotImplemented){return radd(self)}
-        throw TypeError.$factory('can only concatenate list (not "' +
+        var radd = getattr(other, "__radd__", _b_.NotImplemented)
+        if(radd !== _b_.NotImplemented){return radd(self)}
+        throw _b_.TypeError.$factory('can only concatenate list (not "' +
             $B.class_name(other) + '") to list')
     }
     var res = self.valueOf().concat(other.valueOf())
@@ -71,11 +71,11 @@ list.__delitem__ = function(self, arg){
     }
     if(isinstance(arg, _b_.slice)) {
         var step = arg.step
-        if(step === None){step = 1}
+        if(step === $N){step = 1}
         var start = arg.start
-        if(start === None){start = step > 0 ? 0 : self.length}
+        if(start === $N){start = step > 0 ? 0 : self.length}
         var stop = arg.stop
-        if(stop === None){stop = step > 0 ? self.length : 0}
+        if(stop === $N){stop = step > 0 ? self.length : 0}
         if(start < 0){start = self.length + start}
         if(stop < 0){stop = self.length + stop}
         var res = [],
@@ -103,7 +103,7 @@ list.__delitem__ = function(self, arg){
         return $N
     }
 
-    if(hasattr(arg, "__int__") || hasattr(arg, "__index__")){
+    if(_b_.hasattr(arg, "__int__") || _b_.hasattr(arg, "__index__")){
        list.__delitem__(self, _b_.int.$factory(arg))
        return $N
     }
@@ -168,7 +168,7 @@ list.__getitem__ = function(self, arg){
         }
     }
 
-    if(hasattr(key, "__int__") || hasattr(key, "__index__")){
+    if(_b_.hasattr(key, "__int__") || _b_.hasattr(key, "__index__")){
        return list.__getitem__(self, _b_.int.$factory(key))
     }
 
@@ -218,13 +218,13 @@ list.__gt__ = function(self, other){
     return false
 }
 
-list.__hash__ = None
+list.__hash__ = $N
 
 list.__iadd__ = function() {
     var $ = $B.args("__iadd__", 2, {self: null, x: null}, ["self", "x"],
         arguments, {}, null, null)
-    var radd = getattr($.x, "__radd__", NotImplemented)
-    if(radd !== NotImplemented){return radd($.self)}
+    var radd = getattr($.x, "__radd__", _b_.NotImplemented)
+    if(radd !== _b_.NotImplemented){return radd($.self)}
     var x = list.$factory($B.$iter($.x))
     for(var i = 0; i < x.length; i++){
         $.self.push(x[i])
@@ -249,8 +249,8 @@ list.__imul__ = function() {
 
 list.__init__ = function(self, arg){
     var len_func = $B.$call(getattr(self, "__len__")),
-        pop_func = getattr(self, "pop", _b_.None)
-    if(pop_func !== _b_.None){
+        pop_func = getattr(self, "pop", $N)
+    if(pop_func !== $N){
         pop_func = $B.$call(pop_func)
         while(len_func()){pop_func()}
     }
@@ -326,12 +326,12 @@ list.__mul__ = function(self, other){
        return res
     }
 
-    if(hasattr(other, "__int__") || hasattr(other, "__index__")){
+    if(_b_.hasattr(other, "__int__") || _b_.hasattr(other, "__index__")){
        return list.__mul__(self, _b_.int.$factory(other))
     }
 
-    var rmul = $B.$getattr(other, "__rmul__", NotImplemented)
-    if(rmul !== NotImplemented){
+    var rmul = $B.$getattr(other, "__rmul__", _b_.NotImplemented)
+    if(rmul !== _b_.NotImplemented){
         return rmul(self)
     }
 
@@ -406,7 +406,7 @@ list.$setitem = function(self, arg, value){
         return $N
     }
 
-    if(hasattr(arg, "__int__") || hasattr(arg, "__index__")){
+    if(_b_.hasattr(arg, "__int__") || _b_.hasattr(arg, "__index__")){
        list.__setitem__(self, _b_.int.$factory(arg), value)
        return $N
     }
@@ -570,7 +570,7 @@ function $partition(arg, array, begin, end, pivot)
             // If the comparison function changes the array size, raise
             // ValueError
             if(array.length !== len){
-                throw ValueError.$factory("list modified during sort")
+                throw _b_.ValueError.$factory("list modified during sort")
             }
             if(getattr(x, "__le__")(arg(piv))){
                 array = swap(array, store, ix)
@@ -616,7 +616,7 @@ list.sort = function(self){
         arguments, {}, null, "kw")
 
     check_not_tuple(self, "sort")
-    var func = _b_.None,
+    var func = $N,
         reverse = false,
         kw_args = $.kw,
         keys = _b_.list.$factory(_b_.dict.$$keys(kw_args))
@@ -629,26 +629,26 @@ list.sort = function(self){
     }
     if(self.length == 0){return}
 
-    if(func !== _b_.None){
+    if(func !== $N){
         func = $B.$call(func) // func can be an object with method __call__
     }
 
     self.$cl = $elts_class(self)
     var cmp = null;
-    if(func === _b_.None && self.$cl === _b_.str){
+    if(func === $N && self.$cl === _b_.str){
         if(reverse){
             cmp = function(b, a){return $B.$AlphabeticalCompare(a, b)}
         }else{
             cmp = function(a, b){return $B.$AlphabeticalCompare(a, b)}
         }
-    }else if(func === _b_.None && self.$cl === _b_.int){
+    }else if(func === $N && self.$cl === _b_.int){
         if(reverse){
             cmp = function(b, a){return a - b}
         }else{
             cmp = function(a, b){return a - b}
         }
     }else{
-        if(func === _b_.None){
+        if(func === $N){
             if(reverse){
                 cmp = function(b, a) {
                     res = getattr(a, "__le__")(b)

@@ -113,7 +113,7 @@ set.__init__ = function(self, iterable, second){
             for(var i = 0, len = iterable.length; i < len; i++){
                 $add(self, iterable[i])
             }
-            return _b_.None
+            return $N
         }
     }
 
@@ -207,7 +207,7 @@ set.__or__ = function(self, other, accept_iter){
 
 set.__reduce__ = function(self){
     return _b_.tuple.$factory([self.__class__,
-        _b_.tuple.$factory([self.$items]), _b_.None])
+        _b_.tuple.$factory([self.$items]), $N])
 }
 
 set.__reduce_ex__ = function(self, protocol){

@@ -80,8 +80,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.1"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-02-22 17:31:28.933306"
-__BRYTHON__.timestamp=1550853088933
+__BRYTHON__.compiled_date="2019-02-22 18:03:35.734733"
+__BRYTHON__.timestamp=1550855015734
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 ;
 
@@ -8129,7 +8129,7 @@ return _b_.NotImplemented}
 set.__gt__=function(self,other){if(_b_.isinstance(other,[set,frozenset])){return set.__lt__(other,self)}
 return _b_.NotImplemented}
 set.__init__=function(self,iterable,second){if(second===undefined){if(Array.isArray(iterable)){for(var i=0,len=iterable.length;i < len;i++){$add(self,iterable[i])}
-return _b_.None}}
+return $N}}
 var $=$B.args("__init__",2,{self:null,iterable:null},["self","iterable"],arguments,{iterable:[]},null,null),self=$.self,iterable=$.iterable
 if(_b_.isinstance(iterable,[set,frozenset])){self.$items=iterable.$items.slice()
 return $N}
@@ -8161,7 +8161,7 @@ catch(err){if(_b_.isinstance(err,_b_.StopIteration)){break}
 throw err}}
 res.__class__=self.__class__
 return res}
-set.__reduce__=function(self){return _b_.tuple.$factory([self.__class__,_b_.tuple.$factory([self.$items]),_b_.None])}
+set.__reduce__=function(self){return _b_.tuple.$factory([self.__class__,_b_.tuple.$factory([self.$items]),$N])}
 set.__reduce_ex__=function(self,protocol){return set.__reduce__(self)}
 set.__str__=set.__repr__=function(self){var klass_name=$B.class_name(self)
 self.$cycle=self.$cycle===undefined ? 0 :self.$cycle+1
@@ -10420,17 +10420,15 @@ throw e;}}}
 $B.$TimSort=tim_sort_safe
 $B.$AlphabeticalCompare=alphabeticalCompare})(__BRYTHON__)
 ;
-;(function($B){var bltns=$B.InjectBuiltins()
-eval(bltns)
-var object=_b_.object,$N=_b_.None
+;(function($B){var _b_=$B.builtins,object=_b_.object,getattr=$B.$getattr,isinstance=_b_.isinstance,$N=_b_.None
 function check_not_tuple(self,attr){if(self.__class__===tuple){throw _b_.AttributeError.$factory(
 "'tuple' object has no attribute '"+attr+"'")}}
 function $list(){
 return list.$factory.apply(null,arguments)}
 var list={__class__:_b_.type,__mro__:[object],$infos:{__module__:"builtins",__name__:"list"},$is_class:true,$native:true,__dir__:object.__dir__}
-list.__add__=function(self,other){if($B.get_class(self)!==$B.get_class(other)){var radd=getattr(other,"__radd__",NotImplemented)
-if(radd !==NotImplemented){return radd(self)}
-throw TypeError.$factory('can only concatenate list (not "'+
+list.__add__=function(self,other){if($B.get_class(self)!==$B.get_class(other)){var radd=getattr(other,"__radd__",_b_.NotImplemented)
+if(radd !==_b_.NotImplemented){return radd(self)}
+throw _b_.TypeError.$factory('can only concatenate list (not "'+
 $B.class_name(other)+'") to list')}
 var res=self.valueOf().concat(other.valueOf())
 if(isinstance(self,tuple)){res=tuple.$factory(res)}
@@ -10447,11 +10445,11 @@ if(pos >=0 && pos < self.length){self.splice(pos,1)
 return $N}
 throw _b_.IndexError.$factory("list index out of range")}
 if(isinstance(arg,_b_.slice)){var step=arg.step
-if(step===None){step=1}
+if(step===$N){step=1}
 var start=arg.start
-if(start===None){start=step > 0 ? 0 :self.length}
+if(start===$N){start=step > 0 ? 0 :self.length}
 var stop=arg.stop
-if(stop===None){stop=step > 0 ? self.length :0}
+if(stop===$N){stop=step > 0 ? self.length :0}
 if(start < 0){start=self.length+start}
 if(stop < 0){stop=self.length+stop}
 var res=[],i=null,pos=0
@@ -10460,7 +10458,7 @@ res.reverse()}}
 var i=res.length
 while(i--){self.splice(res[i],1)}
 return $N}
-if(hasattr(arg,"__int__")||hasattr(arg,"__index__")){list.__delitem__(self,_b_.int.$factory(arg))
+if(_b_.hasattr(arg,"__int__")||_b_.hasattr(arg,"__index__")){list.__delitem__(self,_b_.int.$factory(arg))
 return $N}
 throw _b_.TypeError.$factory("list indices must be integer, not "+
 _b_.str.$factory(arg.__class__))}
@@ -10483,7 +10481,7 @@ for(var i=start;i < stop;i+=step){res[pos++]=items[i]}
 return factory(res)}else{if(stop > start){return factory(res)}
 for(var i=start;i > stop;i+=step){res[pos++]=items[i]}
 return factory(res)}}
-if(hasattr(key,"__int__")||hasattr(key,"__index__")){return list.__getitem__(self,_b_.int.$factory(key))}
+if(_b_.hasattr(key,"__int__")||_b_.hasattr(key,"__index__")){return list.__getitem__(self,_b_.int.$factory(key))}
 throw _b_.TypeError.$factory("list indices must be integer, not "+
 $B.class_name(key))}
 list.__ge__=function(self,other){if(! isinstance(other,[list,_b_.tuple])){return _b_.NotImplemented}
@@ -10504,10 +10502,10 @@ if(res===_b_.NotImplemented){throw _b_.TypeError.$factory("unorderable types: "+
 $B.class_name(self[i])+"() > "+
 $B.class_name(other[i])+"()")}else return res}}
 return false}
-list.__hash__=None
+list.__hash__=$N
 list.__iadd__=function(){var $=$B.args("__iadd__",2,{self:null,x:null},["self","x"],arguments,{},null,null)
-var radd=getattr($.x,"__radd__",NotImplemented)
-if(radd !==NotImplemented){return radd($.self)}
+var radd=getattr($.x,"__radd__",_b_.NotImplemented)
+if(radd !==_b_.NotImplemented){return radd($.self)}
 var x=list.$factory($B.$iter($.x))
 for(var i=0;i < x.length;i++){$.self.push(x[i])}
 return $.self}
@@ -10515,8 +10513,8 @@ list.__imul__=function(){var $=$B.args("__imul__",2,{self:null,x:null},["self","
 if(x==0){list.clear($.self);return $.self}
 for(var i=1;i < x;i++){for(j=0;j < len;j++){$.self[pos++]=$.self[j]}}
 return $.self}
-list.__init__=function(self,arg){var len_func=$B.$call(getattr(self,"__len__")),pop_func=getattr(self,"pop",_b_.None)
-if(pop_func !==_b_.None){pop_func=$B.$call(pop_func)
+list.__init__=function(self,arg){var len_func=$B.$call(getattr(self,"__len__")),pop_func=getattr(self,"pop",$N)
+if(pop_func !==$N){pop_func=$B.$call(pop_func)
 while(len_func()){pop_func()}}
 if(arg===undefined){return $N}
 var arg=$B.$iter(arg),next_func=$B.$call(getattr(arg,"__next__")),pos=len_func()
@@ -10544,9 +10542,9 @@ var res=[],$temp=self.slice(),len=$temp.length
 for(var i=0;i < other;i++){for(var j=0;j < len;j++){res.push($temp[j])}}
 res.__class__=self.__class__
 return res}
-if(hasattr(other,"__int__")||hasattr(other,"__index__")){return list.__mul__(self,_b_.int.$factory(other))}
-var rmul=$B.$getattr(other,"__rmul__",NotImplemented)
-if(rmul !==NotImplemented){return rmul(self)}
+if(_b_.hasattr(other,"__int__")||_b_.hasattr(other,"__index__")){return list.__mul__(self,_b_.int.$factory(other))}
+var rmul=$B.$getattr(other,"__rmul__",_b_.NotImplemented)
+if(rmul !==_b_.NotImplemented){return rmul(self)}
 throw _b_.TypeError.$factory(
 "can't multiply sequence by non-int of type '"+
 $B.class_name(other)+"'")}
@@ -10579,7 +10577,7 @@ if(isinstance(arg,_b_.slice)){var s=_b_.slice.$conv_for_seq(arg,self.length)
 if(arg.step===null){$B.set_list_slice(self,s.start,s.stop,value)}
 else{$B.set_list_slice_step(self,s.start,s.stop,s.step,value)}
 return $N}
-if(hasattr(arg,"__int__")||hasattr(arg,"__index__")){list.__setitem__(self,_b_.int.$factory(arg),value)
+if(_b_.hasattr(arg,"__int__")||_b_.hasattr(arg,"__index__")){list.__setitem__(self,_b_.int.$factory(arg),value)
 return $N}
 throw _b_.TypeError.$factory("list indices must be integer, not "+
 $B.class_name(arg))}
@@ -10643,7 +10641,7 @@ for(var ix=begin;ix < end-1;++ix){if(le_func(array[ix],piv)){array=swap(array,st
 ++store}}}else{for(var ix=begin;ix < end-1;++ix){if(getattr(array[ix],"__le__")(piv)){array=swap(array,store,ix)
 ++store}}}}else{var len=array.length
 for(var ix=begin;ix < end-1;++ix){var x=arg(array[ix])
-if(array.length !==len){throw ValueError.$factory("list modified during sort")}
+if(array.length !==len){throw _b_.ValueError.$factory("list modified during sort")}
 if(getattr(x,"__le__")(arg(piv))){array=swap(array,store,ix)
 ++store}}}
 array=swap(array,end-1,store)
@@ -10663,16 +10661,16 @@ while(i--){if($B.get_class(self[i])!==cl){return false}}
 return cl}
 list.sort=function(self){var $=$B.args("sort",1,{self:null},["self"],arguments,{},null,"kw")
 check_not_tuple(self,"sort")
-var func=_b_.None,reverse=false,kw_args=$.kw,keys=_b_.list.$factory(_b_.dict.$$keys(kw_args))
+var func=$N,reverse=false,kw_args=$.kw,keys=_b_.list.$factory(_b_.dict.$$keys(kw_args))
 for(var i=0;i < keys.length;i++){if(keys[i]=="key"){func=kw_args.$string_dict[keys[i]]}
 else if(keys[i]=="reverse"){reverse=kw_args.$string_dict[keys[i]]}
 else{throw _b_.TypeError.$factory("'"+keys[i]+
 "' is an invalid keyword argument for this function")}}
 if(self.length==0){return}
-if(func !==_b_.None){func=$B.$call(func)}
+if(func !==$N){func=$B.$call(func)}
 self.$cl=$elts_class(self)
 var cmp=null;
-if(func===_b_.None && self.$cl===_b_.str){if(reverse){cmp=function(b,a){return $B.$AlphabeticalCompare(a,b)}}else{cmp=function(a,b){return $B.$AlphabeticalCompare(a,b)}}}else if(func===_b_.None && self.$cl===_b_.int){if(reverse){cmp=function(b,a){return a-b}}else{cmp=function(a,b){return a-b}}}else{if(func===_b_.None){if(reverse){cmp=function(b,a){res=getattr(a,"__le__")(b)
+if(func===$N && self.$cl===_b_.str){if(reverse){cmp=function(b,a){return $B.$AlphabeticalCompare(a,b)}}else{cmp=function(a,b){return $B.$AlphabeticalCompare(a,b)}}}else if(func===$N && self.$cl===_b_.int){if(reverse){cmp=function(b,a){return a-b}}else{cmp=function(a,b){return a-b}}}else{if(func===$N){if(reverse){cmp=function(b,a){res=getattr(a,"__le__")(b)
 if(res===_b_.NotImplemented){throw _b_.TypeError.$factory("unorderable types: "+
 $B.class_name(b)+"() <="+
 $B.class_name(a)+"()")}
