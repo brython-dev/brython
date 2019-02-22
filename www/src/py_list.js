@@ -496,12 +496,13 @@ list.insert = function(){
 }
 
 list.pop = function(){
+    var missing = {}
     var $ = $B.args("pop", 2, {self: null, pos: null}, ["self", "pos"],
-        arguments, {pos: null}, null, null),
+        arguments, {pos: missing}, null, null),
         self = $.self,
         pos = $.pos
     check_not_tuple(self, "pop")
-    if(pos === null){pos = self.length - 1}
+    if(pos === missing){pos = self.length - 1}
     pos = $B.$GetInt(pos)
     if(pos < 0){pos += self.length}
     var res = self[pos]

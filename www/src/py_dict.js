@@ -7,17 +7,6 @@ var object = _b_.object,
     str_hash = _b_.str.__hash__,
     $N = _b_.None
 
-// dictionary
-function $DictClass($keys,$values){
-    this.iter = null
-    this.__class__ = dict
-    dict.clear(this)
-
-    var setitem = dict.__setitem__,
-        i = $keys.length
-    while(i--){setitem($keys[i], $values[i])}
-}
-
 var dict = {
     __class__: _b_.type,
     __mro__: [object],
@@ -110,16 +99,6 @@ var $copy_dict = function(left, right){
             throw _b_.RuntimeError.$factory("dict mutated during update")
         }
     }
-}
-
-function toSet(items){
-    // Build a set from the iteration on items
-    var res = []
-    while(true){
-        try{res.push(items.next())}
-        catch(err){break}
-    }
-    return _b_.set.$factory(res)
 }
 
 var $iterator_wrapper = function(items, klass){
@@ -385,7 +364,7 @@ dict.__getitem__ = function(){
     throw KeyError.$factory(arg)
 }
 
-dict.__hash__ = None
+dict.__hash__ = _b_.None
 
 function init_from_list(self, args){
     var i = -1,
@@ -491,7 +470,6 @@ dict.__init__ = function(self, first, second){
     return $N
 }
 
-var $dict_iterator = $B.$iterator_class("dict iterator")
 dict.__iter__ = function(self) {
     return dict.$$keys(self)
 }
@@ -876,17 +854,8 @@ $B.set_func_names(dict, "builtins")
 // have the attribute $infos
 dict.fromkeys = _b_.classmethod.$factory(dict.fromkeys)
 
-// following are used for faster access elsewhere
-$B.$dict_iterator = function(d){return new $item_generator(d)}
-$B.$dict_length = dict.__len__
-$B.$dict_getitem = dict.__getitem__
-$B.$dict_get = dict.get
-$B.$dict_set = dict.__setitem__
-$B.$dict_contains = dict.__contains__
-$B.$dict_items = function(d) { return new $item_generator(d).as_list() }
-$B.$copy_dict = $copy_dict  // copy from right to left
-$B.$dict_get_copy = dict.copy  // return a shallow copy
-
+// Use in py_types.js
+$B.$dict_items = function(d){return new $item_generator(d).as_list()}
 
 // Class for attribute __dict__ of classes
 var mappingproxy = $B.mappingproxy = $B.make_class("mappingproxy",
