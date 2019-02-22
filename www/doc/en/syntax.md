@@ -26,12 +26,18 @@ Brython supports most of the keywords and functions of Python 3 :
 Here are a few features and limitations imposed by the browser and Javascript :
 
 - Javascript functions can't block execution for a given time, or waiting for
-  an event to happen, before going to the next instruction. For this reason,
-  `time.sleep()` can't be used : functions in module **browser.timer** such as
-  `set_timeout()` or `set_interval()` must be used instead ; the built-in
-  function `input()` is simulated by the Javascript function `prompt()` ;
-  blocking methods in module `asyncio` are in fact not blocking, that is to
-  say, the instructions that follow are executed immediately.
+  an event to happen, before going to the next instruction. For this reason:
+
+ - `time.sleep()` can't be used : functions in module **browser.timer** such
+   as `set_timeout()` or `set_interval()` must be used instead
+
+ - the built-in function `input()` is simulated by the Javascript function
+ `prompt()`
+
+- for the same reason, and also because the browser has its own implicit
+  event loop, the CPython `asyncio` module is not usable. A Brython-specific
+  module, [**`browser.aio`**](aio.html), is provided for asynchrnous
+  programming.
 
 - the built-in function `open()` takes as argument the url of the file to
   open. Since it is read with an Ajax call, it must be in the same domain as
