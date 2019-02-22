@@ -94,13 +94,17 @@ set.__format__ = function(self, format_string){
 }
 
 set.__ge__ = function(self, other){
-    var res = set.__le__(self, other)
-    return res === _b_.NotImplemented ? res : ! res
+    if(_b_.isinstance(other, [set, frozenset])){
+        return set.__le__(other, self)
+    }
+    return _b_.NotImplemented
 }
 
 set.__gt__ = function(self, other){
-    var res = set.__lt__(self, other)
-    return res === _b_.NotImplemented ? res : ! res
+    if(_b_.isinstance(other, [set, frozenset])){
+        return set.__lt__(other, self)
+    }
+    return _b_.NotImplemented
 }
 
 set.__init__ = function(self, iterable, second){
@@ -150,6 +154,7 @@ set.__iter__ = function(self){
 }
 
 set.__le__ = function(self, other){
+    // Test whether every element in the set is in other.
     if(_b_.isinstance(other, [set, frozenset])){
         var cfunc = _b_.getattr(other, "__contains__")
         for(var i = 0, len = self.$items.length; i < len; i++){

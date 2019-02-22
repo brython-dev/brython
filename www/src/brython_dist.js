@@ -80,8 +80,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.1"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-02-22 09:47:55.049023"
-__BRYTHON__.timestamp=1550825275049
+__BRYTHON__.compiled_date="2019-02-22 14:09:40.439209"
+__BRYTHON__.timestamp=1550840980439
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 ;
 
@@ -8124,10 +8124,10 @@ return true}
 return false}
 return _b_.NotImplemented}
 set.__format__=function(self,format_string){return set.__str__(self)}
-set.__ge__=function(self,other){var res=set.__le__(self,other)
-return res===_b_.NotImplemented ? res :! res}
-set.__gt__=function(self,other){var res=set.__lt__(self,other)
-return res===_b_.NotImplemented ? res :! res}
+set.__ge__=function(self,other){if(_b_.isinstance(other,[set,frozenset])){return set.__le__(other,self)}
+return _b_.NotImplemented}
+set.__gt__=function(self,other){if(_b_.isinstance(other,[set,frozenset])){return set.__lt__(other,self)}
+return _b_.NotImplemented}
 set.__init__=function(self,iterable,second){if(second===undefined){if(Array.isArray(iterable)){for(var i=0,len=iterable.length;i < len;i++){$add(self,iterable[i])}
 return _b_.None}}
 var $=$B.args("__init__",2,{self:null,iterable:null},["self","iterable"],arguments,{iterable:[]},null,null),self=$.self,iterable=$.iterable
@@ -8143,7 +8143,8 @@ set.__iter__=function(self){var it=$B.$iterator(self.$items,$set_iterator),len=s
 it.__next__=function(){if(it.__len__()!=len){throw _b_.RuntimeError.$factory("size changed during iteration")}
 return nxt()}
 return it}
-set.__le__=function(self,other){if(_b_.isinstance(other,[set,frozenset])){var cfunc=_b_.getattr(other,"__contains__")
+set.__le__=function(self,other){
+if(_b_.isinstance(other,[set,frozenset])){var cfunc=_b_.getattr(other,"__contains__")
 for(var i=0,len=self.$items.length;i < len;i++){if(! cfunc(self.$items[i])){return false}}
 return true}else{return _b_.NotImplemented}}
 set.__len__=function(self){return self.$items.length}
