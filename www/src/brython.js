@@ -80,8 +80,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.1"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-02-20 09:24:03.567594"
-__BRYTHON__.timestamp=1550651043567
+__BRYTHON__.compiled_date="2019-02-22 09:47:55.049023"
+__BRYTHON__.timestamp=1550825275049
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 ;
 
@@ -109,9 +109,15 @@ $B.list2obj=function(list,value){var res={},i=list.length
 if(value===undefined){value=true}
 while(i--> 0){res[list[i]]=value}
 return res}
-var $operators={"//=":"ifloordiv",">>=":"irshift","<<=":"ilshift","**=":"ipow","**":"pow","//":"floordiv","<<":"lshift",">>":"rshift","+=":"iadd","-=":"isub","*=":"imul","/=":"itruediv","%=":"imod","&=":"iand","|=":"ior","^=":"ixor","+":"add","-":"sub","*":"mul","/":"truediv","%":"mod","&":"and","|":"or","~":"invert","^":"xor","<":"lt",">":"gt","<=":"le",">=":"ge","==":"eq","!=":"ne","or":"or","and":"and","in":"in","not":"not","is":"is","not_in":"not_in","is_not":"is_not",
-"@":"matmul","@=":"imatmul" }
-var $augmented_assigns=$B.augmented_assigns={"//=":"ifloordiv",">>=":"irshift","<<=":"ilshift","**=":"ipow","+=":"iadd","-=":"isub","*=":"imul","/=":"itruediv","%=":"imod","&=":"iand","|=":"ior","^=":"ixor","@=":"imatmul"}
+$B.op2method={operations:{"**":"pow","//":"floordiv","<<":"lshift",">>":"rshift","+":"add","-":"sub","*":"mul","/":"truediv","%":"mod","@":"matmul" },augmented_assigns:{"//=":"ifloordiv",">>=":"irshift","<<=":"ilshift","**=":"ipow","+=":"iadd","-=":"isub","*=":"imul","/=":"itruediv","%=":"imod","&=":"iand","|=":"ior","^=":"ixor","@=":"imatmul"},binary:{"&":"and","|":"or","~":"invert","^":"xor"},comparisons:{"<":"lt",">":"gt","<=":"le",">=":"ge","==":"eq","!=":"ne"},boolean:{"or":"or","and":"and","in":"in","not":"not","is":"is","not_in":"not_in","is_not":"is_not" },subset:function(){var res={},keys
+if(arguments[0]=="all"){keys=Object.keys($B.op2method)
+keys.splice(keys.indexOf("subset"),1)}else{keys=Array.from(arguments)}
+for(var i=0,len=keys.length;i < len;i++){var key=keys[i],ops=$B.op2method[key]
+if(ops===undefined){throw Error(key)}
+for(var attr in ops){res[attr]=ops[attr]}}
+return res}}
+var $operators=$B.op2method.subset("all")
+var $augmented_assigns=$B.augmented_assigns=$B.op2method.augmented_assigns
 var noassign=$B.list2obj(['True','False','None','__debug__'])
 var $op_order=[['or'],['and'],['not'],['in','not_in'],['<','<=','>','>=','!=','==','is','is_not'],['|'],['^'],['&'],['>>','<<'],['+'],['-'],['*','@','/','//','%'],['unary_neg','unary_inv','unary_pos'],['**']
 ]
@@ -4766,7 +4772,7 @@ root.add(catch_node)
 if($B.profile > 0){$add_profile(root,null,module)}
 if($B.debug > 0){$add_line_num(root,null,module)}
 var t1=new Date().getTime()
-if($B.debug >=2){if(module==locals_id){console.log('module '+module+' translated in '+
+if($B.debug > 2){if(module==locals_id){console.log('module '+module+' translated in '+
 (t1-t0)+' ms')}}
 $B.compile_time+=t1-t0
 return root}
@@ -9415,6 +9421,8 @@ if(isinstance(other,_b_.tuple)){res=_b_.tuple.$factory(res)}
 return res}
 if(hasattr(other,"__rmul__")){return getattr(other,"__rmul__")(self)}
 $err("*",other)}
+int.__ne__=function(self,other){var res=int.__eq__(self,other)
+return(res===_b_.NotImplemented)? res :!res}
 int.__neg__=function(self){return-self}
 int.__new__=function(cls,value){if(cls===undefined){throw _b_.TypeError.$factory("int.__new__(): not enough arguments")}else if(! isinstance(cls,_b_.type)){throw _b_.TypeError.$factory("int.__new__(X): X is not a type object")}
 if(cls===int){return int.$factory(value)}
@@ -9602,30 +9610,19 @@ var missing={},bool_func=$B.$getattr(obj,"__bool__",missing)
 if(bool_func===missing){try{return getattr(obj,"__len__")()> 0}
 catch(err){return true}}else{return bool_func()}}}
 var bool={__bases__:[int],__class__:_b_.type,__mro__:[int,object],$infos:{__name__:"bool",__module__:"builtins"},$is_class:true,$native:true}
-bool.__add__=function(self,other){return(other ? 1 :0)+(self ? 1 :0)}
+var methods=$B.op2method.subset("operations","binary","comparisons","boolean")
+for(var op in methods){var method="__"+methods[op]+"__"
+bool[method]=(function(op){return function(self,other){var value=self ? 1 :0
+if(int[op]!==undefined){return int[op](value,other)}}})(method)}
 bool.__and__=function(self,other){return $B.$bool(int.__and__(self,other))}
-bool.__eq__=function(self,other){if(other===self){return True}
-else if(typeof other=="number"){return self ? other==1 :other==0}else if(isinstance(other,_b_.int)){return self ? other.$value==1 :other.$value==0}else if(other instanceof Number){return self ? other==1 :other==0}else{return false}
-return _b_.NotImplemented}
-bool.__ne__=function(self,other){var res=bool.__eq__(self,other)
-return res===_b_.NotImplemented ? res :! res}
-bool.__ge__=function(self,other){return _b_.int.__ge__(bool.__hash__(self),other)}
-bool.__gt__=function(self,other){return _b_.int.__gt__(bool.__hash__(self),other)}
 bool.__hash__=bool.__index__=bool.__int__=function(self){if(self.valueOf())return 1
 return 0}
-bool.__le__=function(self,other){var res=bool.__gt__(self,other)
-return res===_b_.NotImplemented ? res :! res}
-bool.__lshift__=function(self,other){return self.valueOf()<< other}
-bool.__lt__=function(self,other){var res=bool.__ge__(self,other)
-return res===_b_.NotImplemented ? res :! res}
-bool.__mul__=function(self,other){return self ? other :0}
 bool.__neg__=function(self){return-$B.int_or_bool(self)}
 bool.__or__=function(self,other){return $B.$bool(int.__or__(self,other))}
 bool.__pos__=$B.int_or_bool
 bool.__repr__=bool.__str__=function(self){return self ? "True" :"False"}
 bool.__setattr__=function(self,attr){if(_b_.dir(self).indexOf(attr)>-1){var msg="attribute '"+attr+"' of 'int' objects is not writable"}else{var msg="'bool' object has no attribute '"+attr+"'"}
 throw _b_.AttributeError.$factory(msg)}
-bool.__sub__=function(self,other){return(self ? 1 :0)-(other ? 1 :0)}
 bool.__xor__=function(self,other){return self.valueOf()!=other.valueOf()}
 bool.$factory=function(){
 var $=$B.args("bool",1,{x:null},["x"],arguments,{x:false},null,null)

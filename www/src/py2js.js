@@ -60,25 +60,52 @@ Internal variables
 */
 
 // Mapping between operators and special Python method names
-var $operators = {
-    "//=": "ifloordiv", ">>=": "irshift", "<<=": "ilshift",
-    "**=": "ipow", "**": "pow", "//": "floordiv", "<<": "lshift",
-    ">>": "rshift", "+=": "iadd", "-=": "isub", "*=": "imul",
-    "/=": "itruediv", "%=": "imod", "&=": "iand", "|=": "ior",
-    "^=": "ixor", "+": "add", "-": "sub", "*": "mul", "/": "truediv",
-    "%": "mod", "&": "and", "|": "or", "~": "invert", "^": "xor",
-    "<": "lt", ">": "gt", "<=": "le", ">=": "ge", "==": "eq", "!=": "ne",
-    "or": "or", "and": "and", "in": "in", "not": "not", "is": "is",
-    "not_in": "not_in", "is_not": "is_not", // fake
-    "@": "matmul", "@=": "imatmul" // PEP 465
+$B.op2method = {
+    operations: {
+        "**": "pow", "//": "floordiv", "<<": "lshift", ">>": "rshift",
+        "+": "add", "-": "sub", "*": "mul", "/": "truediv", "%": "mod",
+        "@": "matmul" // PEP 465
+    },
+    augmented_assigns: {
+        "//=": "ifloordiv", ">>=": "irshift", "<<=": "ilshift", "**=": "ipow",
+        "+=": "iadd","-=": "isub", "*=": "imul", "/=": "itruediv",
+        "%=": "imod", "&=": "iand","|=": "ior","^=": "ixor", "@=": "imatmul"
+    },
+    binary: {
+        "&": "and", "|": "or", "~": "invert", "^": "xor"
+    },
+    comparisons: {
+        "<": "lt", ">": "gt", "<=": "le", ">=": "ge", "==": "eq", "!=": "ne"
+    },
+    boolean: {
+        "or": "or", "and": "and", "in": "in", "not": "not", "is": "is",
+        "not_in": "not_in", "is_not": "is_not" // fake
+    },
+    subset: function(){
+        var res = {},
+            keys
+        if(arguments[0] == "all"){
+            keys = Object.keys($B.op2method)
+            keys.splice(keys.indexOf("subset"), 1)
+        }else{
+            keys = Array.from(arguments)
+        }
+        for(var i = 0, len = keys.length; i < len; i++){
+            var key = keys[i],
+                ops = $B.op2method[key]
+            if(ops === undefined){throw Error(key)}
+            for(var attr in ops){
+                res[attr] = ops[attr]
+            }
+        }
+        return res
+    }
 }
 
+var $operators = $B.op2method.subset("all")
+
 // Mapping between augmented assignment operators and method names
-var $augmented_assigns = $B.augmented_assigns = {
-    "//=": "ifloordiv", ">>=": "irshift", "<<=": "ilshift", "**=": "ipow",
-    "+=": "iadd","-=": "isub", "*=": "imul", "/=": "itruediv", "%=": "imod",
-    "&=": "iand","|=": "ior","^=": "ixor", "@=": "imatmul"
-}
+var $augmented_assigns = $B.augmented_assigns = $B.op2method.augmented_assigns
 
 // Names that can't be assigned to
 var noassign = $B.list2obj(['True', 'False', 'None', '__debug__'])
@@ -9423,7 +9450,7 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
     }
 
     var t1 = new Date().getTime()
-    if($B.debug >= 2){
+    if($B.debug > 2){
         if(module == locals_id){
             console.log('module ' + module + ' translated in ' +
                 (t1 - t0) + ' ms')

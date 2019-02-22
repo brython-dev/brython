@@ -224,4 +224,17 @@ from fractions import *
 x = Fraction(1,1000000000000000)/10
 assert str(x) == "1/10000000000000000"
 
+# issue 1040
+assert True + 2 == 3
+assert False + 2 == 2
+assert True * 3 == 3
+assert False * 3 == 0
+assert True / 2 == 0.5
+assert False / 2 == 0
+try:
+    1 / False
+    raise Exception("should have raised ZeroDivisionError")
+except ZeroDivisionError:
+    pass
+    
 print('passed all tests...')
