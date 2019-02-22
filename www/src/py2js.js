@@ -83,12 +83,14 @@ $B.op2method = {
     },
     subset: function(){
         var res = {},
-            keys
+            keys = []
         if(arguments[0] == "all"){
             keys = Object.keys($B.op2method)
             keys.splice(keys.indexOf("subset"), 1)
         }else{
-            keys = Array.from(arguments)
+            for(var i = 0, len=arguments.length; i < len; i++){
+                keys.push(arguments[i])
+            }
         }
         for(var i = 0, len = keys.length; i < len; i++){
             var key = keys[i],
