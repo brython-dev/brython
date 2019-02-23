@@ -77,6 +77,44 @@ function handle_kwargs(kw, method){
     }
 }
 
+function ajax(){
+    var $ = $B.args("ajax", 2, {method: null, url: null},
+            ["method", "url"], arguments, {},
+            null, "kw"),
+        method = $.method,
+        url = $.url,
+        kw = $.kw
+    var args = handle_kwargs(kw, "get")
+    if(! args.cache){
+        url = "?ts" + (new Date()).getTime() + "=0"
+    }
+    if(args.body){
+        url = url + (args.cache ? "?" : "&") + args.body
+    }
+    return {
+        __class__: $B.coroutine,
+        $args: [url, args],
+        $func: function(){
+            return new Promise(function(resolve, reject){
+                var xhr = new XMLHttpRequest()
+                xhr.open(method, url, true)
+                for(key in args.headers){
+                    xhr.setRequestHeader(key, args.headers[key])
+                }
+                xhr.format = args.format
+                xhr.responseType = responseType[args.format]
+                xhr.onreadystatechange = function(){
+                    if(this.readyState == 4){
+                        this.__class__ = HTTPRequest
+                        resolve(this)
+                    }
+                }
+                xhr.send()
+            })
+        }
+    }
+}
+
 function event(){
     // event(element, name) is a Promise on the event "name" happening on the
     // element. This promise always resolves (never rejects) with the DOM event.
@@ -126,44 +164,6 @@ HTTPRequest.response_headers = _b_.property.$factory(function(self){
     return res
 })
 
-function ajax(){
-    var $ = $B.args("ajax", 2, {method: null, url: null},
-            ["method", "url"], arguments, {},
-            null, "kw"),
-        method = $.method,
-        url = $.url,
-        kw = $.kw
-    var args = handle_kwargs(kw, "get")
-    if(! args.cache){
-        url = "?ts" + (new Date()).getTime() + "=0"
-    }
-    if(args.body){
-        url = url + (args.cache ? "?" : "&") + args.body
-    }
-    return {
-        __class__: $B.coroutine,
-        $args: [url, args],
-        $func: function(){
-            return new Promise(function(resolve, reject){
-                var xhr = new XMLHttpRequest()
-                xhr.open(method, url, true)
-                for(key in args.headers){
-                    xhr.setRequestHeader(key, args.headers[key])
-                }
-                xhr.format = args.format
-                xhr.responseType = responseType[args.format]
-                xhr.onreadystatechange = function(){
-                    if(this.readyState == 4){
-                        this.__class__ = HTTPRequest
-                        resolve(this)
-                    }
-                }
-                xhr.send()
-            })
-        }
-    }
-}
-
 function get(){
     var args = ["GET"]
     for(var i = 0, len = arguments.length; i < len; i++){
@@ -186,16 +186,6 @@ function post(){
         args.push(arguments[i])
     }
     return ajax.apply(null, args)
-}
-
-function sleep(seconds){
-    return {
-        __class__: $B.coroutine,
-        $args: [seconds],
-        $func: function(){
-            return new Promise(resolve => setTimeout(resolve, 1000 * seconds))
-        }
-    }
 }
 
 function run(coro){
@@ -234,10 +224,21 @@ function run(coro){
     return _b_.None
 }
 
+function sleep(seconds){
+    return {
+        __class__: $B.coroutine,
+        $args: [seconds],
+        $func: function(){
+            return new Promise(resolve => setTimeout(resolve, 1000 * seconds))
+        }
+    }
+}
+
 return {
     ajax: ajax,
     event: event,
     get: get,
+    indexedDB: _indexedDB,
     iscoroutine: iscoroutine,
     iscoroutinefunction: iscoroutinefunction,
     post: post,

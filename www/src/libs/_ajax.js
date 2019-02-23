@@ -218,11 +218,11 @@ function get(){
         qs = items.data,
         timeout = items.timeout
     set_timeout(self, timeout)
-    if(! (items.cache === true)){
-        url += "?timestamp" + (new Date()).getTime() + "0"
-    }
     if(qs){
-        url += (items.cache === true ? "&" : "?") + qs
+        url += "?" + qs
+    }
+    if(! (items.cache === true)){
+        url += (qs ? "&" : "?") + (new Date()).getTime()
     }
     self.js.open("GET", url, async)
     self.js.send()
