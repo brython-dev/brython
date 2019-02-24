@@ -57,25 +57,26 @@ def keypress(e):
         pos = fr.find(char)
         if pos > -1:
             printkey(ru[pos])
-            if e.altKey:
-                printkey("&#x301;")
             e.preventDefault()
             e.stopPropagation()
         elif char in signes_fr:
             pos = signes_fr.find(char)
-            if e.altKey:
-                pos += 2
             printkey(signes_ru[pos])
+            e.preventDefault()
+            e.stopPropagation()
+        elif char == "'":
+            # accent sur voyelle précédente
+            printkey("&#x301;")
             e.preventDefault()
             e.stopPropagation()
 
 @bind(document["undo"], "click")
 def undo(ev):
-  document.execCommand("undo", False)
+    document.execCommand("undo", False)
 
 @bind(document["redo"], "click")
 def redo(ev):
-  document.execCommand("redo", False)
+    document.execCommand("redo", False)
 
 # truc pour mettre le focus dans la zone de saisie
 # https://stackoverflow.com/questions/2388164/set-focus-on-div-contenteditable-element
@@ -98,7 +99,7 @@ document.execCommand('delete', False)
 Pour  ц ч й я c y ы ш щ э ю ь ъ
 taper c q î à s y u h w è ù é ç
 
-<small>Voyelles accentuées : ALT + voyelle
+<small>Voyelles accentuées : ' après la voyelle
 
 Pour ь / ъ majuscule : ALT + é / ç</small>
 </pre></div>
