@@ -238,7 +238,6 @@ return {
     ajax: ajax,
     event: event,
     get: get,
-    indexedDB: _indexedDB,
     iscoroutine: iscoroutine,
     iscoroutinefunction: iscoroutinefunction,
     post: post,
