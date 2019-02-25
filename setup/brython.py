@@ -30,9 +30,6 @@ parser.add_argument('--port', help='Port for the built-in server',
 parser.add_argument('--reset', help='Reset brython_modules.js to stdlib',
     action="store_true")
 
-parser.add_argument('--server', help='Start the built-in server',
-    action="store_true")
-
 parser.add_argument('--update', help='Update Brython scripts',
     action="store_true")
 
@@ -70,7 +67,7 @@ if args.add_package:
         shutil.copytree(package_file, dest_dir)
 
 if args.install:
-    print('Installing Brython in an empty directory')
+    print('Installing Brython {} in an empty directory'.format(implementation))
 
     src_path = os.path.join(os.path.dirname(__file__), 'data')
 
@@ -83,7 +80,7 @@ if args.install:
         shutil.copyfile(os.path.join(src_path, path), path)
 
 if args.update:
-    print('Update Brython scripts')
+    print('Update Brython scripts to verion {}'.format(implementation))
 
     src_path = os.path.join(os.path.dirname(__file__), 'data')
 
@@ -94,10 +91,6 @@ if args.reset:
     print('Reset brython_modules.js to standard distribution')
     shutil.copyfile(os.path.join(os.getcwd(), 'brython_stdlib.js'),
         os.path.join(os.getcwd(), 'brython_modules.js'))
-
-if args.server:
-    import server
-    server.run(int(args.port))
 
 if args.modules:
     print('Create brython_modules.js with all the modules used by the application')

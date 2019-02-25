@@ -86,7 +86,7 @@ setup(
     # What does your project relate to?
     keywords='Python browser',
 
-    py_modules=["brython", "list_modules", "server"],
+    py_modules=["brython", "list_modules"],
 
     package_data={
         'data': [
