@@ -52,6 +52,34 @@ In the application directory, you can then update the Brython files
 python -m brython --update
 ```
 
+Installing a CPython package
+----------------------------
+A CPython package installed by `pip` can be installed in a Brython application
+by the command `--add package <package name>`.
+
+For example:
+```
+pip install attrs
+python -m brython --add_package attrs
+```
+
+All the files in the package must of course be usable by Brython; this
+excludes files written in C for instance.
+
+Other commands
+--------------
+
+`-- modules`
+
+> creates an application-specific distribution, to replace
+> __`brython_stdlib.js`__ by a smaller file. See section
+> [import](import.html).
+
+`-- make_dist`
+
+> generate a CPython package, suitable for distribution by PyPI, to install a
+> Brython application. See section [Deploying a Brython application](deploy.html)
+
 Web server
 ----------
 The HTML files can be opened in the browser, but it is recommended to
