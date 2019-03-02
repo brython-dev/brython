@@ -190,4 +190,12 @@ try:
 except AttributeError:
     pass
 
+# issue 1044
+a = []
+try:
+    a.push(1)
+    raise Exception("should have raised AttributeError")
+except AttributeError:
+    pass
+    
 print("passed all tests..")

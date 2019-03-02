@@ -347,6 +347,7 @@ list.__new__ = function(cls, ...args){
     var res = []
     res.__class__ = cls
     res.__brython__ = true
+    res.__dict__ = _b_.dict.$factory()
     return res
 }
 
@@ -377,7 +378,8 @@ list.__setattr__ = function(self, attr, value){
                 "'list' object has no attribute '" + attr + "'")
         }
     }
-    self[attr] = value
+    // list subclass : use __dict__
+    self.__dict__.$string_dict[attr] = value
     return $N
 }
 
@@ -832,6 +834,7 @@ tuple.$factory = function(){
 $B.fast_tuple = function(array){
     array.__class__ = tuple
     array.__brython__ = true
+    array.__dict__ = _b_.dict.$factory()
     return array
 }
 // add tuple methods
@@ -895,6 +898,7 @@ tuple.__new__ = function(cls, ...args){
     var self = []
     self.__class__ = cls
     self.__brython__ = true
+    self.__dict__ = _b_.dict.$factory()
     var arg = $B.$iter(args[0]),
         next_func = $B.$call(getattr(arg, "__next__"))
     while(1){
