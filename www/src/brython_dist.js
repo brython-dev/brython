@@ -80,8 +80,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,1,'final',0]
 __BRYTHON__.__MAGIC__="3.7.1"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-03-02 12:02:27.042893"
-__BRYTHON__.timestamp=1551524547042
+__BRYTHON__.compiled_date="2019-03-02 12:23:49.717747"
+__BRYTHON__.timestamp=1551525829717
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 ;
 
@@ -10435,6 +10435,7 @@ if(radd !==_b_.NotImplemented){return radd(self)}
 throw _b_.TypeError.$factory('can only concatenate list (not "'+
 $B.class_name(other)+'") to list')}
 var res=self.valueOf().concat(other.valueOf())
+res.__brython__=true
 if(isinstance(self,tuple)){res=tuple.$factory(res)}
 return res}
 list.__contains__=function(self,item){var $=$B.args("__contains__",2,{self:null,item:null},["self","item"],arguments,{},null,null),self=$.self,item=$.item

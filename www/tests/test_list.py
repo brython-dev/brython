@@ -197,5 +197,11 @@ try:
     raise Exception("should have raised AttributeError")
 except AttributeError:
     pass
-    
+
+# issue 1045
+a = ["a"]
+b = ["b"]
+assert a.sort() is None
+assert (a+b).sort() is None
+
 print("passed all tests..")

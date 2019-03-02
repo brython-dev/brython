@@ -40,6 +40,7 @@ list.__add__ = function(self, other){
             $B.class_name(other) + '") to list')
     }
     var res = self.valueOf().concat(other.valueOf())
+    res.__brython__ = true
     if(isinstance(self, tuple)){res = tuple.$factory(res)}
     return res
 }
