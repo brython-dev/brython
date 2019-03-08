@@ -83,8 +83,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,1,'final',0]
 __BRYTHON__.__MAGIC__="3.7.1"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-03-08 22:01:01.581587"
-__BRYTHON__.timestamp=1552078861581
+__BRYTHON__.compiled_date="2019-03-08 22:11:25.711957"
+__BRYTHON__.timestamp=1552079485711
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 ;
 
@@ -6528,10 +6528,14 @@ if(klass===$B.JSObject && obj.js_func !==undefined){return $B.JSConstructor.$fac
 break}
 if(typeof obj=='function'){var value=obj[attr]
 if(value !==undefined){if(attr=='__module__'){return value}}}
-if(klass.$native){if($test){console.log("native class",klass)}
+if(klass.$native){if($test){console.log("native class",klass,klass[attr])}
 if(klass[attr]===undefined){var object_attr=_b_.object[attr]
+if($test){console.log("object attr",object_attr)}
 if(object_attr !==undefined){klass[attr]=object_attr}
-else{if(obj[attr]!==undefined){return obj[attr]}
+else{if($test){console.log("obj[attr]",obj[attr])}
+var attrs=obj.__dict__
+if(attrs &&
+(object_attr=attrs.$string_dict[attr])!==undefined){return object_attr}
 if(_default===undefined){attr_error(attr,klass.$infos.__name__)}
 return _default}}
 if(klass.$descriptors && klass.$descriptors[attr]!==undefined){return klass[attr](obj)}
@@ -10435,6 +10439,7 @@ if(radd !==_b_.NotImplemented){return radd(self)}
 throw _b_.TypeError.$factory('can only concatenate list (not "'+
 $B.class_name(other)+'") to list')}
 var res=self.valueOf().concat(other.valueOf())
+res.__brython__=true
 if(isinstance(self,tuple)){res=tuple.$factory(res)}
 return res}
 list.__contains__=function(self,item){var $=$B.args("__contains__",2,{self:null,item:null},["self","item"],arguments,{},null,null),self=$.self,item=$.item
@@ -10556,6 +10561,7 @@ list.__new__=function(cls,...args){if(cls===undefined){throw _b_.TypeError.$fact
 var res=[]
 res.__class__=cls
 res.__brython__=true
+res.__dict__=_b_.dict.$factory()
 return res}
 list.__repr__=function(self){if(self===undefined){return "<class 'list'>"}
 var _r=[]
@@ -10567,7 +10573,7 @@ return "["+_r.join(", ")+"]"}
 list.__setattr__=function(self,attr,value){if(self.__class__===list){if(list.hasOwnProperty(attr)){throw _b_.AttributeError.$factory("'list' object attribute '"+
 attr+"' is read-only")}else{throw _b_.AttributeError.$factory(
 "'list' object has no attribute '"+attr+"'")}}
-self[attr]=value
+self.__dict__.$string_dict[attr]=value
 return $N}
 list.__setitem__=function(){var $=$B.args("__setitem__",3,{self:null,key:null,value:null},["self","key","value"],arguments,{},null,null),self=$.self,arg=$.key,value=$.value
 list.$setitem(self,arg,value)}
@@ -10740,6 +10746,7 @@ obj.__class__=tuple
 return obj}
 $B.fast_tuple=function(array){array.__class__=tuple
 array.__brython__=true
+array.__dict__=_b_.dict.$factory()
 return array}
 for(var attr in list){switch(attr){case "__delitem__":
 case "__iadd__":
@@ -10769,6 +10776,7 @@ tuple.__new__=function(cls,...args){if(cls===undefined){throw _b_.TypeError.$fac
 var self=[]
 self.__class__=cls
 self.__brython__=true
+self.__dict__=_b_.dict.$factory()
 var arg=$B.$iter(args[0]),next_func=$B.$call(getattr(arg,"__next__"))
 while(1){try{var item=next_func()
 self.push(item)}
