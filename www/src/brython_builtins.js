@@ -3,9 +3,10 @@ var __BRYTHON__ = __BRYTHON__ || {}  // global object with brython built-ins
 ;(function($B) {
 
 // Detect whether we are in a Web Worker
-var isWebWorker = ('undefined' !== typeof WorkerGlobalScope) && ("function" === typeof importScripts) && (navigator instanceof WorkerNavigator)
+var isWebWorker = ('undefined' !== typeof WorkerGlobalScope) &&
+                  ("function" === typeof importScripts) &&
+                  (navigator instanceof WorkerNavigator)
 var _window = self;
-
 
 var $path
 
@@ -14,6 +15,9 @@ if($B.brython_path === undefined){
     var this_url;
     if(isWebWorker){
         this_url = _window.location.href;
+        if(this_url.startsWith("blob:")){
+            this_url = this_url.substr(5)
+        }
     }else{
         var scripts = document.getElementsByTagName('script')
         this_url = scripts[scripts.length - 1].src
@@ -71,12 +75,9 @@ $B._globals = {}
 $B.frames_stack = []
 
 // Python __builtins__
-$B.builtins = {
-    __repr__:function(){return "<module 'builtins>'"},
-    __str__:function(){return "<module 'builtins'>"},
-}
+$B.builtins = {}
 
-$B.builtins_scope = {id:'__builtins__',module:'__builtins__', binding:{}}
+$B.builtins_scope = {id:'__builtins__', module:'__builtins__', binding:{}}
 
 // Builtin functions : used in py2js to simplify the code produced by a call
 $B.builtin_funcs = {}
