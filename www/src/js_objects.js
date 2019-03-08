@@ -211,7 +211,7 @@ JSObject.__dir__ = function(self){
 }
 
 JSObject.__getattribute__ = function(self,attr){
-    var $test = false //attr == "json"
+    var $test = false //attr == "postMessage"
     if($test){console.log("get attr", attr, "of", self)}
     if(attr.substr(0,2) == '$$'){attr = attr.substr(2)}
     if(self.js === null){return object.__getattribute__(None, attr)}
@@ -285,9 +285,9 @@ JSObject.__getattribute__ = function(self,attr){
                 if(this !== null && this !== undefined && this !== _window){
                     new_this = this
                 }
-                if($test){console.log("call func with args", args)}
+                if($test){console.log("call func", js_attr, "with args", args)}
                 var result = js_attr.apply(new_this, args)
-                
+
                 return jsobj2pyobj(result)
             }
             res.__repr__ = function(){return '<function ' + attr + '>'}

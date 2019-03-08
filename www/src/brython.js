@@ -8,12 +8,15 @@ unicode=unicode||{},unicode.title=function(r){for(var n="",t=!1,e=0;r.length>e;e
 ;
 var __BRYTHON__=__BRYTHON__ ||{}
 ;(function($B){
-var isWebWorker=('undefined' !==typeof WorkerGlobalScope)&&("function"===typeof importScripts)&&(navigator instanceof WorkerNavigator)
+var isWebWorker=('undefined' !==typeof WorkerGlobalScope)&&
+("function"===typeof importScripts)&&
+(navigator instanceof WorkerNavigator)
 var _window=self;
 var $path
 if($B.brython_path===undefined){
 var this_url;
-if(isWebWorker){this_url=_window.location.href;}else{var scripts=document.getElementsByTagName('script')
+if(isWebWorker){this_url=_window.location.href;
+if(this_url.startsWith("blob:")){this_url=this_url.substr(5)}}else{var scripts=document.getElementsByTagName('script')
 this_url=scripts[scripts.length-1].src}
 var elts=this_url.split('/')
 elts.pop()
@@ -32,7 +35,7 @@ $B.imported={}
 $B.precompiled={}
 $B._globals={}
 $B.frames_stack=[]
-$B.builtins={__repr__:function(){return "<module 'builtins>'"},__str__:function(){return "<module 'builtins'>"},}
+$B.builtins={}
 $B.builtins_scope={id:'__builtins__',module:'__builtins__',binding:{}}
 $B.builtin_funcs={}
 $B.builtin_classes=[]
@@ -80,8 +83,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,1,'final',0]
 __BRYTHON__.__MAGIC__="3.7.1"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-02-25 08:57:12.843730"
-__BRYTHON__.timestamp=1551081432843
+__BRYTHON__.compiled_date="2019-03-08 22:01:01.581587"
+__BRYTHON__.timestamp=1552078861581
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 ;
 
@@ -8447,7 +8450,7 @@ var new_this=self.js
 if(self.js_func){
 new_this=self.js_func;}
 if(this !==null && this !==undefined && this !==_window){new_this=this}
-if($test){console.log("call func with args",args)}
+if($test){console.log("call func",js_attr,"with args",args)}
 var result=js_attr.apply(new_this,args)
 return jsobj2pyobj(result)}
 res.__repr__=function(){return '<function '+attr+'>'}
@@ -8576,7 +8579,7 @@ $B.download_time=$B.download_time ||0
 xhr.open("GET",url+fake_qs,false)
 xhr.send()
 if($B.$CORS){if(xhr.status==200 ||xhr.status==0){res=xhr.responseText}else{res=_b_.FileNotFoundError.$factory("No module named '"+
-mod_name+"'")}}else{if(xhr.readyState==4){if(xhr.status==200 ||xhr.status==0){res=xhr.responseText
+mod_name+"'")}}else{if(xhr.readyState==4){if(xhr.status==200){res=xhr.responseText
 module.$last_modified=
 xhr.getResponseHeader("Last-Modified")}else{
 console.log("Error "+xhr.status+
@@ -8908,15 +8911,16 @@ for(var i=0,l=__all__.length;i < l;++i){var name=__all__[i]
 var alias=aliases[name]||name
 try{
 locals[alias]=_b_.getattr(modobj,name);}catch($err1){
-try{_b_.getattr(__import__,'__call__')(mod_name+'.'+name,globals,undefined,[],0);
-locals[alias]=_b_.getattr(modobj,name);}catch($err3){
+try{var name1=$B.from_alias(name)
+_b_.getattr(__import__,'__call__')(mod_name+'.'+name1,globals,undefined,[],0);
+locals[alias]=_b_.getattr(modobj,name1);}catch($err3){
 if(mod_name==="__future__"){
 var frame=$B.last($B.frames_stack),line_info=frame[3].$line_info,line_elts=line_info.split(','),line_num=parseInt(line_elts[0])
 $B.$SyntaxError(frame[2],"future feature "+name+" is not defined",current_frame[3].src,undefined,line_num)}
 if($err3.$py_error){var msg=_b_.getattr($err3,"info")+"\n"+
-$err3.__class__.__name__+": "+
+$err3.__class__.$infos.__name__+": "+
 $err3.args[0],exc=_b_.ImportError.$factory("cannot import name '"+
-name+"'\n\n"+msg)
+$B.from_alias(name)+"'")
 exc.name=name
 throw exc}
 console.log($err3)
@@ -12906,7 +12910,10 @@ obj.tags.$string_dict[tag]=klass
 return klass}
 tags.forEach(function(tag){obj[tag]=maketag(tag)})
 obj.maketag=maketag
-return obj})(__BRYTHON__)}
+return obj})(__BRYTHON__)}else{
+delete browser.$$window
+delete browser.win
+browser.self=$B.win}
 modules['browser']=browser
 modules['javascript']={
 $$this:function(){
@@ -12978,7 +12985,10 @@ var load_module=$B.$getattr(_loader,"load_module")
 module=$B.$call(load_module)(mod_name)
 _sys_modules[mod_name]=module
 return module}}else{spec=find_spec(mod_name,_path,undefined,blocking)
-if(!$B.is_none(spec)){spec.blocking=blocking
+if(!$B.is_none(spec)){module=$B.imported[spec.name]
+if(module !==undefined){
+return _sys_modules[spec.name]=module}
+spec.blocking=blocking
 _loader=_b_.getattr(spec,"loader",_b_.None)
 break}}}
 if(_loader===undefined){
@@ -13006,8 +13016,7 @@ if(! $B.is_none(cached)){module.__cached__=cached}
 if($B.is_none(_loader)){if(!$B.is_none(locs)){_sys_modules[_spec_name]=module}else{throw _b_.ImportError.$factory(mod_name)}}else{var exec_module=_b_.getattr(_loader,"exec_module",_b_.None)
 if($B.is_none(exec_module)){
 module=_b_.getattr(_loader,"load_module")(_spec_name)}else{_sys_modules[_spec_name]=module
-try{exec_module(module,blocking)}
-catch(e){delete _sys_modules[_spec_name]
+try{exec_module(module,blocking)}catch(e){delete _sys_modules[_spec_name]
 throw e}}}
 return _sys_modules[_spec_name]}
 $B.import_hooks=import_hooks})(__BRYTHON__)
