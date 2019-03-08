@@ -42,6 +42,11 @@ for(var i = 0, len = _meta_path.length; i < len; i++){
     }else{
         spec = find_spec(mod_name, _path, undefined, blocking)
         if(!$B.is_none(spec)){
+            module = $B.imported[spec.name]
+            if(module !== undefined){
+                // If module of same name is already in imports, return it
+                return _sys_modules[spec.name] = module
+            }
             spec.blocking = blocking
             _loader = _b_.getattr(spec, "loader", _b_.None)
             break
@@ -111,14 +116,14 @@ if($B.is_none(_loader)){
         module = _b_.getattr(_loader, "load_module")(_spec_name)
     }else{
         _sys_modules[_spec_name] = module
-        try{exec_module(module, blocking)}
-        catch(e){
+        try{
+            exec_module(module, blocking)
+        }catch(e){
             delete _sys_modules[_spec_name]
             throw e
        }
     }
 }
-
 return _sys_modules[_spec_name]
 }
 

@@ -90,7 +90,7 @@ function $download_module(module, url, $package){
 
     xhr.open("GET", url + fake_qs, false)
     xhr.send()
-
+    
     if($B.$CORS){
         if(xhr.status == 200 || xhr.status == 0){
            res = xhr.responseText
@@ -100,7 +100,7 @@ function $download_module(module, url, $package){
         }
     }else{
         if(xhr.readyState == 4){
-            if(xhr.status == 200 || xhr.status == 0){
+            if(xhr.status == 200){
                 res = xhr.responseText
                 module.$last_modified =
                     xhr.getResponseHeader("Last-Modified")
@@ -1074,10 +1074,11 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                     // [Import spec] attempt to import a submodule with that name ...
                     // FIXME : level = 0 ? level = 1 ?
                     try{
-                        _b_.getattr(__import__, '__call__')(mod_name + '.' + name,
+                        var name1 = $B.from_alias(name)
+                        _b_.getattr(__import__, '__call__')(mod_name + '.' + name1,
                             globals, undefined, [], 0);
                         // [Import spec] ... then check imported module again for name
-                        locals[alias] = _b_.getattr(modobj, name);
+                        locals[alias] = _b_.getattr(modobj, name1);
                     }catch($err3){
                         // [Import spec] Attribute not found
                         if(mod_name === "__future__"){
@@ -1093,10 +1094,10 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                         // For other modules, raise ImportError
                         if($err3.$py_error){
                             var msg = _b_.getattr($err3, "info") + "\n" +
-                                    $err3.__class__.__name__ + ": " +
+                                    $err3.__class__.$infos.__name__ + ": " +
                                     $err3.args[0],
                                 exc = _b_.ImportError.$factory("cannot import name '"+
-                                    name + "'\n\n" + msg)
+                                    $B.from_alias(name) +"'")
                                 exc.name = name
                                 throw exc
                         }
