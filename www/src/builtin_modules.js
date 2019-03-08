@@ -299,6 +299,11 @@
 
             return obj
         })(__BRYTHON__)
+    }else{
+        // In a web worker, name "window" is not defined, but name "self" is
+        delete browser.$$window
+        delete browser.win
+        browser.self = $B.win
     }
 
     modules['browser'] = browser
@@ -528,7 +533,5 @@
     })
 
     $B.set_func_names($B.cell, "builtins")
-
-
 
 })(__BRYTHON__)
