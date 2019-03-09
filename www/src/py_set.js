@@ -141,6 +141,7 @@ set.__init__ = function(self, iterable, second){
 
 var $set_iterator = $B.$iterator_class("set iterator")
 set.__iter__ = function(self){
+    self.$items.sort()
     var it = $B.$iterator(self.$items, $set_iterator),
         len = self.$items.length,
         nxt = it.__next__
@@ -228,6 +229,7 @@ set.__str__ = set.__repr__ = function(self){
         self.$cycle--
         return klass_name + "(...)"
     }
+    self.$items.sort()
     for(var i = 0, len = self.$items.length; i < len; i++){
         var r = _b_.repr(self.$items[i])
         if(r === self || r === self.$items[i]){res.push("{...}")}

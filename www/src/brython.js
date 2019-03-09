@@ -83,8 +83,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,1,'final',0]
 __BRYTHON__.__MAGIC__="3.7.1"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-03-09 21:05:24.701165"
-__BRYTHON__.timestamp=1552161924701
+__BRYTHON__.compiled_date="2019-03-09 22:33:07.203160"
+__BRYTHON__.timestamp=1552167187203
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 ;
 
@@ -8157,7 +8157,8 @@ set.add(self,item)}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){break}
 throw err}}
 return $N}
 var $set_iterator=$B.$iterator_class("set iterator")
-set.__iter__=function(self){var it=$B.$iterator(self.$items,$set_iterator),len=self.$items.length,nxt=it.__next__
+set.__iter__=function(self){self.$items.sort()
+var it=$B.$iterator(self.$items,$set_iterator),len=self.$items.length,nxt=it.__next__
 it.__next__=function(){if(it.__len__()!=len){throw _b_.RuntimeError.$factory("size changed during iteration")}
 return nxt()}
 return it}
@@ -8189,6 +8190,7 @@ if(head=="set({"){head="{";tail="}"}
 var res=[]
 if(self.$cycle){self.$cycle--
 return klass_name+"(...)"}
+self.$items.sort()
 for(var i=0,len=self.$items.length;i < len;i++){var r=_b_.repr(self.$items[i])
 if(r===self ||r===self.$items[i]){res.push("{...}")}
 else{res.push(r)}}

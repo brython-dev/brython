@@ -218,4 +218,11 @@ a = {1}
 b = deepcopy(a)
 assert b == {1}
 
+# issue 1052
+t1 = {1, "a", (7,), 2, (8,)}
+t2 = {2, (8,), 1, "a", (7,)}
+assert str(t1) == str(t2)
+assert list(t1) == list(t2)
+assert {tuple({1, 2}), tuple({2,1})} == {(1, 2)}
+
 print("passed all tests..")
