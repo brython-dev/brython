@@ -656,6 +656,19 @@ type.mro = function(cls){
     return mro
 }
 
+type.__subclasscheck__ = function(self, subclass){
+    // Is subclass a subclass of self ?
+    var klass = self
+    if(klass === _b_.str){
+        klass = $B.StringSubclass
+    }else if(klass === _b_.float){
+        klass = $B.FloatSubclass
+    }
+    if(subclass.__bases__ === undefined){
+        return self === _b_.object
+    }
+    return subclass.__bases__.indexOf(klass) > -1
+}
 
 $B.set_func_names(type, "builtins")
 

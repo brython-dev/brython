@@ -1301,6 +1301,7 @@ function issubclass(klass,classinfo){
         }
         return false
     }
+
     if(classinfo.$factory || classinfo.$is_class){
         if(klass === classinfo ||
             klass.__mro__.indexOf(classinfo) > -1){return true}
@@ -1308,8 +1309,14 @@ function issubclass(klass,classinfo){
 
     // Search __subclasscheck__ on classinfo
     var sch = $B.$getattr(classinfo, '__subclasscheck__', _b_.None)
+
     if(sch == _b_.None){
         return false
+    }
+    if(classinfo === _b_.type ||
+            (classinfo.__bases__ &&
+             classinfo.__bases__.indexOf(_b_.type) > -1)){
+        return sch(classinfo, klass)
     }
     return sch(klass)
 }

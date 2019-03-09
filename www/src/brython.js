@@ -83,8 +83,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,1,'final',0]
 __BRYTHON__.__MAGIC__="3.7.1"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-03-09 16:53:05.416765"
-__BRYTHON__.timestamp=1552146785416
+__BRYTHON__.compiled_date="2019-03-09 18:02:51.860782"
+__BRYTHON__.timestamp=1552150971860
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 ;
 
@@ -5456,6 +5456,11 @@ if(seq[0]===candidate){
 seqs[i].shift()}}}
 if(mro[mro.length-1]!==_b_.object){mro[mpos++]=_b_.object}
 return mro}
+type.__subclasscheck__=function(self,subclass){
+var klass=self
+if(klass===_b_.str){klass=$B.StringSubclass}else if(klass===_b_.float){klass=$B.FloatSubclass}
+if(subclass.__bases__===undefined){return self===_b_.object}
+return subclass.__bases__.indexOf(klass)>-1}
 $B.set_func_names(type,"builtins")
 _b_.type=type
 var wrapper_descriptor=$B.make_class("wrapper_descriptor")
@@ -6678,6 +6683,9 @@ if(classinfo.$factory ||classinfo.$is_class){if(klass===classinfo ||
 klass.__mro__.indexOf(classinfo)>-1){return true}}
 var sch=$B.$getattr(classinfo,'__subclasscheck__',_b_.None)
 if(sch==_b_.None){return false}
+if(classinfo===_b_.type ||
+(classinfo.__bases__ &&
+classinfo.__bases__.indexOf(_b_.type)>-1)){return sch(classinfo,klass)}
 return sch(klass)}
 var iterator_class=$B.make_class("iterator",function(getitem,len){return{
 __class__:iterator_class,getitem:getitem,len:len,counter:-1}}

@@ -185,4 +185,10 @@ assert s == "Hello,\tworld!"
 s = bytes("Hello,\\bworld!", "utf-8").decode("unicode-escape")
 assert s == "Hello,\bworld!"
 
+# issue 1049
+class Mystring(str):
+    pass
+
+assert issubclass(Mystring, str)
+
 print("passed all tests...")

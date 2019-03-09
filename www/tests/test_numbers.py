@@ -236,5 +236,11 @@ try:
     raise Exception("should have raised ZeroDivisionError")
 except ZeroDivisionError:
     pass
-    
+
+# issue 1049
+class Myfloat(float):
+    pass
+
+assert issubclass(Myfloat, float)
+
 print('passed all tests...')
