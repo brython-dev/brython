@@ -7382,13 +7382,14 @@ var $transition = $B.parser.$transition = function(context, token, value){
 
         case 'expr':
           switch(token) {
+              case 'bytes':
+              case 'float':
               case 'id':
               case 'imaginary':
               case 'int':
-              case 'float':
-              case 'str':
-              case 'bytes':
               case 'lamdba':
+              case 'pass':
+              case 'str':
                   $_SyntaxError(context, 'token ' + token + ' after ' +
                       context)
                   break
