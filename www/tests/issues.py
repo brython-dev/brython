@@ -2269,6 +2269,39 @@ xaz25 = 8
 f()
 assert xaz25 == 9
 
+# issue 1048
+class Foo:
+    bar = 1
+
+foo = Foo()
+try:
+    delattr(foo, 'bar')
+    raise Exception("should have raised AttributeError")
+except AttributeError:
+    pass
+
+class C:
+
+    def __init__(self):
+        self._x = None
+        self.count = 0
+
+    def getx(self):
+        return self._x
+
+    def setx(self, value):
+        self._x = value
+
+    def delx(self):
+        self.count += 1
+        del self._x
+
+    x = property(getx, setx, delx, "I'm the 'x' property.")
+
+c = C()
+delattr(c, "x")
+assert c.count == 1
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

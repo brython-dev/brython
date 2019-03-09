@@ -83,8 +83,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,1,'final',0]
 __BRYTHON__.__MAGIC__="3.7.1"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-03-08 22:11:25.711957"
-__BRYTHON__.timestamp=1552079485711
+__BRYTHON__.compiled_date="2019-03-09 16:48:37.519606"
+__BRYTHON__.timestamp=1552146517519
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 ;
 
@@ -5038,9 +5038,16 @@ var object={
 $infos:{__name__:"object"},$is_class:true,$native:true}
 var opnames=["add","sub","mul","truediv","floordiv","mod","pow","lshift","rshift","and","xor","or"]
 var opsigns=["+","-","*","/","//","%","**","<<",">>","&","^","|"]
-object.__delattr__=function(self,attr){_b_.getattr(self,attr)
-delete self[attr]
-return _b_.None}
+object.__delattr__=function(self,attr){attr=$B.from_alias(attr)
+if(self.__dict__ && self.__dict__.$string_dict &&
+self.__dict__.$string_dict[attr]!==undefined){delete self.__dict__.$string_dict[attr]
+return _b_.None}else if(self.__dict__===undefined && self[attr]!==undefined){delete self[attr]
+return _b_.None}else{
+var klass=self.__class__
+if(klass){var prop=$B.$getattr(klass,attr)
+if(prop.__class__===_b_.property){if(prop.__delete__ !==undefined){prop.__delete__(self)
+return _b_.None}}}}
+throw _b_.AttributeError.$factory(attr)}
 object.__dir__=function(self){var objects
 if(self.$is_class){objects=[self].concat(self.__mro__)}else{var klass=self.__class__ ||$B.get_class(self)
 objects=[self,klass].concat(klass.__mro__)}
@@ -6279,14 +6286,7 @@ check_no_kw('delattr',obj,attr)
 check_nb_args('delattr',2,arguments)
 if(typeof attr !='string'){throw _b_.TypeError.$factory("attribute name must be string, not '"+
 $B.class_name(attr)+"'")}
-var klass=$B.get_class(obj)
-var res=obj[attr]
-if(res===undefined){res=klass[attr]
-if(res===undefined){var mro=klass.__mro__
-for(var i=0;i < mro.length;i++){var res=mro[i][attr]
-if(res !==undefined){break}}}}
-if(res !==undefined && res.__delete__ !==undefined){res.__delete__(res,obj,attr)}else{$B.$getattr(obj,'__delattr__')(attr)}
-return None}
+return $B.$getattr(obj,'__delattr__')(attr)}
 function dir(obj){if(obj===undefined){
 var frame=$B.last($B.frames_stack),globals_obj=frame[3],res=_b_.list.$factory(),pos=0
 for(var attr in globals_obj){if(attr.charAt(0)=='$' && attr.charAt(1)!='$'){

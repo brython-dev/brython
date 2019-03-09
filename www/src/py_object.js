@@ -24,9 +24,28 @@ var opnames = ["add", "sub", "mul", "truediv", "floordiv", "mod", "pow",
 var opsigns = ["+", "-", "*", "/", "//", "%", "**", "<<", ">>", "&", "^", "|"]
 
 object.__delattr__ = function(self, attr){
-    _b_.getattr(self, attr) // raises AttributeError if necessary
-    delete self[attr]
-    return _b_.None
+    attr = $B.from_alias(attr)
+    if(self.__dict__ && self.__dict__.$string_dict &&
+            self.__dict__.$string_dict[attr] !== undefined){
+        delete self.__dict__.$string_dict[attr]
+        return _b_.None
+    }else if(self.__dict__ === undefined && self[attr] !== undefined){
+        delete self[attr]
+        return _b_.None
+    }else{
+        // If attr is a descriptor and has a __delete__ method, use it
+        var klass = self.__class__
+        if(klass){
+            var prop = $B.$getattr(klass, attr)
+            if(prop.__class__ === _b_.property){
+                if(prop.__delete__ !== undefined){
+                    prop.__delete__(self)
+                    return _b_.None
+                }
+            }
+        }
+    }
+    throw _b_.AttributeError.$factory(attr)
 }
 
 object.__dir__ = function(self) {

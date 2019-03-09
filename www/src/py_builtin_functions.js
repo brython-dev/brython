@@ -299,24 +299,7 @@ function delattr(obj, attr) {
         throw _b_.TypeError.$factory("attribute name must be string, not '" +
             $B.class_name(attr) + "'")
     }
-    var klass = $B.get_class(obj)
-    var res = obj[attr]
-    if(res === undefined){
-        res = klass[attr]
-        if(res === undefined){
-            var mro = klass.__mro__
-            for(var i = 0; i < mro.length; i++){
-                var res = mro[i][attr]
-                if(res !== undefined){break}
-            }
-        }
-    }
-    if(res !== undefined && res.__delete__ !== undefined){
-        res.__delete__(res, obj, attr)
-    }else{
-        $B.$getattr(obj, '__delattr__')(attr)
-    }
-    return None
+    return $B.$getattr(obj, '__delattr__')(attr)
 }
 
 function dir(obj){
