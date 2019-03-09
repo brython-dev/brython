@@ -83,8 +83,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,1,'final',0]
 __BRYTHON__.__MAGIC__="3.7.1"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-03-09 18:16:18.034294"
-__BRYTHON__.timestamp=1552151778034
+__BRYTHON__.compiled_date="2019-03-09 21:05:24.701165"
+__BRYTHON__.timestamp=1552161924701
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 ;
 
@@ -6812,9 +6812,11 @@ return res}}}
 $B.set_func_names(memoryview,"builtins")
 function min(){return $extreme(arguments,'__lt__')}
 function next(obj){check_no_kw('next',obj)
-check_nb_args('next',1,arguments)
+var missing={},$=$B.args("next",2,{obj:null,def:null},['obj','def'],arguments,{def:missing},null,null)
 var ga=$B.$getattr(obj,'__next__')
-if(ga !==undefined){return $B.$call(ga)()}
+if(ga !==undefined){try{return $B.$call(ga)()}catch(err){if(err.__class__===_b_.StopIteration &&
+$.def !==missing){return $.def}
+throw err}}
 throw _b_.TypeError.$factory("'"+$B.class_name(obj)+
 "' object is not an iterator")}
 var NotImplementedType=$B.make_class("NotImplementedType",function(){return NotImplemented}

@@ -1648,10 +1648,20 @@ function min(){
 
 function next(obj){
     check_no_kw('next', obj)
-    check_nb_args('next', 1, arguments)
+    var missing = {},
+        $ = $B.args("next", 2, {obj: null, def: null}, ['obj', 'def'],
+            arguments, {def: missing}, null, null)
     var ga = $B.$getattr(obj, '__next__')
     if(ga !== undefined){
-        return $B.$call(ga)()
+        try{
+            return $B.$call(ga)()
+        }catch(err){
+            if(err.__class__ === _b_.StopIteration &&
+                    $.def !== missing){
+                return $.def
+            }
+            throw err
+        }
     }
     throw _b_.TypeError.$factory("'" + $B.class_name(obj) +
         "' object is not an iterator")
