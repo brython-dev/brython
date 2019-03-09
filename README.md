@@ -144,16 +144,6 @@ There's a [Brython Community on Google Plus](https://plus.google.com/communities
 
 If you want to contribute to Brython, please read the [contributing guide](https://github.com/brython-dev/brython/blob/master/CONTRIBUTING.md).
 
-Agile Development
-=================
-
-- [**Brython KanBan of Tickets**](https://waffle.io/brython-dev/brython "Agile Development Kanban") *Whats Brython Team working on ?*
-
-- **Throughput Graph:** *Statistics about our work...*
-
-[![Throughput Graph](https://graphs.waffle.io/brython-dev/brython/throughput.svg)](https://waffle.io/brython-dev/brython/metrics)
-
-
 Thank you
 =========
 
