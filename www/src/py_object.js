@@ -61,8 +61,12 @@ object.__dir__ = function(self) {
     for(var i = 0, len = objects.length; i < len; i++){
         for(var attr in objects[i]){
             if(attr.charAt(0) == "$") {
-                // exclude internal attributes set by Brython
-                continue
+                if(attr.charAt(1) == "$"){
+                    res.push(attr.substr(2))
+                }else{
+                    // exclude internal attributes set by Brython
+                    continue
+                }
             }
             if(! isNaN(parseInt(attr.charAt(0)))){
                 // Exclude numerical attributes

@@ -2432,8 +2432,9 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         this.args = []
         this.__defaults__ = []
         this.slots = []
-        var slot_list = []
-        var annotations = []
+        var slot_list = [],
+            slot_init = [],
+            annotations = []
         if(this.annotation){
             annotations.push('"return":' + this.annotation.to_js())
         }
@@ -2457,6 +2458,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
                 }
                 this.slots.push(arg.name + ':null')
                 slot_list.push('"' + arg.name + '"')
+                slot_init.push(arg.name + ':' + arg.name)
                 if(arg.tree.length > 0){
                     defaults.push('"' + arg.name + '"')
                     defs1.push(arg.name + ':' + $to_js(arg.tree))
@@ -2471,29 +2473,14 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
             }
         }, this)
 
+        slot_init = '{' + slot_init.join(", ") + '}'
+
         // Flags
         var flags = 67
         if(this.star_arg){flags |= 4}
         if(this.kw_arg){flags |= 8}
         if(this.type == 'generator'){flags |= 32}
         if(this.async){flags |= 128}
-
-        // String to pass positional arguments
-        var positional_str = [],
-            positional_obj = [], pos = 0
-        this.positional_list.forEach(function(elt){
-            positional_str.push('"' + elt + '"')
-            positional_obj.push(elt + ':null')
-        }, this)
-        positional_str = positional_str.join(',')
-        positional_obj = '{' + positional_obj.join(',') + '}'
-
-        // String to pass arguments with default values
-        var dobj = []
-        this.default_list.forEach(function(_default){
-            dobj.push(_default + ':null')
-        })
-        dobj = '{' + dobj.join(',') + '}'
 
         var nodes = [], js
 
@@ -2534,30 +2521,15 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
                 "$B.frames_stack.slice()"))
         }
 
-        if($B.profile > 1){
-            if(this.scope.ntype == 'class'){
-                fname = this.scope.context.tree[0].name + '.' + this.name
-            }
-            else{fname = this.name}
-            if(pnode && pnode.id){
-                fmod = pnode.id.slice(0, pnode.id.indexOf('_'))
-            }else{
-                fmod = ''
-            }
-            js = ";var _parent_line_info = {}; " +
-                "if($B.frames_stack[$B.frames_stack.length - 1]){" +
-                 " _parent_line_info = $B.frames_stack[" +
-                 "$B.frames_stack.length-1][1].$line_info}else{" +
-                 "_parent_line_info = " + global_ns + ".$line_info};" +
-                 ";$B.$profile.call('" + fmod + "','" + fname + "'," +
-                 node.line_num + ",_parent_line_info);"
-            enter_frame_nodes.splice(0, 0, $NodeJS(js))
-        }
         enter_frame_nodes.forEach(function(node){
             node.enter_frame = true
         })
 
         nodes = nodes.concat(enter_frame_nodes)
+
+        nodes.push($NodeJS("var $nb_defaults = Object.keys($defaults).length,"))
+        nodes.push($NodeJS("    $parent = $locals.$parent"))
+
         this.env = []
 
         // Code in the worst case, uses $B.args in py_utils.js
@@ -2569,34 +2541,8 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
 
         js += ' = $B.args("' + this.name + '", ' +
             this.argcount + ', {' + this.slots.join(', ') + '}, ' +
-            '[' + slot_list.join(', ') + '], arguments, '
-
-        // Management of default values is complex... It uses a JS object
-        // called $default, evaluated only once, with the appropriate keys
-        // and values.
-        //
-        // A function like
-        // def f(x=1):
-        //     ...
-        //
-        // is implemented as
-        //
-        // $locals["f"] = (function($defaults){
-        //     function f1(){
-        //        ... function body, uses $default to parse arguments ...
-        //     }
-        //     f1.$infos = {
-        //         ... function attributes ...
-        //     }
-        //     return f1
-        // })({x: 1})  <-- default object is evaluated here
-        //
-        // $defaults could be set as an attribute of f1, and be referenced
-        // inside the function body, but this slows down execution a lot
-
-        if(defs1.length){js += '$defaults, '}
-        else{js += '{}, '}
-        js += this.other_args + ', ' + this.other_kw + ');'
+            '[' + slot_list.join(', ') + '], arguments, $defaults, ' +
+            this.other_args + ', ' + this.other_kw + ');'
 
         var new_node = new $Node()
         new $NodeJSCtx(new_node, js)
@@ -2610,84 +2556,88 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
 
         var only_positional = false
         if(this.other_args === null && this.other_kw === null &&
-                this.after_star.length == 0 && defaults.length == 0){
+                this.after_star.length == 0){
             // If function only takes positional arguments, we can generate
             // a faster version of argument parsing than by calling function
             // $B.args
             only_positional = true
 
-            if($B.debug > 0 || this.positional_list.length > 0){
+            // Number of arguments received
+            nodes.push($NodeJS('var $len = arguments.length;'))
 
-                // Test if all the arguments passed to the function
-                // are positional, not keyword arguments
-                // In calls, keyword arguments are passed as the last
-                // argument, an object with attribute $nat set to "kw"
+            // Test if all the arguments passed to the function
+            // are positional, not keyword arguments
+            // In calls, keyword arguments are passed as the last
+            // argument, an object with attribute $nat set to "kw"
 
-                nodes.push($NodeJS('var $len = arguments.length;'))
+            var new_node = new $Node()
+            var js = 'if($len > 0 && arguments[$len - 1].$nat !== undefined)'
+            new $NodeJSCtx(new_node,js)
+            nodes.push(new_node)
 
-                var new_node = new $Node()
-                var js = 'if($len > 0 && arguments[$len - 1].$nat !== undefined)'
-                new $NodeJSCtx(new_node,js)
-                nodes.push(new_node)
+            // If at least one argument is not "simple", fall back to
+            // $B.args()
+            make_args_nodes.forEach(function(item){
+                new_node.add(item)
+            })
 
-                // If at least one argument is not "simple", fall back to
-                // $B.args()
-                new_node.add(make_args_nodes[0])
-                if(make_args_nodes.length > 1){new_node.add(make_args_nodes[1])}
+            var else_node = new $Node()
+            new $NodeJSCtx(else_node, 'else')
+            nodes.push(else_node)
 
-                var else_node = new $Node()
-                new $NodeJSCtx(else_node, 'else')
-                nodes.push(else_node)
+            var pos_len = this.slots.length
 
-            }
+            // Exact number of arguments received
+            var test_node = $NodeJS('if($len == ' + pos_len + ')')
+            else_node.add(test_node)
 
-            var pos_len = this.positional_list.length
-
-            if($B.debug > 0){
-                // If all arguments are "simple" all there is to check is that
-                // we got the right number of arguments
-                js = 'if($len !=' + pos_len + '){$B.wrong_nb_args("' +
-                    this.name + '", $len, ' + pos_len
-                if(positional_str.length > 0){
-                    js += ', [' + positional_str + ']'
-                }
-                js += ')}'
-
-                else_node.add($NodeJS(js))
-            }
-
-            if(this.positional_list.length > 0){
-                if(this.type == 'generator'){
-                    this.positional_list.forEach(function(arg){
-                        else_node.add($NodeJS('$locals["' + arg + '"] = ' +
+            if(this.type == 'generator'){
+                if(this.args.length == 0){test_node.add($NodeJS('//'))}
+                else{
+                    this.args.forEach(function(arg){
+                        test_node.add($NodeJS('$locals["' + arg + '"] = ' +
                             arg))
                     })
-                }else{
-                    var pargs = []
-                    this.positional_list.forEach(function(arg){
-                        pargs.push(arg + ':' + arg)
-                    })
-                    if($B.debug < 1){
-                        js = 'if($len !=' + pos_len + '){$B.wrong_nb_args("' +
-                            this.name + '", $len, ' + pos_len
-                        if(positional_str.length > 0){
-                            js += ', [' + positional_str + ']'
-                        }
-                        js += ')}'
-                        else_node.add($NodeJS(js))
-                    }
-                    else_node.add($NodeJS(local_ns +
-                        ' = $locals = {' + pargs.join(', ') + '}'))
                 }
+            }else{
+                test_node.add($NodeJS(local_ns +
+                    ' = $locals = ' + slot_init))
             }
+
+            // Too many arguments
+            else_node.add($NodeJS('else if($len > ' + pos_len +
+                '){$B.wrong_nb_args("' + this.name + '", $len, ' +
+                pos_len + ', [' + slot_list + '])}'))
+
+            // Not enough arguments
+            else_node.add($NodeJS('else if($len + $nb_defaults < ' +
+                pos_len + '){$B.wrong_nb_args("' + this.name +
+                '", $len, ' + pos_len + ', [' + slot_list + '])}'))
+
+            // Replace missing arguments with default values
+            subelse_node = $NodeJS("else")
+            else_node.add(subelse_node)
+
+            if(this.type == 'generator'){
+                this.args.forEach(function(arg){
+                    subelse_node.add($NodeJS('$locals["' + arg + '"] = ' +
+                        arg))
+                })
+            }else{
+                subelse_node.add($NodeJS(local_ns +
+                    ' = $locals = ' + slot_init))
+            }
+            subelse_node.add($NodeJS("var defparams = [" + slot_list + "]"))
+            subelse_node.add($NodeJS("for(var i=$len; i < defparams.length" +
+                ";i++){$locals[defparams[i]] = $defaults[defparams[i]]}"))
 
         }else{
             nodes.push(make_args_nodes[0])
             if(make_args_nodes.length > 1){nodes.push(make_args_nodes[1])}
         }
 
-        nodes.push(
-          $NodeJS('$top_frame[1] = $locals;'))
+        nodes.push($NodeJS('$top_frame[1] = $locals;'))
+        nodes.push($NodeJS('$locals.$parent = $parent'))
 
         // set __BRYTHON__.js_this to Javascript "this"
         // To use some JS libraries it may be necessary to know what "this"
@@ -3043,7 +2993,7 @@ var $DictOrSetCtx = $B.parser.$DictOrSetCtx = function(context){
             case 'dict':
                 var packed = this.packed_indices()
                 if(packed.length > 0){
-                    return 'dict.$factory(' + this.unpack_dict(packed) +
+                    return '_b_.dict.$factory(' + this.unpack_dict(packed) +
                         ')' + $to_js(this.tree)
                 }
                 var res = []
@@ -3051,13 +3001,13 @@ var $DictOrSetCtx = $B.parser.$DictOrSetCtx = function(context){
                     res.push('[' + this.items[i].to_js() + ',' +
                       this.items[i + 1].to_js() + ']')
                 }
-                return 'dict.$factory([' + res.join(',') + '])' +
+                return '_b_.dict.$factory([' + res.join(',') + '])' +
                     $to_js(this.tree)
             case 'set_comp':
-                return 'set.$factory(' + $to_js(this.items) + ')' +
+                return '_b_.set.$factory(' + $to_js(this.items) + ')' +
                     $to_js(this.tree)
             case 'dict_comp':
-                return 'dict.$factory(' + $to_js(this.items) + ')' +
+                return '_b_.dict.$factory(' + $to_js(this.items) + ')' +
                     $to_js(this.tree)
         }
         var packed = this.packed_indices()
@@ -3443,7 +3393,7 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
         new_nodes[pos++] = new_node
 
         // Line to store the length of the iterator
-        var js = 'if(isinstance(' + iterable_name + ', dict)){$locals.$len_func' +
+        var js = 'if(isinstance(' + iterable_name + ', _b_.dict)){$locals.$len_func' +
             num + ' = $B.$getattr(' + iterable_name + ', "__len__"); $locals.$len' +
             num + ' = $locals.$len_func' + num + '()}else{$locals.$len' +
             num + ' = null}'
@@ -8645,11 +8595,11 @@ var $transition = $B.parser.$transition = function(context, token, value){
 }
 
 // Names that can't be given to variable names or attributes
-$B.forbidden = ["alert", "arguments", "case", "catch", "constructor", "Date",
-    "delete", "default", "document", "enum", "eval", "extends", "Error",
-    "history", "function", "keys", "length", "location", "Math", "new", "null",
-    "Number", "RegExp", "super", "this","throw", "var", "window",
-    "toLocaleString", "toString", "message"]
+$B.forbidden = ["alert", "arguments", "case", "catch", "const", "constructor",
+    "Date", "delete", "default", "document", "enum", "eval", "extends",
+    "Error", "history", "function", "keys", "length", "location", "Math",
+    "new", "null", "Number", "RegExp", "super", "this","throw", "var", 
+    "window", "toLocaleString", "toString", "message"]
 $B.aliased_names = $B.list2obj($B.forbidden)
 
 var s_escaped = 'abfnrtvxuU"0123456789' + "'" + '\\',
