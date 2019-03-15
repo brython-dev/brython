@@ -813,7 +813,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false //attr == "sort" // && obj === $B // "Point"
+    var $test = false // attr == "ftrk2" // && obj === $B // "Point"
     if($test){console.log("$getattr", attr, obj, klass)}
 
     // Shortcut for classes without parents
@@ -2634,6 +2634,42 @@ $B.Function.__mro__ = [object]
 $B.Function.__setattr__ = function(self, attr, value){
     if(attr == "__closure__"){
         throw _b_.AttributeError.$factory("readonly attribute")
+    }else if(attr == "__defaults__"){
+        // Setting attribute __defaults__ requires making a new version of the
+        // function, based on its attribute $set_defaults
+        if(value === _b_.None){
+            value = []
+        }else if(! isinstance(value, _b_.tuple)){
+            throw _b_.TypeError.$factory(
+                "__defaults__ must be set to a tuple object")
+        }
+        var set_func = self.$set_defaults
+        if(set_func === undefined){
+            throw _b_.AttributeError.$factory("cannot set attribute " + attr +
+                " of " + _b_.str.$factory(self))
+        }
+        if(self.$infos && self.$infos.__code__){
+            // Make the new $defaults Javascript object
+            var argcount = self.$infos.__code__.co_argcount,
+                varnames = self.$infos.__code__.co_varnames,
+                params = varnames.slice(0, argcount),
+                $defaults = {}
+            for(var i = value.length - 1; i >= 0; i--){
+                var pos = params.length - value.length + i
+                if(pos < 0){break}
+                $defaults[params[pos]] = value[i]
+            }
+        }else{
+            throw _b_.AttributeError.$factory("cannot set attribute " + attr +
+                " of " + _b_.str.$factory(self))
+        }
+        var klass = self.$infos.$class // Defined if function is in a class
+        var new_func = set_func($defaults)
+        new_func.$set_defaults = set_func
+        if(klass){
+            klass[self.$infos.__name__] = new_func
+            new_func.$infos.$class = klass
+        }
     }
     if(self.$infos[attr] !== undefined){self.$infos[attr] = value}
     else{self.$attrs = self.$attrs || {}; self.$attrs[attr] = value}

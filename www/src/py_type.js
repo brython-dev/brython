@@ -197,6 +197,16 @@ $B.$class_constructor = function(class_name, class_obj, bases,
     }
     kls.$subclasses = []
 
+    // Set attribute "$class" of functions defined in the class. Used in
+    // py_builtin_functions / Function.__setattr__ to reset the function
+    // if the attribute __defaults__ is reset.
+    for(var attr in class_obj){
+        if(attr.charAt(0) != "$" || attr.substr(0,2) == "$$"){
+            if(typeof class_obj[attr] == "function"){
+                class_obj[attr].$infos.$class = kls
+            }
+        }
+    }
     if(kls.__class__ === metaclass){
         // Initialize the class object by a call to metaclass __init__
         var meta_init = _b_.type.__getattribute__(metaclass, "__init__")
@@ -310,7 +320,7 @@ type.__getattribute__ = function(klass, attr){
                 function(key){delete klass[key]})
     }
     var res = klass[attr]
-    var $test = false //attr=="__name__" //&& klass.__name__ == "Point"
+    var $test = false // attr=="__new__" && klass.$infos.__name__ == "N"
     if($test){
         console.log("attr", attr, "of", klass, res)
     }
@@ -510,6 +520,9 @@ type.__new__ = function(meta, name, bases, cl_dict){
         var key = $B.to_alias(items[i][0]),
             v = items[i][1]
         class_dict[key] = v
+        if(typeof v == "function"){
+            v.$infos.$class = class_dict
+        }
     }
 
     class_dict.__mro__ = type.mro(class_dict)

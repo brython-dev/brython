@@ -54,3 +54,10 @@ d['b'] = 3
 assert list(d.keys()) == ["a", "b"]
 assert list(d.values()) == [2, 3]
 assert list(d.items()) == [("a", 2), ("b", 3)]
+
+# issue 1053
+N = collections.namedtuple('N', 'a b')
+N.__new__.__defaults__ = (3, 4)
+n = N()
+assert n.a == 3
+assert n.b == 4

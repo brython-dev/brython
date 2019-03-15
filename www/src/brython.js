@@ -83,8 +83,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,1,'final',0]
 __BRYTHON__.__MAGIC__="3.7.1"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-03-13 17:57:25.316938"
-__BRYTHON__.timestamp=1552496245316
+__BRYTHON__.compiled_date="2019-03-15 12:35:30.062818"
+__BRYTHON__.timestamp=1552649730062
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 ;
 
@@ -1216,6 +1216,10 @@ this.__defaults__=[]
 this.slots=[]
 var slot_list=[],slot_init=[],annotations=[]
 if(this.annotation){annotations.push('"return":'+this.annotation.to_js())}
+this.func_name=this.tree[0].to_js()
+var func_name1=this.func_name
+if(this.decorated){this.func_name='var '+this.alias
+func_name1=this.alias}
 var func_args=this.tree[1].tree
 func_args.forEach(function(arg){this.args.push(arg.name)
 this.varnames[arg.name]=true
@@ -1246,8 +1250,8 @@ var prefix=this.tree[0].to_js()
 if(this.decorated){prefix=this.alias}
 var name=this.name+this.num
 var local_ns='$locals_'+this.id
-js='var '+local_ns+' = {$name: "'+this.name+'"}, '+
-'$local_name = "'+this.id+'",$locals = '+local_ns+';'
+js='var '+local_ns+' = {}, $local_name = "'+this.id+
+'",$locals = '+local_ns+';'
 var new_node=new $Node()
 new_node.locals_def=true
 new_node.func_node=node
@@ -1298,6 +1302,7 @@ arg))})}}else{test_node.add($NodeJS(local_ns+
 else_node.add($NodeJS('else if($len > '+pos_len+
 '){$B.wrong_nb_args("'+this.name+'", $len, '+
 pos_len+', ['+slot_list+'])}'))
+if(pos_len > 0){
 else_node.add($NodeJS('else if($len + $nb_defaults < '+
 pos_len+'){$B.wrong_nb_args("'+this.name+
 '", $len, '+pos_len+', ['+slot_list+'])}'))
@@ -1308,7 +1313,7 @@ arg))})}else{subelse_node.add($NodeJS(local_ns+
 ' = $locals = '+slot_init))}
 subelse_node.add($NodeJS("var defparams = ["+slot_list+"]"))
 subelse_node.add($NodeJS("for(var i=$len; i < defparams.length"+
-";i++){$locals[defparams[i]] = $defaults[defparams[i]]}"))}else{nodes.push(make_args_nodes[0])
+";i++){$locals[defparams[i]] = $defaults[defparams[i]]}"))}}else{nodes.push(make_args_nodes[0])
 if(make_args_nodes.length > 1){nodes.push(make_args_nodes[1])}}
 nodes.push($NodeJS('$top_frame[1] = $locals;'))
 nodes.push($NodeJS('$locals.$parent = $parent'))
@@ -1382,7 +1387,14 @@ if(this.type=="def"){
 node.parent.insert(rank+offset++,new $MarkerNode('func_end:'+CODE_MARKER))
 var res='return '+name
 if(this.async){res='return $B.make_async('+name+')'}
-node.parent.insert(rank+offset++,$NodeJS(res+'})('+this.default_str+')'))}
+node.parent.insert(rank+offset++,$NodeJS(res+'}'))
+node.parent.insert(rank+offset++,$NodeJS(
+func_name1+" = "+this.name+'$'+this.num+
+'('+this.default_str+')'))
+node.parent.insert(rank+offset++,$NodeJS(
+func_name1+".$set_defaults = function(value){return "+
+func_name1+" = "+this.name+"$"+this.num+
+"(value)}"))}
 if(this.type=='def'){var parent=node
 for(var pos=0;pos < parent.children.length &&
 parent.children[pos]!==$B.last(enter_frame_nodes);pos++){}
@@ -1399,7 +1411,8 @@ return offset}
 this.to_js=function(func_name){this.js_processed=true
 func_name=func_name ||this.tree[0].to_js()
 if(this.decorated){func_name='var '+this.alias}
-return func_name+' = (function ($defaults){'+
+return "var "+this.name+'$'+this.num+
+' = function($defaults){'+
 (this.async ? 'async ' :'')+'function '+
 this.name+this.num+'('+this.params+')'}}
 var $DelCtx=$B.parser.$DelCtx=function(C){
@@ -5279,6 +5292,7 @@ var kls=meta_new(metaclass,class_name,bases,cl_dict)
 kls.__module__=module
 kls.$infos={__module__:module,__name__:class_name,__qualname__:class_name}
 kls.$subclasses=[]
+for(var attr in class_obj){if(attr.charAt(0)!="$" ||attr.substr(0,2)=="$$"){if(typeof class_obj[attr]=="function"){class_obj[attr].$infos.$class=kls}}}
 if(kls.__class__===metaclass){
 var meta_init=_b_.type.__getattribute__(metaclass,"__init__")
 meta_init(kls,class_name,bases,cl_dict)}
@@ -5390,7 +5404,8 @@ type.__new__=function(meta,name,bases,cl_dict){
 var class_dict={__class__ :meta,__bases__ :bases,__dict__ :cl_dict,$infos:{__name__:name.replace("$$","")},$is_class:true,$has_setattr:cl_dict.$has_setattr}
 var items=$B.$dict_items(cl_dict)
 for(var i=0;i < items.length;i++){var key=$B.to_alias(items[i][0]),v=items[i][1]
-class_dict[key]=v}
+class_dict[key]=v
+if(typeof v=="function"){v.$infos.$class=class_dict}}
 class_dict.__mro__=type.mro(class_dict)
 return class_dict}
 type.__repr__=type.__str__=function(kls){if(kls.$infos===undefined){console.log("no $infos",kls)}
@@ -7166,7 +7181,23 @@ cells.push($B.cell.$factory(null))}}
 return _b_.tuple.$factory(cells)}else if(self.$attrs && self.$attrs[attr]!==undefined){return self.$attrs[attr]}else{return _b_.object.__getattribute__(self,attr)}}
 $B.Function.__repr__=$B.Function.__str__=function(self){if(self.$infos===undefined){return '<function '+self.name+'>'}else{return '<function '+self.$infos.__qualname__+'>'}}
 $B.Function.__mro__=[object]
-$B.Function.__setattr__=function(self,attr,value){if(attr=="__closure__"){throw _b_.AttributeError.$factory("readonly attribute")}
+$B.Function.__setattr__=function(self,attr,value){if(attr=="__closure__"){throw _b_.AttributeError.$factory("readonly attribute")}else if(attr=="__defaults__"){
+if(value===_b_.None){value=[]}else if(! isinstance(value,_b_.tuple)){throw _b_.TypeError.$factory(
+"__defaults__ must be set to a tuple object")}
+var set_func=self.$set_defaults
+if(set_func===undefined){throw _b_.AttributeError.$factory("cannot set attribute "+attr+
+" of "+_b_.str.$factory(self))}
+if(self.$infos && self.$infos.__code__){
+var argcount=self.$infos.__code__.co_argcount,varnames=self.$infos.__code__.co_varnames,params=varnames.slice(0,argcount),$defaults={}
+for(var i=value.length-1;i >=0;i--){var pos=params.length-value.length+i
+if(pos < 0){break}
+$defaults[params[pos]]=value[i]}}else{throw _b_.AttributeError.$factory("cannot set attribute "+attr+
+" of "+_b_.str.$factory(self))}
+var klass=self.$infos.$class 
+var new_func=set_func($defaults)
+new_func.$set_defaults=set_func
+if(klass){klass[self.$infos.__name__]=new_func
+new_func.$infos.$class=klass}}
 if(self.$infos[attr]!==undefined){self.$infos[attr]=value}
 else{self.$attrs=self.$attrs ||{};self.$attrs[attr]=value}}
 $B.Function.$factory=function(){}

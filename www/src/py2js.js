@@ -2439,6 +2439,13 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
             annotations.push('"return":' + this.annotation.to_js())
         }
 
+        this.func_name = this.tree[0].to_js()
+        var func_name1 = this.func_name
+        if(this.decorated){
+            this.func_name = 'var ' + this.alias
+            func_name1 = this.alias
+        }
+
         var func_args = this.tree[1].tree
         func_args.forEach(function(arg){
             this.args.push(arg.name)
@@ -2500,8 +2507,8 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
 
         // Declare object holding local variables
         var local_ns = '$locals_' + this.id
-        js = 'var ' + local_ns + ' = {$name: "' + this.name + '"}, ' +
-            '$local_name = "' + this.id + '",$locals = ' + local_ns + ';'
+        js = 'var ' + local_ns + ' = {}, $local_name = "' + this.id +
+            '",$locals = ' + local_ns + ';'
 
         var new_node = new $Node()
         new_node.locals_def = true
@@ -2609,28 +2616,29 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
                 '){$B.wrong_nb_args("' + this.name + '", $len, ' +
                 pos_len + ', [' + slot_list + '])}'))
 
-            // Not enough arguments
-            else_node.add($NodeJS('else if($len + $nb_defaults < ' +
-                pos_len + '){$B.wrong_nb_args("' + this.name +
-                '", $len, ' + pos_len + ', [' + slot_list + '])}'))
+            if(pos_len > 0){
+                // Not enough arguments
+                else_node.add($NodeJS('else if($len + $nb_defaults < ' +
+                    pos_len + '){$B.wrong_nb_args("' + this.name +
+                    '", $len, ' + pos_len + ', [' + slot_list + '])}'))
 
-            // Replace missing arguments with default values
-            subelse_node = $NodeJS("else")
-            else_node.add(subelse_node)
+                // Replace missing arguments with default values
+                subelse_node = $NodeJS("else")
+                else_node.add(subelse_node)
 
-            if(this.type == 'generator'){
-                this.args.forEach(function(arg){
-                    subelse_node.add($NodeJS('$locals["' + arg + '"] = ' +
-                        arg))
-                })
-            }else{
-                subelse_node.add($NodeJS(local_ns +
-                    ' = $locals = ' + slot_init))
+                if(this.type == 'generator'){
+                    this.args.forEach(function(arg){
+                        subelse_node.add($NodeJS('$locals["' + arg + '"] = ' +
+                            arg))
+                    })
+                }else{
+                    subelse_node.add($NodeJS(local_ns +
+                        ' = $locals = ' + slot_init))
+                }
+                subelse_node.add($NodeJS("var defparams = [" + slot_list + "]"))
+                subelse_node.add($NodeJS("for(var i=$len; i < defparams.length" +
+                    ";i++){$locals[defparams[i]] = $defaults[defparams[i]]}"))
             }
-            subelse_node.add($NodeJS("var defparams = [" + slot_list + "]"))
-            subelse_node.add($NodeJS("for(var i=$len; i < defparams.length" +
-                ";i++){$locals[defparams[i]] = $defaults[defparams[i]]}"))
-
         }else{
             nodes.push(make_args_nodes[0])
             if(make_args_nodes.length > 1){nodes.push(make_args_nodes[1])}
@@ -2796,7 +2804,16 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
                 res = 'return $B.make_async(' + name + ')'
             }
             node.parent.insert(rank + offset++,
-                $NodeJS(res + '})(' + this.default_str + ')'))
+                $NodeJS(res + '}'))
+
+            node.parent.insert(rank + offset++, $NodeJS(
+                func_name1 + " = " + this.name + '$' + this.num +
+                '(' + this.default_str + ')'))
+
+            node.parent.insert(rank + offset++, $NodeJS(
+                func_name1 + ".$set_defaults = function(value){return " +
+                func_name1 + " = " + this.name + "$" + this.num +
+                "(value)}"))
         }
 
         // wrap everything in a try/catch to be sure to exit from frame
@@ -2838,7 +2855,8 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         func_name = func_name || this.tree[0].to_js()
         if(this.decorated){func_name = 'var ' + this.alias}
 
-        return func_name + ' = (function ($defaults){' +
+        return "var " + this.name + '$' + this.num + 
+            ' = function($defaults){' +
             (this.async ? 'async ' : '') + 'function '+
             this.name + this.num + '(' + this.params + ')'
     }
@@ -8598,7 +8616,7 @@ var $transition = $B.parser.$transition = function(context, token, value){
 $B.forbidden = ["alert", "arguments", "case", "catch", "const", "constructor",
     "Date", "delete", "default", "document", "enum", "eval", "extends",
     "Error", "history", "function", "keys", "length", "location", "Math",
-    "new", "null", "Number", "RegExp", "super", "this","throw", "var", 
+    "new", "null", "Number", "RegExp", "super", "this","throw", "var",
     "window", "toLocaleString", "toString", "message"]
 $B.aliased_names = $B.list2obj($B.forbidden)
 

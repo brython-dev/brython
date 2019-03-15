@@ -2302,6 +2302,65 @@ c = C()
 delattr(c, "x")
 assert c.count == 1
 
+# setting __defaults__ to functions (issue #1053)
+
+def ftrk(x, y=5):
+    return x + y
+
+assert ftrk(1) == 6
+
+ftrk.__defaults__ = (4, 1)
+assert ftrk(1) == 2
+assert ftrk() == 5
+ftrk.__defaults__ = ()
+try:
+    ftrk()
+    raise Exception("should have raised TypeError")
+except TypeError:
+    pass
+ftrk.__defaults__ = (4, 1)
+assert ftrk(1) == 2
+assert ftrk() == 5
+ftrk.__defaults__ = None
+try:
+    ftrk()
+    raise Exception("should have raised TypeError")
+except TypeError:
+    pass
+
+def g():
+    def h(x, y):
+        return x + y
+    h.__defaults__ = (3,)
+    return h
+
+assert g()(1) == 4
+
+class A:
+    def ftrk2(self, x):
+        return x + 1
+
+a = A()
+assert a.ftrk2(2) == 3
+A.ftrk2.__defaults__ = (2,)
+assert a.ftrk2() == 3, a.ftrk2()
+
+class B:
+
+    def __new__(cls, a):
+        obj = object.__new__(cls)
+        obj.a = a
+        return obj
+
+    def show(self):
+        return self.a
+
+b = B(2)
+assert b.show() == 2
+B.__new__.__defaults__ = (8,)
+b2 = B()
+assert b2.show() == 8
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
