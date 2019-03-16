@@ -83,8 +83,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,1,'final',0]
 __BRYTHON__.__MAGIC__="3.7.1"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-03-16 09:58:31.977965"
-__BRYTHON__.timestamp=1552726711977
+__BRYTHON__.compiled_date="2019-03-16 14:16:32.939251"
+__BRYTHON__.timestamp=1552742192939
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 ;
 
@@ -7323,15 +7323,12 @@ first_frame[4].$infos.__code__){return first_frame[4].$infos.__code__.co_firstli
 return-1}
 else{return parseInt(line_info.split(",")[0])}
 case "tb_lasti":
-console.log(attr,self.$stack)
-if(line_info===undefined){console.log("no line info",first_frame)
-return "<unknown>"}else{var info=line_info.split(","),src
+if(line_info===undefined){return "<unknown>"}else{var info=line_info.split(","),src
 for(var i=self.$stack.length-1;i >=0;i--){var fr=self.$stack[i]
 if(fr[2]==info[1]){src=fr[3].$src
 break}}
 if(src===undefined && $B.file_cache.hasOwnProperty(info[1])){src=$B.file_cache[info[1]]}
-if(src !==undefined){return src.split("\n")[parseInt(info[0]-1)].trim()}else{console.log("no src",info)
-return "<unknown>"}}
+if(src !==undefined){return src.split("\n")[parseInt(info[0]-1)].trim()}else{return "<unknown>"}}
 case "tb_next":
 if(self.$stack.length <=1){return None}
 else{return traceback.$factory(self.exc,self.$stack.slice(1))}
@@ -8029,22 +8026,9 @@ case "utf-8":
 case "utf8":
 case "U8":
 case "UTF":
-var i=0,cp,_int_800=_int("800"),_int_c2=_int("c2"),_int_1000=_int("1000"),_int_e0=_int("e0"),_int_e1=_int("e1"),_int_e3=_int("e3"),_int_a0=_int("a0"),_int_80=_int("80"),_int_2000=_int("2000")
-while(i < b.length){if(b[i]<=127){s+=String.fromCharCode(b[i])
-i+=1}else if(b[i]< _int_e0){if(i < b.length-1){cp=b[i+1]+64*(b[i]-_int_c2)
-s+=String.fromCharCode(cp)
-i+=2}else{$UnicodeDecodeError(encoding,i)}}else if(b[i]==_int_e0){if(i < b.length-2){var zone=b[i+1]-_int_a0
-cp=b[i+2]-_int_80+_int_800+64*zone
-s+=String.fromCharCode(cp)
-i+=3}else{$UnicodeDecodeError(encoding,i)}}else if(b[i]< _int_e3){if(i < b.length-2){var zone=b[i+1]-_int_80
-cp=b[i+2]-_int_80+_int_1000+64*zone
-s+=String.fromCharCode(cp)
-i+=3}else{$UnicodeDecodeError(encoding,i)}}else{if(i < b.length-2){var zone1=b[i]-_int_e1-1
-var zone=b[i+1]-_int_80+64*zone1
-cp=b[i+2]-_int_80+_int_2000+64*zone
-s+=String.fromCharCode(cp)
-i+=3}else{if(errors=="surrogateescape"){s+="\\udc"+_hex(b[i])
-i+=1}else{$UnicodeDecodeError(encoding,i)}}}}
+var s=""
+b.forEach(function(item){s+=String.fromCharCode(item)})
+s=decodeURIComponent(escape(s))
 break
 case "latin_1":
 case "windows1252":
@@ -8091,23 +8075,8 @@ var t=[],pos=0,enc=normalise(encoding)
 switch(enc){case "utf-8":
 case "utf_8":
 case "utf8":
-var _int_800=_int("800"),_int_c2=_int("c2"),_int_1000=_int("1000"),_int_e0=_int("e0"),_int_e1=_int("e1"),_int_a0=_int("a0"),_int_80=_int("80"),_int_2000=_int("2000"),_int_D000=_int("D000")
-for(var i=0,len=s.length;i < len;i++){var cp=s.charCodeAt(i)
-if(cp <=127){t[pos++]=cp}else if(cp < _int_800){var zone=Math.floor((cp-128)/64)
-t[pos++]=_int_c2+zone
-t[pos++]=cp-64*zone}else if(cp < _int_1000){var zone=Math.floor((cp-_int_800)/64)
-t[pos++]=_int_e0
-t[pos++]=_int_a0+zone
-t[pos++]=_int_80+cp-_int_800-64*zone}else if(cp < _int_2000){var zone=Math.floor((cp-_int_1000)/64)
-t[pos++]=_int_e1+Math.floor((cp-_int_1000)/
-_int_1000)
-t[pos++]=_int_80+zone
-t[pos++]=_int_80+cp-_int_1000-64*zone}else if(cp < _int_D000){var zone=Math.floor((cp-_int_2000)/64)
-var zone1=Math.floor((cp-_int_2000)/_int_1000)
-t[pos++]=_int_e1+Math.floor((cp-_int_1000)/
-_int_1000)
-t[pos++]=_int_80+zone-zone1*64
-t[pos++]=_int_80+cp-_int_2000-64*zone}}
+var s1=unescape(encodeURIComponent(s))
+for(var i=0,len=s1.length;i < len;i++){t.push(s1.charCodeAt(i))}
 break
 case "latin1":
 case "iso8859_1":
