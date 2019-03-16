@@ -302,6 +302,22 @@ function delattr(obj, attr) {
     return $B.$getattr(obj, '__delattr__')(attr)
 }
 
+$B.$delete = function(name){
+    // remove name from namespace
+    var found = false
+    for(var i = $B.frames_stack.length - 1; i >= 0 && ! found; i--){
+        var frame = $B.frames_stack[i]
+        if(frame[1][name] !== undefined){
+            delete frame[1][name]
+            found = true
+        }
+        if(frame[2] != frame[0] && frame[3][name] !== undefined){
+            delete frame[3][name]
+            found = true
+        }
+    }
+}
+
 function dir(obj){
     if(obj === undefined){
         // if dir is called without arguments, use globals
@@ -409,7 +425,7 @@ $B.to_alias = function(attr){
 
 //eval() (built in function)
 function $$eval(src, _globals, _locals){
-
+    
     if(_globals === undefined){_globals = _b_.None}
     if(_locals === undefined){_locals = _b_.None}
 
@@ -513,7 +529,7 @@ function $$eval(src, _globals, _locals){
     // Initialise block globals
     if(_globals === _b_.None){
         var gobj = current_frame[3],
-            ex = 'var $locals_' + current_globals_id + ' = gobj;'
+            ex = 'var $locals_' + globals_id + ' = gobj;'
         eval(ex) // needed for generators
         for(var attr in gobj){
             if((! attr.startsWith("$")) || attr.startsWith('$$')){
@@ -623,6 +639,7 @@ function $$eval(src, _globals, _locals){
         if(is_exec){
             var locals_obj = eval("$locals_" + locals_id),
                 globals_obj = eval("$locals_" + globals_id)
+
             if(_globals === _b_.None){
                 var res = new Function("$locals_" + globals_id,
                     "$locals_" + locals_id, js)(globals_obj, locals_obj)
