@@ -1,5 +1,5 @@
 import sys
-import traceback
+#import traceback
 
 from browser import document as doc
 from browser import window, alert, console
@@ -84,8 +84,33 @@ class Trace:
 
 def print_tb():
     trace = Trace()
-    traceback.print_exc(file=trace)
+    exc_info = sys.exc_info()
+    exc_class = exc_info[0].__name__
+    exc_msg = str(exc_info[1])
+    tb = exc_info[2]
+    if exc_info[0] is SyntaxError:
+        return syntax_error(exc_info[1].args)
+    trace.write("Traceback (most recent call last):\n")
+    while tb is not None:
+        frame = tb.tb_frame
+        code = frame.f_code
+        name = code.co_name
+        filename = code.co_filename
+        trace.write(f"  File {filename}, line {tb.tb_lineno}, in {name}\n")
+        if not filename.startswith("<"):
+            trace.write(f"    {tb.tb_lasti}\n")
+        tb = tb.tb_next
+    trace.write(f"{exc_class}: {exc_msg}\n")
+    #traceback.print_exc(file=trace)
     CODE_ELT.value += trace.format()
+
+def syntax_error(args):
+    info, filename, lineno, offset, line = args
+    print(f"  File {filename}, line {lineno}")
+    print("    " + line)
+    print("    " + offset * " " + "^")
+    print("SyntaxError:", info)
+    flush()
 
 OUT_BUFFER = ''
 
@@ -174,12 +199,7 @@ def myKeyPress(event):
                     doc['code'].value += '... '
                     _status = "block"
                 else:
-                    info, filename, lineno, offset, line = msg.args
-                    print(f"  File <stdin>, line {lineno}")
-                    print("    " + line)
-                    print("    " + offset * " " + "^")
-                    print("SyntaxError:", info)
-                    flush()
+                    syntax_error(msg.args)
                     doc['code'].value += '>>> '
                     _status = "main"
             except:
