@@ -83,8 +83,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,1,'final',0]
 __BRYTHON__.__MAGIC__="3.7.1"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-03-15 12:35:30.062818"
-__BRYTHON__.timestamp=1552649730062
+__BRYTHON__.compiled_date="2019-03-16 09:58:31.977965"
+__BRYTHON__.timestamp=1552726711977
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 ;
 
@@ -1263,7 +1263,6 @@ var enter_frame_nodes=[$NodeJS('var $top_frame = [$local_name, $locals,'+
 if(this.async){enter_frame_nodes.push($NodeJS("var $stack = "+
 "$B.frames_stack.slice()"))}
 enter_frame_nodes.forEach(function(node){node.enter_frame=true})
-nodes=nodes.concat(enter_frame_nodes)
 nodes.push($NodeJS("var $nb_defaults = Object.keys($defaults).length,"))
 nodes.push($NodeJS("    $parent = $locals.$parent"))
 this.env=[]
@@ -1315,6 +1314,7 @@ subelse_node.add($NodeJS("var defparams = ["+slot_list+"]"))
 subelse_node.add($NodeJS("for(var i=$len; i < defparams.length"+
 ";i++){$locals[defparams[i]] = $defaults[defparams[i]]}"))}}else{nodes.push(make_args_nodes[0])
 if(make_args_nodes.length > 1){nodes.push(make_args_nodes[1])}}
+nodes=nodes.concat(enter_frame_nodes)
 nodes.push($NodeJS('$top_frame[1] = $locals;'))
 nodes.push($NodeJS('$locals.$parent = $parent'))
 nodes.push($NodeJS('$B.js_this = this;'))
@@ -1431,7 +1431,7 @@ C.tree.pop()})
 this.tree=[]
 return res.join(';')}else{var expr=this.tree[0].tree[0]
 switch(expr.type){case 'id':
-var res='delete '+expr.to_js()+';'
+var res='$B.$delete("'+expr.value+'");'
 delete $get_scope(this).binding[expr.value]
 return res
 case 'list_or_tuple':
@@ -6292,6 +6292,13 @@ check_nb_args('delattr',2,arguments)
 if(typeof attr !='string'){throw _b_.TypeError.$factory("attribute name must be string, not '"+
 $B.class_name(attr)+"'")}
 return $B.$getattr(obj,'__delattr__')(attr)}
+$B.$delete=function(name){
+var found=false
+for(var i=$B.frames_stack.length-1;i >=0 && ! found;i--){var frame=$B.frames_stack[i]
+if(frame[1][name]!==undefined){delete frame[1][name]
+found=true}
+if(frame[2]!=frame[0]&& frame[3][name]!==undefined){delete frame[3][name]
+found=true}}}
 function dir(obj){if(obj===undefined){
 var frame=$B.last($B.frames_stack),globals_obj=frame[3],res=_b_.list.$factory(),pos=0
 for(var attr in globals_obj){if(attr.charAt(0)=='$' && attr.charAt(1)!='$'){
@@ -6366,7 +6373,7 @@ for(var attr in _locals.$string_dict){parent_scope.binding[attr]=true}}}
 $B.$py_module_path[globals_id]=$B.$py_module_path[current_globals_id]
 eval('var $locals_'+globals_id+' = {}\nvar $locals_'+
 locals_id+' = {}')
-if(_globals===_b_.None){var gobj=current_frame[3],ex='var $locals_'+current_globals_id+' = gobj;'
+if(_globals===_b_.None){var gobj=current_frame[3],ex='var $locals_'+globals_id+' = gobj;'
 eval(ex)
 for(var attr in gobj){if((! attr.startsWith("$"))||attr.startsWith('$$')){eval("$locals_"+globals_id+"[attr] = gobj[attr]")}}}else{if(_globals.$jsobj){var items=_globals.$jsobj}
 else{var items=_globals.$string_dict}
@@ -7316,10 +7323,15 @@ first_frame[4].$infos.__code__){return first_frame[4].$infos.__code__.co_firstli
 return-1}
 else{return parseInt(line_info.split(",")[0])}
 case "tb_lasti":
-if(line_info===undefined){return "<unknown>"}
-else{var info=line_info.split(",")
-var src=$B.$py_src[info[1]]
-if(src !==undefined){return src.split("\n")[parseInt(info[0]-1)].trim()}else{return "<unknown>"}}
+console.log(attr,self.$stack)
+if(line_info===undefined){console.log("no line info",first_frame)
+return "<unknown>"}else{var info=line_info.split(","),src
+for(var i=self.$stack.length-1;i >=0;i--){var fr=self.$stack[i]
+if(fr[2]==info[1]){src=fr[3].$src
+break}}
+if(src===undefined && $B.file_cache.hasOwnProperty(info[1])){src=$B.file_cache[info[1]]}
+if(src !==undefined){return src.split("\n")[parseInt(info[0]-1)].trim()}else{console.log("no src",info)
+return "<unknown>"}}
 case "tb_next":
 if(self.$stack.length <=1){return None}
 else{return traceback.$factory(self.exc,self.$stack.slice(1))}
@@ -8648,8 +8660,7 @@ $module.__name__=_module.__name__
 $module.__repr__=$module.__str__=function(){if($B.builtin_module_names.indexOf(_module.name)>-1){return "<module '"+_module.__name__+"' (built-in)>"}
 return "<module '"+_module.__name__+"' from "+path+" >"}
 if(_module.name !="builtins"){
-$module.__file__=path
-$B.file_cache[path]=module_contents}}
+$module.__file__=path}}
 $B.imported[_module.__name__]=$module
 return true}
 function show_ns(){var kk=Object.keys(_window)
@@ -8702,6 +8713,7 @@ var mod=eval("$module")
 for(var attr in mod){module[attr]=mod[attr]}
 module.__initializing__=false
 $B.imported[module.__name__]=module
+$B.file_cache[module.__name__]=module_contents
 return true}catch(err){console.log(""+err+" "+" for module "+module.__name__)
 for(var attr in err){console.log(attr+" "+err[attr])}
 if($B.debug > 0){console.log("line info "+__BRYTHON__.line_info)}

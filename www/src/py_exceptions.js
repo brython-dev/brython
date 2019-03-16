@@ -162,13 +162,26 @@ traceback.__getattribute__ = function(self, attr){
             }
             else{return parseInt(line_info.split(",")[0])}
         case "tb_lasti":
-            if(line_info === undefined){return "<unknown>"}
-            else{
-                var info = line_info.split(",")
-                var src = $B.$py_src[info[1]]
+            if(line_info === undefined){
+                return "<unknown>"
+            }else{
+                var info = line_info.split(","),
+                    src
+                for(var i = self.$stack.length - 1; i >= 0; i--){
+                    var fr = self.$stack[i]
+                    if(fr[2] == info[1]){
+                        src = fr[3].$src
+                        break
+                    }
+                }
+                if(src === undefined && $B.file_cache.hasOwnProperty(info[1])){
+                    src = $B.file_cache[info[1]]
+                }
                 if(src !== undefined){
                     return src.split("\n")[parseInt(info[0] - 1)].trim()
-                }else{return "<unknown>"}
+                }else{
+                    return "<unknown>"
+                }
             }
         case "tb_next":
             if(self.$stack.length <= 1){return None}
