@@ -8614,11 +8614,12 @@ var $transition = $B.parser.$transition = function(context, token, value){
 
 // Names that can't be given to variable names or attributes
 $B.forbidden = ["alert", "arguments", "case", "catch", "const", "constructor",
-    "Date", "debugger", "delete", "default", "do", "document", "enum", "eval",
-    "extends", "Error", "history", "function", "instanceof", "keys", "length",
-    "location", "Math", "message","new", "null", "Number", "RegExp", "super",
-    "switch", "this", "throw", "typeof", "var", "window", "toLocaleString", 
-    "toString", "void"]
+    "Date", "debugger", "delete", "default", "do", "document", "enum",
+    "export", "eval", "extends", "Error", "history", "function", "instanceof",
+    "keys", "length", "location", "Math", "message","new", "null", "Number",
+    "RegExp", "super", "switch", "this", "throw", "typeof", "var", "window", 
+    "toLocaleString", "toString", "void"]
+    //enum, export, extends, import, and super
 $B.aliased_names = $B.list2obj($B.forbidden)
 
 var s_escaped = 'abfnrtvxuU"0123456789' + "'" + '\\',

@@ -83,8 +83,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,1,'final',0]
 __BRYTHON__.__MAGIC__="3.7.1"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-03-16 15:23:30.836278"
-__BRYTHON__.timestamp=1552746210836
+__BRYTHON__.compiled_date="2019-03-16 15:30:55.732880"
+__BRYTHON__.timestamp=1552746655732
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 ;
 
@@ -4374,7 +4374,7 @@ C.from=true
 $add_yield_from_code(C)
 return C.tree[0]}
 return $transition(C.parent,token)}}
-$B.forbidden=["alert","arguments","case","catch","const","constructor","Date","debugger","delete","default","do","document","enum","eval","extends","Error","history","function","instanceof","keys","length","location","Math","message","new","null","Number","RegExp","super","switch","this","throw","typeof","var","window","toLocaleString","toString","void"]
+$B.forbidden=["alert","arguments","case","catch","const","constructor","Date","debugger","delete","default","do","document","enum","export","eval","extends","Error","history","function","instanceof","keys","length","location","Math","message","new","null","Number","RegExp","super","switch","this","throw","typeof","var","window","toLocaleString","toString","void"]
 $B.aliased_names=$B.list2obj($B.forbidden)
 var s_escaped='abfnrtvxuU"0123456789'+"'"+'\\',is_escaped={}
 for(var i=0;i < s_escaped.length;i++){is_escaped[s_escaped.charAt(i)]=true}
