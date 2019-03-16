@@ -90,7 +90,7 @@ function $download_module(module, url, $package){
 
     xhr.open("GET", url + fake_qs, false)
     xhr.send()
-    
+
     if($B.$CORS){
         if(xhr.status == 200 || xhr.status == 0){
            res = xhr.responseText
@@ -190,7 +190,6 @@ function run_js(module_contents, path, _module){
 
         if(_module.name != "builtins") { // builtins do not have a __file__ attribute
             $module.__file__ = path
-            $B.file_cache[path] = module_contents
         }
     }
     $B.imported[_module.__name__] = $module
@@ -316,6 +315,7 @@ function run_py(module_contents, path, module, compiled) {
         // setting attributes in a program affects the module namespace
         // See issue #7
         $B.imported[module.__name__] = module
+        $B.file_cache[module.__name__] = module_contents
         return true
     }catch(err){
         console.log("" + err + " " + " for module " + module.__name__)
@@ -1031,7 +1031,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                         __import__ :
                         _b_.getattr(__import__, "__call__"),
         modobj = importer(mod_name, globals, undefined, fromlist, 0)
-
+        
     // Apply bindings upon local namespace
     if(! fromlist || fromlist.length == 0){
         // import mod_name [as alias]
