@@ -194,7 +194,11 @@ $B.ajax_load_script = function(script){
         if(this.readyState == 4){
             if(this.status == 200){
                 var src = this.responseText
-                $B.tasks.splice(0, 0, [$B.run_script, src, name, true])
+                if(script.is_ww){
+                    $B.webworkers[name] = src
+                }else{
+                    $B.tasks.splice(0, 0, [$B.run_script, src, name, true])
+                }
             }else if(this.status == 404){
                 throw Error(url + " not found")
             }

@@ -8617,7 +8617,7 @@ $B.forbidden = ["alert", "arguments", "case", "catch", "const", "constructor",
     "Date", "debugger", "delete", "default", "do", "document", "enum",
     "export", "eval", "extends", "Error", "history", "function", "instanceof",
     "keys", "length", "location", "Math", "message","new", "null", "Number",
-    "RegExp", "super", "switch", "this", "throw", "typeof", "var", "window", 
+    "RegExp", "super", "switch", "this", "throw", "typeof", "var", "window",
     "toLocaleString", "toString", "void"]
     //enum, export, extends, import, and super
 $B.aliased_names = $B.list2obj($B.forbidden)
@@ -9518,7 +9518,7 @@ var brython = $B.parser.brython = function(options){
     var $href = $B.script_path = _window.location.href,
         $href_elts = $href.split('/')
     $href_elts.pop()
-    if(isWebWorker){$href_elts.pop()} // WebWorker script is in the web_workers subdirectory
+    if($B.isWebWorker){$href_elts.pop()} // WebWorker script is in the web_workers subdirectory
     $B.curdir = $href_elts.join('/')
 
     // List of URLs where imported modules should be searched
@@ -9556,7 +9556,7 @@ var brython = $B.parser.brython = function(options){
         })
     }
 
-    if(!isWebWorker){
+    if(!$B.isWebWorker){
         // Get all links with rel=pythonpath and add them to sys.path
         var path_links = document.querySelectorAll('head link[rel~=pythonpath]'),
             _importlib = $B.imported['_importlib']
@@ -9599,7 +9599,7 @@ var brython = $B.parser.brython = function(options){
     }else{
         $B.__ARGV = _b_.list.$factory([])
     }
-    if(!isWebWorker){
+    if(!$B.isWebWorker){
         _run_scripts(options)
     }
 }
@@ -9675,9 +9675,12 @@ var $log = $B.$log = function(js){
         console.log(i + 1, ":", line)
     })
 }
-var _run_scripts = $B.parser._run_scripts = function(options) {
+var _run_scripts = $B.parser._run_scripts = function(options){
     // Save initial Javascript namespace
     var kk = Object.keys(_window)
+
+    // Id sets to scripts
+    var defined_ids = {}
 
     // Option to run code on demand and not all the scripts defined in a page
     // The following lines are included to allow to run brython scripts in
@@ -9690,13 +9693,22 @@ var _run_scripts = $B.parser._run_scripts = function(options) {
         })
     }else{
         var scripts = document.getElementsByTagName('script'),
-            $elts = []
+            $elts = [],
+            webworkers = []
         // Freeze the list of scripts here ; other scripts can be inserted on
         // the fly by viruses
         for(var i = 0; i < scripts.length; i++){
             var script = scripts[i]
             if(script.type == "text/python" || script.type == "text/python3"){
-                $elts.push(script)
+                if(script.className == "webworker"){
+                    if(script.id === undefined){
+                        throw _b_.AttributeError.$factory(
+                            "webworker script has no attribute 'id'")
+                    }
+                    webworkers.push(script)
+                }else{
+                    $elts.push(script)
+                }
             }
         }
     }
@@ -9764,7 +9776,6 @@ var _run_scripts = $B.parser._run_scripts = function(options) {
             }
         }
         // Get all explicitely defined ids, to avoid overriding
-        var defined_ids = {}
         for(var i = 0; i < $elts.length; i++){
             var elt = $elts[i]
             if(elt.id){
@@ -9776,7 +9787,24 @@ var _run_scripts = $B.parser._run_scripts = function(options) {
                 }
             }
         }
-        var scripts = []
+
+        var src
+        for(var i = 0, len = webworkers.length; i < len; i++){
+            var worker = webworkers[i]
+            if(worker.src){
+                // format <script type="text/python" src="python_script.py">
+                // get source code by an Ajax call
+                $B.tasks.push([$B.ajax_load_script,
+                    {name: worker.id, url: worker.src, is_ww: true}])
+            }else{
+                // Get source code inside the script element
+                src = (worker.innerHTML || worker.textContent)
+                // remove leading CR if any
+                src = src.replace(/^\n/, '')
+                $B.webworkers[worker.id] = src
+            }
+        }
+
         for(var i = 0; i < $elts.length; i++){
             var elt = $elts[i]
             if(elt.type == "text/python" || elt.type == "text/python3"){
@@ -9801,7 +9829,6 @@ var _run_scripts = $B.parser._run_scripts = function(options) {
                 }
 
                 // Get Python source code
-                var $src = null
                 if(elt.src){
                     // format <script type="text/python" src="python_script.py">
                     // get source code by an Ajax call
@@ -9809,7 +9836,7 @@ var _run_scripts = $B.parser._run_scripts = function(options) {
                         {name: module_name, url: elt.src}])
                 }else{
                     // Get source code inside the script element
-                    var src = (elt.innerHTML || elt.textContent)
+                    src = (elt.innerHTML || elt.textContent)
                     // remove leading CR if any
                     src = src.replace(/^\n/, '')
                     $B.run_script(src, module_name)
