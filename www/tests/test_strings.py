@@ -203,4 +203,7 @@ class Mystring(str):
 
 assert issubclass(Mystring, str)
 
+# issue 1060
+assert str(bytes('abc', encoding='ascii'), encoding='ascii') == "abc"
+
 print("passed all tests...")

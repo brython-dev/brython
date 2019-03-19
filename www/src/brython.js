@@ -8,14 +8,14 @@ unicode=unicode||{},unicode.title=function(r){for(var n="",t=!1,e=0;r.length>e;e
 ;
 var __BRYTHON__=__BRYTHON__ ||{}
 ;(function($B){
-var isWebWorker=('undefined' !==typeof WorkerGlobalScope)&&
+$B.isWebWorker=('undefined' !==typeof WorkerGlobalScope)&&
 ("function"===typeof importScripts)&&
 (navigator instanceof WorkerNavigator)
 var _window=self;
 var $path
 if($B.brython_path===undefined){
 var this_url;
-if(isWebWorker){this_url=_window.location.href;
+if($B.isWebWorker){this_url=_window.location.href;
 if(this_url.startsWith("blob:")){this_url=this_url.substr(5)}}else{var scripts=document.getElementsByTagName('script')
 this_url=scripts[scripts.length-1].src}
 var elts=this_url.split('/')
@@ -25,6 +25,7 @@ var path=_window.location.origin+_window.location.pathname,path_elts=path.split(
 path_elts.pop()
 var $script_dir=$B.script_dir=path_elts.join("/")
 $B.__ARGV=[]
+$B.webworkers={}
 $B.$py_module_path={}
 $B.file_cache={}
 $B.$py_src={}
@@ -46,7 +47,7 @@ else{throw $B.builtins.AttributeError.$factory(
 '__BRYTHON__ object has no attribute '+attr)}}
 $B.language=_window.navigator.userLanguage ||_window.navigator.language
 $B.locale="C" 
-if(isWebWorker){$B.charset="utf-8"}else{
+if($B.isWebWorker){$B.charset="utf-8"}else{
 $B.charset=document.characterSet ||document.inputEncoding ||"utf-8"}
 $B.max_int=Math.pow(2,53)-1
 $B.min_int=-$B.max_int
@@ -83,9 +84,9 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,1,'final',0]
 __BRYTHON__.__MAGIC__="3.7.1"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-03-16 15:30:55.732880"
-__BRYTHON__.timestamp=1552746655732
-__BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
+__BRYTHON__.compiled_date="2019-03-19 09:16:06.531926"
+__BRYTHON__.timestamp=1552983366531
+__BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","_webworker","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 ;
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -4806,7 +4807,7 @@ path_hooks.push($B.$path_hooks[1])
 $B.path_hooks=path_hooks
 var $href=$B.script_path=_window.location.href,$href_elts=$href.split('/')
 $href_elts.pop()
-if(isWebWorker){$href_elts.pop()}
+if($B.isWebWorker){$href_elts.pop()}
 $B.curdir=$href_elts.join('/')
 if(options.pythonpath !==undefined){$B.path=options.pythonpath
 $B.$options.static_stdlib_import=false}
@@ -4819,7 +4820,7 @@ if(path.slice(-7).toLowerCase()=='.vfs.js' &&
 (prefetch===undefined ||prefetch===true)){$B.path_importer_cache[path+'/']=
 $B.imported['_importlib'].VFSPathFinder(path)}
 if(lang){_importlib.optimize_import_for_path(path,lang)}})}
-if(!isWebWorker){
+if(!$B.isWebWorker){
 var path_links=document.querySelectorAll('head link[rel~=pythonpath]'),_importlib=$B.imported['_importlib']
 for(var i=0,e;e=path_links[i];++i){var href=e.href;
 if((' '+e.rel+' ').indexOf(' prepend ')!=-1){$B.path.unshift(href);}else{$B.path.push(href);}
@@ -4834,7 +4835,7 @@ if(options.re_module !==undefined){if(options.re_module=='pyre' ||options.re_mod
 console.log("DeprecationWarning: \'re_module\' option of \'brython\' "+
 "function will be deprecated in future versions of Brython.")}
 if($B.$options.args){$B.__ARGV=$B.$options.args}else{$B.__ARGV=_b_.list.$factory([])}
-if(!isWebWorker){_run_scripts(options)}}
+if(!$B.isWebWorker){_run_scripts(options)}}
 $B.run_script=function(src,name,run_loop){
 if(run_loop){if($B.idb_cx && $B.idb_cx.$closed){$B.tasks.push([$B.idb_open])}}
 $B.$py_module_path[name]=$B.script_path
@@ -4856,10 +4857,13 @@ if(run_loop){$B.loop()}}
 var $log=$B.$log=function(js){js.split("\n").forEach(function(line,i){console.log(i+1,":",line)})}
 var _run_scripts=$B.parser._run_scripts=function(options){
 var kk=Object.keys(_window)
+var defined_ids={}
 if(options.ipy_id !==undefined){var $elts=[]
-options.ipy_id.forEach(function(elt){$elts.push(document.getElementById(elt))})}else{var scripts=document.getElementsByTagName('script'),$elts=[]
+options.ipy_id.forEach(function(elt){$elts.push(document.getElementById(elt))})}else{var scripts=document.getElementsByTagName('script'),$elts=[],webworkers=[]
 for(var i=0;i < scripts.length;i++){var script=scripts[i]
-if(script.type=="text/python" ||script.type=="text/python3"){$elts.push(script)}}}
+if(script.type=="text/python" ||script.type=="text/python3"){if(script.className=="webworker"){if(script.id===undefined){throw _b_.AttributeError.$factory(
+"webworker script has no attribute 'id'")}
+webworkers.push(script)}else{$elts.push(script)}}}}
 var first_script=true,module_name
 if(options.ipy_id !==undefined){module_name='__main__'
 var $src="",js,root
@@ -4884,11 +4888,16 @@ var $trace=_b_.getattr($err,'info')+'\n'+$err.__name__+
 try{_b_.getattr($B.stderr,'write')($trace)}catch(print_exc_err){console.log($trace)}
 throw $err}}else{if($elts.length > 0){if(options.indexedDB && $B.has_indexedDB &&
 $B.hasOwnProperty("VFS")){$B.tasks.push([$B.idb_open])}}
-var defined_ids={}
 for(var i=0;i < $elts.length;i++){var elt=$elts[i]
 if(elt.id){if(defined_ids[elt.id]){throw Error("Brython error : Found 2 scripts with the "+
 "same id '"+elt.id+"'")}else{defined_ids[elt.id]=true}}}
-var scripts=[]
+var src
+for(var i=0,len=webworkers.length;i < len;i++){var worker=webworkers[i]
+if(worker.src){
+$B.tasks.push([$B.ajax_load_script,{name:worker.id,url:worker.src,is_ww:true}])}else{
+src=(worker.innerHTML ||worker.textContent)
+src=src.replace(/^\n/,'')
+$B.webworkers[worker.id]=src}}
 for(var i=0;i < $elts.length;i++){var elt=$elts[i]
 if(elt.type=="text/python" ||elt.type=="text/python3"){
 if(elt.id){module_name=elt.id}
@@ -4896,10 +4905,9 @@ else{
 if(first_script){module_name='__main__'
 first_script=false}else{module_name='__main__'+$B.UUID()}
 while(defined_ids[module_name]!==undefined){module_name='__main__'+$B.UUID()}}
-var $src=null
 if(elt.src){
 $B.tasks.push([$B.ajax_load_script,{name:module_name,url:elt.src}])}else{
-var src=(elt.innerHTML ||elt.textContent)
+src=(elt.innerHTML ||elt.textContent)
 src=src.replace(/^\n/,'')
 $B.run_script(src,module_name)}}}}
 if(options.ipy_id===undefined){$B.loop()}}
@@ -4979,7 +4987,7 @@ $B.ajax_load_script=function(script){var url=script.url,name=script.name
 var req=new XMLHttpRequest()
 req.open("GET",url+"?"+Date.now(),true)
 req.onreadystatechange=function(){if(this.readyState==4){if(this.status==200){var src=this.responseText
-$B.tasks.splice(0,0,[$B.run_script,src,name,true])}else if(this.status==404){throw Error(url+" not found")}
+if(script.is_ww){$B.webworkers[name]=src}else{$B.tasks.splice(0,0,[$B.run_script,src,name,true])}}else if(this.status==404){throw Error(url+" not found")}
 loop()}}
 req.send()}
 function add_jsmodule(module,source){
@@ -8555,7 +8563,7 @@ $B.JSConstructor=JSConstructor})(__BRYTHON__)
 ;(function($B){$B.stdlib={}
 var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_collections_abc','_compat_pickle','_contextvars','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_py_abc','_pydecimal','_queue','_random','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_weakref','_weakrefset','abc','antigravity','argparse','atexit','base64','bdb','binascii','bisect','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','gettext','glob','heapq','imp','inspect','io','ipaddress','itertools','keyword','linecache','locale','nntplib','numbers','opcode','operator','optparse','os','pdb','pickle','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','re','reprlib','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uuid','warnings','weakref','webbrowser','zipfile']
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
-var js=['_aio','_ajax','_base64','_binascii','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_sre_utils','_string','_strptime','_svg','_sys','_warnings','aes','array','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','json','long_int','marshal','math','md5','modulefinder','pbkdf2','posix','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','zlib']
+var js=['_aio','_ajax','_base64','_binascii','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_sre_utils','_string','_strptime','_svg','_sys','_warnings','_webworker','aes','array','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','json','long_int','marshal','math','md5','modulefinder','pbkdf2','posix','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','zlib']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
 var pkglist=['asyncio','browser','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
 for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}})(__BRYTHON__)
@@ -11437,7 +11445,8 @@ var func=$B.$getattr(arg.__class__,"__str__")
 return func(arg)}
 if(arg.__class__ && arg.__class__===_b_.bytes &&
 encoding !==undefined){
-return _b_.bytes.decode(arg,encoding ||"utf-8",errors ||"strict")}
+var $=$B.args("str",3,{arg:null,encoding:null,errors:null},["arg","encoding","errors"],arguments,{encoding:"utf-8",errors:"strict"},null,null)
+return _b_.bytes.decode(arg,$.encoding,$.errors)}
 var f=$B.$getattr(arg,"__str__",null)
 if(f===null ||
 (arg.__class__ && arg.__class__ !==_b_.object &&
@@ -12836,11 +12845,10 @@ var update=function(mod,data){for(attr in data){mod[attr]=data[attr]}}
 var _window=self;
 var modules={}
 var browser={$package:true,$is_package:true,__initialized__:true,__package__:'browser',__file__:$B.brython_path.replace(/\/*$/g,'')+
-'/Lib/browser/__init__.py',console:$B.JSObject.$factory(self.console),win:$B.win,$$window:$B.win,}
-browser.__path__=browser.__file__
-if(! $B.isa_web_worker ){update(browser,{$$alert:function(message){window.alert($B.builtins.str.$factory(message))},bind:function(){
+'/Lib/browser/__init__.py',bind:function(){
 var $=$B.args("bind",2,{elt:null,evt:null},["elt","evt"],arguments,{},null,null)
-return function(callback){if($.elt.__class__===$B.JSObject){
+return function(callback){if($.elt.__class__ &&
+_b_.issubclass($.elt.__class__,$B.JSObject)){
 $B.$call($B.$getattr($.elt,"bind"))($.evt,callback)
 return callback}else if(_b_.isinstance($.elt,$B.DOMNode)){
 $B.DOMNode.bind($.elt,$.evt,callback)
@@ -12853,7 +12861,13 @@ while(true){try{var elt=_b_.next(it)
 $B.DOMNode.bind(elt,$.evt,callback)}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){break}
 throw err}}}catch(err){if(_b_.isinstance(err,_b_.AttributeError)){$B.DOMNode.bind($.elt,$.evt,callback)}
 throw err}
-return callback}},confirm:$B.JSObject.$factory(window.confirm),$$document:$B.DOMNode.$factory(document),doc:$B.DOMNode.$factory(document),
+return callback}},console:$B.JSObject.$factory(self.console),win:$B.win,$$window:$B.win,}
+browser.__path__=browser.__file__
+if($B.isWebWorker){
+delete browser.$$window
+delete browser.win
+browser.self=$B.win
+$B.$setattr(browser.self,"send",self.postMessage)}else{update(browser,{$$alert:function(message){window.alert($B.builtins.str.$factory(message))},confirm:$B.JSObject.$factory(window.confirm),$$document:$B.DOMNode.$factory(document),doc:$B.DOMNode.$factory(document),
 DOMEvent:$B.DOMEvent,DOMNode:$B.DOMNode.$factory,load:function(script_url){
 var file_obj=$B.builtins.open(script_url)
 var content=$B.builtins.getattr(file_obj,'read')()
@@ -12927,10 +12941,7 @@ obj.tags.$string_dict[tag]=klass
 return klass}
 tags.forEach(function(tag){obj[tag]=maketag(tag)})
 obj.maketag=maketag
-return obj})(__BRYTHON__)}else{
-delete browser.$$window
-delete browser.win
-browser.self=$B.win}
+return obj})(__BRYTHON__)}
 modules['browser']=browser
 modules['javascript']={
 $$this:function(){
@@ -12960,7 +12971,7 @@ for(var attr in module_obj){if(typeof module_obj[attr]=='function'){var name=att
 while(name.charAt(0)=='$'){name=name.substr(1)}
 module_obj[attr].$infos={__name__:name}}}}
 for(var attr in modules){load(attr,modules[attr])}
-if(! $B.isa_web_worker){modules['browser'].html=modules['browser.html']}
+if(! $B.isWebWorker){modules['browser'].html=modules['browser.html']}
 var _b_=$B.builtins
 _b_.__builtins__=$B.module.$factory('__builtins__','Python builtins')
 for(var attr in _b_){_b_.__builtins__[attr]=_b_[attr]

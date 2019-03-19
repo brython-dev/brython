@@ -1737,8 +1737,11 @@ str.$factory = function(arg, encoding, errors){
                 encoding !== undefined){
             // str(bytes, encoding, errors) is equal to
             // bytes.decode(encoding, errors)
-            return _b_.bytes.decode(arg, encoding || "utf-8",
-                errors || "strict")
+            // Arguments may be passed as keywords (cf. issue #1060)
+            var $ = $B.args("str", 3, {arg: null, encoding: null, errors: null},
+                    ["arg", "encoding", "errors"], arguments,
+                    {encoding: "utf-8", errors: "strict"}, null, null)
+            return _b_.bytes.decode(arg, $.encoding, $.errors)
         }
         var f = $B.$getattr(arg, "__str__", null)
         if(f === null ||

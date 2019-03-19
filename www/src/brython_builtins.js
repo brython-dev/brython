@@ -3,7 +3,7 @@ var __BRYTHON__ = __BRYTHON__ || {}  // global object with brython built-ins
 ;(function($B) {
 
 // Detect whether we are in a Web Worker
-var isWebWorker = ('undefined' !== typeof WorkerGlobalScope) &&
+$B.isWebWorker = ('undefined' !== typeof WorkerGlobalScope) &&
                   ("function" === typeof importScripts) &&
                   (navigator instanceof WorkerNavigator)
 var _window = self;
@@ -13,7 +13,7 @@ var $path
 if($B.brython_path === undefined){
     // Get url of this script brython_builtins.js
     var this_url;
-    if(isWebWorker){
+    if($B.isWebWorker){
         this_url = _window.location.href;
         if(this_url.startsWith("blob:")){
             this_url = this_url.substr(5)
@@ -42,6 +42,10 @@ var $script_dir = $B.script_dir = path_elts.join("/")
 
 // Populated in py2js.brython(), used for sys.argv
 $B.__ARGV = []
+
+// For all the scripts defined in the page as webworkers, mapping between
+// script name and its source code
+$B.webworkers = {}
 
 // Mapping between a module name and its path (url)
 $B.$py_module_path = {}
@@ -101,7 +105,7 @@ $B.language = _window.navigator.userLanguage || _window.navigator.language
 
 $B.locale = "C" // can be reset by locale.setlocale
 
-if(isWebWorker){
+if($B.isWebWorker){
     $B.charset = "utf-8"
 }else{
     // document charset ; defaults to "utf-8"
