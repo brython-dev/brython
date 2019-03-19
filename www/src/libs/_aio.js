@@ -234,68 +234,6 @@ function sleep(seconds){
     }
 }
 
-var brython_scripts = ['brython', 'brython_stdlib']
-
-var wclass = $B.make_class("Worker",
-    function(worker){
-        return {
-            __class__: wclass,
-            js: worker
-        }
-    }
-)
-
-wclass.__getattribute__ = $B.JSObject.__getattribute__
-wclass.bind = $B.JSObject.bind
-wclass.send = function(self){
-    var f = $B.JSObject.__getattribute__(self, "postMessage")
-    f.js.apply(null, Array.prototype.slice.call(arguments, 1))
-}
-
-$B.set_func_names(wclass, "browser.aio")
-
-var _Worker = $B.make_class("Worker", function(url, onmessage, onerror){
-    var $ = $B.args("__init__", 3, {url: null, onmessage: null, onerror: null},
-            ['url', 'onmessage', 'onerror'], arguments,
-            {onmessage: _b_.None, onerror: _b_.None}, null, null),
-        url = $.url
-    return new Promise(function(resolve, reject){
-        fetch(url, {cache: 'no-cache'}).then(function(resp){
-            var save_path = $B.brython_path
-            if(resp.status != 200){
-                reject(_b_.FileNotFoundError.$factory(url))
-                return
-            }
-            resp.text().then(function(src){
-                var script_id = "worker" + $B.UUID()
-                try{
-                    var js = __BRYTHON__.imported.javascript.py2js(src, script_id)
-                }catch(err){
-                    return reject(err)
-                }
-                var header = 'var $locals_' + script_id +' = {}\n';
-                brython_scripts.forEach(function(script){
-                    var url = $B.brython_path + script + ".js?" +
-                        (new Date()).getTime()
-                    header += 'importScripts("' + url + '")\n'
-                })
-                // restore brython_path
-                header += '__BRYTHON__.brython_path = "' + $B.brython_path +
-                    '"\n'
-                header += 'brython(1)\n'; // to initialize internal Brython values
-                js = header + js
-                var blob = new Blob([js], {type: "application/js"}),
-                    url = URL.createObjectURL(blob),
-                    w = new Worker(url),
-                    res = wclass.$factory(w)
-                resolve(res)
-            }).catch(function(err){
-                reject(err)
-            })
-        })
-    })
-})
-
 return {
     ajax: ajax,
     event: event,
@@ -304,8 +242,7 @@ return {
     iscoroutinefunction: iscoroutinefunction,
     post: post,
     run: run,
-    sleep: sleep,
-    Worker: _Worker
+    sleep: sleep
 }
 
 })(__BRYTHON__)
