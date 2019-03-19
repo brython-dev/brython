@@ -14,57 +14,70 @@
         __package__: 'browser',
         __file__: $B.brython_path.replace(/\/*$/g,'') +
             '/Lib/browser/__init__.py',
+
+        bind:function(){
+            // bind(element, event) is a decorator for callback function
+            var $ = $B.args("bind", 2, {elt: null, evt: null}, ["elt", "evt"],
+                arguments, {}, null, null)
+            return function(callback){
+                if($.elt.__class__ &&
+                        _b_.issubclass($.elt.__class__, $B.JSObject)){
+                    // eg window, Web Worker
+                    $B.$call($B.$getattr($.elt, "bind"))($.evt, callback)
+                    return callback
+                }else if(_b_.isinstance($.elt, $B.DOMNode)){
+                    // DOM element
+                    $B.DOMNode.bind($.elt, $.evt, callback)
+                    return callback
+                }else if(_b_.isinstance($.elt, _b_.str)){
+                    // string interpreted as a CSS selector
+                    var items = document.querySelectorAll($.elt)
+                    for(var i = 0; i < items.length; i++){
+                        $B.DOMNode.bind($B.DOMNode.$factory(items[i]),
+                            $.evt, callback)
+                    }
+                    return callback
+                }
+                try{
+                    var it = $B.$iter($.elt)
+                    while(true){
+                        try{
+                            var elt = _b_.next(it)
+                            $B.DOMNode.bind(elt, $.evt, callback)
+                        }catch(err){
+                            if(_b_.isinstance(err, _b_.StopIteration)){
+                                break
+                            }
+                            throw err
+                        }
+                    }
+                }catch(err){
+                    if(_b_.isinstance(err, _b_.AttributeError)){
+                        $B.DOMNode.bind($.elt, $.evt, callback)
+                    }
+                    throw err
+                }
+                return callback
+            }
+        },
+
         console: $B.JSObject.$factory(self.console),
         win: $B.win,
         $$window: $B.win,
     }
     browser.__path__ = browser.__file__
 
-    if(! $B.isa_web_worker ){
+    if($B.isWebWorker){
+        // In a web worker, name "window" is not defined, but name "self" is
+        delete browser.$$window
+        delete browser.win
+        browser.self = $B.win
+        $B.$setattr(browser.self, "send", self.postMessage)
+
+    }else{
         update(browser, {
-            $$alert:function(message){window.alert($B.builtins.str.$factory(message))},
-            bind:function(){
-                // bind(element, event) is a decorator for callback function
-                var $ = $B.args("bind", 2, {elt: null, evt: null}, ["elt", "evt"],
-                    arguments, {}, null, null)
-                return function(callback){
-                    if($.elt.__class__ === $B.JSObject){ // eg window
-                        $B.$call($B.$getattr($.elt, "bind"))($.evt, callback)
-                        return callback
-                    }else if(_b_.isinstance($.elt, $B.DOMNode)){
-                        // DOM element
-                        $B.DOMNode.bind($.elt, $.evt, callback)
-                        return callback
-                    }else if(_b_.isinstance($.elt, _b_.str)){
-                        // string interpreted as a CSS selector
-                        var items = document.querySelectorAll($.elt)
-                        for(var i = 0; i < items.length; i++){
-                            $B.DOMNode.bind($B.DOMNode.$factory(items[i]),
-                                $.evt, callback)
-                        }
-                        return callback
-                    }
-                    try{
-                        var it = $B.$iter($.elt)
-                        while(true){
-                            try{
-                                var elt = _b_.next(it)
-                                $B.DOMNode.bind(elt, $.evt, callback)
-                            }catch(err){
-                                if(_b_.isinstance(err, _b_.StopIteration)){
-                                    break
-                                }
-                                throw err
-                            }
-                        }
-                    }catch(err){
-                        if(_b_.isinstance(err, _b_.AttributeError)){
-                            $B.DOMNode.bind($.elt, $.evt, callback)
-                        }
-                        throw err
-                    }
-                    return callback
-                }
+            $$alert:function(message){
+                window.alert($B.builtins.str.$factory(message))
             },
             confirm: $B.JSObject.$factory(window.confirm),
             $$document:$B.DOMNode.$factory(document),
@@ -299,11 +312,6 @@
 
             return obj
         })(__BRYTHON__)
-    }else{
-        // In a web worker, name "window" is not defined, but name "self" is
-        delete browser.$$window
-        delete browser.win
-        browser.self = $B.win
     }
 
     modules['browser'] = browser
@@ -441,7 +449,7 @@
     }
 
     for(var attr in modules){load(attr, modules[attr])}
-    if(! $B.isa_web_worker){modules['browser'].html = modules['browser.html']}
+    if(! $B.isWebWorker){modules['browser'].html = modules['browser.html']}
 
     var _b_ = $B.builtins
 
