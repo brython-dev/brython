@@ -52,7 +52,8 @@ state = "off"
 
 div_style = {"position": "absolute",
              "left": int(width * 0.5),
-             "paddingLeft": "10px",
+             "paddingLeft": "1em",
+             "padding-right": "1em",
              "backgroundColor": "#ccc",
              "borderStyle": "solid",
              "borderColor" : "#888",
@@ -62,6 +63,15 @@ div_style = {"position": "absolute",
             }
 
 def show_source(text):
+    shown = document.select(".show_source")
+    print(shown)
+    if not shown:
+        top = btn.offsetTop + btn.offsetHeight
+    else:
+        top = max(elt.offsetTop + elt.offsetHeight for elt in shown)
+
+    top += int(0.5 * btn.offsetHeight)
+
     div = html.DIV(style=div_style, Class="show_source")
     indent = None
     lines = text.split("\n")
@@ -76,6 +86,7 @@ def show_source(text):
 
     div <= highlight.highlight(text)
     document <= div
+    div.top = top
     div.left = max(int(width / 2),
         width - div.offsetWidth - int(0.02 * width))
 
@@ -108,6 +119,3 @@ href = href[href.rfind("/") + 1:]
 
 document.body.insertBefore(html.DIV(btn, style={"text-align": "right"}),
     document.body.children[0])
-
-
-div_style["top"] = btn.offsetTop + int(1.5 * btn.offsetHeight)
