@@ -26,8 +26,8 @@ clear_timeout = window.clearTimeout
 def set_interval(func,interval):
     return window.setInterval(wrap(func),interval)
 
-def set_timeout(func,interval):
-    return int(window.setTimeout(wrap(func),interval))
+def set_timeout(func,interval,*args):
+    return int(window.setTimeout(wrap(func),interval,*args))
 
 def request_animation_frame(func):
     return int(window.requestAnimationFrame(func))
