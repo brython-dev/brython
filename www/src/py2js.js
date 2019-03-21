@@ -1041,7 +1041,7 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context){
 
         // assignment
         var left = this.tree[0]
-        if(left.type == 'expr'){left = left.tree[0]}
+        while(left.type == 'expr'){left = left.tree[0]}
 
         var right = this.tree[1]
         if(left.type == 'attribute' || left.type == 'sub'){

@@ -84,8 +84,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,1,'final',0]
 __BRYTHON__.__MAGIC__="3.7.1"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-03-19 09:16:06.531926"
-__BRYTHON__.timestamp=1552983366531
+__BRYTHON__.compiled_date="2019-03-21 09:19:09.386861"
+__BRYTHON__.timestamp=1553156349386
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","_webworker","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 ;
 
@@ -543,7 +543,7 @@ if(this.parent.type=='call'){
 return '{$nat:"kw",name:'+this.tree[0].to_js()+
 ',value:'+this.tree[1].to_js()+'}'}
 var left=this.tree[0]
-if(left.type=='expr'){left=left.tree[0]}
+while(left.type=='expr'){left=left.tree[0]}
 var right=this.tree[1]
 if(left.type=='attribute' ||left.type=='sub'){
 var right_js=right.to_js()
