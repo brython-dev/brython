@@ -612,7 +612,9 @@ Random.randint = function(self, a, b){
 }
 
 Random.random = function(self){
-    return self._random()
+    var res = self._random()
+    if(! Number.isInteger(res)){return new Number(res)}
+    return res
 }
 
 Random.randrange = function(){
