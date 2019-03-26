@@ -84,8 +84,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,1,'final',0]
 __BRYTHON__.__MAGIC__="3.7.1"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-03-26 17:51:37.615986"
-__BRYTHON__.timestamp=1553619097615
+__BRYTHON__.compiled_date="2019-03-26 22:28:17.818352"
+__BRYTHON__.timestamp=1553635697818
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","_webworker","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 ;
 
@@ -8461,17 +8461,19 @@ if(js_attr !==undefined){if($test){console.log("jsattr",js_attr)}
 if(typeof js_attr=='function'){
 var res=function(){var args=[]
 for(var i=0,len=arguments.length;i < len;i++){var arg=arguments[i]
-if(arg !==undefined && arg !==null && arg.$nat !==undefined){
-throw TypeError.$factory(
+if(arg !==undefined && arg !==null &&
+arg.$nat !==undefined){var kw=arg.kw
+if(Array.isArray(kw)){kw=$B.extend(js_attr.name,...kw)}
+if(Object.keys(kw).length > 0){
+throw _b_.TypeError.$factory(
 "A Javascript function can't take "+
-"keyword arguments")}else{args.push(pyobj2jsobj(arg))}}
+"keyword arguments")}}else{args.push(pyobj2jsobj(arg))}}
 if(attr==='replace' && self.js===location){location.replace(args[0])
 return}
 var new_this=self.js
 if(self.js_func){
 new_this=self.js_func;}
 if(this !==null && this !==undefined && this !==_window){new_this=this}
-if($test){console.log("call func",js_attr,"with args",args)}
 var result=js_attr.apply(new_this,args)
 return jsobj2pyobj(result)}
 res.__repr__=function(){return '<function '+attr+'>'}

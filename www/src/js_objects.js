@@ -255,17 +255,24 @@ JSObject.__getattribute__ = function(self,attr){
                 var args = []
                 for(var i = 0, len = arguments.length; i < len; i++){
                     var arg = arguments[i]
-                    if(arg !== undefined && arg !== null && arg.$nat !== undefined){
-                        //
-                        // Passing keyword arguments to a Javascript function
-                        // raises a TypeError : since we don't know the
-                        // signature of the function, the result of Brython
-                        // code like foo(y=1, x=2) applied to a JS function
-                        // defined by function foo(x, y) can't be determined.
-                        //
-                        throw TypeError.$factory(
-                            "A Javascript function can't take " +
-                                "keyword arguments")
+                    if(arg !== undefined && arg !== null &&
+                            arg.$nat !== undefined){
+                        var kw = arg.kw
+                        if(Array.isArray(kw)){
+                            kw = $B.extend(js_attr.name, ...kw)
+                        }
+                        if(Object.keys(kw).length > 0){
+                            //
+                            // Passing keyword arguments to a Javascript function
+                            // raises a TypeError : since we don't know the
+                            // signature of the function, the result of Brython
+                            // code like foo(y=1, x=2) applied to a JS function
+                            // defined by function foo(x, y) can't be determined.
+                            //
+                            throw _b_.TypeError.$factory(
+                                "A Javascript function can't take " +
+                                    "keyword arguments")
+                        }
                     }else{
                         args.push(pyobj2jsobj(arg))
                     }
@@ -285,9 +292,7 @@ JSObject.__getattribute__ = function(self,attr){
                 if(this !== null && this !== undefined && this !== _window){
                     new_this = this
                 }
-                if($test){console.log("call func", js_attr, "with args", args)}
                 var result = js_attr.apply(new_this, args)
-
                 return jsobj2pyobj(result)
             }
             res.__repr__ = function(){return '<function ' + attr + '>'}
