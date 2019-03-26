@@ -2375,6 +2375,20 @@ for x.foo in y:
 
 assert t == y
 
+# issue 1062
+try:
+    eval("x[]")
+    raise Exception("should have raised SyntaxError")
+except SyntaxError:
+    pass
+
+try:
+    eval("x{}")
+    raise Exception("should have raised SyntaxError")
+except SyntaxError:
+    pass
+
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

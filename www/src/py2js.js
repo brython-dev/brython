@@ -7358,12 +7358,12 @@ var $transition = $B.parser.$transition = function(context, token, value){
               case 'lamdba':
               case 'pass':
               case 'str':
+              case '{':
                   $_SyntaxError(context, 'token ' + token + ' after ' +
                       context)
                   break
               case '[':
               case '(':
-              case '{':
               case '.':
               case 'not':
                   if(context.expect == 'expr'){
@@ -8452,13 +8452,15 @@ var $transition = $B.parser.$transition = function(context, token, value){
                     var expr = new $AbstractExprCtx(context,false)
                     return $transition(expr, token, value)
                 case ']':
-                    return context.parent
+                    if(context.tree[0].tree.length > 0){
+                        return context.parent
+                    }
+                    break
                 case ':':
                     return new $AbstractExprCtx(new $SliceCtx(context), false)
                 case ',':
                     return new $AbstractExprCtx(context, false)
             }
-            console.log('syntax error', context, token)
             $_SyntaxError(context, 'token ' + token + ' after ' + context)
         case 'target_list':
             switch(token) {
