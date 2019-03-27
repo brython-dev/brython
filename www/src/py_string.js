@@ -836,6 +836,8 @@ str.__repr__ = function(self){
               replace(new RegExp("\n", "g"), "\\n").
               replace(new RegExp("\r", "g"), "\\r").
               replace(new RegExp("\t", "g"), "\\t")
+
+    res = res.replace(combining_re, "\u200B$1")
     if(res.search('"') == -1 && res.search("'") == -1){
         return "'" + res + "'"
     }else if(self.search('"') == -1){
@@ -850,9 +852,14 @@ str.__setitem__ = function(self, attr, value){
     throw _b_.TypeError.$factory(
         "'str' object does not support item assignment")
 }
+var combining = []
+for(var cp = 0x300; cp <= 0x36F; cp++){
+    combining.push(String.fromCharCode(cp))
+}
+var combining_re = new RegExp("(" + combining.join("|") + ")")
 
 str.__str__ = function(self){
-    return self
+    return self.replace(combining_re, "\u200B$1")
 }
 str.toString = function(){return "string!"}
 
@@ -1718,7 +1725,7 @@ str.$factory = function(arg, encoding, errors){
     if(arg === undefined){console.log("undef"); return "<undefined>"}
     switch(typeof arg) {
         case "string":
-            return arg
+            return str.__str__(arg)
         case "number":
             if(isFinite(arg)){return arg.toString()}
     }
