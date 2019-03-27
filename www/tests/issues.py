@@ -2361,6 +2361,34 @@ B.__new__.__defaults__ = (8,)
 b2 = B()
 assert b2.show() == 8
 
+# issue 1063
+class A(object):
+  pass
+
+y = [1, 2, 3]
+x = A()
+
+t = []
+
+for x.foo in y:
+    t.append(x.foo)
+
+assert t == y
+
+# issue 1062
+try:
+    eval("x[]")
+    raise Exception("should have raised SyntaxError")
+except SyntaxError:
+    pass
+
+try:
+    eval("x{}")
+    raise Exception("should have raised SyntaxError")
+except SyntaxError:
+    pass
+
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

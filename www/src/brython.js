@@ -84,9 +84,9 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,1,'final',0]
 __BRYTHON__.__MAGIC__="3.7.1"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-03-19 09:16:06.531926"
-__BRYTHON__.timestamp=1552983366531
-__BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","_webworker","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
+__BRYTHON__.compiled_date="2019-03-27 21:42:45.582597"
+__BRYTHON__.timestamp=1553719365582
+__BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","_webworker","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","unicodedata","zlib"]
 ;
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -543,7 +543,7 @@ if(this.parent.type=='call'){
 return '{$nat:"kw",name:'+this.tree[0].to_js()+
 ',value:'+this.tree[1].to_js()+'}'}
 var left=this.tree[0]
-if(left.type=='expr'){left=left.tree[0]}
+while(left.type=='expr'){left=left.tree[0]}
 var right=this.tree[1]
 if(left.type=='attribute' ||left.type=='sub'){
 var right_js=right.to_js()
@@ -3595,12 +3595,12 @@ case 'int':
 case 'lamdba':
 case 'pass':
 case 'str':
+case '{':
 $_SyntaxError(C,'token '+token+' after '+
 C)
 break
 case '[':
 case '(':
-case '{':
 case '.':
 case 'not':
 if(C.expect=='expr'){C.expect=','
@@ -4275,12 +4275,12 @@ case 'lamdba':
 var expr=new $AbstractExprCtx(C,false)
 return $transition(expr,token,value)
 case ']':
-return C.parent
+if(C.tree[0].tree.length > 0){return C.parent}
+break
 case ':':
 return new $AbstractExprCtx(new $SliceCtx(C),false)
 case ',':
 return new $AbstractExprCtx(C,false)}
-console.log('syntax error',C,token)
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'target_list':
 switch(token){case 'id':
@@ -4481,7 +4481,7 @@ xhr.onreadystatechange=function(){if(this.readyState==4){if(this.status==200){$B
 "load unicode.txt")}}}
 xhr.send()}
 if($B.unicodedb !==undefined){var re=new RegExp("^([0-9A-F]+);"+
-description+"$","m")
+description+";.*$","m")
 search=re.exec($B.unicodedb)
 if(search===null){$_SyntaxError(C,"(unicode error) "+
 "unknown Unicode character name",pos)}
@@ -6163,7 +6163,7 @@ res=$B.$call($B.$getattr(x,op))(y)
 if(res !==_b_.NotImplemented){return res}
 if(compared){return false}
 rev_op=reversed_op[op]||op
-res=$B.$getattr(y,rev_op)(x)
+res=$B.$call($B.$getattr(y,rev_op))(x)
 if(res !==_b_.NotImplemented ){return res}
 if(op=="__eq__"){return _b_.False}
 else if(op=="__ne__"){return _b_.True}
@@ -8461,17 +8461,19 @@ if(js_attr !==undefined){if($test){console.log("jsattr",js_attr)}
 if(typeof js_attr=='function'){
 var res=function(){var args=[]
 for(var i=0,len=arguments.length;i < len;i++){var arg=arguments[i]
-if(arg !==undefined && arg !==null && arg.$nat !==undefined){
-throw TypeError.$factory(
+if(arg !==undefined && arg !==null &&
+arg.$nat !==undefined){var kw=arg.kw
+if(Array.isArray(kw)){kw=$B.extend(js_attr.name,...kw)}
+if(Object.keys(kw).length > 0){
+throw _b_.TypeError.$factory(
 "A Javascript function can't take "+
-"keyword arguments")}else{args.push(pyobj2jsobj(arg))}}
+"keyword arguments")}}else{args.push(pyobj2jsobj(arg))}}
 if(attr==='replace' && self.js===location){location.replace(args[0])
 return}
 var new_this=self.js
 if(self.js_func){
 new_this=self.js_func;}
 if(this !==null && this !==undefined && this !==_window){new_this=this}
-if($test){console.log("call func",js_attr,"with args",args)}
 var result=js_attr.apply(new_this,args)
 return jsobj2pyobj(result)}
 res.__repr__=function(){return '<function '+attr+'>'}
@@ -8563,7 +8565,7 @@ $B.JSConstructor=JSConstructor})(__BRYTHON__)
 ;(function($B){$B.stdlib={}
 var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_collections_abc','_compat_pickle','_contextvars','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_py_abc','_pydecimal','_queue','_random','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_weakref','_weakrefset','abc','antigravity','argparse','atexit','base64','bdb','binascii','bisect','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','gettext','glob','heapq','imp','inspect','io','ipaddress','itertools','keyword','linecache','locale','nntplib','numbers','opcode','operator','optparse','os','pdb','pickle','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','re','reprlib','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uuid','warnings','weakref','webbrowser','zipfile']
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
-var js=['_aio','_ajax','_base64','_binascii','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_sre_utils','_string','_strptime','_svg','_sys','_warnings','_webworker','aes','array','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','json','long_int','marshal','math','md5','modulefinder','pbkdf2','posix','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','zlib']
+var js=['_aio','_ajax','_base64','_binascii','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_sre_utils','_string','_strptime','_svg','_sys','_warnings','_webworker','aes','array','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','json','long_int','marshal','math','md5','modulefinder','pbkdf2','posix','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata','zlib']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
 var pkglist=['asyncio','browser','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
 for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}})(__BRYTHON__)
@@ -9595,8 +9597,7 @@ if(base==0){if(_pre=="0B"){base=2}
 if(_pre=="0O"){base=8}
 if(_pre=="0X"){base=16}}else if(_pre=="0X" && base !=16){invalid(_value,base)}
 else if(_pre=="0O" && base !=8){invalid(_value,base)}
-else if(_pre=="0B" && base !=2){invalid(_value,base)}
-if(_pre=="0B" ||_pre=="0O" ||_pre=="0X"){_value=_value.substr(2)
+if((_pre=="0B" && base==2)||_pre=="0O" ||_pre=="0X"){_value=_value.substr(2)
 while(_value.startsWith("_")){_value=_value.substr(1)}}}else if(base==0){
 base=10}
 var _digits=$valid_digits(base),_re=new RegExp("^[+-]?["+_digits+"]"+
@@ -11093,13 +11094,17 @@ replace(new RegExp("\f","g"),"\\x0c").
 replace(new RegExp("\n","g"),"\\n").
 replace(new RegExp("\r","g"),"\\r").
 replace(new RegExp("\t","g"),"\\t")
+res=res.replace(combining_re,"\u200B$1")
 if(res.search('"')==-1 && res.search("'")==-1){return "'"+res+"'"}else if(self.search('"')==-1){return '"'+res+'"'}
 var qesc=new RegExp("'","g")
 res="'"+res.replace(qesc,"\\'")+"'"
 return res}
 str.__setitem__=function(self,attr,value){throw _b_.TypeError.$factory(
 "'str' object does not support item assignment")}
-str.__str__=function(self){return self}
+var combining=[]
+for(var cp=0x300;cp <=0x36F;cp++){combining.push(String.fromCharCode(cp))}
+var combining_re=new RegExp("("+combining.join("|")+")")
+str.__str__=function(self){return self.replace(combining_re,"\u200B$1")}
 str.toString=function(){return "string!"}
 var $comp_func=function(self,other){if(typeof other !=="string"){return _b_.NotImplemented}
 return self > other}
@@ -11437,7 +11442,7 @@ default:
 return "0".repeat(width-self.length)+self}}
 str.$factory=function(arg,encoding,errors){if(arg===undefined){console.log("undef");return "<undefined>"}
 switch(typeof arg){case "string":
-return arg
+return str.__str__(arg)
 case "number":
 if(isFinite(arg)){return arg.toString()}}
 try{if(arg.$is_class ||arg.$factory){

@@ -1,6 +1,6 @@
 import sys
 import time
-import traceback
+import tb as traceback
 import javascript
 
 from browser import document as doc, window, alert

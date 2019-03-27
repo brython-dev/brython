@@ -1,5 +1,5 @@
-from browser import window
-from browser import console
+from browser import console, window
+
 def wrap(func):
     # Transforms a function f into another function that prints a
     # traceback in case of exception
@@ -16,18 +16,19 @@ def wrap(func):
                 import sys
                 sys.stderr.write(msg)
             except Exception as exc2:
-                console.log("Error printing exception traceback", exc2, func, args, kw)
+                console.log("Error printing exception traceback", exc2, func, 
+                    args, kw)
     return f
 
 clear_interval = window.clearInterval
-    
+
 clear_timeout = window.clearTimeout
 
-def set_interval(func,interval):
-    return window.setInterval(wrap(func),interval)
+def set_interval(func, interval):
+    return window.setInterval(wrap(func), interval)
 
-def set_timeout(func,interval,*args):
-    return int(window.setTimeout(wrap(func),interval,*args))
+def set_timeout(func, interval, *args):
+    return int(window.setTimeout(wrap(func), interval, *args))
 
 def request_animation_frame(func):
     return int(window.requestAnimationFrame(func))

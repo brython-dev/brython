@@ -1041,7 +1041,7 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context){
 
         // assignment
         var left = this.tree[0]
-        if(left.type == 'expr'){left = left.tree[0]}
+        while(left.type == 'expr'){left = left.tree[0]}
 
         var right = this.tree[1]
         if(left.type == 'attribute' || left.type == 'sub'){
@@ -7358,12 +7358,12 @@ var $transition = $B.parser.$transition = function(context, token, value){
               case 'lamdba':
               case 'pass':
               case 'str':
+              case '{':
                   $_SyntaxError(context, 'token ' + token + ' after ' +
                       context)
                   break
               case '[':
               case '(':
-              case '{':
               case '.':
               case 'not':
                   if(context.expect == 'expr'){
@@ -8452,13 +8452,15 @@ var $transition = $B.parser.$transition = function(context, token, value){
                     var expr = new $AbstractExprCtx(context,false)
                     return $transition(expr, token, value)
                 case ']':
-                    return context.parent
+                    if(context.tree[0].tree.length > 0){
+                        return context.parent
+                    }
+                    break
                 case ':':
                     return new $AbstractExprCtx(new $SliceCtx(context), false)
                 case ',':
                     return new $AbstractExprCtx(context, false)
             }
-            console.log('syntax error', context, token)
             $_SyntaxError(context, 'token ' + token + ' after ' + context)
         case 'target_list':
             switch(token) {
@@ -8845,7 +8847,7 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
                             }
                             if($B.unicodedb !== undefined){
                                 var re = new RegExp("^([0-9A-F]+);" +
-                                    description + "$", "m")
+                                    description + ";.*$", "m")
                                 search = re.exec($B.unicodedb)
                                 if(search === null){
                                     $_SyntaxError(context,"(unicode error) " +
