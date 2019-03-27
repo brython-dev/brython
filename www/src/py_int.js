@@ -697,9 +697,7 @@ int.$factory = function(value, base){
                 if(_pre == "0X"){base = 16}
             }else if(_pre == "0X" && base != 16){invalid(_value, base)}
             else if(_pre == "0O" && base != 8){invalid(_value, base)}
-            else if(_pre == "0B" && base != 2){invalid(_value, base)
-            }
-            if(_pre == "0B" || _pre == "0O" || _pre == "0X"){
+            if((_pre == "0B" && base == 2) || _pre == "0O" || _pre == "0X"){
                 _value = _value.substr(2)
                 while(_value.startsWith("_")){
                     _value = _value.substr(1)
