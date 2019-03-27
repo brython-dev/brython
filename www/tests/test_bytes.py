@@ -165,4 +165,11 @@ b'1 22 333 4444 55555'.count(32) == 4
 # issue 972
 assert b'a' in b'a'
 
+# issue 1070
+try:
+    b"\xff".decode('utf-8')
+    raise Exception("should have raised UnicodeDecodeError")
+except UnicodeDecodeError:
+    pass
+
 print('passed all tests...')

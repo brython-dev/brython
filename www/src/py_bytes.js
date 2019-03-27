@@ -1155,7 +1155,12 @@ var decode = $B.decode = function(b, encoding, errors){
           b.forEach(function(item){
               s += String.fromCharCode(item)
           })
-          s = decodeURIComponent(escape(s))
+          try{
+              s = decodeURIComponent(escape(s))
+          }catch(err){
+              throw _b_.UnicodeDecodeError.$factory(
+                  "'utf-8' codec can't decode bytes")
+          }
           break
       case "latin_1":
       case "windows1252":
