@@ -1495,7 +1495,7 @@ $B.rich_comp = function(op, x, y){
     if(res !== _b_.NotImplemented){return res}
     if(compared){return false}
     rev_op = reversed_op[op] || op
-    res = $B.$getattr(y, rev_op)(x)
+    res = $B.$call($B.$getattr(y, rev_op))(x)
     if(res !== _b_.NotImplemented ){return res}
     // If both operands return NotImplemented, return False if the operand is
     // __eq__, True if it is __ne__, raise TypeError otherwise
