@@ -8847,7 +8847,7 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
                             }
                             if($B.unicodedb !== undefined){
                                 var re = new RegExp("^([0-9A-F]+);" +
-                                    description + "$", "m")
+                                    description + ";.*$", "m")
                                 search = re.exec($B.unicodedb)
                                 if(search === null){
                                     $_SyntaxError(context,"(unicode error) " +
