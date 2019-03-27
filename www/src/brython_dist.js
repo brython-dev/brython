@@ -84,8 +84,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,1,'final',0]
 __BRYTHON__.__MAGIC__="3.7.1"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-03-27 18:59:16.469943"
-__BRYTHON__.timestamp=1553709556469
+__BRYTHON__.compiled_date="2019-03-27 19:22:46.787481"
+__BRYTHON__.timestamp=1553710966787
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","_webworker","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","unicodedata","zlib"]
 ;
 
@@ -11086,8 +11086,7 @@ var $res=""
 for(var i=0;i< $.other;i++){$res+=$.self.valueOf()}
 return $res}
 str.__ne__=function(self,other){return other !==self.valueOf()}
-str.__repr__=function(self){console.log("string repr",self)
-var res=self
+str.__repr__=function(self){var res=self
 res=self.replace(/\\/g,"\\\\")
 res=res.replace(new RegExp("\u0007","g"),"\\x07").
 replace(new RegExp("\b","g"),"\\x08").
