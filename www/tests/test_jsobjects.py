@@ -67,3 +67,7 @@ try:
     raise Exception("should have raised TypeError")
 except TypeError:
     pass
+
+x = window.initJSWithEq()
+assert 'x' == x
+assert x == 'x'
