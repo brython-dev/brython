@@ -305,7 +305,7 @@ bytes.__new__ = function(cls, source, encoding, errors){
             if(encoding === undefined){
                 throw _b_.TypeError.$factory("string argument without an encoding")
             }
-            int_list = encode(source, encoding)
+            int_list = encode(source, encoding,errors)
         }else{
             // tranform iterable "source" into a list
             int_list = _b_.list.$factory(source)
@@ -1151,17 +1151,66 @@ var decode = $B.decode = function(b, encoding, errors){
       case "utf8":
       case "U8":
       case "UTF":
-          var s = ""
-          b.forEach(function(item){
-              s += String.fromCharCode(item)
-          })
-          try{
-              s = decodeURIComponent(escape(s))
-          }catch(err){
-              throw _b_.UnicodeDecodeError.$factory(
-                  "'utf-8' codec can't decode bytes")
-          }
-          break
+        var i = 0,
+            cp,
+            _int_800 = _int("800"),
+            _int_c2 = _int("c2"),
+            _int_1000 = _int("1000"),
+            _int_e0 = _int("e0"),
+            _int_e1 = _int("e1"),
+            _int_e3 = _int("e3"),
+            _int_a0 = _int("a0"),
+            _int_80 = _int("80"),
+            _int_2000 = _int("2000")
+
+        while(i < b.length){
+            if(b[i] <= 127){
+                s += String.fromCharCode(b[i])
+                i += 1
+            }else if(b[i] < _int_e0){
+                if(i < b.length - 1){
+                    cp = b[i + 1] + 64 * (b[i] - _int_c2)
+                    s += String.fromCharCode(cp)
+                    i += 2
+                }else{
+                    $UnicodeDecodeError(encoding, i)
+                }
+            }else if(b[i] == _int_e0){
+                if(i < b.length - 2){
+                    var zone = b[i + 1] - _int_a0
+                    cp = b[i + 2] - _int_80 + _int_800 + 64 * zone
+                    s += String.fromCharCode(cp)
+                    i += 3
+                }else{
+                    $UnicodeDecodeError(encoding, i)
+                }
+            }else if(b[i] < _int_e3){
+                if(i < b.length - 2){
+                    var zone = b[i + 1] - _int_80
+                    cp = b[i + 2] - _int_80 + _int_1000 + 64 * zone
+                    s += String.fromCharCode(cp)
+                    i += 3
+                }else{
+                    $UnicodeDecodeError(encoding, i)
+                }
+            }else{
+                if(i < b.length - 2){
+                    var zone1 = b[i] - _int_e1 - 1
+                    var zone = b[i + 1] - _int_80 + 64 * zone1
+                    cp = b[i + 2] - _int_80 + _int_2000 + 64 * zone
+                    s += String.fromCharCode(cp)
+                    i += 3
+                }else{
+                    if(errors == "surrogateescape"){
+                       s += "\\udc" + _hex(b[i])
+                       i += 1
+                    }else{
+                       $UnicodeDecodeError(encoding, i)
+                    }
+                }
+            }
+        }
+        break
       case "latin_1":
       case "windows1252":
       case "iso-8859-1":
@@ -1225,22 +1274,55 @@ var decode = $B.decode = function(b, encoding, errors){
     return s
 }
 
-var encode = $B.encode = function(s, encoding){
-    var $ = $B.args("encode", 2, {s:null, encoding:null}, ["s", "encoding"],
-        arguments, {}, null, null),
-        s = $.s,
-        encoding = $.encoding
+var encode = $B.encode = function(s, encoding,errors){
+ //   var $ = $B.args("encode", 3, {s:null, encoding:null}, ["s", "encoding"],
+   //     arguments, {}, null, null),
     var t = [],
         pos = 0,
         enc = normalise(encoding)
-
+        console.log("here "+errors)
     switch(enc) {
         case "utf-8":
         case "utf_8":
         case "utf8":
-            var s1 = unescape(encodeURIComponent(s))
-            for(var i = 0, len = s1.length; i < len; i++){
-                t.push(s1.charCodeAt(i))
+            //optimize by creating constants..
+            var _int_800 = _int("800"),
+                _int_c2 = _int("c2"),
+                _int_1000 = _int("1000"),
+                _int_e0 = _int("e0"),
+                _int_e1 = _int("e1"),
+                _int_a0 = _int("a0"),
+                _int_80 = _int("80"),
+                _int_2000 = _int("2000"),
+                _int_D000 = _int("D000")
+
+            for(var i = 0, len = s.length; i < len; i++){
+                var cp = s.charCodeAt(i) // code point
+                if(cp <= 127){
+                    t[pos++] = cp
+                }else if(cp < _int_800){
+                    var zone = Math.floor((cp - 128) / 64)
+                    t[pos++] = _int_c2 + zone
+                    t[pos++] = cp - 64 * zone
+                }else if(cp < _int_1000){
+                    var zone = Math.floor((cp - _int_800) / 64)
+                    t[pos++] = _int_e0
+                    t[pos++] = _int_a0 + zone
+                    t[pos++] = _int_80 + cp - _int_800 - 64 * zone
+                }else if(cp < _int_2000){
+                    var zone = Math.floor((cp - _int_1000) / 64)
+                    t[pos++] = _int_e1 + Math.floor((cp - _int_1000) /
+                        _int_1000)
+                    t[pos++] = _int_80 + zone
+                    t[pos++] = _int_80 + cp - _int_1000 - 64 * zone
+                }else if(cp < _int_D000){
+                    var zone = Math.floor((cp - _int_2000) / 64)
+                    var zone1 = Math.floor((cp - _int_2000) / _int_1000)
+                    t[pos++] = _int_e1 + Math.floor((cp - _int_1000) /
+                        _int_1000)
+                    t[pos++] = _int_80 + zone - zone1 * 64
+                    t[pos++] = _int_80 + cp - _int_2000 - 64 * zone
+                }
             }
             break
         case "latin1":
@@ -1249,13 +1331,17 @@ var encode = $B.encode = function(s, encoding){
             for(var i = 0, len = s.length; i < len; i++){
                 var cp = s.charCodeAt(i) // code point
                 if(cp <= 255){t[pos++] = cp}
-                else{$UnicodeEncodeError(encoding, i)}
+                if(errors==="ignore"){return t;}
+                else{$UnicodeEncodeError(encoding, i)} //prevent the user from seeing the error if ignore is set
             }
             break
         case "ascii":
           for(var i = 0, len = s.length; i < len; i++){
               var cp = s.charCodeAt(i) // code point
               if(cp <= 127){t[pos++] = cp}
+              if(errors==="ignore"){
+                  return t; 
+              }
               else{$UnicodeEncodeError(encoding, i)}
           }
           break
@@ -1283,7 +1369,7 @@ var encode = $B.encode = function(s, encoding){
 
             for(var i = 0, len = s.length; i < len; i++){
                 var cp = s.charCodeAt(i) // code point
-                if(from_unicode[enc][cp] === undefined){
+                if(from_unicode[enc][cp] === undefined && errors!=="ignore"){
                     $UnicodeEncodeError(encoding, cp, i)
                 }
                 t[pos++] = from_unicode[enc][cp]
@@ -1295,6 +1381,7 @@ var encode = $B.encode = function(s, encoding){
 
 
 bytes.$factory = function (source, encoding, errors) {
+    console.log(errors);
     return bytes.__new__(bytes, source, encoding, errors)
 }
 
