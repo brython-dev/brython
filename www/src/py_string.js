@@ -836,8 +836,6 @@ str.__repr__ = function(self){
               replace(new RegExp("\n", "g"), "\\n").
               replace(new RegExp("\r", "g"), "\\r").
               replace(new RegExp("\t", "g"), "\\t")
-
-    res = res.replace(combining_re, "\u200B$1")
     if(res.search('"') == -1 && res.search("'") == -1){
         return "'" + res + "'"
     }else if(self.search('"') == -1){
@@ -852,14 +850,9 @@ str.__setitem__ = function(self, attr, value){
     throw _b_.TypeError.$factory(
         "'str' object does not support item assignment")
 }
-var combining = []
-for(var cp = 0x300; cp <= 0x36F; cp++){
-    combining.push(String.fromCharCode(cp))
-}
-var combining_re = new RegExp("(" + combining.join("|") + ")")
 
 str.__str__ = function(self){
-    return self.replace(combining_re, "\u200B$1")
+    return self
 }
 str.toString = function(){return "string!"}
 
@@ -954,7 +947,7 @@ str.count = function(){
     return n
 }
 
-str.encode = function(self, encoding) {
+str.encode = function(self, encoding,errors="") {
     if(encoding === undefined){encoding = "utf-8"}
     if(encoding == "rot13" || encoding == "rot_13"){
         // Special case : returns a string
@@ -970,7 +963,10 @@ str.encode = function(self, encoding) {
         }
         return res
     }
-    return _b_.bytes.$factory(self, encoding)
+    console.log(errors);
+    const a= _b_.bytes.$factory(self, encoding,errors);
+    console.log("errors is "+a.errors);   
+    return _b_.bytes.$factory(self, encoding,errors);
 }
 
 str.endswith = function(){
@@ -1725,7 +1721,7 @@ str.$factory = function(arg, encoding, errors){
     if(arg === undefined){console.log("undef"); return "<undefined>"}
     switch(typeof arg) {
         case "string":
-            return str.__str__(arg)
+            return arg
         case "number":
             if(isFinite(arg)){return arg.toString()}
     }
@@ -1744,11 +1740,8 @@ str.$factory = function(arg, encoding, errors){
                 encoding !== undefined){
             // str(bytes, encoding, errors) is equal to
             // bytes.decode(encoding, errors)
-            // Arguments may be passed as keywords (cf. issue #1060)
-            var $ = $B.args("str", 3, {arg: null, encoding: null, errors: null},
-                    ["arg", "encoding", "errors"], arguments,
-                    {encoding: "utf-8", errors: "strict"}, null, null)
-            return _b_.bytes.decode(arg, $.encoding, $.errors)
+            return _b_.bytes.decode(arg, encoding || "utf-8",
+                errors || "strict")
         }
         var f = $B.$getattr(arg, "__str__", null)
         if(f === null ||
