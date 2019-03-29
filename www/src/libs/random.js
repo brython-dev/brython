@@ -608,6 +608,9 @@ Random.randint = function(self, a, b){
         {self: null, a:null, b:null},
         ['self', 'a', 'b'],
         arguments, {}, null, null)
+    if(! _b_.isinstance($.b, _b_.int)){
+        throw _b_.ValueError.$factory("non-integer arg 1 for randrange()")
+    }
     return Random.randrange($.self, $.a, $.b + 1)
 }
 
@@ -625,7 +628,12 @@ Random.randrange = function(){
         self = $.self,
         _random = self._random
         //console.log("randrange", $)
-
+    for(var i = 1, len = arguments.length; i < len; i++){
+        if(! _b_.isinstance(arguments[i], _b_.int)){
+            throw _b_.ValueError.$factory("non-integer arg " + i +
+                " for randrange()")
+        }
+    }
     if($.stop === null){
         var start = 0, stop = $.x, step = 1
     }else{
@@ -638,7 +646,7 @@ Random.randrange = function(){
             start + ", " + stop + ", " + step + ")")
     }
     if(typeof start == 'number' && typeof stop == 'number' &&
-        typeof step == 'number'){
+            typeof step == 'number'){
         return start + step * Math.floor(_random() *
             Math.ceil((stop - start) / step))
     }else{

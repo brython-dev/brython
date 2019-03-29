@@ -84,8 +84,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,1,'final',0]
 __BRYTHON__.__MAGIC__="3.7.1"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-03-27 22:15:11.410148"
-__BRYTHON__.timestamp=1553721311410
+__BRYTHON__.compiled_date="2019-03-29 09:05:58.662190"
+__BRYTHON__.timestamp=1553846758662
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","_webworker","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","unicodedata","zlib"]
 ;
 
@@ -8373,6 +8373,27 @@ _b_.frozenset=frozenset})(__BRYTHON__)
 eval(bltns)
 var object=_b_.object
 var _window=self;
+$B.pyobj2structuredclone=function(obj){
+if(typeof obj=="boolean" ||typeof obj=="number" ||
+typeof obj=="string"){return obj}else if(obj instanceof Number){return obj.valueOf()}else if(Array.isArray(obj)||obj.__class__===_b_.list ||
+obj.__class__===_b_.tuple){var res=[]
+for(var i=0,len=obj.length;i < len;i++){res.push($B.pyobj2structuredclone(obj[i]))}
+return res}else if(obj.__class__===_b_.dict){if(Object.keys(obj.$numeric_dict).length > 0 ||
+Object.keys(obj.$object_dict).length > 0){throw _b_.TypeError.$factory("a dictionary with non-string "+
+"keys cannot be sent to or from a Web Worker")}
+var res={}
+for(var key in obj.$string_dict){res[key]=$B.pyobj2structuredclone(obj.$string_dict[key])}
+return res}else{console.log(obj,obj.__class__)
+return obj}}
+$B.structuredclone2pyobj=function(obj){if(typeof obj=="boolean" ||typeof obj=="number" ||
+typeof obj=="string"){return obj}else if(obj instanceof Number){return obj.valueOf()}else if(Array.isArray(obj)||obj.__class__===_b_.list ||
+obj.__class__===_b_.tuple){var res=_b_.list.$factory()
+for(var i=0,len=obj.length;i < len;i++){res.push($B.structuredclone2pyobj(obj[i]))}
+return res}else if(typeof obj=="object"){var res=_b_.dict.$factory()
+for(var key in obj){res.$string_dict[key]=$B.structuredclone2pyobj(obj[key])}
+return res}else{console.log(obj,Array.isArray(obj),obj.__class__,_b_.list,obj.__class__===_b_.list)
+throw _b_.TypeError.$factory(_b_.str.$factory(obj)+
+" does not support the structured clone algorithm")}}
 var JSConstructor={__class__:_b_.type,__mro__:[object],$infos:{__module__:"<javascript>",__name__:'JSConstructor'},$is_class:true}
 JSConstructor.__call__=function(self){
 return function(){var args=[null]
@@ -8456,6 +8477,7 @@ if(self.__class__===JSObject && attr=="bind" &&
 self.js[attr]===undefined &&
 self.js['addEventListener']!==undefined){
 attr='addEventListener'}
+if(attr=="data" && self.js instanceof MessageEvent){return $B.structuredclone2pyobj(self.js.data)}
 var js_attr=self.js[attr]
 if(self.js_func && self.js_func[attr]!==undefined){js_attr=self.js_func[attr]}
 if(js_attr !==undefined){if($test){console.log("jsattr",js_attr)}
@@ -8536,7 +8558,8 @@ attr=attr.substr(2)}
 if(isinstance(value,JSObject)){self.js[attr]=value.js}
 else{self.js[attr]=value
 if(typeof value=='function'){self.js[attr]=function(){var args=[]
-for(var i=0,len=arguments.length;i < len;i++){args.push($B.$JS2Py(arguments[i]))}
+for(var i=0,len=arguments.length;i < len;i++){console.log(i,arguments[i])
+args.push($B.$JS2Py(arguments[i]))}
 try{return value.apply(null,args)}
 catch(err){err=$B.exception(err)
 var info=_b_.getattr(err,'info')
@@ -12855,8 +12878,10 @@ var browser={$package:true,$is_package:true,__initialized__:true,__package__:'br
 var $=$B.args("bind",2,{elt:null,evt:null},["elt","evt"],arguments,{},null,null)
 return function(callback){if($.elt.__class__ &&
 _b_.issubclass($.elt.__class__,$B.JSObject)){
-$B.$call($B.$getattr($.elt,"bind"))($.evt,callback)
-return callback}else if(_b_.isinstance($.elt,$B.DOMNode)){
+if($.elt.js===_window){function f(ev){return callback($B.JSObject.$factory(ev))}
+$.elt.js["on"+$.evt]=f
+return f}else{$B.$call($B.$getattr($.elt,"bind"))($.evt,callback)
+return callback}}else if(_b_.isinstance($.elt,$B.DOMNode)){
 $B.DOMNode.bind($.elt,$.evt,callback)
 return callback}else if(_b_.isinstance($.elt,_b_.str)){
 var items=document.querySelectorAll($.elt)
@@ -12873,7 +12898,7 @@ if($B.isWebWorker){
 delete browser.$$window
 delete browser.win
 browser.self=$B.win
-$B.$setattr(browser.self,"send",self.postMessage)}else{update(browser,{$$alert:function(message){window.alert($B.builtins.str.$factory(message))},confirm:$B.JSObject.$factory(window.confirm),$$document:$B.DOMNode.$factory(document),doc:$B.DOMNode.$factory(document),
+browser.self.js.send=self.postMessage}else{update(browser,{$$alert:function(message){window.alert($B.builtins.str.$factory(message))},confirm:$B.JSObject.$factory(window.confirm),$$document:$B.DOMNode.$factory(document),doc:$B.DOMNode.$factory(document),
 DOMEvent:$B.DOMEvent,DOMNode:$B.DOMNode.$factory,load:function(script_url){
 var file_obj=$B.builtins.open(script_url)
 var content=$B.builtins.getattr(file_obj,'read')()
