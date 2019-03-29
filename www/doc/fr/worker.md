@@ -1,5 +1,5 @@
 module **browser.worker**
-------------------------- 
+-------------------------
 
 Le module **worker** permet de faire fonctionner les
 [WebWorkers](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API)
@@ -139,3 +139,53 @@ def callback(evt):
 
 La galerie fournit un [exemple de mise en oeuvre](/gallery/webworker_mdn.html)
 d'un Web Worker en Brython.
+
+Code du script principal:
+
+```python
+"""Main script."""
+
+from browser import bind, document, worker
+
+result = document.select_one('.result')
+inputs = document.select("input")
+
+
+# Create a web worker, identified by a script id in this page.
+myWorker = worker.Worker("worker")
+
+@bind(inputs, "change")
+def change(evt):
+    """Called when the value in one of the input fields changes."""
+    # Send a message (here a list of values) to the worker
+    myWorker.send([x.value for x in inputs])
+
+@bind(myWorker, "message")
+def onmessage(e):
+    """Handles the messages sent by the worker."""
+    result.text = e.data
+```
+
+Code du travailleur:
+
+```python
+"""Web Worker script."""
+
+# In web workers, "window" is replaced by "self".
+from browser import bind, self
+
+@bind(self, "message")
+def message(evt):
+    """Handle a message sent by the main script.
+    evt.data is the message body.
+    """
+    try:
+        result = int(evt.data[0]) * int(evt.data[1])
+        workerResult = f'Result: {result}'
+        # Send a message to the main script.
+        # In the main script, it will be handled by the function bound to
+        # the event "message" for the worker.
+        self.send(workerResult)
+    except ValueError:
+        self.send('Please write two numbers')
+```
