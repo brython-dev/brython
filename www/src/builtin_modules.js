@@ -23,8 +23,16 @@
                 if($.elt.__class__ &&
                         _b_.issubclass($.elt.__class__, $B.JSObject)){
                     // eg window, Web Worker
-                    $B.$call($B.$getattr($.elt, "bind"))($.evt, callback)
-                    return callback
+                    if($.elt.js === _window){
+                        function f(ev){
+                            return callback($B.JSObject.$factory(ev))
+                        }
+                        $.elt.js["on" + $.evt] = f
+                        return f
+                    }else{
+                        $B.$call($B.$getattr($.elt, "bind"))($.evt, callback)
+                        return callback
+                    }
                 }else if(_b_.isinstance($.elt, $B.DOMNode)){
                     // DOM element
                     $B.DOMNode.bind($.elt, $.evt, callback)
@@ -72,7 +80,8 @@
         delete browser.$$window
         delete browser.win
         browser.self = $B.win
-        $B.$setattr(browser.self, "send", self.postMessage)
+        // browser.send is an alias for postMessage
+        browser.self.js.send = self.postMessage
 
     }else{
         update(browser, {

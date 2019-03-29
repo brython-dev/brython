@@ -7,6 +7,66 @@ var object = _b_.object
 
 var _window = self;
 
+$B.pyobj2structuredclone = function(obj){
+    // If the Python object supports the structured clone algorithm, return
+    // the result, else raise an exception
+    if(typeof obj == "boolean" || typeof obj == "number" ||
+            typeof obj == "string"){
+        return obj
+    }else if(obj instanceof Number){
+        return obj.valueOf()
+    }else if(Array.isArray(obj) || obj.__class__ === _b_.list ||
+            obj.__class__ === _b_.tuple){
+        var res = []
+        for(var i = 0, len = obj.length; i < len; i++){
+            res.push($B.pyobj2structuredclone(obj[i]))
+        }
+        return res
+    }else if(obj.__class__ === _b_.dict){
+        if(Object.keys(obj.$numeric_dict).length > 0 ||
+                Object.keys(obj.$object_dict).length > 0){
+            throw _b_.TypeError.$factory("a dictionary with non-string " +
+                "keys cannot be sent to or from a Web Worker")
+        }
+        var res = {}
+        for(var key in obj.$string_dict){
+            res[key] = $B.pyobj2structuredclone(obj.$string_dict[key])
+        }
+        return res
+    }else{
+        console.log(obj, obj.__class__)
+        return obj
+        //throw _b_.TypeError.$factory(_b_.str.$factory(obj) +
+        //    " does not support the structured clone algorithm")
+    }
+}
+$B.structuredclone2pyobj = function(obj){
+    if(typeof obj == "boolean" || typeof obj == "number" ||
+            typeof obj == "string"){
+        return obj
+    }else if(obj instanceof Number){
+        return obj.valueOf()
+    }else if(Array.isArray(obj) || obj.__class__ === _b_.list ||
+            obj.__class__ === _b_.tuple){
+        var res = _b_.list.$factory()
+        for(var i = 0, len = obj.length; i < len; i++){
+            res.push($B.structuredclone2pyobj(obj[i]))
+        }
+        return res
+    }else if(typeof obj == "object"){
+        var res = _b_.dict.$factory()
+        for(var key in obj){
+            res.$string_dict[key] = $B.structuredclone2pyobj(obj[key])
+        }
+        return res
+    }else{
+        console.log(obj, Array.isArray(obj),
+            obj.__class__, _b_.list, obj.__class__ === _b_.list)
+        throw _b_.TypeError.$factory(_b_.str.$factory(obj) +
+            " does not support the structured clone algorithm")
+    }
+
+}
 
 // Transforms a Javascript constructor into a Python function
 // that returns instances of the constructor, converted to Python objects
@@ -211,7 +271,7 @@ JSObject.__dir__ = function(self){
 }
 
 JSObject.__getattribute__ = function(self,attr){
-    var $test = false //attr == "postMessage"
+    var $test = false //attr == "data"
     if($test){console.log("get attr", attr, "of", self)}
     if(attr.substr(0,2) == '$$'){attr = attr.substr(2)}
     if(self.js === null){return object.__getattribute__(None, attr)}
@@ -239,6 +299,10 @@ JSObject.__getattribute__ = function(self,attr){
             self.js['addEventListener'] !== undefined){
         // For JS objects, "bind" is aliased to addEventListener
         attr = 'addEventListener'
+    }
+
+    if(attr == "data" && self.js instanceof MessageEvent){
+        return $B.structuredclone2pyobj(self.js.data)
     }
     var js_attr = self.js[attr]
     if(self.js_func && self.js_func[attr] !== undefined){
@@ -429,18 +493,19 @@ JSObject.__repr__ = function(self){
     return "<JSObject wraps " + self.js + ">"
 }
 
-JSObject.__setattr__ = function(self,attr,value){
+JSObject.__setattr__ = function(self, attr, value){
     if(attr.substr && attr.substr(0,2) == '$$'){
         // aliased attribute names, eg "message"
         attr = attr.substr(2)
     }
-    if(isinstance(value,JSObject)){self.js[attr] = value.js}
+    if(isinstance(value, JSObject)){self.js[attr] = value.js}
     else{
         self.js[attr] = value
         if(typeof value == 'function'){
             self.js[attr] = function(){
                 var args = []
                 for(var i = 0, len = arguments.length; i < len; i++){
+                    console.log(i, arguments[i])
                     args.push($B.$JS2Py(arguments[i]))
                 }
                 try{return value.apply(null, args)}

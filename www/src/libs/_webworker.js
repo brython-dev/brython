@@ -12,8 +12,17 @@ var $module = (function($B){
 
 var _b_ = $B.builtins
 
-var brython_scripts = ['brython', 'brython_stdlib']
-
+var brython_scripts = //['brython', 'brython_stdlib']
+[
+        'unicode.min',
+        'brython_builtins', 'version_info', 'py2js', 'loaders',
+        'py_object', 'py_type', 'py_utils', 'py_builtin_functions',
+        'py_exceptions', 'py_range_slice', 'py_bytes', 'py_set', 'js_objects',
+        'stdlib_paths', 'py_import', 'py_float', 'py_int', 'py_long_int',
+        'py_complex', 'py_sort', 'py_list', 'py_string', 'py_dict',
+        'py_dom', 'py_generator', 'builtin_modules', 'py_import_hooks',
+        'async'
+    ]
 var wclass = $B.make_class("Worker",
     function(worker){
         return {
@@ -24,8 +33,13 @@ var wclass = $B.make_class("Worker",
 )
 wclass.__mro__ = [$B.JSObject, _b_.object]
 wclass.send = function(self){
-    var f = $B.JSObject.__getattribute__(self, "postMessage")
-    f.js.apply(null, Array.prototype.slice.call(arguments, 1))
+    var $ = $B.args("send", 1, {self: null}, ["self"], arguments, {}, "args",
+                null),
+            args = $.args
+    for(var i = 0, len = args.length; i < len; i++){
+        args[i] = $B.pyobj2structuredclone(args[i])
+    }
+    self.js.postMessage.apply(self.js, args)
 }
 
 $B.set_func_names(wclass, "browser.worker")
