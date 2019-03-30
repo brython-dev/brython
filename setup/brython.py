@@ -7,7 +7,7 @@ import shutil
 import json
 import argparse
 
-implementation = "3.7.1"
+implementation = "3.7.2"
 
 parser = argparse.ArgumentParser()
 
