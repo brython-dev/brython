@@ -19,7 +19,8 @@ module.__init__ = function(){}
 
 module.__new__ = function(cls, name, doc, $package){
     return {
-        __class__: cls,
+        //__class__: cls,
+        $class: cls,
         __name__: name,
         __doc__: doc || _b_.None,
         __package__: $package || _b_.None
@@ -44,7 +45,8 @@ module.__setattr__ = function(self, attr, value){
 
 module.$factory = function(name, doc, $package){
     return {
-        __class__: module,
+        //__class__: module,
+        $class: module,
         __name__: name,
         __doc__: doc || _b_.None,
         __package__: $package || _b_.None
@@ -1031,7 +1033,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                         __import__ :
                         _b_.getattr(__import__, "__call__"),
         modobj = importer(mod_name, globals, undefined, fromlist, 0)
-        
+
     // Apply bindings upon local namespace
     if(! fromlist || fromlist.length == 0){
         // import mod_name [as alias]

@@ -2647,6 +2647,19 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         nodes.push($NodeJS('$top_frame[1] = $locals;'))
         nodes.push($NodeJS('$locals.$parent = $parent'))
 
+        // Handle name __class__ in methods (PEP 3135 and issue #1068)
+        var is_method = scope.ntype == "class"
+        if(is_method){
+            var class_name = scope.context.tree[0].name,
+                class_block = scope.parent_block,
+                class_ref = "$locals_" + class_block.id.replace(/\./g, '_') +
+                    '["' + class_name + '"]'
+            // bind name __class__ in method
+            this.parent.node.binding["__class__"] = true
+            // set its value to the class where the method is defined
+            nodes.push($NodeJS("$locals.__class__ = " + class_ref))
+        }
+
         // set __BRYTHON__.js_this to Javascript "this"
         // To use some JS libraries it may be necessary to know what "this"
         // is set to ; in Brython it is available as the result of function
@@ -4088,7 +4101,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         // get global scope
         var gs = innermost
 
-        var $test = false //val == "xwq"
+        var $test = false //val == "__class__"
 
         if($test){
             console.log("this", this)
@@ -4096,6 +4109,9 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         }
 
         while(true){
+            if($test){
+                console.log(gs.id, gs)
+            }
             if(gs.parent_block){
                 if(gs.parent_block == $B.builtins_scope){break}
                 else if(gs.parent_block.id === undefined){break}
@@ -4109,7 +4125,9 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
             search_ids = ['"' + gs.id + '"']
         }
 
-        if($test){console.log("search ids", search_ids)}
+        if($test){
+            console.log("search ids", search_ids)
+        }
 
         if(this.nonlocal || this.bound){
             var bscope = this.firstBindingScopeId()
