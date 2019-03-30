@@ -87,6 +87,10 @@ class RequestHandler(CGIHTTPRequestHandler):
             else:
                 return self.list_directory(path)
         ctype = self.guess_type(path)
+        # I had the case where the mimetype associated with .js in the Windows 
+        # registery was text/plain...
+        if os.path.splitext(path)[1] == ".js":
+            ctype = "application/javascript"
         try:
             f = open(path, 'rb')
         except OSError:
