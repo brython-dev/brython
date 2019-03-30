@@ -89,7 +89,7 @@ def callback(evt):
 
 In a worker, the **browser** module doesn't have all the usual attributes, for
 instance not those that allow access to the document: for instance the
-`document` is not defined, neither the **html** module.
+`document` attribute or the **html** module are not available.
 
 The `window` attribute itself is not defined; instead, an attribute `self`
 represents the worker and manages the relationship with the main script it is
@@ -149,7 +149,6 @@ from browser import bind, document, worker
 
 result = document.select_one('.result')
 inputs = document.select("input")
-
 
 # Create a web worker, identified by a script id in this page.
 myWorker = worker.Worker("worker")
