@@ -2388,7 +2388,23 @@ try:
 except SyntaxError:
     pass
 
+# issue 1068
+class Class():
 
+    def method(self):
+      return __class__.__name__
+
+assert Class().method() == "Class"
+
+def f():
+    print(__class__)
+
+try:
+    f()
+    raise Exception("should have raised NameError")
+except NameError:
+    pass
+    
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
