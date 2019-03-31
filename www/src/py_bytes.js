@@ -305,7 +305,7 @@ bytes.__new__ = function(cls, source, encoding, errors){
             if(encoding === undefined){
                 throw _b_.TypeError.$factory("string argument without an encoding")
             }
-            int_list = encode(source, encoding)
+            int_list = encode(source, encoding, errors)
         }else{
             // tranform iterable "source" into a list
             int_list = _b_.list.$factory(source)
@@ -1225,10 +1225,10 @@ var decode = $B.decode = function(b, encoding, errors){
     return s
 }
 
-var encode = $B.encode = function(s, encoding){
-    var $ = $B.args("encode", 2, {s:null, encoding:null}, ["s", "encoding"],
-        arguments, {}, null, null),
-        s = $.s,
+var encode = $B.encode = function (s, encoding, errors){
+   // var $ = $B.args("encode", 2, {s:null, encoding:null}, ["s", "encoding"],
+   //     arguments, {}, null, null),
+   //     s = $.s,
         encoding = $.encoding
     var t = [],
         pos = 0,
@@ -1249,6 +1249,7 @@ var encode = $B.encode = function(s, encoding){
             for(var i = 0, len = s.length; i < len; i++){
                 var cp = s.charCodeAt(i) // code point
                 if(cp <= 255){t[pos++] = cp}
+                if (errors === "ignore") { return t; }
                 else{$UnicodeEncodeError(encoding, i)}
             }
             break
@@ -1256,6 +1257,7 @@ var encode = $B.encode = function(s, encoding){
           for(var i = 0, len = s.length; i < len; i++){
               var cp = s.charCodeAt(i) // code point
               if(cp <= 127){t[pos++] = cp}
+              if (errors === "ignore") { return t; }
               else{$UnicodeEncodeError(encoding, i)}
           }
           break
@@ -1283,7 +1285,7 @@ var encode = $B.encode = function(s, encoding){
 
             for(var i = 0, len = s.length; i < len; i++){
                 var cp = s.charCodeAt(i) // code point
-                if(from_unicode[enc][cp] === undefined){
+                if(from_unicode[enc][cp] === undefined && errors !== "ignore"){
                     $UnicodeEncodeError(encoding, cp, i)
                 }
                 t[pos++] = from_unicode[enc][cp]
