@@ -954,7 +954,7 @@ str.count = function(){
     return n
 }
 
-str.encode = function(self, encoding) {
+str.encode = function (self, encoding, errors = "") {
     if(encoding === undefined){encoding = "utf-8"}
     if(encoding == "rot13" || encoding == "rot_13"){
         // Special case : returns a string
@@ -970,7 +970,7 @@ str.encode = function(self, encoding) {
         }
         return res
     }
-    return _b_.bytes.$factory(self, encoding)
+    return _b_.bytes.$factory(self, encoding, errors)
 }
 
 str.endswith = function(){
