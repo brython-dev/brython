@@ -23,8 +23,8 @@ complex|hasattr|max|round|
 delattr|hash|memoryview|set|
 """
 
-kw_pattern = '^('+'|'.join(keyword.kwlist)+')$'
-bf_pattern = '^('+builtin_funcs.replace("\n", "")+')$'
+kw_pattern = '^(' + '|'.join(keyword.kwlist) + ')$'
+bf_pattern = '^(' + builtin_funcs.replace("\n", "") + ')$'
 
 def escape(txt):
     txt = txt.replace('<', '&lt;')
