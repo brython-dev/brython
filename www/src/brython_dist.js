@@ -84,8 +84,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.2"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-03-30 08:33:20.615642"
-__BRYTHON__.timestamp=1553931200615
+__BRYTHON__.compiled_date="2019-04-01 16:32:13.847969"
+__BRYTHON__.timestamp=1554129133847
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","_webworker","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","unicodedata","zlib"]
 ;
 
@@ -7748,7 +7748,7 @@ bytes.__new__=function(cls,source,encoding,errors){
 var self={__class__:cls},int_list=[],pos=0
 if(source===undefined){}else if(isinstance(source,_b_.int)){var i=source
 while(i--){int_list[pos++]=0}}else{if(isinstance(source,_b_.str)){if(encoding===undefined){throw _b_.TypeError.$factory("string argument without an encoding")}
-int_list=encode(source,encoding)}else{
+int_list=encode(source,encoding,errors)}else{
 int_list=_b_.list.$factory(source)
 for(var i=0;i < int_list.length;i++){try{var item=_b_.int.$factory(int_list[i])}catch(err){throw _b_.TypeError.$factory("'"+
 $B.class_name(int_list[i])+"' object "+
@@ -8086,7 +8086,8 @@ if(u !==undefined){s+=String.fromCharCode(u)}
 else{s+=String.fromCharCode(item)}})
 break}
 return s}
-var encode=$B.encode=function(s,encoding){var $=$B.args("encode",2,{s:null,encoding:null},["s","encoding"],arguments,{},null,null),s=$.s,encoding=$.encoding
+var encode=$B.encode=function(s,encoding,errors){
+encoding=$.encoding
 var t=[],pos=0,enc=normalise(encoding)
 switch(enc){case "utf-8":
 case "utf_8":
@@ -8099,11 +8100,13 @@ case "iso8859_1":
 case "windows1252":
 for(var i=0,len=s.length;i < len;i++){var cp=s.charCodeAt(i)
 if(cp <=255){t[pos++]=cp}
+if(errors==="ignore"){return t;}
 else{$UnicodeEncodeError(encoding,i)}}
 break
 case "ascii":
 for(var i=0,len=s.length;i < len;i++){var cp=s.charCodeAt(i)
 if(cp <=127){t[pos++]=cp}
+if(errors==="ignore"){return t;}
 else{$UnicodeEncodeError(encoding,i)}}
 break
 case "raw_unicode_escape":
@@ -8116,7 +8119,7 @@ break
 default:
 try{load_encoder(enc)}catch(err){throw _b_.LookupError.$factory("unknown encoding: "+encoding)}
 for(var i=0,len=s.length;i < len;i++){var cp=s.charCodeAt(i)
-if(from_unicode[enc][cp]===undefined){$UnicodeEncodeError(encoding,cp,i)}
+if(from_unicode[enc][cp]===undefined && errors !=="ignore"){$UnicodeEncodeError(encoding,cp,i)}
 t[pos++]=from_unicode[enc][cp]}
 break}
 return t}
@@ -11171,14 +11174,14 @@ while(pos < substr.length){pos=substr.indexOf($.sub,pos)
 if(pos >=0){n++;pos+=$.sub.length}
 else{break}}
 return n}
-str.encode=function(self,encoding){if(encoding===undefined){encoding="utf-8"}
+str.encode=function(self,encoding,errors=""){if(encoding===undefined){encoding="utf-8"}
 if(encoding=="rot13" ||encoding=="rot_13"){
 var res=""
 for(var i=0,len=self.length;i < len ;i++){var char=self.charAt(i)
 if(("a" <=char && char <="m")||("A" <=char && char <="M")){res+=String.fromCharCode(String.charCodeAt(char)+13)}else if(("m" < char && char <="z")||
 ("M" < char && char <="Z")){res+=String.fromCharCode(String.charCodeAt(char)-13)}else{res+=char}}
 return res}
-return _b_.bytes.$factory(self,encoding)}
+return _b_.bytes.$factory(self,encoding,errors)}
 str.endswith=function(){
 var $=$B.args("endswith",4,{self:null,suffix:null,start:null,end:null},["self","suffix","start","end"],arguments,{start:0,end:null},null,null)
 normalize_start_end($)
