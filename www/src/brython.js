@@ -84,8 +84,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.2"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-04-01 16:32:13.847969"
-__BRYTHON__.timestamp=1554129133847
+__BRYTHON__.compiled_date="2019-04-02 11:08:49.315723"
+__BRYTHON__.timestamp=1554196129315
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","_webworker","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","unicodedata","zlib"]
 ;
 
@@ -7744,7 +7744,9 @@ var res=bytes.$factory()
 res.source=t
 return res}
 bytes.__ne__=function(self,other){return ! bytes.__eq__(self,other)}
-bytes.__new__=function(cls,source,encoding,errors){
+bytes.__new__=function(cls,source,encoding,errors){var $=$B.args("__new__",4,{cls:null,source:null,encoding:null,errors:null},["cls","source","encoding","errors"],arguments,{encoding:"utf-8",errors:"strict"},null,null)
+return bytes.$new($.cls,$.source,$.encoding,$.errors)}
+bytes.$new=function(cls,source,encoding,errors){
 var self={__class__:cls},int_list=[],pos=0
 if(source===undefined){}else if(isinstance(source,_b_.int)){var i=source
 while(i--){int_list[pos++]=0}}else{if(isinstance(source,_b_.str)){if(encoding===undefined){throw _b_.TypeError.$factory("string argument without an encoding")}
@@ -8086,8 +8088,7 @@ if(u !==undefined){s+=String.fromCharCode(u)}
 else{s+=String.fromCharCode(item)}})
 break}
 return s}
-var encode=$B.encode=function(s,encoding,errors){
-encoding=$.encoding
+var encode=$B.encode=function(){var $=$B.args("encode",3,{s:null,encoding:null,errors:null},["s","encoding","errors"],arguments,{encoding:"utf-8",errors:"strict"},null,null),s=$.s,encoding=$.encoding,errors=$.errors
 var t=[],pos=0,enc=normalise(encoding)
 switch(enc){case "utf-8":
 case "utf_8":
@@ -8100,14 +8101,12 @@ case "iso8859_1":
 case "windows1252":
 for(var i=0,len=s.length;i < len;i++){var cp=s.charCodeAt(i)
 if(cp <=255){t[pos++]=cp}
-if(errors==="ignore"){return t;}
-else{$UnicodeEncodeError(encoding,i)}}
+else if(errors !="ignore"){$UnicodeEncodeError(encoding,i)}}
 break
 case "ascii":
 for(var i=0,len=s.length;i < len;i++){var cp=s.charCodeAt(i)
 if(cp <=127){t[pos++]=cp}
-if(errors==="ignore"){return t;}
-else{$UnicodeEncodeError(encoding,i)}}
+else if(errors !="ignore"){$UnicodeEncodeError(encoding,i)}}
 break
 case "raw_unicode_escape":
 for(var i=0,len=s.length;i < len;i++){var cp=s.charCodeAt(i)
@@ -8119,11 +8118,12 @@ break
 default:
 try{load_encoder(enc)}catch(err){throw _b_.LookupError.$factory("unknown encoding: "+encoding)}
 for(var i=0,len=s.length;i < len;i++){var cp=s.charCodeAt(i)
-if(from_unicode[enc][cp]===undefined && errors !=="ignore"){$UnicodeEncodeError(encoding,cp,i)}
+if(from_unicode[enc][cp]===undefined){$UnicodeEncodeError(encoding,cp,i)}
 t[pos++]=from_unicode[enc][cp]}
 break}
 return t}
-bytes.$factory=function(source,encoding,errors){return bytes.__new__(bytes,source,encoding,errors)}
+bytes.$factory=function(source,encoding,errors){var $=$B.args("bytes",3,{source:null,encoding:null,errors:null},["source","encoding","errors"],arguments,{source:[],encoding:"utf-8",errors:"strict"},null,null)
+return bytes.$new(bytes,$.source,$.encoding,$.errors)}
 bytes.__class__=_b_.type
 bytes.$is_class=true
 for(var attr in bytes){if(bytearray[attr]===undefined && typeof bytes[attr]=="function"){bytearray[attr]=(function(_attr){return function(){return bytes[_attr].apply(null,arguments)}})(attr)}}
@@ -11174,14 +11174,14 @@ while(pos < substr.length){pos=substr.indexOf($.sub,pos)
 if(pos >=0){n++;pos+=$.sub.length}
 else{break}}
 return n}
-str.encode=function(self,encoding,errors=""){if(encoding===undefined){encoding="utf-8"}
-if(encoding=="rot13" ||encoding=="rot_13"){
+str.encode=function(){var $=$B.args("encode",3,{self:null,encoding:null,errors:null},["self","encoding","errors"],arguments,{encoding:"utf-8",errors:"strict"},null,null)
+if($.encoding=="rot13" ||$.encoding=="rot_13"){
 var res=""
-for(var i=0,len=self.length;i < len ;i++){var char=self.charAt(i)
+for(var i=0,len=$.self.length;i < len ;i++){var char=$.self.charAt(i)
 if(("a" <=char && char <="m")||("A" <=char && char <="M")){res+=String.fromCharCode(String.charCodeAt(char)+13)}else if(("m" < char && char <="z")||
 ("M" < char && char <="Z")){res+=String.fromCharCode(String.charCodeAt(char)-13)}else{res+=char}}
 return res}
-return _b_.bytes.$factory(self,encoding,errors)}
+return _b_.bytes.__new__(_b_.bytes,$.self,$.encoding,$.errors)}
 str.endswith=function(){
 var $=$B.args("endswith",4,{self:null,suffix:null,start:null,end:null},["self","suffix","start","end"],arguments,{start:0,end:null},null,null)
 normalize_start_end($)

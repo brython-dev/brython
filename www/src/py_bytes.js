@@ -291,7 +291,16 @@ bytes.__mul__ = function(){
 bytes.__ne__ = function(self,other){return ! bytes.__eq__(self, other)}
 
 bytes.__new__ = function(cls, source, encoding, errors){
-    // Create an instance of bytes
+    var $ = $B.args("__new__", 4,
+            {cls: null, source: null, encoding: null, errors: null},
+            ["cls", "source", "encoding", "errors"], arguments,
+            {encoding: "utf-8", errors: "strict"}, null, null)
+    return bytes.$new($.cls, $.source, $.encoding, $.errors)
+}
+
+bytes.$new = function(cls, source, encoding, errors){
+    // Create an instance of bytes. Called by methods that have already parsed
+    // the arguments.
     var self = {__class__: cls},
         int_list = [],
         pos = 0
@@ -1225,11 +1234,13 @@ var decode = $B.decode = function(b, encoding, errors){
     return s
 }
 
-var encode = $B.encode = function (s, encoding, errors){
-   // var $ = $B.args("encode", 2, {s:null, encoding:null}, ["s", "encoding"],
-   //     arguments, {}, null, null),
-   //     s = $.s,
-        encoding = $.encoding
+var encode = $B.encode = function(){
+    var $ = $B.args("encode", 3, {s: null, encoding: null, errors: null},
+        ["s", "encoding", "errors"],
+        arguments, {encoding: "utf-8", errors:"strict"}, null, null),
+        s = $.s,
+        encoding = $.encoding,
+        errors = $.errors
     var t = [],
         pos = 0,
         enc = normalise(encoding)
@@ -1249,16 +1260,14 @@ var encode = $B.encode = function (s, encoding, errors){
             for(var i = 0, len = s.length; i < len; i++){
                 var cp = s.charCodeAt(i) // code point
                 if(cp <= 255){t[pos++] = cp}
-                if (errors === "ignore") { return t; }
-                else{$UnicodeEncodeError(encoding, i)}
+                else if(errors != "ignore"){$UnicodeEncodeError(encoding, i)}
             }
             break
         case "ascii":
           for(var i = 0, len = s.length; i < len; i++){
               var cp = s.charCodeAt(i) // code point
               if(cp <= 127){t[pos++] = cp}
-              if (errors === "ignore") { return t; }
-              else{$UnicodeEncodeError(encoding, i)}
+              else if(errors != "ignore"){$UnicodeEncodeError(encoding, i)}
           }
           break
         case "raw_unicode_escape":
@@ -1285,7 +1294,7 @@ var encode = $B.encode = function (s, encoding, errors){
 
             for(var i = 0, len = s.length; i < len; i++){
                 var cp = s.charCodeAt(i) // code point
-                if(from_unicode[enc][cp] === undefined && errors !== "ignore"){
+                if(from_unicode[enc][cp] === undefined){
                     $UnicodeEncodeError(encoding, cp, i)
                 }
                 t[pos++] = from_unicode[enc][cp]
@@ -1296,8 +1305,12 @@ var encode = $B.encode = function (s, encoding, errors){
 }
 
 
-bytes.$factory = function (source, encoding, errors) {
-    return bytes.__new__(bytes, source, encoding, errors)
+bytes.$factory = function(source, encoding, errors){
+    var $ = $B.args("bytes", 3,
+            {source: null, encoding: null, errors: null},
+            ["source", "encoding", "errors"], arguments,
+            {source: [], encoding: "utf-8", errors: "strict"}, null, null)
+    return bytes.$new(bytes, $.source, $.encoding, $.errors)
 }
 
 bytes.__class__ = _b_.type

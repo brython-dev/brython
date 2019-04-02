@@ -954,13 +954,15 @@ str.count = function(){
     return n
 }
 
-str.encode = function (self, encoding, errors = "") {
-    if(encoding === undefined){encoding = "utf-8"}
-    if(encoding == "rot13" || encoding == "rot_13"){
+str.encode = function(){
+    var $ = $B.args("encode", 3, {self: null, encoding: null, errors: null},
+            ["self", "encoding", "errors"], arguments,
+            {encoding: "utf-8", errors: "strict"}, null, null)
+    if($.encoding == "rot13" || $.encoding == "rot_13"){
         // Special case : returns a string
         var res = ""
-        for(var i = 0, len = self.length; i < len ; i++){
-            var char = self.charAt(i)
+        for(var i = 0, len = $.self.length; i < len ; i++){
+            var char = $.self.charAt(i)
             if(("a" <= char && char <= "m") || ("A" <= char && char <= "M")){
                 res += String.fromCharCode(String.charCodeAt(char) + 13)
             }else if(("m" < char && char <= "z") ||
@@ -970,7 +972,7 @@ str.encode = function (self, encoding, errors = "") {
         }
         return res
     }
-    return _b_.bytes.$factory(self, encoding, errors)
+    return _b_.bytes.__new__(_b_.bytes, $.self, $.encoding, $.errors)
 }
 
 str.endswith = function(){

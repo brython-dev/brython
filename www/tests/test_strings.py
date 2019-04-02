@@ -206,4 +206,7 @@ assert issubclass(Mystring, str)
 # issue 1060
 assert str(bytes('abc', encoding='ascii'), encoding='ascii') == "abc"
 
+# issue 1071
+assert 'ß'.encode('ascii', 'ignore') == b''
+
 print("passed all tests...")
