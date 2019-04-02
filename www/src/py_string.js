@@ -1401,6 +1401,8 @@ str.maketrans = function() {
     }
 }
 
+str.maketrans.$type = "staticmethod"
+
 str.partition = function() {
     var $ = $B.args("partition", 2, {self: null, sep: null}, ["self", "sep"],
         arguments, {}, null, null)
