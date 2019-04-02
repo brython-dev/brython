@@ -209,4 +209,8 @@ assert str(bytes('abc', encoding='ascii'), encoding='ascii') == "abc"
 # issue 1071
 assert 'ß'.encode('ascii', 'ignore') == b''
 
+# issue 1076
+assert 'abc'.isascii()
+assert not 'abç'.isascii()
+
 print("passed all tests...")

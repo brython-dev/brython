@@ -1278,6 +1278,16 @@ str.index = function(self){
     return res
 }
 
+str.isascii = function(self){
+    // Return true if the string is empty or all characters in the string are
+    // ASCII, false otherwise. ASCII characters have code points in the range
+    // U+0000-U+007F.
+    for(var i = 0, len = self.length; i < len; i++){
+        if(self.charCodeAt(i) > 127){return false}
+    }
+    return true
+}
+
 str.join = function(){
     var $ = $B.args("join", 2, {self: null, iterable: null},
         ["self", "iterable"], arguments, {}, null, null)
@@ -1905,7 +1915,7 @@ $B.parse_format_spec = function(spec){
             throw _b_.ValueError.$factory("Invalid format specifier: " + spec)
         }
     }
-    
+
     this.toString = function(){
         return (this.fill === undefined ? "" : _b_.str.$factory(this.fill)) +
             (this.align || "") +
