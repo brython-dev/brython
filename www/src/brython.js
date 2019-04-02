@@ -84,8 +84,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.2"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-04-02 11:43:25.710515"
-__BRYTHON__.timestamp=1554198205710
+__BRYTHON__.compiled_date="2019-04-02 14:45:13.575681"
+__BRYTHON__.timestamp=1554209113575
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","_webworker","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","unicodedata","zlib"]
 ;
 
@@ -11340,7 +11340,7 @@ if($.z !==null){
 if(! _b_.isinstance($.z,_b_.str)){throw _b_.TypeError.$factory(
 "maketrans third argument must be a string")}
 for(var i=0,len=$.z.length;i < len;i++){toNone[_b_.ord($.z.charAt(i))]=true}}
-for(var i=0,len=$.x.length;i < len;i++){var key=_b_.ord($.x.charAt(i)),value=$.y.charAt(i)
+for(var i=0,len=$.x.length;i < len;i++){var key=_b_.ord($.x.charAt(i)),value=$.y.charCodeAt(i)
 _b_.dict.$setitem(_t,key,value)}
 for(var k in toNone){_b_.dict.$setitem(_t,parseInt(k),_b_.None)}
 return _t}}}
@@ -11468,7 +11468,7 @@ for(var j=$.self.length-1;j >=i;j--){if($.chars.indexOf($.self.charAt(j))==-1){b
 return $.self.substring(i,j+1)}
 str.translate=function(self,table){var res=[],getitem=$B.$getattr(table,"__getitem__")
 for(var i=0,len=self.length;i < len;i++){try{var repl=getitem(self.charCodeAt(i))
-if(repl !==_b_.None){res.push(repl)}}catch(err){res.push(self.charAt(i))}}
+if(repl !==_b_.None){res.push(String.fromCharCode(repl))}}catch(err){res.push(self.charAt(i))}}
 return res.join("")}
 str.zfill=function(self,width){var $=$B.args("zfill",2,{self:null,width:null},["self","width"],arguments,{},null,null)
 if($.width <=self.length){return self}

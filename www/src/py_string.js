@@ -1390,7 +1390,7 @@ str.maketrans = function() {
             }
             for(var i = 0, len = $.x.length; i < len; i++){
                 var key = _b_.ord($.x.charAt(i)),
-                    value = $.y.charAt(i)
+                    value = $.y.charCodeAt(i)
                 _b_.dict.$setitem(_t, key, value)
             }
             for(var k in toNone){
@@ -1712,7 +1712,7 @@ str.translate = function(self, table){
         try{
             var repl = getitem(self.charCodeAt(i))
             if(repl !== _b_.None){
-                res.push(repl)
+                res.push(String.fromCharCode(repl))
             }
         }catch(err){
             res.push(self.charAt(i))

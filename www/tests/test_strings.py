@@ -217,4 +217,8 @@ assert not 'abç'.isascii()
 assert str.maketrans({'a': 'A'}) == {97: 'A'}
 assert 'xyz'.maketrans({'a': 'A'}) == {97: 'A'}
 
+# issue 1078
+assert 'xyz'.maketrans('abc', 'def', 'abd') == {97: None, 98: None, 99: 102, 
+                                                100: None}
+
 print("passed all tests...")
