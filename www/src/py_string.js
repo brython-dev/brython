@@ -1860,7 +1860,9 @@ $B.parse_format_spec = function(spec){
         if(car == "0"){
             // sign-aware : equivalent to fill = 0 and align == "="
             this.fill = "0"
-            this.align = "="
+            if(align_pos == -1){
+                this.align = "="
+            }
             pos++
             car = spec.charAt(pos)
         }
@@ -1903,6 +1905,7 @@ $B.parse_format_spec = function(spec){
             throw _b_.ValueError.$factory("Invalid format specifier: " + spec)
         }
     }
+    
     this.toString = function(){
         return (this.fill === undefined ? "" : _b_.str.$factory(this.fill)) +
             (this.align || "") +

@@ -249,3 +249,8 @@ assert results ==  ['    5     5     5   101',
 '    9     9    11  1001',
 '   10     A    12  1010',
 '   11     B    13  1011']
+
+# issue 1071
+assert format(123.456, "^-09.3f") == "0123.4560"
+
+print("passed all tests...")
