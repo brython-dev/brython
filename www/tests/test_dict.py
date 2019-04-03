@@ -56,6 +56,22 @@ assert d[f] == 1
 assert d[g] == 2
 assert hash(f) != hash(g)
 
+# issue 601
+assert {1: 1}.keys() == {1}
+assert {1} == {1: 1}.keys()
+assert {1: 1}.items() == {(1, 1)}
+assert {1: 2}.values() != {2}
+
+# issue 602
+d = {} #should crash with mutation in for loop dict error
+d[1] = 1
+try:
+    for i in d:
+        d[i + 1] = 1
+    raise Exception('should fail')
+except RuntimeError:
+    pass
+
 # issue 994
 d = {False: "Test", True: "Test2"}
 assert d[False] == "Test"

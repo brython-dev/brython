@@ -438,7 +438,7 @@ JSObject.__getitem__ = function(self, rank){
     }
 }
 
-var $JSObject_iterator = $B.$iterator_class('JS object iterator')
+var JSObject_iterator = $B.make_iterator_class('JS object iterator')
 JSObject.__iter__ = function(self){
     var items = []
     if(_window.Symbol && self.js[Symbol.iterator] !== undefined){
@@ -458,13 +458,13 @@ JSObject.__iter__ = function(self){
                 }
             }
         }
-        return $B.$iterator(items, $JSObject_iterator)
+        return $B.JSObject_iterator.$factory(items)
     }else if(self.js.length !== undefined && self.js.item !== undefined){
         // collection
         for(var i = 0; i < self.js.length; i++){
             items.push(JSObject.$factory(self.js.item(i)))
         }
-        return $B.$iterator(items, $JSObject_iterator)
+        return JSObject_iterator.$factory(items)
     }
     // Else iterate on the dictionary built from the JS object
     var _dict = JSObject.to_dict(self)

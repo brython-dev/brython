@@ -139,19 +139,10 @@ set.__init__ = function(self, iterable, second){
     return $N
 }
 
-var $set_iterator = $B.$iterator_class("set iterator")
+var set_iterator = $B.make_iterator_class("set iterator")
 set.__iter__ = function(self){
     self.$items.sort()
-    var it = $B.$iterator(self.$items, $set_iterator),
-        len = self.$items.length,
-        nxt = it.__next__
-    it.__next__ = function(){
-        if(it.__len__() != len){
-            throw _b_.RuntimeError.$factory("size changed during iteration")
-        }
-        return nxt()
-    }
-    return it
+    return set_iterator.$factory(self.$items)
 }
 
 set.__le__ = function(self, other){

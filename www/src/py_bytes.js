@@ -57,9 +57,9 @@ mutable_methods.forEach(function(method){
     })(method)
 })
 
-var $bytearray_iterator = $B.$iterator_class('bytearray_iterator')
+var bytearray_iterator = $B.make_iterator_class('bytearray_iterator')
 bytearray.__iter__ = function(self){
-    return $B.$iterator(self.source, $bytearray_iterator)
+    return bytearray_iterator.$factory(self.source)
 }
 bytearray.__mro__ = [object]
 
@@ -179,9 +179,9 @@ bytes.__contains__ = function(self, other){
     return false
 }
 
-var $bytes_iterator = $B.$iterator_class("bytes_iterator")
+var bytes_iterator = $B.make_iterator_class("bytes_iterator")
 bytes.__iter__ = function(self){
-    return $B.$iterator(self.source, $bytes_iterator)
+    return bytes_iterator.$factory(self.source)
 }
 
 bytes.__eq__ = function(self, other){

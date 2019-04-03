@@ -3423,13 +3423,6 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
         new $NodeJSCtx(new_node,js)
         new_nodes[pos++] = new_node
 
-        // Line to store the length of the iterator
-        var js = 'if(isinstance(' + iterable_name + ', _b_.dict)){$locals.$len_func' +
-            num + ' = $B.$getattr(' + iterable_name + ', "__len__"); $locals.$len' +
-            num + ' = $locals.$len_func' + num + '()}else{$locals.$len' +
-            num + ' = null}'
-        new_nodes[pos++] = $NodeJS(js)
-
         if(this.has_break){
             // If there is a "break" in the loop, add a boolean
             // used if there is an "else" clause and in generators
@@ -3465,12 +3458,6 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
                 offset += new_nodes.length
             }
         }
-
-        // Add test of length change
-        while_node.add($NodeJS('if($locals.$len' + num +
-            '!==null && $locals.$len' + num + '!=$locals.$len_func' +
-            num + '()){throw RuntimeError.$factory("dictionary' +
-            ' changed size during iteration")}'))
 
         var try_node = $NodeJS("try")
         // Copy attribute "bindings" in try node, so that it is at the same

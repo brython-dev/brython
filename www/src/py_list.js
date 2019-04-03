@@ -273,13 +273,13 @@ list.__init__ = function(self, arg){
     return $N
 }
 
-var $list_iterator = $B.$iterator_class("list_iterator")
-$list_iterator.__reduce__ = $list_iterator.__reduce_ex__ = function(self){
+var list_iterator = $B.make_iterator_class("list_iterator")
+list_iterator.__reduce__ = list_iterator.__reduce_ex__ = function(self){
     return $B.fast_tuple([_b_.iter, $B.fast_tuple([list.$factory(self)]), 0])
 }
 
 list.__iter__ = function(self){
-    return $B.$iterator(self, $list_iterator)
+    return list_iterator.$factory(self)
 }
 
 list.__le__ = function(self, other){
@@ -816,13 +816,13 @@ var tuple = {
     $native: true
 }
 
+var tuple_iterator = $B.make_iterator_class("tuple_iterator")
 tuple.__iter__ = function(self){
-    return $B.$iterator(self, $tuple_iterator)
+    return tuple_iterator.$factory(self)
 }
 
 // other attributes are defined in py_list.js, once list is defined
 
-var $tuple_iterator = $B.$iterator_class("tuple_iterator")
 
 // type() is implemented in py_utils
 

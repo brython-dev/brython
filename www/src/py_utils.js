@@ -829,23 +829,21 @@ $B.$call = function(callable){
     }
 }
 
-// default standard output and error
-// can be reset by sys.stdout or sys.stderr
-var $io = {__class__: _b_.type, $infos:{__name__: "io"}}
-$io.__mro__ = [_b_.object]
+// Default standard output and error
+// Can be reset by sys.stdout or sys.stderr
+var $io = $B.make_class("io", function(){
+    return {__class__: $io}
+    }
+)
 
-$B.stderr = {
-    __class__: $io,
-    write: function(data){console.log(data)},
-    flush: function(){}
+$io.write = function(self, msg){
+    // Default to printing to browser console
+    console.log(msg)
+    return _b_.None
 }
-$B.stderr_buff = "" // buffer for standard output
 
-$B.stdout = {
-    __class__: $io,
-    write: function(data){console.log(data)},
-    flush: function(){}
-}
+$B.stderr = $io.$factory()
+$B.stdout = $io.$factory()
 
 $B.stdin = {
     __class__: $io,
@@ -861,149 +859,51 @@ $B.stdin = {
     }
 }
 
-$B.jsobject2pyobject = function(obj){
-    switch(obj) {
-        case null:
-            return _b_.None
-        case true:
-            return _b_.True
-        case false:
-            return _b_.False
-    }
-
-    if(typeof obj === "object" && ! Array.isArray(obj) &&
-            obj.__class__ === undefined){
-        // transform JS object into a Python dict
-        var res = _b_.dict.$factory()
-        for(var attr in obj){
-           res.$string_dict[attr] = $B.jsobject2pyobject(obj[attr])
-        }
-        return res
-    }
-
-    if(_b_.isinstance(obj, _b_.list)){
-        var res = [],
-            pos = 0
-        for(var i = 0, len = obj.length; i < len; i++){
-            res[pos++] = $B.jsobject2pyobject(obj[i])
-        }
-        return res
-    }
-
-    if(obj.__class__ !== undefined){
-        if(obj.__class__ === _b_.list){
-          for(var i = 0, len = obj.length; i < len; i++){
-              obj[i] = $B.jsobject2pyobject(obj[i])
-          }
-          return obj
-        }
-        return obj
-    }
-
-    if(obj._type_ === "iter") { // this is an iterator
-       return _b_.iter(obj.data)
-    }
-
-    return $B.JSObject.$factory(obj)
-}
-
 $B.set_line = function(line_num, module_name){
     $B.line_info = line_num + "," + module_name
     return _b_.None
 }
 
-// functions to define iterators
-$B.$iterator = function(items, klass){
-    var res = {
-        __class__: klass,
-        __iter__: function(){return res},
-        __len__: function(){return items.length},
-        __next__: function(){
-            res.counter++
-            if(res.counter < items.length){return items[res.counter]}
-            throw _b_.StopIteration.$factory("StopIteration")
-        },
-        __repr__: function(){return "<" + klass.$infos.__name__ + " object>"},
-        counter: -1
-    }
-    res.__str__ = res.toString = res.__repr__
-    return res
-}
+$B.make_iterator_class = function(name){
+    // Builds a class to iterate over items
 
-$B.$iterator_class = function(name){
-
-    var res = {
+    var klass = {
         __class__: _b_.type,
         __mro__: [_b_.object],
-        $infos:{
-            __name__: name,
-            __module__: "builtins"
+        $factory: function(items){
+            return {
+                __class__: klass,
+                counter: -1,
+                items: items,
+                len: items.length
+            }
         },
-        $is_class: true
+        $infos:{
+            __name__: name
+        },
+        $is_class: true,
+
+        __iter__: function(self){
+            self.counter = -1
+            self.len = self.items.length
+            return self
+        },
+
+        __len__: function(self){
+            return self.items.length
+        },
+
+        __next__: function(self){
+            self.counter++
+            if(self.counter < self.items.length){
+                return self.items[self.counter]
+            }
+            throw _b_.StopIteration.$factory("StopIteration")
+        }
     }
 
-    function as_array(s) {
-       var _a = [],
-           pos = 0,
-           _it = _b_.iter(s)
-       while (1) {
-         try{
-              _a[pos++] = _b_.next(_it)
-         }catch(err){
-              if(err.__class__ === _b_.StopIteration){
-                  break
-              }
-         }
-       }
-       return _a
-    }
-
-    function as_list(s){return _b_.list.$factory(as_array(s))}
-    function as_set(s){return _b_.set.$factory(as_array(s))}
-
-    res.__eq__ = function(self,other){
-       if(_b_.isinstance(other, [_b_.tuple, _b_.set, _b_.list])){
-          return $B.$getattr(as_list(self), "__eq__")(other)
-       }
-
-       if(_b_.hasattr(other, "__iter__")){
-          return $B.$getattr(as_list(self), "__eq__")(as_list(other))
-       }
-
-       _b_.NotImplementedError.$factory(
-           "__eq__ not implemented yet for list and " + _b_.type(other))
-    }
-
-    var _ops = ["eq", "ne"],
-        _f = res.__eq__ + ""
-
-    for (var i = 0; i < _ops.length; i++) {
-        var _op = "__" + _ops[i] + "__"
-        eval("res." + _op + "=" + _f.replace(new RegExp("__eq__", "g"), _op))
-    }
-
-    res.__or__ = function(self, other){
-       if(_b_.isinstance(other, [_b_.tuple, _b_.set, _b_.list])){
-          return $B.$getattr(as_set(self), "__or__")(other)
-       }
-
-       if(_b_.hasattr(other, "__iter__")){
-          return $B.$getattr(as_set(self), "__or__")(as_set(other))
-       }
-
-       _b_.NotImplementedError.$factory(
-           "__or__ not implemented yet for set and " + _b_.type(other))
-    }
-
-    var _ops = ["sub", "and", "xor", "gt", "ge", "lt", "le"],
-        _f = res.__or__ + ""
-
-    for(var i = 0; i < _ops.length; i++){
-        var _op = "__" + _ops[i] + "__"
-        eval("res." + _op + "=" + _f.replace(new RegExp("__or__", "g"), _op))
-    }
-
-    return res
+    $B.set_func_names(klass, "builtins")
+    return klass
 }
 
 function $err(op, klass, other){

@@ -227,10 +227,10 @@ str.__init__ = function(self, arg){
     return _b_.None
 }
 
-var $str_iterator = $B.$iterator_class("str_iterator")
+var str_iterator = $B.make_iterator_class("str_iterator")
 str.__iter__ = function(self){
     var items = self.split("") // list of all characters in string
-    return $B.$iterator(items, $str_iterator)
+    return str_iterator.$factory(items)
 }
 
 str.__len__ = function(self){return self.length}

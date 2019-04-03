@@ -1471,9 +1471,9 @@ Query.__getitem__ = function(self, key){
     return result
 }
 
-var Query_iterator = $B.$iterator_class("query string iterator")
+var Query_iterator = $B.make_iterator_class("query string iterator")
 Query.__iter__ = function(self){
-    return $B.$iterator(self._keys, Query_iterator)
+    return Query_iterator.$factory(self._keys)
 }
 
 Query.__mro__ = [object]

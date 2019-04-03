@@ -425,7 +425,7 @@ $B.to_alias = function(attr){
 
 //eval() (built in function)
 function $$eval(src, _globals, _locals){
-    
+
     if(_globals === undefined){_globals = _b_.None}
     if(_locals === undefined){_locals = _b_.None}
 
@@ -830,7 +830,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false // attr == "ftrk2" // && obj === $B // "Point"
+    var $test = false //attr == "pop" // && obj === $B // "Point"
     if($test){console.log("$getattr", attr, obj, klass)}
 
     // Shortcut for classes without parents
@@ -1030,10 +1030,19 @@ $B.$getattr = function(obj, attr, _default){
     if($test){console.log("attr_func is odga", attr_func === odga, obj[attr])}
     if(attr_func === odga){
         var res = obj[attr]
+        /*
+        if(obj.__dict__){
+            res = obj.__dict__.$string_dict[attr]
+        }
+        if(obj[attr] !== undefined){
+            console.log(obj, attr, obj[attr], res)
+        }
+        */
         if(res === null){return null}
         else if(res === undefined && obj.hasOwnProperty(attr)){
             return res
         }else if(res !== undefined){
+            //console.log(obj, attr, obj[attr])
             if(res.__set__ === undefined || res.$is_class){
                 if($test){console.log("return", res, res+'',
                     res.__set__, res.$is_class)}
@@ -2480,11 +2489,10 @@ var zip = $B.make_class("zip",
     }
 )
 
-var $zip_iterator = $B.$iterator_class('zip_iterator')
+var zip_iterator = $B.make_iterator_class('zip_iterator')
+
 zip.__iter__ = function(self){
-    // issue #317 : iterator is not reset at each call to zip()
-    return self.$iterator = self.$iterator ||
-        $B.$iterator(self.items,$zip_iterator)
+    return zip_iterator.$factory(self.items)
 }
 
 $B.set_func_names(zip, "builtins")

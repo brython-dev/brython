@@ -515,7 +515,7 @@ type.__new__ = function(meta, name, bases, cl_dict){
     }
 
     // set class attributes for faster lookups
-    var items = $B.$dict_items(cl_dict)
+    var items = $B.dict_to_list(cl_dict) // defined in py_dict.js$dict_items(cl_dict)
     for(var i = 0; i < items.length; i++){
         var key = $B.to_alias(items[i][0]),
             v = items[i][1]
