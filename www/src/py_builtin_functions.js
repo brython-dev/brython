@@ -44,12 +44,19 @@ function check_no_kw(name, x, y){
 }
 
 var NoneType = {
-    __class__: _b_.type,
+    $factory: function(){
+        return None
+    },
     $infos:{
         __name__: "NoneType",
         __module__: "builtins"
     },
+    __bool__: function(self){return False},
+    __class__: _b_.type,
+    __hash__: function(self){return 0},
     __mro__: [object],
+    __repr__: function(self){return 'None'},
+    __str__: function(self){return 'None'},
     $is_class: true
 }
 
@@ -58,16 +65,8 @@ NoneType.__setattr__ = function(self, attr){
 }
 
 var None = {
-    __bool__: function(){return False},
     __class__: NoneType,
-    __hash__: function(){return 0},
-    __repr__: function(){return 'None'},
-    __str__: function(){return 'None'},
-    toString: function(){return 'None'}
 }
-
-NoneType.$factory = function(){return None}
-
 
 for(var $op in $B.$comps){ // None is not orderable with any type
     var key = $B.$comps[$op]
