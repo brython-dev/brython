@@ -617,8 +617,6 @@ $B.set_list_slice_step = function(obj, start, stop, step, value){
     }
 }
 
-$B.nbsi = 0
-$B.siklass = {}
 $B.$setitem = function(obj, item, value){
     if(Array.isArray(obj) && obj.__class__ === undefined &&
             typeof item == "number" &&
@@ -637,13 +635,6 @@ $B.$setitem = function(obj, item, value){
         return
     }else if(obj.__class__ === _b_.list){
         return _b_.list.$setitem(obj, item, value)
-    }
-    $B.nbsi++
-    var klname = obj.__class__.$infos.__name__
-    if($B.siklass[klname] !== undefined){
-        $B.siklass[klname]++
-    }else{
-        $B.siklass[klname] = 1
     }
     $B.$getattr(obj, "__setitem__")(item, value)
 }
