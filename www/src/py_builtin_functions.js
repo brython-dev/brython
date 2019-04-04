@@ -379,35 +379,29 @@ function divmod(x,y) {
 
 var enumerate = $B.make_class("enumerate",
     function(){
-        var $ns = $B.args("enumerate", 2, {iterable: null,start: null},
-            ['iterable', 'start'], arguments, {start: 0}, null, null)
-        var _iter = iter($ns["iterable"])
-        var _start = $ns["start"]
-        var res = {
+        var $ns = $B.args("enumerate", 2, {iterable: null, start: null},
+            ['iterable', 'start'], arguments, {start: 0}, null, null),
+            _iter = iter($ns["iterable"]),
+            start = $ns["start"]
+        return {
             __class__: enumerate,
-            __getattr__: function(attr){return res[attr]},
-            __iter__: function(){return res},
             __name__: 'enumerate iterator',
-            __next__: function(){
-                res.counter++
-                return _b_.tuple.$factory([res.counter, next(_iter)])
-            },
-            __repr__: function(){return "<enumerate object>"},
-            __str__: function(){return "<enumerate object>"},
-            counter: _start - 1
+            counter: start - 1,
+            iter: _iter,
+            start: start
         }
-        for(var attr in res){
-            if(typeof res[attr] === 'function' && attr !== "__class__"){
-                res[attr].__str__ = (function(x){
-                    return function(){
-                        return "<method wrapper '" + x + "' of enumerate object>"
-                    }
-                })(attr)
-            }
-        }
-        return res
     }
 )
+
+enumerate.__iter__ = function(self){
+    self.counter = self.start - 1
+    return self
+}
+
+enumerate.__next__ = function(self){
+    self.counter++
+    return $B.fast_tuple([self.counter, next(self.iter)])
+}
 
 $B.set_func_names(enumerate, "builtins")
 
