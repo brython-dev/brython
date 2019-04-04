@@ -1831,7 +1831,8 @@ function repr(obj){
         // class or its subclasses, but the attribute __repr__ of the
         // class metaclass (usually "type")
         // The metaclass is the attribute __class__ of the class
-        var func = _b_.type.__getattribute__(obj.__class__, '__repr__')
+        var func = _b_.type.__getattribute__(
+            obj.__class__ || $B.get_class(obj), '__repr__')
         return func(obj)
     }
     var func = $B.$getattr(obj, '__repr__')
