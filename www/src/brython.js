@@ -84,8 +84,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.2"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-04-03 14:36:32.860895"
-__BRYTHON__.timestamp=1554294992860
+__BRYTHON__.compiled_date="2019-04-04 16:26:33.564312"
+__BRYTHON__.timestamp=1554387993564
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","unicodedata","zlib"]
 ;
 
@@ -1697,11 +1697,6 @@ var it_js=iterable.to_js(),iterable_name='$iter'+num,js='var '+iterable_name+' =
 iterable_name+'),"__next__")'
 new $NodeJSCtx(new_node,js)
 new_nodes[pos++]=new_node
-var js='if(isinstance('+iterable_name+', _b_.dict)){$locals.$len_func'+
-num+' = $B.$getattr('+iterable_name+', "__len__"); $locals.$len'+
-num+' = $locals.$len_func'+num+'()}else{$locals.$len'+
-num+' = null}'
-new_nodes[pos++]=$NodeJS(js)
 if(this.has_break){
 new_nodes[pos++]=$NodeJS(local_ns+'["$no_break'+num+
 '"] = true;')}
@@ -1717,10 +1712,6 @@ new_nodes[pos++]=while_node
 node.parent.children.splice(rank,1)
 if(this.test_range){for(var i=new_nodes.length-1;i >=0;i--){else_node.insert(0,new_nodes[i])}}else{for(var i=new_nodes.length-1;i >=0;i--){node.parent.insert(rank,new_nodes[i])
 offset+=new_nodes.length}}
-while_node.add($NodeJS('if($locals.$len'+num+
-'!==null && $locals.$len'+num+'!=$locals.$len_func'+
-num+'()){throw RuntimeError.$factory("dictionary'+
-' changed size during iteration")}'))
 var try_node=$NodeJS("try")
 try_node.bindings=node.bindings
 while_node.add(try_node)
@@ -5813,8 +5804,6 @@ if(nb !=repl.length){throw _b_.ValueError.$factory(
 " to extended slice of size "+nb)}
 for(var i=start;test(i);i+=step){obj[i]=repl[j]
 j++}}
-$B.nbsi=0
-$B.siklass={}
 $B.$setitem=function(obj,item,value){if(Array.isArray(obj)&& obj.__class__===undefined &&
 typeof item=="number" &&
 !_b_.isinstance(obj,_b_.tuple)){if(item < 0){item+=obj.length}
@@ -5823,9 +5812,6 @@ obj[item]=value
 return}else if(obj.__class__===_b_.dict){_b_.dict.$setitem(obj,item,value)
 return}else if(obj.__class__===$B.JSObject){$B.JSObject.__setattr__(obj,item,value)
 return}else if(obj.__class__===_b_.list){return _b_.list.$setitem(obj,item,value)}
-$B.nbsi++
-var klname=obj.__class__.$infos.__name__
-if($B.siklass[klname]!==undefined){$B.siklass[klname]++}else{$B.siklass[klname]=1}
 $B.$getattr(obj,"__setitem__")(item,value)}
 $B.augm_item_add=function(obj,item,incr){if(Array.isArray(obj)&& typeof item=="number" &&
 obj[item]!==undefined){if(Array.isArray(obj[item])&& Array.isArray(incr)){for(var i=0,len=incr.length;i < len;i++){obj[item].push(incr[i])}
@@ -5899,42 +5885,11 @@ $B.stdout=$io.$factory()
 $B.stdin={__class__:$io,__original__:true,closed:false,len:1,pos:0,read:function(){return ""},readline:function(){return ""}}
 $B.set_line=function(line_num,module_name){$B.line_info=line_num+","+module_name
 return _b_.None}
-$B.$iterator=function(items,klass){var res={__class__:klass,counter:-1,items:items}
-res.__str__=res.toString=res.__repr__
-return res}
-$B.$iterator_class=function(name){
-var klass={__class__:_b_.type,__mro__:[_b_.object],$infos:{__name__:name,__module__:"builtins"},$is_class:true}
-function as_array(s){var _a=[],pos=0,_it=_b_.iter(s)
-while(1){try{_a[pos++]=_b_.next(_it)}catch(err){if(err.__class__===_b_.StopIteration){break}}}
-return _a}
-function as_list(s){return _b_.list.$factory(as_array(s))}
-function as_set(s){return _b_.set.$factory(as_array(s))}
-klass.__eq__=function(self,other){if(_b_.isinstance(other,[_b_.tuple,_b_.set,_b_.list])){return $B.$getattr(as_list(self),"__eq__")(other)}
-if(_b_.hasattr(other,"__iter__")){return $B.$getattr(as_list(self),"__eq__")(as_list(other))}
-_b_.NotImplementedError.$factory(
-"__eq__ not implemented yet for list and "+_b_.type(other))}
-var _ops=["eq","ne"],_f=klass.__eq__+""
-for(var i=0;i < _ops.length;i++){var _op="__"+_ops[i]+"__"
-eval("klass."+_op+"="+_f.replace(new RegExp("__eq__","g"),_op))}
-klass.__iter__=function(self){return self}
-klass.__len__=function(self){return self.items.length}
-klass.__next__=function(self){self.counter++
-if(self.counter < self.items.length){return self.items[self.counter]}
-throw _b_.StopIteration.$factory("StopIteration")}
-klass.__or__=function(self,other){if(_b_.isinstance(other,[_b_.tuple,_b_.set,_b_.list])){return $B.$getattr(as_set(self),"__or__")(other)}
-if(_b_.hasattr(other,"__iter__")){return $B.$getattr(as_set(self),"__or__")(as_set(other))}
-_b_.NotImplementedError.$factory(
-"__or__ not implemented yet for set and "+_b_.type(other))}
-var _ops=["sub","and","xor","gt","ge","lt","le"],_f=klass.__or__+""
-for(var i=0;i < _ops.length;i++){var _op="__"+_ops[i]+"__"
-eval("klass."+_op+"="+_f.replace(new RegExp("__or__","g"),_op))}
-return klass}
 $B.make_iterator_class=function(name){
 var klass={__class__:_b_.type,__mro__:[_b_.object],$factory:function(items){return{
 __class__:klass,counter:-1,items:items,len:items.length}},$infos:{__name__:name},$is_class:true,__iter__:function(self){self.counter=-1
 self.len=self.items.length
-return self},__len__:function(self){return self.items.length},__next__:function(self){if(self.items.length !=self.len){console.log("bizarre",self)}
-self.counter++
+return self},__len__:function(self){return self.items.length},__next__:function(self){self.counter++
 if(self.counter < self.items.length){return self.items[self.counter]}
 throw _b_.StopIteration.$factory("StopIteration")}}
 $B.set_func_names(klass,"builtins")
@@ -5947,9 +5902,7 @@ var ropsigns=["+","-","*","/","//","%","**","<<",">>","&","^","|"]
 $B.make_rmethods=function(klass){for(var j=0,_len_j=ropnames.length;j < _len_j;j++){if(klass["__"+ropnames[j]+"__"]===undefined){klass["__"+ropnames[j]+"__"]=(function(name,sign){return function(self,other){try{return $B.$getattr(other,"__r"+name+"__")(self)}
 catch(err){$err(sign,klass,other)}}})(ropnames[j],ropsigns[j])}}}
 $B.UUID=function(){return $B.$py_UUID++}
-$B.nb_inject=0
-$B.InjectBuiltins=function(){$B.nb_inject++
-var _str=["var _b_ = $B.builtins"],pos=1
+$B.InjectBuiltins=function(){var _str=["var _b_ = $B.builtins"],pos=1
 for(var $b in $B.builtins){_str[pos++]="var "+$b+'=_b_["'+$b+'"]'}
 return _str.join(";")}
 $B.$GetInt=function(value){
@@ -5985,10 +5938,6 @@ else{throw _b_.TypeError.$factory("'"+$B.class_name(v)+
 default:
 throw _b_.TypeError.$factory("'"+$B.class_name(v)+
 "' object cannot be interpreted as an integer")}}
-$B.int_value=function(v){
-try{return $B.int_or_bool(v)}
-catch(err){if(_b_.isinstance(v,_b_.complex)&& v.$imag==0){return $B.int_or_bool(v.$real)}else if(isinstance(v,_b_.float)&& v==Math.floor(v)){return Math.floor(v)}else{throw _b_.TypeError.$factory("'"+$B.class_name(v)+
-"' object cannot be interpreted as an integer")}}}
 $B.enter_frame=function(frame){
 $B.frames_stack.push(frame)}
 $B.leave_frame=function(arg){
@@ -6001,13 +5950,6 @@ if($B.profile > 0){$B.$profile.return()}
 if($B.frames_stack.length==0){console.log("empty stack");return}
 var frame=$B.frames_stack.pop()
 for(var i=$B.frames_stack.length-1;i >=0;i--){if($B.frames_stack[i][2]==frame[2]){$B.frames_stack[i][3]=frame[3]}}}
-$B.memory=function(){var info=[]
-for(var attr in __BRYTHON__){var obj=__BRYTHON__[attr]
-if(obj===null){continue}
-if(Array.isArray(obj)){info.push([obj.length,attr])}
-else if(typeof obj=="object"){info.push([Object.keys(obj).length,attr])}}
-info.sort(function(x,y){return x[0]-y[0]})
-for(var i=0,len=info.length;i < len;i++){console.log(info[i][0],info[i][1],__BRYTHON__[info[i][1]])}}
 var Profile=$B.make_class("profile",function(){return{__class__:Profile}}
 )
 Profile.__dir__=function(self){return Object.keys(self)}
@@ -6200,10 +6142,9 @@ expected+" argument"+(expected < 2 ? '' :'s')+
 " ("+len+" given)")}}}
 function check_no_kw(name,x,y){
 if(x.$nat ||(y !==undefined && y.$nat)){throw _b_.TypeError.$factory(name+"() takes no keyword arguments")}}
-var NoneType={__class__:_b_.type,$infos:{__name__:"NoneType",__module__:"builtins"},__mro__:[object],$is_class:true}
+var NoneType={$factory:function(){return None},$infos:{__name__:"NoneType",__module__:"builtins"},__bool__:function(self){return False},__class__:_b_.type,__hash__:function(self){return 0},__mro__:[object],__repr__:function(self){return 'None'},__str__:function(self){return 'None'},$is_class:true}
 NoneType.__setattr__=function(self,attr){return no_set_attr(NoneType,attr)}
-var None={__bool__:function(){return False},__class__:NoneType,__hash__:function(){return 0},__repr__:function(){return 'None'},__str__:function(){return 'None'},toString:function(){return 'None'}}
-NoneType.$factory=function(){return None}
+var None={__class__:NoneType,}
 for(var $op in $B.$comps){
 var key=$B.$comps[$op]
 switch(key){case 'ge':
@@ -6337,14 +6278,14 @@ function divmod(x,y){check_no_kw('divmod',x,y)
 check_nb_args('divmod',2,arguments)
 var klass=x.__class__ ||$B.get_class(x)
 return _b_.tuple.$factory([$B.$getattr(klass,'__floordiv__')(x,y),$B.$getattr(klass,'__mod__')(x,y)])}
-var enumerate=$B.make_class("enumerate",function(){var $ns=$B.args("enumerate",2,{iterable:null,start:null},['iterable','start'],arguments,{start:0},null,null)
-var _iter=iter($ns["iterable"])
-var _start=$ns["start"]
-var res={__class__:enumerate,__getattr__:function(attr){return res[attr]},__iter__:function(){return res},__name__:'enumerate iterator',__next__:function(){res.counter++
-return _b_.tuple.$factory([res.counter,next(_iter)])},__repr__:function(){return "<enumerate object>"},__str__:function(){return "<enumerate object>"},counter:_start-1}
-for(var attr in res){if(typeof res[attr]==='function' && attr !=="__class__"){res[attr].__str__=(function(x){return function(){return "<method wrapper '"+x+"' of enumerate object>"}})(attr)}}
-return res}
+var enumerate=$B.make_class("enumerate",function(){var $ns=$B.args("enumerate",2,{iterable:null,start:null},['iterable','start'],arguments,{start:0},null,null),_iter=iter($ns["iterable"]),start=$ns["start"]
+return{
+__class__:enumerate,__name__:'enumerate iterator',counter:start-1,iter:_iter,start:start}}
 )
+enumerate.__iter__=function(self){self.counter=self.start-1
+return self}
+enumerate.__next__=function(self){self.counter++
+return $B.fast_tuple([self.counter,next(self.iter)])}
 $B.set_func_names(enumerate,"builtins")
 $B.from_alias=function(attr){if(attr.substr(0,2)=='$$' && $B.aliased_names[attr.substr(2)]){return attr.substr(2)}
 return attr}
@@ -6903,7 +6844,8 @@ quit.__repr__=quit.__str__=function(){return "Use quit() or Ctrl-Z plus Return t
 function repr(obj){check_no_kw('repr',obj)
 check_nb_args('repr',1,arguments)
 if(obj.$is_class ||obj.$factory){
-var func=_b_.type.__getattribute__(obj.__class__,'__repr__')
+var func=_b_.type.__getattribute__(
+obj.__class__ ||$B.get_class(obj),'__repr__')
 return func(obj)}
 var func=$B.$getattr(obj,'__repr__')
 if(func !==undefined){return $B.$call(func)()}
@@ -9516,7 +9458,7 @@ $err('>>',other)}
 int.__setattr__=function(self,attr,value){if(typeof self=="number"){if(int.$factory[attr]===undefined){throw _b_.AttributeError.$factory(
 "'int' object has no attribute '"+attr+"'")}else{throw _b_.AttributeError.$factory(
 "'int' object attribute '"+attr+"' is read-only")}}
-self[attr]=value
+self.__dict__.$string_dict[attr]=value
 return _b_.None}
 int.__str__=int.__repr__
 int.__truediv__=function(self,other){if(_b_.isinstance(other,int)){other=int_value(other)
@@ -11650,6 +11592,10 @@ if(ix !==undefined){return items.map(function(item){return item[ix]})}else{items
 return items.map(function(item){item.__class__=_b_.tuple;return item}
 )}}
 $B.dict_to_list=to_list 
+function dict_iterator_next(self){if(self.len_func()!=self.len){throw RuntimeError.$factory("dictionary changed size during iteration")}
+self.counter++
+if(self.counter < self.items.length){return self.items[self.counter]}
+throw _b_.StopIteration.$factory("StopIteration")}
 var $copy_dict=function(left,right){var _l=to_list(right),si=dict.$setitem,i=_l.length
 right.$version=right.$version ||0
 var right_version=right.$version ||0
@@ -11869,15 +11815,21 @@ else{throw err}}}
 var dict_items=$B.make_iterator_class("dict_items")
 dict_items.__eq__=function(self,other){
 return $B.rich_comp("__eq__",_b_.set.$factory(self),_b_.set.$factory(other))}
+dict_items.__next__=dict_iterator_next
 dict.items=function(self){if(arguments.length > 1){var _len=arguments.length-1,_msg="items() takes no arguments ("+_len+" given)"
 throw _b_.TypeError.$factory(_msg)}
-return dict_items.$factory(to_list(self))}
+var it=dict_items.$factory(to_list(self))
+it.len_func=function(){return dict.__len__(self)}
+return it}
 var dict_keys=$B.make_iterator_class("dict_keys")
 dict_keys.__eq__=function(self,other){
 return $B.rich_comp("__eq__",_b_.set.$factory(self),_b_.set.$factory(other))}
+dict_keys.__next__=dict_iterator_next
 dict.$$keys=function(self){if(arguments.length > 1){var _len=arguments.length-1,_msg="keys() takes no arguments ("+_len+" given)"
 throw _b_.TypeError.$factory(_msg)}
-return dict_keys.$factory(to_list(self,0))}
+var it=dict_keys.$factory(to_list(self,0))
+it.len_func=function(){return dict.__len__(self)}
+return it}
 dict.pop=function(){var missing={},$=$B.args("pop",3,{self:null,key:null,_default:null},["self","key","_default"],arguments,{_default:missing},null,null),self=$.self,key=$.key,_default=$._default
 try{var res=dict.__getitem__(self,key)
 dict.__delitem__(self,key)
@@ -11914,9 +11866,12 @@ $copy_dict(self,kw)
 self.$version++
 return $N}
 var dict_values=$B.make_iterator_class("dict_values")
+dict_values.__next__=dict_iterator_next
 dict.values=function(self){if(arguments.length > 1){var _len=arguments.length-1,_msg="values() takes no arguments ("+_len+" given)"
 throw _b_.TypeError.$factory(_msg)}
-return dict_values.$factory(to_list(self,1))}
+var it=dict_values.$factory(to_list(self,1))
+it.len_func=function(){return dict.__len__(self)}
+return it}
 dict.$factory=function(){var res=dict.__new__(dict)
 var args=[res]
 for(var i=0,len=arguments.length;i < len ;i++){args.push(arguments[i])}

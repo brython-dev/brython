@@ -926,11 +926,9 @@ $B.make_rmethods = function(klass){
 
 // UUID is a function to produce a unique id.
 // the variable $B.py_UUID is defined in py2js.js (in the brython function)
-$B.UUID = function() {return $B.$py_UUID++}
+$B.UUID = function(){return $B.$py_UUID++}
 
-$B.nb_inject = 0
 $B.InjectBuiltins = function() {
-    $B.nb_inject++
    var _str = ["var _b_ = $B.builtins"],
        pos = 1
    for(var $b in $B.builtins){
@@ -991,25 +989,6 @@ $B.int_or_bool = function(v){
     }
 }
 
-$B.int_value = function(v){
-    // If v is an integer, return v
-    // If it's a boolean, return 0 or 1
-    // If it's a complex with v.imag = 0, return int_value(v.real)
-    // If it's a float that equals an integer, return it
-    // Else throw ValueError
-    try{return $B.int_or_bool(v)}
-    catch(err){
-        if(_b_.isinstance(v, _b_.complex) && v.$imag == 0){
-            return $B.int_or_bool(v.$real)
-        }else if(isinstance(v, _b_.float) && v == Math.floor(v)){
-            return Math.floor(v)
-        }else{
-            throw _b_.TypeError.$factory("'" + $B.class_name(v) +
-                "' object cannot be interpreted as an integer")
-        }
-    }
-}
-
 $B.enter_frame = function(frame){
     // Enter execution frame : save on top of frames stack
     $B.frames_stack.push(frame)
@@ -1034,22 +1013,6 @@ $B.leave_frame_exec = function(arg){
             $B.frames_stack[i][3] = frame[3]
         }
     }
-}
-
-$B.memory = function(){
-    var info = []
-    for(var attr in __BRYTHON__){
-       var obj = __BRYTHON__[attr]
-       if(obj === null){continue}
-       if(Array.isArray(obj)){info.push([obj.length, attr])}
-       else if(typeof obj == "object"){
-           info.push([Object.keys(obj).length, attr])
-       }
-   }
-   info.sort(function(x, y){return x[0] - y[0]})
-   for(var i = 0, len = info.length; i < len; i++){
-       console.log(info[i][0], info[i][1], __BRYTHON__[info[i][1]])
-   }
 }
 
 var Profile = $B.make_class("profile",
