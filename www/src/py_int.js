@@ -15,7 +15,8 @@ function int_value(obj){
 }
 
 // dictionary for built-in class 'int'
-var int = {__class__: _b_.type,
+var int = {
+    __class__: _b_.type,
     __dir__: _b_.object.__dir__,
     $infos: {
         __module__: "builtins",
@@ -448,7 +449,7 @@ int.__setattr__ = function(self, attr, value){
         }
     }
     // subclasses of int can have attributes set
-    self[attr] = value
+    self.__dict__.$string_dict[attr] = value
     return _b_.None
 }
 
