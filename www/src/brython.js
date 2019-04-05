@@ -84,8 +84,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.2"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-04-04 16:26:33.564312"
-__BRYTHON__.timestamp=1554387993564
+__BRYTHON__.compiled_date="2019-04-05 14:37:53.609593"
+__BRYTHON__.timestamp=1554467873609
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","unicodedata","zlib"]
 ;
 
@@ -5079,6 +5079,8 @@ var $test=false
 if($test){console.log("attr",attr,"de",obj,"klass",klass)}
 if(attr==="__class__"){return klass}
 var res=obj[attr]
+if(Array.isArray(obj)&& Array.prototype[attr]!==undefined){
+res=undefined}
 if(res===undefined && obj.__dict__ &&
 obj.__dict__.$string_dict.hasOwnProperty(attr)){return obj.__dict__.$string_dict[attr]}
 if(res===undefined){
@@ -5315,12 +5317,15 @@ return kls}
 var type=$B.make_class("type",function(obj,bases,cl_dict){if(arguments.length==1){return obj.__class__ ||$B.get_class(obj)}
 return type.__new__(type,obj,bases,cl_dict)}
 )
-type.__call__=function(klass,...extra_args){var new_func=_b_.type.__getattribute__(klass,"__new__")
+type.__call__=function(){var extra_args=[],klass=arguments[0]
+for(var i=1,len=arguments.length;i < len;i++){extra_args.push(arguments[i])}
+var new_func=_b_.type.__getattribute__(klass,"__new__")
 var instance=new_func.apply(null,arguments)
 if(instance.__class__===klass){
 var init_func=_b_.type.__getattribute__(klass,"__init__")
 if(init_func !==_b_.object.__init__){
-init_func(instance,...extra_args)}}
+var args=[instance].concat(extra_args)
+init_func.apply(null,args)}}
 return instance}
 type.__class__=type
 type.__format__=function(klass,fmt_spec){
@@ -5424,9 +5429,6 @@ var bases=cls.__bases__,seqs=[],pos1=0
 for(var i=0;i < bases.length;i++){
 if(bases[i]===_b_.str){bases[i]=$B.StringSubclass}
 else if(bases[i]===_b_.float){bases[i]=$B.FloatSubclass}
-else if(bases[i]===_b_.list){for(var attr in _b_.list){if(attr=="$factory"){continue}
-if(cls[attr]===undefined){cls[attr]=_b_.list[attr]}}
-cls.$native=true}
 var bmro=[],pos=0
 if(bases[i]===undefined ||
 bases[i].__mro__===undefined){if(bases[i].__class__===$B.JSObject){
@@ -6524,8 +6526,10 @@ if(attr_func !==undefined){break}}}}
 if(typeof attr_func !=='function'){console.log(attr+' is not a function '+attr_func,klass)}
 if($test){console.log("attr_func is odga",attr_func===odga,obj[attr])}
 if(attr_func===odga){var res=obj[attr]
+if(Array.isArray(obj)&& Array.prototype[attr]!==undefined){
+res=undefined}
 if(res===null){return null}
-else if(res===undefined && obj.hasOwnProperty(attr)){return res}else if(res !==undefined){
+else if(res===undefined && obj.hasOwnProperty(attr)){return res}else if(res !==undefined){if($test){console.log(obj,attr,obj[attr],res.__set__ ||res.$is_class)}
 if(res.__set__===undefined ||res.$is_class){if($test){console.log("return",res,res+'',res.__set__,res.$is_class)}
 return res}}}
 try{var res=attr_func(obj,attr)
@@ -7252,6 +7256,7 @@ trace.push(info[1]+" line "+info[0])
 var src=$B.file_cache[frame[3].__file__]
 if(src){var lines=src.split("\n"),line=lines[parseInt(info[0])-1]
 trace.push("  "+line.trim())}}})
+console.log("print stack ok",trace)
 return trace.join("\n")}
 var traceback=$B.make_class("traceback",function(exc,stack){if(stack===undefined)
 stack=exc.$stack

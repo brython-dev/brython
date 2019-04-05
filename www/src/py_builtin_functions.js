@@ -823,7 +823,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false //attr == "pop" // && obj === $B // "Point"
+    var $test = false // attr == "__len__" // && obj === $B // "Point"
     if($test){console.log("$getattr", attr, obj, klass)}
 
     // Shortcut for classes without parents
@@ -1023,19 +1023,18 @@ $B.$getattr = function(obj, attr, _default){
     if($test){console.log("attr_func is odga", attr_func === odga, obj[attr])}
     if(attr_func === odga){
         var res = obj[attr]
-        /*
-        if(obj.__dict__){
-            res = obj.__dict__.$string_dict[attr]
+        if(Array.isArray(obj) && Array.prototype[attr] !== undefined){
+            // Special case for list subclasses. Cf issue 1081.
+            res = undefined
         }
-        if(obj[attr] !== undefined){
-            console.log(obj, attr, obj[attr], res)
-        }
-        */
         if(res === null){return null}
         else if(res === undefined && obj.hasOwnProperty(attr)){
             return res
         }else if(res !== undefined){
-            //console.log(obj, attr, obj[attr])
+            if($test){console.log(obj, attr, obj[attr],
+                res.__set__ || res.$is_class)}
+            // Cf. issue 1081
+            //var in_proto = Object.getPrototypeOf(obj)[attr]
             if(res.__set__ === undefined || res.$is_class){
                 if($test){console.log("return", res, res+'',
                     res.__set__, res.$is_class)}

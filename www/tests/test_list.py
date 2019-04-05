@@ -166,7 +166,7 @@ assert ['a'] < ['a', 2]
 
 # issue 993
 assert sorted(['b3', 'a2', 'c1']) == ['a2', 'b3', 'c1']
-assert sorted(['a2', 'b3', 'c1'], key=lambda a:a[1]) == ['c1', 'a2', 'b3']
+assert sorted(['a2', 'b3', 'c1'], key=lambda a: a[1]) == ['c1', 'a2', 'b3']
 assert sorted(['a2', 'b3', 'c1'], key=None) == ['a2', 'b3', 'c1']
 
 ls = ['b3', 'a2', 'c1']; ls.sort()
@@ -202,6 +202,24 @@ except AttributeError:
 a = ["a"]
 b = ["b"]
 assert a.sort() is None
-assert (a+b).sort() is None
+assert (a + b).sort() is None
 
+# issue 1081
+class A(list):
+    pass
+
+test1 = A([1, 2, 3])
+test1.append(4)
+assert test1 == [1, 2, 3, 4]
+test1.pop()
+assert test1 == [1, 2, 3]
+
+class B(A):
+    pass
+
+test2 = B([1, 2, 3])
+test2.append(4)
+assert test2 == [1, 2, 3, 4]
+test2.pop()
+assert test2 == [1, 2, 3]
 print("passed all tests..")

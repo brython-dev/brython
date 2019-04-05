@@ -116,6 +116,7 @@ $B.print_stack = function(stack){
             }
         }
     })
+    console.log("print stack ok", trace)
     return trace.join("\n")
 }
 

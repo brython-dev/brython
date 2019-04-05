@@ -112,12 +112,16 @@ object.__getattribute__ = function(obj, attr){
 
     var klass = obj.__class__ || $B.get_class(obj)
 
-    var $test = false //attr == "f"
+    var $test = false //attr == "status"
     if($test){console.log("attr", attr, "de", obj, "klass", klass)}
     if(attr === "__class__"){
         return klass
     }
     var res = obj[attr]
+    if(Array.isArray(obj) && Array.prototype[attr] !== undefined){
+        // Special case for list subclasses. Cf. issue 1081
+        res = undefined
+    }
     if(res === undefined && obj.__dict__ &&
             obj.__dict__.$string_dict.hasOwnProperty(attr)){
         return obj.__dict__.$string_dict[attr]

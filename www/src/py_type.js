@@ -254,7 +254,12 @@ var type = $B.make_class("type",
     }
 )
 
-type.__call__ = function(klass, ...extra_args){
+type.__call__ = function(){
+    var extra_args = [],
+        klass = arguments[0]
+    for(var i = 1, len = arguments.length; i < len; i++){
+        extra_args.push(arguments[i])
+    }
     var new_func = _b_.type.__getattribute__(klass, "__new__")
     // create an instance with __new__
     var instance = new_func.apply(null, arguments)
@@ -264,7 +269,8 @@ type.__call__ = function(klass, ...extra_args){
         if(init_func !== _b_.object.__init__){
             // object.__init__ is not called in this case (it would raise an
             // exception if there are parameters).
-            init_func(instance, ...extra_args)
+            var args = [instance].concat(extra_args)
+            init_func.apply(null, args)
         }
     }
     return instance
@@ -561,19 +567,10 @@ type.mro = function(cls){
         seqs = [],
         pos1 = 0
     for(var i = 0; i < bases.length; i++){
-        // we can't simply push bases[i].__mro__
+        // We can't simply push bases[i].__mro__
         // because it would be modified in the algorithm
         if(bases[i] === _b_.str){bases[i] = $B.StringSubclass}
         else if(bases[i] === _b_.float){bases[i] = $B.FloatSubclass}
-        else if(bases[i] === _b_.list){
-            for(var attr in _b_.list){
-                if(attr == "$factory"){continue}
-                if(cls[attr] === undefined){
-                    cls[attr] = _b_.list[attr]
-                }
-            }
-            cls.$native = true
-        }
         var bmro = [],
             pos = 0
         if(bases[i] === undefined ||
