@@ -1987,6 +1987,9 @@ $B.$setattr = function(obj, attr, value){
         if(attr == "__init__" || attr == "__new__"){
             // redefine the function that creates instances of the class
             obj.$factory = $B.$instance_creator(obj)
+        }else if(attr == "__bases__"){
+            // redefine mro
+            obj.__mro__ = _b_.type.mro(obj)
         }
         return None
     }

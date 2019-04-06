@@ -84,8 +84,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.2"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-04-05 14:37:53.609593"
-__BRYTHON__.timestamp=1554467873609
+__BRYTHON__.compiled_date="2019-04-06 16:55:34.005204"
+__BRYTHON__.timestamp=1554562534005
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","unicodedata","zlib"]
 ;
 
@@ -6913,7 +6913,8 @@ metaclass[attr].__set__){metaclass[attr].__set__(obj,value)
 return None}
 obj[attr]=value
 if(attr=="__init__" ||attr=="__new__"){
-obj.$factory=$B.$instance_creator(obj)}
+obj.$factory=$B.$instance_creator(obj)}else if(attr=="__bases__"){
+obj.__mro__=_b_.type.mro(obj)}
 return None}
 var res=obj[attr],klass=obj.__class__ ||$B.get_class(obj)
 if($test){console.log('set attr',attr,'to',obj,obj[attr],'class',klass)}
@@ -12819,7 +12820,7 @@ var browser={$package:true,$is_package:true,__initialized__:true,__package__:'br
 var $=$B.args("bind",2,{elt:null,evt:null},["elt","evt"],arguments,{},null,null)
 return function(callback){if($.elt.__class__ &&
 _b_.issubclass($.elt.__class__,$B.JSObject)){
-if($.elt.js===_window){function f(ev){return callback($B.JSObject.$factory(ev))}
+if($.elt.js===_window){function f(ev){try{return callback($B.JSObject.$factory(ev))}catch(err){$B.handle_error(err)}}
 $.elt.js["on"+$.evt]=f
 return f}else{$B.$call($B.$getattr($.elt,"bind"))($.evt,callback)
 return callback}}else if(_b_.isinstance($.elt,$B.DOMNode)){
