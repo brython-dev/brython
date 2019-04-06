@@ -84,8 +84,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.2"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-04-06 16:55:34.005204"
-__BRYTHON__.timestamp=1554562534005
+__BRYTHON__.compiled_date="2019-04-06 21:36:06.295998"
+__BRYTHON__.timestamp=1554579366295
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","unicodedata","zlib"]
 ;
 
@@ -9541,9 +9541,9 @@ int.$factory=function(value,base){
 if(value===undefined){return 0}
 if(typeof value=="number" &&
 (base===undefined ||base==10)){return parseInt(value)}
-if(base !==undefined){if(! _b_.isinstance(value,[_b_.str,_b_.bytes,_b_.bytearray])){throw TypeError.$factory(
+if(base !==undefined){if(! _b_.isinstance(value,[_b_.str,_b_.bytes,_b_.bytearray])){throw _b_.TypeError.$factory(
 "int() can't convert non-string with explicit base")}}
-if(_b_.isinstance(value,_b_.complex)){throw TypeError.$factory("can't convert complex to int")}
+if(_b_.isinstance(value,_b_.complex)){throw _b_.TypeError.$factory("can't convert complex to int")}
 var $ns=$B.args("int",2,{x:null,base:null},["x","base"],arguments,{"base":10},null,null),value=$ns["x"],base=$ns["base"]
 if(_b_.isinstance(value,_b_.float)&& base==10){if(value < $B.min_int ||value > $B.max_int){return $B.long_int.$from_float(value)}
 else{return value > 0 ? Math.floor(value):Math.ceil(value)}}

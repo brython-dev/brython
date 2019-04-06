@@ -625,13 +625,13 @@ int.$factory = function(value, base){
 
     if(base !== undefined){
         if(! _b_.isinstance(value, [_b_.str, _b_.bytes, _b_.bytearray])){
-            throw TypeError.$factory(
+            throw _b_.TypeError.$factory(
                 "int() can't convert non-string with explicit base")
         }
     }
 
     if(_b_.isinstance(value, _b_.complex)){
-        throw TypeError.$factory("can't convert complex to int")
+        throw _b_.TypeError.$factory("can't convert complex to int")
     }
     var $ns = $B.args("int", 2, {x:null, base:null}, ["x", "base"], arguments,
         {"base": 10}, null, null),
