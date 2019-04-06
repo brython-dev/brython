@@ -25,7 +25,11 @@
                     // eg window, Web Worker
                     if($.elt.js === _window){
                         function f(ev){
-                            return callback($B.JSObject.$factory(ev))
+                            try{
+                                return callback($B.JSObject.$factory(ev))
+                            }catch(err){
+                                $B.handle_error(err)
+                            }
                         }
                         $.elt.js["on" + $.evt] = f
                         return f

@@ -1,12 +1,4 @@
-// Replacement for asyncio.
-//
-// CPython asyncio can't be implemented for Brython because it relies on
-// blocking function (eg run(), run_until_complete()), and such functions
-// can't be defined in Javascript. It also manages an event loop, and a
-// browser only has its own built-in event loop.
-//
-// This module exposes functions whose result can be "await"-ed inside
-// asynchrounous functions defined by "async def".
+// Web Worker implementation
 
 var $module = (function($B){
 
@@ -45,7 +37,6 @@ wclass.send = function(self){
 $B.set_func_names(wclass, "browser.worker")
 
 var _Worker = $B.make_class("Worker", function(id, onmessage, onerror){
-
     var $ = $B.args("__init__", 3, {id: null, onmessage: null, onerror: null},
             ['id', 'onmessage', 'onerror'], arguments,
             {onmessage: _b_.None, onerror: _b_.None}, null, null),
