@@ -23,20 +23,15 @@
                 if($.elt.__class__ &&
                         _b_.issubclass($.elt.__class__, $B.JSObject)){
                     // eg window, Web Worker
-                    if($.elt.js === _window){
-                        function f(ev){
-                            try{
-                                return callback($B.JSObject.$factory(ev))
-                            }catch(err){
-                                $B.handle_error(err)
-                            }
+                    function f(ev){
+                        try{
+                            return callback($B.JSObject.$factory(ev))
+                        }catch(err){
+                            $B.handle_error(err)
                         }
-                        $.elt.js["on" + $.evt] = f
-                        return f
-                    }else{
-                        $B.$call($B.$getattr($.elt, "bind"))($.evt, callback)
-                        return callback
                     }
+                    $.elt.js.addEventListener($.evt, f, false)
+                    return f
                 }else if(_b_.isinstance($.elt, $B.DOMNode)){
                     // DOM element
                     $B.DOMNode.bind($.elt, $.evt, callback)
