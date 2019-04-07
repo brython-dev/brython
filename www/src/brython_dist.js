@@ -84,8 +84,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.2"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-04-07 13:59:12.709684"
-__BRYTHON__.timestamp=1554638352709
+__BRYTHON__.compiled_date="2019-04-07 19:07:30.382976"
+__BRYTHON__.timestamp=1554656850382
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","unicodedata","zlib"]
 ;
 
@@ -8474,9 +8474,9 @@ self.js)}}
 JSObject.__getitem__=function(self,rank){if(typeof self.js.length=='number'){if((typeof rank=="number" ||typeof rank=="boolean")&&
 typeof self.js.item=='function'){var rank_to_int=_b_.int.$factory(rank)
 if(rank_to_int < 0){rank_to_int+=self.js.length}
-var res=JSObject.$factory(self.js.item(rank_to_int))
-if(res===undefined){throw _b_.KeyError.$factory(rank)}
-return res}else if(typeof rank=="string" &&
+var res=self.js.item(rank_to_int)
+if(res===null){throw _b_.IndexError.$factory(rank)}
+return JSObject.$factory(res)}else if(typeof rank=="string" &&
 typeof self.js.getNamedItem=='function'){var res=JSObject.$factory(self.js.getNamedItem(rank))
 if(res===undefined){throw _b_.KeyError.$factory(rank)}
 return res}}
@@ -12011,6 +12011,11 @@ ev.__class__=DOMEvent
 if(ev.preventDefault===undefined){ev.preventDefault=function(){ev.returnValue=false}}
 if(ev.stopPropagation===undefined){ev.stopPropagation=function(){ev.cancelBubble=true}}
 return ev}
+function dom2svg(svg_elt,coords){
+var pt=svg_elt.createSVGPoint()
+pt.x=coords.x
+pt.y=coords.y
+return pt.matrixTransform(svg_elt.getScreenCTM().inverse())}
 DOMEvent.__getattribute__=function(self,attr){switch(attr){case '__repr__':
 case '__str__':
 return function(){return '<DOMEvent object>'}
@@ -12024,7 +12029,15 @@ return self['data']
 case 'target':
 if(self.target !==undefined){return DOMNode.$factory(self.target)}
 case 'char':
-return String.fromCharCode(self.which)}
+return String.fromCharCode(self.which)
+case 'svgX':
+if(self.target instanceof SVGSVGElement){return Math.floor(dom2svg(self.target,$mouseCoords(self)).x)}
+throw _b_.AttributeError.$factory("event target is not an SVG "+
+"element")
+case 'svgY':
+if(self.target instanceof SVGSVGElement){return Math.floor(dom2svg(self.target,$mouseCoords(self)).y)}
+throw _b_.AttributeError.$factory("event target is not an SVG "+
+"element")}
 var res=self[attr]
 if(res !==undefined){if(typeof res=="function"){var func=function(){var args=[]
 for(var i=0;i < arguments.length;i++){args.push($B.pyobj2jsobj(arguments[i]))}
@@ -12284,11 +12297,7 @@ DOMNode.abs_left={__get__:function(self){return $getPosition(self.elt).left},__s
 DOMNode.abs_top={__get__:function(self){return $getPosition(self.elt).top},__set__:function(){throw _b_.AttributeError.$factory("'DOMNode' objectattribute "+
 "'abs_top' is read-only")}}
 DOMNode.bind=function(self,event){
-if(arguments.length==2){
-return(function(obj,evt){function f(callback){DOMNode.bind(obj,evt,callback)
-return callback}
-return f})(self,event)}
-for(var i=2;i < arguments.length;i++){var func=arguments[i]
+var $=$B.args("bind",4,{self:null,event:null,func:null,options:null},["self","event","func","options"],arguments,{options:_b_.None},null,null),self=$.self,event=$.event,func=$.func,options=$.options
 var callback=(function(f){return function(ev){try{return f($DOMEvent(ev))}catch(err){if(err.__class__ !==undefined){var msg=$B.$getattr(err,"info")+
 "\n"+$B.class_name(err)
 if(err.args){msg+=": "+err.args[0]}
@@ -12299,10 +12308,10 @@ catch(err1){console.log(err)}}}}}
 callback.$infos=func.$infos
 callback.$attrs=func.$attrs ||{}
 callback.$func=func
-self.elt.addEventListener(event,callback,false)
+if(typeof options=="boolean"){self.elt.addEventListener(event,callback,options)}else if(options.__class__===_b_.dict){self.elt.addEventListener(event,callback,options.$string_dict)}else if(options===_b_.None){self.elt.addEventListener(event,callback,false)}
 self.elt.$events=self.elt.$events ||{}
 self.elt.$events[event]=self.elt.$events[event]||[]
-self.elt.$events[event].push([func,callback])}
+self.elt.$events[event].push([func,callback])
 return self}
 DOMNode.children=function(self){var res=[],elt=self.elt
 console.log(elt,elt.childNodes)
@@ -12817,16 +12826,19 @@ var _window=self;
 var modules={}
 var browser={$package:true,$is_package:true,__initialized__:true,__package__:'browser',__file__:$B.brython_path.replace(/\/*$/g,'')+
 '/Lib/browser/__init__.py',bind:function(){
-var $=$B.args("bind",2,{elt:null,evt:null},["elt","evt"],arguments,{},null,null)
+var $=$B.args("bind",3,{elt:null,evt:null,options:null},["elt","evt","options"],arguments,{options:_b_.None},null,null)
+var options=$.options
+if(typeof options=="boolean"){}
+else if(options.__class__===_b_.dict){options=options.$string_dict}else{options==false}
 return function(callback){if($.elt.__class__ &&
 _b_.issubclass($.elt.__class__,$B.JSObject)){
 function f(ev){try{return callback($B.JSObject.$factory(ev))}catch(err){$B.handle_error(err)}}
-$.elt.js.addEventListener($.evt,f,false)
-return f}else if(_b_.isinstance($.elt,$B.DOMNode)){
-$B.DOMNode.bind($.elt,$.evt,callback)
+$.elt.js.addEventListener($.evt,f,options)
+return callback}else if(_b_.isinstance($.elt,$B.DOMNode)){
+$B.DOMNode.bind($.elt,$.evt,callback,options)
 return callback}else if(_b_.isinstance($.elt,_b_.str)){
 var items=document.querySelectorAll($.elt)
-for(var i=0;i < items.length;i++){$B.DOMNode.bind($B.DOMNode.$factory(items[i]),$.evt,callback)}
+for(var i=0;i < items.length;i++){$B.DOMNode.bind($B.DOMNode.$factory(items[i]),$.evt,callback,options)}
 return callback}
 try{var it=$B.$iter($.elt)
 while(true){try{var elt=_b_.next(it)

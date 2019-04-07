@@ -419,9 +419,9 @@ JSObject.__getitem__ = function(self, rank){
                 typeof self.js.item == 'function'){
             var rank_to_int = _b_.int.$factory(rank)
             if(rank_to_int < 0){rank_to_int += self.js.length}
-            var res = JSObject.$factory(self.js.item(rank_to_int))
-            if(res === undefined){throw _b_.KeyError.$factory(rank)}
-            return res
+            var res = self.js.item(rank_to_int)
+            if(res === null){throw _b_.IndexError.$factory(rank)}
+            return JSObject.$factory(res)
         }else if(typeof rank == "string" &&
                 typeof self.js.getNamedItem == 'function'){
             var res = JSObject.$factory(self.js.getNamedItem(rank))
