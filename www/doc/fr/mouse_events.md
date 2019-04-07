@@ -142,3 +142,15 @@ Chaque bouton sur lequel on peut appuyer est représenté par un entier donné (
 
 </table>
 
+Si la cible de l'événement est un élément SVG (le conteneur défini par une
+balise &lt;SVG&gt;), l'objet événement a des attributs supplémentaires:
+
+<table cellpadding=3 border=1>
+
+<tr>
+  <td>*svgX, svgY*</td>
+  <td>les coordonnées X, Y de la souris, relativement à l'angle supérieur
+  gauche de l'élément SVG</td>
+</tr>
+
+</table>

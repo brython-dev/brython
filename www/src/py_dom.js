@@ -282,6 +282,16 @@ DOMEvent.__new__ = function(cls, evt_name){
     return ev
 }
 
+function dom2svg(svg_elt, coords){
+    // Used to compute the mouse position relatively to the upper left corner
+    // of an SVG element, based on the coordinates coords.x, coords.y that are 
+    // relative to the browser screen.
+    var pt = svg_elt.createSVGPoint()
+    pt.x = coords.x
+    pt.y = coords.y
+    return pt.matrixTransform(svg_elt.getScreenCTM().inverse())
+}
+
 DOMEvent.__getattribute__ = function(self, attr){
     switch(attr) {
         case '__repr__':
@@ -302,6 +312,18 @@ DOMEvent.__getattribute__ = function(self, attr){
             }
         case 'char':
             return String.fromCharCode(self.which)
+        case 'svgX':
+            if(self.target instanceof SVGSVGElement){
+                return Math.floor(dom2svg(self.target, $mouseCoords(self)).x)
+            }
+            throw _b_.AttributeError.$factory("event target is not an SVG " +
+                "element")
+        case 'svgY':
+            if(self.target instanceof SVGSVGElement){
+                return Math.floor(dom2svg(self.target, $mouseCoords(self)).y)
+            }
+            throw _b_.AttributeError.$factory("event target is not an SVG " +
+                "element")
     }
 
     var res =  self[attr]
@@ -1014,45 +1036,46 @@ DOMNode.abs_top = {
 
 DOMNode.bind = function(self, event){
     // bind functions to the event (event = "click", "mouseover" etc.)
-    if(arguments.length == 2){
-        // elt.bind(event) is a decorator for callback functions
-        return (function(obj, evt){
-            function f(callback){
-                DOMNode.bind(obj, evt, callback)
-                return callback
-            }
-            return f
-        })(self, event)
-    }
+    var $ = $B.args("bind", 4,
+            {self: null, event: null, func: null, options: null},
+            ["self", "event", "func", "options"], arguments,
+            {options: _b_.None}, null, null),
+            self = $.self,
+            event = $.event,
+            func = $.func,
+            options = $.options
 
-    for(var i = 2; i < arguments.length; i++){
-        var func = arguments[i]
-        var callback = (function(f){
-            return function(ev){
-                try{
-                    return f($DOMEvent(ev))
-                }catch(err){
-                    if(err.__class__ !== undefined){
-                        var msg = $B.$getattr(err, "info") +
-                            "\n" + $B.class_name(err)
-                        if(err.args){msg += ": " + err.args[0]}
-                        try{$B.$getattr($B.stderr, "write")(msg)}
-                        catch(err){console.log(msg)}
-                    }else{
-                        try{$B.$getattr($B.stderr, "write")(err)}
-                        catch(err1){console.log(err)}
-                    }
+    var callback = (function(f){
+        return function(ev){
+            try{
+                return f($DOMEvent(ev))
+            }catch(err){
+                if(err.__class__ !== undefined){
+                    var msg = $B.$getattr(err, "info") +
+                        "\n" + $B.class_name(err)
+                    if(err.args){msg += ": " + err.args[0]}
+                    try{$B.$getattr($B.stderr, "write")(msg)}
+                    catch(err){console.log(msg)}
+                }else{
+                    try{$B.$getattr($B.stderr, "write")(err)}
+                    catch(err1){console.log(err)}
                 }
-            }}
-        )(func)
-        callback.$infos = func.$infos
-        callback.$attrs = func.$attrs || {}
-        callback.$func = func
+            }
+        }}
+    )(func)
+    callback.$infos = func.$infos
+    callback.$attrs = func.$attrs || {}
+    callback.$func = func
+    if(typeof options == "boolean"){
+        self.elt.addEventListener(event, callback, options)
+    }else if(options.__class__ === _b_.dict){
+        self.elt.addEventListener(event, callback, options.$string_dict)
+    }else if(options === _b_.None){
         self.elt.addEventListener(event, callback, false)
-        self.elt.$events = self.elt.$events || {}
-        self.elt.$events[event] = self.elt.$events[event] || []
-        self.elt.$events[event].push([func, callback])
     }
+    self.elt.$events = self.elt.$events || {}
+    self.elt.$events[event] = self.elt.$events[event] || []
+    self.elt.$events[event].push([func, callback])
     return self
 }
 

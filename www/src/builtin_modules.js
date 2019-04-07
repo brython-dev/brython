@@ -17,8 +17,16 @@
 
         bind:function(){
             // bind(element, event) is a decorator for callback function
-            var $ = $B.args("bind", 2, {elt: null, evt: null}, ["elt", "evt"],
-                arguments, {}, null, null)
+            var $ = $B.args("bind", 3, {elt: null, evt: null, options: null},
+                    ["elt", "evt", "options"], arguments,
+                    {options: _b_.None}, null, null)
+            var options = $.options
+            if(typeof options == "boolean"){}
+            else if(options.__class__ === _b_.dict){
+                options = options.$string_dict
+            }else{
+                options == false
+            }
             return function(callback){
                 if($.elt.__class__ &&
                         _b_.issubclass($.elt.__class__, $B.JSObject)){
@@ -30,18 +38,18 @@
                             $B.handle_error(err)
                         }
                     }
-                    $.elt.js.addEventListener($.evt, f, false)
-                    return f
+                    $.elt.js.addEventListener($.evt, f, options)
+                    return callback
                 }else if(_b_.isinstance($.elt, $B.DOMNode)){
                     // DOM element
-                    $B.DOMNode.bind($.elt, $.evt, callback)
+                    $B.DOMNode.bind($.elt, $.evt, callback, options)
                     return callback
                 }else if(_b_.isinstance($.elt, _b_.str)){
                     // string interpreted as a CSS selector
                     var items = document.querySelectorAll($.elt)
                     for(var i = 0; i < items.length; i++){
                         $B.DOMNode.bind($B.DOMNode.$factory(items[i]),
-                            $.evt, callback)
+                            $.evt, callback, options)
                     }
                     return callback
                 }
