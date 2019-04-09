@@ -1,4 +1,3 @@
-import keyword
 import _jsre as re
 
 from browser import html
