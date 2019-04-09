@@ -458,7 +458,7 @@ JSObject.__iter__ = function(self){
                 }
             }
         }
-        return $B.JSObject_iterator.$factory(items)
+        return JSObject_iterator.$factory(items)
     }else if(self.js.length !== undefined && self.js.item !== undefined){
         // collection
         for(var i = 0; i < self.js.length; i++){
