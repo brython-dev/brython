@@ -418,7 +418,6 @@ $B.to_alias = function(attr){
 
 //eval() (built in function)
 function $$eval(src, _globals, _locals){
-
     if(_globals === undefined){_globals = _b_.None}
     if(_locals === undefined){_locals = _b_.None}
 
