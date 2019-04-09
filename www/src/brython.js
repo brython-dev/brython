@@ -84,8 +84,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.2"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-04-09 21:33:52.829433"
-__BRYTHON__.timestamp=1554838432829
+__BRYTHON__.compiled_date="2019-04-09 21:46:08.223310"
+__BRYTHON__.timestamp=1554839168223
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","unicodedata","zlib"]
 ;
 
@@ -2670,7 +2670,9 @@ var res1="$B.builtins.str.format('{0:' + "+
 fmt+" + '}', "+expr1+")"
 elts.push(res1)}else{if(parsed_fstring[i].conversion===null){expr1='$B.builtins.str.$factory('+expr1+')'}
 elts.push(expr1)}}else{var re=new RegExp("'","g")
-elts.push("'"+parsed_fstring[i].replace(re,"\\'")+"'")}}
+var elt=parsed_fstring[i].replace(re,"\\'")
+.replace("\n","\\n")
+elts.push("'"+elt+"'")}}
 return elts.join(' + ')}
 for(var i=0;i < this.tree.length;i++){if(this.tree[i].type=="call"){
 var js='(function(){throw TypeError.$factory("'+"'str'"+

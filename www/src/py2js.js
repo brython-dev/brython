@@ -5644,7 +5644,9 @@ var $StringCtx = $B.parser.$StringCtx = function(context,value){
                     }
                 }else{
                     var re = new RegExp("'", "g")
-                    elts.push("'" + parsed_fstring[i].replace(re, "\\'") + "'")
+                    var elt = parsed_fstring[i].replace(re, "\\'")
+                                               .replace("\n", "\\n")
+                    elts.push("'" + elt + "'")
                 }
             }
             return elts.join(' + ')
