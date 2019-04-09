@@ -160,8 +160,7 @@ class Template:
                     if nb_double_braces != nb_braces:
                         lines = [line for line in elt.text.split("\n")
                             if line.strip()]
-                        text = " ".join(lines).replace('"', "&quot;")
-                        text = 'f"""' + text + '"""'
+                        text = 'f"""' + " ".join(lines) + '"""'
                 self.add_indent ("__write__(" + text + ")\n", elt)
 
         elif hasattr(elt, "tagName"):
