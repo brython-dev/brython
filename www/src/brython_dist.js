@@ -84,8 +84,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.2"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-04-09 18:15:48.995158"
-__BRYTHON__.timestamp=1554826548995
+__BRYTHON__.compiled_date="2019-04-09 21:33:52.829433"
+__BRYTHON__.timestamp=1554838432829
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","unicodedata","zlib"]
 ;
 
@@ -7567,12 +7567,15 @@ return{start:start,stop:stop,step:step}}
 slice.start=function(self){return self.start}
 slice.step=function(self){return self.step}
 slice.stop=function(self){return self.stop}
-slice.indices=function(self,length){var len=$B.$GetInt(length)
+slice.indices=function(self,length){
+var $=$B.args("indices",2,{self:null,length:null},["self","length"],arguments,{},null,null)
+var len=$B.$GetInt($.length)
+if(len > 0){var start,stop,step
 if(len < 0){_b_.ValueError.$factory("length should not be negative")}
-if(self.step > 0){var _len=_b_.min(len,self.stop)
-return _b_.tuple.$factory([self.start,_len,self.step])}else if(self.step==_b_.None){var _len=_b_.min(len,self.stop),_start=self.start
-if(_start==_b_.None){_start=0}
-return _b_.tuple.$factory([_start,_len,1])}
+start=self.start===_b_.None ? 0 :self.start
+stop=self.stop===_b_.None ? length :self.stop
+step=self.step===_b_.None ? 1 :self.step
+return _b_.tuple.$factory([start,stop,step])}
 _b_.NotImplementedError.$factory(
 "Error! negative step indices not implemented yet")}
 slice.$factory=function(){var $=$B.args("slice",3,{start:null,stop:null,step:null},["start","stop","step"],arguments,{stop:null,step:null},null,null),start,stop,step
