@@ -392,12 +392,13 @@ slice.indices = function(self, length){
             ["self", "length"], arguments, {}, null, null)
     var len = $B.$GetInt($.length)
     if(len > 0){
-        var start, stop, step
         if(len < 0){_b_.ValueError.$factory("length should not be negative")}
-        start = self.start === _b_.None ? 0 : self.start
-        stop = self.stop === _b_.None ? length : self.stop
-        step = self.step === _b_.None ? 1 : self.step
-        return _b_.tuple.$factory([start, stop, step])
+        var _start = (self.start == _b_.None) ? 0 : _b_.min(len, self.start)
+        var _stop = (self.stop == _b_.None)? len :_b_.min(len, self.stop)
+        var _step = (self.step == _b_.None)? 1 : self.step
+        if(_start < 0){_start = _b_.max(0, _start + len)}
+        if(_stop < 0){_stop=_b_.max(0, _stop + len)}
+        return _b_.tuple.$factory([_start, _stop, _step])
     }
     _b_.NotImplementedError.$factory(
         "Error! negative step indices not implemented yet")
