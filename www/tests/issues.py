@@ -2129,6 +2129,14 @@ B.__new__.__defaults__ = (8,)
 b2 = B()
 assert b2.show() == 8
 
+# issue 1059
+with open("z.txt", encoding="utf-8") as f:
+    t = [line for line in f]
+assert t == ["a\n", "b\n", "c\n"]
+
+with open("z.txt", encoding="utf-8") as f:
+    assert f.readlines() == t
+
 # issue 1063
 class A(object):
   pass

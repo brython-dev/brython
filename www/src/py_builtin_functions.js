@@ -2281,48 +2281,55 @@ function vars(){
     }
 }
 
-var $Reader = {
-    __class__: _b_.type,
-    $infos: {
-        __name__: 'reader'
-    }
-}
+var $Reader = $B.make_class("Reader")
 
 $Reader.__enter__ = function(self){return self}
 
 $Reader.__exit__ = function(self){return false}
 
-$Reader.__iter__ = function(self){return iter(self.$lines)}
+$Reader.__iter__ = function(self){
+    // Iteration ignores last empty lines (issue #1059)
+    return iter($Reader.readlines(self))
+}
 
 $Reader.__len__ = function(self){return self.lines.length}
 
-$Reader.__mro__ = [object]
-
 $Reader.close = function(self){self.closed = true}
 
-$Reader.flush = function(self){
-    return None
-}
+$Reader.flush = function(self){return None}
 
-$Reader.read = function(self, nb){
+$Reader.read = function(){
+    var $ = $B.args("read", 2, {self: null, size: null},
+            ["self", "size"], arguments, {size: -1}, null, null),
+            self = $.self,
+            size = $B.$GetInt($.size)
     if(self.closed === true){
         throw _b_.ValueError.$factory('I/O operation on closed file')
     }
-    if(nb === undefined){return self.$content}
+    self.$counter = self.$counter || 0
+    if(size < 0){
+        var res = self.$content.substr(self.$counter)
+        self.$counter = self.$content.length - 1
+        return res
+    }
 
     if(self.$content.__class__ === _b_.bytes){
         res = _b_.bytes.$factory(self.$content.source.slice(self.$counter,
-            self.$counter + nb))
+            self.$counter + size))
     }else{
-        res = self.$content.substr(self.$counter - nb, nb)
+        res = self.$content.substr(self.$counter - size, size)
     }
-    self.$counter += nb
+    self.$counter += size
     return res
 }
 
 $Reader.readable = function(self){return true}
 
-$Reader.readline = function(self, limit){
+$Reader.readline = function(self, size){
+    var $ = $B.args("readline", 2, {self: null, size: null},
+            ["self", "size"], arguments, {size: -1}, null, null),
+            self = $.self,
+            size = $B.$GetInt($.size)
     // set line counter
     self.$lc = self.$lc === undefined ? -1 : self.$lc
 
@@ -2331,20 +2338,39 @@ $Reader.readline = function(self, limit){
     }
 
     if(self.$lc == self.$lines.length - 1){
-        return self.$bin ? _b_.bytes.$factory() : ''
+        return ''
     }
     self.$lc++
-    var res = self.$lines[self.$lc]
-    self.$counter += (self.$bin ? res.source.length : res.length)
-    return res
+    var line = self.$lines[self.$lc]
+    if(size > 0){
+        line = line.substr(0, size)
+    }
+    self.$counter += line.length
+    return line
 }
 
-$Reader.readlines = function(self, hint){
+$Reader.readlines = function(){
+    var $ = $B.args("readlines", 2, {self: null, hint: null},
+            ["self", "hint"], arguments, {hint: -1}, null, null),
+            self = $.self,
+            hint = $B.$GetInt($.hint)
+    var nb_read = 0
     if(self.closed === true){
         throw _b_.ValueError.$factory('I/O operation on closed file')
     }
     self.$lc = self.$lc === undefined ? -1 : self.$lc
-    return self.$lines.slice(self.$lc + 1)
+    if(hint < 0){
+        var lines = self.$lines.slice(self.$lc + 1)
+    }else{
+        var lines = []
+        while(self.$lc < self.$lines.length &&
+                nb_read < hint){
+            self.$lc++
+            lines.push(self.$lines[self.$lc])
+        }
+    }
+    while(lines[lines.length - 1] == ''){lines.pop()}
+    return lines
 }
 
 $Reader.seek = function(self, offset, whence){
@@ -2363,7 +2389,9 @@ $Reader.tell = function(self){return self.$counter}
 
 $Reader.writable = function(self){return false}
 
-var $BufferedReader = $B.make_class('_io.BuffredReader')
+$B.set_func_names($Reader, "builtins")
+
+var $BufferedReader = $B.make_class('_io.BufferedReader')
 
 $BufferedReader.__mro__ = [$Reader, object]
 
@@ -2400,7 +2428,8 @@ function $url_open(){
             }
         }else{
             if(is_binary){
-                throw _b_.IOError.$factory("open() in binary mode is not supported")
+                throw _b_.IOError.$factory(
+                    "open() in binary mode is not supported")
             }
 
             var req = new XMLHttpRequest();

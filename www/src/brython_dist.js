@@ -84,8 +84,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.2"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-04-10 08:16:40.717127"
-__BRYTHON__.timestamp=1554877000717
+__BRYTHON__.compiled_date="2019-04-10 18:18:53.837946"
+__BRYTHON__.timestamp=1554913133837
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","unicodedata","zlib"]
 ;
 
@@ -4940,6 +4940,7 @@ imports=imports.join(",")
 $B.tasks.splice(0,0,[store_precompiled,module,js,imports,is_package])}else{console.log('bizarre',module,ext)}}else{}}else{
 if(res.is_package){$B.precompiled[module]=[res.content]}else{$B.precompiled[module]=res.content}
 if(res.imports.length > 0){
+if($B.debug > 1){console.log(module,"imports",res.imports)}
 var subimports=res.imports.split(",")
 for(var i=0;i < subimports.length;i++){var subimport=subimports[i]
 if(subimport.startsWith(".")){
@@ -7014,31 +7015,43 @@ function vars(){var def={},$=$B.args('vars',1,{obj:null},['obj'],arguments,{obj:
 if($.obj===def){return _b_.locals()}else{try{return $B.$getattr($.obj,'__dict__')}
 catch(err){if(err.__class__===_b_.AttributeError){throw _b_.TypeError.$factory("vars() argument must have __dict__ attribute")}
 throw err}}}
-var $Reader={__class__:_b_.type,$infos:{__name__:'reader'}}
+var $Reader=$B.make_class("Reader")
 $Reader.__enter__=function(self){return self}
 $Reader.__exit__=function(self){return false}
-$Reader.__iter__=function(self){return iter(self.$lines)}
+$Reader.__iter__=function(self){
+return iter($Reader.readlines(self))}
 $Reader.__len__=function(self){return self.lines.length}
-$Reader.__mro__=[object]
 $Reader.close=function(self){self.closed=true}
 $Reader.flush=function(self){return None}
-$Reader.read=function(self,nb){if(self.closed===true){throw _b_.ValueError.$factory('I/O operation on closed file')}
-if(nb===undefined){return self.$content}
-if(self.$content.__class__===_b_.bytes){res=_b_.bytes.$factory(self.$content.source.slice(self.$counter,self.$counter+nb))}else{res=self.$content.substr(self.$counter-nb,nb)}
-self.$counter+=nb
+$Reader.read=function(){var $=$B.args("read",2,{self:null,size:null},["self","size"],arguments,{size:-1},null,null),self=$.self,size=$B.$GetInt($.size)
+if(self.closed===true){throw _b_.ValueError.$factory('I/O operation on closed file')}
+self.$counter=self.$counter ||0
+if(size < 0){var res=self.$content.substr(self.$counter)
+self.$counter=self.$content.length-1
+return res}
+if(self.$content.__class__===_b_.bytes){res=_b_.bytes.$factory(self.$content.source.slice(self.$counter,self.$counter+size))}else{res=self.$content.substr(self.$counter-size,size)}
+self.$counter+=size
 return res}
 $Reader.readable=function(self){return true}
-$Reader.readline=function(self,limit){
+$Reader.readline=function(self,size){var $=$B.args("readline",2,{self:null,size:null},["self","size"],arguments,{size:-1},null,null),self=$.self,size=$B.$GetInt($.size)
 self.$lc=self.$lc===undefined ?-1 :self.$lc
 if(self.closed===true){throw _b_.ValueError.$factory('I/O operation on closed file')}
-if(self.$lc==self.$lines.length-1){return self.$bin ? _b_.bytes.$factory():''}
+if(self.$lc==self.$lines.length-1){return ''}
 self.$lc++
-var res=self.$lines[self.$lc]
-self.$counter+=(self.$bin ? res.source.length :res.length)
-return res}
-$Reader.readlines=function(self,hint){if(self.closed===true){throw _b_.ValueError.$factory('I/O operation on closed file')}
+var line=self.$lines[self.$lc]
+if(size > 0){line=line.substr(0,size)}
+self.$counter+=line.length
+return line}
+$Reader.readlines=function(){var $=$B.args("readlines",2,{self:null,hint:null},["self","hint"],arguments,{hint:-1},null,null),self=$.self,hint=$B.$GetInt($.hint)
+var nb_read=0
+if(self.closed===true){throw _b_.ValueError.$factory('I/O operation on closed file')}
 self.$lc=self.$lc===undefined ?-1 :self.$lc
-return self.$lines.slice(self.$lc+1)}
+if(hint < 0){var lines=self.$lines.slice(self.$lc+1)}else{var lines=[]
+while(self.$lc < self.$lines.length &&
+nb_read < hint){self.$lc++
+lines.push(self.$lines[self.$lc])}}
+while(lines[lines.length-1]==''){lines.pop()}
+return lines}
 $Reader.seek=function(self,offset,whence){if(self.closed===True){throw _b_.ValueError.$factory('I/O operation on closed file')}
 if(whence===undefined){whence=0}
 if(whence===0){self.$counter=offset}
@@ -7047,7 +7060,8 @@ else if(whence===2){self.$counter=self.$content.length+offset}}
 $Reader.seekable=function(self){return true}
 $Reader.tell=function(self){return self.$counter}
 $Reader.writable=function(self){return false}
-var $BufferedReader=$B.make_class('_io.BuffredReader')
+$B.set_func_names($Reader,"builtins")
+var $BufferedReader=$B.make_class('_io.BufferedReader')
 $BufferedReader.__mro__=[$Reader,object]
 var $TextIOWrapper=$B.make_class('_io.TextIOWrapper')
 $TextIOWrapper.__mro__=[$Reader,object]
@@ -7063,7 +7077,8 @@ if(isinstance(file,_b_.str)){
 var is_binary=mode.search('b')>-1
 if($ns.file=="<string>"){console.log($ns.file,$B.file_cache[$ns.file])}
 if($B.file_cache.hasOwnProperty($ns.file)){var str_content=$B.file_cache[$ns.file]
-if(is_binary){$res=_b_.str.encode(str_content,"utf-8")}else{$res=str_content}}else{if(is_binary){throw _b_.IOError.$factory("open() in binary mode is not supported")}
+if(is_binary){$res=_b_.str.encode(str_content,"utf-8")}else{$res=str_content}}else{if(is_binary){throw _b_.IOError.$factory(
+"open() in binary mode is not supported")}
 var req=new XMLHttpRequest();
 req.onreadystatechange=function(){try{var status=this.status
 if(status==404){$res=_b_.IOError.$factory('File '+file+' not found')}else if(status !=200){$res=_b_.IOError.$factory('Could not open file '+
