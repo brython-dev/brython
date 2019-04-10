@@ -2388,7 +2388,28 @@ try:
     raise Exception("should have raised NameError")
 except NameError:
     pass
-    
+
+# issue 1085
+expected = [
+    (0, 10, 1),
+    (0, 10, 1),
+    (0, 1, 1),
+    (0, 1, 1),
+    (1, 10, 1),
+    (1, 10, 1),
+    (1, 1, 1),
+    (1, 1, 1)
+]
+
+tmp = (None, 1)
+for i in range(8):
+    target = slice(
+        tmp[bool(i & 4)],
+        tmp[bool(i & 2)],
+        tmp[bool(i & 1)]
+    )
+    assert target.indices(10) == expected[i]
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

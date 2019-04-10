@@ -377,29 +377,31 @@ slice.$conv_for_seq = function(self, len){
     return {start: start, stop: stop, step: step}
 }
 
-//slice.descriptors = {
-    //start: function(self){return self.start},
-    //step: function(self){return self.step},
-    //stop: function(self){return self.stop}
-//}
 slice.start = function(self){return self.start}
 slice.step = function(self){return self.step}
 slice.stop = function(self){return self.stop}
 
-slice.indices = function (self, length) {
-  var len = $B.$GetInt(length)
-  if(len < 0){_b_.ValueError.$factory("length should not be negative")}
-  if(self.step > 0) {
-     var _len = _b_.min(len, self.stop)
-     return _b_.tuple.$factory([self.start, _len, self.step])
-  }else if(self.step == _b_.None){
-     var _len = _b_.min(len, self.stop),
-         _start = self.start
-     if(_start == _b_.None){_start = 0}
-     return _b_.tuple.$factory([_start, _len, 1])
-  }
-  _b_.NotImplementedError.$factory(
-      "Error! negative step indices not implemented yet")
+slice.indices = function(self, length){
+    // This method takes a single integer argument length and computes
+    // information about the slice that the slice object would describe if
+    // applied to a sequence of length items. It returns a tuple of three
+    // integers; respectively these are the start and stop indices and the
+    // step or stride length of the slice. Missing or out-of-bounds indices
+    // are handled in a manner consistent with regular slices.
+    var $ = $B.args("indices", 2, {self: null, length: null},
+            ["self", "length"], arguments, {}, null, null)
+    var len = $B.$GetInt($.length)
+    if(len > 0){
+        if(len < 0){_b_.ValueError.$factory("length should not be negative")}
+        var _start = (self.start == _b_.None) ? 0 : _b_.min(len, self.start)
+        var _stop = (self.stop == _b_.None)? len :_b_.min(len, self.stop)
+        var _step = (self.step == _b_.None)? 1 : self.step
+        if(_start < 0){_start = _b_.max(0, _start + len)}
+        if(_stop < 0){_stop=_b_.max(0, _stop + len)}
+        return _b_.tuple.$factory([_start, _stop, _step])
+    }
+    _b_.NotImplementedError.$factory(
+        "Error! negative step indices not implemented yet")
 }
 
 slice.$factory = function(){
