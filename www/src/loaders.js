@@ -71,8 +71,11 @@ function idb_load(evt, module){
             $B.precompiled[module] = res.content
         }
         if(res.imports.length > 0){
-            // res.impots is a string with the modules imported by the current
+            // res.imports is a string with the modules imported by the current
             // modules, separated by commas
+            if($B.debug > 1){
+                console.log(module, "imports", res.imports)
+            }
             var subimports = res.imports.split(",")
             for(var i = 0; i < subimports.length; i++){
                 var subimport = subimports[i]
