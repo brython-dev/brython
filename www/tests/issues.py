@@ -21,7 +21,6 @@ class a(object):
     def __init__(self):
         self.x = 9
 
-
 a.__init__
 
 class b(a):
@@ -29,7 +28,6 @@ class b(a):
     def __init__(s):
         super().__init__()
         assert s.x == 9
-
 
 z = b()
 
@@ -44,7 +42,7 @@ class ToDir:
 
 instanceToDir = ToDir()
 
-dictToDir=({k: getattr(instanceToDir, k)
+dictToDir = ({k: getattr(instanceToDir, k)
     for k in dir(instanceToDir) if '__' not in k})
 
 castdictToDir={str(k): getattr(instanceToDir, k)
@@ -77,7 +75,7 @@ assert foo() == [0, 1, 2, 3, 4]
 def f():
     ...
 
-#issue 83
+# issue 83
 import sys
 assert sys.version_info > (3, 0, 0)
 assert sys.version_info >= (3, 0, 0)
@@ -87,15 +85,6 @@ assert sys.version_info != (3, 0, 0)
 
 assert not sys.version_info < (3, 0, 0)
 assert not sys.version_info <= (3, 0, 0)
-
-#issue 98
-assert int.from_bytes(b'\xfc', 'big') == 252
-assert int.from_bytes(bytearray([252, 0]), 'big') == 64512
-assert int.from_bytes(b'\x00\x10', byteorder='big') == 16
-assert int.from_bytes(b'\x00\x10', byteorder='little') == 4096
-assert int.from_bytes(b'\xfc\x00', byteorder='big', signed=True) == -1024
-assert int.from_bytes(b'\xfc\x00', byteorder='big', signed=False) == 64512
-assert int.from_bytes([255, 0, 0], byteorder='big') == 16711680
 
 # issue #100
 class A:
@@ -121,28 +110,15 @@ def funcattrs(**kwds):
     return decorate
 
 class C(object):
-       @funcattrs(abc=1, xyz="haha")
-       @funcattrs(booh=42)
-       def foo(self): return 42
+    @funcattrs(abc=1, xyz="haha")
+    @funcattrs(booh=42)
+    def foo(self):
+        return 42
 
 assert C().foo() == 42
 assert C.foo.abc == 1
 assert C.foo.xyz == "haha"
 assert C.foo.booh == 42
-
-# issue 115
-a = 1
-assert a.numerator == 1
-assert a.denominator == 1
-assert a.real == 1
-assert a.imag == 0
-assert isinstance(a.imag, int) == True
-a = 1 + 2j
-assert a.real == 1
-assert a.imag == 2
-assert isinstance(a.real, float) == True
-assert isinstance(a.imag, float) == True
-
 
 # issue 118
 class A:
@@ -166,9 +142,6 @@ class MyClass(MyParent):
 
 assert MyClass.spam == "whatever"
 assert MyParent.spam == "whatever"
-
-#issue 127
-assert "aaa+AAA".split("+") == ['aaa', 'AAA']
 
 # issue 121
 def recur(change_namespace=0):
@@ -250,15 +223,6 @@ except ValueError:
     tb = sys.exc_info()[2]
     assert isinstance(tb, types.TracebackType)
 
-# issue 156
-from collections import abc
-assert isinstance(dict(one=1), abc.Mapping)
-assert issubclass(dict, abc.Mapping)
-
-# True and False are instances of int
-assert isinstance(True, int)
-assert isinstance(False, int)
-
 # repr of type(None)
 assert repr(type(None)) == "<class 'NoneType'>"
 
@@ -295,16 +259,22 @@ assert a.x == 1
 
 # hashable objects
 class X:
-    def __hash__(self): return hash(1.0)
-    def __eq__(self, other): return other == 1
+
+    def __hash__(self):
+        return hash(1.0)
+
+    def __eq__(self, other):
+        return other == 1
 
 a = {1: 'a', X(): 'b'}
-assert a == {1:'b'}
+assert a == {1: 'b'}
 assert X() in a
 assert a[X()] == 'b'
 
 class X:
-    def __hash__(self): return hash('u')
+
+    def __hash__(self):
+        return hash('u')
 
 a = {'u': 'a', X(): 'b'}
 assert set(a.values()) == {'a', 'b'}
@@ -314,9 +284,12 @@ b = {'u': 'a'}
 assert not X() in b
 
 class X:
-    def __hash__(self): return hash('u')
-    def __eq__(self, other): return other == 'u'
-    pass
+
+    def __hash__(self):
+        return hash('u')
+
+    def __eq__(self, other):
+        return other == 'u'
 
 a = {'u': 'a', X(): 'b'}
 assert a == {'u': 'b'}
@@ -340,20 +313,13 @@ assert foo.__doc__ == "foodoc"
 
 # issue 203
 def f(z):
-  z += 1
-  return z
+    z += 1
+    return z
 
 x = 1.0
 assert x != f(x)
 
-# issue 204
-import math
-m, e = math.frexp(abs(123.456))
-assert m == 0.9645
-assert m * (1 << 24) == 16181624.832
-
 # issue 207
-
 for x in range(0x7ffffff0, 0x8000000f):
     assert x & x == x, "%s & %s == %s" % (hex(x), hex(x), hex(x & x))
     assert x | x == x, "%s | %s == %s" % (hex(x), hex(x), hex(x | x))
@@ -383,10 +349,6 @@ b = Cmp(1)
 assert a == b
 assert not (a != b)
 
-# issue 218
-a = [1, 2, 3]
-a *= 2
-assert a == [1, 2, 3, 1, 2, 3]
 
 # bug with property setter
 class Test:
@@ -445,21 +407,22 @@ assert b64 == b'RVqG3atOht2rTkVbht2rTobdq04='
 
 # issue 279
 x = 0
-if False: x += 2; x += 3
-for n in range(2): x += 1; x += 1
+
+if False:
+    x += 2
+    x += 3
+
+for n in range(2):
+    x += 1
+    x += 1
+
 assert x == 4
 
 # issue 280
 for n in range(5):
     pass
+
 assert n == 4
-
-# issue 294
-assert int.from_bytes(bytes=b'some_bytes',byteorder='big') == \
-    545127616933790290830707
-
-# issue 296
-assert [4, 0, 4].index(4, 1) == 2
 
 #issue 297
 assert type((1,) * 2) == tuple
@@ -473,19 +436,13 @@ except AttributeError:
 
 # issue 298
 n = 1
-for n in range(n): pass
+for n in range(n):
+    pass
 assert n == 0
 
-#issue 301
+# issue 301
 t = 1, 2
 assertRaises(AttributeError, getattr, t, "__setitem__")
-
-# issue 303
-assert "{0:.{1}f}".format(1.123, 1) == "1.1"
-
-# issue 305
-a = [1, 2, 3]
-assert a.sort() is None
 
 # issue 307
 x = 1
@@ -539,7 +496,7 @@ assert c == 1
 assert d == 0
 
 # unpacking in target list
-for a,*b in [[1, 2, 3]]:
+for a, *b in [[1, 2, 3]]:
     assert a == 1
     assert b == [2, 3]
 
@@ -550,7 +507,7 @@ def f():
 assertRaises(UnboundLocalError, f)
 
 def f():
-    a = a+1
+    a = a + 1
 
 assertRaises(UnboundLocalError, f)
 
@@ -659,25 +616,15 @@ assertRaises(TypeError, B)
 
 # class C overrides foo so it has no abstract method, it can have instances
 class C(A):
-    def foo(self): return 42
+
+    def foo(self):
+        return 42
 
 assert C().foo() == 42
 
 # issue 348
 x, y = y, x = 2, 3
 assert x, y == (3, 2)
-
-# issue 350
-a = float("-inf")
-b = float("-infinity")
-assert a == b
-assert repr(a) == '-inf'
-assert a * 1. == b
-assert a * 1 == b
-
-# issue 352
-a = float("inf")
-assert a * 1 == a
 
 # issue 355
 class kk:
@@ -692,12 +639,6 @@ def foo(enum): pass
 
 # issue 360
 assert "André".isidentifier()
-
-# issue 361
-FULL_ENGLISH_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-FULL_ENTEAN_ALPHABET =  "AZYXEWVTISRLPNOMQKJHUGFDCB"
-tran_tab = str.maketrans(FULL_ENGLISH_ALPHABET, FULL_ENTEAN_ALPHABET, 'sh')
-assert "PETEshelley".translate(tran_tab) == "MEHEelley"
 
 # issue 363
 a = float('nan')
@@ -793,20 +734,6 @@ assert not True and not True or not False
 assert not True and not False or True
 assert not True and not False or not False
 
-# issue 423
-assert 'a'.islower()
-assert 'A'.isupper()
-assert 'Ⰰ'.isupper() # U+2C00     GLAGOLITIC CAPITAL LETTER AZU
-assert 'a0123'.islower()
-assert not '0123'.islower() # no uppercase, lowercase or titlecase letter
-assert not '0123'.isupper()
-assert not '!!!'.isupper()
-assert not '!!!'.islower()
-
-# issue 421
-assert "{:.0f}".format(2.1) == "2"
-assert "{:.0f}".format(-2.1) == "-2"
-
 # set attribute __doc__ of a function
 def test():
     """original text"""
@@ -815,32 +742,6 @@ def test():
 assert test.__doc__ == """original text"""
 test.__doc__ = "new text"
 assert test.__doc__ == "new text"
-
-# issue 433
-
-# Once pull request 494 is integrated we should
-# use `math.isclose` instead of `my_isclose`
-# Floats should not test for equality !
-import math
-def my_isclose(a, b, rel_tol=1e-09, abs_tol=1e-09):
-    if a == b:
-        return True
-    diff = abs(a-b)
-    return diff <= abs(a)*rel_tol or diff <= abs(b)*rel_tol or diff <= abs_tol
-
-assert my_isclose(10 ** 1j, (-0.6682015101903132 + 0.7439803369574931j))
-assert my_isclose(10.5 ** (3 + 1j), (-814.610144261598 + 822.4998197514079j))
-
-assert my_isclose(math.e ** 1j, (0.5403023058681398 + 0.8414709848078965j))
-
-assert my_isclose((1 + 2j) ** 1j, (0.2291401859804338 + 0.23817011512167555j))
-
-# issue 434
-import collections
-Set = collections.defaultdict(lambda: None)
-Set[0]
-Set[int]
-Set[str]
 
 # issue 443
 class Pepe:
@@ -881,13 +782,6 @@ assert True != None
 import copy
 assert copy.copy({1}) == {1}
 assert copy.copy({1: 2}) == {1: 2}
-
-# issue 456
-assert {0, 1, 2}.issuperset([0, 1])
-assert not {0, 1, 2}.issuperset([2, 3])
-
-assert {0, 1}.issubset(range(3))
-assert not {7, 8}.issubset([6, 7])
 
 # issue 465
 class A:
@@ -990,23 +884,7 @@ b = [3, 4]
 odd = [x for x in a + b if x % 2]
 assert odd == [1, 3]
 
-# Bug in generators (GitHub Issue #502)
-
-def test_gen():
-    for i in range(1):
-        yield i
-    return 20
-
-g = test_gen()
-next(g)
-try:
-    next(g)
-except StopIteration as exc:
-    assert exc.value == 20
-
-
-# Bug in round (GitHub Issue #506)
-
+# issue 506
 class TestRound:
 
     def __round__(self, n=None):
@@ -1056,10 +934,6 @@ finally:
     order.append('finally')
 
 assert order == ['try', 'else', 'finally']
-
-# issue 529
-x = [-644475]
-assert "{:,}".format(int(x[0])) == "-644,475"
 
 # issue 542
 def test(*args):
@@ -1145,13 +1019,6 @@ num = N()
 assert sin(num) == -0.9165215479156338
 assert log(num) == 3.7376696182833684
 
-# issue 558
-a = set([5, 10])
-b = set(a)
-a.difference_update([5])
-assert a == {10}
-assert b == {5, 10}
-
 # issue 560
 class Base:
 
@@ -1175,7 +1042,7 @@ assert str(False + False) == '0'
 assert False + True == 1
 assert True + True == 2
 
-# Issue 572: Sort should be stable
+# issue 572: sort should be stable
 words = ["Bed", "Axe", "Cat", "Court", "Axle", "Beer"]
 words.sort()
 words.sort(key=len, reverse=True)
@@ -1269,6 +1136,7 @@ assert test[0]._blocking is True
 # issue 588
 def yoba(a, b):
     return a + b
+
 assertRaises(TypeError, yoba, 1, 2, 3)
 
 # issue 592
@@ -1326,29 +1194,11 @@ class StopCompares:
 checkfirst = list([1, StopCompares()])
 assert(1 in checkfirst)
 
-# issue 614
-from collections import namedtuple
-N = namedtuple('N', 'spam, length, eggs')
-n = N(5, 6, 7)
-assert n.length == 6
-
-M = namedtuple('M', 'a, b, c')
-m = M(5, 6, 7)
-try:
-    m.length
-    raise AssertionError("should have raised AttributeError")
-except AttributeError:
-    pass
-
 # issue 615
 class A:
     spam = 5
 
-try:
-    a = A(5)
-    raise AssertionError("should have raised TypeError")
-except TypeError:
-    pass
+assertRaises(TypeError, A, 5)
 
 try:
     class A(spam="foo"):
@@ -1493,14 +1343,17 @@ assert [0, 1][-1] == 1
 assert {-1: 'a'}[-1] == 'a'
 
 # issue 691
-class C(object): pass
+class C(object):
+    pass
+
 c1 = C()
 c1.x = 42
 assert c1.__dict__['x'] == 42
 c1.__dict__.clear()
 assert c1.__dict__ == {}
 
-class C(object): pass
+class C(object):
+    pass
 c2 = C()
 c2.x = 42
 c2.__dict__ = dict()
@@ -1578,13 +1431,6 @@ assert tail == [2, 3]
 def test(msg = 'a', e_type: int = 10):
     pass
 
-# issue 749
-assert float.__eq__(1.5, 1.5)
-assert float.__eq__(1.0, 1)
-assert not float.__eq__(1, 0)
-assert int.__eq__(1, 1)
-assert not int.__eq__(1, 0)
-
 # issue 751
 class Z: pass
 
@@ -1605,9 +1451,8 @@ try:
 except TypeError:
     pass
 
-# Issue 753
-# This array trips over a bug in the sorting library that we use:
-#    see https://github.com/mziccard/node-timsort/issues/14
+# issue 753
+# cf. https://github.com/mziccard/node-timsort/issues/14
 a = [1.0, 1.0, 1.0, 1.0, 1.0, 0.5, 1.0, 0.5, 0.5, 1.0,
      0.5, 0.5, 0.5, 1.0, 0.5, 0.5, 0.5, 0.5, 1.0, 0.5,
      0.5, 0.5, 0.5, 0.5, 1.0, 0.5, 1.0, 0.5, 0.5, 0.5,
@@ -1656,28 +1501,6 @@ class A:
 
 assert '{0}'.format(A()) == 'an A'
 
-# issue 765
-def sub_gen(expect):
-    res = yield None
-    assert res == expect, "Value should be sent to the inner generator"
-    return res
-
-def main_gen(expect):
-    r = yield from sub_gen(expect)
-    assert r == expect, \
-        "Value returned from the inner generator should be result of "\
-        "yield from expression"
-    return r
-
-expect_value = 30
-g = main_gen(expect_value)
-assert g.send(None) is None
-try:
-    g.send(expect_value)
-    assert False, "Return from iterator should send StopIteration"
-except StopIteration as e:
-    assert e.value == expect_value
-
 # issue 776
 def f():
     d = {
@@ -1690,11 +1513,7 @@ def f():
 
 # issue 778
 import os
-try:
-    os.listdir()
-    raise Exception("should have raised NotImplementedError")
-except NotImplementedError:
-    pass
+assertRaises(NotImplementedError, os.listdir)
 
 # issue 780
 def g():
@@ -1792,11 +1611,6 @@ class C(B,A):
 
 c = C()
 
-# issue 794
-assert (-1024).to_bytes(2, "big", signed=True) == b'\xfc\x00'
-assert (1024).to_bytes(2, "big") == b'\x04\x00'
-assert (1024).to_bytes(2, "little") == b'\x00\x04'
-
 """
 import ipaddress
 assert repr(ipaddress.ip_address('192.168.0.1')) == "IPv4Address('192.168.0.1')"
@@ -1855,15 +1669,6 @@ obj_dict['target_key'] = target
 obj_dict['target_key'](x='hello')
 
 assert global_x == 'hello'
-
-# issue 823
-x = 5
-s = "Distance {}km".format(x)
-assert s == "Distance 5km"
-
-x = 5.1
-s = "Distance {}km".format(x)
-assert s == "Distance 5.1km"
 
 # issue 835
 x = 0
@@ -2128,11 +1933,7 @@ src = """def f():
     pass
 f():
 """
-try:
-    exec(src)
-    raise Exception("should have raised SyntaxError")
-except SyntaxError:
-    pass
+assertRaises(SyntaxError, exec, src)
 
 # issue 948
 try:
@@ -2215,14 +2016,10 @@ def g():
     global x985
     x985 = 1
 
-try:
-    f()
-    raise Exception("should have raised NameError")
-except NameError:
-    pass
+assertRaises(NameError, f)
 
 # issue 1024
-assert [ x for x in range(10) if x % 2 if x % 3 ] == [1, 5, 7]
+assert [x for x in range(10) if x % 2 if x % 3] == [1, 5, 7]
 
 result = []
 for x, in [(1,), (2,), (3,)]:
@@ -2238,11 +2035,7 @@ def test_yield_in_comprehensions(self):
     def g2(): [x for x in [(yield 1)]]
 
 # issue 1026
-try:
-    exec("x += y += 5")
-    raise Exception("should have raised SyntaxError")
-except SyntaxError:
-    pass
+assertRaises(SyntaxError, exec, "x += y += 5")
 
 # augmented assignment to a global variable
 def f():
@@ -2258,11 +2051,7 @@ class Foo:
     bar = 1
 
 foo = Foo()
-try:
-    delattr(foo, 'bar')
-    raise Exception("should have raised AttributeError")
-except AttributeError:
-    pass
+assertRaises(AttributeError, delattr, foo, 'bar')
 
 class C:
 
@@ -2297,20 +2086,15 @@ ftrk.__defaults__ = (4, 1)
 assert ftrk(1) == 2
 assert ftrk() == 5
 ftrk.__defaults__ = ()
-try:
-    ftrk()
-    raise Exception("should have raised TypeError")
-except TypeError:
-    pass
+
+assertRaises(TypeError, ftrk)
+
 ftrk.__defaults__ = (4, 1)
 assert ftrk(1) == 2
 assert ftrk() == 5
 ftrk.__defaults__ = None
-try:
-    ftrk()
-    raise Exception("should have raised TypeError")
-except TypeError:
-    pass
+
+assertRaises(TypeError, ftrk)
 
 def g():
     def h(x, y):
@@ -2360,17 +2144,8 @@ for x.foo in y:
 assert t == y
 
 # issue 1062
-try:
-    eval("x[]")
-    raise Exception("should have raised SyntaxError")
-except SyntaxError:
-    pass
-
-try:
-    eval("x{}")
-    raise Exception("should have raised SyntaxError")
-except SyntaxError:
-    pass
+assertRaises(SyntaxError, exec, "x[]")
+assertRaises(SyntaxError, exec, "x{}")
 
 # issue 1068
 class Class():
@@ -2383,11 +2158,7 @@ assert Class().method() == "Class"
 def f():
     print(__class__)
 
-try:
-    f()
-    raise Exception("should have raised NameError")
-except NameError:
-    pass
+assertRaises(NameError, f)
 
 # issue 1085
 expected = [

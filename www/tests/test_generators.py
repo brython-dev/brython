@@ -472,6 +472,41 @@ except StopIteration as exc:
 # issue 470
 assert eval('bytes(0 for x in [])') == b''
 
+# issue 502
+def test_gen():
+    for i in range(1):
+        yield i
+    return 20
+
+g = test_gen()
+next(g)
+try:
+    next(g)
+except StopIteration as exc:
+    assert exc.value == 20
+
+# issue 765
+def sub_gen(expect):
+    res = yield None
+    assert res == expect, "Value should be sent to the inner generator"
+    return res
+
+def main_gen(expect):
+    r = yield from sub_gen(expect)
+    assert r == expect, \
+        "Value returned from the inner generator should be result of "\
+        "yield from expression"
+    return r
+
+expect_value = 30
+g = main_gen(expect_value)
+assert g.send(None) is None
+try:
+    g.send(expect_value)
+    assert False, "Return from iterator should send StopIteration"
+except StopIteration as e:
+    assert e.value == expect_value
+
 # issue 857
 def f():
     def x():

@@ -34,11 +34,48 @@ assert x.__ceil__() == -3
 
 assert x.__divmod__(2) == (-2, 1)
 
-# issue 564
-x = 2
-assert isinstance(.5 * x, float)
-assert isinstance(1.0 + x, float)
-assert isinstance(3.0 - x, float)
+
+#issue 98
+assert int.from_bytes(b'\xfc', 'big') == 252
+assert int.from_bytes(bytearray([252, 0]), 'big') == 64512
+assert int.from_bytes(b'\x00\x10', byteorder='big') == 16
+assert int.from_bytes(b'\x00\x10', byteorder='little') == 4096
+assert int.from_bytes(b'\xfc\x00', byteorder='big', signed=True) == -1024
+assert int.from_bytes(b'\xfc\x00', byteorder='big', signed=False) == 64512
+assert int.from_bytes([255, 0, 0], byteorder='big') == 16711680
+
+# issue 115
+a = 1
+assert a.numerator == 1
+assert a.denominator == 1
+assert a.real == 1
+assert a.imag == 0
+assert isinstance(a.imag, int) == True
+a = 1 + 2j
+assert a.real == 1
+assert a.imag == 2
+assert isinstance(a.real, float) == True
+assert isinstance(a.imag, float) == True
+
+# True and False are instances of int
+assert isinstance(True, int)
+assert isinstance(False, int)
+
+# issue 294
+assert int.from_bytes(bytes=b'some_bytes',byteorder='big') == \
+    545127616933790290830707
+
+# issue 350
+a = float("-inf")
+b = float("-infinity")
+assert a == b
+assert repr(a) == '-inf'
+assert a * 1. == b
+assert a * 1 == b
+
+# issue 352
+a = float("inf")
+assert a * 1 == a
 
 # complex numbers
 x = 8j
@@ -147,6 +184,24 @@ try:
     raise Exception("should have raised FloatCompError")
 except FloatCompError:
     pass
+
+# issue 564
+x = 2
+assert isinstance(.5 * x, float)
+assert isinstance(1.0 + x, float)
+assert isinstance(3.0 - x, float)
+
+# issue 749
+assert float.__eq__(1.5, 1.5)
+assert float.__eq__(1.0, 1)
+assert not float.__eq__(1, 0)
+assert int.__eq__(1, 1)
+assert not int.__eq__(1, 0)
+
+# issue 794
+assert (-1024).to_bytes(2, "big", signed=True) == b'\xfc\x00'
+assert (1024).to_bytes(2, "big") == b'\x04\x00'
+assert (1024).to_bytes(2, "little") == b'\x00\x04'
 
 # issue 840
 x = 123 ** 20

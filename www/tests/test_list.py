@@ -107,6 +107,19 @@ assert x[1] == 'r'
 assert 'r' in x
 assert 'rty' not in x
 
+
+# issue 218
+a = [1, 2, 3]
+a *= 2
+assert a == [1, 2, 3, 1, 2, 3]
+
+# issue 296
+assert [4, 0, 4].index(4, 1) == 2
+
+# issue 305
+a = [1, 2, 3]
+assert a.sort() is None
+
 # issue 364
 class A(list):
 

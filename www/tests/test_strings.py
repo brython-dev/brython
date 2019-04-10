@@ -126,6 +126,10 @@ assert  r'(?:([\w ]+) ([\w.]+) .*\[.* ([\d.]+)\])' == (r'(?:([\w ]+) ([\w.]+) '
         '.*'
         '\[.* ([\d.]+)\])'), 'raw string continuation'
 
+
+# issue 127
+assert "aaa+AAA".split("+") == ['aaa', 'AAA']
+
 # issue 265
 assert "" in "test"
 assert "" in ""
@@ -133,6 +137,22 @@ assert not "a" in ""
 
 # issue 285
 assert "ab"[1:0:-1] == 'b'
+
+# issue 361
+FULL_ENGLISH_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+FULL_ENTEAN_ALPHABET =  "AZYXEWVTISRLPNOMQKJHUGFDCB"
+tran_tab = str.maketrans(FULL_ENGLISH_ALPHABET, FULL_ENTEAN_ALPHABET, 'sh')
+assert "PETEshelley".translate(tran_tab) == "MEHEelley"
+
+# issue 423
+assert 'a'.islower()
+assert 'A'.isupper()
+assert 'Ⰰ'.isupper() # U+2C00     GLAGOLITIC CAPITAL LETTER AZU
+assert 'a0123'.islower()
+assert not '0123'.islower() # no uppercase, lowercase or titlecase letter
+assert not '0123'.isupper()
+assert not '!!!'.isupper()
+assert not '!!!'.islower()
 
 # identifiers
 assert "x".isidentifier()
@@ -218,7 +238,7 @@ assert str.maketrans({'a': 'A'}) == {97: 'A'}
 assert 'xyz'.maketrans({'a': 'A'}) == {97: 'A'}
 
 # issue 1078
-assert 'xyz'.maketrans('abc', 'def', 'abd') == {97: None, 98: None, 99: 102, 
+assert 'xyz'.maketrans('abc', 'def', 'abd') == {97: None, 98: None, 99: 102,
                                                 100: None}
 
 print("passed all tests...")

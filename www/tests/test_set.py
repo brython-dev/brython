@@ -71,12 +71,26 @@ class foo(set):
 x = foo([1, 2])
 assert x.show() == 'show'
 
+# issue 456
+assert {0, 1, 2}.issuperset([0, 1])
+assert not {0, 1, 2}.issuperset([2, 3])
+
+assert {0, 1}.issubset(range(3))
+assert not {7, 8}.issubset([6, 7])
+
 # issue 543
 assert {''} | {0} == {'', 0}
 
 s = set(range(20))
 s.intersection_update({5})
 assert s == {5}
+
+# issue 558
+a = set([5, 10])
+b = set(a)
+a.difference_update([5])
+assert a == {10}
+assert b == {5, 10}
 
 # issue 797 test set inplace operators
 # from stdlib Lib/test/test_set.py
