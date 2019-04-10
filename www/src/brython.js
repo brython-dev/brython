@@ -84,8 +84,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.2"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-04-09 22:21:21.675481"
-__BRYTHON__.timestamp=1554841281675
+__BRYTHON__.compiled_date="2019-04-10 11:17:25.029454"
+__BRYTHON__.timestamp=1554866245029
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","unicodedata","zlib"]
 ;
 
@@ -7572,15 +7572,17 @@ slice.stop=function(self){return self.stop}
 slice.indices=function(self,length){
 var $=$B.args("indices",2,{self:null,length:null},["self","length"],arguments,{},null,null)
 var len=$B.$GetInt($.length)
-if(len > 0){if(len < 0){_b_.ValueError.$factory("length should not be negative")}
-var _start=(self.start==_b_.None)? 0 :_b_.min(len,self.start)
-var _stop=(self.stop==_b_.None)? len :_b_.min(len,self.stop)
+if(len < 0){_b_.ValueError.$factory("length should not be negative")}
 var _step=(self.step==_b_.None)? 1 :self.step
+if(_step < 0){var _start=self.start,_stop=self.stop
+_start=(_start==_b_.None)? len-1 :
+(_start < 0)? _b_.max(-1,_start+len):_b_.min(len-1,self.start)
+_stop=(self.stop==_b_.None)?-1 :
+(_stop < 0)? _b_.max(-1,_stop+len):_b_.min(len-1,self.stop)}else{var _start=(self.start==_b_.None)? 0 :_b_.min(len,self.start)
+var _stop=(self.stop==_b_.None)? len :_b_.min(len,self.stop)
 if(_start < 0){_start=_b_.max(0,_start+len)}
-if(_stop < 0){_stop=_b_.max(0,_stop+len)}
+if(_stop < 0){_stop=_b_.max(0,_stop+len)}}
 return _b_.tuple.$factory([_start,_stop,_step])}
-_b_.NotImplementedError.$factory(
-"Error! negative step indices not implemented yet")}
 slice.$factory=function(){var $=$B.args("slice",3,{start:null,stop:null,step:null},["start","stop","step"],arguments,{stop:null,step:null},null,null),start,stop,step
 if($.stop===null && $.step===null){start=_b_.None
 stop=$.start
