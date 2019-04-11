@@ -172,4 +172,8 @@ try:
 except UnicodeDecodeError:
     pass
 
+# issue 1090
+assert bytes.fromhex('2Ef0 F1f2 ') == b'.\xf0\xf1\xf2'
+assert bytearray.fromhex('2Ef0 F1f2 ') == bytearray(b'.\xf0\xf1\xf2')
+
 print('passed all tests...')

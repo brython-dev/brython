@@ -446,6 +446,24 @@ bytes.find = function() {
     return -1
 }
 
+// bytes.fromhex is set as a classmethod after $set_func_names is called
+bytes.fromhex = function(){
+    var $ = $B.args('fromhex', 2,
+        {cls: null, string: null},
+        ['cls', 'string'],
+        arguments, {}, null, null),
+        string = $.string.replace(/\s/g, ''),
+        source = []
+    for(var i = 0; i < string.length; i += 2){
+        if(i + 2 > string.length){
+            throw _b_.ValueError.$factory("non-hexadecimal number found " +
+                "in fromhex() arg")
+        }
+        source.push(_b_.int.$factory(string.substr(i, 2), 16))
+    }
+    return $.cls.$factory(source)
+}
+
 bytes.rfind = function() {
     var $ = $B.args('rfind', 4,
         {self: null, sub: null, start: null, end: null},
@@ -1328,7 +1346,13 @@ for(var attr in bytes){
 }
 
 $B.set_func_names(bytes, "builtins")
+
+// classmethod needs function attribute $info, which is set by set_func_names
+bytes.fromhex = _b_.classmethod.$factory(bytes.fromhex)
+
 $B.set_func_names(bytearray, "builtins")
+
+bytearray.fromhex = _b_.classmethod.$factory(bytearray.fromhex)
 
 _b_.bytes = bytes
 _b_.bytearray = bytearray

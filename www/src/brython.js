@@ -84,8 +84,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.2"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-04-10 18:18:53.837946"
-__BRYTHON__.timestamp=1554913133837
+__BRYTHON__.compiled_date="2019-04-11 18:18:29.065252"
+__BRYTHON__.timestamp=1554999509065
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","unicodedata","zlib"]
 ;
 
@@ -7767,6 +7767,11 @@ var end=$.end==-1 ? $.self.source.length-sub.source.length :
 Math.min($.self.source.length-sub.source.length,$.end)
 for(var i=start;i <=end;i++){if(bytes.startswith($.self,sub,i)){return i}}
 return-1}
+bytes.fromhex=function(){var $=$B.args('fromhex',2,{cls:null,string:null},['cls','string'],arguments,{},null,null),string=$.string.replace(/\s/g,''),source=[]
+for(var i=0;i < string.length;i+=2){if(i+2 > string.length){throw _b_.ValueError.$factory("non-hexadecimal number found "+
+"in fromhex() arg")}
+source.push(_b_.int.$factory(string.substr(i,2),16))}
+return $.cls.$factory(source)}
 bytes.rfind=function(){var $=$B.args('rfind',4,{self:null,sub:null,start:null,end:null},['self','sub','start','end'],arguments,{start:0,end:-1},null,null),sub=$.sub,start=$.start
 if(typeof sub=="number"){if(sub < 0 ||sub > 255){throw _b_.ValueError.$factory("byte must be in range(0, 256)")}
 return $.self.source.slice(start,$.end==-1 ? undefined :$.end).
@@ -8094,7 +8099,9 @@ bytes.__class__=_b_.type
 bytes.$is_class=true
 for(var attr in bytes){if(bytearray[attr]===undefined && typeof bytes[attr]=="function"){bytearray[attr]=(function(_attr){return function(){return bytes[_attr].apply(null,arguments)}})(attr)}}
 $B.set_func_names(bytes,"builtins")
+bytes.fromhex=_b_.classmethod.$factory(bytes.fromhex)
 $B.set_func_names(bytearray,"builtins")
+bytearray.fromhex=_b_.classmethod.$factory(bytearray.fromhex)
 _b_.bytes=bytes
 _b_.bytearray=bytearray})(__BRYTHON__)
 ;
