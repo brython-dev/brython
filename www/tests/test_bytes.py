@@ -176,4 +176,7 @@ except UnicodeDecodeError:
 assert bytes.fromhex('2Ef0 F1f2 ') == b'.\xf0\xf1\xf2'
 assert bytearray.fromhex('2Ef0 F1f2 ') == bytearray(b'.\xf0\xf1\xf2')
 
+# issue 1091
+assert bytearray(b'\x07\xf0\xf1\xf2').hex() == "07f0f1f2"
+
 print('passed all tests...')
