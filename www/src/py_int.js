@@ -118,6 +118,10 @@ int.to_bytes = function(){
     }
     if(res.length > len){
         throw _b_.OverflowError.$factory("int too big to convert")
+    }else{
+        while(res.length < len){
+            res = res.concat([0])
+        }
     }
     if(byteorder == "big"){res = res.reverse()}
     return {

@@ -298,4 +298,7 @@ class Myfloat(float):
 
 assert issubclass(Myfloat, float)
 
+# issue 1092
+assert (1024).to_bytes(4, byteorder='big') == b'\x00\x00\x04\x00'
+
 print('passed all tests...')
