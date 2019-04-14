@@ -5,10 +5,9 @@
 brython
 =======
 
-Brython (Browser Python) is an implementation of Python 3 running in the
-browser, with an interface to the DOM elements and events.
+Brython (Browser Python) é uma implementação em Python 3 executada no navegador com interface para os elementos e eventos do DOM.
 
-Here is a simple example of an HTML page running Python:
+A seguir, um exemplo simples de uma página HTML utilizando Python:
 
 ```xml
     <html>
@@ -35,31 +34,28 @@ Here is a simple example of an HTML page running Python:
     </html>
 ```
 
-To use Brython, all there is to do is:
+Para usar o Brython, tudo o que você precisará fazer é:
 
-1. Load the script [brython.js](http://brython.info/src/brython.js "Brython from the site brython.info").
-2. Run the function `brython()` on page load, like `<body onload=brython()>`.
-3. Write Python code inside tags `<script type="text/python">` or linking it.
+1. Carregar o script [brython.js](http://brython.info/src/brython.js "Brython from the site brython.info").
+2. Executar a função `brython()` no carregamento da página, com `<body onload=brython()>`.
+3. Escrever os códigos em Python entre as tags `<script type="text/python">`.
 
 
-Main features
+Principais características
 =============
-Brython supports most of the syntax of [Python 3](https://www.python.org "Python Homepage"),
-including comprehensions, generators, metaclasses, imports, etc.
-and many modules of the CPython distribution.
+Brython suporta grande parte da sintaxe de [Python 3](https://www.python.org "Python Homepage"),
+incluso compreensões, geradores, metaclasses, importações, dentre outros muitos módulos da distribuição CPython.
 
-It includes libraries to interact with DOM elements and events,
-and with existing Javascript libraries such as jQuery, 3D, Highcharts, Raphael etc.
-It supports lastest specs of HTML5/CSS3, and can use CSS Frameworks like Bootstrap3, LESS, SASS etc.
+Inclui bibliotecas para interagir com elementos e eventos DOM além de algumas das bibliotecas existentes do Javascript tais como, jQuery, 3D, Highcharts, Raphael etc.
+
+Suporta as mais recentes especificações de HTML5/CSS3 podendo ser utilizado com frameworks de CSS como Bootstrap3, LESS, SASS etc.
 
 
-Getting started
+Começando
 ===============
 Zero install !
 --------------
-The most simple way to get started, without anything to install, is to use the
-distribution available online through [cdnjs](https://cdnjs.com). You can 
-choose the latest stable release :
+A maneira mais simles para começar sem instalação é utilizar a distribuição disponível em [cdnjs](https://cdnjs.com). Você pode escolher a versão estável mais recente em:
 
 ```xml
 <script type="text/javascript"
@@ -67,9 +63,7 @@ choose the latest stable release :
 </script>
 ```
 
-The previous code will allow you to use raw python code, but if you import
-modules from the standard library you have to load a single javascript file
-with the [available stdlib](https://github.com/brython-dev/brython/tree/master/www/src/Lib):
+O código acima irá lhe permitir utilizar códigos python diretamente, mas, para importar módulos da biblioteca padrão é necessário carregar um único arquivo javascript com o [stdlib disponível](https://github.com/brython-dev/brython/tree/master/www/src/Lib):
 
 ```xml
 <script type="text/javascript"
@@ -77,73 +71,65 @@ with the [available stdlib](https://github.com/brython-dev/brython/tree/master/w
 </script>
 ```
 
-Local install
+Instalação local
 -------------
-To install Brython locally, if you have a CPython distribution with `pip` :
+Para instalar Brython localmente, caso você tenha uma distribuição CPython, é possível através do `pip` :
 
 ```bash
 pip install brython
 ```
-
-then create a new directory and run
+em seguida, crie um novo diretório e execute:
 
 ```bash
 python -m brython --install
 ```
 
-or by loading the latest version of the Brython zip file from the
-[releases page](https://github.com/brython-dev/brython/releases).
+Você pode ainda obter a versão mais recente do Brython em formato zip através da nossa [página de lançamentos](https://github.com/brython-dev/brython/releases).
 
-In both cases, the distribution includes __brython.js__ (the core Brython engine)
-and __brython_stdlib.js__ (a bundle of all the files in the standard distribution).
+Em ambos os casos, a distribuição obtida inclui __brython.js__ (o arquivo central do Brython)
+e o __brython_stdlib.js__ (um pacote com todos os arquivos na distribuição padrão).
 
-It also includes the page __demo.html__ that shows a few examples of how you
-can interact with a web page using Python as the scripting language : create
-new elements, access and modify existing elements, create graphics, animations,
-send Ajax requests, etc.
+Também inclui a página __demo.html__, a qual possui alguns exemplos de como interagir com uma página web utilizando Python como linguagem de script: como criar novos elementos, acessar e modificar elementos existentes, criar gráficos, animações, enviar requisições Ajax, etc.
 
-Test Brython online
+Teste Brython online
 ===================
-If you want to test Brython online you can visit the following:
+Se você deseja testar o Brython online, você pode visitar algum dos sites a seguir:
 
 - [Editor](http://brython.info/tests/editor.html "Online Brython Editor")
 - [Console](http://brython.info/tests/console.html "Online Brython Console")
 
 
-Gallery of examples
+Galeria de Exemplos
 ===================
-There is a [gallery of examples](http://brython.info/gallery/gallery_en.html "gallery of examples")
-where you can see simple and advanced examples using vanilla Brython or
-interacting with other javascript libraries.
+Em [galeria de exemplos](http://brython.info/gallery/gallery_en.html "gallery of examples")
+você encontra exemplos desde simples até a avançados usando Brython além de interações com outras bibliotecas javascript. 
 
 
-Documentation
+Documentação
 =============
-Documentation is available on the [official site](http://www.brython.info "Brython Homepage").
-You can read the docs in [English](http://brython.info/static_doc/en/intro.html),
-[French](http://brython.info/static_doc/fr/intro.html) and
-[Spanish](http://brython.info/static_doc/es/intro.html).
+Documentação disponível no [site oficial](http://www.brython.info "Brython Homepage").
+Disponível em [Inglês](http://brython.info/static_doc/en/intro.html),
+[Francês](http://brython.info/static_doc/fr/intro.html) e
+[Espanhol](http://brython.info/static_doc/es/intro.html).
 
-The most updated docs usually are the English and French versions so if you
-want to be up-to-date, please, use these versions.
+As documentações mais atualizadas geralmente são as versões em inglês e francês, então caso você
+precise da versão mais recente, por favor, utilize uma dessas versões.
 
-Curious about [how Brython works](https://github.com/brython-dev/brython/wiki/How%20Brython%20works) ?
+Curioso sobre [como Brython funciona](https://github.com/brython-dev/brython/wiki/How%20Brython%20works) ?
 
-A [tutorial](https://github.com/brython-dev/brython/wiki/Writing-an-Android-application)
-explains how to build Android applications with Brython.
+Veja neste [tutorial](https://github.com/brython-dev/brython/wiki/Writing-an-Android-application)
+como contruir uma aplicação Android com Brython.
 
-Community (questions, feedback, issues, new features, ...)
+Comunidade (perguntas, feedback, issues, novas funcionalidades, ...)
 ==========================================================
-You can subscribe and post to the
-[mailing list](https://groups.google.com/forum/?fromgroups=#!forum/brython "Brython Main Mailing List").
+Você pode se inscrever e postar em nossa
+[lista de e-mails](https://groups.google.com/forum/?fromgroups=#!forum/brython "Brython Main Mailing List").
 
-If you find a bug/issue or do you want to see a new feature in Brython, please,
-[open a new issue](https://github.com/brython-dev/brython/issues "Brython GitHub Issues").
+Se você encontrar um bug, possuir dúvidas ou queira conhecer mais sobre uma nova funcionalidade do Brython, por favor [abra uma issue](https://github.com/brython-dev/brython/issues "Brython GitHub Issues").
 
-If you want to contribute to Brython, please read the [contributing guide](https://github.com/brython-dev/brython/blob/master/CONTRIBUTING.md).
+Se você deseja contribuir para o Brython, por favor, leia o [guia de contribuição](https://github.com/brython-dev/brython/blob/master/CONTRIBUTING.md).
 
-Thank you
+Obrigado
 =========
 
-- [BrowserStack](http://www.browserstack.com) for providing an access
-to their online testing environment.
+- Utilize o [BrowserStack](http://www.browserstack.com) para obter acesso ao ambiente de testes online.
