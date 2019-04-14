@@ -95,7 +95,7 @@ document["btn_show"].bind('click', show_test)
 
 </head>
 
-<body onload="brython({debug:1,
+<body onload="brython({debug:2,
                        static_stdlib_import: true
                        })">
 
@@ -176,6 +176,7 @@ Brython version: <span id="version"></span>
 <script type="text/javascript" src="/src/brython_builtins.js"></script>
 <script type="text/javascript" src="/src/version_info.js"></script>
 <script type="text/javascript" src="/src/py2js.js"></script>
+<script type="text/javascript" src="/src/loaders.js"></script>
 <script type="text/javascript" src="/src/py_object.js"></script>
 <script type="text/javascript" src="/src/py_type.js"></script>
 <script type="text/javascript" src="/src/py_utils.js"></script>
@@ -205,8 +206,6 @@ Brython version: <span id="version"></span>
 
 <script type="text/javascript" src="/src/brython_stdlib.js"></script>
 
-<!--<script type="text/javascript" src="/src/brython.js"></script>
-<script type="text/javascript" src="/src/brython_stdlib.js"></script>-->
 
 </body>
 </html>
