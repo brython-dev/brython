@@ -74,11 +74,10 @@ function dict_iterator_next(self){
 
 var $copy_dict = function(left, right){
     var _l = to_list(right),
-        si = dict.$setitem,
-        i = _l.length
+        si = dict.$setitem
     right.$version = right.$version || 0
     var right_version = right.$version || 0
-    while(i--){
+    for(var i = 0, len = _l.length; i < len; i++){
         si(left, _l[i][0], _l[i][1])
         if(right.$version != right_version){
             throw _b_.RuntimeError.$factory("dict mutated during update")
@@ -752,9 +751,8 @@ dict.update = function(self){
             }
             $copy_dict(self, o)
         }else if(hasattr(o, "keys")){
-            var _keys = _b_.list.$factory($B.$call($B.$getattr(o, "keys"))()),
-                i = _keys.length
-            while(i--){
+            var _keys = _b_.list.$factory($B.$call($B.$getattr(o, "keys"))())
+            for(var i = 0, len = _keys.length; i < len; i++){
                 var _value = getattr(o, "__getitem__")(_keys[i])
                 dict.$setitem(self, _keys[i], _value)
             }
