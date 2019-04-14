@@ -706,7 +706,7 @@ dict.pop = function(){
 
 dict.popitem = function(self){
     try{
-        var itm = new $item_iterator(self).next()
+        var itm = _b_.next(dict.items(self))
         dict.__delitem__(self, itm[0])
         return _b_.tuple.$factory(itm)
     }catch(err) {
