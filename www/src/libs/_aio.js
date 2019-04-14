@@ -220,6 +220,9 @@ function run(coro){
     }else{
         error_func = handle_error
     }
+    // Add top frame a second time to get the correct frame when the async
+    // function exits
+    $B.frames_stack.push($B.last($B.frames_stack))
     $B.coroutine.send(coro).then(onsuccess).catch(error_func)
     return _b_.None
 }

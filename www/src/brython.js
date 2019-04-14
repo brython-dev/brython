@@ -84,8 +84,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.2"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-04-14 12:05:02.465403"
-__BRYTHON__.timestamp=1555236302465
+__BRYTHON__.compiled_date="2019-04-14 13:56:23.364354"
+__BRYTHON__.timestamp=1555242983364
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","unicodedata","zlib"]
 ;
 
@@ -4764,7 +4764,7 @@ var try_node=new $NodeJS('try'),children=root.children.slice(enter_frame_pos+1,r
 root.insert(enter_frame_pos+1,try_node)
 if(children.length==0){children=[$NodeJS('')]}
 children.forEach(function(child){try_node.add(child)})
-try_node.add($NodeJS('if(!$locals.$run_async){$B.leave_frame()}'))
+try_node.add($NodeJS('$B.leave_frame()'))
 root.children.splice(enter_frame_pos+2,root.children.length)
 var catch_node=new $NodeJS('catch(err)')
 catch_node.add($NodeJS('$B.leave_frame()'))
@@ -13104,9 +13104,7 @@ $B.import_hooks=import_hooks})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins
 var coroutine=$B.coroutine=$B.make_class("coroutine")
 coroutine.close=function(self){}
-coroutine.send=function(self){
-$B.last($B.frames_stack)[3].$run_async=true
-return self.$func.apply(null,self.$args)}
+coroutine.send=function(self){return self.$func.apply(null,self.$args)}
 $B.set_func_names(coroutine,"builtins")
 $B.make_async=func=>{
 var f=function(){var args=arguments

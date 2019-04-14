@@ -9415,8 +9415,7 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
         try_node.add(child)
     })
     // add node to exit frame in case no exception was raised
-    // See async.js / couroutine.send for an explanation on $run_async
-    try_node.add($NodeJS('if(!$locals.$run_async){$B.leave_frame()}'))
+    try_node.add($NodeJS('$B.leave_frame()'))
 
     root.children.splice(enter_frame_pos + 2, root.children.length)
 
