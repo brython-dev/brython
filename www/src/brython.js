@@ -84,8 +84,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.2"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-04-11 21:35:16.366583"
-__BRYTHON__.timestamp=1555011316366
+__BRYTHON__.compiled_date="2019-04-14 12:05:02.465403"
+__BRYTHON__.timestamp=1555236302465
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","unicodedata","zlib"]
 ;
 
@@ -7760,16 +7760,15 @@ len=1}else if(!$.sub.__class__){throw _b_.TypeError.$factory("first argument mus
 do{index=bytes.find($.self,$.sub,Math.max(index+len,$.start),$.end)
 if(index !=-1){n++}}while(index !=-1)
 return n}
-bytes.decode=function(self,encoding,errors){if(encoding===undefined){encoding='utf-8'}
-if(errors===undefined){errors='strict'}
-switch(errors){case 'strict':
+bytes.decode=function(self,encoding,errors){var $=$B.args("decode",3,{self:null,encoding:null,errors:null},["self","encoding","errors"],arguments,{encoding:"utf-8",errors:"strict"},null,null)
+switch($.errors){case 'strict':
 case 'ignore':
 case 'replace':
 case 'surrogateescape':
 case 'surrogatepass':
 case 'xmlcharrefreplace':
 case 'backslashreplace':
-return decode(self.source,encoding,errors)
+return decode($.self.source,$.encoding,$.errors)
 default:}}
 bytes.endswith=function(){var $=$B.args('endswith',4,{self:null,suffix:null,start:null,end:null},['self','suffix','start','end'],arguments,{start:-1,end:-1},null,null)
 if(_b_.isinstance($.suffix,bytes)){var start=$.start==-1 ?
@@ -8020,11 +8019,41 @@ case "utf-8":
 case "utf8":
 case "U8":
 case "UTF":
-var s=""
-b.forEach(function(item){s+=String.fromCharCode(item)})
-try{s=decodeURIComponent(escape(s))}catch(err){throw _b_.UnicodeDecodeError.$factory(
-"'utf-8' codec can't decode bytes")}
-break
+var pos=0,s="",err_info
+while(pos < b.length){var byte=b[pos]
+err_info=null
+if(!(byte & 0x80)){
+s+=String.fromCodePoint(byte)
+pos++}else if((byte >> 5)==6){
+if(b[pos+1]===undefined){err_info=[byte,pos,"end"]}else if((b[pos+1]& 0xc0)!=0x80){err_info=[byte,pos,"continuation"]}
+if(err_info !==null){if(errors=="ignore"){pos++}else{throw _b_.UnicodeDecodeError.$factory(
+"'utf-8' codec can't decode byte 0x"+
+err_info[0].toString(16)+"  in position "+
+err_info[1]+
+(err_info[2]=="end" ? ": unexpected end of data" :
+": invalid continuation byte"))}}else{var cp=byte & 0x1f
+cp <<=6
+cp+=b[pos+1]& 0x3f
+s+=String.fromCodePoint(cp)
+pos+=2}}else if((byte >> 4)==14){
+if(b[pos+1]===undefined){err_info=[byte,pos,"end",pos+1]}else if((b[pos+1]& 0xc0)!=0x80){err_info=[byte,pos,"continuation",pos+2]}else if(b[pos+2]===undefined){err_info=[byte,pos+'-'+(pos+1),"end",pos+2]}else if((b[pos+2]& 0xc0)!=0x80){err_info=[byte,pos,"continuation",pos+3]}
+if(err_info !==null){if(errors=="ignore"){pos=err_info[3]}else if(errors=="surrogateescape"){for(var i=pos;i < err_info[3];i++){s+=String.fromCodePoint(0xdc80+b[i]-0x80)}
+pos=err_info[3]}else{throw _b_.UnicodeDecodeError.$factory(
+"'utf-8' codec can't decode byte 0x"+
+err_info[0].toString(16)+"  in position "+
+err_info[1]+
+(err_info[2]=="end" ? ": unexpected end of data" :
+": invalid continuation byte"))}}else{var cp=byte & 0xf
+cp=cp << 12
+cp+=(b[pos+1]& 0x3f)<< 6
+cp+=b[pos+2]& 0x3f
+s+=String.fromCodePoint(cp)
+pos+=3}}else{if(errors=="ignore"){pos++}else if(errors=="surrogateescape"){s+=String.fromCodePoint(0xdc80+b[pos]-0x80)
+pos++}else{throw _b_.UnicodeDecodeError.$factory(
+"'utf-8' codec can't decode byte 0x"+
+byte.toString(16)+"in position "+pos+
+": invalid start byte")}}}
+return s
 case "latin_1":
 case "windows1252":
 case "iso-8859-1":
@@ -8070,9 +8099,12 @@ var t=[],pos=0,enc=normalise(encoding)
 switch(enc){case "utf-8":
 case "utf_8":
 case "utf8":
-var s1=unescape(encodeURIComponent(s))
-for(var i=0,len=s1.length;i < len;i++){t.push(s1.charCodeAt(i))}
-break
+var res=[]
+for(var i=0,len=s.length;i < len;i++){var cp=s.charCodeAt(i),bytes
+if(cp < 0x7f){bytes=[cp]}else if(cp < 0x7ff){bytes=[0xc0+(cp >> 6),0x80+(cp & 0x3f)
+]}else if(cp < 0xffff){bytes=[0xe0+(cp >> 12),0x80+((cp & 0xfff)>> 6),0x80+(cp & 0x3f)]}else{console.log("4 bytes")}
+res=res.concat(bytes)}
+return res
 case "latin1":
 case "iso8859_1":
 case "windows1252":
@@ -11878,7 +11910,7 @@ dict.__delitem__(self,key)
 return res}catch(err){if(err.__class__===_b_.KeyError){if(_default !==missing){return _default}
 throw err}
 throw err}}
-dict.popitem=function(self){try{var itm=new $item_iterator(self).next()
+dict.popitem=function(self){try{var itm=_b_.next(dict.items(self))
 dict.__delitem__(self,itm[0])
 return _b_.tuple.$factory(itm)}catch(err){if(err.__class__==_b_.StopIteration){throw KeyError.$factory("'popitem(): dictionary is empty'")}}}
 dict.setdefault=function(){var $=$B.args("setdefault",3,{self:null,key:null,_default:null},["self","key","_default"],arguments,{_default:$N},null,null),self=$.self,key=$.key,_default=$._default

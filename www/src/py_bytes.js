@@ -446,10 +446,10 @@ bytes.count = function() {
 }
 
 bytes.decode = function(self, encoding,errors){
-    if(encoding === undefined){encoding = 'utf-8'}
-    if(errors === undefined){errors = 'strict'}
-
-    switch (errors) {
+    var $ = $B.args("decode", 3, {self: null, encoding: null, errors: null},
+            ["self", "encoding", "errors"], arguments,
+            {encoding: "utf-8", errors: "strict"}, null, null)
+    switch ($.errors) {
       case 'strict':
       case 'ignore':
       case 'replace':
@@ -457,7 +457,7 @@ bytes.decode = function(self, encoding,errors){
       case 'surrogatepass':
       case 'xmlcharrefreplace':
       case 'backslashreplace':
-        return decode(self.source, encoding, errors)
+        return decode($.self.source, $.encoding, $.errors)
       default:
         // raise error since errors variable is not valid
     }
@@ -1187,24 +1187,97 @@ function load_encoder(enc){
 var decode = $B.decode = function(b, encoding, errors){
     var s = "",
         enc = normalise(encoding)
-
     switch(enc) {
       case "utf_8":
       case "utf-8":
       case "utf8":
       case "U8":
       case "UTF":
-          var s = ""
-          b.forEach(function(item){
-              s += String.fromCharCode(item)
-          })
-          try{
-              s = decodeURIComponent(escape(s))
-          }catch(err){
-              throw _b_.UnicodeDecodeError.$factory(
-                  "'utf-8' codec can't decode bytes")
+          var pos = 0,
+              s = "",
+              err_info
+          while(pos < b.length){
+              var byte = b[pos]
+              err_info = null
+              if(!(byte & 0x80)){
+                  // Most significant bit = 0
+                  s += String.fromCodePoint(byte)
+                  pos++
+              }else if((byte >> 5) == 6){
+                  // Expect 2 bytes with the 2nd of the form 10xxxxxx
+                  if(b[pos + 1] === undefined){
+                      err_info = [byte, pos, "end"]
+                  }else if((b[pos + 1] & 0xc0) != 0x80){
+                      err_info = [byte, pos, "continuation"]
+                  }
+                  if(err_info !== null){
+                      if(errors == "ignore"){
+                          pos++
+                      }else{
+                          throw _b_.UnicodeDecodeError.$factory(
+                              "'utf-8' codec can't decode byte 0x" +
+                              err_info[0].toString(16) +"  in position " +
+                              err_info[1] +
+                              (err_info[2] == "end" ? ": unexpected end of data" :
+                                  ": invalid continuation byte"))
+                      }
+                  }else{
+                      var cp = byte & 0x1f
+                      cp <<= 6
+                      cp += b[pos + 1] & 0x3f
+                      s += String.fromCodePoint(cp)
+                      pos += 2
+                  }
+              }else if((byte >> 4) == 14){
+                  // 3 bytes with the 2nd and 3d of the form 10xxxxxx
+                  if(b[pos + 1] === undefined){
+                      err_info = [byte, pos, "end", pos + 1]
+                  }else if((b[pos + 1] & 0xc0) != 0x80){
+                      err_info = [byte, pos, "continuation", pos + 2]
+                  }else if(b[pos + 2] === undefined){
+                      err_info = [byte, pos + '-' + (pos + 1), "end", pos + 2]
+                  }else if((b[pos + 2] & 0xc0) != 0x80){
+                      err_info = [byte, pos, "continuation", pos + 3]
+                  }
+                  if(err_info !== null){
+                      if(errors == "ignore"){
+                          pos = err_info[3]
+                      }else if(errors == "surrogateescape"){
+                          for(var i = pos; i < err_info[3]; i++){
+                              s += String.fromCodePoint(0xdc80 + b[i] - 0x80)
+                          }
+                          pos = err_info[3]
+                      }else{
+                          throw _b_.UnicodeDecodeError.$factory(
+                              "'utf-8' codec can't decode byte 0x" +
+                              err_info[0].toString(16) +"  in position " +
+                              err_info[1] +
+                              (err_info[2] == "end" ? ": unexpected end of data" :
+                                  ": invalid continuation byte"))
+                      }
+                  }else{
+                      var cp = byte & 0xf
+                      cp = cp << 12
+                      cp += (b[pos + 1] & 0x3f) << 6
+                      cp += b[pos + 2] & 0x3f
+                      s += String.fromCodePoint(cp)
+                      pos += 3
+                  }
+              }else{
+                  if(errors == "ignore"){
+                      pos++
+                  }else if(errors == "surrogateescape"){
+                      s += String.fromCodePoint(0xdc80 + b[pos] - 0x80)
+                      pos++
+                  }else{
+                      throw _b_.UnicodeDecodeError.$factory(
+                          "'utf-8' codec can't decode byte 0x" +
+                          byte.toString(16) + "in position " + pos +
+                          ": invalid start byte")
+                  }
+              }
           }
-          break
+          return s
       case "latin_1":
       case "windows1252":
       case "iso-8859-1":
@@ -1283,11 +1356,27 @@ var encode = $B.encode = function(){
         case "utf-8":
         case "utf_8":
         case "utf8":
-            var s1 = unescape(encodeURIComponent(s))
-            for(var i = 0, len = s1.length; i < len; i++){
-                t.push(s1.charCodeAt(i))
+            var res = []
+            for(var i = 0, len = s.length; i < len; i++){
+                var cp = s.charCodeAt(i),
+                    bytes
+                if(cp < 0x7f){
+                    bytes = [cp]
+                }else if(cp < 0x7ff){
+                    bytes = [0xc0 + (cp >> 6),
+                               0x80 + (cp & 0x3f)
+                               ]
+                }else if(cp < 0xffff){
+                    bytes = [0xe0 + (cp >> 12),
+                               0x80 + ((cp & 0xfff) >> 6),
+                               0x80 + (cp & 0x3f)]
+
+                }else{
+                    console.log("4 bytes")
+                }
+                res = res.concat(bytes)
             }
-            break
+            return res
         case "latin1":
         case "iso8859_1":
         case "windows1252":
