@@ -139,5 +139,5 @@ def on_complete(req):
 
 ajax.post(url,
           data={'x': 0, 'y': 1},
-          complete=on_complete)
+          oncomplete=on_complete)
 ```
