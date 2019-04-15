@@ -84,8 +84,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.2"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-04-14 13:56:23.364354"
-__BRYTHON__.timestamp=1555242983364
+__BRYTHON__.compiled_date="2019-04-15 07:57:13.235946"
+__BRYTHON__.timestamp=1555307833235
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","unicodedata","zlib"]
 ;
 
@@ -6861,8 +6861,9 @@ var reversed=$B.make_class("reversed",function(seq){
 check_no_kw('reversed',seq)
 check_nb_args('reversed',1,arguments)
 var rev_method=$B.$getattr(seq,'__reversed__',null)
-if(rev_method !==null){
-return rev_method()}
+if(rev_method !==null){try{return $B.$call(rev_method)()}catch(err){throw _b_.TypeError.$factory("'"+
+$B.get_class(seq).$infos.__name__+
+"' object is not reversible")}}
 try{var res={__class__:reversed,$counter :$B.$getattr(seq,'__len__')(),getter:$B.$getattr(seq,'__getitem__')}
 return res}catch(err){throw _b_.TypeError.$factory("argument to reversed() must be a sequence")}}
 )
@@ -11670,10 +11671,10 @@ function dict_iterator_next(self){if(self.len_func()!=self.len){throw RuntimeErr
 self.counter++
 if(self.counter < self.items.length){return self.items[self.counter]}
 throw _b_.StopIteration.$factory("StopIteration")}
-var $copy_dict=function(left,right){var _l=to_list(right),si=dict.$setitem,i=_l.length
+var $copy_dict=function(left,right){var _l=to_list(right),si=dict.$setitem
 right.$version=right.$version ||0
 var right_version=right.$version ||0
-while(i--){si(left,_l[i][0],_l[i][1])
+for(var i=0,len=_l.length;i < len;i++){si(left,_l[i][0],_l[i][1])
 if(right.$version !=right_version){throw _b_.RuntimeError.$factory("dict mutated during update")}}}
 function rank(self,hash,key){
 var pairs=self.$object_dict[hash]
@@ -11924,8 +11925,8 @@ return _default}}
 dict.update=function(self){var $=$B.args("update",1,{"self":null},["self"],arguments,{},"args","kw"),self=$.self,args=$.args,kw=$.kw
 if(args.length > 0){var o=args[0]
 if(isinstance(o,dict)){if(o.$jsobj){o=jsobj2dict(o.$jsobj)}
-$copy_dict(self,o)}else if(hasattr(o,"keys")){var _keys=_b_.list.$factory($B.$call($B.$getattr(o,"keys"))()),i=_keys.length
-while(i--){var _value=getattr(o,"__getitem__")(_keys[i])
+$copy_dict(self,o)}else if(hasattr(o,"keys")){var _keys=_b_.list.$factory($B.$call($B.$getattr(o,"keys"))())
+for(var i=0,len=_keys.length;i < len;i++){var _value=getattr(o,"__getitem__")(_keys[i])
 dict.$setitem(self,_keys[i],_value)}}else{var it=_b_.iter(o),i=0
 while(true){try{var item=_b_.next(it)}catch(err){if(err.__class__===_b_.StopIteration){break}
 throw err}

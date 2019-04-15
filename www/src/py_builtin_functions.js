@@ -1852,10 +1852,14 @@ var reversed = $B.make_class("reversed",
 
         var rev_method = $B.$getattr(seq, '__reversed__', null)
         if(rev_method !== null){
-            //console.log("rev method", rev_method)
-            return rev_method()
+            try{
+                return $B.$call(rev_method)()
+            }catch(err){
+                throw _b_.TypeError.$factory("'" +
+                    $B.get_class(seq).$infos.__name__ +
+                    "' object is not reversible")
+            }
         }
-
         try{
             var res = {
                 __class__: reversed,
