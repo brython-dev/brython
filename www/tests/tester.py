@@ -216,7 +216,9 @@ class TestReport:
         methods.sort()
         for method in methods:
             report = self.records[method]
-            res += '{:15} {1.status} {1.lineno}\n    {1.args[0]}'.format(method, report)
+            res += '{:15} {1.status} {1.lineno}'.format(method, report)
+            if report.args:
+                res += '\n    {0.args[0]}'.format(report)
         return res
 
 TestCase = Tester # unittest interface
