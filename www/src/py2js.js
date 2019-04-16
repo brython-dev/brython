@@ -5254,8 +5254,8 @@ var $OpCtx = $B.parser.$OpCtx = function(context,op){
                                 ' == "string" && typeof ' + t1 +
                                 ' == "string") ? ' + t0 + '+' + t1)
                         }
-                        res.push(': $B.$getattr(' + t0 + ',"__')
-                        res.push($operators[this.op] + '__")(' + t1 + ')')
+                        res.push(': $B.rich_op("' + $operators[this.op] + '",' +
+                            t0 + ',' + t1 + ')')
                         return '(' + res.join('') + ')'
                     }
                 }
@@ -5271,8 +5271,8 @@ var $OpCtx = $B.parser.$OpCtx = function(context,op){
                     return '$B.rich_comp("__' + $operators[this.op] + '__",' +
                         this.tree[0].to_js() + ',' + this.tree[1].to_js() + ')'
                 }else{
-                    return '$B.$getattr(' + this.tree[0].to_js() + ', "__' +
-                        $operators[this.op] + '__")(' + this.tree[1].to_js() +
+                    return '$B.rich_op("' + $operators[this.op] + '", ' +
+                        this.tree[0].to_js() + ', ' + this.tree[1].to_js() +
                         ')'
                 }
         }

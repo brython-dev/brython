@@ -36,7 +36,8 @@ set.__add__ = function(self,other){
 }
 
 set.__and__ = function(self, other, accept_iter){
-    $test(accept_iter, other)
+    try{$test(accept_iter, other)}
+    catch(err){return _b_.NotImplemented}
     var res = create_type(self)
     for(var i = 0, len = self.$items.length; i < len; i++){
         if(_b_.getattr(other, "__contains__")(self.$items[i])){
@@ -197,6 +198,11 @@ set.__or__ = function(self, other, accept_iter){
     return res
 }
 
+set.__rand__ = function(self, other){
+    // Used when other.__and__(self) is NotImplemented
+    return set.__and__(self, other)
+}
+
 set.__reduce__ = function(self){
     return _b_.tuple.$factory([self.__class__,
         _b_.tuple.$factory([self.$items]), $N])
@@ -204,6 +210,16 @@ set.__reduce__ = function(self){
 
 set.__reduce_ex__ = function(self, protocol){
     return set.__reduce__(self)
+}
+
+set.__rsub__ = function(self, other){
+    // Used when other.__sub__(self) is NotImplemented
+    return set.__sub__(self, other)
+}
+
+set.__rxor__ = function(self, other){
+    // Used when other.__xor__(self) is NotImplemented
+    return set.__xor__(self, other)
 }
 
 set.__str__ = set.__repr__ = function(self){
@@ -233,7 +249,8 @@ set.__str__ = set.__repr__ = function(self){
 
 set.__sub__ = function(self, other, accept_iter){
     // Return a new set with elements in the set that are not in the others
-    $test(accept_iter, other, "-")
+    try{$test(accept_iter, other, "-")}
+    catch(err){return _b_.NotImplemented}
     var res = create_type(self),
         cfunc = _b_.getattr(other, "__contains__")
     for(var i = 0, len = self.$items.length; i < len; i++){
@@ -246,7 +263,8 @@ set.__sub__ = function(self, other, accept_iter){
 
 set.__xor__ = function(self, other, accept_iter){
     // Return a new set with elements in either the set or other but not both
-    $test(accept_iter, other, "^")
+    try{$test(accept_iter, other, "^")}
+    catch(err){return _b_.NotImplemented}
     var res = create_type(self),
         cfunc = _b_.getattr(other, "__contains__")
     for(var i = 0, len = self.$items.length; i < len; i++){
@@ -505,7 +523,7 @@ set.difference = function(){
 
     var res = clone($.self)
     for(var i = 0; i < $.args.length; i++){
-        res = set.__sub__(res, set.$factory($.args[i]))
+        res = set.__sub__(res, set.$factory($.args[i]), true)
     }
     return res
 }
