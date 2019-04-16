@@ -464,26 +464,25 @@ list.extend = function(){
 }
 
 list.index = function(){
-    var $ = $B.args("index", 4, {self: null, x: null, start: null, stop: null},
-        ["self", "x", "start" ,"stop"], arguments,
-        {start: null, stop: null}, null, null),
+    var missing = {},
+        $ = $B.args("index", 4, {self: null, x: null, start: null, stop: null},
+            ["self", "x", "start" ,"stop"], arguments,
+            {start: 0, stop: missing}, null, null),
         self = $.self,
         start = $.start,
         stop = $.stop
     var _eq = function(other){return $B.rich_comp("__eq__", $.x, other)}
-    if(start === null){start = 0}
-    else{
-        if(start.__class__ === $B.long_int){
-            start = parseInt(start.value) * (start.pos ? 1 : -1)
-        }
-        if(start < 0){start = Math.max(0, start + self.length)}
+    if(start.__class__ === $B.long_int){
+        start = parseInt(start.value) * (start.pos ? 1 : -1)
     }
-    if(stop === null){stop = self.length}
+    if(start < 0){start = Math.max(0, start + self.length)}
+    if(stop === missing){stop = self.length}
     else{
         if(stop.__class__ === $B.long_int){
             stop = parseInt(stop.value) * (stop.pos ? 1 : -1)
         }
         if(stop < 0){stop = Math.min(self.length, stop + self.length)}
+        stop = Math.min(stop, self.length)
     }
     for(var i = start; i < stop; i++){
         if(_eq(self[i])){return i}
