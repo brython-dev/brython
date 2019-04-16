@@ -6,8 +6,6 @@ var _b_ = $B.builtins
 $B.$class_constructor = function(class_name, class_obj, bases,
         parents_names, kwargs){
 
-    var $test = false //class_name == "SRE_Pattern"
-    if($test){console.log("create class", class_name, "class_obj", class_obj)}
     bases = bases || []
     var metaclass
 
@@ -521,13 +519,20 @@ type.__new__ = function(meta, name, bases, cl_dict){
     }
 
     // set class attributes for faster lookups
-    var items = $B.dict_to_list(cl_dict) // defined in py_dict.js$dict_items(cl_dict)
+    var items = $B.dict_to_list(cl_dict) // defined in py_dict.js
     for(var i = 0; i < items.length; i++){
         var key = $B.to_alias(items[i][0]),
             v = items[i][1]
         class_dict[key] = v
         if(typeof v == "function"){
             v.$infos.$class = class_dict
+            if(v.$infos.$defaults){
+                // If the function was set an attribute __defaults__, it is
+                // stored in v.$infos.$defaults (cf. Function.__setattr__ in
+                // py_builtin_functions.js)
+                $B.Function.__setattr__(v, "__defaults__",
+                    v.$infos.$defaults)
+            }
         }
     }
 
@@ -715,7 +720,9 @@ var $instance_creator = $B.$instance_creator = function(klass){
             if(klass.hasOwnProperty("__init__")){
                 factory = function(){
                     var args = []
-                    for(var i = 0; i < arguments.length; i++){args.push(arguments[i])}
+                    for(var i = 0; i < arguments.length; i++){
+                        args.push(arguments[i])
+                    }
                     var obj = klass.__new__.apply(null, [klass].concat(args))
                     klass.__init__.apply(null, [obj].concat(args))
                     return obj

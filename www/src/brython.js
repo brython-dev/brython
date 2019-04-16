@@ -84,8 +84,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.2"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-04-15 07:57:13.235946"
-__BRYTHON__.timestamp=1555307833235
+__BRYTHON__.compiled_date="2019-04-16 11:05:15.424402"
+__BRYTHON__.timestamp=1555405515424
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","unicodedata","zlib"]
 ;
 
@@ -2493,16 +2493,16 @@ var t0=this.tree[0].to_js(),t1=this.tree[1].to_js()
 if(this.op=='+'){res.push(' : (typeof '+t0+
 ' == "string" && typeof '+t1+
 ' == "string") ? '+t0+'+'+t1)}
-res.push(': $B.$getattr('+t0+',"__')
-res.push($operators[this.op]+'__")('+t1+')')
+res.push(': $B.rich_op("'+$operators[this.op]+'",'+
+t0+','+t1+')')
 return '('+res.join('')+')'}}
 if(comps[this.op]!==undefined){return '$B.rich_comp("__'+$operators[this.op]+'__",'+
 e0.to_js()+','+e1.to_js()+')'}else{return '$B.$getattr('+e0.to_js()+', "__'+
 $operators[this.op]+'__")('+e1.to_js()+')'}
 default:
 if(comps[this.op]!==undefined){return '$B.rich_comp("__'+$operators[this.op]+'__",'+
-this.tree[0].to_js()+','+this.tree[1].to_js()+')'}else{return '$B.$getattr('+this.tree[0].to_js()+', "__'+
-$operators[this.op]+'__")('+this.tree[1].to_js()+
+this.tree[0].to_js()+','+this.tree[1].to_js()+')'}else{return '$B.rich_op("'+$operators[this.op]+'", '+
+this.tree[0].to_js()+', '+this.tree[1].to_js()+
 ')'}}}
 this.simple_js=function(){function sjs(elt){if(elt.type=='op'){return elt.simple_js()}
 else if(elt.type=='expr' && elt.tree[0].type=='list_or_tuple'
@@ -5240,9 +5240,7 @@ return A}
 return object})(__BRYTHON__)
 ;
 ;(function($B){var _b_=$B.builtins
-$B.$class_constructor=function(class_name,class_obj,bases,parents_names,kwargs){var $test=false 
-if($test){console.log("create class",class_name,"class_obj",class_obj)}
-bases=bases ||[]
+$B.$class_constructor=function(class_name,class_obj,bases,parents_names,kwargs){bases=bases ||[]
 var metaclass
 var module=class_obj.__module__
 if(module===undefined){
@@ -5418,7 +5416,9 @@ var class_dict={__class__ :meta,__bases__ :bases,__dict__ :cl_dict,$infos:{__nam
 var items=$B.dict_to_list(cl_dict)
 for(var i=0;i < items.length;i++){var key=$B.to_alias(items[i][0]),v=items[i][1]
 class_dict[key]=v
-if(typeof v=="function"){v.$infos.$class=class_dict}}
+if(typeof v=="function"){v.$infos.$class=class_dict
+if(v.$infos.$defaults){
+$B.Function.__setattr__(v,"__defaults__",v.$infos.$defaults)}}}
 class_dict.__mro__=type.mro(class_dict)
 return class_dict}
 type.__repr__=type.__str__=function(kls){if(kls.$infos===undefined){console.log("no $infos",kls)}
@@ -6120,6 +6120,13 @@ else if(op=="__ne__"){return _b_.True}
 throw _b_.TypeError.$factory("'"+method2comp[op]+
 "' not supported between instances of '"+$B.class_name(x)+
 "' and '"+$B.class_name(y)+"'")}
+var opname2opsign={sub:"-",xor:"^"}
+$B.rich_op=function(op,x,y){var res=$B.$call($B.$getattr(x,"__"+op+"__"))(y)
+if(res===_b_.NotImplemented){res=$B.$call($B.$getattr(y,"__r"+op+"__"))(x)
+if(res !==_b_.NotImplemented){return res}
+throw _b_.TypeError.$factory("'"+(opname2opsign[op]||op)+
+"' not supported between instances of '"+$B.class_name(x)+
+"' and '"+$B.class_name(y)+"'")}else{return res}}
 $B.is_none=function(o){return o===undefined ||o===null ||o==_b_.None}})(__BRYTHON__)
 if(!Array.prototype.indexOf){Array.prototype.indexOf=function(obj,fromIndex){if(fromIndex < 0)fromIndex+=this.length
 for(var i=fromIndex ||0,len=this.length;i < len;i++){if(this[i]===obj){return i}}
@@ -6947,9 +6954,11 @@ for(var i=0,_len=mro.length-1;i < _len;i++){_setattr=mro[i].__setattr__
 if(_setattr){break}}}}
 var special_attrs=["__module__"]
 if(klass && klass.__slots__ && special_attrs.indexOf(attr)==-1 &&
-! _setattr){var has_slot=false
-if(klass.__slots__.indexOf(attr)>-1){has_slot=true}else{for(var i=0;i < klass.__mro__.length;i++){var kl=klass.__mro__[i]
-if(kl.__slots__ && kl.__slots__.indexOf(attr)>-1){has_slot=true
+! _setattr){function mangled_slots(klass){if(klass.__slots__){if(Array.isArray(klass.__slots__)){return klass.__slots__.map(function(item){if(item.startsWith("__")&& ! item.endsWith("_")){return "_"+klass.$infos.__name__+item}else{return item}})}else{return klass.__slots__}}
+return[]}
+var has_slot=false
+if(mangled_slots(klass).indexOf(attr)>-1){has_slot=true}else{for(var i=0;i < klass.__mro__.length;i++){var kl=klass.__mro__[i]
+if(mangled_slots(kl).indexOf(attr)>-1){has_slot=true
 break}}}
 if(! has_slot){throw _b_.AttributeError.$factory("'"+klass.$infos.__name__+
 "' object has no attribute '"+attr+"'")}}
@@ -7179,7 +7188,9 @@ var klass=self.$infos.$class
 var new_func=set_func($defaults)
 new_func.$set_defaults=set_func
 if(klass){klass[self.$infos.__name__]=new_func
-new_func.$infos.$class=klass}}
+new_func.$infos.$class=klass}else{
+self.$infos.$defaults=value}
+return _b_.None}
 if(self.$infos[attr]!==undefined){self.$infos[attr]=value}
 else{self.$attrs=self.$attrs ||{};self.$attrs[attr]=value}}
 $B.Function.$factory=function(){}
@@ -8152,7 +8163,8 @@ return res}
 var set={__class__:_b_.type,$infos:{__module__:"builtins",__name__:"set"},$is_class:true,$native:true}
 set.__add__=function(self,other){throw _b_.TypeError.$factory(
 "unsupported operand type(s) for +: 'set' and "+typeof other)}
-set.__and__=function(self,other,accept_iter){$test(accept_iter,other)
+set.__and__=function(self,other,accept_iter){try{$test(accept_iter,other)}
+catch(err){return _b_.NotImplemented}
 var res=create_type(self)
 for(var i=0,len=self.$items.length;i < len;i++){if(_b_.getattr(other,"__contains__")(self.$items[i])){set.add(res,self.$items[i])}}
 return res}
@@ -8204,8 +8216,14 @@ catch(err){if(_b_.isinstance(err,_b_.StopIteration)){break}
 throw err}}
 res.__class__=self.__class__
 return res}
+set.__rand__=function(self,other){
+return set.__and__(self,other)}
 set.__reduce__=function(self){return _b_.tuple.$factory([self.__class__,_b_.tuple.$factory([self.$items]),$N])}
 set.__reduce_ex__=function(self,protocol){return set.__reduce__(self)}
+set.__rsub__=function(self,other){
+return set.__sub__(self,other)}
+set.__rxor__=function(self,other){
+return set.__xor__(self,other)}
 set.__str__=set.__repr__=function(self){var klass_name=$B.class_name(self)
 self.$cycle=self.$cycle===undefined ? 0 :self.$cycle+1
 if(self.$items.length===0){return klass_name+"()"}
@@ -8222,12 +8240,14 @@ res=res.join(", ")
 self.$cycle--
 return head+res+tail}
 set.__sub__=function(self,other,accept_iter){
-$test(accept_iter,other,"-")
+try{$test(accept_iter,other,"-")}
+catch(err){return _b_.NotImplemented}
 var res=create_type(self),cfunc=_b_.getattr(other,"__contains__")
 for(var i=0,len=self.$items.length;i < len;i++){if(! cfunc(self.$items[i])){res.$items.push(self.$items[i])}}
 return res}
 set.__xor__=function(self,other,accept_iter){
-$test(accept_iter,other,"^")
+try{$test(accept_iter,other,"^")}
+catch(err){return _b_.NotImplemented}
 var res=create_type(self),cfunc=_b_.getattr(other,"__contains__")
 for(var i=0,len=self.$items.length;i < len;i++){if(! cfunc(self.$items[i])){set.add(res,self.$items[i])}}
 for(var i=0,len=other.$items.length;i < len;i++){if(! set.__contains__(self,other.$items[i])){set.add(res,other.$items[i])}}
@@ -8318,7 +8338,7 @@ return $N}
 set.difference=function(){var $=$B.args("difference",1,{self:null},["self"],arguments,{},"args",null)
 if($.args.length==0){return set.copy($.self)}
 var res=clone($.self)
-for(var i=0;i < $.args.length;i++){res=set.__sub__(res,set.$factory($.args[i]))}
+for(var i=0;i < $.args.length;i++){res=set.__sub__(res,set.$factory($.args[i]),true)}
 return res}
 var fc=set.difference+"" 
 eval("set.intersection = "+
@@ -10670,14 +10690,14 @@ list.extend=function(){var $=$B.args("extend",2,{self:null,t:null},["self","t"],
 var other=list.$factory($B.$iter($.t))
 for(var i=0;i < other.length;i++){$.self.push(other[i])}
 return $N}
-list.index=function(){var $=$B.args("index",4,{self:null,x:null,start:null,stop:null},["self","x","start" ,"stop"],arguments,{start:null,stop:null},null,null),self=$.self,start=$.start,stop=$.stop
+list.index=function(){var missing={},$=$B.args("index",4,{self:null,x:null,start:null,stop:null},["self","x","start" ,"stop"],arguments,{start:0,stop:missing},null,null),self=$.self,start=$.start,stop=$.stop
 var _eq=function(other){return $B.rich_comp("__eq__",$.x,other)}
-if(start===null){start=0}
-else{if(start.__class__===$B.long_int){start=parseInt(start.value)*(start.pos ? 1 :-1)}
-if(start < 0){start=Math.max(0,start+self.length)}}
-if(stop===null){stop=self.length}
+if(start.__class__===$B.long_int){start=parseInt(start.value)*(start.pos ? 1 :-1)}
+if(start < 0){start=Math.max(0,start+self.length)}
+if(stop===missing){stop=self.length}
 else{if(stop.__class__===$B.long_int){stop=parseInt(stop.value)*(stop.pos ? 1 :-1)}
-if(stop < 0){stop=Math.min(self.length,stop+self.length)}}
+if(stop < 0){stop=Math.min(self.length,stop+self.length)}
+stop=Math.min(stop,self.length)}
 for(var i=start;i < stop;i++){if(_eq(self[i])){return i}}
 throw _b_.ValueError.$factory(_b_.str.$factory($.x)+" is not in list")}
 list.insert=function(){var $=$B.args("insert",3,{self:null,i:null,item:null},["self","i","item"],arguments,{},null,null)
@@ -11227,7 +11247,8 @@ check_str($.sub)
 normalize_start_end($)
 if(!isinstance($.start,_b_.int)||!isinstance($.end,_b_.int)){throw _b_.TypeError.$factory("slice indices must be "+
 "integers or None or have an __index__ method")}
-var s=$.self.substring($.start,$.end)
+var s=""
+for(var i=$.start;i < $.end;i++){s+=$.self.charAt(i)}
 if($.sub.length==0 && $.start==$.self.length){return $.self.length}
 if(s.length+$.sub.length==0){return-1}
 var last_search=s.length-$.sub.length
