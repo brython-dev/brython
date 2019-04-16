@@ -87,6 +87,8 @@ var ajax = {
             return function(params){
                 return ajax.send(self, params)
             }
+        }else if(attr == 'xml'){ // alias
+            attr = 'responseXML'
         }
         // Otherwise default to JSObject method
         return $B.JSObject.__getattribute__(self, attr)
