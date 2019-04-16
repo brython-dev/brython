@@ -1037,16 +1037,21 @@ str.find = function(){
     // arguments start and end are interpreted as in slice notation.
     // Return -1 if sub is not found.
     var $ = $B.args("str.find", 4,
-        {self: null, sub: null, start: null, end: null},
-        ["self", "sub", "start", "end"],
-        arguments, {start: 0, end: null}, null, null)
+            {self: null, sub: null, start: null, end: null},
+            ["self", "sub", "start", "end"],
+            arguments, {start: 0, end: null}, null, null)
     check_str($.sub)
     normalize_start_end($)
 
     if(!isinstance($.start, _b_.int)||!isinstance($.end, _b_.int)){
         throw _b_.TypeError.$factory("slice indices must be " +
             "integers or None or have an __index__ method")}
-    var s = $.self.substring($.start, $.end)
+    // Can't use string.substring(start, end) because if end < start,
+    // Javascript transforms it into substring(end, start)...
+    var s = ""
+    for(var i = $.start; i < $.end; i++){
+        s += $.self.charAt(i)
+    }
 
     if($.sub.length == 0 && $.start == $.self.length){return $.self.length}
     if(s.length + $.sub.length == 0){return -1}
@@ -1273,7 +1278,7 @@ str.format_map = function(self) {
 
 str.index = function(self){
     // Like find(), but raise ValueError when the substring is not found.
-    var res = str.find.apply(null,arguments)
+    var res = str.find.apply(null, arguments)
     if(res === -1){throw _b_.ValueError.$factory("substring not found")}
     return res
 }
