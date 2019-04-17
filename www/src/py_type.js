@@ -530,8 +530,9 @@ type.__new__ = function(meta, name, bases, cl_dict){
                 // If the function was set an attribute __defaults__, it is
                 // stored in v.$infos.$defaults (cf. Function.__setattr__ in
                 // py_builtin_functions.js)
+                var $defaults = v.$infos.$defaults
                 $B.Function.__setattr__(v, "__defaults__",
-                    v.$infos.$defaults)
+                    $defaults)
             }
         }
     }

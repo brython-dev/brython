@@ -2649,7 +2649,6 @@ $B.Function.__get__ = function(self, obj){
 $B.Function.__getattribute__ = function(self, attr){
     // Internal attributes __name__, __module__, __doc__ etc.
     // are stored in self.$infos
-    if(attr == "known_attr"){console.log("get function attr", attr, self)}
     if(!self.$infos){console.log("get attr", attr, "from function", self,
         "no $infos")}
     if(self.$infos && self.$infos[attr] !== undefined){
@@ -2738,9 +2737,11 @@ $B.Function.__setattr__ = function(self, attr, value){
         if(klass){
             klass[self.$infos.__name__] = new_func
             new_func.$infos.$class = klass
+            new_func.$infos.__defaults__ = value
         }else{
             // Set attribute $defaults. Used in py_types.js / types.__new__
             self.$infos.$defaults = value
+            self.$infos.__defaults__ = value
         }
         return _b_.None
     }
