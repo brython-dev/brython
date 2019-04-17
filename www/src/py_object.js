@@ -426,7 +426,11 @@ _b_.__newobj__ = __newobj__
 
 object.__reduce_ex__ = function(self){
     var res = [__newobj__]
-    res.push(_b_.tuple.$factory([self.__class__]))
+    var arg2 = _b_.tuple.$factory([self.__class__])
+    if(Array.isArray(self)){
+        self.forEach(function(item){arg2.push(item)})
+    }
+    res.push(arg2)
     var d = _b_.dict.$factory(),
         nb = 0
     if(self.__dict__ === undefined){
