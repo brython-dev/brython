@@ -1096,7 +1096,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                         // For other modules, raise ImportError
                         if($err3.$py_error){
                             var msg = _b_.getattr($err3, "info") + "\n" +
-                                    $err3.__class__.$infos.__name__ + ": " +
+                                    $B.class_name($err3) + ": " +
                                     $err3.args[0],
                                 exc = _b_.ImportError.$factory("cannot import name '"+
                                     $B.from_alias(name) +"'")

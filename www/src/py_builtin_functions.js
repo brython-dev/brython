@@ -1855,8 +1855,7 @@ var reversed = $B.make_class("reversed",
             try{
                 return $B.$call(rev_method)()
             }catch(err){
-                throw _b_.TypeError.$factory("'" +
-                    $B.get_class(seq).$infos.__name__ +
+                throw _b_.TypeError.$factory("'" + $B.class_name(seq) +
                     "' object is not reversible")
             }
         }
@@ -1966,10 +1965,9 @@ $B.$setattr = function(obj, attr, value){
             }else if(Array.isArray(value.__bases__)){
                 for(var i = 0; i < value.__bases__.length; i++){
                     if(value.__bases__[i].__module__ == "builtins"){
-                        error("__class__ assignment: '" +
-                            obj.__class__.$infos.__name__ + "' object layout " +
-                            "differs from '" + value.__class__.$infos.__name__ +
-                            "'")
+                        error("__class__ assignment: '" + $B.class_name(obj) +
+                            "' object layout differs from '" + 
+                            $B.class_name(value) + "'")
                     }
                 }
             }
@@ -2639,7 +2637,7 @@ $B.Function.__get__ = function(self, obj){
     }
     method.$infos = {
         __name__: self.$infos.__name__,
-        __qualname__: obj.__class__.$infos.__name__ + "." + self.$infos.__name__,
+        __qualname__: $B.class_name(obj) + "." + self.$infos.__name__,
         __self__: obj,
         __func__: self
     }

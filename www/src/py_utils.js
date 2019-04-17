@@ -108,7 +108,6 @@ $B.args = function($fname, argcount, slots, var_names, args, $dobj,
                     if(key.substr(0, 2) == "$$"){key = key.substr(2)}
                     extra_kw.$string_dict[key] = value
                 }else{
-                    console.log("key", key, "slots", slots)
                     throw _b_.TypeError.$factory($fname +
                         "() got an unexpected keyword argument '" + key + "'")
                 }
@@ -210,13 +209,6 @@ $B.get_class = function(obj){
 
 $B.class_name = function(obj){
     return $B.get_class(obj).$infos.__name__
-}
-
-$B.$mkdict = function(glob, loc){
-    var res = {}
-    for(var arg in glob){res[arg] = glob[arg]}
-    for(var arg in loc){res[arg] = loc[arg]}
-    return res
 }
 
 $B.$list_comp = function(items){
@@ -1336,9 +1328,8 @@ $B.rich_comp = function(op, x, y){
             return !(x === y)
         }else{
             throw _b_.TypeError.$factory("'" + method2comp[op] +
-                "' not supported between instances of '" +
-                $B.get_class(x).$infos.__name__ + "' and '" +
-                $B.get_class(y).$infos.__name__ + "'")
+                "' not supported between instances of '" + $B.class_name(x) + 
+                "' and '" + $B.class_name(y) + "'")
         }
     }
 

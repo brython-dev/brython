@@ -289,7 +289,7 @@ $B.has_indexedDB = self.indexedDB !== undefined
 $B.handle_error = function(err){
     // Print the error traceback on the standard error stream
     if(err.__class__ !== undefined){
-        var name = err.__class__.$infos.__name__,
+        var name = $B.class_name(err),
             trace = _b_.getattr(err, 'info')
         if(name == 'SyntaxError' || name == 'IndentationError'){
             var offset = err.args[3]

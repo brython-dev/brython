@@ -233,7 +233,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
             }catch(err){
                 console.log(err)
                 console.log(_b_.getattr(err,'info'))
-                console.log(err.__class__.$infos.__name__ + ':',
+                console.log($B.class_name(err) + ':',
                     err.args.length > 0 ? err.args[0] : '' )
                 throw err
             }
@@ -514,12 +514,12 @@ JSObject.__setattr__ = function(self, attr, value){
                     var info = _b_.getattr(err, 'info')
                     if(err.args.length > 0){
                         err.toString = function(){
-                            return info + '\n' + err.__class__.$infos.__name__ +
+                            return info + '\n' + $B.class_name(err) +
                             ': ' + _b_.repr(err.args[0])
                         }
                     }else{
                         err.toString = function(){
-                            return info + '\n' + err.__class__.$infos.__name__
+                            return info + '\n' + $B.class_name(err)
                         }
                     }
                     console.log(err + '')

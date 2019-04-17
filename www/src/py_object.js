@@ -460,9 +460,9 @@ object.__repr__ = function(self){
     if(self.__class__.$infos.__module__ !== undefined &&
             self.__class__.$infos.__module__ !== "builtins"){
         return "<" + self.__class__.$infos.__module__ + "." +
-            self.__class__.$infos.__name__ + " object>"
+            $B.class_name(self) + " object>"
     }else{
-        return "<" + self.__class__.$infos.__name__ + " object>"
+        return "<" + $B.class_name(self) + " object>"
     }
 }
 
