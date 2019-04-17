@@ -2296,6 +2296,12 @@ for args, cut, res in test_pool:
     assert res == res_test, \
         '{test}.indices({cut}) should be {res}, not {res_test}'.format(**locals())
 
+# too many positional arguments
+def f(a, b, *, x=3):
+    print(a, b, x)
+
+assertRaises(TypeError, f, 1, 2, 3)
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

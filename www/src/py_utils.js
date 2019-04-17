@@ -9,14 +9,17 @@ var _b_ = $B.builtins,
 $B.args = function($fname, argcount, slots, var_names, args, $dobj,
     extra_pos_args, extra_kw_args){
     // builds a namespace from the arguments provided in $args
-    // in a function defined like foo(x,y,z=1,*args,u,v,**kw) the parameters are
-    // $fname = "f"
-    // argcount = 3 (for x, y , z)
-    // slots = {x:null, y:null, z:null, u:null, v:null}
-    // var_names = ['x', 'y', 'z', 'u', 'v']
-    // $dobj = {'z':1}
-    // extra_pos_args = 'args'
-    // extra_kw_args = 'kw'
+    // in a function defined as
+    //     foo(x, y, z=1, *args, u, v, **kw)
+    // the parameters are
+    //     $fname = "f"
+    //     argcount = 3 (for x, y , z)
+    //     slots = {x:null, y:null, z:null, u:null, v:null}
+    //     var_names = ['x', 'y', 'z', 'u', 'v']
+    //     $dobj = {'z':1}
+    //     extra_pos_args = 'args'
+    //     extra_kw_args = 'kw'
+    //     kwonlyargcount = 2
 
     var $args = []
     if(Array.isArray(args)){$args = args}
@@ -49,7 +52,7 @@ $B.args = function($fname, argcount, slots, var_names, args, $dobj,
     }
     if(extra_kw_args){
         // Build a dict object faster than with _b_.dict()
-        slots[extra_kw_args] = {
+        extra_kw = {
             __class__: _b_.dict,
             $numeric_dict: {},
             $object_dict: {},
@@ -61,7 +64,7 @@ $B.args = function($fname, argcount, slots, var_names, args, $dobj,
 
     if(nb_pos > argcount){
         // More positional arguments than formal parameters
-        if(extra_pos_args === null){
+        if(extra_pos_args === null || extra_pos_args == "$dummy"){
             // No parameter to store extra positional arguments :
             // thow an exception
             msg = $fname + "() takes " + argcount + " positional argument" +
@@ -86,31 +89,36 @@ $B.args = function($fname, argcount, slots, var_names, args, $dobj,
 
     if(filled == argcount && argcount === var_names.length &&
             ! has_kw_args){
+        if(extra_kw_args){
+            slots[extra_kw_args] = extra_kw
+        }
         return slots
     }
 
     // Then fill slots with keyword arguments, if any
     if(has_kw_args){
         for(var key in kw_args){
-            var value = kw_args[key]
-            if(slots[key] === undefined){
+            var value = kw_args[key],
+                key1 = $B.to_alias(key)
+            if(slots[key1] === undefined){
                 // The name of the keyword argument doesn't match any of the
                 // formal parameters
                 if(extra_kw_args){
                     // If there is a place to store extra keyword arguments
                     if(key.substr(0, 2) == "$$"){key = key.substr(2)}
-                    slots[extra_kw_args].$string_dict[key] = value
+                    extra_kw.$string_dict[key] = value
                 }else{
+                    console.log("key", key, "slots", slots)
                     throw _b_.TypeError.$factory($fname +
                         "() got an unexpected keyword argument '" + key + "'")
                 }
-            }else if(slots[key] !== null){
+            }else if(slots[key1] !== null){
                 // The slot is already filled
                 throw _b_.TypeError.$factory($fname +
                     "() got multiple values for argument '" + key + "'")
             }else{
                 // Fill the slot with the key/value pair
-                slots[key] = value
+                slots[key1] = value
             }
         }
     }
@@ -136,6 +144,10 @@ $B.args = function($fname, argcount, slots, var_names, args, $dobj,
             throw _b_.TypeError.$factory(msg)
         }
 
+    }
+
+    if(extra_kw_args){
+        slots[extra_kw_args] = extra_kw
     }
 
     return slots

@@ -84,8 +84,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.2"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-04-16 11:05:15.424402"
-__BRYTHON__.timestamp=1555405515424
+__BRYTHON__.compiled_date="2019-04-17 10:35:49.445103"
+__BRYTHON__.timestamp=1555490149445
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","unicodedata","zlib"]
 ;
 
@@ -821,7 +821,7 @@ this.type='call_arg'
 this.parent=C
 this.start=$pos
 this.tree=[]
-C.tree[C.tree.length]=this
+C.tree.push(this)
 this.expect='id'
 this.toString=function(){return 'call_arg '+this.tree}
 this.to_js=function(){this.js_processed=true
@@ -1573,7 +1573,7 @@ this.to_js=function(arg){var res
 this.js_processed=true
 if(this.type=='list'){res='['+$to_js(this.tree)+']'}
 else if(this.tree.length==1){res=this.tree[0].to_js(arg)}
-else{res='tuple.$factory(['+$to_js(this.tree)+'])'}
+else{res='_b_.tuple.$factory(['+$to_js(this.tree)+'])'}
 if(this.is_await){res="await $B.promise("+res+")"}
 return res}}
 var $ExprNot=$B.parser.$ExprNot=function(C){
@@ -2254,9 +2254,9 @@ return $B.$dict_comp(module_name,scope,items,line_num)}
 return $B.$gen_expr(module_name,scope,items,line_num)
 case 'tuple':
 var packed=this.packed_indices()
-if(packed.length > 0){return 'tuple.$factory('+this.unpack(packed)+')'}
+if(packed.length > 0){return '$B.fast_tuple('+this.unpack(packed)+')'}
 if(this.tree.length==1 && this.has_comma===undefined){return this.tree[0].to_js()}
-return 'tuple.$factory(['+$to_js(this.tree)+'])'}}}
+return '$B.fast_tuple(['+$to_js(this.tree)+'])'}}}
 var $NodeCtx=$B.parser.$NodeCtx=function(node){
 this.node=node
 node.C=this
@@ -5198,7 +5198,9 @@ function __newobj__(cls){return $B.$getattr(cls,"__new__").apply(null,arguments)
 __newobj__.$infos={__name__:"__newobj__",__qualname__:"__newobj__"}
 _b_.__newobj__=__newobj__
 object.__reduce_ex__=function(self){var res=[__newobj__]
-res.push(_b_.tuple.$factory([self.__class__]))
+var arg2=_b_.tuple.$factory([self.__class__])
+if(Array.isArray(self)){self.forEach(function(item){arg2.push(item)})}
+res.push(arg2)
 var d=_b_.dict.$factory(),nb=0
 if(self.__dict__===undefined){console.log("no dict",self)
 $B.frames_stack.forEach(function(frame){console.log(frame[0],frame[1],frame[2])})}
@@ -5418,7 +5420,8 @@ for(var i=0;i < items.length;i++){var key=$B.to_alias(items[i][0]),v=items[i][1]
 class_dict[key]=v
 if(typeof v=="function"){v.$infos.$class=class_dict
 if(v.$infos.$defaults){
-$B.Function.__setattr__(v,"__defaults__",v.$infos.$defaults)}}}
+var $defaults=v.$infos.$defaults
+$B.Function.__setattr__(v,"__defaults__",$defaults)}}}
 class_dict.__mro__=type.mro(class_dict)
 return class_dict}
 type.__repr__=type.__str__=function(kls){if(kls.$infos===undefined){console.log("no $infos",kls)}
@@ -5558,9 +5561,9 @@ if(Array.isArray(kw_args)){kw_args=$B.extend($fname,...kw_args)}}}
 if(extra_pos_args){slots[extra_pos_args]=[]
 slots[extra_pos_args].__class__=_b_.tuple}
 if(extra_kw_args){
-slots[extra_kw_args]={__class__:_b_.dict,$numeric_dict:{},$object_dict:{},$string_dict :{},$str_hash:{},length:0}}
+extra_kw={__class__:_b_.dict,$numeric_dict:{},$object_dict:{},$string_dict :{},$str_hash:{},length:0}}
 if(nb_pos > argcount){
-if(extra_pos_args===null){
+if(extra_pos_args===null ||extra_pos_args=="$dummy"){
 msg=$fname+"() takes "+argcount+" positional argument"+
 (argcount> 1 ? "" :"s")+" but more were given"
 throw _b_.TypeError.$factory(msg)}else{
@@ -5569,16 +5572,18 @@ nb_pos=argcount}}
 for(var i=0;i < nb_pos;i++){slots[var_names[i]]=$args[i]
 filled++}
 if(filled==argcount && argcount===var_names.length &&
-! has_kw_args){return slots}
-if(has_kw_args){for(var key in kw_args){var value=kw_args[key]
-if(slots[key]===undefined){
+! has_kw_args){if(extra_kw_args){slots[extra_kw_args]=extra_kw}
+return slots}
+if(has_kw_args){for(var key in kw_args){var value=kw_args[key],key1=$B.to_alias(key)
+if(slots[key1]===undefined){
 if(extra_kw_args){
 if(key.substr(0,2)=="$$"){key=key.substr(2)}
-slots[extra_kw_args].$string_dict[key]=value}else{throw _b_.TypeError.$factory($fname+
-"() got an unexpected keyword argument '"+key+"'")}}else if(slots[key]!==null){
+extra_kw.$string_dict[key]=value}else{console.log("key",key,"slots",slots)
+throw _b_.TypeError.$factory($fname+
+"() got an unexpected keyword argument '"+key+"'")}}else if(slots[key1]!==null){
 throw _b_.TypeError.$factory($fname+
 "() got multiple values for argument '"+key+"'")}else{
-slots[key]=value}}}
+slots[key1]=value}}}
 var missing=[]
 for(var attr in slots){if(slots[attr]===null){if($dobj[attr]!==undefined){slots[attr]=$dobj[attr]}
 else{missing.push("'"+attr+"'")}}}
@@ -5587,6 +5592,7 @@ if(missing.length > 0){if(missing.length==1){throw _b_.TypeError.$factory($fname
 " positional arguments: "
 msg+=missing.join(" and ")
 throw _b_.TypeError.$factory(msg)}}
+if(extra_kw_args){slots[extra_kw_args]=extra_kw}
 return slots}
 $B.wrong_nb_args=function(name,received,expected,positional){if(received < expected){var missing=expected-received
 throw _b_.TypeError.$factory(name+"() missing "+missing+
@@ -7155,7 +7161,6 @@ console.log($B.last($B.frames_stack))}
 method.$infos={__name__:self.$infos.__name__,__qualname__:obj.__class__.$infos.__name__+"."+self.$infos.__name__,__self__:obj,__func__:self}
 return method}
 $B.Function.__getattribute__=function(self,attr){
-if(attr=="known_attr"){console.log("get function attr",attr,self)}
 if(!self.$infos){console.log("get attr",attr,"from function",self,"no $infos")}
 if(self.$infos && self.$infos[attr]!==undefined){if(attr=='__code__'){var res={__class__:code}
 for(var attr in self.$infos.__code__){res[attr]=self.$infos.__code__[attr]}
@@ -7188,8 +7193,10 @@ var klass=self.$infos.$class
 var new_func=set_func($defaults)
 new_func.$set_defaults=set_func
 if(klass){klass[self.$infos.__name__]=new_func
-new_func.$infos.$class=klass}else{
-self.$infos.$defaults=value}
+new_func.$infos.$class=klass
+new_func.$infos.__defaults__=value}else{
+self.$infos.$defaults=value
+self.$infos.__defaults__=value}
 return _b_.None}
 if(self.$infos[attr]!==undefined){self.$infos[attr]=value}
 else{self.$attrs=self.$attrs ||{};self.$attrs[attr]=value}}
