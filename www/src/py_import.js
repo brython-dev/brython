@@ -893,6 +893,14 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
 
 
    // [Import spec] Halt import logic
+   var from_stdlib = false
+   if(globals.$jsobj && globals.$jsobj.__file__){
+       if(globals.$jsobj.__file__.startsWith($B.brython_path)){
+           from_stdlib = "static"
+       }else if(globals.$jsobj.__file__.startsWith("VFS.")){
+           from_stdlib = "VFS"
+       }
+   }
 
    var modobj = $B.imported[mod_name],
        parsed_name = mod_name.split('.')
@@ -918,7 +926,7 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
                 import_error(_mod_name)
             }else if (modobj === undefined){
                 try{
-                    $B.import_hooks(_mod_name, __path__, undefined)
+                    $B.import_hooks(_mod_name, __path__, from_stdlib)
                 }catch(err){
                     delete $B.imported[_mod_name]
                     throw err
@@ -1120,6 +1128,12 @@ $B.$path_hooks = [vfs_hook, url_hook]
 
 // List of finders, also used by brython()
 $B.$meta_path = [finder_VFS, finder_stdlib_static, finder_path]
+
+$B.finders = {
+    VFS: finder_VFS,
+    stdlib_static: finder_stdlib_static,
+    path: finder_path
+}
 
 function optimize_import_for_path(path, filetype){
     if (path.slice(-1) != "/") { path = path + "/" }
