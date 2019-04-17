@@ -1570,7 +1570,7 @@ var $CallArgCtx = $B.parser.$CallArgCtx = function(context){
     this.parent = context
     this.start = $pos
     this.tree = []
-    context.tree[context.tree.length] = this
+    context.tree.push(this)
     this.expect = 'id'
 
     this.toString = function(){return 'call_arg ' + this.tree}
@@ -1625,7 +1625,6 @@ var $CallCtx = $B.parser.$CallCtx = function(context){
             }
         }
         var func_js = this.func.to_js()
-
         if(this.func !== undefined) {
             switch(this.func.value) {
                 case 'classmethod':
@@ -3157,7 +3156,7 @@ var $ExprCtx = $B.parser.$ExprCtx = function(context, name, with_commas){
         this.js_processed = true
         if(this.type == 'list'){res = '[' + $to_js(this.tree) + ']'}
         else if(this.tree.length == 1){res = this.tree[0].to_js(arg)}
-        else{res = 'tuple.$factory([' + $to_js(this.tree) + '])'}
+        else{res = '_b_.tuple.$factory([' + $to_js(this.tree) + '])'}
         if(this.is_await){
             res = "await $B.promise(" + res + ")"
         }
@@ -4786,12 +4785,12 @@ var $ListOrTupleCtx = $B.parser.$ListOrTupleCtx = function(context,real){
             case 'tuple':
                 var packed = this.packed_indices()
                 if(packed.length > 0){
-                    return 'tuple.$factory(' + this.unpack(packed) + ')'
+                    return '$B.fast_tuple(' + this.unpack(packed) + ')'
                 }
                 if(this.tree.length == 1 && this.has_comma === undefined){
                     return this.tree[0].to_js()
                 }
-                return 'tuple.$factory([' + $to_js(this.tree) + '])'
+                return '$B.fast_tuple([' + $to_js(this.tree) + '])'
         }
     }
 }
