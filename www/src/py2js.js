@@ -3306,12 +3306,11 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
 
             if(!shortcut){
 
-                var js = 'var $stop_' + num + ' = $B.int_or_bool(' + stop + ');' +
-                    h + idt + ' = ' + start + ';' +
-                    h + '    var $next' + num + ' = ' + idt + ',' +
-                    h + '    $safe' + num + ' = typeof $next' + num +
+                var js = 'var $stop_' + num + ' = $B.int_or_bool(' + stop + '),' +
+                    h + '        $next' + num + " = " +start + ',' +
+                    h + '        $safe' + num + ' = typeof $next' + num +
                     ' == "number" && typeof ' + '$stop_' + num + ' == "number";' +
-                    h + 'while(true)'
+                    h + '    while(true)'
                 var for_node = new $Node()
                 new $NodeJSCtx(for_node, js)
 
@@ -4442,8 +4441,9 @@ var $ImportCtx = $B.parser.$ImportCtx = function(context){
             for(var i = 0; i < mod_elts.length; i++){
                 module.imports[mod_elts.slice(0, i + 1).join(".")] = true
             }
-            res.push('$B.$import("' + mod_name + '", [],' + aliases +
-                ',' + localns + ', true);')
+            var js = '$B.$import("' + mod_name + '", [],' + aliases +
+                ',' + localns + ', true);'
+            res.push(js)
         })
         // add None for interactive console
         return res.join('') + 'None;'
@@ -9418,7 +9418,7 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
 
     root.children.splice(enter_frame_pos + 2, root.children.length)
 
-    var catch_node = new $NodeJS('catch(err)')
+    var catch_node = $NodeJS('catch(err)')
     catch_node.add($NodeJS('$B.leave_frame()'))
     catch_node.add($NodeJS('throw err'))
 

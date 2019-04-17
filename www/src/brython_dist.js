@@ -84,8 +84,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.2"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-04-17 12:10:42.770963"
-__BRYTHON__.timestamp=1555495842770
+__BRYTHON__.compiled_date="2019-04-17 22:38:00.065552"
+__BRYTHON__.timestamp=1555533480065
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","unicodedata","zlib"]
 ;
 
@@ -1638,12 +1638,11 @@ var for_node=$NodeJS("for (var "+varname+" = 0; "+
 varname+" < "+stop+"; "+varname+"++)")
 for_node.add($NodeJS(idt+" = "+varname))}}
 var start=0,stop=$range.tree[0].to_js()}else{var start=$range.tree[0].to_js(),stop=$range.tree[1].to_js()}
-if(!shortcut){var js='var $stop_'+num+' = $B.int_or_bool('+stop+');'+
-h+idt+' = '+start+';'+
-h+'    var $next'+num+' = '+idt+','+
-h+'    $safe'+num+' = typeof $next'+num+
+if(!shortcut){var js='var $stop_'+num+' = $B.int_or_bool('+stop+'),'+
+h+'        $next'+num+" = "+start+','+
+h+'        $safe'+num+' = typeof $next'+num+
 ' == "number" && typeof '+'$stop_'+num+' == "number";'+
-h+'while(true)'
+h+'    while(true)'
 var for_node=new $Node()
 new $NodeJSCtx(for_node,js)
 for_node.add($NodeJS('if($safe'+num+' && $next'+num+
@@ -2081,8 +2080,9 @@ this.tree.forEach(function(item){var mod_name=item.name,aliases=(item.name==item
 '{}' :('{"'+mod_name+'" : "'+
 item.alias+'"}'),localns='$locals_'+scope.id.replace(/\./g,'_'),mod_elts=item.name.split(".")
 for(var i=0;i < mod_elts.length;i++){module.imports[mod_elts.slice(0,i+1).join(".")]=true}
-res.push('$B.$import("'+mod_name+'", [],'+aliases+
-','+localns+', true);')})
+var js='$B.$import("'+mod_name+'", [],'+aliases+
+','+localns+', true);'
+res.push(js)})
 return res.join('')+'None;'}}
 var $ImportedModuleCtx=$B.parser.$ImportedModuleCtx=function(C,name){this.type='imported module'
 this.parent=C
@@ -8856,6 +8856,8 @@ function import_error(mod_name){var exc=_b_.ImportError.$factory(mod_name)
 exc.name=mod_name
 throw exc}
 $B.$__import__=function(mod_name,globals,locals,fromlist,level){
+var from_stdlib=false
+if(globals.$jsobj && globals.$jsobj.__file__){if(globals.$jsobj.__file__.startsWith($B.brython_path)){from_stdlib="static"}else if(globals.$jsobj.__file__.startsWith("VFS.")){from_stdlib="VFS"}}
 var modobj=$B.imported[mod_name],parsed_name=mod_name.split('.')
 if(modobj==_b_.None){
 import_error(mod_name)}
@@ -8866,7 +8868,7 @@ _mod_name+=modsep+parsed_name[i]
 modsep="."
 var modobj=$B.imported[_mod_name]
 if(modobj==_b_.None){
-import_error(_mod_name)}else if(modobj===undefined){try{$B.import_hooks(_mod_name,__path__,undefined)}catch(err){delete $B.imported[_mod_name]
+import_error(_mod_name)}else if(modobj===undefined){try{$B.import_hooks(_mod_name,__path__,from_stdlib)}catch(err){delete $B.imported[_mod_name]
 throw err}
 if($B.is_none($B.imported[_mod_name])){import_error(_mod_name)}else{
 if(_parent_name){_b_.setattr($B.imported[_parent_name],parsed_name[i],$B.imported[_mod_name])}}}
@@ -8930,6 +8932,7 @@ throw _b_.ImportError.$factory(
 "cannot import name '"+name+"'")}}}}}}
 $B.$path_hooks=[vfs_hook,url_hook]
 $B.$meta_path=[finder_VFS,finder_stdlib_static,finder_path]
+$B.finders={VFS:finder_VFS,stdlib_static:finder_stdlib_static,path:finder_path}
 function optimize_import_for_path(path,filetype){if(path.slice(-1)!="/"){path=path+"/" }
 var value=(filetype=='none')? _b_.None :
 url_hook.$factory(path,filetype)
@@ -12991,9 +12994,12 @@ return $B.rich_comp(op,self.$cell_contents,other.$cell_contents)}})(op)})
 $B.set_func_names($B.cell,"builtins")})(__BRYTHON__)
 ;
 ;(function($B){var _b_=$B.builtins
-function import_hooks(mod_name,_path,module,blocking){
-if($B.is_none(module)){module=undefined}
-var _meta_path=$B.meta_path,_sys_modules=$B.imported,_loader,spec
+function import_hooks(mod_name,_path,from_stdlib){var _meta_path=$B.meta_path.slice(),_sys_modules=$B.imported,_loader,spec
+if(from_stdlib=="static"){
+var ix=_meta_path.indexOf($B.finders["path"])
+if(ix >-1){_meta_path.splice(ix,1)}}else if(from_stdlib=="VFS"){var keys=["path","stdlib_static"]
+keys.forEach(function(key){var ix=_meta_path.indexOf($B.finders[key])
+if(ix >-1){_meta_path.splice(ix,1)}})}
 for(var i=0,len=_meta_path.length;i < len;i++){var _finder=_meta_path[i],find_spec=$B.$getattr(_finder,"find_spec",_b_.None)
 if(find_spec==_b_.None){
 var find_module=$B.$getattr(_finder,"find_module",_b_.None)
@@ -13001,11 +13007,10 @@ if(find_module !==_b_.None){_loader=find_module(mod_name,_path)
 var load_module=$B.$getattr(_loader,"load_module")
 module=$B.$call(load_module)(mod_name)
 _sys_modules[mod_name]=module
-return module}}else{spec=find_spec(mod_name,_path,undefined,blocking)
+return module}}else{spec=find_spec(mod_name,_path,undefined)
 if(!$B.is_none(spec)){module=$B.imported[spec.name]
 if(module !==undefined){
 return _sys_modules[spec.name]=module}
-spec.blocking=blocking
 _loader=_b_.getattr(spec,"loader",_b_.None)
 break}}}
 if(_loader===undefined){
@@ -13033,7 +13038,7 @@ if(! $B.is_none(cached)){module.__cached__=cached}
 if($B.is_none(_loader)){if(!$B.is_none(locs)){_sys_modules[_spec_name]=module}else{throw _b_.ImportError.$factory(mod_name)}}else{var exec_module=_b_.getattr(_loader,"exec_module",_b_.None)
 if($B.is_none(exec_module)){
 module=_b_.getattr(_loader,"load_module")(_spec_name)}else{_sys_modules[_spec_name]=module
-try{exec_module(module,blocking)}catch(e){delete _sys_modules[_spec_name]
+try{exec_module(module)}catch(e){delete _sys_modules[_spec_name]
 throw e}}}
 return _sys_modules[_spec_name]}
 $B.import_hooks=import_hooks})(__BRYTHON__)
