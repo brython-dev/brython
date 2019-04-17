@@ -84,8 +84,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.2"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-04-17 10:35:49.445103"
-__BRYTHON__.timestamp=1555490149445
+__BRYTHON__.compiled_date="2019-04-17 11:51:11.787190"
+__BRYTHON__.timestamp=1555494671787
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","unicodedata","zlib"]
 ;
 
@@ -5018,7 +5018,7 @@ func.apply(null,args)}}
 $B.tasks=[]
 $B.has_indexedDB=self.indexedDB !==undefined
 $B.handle_error=function(err){
-if(err.__class__ !==undefined){var name=err.__class__.$infos.__name__,trace=_b_.getattr(err,'info')
+if(err.__class__ !==undefined){var name=$B.class_name(err),trace=_b_.getattr(err,'info')
 if(name=='SyntaxError' ||name=='IndentationError'){var offset=err.args[3]
 trace+='\n    '+' '.repeat(offset)+'^'+
 '\n'+name+': '+err.args[0]}else{trace+='\n'+name+': '+err.args}}else{console.log(err)
@@ -5215,7 +5215,7 @@ object.__repr__=function(self){if(self===object){return "<class 'object'>"}
 if(self.__class__===_b_.type){return "<class '"+self.__name__+"'>"}
 if(self.__class__.$infos.__module__ !==undefined &&
 self.__class__.$infos.__module__ !=="builtins"){return "<"+self.__class__.$infos.__module__+"."+
-self.__class__.$infos.__name__+" object>"}else{return "<"+self.__class__.$infos.__name__+" object>"}}
+$B.class_name(self)+" object>"}else{return "<"+$B.class_name(self)+" object>"}}
 object.__setattr__=function(self,attr,val){if(val===undefined){
 throw _b_.TypeError.$factory(
 "can't set attributes of built-in/extension type 'object'")}else if(self.__class__===object){
@@ -5578,8 +5578,7 @@ if(has_kw_args){for(var key in kw_args){var value=kw_args[key],key1=$B.to_alias(
 if(slots[key1]===undefined){
 if(extra_kw_args){
 if(key.substr(0,2)=="$$"){key=key.substr(2)}
-extra_kw.$string_dict[key]=value}else{console.log("key",key,"slots",slots)
-throw _b_.TypeError.$factory($fname+
+extra_kw.$string_dict[key]=value}else{throw _b_.TypeError.$factory($fname+
 "() got an unexpected keyword argument '"+key+"'")}}else if(slots[key1]!==null){
 throw _b_.TypeError.$factory($fname+
 "() got multiple values for argument '"+key+"'")}else{
@@ -5623,10 +5622,6 @@ return _b_.list}}else if(obj.constructor===Number){return _b_.float}
 break}}
 return klass}
 $B.class_name=function(obj){return $B.get_class(obj).$infos.__name__}
-$B.$mkdict=function(glob,loc){var res={}
-for(var arg in glob){res[arg]=glob[arg]}
-for(var arg in loc){res[arg]=loc[arg]}
-return res}
 $B.$list_comp=function(items){
 var ix=$B.UUID(),py="x"+ix+"=[]\n",indent=0
 for(var i=1,len=items.length;i < len;i++){var item=items[i].replace(/\s+$/,"").replace(/\n/g,"")
@@ -5894,8 +5889,6 @@ return _b_.None}
 $B.stderr=$io.$factory()
 $B.stdout=$io.$factory()
 $B.stdin={__class__:$io,__original__:true,closed:false,len:1,pos:0,read:function(){return ""},readline:function(){return ""}}
-$B.set_line=function(line_num,module_name){$B.line_info=line_num+","+module_name
-return _b_.None}
 $B.make_iterator_class=function(name){
 var klass={__class__:_b_.type,__mro__:[_b_.object],$factory:function(items){return{
 __class__:klass,counter:-1,items:items,len:items.length}},$infos:{__name__:name},$is_class:true,__iter__:function(self){self.counter=-1
@@ -5961,88 +5954,6 @@ if($B.profile > 0){$B.$profile.return()}
 if($B.frames_stack.length==0){console.log("empty stack");return}
 var frame=$B.frames_stack.pop()
 for(var i=$B.frames_stack.length-1;i >=0;i--){if($B.frames_stack[i][2]==frame[2]){$B.frames_stack[i][3]=frame[3]}}}
-var Profile=$B.make_class("profile",function(){return{__class__:Profile}}
-)
-Profile.__dir__=function(self){return Object.keys(self)}
-Profile.__getattribute__=function(self,attr){if(attr=="__str__"){return function(){var res="<profile object"
-for(var attr in self){if(attr.startsWith("__")){continue}
-res+=" "+attr+": "
-if(typeof self[attr]=="object"){res+=_b_.dict.__str__($B.obj_dict(self[attr]))}else{res+=_b_.str.$factory(self[attr])}}
-return res+">"}}
-return $B.jsobj2pyobj(self[attr])}
-$B.$profile_data=Profile.$factory()
-$B.$profile=(function(profile){var call_times={},
-_START=0,
-_CALLER=1,_CUMULATED=2,_LAST_RESUMED=3,call_stack=[],
-profile_start=null,
-active=false,
-paused=false,
-cumulated=0 
-var _fhash=function(module,fname,line){return module+"."+fname+":"+line}
-var _hash=function(module,line){return module+":"+line}
-var _is_recursive=function(h){for(var i=0;i < call_stack.length;i++)
-if(call_stack[i]==h){return true}
-return false}
-var $profile={"call":function(module,fname,line,caller){if($B.profile > 1 && active){var ctime=new Date()
-var h=_fhash(module,fname,line)
-if(!(h in call_times)){call_times[h]=[]}
-if(call_stack.length > 0){in_func=call_stack[call_stack.length-1]
-func_stack=call_times[in_func]
-inner_most_call=func_stack[func_stack.length-1]
-inner_most_call[_CUMULATED]+=ctime-
-inner_most_call[_LAST_RESUMED]
-caller=caller+":"+in_func}
-call_times[h].push([ctime,caller,0,ctime])
-call_stack.push(h)}},"return":function(){if($B.profile > 1 && active){var h=call_stack.pop()
-if(h in call_times){var t_end=new Date(),data=call_times[h].pop()
-t_start=data[_START]
-caller=data[_CALLER]
-t_duration=t_end-t_start
-t_in_func=data[_CUMULATED]+t_end-
-data[_LAST_RESUMED]
-if(!(h in profile.call_times)){profile.call_times[h]=0
-profile.call_times_proper[h]=0
-profile.call_counts[h]=0
-profile.call_counts_norec[h]=0
-profile.callers[h]={}}
-profile.call_times[h]+=t_duration
-profile.call_times_proper[h]+=t_in_func
-profile.call_counts[h]+=1
-if(!(caller in profile.callers[h])){profile.callers[h][caller]=[0,0,0,0]}
-if(! _is_recursive(h)){profile.call_counts_norec[h]+=1
-profile.callers[h][caller][3]++}
-profile.callers[h][caller][0]+=t_duration 
-profile.callers[h][caller][1]+=t_in_func 
-profile.callers[h][caller][2]++
-if(call_stack.length > 0){
-in_func=call_stack[call_stack.length-1]
-func_stack=call_times[in_func]
-inner_most_call=func_stack[func_stack.length-1]
-inner_most_call[_LAST_RESUMED]=new Date()}}}},"count":function(module,line){if(active){var h=_hash(module,line)
-if(!(h in profile.line_counts)){profile.line_counts[h]=0}
-profile.line_counts[h]++}},"pause":function(){if(active){elapsed=(new Date())-profile_start
-cumulated+=elapsed
-active=false
-paused=true}},"start":function(){if($B.profile > 0){if(! paused){$B.$profile.clear()}
-else{paused=false}
-active=true
-profile_start=new Date()}},"elapsed":function(){if(active){return cumulated+(new Date())-profile_start}
-else{return cumulated}},"stop":function(){if(active ||paused){profile.profile_duration=((new Date())-profile_start)+
-cumulated
-active=false
-paused=false}},"clear":function(){cumulated=0;
-profile.line_counts={}
-profile.call_times={}
-profile.call_times_proper={}
-profile.call_counts={}
-profile.call_counts_norec={}
-profile.callers={}
-active=false
-paused=false},"status":function(){if($B.profile <=0){return "Disabled"}
-if(active){return "Collecting data: active"}
-else if(paused){return "Collecting data: paused"}
-else{return "Stopped"}},}
-return $profile})($B.$profile_data)
 var min_int=Math.pow(-2,53),max_int=Math.pow(2,53)-1
 $B.is_safe_int=function(){for(var i=0;i < arguments.length;i++){var arg=arguments[i]
 if(arg < min_int ||arg > max_int){return false}}
@@ -6106,9 +6017,8 @@ case "__gt__":
 return x1 > y1}}
 var res,rev_op,compared=false
 if(x.$is_class ||x.$factory){if(op=="__eq__"){return(x===y)}else if(op=="__ne__"){return !(x===y)}else{throw _b_.TypeError.$factory("'"+method2comp[op]+
-"' not supported between instances of '"+
-$B.get_class(x).$infos.__name__+"' and '"+
-$B.get_class(y).$infos.__name__+"'")}}
+"' not supported between instances of '"+$B.class_name(x)+
+"' and '"+$B.class_name(y)+"'")}}
 if(x.__class__ && y.__class__){
 if(y.__class__.__mro__.indexOf(x.__class__)>-1){rev_op=reversed_op[op]||op
 var rev_func=$B.$getattr(y,rev_op)
@@ -6874,8 +6784,7 @@ var reversed=$B.make_class("reversed",function(seq){
 check_no_kw('reversed',seq)
 check_nb_args('reversed',1,arguments)
 var rev_method=$B.$getattr(seq,'__reversed__',null)
-if(rev_method !==null){try{return $B.$call(rev_method)()}catch(err){throw _b_.TypeError.$factory("'"+
-$B.get_class(seq).$infos.__name__+
+if(rev_method !==null){try{return $B.$call(rev_method)()}catch(err){throw _b_.TypeError.$factory("'"+$B.class_name(seq)+
 "' object is not reversible")}}
 try{var res={__class__:reversed,$counter :$B.$getattr(seq,'__len__')(),getter:$B.$getattr(seq,'__getitem__')}
 return res}catch(err){throw _b_.TypeError.$factory("argument to reversed() must be a sequence")}}
@@ -6916,10 +6825,9 @@ obj.__dict__=value
 return None}else if(attr=="__class__"){
 function error(msg){throw _b_.TypeError.$factory(msg)}
 if(value.__class__){if(value.__module__=="builtins"){error("__class__ assignement only "+
-"supported for heap types or ModuleType subclasses")}else if(Array.isArray(value.__bases__)){for(var i=0;i < value.__bases__.length;i++){if(value.__bases__[i].__module__=="builtins"){error("__class__ assignment: '"+
-obj.__class__.$infos.__name__+"' object layout "+
-"differs from '"+value.__class__.$infos.__name__+
-"'")}}}}
+"supported for heap types or ModuleType subclasses")}else if(Array.isArray(value.__bases__)){for(var i=0;i < value.__bases__.length;i++){if(value.__bases__[i].__module__=="builtins"){error("__class__ assignment: '"+$B.class_name(obj)+
+"' object layout differs from '"+
+$B.class_name(value)+"'")}}}}
 obj.__class__=value
 return None}
 if($test){console.log("set attr",attr,"to",obj)}
@@ -7158,7 +7066,7 @@ var method=function(){return self(obj,...arguments)}
 method.__class__=$B.method
 if(self.$infos===undefined){console.log("no $infos",self)
 console.log($B.last($B.frames_stack))}
-method.$infos={__name__:self.$infos.__name__,__qualname__:obj.__class__.$infos.__name__+"."+self.$infos.__name__,__self__:obj,__func__:self}
+method.$infos={__name__:self.$infos.__name__,__qualname__:$B.class_name(obj)+"."+self.$infos.__name__,__self__:obj,__func__:self}
 return method}
 $B.Function.__getattribute__=function(self,attr){
 if(!self.$infos){console.log("get attr",attr,"from function",self,"no $infos")}
@@ -8499,7 +8407,7 @@ for(var i=0;i < arguments.length;i++){if(arguments[i]===undefined){args.push(_b_
 else{args.push(jsobj2pyobj(arguments[i]))}}
 return pyobj2jsobj(pyobj.apply(this,args))}catch(err){console.log(err)
 console.log(_b_.getattr(err,'info'))
-console.log(err.__class__.$infos.__name__+':',err.args.length > 0 ? err.args[0]:'' )
+console.log($B.class_name(err)+':',err.args.length > 0 ? err.args[0]:'' )
 throw err}}}else{
 return pyobj}}
 var JSObject={__class__:_b_.type,__mro__:[object],$infos:{__module__:"builtins",__name__:'JSObject'}}
@@ -8609,8 +8517,8 @@ args.push($B.$JS2Py(arguments[i]))}
 try{return value.apply(null,args)}
 catch(err){err=$B.exception(err)
 var info=_b_.getattr(err,'info')
-if(err.args.length > 0){err.toString=function(){return info+'\n'+err.__class__.$infos.__name__+
-': '+_b_.repr(err.args[0])}}else{err.toString=function(){return info+'\n'+err.__class__.$infos.__name__}}
+if(err.args.length > 0){err.toString=function(){return info+'\n'+$B.class_name(err)+
+': '+_b_.repr(err.args[0])}}else{err.toString=function(){return info+'\n'+$B.class_name(err)}}
 console.log(err+'')
 throw err}}}}}
 JSObject.__setitem__=JSObject.__setattr__
@@ -9011,7 +8919,7 @@ if(mod_name==="__future__"){
 var frame=$B.last($B.frames_stack),line_info=frame[3].$line_info,line_elts=line_info.split(','),line_num=parseInt(line_elts[0])
 $B.$SyntaxError(frame[2],"future feature "+name+" is not defined",current_frame[3].src,undefined,line_num)}
 if($err3.$py_error){var msg=_b_.getattr($err3,"info")+"\n"+
-$err3.__class__.$infos.__name__+": "+
+$B.class_name($err3)+": "+
 $err3.args[0],exc=_b_.ImportError.$factory("cannot import name '"+
 $B.from_alias(name)+"'")
 exc.name=name
