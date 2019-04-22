@@ -284,7 +284,7 @@ DOMEvent.__new__ = function(cls, evt_name){
 
 function dom2svg(svg_elt, coords){
     // Used to compute the mouse position relatively to the upper left corner
-    // of an SVG element, based on the coordinates coords.x, coords.y that are 
+    // of an SVG element, based on the coordinates coords.x, coords.y that are
     // relative to the browser screen.
     var pt = svg_elt.createSVGPoint()
     pt.x = coords.x
@@ -337,7 +337,8 @@ DOMEvent.__getattribute__ = function(self, attr){
                 return res.apply(self, arguments)
             }
             func.$infos = {
-                __name__: res.toString().substr(9, res.toString().search("{"))
+                __name__: res.name,
+                __qualname__: res.name
             }
             return func
         }
