@@ -332,13 +332,40 @@
 
     modules['browser'] = browser
 
+    var re = $B.make_class("re", function(){
+        return {
+            __class__: re,
+            obj: new RegExp(...arguments)
+        }
+    })
+
+    var methods = ["match", "replace", "search", "split"]
+    methods.forEach(function(method){
+        re[method] = function(self, s){
+            var res,
+                args = []
+            for(var i = 1, len = arguments.length; i < len; i++){
+                args.push(arguments[i])
+            }
+            return (res = self.obj[Symbol[method]](...args)) === null ?
+                _b_.None : res
+        }
+    })
+
+    $B.set_func_names(re, "javascript")
+
     modules['javascript'] = {
-        //__file__:$B.brython_path + '/libs/javascript.js',
         $$this: function(){
             // returns the content of Javascript "this"
             // $B.js_this is set to "this" at the beginning of each function
             if($B.js_this === undefined){return $B.builtins.None}
             return $B.JSObject.$factory($B.js_this)
+        },
+        $$Date: function(){
+            return $B.JSObject.$factory(new Date(...arguments))
+        },
+        $$RegExp: function(){
+            return re.$factory(...arguments)
         },
         JSObject: function(){
             console.log('"javascript.JSObject" is deprecrated. ' +
@@ -457,9 +484,11 @@
         // set attribute "name" of functions
         for(var attr in module_obj){
             if(typeof module_obj[attr] == 'function'){
-                var name = attr
-                while(name.charAt(0) == '$'){name = name.substr(1)}
-                module_obj[attr].$infos = {__name__:name}
+                var attr1 = $B.from_alias(attr)
+                module_obj[attr].$infos = {
+                    __name__: attr1,
+                    __qualname__: name + '.' + attr1
+                }
             }
         }
     }
