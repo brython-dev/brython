@@ -84,8 +84,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.2"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-04-17 22:38:00.065552"
-__BRYTHON__.timestamp=1555533480065
+__BRYTHON__.compiled_date="2019-04-22 08:48:54.544542"
+__BRYTHON__.timestamp=1555915734544
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","unicodedata","zlib"]
 ;
 
@@ -6224,7 +6224,7 @@ if(_locals===undefined){_locals=_b_.None}
 var current_frame=$B.frames_stack[$B.frames_stack.length-1]
 if(current_frame !==undefined){var current_locals_id=current_frame[0].replace(/\./,'_'),current_globals_id=current_frame[2].replace(/\./,'_')}
 var stack_len=$B.frames_stack.length
-var is_exec=arguments[3]=='exec',leave=false
+var is_exec=arguments[3]=='exec'
 if(src.__class__===code){is_exec=src.mode=="exec"
 src=src.source}else if(typeof src !=='string'){throw _b_.TypeError.$factory("eval() arg 1 must be a string, bytes "+
 "or code object")}
@@ -6450,7 +6450,7 @@ if(mro===undefined){console.log(obj,attr,"no mro, klass",klass)}
 for(var i=0,len=mro.length;i < len;i++){attr_func=mro[i]['__getattribute__']
 if(attr_func !==undefined){break}}}}
 if(typeof attr_func !=='function'){console.log(attr+' is not a function '+attr_func,klass)}
-if($test){console.log("attr_func is odga",attr_func===odga,obj[attr])}
+if($test){console.log("attr_func is odga",attr_func,attr_func===odga,obj[attr])}
 if(attr_func===odga){var res=obj[attr]
 if(Array.isArray(obj)&& Array.prototype[attr]!==undefined){
 res=undefined}
@@ -7174,7 +7174,8 @@ var lines=src.split("\n"),line=lines[line_num-1],lpos=pos-line_pos[line_num],len
 exc.text=line
 lpos-=len-line.length
 if(lpos < 0){lpos=0}
-line=line.replace(/^\s*/,'')
+while(line.charAt(0)==' '){line=line.substr(1)
+if(lpos > 0){lpos--}}
 exc.offset=lpos
 exc.args=_b_.tuple.$factory([$B.$getitem(exc.args,0),module,line_num,lpos,line])}
 exc.lineno=line_num
@@ -7243,16 +7244,18 @@ $stack:deep_copy(stack)}
 if(pos===undefined){pos=0}
 res.$pos=pos
 if(fs.length){var _frame=fs[pos],locals_id=_frame[0],filename
+console.log("frame",_frame)
 try{res.f_locals=$B.obj_dict(_frame[1])}catch(err){console.log("err "+err)
 throw err}
 res.f_globals=$B.obj_dict(_frame[3])
-if(locals_id.startsWith("$exec")){filename="<string>"}
+if(_frame[3].__file__ !==undefined){filename=_frame[3].__file__}else if(locals_id.startsWith("$exec")){filename="<string>"}
 if(_frame[1].$line_info===undefined){res.f_lineno=-1}else{var line_info=_frame[1].$line_info.split(",")
 res.f_lineno=parseInt(line_info[0])
 var module_name=line_info[1]
 if($B.imported.hasOwnProperty(module_name)){filename=$B.imported[module_name].__file__}
 res.f_lineno=parseInt(_frame[1].$line_info.split(',')[0])}
-var co_name=locals_id
+var co_name=locals_id.startsWith("$exec")? "<string>" :
+locals_id
 if(locals_id==_frame[2]){co_name="<module>"}else{if(_frame[0].$name){co_name=_frame[0].$name}else if(_frame.length > 4){if(_frame[4].$infos){co_name=_frame[4].$infos.__name__}else{co_name=_frame[4].name}
 if(filename===undefined && _frame[4].$infos.__code__){filename=_frame[4].$infos.__code__.co_filename
 res.f_lineno=_frame[4].$infos.__code__.co_firstlineno}}}
@@ -7298,7 +7301,7 @@ var line=lines[parseInt(line_info[0])-1]
 if(line){line=line.replace(/^[ ]+/g,"")}
 info+="\n    "+line}else{console.log("src undef",line_info)}}
 if(exc.__class__===_b_.SyntaxError){info+="\n  File "+exc.args[1]+", line "+exc.args[2]+
-"\n    "+exc.text}
+"\n    "+exc.args[4]}
 return info}
 BaseException.__getattr__=function(self,attr){if(attr=="info"){return getExceptionTrace(self,false);}else if(attr=="infoWithInternal"){return getExceptionTrace(self,true);}else if(attr=="traceback"){
 if(self.$traceback !==undefined){return self.$traceback}
@@ -8545,7 +8548,7 @@ var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_colle
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
 var js=['_aio','_ajax','_base64','_binascii','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_sre_utils','_string','_strptime','_svg','_warnings','_webworker','aes','array','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','json','long_int','marshal','math','md5','modulefinder','pbkdf2','posix','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata','zlib']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
-var pkglist=['asyncio','browser','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
+var pkglist=['asyncio','browser','browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
 for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}})(__BRYTHON__)
 ;
 
@@ -8920,12 +8923,7 @@ locals[alias]=_b_.getattr(modobj,name1);}catch($err3){
 if(mod_name==="__future__"){
 var frame=$B.last($B.frames_stack),line_info=frame[3].$line_info,line_elts=line_info.split(','),line_num=parseInt(line_elts[0])
 $B.$SyntaxError(frame[2],"future feature "+name+" is not defined",current_frame[3].src,undefined,line_num)}
-if($err3.$py_error){var msg=_b_.getattr($err3,"info")+"\n"+
-$B.class_name($err3)+": "+
-$err3.args[0],exc=_b_.ImportError.$factory("cannot import name '"+
-$B.from_alias(name)+"'")
-exc.name=name
-throw exc}
+if($err3.$py_error){throw $err3}
 console.log($err3)
 console.log($B.last($B.frames_stack))
 throw _b_.ImportError.$factory(
@@ -12050,7 +12048,7 @@ var res=self[attr]
 if(res !==undefined){if(typeof res=="function"){var func=function(){var args=[]
 for(var i=0;i < arguments.length;i++){args.push($B.pyobj2jsobj(arguments[i]))}
 return res.apply(self,arguments)}
-func.$infos={__name__:res.toString().substr(9,res.toString().search("{"))}
+func.$infos={__name__:res.name,__qualname__:res.name}
 return func}
 return $B.$JS2Py(res)}
 throw _b_.AttributeError.$factory("object DOMEvent has no attribute '"+
@@ -12935,10 +12933,17 @@ tags.forEach(function(tag){obj[tag]=maketag(tag)})
 obj.maketag=maketag
 return obj})(__BRYTHON__)}
 modules['browser']=browser
-modules['javascript']={
-$$this:function(){
+var re=$B.make_class("re",function(){return{
+__class__:re,obj:new RegExp(...arguments)}})
+var methods=["match","replace","search","split"]
+methods.forEach(function(method){re[method]=function(self,s){var res,args=[]
+for(var i=1,len=arguments.length;i < len;i++){args.push(arguments[i])}
+return(res=self.obj[Symbol[method]](...args))===null ?
+_b_.None :res}})
+$B.set_func_names(re,"javascript")
+modules['javascript']={$$this:function(){
 if($B.js_this===undefined){return $B.builtins.None}
-return $B.JSObject.$factory($B.js_this)},JSObject:function(){console.log('"javascript.JSObject" is deprecrated. '+
+return $B.JSObject.$factory($B.js_this)},$$Date:function(){return $B.JSObject.$factory(new Date(...arguments))},$$RegExp:function(){return re.$factory(...arguments)},JSObject:function(){console.log('"javascript.JSObject" is deprecrated. '+
 'Use window.<jsobject name> instead.')
 return $B.JSObject.$factory(...arguments)},JSConstructor:function(){console.log('"javascript.JSConstructor" is deprecrated. '+
 'Use window.<js constructor name>.new() instead.')
@@ -12959,9 +12964,8 @@ function load(name,module_obj){
 module_obj.__class__=$B.module
 module_obj.__name__=name
 $B.imported[name]=module_obj
-for(var attr in module_obj){if(typeof module_obj[attr]=='function'){var name=attr
-while(name.charAt(0)=='$'){name=name.substr(1)}
-module_obj[attr].$infos={__name__:name}}}}
+for(var attr in module_obj){if(typeof module_obj[attr]=='function'){var attr1=$B.from_alias(attr)
+module_obj[attr].$infos={__name__:attr1,__qualname__:name+'.'+attr1}}}}
 for(var attr in modules){load(attr,modules[attr])}
 if(! $B.isWebWorker){modules['browser'].html=modules['browser.html']}
 var _b_=$B.builtins

@@ -1101,15 +1101,8 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                                 "future feature " + name + " is not defined",
                                 current_frame[3].src, undefined, line_num)
                         }
-                        // For other modules, raise ImportError
                         if($err3.$py_error){
-                            var msg = _b_.getattr($err3, "info") + "\n" +
-                                    $B.class_name($err3) + ": " +
-                                    $err3.args[0],
-                                exc = _b_.ImportError.$factory("cannot import name '"+
-                                    $B.from_alias(name) +"'")
-                                exc.name = name
-                                throw exc
+                            throw $err3
                         }
                         console.log($err3)
                         console.log($B.last($B.frames_stack))

@@ -63,7 +63,10 @@ $B.$syntax_err_line = function(exc, module, src, pos, line_num){
         exc.text = line
         lpos -= len - line.length
         if(lpos < 0){lpos = 0}
-        line = line.replace(/^\s*/,'')
+        while(line.charAt(0) == ' '){
+            line = line.substr(1)
+            if(lpos > 0){lpos--}
+        }
         exc.offset = lpos
         exc.args = _b_.tuple.$factory([$B.$getitem(exc.args, 0), module,
             line_num, lpos, line])
@@ -212,6 +215,7 @@ var frame = $B.make_class("frame",
             var _frame = fs[pos],
                 locals_id = _frame[0],
                 filename
+            console.log("frame", _frame)
             try{
                 res.f_locals = $B.obj_dict(_frame[1])
             }catch(err){
@@ -220,7 +224,9 @@ var frame = $B.make_class("frame",
             }
             res.f_globals = $B.obj_dict(_frame[3])
 
-            if(locals_id.startsWith("$exec")){
+            if(_frame[3].__file__ !== undefined){
+                filename = _frame[3].__file__
+            }else if(locals_id.startsWith("$exec")){
                 filename = "<string>"
             }
             if(_frame[1].$line_info === undefined){
@@ -235,7 +241,8 @@ var frame = $B.make_class("frame",
                 res.f_lineno = parseInt(_frame[1].$line_info.split(',')[0])
             }
 
-            var co_name = locals_id
+            var co_name = locals_id.startsWith("$exec") ? "<string>" :
+                          locals_id
             if(locals_id == _frame[2]){
                 co_name = "<module>"
             }else{
@@ -377,7 +384,7 @@ var getExceptionTrace = function(exc, includeInternal) {
     }
     if(exc.__class__ === _b_.SyntaxError){
         info += "\n  File " + exc.args[1] + ", line " + exc.args[2] +
-            "\n    " + exc.text
+            "\n    " + exc.args[4]
 
     }
     return info

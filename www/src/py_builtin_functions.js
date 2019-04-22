@@ -430,7 +430,7 @@ function $$eval(src, _globals, _locals){
 
     var stack_len = $B.frames_stack.length
 
-    var is_exec = arguments[3] == 'exec', leave = false
+    var is_exec = arguments[3] == 'exec'
 
     if(src.__class__ === code){
         is_exec = src.mode == "exec"
@@ -639,6 +639,7 @@ function $$eval(src, _globals, _locals){
             }else{
                 current_globals_obj = current_frame[3]
                 current_locals_obj = current_frame[1]
+
                 var res = new Function("$locals_" + globals_id,
                     "$locals_" + locals_id,
                     "$locals_" + current_globals_id,
@@ -822,7 +823,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false // attr == "__len__" // && obj === $B // "Point"
+    var $test = false // attr == "preventDefault" // && obj === $B // "Point"
     if($test){console.log("$getattr", attr, obj, klass)}
 
     // Shortcut for classes without parents
@@ -1019,7 +1020,7 @@ $B.$getattr = function(obj, attr, _default){
     if(typeof attr_func !== 'function'){
         console.log(attr + ' is not a function ' + attr_func, klass)
     }
-    if($test){console.log("attr_func is odga", attr_func === odga, obj[attr])}
+    if($test){console.log("attr_func is odga", attr_func, attr_func === odga, obj[attr])}
     if(attr_func === odga){
         var res = obj[attr]
         if(Array.isArray(obj) && Array.prototype[attr] !== undefined){
@@ -1966,7 +1967,7 @@ $B.$setattr = function(obj, attr, value){
                 for(var i = 0; i < value.__bases__.length; i++){
                     if(value.__bases__[i].__module__ == "builtins"){
                         error("__class__ assignment: '" + $B.class_name(obj) +
-                            "' object layout differs from '" + 
+                            "' object layout differs from '" +
                             $B.class_name(value) + "'")
                     }
                 }
