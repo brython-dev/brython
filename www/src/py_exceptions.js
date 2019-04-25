@@ -215,7 +215,6 @@ var frame = $B.make_class("frame",
             var _frame = fs[pos],
                 locals_id = _frame[0],
                 filename
-            console.log("frame", _frame)
             try{
                 res.f_locals = $B.obj_dict(_frame[1])
             }catch(err){
