@@ -84,8 +84,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.2"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-04-25 09:29:16.232146"
-__BRYTHON__.timestamp=1556177356232
+__BRYTHON__.compiled_date="2019-04-25 11:05:01.981154"
+__BRYTHON__.timestamp=1556183101981
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","unicodedata","zlib"]
 ;
 
@@ -7244,7 +7244,6 @@ $stack:deep_copy(stack)}
 if(pos===undefined){pos=0}
 res.$pos=pos
 if(fs.length){var _frame=fs[pos],locals_id=_frame[0],filename
-console.log("frame",_frame)
 try{res.f_locals=$B.obj_dict(_frame[1])}catch(err){console.log("err "+err)
 throw err}
 res.f_globals=$B.obj_dict(_frame[3])
@@ -9029,11 +9028,12 @@ if(fmt.type !==undefined &&
 (fmt.type=="%" ||fmt.type.toLowerCase()=="f")){if(pt_pos==-1){res+="."+"0".repeat(fmt.precision)}
 else{var missing=fmt.precision-res.length+pt_pos+1
 if(missing > 0){res+="0".repeat(missing)}}}else{var res1=self.toExponential(fmt.precision-1),exp=parseInt(res1.substr(res1.search("e")+1))
-if(exp <-4 ||exp >=fmt.precision-1){res=res1
-if(Math.abs(exp)< 10){res=res.substr(0,res.length-1)+"0"+
-res.charAt(res.length-1)}}}}else{var res=_b_.str.$factory(self)}
+if(exp <-4 ||exp >=fmt.precision-1){
+var elts=res1.split("e")
+while(elts[0].endsWith("0")){elts[0]=elts[0].substr(0,elts[0].length-1)}
+res=elts.join("e")}else{}}}else{var res=_b_.str.$factory(self)}
 if(fmt.type===undefined||"gGn".indexOf(fmt.type)!=-1){
-while(res.charAt(res.length-1)=="0"){res=res.substr(0,res.length-1)}
+if(res.search("e")==-1){while(res.charAt(res.length-1)=="0"){res=res.substr(0,res.length-1)}}
 if(res.charAt(res.length-1)=="."){if(fmt.type===undefined){res+="0"}
 else{res=res.substr(0,res.length-1)}}}
 if(fmt.sign !==undefined){if((fmt.sign==" " ||fmt.sign=="+" )&& self > 0){res=fmt.sign+res}}
