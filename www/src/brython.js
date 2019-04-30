@@ -84,8 +84,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.2"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-04-22 08:48:54.544542"
-__BRYTHON__.timestamp=1555915734544
+__BRYTHON__.compiled_date="2019-04-25 11:05:01.981154"
+__BRYTHON__.timestamp=1556183101981
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","unicodedata","zlib"]
 ;
 
@@ -3555,7 +3555,7 @@ case '[':
 case '(':
 case '{':
 case 'not':
-case 'lamdba':
+case 'lambda':
 if(C.expect=='id'){C.expect='as'
 return $transition(new $AbstractExprCtx(C,false),token,value)}
 case 'as':
@@ -3591,7 +3591,7 @@ case 'float':
 case 'id':
 case 'imaginary':
 case 'int':
-case 'lamdba':
+case 'lambda':
 case 'pass':
 case 'str':
 case '{':
@@ -3946,7 +3946,7 @@ case '[':
 case '(':
 case '{':
 case 'not':
-case 'lamdba':
+case 'lambda':
 $_SyntaxError(C,'token '+token+' after '+
 C)}
 return $transition(C.parent,token,value)
@@ -4051,7 +4051,7 @@ case '[':
 case '(':
 case '{':
 case 'not':
-case 'lamdba':
+case 'lambda':
 case '.':
 var expr=new $AbstractExprCtx(C,true)
 return $transition(expr,token,value)
@@ -4155,7 +4155,7 @@ case '(':
 case '{':
 case '.':
 case 'not':
-case 'lamdba':
+case 'lambda':
 var expr=new $AbstractExprCtx(C,false)
 return $transition(expr,token,value)
 case 'op':
@@ -4183,7 +4183,7 @@ case '(':
 case '{':
 case '.':
 case 'not':
-case 'lamdba':
+case 'lambda':
 return $transition(new $AbstractExprCtx(C,false),token,value)
 case 'op':
 switch(value){case '+':
@@ -4239,7 +4239,7 @@ case '[':
 case '(':
 case '{':
 case 'not':
-case 'lamdba':
+case 'lambda':
 return $transition(new $AbstractExprCtx(C,false),token,value)
 case ',':
 return $transition(C.parent,token)
@@ -4270,7 +4270,7 @@ case '(':
 case '{':
 case '.':
 case 'not':
-case 'lamdba':
+case 'lambda':
 var expr=new $AbstractExprCtx(C,false)
 return $transition(expr,token,value)
 case ']':
@@ -7244,7 +7244,6 @@ $stack:deep_copy(stack)}
 if(pos===undefined){pos=0}
 res.$pos=pos
 if(fs.length){var _frame=fs[pos],locals_id=_frame[0],filename
-console.log("frame",_frame)
 try{res.f_locals=$B.obj_dict(_frame[1])}catch(err){console.log("err "+err)
 throw err}
 res.f_globals=$B.obj_dict(_frame[3])
@@ -8548,7 +8547,7 @@ var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_colle
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
 var js=['_aio','_ajax','_base64','_binascii','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_sre_utils','_string','_strptime','_svg','_warnings','_webworker','aes','array','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','json','long_int','marshal','math','md5','modulefinder','pbkdf2','posix','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata','zlib']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
-var pkglist=['asyncio','browser','browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
+var pkglist=['asyncio','browser','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
 for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}})(__BRYTHON__)
 ;
 
@@ -9029,11 +9028,12 @@ if(fmt.type !==undefined &&
 (fmt.type=="%" ||fmt.type.toLowerCase()=="f")){if(pt_pos==-1){res+="."+"0".repeat(fmt.precision)}
 else{var missing=fmt.precision-res.length+pt_pos+1
 if(missing > 0){res+="0".repeat(missing)}}}else{var res1=self.toExponential(fmt.precision-1),exp=parseInt(res1.substr(res1.search("e")+1))
-if(exp <-4 ||exp >=fmt.precision-1){res=res1
-if(Math.abs(exp)< 10){res=res.substr(0,res.length-1)+"0"+
-res.charAt(res.length-1)}}}}else{var res=_b_.str.$factory(self)}
+if(exp <-4 ||exp >=fmt.precision-1){
+var elts=res1.split("e")
+while(elts[0].endsWith("0")){elts[0]=elts[0].substr(0,elts[0].length-1)}
+res=elts.join("e")}else{}}}else{var res=_b_.str.$factory(self)}
 if(fmt.type===undefined||"gGn".indexOf(fmt.type)!=-1){
-while(res.charAt(res.length-1)=="0"){res=res.substr(0,res.length-1)}
+if(res.search("e")==-1){while(res.charAt(res.length-1)=="0"){res=res.substr(0,res.length-1)}}
 if(res.charAt(res.length-1)=="."){if(fmt.type===undefined){res+="0"}
 else{res=res.substr(0,res.length-1)}}}
 if(fmt.sign !==undefined){if((fmt.sign==" " ||fmt.sign=="+" )&& self > 0){res=fmt.sign+res}}

@@ -301,4 +301,20 @@ assert issubclass(Myfloat, float)
 # issue 1092
 assert (1024).to_bytes(4, byteorder='big') == b'\x00\x00\x04\x00'
 
+# issue 1098
+def test(x, pattern):
+    assert x == pattern, f'''{x!r} != {pattern!r}'''
+
+test( f'''{1.230e-1}''',     '0.123'   )
+test( f'''{1.230e-11}''',    '1.23e-11')
+test( f'''{1.230e-10}''',    '1.23e-10')
+test( f'''{1.230e-3:8.6}''', ' 0.00123')
+test( f'''{1.230e-3:1.6}''', '0.00123' )
+test(f'''{1.23e-11:1.6}''', '1.23e-11')
+test( f'''{1.23e-10:1.6}''', '1.23e-10')
+test( f'''{1.23e-10:9.6}''',' 1.23e-10')
+test(     f'''{1.23e-10:1.15}''', '1.23e-10')
+test(1.23e-10.__format__('1.15'), '1.23e-10')
+
+
 print('passed all tests...')

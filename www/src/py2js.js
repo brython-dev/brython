@@ -7306,7 +7306,7 @@ var $transition = $B.parser.$transition = function(context, token, value){
                 case '(':
                 case '{':
                 case 'not':
-                case 'lamdba':
+                case 'lambda':
                     if(context.expect == 'id'){
                        context.expect = 'as'
                        return $transition(new $AbstractExprCtx(context, false),
@@ -7361,7 +7361,7 @@ var $transition = $B.parser.$transition = function(context, token, value){
               case 'id':
               case 'imaginary':
               case 'int':
-              case 'lamdba':
+              case 'lambda':
               case 'pass':
               case 'str':
               case '{':
@@ -7988,7 +7988,7 @@ var $transition = $B.parser.$transition = function(context, token, value){
                 case '(':
                 case '{':
                 case 'not':
-                case 'lamdba':
+                case 'lambda':
                     $_SyntaxError(context, 'token ' + token + ' after ' +
                         context)
             }
@@ -8168,7 +8168,7 @@ var $transition = $B.parser.$transition = function(context, token, value){
                 case '(':
                 case '{':
                 case 'not':
-                case 'lamdba':
+                case 'lambda':
                 case '.':
                     var expr = new $AbstractExprCtx(context,true)
                     return $transition(expr,token,value)
@@ -8292,7 +8292,7 @@ var $transition = $B.parser.$transition = function(context, token, value){
                 case '{':
                 case '.':
                 case 'not':
-                case 'lamdba':
+                case 'lambda':
                     var expr = new $AbstractExprCtx(context, false)
                     return $transition(expr, token, value)
                 case 'op':
@@ -8331,7 +8331,7 @@ var $transition = $B.parser.$transition = function(context, token, value){
                 case '{':
                 case '.':
                 case 'not':
-                case 'lamdba':
+                case 'lambda':
                     return $transition(new $AbstractExprCtx(context, false),
                         token, value)
                 case 'op':
@@ -8412,7 +8412,7 @@ var $transition = $B.parser.$transition = function(context, token, value){
                 case '(':
                 case '{':
                 case 'not':
-                case 'lamdba':
+                case 'lambda':
                     return $transition(new $AbstractExprCtx(context, false),
                         token, value)
                 case ',':
@@ -8454,7 +8454,7 @@ var $transition = $B.parser.$transition = function(context, token, value){
                 case '{':
                 case '.':
                 case 'not':
-                case 'lamdba':
+                case 'lambda':
                     var expr = new $AbstractExprCtx(context,false)
                     return $transition(expr, token, value)
                 case ']':

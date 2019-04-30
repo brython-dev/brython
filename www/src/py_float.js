@@ -210,19 +210,30 @@ function preformat(self, fmt){
             var res1 = self.toExponential(fmt.precision - 1),
                 exp = parseInt(res1.substr(res1.search("e") + 1))
             if(exp < -4 || exp >= fmt.precision - 1){
-                res = res1
+                //console.log("cas 1", self, fmt.precision, res1, exp)
+                var elts = res1.split("e")
+                // Remove trailing 0 from mantissa
+                while(elts[0].endsWith("0")){elts[0] = elts[0].substr(0,
+                    elts[0].length - 1)}
+                res = elts.join("e")
+                /*
                 if(Math.abs(exp) < 10){
                     res = res.substr(0, res.length - 1) + "0" +
                         res.charAt(res.length - 1)
                 }
+                */
+            }else{
+                //console.log("cas 2", self, fmt.precision, res1, exp)
             }
         }
     }else{var res = _b_.str.$factory(self)}
 
     if(fmt.type === undefined|| "gGn".indexOf(fmt.type) != -1){
-        // remove trailing 0
-        while(res.charAt(res.length - 1) == "0"){
-            res = res.substr(0, res.length - 1)
+        // remove trailing 0 for non-exponential formats
+        if(res.search("e") == -1){
+            while(res.charAt(res.length - 1) == "0"){
+                res = res.substr(0, res.length - 1)
+            }
         }
         if(res.charAt(res.length - 1) == "."){
             if(fmt.type === undefined){res += "0"}
