@@ -1,48 +1,3 @@
-import time
-
-text = "this is an example of a huffman tree"
-
-
-text = """Pleurez, doux alcyons, ô vous, oiseaux sacrés,
-Oiseaux chers à Thétis, doux alcyons, pleurez.
-
-Elle a vécu, Myrto, la jeune Tarentine.
-Un vaisseau la portait aux bords de Camarine.
-Là l'hymen, les chansons, les flûtes, lentement,
-Devaient la reconduire au seuil de son amant.
-Une clef vigilante a pour cette journée
-Dans le cèdre enfermé sa robe d'hyménée
-Et l'or dont au festin ses bras seraient parés
-Et pour ses blonds cheveux les parfums préparés.
-Mais, seule sur la proue, invoquant les étoiles,
-Le vent impétueux qui soufflait dans les voiles
-L'enveloppe. Étonnée, et loin des matelots,
-Elle crie, elle tombe, elle est au sein des flots.
-
-Elle est au sein des flots, la jeune Tarentine.
-Son beau corps a roulé sous la vague marine.
-Thétis, les yeux en pleurs, dans le creux d'un rocher
-Aux monstres dévorants eut soin de la cacher.
-Par ses ordres bientôt les belles Néréides
-L'élèvent au-dessus des demeures humides,
-Le portent au rivage, et dans ce monument
-L'ont, au cap du Zéphir, déposé mollement.
-Puis de loin à grands cris appelant leurs compagnes,
-Et les Nymphes des bois, des sources, des montagnes,
-Toutes frappant leur sein et traînant un long deuil,
-Répétèrent : « hélas ! » autour de son cercueil.
-
-Hélas ! chez ton amant tu n'es point ramenée.
-Tu n'as point revêtu ta robe d'hyménée.
-L'or autour de tes bras n'a point serré de nœuds.
-Les doux parfums n'ont point coulé sur tes cheveux."""
-
-
-with open("20190404/www/src/unicode.txt", encoding="ascii") as f:
-    text = f.read()
-
-t0 = time.time()
-
 def normalized(codelengths):
     car, codelength = codelengths[0]
     value = 0
@@ -62,23 +17,24 @@ def normalized(codelengths):
     return codes
 
 
-class Node:
-
-    def __init__(self, f1, f2):
-        self.f1 = f1
-        self.f2 = f2
-        self.w = f1[1] + f2[1]
-
-    def __repr__(self):
-        return f"<{self.f1[0]},{self.f2[0]} : {self.w}>"
-
 
 class Compresser:
+
+    class Node:
+
+        def __init__(self, f1, f2):
+            self.f1 = f1
+            self.f2 = f2
+            self.w = f1[1] + f2[1]
+
+        def __repr__(self):
+            return f"<{self.f1[0]},{self.f2[0]} : {self.w}>"
+
 
     def __init__(self, text):
         if not isinstance(text, (bytes, bytearray, memoryview)):
             raise TypeError("a bytes-like object is required, not '" +
-                types(text).__name__ + "'")
+                type(text).__name__ + "'")
         self.text = text
         self.dic = {}
         self.frequencies()
@@ -87,6 +43,15 @@ class Compresser:
         self.make_codelengths()
         self.codes = normalized(self.codelengths)
         self.compressed = ''.join(self.codes[car] for car in text)
+        self.out = bytearray()
+        pos = 0
+        while pos < len(self.compressed):
+            bits = self.compressed[pos:pos + 8]
+            byte = int(bits, 2)
+            if len(bits) < 8:
+                byte << (8 - len(bits))
+            self.out.append(byte)
+            pos += 8
 
     def frequencies(self):
         freqs = {}
@@ -97,7 +62,7 @@ class Compresser:
 
     def make_tree(self):
         while len(self.freqs) > 1:
-            node = Node(self.freqs.pop(), self.freqs.pop())
+            node = Compresser.Node(self.freqs.pop(), self.freqs.pop())
             if not self.freqs:
                 self.freqs.append([node, node.w])
             else:
@@ -107,11 +72,11 @@ class Compresser:
                 self.freqs.insert(pos, [node, node.w])
 
     def parse(self, node, code):
-        if isinstance(node.f1[0], Node):
+        if isinstance(node.f1[0], Compresser.Node):
             self.parse(node.f1[0], code + "1")
         else:
             self.dic[node.f1[0]] = code + "1"
-        if isinstance(node.f2[0], Node):
+        if isinstance(node.f2[0], Compresser.Node):
             self.parse(node.f2[0], code + "0")
         else:
             self.dic[node.f2[0]] = code + "0"
@@ -127,31 +92,50 @@ class Compresser:
 
 class Decompresser:
 
+    class Node:
+
+        def __init__(self, code=''):
+            self.code = code
+            self.children = []
+
+
     def __init__(self, compressed, codelengths):
         self.compressed = compressed
-        self.codes = normalized(codelengths)
+        codes = normalized(codelengths)
+        self.codes = {value : key for key, value in codes.items()}
+        self.root = Decompresser.Node()
+        self.make_tree(self.root)
+
+    def make_tree(self, node):
+        children = []
+        for bit in '01':
+            next_code = node.code + bit
+            if next_code in self.codes:
+                children.append(self.codes[next_code])
+            else:
+                new_node = Decompresser.Node(next_code)
+                children.append(new_node)
+        node.children = children
+        for child in children:
+            if isinstance(child, Decompresser.Node):
+                self.make_tree(child)
 
     def decompress(self):
-        code_items = dict((v, bytes([car])) for car, v in self.codes.items())
-        print(code_items)
-
+        txt = self.compressed
         pos = 0
-        s = ''
-        result = b''
-        while pos < len(self.compressed):
-            s += self.compressed[pos]
-            if s in code_items:
-                result += code_items[s]
-                s = ''
+        code = ''
+        node = self.root
+
+        res = bytearray()
+
+        while pos < len(txt):
+            code = int(txt[pos])
+            child = node.children[code]
+            if isinstance(child, int):
+                res.append(child)
+                node = self.root
+            else:
+                node = child
             pos += 1
-        return result
 
-
-compr = Compresser(text.encode("utf-8"))
-codelengths = compr.codelengths
-
-print(8 * len(text), len(compr.compressed))
-
-decomp = Decompresser(compr.compressed, compr.codelengths)
-
-assert decomp.decompress().decode("utf-8") == text
+        return res
