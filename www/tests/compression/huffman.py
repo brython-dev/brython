@@ -22,24 +22,31 @@ class Tree:
         self.root = root
         self.nb_levels = 0
 
-    def length(self, node=None):
-        if node is None:
-            node = self.root
-            self.nb_levels = 0
-        if not node.is_leaf:
-            self.nb_levels = max(self.nb_levels, node.level + 1)
+    def length(self):
+        self.root.level = 0
+        node = self.root
+        nb_levels = 0
+        def set_level(node):
+            nonlocal nb_levels
             for child in node.children:
-                self.length(child)
+                child.level = node.level + 1
+                nb_levels = max(nb_levels, child.level)
+                if not child.is_leaf:
+                    set_level(child)
+        set_level(self.root)
+        return nb_levels
 
     def reduce_tree(self):
-        self.length()
-        currentlen = self.nb_levels
+        """Reduce the tree. Uses the algorithm described in
+        http://compressions.sourceforge.net/Huffman.html#3
+        """
+        currentlen = self.length()
         deepest = self.nodes_at(currentlen)
         deepest_leaves = [node for node in deepest if node.is_leaf]
         rightmost_leaf = deepest_leaves[-1]
         sibling = rightmost_leaf.parent.children[0]
-        
-        # replace rightmost_leaf parent by rightmost_leaf
+
+        # replace rightmost_leaf's parent by rightmost_leaf
         parent = rightmost_leaf.parent
         grand_parent = parent.parent
         rank = grand_parent.children.index(parent)
@@ -47,7 +54,7 @@ class Tree:
         children[rank] = rightmost_leaf
         grand_parent.add(children)
 
-        # find level with leaves
+        # find first upper level with leaves
         up_level = rightmost_leaf.level - 2
         while up_level > 0:
             nodes = self.nodes_at(up_level)
@@ -57,7 +64,7 @@ class Tree:
                 # replace by node with leaves = [sibling, leftmost_leaf]
                 parent = leftmost_leaf.parent
                 rank = parent.children.index(leftmost_leaf)
-                new_node = Node1(parent.code)
+                new_node = Node()
                 new_node.level = leftmost_leaf.level
                 children = [sibling, leftmost_leaf]
                 new_node.add(children)
@@ -68,22 +75,6 @@ class Tree:
                 up_level -= 1
         if up_level == 0:
             raise Exception("cannot resize tree")
-
-    def rightmost_leaf(self):
-        """Find rightmost leaf at level in the tree."""
-        node = self.root
-        rank = 1
-        while True:
-            if not node.is_leaf:
-                left, right = node.children
-                if not right.is_leaf:
-                    node = right
-                    rank += 1
-                elif not left.is_leaf:
-                    node = left
-                    rank += 1
-                else:
-                    return right
 
     def nodes_at(self, level, top=None):
         """Return list of all the nodes below top at specified level."""
@@ -98,12 +89,13 @@ class Tree:
         return res
 
     def reduce(self, maxlevels):
-        self.length()
-        while self.nb_levels > maxlevels:
+        """Reduce number of levels to maxlevels, if possible."""
+        while self.length() > maxlevels:
             self.reduce_tree()
-            self.length()
 
-    def to_dict(self, node=None, code=''):
+    def codes(self, node=None, code=''):
+        """Returns a dictionary mapping leaf characters to the Huffman code
+        of the node as a string of 0's and 1's."""
         if node is None:
             self.dic = {}
             node = self.root
@@ -111,17 +103,17 @@ class Tree:
             self.dic[node.char] = code
         else:
             for i, child in enumerate(node.children):
-                self.to_dict(child, code + str(i))
+                self.codes(child, code + str(i))
         return self.dic
 
 
-class Node1:
+class Node:
 
-    def __init__(self, code='', char=None):
-        self.code = code
+    def __init__(self, char=None, weight=0):
         self.char = char
         self.is_leaf = char is not None
         self.level = 0
+        self.weight = weight
 
     def add(self, children):
         self.children = children
@@ -135,37 +127,46 @@ class Node1:
         else:
             return f'Node({self.code} level {self.level})'
 
+
 class Compresser:
-
-    class Node:
-
-        def __init__(self, f1, f2):
-            self.f1 = f1
-            self.f2 = f2
-            self.w = f1[1] + f2[1]
-
 
     def __init__(self, text):
         if not isinstance(text, (bytes, bytearray, memoryview)):
             raise TypeError("a bytes-like object is required, not '" +
                 type(text).__name__ + "'")
         self.text = text
+
+        freqs = {256: 1}
+        for car in self.text:
+            freqs[car] = freqs.get(car, 0) + 1
+
+        freqs = sorted(freqs.items(),
+            key=lambda item: item[1], reverse=True)
+
+        nodes = [Node(char=key, weight=value) for (key, value) in freqs]
+
         self.dic = {}
-        self.frequencies()
 
-        self.make_tree()
-        self.make_dict()
+        while len(nodes) > 1:
+            right, left = nodes.pop(), nodes.pop()
+            node = Node(weight=right.weight + left.weight)
+            node.add([left, right])
+            if not nodes:
+                nodes.append(node)
+            else:
+                pos = len(nodes) - 1
+                while pos and nodes[pos].weight < node.weight:
+                    pos -= 1
+                nodes.insert(pos, node)
 
-        raw_tree = self.build_tree()
-        dic = raw_tree.to_dict()
-        raw_tree.reduce(15)
+        tree = Tree(nodes[0])
+        tree.reduce(15)
 
-        new_dic = raw_tree.to_dict()
-        self.dic = new_dic
+        codes = tree.codes()
 
-        dic_items = list(self.dic.items())
-        dic_items.sort(key=lambda item:(len(item[1]), item[0]))
-        self.codelengths = [(car, len(value)) for car, value in dic_items]
+        code_items = list(codes.items())
+        code_items.sort(key=lambda item:(len(item[1]), item[0]))
+        self.codelengths = [(car, len(value)) for car, value in code_items]
 
         self.codes = normalized(self.codelengths)
 
@@ -187,90 +188,31 @@ class Compresser:
     def compressed_str(self):
         return ''.join(self.codes[car] for car in self.text)
 
-    def frequencies(self):
-        freqs = {256: 1}
-        for car in self.text:
-            freqs[car] = freqs.get(car, 0) + 1
-        self.freqs = list(freqs.items())
-        self.freqs.sort(key=lambda item: item[1], reverse=True)
-
-    def make_tree(self):
-        while len(self.freqs) > 1:
-            node = Compresser.Node(self.freqs.pop(), self.freqs.pop())
-            if not self.freqs:
-                self.freqs.append([node, node.w])
-            else:
-                pos = len(self.freqs) - 1
-                while pos and self.freqs[pos][1] < node.w:
-                    pos -= 1
-                self.freqs.insert(pos, [node, node.w])
-
-    def build_tree(self):
-        root = Node1()
-        codes = {value : key for key, value in self.dic.items()}
-
-        def make_tree(codes, node):
-            children = []
-            for bit in '01':
-                next_code = node.code + bit
-                if next_code in codes:
-                    children.append(Node1(next_code, codes[next_code]))
-                else:
-                    new_node = Node1(next_code)
-                    children.append(new_node)
-            node.add(children)
-            for child in children:
-                if not child.is_leaf:
-                    make_tree(codes, child)
-
-        make_tree(codes, root)
-        return Tree(root)
-
-    def make_dict(self):
-
-        def parse(node, code):
-            if isinstance(node.f1[0], Compresser.Node):
-                parse(node.f1[0], code + "0")
-            else:
-                self.dic[node.f1[0]] = code + "0"
-            if isinstance(node.f2[0], Compresser.Node):
-                parse(node.f2[0], code + "1")
-            else:
-                self.dic[node.f2[0]] = code + "1"
-
-        root = self.freqs[0][0]
-        parse(root, "")
 
 class Decompresser:
-
-    class Node:
-
-        def __init__(self, code=''):
-            self.code = code
-            self.children = []
-
-        def __repr__(self):
-            return str(self.code) + str(self.children)
 
     def __init__(self, compressed, codelengths):
         self.compressed = compressed
         codes = normalized(codelengths)
         self.codes = {value : key for key, value in codes.items()}
-        self.root = Decompresser.Node()
+        self.root = Node()
         self.make_tree(self.root)
 
     def make_tree(self, node):
+        if node is self.root:
+            node.code = ''
         children = []
         for bit in '01':
             next_code = node.code + bit
             if next_code in self.codes:
-                children.append(self.codes[next_code])
+                child = Node(char=self.codes[next_code])
             else:
-                new_node = Decompresser.Node(next_code)
-                children.append(new_node)
-        node.children = children
+                child = Node()
+            child.code = next_code
+            children.append(child)
+        node.add(children)
         for child in children:
-            if isinstance(child, Decompresser.Node):
+            if not child.is_leaf:
                 self.make_tree(child)
 
     def decompress(self):
@@ -284,7 +226,7 @@ class Decompresser:
         while pos < len(source):
             code = int(source[pos])
             child = node.children[code]
-            if isinstance(child, int):
+            if child.is_leaf:
                 res.append(child)
                 node = self.root
             else:
@@ -305,10 +247,10 @@ class Decompresser:
             while mask > 0:
                 code = bool(byte & mask)
                 child = node.children[code]
-                if isinstance(child, int):
-                    if child == 256:
+                if child.is_leaf:
+                    if child.char == 256:
                         break # end of block
-                    res.append(child)
+                    res.append(child.char)
                     node = self.root
                 else:
                     node = child
