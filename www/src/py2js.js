@@ -5141,8 +5141,10 @@ var $OpCtx = $B.parser.$OpCtx = function(context,op){
                     this.tree[1].to_js() + ')'
             case 'is_not':
                 return this.tree[0].to_js() + '!==' + this.tree[1].to_js()
-            case '*':
             case '+':
+                return '$B.add(' + this.tree[0].to_js() + ', ' +
+                    this.tree[1].to_js() + ')'
+            case '*':
             case '-':
                 var op = this.op,
                     vars = [],
@@ -5210,9 +5212,6 @@ var $OpCtx = $B.parser.$OpCtx = function(context,op){
                                 this.result_type = 'int'
                             }else{this.result_type = 'float'}
                             switch(this.op){
-                                case '+':
-                                    return '$B.add(' + v0.to_js() + ',' +
-                                        v1.to_js() + ')'
                                 case '-':
                                     return '$B.sub(' + v0.to_js() + ',' +
                                         v1.to_js() + ')'

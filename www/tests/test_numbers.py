@@ -158,6 +158,10 @@ assert int('2qhxjli', 34) == 4294967296
 assert int('2br45qb', 35) == 4294967296
 assert int('1z141z4', 36) == 4294967296
 
+a = 2 ** 53 - 3
+assert a + 10 == 9007199254740999
+assert a + 11 == 9007199254741000
+
 # float subclass
 class Float(float):
 

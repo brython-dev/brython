@@ -84,8 +84,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.2"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-04-30 19:05:08.510128"
-__BRYTHON__.timestamp=1556643908510
+__BRYTHON__.compiled_date="2019-05-04 15:12:02.824980"
+__BRYTHON__.timestamp=1556975522824
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","unicodedata","zlib"]
 ;
 
@@ -2441,8 +2441,10 @@ return '$B.$is('+this.tree[0].to_js()+', '+
 this.tree[1].to_js()+')'
 case 'is_not':
 return this.tree[0].to_js()+'!=='+this.tree[1].to_js()
-case '*':
 case '+':
+return '$B.add('+this.tree[0].to_js()+', '+
+this.tree[1].to_js()+')'
+case '*':
 case '-':
 var op=this.op,vars=[],has_float_lit=false,scope=$get_scope(this)
 function is_simple(elt){if(elt.type=='expr' && elt.tree[0].type=='int'){return true}else if(elt.type=='expr' &&
@@ -2470,10 +2472,7 @@ if((t0=='float' && t1=='float')||
 (this.op=='+' && t0=='str' && t1=='str')){this.result_type=t0
 return v0.to_js()+this.op+v1.to_js()}else if(['int','float'].indexOf(t0)>-1 &&
 ['int','float'].indexOf(t1)>-1){if(t0=='int' && t1=='int'){this.result_type='int'}else{this.result_type='float'}
-switch(this.op){case '+':
-return '$B.add('+v0.to_js()+','+
-v1.to_js()+')'
-case '-':
+switch(this.op){case '-':
 return '$B.sub('+v0.to_js()+','+
 v1.to_js()+')'
 case '*':
@@ -5958,7 +5957,14 @@ var min_int=Math.pow(-2,53),max_int=Math.pow(2,53)-1
 $B.is_safe_int=function(){for(var i=0;i < arguments.length;i++){var arg=arguments[i]
 if(arg < min_int ||arg > max_int){return false}}
 return true}
-$B.add=function(x,y){var z=(typeof x !="number" ||typeof y !="number")?
+$B.add=function(x,y){if(typeof x.valueOf()=="number" && typeof y.valueOf()=="number"){if(typeof x=="number" && typeof y=="number"){
+var z=x+y
+if(z < max_int){return z}
+return $B.long_int.__add__($B.long_int.$factory(x),$B.long_int.$factory(y))}else{
+return new Number(x+y)}}else if(typeof x=="string" && typeof x=="string"){
+return x+y}
+return _b_.getattr(x,"__add__")(y)}
+$B.zzadd=function(x,y){var z=(typeof x !="number" ||typeof y !="number")?
 new Number(x+y):x+y
 if(x > min_int && x < max_int && y > min_int && y < max_int
 && z > min_int && z < max_int){return z}

@@ -1025,6 +1025,25 @@ $B.is_safe_int = function(){
 }
 
 $B.add = function(x, y){
+    if(typeof x.valueOf() == "number" && typeof y.valueOf() == "number"){
+        if(typeof x == "number" && typeof y == "number"){
+            // ints
+            var z = x + y
+            if(z < max_int){return z}
+            return $B.long_int.__add__($B.long_int.$factory(x),
+                $B.long_int.$factory(y))
+        }else{
+            // floats
+            return new Number(x + y)
+        }
+    }else if (typeof x=="string" && typeof x=="string"){
+        // strings
+        return x + y
+    }
+    return _b_.getattr(x, "__add__")(y)
+}
+
+$B.zzadd = function(x, y){
     var z = (typeof x != "number" || typeof y != "number") ?
                 new Number(x + y) : x + y
     if(x > min_int && x < max_int && y > min_int && y < max_int
@@ -1150,7 +1169,7 @@ $B.rich_comp = function(op, x, y){
             return !(x === y)
         }else{
             throw _b_.TypeError.$factory("'" + method2comp[op] +
-                "' not supported between instances of '" + $B.class_name(x) + 
+                "' not supported between instances of '" + $B.class_name(x) +
                 "' and '" + $B.class_name(y) + "'")
         }
     }
