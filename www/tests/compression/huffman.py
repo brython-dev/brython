@@ -37,7 +37,8 @@ class Tree:
         return nb_levels
 
     def reduce_tree(self):
-        """Reduce the tree. Uses the algorithm described in
+        """Change the tree to reduce the number of levels.
+        Uses the algorithm described in
         http://compressions.sourceforge.net/Huffman.html#3
         """
         currentlen = self.length()
@@ -95,7 +96,7 @@ class Tree:
 
     def codes(self, node=None, code=''):
         """Returns a dictionary mapping leaf characters to the Huffman code
-        of the node as a string of 0's and 1's."""
+        of the node, as a string of 0's and 1's."""
         if node is None:
             self.dic = {}
             node = self.root
@@ -125,7 +126,7 @@ class Node:
         if self.is_leaf:
             return f'Leaf({self.char} level {self.level})'
         else:
-            return f'Node({self.code} level {self.level})'
+            return f'Node(level {self.level})'
 
 
 class Compresser:
@@ -144,8 +145,6 @@ class Compresser:
             key=lambda item: item[1], reverse=True)
 
         nodes = [Node(char=key, weight=value) for (key, value) in freqs]
-
-        self.dic = {}
 
         while len(nodes) > 1:
             right, left = nodes.pop(), nodes.pop()
@@ -233,7 +232,7 @@ class Decompresser:
                 node = child
             pos += 1
 
-        return res
+        return bytes(res)
 
     def decompress_bytes(self):
         source = self.compressed
@@ -258,3 +257,19 @@ class Decompresser:
             pos += 1
 
         return res
+
+def compress(text, klass=bytes):
+    compr = Compresser(text)
+    result = {"codelengths": compr.codelengths}
+    if klass is bytes:
+        result["data"] = compr.compressed_bytes()
+    elif klass is str:
+        result["data"] = compr.compressed_str()
+    else:
+        raise TypeError("second argument of compress must be bytes or "
+            "str, not '{}'".format(klass))
+    return result
+
+def decompress(data, codelengths):
+    decomp = Decompresser(data, codelengths)
+    return decomp.decompress()
