@@ -83,7 +83,7 @@ def make_tree(reader):
         15)
     clen = {}
     for i, length in zip(range(HCLEN + 4), alphabet):
-        clen[length] = extra_bits(reader, 3, "lsf")
+        clen[length] = extra_bits(reader, 3)
 
     # tree used to decode code lengths
     clen_root = tree_from_codelengths(clen)
@@ -107,10 +107,10 @@ def read_distance(reader, root):
         if child.is_leaf:
             dist_code = child.char
             if dist_code < 3:
-                distance = dist_code
+                distance = dist_code + 1
             else:
                 nb = (dist_code // 2) - 1
-                extra = extra_bits(reader, nb, "lsf")
+                extra = extra_bits(reader, nb)
                 half, delta = divmod(dist_code, 2)
                 distance = 1 + (2 ** half) + delta * (2 ** (half - 1)) + extra
             return distance
@@ -190,7 +190,7 @@ def decomp_default(reader):
                 # next five bits are the distance code
                 dist_code = extra_bits(reader, 5, "msf")
                 if dist_code < 3:
-                    distance = dist_code
+                    distance = dist_code + 1
                 else:
                     nb = (dist_code // 2) - 1
                     extra = extra_bits(reader, nb)
@@ -214,32 +214,35 @@ def decompress(buf):
 
     reader = bit_reader(data)
 
-    BFINAL = next(reader)
+    result = bytearray()
 
-    BTYPE = extra_bits(reader, 2)
+    while True:
+        BFINAL = next(reader)
 
-    print("BFINAL", BFINAL)
-    print("BTYPE", bin(BTYPE))
+        BTYPE = extra_bits(reader, 2)
+        
+        if BTYPE == 0b01:
+            # compression with fixed Huffman codes for literals/lengths
+            # and distances
+            result += decomp_default(reader)
 
-    if BTYPE == 0b01:
-        return decomp_default(reader)
+        elif BTYPE == 0b10:
+            # compression with dynamic Huffman codes
+            lit_len_tree, distance_tree = make_tree(reader)
 
-    elif BTYPE == 0b10:
-        lit_len_tree, distance_tree = make_tree(reader)
-        res = bytearray()
+            while True:
+                # read a literal or length
+                _type, value = read_literal_or_length(reader, lit_len_tree)
+                if _type == 'eob':
+                    break
+                elif _type == 'literal':
+                    result.append(value)
+                elif _type == 'length':
+                    # read a distance
+                    length = value
+                    distance = read_distance(reader, distance_tree)
+                    for _ in range(length):
+                        result.append(result[-distance])
 
-        while True:
-            # read a literal or length
-            _type, value = read_literal_or_length(reader, lit_len_tree)
-            if _type == 'eob':
-                return bytes(res)
-            elif _type == 'literal':
-                res.append(value)
-            elif _type == 'length':
-                # read distance
-                length = value
-                distance = read_distance(reader, distance_tree)
-                for _ in range(length):
-                    res.append(res[-distance])
-
-        return bytes(res)
+        if BFINAL:
+            return bytes(result)

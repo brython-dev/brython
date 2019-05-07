@@ -41,6 +41,9 @@ Les doux parfums n'ont point coulé sur tes cheveux."""
 #text = "bla bla bla"
 text = text.encode("utf-8")
 
+with open("du cote de chez swann.txt", "rb") as f:
+    text = f.read()
+
 chars = {x for x in text}
 
 """
@@ -78,4 +81,10 @@ for d in distances:
 buf = compresser.compress(text)
 buf += compresser.flush()
 
-print(deflate.decompress(buf).decode("utf-8"))
+dec = deflate.decompress(buf)
+print(len(dec), len(text))
+print(dec == text)
+if dec != text:
+    for i, car in enumerate(dec):
+        if text[i] != car:
+            print("erreur", i , car, text[i])
