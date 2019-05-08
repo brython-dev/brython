@@ -1,3 +1,30 @@
+def codelengths_from_frequencies(freqs):
+    freqs = sorted(freqs.items(),
+        key=lambda item: item[1], reverse=True)
+
+    nodes = [Node(char=key, weight=value) for (key, value) in freqs]
+
+    while len(nodes) > 1:
+        right, left = nodes.pop(), nodes.pop()
+        node = Node(weight=right.weight + left.weight)
+        node.add([left, right])
+        if not nodes:
+            nodes.append(node)
+        else:
+            pos = len(nodes) - 1
+            while pos and nodes[pos].weight < node.weight:
+                pos -= 1
+            nodes.insert(pos, node)
+
+    tree = Tree(nodes[0])
+    tree.reduce(15)
+
+    codes = tree.codes()
+
+    code_items = list(codes.items())
+    code_items.sort(key=lambda item:(len(item[1]), item[0]))
+    return [(car, len(value)) for car, value in code_items]
+
 def normalized(codelengths):
     car, codelength = codelengths[0]
     value = 0
@@ -141,31 +168,7 @@ class Compresser:
         for car in self.text:
             freqs[car] = freqs.get(car, 0) + 1
 
-        freqs = sorted(freqs.items(),
-            key=lambda item: item[1], reverse=True)
-
-        nodes = [Node(char=key, weight=value) for (key, value) in freqs]
-
-        while len(nodes) > 1:
-            right, left = nodes.pop(), nodes.pop()
-            node = Node(weight=right.weight + left.weight)
-            node.add([left, right])
-            if not nodes:
-                nodes.append(node)
-            else:
-                pos = len(nodes) - 1
-                while pos and nodes[pos].weight < node.weight:
-                    pos -= 1
-                nodes.insert(pos, node)
-
-        tree = Tree(nodes[0])
-        tree.reduce(15)
-
-        codes = tree.codes()
-
-        code_items = list(codes.items())
-        code_items.sort(key=lambda item:(len(item[1]), item[0]))
-        self.codelengths = [(car, len(value)) for car, value in code_items]
+        self.codelengths = codelengths_from_frequencies(freqs)
 
         self.codes = normalized(self.codelengths)
 

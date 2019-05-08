@@ -38,7 +38,7 @@ Tu n'as point revêtu ta robe d'hyménée.
 L'or autour de tes bras n'a point serré de nœuds.
 Les doux parfums n'ont point coulé sur tes cheveux."""
 
-#text = "bla bla bla"
+#text = "adsqfqgqs"
 text = text.encode("utf-8")
 
 with open("du cote de chez swann.txt", "rb") as f:
@@ -82,8 +82,7 @@ buf = compresser.compress(text)
 buf += compresser.flush()
 
 dec = deflate.decompress(buf)
-print(len(dec), len(text))
-print(dec == text)
+
 if dec != text:
     for i, car in enumerate(dec):
         if text[i] != car:
