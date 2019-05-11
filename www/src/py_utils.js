@@ -831,6 +831,10 @@ var $io = $B.make_class("io", function(){
     }
 )
 
+$io.flush = function(){
+    // do nothing
+}
+
 $io.write = function(self, msg){
     // Default to printing to browser console
     console.log(msg)
