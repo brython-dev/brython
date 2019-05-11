@@ -2130,11 +2130,18 @@ b2 = B()
 assert b2.show() == 8
 
 # issue 1059
-with open("z.txt", encoding="utf-8") as f:
+import os
+try:
+    issues_py_dir = os.path.dirname(__file__)
+    z_txt_path = os.path.join(issues_py_dir, "z.txt")
+except NameError:
+    z_txt_path = "z.txt"
+
+with open(z_txt_path, encoding="utf-8") as f:
     t = [line for line in f]
 assert t == ["a\n", "b\n", "c\n"]
 
-with open("z.txt", encoding="utf-8") as f:
+with open(z_txt_path, encoding="utf-8") as f:
     assert f.readlines() == t
 
 # issue 1063

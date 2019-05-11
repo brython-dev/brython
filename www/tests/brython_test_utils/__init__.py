@@ -78,11 +78,13 @@ def populate_testmod_input(elem, selected=None):
                 o = html.OPTION(caption, value=filenm)
             g <= o
 
-def run(src):
+def run(src, file_path=None):
     t0 = time.perf_counter()
     msg = ''
     try:
         ns = {'__name__':'__main__'}
+        if file_path is not None:
+            ns['__file__'] = file_path
         exec(src, ns)
         state = 1
     except Exception as exc:
@@ -95,6 +97,7 @@ def run(src):
 def run_test_module(filename, base_path=''):
     if base_path and not base_path.endswith('/'):
         base_path += '/'
-    src = open(base_path + filename).read()
-    return run(src)
+    file_path = base_path + filename
+    src = open(file_path).read()
+    return run(src, file_path)
 
