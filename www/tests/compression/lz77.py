@@ -1,6 +1,6 @@
 class LZ77:
 
-    def compress(self, text, size, min_len=1):
+    def compress(self, text, size, min_len=3):
         buf = bytearray()
 
         pos = 0
@@ -16,6 +16,10 @@ class LZ77:
                     length += 1
 
                 distance = len(buf) - buf_pos
+                if distance == 66:
+                    print("distance", distance, "copied",
+                        buf[buf_pos : buf_pos + length],
+                        len(buf[buf_pos : buf_pos + length]))
                 buf += text[pos:pos + length + 1]
                 yield (length, distance)
                 if pos + length == len(text):

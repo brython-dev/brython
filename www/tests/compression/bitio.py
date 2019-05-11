@@ -47,7 +47,7 @@ class BitIO:
                 bitpos += 8
             self.bitnum = bitpos
 
-    def write_bits(self, *bits):
+    def write(self, *bits):
         for bit in bits:
             if not self.bytestream:
                 self.bytestream.append(0)
@@ -74,9 +74,9 @@ class BitIO:
         while value:
             bits.append(value & 1)
             value >>= 1
-        self.write_bits(*bits)
+        self.write(*bits)
         for _ in range(nb - len(bits)):
-            self.write_bits(0)
+            self.write(0)
 
 if __name__ == "__main__":
     text = """Pleurez, doux alcyons, ô vous, oiseaux sacrés,

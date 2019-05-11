@@ -83,6 +83,7 @@ def dynamic_tree(reader):
     HLIT = reader.read(5)
     HDIST = reader.read(5)
     HCLEN = reader.read(4)
+    print("decompress, HLIT", HLIT, "HDIST", HDIST, "HCLEN", HCLEN)
     # read codes for lengths
     alphabet = (16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1,
         15)
@@ -95,6 +96,7 @@ def dynamic_tree(reader):
 
     # code lengths for the literal / length alphabet
     lit_len = read_codelengths(reader, clen_root, HLIT + 257)
+    print("decompress, lengths", lit_len[257:])
     lit_len_tree = tree_from_codelengths(dict(enumerate(lit_len)))
 
     # code lengths for the distances alphabet
@@ -122,6 +124,40 @@ def read_distance(reader, root):
             return distance
         else:
             node = child
+
+def distance_to_code(distance):
+    if distance < 5:
+        return (1 + distance, 0, 0)
+    else:
+        d = distance
+        coef = 2
+        p = 2
+        while 2 ** (p + 1) < d:
+            p += 1
+        d0 = 2 ** p + 1
+        a, b = divmod(d - d0, 2 ** (p - 1))
+        return 2 * p + a, b, p - 1
+
+def length_to_code(length):
+    if length < 11:
+        return (254 + length, 0, 0)
+    elif length < 19:
+        a, b = divmod(length - 11, 2)
+        return (265 + a, b, 1)
+    elif length < 35:
+        a, b = divmod(length - 19, 4)
+        return (269 + a, b, 2)
+    elif length < 67:
+        a, b = divmod(length - 35, 8)
+        return (273 + a, b, 3)
+    elif length < 131:
+        a, b = divmod(length - 67, 16)
+        return (277 + a, b, 4)
+    elif length < 258:
+        a, b = divmod(length - 131, 32)
+        return (281 + a, b, 5)
+    elif length == 258:
+        return (285, 0, 0)
 
 def read_literal_or_length(reader, root):
     node = root
@@ -190,28 +226,34 @@ def decomp_fixed(reader):
     return result
 
 def compress(source, window_size=32 * 1024):
+    print("compress")
     lz = lz77.LZ77()
     lit_len_count = {}
     distance_count = {}
     for item in lz.compress(source, window_size):
         if isinstance(item, tuple):
             length, distance = item
-            lit_len_count[length] = lit_len_count.get(length, 0) + 1
-            distance_count[distance] = distance_count.get(distance, 0) + 1
+            print("compress, distance", distance, "length", length)
+            length_code, extra, nb = length_to_code(length)
+            lit_len_count[length_code] = lit_len_count.get(length_code, 0) + 1
+            distance_code, extra, nb = distance_to_code(distance)
+            distance_count[distance_code] = \
+                distance_count.get(distance_code, 0) + 1
         else:
             literal = item
             lit_len_count[literal] = lit_len_count.get(literal, 0) + 1
 
-    print(lit_len_count)
-    print(distance_count)
     lit_len_codelengths = huffman.codelengths_from_frequencies(lit_len_count)
+    print("compress", [item for item in lit_len_codelengths if item[0]>256])
+    HLIT = max(car for (car, _) in lit_len_codelengths) - 257
     distance_codelengths = huffman.codelengths_from_frequencies(distance_count)
+    HDIST = max(dist for (dist, _) in distance_codelengths) - 1
     codelengths_count = {}
     for car, length in lit_len_codelengths + distance_codelengths:
-        codelengths_count[length] = codelengths_count.get(length, 0) + 1
-    print(codelengths_count)
+        codelengths_count[length] = codelengths_count.get(length, 0) - 1
     codelengths_codelengths = huffman.codelengths_from_frequencies(
         codelengths_count)
+    HCLEN = max(length for (length, _) in codelengths_codelengths) - 4
     codelengths_dict = dict(codelengths_codelengths)
 
     alphabet = (16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1,
@@ -219,14 +261,26 @@ def compress(source, window_size=32 * 1024):
     codelengths_list = [codelengths_dict.get(car, 0) for car in alphabet]
     while codelengths_list[-1] == 0:
         codelengths_list.pop()
-    print(codelengths_list)
 
     out = bitio.BitIO()
+    out.write_int(8, 4) # compression method = 8
+    out.write_int(7, 4) # window size = 2 ** (8 + 7)
+    out.write_int(0x9c, 8) # FLG
+
+    out.write(1) # BFINAL = 1
+    out.write(0, 1) # BTYPE = dynamic Huffman codes
+    print("compress, HLIT", HLIT, "HDIST", HDIST, "HCLEN", HCLEN)
+    input()
+
+    out.write_int(HLIT, 5)
+    out.write_int(HDIST, 5)
+    out.write_int(HCLEN, 4)
+
+    # write codelengths for codelengths tree
     for length in codelengths_list:
         out.write_int(length, 3)
-    out.move(-out.pos)
-    for length in codelengths_list:
-        print(length, out.read(3))
+
+    return bytes(out.bytestream)
 
 def decompress(buf):
     reader = bitio.BitIO(buf)
@@ -254,7 +308,7 @@ def decompress(buf):
         elif BTYPE == 0b10:
             # compression with dynamic Huffman codes
             lit_len_tree, distance_tree = dynamic_tree(reader)
-            
+
             while True:
                 # read a literal or length
                 _type, value = read_literal_or_length(reader, lit_len_tree)
@@ -266,6 +320,7 @@ def decompress(buf):
                     # read a distance
                     length = value
                     distance = read_distance(reader, distance_tree)
+                    print("distance", distance, "length", length)
                     for _ in range(length):
                         result.append(result[-distance])
 
@@ -286,3 +341,8 @@ def decompress(buf):
             assert b == b1
 
             return bytes(result)
+
+if __name__ == "__main__":
+
+    for i in range(12, 27):
+        print(i, distance_to_code(i))
