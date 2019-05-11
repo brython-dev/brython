@@ -84,8 +84,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.2"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-05-11 14:00:36.913326"
-__BRYTHON__.timestamp=1557576036913
+__BRYTHON__.compiled_date="2019-05-11 14:16:19.834367"
+__BRYTHON__.timestamp=1557576979834
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","unicodedata","zlib"]
 ;
 
@@ -1612,7 +1612,9 @@ iterable.type=='expr' &&
 iterable.tree[0].type=='expr' &&
 iterable.tree[0].tree[0].type=='call'){var call=iterable.tree[0].tree[0]
 if(call.func.type=='id'){var func_name=call.func.value
-if(func_name=='range' && call.tree.length < 3){$range=call}}}
+if(func_name=='range' && call.tree.length < 3 &&
+call.tree.length > 0){
+$range=call}}}
 var new_nodes=[],pos=0
 var children=node.children
 var offset=1
@@ -7476,15 +7478,16 @@ if($B.eq(res,sub)){if(($B.gt(self.stop,self.start)&& $B.ge(other,self.start)
 && $B.gt(other,self.stop))){return fl}else{throw _b_.ValueError.$factory(_b_.str.$factory(other)+
 ' not in range')}}else{throw _b_.ValueError.$factory(_b_.str.$factory(other)+
 " not in range")}}
-range.$factory=function(){var $=$B.args("range",3,{start:null,stop:null,step:null},["start","stop","step"],arguments,{stop:null,step:null},null,null),start=$.start,stop=$.stop,step=$.step,safe
-if(stop===null && step===null){stop=$B.PyNumber_Index(start)
+range.$factory=function(){var $=$B.args("range",3,{start:null,stop:null,step:null},["start","stop","step"],arguments,{start:null,stop:null,step:null},null,null),start=$.start,stop=$.stop,step=$.step,safe
+if(stop===null && step===null){if(start==null){throw _b_.TypeError.$factory("range expected 1 arguments, got 0")}
+stop=$B.PyNumber_Index(start)
 safe=typeof stop==="number"
 return{__class__:range,start:0,stop:stop,step:1,$is_range:true,$safe:safe}}
 if(step===null){step=1}
 start=$B.PyNumber_Index(start)
 stop=$B.PyNumber_Index(stop)
 step=$B.PyNumber_Index(step)
-if(step==0){throw _b_.ValueError.$factory("range.$factory() arg 3 must not be zero")}
+if(step==0){throw _b_.ValueError.$factory("range arg 3 must not be zero")}
 safe=(typeof start=="number" && typeof stop=="number" &&
 typeof step=="number")
 return{__class__:range,start:start,stop:stop,step:step,$is_range:true,$safe:safe}}

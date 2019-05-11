@@ -257,12 +257,15 @@ range.index = function(self, other){
 range.$factory = function(){
     var $ = $B.args("range", 3, {start: null, stop: null, step: null},
         ["start", "stop", "step"],
-        arguments, {stop: null, step: null}, null, null),
+        arguments, {start: null, stop: null, step: null}, null, null),
         start = $.start,
         stop = $.stop,
         step = $.step,
         safe
     if(stop === null && step === null){
+        if(start == null){
+            throw _b_.TypeError.$factory("range expected 1 arguments, got 0")
+        }
         stop = $B.PyNumber_Index(start)
         safe = typeof stop === "number"
         return{__class__: range,
@@ -278,7 +281,7 @@ range.$factory = function(){
     stop = $B.PyNumber_Index(stop)
     step = $B.PyNumber_Index(step)
     if(step == 0){
-        throw _b_.ValueError.$factory("range.$factory() arg 3 must not be zero")
+        throw _b_.ValueError.$factory("range arg 3 must not be zero")
     }
     safe = (typeof start == "number" && typeof stop == "number" &&
         typeof step == "number")
@@ -395,7 +398,7 @@ slice.indices = function(self, length){
     var _step = (self.step == _b_.None)? 1 : self.step
     if(_step < 0){
         var _start = self.start, _stop = self.stop
-        _start = (_start == _b_.None)? len - 1 : 
+        _start = (_start == _b_.None)? len - 1 :
             (_start < 0)? _b_.max(-1, _start + len) : _b_.min(len - 1, self.start)
         _stop = (self.stop == _b_.None)? -1 :
             (_stop < 0)? _b_.max(-1, _stop + len) : _b_.min(len - 1, self.stop)

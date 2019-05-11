@@ -3235,7 +3235,8 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
             var call = iterable.tree[0].tree[0]
             if(call.func.type == 'id'){
                 var func_name = call.func.value
-                if(func_name == 'range' && call.tree.length < 3){
+                if(func_name == 'range' && call.tree.length < 3 &&
+                        call.tree.length > 0){ // issue 1104
                     $range = call
                 }
             }
