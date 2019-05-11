@@ -1741,7 +1741,7 @@ str.zfill = function(self, width){
 }
 
 str.$factory = function(arg, encoding, errors){
-    if(arg === undefined){console.log("undef"); return "<undefined>"}
+    if(arg === undefined){return ""}
     switch(typeof arg) {
         case "string":
             return str.__str__(arg)

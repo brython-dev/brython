@@ -241,4 +241,7 @@ assert 'xyz'.maketrans({'a': 'A'}) == {97: 'A'}
 assert 'xyz'.maketrans('abc', 'def', 'abd') == {97: None, 98: None, 99: 102,
                                                 100: None}
 
+# issue 1103
+assert str() == ""
+
 print("passed all tests...")
