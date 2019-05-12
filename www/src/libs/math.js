@@ -293,7 +293,13 @@ var _mod = {
          if(_b_.$isinf(_r)){throw OverflowError("math range error")}
          return float.$factory(_r)
     },
-    expm1: function(x){return float.$factory(Math.exp(float_check(x)) - 1)},
+    expm1: function(x){
+         if(_b_.$isninf(x)){return float.$factory(0)}
+         if(_b_.$isinf(x)){return float.$factory('inf')}
+         var _r = Math.expm1(float_check(x))
+         if(_b_.$isinf(_r)){throw OverflowError("math range error")}
+         return float.$factory(_r)
+    },
     //fabs: function(x){ return x>0?float.$factory(x):float.$factory(-x)},
     fabs: function(x){return _b_.$fabs(x)}, //located in py_float.js
     factorial: function(x) {

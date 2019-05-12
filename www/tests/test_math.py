@@ -158,4 +158,8 @@ assert math.gcd(234, 78) == 78
 # issue 1108
 assert math.copysign(1.0, -0.0) == -1.0
 
+# issue 1109
+assert math.expm1(1e-5) == 0.000010000050000166668
+
+
 print("passed all tests..")
