@@ -154,4 +154,8 @@ assert my_isclose((1 + 2j) ** 1j, (0.2291401859804338 + 0.23817011512167555j))
 
 # issue 924
 assert math.gcd(234, 78) == 78
+
+# issue 1108
+assert math.copysign(1.0, -0.0) == -1.0
+
 print("passed all tests..")

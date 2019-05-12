@@ -236,8 +236,8 @@ var _mod = {
     copysign: function(x,y) {
         var x1 = Math.abs(float_check(x))
         var y1 = float_check(y)
-        var sign = y1 ? y1 < 0 ? -1 : 1 : 1
-        if(isNegZero(y1)){sign = -1}   // probably need to work on adding a check for -0
+        var sign = Math.sign(y1)
+        sign = (sign == 1 || Object.is(sign, +0)) ? 1 : - 1
         return float.$factory(x1 * sign)
     },
     cos : function(x){return float.$factory(Math.cos(float_check(x)))},
