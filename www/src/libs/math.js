@@ -355,30 +355,48 @@ var _mod = {
         return new Number(res)
     },
     gamma: function(x){
-         //using code from http://stackoverflow.com/questions/3959211/fast-factorial-function-in-javascript
-         // Lanczos Approximation of the Gamma Function
-         // As described in Numerical Recipes in C (2nd ed. Cambridge University Press, 1992)
-         if(_b_.isinstance(x, int)){
-             if(i < 1){
-                 throw _b_.ValueError.$factory("math domain error")
-             }
-             var res = 1
-             for(var i = 1; i < x; i++){res *= i}
-             return new Number(res)
-         }
-         var y = float_check(x)
-         var z = y + 1
-         var d1 = Math.sqrt(2 * Math.PI) / z
+        if(_b_.isinstance(x, int)){
+            if(i < 1){
+                throw _b_.ValueError.$factory("math domain error")
+            }
+            var res = 1
+            for(var i = 1; i < x; i++){res *= i}
+            return new Number(res)
+        }
+        // Adapted from https://en.wikipedia.org/wiki/Lanczos_approximation
+        var p = [676.5203681218851,
+            -1259.1392167224028,
+            771.32342877765313,
+            -176.61502916214059,
+            12.507343278686905,
+            -0.13857109526572012,
+            9.9843695780195716e-6,
+            1.5056327351493116e-7
+            ]
 
-         var d2 = 1.000000000190015;
-         d2 +=  76.18009172947146 / (z + 1)
-         d2 += -86.50532032941677 / (z + 2)
-         d2 +=  24.01409824083091 / (z + 3)
-         d2 += -1.231739572450155 / (z + 4)
-         d2 +=  1.208650973866179E-3 / (z + 5)
-         d2 += -5.395239384953E-6 / (z + 6)
-
-         return d1 * d2 * Math.pow(z + 5.5, z + 0.5) * Math.exp(-(z + 5.5))
+        var EPSILON = 1e-07
+        function drop_imag(z){
+            if(Math.abs(z.imag) <= EPSILON){
+                z = z.real
+            }
+            return z
+        }
+        var z = x
+        if(z < 0.5){
+            var y = Math.PI / (Math.sin(Math.PI * z) * _mod.gamma(1-z)) // Reflection formula
+        }else{
+            z -= 1
+            var x = 0.99999999999980993,
+                i = 0
+            for(var i = 0, len = p.length; i < len; i++){
+                var pval = p[i]
+                x += pval / (z + i + 1)
+            }
+            var t = z + p.length - 0.5,
+                sq = Math.sqrt(2 * Math.PI),
+                y = sq * Math.pow(t, (z + 0.5)) * Math.exp(-t) * x
+        }
+        return drop_imag(y)
     },
     gcd: function(){
         var $ = $B.args("gcd", 2, {a: null, b: null}, ['a', 'b'],
