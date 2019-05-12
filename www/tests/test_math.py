@@ -164,4 +164,9 @@ assert math.expm1(1e-5) == 0.000010000050000166668
 # issue 1110
 assert math.log10(1000) == 3.0
 
+# issue 1111
+log1p = math.log1p(1e-5)
+assert (log1p == 0.00000999995000033333 or # CPython, Edge
+        log1p == 0.000009999950000333332) # Firefox, Chrome
+        
 print("passed all tests..")

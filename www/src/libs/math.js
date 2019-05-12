@@ -447,7 +447,7 @@ var _mod = {
          if(base === undefined){return float.$factory(Math.log(x1))}
          return float.$factory(Math.log(x1) / Math.log(float_check(base)))
     },
-    log1p: function(x){return float.$factory(Math.log(1.0 + float_check(x)))},
+    log1p: function(x){return float.$factory(Math.log1p(float_check(x)))},
     log2: function(x){
         if(isNaN(x)){return float.$factory('nan')}
         if(_b_.$isninf(x)) {throw ValueError('')}
