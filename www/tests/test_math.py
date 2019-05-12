@@ -168,5 +168,8 @@ assert math.log10(1000) == 3.0
 log1p = math.log1p(1e-5)
 assert (log1p == 0.00000999995000033333 or # CPython, Edge
         log1p == 0.000009999950000333332) # Firefox, Chrome
-        
+
+# issue 1112
+assert math.gamma(2) == 1.0
+
 print("passed all tests..")

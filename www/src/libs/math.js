@@ -358,6 +358,14 @@ var _mod = {
          //using code from http://stackoverflow.com/questions/3959211/fast-factorial-function-in-javascript
          // Lanczos Approximation of the Gamma Function
          // As described in Numerical Recipes in C (2nd ed. Cambridge University Press, 1992)
+         if(_b_.isinstance(x, int)){
+             if(i < 1){
+                 throw _b_.ValueError.$factory("math domain error")
+             }
+             var res = 1
+             for(var i = 1; i < x; i++){res *= i}
+             return new Number(res)
+         }
          var y = float_check(x)
          var z = y + 1
          var d1 = Math.sqrt(2 * Math.PI) / z
