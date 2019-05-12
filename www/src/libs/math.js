@@ -456,7 +456,7 @@ var _mod = {
         return float.$factory(Math.log(x1) / Math.LN2)
     },
     log10: function(x) {
-        return float.$factory(Math.log(float_check(x)) / Math.LN10)
+        return float.$factory(Math.log10(float_check(x)))
     },
     modf: function(x) {
        if(_b_.$isninf(x)){
