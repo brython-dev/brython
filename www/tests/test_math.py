@@ -172,4 +172,7 @@ assert (log1p == 0.00000999995000033333 or # CPython, Edge
 # issue 1112
 assert math.gamma(2) == 1.0
 
+# issue 1113
+assert math.lgamma(2) == 0.0
+
 print("passed all tests..")

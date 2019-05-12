@@ -434,21 +434,7 @@ var _mod = {
     isnan: function(x){return isNaN(float_check(x))},
     ldexp: function(x, i){return _b_.$ldexp(x, i)},   //located in py_float.js
     lgamma: function(x){
-         // see gamma function for sources
-         var y = float_check(x),
-             z = y + 1,
-             d1 = Math.sqrt(2 * Math.PI) / z
-
-         var d2 = 1.000000000190015
-         d2 +=  76.18009172947146 / (z + 1)
-         d2 += -86.50532032941677 / (z + 2)
-         d2 +=  24.01409824083091 / (z + 3)
-         d2 += -1.231739572450155 / (z + 4)
-         d2 +=  1.208650973866179E-3 / (z + 5)
-         d2 += -5.395239384953E-6 / (z + 6)
-
-         return float.$factory(Math.log(Math.abs(d1 * d2 *
-             Math.pow(z + 5.5, z + 0.5) * Math.exp(-(z + 5.5)))))
+        return new Number(Math.log(Math.abs(_mod.gamma(x))))
     },
     log: function(x, base){
          var x1 = float_check(x)
