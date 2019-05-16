@@ -9,9 +9,9 @@ class BitIO:
     def pos(self):
         return self.bytenum * 8 + self.bitnum
 
-    def read(self, nb, order="lsf"):
+    def read(self, nb, order="lsf", trace=False):
         result = 0
-        coef = 1 if order == "lsf" else 2 ** nb - 1
+        coef = 1 if order == "lsf" else 2 ** (nb - 1)
         for _ in range(nb):
             if self.bitnum == 8:
                 if self.bytenum == len(self.bytestream) - 1:
@@ -19,6 +19,8 @@ class BitIO:
                 self.bytenum += 1
                 self.bitnum = 0
             mask = 2 ** self.bitnum
+            if trace:
+                print("bit", int(bool(mask & self.bytestream[self.bytenum])))
             result += coef * bool(mask & self.bytestream[self.bytenum])
             self.bitnum += 1
             if order == "lsf":
@@ -47,6 +49,13 @@ class BitIO:
                 bitpos += 8
             self.bitnum = bitpos
 
+    def show(self):
+        for x in self.bytestream:
+            s = str(bin(x))[2:]
+            s = "0" * (8 - len(s)) + s
+            print(s, end=" ")
+        print()
+
     def write(self, *bits):
         for bit in bits:
             if not self.bytestream:
@@ -66,7 +75,7 @@ class BitIO:
             self.bytestream[self.bytenum] = byte
             self.bitnum += 1
 
-    def write_int(self, value, nb):
+    def write_int(self, value, nb, order="lsf"):
         """Write integer on nb bits."""
         if value >= 2 ** nb:
             raise ValueError("can't write value on {} bits".format(nb))
@@ -74,9 +83,12 @@ class BitIO:
         while value:
             bits.append(value & 1)
             value >>= 1
+        # pad with 0's
+        bits = bits + [0] * (nb - len(bits))
+        if order != "lsf":
+            bits.reverse()
+        assert len(bits) == nb
         self.write(*bits)
-        for _ in range(nb - len(bits)):
-            self.write(0)
 
 if __name__ == "__main__":
     text = """Pleurez, doux alcyons, ô vous, oiseaux sacrés,

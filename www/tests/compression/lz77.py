@@ -1,7 +1,7 @@
 class LZ77:
 
     def compress(self, text, size, min_len=3):
-        
+
         pos = 0
         while pos < len(text):
             sequence = text[pos:pos + min_len]
@@ -26,7 +26,7 @@ class LZ77:
                     match2 = text[pos + 1 : pos + length + 2]
                     longer_buf_pos = buf.rfind(match2)
                     if longer_buf_pos > -1:
-                        # found longer match : emit current byte as literal 
+                        # found longer match : emit current byte as literal
                         # and move 1 byte forward
                         longer_match = True
                         char = text[pos]
@@ -40,6 +40,7 @@ class LZ77:
                     else:
                         pos += length
                         yield text[pos]
+                        pos += 1
             else:
                 char = text[pos]
                 yield char

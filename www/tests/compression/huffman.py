@@ -1,9 +1,10 @@
+class ResizeError(Exception):
+    pass
+
 def codelengths_from_frequencies(freqs):
     freqs = sorted(freqs.items(),
-        key=lambda item: item[1], reverse=True)
-
+        key=lambda item: (item[1], -item[0]), reverse=True)
     nodes = [Node(char=key, weight=value) for (key, value) in freqs]
-
     while len(nodes) > 1:
         right, left = nodes.pop(), nodes.pop()
         node = Node(weight=right.weight + left.weight)
@@ -11,12 +12,13 @@ def codelengths_from_frequencies(freqs):
         if not nodes:
             nodes.append(node)
         else:
-            pos = len(nodes) - 1
-            while pos and nodes[pos].weight < node.weight:
-                pos -= 1
+            pos = 0
+            while nodes[pos].weight > node.weight:
+                pos += 1
             nodes.insert(pos, node)
 
-    tree = Tree(nodes[0])
+    top = nodes[0]
+    tree = Tree(top)
     tree.reduce(15)
 
     codes = tree.codes()
@@ -25,7 +27,9 @@ def codelengths_from_frequencies(freqs):
     code_items.sort(key=lambda item:(len(item[1]), item[0]))
     return [(car, len(value)) for car, value in code_items]
 
-def normalized(codelengths):
+def normalized(codelengths, trace=False):
+    if trace:
+        print("normalize")
     car, codelength = codelengths[0]
     value = 0
     codes = {car: "0" * codelength}
@@ -41,6 +45,8 @@ def normalized(codelengths):
         assert len(bvalue) == nbits
         codes[newcar] = bvalue
 
+    if trace:
+        print("codes after normalized", codes)
     return codes
 
 class Tree:
@@ -102,7 +108,7 @@ class Tree:
             else:
                 up_level -= 1
         if up_level == 0:
-            raise Exception("cannot resize tree")
+            raise ResizeError
 
     def nodes_at(self, level, top=None):
         """Return list of all the nodes below top at specified level."""
@@ -137,23 +143,30 @@ class Tree:
 
 class Node:
 
-    def __init__(self, char=None, weight=0):
+    def __init__(self, char=None, weight=0, level=0):
         self.char = char
         self.is_leaf = char is not None
-        self.level = 0
+        self.level = level
         self.weight = weight
+        self.height = 0
 
     def add(self, children):
         self.children = children
         for child in self.children:
             child.parent = self
             child.level = self.level + 1
+        self.height = max(self.height, children[0].height + 1,
+            children[1].height + 1)
+        node = self
+        while hasattr(node, "parent"):
+            node.parent.height = max(node.parent.height, node.height + 1)
+            node = node.parent
 
     def __repr__(self):
         if self.is_leaf:
-            return f'Leaf({self.char} level {self.level})'
+            return f'{chr(self.char)!r}'
         else:
-            return f'Node(level {self.level})'
+            return f'{self.children}'
 
 
 class Compresser:
@@ -164,7 +177,7 @@ class Compresser:
                 type(text).__name__ + "'")
         self.text = text
 
-        freqs = {256: 1}
+        freqs = {} #256: 1}
         for car in self.text:
             freqs[car] = freqs.get(car, 0) + 1
 

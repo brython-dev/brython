@@ -5,11 +5,14 @@ import lz77
 class Error(Exception):
     pass
 
-def tree_from_codelengths(codelengths):
+def tree_from_codelengths(codelengths, trace=False):
     lengths = list(codelengths.items())
     # remove items with value = 0
     lengths = [x for x in lengths if x[1] > 0]
     lengths.sort(key=lambda item:(item[1], item[0]))
+    if trace:
+        codes = huffman.normalized(lengths)
+        print("codes", codes)
     decomp = huffman.Decompresser('', lengths)
     return decomp.root
 
@@ -25,30 +28,51 @@ for car in range(280, 288):
 
 fixed_lit_len_tree = tree_from_codelengths(codelengths)
 
-def bit_reader(bytestream):
-    """Generator of bits from bytestream."""
-    mask = 1
-    for byte in bytestream:
-        while mask < 256:
-            yield int(bool(byte & mask))
-            mask <<= 1
-        mask = 1
-
-def extra_bits(reader, nb, order="lsf"):
-    """Read nb bits from reader and return the result as an integer."""
-    result = 0
-    if order == "msf":
-        coef = 2 ** (nb - 1)
-        for _ in range(nb):
-            result += coef * next(reader)
-            coef //= 2
-    else:
-        coef = 1
-        for _ in range(nb):
-            bit = next(reader)
-            result += coef * bit
-            coef *= 2
-    return result
+def cl_encode(lengths):
+    """lengths is a list of (char, nb) tuples. Return a list of lengths
+    encoded as specified in section 3.2.7"""
+    dic = dict(lengths)
+    items = [dic.get(i, 0) for i in range(max(dic) + 1)]
+    """
+    for length in range(max(items) + 1):
+        print(length, [chr(i) if i < 256 else i for i, v in enumerate(items)
+            if v == length])
+    """
+    pos = 0
+    while pos < len(items):
+        if items[pos] == 0:
+            # count repetitions of 0
+            i = pos + 1
+            while i < len(items) and items[i] == 0:
+                i += 1
+            if i - pos < 3:
+                for i in range(pos, i):
+                    yield items[i]
+                pos = i + 1
+            else:
+                repeat = i - pos
+                if repeat < 11:
+                    yield (17, repeat - 3)
+                else:
+                    yield (18, repeat - 11)
+                pos = i
+        else:
+            item = items[pos]
+            yield item
+            i = pos + 1
+            while i < len(items) and items[i] == item:
+                i += 1
+            repeat = i - pos - 1 # number of repetitions after 1st occurrence
+            if repeat < 3:
+                for i in range(repeat):
+                    yield item
+            else:
+                nb = repeat - 3
+                while nb > 3:
+                    yield (16, 3)
+                    nb -= 3
+                yield (16, nb)
+            pos += repeat + 1
 
 def read_codelengths(reader, root, num):
     """Read the num codelengths from the bits in reader, using the Huffman
@@ -88,15 +112,18 @@ def dynamic_tree(reader):
     alphabet = (16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1,
         15)
     clen = {}
+    c = []
     for i, length in zip(range(HCLEN + 4), alphabet):
-        clen[length] = reader.read(3)
-
+        c.append(reader.read(3))
+        clen[length] = c[-1] #reader.read(3)
+    print("cl bits", c)
+    print("decompress, clen", [(length, v) for length, v in clen.items()])
     # tree used to decode code lengths
-    clen_root = tree_from_codelengths(clen)
+    clen_root = tree_from_codelengths(clen, True)
 
     # code lengths for the literal / length alphabet
     lit_len = read_codelengths(reader, clen_root, HLIT + 257)
-    print("decompress, lengths", lit_len[257:])
+    print("decompress, lit_len\n", lit_len)
     lit_len_tree = tree_from_codelengths(dict(enumerate(lit_len)))
 
     # code lengths for the distances alphabet
@@ -230,37 +257,62 @@ def compress(source, window_size=32 * 1024):
     lz = lz77.LZ77()
     lit_len_count = {}
     distance_count = {}
+    store = []
     for item in lz.compress(source, window_size):
         if isinstance(item, tuple):
             length, distance = item
-            print("compress, distance", distance, "length", length)
-            length_code, extra, nb = length_to_code(length)
+            length_code, *extra_length = length_to_code(length)
             lit_len_count[length_code] = lit_len_count.get(length_code, 0) + 1
-            distance_code, extra, nb = distance_to_code(distance)
+            distance_code, *extra_dist = distance_to_code(distance)
             distance_count[distance_code] = \
                 distance_count.get(distance_code, 0) + 1
+            store.append((length_code, extra_length, distance_code,
+                          extra_dist))
         else:
             literal = item
             lit_len_count[literal] = lit_len_count.get(literal, 0) + 1
+            store.append(literal)
+
+    store.append(256)
+
+    lit_len_count[256] = 1 # end of block
 
     lit_len_codelengths = huffman.codelengths_from_frequencies(lit_len_count)
-    print("compress", [item for item in lit_len_codelengths if item[0]>256])
-    HLIT = max(car for (car, _) in lit_len_codelengths) - 257
+    lit_len_codes = huffman.normalized(lit_len_codelengths)
+    print("compress, lit len codes\n",
+        [len(lit_len_codes.get(i, '')) for i in range(max(lit_len_codes) + 1)])
+
+    coded_lit_len = list(cl_encode(lit_len_codelengths))
+    print("coded lit len", coded_lit_len)
+    HLIT = 1 + max(car for (car, _) in lit_len_codelengths) - 257
+
     distance_codelengths = huffman.codelengths_from_frequencies(distance_count)
-    HDIST = max(dist for (dist, _) in distance_codelengths) - 1
+    distance_codes = huffman.normalized(distance_codelengths)
+    coded_distance = list(cl_encode(distance_codelengths))
+    print("coded distance", coded_distance)
+
     codelengths_count = {}
-    for car, length in lit_len_codelengths + distance_codelengths:
-        codelengths_count[length] = codelengths_count.get(length, 0) - 1
+    for coded in coded_lit_len, coded_distance:
+        for item in coded:
+            length = item[0] if isinstance(item, tuple) else item
+            codelengths_count[length] = codelengths_count.get(length, 0) + 1
+
+    print("codelength count", codelengths_count)
+
+    HDIST = 1 + max(dist for (dist, _) in distance_codelengths) - 1
     codelengths_codelengths = huffman.codelengths_from_frequencies(
         codelengths_count)
-    HCLEN = max(length for (length, _) in codelengths_codelengths) - 4
     codelengths_dict = dict(codelengths_codelengths)
+    cl_codes = huffman.normalized(codelengths_codelengths)
+    print("cl codes", cl_codes)
 
     alphabet = (16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1,
         15)
     codelengths_list = [codelengths_dict.get(car, 0) for car in alphabet]
     while codelengths_list[-1] == 0:
         codelengths_list.pop()
+    print("codelength list", codelengths_list)
+    HCLEN = len(codelengths_list) - 4
 
     out = bitio.BitIO()
     out.write_int(8, 4) # compression method = 8
@@ -270,15 +322,57 @@ def compress(source, window_size=32 * 1024):
     out.write(1) # BFINAL = 1
     out.write(0, 1) # BTYPE = dynamic Huffman codes
     print("compress, HLIT", HLIT, "HDIST", HDIST, "HCLEN", HCLEN)
-    input()
 
     out.write_int(HLIT, 5)
     out.write_int(HDIST, 5)
     out.write_int(HCLEN, 4)
 
     # write codelengths for codelengths tree
-    for length in codelengths_list:
+    for length, car in zip(codelengths_list, alphabet):
         out.write_int(length, 3)
+
+    # write lit_len and distance tables
+    for item in coded_lit_len + coded_distance:
+        if isinstance(item, tuple):
+            length, extra = item
+            code = cl_codes[length]
+            value, nbits = int(code, 2), len(code)
+            out.write_int(value, nbits, order="msf")
+            if length == 16:
+                out.write_int(extra, 2)
+            elif length == 17:
+                out.write_int(extra, 3)
+            elif length == 18:
+                out.write_int(extra, 7)
+        else:
+            code = cl_codes[item]
+            value, nbits = int(code, 2), len(code)
+            out.write_int(value, nbits, order="msf")
+            
+    for item in store:
+        if isinstance(item, tuple):
+            length, extra_length, distance, extra_distance = item
+            # length code
+            code = lit_len_codes[length]
+            value, nb = int(code, 2), len(code)
+            out.write_int(value, nb)
+            # extra bits for length
+            value, nb = extra_length
+            if nb:
+                out.write_int(value, nb)
+            # distance
+            code = distance_codes[distance]
+            value, nb = int(code, 2), len(code)
+            out.write_int(value, nb)
+            # extra bits for distance
+            value, nb = extra_distance
+            if nb:
+                out.write_int(value, nb)
+        else:
+            literal = item
+            code = lit_len_codes[item]
+            value, nb = int(code, 2), len(code)
+            out.write_int(value, nb)
 
     return bytes(out.bytestream)
 
@@ -320,7 +414,6 @@ def decompress(buf):
                     # read a distance
                     length = value
                     distance = read_distance(reader, distance_tree)
-                    print("distance", distance, "length", length)
                     for _ in range(length):
                         result.append(result[-distance])
 
@@ -344,5 +437,17 @@ def decompress(buf):
 
 if __name__ == "__main__":
 
-    for i in range(12, 27):
-        print(i, distance_to_code(i))
+    lengths = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0,
+        5, 0, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        8, 0, 7, 0, 0, 0, 0, 0, 0, 7, 8, 0, 7, 7, 0, 0, 0, 6, 8, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 4, 7, 5, 6, 4, 6, 0, 6, 5, 8, 0, 4, 7, 4, 5, 5,
+        0, 5, 4, 5, 5, 6, 0, 7, 6, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 0,
+        0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 5, 6, 6, 7, 7, 7, 7, 0, 0, 0, 7]
+    x = zip(range(len(lengths)), lengths)
+    print(list(cl_encode(x)))
