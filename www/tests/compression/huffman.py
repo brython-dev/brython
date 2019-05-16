@@ -27,9 +27,7 @@ def codelengths_from_frequencies(freqs):
     code_items.sort(key=lambda item:(len(item[1]), item[0]))
     return [(car, len(value)) for car, value in code_items]
 
-def normalized(codelengths, trace=False):
-    if trace:
-        print("normalize")
+def normalized(codelengths):
     car, codelength = codelengths[0]
     value = 0
     codes = {car: "0" * codelength}
@@ -45,8 +43,6 @@ def normalized(codelengths, trace=False):
         assert len(bvalue) == nbits
         codes[newcar] = bvalue
 
-    if trace:
-        print("codes after normalized", codes)
     return codes
 
 class Tree:
@@ -177,7 +173,7 @@ class Compresser:
                 type(text).__name__ + "'")
         self.text = text
 
-        freqs = {} #256: 1}
+        freqs = {}
         for car in self.text:
             freqs[car] = freqs.get(car, 0) + 1
 
