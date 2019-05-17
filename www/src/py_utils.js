@@ -768,10 +768,7 @@ $B.$is_member = function(item, _set){
                 var elt = _b_.next(_iter)
                 if($B.rich_comp("__eq__", elt, item)){return true}
             }catch(err){
-                if(err.__class__ === _b_.StopIteration){
-                    return false
-                }
-                throw err
+                return false
             }
         }
     }
@@ -889,9 +886,10 @@ $B.make_iterator_class = function(name){
         },
 
         __next__: function(self){
-            if(typeof self.len_func == "function" && 
+            if(typeof self.len_func == "function" &&
                     self.len_func() != self.len){
-                throw _b_.RuntimeError.$factory("dictionary changed size during iteration")
+                throw _b_.RuntimeError.$factory(
+                    "dictionary changed size during iteration")
             }
             self.counter++
             if(self.counter < self.items.length){

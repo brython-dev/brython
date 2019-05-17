@@ -98,4 +98,14 @@ assert not (main == diff)
 assert diff == {A(): 1}
 assert not (main == {A(): 1})
 
+# membership doesn't raise exception "dict changed size during iteration"
+# cf. issue 1114
+class X:
+    def __eq__(self, other):
+        d.clear()
+        return NotImplemented
+
+d = {0: set()}
+assert not (0, X()) in d.items()
+
 print("passed all tests..")

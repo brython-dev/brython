@@ -84,8 +84,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.2"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-05-17 21:32:05.799261"
-__BRYTHON__.timestamp=1558121525799
+__BRYTHON__.compiled_date="2019-05-17 22:11:29.749952"
+__BRYTHON__.timestamp=1558123889749
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","unicodedata","zlib"]
 ;
 
@@ -5866,8 +5866,7 @@ if(f){return f(item)}
 try{_iter=_b_.iter(_set)}
 catch(err){}
 if(_iter){while(1){try{var elt=_b_.next(_iter)
-if($B.rich_comp("__eq__",elt,item)){return true}}catch(err){if(err.__class__===_b_.StopIteration){return false}
-throw err}}}
+if($B.rich_comp("__eq__",elt,item)){return true}}catch(err){return false}}}
 try{f=$B.$getattr(_set,"__getitem__")}
 catch(err){throw _b_.TypeError.$factory("'"+$B.class_name(_set)+
 "' object is not iterable")}
@@ -5895,8 +5894,9 @@ $B.make_iterator_class=function(name){
 var klass={__class__:_b_.type,__mro__:[_b_.object],$factory:function(items){return{
 __class__:klass,__dict__:_b_.dict.$factory(),counter:-1,items:items,len:items.length}},$infos:{__name__:name},$is_class:true,__iter__:function(self){self.counter=self.counter===undefined ?-1 :self.counter
 self.len=self.items.length
-return self},__len__:function(self){return self.items.length},__next__:function(self){if(typeof self.len_func=="function" && 
-self.len_func()!=self.len){throw _b_.RuntimeError.$factory("dictionary changed size during iteration")}
+return self},__len__:function(self){return self.items.length},__next__:function(self){if(typeof self.len_func=="function" &&
+self.len_func()!=self.len){throw _b_.RuntimeError.$factory(
+"dictionary changed size during iteration")}
 self.counter++
 if(self.counter < self.items.length){return self.items[self.counter]}
 throw _b_.StopIteration.$factory("StopIteration")},__reduce_ex__:function(self,protocol){return $B.fast_tuple([_b_.iter,_b_.tuple.$factory([self.items])])}}
