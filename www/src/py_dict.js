@@ -7,6 +7,56 @@ var object = _b_.object,
     str_hash = _b_.str.__hash__,
     $N = _b_.None
 
+var set_ops = ["eq", "add", "sub", "and", "or", "xor", "le", "lt", "ge", "gt"]
+
+$B.make_view = function(name, set_like){
+    var klass = $B.make_class(name, function(items){
+        return {
+            __class__: klass,
+            __dict__: _b_.dict.$factory(),
+            counter: -1,
+            items: items,
+            len: items.length
+        }
+    })
+
+    if(set_like){
+        for(var i = 0, len = set_ops.length; i < len; i++){
+            var op = "__" + set_ops[i] + "__"
+            klass[op] = (function(op){
+                return function(self, other){
+                    // compare set of items to other
+                    return _b_.set[op](_b_.set.$factory(self),
+                        _b_.set.$factory(other))
+                }
+            })(op)
+        }
+    }
+    klass.__iter__ = function(self){
+        var it = klass.$iterator.$factory(self.items)
+        it.len_func = self.len_func
+        return it
+    }
+    klass.__repr__ = function(self){
+        return klass.$infos.__name__ + '(' + _b_.repr(self.items) + ')'
+    }
+
+    return klass
+}
+
+// Special version of __next__ for iterators on dict keys / values / items.
+// Checks that the dictionary size didn't change during iteration.
+function dict_iterator_next(self){
+    if(self.len_func() != self.len){
+        throw RuntimeError.$factory("dictionary changed size during iteration")
+    }
+    self.counter++
+    if(self.counter < self.items.length){
+        return self.items[self.counter]
+    }
+    throw _b_.StopIteration.$factory("StopIteration")
+}
+
 var dict = {
     __class__: _b_.type,
     __mro__: [object],
@@ -425,7 +475,7 @@ dict.__init__ = function(self, first, second){
 }
 
 dict.__iter__ = function(self) {
-    return dict.$$keys(self)
+    return _b_.iter(dict.$$keys(self))
 }
 
 dict.__len__ = function(self) {
@@ -639,15 +689,8 @@ dict.get = function(){
     }
 }
 
-var dict_items = $B.make_iterator_class("dict_items")
-
-dict_items.__eq__ = function(self, other){
-    // compare set of items to other
-    return $B.rich_comp("__eq__", _b_.set.$factory(self),
-        _b_.set.$factory(other))
-}
-
-dict_items.__next__ = dict_iterator_next
+var dict_items = $B.make_view("dict_items", true)
+dict_items.$iterator = $B.make_iterator_class("dict_itemiterator")
 
 dict.items = function(self){
     if(arguments.length > 1){
@@ -660,15 +703,8 @@ dict.items = function(self){
     return it
 }
 
-var dict_keys = $B.make_iterator_class("dict_keys")
-
-dict_keys.__eq__ = function(self, other){
-    // compare set of items to other
-    return $B.rich_comp("__eq__", _b_.set.$factory(self),
-        _b_.set.$factory(other))
-}
-
-dict_keys.__next__ = dict_iterator_next
+var dict_keys = $B.make_view("dict_keys", true)
+dict_keys.$iterator = $B.make_iterator_class("dict_keyiterator")
 
 dict.$$keys = function(self){
     if(arguments.length > 1){
@@ -705,7 +741,7 @@ dict.pop = function(){
 
 dict.popitem = function(self){
     try{
-        var itm = _b_.next(dict.items(self))
+        var itm = _b_.next(_b_.iter(dict.items(self)))
         dict.__delitem__(self, itm[0])
         return _b_.tuple.$factory(itm)
     }catch(err) {
@@ -787,9 +823,8 @@ dict.update = function(self){
     return $N
 }
 
-var dict_values = $B.make_iterator_class("dict_values")
-
-dict_values.__next__ = dict_iterator_next
+var dict_values = $B.make_view("dict_values")
+dict_values.$iterator = $B.make_iterator_class("dict_valueiterator")
 
 dict.values = function(self){
     if(arguments.length > 1){

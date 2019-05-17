@@ -84,8 +84,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.2"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-05-12 23:45:49.022187"
-__BRYTHON__.timestamp=1557697549022
+__BRYTHON__.compiled_date="2019-05-17 21:32:05.799261"
+__BRYTHON__.timestamp=1558121525799
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","unicodedata","zlib"]
 ;
 
@@ -5893,11 +5893,13 @@ $B.stdout=$io.$factory()
 $B.stdin={__class__:$io,__original__:true,closed:false,len:1,pos:0,read:function(){return ""},readline:function(){return ""}}
 $B.make_iterator_class=function(name){
 var klass={__class__:_b_.type,__mro__:[_b_.object],$factory:function(items){return{
-__class__:klass,counter:-1,items:items,len:items.length}},$infos:{__name__:name},$is_class:true,__iter__:function(self){self.counter=-1
+__class__:klass,__dict__:_b_.dict.$factory(),counter:-1,items:items,len:items.length}},$infos:{__name__:name},$is_class:true,__iter__:function(self){self.counter=self.counter===undefined ?-1 :self.counter
 self.len=self.items.length
-return self},__len__:function(self){return self.items.length},__next__:function(self){self.counter++
+return self},__len__:function(self){return self.items.length},__next__:function(self){if(typeof self.len_func=="function" && 
+self.len_func()!=self.len){throw _b_.RuntimeError.$factory("dictionary changed size during iteration")}
+self.counter++
 if(self.counter < self.items.length){return self.items[self.counter]}
-throw _b_.StopIteration.$factory("StopIteration")}}
+throw _b_.StopIteration.$factory("StopIteration")},__reduce_ex__:function(self,protocol){return $B.fast_tuple([_b_.iter,_b_.tuple.$factory([self.items])])}}
 $B.set_func_names(klass,"builtins")
 return klass}
 function $err(op,klass,other){var msg="unsupported operand type(s) for "+op+": '"+
@@ -6612,8 +6614,7 @@ try{$B.$getattr(res,'__next__')}
 catch(err){if(isinstance(err,_b_.AttributeError)){throw _b_.TypeError.$factory(
 "iter() returned non-iterator of type '"+
 $B.class_name(res)+"'")}}
-return res}else{console.log("iter with sentinel")
-return callable_iterator.$factory(obj,sentinel)}}
+return res}else{return callable_iterator.$factory(obj,sentinel)}}
 function iter(){
 var $=$B.args('iter',1,{obj:null},['obj'],arguments,{},'args','kw'),sentinel
 if($.args.length > 0){var sentinel=$.args[0]}
@@ -11601,6 +11602,21 @@ return elts}})(__BRYTHON__)
 ;(function($B){var bltns=$B.InjectBuiltins()
 eval(bltns)
 var object=_b_.object,str_hash=_b_.str.__hash__,$N=_b_.None
+var set_ops=["eq","add","sub","and","or","xor","le","lt","ge","gt"]
+$B.make_view=function(name,set_like){var klass=$B.make_class(name,function(items){return{
+__class__:klass,__dict__:_b_.dict.$factory(),counter:-1,items:items,len:items.length}})
+if(set_like){for(var i=0,len=set_ops.length;i < len;i++){var op="__"+set_ops[i]+"__"
+klass[op]=(function(op){return function(self,other){
+return _b_.set[op](_b_.set.$factory(self),_b_.set.$factory(other))}})(op)}}
+klass.__iter__=function(self){var it=klass.$iterator.$factory(self.items)
+it.len_func=self.len_func
+return it}
+klass.__repr__=function(self){return klass.$infos.__name__+'('+_b_.repr(self.items)+')'}
+return klass}
+function dict_iterator_next(self){if(self.len_func()!=self.len){throw RuntimeError.$factory("dictionary changed size during iteration")}
+self.counter++
+if(self.counter < self.items.length){return self.items[self.counter]}
+throw _b_.StopIteration.$factory("StopIteration")}
 var dict={__class__:_b_.type,__mro__:[object],$infos:{__module__:"builtins",__name__:"dict"},$is_class:true,$native:true}
 function to_list(d,ix){var items=[],item
 if(d.$jsobj){items=[]
@@ -11755,7 +11771,7 @@ default:
 si(self,attr,kw[attr])
 break}}
 return $N}
-dict.__iter__=function(self){return dict.$$keys(self)}
+dict.__iter__=function(self){return _b_.iter(dict.$$keys(self))}
 dict.__len__=function(self){var _count=0
 if(self.$jsobj){for(var attr in self.$jsobj){if(attr.charAt(0)!="$"){_count++}}
 return _count}
@@ -11834,19 +11850,15 @@ dict.get=function(){var $=$B.args("get",3,{self:null,key:null,_default:null},["s
 try{return dict.__getitem__($.self,$.key)}
 catch(err){if(_b_.isinstance(err,_b_.KeyError)){return $._default}
 else{throw err}}}
-var dict_items=$B.make_iterator_class("dict_items")
-dict_items.__eq__=function(self,other){
-return $B.rich_comp("__eq__",_b_.set.$factory(self),_b_.set.$factory(other))}
-dict_items.__next__=dict_iterator_next
+var dict_items=$B.make_view("dict_items",true)
+dict_items.$iterator=$B.make_iterator_class("dict_itemiterator")
 dict.items=function(self){if(arguments.length > 1){var _len=arguments.length-1,_msg="items() takes no arguments ("+_len+" given)"
 throw _b_.TypeError.$factory(_msg)}
 var it=dict_items.$factory(to_list(self))
 it.len_func=function(){return dict.__len__(self)}
 return it}
-var dict_keys=$B.make_iterator_class("dict_keys")
-dict_keys.__eq__=function(self,other){
-return $B.rich_comp("__eq__",_b_.set.$factory(self),_b_.set.$factory(other))}
-dict_keys.__next__=dict_iterator_next
+var dict_keys=$B.make_view("dict_keys",true)
+dict_keys.$iterator=$B.make_iterator_class("dict_keyiterator")
 dict.$$keys=function(self){if(arguments.length > 1){var _len=arguments.length-1,_msg="keys() takes no arguments ("+_len+" given)"
 throw _b_.TypeError.$factory(_msg)}
 var it=dict_keys.$factory(to_list(self,0))
@@ -11858,7 +11870,7 @@ dict.__delitem__(self,key)
 return res}catch(err){if(err.__class__===_b_.KeyError){if(_default !==missing){return _default}
 throw err}
 throw err}}
-dict.popitem=function(self){try{var itm=_b_.next(dict.items(self))
+dict.popitem=function(self){try{var itm=_b_.next(_b_.iter(dict.items(self)))
 dict.__delitem__(self,itm[0])
 return _b_.tuple.$factory(itm)}catch(err){if(err.__class__==_b_.StopIteration){throw KeyError.$factory("'popitem(): dictionary is empty'")}}}
 dict.setdefault=function(){var $=$B.args("setdefault",3,{self:null,key:null,_default:null},["self","key","_default"],arguments,{_default:$N},null,null),self=$.self,key=$.key,_default=$._default
@@ -11887,8 +11899,8 @@ i++}}}
 $copy_dict(self,kw)
 self.$version++
 return $N}
-var dict_values=$B.make_iterator_class("dict_values")
-dict_values.__next__=dict_iterator_next
+var dict_values=$B.make_view("dict_values")
+dict_values.$iterator=$B.make_iterator_class("dict_valueiterator")
 dict.values=function(self){if(arguments.length > 1){var _len=arguments.length-1,_msg="values() takes no arguments ("+_len+" given)"
 throw _b_.TypeError.$factory(_msg)}
 var it=dict_values.$factory(to_list(self,1))

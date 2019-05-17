@@ -1413,7 +1413,6 @@ $B.$iter = function(obj, sentinel){
         }
         return res
     }else{
-        console.log("iter with sentinel")
         return callable_iterator.$factory(obj, sentinel)
     }
 }

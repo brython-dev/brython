@@ -867,6 +867,7 @@ $B.make_iterator_class = function(name){
         $factory: function(items){
             return {
                 __class__: klass,
+                __dict__: _b_.dict.$factory(),
                 counter: -1,
                 items: items,
                 len: items.length
@@ -878,7 +879,7 @@ $B.make_iterator_class = function(name){
         $is_class: true,
 
         __iter__: function(self){
-            self.counter = -1
+            self.counter = self.counter === undefined ? -1 : self.counter
             self.len = self.items.length
             return self
         },
@@ -888,11 +889,19 @@ $B.make_iterator_class = function(name){
         },
 
         __next__: function(self){
+            if(typeof self.len_func == "function" && 
+                    self.len_func() != self.len){
+                throw _b_.RuntimeError.$factory("dictionary changed size during iteration")
+            }
             self.counter++
             if(self.counter < self.items.length){
                 return self.items[self.counter]
             }
             throw _b_.StopIteration.$factory("StopIteration")
+        },
+
+        __reduce_ex__: function(self, protocol){
+            return $B.fast_tuple([_b_.iter, _b_.tuple.$factory([self.items])])
         }
     }
 
