@@ -1287,7 +1287,6 @@ function isinstance(obj, cls){
     function check(kl, cls){
         if(kl === cls){return true}
         else if(cls === _b_.str && kl === $B.StringSubclass){return true}
-        else if(cls === _b_.float && kl === $B.FloatSubclass){return true}
         else if(cls === _b_.int && kl === $B.IntSubclass){return true}
     }
     if(check(klass, cls)){return true}
@@ -2233,8 +2232,8 @@ $$super.__getattribute__ = function(self, attr){
     }
     var f = _b_.type.__getattribute__(mro[0], attr)
 
-    var $test = false //attr == "__setattr__"
-    if($test){console.log("super", attr, self, f)}
+    var $test = false // attr == "__new__"
+    if($test){console.log("super", attr, self, f, f + '')}
     if(f.$type == "staticmethod"){return f}
     else{
         if(f.__class__ === $B.method){

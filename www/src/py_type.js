@@ -576,7 +576,6 @@ type.mro = function(cls){
         // We can't simply push bases[i].__mro__
         // because it would be modified in the algorithm
         if(bases[i] === _b_.str){bases[i] = $B.StringSubclass}
-        else if(bases[i] === _b_.float){bases[i] = $B.FloatSubclass}
         var bmro = [],
             pos = 0
         if(bases[i] === undefined ||

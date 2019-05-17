@@ -84,8 +84,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.2"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-05-17 22:11:29.749952"
-__BRYTHON__.timestamp=1558123889749
+__BRYTHON__.compiled_date="2019-05-17 22:58:59.651684"
+__BRYTHON__.timestamp=1558126739651
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","unicodedata","zlib"]
 ;
 
@@ -5435,7 +5435,6 @@ type.mro=function(cls){
 var bases=cls.__bases__,seqs=[],pos1=0
 for(var i=0;i < bases.length;i++){
 if(bases[i]===_b_.str){bases[i]=$B.StringSubclass}
-else if(bases[i]===_b_.float){bases[i]=$B.FloatSubclass}
 var bmro=[],pos=0
 if(bases[i]===undefined ||
 bases[i].__mro__===undefined){if(bases[i].__class__===$B.JSObject){
@@ -6566,7 +6565,6 @@ klass=$B.get_class(obj)}
 if(klass===undefined){return false}
 function check(kl,cls){if(kl===cls){return true}
 else if(cls===_b_.str && kl===$B.StringSubclass){return true}
-else if(cls===_b_.float && kl===$B.FloatSubclass){return true}
 else if(cls===_b_.int && kl===$B.IntSubclass){return true}}
 if(check(klass,cls)){return true}
 var mro=klass.__mro__
@@ -6926,7 +6924,7 @@ if(attr=="__repr__" ||attr=="__str__"){
 return function(){return $$super.__repr__(self)}}
 var f=_b_.type.__getattribute__(mro[0],attr)
 var $test=false 
-if($test){console.log("super",attr,self,f)}
+if($test){console.log("super",attr,self,f,f+'')}
 if(f.$type=="staticmethod"){return f}
 else{if(f.__class__===$B.method){
 f=f.$infos.__func__}
@@ -8956,13 +8954,16 @@ var object=_b_.object
 function $err(op,other){var msg="unsupported operand type(s) for "+op+
 ": 'float' and '"+$B.class_name(other)+"'"
 throw _b_.TypeError.$factory(msg)}
+function float_value(obj){
+return obj.$value !==undefined ? obj.$value :obj}
 var float={__class__:_b_.type,__dir__:object.__dir__,$infos:{__module__:"builtins",__name__:"float"},$is_class:true,$native:true,$descriptors:{"numerator":true,"denominator":true,"imag":true,"real":true}}
-float.numerator=function(self){return self}
+float.numerator=function(self){return float_value(self)}
 float.denominator=function(self){return _b_.int.$factory(1)}
 float.imag=function(self){return _b_.int.$factory(0)}
-float.real=function(self){return self}
-float.__float__=function(self){return self}
-float.as_integer_ratio=function(self){if(self.valueOf()==Number.POSITIVE_INFINITY ||
+float.real=function(self){return float_value(self)}
+float.__float__=function(self){return float_value(self)}
+float.as_integer_ratio=function(self){self=float_value(self)
+if(self.valueOf()==Number.POSITIVE_INFINITY ||
 self.valueOf()==Number.NEGATIVE_INFINITY){throw _b_.OverflowError.$factory("Cannot pass infinity to "+
 "float.as_integer_ratio.")}
 if(! Number.isFinite(self.valueOf())){throw _b_.ValueError.$factory("Cannot pass NaN to "+
@@ -8976,15 +8977,20 @@ denominator=1
 py_exponent=_b_.getattr(_b_.int.$factory(denominator),"__lshift__")(py_exponent)
 if(exponent > 0){numerator=numerator*py_exponent}else{denominator=py_exponent}
 return _b_.tuple.$factory([_b_.int.$factory(numerator),_b_.int.$factory(denominator)])}
-float.__bool__=function(self){return _b_.bool.$factory(self.valueOf())}
-float.__eq__=function(self,other){if(isNaN(self)&& isNaN(other)){return false}
+float.__bool__=function(self){self=float_value(self)
+return _b_.bool.$factory(self.valueOf())}
+float.__eq__=function(self,other){self=float_value(self)
+other=float_value(other)
+if(isNaN(self)&& isNaN(other)){return false}
 if(isinstance(other,_b_.int)){return self==other}
 if(isinstance(other,float)){
 return self.valueOf()==other.valueOf()}
 if(isinstance(other,_b_.complex)){if(other.$imag !=0){return false}
 return self==other.$real}
 return _b_.NotImplemented}
-float.__floordiv__=function(self,other){if(isinstance(other,[_b_.int,float])){if(other.valueOf()==0){throw ZeroDivisionError.$factory('division by zero')}
+float.__floordiv__=function(self,other){self=float_value(self)
+other=float_value(other)
+if(isinstance(other,[_b_.int,float])){if(other.valueOf()==0){throw ZeroDivisionError.$factory('division by zero')}
 return float.$factory(Math.floor(self/other))}
 if(hasattr(other,"__rfloordiv__")){return getattr(other,"__rfloordiv__")(self)}
 $err("//",other)}
@@ -9039,10 +9045,9 @@ if(fmt.type !==undefined &&
 (fmt.type=="%" ||fmt.type.toLowerCase()=="f")){if(pt_pos==-1){res+="."+"0".repeat(fmt.precision)}
 else{var missing=fmt.precision-res.length+pt_pos+1
 if(missing > 0){res+="0".repeat(missing)}}}else{var res1=self.toExponential(fmt.precision-1),exp=parseInt(res1.substr(res1.search("e")+1))
-if(exp <-4 ||exp >=fmt.precision-1){
-var elts=res1.split("e")
+if(exp <-4 ||exp >=fmt.precision-1){var elts=res1.split("e")
 while(elts[0].endsWith("0")){elts[0]=elts[0].substr(0,elts[0].length-1)}
-res=elts.join("e")}else{}}}else{var res=_b_.str.$factory(self)}
+res=elts.join("e")}}}else{var res=_b_.str.$factory(self)}
 if(fmt.type===undefined||"gGn".indexOf(fmt.type)!=-1){
 if(res.search("e")==-1){while(res.charAt(res.length-1)=="0"){res=res.substr(0,res.length-1)}}
 if(res.charAt(res.length-1)=="."){if(fmt.type===undefined){res+="0"}
@@ -9050,7 +9055,8 @@ else{res=res.substr(0,res.length-1)}}}
 if(fmt.sign !==undefined){if((fmt.sign==" " ||fmt.sign=="+" )&& self > 0){res=fmt.sign+res}}
 if(fmt.type=="%"){res+="%"}
 return res}
-float.__format__=function(self,format_spec){var fmt=new $B.parse_format_spec(format_spec)
+float.__format__=function(self,format_spec){self=float_value(self)
+var fmt=new $B.parse_format_spec(format_spec)
 fmt.align=fmt.align ||">"
 var raw=preformat(self,fmt).split('.'),_int=raw[0]
 if(fmt.comma){var len=_int.length,nb=Math.ceil(_int.length/3),chunks=[]
@@ -9100,6 +9106,7 @@ var j=i
 if(isinstance(i,float)){j=i.valueOf()}
 return y*Math.pow(2,j)}
 float.hex=function(self){
+self=float_value(self)
 var DBL_MANT_DIG=53,
 TOHEX_NBITS=DBL_MANT_DIG+3-(DBL_MANT_DIG+2)% 4
 switch(self.valueOf()){case Infinity:
@@ -9125,12 +9132,12 @@ if(_e < 0){_esign="-"
 _e=-_e}
 if(self.value < 0){return "-0x"+_s+"p"+_esign+_e}
 return "0x"+_s+"p"+_esign+_e}
-float.__init__=function(self,value){self.valueOf=function(){return value.valueOf()}
-self.toString=function(){return value+""}
-return _b_.None}
+float.__init__=function(self,value){return _b_.None}
 float.__int__=function(self){return parseInt(self)}
 float.is_integer=function(self){return _b_.int.$factory(self)==self}
 float.__mod__=function(self,other){
+self=float_value(self)
+other=float_value(other)
 if(other==0){throw ZeroDivisionError.$factory("float modulo")}
 if(isinstance(other,_b_.int)){return new Number((self % other+other)% other)}
 if(isinstance(other,float)){
@@ -9142,9 +9149,11 @@ return new Number((self % bool_value+bool_value)% bool_value)}
 if(hasattr(other,"__rmod__")){return getattr(other,"__rmod__")(self)}
 $err("%",other)}
 float.__mro__=[object]
-float.__mul__=function(self,other){if(isinstance(other,_b_.int)){if(other.__class__==$B.long_int){return new Number(self*parseFloat(other.value))}
+float.__mul__=function(self,other){self=float_value(self)
+other=float_value(other)
+if(isinstance(other,_b_.int)){if(other.__class__==$B.long_int){return new Number(self*parseFloat(other.value))}
 return new Number(self*other)}
-if(isinstance(other,float)){return new Number(self*other)}
+if(isinstance(other,float)){return new Number(self*float_value(other))}
 if(isinstance(other,_b_.bool)){var bool_value=0
 if(other.valueOf()){bool_value=1}
 return new Number(self*bool_value)}
@@ -9153,9 +9162,15 @@ if(hasattr(other,"__rmul__")){return getattr(other,"__rmul__")(self)}
 $err("*",other)}
 float.__ne__=function(self,other){var res=float.__eq__(self,other)
 return res===_b_.NotImplemented ? res :! res}
-float.__neg__=function(self,other){return float.$factory(-self)}
-float.__pos__=function(self){return self}
-float.__pow__=function(self,other){var other_int=isinstance(other,_b_.int)
+float.__neg__=function(self,other){return float.$factory(-float_value(self))}
+float.__new__=function(cls,value){if(cls===undefined){throw _b_.TypeError.$factory("float.__new__(): not enough arguments")}else if(! _b_.isinstance(cls,_b_.type)){throw _b_.TypeError.$factory("float.__new__(X): X is not a type object")}
+if(cls===float){return float.$factory(value)}
+return{
+__class__:cls,__dict__:_b_.dict.$factory(),$value:value ||0}}
+float.__pos__=function(self){return float_value(self)}
+float.__pow__=function(self,other){self=float_value(self)
+other=float_value(other)
+var other_int=isinstance(other,_b_.int)
 if(other_int ||isinstance(other,float)){if(self==1){return self}
 if(other==0){return new Number(1)}
 if(self==-1 &&
@@ -9174,7 +9189,7 @@ return float.$factory(Math.pow(self,other))}else if(isinstance(other,_b_.complex
 return $B.make_complex(preal*Math.cos(ln),preal*Math.sin(ln))}
 if(hasattr(other,"__rpow__")){return getattr(other,"__rpow__")(self)}
 $err("** or pow()",other)}
-float.__repr__=float.__str__=function(self){if(self===float){return "<class 'float'>"}
+float.__repr__=float.__str__=function(self){self=float_value(self)
 if(self.valueOf()==Infinity){return 'inf'}
 if(self.valueOf()==-Infinity){return '-inf'}
 if(isNaN(self.valueOf())){return 'nan'}
@@ -9185,15 +9200,19 @@ float.__setattr__=function(self,attr,value){if(self.constructor===Number){if(flo
 attr+"'")}else{throw _b_.AttributeError.$factory("'float' object attribute '"+
 attr+"' is read-only")}}
 self[attr]=value
-return $N}
-float.__truediv__=function(self,other){if(isinstance(other,[_b_.int,float])){if(other.valueOf()==0){throw ZeroDivisionError.$factory("division by zero")}
+return _b_.None}
+float.__truediv__=function(self,other){self=float_value(self)
+other=float_value(other)
+if(isinstance(other,[_b_.int,float])){if(other.valueOf()==0){throw ZeroDivisionError.$factory("division by zero")}
 return float.$factory(self/other)}
 if(isinstance(other,_b_.complex)){var cmod=other.$real*other.$real+other.$imag*other.$imag
 if(cmod==0){throw ZeroDivisionError.$factory("division by zero")}
 return $B.make_complex(float.$factory(self*other.$real/cmod),float.$factory(-self*other.$imag/cmod))}
 if(hasattr(other,"__rtruediv__")){return getattr(other,"__rtruediv__")(self)}
 $err("/",other)}
-var $op_func=function(self,other){if(isinstance(other,_b_.int)){if(typeof other=="boolean"){return other ? self-1 :self}else if(other.__class__===$B.long_int){return float.$factory(self-parseInt(other.value))}else{return float.$factory(self-other)}}
+var $op_func=function(self,other){self=float_value(self)
+other=float_value(other)
+if(isinstance(other,_b_.int)){if(typeof other=="boolean"){return other ? self-1 :self}else if(other.__class__===$B.long_int){return float.$factory(self-parseInt(other.value))}else{return float.$factory(self-other)}}
 if(isinstance(other,float)){return float.$factory(self-other)}
 if(isinstance(other,_b_.bool)){var bool_value=0
 if(other.valueOf()){bool_value=1}
@@ -9206,7 +9225,9 @@ var $ops={"+":"add","-":"sub"}
 for(var $op in $ops){var $opf=$op_func.replace(/-/gm,$op)
 $opf=$opf.replace(/__rsub__/gm,"__r"+$ops[$op]+"__")
 eval("float.__"+$ops[$op]+"__ = "+$opf)}
-var $comp_func=function(self,other){if(isinstance(other,_b_.int)){if(other.__class__===$B.long_int){return self > parseInt(other.value)}
+var $comp_func=function(self,other){self=float_value(self)
+other=float_value(other)
+if(isinstance(other,_b_.int)){if(other.__class__===$B.long_int){return self > parseInt(other.value)}
 return self > other.valueOf()}
 if(isinstance(other,float)){return self > other}
 if(isinstance(other,_b_.bool)){return self.valueOf()> _b_.bool.__hash__(other)}
@@ -9278,8 +9299,6 @@ throw _b_.ValueError.$factory(
 _b_.str.$factory(value)+"'")}}}
 throw _b_.TypeError.$factory("float() argument must be a string or a "+
 "number, not '"+$B.class_name(value)+"'")}
-float.__new__=function(cls){if(cls===undefined){throw _b_.TypeError.$factory("float.__new__(): not enough arguments")}
-return{__class__:cls}}
 $B.$FloatClass=$FloatClass
 $B.set_func_names(float,"builtins")
 var FloatSubclass=$B.FloatSubclass={__class__:_b_.type,__mro__:[object],$infos:{__module__:"builtins",__name__:"float"},$is_class:true}

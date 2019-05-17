@@ -320,5 +320,23 @@ test( f'''{1.23e-10:9.6}''',' 1.23e-10')
 test(     f'''{1.23e-10:1.15}''', '1.23e-10')
 test(1.23e-10.__format__('1.15'), '1.23e-10')
 
+# issue 1115
+class sffloat(float):
+    def __new__(cls, value, sf=None):
+        return super().__new__(cls, value)
+
+    def __init__(self, value, sf=None):
+        float.__init__(value)
+        self.sf = sf
+
+assert issubclass(sffloat, float)
+
+a = sffloat(1.0,2)
+b = sffloat(2.0,3)
+assert isinstance(a, float)
+
+assert a * b == 2.0
+assert a.sf == 2
+assert b.sf == 3
 
 print('passed all tests...')
