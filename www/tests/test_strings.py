@@ -225,6 +225,8 @@ assert issubclass(Mystring, str)
 
 # issue 1060
 assert str(bytes('abc', encoding='ascii'), encoding='ascii') == "abc"
+b = bytes('pythôn', encoding='utf-8')
+assert str(b, encoding='ascii', errors='ignore') == "pythn"
 
 # issue 1071
 assert 'ß'.encode('ascii', 'ignore') == b''

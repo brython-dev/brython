@@ -1783,7 +1783,7 @@ str.$factory = function(arg, encoding, errors){
         if($B.debug > 1){console.log(err)}
         console.log("Warning - no method __str__ or __repr__, " +
             "default to toString", arg)
-        return arg.toString()
+        throw err
     }
     return $B.$call(f)()
 }

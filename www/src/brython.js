@@ -84,8 +84,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,2,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.2"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-05-20 09:40:52.765657"
-__BRYTHON__.timestamp=1558338052765
+__BRYTHON__.compiled_date="2019-05-20 21:36:37.783682"
+__BRYTHON__.timestamp=1558380997783
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata","zlib"]
 ;
 
@@ -8019,10 +8019,10 @@ return String.fromCharCode(cp)})
 return b
 case "ascii":
 for(var i=0,len=b.length;i < len;i++){var cp=b[i]
-if(cp <=127){s+=String.fromCharCode(cp)}else{var msg="'ascii' codec can't decode byte 0x"+
+if(cp <=127){s+=String.fromCharCode(cp)}else{if(errors=="ignore"){}else{var msg="'ascii' codec can't decode byte 0x"+
 cp.toString(16)+" in position "+i+
 ": ordinal not in range(128)"
-throw _b_.UnicodeDecodeError.$factory(msg)}}
+throw _b_.UnicodeDecodeError.$factory(msg)}}}
 break
 default:
 try{load_decoder(enc)}catch(err){console.log(b,encoding,"error load_decoder",err)
@@ -11475,7 +11475,7 @@ console.log("err ",err)
 if($B.debug > 1){console.log(err)}
 console.log("Warning - no method __str__ or __repr__, "+
 "default to toString",arg)
-return arg.toString()}
+throw err}
 return $B.$call(f)()}
 str.__new__=function(cls){if(cls===undefined){throw _b_.TypeError.$factory("str.__new__(): not enough arguments")}
 return{__class__:cls}}

@@ -1317,10 +1317,14 @@ var decode = $B.decode = function(b, encoding, errors){
               if(cp <= 127){
                   s += String.fromCharCode(cp)
               }else{
-                  var msg = "'ascii' codec can't decode byte 0x" +
-                    cp.toString(16) + " in position " + i +
-                    ": ordinal not in range(128)"
-                  throw _b_.UnicodeDecodeError.$factory(msg)
+                  if(errors == "ignore"){
+                      // ignore
+                  }else{
+                      var msg = "'ascii' codec can't decode byte 0x" +
+                        cp.toString(16) + " in position " + i +
+                        ": ordinal not in range(128)"
+                      throw _b_.UnicodeDecodeError.$factory(msg)
+                  }
               }
           }
           break
