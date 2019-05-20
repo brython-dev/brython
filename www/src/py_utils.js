@@ -1047,7 +1047,7 @@ $B.add = function(x, y){
             // floats
             return new Number(x + y)
         }
-    }else if (typeof x=="string" && typeof x=="string"){
+    }else if (typeof x == "string" && typeof y == "string"){
         // strings
         return x + y
     }
