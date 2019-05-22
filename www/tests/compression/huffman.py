@@ -13,7 +13,7 @@ def codelengths_from_frequencies(freqs):
             nodes.append(node)
         else:
             pos = 0
-            while nodes[pos].weight > node.weight:
+            while pos < len(nodes) and nodes[pos].weight > node.weight:
                 pos += 1
             nodes.insert(pos, node)
 
