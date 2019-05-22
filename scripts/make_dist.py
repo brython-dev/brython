@@ -21,7 +21,7 @@ if sys.version_info[0] != 3:
 pdir = os.path.dirname(os.getcwd())
 # version info
 version = [3, 7, 0, "final", 0]
-implementation = [3, 7, 2, "dev", 0]
+implementation = [3, 7, 2, "final", 0]
 
 # version name
 vname = '.'.join(str(x) for x in implementation[:3])
@@ -117,7 +117,7 @@ def run():
 
     make_VFS.process(os.path.join(pdir, 'www', 'src', 'brython_stdlib.js'))
 
-    # Create make brython_stdlib.js : core + libraries
+    # Create brython_dist.js : core + libraries
     src_dir = os.path.join(pdir, 'www', 'src')
     with open(os.path.join(src_dir, 'brython_dist.js'), 'w') as distrib:
         distrib.write(open(os.path.join(src_dir, 'brython.js')).read())
