@@ -27,7 +27,7 @@ for car in range(280, 288):
 
 fixed_decomp = decompresser(fixed_codelengths)
 fixed_lit_len_tree = fixed_decomp.root
-fixed_lit_len_codes = {value: key 
+fixed_lit_len_codes = {value: key
     for (key, value) in fixed_decomp.codes.items()}
 
 def cl_encode(lengths):
@@ -251,9 +251,13 @@ def compress(source, window_size=32 * 1024):
     lit_len_count = {}
     distance_count = {}
     store = []
+    replaced = 0
+    nb_tuples = 0
     for item in lz.compress(source, window_size):
         if isinstance(item, tuple):
+            nb_tuples += 1
             length, distance = item
+            replaced += length
             length_code, *extra_length = length_to_code(length)
             lit_len_count[length_code] = lit_len_count.get(length_code, 0) + 1
             distance_code, *extra_dist = distance_to_code(distance)
@@ -267,6 +271,14 @@ def compress(source, window_size=32 * 1024):
             store.append(literal)
 
     store.append(256)
+
+    # Estimate how many bytes would be saved with dynamic Huffman tables
+    # The tables take about 100 bytes, and each (length, distance) tuple is
+    # encoded in about 20 bits
+    score = replaced - 100 - (nb_tuples * 20 // 8)
+    if score < 0:
+        # If dynamic tables is going to be inefficient, use fixed tables
+        return compress_fixed(source, store)
 
     lit_len_count[256] = 1 # end of block
 
@@ -366,7 +378,6 @@ def compress(source, window_size=32 * 1024):
     # pad with 0
     while out.bitnum != 8:
         out.write(0)
-
     # write ADLER32 checksum
     a, b = adler32(source)
     a1, a2 = divmod(a, 256)
