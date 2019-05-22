@@ -5,25 +5,30 @@ import lz77
 class Error(Exception):
     pass
 
-def tree_from_codelengths(codelengths):
+def decompresser(codelengths):
     lengths = list(codelengths.items())
     # remove items with value = 0
     lengths = [x for x in lengths if x[1] > 0]
     lengths.sort(key=lambda item:(item[1], item[0]))
-    decomp = huffman.Decompresser('', lengths)
-    return decomp.root
+    return huffman.Decompresser('', lengths)
 
-codelengths = {}
+def tree_from_codelengths(codelengths):
+    return decompresser(codelengths).root
+
+fixed_codelengths = {}
 for car in range(144):
-    codelengths[car] = 8
+    fixed_codelengths[car] = 8
 for car in range(144, 256):
-    codelengths[car] = 9
+    fixed_codelengths[car] = 9
 for car in range(256, 280):
-    codelengths[car] = 7
+    fixed_codelengths[car] = 7
 for car in range(280, 288):
-    codelengths[car] = 8
+    fixed_codelengths[car] = 8
 
-fixed_lit_len_tree = tree_from_codelengths(codelengths)
+fixed_decomp = decompresser(fixed_codelengths)
+fixed_lit_len_tree = fixed_decomp.root
+fixed_lit_len_codes = {value: key 
+    for (key, value) in fixed_decomp.codes.items()}
 
 def cl_encode(lengths):
     """lengths is a list of (char, nb) tuples. Return a list of lengths
@@ -271,9 +276,15 @@ def compress(source, window_size=32 * 1024):
     coded_lit_len = list(cl_encode(lit_len_codelengths))
     HLIT = 1 + max(car for (car, _) in lit_len_codelengths) - 257
 
-    distance_codelengths = huffman.codelengths_from_frequencies(distance_count)
-    distance_codes = huffman.normalized(distance_codelengths)
-    coded_distance = list(cl_encode(distance_codelengths))
+    coded_distance = []
+    HDIST = 1
+    if distance_count:
+        distance_codelengths = huffman.codelengths_from_frequencies(distance_count)
+        distance_codes = huffman.normalized(distance_codelengths)
+        coded_distance = list(cl_encode(distance_codelengths))
+        HDIST = 1 + max(dist for (dist, _) in distance_codelengths) - 1
+    else:
+        return compress_fixed(source, store)
 
     codelengths_count = {}
     for coded in coded_lit_len, coded_distance:
@@ -281,7 +292,6 @@ def compress(source, window_size=32 * 1024):
             length = item[0] if isinstance(item, tuple) else item
             codelengths_count[length] = codelengths_count.get(length, 0) + 1
 
-    HDIST = 1 + max(dist for (dist, _) in distance_codelengths) - 1
     codelengths_codelengths = huffman.codelengths_from_frequencies(
         codelengths_count)
     codelengths_dict = dict(codelengths_codelengths)
@@ -301,7 +311,7 @@ def compress(source, window_size=32 * 1024):
 
     out.write(1) # BFINAL = 1
     out.write(0, 1) # BTYPE = dynamic Huffman codes
-    
+
     out.write_int(HLIT, 5)
     out.write_int(HDIST, 5)
     out.write_int(HCLEN, 4)
@@ -367,6 +377,57 @@ def compress(source, window_size=32 * 1024):
     out.write_int(a2, 8)
 
     return bytes(out.bytestream)
+
+def compress_fixed(source, items):
+    """Use fixed Huffman code."""
+    out = bitio.BitIO()
+    out.write_int(8, 4) # compression method = 8
+    out.write_int(7, 4) # window size = 2 ** (8 + 7)
+    out.write_int(0x9c, 8) # FLG
+
+    out.write(1) # BFINAL = 1
+    out.write(1, 0) # BTYPE = fixed Huffman codes
+
+    for item in items:
+        if isinstance(item, tuple):
+            length, extra_length, distance, extra_distance = item
+            # length code
+            code = fixed_lit_len_codes[length]
+            value, nb = int(code, 2), len(code)
+            out.write_int(value, nb, order="msf")
+            # extra bits for length
+            value, nb = extra_length
+            if nb:
+                out.write_int(value, nb)
+            # distance
+            code = distance - 1
+            value, nb = code, 5
+            out.write_int(value, nb, order="msf")
+            # extra bits for distance
+            value, nb = extra_distance
+            if nb:
+                out.write_int(value, nb)
+        else:
+            literal = item
+            code = fixed_lit_len_codes[item]
+            value, nb = int(code, 2), len(code)
+            out.write_int(value, nb, order="msf")
+
+    # pad with 0
+    while out.bitnum != 8:
+        out.write(0)
+
+    # write ADLER32 checksum
+    a, b = adler32(source)
+    a1, a2 = divmod(a, 256)
+    b1, b2 = divmod(b, 256)
+    out.write_int(b1, 8)
+    out.write_int(b2, 8)
+    out.write_int(a1, 8)
+    out.write_int(a2, 8)
+
+    return bytes(out.bytestream)
+
 
 def adler32(source):
     a = 1

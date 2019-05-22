@@ -84,8 +84,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,2,'final',0]
 __BRYTHON__.__MAGIC__="3.7.2"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-05-22 08:47:37.527790"
-__BRYTHON__.timestamp=1558507657527
+__BRYTHON__.compiled_date="2019-05-22 20:29:21.210948"
+__BRYTHON__.timestamp=1558549761210
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata","zlib"]
 ;
 
@@ -13039,13 +13039,8 @@ return $B.rich_comp(op,self.$cell_contents,other.$cell_contents)}})(op)})
 $B.set_func_names($B.cell,"builtins")})(__BRYTHON__)
 ;
 ;(function($B){var _b_=$B.builtins
-function import_hooks(mod_name,_path,from_stdlib){var _meta_path=$B.meta_path.slice(),_sys_modules=$B.imported,_loader,spec
-if(from_stdlib=="static"){
-var ix=_meta_path.indexOf($B.finders["path"])
-if(ix >-1){_meta_path.splice(ix,1)}}else if(from_stdlib=="VFS"){var keys=["path","stdlib_static"]
-keys.forEach(function(key){var ix=_meta_path.indexOf($B.finders[key])
-if(ix >-1){_meta_path.splice(ix,1)}})}
-for(var i=0,len=_meta_path.length;i < len;i++){var _finder=_meta_path[i],find_spec=$B.$getattr(_finder,"find_spec",_b_.None)
+function import_hooks(mod_name,_path,from_stdlib){var _sys_modules=$B.imported,_loader,spec
+for(var i=0,len=$B.meta_path.length;i < len;i++){var _finder=$B.meta_path[i],find_spec=$B.$getattr(_finder,"find_spec",_b_.None)
 if(find_spec==_b_.None){
 var find_module=$B.$getattr(_finder,"find_module",_b_.None)
 if(find_module !==_b_.None){_loader=find_module(mod_name,_path)

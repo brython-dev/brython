@@ -15,29 +15,12 @@ var _b_ = $B.builtins
 */
 function import_hooks(mod_name, _path, from_stdlib) {
 
-    var _meta_path = $B.meta_path.slice(),
-        _sys_modules = $B.imported,
+    var _sys_modules = $B.imported,
         _loader,
         spec
 
-    if(from_stdlib == "static"){
-        // No use trying anything else than stdlib finders
-        var ix = _meta_path.indexOf($B.finders["path"])
-        if(ix > -1){
-            _meta_path.splice(ix, 1)
-        }
-    }else if(from_stdlib == "VFS"){
-        var keys = ["path", "stdlib_static"]
-        keys.forEach(function(key){
-            var ix = _meta_path.indexOf($B.finders[key])
-            if(ix > -1){
-                _meta_path.splice(ix, 1)
-            }
-        })
-    }
-
-    for(var i = 0, len = _meta_path.length; i < len; i++){
-        var _finder = _meta_path[i],
+    for(var i = 0, len = $B.meta_path.length; i < len; i++){
+        var _finder = $B.meta_path[i],
             find_spec = $B.$getattr(_finder, "find_spec", _b_.None)
         if(find_spec == _b_.None){
             // If find_spec is not defined for the meta path, try the legacy
