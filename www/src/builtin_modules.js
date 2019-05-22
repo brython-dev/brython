@@ -394,8 +394,8 @@
             return $B.py2js(src, module_name, module_name,
                 $B.builtins_scope).to_js()
         },
-        pyobj2jsobj:function(obj){ return $B.pyobj2jsobj(obj)},
-        jsobj2pyobj:function(obj){ return $B.jsobj2pyobj(obj)},
+        pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},
+        jsobj2pyobj:function(obj){return $B.jsobj2pyobj(obj)},
         UNDEFINED: undefined
     }
 
