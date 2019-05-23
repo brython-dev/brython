@@ -239,4 +239,10 @@ assert str(t1) == str(t2)
 assert list(t1) == list(t2)
 assert {tuple({1, 2}), tuple({2,1})} == {(1, 2)}
 
+# issue 1119
+L1 = [0, 70.5, 80, 10, 10, 20.0, 20.0, 40, 40.0, 60.0, 60, 70.5, 70.5, 80]
+S = set(L1)
+L2 = sorted(S)
+assert L2 == [0, 10, 20.0, 40, 60.0, 70.5, 80]
+
 print("passed all tests..")

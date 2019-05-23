@@ -179,7 +179,8 @@ set.__new__ = function(cls){
     return {
         __class__: cls,
         $simple: true,
-        $items: []
+        $items: [],
+        $numbers: [] // stores integers, and floats equal to integers
         }
 }
 
@@ -292,20 +293,36 @@ function $test(accept_iter, other, op){
 $B.make_rmethods(set)
 
 function $add(self, item){
-    if(typeof item !== "string" && typeof item !== "number" &&
-        !(item instanceof Number)){
-        self.$simple = false
-        $B.$getattr(item, "__hash__")
+    var $simple = false
+    if(typeof item === "string" || typeof item === "number" ||
+            item instanceof Number){
+        $simple = true
     }
-    if(self.$simple){
+
+    if($simple){
         var ix = self.$items.indexOf(item)
-        if(ix == -1){self.$items.push(item)}
-        else{
+        if(ix == -1){
+            if(item instanceof Number &&
+                    self.$numbers.indexOf(item.valueOf()) > -1){
+                // do nothing
+            }else if(typeof item == "number" &&
+                    self.$numbers.indexOf(item) > -1){
+                // do nothing
+            }else{
+                self.$items.push(item)
+                var value = item.valueOf()
+                if(typeof value == "number"){
+                    self.$numbers.push(value)
+                }
+            }
+        }else{
             // issue 543 : for some Javascript implementations,
             // [''].indexOf(0) is 0, not -1, so {''}.add(0) is {''}
             if(item !== self.$items[ix]){self.$items.push(item)}
         }
         return $N
+    }else{
+        $B.$getattr(item, "__hash__")
     }
     var cfunc = function(other){return $B.rich_comp("__eq__", item, other)}
     for(var i = 0, len = self.$items.length; i < len; i++){
@@ -585,7 +602,8 @@ set.$factory = function(){
     var res = {
         __class__: set,
         $simple: true,
-        $items: []
+        $items: [],
+        $numbers: []
     }
     // apply __init__ with arguments of set()
     var args = [res].concat(Array.prototype.slice.call(arguments))
@@ -666,7 +684,8 @@ frozenset.__new__ = function(cls){
     return {
         __class__: cls,
         $simple: true,
-        $items: []
+        $items: [],
+        $numbers: []
         }
 }
 
@@ -676,6 +695,7 @@ function empty_frozenset(){
     return {
         __class__: frozenset,
         $items: [],
+        $numbers: [],
         $id: singleton_id
     }
 }
