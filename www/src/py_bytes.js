@@ -516,18 +516,24 @@ bytes.expandtabs = function() {
     return _b_.bytes.$factory(buffer)
 }
 
-bytes.find = function() {
-    var $ = $B.args('find', 4,
-        {self: null, sub: null, start: null, end: null},
-        ['self', 'sub', 'start', 'end'],
-        arguments, {start: 0, end: -1}, null, null),
-        sub = $.sub,
-        start = $.start
+bytes.find = function(self, sub){
+    if(arguments.length != 2){
+        var $ = $B.args('find', 4,
+            {self: null, sub: null, start: null, end: null},
+            ['self', 'sub', 'start', 'end'],
+            arguments, {start: 0, end: -1}, null, null),
+            sub = $.sub,
+            start = $.start,
+            end = $.end
+    }else{
+        var start = 0,
+            end = -1
+    }
     if(typeof sub == "number"){
         if(sub < 0 || sub > 255){
             throw _b_.ValueError.$factory("byte must be in range(0, 256)")
         }
-        return $.self.source.slice(0, $.end == -1 ? undefined : $.end).indexOf(sub, start)
+        return self.source.slice(0, end == -1 ? undefined : end).indexOf(sub, start)
     }else if(! sub.__class__){
         throw _b_.TypeError.$factory("first argument must be a bytes-like " +
             "object, not '" + $B.class_name(sub) + "'")
@@ -535,11 +541,21 @@ bytes.find = function() {
         throw _b_.TypeError.$factory("first argument must be a bytes-like " +
             "object, not '" + $B.class_name(sub) + "'")
     }
-    var end = $.end == -1 ? $.self.source.length - sub.source.length :
-        Math.min($.self.source.length - sub.source.length, $.end)
+    end = end == -1 ? self.source.length : Math.min(self.source.length, end)
 
-    for(var i = start; i <= end; i++){
-        if(bytes.startswith($.self, sub, i)){return i}
+    var len = sub.source.length
+    for(var i = start; i <= end - len; i++){
+        var chunk = self.source.slice(i, i + len),
+            found = true
+        for(var j = 0; j < len; j++){
+            if(chunk[j] != sub.source[j]){
+                found = false
+                break
+            }
+        }
+        if(found){
+            return i
+        }
     }
     return -1
 }
@@ -849,14 +865,21 @@ bytes.replace = function(){
     return bytes.$factory(res)
 }
 
-bytes.rfind = function() {
-    var $ = $B.args('rfind', 4,
-        {self: null, sub: null, start: null, end: null},
-        ['self', 'sub', 'start', 'end'],
-        arguments, {start: 0, end: -1}, null, null),
-        sub = $.sub,
-        start = $.start
-
+bytes.rfind = function(self, subbytes){
+    if(arguments.length == 2 && subbytes.__class__ === bytes){
+        var sub = subbytes,
+            start = 0,
+            end = -1
+    }else{
+        var $ = $B.args('rfind', 4,
+            {self: null, sub: null, start: null, end: null},
+            ['self', 'sub', 'start', 'end'],
+            arguments, {start: 0, end: -1}, null, null),
+            self = $.self,
+            sub = $.sub,
+            start = $.start,
+            end = $.end
+    }
     if(typeof sub == "number"){
         if(sub < 0 || sub > 255){
             throw _b_.ValueError.$factory("byte must be in range(0, 256)")
@@ -870,13 +893,19 @@ bytes.rfind = function() {
         throw _b_.TypeError.$factory("first argument must be a bytes-like " +
             "object, not '" + $B.class_name(sub) + "'")
     }
-    var end = $.end == -1 ? $.self.source.length - sub.source.length :
-        Math.min($.self.source.length - sub.source.length, $.end)
+    end = end == -1 ? self.source.length : Math.min(self.source.length, end)
 
-    for(var i = end - 1; i >= start; --i){
-        if(bytes.startswith($.self, sub, i)){
-            return i
+    var len = sub.source.length
+    for(var i = end - len; i >= start; --i){
+        var chunk = self.source.slice(i, i + len),
+            found = true
+        for(var j = 0; j < len; j++){
+            if(chunk[j] != sub.source[j]){
+                found = false
+                break
+            }
         }
+        if(found){return i}
     }
     return -1
 }

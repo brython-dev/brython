@@ -1485,10 +1485,13 @@ str.replace = function(self, old, _new, count) {
     return res
 }
 
-str.rfind = function(self){
+str.rfind = function(self, substr){
     // Return the highest index in the string where substring sub is found,
     // such that sub is contained within s[start:end]. Optional arguments
     // start and end are interpreted as in slice notation. Return -1 on failure.
+    if(arguments.length == 2 && typeof substr == "string"){
+        return self.lastIndexOf(substr)
+    }
     var $ = $B.args("rfind", 4,
         {self: null, sub: null, start: null, end: null},
         ["self", "sub", "start", "end"],

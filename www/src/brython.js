@@ -84,8 +84,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-05-24 09:13:03.573597"
-__BRYTHON__.timestamp=1558681983573
+__BRYTHON__.compiled_date="2019-05-24 14:04:34.705775"
+__BRYTHON__.timestamp=1558699474705
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","_zlib","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -7729,14 +7729,17 @@ for(let i=0;i < $.tabsize;++i){tab_spaces.push(32)}
 var buffer=$.self.source.slice()
 for(let i=0;i < buffer.length;++i){if(buffer[i]===9){buffer.splice.apply(buffer,[i,1].concat(tab_spaces))}}
 return _b_.bytes.$factory(buffer)}
-bytes.find=function(){var $=$B.args('find',4,{self:null,sub:null,start:null,end:null},['self','sub','start','end'],arguments,{start:0,end:-1},null,null),sub=$.sub,start=$.start
+bytes.find=function(self,sub){if(arguments.length !=2){var $=$B.args('find',4,{self:null,sub:null,start:null,end:null},['self','sub','start','end'],arguments,{start:0,end:-1},null,null),sub=$.sub,start=$.start,end=$.end}else{var start=0,end=-1}
 if(typeof sub=="number"){if(sub < 0 ||sub > 255){throw _b_.ValueError.$factory("byte must be in range(0, 256)")}
-return $.self.source.slice(0,$.end==-1 ? undefined :$.end).indexOf(sub,start)}else if(! sub.__class__){throw _b_.TypeError.$factory("first argument must be a bytes-like "+
+return self.source.slice(0,end==-1 ? undefined :end).indexOf(sub,start)}else if(! sub.__class__){throw _b_.TypeError.$factory("first argument must be a bytes-like "+
 "object, not '"+$B.class_name(sub)+"'")}else if(! sub.__class__.$buffer_protocol){throw _b_.TypeError.$factory("first argument must be a bytes-like "+
 "object, not '"+$B.class_name(sub)+"'")}
-var end=$.end==-1 ? $.self.source.length-sub.source.length :
-Math.min($.self.source.length-sub.source.length,$.end)
-for(var i=start;i <=end;i++){if(bytes.startswith($.self,sub,i)){return i}}
+end=end==-1 ? self.source.length :Math.min(self.source.length,end)
+var len=sub.source.length
+for(var i=start;i <=end-len;i++){var chunk=self.source.slice(i,i+len),found=true
+for(var j=0;j < len;j++){if(chunk[j]!=sub.source[j]){found=false
+break}}
+if(found){return i}}
 return-1}
 bytes.fromhex=function(){var $=$B.args('fromhex',2,{cls:null,string:null},['cls','string'],arguments,{},null,null),string=$.string.replace(/\s/g,''),source=[]
 for(var i=0;i < string.length;i+=2){if(i+2 > string.length){throw _b_.ValueError.$factory("non-hexadecimal number found "+
@@ -7839,15 +7842,18 @@ for(var i=0;i < len;i++){if(bytes.startswith(self,old,i)&& count){for(var j=0;j 
 i+=(old.source.length-1)
 count--}else{res.push(src[i])}}
 return bytes.$factory(res)}
-bytes.rfind=function(){var $=$B.args('rfind',4,{self:null,sub:null,start:null,end:null},['self','sub','start','end'],arguments,{start:0,end:-1},null,null),sub=$.sub,start=$.start
+bytes.rfind=function(self,subbytes){if(arguments.length==2 && subbytes.__class__===bytes){var sub=subbytes,start=0,end=-1}else{var $=$B.args('rfind',4,{self:null,sub:null,start:null,end:null},['self','sub','start','end'],arguments,{start:0,end:-1},null,null),self=$.self,sub=$.sub,start=$.start,end=$.end}
 if(typeof sub=="number"){if(sub < 0 ||sub > 255){throw _b_.ValueError.$factory("byte must be in range(0, 256)")}
 return $.self.source.slice(start,$.end==-1 ? undefined :$.end).
 lastIndexOf(sub)+start}else if(! sub.__class__){throw _b_.TypeError.$factory("first argument must be a bytes-like "+
 "object, not '"+$B.class_name($.sub)+"'")}else if(! sub.__class__.$buffer_protocol){throw _b_.TypeError.$factory("first argument must be a bytes-like "+
 "object, not '"+$B.class_name(sub)+"'")}
-var end=$.end==-1 ? $.self.source.length-sub.source.length :
-Math.min($.self.source.length-sub.source.length,$.end)
-for(var i=end-1;i >=start;--i){if(bytes.startswith($.self,sub,i)){return i}}
+end=end==-1 ? self.source.length :Math.min(self.source.length,end)
+var len=sub.source.length
+for(var i=end-len;i >=start;--i){var chunk=self.source.slice(i,i+len),found=true
+for(var j=0;j < len;j++){if(chunk[j]!=sub.source[j]){found=false
+break}}
+if(found){return i}}
 return-1}
 bytes.rindex=function(){var $=$B.args('rfind',4,{self:null,sub:null,start:null,end:null},['self','sub','start','end'],arguments,{start:0,end:-1},null,null)
 var index=bytes.rfind($.self,$.sub,$.start,$.end)
@@ -8675,7 +8681,17 @@ if($B.$options.debug==10){console.log("code for module "+module.__name__)
 console.log(js)}
 js+="; return $module"
 var module_id="$locals_"+module.__name__.replace(/\./g,'_')
-var $module=(new Function(module_id,js))(module)}catch(err){
+var $module=(new Function(module_id,js))(module)}catch(err){console.log(err+" for module "+module.__name__)
+console.log("module",module)
+console.log(root)
+console.log(err)
+if($B.debug > 1){console.log(js)}
+for(var attr in err){console.log(attr,err[attr])}
+console.log(_b_.getattr(err,"info","[no info]"))
+console.log("message: "+err.$message)
+console.log("filename: "+err.fileName)
+console.log("linenum: "+err.lineNumber)
+if($B.debug > 0){console.log("line info "+$B.line_info)}
 throw err}finally{root=null
 js=null
 $B.clear_ns(module.__name__)}
@@ -11358,7 +11374,8 @@ res=res.substr(0,pos)+_new+res.substr(pos+old.length)
 pos=pos+_new.length
 count--}
 return res}
-str.rfind=function(self){
+str.rfind=function(self,substr){
+if(arguments.length==2 && typeof substr=="string"){return self.lastIndexOf(substr)}
 var $=$B.args("rfind",4,{self:null,sub:null,start:null,end:null},["self","sub","start","end"],arguments,{start:0,end:null},null,null)
 normalize_start_end($)
 check_str($.sub)
@@ -12797,6 +12814,8 @@ while(start < exit_parent.children.length &&
 (exit_parent.children[start].is_except ||
 exit_parent.children[start].is_else)){start++}}
 for(var i=start,len=exit_parent.children.length;i < len;i++){var clone=exit_parent.children[i].clone_tree(null,true)
+if(clone.is_continue){
+break}
 if(clone.has("continue")){has_continue=true;}
 rest[pos++]=clone
 if(clone.has("break")){has_break=true}}
