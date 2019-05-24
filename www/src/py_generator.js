@@ -517,6 +517,10 @@ function make_next(self, yield_node_id){
 
         for(var i = start, len = exit_parent.children.length; i < len; i++){
             var clone = exit_parent.children[i].clone_tree(null, true)
+            if(clone.is_continue){
+                // Stop copying
+                break
+            }
             if(clone.has("continue")){
                 has_continue = true;
             }
@@ -636,7 +640,7 @@ generator.__next__ = function(self){
         self.$finished = true
         throw _b_.StopIteration.$factory(_b_.None)
     }
-    
+
     try{
         var res = self.next.apply(self, self.args)
     }catch(err){
