@@ -281,7 +281,6 @@ def decompresser(codelengths):
 def tree_from_codelengths(codelengths):
     return decompresser(codelengths)["root"]
 
-
 def lz_generator(text, size, min_len=3):
     """Generator of items based on the LZ algorithm, using the specified
     window size and a minimum match length.
@@ -677,9 +676,6 @@ def compress_fixed(out, source, items):
             code = fixed_lit_len_codes[item]
             value, nb = int(code, 2), len(code)
             out.write_int(value, nb, order="msf")
-            print("literal", chr(item) if item < 256 else item,
-                out.show())
-
 
 def compress(source, window_size=32 * 1024):
 
@@ -695,7 +691,6 @@ def compress(source, window_size=32 * 1024):
     nb_tuples = 0 # Count number of tuples produced by the LZ algorithm
 
     for item in lz_generator(source, window_size):
-        print("from lz gen", item)
         if isinstance(item, tuple):
             nb_tuples += 1
             length, distance = item # Raw values as integers
