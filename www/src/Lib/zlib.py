@@ -50,11 +50,12 @@ class BitIO:
             self.bitnum = bitpos
 
     def show(self):
+        res = ""
         for x in self.bytestream:
             s = str(bin(x))[2:]
             s = "0" * (8 - len(s)) + s
-            print(s, end=" ")
-        print()
+            res += s + " "
+        return res
 
     def write(self, *bits):
         for bit in bits:
@@ -676,6 +677,8 @@ def compress_fixed(out, source, items):
             code = fixed_lit_len_codes[item]
             value, nb = int(code, 2), len(code)
             out.write_int(value, nb, order="msf")
+            print("literal", chr(item) if item < 256 else item,
+                out.show())
 
 
 def compress(source, window_size=32 * 1024):
@@ -692,6 +695,7 @@ def compress(source, window_size=32 * 1024):
     nb_tuples = 0 # Count number of tuples produced by the LZ algorithm
 
     for item in lz_generator(source, window_size):
+        print("from lz gen", item)
         if isinstance(item, tuple):
             nb_tuples += 1
             length, distance = item # Raw values as integers
