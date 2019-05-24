@@ -224,7 +224,7 @@ var add_identnode = $B.parser.add_identnode = function(parent, insert_at, name, 
  * that is yielded from is not parsed yet so that we can't populate the variable `_i`
  * but must post-pone it to the transform method of $YieldFromMarkerNode.
  */
-var $add_yield_from_code = $B.parser.$add_yield_from_code = function(yield_ctx) {
+var $add_yield_from_code = $B.parser.$add_yield_from_code = function(yield_ctx){
     var pnode = $get_node(yield_ctx)
     var generator = $get_scope(yield_ctx).context.tree[0]
 
@@ -1542,7 +1542,6 @@ var $BreakCtx = $B.parser.$BreakCtx = function(context){
 
     this.parent = context
     context.tree[context.tree.length] = this
-
     // set information related to the associated loop
     set_loop_context.apply(this, [context, 'break'])
 

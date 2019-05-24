@@ -23,10 +23,10 @@ var _b_ = $B.builtins
 var bltns = $B.InjectBuiltins()
 eval(bltns)
 
-function rstrip(s, strip_chars) {
+function rstrip(s, strip_chars){
     var _chars = strip_chars || " \t\n";
     var nstrip = 0, len = s.length;
-    while( nstrip < len && _chars.indexOf(s.charAt(len-1-nstrip)) > -1 ) nstrip ++;
+    while(nstrip < len && _chars.indexOf(s.charAt(len-1-nstrip)) > -1) nstrip ++;
     return s.substr(0, len-nstrip)
 }
 
@@ -59,14 +59,20 @@ function make_node(top_node, node){
     // for the modified function that will return iterators
     // top_node is the root node of the modified function
 
-    if (node.type === "marker") return
+    if(node.type === "marker"){return}
+
+    var is_cond = false,
+        is_except = false,
+        is_else = false,
+        is_continue,
+        ctx_js
+
     // cache context.to_js
     if(node.context.$genjs){
-        var ctx_js = node.context.$genjs
+        ctx_js = node.context.$genjs
     }else{
-        var ctx_js = node.context.$genjs = node.context.to_js()
+        ctx_js = node.context.$genjs = node.context.to_js()
     }
-    var is_cond = false, is_except = false,is_else = false, is_continue
 
     if(node.locals_def){
         var parent_id = node.func_node.parent_block.id
@@ -116,7 +122,9 @@ function make_node(top_node, node){
             // Replace "yield value" by "return [value, node_id]"
 
             var yield_node_id = top_node.yields.length
-            ctx_js = rstrip(ctx_js, ';')
+            while(ctx_js.endsWith(";")){
+                ctx_js = ctx_js.substr(0, ctx_js.length - 1)
+            }
             var res =  "return [" + ctx_js + ", " + yield_node_id + "]"
             new_node.data = res
             top_node.yields.push(new_node)
@@ -137,7 +145,7 @@ function make_node(top_node, node){
 
             // If method throw was called, raise the exception
             js += "if(sent_value.__class__ === $B.$GeneratorSendError)"+
-                  "{throw sent_value.err}"
+                  "{throw sent_value.err};"
 
             // Else set the yielded value to sent_value
             js += "var $yield_value" + ctx_js + " = sent_value;"
@@ -269,6 +277,11 @@ $B.genNode = function(data, parent){
         if(this["is_" + keyword]){return true}
         else{
             for(var i = 0, len = this.children.length; i < len; i++){
+                if(this.children[i].loop_start !== undefined){
+                    // If the child is a loop, don't search a "break" or
+                    // "continue" below it, they don't apply to 'this'
+                    continue
+                }
                 if(this.children[i].has(keyword)){return true}
             }
         }
@@ -471,7 +484,6 @@ function make_next(self, yield_node_id){
     // - goes up one block until it reaches the function root node
 
     while(1){
-
         // Compute the rest of the block to run after exit_node
         var exit_parent = exit_node.parent,
             rest = [],
@@ -526,6 +538,14 @@ function make_next(self, yield_node_id){
                 "{if(err.__class__ !== $B.GeneratorBreak){throw err}}"
             catch_test = new $B.genNode(catch_test)
             rest = [rest_try, catch_test]
+            if(exit_parent.loop_start !== undefined){
+                var test = 'if($locals["$no_break' + exit_parent.loop_start +
+                    '"])',
+                    test_node = new $B.genNode(test)
+                test_node.addChild(rest_try)
+                test_node.addChild(catch_test)
+                rest = [test_node]
+            }
         }
 
         // Get list of "try" nodes above exit node
@@ -533,7 +553,9 @@ function make_next(self, yield_node_id){
 
         if(tries.length == 0){
             // Not in a "try" clause : run rest at function level
-            for(var i = 0; i < rest.length; i++){fnode.addChild(rest[i])}
+            for(var i = 0; i < rest.length; i++){
+                fnode.addChild(rest[i])
+            }
         }else{
             // Attach "rest" to successive "try" found, or to function body
             var tree = [], pos = 0
@@ -614,7 +636,7 @@ generator.__next__ = function(self){
         self.$finished = true
         throw _b_.StopIteration.$factory(_b_.None)
     }
-
+    
     try{
         var res = self.next.apply(self, self.args)
     }catch(err){

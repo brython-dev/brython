@@ -718,4 +718,25 @@ g.send(0)
 g.send(0)
 assert g.send(1) == (1, 2, 3)
 
+# issue 1120
+def gen():
+    while True:
+        if True:
+            for char in 'abc':
+                yield char
+            break
+        yield 'Z'
+
+assert list(gen()) == ['a', 'b', 'c']
+
+def gen1():
+    dct = {"1": 1}
+    for key, value in dct.items():
+        yield key
+        yield "---"
+        yield value
+        yield from ['Y', 'Z']
+
+assert list(gen1()) == ["1", "---", 1, 'Y', 'Z']
+
 print('passed all tests...')
