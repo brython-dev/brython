@@ -373,6 +373,47 @@ Random.choice = function(){
     else{return _b_.getattr(seq, "__getitem__")(rank)}
 }
 
+Random.choices = function(){
+    var $ = $B.args("choices", 3,
+            {self: null,population:null, weights:null, cum_weights:null, k:null},
+            ["self", "population", "weights", "cum_weights", "k"], arguments,
+            {weights: _b_.None, cum_weights: _b_.None, k: 1}, "*", null),
+            self = $.self,
+            population = $.population,
+            weights = $.weights,
+            cum_weights = $.cum_weights,
+            k = $.k
+
+    if(weights === _b_.None){
+        weights = []
+        population.forEach(function(){
+            weights.push(1)
+        })
+    }else if(cum_weights !== _b_.None){
+        throw _b_.TypeError.$factory("Cannot specify both weights and " +
+            "cumulative weights")
+    }
+    if(cum_weights === _b_.None){
+        var cum_weights = [weights[0]]
+        weights.forEach(function(weight, rank){
+            if(rank > 0){
+                cum_weights.push(cum_weights[rank - 1] + weight)
+            }
+        })
+    }
+    var result = []
+    for(var i = 0; i < k; i++){
+        var rand = Math.random() * cum_weights[cum_weights.length - 1]
+        for(var rank = 0, len = population.length; rank < len; rank++){
+            if(cum_weights[rank] > rand){
+                result.push(population[rank])
+                break
+            }
+        }
+    }
+    return result
+}
+
 Random.expovariate = function(self, lambd){
     /*
     Exponential distribution.
