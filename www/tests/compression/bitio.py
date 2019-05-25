@@ -50,12 +50,11 @@ class BitIO:
             self.bitnum = bitpos
 
     def show(self):
-        res = ""
         for x in self.bytestream:
             s = str(bin(x))[2:]
             s = "0" * (8 - len(s)) + s
-            res += s + " "
-        return s
+            print(s, end=" ")
+        print()
 
     def write(self, *bits):
         for bit in bits:

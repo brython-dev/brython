@@ -49,7 +49,8 @@ class Tree:
 
     def __init__(self, root):
         self.root = root
-        
+        self.nb_levels = 0
+
     def length(self):
         self.root.level = 0
         node = self.root
@@ -143,13 +144,20 @@ class Node:
         self.is_leaf = char is not None
         self.level = level
         self.weight = weight
-        
+        self.height = 0
+
     def add(self, children):
         self.children = children
         for child in self.children:
             child.parent = self
             child.level = self.level + 1
-        
+        self.height = max(self.height, children[0].height + 1,
+            children[1].height + 1)
+        node = self
+        while hasattr(node, "parent"):
+            node.parent.height = max(node.parent.height, node.height + 1)
+            node = node.parent
+
     def __repr__(self):
         if self.is_leaf:
             return f'{chr(self.char)!r}'
