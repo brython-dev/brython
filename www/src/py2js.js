@@ -3797,8 +3797,7 @@ var $FuncStarArgCtx = $B.parser.$FuncStarArgCtx = function(context,op){
 
     this.set_name = function(name){
         this.name = name
-        //if(name == '$dummy'){return}
-
+        
         // bind name to function scope
         if(this.node.binding[name]){
             $_SyntaxError(context,
@@ -7847,8 +7846,8 @@ var $transition = $B.parser.$transition = function(context, token, value){
                 case ')':
                     if(context.name === undefined){
                        // anonymous star arg - found in configparser
-                       context.set_name('$dummy')
-                       context.parent.names.push('$dummy')
+                       context.set_name('*')
+                       context.parent.names.push('*')
                     }
                     return $transition(context.parent, token)
                 case ':':

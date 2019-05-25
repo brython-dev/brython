@@ -84,8 +84,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-05-24 15:21:24.446347"
-__BRYTHON__.timestamp=1558704084446
+__BRYTHON__.compiled_date="2019-05-25 16:20:46.947826"
+__BRYTHON__.timestamp=1558794046947
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","_zlib","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -3855,8 +3855,8 @@ return C
 case ',':
 case ')':
 if(C.name===undefined){
-C.set_name('$dummy')
-C.parent.names.push('$dummy')}
+C.set_name('*')
+C.parent.names.push('*')}
 return $transition(C.parent,token)
 case ':':
 if(C.name===undefined){$_SyntaxError(C,'annotation on an unnamed parameter')}
@@ -5563,7 +5563,7 @@ slots[extra_pos_args].__class__=_b_.tuple}
 if(extra_kw_args){
 extra_kw={__class__:_b_.dict,$numeric_dict:{},$object_dict:{},$string_dict :{},$str_hash:{},length:0}}
 if(nb_pos > argcount){
-if(extra_pos_args===null ||extra_pos_args=="$dummy"){
+if(extra_pos_args===null ||extra_pos_args=="*"){
 msg=$fname+"() takes "+argcount+" positional argument"+
 (argcount> 1 ? "" :"s")+" but more were given"
 throw _b_.TypeError.$factory(msg)}else{

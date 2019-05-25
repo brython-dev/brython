@@ -64,7 +64,7 @@ $B.args = function($fname, argcount, slots, var_names, args, $dobj,
 
     if(nb_pos > argcount){
         // More positional arguments than formal parameters
-        if(extra_pos_args === null || extra_pos_args == "$dummy"){
+        if(extra_pos_args === null || extra_pos_args == "*"){
             // No parameter to store extra positional arguments :
             // thow an exception
             msg = $fname + "() takes " + argcount + " positional argument" +
