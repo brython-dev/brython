@@ -392,6 +392,11 @@ Random.choices = function(){
     }else if(cum_weights !== _b_.None){
         throw _b_.TypeError.$factory("Cannot specify both weights and " +
             "cumulative weights")
+    }else{
+        if(weights.length != population.length){
+            throw _b_.ValueError.$factory('The number of weights does not ' +
+                'match the population')
+        }
     }
     if(cum_weights === _b_.None){
         var cum_weights = [weights[0]]
@@ -400,7 +405,11 @@ Random.choices = function(){
                 cum_weights.push(cum_weights[rank - 1] + weight)
             }
         })
+    }else if(cum_weights.length != population.length){
+        throw _b_.ValueError.$factory('The number of weights does not ' +
+            'match the population')
     }
+
     var result = []
     for(var i = 0; i < k; i++){
         var rand = Math.random() * cum_weights[cum_weights.length - 1]
