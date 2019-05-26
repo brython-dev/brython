@@ -384,6 +384,9 @@ Random.choices = function(){
             cum_weights = $.cum_weights,
             k = $.k
 
+    if(population.length == 0){
+        throw _b_.ValueError.$factory("population is empty")
+    }
     if(weights === _b_.None){
         weights = []
         population.forEach(function(){
