@@ -891,11 +891,16 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
 
    // [Import spec] Halt import logic
    var from_stdlib = false
+
+   // Check if the script that imports the module is in the standard library.
+   // If so, it's no use trying to import with finder_path (in the importer's
+   // directory)
    if(globals.$jsobj && globals.$jsobj.__file__){
-       if(globals.$jsobj.__file__.startsWith($B.brython_path)){
+       var file = globals.$jsobj.__file__
+       if(file.startsWith($B.brython_path + "Lib/") ||
+               file.startsWith($B.brython_path + "libs/") ||
+               file.startsWith("VFS.")){
            from_stdlib = "static"
-       }else if(globals.$jsobj.__file__.startsWith("VFS.")){
-           from_stdlib = "VFS"
        }
    }
 

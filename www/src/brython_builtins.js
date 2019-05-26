@@ -30,6 +30,9 @@ if($B.brython_path === undefined){
     // It is used to import modules of the standard library
     $path = $B.brython_path = elts.join('/') + '/'
 }else{
+    if(! $B.brython_path.endsWith("/")){
+        $B.brython_path += "/"
+    }
     $path = $B.brython_path
 }
 

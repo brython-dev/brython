@@ -15,12 +15,22 @@ var _b_ = $B.builtins
 */
 function import_hooks(mod_name, _path, from_stdlib) {
 
-    var _sys_modules = $B.imported,
+    var meta_path = $B.meta_path.slice(),
+        _sys_modules = $B.imported,
         _loader,
         spec
 
-    for(var i = 0, len = $B.meta_path.length; i < len; i++){
-        var _finder = $B.meta_path[i],
+    if(from_stdlib){
+        // When importing from a module in the standard library, remove
+        // finder_path from the finders : the module can't be in the current
+        // directory.
+        var path_ix = meta_path.indexOf($B.finders["path"])
+        if(path_ix > -1){
+            meta_path.splice(path_ix, 1)
+        }
+    }
+    for(var i = 0, len = meta_path.length; i < len; i++){
+        var _finder = meta_path[i],
             find_spec = $B.$getattr(_finder, "find_spec", _b_.None)
         if(find_spec == _b_.None){
             // If find_spec is not defined for the meta path, try the legacy

@@ -20,7 +20,8 @@ if(this_url.startsWith("blob:")){this_url=this_url.substr(5)}}else{var scripts=d
 this_url=scripts[scripts.length-1].src}
 var elts=this_url.split('/')
 elts.pop()
-$path=$B.brython_path=elts.join('/')+'/'}else{$path=$B.brython_path}
+$path=$B.brython_path=elts.join('/')+'/'}else{if(! $B.brython_path.endsWith("/")){$B.brython_path+="/"}
+$path=$B.brython_path}
 var path=_window.location.origin+_window.location.pathname,path_elts=path.split("/")
 path_elts.pop()
 var $script_dir=$B.script_dir=path_elts.join("/")
@@ -84,8 +85,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-05-25 16:20:46.947826"
-__BRYTHON__.timestamp=1558794046947
+__BRYTHON__.compiled_date="2019-05-26 09:30:02.797025"
+__BRYTHON__.timestamp=1558855802797
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","_zlib","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -8887,7 +8888,10 @@ exc.name=mod_name
 throw exc}
 $B.$__import__=function(mod_name,globals,locals,fromlist,level){
 var from_stdlib=false
-if(globals.$jsobj && globals.$jsobj.__file__){if(globals.$jsobj.__file__.startsWith($B.brython_path)){from_stdlib="static"}else if(globals.$jsobj.__file__.startsWith("VFS.")){from_stdlib="VFS"}}
+if(globals.$jsobj && globals.$jsobj.__file__){var file=globals.$jsobj.__file__
+if(file.startsWith($B.brython_path+"Lib/")||
+file.startsWith($B.brython_path+"libs/")||
+file.startsWith("VFS.")){from_stdlib="static"}}
 var modobj=$B.imported[mod_name],parsed_name=mod_name.split('.')
 if(modobj==_b_.None){
 import_error(mod_name)}
@@ -13068,8 +13072,11 @@ return $B.rich_comp(op,self.$cell_contents,other.$cell_contents)}})(op)})
 $B.set_func_names($B.cell,"builtins")})(__BRYTHON__)
 ;
 ;(function($B){var _b_=$B.builtins
-function import_hooks(mod_name,_path,from_stdlib){var _sys_modules=$B.imported,_loader,spec
-for(var i=0,len=$B.meta_path.length;i < len;i++){var _finder=$B.meta_path[i],find_spec=$B.$getattr(_finder,"find_spec",_b_.None)
+function import_hooks(mod_name,_path,from_stdlib){var meta_path=$B.meta_path.slice(),_sys_modules=$B.imported,_loader,spec
+if(from_stdlib){
+var path_ix=meta_path.indexOf($B.finders["path"])
+if(path_ix >-1){meta_path.splice(path_ix,1)}}
+for(var i=0,len=meta_path.length;i < len;i++){var _finder=meta_path[i],find_spec=$B.$getattr(_finder,"find_spec",_b_.None)
 if(find_spec==_b_.None){
 var find_module=$B.$getattr(_finder,"find_module",_b_.None)
 if(find_module !==_b_.None){_loader=find_module(mod_name,_path)
