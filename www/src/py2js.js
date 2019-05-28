@@ -14,7 +14,7 @@ Number.isSafeInteger = Number.isSafeInteger || function (value) {
 
 var js,$pos,res,$op
 var _b_ = $B.builtins
-var _window = self;
+var _window = self
 var isWebWorker = $B.isa_web_worker =
     ('undefined' !== typeof WorkerGlobalScope) &&
     ("function" === typeof importScripts) &&
@@ -26,14 +26,6 @@ $B.parser = {}
 Utility functions
 =================
 */
-
-// Keys of an object
-var keys = $B.keys = function(obj){
-    var res = []
-    for(var attr in obj){res.push(attr)}
-    res.sort()
-    return res
-}
 
 // Return a clone of an object
 var clone = $B.clone = function(obj){
@@ -207,10 +199,10 @@ var add_identnode = $B.parser.add_identnode = function(parent, insert_at, name, 
 /*
  * This helper function is used to convert `yield from` statements into
  * blocks of code using only `yield` (see PEP 808). When a yield from
- * is encountered, this function creates the python code (see variable replace_with)
- * parses it using the :function:`$tokenize` function inserting it at the current
- * position in the tree. Finally, the yield_ctx is replaced with a $YieldFromMarkerNode
- * which, when transformed, does the following:
+ * is encountered, this function creates the python code (see variable
+ * replace_with), parses it using the :function:`$tokenize` function inserting
+ * it at the current position in the tree. Finally, the yield_ctx is replaced
+ * with a $YieldFromMarkerNode which, when transformed, does the following:
  *
  *   1. stores the expression that is yielded from into the variable `_i`
  *      so that it can then be used in the replacement code
@@ -220,9 +212,10 @@ var add_identnode = $B.parser.add_identnode = function(parent, insert_at, name, 
  *      the variable `x` needs to hold the value sent to the generator).
  *
  * Note that since the function :function:`$add_yield_from_code` is called
- * during the parsing process when the `from` token is encountered, the expression
- * that is yielded from is not parsed yet so that we can't populate the variable `_i`
- * but must post-pone it to the transform method of $YieldFromMarkerNode.
+ * during the parsing process when the `from` token is encountered, the
+ * expression that is yielded from is not parsed yet so that we can't populate
+ * the variable `_i` but must post-pone it to the transform method of
+ * $YieldFromMarkerNode.
  */
 var $add_yield_from_code = $B.parser.$add_yield_from_code = function(yield_ctx){
     var pnode = $get_node(yield_ctx)
@@ -366,7 +359,7 @@ var $_SyntaxError = $B.parser.$_SyntaxError = function (context, msg, indent){
 Class for Python abstract syntax tree
 =====================================
 
-An instance is created for the whole Python program as the root of the tree
+An instance is created for the whole Python program as the root of the tree.
 
 For each instruction in the Python source code, an instance is created
 as a child of the block where it stands : the root for instructions at
@@ -564,7 +557,7 @@ var $Node = $B.parser.$Node = function(type){
                 while(parent !== undefined && parent.id === undefined){
                     parent = parent.parent
                 }
-
+                // $B.$BRgenerator defined in py_generators.js
                 var g = $B.$BRgenerator(def_ctx.name, blocks,
                     def_ctx.id, def_node),
                     block_id = parent.id.replace(/\./g, '_'),
@@ -593,7 +586,7 @@ var $Node = $B.parser.$Node = function(type){
 
 }
 
-var $YieldFromMarkerNode = $B.parser.$YieldFromMarkerNode = function(params) {
+var $YieldFromMarkerNode = $B.parser.$YieldFromMarkerNode = function(params){
     $Node.apply(this, ['marker'])
     new $NodeCtx(this)
     this.params = params
@@ -601,7 +594,8 @@ var $YieldFromMarkerNode = $B.parser.$YieldFromMarkerNode = function(params) {
     this.transform = function(rank) {
         add_identnode(this.parent, rank,
                 params.iter_name,
-                new $JSCode('$B.$iter(' + params.yield_expr.tree[0].to_js() + ')')
+                new $JSCode('$B.$iter(' + params.yield_expr.tree[0].to_js() +
+                    ')')
         )
         if(params.save_result){
             var assign_ctx = params.assign_ctx
@@ -796,7 +790,7 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context){
                 // the right part of the assignement must be evaluated
                 // first, and it is the builtin "range"
                 var node = $get_node(this)
-                node.bound_before = $B.keys(scope.binding)
+                node.bound_before = Object.keys(scope.binding)
                 $bind(assigned.value, scope, this)
             }else{
                 // assignement to a variable defined as global : bind name at
@@ -1016,7 +1010,8 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context){
                 node.parent.insert(rank++, new_node)
                 var context = new $NodeCtx(new_node) // create ordinary node
                 left_item.parent = context
-                var assign = new $AssignCtx(left_item, false) // assignment to left operand
+                // assignment to left operand
+                var assign = new $AssignCtx(left_item, false)
                 var js = rlname
                 if(packed == null || i < packed){
                     js += '[' + i + ']'
@@ -1034,7 +1029,7 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context){
     }
     this.to_js = function(){
         this.js_processed = true
-        if(this.parent.type == 'call'){// like in foo(x=0)
+        if(this.parent.type == 'call'){ // like in foo(x=0)
             return '{$nat:"kw",name:' + this.tree[0].to_js() +
                 ',value:' + this.tree[1].to_js() + '}'
         }
@@ -1219,7 +1214,7 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
     }
 
     // Store the names already bound
-    $get_node(this).bound_before = $B.keys(scope.binding)
+    $get_node(this).bound_before = Object.keys(scope.binding)
 
     this.module = scope.module
 
@@ -1786,30 +1781,25 @@ var $CallCtx = $B.parser.$CallCtx = function(context){
 
             var default_res = "$B.$call(" + func_js + ")" + args_str
 
-            if(this.tree.length > -1){
-                if(this.func.type == 'id'){
-                    if(this.func.is_builtin){
-                        // simplify code for built-in functions
-                        var classes = ["complex", "bytes", "bytearray",
-                            "object", "memoryview", "int", "float", "str",
-                            "list", "tuple", "dict", "set", "frozenset",
-                            "range", "slice", "zip", "bool", "type",
-                            "classmethod", "staticmethod", "enumerate",
-                            "reversed", "property", "$$super", "zip", "map",
-                            "filter"]
-                        if($B.builtin_funcs[this.func.value] !== undefined){
-                            if(classes.indexOf(this.func.value) == -1){
-                                return func_js + args_str
-                            }else{
-                                return func_js + ".$factory" + args_str
-                            }
-                        }
+            if(this.tree.length > -1 && this.func.type == 'id' &&
+                    this.func.is_builtin){
+                // simplify code for built-in functions and classes
+                var classes = ["complex", "bytes", "bytearray",
+                    "object", "memoryview", "int", "float", "str",
+                    "list", "tuple", "dict", "set", "frozenset",
+                    "range", "slice", "zip", "bool", "type",
+                    "classmethod", "staticmethod", "enumerate",
+                    "reversed", "property", "$$super", "zip", "map",
+                    "filter"]
+                if($B.builtin_funcs[this.func.value] !== undefined){
+                    if(classes.indexOf(this.func.value) == -1){
+                        // built-in function
+                        return func_js + args_str
+                    }else{
+                        // built-in class
+                        return func_js + ".$factory" + args_str
                     }
-                    var res = default_res
-                }else{
-                    var res = default_res
                 }
-                return res
             }
 
             return default_res
@@ -1858,7 +1848,6 @@ var $ClassCtx = $B.parser.$ClassCtx = function(context){
 
         // bind name
         $bind(name, this.scope, this)
-        //this.scope.binding[name] = this
 
         // if function is defined inside another function, add the name
         // to local names
@@ -2232,7 +2221,6 @@ var $DecoratorCtx = $B.parser.$DecoratorCtx = function(context){
         // instead of "def" or "class" because the result might have an
         // attribute "__call__"
         $bind(obj.name, scope, this)
-        //scope.binding[obj.name] = true
 
         node.parent.insert(func_rank + 1, $NodeJS(res))
         this.decorators = decorators
@@ -2277,7 +2265,7 @@ var $DecoratorExprCtx = $B.parser.$DecoratorExprCtx = function(context){
         }
 
 
-        return obj //res.join(".")
+        return obj
     }
 }
 
@@ -2809,7 +2797,8 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         this.default_str = '{' + defs1.join(', ') + '}'
         if(this.type == "def"){
             // Add a node to mark the end of the function
-            node.parent.insert(rank + offset++, new $MarkerNode('func_end:'+CODE_MARKER))
+            node.parent.insert(rank + offset++, new $MarkerNode('func_end:' +
+                CODE_MARKER))
             var res = 'return ' + name
             if(this.async){
                 res = 'return $B.make_async(' + name + ')'
@@ -2933,7 +2922,7 @@ var $DelCtx = $B.parser.$DelCtx = function(context){
 
 var $DictOrSetCtx = $B.parser.$DictOrSetCtx = function(context){
     // Context for literal dictionaries or sets
-    // Rhe real type (dist or set) is set inside $transition
+    // The real type (dist or set) is set inside $transition
     // as the attribute 'real'
     this.type = 'dict_or_set'
     this.real = 'dict_or_set'
@@ -3374,9 +3363,7 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
                 }
 
             }else{
-
-                // If the loop is already inside a function, don't
-                // wrap it
+                // If the loop is already inside a function, don't wrap it
                 test_range_node.add(for_node)
             }
             if(range_is_builtin){
@@ -3797,7 +3784,7 @@ var $FuncStarArgCtx = $B.parser.$FuncStarArgCtx = function(context,op){
 
     this.set_name = function(name){
         this.name = name
-        
+
         // bind name to function scope
         if(this.node.binding[name]){
             $_SyntaxError(context,
