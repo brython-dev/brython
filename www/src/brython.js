@@ -85,8 +85,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-05-26 09:38:37.483309"
-__BRYTHON__.timestamp=1558856317483
+__BRYTHON__.compiled_date="2019-05-28 18:01:56.986787"
+__BRYTHON__.timestamp=1559059316986
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","_zlib","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -96,16 +96,12 @@ Math.floor(value)===value};
 Number.isSafeInteger=Number.isSafeInteger ||function(value){return Number.isInteger(value)&& Math.abs(value)<=Number.MAX_SAFE_INTEGER;};
 var js,$pos,res,$op
 var _b_=$B.builtins
-var _window=self;
+var _window=self
 var isWebWorker=$B.isa_web_worker=
 ('undefined' !==typeof WorkerGlobalScope)&&
 ("function"===typeof importScripts)&&
 (navigator instanceof WorkerNavigator)
 $B.parser={}
-var keys=$B.keys=function(obj){var res=[]
-for(var attr in obj){res.push(attr)}
-res.sort()
-return res}
 var clone=$B.clone=function(obj){var res={}
 for(var attr in obj){res[attr]=obj[attr]}
 return res}
@@ -333,7 +329,8 @@ var $YieldFromMarkerNode=$B.parser.$YieldFromMarkerNode=function(params){$Node.a
 new $NodeCtx(this)
 this.params=params
 this.tree
-this.transform=function(rank){add_identnode(this.parent,rank,params.iter_name,new $JSCode('$B.$iter('+params.yield_expr.tree[0].to_js()+')')
+this.transform=function(rank){add_identnode(this.parent,rank,params.iter_name,new $JSCode('$B.$iter('+params.yield_expr.tree[0].to_js()+
+')')
 )
 if(params.save_result){var assign_ctx=params.assign_ctx
 assign_ctx.tree.pop()
@@ -412,7 +409,7 @@ assigned.bound=true
 if(!$B._globals[scope.id]||
 $B._globals[scope.id][assigned.value]===undefined){
 var node=$get_node(this)
-node.bound_before=$B.keys(scope.binding)
+node.bound_before=Object.keys(scope.binding)
 $bind(assigned.value,scope,this)}else{
 var module=$get_module(C)
 $bind(assigned.value,module,this)}}else if(["str","int","float","complex"].indexOf(assigned.type)>-1){$_SyntaxError(C,["can't assign to literal"])}else if(assigned.type=="unary"){$_SyntaxError(C,["can't assign to operator"])}}
@@ -635,7 +632,7 @@ if(noassign[name]===true){$_SyntaxError(C,["can't assign to keyword"])}else if((
 (scope.binding[name]===undefined)){if(scope.globals===undefined ||
 scope.globals.indexOf(name)==-1){
 assigned.unbound=true}}}else if(['str','int','float','complex'].indexOf(assigned.type)>-1){$_SyntaxError(C,["can't assign to literal"])}}
-$get_node(this).bound_before=$B.keys(scope.binding)
+$get_node(this).bound_before=Object.keys(scope.binding)
 this.module=scope.module
 this.toString=function(){return '(augm assign) '+this.tree}
 this.transform=function(node,rank){var func='__'+$operators[op]+'__',offset=0,parent=node.parent,line_num=node.line_num,lnum_set=false
@@ -929,11 +926,12 @@ else if(!args_str){args_str=kw_args_str}}
 if(star_args){
 args_str='.apply(null,'+args_str+')'}else{args_str='('+args_str+')'}
 var default_res="$B.$call("+func_js+")"+args_str
-if(this.tree.length >-1){if(this.func.type=='id'){if(this.func.is_builtin){
+if(this.tree.length >-1 && this.func.type=='id' &&
+this.func.is_builtin){
 var classes=["complex","bytes","bytearray","object","memoryview","int","float","str","list","tuple","dict","set","frozenset","range","slice","zip","bool","type","classmethod","staticmethod","enumerate","reversed","property","$$super","zip","map","filter"]
-if($B.builtin_funcs[this.func.value]!==undefined){if(classes.indexOf(this.func.value)==-1){return func_js+args_str}else{return func_js+".$factory"+args_str}}}
-var res=default_res}else{var res=default_res}
-return res}
+if($B.builtin_funcs[this.func.value]!==undefined){if(classes.indexOf(this.func.value)==-1){
+return func_js+args_str}else{
+return func_js+".$factory"+args_str}}}
 return default_res}}}
 var $ClassCtx=$B.parser.$ClassCtx=function(C){
 this.type='class'
@@ -1146,7 +1144,7 @@ this.names.slice(1).forEach(function(name){obj="_b_.getattr("+obj+", '"+name+"')
 if(this.tree.length > 1){
 this.tree[0].func={to_js:function(){return obj}}
 return this.tree[0].to_js()}
-return obj }}
+return obj}}
 var $DefCtx=$B.parser.$DefCtx=function(C){this.type='def'
 this.name=null
 this.parent=C
@@ -1391,7 +1389,8 @@ js+='None;'
 node.parent.insert(rank+offset++,$NodeJS(js))
 this.default_str='{'+defs1.join(', ')+'}'
 if(this.type=="def"){
-node.parent.insert(rank+offset++,new $MarkerNode('func_end:'+CODE_MARKER))
+node.parent.insert(rank+offset++,new $MarkerNode('func_end:'+
+CODE_MARKER))
 var res='return '+name
 if(this.async){res='return $B.make_async('+name+')'}
 node.parent.insert(rank+offset++,$NodeJS(res+'}'))

@@ -415,7 +415,7 @@ Random.choices = function(){
 
     var result = []
     for(var i = 0; i < k; i++){
-        var rand = Math.random() * cum_weights[cum_weights.length - 1]
+        var rand = self._random() * cum_weights[cum_weights.length - 1]
         for(var rank = 0, len = population.length; rank < len; rank++){
             if(cum_weights[rank] > rand){
                 result.push(population[rank])

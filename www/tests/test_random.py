@@ -112,3 +112,9 @@ test(random.randrange, 2.5)
 for (a, b) in [(0, 2.5), (0.5, 2)]:
     test(random.randrange, a, b)
 
+# issue 1121
+random.seed(31416)
+ch1 = random.choices([0, 1, 2], [2, 1, 1], k = 50)
+random.seed(31416)
+ch2 = random.choices([0, 1, 2], [2, 1, 1], k = 50)
+assert ch1 == ch2
