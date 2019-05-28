@@ -1217,10 +1217,44 @@ $B.rich_comp = function(op, x, y){
         "' and '" + $B.class_name(y) + "'")
 }
 
-var opname2opsign = {sub: "-", xor: "^"}
+var opname2opsign = {sub: "-", xor: "^", mul: "*"}
 
 $B.rich_op = function(op, x, y){
-    var res = $B.$call($B.$getattr(x, "__" + op + "__"))(y)
+    var x_class = x.__class__ || $B.get_class(x),
+        y_class = y.__class__ || $B.get_class(y),
+        method
+    if(x.__class__ === y.__class__){
+        // For objects of the same type, don't try the reversed operator
+        try{
+            method = $B.$call($B.$getattr(x, "__" + op + "__"))
+        }catch(err){
+            if(err.__class__ === _b_.AttributeError){
+                var kl_name = $B.class_name(x)
+                throw _b_.TypeError.$factory("unsupported operand type(s) " +
+                    "for " + opname2opsign[op] + ": '" + kl_name + "' and '" + 
+                    kl_name + "'")
+            }
+            throw err
+        }
+        return method(y)
+    }
+    // For instances of different classes, try reversed operator
+    var res
+    try{
+        method = $B.$call($B.$getattr(x, "__" + op + "__"))
+    }catch(err){
+        if(err.__class__ !== _b_.AttributeError){
+            throw err
+        }
+        res = $B.$call($B.$getattr(y, "__r" + op + "__"))(x)
+        if(res !== _b_.NotImplemented){
+            return res
+        }
+        throw _b_.TypeError.$factory("'" + (opname2opsign[op] || op) +
+            "' not supported between instances of '" + $B.class_name(x) +
+            "' and '" + $B.class_name(y) + "'")
+    }
+    res = method(y)
     if(res === _b_.NotImplemented){
         res = $B.$call($B.$getattr(y, "__r" + op + "__"))(x)
         if(res !== _b_.NotImplemented){

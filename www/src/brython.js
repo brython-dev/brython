@@ -85,8 +85,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-05-28 18:40:49.219386"
-__BRYTHON__.timestamp=1559061649219
+__BRYTHON__.compiled_date="2019-05-28 19:41:02.705327"
+__BRYTHON__.timestamp=1559065262705
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","_zlib","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -2498,8 +2498,8 @@ res.push(': $B.rich_op("'+$operators[this.op]+'",'+
 t0+','+t1+')')
 return '('+res.join('')+')'}}
 if(comps[this.op]!==undefined){return '$B.rich_comp("__'+$operators[this.op]+'__",'+
-e0.to_js()+','+e1.to_js()+')'}else{return '$B.$getattr('+e0.to_js()+', "__'+
-$operators[this.op]+'__")('+e1.to_js()+')'}
+e0.to_js()+','+e1.to_js()+')'}else{return '$B.rich_op("'+$operators[this.op]+'", '+
+e0.to_js()+', '+e1.to_js()+')'}
 default:
 if(comps[this.op]!==undefined){return '$B.rich_comp("__'+$operators[this.op]+'__",'+
 this.tree[0].to_js()+','+this.tree[1].to_js()+')'}else{return '$B.rich_op("'+$operators[this.op]+'", '+
@@ -5149,20 +5149,7 @@ if(_ga===undefined){_ga=klass["__getattr__"]
 if(_ga===undefined){var mro=klass.__mro__
 for(var i=0,len=mro.length;i < len;i++){_ga=mro[i]["__getattr__"]
 if(_ga !==undefined){break}}}}
-if(_ga !==undefined){try{return _ga(obj,attr)}catch(err){if(err.__class__ !==_b_.AttributeError){
-throw err}}}
-if(attr.substr(0,2)=="__" && attr.substr(attr.length-2)=="__"){var attr1=attr.substr(2,attr.length-4)
-var rank=opnames.indexOf(attr1)
-if(rank >-1){var rop="__r"+opnames[rank]+"__" 
-var func=function(){try{
-if($B.get_class(arguments[0])===klass){throw Error('')}
-return _b_.getattr(arguments[0],rop)(obj)}catch(err){var msg="unsupported operand types for "+
-opsigns[rank]+": '"+klass.$infos.__name__+
-"' and '"+$B.class_name(arguments[0])+
-"'"
-throw _b_.TypeError.$factory(msg)}}
-func.$infos={__name__ :klass.$infos.__name__+"."+attr}
-return func}}}}
+if(_ga !==undefined){return _ga(obj,attr)}}}
 object.__gt__=function(){return _b_.NotImplemented}
 object.__hash__=function(self){var hash=self.__hashvalue__
 if(hash !==undefined){return hash}
@@ -6046,8 +6033,23 @@ else if(op=="__ne__"){return _b_.True}
 throw _b_.TypeError.$factory("'"+method2comp[op]+
 "' not supported between instances of '"+$B.class_name(x)+
 "' and '"+$B.class_name(y)+"'")}
-var opname2opsign={sub:"-",xor:"^"}
-$B.rich_op=function(op,x,y){var res=$B.$call($B.$getattr(x,"__"+op+"__"))(y)
+var opname2opsign={sub:"-",xor:"^",mul:"*"}
+$B.rich_op=function(op,x,y){var x_class=x.__class__ ||$B.get_class(x),y_class=y.__class__ ||$B.get_class(y),method
+if(x.__class__===y.__class__){
+try{method=$B.$call($B.$getattr(x,"__"+op+"__"))}catch(err){if(err.__class__===_b_.AttributeError){var kl_name=$B.class_name(x)
+throw _b_.TypeError.$factory("unsupported operand type(s) "+
+"for "+opname2opsign[op]+": '"+kl_name+"' and '"+
+kl_name+"'")}
+throw err}
+return method(y)}
+var res
+try{method=$B.$call($B.$getattr(x,"__"+op+"__"))}catch(err){if(err.__class__ !==_b_.AttributeError){throw err}
+res=$B.$call($B.$getattr(y,"__r"+op+"__"))(x)
+if(res !==_b_.NotImplemented){return res}
+throw _b_.TypeError.$factory("'"+(opname2opsign[op]||op)+
+"' not supported between instances of '"+$B.class_name(x)+
+"' and '"+$B.class_name(y)+"'")}
+res=method(y)
 if(res===_b_.NotImplemented){res=$B.$call($B.$getattr(y,"__r"+op+"__"))(x)
 if(res !==_b_.NotImplemented){return res}
 throw _b_.TypeError.$factory("'"+(opname2opsign[op]||op)+

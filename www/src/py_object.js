@@ -316,38 +316,7 @@ object.__getattribute__ = function(obj, attr){
             }
         }
         if(_ga !== undefined){
-            try{
-                return _ga(obj, attr)
-            }catch(err){
-                if(err.__class__ !== _b_.AttributeError){ // issue #1122
-                    throw err
-                }
-            }
-        }
-        // for special methods such as __mul__, look for __rmul__ on operand
-        if(attr.substr(0,2) == "__" && attr.substr(attr.length - 2) == "__"){
-            var attr1 = attr.substr(2, attr.length - 4) // stripped of __
-            var rank = opnames.indexOf(attr1)
-            if(rank > -1){
-                var rop = "__r" + opnames[rank] + "__" // name of reflected operator
-                var func = function(){
-                    try{
-                        // Operands must be of different types
-                        if($B.get_class(arguments[0]) === klass){
-                            throw Error('')
-                        }
-                        return _b_.getattr(arguments[0], rop)(obj)
-                    }catch(err){
-                        var msg = "unsupported operand types for " +
-                            opsigns[rank] + ": '" + klass.$infos.__name__ +
-                            "' and '" + $B.class_name(arguments[0]) +
-                            "'"
-                        throw _b_.TypeError.$factory(msg)
-                    }
-                }
-                func.$infos = {__name__ : klass.$infos.__name__ + "." + attr}
-                return func
-            }
+            return _ga(obj, attr)
         }
     }
 }

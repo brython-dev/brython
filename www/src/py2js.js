@@ -5247,8 +5247,8 @@ var $OpCtx = $B.parser.$OpCtx = function(context,op){
                     return '$B.rich_comp("__' + $operators[this.op] + '__",' +
                         e0.to_js() + ',' + e1.to_js() + ')'
                 }else{
-                    return '$B.$getattr(' + e0.to_js() + ', "__' +
-                        $operators[this.op] + '__")(' + e1.to_js() + ')'
+                    return '$B.rich_op("' + $operators[this.op] + '", ' +
+                        e0.to_js() + ', ' + e1.to_js() + ')'
                 }
             default:
                 if(comps[this.op] !== undefined){
