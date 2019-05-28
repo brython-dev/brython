@@ -85,8 +85,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-05-28 18:01:56.986787"
-__BRYTHON__.timestamp=1559059316986
+__BRYTHON__.compiled_date="2019-05-28 18:40:49.219386"
+__BRYTHON__.timestamp=1559061649219
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","_zlib","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5149,8 +5149,8 @@ if(_ga===undefined){_ga=klass["__getattr__"]
 if(_ga===undefined){var mro=klass.__mro__
 for(var i=0,len=mro.length;i < len;i++){_ga=mro[i]["__getattr__"]
 if(_ga !==undefined){break}}}}
-if(_ga !==undefined){try{return _ga(obj,attr)}
-catch(err){if($B.debug > 2){console.log(err)}}}
+if(_ga !==undefined){try{return _ga(obj,attr)}catch(err){if(err.__class__ !==_b_.AttributeError){
+throw err}}}
 if(attr.substr(0,2)=="__" && attr.substr(attr.length-2)=="__"){var attr1=attr.substr(2,attr.length-4)
 var rank=opnames.indexOf(attr1)
 if(rank >-1){var rop="__r"+opnames[rank]+"__" 

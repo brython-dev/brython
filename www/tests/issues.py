@@ -2309,6 +2309,26 @@ def f(a, b, *, x=3):
 
 assertRaises(TypeError, f, 1, 2, 3)
 
+# issue 1122
+class A(Exception):
+    pass
+
+class B(object):
+    def __getattr__(self, attr):
+        raise A()
+
+ok = False
+
+try:
+    b = B()
+    b.attr
+except A:
+    ok = True
+except:
+    pass
+
+assert(ok)
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
