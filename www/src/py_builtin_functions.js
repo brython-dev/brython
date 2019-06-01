@@ -418,8 +418,14 @@ $B.to_alias = function(attr){
 
 //eval() (built in function)
 function $$eval(src, _globals, _locals){
-    if(_globals === undefined){_globals = _b_.None}
-    if(_locals === undefined){_locals = _b_.None}
+    var $ = $B.args("eval", 4,
+            {src: null, globals: null, locals: null, is_exec: null},
+            ["src", "globals", "locals", "is_exec"], arguments,
+            {globals: _b_.None, locals: _b_.None, is_exec: false}, null, null),
+            src = $.src,
+            _globals = $.globals,
+            _locals = $.locals,
+            is_exec = $.is_exec
 
     var current_frame = $B.frames_stack[$B.frames_stack.length - 1]
 
@@ -430,7 +436,7 @@ function $$eval(src, _globals, _locals){
 
     var stack_len = $B.frames_stack.length
 
-    var is_exec = arguments[3] == 'exec'
+    //var is_exec = arguments[3] == 'exec'
 
     if(src.__class__ === code){
         is_exec = src.mode == "exec"
@@ -483,7 +489,7 @@ function $$eval(src, _globals, _locals){
         // globals_id
         if(_globals.__class__ != _b_.dict){
             throw _b_.TypeError.$factory("exec() globals must be a dict, not "+
-                _globals.__class__.$infos.__name__)
+                $B.get_class(_globals).$infos.__name__)
         }
         _globals.globals_id = _globals.globals_id || globals_id
         globals_id = _globals.globals_id
@@ -725,7 +731,7 @@ function exec(src, globals, locals){
         src = $.src,
         globals = $.globals,
         locals = $.locals
-    return $$eval(src, globals, locals, 'exec') || _b_.None
+    return $$eval(src, globals, locals, true) || _b_.None
 }
 
 exec.$is_func = true

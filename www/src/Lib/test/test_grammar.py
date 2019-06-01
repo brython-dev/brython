@@ -110,7 +110,6 @@ class TokenTests(unittest.TestCase):
         x = 0
         self.assertEqual(x, 0, 'backslash ending comment')
 
-    @unittest.skip('Fails in Brython -- still needs to be investigated')
     def test_plain_integers(self):
         self.assertEqual(type(000), type(0))
         self.assertEqual(0xff, 255)
@@ -171,14 +170,12 @@ class TokenTests(unittest.TestCase):
         x = .3e14
         x = 3.1e4
 
-    @unittest.skip('Fails in Brython -- still needs to be investigated')
     def test_float_exponent_tokenization(self):
         # See issue 21642.
         self.assertEqual(1 if 1else 0, 1)
         self.assertEqual(1 if 0else 0, 0)
         self.assertRaises(SyntaxError, eval, "0 if 1Else 0")
 
-    @unittest.skip('Fails in Brython -- still needs to be investigated')
     def test_underscore_literals(self):
         for lit in VALID_UNDERSCORE_LITERALS:
             self.assertEqual(eval(lit), eval(lit.replace('_', '')))
@@ -227,11 +224,7 @@ the \'lazy\' dog.\n\
 '
         self.assertEqual(x, y)
 
-    @unittest.skip('Fails in Brython -- still needs to be investigated')
-    def test_ellipsis(self):
-        x = ...
-        self.assertTrue(x is Ellipsis)
-        self.assertRaises(SyntaxError, eval, ".. .")
+
 
     @unittest.skip('Fails in Brython -- still needs to be investigated')
     def test_eof_error(self):
@@ -269,7 +262,6 @@ class GrammarTests(unittest.TestCase):
         # testlist ENDMARKER
         x = eval('1, 0 or 1')
 
-    @unittest.skip('Fails in Brython -- still needs to be investigated')
     def test_var_annot_basics(self):
         # all these should be allowed
         var1: int = 5

@@ -3060,6 +3060,7 @@ var $EllipsisCtx = $B.parser.$EllipsisCtx = function(context){
     this.type = 'ellipsis'
     this.parent = context
     this.nbdots = 1
+    this.start = $pos
     context.tree[context.tree.length] = this
 
     this.toString = function(){return 'ellipsis'}
@@ -4839,9 +4840,13 @@ var $NodeCtx = $B.parser.$NodeCtx = function(node){
                     return "$locals.__annotations__.$string_dict['" +
                         this.tree[0].tree[0].value + "'] = " +
                         this.tree[0].annotation.to_js() + ";"
-                }else{
+                }else if(this.tree[0].type == "def"){
                     // Evaluate annotation
                     this.js = this.tree[0].annotation.to_js() + ";"
+                }else{
+                    // Ignore
+                    this.js = ""
+                    this.tree = []
                 }
             }else if(this.tree[0].type == "assign" &&
                     this.tree[0].tree[0].annotation){
@@ -6650,7 +6655,9 @@ var $mangle = $B.parser.$mangle = function(name, context){
 // Python source code
 
 var $transition = $B.parser.$transition = function(context, token, value){
-    //console.log("context", context, "token", token, value)
+    if(token == ":"){
+        //console.log("context", context, "token", token, value)
+    }
     switch(context.type){
         case 'abstract_expr':
 
@@ -7272,9 +7279,14 @@ var $transition = $B.parser.$transition = function(context, token, value){
             $_SyntaxError(context, 'token ' + token + ' after ' + context)
 
         case 'ellipsis':
-            if(token == '.'){context.nbdots++; return context}
-            else{
-                if(context.nbdots != 3){
+            if(token == '.'){
+                context.nbdots++
+                if(context.nbdots == 3 && $pos - context.start == 2){
+                    context.$complete = true
+                }
+                return context
+            }else{
+                if(! context.$complete){
                     $pos--
                     $_SyntaxError(context, 'token ' + token + ' after ' +
                         context)

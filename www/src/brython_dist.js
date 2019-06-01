@@ -85,8 +85,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-06-01 13:46:16.745994"
-__BRYTHON__.timestamp=1559389576745
+__BRYTHON__.compiled_date="2019-06-01 17:08:11.928247"
+__BRYTHON__.timestamp=1559401691928
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","_zlib","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -1527,6 +1527,7 @@ var $EllipsisCtx=$B.parser.$EllipsisCtx=function(C){
 this.type='ellipsis'
 this.parent=C
 this.nbdots=1
+this.start=$pos
 C.tree[C.tree.length]=this
 this.toString=function(){return 'ellipsis'}
 this.to_js=function(){this.js_processed=true
@@ -2292,8 +2293,10 @@ if(this.tree[0]){if(this.tree[0].annotation){
 if(this.tree[0].type=="expr" &&
 this.tree[0].tree[0].type=="id"){return "$locals.__annotations__.$string_dict['"+
 this.tree[0].tree[0].value+"'] = "+
-this.tree[0].annotation.to_js()+";"}else{
-this.js=this.tree[0].annotation.to_js()+";"}}else if(this.tree[0].type=="assign" &&
+this.tree[0].annotation.to_js()+";"}else if(this.tree[0].type=="def"){
+this.js=this.tree[0].annotation.to_js()+";"}else{
+this.js=""
+this.tree=[]}}else if(this.tree[0].type=="assign" &&
 this.tree[0].tree[0].annotation){
 var left=this.tree[0].tree[0]
 if(left.tree[0]&& left.tree[0].type=="id"){this.js="$locals.__annotations__.$string_dict['"+
@@ -3119,7 +3122,7 @@ while(true){if(scope.ntype=="module"){return name}
 else if(scope.ntype=="class"){var class_name=scope.C.tree[0].name
 while(class_name.charAt(0)=='_'){class_name=class_name.substr(1)}
 return '_'+class_name+name}else{if(scope.parent && scope.parent.C){scope=$get_scope(scope.C.tree[0])}else{return name}}}}else{return name}}
-var $transition=$B.parser.$transition=function(C,token,value){
+var $transition=$B.parser.$transition=function(C,token,value){if(token==":"){}
 switch(C.type){case 'abstract_expr':
 var packed=C.packed,is_await=C.is_await
 switch(token){case 'id':
@@ -3543,8 +3546,9 @@ case ':':
 if(C.parent.parent.type=='lambda'){return $transition(C.parent.parent,token)}}
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'ellipsis':
-if(token=='.'){C.nbdots++;return C}
-else{if(C.nbdots !=3){$pos--
+if(token=='.'){C.nbdots++
+if(C.nbdots==3 && $pos-C.start==2){C.$complete=true}
+return C}else{if(! C.$complete){$pos--
 $_SyntaxError(C,'token '+token+' after '+
 C)}else{return $transition(C.parent,token,value)}}
 case 'except':
@@ -6233,12 +6237,10 @@ $B.from_alias=function(attr){if(attr.substr(0,2)=='$$' && $B.aliased_names[attr.
 return attr}
 $B.to_alias=function(attr){if($B.aliased_names[attr]){return '$$'+attr}
 return attr}
-function $$eval(src,_globals,_locals){if(_globals===undefined){_globals=_b_.None}
-if(_locals===undefined){_locals=_b_.None}
+function $$eval(src,_globals,_locals){var $=$B.args("eval",4,{src:null,globals:null,locals:null,is_exec:null},["src","globals","locals","is_exec"],arguments,{globals:_b_.None,locals:_b_.None,is_exec:false},null,null),src=$.src,_globals=$.globals,_locals=$.locals,is_exec=$.is_exec
 var current_frame=$B.frames_stack[$B.frames_stack.length-1]
 if(current_frame !==undefined){var current_locals_id=current_frame[0].replace(/\./,'_'),current_globals_id=current_frame[2].replace(/\./,'_')}
 var stack_len=$B.frames_stack.length
-var is_exec=arguments[3]=='exec'
 if(src.__class__===code){is_exec=src.mode=="exec"
 src=src.source}else if(typeof src !=='string'){throw _b_.TypeError.$factory("eval() arg 1 must be a string, bytes "+
 "or code object")}
@@ -6255,7 +6257,7 @@ global_scope.parent_block=$B.builtins_scope
 parent_scope=local_scope
 eval("$locals_"+parent_scope.id+" = current_frame[1]")}else{
 if(_globals.__class__ !=_b_.dict){throw _b_.TypeError.$factory("exec() globals must be a dict, not "+
-_globals.__class__.$infos.__name__)}
+$B.get_class(_globals).$infos.__name__)}
 _globals.globals_id=_globals.globals_id ||globals_id
 globals_id=_globals.globals_id
 if(_locals===_globals ||_locals===_b_.None){locals_id=globals_id
@@ -6334,7 +6336,7 @@ $B.clear_ns(locals_id)}}
 $$eval.$is_func=true
 function exec(src,globals,locals){var missing={}
 var $=$B.args("exec",3,{src:null,globals:null,locals:null},["src","globals","locals"],arguments,{globals:_b_.None,locals:_b_.None},null,null),src=$.src,globals=$.globals,locals=$.locals
-return $$eval(src,globals,locals,'exec')||_b_.None}
+return $$eval(src,globals,locals,true)||_b_.None}
 exec.$is_func=true
 function exit(){throw _b_.SystemExit}
 exit.__repr__=exit.__str__=function(){return "Use exit() or Ctrl-Z plus Return to exit"}
