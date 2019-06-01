@@ -2329,6 +2329,16 @@ except:
 
 assert(ok)
 
+# issue 1125
+from typing import Union
+
+row = Union[int, str]
+
+def do() -> None:
+  a: row = 4
+  
+do()
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

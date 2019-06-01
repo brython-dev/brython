@@ -1442,7 +1442,9 @@ function locals(){
     // The last item in __BRYTHON__.frames_stack is
     // [locals_name, locals_obj, globals_name, globals_obj]
     check_nb_args('locals', 0, arguments)
-    return $B.obj_dict($B.last($B.frames_stack)[1])
+    var res = $B.obj_dict($B.last($B.frames_stack)[1])
+    delete res.$jsobj.__annotations__
+    return res
 }
 
 

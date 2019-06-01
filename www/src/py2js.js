@@ -2391,7 +2391,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         this.rank = rank // save rank if we must add generator declaration
 
         // block indentation
-        var indent = node.indent + 16
+        var indent = node.indent + 12
 
         // List of enclosing functions
 
@@ -2492,9 +2492,11 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         // Add lines of code to node children
 
         // Declare object holding local variables
-        var local_ns = '$locals_' + this.id
-        js = 'var ' + local_ns + ' = {}, $local_name = "' + this.id +
-            '",$locals = ' + local_ns + ';'
+        var local_ns = '$locals_' + this.id,
+            h = '\n' + ' '.repeat(indent)
+        js = 'var ' + local_ns + ' = {},' +
+            h +'$local_name = "' + this.id +
+            '",' + h + '$locals = ' + local_ns + ';'
 
         var new_node = new $Node()
         new_node.locals_def = true
@@ -2628,9 +2630,11 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
             if(make_args_nodes.length > 1){nodes.push(make_args_nodes[1])}
         }
 
+
         nodes = nodes.concat(enter_frame_nodes)
 
-        nodes.push($NodeJS('$top_frame[1] = $locals;'))
+        nodes.push($NodeJS('$locals.__annotations__ = _b_.dict.$factory()'))
+        nodes.push($NodeJS('$top_frame[1] = $locals'))
         nodes.push($NodeJS('$locals.$parent = $parent'))
 
         // Handle name __class__ in methods (PEP 3135 and issue #1068)
@@ -9383,8 +9387,8 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
     var enter_frame_pos = offset,
         js = 'var $top_frame = ["' + locals_id.replace(/\./g, '_') + '", ' +
             local_ns + ', "' + module.replace(/\./g, '_') + '", ' +
-            global_ns + ']; $B.frames_stack.push($top_frame); ' +
-            'var $stack_length = $B.frames_stack.length;'
+            global_ns + ']\n$B.frames_stack.push($top_frame)\n' +
+            'var $stack_length = $B.frames_stack.length'
     root.insert(offset++, $NodeJS(js))
 
     // Wrap code in a try/finally to make sure we leave the frame

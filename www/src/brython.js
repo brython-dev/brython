@@ -85,8 +85,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-05-28 19:41:02.705327"
-__BRYTHON__.timestamp=1559065262705
+__BRYTHON__.compiled_date="2019-06-01 13:46:16.745994"
+__BRYTHON__.timestamp=1559389576745
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","_zlib","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -1199,7 +1199,7 @@ if(this.transformed !==undefined){return}
 var scope=this.scope
 this.doc_string=$get_docstring(node)
 this.rank=rank 
-var indent=node.indent+16
+var indent=node.indent+12
 if(this.name.substr(0,15)=='lambda_'+$B.lambda_magic){var pblock=scope.parent_block
 if(pblock.C && pblock.C.tree[0].type=="def"){this.enclosing.push(pblock)}}
 var pnode=this.parent.node
@@ -1249,9 +1249,10 @@ var global_ns='$locals_'+global_scope.id.replace(/\./g,'_')
 var prefix=this.tree[0].to_js()
 if(this.decorated){prefix=this.alias}
 var name=this.name+this.num
-var local_ns='$locals_'+this.id
-js='var '+local_ns+' = {}, $local_name = "'+this.id+
-'",$locals = '+local_ns+';'
+var local_ns='$locals_'+this.id,h='\n'+' '.repeat(indent)
+js='var '+local_ns+' = {},'+
+h+'$local_name = "'+this.id+
+'",'+h+'$locals = '+local_ns+';'
 var new_node=new $Node()
 new_node.locals_def=true
 new_node.func_node=node
@@ -1315,7 +1316,8 @@ subelse_node.add($NodeJS("for(var i=$len; i < defparams.length"+
 ";i++){$locals[defparams[i]] = $defaults[defparams[i]]}"))}}else{nodes.push(make_args_nodes[0])
 if(make_args_nodes.length > 1){nodes.push(make_args_nodes[1])}}
 nodes=nodes.concat(enter_frame_nodes)
-nodes.push($NodeJS('$top_frame[1] = $locals;'))
+nodes.push($NodeJS('$locals.__annotations__ = _b_.dict.$factory()'))
+nodes.push($NodeJS('$top_frame[1] = $locals'))
 nodes.push($NodeJS('$locals.$parent = $parent'))
 var is_method=scope.ntype=="class"
 if(is_method){var class_name=scope.C.tree[0].name,class_block=scope.parent_block,class_ref="$locals_"+class_block.id.replace(/\./g,'_')+
@@ -4758,8 +4760,8 @@ root.insert(offset++,$NodeJS(local_ns+'["__package__"] = "'+__package__+'"'))
 root.insert(offset++,$NodeJS('$locals.__annotations__ = _b_.dict.$factory()'))
 var enter_frame_pos=offset,js='var $top_frame = ["'+locals_id.replace(/\./g,'_')+'", '+
 local_ns+', "'+module.replace(/\./g,'_')+'", '+
-global_ns+']; $B.frames_stack.push($top_frame); '+
-'var $stack_length = $B.frames_stack.length;'
+global_ns+']\n$B.frames_stack.push($top_frame)\n'+
+'var $stack_length = $B.frames_stack.length'
 root.insert(offset++,$NodeJS(js))
 var try_node=new $NodeJS('try'),children=root.children.slice(enter_frame_pos+1,root.children.length)
 root.insert(enter_frame_pos+1,try_node)
@@ -6626,7 +6628,9 @@ catch(err){throw _b_.TypeError.$factory("object of type '"+
 $B.class_name(obj)+"' has no len()")}}
 function locals(){
 check_nb_args('locals',0,arguments)
-return $B.obj_dict($B.last($B.frames_stack)[1])}
+var res=$B.obj_dict($B.last($B.frames_stack)[1])
+delete res.$jsobj.__annotations__
+return res}
 var map=$B.make_class("map",function(){var $=$B.args('map',2,{func:null,it1:null},['func','it1'],arguments,{},'args',null),func=$B.$call($.func)
 var iter_args=[$B.$iter($.it1)]
 $.args.forEach(function(item){iter_args.push($B.$iter(item))})
