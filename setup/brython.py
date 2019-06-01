@@ -80,7 +80,7 @@ if args.install:
         shutil.copyfile(os.path.join(src_path, path), path)
 
 if args.update:
-    print('Update Brython scripts to verion {}'.format(implementation))
+    print('Update Brython scripts to version {}'.format(implementation))
 
     src_path = os.path.join(os.path.dirname(__file__), 'data')
 
