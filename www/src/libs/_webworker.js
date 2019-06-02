@@ -43,7 +43,7 @@ var _Worker = $B.make_class("Worker", function(id, onmessage, onerror){
         id = $.id,
         src = $B.webworkers[id]
         if(src === undefined){
-            throw _b_.KeyError.$factory(url)
+            throw _b_.KeyError.$factory(id)
         }
         var script_id = "worker" + $B.UUID(),
             js = __BRYTHON__.imported.javascript.py2js(src,

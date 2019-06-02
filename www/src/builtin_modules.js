@@ -77,20 +77,22 @@
         },
 
         console: $B.JSObject.$factory(self.console),
+        self: $B.win,
         win: $B.win,
         $$window: $B.win,
     }
     browser.__path__ = browser.__file__
 
     if($B.isWebWorker){
+        browser.is_webworker = true
         // In a web worker, name "window" is not defined, but name "self" is
         delete browser.$$window
         delete browser.win
-        browser.self = $B.win
         // browser.send is an alias for postMessage
         browser.self.js.send = self.postMessage
 
     }else{
+        browser.is_webworker = false
         update(browser, {
             $$alert:function(message){
                 window.alert($B.builtins.str.$factory(message))
@@ -332,28 +334,6 @@
 
     modules['browser'] = browser
 
-    var re = $B.make_class("re", function(){
-        return {
-            __class__: re,
-            obj: new RegExp(...arguments)
-        }
-    })
-
-    var methods = ["match", "replace", "search", "split"]
-    methods.forEach(function(method){
-        re[method] = function(self, s){
-            var res,
-                args = []
-            for(var i = 1, len = arguments.length; i < len; i++){
-                args.push(arguments[i])
-            }
-            return (res = self.obj[Symbol[method]](...args)) === null ?
-                _b_.None : res
-        }
-    })
-
-    $B.set_func_names(re, "javascript")
-
     modules['javascript'] = {
         $$this: function(){
             // returns the content of Javascript "this"
@@ -361,22 +341,18 @@
             if($B.js_this === undefined){return $B.builtins.None}
             return $B.JSObject.$factory($B.js_this)
         },
-        $$Date: function(){
-            return $B.JSObject.$factory(new Date(...arguments))
-        },
-        $$RegExp: function(){
-            return re.$factory(...arguments)
+        $$Date: $B.JSObject.$factory(self.Date),
+        JSConstructor: function(){
+            console.log('"javascript.JSConstructor" is deprecrated. ' +
+                'Use window.<js constructor name>.new() instead.')
+            return $B.JSConstructor.$factory.apply(null, arguments)
         },
         JSObject: function(){
             console.log('"javascript.JSObject" is deprecrated. ' +
                 'Use window.<jsobject name> instead.')
             return $B.JSObject.$factory(...arguments)
         },
-        JSConstructor: function(){
-            console.log('"javascript.JSConstructor" is deprecrated. ' +
-                'Use window.<js constructor name>.new() instead.')
-            return $B.JSConstructor.$factory.apply(null, arguments)
-        },
+        jsobj2pyobj:function(obj){return $B.jsobj2pyobj(obj)},
         load:function(script_url){
             console.log('"javascript.load" is deprecrated. ' +
                 'Use browser.load instead.')
@@ -386,7 +362,9 @@
             var content = $B.builtins.getattr(file_obj, 'read')()
             eval(content)
         },
+        $$Math: $B.JSObject.$factory(self.Math),
         NULL: null,
+        $$Number: $B.JSObject.$factory(self.Number),
         py2js: function(src, module_name){
             if(module_name === undefined){
                 module_name = '__main__' + $B.UUID()
@@ -395,7 +373,8 @@
                 $B.builtins_scope).to_js()
         },
         pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},
-        jsobj2pyobj:function(obj){return $B.jsobj2pyobj(obj)},
+        $$RegExp: $B.JSObject.$factory(self.RegExp),
+        $$String: $B.JSObject.$factory(self.String),
         UNDEFINED: undefined
     }
 
@@ -463,7 +442,7 @@
             __set__: function(self, obj, value){$B.stdout = value},
             write: function(data){_b_.getattr($B.stdout,"write")(data)}
         },
-        stdin : $B.stdin,
+        stdin: $B.stdin,
         vfs: {
             __get__: function(){
                 if($B.hasOwnProperty("VFS")){return $B.obj_dict($B.VFS)}

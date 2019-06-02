@@ -85,8 +85,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-06-01 17:08:11.928247"
-__BRYTHON__.timestamp=1559401691928
+__BRYTHON__.compiled_date="2019-06-02 17:57:03.290566"
+__BRYTHON__.timestamp=1559491023290
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","_zlib","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -589,6 +589,27 @@ left.func='getitem'
 res+=','+right_js+')};None;'}
 return res}}
 return left.to_js()+' = '+right.to_js()}}
+function $assignment_expression(C){console.log(C,"assign_expr")
+var scope=$get_scope(C),name=C.tree[0].value
+$bind(name,scope,C)
+var $assign_expr=C.tree[0]
+for(var rank=0,len=C.parent.tree.length;
+rank < len;rank++){if(C.parent.tree[rank]===C){console.log("rank",rank)
+break}}
+C.parent.tree.splice(rank,1)
+var res=new $AbstractExprCtx(C.parent,true)
+res.$assign_expr=$assign_expr
+return res}
+var $AssignExprCtx=$B.parser.$AssignExprCtx=function(C){console.log("assign expr",C)
+this.type="assign_expr"
+this.parent=C
+this.tree=[]
+var scope=$get_scope(this)
+var assigned=C.tree[0]
+console.log("bind",assigned.value,"in scope",scope)
+$bind(assigned.value,scope,this)
+this.to_js=function(){console.log(this.type,this.tree)
+return ""}}
 var $AsyncCtx=$B.parser.$AsyncCtx=function(C){
 this.type='async'
 this.parent=C
@@ -3731,6 +3752,10 @@ if(C.type=="condition"){$_SyntaxError(C,'token '+token+' after '
 C=C.tree[0]
 return new $AbstractExprCtx(new $AssignCtx(C),true)}
 break
+case ':=':
+if(C.tree.length==1 &&
+C.tree[0].type=="id"){return $assignment_expression(C)}
+$_SyntaxError(C,'token '+token+' after '+C)
 case 'if':
 var in_comp=false,ctx=C.parent
 while(true){if(ctx.type=="list_or_tuple"){
@@ -4649,7 +4674,10 @@ break
 case ',':
 case ':':
 $pos=pos
-C=$transition(C,car)
+if(src.charAt(pos+1)=="="){
+console.log("PEP 572")
+C=$transition(C,":=")
+pos++}else{C=$transition(C,car)}
 pos++
 break
 case ';':
@@ -12932,13 +12960,13 @@ while(true){try{var elt=_b_.next(it)
 $B.DOMNode.bind(elt,$.evt,callback)}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){break}
 throw err}}}catch(err){if(_b_.isinstance(err,_b_.AttributeError)){$B.DOMNode.bind($.elt,$.evt,callback)}
 throw err}
-return callback}},console:$B.JSObject.$factory(self.console),win:$B.win,$$window:$B.win,}
+return callback}},console:$B.JSObject.$factory(self.console),self:$B.win,win:$B.win,$$window:$B.win,}
 browser.__path__=browser.__file__
-if($B.isWebWorker){
+if($B.isWebWorker){browser.is_webworker=true
 delete browser.$$window
 delete browser.win
-browser.self=$B.win
-browser.self.js.send=self.postMessage}else{update(browser,{$$alert:function(message){window.alert($B.builtins.str.$factory(message))},confirm:$B.JSObject.$factory(window.confirm),$$document:$B.DOMNode.$factory(document),doc:$B.DOMNode.$factory(document),
+browser.self.js.send=self.postMessage}else{browser.is_webworker=false
+update(browser,{$$alert:function(message){window.alert($B.builtins.str.$factory(message))},confirm:$B.JSObject.$factory(window.confirm),$$document:$B.DOMNode.$factory(document),doc:$B.DOMNode.$factory(document),
 DOMEvent:$B.DOMEvent,DOMNode:$B.DOMNode.$factory,load:function(script_url){
 var file_obj=$B.builtins.open(script_url)
 var content=$B.builtins.getattr(file_obj,'read')()
@@ -13014,32 +13042,24 @@ tags.forEach(function(tag){obj[tag]=maketag(tag)})
 obj.maketag=maketag
 return obj})(__BRYTHON__)}
 modules['browser']=browser
-var re=$B.make_class("re",function(){return{
-__class__:re,obj:new RegExp(...arguments)}})
-var methods=["match","replace","search","split"]
-methods.forEach(function(method){re[method]=function(self,s){var res,args=[]
-for(var i=1,len=arguments.length;i < len;i++){args.push(arguments[i])}
-return(res=self.obj[Symbol[method]](...args))===null ?
-_b_.None :res}})
-$B.set_func_names(re,"javascript")
 modules['javascript']={$$this:function(){
 if($B.js_this===undefined){return $B.builtins.None}
-return $B.JSObject.$factory($B.js_this)},$$Date:function(){return $B.JSObject.$factory(new Date(...arguments))},$$RegExp:function(){return re.$factory(...arguments)},JSObject:function(){console.log('"javascript.JSObject" is deprecrated. '+
-'Use window.<jsobject name> instead.')
-return $B.JSObject.$factory(...arguments)},JSConstructor:function(){console.log('"javascript.JSConstructor" is deprecrated. '+
+return $B.JSObject.$factory($B.js_this)},$$Date:$B.JSObject.$factory(self.Date),JSConstructor:function(){console.log('"javascript.JSConstructor" is deprecrated. '+
 'Use window.<js constructor name>.new() instead.')
-return $B.JSConstructor.$factory.apply(null,arguments)},load:function(script_url){console.log('"javascript.load" is deprecrated. '+
+return $B.JSConstructor.$factory.apply(null,arguments)},JSObject:function(){console.log('"javascript.JSObject" is deprecrated. '+
+'Use window.<jsobject name> instead.')
+return $B.JSObject.$factory(...arguments)},jsobj2pyobj:function(obj){return $B.jsobj2pyobj(obj)},load:function(script_url){console.log('"javascript.load" is deprecrated. '+
 'Use browser.load instead.')
 var file_obj=$B.builtins.open(script_url)
 var content=$B.builtins.getattr(file_obj,'read')()
-eval(content)},NULL:null,py2js:function(src,module_name){if(module_name===undefined){module_name='__main__'+$B.UUID()}
-return $B.py2js(src,module_name,module_name,$B.builtins_scope).to_js()},pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},jsobj2pyobj:function(obj){return $B.jsobj2pyobj(obj)},UNDEFINED:undefined}
+eval(content)},$$Math:$B.JSObject.$factory(self.Math),NULL:null,$$Number:$B.JSObject.$factory(self.Number),py2js:function(src,module_name){if(module_name===undefined){module_name='__main__'+$B.UUID()}
+return $B.py2js(src,module_name,module_name,$B.builtins_scope).to_js()},pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},$$RegExp:$B.JSObject.$factory(self.RegExp),$$String:$B.JSObject.$factory(self.String),UNDEFINED:undefined}
 var _b_=$B.builtins
 modules['_sys']={
 Getframe :function(depth){return $B._frame.$factory($B.frames_stack,depth)},exc_info:function(){for(var i=$B.frames_stack.length-1;i >=0;i--){var frame=$B.frames_stack[i],exc=frame[1].$current_exception
 if(exc){return _b_.tuple.$factory([exc.__class__,exc,$B.$getattr(exc,"traceback")])}}
 return _b_.tuple.$factory([_b_.None,_b_.None,_b_.None])},modules:{__get__:function(){return $B.obj_dict($B.imported)},__set__:function(self,obj,value){throw _b_.TypeError.$factory("Read only property 'sys.modules'")}},path:{__get__:function(){return $B.path},__set__:function(self,obj,value){$B.path=value;}},meta_path:{__get__:function(){return $B.meta_path},__set__:function(self,obj,value){$B.meta_path=value }},path_hooks:{__get__:function(){return $B.path_hooks},__set__:function(self,obj,value){$B.path_hooks=value }},path_importer_cache:{__get__:function(){return _b_.dict.$factory($B.JSObject.$factory($B.path_importer_cache))},__set__:function(self,obj,value){throw _b_.TypeError.$factory("Read only property"+
-" 'sys.path_importer_cache'")}},stderr:{__get__:function(){return $B.stderr},__set__:function(self,obj,value){$B.stderr=value},write:function(data){_b_.getattr($B.stderr,"write")(data)}},stdout:{__get__:function(){return $B.stdout},__set__:function(self,obj,value){$B.stdout=value},write:function(data){_b_.getattr($B.stdout,"write")(data)}},stdin :$B.stdin,vfs:{__get__:function(){if($B.hasOwnProperty("VFS")){return $B.obj_dict($B.VFS)}
+" 'sys.path_importer_cache'")}},stderr:{__get__:function(){return $B.stderr},__set__:function(self,obj,value){$B.stderr=value},write:function(data){_b_.getattr($B.stderr,"write")(data)}},stdout:{__get__:function(){return $B.stdout},__set__:function(self,obj,value){$B.stdout=value},write:function(data){_b_.getattr($B.stdout,"write")(data)}},stdin:$B.stdin,vfs:{__get__:function(){if($B.hasOwnProperty("VFS")){return $B.obj_dict($B.VFS)}
 else{return _b_.None}},__set__:function(){throw _b_.TypeError.$factory("Read only property 'sys.vfs'")}}}
 function load(name,module_obj){
 module_obj.__class__=$B.module

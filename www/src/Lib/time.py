@@ -1,11 +1,9 @@
 import _locale
-
-from browser import window
+import javascript
 
 # Javascript Date constructor
-date = window.Date.new
-
-now = window.Date.now
+date = javascript.Date.new
+now = javascript.Date.now
 
 #daylight = 0 # fix me.. returns Non zero if DST timezone is defined
 

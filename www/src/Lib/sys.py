@@ -1,9 +1,8 @@
 # hack to return special attributes
 from _sys import *
+import javascript
 
 _getframe = Getframe
-from javascript import JSObject
-from browser import window
 
 abiflags = 0 # required in sysconfig
 
@@ -46,8 +45,8 @@ flags = flag_class()
 
 class float_info:
     mant_dig = 53
-    max = window.Number.MAX_VALUE
-    min = window.Number.MIN_VALUE
+    max = javascript.Number.MAX_VALUE
+    min = javascript.Number.MIN_VALUE
     radix = 2
 
 def getfilesystemencoding(*args, **kw):
@@ -237,11 +236,10 @@ class _float_info:
  |                    interpreter startup time. See section 5.2.4.2.2 of the C99 standard for an explanation of the possible values and their meanings.
     """
     def __init__(self):
-        _number = window.Number
         self.dig = 15
         self.epsilon = 2 ** -52
         self.mant_dig = 53
-        self.max = _number.MAX_VALUE
+        self.max = javascript.Number.MAX_VALUE
         self.max_exp = 2 ** 10
         self.max_10_exp = 308
         self.min = 2 ** (-1022)
