@@ -54,8 +54,10 @@ Here are a few features and limitations imposed by the browser and Javascript :
 - to open a print dialog (to a printer), call `window.print` (`window` is
   defined in module **browser**).
 
-- `sys.stdin` is not implemented at this time, however there is an `input()`
-  built-in function that will open a blocking input dialog (a prompt).
+- the `input()` built-in is implemented with the browser's blocking function
+  _prompt()_. Since blocking functions can't be defined with Javascript,
+  `sys.stdin` is read-only. An example in the gallery shows how to simulate
+  an input function in a custom dialog box.
 
 - the objects lifecycle is managed by the Javascript garbage collector,
   Brython doesn't manage reference counting like CPython. Therefore, method

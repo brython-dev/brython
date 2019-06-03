@@ -85,8 +85,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-06-02 17:57:03.290566"
-__BRYTHON__.timestamp=1559491023290
+__BRYTHON__.compiled_date="2019-06-03 11:36:27.224721"
+__BRYTHON__.timestamp=1559554587224
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","_zlib","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -390,11 +390,13 @@ if(message !==null){js='throw AssertionError.$factory(str.$factory('+
 message.to_js()+'))'}
 new $NodeJSCtx(new_node,js)
 node.add(new_node)}}
-var $AssignCtx=$B.parser.$AssignCtx=function(C){
+var $AssignCtx=$B.parser.$AssignCtx=function(C,expression){
 var ctx=C
 while(ctx){if(ctx.type=='assert'){$_SyntaxError(C,'invalid syntax - assign')}
 ctx=ctx.parent}
 this.type='assign'
+if(expression=='expression'){this.expression=true
+console.log("parent of assign expr",C.parent)}
 C.parent.tree.pop()
 C.parent.tree[C.parent.tree.length]=this
 this.parent=C.parent
@@ -589,27 +591,6 @@ left.func='getitem'
 res+=','+right_js+')};None;'}
 return res}}
 return left.to_js()+' = '+right.to_js()}}
-function $assignment_expression(C){console.log(C,"assign_expr")
-var scope=$get_scope(C),name=C.tree[0].value
-$bind(name,scope,C)
-var $assign_expr=C.tree[0]
-for(var rank=0,len=C.parent.tree.length;
-rank < len;rank++){if(C.parent.tree[rank]===C){console.log("rank",rank)
-break}}
-C.parent.tree.splice(rank,1)
-var res=new $AbstractExprCtx(C.parent,true)
-res.$assign_expr=$assign_expr
-return res}
-var $AssignExprCtx=$B.parser.$AssignExprCtx=function(C){console.log("assign expr",C)
-this.type="assign_expr"
-this.parent=C
-this.tree=[]
-var scope=$get_scope(this)
-var assigned=C.tree[0]
-console.log("bind",assigned.value,"in scope",scope)
-$bind(assigned.value,scope,this)
-this.to_js=function(){console.log(this.type,this.tree)
-return ""}}
 var $AsyncCtx=$B.parser.$AsyncCtx=function(C){
 this.type='async'
 this.parent=C
@@ -1588,8 +1569,10 @@ this.name=name
 this.with_commas=with_commas
 this.expect=',' 
 this.parent=C
-this.packed=C.packed
-this.is_await=C.is_await
+if(C.packed){this.packed=C.packed}
+if(C.is_await){this.is_await=C.is_await}
+if(C.assign){
+this.assign=C.assign}
 this.tree=[]
 C.tree[C.tree.length]=this
 this.toString=function(){return '(expr '+with_commas+') '+this.tree}
@@ -1599,6 +1582,10 @@ if(this.type=='list'){res='['+$to_js(this.tree)+']'}
 else if(this.tree.length==1){res=this.tree[0].to_js(arg)}
 else{res='_b_.tuple.$factory(['+$to_js(this.tree)+'])'}
 if(this.is_await){res="await $B.promise("+res+")"}
+if(this.assign){console.log("expr to js, is assign",this)
+var scope=$get_scope(this)
+res="$locals_"+scope.id.replace(/\./g,'_')+'["'+
+this.assign.value+'"] = '+res}
 return res}}
 var $ExprNot=$B.parser.$ExprNot=function(C){
 this.type='expr_not'
@@ -3143,10 +3130,11 @@ while(true){if(scope.ntype=="module"){return name}
 else if(scope.ntype=="class"){var class_name=scope.C.tree[0].name
 while(class_name.charAt(0)=='_'){class_name=class_name.substr(1)}
 return '_'+class_name+name}else{if(scope.parent && scope.parent.C){scope=$get_scope(scope.C.tree[0])}else{return name}}}}else{return name}}
-var $transition=$B.parser.$transition=function(C,token,value){if(token==":"){}
+var $transition=$B.parser.$transition=function(C,token,value){
 switch(C.type){case 'abstract_expr':
-var packed=C.packed,is_await=C.is_await
-switch(token){case 'id':
+var packed=C.packed,is_await=C.is_await,assign=C.assign
+if(assign){console.log("abstract expr is assign",C)}
+if(! assign){switch(token){case 'id':
 case 'imaginary':
 case 'int':
 case 'float':
@@ -3163,7 +3151,9 @@ C.parent.tree.pop()
 var commas=C.with_commas
 C=C.parent
 C.packed=packed
-C.is_await=is_await}
+C.is_await=is_await
+if(assign){console.log("set assign to parent",C)
+C.assign=assign}}}
 switch(token){case 'await':
 return new $AwaitCtx(C)
 case 'id':
@@ -3754,7 +3744,13 @@ return new $AbstractExprCtx(new $AssignCtx(C),true)}
 break
 case ':=':
 if(C.tree.length==1 &&
-C.tree[0].type=="id"){return $assignment_expression(C)}
+C.tree[0].type=="id"){var scope=$get_scope(C),name=C.tree[0].value
+$bind(name,scope,C)
+var parent=C.parent
+parent.tree.pop()
+var assign_expr=new $AbstractExprCtx(parent,false)
+assign_expr.assign=C.tree[0]
+return assign_expr}
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'if':
 var in_comp=false,ctx=C.parent
@@ -4674,8 +4670,8 @@ break
 case ',':
 case ':':
 $pos=pos
-if(src.charAt(pos+1)=="="){
-console.log("PEP 572")
+if(src.substr(pos,2)==":="){
+console.log("PEP 572",src.substr(pos,2))
 C=$transition(C,":=")
 pos++}else{C=$transition(C,car)}
 pos++
@@ -6568,15 +6564,7 @@ else{return obj.$id=$B.UUID()}}
 function __import__(mod_name,globals,locals,fromlist,level){
 var $=$B.args('__import__',5,{name:null,globals:null,locals:null,fromlist:null,level:null},['name','globals','locals','fromlist','level'],arguments,{globals:None,locals:None,fromlist:_b_.tuple.$factory(),level:0},null,null)
 return $B.$__import__($.name,$.globals,$.locals,$.fromlist)}
-function input(msg){var stdin=($B.imported.sys && $B.imported.sys.stdin ||$B.stdin);
-if(stdin.__original__){return prompt(msg ||'')||''}
-msg=msg ||""
-if(msg){$B.stdout.write(msg)}
-stdin.msg=msg
-var val=$B.$getattr(stdin,'readline')()
-val=val.split('\n')[0]
-if(stdin.len===stdin.pos){$B.$getattr(stdin,'close')()}
-return val}
+function input(msg){return prompt(msg ||'')||''}
 function isinstance(obj,cls){check_no_kw('isinstance',obj,cls)
 check_nb_args('isinstance',2,arguments)
 if(obj===null){return cls===None}
@@ -13059,7 +13047,7 @@ modules['_sys']={
 Getframe :function(depth){return $B._frame.$factory($B.frames_stack,depth)},exc_info:function(){for(var i=$B.frames_stack.length-1;i >=0;i--){var frame=$B.frames_stack[i],exc=frame[1].$current_exception
 if(exc){return _b_.tuple.$factory([exc.__class__,exc,$B.$getattr(exc,"traceback")])}}
 return _b_.tuple.$factory([_b_.None,_b_.None,_b_.None])},modules:{__get__:function(){return $B.obj_dict($B.imported)},__set__:function(self,obj,value){throw _b_.TypeError.$factory("Read only property 'sys.modules'")}},path:{__get__:function(){return $B.path},__set__:function(self,obj,value){$B.path=value;}},meta_path:{__get__:function(){return $B.meta_path},__set__:function(self,obj,value){$B.meta_path=value }},path_hooks:{__get__:function(){return $B.path_hooks},__set__:function(self,obj,value){$B.path_hooks=value }},path_importer_cache:{__get__:function(){return _b_.dict.$factory($B.JSObject.$factory($B.path_importer_cache))},__set__:function(self,obj,value){throw _b_.TypeError.$factory("Read only property"+
-" 'sys.path_importer_cache'")}},stderr:{__get__:function(){return $B.stderr},__set__:function(self,obj,value){$B.stderr=value},write:function(data){_b_.getattr($B.stderr,"write")(data)}},stdout:{__get__:function(){return $B.stdout},__set__:function(self,obj,value){$B.stdout=value},write:function(data){_b_.getattr($B.stdout,"write")(data)}},stdin:$B.stdin,vfs:{__get__:function(){if($B.hasOwnProperty("VFS")){return $B.obj_dict($B.VFS)}
+" 'sys.path_importer_cache'")}},stderr:{__get__:function(){return $B.stderr},__set__:function(self,obj,value){$B.stderr=value},write:function(data){_b_.getattr($B.stderr,"write")(data)}},stdout:{__get__:function(){return $B.stdout},__set__:function(self,obj,value){$B.stdout=value},write:function(data){_b_.getattr($B.stdout,"write")(data)}},stdin:{__get__:function(){return $B.stdin},__set__:function(){throw _b_.TypeError.$factory("sys.stdin is read-only")}},vfs:{__get__:function(){if($B.hasOwnProperty("VFS")){return $B.obj_dict($B.VFS)}
 else{return _b_.None}},__set__:function(){throw _b_.TypeError.$factory("Read only property 'sys.vfs'")}}}
 function load(name,module_obj){
 module_obj.__class__=$B.module

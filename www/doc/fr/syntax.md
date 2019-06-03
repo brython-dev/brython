@@ -54,8 +54,11 @@ Quelques particularités liées au contexte d'exécution dans un navigateur :
   `write()`, ce qui permet par exemple d'afficher les messages d'erreurs dans
   une fenêtre
 
-- `sys.stdin` n'est pas implémenté, mais on peut utiliser la fonction intégrée
-  `input()` qui ouvre une fenêtre d'invite
+- la fonction intégrée `input()` est implémentée avec la fonction bloquante
+  du navigateur __prompt()__. Comme on ne peut pas définir de fonction
+  bloquante en Javascript, `sys.stdin` est en lecture seule. Un exemple dans
+  la galerie montre comment simuler la fonction input dans une boite de
+  dialogue personnalisée
 
 - pour lancer une impression sur imprimante, utiliser la méthode `print()` de
   l'objet `window` défini dans le module **browser** :

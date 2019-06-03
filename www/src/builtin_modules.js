@@ -442,7 +442,12 @@
             __set__: function(self, obj, value){$B.stdout = value},
             write: function(data){_b_.getattr($B.stdout,"write")(data)}
         },
-        stdin: $B.stdin,
+        stdin: {
+            __get__: function(){return $B.stdin},
+            __set__: function(){
+                throw _b_.TypeError.$factory("sys.stdin is read-only")
+            }
+        },
         vfs: {
             __get__: function(){
                 if($B.hasOwnProperty("VFS")){return $B.obj_dict($B.VFS)}
