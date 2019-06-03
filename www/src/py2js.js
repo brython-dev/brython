@@ -3168,8 +3168,8 @@ var $ExprCtx = $B.parser.$ExprCtx = function(context, name, with_commas){
         if(this.assign){
             console.log("expr to js, is assign", this)
             var scope = $get_scope(this)
-            res = "$locals_" + scope.id.replace(/\./g, '_') + '["' +
-                this.assign.value + '"] = ' + res
+            res = "($locals_" + scope.id.replace(/\./g, '_') + '["' +
+                this.assign.value + '"] = ' + res + ')'
         }
         return res
     }
@@ -6680,9 +6680,7 @@ var $transition = $B.parser.$transition = function(context, token, value){
           var packed = context.packed,
               is_await = context.is_await,
               assign = context.assign
-          if(assign){
-              console.log("abstract expr is assign", context)
-          }
+          
           if(! assign){
               switch(token) {
                   case 'id':
