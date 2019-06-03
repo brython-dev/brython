@@ -728,7 +728,7 @@ var $AssertCtx = $B.parser.$AssertCtx = function(context){
     }
 }
 
-var $AssignCtx = $B.parser.$AssignCtx = function(context){
+var $AssignCtx = $B.parser.$AssignCtx = function(context, expression){
     /*
     Class for the assignment operator "="
     context is the left operand of assignment
@@ -745,6 +745,10 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context){
     }
 
     this.type = 'assign'
+    if(expression == 'expression'){
+        this.expression = true
+        console.log("parent of assign expr", context.parent)
+    }
     // replace parent by "this" in parent tree
     context.parent.tree.pop()
     context.parent.tree[context.parent.tree.length] = this
@@ -3135,8 +3139,16 @@ var $ExprCtx = $B.parser.$ExprCtx = function(context, name, with_commas){
     this.with_commas = with_commas
     this.expect = ',' // can be 'expr' or ','
     this.parent = context
-    this.packed = context.packed
-    this.is_await = context.is_await
+    if(context.packed){
+        this.packed = context.packed
+    }
+    if(context.is_await){
+        this.is_await = context.is_await
+    }
+    if(context.assign){
+        // assignment expression
+        this.assign = context.assign
+    }
     this.tree = []
     context.tree[context.tree.length] = this
 
@@ -3152,6 +3164,12 @@ var $ExprCtx = $B.parser.$ExprCtx = function(context, name, with_commas){
         else{res = '_b_.tuple.$factory([' + $to_js(this.tree) + '])'}
         if(this.is_await){
             res = "await $B.promise(" + res + ")"
+        }
+        if(this.assign){
+            console.log("expr to js, is assign", this)
+            var scope = $get_scope(this)
+            res = "$locals_" + scope.id.replace(/\./g, '_') + '["' +
+                this.assign.value + '"] = ' + res
         }
         return res
     }
@@ -6655,34 +6673,41 @@ var $mangle = $B.parser.$mangle = function(name, context){
 // Python source code
 
 var $transition = $B.parser.$transition = function(context, token, value){
-    if(token == ":"){
-        //console.log("context", context, "token", token, value)
-    }
+    //console.log("context", context, "token", token, value)
     switch(context.type){
         case 'abstract_expr':
 
           var packed = context.packed,
-              is_await = context.is_await
-
-          switch(token) {
-              case 'id':
-              case 'imaginary':
-              case 'int':
-              case 'float':
-              case 'str':
-              case 'bytes':
-              case '[':
-              case '(':
-              case '{':
-              case '.':
-              case 'not':
-              case 'lambda':
-              case 'yield':
-                  context.parent.tree.pop() // remove abstract expression
-                  var commas = context.with_commas
-                  context = context.parent
-                  context.packed = packed
-                  context.is_await = is_await
+              is_await = context.is_await,
+              assign = context.assign
+          if(assign){
+              console.log("abstract expr is assign", context)
+          }
+          if(! assign){
+              switch(token) {
+                  case 'id':
+                  case 'imaginary':
+                  case 'int':
+                  case 'float':
+                  case 'str':
+                  case 'bytes':
+                  case '[':
+                  case '(':
+                  case '{':
+                  case '.':
+                  case 'not':
+                  case 'lambda':
+                  case 'yield':
+                      context.parent.tree.pop() // remove abstract expression
+                      var commas = context.with_commas
+                      context = context.parent
+                      context.packed = packed
+                      context.is_await = is_await
+                      if(assign){
+                          console.log("set assign to parent", context)
+                          context.assign = assign
+                      }
+              }
           }
 
           switch(token) {
@@ -7409,7 +7434,7 @@ var $transition = $B.parser.$transition = function(context, token, value){
                            return tuple
                        }
                   }
-                  return $transition(context.parent,token)
+                  return $transition(context.parent, token)
               case '.':
                   return new $AttrCtx(context)
             case '[':
@@ -7620,6 +7645,20 @@ var $transition = $B.parser.$transition = function(context, token, value){
                    return new $AbstractExprCtx(new $AssignCtx(context), true)
                 }
                 break
+            case ':=':
+                // PEP 572 : assignment expression
+                if(context.tree.length == 1 &&
+                        context.tree[0].type == "id"){
+                    var scope = $get_scope(context),
+                        name = context.tree[0].value
+                    $bind(name, scope, context)
+                    var parent = context.parent
+                    parent.tree.pop()
+                    var assign_expr = new $AbstractExprCtx(parent, false)
+                    assign_expr.assign = context.tree[0]
+                    return assign_expr
+                }
+                $_SyntaxError(context, 'token ' + token + ' after ' + context)
             case 'if':
                 var in_comp = false,
                     ctx = context.parent
@@ -9178,7 +9217,14 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
             case ',':
             case ':':
                 $pos = pos
-                context = $transition(context, car)
+                if(src.substr(pos, 2) == ":="){
+                    // PEP 572 : assignment expression
+                    console.log("PEP 572", src.substr(pos, 2))
+                    context = $transition(context, ":=")
+                    pos++
+                }else{
+                    context = $transition(context, car)
+                }
                 pos++
                 break
             case ';':
