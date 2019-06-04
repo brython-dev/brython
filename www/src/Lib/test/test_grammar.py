@@ -274,7 +274,6 @@ class GrammarTests(unittest.TestCase):
         my_lst[one()-1]: int = 5
         self.assertEqual(my_lst, [5])
 
-    @unittest.skip('Fails in Brython -- still needs to be investigated')
     def test_var_annot_syntax_errors(self):
         # parser pass
         check_syntax_error(self, "def f: int")
@@ -295,7 +294,6 @@ class GrammarTests(unittest.TestCase):
                                  "    global x\n"
                                  "    x: int\n")
 
-    @unittest.skip('Fails in Brython -- still needs to be investigated')
     def test_var_annot_basic_semantics(self):
         # execution order
         with self.assertRaises(ZeroDivisionError):
