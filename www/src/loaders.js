@@ -173,7 +173,7 @@ $B.idb_open = function(obj){
                 store.onsuccess = loop
             }
         }else{
-            console.log("using indexedDB for stdlib modules cache")
+            console.info("using indexedDB for stdlib modules cache")
             loop()
         }
     }
