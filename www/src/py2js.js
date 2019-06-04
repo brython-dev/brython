@@ -690,7 +690,9 @@ var $AnnotationCtx = $B.parser.$AnnotationCtx = function(context){
     context.annotation = this
 
     var scope = $get_scope(context)
-    if(scope.ntype == "def" && context.tree[0].type == "id"){
+
+    if(scope.ntype == "def" && context.tree && context.tree.length > 0 &&
+            context.tree[0].type == "id"){
         var name = context.tree[0].value
         if(scope.globals && scope.globals.has(name) > -1){
             $_SyntaxError(context, ["annotated name '" + name +
@@ -698,6 +700,9 @@ var $AnnotationCtx = $B.parser.$AnnotationCtx = function(context){
         }
         scope.annotations = scope.annotations || new Set()
         scope.annotations.add(name)
+        // name is local in the scope
+        scope.binding = scope.binding || {}
+        scope.binding[name] = true
     }
     this.toString = function(){return '(annotation) ' + this.tree}
 
@@ -3852,6 +3857,10 @@ var $GlobalCtx = $B.parser.$GlobalCtx = function(context){
     this.toString = function(){return 'global ' + this.tree}
 
     this.add = function(name){
+        if(this.scope.annotations && this.scope.annotations.has(name)){
+            $_SyntaxError(context, ["annotated name '" + name +
+                "' can't be global"])
+        }
         $B._globals[this.scope.id][name] = true
     }
 
@@ -4845,6 +4854,7 @@ var $NodeCtx = $B.parser.$NodeCtx = function(node){
     // bound in the scope is created. It is used in $IdCtx to detect
     // names that are referenced but not yet bound in the scope
     this.node.locals = clone(scope.binding)
+    this.scope = scope
 
     this.toString = function(){return 'node ' + this.tree}
 
@@ -4861,32 +4871,47 @@ var $NodeCtx = $B.parser.$NodeCtx = function(node){
         }
         this.js = ""
         if(this.tree[0]){
+            var is_not_def = this.scope.ntype != "def"
             if(this.tree[0].annotation){
                 // Node is annotation
-                if(this.tree[0].type == "expr" &&
-                        this.tree[0].tree[0].type == "id"){
-                    return "$locals.__annotations__.$string_dict['" +
-                        this.tree[0].tree[0].value + "'] = " +
-                        this.tree[0].annotation.to_js() + ";"
-                }else if(this.tree[0].type == "def"){
-                    // Evaluate annotation
-                    this.js = this.tree[0].annotation.to_js() + ";"
-                }else{
-                    // Ignore
-                    this.js = ""
+                if(is_not_def){
+                    if(this.tree[0].type == "expr" &&
+                            this.tree[0].tree[0].type == "id"){
+                        return "$locals.__annotations__.$string_dict['" +
+                            this.tree[0].tree[0].value + "'] = " +
+                            this.tree[0].annotation.to_js() + ";"
+                    }else if(this.tree[0].type == "def"){
+                        // Evaluate annotation
+                        this.js = this.tree[0].annotation.to_js() + ";"
+                    }else{
+                        // Ignore
+                        this.js = ""
+                        this.tree = []
+                    }
+                }else if(this.tree[0].type != "def"){
+                    // Avoid evaluation
                     this.tree = []
                 }
             }else if(this.tree[0].type == "assign" &&
                     this.tree[0].tree[0].annotation){
                 // Left side of assignment is annoted
-                var left = this.tree[0].tree[0]
-                if(left.tree[0] && left.tree[0].type == "id"){
-                    this.js = "$locals.__annotations__.$string_dict['" +
+                var left = this.tree[0].tree[0],
+                    right = this.tree[0].tree[1]
+                // Evaluate value first
+                this.js = "var $value = " + right.to_js() + ";"
+                this.tree[0].tree.splice(1, 1)
+                new $RawJSCtx(this.tree[0], "$value")
+                if(left.tree[0] && left.tree[0].type == "id" && is_not_def){
+                    this.js += "$locals.__annotations__.$string_dict['" +
                         left.tree[0].value + "'] = " +
                         left.annotation.to_js() + ";"
                 }else{
                     // Evaluate annotation
-                    this.js =  left.annotation.to_js() + ";"
+                    this.js +=  $to_js(this.tree) + ";"
+                    if(is_not_def){
+                        this.js += left.annotation.to_js()
+                    }
+                    return this.js
                 }
             }
         }
@@ -7607,11 +7632,15 @@ var $transition = $B.parser.$transition = function(context, token, value){
                     return $transition(context.parent, token, value)
                 }else if(context.parent.type == "node"){
                     // annotation
-                    if(context.tree.length != 1 ||
-                            ["id", "sub", "attribute"].indexOf(context.tree[0].type) == -1){
-                        $_SyntaxError(context, "invalid target for annoation")
+                    if(context.tree.length == 1){
+                        var child = context.tree[0]
+                        if(["id", "sub", "attribute"].indexOf(child.type) > -1 ||
+                                (child.real == "tuple" && child.expect == "," &&
+                                 child.tree.length == 1)){
+                            return new $AbstractExprCtx(new $AnnotationCtx(context), false)
+                        }
                     }
-                    return new $AbstractExprCtx(new $AnnotationCtx(context), false)
+                    $_SyntaxError(context, "invalid target for annotation")
                 }
                 break
             case '=':
