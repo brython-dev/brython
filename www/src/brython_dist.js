@@ -85,8 +85,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-06-04 11:28:16.484940"
-__BRYTHON__.timestamp=1559640496484
+__BRYTHON__.compiled_date="2019-06-04 23:05:45.035416"
+__BRYTHON__.timestamp=1559682345035
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","_zlib","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -369,11 +369,14 @@ this.parent=C
 this.tree=[]
 C.annotation=this
 var scope=$get_scope(C)
-if(scope.ntype=="def" && C.tree[0].type=="id"){var name=C.tree[0].value
+if(scope.ntype=="def" && C.tree && C.tree.length > 0 &&
+C.tree[0].type=="id"){var name=C.tree[0].value
 if(scope.globals && scope.globals.has(name)>-1){$_SyntaxError(C,["annotated name '"+name+
 "' can't be global"])}
 scope.annotations=scope.annotations ||new Set()
-scope.annotations.add(name)}
+scope.annotations.add(name)
+scope.binding=scope.binding ||{}
+scope.binding[name]=true}
 this.toString=function(){return '(annotation) '+this.tree}
 this.to_js=function(){return $to_js(this.tree)}}
 var $AssertCtx=$B.parser.$AssertCtx=function(C){
@@ -1895,7 +1898,9 @@ this.expect='id'
 this.scope=$get_scope(this)
 $B._globals[this.scope.id]=$B._globals[this.scope.id]||{}
 this.toString=function(){return 'global '+this.tree}
-this.add=function(name){$B._globals[this.scope.id][name]=true}
+this.add=function(name){if(this.scope.annotations && this.scope.annotations.has(name)){$_SyntaxError(C,["annotated name '"+name+
+"' can't be global"])}
+$B._globals[this.scope.id][name]=true}
 this.to_js=function(){this.js_processed=true
 return ''}}
 var $IdCtx=$B.parser.$IdCtx=function(C,value){
@@ -2293,6 +2298,7 @@ if(_break_flag){break}
 tree_node=tree_node.parent}
 if(scope===null){scope=tree_node.parent ||tree_node }
 this.node.locals=clone(scope.binding)
+this.scope=scope
 this.toString=function(){return 'node '+this.tree}
 this.to_js=function(){if(this.js !==undefined){return this.js}
 this.js_processed=true
@@ -2303,20 +2309,27 @@ new_node.indent=node.indent+4
 this.tree.pop()
 node.add(new_node)}
 this.js=""
-if(this.tree[0]){if(this.tree[0].annotation){
-if(this.tree[0].type=="expr" &&
+if(this.tree[0]){var is_not_def=this.scope.ntype !="def"
+if(this.tree[0].annotation){
+if(is_not_def){if(this.tree[0].type=="expr" &&
 this.tree[0].tree[0].type=="id"){return "$locals.__annotations__.$string_dict['"+
 this.tree[0].tree[0].value+"'] = "+
 this.tree[0].annotation.to_js()+";"}else if(this.tree[0].type=="def"){
 this.js=this.tree[0].annotation.to_js()+";"}else{
 this.js=""
+this.tree=[]}}else if(this.tree[0].type !="def"){
 this.tree=[]}}else if(this.tree[0].type=="assign" &&
 this.tree[0].tree[0].annotation){
-var left=this.tree[0].tree[0]
-if(left.tree[0]&& left.tree[0].type=="id"){this.js="$locals.__annotations__.$string_dict['"+
+var left=this.tree[0].tree[0],right=this.tree[0].tree[1]
+this.js="var $value = "+right.to_js()+";"
+this.tree[0].tree.splice(1,1)
+new $RawJSCtx(this.tree[0],"$value")
+if(left.tree[0]&& left.tree[0].type=="id" && is_not_def){this.js+="$locals.__annotations__.$string_dict['"+
 left.tree[0].value+"'] = "+
 left.annotation.to_js()+";"}else{
-this.js=left.annotation.to_js()+";"}}}
+this.js+=$to_js(this.tree)+";"
+if(is_not_def){this.js+=left.annotation.to_js()}
+return this.js}}}
 if(node.children.length==0){this.js+=$to_js(this.tree)+';'}else{this.js+=$to_js(this.tree)}
 return this.js}}
 var $NodeJS=$B.parser.$NodeJS=function(js){var node=new $Node()
@@ -3727,9 +3740,11 @@ case ":":
 if(C.parent.type=="sub" ||
 (C.parent.type=="list_or_tuple" &&
 C.parent.parent.type=="sub")){return new $AbstractExprCtx(new $SliceCtx(C.parent),false)}else if(C.parent.type=="slice"){return $transition(C.parent,token,value)}else if(C.parent.type=="node"){
-if(C.tree.length !=1 ||
-["id","sub","attribute"].indexOf(C.tree[0].type)==-1){$_SyntaxError(C,"invalid target for annoation")}
-return new $AbstractExprCtx(new $AnnotationCtx(C),false)}
+if(C.tree.length==1){var child=C.tree[0]
+if(["id","sub","attribute"].indexOf(child.type)>-1 ||
+(child.real=="tuple" && child.expect=="," &&
+child.tree.length==1)){return new $AbstractExprCtx(new $AnnotationCtx(C),false)}}
+$_SyntaxError(C,"invalid target for annotation")}
 break
 case '=':
 function has_parent(ctx,type){
@@ -5002,25 +5017,25 @@ function idb_get(module){
 var db=$B.idb_cx.result,tx=db.transaction("modules","readonly")
 try{var store=tx.objectStore("modules")
 req=store.get(module)
-req.onsuccess=function(evt){idb_load(evt,module)}}catch(err){console.log('error',err)}}
+req.onsuccess=function(evt){idb_load(evt,module)}}catch(err){console.info('error',err)}}
 $B.idb_open=function(obj){var idb_cx=$B.idb_cx=indexedDB.open("brython_stdlib")
 idb_cx.onsuccess=function(){var db=idb_cx.result
 if(!db.objectStoreNames.contains("modules")){var version=db.version
 db.close()
-console.log('create object store',version)
+console.info('create object store',version)
 idb_cx=indexedDB.open("brython_stdlib",version+1)
-idb_cx.onupgradeneeded=function(){console.log("upgrade needed")
+idb_cx.onupgradeneeded=function(){console.info("upgrade needed")
 var db=$B.idb_cx.result,store=db.createObjectStore("modules",{"keyPath":"name"})
 store.onsuccess=loop}
 idb_cx.onversionchanged=function(){console.log("version changed")}
-idb_cx.onsuccess=function(){console.log("db opened",idb_cx)
+idb_cx.onsuccess=function(){console.info("db opened",idb_cx)
 var db=idb_cx.result,store=db.createObjectStore("modules",{"keyPath":"name"})
-store.onsuccess=loop}}else{console.log("using indexedDB for stdlib modules cache")
+store.onsuccess=loop}}else{console.info("using indexedDB for stdlib modules cache")
 loop()}}
-idb_cx.onupgradeneeded=function(){console.log("upgrade needed")
+idb_cx.onupgradeneeded=function(){console.info("upgrade needed")
 var db=idb_cx.result,store=db.createObjectStore("modules",{"keyPath":"name"})
 store.onsuccess=loop}
-idb_cx.onerror=function(){console.log('could not open indexedDB database')}}
+idb_cx.onerror=function(){console.info('could not open indexedDB database')}}
 $B.ajax_load_script=function(script){var url=script.url,name=script.name
 var req=new XMLHttpRequest()
 req.open("GET",url+"?"+Date.now(),true)

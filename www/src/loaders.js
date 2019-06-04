@@ -144,7 +144,7 @@ function idb_get(module){
             req = store.get(module)
         req.onsuccess = function(evt){idb_load(evt, module)}
     }catch(err){
-        console.log('error', err)
+        console.info('error', err)
     }
 }
 
@@ -155,10 +155,10 @@ $B.idb_open = function(obj){
         if(!db.objectStoreNames.contains("modules")){
             var version = db.version
             db.close()
-            console.log('create object store', version)
+            console.info('create object store', version)
             idb_cx = indexedDB.open("brython_stdlib", version+1)
             idb_cx.onupgradeneeded = function(){
-                console.log("upgrade needed")
+                console.info("upgrade needed")
                 var db = $B.idb_cx.result,
                     store = db.createObjectStore("modules", {"keyPath": "name"})
                 store.onsuccess = loop
@@ -167,7 +167,7 @@ $B.idb_open = function(obj){
                 console.log("version changed")
             }
             idb_cx.onsuccess = function(){
-                console.log("db opened", idb_cx)
+                console.info("db opened", idb_cx)
                 var db = idb_cx.result,
                     store = db.createObjectStore("modules", {"keyPath": "name"})
                 store.onsuccess = loop
@@ -178,13 +178,13 @@ $B.idb_open = function(obj){
         }
     }
     idb_cx.onupgradeneeded = function(){
-        console.log("upgrade needed")
+        console.info("upgrade needed")
         var db = idb_cx.result,
             store = db.createObjectStore("modules", {"keyPath": "name"})
         store.onsuccess = loop
     }
     idb_cx.onerror = function(){
-        console.log('could not open indexedDB database')
+        console.info('could not open indexedDB database')
     }
 }
 
