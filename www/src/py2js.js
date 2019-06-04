@@ -689,6 +689,16 @@ var $AnnotationCtx = $B.parser.$AnnotationCtx = function(context){
     // annotation is stored in attribute "annotations" of parent, not "tree"
     context.annotation = this
 
+    var scope = $get_scope(context)
+    if(scope.ntype == "def" && context.tree[0].type == "id"){
+        var name = context.tree[0].value
+        if(scope.globals && scope.globals.has(name) > -1){
+            $_SyntaxError(context, ["annotated name '" + name +
+                "' can't be global"])
+        }
+        scope.annotations = scope.annotations || new Set()
+        scope.annotations.add(name)
+    }
     this.toString = function(){return '(annotation) ' + this.tree}
 
     this.to_js = function(){return $to_js(this.tree)}
@@ -1204,7 +1214,7 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
             }else if((scope.ntype == 'def' || scope.ntype == 'generator') &&
                     (scope.binding[name] === undefined)){
                 if(scope.globals === undefined ||
-                        scope.globals.indexOf(name) == -1){
+                        ! scope.globals.has(name)){
                     // Augmented assign to a variable not yet defined in
                     // local scope : set attribute "unbound" to the id. If not
                     // defined in the rest of the block this will raise an
@@ -1316,7 +1326,7 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
                         case 'def':
                         case 'generator':
                             if(scope.globals &&
-                                    scope.globals.indexOf(context.tree[0].value) > -1){
+                                    scope.globals.has(context.tree[0].value)){
                                 prefix = global_ns
                             }else{prefix = '$locals'}
                             break
@@ -3920,9 +3930,9 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
             return
         }else if(context.type == 'global'){
             if(scope.globals === undefined){
-                scope.globals = [value]
-            }else if(scope.globals.indexOf(value) == -1){
-                scope.globals.push(value)
+                scope.globals = new Set([value])
+            }else{
+                scope.globals.add(value)
             }
         }
     }
@@ -4115,7 +4125,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         }
         search_ids = "[" + search_ids.join(", ") + "]"
 
-        if (innermost.globals && innermost.globals.indexOf(val) > -1){
+        if (innermost.globals && innermost.globals.has(val)){
             search_ids = ['"' + gs.id + '"']
         }
 
@@ -6501,7 +6511,7 @@ var $bind = $B.parser.$bind = function(name, scope, context){
         return
     }
 
-    if(scope.globals && scope.globals.indexOf(name) > -1){
+    if(scope.globals && scope.globals.has(name)){
         var module = $get_module(context)
         module.binding[name] = true
         return
@@ -6680,7 +6690,7 @@ var $transition = $B.parser.$transition = function(context, token, value){
           var packed = context.packed,
               is_await = context.is_await,
               assign = context.assign
-          
+
           if(! assign){
               switch(token) {
                   case 'id':
@@ -6812,6 +6822,8 @@ var $transition = $B.parser.$transition = function(context, token, value){
             if(token == "eol" && context.tree.length == 1 &&
                     context.tree[0].tree.length == 0){
                 $_SyntaxError(context, "empty annotation")
+            }else if(token == ':' && context.parent.type != "def"){
+                $_SyntaxError(context, "more than one annotation")
             }
             return $transition(context.parent, token)
 
@@ -7595,6 +7607,10 @@ var $transition = $B.parser.$transition = function(context, token, value){
                     return $transition(context.parent, token, value)
                 }else if(context.parent.type == "node"){
                     // annotation
+                    if(context.tree.length != 1 ||
+                            ["id", "sub", "attribute"].indexOf(context.tree[0].type) == -1){
+                        $_SyntaxError(context, "invalid target for annoation")
+                    }
                     return new $AbstractExprCtx(new $AnnotationCtx(context), false)
                 }
                 break

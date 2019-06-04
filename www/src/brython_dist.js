@@ -85,8 +85,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-06-03 11:36:27.224721"
-__BRYTHON__.timestamp=1559554587224
+__BRYTHON__.compiled_date="2019-06-04 11:28:16.484940"
+__BRYTHON__.timestamp=1559640496484
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","_zlib","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -368,6 +368,12 @@ this.type='annotation'
 this.parent=C
 this.tree=[]
 C.annotation=this
+var scope=$get_scope(C)
+if(scope.ntype=="def" && C.tree[0].type=="id"){var name=C.tree[0].value
+if(scope.globals && scope.globals.has(name)>-1){$_SyntaxError(C,["annotated name '"+name+
+"' can't be global"])}
+scope.annotations=scope.annotations ||new Set()
+scope.annotations.add(name)}
 this.toString=function(){return '(annotation) '+this.tree}
 this.to_js=function(){return $to_js(this.tree)}}
 var $AssertCtx=$B.parser.$AssertCtx=function(C){
@@ -632,7 +638,7 @@ if(C.type=='expr'){var assigned=C.tree[0]
 if(assigned.type=='id'){var name=assigned.value
 if(noassign[name]===true){$_SyntaxError(C,["can't assign to keyword"])}else if((scope.ntype=='def' ||scope.ntype=='generator')&&
 (scope.binding[name]===undefined)){if(scope.globals===undefined ||
-scope.globals.indexOf(name)==-1){
+! scope.globals.has(name)){
 assigned.unbound=true}}}else if(['str','int','float','complex'].indexOf(assigned.type)>-1){$_SyntaxError(C,["can't assign to literal"])}}
 $get_node(this).bound_before=Object.keys(scope.binding)
 this.module=scope.module
@@ -683,7 +689,7 @@ break
 case 'def':
 case 'generator':
 if(scope.globals &&
-scope.globals.indexOf(C.tree[0].value)>-1){prefix=global_ns}else{prefix='$locals'}
+scope.globals.has(C.tree[0].value)){prefix=global_ns}else{prefix='$locals'}
 break
 case 'class':
 var new_node=new $Node()
@@ -1584,8 +1590,8 @@ else{res='_b_.tuple.$factory(['+$to_js(this.tree)+'])'}
 if(this.is_await){res="await $B.promise("+res+")"}
 if(this.assign){console.log("expr to js, is assign",this)
 var scope=$get_scope(this)
-res="$locals_"+scope.id.replace(/\./g,'_')+'["'+
-this.assign.value+'"] = '+res}
+res="($locals_"+scope.id.replace(/\./g,'_')+'["'+
+this.assign.value+'"] = '+res+')'}
 return res}}
 var $ExprNot=$B.parser.$ExprNot=function(C){
 this.type='expr_not'
@@ -1928,7 +1934,7 @@ while(_ctx){if(_ctx.type=='list_or_tuple' && _ctx.is_comp()){this.in_comp=true
 return}
 _ctx=_ctx.parent}
 if(C.type=='expr' && C.parent.type=='comp_if'){
-return}else if(C.type=='global'){if(scope.globals===undefined){scope.globals=[value]}else if(scope.globals.indexOf(value)==-1){scope.globals.push(value)}}}
+return}else if(C.type=='global'){if(scope.globals===undefined){scope.globals=new Set([value])}else{scope.globals.add(value)}}}
 this.toString=function(){return '(id) '+this.value+':'+(this.tree ||'')}
 this.firstBindingScopeId=function(){
 var scope=this.scope,found=[],nb=0
@@ -1986,7 +1992,7 @@ else if(gs.parent_block.id===undefined){break}
 gs=gs.parent_block}
 search_ids.push('"'+gs.id+'"')}
 search_ids="["+search_ids.join(", ")+"]"
-if(innermost.globals && innermost.globals.indexOf(val)>-1){search_ids=['"'+gs.id+'"']}
+if(innermost.globals && innermost.globals.has(val)){search_ids=['"'+gs.id+'"']}
 if($test){console.log("search ids",search_ids)}
 if(this.nonlocal ||this.bound){var bscope=this.firstBindingScopeId()
 if($test){console.log("binding",bscope)}
@@ -3057,7 +3063,7 @@ $B.$add_line_num=$add_line_num
 var $bind=$B.parser.$bind=function(name,scope,C){
 if(scope.nonlocals && scope.nonlocals[name]){
 return}
-if(scope.globals && scope.globals.indexOf(name)>-1){var module=$get_module(C)
+if(scope.globals && scope.globals.has(name)){var module=$get_module(C)
 module.binding[name]=true
 return}
 var node=$get_node(C)
@@ -3133,7 +3139,6 @@ return '_'+class_name+name}else{if(scope.parent && scope.parent.C){scope=$get_sc
 var $transition=$B.parser.$transition=function(C,token,value){
 switch(C.type){case 'abstract_expr':
 var packed=C.packed,is_await=C.is_await,assign=C.assign
-if(assign){console.log("abstract expr is assign",C)}
 if(! assign){switch(token){case 'id':
 case 'imaginary':
 case 'int':
@@ -3233,7 +3238,7 @@ $_SyntaxError(C,token)}}
 return $transition(C.parent,token,value)
 case 'annotation':
 if(token=="eol" && C.tree.length==1 &&
-C.tree[0].tree.length==0){$_SyntaxError(C,"empty annotation")}
+C.tree[0].tree.length==0){$_SyntaxError(C,"empty annotation")}else if(token==':' && C.parent.type !="def"){$_SyntaxError(C,"more than one annotation")}
 return $transition(C.parent,token)
 case 'assert':
 if(token=='eol'){return $transition(C.parent,token)}
@@ -3722,6 +3727,8 @@ case ":":
 if(C.parent.type=="sub" ||
 (C.parent.type=="list_or_tuple" &&
 C.parent.parent.type=="sub")){return new $AbstractExprCtx(new $SliceCtx(C.parent),false)}else if(C.parent.type=="slice"){return $transition(C.parent,token,value)}else if(C.parent.type=="node"){
+if(C.tree.length !=1 ||
+["id","sub","attribute"].indexOf(C.tree[0].type)==-1){$_SyntaxError(C,"invalid target for annoation")}
 return new $AbstractExprCtx(new $AnnotationCtx(C),false)}
 break
 case '=':
