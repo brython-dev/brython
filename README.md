@@ -1,4 +1,5 @@
 [![CDNJS version](https://img.shields.io/cdnjs/v/brython.svg)](https://cdnjs.com/libraries/brython)
+[![Travis](https://api.travis-ci.org/brython-dev/brython.svg)](https://travis-ci.org/brython-dev/brython)
 
 brython
 =======
@@ -56,7 +57,7 @@ Getting started
 Zero install !
 --------------
 The most simple way to get started, without anything to install, is to use the
-distribution available online through [cdnjs](https://cdnjs.com). You can 
+distribution available online through [cdnjs](https://cdnjs.com). You can
 choose the latest stable release :
 
 ```xml
