@@ -1391,27 +1391,24 @@ var encode = $B.encode = function(){
         case "utf8":
             var res = []
             for(var i = 0, len = s.length; i < len; i++){
-                var cp = s.charCodeAt(i),
-                    bytes
+                var cp = s.charCodeAt(i)
                 if(cp < 0x7f){
-                    bytes = [cp]
+                    res.push(cp)
                 }else if(cp < 0x7ff){
-                    bytes = [0xc0 + (cp >> 6),
-                               0x80 + (cp & 0x3f)
-                               ]
+                    res.push(0xc0 + (cp >> 6),
+                             0x80 + (cp & 0x3f))
                 }else if(cp < 0xffff){
-                    bytes = [0xe0 + (cp >> 12),
-                               0x80 + ((cp & 0xfff) >> 6),
-                               0x80 + (cp & 0x3f)]
-
+                    res.push(0xe0 + (cp >> 12),
+                             0x80 + ((cp & 0xfff) >> 6),
+                             0x80 + (cp & 0x3f))
                 }else{
                     console.log("4 bytes")
                 }
-                res = res.concat(bytes)
             }
             return res
         case "latin1":
         case "iso8859_1":
+        case "iso_8859_1":
         case "windows1252":
             for(var i = 0, len = s.length; i < len; i++){
                 var cp = s.charCodeAt(i) // code point

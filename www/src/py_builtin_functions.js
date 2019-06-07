@@ -829,7 +829,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false // attr == "preventDefault" // && obj === $B // "Point"
+    var $test = false // attr == "__prepare__" // && obj === $B // "Point"
     if($test){console.log("$getattr", attr, obj, klass)}
 
     // Shortcut for classes without parents
@@ -956,7 +956,7 @@ $B.$getattr = function(obj, attr, _default){
         }
     }
 
-    if(klass.$native){
+    if((! is_class) && klass.$native){
         if($test){console.log("native class", klass, klass[attr])}
         if(klass[attr] === undefined){
             var object_attr = _b_.object[attr]

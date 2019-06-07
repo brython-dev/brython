@@ -85,8 +85,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-06-04 23:05:45.035416"
-__BRYTHON__.timestamp=1559682345035
+__BRYTHON__.compiled_date="2019-06-07 13:12:00.945934"
+__BRYTHON__.timestamp=1559905920945
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","_zlib","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -6482,7 +6482,7 @@ if(klass===$B.JSObject && obj.js_func !==undefined){return $B.JSConstructor.$fac
 break}
 if(typeof obj=='function'){var value=obj[attr]
 if(value !==undefined){if(attr=='__module__'){return value}}}
-if(klass.$native){if($test){console.log("native class",klass,klass[attr])}
+if((! is_class)&& klass.$native){if($test){console.log("native class",klass,klass[attr])}
 if(klass[attr]===undefined){var object_attr=_b_.object[attr]
 if($test){console.log("object attr",object_attr)}
 if(object_attr !==undefined){klass[attr]=object_attr}
@@ -8090,13 +8090,12 @@ switch(enc){case "utf-8":
 case "utf_8":
 case "utf8":
 var res=[]
-for(var i=0,len=s.length;i < len;i++){var cp=s.charCodeAt(i),bytes
-if(cp < 0x7f){bytes=[cp]}else if(cp < 0x7ff){bytes=[0xc0+(cp >> 6),0x80+(cp & 0x3f)
-]}else if(cp < 0xffff){bytes=[0xe0+(cp >> 12),0x80+((cp & 0xfff)>> 6),0x80+(cp & 0x3f)]}else{console.log("4 bytes")}
-res=res.concat(bytes)}
+for(var i=0,len=s.length;i < len;i++){var cp=s.charCodeAt(i)
+if(cp < 0x7f){res.push(cp)}else if(cp < 0x7ff){res.push(0xc0+(cp >> 6),0x80+(cp & 0x3f))}else if(cp < 0xffff){res.push(0xe0+(cp >> 12),0x80+((cp & 0xfff)>> 6),0x80+(cp & 0x3f))}else{console.log("4 bytes")}}
 return res
 case "latin1":
 case "iso8859_1":
+case "iso_8859_1":
 case "windows1252":
 for(var i=0,len=s.length;i < len;i++){var cp=s.charCodeAt(i)
 if(cp <=255){t[pos++]=cp}
