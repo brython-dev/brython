@@ -85,8 +85,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-06-07 13:12:00.945934"
-__BRYTHON__.timestamp=1559905920945
+__BRYTHON__.compiled_date="2019-06-08 18:02:35.974522"
+__BRYTHON__.timestamp=1560009755974
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","_zlib","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -971,17 +971,19 @@ $bind(name,this.scope,this)
 if(scope.is_function){if(scope.C.tree[0].locals.indexOf(name)==-1){scope.C.tree[0].locals.push(name)}}}
 this.transform=function(node,rank){
 this.doc_string=$get_docstring(node)
-var instance_decl=new $Node(),local_ns='$locals_'+this.id.replace(/\./g,'_'),js=';var '+local_ns+' = {$type: "class", '+
-'__annotations__: _b_.dict.$factory()}, $locals = '+
-local_ns+', $local_name = "'+local_ns+'";'
+var indent='\n'+' '.repeat(node.indent+12),instance_decl=new $Node(),local_ns='$locals_'+this.id.replace(/\./g,'_'),js='var '+local_ns+' = {'+
+'__annotations__: _b_.dict.$factory()}, '+
+indent+'$locals = '+local_ns+', '+
+indent+'$local_name = "'+local_ns+'",'
 new $NodeJSCtx(instance_decl,js)
 node.insert(0,instance_decl)
 var global_scope=this.scope
 while(global_scope.parent_block.id !=='__builtins__'){global_scope=global_scope.parent_block}
 var global_ns='$locals_'+global_scope.id.replace(/\./g,'_')
-var js=';var $top_frame = [$local_name, $locals,'+'"'+
-global_scope.id+'", '+global_ns+
-']; $B.frames_stack.push($top_frame);'
+var js=' '.repeat(node.indent+4)+
+'$top_frame = [$local_name, $locals,'+'"'+
+global_scope.id+'", '+global_ns+']'+
+indent+'$B.frames_stack.push($top_frame)'
 node.insert(1,$NodeJS(js))
 node.add($NodeJS('$B.leave_frame()'))
 var ret_obj=new $Node()
@@ -5316,7 +5318,9 @@ metaclass.__bases__.indexOf(mc)==-1){throw _b_.TypeError.$factory("metaclass con
 "strict) subclass of the metaclasses of all its bases")}}}else{metaclass=_b_.type}}
 var prepare=$B.$getattr(metaclass,"__prepare__",_b_.None),cl_dict=prepare(class_name,bases)
 if(cl_dict.__class__ !==_b_.dict){set_class_item=$B.$getattr(cl_dict,"__setitem__")}else{set_class_item=function(attr,value){cl_dict.$string_dict[attr]=value}}
-for(var attr in class_obj){if(attr.charAt(0)!="$" ||attr.substr(0,2)=="$$"){set_class_item(attr,class_obj[attr])}}
+for(var attr in class_obj){if(attr=="__annotations__"){cl_dict.$string_dict[attr]=cl_dict.$string_dict[attr]||
+_b_.dict.$factory()
+for(var key in class_obj[attr].$string_dict){$B.$setitem(cl_dict.$string_dict[attr],key,class_obj[attr].$string_dict[key])}}else{if(attr.charAt(0)!="$" ||attr.substr(0,2)=="$$"){set_class_item(attr,class_obj[attr])}}}
 if(use_mro_entries){set_class_item("__orig_bases__",_b_.tuple.$factory(orig_bases))}
 var class_dict={__bases__:bases,__class__:metaclass,__dict__:cl_dict}
 if(cl_dict.__class__===_b_.dict){for(var key in cl_dict.$string_dict){class_dict[key]=cl_dict.$string_dict[key]}}else{var get_class_item=$B.$getattr(cl_dict,"__getitem__")
@@ -5374,10 +5378,12 @@ type.__class__=type
 type.__format__=function(klass,fmt_spec){
 return _b_.str.$factory(klass)}
 type.__getattribute__=function(klass,attr){switch(attr){case "__annotations__":
-var mro=[klass].concat(klass.__mro__)
-var res=_b_.dict.$factory()
-for(var i=mro.length-1;i >=0;i--){var ann=mro[i].__annotations__
-if(ann){for(var key in ann.$string_dict){res.$string_dict[key]=ann.$string_dict[key]}}}
+var mro=[klass].concat(klass.__mro__),res
+for(var i=0,len=mro.length;i < len;i++){if(mro[i].__dict__){var ann=mro[i].__dict__.$string_dict.__annotations__
+if(ann){if(res===undefined){res=ann}else if(res.__class__===_b_.dict &&
+ann.__class__===_b_.dict){
+for(var key in ann.$string_dict){res.$string_dict[key]=ann.$string_dict[key]}}}}}
+if(res===undefined){res=_b_.dict.$factory()}
 return res
 case "__bases__":
 var res=klass.__bases__ ||_b_.tuple.$factory()

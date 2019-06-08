@@ -103,8 +103,17 @@ $B.$class_constructor = function(class_name, class_obj, bases,
 
     // Transform class object into a dictionary
     for(var attr in class_obj){
-        if(attr.charAt(0) != "$" || attr.substr(0,2) == "$$"){
-            set_class_item(attr, class_obj[attr])
+        if(attr == "__annotations__"){
+            cl_dict.$string_dict[attr] = cl_dict.$string_dict[attr] ||
+                _b_.dict.$factory()
+            for(var key in class_obj[attr].$string_dict){
+                $B.$setitem(cl_dict.$string_dict[attr], key,
+                    class_obj[attr].$string_dict[key])
+            }
+        }else{
+            if(attr.charAt(0) != "$" || attr.substr(0,2) == "$$"){
+                set_class_item(attr, class_obj[attr])
+            }
         }
     }
 
@@ -285,16 +294,26 @@ type.__getattribute__ = function(klass, attr){
 
     switch(attr) {
         case "__annotations__":
-            var mro = [klass].concat(klass.__mro__)
-            var res = _b_.dict.$factory()
-            for(var i = mro.length - 1; i >= 0; i--){
-                var ann = mro[i].__annotations__
-                if(ann){
-                    for(var key in ann.$string_dict){
-                        res.$string_dict[key] = ann.$string_dict[key]
+            var mro = [klass].concat(klass.__mro__),
+                res
+            for(var i = 0, len = mro.length; i < len; i++){
+                if(mro[i].__dict__){
+                    var ann = mro[i].__dict__.$string_dict.__annotations__
+                    if(ann){
+                        if(res === undefined){
+                            res = ann
+                        }else if(res.__class__ === _b_.dict &&
+                                ann.__class__ === _b_.dict){
+                            // Inherit annotations that are implemented as
+                            // dictionaries
+                            for(var key in ann.$string_dict){
+                                res.$string_dict[key] = ann.$string_dict[key]
+                            }
+                        }
                     }
                 }
             }
+            if(res === undefined){res = _b_.dict.$factory()}
             return res
         case "__bases__":
             var res = klass.__bases__ || _b_.tuple.$factory()

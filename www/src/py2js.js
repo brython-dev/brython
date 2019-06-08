@@ -1882,11 +1882,13 @@ var $ClassCtx = $B.parser.$ClassCtx = function(context){
         // doc string
         this.doc_string = $get_docstring(node)
 
-        var instance_decl = new $Node(),
+        var indent = '\n' + ' '.repeat(node.indent + 12),
+            instance_decl = new $Node(),
             local_ns = '$locals_' + this.id.replace(/\./g, '_'),
-            js = ';var ' + local_ns + ' = {$type: "class", ' +
-            '__annotations__: _b_.dict.$factory()}, $locals = ' +
-                local_ns + ', $local_name = "' + local_ns + '";'
+            js = 'var ' + local_ns + ' = {' +
+                 '__annotations__: _b_.dict.$factory()}, ' +
+                 indent + '$locals = ' + local_ns + ', ' +
+                 indent + '$local_name = "' + local_ns + '",'
         new $NodeJSCtx(instance_decl, js)
         node.insert(0, instance_decl)
 
@@ -1897,9 +1899,10 @@ var $ClassCtx = $B.parser.$ClassCtx = function(context){
         }
         var global_ns = '$locals_' + global_scope.id.replace(/\./g, '_')
 
-        var js = ';var $top_frame = [$local_name, $locals,' + '"' +
-            global_scope.id + '", ' + global_ns +
-            ']; $B.frames_stack.push($top_frame);'
+        var js = ' '.repeat(node.indent + 4) +
+                 '$top_frame = [$local_name, $locals,' + '"' +
+                 global_scope.id + '", ' + global_ns + ']' +
+                 indent + '$B.frames_stack.push($top_frame)'
 
         node.insert(1, $NodeJS(js))
 
