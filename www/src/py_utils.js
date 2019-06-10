@@ -365,8 +365,8 @@ $B.$local_search = function(name){
     var frame = $B.last($B.frames_stack)
     if(frame[1][name] !== undefined){return frame[1][name]}
     else{
-        throw _b_.UnboundLocalError.$factory("local variable '" + name +
-                "' referenced before assignment")
+        throw _b_.UnboundLocalError.$factory("local variable '" +
+            $B.from_alias(name) + "' referenced before assignment")
     }
 }
 
@@ -377,14 +377,15 @@ $B.$check_def = function(name, value){
     }else if(_b_[name] !== undefined){ // issue 1133
         return _b_[name]
     }
-    throw _b_.NameError.$factory("name '" + name + "' is not defined")
+    throw _b_.NameError.$factory("name '" + $B.from_alias(name) +
+        "' is not defined")
 }
 
 $B.$check_def_local = function(name, value){
     // Check if value is not undefined
     if(value !== undefined){return value}
-    throw _b_.UnboundLocalError.$factory("local variable '" + name +
-        "' referenced before assignment")
+    throw _b_.UnboundLocalError.$factory("local variable '" + 
+        $B.from_alias(name) + "' referenced before assignment")
 }
 
 $B.$check_def_free = function(name, value){
@@ -397,7 +398,7 @@ $B.$check_def_free = function(name, value){
         res = $B.frames_stack[i][3][name]
         if(res !== undefined){return res}
     }
-    throw _b_.NameError.$factory("free variable '" + name +
+    throw _b_.NameError.$factory("free variable '" + $B.from_alias(name) +
         "' referenced before assignment in enclosing scope")
 }
 
@@ -419,7 +420,7 @@ $B.$check_def_free1 = function(name, scope_id){
             if(res !== undefined){return res}
         }
     }
-    throw _b_.NameError.$factory("free variable '" + name +
+    throw _b_.NameError.$factory("free variable '" + $B.from_alias(name) +
         "' referenced before assignment in enclosing scope")
 }
 

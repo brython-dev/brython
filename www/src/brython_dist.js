@@ -85,8 +85,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-06-10 17:56:38.656404"
-__BRYTHON__.timestamp=1560182198656
+__BRYTHON__.compiled_date="2019-06-10 18:03:55.106623"
+__BRYTHON__.timestamp=1560182635106
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","_zlib","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5737,16 +5737,17 @@ throw _b_.NameError.$factory("name '"+$B.from_alias(name)+
 $B.$local_search=function(name){
 var frame=$B.last($B.frames_stack)
 if(frame[1][name]!==undefined){return frame[1][name]}
-else{throw _b_.UnboundLocalError.$factory("local variable '"+name+
-"' referenced before assignment")}}
+else{throw _b_.UnboundLocalError.$factory("local variable '"+
+$B.from_alias(name)+"' referenced before assignment")}}
 $B.$check_def=function(name,value){
 if(value !==undefined){return value}else if(_b_[name]!==undefined){
 return _b_[name]}
-throw _b_.NameError.$factory("name '"+name+"' is not defined")}
+throw _b_.NameError.$factory("name '"+$B.from_alias(name)+
+"' is not defined")}
 $B.$check_def_local=function(name,value){
 if(value !==undefined){return value}
-throw _b_.UnboundLocalError.$factory("local variable '"+name+
-"' referenced before assignment")}
+throw _b_.UnboundLocalError.$factory("local variable '"+
+$B.from_alias(name)+"' referenced before assignment")}
 $B.$check_def_free=function(name,value){
 if(value !==undefined){return value}
 var res
@@ -5754,7 +5755,7 @@ for(var i=$B.frames_stack.length-1;i >=0;i--){res=$B.frames_stack[i][1][name]
 if(res !==undefined){return res}
 res=$B.frames_stack[i][3][name]
 if(res !==undefined){return res}}
-throw _b_.NameError.$factory("free variable '"+name+
+throw _b_.NameError.$factory("free variable '"+$B.from_alias(name)+
 "' referenced before assignment in enclosing scope")}
 $B.$check_def_free1=function(name,scope_id){
 var res
@@ -5765,7 +5766,7 @@ if(frame[1].$parent){res=frame[1].$parent[name]
 if(res !==undefined){return res}}
 if(frame[2]==scope_id){res=frame[3][name]
 if(res !==undefined){return res}}}
-throw _b_.NameError.$factory("free variable '"+name+
+throw _b_.NameError.$factory("free variable '"+$B.from_alias(name)+
 "' referenced before assignment in enclosing scope")}
 $B.$JS2Py=function(src){if(typeof src==="number"){if(src % 1===0){return src}
 return _b_.float.$factory(src)}
