@@ -372,7 +372,11 @@ $B.$local_search = function(name){
 
 $B.$check_def = function(name, value){
     // Check if value is not undefined
-    if(value !== undefined){return value}
+    if(value !== undefined){
+        return value
+    }else if(_b_[name] !== undefined){ // issue 1133
+        return _b_[name]
+    }
     throw _b_.NameError.$factory("name '" + name + "' is not defined")
 }
 
@@ -1231,7 +1235,7 @@ $B.rich_op = function(op, x, y){
             if(err.__class__ === _b_.AttributeError){
                 var kl_name = $B.class_name(x)
                 throw _b_.TypeError.$factory("unsupported operand type(s) " +
-                    "for " + opname2opsign[op] + ": '" + kl_name + "' and '" + 
+                    "for " + opname2opsign[op] + ": '" + kl_name + "' and '" +
                     kl_name + "'")
             }
             throw err

@@ -2336,8 +2336,19 @@ row = Union[int, str]
 
 def do() -> None:
   a: row = 4
-  
+
 do()
+
+# issue 1133
+try:
+    set
+except NameError:
+    from sets import Set as set
+
+if False:
+    set = list
+
+assert set([1, 2]) == {1, 2}
 
 # ==========================================
 # Finally, report that all tests have passed
