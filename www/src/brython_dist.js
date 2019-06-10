@@ -85,8 +85,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-06-10 18:03:55.106623"
-__BRYTHON__.timestamp=1560182635106
+__BRYTHON__.compiled_date="2019-06-10 19:44:46.228474"
+__BRYTHON__.timestamp=1560188686228
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","_zlib","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5065,8 +5065,8 @@ module.__file__=script.__file__
 $B.imported[script_id]=module
 new Function("$locals_"+script_id,script.js)(module)}catch(err){
 if(err.$py_error===undefined){console.log('Javascript error',err)
-$B.print_stack()
-err=_b_.RuntimeError.$factory(err+'')}
+if($B.is_recursion_error(err)){err=_b_.RecursionError.$factory("too much recursion")}else{$B.print_stack()
+err=_b_.RuntimeError.$factory(err+'')}}
 $B.handle_error(err)}
 loop()}else{
 func.apply(null,args)}}
@@ -7392,12 +7392,13 @@ _b_.BaseException=BaseException
 $B.exception=function(js_exc){
 if(! js_exc.$py_error){console.log("Javascript exception:",js_exc)
 console.log($B.last($B.frames_stack))
+console.log("recursion error ?",$B.is_recursion_error(js_exc))
 var exc=Error()
 exc.__name__="Internal Javascript error: "+
 (js_exc.__name__ ||js_exc.name)
 exc.__class__=_b_.Exception
 exc.$js_exc=js_exc
-if(js_exc.name=="ReferenceError"){exc.__name__="NameError"
+if($B.is_recursion_error(js_exc)){return _b_.RecursionError.$factory("too much recursion")}else if(js_exc.name=="ReferenceError"){exc.__name__="NameError"
 exc.__class__=_b_.NameError
 js_exc.message=js_exc.message.replace("$$","")}else if(js_exc.name=="InternalError"){exc.__name__="RuntimeError"
 exc.__class__=_b_.RuntimeError}
@@ -7417,6 +7418,11 @@ for(var i=0;i < exc_list.length;i++){var exc_class=exc_list[i]
 if(this_exc_class===undefined){console.log("exc class undefined",exc)}
 if(issubclass(this_exc_class,exc_class)){return true}}
 return false}
+$B.is_recursion_error=function(js_exc){
+var msg=js_exc+"",parts=msg.split(":"),err_type=parts[0].trim(),err_msg=parts[1].trim()
+return(err_type=='InternalError' && err_msg=='too much recursion')||
+(err_type=='Error' && err_msg=='Out of stack space')||
+(err_type=='RangeError' && err_msg=='Maximum call stack size exceeded')}
 function $make_exc(names,parent){
 var _str=[],pos=0
 for(var i=0;i < names.length;i++){var name=names[i],code=""
@@ -7442,7 +7448,7 @@ $make_exc(["IndexError","KeyError"],_b_.LookupError)
 $make_exc(["UnboundLocalError"],_b_.NameError)
 $make_exc(["BlockingIOError","ChildProcessError","ConnectionError","FileExistsError","FileNotFoundError","InterruptedError","IsADirectoryError","NotADirectoryError","PermissionError","ProcessLookupError","TimeoutError"],_b_.OSError)
 $make_exc(["BrokenPipeError","ConnectionAbortedError","ConnectionRefusedError","ConnectionResetError"],_b_.ConnectionError)
-$make_exc(["NotImplementedError"],_b_.RuntimeError)
+$make_exc(["NotImplementedError","RecursionError"],_b_.RuntimeError)
 $make_exc(["IndentationError"],_b_.SyntaxError)
 $make_exc(["TabError"],_b_.IndentationError)
 $make_exc(["UnicodeError"],_b_.ValueError)

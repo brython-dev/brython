@@ -456,12 +456,15 @@ $B.exception = function(js_exc){
     if(! js_exc.$py_error){
         console.log("Javascript exception:", js_exc)
         console.log($B.last($B.frames_stack))
+        console.log("recursion error ?", $B.is_recursion_error(js_exc))
         var exc = Error()
         exc.__name__ = "Internal Javascript error: " +
             (js_exc.__name__ || js_exc.name)
         exc.__class__ = _b_.Exception
         exc.$js_exc = js_exc
-        if(js_exc.name == "ReferenceError"){
+        if($B.is_recursion_error(js_exc)){
+            return _b_.RecursionError.$factory("too much recursion")
+        }else if(js_exc.name == "ReferenceError"){
             exc.__name__ = "NameError"
             exc.__class__ = _b_.NameError
             js_exc.message = js_exc.message.replace("$$", "")
@@ -497,6 +500,17 @@ $B.is_exc = function(exc, exc_list){
         if(issubclass(this_exc_class, exc_class)){return true}
     }
     return false
+}
+
+$B.is_recursion_error = function(js_exc){
+    // Test if the JS exception matches Python RecursionError
+    var msg = js_exc + "",
+        parts = msg.split(":"),
+        err_type = parts[0].trim(),
+        err_msg = parts[1].trim()
+    return (err_type == 'InternalError' && err_msg == 'too much recursion') ||
+        (err_type == 'Error' && err_msg == 'Out of stack space') ||
+        (err_type == 'RangeError' && err_msg == 'Maximum call stack size exceeded')
 }
 
 function $make_exc(names, parent){
@@ -553,7 +567,7 @@ $make_exc(["BlockingIOError", "ChildProcessError", "ConnectionError",
     "ProcessLookupError", "TimeoutError"], _b_.OSError)
 $make_exc(["BrokenPipeError", "ConnectionAbortedError",
     "ConnectionRefusedError", "ConnectionResetError"], _b_.ConnectionError)
-$make_exc(["NotImplementedError"], _b_.RuntimeError)
+$make_exc(["NotImplementedError", "RecursionError"], _b_.RuntimeError)
 $make_exc(["IndentationError"], _b_.SyntaxError)
 $make_exc(["TabError"], _b_.IndentationError)
 $make_exc(["UnicodeError"], _b_.ValueError)

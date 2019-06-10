@@ -270,10 +270,13 @@ var loop = $B.loop = function(){
             // instance of a Python exception
             if(err.$py_error === undefined){
                 console.log('Javascript error', err)
-                $B.print_stack()
-                err = _b_.RuntimeError.$factory(err + '')
+                if($B.is_recursion_error(err)){
+                    err = _b_.RecursionError.$factory("too much recursion")
+                }else{
+                    $B.print_stack()
+                    err = _b_.RuntimeError.$factory(err + '')
+                }
             }
-
             $B.handle_error(err)
         }
         loop()
