@@ -62,11 +62,10 @@ object.__dir__ = function(self) {
         for(var attr in objects[i]){
             if(attr.charAt(0) == "$") {
                 if(attr.charAt(1) == "$"){
+                    // aliased name
                     res.push(attr.substr(2))
-                }else{
-                    // exclude internal attributes set by Brython
-                    continue
                 }
+                continue
             }
             if(! isNaN(parseInt(attr.charAt(0)))){
                 // Exclude numerical attributes
@@ -77,7 +76,7 @@ object.__dir__ = function(self) {
             res.push(attr)
         }
     }
-
+    
     // add object's own attributes
     if(self.__dict__){
         for(var attr in self.__dict__.$string_dict){
