@@ -197,6 +197,8 @@ class ModulesFinder:
                         continue
                     # get package name
                     package = dirname[len(self.directory) + 1:] or None
+                    if package.startswith('Lib/site-packages/'):
+                        package = package[len('Lib/site-packages/'):]
                     with open(path, encoding="utf-8") as fobj:
                         try:
                             imports |= self.get_imports(fobj.read(), package)
@@ -361,7 +363,7 @@ if stdlib_dir is None:
 # get all Python modules and packages
 user_modules = {}
 
-packages = set()
+packages = {os.getcwd(), os.getcwd() + '/Lib/site-packages'}
 
 def is_package(folder):
     """Test if folder is a package, ie has __init__.py and all the folders
@@ -375,7 +377,7 @@ def is_package(folder):
         if not os.path.exists(os.path.join(current, "__init__.py")):
             return False
         current = os.path.dirname(current)
-        if current == os.getcwd():
+        if current in packages:
             packages.add(folder)
             return True
 
@@ -397,6 +399,8 @@ for dirname, dirnames, filenames in os.walk(os.getcwd()):
             # modules in packages below current directory
             path = os.path.join(dirname, filename)
             package = dirname[len(os.getcwd()) + 1:].replace(os.sep, '.')
+            if package.startswith('Lib.site-packages.'):
+                package = package[len('Lib.site-packages.'):]
             if filename == "__init__.py":
                 module_name = package
             else:
