@@ -85,8 +85,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-06-11 17:24:31.427203"
-__BRYTHON__.timestamp=1560266671427
+__BRYTHON__.compiled_date="2019-06-12 07:35:37.605775"
+__BRYTHON__.timestamp=1560317737605
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","_zlib","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -8948,9 +8948,10 @@ throw exc}
 $B.$__import__=function(mod_name,globals,locals,fromlist,level){
 var from_stdlib=false
 if(globals.$jsobj && globals.$jsobj.__file__){var file=globals.$jsobj.__file__
-if(file.startsWith($B.brython_path+"Lib/")||
+if((file.startsWith($B.brython_path+"Lib/")&&
+! file.startsWith($B.brython_path+"Lib/site-packages/"))||
 file.startsWith($B.brython_path+"libs/")||
-file.startsWith("VFS.")){from_stdlib="static"}}
+file.startsWith("VFS.")){from_stdlib=true}}
 var modobj=$B.imported[mod_name],parsed_name=mod_name.split('.')
 if(modobj==_b_.None){
 import_error(mod_name)}

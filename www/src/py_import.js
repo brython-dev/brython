@@ -897,13 +897,14 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
    // directory)
    if(globals.$jsobj && globals.$jsobj.__file__){
        var file = globals.$jsobj.__file__
-       if(file.startsWith($B.brython_path + "Lib/") ||
+       if((file.startsWith($B.brython_path + "Lib/") &&
+               ! file.startsWith($B.brython_path + "Lib/site-packages/")) ||
                file.startsWith($B.brython_path + "libs/") ||
                file.startsWith("VFS.")){
-           from_stdlib = "static"
+           from_stdlib = true
        }
    }
-
+   
    var modobj = $B.imported[mod_name],
        parsed_name = mod_name.split('.')
    if(modobj == _b_.None){
