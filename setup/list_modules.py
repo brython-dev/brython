@@ -453,7 +453,7 @@ class BrythonScriptsExtractor(html.parser.HTMLParser):
             _type = "js_script"
             src = None
             for key, value in attrs:
-                if key == 'type' and value == "text/python":
+                if key == 'type' and value in ("text/python", "text/python3"):
                     _type = "py_script"
                 elif key == "src":
                     src = value
