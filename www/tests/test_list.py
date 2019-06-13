@@ -235,4 +235,8 @@ test2.append(4)
 assert test2 == [1, 2, 3, 4]
 test2.pop()
 assert test2 == [1, 2, 3]
+
+# issue 1139
+assert [*[1, 2, 3][:]] == [1, 2, 3]
+
 print("passed all tests..")

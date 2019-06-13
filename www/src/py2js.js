@@ -5376,7 +5376,7 @@ var $PackedCtx = $B.parser.$PackedCtx = function(context){
     this.parent = context
     this.tree = []
     context.tree[context.tree.length] = this
-
+    
     this.toString = function(){return '(packed) ' + this.tree}
 
     this.to_js = function(){
@@ -8132,7 +8132,11 @@ var $transition = $B.parser.$transition = function(context, token, value){
                                      context.intervals.push($pos)
                                  }
                                  if(context.parent.type == "packed"){
-                                     return context.parent.parent
+                                     if(context.parent.tree.length > 0){
+                                         return context.parent.tree[0]
+                                     }else{
+                                         return context.parent.parent
+                                     }
                                  }
                                  return context.parent
                             }
@@ -8436,6 +8440,11 @@ var $transition = $B.parser.$transition = function(context, token, value){
             }
             return $transition(context.parent, token)
         case 'packed':
+            if(context.tree.length > 0 && token == "["){
+                // Apply subscription to packed element (issue #1139)
+                console.log("apply to packed element", context.tree[0])
+                return $transition(context.tree[0], token, value)
+            }
             if(token == 'id'){
                 new $IdCtx(context, value)
                 context.parent.expect = ','
@@ -8446,6 +8455,8 @@ var $transition = $B.parser.$transition = function(context, token, value){
             }else if(token == "("){
                 context.parent.expect = ','
                 return new $ListOrTupleCtx(context, "tuple")
+            }else if(token == "]"){
+                return $transition(context.parent, token, value)
             }
             console.log("syntax error", context, token)
             $_SyntaxError(context, 'token ' + token + ' after ' + context)
@@ -8544,6 +8555,9 @@ var $transition = $B.parser.$transition = function(context, token, value){
                     var expr = new $AbstractExprCtx(context,false)
                     return $transition(expr, token, value)
                 case ']':
+                    if(context.parent.packed){
+                        return context.parent.tree[0]
+                    }
                     if(context.tree[0].tree.length > 0){
                         return context.parent
                     }

@@ -85,8 +85,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-06-12 07:35:37.605775"
-__BRYTHON__.timestamp=1560317737605
+__BRYTHON__.compiled_date="2019-06-13 17:06:27.188705"
+__BRYTHON__.timestamp=1560438387188
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","_zlib","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -4030,7 +4030,7 @@ case 'list':
 case 'list_comp':
 if(token==']'){C.closed=true
 if(C.real=='list_comp'){C.intervals.push($pos)}
-if(C.parent.type=="packed"){return C.parent.parent}
+if(C.parent.type=="packed"){if(C.parent.tree.length > 0){return C.parent.tree[0]}else{return C.parent.parent}}
 return C.parent}
 break
 case 'dict_or_set_comp':
@@ -4248,11 +4248,14 @@ if(C.tree[C.tree.length-1].type==
 C)}}
 return $transition(C.parent,token)
 case 'packed':
+if(C.tree.length > 0 && token=="["){
+console.log("apply to packed element",C.tree[0])
+return $transition(C.tree[0],token,value)}
 if(token=='id'){new $IdCtx(C,value)
 C.parent.expect=','
 return C.parent}else if(token=="["){C.parent.expect=','
 return new $ListOrTupleCtx(C,"list")}else if(token=="("){C.parent.expect=','
-return new $ListOrTupleCtx(C,"tuple")}
+return new $ListOrTupleCtx(C,"tuple")}else if(token=="]"){return $transition(C.parent,token,value)}
 console.log("syntax error",C,token)
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'pass':
@@ -4326,6 +4329,7 @@ case 'lambda':
 var expr=new $AbstractExprCtx(C,false)
 return $transition(expr,token,value)
 case ']':
+if(C.parent.packed){return C.parent.tree[0]}
 if(C.tree[0].tree.length > 0){return C.parent}
 break
 case ':':
