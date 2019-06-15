@@ -5376,7 +5376,7 @@ var $PackedCtx = $B.parser.$PackedCtx = function(context){
     this.parent = context
     this.tree = []
     context.tree[context.tree.length] = this
-    
+
     this.toString = function(){return '(packed) ' + this.tree}
 
     this.to_js = function(){
@@ -8725,8 +8725,8 @@ $B.forbidden = ["alert", "arguments", "case", "catch", "const", "constructor",
     "Date", "debugger", "delete", "default", "do", "document", "enum",
     "export", "eval", "extends", "Error", "history", "function", "instanceof",
     "keys", "length", "location", "Math", "message","new", "null", "Number",
-    "RegExp", "super", "switch", "this", "throw", "typeof", "var", "window",
-    "toLocaleString", "toString", "void"]
+    "RegExp", "String", "super", "switch", "this", "throw", "typeof", "var", 
+    "window", "toLocaleString", "toString", "void"]
     //enum, export, extends, import, and super
 $B.aliased_names = $B.list2obj($B.forbidden)
 
