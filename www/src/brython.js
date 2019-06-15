@@ -85,8 +85,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-06-13 17:06:27.188705"
-__BRYTHON__.timestamp=1560438387188
+__BRYTHON__.compiled_date="2019-06-15 17:13:31.709522"
+__BRYTHON__.timestamp=1560611611709
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","_zlib","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -4430,7 +4430,7 @@ C.from=true
 $add_yield_from_code(C)
 return C.tree[0]}
 return $transition(C.parent,token)}}
-$B.forbidden=["alert","arguments","case","catch","const","constructor","Date","debugger","delete","default","do","document","enum","export","eval","extends","Error","history","function","instanceof","keys","length","location","Math","message","new","null","Number","RegExp","super","switch","this","throw","typeof","var","window","toLocaleString","toString","void"]
+$B.forbidden=["alert","arguments","case","catch","const","constructor","Date","debugger","delete","default","do","document","enum","export","eval","extends","Error","history","function","instanceof","keys","length","location","Math","message","new","null","Number","RegExp","String","super","switch","this","throw","typeof","var","window","toLocaleString","toString","void"]
 $B.aliased_names=$B.list2obj($B.forbidden)
 var s_escaped='abfnrtvxuU"0123456789'+"'"+'\\',is_escaped={}
 for(var i=0;i < s_escaped.length;i++){is_escaped[s_escaped.charAt(i)]=true}
@@ -8574,12 +8574,17 @@ throw _b_.KeyError.$factory(rank)}}
 var JSObject_iterator=$B.make_iterator_class('JS object iterator')
 JSObject.__iter__=function(self){var items=[]
 if(_window.Symbol && self.js[Symbol.iterator]!==undefined){
-if(self.js.length !==undefined && self.js.item !==undefined){for(var i=0;i < self.js.length ;i++){items.push(JSObject.$factory(self.js[i]))}}else{for(var item in self.js){if(self.js.hasOwnProperty(item)){items.push(jsobj2pyobj(item))}}}
+var items=[]
+while(true){var nxt=self.js.next()
+if(nxt.done){break}
+items.push(nxt.value)}
 return JSObject_iterator.$factory(items)}else if(self.js.length !==undefined && self.js.item !==undefined){
 for(var i=0;i < self.js.length;i++){items.push(JSObject.$factory(self.js.item(i)))}
 return JSObject_iterator.$factory(items)}
 var _dict=JSObject.to_dict(self)
 return _b_.dict.__iter__(_dict)}
+JSObject.__le__=function(self,other){if(typeof self.js["appendChild"]=="function"){return $B.DOMNode.__le__($B.DOMNode.$factory(self.js),other)}
+return _b_.NotImplemented}
 JSObject.__len__=function(self){if(typeof self.js.length=='number'){return self.js.length}
 try{return getattr(self.js,'__len__')()}
 catch(err){throw _b_.AttributeError.$factory(self.js+' has no attribute __len__')}}
@@ -13011,6 +13016,13 @@ var regex=new RegExp("[\\?&]"+name+"=([^&#]*)"),results=regex.exec(location.sear
 results=results===null ? "" :
 decodeURIComponent(results[1].replace(/\+/g," "));
 return $B.builtins.str.$factory(results);}})
+$B.createWebComponent=function(cls){class WebComp extends HTMLElement{
+constructor(){
+super();
+if(this.__init__){this.__init__()}}}
+for(key in cls){if(typeof cls[key]=="function"){WebComp.prototype[key]=(function(attr){return function(){return __BRYTHON__.pyobj2jsobj(cls[attr]).call(null,this,...arguments)}})(key)}}
+customElements.define(cls.tag_name,WebComp)
+return WebComp}
 modules['browser.html']=(function($B){var _b_=$B.builtins
 var TagSum=$B.TagSum
 function makeTagDict(tagName){
@@ -13022,8 +13034,9 @@ self.elt.innerHTML=_b_.str.$factory(first)}else if(first.__class__===TagSum){for
 var items=_b_.list.$factory(first)
 items.forEach(function(item){$B.DOMNode.__le__(self,item)})}catch(err){console.log(err)
 console.log("first",first)
+console.log(arguments)
 throw _b_.ValueError.$factory(
-'wrong element '+first)}}}}
+'wrong element '+_b_.str.$factory(first))}}}}
 var items=_b_.list.$factory(_b_.dict.items($ns['kw']))
 for(var i=0,len=items.length;i < len;i++){
 var arg=items[i][0],value=items[i][1]

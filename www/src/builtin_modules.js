@@ -152,6 +152,29 @@
             }
         })
 
+        $B.createWebComponent = function(cls){
+            class WebComp extends HTMLElement {
+              constructor() {
+                // Always call super first in constructor
+                super();
+                if(this.__init__){
+                    this.__init__()
+                }
+              }
+            }
+            for(key in cls){
+                if(typeof cls[key] == "function"){
+                    WebComp.prototype[key] = (function(attr){
+                        return function(){
+                            return __BRYTHON__.pyobj2jsobj(cls[attr]).call(null, this, ...arguments)
+                        }
+                    })(key)
+                }
+            }
+            customElements.define(cls.tag_name, WebComp)
+            return WebComp
+        }
+
         // creation of an HTML element
         modules['browser.html'] = (function($B){
 
@@ -196,8 +219,9 @@
                                 }catch(err){
                                     console.log(err)
                                     console.log("first", first)
+                                    console.log(arguments)
                                     throw _b_.ValueError.$factory(
-                                        'wrong element ' + first)
+                                        'wrong element ' + _b_.str.$factory(first))
                                 }
                             }
                         }
