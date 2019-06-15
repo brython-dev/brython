@@ -739,4 +739,13 @@ def gen1():
 
 assert list(gen1()) == ["1", "---", 1, 'Y', 'Z']
 
+# issue 1141
+def unpack():
+    x, y = yield
+    assert x + y == 9
+    yield None
+gen = unpack()
+next(gen)
+gen.send((5, 4))
+
 print('passed all tests...')

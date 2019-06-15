@@ -85,8 +85,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-06-15 17:13:31.709522"
-__BRYTHON__.timestamp=1560611611709
+__BRYTHON__.compiled_date="2019-06-15 17:58:53.389313"
+__BRYTHON__.timestamp=1560614333389
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","_zlib","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -286,7 +286,7 @@ $loop_num++
 offset+=3},this)
 this.parent.insert(rank+offset,this)
 this.yield_atoms=[]
-return offset+1}
+return offset}
 if(this.type==='module'){
 this.__doc__=$get_docstring(this)
 var i=0
