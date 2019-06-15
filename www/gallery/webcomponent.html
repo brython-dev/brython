@@ -1,0 +1,132 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+body,td,th{
+    font-family:sans-serif;
+    font-size:12px;
+}
+td {
+    vertical-align: top;
+}
+
+
+a.sort_link{
+    margin-left:10px;
+    font-size: 15px;
+    text-decoration:none;
+}
+
+</style>
+
+<script type="text/javascript" src="/src/brython.js"></script>
+
+<script type="text/python" src="show_source.py"></script>
+
+</head>
+<body onLoad="brython(2)">
+
+<table width="100%">
+<tr>
+<td width="25%" style="padding-left:3%;">
+    <h2>Web Component</h2>
+    This example shows how to create custom HTML tags using the standard DOM
+    <a href="https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_custom_elements"
+        target="_blank">Web Component</a> technology.
+
+</td>
+<td id="right">
+
+<h1>Pop-up info widget</h1>
+
+<form>
+  <div>
+    <label for="cvc">Enter your CVC
+    <popup-info img="img/alt.png" data-text="Your card validation code (CVC) is an extra security feature — it is the last 3 or 4 numbers on the back of your card."></popup-info></label>
+    <input type="text" id="cvc">
+  </div>
+</form>
+
+</td>
+</tr>
+</table>
+
+
+<script type="text/python">
+from browser import document, window, html
+import javascript
+from browser.webcomponent import WebComponent
+
+style_str = """
+  .wrapper {
+    position: relative;
+  }
+  .info {
+    font-size: 0.8rem;
+    width: 200px;
+    display: inline-block;
+    border: 1px solid black;
+    padding: 10px;
+    background: white;
+    border-radius: 10px;
+    opacity: 0;
+    transition: 0.6s all;
+    position: absolute;
+    top: 20px;
+    left: 10px;
+    z-index: 3;
+  }
+  img {
+    width: 1.2rem;
+  }
+  .icon:hover + .info, .icon:focus + .info {
+    opacity: 1;
+  }
+"""
+
+class PopUpInfo(metaclass=WebComponent):
+
+    tag_name = "popup-info"
+
+    def __init__(self):
+        # Create a shadow root
+        shadow = self.attachShadow({'mode': 'open'})
+
+        # Create spans
+        wrapper = html.SPAN(Class="wrapper")
+
+        info = html.SPAN(Class="info")
+        # Take attribute content and put it inside the info span
+        text = self.getAttribute('data-text')
+        info.textContent = text
+
+        # Insert icon
+        icon = html.SPAN(Class="icon", tabindex=0)
+
+        if self.hasAttribute('img'):
+            imgUrl = self.getAttribute('img')
+        else:
+            imgUrl = 'img/default.png'
+
+        img = html.IMG(src=imgUrl)
+        icon <= img
+
+        style = html.STYLE()
+        style.textContent = style_str
+
+        shadow <= style
+        shadow <= wrapper
+        wrapper <= icon
+        wrapper <= info
+
+    def connectedCallback(self):
+        print("connected callback", self)
+
+</script>
+
+
+
+
+</body>
+</html>
