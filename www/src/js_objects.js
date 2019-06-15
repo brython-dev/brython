@@ -447,16 +447,13 @@ JSObject.__iter__ = function(self){
         // compatibility with uglifyjs
         // If object has length and item(), it's a collection : iterate on
         // its items
-        if(self.js.length !== undefined && self.js.item !== undefined){
-            for(var i = 0; i < self.js.length ; i++){
-                items.push(JSObject.$factory(self.js[i]))
+        var items = []
+        while(true){
+            var nxt = self.js.next()
+            if(nxt.done){
+                break
             }
-        }else{
-            for(var item in self.js){
-                if(self.js.hasOwnProperty(item)){
-                    items.push(jsobj2pyobj(item))
-                }
-            }
+            items.push(nxt.value)
         }
         return JSObject_iterator.$factory(items)
     }else if(self.js.length !== undefined && self.js.item !== undefined){
@@ -471,6 +468,12 @@ JSObject.__iter__ = function(self){
     return _b_.dict.__iter__(_dict)
 }
 
+JSObject.__le__ = function(self, other){
+    if(typeof self.js["appendChild"] == "function"){
+        return $B.DOMNode.__le__($B.DOMNode.$factory(self.js), other)
+    }
+    return _b_.NotImplemented
+}
 JSObject.__len__ = function(self){
     if(typeof self.js.length == 'number'){return self.js.length}
     try{return getattr(self.js, '__len__')()}
