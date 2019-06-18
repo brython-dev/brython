@@ -565,7 +565,9 @@ type.__repr__ = type.__str__ = function(kls){
         console.log("no $infos", kls)
     }
     var qualname = kls.$infos.__name__
-    if(kls.$infos.__module__ != "builtins"){
+    if(kls.$infos.__module__    &&
+            kls.$infos.__module__ != "builtins" &&
+            !kls.$infos.__module__.startsWith("$")){
         qualname = kls.$infos.__module__ + "." + qualname
     }
     return "<class '" + qualname + "'>"

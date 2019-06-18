@@ -85,8 +85,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-06-15 17:58:53.389313"
-__BRYTHON__.timestamp=1560614333389
+__BRYTHON__.compiled_date="2019-06-18 10:06:23.988954"
+__BRYTHON__.timestamp=1560845183988
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","_zlib","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5477,7 +5477,9 @@ class_dict.__mro__=type.mro(class_dict)
 return class_dict}
 type.__repr__=type.__str__=function(kls){if(kls.$infos===undefined){console.log("no $infos",kls)}
 var qualname=kls.$infos.__name__
-if(kls.$infos.__module__ !="builtins"){qualname=kls.$infos.__module__+"."+qualname}
+if(kls.$infos.__module__ &&
+kls.$infos.__module__ !="builtins" &&
+!kls.$infos.__module__.startsWith("$")){qualname=kls.$infos.__module__+"."+qualname}
 return "<class '"+qualname+"'>"}
 type.__prepare__=function(){return _b_.dict.$factory()}
 type.__qualname__={__get__:function(self){return self.$infos.__qualname__ ||self.$infos.__name__},__set__:function(self,value){self.$infos.__qualname__=value}}
@@ -8575,9 +8577,9 @@ var JSObject_iterator=$B.make_iterator_class('JS object iterator')
 JSObject.__iter__=function(self){var items=[]
 if(_window.Symbol && self.js[Symbol.iterator]!==undefined){
 var items=[]
-while(true){var nxt=self.js.next()
+if(self.js.next !==undefined){while(true){var nxt=self.js.next()
 if(nxt.done){break}
-items.push(nxt.value)}
+items.push(nxt.value)}}else if(self.js.length !==undefined && self.js.items !==undefined){for(var i=0;i < self.js.length;i++){items.push(self.js.item(i))}}
 return JSObject_iterator.$factory(items)}else if(self.js.length !==undefined && self.js.item !==undefined){
 for(var i=0;i < self.js.length;i++){items.push(JSObject.$factory(self.js.item(i)))}
 return JSObject_iterator.$factory(items)}
