@@ -66,7 +66,11 @@ if args.install:
         sys.exit()
 
     for path in files:
-        shutil.copyfile(os.path.join(src_path, path), path)
+        dst = os.path.join(os.getcwd(), path)
+        head, tail = os.path.split(dst)
+        if not os.path.exists(head):
+            os.mkdir(head)
+        shutil.copyfile(os.path.join(src_path, path), dst)
 
 """
 
@@ -161,6 +165,7 @@ class ModulesFinder:
         """Walk the directory to find all pages with Brython scripts, parse
         them to get the list of modules needed to make them run.
         """
+        site_packages = 'Lib{0}site-packages{0}'.format(os.sep)
         imports = set()
         for dirname, dirnames, filenames in os.walk(self.directory):
             for name in dirnames:
@@ -197,7 +202,8 @@ class ModulesFinder:
                         continue
                     # get package name
                     package = dirname[len(self.directory) + 1:] or None
-                    if package.startswith('Lib/site-packages/'):
+                    if package is not None and \
+                            package.startswith(site_packages):
                         package = package[len('Lib/site-packages/'):]
                     with open(path, encoding="utf-8") as fobj:
                         try:
@@ -295,7 +301,9 @@ class ModulesFinder:
                 dirnames.remove("__dist__")
             for filename in filenames:
                 path = os.path.join(dirname, filename)
-                files.append(path[len(os.getcwd()) + 1:])
+                parts = path[len(os.getcwd()) + 1:].split(os.sep)
+                files.append("os.path.join(" +
+                             ", ".join(repr(part) for part in parts) +")")
                 if os.path.splitext(filename)[1] == '.html':
                     # detect charset
                     charset_detector = CharsetDetector()
@@ -328,7 +336,7 @@ class ModulesFinder:
                     dest = self._dest(data_dir, dirname, filename)
                     shutil.copyfile(path, dest)
 
-        info["files"] = ',\n'.join('"{}"'.format(file) for file in files)
+        info["files"] = ',\n'.join(files)
 
         # Generate setup.py from the template in string setup
         path = os.path.join(temp_dir, "setup.py")
