@@ -448,12 +448,18 @@ JSObject.__iter__ = function(self){
         // If object has length and item(), it's a collection : iterate on
         // its items
         var items = []
-        while(true){
-            var nxt = self.js.next()
-            if(nxt.done){
-                break
+        if(self.js.next !== undefined){
+            while(true){
+                var nxt = self.js.next()
+                if(nxt.done){
+                    break
+                }
+                items.push(nxt.value)
             }
-            items.push(nxt.value)
+        }else if(self.js.length !== undefined && self.js.items !== undefined){
+            for(var i = 0; i < self.js.length; i++){
+                items.push(self.js.item(i))
+            }
         }
         return JSObject_iterator.$factory(items)
     }else if(self.js.length !== undefined && self.js.item !== undefined){
