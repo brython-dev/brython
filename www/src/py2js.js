@@ -6099,8 +6099,6 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
 
         */
 
-        node.is_try = true // for generators that use a context manager
-
         if(this.transformed){return}  // used if inside a for loop
 
         // If there are several "with" clauses, create a new child
@@ -6133,6 +6131,12 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
         if(this.async){
             return this.transform_async(node, rank)
         }
+
+        var top_try_node = $NodeJS("try")
+        top_try_node.is_try = true
+        node.parent.insert(rank + 1, top_try_node)
+        //node.is_try = true // for generators that use a context manager
+
 
         // Used to create js identifiers:
         var num = this.num = $loop_num++
@@ -6174,7 +6178,7 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
         var try_node = new $Node()
         try_node.is_try = true
         new $NodeJSCtx(try_node, 'try')
-        node.add(try_node)
+        top_try_node.add(try_node)
 
         // if there is an alias, insert the value
         if(this.tree[0].alias){
@@ -6202,7 +6206,7 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
                    'throw ' + err_name +
                 '}'
         ))
-        node.add(catch_node)
+        top_try_node.add(catch_node)
 
         var finally_node = new $Node()
         new $NodeJSCtx(finally_node, 'finally')
@@ -6214,7 +6218,7 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
         finally_node.add($NodeJS('if(' + exc_name + ')'+ cme_name +
             '(None,None,None);')
         )
-        node.parent.insert(rank + 1, finally_node)
+        node.parent.insert(rank + 2, finally_node)
 
         this.transformed = true
     }
@@ -6326,9 +6330,9 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
         else_node.add($NodeJS('await $B.promise(' +
             cm_name + ', _b_.None, _b_.None, _b_.None)'))
 
-        // Remove original "for" node
+        // Remove original node
         node.parent.children.splice(rank, 1)
-
+        
         for(var i = new_nodes.length - 1; i >= 0; i--){
             node.parent.insert(rank, new_nodes[i])
         }
@@ -6349,8 +6353,7 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
         return 'var ' + cm_name + ' = ' + this.tree[0].to_js() + '\n' +
                h + 'var ' + cme_name + ' = $B.$getattr('+cm_name+',"__exit__")\n' +
                h + 'var ' + val_name + ' = $B.$getattr('+cm_name+',"__enter__")()\n' +
-               h + 'var ' + exc_name + ' = true\n'+
-               h + 'try'
+               h + 'var ' + exc_name + ' = true\n'
     }
 }
 
