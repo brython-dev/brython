@@ -85,8 +85,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-06-23 13:13:52.244659"
-__BRYTHON__.timestamp=1561288432244
+__BRYTHON__.compiled_date="2019-06-23 15:23:35.084677"
+__BRYTHON__.timestamp=1561296215084
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -2897,7 +2897,10 @@ var top_try_node=$NodeJS("try")
 top_try_node.is_try=true
 node.parent.insert(rank+1,top_try_node)
 var num=this.num=$loop_num++
-var cm_name='$ctx_manager'+num,cme_name='$ctx_manager_exit'+num,exc_name='$exc'+num,err_name='$err'+num,val_name='$value'+num
+var prefix=""
+if(this.scope.ntype=="generator"){prefix="$locals."}
+var cm_name=prefix+'$ctx_manager'+num,cme_name=prefix+'$ctx_manager_exit'+num,exc_name=prefix+'$exc'+num,err_name='$err'+num,val_name=prefix+'$value'+num
+if(num==325){console.log("ctx manager, num",num,this)}
 if(this.tree[0].alias===null){this.tree[0].alias='$temp'}
 if(this.tree[0].type=='expr' &&
 this.tree[0].tree[0].type=='list_or_tuple'){if(this.tree[1].type !='expr' ||

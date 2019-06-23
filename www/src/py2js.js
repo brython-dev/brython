@@ -6140,12 +6140,20 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
 
         // Used to create js identifiers:
         var num = this.num = $loop_num++
-        var cm_name  = '$ctx_manager' + num,
-            cme_name = '$ctx_manager_exit' + num,
-            exc_name = '$exc' + num,
-            err_name = '$err' + num,
-            val_name = '$value' + num
 
+        var prefix = ""
+        if(this.scope.ntype == "generator"){
+            prefix = "$locals."
+        }
+        var cm_name  = prefix + '$ctx_manager' + num,
+            cme_name = prefix + '$ctx_manager_exit' + num,
+            exc_name = prefix + '$exc' + num,
+            err_name = '$err' + num,
+            val_name = prefix + '$value' + num
+
+        if(num == 325){
+            console.log("ctx manager, num", num, this)
+        }
         if(this.tree[0].alias === null){this.tree[0].alias = '$temp'}
 
         // Form "with (a,b,c) as (x,y,z)"
@@ -6332,7 +6340,7 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
 
         // Remove original node
         node.parent.children.splice(rank, 1)
-        
+
         for(var i = new_nodes.length - 1; i >= 0; i--){
             node.parent.insert(rank, new_nodes[i])
         }
