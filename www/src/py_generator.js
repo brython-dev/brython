@@ -121,11 +121,29 @@ function make_node(top_node, node){
 
             // Replace "yield value" by "return [value, node_id]"
 
+            // Is yield node inside a context manager ?
+            var ctx_manager,
+                parent = node.parent
+            while(parent && parent.ntype !== "generator"){
+                ctx_manager = parent.ctx_manager_num
+                if(ctx_manager !==undefined){
+                    break
+                }
+                parent = parent.parent
+            }
+
             var yield_node_id = top_node.yields.length
             while(ctx_js.endsWith(";")){
                 ctx_js = ctx_js.substr(0, ctx_js.length - 1)
             }
             var res =  "return [" + ctx_js + ", " + yield_node_id + "]"
+
+            // Add a local variable that will prevent executing the __exit__
+            // method of the context manager before returning the value
+            if(ctx_manager !== undefined){
+                res = "$locals.$yield" + ctx_manager +" = true;" + res
+            }
+
             new_node.data = res
             top_node.yields.push(new_node)
 

@@ -6101,6 +6101,11 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
 
         if(this.transformed){return}  // used if inside a for loop
 
+        this.prefix = ""
+        if(this.scope.ntype == "generator"){
+            this.prefix = "$locals."
+        }
+
         // If there are several "with" clauses, create a new child
         // For instance :
         //     with x as x1, y as y1:
@@ -6141,15 +6146,13 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
         // Used to create js identifiers:
         var num = this.num = $loop_num++
 
-        var prefix = ""
-        if(this.scope.ntype == "generator"){
-            prefix = "$locals."
-        }
-        var cm_name  = prefix + '$ctx_manager' + num,
-            cme_name = prefix + '$ctx_manager_exit' + num,
-            exc_name = prefix + '$exc' + num,
-            err_name = '$err' + num,
-            val_name = prefix + '$value' + num
+        top_try_node.ctx_manager_num = num
+
+        this.cm_name  = this.prefix + '$ctx_manager' + num
+        this.cmexit_name = this.prefix + '$ctx_manager_exit' + num
+        this.exc_name = this.prefix + '$exc' + num
+        this.err_name = '$err' + num
+        this.val_name = '$value' + num
 
         if(num == 325){
             console.log("ctx manager, num", num, this)
@@ -6192,7 +6195,7 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
         if(this.tree[0].alias){
             var alias = this.tree[0].alias.tree[0].tree[0].value
             try_node.add($NodeJS('$locals' + '["' + alias + '"] = ' +
-                val_name))
+                this.val_name))
         }
 
         // place block inside a try clause
@@ -6200,19 +6203,16 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
 
         var catch_node = new $Node()
         catch_node.is_catch = true // for generators
-        new $NodeJSCtx(catch_node, 'catch(' + err_name + ')')
+        new $NodeJSCtx(catch_node, 'catch(' + this.err_name + ')')
 
-        catch_node.add($NodeJS(exc_name + ' = false;' + err_name +
-            ' = $B.exception(' + err_name + ')\n' + ' '.repeat(node.indent+4) +
-                'var $b = '+cme_name+'('+
-                            err_name + '.__class__,' +
-                            err_name + ','+
-                            '$B.$getattr('+err_name + ', "traceback")'+
-                        ')'+
-                    //')'+
-                ';if(!$B.$bool($b)){' +
-                   'throw ' + err_name +
-                '}'
+        catch_node.add($NodeJS(this.exc_name + ' = false;' + this.err_name +
+            ' = $B.exception(' + this.err_name + ')\n' +
+                ' '.repeat(node.indent + 4) +
+                'var $b = ' + this.cmexit_name + '(' +
+                              this.err_name + '.__class__,' +
+                              this.err_name + ','+
+                              '$B.$getattr(' + this.err_name + ', "traceback")' +
+                        ');if(!$B.$bool($b)){throw ' + this.err_name + '}'
         ))
         top_try_node.add(catch_node)
 
@@ -6223,9 +6223,12 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
         finally_node.context.in_ctx_manager = true
         finally_node.is_except = true
         finally_node.in_ctx_manager = true
-        finally_node.add($NodeJS('if(' + exc_name + ')'+ cme_name +
-            '(None,None,None);')
-        )
+        var js = 'if(' + this.exc_name
+        if(this.scope.ntype == "generator"){
+            js += ' && !$locals.$yield' + num
+        }
+        js += ')'+ this.cmexit_name + '(None,None,None);'
+        finally_node.add($NodeJS(js))
         node.parent.insert(rank + 2, finally_node)
 
         this.transformed = true
@@ -6260,29 +6263,30 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
 
         var new_nodes = []
         var num = this.num = $loop_num++
-        var cm_name  = '$ctx_manager' + num,
-            cmtype_name = '$ctx_mgr_type' + num,
+
+        this.cm_name  = '$ctx_manager' + num,
+        this.cmexit_name = '$ctx_manager_exit' + num
+        this.exc_name = '$exc' + num
+        var cmtype_name = '$ctx_mgr_type' + num,
             cmenter_name = '$ctx_manager_enter' + num,
-            cmexit_name = '$ctx_manager_exit' + num,
-            exc_name = '$exc' + num,
             err_name = '$err' + num
 
         // Line mgr = (EXPR)
-        var js = 'var ' + cm_name + ' = ' + expr.to_js() +','
+        var js = 'var ' + this.cm_name + ' = ' + expr.to_js() +','
         new_nodes.push($NodeJS(js))
 
         // aexit = type(mgr).__aexit__
         new_nodes.push($NodeJS('    ' + cmtype_name +
-            ' = _b_.type.$factory(' + cm_name + '),'))
-        new_nodes.push($NodeJS('    ' + cmexit_name +
+            ' = _b_.type.$factory(' + this.cm_name + '),'))
+        new_nodes.push($NodeJS('    ' + this.cmexit_name +
             ' = $B.$call($B.$getattr(' + cmtype_name + ', "__aexit__")),'))
 
         // aenter = type(mgr).__aenter__(mgr)
         new_nodes.push($NodeJS('    ' + cmenter_name +
             ' = $B.$call($B.$getattr(' + cmtype_name + ', "__aenter__"))' +
-            '(' + cm_name + '),'))
+            '(' + this.cm_name + '),'))
 
-        new_nodes.push($NodeJS("    " + exc_name + " = false"))
+        new_nodes.push($NodeJS("    " + this.exc_name + " = false"))
 
         // VAR = await aenter
         js = ""
@@ -6321,22 +6325,22 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
         new_nodes.push(catch_node)
 
         //     if not await aexit(mgr, $sys.exc_info())
-        catch_node.add($NodeJS(exc_name + ' = true'))
+        catch_node.add($NodeJS(this.exc_name + ' = true'))
         catch_node.add($NodeJS('var ' + err_name +
             ' = $B.imported["_sys"].exc_info()'))
         var if_node = $NodeJS('if(! await $B.promise(' +
-            cmexit_name + '(' + cm_name + ', ' + err_name + '[0], ' +
+            this.cmexit_name + '(' + this.cm_name + ', ' + err_name + '[0], ' +
             err_name + '[1], ' + err_name + '[2])))')
         catch_node.add(if_node)
         //         raise
         if_node.add($NodeJS('$B.$raise()'))
 
         // else:
-        var else_node = $NodeJS('if(! ' + exc_name +')')
+        var else_node = $NodeJS('if(! ' + this.exc_name +')')
         new_nodes.push(else_node)
         //     await aexit(mgr, None, None, None)
         else_node.add($NodeJS('await $B.promise(' +
-            cm_name + ', _b_.None, _b_.None, _b_.None)'))
+            this.cm_name + ', _b_.None, _b_.None, _b_.None)'))
 
         // Remove original node
         node.parent.children.splice(rank, 1)
@@ -6352,16 +6356,17 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
     this.to_js = function(){
         this.js_processed = true
         var indent = $get_node(this).indent,
-            h = ' '.repeat(indent + 4),
+            h = ' '.repeat(indent),
             num = this.num
-        var cm_name  = '$ctx_manager' + num,
-            cme_name = '$ctx_manager_exit' + num,
-            exc_name = '$exc' + num,
+        var head = this.prefix == "" ? "var " : this.prefix,
+            cm_name  = '$ctx_manager' + num,
+            cme_name = head + '$ctx_manager_exit' + num,
+            exc_name = head + '$exc' + num,
             val_name = '$value' + num
         return 'var ' + cm_name + ' = ' + this.tree[0].to_js() + '\n' +
-               h + 'var ' + cme_name + ' = $B.$getattr('+cm_name+',"__exit__")\n' +
+               h + cme_name + ' = $B.$getattr('+cm_name+',"__exit__")\n' +
                h + 'var ' + val_name + ' = $B.$getattr('+cm_name+',"__enter__")()\n' +
-               h + 'var ' + exc_name + ' = true\n'
+               h + exc_name + ' = true\n'
     }
 }
 

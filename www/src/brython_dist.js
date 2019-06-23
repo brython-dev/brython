@@ -85,8 +85,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-06-23 15:23:35.084677"
-__BRYTHON__.timestamp=1561296215084
+__BRYTHON__.compiled_date="2019-06-23 16:49:48.695520"
+__BRYTHON__.timestamp=1561301388695
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -2881,6 +2881,8 @@ with_ctx.async=this.async
 suite.forEach(function(elt){new_node.add(elt)})
 node.children=[new_node]}
 if(this.transformed){return}
+this.prefix=""
+if(this.scope.ntype=="generator"){this.prefix="$locals."}
 if(this.tree.length > 1){var nw=new $Node(),ctx=new $NodeCtx(nw)
 nw.parent=node
 nw.module=node.module
@@ -2897,9 +2899,12 @@ var top_try_node=$NodeJS("try")
 top_try_node.is_try=true
 node.parent.insert(rank+1,top_try_node)
 var num=this.num=$loop_num++
-var prefix=""
-if(this.scope.ntype=="generator"){prefix="$locals."}
-var cm_name=prefix+'$ctx_manager'+num,cme_name=prefix+'$ctx_manager_exit'+num,exc_name=prefix+'$exc'+num,err_name='$err'+num,val_name=prefix+'$value'+num
+top_try_node.ctx_manager_num=num
+this.cm_name=this.prefix+'$ctx_manager'+num
+this.cmexit_name=this.prefix+'$ctx_manager_exit'+num
+this.exc_name=this.prefix+'$exc'+num
+this.err_name='$err'+num
+this.val_name='$value'+num
 if(num==325){console.log("ctx manager, num",num,this)}
 if(this.tree[0].alias===null){this.tree[0].alias='$temp'}
 if(this.tree[0].type=='expr' &&
@@ -2920,21 +2925,19 @@ new $NodeJSCtx(try_node,'try')
 top_try_node.add(try_node)
 if(this.tree[0].alias){var alias=this.tree[0].alias.tree[0].tree[0].value
 try_node.add($NodeJS('$locals'+'["'+alias+'"] = '+
-val_name))}
+this.val_name))}
 block.forEach(function(elt){try_node.add(elt)})
 var catch_node=new $Node()
 catch_node.is_catch=true 
-new $NodeJSCtx(catch_node,'catch('+err_name+')')
-catch_node.add($NodeJS(exc_name+' = false;'+err_name+
-' = $B.exception('+err_name+')\n'+' '.repeat(node.indent+4)+
-'var $b = '+cme_name+'('+
-err_name+'.__class__,'+
-err_name+','+
-'$B.$getattr('+err_name+', "traceback")'+
-')'+
-';if(!$B.$bool($b)){'+
-'throw '+err_name+
-'}'
+new $NodeJSCtx(catch_node,'catch('+this.err_name+')')
+catch_node.add($NodeJS(this.exc_name+' = false;'+this.err_name+
+' = $B.exception('+this.err_name+')\n'+
+' '.repeat(node.indent+4)+
+'var $b = '+this.cmexit_name+'('+
+this.err_name+'.__class__,'+
+this.err_name+','+
+'$B.$getattr('+this.err_name+', "traceback")'+
+');if(!$B.$bool($b)){throw '+this.err_name+'}'
 ))
 top_try_node.add(catch_node)
 var finally_node=new $Node()
@@ -2944,26 +2947,29 @@ finally_node.C.token='finally'
 finally_node.C.in_ctx_manager=true
 finally_node.is_except=true
 finally_node.in_ctx_manager=true
-finally_node.add($NodeJS('if('+exc_name+')'+cme_name+
-'(None,None,None);')
-)
+var js='if('+this.exc_name
+if(this.scope.ntype=="generator"){js+=' && !$locals.$yield'+num}
+js+=')'+this.cmexit_name+'(None,None,None);'
+finally_node.add($NodeJS(js))
 node.parent.insert(rank+2,finally_node)
 this.transformed=true}
 this.transform_async=function(node,rank){
 var scope=$get_scope(this),expr=this.tree[0],alias=this.tree[0].alias
 var new_nodes=[]
 var num=this.num=$loop_num++
-var cm_name='$ctx_manager'+num,cmtype_name='$ctx_mgr_type'+num,cmenter_name='$ctx_manager_enter'+num,cmexit_name='$ctx_manager_exit'+num,exc_name='$exc'+num,err_name='$err'+num
-var js='var '+cm_name+' = '+expr.to_js()+','
+this.cm_name='$ctx_manager'+num,this.cmexit_name='$ctx_manager_exit'+num
+this.exc_name='$exc'+num
+var cmtype_name='$ctx_mgr_type'+num,cmenter_name='$ctx_manager_enter'+num,err_name='$err'+num
+var js='var '+this.cm_name+' = '+expr.to_js()+','
 new_nodes.push($NodeJS(js))
 new_nodes.push($NodeJS('    '+cmtype_name+
-' = _b_.type.$factory('+cm_name+'),'))
-new_nodes.push($NodeJS('    '+cmexit_name+
+' = _b_.type.$factory('+this.cm_name+'),'))
+new_nodes.push($NodeJS('    '+this.cmexit_name+
 ' = $B.$call($B.$getattr('+cmtype_name+', "__aexit__")),'))
 new_nodes.push($NodeJS('    '+cmenter_name+
 ' = $B.$call($B.$getattr('+cmtype_name+', "__aenter__"))'+
-'('+cm_name+'),'))
-new_nodes.push($NodeJS("    "+exc_name+" = false"))
+'('+this.cm_name+'),'))
+new_nodes.push($NodeJS("    "+this.exc_name+" = false"))
 js=""
 if(alias){if(alias.tree[0].tree[0].type !="list_or_tuple"){var js=alias.tree[0].to_js()+' = '+
 'await $B.promise('+cmenter_name+')'
@@ -2980,29 +2986,29 @@ node.children.forEach(function(child){try_node.add(child)})
 new_nodes.push(try_node)
 var catch_node=new $NodeJS('catch(err)')
 new_nodes.push(catch_node)
-catch_node.add($NodeJS(exc_name+' = true'))
+catch_node.add($NodeJS(this.exc_name+' = true'))
 catch_node.add($NodeJS('var '+err_name+
 ' = $B.imported["_sys"].exc_info()'))
 var if_node=$NodeJS('if(! await $B.promise('+
-cmexit_name+'('+cm_name+', '+err_name+'[0], '+
+this.cmexit_name+'('+this.cm_name+', '+err_name+'[0], '+
 err_name+'[1], '+err_name+'[2])))')
 catch_node.add(if_node)
 if_node.add($NodeJS('$B.$raise()'))
-var else_node=$NodeJS('if(! '+exc_name+')')
+var else_node=$NodeJS('if(! '+this.exc_name+')')
 new_nodes.push(else_node)
 else_node.add($NodeJS('await $B.promise('+
-cm_name+', _b_.None, _b_.None, _b_.None)'))
+this.cm_name+', _b_.None, _b_.None, _b_.None)'))
 node.parent.children.splice(rank,1)
 for(var i=new_nodes.length-1;i >=0;i--){node.parent.insert(rank,new_nodes[i])}
 node.children=[]
 return 0}
 this.to_js=function(){this.js_processed=true
-var indent=$get_node(this).indent,h=' '.repeat(indent+4),num=this.num
-var cm_name='$ctx_manager'+num,cme_name='$ctx_manager_exit'+num,exc_name='$exc'+num,val_name='$value'+num
+var indent=$get_node(this).indent,h=' '.repeat(indent),num=this.num
+var head=this.prefix=="" ? "var " :this.prefix,cm_name='$ctx_manager'+num,cme_name=head+'$ctx_manager_exit'+num,exc_name=head+'$exc'+num,val_name='$value'+num
 return 'var '+cm_name+' = '+this.tree[0].to_js()+'\n'+
-h+'var '+cme_name+' = $B.$getattr('+cm_name+',"__exit__")\n'+
+h+cme_name+' = $B.$getattr('+cm_name+',"__exit__")\n'+
 h+'var '+val_name+' = $B.$getattr('+cm_name+',"__enter__")()\n'+
-h+'var '+exc_name+' = true\n'}}
+h+exc_name+' = true\n'}}
 var $YieldCtx=$B.parser.$YieldCtx=function(C,is_await){
 this.type='yield'
 this.toString=function(){return '(yield) '+this.tree}
@@ -12729,9 +12735,14 @@ if(ctx_js){
 var new_node=new $B.genNode(ctx_js)
 new_node.line_num=node.line_num
 if(ctype=="yield"){
+var ctx_manager,parent=node.parent
+while(parent && parent.ntype !=="generator"){ctx_manager=parent.ctx_manager_num
+if(ctx_manager !==undefined){break}
+parent=parent.parent}
 var yield_node_id=top_node.yields.length
 while(ctx_js.endsWith(";")){ctx_js=ctx_js.substr(0,ctx_js.length-1)}
 var res="return ["+ctx_js+", "+yield_node_id+"]"
+if(ctx_manager !==undefined){res="$locals.$yield"+ctx_manager+" = true;"+res}
 new_node.data=res
 top_node.yields.push(new_node)}else if(node.is_set_yield_value){
 var yield_node_id=top_node.yields.length
