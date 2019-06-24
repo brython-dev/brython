@@ -384,7 +384,7 @@ $B.$check_def = function(name, value){
 $B.$check_def_local = function(name, value){
     // Check if value is not undefined
     if(value !== undefined){return value}
-    throw _b_.UnboundLocalError.$factory("local variable '" + 
+    throw _b_.UnboundLocalError.$factory("local variable '" +
         $B.from_alias(name) + "' referenced before assignment")
 }
 
@@ -1009,12 +1009,35 @@ $B.enter_frame = function(frame){
     $B.frames_stack.push(frame)
 }
 
+function exit_ctx_managers_in_generators(frame){
+    // Called when leaving an execution frame.
+    // Inspect the generators in frame's locals. If they have unclosed context
+    // managers, close them.
+    for(key in frame[1]){
+        if(frame[1][key] && frame[1][key].$is_generator_obj){
+            var gen_obj = frame[1][key]
+            // If the generator object's attribute env has an attribute
+            // $ctx_manager_exit, it means that a context manager has not yet
+            // called the method __exit__ (issue #1143)
+            if(gen_obj.env !== undefined){
+                for(var attr in gen_obj.env){
+                    if(attr.search(/^\$ctx_manager_exit\d+$/) > -1){
+                        // Call __exit__
+                        $B.$call(gen_obj.env[attr])()
+                    }
+                }
+            }
+        }
+    }
+}
+
 $B.leave_frame = function(arg){
     // Leave execution frame
     if($B.profile > 0){$B.$profile.return()}
     if($B.frames_stack.length == 0){console.log("empty stack"); return}
     $B.del_exc()
-    $B.frames_stack.pop()
+    var frame = $B.frames_stack.pop()
+    exit_ctx_managers_in_generators(frame)
 }
 
 $B.leave_frame_exec = function(arg){
@@ -1023,6 +1046,7 @@ $B.leave_frame_exec = function(arg){
     if($B.profile > 0){$B.$profile.return()}
     if($B.frames_stack.length == 0){console.log("empty stack"); return}
     var frame = $B.frames_stack.pop()
+    exit_ctx_managers_in_generators(frame)
     for(var i = $B.frames_stack.length - 1; i >= 0; i--){
         if($B.frames_stack[i][2] == frame[2]){
             $B.frames_stack[i][3] = frame[3]

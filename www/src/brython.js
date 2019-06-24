@@ -85,8 +85,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-06-23 16:49:48.695520"
-__BRYTHON__.timestamp=1561301388695
+__BRYTHON__.compiled_date="2019-06-24 14:42:46.832431"
+__BRYTHON__.timestamp=1561380166832
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -1452,8 +1452,16 @@ C.tree.pop()})
 this.tree=[]
 return res.join(';')}else{var expr=this.tree[0].tree[0]
 switch(expr.type){case 'id':
-var res='$B.$delete("'+expr.value+'");'
-delete $get_scope(this).binding[expr.value]
+var scope=$get_scope(this),is_global=false
+if((scope.ntype=="def" ||scope.ntype=="generator")&&
+scope.globals && scope.globals.has(expr.value)){
+scope=scope.parent
+while(scope.parent &&
+scope.parent.id !=="__builtins__"){scope=scope.parent}
+is_global=true}
+var res='$B.$delete("'+expr.value+'"'+
+(is_global ? ', "global"' :'')+');'
+delete scope.binding[expr.value]
 return res
 case 'list_or_tuple':
 var res=[]
@@ -2930,15 +2938,16 @@ block.forEach(function(elt){try_node.add(elt)})
 var catch_node=new $Node()
 catch_node.is_catch=true 
 new $NodeJSCtx(catch_node,'catch('+this.err_name+')')
-catch_node.add($NodeJS(this.exc_name+' = false;'+this.err_name+
+var js=this.exc_name+' = false;'+this.err_name+
 ' = $B.exception('+this.err_name+')\n'+
 ' '.repeat(node.indent+4)+
 'var $b = '+this.cmexit_name+'('+
 this.err_name+'.__class__,'+
 this.err_name+','+
-'$B.$getattr('+this.err_name+', "traceback")'+
-');if(!$B.$bool($b)){throw '+this.err_name+'}'
-))
+'$B.$getattr('+this.err_name+', "traceback"));'
+if(this.scope.ntype=="generator"){js+='delete '+this.cmexit_name+';'}
+js+='if(!$B.$bool($b)){throw '+this.err_name+'}'
+catch_node.add($NodeJS(js))
 top_try_node.add(catch_node)
 var finally_node=new $Node()
 new $NodeJSCtx(finally_node,'finally')
@@ -2949,7 +2958,9 @@ finally_node.is_except=true
 finally_node.in_ctx_manager=true
 var js='if('+this.exc_name
 if(this.scope.ntype=="generator"){js+=' && !$locals.$yield'+num}
-js+=')'+this.cmexit_name+'(None,None,None);'
+js+='){'+this.cmexit_name+'(None,None,None);'
+if(this.scope.ntype=="generator"){js+='delete '+this.cmexit_name}
+js+='}'
 finally_node.add($NodeJS(js))
 node.parent.insert(rank+2,finally_node)
 this.transformed=true}
@@ -6011,15 +6022,21 @@ throw _b_.TypeError.$factory("'"+$B.class_name(v)+
 "' object cannot be interpreted as an integer")}}
 $B.enter_frame=function(frame){
 $B.frames_stack.push(frame)}
+function exit_ctx_managers_in_generators(frame){
+for(key in frame[1]){if(frame[1][key]&& frame[1][key].$is_generator_obj){var gen_obj=frame[1][key]
+if(gen_obj.env !==undefined){for(var attr in gen_obj.env){if(attr.search(/^\$ctx_manager_exit\d+$/)>-1){
+$B.$call(gen_obj.env[attr])()}}}}}}
 $B.leave_frame=function(arg){
 if($B.profile > 0){$B.$profile.return()}
 if($B.frames_stack.length==0){console.log("empty stack");return}
 $B.del_exc()
-$B.frames_stack.pop()}
+var frame=$B.frames_stack.pop()
+exit_ctx_managers_in_generators(frame)}
 $B.leave_frame_exec=function(arg){
 if($B.profile > 0){$B.$profile.return()}
 if($B.frames_stack.length==0){console.log("empty stack");return}
 var frame=$B.frames_stack.pop()
+exit_ctx_managers_in_generators(frame)
 for(var i=$B.frames_stack.length-1;i >=0;i--){if($B.frames_stack[i][2]==frame[2]){$B.frames_stack[i][3]=frame[3]}}}
 var min_int=Math.pow(-2,53),max_int=Math.pow(2,53)-1
 $B.is_safe_int=function(){for(var i=0;i < arguments.length;i++){var arg=arguments[i]
@@ -6261,13 +6278,17 @@ check_nb_args('delattr',2,arguments)
 if(typeof attr !='string'){throw _b_.TypeError.$factory("attribute name must be string, not '"+
 $B.class_name(attr)+"'")}
 return $B.$getattr(obj,'__delattr__')(attr)}
-$B.$delete=function(name){
-var found=false
-for(var i=$B.frames_stack.length-1;i >=0 && ! found;i--){var frame=$B.frames_stack[i]
-if(frame[1][name]!==undefined){delete frame[1][name]
-found=true}
-if(frame[2]!=frame[0]&& frame[3][name]!==undefined){delete frame[3][name]
-found=true}}}
+$B.$delete=function(name,is_global){
+function del(obj){
+if(obj.$is_generator_obj && obj.env){for(var attr in obj.env){if(attr.search(/^\$ctx_manager_exit\d+$/)>-1){$B.$call(obj.env[attr])()
+delete obj.env[attr]}}}}
+var found=false,frame=$B.last($B.frames_stack)
+if(! is_global){if(frame[1][name]!==undefined){found=true
+del(frame[1][name])
+delete frame[1][name]}}else{if(frame[2]!=frame[0]&& frame[3][name]!==undefined){found=true
+del(frame[3][name])
+delete frame[3][name]}}
+if(!found){throw _b_.NameError.$factory(name)}}
 function dir(obj){if(obj===undefined){
 var frame=$B.last($B.frames_stack),globals_obj=frame[3],res=_b_.list.$factory(),pos=0
 for(var attr in globals_obj){if(attr.charAt(0)=='$' && attr.charAt(1)!='$'){
@@ -6452,6 +6473,7 @@ return false}
 $B.$getattr=function(obj,attr,_default){
 var rawname=attr
 attr=$B.to_alias(attr)
+if(obj===undefined){console.log("get attr",attr,"of undefined")}
 var is_class=obj.$is_class ||obj.$factory
 var klass=obj.__class__
 var $test=false 
@@ -12982,7 +13004,7 @@ for(var attr in blocks[block_id]){blocks["$locals_"+name][attr]=blocks[block_id]
 return function(){var iter_id="$gen"+$B.gen_counter++,gfuncs=[]
 gfuncs.push(funcs[0]($defaults))
 for(var i=1;i < funcs.length;i++){gfuncs.push(funcs[i])}
-var res={__class__:generator,__name__:name,args:Array.prototype.slice.call(arguments),blocks:blocks,env:{},name:name,nexts:gfuncs.slice(1),next:gfuncs[0],iter_id:iter_id,gi_running:false,$started:false,$defaults:$defaults}
+var res={__class__:generator,__name__:name,args:Array.prototype.slice.call(arguments),blocks:blocks,env:{},name:name,nexts:gfuncs.slice(1),next:gfuncs[0],iter_id:iter_id,gi_running:false,$started:false,$defaults:$defaults,$is_generator_obj:true}
 return res}}
 $B.set_func_names(generator,"builtins")})(__BRYTHON__)
 ;

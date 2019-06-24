@@ -758,7 +758,8 @@ generator.$factory = $B.genfunc = function(name, blocks, funcs, $defaults){
             iter_id: iter_id,
             gi_running: false,
             $started: false,
-            $defaults: $defaults
+            $defaults: $defaults,
+            $is_generator_obj: true
         }
         return res
     }

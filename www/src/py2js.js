@@ -2917,8 +2917,24 @@ var $DelCtx = $B.parser.$DelCtx = function(context){
             switch(expr.type) {
                 case 'id':
                     // cf issue #923
-                    var res = '$B.$delete("' + expr.value + '");'
-                    delete $get_scope(this).binding[expr.value]
+                    var scope = $get_scope(this),
+                        is_global = false
+                    if((scope.ntype == "def" || scope.ntype == "generator") &&
+                            scope.globals && scope.globals.has(expr.value)){
+                        // Delete from global namespace
+                        scope = scope.parent
+                        while(scope.parent &&
+                                scope.parent.id !== "__builtins__"){
+                            scope = scope.parent
+                        }
+                        is_global = true
+                    }
+                    var res = '$B.$delete("' + expr.value + '"' +
+                        (is_global ? ', "global"' : '') + ');'
+                    // Delete from scope to force the use of $search or
+                    // $global_search in mane resolution, even if del is never
+                    // called.
+                    delete scope.binding[expr.value]
                     return res
                 case 'list_or_tuple':
                     var res = []
@@ -4117,7 +4133,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         // get global scope
         var gs = innermost
 
-        var $test = false //val == "__class__"
+        var $test = false //val == "x"
 
         if($test){
             console.log("this", this)
@@ -6205,15 +6221,18 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
         catch_node.is_catch = true // for generators
         new $NodeJSCtx(catch_node, 'catch(' + this.err_name + ')')
 
-        catch_node.add($NodeJS(this.exc_name + ' = false;' + this.err_name +
+        var js = this.exc_name + ' = false;' + this.err_name +
             ' = $B.exception(' + this.err_name + ')\n' +
                 ' '.repeat(node.indent + 4) +
                 'var $b = ' + this.cmexit_name + '(' +
-                              this.err_name + '.__class__,' +
-                              this.err_name + ','+
-                              '$B.$getattr(' + this.err_name + ', "traceback")' +
-                        ');if(!$B.$bool($b)){throw ' + this.err_name + '}'
-        ))
+                this.err_name + '.__class__,' +
+                this.err_name + ','+
+                '$B.$getattr(' + this.err_name + ', "traceback"));'
+        if(this.scope.ntype == "generator"){
+            js += 'delete ' + this.cmexit_name + ';'
+        }
+        js += 'if(!$B.$bool($b)){throw ' + this.err_name + '}'
+        catch_node.add($NodeJS(js))
         top_try_node.add(catch_node)
 
         var finally_node = new $Node()
@@ -6227,7 +6246,11 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
         if(this.scope.ntype == "generator"){
             js += ' && !$locals.$yield' + num
         }
-        js += ')'+ this.cmexit_name + '(None,None,None);'
+        js += '){'+ this.cmexit_name + '(None,None,None);'
+        if(this.scope.ntype == "generator"){
+            js += 'delete ' + this.cmexit_name
+        }
+        js += '}'
         finally_node.add($NodeJS(js))
         node.parent.insert(rank + 2, finally_node)
 

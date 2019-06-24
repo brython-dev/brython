@@ -748,4 +748,37 @@ gen = unpack()
 next(gen)
 gen.send((5, 4))
 
+# issue 1143 (yield inside with)
+trace = []
+
+class A(object):
+
+    def __enter__(self):
+        trace.append('enter A')
+
+    def __exit__(self, *pa, **ka):
+        trace.append('exit A')
+
+def test_gen():
+    trace.append('test starts')
+    with A() as x:
+        yield 1
+        yield 2
+    return
+
+def f():
+    gen = test_gen()
+    trace.append(next(gen))
+    trace.append(next(gen))
+
+f()
+trace.append('end of f()')
+
+gen2 = test_gen()
+trace.append(next(gen2))
+del gen2
+
+assert trace == ['test starts', 'enter A', 1, 2, 'exit A', 'end of f()', 
+    'test starts', 'enter A', 1, 'exit A']
+
 print('passed all tests...')

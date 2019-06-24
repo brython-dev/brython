@@ -301,19 +301,37 @@ function delattr(obj, attr) {
     return $B.$getattr(obj, '__delattr__')(attr)
 }
 
-$B.$delete = function(name){
+$B.$delete = function(name, is_global){
     // remove name from namespace
-    var found = false
-    for(var i = $B.frames_stack.length - 1; i >= 0 && ! found; i--){
-        var frame = $B.frames_stack[i]
+    function del(obj){
+        // If obj is a generator object with a context manager whose method
+        // __exit__ has not yet been called, call it
+        if(obj.$is_generator_obj && obj.env){
+            for(var attr in obj.env){
+                if(attr.search(/^\$ctx_manager_exit\d+$/) > -1){
+                    $B.$call(obj.env[attr])()
+                    delete obj.env[attr]
+                }
+            }
+        }
+    }
+    var found = false,
+        frame = $B.last($B.frames_stack)
+    if(! is_global){
         if(frame[1][name] !== undefined){
+            found = true
+            del(frame[1][name])
             delete frame[1][name]
-            found = true
         }
+    }else{
         if(frame[2] != frame[0] && frame[3][name] !== undefined){
-            delete frame[3][name]
             found = true
+            del(frame[3][name])
+            delete frame[3][name]
         }
+    }
+    if(!found){
+        throw _b_.NameError.$factory(name)
     }
 }
 
@@ -824,6 +842,10 @@ $B.$getattr = function(obj, attr, _default){
     // Used internally to avoid having to parse the arguments
     var rawname = attr
     attr = $B.to_alias(attr)
+
+    if(obj === undefined){
+        console.log("get attr", attr, "of undefined")
+    }
 
     var is_class = obj.$is_class || obj.$factory
 
