@@ -778,7 +778,29 @@ gen2 = test_gen()
 trace.append(next(gen2))
 del gen2
 
-assert trace == ['test starts', 'enter A', 1, 2, 'exit A', 'end of f()', 
+assert trace == ['test starts', 'enter A', 1, 2, 'exit A', 'end of f()',
     'test starts', 'enter A', 1, 'exit A']
+
+trace = []
+
+def test_gen():
+    trace.append('test starts')
+    with A():
+        trace.append(1)
+        yield
+        trace.append(2)
+        yield
+    trace.append(3)
+    yield
+    with A():
+        trace.append(4)
+        yield
+        trace.append(5)
+        yield
+
+list(test_gen())
+
+assert trace == ['test starts', 'enter A', 1, 2, 'exit A', 3, 'enter A', 4, 5,
+    'exit A']
 
 print('passed all tests...')

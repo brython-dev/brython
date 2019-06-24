@@ -6170,9 +6170,6 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
         this.err_name = '$err' + num
         this.val_name = '$value' + num
 
-        if(num == 325){
-            console.log("ctx manager, num", num, this)
-        }
         if(this.tree[0].alias === null){this.tree[0].alias = '$temp'}
 
         // Form "with (a,b,c) as (x,y,z)"
@@ -6244,13 +6241,17 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
         finally_node.in_ctx_manager = true
         var js = 'if(' + this.exc_name
         if(this.scope.ntype == "generator"){
-            js += ' && !$locals.$yield' + num
+            js += ' && !$locals.$yield' + num +
+                  ' && ' + this.cmexit_name
         }
         js += '){'+ this.cmexit_name + '(None,None,None);'
         if(this.scope.ntype == "generator"){
             js += 'delete ' + this.cmexit_name
         }
         js += '}'
+        if(this.scope.ntype == "generator"){
+            js += '\n$locals.$yield' + num + ' = false'
+        }
         finally_node.add($NodeJS(js))
         node.parent.insert(rank + 2, finally_node)
 
@@ -6469,6 +6470,7 @@ var $YieldCtx = $B.parser.$YieldCtx = function(context, is_await){
     this.transform = function(node, rank){
         var new_node = $NodeJS('// placeholder for generator sent value')
         new_node.is_set_yield_value = true
+        new_node.indent = node.indent
         node.parent.insert(rank + 1, new_node)
     }
 

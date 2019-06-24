@@ -159,17 +159,18 @@ function make_node(top_node, node){
 
             var yield_node_id = top_node.yields.length
             var js = "var sent_value = this.sent_value === undefined ? " +
-                "None : this.sent_value;"
+                "None : this.sent_value;",
+                h = "\n" + ' '.repeat(node.indent)
 
             // If method throw was called, raise the exception
-            js += "if(sent_value.__class__ === $B.$GeneratorSendError)"+
+            js += h + "if(sent_value.__class__ === $B.$GeneratorSendError)"+
                   "{throw sent_value.err};"
 
             // Else set the yielded value to sent_value
-            js += "var $yield_value" + ctx_js + " = sent_value;"
+            js += h + "var $yield_value" + ctx_js + " = sent_value;"
 
             // Reset sent_value value to None for the next iteration
-            js += "this.sent_value = None"
+            js += h + "this.sent_value = None"
             new_node.data = js
 
         }else if(ctype == "break" || ctype == "continue"){

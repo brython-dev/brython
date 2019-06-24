@@ -85,8 +85,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-06-24 14:42:46.832431"
-__BRYTHON__.timestamp=1561380166832
+__BRYTHON__.compiled_date="2019-06-24 16:01:48.060140"
+__BRYTHON__.timestamp=1561384908060
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -2913,7 +2913,6 @@ this.cmexit_name=this.prefix+'$ctx_manager_exit'+num
 this.exc_name=this.prefix+'$exc'+num
 this.err_name='$err'+num
 this.val_name='$value'+num
-if(num==325){console.log("ctx manager, num",num,this)}
 if(this.tree[0].alias===null){this.tree[0].alias='$temp'}
 if(this.tree[0].type=='expr' &&
 this.tree[0].tree[0].type=='list_or_tuple'){if(this.tree[1].type !='expr' ||
@@ -2957,10 +2956,12 @@ finally_node.C.in_ctx_manager=true
 finally_node.is_except=true
 finally_node.in_ctx_manager=true
 var js='if('+this.exc_name
-if(this.scope.ntype=="generator"){js+=' && !$locals.$yield'+num}
+if(this.scope.ntype=="generator"){js+=' && !$locals.$yield'+num+
+' && '+this.cmexit_name}
 js+='){'+this.cmexit_name+'(None,None,None);'
 if(this.scope.ntype=="generator"){js+='delete '+this.cmexit_name}
 js+='}'
+if(this.scope.ntype=="generator"){js+='\n$locals.$yield'+num+' = false'}
 finally_node.add($NodeJS(js))
 node.parent.insert(rank+2,finally_node)
 this.transformed=true}
@@ -3052,6 +3053,7 @@ def.yields.push(this)}
 this.toString=function(){return '(yield) '+(this.from ? '(from) ' :'')+this.tree}
 this.transform=function(node,rank){var new_node=$NodeJS('// placeholder for generator sent value')
 new_node.is_set_yield_value=true
+new_node.indent=node.indent
 node.parent.insert(rank+1,new_node)}
 this.to_js=function(){this.js_processed=true
 if(this.from===undefined){return $to_js(this.tree)||'None'}
@@ -12769,11 +12771,11 @@ new_node.data=res
 top_node.yields.push(new_node)}else if(node.is_set_yield_value){
 var yield_node_id=top_node.yields.length
 var js="var sent_value = this.sent_value === undefined ? "+
-"None : this.sent_value;"
-js+="if(sent_value.__class__ === $B.$GeneratorSendError)"+
+"None : this.sent_value;",h="\n"+' '.repeat(node.indent)
+js+=h+"if(sent_value.__class__ === $B.$GeneratorSendError)"+
 "{throw sent_value.err};"
-js+="var $yield_value"+ctx_js+" = sent_value;"
-js+="this.sent_value = None"
+js+=h+"var $yield_value"+ctx_js+" = sent_value;"
+js+=h+"this.sent_value = None"
 new_node.data=js}else if(ctype=="break" ||ctype=="continue"){
 new_node["is_"+ctype]=true
 new_node.loop_num=node.C.tree[0].loop_ctx.loop_num}
