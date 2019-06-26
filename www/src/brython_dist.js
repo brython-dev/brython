@@ -73,6 +73,7 @@ $B.has_session_storage=true}}catch(err){}}else{$B.has_local_storage=false
 $B.has_session_storage=false}
 $B.globals=function(){
 return $B.frames_stack[$B.frames_stack.length-1][3]}
+$B.scripts={}
 $B.$options={}
 $B.python_to_js=function(src,script_id){$B.meta_path=$B.$meta_path.slice()
 if(!$B.use_VFS){$B.meta_path.shift()}
@@ -85,8 +86,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-06-24 16:01:48.060140"
-__BRYTHON__.timestamp=1561384908060
+__BRYTHON__.compiled_date="2019-06-26 15:53:30.137974"
+__BRYTHON__.timestamp=1561557210137
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -4944,7 +4945,9 @@ options.ipy_id.forEach(function(elt){$elts.push(document.getElementById(elt))})}
 for(var i=0;i < scripts.length;i++){var script=scripts[i]
 if(script.type=="text/python" ||script.type=="text/python3"){if(script.className=="webworker"){if(script.id===undefined){throw _b_.AttributeError.$factory(
 "webworker script has no attribute 'id'")}
-webworkers.push(script)}else{$elts.push(script)}}}}
+webworkers.push(script)}else{$elts.push(script)}}}
+for(var script_id in $B.scripts){
+$elts.push({id:script_id,type:"text/python",textContent:$B.scripts[script_id]})}}
 var first_script=true,module_name
 if(options.ipy_id !==undefined){module_name='__main__'
 var $src="",js,root

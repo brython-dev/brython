@@ -188,6 +188,8 @@ $B.globals = function(){
     return $B.frames_stack[$B.frames_stack.length - 1][3]
 }
 
+$B.scripts = {} // for Python scripts embedded in a JS file
+
 $B.$options = {}
 
 // Can be used in Javascript programs to run Python code

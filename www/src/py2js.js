@@ -9866,6 +9866,21 @@ var _run_scripts = $B.parser._run_scripts = function(options){
                 }
             }
         }
+        for(var script_id in $B.scripts){
+            // Javascript scripts included in the page with
+            // <script type="text/javascript" src="source.js"></script>
+            // with content like
+            // __BRYTHON__.scripts["myscript"] =
+            // `
+            // <Python code here>
+            // `
+            // The backtick (`) is like the triple quote in Python
+            // This technique avoids Ajax calls to load an external Python
+            // script, and works without a web server.
+            $elts.push({id: script_id,
+                        type: "text/python",
+                        textContent: $B.scripts[script_id]})
+        }
     }
 
     // Get all scripts with type = text/python or text/python3 and run them
