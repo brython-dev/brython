@@ -428,7 +428,9 @@ BaseException.$factory = function (){
     err.__class__ = _b_.BaseException
     err.$py_error = true
     // Make a copy of the current frame stack array
-    err.$stack = deep_copy($B.frames_stack);
+    if(err.$stack === undefined){
+        err.$stack = deep_copy($B.frames_stack);
+    }
     if($B.frames_stack.length){
         err.$line_info = $B.last($B.frames_stack)[1].$line_info
     }

@@ -167,7 +167,9 @@ function make_node(top_node, node){
                   "{throw sent_value.err};"
 
             // Else set the yielded value to sent_value
-            js += h + "var $yield_value" + ctx_js + " = sent_value;"
+            if(typeof ctx_js == "number"){
+                js += h + "var $yield_value" + ctx_js + " = sent_value;"
+            }
 
             // Reset sent_value value to None for the next iteration
             js += h + "this.sent_value = None"
@@ -216,6 +218,14 @@ $B.genNode = function(data, parent){
         this.has_child = true
         child.parent = this
         child.rank = this.children.length - 1
+    }
+
+    this.insert = function(pos, child){
+        if(child === undefined){console.log("child of " + this + " undefined")}
+        this.children.splice(pos, 0, child)
+        this.has_child = true
+        child.parent = this
+        child.rank = pos //this.children.length - 1
     }
 
     this.clone = function(){
@@ -414,6 +424,7 @@ $B.$BRgenerator = function(func_name, blocks, def_id, def_node){
         $B.$add_line_num(def_node, def_ctx.rank)
     }
     var func_root = new $B.genNode(def_ctx.to_js())
+
     // Once the Javascript code is generated, remove the nodes for line
     // numbers, they make the rest of the algorithm bug
     remove_line_nums(def_node.parent)
@@ -443,7 +454,8 @@ $B.$BRgenerator = function(func_name, blocks, def_id, def_node){
         num: 0
     }
 
-    var src = func_root.src(), //children[1].src(),
+    // Restore function line num
+    var src = func_root.src(),
         raw_src = src.substr(src.search("function"))
 
     // For the first call, add defaults object as arguement
@@ -673,6 +685,7 @@ generator.__next__ = function(self){
         console.log(err)
         */
         self.$finished = true
+        err.$stack = $B.frames_stack.slice() // otherwise frame is lot in finally
         throw err
     }finally{
         // The line "leave_frame" is not inserted in the function body for

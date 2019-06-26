@@ -86,8 +86,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-06-26 15:53:30.137974"
-__BRYTHON__.timestamp=1561557210137
+__BRYTHON__.compiled_date="2019-06-26 17:05:35.508510"
+__BRYTHON__.timestamp=1561561535508
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -1339,6 +1339,10 @@ if(is_method){var class_name=scope.C.tree[0].name,class_block=scope.parent_block
 this.parent.node.binding["__class__"]=true
 nodes.push($NodeJS("$locals.__class__ = "+class_ref))}
 nodes.push($NodeJS('$B.js_this = this;'))
+if(this.type=="generator"){var suspension_node=$NodeJS("// suspension")
+suspension_node.is_set_yield_value=true
+suspension_node.num=node.num
+nodes.push(suspension_node)}
 for(var i=nodes.length-1;i >=0;i--){node.children.splice(0,0,nodes[i])}
 var def_func_node=new $Node()
 this.params=''
@@ -7423,7 +7427,7 @@ BaseException.$factory=function(){var err=Error()
 err.args=_b_.tuple.$factory(Array.prototype.slice.call(arguments))
 err.__class__=_b_.BaseException
 err.$py_error=true
-err.$stack=deep_copy($B.frames_stack);
+if(err.$stack===undefined){err.$stack=deep_copy($B.frames_stack);}
 if($B.frames_stack.length){err.$line_info=$B.last($B.frames_stack)[1].$line_info}
 eval("//placeholder//")
 err.__cause__=_b_.None 
@@ -12777,7 +12781,7 @@ var js="var sent_value = this.sent_value === undefined ? "+
 "None : this.sent_value;",h="\n"+' '.repeat(node.indent)
 js+=h+"if(sent_value.__class__ === $B.$GeneratorSendError)"+
 "{throw sent_value.err};"
-js+=h+"var $yield_value"+ctx_js+" = sent_value;"
+if(typeof ctx_js=="number"){js+=h+"var $yield_value"+ctx_js+" = sent_value;"}
 js+=h+"this.sent_value = None"
 new_node.data=js}else if(ctype=="break" ||ctype=="continue"){
 new_node["is_"+ctype]=true
@@ -12804,6 +12808,11 @@ this.children[this.children.length]=child
 this.has_child=true
 child.parent=this
 child.rank=this.children.length-1}
+this.insert=function(pos,child){if(child===undefined){console.log("child of "+this+" undefined")}
+this.children.splice(pos,0,child)
+this.has_child=true
+child.parent=this
+child.rank=pos }
 this.clone=function(){var res=new $B.genNode(this.data)
 res.has_child=this.has_child
 res.is_cond=this.is_cond
@@ -12898,8 +12907,7 @@ for(var i=0,len=def_node.children.length;i < len;i++){var nd=make_node(func_root
 if(nd===undefined){continue}
 func_root.addChild(nd)}
 var obj={__class__ :$BRGeneratorDict,blocks:blocks,def_ctx:def_ctx,def_id:def_id,func_name:func_name,func_root:func_root,module:module,gi_running:false,iter_id:iter_id,id:iter_id,num:0}
-var src=func_root.src(),
-raw_src=src.substr(src.search("function"))
+var src=func_root.src(),raw_src=src.substr(src.search("function"))
 raw_src+="return "+def_ctx.name+def_ctx.num+"}"
 var funcs=[raw_src]
 obj.parent_block=def_node
@@ -12981,6 +12989,7 @@ if(self.next===undefined){self.$finished=true
 throw _b_.StopIteration.$factory(_b_.None)}
 try{var res=self.next.apply(self,self.args)}catch(err){
 self.$finished=true
+err.$stack=$B.frames_stack.slice()
 throw err}finally{
 self.gi_running=false
 $B.leave_frame(self.iter_id)}

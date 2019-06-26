@@ -2678,6 +2678,16 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         // this() in module javascript
         nodes.push($NodeJS('$B.js_this = this;'))
 
+        // If the function is a generator, the beginning of the function body
+        // is the "suspension point" for generator.throw or generator.send,
+        // so we insert a set_yield_value node
+        if(this.type == "generator"){
+            var suspension_node = $NodeJS("// suspension")
+            suspension_node.is_set_yield_value = true
+            suspension_node.num = node.num
+            nodes.push(suspension_node)
+        }
+
         // remove children of original node
         for(var i = nodes.length - 1; i >= 0; i--){
             node.children.splice(0, 0, nodes[i])
@@ -6544,7 +6554,7 @@ var $add_line_num = $B.parser.$add_line_num = function(node,rank){
             // add a trailing None for interactive mode
             var js = ';$locals.$line_info = "' + line_num + ',' +
                 mod_id + '";'
-
+            
             var new_node = new $Node()
             new_node.is_line_num = true // used in generators
             new $NodeJSCtx(new_node, js)
