@@ -43,9 +43,10 @@ function jscode_namespace(iter_name, action, parent_id) {
     var res = 'for(var attr in this.blocks){' +
               'eval("var " + attr + " = this.blocks[attr]")'+
            '};' +
-           'var $locals_' + iter_name + ' = this.env' + _clean + ', '+
-               '$local_name = "' + iter_name + '", ' +
-               '$locals = $locals_' + iter_name + ';'
+           '\nvar $locals_' + iter_name + ' = this.env' + _clean + ', '+
+               '\n    $local_name = "' + iter_name + '", ' +
+               '\n    $locals = $locals_' + iter_name + ',' +
+               '\n    $yield;'
     if(parent_id){
         res += '$locals.$parent = $locals_' + parent_id.replace(/\./g, "_") +
             ';'
@@ -122,15 +123,7 @@ function make_node(top_node, node){
             // Replace "yield value" by "return [value, node_id]"
 
             // Is yield node inside a context manager ?
-            var ctx_manager,
-                parent = node.parent
-            while(parent && parent.ntype !== "generator"){
-                ctx_manager = parent.ctx_manager_num
-                if(ctx_manager !==undefined){
-                    break
-                }
-                parent = parent.parent
-            }
+            var ctx_manager = in_ctx_manager(node)
 
             var yield_node_id = top_node.yields.length
             while(ctx_js.endsWith(";")){
@@ -141,7 +134,7 @@ function make_node(top_node, node){
             // Add a local variable that will prevent executing the __exit__
             // method of the context manager before returning the value
             if(ctx_manager !== undefined){
-                res = "$locals.$yield" + ctx_manager +" = true;" + res
+                res = "$yield = true;" + res
             }
 
             new_node.data = res
@@ -150,14 +143,18 @@ function make_node(top_node, node){
         }else if(node.is_set_yield_value){
 
             // After each yield, py2js inserts a no-op line as a placeholder
-            // for values or exceptions sent to the iterator
+            // for values or exceptions sent to the iterator.
             //
             // Here, this line is replaced by a test on the attribute
-            // sent_value of __BRYTHON__.modules[iter_id]. This attribute is
-            // set when methods send() or throw() of the generators are
-            // invoked
+            // sent_value of the Javascript built-in value "this". This
+            // attribute is set when methods send() or throw() of the
+            // generator are invoked.
 
-            var yield_node_id = top_node.yields.length
+            // Is yield node inside a context manager ?
+            var ctx_manager
+            if(node.after_yield){
+                ctx_manager = in_ctx_manager(node)
+            }
             var js = "var sent_value = this.sent_value === undefined ? " +
                 "None : this.sent_value;",
                 h = "\n" + ' '.repeat(node.indent)
@@ -169,6 +166,10 @@ function make_node(top_node, node){
             // Else set the yielded value to sent_value
             if(typeof ctx_js == "number"){
                 js += h + "var $yield_value" + ctx_js + " = sent_value;"
+            }
+
+            if(ctx_manager !== undefined){
+                js += h + "$yield = true;" // to avoid exiting from ctx mngr
             }
 
             // Reset sent_value value to None for the next iteration
@@ -356,6 +357,19 @@ $B.$GeneratorSendError = {}
 var $GeneratorReturn = {}
 $B.generator_return = function(value){
     return {__class__: $GeneratorReturn, value: value}
+}
+
+function in_ctx_manager(node){
+    // Is yield node inside a context manager ?
+    var ctx_manager,
+        parent = node.parent
+    while(parent && parent.ntype !== "generator"){
+        ctx_manager = parent.ctx_manager_num
+        if(ctx_manager !== undefined){
+            return ctx_manager
+        }
+        parent = parent.parent
+    }
 }
 
 function in_loop(node){

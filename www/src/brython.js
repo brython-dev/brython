@@ -86,8 +86,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-06-26 17:05:35.508510"
-__BRYTHON__.timestamp=1561561535508
+__BRYTHON__.compiled_date="2019-06-28 11:13:08.604757"
+__BRYTHON__.timestamp=1561713188604
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -2961,12 +2961,12 @@ finally_node.C.in_ctx_manager=true
 finally_node.is_except=true
 finally_node.in_ctx_manager=true
 var js='if('+this.exc_name
-if(this.scope.ntype=="generator"){js+=' && !$locals.$yield'+num+
+if(this.scope.ntype=="generator"){js+=' && (!$yield)'+
 ' && '+this.cmexit_name}
-js+='){'+this.cmexit_name+'(None,None,None);'
+js+='){;'+this.cmexit_name+'(None,None,None);'
 if(this.scope.ntype=="generator"){js+='delete '+this.cmexit_name}
 js+='}'
-if(this.scope.ntype=="generator"){js+='\n$locals.$yield'+num+' = false'}
+if(this.scope.ntype=="generator"){js+='$yield = undefined'}
 finally_node.add($NodeJS(js))
 node.parent.insert(rank+2,finally_node)
 this.transformed=true}
@@ -3028,11 +3028,10 @@ h+'var '+val_name+' = $B.$getattr('+cm_name+',"__enter__")()\n'+
 h+exc_name+' = true\n'}}
 var $YieldCtx=$B.parser.$YieldCtx=function(C,is_await){
 this.type='yield'
-this.toString=function(){return '(yield) '+this.tree}
 this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this
-var in_lambda=false,parent=C
+var in_lambda=false,in_ctx_manager=false,parent=C
 while(parent){if(parent.type=="lambda"){in_lambda=true
 break}
 parent=parent.parent}
@@ -3053,11 +3052,14 @@ in_func=parent.is_function
 func_scope=parent}
 if(! in_func){$_SyntaxError(C,["'yield' outside function"])}}
 if(! in_lambda){var def=func_scope.C.tree[0]
-if(! is_await){def.type='generator'}
+if(! is_await){def.type='generator'
+func_scope.ntype='generator'}
 def.yields.push(this)}
 this.toString=function(){return '(yield) '+(this.from ? '(from) ' :'')+this.tree}
-this.transform=function(node,rank){var new_node=$NodeJS('// placeholder for generator sent value')
+this.transform=function(node,rank){
+var new_node=$NodeJS('// placeholder for generator sent value')
 new_node.is_set_yield_value=true
+new_node.after_yield=true
 new_node.indent=node.indent
 node.parent.insert(rank+1,new_node)}
 this.to_js=function(){this.js_processed=true
@@ -12732,9 +12734,10 @@ if(action==='store'){_clean=' = {}'}
 var res='for(var attr in this.blocks){'+
 'eval("var " + attr + " = this.blocks[attr]")'+
 '};'+
-'var $locals_'+iter_name+' = this.env'+_clean+', '+
-'$local_name = "'+iter_name+'", '+
-'$locals = $locals_'+iter_name+';'
+'\nvar $locals_'+iter_name+' = this.env'+_clean+', '+
+'\n    $local_name = "'+iter_name+'", '+
+'\n    $locals = $locals_'+iter_name+','+
+'\n    $yield;'
 if(parent_id){res+='$locals.$parent = $locals_'+parent_id.replace(/\./g,"_")+
 ';'}
 return res}
@@ -12766,22 +12769,21 @@ if(ctx_js){
 var new_node=new $B.genNode(ctx_js)
 new_node.line_num=node.line_num
 if(ctype=="yield"){
-var ctx_manager,parent=node.parent
-while(parent && parent.ntype !=="generator"){ctx_manager=parent.ctx_manager_num
-if(ctx_manager !==undefined){break}
-parent=parent.parent}
+var ctx_manager=in_ctx_manager(node)
 var yield_node_id=top_node.yields.length
 while(ctx_js.endsWith(";")){ctx_js=ctx_js.substr(0,ctx_js.length-1)}
 var res="return ["+ctx_js+", "+yield_node_id+"]"
-if(ctx_manager !==undefined){res="$locals.$yield"+ctx_manager+" = true;"+res}
+if(ctx_manager !==undefined){res="$yield = true;"+res}
 new_node.data=res
 top_node.yields.push(new_node)}else if(node.is_set_yield_value){
-var yield_node_id=top_node.yields.length
+var ctx_manager
+if(node.after_yield){ctx_manager=in_ctx_manager(node)}
 var js="var sent_value = this.sent_value === undefined ? "+
 "None : this.sent_value;",h="\n"+' '.repeat(node.indent)
 js+=h+"if(sent_value.__class__ === $B.$GeneratorSendError)"+
 "{throw sent_value.err};"
 if(typeof ctx_js=="number"){js+=h+"var $yield_value"+ctx_js+" = sent_value;"}
+if(ctx_manager !==undefined){js+=h+"$yield = true;" }
 js+=h+"this.sent_value = None"
 new_node.data=js}else if(ctype=="break" ||ctype=="continue"){
 new_node["is_"+ctype]=true
@@ -12877,6 +12879,11 @@ $B.GeneratorBreak=$B.make_class("GeneratorBreak")
 $B.$GeneratorSendError={}
 var $GeneratorReturn={}
 $B.generator_return=function(value){return{__class__:$GeneratorReturn,value:value}}
+function in_ctx_manager(node){
+var ctx_manager,parent=node.parent
+while(parent && parent.ntype !=="generator"){ctx_manager=parent.ctx_manager_num
+if(ctx_manager !==undefined){return ctx_manager}
+parent=parent.parent}}
 function in_loop(node){
 while(node){if(node.loop_start !==undefined){return node}
 node=node.parent}

@@ -759,7 +759,7 @@ class A(object):
     def __exit__(self, *pa, **ka):
         trace.append('exit A')
 
-def test_gen():
+def test_gen1():
     trace.append('test starts')
     with A() as x:
         yield 1
@@ -767,14 +767,14 @@ def test_gen():
     return
 
 def f():
-    gen = test_gen()
+    gen = test_gen1()
     trace.append(next(gen))
     trace.append(next(gen))
 
 f()
 trace.append('end of f()')
 
-gen2 = test_gen()
+gen2 = test_gen1()
 trace.append(next(gen2))
 del gen2
 
@@ -783,7 +783,7 @@ assert trace == ['test starts', 'enter A', 1, 2, 'exit A', 'end of f()',
 
 trace = []
 
-def test_gen():
+def test_gen2():
     trace.append('test starts')
     with A():
         trace.append(1)
@@ -798,9 +798,38 @@ def test_gen():
         trace.append(5)
         yield
 
-list(test_gen())
+list(test_gen2())
 
 assert trace == ['test starts', 'enter A', 1, 2, 'exit A', 3, 'enter A', 4, 5,
     'exit A']
+
+def test_gen3():
+    with A():
+        if AS_LOOP:
+            for i in range(1, 3):
+                yield i
+        else:
+            yield 1
+            yield 2
+    yield 3
+    with A():
+        if AS_LOOP:
+            for i in range(4, 6):
+                yield i
+        else:
+            yield 4
+            yield 5
+
+AS_LOOP = False
+trace = []
+for value in test_gen3():
+    trace.append(value)
+assert trace == ['enter A', 1, 2, 'exit A', 3, 'enter A', 4, 5, 'exit A']
+
+AS_LOOP = True
+trace = []
+for value in test_gen3():
+    trace.append(value)
+assert trace == ['enter A', 1, 2, 'exit A', 3, 'enter A', 4, 5, 'exit A']
 
 print('passed all tests...')

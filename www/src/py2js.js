@@ -6131,7 +6131,7 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
         if(this.scope.ntype == "generator"){
             this.prefix = "$locals."
         }
-
+        
         // If there are several "with" clauses, create a new child
         // For instance :
         //     with x as x1, y as y1:
@@ -6179,7 +6179,7 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
         this.exc_name = this.prefix + '$exc' + num
         this.err_name = '$err' + num
         this.val_name = '$value' + num
-
+        
         if(this.tree[0].alias === null){this.tree[0].alias = '$temp'}
 
         // Form "with (a,b,c) as (x,y,z)"
@@ -6229,7 +6229,7 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
         new $NodeJSCtx(catch_node, 'catch(' + this.err_name + ')')
 
         var js = this.exc_name + ' = false;' + this.err_name +
-            ' = $B.exception(' + this.err_name + ')\n' +
+                ' = $B.exception(' + this.err_name + ')\n' +
                 ' '.repeat(node.indent + 4) +
                 'var $b = ' + this.cmexit_name + '(' +
                 this.err_name + '.__class__,' +
@@ -6251,16 +6251,16 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
         finally_node.in_ctx_manager = true
         var js = 'if(' + this.exc_name
         if(this.scope.ntype == "generator"){
-            js += ' && !$locals.$yield' + num +
+            js += ' && (!$yield)' +
                   ' && ' + this.cmexit_name
         }
-        js += '){'+ this.cmexit_name + '(None,None,None);'
+        js += '){;'+ this.cmexit_name + '(None,None,None);'
         if(this.scope.ntype == "generator"){
             js += 'delete ' + this.cmexit_name
         }
         js += '}'
         if(this.scope.ntype == "generator"){
-            js += '\n$locals.$yield' + num + ' = false'
+            js += '$yield = undefined'
         }
         finally_node.add($NodeJS(js))
         node.parent.insert(rank + 2, finally_node)
@@ -6408,12 +6408,12 @@ var $YieldCtx = $B.parser.$YieldCtx = function(context, is_await){
     // Class for keyword "yield"
     // "await" is implemented as "yield from", for this case is_await is set
     this.type = 'yield'
-    this.toString = function(){return '(yield) ' + this.tree}
     this.parent = context
     this.tree = []
     context.tree[context.tree.length] = this
 
     var in_lambda = false,
+        in_ctx_manager = false,
         parent = context
     while(parent){
         if(parent.type == "lambda"){
@@ -6468,6 +6468,7 @@ var $YieldCtx = $B.parser.$YieldCtx = function(context, is_await){
         var def = func_scope.context.tree[0]
         if(! is_await){
             def.type = 'generator'
+            func_scope.ntype = 'generator'
         }
         // Add to list of "yields" in function
         def.yields.push(this)
@@ -6478,8 +6479,11 @@ var $YieldCtx = $B.parser.$YieldCtx = function(context, is_await){
     }
 
     this.transform = function(node, rank){
+        // Add a node to handle values passed to the generator with methods
+        // send() or throw().
         var new_node = $NodeJS('// placeholder for generator sent value')
         new_node.is_set_yield_value = true
+        new_node.after_yield = true
         new_node.indent = node.indent
         node.parent.insert(rank + 1, new_node)
     }
@@ -6554,7 +6558,7 @@ var $add_line_num = $B.parser.$add_line_num = function(node,rank){
             // add a trailing None for interactive mode
             var js = ';$locals.$line_info = "' + line_num + ',' +
                 mod_id + '";'
-            
+
             var new_node = new $Node()
             new_node.is_line_num = true // used in generators
             new $NodeJSCtx(new_node, js)
