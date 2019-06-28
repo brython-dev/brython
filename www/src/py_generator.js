@@ -159,6 +159,9 @@ function make_node(top_node, node){
                 "None : this.sent_value;",
                 h = "\n" + ' '.repeat(node.indent)
 
+            // Reset sent_value value to None for the next iteration
+            js += h + "this.sent_value = None"
+
             // If method throw was called, raise the exception
             js += h + "if(sent_value.__class__ === $B.$GeneratorSendError)"+
                   "{throw sent_value.err};"
@@ -172,8 +175,6 @@ function make_node(top_node, node){
                 js += h + "$yield = true;" // to avoid exiting from ctx mngr
             }
 
-            // Reset sent_value value to None for the next iteration
-            js += h + "this.sent_value = None"
             new_node.data = js
 
         }else if(ctype == "break" || ctype == "continue"){

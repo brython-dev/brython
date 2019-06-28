@@ -832,4 +832,45 @@ for value in test_gen3():
     trace.append(value)
 assert trace == ['enter A', 1, 2, 'exit A', 3, 'enter A', 4, 5, 'exit A']
 
+# issue 1146
+def fgen(SHOW_ERROR):
+    while 1:
+        try:
+            trace.append('trying...')
+            yield
+        except GeneratorExit:   # exit nicely
+            break
+        except:
+            trace.append('ERROR handler start')
+            if SHOW_ERROR:
+                yield
+            trace.append('ERROR handler end')
+        else:
+            trace.append('OK')
+
+trace = []
+
+def test(SHOW_ERROR):
+    del trace[:]
+
+    gen = fgen(SHOW_ERROR)
+    for i in range(5):
+        if i == 2:
+            trace.append('THROW')
+            gen.throw(Exception())
+            if SHOW_ERROR:
+                trace.append(next(gen))
+        else:
+            trace.append(next(gen))
+
+    return trace
+
+assert test(True) == ['trying...', None, 'OK', 'trying...', None, 'THROW',
+    'ERROR handler start', 'ERROR handler end', 'trying...', None, 'OK',
+    'trying...', None, 'OK', 'trying...', None]
+
+assert test(False) == ['trying...', None, 'OK', 'trying...', None, 'THROW',
+    'ERROR handler start', 'ERROR handler end', 'trying...', 'OK',
+    'trying...', None, 'OK', 'trying...', None]
+
 print('passed all tests...')

@@ -5898,12 +5898,16 @@ var $TryCtx = $B.parser.$TryCtx = function(context){
         var scope = $get_scope(this)
 
         var error_name = create_temp_name('$err')
-        var failed_name = create_temp_name('$failed')
+
+        // Add a boolean $failed, used to run the 'else' clause. Set as an
+        // attribute of $locals for the case when code is inside a
+        // generator (cf. issue #1146)
+        var failed_name = "$locals." + create_temp_name('$failed')
 
         // Transform node into Javascript 'try' (necessary if
         // "try" inside a "for" loop)
-        // Add a boolean $failed, used to run the 'else' clause
-        var js = 'var '+failed_name + ' = false;\n' +
+
+        var js = failed_name + ' = false;\n' +
             ' '.repeat(node.indent + 4) + 'try'
         new $NodeJSCtx(node, js)
         node.is_try = true // used in generators
@@ -5922,7 +5926,7 @@ var $TryCtx = $B.parser.$TryCtx = function(context){
         // happens in a callback function ; in this case the frame would be
         // lost at the time the exception is handled by $B.exception
         catch_node.add(
-            $NodeJS('var '+ failed_name + ' = true;' +
+            $NodeJS(failed_name + ' = true;' +
             '$B.pmframe = $B.last($B.frames_stack);'+
             // Fake line to start the 'else if' clauses
             'if(0){}')
@@ -6131,7 +6135,7 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
         if(this.scope.ntype == "generator"){
             this.prefix = "$locals."
         }
-        
+
         // If there are several "with" clauses, create a new child
         // For instance :
         //     with x as x1, y as y1:
@@ -6179,7 +6183,7 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
         this.exc_name = this.prefix + '$exc' + num
         this.err_name = '$err' + num
         this.val_name = '$value' + num
-        
+
         if(this.tree[0].alias === null){this.tree[0].alias = '$temp'}
 
         // Form "with (a,b,c) as (x,y,z)"

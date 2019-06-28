@@ -86,8 +86,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-06-28 11:13:08.604757"
-__BRYTHON__.timestamp=1561713188604
+__BRYTHON__.compiled_date="2019-06-28 12:09:26.773585"
+__BRYTHON__.timestamp=1561716566773
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -2806,8 +2806,8 @@ default:
 $_SyntaxError(C,"missing clause after 'try'")}}
 var scope=$get_scope(this)
 var error_name=create_temp_name('$err')
-var failed_name=create_temp_name('$failed')
-var js='var '+failed_name+' = false;\n'+
+var failed_name="$locals."+create_temp_name('$failed')
+var js=failed_name+' = false;\n'+
 ' '.repeat(node.indent+4)+'try'
 new $NodeJSCtx(node,js)
 node.is_try=true 
@@ -2817,7 +2817,7 @@ catch_node.is_catch=true
 node.parent.insert(rank+1,catch_node)
 catch_node.add($NodeJS("$B.set_exc("+error_name+")"))
 catch_node.add(
-$NodeJS('var '+failed_name+' = true;'+
+$NodeJS(failed_name+' = true;'+
 '$B.pmframe = $B.last($B.frames_stack);'+
 'if(0){}')
 )
@@ -12780,11 +12780,11 @@ var ctx_manager
 if(node.after_yield){ctx_manager=in_ctx_manager(node)}
 var js="var sent_value = this.sent_value === undefined ? "+
 "None : this.sent_value;",h="\n"+' '.repeat(node.indent)
+js+=h+"this.sent_value = None"
 js+=h+"if(sent_value.__class__ === $B.$GeneratorSendError)"+
 "{throw sent_value.err};"
 if(typeof ctx_js=="number"){js+=h+"var $yield_value"+ctx_js+" = sent_value;"}
 if(ctx_manager !==undefined){js+=h+"$yield = true;" }
-js+=h+"this.sent_value = None"
 new_node.data=js}else if(ctype=="break" ||ctype=="continue"){
 new_node["is_"+ctype]=true
 new_node.loop_num=node.C.tree[0].loop_ctx.loop_num}
