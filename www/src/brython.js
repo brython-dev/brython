@@ -86,8 +86,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-06-28 12:09:26.773585"
-__BRYTHON__.timestamp=1561716566773
+__BRYTHON__.compiled_date="2019-07-02 09:05:40.806088"
+__BRYTHON__.timestamp=1562051140806
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -279,6 +279,7 @@ var yield_expr=new $YieldCtx(new $NodeCtx(yield_node))
 new $StringCtx(yield_expr,'$yield_value'+$loop_num)
 var set_yield=new $Node()
 set_yield.is_set_yield_value=true
+set_yield.after_yield=true
 js=$loop_num
 new $NodeJSCtx(set_yield,js)
 this.parent.insert(rank+offset+2,set_yield)

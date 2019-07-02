@@ -832,6 +832,46 @@ for value in test_gen3():
     trace.append(value)
 assert trace == ['enter A', 1, 2, 'exit A', 3, 'enter A', 4, 5, 'exit A']
 
+
+def test_gen3():
+    with A():
+        if AS_LOOP:
+            for i in range(1, 3):
+                val = yield i
+                assert val == i+1
+        else:
+            val = yield 1
+            assert val == 2
+            val = yield 2
+            assert val == 3
+    yield 3
+    with A():
+        if AS_LOOP:
+            for i in range(4, 6):
+                yield i
+        else:
+            yield 4
+            yield 5
+
+def run_test_gen3():
+    gen = test_gen3()
+    value = next(gen)
+    for ii in range(2):
+        trace.append(value)
+        value = gen.send(value+1)
+    trace.append(value)
+    for value in gen:
+        trace.append(value)
+    assert trace == ['enter A', 1, 2, 'exit A', 3, 'enter A', 4, 5, 'exit A']
+
+AS_LOOP = False
+trace = []
+run_test_gen3()
+
+AS_LOOP = True
+trace = []
+run_test_gen3()
+
 # issue 1146
 def fgen(SHOW_ERROR):
     while 1:

@@ -483,6 +483,7 @@ var $Node = $B.parser.$Node = function(type){
                 // value sent to the generator, if any
                 var set_yield = new $Node()
                 set_yield.is_set_yield_value = true
+                set_yield.after_yield = true
 
                 // the JS code will be set in py_utils.$B.make_node
                 js = $loop_num
