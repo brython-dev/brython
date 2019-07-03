@@ -1292,7 +1292,7 @@ function isinstance(obj, cls){
         }
         klass = $B.get_class(obj)
     }
-
+    
     if(klass === undefined){return false}
 
     // Return true if one of the parents of obj class is cls
@@ -1307,9 +1307,11 @@ function isinstance(obj, cls){
     if(check(klass, cls)){return true}
     var mro = klass.__mro__
     for(var i = 0; i < mro.length; i++){
-       if(check(mro[i], cls)){return true}
+       if(check(mro[i], cls)){
+           return true
+       }
     }
-
+    
     // Search __instancecheck__ on cls's class (ie its metaclass)
     var instancecheck = $B.$getattr(cls.__class__ || $B.get_class(cls),
         '__instancecheck__', _b_.None)

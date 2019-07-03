@@ -86,8 +86,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-07-03 09:39:35.144848"
-__BRYTHON__.timestamp=1562139575144
+__BRYTHON__.compiled_date="2019-07-03 13:34:28.467903"
+__BRYTHON__.timestamp=1562153668467
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -1857,8 +1857,8 @@ res[pos++]='\n'+head+'for(var $attr in $B.imported["'+
 mod_name+'"]){if($attr.charAt(0) !== "_" && $attr.charAt(0) !== "$")'+
 '{$locals[$attr] = $B.imported["'+mod_name+'"][$attr]}};'}else{this.names.forEach(function(name){module.imports[this.module+'.'+name]=true
 res[pos++]='\n'+head+'$locals["'+
-(this.aliases[name]||name)+'"] = $B.imported["'+
-mod_name+'"]["'+name+'"];'},this)}
+(this.aliases[name]||name)+'"] = $B.$getattr($B.imported["'+
+mod_name+'"], "'+name+'");'},this)}
 res[pos++]='\n'+head+'None;'
 return res.join('');}}
 var $FuncArgs=$B.parser.$FuncArgs=function(C){
@@ -13152,11 +13152,11 @@ return obj})(__BRYTHON__)}
 modules['browser']=browser
 modules['javascript']={$$this:function(){
 if($B.js_this===undefined){return $B.builtins.None}
-return $B.JSObject.$factory($B.js_this)},$$Date:$B.JSObject.$factory(self.Date),JSConstructor:function(){console.log('"javascript.JSConstructor" is deprecrated. '+
+return $B.JSObject.$factory($B.js_this)},$$Date:$B.JSObject.$factory(self.Date),JSConstructor:{__get__:function(){console.warn('"javascript.JSConstructor" is deprecrated. '+
 'Use window.<js constructor name>.new() instead.')
-return $B.JSConstructor.$factory.apply(null,arguments)},JSObject:function(){console.log('"javascript.JSObject" is deprecrated. '+
-'Use window.<jsobject name> instead.')
-return $B.JSObject.$factory(...arguments)},jsobj2pyobj:function(obj){return $B.jsobj2pyobj(obj)},load:function(script_url){console.log('"javascript.load" is deprecrated. '+
+return $B.JSConstructor},__set__:function(){throw _b_.AttributeError.$factory("read only")}},JSObject:{__get__:function(){console.warn('"javascript.JSObject" is deprecrated. To use '+
+'a Javascript object, use window.<object name> instead.')
+return $B.JSObject},__set__:function(){throw _b_.AttributeError.$factory("read only")}},jsobj2pyobj:function(obj){return $B.jsobj2pyobj(obj)},load:function(script_url){console.log('"javascript.load" is deprecrated. '+
 'Use browser.load instead.')
 var file_obj=$B.builtins.open(script_url)
 var content=$B.builtins.getattr(file_obj,'read')()

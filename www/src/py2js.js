@@ -3767,8 +3767,8 @@ var $FromCtx = $B.parser.$FromCtx = function(context){
             this.names.forEach(function(name){
                 module.imports[this.module + '.' + name] = true
                 res[pos++] = '\n' + head + '$locals["' +
-                (this.aliases[name] || name) + '"] = $B.imported["' +
-                mod_name + '"]["' + name + '"];'
+                (this.aliases[name] || name) + '"] = $B.$getattr($B.imported["' +
+                mod_name + '"], "' + name + '");'
             }, this)
         }
         res[pos++] = '\n' + head + 'None;'

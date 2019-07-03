@@ -366,15 +366,25 @@
             return $B.JSObject.$factory($B.js_this)
         },
         $$Date: $B.JSObject.$factory(self.Date),
-        JSConstructor: function(){
-            console.log('"javascript.JSConstructor" is deprecrated. ' +
-                'Use window.<js constructor name>.new() instead.')
-            return $B.JSConstructor.$factory.apply(null, arguments)
+        JSConstructor: {
+            __get__: function(){
+                console.warn('"javascript.JSConstructor" is deprecrated. ' +
+                    'Use window.<js constructor name>.new() instead.')
+                return $B.JSConstructor
+            },
+            __set__: function(){
+                throw _b_.AttributeError.$factory("read only")
+            }            
         },
-        JSObject: function(){
-            console.log('"javascript.JSObject" is deprecrated. ' +
-                'Use window.<jsobject name> instead.')
-            return $B.JSObject.$factory(...arguments)
+        JSObject: {
+            __get__: function(){
+                console.warn('"javascript.JSObject" is deprecrated. To use ' +
+                    'a Javascript object, use window.<object name> instead.')
+                return $B.JSObject
+            },
+            __set__: function(){
+                throw _b_.AttributeError.$factory("read only")
+            }
         },
         jsobj2pyobj:function(obj){return $B.jsobj2pyobj(obj)},
         load:function(script_url){
