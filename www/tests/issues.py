@@ -1882,6 +1882,10 @@ try:
 except NameError:
     pass
 
+hello = {"a": 1, "b": 2}
+del(hello["a"]) # with parenthesis
+assert len(hello) == 1
+
 # issue 925
 class A():
 

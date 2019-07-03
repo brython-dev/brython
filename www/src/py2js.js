@@ -2909,12 +2909,14 @@ var $DelCtx = $B.parser.$DelCtx = function(context){
     this.toString = function(){return 'del ' + this.tree}
 
     this.to_js = function(){
+        console.log("del", this)
         this.js_processed = true
 
         if(this.tree[0].type == 'list_or_tuple'){
             // Syntax "del a, b, c"
             var res = []
             this.tree[0].tree.forEach(function(elt){
+                console.log("elt", elt)
                 var subdel = new $DelCtx(context) // this adds an element to context.tree
                 subdel.tree = [elt]
                 res.push(subdel.to_js())
@@ -2922,6 +2924,11 @@ var $DelCtx = $B.parser.$DelCtx = function(context){
             })
             this.tree = []
             return res.join(';')
+        }else if(this.tree[0].type == 'expr' &&
+                this.tree[0].tree[0].type == 'list_or_tuple'){
+            // del(x[0]) is the same as del x[0], cf.issue #923
+            this.tree[0] = this.tree[0].tree[0]
+            return this.to_js()
         }else{
             var expr = this.tree[0].tree[0]
 

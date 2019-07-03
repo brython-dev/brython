@@ -86,8 +86,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-07-02 09:05:40.806088"
-__BRYTHON__.timestamp=1562051140806
+__BRYTHON__.compiled_date="2019-07-03 09:39:35.144848"
+__BRYTHON__.timestamp=1562139575144
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -1448,15 +1448,20 @@ this.parent=C
 C.tree[C.tree.length]=this
 this.tree=[]
 this.toString=function(){return 'del '+this.tree}
-this.to_js=function(){this.js_processed=true
+this.to_js=function(){console.log("del",this)
+this.js_processed=true
 if(this.tree[0].type=='list_or_tuple'){
 var res=[]
-this.tree[0].tree.forEach(function(elt){var subdel=new $DelCtx(C)
+this.tree[0].tree.forEach(function(elt){console.log("elt",elt)
+var subdel=new $DelCtx(C)
 subdel.tree=[elt]
 res.push(subdel.to_js())
 C.tree.pop()})
 this.tree=[]
-return res.join(';')}else{var expr=this.tree[0].tree[0]
+return res.join(';')}else if(this.tree[0].type=='expr' &&
+this.tree[0].tree[0].type=='list_or_tuple'){
+this.tree[0]=this.tree[0].tree[0]
+return this.to_js()}else{var expr=this.tree[0].tree[0]
 switch(expr.type){case 'id':
 var scope=$get_scope(this),is_global=false
 if((scope.ntype=="def" ||scope.ntype=="generator")&&
