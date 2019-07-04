@@ -904,9 +904,10 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
            from_stdlib = true
        }
    }
-   
+
    var modobj = $B.imported[mod_name],
        parsed_name = mod_name.split('.')
+   
    if(modobj == _b_.None){
        // [Import spec] Stop loading loop right away
        import_error(mod_name)
@@ -1082,16 +1083,16 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                 var alias = aliases[name] || name
                 try{
                     // [Import spec] Check if module has an attribute by that name
-                    locals[alias] = _b_.getattr(modobj, name);
+                    locals[alias] = $B.$getattr(modobj, name);
                 }catch($err1){
                     // [Import spec] attempt to import a submodule with that name ...
                     // FIXME : level = 0 ? level = 1 ?
                     try{
                         var name1 = $B.from_alias(name)
-                        _b_.getattr(__import__, '__call__')(mod_name + '.' + name1,
+                        $B.$getattr(__import__, '__call__')(mod_name + '.' + name1,
                             globals, undefined, [], 0);
                         // [Import spec] ... then check imported module again for name
-                        locals[alias] = _b_.getattr(modobj, name1);
+                        locals[alias] = $B.$getattr(modobj, name1);
                     }catch($err3){
                         // [Import spec] Attribute not found
                         if(mod_name === "__future__"){
@@ -1105,7 +1106,8 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                                 current_frame[3].src, undefined, line_num)
                         }
                         if($err3.$py_error){
-                            throw $err3
+                            throw _b_.ImportError.$factory(
+                                "cannot import name '" + name + "'")
                         }
                         console.log($err3)
                         console.log($B.last($B.frames_stack))
