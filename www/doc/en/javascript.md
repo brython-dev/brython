@@ -1,8 +1,8 @@
 module **javascript**
 ---------------------
 
-The module **javascript** allows interaction with the objects defined in 
-Javascript programs and libraries present in the same page as the Brython 
+The module **javascript** allows interaction with the objects defined in
+Javascript programs and libraries present in the same page as the Brython
 program.
 
 **javascript**.`py2js(`_src_`)`
@@ -12,3 +12,60 @@ program.
 > Returns the Brython object matching the value of the Javascript object `this`. It
 > may be useful when using Javascript frameworks, eg when a callback function uses
 > the value of `this`.
+
+The module also allows using objects defined by the Javascript language.
+Please refer to the documentation of these objects.
+
+**javascript**.`Date` [doc](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date)
+> Constructor of date / time objects.
+
+<blockquote>
+```python
+from javascript import Date
+
+date = Date.new(2012, 6, 10)
+print(date.toDateString())
+```
+</blockquote>
+
+**javascript**.`JSON` [doc](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON)
+> Object to convert to and from JSON objects. It exposes two functions:
+
+>> `stringify`: serialize simple objects (dictionaries, lists, tuples,
+>> integers, reals, strings)
+
+>> `parse`: conversion of a JSON-formatted string into a simple object
+
+**javascript**.`Math` [doc](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math)
+> Object for mathematical functions and constants.
+
+**javascript**.`Number` [doc](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)
+> Constructor for objects of type "number".
+
+**javascript**.`RegExp` [doc](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp)
+> Constructor of "regular expression" objects, using the Javascript-specific
+> syntax, which doesn't fully match that of Python.
+> The method `exec()` of instances of this class can be applied to Python
+> strings:
+<blockquote>
+```python
+from javascript import RegExp
+
+re = RegExp.new(r"^test(\d+)$")
+print(re.exec("test44"))
+```
+</blockquote>
+
+**javascript**.`String` [doc](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)
+> Constructor of Javascript objects of type "string". Must be used to call
+> methods that accept Javascript regular expressions as parameters:
+<blockquote>
+```python
+from javascript import RegExp, String
+
+re = RegExp.new(r"^test(\d+)$")
+print(String.new("test33").search(re))
+```
+</blockquote>
+
+
