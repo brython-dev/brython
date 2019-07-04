@@ -36,8 +36,6 @@ $B.pyobj2structuredclone = function(obj){
     }else{
         console.log(obj, obj.__class__)
         return obj
-        //throw _b_.TypeError.$factory(_b_.str.$factory(obj) +
-        //    " does not support the structured clone algorithm")
     }
 }
 $B.structuredclone2pyobj = function(obj){

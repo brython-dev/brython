@@ -86,8 +86,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-07-03 13:34:28.467903"
-__BRYTHON__.timestamp=1562153668467
+__BRYTHON__.compiled_date="2019-07-04 14:13:39.060769"
+__BRYTHON__.timestamp=1562242419060
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -9067,14 +9067,15 @@ for(var attr in modobj){if(attr[0]!=="_"){locals[attr]=modobj[attr]}}}else{
 for(var i=0,l=__all__.length;i < l;++i){var name=__all__[i]
 var alias=aliases[name]||name
 try{
-locals[alias]=_b_.getattr(modobj,name);}catch($err1){
+locals[alias]=$B.$getattr(modobj,name);}catch($err1){
 try{var name1=$B.from_alias(name)
-_b_.getattr(__import__,'__call__')(mod_name+'.'+name1,globals,undefined,[],0);
-locals[alias]=_b_.getattr(modobj,name1);}catch($err3){
+$B.$getattr(__import__,'__call__')(mod_name+'.'+name1,globals,undefined,[],0);
+locals[alias]=$B.$getattr(modobj,name1);}catch($err3){
 if(mod_name==="__future__"){
 var frame=$B.last($B.frames_stack),line_info=frame[3].$line_info,line_elts=line_info.split(','),line_num=parseInt(line_elts[0])
 $B.$SyntaxError(frame[2],"future feature "+name+" is not defined",current_frame[3].src,undefined,line_num)}
-if($err3.$py_error){throw $err3}
+if($err3.$py_error){throw _b_.ImportError.$factory(
+"cannot import name '"+name+"'")}
 console.log($err3)
 console.log($B.last($B.frames_stack))
 throw _b_.ImportError.$factory(
@@ -13156,7 +13157,7 @@ return $B.JSObject.$factory($B.js_this)},$$Date:$B.JSObject.$factory(self.Date),
 'Use window.<js constructor name>.new() instead.')
 return $B.JSConstructor},__set__:function(){throw _b_.AttributeError.$factory("read only")}},JSObject:{__get__:function(){console.warn('"javascript.JSObject" is deprecrated. To use '+
 'a Javascript object, use window.<object name> instead.')
-return $B.JSObject},__set__:function(){throw _b_.AttributeError.$factory("read only")}},jsobj2pyobj:function(obj){return $B.jsobj2pyobj(obj)},load:function(script_url){console.log('"javascript.load" is deprecrated. '+
+return $B.JSObject},__set__:function(){throw _b_.AttributeError.$factory("read only")}},JSON:{__class__:$B.make_class("JSON"),parse:function(s){return $B.structuredclone2pyobj(JSON.parse(s))},stringify:function(obj){return JSON.stringify($B.pyobj2structuredclone(obj))}},jsobj2pyobj:function(obj){return $B.jsobj2pyobj(obj)},load:function(script_url){console.log('"javascript.load" is deprecrated. '+
 'Use browser.load instead.')
 var file_obj=$B.builtins.open(script_url)
 var content=$B.builtins.getattr(file_obj,'read')()

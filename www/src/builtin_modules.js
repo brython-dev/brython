@@ -374,7 +374,7 @@
             },
             __set__: function(){
                 throw _b_.AttributeError.$factory("read only")
-            }            
+            }
         },
         JSObject: {
             __get__: function(){
@@ -384,6 +384,15 @@
             },
             __set__: function(){
                 throw _b_.AttributeError.$factory("read only")
+            }
+        },
+        JSON: {
+            __class__: $B.make_class("JSON"),
+            parse: function(s){
+                return $B.structuredclone2pyobj(JSON.parse(s))
+            },
+            stringify: function(obj){
+                return JSON.stringify($B.pyobj2structuredclone(obj))
             }
         },
         jsobj2pyobj:function(obj){return $B.jsobj2pyobj(obj)},
