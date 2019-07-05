@@ -2909,7 +2909,6 @@ var $DelCtx = $B.parser.$DelCtx = function(context){
     this.toString = function(){return 'del ' + this.tree}
 
     this.to_js = function(){
-        console.log("del", this)
         this.js_processed = true
 
         if(this.tree[0].type == 'list_or_tuple'){
