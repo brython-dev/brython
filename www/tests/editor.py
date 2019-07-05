@@ -13,8 +13,9 @@ _s.style.height = '%spx' % int(_height * 0.66)
 has_ace = True
 try:
     editor = window.ace.edit("editor")
-    session = editor.getSession()
-    session.setMode("ace/mode/python")
+    editor.setTheme("ace/theme/solarized_light")
+    editor.session.setMode("ace/mode/python")
+    editor.focus()
 
     editor.setOptions({
      'enableLiveAutocompletion': True,
