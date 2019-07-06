@@ -925,6 +925,8 @@ the second argument.
     </script>
 
     <p>
+    <i>Warning: this demo only works if this page (demo.html) is served in
+    http, not https.</i>
     <pre class="python"></pre>
     <p>
 
@@ -1024,10 +1026,11 @@ the second argument.
     <span id="zone11" class="zone"></span>
 
     <script type="text/python" id="script11">
-    from browser import document, window
+    from browser import document
+    import javascript
 
     def show_date(event):
-        date = window.Date.new()
+        date = javascript.Date.new()
         document["zone11"].text = "{}-{:02}-{:02} at {:02}:{:02}:{:02}".format(
             date.getFullYear(), date.getMonth()+1, date.getDate(),
             date.getHours(), date.getMinutes(), date.getSeconds())
@@ -1040,10 +1043,18 @@ the second argument.
     <p>
 
     <span class="comment">
-    Brython provides the modules <code class="module">time</code> and <code class="module">datetime</code> of the standard distribution, but it can also interact with the objects defined by Javascript.
-    <p>To use such objects, import the object <code>window</code> from module <code class="module">browser</code> : it is used to get a reference to all the objects defined in the Javascript global namespace.
-    <p>Because the Javascript object <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date" target="_blank"><code>Date</code></a> is a constructor (ie a function that returns new objects with the syntax <i>var date = new Date()</i>), we create Brython objects with the attribute <code>new</code>.
-    <p>We then use the attributes of the Javascript instance of <code>Date()</code> such as <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getFullYear" target="_blank"><code>getFullYear</code></a> with the usual Python syntax.
+    Brython provides the modules <code class="module">time</code> and
+    <code class="module">datetime</code> of the standard distribution, but it
+    can also interact with the objects defined by Javascript.
+    <p>To use such objects, import the module <code class="module">javascript</code>:
+    it is used to get a reference objects defined by the Javascript language.
+    <p>Because the Javascript object <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date" target="_blank"><code>Date</code></a>
+    is a constructor (ie a function that returns new objects with the syntax
+    <i>var date = new Date()</i>), we create Brython objects with the
+    attribute <code>new</code>.
+    <p>We then use the attributes of the Javascript instance of
+    <code>Date()</code> such as <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getFullYear" target="_blank"><code>getFullYear</code></a>
+    with the usual Python syntax.
     </span>
 </div>
 
@@ -1052,11 +1063,12 @@ the second argument.
     <span id="zone17" class="zone"></span>
 
     <script type="text/python" id="script17">
-    from browser import document, window
+    from browser import document
+    import javascript
 
     def change(event):
-        s = window.String.new("abracadabra")
-        document["zone17"].text = s.replace(window.RegExp.new("a", "g"), "i")
+        s = javascript.String.new("abracadabra")
+        document["zone17"].text = s.replace(javascript.RegExp.new("a", "g"), "i")
 
     document["button17"].bind("click", change)
     </script>
@@ -1066,7 +1078,10 @@ the second argument.
     <p>
 
     <span class="comment">
-    Similarly, Brython provides the standard Python module <code class="module">re</code> for regular expressions, but it can also use the Javascript <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions" target="_blank">RegExp</a> and <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String" target="_blank">String</a> classes.
+    Similarly, Brython provides the standard Python module
+    <code class="module">re</code> for regular expressions, but it can also
+    use the Javascript <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions" target="_blank">RegExp</a> 
+    and <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String" target="_blank">String</a> classes.
     </span>
 </div>
 
