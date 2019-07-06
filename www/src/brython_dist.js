@@ -86,8 +86,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-07-06 16:28:58.324491"
-__BRYTHON__.timestamp=1562423338324
+__BRYTHON__.compiled_date="2019-07-06 17:49:28.561673"
+__BRYTHON__.timestamp=1562428168561
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -12376,17 +12376,12 @@ if(property===undefined && $B.aliased_names[attr]){property=self.elt["$$"+attr]}
 if(property===undefined){return object.__getattribute__(self,attr)}
 var res=property
 if(res !==undefined){if(res===null){return _b_.None}
-if(typeof res==="function"){var func=(function(f,elt){return function(){var args=[],pos=0
+if(typeof res==="function"){
+var func=(function(f,elt){return function(){var args=[],pos=0
 for(var i=0;i < arguments.length;i++){var arg=arguments[i]
-if(typeof arg=="function"){var f1=function(dest_fn){return function(){try{return dest_fn.apply(null,arguments)}
-catch(err){console.log(dest_fn,typeof dest_fn,err)
-if(err.__class__ !==undefined){var msg=$B.$getattr(err,'info')+
-'\n'+$B.class_name(err)
-if(err.args){msg+=': '+err.args[0]}
-try{$B.$getattr($B.stderr,"write")(msg)}
-catch(err){console.log(msg)}}else{try{$B.$getattr($B.stderr,"write")(err)}
-catch(err1){console.log(err)}}
-throw err}}}(arg)
+if(typeof arg=="function"){
+if(arg.$cache){var f1=arg.$cache}else{var f1=function(dest_fn){return function(){try{return dest_fn.apply(null,arguments)}catch(err){$B.handle_error(err)}}}(arg)
+arg.$cache=f1}
 args[pos++]=f1}
 else if(_b_.isinstance(arg,JSObject)){args[pos++]=arg.js}else if(_b_.isinstance(arg,DOMNode)){args[pos++]=arg.elt}else if(arg===_b_.None){args[pos++]=null}else{args[pos++]=arg}}
 var result=f.apply(elt,args)

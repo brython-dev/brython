@@ -742,29 +742,37 @@ DOMNode.__getattribute__ = function(self, attr){
     if(res !== undefined){
         if(res === null){return _b_.None}
         if(typeof res === "function"){
+            // If elt[attr] is a function, it is converted in another function
+            // that produces a Python error message in case of failure.
             var func = (function(f, elt){
                 return function(){
                     var args = [], pos = 0
                     for(var i = 0; i < arguments.length; i++){
                         var arg = arguments[i]
                         if(typeof arg == "function"){
-                            var f1 = function(dest_fn) { return function(){
-                                try{return dest_fn.apply(null, arguments)}
-                                catch(err){
-                                    console.log(dest_fn, typeof dest_fn, err)
-                                    if(err.__class__ !== undefined){
-                                        var msg = $B.$getattr(err, 'info') +
-                                            '\n' + $B.class_name(err)
-                                        if(err.args){msg += ': ' + err.args[0]}
-                                        try{$B.$getattr($B.stderr, "write")(msg)}
-                                        catch(err){console.log(msg)}
-                                    }else{
-                                        try{$B.$getattr($B.stderr, "write")(err)}
-                                        catch(err1){console.log(err)}
+                            // Conversion of function arguments into functions
+                            // that handle exceptions. The converted function
+                            // is cached, so that for instance in this code :
+                            //
+                            // element.addEventListener("click", f)
+                            // element.removeEventListener("click", f)
+                            //
+                            // it is the same function "f" that is added and
+                            // then removed (cf. issue #1157)
+                            if(arg.$cache){
+                                var f1 = arg.$cache
+                            }else{
+                                var f1 = function(dest_fn){
+                                    return function(){
+                                        try{
+                                            return dest_fn.apply(null, arguments)
+                                        }catch(err){
+                                            $B.handle_error(err)
+                                        }
                                     }
-                                    throw err
-                                }
-                            }}(arg)
+                                }(arg)
+                                arg.$cache = f1
+                            }
                             args[pos++] = f1
                         }
                         else if(_b_.isinstance(arg, JSObject)){
