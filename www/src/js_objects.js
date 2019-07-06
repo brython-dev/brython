@@ -39,7 +39,9 @@ $B.pyobj2structuredclone = function(obj){
     }
 }
 $B.structuredclone2pyobj = function(obj){
-    if(typeof obj == "boolean" || typeof obj == "number" ||
+    if(obj === null){
+        return _b_.None
+    }else if(typeof obj == "boolean" || typeof obj == "number" ||
             typeof obj == "string"){
         return obj
     }else if(obj instanceof Number){
