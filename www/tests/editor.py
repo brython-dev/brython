@@ -10,6 +10,8 @@ _height = doc.documentElement.clientHeight
 _s = doc['container']
 _s.style.height = '%spx' % int(_height * 0.66)
 
+doc["legend"].style.top = '%spx' % int(_height * 0.9)
+
 has_ace = True
 try:
     editor = window.ace.edit("editor")
@@ -19,7 +21,6 @@ try:
 
     editor.setOptions({
      'enableLiveAutocompletion': True,
-     'enableSnippets': True,
      'highlightActiveLine': False,
      'highlightSelectedWord': True
     })

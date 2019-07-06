@@ -44,3 +44,8 @@ height:100%;
 float:none;
 color: #fff;
 }
+
+#legend{
+    position: absolute;
+    margin-left: 5%;
+}
