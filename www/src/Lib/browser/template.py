@@ -265,12 +265,15 @@ class Template:
                     line_no = tb.tb_lineno
                     tb = tb.tb_next
             elt = self.line_mapping[line_no]
-            print("Error rendering the element:")
-            try:
-                print(elt.outerHTML)
-            except AttributeError:
-                print('no outerHTML for', elt)
-                print(elt.html)
+            print("Error rendering the element:", elt.nodeType)
+            if elt.nodeType == 3: # text
+                print(elt.textContent)
+            else:
+                try:
+                    print(elt.outerHTML)
+                except AttributeError:
+                    print('no outerHTML for', elt)
+                    print(elt.html)
             print(f"{exc.__class__.__name__}:  {exc}")
             return
 
