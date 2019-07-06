@@ -2915,7 +2915,6 @@ var $DelCtx = $B.parser.$DelCtx = function(context){
             // Syntax "del a, b, c"
             var res = []
             this.tree[0].tree.forEach(function(elt){
-                console.log("elt", elt)
                 var subdel = new $DelCtx(context) // this adds an element to context.tree
                 subdel.tree = [elt]
                 res.push(subdel.to_js())
