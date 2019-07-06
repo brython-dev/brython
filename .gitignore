@@ -87,3 +87,7 @@ setup/data/*.js
 
 # Files created by make_doc
 www/static_doc
+
+# Jetbrains IDEs
+*.iml
+.idea
