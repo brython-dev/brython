@@ -339,4 +339,11 @@ assert a * b == 2.0
 assert a.sf == 2
 assert b.sf == 3
 
+# issue 1156
+try:
+    isinstance(42, 43)
+    raise Exception("should have raised TypeError")
+except TypeError:
+    pass
+
 print('passed all tests...')

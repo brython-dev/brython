@@ -86,8 +86,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-07-05 11:52:07.895776"
-__BRYTHON__.timestamp=1562320327895
+__BRYTHON__.compiled_date="2019-07-06 16:28:58.324491"
+__BRYTHON__.timestamp=1562423338324
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -1451,8 +1451,7 @@ this.toString=function(){return 'del '+this.tree}
 this.to_js=function(){this.js_processed=true
 if(this.tree[0].type=='list_or_tuple'){
 var res=[]
-this.tree[0].tree.forEach(function(elt){console.log("elt",elt)
-var subdel=new $DelCtx(C)
+this.tree[0].tree.forEach(function(elt){var subdel=new $DelCtx(C)
 subdel.tree=[elt]
 res.push(subdel.to_js())
 C.tree.pop()})
@@ -6656,6 +6655,9 @@ if(obj===null){return cls===None}
 if(obj===undefined){return false}
 if(cls.constructor===Array){for(var i=0;i < cls.length;i++){if(isinstance(obj,cls[i])){return true}}
 return false}
+if(!cls.__class__ ||
+!(cls.$factory !==undefined ||cls.$is_class !==undefined)){throw _b_.TypeError.$factory("isinstance() arg 2 must be a type "+
+"or tuple of types")}
 if(cls===_b_.int &&(obj===True ||obj===False)){return True}
 if(cls===_b_.bool){switch(typeof obj){case "string":
 return false

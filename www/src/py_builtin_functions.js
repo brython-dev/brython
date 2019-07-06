@@ -1259,6 +1259,12 @@ function isinstance(obj, cls){
         }
         return false
     }
+    if(!cls.__class__ ||
+            !(cls.$factory !== undefined || cls.$is_class !== undefined)){
+        throw _b_.TypeError.$factory("isinstance() arg 2 must be a type " +
+            "or tuple of types")
+    }
+
     if(cls === _b_.int && (obj === True || obj === False)){return True}
 
     if(cls === _b_.bool){
@@ -1292,7 +1298,7 @@ function isinstance(obj, cls){
         }
         klass = $B.get_class(obj)
     }
-    
+
     if(klass === undefined){return false}
 
     // Return true if one of the parents of obj class is cls
@@ -1311,7 +1317,7 @@ function isinstance(obj, cls){
            return true
        }
     }
-    
+
     // Search __instancecheck__ on cls's class (ie its metaclass)
     var instancecheck = $B.$getattr(cls.__class__ || $B.get_class(cls),
         '__instancecheck__', _b_.None)
