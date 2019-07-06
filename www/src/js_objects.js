@@ -454,7 +454,7 @@ JSObject.__iter__ = function(self){
                 }
                 items.push(nxt.value)
             }
-        }else if(self.js.length !== undefined && self.js.items !== undefined){
+        }else if(self.js.length !== undefined && self.js.item !== undefined){
             for(var i = 0; i < self.js.length; i++){
                 items.push(self.js.item(i))
             }
