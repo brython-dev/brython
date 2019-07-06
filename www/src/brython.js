@@ -86,8 +86,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-07-06 17:49:28.561673"
-__BRYTHON__.timestamp=1562428168561
+__BRYTHON__.compiled_date="2019-07-06 20:58:01.486521"
+__BRYTHON__.timestamp=1562439481486
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -8475,7 +8475,7 @@ var res={}
 for(var key in obj.$string_dict){res[key]=$B.pyobj2structuredclone(obj.$string_dict[key])}
 return res}else{console.log(obj,obj.__class__)
 return obj}}
-$B.structuredclone2pyobj=function(obj){if(typeof obj=="boolean" ||typeof obj=="number" ||
+$B.structuredclone2pyobj=function(obj){if(obj===null){return _b_.None}else if(typeof obj=="boolean" ||typeof obj=="number" ||
 typeof obj=="string"){return obj}else if(obj instanceof Number){return obj.valueOf()}else if(Array.isArray(obj)||obj.__class__===_b_.list ||
 obj.__class__===_b_.tuple){var res=_b_.list.$factory()
 for(var i=0,len=obj.length;i < len;i++){res.push($B.structuredclone2pyobj(obj[i]))}
@@ -8629,7 +8629,7 @@ if(_window.Symbol && self.js[Symbol.iterator]!==undefined){
 var items=[]
 if(self.js.next !==undefined){while(true){var nxt=self.js.next()
 if(nxt.done){break}
-items.push(nxt.value)}}else if(self.js.length !==undefined && self.js.items !==undefined){for(var i=0;i < self.js.length;i++){items.push(self.js.item(i))}}
+items.push(nxt.value)}}else if(self.js.length !==undefined && self.js.item !==undefined){for(var i=0;i < self.js.length;i++){items.push(self.js.item(i))}}
 return JSObject_iterator.$factory(items)}else if(self.js.length !==undefined && self.js.item !==undefined){
 for(var i=0;i < self.js.length;i++){items.push(JSObject.$factory(self.js.item(i)))}
 return JSObject_iterator.$factory(items)}
