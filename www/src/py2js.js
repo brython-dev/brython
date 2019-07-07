@@ -5471,6 +5471,12 @@ var $ReturnCtx = $B.parser.$ReturnCtx = function(context){
     this.tree = []
     context.tree[context.tree.length] = this
 
+    // Check if inside a function
+    this.scope = $get_scope(this)
+    if(["def", "generator"].indexOf(this.scope.ntype) == -1){
+        $_SyntaxError(context, ["'return' outside function"])
+    }
+
     // Check if return is inside a "for" loop
     // In this case, the loop will not be included inside a function
     // for optimisation
@@ -5499,7 +5505,7 @@ var $ReturnCtx = $B.parser.$ReturnCtx = function(context){
             this.tree.pop()
             new $IdCtx(new $ExprCtx(this, 'rvalue', false), 'None')
         }
-        var scope = $get_scope(this)
+        var scope = this.scope
         if(scope.ntype == 'generator'){
             return 'return [$B.generator_return(' + $to_js(this.tree) + ')]'
         }

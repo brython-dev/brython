@@ -86,8 +86,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-07-06 20:58:01.486521"
-__BRYTHON__.timestamp=1562439481486
+__BRYTHON__.compiled_date="2019-07-07 15:28:12.439432"
+__BRYTHON__.timestamp=1562506092439
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -2609,6 +2609,8 @@ this.type='return'
 this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this
+this.scope=$get_scope(this)
+if(["def","generator"].indexOf(this.scope.ntype)==-1){$_SyntaxError(C,["'return' outside function"])}
 var node=$get_node(this)
 while(node.parent){if(node.parent.C){var elt=node.parent.C.tree[0]
 if(elt.type=='for'){elt.has_return=true
@@ -2619,7 +2621,7 @@ this.to_js=function(){this.js_processed=true
 if(this.tree.length==1 && this.tree[0].type=='abstract_expr'){
 this.tree.pop()
 new $IdCtx(new $ExprCtx(this,'rvalue',false),'None')}
-var scope=$get_scope(this)
+var scope=this.scope
 if(scope.ntype=='generator'){return 'return [$B.generator_return('+$to_js(this.tree)+')]'}
 var js='var $res = '+$to_js(this.tree)+';'+'$B.leave_frame'
 if(scope.id.substr(0,6)=='$exec_'){js+='_exec'}
