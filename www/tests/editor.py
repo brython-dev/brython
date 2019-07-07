@@ -11,6 +11,7 @@ _s = doc['container']
 _s.style.height = '%spx' % int(_height * 0.66)
 
 doc["legend"].style.top = '%spx' % int(_height * 0.9)
+doc["legend"].style.visibility = "visible"
 
 has_ace = True
 try:
