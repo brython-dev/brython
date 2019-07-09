@@ -614,13 +614,11 @@ def compress_fixed(out, source, items):
             if nb:
                 out.write_int(value, nb)
             # distance
-            code = distance - 1
-            value, nb = code, 5
-            out.write_int(value, nb, order="msf")
+            out.write_int(distance, 5)
             # extra bits for distance
             value, nb = extra_distance
             if nb:
-                out.write_int(value, nb)
+                out.write_int(value, nb, order="msf")
         else:
             literal = item
             code = fixed_lit_len_codes[item]
@@ -708,37 +706,6 @@ def compress(source, window_size=32 * 1024):
 
     return bytes(out.bytestream)
 
-def decomp_fixed(reader):
-    """Decompress with fixed Huffman codes."""
-    root = fixed_lit_len_tree
-    result = bytearray()
-
-    while True:
-        # read a literal or length
-        _type, value = read_literal_or_length(reader, root)
-        if _type == 'eob':
-            break
-        elif _type == 'literal':
-            result.append(value)
-        elif _type == 'length':
-            length = value
-            # next five bits are the distance code
-            dist_code = reader.read(5, "msf")
-            if dist_code < 3:
-                distance = dist_code + 1
-            else:
-                nb = (dist_code // 2) - 1
-                extra = reader.read(nb)
-                half, delta = divmod(dist_code, 2)
-                distance = 1 + (2 ** half) + delta * (2 ** (half - 1)) + extra
-            for _ in range(length):
-                result.append(result[-distance])
-
-            node = root
-        else:
-            node = child
-    return result
-
 def decompress(buf):
     reader = BitIO(buf)
 
@@ -772,12 +739,12 @@ def decompress(buf):
                 elif _type == 'length':
                     length = value
                     # next five bits are the distance code
-                    dist_code = reader.read(5, "msf")
+                    dist_code = reader.read(5)
                     if dist_code < 3:
                         distance = dist_code + 1
                     else:
                         nb = (dist_code // 2) - 1
-                        extra = reader.read(nb)
+                        extra = reader.read(nb, "msf")
                         half, delta = divmod(dist_code, 2)
                         distance = 1 + (2 ** half) + delta * (2 ** (half - 1)) + extra
                     for _ in range(length):
