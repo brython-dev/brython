@@ -28,10 +28,26 @@ function set_timeout(self, timeout){
     }
 }
 
+function _read(req){
+    var xhr = req.js,
+        res
+    if(xhr.responseType == "arraybuffer"){
+        var abuf = new Uint8Array(xhr.response)
+        res = []
+        for(var i = 0, len = abuf.length; i < len; i++){
+            res.push(abuf[i])
+        }
+        return _b_.bytes.$factory(res)
+    }else{
+        return xhr.responseText
+    }
+}
+
 function handle_kwargs(self, kw, method){
     var data,
         headers,
         cache,
+        mode,
         timeout = {}
     for(var key in kw.$string_dict){
         if(key == "data"){
@@ -61,7 +77,13 @@ function handle_kwargs(self, kw, method){
             if(event == "timeout"){
                 timeout.func = kw.$string_dict[key]
             }else{
-                ajax.bind(self, event, kw.$string_dict[key])
+                var f = kw.$string_dict[key]
+                ajax.bind(self, event, f)
+            }
+        }else if(key == "mode"){
+            if(kw.$string_dict[key] == "binary"){
+                self.js.responseType = "arraybuffer"
+                mode = "binary"
             }
         }else if(key == "timeout"){
             timeout.seconds = kw.$string_dict[key]
@@ -74,7 +96,7 @@ function handle_kwargs(self, kw, method){
         self.js.setRequestHeader("Content-type",
                                  "application/x-www-form-urlencoded")
     }
-    return {cache: cache, data:data, timeout: timeout}
+    return {cache: cache, data:data, mode: mode, timeout: timeout}
 }
 
 var ajax = {
@@ -226,6 +248,10 @@ function get(){
     if(! (items.cache === true)){
         url += (qs ? "&" : "?") + (new Date()).getTime()
     }
+    // Add function read() to return str or bytes according to mode
+    self.js.read = function(){
+        return _read(self)
+    }
     self.js.open("GET", url, async)
     self.js.send()
 }
@@ -244,6 +270,10 @@ function post(){
         data = items.data,
         timeout = items.timeout
     set_timeout(self, timeout)
+    // Add function read() to return str or bytes according to mode
+    self.js.read = function(){
+        return _read(self)
+    }
     self.js.send(data)
 }
 
