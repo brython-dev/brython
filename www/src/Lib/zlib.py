@@ -599,7 +599,7 @@ def compress_dynamic(out, source, store, lit_len_count, distance_count):
 
 def compress_fixed(out, source, items):
     """Use fixed Huffman code."""
-
+    print("fixed", items)
     out.write(1, 0) # BTYPE = fixed Huffman codes
 
     for item in items:
@@ -614,11 +614,11 @@ def compress_fixed(out, source, items):
             if nb:
                 out.write_int(value, nb)
             # distance
-            out.write_int(distance, 5)
+            out.write_int(distance, 5, order="msf")
             # extra bits for distance
             value, nb = extra_distance
             if nb:
-                out.write_int(value, nb, order="msf")
+                out.write_int(value, nb)
         else:
             literal = item
             code = fixed_lit_len_codes[item]
@@ -723,7 +723,7 @@ def decompress(buf):
         BFINAL = reader.read(1)
 
         BTYPE = reader.read(2)
-
+        
         if BTYPE == 0b01:
             # Decompression with fixed Huffman codes for literals/lengths
             # and distances
@@ -739,14 +739,15 @@ def decompress(buf):
                 elif _type == 'length':
                     length = value
                     # next five bits are the distance code
-                    dist_code = reader.read(5)
+                    dist_code = reader.read(5, "msf")
                     if dist_code < 3:
                         distance = dist_code + 1
                     else:
                         nb = (dist_code // 2) - 1
-                        extra = reader.read(nb, "msf")
+                        extra = reader.read(nb)
                         half, delta = divmod(dist_code, 2)
-                        distance = 1 + (2 ** half) + delta * (2 ** (half - 1)) + extra
+                        distance = (1 + (2 ** half) + 
+                            delta * (2 ** (half - 1)) + extra)
                     for _ in range(length):
                         result.append(result[-distance])
 
