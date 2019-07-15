@@ -132,6 +132,47 @@ expected = [False, False, False, False, True, True, False, False, False]
 for case, result in zip(cases, expected):
     assert math.isclose(**case) == result
 
+# issue 204
+m, e = math.frexp(abs(123.456))
+assert m == 0.9645
+assert m * (1 << 24) == 16181624.832
+
+# issue 433
+# Floats should not test for equality !
+def my_isclose(a, b, rel_tol=1e-09, abs_tol=1e-09):
+    if a == b:
+        return True
+    diff = abs(a-b)
+    return diff <= abs(a)*rel_tol or diff <= abs(b)*rel_tol or diff <= abs_tol
+
+assert my_isclose(10 ** 1j, (-0.6682015101903132 + 0.7439803369574931j))
+assert my_isclose(10.5 ** (3 + 1j), (-814.610144261598 + 822.4998197514079j))
+
+assert my_isclose(math.e ** 1j, (0.5403023058681398 + 0.8414709848078965j))
+
+assert my_isclose((1 + 2j) ** 1j, (0.2291401859804338 + 0.23817011512167555j))
+
 # issue 924
 assert math.gcd(234, 78) == 78
+
+# issue 1108
+assert math.copysign(1.0, -0.0) == -1.0
+
+# issue 1109
+assert math.expm1(1e-5) == 0.000010000050000166668
+
+# issue 1110
+assert math.log10(1000) == 3.0
+
+# issue 1111
+log1p = math.log1p(1e-5)
+assert (log1p == 0.00000999995000033333 or # CPython, Edge
+        log1p == 0.000009999950000333332) # Firefox, Chrome
+
+# issue 1112
+assert math.gamma(2) == 1.0
+
+# issue 1113
+assert math.lgamma(2) == 0.0
+
 print("passed all tests..")

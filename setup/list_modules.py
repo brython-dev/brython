@@ -66,7 +66,11 @@ if args.install:
         sys.exit()
 
     for path in files:
-        shutil.copyfile(os.path.join(src_path, path), path)
+        dst = os.path.join(os.getcwd(), path)
+        head, tail = os.path.split(dst)
+        if not os.path.exists(head):
+            os.mkdir(head)
+        shutil.copyfile(os.path.join(src_path, path), dst)
 
 """
 
@@ -161,6 +165,7 @@ class ModulesFinder:
         """Walk the directory to find all pages with Brython scripts, parse
         them to get the list of modules needed to make them run.
         """
+        site_packages = 'Lib{0}site-packages{0}'.format(os.sep)
         imports = set()
         for dirname, dirnames, filenames in os.walk(self.directory):
             for name in dirnames:
@@ -197,6 +202,9 @@ class ModulesFinder:
                         continue
                     # get package name
                     package = dirname[len(self.directory) + 1:] or None
+                    if package is not None and \
+                            package.startswith(site_packages):
+                        package = package[len('Lib/site-packages/'):]
                     with open(path, encoding="utf-8") as fobj:
                         try:
                             imports |= self.get_imports(fobj.read(), package)
@@ -294,7 +302,9 @@ class ModulesFinder:
                 dirnames.remove("__dist__")
             for filename in filenames:
                 path = os.path.join(dirname, filename)
-                files.append(path[len(os.getcwd()) + 1:])
+                parts = path[len(os.getcwd()) + 1:].split(os.sep)
+                files.append("os.path.join(" +
+                             ", ".join(repr(part) for part in parts) +")")
                 if os.path.splitext(filename)[1] == '.html':
                     # detect charset
                     charset_detector = CharsetDetector()
@@ -327,7 +337,7 @@ class ModulesFinder:
                     dest = self._dest(data_dir, dirname, filename)
                     shutil.copyfile(path, dest)
 
-        info["files"] = ',\n'.join('"{}"'.format(file) for file in files)
+        info["files"] = ',\n'.join(files)
 
         # Generate setup.py from the template in string setup
         path = os.path.join(temp_dir, "setup.py")
@@ -362,7 +372,7 @@ if stdlib_dir is None:
 # get all Python modules and packages
 user_modules = {}
 
-packages = set()
+packages = {os.getcwd(), os.getcwd() + '/Lib/site-packages'}
 
 def is_package(folder):
     """Test if folder is a package, ie has __init__.py and all the folders
@@ -376,7 +386,7 @@ def is_package(folder):
         if not os.path.exists(os.path.join(current, "__init__.py")):
             return False
         current = os.path.dirname(current)
-        if current == os.getcwd():
+        if current in packages:
             packages.add(folder)
             return True
 
@@ -398,6 +408,8 @@ for dirname, dirnames, filenames in os.walk(os.getcwd()):
             # modules in packages below current directory
             path = os.path.join(dirname, filename)
             package = dirname[len(os.getcwd()) + 1:].replace(os.sep, '.')
+            if package.startswith('Lib.site-packages.'):
+                package = package[len('Lib.site-packages.'):]
             if filename == "__init__.py":
                 module_name = package
             else:
@@ -454,7 +466,7 @@ class BrythonScriptsExtractor(html.parser.HTMLParser):
             _type = "js_script"
             src = None
             for key, value in attrs:
-                if key == 'type' and value == "text/python":
+                if key == 'type' and value in ("text/python", "text/python3"):
                     _type = "py_script"
                 elif key == "src":
                     src = value

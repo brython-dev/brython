@@ -102,15 +102,23 @@ req.send({'x':0, 'y':1})
 GET and POST calls can be performed in a more straightforward way with the
 matching functions:
 
-`get(`_url[, async=True, headers={}, timeout=None, data="", **callbacks]_`)`
+`get(`_url[, async=True, headers={}, mode="text", timeout=None, data="", **callbacks]_`)`
 
 `post(`_url[, async=True, headers={"Content-Type": _
 _"application/x-www-form-urlencoded"}, timeout=None, data="", **callbacks]_`)`
 
+> _async_ is a boolean to specify if the request is asynchronous
+> (default value) or synchronous (blocking)
+
 > _headers_ is a dictionary with the HTTP headers key / values
+
+> _mode_ is "text" or "binary"
 
 > _data_ is either a string, or a dictionary. In the second case, the
 > dictionary is converted into a string of the form `x=1&y=2`.
+
+> _cache_ is a boolean to specify if the GET request should use the browser
+> cache
 
 > _timeout_ is the time in seconds after which the request is canceled
 
@@ -119,6 +127,10 @@ _"application/x-www-form-urlencoded"}, timeout=None, data="", **callbacks]_`)`
 > function that handles this event. For the key `ontimeout`, the value
 > is the function to call if the duration defined in _timeout_ has been
 > reached.
+
+In the callback function, the Ajax object has a method _read()_ that reads the
+response content as a string if mode is "text" and as `bytes` if mode is
+"binary".
 
 The above example can be written with this shortcut:
 
@@ -133,5 +145,18 @@ def on_complete(req):
 
 ajax.post(url,
           data={'x': 0, 'y': 1},
-          complete=on_complete)
+          oncomplete=on_complete)
+```
+
+Reading a binary file:
+
+```python
+from browser import ajax
+
+def read(f):
+    data = f.read()
+    assert isinstance(data, bytes)
+
+req = ajax.get("tests.zip", mode="binary",
+    oncomplete=read)
 ```

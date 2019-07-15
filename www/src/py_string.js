@@ -227,10 +227,10 @@ str.__init__ = function(self, arg){
     return _b_.None
 }
 
-var $str_iterator = $B.$iterator_class("str_iterator")
+var str_iterator = $B.make_iterator_class("str_iterator")
 str.__iter__ = function(self){
     var items = self.split("") // list of all characters in string
-    return $B.$iterator(items, $str_iterator)
+    return str_iterator.$factory(items)
 }
 
 str.__len__ = function(self){return self.length}
@@ -836,6 +836,8 @@ str.__repr__ = function(self){
               replace(new RegExp("\n", "g"), "\\n").
               replace(new RegExp("\r", "g"), "\\r").
               replace(new RegExp("\t", "g"), "\\t")
+
+    res = res.replace(combining_re, "\u200B$1")
     if(res.search('"') == -1 && res.search("'") == -1){
         return "'" + res + "'"
     }else if(self.search('"') == -1){
@@ -850,16 +852,20 @@ str.__setitem__ = function(self, attr, value){
     throw _b_.TypeError.$factory(
         "'str' object does not support item assignment")
 }
+var combining = []
+for(var cp = 0x300; cp <= 0x36F; cp++){
+    combining.push(String.fromCharCode(cp))
+}
+var combining_re = new RegExp("(" + combining.join("|") + ")")
 
 str.__str__ = function(self){
-    return self
+    return self.replace(combining_re, "\u200B$1")
 }
 str.toString = function(){return "string!"}
 
 // generate comparison methods
 var $comp_func = function(self,other){
-    if(typeof other !== "string"){throw _b_.TypeError.$factory(
-        "unorderable types: 'str' > " + $B.class_name(other) + "()")}
+    if(typeof other !== "string"){return _b_.NotImplemented}
     return self > other
 }
 $comp_func += "" // source code
@@ -948,13 +954,15 @@ str.count = function(){
     return n
 }
 
-str.encode = function(self, encoding) {
-    if(encoding === undefined){encoding = "utf-8"}
-    if(encoding == "rot13" || encoding == "rot_13"){
+str.encode = function(){
+    var $ = $B.args("encode", 3, {self: null, encoding: null, errors: null},
+            ["self", "encoding", "errors"], arguments,
+            {encoding: "utf-8", errors: "strict"}, null, null)
+    if($.encoding == "rot13" || $.encoding == "rot_13"){
         // Special case : returns a string
         var res = ""
-        for(var i = 0, len = self.length; i < len ; i++){
-            var char = self.charAt(i)
+        for(var i = 0, len = $.self.length; i < len ; i++){
+            var char = $.self.charAt(i)
             if(("a" <= char && char <= "m") || ("A" <= char && char <= "M")){
                 res += String.fromCharCode(String.charCodeAt(char) + 13)
             }else if(("m" < char && char <= "z") ||
@@ -964,7 +972,7 @@ str.encode = function(self, encoding) {
         }
         return res
     }
-    return _b_.bytes.$factory(self, encoding)
+    return _b_.bytes.__new__(_b_.bytes, $.self, $.encoding, $.errors)
 }
 
 str.endswith = function(){
@@ -1029,16 +1037,21 @@ str.find = function(){
     // arguments start and end are interpreted as in slice notation.
     // Return -1 if sub is not found.
     var $ = $B.args("str.find", 4,
-        {self: null, sub: null, start: null, end: null},
-        ["self", "sub", "start", "end"],
-        arguments, {start: 0, end: null}, null, null)
+            {self: null, sub: null, start: null, end: null},
+            ["self", "sub", "start", "end"],
+            arguments, {start: 0, end: null}, null, null)
     check_str($.sub)
     normalize_start_end($)
 
     if(!isinstance($.start, _b_.int)||!isinstance($.end, _b_.int)){
         throw _b_.TypeError.$factory("slice indices must be " +
             "integers or None or have an __index__ method")}
-    var s = $.self.substring($.start, $.end)
+    // Can't use string.substring(start, end) because if end < start,
+    // Javascript transforms it into substring(end, start)...
+    var s = ""
+    for(var i = $.start; i < $.end; i++){
+        s += $.self.charAt(i)
+    }
 
     if($.sub.length == 0 && $.start == $.self.length){return $.self.length}
     if(s.length + $.sub.length == 0){return -1}
@@ -1265,9 +1278,19 @@ str.format_map = function(self) {
 
 str.index = function(self){
     // Like find(), but raise ValueError when the substring is not found.
-    var res = str.find.apply(null,arguments)
+    var res = str.find.apply(null, arguments)
     if(res === -1){throw _b_.ValueError.$factory("substring not found")}
     return res
+}
+
+str.isascii = function(self){
+    // Return true if the string is empty or all characters in the string are
+    // ASCII, false otherwise. ASCII characters have code points in the range
+    // U+0000-U+007F.
+    for(var i = 0, len = self.length; i < len; i++){
+        if(self.charCodeAt(i) > 127){return false}
+    }
+    return true
 }
 
 str.join = function(){
@@ -1372,7 +1395,7 @@ str.maketrans = function() {
             }
             for(var i = 0, len = $.x.length; i < len; i++){
                 var key = _b_.ord($.x.charAt(i)),
-                    value = $.y.charAt(i)
+                    value = $.y.charCodeAt(i)
                 _b_.dict.$setitem(_t, key, value)
             }
             for(var k in toNone){
@@ -1382,6 +1405,8 @@ str.maketrans = function() {
         }
     }
 }
+
+str.maketrans.$type = "staticmethod"
 
 str.partition = function() {
     var $ = $B.args("partition", 2, {self: null, sep: null}, ["self", "sep"],
@@ -1460,10 +1485,13 @@ str.replace = function(self, old, _new, count) {
     return res
 }
 
-str.rfind = function(self){
+str.rfind = function(self, substr){
     // Return the highest index in the string where substring sub is found,
     // such that sub is contained within s[start:end]. Optional arguments
     // start and end are interpreted as in slice notation. Return -1 on failure.
+    if(arguments.length == 2 && typeof substr == "string"){
+        return self.lastIndexOf(substr)
+    }
     var $ = $B.args("rfind", 4,
         {self: null, sub: null, start: null, end: null},
         ["self", "sub", "start", "end"],
@@ -1692,7 +1720,7 @@ str.translate = function(self, table){
         try{
             var repl = getitem(self.charCodeAt(i))
             if(repl !== _b_.None){
-                res.push(repl)
+                res.push(String.fromCharCode(repl))
             }
         }catch(err){
             res.push(self.charAt(i))
@@ -1716,10 +1744,10 @@ str.zfill = function(self, width){
 }
 
 str.$factory = function(arg, encoding, errors){
-    if(arg === undefined){console.log("undef"); return "<undefined>"}
+    if(arg === undefined){return ""}
     switch(typeof arg) {
         case "string":
-            return arg
+            return str.__str__(arg)
         case "number":
             if(isFinite(arg)){return arg.toString()}
     }
@@ -1738,8 +1766,11 @@ str.$factory = function(arg, encoding, errors){
                 encoding !== undefined){
             // str(bytes, encoding, errors) is equal to
             // bytes.decode(encoding, errors)
-            return _b_.bytes.decode(arg, encoding || "utf-8",
-                errors || "strict")
+            // Arguments may be passed as keywords (cf. issue #1060)
+            var $ = $B.args("str", 3, {arg: null, encoding: null, errors: null},
+                    ["arg", "encoding", "errors"], arguments,
+                    {encoding: "utf-8", errors: "strict"}, null, null)
+            return _b_.bytes.decode(arg, $.encoding, $.errors)
         }
         var f = $B.$getattr(arg, "__str__", null)
         if(f === null ||
@@ -1755,7 +1786,7 @@ str.$factory = function(arg, encoding, errors){
         if($B.debug > 1){console.log(err)}
         console.log("Warning - no method __str__ or __repr__, " +
             "default to toString", arg)
-        return arg.toString()
+        throw err
     }
     return $B.$call(f)()
 }
@@ -1849,7 +1880,9 @@ $B.parse_format_spec = function(spec){
         if(car == "0"){
             // sign-aware : equivalent to fill = 0 and align == "="
             this.fill = "0"
-            this.align = "="
+            if(align_pos == -1){
+                this.align = "="
+            }
             pos++
             car = spec.charAt(pos)
         }
@@ -1892,6 +1925,7 @@ $B.parse_format_spec = function(spec){
             throw _b_.ValueError.$factory("Invalid format specifier: " + spec)
         }
     }
+
     this.toString = function(){
         return (this.fill === undefined ? "" : _b_.str.$factory(this.fill)) +
             (this.align || "") +

@@ -1,5 +1,5 @@
 import sys
-import traceback
+import tb as traceback
 
 from browser import document as doc
 from browser import window, alert, console
@@ -86,6 +86,14 @@ def print_tb():
     trace = Trace()
     traceback.print_exc(file=trace)
     CODE_ELT.value += trace.format()
+
+def syntax_error(args):
+    info, filename, lineno, offset, line = args
+    print(f"  File {filename}, line {lineno}")
+    print("    " + line)
+    print("    " + offset * " " + "^")
+    print("SyntaxError:", info)
+    flush()
 
 OUT_BUFFER = ''
 
@@ -174,12 +182,7 @@ def myKeyPress(event):
                     doc['code'].value += '... '
                     _status = "block"
                 else:
-                    info, filename, lineno, offset, line = msg.args
-                    print(f"  File <stdin>, line {lineno}")
-                    print("    " + line)
-                    print("    " + offset * " " + "^")
-                    print("SyntaxError:", info)
-                    flush()
+                    syntax_error(msg.args)
                     doc['code'].value += '>>> '
                     _status = "main"
             except:
@@ -245,6 +248,14 @@ def myKeyDown(event):
         if (lstart == -1 and len(src) < 5) or (len(src) - lstart < 6):
             event.preventDefault()
             event.stopPropagation()
+    elif event.ctrlKey and event.keyCode == 65: # ctrl+a
+        src = doc['code'].value
+        pos = doc['code'].selectionStart
+        col = get_col(doc['code'])
+        doc['code'].setSelectionRange(pos - col + 4, len(src))
+        event.preventDefault()
+    elif event.keyCode in [33, 34]: # page up, page down
+        event.preventDefault()
 
 
 doc['code'].bind('keypress', myKeyPress)

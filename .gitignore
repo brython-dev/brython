@@ -96,4 +96,8 @@ www/src/brython_stdlib.js
 www/src/brython_dist.js
 www/src/version_info.js
 
+# Jetbrains IDEs
+*.iml
+.idea
+
 node_modules/

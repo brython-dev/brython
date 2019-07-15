@@ -79,6 +79,7 @@ def process(filename, exclude_dirs=['test','site-packages']):
                 if re.match(r'^module\d+\..*$', _file):
                     continue
                 if not git.in_index(_file):
+                    print(_file, "not in git index")
                     continue
                 nb += 1
 

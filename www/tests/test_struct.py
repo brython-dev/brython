@@ -55,3 +55,6 @@ test3()
 
 # issue 687
 assert struct.unpack('I', struct.pack ('I', 1234)) == (1234,)
+
+# issue 1134
+assert struct.calcsize('>4s   c 15x 6l') == 44

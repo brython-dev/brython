@@ -71,8 +71,11 @@ function idb_load(evt, module){
             $B.precompiled[module] = res.content
         }
         if(res.imports.length > 0){
-            // res.impots is a string with the modules imported by the current
+            // res.imports is a string with the modules imported by the current
             // modules, separated by commas
+            if($B.debug > 1){
+                console.log(module, "imports", res.imports)
+            }
             var subimports = res.imports.split(",")
             for(var i = 0; i < subimports.length; i++){
                 var subimport = subimports[i]
@@ -141,7 +144,7 @@ function idb_get(module){
             req = store.get(module)
         req.onsuccess = function(evt){idb_load(evt, module)}
     }catch(err){
-        console.log('error', err)
+        console.info('error', err)
     }
 }
 
@@ -152,10 +155,10 @@ $B.idb_open = function(obj){
         if(!db.objectStoreNames.contains("modules")){
             var version = db.version
             db.close()
-            console.log('create object store', version)
+            console.info('create object store', version)
             idb_cx = indexedDB.open("brython_stdlib", version+1)
             idb_cx.onupgradeneeded = function(){
-                console.log("upgrade needed")
+                console.info("upgrade needed")
                 var db = $B.idb_cx.result,
                     store = db.createObjectStore("modules", {"keyPath": "name"})
                 store.onsuccess = loop
@@ -164,24 +167,24 @@ $B.idb_open = function(obj){
                 console.log("version changed")
             }
             idb_cx.onsuccess = function(){
-                console.log("db opened", idb_cx)
+                console.info("db opened", idb_cx)
                 var db = idb_cx.result,
                     store = db.createObjectStore("modules", {"keyPath": "name"})
                 store.onsuccess = loop
             }
         }else{
-            console.log("using indexedDB for stdlib modules cache")
+            console.info("using indexedDB for stdlib modules cache")
             loop()
         }
     }
     idb_cx.onupgradeneeded = function(){
-        console.log("upgrade needed")
+        console.info("upgrade needed")
         var db = idb_cx.result,
             store = db.createObjectStore("modules", {"keyPath": "name"})
         store.onsuccess = loop
     }
     idb_cx.onerror = function(){
-        console.log('could not open indexedDB database')
+        console.info('could not open indexedDB database')
     }
 }
 
@@ -194,7 +197,11 @@ $B.ajax_load_script = function(script){
         if(this.readyState == 4){
             if(this.status == 200){
                 var src = this.responseText
-                $B.tasks.splice(0, 0, [$B.run_script, src, name, true])
+                if(script.is_ww){
+                    $B.webworkers[name] = src
+                }else{
+                    $B.tasks.splice(0, 0, [$B.run_script, src, name, true])
+                }
             }else if(this.status == 404){
                 throw Error(url + " not found")
             }
@@ -263,10 +270,13 @@ var loop = $B.loop = function(){
             // instance of a Python exception
             if(err.$py_error === undefined){
                 console.log('Javascript error', err)
-                $B.print_stack()
-                err = _b_.RuntimeError.$factory(err + '')
+                if($B.is_recursion_error(err)){
+                    err = _b_.RecursionError.$factory("too much recursion")
+                }else{
+                    $B.print_stack()
+                    err = _b_.RuntimeError.$factory(err + '')
+                }
             }
-
             $B.handle_error(err)
         }
         loop()
@@ -282,7 +292,7 @@ $B.has_indexedDB = self.indexedDB !== undefined
 $B.handle_error = function(err){
     // Print the error traceback on the standard error stream
     if(err.__class__ !== undefined){
-        var name = err.__class__.$infos.__name__,
+        var name = $B.class_name(err),
             trace = _b_.getattr(err, 'info')
         if(name == 'SyntaxError' || name == 'IndentationError'){
             var offset = err.args[3]

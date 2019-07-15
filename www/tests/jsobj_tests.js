@@ -19,3 +19,13 @@ class JS_A {
 function initClass() {
     return new JS_A();
 }
+
+class JSWithEq {
+  __eq__(other) {
+    return true;
+  }
+}
+
+function initJSWithEq() {
+  return new JSWithEq();
+}

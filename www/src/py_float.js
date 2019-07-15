@@ -11,6 +11,12 @@ function $err(op, other){
     throw _b_.TypeError.$factory(msg)
 }
 
+function float_value(obj){
+    // Instances of float subclasses that call float.__new__(cls, value)
+    // have an attribute $value set
+    return obj.$value !== undefined ? obj.$value : obj
+}
+
 // dictionary for built-in class 'float'
 var float = {
     __class__: _b_.type,
@@ -29,13 +35,15 @@ var float = {
     }
 }
 
-float.numerator = function(self){return self}
+float.numerator = function(self){return float_value(self)}
 float.denominator = function(self){return _b_.int.$factory(1)}
 float.imag = function(self){return _b_.int.$factory(0)}
-float.real = function(self){return self}
-float.__float__ = function(self){return self}
+float.real = function(self){return float_value(self)}
+float.__float__ = function(self){return float_value(self)}
 
-float.as_integer_ratio = function(self) {
+float.as_integer_ratio = function(self){
+    self = float_value(self)
+
     if(self.valueOf() == Number.POSITIVE_INFINITY ||
             self.valueOf() == Number.NEGATIVE_INFINITY){
         throw _b_.OverflowError.$factory("Cannot pass infinity to " +
@@ -75,9 +83,14 @@ float.as_integer_ratio = function(self) {
         _b_.int.$factory(denominator)])
 }
 
-float.__bool__ = function(self){return _b_.bool.$factory(self.valueOf())}
+float.__bool__ = function(self){
+    self = float_value(self)
+    return _b_.bool.$factory(self.valueOf())
+}
 
 float.__eq__ = function(self, other){
+    self = float_value(self)
+    other = float_value(other)
     if(isNaN(self) && isNaN(other)){return false}
     if(isinstance(other, _b_.int)){return self == other}
     if(isinstance(other, float)) {
@@ -92,6 +105,8 @@ float.__eq__ = function(self, other){
 }
 
 float.__floordiv__ = function(self, other){
+    self = float_value(self)
+    other = float_value(other)
     if(isinstance(other,[_b_.int, float])){
       if(other.valueOf() == 0){
           throw ZeroDivisionError.$factory('division by zero')
@@ -210,19 +225,21 @@ function preformat(self, fmt){
             var res1 = self.toExponential(fmt.precision - 1),
                 exp = parseInt(res1.substr(res1.search("e") + 1))
             if(exp < -4 || exp >= fmt.precision - 1){
-                res = res1
-                if(Math.abs(exp) < 10){
-                    res = res.substr(0, res.length - 1) + "0" +
-                        res.charAt(res.length - 1)
-                }
+                var elts = res1.split("e")
+                // Remove trailing 0 from mantissa
+                while(elts[0].endsWith("0")){elts[0] = elts[0].substr(0,
+                    elts[0].length - 1)}
+                res = elts.join("e")
             }
         }
     }else{var res = _b_.str.$factory(self)}
 
     if(fmt.type === undefined|| "gGn".indexOf(fmt.type) != -1){
-        // remove trailing 0
-        while(res.charAt(res.length - 1) == "0"){
-            res = res.substr(0, res.length - 1)
+        // remove trailing 0 for non-exponential formats
+        if(res.search("e") == -1){
+            while(res.charAt(res.length - 1) == "0"){
+                res = res.substr(0, res.length - 1)
+            }
         }
         if(res.charAt(res.length - 1) == "."){
             if(fmt.type === undefined){res += "0"}
@@ -239,7 +256,8 @@ function preformat(self, fmt){
     return res
 }
 
-float.__format__ = function(self, format_spec) {
+float.__format__ = function(self, format_spec){
+    self = float_value(self)
     var fmt = new $B.parse_format_spec(format_spec)
     fmt.align = fmt.align || ">"
     var raw = preformat(self, fmt).split('.'),
@@ -337,6 +355,7 @@ _b_.$ldexp = function(x, i) {
 
 float.hex = function(self) {
     // http://hg.python.org/cpython/file/d422062d7d36/Objects/floatobject.c
+    self = float_value(self)
     var DBL_MANT_DIG = 53,   // 53 bits?
         TOHEX_NBITS = DBL_MANT_DIG + 3 - (DBL_MANT_DIG + 2) % 4
 
@@ -382,8 +401,6 @@ float.hex = function(self) {
 }
 
 float.__init__ = function(self, value){
-    self.valueOf = function(){return value.valueOf()}
-    self.toString = function(){return value + ""}
     return _b_.None
 }
 
@@ -393,6 +410,8 @@ float.is_integer = function(self) {return _b_.int.$factory(self) == self}
 
 float.__mod__ = function(self, other) {
     // can't use Javascript % because it works differently for negative numbers
+    self = float_value(self)
+    other = float_value(other)
     if(other == 0){throw ZeroDivisionError.$factory("float modulo")}
     if(isinstance(other, _b_.int)){
         return new Number((self % other + other) % other)
@@ -417,13 +436,15 @@ float.__mod__ = function(self, other) {
 float.__mro__ = [object]
 
 float.__mul__ = function(self, other){
+    self = float_value(self)
+    other = float_value(other)
     if(isinstance(other, _b_.int)){
         if(other.__class__ == $B.long_int){
             return new Number(self * parseFloat(other.value))
         }
         return new Number(self * other)
     }
-    if(isinstance(other,float)){return new Number(self * other)}
+    if(isinstance(other, float)){return new Number(self * float_value(other))}
     if(isinstance(other, _b_.bool)){
       var bool_value = 0
       if(other.valueOf()){bool_value = 1}
@@ -437,13 +458,35 @@ float.__mul__ = function(self, other){
     $err("*", other)
 }
 
-float.__ne__ = function(self, other){return ! float.__eq__(self, other)}
+float.__ne__ = function(self, other){
+    var res = float.__eq__(self, other)
+    return res === _b_.NotImplemented ? res : ! res
+}
 
-float.__neg__ = function(self, other){return float.$factory(-self)}
+float.__neg__ = function(self, other){
+    return float.$factory(-float_value(self))
+}
 
-float.__pos__ = function(self){return self}
+float.__new__ = function(cls, value){
+    if(cls === undefined){
+        throw _b_.TypeError.$factory("float.__new__(): not enough arguments")
+    }else if(! _b_.isinstance(cls, _b_.type)){
+        throw _b_.TypeError.$factory("float.__new__(X): X is not a type object")
+    }
+    if(cls === float){return float.$factory(value)}
+    return {
+        __class__: cls,
+        __dict__: _b_.dict.$factory(),
+        $value: value || 0
+    }
+}
+
+float.__pos__ = function(self){return float_value(self)}
 
 float.__pow__ = function(self, other){
+    self = float_value(self)
+    other = float_value(other)
+
     var other_int = isinstance(other, _b_.int)
     if(other_int || isinstance(other, float)){
         if(self == 1){return self} // even for Infinity or NaN
@@ -490,7 +533,7 @@ float.__pow__ = function(self, other){
 }
 
 float.__repr__ = float.__str__ = function(self){
-    if(self === float){return "<class 'float'>"}
+    self = float_value(self)
     if(self.valueOf() == Infinity){return 'inf'}
     if(self.valueOf() == -Infinity){return '-inf'}
     if(isNaN(self.valueOf())){return 'nan'}
@@ -512,10 +555,12 @@ float.__setattr__ = function(self, attr, value){
     }
     // subclasses of float can have attributes set
     self[attr] = value
-    return $N
+    return _b_.None
 }
 
 float.__truediv__ = function(self, other){
+    self = float_value(self)
+    other = float_value(other)
     if(isinstance(other, [_b_.int, float])){
         if(other.valueOf() == 0){
             throw ZeroDivisionError.$factory("division by zero")
@@ -537,6 +582,8 @@ float.__truediv__ = function(self, other){
 
 // operations
 var $op_func = function(self, other){
+    self = float_value(self)
+    other = float_value(other)
     if(isinstance(other, _b_.int)){
         if(typeof other == "boolean"){
             return other ? self - 1 : self
@@ -566,6 +613,9 @@ for(var $op in $ops){
 
 // comparison methods
 var $comp_func = function(self, other){
+    self = float_value(self)
+    other = float_value(other)
+
     if(isinstance(other, _b_.int)){
         if(other.__class__ === $B.long_int){
             return self > parseInt(other.value)
@@ -692,13 +742,6 @@ float.$factory = function (value){
     }
     throw _b_.TypeError.$factory("float() argument must be a string or a " +
         "number, not '" + $B.class_name(value) + "'")
-}
-
-float.__new__ = function(cls){
-    if(cls === undefined){
-        throw _b_.TypeError.$factory("float.__new__(): not enough arguments")
-    }
-    return {__class__: cls}
 }
 
 $B.$FloatClass = $FloatClass

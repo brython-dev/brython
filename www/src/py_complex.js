@@ -1,9 +1,6 @@
 ;(function($B){
 
-var bltns = $B.InjectBuiltins()
-eval(bltns)
-
-var object = _b_.object
+var _b_ = $B.builtins
 
 function $UnsupportedOpType(op, class1, class2){
     throw _b_.TypeError.$factory("unsupported operand type(s) for " +
@@ -12,7 +9,7 @@ function $UnsupportedOpType(op, class1, class2){
 
 var complex = {
     __class__: _b_.type,
-    __dir__: object.__dir__,
+    __dir__: _b_.object.__dir__,
     $infos: {
         __module__: "builtins",
         __name__: "complex"
@@ -43,19 +40,19 @@ complex.__bool__ = function(self){
 }
 
 complex.__eq__ = function(self, other){
-    if(isinstance(other, complex)){
+    if(_b_.isinstance(other, complex)){
         return self.$real.valueOf() == other.$real.valueOf() &&
             self.$imag.valueOf() == other.$imag.valueOf()
     }
-    if(isinstance(other, _b_.int)){
-        if(self.$imag != 0){return False}
+    if(_b_.isinstance(other, _b_.int)){
+        if(self.$imag != 0){return false}
         return self.$real == other.valueOf()
     }
-    if(isinstance(other, _b_.float)){
-      if(self.$imag != 0){return False}
+    if(_b_.isinstance(other, _b_.float)){
+      if(self.$imag != 0){return false}
       return self.$real == other.valueOf()
     }
-    $UnsupportedOpType("==", "complex", $B.get_class(other))
+    return _b_.NotImplemented
 }
 
 complex.__floordiv__ = function(self,other){
@@ -65,10 +62,6 @@ complex.__floordiv__ = function(self,other){
 complex.__hash__ = function(self){
     // this is a quick fix for something like 'hash(complex)', where
     // complex is not an instance but a type
-    if(self === undefined){
-       return complex.__hashvalue__ || $B.$py_next_hash--
-    }
-
     return self.$imag * 1000003 + self.$real
 }
 
@@ -82,27 +75,28 @@ complex.__mod__ = function(self, other) {
     throw _b_.TypeError.$factory("TypeError: can't mod complex numbers.")
 }
 
-complex.__mro__ = [object]
+complex.__mro__ = [_b_.object]
 
 complex.__mul__ = function(self, other){
-    if(isinstance(other, complex)){
+    if(_b_.isinstance(other, complex)){
       return make_complex(self.$real * other.$real - self.$imag * other.$imag,
           self.$imag * other.$real + self.$real * other.$imag)
-    }else if(isinstance(other, _b_.int)){
+    }else if(_b_.isinstance(other, _b_.int)){
       return make_complex(self.$real * other.valueOf(),
           self.$imag * other.valueOf())
-    }else if(isinstance(other, _b_.float)){
+    }else if(_b_.isinstance(other, _b_.float)){
       return make_complex(self.$real * other, self.$imag * other)
-    }else if(isinstance(other, _b_.bool)){
+    }else if(_b_.isinstance(other, _b_.bool)){
       if(other.valueOf()){return self}
       return make_complex(0, 0)
     }
     $UnsupportedOpType("*", complex, other)
 }
 
-complex.__name__ = "complex"
-
-complex.__ne__ = function(self,other){return ! complex.__eq__(self, other)}
+complex.__ne__ = function(self, other){
+    var res = complex.__eq__(self, other)
+    return res === _b_.NotImplemented ? res : ! res
+}
 
 complex.__neg__ = function(self){
     return make_complex(-self.$real, -self.$imag)
@@ -115,7 +109,8 @@ complex.__new__ = function(cls){
     var res,
         missing = {},
         args = $B.args("complex", 3, {cls: null, real: null, imag: null},
-            ["cls", "real", "imag"], arguments, {real: 0, imag: missing}, null, null),
+            ["cls", "real", "imag"], arguments, {real: 0, imag: missing},
+            null, null),
         $real = args.real,
         $imag = args.imag
 
@@ -182,8 +177,8 @@ complex.__new__ = function(cls){
     if(arguments.length == 1 && $real.__class__ === complex && $imag == 0){
         return $real
     }
-    if((isinstance($real, _b_.float) || isinstance($real, _b_.int)) &&
-            (isinstance($imag, _b_.float) || isinstance($imag, _b_.int))){
+    if((_b_.isinstance($real, _b_.float) || _b_.isinstance($real, _b_.int)) &&
+            (_b_.isinstance($imag, _b_.float) || _b_.isinstance($imag, _b_.int))){
         res = {
             __class__: complex,
             $real: $real,
@@ -192,23 +187,18 @@ complex.__new__ = function(cls){
         return res
     }
 
-    for(var i = 0; i < type_conversions.length; i++){
-        if(hasattr($real, type_conversions[i])){
-
-        }
-    }
     $real = _convert($real)
     $imag = _convert($imag)
-    if(! isinstance($real, _b_.float) && ! isinstance($real, _b_.int) &&
-            ! isinstance($real, _b_.complex)){
+    if(! _b_.isinstance($real, _b_.float) && ! _b_.isinstance($real, _b_.int) &&
+            ! _b_.isinstance($real, _b_.complex)){
         throw _b_.TypeError.$factory("complex() argument must be a string " +
             "or a number")
     }
     if(typeof $imag == "string"){
         throw _b_.TypeError.$factory("complex() second arg can't be a string")
     }
-    if(! isinstance($imag, _b_.float) && ! isinstance($imag, _b_.int) &&
-            ! isinstance($imag, _b_.complex) && $imag !== missing){
+    if(! _b_.isinstance($imag, _b_.float) && ! _b_.isinstance($imag, _b_.int) &&
+            ! _b_.isinstance($imag, _b_.complex) && $imag !== missing){
         throw _b_.TypeError.$factory("complex() argument must be a string " +
             "or a number")
     }
@@ -290,9 +280,9 @@ complex.__sqrt__ = function(self) {
 }
 
 complex.__truediv__ = function(self, other){
-    if(isinstance(other, complex)){
+    if(_b_.isinstance(other, complex)){
         if(other.$real == 0 && other.$imag == 0){
-           throw ZeroDivisionError.$factory("division by zero")
+           throw _b_.ZeroDivisionError.$factory("division by zero")
         }
         var _num = self.$real * other.$real + self.$imag * other.$imag,
             _div = other.$real * other.$real + other.$imag * other.$imag
@@ -301,15 +291,15 @@ complex.__truediv__ = function(self, other){
 
         return make_complex(_num / _div, _num2 / _div)
     }
-    if(isinstance(other, _b_.int)){
+    if(_b_.isinstance(other, _b_.int)){
         if(! other.valueOf()){
-            throw ZeroDivisionError.$factory('division by zero')
+            throw _b_.ZeroDivisionError.$factory('division by zero')
         }
         return complex.__truediv__(self, complex.$factory(other.valueOf()))
     }
-    if(isinstance(other, _b_.float)){
+    if(_b_.isinstance(other, _b_.float)){
         if(! other.valueOf()){
-            throw ZeroDivisionError.$factory("division by zero")
+            throw _b_.ZeroDivisionError.$factory("division by zero")
         }
         return complex.__truediv__(self, complex.$factory(other.valueOf()))
     }
@@ -335,17 +325,17 @@ for(var $op in $ops){
 complex.__ior__ = complex.__or__
 
 // operations
-var $op_func = function(self,other){
-    if(isinstance(other, complex)){
+var $op_func = function(self, other){
+    if(_b_.isinstance(other, complex)){
         return make_complex(self.$real - other.$real, self.$imag - other.$imag)
     }
-    if(isinstance(other, _b_.int)){
+    if(_b_.isinstance(other, _b_.int)){
         return make_complex($B.sub(self.$real,other.valueOf()), self.$imag)
     }
-    if(isinstance(other, _b_.float)){
+    if(_b_.isinstance(other, _b_.float)){
         return make_complex(self.$real - other.valueOf(), self.$imag)
     }
-    if(isinstance(other, _b_.bool)){
+    if(_b_.isinstance(other, _b_.bool)){
          var bool_value = 0
          if(other.valueOf()){bool_value = 1}
          return make_complex(self.$real - bool_value, self.$imag)
@@ -367,7 +357,7 @@ var $comp_func = function(self, other){
     throw _b_.TypeError.$factory("TypeError: no ordering relation " +
         "is defined for complex numbers")
 }
-$comp_func += '' // source codevar $comps = {'>':'gt','>=':'ge','<':'lt','<=':'le'}
+$comp_func += '' // source code
 for(var $op in $B.$comps){
     eval("complex.__" + $B.$comps[$op] + "__ = " +
         $comp_func.replace(/>/gm, $op))
@@ -395,8 +385,10 @@ var _real = 1,
 var type_conversions = ["__complex__", "__float__", "__int__"]
 var _convert = function(num){
     for(var i = 0; i < type_conversions.length; i++) {
-        if(hasattr(num, type_conversions[i])) {
-            return getattr(num, type_conversions[i])()
+        var missing = {},
+            tc = getattr(num, type_conversions[i], missing)
+        if(tc !== missing){
+            return tc()
         }
     }
     return num

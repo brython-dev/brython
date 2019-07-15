@@ -165,4 +165,18 @@ b'1 22 333 4444 55555'.count(32) == 4
 # issue 972
 assert b'a' in b'a'
 
+# issue 1070
+try:
+    b"\xff".decode('utf-8')
+    raise Exception("should have raised UnicodeDecodeError")
+except UnicodeDecodeError:
+    pass
+
+# issue 1090
+assert bytes.fromhex('2Ef0 F1f2 ') == b'.\xf0\xf1\xf2'
+assert bytearray.fromhex('2Ef0 F1f2 ') == bytearray(b'.\xf0\xf1\xf2')
+
+# issue 1091
+assert bytearray(b'\x07\xf0\xf1\xf2').hex() == "07f0f1f2"
+
 print('passed all tests...')

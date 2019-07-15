@@ -105,6 +105,9 @@ class Tester:
         if not isinstance(obj, klass):
             raise AssertionError('%s is not an instance of %s' %(obj, klass))
 
+    def assertIsNone(self, obj, msg=None):
+        assert obj == None, value
+
     def assertIsNot(self, a, b):
         if a is b:
             raise AssertionError('%s is %s should be false' %(a,b))
@@ -156,10 +159,13 @@ class Tester:
                         fname = tb.tb_frame.f_code.co_filename
                     except:
                         fname = '<nc>'
+                    module_name = type(self).__module__
+                    module = sys.modules.get(module_name)
+                    module_file = module.__file__ if module else None
                     while True:
-                        if fname == type(self).__module__:
+                        print(fname, "line", tb.tb_lineno)
+                        if fname == module_file:
                             errline = tb.tb_lineno
-                            break
                         tb = tb.tb_next
                         if tb is None:
                             break
@@ -216,7 +222,9 @@ class TestReport:
         methods.sort()
         for method in methods:
             report = self.records[method]
-            res += '{:15} {1.status} {1.lineno}\n    {1.args[0]}'.format(method, report)
+            res += '{:15} {1.status} {1.lineno}\n'.format(method, report)
+            if report.args:
+                res += '    {0.args[0]}\n'.format(report)
         return res
 
 TestCase = Tester # unittest interface

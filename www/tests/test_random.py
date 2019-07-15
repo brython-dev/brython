@@ -95,3 +95,26 @@ a = [random.randint(0, 10 ** 8) for _ in range(n)]
 
 unique = len(set(a))
 assert 100 * unique / n > 99
+
+# issue 1073
+def test(func, *args):
+    try:
+        func(*args)
+        raise Exception("should have raised ValueError")
+    except:
+        pass
+
+for (a, b) in [(1.3, 5), (1, 4.5), (2.2, 3.8)]:
+    test(random.randint, a, b)
+
+test(random.randrange, 2.5)
+
+for (a, b) in [(0, 2.5), (0.5, 2)]:
+    test(random.randrange, a, b)
+
+# issue 1121
+random.seed(31416)
+ch1 = random.choices([0, 1, 2], [2, 1, 1], k = 50)
+random.seed(31416)
+ch2 = random.choices([0, 1, 2], [2, 1, 1], k = 50)
+assert ch1 == ch2

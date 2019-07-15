@@ -58,8 +58,6 @@ var array = $B.make_class("array",
 
 array.$buffer_protocol = true
 
-var array_iterator = $B.$iterator_class("array_iterator")
-
 array.__getitem__ = function(self, key){
     if(self.obj && self.obj[key] !== undefined){
         return self.obj[key]
@@ -67,8 +65,9 @@ array.__getitem__ = function(self, key){
     throw _b_.IndexError("array index out of range")
 }
 
+var array_iterator = $B.make_iterator_class("array_iterator")
 array.__iter__ = function(self){
-    return $B.$iterator(self.obj, array_iterator)
+    return array_iterator.$factory(self.obj)
 }
 
 array.__len__ = function(self){
