@@ -1,16 +1,33 @@
 sudo: required
-
 language: python
-
-addons:
-    chrome: stable
-    firefox: "59.0"
 
 matrix:
   include:
     - python: 3.6
-    - language: python
-      python: 3.7
+      addons:
+          chrome: "stable"
+          firefox: "latest"
+      before_install:
+        - python --version
+        - mkdir qunit
+        - wget -O qunit/qunit-1.18.0.css http://code.jquery.com/qunit/qunit-1.18.0.css
+        - wget -O qunit/qunit-1.18.0.js  http://code.jquery.com/qunit/qunit-1.18.0.js
+        - nvm install 8
+        - nvm use 8
+        - npm install testem
+        - ./node_modules/.bin/testem launchers
+        # A newer version of libnss3 is needed for the latest Chrome version
+        - sudo apt-get --only-upgrade install libnss3
+
+      before_script:
+        - export DISPLAY=:99.0
+        - sh -e /etc/init.d/xvfb start
+        - (cd scripts && python make_doc.py)
+        - (cd scripts && python make_dist.py)
+
+      script:
+        - ./node_modules/.bin/testem --launch "Firefox,Headless Chrome" -t www/tests/qunit/run_tests.html ci
+    - python: 3.7
       dist: xenial  # required for Python >= 3.7 (travis-ci/travis-ci#9069)
       before_install: pip install --upgrade pip
       before_script: pip install flake8
@@ -18,24 +35,3 @@ matrix:
         - EXCLUDE=./.*,www/src/Lib/test/badsyntax_3131.py
         # stop the build if there are Python syntax errors
         - flake8 . --exclude=$EXCLUDE --exit-zero --select=E999 --show-source --statistics
-
-before_install:
-  - python --version
-  - mkdir qunit
-  - wget -O qunit/qunit-1.18.0.css http://code.jquery.com/qunit/qunit-1.18.0.css
-  - wget -O qunit/qunit-1.18.0.js  http://code.jquery.com/qunit/qunit-1.18.0.js
-  - nvm install 8
-  - nvm use 8
-  - npm install testem
-  - ./node_modules/.bin/testem launchers
-  # A newer version of libnss3 is needed for the latest Chrome version
-  - sudo apt-get --only-upgrade install libnss3
-
-before_script:
-  - export DISPLAY=:99.0
-  - sh -e /etc/init.d/xvfb start
-  - (cd scripts && python make_doc.py)
-  - (cd scripts && python make_dist.py)
-
-script:
-  - ./node_modules/.bin/testem --skip PhantomJS,Chromium -t www/tests/qunit/run_tests.html ci

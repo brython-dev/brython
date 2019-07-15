@@ -45,13 +45,25 @@ Whitespace between formats is ignored.
 
 The variable struct.error is an exception raised on errors."""
 
-import math, sys
+import math
+import re
+import sys
 
 # TODO: XXX Find a way to get information on native sizes and alignments
 class StructError(Exception):
     pass
+
+
 error = StructError
-def unpack_int(data,index,size,le):
+
+def _normalize(fmt):
+    """Check if there are illegal whitespaces (between a count and its format)
+    and remove other whitespaces."""
+    if re.search(r"\d\s+", fmt):
+        raise StructError("bad char in struct format")
+    return fmt.replace(" ", "")
+
+def unpack_int(data, index, size, le):
     bytes = [b for b in data[index:index+size]]
     if le == 'little':
         bytes.reverse()
@@ -60,22 +72,22 @@ def unpack_int(data,index,size,le):
         number = number << 8 | b
     return int(number)
 
-def unpack_signed_int(data,index,size,le):
-    number = unpack_int(data,index,size,le)
-    max = 2**(size*8)
-    if number > 2**(size*8 - 1) - 1:
-        number = int(-1*(max - number))
+def unpack_signed_int(data, index, size, le):
+    number = unpack_int(data, index, size, le)
+    max = 2 ** (size * 8)
+    if number > 2 ** (size * 8 - 1) - 1:
+        number = int(-1 * (max - number))
     return number
 
 INFINITY = 1e200 * 1e200
 NAN = INFINITY / INFINITY
 
-def unpack_char(data,index,size,le):
-    return data[index:index+size]
+def unpack_char(data, index, size, le):
+    return data[index:index + size]
 
-def pack_int(number,size,le):
-    x=number
-    res=[]
+def pack_int(number, size, le):
+    x = number
+    res = []
     for i in range(size):
         res.append(x&0xff)
         x >>= 8
@@ -83,29 +95,30 @@ def pack_int(number,size,le):
         res.reverse()
     return bytes(res)
 
-def pack_signed_int(number,size,le):
+def pack_signed_int(number, size, le):
     if not isinstance(number, int):
         raise StructError("argument for i,I,l,L,q,Q,h,H must be integer")
-    if  number > 2**(8*size-1)-1 or number < -1*2**(8*size-1):
+    if  number > 2 ** (8 * size - 1) - 1 or number < -1 * 2 ** (8 * size - 1):
         raise OverflowError("Number:%i too large to convert" % number)
-    return pack_int(number,size,le)
+    return pack_int(number, size, le)
 
-def pack_unsigned_int(number,size,le):
+def pack_unsigned_int(number, size, le):
     if not isinstance(number, int):
         raise StructError("argument for i,I,l,L,q,Q,h,H must be integer")
     if number < 0:
         raise TypeError("can't convert negative long to unsigned")
-    if number > 2**(8*size)-1:
+    if number > 2 ** (8 * size) - 1:
         raise OverflowError("Number:%i too large to convert" % number)
-    return pack_int(number,size,le)
+    return pack_int(number, size, le)
 
-def pack_char(char,size,le):
+def pack_char(char, size, le):
     return bytes(char)
 
 def isinf(x):
     return x != 0.0 and x / 2 == x
+
 def isnan(v):
-    return v != v*1.0 or (v == 1.0 and v == 2.0)
+    return v != v * 1.0 or (v == 1.0 and v == 2.0)
 
 def pack_float(x, size, le):
     unsigned = float_pack(x, size)
@@ -241,53 +254,55 @@ def float_pack(x, size):
 
 
 big_endian_format = {
-    'x':{ 'size' : 1, 'alignment' : 0, 'pack' : None, 'unpack' : None},
-    'b':{ 'size' : 1, 'alignment' : 0, 'pack' : pack_signed_int, 'unpack' : unpack_signed_int},
-    'B':{ 'size' : 1, 'alignment' : 0, 'pack' : pack_unsigned_int, 'unpack' : unpack_int},
-    'c':{ 'size' : 1, 'alignment' : 0, 'pack' : pack_char, 'unpack' : unpack_char},
-    's':{ 'size' : 1, 'alignment' : 0, 'pack' : None, 'unpack' : None},
-    'p':{ 'size' : 1, 'alignment' : 0, 'pack' : None, 'unpack' : None},
-    'h':{ 'size' : 2, 'alignment' : 0, 'pack' : pack_signed_int, 'unpack' : unpack_signed_int},
-    'H':{ 'size' : 2, 'alignment' : 0, 'pack' : pack_unsigned_int, 'unpack' : unpack_int},
-    'i':{ 'size' : 4, 'alignment' : 0, 'pack' : pack_signed_int, 'unpack' : unpack_signed_int},
-    'I':{ 'size' : 4, 'alignment' : 0, 'pack' : pack_unsigned_int, 'unpack' : unpack_int},
-    'l':{ 'size' : 4, 'alignment' : 0, 'pack' : pack_signed_int, 'unpack' : unpack_signed_int},
-    'L':{ 'size' : 4, 'alignment' : 0, 'pack' : pack_unsigned_int, 'unpack' : unpack_int},
-    'q':{ 'size' : 8, 'alignment' : 0, 'pack' : pack_signed_int, 'unpack' : unpack_signed_int},
-    'Q':{ 'size' : 8, 'alignment' : 0, 'pack' : pack_unsigned_int, 'unpack' : unpack_int},
-    'f':{ 'size' : 4, 'alignment' : 0, 'pack' : pack_float, 'unpack' : unpack_float},
-    'd':{ 'size' : 8, 'alignment' : 0, 'pack' : pack_float, 'unpack' : unpack_float},
+    'x': {'size': 1, 'alignment': 0, 'pack': None, 'unpack': None},
+    'b': {'size': 1, 'alignment': 0, 'pack': pack_signed_int, 'unpack': unpack_signed_int},
+    'B': {'size': 1, 'alignment': 0, 'pack': pack_unsigned_int, 'unpack': unpack_int},
+    'c': {'size': 1, 'alignment': 0, 'pack': pack_char, 'unpack': unpack_char},
+    's': {'size': 1, 'alignment': 0, 'pack': None, 'unpack': None},
+    'p': {'size': 1, 'alignment': 0, 'pack': None, 'unpack': None},
+    'h': {'size': 2, 'alignment': 0, 'pack': pack_signed_int, 'unpack': unpack_signed_int},
+    'H': {'size': 2, 'alignment': 0, 'pack': pack_unsigned_int, 'unpack': unpack_int},
+    'i': {'size': 4, 'alignment': 0, 'pack': pack_signed_int, 'unpack': unpack_signed_int},
+    'I': {'size': 4, 'alignment': 0, 'pack': pack_unsigned_int, 'unpack': unpack_int},
+    'l': {'size': 4, 'alignment': 0, 'pack': pack_signed_int, 'unpack': unpack_signed_int},
+    'L': {'size': 4, 'alignment': 0, 'pack': pack_unsigned_int, 'unpack': unpack_int},
+    'q': {'size': 8, 'alignment': 0, 'pack': pack_signed_int, 'unpack': unpack_signed_int},
+    'Q': {'size': 8, 'alignment': 0, 'pack': pack_unsigned_int, 'unpack': unpack_int},
+    'f': {'size': 4, 'alignment': 0, 'pack': pack_float, 'unpack': unpack_float},
+    'd': {'size': 8, 'alignment': 0, 'pack': pack_float, 'unpack': unpack_float},
     }
+
 default = big_endian_format
-formatmode={ '<' : (default, 'little'),
+
+formatmode = { '<' : (default, 'little'),
              '>' : (default, 'big'),
              '!' : (default, 'big'),
              '=' : (default, sys.byteorder),
              '@' : (default, sys.byteorder)
             }
 
-def getmode(fmt):
+def _getmode(fmt):
     try:
-        formatdef,endianness = formatmode[fmt[0]]
-        alignment = fmt[0] not in formatmode or fmt[0]=='@'
+        formatdef, endianness = formatmode[fmt[0]]
+        alignment = fmt[0] not in formatmode or fmt[0] == '@'
         index = 1
     except (IndexError, KeyError):
-        formatdef,endianness = formatmode['@']
+        formatdef, endianness = formatmode['@']
         alignment = True
         index = 0
-    return formatdef,endianness,index,alignment
+    return formatdef, endianness, index, alignment
 
-def getNum(fmt,i):
-    num=None
+def _getnum(fmt, i):
+    num = None
     cur = fmt[i]
     while ('0'<= cur ) and ( cur <= '9'):
         if num == None:
             num = int(cur)
         else:
-            num = 10*num + int(cur)
+            num = 10 * num + int(cur)
         i += 1
         cur = fmt[i]
-    return num,i
+    return num, i
 
 def calcsize(fmt):
     """calcsize(fmt) -> int
@@ -296,18 +311,20 @@ def calcsize(fmt):
     if isinstance(fmt, bytes):
         fmt = fmt.decode("ascii")
 
-    formatdef,endianness,i,alignment = getmode(fmt)
+    fmt = _normalize(fmt)
+
+    formatdef, endianness, i, alignment = _getmode(fmt)
     num = 0
     result = 0
-    while i<len(fmt):
-        num,i = getNum(fmt,i)
+    while i < len(fmt):
+        num, i = _getnum(fmt,i)
         cur = fmt[i]
         try:
             format = formatdef[cur]
         except KeyError:
             raise StructError("%s is not a valid format" % cur)
         if num != None :
-            result += num*format['size']
+            result += num * format['size']
         else:
             # if formatdef is native, alignment is native, so we count a
             # number of padding bytes until result is a multiple of size
@@ -318,16 +335,17 @@ def calcsize(fmt):
         i += 1
     return result
 
-def pack(fmt,*args):
+def pack(fmt, *args):
     """pack(fmt, v1, v2, ...) -> string
        Return string containing values v1, v2, ... packed according to fmt.
        See struct.__doc__ for more on format strings."""
-    formatdef,endianness,i,alignment = getmode(fmt)
+    fmt = _normalize(fmt)
+    formatdef, endianness, i, alignment = _getmode(fmt)
     args = list(args)
     n_args = len(args)
     result = []
-    while i<len(fmt):
-        num,i = getNum(fmt,i)
+    while i < len(fmt):
+        num, i = _getnum(fmt, i)
         cur = fmt[i]
         try:
             format = formatdef[cur]
@@ -340,11 +358,11 @@ def pack(fmt,*args):
             num_s = num
 
         if cur == 'x':
-            result += [b'\0'*num]
+            result += [b'\0' * num]
         elif cur == 's':
             if isinstance(args[0], bytes):
                 padding = num - len(args[0])
-                result += [args[0][:num] + b'\0'*padding]
+                result += [args[0][:num] + b'\0' * padding]
                 args.pop(0)
             else:
                 raise StructError("arg for string format not a string")
@@ -353,12 +371,13 @@ def pack(fmt,*args):
                 padding = num - len(args[0]) - 1
 
                 if padding > 0:
-                    result += [bytes([len(args[0])]) + args[0][:num-1] + b'\0'*padding]
+                    result += [bytes([len(args[0])]) + args[0][:num-1] +
+                        b'\0'*padding]
                 else:
-                    if num<255:
-                        result += [bytes([num-1]) + args[0][:num-1]]
+                    if num < 255:
+                        result += [bytes([num-1]) + args[0][:num - 1]]
                     else:
-                        result += [bytes([255]) + args[0][:num-1]]
+                        result += [bytes([255]) + args[0][:num - 1]]
                 args.pop(0)
             else:
                 raise StructError("arg for string format not a string")
@@ -370,29 +389,30 @@ def pack(fmt,*args):
                 # pad with 0 until position is a multiple of size
                 if len(result) and alignment:
                     padding = format['size'] - len(result) % format['size']
-                    result += [bytes([0])]*padding
-                result += [format['pack'](var,format['size'],endianness)]
-            args=args[num:]
+                    result += [bytes([0])] * padding
+                result += [format['pack'](var, format['size'], endianness)]
+            args = args[num:]
         num = None
         i += 1
     if len(args) != 0:
         raise StructError("too many arguments for pack format")
     return b''.join(result)
 
-def unpack(fmt,data):
+def unpack(fmt, data):
     """unpack(fmt, string) -> (v1, v2, ...)
        Unpack the string, containing packed C structure data, according
        to fmt.  Requires len(string)==calcsize(fmt).
        See struct.__doc__ for more on format strings."""
-    formatdef,endianness,i,alignment = getmode(fmt)
+    fmt = _normalize(fmt)
+    formatdef, endianness, i, alignment = _getmode(fmt)
     j = 0
     num = 0
     result = []
-    length= calcsize(fmt)
+    length = calcsize(fmt)
     if length != len (data):
         raise StructError("unpack str size does not match format")
-    while i<len(fmt):
-        num,i=getNum(fmt,i)
+    while i < len(fmt):
+        num, i = _getnum(fmt, i)
         cur = fmt[i]
         i += 1
         try:
@@ -406,32 +426,33 @@ def unpack(fmt,data):
         if cur == 'x':
             j += num
         elif cur == 's':
-            result.append(data[j:j+num])
+            result.append(data[j:j + num])
             j += num
         elif cur == 'p':
-            n=data[j]
+            n = data[j]
             if n >= num:
-                n = num-1
-            result.append(data[j+1:j+n+1])
+                n = num - 1
+            result.append(data[j + 1:j + n + 1])
             j += num
         else:
             # skip padding bytes until we get at a multiple of size
-            if j>0 and alignment:
+            if j > 0 and alignment:
                 padding = format['size'] - j % format['size']
                 j += padding
             for n in range(num):
-                result += [format['unpack'](data,j,format['size'],endianness)]
+                result += [format['unpack'](data, j, format['size'],
+                    endianness)]
                 j += format['size']
 
     return tuple(result)
 
 def pack_into(fmt, buf, offset, *args):
     data = pack(fmt, *args)
-    buf[offset:offset+len(data)] = data
+    buf[offset:offset + len(data)] = data
 
 def unpack_from(fmt, buf, offset=0):
     size = calcsize(fmt)
-    data = buf[offset:offset+size]
+    data = buf[offset:offset + size]
     if len(data) != size:
         raise error("unpack_from requires a buffer of at least %d bytes"
                     % (size,))
@@ -458,8 +479,8 @@ class Struct:
     def unpack_from(self, *args):
         return unpack_from(self.format, *args)
 
-if __name__=='__main__':
-    t = pack('Bf',1,2)
+if __name__ == '__main__':
+    t = pack('Bf', 1, 2)
     print(t, len(t))
     print(unpack('Bf', t))
     print(calcsize('Bf'))

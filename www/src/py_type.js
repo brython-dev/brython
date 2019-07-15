@@ -6,8 +6,6 @@ var _b_ = $B.builtins
 $B.$class_constructor = function(class_name, class_obj, bases,
         parents_names, kwargs){
 
-    var $test = false //class_name == "SRE_Pattern"
-    if($test){console.log("create class", class_name, "class_obj", class_obj)}
     bases = bases || []
     var metaclass
 
@@ -105,8 +103,17 @@ $B.$class_constructor = function(class_name, class_obj, bases,
 
     // Transform class object into a dictionary
     for(var attr in class_obj){
-        if(attr.charAt(0) != "$" || attr.substr(0,2) == "$$"){
-            set_class_item(attr, class_obj[attr])
+        if(attr == "__annotations__"){
+            cl_dict.$string_dict[attr] = cl_dict.$string_dict[attr] ||
+                _b_.dict.$factory()
+            for(var key in class_obj[attr].$string_dict){
+                $B.$setitem(cl_dict.$string_dict[attr], key,
+                    class_obj[attr].$string_dict[key])
+            }
+        }else{
+            if(attr.charAt(0) != "$" || attr.substr(0,2) == "$$"){
+                set_class_item(attr, class_obj[attr])
+            }
         }
     }
 
@@ -197,6 +204,16 @@ $B.$class_constructor = function(class_name, class_obj, bases,
     }
     kls.$subclasses = []
 
+    // Set attribute "$class" of functions defined in the class. Used in
+    // py_builtin_functions / Function.__setattr__ to reset the function
+    // if the attribute __defaults__ is reset.
+    for(var attr in class_obj){
+        if(attr.charAt(0) != "$" || attr.substr(0,2) == "$$"){
+            if(typeof class_obj[attr] == "function"){
+                class_obj[attr].$infos.$class = kls
+            }
+        }
+    }
     if(kls.__class__ === metaclass){
         // Initialize the class object by a call to metaclass __init__
         var meta_init = _b_.type.__getattribute__(metaclass, "__init__")
@@ -244,7 +261,12 @@ var type = $B.make_class("type",
     }
 )
 
-type.__call__ = function(klass, ...extra_args){
+type.__call__ = function(){
+    var extra_args = [],
+        klass = arguments[0]
+    for(var i = 1, len = arguments.length; i < len; i++){
+        extra_args.push(arguments[i])
+    }
     var new_func = _b_.type.__getattribute__(klass, "__new__")
     // create an instance with __new__
     var instance = new_func.apply(null, arguments)
@@ -254,7 +276,8 @@ type.__call__ = function(klass, ...extra_args){
         if(init_func !== _b_.object.__init__){
             // object.__init__ is not called in this case (it would raise an
             // exception if there are parameters).
-            init_func(instance, ...extra_args)
+            var args = [instance].concat(extra_args)
+            init_func.apply(null, args)
         }
     }
     return instance
@@ -271,16 +294,26 @@ type.__getattribute__ = function(klass, attr){
 
     switch(attr) {
         case "__annotations__":
-            var mro = [klass].concat(klass.__mro__)
-            var res = _b_.dict.$factory()
-            for(var i = mro.length - 1; i >= 0; i--){
-                var ann = mro[i].__annotations__
-                if(ann){
-                    for(var key in ann.$string_dict){
-                        res.$string_dict[key] = ann.$string_dict[key]
+            var mro = [klass].concat(klass.__mro__),
+                res
+            for(var i = 0, len = mro.length; i < len; i++){
+                if(mro[i].__dict__){
+                    var ann = mro[i].__dict__.$string_dict.__annotations__
+                    if(ann){
+                        if(res === undefined){
+                            res = ann
+                        }else if(res.__class__ === _b_.dict &&
+                                ann.__class__ === _b_.dict){
+                            // Inherit annotations that are implemented as
+                            // dictionaries
+                            for(var key in ann.$string_dict){
+                                res.$string_dict[key] = ann.$string_dict[key]
+                            }
+                        }
                     }
                 }
             }
+            if(res === undefined){res = _b_.dict.$factory()}
             return res
         case "__bases__":
             var res = klass.__bases__ || _b_.tuple.$factory()
@@ -310,7 +343,7 @@ type.__getattribute__ = function(klass, attr){
                 function(key){delete klass[key]})
     }
     var res = klass[attr]
-    var $test = false //attr=="__name__" //&& klass.__name__ == "Point"
+    var $test = false // attr=="__new__" && klass.$infos.__name__ == "N"
     if($test){
         console.log("attr", attr, "of", klass, res)
     }
@@ -505,11 +538,22 @@ type.__new__ = function(meta, name, bases, cl_dict){
     }
 
     // set class attributes for faster lookups
-    var items = $B.$dict_items(cl_dict)
+    var items = $B.dict_to_list(cl_dict) // defined in py_dict.js
     for(var i = 0; i < items.length; i++){
         var key = $B.to_alias(items[i][0]),
             v = items[i][1]
         class_dict[key] = v
+        if(typeof v == "function"){
+            v.$infos.$class = class_dict
+            if(v.$infos.$defaults){
+                // If the function was set an attribute __defaults__, it is
+                // stored in v.$infos.$defaults (cf. Function.__setattr__ in
+                // py_builtin_functions.js)
+                var $defaults = v.$infos.$defaults
+                $B.Function.__setattr__(v, "__defaults__",
+                    $defaults)
+            }
+        }
     }
 
     class_dict.__mro__ = type.mro(class_dict)
@@ -521,7 +565,9 @@ type.__repr__ = type.__str__ = function(kls){
         console.log("no $infos", kls)
     }
     var qualname = kls.$infos.__name__
-    if(kls.$infos.__module__ != "builtins"){
+    if(kls.$infos.__module__    &&
+            kls.$infos.__module__ != "builtins" &&
+            !kls.$infos.__module__.startsWith("$")){
         qualname = kls.$infos.__module__ + "." + qualname
     }
     return "<class '" + qualname + "'>"
@@ -548,19 +594,9 @@ type.mro = function(cls){
         seqs = [],
         pos1 = 0
     for(var i = 0; i < bases.length; i++){
-        // we can't simply push bases[i].__mro__
+        // We can't simply push bases[i].__mro__
         // because it would be modified in the algorithm
         if(bases[i] === _b_.str){bases[i] = $B.StringSubclass}
-        else if(bases[i] === _b_.float){bases[i] = $B.FloatSubclass}
-        else if(bases[i] === _b_.list){
-            for(var attr in _b_.list){
-                if(attr == "$factory"){continue}
-                if(cls[attr] === undefined){
-                    cls[attr] = _b_.list[attr]
-                }
-            }
-            cls.$native = true
-        }
         var bmro = [],
             pos = 0
         if(bases[i] === undefined ||
@@ -656,6 +692,19 @@ type.mro = function(cls){
     return mro
 }
 
+type.__subclasscheck__ = function(self, subclass){
+    // Is subclass a subclass of self ?
+    var klass = self
+    if(klass === _b_.str){
+        klass = $B.StringSubclass
+    }else if(klass === _b_.float){
+        klass = $B.FloatSubclass
+    }
+    if(subclass.__bases__ === undefined){
+        return self === _b_.object
+    }
+    return subclass.__bases__.indexOf(klass) > -1
+}
 
 $B.set_func_names(type, "builtins")
 
@@ -692,7 +741,9 @@ var $instance_creator = $B.$instance_creator = function(klass){
             if(klass.hasOwnProperty("__init__")){
                 factory = function(){
                     var args = []
-                    for(var i = 0; i < arguments.length; i++){args.push(arguments[i])}
+                    for(var i = 0; i < arguments.length; i++){
+                        args.push(arguments[i])
+                    }
                     var obj = klass.__new__.apply(null, [klass].concat(args))
                     klass.__init__.apply(null, [obj].concat(args))
                     return obj

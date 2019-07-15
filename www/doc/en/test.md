@@ -41,6 +41,7 @@ This code :
 ```python
 x = [1, 2]
 x[3]
+```
 
 generates :
 
@@ -90,7 +91,7 @@ case you want to build on it).
 
 Currently only python language specific programs are supported.
 
-The debugger does not fully support the input statements; only supporting 
+The debugger does not fully support the input statements; only supporting
 input with a string literal for argument (more on this below).
 
 

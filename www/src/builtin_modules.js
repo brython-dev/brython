@@ -14,57 +14,88 @@
         __package__: 'browser',
         __file__: $B.brython_path.replace(/\/*$/g,'') +
             '/Lib/browser/__init__.py',
+
+        bind:function(){
+            // bind(element, event) is a decorator for callback function
+            var $ = $B.args("bind", 3, {elt: null, evt: null, options: null},
+                    ["elt", "evt", "options"], arguments,
+                    {options: _b_.None}, null, null)
+            var options = $.options
+            if(typeof options == "boolean"){}
+            else if(options.__class__ === _b_.dict){
+                options = options.$string_dict
+            }else{
+                options == false
+            }
+            return function(callback){
+                if($.elt.__class__ &&
+                        _b_.issubclass($.elt.__class__, $B.JSObject)){
+                    // eg window, Web Worker
+                    function f(ev){
+                        try{
+                            return callback($B.JSObject.$factory(ev))
+                        }catch(err){
+                            $B.handle_error(err)
+                        }
+                    }
+                    $.elt.js.addEventListener($.evt, f, options)
+                    return callback
+                }else if(_b_.isinstance($.elt, $B.DOMNode)){
+                    // DOM element
+                    $B.DOMNode.bind($.elt, $.evt, callback, options)
+                    return callback
+                }else if(_b_.isinstance($.elt, _b_.str)){
+                    // string interpreted as a CSS selector
+                    var items = document.querySelectorAll($.elt)
+                    for(var i = 0; i < items.length; i++){
+                        $B.DOMNode.bind($B.DOMNode.$factory(items[i]),
+                            $.evt, callback, options)
+                    }
+                    return callback
+                }
+                try{
+                    var it = $B.$iter($.elt)
+                    while(true){
+                        try{
+                            var elt = _b_.next(it)
+                            $B.DOMNode.bind(elt, $.evt, callback)
+                        }catch(err){
+                            if(_b_.isinstance(err, _b_.StopIteration)){
+                                break
+                            }
+                            throw err
+                        }
+                    }
+                }catch(err){
+                    if(_b_.isinstance(err, _b_.AttributeError)){
+                        $B.DOMNode.bind($.elt, $.evt, callback)
+                    }
+                    throw err
+                }
+                return callback
+            }
+        },
+
         console: $B.JSObject.$factory(self.console),
+        self: $B.win,
         win: $B.win,
         $$window: $B.win,
     }
     browser.__path__ = browser.__file__
 
-    if(! $B.isa_web_worker ){
+    if($B.isWebWorker){
+        browser.is_webworker = true
+        // In a web worker, name "window" is not defined, but name "self" is
+        delete browser.$$window
+        delete browser.win
+        // browser.send is an alias for postMessage
+        browser.self.js.send = self.postMessage
+
+    }else{
+        browser.is_webworker = false
         update(browser, {
-            $$alert:function(message){window.alert($B.builtins.str.$factory(message))},
-            bind:function(){
-                // bind(element, event) is a decorator for callback function
-                var $ = $B.args("bind", 2, {elt: null, evt: null}, ["elt", "evt"],
-                    arguments, {}, null, null)
-                return function(callback){
-                    if($.elt.__class__ === $B.JSObject){ // eg window
-                        $B.$call($B.$getattr($.elt, "bind"))($.evt, callback)
-                        return callback
-                    }else if(_b_.isinstance($.elt, $B.DOMNode)){
-                        // DOM element
-                        $B.DOMNode.bind($.elt, $.evt, callback)
-                        return callback
-                    }else if(_b_.isinstance($.elt, _b_.str)){
-                        // string interpreted as a CSS selector
-                        var items = document.querySelectorAll($.elt)
-                        for(var i = 0; i < items.length; i++){
-                            $B.DOMNode.bind($B.DOMNode.$factory(items[i]),
-                                $.evt, callback)
-                        }
-                        return callback
-                    }
-                    try{
-                        var it = $B.$iter($.elt)
-                        while(true){
-                            try{
-                                var elt = _b_.next(it)
-                                $B.DOMNode.bind(elt, $.evt, callback)
-                            }catch(err){
-                                if(_b_.isinstance(err, _b_.StopIteration)){
-                                    break
-                                }
-                                throw err
-                            }
-                        }
-                    }catch(err){
-                        if(_b_.isinstance(err, _b_.AttributeError)){
-                            $B.DOMNode.bind($.elt, $.evt, callback)
-                        }
-                        throw err
-                    }
-                    return callback
-                }
+            $$alert:function(message){
+                window.alert($B.builtins.str.$factory(message))
             },
             confirm: $B.JSObject.$factory(window.confirm),
             $$document:$B.DOMNode.$factory(document),
@@ -121,6 +152,29 @@
             }
         })
 
+        $B.createWebComponent = function(cls){
+            class WebComp extends HTMLElement {
+              constructor() {
+                // Always call super first in constructor
+                super();
+                if(this.__init__){
+                    this.__init__()
+                }
+              }
+            }
+            for(key in cls){
+                if(typeof cls[key] == "function"){
+                    WebComp.prototype[key] = (function(attr){
+                        return function(){
+                            return __BRYTHON__.pyobj2jsobj(cls[attr]).call(null, this, ...arguments)
+                        }
+                    })(key)
+                }
+            }
+            customElements.define(cls.tag_name, WebComp)
+            return WebComp
+        }
+
         // creation of an HTML element
         modules['browser.html'] = (function($B){
 
@@ -165,8 +219,9 @@
                                 }catch(err){
                                     console.log(err)
                                     console.log("first", first)
+                                    console.log(arguments)
                                     throw _b_.ValueError.$factory(
-                                        'wrong element ' + first)
+                                        'wrong element ' + _b_.str.$factory(first))
                                 }
                             }
                         }
@@ -304,23 +359,43 @@
     modules['browser'] = browser
 
     modules['javascript'] = {
-        //__file__:$B.brython_path + '/libs/javascript.js',
         $$this: function(){
             // returns the content of Javascript "this"
             // $B.js_this is set to "this" at the beginning of each function
             if($B.js_this === undefined){return $B.builtins.None}
             return $B.JSObject.$factory($B.js_this)
         },
-        JSObject: function(){
-            console.log('"javascript.JSObject" is deprecrated. ' +
-                'Use window.<jsobject name> instead.')
-            return $B.JSObject.$factory(...arguments)
+        $$Date: $B.JSObject.$factory(self.Date),
+        JSConstructor: {
+            __get__: function(){
+                console.warn('"javascript.JSConstructor" is deprecrated. ' +
+                    'Use window.<js constructor name>.new() instead.')
+                return $B.JSConstructor
+            },
+            __set__: function(){
+                throw _b_.AttributeError.$factory("read only")
+            }
         },
-        JSConstructor: function(){
-            console.log('"javascript.JSConstructor" is deprecrated. ' +
-                'Use window.<js constructor name>.new() instead.')
-            return $B.JSConstructor.$factory.apply(null, arguments)
+        JSObject: {
+            __get__: function(){
+                console.warn('"javascript.JSObject" is deprecrated. To use ' +
+                    'a Javascript object, use window.<object name> instead.')
+                return $B.JSObject
+            },
+            __set__: function(){
+                throw _b_.AttributeError.$factory("read only")
+            }
         },
+        JSON: {
+            __class__: $B.make_class("JSON"),
+            parse: function(s){
+                return $B.structuredclone2pyobj(JSON.parse(s))
+            },
+            stringify: function(obj){
+                return JSON.stringify($B.pyobj2structuredclone(obj))
+            }
+        },
+        jsobj2pyobj:function(obj){return $B.jsobj2pyobj(obj)},
         load:function(script_url){
             console.log('"javascript.load" is deprecrated. ' +
                 'Use browser.load instead.')
@@ -330,7 +405,9 @@
             var content = $B.builtins.getattr(file_obj, 'read')()
             eval(content)
         },
+        $$Math: $B.JSObject.$factory(self.Math),
         NULL: null,
+        $$Number: $B.JSObject.$factory(self.Number),
         py2js: function(src, module_name){
             if(module_name === undefined){
                 module_name = '__main__' + $B.UUID()
@@ -338,8 +415,9 @@
             return $B.py2js(src, module_name, module_name,
                 $B.builtins_scope).to_js()
         },
-        pyobj2jsobj:function(obj){ return $B.pyobj2jsobj(obj)},
-        jsobj2pyobj:function(obj){ return $B.jsobj2pyobj(obj)},
+        pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},
+        $$RegExp: $B.JSObject.$factory(self.RegExp),
+        $$String: $B.JSObject.$factory(self.String),
         UNDEFINED: undefined
     }
 
@@ -407,7 +485,12 @@
             __set__: function(self, obj, value){$B.stdout = value},
             write: function(data){_b_.getattr($B.stdout,"write")(data)}
         },
-        stdin : $B.stdin,
+        stdin: {
+            __get__: function(){return $B.stdin},
+            __set__: function(){
+                throw _b_.TypeError.$factory("sys.stdin is read-only")
+            }
+        },
         vfs: {
             __get__: function(){
                 if($B.hasOwnProperty("VFS")){return $B.obj_dict($B.VFS)}
@@ -428,15 +511,17 @@
         // set attribute "name" of functions
         for(var attr in module_obj){
             if(typeof module_obj[attr] == 'function'){
-                var name = attr
-                while(name.charAt(0) == '$'){name = name.substr(1)}
-                module_obj[attr].$infos = {__name__:name}
+                var attr1 = $B.from_alias(attr)
+                module_obj[attr].$infos = {
+                    __name__: attr1,
+                    __qualname__: name + '.' + attr1
+                }
             }
         }
     }
 
     for(var attr in modules){load(attr, modules[attr])}
-    if(! $B.isa_web_worker){modules['browser'].html = modules['browser.html']}
+    if(! $B.isWebWorker){modules['browser'].html = modules['browser.html']}
 
     var _b_ = $B.builtins
 
@@ -528,7 +613,5 @@
     })
 
     $B.set_func_names($B.cell, "builtins")
-
-
 
 })(__BRYTHON__)

@@ -19,7 +19,8 @@ module.__init__ = function(){}
 
 module.__new__ = function(cls, name, doc, $package){
     return {
-        __class__: cls,
+        //__class__: cls,
+        $class: cls,
         __name__: name,
         __doc__: doc || _b_.None,
         __package__: $package || _b_.None
@@ -44,7 +45,8 @@ module.__setattr__ = function(self, attr, value){
 
 module.$factory = function(name, doc, $package){
     return {
-        __class__: module,
+        //__class__: module,
+        $class: module,
         __name__: name,
         __doc__: doc || _b_.None,
         __package__: $package || _b_.None
@@ -105,8 +107,7 @@ function $download_module(module, url, $package){
             // a matching file is not found. Check the content type so that we
             // can treat HTML files as a 404.
             const contentType = xhr.getResponseHeader("Content-Type") || "";
-            if ((xhr.status == 200 || xhr.status == 0)
-                && (contentType.indexOf("html") === -1)) {
+            if (xhr.status == 200 && (contentType.indexOf("html") === -1)) {
                 res = xhr.responseText
                 module.$last_modified =
                     xhr.getResponseHeader("Last-Modified")
@@ -196,7 +197,6 @@ function run_js(module_contents, path, _module){
 
         if(_module.name != "builtins") { // builtins do not have a __file__ attribute
             $module.__file__ = path
-            $B.file_cache[path] = module_contents
         }
     }
     $B.imported[_module.__name__] = $module
@@ -283,15 +283,12 @@ function run_py(module_contents, path, module, compiled) {
         var module_id = "$locals_" + module.__name__.replace(/\./g, '_')
         var $module = (new Function(module_id, js))(module) //eval(js)
     }catch(err){
-        /*
         console.log(err + " for module " + module.__name__)
         console.log("module", module)
         console.log(root)
         console.log(err)
         if($B.debug > 1){
-            js.split("\n").forEach(function(item, i){
-                console.log(i+1, ":", item)
-            })
+            console.log(js)
         }
         //console.log(module_contents
         for(var attr in err){
@@ -302,7 +299,7 @@ function run_py(module_contents, path, module, compiled) {
         console.log("filename: " + err.fileName)
         console.log("linenum: " + err.lineNumber)
         if($B.debug > 0){console.log("line info " + $B.line_info)}
-        */
+
         throw err
     }finally{
         root = null
@@ -322,6 +319,7 @@ function run_py(module_contents, path, module, compiled) {
         // setting attributes in a program affects the module namespace
         // See issue #7
         $B.imported[module.__name__] = module
+        $B.file_cache[module.__name__] = module_contents
         return true
     }catch(err){
         console.log("" + err + " " + " for module " + module.__name__)
@@ -897,9 +895,24 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
 
 
    // [Import spec] Halt import logic
+   var from_stdlib = false
+
+   // Check if the script that imports the module is in the standard library.
+   // If so, it's no use trying to import with finder_path (in the importer's
+   // directory)
+   if(globals.$jsobj && globals.$jsobj.__file__){
+       var file = globals.$jsobj.__file__
+       if((file.startsWith($B.brython_path + "Lib/") &&
+               ! file.startsWith($B.brython_path + "Lib/site-packages/")) ||
+               file.startsWith($B.brython_path + "libs/") ||
+               file.startsWith("VFS.")){
+           from_stdlib = true
+       }
+   }
 
    var modobj = $B.imported[mod_name],
        parsed_name = mod_name.split('.')
+   
    if(modobj == _b_.None){
        // [Import spec] Stop loading loop right away
        import_error(mod_name)
@@ -922,7 +935,7 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
                 import_error(_mod_name)
             }else if (modobj === undefined){
                 try{
-                    $B.import_hooks(_mod_name, __path__, undefined)
+                    $B.import_hooks(_mod_name, __path__, from_stdlib)
                 }catch(err){
                     delete $B.imported[_mod_name]
                     throw err
@@ -1075,15 +1088,16 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                 var alias = aliases[name] || name
                 try{
                     // [Import spec] Check if module has an attribute by that name
-                    locals[alias] = _b_.getattr(modobj, name);
+                    locals[alias] = $B.$getattr(modobj, name);
                 }catch($err1){
                     // [Import spec] attempt to import a submodule with that name ...
                     // FIXME : level = 0 ? level = 1 ?
                     try{
-                        _b_.getattr(__import__, '__call__')(mod_name + '.' + name,
+                        var name1 = $B.from_alias(name)
+                        $B.$getattr(__import__, '__call__')(mod_name + '.' + name1,
                             globals, undefined, [], 0);
                         // [Import spec] ... then check imported module again for name
-                        locals[alias] = _b_.getattr(modobj, name);
+                        locals[alias] = $B.$getattr(modobj, name1);
                     }catch($err3){
                         // [Import spec] Attribute not found
                         if(mod_name === "__future__"){
@@ -1096,15 +1110,9 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                                 "future feature " + name + " is not defined",
                                 current_frame[3].src, undefined, line_num)
                         }
-                        // For other modules, raise ImportError
                         if($err3.$py_error){
-                            var msg = _b_.getattr($err3, "info") + "\n" +
-                                    $err3.__class__.__name__ + ": " +
-                                    $err3.args[0],
-                                exc = _b_.ImportError.$factory("cannot import name '"+
-                                    name + "'\n\n" + msg)
-                                exc.name = name
-                                throw exc
+                            throw _b_.ImportError.$factory(
+                                "cannot import name '" + name + "'")
                         }
                         console.log($err3)
                         console.log($B.last($B.frames_stack))
@@ -1123,6 +1131,12 @@ $B.$path_hooks = [vfs_hook, url_hook]
 
 // List of finders, also used by brython()
 $B.$meta_path = [finder_VFS, finder_stdlib_static, finder_path]
+
+$B.finders = {
+    VFS: finder_VFS,
+    stdlib_static: finder_stdlib_static,
+    path: finder_path
+}
 
 function optimize_import_for_path(path, filetype){
     if (path.slice(-1) != "/") { path = path + "/" }

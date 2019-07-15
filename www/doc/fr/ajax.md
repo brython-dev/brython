@@ -99,15 +99,23 @@ req.send({'x':0, 'y':1})
 Les appels GET et POST peuvent être effectués plus simplement avec les
 fonctions correspondantes :
 
-`get(`_url[, async=True, headers={}, timeout=None, data="", **callbacks]_`)`
+`get(`_url[, async=True, headers={}, mode="text", timeout=None, cache=False, data="", **callbacks]_`)`
 
 `post(`_url[, async=True, headers={"Content-Type": _
 _"application/x-www-form-urlencoded"}, timeout=None, data="", **callbacks]_`)`
 
+> _async_ est un booléen qui indique si la requête doit être asynchrone
+> (valeur par défaut) ou synchrone
+
 > _headers_ est un dictionnaire avec les clés-valeurs des entêtes HTTP
 
+> _mode_ est le mode de lecture : "text" ou "binary"
+
+> _cache_ est un booléen qui indique si la requête GET doit utiliser le cache
+> du navigateur
+
 > _data_ est soit une chaine de caractères, soit un dictionnaire. Si c'est un
-> dictionnaire, il est converti en une chaine de la forme `x=1&y=2`.
+> dictionnaire, il est converti en une chaine de la forme `x=1&y=2`
 
 > _timeout_ est la durée en secondes après laquelle la requête est abandonnée
 
@@ -115,6 +123,10 @@ _"application/x-www-form-urlencoded"}, timeout=None, data="", **callbacks]_`)`
 > `on` + nom d'événement (`onloaded`, `oncomplete`...) et comme valeur la
 > fonction qui gère cet événement. La clé `ontimeout` a pour valeur la
 > fonction à appeler si la durée définie dans _timeout_ est dépassée.
+
+Dans la fonction de rappel, l'objet Ajax possède une méthode _read()_ qui lit
+le contenu de la réponse sous forme de chaine si le mode est "text" et sous
+forme de `bytes` si le mode est "binary".
 
 L'exemple ci-dessus peut être réécrit de la façon suivante:
 
@@ -129,6 +141,18 @@ def on_complete(req):
 
 ajax.post(url,
           data={'x': 0, 'y': 1},
-          complete=on_complete)
+          oncomplete=on_complete)
 ```
 
+Lecture d'un fichier en mode binaire:
+
+```python
+from browser import ajax
+
+def read(f):
+    data = f.read()
+    assert isinstance(data, bytes)
+
+req = ajax.get("tests.zip", mode="binary",
+    oncomplete=read)
+```

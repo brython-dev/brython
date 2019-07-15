@@ -26,12 +26,18 @@ Brython supports most of the keywords and functions of Python 3 :
 Here are a few features and limitations imposed by the browser and Javascript :
 
 - Javascript functions can't block execution for a given time, or waiting for
-  an event to happen, before going to the next instruction. For this reason,
-  `time.sleep()` can't be used : functions in module **browser.timer** such as
-  `set_timeout()` or `set_interval()` must be used instead ; the built-in
-  function `input()` is simulated by the Javascript function `prompt()` ;
-  blocking methods in module `asyncio` are in fact not blocking, that is to
-  say, the instructions that follow are executed immediately.
+  an event to happen, before going to the next instruction. For this reason:
+
+ - `time.sleep()` can't be used : functions in module **browser.timer** such
+   as `set_timeout()` or `set_interval()` must be used instead
+
+ - the built-in function `input()` is simulated by the Javascript function
+ `prompt()`
+
+- for the same reason, and also because the browser has its own implicit
+  event loop, the CPython `asyncio` module is not usable. A Brython-specific
+  module, [**`browser.aio`**](aio.html), is provided for asynchrnous
+  programming.
 
 - the built-in function `open()` takes as argument the url of the file to
   open. Since it is read with an Ajax call, it must be in the same domain as
@@ -48,8 +54,10 @@ Here are a few features and limitations imposed by the browser and Javascript :
 - to open a print dialog (to a printer), call `window.print` (`window` is
   defined in module **browser**).
 
-- `sys.stdin` is not implemented at this time, however there is an `input()`
-  built-in function that will open a blocking input dialog (a prompt).
+- the `input()` built-in is implemented with the browser's blocking function
+  _prompt()_. Since blocking functions can't be defined with Javascript,
+  `sys.stdin` is read-only. An example in the gallery shows how to simulate
+  an input function in a custom dialog box.
 
 - the objects lifecycle is managed by the Javascript garbage collector,
   Brython doesn't manage reference counting like CPython. Therefore, method

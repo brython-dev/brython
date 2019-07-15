@@ -2,7 +2,7 @@
 with window.navigator.
 """
 
-from browser import window
+from browser import self as window # works in web workers
 
 def architecture(*args, **kw):
     return "<unknown>", window.navigator.platform

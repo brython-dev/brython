@@ -56,9 +56,6 @@ def reset_src():
 
 results = []
 
-def err_msg():
-    doc["result"].html = "server didn't reply after %s seconds" %timeout
-
 def forward(req):
     results[-1]['CPython'] = req.text
     print(f"CPython: {req.text}")
@@ -73,11 +70,10 @@ def no_forward(req):
 def run_cpython(script_name, next_step):
     """Send an async POST Ajax call to run the CPython script.
     next_step is the function called when the Ajax call is complete."""
-    req = ajax.ajax()
-    req.set_timeout(4, err_msg)
-    req.post('/time_cpython',
+    ajax.post('/time_cpython',
         oncomplete=next_step,
-        data=script_name)
+        data=script_name,
+        timeout=4)
 
 def execute(script_name, src, callback):
     doc["console"].value = ""
@@ -164,9 +160,7 @@ def load_script(evt):
         # Enable "run" button.
         del doc["run"].attrs["disabled"]
 
-    req = ajax.ajax()
-    req.set_timeout(4, err_msg)
-    req.get(script_name, oncomplete=loaded)
+    ajax.get(script_name, oncomplete=loaded, timeout=4)
 
 @bind("#set_debug", "click")
 def set_debug(ev):

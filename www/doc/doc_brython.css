@@ -190,7 +190,8 @@ em {
 
 strong {
   color:#339;
-  font-family:courier
+  font-family:courier;
+  font-size: 1em;
 }
 
 #main {

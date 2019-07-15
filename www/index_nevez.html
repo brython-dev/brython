@@ -1,0 +1,277 @@
+<!doctype html>
+<html>
+<head>
+<meta name="description" content="Brython">
+<meta name="keywords" content="Python,Brython">
+<meta name="author" content="Pierre Quentel">
+<meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
+
+<link rel="icon" type="image/png" href="favicon.png" />
+<link rel="stylesheet" type="text/css"
+      href="https://fonts.googleapis.com/css?family=Montserrat">
+
+<style>
+table.perf td{
+    padding-right: 2em;
+    font-size: 0.8em;
+}
+</style>
+
+<noscript>Please enable Javascript to view this page correctly.</noscript>
+
+<script type="text/javascript" src="/src/brython.js"></script>
+
+<script type="text/python3">
+"""Code for the header menu"""
+from browser import document, html
+import header
+
+qs_lang, language = header.show()
+
+document["content"].html = document[f"content_{language}"].html
+
+if qs_lang:
+    document[f"c_{qs_lang}"].href += f"?lang={qs_lang}"
+
+def ch_lang(ev):
+    sel = ev.target
+    new_lang = sel.options[sel.selectedIndex].value
+    elts = document.location.href.split("?")
+    document.location.href = elts[0] + f"?lang={new_lang}"
+
+for elt in document.select("select.language"):
+    elt.bind('change', ch_lang)
+
+# underline links in page text, but not in the upper banner
+for elt in document.select("a"):
+    if not elt.classList.contains("banner"):
+        elt.style.textDecoration = "underline"
+</script>
+
+
+<title>Brython</title>
+<link rel="stylesheet" href="doc/doc_brython.css">
+</head>
+<!--
+options:
+  debug: can equal 0,1,2.  more verbose as number increases
+  cache: 'none', 'version', 'browser'.
+         'none' - no caching allowed. a new random number is appended to end of each request
+         'version' - caching allowed for each new brython version
+         'browser' - nothing is appended to request.  A clients browser is responsible for caching actions.
+  pythonpath: a list of additional urls/paths to search for modules
+-->
+<body onload="brython(1)">
+
+<table id="banner" cellpadding=0 cellspacing=0>
+<tr id="banner_row">
+<td class="logo"><a href="../index.html"><img src="brython_tp.png" class="logo"></a></td>
+</tr>
+</table>
+
+<div id="content"></div>
+
+<div id="content_en" style="height:1px;visibility:hidden">
+
+<table style="width:85%;margin-left:10%">
+<tr>
+<td>
+<H1 style="font-size:300%;">Brython</H1>
+<H2>A Python 3 implementation for client-side web programming</H2>
+</td>
+<td valign="top">
+<select class="language" id="change_lang_en">
+<option value="en" selected>English
+<option value="es">Espa&ntilde;ol
+<option value="fr">Fran&ccedil;ais
+</select>
+</td>
+</tr>
+</table>
+
+<table style="width:85%;margin-left:10%">
+<tr>
+<td style="width:65%;font-size:16px;">
+Brython is designed to replace Javascript as the scripting language for the Web. As such, it is a Python 3 implementation, adapted to the HTML5 environment, that is to say with an interface to the DOM objects and events.
+
+<p>Brython is not "Python-like", but tries to be as close as possible to the Python language ; in other words, the features that work in CPython but not Brython are considered bugs. The only limitations are the features that can't be implemented in Javascript (eg. blocking funcions) or those related to the browser environment (eg. or writing to disk). But it is close enough to Python 3 to support online courses such as <a href="https://academy.cs.cmu.edu/splash" target="_blank">Carnegie Mellon University's Computer Science Academy</a>.
+
+<p>Despite this stress on compliance, execution time is sometimes faster, sometimes slower, rarely much slower than CPython. With Firefox, the table below shows how Brython performs compared to CPython (taking 100 as base for CPython)
+
+<table class="perf">
+<tr><td>assignment to int</td><td align="right">65</td>
+<td>assignment to float</td><td align="right"> 195</td></tr>
+<tr><td>augmented assignment</td><td align="right"> 70</td>
+<td>build a dictionary</td><td align="right"> 422</td></tr>
+<tr><td>add item to dict</td><td align="right"> 111</td>
+<td>set dict item</td><td align="right"> 102</td></tr>
+<tr><td>build a set</td><td align="right"> 681</td>
+<td>build a list</td><td align="right"> 73</td></tr>
+<tr><td>set a list item</td><td align="right"> 76</td>
+<td>add integers</td><td align="right"> 195</td></tr>
+<tr><td>add strings</td><td align="right"> 89</td>
+<td>str of int</td><td align="right"> 141</td></tr>
+<tr><td>create a function with no parameter</td><td align="right"> 178</td>
+<td>create a function with a single positional param</td><td align="right"> 180</td></tr>
+<tr><td>create a function with complex params</td><td align="right"> 246</td>
+<td>function call with single positional argument</td><td align="right"> 427</td></tr>
+<tr><td>function call with positional and keyword args</td><td align="right"> 402</td>
+<td>create a simple class (no parent, no __init__)</td><td align="right"> 390</td></tr>
+<tr><td>create class with __init__</td><td align="right"> 299</td>
+<td>create an instance of a simple class</td><td align="right"> 326</td></tr>
+<tr><td>create an instance of a class with __init__</td><td align="right"> 331</td>
+<td>call an instance method</td><td align="right"> 1844</td></tr>
+</table>
+
+<p>The modules in the standard library are translated only once for each new Brython version ; they are then stored in an indexedDB database on the client side. The first run of a program that uses many stdlib modules might take a few seconds, but the next runs will be much faster.
+
+<p>The size of the core Brython script is 134 kB once minified and compressed. The standard library can be loaded as a single script, its size is 699 kB.
+
+<p>All popular Javascript frameworks (jQuery, vue.js, Highcharts, etc.) can be easily used from inside Brython scripts.
+
+<p>You can take a look at <a href="https://github.com/brython-dev/brython/wiki/Brython-in-the-wild">applications developed with Brython</a>, and watch <a href="https://github.com/brython-dev/brython/wiki/Brython-videos-and-talks">videos and talks</a>. Documentation and online resources are available on this site.
+
+<p>The <a href="https://github.com/brython-dev/brython">development site</a> is on Github. Contributors are welcome !
+
+</td>
+
+</tr>
+
+</table>
+
+</div>
+
+<div id="content_fr" style="height:1px;visibility:hidden">
+<table style="width:80%;margin-left:10%">
+<tr>
+<td>
+<H1 style="font-size:300%;">Brython</H1>
+<H2>Une implémentation de Python 3 pour la programmation web côté client</H2>
+</td>
+<td valign="top">
+<select class="language" id="change_lang_fr">
+<option value="en">English
+<option value="es">Espa&ntilde;ol
+<option value="fr" selected>Fran&ccedil;ais
+</select>
+</td>
+</tr>
+</table>
+
+<table style="width:80%;margin-left:10%">
+<tr>
+<td style="width:60%;font-size:16px;">
+L'objectif de Brython est de remplacer Javascript comme langage de script côté client. Il s'agit d'une implémentation de Python3, adaptée à l'environnement HTML5, avec une interface vers les objets et les événements DOM.
+
+<p>Brython n'est pas "ressemblant à Python", mais essaie d'être aussi proche que possible du langage Python. En d'autres termes, tout ce qui fonctionne en CPython mais pas en Brython est considéré comme un bug. La seule limite sont les fonctionnalités qui ne peuvent pas être implémentées en Javascript (par exemple les fonctions bloquantes) ou celle qui sont liées à l'environnement sécurisé du navigateur (écriture sur disque par exemple). Mais il est suffisamment proche de Python 3 pour servir de support à des cours de programmation en ligne comme celui de la <a href="https://academy.cs.cmu.edu/splash" target="_blank">Carnegie Mellon University's Computer Science Academy</a>.
+
+<p>Malgré cet accent mis sur la conformité, les temps d'exécution sont parfois plus rapides, parfois plus lents, rarement beaucoup plus lents qu'en CPython. Avec Firefox, la table ci-dessous montre les performances sur un certain nombre d'opérations élémentaires, en prenant CPython comme base 100:
+
+<table class="perf">
+<tr><td>affectation d'un entier</td><td align="right">65</td>
+<td>affectation d'un réel</td><td align="right"> 195</td></tr>
+<tr><td>affectation augmentée</td><td align="right"> 70</td>
+<td>construction d'un dictionnaire</td><td align="right"> 422</td></tr>
+<tr><td>ajout d'un élément à un dictionnaire</td><td align="right"> 111</td>
+<td>affectation d'une valeur à une clé</td><td align="right"> 102</td></tr>
+<tr><td>construction d'un set</td><td align="right"> 681</td>
+<td>construction d'une liste</td><td align="right"> 73</td></tr>
+<tr><td>affectation à un élement de liste</td><td align="right"> 76</td>
+<td>addition d'entiers</td><td align="right"> 195</td></tr>
+<tr><td>addition de chaines</td><td align="right"> 89</td>
+<td>conversion entier / chaine</td><td align="right"> 141</td></tr>
+<tr><td>création de fonction sans paramètre</td><td align="right"> 178</td>
+<td>création de fonction avec 1 seul paramètre</td><td align="right"> 180</td></tr>
+<tr><td>création de fonction avec valeurs par défaut</td><td align="right"> 246</td>
+<td>appel de fonction avec un seul argument positionnel</td><td align="right"> 427</td></tr>
+<tr><td>appel de fonction avec arguments positionnels et mots-clés</td><td align="right"> 402</td>
+<td>création de classe simple (pas de parent, pas d'__init__)</td><td align="right"> 390</td></tr>
+<tr><td>création de classe avec __init__</td><td align="right"> 299</td>
+<td>création d'instances d'une classe simple</td><td align="right"> 326</td></tr>
+<tr><td>création d'instance de classe avec __init__</td><td align="right"> 331</td>
+<td>appel d'une méthode d'instance</td><td align="right"> 1844</td></tr>
+</table>
+
+<p>Les modules de la librairie standard sont traduits une seule fois pour chaque nouvelle version de Brython; elles sont ensuite cachées dans une base de données indexedDB côté client. La première exécution d'un programme qui utilise beaucoup de modules de la librairie standard peut prendre plusieurs secondes, mais les exécutions suivantes seront beaucoup plus rapides.
+
+<p>La taille du script principal de Brython est de 134 kO une fois minifié et compressé. La librairie standard peut être chargée comme un seul fichier, sa taille est de 699 kO.
+
+<p>Tous les frameworks Javascript (jQuery, vue.js, Highcharts, etc.) peuvent être utilisés simplement depuis les scripts Brython.
+
+<p>Pour vous faire une idée, vous pouvez utiliser la <a href="console.html" id="c_fr">console interactive</a>, regarder quelques <a href="https://github.com/brython-dev/brython/wiki/Brython-in-the-wild">applications développées en Brython</a>, and voir des <a href="https://github.com/brython-dev/brython/wiki/Brython-videos-and-talks">vidéos et des conférences</a>. La documentation et des ressources sont disponibles sur ce site.
+
+<p>Le <a href="https://github.com/brython-dev/brython">site de développement</a> est sur Github. Les contributeurs sont bienvenus !
+
+</td>
+
+</tr>
+</table>
+
+</div>
+
+<div id="content_es" style="height:1px;visibility:hidden">
+<table style="width:80%;margin-left:10%;">
+<tr>
+<td>
+<H1 style="font-size:300%;">Brython</H1>
+<H2>Una implementación de Python para la programación web del lado del cliente</H2>
+</td>
+<td valign="top">
+<select class="language" id="change_lang_en">
+<option value="en">English
+<option value="es" selected>Espa&ntilde;ol
+<option value="fr">Fran&ccedil;ais
+</select>
+</td>
+</tr>
+</table>
+
+<table style="width:80%;margin-left:10%">
+<tr>
+<td style="width:60%;font-size:16px;">
+Brython is designed to replace Javascript as the scripting language for the Web. As such, it is a Python 3 implementation, adapted to the HTML5 environment, that is to say with an interface to the DOM objects and events.
+
+<p>Brython is not "Python-like", but tries to be as close as possible to the Python language ; in other words, the features that work in CPython but not Brython are considered bugs. The only limitations are the features that can't be implemented in Javascript (eg. blocking funcions) or those related to the browser environment (eg. or writing to disk). But it is close enough to Python 3 to support online courses such as <a href="https://academy.cs.cmu.edu/splash" target="_blank">Carnegie Mellon University's Computer Science Academy</a>.
+
+<p>Despite this stress on compliance, execution time is sometimes faster, sometimes slower, rarely much slower than CPython. With Firefox, the table below shows how Brython performs compared to CPython (taking 100 as base for CPython)
+
+<table class="perf">
+<tr><td>assignment to int</td><td align="right">65</td>
+<td>assignment to float</td><td align="right"> 195</td></tr>
+<tr><td>augmented assignment</td><td align="right"> 70</td>
+<td>build a dictionary</td><td align="right"> 422</td></tr>
+<tr><td>add item to dict</td><td align="right"> 111</td>
+<td>set dict item</td><td align="right"> 102</td></tr>
+<tr><td>build a set</td><td align="right"> 681</td>
+<td>build a list</td><td align="right"> 73</td></tr>
+<tr><td>set a list item</td><td align="right"> 76</td>
+<td>add integers</td><td align="right"> 195</td></tr>
+<tr><td>add strings</td><td align="right"> 89</td>
+<td>str of int</td><td align="right"> 141</td></tr>
+<tr><td>create a function with no parameter</td><td align="right"> 178</td>
+<td>create a function with a single positional param</td><td align="right"> 180</td></tr>
+<tr><td>create a function with complex params</td><td align="right"> 246</td>
+<td>function call with single positional argument</td><td align="right"> 427</td></tr>
+<tr><td>function call with positional and keyword args</td><td align="right"> 402</td>
+<td>create a simple class (no parent, no __init__)</td><td align="right"> 390</td></tr>
+<tr><td>create class with __init__</td><td align="right"> 299</td>
+<td>create an instance of a simple class</td><td align="right"> 326</td></tr>
+<tr><td>create an instance of a class with __init__</td><td align="right"> 331</td>
+<td>call an instance method</td><td align="right"> 1844</td></tr>
+</table>
+
+<p>The modules in the standard library are translated only once for each new Brython version ; they are then stored in an indexedDB database on the client side. The first run of a program that uses many stdlib modules might take a few seconds, but the next runs will be much faster.
+
+<p>The size of the core Brython script is 134 kB once minified and compressed. The standard library can be loaded as a single script, its size is 699 kB.
+
+<p>All popular Javascript frameworks (jQuery, vue.js, Highcharts, etc.) can be easily used from inside Brython scripts.
+
+<p>For more information, you can use the <a href="console.html" id="c_en">interactive console</a>, take a look at <a href="https://github.com/brython-dev/brython/wiki/Brython-in-the-wild">applications developed with Brython</a>, and watch <a href="https://github.com/brython-dev/brython/wiki/Brython-videos-and-talks">videos and talks</a>. Documentation and online resources are available on this site.
+
+<p>The <a href="https://github.com/brython-dev/brython">development site</a> is on Github. Contributors are welcome !
+</table>
+
+</div>
+
+</body>
+</html>

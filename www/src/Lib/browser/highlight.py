@@ -1,4 +1,3 @@
-import keyword
 import _jsre as re
 
 from browser import html
@@ -23,8 +22,45 @@ complex|hasattr|max|round|
 delattr|hash|memoryview|set|
 """
 
-kw_pattern = '^('+'|'.join(keyword.kwlist)+')$'
-bf_pattern = '^('+builtin_funcs.replace("\n", "")+')$'
+keywords = [
+        'False',
+        'None',
+        'True',
+        'and',
+        'as',
+        'assert',
+        'async',
+        'await',
+        'break',
+        'class',
+        'continue',
+        'def',
+        'del',
+        'elif',
+        'else',
+        'except',
+        'finally',
+        'for',
+        'from',
+        'global',
+        'if',
+        'import',
+        'in',
+        'is',
+        'lambda',
+        'nonlocal',
+        'not',
+        'or',
+        'pass',
+        'raise',
+        'return',
+        'try',
+        'while',
+        'with',
+        'yield',
+        ]
+kw_pattern = '^(' + '|'.join(keywords) + ')$'
+bf_pattern = '^(' + builtin_funcs.replace("\n", "") + ')$'
 
 def escape(txt):
     txt = txt.replace('<', '&lt;')

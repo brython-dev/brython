@@ -249,3 +249,28 @@ assert results ==  ['    5     5     5   101',
 '    9     9    11  1001',
 '   10     A    12  1010',
 '   11     B    13  1011']
+
+# issue 303
+assert "{0:.{1}f}".format(1.123, 1) == "1.1"
+
+# issue 421
+assert "{:.0f}".format(2.1) == "2"
+assert "{:.0f}".format(-2.1) == "-2"
+
+# issue 529
+x = [-644475]
+assert "{:,}".format(int(x[0])) == "-644,475"
+
+# issue 823
+x = 5
+s = "Distance {}km".format(x)
+assert s == "Distance 5km"
+
+x = 5.1
+s = "Distance {}km".format(x)
+assert s == "Distance 5.1km"
+
+# issue 1071
+assert format(123.456, "^-09.3f") == "0123.4560"
+
+print("passed all tests...")

@@ -49,7 +49,7 @@ if command == "sdist":
 setup(
     name='brython',
 
-    version='3.7.0',
+    version='3.7.3',
     description='Brython is an implementation of Python 3 running in the browser',
 
     long_description=LONG_DESCRIPTION,
@@ -86,7 +86,7 @@ setup(
     # What does your project relate to?
     keywords='Python browser',
 
-    py_modules=["brython", "list_modules", "server"],
+    py_modules=["brython", "list_modules"],
 
     package_data={
         'data': [

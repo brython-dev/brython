@@ -4,7 +4,7 @@ return  {
     loads : function(){
         var $ = $B.args('loads', 1, {obj:null}, ['obj'], arguments, {},
             null, null)
-        return $B.jsobject2pyobject(JSON.parse($.obj))
+        return $B.structuredclone2pyobj(JSON.parse($.obj))
     },
     load : function(){
         var $ = $B.args('load', 1, {obj:null}, ['obj'], arguments, {},
@@ -14,7 +14,7 @@ return  {
     dumps : function(){
         var $ = $B.args('dumps', 1, {obj:null}, ['obj'], arguments, {},
             null, null)
-        return JSON.stringify($B.pyobject2jsobject($.obj))
+        return JSON.stringify($B.pyobj2structuredclone($.obj))
     },
 }
 

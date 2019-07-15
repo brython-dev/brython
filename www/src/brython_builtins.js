@@ -3,17 +3,21 @@ var __BRYTHON__ = __BRYTHON__ || {}  // global object with brython built-ins
 ;(function($B) {
 
 // Detect whether we are in a Web Worker
-var isWebWorker = ('undefined' !== typeof WorkerGlobalScope) && ("function" === typeof importScripts) && (navigator instanceof WorkerNavigator)
+$B.isWebWorker = ('undefined' !== typeof WorkerGlobalScope) &&
+                  ("function" === typeof importScripts) &&
+                  (navigator instanceof WorkerNavigator)
 var _window = self;
-
 
 var $path
 
 if($B.brython_path === undefined){
     // Get url of this script brython_builtins.js
     var this_url;
-    if(isWebWorker){
+    if($B.isWebWorker){
         this_url = _window.location.href;
+        if(this_url.startsWith("blob:")){
+            this_url = this_url.substr(5)
+        }
     }else{
         var scripts = document.getElementsByTagName('script')
         this_url = scripts[scripts.length - 1].src
@@ -26,6 +30,9 @@ if($B.brython_path === undefined){
     // It is used to import modules of the standard library
     $path = $B.brython_path = elts.join('/') + '/'
 }else{
+    if(! $B.brython_path.endsWith("/")){
+        $B.brython_path += "/"
+    }
     $path = $B.brython_path
 }
 
@@ -38,6 +45,10 @@ var $script_dir = $B.script_dir = path_elts.join("/")
 
 // Populated in py2js.brython(), used for sys.argv
 $B.__ARGV = []
+
+// For all the scripts defined in the page as webworkers, mapping between
+// script name and its source code
+$B.webworkers = {}
 
 // Mapping between a module name and its path (url)
 $B.$py_module_path = {}
@@ -71,12 +82,9 @@ $B._globals = {}
 $B.frames_stack = []
 
 // Python __builtins__
-$B.builtins = {
-    __repr__:function(){return "<module 'builtins>'"},
-    __str__:function(){return "<module 'builtins'>"},
-}
+$B.builtins = {}
 
-$B.builtins_scope = {id:'__builtins__',module:'__builtins__', binding:{}}
+$B.builtins_scope = {id:'__builtins__', module:'__builtins__', binding:{}}
 
 // Builtin functions : used in py2js to simplify the code produced by a call
 $B.builtin_funcs = {}
@@ -100,7 +108,7 @@ $B.language = _window.navigator.userLanguage || _window.navigator.language || 'e
 
 $B.locale = "C" // can be reset by locale.setlocale
 
-if(isWebWorker){
+if($B.isWebWorker){
     $B.charset = "utf-8"
 }else{
     // document charset ; defaults to "utf-8"
@@ -179,6 +187,8 @@ $B.globals = function(){
     // Can be used in Javascript console to inspect global namespace
     return $B.frames_stack[$B.frames_stack.length - 1][3]
 }
+
+$B.scripts = {} // for Python scripts embedded in a JS file
 
 $B.$options = {}
 

@@ -21,7 +21,7 @@ if sys.version_info[0] != 3:
 pdir = os.path.dirname(os.getcwd())
 # version info
 version = [3, 7, 0, "final", 0]
-implementation = [3, 7, 1, "dev", 0]
+implementation = [3, 7, 4, "dev", 0]
 
 # version name
 vname = '.'.join(str(x) for x in implementation[:3])
@@ -80,7 +80,7 @@ def run():
         'py_object', 'py_type', 'py_utils', 'py_builtin_functions',
         'py_exceptions', 'py_range_slice', 'py_bytes', 'py_set', 'js_objects',
         'stdlib_paths', 'py_import', 'py_float', 'py_int', 'py_long_int',
-        'py_complex', 'py_sort', 'py_list', 'py_string', 'py_dict', 
+        'py_complex', 'py_sort', 'py_list', 'py_string', 'py_dict',
         'py_dom', 'py_generator', 'builtin_modules', 'py_import_hooks',
         'async'
     ]
@@ -117,11 +117,26 @@ def run():
 
     make_VFS.process(os.path.join(pdir, 'www', 'src', 'brython_stdlib.js'))
 
-    # Create make brython_stdlib.js : core + libraries
+    # Create brython_dist.js : core + libraries
     src_dir = os.path.join(pdir, 'www', 'src')
     with open(os.path.join(src_dir, 'brython_dist.js'), 'w') as distrib:
         distrib.write(open(os.path.join(src_dir, 'brython.js')).read())
         distrib.write(open(os.path.join(src_dir, 'brython_stdlib.js')).read())
+
+    # update implementation in brython.py
+    br_script = os.path.join(pdir, 'setup', 'brython.py')
+    with open(br_script, encoding='utf-8') as f:
+        br = f.read()
+        mo = re.search('^implementation = "(.*)"$', br, flags=re.M)
+        if not mo:
+            raise Exception("missing implementation in brython.py")
+        br_versioned = re.sub('^implementation = "(.*)"$',
+                              'implementation = "{}"'.format(vname),
+                              br,
+                              flags=re.M)
+    
+    with open(br_script, "w", encoding="utf-8") as out:
+        out.write(br_versioned)
 
     # copy files in folder /setup
     sdir = os.path.join(pdir, 'setup', 'data')

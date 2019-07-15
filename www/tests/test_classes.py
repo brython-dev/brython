@@ -436,4 +436,21 @@ t = test()
 assert t.x == "a"
 assert test.nb_set == 1, test.nb_set
 
+# issue 1083
+class Gentleman(object):
+  def introduce_self(self):
+    return "Hello, my name is %s" % self.name
+
+class Base(object):pass
+class Person(Base):
+  def __init__(self, name):
+    self.name = name
+
+p = Person("John")
+Person.__bases__=(Gentleman,object,)
+assert p.introduce_self() == "Hello, my name is John"
+
+q = Person("Pete")
+assert q.introduce_self() == "Hello, my name is Pete"
+
 print('passed all tests..')
