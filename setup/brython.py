@@ -99,8 +99,7 @@ if args.modules:
     finder = list_modules.ModulesFinder()
     # finder.inspect()
     finder.modules = {
-        'cmu_graphics_bry', 'sys', 'traceback', 'hashlib', 'time', 'random', 'math',
-        'linecache',
+        'cmu_graphics_bry', 'sys', 'traceback', 'hashlib', 'random', 'math', 'linecache',
     }
     finder.make_brython_modules()
 

@@ -514,7 +514,7 @@ JSObject.__setattr__ = function(self, attr, value){
             self.js[attr] = function(){
                 var args = []
                 for(var i = 0, len = arguments.length; i < len; i++){
-                    console.log(i, arguments[i])
+                    // console.log(i, arguments[i])
                     args.push($B.$JS2Py(arguments[i]))
                 }
                 try{return value.apply(null, args)}
