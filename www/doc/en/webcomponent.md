@@ -7,7 +7,7 @@ define a class that will handle the definition and the behaviour of the
 Web Component.
 
 ```python
-from browser import WebComponent
+from browser.webcomponent import WebComponent
 
 class CustomElement(metaclass=WebComponent):
 
@@ -62,6 +62,9 @@ that manage the life cycle of a custom component.
 To implement them in Brython, just add the functions in the class definition:
 
 ```python
+
+from browser.webcomponent import WebComponent
+
 class BoldItalic(metaclass=WebComponent):
 
     tag_name = "bold-italic"
