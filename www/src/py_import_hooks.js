@@ -39,8 +39,8 @@ function import_hooks(mod_name, _path, from_stdlib) {
             if(find_module !== _b_.None){
                 _loader = find_module(mod_name, _path)
                 // The loader has a method load_module()
-                var load_module = $B.$getattr(_loader, "load_module")
-                module = $B.$call(load_module)(mod_name)
+                var load_module = $B.$getattr(_loader, "load_module"),
+                    module = $B.$call(load_module)(mod_name)
                 _sys_modules[mod_name] = module
                 return module
             }

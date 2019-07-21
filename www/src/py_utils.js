@@ -31,7 +31,8 @@ $B.args = function($fname, argcount, slots, var_names, args, $dobj,
     }
     var has_kw_args = false,
         nb_pos = $args.length,
-        filled = 0
+        filled = 0,
+        extra_kw
 
     // If the function call had keywords arguments, they are in the last
     // element of $args

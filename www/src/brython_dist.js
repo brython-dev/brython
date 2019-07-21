@@ -86,8 +86,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-07-21 10:26:40.111044"
-__BRYTHON__.timestamp=1563697600111
+__BRYTHON__.compiled_date="2019-07-21 11:45:24.311368"
+__BRYTHON__.timestamp=1563702324311
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5393,7 +5393,7 @@ var meta_init=_b_.type.__getattribute__(metaclass,"__init__")
 meta_init(kls,class_name,bases,cl_dict)}
 for(var i=0;i < bases.length;i++){bases[i].$subclasses=bases[i].$subclasses ||[]
 bases[i].$subclasses.push(kls)
-if(i==0){init_subclass=_b_.type.__getattribute__(bases[i],"__init_subclass__")
+if(i==0){var init_subclass=_b_.type.__getattribute__(bases[i],"__init_subclass__")
 if(init_subclass.$infos.__func__ !==undefined){init_subclass.$infos.__func__(kls,{$nat:"kw",kw:extra_kwargs})}else{init_subclass(kls,{$nat:"kw",kw:extra_kwargs})}}}
 if(bases.length==0){$B.$getattr(metaclass,"__init_subclass__")(kls,{$nat:"kw",kw:extra_kwargs})}
 if(!is_instanciable){function nofactory(){throw _b_.TypeError.$factory("Can't instantiate abstract class "+
@@ -5627,10 +5627,8 @@ if(key=="__class__"){throw _b_.TypeError.$factory("__class__ assignment only sup
 throw _b_.AttributeError.$factory("'method' object has no attribute '"+
 key+"'")}
 $B.set_func_names(method,"builtins")
-method_descriptor=$B.method_descriptor=
-$B.make_class("method_descriptor")
-classmethod_descriptor=$B.classmethod_descriptor=
-$B.make_class("classmethod_descriptor")
+$B.method_descriptor=$B.make_class("method_descriptor")
+$B.classmethod_descriptor=$B.make_class("classmethod_descriptor")
 _b_.object.__class__=type})(__BRYTHON__)
 ;
 ;(function($B){var _b_=$B.builtins,_window=self,isWebWorker=('undefined' !==typeof WorkerGlobalScope)&&
@@ -5641,7 +5639,7 @@ var $args=[]
 if(Array.isArray(args)){$args=args}
 else{
 for(var i=0,len=args.length;i < len;i++){$args.push(args[i])}}
-var has_kw_args=false,nb_pos=$args.length,filled=0
+var has_kw_args=false,nb_pos=$args.length,filled=0,extra_kw
 if(nb_pos > 0 && $args[nb_pos-1]&& $args[nb_pos-1].$nat){nb_pos--
 if(Object.keys($args[nb_pos].kw).length > 0){has_kw_args=true
 var kw_args=$args[nb_pos].kw
@@ -8998,9 +8996,6 @@ var _sys_paths=[[$B.script_dir+"/","py"],[$B.brython_path+"Lib/","py"],[$B.bryth
 for(var i=0;i < _sys_paths.length;++i){var _path=_sys_paths[i],_type=_path[1]
 _path=_path[0]
 $B.path_importer_cache[_path]=url_hook.$factory(_path,_type)}
-delete _path
-delete _type
-delete _sys_paths
 function import_error(mod_name){var exc=_b_.ImportError.$factory(mod_name)
 exc.name=mod_name
 throw exc}
@@ -11874,7 +11869,7 @@ case "number":
 if(self.$numeric_dict[arg]!==undefined){return self.$numeric_dict[arg]}
 break}
 var hash=_b_.hash(arg),_eq=function(other){return $B.rich_comp("__eq__",arg,other)}
-arg.$hash=hash 
+if(typeof arg=="object"){arg.$hash=hash }
 var sk=self.$str_hash[hash]
 if(sk !==undefined && _eq(sk)){return self.$string_dict[sk]}
 if(self.$numeric_dict[hash]!==undefined && _eq(hash)){return self.$numeric_dict[hash]}
@@ -13210,8 +13205,7 @@ for(var i=0,len=meta_path.length;i < len;i++){var _finder=meta_path[i],find_spec
 if(find_spec==_b_.None){
 var find_module=$B.$getattr(_finder,"find_module",_b_.None)
 if(find_module !==_b_.None){_loader=find_module(mod_name,_path)
-var load_module=$B.$getattr(_loader,"load_module")
-module=$B.$call(load_module)(mod_name)
+var load_module=$B.$getattr(_loader,"load_module"),module=$B.$call(load_module)(mod_name)
 _sys_modules[mod_name]=module
 return module}}else{spec=find_spec(mod_name,_path,undefined)
 if(!$B.is_none(spec)){module=$B.imported[spec.name]

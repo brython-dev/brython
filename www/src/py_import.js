@@ -846,9 +846,6 @@ for(var i = 0; i < _sys_paths.length; ++i){
     _path = _path[0]
     $B.path_importer_cache[_path] = url_hook.$factory(_path, _type)
 }
-delete _path
-delete _type
-delete _sys_paths
 
 function import_error(mod_name){
     var exc = _b_.ImportError.$factory(mod_name)

@@ -226,7 +226,7 @@ $B.$class_constructor = function(class_name, class_obj, bases,
         bases[i].$subclasses.push(kls)
         // call __init_subclass__ with the extra keyword arguments
         if(i == 0){
-            init_subclass = _b_.type.__getattribute__(bases[i],
+            var init_subclass = _b_.type.__getattribute__(bases[i],
                 "__init_subclass__")
             if(init_subclass.$infos.__func__ !== undefined){
                 init_subclass.$infos.__func__(kls, {$nat: "kw", kw: extra_kwargs})
@@ -889,11 +889,9 @@ method.__setattr__ = function(self, key, value){
 
 $B.set_func_names(method, "builtins")
 
-method_descriptor = $B.method_descriptor =
-    $B.make_class("method_descriptor")
+$B.method_descriptor = $B.make_class("method_descriptor")
 
-classmethod_descriptor = $B.classmethod_descriptor =
-    $B.make_class("classmethod_descriptor")
+$B.classmethod_descriptor = $B.make_class("classmethod_descriptor")
 
 // this could not be done before $type and $factory are defined
 _b_.object.__class__ = type
