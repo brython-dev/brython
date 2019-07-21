@@ -2454,7 +2454,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
             this.func_name = 'var ' + this.alias
             func_name1 = this.alias
         }
-
+        
         var func_args = this.tree[1].tree
         func_args.forEach(function(arg){
             this.args.push(arg.name)
@@ -2508,8 +2508,6 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         }
         var global_ns = '$locals_' + global_scope.id.replace(/\./g, '_')
 
-        var prefix = this.tree[0].to_js()
-        if(this.decorated){prefix = this.alias}
         var name = this.name + this.num
 
         // Add lines of code to node children
@@ -2844,7 +2842,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
                 $NodeJS(res + '}'))
 
             node.parent.insert(rank + offset++, $NodeJS(
-                func_name1 + " = " + this.name + '$' + this.num +
+                this.func_name + " = " + this.name + '$' + this.num +
                 '(' + this.default_str + ')'))
 
             node.parent.insert(rank + offset++, $NodeJS(

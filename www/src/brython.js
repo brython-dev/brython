@@ -86,8 +86,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-07-19 15:11:28.353551"
-__BRYTHON__.timestamp=1563541888353
+__BRYTHON__.compiled_date="2019-07-21 10:26:40.111044"
+__BRYTHON__.timestamp=1563697600111
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -1261,8 +1261,6 @@ var global_scope=scope
 while(global_scope.parent_block &&
 global_scope.parent_block.id !=='__builtins__'){global_scope=global_scope.parent_block}
 var global_ns='$locals_'+global_scope.id.replace(/\./g,'_')
-var prefix=this.tree[0].to_js()
-if(this.decorated){prefix=this.alias}
 var name=this.name+this.num
 var local_ns='$locals_'+this.id,h='\n'+' '.repeat(indent)
 js='var '+local_ns+' = {},'+
@@ -1416,7 +1414,7 @@ var res='return '+name
 if(this.async){res='return $B.make_async('+name+')'}
 node.parent.insert(rank+offset++,$NodeJS(res+'}'))
 node.parent.insert(rank+offset++,$NodeJS(
-func_name1+" = "+this.name+'$'+this.num+
+this.func_name+" = "+this.name+'$'+this.num+
 '('+this.default_str+')'))
 node.parent.insert(rank+offset++,$NodeJS(
 func_name1+".$set_defaults = function(value){return "+
