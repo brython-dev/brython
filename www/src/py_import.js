@@ -885,7 +885,6 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
     // its attribute exec_module.
     // exec_module initializes $B.imported to a module object.
 
-
    // [Import spec] Halt import logic
    var from_stdlib = false
 
@@ -904,7 +903,7 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
 
    var modobj = $B.imported[mod_name],
        parsed_name = mod_name.split('.')
-   
+
    if(modobj == _b_.None){
        // [Import spec] Stop loading loop right away
        import_error(mod_name)

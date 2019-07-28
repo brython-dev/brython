@@ -19,7 +19,7 @@ check_hash_based_pycs = """default"""
 
 def create_builtin(spec):
     """Create an extension module."""
-    __import__(spec.name)
+    return __import__(spec.name)
 
 def create_dynamic(*args,**kw):
     """Create an extension module."""

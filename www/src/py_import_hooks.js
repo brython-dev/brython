@@ -57,7 +57,7 @@ function import_hooks(mod_name, _path, from_stdlib) {
             }
         }
     }
-
+    
     if(_loader === undefined){
         // No import spec found
         var exc = _b_.ImportError.$factory("No module named " + mod_name)
