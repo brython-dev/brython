@@ -111,19 +111,16 @@ JSConstructor.__getattribute__ = function(self, attr){
             return $B.$JS2Py(res)
         }
     }
-    return JSObject.__getattribute__(self.obj, attr)
+    return JSObject.__getattribute__(self, attr)
 }
 
 JSConstructor.$factory = function(obj){
     return {
         __class__: JSConstructor,
-        obj: obj,
+        js: obj,
         func: obj.js_func
     }
 }
-
-// JSObject : wrapper around a native Javascript object
-
 
 // Object used to convert Javascript undefined value
 var UndefinedClass = $B.make_class("undefined",
@@ -246,6 +243,8 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
 
     }
 }
+
+// JSObject : wrapper around a native Javascript object
 
 var JSObject = {
     __class__: _b_.type,
