@@ -2,20 +2,24 @@
 var $module = (function($B){
 
 function define(tag_name, cls){
-    class WebComp extends HTMLElement {
+    class WebComponent extends HTMLElement {
       constructor() {
         // Always call super first in constructor
         super()
         // Call method __init__ of class, with the WebComp object as self
         if(cls.__init__){
-            $B.$call(cls.__init__)($B.JSObject.$factory(this))
+            try{
+                $B.$call(cls.__init__)($B.DOMNode.$factory(this))
+            }catch(err){
+                $B.handle_error(err)
+            }
         }
       }
     }
     for(key in cls){
         // Wrap other methods such as connectedCallback
         if(typeof cls[key] == "function"){
-            WebComp.prototype[key] = (function(attr){
+            WebComponent.prototype[key] = (function(attr){
                 return function(){
                     return $B.pyobj2jsobj(cls[attr]).call(null, this, ...arguments)
                 }
@@ -23,8 +27,8 @@ function define(tag_name, cls){
         }
     }
 
-    // define WebComp as the class to use for the specified tag name 
-    customElements.define(tag_name, WebComp)
+    // define WebComp as the class to use for the specified tag name
+    customElements.define(tag_name, WebComponent)
 }
 
 return {define: define}
