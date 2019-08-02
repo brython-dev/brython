@@ -451,7 +451,7 @@ type.__getattribute__ = function(klass, attr){
         if(typeof res == "function"){
             // method
             if(res.$infos === undefined){
-                console.log("warning: no attribute $infos for", res)
+                console.log("warning: no attribute $infos for", res, "attr", attr)
             }
             if($test){console.log("res is function", res)}
 
@@ -736,6 +736,7 @@ var $instance_creator = $B.$instance_creator = function(klass){
     var metaclass = klass.__class__,
         call_func,
         factory
+    
     if(metaclass === _b_.type && (!klass.__bases__ || klass.__bases__.length == 0)){
         if(klass.hasOwnProperty("__new__")){
             if(klass.hasOwnProperty("__init__")){

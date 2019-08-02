@@ -96,13 +96,17 @@ req.send({'x':0, 'y':1})
 
 ### Raccourcis
 
-Les appels GET et POST peuvent être effectués plus simplement avec les
+Les appels peuvent être effectués plus simplement avec les
 fonctions correspondantes :
 
 `get(`_url[, async=True, headers={}, mode="text", timeout=None, cache=False, data="", **callbacks]_`)`
 
+et de même pour `delete`, `head` et `options`.
+
 `post(`_url[, async=True, headers={"Content-Type": _
 _"application/x-www-form-urlencoded"}, timeout=None, data="", **callbacks]_`)`
+
+et de même pour `put`.
 
 > _async_ est un booléen qui indique si la requête doit être asynchrone
 > (valeur par défaut) ou synchrone
