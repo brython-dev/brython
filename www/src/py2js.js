@@ -1179,7 +1179,7 @@ var $AttrCtx = $B.parser.$AttrCtx = function(context){
                             parent.context.tree[0].args === undefined){
                         // set attr to instance of a class without a parent
                         this.assign_self = true
-                        return [js + ".__class__ && !" +
+                        return [js + ".__class__ && " + js + ".__dict__ && !" +
                             js + ".__class__.$has_setattr && ! " + js +
                             ".$is_class ? " + js +
                             ".__dict__.$string_dict['" + this.name +
