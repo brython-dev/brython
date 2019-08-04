@@ -7,6 +7,13 @@ coroutine.close = function(self){}
 coroutine.send = function(self){
     return self.$func.apply(null, self.$args)
 }
+coroutine.__repr__ = coroutine.__str__ = function(self){
+    if(self.$func.$infos){
+        return "<coroutine " + self.$func.$infos.__name__ + ">"
+    }else{
+        return "<coroutine object>"
+    }
+}
 
 $B.set_func_names(coroutine, "builtins")
 

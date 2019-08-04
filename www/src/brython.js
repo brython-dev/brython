@@ -86,8 +86,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-08-02 10:30:26.809383"
-__BRYTHON__.timestamp=1564734626809
+__BRYTHON__.compiled_date="2019-08-04 08:26:56.671759"
+__BRYTHON__.timestamp=1564900016671
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -6186,6 +6186,7 @@ if(len !=expected){if(expected==0){throw _b_.TypeError.$factory(name+"() takes n
 expected+" argument"+(expected < 2 ? '' :'s')+
 " ("+len+" given)")}}}
 function check_no_kw(name,x,y){
+if(x===undefined){console.log("x undef",name,x,y)}
 if(x.$nat ||(y !==undefined && y.$nat)){throw _b_.TypeError.$factory(name+"() takes no keyword arguments")}}
 var NoneType={$factory:function(){return None},$infos:{__name__:"NoneType",__module__:"builtins"},__bool__:function(self){return False},__class__:_b_.type,__hash__:function(self){return 0},__mro__:[object],__repr__:function(self){return 'None'},__str__:function(self){return 'None'},$is_class:true}
 NoneType.__setattr__=function(self,attr){return no_set_attr(NoneType,attr)}
@@ -11594,7 +11595,8 @@ return self.charAt(0)+
 "0".repeat($.width-self.length)+self.substr(1)
 default:
 return "0".repeat(width-self.length)+self}}
-str.$factory=function(arg,encoding,errors){if(arg===undefined){throw _b_.TypeError.$factory("str() argument is undefined")}
+str.$factory=function(arg,encoding,errors){if(arguments.length==0){return ""}
+if(arg===undefined){throw _b_.TypeError.$factory("str() argument is undefined")}
 switch(typeof arg){case "string":
 return str.__str__(arg)
 case "number":
@@ -13241,6 +13243,7 @@ $B.import_hooks=import_hooks})(__BRYTHON__)
 var coroutine=$B.coroutine=$B.make_class("coroutine")
 coroutine.close=function(self){}
 coroutine.send=function(self){return self.$func.apply(null,self.$args)}
+coroutine.__repr__=coroutine.__str__=function(self){if(self.$func.$infos){return "<coroutine "+self.$func.$infos.__name__+">"}else{return "<coroutine object>"}}
 $B.set_func_names(coroutine,"builtins")
 $B.make_async=func=>{
 var f=function(){var args=arguments

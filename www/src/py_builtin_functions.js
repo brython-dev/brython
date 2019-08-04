@@ -39,6 +39,9 @@ function check_nb_args(name, expected, args){
 
 function check_no_kw(name, x, y){
     // Throw error if one of x, y is a keyword argument
+    if(x === undefined){
+        console.log("x undef", name, x, y)
+    }
     if(x.$nat || (y !== undefined && y.$nat)){
         throw _b_.TypeError.$factory(name + "() takes no keyword arguments")}
 }
