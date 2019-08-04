@@ -214,7 +214,7 @@ function chr(i) {
     if(i < 0 || i > 1114111){
         throw _b_.ValueError.$factory('Outside valid range')
     }
-    return String.fromCharCode(i)
+    return String.fromCodePoint(i)
 }
 
 //classmethod() (built in class)
