@@ -86,8 +86,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-08-04 11:07:05.380883"
-__BRYTHON__.timestamp=1564909625380
+__BRYTHON__.compiled_date="2019-08-06 12:48:30.017551"
+__BRYTHON__.timestamp=1565088510017
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5505,6 +5505,11 @@ var class_dict={__class__ :meta,__bases__ :bases,__dict__ :cl_dict,$infos:{__nam
 var items=$B.dict_to_list(cl_dict)
 for(var i=0;i < items.length;i++){var key=$B.to_alias(items[i][0]),v=items[i][1]
 class_dict[key]=v
+if(v.__class__){
+var is_descriptor=
+$B.$getattr(v.__class__,"__set__",_b_.None)!==_b_.None
+if(is_descriptor){var set_name=$B.$getattr(v.__class__,"__set_name__",_b_.None)
+if(set_name !==_b_.None){set_name(v,v.__class__,key)}}}
 if(typeof v=="function"){v.$infos.$class=class_dict
 if(v.$infos.$defaults){
 var $defaults=v.$infos.$defaults
@@ -12837,6 +12842,7 @@ console.log("replace by void(0)",this)
 res=new $B.genNode("void(0)")}else{res=new $B.genNode(exit_node.data)}
 exit_node.replaced=true}
 if(head &&(this.is_break ||this.is_continue)){var loop=in_loop(this)
+res.loop=loop
 if(loop.has("yield")){res.data=""
 if(this.is_break){res.data+='$locals["$no_break'+this.loop_num+
 '"] = false;'}
@@ -12947,7 +12953,7 @@ exit_parent.children[start].is_else)){start++}}
 for(var i=start,len=exit_parent.children.length;i < len;i++){var clone=exit_parent.children[i].clone_tree(null,true)
 if(clone.is_continue){
 break}
-if(clone.has("continue")){has_continue=true;}
+if(clone.has("continue")){has_continue=true}
 rest[pos++]=clone
 if(clone.has("break")){has_break=true}}
 if((has_break ||has_continue)&& rest.length > 0){

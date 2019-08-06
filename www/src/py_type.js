@@ -543,6 +543,18 @@ type.__new__ = function(meta, name, bases, cl_dict){
         var key = $B.to_alias(items[i][0]),
             v = items[i][1]
         class_dict[key] = v
+        if(v.__class__){
+            // cf PEP 487 and issue #1178
+            var is_descriptor =
+                $B.$getattr(v.__class__, "__set__", _b_.None) !== _b_.None
+
+            if(is_descriptor){
+                var set_name = $B.$getattr(v.__class__, "__set_name__", _b_.None)
+                if(set_name !== _b_.None){
+                    set_name(v, v.__class__, key)
+                }
+            }
+        }
         if(typeof v == "function"){
             v.$infos.$class = class_dict
             if(v.$infos.$defaults){
@@ -736,7 +748,7 @@ var $instance_creator = $B.$instance_creator = function(klass){
     var metaclass = klass.__class__,
         call_func,
         factory
-    
+
     if(metaclass === _b_.type && (!klass.__bases__ || klass.__bases__.length == 0)){
         if(klass.hasOwnProperty("__new__")){
             if(klass.hasOwnProperty("__init__")){
