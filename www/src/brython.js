@@ -86,8 +86,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-08-06 12:48:30.017551"
-__BRYTHON__.timestamp=1565088510017
+__BRYTHON__.compiled_date="2019-08-06 17:50:03.028631"
+__BRYTHON__.timestamp=1565106603028
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -8168,9 +8168,14 @@ var res=[]
 for(var i=0,len=s.length;i < len;i++){var cp=s.charCodeAt(i)
 if(cp < 0x7f){res.push(cp)}else if(cp < 0x7ff){res.push(0xc0+(cp >> 6),0x80+(cp & 0x3f))}else if(cp < 0xffff){res.push(0xe0+(cp >> 12),0x80+((cp & 0xfff)>> 6),0x80+(cp & 0x3f))}else{console.log("4 bytes")}}
 return res
+case "latin":
 case "latin1":
+case "latin-1":
+case "L1":
 case "iso8859_1":
 case "iso_8859_1":
+case "8859":
+case "cp819":
 case "windows1252":
 for(var i=0,len=s.length;i < len;i++){var cp=s.charCodeAt(i)
 if(cp <=255){t[pos++]=cp}
