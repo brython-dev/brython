@@ -86,8 +86,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-08-06 17:50:03.028631"
-__BRYTHON__.timestamp=1565106603028
+__BRYTHON__.compiled_date="2019-08-09 15:11:24.649232"
+__BRYTHON__.timestamp=1565356284649
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -2723,7 +2723,7 @@ fmt+" + '}', "+expr1+")"
 elts.push(res1)}else{if(parsed_fstring[i].conversion===null){expr1='$B.builtins.str.$factory('+expr1+')'}
 elts.push(expr1)}}else{var re=new RegExp("'","g")
 var elt=parsed_fstring[i].replace(re,"\\'")
-.replace("\n","\\n")
+.replace(/\n/g,"\\n")
 elts.push("'"+elt+"'")}}
 return elts.join(' + ')}
 for(var i=0;i < this.tree.length;i++){if(this.tree[i].type=="call"){
@@ -2736,6 +2736,7 @@ if(is_bytes){res+='bytes.$factory('}}else if(type !=is_bytes){return '$B.$TypeEr
 if(!is_bytes){if(is_fstring){res+=fstring(value)}else{res+=value.replace(/\n/g,'\\n\\\n')}}else{res+=value.substr(1).replace(/\n/g,'\\n\\\n')}
 if(i < this.tree.length-1){res+='+'}}}
 if(is_bytes){res+=',"ISO-8859-1")'}
+if(res.length==0){res='""'}
 return res}}
 var $SubCtx=$B.parser.$SubCtx=function(C){
 this.type='sub'

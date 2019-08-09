@@ -62,4 +62,20 @@ u{123}
 zz'''
 assert d == "ddf\nu123\nzz"
 
+# issue 1183
+a = f""
+assert a == ""
+
+entry = "hello"
+a = f"""
+<p>
+{entry}
+</p>
+"""
+assert a == """
+<p>
+hello
+</p>
+"""
+
 print("passed all tests")

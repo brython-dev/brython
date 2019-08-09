@@ -2454,7 +2454,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
             this.func_name = 'var ' + this.alias
             func_name1 = this.alias
         }
-        
+
         var func_args = this.tree[1].tree
         func_args.forEach(function(arg){
             this.args.push(arg.name)
@@ -5730,7 +5730,7 @@ var $StringCtx = $B.parser.$StringCtx = function(context,value){
                 }else{
                     var re = new RegExp("'", "g")
                     var elt = parsed_fstring[i].replace(re, "\\'")
-                                               .replace("\n", "\\n")
+                                               .replace(/\n/g, "\\n")
                     elts.push("'" + elt + "'")
                 }
             }
@@ -5772,6 +5772,7 @@ var $StringCtx = $B.parser.$StringCtx = function(context,value){
             }
         }
         if(is_bytes){res += ',"ISO-8859-1")'}
+        if(res.length == 0){res = '""'}
         return res
     }
 }
