@@ -6249,7 +6249,7 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
                 'var $b = ' + this.cmexit_name + '(' +
                 this.err_name + '.__class__,' +
                 this.err_name + ','+
-                '$B.$getattr(' + this.err_name + ', "traceback"));'
+                '$B.$getattr(' + this.err_name + ', "__traceback__"));'
         if(this.scope.ntype == "generator"){
             js += 'delete ' + this.cmexit_name + ';'
         }

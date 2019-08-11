@@ -395,7 +395,7 @@ BaseException.__getattr__ = function(self, attr){
         return getExceptionTrace(self, false);
     }else if (attr == "infoWithInternal"){
         return getExceptionTrace(self, true);
-    }else if(attr == "traceback"){
+    }else if(attr == "__traceback__"){
         // Return traceback object
         if(self.$traceback !== undefined){return self.$traceback}
         return traceback.$factory(self)
@@ -406,7 +406,7 @@ BaseException.__getattr__ = function(self, attr){
 }
 
 BaseException.with_traceback = function(self, tb){
-    self.traceback = tb
+    self.$traceback = tb
     return self
 }
 

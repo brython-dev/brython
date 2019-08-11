@@ -425,7 +425,7 @@
                     exc = frame[1].$current_exception
                 if(exc){
                     return _b_.tuple.$factory([exc.__class__, exc,
-                        $B.$getattr(exc, "traceback")])
+                        $B.$getattr(exc, "__traceback__")])
                 }
             }
             return _b_.tuple.$factory([_b_.None, _b_.None, _b_.None])
