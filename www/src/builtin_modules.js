@@ -398,6 +398,15 @@
         UNDEFINED: undefined
     }
 
+    var arraybuffers = ["Int8Array", "Uint8Array", "Uint8ClampedArray",
+        "Int16Array", "Uint16Array", "Int32Array", "Uint32Array",
+        "Float32Array", "Float64Array", "BigInt64Array", "BigUint64Array"]
+    arraybuffers.forEach(function(ab){
+        if(self[ab] !== undefined){
+            modules['javascript'][ab] = $B.JSObject.$factory(self[ab])
+        }
+    })
+
     // _sys module is at the core of Brython since it is paramount for
     // the import machinery.
     // see https://github.com/brython-dev/brython/issues/189
