@@ -1179,7 +1179,7 @@ var $AttrCtx = $B.parser.$AttrCtx = function(context){
                             parent.context.tree[0].args === undefined){
                         // set attr to instance of a class without a parent
                         this.assign_self = true
-                        return [js + ".__class__ && !" +
+                        return [js + ".__class__ && " + js + ".__dict__ && !" +
                             js + ".__class__.$has_setattr && ! " + js +
                             ".$is_class ? " + js +
                             ".__dict__.$string_dict['" + this.name +
@@ -2508,8 +2508,6 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         }
         var global_ns = '$locals_' + global_scope.id.replace(/\./g, '_')
 
-        var prefix = this.tree[0].to_js()
-        if(this.decorated){prefix = this.alias}
         var name = this.name + this.num
 
         // Add lines of code to node children
@@ -2844,7 +2842,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
                 $NodeJS(res + '}'))
 
             node.parent.insert(rank + offset++, $NodeJS(
-                func_name1 + " = " + this.name + '$' + this.num +
+                this.func_name + " = " + this.name + '$' + this.num +
                 '(' + this.default_str + ')'))
 
             node.parent.insert(rank + offset++, $NodeJS(
@@ -5732,7 +5730,7 @@ var $StringCtx = $B.parser.$StringCtx = function(context,value){
                 }else{
                     var re = new RegExp("'", "g")
                     var elt = parsed_fstring[i].replace(re, "\\'")
-                                               .replace("\n", "\\n")
+                                               .replace(/\n/g, "\\n")
                     elts.push("'" + elt + "'")
                 }
             }
@@ -5774,6 +5772,7 @@ var $StringCtx = $B.parser.$StringCtx = function(context,value){
             }
         }
         if(is_bytes){res += ',"ISO-8859-1")'}
+        if(res.length == 0){res = '""'}
         return res
     }
 }

@@ -226,7 +226,7 @@ $B.$class_constructor = function(class_name, class_obj, bases,
         bases[i].$subclasses.push(kls)
         // call __init_subclass__ with the extra keyword arguments
         if(i == 0){
-            init_subclass = _b_.type.__getattribute__(bases[i],
+            var init_subclass = _b_.type.__getattribute__(bases[i],
                 "__init_subclass__")
             if(init_subclass.$infos.__func__ !== undefined){
                 init_subclass.$infos.__func__(kls, {$nat: "kw", kw: extra_kwargs})
@@ -451,7 +451,7 @@ type.__getattribute__ = function(klass, attr){
         if(typeof res == "function"){
             // method
             if(res.$infos === undefined){
-                console.log("warning: no attribute $infos for", res)
+                console.log("warning: no attribute $infos for", res, "attr", attr)
             }
             if($test){console.log("res is function", res)}
 
@@ -543,6 +543,18 @@ type.__new__ = function(meta, name, bases, cl_dict){
         var key = $B.to_alias(items[i][0]),
             v = items[i][1]
         class_dict[key] = v
+        if(v.__class__){
+            // cf PEP 487 and issue #1178
+            var is_descriptor =
+                $B.$getattr(v.__class__, "__set__", _b_.None) !== _b_.None
+
+            if(is_descriptor){
+                var set_name = $B.$getattr(v.__class__, "__set_name__", _b_.None)
+                if(set_name !== _b_.None){
+                    set_name(v, v.__class__, key)
+                }
+            }
+        }
         if(typeof v == "function"){
             v.$infos.$class = class_dict
             if(v.$infos.$defaults){
@@ -736,6 +748,7 @@ var $instance_creator = $B.$instance_creator = function(klass){
     var metaclass = klass.__class__,
         call_func,
         factory
+
     if(metaclass === _b_.type && (!klass.__bases__ || klass.__bases__.length == 0)){
         if(klass.hasOwnProperty("__new__")){
             if(klass.hasOwnProperty("__init__")){
@@ -889,11 +902,9 @@ method.__setattr__ = function(self, key, value){
 
 $B.set_func_names(method, "builtins")
 
-method_descriptor = $B.method_descriptor =
-    $B.make_class("method_descriptor")
+$B.method_descriptor = $B.make_class("method_descriptor")
 
-classmethod_descriptor = $B.classmethod_descriptor =
-    $B.make_class("classmethod_descriptor")
+$B.classmethod_descriptor = $B.make_class("classmethod_descriptor")
 
 // this could not be done before $type and $factory are defined
 _b_.object.__class__ = type

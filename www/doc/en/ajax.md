@@ -104,8 +104,12 @@ matching functions:
 
 `get(`_url[, async=True, headers={}, mode="text", timeout=None, data="", **callbacks]_`)`
 
+and the same for `delete`, `head` and `options`.
+
 `post(`_url[, async=True, headers={"Content-Type": _
 _"application/x-www-form-urlencoded"}, timeout=None, data="", **callbacks]_`)`
+
+and the same for `put`.
 
 > _async_ is a boolean to specify if the request is asynchronous
 > (default value) or synchronous (blocking)

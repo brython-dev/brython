@@ -1406,9 +1406,14 @@ var encode = $B.encode = function(){
                 }
             }
             return res
+        case "latin":
         case "latin1":
+        case "latin-1":
+        case "L1":
         case "iso8859_1":
         case "iso_8859_1":
+        case "8859":
+        case "cp819":
         case "windows1252":
             for(var i = 0, len = s.length; i < len; i++){
                 var cp = s.charCodeAt(i) // code point

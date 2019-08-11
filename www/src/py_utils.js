@@ -31,7 +31,8 @@ $B.args = function($fname, argcount, slots, var_names, args, $dobj,
     }
     var has_kw_args = false,
         nb_pos = $args.length,
-        filled = 0
+        filled = 0,
+        extra_kw
 
     // If the function call had keywords arguments, they are in the last
     // element of $args
@@ -178,11 +179,9 @@ $B.get_class = function(obj){
         switch(typeof obj) {
             case "number":
                 if(obj % 1 === 0){ // this is an int
-                   obj.__class__ = _b_.int
                    return _b_.int
                 }
                 // this is a float
-                obj.__class__ = _b_.float
                 return _b_.float
             case "string":
                 return _b_.str

@@ -781,6 +781,8 @@ DOMNode.__getattribute__ = function(self, attr){
                             args[pos++] = arg.elt
                         }else if(arg === _b_.None){
                             args[pos++] = null
+                        }else if(arg.__class__ == _b_.dict){
+                            args[pos++] = arg.$string_dict
                         }else{
                             args[pos++] = arg
                         }

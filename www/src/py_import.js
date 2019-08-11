@@ -846,9 +846,6 @@ for(var i = 0; i < _sys_paths.length; ++i){
     _path = _path[0]
     $B.path_importer_cache[_path] = url_hook.$factory(_path, _type)
 }
-delete _path
-delete _type
-delete _sys_paths
 
 function import_error(mod_name){
     var exc = _b_.ImportError.$factory(mod_name)
@@ -888,7 +885,6 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
     // its attribute exec_module.
     // exec_module initializes $B.imported to a module object.
 
-
    // [Import spec] Halt import logic
    var from_stdlib = false
 
@@ -907,7 +903,7 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
 
    var modobj = $B.imported[mod_name],
        parsed_name = mod_name.split('.')
-   
+
    if(modobj == _b_.None){
        // [Import spec] Stop loading loop right away
        import_error(mod_name)

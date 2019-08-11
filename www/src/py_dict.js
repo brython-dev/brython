@@ -334,7 +334,9 @@ dict.__getitem__ = function(){
     var hash = _b_.hash(arg),
         _eq = function(other){return $B.rich_comp("__eq__", arg, other)}
 
-    arg.$hash = hash // cache for setdefault
+    if(typeof arg == "object"){
+        arg.$hash = hash // cache for setdefault
+    }
     var sk = self.$str_hash[hash]
     if(sk !== undefined && _eq(sk)){
         return self.$string_dict[sk]
