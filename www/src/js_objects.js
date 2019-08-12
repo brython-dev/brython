@@ -188,7 +188,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
         // underlying DOM element
         return pyobj.elt
 
-    }else if([_b_.list,_b_.tuple].indexOf(klass) > -1){
+    }else if([_b_.list, _b_.tuple].indexOf(klass) > -1){
 
         // Python list : transform its elements
         var res = []
@@ -197,7 +197,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
         })
         return res
 
-    }else if(klass === _b_.dict){
+    }else if(klass === _b_.dict || _b_.issubclass(klass, _b_.dict)){
 
         // Python dictionaries are transformed into a Javascript object
         // whose attributes are the dictionary keys
@@ -212,7 +212,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
         })
         return jsobj
 
-    }else if(klass === $B.builtins.float){
+    }else if(klass === _b_.float){
 
         // Python floats are converted to the underlying value
         return pyobj.valueOf()

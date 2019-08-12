@@ -86,8 +86,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'final',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-08-11 19:28:17.283503"
-__BRYTHON__.timestamp=1565544497283
+__BRYTHON__.compiled_date="2019-08-12 11:47:29.983688"
+__BRYTHON__.timestamp=1565603249983
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -8540,13 +8540,13 @@ klass.__mro__.indexOf($B.DOMNode)>-1){
 return pyobj.elt}else if([_b_.list,_b_.tuple].indexOf(klass)>-1){
 var res=[]
 pyobj.forEach(function(item){res.push(pyobj2jsobj(item))})
-return res}else if(klass===_b_.dict){
+return res}else if(klass===_b_.dict ||_b_.issubclass(klass,_b_.dict)){
 var jsobj={}
 var items=_b_.list.$factory(_b_.dict.items(pyobj))
 items.forEach(function(item){if(typeof item[1]=='function'){
 item[1].bind(jsobj)}
 jsobj[item[0]]=pyobj2jsobj(item[1])})
-return jsobj}else if(klass===$B.builtins.float){
+return jsobj}else if(klass===_b_.float){
 return pyobj.valueOf()}else if(klass===$B.Function ||klass===$B.method){
 return function(){try{var args=[]
 for(var i=0;i < arguments.length;i++){if(arguments[i]===undefined){args.push(_b_.None)}
@@ -13107,7 +13107,7 @@ if(arg.toLowerCase().substr(0,2)=="on"){
 var js='$B.DOMNode.bind(self,"'+
 arg.toLowerCase().substr(2)
 eval(js+'",function(){'+value+'})')}else if(arg.toLowerCase()=="style"){$B.DOMNode.set_style(self,value)}else{if(value !==false){
-try{arg=arg.replace('_','-')
+try{arg=arg.replace(/_/g,'-')
 self.elt.setAttribute(arg,value)}catch(err){throw _b_.ValueError.$factory(
 "can't set attribute "+arg)}}}}}
 dict.__mro__=[$B.DOMNode,$B.builtins.object]
