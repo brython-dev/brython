@@ -408,7 +408,6 @@ long_int.__index__ = function(self){
     // Used by bin()
     // returns a string with the binary value of self
     // The algorithm computes the result of the floor division of self by 2
-
     var res = '',
         temp = self.value,
         d

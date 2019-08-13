@@ -222,7 +222,9 @@
                             if(value !== false){
                                 // option.selected = false sets it to true :-)
                                 try{
-                                    arg = arg.replace(/_/g, '-')
+                                    // Call attribute mapper (cf. issue#1187)
+                                    arg = $B.imported["browser.html"].
+                                        attribute_mapper(arg)
                                     self.elt.setAttribute(arg, value)
                                 }catch(err){
                                     throw _b_.ValueError.$factory(
@@ -328,6 +330,11 @@
 
             // expose function maketag to generate arbitrary tags (issue #624)
             obj.maketag = maketag
+
+            // expose function to transform parameters (issue #1187)
+            obj.attribute_mapper = function(attr){
+                return attr.replace(/_/g, '-')
+            }
 
             return obj
         })(__BRYTHON__)
