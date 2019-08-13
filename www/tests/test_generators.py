@@ -913,4 +913,16 @@ assert test(False) == ['trying...', None, 'OK', 'trying...', None, 'THROW',
     'ERROR handler start', 'ERROR handler end', 'trying...', 'OK',
     'trying...', None, 'OK', 'trying...', None]
 
+# related to issue #1176
+def f():
+    while True:
+        if t:
+            yield t.pop()
+            continue
+        return t
+
+t = ["a", "b", "c"]
+assert list(f()) == ["c", "b", "a"]
+assert not t
+
 print('passed all tests...')

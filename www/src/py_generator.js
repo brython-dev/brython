@@ -271,6 +271,7 @@ $B.genNode = function(data, parent){
 
         if(head && (this.is_break || this.is_continue)){
             var loop = in_loop(this)
+            res.loop = loop
             if(loop.has("yield")){
                 res.data = ""
                 if(this.is_break){
@@ -561,10 +562,19 @@ function make_next(self, yield_node_id){
             }
         }
 
+        var is_continue
+
         for(var i = start, len = exit_parent.children.length; i < len; i++){
             var clone = exit_parent.children[i].clone_tree(null, true)
             if(clone.is_continue){
                 // Stop copying
+                is_continue = true
+                var loop = clone.loop
+                // Run loop again
+                for(var j = loop.rank, len = loop.parent.children.length;
+                        j < len; j++){
+                    rest[pos++] = loop.parent.children[j].clone_tree(null, true)
+                }
                 break
             }
             if(clone.has("continue")){
@@ -711,7 +721,7 @@ generator.__next__ = function(self){
 
     // Brython replaces "yield x" by "return [x, next_rank]"
     // next_rank is the rank of the function to call after this yield
-
+    
     if(res === undefined){throw _b_.StopIteration.$factory(_b_.None)}
     else if(res[0].__class__ === $GeneratorReturn){
         // The function may have ordinary "return" lines, in this case

@@ -9899,7 +9899,7 @@ var _run_scripts = $B.parser._run_scripts = function(options){
             // Javascript scripts included in the page with
             // <script type="text/javascript" src="source.js"></script>
             // with content like
-            // __BRYTHON__.scripts["myscript"] =
+            // __BRYTHON__.scripts["myscript"] = String.raw
             // `
             // <Python code here>
             // `
