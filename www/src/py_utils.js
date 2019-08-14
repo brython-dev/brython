@@ -32,7 +32,16 @@ $B.args = function($fname, argcount, slots, var_names, args, $dobj,
     var has_kw_args = false,
         nb_pos = $args.length,
         filled = 0,
-        extra_kw
+        extra_kw,
+        only_positional
+
+    // If the function definition indicates the end of positional arguments,
+    // store the position and remove "/" from variable names
+    var end_positional = var_names.indexOf("/")
+    if(end_positional != -1){
+        var_names.splice(end_positional, 1)
+        only_positional = var_names.slice(0, end_positional)
+    }
 
     // If the function call had keywords arguments, they are in the last
     // element of $args
@@ -116,6 +125,9 @@ $B.args = function($fname, argcount, slots, var_names, args, $dobj,
                 // The slot is already filled
                 throw _b_.TypeError.$factory($fname +
                     "() got multiple values for argument '" + key + "'")
+            }else if(only_positional && only_positional.indexOf(key1) > -1){
+                throw _b_.TypeError.$factory($fname + "() got an " +
+                    "unexpected keyword argument '" + key + "'")
             }else{
                 // Fill the slot with the key/value pair
                 slots[key1] = value

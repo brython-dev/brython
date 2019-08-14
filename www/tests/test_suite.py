@@ -1,3 +1,5 @@
+from tester import assertRaises
+
 # numbers
 assert 2 + 2 == 4
 assert (50 - 5 * 6) / 4 == 5.0
@@ -491,5 +493,25 @@ for value in [0.,
     if value is not None:
         assert value != None
         assert not (value == None)
+
+# PEP 570 (positional-only parameters)
+def pos_only_arg(arg, /):
+    return arg
+
+pos_only_arg(1)
+assertRaises(TypeError, pos_only_arg, arg=2)
+
+def kwd_only_arg(*, arg):
+    return arg
+
+assert kwd_only_arg(arg=2) == 2
+assertRaises(TypeError, kwd_only_arg, 1)
+
+def combined_example(pos_only, /, standard, *, kwd_only):
+    return pos_only, standard, kwd_only
+
+assert combined_example(1, 2, kwd_only=3) == (1, 2, 3)
+assert combined_example(1, standard=2, kwd_only=3) == (1, 2, 3)
+assertRaises(TypeError, combined_example, 1, 2, 3)
 
 print('passed all tests...')

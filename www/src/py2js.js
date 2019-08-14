@@ -2432,7 +2432,8 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         }
 
         var defaults = [],
-            defs1 = []
+            defs1 = [],
+            has_end_pos = false
         this.argcount = 0
         this.kwonlyargcount = 0 // number of args after a star arg
         this.kwonlyargsdefaults = []
@@ -2457,8 +2458,14 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
 
         var func_args = this.tree[1].tree
         func_args.forEach(function(arg){
-            this.args.push(arg.name)
-            this.varnames[arg.name] = true
+            if(arg.type == 'end_positional'){
+                this.args.push("/")
+                slot_list.push('"/"')
+                has_end_pos = true
+            }else{
+                this.args.push(arg.name)
+                this.varnames[arg.name] = true
+            }
             if(arg.type == 'func_arg_id'){
                 if(this.star_arg){
                     this.kwonlyargcount++
@@ -2570,7 +2577,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
 
         var only_positional = false
         if(this.other_args === null && this.other_kw === null &&
-                this.after_star.length == 0){
+                this.after_star.length == 0 && !has_end_pos){
             // If function only takes positional arguments, we can generate
             // a faster version of argument parsing than by calling function
             // $B.args
@@ -3120,6 +3127,19 @@ var $EllipsisCtx = $B.parser.$EllipsisCtx = function(context){
     this.to_js = function(){
         this.js_processed = true
         return '$B.builtins["Ellipsis"]'
+    }
+}
+
+var $EndOfPositionalCtx = $B.parser.$EndOfConditionalCtx = function(context){
+    // Indicates the end of positional arguments in a function definition
+    // PEP 570
+    this.type = "end_positional"
+    this.parent = context
+    context.has_end_positional = true
+    context.tree.push(this)
+
+    this.to_js = function(){
+        return "/"
     }
 }
 
@@ -7428,6 +7448,12 @@ var $transition = $B.parser.$transition = function(context, token, value){
                 }
             }
 
+        case 'end_positional':
+            if(token == "," || token == ")"){
+                return $transition(context.parent, token, value)
+            }
+            $_SyntaxError(context, 'token ' + token + ' after ' + context)
+
         case 'except':
             switch(token) {
                 case 'id':
@@ -7972,7 +7998,7 @@ var $transition = $B.parser.$transition = function(context, token, value){
                     return context.parent
                 case 'op':
                     if(context.has_kw_arg){
-                        $_SyntaxError(context,'duplicate kw arg')
+                        $_SyntaxError(context, 'duplicate kw arg')
                     }
                     var op = value
                     context.expect = ','
@@ -7981,8 +8007,18 @@ var $transition = $B.parser.$transition = function(context, token, value){
                             $_SyntaxError(context,'duplicate star arg')
                         }
                         return new $FuncStarArgCtx(context, '*')
+                    }else if(op == '**'){
+                        return new $FuncStarArgCtx(context, '**')
+                    }else if(op == '/'){ // PEP 570
+                        if(context.has_end_positional){
+                            $_SyntaxError(context,
+                                ['duplicate / in function parameters'])
+                        }else if(context.has_star_arg){
+                            $_SyntaxError(context,
+                                ['/ after * in function parameters'])
+                        }
+                        return new $EndOfPositionalCtx(context)
                     }
-                    if(op == '**'){return new $FuncStarArgCtx(context, '**')}
                     $_SyntaxError(context, 'token ' + op + ' after ' + context)
             }
             $_SyntaxError(context, 'token ' + token + ' after ' + context)

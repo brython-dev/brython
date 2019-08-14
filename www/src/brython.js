@@ -86,8 +86,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'final',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-08-13 21:30:24.452210"
-__BRYTHON__.timestamp=1565724624452
+__BRYTHON__.compiled_date="2019-08-14 13:35:19.836458"
+__BRYTHON__.timestamp=1565782519836
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -1220,7 +1220,7 @@ if(pblock.C && pblock.C.tree[0].type=="def"){this.enclosing.push(pblock)}}
 var pnode=this.parent.node
 while(pnode.parent && pnode.parent.is_def_func){this.enclosing.push(pnode.parent.parent)
 pnode=pnode.parent.parent}
-var defaults=[],defs1=[]
+var defaults=[],defs1=[],has_end_pos=false
 this.argcount=0
 this.kwonlyargcount=0 
 this.kwonlyargsdefaults=[]
@@ -1236,8 +1236,10 @@ var func_name1=this.func_name
 if(this.decorated){this.func_name='var '+this.alias
 func_name1=this.alias}
 var func_args=this.tree[1].tree
-func_args.forEach(function(arg){this.args.push(arg.name)
-this.varnames[arg.name]=true
+func_args.forEach(function(arg){if(arg.type=='end_positional'){this.args.push("/")
+slot_list.push('"/"')
+has_end_pos=true}else{this.args.push(arg.name)
+this.varnames[arg.name]=true}
 if(arg.type=='func_arg_id'){if(this.star_arg){this.kwonlyargcount++
 if(arg.has_default){this.kwonlyargsdefaults.push(arg.name)}}
 else{this.argcount++
@@ -1294,7 +1296,7 @@ js='for(var $var in $ns){$locals[$var] = $ns[$var]};'
 make_args_nodes.push($NodeJS(js))}
 var only_positional=false
 if(this.other_args===null && this.other_kw===null &&
-this.after_star.length==0){
+this.after_star.length==0 && !has_end_pos){
 only_positional=true
 nodes.push($NodeJS('var $len = arguments.length;'))
 var new_node=new $Node()
@@ -1560,6 +1562,12 @@ C.tree[C.tree.length]=this
 this.toString=function(){return 'ellipsis'}
 this.to_js=function(){this.js_processed=true
 return '$B.builtins["Ellipsis"]'}}
+var $EndOfPositionalCtx=$B.parser.$EndOfConditionalCtx=function(C){
+this.type="end_positional"
+this.parent=C
+C.has_end_positional=true
+C.tree.push(this)
+this.to_js=function(){return "/"}}
 var $ExceptCtx=$B.parser.$ExceptCtx=function(C){
 this.type='except'
 this.parent=C
@@ -3617,6 +3625,9 @@ if(C.nbdots==3 && $pos-C.start==2){C.$complete=true}
 return C}else{if(! C.$complete){$pos--
 $_SyntaxError(C,'token '+token+' after '+
 C)}else{return $transition(C.parent,token,value)}}
+case 'end_positional':
+if(token=="," ||token==")"){return $transition(C.parent,token,value)}
+$_SyntaxError(C,'token '+token+' after '+C)
 case 'except':
 switch(token){case 'id':
 case 'imaginary':
@@ -3927,8 +3938,9 @@ if(C.has_kw_arg){$_SyntaxError(C,'duplicate kw arg')}
 var op=value
 C.expect=','
 if(op=='*'){if(C.has_star_arg){$_SyntaxError(C,'duplicate star arg')}
-return new $FuncStarArgCtx(C,'*')}
-if(op=='**'){return new $FuncStarArgCtx(C,'**')}
+return new $FuncStarArgCtx(C,'*')}else if(op=='**'){return new $FuncStarArgCtx(C,'**')}else if(op=='/'){
+if(C.has_end_positional){$_SyntaxError(C,['duplicate / in function parameters'])}else if(C.has_star_arg){$_SyntaxError(C,['/ after * in function parameters'])}
+return new $EndOfPositionalCtx(C)}
 $_SyntaxError(C,'token '+op+' after '+C)}
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'func_star_arg':
@@ -5645,7 +5657,10 @@ var $args=[]
 if(Array.isArray(args)){$args=args}
 else{
 for(var i=0,len=args.length;i < len;i++){$args.push(args[i])}}
-var has_kw_args=false,nb_pos=$args.length,filled=0,extra_kw
+var has_kw_args=false,nb_pos=$args.length,filled=0,extra_kw,only_positional
+var end_positional=var_names.indexOf("/")
+if(end_positional !=-1){var_names.splice(end_positional,1)
+only_positional=var_names.slice(0,end_positional)}
 if(nb_pos > 0 && $args[nb_pos-1]&& $args[nb_pos-1].$nat){nb_pos--
 if(Object.keys($args[nb_pos].kw).length > 0){has_kw_args=true
 var kw_args=$args[nb_pos].kw
@@ -5673,7 +5688,8 @@ if(key.substr(0,2)=="$$"){key=key.substr(2)}
 extra_kw.$string_dict[key]=value}else{throw _b_.TypeError.$factory($fname+
 "() got an unexpected keyword argument '"+key+"'")}}else if(slots[key1]!==null){
 throw _b_.TypeError.$factory($fname+
-"() got multiple values for argument '"+key+"'")}else{
+"() got multiple values for argument '"+key+"'")}else if(only_positional && only_positional.indexOf(key1)>-1){throw _b_.TypeError.$factory($fname+"() got an "+
+"unexpected keyword argument '"+key+"'")}else{
 slots[key1]=value}}}
 var missing=[]
 for(var attr in slots){if(slots[attr]===null){if($dobj[attr]!==undefined){slots[attr]=$dobj[attr]}
