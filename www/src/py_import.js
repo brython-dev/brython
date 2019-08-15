@@ -234,7 +234,9 @@ function import_py(module, path, $package){
 function run_py(module_contents, path, module, compiled) {
     // set file cache for path ; used in built-in function open()
     $B.file_cache[path] = module_contents
-    var root, js
+    var root,
+        js,
+        mod_name = module.__name__ // might be modified inside module, eg _pydecimal
     if(! compiled){
         var $Node = $B.$Node,
             $NodeJSCtx = $B.$NodeJSCtx
@@ -299,7 +301,7 @@ function run_py(module_contents, path, module, compiled) {
         $B.file_cache[module.__name__] = module_contents
         return {
             content: src,
-            name: module.__name__,
+            name: mod_name,
             timestamp: $B.timestamp,
             imports: Object.keys(root.imports).join(",")
         }
@@ -401,23 +403,28 @@ var finder_VFS = {
 
 
         }else{
+            var mod_name = modobj.__name__
             if($B.debug > 1){
-                console.log("run Python code from VFS", modobj.__name__)
+                console.log("run Python code from VFS", mod_name)
             }
-            var record = run_py(module_contents, modobj.__path__, modobj,
-                ext == '.pyc.js')
-            if(Array.isArray(modobj.__path__) && modobj.__path__.length > 0 &&
-                    !modobj.__path__[0].endsWith('.vfs.js')){
-                console.log("store precompiled", modobj.__path__, ext, record)
-                record.is_package = modobj.$is_package
-                // Sends a request to store the compiled Javascript for a module.
-                var db = $B.idb_cx.result,
-                    tx = db.transaction("modules", "readwrite"),
-                    store = tx.objectStore("modules"),
-                    cursor = store.openCursor(),
-                request = store.put(record)
-                request.onsuccess = function(){
-                    console.log(modobj.__name__, "stored in db")
+            var record = run_py(module_contents, modobj.__path__, modobj)
+            record.is_package = modobj.$is_package
+            $B.precompiled[mod_name] = record.is_package ? [record.content] :
+                record.content
+            if(window.indexedDB){
+                // Store the compiled Javascript in indexedDB cache
+                var idb_cx = indexedDB.open("brython_stdlib")
+                idb_cx.onsuccess = function(evt){
+                    var db = evt.target.result,
+                        tx = db.transaction("modules", "readwrite"),
+                        store = tx.objectStore("modules"),
+                        cursor = store.openCursor(),
+                    request = store.put(record)
+                    request.onsuccess = function(){
+                        if(true){ //$B.debug > 1){
+                            console.info(modobj.__name__, "stored in db")
+                        }
+                    }
                 }
             }
         }
@@ -818,7 +825,7 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
            from_stdlib = true
        }
    }
-
+   
    var modobj = $B.imported[mod_name],
        parsed_name = mod_name.split('.')
 

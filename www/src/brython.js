@@ -86,8 +86,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'final',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-08-15 14:48:42.853064"
-__BRYTHON__.timestamp=1565873322853
+__BRYTHON__.compiled_date="2019-08-15 15:10:37.614074"
+__BRYTHON__.timestamp=1565874637614
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -8882,12 +8882,12 @@ for(var attr in $module){$B.imported[parent][attr]=$module[attr]}
 if(i>0){
 $B.builtins.setattr($B.imported[parts.slice(0,i).join(".")],parts[i],$module)}}
 return $module}else{if($B.debug > 1){console.log("run Python code from VFS",modobj.__name__)}
-var record=run_py(module_contents,modobj.__path__,modobj,ext=='.pyc.js')
-if(Array.isArray(modobj.__path__)&& modobj.__path__.length > 0 &&
-!modobj.__path__[0].endsWith('.vfs.js')){console.log("store precompiled",modobj.__path__,ext,record)
+var record=run_py(module_contents,modobj.__path__,modobj)
+if(false){
 record.is_package=modobj.$is_package
-var db=$B.idb_cx.result,tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules"),cursor=store.openCursor(),request=store.put(record)
-request.onsuccess=function(){console.log(modobj.__name__,"stored in db")}}}},find_module:function(cls,name,path){return{
+var idb_cx=indexedDB.open("brython_stdlib")
+idb_cx.onsuccess=function(evt){var db=evt.target.result,tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules"),cursor=store.openCursor(),request=store.put(record)
+request.onsuccess=function(){if($B.debug > 1){console.log(modobj.__name__,"stored in db")}}}}}},find_module:function(cls,name,path){return{
 __class__:Loader,load_module:function(name,path){var spec=cls.find_spec(cls,name,path)
 var mod=module.$factory(name)
 $B.imported[name]=mod
