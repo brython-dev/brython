@@ -86,8 +86,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'final',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-08-15 14:22:50.417450"
-__BRYTHON__.timestamp=1565871770417
+__BRYTHON__.compiled_date="2019-08-15 14:48:42.853064"
+__BRYTHON__.timestamp=1565873322853
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5309,8 +5309,9 @@ res.push(_b_.None)
 return _b_.tuple.$factory(res)}
 object.__repr__=function(self){if(self===object){return "<class 'object'>"}
 if(self.__class__===_b_.type){return "<class '"+self.__name__+"'>"}
-if(self.__class__.$infos.__module__ !==undefined &&
-self.__class__.$infos.__module__ !=="builtins"){return "<"+self.__class__.$infos.__module__+"."+
+var module=self.__class__.$infos.__module__
+if(module !==undefined && !module.startsWith("$")&&
+module !=="builtins"){return "<"+self.__class__.$infos.__module__+"."+
 $B.class_name(self)+" object>"}else{return "<"+$B.class_name(self)+" object>"}}
 object.__setattr__=function(self,attr,val){if(val===undefined){
 throw _b_.TypeError.$factory(
@@ -5517,7 +5518,7 @@ type.__new__=function(meta,name,bases,cl_dict){
 var class_dict={__class__ :meta,__bases__ :bases,__dict__ :cl_dict,$infos:{__name__:name.replace("$$","")},$is_class:true,$has_setattr:cl_dict.$has_setattr}
 var items=$B.dict_to_list(cl_dict)
 for(var i=0;i < items.length;i++){var key=$B.to_alias(items[i][0]),v=items[i][1]
-if(v===undefined){console.log(cl_dict)}
+if(v===undefined){continue}
 class_dict[key]=v
 if(v.__class__){
 var is_descriptor=
@@ -6400,7 +6401,6 @@ if(_globals===_b_.None){var gobj=current_frame[3],ex='var $locals_'+globals_id+'
 eval(ex)
 for(var attr in gobj){if((! attr.startsWith("$"))||attr.startsWith('$$')){eval("$locals_"+globals_id+"[attr] = gobj[attr]")}}}else{if(_globals.$jsobj){var items=_globals.$jsobj}
 else{var items=_globals.$string_dict}
-items.__name__=items.__name__ ||"<string>"
 eval("$locals_"+globals_id+" = _globals.$string_dict")
 for(var item in items){var item1=$B.to_alias(item)
 try{eval('$locals_'+globals_id+'["'+item1+
@@ -8966,10 +8966,6 @@ finder_path.$factory=function(){return{__class__:finder_path}}
 var url_hook={__class__:_b_.type,__mro__:[_b_.object],__repr__:function(self){return "<UrlPathFinder"+(self.hint? " for '"+self.hint+"'":
 "(unbound)")+" at "+self.path_entry+'>'},$infos:{__module__:"builtins",__name__:"UrlPathFinder"},find_spec :function(self,fullname,module){var loader_data={},notfound=true,hint=self.hint,base_path=self.path_entry+fullname.match(/[^.]+$/g)[0],modpaths=[]
 var tryall=hint===undefined
-if(tryall ||hint=="js"){
-modpaths=[[base_path+".js","js",false]]}
-if(tryall ||hint=='pyc.js'){
-modpaths=modpaths.concat([[base_path+".pyc.js","pyc.js",false],[base_path+"/__init__.pyc.js","pyc.js",true]])}
 if(tryall ||hint=='py'){
 modpaths=modpaths.concat([[base_path+".py","py",false],[base_path+"/__init__.py","py",true]])}
 for(var j=0;notfound && j < modpaths.length;++j){try{var file_info=modpaths[j],module={__name__:fullname,$is_package:false}

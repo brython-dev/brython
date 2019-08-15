@@ -694,16 +694,6 @@ var url_hook = {
             base_path = self.path_entry + fullname.match(/[^.]+$/g)[0],
             modpaths = []
         var tryall = hint === undefined
-        if(tryall || hint == "js"){
-            // either js or undefined , try js code
-            modpaths = [[base_path + ".js", "js", false]]
-        }
-        if(tryall || hint == 'pyc.js'){
-            // either pyc or undefined , try pre-compiled module code
-            modpaths = modpaths.concat([[base_path + ".pyc.js", "pyc.js", false],
-                                        [base_path + "/__init__.pyc.js",
-                                         "pyc.js", true]])
-        }
         if(tryall || hint == 'py'){
             // either py or undefined , try py code
             modpaths = modpaths.concat([[base_path + ".py", "py", false],
