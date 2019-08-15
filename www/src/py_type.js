@@ -542,6 +542,7 @@ type.__new__ = function(meta, name, bases, cl_dict){
     for(var i = 0; i < items.length; i++){
         var key = $B.to_alias(items[i][0]),
             v = items[i][1]
+        if(v === undefined){continue}
         class_dict[key] = v
         if(v.__class__){
             // cf PEP 487 and issue #1178
