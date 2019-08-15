@@ -4,6 +4,12 @@
 
 var _b_ = $B.builtins
 
+if($B.VFS_timestamp && $B.VFS_timestamp > $B.timestamp){
+    // A VFS created by python -m brython --modules has its own
+    // timestamp. If it is after the one in brython.js, use it
+    $B.timestamp = $B.VFS_timestamp
+}
+
 function idb_load(evt, module){
     // Callback function of a request to the indexedDB database with a module
     // name as key.
@@ -14,12 +20,6 @@ function idb_load(evt, module){
     var res = evt.target.result
 
     var timestamp = $B.timestamp
-
-    if($B.VFS_timestamp && $B.VFS_timestamp > $B.timestamp){
-        // A VFS created by python -m brython --modules has its own
-        // timestamp. If it is after the one in brython.js, use it
-        $B.timestamp = $B.VFS_timestamp
-    }
 
     if(res === undefined || res.timestamp != $B.timestamp){
         // Not found or not with the same date as in brython_stdlib.js:
@@ -174,7 +174,29 @@ $B.idb_open = function(obj){
             }
         }else{
             console.info("using indexedDB for stdlib modules cache")
-            loop()
+            // Preload all compiles modules
+
+            var tx = db.transaction("modules", "readonly"),
+                store = tx.objectStore("modules"),
+                cursor = store.openCursor(),
+                record
+
+            cursor.onsuccess = function(evt){
+                res = evt.target.result
+                if(res){
+                    record = res.value
+                    if(record.timestamp == $B.timestamp){
+                        if(record.is_package){
+                            $B.precompiled[record.name] = [record.content]
+                        }else{
+                            $B.precompiled[record.name] = record.content
+                        }
+                    }
+                    res.continue()
+                }else{
+                    loop()
+                }
+            }
         }
     }
     idb_cx.onupgradeneeded = function(){

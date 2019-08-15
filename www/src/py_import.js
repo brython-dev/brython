@@ -246,25 +246,6 @@ function run_py(module_contents, path, module, compiled) {
         if(module.__package__ !== undefined){
             root.binding["__package__"] = true
         }
-        var body = root.children
-        root.children = []
-        // use the module pattern : module name returns the results of an anonymous function
-        var mod_node = new $Node("expression")
-        new $NodeJSCtx(mod_node,"var $module = (function()")
-        root.insert(0, mod_node)
-        for(var i = 0, len = body.length; i < len; i++){mod_node.add(body[i])}
-
-        // $globals will be returned when the anonymous function is run
-        var ret_node = new $Node("expression")
-        new $NodeJSCtx(ret_node,"return $locals_" +
-            module.__name__.replace(/\./g, "_"))
-        mod_node.add(ret_node)
-        // add parenthesis for anonymous function execution
-
-        var ex_node = new $Node("expression")
-        new $NodeJSCtx(ex_node, ")(__BRYTHON__)")
-        root.add(ex_node)
-
     }
 
     try{
@@ -274,7 +255,10 @@ function run_py(module_contents, path, module, compiled) {
            console.log("code for module " + module.__name__)
            console.log(js)
         }
-        js += "; return $module"
+        var src = js
+        js = "var $module = (function(){\n" + js + "return $locals_" +
+            module.__name__.replace(/\./g, "_") + "})(__BRYTHON__)\n" +
+            "return $module"
         var module_id = "$locals_" + module.__name__.replace(/\./g, '_')
         var $module = (new Function(module_id, js))(module) //eval(js)
     }catch(err){
@@ -297,8 +281,6 @@ function run_py(module_contents, path, module, compiled) {
 
         throw err
     }finally{
-        root = null
-        js = null
         $B.clear_ns(module.__name__)
     }
 
@@ -315,7 +297,12 @@ function run_py(module_contents, path, module, compiled) {
         // See issue #7
         $B.imported[module.__name__] = module
         $B.file_cache[module.__name__] = module_contents
-        return true
+        return {
+            content: src,
+            name: module.__name__,
+            timestamp: $B.timestamp,
+            imports: Object.keys(root.imports).join(",")
+        }
     }catch(err){
         console.log("" + err + " " + " for module " + module.__name__)
         for(var attr in err){console.log(attr + " " + err[attr])}
@@ -396,6 +383,7 @@ var finder_VFS = {
                        console.log(err)
                        for(var k in err){console.log(k, err[k])}
                        console.log(Object.keys($B.imported))
+                       if($B.debug > 2){console.log(mod_js)}
                    }
                    throw err
                }
@@ -416,7 +404,22 @@ var finder_VFS = {
             if($B.debug > 1){
                 console.log("run Python code from VFS", modobj.__name__)
             }
-            run_py(module_contents, modobj.__path__, modobj, ext == '.pyc.js')
+            var record = run_py(module_contents, modobj.__path__, modobj,
+                ext == '.pyc.js')
+            if(Array.isArray(modobj.__path__) && modobj.__path__.length > 0 &&
+                    !modobj.__path__[0].endsWith('.vfs.js')){
+                console.log("store precompiled", modobj.__path__, ext, record)
+                record.is_package = modobj.$is_package
+                // Sends a request to store the compiled Javascript for a module.
+                var db = $B.idb_cx.result,
+                    tx = db.transaction("modules", "readwrite"),
+                    store = tx.objectStore("modules"),
+                    cursor = store.openCursor(),
+                request = store.put(record)
+                request.onsuccess = function(){
+                    console.log(modobj.__name__, "stored in db")
+                }
+            }
         }
     },
 
@@ -664,81 +667,6 @@ finder_path.$factory = function(){
     return {__class__: finder_path}
 }
 
-
-/**
- * Find modules packaged in a js script to be used as a virtual file system
- *
- * @param {string}      URL pointing at location of VFS js file
- */
-
-var vfs_hook = {
-    __class__: _b_.type,
-    __mro__: [_b_.object],
-    $infos: {
-        __module__: "builtins",
-        __name__: "VfsPathFinder"
-    },
-
-    load_vfs: function(self) {
-        try{var code = $download_module({__name__: "<VFS>"}, self.path)}
-        catch(e){
-            self.vfs = undefined
-            throw new _b_.ImportError.$factory(e.$message || e.message)
-        }
-        eval(code)
-        code = null
-        try{self.vfs = $vfs}
-        catch(e){
-            throw new _b_.ImportError.$factory("Expecting $vfs var in VFS file")
-        }
-        $B.path_importer_cache[self.path + "/"] = self
-    },
-
-    find_spec: function(self, fullname, module){
-        if(self.vfs === undefined){
-            try{vfs_hook.load_vfs(self)}
-            catch(e){
-                console.log("Could not load VFS while importing '" +
-                    fullname + "'")
-                return _b_.None
-            }
-        }
-        self.__class__.vfs = self.vfs
-        var stored = self.vfs[fullname]
-        if(stored === undefined){return _b_.None}
-        var is_package = stored[2]
-        return new_spec({
-            name : fullname,
-            loader: finder_VFS,
-            // FIXME : Better origin string.
-            origin : self.path + '#' + fullname,
-            // FIXME: Namespace packages ?
-            submodule_search_locations: is_package? [self.path] :
-              _b_.None,
-            loader_state: {stored: stored},
-            // FIXME : Where exactly compiled module is stored ?
-            cached: _b_.None,
-            parent: is_package ? fullname : parent_package(fullname),
-            has_location: _b_.True
-        })
-    },
-
-    invalidate_caches: function(self){self.vfs = undefined}
-}
-
-vfs_hook.$factory = function(path) {
-    if(path.substr(-1) == '/'){
-        path = path.slice(0, -1)
-    }
-    var ext = path.substr(-7)
-    if(ext != '.vfs.js'){
-        throw _b_.ImportError.$factory('VFS file URL must end with .vfs.js extension');
-    }
-    self = {__class__: vfs_hook, path: path}
-    return self
-}
-
-$B.set_func_names(vfs_hook, "<import>")
 
 /**
  * Find modules deployed in a hierarchy under a given base URL
@@ -1118,7 +1046,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
 
 // List of path hooks. It is changed by function brython() depending
 // on the options passed
-$B.$path_hooks = [vfs_hook, url_hook]
+$B.$path_hooks = [url_hook]
 
 // List of finders, also used by brython()
 $B.$meta_path = [finder_VFS, finder_stdlib_static, finder_path]
@@ -1150,7 +1078,6 @@ var _importlib_module = {
     VFSFinder: finder_VFS,
     StdlibStatic: finder_stdlib_static,
     ImporterPath: finder_path,
-    VFSPathFinder : vfs_hook,
     UrlPathFinder: url_hook,
     optimize_import_for_path : optimize_import_for_path
 }

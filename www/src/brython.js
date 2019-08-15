@@ -86,8 +86,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'final',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-08-14 13:35:19.836458"
-__BRYTHON__.timestamp=1565782519836
+__BRYTHON__.compiled_date="2019-08-15 14:22:50.417450"
+__BRYTHON__.timestamp=1565871770417
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -4929,10 +4929,6 @@ if(!$B.isWebWorker){
 var path_links=document.querySelectorAll('head link[rel~=pythonpath]'),_importlib=$B.imported['_importlib']
 for(var i=0,e;e=path_links[i];++i){var href=e.href;
 if((' '+e.rel+' ').indexOf(' prepend ')!=-1){$B.path.unshift(href);}else{$B.path.push(href);}
-if(href.slice(-7).toLowerCase()=='.vfs.js' &&
-(' '+e.rel+' ').indexOf(' prefetch ')!=-1){
-$B.path_importer_cache[href+'/']=
-$B.imported['_importlib'].VFSPathFinder.$factory(href)}
 var filetype=e.hreflang
 if(filetype){if(filetype.slice(0,2)=='x-'){filetype=filetype.slice(2)}
 _importlib.optimize_import_for_path(e.href,filetype)}}}
@@ -5026,11 +5022,11 @@ var brython=__BRYTHON__.brython
 ;
 
 (function($B){var _b_=$B.builtins
+if($B.VFS_timestamp && $B.VFS_timestamp > $B.timestamp){
+$B.timestamp=$B.VFS_timestamp}
 function idb_load(evt,module){
 var res=evt.target.result
 var timestamp=$B.timestamp
-if($B.VFS_timestamp && $B.VFS_timestamp > $B.timestamp){
-$B.timestamp=$B.VFS_timestamp}
 if(res===undefined ||res.timestamp !=$B.timestamp){
 if($B.VFS[module]!==undefined){var elts=$B.VFS[module],ext=elts[0],source=elts[1],is_package=elts.length==4,__package__
 if(ext==".py"){
@@ -5086,7 +5082,11 @@ idb_cx.onversionchanged=function(){console.log("version changed")}
 idb_cx.onsuccess=function(){console.info("db opened",idb_cx)
 var db=idb_cx.result,store=db.createObjectStore("modules",{"keyPath":"name"})
 store.onsuccess=loop}}else{console.info("using indexedDB for stdlib modules cache")
-loop()}}
+var tx=db.transaction("modules","readonly"),store=tx.objectStore("modules"),cursor=store.openCursor(),record
+cursor.onsuccess=function(evt){res=evt.target.result
+if(res){record=res.value
+if(record.timestamp==$B.timestamp){if(record.is_package){$B.precompiled[record.name]=[record.content]}else{$B.precompiled[record.name]=record.content}}
+res.continue()}else{loop()}}}}
 idb_cx.onupgradeneeded=function(){console.info("upgrade needed")
 var db=idb_cx.result,store=db.createObjectStore("modules",{"keyPath":"name"})
 store.onsuccess=loop}
@@ -5517,6 +5517,7 @@ type.__new__=function(meta,name,bases,cl_dict){
 var class_dict={__class__ :meta,__bases__ :bases,__dict__ :cl_dict,$infos:{__name__:name.replace("$$","")},$is_class:true,$has_setattr:cl_dict.$has_setattr}
 var items=$B.dict_to_list(cl_dict)
 for(var i=0;i < items.length;i++){var key=$B.to_alias(items[i][0]),v=items[i][1]
+if(v===undefined){console.log(cl_dict)}
 class_dict[key]=v
 if(v.__class__){
 var is_descriptor=
@@ -6399,6 +6400,7 @@ if(_globals===_b_.None){var gobj=current_frame[3],ex='var $locals_'+globals_id+'
 eval(ex)
 for(var attr in gobj){if((! attr.startsWith("$"))||attr.startsWith('$$')){eval("$locals_"+globals_id+"[attr] = gobj[attr]")}}}else{if(_globals.$jsobj){var items=_globals.$jsobj}
 else{var items=_globals.$string_dict}
+items.__name__=items.__name__ ||"<string>"
 eval("$locals_"+globals_id+" = _globals.$string_dict")
 for(var item in items){var item1=$B.to_alias(item)
 try{eval('$locals_'+globals_id+'["'+item1+
@@ -8808,24 +8810,14 @@ var root,js
 if(! compiled){var $Node=$B.$Node,$NodeJSCtx=$B.$NodeJSCtx
 $B.$py_module_path[module.__name__]=path
 root=$B.py2js(module_contents,module,module.__name__,$B.builtins_scope)
-if(module.__package__ !==undefined){root.binding["__package__"]=true}
-var body=root.children
-root.children=[]
-var mod_node=new $Node("expression")
-new $NodeJSCtx(mod_node,"var $module = (function()")
-root.insert(0,mod_node)
-for(var i=0,len=body.length;i < len;i++){mod_node.add(body[i])}
-var ret_node=new $Node("expression")
-new $NodeJSCtx(ret_node,"return $locals_"+
-module.__name__.replace(/\./g,"_"))
-mod_node.add(ret_node)
-var ex_node=new $Node("expression")
-new $NodeJSCtx(ex_node,")(__BRYTHON__)")
-root.add(ex_node)}
+if(module.__package__ !==undefined){root.binding["__package__"]=true}}
 try{js=compiled ? module_contents :root.to_js()
 if($B.$options.debug==10){console.log("code for module "+module.__name__)
 console.log(js)}
-js+="; return $module"
+var src=js
+js="var $module = (function(){\n"+js+"return $locals_"+
+module.__name__.replace(/\./g,"_")+"})(__BRYTHON__)\n"+
+"return $module"
 var module_id="$locals_"+module.__name__.replace(/\./g,'_')
 var $module=(new Function(module_id,js))(module)}catch(err){console.log(err+" for module "+module.__name__)
 console.log("module",module)
@@ -8838,16 +8830,15 @@ console.log("message: "+err.$message)
 console.log("filename: "+err.fileName)
 console.log("linenum: "+err.lineNumber)
 if($B.debug > 0){console.log("line info "+$B.line_info)}
-throw err}finally{root=null
-js=null
-$B.clear_ns(module.__name__)}
+throw err}finally{$B.clear_ns(module.__name__)}
 try{
 var mod=eval("$module")
 for(var attr in mod){module[attr]=mod[attr]}
 module.__initializing__=false
 $B.imported[module.__name__]=module
 $B.file_cache[module.__name__]=module_contents
-return true}catch(err){console.log(""+err+" "+" for module "+module.__name__)
+return{
+content:src,name:module.__name__,timestamp:$B.timestamp,imports:Object.keys(root.imports).join(",")}}catch(err){console.log(""+err+" "+" for module "+module.__name__)
 for(var attr in err){console.log(attr+" "+err[attr])}
 if($B.debug > 0){console.log("line info "+__BRYTHON__.line_info)}
 throw err}}
@@ -8884,13 +8875,19 @@ mod_js+="return $locals_"+parent_id
 var $module=new Function("$locals_"+parent_id,mod_js)(
 $B.imported[parent])}catch(err){if($B.debug > 1){console.log(err)
 for(var k in err){console.log(k,err[k])}
-console.log(Object.keys($B.imported))}
+console.log(Object.keys($B.imported))
+if($B.debug > 2){console.log(mod_js)}}
 throw err}
 for(var attr in $module){$B.imported[parent][attr]=$module[attr]}
 if(i>0){
 $B.builtins.setattr($B.imported[parts.slice(0,i).join(".")],parts[i],$module)}}
 return $module}else{if($B.debug > 1){console.log("run Python code from VFS",modobj.__name__)}
-run_py(module_contents,modobj.__path__,modobj,ext=='.pyc.js')}},find_module:function(cls,name,path){return{
+var record=run_py(module_contents,modobj.__path__,modobj,ext=='.pyc.js')
+if(Array.isArray(modobj.__path__)&& modobj.__path__.length > 0 &&
+!modobj.__path__[0].endsWith('.vfs.js')){console.log("store precompiled",modobj.__path__,ext,record)
+record.is_package=modobj.$is_package
+var db=$B.idb_cx.result,tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules"),cursor=store.openCursor(),request=store.put(record)
+request.onsuccess=function(){console.log(modobj.__name__,"stored in db")}}}},find_module:function(cls,name,path){return{
 __class__:Loader,load_module:function(name,path){var spec=cls.find_spec(cls,name,path)
 var mod=module.$factory(name)
 $B.imported[name]=mod
@@ -8966,32 +8963,6 @@ $B.set_func_names(finder_path,"<import>")
 for(var method in finder_path){if(typeof finder_path[method]=="function"){finder_path[method]=_b_.classmethod.$factory(
 finder_path[method])}}
 finder_path.$factory=function(){return{__class__:finder_path}}
-var vfs_hook={__class__:_b_.type,__mro__:[_b_.object],$infos:{__module__:"builtins",__name__:"VfsPathFinder"},load_vfs:function(self){try{var code=$download_module({__name__:"<VFS>"},self.path)}
-catch(e){self.vfs=undefined
-throw new _b_.ImportError.$factory(e.$message ||e.message)}
-eval(code)
-code=null
-try{self.vfs=$vfs}
-catch(e){throw new _b_.ImportError.$factory("Expecting $vfs var in VFS file")}
-$B.path_importer_cache[self.path+"/"]=self},find_spec:function(self,fullname,module){if(self.vfs===undefined){try{vfs_hook.load_vfs(self)}
-catch(e){console.log("Could not load VFS while importing '"+
-fullname+"'")
-return _b_.None}}
-self.__class__.vfs=self.vfs
-var stored=self.vfs[fullname]
-if(stored===undefined){return _b_.None}
-var is_package=stored[2]
-return new_spec({name :fullname,loader:finder_VFS,
-origin :self.path+'#'+fullname,
-submodule_search_locations:is_package?[self.path]:
-_b_.None,loader_state:{stored:stored},
-cached:_b_.None,parent:is_package ? fullname :parent_package(fullname),has_location:_b_.True})},invalidate_caches:function(self){self.vfs=undefined}}
-vfs_hook.$factory=function(path){if(path.substr(-1)=='/'){path=path.slice(0,-1)}
-var ext=path.substr(-7)
-if(ext !='.vfs.js'){throw _b_.ImportError.$factory('VFS file URL must end with .vfs.js extension');}
-self={__class__:vfs_hook,path:path}
-return self}
-$B.set_func_names(vfs_hook,"<import>")
 var url_hook={__class__:_b_.type,__mro__:[_b_.object],__repr__:function(self){return "<UrlPathFinder"+(self.hint? " for '"+self.hint+"'":
 "(unbound)")+" at "+self.path_entry+'>'},$infos:{__module__:"builtins",__name__:"UrlPathFinder"},find_spec :function(self,fullname,module){var loader_data={},notfound=true,hint=self.hint,base_path=self.path_entry+fullname.match(/[^.]+$/g)[0],modpaths=[]
 var tryall=hint===undefined
@@ -9103,7 +9074,7 @@ console.log($err3)
 console.log($B.last($B.frames_stack))
 throw _b_.ImportError.$factory(
 "cannot import name '"+name+"'")}}}}}}
-$B.$path_hooks=[vfs_hook,url_hook]
+$B.$path_hooks=[url_hook]
 $B.$meta_path=[finder_VFS,finder_stdlib_static,finder_path]
 $B.finders={VFS:finder_VFS,stdlib_static:finder_stdlib_static,path:finder_path}
 function optimize_import_for_path(path,filetype){if(path.slice(-1)!="/"){path=path+"/" }
@@ -9111,7 +9082,7 @@ var value=(filetype=='none')? _b_.None :
 url_hook.$factory(path,filetype)
 $B.path_importer_cache[path]=value}
 var Loader={__class__:$B.$type,__mro__:[_b_.object],__name__ :"Loader"}
-var _importlib_module={__class__ :module,__name__ :"_importlib",Loader:Loader,VFSFinder:finder_VFS,StdlibStatic:finder_stdlib_static,ImporterPath:finder_path,VFSPathFinder :vfs_hook,UrlPathFinder:url_hook,optimize_import_for_path :optimize_import_for_path}
+var _importlib_module={__class__ :module,__name__ :"_importlib",Loader:Loader,VFSFinder:finder_VFS,StdlibStatic:finder_stdlib_static,ImporterPath:finder_path,UrlPathFinder:url_hook,optimize_import_for_path :optimize_import_for_path}
 _importlib_module.__repr__=_importlib_module.__str__=function(){return "<module '_importlib' (built-in)>"}
 $B.imported["_importlib"]=_importlib_module})(__BRYTHON__)
 ;

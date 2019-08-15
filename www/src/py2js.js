@@ -9787,12 +9787,6 @@ var brython = $B.parser.brython = function(options){
             }else{
                 $B.path.push(href);
             }
-            if(href.slice(-7).toLowerCase() == '.vfs.js' &&
-                    (' ' + e.rel + ' ').indexOf(' prefetch ') != -1) {
-                // Prefetch VFS file
-                $B.path_importer_cache[href + '/'] =
-                        $B.imported['_importlib'].VFSPathFinder.$factory(href)
-            }
             var filetype = e.hreflang
             if(filetype){
                 if(filetype.slice(0,2) == 'x-'){filetype = filetype.slice(2)}
