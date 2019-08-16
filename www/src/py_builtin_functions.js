@@ -374,7 +374,7 @@ function dir(obj){
         return res
     }catch (err){
         // ignore, default
-        console.log(err)
+        //console.log(err)
     }
 
     var res = [], pos = 0
