@@ -10,13 +10,13 @@ def wrap(func):
             msg = ''
             try:
                 if exc.args:
-                    msg = '{0.info}\n{0.__name__}: {0.args[0]}'.format(exc)
+                    msg = '{0.info}\n{0.__class__.__name__}: {0.args[0]}'.format(exc)
                 else:
                     msg = str(exc)
                 import sys
                 sys.stderr.write(msg)
             except Exception as exc2:
-                console.log("Error printing exception traceback", exc2, func, 
+                console.log("Error printing exception traceback", exc2, func,
                     args, kw)
     return f
 
