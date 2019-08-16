@@ -9,7 +9,8 @@ from browser.html import *
 from browser.local_storage import storage
 
 # set version
-doc["version"].text = ".".join(str(x) for x in sys.version_info[:3])
+info = sys.implementation.version
+doc["version"].text = f"{info.major}.{info.minor}.{info.micro}"
 
 # set height of container to 66% of screen
 height = doc.documentElement.clientHeight
@@ -17,15 +18,14 @@ container = doc['container']
 container.style.height = f'{int(height * 0.66)}px'
 
 editor = window.ace.edit("editor")
-session = editor.getSession()
-session.setMode("ace/mode/python")
-editor.setValue("blabla")
+editor.setTheme("ace/theme/solarized_light")
+editor.session.setMode("ace/mode/python")
+editor.focus()
 
 editor.setOptions({
-   'enableLiveAutocompletion': True,
-   'enableSnippets': True,
-   'highlightActiveLine': False,
-   'highlightSelectedWord': True
+ 'enableLiveAutocompletion': True,
+ 'highlightActiveLine': False,
+ 'highlightSelectedWord': True
 })
 
 class cOutput:
