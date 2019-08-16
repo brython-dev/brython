@@ -104,3 +104,12 @@ test()
 
 # issue 970
 exec("\\")
+
+# issue 1188
+try:
+    exec("x.foo()\nx=3", {}, {})
+    raise Exception("should have raised NameError")
+except NameError:
+    pass
+
+print("passed all tests...")

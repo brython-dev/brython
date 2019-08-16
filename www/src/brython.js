@@ -86,8 +86,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'final',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-08-16 09:30:00.565264"
-__BRYTHON__.timestamp=1565940600565
+__BRYTHON__.compiled_date="2019-08-16 15:40:43.480714"
+__BRYTHON__.timestamp=1565962843480
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -2034,6 +2034,7 @@ $B._globals[scope.id][val]!==undefined){
 if(this.boundBefore(gs)){return global_ns+'["'+val+'"]'}else{if($test){console.log("use global search",this)}
 if(this.augm_assign){return global_ns+'["'+val+'"]'}else{return '$B.$global_search("'+val+'", '+
 search_ids+')'}}}
+if($test){console.log("scope",scope,"innermost",innermost,scope===innermost)}
 if(scope===innermost){
 if(bound_before){if(bound_before.indexOf(val)>-1){found.push(scope)}
 else if(scope.C &&
@@ -2073,11 +2074,12 @@ return this.result}}}
 var scope=found[0]
 this.found=scope.binding[val]
 var scope_ns='$locals_'+scope.id.replace(/\./g,'_')
-if(scope.C===undefined){
+if(scope.C===undefined){if($test){console.log("module level",scope.id,scope.module)}
 if(scope.id=='__builtins__'){if(gs.blurred){
 val='('+global_ns+'["'+val+'"] || '+val+')'}else{
 if(val !=='__builtins__'){val='$B.builtins.'+val}
-this.is_builtin=true}}else if(scope.id==scope.module){
+this.is_builtin=true}}else{
+if($test){console.log("name found at module level")}
 if(this.bound ||this.augm_assign){
 val=scope_ns+'["'+val+'"]'}else{if(scope===innermost && this.env[val]===undefined){
 this.result='$B.$search("'+val+'")'
@@ -2085,7 +2087,7 @@ return this.result}else{if(this.boundBefore(scope)){
 val=scope_ns+'["'+val+'"]'}else{
 if($test){console.log("use check def")}
 val='$B.$check_def("'+val+'",'+
-scope_ns+'["'+val+'"])'}}}}else{val=scope_ns+'["'+val+'"]'}}else if(scope===innermost){if($B._globals[scope.id]&& $B._globals[scope.id][val]){val=global_ns+'["'+val+'"]'}else if(!this.bound && !this.augm_assign){
+scope_ns+'["'+val+'"])'}}}}}else if(scope===innermost){if($B._globals[scope.id]&& $B._globals[scope.id][val]){val=global_ns+'["'+val+'"]'}else if(!this.bound && !this.augm_assign){
 if(this.boundBefore(scope)){val='$locals["'+val+'"]'}else{val='$B.$check_def_local("'+val+'",$locals["'+
 val+'"])'}}else{val='$locals["'+val+'"]'}}else if(!this.augm_assign){
 if(scope.ntype=='generator'){
@@ -5786,7 +5788,8 @@ var frame=$B.last($B.frames_stack)
 if(frame[1][name]!==undefined){return frame[1][name]}
 else if(frame[3][name]!==undefined){return frame[3][name]}
 else if(_b_[name]!==undefined){return _b_[name]}
-else{if(frame[0]==frame[2]||frame[1].$type=="class"){throw _b_.NameError.$factory(
+else{if(frame[0]==frame[2]||frame[1].$type=="class" ||
+frame[1].$exec_locals){throw _b_.NameError.$factory(
 "name '"+name+"' is not defined")}
 else{throw _b_.UnboundLocalError.$factory("local variable '"+
 name+"' referenced before assignment")}}}
@@ -6419,7 +6422,8 @@ else{var items=_locals.$string_dict}
 for(var item in items){var item1=$B.to_alias(item)
 try{eval('$locals_'+locals_id+'["'+item+'"] = items.'+item)}catch(err){console.log(err)
 console.log('error setting',item)
-break}}}
+break}}
+eval("$locals_"+locals_id+".$exec_locals = true")}
 eval("$locals_"+locals_id+".$src = src")
 var root=$B.py2js(src,globals_id,locals_id,parent_scope),js,gns,lns
 if(_globals !==_b_.None && _locals==_b_.None){for(var attr in _globals.$string_dict){root.binding[attr]=true}}

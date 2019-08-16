@@ -600,6 +600,9 @@ function $$eval(src, _globals, _locals){
                 break
             }
         }
+        // Attribute $exec_locals is used in py_utils.$search to raise
+        // NameError instead of UnboundLocalError
+        eval("$locals_" + locals_id + ".$exec_locals = true")
     }
     eval("$locals_" + locals_id + ".$src = src")
 

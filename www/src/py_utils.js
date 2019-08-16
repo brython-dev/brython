@@ -337,7 +337,8 @@ $B.$search = function(name, global_ns){
     else if(frame[3][name] !== undefined){return frame[3][name]}
     else if(_b_[name] !== undefined){return _b_[name]}
     else{
-        if(frame[0] == frame[2] || frame[1].$type == "class"){
+        if(frame[0] == frame[2] || frame[1].$type == "class" ||
+                frame[1].$exec_locals){
             throw _b_.NameError.$factory(
                 "name '" + name + "' is not defined")}
         else{

@@ -4167,7 +4167,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         // get global scope
         var gs = innermost
 
-        var $test = false //val == "x"
+        var $test = false // val == "x"
 
         if($test){
             console.log("this", this)
@@ -4227,6 +4227,10 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                             search_ids + ')'
                     }
                 }
+            }
+            if($test){
+                console.log("scope", scope, "innermost", innermost,
+                    scope === innermost)
             }
             if(scope === innermost){
                 // Handle the case when the same name is used at both sides
@@ -4308,7 +4312,6 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                 }
             }
             if(found.length > 1 && found[0].context){
-
                 if(found[0].context.tree[0].type == 'class'){
                     var ns0 = '$locals_' + found[0].id.replace(/\./g, '_'),
                         ns1 = '$locals_' + found[1].id.replace(/\./g, '_'),
@@ -4353,6 +4356,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
             var scope_ns = '$locals_' + scope.id.replace(/\./g, '_')
 
             if(scope.context === undefined){
+                if($test){console.log("module level", scope.id, scope.module)}
                 // name found at module level
                 if(scope.id == '__builtins__'){
                     if(gs.blurred){
@@ -4368,8 +4372,9 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                         }
                         this.is_builtin = true
                     }
-                }else if(scope.id == scope.module){
+                }else{
                     // Name found at module level
+                    if($test){console.log("name found at module level")}
                     if(this.bound || this.augm_assign){
                         // If the id is in the left part of a binding or
                         // an augmented assign, eg "x = 0" or "x += 5"
@@ -4398,8 +4403,6 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                             }
                         }
                     }
-                }else{
-                    val = scope_ns + '["' + val + '"]'
                 }
             }else if(scope === innermost){
                 if($B._globals[scope.id] && $B._globals[scope.id][val]){
