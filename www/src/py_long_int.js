@@ -56,6 +56,46 @@ function add_pos(v1, v2){
     return {__class__: long_int, value: res, pos: true}
 }
 
+var len = ((Math.pow(2, 53) - 1) + '').length - 1
+
+function binary(t){
+    var nb_chunks = Math.ceil(t.length / len),
+        chunks = [],
+        pos,
+        start,
+        nb,
+        bin = []
+    for(var i = 0; i < nb_chunks; i++){
+        pos = t.length - (i + 1) * len
+        start = Math.max(0, pos)
+        nb = pos - start
+        chunks.push(t.substr(start, len + nb))
+    }
+    chunks = chunks.reverse()
+    chunks.forEach(function(chunk, i){
+        chunks[i] = parseInt(chunk)
+    })
+
+    var rest
+    var carry = Math.pow(10, 15)
+
+    while(chunks[chunks.length - 1] > 0){
+        chunks.forEach(function(chunk, i){
+            rest = chunk % 2
+            chunks[i] = Math.floor(chunk / 2)
+            if(rest && i < chunks.length - 1){
+                chunks[i + 1] += carry
+            }
+        })
+        bin.push(rest)
+        if(chunks[0] == 0){
+            chunks.shift()
+        }
+    }
+    bin = bin.reverse().join('')
+    return bin
+}
+
 function check_shift(shift){
     // Check the argument of >> and <<
     if(! isinstance(shift, long_int)){
@@ -682,6 +722,9 @@ long_int.real = function(self){return self}
 
 long_int.to_base = function(self, base){
     // Returns the string representation of self in specified base
+    if(base == 2){
+        return binary(self.value)
+    }
     var res = "",
         v = self.value
     while(v > 0){
