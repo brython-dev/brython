@@ -86,8 +86,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'final',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-08-15 15:10:37.614074"
-__BRYTHON__.timestamp=1565874637614
+__BRYTHON__.compiled_date="2019-08-16 09:30:00.565264"
+__BRYTHON__.timestamp=1565940600565
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -3044,7 +3044,7 @@ this.type='yield'
 this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this
-var in_lambda=false,in_ctx_manager=false,parent=C
+var in_lambda=false,parent=C
 while(parent){if(parent.type=="lambda"){in_lambda=true
 break}
 parent=parent.parent}
@@ -3074,7 +3074,11 @@ var new_node=$NodeJS('// placeholder for generator sent value')
 new_node.is_set_yield_value=true
 new_node.after_yield=true
 new_node.indent=node.indent
-node.parent.insert(rank+1,new_node)}
+node.parent.insert(rank+1,new_node)
+var parent=node.parent
+while(parent){if(parent.ctx_manager_num !==undefined){node.parent.insert(rank+2,$NodeJS("$top_frame[1].$has_yield_in_cm = true"))
+break}
+parent=parent.parent}}
 this.to_js=function(){this.js_processed=true
 if(this.from===undefined){return $to_js(this.tree)||'None'}
 return $to_js(this.tree)}}
@@ -6062,11 +6066,11 @@ for(key in frame[1]){if(frame[1][key]&& frame[1][key].$is_generator_obj){var gen
 if(gen_obj.env !==undefined){for(var attr in gen_obj.env){if(attr.search(/^\$ctx_manager_exit\d+$/)>-1){
 $B.$call(gen_obj.env[attr])()}}}}}}
 $B.leave_frame=function(arg){
-if($B.profile > 0){$B.$profile.return()}
 if($B.frames_stack.length==0){console.log("empty stack");return}
 $B.del_exc()
 var frame=$B.frames_stack.pop()
-exit_ctx_managers_in_generators(frame)}
+if(frame[1].$has_yield_in_cm){
+exit_ctx_managers_in_generators(frame)}}
 $B.leave_frame_exec=function(arg){
 if($B.profile > 0){$B.$profile.return()}
 if($B.frames_stack.length==0){console.log("empty stack");return}
@@ -6341,8 +6345,7 @@ return $B.$call(dir_func)(obj)}
 try{var res=$B.$call($B.$getattr(obj,'__dir__'))()
 res=_b_.list.$factory(res)
 res.sort()
-return res}catch(err){
-console.log(err)}
+return res}catch(err){}
 var res=[],pos=0
 for(var attr in obj){if(attr.charAt(0)!=='$' && attr !=='__class__' &&
 obj[attr]!==undefined){res[pos++]=attr}}
@@ -8806,7 +8809,7 @@ $B.imported[mod_name].__file__=path
 return run_py(module_contents,path,module)}
 function run_py(module_contents,path,module,compiled){
 $B.file_cache[path]=module_contents
-var root,js
+var root,js,mod_name=module.__name__ 
 if(! compiled){var $Node=$B.$Node,$NodeJSCtx=$B.$NodeJSCtx
 $B.$py_module_path[module.__name__]=path
 root=$B.py2js(module_contents,module,module.__name__,$B.builtins_scope)
@@ -8838,7 +8841,7 @@ module.__initializing__=false
 $B.imported[module.__name__]=module
 $B.file_cache[module.__name__]=module_contents
 return{
-content:src,name:module.__name__,timestamp:$B.timestamp,imports:Object.keys(root.imports).join(",")}}catch(err){console.log(""+err+" "+" for module "+module.__name__)
+content:src,name:mod_name,timestamp:$B.timestamp,imports:Object.keys(root.imports).join(",")}}catch(err){console.log(""+err+" "+" for module "+module.__name__)
 for(var attr in err){console.log(attr+" "+err[attr])}
 if($B.debug > 0){console.log("line info "+__BRYTHON__.line_info)}
 throw err}}
@@ -8881,13 +8884,17 @@ throw err}
 for(var attr in $module){$B.imported[parent][attr]=$module[attr]}
 if(i>0){
 $B.builtins.setattr($B.imported[parts.slice(0,i).join(".")],parts[i],$module)}}
-return $module}else{if($B.debug > 1){console.log("run Python code from VFS",modobj.__name__)}
+return $module}else{var mod_name=modobj.__name__
+if($B.debug > 1){console.log("run Python code from VFS",mod_name)}
 var record=run_py(module_contents,modobj.__path__,modobj)
-if(false){
 record.is_package=modobj.$is_package
+$B.precompiled[mod_name]=record.is_package ?[record.content]:
+record.content
+if(window.indexedDB){
 var idb_cx=indexedDB.open("brython_stdlib")
 idb_cx.onsuccess=function(evt){var db=evt.target.result,tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules"),cursor=store.openCursor(),request=store.put(record)
-request.onsuccess=function(){if($B.debug > 1){console.log(modobj.__name__,"stored in db")}}}}}},find_module:function(cls,name,path){return{
+request.onsuccess=function(){if(true){
+console.info(modobj.__name__,"stored in db")}}}}}},find_module:function(cls,name,path){return{
 __class__:Loader,load_module:function(name,path){var spec=cls.find_spec(cls,name,path)
 var mod=module.$factory(name)
 $B.imported[name]=mod
@@ -9821,6 +9828,23 @@ carry=parseInt(x.charAt(0))}
 else{res=x+res;carry=0}}
 if(carry){res=carry+res}
 return{__class__:long_int,value:res,pos:true}}
+var len=((Math.pow(2,53)-1)+'').length-1
+function binary(t){var nb_chunks=Math.ceil(t.length/len),chunks=[],pos,start,nb,bin=[]
+for(var i=0;i < nb_chunks;i++){pos=t.length-(i+1)*len
+start=Math.max(0,pos)
+nb=pos-start
+chunks.push(t.substr(start,len+nb))}
+chunks=chunks.reverse()
+chunks.forEach(function(chunk,i){chunks[i]=parseInt(chunk)})
+var rest
+var carry=Math.pow(10,15)
+while(chunks[chunks.length-1]> 0){chunks.forEach(function(chunk,i){rest=chunk % 2
+chunks[i]=Math.floor(chunk/2)
+if(rest && i < chunks.length-1){chunks[i+1]+=carry}})
+bin.push(rest)
+if(chunks[0]==0){chunks.shift()}}
+bin=bin.reverse().join('')
+return bin}
 function check_shift(shift){
 if(! isinstance(shift,long_int)){throw TypeError.$factory("shift must be int, not '"+
 $B.class_name(shift)+"'")}
@@ -10092,6 +10116,7 @@ long_int.denominator=function(self){return _b_.int.$factory(1)}
 long_int.imag=function(self){return _b_.int.$factory(0)}
 long_int.real=function(self){return self}
 long_int.to_base=function(self,base){
+if(base==2){return binary(self.value)}
 var res="",v=self.value
 while(v > 0){var dm=divmod_pos(v,base.toString())
 res=parseInt(dm[1].value).toString(base)+res

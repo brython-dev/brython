@@ -6441,14 +6441,12 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
 
 var $YieldCtx = $B.parser.$YieldCtx = function(context, is_await){
     // Class for keyword "yield"
-    // "await" is implemented as "yield from", for this case is_await is set
     this.type = 'yield'
     this.parent = context
     this.tree = []
     context.tree[context.tree.length] = this
 
     var in_lambda = false,
-        in_ctx_manager = false,
         parent = context
     while(parent){
         if(parent.type == "lambda"){
@@ -6521,6 +6519,17 @@ var $YieldCtx = $B.parser.$YieldCtx = function(context, is_await){
         new_node.after_yield = true
         new_node.indent = node.indent
         node.parent.insert(rank + 1, new_node)
+
+        // If inside a context manager, mark frame
+        var parent = node.parent
+        while(parent){
+            if(parent.ctx_manager_num !== undefined){
+                node.parent.insert(rank + 2,
+                    $NodeJS("$top_frame[1].$has_yield_in_cm = true"))
+                break
+            }
+            parent = parent.parent
+        }
     }
 
     this.to_js = function(){

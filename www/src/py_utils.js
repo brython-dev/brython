@@ -1044,11 +1044,15 @@ function exit_ctx_managers_in_generators(frame){
 
 $B.leave_frame = function(arg){
     // Leave execution frame
-    if($B.profile > 0){$B.$profile.return()}
     if($B.frames_stack.length == 0){console.log("empty stack"); return}
     $B.del_exc()
     var frame = $B.frames_stack.pop()
-    exit_ctx_managers_in_generators(frame)
+    if(frame[1].$has_yield_in_cm){
+        // The attribute $has_yield_in_cm is set in py2js.js /
+        // $YieldCtx.transform only if the frame has "yield" inside a
+        // context manager.
+        exit_ctx_managers_in_generators(frame)
+    }
 }
 
 $B.leave_frame_exec = function(arg){
