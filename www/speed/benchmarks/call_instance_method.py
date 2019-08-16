@@ -6,6 +6,5 @@ class A:
         return self.x
 
 a = A(1)
-
 for i in range(100000):
     a.f()

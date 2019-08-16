@@ -8,6 +8,8 @@ from browser import timer
 from browser.html import *
 from browser.local_storage import storage
 
+import javascript
+
 # set version
 info = sys.implementation.version
 doc["version"].text = f"{info.major}.{info.minor}.{info.micro}"
@@ -57,8 +59,9 @@ def reset_src():
 results = []
 
 def forward(req):
-    results[-1]['CPython'] = req.text
-    print(f"CPython: {req.text}")
+    cpython_time = float(req.text)
+    results[-1]['CPython'] = cpython_time
+    print(f"CPython: {cpython_time:.2f}")
     test_next()
 
 def no_forward(req):
@@ -75,9 +78,18 @@ def run_cpython(script_name, next_step):
         data=script_name,
         timeout=4)
 
-def execute(script_name, src, callback):
+def execute(option, src, callback):
+    script_name = option.value
     doc["console"].value = ""
-    result = {"test": script_name}
+    src = editor.getValue()
+    pos = src.find("JS_CODE")
+    if pos > -1:
+        src = src[:pos]
+    result = {
+        "test": script_name.split("/")[-1],
+        "description": option.text,
+        "src": src.strip()
+        }
     storage["py_src"] = src
 
     t0 = time.perf_counter()
@@ -90,8 +102,8 @@ def execute(script_name, src, callback):
         state = 0
 
     brython_time = (time.perf_counter() - t0) * 1000.0
-    result['Brython'] = '%6.2f' % brython_time
-    print(f"Brython: {brython_time:6.2f}")
+    result['Brython'] = brython_time
+    print(f"Brython: {brython_time:.2f}")
 
     results.append(result)
 
@@ -113,12 +125,12 @@ def test_next():
         doc['files'].selectedIndex = script_num
         editor.setValue(src)
 
-        execute(script_name, src, forward)
+        execute(option, src, forward)
 
     else:
 
         doc['console'].value = ''
-        print('completed all tests in %.2f s' %(time.time()-t_start))
+        print('completed all tests in %.2f s' %(time.time() - t_start))
         print('failed : %s' %failed)
 
         w = window.open()
@@ -142,6 +154,12 @@ def test_next():
         version = '.'.join(str(x) for x in __BRYTHON__.implementation[:3])
         body <= H1(f"Brython {version} performance (base 100 = CPython)")
         body <= table
+
+        ajax.post("/cgi-bin/store_speed.py",
+            data={
+                "results": javascript.JSON.stringify(results),
+                "version": version
+            })
 
 @bind("#clear", "click")
 def clear(evt):
@@ -192,9 +210,9 @@ def show_console(evt):
 @bind("#run", "click")
 def run_script(evt):
     """Run a single script."""
-    script_name = doc["files"].options[doc["files"].selectedIndex].value
+    option = doc["files"].options[doc["files"].selectedIndex]
     src = editor.getValue()
-    execute(script_name, src, no_forward)
+    execute(option, src, no_forward)
 
 @bind("#test_all", "click")
 def test_all(evt):

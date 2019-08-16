@@ -1,6 +1,6 @@
-d={}
-for _i in range(100000):
-    d[_i]=_i
+d = {}
+for i in range(100000):
+    d[i] = i
 
 JS_CODE = '''
 var d = {};
