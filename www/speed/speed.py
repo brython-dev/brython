@@ -155,12 +155,6 @@ def test_next():
         body <= H1(f"Brython {version} performance (base 100 = CPython)")
         body <= table
 
-        ajax.post("/cgi-bin/store_speed.py",
-            data={
-                "results": javascript.JSON.stringify(results),
-                "version": version
-            })
-
 @bind("#clear", "click")
 def clear(evt):
     """Clear console"""

@@ -44,11 +44,11 @@ pre{
 </style>
 </head>
 <body>
-<h2>Brython $ performance (base 100 = CPython)</h2>
+<h2>Brython $ performance compared to CPython</h2>
 <table>
 <tr>
 <th>Test</th>
-<th>Brython</th>
+<th>Brython<br>(100 = CPython)</th>
 <th>Code</th>
 </tr>
 """
