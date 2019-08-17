@@ -61,7 +61,7 @@ class Dialog:
 
         document <= self.div
         self.title.bind("mousedown", self.mousedown)
-        self.title.bind("mousemove", self.mousemove)
+        document.bind("mousemove", self.mousemove)
         self.title.bind("mouseup", self.mouseup)
         self.div.bind("leave", self.mouseup)
         self.is_moving = False
