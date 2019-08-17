@@ -279,6 +279,16 @@ function split_chunks(s, size){
 }
 
 function mul_pos(x, y){
+    var ix = parseInt(x),
+        iy = parseInt(y),
+        z = ix * iy
+    if(z < $B.max_int){
+        return {
+            __class__: long_int,
+            value: z.toString(),
+            pos: true
+        }
+    }
     // To multiply long integers in strings x and y, split the strings in
     // chunks of chunk_size digits to get integers than can be safely
     // multiplied by Javascript
