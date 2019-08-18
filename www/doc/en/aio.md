@@ -12,10 +12,10 @@ and the way browsers work make it impossible to define functions whose
 execution is suspended until an event occurs.
 
 2. the browser has its own implicit event loop, it is not possible to define
-another one as the **asyncio** modules does with the fonction
+another one as the **asyncio** modules does with the function
 `set_event_loop()`.
 
-Th module **browser.aio** defines the following asynchronous functions:
+The module **browser.aio** defines the following asynchronous functions:
 
 ### Ajax requests
 
@@ -31,7 +31,7 @@ Th module **browser.aio** defines the following asynchronous functions:
 
 >> "text" : the response is a string
 
->> "binary" : an instanc of class `bytes`
+>> "binary" : an instance of class `bytes`
 
 >> "dataURL" : a string formatted as
 >> [dataURL](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URIs)
