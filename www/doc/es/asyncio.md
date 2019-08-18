@@ -16,7 +16,7 @@ import asyncio
 def test_wget(urls):
     results = []
     for u in urls:
-        req = yield from asyncio.HTTPRequest(u)
+        req = yield asyncio.HTTPRequest(u)
         results.append(req.response)
     return results
 
@@ -32,7 +32,7 @@ y `data` para POST-requests).
 
 Sin embargo, alguna funcionalidad `asyncio` más avanzada no se encuentra
 implementado. Tampoco tiene mucho sentido en el navegador (servidores TCP, ...), 
-o puede tener sensito pero actualmente no está soportado (e.g. Threading/Multiprocess 
+o puede tener sentido pero actualmente no está soportado (e.g. Threading/Multiprocess 
 podría, en teoría, ser implementado usando
 [WebWorkers](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API)).
 
