@@ -28,7 +28,7 @@ function check_nb_args(name, expected, args){
     if(len != expected){
         if(expected == 0){
             throw _b_.TypeError.$factory(name + "() takes no argument" +
-                " (" + got + " given)")
+                " (" + len + " given)")
         }else{
             throw _b_.TypeError.$factory(name + "() takes exactly " +
                 expected + " argument" + (expected < 2 ? '' : 's') +
@@ -1102,7 +1102,10 @@ function globals(){
     // The last item in __BRYTHON__.frames_stack is
     // [locals_name, locals_obj, globals_name, globals_obj]
     check_nb_args('globals', 0, arguments)
-    return $B.obj_dict($B.last($B.frames_stack)[3])
+    var res = $B.obj_dict($B.last($B.frames_stack)[3])
+    res.$jsobj.__BRYTHON__ = $B.JSObject.$factory($B) // issue 1181
+    console.log("globals", res)
+    return res
 }
 
 function hasattr(obj,attr){

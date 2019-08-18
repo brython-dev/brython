@@ -86,8 +86,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'final',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-08-17 19:51:19.610702"
-__BRYTHON__.timestamp=1566064279610
+__BRYTHON__.compiled_date="2019-08-18 22:01:16.251700"
+__BRYTHON__.timestamp=1566158476251
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -4957,7 +4957,7 @@ if(type==".py"){var src=submodule[1],subimports=submodule[2],is_package=submodul
 if(type==".py"){
 required_stdlib_imports(subimports)}
 subimports.forEach(function(mod){if(imports.indexOf(mod)==-1){imports.push(mod)}})}}})
-for(var j=0;j<imports.length;j++){$B.tasks.push([$B.inImported,imports[j]])}
+for(var j=0;j < imports.length;j++){$B.tasks.push([$B.inImported,imports[j]])}
 root=null}
 $B.tasks.push(["execute",script])
 if(run_loop){$B.loop()}}
@@ -4967,12 +4967,13 @@ var kk=Object.keys(_window)
 var defined_ids={}
 if(options.ipy_id !==undefined){var $elts=[]
 options.ipy_id.forEach(function(elt){$elts.push(document.getElementById(elt))})}else{var scripts=document.getElementsByTagName('script'),$elts=[],webworkers=[]
+for(var script_id in $B.scripts){
+console.log("ext script",script_id)
+$elts.push({id:script_id,type:"text/python",textContent:$B.scripts[script_id]})}
 for(var i=0;i < scripts.length;i++){var script=scripts[i]
 if(script.type=="text/python" ||script.type=="text/python3"){if(script.className=="webworker"){if(script.id===undefined){throw _b_.AttributeError.$factory(
 "webworker script has no attribute 'id'")}
-webworkers.push(script)}else{$elts.push(script)}}}
-for(var script_id in $B.scripts){
-$elts.push({id:script_id,type:"text/python",textContent:$B.scripts[script_id]})}}
+webworkers.push(script)}else{$elts.push(script)}}}}
 var first_script=true,module_name
 if(options.ipy_id !==undefined){module_name='__main__'
 var $src="",js,root
@@ -6213,7 +6214,7 @@ var len=args.length,last=args[len-1]
 if(last && last.$nat=="kw"){var kw=last.kw
 if(Array.isArray(kw)&& kw[1]&& kw[1].__class__===_b_.dict){if(Object.keys(kw[1].$string_dict).length==0){len--}}}
 if(len !=expected){if(expected==0){throw _b_.TypeError.$factory(name+"() takes no argument"+
-" ("+got+" given)")}else{throw _b_.TypeError.$factory(name+"() takes exactly "+
+" ("+len+" given)")}else{throw _b_.TypeError.$factory(name+"() takes exactly "+
 expected+" argument"+(expected < 2 ? '' :'s')+
 " ("+len+" given)")}}}
 function check_no_kw(name,x,y){
@@ -6620,7 +6621,10 @@ if(is_class){cname=obj.$infos.__name__}
 attr_error(rawname,cname)}
 function globals(){
 check_nb_args('globals',0,arguments)
-return $B.obj_dict($B.last($B.frames_stack)[3])}
+var res=$B.obj_dict($B.last($B.frames_stack)[3])
+res.$jsobj.__BRYTHON__=$B.JSObject.$factory($B)
+console.log("globals",res)
+return res}
 function hasattr(obj,attr){check_no_kw('hasattr',obj,attr)
 check_nb_args('hasattr',2,arguments)
 try{$B.$getattr(obj,attr);return true}
