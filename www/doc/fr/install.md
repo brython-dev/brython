@@ -56,7 +56,7 @@ python -m brython --update
 Installer un package CPython
 ----------------------------
 Un package CPython installé par `pip` peut être installé dans une application
-Brython par la commande `--add package <nom du package>`.
+Brython par la commande `--add_package <nom du package>`.
 
 Par exemple:
 ```
