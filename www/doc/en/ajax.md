@@ -18,7 +18,7 @@ This object has the following attributes and methods :
 - "interactive": response in progress
 - "complete" : finished
 
-> The _function_ takes a single argument, the `ajax` object.
+> The _function_ takes a single argument, the `Ajax` object.
 
 `open(`_method, url, async_`)`
 > _method_ is the HTTP method used for the request (usually GET or POST),
@@ -88,7 +88,7 @@ def on_complete(req):
    else:
        document["result"].html = "error "+req.text
 
-req = ajax.ajax()
+req = ajax.Ajax()
 req.bind('complete',on_complete)
 # send a POST request to the url
 req.open('POST',url,True)
@@ -132,7 +132,7 @@ and the same for `put`.
 > is the function to call if the duration defined in _timeout_ has been
 > reached.
 
-In the callback function, the Ajax object has a method _read()_ that reads the
+In the callback function, the `Ajax` object has a method _read()_ that reads the
 response content as a string if mode is "text" and as `bytes` if mode is
 "binary".
 
