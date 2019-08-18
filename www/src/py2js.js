@@ -9885,8 +9885,8 @@ $B.run_script = function(src, name, run_loop){
             }
         })
         // Add task to stack
-        for(var j=0; j<imports.length;j++){
-           $B.tasks.push([$B.inImported, imports[j]])
+        for(var j = 0; j < imports.length; j++){
+            $B.tasks.push([$B.inImported, imports[j]])
         }
         root = null
     }
@@ -9921,6 +9921,22 @@ var _run_scripts = $B.parser._run_scripts = function(options){
         var scripts = document.getElementsByTagName('script'),
             $elts = [],
             webworkers = []
+        for(var script_id in $B.scripts){
+            // Javascript scripts included in the page with
+            // <script type="text/javascript" src="source.js"></script>
+            // with content like
+            // __BRYTHON__.scripts["myscript"] = String.raw
+            // `
+            // <Python code here>
+            // `
+            // The backtick (`) is like the triple quote in Python
+            // This technique avoids Ajax calls to load an external Python
+            // script, and works without a web server.
+            console.log("ext script", script_id)
+            $elts.push({id: script_id,
+                        type: "text/python",
+                        textContent: $B.scripts[script_id]})
+        }
         // Freeze the list of scripts here ; other scripts can be inserted on
         // the fly by viruses
         for(var i = 0; i < scripts.length; i++){
@@ -9936,21 +9952,6 @@ var _run_scripts = $B.parser._run_scripts = function(options){
                     $elts.push(script)
                 }
             }
-        }
-        for(var script_id in $B.scripts){
-            // Javascript scripts included in the page with
-            // <script type="text/javascript" src="source.js"></script>
-            // with content like
-            // __BRYTHON__.scripts["myscript"] = String.raw
-            // `
-            // <Python code here>
-            // `
-            // The backtick (`) is like the triple quote in Python
-            // This technique avoids Ajax calls to load an external Python
-            // script, and works without a web server.
-            $elts.push({id: script_id,
-                        type: "text/python",
-                        textContent: $B.scripts[script_id]})
         }
     }
 
