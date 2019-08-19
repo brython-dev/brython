@@ -372,9 +372,9 @@ var getExceptionTrace = function(exc, includeInternal) {
             info += ', in ' + frame[4].$infos.__name__
         }
 
-        if (src !== undefined) {
-            var lines = src.split("\n");
-            var line = lines[parseInt(line_info[0]) - 1]
+        if(src !== undefined){
+            var lines = src.split("\n"),
+                line = lines[parseInt(line_info[0]) - 1]
             if(line){line = line.replace(/^[ ]+/g, "")}
             info += "\n    " + line
         }else{

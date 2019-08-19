@@ -449,15 +449,12 @@ function $$eval(src, _globals, _locals){
             is_exec = $.is_exec
 
     var current_frame = $B.frames_stack[$B.frames_stack.length - 1]
-
     if(current_frame !== undefined){
         var current_locals_id = current_frame[0].replace(/\./, '_'),
             current_globals_id = current_frame[2].replace(/\./, '_')
     }
 
     var stack_len = $B.frames_stack.length
-
-    //var is_exec = arguments[3] == 'exec'
 
     if(src.__class__ === code){
         is_exec = src.mode == "exec"
@@ -604,8 +601,13 @@ function $$eval(src, _globals, _locals){
         // NameError instead of UnboundLocalError
         eval("$locals_" + locals_id + ".$exec_locals = true")
     }
-    eval("$locals_" + locals_id + ".$src = src")
 
+    if(_globals === _b_.None && _locals === _b_.None &&
+            current_frame[0] == current_frame[2]){
+    }else{
+        eval("$locals_" + locals_id + ".$src = src")
+    }
+    
     var root = $B.py2js(src, globals_id, locals_id, parent_scope),
         js, gns, lns
 
@@ -1104,7 +1106,6 @@ function globals(){
     check_nb_args('globals', 0, arguments)
     var res = $B.obj_dict($B.last($B.frames_stack)[3])
     res.$jsobj.__BRYTHON__ = $B.JSObject.$factory($B) // issue 1181
-    console.log("globals", res)
     return res
 }
 

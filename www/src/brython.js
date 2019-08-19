@@ -86,8 +86,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'final',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-08-18 22:01:16.251700"
-__BRYTHON__.timestamp=1566158476251
+__BRYTHON__.compiled_date="2019-08-19 12:59:40.141775"
+__BRYTHON__.timestamp=1566212380141
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -2027,7 +2027,8 @@ if($test){console.log("search ids",search_ids)}
 if(this.nonlocal ||this.bound){var bscope=this.firstBindingScopeId()
 if($test){console.log("binding",bscope)}
 if(bscope !==undefined){return "$locals_"+bscope.replace(/\./g,"_")+'["'+
-val+'"]'}}
+val+'"]'}else if(this.bound){return "$locals_"+innermost.id.replace(/\./g,"_")+
+'["'+val+'"]'}}
 var global_ns='$locals_'+gs.id.replace(/\./g,'_')
 while(1){if($B._globals[scope.id]!==undefined &&
 $B._globals[scope.id][val]!==undefined){
@@ -6426,6 +6427,7 @@ console.log('error setting',item)
 break}}
 eval("$locals_"+locals_id+".$exec_locals = true")}
 eval("$locals_"+locals_id+".$src = src")
+if(locals_id=="urllib3.packages.six"){alert("set $src")}
 var root=$B.py2js(src,globals_id,locals_id,parent_scope),js,gns,lns
 if(_globals !==_b_.None && _locals==_b_.None){for(var attr in _globals.$string_dict){root.binding[attr]=true}}
 try{
@@ -6623,7 +6625,6 @@ function globals(){
 check_nb_args('globals',0,arguments)
 var res=$B.obj_dict($B.last($B.frames_stack)[3])
 res.$jsobj.__BRYTHON__=$B.JSObject.$factory($B)
-console.log("globals",res)
 return res}
 function hasattr(obj,attr){check_no_kw('hasattr',obj,attr)
 check_nb_args('hasattr',2,arguments)
@@ -7444,12 +7445,13 @@ if(exc.module==line_info[1]){src=exc.src}
 if(!includeInternal){var src=frame[3].$src
 if(src===undefined){if($B.VFS && $B.VFS.hasOwnProperty(frame[2])){src=$B.VFS[frame[2]][1]}else if(src=$B.file_cache[frame[3].__file__]){}else{continue}}}
 var module=line_info[1]
+if(module=="urllib3.pacakges.six"){console.log("oops")}
 if(module.charAt(0)=="$"){module="<module>"}
 info+="\n  module "+module+" line "+line_info[0]
 if(frame.length > 4 && frame[4].$infos){info+=', in '+frame[4].$infos.__name__}
-if(src !==undefined){var lines=src.split("\n");
-var line=lines[parseInt(line_info[0])-1]
+if(src !==undefined){var lines=src.split("\n"),line=lines[parseInt(line_info[0])-1]
 if(line){line=line.replace(/^[ ]+/g,"")}
+if(line===undefined){console.log("undef",src,line_info)}
 info+="\n    "+line}else{console.log("src undef",line_info)}}
 if(exc.__class__===_b_.SyntaxError){info+="\n  File "+exc.args[1]+", line "+exc.args[2]+
 "\n    "+exc.args[4]}
