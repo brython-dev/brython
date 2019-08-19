@@ -22,9 +22,9 @@ deploy it on the Python Package Index.
 
 Users can then install the CPython package by the usual command:
 
-    pip install <nom_application>
+    pip install <application_name>
 
 and install the Brython application in a directory by:
 
-    python -m <nom_application> --install
+    python -m <application_name> --install
 
