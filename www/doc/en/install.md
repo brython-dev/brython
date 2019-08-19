@@ -46,7 +46,7 @@ pip install brython --upgrade
 ```
 
 In the application directory, you can then update the Brython files
-(__brython.js__ et __brython_stdlib.js__) by:
+(__brython.js__ and __brython_stdlib.js__) by:
 
 ```
 python -m brython --update
