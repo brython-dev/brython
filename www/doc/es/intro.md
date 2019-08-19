@@ -23,6 +23,8 @@ Un ejemplo simple :
 <script type="text/python">
 from browser import document, alert
 
+# bind event 'click' on button to function echo
+
 def echo(ev):
     alert(document["zone"].value)
 
@@ -47,8 +49,8 @@ def echo(ev):
 document["mybutton"].bind("click", echo)
 </script>
 
-<input id="zone" autocomplete="off">
-<button id="mybutton">click !</button>
+<input id="zone">
+<button id="mybutton">click!</button>
 
 </td>
 </tr>
