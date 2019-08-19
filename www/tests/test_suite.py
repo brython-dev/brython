@@ -514,4 +514,10 @@ assert combined_example(1, 2, kwd_only=3) == (1, 2, 3)
 assert combined_example(1, standard=2, kwd_only=3) == (1, 2, 3)
 assertRaises(TypeError, combined_example, 1, 2, 3)
 
+# del
+attr = 5
+del attr
+for attr in range(5):
+    pass
+
 print('passed all tests...')

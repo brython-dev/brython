@@ -2953,7 +2953,7 @@ var $DelCtx = $B.parser.$DelCtx = function(context){
                     var res = '$B.$delete("' + expr.value + '"' +
                         (is_global ? ', "global"' : '') + ');'
                     // Delete from scope to force the use of $search or
-                    // $global_search in mane resolution, even if del is never
+                    // $global_search in name resolution, even if del is never
                     // called.
                     delete scope.binding[expr.value]
                     return res
@@ -4198,10 +4198,14 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         if(this.nonlocal || this.bound){
             var bscope = this.firstBindingScopeId()
             if($test){console.log("binding", bscope)}
-            // Might be undefined, for augmented assignments
+            // Might be undefined, for augmented assignments or if the name
+            // has been deleted before (by del)
             if(bscope !== undefined){
                 return "$locals_" + bscope.replace(/\./g, "_") + '["' +
                     val + '"]'
+            }else if(this.bound){
+                return "$locals_" + innermost.id.replace(/\./g, "_") +
+                    '["' + val + '"]'
             }
         }
 
