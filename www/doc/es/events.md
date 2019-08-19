@@ -24,10 +24,14 @@ def show(ev):
 btn.bind("click", show)
 ```
 
-`btn` es una referencia al elemento.
-Los argumentos de `bind` son el tipo de evento que el botón deberá manejar, y
-la función que es llamada quando el evento ocurre sobre el elemento. La
-función toma un único argumento, una instancia de la clase `DOMEvent`. Por
+`btn` es una referencia al elemento. Los argumentos de `bind` son el tipo de 
+evento que el botón deberá manejar, y la función que es llamada cuando el evento 
+ocurre sobre el elemento. Las siguientes páginas proporcionan muchos ejemplos
+de eventos tales como for interacción con el ratón, el teclado,
+drag-and-drop, etc.
+
+La función toma un único argumento, una instancia de la clase `DOMEvent` definida
+en el módulo **browser**. Por
 ejemplo :
 
 ```python
@@ -59,13 +63,12 @@ btn.bind("click", show)
 
 Interfaz
 --------
-
 Para la gestión de eventos, los elementos de una página disponen de los
 siguientes métodos :
 
 <code>elt.bind(_evt\_name, handler_)</code>
 
-> la función _handler_ es llamada quando el evento ocurre sobre el elemento
+> la función _handler_ es llamada cuando el evento _evt\_name_ ocurre sobre el elemento
 
 <code>elt.unbind(_evt\_name[, handler_])</code>
 
@@ -77,9 +80,38 @@ siguientes métodos :
 
 > devuelve la lista de funciones que maneja el evento llamado _evt\_name_
 
+Usando el decorador `browser.bind`
+----------------------------------
+_Nuevo en la versión 3.6.0_
+
+El módulo **browser** define una función `bind` que se puede usar como un decorador
+para un gestor de eventos (*event handler*). Su sintaxis es como sigue
+
+<code>@bind(_target, evt_)</code>
+
+Si _target_ es una instancia `DOMNode`, la función decorada maneja el evento
+_evt_ para ese elemento.
+
+Si _target_ es un *string*, se interpretará como un selector CSS ; para todos 
+los elementos en la página que usen este selector el evento _evt_ será gestionado
+mediante la función decorada.
+
+Ejemplos:
+
+```python
+from browser import document, bind
+
+@bind(document[element_id], "mouseover")
+def mouseover(ev):
+    ...
+
+@bind("div.foo", "enter") # todos los elementos DIV con atributo class="foo"
+def enter(ev):
+    ...
+```
+
 Objetos `DOMEvent`
 ------------------
-
 (información de Mozilla Contributors, encontrada en
 [https://developer.mozilla.org/en-US/docs/Web/API/event](https://developer.mozilla.org/en-US/docs/Web/API/event))
 
@@ -224,7 +256,7 @@ y los siguientes métodos
 
 > **Ejemplo**
 
-> Cuando una checkbox se pulsa, la acción por defecto será mostrar u ocultar una marca dentro del checkbox :
+> Cuando un checkbox se pulsa, la acción por defecto será mostrar u ocultar una marca dentro del checkbox :
 
 >> checkbox (comportamiento por defecto) <input type="checkbox">
 
@@ -244,6 +276,7 @@ document["disabled_cbox"].bind("click",_cancel)
 >> resultado :
 
 >> checkbox deshabilitado <input type="checkbox" id="disabled_cbox">
+
 
 `stopPropagation()`
 > previene la propagación del evento
@@ -276,8 +309,6 @@ document["blue"].bind("click", show)
 document["green"].bind("click", show_stop)
 ```
 </blockquote>
-
-<div id="zzz"></div>
 
 > Pulsando en la zona amarilla provoca la llamada a la función `show()`, la
 > cual muestra el mensaje "click on yellow"
