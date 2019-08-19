@@ -65,15 +65,22 @@ Para optimizar los _imports, si Brython fue instalado usando `pip`, puedes gener
 un fichero __brython_modules.js__ que solo contendrá los módulos usados por la
 aplicación.
 
-Para ello, la lista de los módulos debe ser añadida en un fichero __.bundle-include__ 
-en el directorio raíz y luego ejecutar en la línea de comandos
+Para ello, desde el directorio raíz de la aplicación ejecuta en la línea de comandos
 
-`python -m brython --update`
+`python -m brython --modules`
 
-Para obtener la lista de los módulos usados puedes ejecutar la aplicación en un navegador, 
-abre la consola del navegador y ejecuta el comando:
+Ten en cuenta que este programa analiza el código Brython en todos los scripts, módulos
+y páginas HTML del directorio y todos sus sub-directorios. La versión CPython
+usada debe ser compatible con el código Brython: por ejemplo, si existen 
+f-strings en el código Brython, se requiere usar CPython 3.6+, si no obtendrás
+errores de sintaxis.
 
-`__BRYTHON__.imports()`
+Puedes reemplazar todas las ocurrencias de
 
-Esto abre una nueva ventana con la lista de los módulos usados que puedes copiar y pegar
-en __.bundle-include__.
+    <script type="text/javascript" src="brython_stdlib.js"></script>
+
+por
+
+    <script type="text/javascript" src="brython_modules.js"></script>
+
+
