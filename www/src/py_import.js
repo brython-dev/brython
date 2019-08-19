@@ -264,6 +264,7 @@ function run_py(module_contents, path, module, compiled) {
         var module_id = "$locals_" + module.__name__.replace(/\./g, '_')
         var $module = (new Function(module_id, js))(module) //eval(js)
     }catch(err){
+        /*
         console.log(err + " for module " + module.__name__)
         console.log("module", module)
         console.log(root)
@@ -280,7 +281,7 @@ function run_py(module_contents, path, module, compiled) {
         console.log("filename: " + err.fileName)
         console.log("linenum: " + err.lineNumber)
         if($B.debug > 0){console.log("line info " + $B.line_info)}
-
+        */
         throw err
     }finally{
         $B.clear_ns(module.__name__)
@@ -825,7 +826,7 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
            from_stdlib = true
        }
    }
-   
+
    var modobj = $B.imported[mod_name],
        parsed_name = mod_name.split('.')
 
