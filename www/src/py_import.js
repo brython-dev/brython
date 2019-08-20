@@ -412,7 +412,7 @@ var finder_VFS = {
             record.is_package = modobj.$is_package
             $B.precompiled[mod_name] = record.is_package ? [record.content] :
                 record.content
-            if(window.indexedDB){
+            if($B.$options.indexedDB && window.indexedDB){
                 // Store the compiled Javascript in indexedDB cache
                 var idb_cx = indexedDB.open("brython_stdlib")
                 idb_cx.onsuccess = function(evt){
