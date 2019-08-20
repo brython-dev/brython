@@ -18,8 +18,7 @@ y una función:
 
 Un objeto `WebSocket` dispone de los siguientes métodos :
 
-<code>bind(_evt,funcion_)</code> 
-
+`bind(`_evt,function_`)` 
 > adjunta la _funcion_ al evento _evt_. Los eventos y los correspondientes argumentos de la función son :
 
 <blockquote>
@@ -47,38 +46,38 @@ Un objeto `WebSocket` dispone de los siguientes métodos :
 </table>
 </blockquote>
 
-<code>send(_data_)</code>
-
+`send(`_data_`)`
 > envía el string _data_ al servidor
-`close()`
 
+`close()`
 > cierra la conexión
 
 Ejemplo :
 <table>
 <tr>
-<td>
+<td valign="top">
 ```exec_on_load
-from browser import alert, document as doc
-from browser import websocket
+from browser import alert, document, websocket
 
 def on_open(evt):
-    doc['sendbtn'].disabled = False
-    doc['closebtn'].disabled = False
-    doc['openbtn'].disabled = True
+    document['sendbtn'].disabled = False
+    document['closebtn'].disabled = False
+    document['openbtn'].disabled = True
 
 def on_message(evt):
-    # message reeived from server
-    alert("Message received : %s" %evt.data)
+    # message received from server
+    alert(f"Message received : {evt.data}")
 
 def on_close(evt):
     # websocket is closed
     alert("Connection is closed")
-    doc['openbtn'].disabled = False
-    doc['closebtn'].disabled = True
-    doc['sendbtn'].disabled = True
+    document['openbtn'].disabled = False
+    document['closebtn'].disabled = True
+    document['sendbtn'].disabled = True
 
 ws = None
+
+@document['openbtn'].bind('click')
 def _open(ev):
     if not websocket.supported:
         alert("WebSocket is not supported by your browser")
@@ -91,18 +90,16 @@ def _open(ev):
     ws.bind('message',on_message)
     ws.bind('close',on_close)
 
+@document['sendbtn'].bind('click')
 def send(ev):
-    data = doc["data"].value
+    data = document["data"].value
     if data:
         ws.send(data)
 
+@document['closebtn'].bind('click')
 def close_connection(ev):
     ws.close()
-    doc['openbtn'].disabled = False
-
-doc['openbtn'].bind('click', _open)
-doc['sendbtn'].bind('click', send)
-doc['closebtn'].bind('click', close_connection)
+    document['openbtn'].disabled = False
 ```        
 </td>
 
