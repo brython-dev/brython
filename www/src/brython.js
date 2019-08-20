@@ -75,6 +75,9 @@ $B.globals=function(){
 return $B.frames_stack[$B.frames_stack.length-1][3]}
 $B.scripts={}
 $B.$options={}
+$B.update_VFS=function(scripts){$B.VFS=$B.VFS ||{}
+for(var script in scripts){if($B.VFS.hasOwnProperty(script)){console.warn("Virtual File System: duplicate entry "+script)}
+$B.VFS[script]=scripts[script]}}
 $B.python_to_js=function(src,script_id){$B.meta_path=$B.$meta_path.slice()
 if(!$B.use_VFS){$B.meta_path.shift()}
 if(script_id===undefined){script_id="__main__"}
@@ -86,8 +89,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'final',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-08-19 12:59:40.141775"
-__BRYTHON__.timestamp=1566212380141
+__BRYTHON__.compiled_date="2019-08-20 10:01:27.443624"
+__BRYTHON__.timestamp=1566288087443
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -6426,8 +6429,8 @@ try{eval('$locals_'+locals_id+'["'+item+'"] = items.'+item)}catch(err){console.l
 console.log('error setting',item)
 break}}
 eval("$locals_"+locals_id+".$exec_locals = true")}
-eval("$locals_"+locals_id+".$src = src")
-if(locals_id=="urllib3.packages.six"){alert("set $src")}
+if(_globals===_b_.None && _locals===_b_.None &&
+current_frame[0]==current_frame[2]){}else{eval("$locals_"+locals_id+".$src = src")}
 var root=$B.py2js(src,globals_id,locals_id,parent_scope),js,gns,lns
 if(_globals !==_b_.None && _locals==_b_.None){for(var attr in _globals.$string_dict){root.binding[attr]=true}}
 try{
@@ -7445,13 +7448,11 @@ if(exc.module==line_info[1]){src=exc.src}
 if(!includeInternal){var src=frame[3].$src
 if(src===undefined){if($B.VFS && $B.VFS.hasOwnProperty(frame[2])){src=$B.VFS[frame[2]][1]}else if(src=$B.file_cache[frame[3].__file__]){}else{continue}}}
 var module=line_info[1]
-if(module=="urllib3.pacakges.six"){console.log("oops")}
 if(module.charAt(0)=="$"){module="<module>"}
 info+="\n  module "+module+" line "+line_info[0]
 if(frame.length > 4 && frame[4].$infos){info+=', in '+frame[4].$infos.__name__}
 if(src !==undefined){var lines=src.split("\n"),line=lines[parseInt(line_info[0])-1]
 if(line){line=line.replace(/^[ ]+/g,"")}
-if(line===undefined){console.log("undef",src,line_info)}
 info+="\n    "+line}else{console.log("src undef",line_info)}}
 if(exc.__class__===_b_.SyntaxError){info+="\n  File "+exc.args[1]+", line "+exc.args[2]+
 "\n    "+exc.args[4]}
@@ -8726,7 +8727,7 @@ var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_colle
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
 var js=['_aio','_ajax','_base64','_binascii','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_sre_utils','_string','_strptime','_svg','_warnings','_webcomponent','_webworker','_zlib_utils','aes','array','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','long_int','marshal','math','md5','modulefinder','pbkdf2','posix','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
-var pkglist=['asyncio','browser','browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','json','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
+var pkglist=['asyncio','browser','browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','json','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.requests','site-packages.simpleaio','site-packages.ui','site-packages.urllib3','site-packages.urllib3.contrib','site-packages.urllib3.contrib._securetransport','site-packages.urllib3.packages','site-packages.urllib3.packages.backports','site-packages.urllib3.packages.ssl_match_hostname','site-packages.urllib3.util','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
 for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}})(__BRYTHON__)
 ;
 
@@ -8832,17 +8833,7 @@ js="var $module = (function(){\n"+js+"return $locals_"+
 module.__name__.replace(/\./g,"_")+"})(__BRYTHON__)\n"+
 "return $module"
 var module_id="$locals_"+module.__name__.replace(/\./g,'_')
-var $module=(new Function(module_id,js))(module)}catch(err){console.log(err+" for module "+module.__name__)
-console.log("module",module)
-console.log(root)
-console.log(err)
-if($B.debug > 1){console.log(js)}
-for(var attr in err){console.log(attr,err[attr])}
-console.log(_b_.getattr(err,"info","[no info]"))
-console.log("message: "+err.$message)
-console.log("filename: "+err.fileName)
-console.log("linenum: "+err.lineNumber)
-if($B.debug > 0){console.log("line info "+$B.line_info)}
+var $module=(new Function(module_id,js))(module)}catch(err){
 throw err}finally{$B.clear_ns(module.__name__)}
 try{
 var mod=eval("$module")
@@ -8900,7 +8891,7 @@ var record=run_py(module_contents,modobj.__path__,modobj)
 record.is_package=modobj.$is_package
 $B.precompiled[mod_name]=record.is_package ?[record.content]:
 record.content
-if(window.indexedDB){
+if($B.$options.indexedDB && window.indexedDB){
 var idb_cx=indexedDB.open("brython_stdlib")
 idb_cx.onsuccess=function(evt){var db=evt.target.result,tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules"),cursor=store.openCursor(),request=store.put(record)
 request.onsuccess=function(){if(true){

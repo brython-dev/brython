@@ -192,6 +192,17 @@ $B.scripts = {} // for Python scripts embedded in a JS file
 
 $B.$options = {}
 
+// Update the Virtual File System
+$B.update_VFS = function(scripts){
+    $B.VFS = $B.VFS || {}
+    for(var script in scripts){
+        if($B.VFS.hasOwnProperty(script)){
+            console.warn("Virtual File System: duplicate entry " + script)
+        }
+        $B.VFS[script] = scripts[script]
+    }
+}
+
 // Can be used in Javascript programs to run Python code
 $B.python_to_js = function(src, script_id){
     $B.meta_path = $B.$meta_path.slice()

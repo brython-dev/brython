@@ -124,8 +124,8 @@ def process(filename, exclude_dirs=['test','site-packages']):
     print('{} files, {} errors'.format(nb, nb_err))
     with open(filename, "w") as out:
       out.write('__BRYTHON__.use_VFS = true;\n')
-      out.write('__BRYTHON__.VFS={}\n\n'.format(json.dumps(VFS)))
-
+      out.write('var scripts = {}\n'.format(json.dumps(VFS)))
+      out.write('__BRYTHON__.update_VFS(scripts)\n')
 
 
 if __name__ == '__main__':
