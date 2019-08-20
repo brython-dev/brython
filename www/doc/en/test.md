@@ -1,5 +1,3 @@
-
-
 Testing, debugging and profiling
 --------------------------------
 
