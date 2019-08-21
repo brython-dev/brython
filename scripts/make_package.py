@@ -53,10 +53,7 @@ def make(package_name, package_path, exclude_dirs=None):
         root_elts = dirpath.split(os.sep)
         for exclude in exclude_dirs:
             if exclude in root_elts:
-               flag = True
                continue
-        if flag:
-           continue  # skip these modules
         if '__pycache__' in dirnames:
             dirnames.remove("__pycache__")
 
@@ -69,7 +66,7 @@ def make(package_name, package_path, exclude_dirs=None):
             ext = os.path.splitext(filename)[1]
             if ext not in ('.js', '.py'):
                 continue
-            if filename.endswith(".brython.js"):
+            if filename.endswith(".brython.js"): # no recursion
                 continue
 
             nb += 1
@@ -90,7 +87,8 @@ def make(package_name, package_path, exclude_dirs=None):
                     imports = sorted(list(visitor.imports))
 
             mod_name = filename.replace(os.sep, '.')
-            mod_name = package_name + "." + mod_name
+            if package_name:
+                mod_name = package_name + "." + mod_name
             mod_name, ext = os.path.splitext(mod_name)
             is_package = mod_name.endswith('__init__')
             if ext == ".py":

@@ -232,9 +232,11 @@ class ModulesFinder:
             # Add VFS_timestamp ; used to test if the indexedDB must be
             # refreshed
             out.write("__BRYTHON__.VFS_timestamp = {}\n".format(
-                int(1000*time.time())))
-            out.write("__BRYTHON__.use_VFS = true\n__BRYTHON__.VFS = ")
+                int(1000 * time.time())))
+            out.write("__BRYTHON__.use_VFS = true\nvar scripts = ")
             json.dump(vfs, out)
+            out.write("\n__BRYTHON__.update_VFS(scripts)")
+
 
     def _dest(self, base_dir, dirname, filename):
         """Build the destination path for a file."""
@@ -361,7 +363,8 @@ for dirname, dirnames, filenames in os.walk(os.getcwd()):
             path = os.path.join(dirname, filename)
             with open(path, encoding="utf-8") as fobj:
                 modules = fobj.read()
-                modules = modules[modules.find('{'):]
+                modules = modules[modules.find('{'):
+                        modules.find('__BRYTHON__.update_VFS(')]
                 stdlib = json.loads(modules)
 
 if stdlib_dir is None:
