@@ -134,7 +134,7 @@ def run():
                               'implementation = "{}"'.format(vname),
                               br,
                               flags=re.M)
-    
+
     with open(br_script, "w", encoding="utf-8") as out:
         out.write(br_versioned)
 
@@ -179,8 +179,8 @@ def run():
     dist3 = zipfile.ZipFile(dest_path + '.zip', mode='w',
                             compression=zipfile.ZIP_DEFLATED)
 
-    paths = ['README.txt', 'demo.html', 'brython.js', 'brython_stdlib.js',
-        'unicode.txt']
+    paths = ['README.txt', 'demo.html', 
+        'brython.js', 'brython_stdlib.js', 'unicode.txt']
 
     for arc, wfunc in ((dist1, dist1.add), (dist2, dist2.add),
             (dist3, dist3.write)):

@@ -8,6 +8,27 @@ import sys
 with open('README.rst', encoding='utf-8') as fobj:
     LONG_DESCRIPTION = fobj.read()
 
+# source of index.html
+html = """<!doctype html>
+<html>
+
+<head>
+<meta charset="utf-8">
+<script type="text/javascript" src="brython.js"></script>
+<script type="text/javascript" src="brython_stdlib.js"></script>
+</head>
+
+<body onload="brython(1)">
+<script type="text/python">
+from browser import document
+
+document <= "Hello"
+</script>
+</body>
+
+</html>"""
+
+
 command = sys.argv[1]
 
 if command == "sdist":
@@ -24,6 +45,10 @@ if command == "sdist":
         shutil.copyfile(os.path.join(src_dir, fname),
             os.path.join(data_dir, fname))
 
+    # copy index.html
+    with open(os.path.join(data_dir, "index.html"), "w", encoding="utf-8") as out:
+        out.write(html)
+    
     # copy demo.html
     with open(os.path.join(root_dir, 'www', 'demo.html'), encoding="utf-8") as f:
         demo = f.read()
@@ -92,6 +117,7 @@ setup(
         'data': [
             'README.txt',
             'demo.html',
+            'index.html',
             'brython.js',
             'brython_stdlib.js',
             'unicode.txt'
