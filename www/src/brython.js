@@ -89,8 +89,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'final',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-08-21 08:08:53.277848"
-__BRYTHON__.timestamp=1566367733277
+__BRYTHON__.compiled_date="2019-08-21 11:35:59.865547"
+__BRYTHON__.timestamp=1566380159865
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -3032,8 +3032,8 @@ catch_node.add(if_node)
 if_node.add($NodeJS('$B.$raise()'))
 var else_node=$NodeJS('if(! '+this.exc_name+')')
 new_nodes.push(else_node)
-else_node.add($NodeJS('await $B.promise('+
-this.cm_name+', _b_.None, _b_.None, _b_.None)'))
+else_node.add($NodeJS('await $B.promise('+this.cmexit_name+'('+
+this.cm_name+', _b_.None, _b_.None, _b_.None))'))
 node.parent.children.splice(rank,1)
 for(var i=new_nodes.length-1;i >=0;i--){node.parent.insert(rank,new_nodes[i])}
 node.children=[]
