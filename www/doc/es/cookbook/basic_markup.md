@@ -3,10 +3,8 @@ Problema
 
 Uso de las etiquetas HTML b&aacute;sicas: bold, italic, headers...
 
-
 Soluci&oacute;n
 --------
-
 
 <table width="100%">
 <tr>
@@ -14,6 +12,7 @@ Soluci&oacute;n
 
 ```exec
 from browser import document, html
+
 document['zone'] <= html.H1("Presentando a Brython")
 document['zone'] <= html.H4(html.I("Python en el navegador"))
 document['zone'] <= html.B("Hola mundo !")

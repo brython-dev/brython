@@ -208,7 +208,7 @@ jq.each(jq('span'), show)
 ### Other examples
 
 You will find in the [gallery](../../gallery/gallery_en.html) other examples
-of how to use Javascript librairies (Three, Highcharts, Raphael) in Brython
+of how to use Javascript libraries (Three, Highcharts, Raphael) in Brython
 scripts.
 
 

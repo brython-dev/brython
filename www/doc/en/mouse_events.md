@@ -2,7 +2,7 @@ Mouse events
 ============
 
 <script type="text/python">
-from browser import doc, alert
+from browser import document, alert
 </script>
 
 The mouse-related events (movement, pressing a button) are

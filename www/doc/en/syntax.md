@@ -11,9 +11,9 @@ Keywords and built-in functions
 
 Brython supports most of the keywords and functions of Python 3 :
 
-- keywords : `and, as, assert, async, await, break, class, continue, def, del, elif, else,`
-  `except, False, finally, for, from, global, if, import, in, is, lambda, `
-  `None, nonlocal, not, or, pass, raise, return, True, try, while, with, yield`
+- keywords : `and, as, assert, async, await, break, class, continue, def, del, `
+  `elif, else, except, False, finally, for, from, global, if, import, in, is, `
+  `lambda, None, nonlocal, not, or, pass, raise, return, True, try, while, with, yield`
 - built-in functions and classes : `abs, all, any, ascii, bin, bool, bytes,`
   `callable, chr, classmethod, delattr, dict, dir, divmod, `
   `enumerate, eval, exec, filter, float, frozenset, getattr, `
@@ -36,7 +36,7 @@ Here are a few features and limitations imposed by the browser and Javascript :
 
 - for the same reason, and also because the browser has its own implicit
   event loop, the CPython `asyncio` module is not usable. A Brython-specific
-  module, [**`browser.aio`**](aio.html), is provided for asynchrnous
+  module, [**`browser.aio`**](aio.html), is provided for asynchronous
   programming.
 
 - the built-in function `open()` takes as argument the url of the file to

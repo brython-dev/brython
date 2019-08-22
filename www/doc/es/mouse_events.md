@@ -2,7 +2,7 @@ Eventos del ratón
 ============
 
 <script type="text/python">
-from browser import doc, alert
+from browser import document, alert
 </script>
 
 Los eventos relacionados con el ratón (mover o pulsar un  botón) son
@@ -19,15 +19,21 @@ que tiene la función anexada que espera a que suceda el evento</td></tr>
 <tr><td>*mouseover*</td><td>cuando el puntero se mueve sobre un elemento que
 tiene la función anexada que espera a que suceda el evento o sobre uno de sus
 elementos hijos</td></tr>
-<tr><td>*mouseout*</td><td>cuando el puntero se mueve fuera de un elemento que tiene la función anexada que espera a que suceda el evento o cuando sale de alguno de sus elementos hijos</td></tr>
+<tr><td>*mouseout*</td><td>cuando el puntero se mueve fuera de un elemento que 
+tiene la función anexada que espera a que suceda el evento o cuando sale de 
+alguno de sus elementos hijos</td></tr>
 
-<tr><td>*mousemove*</td><td>cuando el puntero se mueve en un elemento que tiene la función anexada que espera a que suceda el evento</td></tr>
+<tr><td>*mousemove*</td><td>cuando el puntero se mueve en un elemento</td></tr>
 
-<tr><td>*mousedown*</td><td>cuando se pulsa un botón (normalmente del ratón) sobre un elemento que tiene la función anexada que espera a que suceda el evento</td></tr>
-<tr><td>*mouseup*</td><td>cuando se libera un botón (normalmente del ratón) sobre un elemento que tiene la función anexada que espera a que suceda el evento</td></tr>
+<tr><td>*mousedown*</td><td>cuando se pulsa un botón (normalmente del ratón) 
+sobre un elemento</td></tr>
+<tr><td>*mouseup*</td><td>cuando se libera un botón (normalmente del ratón) 
+sobre un elemento</td></tr>
 
-<tr><td>*click*</td><td>cuando se pulsa y libera un botón (normalmente del ratón) sobre un elemento que tiene la función anexada que espera a que suceda el evento</td></tr>
-<tr><td>*dblclick*</td><td>cuando se pulsa y libera un botón dos veces (normalmente del ratón) sobre un elemento que tiene la función anexada que espera a que suceda el evento</td></tr>
+<tr><td>*click*</td><td>cuando se pulsa y libera un botón (normalmente del 
+ratón) sobre un elemento</td></tr>
+<tr><td>*dblclick*</td><td>cuando se pulsa y libera un botón dos veces 
+(normalmente del ratón) sobre un elemento</td></tr>
 
 </table>
 
@@ -36,7 +42,9 @@ Ejemplos
 
 *mouseenter* y *mouseleave*
 
-> estos eventos ocurrirán cuando el puntero del ratónentran o abandonan un elemento. Si un elemento incluye a otros, el evento ocurrirá cada vez que el ratón entre o salga de un elemento hijo
+> estos eventos ocurrirán cuando el puntero del ratón entra o abandona un 
+> elemento. Si un elemento incluye a otros, el evento ocurrirá cada vez que el 
+> ratón entre o salga de un elemento hijo
 
 <table>
 <tr>
@@ -69,7 +77,9 @@ for elt_id in ("yellow1", "blue1"):
 
 *mouseover* y *mouseout*
 
-> la diferencia con *mouseenter* y *mouseleave* es que, una vez que el puntero entrado o salido de un elemento, el evento  no se propagará a los elementos hijo
+> la diferencia con *mouseenter* y *mouseleave* es que, una vez que el puntero 
+> ha entrado o salido de un elemento, el evento  no se propagará a los elementos
+> hijo
 
 <table>
 <tr>
@@ -106,7 +116,8 @@ for elt_id in ("yellow2", "blue2"):
 
 <table>
 <tr><td>
-<div id="green" style="padding:5px;background-color:#8F8;width:150px;">mueve el ratón</div>
+<div id="green" style="padding:5px;background-color:#8F8;width:150px;">mueve el 
+ratón</div>
 </td>
 <td><div id="trace3">&nbsp;</div></td>
 </tr>
@@ -132,19 +143,65 @@ Atributos de la instancia `DOMEvent`
 Para eventos de ratón, la instancia de `DOMEvent` posee los siguientes atributos
 
 <table cellpadding=3 border=1>
-<tr><td>*button*</td><td>indica cual fue el botón pulsado que desencadenó el evento</td></tr>
-<tr><td>*buttons*</td><td>indica cuales fueron los botones pulsados que han desencadenado el evento.
+<tr>
+  <td>*button*</td>
+  <td>indica cual fue el botón pulsado que desencadenó el evento</td>
+</tr>
+<tr>
+  <td>*buttons*</td>
+  <td>indica cuales fueron los botones pulsados que han desencadenado el evento.
 
-Cada botón que puede sser pulsado se representa mediante un número (1  : botón izquierdo, 2  : botón derecho, 4  : rueda del ratón). Si se aprieta más de un botón, el valor de los botones se combina para obtener un nuevo número. Por ejemplo, si se pulsa el botón derecho (2) y el botón rueda (4) el valor será igual a 2|4, que es 6</td></tr>
+  Cada botón que puede sser pulsado se representa mediante un número (1: botón 
+  izquierdo, 2: botón derecho, 4: rueda del ratón). Si se aprieta más de un 
+  botón, el valor de los botones se combina para obtener un nuevo número. Por 
+  ejemplo, si se pulsa el botón derecho (2) y el botón rueda (4) el valor será 
+  igual a 2|4, que es 6</td>
+</tr>
 
-<tr><td>*x*</td><td>posición del ratón (en píxeles) en relación a la esquina superior izquierda de la ventana</td></tr>
-<tr><td>*y*</td><td>posición del ratón (en píxeles) en relación a la esquina superior izquierda de la ventana</td></tr>
+<tr>
+  <td>*x*</td>
+  <td>posición del ratón (en píxeles) en relación a la esquina superior 
+  izquierda de la ventana</td>
+</tr>
+<tr>
+  <td>*y*</td>
+  <td>posición del ratón (en píxeles) en relación a la esquina superior 
+  izquierda de la ventana</td>
+</tr>
 
-<tr><td>*clientX*</td><td>la coordenada X del puntero del ratón en las coordenadas locales (DOM content)</td></tr>
-<tr><td>*clientY*</td><td>la coordenada Y del puntero del ratón en las coordenadas locales (DOM content)</td></tr>
+<tr>
+  <td>*clientX*</td>
+  <td>la coordenada X del puntero del ratón en las coordenadas locales (DOM 
+  content)</td>
+</tr>
+<tr>
+  <td>*clientY*</td>
+  <td>la coordenada Y del puntero del ratón en las coordenadas locales (DOM 
+  content)</td>
+</tr>
 
-<tr><td>*screenX*</td><td>la coordenada X del puntero del ratón en las coordenadas globales (pantalla)</td></tr>
-<tr><td>*screenY*</td><td>la coordenada Y del puntero del ratón en las coordenadas globales (pantalla)</td></tr>
+<tr>
+  <td>*screenX*</td>
+  <td>la coordenada X del puntero del ratón en las coordenadas globales 
+  (pantalla)</td>
+</tr>
+<tr>
+  <td>*screenY*</td>
+  <td>la coordenada Y del puntero del ratón en las coordenadas globales 
+  (pantalla)</td>
+</tr>
 
 </table>
 
+Si el objetivo del evento es un elemento SVG (el contenedor definido por una 
+etiqueta &lt;SVG&gt;), el evento tiene los siguientes atributos:
+
+<table cellpadding=3 border=1>
+
+<tr>
+  <td>*svgX, svgY*</td>
+  <td>las coordenadas X, Y del puntero del ratón, en relación a la esquina
+  superior izquierda del elemento SVG</td>
+</tr>
+
+</table>

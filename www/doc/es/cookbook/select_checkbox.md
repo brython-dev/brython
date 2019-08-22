@@ -9,14 +9,13 @@ posee un atributo booleano _selected_. Este atributo puede ser leído para
 comprobar si la opción ha sido seleccionada ; asignándole un valor `True` o 
 `False` selecciona o deselecciona la opción.
 
-Los elementos Checkbox (INPUT type="checkbox") poseenun atributo booleano 
+Los elementos Checkbox (INPUT type="checkbox") poseen un atributo booleano 
 _checked_ que se puede usar de la misma forma : para conocer si una caja ha 
 sido chequeada, o para chequearla/deschequearla.
 
-El ejemplo de más bajo selecciona o deselecciona opciones de acuerdo al estado
- (chequeado/deschequeado) de los elementos checkbox ; de la misma forma, un 
- click en un elemento SELECT provoca el chequeo/deschequeo del checkbox 
- asociado.
+El ejemplo de más abajo selecciona o deselecciona opciones de acuerdo al estado
+ (chequeado o no) de los elementos checkbox ; de la misma forma, un 
+ click en un elemento SELECT provoca el chequeo o no del checkbox asociado.
 
 La función `show_selected()` muestra como obtener la lista de los elementos 
 seleccionados; `for option in sel` itera itera sobre las opciones posibles. 

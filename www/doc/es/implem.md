@@ -9,15 +9,13 @@ Traducción de la sintaxis Python a código Javascript
 </tr>
 
 <tr>
+<td><pre><code>
+x = 1
+y = 3.14
+z = "azerty"
+</code></pre></td>
 <td>
-`x = 1`
-
-`y = 3.14`
-
-`z = "azerty"`
-</td>
-<td>
-    var $globals = __BRYTHON__.scope["__main__"].__dict__
+    var $globals = __BRYTHON__.vars["__main__"]
     var $locals = $globals
     x=$globals["x"]=Number(1)
     y=$globals["y"]=float(3.14)
@@ -25,35 +23,31 @@ Traducción de la sintaxis Python a código Javascript
 </td>
 <td>Las primeras dos líneas están presentes en todos los scripts ; definen variables internas Brython que usan las funciones `globals()` y `locals()`. Tened en cuenta que en los siguientes ejemplos no se mostrarán esas dos líneas.
 
-_float_ es una función Javascript definida en __py\_builtin\_functions.js__</td>
+`float` es una función Javascript definida en __py\_float.js__</td>
 </tr>
 
 <tr>
 <td>`x = foo.bar`</td>
 <td>`x=getattr(foo,"bar")`
-<td>&nbsp;</td>
-</td>
+<td>&nbsp;</td> 
 </tr>
 
 <tr>
 <td>`foo.bar = x`</td>
 <td>`setattr(foo,"bar",x)`
 <td>&nbsp;</td>
-</td>
 </tr>
 
 <tr>
 <td>`x = foo[bar]`</td>
 <td>`x=getattr(foo,"__getitem__")(bar)`
 <td>&nbsp;</td>
-</td>
 </tr>
 
 <tr>
 <td>`foo[bar] = x`</td>
 <td>`getattr(foo,"__setitem__")(bar,x)`
 <td>&nbsp;</td>
-</td>
 </tr>
 
 <tr>
@@ -61,7 +55,6 @@ _float_ es una función Javascript definida en __py\_builtin\_functions.js__</td
 <td>`getattr(x,"__add__")(y)`
 <td>lo mismo para todos los operadores
 <br>necesario para implementar operaciones como 2 * "a"</td>
-</td>
 </tr>
 
 <tr>
@@ -112,6 +105,7 @@ se podría usar el operador Javascript +=
         (...)
     }
 
+
 </td>
 <td>_$no\_break_ es un booleano usado en el caso de que el bucle `for` tenga un `else`
 
@@ -138,7 +132,8 @@ _$is\_exc(exc,classes)_ es una función interna que comprueba si la excepción _
     var x=$globals["x"]=$rlist9[0]
     var y=$globals["y"]=$rlist9[1] 
 </td>
-<td>La traducción es bastante larga, pero el manejo de las excepciones se debe realizar en el tiempo de ejecución</td></tr>
+<td>La traducción es bastante larga, pero el manejo de las excepciones se debe realizar en el tiempo de ejecución</td>
+</tr>
 
 <tr>
 <td>
