@@ -42,7 +42,7 @@ La sintaxis para crear un objeto (eg un hiperenlace) es :
 > *attributes* es una secuencia de palabras clave (keywords) correspondientes a los
 >  [atributos](http://www.w3.org/TR/html5-author/index.html#attributes-1) de la etiqueta HTML. 
 > Si el atributo contiene un guión (`-`) deberá ser reemplazado por un guión bajo (`_`): _http\_equiv_ 
-> en lugar de _http-quiv_ (el símbolo `-` será interpretado como el signo 'menos'). 
+> en lugar de _http-equiv_ (el símbolo `-` será interpretado como el signo 'menos'). 
 > Para nombres de atributos más complejos se puede usar la sintaxis
 
 <blockquote>
@@ -87,7 +87,7 @@ d = html.DIV('Brython', Class="container")
 También se puede crear un objeto sin argumentos y añadirlos a posteriori:
 
 - Para añadir un nodo hijo hay que usar el operador **<=**
-- Para añadir atributos se usa la sintaxis clásica de Python : `object.attribute = value` (ver la sección
+- Para añadir atributos se usa la sintaxis clásica de Python : `object.attrs[key] = value` (ver la sección
   [atributos y métodos](attributes.html))
 
 Ejemplo :

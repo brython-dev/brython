@@ -93,7 +93,7 @@ You can also create an object without argument, then build it up:
 
 - to add a child node, use the **<=** operator
 - to add attributes, use the syntax :
-  `object.attribute = value` (see section
+  `object.attrs[key] = value` (see section
   [Attributes and methods](attributes.html))
 
 Example :

@@ -94,7 +94,7 @@ On peut aussi créer un objet sans argument, puis le compléter :
 
 - pour ajouter un noeud enfant, utiliser l'opérateur **<=**
 - pour ajouter des attributs, utiliser la syntaxe :
-  `objet.attrs[attribut] = valeur` (voir la section
+  `objet.attrs[cle] = valeur` (voir la section
   [Attributs et méthodes](attributes.html))
 
 Exemple :
