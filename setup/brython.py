@@ -43,7 +43,8 @@ if __name__ == "__main__":
     if args.add_package:
         print('add package {}...'.format(args.add_package))
         package = __import__(args.add_package)
-        package_file = os.path.dirname(package.__file__)
+        package_file = package.__file__
+        package_dir = os.path.dirname(package_file)
         lib_dir = os.path.join(os.getcwd(), 'Lib')
         if not os.path.exists(lib_dir):
             os.mkdir(lib_dir)
@@ -51,9 +52,9 @@ if __name__ == "__main__":
         if not os.path.exists(dest_dir):
             os.mkdir(dest_dir)
 
-        if os.path.splitext(package_file)[1] == '.egg':
+        if os.path.splitext(package_dir)[1] == '.egg':
             import zipfile
-            zf = zipfile.ZipFile(package_file)
+            zf = zipfile.ZipFile(package_dir)
             for info in zf.infolist():
                 if info.filename.startswith(('__pycache__', 'EGG-INFO')):
                     continue
@@ -61,12 +62,16 @@ if __name__ == "__main__":
                 print('extract', info.filename)
             zf.close()
             print('done')
-        elif os.path.isdir(package_file):
-            print('copy folder', package_file)
+        elif not package_dir.split(os.sep)[-1] == "site-packages":
+            print('copy folder', package_dir)
             dest_dir = os.path.join(dest_dir, args.add_package)
             if os.path.exists(dest_dir):
                 shutil.rmtree(dest_dir)
-            shutil.copytree(package_file, dest_dir)
+            shutil.copytree(package_dir, dest_dir)
+        else:
+            print('copy single file', package_file)
+            shutil.copyfile(package_file, os.path.join(dest_dir,
+                os.path.basename(package_file)))
 
     if args.install:
         print('Installing Brython {} in an empty directory'.format(implementation))
