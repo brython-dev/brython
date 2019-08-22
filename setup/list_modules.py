@@ -132,8 +132,10 @@ class ModulesFinder:
         for module in finder.imports:
             if module in self.modules:
                 continue
+            found = False
             for module_dict in [stdlib, user_modules]:
                 if module in module_dict:
+                    found = True
                     self.modules.add(module)
                     if module_dict[module][0] == '.py':
                         is_package = len(module_dict[module]) == 4
@@ -350,6 +352,9 @@ class ModulesFinder:
         with open(path, "w", encoding="utf-8") as out:
             out.write(app.format(**info))
 
+# User-defined Python modules and packages
+user_modules = {}
+
 # Get all modules in the Brython standard distribution.
 # They must be in brython_stdlib.js somewhere in the current directory
 # or below.
@@ -370,9 +375,33 @@ for dirname, dirnames, filenames in os.walk(os.getcwd()):
 if stdlib_dir is None:
     raise FileNotFoundError("Could not find brython_stdlib.js in this"
         " directory or below")
-
-# get all Python modules and packages
-user_modules = {}
+else:
+    # search in site-packages
+    sp_dir = os.path.join(stdlib_dir, "Lib", "site-packages")
+    if os.path.exists(sp_dir):
+        print("search in site-packages...")
+        for dirpath, dirnames, filenames in os.walk(sp_dir):
+            package = dirpath[len(sp_dir) + 1:]
+            for filename in filenames:
+                if not filename.endswith(".py"):
+                    print("skip non-Python module", filename)
+                    continue
+                fullpath = os.path.join(dirpath, filename)
+                is_package = False
+                if not package:
+                    # file in site-packages
+                    module = os.path.splitext(filename)[0]
+                else:
+                    elts = package.split(os.sep)
+                    is_package = filename == "__init__.py"
+                    if not is_package:
+                        elts.append(os.path.splitext(filename)[0])
+                    module = ".".join(elts)
+                with open(fullpath, encoding="utf-8") as f:
+                    src = f.read()
+                mf = ModulesFinder()
+                imports = mf.get_imports(src)
+                stdlib[module] = [".py", src, list(imports), is_package]
 
 packages = {os.getcwd(), os.getcwd() + '/Lib/site-packages'}
 
