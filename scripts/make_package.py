@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import time
 import ast
 
 import python_minifier
@@ -44,7 +45,7 @@ class Visitor(ast.NodeVisitor):
 
 def make(package_name, package_path, exclude_dirs=None):
     print("Generating package {}".format(package_name))
-    VFS = {}
+    VFS = {"$timestamp": int(1000 * time.time())}
     nb = 0
     if exclude_dirs is None:
         exclude_dirs = []
@@ -99,7 +100,7 @@ def make(package_name, package_path, exclude_dirs=None):
                     VFS[mod_name] = [ext, data, imports]
             else:
                VFS[mod_name] = [ext, data]
-            print("adding {}".format(mod_name))
+            print("adding {} package {}".format(mod_name, is_package))
 
     print('{} files'.format(nb))
     with open(os.path.join(package_path, package_name + ".brython.js"),

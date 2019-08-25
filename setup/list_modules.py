@@ -219,7 +219,7 @@ class ModulesFinder:
         """Build brython_modules.js from the list of modules needed by the
         application.
         """
-        vfs = {}
+        vfs = {"$timestamp": int(1000 * time.time())}
         for module in self.modules:
             dico = stdlib if module in stdlib else user_modules
             vfs[module] = dico[module]
