@@ -76,8 +76,11 @@ return $B.frames_stack[$B.frames_stack.length-1][3]}
 $B.scripts={}
 $B.$options={}
 $B.update_VFS=function(scripts){$B.VFS=$B.VFS ||{}
+var vfs_timestamp=scripts.$timestamp
+if(vfs_timestamp !==undefined){delete scripts.$timestamp}
 for(var script in scripts){if($B.VFS.hasOwnProperty(script)){console.warn("Virtual File System: duplicate entry "+script)}
-$B.VFS[script]=scripts[script]}}
+$B.VFS[script]=scripts[script]
+$B.VFS[script].timestamp=vfs_timestamp}}
 $B.python_to_js=function(src,script_id){$B.meta_path=$B.$meta_path.slice()
 if(!$B.use_VFS){$B.meta_path.shift()}
 if(script_id===undefined){script_id="__main__"}
@@ -89,8 +92,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'final',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-08-22 10:25:40.160447"
-__BRYTHON__.timestamp=1566462340160
+__BRYTHON__.compiled_date="2019-08-25 11:22:09.645411"
+__BRYTHON__.timestamp=1566724929645
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5039,8 +5042,8 @@ function idb_load(evt,module){
 var res=evt.target.result
 var timestamp=$B.timestamp
 if(res===undefined ||res.timestamp !=$B.timestamp){
-if($B.VFS[module]!==undefined){var elts=$B.VFS[module],ext=elts[0],source=elts[1],is_package=elts.length==4,__package__
-if(ext==".py"){
+if($B.VFS[module]!==undefined){var elts=$B.VFS[module],ext=elts[0],source=elts[1]
+if(ext==".py"){var imports=elts[2],is_package=elts.length==4,source_ts=elts.timestamp,__package__
 if(is_package){__package__=module}
 else{var parts=module.split(".")
 parts.pop()
@@ -5050,9 +5053,11 @@ try{var root=$B.py2js(source,module,module),js=root.to_js()}catch(err){$B.handle
 throw err}
 delete $B.imported[module]
 if($B.debug > 1){console.log("precompile",module)}
-var imports=elts[2]
+var parts=module.split(".")
+if(parts.length > 1){parts.pop()}
+if($B.stdlib.hasOwnProperty(parts.join("."))){var imports=elts[2]
 imports=imports.join(",")
-$B.tasks.splice(0,0,[store_precompiled,module,js,imports,is_package])}else{console.log('bizarre',module,ext)}}else{}}else{
+$B.tasks.splice(0,0,[store_precompiled,module,js,source_ts,imports,is_package])}}else{console.log('bizarre',module,ext)}}else{}}else{
 if(res.is_package){$B.precompiled[module]=[res.content]}else{$B.precompiled[module]=res.content}
 if(res.imports.length > 0){
 if($B.debug > 1){console.log(module,"imports",res.imports)}
@@ -5070,8 +5075,9 @@ if(!$B.imported.hasOwnProperty(subimport)&&
 if($B.VFS.hasOwnProperty(subimport)){var submodule=$B.VFS[subimport],ext=submodule[0],source=submodule[1]
 if(submodule[0]==".py"){$B.tasks.splice(0,0,[idb_get,subimport])}else{add_jsmodule(subimport,source)}}}}}}
 loop()}
-function store_precompiled(module,js,imports,is_package){
-var db=$B.idb_cx.result,tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules"),cursor=store.openCursor(),data={"name":module,"content":js,"imports":imports,"timestamp":__BRYTHON__.timestamp,"is_package":is_package},request=store.put(data)
+function store_precompiled(module,js,source_ts,imports,is_package){
+var db=$B.idb_cx.result,tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules"),cursor=store.openCursor(),data={"name":module,"content":js,"imports":imports,"origin":origin,"timestamp":__BRYTHON__.timestamp,"source_ts":source_ts,"is_package":is_package},request=store.put(data)
+if($B.debug > 1){console.log("store precompiled",module,"package",is_package)}
 request.onsuccess=function(evt){
 $B.tasks.splice(0,0,[idb_get,module])
 loop()}}
@@ -5080,12 +5086,15 @@ var db=$B.idb_cx.result,tx=db.transaction("modules","readonly")
 try{var store=tx.objectStore("modules")
 req=store.get(module)
 req.onsuccess=function(evt){idb_load(evt,module)}}catch(err){console.info('error',err)}}
-$B.idb_open=function(obj){var idb_cx=$B.idb_cx=indexedDB.open("brython_stdlib")
+function remove_from_cache(cursor,record){var request=cursor.delete()
+request.onsuccess=function(){if($B.debug > 1){console.log("delete outdated",record.name)}}}
+$B.idb_open=function(obj){$B.idb_name="brython-cache"
+var idb_cx=$B.idb_cx=indexedDB.open($B.idb_name)
 idb_cx.onsuccess=function(){var db=idb_cx.result
 if(!db.objectStoreNames.contains("modules")){var version=db.version
 db.close()
 console.info('create object store',version)
-idb_cx=indexedDB.open("brython_stdlib",version+1)
+idb_cx=indexedDB.open($B.idb_name,version+1)
 idb_cx.onupgradeneeded=function(){console.info("upgrade needed")
 var db=$B.idb_cx.result,store=db.createObjectStore("modules",{"keyPath":"name"})
 store.onsuccess=loop}
@@ -5093,11 +5102,16 @@ idb_cx.onversionchanged=function(){console.log("version changed")}
 idb_cx.onsuccess=function(){console.info("db opened",idb_cx)
 var db=idb_cx.result,store=db.createObjectStore("modules",{"keyPath":"name"})
 store.onsuccess=loop}}else{console.info("using indexedDB for stdlib modules cache")
-var tx=db.transaction("modules","readonly"),store=tx.objectStore("modules"),cursor=store.openCursor(),record
-cursor.onsuccess=function(evt){res=evt.target.result
-if(res){record=res.value
-if(record.timestamp==$B.timestamp){if(record.is_package){$B.precompiled[record.name]=[record.content]}else{$B.precompiled[record.name]=record.content}}
-res.continue()}else{loop()}}}}
+var tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules"),record,outdated=[]
+store.openCursor().onsuccess=function(evt){cursor=evt.target.result
+if(cursor){record=cursor.value
+if(record.timestamp==$B.timestamp){if(!$B.VFS ||!$B.VFS[record.name]||
+$B.VFS[record.name].timestamp==record.source_ts){
+if(record.is_package){$B.precompiled[record.name]=[record.content]}else{$B.precompiled[record.name]=record.content}
+if($B.debug > 1){console.log("load from cache",record.name)}}else{
+remove_from_cache(cursor,record)}}else{remove_from_cache(cursor,record)}
+cursor.continue()}else{if($B.debug > 1){console.log("done")}
+loop()}}}}
 idb_cx.onupgradeneeded=function(){console.info("upgrade needed")
 var db=idb_cx.result,store=db.createObjectStore("modules",{"keyPath":"name"})
 store.onsuccess=loop}
@@ -8862,8 +8876,8 @@ if(ext=='.js'){run_js(module_contents,modobj.__path__,modobj)}else if($B.precomp
 for(var i=0;i < parts.length;i++){var parent=parts.slice(0,i+1).join(".")
 if($B.imported.hasOwnProperty(parent)&&
 $B.imported[parent].__initialized__){continue}
-var mod_js=$B.precompiled[parent],is_package=Array.isArray(mod_js)
-if(is_package){mod_js=mod_js[0]}
+var mod_js=$B.precompiled[parent],is_package=modobj.$is_package
+if(Array.isArray(mod_js)){mod_js=mod_js[0]}
 $B.imported[parent]=module.$factory(parent,undefined,is_package)
 $B.imported[parent].__initialized__=true
 $B.imported[parent].__file__=
@@ -8891,11 +8905,13 @@ var record=run_py(module_contents,modobj.__path__,modobj)
 record.is_package=modobj.$is_package
 $B.precompiled[mod_name]=record.is_package ?[record.content]:
 record.content
-if($B.$options.indexedDB && window.indexedDB){
-var idb_cx=indexedDB.open("brython_stdlib")
+var elts=mod_name.split(".")
+if(elts.length > 1){elts.pop()}
+var in_stdlib=$B.stdlib.hasOwnProperty(elts.join("."))
+if(in_stdlib && $B.$options.indexedDB && window.indexedDB){
+var idb_cx=indexedDB.open($B.idb_name)
 idb_cx.onsuccess=function(evt){var db=evt.target.result,tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules"),cursor=store.openCursor(),request=store.put(record)
-request.onsuccess=function(){if(true){
-console.info(modobj.__name__,"stored in db")}}}}}},find_module:function(cls,name,path){return{
+request.onsuccess=function(){if($B.debug > 1){console.info(modobj.__name__,"stored in db")}}}}}},find_module:function(cls,name,path){return{
 __class__:Loader,load_module:function(name,path){var spec=cls.find_spec(cls,name,path)
 var mod=module.$factory(name)
 $B.imported[name]=mod
@@ -13140,11 +13156,10 @@ if(args.length==1){var first=args[0]
 if(_b_.isinstance(first,[_b_.str,_b_.int,_b_.float])){
 self.elt.innerHTML=_b_.str.$factory(first)}else if(first.__class__===TagSum){for(var i=0,len=first.children.length;i < len;i++){self.elt.appendChild(first.children[i].elt)}}else{if(_b_.isinstance(first,$B.DOMNode)){self.elt.appendChild(first.elt)}else{try{
 var items=_b_.list.$factory(first)
-items.forEach(function(item){$B.DOMNode.__le__(self,item)})}catch(err){console.log(err)
+items.forEach(function(item){$B.DOMNode.__le__(self,item)})}catch(err){if($B.debug > 1){console.log(err,err.__class__,err.args)
 console.log("first",first)
-console.log(arguments)
-throw _b_.ValueError.$factory(
-'wrong element '+_b_.str.$factory(first))}}}}
+console.log(arguments)}
+$B.handle_error(err)}}}}
 var items=_b_.list.$factory(_b_.dict.items($ns['kw']))
 for(var i=0,len=items.length;i < len;i++){
 var arg=items[i][0],value=items[i][1]

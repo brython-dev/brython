@@ -6415,7 +6415,7 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
         var else_node = $NodeJS('if(! ' + this.exc_name +')')
         new_nodes.push(else_node)
         //     await aexit(mgr, None, None, None)
-        else_node.add($NodeJS('await $B.promise(' + this.cmexit_name + '(' + 
+        else_node.add($NodeJS('await $B.promise(' + this.cmexit_name + '(' +
             this.cm_name +', _b_.None, _b_.None, _b_.None))'))
 
         // Remove original node

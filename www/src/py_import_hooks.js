@@ -19,7 +19,6 @@ function import_hooks(mod_name, _path, from_stdlib) {
         _sys_modules = $B.imported,
         _loader,
         spec
-
     if(from_stdlib){
         // When importing from a module in the standard library, remove
         // finder_path from the finders : the module can't be in the current
@@ -57,7 +56,7 @@ function import_hooks(mod_name, _path, from_stdlib) {
             }
         }
     }
-    
+
     if(_loader === undefined){
         // No import spec found
         var exc = _b_.ImportError.$factory("No module named " + mod_name)
