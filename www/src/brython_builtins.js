@@ -195,11 +195,16 @@ $B.$options = {}
 // Update the Virtual File System
 $B.update_VFS = function(scripts){
     $B.VFS = $B.VFS || {}
+    var vfs_timestamp = scripts.$timestamp
+    if(vfs_timestamp !== undefined){
+        delete scripts.$timestamp
+    }
     for(var script in scripts){
         if($B.VFS.hasOwnProperty(script)){
             console.warn("Virtual File System: duplicate entry " + script)
         }
         $B.VFS[script] = scripts[script]
+        $B.VFS[script].timestamp = vfs_timestamp
     }
 }
 
