@@ -360,8 +360,8 @@ var finder_VFS = {
                }
                // Initialise $B.imported[parent]
                var mod_js = $B.precompiled[parent],
-                   is_package = Array.isArray(mod_js)
-               if(is_package){mod_js=mod_js[0]}
+                   is_package = modobj.$is_package
+               if(Array.isArray(mod_js)){mod_js = mod_js[0]}
                $B.imported[parent] = module.$factory(parent, undefined, is_package)
                $B.imported[parent].__initialized__ = true
                $B.imported[parent].__file__ =
@@ -412,9 +412,14 @@ var finder_VFS = {
             record.is_package = modobj.$is_package
             $B.precompiled[mod_name] = record.is_package ? [record.content] :
                 record.content
-            if($B.$options.indexedDB && window.indexedDB){
+            var elts = mod_name.split(".")
+            if(elts.length > 1){
+                elts.pop()
+            }
+            var in_stdlib = $B.stdlib.hasOwnProperty(elts.join("."))
+            if(in_stdlib && $B.$options.indexedDB && window.indexedDB){
                 // Store the compiled Javascript in indexedDB cache
-                var idb_cx = indexedDB.open("brython_stdlib")
+                var idb_cx = indexedDB.open($B.idb_name)
                 idb_cx.onsuccess = function(evt){
                     var db = evt.target.result,
                         tx = db.transaction("modules", "readwrite"),
@@ -422,7 +427,7 @@ var finder_VFS = {
                         cursor = store.openCursor(),
                     request = store.put(record)
                     request.onsuccess = function(){
-                        if(true){ //$B.debug > 1){
+                        if($B.debug > 1){
                             console.info(modobj.__name__, "stored in db")
                         }
                     }
