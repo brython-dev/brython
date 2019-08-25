@@ -41,14 +41,16 @@ if command == "sdist":
     data_dir = os.path.join(this_dir, "data")
 
     # copy files from /www/src
-    for fname in ["brython.js", "brython_stdlib.js", "unicode.txt"]:
+    for fname in ["brython_stdlib.js", "unicode.txt"]:
         shutil.copyfile(os.path.join(src_dir, fname),
             os.path.join(data_dir, fname))
+    shutil.copyfile(os.path.join(src_dir, "brython_no_static.js"),
+        os.path.join(data_dir, "brython.js"))
 
     # copy index.html
     with open(os.path.join(data_dir, "index.html"), "w", encoding="utf-8") as out:
         out.write(html)
-    
+
     # copy demo.html
     with open(os.path.join(root_dir, 'www', 'demo.html'), encoding="utf-8") as f:
         demo = f.read()

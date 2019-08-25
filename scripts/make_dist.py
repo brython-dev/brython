@@ -44,6 +44,8 @@ def run():
         'src', _pth)
     now = datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
 
+    timestamp = int(1000 * time.time())
+    
     # update version number
     with open(abs_path('version_info.js'), 'w') as vinfo_file_out:
         # implementation[2] = now
@@ -54,8 +56,7 @@ def run():
         vinfo_file_out.write('__BRYTHON__.version_info = %s\n' % str(version))
         vinfo_file_out.write('__BRYTHON__.compiled_date = "%s"\n'
             %str(datetime.datetime.now()))
-        vinfo_file_out.write('__BRYTHON__.timestamp = {}\n'.format(
-            int(1000*time.time())))
+        vinfo_file_out.write('__BRYTHON__.timestamp = {}\n'.format(timestamp))
         # builtin module names = list of scripts in src/libs
         vinfo_file_out.write('__BRYTHON__.builtin_module_names = [')
         _modules = ['"%s"' % fname.split('.')[0]
@@ -66,8 +67,6 @@ def run():
         _modules.sort()
         vinfo_file_out.write(',\n    '.join(_modules))
         vinfo_file_out.write(']\n')
-
-        #log.info("Finished Writing file: " + abs_path('version_info.js'))
 
     # generate html files that compare Brython and CPython distributions
     import make_stdlib_list
@@ -91,17 +90,27 @@ def run():
 // version compiled from commented, indented source files at
 // github.com/brython-dev/brython
 """.format(version, implementation)
+
+    res_no_static = res # same but without static stdlib files
     src_size = 0
 
     for fname in sources:
         src = open(abs_path(fname)+'.js').read() + '\n'
         src_size += len(src)
-        res += javascript_minifier.minify(src) + ";\n"
+        mini = javascript_minifier.minify(src) + ";\n"
+        res += mini
+        if fname == 'stdlib_paths':
+            res_no_static += "__BRYTHON__.stdlib = {}\n"
+        else:
+            res_no_static += mini
 
     res = re.sub(r'\bcontext\b', 'C', res)
 
     with open(abs_path('brython.js'), 'w', newline="\n") as out:
         out.write(res)
+
+    with open(abs_path('brython_no_static.js'), 'w', newline="\n") as out:
+        out.write(res_no_static)
 
     print(('size : originals %s compact %s gain %.2f' %
           (src_size, len(res), 100 * (src_size - len(res)) / src_size)))
@@ -141,8 +150,12 @@ def run():
     # copy files in folder /setup
     sdir = os.path.join(pdir, 'setup', 'data')
 
-    for f in ['brython.js', 'brython_stdlib.js', 'unicode.txt']:
+    for f in ['brython_stdlib.js', 'unicode.txt']:
         shutil.copyfile(os.path.join(src_dir, f), os.path.join(sdir, f))
+
+    # copy the version of brython.js that has no static stdlib
+    shutil.copyfile(os.path.join(src_dir, "brython_no_static.js"), 
+        os.path.join(sdir, "brython.js"))
 
     # copy demo.html
     with open(os.path.join(pdir, 'www', 'demo.html'), encoding="utf-8") as f:
@@ -179,7 +192,7 @@ def run():
     dist3 = zipfile.ZipFile(dest_path + '.zip', mode='w',
                             compression=zipfile.ZIP_DEFLATED)
 
-    paths = ['README.txt', 'demo.html', 
+    paths = ['README.txt', 'demo.html',
         'brython.js', 'brython_stdlib.js', 'unicode.txt']
 
     for arc, wfunc in ((dist1, dist1.add), (dist2, dist2.add),
