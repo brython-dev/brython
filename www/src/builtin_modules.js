@@ -90,7 +90,6 @@
         delete browser.win
         // browser.send is an alias for postMessage
         browser.self.js.send = self.postMessage
-
     }else{
         browser.is_webworker = false
         update(browser, {
@@ -175,7 +174,7 @@
                         args = $ns['args']
                     if(args.length == 1){
                         var first = args[0]
-                        if(_b_.isinstance(first,[_b_.str,_b_.int,_b_.float])){
+                        if(_b_.isinstance(first,[_b_.str, _b_.int, _b_.float])){
                             // set "first" as HTML content (not text)
                             self.elt.innerHTML = _b_.str.$factory(first)
                         }else if(first.__class__ === TagSum){
@@ -194,11 +193,12 @@
                                         $B.DOMNode.__le__(self, item)
                                     })
                                 }catch(err){
-                                    console.log(err)
-                                    console.log("first", first)
-                                    console.log(arguments)
-                                    throw _b_.ValueError.$factory(
-                                        'wrong element ' + _b_.str.$factory(first))
+                                    if($B.debug > 1){
+                                        console.log(err, err.__class__, err.args)
+                                        console.log("first", first)
+                                        console.log(arguments)
+                                    }
+                                    $B.handle_error(err)
                                 }
                             }
                         }
