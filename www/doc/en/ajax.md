@@ -102,17 +102,17 @@ req.send({'x':0, 'y':1})
 GET and POST calls can be performed in a more straightforward way with the
 matching functions:
 
-`get(`_url[, async=True, headers={}, mode="text", timeout=None, data="", **callbacks]_`)`
+`get(`_url[, blocking=False, headers={}, mode="text", timeout=None, data="", **callbacks]_`)`
 
 and the same for `delete`, `head` and `options`.
 
-`post(`_url[, async=True, headers={"Content-Type": _
+`post(`_url[, blocking=False, headers={"Content-Type": _
 _"application/x-www-form-urlencoded"}, timeout=None, data="", **callbacks]_`)`
 
 and the same for `put`.
 
-> _async_ is a boolean to specify if the request is asynchronous
-> (default value) or synchronous (blocking)
+> _blocking_ is a boolean to specify if the request is blocking or not.
+> The default value is `False` (asynchronous request)
 
 > _headers_ is a dictionary with the HTTP headers key / values
 

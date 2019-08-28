@@ -231,12 +231,12 @@ ajax.$factory = function(){
 }
 
 function _request_without_body(){
-    var $ = $B.args(method, 3, {method: null, url: null, async: null},
-        ["method", "url", "async"], arguments, {async: true},
+    var $ = $B.args(method, 3, {method: null, url: null, blocking: null},
+        ["method", "url", "blocking"], arguments, {blocking: false},
         null, "kw"),
     method = $.method,
     url = $.url,
-    async = $.async,
+    async = !$.blocking,
     kw = $.kw
     var self = ajax.$factory(),
         items = handle_kwargs(self, kw, method),
@@ -258,12 +258,12 @@ function _request_without_body(){
 }
 
 function _request_with_body(){
-    var $ = $B.args(method, 3, {method: null, url: null, async: null},
-        ["method", "url", "async"], arguments, {async: true},
+    var $ = $B.args(method, 3, {method: null, url: null, blocking: null},
+        ["method", "url", "blocking"], arguments, {blocking: false},
         null, "kw"),
     method = $.method,
     url = $.url,
-    async = $.async,
+    async = !$.blocking,
     kw = $.kw
 
     var self = ajax.$factory()

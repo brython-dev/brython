@@ -99,17 +99,17 @@ req.send({'x':0, 'y':1})
 Les appels peuvent être effectués plus simplement avec les
 fonctions correspondantes :
 
-`get(`_url[, async=True, headers={}, mode="text", timeout=None, cache=False, data="", **callbacks]_`)`
+`get(`_url[, blocking=False, headers={}, mode="text", timeout=None, cache=False, data="", **callbacks]_`)`
 
 et de même pour `delete`, `head` et `options`.
 
-`post(`_url[, async=True, headers={"Content-Type": _
+`post(`_url[, blocking=False, headers={"Content-Type": _
 _"application/x-www-form-urlencoded"}, timeout=None, data="", **callbacks]_`)`
 
 et de même pour `put`.
 
-> _async_ est un booléen qui indique si la requête doit être asynchrone
-> (valeur par défaut) ou synchrone
+> _blocking_ est un booléen qui indique si la requête doit être bloquante
+> ou non. La valeur par défaut est `False` (la requête est asynchrone)
 
 > _headers_ est un dictionnaire avec les clés-valeurs des entêtes HTTP
 
