@@ -64,7 +64,7 @@ function parent_package(mod_name) {
     return parts.join(".")
 }
 
-function $download_module(module, url, $package){
+function $download_module(mod, url, $package){
     var xhr = new XMLHttpRequest(),
         fake_qs
 
@@ -84,7 +84,7 @@ function $download_module(module, url, $package){
         }, 5000)
 
     var res = null,
-        mod_name = module.__name__,
+        mod_name = mod.__name__,
         res,
         t0 = new Date()
 
@@ -104,12 +104,12 @@ function $download_module(module, url, $package){
         if(xhr.readyState == 4){
             if(xhr.status == 200){
                 res = xhr.responseText
-                module.$last_modified =
+                mod.$last_modified =
                     xhr.getResponseHeader("Last-Modified")
             }else{
                 // don't throw an exception here, it will not be caught
                 // (issue #30)
-                console.log("Error " + xhr.status +
+                console.info("Error " + xhr.status +
                     " means that Python module " + mod_name +
                     " was not found at url " + url)
                 res = _b_.FileNotFoundError.$factory("No module named '" +
@@ -133,13 +133,13 @@ function $download_module(module, url, $package){
 
 $B.$download_module = $download_module
 
-function import_js(module, path) {
+function import_js(mod, path) {
     try{
-        var module_contents = $download_module(module, path, undefined)
+        var module_contents = $download_module(mod, path, undefined)
     }catch(err){
         return null
     }
-    run_js(module_contents, path, module)
+    run_js(module_contents, path, mod)
     return true
 }
 
@@ -208,17 +208,17 @@ function show_ns(){
     console.log("---")
 }
 
-function import_py(module, path, $package){
+function import_py(mod, path, $package){
     // import Python module at specified path
-    var mod_name = module.__name__,
-        module_contents = $download_module(module, path, $package)
-    module.$src = module_contents
-    $B.imported[mod_name].$is_package = module.$is_package
-    $B.imported[mod_name].$last_modified = module.$last_modified
+    var mod_name = mod.__name__,
+        module_contents = $download_module(mod, path, $package)
+    mod.$src = module_contents
+    $B.imported[mod_name].$is_package = mod.$is_package
+    $B.imported[mod_name].$last_modified = mod.$last_modified
     if(path.substr(path.length - 12) == "/__init__.py"){
         $B.imported[mod_name].__package__ = mod_name
         $B.imported[mod_name].__path__ = path
-        $B.imported[mod_name].$is_package = module.$is_package = true
+        $B.imported[mod_name].$is_package = mod.$is_package = true
     }else if($package){
         $B.imported[mod_name].__package__ = $package
     }else{
@@ -227,7 +227,7 @@ function import_py(module, path, $package){
         $B.imported[mod_name].__package__ = mod_elts.join(".")
     }
     $B.imported[mod_name].__file__ = path
-    return run_py(module_contents, path, module)
+    return run_py(module_contents, path, mod)
 }
 
 //$B.run_py is needed for import hooks..
@@ -600,17 +600,17 @@ var finder_path = {
         return _b_.None
     },
 
-    exec_module : function(cls, module) {
-        var _spec = _b_.getattr(module, "__spec__"),
+    exec_module : function(cls, _module) {
+        var _spec = _b_.getattr(_module, "__spec__"),
             code = _spec.loader_state.code;
-        module.$is_package = _spec.loader_state.is_package,
+        _module.$is_package = _spec.loader_state.is_package,
         delete _spec.loader_state["code"]
         var src_type = _spec.loader_state.type
         if(src_type == "py" || src_type == "pyc.js"){
-            run_py(code, _spec.origin, module, src_type == "pyc.js")
+            run_py(code, _spec.origin, _module, src_type == "pyc.js")
         }
         else if(_spec.loader_state.type == "js"){
-            run_js(code, _spec.origin, module)
+            run_js(code, _spec.origin, _module)
         }
     },
 
@@ -676,7 +676,7 @@ for(var method in finder_path){
     }
 }
 
-finder_path.$factory = function(){
+ finder_path.$factory = function(){
     return {__class__: finder_path}
 }
 

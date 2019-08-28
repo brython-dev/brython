@@ -44,7 +44,8 @@ function import_hooks(mod_name, _path, from_stdlib) {
                 return module
             }
         }else{
-            spec = find_spec(mod_name, _path, undefined)
+            spec = find_spec(mod_name, _path)
+
             if(!$B.is_none(spec)){
                 module = $B.imported[spec.name]
                 if(module !== undefined){

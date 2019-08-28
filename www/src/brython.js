@@ -92,8 +92,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'final',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-08-25 11:22:09.645411"
-__BRYTHON__.timestamp=1566724929645
+__BRYTHON__.compiled_date="2019-08-28 08:30:27.236192"
+__BRYTHON__.timestamp=1566973827236
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -1842,6 +1842,8 @@ this.toString=function(){return '(from) '+this.module+' (import) '+this.names+
 '(as)'+this.aliases}
 this.to_js=function(){this.js_processed=true
 var scope=$get_scope(this),module=$get_module(this),mod=module.module,res=[],pos=0,indent=$get_node(this).indent,head=' '.repeat(indent)
+if(mod.startsWith("$exec")){var frame=$B.last($B.frames_stack)[1]
+if(frame.module && frame.module.__name__){mod=frame.module.__name__}}
 var mod_elts=this.module.split(".")
 for(var i=0;i < mod_elts.length;i++){module.imports[mod_elts.slice(0,i+1).join(".")]=true}
 var _mod=this.module.replace(/\$/g,''),$package,packages=[]
@@ -6397,7 +6399,7 @@ var stack_len=$B.frames_stack.length
 if(src.__class__===code){is_exec=src.mode=="exec"
 src=src.source}else if(typeof src !=='string'){throw _b_.TypeError.$factory("eval() arg 1 must be a string, bytes "+
 "or code object")}
-var globals_id='$exec_'+$B.UUID(),locals_id='$exec_'+$B.UUID(),parent_scope
+var globals_id='$exec_'+$B.UUID(),globals_name=globals_id,locals_id='$exec_'+$B.UUID(),parent_scope
 if(_globals===_b_.None){if(current_locals_id==current_globals_id){locals_id=globals_id}
 var local_scope={module:locals_id,id:locals_id,binding:{},bindings:{}}
 for(var attr in current_frame[1]){local_scope.binding[attr]=true
@@ -6411,8 +6413,8 @@ parent_scope=local_scope
 eval("$locals_"+parent_scope.id+" = current_frame[1]")}else{
 if(_globals.__class__ !=_b_.dict){throw _b_.TypeError.$factory("exec() globals must be a dict, not "+
 $B.get_class(_globals).$infos.__name__)}
-_globals.globals_id=_globals.globals_id ||globals_id
-globals_id=_globals.globals_id
+if(_globals.globals_id){globals_id=globals_name=_globals.globals_id}
+_globals.globals_id=globals_id
 if(_locals===_globals ||_locals===_b_.None){locals_id=globals_id
 parent_scope=$B.builtins_scope}else{
 var grandparent_scope={id:globals_id,parent_block:$B.builtins_scope,binding:{}}
@@ -6475,7 +6477,8 @@ else{_locals.$string_dict[attr1]=lns[attr]}}}}else{for(var attr in lns){if(attr 
 if(_globals !==_b_.None){
 for(var attr in gns){attr1=$B.from_alias(attr)
 if(attr1.charAt(0)!='$'){if(_globals.$jsobj){_globals.$jsobj[attr]=gns[attr]}
-else{_globals.$string_dict[attr1]=gns[attr]}}}}else{for(var attr in gns){if(attr !=="$src"){current_frame[3][attr]=gns[attr]}}}
+else{_globals.$string_dict[attr1]=gns[attr]}}}
+for(var attr in _globals.$string_dict){if(attr.startsWith("$")){delete _globals.$string_dict[attr]}}}else{for(var attr in gns){if(attr !=="$src"){current_frame[3][attr]=gns[attr]}}}
 if(res===undefined){return _b_.None}
 return res}catch(err){err.src=src
 err.module=globals_id
@@ -8761,7 +8764,7 @@ $B.set_func_names(module,"builtins")
 function parent_package(mod_name){var parts=mod_name.split(".")
 parts.pop()
 return parts.join(".")}
-function $download_module(module,url,$package){var xhr=new XMLHttpRequest(),fake_qs
+function $download_module(mod,url,$package){var xhr=new XMLHttpRequest(),fake_qs
 switch($B.$options.cache){case "version":
 fake_qs="?v="+$B.version_info[2]
 break
@@ -8771,15 +8774,15 @@ break
 default:
 fake_qs="?v="+(new Date().getTime())}
 var timer=_window.setTimeout(function(){xhr.abort()},5000)
-var res=null,mod_name=module.__name__,res,t0=new Date()
+var res=null,mod_name=mod.__name__,res,t0=new Date()
 $B.download_time=$B.download_time ||0
 xhr.open("GET",url+fake_qs,false)
 xhr.send()
 if($B.$CORS){if(xhr.status==200 ||xhr.status==0){res=xhr.responseText}else{res=_b_.FileNotFoundError.$factory("No module named '"+
 mod_name+"'")}}else{if(xhr.readyState==4){if(xhr.status==200){res=xhr.responseText
-module.$last_modified=
+mod.$last_modified=
 xhr.getResponseHeader("Last-Modified")}else{
-console.log("Error "+xhr.status+
+console.info("Error "+xhr.status+
 " means that Python module "+mod_name+
 " was not found at url "+url)
 res=_b_.FileNotFoundError.$factory("No module named '"+
@@ -8791,8 +8794,8 @@ if(res.constructor===Error){throw res}
 $B.download_time+=(new Date())-t0
 return res}
 $B.$download_module=$download_module
-function import_js(module,path){try{var module_contents=$download_module(module,path,undefined)}catch(err){return null}
-run_js(module_contents,path,module)
+function import_js(mod,path){try{var module_contents=$download_module(mod,path,undefined)}catch(err){return null}
+run_js(module_contents,path,mod)
 return true}
 function run_js(module_contents,path,_module){
 try{var $module=new Function(module_contents+";\nreturn $module")()
@@ -8820,18 +8823,18 @@ function show_ns(){var kk=Object.keys(_window)
 for(var i=0,len=kk.length;i < len;i++){console.log(kk[i])
 if(kk[i].charAt(0)=="$"){console.log(eval(kk[i]))}}
 console.log("---")}
-function import_py(module,path,$package){
-var mod_name=module.__name__,module_contents=$download_module(module,path,$package)
-module.$src=module_contents
-$B.imported[mod_name].$is_package=module.$is_package
-$B.imported[mod_name].$last_modified=module.$last_modified
+function import_py(mod,path,$package){
+var mod_name=mod.__name__,module_contents=$download_module(mod,path,$package)
+mod.$src=module_contents
+$B.imported[mod_name].$is_package=mod.$is_package
+$B.imported[mod_name].$last_modified=mod.$last_modified
 if(path.substr(path.length-12)=="/__init__.py"){$B.imported[mod_name].__package__=mod_name
 $B.imported[mod_name].__path__=path
-$B.imported[mod_name].$is_package=module.$is_package=true}else if($package){$B.imported[mod_name].__package__=$package}else{var mod_elts=mod_name.split(".")
+$B.imported[mod_name].$is_package=mod.$is_package=true}else if($package){$B.imported[mod_name].__package__=$package}else{var mod_elts=mod_name.split(".")
 mod_elts.pop()
 $B.imported[mod_name].__package__=mod_elts.join(".")}
 $B.imported[mod_name].__file__=path
-return run_py(module_contents,path,module)}
+return run_py(module_contents,path,mod)}
 function run_py(module_contents,path,module,compiled){
 $B.file_cache[path]=module_contents
 var root,js,mod_name=module.__name__ 
@@ -8957,11 +8960,11 @@ for(var method in finder_stdlib_static){if(typeof finder_stdlib_static[method]==
 finder_stdlib_static[method])}}
 finder_stdlib_static.$factory=function(){return{__class__:finder_stdlib_static}}
 var finder_path={__class__:_b_.type,__mro__:[_b_.object],$infos:{__module__:"builtins",__name__:"ImporterPath"},create_module :function(cls,spec){
-return _b_.None},exec_module :function(cls,module){var _spec=_b_.getattr(module,"__spec__"),code=_spec.loader_state.code;
-module.$is_package=_spec.loader_state.is_package,delete _spec.loader_state["code"]
+return _b_.None},exec_module :function(cls,_module){var _spec=_b_.getattr(_module,"__spec__"),code=_spec.loader_state.code;
+_module.$is_package=_spec.loader_state.is_package,delete _spec.loader_state["code"]
 var src_type=_spec.loader_state.type
-if(src_type=="py" ||src_type=="pyc.js"){run_py(code,_spec.origin,module,src_type=="pyc.js")}
-else if(_spec.loader_state.type=="js"){run_js(code,_spec.origin,module)}},find_module:function(cls,name,path){return finder_path.find_spec(cls,name,path)},find_spec :function(cls,fullname,path,prev_module){var current_module=$B.last($B.frames_stack)[2]
+if(src_type=="py" ||src_type=="pyc.js"){run_py(code,_spec.origin,_module,src_type=="pyc.js")}
+else if(_spec.loader_state.type=="js"){run_js(code,_spec.origin,_module)}},find_module:function(cls,name,path){return finder_path.find_spec(cls,name,path)},find_spec :function(cls,fullname,path,prev_module){var current_module=$B.last($B.frames_stack)[2]
 if($B.VFS && $B.VFS[current_module]){
 return _b_.None}
 if($B.is_none(path)){
@@ -13279,7 +13282,7 @@ var find_module=$B.$getattr(_finder,"find_module",_b_.None)
 if(find_module !==_b_.None){_loader=find_module(mod_name,_path)
 var load_module=$B.$getattr(_loader,"load_module"),module=$B.$call(load_module)(mod_name)
 _sys_modules[mod_name]=module
-return module}}else{spec=find_spec(mod_name,_path,undefined)
+return module}}else{spec=find_spec(mod_name,_path)
 if(!$B.is_none(spec)){module=$B.imported[spec.name]
 if(module !==undefined){
 return _sys_modules[spec.name]=module}

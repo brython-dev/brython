@@ -3722,7 +3722,12 @@ var $FromCtx = $B.parser.$FromCtx = function(context){
             pos = 0,
             indent = $get_node(this).indent,
             head = ' '.repeat(indent)
-
+        if(mod.startsWith("$exec")){
+            var frame = $B.last($B.frames_stack)[1]
+            if(frame.module && frame.module.__name__){
+                mod = frame.module.__name__
+            }
+        }
         var mod_elts = this.module.split(".")
         for(var i = 0; i < mod_elts.length; i++){
             module.imports[mod_elts.slice(0, i + 1).join(".")] = true
@@ -3754,10 +3759,6 @@ var $FromCtx = $B.parser.$FromCtx = function(context){
         }
         if(_mod){packages.push(_mod)}
         this.module = packages.join('.')
-        /*
-        console.log("from", this.module, "import", this.names, $package, packages,
-            module.module)
-        */
 
         // FIXME : Replacement still needed ?
         var mod_name = this.module.replace(/\$/g, '')

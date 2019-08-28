@@ -466,6 +466,7 @@ function $$eval(src, _globals, _locals){
 
     // code will be run in a specific block
     var globals_id = '$exec_' + $B.UUID(),
+        globals_name = globals_id,
         locals_id = '$exec_' + $B.UUID(),
         parent_scope
 
@@ -509,8 +510,10 @@ function $$eval(src, _globals, _locals){
             throw _b_.TypeError.$factory("exec() globals must be a dict, not "+
                 $B.get_class(_globals).$infos.__name__)
         }
-        _globals.globals_id = _globals.globals_id || globals_id
-        globals_id = _globals.globals_id
+        if(_globals.globals_id){
+            globals_id = globals_name = _globals.globals_id
+        }
+        _globals.globals_id = globals_id
 
         if(_locals === _globals || _locals === _b_.None){
             locals_id = globals_id
@@ -607,7 +610,7 @@ function $$eval(src, _globals, _locals){
     }else{
         eval("$locals_" + locals_id + ".$src = src")
     }
-    
+
     var root = $B.py2js(src, globals_id, locals_id, parent_scope),
         js, gns, lns
 
@@ -659,7 +662,7 @@ function $$eval(src, _globals, _locals){
         }
 
         js = root.to_js()
-
+        
         if(is_exec){
             var locals_obj = eval("$locals_" + locals_id),
                 globals_obj = eval("$locals_" + globals_id)
@@ -713,6 +716,12 @@ function $$eval(src, _globals, _locals){
                 if(attr1.charAt(0) != '$'){
                     if(_globals.$jsobj){_globals.$jsobj[attr] = gns[attr]}
                     else{_globals.$string_dict[attr1] = gns[attr]}
+                }
+            }
+            // Remove attributes starting with $
+            for(var attr in _globals.$string_dict){
+                if(attr.startsWith("$")){
+                    delete _globals.$string_dict[attr]
                 }
             }
         }else{
