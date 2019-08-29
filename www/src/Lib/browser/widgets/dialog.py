@@ -2,6 +2,7 @@ from browser import document, html
 
 styles = {
     "dialog": {
+        "font-family": "arial",
         "position": "absolute",
         "width": "10%",
         "left": "10px",
