@@ -92,8 +92,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,4,'final',0]
 __BRYTHON__.__MAGIC__="3.7.4"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-08-28 08:30:27.236192"
-__BRYTHON__.timestamp=1566973827236
+__BRYTHON__.compiled_date="2019-08-29 08:41:21.036295"
+__BRYTHON__.timestamp=1567060881036
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -8859,7 +8859,7 @@ module.__initializing__=false
 $B.imported[module.__name__]=module
 $B.file_cache[module.__name__]=module_contents
 return{
-content:src,name:mod_name,timestamp:$B.timestamp,imports:Object.keys(root.imports).join(",")}}catch(err){console.log(""+err+" "+" for module "+module.__name__)
+content:src,name:mod_name,imports:Object.keys(root.imports).join(",")}}catch(err){console.log(""+err+" "+" for module "+module.__name__)
 for(var attr in err){console.log(attr+" "+err[attr])}
 if($B.debug > 0){console.log("line info "+__BRYTHON__.line_info)}
 throw err}}
@@ -8906,12 +8906,13 @@ return $module}else{var mod_name=modobj.__name__
 if($B.debug > 1){console.log("run Python code from VFS",mod_name)}
 var record=run_py(module_contents,modobj.__path__,modobj)
 record.is_package=modobj.$is_package
+record.timestamp=$B.timestamp
+record.source_ts=$B.VFS[record.name].timestamp
 $B.precompiled[mod_name]=record.is_package ?[record.content]:
 record.content
 var elts=mod_name.split(".")
 if(elts.length > 1){elts.pop()}
-var in_stdlib=$B.stdlib.hasOwnProperty(elts.join("."))
-if(in_stdlib && $B.$options.indexedDB && window.indexedDB){
+if($B.$options.indexedDB && window.indexedDB){
 var idb_cx=indexedDB.open($B.idb_name)
 idb_cx.onsuccess=function(evt){var db=evt.target.result,tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules"),cursor=store.openCursor(),request=store.put(record)
 request.onsuccess=function(){if($B.debug > 1){console.info(modobj.__name__,"stored in db")}}}}}},find_module:function(cls,name,path){return{
