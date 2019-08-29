@@ -303,7 +303,6 @@ function run_py(module_contents, path, module, compiled) {
         return {
             content: src,
             name: mod_name,
-            timestamp: $B.timestamp,
             imports: Object.keys(root.imports).join(",")
         }
     }catch(err){
@@ -410,14 +409,15 @@ var finder_VFS = {
             }
             var record = run_py(module_contents, modobj.__path__, modobj)
             record.is_package = modobj.$is_package
+            record.timestamp = $B.timestamp
+            record.source_ts = $B.VFS[record.name].timestamp
             $B.precompiled[mod_name] = record.is_package ? [record.content] :
                 record.content
             var elts = mod_name.split(".")
             if(elts.length > 1){
                 elts.pop()
             }
-            var in_stdlib = $B.stdlib.hasOwnProperty(elts.join("."))
-            if(in_stdlib && $B.$options.indexedDB && window.indexedDB){
+            if($B.$options.indexedDB && window.indexedDB){
                 // Store the compiled Javascript in indexedDB cache
                 var idb_cx = indexedDB.open($B.idb_name)
                 idb_cx.onsuccess = function(evt){
