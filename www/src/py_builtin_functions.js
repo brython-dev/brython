@@ -662,7 +662,7 @@ function $$eval(src, _globals, _locals){
         }
 
         js = root.to_js()
-        
+
         if(is_exec){
             var locals_obj = eval("$locals_" + locals_id),
                 globals_obj = eval("$locals_" + globals_id)
@@ -2720,7 +2720,7 @@ $B.Function.__getattribute__ = function(self, attr){
                 cells.push($B.cell.$factory($B.$check_def_free(free_vars[i])))
             }catch(err){
                 // empty cell
-                cells.push($B.cell.$factory(null))
+                cells.push($B.cell.$factory(None))
             }
         }
         return _b_.tuple.$factory(cells)
