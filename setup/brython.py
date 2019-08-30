@@ -22,12 +22,11 @@ if __name__ == "__main__":
     parser.add_argument('--make_dist', help='Make a Python distribution',
         action="store_true")
 
+    parser.add_argument('--make_package', help='Make a loadable Python package')
+
     parser.add_argument('--modules',
         help='Create brython_modules.js with all the modules used by the application',
         action="store_true")
-
-    parser.add_argument('--port', help='Port for the built-in server',
-        default=8080)
 
     parser.add_argument('--reset', help='Reset brython_modules.js to stdlib',
         action="store_true")
@@ -115,3 +114,9 @@ if __name__ == "__main__":
         finder.make_brython_modules()
         finder.make_setup()
         print('done')
+
+    if args.make_package:
+        package_name = args.make_package
+        import make_package
+        make_package.make(package_name, os.getcwd())
+        print("done")

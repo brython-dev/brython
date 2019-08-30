@@ -44,6 +44,8 @@ class Visitor(ast.NodeVisitor):
 
 
 def make(package_name, package_path, exclude_dirs=None):
+    if not package_name:
+        raise ValueError("package name is not specified")
     print("Generating package {}".format(package_name))
     VFS = {"$timestamp": int(1000 * time.time())}
     nb = 0
@@ -64,53 +66,51 @@ def make(package_name, package_path, exclude_dirs=None):
             package = dirpath[len(package_path) + 1:].split(os.sep)
 
         for filename in filenames:
-            ext = os.path.splitext(filename)[1]
-            if ext not in ('.js', '.py'):
+            name, ext = os.path.splitext(filename)
+            if ext != '.py':
                 continue
-            if filename.endswith(".brython.js"): # no recursion
-                continue
+            is_package = name.endswith('__init__')
+            if is_package:
+                mod_name = '.'.join(package)
+            else:
+                mod_name = '.'.join(package + [name])
 
             nb += 1
             absname = os.path.join(dirpath, filename)
             with open(absname, encoding='utf-8') as f:
                 data = f.read()
 
-            if ext == '.py':
-                data = python_minifier.minify(data, preserve_lines=True)
-                path_elts = package[:]
-                if os.path.basename(filename) != "__init__.py":
-                    path_elts.append(os.path.basename(filename)[:-3])
-                fqname = ".".join(path_elts)
-                with open(absname, encoding="utf-8") as f:
-                    tree = ast.parse(f.read())
-                    visitor = Visitor(package_path, package)
-                    visitor.visit(tree)
-                    imports = sorted(list(visitor.imports))
+            data = python_minifier.minify(data, preserve_lines=True)
+            path_elts = package[:]
+            if os.path.basename(filename) != "__init__.py":
+                path_elts.append(os.path.basename(filename)[:-3])
+            fqname = ".".join(path_elts)
+            with open(absname, encoding="utf-8") as f:
+                tree = ast.parse(f.read())
+                visitor = Visitor(package_path, package)
+                visitor.visit(tree)
+                imports = sorted(list(visitor.imports))
 
-            mod_name = filename.replace(os.sep, '.')
-            if package_name:
-                mod_name = package_name + "." + mod_name
-            mod_name, ext = os.path.splitext(mod_name)
-            is_package = mod_name.endswith('__init__')
-            if ext == ".py":
-                if is_package:
-                   mod_name = mod_name[:-9]
-                   VFS[mod_name] = [ext, data, imports, 1]
-                else:
-                    VFS[mod_name] = [ext, data, imports]
+            if is_package:
+               VFS[mod_name] = [ext, data, imports, 1]
             else:
-               VFS[mod_name] = [ext, data]
+                VFS[mod_name] = [ext, data, imports]
+
             print("adding {} package {}".format(mod_name, is_package))
 
-    print('{} files'.format(nb))
-    with open(os.path.join(package_path, package_name + ".brython.js"),
-            "w", encoding="utf-8") as out:
-        out.write('__BRYTHON__.use_VFS = true;\n')
-        out.write('var scripts = {}\n'.format(json.dumps(VFS)))
-        out.write('__BRYTHON__.update_VFS(scripts)\n')
+    if nb == 0:
+        print("No Python file found in current directory")
+    else:
+        print('{} files'.format(nb))
+        with open(os.path.join(package_path, package_name + ".brython.js"),
+                "w", encoding="utf-8") as out:
+            out.write('__BRYTHON__.use_VFS = true;\n')
+            out.write('var scripts = {}\n'.format(json.dumps(VFS)))
+            out.write('__BRYTHON__.update_VFS(scripts)\n')
 
 if __name__ == "__main__":
-    src_dir = os.path.join(os.path.dirname(os.getcwd()), "www", "src", "Lib",
-        "browser", "widgets")
+    import sys
+    package_name = sys.argv[1] if len(sys.argv) > 1 else ""
+    src_dir = sys.argv[2] if len(sys.argv) > 2 else os.getcwd()
 
-    make("widgets", src_dir)
+    make(package_name, src_dir)

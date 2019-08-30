@@ -47,6 +47,11 @@ if command == "sdist":
     shutil.copyfile(os.path.join(src_dir, "brython_no_static.js"),
         os.path.join(data_dir, "brython.js"))
 
+    # copy python_minifier and make_package in current directory
+    for fname in ["python_minifier.py", "make_package.py"]:
+        shutil.copyfile(os.path.join(root_dir, "scripts", fname),
+            fname)
+
     # copy index.html
     with open(os.path.join(data_dir, "index.html"), "w", encoding="utf-8") as out:
         out.write(html)
@@ -113,7 +118,7 @@ setup(
     # What does your project relate to?
     keywords='Python browser',
 
-    py_modules=["brython", "list_modules"],
+    py_modules=["brython", "list_modules", "make_package", "python_minifier"],
 
     package_data={
         'data': [
