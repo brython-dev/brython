@@ -10,6 +10,7 @@ print()
 fs = cgi.FieldStorage()
 results = json.loads(fs["results"].value)
 version = fs["version"].value
+userAgent = fs["userAgent"].value
 
 data = [
     {"test": result["test"],
@@ -29,6 +30,9 @@ html = """<!doctype html>
 <title>Brython speed compared to CPython</title>
 <link rel="stylesheet" href="static_doc/doc_brython.css">
 <style>
+body{
+    padding-left: 2em;
+}
 td{
     vertical-align: top;
     padding: 3px;
@@ -44,7 +48,9 @@ pre{
 </style>
 </head>
 <body>
-<h2>Brython $ performance compared to CPython</h2>
+<h2>Brython {{version}} performance compared to CPython</h2>
+User agent: {{userAgent}}
+<p>
 <table>
 <tr>
 <th>Test</th>
@@ -53,7 +59,9 @@ pre{
 </tr>
 """
 with open("speed_results.html", "w", encoding="utf-8") as out:
-    out.write(html.replace("$", version))
+    head = html.replace("{{version}}", version).replace("{{userAgent}}",
+        userAgent)
+    out.write(head)
     for record in data:
         out.write(f'<tr><td>{record["description"]}</td>' +
             f'<td align="right"><b>{record["ratio"]}</b></td>' +

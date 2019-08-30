@@ -2,7 +2,7 @@ import time
 import sys
 import traceback
 
-from browser import document, ajax
+from browser import document, window, ajax
 import javascript
 
 def forward(req):
@@ -68,7 +68,8 @@ def test_next():
         ajax.post("/cgi-bin/store_speed.py",
             data={
                 "results": javascript.JSON.stringify(results),
-                "version": version
+                "version": version,
+                "userAgent": window.navigator.userAgent
             })
 
 script_num = -1
