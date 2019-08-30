@@ -92,8 +92,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,5,'final',0]
 __BRYTHON__.__MAGIC__="3.7.5"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-08-30 08:00:12.538623"
-__BRYTHON__.timestamp=1567144812538
+__BRYTHON__.compiled_date="2019-08-30 08:20:49.265958"
+__BRYTHON__.timestamp=1567146049265
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -7254,7 +7254,7 @@ self.$infos.__dict__.$string_dict[attr]!==undefined){return self.$infos.__dict__
 if(free_vars.length==0){return None}
 var cells=[]
 for(var i=0;i < free_vars.length;i++){try{cells.push($B.cell.$factory($B.$check_def_free(free_vars[i])))}catch(err){
-cells.push($B.cell.$factory(null))}}
+cells.push($B.cell.$factory(None))}}
 return _b_.tuple.$factory(cells)}else if(self.$attrs && self.$attrs[attr]!==undefined){return self.$attrs[attr]}else{return _b_.object.__getattribute__(self,attr)}}
 $B.Function.__repr__=$B.Function.__str__=function(self){if(self.$infos===undefined){return '<function '+self.name+'>'}else{return '<function '+self.$infos.__qualname__+'>'}}
 $B.Function.__mro__=[object]
@@ -9094,7 +9094,9 @@ locals[alias]=$B.$getattr(modobj,name1);}catch($err3){
 if(mod_name==="__future__"){
 var frame=$B.last($B.frames_stack),line_info=frame[3].$line_info,line_elts=line_info.split(','),line_num=parseInt(line_elts[0])
 $B.$SyntaxError(frame[2],"future feature "+name+" is not defined",current_frame[3].src,undefined,line_num)}
-if($err3.$py_error){throw _b_.ImportError.$factory(
+if($err3.$py_error){var errname=$err3.__class__.$infos.__name__
+if($err3.__class__ !=_b_.ImportError){$B.handle_error($err3)}
+throw _b_.ImportError.$factory(
 "cannot import name '"+name+"'")}
 console.log($err3)
 console.log($B.last($B.frames_stack))
