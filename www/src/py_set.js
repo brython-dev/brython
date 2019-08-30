@@ -458,11 +458,17 @@ set.remove = function(self, item){
        var _i = self.$items.indexOf(item)
        if(_i == -1){throw _b_.KeyError.$factory(item)}
        self.$items.splice(_i, 1)
+       if(typeof item == "number"){
+           self.$numbers.splice(self.$numbers.indexOf(item), 1)
+       }
        return $N
     }
     for(var i = 0, len = self.$items.length; i < len; i++){
         if($B.rich_comp("__eq__", self.$items[i], item)){
             self.$items.splice(i, 1)
+            if(item instanceof Number){
+                self.$numbers.splice(self.$numbers.indexOf(item.valueOf()), 1)
+            }
             return $N
         }
     }
@@ -718,3 +724,4 @@ _b_.set = set
 _b_.frozenset = frozenset
 
 })(__BRYTHON__)
+

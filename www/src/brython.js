@@ -92,8 +92,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,5,'final',0]
 __BRYTHON__.__MAGIC__="3.7.5"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-08-29 09:17:20.177267"
-__BRYTHON__.timestamp=1567063040177
+__BRYTHON__.compiled_date="2019-08-30 08:00:12.538623"
+__BRYTHON__.timestamp=1567144812538
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -8421,8 +8421,10 @@ if(! _b_.isinstance(item,set)){_b_.hash(item)}
 if(typeof item=="string" ||typeof item=="number"){var _i=self.$items.indexOf(item)
 if(_i==-1){throw _b_.KeyError.$factory(item)}
 self.$items.splice(_i,1)
+if(typeof item=="number"){self.$numbers.splice(self.$numbers.indexOf(item),1)}
 return $N}
 for(var i=0,len=self.$items.length;i < len;i++){if($B.rich_comp("__eq__",self.$items[i],item)){self.$items.splice(i,1)
+if(item instanceof Number){self.$numbers.splice(self.$numbers.indexOf(item.valueOf()),1)}
 return $N}}
 throw _b_.KeyError.$factory(item)}
 set.symmetric_difference_update=function(self,s){
