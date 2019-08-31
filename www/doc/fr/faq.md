@@ -9,11 +9,22 @@ le mot gallois pour "Celte de langue brittonique".
 __Q__ : _avec quels navigateurs peut-on utiliser Brython ?_
 
 __R__ : sur tous les navigateurs modernes, y compris les smartphones. Le code
-Javscript généré évite intentionnellement de nouvelles syntaxes tant qu'elles
+Javascript généré évite intentionnellement de nouvelles syntaxes tant qu'elles
 ne sont pas supportées par la plupart des navigateurs.
 
 Noter tout de même que la performance est généralement meilleure (et parfois
 _nettement_ meilleure) sur Firefox que sur Chrome.
+
+__Q__ : _quelle est la performance de Brython par rapport à CPython ?_
+
+__R__ : [cette page](../../speed_results.html) compare le temps d'exécution d'un
+certain nombre d'opérations entre Brython et CPython sur Firefox. Les
+résultats sont variables selon les opérations, mais dans l'ensemble l'ordre de
+grandeur est le même.
+
+Le repository Brython inclut un script, accessible à l'adresse
+_localhost:8000/speed_, qui compare la vitesse de Brython et de CPython sur la
+machine locale pour ces opérations élémentaires.
 
 __Q__ : _quelle est la performance de Brython par rapport à Javascript, ou_
 _par rapport à d'autres solutions qui permettent d'utiliser Python dans le_
@@ -45,9 +56,7 @@ testé, Brython est généralement plus rapide que pypy.js, lui-même plus rapid
 que Skulpt. Dans certains cas Brython est plus rapide que l'implémentation de
 référence de Python, CPython.
 
-Le repository Brython inclut un script, accessible à l'adresse
-_localhost:8000/speed_, qui compare la vitesse de Brython et de CPython sur la
-machine locale pour un certain nombre d'opérations élémentaires.
+
 
 __Q__ : _il y a des erreurs 404 dans la console du navigateur quand j'exécute_
 _des scripts Brython, pourquoi ?_
@@ -130,6 +139,6 @@ suivantes :
   de "strictement inférieur" : en Python et beaucoup d'autres langages, `<<`
   signifie décalage à gauche ; en HTML les balises sont délimitées par `<` et
   `>`
-- Python utilise le même opérateur `%` pour des opérations très différentes : 
+- Python utilise le même opérateur `%` pour des opérations très différentes :
   modulo et formattage de chaines
 
