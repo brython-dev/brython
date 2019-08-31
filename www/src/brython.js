@@ -92,8 +92,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,5,'final',0]
 __BRYTHON__.__MAGIC__="3.7.5"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-08-30 08:20:49.265958"
-__BRYTHON__.timestamp=1567146049265
+__BRYTHON__.compiled_date="2019-08-31 08:14:16.584141"
+__BRYTHON__.timestamp=1567232056584
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -8277,7 +8277,7 @@ for(var i=0,len=self.$items.length;i < len;i++){if(_b_.getattr(other,"__contains
 return res}
 set.__contains__=function(self,item){if(self.$simple){if(typeof item=="number" ||item instanceof Number){if(isNaN(item)){
 for(var i=self.$items.length-1;i >=0;i--){if(isNaN(self.$items[i])){return true}}
-return false}else{return self.$items.indexOf(item)>-1}}else if(typeof item=="string"){return self.$items.indexOf(item)>-1}}
+return false}else if(item instanceof Number){return self.$numbers.indexOf(item.valueOf())>-1}else{return self.$items.indexOf(item)>-1}}else if(typeof item=="string"){return self.$items.indexOf(item)>-1}}
 if(! _b_.isinstance(item,set)){$B.$getattr(item,"__hash__")}
 for(var i=0,len=self.$items.length;i < len;i++){if($B.rich_comp("__eq__",self.$items[i],item)){return true}}
 return false}
@@ -8386,7 +8386,8 @@ return $N}
 set.copy=function(){var $=$B.args("copy",1,{self:null},["self"],arguments,{},null,null)
 if(_b_.isinstance($.self,frozenset)){return $.self}
 var res=set.$factory()
-for(var i=0,len=$.self.$items.length;i < len;i++){res.$items[i]=$.self.$items[i]}
+$.self.$items.forEach(function(item){res.$items.push(item)})
+$.self.$numbers.forEach(function(item){res.$numbers.push(item)})
 return res}
 set.difference_update=function(self){var $=$B.args("difference_update",1,{self:null},["self"],arguments,{},"args",null)
 for(var i=0;i < $.args.length;i++){var s=set.$factory($.args[i]),_next=_b_.getattr($B.$iter(s),"__next__"),item

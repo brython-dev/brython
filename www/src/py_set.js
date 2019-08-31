@@ -55,6 +55,8 @@ set.__contains__ = function(self,item){
                     if(isNaN(self.$items[i])){return true}
                 }
                 return false
+            }else if(item instanceof Number){
+                return self.$numbers.indexOf(item.valueOf()) > -1
             }else{
                 return self.$items.indexOf(item) > -1
             }
@@ -352,9 +354,12 @@ set.copy = function(){
         arguments, {}, null, null)
     if(_b_.isinstance($.self, frozenset)){return $.self}
     var res = set.$factory() // copy returns an instance of set, even for subclasses
-    for(var i = 0, len = $.self.$items.length; i < len; i++){
-        res.$items[i] = $.self.$items[i]
-    }
+    $.self.$items.forEach(function(item){
+        res.$items.push(item)
+    })
+    $.self.$numbers.forEach(function(item){
+        res.$numbers.push(item)
+    })    
     return res
 }
 
