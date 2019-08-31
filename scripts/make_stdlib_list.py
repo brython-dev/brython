@@ -3,6 +3,7 @@
 
 import sys
 import os
+import git
 
 dico = {
     'title': {
@@ -84,9 +85,14 @@ for lang in 'en','es','fr':
             if path.startswith('Lib\\test'):
                 continue
 
+            if not git.in_index(path.replace("\\", "/")):
+                continue
+
             if path:
                 valid = [f for f in filenames
                     if os.path.splitext(f)[1] not in ['.pyc']]
+                valid = [v for v in valid
+                    if git.in_index(os.path.join(path, v).replace("\\", "/"))]
                 valid = [v for v in valid if v.startswith('_')] + \
                     [v for v in valid if not v.startswith('_')]
 
