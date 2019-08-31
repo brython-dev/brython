@@ -32,10 +32,10 @@ if not os.path.exists(images_dir_dest):
 for img in os.listdir(images_dir_src):
     shutil.copy(os.path.join(images_dir_src, img), images_dir_dest)
 
-for lang in ['fr', 'en', 'es']: 
+for lang in ['fr', 'en', 'es']:
     dest_path = os.path.join(static_doc_path, lang)
     dest_paths = [dest_path, os.path.join(dest_path,'cookbook')]
-        
+
     index = open(os.path.join(md_doc_path,lang,'index_static.html'), 'rb').read()
     index = index.decode('utf-8')
 
@@ -59,8 +59,10 @@ for lang in ['fr', 'en', 'es']:
                     html = html.replace('class="navig" href="',
                         'class="navig" href="../')
                 if scripts:
-                    html = html.replace('<scripts>',
-                        '<script type="text/python">%s\n</script>' %'\n'.join(scripts))
+                    script_content = "\n".join(
+                        f'<script type="text/python">{script}\n</script>' for
+                        script in scripts)
+                    html = html.replace('<scripts>', script_content)
                 out.write(html.encode('utf-8'))
                 out.close()
             elif ext=='.txt':

@@ -18,13 +18,12 @@ from browser import window, document, html, highlight
 import header
 header.show('fr')
 
-
 def run(ev):
     # run the code in the element after the button
     tg = ev.target
     while tg.tagName != 'BUTTON':
         tg = tg.parent
-    exec(tg.python_code,{})
+    exec(tg.elt.text.strip(), {})
     elt.focus()
 
 target = 'content'
@@ -40,7 +39,7 @@ for elt in document[target].get(selector='.exec'):
     btn = html.BUTTON('▶')
     btn.bind('click', run)
     # set attribute python_code, used when button is hit
-    btn.python_code = src
+    btn.elt = elt
     elt.parent.insertBefore(btn, elt)
 for elt in document[target].get(selector='.exec_on_load'):
     # Python code executed on page load
@@ -49,14 +48,13 @@ for elt in document[target].get(selector='.exec_on_load'):
     h.className = "pycode"
     elt.clear()
     elt <= h
-    exec(src,{})
+    exec(src)
 for elt in document[target].get(selector='.python'):
     src = elt.text.strip()
     h = highlight.highlight(src)
     h.className = "pycode"
     elt.clear()
     elt <= h
-
 </script>
 
 </head>
@@ -85,7 +83,7 @@ for elt in document[target].get(selector='.python'):
 <a class="navig" href="dom_api.html">Introduction - API DOM</a>
 <br><a class="navig" href="create.html">Créer un document</a>
 <br><a class="navig" href="access.html">Accéder aux éléments</a>
-<br><a class="navig" href="attributes.html">Attributs et méthodes</a>
+<br><a class="navig" href="attributes.html">Attributs, propriétés et méthodes</a>
 <br>
 <br><a class="navig" href="events.html">Evénements</a>
 <br><a class="navig" href="mouse_events.html">Evénements souris</a>

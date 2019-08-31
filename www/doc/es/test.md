@@ -1,5 +1,5 @@
-Pruebas y depuración y profiling
---------------------------------
+Pruebas y depuración
+--------------------
 
 ### Pruebas interactivas
 

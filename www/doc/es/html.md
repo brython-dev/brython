@@ -110,8 +110,8 @@ y puedes añadir todos los elementos en un iterable :
 from browser.html import *
 
 t = TABLE()
-t <= TR(TH('Number')+TH('Square'))
-t <= (TR(TD(i)+TD(i*i)) for i in range(10))
+t <= TR(TH('Number') + TH('Square'))
+t <= (TR(TD(i) + TD(i * i)) for i in range(10))
 ```
 
 

@@ -1,5 +1,5 @@
-Testing, debugging and profiling
---------------------------------
+Testing and debugging
+---------------------
 
 ### Interactive test
 

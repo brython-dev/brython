@@ -24,9 +24,9 @@ _certaines_ propriétés:
   "class" est "className"
 - en général, la valeur de la propriété est la même que celle de l'attribut,
   mais pas toujours : par exemple, dans le cas d'un élément défini par
-  `<INPUT type="checkbox" checked="checked">`, la valeur de l'attribut
+  `<INPUT type="checkbox" checked="checked">`, la valeur de l'_attribut_
   "checked" est la chaine de caractères "checked", et la valeur de la
-  propriété "checked" est le booléen `true`.
+  _propriété_ "checked" est le booléen `true`.
 
 En plus des attributs définis par la spécification pour une balise donnée, des
 attributs additionnels peuvent être définis (les moteurs de template en

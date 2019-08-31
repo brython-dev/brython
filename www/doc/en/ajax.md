@@ -8,7 +8,7 @@ This module allows running Ajax requests. It defines a single class :
 
 This object has the following attributes and methods :
 
-`bind(`_evt,function_`)`
+`bind(`_evt, function_`)`
 > attaches the _function_ to the event _evt_. _evt_ is a string that matches
 > the different request states :
 
@@ -18,7 +18,7 @@ This object has the following attributes and methods :
 - "interactive": response in progress
 - "complete" : finished
 
-> The _function_ takes a single argument, the `Ajax` object.
+> The _function_ takes a single argument, the `Ajax` instance.
 
 `open(`_method, url, async_`)`
 > _method_ is the HTTP method used for the request (usually GET or POST),
@@ -83,18 +83,18 @@ We suppose there is a DIV with id _result_ in the HTML page
 from browser import document, ajax
 
 def on_complete(req):
-   if req.status==200 or req.status==0:
+   if req.status == 200 or req.status == 0:
        document["result"].html = req.text
    else:
-       document["result"].html = "error "+req.text
+       document["result"].html = "error " + req.text
 
 req = ajax.Ajax()
-req.bind('complete',on_complete)
+req.bind('complete', on_complete)
 # send a POST request to the url
-req.open('POST',url,True)
-req.set_header('content-type','application/x-www-form-urlencoded')
+req.open('POST', url, True)
+req.set_header('content-type', 'application/x-www-form-urlencoded')
 # send data as a dictionary
-req.send({'x':0, 'y':1})
+req.send({'x': 0, 'y': 1})
 ```
 
 ### Shortcuts

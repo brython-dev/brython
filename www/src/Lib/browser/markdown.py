@@ -125,10 +125,10 @@ def mark(src):
             # line indentation indicates nesting level
             nb = 1 + len(lines[i]) - len(lines[i].lstrip())
             lines[i] = '<li>' + lines[i][nb:]
-            if nb>ul:
+            if nb > ul:
                 lines.insert(i, '<ul>' * (nb - ul))
                 i += 1
-            elif nb<ul:
+            elif nb < ul:
                 lines.insert(i, '</ul>' * (ul - nb))
                 i += 1
             ul = nb

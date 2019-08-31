@@ -23,8 +23,8 @@ propiedades:
   "className"
 - generalmente, el valor de la propiedades el mismo que el valor del atributo, 
   pero no siempre: por ejemplo, para un elemento definido mediante
-  `<INPUT type="checkbox" checked="checked">`, el valor del atributo
-  "checked" es el *string* "checked" y el valor de la propiedad "checked" es
+  `<INPUT type="checkbox" checked="checked">`, el valor del _atributo_
+  "checked" es el *string* "checked" y el valor de la _propiedad_ "checked" es
   el booleano `true`
 
 Aparte de los atributos definidos por la especificación para una etiqueta

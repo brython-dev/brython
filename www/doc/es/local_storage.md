@@ -44,7 +44,7 @@ Un ejemplo simple sería como sigue:
 
 ```python
 from browser.local_storage import storage
-storage['foo']='bar'
+storage['foo'] = 'bar'
 print(storage['foo'])
 ```
 

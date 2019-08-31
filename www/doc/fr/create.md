@@ -8,7 +8,6 @@ Une page est constituée d'élements (textes, images, sons...) qu'on peut
 intégrer de deux façons différentes :
 
 - écrire du code HTML avec des balises, par exemple
-
 <blockquote>
 ```xml
 <html>

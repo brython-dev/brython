@@ -82,18 +82,18 @@ Supondremos que existe un DIV con id _result_ en la página HTML
 from browser import document, ajax
 
 def on_complete(req):
-    if req.status==200 or req.status==0:
+    if req.status == 200 or req.status == 0:
         document["result"].html = req.text
     else:
-        document["result"].html = "error "+req.text
+        document["result"].html = "error " + req.text
 
 req = ajax.Ajax()
-req.bind('complete',on_complete)
+req.bind('complete', on_complete)
 # envía una petición POST a la url
-req.open('POST',url,True)
-req.set_header('content-type','application/x-www-form-urlencoded')
+req.open('POST', url, True)
+req.set_header('content-type', 'application/x-www-form-urlencoded')
 # envía datos como un diccionario
-req.send({'x':0, 'y':1})
+req.send({'x': 0, 'y': 1})
 ```
 
 ### Atajos
