@@ -72,7 +72,7 @@ répertoire de l'application, et exécuter
 A noter que ce programme analyse le code Brython contenu dans tous les scripts,
 modules et pages HTML qui se trouvent dans le répertoire et ses
 sous-répertoires. La version de CPython utilisée doit donc être compatible
-avec le code Brython : par exemple si ce code inclut des f-strings, il faut au 
+avec le code Brython : par exemple si ce code inclut des f-strings, il faut au
 minimum CPython 3.6, sinon le programme détectera des erreurs de syntaxe.
 
 Vous pouvez ensuite remplacer toutes les occurrences de
@@ -82,3 +82,27 @@ Vous pouvez ensuite remplacer toutes les occurrences de
 par
 
     <script type="text/javascript" src="brython_modules.js"></script>
+
+Modules et packages tiers
+=========================
+_Nouveau en version 3.7.5_
+
+Un "package Brython" peut être inséré dans la page HTML pour donner accès à
+des modules importables. Il s'agit d'un fichier avec l'extension
+__`brython.js`__ qui contient les modules et packages à distribuer; on
+l'insère par la syntaxe habituelle
+
+```
+<script src="http://anyhost/path/nom_package.brython.js"></script>
+```
+
+Les packages Brython peuvent être situés sur n'importe quel serveur, ce qui
+rend leur déploiement et leur utilisation très simples.
+
+Pour générer un "package Brython", il faut utiliser le package CPython
+`brython` et, dans le répertoire où se situent les fichiers à inclure dans
+le package, exécuter:
+
+```
+python -m brython --make_package <nom_package>
+```
