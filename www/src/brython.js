@@ -92,8 +92,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,5,'final',0]
 __BRYTHON__.__MAGIC__="3.7.5"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-08-31 08:58:47.577972"
-__BRYTHON__.timestamp=1567234727577
+__BRYTHON__.compiled_date="2019-09-01 09:04:43.961746"
+__BRYTHON__.timestamp=1567321483961
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5090,7 +5090,8 @@ req=store.get(module)
 req.onsuccess=function(evt){idb_load(evt,module)}}catch(err){console.info('error',err)}}
 function remove_from_cache(cursor,record){var request=cursor.delete()
 request.onsuccess=function(){if($B.debug > 1){console.log("delete outdated",record.name)}}}
-$B.idb_open=function(obj){$B.idb_name="brython-cache"
+$B.idb_open=function(obj){console.log("idb open")
+$B.idb_name="brython-cache"
 var idb_cx=$B.idb_cx=indexedDB.open($B.idb_name)
 idb_cx.onsuccess=function(){var db=idb_cx.result
 if(!db.objectStoreNames.contains("modules")){var version=db.version
@@ -8915,7 +8916,8 @@ $B.precompiled[mod_name]=record.is_package ?[record.content]:
 record.content
 var elts=mod_name.split(".")
 if(elts.length > 1){elts.pop()}
-if($B.$options.indexedDB && window.indexedDB){
+if($B.$options.indexedDB && self.indexedDB &&
+$B.idb_name){
 var idb_cx=indexedDB.open($B.idb_name)
 idb_cx.onsuccess=function(evt){var db=evt.target.result,tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules"),cursor=store.openCursor(),request=store.put(record)
 request.onsuccess=function(){if($B.debug > 1){console.info(modobj.__name__,"stored in db")}}}}}},find_module:function(cls,name,path){return{

@@ -417,8 +417,11 @@ var finder_VFS = {
             if(elts.length > 1){
                 elts.pop()
             }
-            if($B.$options.indexedDB && window.indexedDB){
+            if($B.$options.indexedDB && self.indexedDB &&
+                    $B.idb_name){
                 // Store the compiled Javascript in indexedDB cache
+                // $B.idb_name may not be defined if we are in a web worker
+                // and the main script is run without a VFS (cf. issue #1202)
                 var idb_cx = indexedDB.open($B.idb_name)
                 idb_cx.onsuccess = function(evt){
                     var db = evt.target.result,

@@ -420,7 +420,6 @@
     // see https://docs.python.org/3/reference/toplevel_components.html#programs
     var _b_ = $B.builtins
     modules['_sys'] = {
-        //__file__:$B.brython_path + '/src/builtin_modules.js',
         // Called "Getframe" because "_getframe" wouldn't be imported in
         // sys.py with "from _sys import *"
         Getframe : function(depth){
