@@ -92,8 +92,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,5,'final',0]
 __BRYTHON__.__MAGIC__="3.7.5"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-09-01 09:04:43.961746"
-__BRYTHON__.timestamp=1567321483961
+__BRYTHON__.compiled_date="2019-09-09 12:47:26.593065"
+__BRYTHON__.timestamp=1568026046593
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5090,8 +5090,7 @@ req=store.get(module)
 req.onsuccess=function(evt){idb_load(evt,module)}}catch(err){console.info('error',err)}}
 function remove_from_cache(cursor,record){var request=cursor.delete()
 request.onsuccess=function(){if($B.debug > 1){console.log("delete outdated",record.name)}}}
-$B.idb_open=function(obj){console.log("idb open")
-$B.idb_name="brython-cache"
+$B.idb_open=function(obj){$B.idb_name="brython-cache"
 var idb_cx=$B.idb_cx=indexedDB.open($B.idb_name)
 idb_cx.onsuccess=function(){var db=idb_cx.result
 if(!db.objectStoreNames.contains("modules")){var version=db.version
@@ -12319,8 +12318,8 @@ var $DOMEvent=$B.$DOMEvent=function(ev){ev.__class__=DOMEvent
 if(ev.preventDefault===undefined){ev.preventDefault=function(){ev.returnValue=false}}
 if(ev.stopPropagation===undefined){ev.stopPropagation=function(){ev.cancelBubble=true}}
 return ev}
-$B.set_func_names(DOMEvent,"<dom>")
-var Clipboard={__class__:_b_.type,$infos:{__module__:"<pydom>",__name__:"Clipboard"}}
+$B.set_func_names(DOMEvent,"browser")
+var Clipboard={__class__:_b_.type,$infos:{__module__:"browser",__name__:"Clipboard"}}
 Clipboard.__getitem__=function(self,name){return self.data.getData(name)}
 Clipboard.__mro__=[object]
 Clipboard.__setitem__=function(self,name,value){self.data.setData(name,value)}
@@ -12361,7 +12360,7 @@ else{self.parent.options.add(element.elt,index)}},item:function(self,index){retu
 Options.$factory=function(parent){return{
 __class__:Options,parent:parent}}
 $B.set_func_names(Options,"<dom>")
-var DOMNode={__class__ :_b_.type,__mro__:[object],$infos:{__module__:"<pydom>",__name__:"DOMNode"}}
+var DOMNode={__class__ :_b_.type,__mro__:[object],$infos:{__module__:"browser",__name__:"DOMNode"}}
 DOMNode.$factory=function(elt,fromtag){if(elt.__class__===DOMNode){return elt}
 if(typeof elt=="number" ||typeof elt=="boolean" ||
 typeof elt=="string"){return elt}
@@ -12737,7 +12736,7 @@ events.splice(j,1)
 flag=true
 break}}
 if(!flag){throw _b_.KeyError.$factory('missing callback for event '+event)}}}
-$B.set_func_names(DOMNode,"<dom>")
+$B.set_func_names(DOMNode,"browser")
 var Query={__class__:_b_.type,$infos:{__name__:"query"}}
 Query.__contains__=function(self,key){return self._keys.indexOf(key)>-1}
 Query.__getitem__=function(self,key){
@@ -13143,7 +13142,7 @@ delete browser.$$window
 delete browser.win
 browser.self.js.send=self.postMessage}else{browser.is_webworker=false
 update(browser,{$$alert:function(message){window.alert($B.builtins.str.$factory(message))},confirm:$B.JSObject.$factory(window.confirm),$$document:$B.DOMNode.$factory(document),doc:$B.DOMNode.$factory(document),
-DOMEvent:$B.DOMEvent,DOMNode:$B.DOMNode.$factory,load:function(script_url){
+DOMEvent:$B.DOMEvent,DOMNode:$B.DOMNode,load:function(script_url){
 var file_obj=$B.builtins.open(script_url)
 var content=$B.builtins.getattr(file_obj,'read')()
 eval(content)},mouseCoords:function(ev){return $B.JSObject.$factory($mouseCoords(ev))},prompt:function(message,default_value){return $B.JSObject.$factory(window.prompt(message,default_value||''))},reload:function(){

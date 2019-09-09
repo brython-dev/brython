@@ -365,12 +365,12 @@ var $DOMEvent = $B.$DOMEvent = function(ev){
     return ev
 }
 
-$B.set_func_names(DOMEvent, "<dom>")
+$B.set_func_names(DOMEvent, "browser")
 
 var Clipboard = {
     __class__: _b_.type,
     $infos: {
-        __module__: "<pydom>",
+        __module__: "browser",
         __name__: "Clipboard"
     }
 }
@@ -530,7 +530,7 @@ var DOMNode = {
     __class__ : _b_.type,
     __mro__: [object],
     $infos: {
-        __module__: "<pydom>",
+        __module__: "browser",
         __name__: "DOMNode"
     }
 }
@@ -1481,7 +1481,7 @@ DOMNode.unbind = function(self, event){
     }
 }
 
-$B.set_func_names(DOMNode, "<dom>")
+$B.set_func_names(DOMNode, "browser")
 
 // return query string as an object with methods to access keys and values
 // same interface as cgi.FieldStorage, with getvalue / getlist / getfirst
