@@ -92,8 +92,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,5,'final',0]
 __BRYTHON__.__MAGIC__="3.7.5"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-09-09 12:47:26.593065"
-__BRYTHON__.timestamp=1568026046593
+__BRYTHON__.compiled_date="2019-09-09 13:48:16.851626"
+__BRYTHON__.timestamp=1568029696851
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5421,8 +5421,10 @@ var _slots=class_obj.__slots__
 if(_slots !==undefined){if(typeof _slots=="string"){_slots=[_slots]}else{_slots=_b_.list.$factory(_slots)}
 cl_dict.__slots__=_slots}
 for(var i=0;i < mro.length-1;i++){for(var attr in mro[i]){if(attr=="__setattr__"){cl_dict.$has_setattr=true
-break}else if(mro[i][attr]&& mro[i][attr].__get__){cl_dict.$has_setattr=true
-break}}}
+break}else if(mro[i][attr]){if(mro[i][attr].__get__ ||(mro[i][attr].__class__ &&
+mro[i][attr].__class__.__get__)){
+cl_dict.$has_setattr=true
+break}}}}
 var meta_new=_b_.type.__getattribute__(metaclass,"__new__")
 var kls=meta_new(metaclass,class_name,bases,cl_dict)
 kls.__module__=module
@@ -7015,7 +7017,7 @@ obj.__mro__=_b_.type.mro(obj)}
 if($test){console.log("after setattr",obj)}
 return None}
 var res=obj[attr],klass=obj.__class__ ||$B.get_class(obj)
-if($test){console.log('set attr',attr,'to',obj,obj[attr],'class',klass)}
+if($test){console.log('set attr',attr,'of obj',obj,'class',klass)}
 if(res===undefined && klass){res=klass[attr]
 if(res===undefined){var mro=klass.__mro__,_len=mro.length
 for(var i=0;i < _len;i++){res=mro[i][attr]

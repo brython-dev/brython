@@ -186,13 +186,16 @@ $B.$class_constructor = function(class_name, class_obj, bases,
             if(attr == "__setattr__"){
                 cl_dict.$has_setattr = true
                 break
-            }else if(mro[i][attr] && mro[i][attr].__get__){
-                cl_dict.$has_setattr = true
-                break
+            }else if(mro[i][attr]){
+                if(mro[i][attr].__get__ || (mro[i][attr].__class__ &&
+                        mro[i][attr].__class__.__get__)){ // issue #1204
+                    cl_dict.$has_setattr = true
+                    break
+                }
             }
         }
     }
-
+    
     // Apply method __new__ of metaclass to create the class object
     var meta_new = _b_.type.__getattribute__(metaclass, "__new__")
     var kls = meta_new(metaclass, class_name, bases, cl_dict)
