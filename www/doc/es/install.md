@@ -4,16 +4,14 @@ Primera instalación
 Para instalar Brython :
 
 - Si tu PC dispone de CPython y pip, instala el paquete `brython` mediante
-
-```
-    pip install brython
+```console
+pip install brython
 ```
 
 > Una vez hecho lo anterior, en un directorio vacio ejecuta
-
-```
-    python -m brython --install
-```
+>```console
+>python -m brython --install
+>```
 
 - Si no puedes instalar Brython de esta forma, ve a la [página de _releases_](https://github.com/brython-dev/brython/releases)
 en Github, selecciona la última versión, descarga y descomprime __Brython-x.y.z.zip__.
@@ -30,7 +28,7 @@ __brython.js__ incluye los módulos de uso frecuente : `browser, browser.html, j
 Si tu aplicación usa módulos de la distribución estándar necesitarás incluir
  __brython_stdlib.js__ además de __brython.js__ en tu página HTML:
 
-```
+```xml
 <script type="text/javascript" src="brython.js"></script>
 <script type="text/javascript" src="brython_stdlib.js"></script>
 ```
@@ -40,14 +38,14 @@ Actualizaciones
 Cuando se publica una nueva versión de Brython, la actualización se realiza usando
 el comando típico:
 
-```
+```console
 pip install brython --upgrade
 ```
 
 En el directorio de la aplicación puedes actualizar los ficheros Brython
 (__brython.js__ y __brython_stdlib.js__) usando:
 
-```
+```console
 python -m brython --update
 ```
 
@@ -57,7 +55,7 @@ Un paquete CPython instalado mediante `pip` se puede instalar en una aplicación
 mediante el comando `--add_package <package name>`.
 
 Por ejemplo:
-```
+```console
 pip install attrs
 python -m brython --add_package attrs
 ```
@@ -87,13 +85,13 @@ servidor web en el directorio de la aplicación.
 La forma más directa sería usar el módulo **http.server** en la biblioteca
 estándar de CPython:
 
-```bash
+```console
 python -m http.server
 ```
 
 El puerto pro defecto es el 8000. Para elegir otro puerto puedes usar:
 
-```bash
+```console
 python -m http.server 8001
 ```
 
