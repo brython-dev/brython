@@ -11,6 +11,9 @@ function define(tag_name, cls){
     if(typeof tag_name != "string"){
         throw _b_.TypeError.$factory("first argument of define() " +
             "must be a string, not '" + $B.class_name(tag_name) + "'")
+    }else if(tag_name.indexOf("-") == -1){
+        throw _b_.ValueError.$factory("custom tag name must " +
+            "contain a hyphen (-)")
     }
     if(!_b_.isinstance(cls, _b_.type)){
         throw _b_.TypeError.$factory("second argument of define() " +
