@@ -195,7 +195,7 @@ $B.$class_constructor = function(class_name, class_obj, bases,
             }
         }
     }
-    
+
     // Apply method __new__ of metaclass to create the class object
     var meta_new = _b_.type.__getattribute__(metaclass, "__new__")
     var kls = meta_new(metaclass, class_name, bases, cl_dict)

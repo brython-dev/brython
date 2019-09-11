@@ -54,7 +54,7 @@ a.sort_link{
 <script type="text/python" src="show_source.py"></script>
 
 </head>
-<body onLoad="brython(2)">
+<body onLoad="brython(1)">
 
 <table width="100%">
 <tr>
@@ -79,6 +79,7 @@ a.sort_link{
   </div>
 </form>
 
+<child-component></child-component>
 </td>
 </tr>
 </table>
@@ -159,11 +160,37 @@ class BoldItalic:
         # Create a shadow root
         shadow = self.attachShadow({'mode': 'open'})
 
-        # Insert the value of attribute "data-val" in bold italic 
+        # Insert the value of attribute "data-val" in bold italic
         # in the shadow root
         shadow <= html.B(html.I(self.attrs['data-val']))
 
 webcomponent.define("bold-italic", BoldItalic)
+
+
+class Parent:
+
+    def __init__(self):
+        self.shadow = self.attachShadow({'mode': 'open'})
+        self.shadow <= html.B('parent component') + html.BR()
+
+class Child(Parent):
+
+    nb_cx = 0
+
+    def __init__(self):
+        super().__init__()
+        self.shadow <= html.B('child component')
+        assert type(self) is Child
+        assert self.__class__ is Child
+        assert isinstance(self, Child)
+
+    def connectedCallback(self):
+        print(self, "connected")
+        Child.nb_cx += 1
+
+webcomponent.define("parent-component", Parent)
+webcomponent.define("child-component", Child)
+assert Child.nb_cx == 1
 </script>
 
 

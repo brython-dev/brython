@@ -19,23 +19,16 @@ function define(tag_name, cls){
         throw _b_.TypeError.$factory("second argument of define() " +
             "must be a class, not '" + $B.class_name(tag_name) + "'")
     }
-    class WebComponent extends HTMLElement {
-      constructor() {
+
+    // Create the Javascript class used for the component. It must have
+    // the same name as the Python class
+    var src = String.raw`var WebComponent = class extends HTMLElement {
+      constructor(){
         // Always call super first in constructor
         super()
-        // Make cls a subclass of JSObject and of DOMNode (issue #1203)
-        var mro = cls.__mro__
-        if(mro.indexOf($B.JSObject) == -1){
-            cls.__mro__.splice(cls.__mro__.length - 2, 0, $B.JSObject)
-        }
-        if(mro.indexOf($B.DOMNode) == -1){
-            cls.__mro__.splice(cls.__mro__.length - 2, 0, $B.DOMNode)
-        }
-        // Call method __init__ of class, with the WebComp object as self
         if(cls.__init__){
             try{
                 var _self = $B.DOMNode.$factory(this)
-                // make "self" an instance of cls (issue #1203)
                 _self.__class__ = cls
                 $B.$call(cls.__init__)(_self)
             }catch(err){
@@ -44,19 +37,40 @@ function define(tag_name, cls){
         }
       }
     }
+    `
+    var name = cls.$infos.__name__
+    eval(src.replace("WebComponent", name))
+    var webcomp = eval(name) // JS class for component
+
     for(key in cls){
         // Wrap other methods such as connectedCallback
         if(typeof cls[key] == "function"){
-            WebComponent.prototype[key] = (function(attr){
+            webcomp.prototype[key] = (function(attr){
                 return function(){
-                    return $B.pyobj2jsobj(cls[attr]).call(null, this, ...arguments)
+                    return $B.pyobj2jsobj(cls[attr]).call(null,
+                        $B.DOMNode.$factory(this), ...arguments)
                 }
             })(key)
         }
     }
 
+    // Override __getattribute__ to handle DOMNode attributes such as
+    // attachShadow
+    cls.__getattribute__ = function(self, attr){
+        try{
+            return $B.DOMNode.__getattribute__(self, attr)
+        }catch(err){
+            if(err.__class__ === _b_.AttributeError){
+                var ga = $B.$getattr(cls, "__getattribute__")
+                return ga(self, attr)
+            }else{
+                throw err
+            }
+        }
+    }
+
     // define WebComp as the class to use for the specified tag name
-    customElements.define(tag_name, WebComponent)
+    customElements.define(tag_name, webcomp)
 }
 
 return {define: define}
