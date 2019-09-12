@@ -92,8 +92,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,5,'final',0]
 __BRYTHON__.__MAGIC__="3.7.5"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-09-12 08:08:25.708654"
-__BRYTHON__.timestamp=1568268505708
+__BRYTHON__.compiled_date="2019-09-12 10:27:21.064296"
+__BRYTHON__.timestamp=1568276841064
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -7247,14 +7247,13 @@ console.log($B.last($B.frames_stack))}
 method.$infos={__name__:self.$infos.__name__,__qualname__:$B.class_name(obj)+"."+self.$infos.__name__,__self__:obj,__func__:self}
 return method}
 $B.Function.__getattribute__=function(self,attr){
-if(!self.$infos){console.log("get attr",attr,"from function",self,"no $infos")}
 if(self.$infos && self.$infos[attr]!==undefined){if(attr=='__code__'){var res={__class__:code}
 for(var attr in self.$infos.__code__){res[attr]=self.$infos.__code__[attr]}
 res.name=self.$infos.__name__
 res.filename=self.$infos.__code__.co_filename
 res.co_code=self+"" 
 return res}else if(attr=='__annotations__'){
-return $B.obj_dict(self.$infos[attr])}else if(self.$infos.hasOwnProperty(attr)){return self.$infos[attr]}}else if(self.$infos.__dict__ &&
+return $B.obj_dict(self.$infos[attr])}else if(self.$infos.hasOwnProperty(attr)){return self.$infos[attr]}}else if(self.$infos && self.$infos.__dict__ &&
 self.$infos.__dict__.$string_dict[attr]!==undefined){return self.$infos.__dict__.$string_dict[attr]}else if(attr=="__closure__"){var free_vars=self.$infos.__code__.co_freevars
 if(free_vars.length==0){return None}
 var cells=[]

@@ -120,15 +120,26 @@ function ajax(){
 }
 
 function event(){
-    // event(element, name) is a Promise on the event "name" happening on the
-    // element. This promise always resolves (never rejects) with the DOM event.
-    var $ = $B.args("event", 2, {element: null, name: null},
-            ["element", "name"], arguments, {}, null, null),
+    // event(element, *names) is a Promise on the events "names" happening on
+    // the element. This promise always resolves (never rejects) with the
+    // first triggered DOM event.
+    var $ = $B.args("event", 1, {element: null},
+            ["element"], arguments, {}, "names", null),
         element = $.element,
-        name = $.name
+        names = $.names
     return new Promise(function(resolve){
-        element.elt.addEventListener(name, function(evt){
-            resolve($B.$DOMEvent(evt))
+        var callbacks = []
+        names.forEach(function(name){
+            var callback = function(evt){
+                // When one of the handled events is triggered, all bindings
+                // are removed
+                callbacks.forEach(function(items){
+                    $B.DOMNode.unbind(element, items[0], items[1])
+                })
+                resolve($B.$DOMEvent(evt))
+            }
+            callbacks.push([name, callback])
+            $B.DOMNode.bind(element, name, callback)
         })
     })
 }
