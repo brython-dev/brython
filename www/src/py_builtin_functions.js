@@ -2690,8 +2690,8 @@ $B.Function.__get__ = function(self, obj){
 $B.Function.__getattribute__ = function(self, attr){
     // Internal attributes __name__, __module__, __doc__ etc.
     // are stored in self.$infos
-    if(!self.$infos){console.log("get attr", attr, "from function", self,
-        "no $infos")}
+    //if(!self.$infos){console.log("get attr", attr, "from function", self,
+    //    "no $infos")}
     if(self.$infos && self.$infos[attr] !== undefined){
         if(attr == '__code__'){
             var res = {__class__: code}
@@ -2708,7 +2708,7 @@ $B.Function.__getattribute__ = function(self, attr){
         }else if(self.$infos.hasOwnProperty(attr)){
             return self.$infos[attr]
         }
-    }else if(self.$infos.__dict__ &&
+    }else if(self.$infos && self.$infos.__dict__ &&
                 self.$infos.__dict__.$string_dict[attr] !== undefined){
             return self.$infos.__dict__.$string_dict[attr]
     }else if(attr == "__closure__"){
