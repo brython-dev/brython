@@ -6387,7 +6387,9 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
 
                 new_nodes.push(new_node)
             }
-        }
+        }else{
+            new_nodes.push($NodeJS('await $B.promise(' + cmenter_name + ')'))
+        }        
 
         // try:
         //     BLOCK
@@ -6982,6 +6984,11 @@ var $transition = $B.parser.$transition = function(context, token, value){
             if(token == "def"){
                 return $transition(context.parent, token, value)
             }else if(token == "for" || token == "with"){
+                var ntype = $get_scope(context).ntype
+                if(ntype !== "def" && ntype != "generator"){
+                    $_SyntaxError(context, ["'async " + token +
+                        "' outside async function"])
+                }
                 var ctx = $transition(context.parent, token, value)
                 ctx.parent.async = true // set attr "async" of for/with context
                 return ctx

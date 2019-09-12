@@ -92,8 +92,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,5,'final',0]
 __BRYTHON__.__MAGIC__="3.7.5"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-09-11 18:12:35.484884"
-__BRYTHON__.timestamp=1568218355484
+__BRYTHON__.compiled_date="2019-09-12 08:08:25.708654"
+__BRYTHON__.timestamp=1568268505708
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -3021,7 +3021,7 @@ alias.tree[0].tree[0].parent=expr
 var assign=new $AssignCtx(expr)
 new $RawJSCtx(assign,'await $B.promise('+
 cmenter_name+')')
-new_nodes.push(new_node)}}
+new_nodes.push(new_node)}}else{new_nodes.push($NodeJS('await $B.promise('+cmenter_name+')'))}
 var try_node=new $NodeJS('try')
 node.children.forEach(function(child){try_node.add(child)})
 new_nodes.push(try_node)
@@ -3323,7 +3323,10 @@ C.guess_type()
 return $transition(C.parent,'eol')}
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'async':
-if(token=="def"){return $transition(C.parent,token,value)}else if(token=="for" ||token=="with"){var ctx=$transition(C.parent,token,value)
+if(token=="def"){return $transition(C.parent,token,value)}else if(token=="for" ||token=="with"){var ntype=$get_scope(C).ntype
+if(ntype !=="def" && ntype !="generator"){$_SyntaxError(C,["'async "+token+
+"' outside async function"])}
+var ctx=$transition(C.parent,token,value)
 ctx.parent.async=true 
 return ctx}
 $_SyntaxError(C,'token '+token+' after '+C)
