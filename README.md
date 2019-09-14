@@ -75,7 +75,8 @@ with the [available stdlib](https://github.com/brython-dev/brython/tree/master/w
 </script>
 ```
 
-If you want to use the latest development version, you can load the files from
+If you want to use the latest development version, you can load the files from 
+[jsDelivr](https://www.jsdelivr.com/)
 ```
 https://cdn.jsdelivr.net/gh/brython-dev/brython/www/src/brython.js
 https://cdn.jsdelivr.net/gh/brython-dev/brython/www/src/brython_stdlib.js
