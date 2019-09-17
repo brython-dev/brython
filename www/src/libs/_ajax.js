@@ -31,6 +31,9 @@ function set_timeout(self, timeout){
 function _read(req){
     var xhr = req.js,
         res
+    if(xhr.responseType == "json"){
+        return $B.structuredclone2pyobj(xhr.response)
+    }
     if(xhr.responseType == "arraybuffer"){
         var abuf = new Uint8Array(xhr.response)
         res = []
@@ -84,6 +87,9 @@ function handle_kwargs(self, kw, method){
             if(kw.$string_dict[key] == "binary"){
                 self.js.responseType = "arraybuffer"
                 mode = "binary"
+            }else if(kw.$string_dict[key] == "json"){
+                self.js.responseType = "json"
+                mode = "json"
             }
         }else if(key == "timeout"){
             timeout.seconds = kw.$string_dict[key]
