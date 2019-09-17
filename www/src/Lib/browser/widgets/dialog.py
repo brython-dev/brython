@@ -34,6 +34,13 @@ styles = {
 }
 
 class Dialog(html.DIV):
+    """Basic, moveable dialog box with a title bar, optional
+    "Ok" / "Cancel" buttons.
+    The "Ok" button is the attribute "ok_button" of the dialog object.
+    Supports drag and drop on the document.
+    A dialog has an attribute "panel" that can contain elements.
+    Method close() removes the dialog box.
+    """
 
     def __init__(self, title="", style={}, top=0, left=0, ok_cancel=False):
         for key in style:
@@ -86,17 +93,41 @@ class Dialog(html.DIV):
         self.is_moving = False
 
 class EntryDialog(Dialog):
+    """Dialog box with "Ok / Cancel" buttons and an INPUT element.
+    When the user clicks on "Ok" or hits the Enter key, an event called
+    "entry" is triggered on the element.
 
-    def __init__(self, title="", style={}, top=0, left=0):
+    Usage:
+        box = EntryDialog()
+
+        @bind(box, "entry")
+        def entry(evt):
+            ...
+    """
+
+    def __init__(self, title="", message=None, style={}, top=0, left=0):
         Dialog.__init__(self, title, style, top, left, ok_cancel=True)
+        if message is not None:
+            self.panel <= message
         self.entry = html.INPUT()
         self.panel <= self.entry
         self.entry.focus()
 
         self.entry.bind("keypress", self.callback)
-        self.ok_button.bind("clcik", self.callback)
+        self.ok_button.bind("click", self.callback)
+
+    @property
+    def value(self):
+        return self.entry.value
 
     def callback(self, evt):
         if evt.target == self.entry and evt.keyCode != 13:
             return
         self.dispatchEvent(window.Event.new("entry"))
+
+class InfoDialog(Dialog):
+    """Dialog box with an information message and no "Ok / Cancel" button."""
+
+    def __init__(self, title="", message="", style={}, top=0, left=0):
+        Dialog.__init__(self, title, style, top, left)
+        self.panel <= message
