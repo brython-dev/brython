@@ -797,8 +797,7 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context, expression){
             // Attribute bound of an id indicates if it is being
             // bound, as it is the case in the left part of an assignment
             assigned.bound = true
-            if(!$B._globals[scope.id] ||
-                $B._globals[scope.id][assigned.value] === undefined){
+            if(!scope.globals || !scope.globals.has(assigned.value)){
                 // A value is going to be assigned to a name
                 // After assignment the name will be bound to the current
                 // scope
@@ -883,8 +882,7 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context, expression){
                     // simple assign : set attribute "bound" for name resolution
                     var name = left.tree[0].value
                     // check if name in globals
-                    if($B._globals && $B._globals[scope.id]
-                        && $B._globals[scope.id][name]){
+                    if(scope.globals && scope.globals.has(name)){
                     }else{
                         left.tree[0].bound = true
                     }
@@ -2227,7 +2225,7 @@ var $DecoratorCtx = $B.parser.$DecoratorCtx = function(context){
             scope = $get_scope(this),
             ref = '$locals["'
         // reference of the original function, may have been declared global
-        if($B._globals[scope.id] && $B._globals[scope.id][obj.name]){
+        if(scope.globals && scope.globals.has(obj.name)){
             var module = $get_module(this)
             ref = '$locals_' + module.id + '["'
         }
@@ -2381,9 +2379,10 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
 
         this.binding = {}
 
-        if($B._globals[this.scope.id] !== undefined &&
-                $B._globals[this.scope.id][name] !== undefined){
+        if(this.scope.globals !== undefined &&
+                this.scope.globals.has(name)){
             // function name was declared global
+            console.log("bind def name in globals", this.root.id)
             $bind(name, this.root, this)
         }else{
             $bind(name, this.scope, this)
@@ -3906,8 +3905,10 @@ var $GlobalCtx = $B.parser.$GlobalCtx = function(context){
     context.tree[context.tree.length] = this
     this.expect = 'id'
     this.scope = $get_scope(this)
-    $B._globals[this.scope.id] = $B._globals[this.scope.id] || {}
-
+    this.scope.globals = this.scope.globals || new Set()
+    this.module = $get_module(this)
+    this.module.binding = this.module.binding || {}
+    
     this.toString = function(){return 'global ' + this.tree}
 
     this.add = function(name){
@@ -3915,7 +3916,8 @@ var $GlobalCtx = $B.parser.$GlobalCtx = function(context){
             $_SyntaxError(context, ["annotated name '" + name +
                 "' can't be global"])
         }
-        $B._globals[this.scope.id][name] = true
+        this.scope.globals.add(name)
+        this.module.binding[name] = true
     }
 
     this.to_js = function(){
@@ -4168,7 +4170,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         // get global scope
         var gs = innermost
 
-        var $test = false // val == "x"
+        var $test = val == "gg"
 
         if($test){
             console.log("this", this)
@@ -4190,6 +4192,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
 
         if (innermost.globals && innermost.globals.has(val)){
             search_ids = ['"' + gs.id + '"']
+            innermost = gs
         }
 
         if($test){
@@ -4214,14 +4217,18 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
 
         // Build the list of scopes where the variable name is bound
         while(1){
-            if($B._globals[scope.id] !== undefined &&
-                    $B._globals[scope.id][val] !== undefined){
+            if(scope.globals !== undefined &&
+                    scope.globals.has(val)){
+                if($test){
+                    console.log("in globals of", scope.id)
+                }
                 // Variable is declared as global. If the name is bound in the
                 // global scope, use it ; if the name is being bound, bind it
                 // in the global namespace.
                 // Else return a call to a function that searches the name in
                 // globals, and throws NameError if not found.
                 if(this.boundBefore(gs)){
+                    if($test){console.log("bound before in gs", gs)}
                     return global_ns + '["' + val + '"]'
                 }else{
                     if($test){console.log("use global search", this)}
@@ -4235,7 +4242,8 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
             }
             if($test){
                 console.log("scope", scope, "innermost", innermost,
-                    scope === innermost)
+                    scope === innermost, "bound_before", bound_before,
+                    "found", found.slice())
             }
             if(scope === innermost){
                 // Handle the case when the same name is used at both sides
@@ -4263,7 +4271,9 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                             }
                         }else{
                             found.push(scope)
+                            break
                         }
+                        if($test){console.log(val, "found in", scope.id)}
                     }
                 }
             }else{
@@ -4410,7 +4420,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                     }
                 }
             }else if(scope === innermost){
-                if($B._globals[scope.id] && $B._globals[scope.id][val]){
+                if(scope.globals && scope.globals.has(val)){
                     val = global_ns + '["' + val + '"]'
                 }else if(!this.bound && !this.augm_assign){
                     // Search all the lines in the scope where the name is
@@ -6389,7 +6399,7 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
             }
         }else{
             new_nodes.push($NodeJS('await $B.promise(' + cmenter_name + ')'))
-        }        
+        }
 
         // try:
         //     BLOCK
@@ -6642,6 +6652,9 @@ var $add_line_num = $B.parser.$add_line_num = function(node,rank){
 $B.$add_line_num = $add_line_num
 
 var $bind = $B.parser.$bind = function(name, scope, context){
+    if(name == "xx"){
+        console.log("$bind", name, scope, context)
+    }
     // Bind a name in scope
     if(scope.nonlocals && scope.nonlocals[name]){
         // name is declared nonlocal in the scope : don't bind

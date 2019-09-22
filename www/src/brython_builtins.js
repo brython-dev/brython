@@ -74,17 +74,13 @@ $B.imported = {}
 // Maps the name of modules to the matching Javascript code
 $B.precompiled = {}
 
-// Maps block names to a dictionary indexed by names defined as global
-// inside the block
-$B._globals = {}
-
 // Frames stack
 $B.frames_stack = []
 
 // Python __builtins__
 $B.builtins = {}
 
-$B.builtins_scope = {id:'__builtins__', module:'__builtins__', binding:{}}
+$B.builtins_scope = {id:'__builtins__', module:'__builtins__', binding: {}}
 
 // Builtin functions : used in py2js to simplify the code produced by a call
 $B.builtin_funcs = {}
@@ -93,7 +89,7 @@ $B.builtin_funcs = {}
 $B.builtin_classes = []
 
 $B.__getattr__ = function(attr){return this[attr]}
-$B.__setattr__ = function(attr,value){
+$B.__setattr__ = function(attr, value){
     // limited to some attributes
     if(['debug', 'stdout', 'stderr'].indexOf(attr) > -1){$B[attr] = value}
     else{
