@@ -3908,7 +3908,7 @@ var $GlobalCtx = $B.parser.$GlobalCtx = function(context){
     this.scope.globals = this.scope.globals || new Set()
     this.module = $get_module(this)
     this.module.binding = this.module.binding || {}
-    
+
     this.toString = function(){return 'global ' + this.tree}
 
     this.add = function(name){
@@ -6652,9 +6652,6 @@ var $add_line_num = $B.parser.$add_line_num = function(node,rank){
 $B.$add_line_num = $add_line_num
 
 var $bind = $B.parser.$bind = function(name, scope, context){
-    if(name == "xx"){
-        console.log("$bind", name, scope, context)
-    }
     // Bind a name in scope
     if(scope.nonlocals && scope.nonlocals[name]){
         // name is declared nonlocal in the scope : don't bind
@@ -6974,6 +6971,10 @@ var $transition = $B.parser.$transition = function(context, token, value){
                 $_SyntaxError(context, "empty annotation")
             }else if(token == ':' && context.parent.type != "def"){
                 $_SyntaxError(context, "more than one annotation")
+            }else if(token == "augm_assign"){
+                $_SyntaxError(context, "augmented assign as annotation")
+            }else if(token == "op"){
+                $_SyntaxError(context, "operator as annotation")
             }
             return $transition(context.parent, token)
 

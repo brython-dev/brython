@@ -91,8 +91,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.6"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-09-24 16:01:21.867257"
-__BRYTHON__.timestamp=1569333681867
+__BRYTHON__.compiled_date="2019-09-24 21:52:36.112974"
+__BRYTHON__.timestamp=1569354756112
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -3138,7 +3138,7 @@ if((elt.type=='condition' && elt.token=="while")
 ','+mod_id+'";'))}}
 return offset}else{return 1}}
 $B.$add_line_num=$add_line_num
-var $bind=$B.parser.$bind=function(name,scope,C){if(name=="xx"){console.log("$bind",name,scope,C)}
+var $bind=$B.parser.$bind=function(name,scope,C){
 if(scope.nonlocals && scope.nonlocals[name]){
 return}
 if(scope.globals && scope.globals.has(name)){var module=$get_module(C)
@@ -3316,7 +3316,7 @@ $_SyntaxError(C,token)}}
 return $transition(C.parent,token,value)
 case 'annotation':
 if(token=="eol" && C.tree.length==1 &&
-C.tree[0].tree.length==0){$_SyntaxError(C,"empty annotation")}else if(token==':' && C.parent.type !="def"){$_SyntaxError(C,"more than one annotation")}
+C.tree[0].tree.length==0){$_SyntaxError(C,"empty annotation")}else if(token==':' && C.parent.type !="def"){$_SyntaxError(C,"more than one annotation")}else if(token=="augm_assign"){$_SyntaxError(C,"augmented assign as annotation")}else if(token=="op"){$_SyntaxError(C,"operator as annotation")}
 return $transition(C.parent,token)
 case 'assert':
 if(token=='eol'){return $transition(C.parent,token)}

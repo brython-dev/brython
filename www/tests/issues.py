@@ -2354,6 +2354,9 @@ if False:
 
 assert set([1, 2]) == {1, 2}
 
+# issue 1209
+assertRaises(SyntaxError, exec, "x:+=1")
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
