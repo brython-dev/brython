@@ -160,3 +160,43 @@ def read(f):
 req = ajax.get("tests.zip", mode="binary",
     oncomplete=read)
 ```
+
+### Envoi de fichiers
+
+Pour envoyer des fichiers saisis dans un formulaire par une balise du type
+```xml
+<input type="file" name="choosefiles" multiple="multiple">
+```
+on peut utiliser la fonction
+
+`file_upload(`_url, file, [**callbacks]_`)`
+
+> _file_ est l'objet fichier à envoyer vers l'_url_, typiquement le résultat
+> d'une expression
+<blockquote>
+```python
+for file in document["choosefiles"].files:
+    ...
+```
+</blockquote>
+
+Exemple:
+```xml
+<script type="text/python">
+from browser import ajax, bind, document
+
+def upload_ok(req):
+    print("c'est tout bon")
+
+@bind("#upload", "click")
+def uploadfiles(event):
+    for f in document["choosefiles"].files:
+        ajax.file_upload("/cgi-bin/savefile.py", f,
+            oncomplete=upload_ok)
+</script>
+
+<form>
+    <input id="choosefiles" type="file" multiple="multiple" />
+</form>
+<button id="upload">Upload</button>
+```

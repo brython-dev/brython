@@ -164,3 +164,43 @@ def read(f):
 req = ajax.get("tests.zip", mode="binary",
     oncomplete=read)
 ```
+
+### File upload
+
+To send files entered in a form by a tag such as
+```xml
+<input type="file" name="choosefiles" multiple="multiple">
+```
+the module provides the function
+
+`file_upload(`_url, file, [**callbacks]_`)`
+
+> _file_ is the file object to upload to the _url_, usually the result of an
+> expression
+<blockquote>
+```python
+for file in document["choosefiles"].files:
+    ...
+```
+</blockquote>
+
+Example:
+```xml
+<script type="text/python">
+from browser import ajax, bind, document
+
+def upload_ok(req):
+    print("all right")
+
+@bind("#upload", "click")
+def uploadfiles(event):
+    for f in document["choosefiles"].files:
+        ajax.file_upload("/cgi-bin/savefile.py", f,
+            oncomplete=upload_ok)
+</script>
+
+<form>
+    <input id="choosefiles" type="file" multiple="multiple" />
+</form>
+<button id="upload">Upload</button>
+```

@@ -309,12 +309,34 @@ function put(){
     _request_with_body.call(null, "put", ...arguments)
 }
 
+function file_upload(){
+    var $ = $B.args("file_upload", 2, {url: null, "file": file},
+            ["url", "file"], arguments, {}, null, "kw"),
+        url = $.url,
+        file = $.file,
+        kw = $.kw
+
+    var formdata = new FormData()
+    formdata.append('filetosave', file, file.name)
+
+    var self = ajax.$factory()
+    self.js.open('POST', url, True)
+    self.js.send(formdata)
+
+    for(key in kw.$string_dict){
+        if(key.startsWith("on")){
+            ajax.bind(self, key.substr(2), kw.$string_dict[key])
+        }
+    }
+}
+
 $B.set_func_names(ajax)
 
 return {
     ajax: ajax,
     Ajax: ajax,
     delete: _delete,
+    file_upload: file_upload,
     get: get,
     head: head,
     options: options,
