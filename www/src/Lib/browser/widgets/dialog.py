@@ -4,7 +4,6 @@ styles = {
     "dialog": {
         "font-family": "arial",
         "position": "absolute",
-        "width": "10%",
         "left": "10px",
         "top": "10px",
         "border-style": "solid",
@@ -28,7 +27,6 @@ styles = {
     "panel": {
         "background-color": "#fff",
         "color": "#000",
-        "height": "20%",
         "padding": "0.6em"
     }
 }
@@ -110,7 +108,7 @@ class EntryDialog(Dialog):
         if message is not None:
             self.panel <= message
         self.entry = html.INPUT()
-        self.panel <= self.entry
+        self.panel <= html.BR() + self.entry
         self.entry.focus()
 
         self.entry.bind("keypress", self.callback)
