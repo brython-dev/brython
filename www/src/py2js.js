@@ -9517,6 +9517,10 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
                   lnum++
                   pos += 2
                   break
+                }else{
+                    $pos = pos
+                    $_SyntaxError(context,
+                        ['unexpected character after line continuation character'])
                 }
             case String.fromCharCode(12): // Form Feed : ignore
                 pos += 1
@@ -9580,7 +9584,6 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
     // line_info = [line_num, parent_block_id] if debug mode is set
     //
     // Returns a tree structure representing the Python source code
-
     $pos = 0
 
     if(typeof module == "object"){
@@ -9603,7 +9606,10 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
     // Normalise line ends
     src = src.replace(/\r\n/gm, "\n")
     // Remove trailing \, cf issue 970
-    while(src.endsWith("\\")){src = src.substr(0, src.length - 1)}
+    // but don't hide syntax error if ends with \\, cf issue 1210
+    if(src.endsWith("\\") && !src.endsWith("\\\\")){
+        src = src.substr(0, src.length - 1)
+    }
     // Normalise script end
     if(src.charAt(src.length - 1) != "\n"){src += "\n"}
 

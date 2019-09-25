@@ -91,8 +91,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.6"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-09-24 21:52:36.112974"
-__BRYTHON__.timestamp=1569354756112
+__BRYTHON__.compiled_date="2019-09-25 09:09:47.105140"
+__BRYTHON__.timestamp=1569395387105
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -4827,7 +4827,8 @@ break
 case '\\':
 if(src.charAt(pos+1)=='\n'){lnum++
 pos+=2
-break}
+break}else{$pos=pos
+$_SyntaxError(C,['unexpected character after line continuation character'])}
 case String.fromCharCode(12):
 pos+=1
 break
@@ -4865,7 +4866,7 @@ var t0=new Date().getTime(),is_comp=false
 if(typeof src=='object'){is_comp=src.is_comp
 src=src.src}
 src=src.replace(/\r\n/gm,"\n")
-while(src.endsWith("\\")){src=src.substr(0,src.length-1)}
+if(src.endsWith("\\")&& !src.endsWith("\\\\")){src=src.substr(0,src.length-1)}
 if(src.charAt(src.length-1)!="\n"){src+="\n"}
 var locals_is_module=Array.isArray(locals_id)
 if(locals_is_module){locals_id=locals_id[0]}

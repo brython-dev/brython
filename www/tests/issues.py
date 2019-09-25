@@ -2357,6 +2357,14 @@ assert set([1, 2]) == {1, 2}
 # issue 1209
 assertRaises(SyntaxError, exec, "x:+=1")
 
+# issue 1210
+assertRaises(SyntaxError, exec, r"\\")
+assertRaises(SyntaxError, exec, r"\\\n")
+assertRaises(SyntaxError, exec, 
+    "def f():\n    \\\\")
+assertRaises(SyntaxError, exec, 
+    "def f():\n    \\\\\n")
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
