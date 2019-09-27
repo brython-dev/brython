@@ -9281,8 +9281,14 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
                     var j = pos + 1
                     while(j < src.length &&
                         src.charAt(j).search(/\d|e|E/) > -1){j++}
-                    context = $transition(context, 'float',
-                        '0' + src.substr(pos, j - pos))
+                    if(src.charAt(j) == "j"){
+                        context = $transition(context, 'imaginary',
+                            '0' + src.substr(pos, j - pos))
+                        j++
+                    }else{
+                        context = $transition(context, 'float',
+                            '0' + src.substr(pos, j - pos))
+                    }
                     pos = j
                     break
                 }

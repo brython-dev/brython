@@ -346,4 +346,8 @@ try:
 except TypeError:
     pass
 
+# issue 1211
+assert .1j == .1j
+assert .1j + 2 == 2 + 0.1j
+
 print('passed all tests...')
