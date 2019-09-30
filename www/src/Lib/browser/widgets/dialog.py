@@ -40,13 +40,11 @@ class Dialog(html.DIV):
     Method close() removes the dialog box.
     """
 
-    def __init__(self, title="", style={}, top=0, left=0, ok_cancel=False):
+    def __init__(self, title="", style={}, top=None, left=None, ok_cancel=False):
         for key in style:
             for item in styles:
                 styles[item][key] = style[key]
         html.DIV.__init__(self, style=styles["dialog"])
-        self.left = left
-        self.top = top
         self._title = html.DIV(html.SPAN(title), style=styles["title"])
         self <= self._title
         btn = html.SPAN("&times;", style=styles["close"])
@@ -64,6 +62,20 @@ class Dialog(html.DIV):
             self <= ok_cancel_zone
 
         document <= self
+        cstyle = window.getComputedStyle(self)
+
+        # Center horizontally and vertically
+        if left is None:
+            width = int(cstyle.width[:-2])
+            left = int((window.innerWidth - width) / 2)
+        self.left = left
+        self.style.left = f'{left}px'
+        if top is None:
+            height = int(cstyle.height[:-2])
+            top = int((window.innerHeight - height) / 2)
+        self.top = top
+        self.style.top = f'{top}px'
+
         self._title.bind("mousedown", self.mousedown)
         document.bind("mousemove", self.mousemove)
         self._title.bind("mouseup", self.mouseup)
@@ -126,6 +138,14 @@ class EntryDialog(Dialog):
 class InfoDialog(Dialog):
     """Dialog box with an information message and no "Ok / Cancel" button."""
 
-    def __init__(self, title="", message="", style={}, top=0, left=0):
+    def __init__(self, title="", message="", style={}, top=None, left=None,
+            remove_after=None):
+        """If remove_after is set, number of seconds after which the dialog is
+        removed."""
         Dialog.__init__(self, title, style, top, left)
         self.panel <= message
+        if remove_after:
+            if not isinstance(remove_after, (int, float)):
+                raise TypeError("remove_after should be a number, not " +
+                    str(remove_after.__class__.__name__))
+            window.setTimeout(self.close, remove_after * 1000)
