@@ -101,7 +101,7 @@ req.send({'x': 0, 'y': 1})
 Las llamadas GET y POST se pueden efectuar de una forma más directa de la
 siguiente forma:
 
-`get(`_url[, blocking=False, headers={}, mode="text", timeout=None, data="", **callbacks]_`)`
+`get(`_url[, blocking=False, headers={}, mode="text", timeout=None, cache=False, data="", **callbacks]_`)`
 
 y lo mismo se podría hacer con `delete`, `head` y `options`.
 

@@ -102,7 +102,7 @@ req.send({'x': 0, 'y': 1})
 GET and POST calls can be performed in a more straightforward way with the
 matching functions:
 
-`get(`_url[, blocking=False, headers={}, mode="text", timeout=None, data="", **callbacks]_`)`
+`get(`_url[, blocking=False, headers={}, mode="text", timeout=None, cache=False, data="", **callbacks]_`)`
 
 and the same for `delete`, `head` and `options`.
 
