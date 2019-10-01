@@ -9735,14 +9735,6 @@ var brython = $B.parser.brython = function(options){
     }
     $B.static_stdlib_import = options.static_stdlib_import
 
-    // If options has an attribute "open", it will be used by the built-in
-    // function open() - see py_builtin_functions.js
-    if(options.open !== undefined){
-        _b_.open = options.open
-        console.log("DeprecationWarning: \'open\' option of \'brython\' "+
-            "function will be deprecated in future versions of Brython.")
-    }
-
     $B.$options = options
 
     // Set $B.meta_path, the list of finders to use for imports
@@ -9843,19 +9835,6 @@ var brython = $B.parser.brython = function(options){
                 _importlib.optimize_import_for_path(e.href, filetype)
             }
         }
-    }
-
-    // Allow user to specify the re module they want to use as a default
-    // Valid values are 'pyre' for pythons re module and
-    // 'jsre' for brythons customized re module
-    // Default is for brython to guess which to use by looking at
-    // complexity of the re pattern
-    if(options.re_module !== undefined){
-       if(options.re_module == 'pyre' || options.re_module == 'jsre'){
-          $B.$options.re = options.re
-       }
-       console.log("DeprecationWarning: \'re_module\' option of \'brython\' "+
-           "function will be deprecated in future versions of Brython.")
     }
 
     if($B.$options.args){
