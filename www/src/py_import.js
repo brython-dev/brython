@@ -66,29 +66,13 @@ function parent_package(mod_name) {
 
 function $download_module(mod, url, $package){
     var xhr = new XMLHttpRequest(),
-        fake_qs
-
-    switch ($B.$options.cache) {
-        case "version":
-            fake_qs = "?v=" + $B.version_info[2]
-            break
-        case "browser":
-            fake_qs = ""
-            break
-        default:
-            fake_qs = "?v=" + (new Date().getTime())
-    }
+        fake_qs = "?v=" + (new Date().getTime()),
+        res = null,
+        mod_name = mod.__name__
 
     var timer = _window.setTimeout(function(){
             xhr.abort()
         }, 5000)
-
-    var res = null,
-        mod_name = mod.__name__,
-        res,
-        t0 = new Date()
-
-    $B.download_time = $B.download_time || 0
 
     xhr.open("GET", url + fake_qs, false)
     xhr.send()
@@ -127,7 +111,6 @@ function $download_module(mod, url, $package){
     }
 
     if(res.constructor === Error){throw res} // module not found
-    $B.download_time += (new Date()) - t0
     return res
 }
 
@@ -230,7 +213,6 @@ function import_py(mod, path, $package){
     return run_py(module_contents, path, mod)
 }
 
-//$B.run_py is needed for import hooks..
 function run_py(module_contents, path, module, compiled) {
     // set file cache for path ; used in built-in function open()
     $B.file_cache[path] = module_contents
@@ -314,7 +296,7 @@ function run_py(module_contents, path, module, compiled) {
     }
 }
 
-$B.run_py = run_py
+$B.run_py = run_py // used in importlib.basehook
 
 function new_spec(fields) {
     // TODO : Implement ModuleSpec class i.e. not a module object
@@ -808,7 +790,6 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
     //   (current directory, site-packages). The search is made on the module
     //   name and if not found on module_name/__init__.py in case the module
     //   is a package
-    // - finder_idb_cached : search modules in the IndexedDB cache
     //
     // In import_hooks, each of the finders in the meta path has a method
     // find_spec(). This method is called with module name and path and
@@ -1013,16 +994,16 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                 var alias = aliases[name] || name
                 try{
                     // [Import spec] Check if module has an attribute by that name
-                    locals[alias] = $B.$getattr(modobj, name);
+                    locals[alias] = $B.$getattr(modobj, name)
                 }catch($err1){
                     // [Import spec] attempt to import a submodule with that name ...
                     // FIXME : level = 0 ? level = 1 ?
                     try{
                         var name1 = $B.from_alias(name)
                         $B.$getattr(__import__, '__call__')(mod_name + '.' + name1,
-                            globals, undefined, [], 0);
+                            globals, undefined, [], 0)
                         // [Import spec] ... then check imported module again for name
-                        locals[alias] = $B.$getattr(modobj, name1);
+                        locals[alias] = $B.$getattr(modobj, name1)
                     }catch($err3){
                         // [Import spec] Attribute not found
                         if(mod_name === "__future__"){

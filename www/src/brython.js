@@ -91,8 +91,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.6"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-09-27 09:45:31.842950"
-__BRYTHON__.timestamp=1569570331842
+__BRYTHON__.compiled_date="2019-10-01 08:58:33.785214"
+__BRYTHON__.timestamp=1569913113785
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -4920,9 +4920,6 @@ $B.profile=options.profile
 if(options.indexedDB===undefined){options.indexedDB=true}
 if(options.static_stdlib_import===undefined){options.static_stdlib_import=true}
 $B.static_stdlib_import=options.static_stdlib_import
-if(options.open !==undefined){_b_.open=options.open
-console.log("DeprecationWarning: \'open\' option of \'brython\' "+
-"function will be deprecated in future versions of Brython.")}
 $B.$options=options
 var meta_path=[],path_hooks=[]
 if($B.use_VFS){meta_path.push($B.$meta_path[0])
@@ -4957,9 +4954,6 @@ if((' '+e.rel+' ').indexOf(' prepend ')!=-1){$B.path.unshift(href);}else{$B.path
 var filetype=e.hreflang
 if(filetype){if(filetype.slice(0,2)=='x-'){filetype=filetype.slice(2)}
 _importlib.optimize_import_for_path(e.href,filetype)}}}
-if(options.re_module !==undefined){if(options.re_module=='pyre' ||options.re_module=='jsre'){$B.$options.re=options.re}
-console.log("DeprecationWarning: \'re_module\' option of \'brython\' "+
-"function will be deprecated in future versions of Brython.")}
 if($B.$options.args){$B.__ARGV=$B.$options.args}else{$B.__ARGV=_b_.list.$factory([])}
 if(!$B.isWebWorker){_run_scripts(options)}}
 $B.run_script=function(src,name,run_loop){
@@ -8778,18 +8772,8 @@ $B.set_func_names(module,"builtins")
 function parent_package(mod_name){var parts=mod_name.split(".")
 parts.pop()
 return parts.join(".")}
-function $download_module(mod,url,$package){var xhr=new XMLHttpRequest(),fake_qs
-switch($B.$options.cache){case "version":
-fake_qs="?v="+$B.version_info[2]
-break
-case "browser":
-fake_qs=""
-break
-default:
-fake_qs="?v="+(new Date().getTime())}
+function $download_module(mod,url,$package){var xhr=new XMLHttpRequest(),fake_qs="?v="+(new Date().getTime()),res=null,mod_name=mod.__name__
 var timer=_window.setTimeout(function(){xhr.abort()},5000)
-var res=null,mod_name=mod.__name__,res,t0=new Date()
-$B.download_time=$B.download_time ||0
 xhr.open("GET",url+fake_qs,false)
 xhr.send()
 if($B.$CORS){if(xhr.status==200 ||xhr.status==0){res=xhr.responseText}else{res=_b_.FileNotFoundError.$factory("No module named '"+
@@ -8805,7 +8789,6 @@ _window.clearTimeout(timer)
 if(res==null){throw _b_.FileNotFoundError.$factory("No module named '"+
 mod_name+"' (res is null)")}
 if(res.constructor===Error){throw res}
-$B.download_time+=(new Date())-t0
 return res}
 $B.$download_module=$download_module
 function import_js(mod,path){try{var module_contents=$download_module(mod,path,undefined)}catch(err){return null}
@@ -8877,7 +8860,7 @@ content:src,name:mod_name,imports:Object.keys(root.imports).join(",")}}catch(err
 for(var attr in err){console.log(attr+" "+err[attr])}
 if($B.debug > 0){console.log("line info "+__BRYTHON__.line_info)}
 throw err}}
-$B.run_py=run_py
+$B.run_py=run_py 
 function new_spec(fields){
 fields.__class__=module
 return fields}
@@ -9100,10 +9083,10 @@ for(var attr in modobj){if(attr[0]!=="_"){locals[attr]=modobj[attr]}}}else{
 for(var i=0,l=__all__.length;i < l;++i){var name=__all__[i]
 var alias=aliases[name]||name
 try{
-locals[alias]=$B.$getattr(modobj,name);}catch($err1){
+locals[alias]=$B.$getattr(modobj,name)}catch($err1){
 try{var name1=$B.from_alias(name)
-$B.$getattr(__import__,'__call__')(mod_name+'.'+name1,globals,undefined,[],0);
-locals[alias]=$B.$getattr(modobj,name1);}catch($err3){
+$B.$getattr(__import__,'__call__')(mod_name+'.'+name1,globals,undefined,[],0)
+locals[alias]=$B.$getattr(modobj,name1)}catch($err3){
 if(mod_name==="__future__"){
 var frame=$B.last($B.frames_stack),line_info=frame[3].$line_info,line_elts=line_info.split(','),line_num=parseInt(line_elts[0])
 $B.$SyntaxError(frame[2],"future feature "+name+" is not defined",current_frame[3].src,undefined,line_num)}
