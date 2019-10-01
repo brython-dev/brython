@@ -88,27 +88,3 @@ par
 ```xml
 <script type="text/javascript" src="brython_modules.js"></script>
 ```
-
-Modules et packages tiers
-=========================
-_Nouveau en version 3.7.5_
-
-Un "package Brython" peut être inséré dans la page HTML pour donner accès à
-des modules importables. Il s'agit d'un fichier avec l'extension
-__`.brython.js`__ qui contient les modules et packages à distribuer; on
-l'insère par la syntaxe habituelle
-
-```xml
-<script src="http://anyhost/path/nom_package.brython.js"></script>
-```
-
-Les packages Brython peuvent être situés sur n'importe quel serveur, ce qui
-rend leur déploiement et leur utilisation très simples.
-
-Pour générer un "package Brython", il faut utiliser le package CPython
-`brython` et, dans le répertoire où se situent les fichiers à inclure dans
-le package, exécuter:
-
-```console
-python -m brython --make_package <nom_package>
-```
