@@ -78,6 +78,11 @@ Other commands
 > generate a CPython package, suitable for distribution by PyPI, to install a
 > Brython application. See section [Deploying a Brython application](deploy.html)
 
+`-- make_package`
+
+> generates a "Brython package", allowing to distribute a module or a package
+> in a very straightforward way. See section [Packages Brython](brython-packages.html)
+
 Web server
 ----------
 The HTML files can be opened in the browser, but it is recommended to

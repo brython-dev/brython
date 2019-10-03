@@ -80,6 +80,11 @@ Autres commandes
 > génère un package CPython, distribuable par PyPI, pour installer une
 > application Brython. Voir la section [Déployer une application](deploy.html)
 
+`-- make_package`
+
+> génère un "package Brython" permettant de distribuer très simplement un
+> module ou un package. Voir la section [Packages Brython](brython-packages.html)
+
 Serveur web
 -----------
 Les fichiers HTML peuvent être ouverts directement dans le navigateur, mais il
