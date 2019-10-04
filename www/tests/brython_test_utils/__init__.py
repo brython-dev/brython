@@ -52,6 +52,7 @@ def discover_brython_test_modules():
           ("test_re.py", "re"),
           ("test_storage.py", "storage"),
           ("test_struct.py", "struct"),
+          ("test_sys.py", "sys"),
           ("test_types.py", "types"),
           ("test_unicodedata.py", "unicodedata"),
           ("test_unittest.py", "unittest"),

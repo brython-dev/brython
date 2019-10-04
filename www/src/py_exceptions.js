@@ -210,6 +210,7 @@ var frame = $B.make_class("frame",
             $stack: deep_copy(stack)
         }
         if(pos === undefined){pos = 0}
+        //pos = fs.length - pos - 1
         res.$pos = pos
         if(fs.length){
             var _frame = fs[pos],

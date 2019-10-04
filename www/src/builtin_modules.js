@@ -423,7 +423,8 @@
         // Called "Getframe" because "_getframe" wouldn't be imported in
         // sys.py with "from _sys import *"
         Getframe : function(depth){
-            return $B._frame.$factory($B.frames_stack, depth)
+            return $B._frame.$factory($B.frames_stack, 
+                $B.frames_stack.length - depth - 1)
         },
         exc_info: function(){
             for(var i = $B.frames_stack.length - 1; i >=0; i--){
