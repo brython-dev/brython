@@ -7,7 +7,7 @@ Un élément personnalisé est utilisé dans une page HTML sous la forme
 <popup-window>Coucou !</popup-window>
 ```
 
-Le module expose une fonction unique
+Le module expose les fonctions suivantes
 
 `define(`_nom_balise, classe_composant_`)`
 
@@ -17,6 +17,10 @@ Le module expose une fonction unique
 > _classe_composant_ est la classe qui définit le comportement du composant.
 > Sa méthode `__init__` est appelée pour créer le composant; le paramètre
 > `self` référence l'élément DOM pour le composant personnalisé.
+
+`get(`_nom_balise_`)`
+
+> renvoie la classe associée à _nom_balise_, ou `None`.
 
 ### Exemple
 

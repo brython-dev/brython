@@ -41,6 +41,7 @@ function define(tag_name, cls){
     var name = cls.$infos.__name__
     eval(src.replace("WebComponent", name))
     var webcomp = eval(name) // JS class for component
+    webcomp.$cls = cls
 
     for(key in cls){
         // Wrap other methods such as connectedCallback
@@ -73,6 +74,15 @@ function define(tag_name, cls){
     customElements.define(tag_name, webcomp)
 }
 
-return {define: define}
+function get(name){
+    var ce = customElements.get(name)
+    if(ce && ce.$cls){return ce.$cls}
+    return _b_.None
+}
+
+return {
+    define: define,
+    get: get
+}
 
 })(__BRYTHON__)

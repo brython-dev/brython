@@ -1,1 +1,1 @@
-from _webcomponent import define
+from _webcomponent import *

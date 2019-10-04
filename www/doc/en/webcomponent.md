@@ -8,7 +8,7 @@ A custom element can be used in the HTML page as
 <popup-window>Hello !</popup-window>
 ```
 
-The module exposes a single function
+The module exposes the following functions
 
 `define(`_tag_name, component_class_`)`
 
@@ -20,6 +20,9 @@ The module exposes a single function
 > `__init__` method is called to create the component; the parameter `self`
 > references the DOM element for the custom component.
 
+`get(`_tag_name_`)`
+
+> returns the class associated to _tag_name_, or `None`.
 
 ### Example
 
