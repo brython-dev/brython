@@ -91,8 +91,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.6"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-10-04 16:50:59.575550"
-__BRYTHON__.timestamp=1570200659575
+__BRYTHON__.compiled_date="2019-10-05 08:31:23.565232"
+__BRYTHON__.timestamp=1570257083565
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -1208,7 +1208,6 @@ this.parent.node.module=this.module
 this.binding={}
 if(this.scope.globals !==undefined &&
 this.scope.globals.has(name)){
-console.log("bind def name in globals",this.root.id)
 $bind(name,this.root,this)}else{$bind(name,this.scope,this)}
 id_ctx.bound=true
 if(scope.is_function){if(scope.C.tree[0].locals.indexOf(name)==-1){scope.C.tree[0].locals.push(name)}}}
@@ -3812,9 +3811,8 @@ if(C.parent.type=="sub" ||
 (C.parent.type=="list_or_tuple" &&
 C.parent.parent.type=="sub")){return new $AbstractExprCtx(new $SliceCtx(C.parent),false)}else if(C.parent.type=="slice"){return $transition(C.parent,token,value)}else if(C.parent.type=="node"){
 if(C.tree.length==1){var child=C.tree[0]
-if(["id","sub","attribute"].indexOf(child.type)>-1 ||
-(child.real=="tuple" && child.expect=="," &&
-child.tree.length==1)){return new $AbstractExprCtx(new $AnnotationCtx(C),false)}}
+if(["id","sub","attribute"].indexOf(child.type)>-1){return new $AbstractExprCtx(new $AnnotationCtx(C),false)}else if(child.real=="tuple" && child.expect=="," &&
+child.tree.length==1){return new $AbstractExprCtx(new $AnnotationCtx(child.tree[0]),false)}}
 $_SyntaxError(C,"invalid target for annotation")}
 break
 case '=':
@@ -4091,7 +4089,13 @@ new $SubCtx(C.parent),false)}
 if(token=='('){return new $CallCtx(C.parent)}
 return $transition(C.parent,token,value)}else{if(C.expect==','){switch(C.real){case 'tuple':
 case 'gen_expr':
-if(token==')'){C.closed=true
+if(token==')'){if(C.parent.type=="expr" &&
+C.parent.parent.type=="node" &&
+C.tree.length==1){
+var node=C.parent.parent,ix=node.tree.indexOf(C.parent),expr=C.tree[0]
+expr.parent=node
+node.tree.splice(ix,1,expr)}
+C.closed=true
 if(C.real=='gen_expr'){C.intervals.push($pos)}
 if(C.parent.type=="packed"){return C.parent.parent}
 return C.parent}
@@ -4838,12 +4842,15 @@ $pos=pos
 $_SyntaxError(C,'unknown token ['+car+']')}}
 if(br_stack.length !=0){var br_err=br_pos[0]
 $pos=br_err[1]
-$_SyntaxError(br_err[0],["Unbalanced bracket "+br_stack.charAt(br_stack.length-1)])}
+var lines=src.split("\n"),id=root.id,fname=id.startsWith("$")? '<string>' :id
+$_SyntaxError(br_err[0],["unexpected EOF while parsing ("+fname+", line "+
+(lines.length-1)+")"])}
 if(C !==null && C.type=="async"){
 console.log("error with async",pos,src,src.substr(pos))
 $pos=pos-7
 throw $_SyntaxError(C,"car "+car+"after async",pos)}
-if(C !==null && C.tree[0]&& $indented.indexOf(C.tree[0].type)>-1){$pos=pos-1
+if(C !==null && C.tree[0]&&
+$indented.indexOf(C.tree[0].type)>-1){$pos=pos-1
 $_SyntaxError(C,'expected an indented block',pos)}}
 var $create_root_node=$B.parser.$create_root_node=function(src,module,locals_id,parent_block,line_num){var root=new $Node('module')
 root.module=module

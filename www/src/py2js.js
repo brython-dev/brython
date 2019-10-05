@@ -2382,7 +2382,6 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         if(this.scope.globals !== undefined &&
                 this.scope.globals.has(name)){
             // function name was declared global
-            console.log("bind def name in globals", this.root.id)
             $bind(name, this.root, this)
         }else{
             $bind(name, this.scope, this)
@@ -7771,10 +7770,11 @@ var $transition = $B.parser.$transition = function(context, token, value){
                     // annotation
                     if(context.tree.length == 1){
                         var child = context.tree[0]
-                        if(["id", "sub", "attribute"].indexOf(child.type) > -1 ||
-                                (child.real == "tuple" && child.expect == "," &&
-                                 child.tree.length == 1)){
+                        if(["id", "sub", "attribute"].indexOf(child.type) > -1){
                             return new $AbstractExprCtx(new $AnnotationCtx(context), false)
+                        }else if(child.real == "tuple" && child.expect == "," &&
+                                 child.tree.length == 1){
+                            return new $AbstractExprCtx(new $AnnotationCtx(child.tree[0]), false)
                         }
                     }
                     $_SyntaxError(context, "invalid target for annotation")
@@ -8258,6 +8258,20 @@ var $transition = $B.parser.$transition = function(context, token, value){
                         case 'tuple':
                         case 'gen_expr':
                             if(token == ')'){
+                                if(context.parent.type == "expr" &&
+                                        context.parent.parent.type == "node" &&
+                                        context.tree.length == 1){
+                                    // Not a tuple, just an expression inside
+                                    // parenthesis at node level : replace by
+                                    // the expression.
+                                    // Required for code like
+                                    //     (pars): bool = True
+                                    var node = context.parent.parent,
+                                        ix = node.tree.indexOf(context.parent),
+                                        expr = context.tree[0]
+                                    expr.parent = node
+                                    node.tree.splice(ix, 1, expr)
+                                }
                                 context.closed = true
                                 if(context.real == 'gen_expr'){
                                     context.intervals.push($pos)
@@ -9540,8 +9554,12 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
     if(br_stack.length != 0){
         var br_err = br_pos[0]
         $pos = br_err[1]
+        var lines = src.split("\n"),
+            id = root.id,
+            fname = id.startsWith("$") ? '<string>' : id
         $_SyntaxError(br_err[0],
-            ["Unbalanced bracket " + br_stack.charAt(br_stack.length - 1)])
+            ["unexpected EOF while parsing (" + fname + ", line " +
+                (lines.length - 1) + ")"])
     }
     if(context !== null && context.type == "async"){
         // issue 941
@@ -9549,7 +9567,8 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
         $pos = pos - 7
         throw $_SyntaxError(context, "car " + car + "after async", pos)
     }
-    if(context !== null && context.tree[0] && $indented.indexOf(context.tree[0].type) > -1){
+    if(context !== null && context.tree[0] &&
+            $indented.indexOf(context.tree[0].type) > -1){
         $pos = pos - 1
         $_SyntaxError(context, 'expected an indented block', pos)
     }
