@@ -701,9 +701,11 @@ var $AnnotationCtx = $B.parser.$AnnotationCtx = function(context){
         }
         scope.annotations = scope.annotations || new Set()
         scope.annotations.add(name)
-        // name is local in the scope
-        scope.binding = scope.binding || {}
-        scope.binding[name] = true
+        // If name was not inside a parenthesis, it is local in the scope
+        if(! context.$in_parens){
+            scope.binding = scope.binding || {}
+            scope.binding[name] = true
+        }
     }
     this.toString = function(){return '(annotation) ' + this.tree}
 
@@ -4947,7 +4949,12 @@ var $NodeCtx = $B.parser.$NodeCtx = function(node){
                 if(is_not_def){
                     if(this.tree[0].type == "expr" &&
                             this.tree[0].tree[0].type == "id"){
-                        return "$locals.__annotations__.$string_dict['" +
+                        var js = ""
+                        if(! this.scope.binding.__annotations__){
+                            js += "$locals.__annotations__ = _b_.dict.factory();"
+                            this.scope.binding.__annotations__ = true
+                        }
+                        return js + "$locals.__annotations__.$string_dict['" +
                             this.tree[0].tree[0].value + "'] = " +
                             this.tree[0].annotation.to_js() + ";"
                     }else if(this.tree[0].type == "def"){
@@ -4968,7 +4975,10 @@ var $NodeCtx = $B.parser.$NodeCtx = function(node){
                 var left = this.tree[0].tree[0],
                     right = this.tree[0].tree[1]
                 // Evaluate value first
-                this.js = "var $value = " + right.to_js() + ";"
+                if(! this.scope.binding.__annotations__){
+                    this.js += "$locals.__annotations__ = _b_.dict.$factory();"
+                }
+                this.js += "var $value = " + right.to_js() + ";"
                 this.tree[0].tree.splice(1, 1)
                 new $RawJSCtx(this.tree[0], "$value")
                 if(left.tree[0] && left.tree[0].type == "id" && is_not_def){
@@ -8270,6 +8280,7 @@ var $transition = $B.parser.$transition = function(context, token, value){
                                         ix = node.tree.indexOf(context.parent),
                                         expr = context.tree[0]
                                     expr.parent = node
+                                    expr.$in_parens = true // keep information
                                     node.tree.splice(ix, 1, expr)
                                 }
                                 context.closed = true
@@ -9584,8 +9595,7 @@ var $create_root_node = $B.parser.$create_root_node = function(src, module,
         __doc__: true,
         __name__: true,
         __file__: true,
-        __package__: true,
-        __annotations__: true
+        __package__: true
     }
 
     root.parent_block = parent_block
@@ -9671,10 +9681,6 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
     // package, if available
     root.insert(offset++,
         $NodeJS(local_ns + '["__package__"] = "' + __package__ +'"'))
-
-    // annotations
-    root.insert(offset++,
-        $NodeJS('$locals.__annotations__ = _b_.dict.$factory()'))
 
     // Code to create the execution frame and store it on the frames stack
     var enter_frame_pos = offset,
