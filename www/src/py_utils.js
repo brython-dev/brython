@@ -444,12 +444,17 @@ $B.$JS2Py = function(src){
         return _b_.float.$factory(src)
     }
     if(src === null || src === undefined){return _b_.None}
+    if(Array.isArray(src) &&
+            Object.getPrototypeOf(src) === Array.prototype){
+        var res = []
+        for(var i = 0, len = src.length; i< len; i++){
+            res.push($B.$JS2Py(src[i]))
+        }
+        return res
+    }
     var klass = $B.get_class(src)
     if(klass !== undefined){
-        if(klass === _b_.list){
-            if(src.__class__){return src}
-            return $B.JSArray.$factory(src) // defined in py_list.js
-        }else if(klass === $B.JSObject){
+        if(klass === $B.JSObject){
             src = src.js
         }else{
             return src
@@ -459,14 +464,6 @@ $B.$JS2Py = function(src){
         if($B.$isNode(src)){return $B.DOMNode.$factory(src)}
         if($B.$isEvent(src)){return $B.$DOMEvent(src)}
         if($B.$isNodeList(src)){return $B.DOMNode.$factory(src)}
-        if(Array.isArray(src) &&
-                Object.getPrototypeOf(src) === Array.prototype){
-            var res = []
-            for(var i = 0, len = src.length; i< len; i++){
-                res.push($B.$JS2Py(src[i]))
-            }
-            return res
-        }
     }
     return $B.JSObject.$factory(src)
 }

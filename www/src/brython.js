@@ -91,8 +91,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.6"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-10-05 08:31:23.565232"
-__BRYTHON__.timestamp=1570257083565
+__BRYTHON__.compiled_date="2019-10-07 11:14:27.141140"
+__BRYTHON__.timestamp=1570439667141
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -382,8 +382,8 @@ if(scope.globals && scope.globals.has(name)>-1){$_SyntaxError(C,["annotated name
 "' can't be global"])}
 scope.annotations=scope.annotations ||new Set()
 scope.annotations.add(name)
-scope.binding=scope.binding ||{}
-scope.binding[name]=true}
+if(! C.$in_parens){scope.binding=scope.binding ||{}
+scope.binding[name]=true}}
 this.toString=function(){return '(annotation) '+this.tree}
 this.to_js=function(){return $to_js(this.tree)}}
 var $AssertCtx=$B.parser.$AssertCtx=function(C){
@@ -2352,7 +2352,10 @@ this.js=""
 if(this.tree[0]){var is_not_def=this.scope.ntype !="def"
 if(this.tree[0].annotation){
 if(is_not_def){if(this.tree[0].type=="expr" &&
-this.tree[0].tree[0].type=="id"){return "$locals.__annotations__.$string_dict['"+
+this.tree[0].tree[0].type=="id"){var js=""
+if(! this.scope.binding.__annotations__){js+="$locals.__annotations__ = _b_.dict.factory();"
+this.scope.binding.__annotations__=true}
+return js+"$locals.__annotations__.$string_dict['"+
 this.tree[0].tree[0].value+"'] = "+
 this.tree[0].annotation.to_js()+";"}else if(this.tree[0].type=="def"){
 this.js=this.tree[0].annotation.to_js()+";"}else{
@@ -2361,7 +2364,9 @@ this.tree=[]}}else if(this.tree[0].type !="def"){
 this.tree=[]}}else if(this.tree[0].type=="assign" &&
 this.tree[0].tree[0].annotation){
 var left=this.tree[0].tree[0],right=this.tree[0].tree[1]
-this.js="var $value = "+right.to_js()+";"
+console.log("annot assign",this.scope.binding)
+if(! this.scope.binding.__annotations__){this.js+="$locals.__annotations__ = _b_.dict.$factory();"}
+this.js+="var $value = "+right.to_js()+";"
 this.tree[0].tree.splice(1,1)
 new $RawJSCtx(this.tree[0],"$value")
 if(left.tree[0]&& left.tree[0].type=="id" && is_not_def){this.js+="$locals.__annotations__.$string_dict['"+
@@ -4094,6 +4099,7 @@ C.parent.parent.type=="node" &&
 C.tree.length==1){
 var node=C.parent.parent,ix=node.tree.indexOf(C.parent),expr=C.tree[0]
 expr.parent=node
+expr.$in_parens=true 
 node.tree.splice(ix,1,expr)}
 C.closed=true
 if(C.real=='gen_expr'){C.intervals.push($pos)}
@@ -4855,7 +4861,7 @@ $_SyntaxError(C,'expected an indented block',pos)}}
 var $create_root_node=$B.parser.$create_root_node=function(src,module,locals_id,parent_block,line_num){var root=new $Node('module')
 root.module=module
 root.id=locals_id
-root.binding={__doc__:true,__name__:true,__file__:true,__package__:true,__annotations__:true}
+root.binding={__doc__:true,__name__:true,__file__:true,__package__:true}
 root.parent_block=parent_block
 root.line_num=line_num
 root.indent=-1
@@ -4892,7 +4898,6 @@ var offset=0
 root.insert(0,$NodeJS(js.join('')))
 offset++
 root.insert(offset++,$NodeJS(local_ns+'["__package__"] = "'+__package__+'"'))
-root.insert(offset++,$NodeJS('$locals.__annotations__ = _b_.dict.$factory()'))
 var enter_frame_pos=offset,js='var $top_frame = ["'+locals_id.replace(/\./g,'_')+'", '+
 local_ns+', "'+module.replace(/\./g,'_')+'", '+
 global_ns+']\n$B.frames_stack.push($top_frame)\n'+
@@ -5875,16 +5880,15 @@ throw _b_.NameError.$factory("free variable '"+$B.from_alias(name)+
 $B.$JS2Py=function(src){if(typeof src==="number"){if(src % 1===0){return src}
 return _b_.float.$factory(src)}
 if(src===null ||src===undefined){return _b_.None}
-var klass=$B.get_class(src)
-if(klass !==undefined){if(klass===_b_.list){if(src.__class__){return src}
-return $B.JSArray.$factory(src)}else if(klass===$B.JSObject){src=src.js}else{return src}}
-if(typeof src=="object"){if($B.$isNode(src)){return $B.DOMNode.$factory(src)}
-if($B.$isEvent(src)){return $B.$DOMEvent(src)}
-if($B.$isNodeList(src)){return $B.DOMNode.$factory(src)}
 if(Array.isArray(src)&&
 Object.getPrototypeOf(src)===Array.prototype){var res=[]
 for(var i=0,len=src.length;i< len;i++){res.push($B.$JS2Py(src[i]))}
-return res}}
+return res}
+var klass=$B.get_class(src)
+if(klass !==undefined){if(klass===$B.JSObject){src=src.js}else{return src}}
+if(typeof src=="object"){if($B.$isNode(src)){return $B.DOMNode.$factory(src)}
+if($B.$isEvent(src)){return $B.$DOMEvent(src)}
+if($B.$isNodeList(src)){return $B.DOMNode.$factory(src)}}
 return $B.JSObject.$factory(src)}
 $B.list_key=function(obj,key){key=$B.$GetInt(key)
 if(key < 0){key+=obj.length}
