@@ -294,7 +294,6 @@ type.__format__ = function(klass, fmt_spec){
 }
 
 type.__getattribute__ = function(klass, attr){
-
     switch(attr) {
         case "__annotations__":
             var mro = [klass].concat(klass.__mro__),
@@ -346,9 +345,9 @@ type.__getattribute__ = function(klass, attr){
                 function(key){delete klass[key]})
     }
     var res = klass[attr]
-    var $test = false // attr=="__new__" && klass.$infos.__name__ == "N"
+    var $test = false // attr=="__str__" // && klass.$infos.__name__ == "N"
     if($test){
-        console.log("attr", attr, "of", klass, res)
+        console.log("attr", attr, "of", klass, res, res + "")
     }
     if(res === undefined && klass.__slots__ &&
             klass.__slots__.indexOf(attr) > -1){
@@ -473,6 +472,10 @@ type.__getattribute__ = function(klass, attr){
         }
 
     }
+}
+
+type.__hash__ = function(cls){
+    return _b_.hash(cls)
 }
 
 type.__init__ = function(){

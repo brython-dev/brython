@@ -324,7 +324,9 @@ function $add(self, item){
         }
         return $N
     }else{
-        $B.$getattr(item, "__hash__")
+        // Compute hash of item : raises an exception if item is not hashable,
+        // otherwise set its attribute __hashvalue__
+        _b_.hash(item)
     }
     var cfunc = function(other){return $B.rich_comp("__eq__", item, other)}
     for(var i = 0, len = self.$items.length; i < len; i++){
@@ -359,7 +361,7 @@ set.copy = function(){
     })
     $.self.$numbers.forEach(function(item){
         res.$numbers.push(item)
-    })    
+    })
     return res
 }
 

@@ -91,8 +91,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.6"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-10-10 17:08:52.681865"
-__BRYTHON__.timestamp=1570720132680
+__BRYTHON__.compiled_date="2019-10-10 18:01:48.164470"
+__BRYTHON__.timestamp=1570723308163
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5523,7 +5523,7 @@ if(klass["__delattr__"]!==undefined){return klass["__delattr__"]}
 return method_wrapper.$factory(attr,klass,function(key){delete klass[key]})}
 var res=klass[attr]
 var $test=false 
-if($test){console.log("attr",attr,"of",klass,res)}
+if($test){console.log("attr",attr,"of",klass,res,res+"")}
 if(res===undefined && klass.__slots__ &&
 klass.__slots__.indexOf(attr)>-1){return member_descriptor.$factory(attr,klass)}
 if(klass.__class__ &&
@@ -5567,6 +5567,7 @@ if(attr=="__new__"){res.$type="staticmethod"}
 if(attr=="__class_getitem__" && res.__class__ !==$B.method){res=_b_.classmethod.$factory(res)}
 if(res.__class__===$B.method){return res.__get__(null,klass)}else{if($test){console.log("return res",res)}
 return res}}else{return res}}}
+type.__hash__=function(cls){return _b_.hash(cls)}
 type.__init__=function(){}
 type.__init_subclass__=function(cls,kwargs){
 var $=$B.args("__init_subclass__",1,{cls:null},["cls"],arguments,{},"args","kwargs")
@@ -8423,7 +8424,8 @@ self.$numbers.indexOf(item)>-1){}else{self.$items.push(item)
 var value=item.valueOf()
 if(typeof value=="number"){self.$numbers.push(value)}}}else{
 if(item !==self.$items[ix]){self.$items.push(item)}}
-return $N}else{$B.$getattr(item,"__hash__")}
+return $N}else{
+_b_.hash(item)}
 var cfunc=function(other){return $B.rich_comp("__eq__",item,other)}
 for(var i=0,len=self.$items.length;i < len;i++){if(cfunc(self.$items[i])){return $N}}
 self.$items.push(item)

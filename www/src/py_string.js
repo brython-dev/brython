@@ -218,7 +218,7 @@ function fnv(p){
 }
 
 str.__hash__ = function(self) {
-  return fnv(self)
+    return fnv(self)
 }
 
 str.__init__ = function(self, arg){
