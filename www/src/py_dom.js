@@ -840,6 +840,12 @@ DOMNode.__getitem__ = function(self, key){
     }
 }
 
+DOMNode.__hash__ = function(self){
+    return self.__hashvalue__ === undefined ?
+        (self.__hashvalue__ = $B.$py_next_hash--) :
+        self.__hashvalue__
+}
+
 DOMNode.__iter__ = function(self){
     // iteration on a Node
     if(self.elt.length !== undefined && typeof self.elt.item == "function"){

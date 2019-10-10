@@ -91,8 +91,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.6"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-10-10 18:01:48.164470"
-__BRYTHON__.timestamp=1570723308163
+__BRYTHON__.compiled_date="2019-10-10 18:09:37.135197"
+__BRYTHON__.timestamp=1570723777135
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -12523,6 +12523,9 @@ self.elt.attributes &&
 typeof self.elt.attributes.getNamedItem=="function"){var attr=self.elt.attributes.getNamedItem(key)
 if(!!attr){return attr.value}
 throw _b_.KeyError.$factory(key)}}}
+DOMNode.__hash__=function(self){return self.__hashvalue__===undefined ?
+(self.__hashvalue__=$B.$py_next_hash--):
+self.__hashvalue__}
 DOMNode.__iter__=function(self){
 if(self.elt.length !==undefined && typeof self.elt.item=="function"){var items=[]
 for(var i=0,len=self.elt.length;i < len;i++){items.push(DOMNode.$factory(self.elt.item(i)))}}else if(self.elt.childNodes !==undefined){var items=[]
