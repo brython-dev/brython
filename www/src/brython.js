@@ -91,8 +91,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.6"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-10-10 08:28:16.602024"
-__BRYTHON__.timestamp=1570688896602
+__BRYTHON__.compiled_date="2019-10-10 16:11:14.679495"
+__BRYTHON__.timestamp=1570716674679
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -1635,7 +1635,7 @@ C.tree[C.tree.length]=this
 this.toString=function(){return '(expr_not)'}}
 var $FloatCtx=$B.parser.$FloatCtx=function(C,value){
 this.type='float'
-this.value=value.replace(/_/g,'')
+this.value=value
 this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this
@@ -2122,7 +2122,7 @@ this.result='$B.$global_search("'+val+'", '+search_ids+')'
 return this.result}}}
 var $ImaginaryCtx=$B.parser.$ImaginaryCtx=function(C,value){
 this.type='imaginary'
-this.value=value.replace(/_/g,'')
+this.value=value
 this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this
@@ -4693,12 +4693,10 @@ case '\t':
 pos++
 break
 case '.':
-if(pos < src.length-1 &&/^[\d]+$/.test(src.charAt(pos+1))){
+if(pos < src.length-1 &&/^\d$/.test(src.charAt(pos+1))){
 var j=pos+1
 while(j < src.length &&
-src.charAt(j).search(/\d|e|E|_/)>-1){j++}
-if(src.charAt(j-1)=="_"){
-$_SyntaxError(C,"trailing whitespace")}
+src.charAt(j).search(/\d|e|E/)>-1){j++}
 if(src.charAt(j)=="j"){C=$transition(C,'imaginary','0'+src.substr(pos,j-pos))
 j++}else{C=$transition(C,'float','0'+src.substr(pos,j-pos))}
 pos=j
@@ -6417,6 +6415,7 @@ $B.from_alias=function(attr){if(attr.substr(0,2)=='$$' && $B.aliased_names[attr.
 return attr}
 $B.to_alias=function(attr){if($B.aliased_names[attr]){return '$$'+attr}
 return attr}
+$B.evalt=0
 function $$eval(src,_globals,_locals){var $=$B.args("eval",4,{src:null,globals:null,locals:null,is_exec:null},["src","globals","locals","is_exec"],arguments,{globals:_b_.None,locals:_b_.None,is_exec:false},null,null),src=$.src,_globals=$.globals,_locals=$.locals,is_exec=$.is_exec
 var current_frame=$B.frames_stack[$B.frames_stack.length-1]
 if(current_frame !==undefined){var current_locals_id=current_frame[0].replace(/\./,'_'),current_globals_id=current_frame[2].replace(/\./,'_')}
@@ -6449,9 +6448,10 @@ for(var attr in _locals.$string_dict){parent_scope.binding[attr]=true}}}
 $B.$py_module_path[globals_id]=$B.$py_module_path[current_globals_id]
 eval('var $locals_'+globals_id+' = {}\nvar $locals_'+
 locals_id+' = {}')
-if(_globals===_b_.None){var gobj=current_frame[3],ex='var $locals_'+globals_id+' = gobj;'
+if(_globals===_b_.None){var gobj=current_frame[3],ex='var $locals_'+globals_id+' = gobj;',obj={}
 eval(ex)
-for(var attr in gobj){if((! attr.startsWith("$"))||attr.startsWith('$$')){eval("$locals_"+globals_id+"[attr] = gobj[attr]")}}}else{if(_globals.$jsobj){var items=_globals.$jsobj}
+for(var attr in gobj){if((! attr.startsWith("$"))||attr.startsWith('$$')){obj[attr]=gobj[attr]}}
+eval("$locals_"+globals_id+" = obj")}else{if(_globals.$jsobj){var items=_globals.$jsobj}
 else{var items=_globals.$string_dict}
 eval("$locals_"+globals_id+" = _globals.$string_dict")
 for(var item in items){var item1=$B.to_alias(item)
@@ -6459,11 +6459,12 @@ try{eval('$locals_'+globals_id+'["'+item1+
 '"] = items[item]')}catch(err){console.log(err)
 console.log('error setting',item)
 break}}}
-if(_locals===_b_.None){if(_globals !==_b_.None){eval('var $locals_'+locals_id+' = $locals_'+globals_id)}else{var lobj=current_frame[1],ex=''
+if(_locals===_b_.None){if(_globals !==_b_.None){eval('var $locals_'+locals_id+' = $locals_'+globals_id)}else{var t0=new Date().getTime()
+var lobj=current_frame[1],ex='',obj={}
 for(var attr in current_frame[1]){if(attr.startsWith("$")&& !attr.startsWith("$$")){continue}
-ex+='$locals_'+locals_id+'["'+attr+
-'"] = current_frame[1]["'+attr+'"];'
-eval(ex)}}}else{if(_locals.$jsobj){var items=_locals.$jsobj}
+obj[attr]=lobj[attr]}
+eval('$locals_'+locals_id+" = obj")
+$B.evalt+=(new Date().getTime())-t0}}else{if(_locals.$jsobj){var items=_locals.$jsobj}
 else{var items=_locals.$string_dict}
 for(var item in items){var item1=$B.to_alias(item)
 try{eval('$locals_'+locals_id+'["'+item+'"] = items.'+item)}catch(err){console.log(err)
@@ -11719,7 +11720,7 @@ catch(err){console.log("no __str__ for",arg)
 console.log("err ",err)
 if($B.debug > 1){console.log(err)}
 console.log("Warning - no method __str__ or __repr__, "+
-"default to toString",arg,"get",arg.__get__+"")
+"default to toString",arg)
 throw err}
 return $B.$call(f)()}
 str.__new__=function(cls){if(cls===undefined){throw _b_.TypeError.$factory("str.__new__(): not enough arguments")}
@@ -13122,10 +13123,7 @@ throw err}}
 generator.send=function(self,value){self.sent_value=value
 return generator.__next__(self)}
 generator.$$throw=function(self,type,value,traceback){var exc=type
-if(value !==undefined){console.log("gen throw",exc,value)
-console.log("frame",$B.last($B.frames_stack))
-exc=$B.$call(exc)(value)
-console.log("nouveau exc",exc,exc.args,"filename",exc.filename)}
+if(value !==undefined){exc=$B.$call(exc)(value)}
 if(traceback !==undefined){exc.$traceback=traceback}
 self.sent_value={__class__:$B.$GeneratorSendError,err:exc}
 return generator.__next__(self)}

@@ -438,7 +438,9 @@ $B.to_alias = function(attr){
 }
 
 //eval() (built in function)
+$B.evalt = 0
 function $$eval(src, _globals, _locals){
+
     var $ = $B.args("eval", 4,
             {src: null, globals: null, locals: null, is_exec: null},
             ["src", "globals", "locals", "is_exec"], arguments,
@@ -548,13 +550,15 @@ function $$eval(src, _globals, _locals){
     // Initialise block globals
     if(_globals === _b_.None){
         var gobj = current_frame[3],
-            ex = 'var $locals_' + globals_id + ' = gobj;'
+            ex = 'var $locals_' + globals_id + ' = gobj;',
+            obj = {}
         eval(ex) // needed for generators
         for(var attr in gobj){
             if((! attr.startsWith("$")) || attr.startsWith('$$')){
-                eval("$locals_" + globals_id +"[attr] = gobj[attr]")
+                obj[attr] = gobj[attr]
             }
         }
+        eval("$locals_" + globals_id +" = obj")
     }else{
         if(_globals.$jsobj){var items = _globals.$jsobj}
         else{var items = _globals.$string_dict}
@@ -578,14 +582,18 @@ function $$eval(src, _globals, _locals){
         if(_globals !== _b_.None){
             eval('var $locals_' + locals_id + ' = $locals_' + globals_id)
         }else{
+    var t0 = new Date().getTime()
+
             var lobj = current_frame[1],
-                ex = ''
+                ex = '',
+                obj = {}
             for(var attr in current_frame[1]){
                 if(attr.startsWith("$") && !attr.startsWith("$$")){continue}
-                ex += '$locals_' + locals_id + '["' + attr +
-                    '"] = current_frame[1]["' + attr + '"];'
-                eval(ex)
+                obj[attr] = lobj[attr]
             }
+            eval('$locals_' + locals_id + " = obj")
+$B.evalt += (new Date().getTime()) - t0
+
         }
     }else{
         if(_locals.$jsobj){var items = _locals.$jsobj}
@@ -613,7 +621,6 @@ function $$eval(src, _globals, _locals){
 
     var root = $B.py2js(src, globals_id, locals_id, parent_scope),
         js, gns, lns
-
     if(_globals !== _b_.None && _locals == _b_.None){
         for(var attr in _globals.$string_dict){
             root.binding[attr] = true
