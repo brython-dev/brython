@@ -589,4 +589,29 @@ $B.$TypeError = function(msg){
     throw _b_.TypeError.$factory(msg)
 }
 
+// SyntaxError instances have special attributes
+var se = _b_.SyntaxError.$factory
+_b_.SyntaxError.$factory = function(){
+    var arg = arguments[0]
+    if(arg.__class__ === _b_.SyntaxError){
+        return arg
+    }
+    var exc = se.apply(null, arguments),
+        frame = $B.last($B.frames_stack)
+    if(frame){
+        line_info = frame[1].$line_info
+        exc.filename = frame[3].__file__
+        exc.lineno = parseInt(line_info.split(",")[0])
+        var src = $B.file_cache[frame[3].__file__]
+        if(src){
+            lines = src.split("\n")
+            exc.text = lines[exc.lineno - 1]
+        }
+        exc.offset = arg.offset
+    }
+    return exc
+}
+
+_b_.SyntaxError
+
 })(__BRYTHON__)

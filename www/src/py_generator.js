@@ -721,7 +721,7 @@ generator.__next__ = function(self){
 
     // Brython replaces "yield x" by "return [x, next_rank]"
     // next_rank is the rank of the function to call after this yield
-    
+
     if(res === undefined){throw _b_.StopIteration.$factory(_b_.None)}
     else if(res[0].__class__ === $GeneratorReturn){
         // The function may have ordinary "return" lines, in this case

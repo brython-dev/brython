@@ -513,6 +513,12 @@ type.__name__ = {
     },
     __set__: function(self, value){
         self.$infos.__name__ = value
+    },
+    __str__: function(self){
+        return "type"
+    },
+    __eq__: function(self, other){
+        return self.$infos.__name__ == other
     }
 }
 
@@ -599,6 +605,12 @@ type.__qualname__ = {
     },
     __set__: function(self, value){
         self.$infos.__qualname__ = value
+    },
+    __str__: function(self){
+        console.log("type.__qualname__")
+    },
+    __eq__: function(self, other){
+        return self.$infos.__qualname__ == other
     }
 }
 

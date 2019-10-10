@@ -691,6 +691,11 @@ var $AnnotationCtx = $B.parser.$AnnotationCtx = function(context){
     context.annotation = this
 
     var scope = $get_scope(context)
+    if(scope.binding.__annotations__ === undefined){
+        // In an imported module, __annotations__ is not defined by default
+        scope.binding.__annotations__ = true
+        context.create_annotations = true
+    }
 
     if(scope.ntype == "def" && context.tree && context.tree.length > 0 &&
             context.tree[0].type == "id"){
@@ -4171,7 +4176,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         // get global scope
         var gs = innermost
 
-        var $test = val == "gg"
+        var $test = false // val == "__annotations__"
 
         if($test){
             console.log("this", this)
@@ -4948,11 +4953,11 @@ var $NodeCtx = $B.parser.$NodeCtx = function(node){
                 // Node is annotation
                 if(is_not_def){
                     if(this.tree[0].type == "expr" &&
+                            ! this.tree[0].$in_parens &&
                             this.tree[0].tree[0].type == "id"){
                         var js = ""
-                        if(! this.scope.binding.__annotations__){
-                            js += "$locals.__annotations__ = _b_.dict.factory();"
-                            this.scope.binding.__annotations__ = true
+                        if(this.create_annotations){
+                            js += "$locals.__annotations__ = _b_.dict.$factory();"
                         }
                         return js + "$locals.__annotations__.$string_dict['" +
                             this.tree[0].tree[0].value + "'] = " +
@@ -4970,12 +4975,13 @@ var $NodeCtx = $B.parser.$NodeCtx = function(node){
                     this.tree = []
                 }
             }else if(this.tree[0].type == "assign" &&
+                    ! this.tree[0].tree[0].$in_parens &&
                     this.tree[0].tree[0].annotation){
                 // Left side of assignment is annoted
                 var left = this.tree[0].tree[0],
                     right = this.tree[0].tree[1]
                 // Evaluate value first
-                if(! this.scope.binding.__annotations__){
+                if(this.create_annotations){
                     this.js += "$locals.__annotations__ = _b_.dict.$factory();"
                 }
                 this.js += "var $value = " + right.to_js() + ";"
@@ -9605,6 +9611,9 @@ var $create_root_node = $B.parser.$create_root_node = function(src, module,
     root.imports = {}
     if(typeof src == "object"){
         root.is_comp = src.is_comp
+        if(src.has_annotations){
+            root.binding.__annotations__ = true
+        }
         src = src.src
     }
     root.src = src
@@ -9631,10 +9640,12 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
     parent_scope = parent_scope || $B.builtins_scope
 
     var t0 = new Date().getTime(),
-        is_comp = false
+        is_comp = false,
+        has_annotations = true // determine if __annotations__ is created
 
     if(typeof src == 'object'){
-        is_comp = src.is_comp
+        var is_comp = src.is_comp,
+            has_annotations = src.has_annotations
         src = src.src
     }
 
@@ -9658,7 +9669,8 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
 
     var global_ns = '$locals_' + module.replace(/\./g,'_')
 
-    var root = $create_root_node({src: src, is_comp: is_comp},
+    var root = $create_root_node(
+        {src: src, is_comp: is_comp, has_annotations: has_annotations},
         module, locals_id, parent_scope, line_num)
 
     $tokenize(root, src)
@@ -9681,6 +9693,12 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
     // package, if available
     root.insert(offset++,
         $NodeJS(local_ns + '["__package__"] = "' + __package__ +'"'))
+
+    // annotations
+    if(root.binding.__annotations__){
+        root.insert(offset++,
+            $NodeJS('$locals.__annotations__ = _b_.dict.$factory()'))
+    }
 
     // Code to create the execution frame and store it on the frames stack
     var enter_frame_pos = offset,

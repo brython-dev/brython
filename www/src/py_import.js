@@ -224,7 +224,12 @@ function run_py(module_contents, path, module, compiled) {
             $NodeJSCtx = $B.$NodeJSCtx
         $B.$py_module_path[module.__name__] = path
 
-        root = $B.py2js(module_contents, module,
+        var src = {
+            src: module_contents,
+            has_annotations: false
+        }
+
+        root = $B.py2js(src, module,
             module.__name__, $B.builtins_scope)
 
         if(module.__package__ !== undefined){

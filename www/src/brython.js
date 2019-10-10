@@ -91,8 +91,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.6"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-10-07 11:14:27.141140"
-__BRYTHON__.timestamp=1570439667141
+__BRYTHON__.compiled_date="2019-10-10 08:28:16.602024"
+__BRYTHON__.timestamp=1570688896602
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -376,6 +376,9 @@ this.parent=C
 this.tree=[]
 C.annotation=this
 var scope=$get_scope(C)
+if(scope.binding.__annotations__===undefined){
+scope.binding.__annotations__=true
+C.create_annotations=true}
 if(scope.ntype=="def" && C.tree && C.tree.length > 0 &&
 C.tree[0].type=="id"){var name=C.tree[0].value
 if(scope.globals && scope.globals.has(name)>-1){$_SyntaxError(C,["annotated name '"+name+
@@ -1632,7 +1635,7 @@ C.tree[C.tree.length]=this
 this.toString=function(){return '(expr_not)'}}
 var $FloatCtx=$B.parser.$FloatCtx=function(C,value){
 this.type='float'
-this.value=value
+this.value=value.replace(/_/g,'')
 this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this
@@ -2021,7 +2024,7 @@ if(val=='__BRYTHON__' ||val=='$B'){return val}
 var innermost=$get_scope(this),scope=innermost,found=[]
 var search_ids=['"'+innermost.id+'"']
 var gs=innermost
-var $test=val=="gg"
+var $test=false 
 if($test){console.log("this",this)
 console.log("innermost",innermost)}
 while(true){if($test){console.log(gs.id,gs)}
@@ -2119,7 +2122,7 @@ this.result='$B.$global_search("'+val+'", '+search_ids+')'
 return this.result}}}
 var $ImaginaryCtx=$B.parser.$ImaginaryCtx=function(C,value){
 this.type='imaginary'
-this.value=value
+this.value=value.replace(/_/g,'')
 this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this
@@ -2352,9 +2355,9 @@ this.js=""
 if(this.tree[0]){var is_not_def=this.scope.ntype !="def"
 if(this.tree[0].annotation){
 if(is_not_def){if(this.tree[0].type=="expr" &&
+! this.tree[0].$in_parens &&
 this.tree[0].tree[0].type=="id"){var js=""
-if(! this.scope.binding.__annotations__){js+="$locals.__annotations__ = _b_.dict.factory();"
-this.scope.binding.__annotations__=true}
+if(this.create_annotations){js+="$locals.__annotations__ = _b_.dict.$factory();"}
 return js+"$locals.__annotations__.$string_dict['"+
 this.tree[0].tree[0].value+"'] = "+
 this.tree[0].annotation.to_js()+";"}else if(this.tree[0].type=="def"){
@@ -2362,10 +2365,10 @@ this.js=this.tree[0].annotation.to_js()+";"}else{
 this.js=""
 this.tree=[]}}else if(this.tree[0].type !="def"){
 this.tree=[]}}else if(this.tree[0].type=="assign" &&
+! this.tree[0].tree[0].$in_parens &&
 this.tree[0].tree[0].annotation){
 var left=this.tree[0].tree[0],right=this.tree[0].tree[1]
-console.log("annot assign",this.scope.binding)
-if(! this.scope.binding.__annotations__){this.js+="$locals.__annotations__ = _b_.dict.$factory();"}
+if(this.create_annotations){this.js+="$locals.__annotations__ = _b_.dict.$factory();"}
 this.js+="var $value = "+right.to_js()+";"
 this.tree[0].tree.splice(1,1)
 new $RawJSCtx(this.tree[0],"$value")
@@ -4690,10 +4693,12 @@ case '\t':
 pos++
 break
 case '.':
-if(pos < src.length-1 &&/^\d$/.test(src.charAt(pos+1))){
+if(pos < src.length-1 &&/^[\d]+$/.test(src.charAt(pos+1))){
 var j=pos+1
 while(j < src.length &&
-src.charAt(j).search(/\d|e|E/)>-1){j++}
+src.charAt(j).search(/\d|e|E|_/)>-1){j++}
+if(src.charAt(j-1)=="_"){
+$_SyntaxError(C,"trailing whitespace")}
 if(src.charAt(j)=="j"){C=$transition(C,'imaginary','0'+src.substr(pos,j-pos))
 j++}else{C=$transition(C,'float','0'+src.substr(pos,j-pos))}
 pos=j
@@ -4868,6 +4873,7 @@ root.indent=-1
 root.comments=[]
 root.imports={}
 if(typeof src=="object"){root.is_comp=src.is_comp
+if(src.has_annotations){root.binding.__annotations__=true}
 src=src.src}
 root.src=src
 return root}
@@ -4876,8 +4882,8 @@ $pos=0
 if(typeof module=="object"){var __package__=module.__package__
 module=module.__name__}else{var __package__=""}
 parent_scope=parent_scope ||$B.builtins_scope
-var t0=new Date().getTime(),is_comp=false
-if(typeof src=='object'){is_comp=src.is_comp
+var t0=new Date().getTime(),is_comp=false,has_annotations=true 
+if(typeof src=='object'){var is_comp=src.is_comp,has_annotations=src.has_annotations
 src=src.src}
 src=src.replace(/\r\n/gm,"\n")
 if(src.endsWith("\\")&& !src.endsWith("\\\\")){src=src.substr(0,src.length-1)}
@@ -4887,7 +4893,8 @@ if(locals_is_module){locals_id=locals_id[0]}
 var internal=locals_id.charAt(0)=='$'
 var local_ns='$locals_'+locals_id.replace(/\./g,'_')
 var global_ns='$locals_'+module.replace(/\./g,'_')
-var root=$create_root_node({src:src,is_comp:is_comp},module,locals_id,parent_scope,line_num)
+var root=$create_root_node(
+{src:src,is_comp:is_comp,has_annotations:has_annotations},module,locals_id,parent_scope,line_num)
 $tokenize(root,src)
 root.is_comp=is_comp
 root.transform()
@@ -4898,6 +4905,7 @@ var offset=0
 root.insert(0,$NodeJS(js.join('')))
 offset++
 root.insert(offset++,$NodeJS(local_ns+'["__package__"] = "'+__package__+'"'))
+if(root.binding.__annotations__){root.insert(offset++,$NodeJS('$locals.__annotations__ = _b_.dict.$factory()'))}
 var enter_frame_pos=offset,js='var $top_frame = ["'+locals_id.replace(/\./g,'_')+'", '+
 local_ns+', "'+module.replace(/\./g,'_')+'", '+
 global_ns+']\n$B.frames_stack.push($top_frame)\n'+
@@ -5558,7 +5566,7 @@ if(kl===cls){return true}
 else{for(var i=0;i < kl.__mro__.length;i++){if(kl.__mro__[i]===cls){return true}}}
 return false}
 type.__instancecheck__.$type="staticmethod"
-type.__name__={__get__:function(self){return self.$infos.__name__},__set__:function(self,value){self.$infos.__name__=value}}
+type.__name__={__get__:function(self){return self.$infos.__name__},__set__:function(self,value){self.$infos.__name__=value},__str__:function(self){return "type"},__eq__:function(self,other){return self.$infos.__name__==other}}
 type.__new__=function(meta,name,bases,cl_dict){
 var class_dict={__class__ :meta,__bases__ :bases,__dict__ :cl_dict,$infos:{__name__:name.replace("$$","")},$is_class:true,$has_setattr:cl_dict.$has_setattr}
 var items=$B.dict_to_list(cl_dict)
@@ -5583,7 +5591,7 @@ kls.$infos.__module__ !="builtins" &&
 !kls.$infos.__module__.startsWith("$")){qualname=kls.$infos.__module__+"."+qualname}
 return "<class '"+qualname+"'>"}
 type.__prepare__=function(){return _b_.dict.$factory()}
-type.__qualname__={__get__:function(self){return self.$infos.__qualname__ ||self.$infos.__name__},__set__:function(self,value){self.$infos.__qualname__=value}}
+type.__qualname__={__get__:function(self){return self.$infos.__qualname__ ||self.$infos.__name__},__set__:function(self,value){self.$infos.__qualname__=value},__str__:function(self){console.log("type.__qualname__")},__eq__:function(self,other){return self.$infos.__qualname__==other}}
 type.mro=function(cls){
 var bases=cls.__bases__,seqs=[],pos1=0
 for(var i=0;i < bases.length;i++){
@@ -7582,7 +7590,20 @@ $make_exc(["UnicodeError"],_b_.ValueError)
 $make_exc(["UnicodeDecodeError","UnicodeEncodeError","UnicodeTranslateError"],_b_.UnicodeError)
 $make_exc(["DeprecationWarning","PendingDeprecationWarning","RuntimeWarning","SyntaxWarning","UserWarning","FutureWarning","ImportWarning","UnicodeWarning","BytesWarning","ResourceWarning"],_b_.Warning)
 $make_exc(["EnvironmentError","IOError","VMSError","WindowsError"],_b_.OSError)
-$B.$TypeError=function(msg){throw _b_.TypeError.$factory(msg)}})(__BRYTHON__)
+$B.$TypeError=function(msg){throw _b_.TypeError.$factory(msg)}
+var se=_b_.SyntaxError.$factory
+_b_.SyntaxError.$factory=function(){var arg=arguments[0]
+if(arg.__class__===_b_.SyntaxError){return arg}
+var exc=se.apply(null,arguments),frame=$B.last($B.frames_stack)
+if(frame){line_info=frame[1].$line_info
+exc.filename=frame[3].__file__
+exc.lineno=parseInt(line_info.split(",")[0])
+var src=$B.file_cache[frame[3].__file__]
+if(src){lines=src.split("\n")
+exc.text=lines[exc.lineno-1]}
+exc.offset=arg.offset}
+return exc}
+_b_.SyntaxError})(__BRYTHON__)
 ;
 
 ;(function($B){var _b_=$B.builtins,None=_b_.None,range={__class__:_b_.type,__mro__:[_b_.object],$infos:{__module__:"builtins",__name__:"range"},$is_class:true,$native:true,$descriptors:{start:true,step:true,stop:true}}
@@ -8848,7 +8869,8 @@ $B.file_cache[path]=module_contents
 var root,js,mod_name=module.__name__ 
 if(! compiled){var $Node=$B.$Node,$NodeJSCtx=$B.$NodeJSCtx
 $B.$py_module_path[module.__name__]=path
-root=$B.py2js(module_contents,module,module.__name__,$B.builtins_scope)
+var src={src:module_contents,has_annotations:false}
+root=$B.py2js(src,module,module.__name__,$B.builtins_scope)
 if(module.__package__ !==undefined){root.binding["__package__"]=true}}
 try{js=compiled ? module_contents :root.to_js()
 if($B.$options.debug==10){console.log("code for module "+module.__name__)
@@ -11697,7 +11719,7 @@ catch(err){console.log("no __str__ for",arg)
 console.log("err ",err)
 if($B.debug > 1){console.log(err)}
 console.log("Warning - no method __str__ or __repr__, "+
-"default to toString",arg)
+"default to toString",arg,"get",arg.__get__+"")
 throw err}
 return $B.$call(f)()}
 str.__new__=function(cls){if(cls===undefined){throw _b_.TypeError.$factory("str.__new__(): not enough arguments")}
@@ -13100,7 +13122,10 @@ throw err}}
 generator.send=function(self,value){self.sent_value=value
 return generator.__next__(self)}
 generator.$$throw=function(self,type,value,traceback){var exc=type
-if(value !==undefined){exc=$B.$call(exc)(value)}
+if(value !==undefined){console.log("gen throw",exc,value)
+console.log("frame",$B.last($B.frames_stack))
+exc=$B.$call(exc)(value)
+console.log("nouveau exc",exc,exc.args,"filename",exc.filename)}
 if(traceback !==undefined){exc.$traceback=traceback}
 self.sent_value={__class__:$B.$GeneratorSendError,err:exc}
 return generator.__next__(self)}

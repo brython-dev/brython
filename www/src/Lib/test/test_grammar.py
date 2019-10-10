@@ -13,7 +13,7 @@ from sys import *
 import test.ann_module as ann_module  # Doesn't work in Brython
 import typing
 from collections import ChainMap
-# from test import ann_module2  # Doesn't work in Brython
+from test import ann_module2  # Doesn't work in Brython
 import test
 
 # These are shared with test_tokenize and other test modules.
