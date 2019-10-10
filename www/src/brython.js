@@ -91,8 +91,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.6"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-10-10 16:11:14.679495"
-__BRYTHON__.timestamp=1570716674679
+__BRYTHON__.compiled_date="2019-10-10 16:14:08.380059"
+__BRYTHON__.timestamp=1570716848380
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -6415,7 +6415,6 @@ $B.from_alias=function(attr){if(attr.substr(0,2)=='$$' && $B.aliased_names[attr.
 return attr}
 $B.to_alias=function(attr){if($B.aliased_names[attr]){return '$$'+attr}
 return attr}
-$B.evalt=0
 function $$eval(src,_globals,_locals){var $=$B.args("eval",4,{src:null,globals:null,locals:null,is_exec:null},["src","globals","locals","is_exec"],arguments,{globals:_b_.None,locals:_b_.None,is_exec:false},null,null),src=$.src,_globals=$.globals,_locals=$.locals,is_exec=$.is_exec
 var current_frame=$B.frames_stack[$B.frames_stack.length-1]
 if(current_frame !==undefined){var current_locals_id=current_frame[0].replace(/\./,'_'),current_globals_id=current_frame[2].replace(/\./,'_')}
@@ -6459,12 +6458,10 @@ try{eval('$locals_'+globals_id+'["'+item1+
 '"] = items[item]')}catch(err){console.log(err)
 console.log('error setting',item)
 break}}}
-if(_locals===_b_.None){if(_globals !==_b_.None){eval('var $locals_'+locals_id+' = $locals_'+globals_id)}else{var t0=new Date().getTime()
-var lobj=current_frame[1],ex='',obj={}
+if(_locals===_b_.None){if(_globals !==_b_.None){eval('var $locals_'+locals_id+' = $locals_'+globals_id)}else{var lobj=current_frame[1],ex='',obj={}
 for(var attr in current_frame[1]){if(attr.startsWith("$")&& !attr.startsWith("$$")){continue}
 obj[attr]=lobj[attr]}
-eval('$locals_'+locals_id+" = obj")
-$B.evalt+=(new Date().getTime())-t0}}else{if(_locals.$jsobj){var items=_locals.$jsobj}
+eval('$locals_'+locals_id+" = obj")}}else{if(_locals.$jsobj){var items=_locals.$jsobj}
 else{var items=_locals.$string_dict}
 for(var item in items){var item1=$B.to_alias(item)
 try{eval('$locals_'+locals_id+'["'+item+'"] = items.'+item)}catch(err){console.log(err)

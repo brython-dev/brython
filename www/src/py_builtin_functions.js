@@ -438,7 +438,6 @@ $B.to_alias = function(attr){
 }
 
 //eval() (built in function)
-$B.evalt = 0
 function $$eval(src, _globals, _locals){
 
     var $ = $B.args("eval", 4,
@@ -582,8 +581,6 @@ function $$eval(src, _globals, _locals){
         if(_globals !== _b_.None){
             eval('var $locals_' + locals_id + ' = $locals_' + globals_id)
         }else{
-    var t0 = new Date().getTime()
-
             var lobj = current_frame[1],
                 ex = '',
                 obj = {}
@@ -592,8 +589,6 @@ function $$eval(src, _globals, _locals){
                 obj[attr] = lobj[attr]
             }
             eval('$locals_' + locals_id + " = obj")
-$B.evalt += (new Date().getTime()) - t0
-
         }
     }else{
         if(_locals.$jsobj){var items = _locals.$jsobj}
