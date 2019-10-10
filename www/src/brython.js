@@ -91,8 +91,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.6"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-10-10 16:14:08.380059"
-__BRYTHON__.timestamp=1570716848380
+__BRYTHON__.compiled_date="2019-10-10 17:08:52.681865"
+__BRYTHON__.timestamp=1570720132680
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -4523,7 +4523,7 @@ var kwdict=["class","return","break","for","lambda","try","finally","raise","def
 var unsupported=[]
 var $indented=["class","def","for","condition","single_kw","try","except","with"
 ]
-var int_pattern=new RegExp("^\\d[0-9_]*(j|J)?"),float_pattern1=new RegExp("^\\d[0-9_]*\\.\\d*([eE][+-]?\\d+)?(j|J)?"),float_pattern2=new RegExp("^\\d[0-9_]*([eE][+-]?\\d+)(j|J)?"),hex_pattern=new RegExp("^0[xX]([0-9a-fA-F_]+)"),octal_pattern=new RegExp("^0[oO]([0-7_]+)"),binary_pattern=new RegExp("^0[bB]([01_]+)")
+var int_pattern=/^\d[0-9_]*(j|J)?/,float_pattern1=/^(\d[\d_]*)\.(\d*)([eE][+-]?\d+(_\d+)*)?(j|J)?/,float_pattern2=/^(\d[\d_]*)([eE][+-]?\d+(_\d+)*)(j|J)?/,hex_pattern=/^0[xX]([\da-fA-F_]+)/,octal_pattern=/^0[oO]([0-7_]+)/,binary_pattern=/^0[bB]([01_]+)/
 var C=null
 var new_node=new $Node(),current=root,name="",_type=null,pos=0,indent=null,string_modifier=false
 var module=root.module
@@ -4686,8 +4686,16 @@ $pos=pos-name.length
 C=$transition(C,'id',name)}
 name=""
 continue}}
-function rmu(numeric_literal){
+function rmuf(numeric_literal){
+if(numeric_literal.search("__")>-1){
+$_SyntaxError(C,"invalid literal")}else if(numeric_literal.endsWith("_")){
+$_SyntaxError(C,"invalid literal")}
 return numeric_literal.replace(/_/g,"")}
+function check_int(numeric_literal){
+rmuf(numeric_literal)
+if(numeric_literal.startsWith("0")){if(numeric_literal.search(/[^0_]/)>-1){
+$_SyntaxError(C,"invalid literal")}else{return "0"}}}
+function rmu(numeric_literal){return numeric_literal.replace(/_/g,"")}
 switch(car){case ' ':
 case '\t':
 pos++
@@ -4696,9 +4704,9 @@ case '.':
 if(pos < src.length-1 &&/^\d$/.test(src.charAt(pos+1))){
 var j=pos+1
 while(j < src.length &&
-src.charAt(j).search(/\d|e|E/)>-1){j++}
-if(src.charAt(j)=="j"){C=$transition(C,'imaginary','0'+src.substr(pos,j-pos))
-j++}else{C=$transition(C,'float','0'+src.substr(pos,j-pos))}
+src.charAt(j).search(/\d|e|E|_/)>-1){j++}
+if(src.charAt(j)=="j"){C=$transition(C,'imaginary','0'+rmu(src.substr(pos,j-pos)))
+j++}else{C=$transition(C,'float','0'+rmu(src.substr(pos,j-pos)))}
 pos=j
 break}
 $pos=pos
@@ -4707,20 +4715,23 @@ pos++
 break
 case '0':
 var res=hex_pattern.exec(src.substr(pos))
-if(res){C=$transition(C,'int',[16,rmu(res[1])])
+if(res){rmuf(res[1])
+C=$transition(C,'int',[16,rmu(res[1])])
 pos+=res[0].length
 break}
 var res=octal_pattern.exec(src.substr(pos))
-if(res){C=$transition(C,'int',[8,rmu(res[1])])
+if(res){C=$transition(C,'int',[8,rmuf(res[1])])
 pos+=res[0].length
 break}
 var res=binary_pattern.exec(src.substr(pos))
-if(res){C=$transition(C,'int',[2,rmu(res[1])])
+if(res){C=$transition(C,'int',[2,rmuf(res[1])])
 pos+=res[0].length
 break}
 if(src.charAt(pos+1).search(/\d/)>-1){
 if(parseInt(src.substr(pos))===0){res=int_pattern.exec(src.substr(pos))
 $pos=pos
+console.log("res",res)
+check_int(res[0])
 C=$transition(C,'int',[10,rmu(res[0])])
 pos+=res[0].length
 break}else{$_SyntaxError(C,'invalid literal starting with 0')}}
@@ -4735,10 +4746,14 @@ case '7':
 case '8':
 case '9':
 var res=float_pattern1.exec(src.substr(pos))
-if(res){$pos=pos
-if(res[2]!==undefined){C=$transition(C,'imaginary',rmu(res[0].substr(0,res[0].length-1)))}else{C=$transition(C,'float',rmu(res[0]))}}else{res=float_pattern2.exec(src.substr(pos))
-if(res){$pos=pos
-if(res[2]!==undefined){C=$transition(C,'imaginary',rmu(res[0].substr(0,res[0].length-1)))}else{C=$transition(C,'float',rmu(res[0]))}}else{res=int_pattern.exec(src.substr(pos))
+if(res){check_int(res[1])
+if(res[2]){rmuf(res[2])}
+$pos=pos
+if($B.last(res)!==undefined){C=$transition(C,'imaginary',rmuf(res[0].substr(0,res[0].length-1)))}else{C=$transition(C,'float',rmuf(res[0]))}}else{res=float_pattern2.exec(src.substr(pos))
+if(res){check_int(res[1])
+$pos=pos
+if($B.last(res)!==undefined){C=$transition(C,'imaginary',rmuf(res[0].substr(0,res[0].length-1)))}else{C=$transition(C,'float',rmuf(res[0]))}}else{res=int_pattern.exec(src.substr(pos))
+check_int(res[0])
 $pos=pos
 if(res[1]!==undefined){C=$transition(C,'imaginary',rmu(res[0].substr(0,res[0].length-1)))}else{C=$transition(C,'int',[10,rmu(res[0])])}}}
 pos+=res[0].length

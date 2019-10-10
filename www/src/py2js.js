@@ -8929,12 +8929,12 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
     ]
     // from https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Reserved_Words
 
-    var int_pattern = new RegExp("^\\d[0-9_]*(j|J)?"),
-        float_pattern1 = new RegExp("^\\d[0-9_]*\\.\\d*([eE][+-]?\\d+)?(j|J)?"),
-        float_pattern2 = new RegExp("^\\d[0-9_]*([eE][+-]?\\d+)(j|J)?"),
-        hex_pattern = new RegExp("^0[xX]([0-9a-fA-F_]+)"),
-        octal_pattern = new RegExp("^0[oO]([0-7_]+)"),
-        binary_pattern = new RegExp("^0[bB]([01_]+)")
+    var int_pattern = /^\d[0-9_]*(j|J)?/,
+        float_pattern1 = /^(\d[\d_]*)\.(\d*)([eE][+-]?\d+(_\d+)*)?(j|J)?/,
+        float_pattern2 = /^(\d[\d_]*)([eE][+-]?\d+(_\d+)*)(j|J)?/,
+        hex_pattern = /^0[xX]([\da-fA-F_]+)/,
+        octal_pattern = /^0[oO]([0-7_]+)/,
+        binary_pattern = /^0[bB]([01_]+)/
 
     var context = null
     var new_node = new $Node(),
@@ -9295,8 +9295,35 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
             }
         }
 
-        function rmu(numeric_literal){
+        function rmuf(numeric_literal){
             // Remove underscores inside a numeric literal (PEP 515)
+            // Raises SyntaxError for consecutive or trailing underscore
+            if(numeric_literal.search("__") > -1){
+                // consecutive underscores is a syntax error
+                $_SyntaxError(context, "invalid literal")
+            }else if(numeric_literal.endsWith("_")){
+                // trailing underscore is a syntax error
+                $_SyntaxError(context, "invalid literal")
+            }
+            return numeric_literal.replace(/_/g, "")
+        }
+
+        function check_int(numeric_literal){
+            // Check that the integer in numeric_literal is valid :
+            // same control as rmuf above + special case for integers
+            // starting with 0
+            rmuf(numeric_literal)
+            if(numeric_literal.startsWith("0")){
+                if(numeric_literal.search(/[^0_]/) > -1){
+                    // 007 or 0_7 is invalid, only 0_0 is ok
+                    $_SyntaxError(context, "invalid literal")
+                }else{
+                    return "0"
+                }
+            }
+        }
+
+        function rmu(numeric_literal){
             return numeric_literal.replace(/_/g, "")
         }
 
@@ -9311,14 +9338,14 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
                     // number starting with . : add a 0 before the point
                     var j = pos + 1
                     while(j < src.length &&
-                        src.charAt(j).search(/\d|e|E/) > -1){j++}
+                        src.charAt(j).search(/\d|e|E|_/) > -1){j++}
                     if(src.charAt(j) == "j"){
                         context = $transition(context, 'imaginary',
-                            '0' + src.substr(pos, j - pos))
+                            '0' + rmu(src.substr(pos, j - pos)))
                         j++
                     }else{
                         context = $transition(context, 'float',
-                            '0' + src.substr(pos, j - pos))
+                            '0' + rmu(src.substr(pos, j - pos)))
                     }
                     pos = j
                     break
@@ -9331,19 +9358,20 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
               // octal, hexadecimal, binary
               var res = hex_pattern.exec(src.substr(pos))
               if(res){
+                  rmuf(res[1])
                   context = $transition(context, 'int', [16, rmu(res[1])])
                   pos += res[0].length
                   break
               }
               var res = octal_pattern.exec(src.substr(pos))
               if(res){
-                  context = $transition(context, 'int', [8, rmu(res[1])])
+                  context = $transition(context, 'int', [8, rmuf(res[1])])
                   pos += res[0].length
                   break
               }
               var res = binary_pattern.exec(src.substr(pos))
               if(res){
-                  context = $transition(context, 'int', [2, rmu(res[1])])
+                  context = $transition(context, 'int', [2, rmuf(res[1])])
                   pos += res[0].length
                   break
               }
@@ -9353,6 +9381,8 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
                   if(parseInt(src.substr(pos)) === 0){
                       res = int_pattern.exec(src.substr(pos))
                       $pos = pos
+                      console.log("res", res)
+                      check_int(res[0])
                       context = $transition(context, 'int',
                           [10, rmu(res[0])])
                       pos += res[0].length
@@ -9373,21 +9403,25 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
                 // digit
                 var res = float_pattern1.exec(src.substr(pos))
                 if(res){
+                    check_int(res[1]) // check that the part before "." is ok
+                    if(res[2]){rmuf(res[2])} // same for the part after "."
                     $pos = pos
-                    if(res[2] !== undefined){
+                    if($B.last(res) !== undefined){
                         context = $transition(context, 'imaginary',
-                            rmu(res[0].substr(0,res[0].length - 1)))
-                    }else{context = $transition(context, 'float', rmu(res[0]))}
+                            rmuf(res[0].substr(0, res[0].length - 1)))
+                    }else{context = $transition(context, 'float', rmuf(res[0]))}
                 }else{
                     res = float_pattern2.exec(src.substr(pos))
                     if(res){
+                        check_int(res[1]) // check the part before "e"
                         $pos = pos
-                        if(res[2] !== undefined){
+                        if($B.last(res) !== undefined){
                             context = $transition(context, 'imaginary',
-                                rmu(res[0].substr(0,res[0].length - 1)))
-                        }else{context = $transition(context, 'float', rmu(res[0]))}
+                                rmuf(res[0].substr(0,res[0].length - 1)))
+                        }else{context = $transition(context, 'float', rmuf(res[0]))}
                     }else{
                         res = int_pattern.exec(src.substr(pos))
+                        check_int(res[0])
                         $pos = pos
                         if(res[1] !== undefined){
                             context = $transition(context, 'imaginary',
