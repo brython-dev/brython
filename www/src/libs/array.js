@@ -252,7 +252,7 @@ array.reverse = function(self){
 array.tobytes = function(self){
     $B.args("tobytes", 1, {self: null},
         ["self"], arguments, {}, null, null)
-    var items = Array.slice.call(null, self.obj),
+    var items = Array.prototype.slice.call(self.obj),
         res = []
     items.forEach(function(item){
         while(item > 256){
@@ -267,7 +267,7 @@ array.tobytes = function(self){
 array.tolist = function(self){
     $B.args("tolist", 1, {self: null},
         ["self"], arguments, {}, null, null)
-    return Array.slice.call(null, self.obj)
+    return Array.prototype.slice.call(self.obj)
 }
 
 array.tostring = array.tobytes
