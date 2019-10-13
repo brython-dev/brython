@@ -91,8 +91,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.6"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-10-13 13:45:07.371175"
-__BRYTHON__.timestamp=1570967107371
+__BRYTHON__.compiled_date="2019-10-13 14:59:58.550375"
+__BRYTHON__.timestamp=1570971598550
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -11835,7 +11835,13 @@ pos=i+1
 break}}else if(car=="}"){if(string.charAt(i+1)==car){current+=car
 i+=2}else{throw Error(" f-string: single '}' is not allowed")}}else{current+=car
 i++}}
-pos=i+1}else{
+pos=i+1}else if(ctype=="debug"){
+while(string.charAt(i)==" "){i++}
+if(string.charAt(i)=="}"){
+elts.push(current)
+ctype=null
+current=""
+pos=i+1}}else{
 var i=pos,nb_braces=1,nb_paren=0,current=new fstring_expression()
 while(i < string.length){car=string.charAt(i)
 if(car=="{" && nb_paren==0){nb_braces++
@@ -11867,7 +11873,19 @@ i=end+3}}else{var end=string.indexOf('"',i+1)
 if(end==-1){throw Error("f-string: unterminated string")}else{current.expression+=string.substring(i,end+1)
 i=end+1}}}else if(nb_paren==0 && car==":"){current.fmt=true
 current.expression+=car
-i++}else{current.expression+=car
+i++}else if(car=="="){
+var ce=current.expression
+if(ce.length==0 ||
+"=!<>".search(ce.charAt(ce.length-1))>-1){current.expression+=car
+i++}else{
+tail=car
+while(string.charAt(i+1).match(/\s/)){tail+=string.charAt(i+1)
+i++}
+elts.push(current.expression+tail)
+while(ce.match(/\s$/)){ce=ce.substr(0,ce.length-1)}
+current.expression=ce
+ctype="debug"
+i++}}else{current.expression+=car
 i++}}
 if(nb_braces > 0){throw Error("f-string: expected '}'")}}}
 if(current.length > 0){elts.push(current)}

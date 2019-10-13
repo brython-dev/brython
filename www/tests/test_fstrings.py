@@ -78,4 +78,10 @@ hello
 </p>
 """
 
+# debug f-strings (new in Python 3.8)
+x = 5.323
+assert f"{x = :.1f}" == "x = 5.3"
+y = 8
+assert f"{y=}" == "y=8"
+
 print("passed all tests")

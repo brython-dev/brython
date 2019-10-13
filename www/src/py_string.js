@@ -2036,6 +2036,17 @@ $B.parse_fstring = function(string){
                 }
             }
             pos = i + 1
+        }else if(ctype == "debug"){
+            // after the equal sign, whitespace are ignored and the only
+            // valid characters are } and :
+            while(string.charAt(i) == " "){i++}
+            if(string.charAt(i) == "}"){
+                // end of debug expression
+                elts.push(current)
+                ctype = null
+                current = ""
+                pos = i + 1
+            }
         }else{
             // End of expression is the } matching the opening {
             // There may be nested braces
@@ -2110,6 +2121,29 @@ $B.parse_fstring = function(string){
                     current.fmt = true
                     current.expression += car
                     i++
+                }else if(car == "="){
+                    // might be a "debug expression", eg f"{x=}"
+                    var ce = current.expression
+                    if(ce.length == 0 ||
+                            "=!<>".search(ce.charAt(ce.length - 1)) > -1){
+                        current.expression += car
+                        i++
+                    }else{
+                        // add debug string
+                        tail = car
+                        while(string.charAt(i + 1).match(/\s/)){
+                            tail += string.charAt(i + 1)
+                            i++
+                        }
+                        elts.push(current.expression + tail)
+                        // remove trailing whitespace from expression
+                        while(ce.match(/\s$/)){
+                            ce = ce.substr(0, ce.length - 1)
+                        }
+                        current.expression = ce
+                        ctype = "debug"
+                        i++
+                    }
                 }else{
                     current.expression += car
                     i++
