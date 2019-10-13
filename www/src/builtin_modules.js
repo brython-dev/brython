@@ -437,6 +437,9 @@
             }
             return _b_.tuple.$factory([_b_.None, _b_.None, _b_.None])
         },
+        excepthook: function(exc_class, exc_value, traceback){
+            $B.handle_error(exc_value)
+        },
         modules: {
             __get__: function(){
                 return $B.obj_dict($B.imported)

@@ -124,7 +124,7 @@ $B.print_stack = function(stack){
 }
 
 // class of traceback objects
-var traceback = $B.make_class("traceback",
+var traceback = $B.traceback = $B.make_class("traceback",
     function(exc, stack){
         if(stack === undefined)
             stack = exc.$stack
