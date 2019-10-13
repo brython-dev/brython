@@ -9381,7 +9381,6 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
                   if(parseInt(src.substr(pos)) === 0){
                       res = int_pattern.exec(src.substr(pos))
                       $pos = pos
-                      console.log("res", res)
                       check_int(res[0])
                       context = $transition(context, 'int',
                           [10, rmu(res[0])])
