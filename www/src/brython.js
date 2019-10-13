@@ -91,8 +91,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.6"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-10-10 18:54:41.748668"
-__BRYTHON__.timestamp=1570726481748
+__BRYTHON__.compiled_date="2019-10-13 10:37:58.529846"
+__BRYTHON__.timestamp=1570955878529
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -4730,7 +4730,6 @@ break}
 if(src.charAt(pos+1).search(/\d/)>-1){
 if(parseInt(src.substr(pos))===0){res=int_pattern.exec(src.substr(pos))
 $pos=pos
-console.log("res",res)
 check_int(res[0])
 C=$transition(C,'int',[10,rmu(res[0])])
 pos+=res[0].length
@@ -7814,6 +7813,12 @@ bytearray.append=function(self,b){if(arguments.length !=2){throw _b_.TypeError.$
 if(! isinstance(b,_b_.int)){throw _b_.TypeError.$factory("an integer is required")}
 if(b > 255){throw ValueError.$factory("byte must be in range(0, 256)")}
 self.source[self.source.length]=b}
+bytearray.extend=function(self,b){if(b.__class__===bytearray ||b.__class__===bytes){b.source.forEach(function(item){self.source.push(item)})
+return _b_.None}
+var it=_b_.iter(b)
+while(true){try{bytearray.__add__(self,_b_.next(it))}catch(err){if(err===_b_.StopIteration){break}
+throw err}}
+return _b_.None}
 bytearray.insert=function(self,pos,b){if(arguments.length !=3){throw _b_.TypeError.$factory(
 "insert takes exactly 2 arguments ("+(arguments.length-1)+
 " given)")}
@@ -7826,9 +7831,9 @@ bytes.__add__=function(self,other){if(isinstance(other,bytes)){return self.__cla
 throw _b_.TypeError.$factory("can't concat bytes to "+
 _b_.str.$factory(other))}
 bytes.__contains__=function(self,other){if(typeof other=="number"){return self.source.indexOf(other)>-1}
-if(self.source.length > other.source.length){return false}
-var len=self.source.length
-for(var i=0;i < other.source.length-self.source.length+1;i++){var flag=true
+if(self.source.length < other.source.length){return false}
+var len=other.source.length
+for(var i=0;i < self.source.length-other.source.length+1;i++){var flag=true
 for(var j=0;j < len;j++){if(other.source[i+j]!=self.source[j]){flag=false
 break}}
 if(flag){return true}}
@@ -7928,7 +7933,7 @@ case 'surrogateescape':
 case 'surrogatepass':
 case 'xmlcharrefreplace':
 case 'backslashreplace':
-return decode($.self.source,$.encoding,$.errors)
+return decode($.self,$.encoding,$.errors)
 default:}}
 bytes.endswith=function(){var $=$B.args('endswith',4,{self:null,suffix:null,start:null,end:null},['self','suffix','start','end'],arguments,{start:-1,end:-1},null,null)
 if(_b_.isinstance($.suffix,bytes)){var start=$.start==-1 ?
@@ -8171,15 +8176,12 @@ if(enc.startsWith("cp")||enc.startsWith("iso")){enc=enc.replace("-","")}
 enc=enc.replace(/-/g,"_")
 return enc}
 function load_decoder(enc){
-if(to_unicode[enc]===undefined){load_encoder(enc)
-to_unicode[enc]={}
-for(var attr in from_unicode[enc]){to_unicode[enc][from_unicode[enc][attr]]=attr}}}
+if(to_unicode[enc]===undefined){var mod=_b_.__import__("encodings."+enc)
+if(mod[enc].getregentry){to_unicode[enc]=$B.$getattr(mod[enc].getregentry(),"decode")}}}
 function load_encoder(enc){
 if(from_unicode[enc]===undefined){var mod=_b_.__import__("encodings."+enc)
-table=mod[enc].decoding_table
-from_unicode[enc]={}
-for(var i=0;i < table.length;i++){from_unicode[enc][table.charCodeAt(i)]=i}}}
-var decode=$B.decode=function(b,encoding,errors){var s="",enc=normalise(encoding)
+if(mod[enc].getregentry){from_unicode[enc]=$B.$getattr(mod[enc].getregentry(),"encode")}}}
+var decode=$B.decode=function(obj,encoding,errors){var s="",b=obj.source,enc=normalise(encoding)
 switch(enc){case "utf_8":
 case "utf-8":
 case "utf8":
@@ -8232,8 +8234,8 @@ case "L1":
 b.forEach(function(item){s+=String.fromCharCode(item)})
 break
 case "unicode_escape":
-if(Array.isArray(b)){b=decode(b,"latin-1","strict")}
-return b.replace(/\\n/g,"\n").
+if(obj.__class__===bytes ||obj.__class__===bytearray){obj=decode(obj,"latin-1","strict")}
+return obj.replace(/\\n/g,"\n").
 replace(/\\a/g,"\u0007").
 replace(/\\b/g,"\b").
 replace(/\\f/g,"\f").
@@ -8241,10 +8243,9 @@ replace(/\\t/g,"\t").
 replace(/\\'/g,"'").
 replace(/\\"/g,'"')
 case "raw_unicode_escape":
-if(Array.isArray(b)){b=decode(b,"latin-1","strict")}
-b=b.replace(/\\u([a-fA-F0-9]{4})/g,function(mo){var cp=parseInt(mo.substr(2),16)
+if(obj.__class__===bytes ||obj.__class__===bytearray){obj=decode(obj,"latin-1","strict")}
+return obj.replace(/\\u([a-fA-F0-9]{4})/g,function(mo){var cp=parseInt(mo.substr(2),16)
 return String.fromCharCode(cp)})
-return b
 case "ascii":
 for(var i=0,len=b.length;i < len;i++){var cp=b[i]
 if(cp <=127){s+=String.fromCharCode(cp)}else{if(errors=="ignore"){}else{var msg="'ascii' codec can't decode byte 0x"+
@@ -8255,10 +8256,7 @@ break
 default:
 try{load_decoder(enc)}catch(err){console.log(b,encoding,"error load_decoder",err)
 throw _b_.LookupError.$factory("unknown encoding: "+enc)}
-b.forEach(function(item){var u=to_unicode[enc][item]
-if(u !==undefined){s+=String.fromCharCode(u)}
-else{s+=String.fromCharCode(item)}})
-break}
+return to_unicode[enc](obj)[0]}
 return s}
 var encode=$B.encode=function(){var $=$B.args("encode",3,{s:null,encoding:null,errors:null},["s","encoding","errors"],arguments,{encoding:"utf-8",errors:"strict"},null,null),s=$.s,encoding=$.encoding,errors=$.errors
 var t=[],pos=0,enc=normalise(encoding)
@@ -8296,10 +8294,7 @@ for(var j=0;j < us.length;j++){t[pos++]=us.charCodeAt(j)}}}
 break
 default:
 try{load_encoder(enc)}catch(err){throw _b_.LookupError.$factory("unknown encoding: "+encoding)}
-for(var i=0,len=s.length;i < len;i++){var cp=s.charCodeAt(i)
-if(from_unicode[enc][cp]===undefined){$UnicodeEncodeError(encoding,cp,i)}
-t[pos++]=from_unicode[enc][cp]}
-break}
+t=from_unicode[enc](s)[0].source}
 return t}
 bytes.$factory=function(source,encoding,errors){var $=$B.args("bytes",3,{source:null,encoding:null,errors:null},["source","encoding","errors"],arguments,{source:[],encoding:"utf-8",errors:"strict"},null,null)
 return bytes.$new(bytes,$.source,$.encoding,$.errors)}
@@ -8795,7 +8790,7 @@ $B.JSObject=JSObject
 $B.JSConstructor=JSConstructor})(__BRYTHON__)
 ;
 ;(function($B){$B.stdlib={}
-var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_collections_abc','_compat_pickle','_contextvars','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_py_abc','_pydecimal','_queue','_random','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_weakref','_weakrefset','abc','antigravity','argparse','atexit','base64','bdb','binascii','bisect','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','gettext','glob','heapq','imp','inspect','io','ipaddress','itertools','keyword','linecache','locale','nntplib','numbers','opcode','operator','optparse','os','pdb','pickle','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','re','reprlib','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','string','struct','subprocess','sys','sysconfig','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uuid','warnings','weakref','webbrowser','zipfile','zlib']
+var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_collections_abc','_compat_pickle','_contextvars','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_py_abc','_pydecimal','_queue','_random','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_weakref','_weakrefset','abc','antigravity','argparse','atexit','base64','bdb','binascii','bisect','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','gettext','glob','heapq','imp','inspect','io','ipaddress','itertools','keyword','linecache','locale','nntplib','numbers','opcode','operator','optparse','os','pdb','pickle','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','re','reprlib','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','string','stringprep','struct','subprocess','sys','sysconfig','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uuid','warnings','weakref','webbrowser','zipfile','zlib']
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
 var js=['_aio','_ajax','_base64','_binascii','_json','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_sre_utils','_string','_strptime','_svg','_warnings','_webcomponent','_webworker','_zlib_utils','aes','array','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','long_int','marshal','math','md5','modulefinder','pbkdf2','posix','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
