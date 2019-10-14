@@ -91,8 +91,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.6"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-10-13 14:59:58.550375"
-__BRYTHON__.timestamp=1570971598550
+__BRYTHON__.compiled_date="2019-10-14 13:27:32.301472"
+__BRYTHON__.timestamp=1571052452301
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -712,6 +712,9 @@ parent.insert(rank+offset,new_node)
 in_class=true
 offset++}}}
 var left=C.tree[0].to_js()
+if(C.tree[0].type=="id"){var binding_scope=C.tree[0].firstBindingScopeId()
+left="$locals_"+binding_scope.replace(/\./g,'_')+
+'["'+C.tree[0].value+'"]'}
 if(left_bound_to_int && right_is_int){parent.insert(rank+offset,$NodeJS(left+" "+op+" "+right))
 return offset++}
 prefix=prefix && !C.tree[0].unknown_binding && !left_id_unbound
@@ -756,7 +759,7 @@ aa1.line_num=node.line_num
 new_node.add(aa1)
 var ctx1=new $NodeCtx(aa1)
 var expr1=new $ExprCtx(ctx1,'clone',false)
-if(left_id_unbound){new $RawJSCtx(expr1,'$locals["'+left_id+'"]')}else{expr1.tree=C.tree
+if(left_id_unbound){new $RawJSCtx(expr1,left)}else{expr1.tree=C.tree
 expr1.tree.forEach(function(elt){elt.parent=expr1})}
 var assign1=new $AssignCtx(expr1)
 var new_op=new $OpCtx(expr1,op.substr(0,op.length-1))
@@ -772,7 +775,7 @@ aa2.line_num=node.line_num
 else_node.add(aa2)
 var ctx2=new $NodeCtx(aa2)
 var expr2=new $ExprCtx(ctx2,'clone',false)
-if(left_id_unbound){new $RawJSCtx(expr2,'$locals["'+left_id+'"]')}else{expr2.tree=C.tree
+if(left_id_unbound){new $RawJSCtx(expr2,left)}else{expr2.tree=C.tree
 expr2.tree.forEach(function(elt){elt.parent=expr2})}
 var assign2=new $AssignCtx(expr2)
 assign2.tree.push($NodeJS('$B.$getattr('+C.to_js()+',"'+
@@ -1622,8 +1625,14 @@ if(this.type=='list'){res='['+$to_js(this.tree)+']'}
 else if(this.tree.length==1){res=this.tree[0].to_js(arg)}
 else{res='_b_.tuple.$factory(['+$to_js(this.tree)+'])'}
 if(this.is_await){res="await $B.promise("+res+")"}
-if(this.assign){console.log("expr to js, is assign",this)
+if(this.assign){
 var scope=$get_scope(this)
+while(scope.is_comp){scope=scope.parent_block}
+if(scope.globals && scope.globals.has(this.assign.value)){
+while(scope.parent_block &&
+scope.parent_block.id !=="__builtins__"){scope=scope.parent_block}}else if(scope.nonlocals &&
+scope.nonlocals[this.assign.value]){
+scope=scope.parent_block}
 res="($locals_"+scope.id.replace(/\./g,'_')+'["'+
 this.assign.value+'"] = '+res+')'}
 return res}}
@@ -2025,8 +2034,7 @@ var innermost=$get_scope(this),scope=innermost,found=[]
 var search_ids=['"'+innermost.id+'"']
 var gs=innermost
 var $test=false 
-if($test){console.log("this",this)
-console.log("innermost",innermost)}
+if($test){console.log("this",this)}
 while(true){if($test){console.log(gs.id,gs)}
 if(gs.parent_block){if(gs.parent_block==$B.builtins_scope){break}
 else if(gs.parent_block.id===undefined){break}
@@ -2065,7 +2073,8 @@ if(scope.binding[val]){found.push(scope)}}
 if(scope.parent_block){scope=scope.parent_block}
 else{break}}
 this.found=found
-if($test){console.log("found",found)}
+if($test){console.log("found",found)
+found.forEach(function(item){console.log(item.id)})}
 if(this.nonlocal && found[0]===innermost){found.shift()}
 if(found.length > 0){
 if(found[0].C && found[0]===innermost
@@ -2103,7 +2112,8 @@ return this.result}else{if(this.boundBefore(scope)){
 val=scope_ns+'["'+val+'"]'}else{
 if($test){console.log("use check def")}
 val='$B.$check_def("'+val+'",'+
-scope_ns+'["'+val+'"])'}}}}}else if(scope===innermost){if(scope.globals && scope.globals.has(val)){val=global_ns+'["'+val+'"]'}else if(!this.bound && !this.augm_assign){
+scope_ns+'["'+val+'"])'}}}}}else if(scope===innermost){if($test){console.log("scope is innermost",scope.id)}
+if(scope.globals && scope.globals.has(val)){val=global_ns+'["'+val+'"]'}else if(!this.bound && !this.augm_assign){
 if(this.boundBefore(scope)){val='$locals["'+val+'"]'}else{val='$B.$check_def_local("'+val+'",$locals["'+
 val+'"])'}}else{val='$locals["'+val+'"]'}}else if(!this.augm_assign){
 if(scope.ntype=='generator'){
@@ -2392,7 +2402,7 @@ this.toString=function(){return 'js '+js}
 this.to_js=function(){this.js_processed=true
 return js}}
 var $NonlocalCtx=$B.parser.$NonlocalCtx=function(C){
-this.type='global'
+this.type='nonlocal'
 this.parent=C
 this.tree=[]
 this.names={}
@@ -2401,7 +2411,7 @@ this.expect='id'
 this.scope=$get_scope(this)
 this.scope.nonlocals=this.scope.nonlocals ||{}
 if(this.scope.C===undefined){$_SyntaxError(C,["nonlocal declaration not allowed at module level"])}
-this.toString=function(){return 'global '+this.tree}
+this.toString=function(){return 'nonlocal '+this.tree}
 this.add=function(name){if(this.scope.binding[name]=="arg"){$_SyntaxError(C,["name '"+name+"' is parameter and nonlocal"])}
 this.names[name]=[false,$pos]
 this.scope.nonlocals[name]=true}
@@ -2722,10 +2732,9 @@ if(car==":" && br_stack.length==0){parts=[expr.substr(0,pos),expr.substr(pos+1)]
 break}else if("{[(".indexOf(car)>-1){br_stack.push(car)}else if(")]}".indexOf(car)>-1){br_stack.pop()}
 pos++}
 expr=parts[0]
-var save_pos=$pos,temp_id="temp"+$B.UUID()
-var expr_node=$B.py2js(expr,scope.module,temp_id,scope)
+var save_pos=$pos
+var expr_node=$B.py2js(expr,scope.module,scope.id,scope)
 expr_node.to_js()
-delete $B.$py_src[temp_id]
 $pos=save_pos
 for(var j=0;j < expr_node.children.length;j++){var node=expr_node.children[j]
 if(node.C.tree && node.C.tree.length==1 &&
@@ -3842,8 +3851,17 @@ C=C.tree[0]
 return new $AbstractExprCtx(new $AssignCtx(C),true)}
 break
 case ':=':
+var ptype=C.parent.type
+if(["node","assign","kwarg","annotation"].
+indexOf(ptype)>-1){$_SyntaxError(C,':= invalid, parent '+ptype)}else if(ptype=="func_arg_id" &&
+C.parent.tree.length > 0){
+$_SyntaxError(C,':= invalid, parent '+ptype)}else if(ptype=="call_arg" &&
+C.parent.parent.type=="call" &&
+C.parent.parent.parent.type=="lambda"){
+$_SyntaxError(C,':= invalid, parent '+ptype)}
 if(C.tree.length==1 &&
 C.tree[0].type=="id"){var scope=$get_scope(C),name=C.tree[0].value
+while(scope.is_comp){scope=scope.parent_block}
 $bind(name,scope,C)
 var parent=C.parent
 parent.tree.pop()
@@ -3991,6 +4009,7 @@ return new $AbstractExprCtx(
 new $AnnotationCtx(C),false)}
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'global':
+case 'nonlocal':
 switch(token){case 'id':
 if(C.expect=='id'){new $IdCtx(C,value)
 C.add(value)
@@ -4797,7 +4816,6 @@ case ',':
 case ':':
 $pos=pos
 if(src.substr(pos,2)==":="){
-console.log("PEP 572",src.substr(pos,2))
 C=$transition(C,":=")
 pos++}else{C=$transition(C,car)}
 pos++
@@ -11876,7 +11894,7 @@ current.expression+=car
 i++}else if(car=="="){
 var ce=current.expression
 if(ce.length==0 ||
-"=!<>".search(ce.charAt(ce.length-1))>-1){current.expression+=car
+"=!<>:".search(ce.charAt(ce.length-1))>-1){current.expression+=car
 i++}else{
 tail=car
 while(string.charAt(i+1).match(/\s/)){tail+=string.charAt(i+1)

@@ -1357,6 +1357,11 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
         }
 
         var left = context.tree[0].to_js()
+        if(context.tree[0].type == "id"){
+            var binding_scope = context.tree[0].firstBindingScopeId()
+            left = "$locals_" + binding_scope.replace(/\./g, '_') +
+                    '["' + context.tree[0].value + '"]'
+        }
 
         if(left_bound_to_int && right_is_int){
             parent.insert(rank + offset, $NodeJS(left + " "+ op + " " + right))
@@ -1431,7 +1436,7 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
         var ctx1 = new $NodeCtx(aa1)
         var expr1 = new $ExprCtx(ctx1, 'clone', false)
         if(left_id_unbound){
-            new $RawJSCtx(expr1, '$locals["' + left_id + '"]')
+            new $RawJSCtx(expr1, left) //'$locals["' + left_id + '"]')
         }else{
             expr1.tree = context.tree
             expr1.tree.forEach(function(elt){
@@ -1458,7 +1463,7 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
         var ctx2 = new $NodeCtx(aa2)
         var expr2 = new $ExprCtx(ctx2, 'clone', false)
         if(left_id_unbound){
-            new $RawJSCtx(expr2, '$locals["' + left_id + '"]')
+            new $RawJSCtx(expr2, left) //'$locals["' + left_id + '"]')
         }else{
             expr2.tree = context.tree
             expr2.tree.forEach(function(elt){
@@ -3239,8 +3244,24 @@ var $ExprCtx = $B.parser.$ExprCtx = function(context, name, with_commas){
             res = "await $B.promise(" + res + ")"
         }
         if(this.assign){
-            console.log("expr to js, is assign", this)
+            // Assignement expression (PEP 572)
             var scope = $get_scope(this)
+            // Inside comprehensions, assignement is in the first
+            // containing scope
+            while(scope.is_comp){
+                scope = scope.parent_block
+            }
+            if(scope.globals && scope.globals.has(this.assign.value)){
+                // Name is declared global
+                while(scope.parent_block &&
+                        scope.parent_block.id !== "__builtins__"){
+                    scope = scope.parent_block
+                }
+            }else if(scope.nonlocals &&
+                    scope.nonlocals[this.assign.value]){
+                // Name is declared nonlocal
+                scope = scope.parent_block
+            }
             res = "($locals_" + scope.id.replace(/\./g, '_') + '["' +
                 this.assign.value + '"] = ' + res + ')'
         }
@@ -4176,11 +4197,10 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         // get global scope
         var gs = innermost
 
-        var $test = false // val == "__annotations__"
+        var $test = false // val == "bx"
 
         if($test){
             console.log("this", this)
-            console.log("innermost", innermost)
         }
 
         while(true){
@@ -4294,7 +4314,12 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
             else{break}
         }
         this.found = found
-        if($test){console.log("found", found)}
+        if($test){
+            console.log("found", found)
+            found.forEach(function(item){
+                console.log(item.id)
+            })
+        }
 
         if(this.nonlocal && found[0] === innermost){found.shift()}
 
@@ -4426,6 +4451,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                     }
                 }
             }else if(scope === innermost){
+                if($test){console.log("scope is innermost", scope.id)}
                 if(scope.globals && scope.globals.has(val)){
                     val = global_ns + '["' + val + '"]'
                 }else if(!this.bound && !this.augm_assign){
@@ -5033,7 +5059,7 @@ var $NodeJSCtx = $B.parser.$NodeJSCtx = function(node,js){
 
 var $NonlocalCtx = $B.parser.$NonlocalCtx = function(context){
     // Class for keyword "nonlocal"
-    this.type = 'global'
+    this.type = 'nonlocal'
     this.parent = context
     this.tree = []
     this.names = {}
@@ -5048,7 +5074,7 @@ var $NonlocalCtx = $B.parser.$NonlocalCtx = function(context){
             ["nonlocal declaration not allowed at module level"])
     }
 
-    this.toString = function(){return 'global ' + this.tree}
+    this.toString = function(){return 'nonlocal ' + this.tree}
 
     this.add = function(name){
         if(this.scope.binding[name] == "arg"){
@@ -5723,11 +5749,9 @@ var $StringCtx = $B.parser.$StringCtx = function(context,value){
                     // This gives us a node whose structure is always the same.
                     // The Javascript code matching the expression is the first
                     // child of the first "try" block in the node's children.
-                    var save_pos = $pos,
-                        temp_id = "temp" + $B.UUID()
-                    var expr_node = $B.py2js(expr, scope.module, temp_id, scope)
+                    var save_pos = $pos
+                    var expr_node = $B.py2js(expr, scope.module, scope.id, scope)
                     expr_node.to_js()
-                    delete $B.$py_src[temp_id]
                     $pos = save_pos
                     for(var j = 0; j < expr_node.children.length; j++){
                         var node = expr_node.children[j]
@@ -7843,10 +7867,27 @@ var $transition = $B.parser.$transition = function(context, token, value){
                 break
             case ':=':
                 // PEP 572 : assignment expression
+                var ptype = context.parent.type
+                if(["node", "assign", "kwarg", "annotation"].
+                        indexOf(ptype) > -1){
+                    $_SyntaxError(context, ':= invalid, parent ' + ptype)
+                }else if(ptype == "func_arg_id" &&
+                        context.parent.tree.length > 0){
+                    // def foo(answer = p := 42):
+                    $_SyntaxError(context, ':= invalid, parent ' + ptype)
+                }else if(ptype == "call_arg" &&
+                        context.parent.parent.type == "call" &&
+                        context.parent.parent.parent.type == "lambda"){
+                    // lambda x := 1
+                    $_SyntaxError(context, ':= invalid, parent ' + ptype)
+                }
                 if(context.tree.length == 1 &&
                         context.tree[0].type == "id"){
                     var scope = $get_scope(context),
                         name = context.tree[0].value
+                    while(scope.is_comp){
+                        scope = scope.parent_block
+                    }
                     $bind(name, scope, context)
                     var parent = context.parent
                     parent.tree.pop()
@@ -8110,6 +8151,7 @@ var $transition = $B.parser.$transition = function(context, token, value){
             $_SyntaxError(context, 'token ' + token + ' after ' + context)
 
         case 'global':
+        case 'nonlocal':
             switch(token) {
                 case 'id':
                     if(context.expect == 'id'){
@@ -9493,7 +9535,6 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
                 $pos = pos
                 if(src.substr(pos, 2) == ":="){
                     // PEP 572 : assignment expression
-                    console.log("PEP 572", src.substr(pos, 2))
                     context = $transition(context, ":=")
                     pos++
                 }else{

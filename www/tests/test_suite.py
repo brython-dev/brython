@@ -520,4 +520,73 @@ del attr
 for attr in range(5):
     pass
 
+# PEP 572 (assignement expressions)
+
+def f(x):
+    return x
+
+(y := f(8))
+assert y == 8
+
+assertRaises(SyntaxError, exec, "y0 = y1 := f(5)")
+
+y0 = (y1 := f(5))
+assert y0 == 5
+assert y1 == 5
+
+assertRaises(SyntaxError, exec, "foo(x = y := f(x))")
+
+assertRaises(SyntaxError, exec,
+    """def foo(answer = p := 42):
+    pass""")
+
+def foo(answer=(p := 42)):
+    return answer, p
+
+assert foo() == (42, 42)
+assert foo(5) == (5, 42)
+
+assertRaises(SyntaxError, exec,
+    """def foo(answer: p := 42 = 5):
+    pass""")
+
+def foo1(answer: (p := 42) = 5):
+    return (answer, p)
+
+assert foo1() == (5, 42)
+assert foo1(8) == (8, 42)
+
+assertRaises(SyntaxError, exec, "lambda x:= 1")
+assertRaises(SyntaxError, exec, "(lambda x:= 1)")
+
+f = lambda: (x := 1)
+assert f() == 1
+
+assert f'{(xw:=10)}' == "10"
+assert xw == 10
+
+z = 3
+assert f'{z:=5}' == '    3'
+
+total = 0
+partial_sums = [total := total + v for v in range(5)]
+assert total == 10
+
+def assign_expr_in_comp_global():
+    global total
+    [total := total + v for v in range(5)]
+
+assign_expr_in_comp_global()
+assert total == 20
+
+def assign_expr_in_comp_nonlocal():
+    x = 0
+    def g():
+        nonlocal x
+        [ x := x + i for i in range(5)]
+    g()
+    return x
+
+assert assign_expr_in_comp_nonlocal() == 10
+
 print('passed all tests...')

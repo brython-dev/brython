@@ -2125,7 +2125,7 @@ $B.parse_fstring = function(string){
                     // might be a "debug expression", eg f"{x=}"
                     var ce = current.expression
                     if(ce.length == 0 ||
-                            "=!<>".search(ce.charAt(ce.length - 1)) > -1){
+                            "=!<>:".search(ce.charAt(ce.length - 1)) > -1){
                         current.expression += car
                         i++
                     }else{
