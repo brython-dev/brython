@@ -51,11 +51,6 @@ def make(package_name, package_path, exclude_dirs=None):
     nb = 0
     if exclude_dirs is None:
         exclude_dirs = []
-
-    # If package_path folder has __init__.py, all scripts will be in the
-    # package named package_name
-    in_package = "__init__.py" in os.listdir(package_path)
-
     for dirpath, dirnames, filenames in os.walk(package_path):
         flag = False
         root_elts = dirpath.split(os.sep)
@@ -70,17 +65,10 @@ def make(package_name, package_path, exclude_dirs=None):
         else:
             package = dirpath[len(package_path) + 1:].split(os.sep)
 
-        if in_package:
-            package = [package_name] + package
-
-        has_init = "__init__.py" in filenames
-        has_py = False
-
         for filename in filenames:
             name, ext = os.path.splitext(filename)
             if ext != '.py':
                 continue
-            has_py = True
             is_package = name.endswith('__init__')
             if is_package:
                 mod_name = '.'.join(package)
@@ -108,13 +96,7 @@ def make(package_name, package_path, exclude_dirs=None):
             else:
                 VFS[mod_name] = [ext, data, imports]
 
-            print("adding {} from {}".format(mod_name, filename))
-
-        if has_py and not has_init:
-            # Add empty package file
-            mod_name = '.'.join(package)
-            VFS[mod_name] = [".py", "", [], 1]
-            print("adding empty {}".format(mod_name))
+            print("adding {} package {}".format(mod_name, is_package))
 
     if nb == 0:
         print("No Python file found in current directory")
@@ -123,7 +105,7 @@ def make(package_name, package_path, exclude_dirs=None):
         with open(os.path.join(package_path, package_name + ".brython.js"),
                 "w", encoding="utf-8") as out:
             out.write('__BRYTHON__.use_VFS = true;\n')
-            out.write('var scripts = {}\n'.format(json.dumps(VFS, indent=4)))
+            out.write('var scripts = {}\n'.format(json.dumps(VFS)))
             out.write('__BRYTHON__.update_VFS(scripts)\n')
 
 if __name__ == "__main__":
