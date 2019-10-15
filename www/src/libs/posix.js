@@ -67,6 +67,7 @@ var $module = {
     lstat: function(){return stat_result.$factory()},
     open: function(path, flags){return _b_.open(path, flags)},
     stat: function(){return stat_result.$factory()},
+    stat_result: function(){return stat_result.$factory()},
     urandom: function(n){
         var randbytes = []
         for(var i = 0; i < n; i++){
