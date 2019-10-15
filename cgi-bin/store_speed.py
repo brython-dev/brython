@@ -4,6 +4,9 @@
 import os
 import cgi
 import json
+import sys
+
+cpython_version = ".".join(str(x) for x in sys.implementation.version[:3])
 
 print('Content-type: text/html\n\n')
 print()
@@ -48,7 +51,7 @@ pre{
 </style>
 </head>
 <body>
-<h2>Brython {{version}} performance compared to CPython</h2>
+<h2>Brython {{version}} performance compared to CPython {{cpython_version}}</h2>
 User agent: {{userAgent}}
 <p>
 <table>
@@ -60,7 +63,7 @@ User agent: {{userAgent}}
 """
 with open("speed_results.html", "w", encoding="utf-8") as out:
     head = html.replace("{{version}}", version).replace("{{userAgent}}",
-        userAgent)
+        userAgent).replace("{{cpython_version}}", cpython_version)
     out.write(head)
     for record in data:
         out.write(f'<tr><td>{record["description"]}</td>' +
