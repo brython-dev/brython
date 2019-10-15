@@ -2837,6 +2837,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
             h1 + 'co_kwonlyargcount:' + this.kwonlyargcount +
             h1 + 'co_name: "' + this.name + '"' +
             h1 + 'co_nlocals: ' + co_varnames.length +
+            h1 + 'co_posonlyargcount: ' + (this.pos_only || 0) +
             h1 + 'co_varnames: [' + co_varnames.join(', ') + ']' +
             h + '}\n' + ' '.repeat(indent + 4) +'};'
 
@@ -3146,6 +3147,7 @@ var $EndOfPositionalCtx = $B.parser.$EndOfConditionalCtx = function(context){
     this.type = "end_positional"
     this.parent = context
     context.has_end_positional = true
+    context.parent.pos_only = context.tree.length
     context.tree.push(this)
 
     this.to_js = function(){
