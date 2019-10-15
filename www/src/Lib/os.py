@@ -9,7 +9,6 @@ name = 'posix'
 linesep = '\n'
 
 from posix import *
-print("stat result", stat_result)
 import posixpath as path
 
 sys.modules['os.path'] = path
