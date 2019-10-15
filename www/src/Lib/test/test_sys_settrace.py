@@ -53,21 +53,51 @@ basic.events = [(0, 'call'),
 # following that clause?
 
 
-# The entire "while 0:" statement is optimized away.  No code
-# exists for it, so the line numbers skip directly from "del x"
-# to "x = 1".
-def arigo_example():
+# Some constructs like "while 0:", "if 0:" or "if 1:...else:..." are optimized
+# away.  No code # exists for them, so the line numbers skip directly from
+# "del x" to "x = 1".
+def arigo_example0():
     x = 1
     del x
     while 0:
         pass
     x = 1
 
-arigo_example.events = [(0, 'call'),
+arigo_example0.events = [(0, 'call'),
                         (1, 'line'),
                         (2, 'line'),
                         (5, 'line'),
                         (5, 'return')]
+
+def arigo_example1():
+    x = 1
+    del x
+    if 0:
+        pass
+    x = 1
+
+arigo_example1.events = [(0, 'call'),
+                        (1, 'line'),
+                        (2, 'line'),
+                        (5, 'line'),
+                        (5, 'return')]
+
+def arigo_example2():
+    x = 1
+    del x
+    if 1:
+        x = 1
+    else:
+        pass
+    return None
+
+arigo_example2.events = [(0, 'call'),
+                        (1, 'line'),
+                        (2, 'line'),
+                        (4, 'line'),
+                        (7, 'line'),
+                        (7, 'return')]
+
 
 # check that lines consisting of just one instruction get traced:
 def one_instr_line():
@@ -207,7 +237,6 @@ tightloop_example.events = [(0, 'call'),
                             (1, 'line'),
                             (2, 'line'),
                             (3, 'line'),
-                            (4, 'line'),
                             (5, 'line'),
                             (5, 'line'),
                             (5, 'line'),
@@ -350,8 +379,12 @@ class TraceTestCase(unittest.TestCase):
 
     def test_01_basic(self):
         self.run_test(basic)
-    def test_02_arigo(self):
-        self.run_test(arigo_example)
+    def test_02_arigo0(self):
+        self.run_test(arigo_example0)
+    def test_02_arigo1(self):
+        self.run_test(arigo_example1)
+    def test_02_arigo2(self):
+        self.run_test(arigo_example2)
     def test_03_one_instr(self):
         self.run_test(one_instr_line)
     def test_04_no_pop_blocks(self):
@@ -668,6 +701,7 @@ class JumpTestCase(unittest.TestCase):
             with self.assertRaisesRegex(*error):
                 asyncio.run(func(output))
         sys.settrace(None)
+        asyncio.set_event_loop_policy(None)
         self.compare_jump_output(expected, output)
 
     def jump_test(jumpFrom, jumpTo, expected, error=None, event='line'):
@@ -793,12 +827,43 @@ class JumpTestCase(unittest.TestCase):
             output.append(11)
         output.append(12)
 
+    @jump_test(5, 11, [2, 4, 12])
+    def test_jump_over_return_try_finally_in_finally_block(output):
+        try:
+            output.append(2)
+        finally:
+            output.append(4)
+            output.append(5)
+            return
+            try:
+                output.append(8)
+            finally:
+                output.append(10)
+            pass
+        output.append(12)
+
     @jump_test(3, 4, [1, 4])
     def test_jump_infinite_while_loop(output):
         output.append(1)
         while True:
             output.append(3)
         output.append(4)
+
+    @jump_test(2, 4, [4, 4])
+    def test_jump_forwards_into_while_block(output):
+        i = 1
+        output.append(2)
+        while i <= 2:
+            output.append(4)
+            i += 1
+
+    @jump_test(5, 3, [3, 3, 3, 5])
+    def test_jump_backwards_into_while_block(output):
+        i = 1
+        while i <= 2:
+            output.append(3)
+            i += 1
+        output.append(5)
 
     @jump_test(2, 3, [1, 3])
     def test_jump_forwards_out_of_with_block(output):
@@ -1101,22 +1166,6 @@ class JumpTestCase(unittest.TestCase):
             output.append(2)
         output.append(3)
 
-    @jump_test(2, 4, [], (ValueError, 'into'))
-    def test_no_jump_forwards_into_while_block(output):
-        i = 1
-        output.append(2)
-        while i <= 2:
-            output.append(4)
-            i += 1
-
-    @jump_test(5, 3, [3, 3], (ValueError, 'into'))
-    def test_no_jump_backwards_into_while_block(output):
-        i = 1
-        while i <= 2:
-            output.append(3)
-            i += 1
-        output.append(5)
-
     @jump_test(1, 3, [], (ValueError, 'into'))
     def test_no_jump_forwards_into_with_block(output):
         output.append(1)
@@ -1187,8 +1236,16 @@ class JumpTestCase(unittest.TestCase):
             output.append(7)
         output.append(8)
 
-    @jump_test(3, 6, [2, 5, 6], (ValueError, 'finally'))
+    @jump_test(1, 5, [], (ValueError, "into a 'finally'"))
     def test_no_jump_into_finally_block(output):
+        output.append(1)
+        try:
+            output.append(3)
+        finally:
+            output.append(5)
+
+    @jump_test(3, 6, [2, 5, 6], (ValueError, "into a 'finally'"))
+    def test_no_jump_into_finally_block_from_try_block(output):
         try:
             output.append(2)
             output.append(3)
@@ -1197,21 +1254,71 @@ class JumpTestCase(unittest.TestCase):
             output.append(6)
         output.append(7)
 
-    @jump_test(1, 5, [], (ValueError, 'finally'))
-    def test_no_jump_into_finally_block_2(output):
-        output.append(1)
-        try:
-            output.append(3)
-        finally:
-            output.append(5)
-
-    @jump_test(5, 1, [1, 3], (ValueError, 'finally'))
+    @jump_test(5, 1, [1, 3], (ValueError, "out of a 'finally'"))
     def test_no_jump_out_of_finally_block(output):
         output.append(1)
         try:
             output.append(3)
         finally:
             output.append(5)
+
+    @jump_test(1, 5, [], (ValueError, "into an 'except'"))
+    def test_no_jump_into_bare_except_block(output):
+        output.append(1)
+        try:
+            output.append(3)
+        except:
+            output.append(5)
+
+    @jump_test(1, 5, [], (ValueError, "into an 'except'"))
+    def test_no_jump_into_qualified_except_block(output):
+        output.append(1)
+        try:
+            output.append(3)
+        except Exception:
+            output.append(5)
+
+    @jump_test(3, 6, [2, 5, 6], (ValueError, "into an 'except'"))
+    def test_no_jump_into_bare_except_block_from_try_block(output):
+        try:
+            output.append(2)
+            output.append(3)
+        except:  # executed if the jump is failed
+            output.append(5)
+            output.append(6)
+            raise
+        output.append(8)
+
+    @jump_test(3, 6, [2], (ValueError, "into an 'except'"))
+    def test_no_jump_into_qualified_except_block_from_try_block(output):
+        try:
+            output.append(2)
+            output.append(3)
+        except ZeroDivisionError:
+            output.append(5)
+            output.append(6)
+            raise
+        output.append(8)
+
+    @jump_test(7, 1, [1, 3, 6], (ValueError, "out of an 'except'"))
+    def test_no_jump_out_of_bare_except_block(output):
+        output.append(1)
+        try:
+            output.append(3)
+            1/0
+        except:
+            output.append(6)
+            output.append(7)
+
+    @jump_test(7, 1, [1, 3, 6], (ValueError, "out of an 'except'"))
+    def test_no_jump_out_of_qualified_except_block(output):
+        output.append(1)
+        try:
+            output.append(3)
+            1/0
+        except Exception:
+            output.append(6)
+            output.append(7)
 
     @jump_test(3, 5, [1, 2, -2], (ValueError, 'into'))
     def test_no_jump_between_with_blocks(output):
@@ -1228,6 +1335,16 @@ class JumpTestCase(unittest.TestCase):
             output.append(3)
         async with asynctracecontext(output, 4):
             output.append(5)
+
+    @jump_test(5, 7, [2, 4], (ValueError, 'finally'))
+    def test_no_jump_over_return_out_of_finally_block(output):
+        try:
+            output.append(2)
+        finally:
+            output.append(4)
+            output.append(5)
+            return
+        output.append(7)
 
     @jump_test(7, 4, [1, 6], (ValueError, 'into'))
     def test_no_jump_into_for_block_before_else(output):
