@@ -61,7 +61,7 @@ choose the latest stable release :
 
 ```xml
 <script type="text/javascript"
-    src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.8.0/brython.min.js">
+    src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.7.5/brython.min.js">
 </script>
 ```
 
@@ -71,7 +71,7 @@ with the [available stdlib](https://github.com/brython-dev/brython/tree/master/w
 
 ```xml
 <script type="text/javascript"
-    src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.8.0/brython_stdlib.js">
+    src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.7.5/brython_stdlib.js">
 </script>
 ```
 
