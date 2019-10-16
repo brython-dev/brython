@@ -1,5 +1,4 @@
 [![CDNJS version](https://img.shields.io/cdnjs/v/brython.svg)](https://cdnjs.com/libraries/brython)
-[![](https://data.jsdelivr.com/v1/package/npm/brython/badge)](https://www.jsdelivr.com/package/npm/brython)
 
 brython
 =======
