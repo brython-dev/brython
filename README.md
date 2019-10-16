@@ -1,5 +1,3 @@
-[![CDNJS version](https://img.shields.io/cdnjs/v/brython.svg)](https://cdnjs.com/libraries/brython)
-
 brython
 =======
 
