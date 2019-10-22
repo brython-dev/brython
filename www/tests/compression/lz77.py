@@ -9,7 +9,7 @@ class LZ77:
                 for char in text[pos:]:
                     yield char
                 break
-            buf = text[pos - size:pos]
+            buf = text[max(0, pos - size):pos]
             buf_pos = buf.rfind(sequence)
             if buf_pos > -1:
                 length = 1
