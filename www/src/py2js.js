@@ -9269,16 +9269,16 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
         }
         // identifier ?
         if(name == "" && car != '$'){
-            // regexIdentifier is defined in brython_builtins.js. It is a
-            // regular expression that matches all the valid Python
-            // identifier names, including those in non-latin writings (cf
-            // issue #358)
-            if($B.regexIdentifier.exec(car)){
+            // $B.unicode_tables is defined in unicode_data.js. Its attributes
+            // XID_Start and XID_Continue are objects with keys = the code
+            // points of valid characters for identifiers.
+            // Cf. https://docs.python.org/3/reference/lexical_analysis.html#identifiers
+            if($B.unicode_tables.XID_Start[car.charCodeAt(0)]){
                 name = car // identifier start
                 var p0 = pos
                 pos++
                 while(pos < src.length &&
-                        $B.regexIdentifier.exec(src.substring(p0, pos + 1))){
+                        $B.unicode_tables.XID_Continue[src.charCodeAt(pos)]){
                     name += src.charAt(pos)
                     pos++
                 }
