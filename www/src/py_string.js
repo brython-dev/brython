@@ -3,6 +3,45 @@
 var bltns = $B.InjectBuiltins()
 eval(bltns)
 
+// build tables from data in unicode_data.js
+var unicode_tables = {}
+for(var gc in $B.unicode){
+    unicode_tables[gc] = {}
+    $B.unicode[gc].forEach(function(item){
+        if(Array.isArray(item)){
+            var step = item[2] || 1
+            for(var i = 0, nb = item[1]; i < nb; i += 1){
+                unicode_tables[gc][item[0] + i * step] = true
+            }
+        }else{
+            unicode_tables[gc][item] = true
+        }
+    })
+}
+
+for(var key in $B.unicode_identifiers){
+    unicode_tables[key] = {}
+    for(const item of $B.unicode_identifiers[key]){
+        if(Array.isArray(item)){
+            for(var i = 0; i < item[1]; i++){
+                unicode_tables[key][item[0] + i] = true
+            }
+        }else{
+            unicode_tables[key][item] = true
+        }
+    }
+}
+
+/*
+// Copy static methods from unicode
+var from_unicode = [
+    "isalpha",
+    "isalnum",
+    "isdecimal",
+    "isdigit",
+    "isidentifier",
+]
+*/
 if(!String.prototype.trim){
     // Polyfill for older browsers
     // The code does not use a regex to make it a bit faster.
@@ -883,30 +922,32 @@ var $notimplemented = function(self, other){
         "OPERATOR not implemented for class str")
 }
 
-// Copy static methods from unicode
-var from_unicode = [
-    "title",
-    "capitalize",
-    "casefold",
-    "islower",
-    "isupper",
-    "istitle",
-    "isspace",
-    "isalpha",
-    "isalnum",
-    "isdecimal",
-    "isdigit",
-    "isnumeric",
-    "isidentifier",
-    "isprintable",
-    "lower",
-    "swapcase",
-    "upper"
-]
-// uses the object unicode, defined in unicode.min.js
-from_unicode.forEach(function(name){
-    str[name] = unicode[name]
-})
+str.capitalize = function(self){
+    var $ = $B.args("capitalize", 1, {self}, ["self"],
+            arguments, {}, null, null)
+    if(self.length == 0){return ""}
+    return self.charAt(0).toUpperCase() + self.substr(1)
+}
+
+str.casefold = function(self){
+    var $ = $B.args("casefold", 1, {self}, ["self"],
+            arguments, {}, null, null),
+        res = "",
+        char,
+        cf
+    for(var i = 0, len = self.length; i < len; i++){
+        char = self.charCodeAt(i)
+        cf = $B.unicode_casefold[char]
+        if(cf){
+            cf.forEach(function(cp){
+                res += String.fromCharCode(cp)
+            })
+        }else{
+            res += self.charAt(i).toLowerCase()
+        }
+    }
+    return res
+}
 
 str.center = function(){
     var $ = $B.args("center", 3, {self: null, width: null, fillchar: null},
@@ -1284,14 +1325,231 @@ str.index = function(self){
 }
 
 str.isascii = function(self){
-    // Return true if the string is empty or all characters in the string are
-    // ASCII, false otherwise. ASCII characters have code points in the range
-    // U+0000-U+007F.
+    /* Return true if the string is empty or all characters in the string are
+    ASCII, false otherwise. ASCII characters have code points in the range
+    U+0000-U+007F. */
     for(var i = 0, len = self.length; i < len; i++){
         if(self.charCodeAt(i) > 127){return false}
     }
     return true
 }
+
+str.isalnum = function(self){
+    /* Return true if all characters in the string are alphanumeric and there
+    is at least one character, false otherwise. A character c is alphanumeric
+    if one of the following returns True: c.isalpha(), c.isdecimal(),
+    c.isdigit(), or c.isnumeric(). */
+    var $ = $B.args("isalnum", 1, {self: null}, ["self"],
+        arguments, {}, null, null),
+        char
+    for(var i = 0, len = self.length; i < len; i++){
+        char = self.charCodeAt(i)
+        if(unicode_tables.Ll[char] ||
+                unicode_tables.Lu[char] ||
+                unicode_tables.Lm[char] ||
+                unicode_tables.Lt[char] ||
+                unicode_tables.Lo[char] ||
+                unicode_tables.Nd[char] ||
+                unicode_tables.digits[char] ||
+                unicode_tables.numeric[char]){
+            continue
+        }
+        return false
+    }
+    return true
+}
+
+str.isalpha = function(self){
+    /* Return true if all characters in the string are alphabetic and there is
+    at least one character, false otherwise. Alphabetic characters are those
+    characters defined in the Unicode character database as "Letter", i.e.,
+    those with general category property being one of "Lm", "Lt", "Lu", "Ll",
+    or "Lo". */
+    var $ = $B.args("isalpha", 1, {self: null}, ["self"],
+        arguments, {}, null, null),
+        char
+    for(var i = 0, len = self.length; i < len; i++){
+        char = self.charCodeAt(i)
+        if(unicode_tables.Ll[char] ||
+                unicode_tables.Lu[char] ||
+                unicode_tables.Lm[char] ||
+                unicode_tables.Lt[char] ||
+                unicode_tables.Lo[char]){
+            continue
+        }
+        return false
+    }
+    return true
+}
+
+str.isdecimal = function(self){
+    /* Return true if all characters in the string are decimal characters and
+    there is at least one character, false otherwise. Decimal characters are
+    those that can be used to form numbers in base 10, e.g. U+0660,
+    ARABIC-INDIC DIGIT ZERO. Formally a decimal character is a character in
+    the Unicode General Category "Nd". */
+    var $ = $B.args("isdecimal", 1, {self: null}, ["self"],
+        arguments, {}, null, null),
+        char
+    for(var i = 0, len = self.length; i < len; i++){
+        char = self.charCodeAt(i)
+        if(! unicode_tables.Nd[char]){
+            return false
+        }
+    }
+    return self.length > 0
+}
+
+str.isdigit = function(self){
+    /* Return true if all characters in the string are digits and there is at
+    least one character, false otherwise. */
+    var $ = $B.args("isdigit", 1, {self: null}, ["self"],
+        arguments, {}, null, null),
+        char
+    for(var i = 0, len = self.length; i < len; i++){
+        char = self.charCodeAt(i)
+        if(! unicode_tables.digits[char]){
+            return false
+        }
+    }
+    return self.length > 0
+}
+
+str.isidentifier = function(self){
+    /* Return true if the string is a valid identifier according to the
+    language definition. */
+    var $ = $B.args("isidentifier", 1, {self: null}, ["self"],
+        arguments, {}, null, null),
+        char
+    if(self.length == 0){return false}
+    else if(unicode_tables.XID_Start[self.charCodeAt(0)] === undefined){
+        return false
+    }else{
+        for(var i = 1, len = self.length; i < len; i++){
+            if(unicode_tables.XID_Continue[self.charCodeAt(i)] === undefined){
+                return false
+            }
+        }
+    }
+    return true
+}
+
+str.islower = function(self){
+    /* Return true if all cased characters 4 in the string are lowercase and
+    there is at least one cased character, false otherwise. */
+    var $ = $B.args("islower", 1, {self: null}, ["self"],
+        arguments, {}, null, null),
+        has_cased = false,
+        char
+
+    for(var i = 0, len = self.length; i < len; i++){
+        char = self.charCodeAt(i)
+        if(unicode_tables["Ll"][char]){has_cased = true; continue}
+        else if(unicode_tables["Lu"][char] || unicode_tables["Lt"][char]){
+            return false
+        }
+    }
+    return has_cased
+}
+
+str.isnumeric = function(self){
+    /* Return true if all characters in the string are numeric characters, and
+    there is at least one character, false otherwise. Numeric characters
+    include digit characters, and all characters that have the Unicode numeric
+    value property, e.g. U+2155, VULGAR FRACTION ONE FIFTH. Formally, numeric
+    characters are those with the property value Numeric_Type=Digit,
+    Numeric_Type=Decimal or Numeric_Type=Numeric.*/
+    var $ = $B.args("isnumeric", 1, {self: null}, ["self"],
+        arguments, {}, null, null)
+    for(var i = 0, len = self.length; i < len; i++){
+        if(! unicode_tables.numeric[self.charCodeAt(i)]){
+            return false
+        }
+    }
+    return self.length > 0
+}
+
+var printable,
+    printable_gc = ['Cc', 'Cf', 'Co', 'Cs','Zl', 'Zp', 'Zs']
+
+str.isprintable = function(self){
+    /* Return true if all characters in the string are printable or the string
+    is empty, false otherwise. Nonprintable characters are those characters
+    defined in the Unicode character database as "Other" or "Separator",
+    excepting the ASCII space (0x20) which is considered printable. */
+
+    // Set printable if not set yet
+    if(printable === undefined){
+        for(var i = 0; i < printable_gc.length; i++){
+            var table = unicode_tables[printable_gc[i]]
+            for(var cp in table){
+                printable[cp] = true
+            }
+        }
+        printable[32] = true
+    }
+
+    var $ = $B.args("isprintable", 1, {self: null}, ["self"],
+        arguments, {}, null, null),
+        char,
+        flag
+    for(var i = 0, len = self.length; i < len; i++){
+        char = self.charCodeAt(i)
+        if(! printable[char]){
+            return false
+        }
+    }
+    return true
+}
+
+str.isspace = function(self){
+    /* Return true if there are only whitespace characters in the string and
+    there is at least one character, false otherwise.
+
+    A character is whitespace if in the Unicode character database, either its
+    general category is Zs ("Separator, space"), or its bidirectional class is
+    one of WS, B, or S.*/
+    var $ = $B.args("isspace", 1, {self: null}, ["self"],
+        arguments, {}, null, null),
+        char
+    for(var i = 0, len = self.length; i < len; i++){
+        char = self.charCodeAt(i)
+        if(! unicode_tables.Zs[char] &&
+                $B.unicode_bidi_whitespace.indexOf(char) == -1){
+            return false
+        }
+    }
+    return self.length > 0
+}
+
+str.istitle = function(self){
+    /* Return true if the string is a titlecased string and there is at least
+    one character, for example uppercase characters may only follow uncased
+    characters and lowercase characters only cased ones. Return false
+    otherwise. */
+    var $ = $B.args("istitle", 1, {self: null}, ["self"],
+        arguments, {}, null, null)
+    return self.length > 0 && str.title(self) == self
+}
+
+str.isupper = function(self){
+    /* Return true if all cased characters 4 in the string are lowercase and
+    there is at least one cased character, false otherwise. */
+    var $ = $B.args("islower", 1, {self: null}, ["self"],
+        arguments, {}, null, null),
+        has_cased = false,
+        char
+
+    for(var i = 0, len = self.length; i < len; i++){
+        char = self.charCodeAt(i)
+        if(unicode_tables["Lu"][char]){has_cased = true; continue}
+        else if(unicode_tables["Ll"][char] || unicode_tables["Lt"][char]){
+            return false
+        }
+    }
+    return has_cased
+}
+
 
 str.join = function(){
     var $ = $B.args("join", 2, {self: null, iterable: null},
@@ -1324,6 +1582,12 @@ str.ljust = function(self) {
 
     if($.width <= self.length){return self}
     return self + $.fillchar.repeat($.width - self.length)
+}
+
+str.lower = function(self){
+    var $ = $B.args("lower", 1, {self: null}, ["self"],
+            arguments, {}, null, null)
+    return self.toLowerCase()
 }
 
 str.lstrip = function(self,x){
@@ -1713,6 +1977,51 @@ str.strip = function(){
     return $.self.substring(i, j + 1)
 }
 
+str.swapcase = function(self){
+    var $ = $B.args("swapcase", 1, {self}, ["self"],
+            arguments, {}, null, null),
+        res = "",
+        char
+
+    for(var i = 0, len = self.length; i < len; i++){
+        char = self.charCodeAt(i)
+        if(unicode_tables.Ll[char]){
+            res += self.charAt(i).toUpperCase()
+        }else if(unicode_tables.Lu[char]){
+            res += self.charAt(i).toLowerCase()
+        }else{
+            res += self.charAt(i)
+        }
+    }
+    return res
+}
+
+str.title = function(self){
+    var $ = $B.args("title", 1, {self}, ["self"],
+            arguments, {}, null, null),
+        state,
+        char,
+        res = ""
+    for(var i = 0, len = self.length; i < len; i++){
+        char = self.charCodeAt(i)
+        if(unicode_tables.Ll[char]){
+            if(! state){
+                res += self.charAt(i).toUpperCase()
+                state = "word"
+            }else{
+                res += self.charAt(i)
+            }
+        }else if(unicode_tables.Lu[char] || unicode_tables.Lt[char]){
+            res += state ? self.charAt(i).toLowerCase() : self.charAt(i)
+            state = "word"
+        }else{
+            state = null
+            res += self.charAt(i)
+        }
+    }
+    return res
+}
+
 str.translate = function(self, table){
     var res = [],
         getitem = $B.$getattr(table, "__getitem__")
@@ -1727,6 +2036,12 @@ str.translate = function(self, table){
         }
     }
     return res.join("")
+}
+
+str.upper = function(self){
+    var $ = $B.args("upper", 1, {self: null}, ["self"],
+            arguments, {}, null, null)
+    return self.toUpperCase()
 }
 
 str.zfill = function(self, width){

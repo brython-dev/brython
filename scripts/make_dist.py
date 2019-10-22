@@ -45,7 +45,7 @@ def run():
     now = datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
 
     timestamp = int(1000 * time.time())
-    
+
     # update version number
     with open(abs_path('version_info.js'), 'w') as vinfo_file_out:
         # implementation[2] = now
@@ -74,7 +74,7 @@ def run():
     import make_stdlib_static
     # build brython.js from base Javascript files
     sources = [
-        'unicode.min',
+        'unicode_data',
         'brython_builtins', 'version_info', 'py2js', 'loaders',
         'py_object', 'py_type', 'py_utils', 'py_builtin_functions',
         'py_exceptions', 'py_range_slice', 'py_bytes', 'py_set', 'js_objects',
@@ -154,7 +154,7 @@ def run():
         shutil.copyfile(os.path.join(src_dir, f), os.path.join(sdir, f))
 
     # copy the version of brython.js that has no static stdlib
-    shutil.copyfile(os.path.join(src_dir, "brython_no_static.js"), 
+    shutil.copyfile(os.path.join(src_dir, "brython_no_static.js"),
         os.path.join(sdir, "brython.js"))
 
     # copy demo.html
