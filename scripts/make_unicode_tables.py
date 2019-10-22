@@ -161,11 +161,40 @@ print(sorted(list(letters)))
 
 with open(os.path.join(dest_dir, "unicode_data.js"), "w",
         encoding="utf-8") as out:
-    out.write("__BRYTHON__.unicode = ")
+    out.write("var $B = __BRYTHON__\n")
+    out.write("$B.unicode = ")
     json.dump(data, out, separators=[",", ":"])
-    out.write("\n__BRYTHON__.unicode_casefold = " +
+    out.write("\n$B.unicode_casefold = " +
         str(casefold).replace(" ", ""))
-    out.write("\n__BRYTHON__.unicode_bidi_whitespace = " +
+    out.write("\n$B.unicode_bidi_whitespace = " +
         str(bidi_ws).replace(" ", ""))
-    out.write("\n__BRYTHON__.unicode_identifiers = ")
+    out.write("\n$B.unicode_identifiers = ")
     json.dump(identifiers, out, separators=[",", ":"])
+    out.write("""\n$B.unicode_tables = {}
+for(var gc in $B.unicode){
+    $B.unicode_tables[gc] = {}
+    $B.unicode[gc].forEach(function(item){
+        if(Array.isArray(item)){
+            var step = item[2] || 1
+            for(var i = 0, nb = item[1]; i < nb; i += 1){
+                $B.unicode_tables[gc][item[0] + i * step] = true
+            }
+        }else{
+            $B.unicode_tables[gc][item] = true
+        }
+    })
+}
+
+for(var key in $B.unicode_identifiers){
+    $B.unicode_tables[key] = {}
+    for(const item of $B.unicode_identifiers[key]){
+        if(Array.isArray(item)){
+            for(var i = 0; i < item[1]; i++){
+                $B.unicode_tables[key][item[0] + i] = true
+            }
+        }else{
+            $B.unicode_tables[key][item] = true
+        }
+    }
+}
+""")

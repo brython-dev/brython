@@ -4,34 +4,7 @@ var bltns = $B.InjectBuiltins()
 eval(bltns)
 
 // build tables from data in unicode_data.js
-var unicode_tables = {}
-for(var gc in $B.unicode){
-    unicode_tables[gc] = {}
-    $B.unicode[gc].forEach(function(item){
-        if(Array.isArray(item)){
-            var step = item[2] || 1
-            for(var i = 0, nb = item[1]; i < nb; i += 1){
-                unicode_tables[gc][item[0] + i * step] = true
-            }
-        }else{
-            unicode_tables[gc][item] = true
-        }
-    })
-}
-
-for(var key in $B.unicode_identifiers){
-    unicode_tables[key] = {}
-    for(const item of $B.unicode_identifiers[key]){
-        if(Array.isArray(item)){
-            for(var i = 0; i < item[1]; i++){
-                unicode_tables[key][item[0] + i] = true
-            }
-        }else{
-            unicode_tables[key][item] = true
-        }
-    }
-}
-
+var unicode_tables = $B.unicode_tables
 /*
 // Copy static methods from unicode
 var from_unicode = [
@@ -1444,8 +1417,8 @@ str.islower = function(self){
 
     for(var i = 0, len = self.length; i < len; i++){
         char = self.charCodeAt(i)
-        if(unicode_tables["Ll"][char]){has_cased = true; continue}
-        else if(unicode_tables["Lu"][char] || unicode_tables["Lt"][char]){
+        if(unicode_tables.Ll[char]){has_cased = true; continue}
+        else if(unicode_tables.Lu[char] || unicode_tables.Lt[char]){
             return false
         }
     }
@@ -1542,8 +1515,8 @@ str.isupper = function(self){
 
     for(var i = 0, len = self.length; i < len; i++){
         char = self.charCodeAt(i)
-        if(unicode_tables["Lu"][char]){has_cased = true; continue}
-        else if(unicode_tables["Ll"][char] || unicode_tables["Lt"][char]){
+        if(unicode_tables.Lu[char]){has_cased = true; continue}
+        else if(unicode_tables.Ll[char] || unicode_tables.Lt[char]){
             return false
         }
     }
