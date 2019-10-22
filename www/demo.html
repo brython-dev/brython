@@ -382,7 +382,7 @@ header.show()
 
     <span class="comment">
     To create DOM elements, Brython provides the module <code class="module">browser.html</code>. It defines classes with the name of all the valid HTML tags in uppercase ; <code>html.B("message")</code> creates the element <code class="html">&lt;B&gt;message&lt;/B&gt;</code>
-    <p>To include an element inside another one, Brython uses the operator <code><=</code> : think of it as a left arrow, not as "inferior or equal". The use of an operator is more concise and avoids having to use a function call.
+    <p>To include an element inside another one, Brython uses the operator <code><=</code> : think of it as a left arrow, not as "less than or equal". The use of an operator is more concise and avoids having to use a function call.
     </code>
     </span>
 
@@ -962,7 +962,8 @@ the end.
     <p>
 
     <span class="comment">
-    By default, <code>print()</code> writes message in the browser console window (to open it, do Ctrl+Maj+K on Firefox, Ctrl+Maj+J on Chrome, F12 on IE, etc).
+    By default, <code>print()</code> writes message in the browser console window (to open it, right-click on the page, and click the "Inspect Element" button. 
+    Safari users cannot see this option initially.).
     <p>Like in Python, the output can be reset by setting <code>sys.stdout</code> to an object with a method <code>write()</code>.
     </span>
 </div>
