@@ -112,4 +112,7 @@ try:
 except NameError:
     pass
 
+# issue 1223
+eval("[x for x in range(3)]")
+
 print("passed all tests...")

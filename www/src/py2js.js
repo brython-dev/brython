@@ -2547,7 +2547,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
             $NodeJS('var $top_frame = [$local_name, $locals,' +
                 '"' + global_scope.id + '", ' + global_ns + ', ' + name + ']'),
             $NodeJS('$B.frames_stack.push($top_frame)'),
-            $NodeJS('var $stack_length = $B.frames_stack.length')
+            $NodeJS('var $stack_length = $B.frames_stack.length;')
         ]
         if(this.async){
             enter_frame_nodes.push($NodeJS("var $stack = " +
@@ -9781,7 +9781,7 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
         js = 'var $top_frame = ["' + locals_id.replace(/\./g, '_') + '", ' +
             local_ns + ', "' + module.replace(/\./g, '_') + '", ' +
             global_ns + ']\n$B.frames_stack.push($top_frame)\n' +
-            'var $stack_length = $B.frames_stack.length'
+            'var $stack_length = $B.frames_stack.length;'
     root.insert(offset++, $NodeJS(js))
 
     // Wrap code in a try/finally to make sure we leave the frame
