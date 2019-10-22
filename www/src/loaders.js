@@ -343,6 +343,9 @@ var loop = $B.loop = function(){
                     err = _b_.RuntimeError.$factory(err + '')
                 }
             }
+            if($B.debug > 1){
+                console.log("handle error", err.__class__, err.args)
+            }
             $B.handle_error(err)
         }
         loop()
