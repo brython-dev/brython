@@ -87,8 +87,8 @@ return js}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,0,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.0"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2019-10-22 17:23:00.446029"
-__BRYTHON__.timestamp=1571757780446
+__BRYTHON__.compiled_date="2019-10-22 22:40:18.584577"
+__BRYTHON__.timestamp=1571776818584
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -6247,7 +6247,7 @@ throw _b_.TypeError.$factory("'"+method2comp[op]+
 "' and '"+$B.class_name(y)+"'")}
 var opname2opsign={sub:"-",xor:"^",mul:"*"}
 $B.rich_op=function(op,x,y){var x_class=x.__class__ ||$B.get_class(x),y_class=y.__class__ ||$B.get_class(y),method
-if(x.__class__===y.__class__){
+if(x_class===y_class){
 try{method=$B.$call($B.$getattr(x,"__"+op+"__"))}catch(err){if(err.__class__===_b_.AttributeError){var kl_name=$B.class_name(x)
 throw _b_.TypeError.$factory("unsupported operand type(s) "+
 "for "+opname2opsign[op]+": '"+kl_name+"' and '"+
@@ -9874,16 +9874,19 @@ var methods=$B.op2method.subset("operations","binary","comparisons","boolean")
 for(var op in methods){var method="__"+methods[op]+"__"
 bool[method]=(function(op){return function(self,other){var value=self ? 1 :0
 if(int[op]!==undefined){return int[op](value,other)}}})(method)}
-bool.__and__=function(self,other){return $B.$bool(int.__and__(self,other))}
+bool.__and__=function(self,other){if(_b_.isinstance(other,bool)){return self && other}else if(_b_.isinstance(other,int)){return int.__and__(bool.__index__(self),int.__index__(other))}
+return _b_.NotImplemented}
 bool.__hash__=bool.__index__=bool.__int__=function(self){if(self.valueOf())return 1
 return 0}
 bool.__neg__=function(self){return-$B.int_or_bool(self)}
-bool.__or__=function(self,other){return $B.$bool(int.__or__(self,other))}
+bool.__or__=function(self,other){if(_b_.isinstance(other,bool)){return self ||other}else if(_b_.isinstance(other,int)){return int.__or__(bool.__index__(self),int.__index__(other))}
+return _b_.NotImplemented}
 bool.__pos__=$B.int_or_bool
 bool.__repr__=bool.__str__=function(self){return self ? "True" :"False"}
 bool.__setattr__=function(self,attr){if(_b_.dir(self).indexOf(attr)>-1){var msg="attribute '"+attr+"' of 'int' objects is not writable"}else{var msg="'bool' object has no attribute '"+attr+"'"}
 throw _b_.AttributeError.$factory(msg)}
-bool.__xor__=function(self,other){return self.valueOf()!=other.valueOf()}
+bool.__xor__=function(self,other){if(_b_.isinstance(other,bool)){return self ^ other ? true :false}else if(_b_.isinstance(other,int)){return int.__xor__(bool.__index__(self),int.__index__(other))}
+return _b_.NotImplemented}
 bool.$factory=function(){
 var $=$B.args("bool",1,{x:null},["x"],arguments,{x:false},null,null)
 return $B.$bool($.x)}

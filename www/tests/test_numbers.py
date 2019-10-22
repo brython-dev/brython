@@ -350,4 +350,23 @@ except TypeError:
 assert .1j == .1j
 assert .1j + 2 == 2 + 0.1j
 
+# issue 1127
+class A:
+
+    def __rand__(self, other):
+        return "A-rand"
+
+    def __ror__(self, other):
+        return "A-ror"
+
+    def __rxor__(self, other):
+        return "A-rxor"
+
+assert False | A() == "A-ror"
+assert True | A() == "A-ror"
+assert False & A() == "A-rand"
+assert True & A() == "A-rand"
+assert False ^ A() == "A-rxor"
+assert True ^ A() == "A-rxor"
+
 print('passed all tests...')

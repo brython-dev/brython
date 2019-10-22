@@ -810,7 +810,12 @@ for(var op in methods){
 }
 
 bool.__and__ = function(self, other){
-    return $B.$bool(int.__and__(self, other))
+    if(_b_.isinstance(other, bool)){
+        return self && other
+    }else if(_b_.isinstance(other, int)){
+        return int.__and__(bool.__index__(self), int.__index__(other))
+    }
+    return _b_.NotImplemented
 }
 
 bool.__hash__ = bool.__index__ = bool.__int__ = function(self){
@@ -821,7 +826,12 @@ bool.__hash__ = bool.__index__ = bool.__int__ = function(self){
 bool.__neg__ = function(self){return -$B.int_or_bool(self)}
 
 bool.__or__ = function(self, other){
-    return $B.$bool(int.__or__(self, other))
+    if(_b_.isinstance(other, bool)){
+        return self || other
+    }else if(_b_.isinstance(other, int)){
+        return int.__or__(bool.__index__(self), int.__index__(other))
+    }
+    return _b_.NotImplemented
 }
 
 bool.__pos__ = $B.int_or_bool
@@ -840,7 +850,12 @@ bool.__setattr__ = function(self, attr){
 }
 
 bool.__xor__ = function(self, other) {
-    return self.valueOf() != other.valueOf()
+    if(_b_.isinstance(other, bool)){
+        return self ^ other ? true : false
+    }else if(_b_.isinstance(other, int)){
+        return int.__xor__(bool.__index__(self), int.__index__(other))
+    }
+    return _b_.NotImplemented
 }
 
 bool.$factory = function(){

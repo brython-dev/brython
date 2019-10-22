@@ -1265,7 +1265,7 @@ $B.rich_op = function(op, x, y){
     var x_class = x.__class__ || $B.get_class(x),
         y_class = y.__class__ || $B.get_class(y),
         method
-    if(x.__class__ === y.__class__){
+    if(x_class === y_class){
         // For objects of the same type, don't try the reversed operator
         try{
             method = $B.$call($B.$getattr(x, "__" + op + "__"))
