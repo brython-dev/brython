@@ -47,10 +47,13 @@ def make(package_name, package_path, exclude_dirs=None):
     if not package_name:
         raise ValueError("package name is not specified")
     print("Generating package {}".format(package_name))
+    has_init = os.path.exists(os.path.join(package_path, "__init__.py"))
+
     VFS = {"$timestamp": int(1000 * time.time())}
     nb = 0
     if exclude_dirs is None:
         exclude_dirs = []
+    
     for dirpath, dirnames, filenames in os.walk(package_path):
         flag = False
         root_elts = dirpath.split(os.sep)
@@ -64,6 +67,9 @@ def make(package_name, package_path, exclude_dirs=None):
             package = []
         else:
             package = dirpath[len(package_path) + 1:].split(os.sep)
+
+        if has_init:
+            package.insert(0, package_name)
 
         for filename in filenames:
             name, ext = os.path.splitext(filename)
