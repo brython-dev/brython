@@ -1,0 +1,125 @@
+<html>
+
+<head>
+<meta charset="utf-8">
+<title>Brython demo</title>
+<style>
+body{
+    font-size: 14px;
+    font-family: Helvetica;
+}
+
+a{
+    color: #333;
+}
+a.menu{
+    text-decoration: none;
+}
+a.menu:hover{
+    background-color: #ccc;
+}
+a:visited{
+    color: #333;
+}
+
+li{
+    list-style-type: none;
+}
+
+#panel{
+    display:table-cell;
+    width:65%;
+    padding-right:2%;
+    text-align: left;
+}
+
+button{
+    background-color: #dadada;
+    color: #113;
+    border-style: solid;
+    border-color: #000;
+    border-width: 1px;
+    border-radius: 3px;
+    font-size: 1.2em;
+}
+button.btn-ls{
+    font-size: 1em;
+}
+
+div.example{
+    margin-top: 2em;
+    display: none;
+}
+
+pre{
+    display: inline-block;
+    padding: 1em;
+    font-family: Consolas, Courier New;
+    color: #ff9;
+    background-color: #114;
+    border-radius: 10px;
+    margin-top: 2em;
+    width: 66%;
+}
+
+pre.html{
+    padding: 0.5em;
+}
+
+.zone{
+    margin-left: 5em;
+    padding: 1em;
+    border-width: 1px;
+    border-color: #333;
+    border-style: solid;
+    width: 20em;
+}
+
+code{
+    font-family: Consolas, Courier New;
+    color: #113;
+    padding-left: 0.2em;
+    padding-right: 0.2em;
+}
+
+code.file{
+    background-color: #fff;
+    font-weigth: bold;
+    font-style: italic;
+}
+
+.up{
+    font-size: 1.2em;
+}
+.down{
+    font-size:0.8em;
+}
+
+/* colors for highlighted Python code */
+
+span.python-string{
+    color: #6aa;
+}
+span.python-comment{
+    color: #6a6;
+}
+span.python-keyword{
+    color: #42ebf4;
+}
+span.python-builtin{
+    color: #0f0;
+}
+</style>
+
+</head>
+
+<body onload="brython({debug: 1, indexedDB: false})">
+
+<h1 style="text-align: center">Introduction to <a href="http://brython.info" target="_blank" class="external">Brython</a></h1>
+{{body}}
+<script src="brython.js"></script>
+<script src="brython_stdlib.js"></script>
+
+</body>
+
+</html>
