@@ -78,7 +78,7 @@ if command == "sdist":
         raise Exception("No tag <!-- end copy --> in demo.html")
     body = demo[start + len(start_tag) : end].strip()
 
-    with open("demo.tmpl", encoding="utf-8") as f:
+    with open(os.path.join(release_dir, "demo.tmpl"), encoding="utf-8") as f:
         template = f.read()
 
     demo = template.replace("{{body}}", body)
