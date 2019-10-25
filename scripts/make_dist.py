@@ -131,20 +131,10 @@ def run():
         distrib.write(open(os.path.join(src_dir, 'brython.js')).read())
         distrib.write(open(os.path.join(src_dir, 'brython_stdlib.js')).read())
 
-    # update implementation in brython.py
-    br_script = os.path.join(pdir, 'setup', 'brython.py')
-    with open(br_script, encoding='utf-8') as f:
-        br = f.read()
-        mo = re.search('^implementation = "(.*)"$', br, flags=re.M)
-        if not mo:
-            raise Exception("missing implementation in brython.py")
-        br_versioned = re.sub('^implementation = "(.*)"$',
-                              'implementation = "{}"'.format(vname),
-                              br,
-                              flags=re.M)
-
+    # update implementation in brython/__init__.py
+    br_script = os.path.join(pdir, 'setup', 'brython', '__init__.py')
     with open(br_script, "w", encoding="utf-8") as out:
-        out.write(br_versioned)
+        out.write('implementation = "{}"'.format(vname))
 
     # copy demo.html
     with open(os.path.join(pdir, 'www', 'demo.html'), encoding="utf-8") as f:

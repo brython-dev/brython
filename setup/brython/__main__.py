@@ -7,7 +7,7 @@ import shutil
 import json
 import argparse
 
-implementation = "3.8.0"
+from . import implementation
 
 if __name__ == "__main__":
 
