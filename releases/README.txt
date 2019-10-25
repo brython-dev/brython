@@ -2,9 +2,9 @@ To run the demo, start the built-in Python HTTP server by
 
     python -m http.server
 
-The default port is 8080. To specify another port:
+The default port is 8000. To specify another port:
 
-    python -m http.server 8081
+    python -m http.server 8080
 
 Then load http://localhost:<port>/demo.html in the browser address bar.
 
