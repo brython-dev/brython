@@ -79,7 +79,7 @@ def run():
         'py_exceptions', 'py_range_slice', 'py_bytes', 'py_set', 'js_objects',
         'stdlib_paths', 'py_import', 'py_float', 'py_int', 'py_long_int',
         'py_complex', 'py_sort', 'py_list', 'unicode_data', 'py_string',
-        'py_dict', 'py_dom', 'py_generator', 'builtin_modules', 
+        'py_dict', 'py_dom', 'py_generator', 'builtin_modules',
         'py_import_hooks', 'async'
     ]
 
@@ -146,16 +146,6 @@ def run():
     with open(br_script, "w", encoding="utf-8") as out:
         out.write(br_versioned)
 
-    # copy files in folder /setup
-    sdir = os.path.join(pdir, 'setup', 'data')
-
-    for f in ['brython_stdlib.js', 'unicode.txt']:
-        shutil.copyfile(os.path.join(src_dir, f), os.path.join(sdir, f))
-
-    # copy the version of brython.js that has no static stdlib
-    shutil.copyfile(os.path.join(src_dir, "brython_no_static.js"),
-        os.path.join(sdir, "brython.js"))
-
     # copy demo.html
     with open(os.path.join(pdir, 'www', 'demo.html'), encoding="utf-8") as f:
         demo = f.read()
@@ -169,12 +159,14 @@ def run():
         raise Exception("No tag <!-- end copy --> in demo.html")
     body = demo[start + len(start_tag) : end].strip()
 
-    with open(os.path.join(sdir, "demo.tmpl"), encoding="utf-8") as f:
+    release_dir = os.path.join(pdir, "releases")
+    with open(os.path.join(release_dir, "demo.tmpl"), encoding="utf-8") as f:
         template = f.read()
 
     demo = template.replace("{{body}}", body)
 
-    with open(os.path.join(sdir, "demo.html"), "w", encoding="utf-8") as out:
+    with open(os.path.join(release_dir, "demo.html"),
+            "w", encoding="utf-8") as out:
         out.write(demo)
 
     # copy files in folder /npm
@@ -183,21 +175,24 @@ def run():
         shutil.copyfile(os.path.join(src_dir, f), os.path.join(npmdir, f))
 
     # create zip files
-    print('create zip files in /setup/data')
+    print('create zip files in /releases')
     name = 'Brython-{}'.format(vname)
-    dest_path = os.path.join(sdir, name)
+    dest_path = os.path.join(release_dir, name)
     dist1 = tarfile.open(dest_path + '.tar.gz', mode='w:gz')
     dist2 = tarfile.open(dest_path+'.tar.bz2', mode='w:bz2')
     dist3 = zipfile.ZipFile(dest_path + '.zip', mode='w',
                             compression=zipfile.ZIP_DEFLATED)
 
-    paths = ['README.txt', 'demo.html',
-        'brython.js', 'brython_stdlib.js', 'unicode.txt']
+    paths1 = ['README.txt', 'demo.html', 'index.html']
+    paths2 = ['brython.js', 'brython_stdlib.js', 'unicode.txt']
 
     for arc, wfunc in ((dist1, dist1.add), (dist2, dist2.add),
             (dist3, dist3.write)):
-        for path in paths:
-            wfunc(os.path.join(sdir, path),
+        for path in paths1:
+            wfunc(os.path.join(release_dir, path),
+                arcname=os.path.join(name, path))
+        for path in paths2:
+            wfunc(abs_path(path),
                 arcname=os.path.join(name, path))
 
         arc.close()
