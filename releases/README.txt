@@ -1,4 +1,6 @@
-To run the demo, start the built-in Python HTTP server by
+To run the demo, you can open the file demo.html from the browser "File/Open..." menu.
+
+Another option is to start the built-in Python HTTP server by
 
     python -m http.server
 
