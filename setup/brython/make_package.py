@@ -4,7 +4,7 @@ import re
 import time
 import ast
 
-import python_minifier
+from . import python_minifier
 
 class Visitor(ast.NodeVisitor):
     """Used to list all the modules imported by a script."""

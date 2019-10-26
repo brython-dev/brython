@@ -100,7 +100,7 @@ if __name__ == "__main__":
 
     if args.modules:
         print('Create brython_modules.js with all the modules used by the application')
-        import list_modules
+        from . import list_modules
 
         finder = list_modules.ModulesFinder()
         finder.inspect()
@@ -108,7 +108,7 @@ if __name__ == "__main__":
 
     if args.make_dist:
         print('Make a Python distribution for the application')
-        import list_modules
+        from . import list_modules
         finder = list_modules.ModulesFinder()
         finder.inspect()
         finder.make_brython_modules()
@@ -117,6 +117,6 @@ if __name__ == "__main__":
 
     if args.make_package:
         package_name = args.make_package
-        import make_package
+        from . import make_package
         make_package.make(package_name, os.getcwd())
         print("done")
