@@ -772,13 +772,19 @@ $B.$bool = function(obj){ // return true or false
             return false
         default:
             if(obj.$is_class){return true}
-            var missing = {},
-                bool_func = $B.$getattr(obj, "__bool__", missing)
-            if(bool_func === missing){
-                try{return $B.$getattr(obj, "__len__")() > 0}
+            var klass = obj.__class__ || $B.get_class(obj),
+                missing = {},
+                bool_method = $B.$getattr(klass, "__bool__", missing)
+            if(bool_method === missing){
+                try{return _b_.len(obj) > 0}
                 catch(err){return true}
             }else{
-                return bool_func()
+                var res = $B.$call(bool_method)(obj)
+                if(res !== true && res !== false){
+                    throw _b_.TypeError.$factory("__bool__ should return " +
+                        "bool, returned " + $B.class_name(res))
+                }
+                return res
             }
     }
 }

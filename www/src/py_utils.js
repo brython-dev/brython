@@ -765,13 +765,18 @@ $B.$is = function(a, b){
 
 $B.$is_member = function(item, _set){
     // used for "item in _set"
-    var f, _iter
+    var f, _iter, method
 
-    // use __contains__ if defined
-    try{f = $B.$getattr(_set, "__contains__")}
+    // Use __contains__ if defined *on the class* (implicit invocation of
+    // special methods don't use object __dict__)
+    try{
+        method = $B.$getattr(_set.__class__ || $B.get_class(_set),
+            "__contains__")
+
+    }
     catch(err){}
 
-    if(f){return f(item)}
+    if(method){return $B.$call(method)(_set, item)}
 
     // use __iter__ if defined
     try{_iter = _b_.iter(_set)}

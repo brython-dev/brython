@@ -2360,11 +2360,22 @@ assertRaises(SyntaxError, exec, "x:+=1")
 # issue 1210
 assertRaises(SyntaxError, exec, r"\\")
 assertRaises(SyntaxError, exec, r"\\\n")
-assertRaises(SyntaxError, exec, 
+assertRaises(SyntaxError, exec,
     "def f():\n    \\\\")
-assertRaises(SyntaxError, exec, 
+assertRaises(SyntaxError, exec,
     "def f():\n    \\\\\n")
 
+# issue 1229
+class A:
+
+    def __str__(self):
+        return "real str"
+
+a = A()
+assert str(a) == "real str"
+
+a.__str__ = lambda : "fake str"
+assert str(a) == "real str"
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

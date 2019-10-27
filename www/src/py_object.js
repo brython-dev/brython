@@ -121,6 +121,7 @@ object.__getattribute__ = function(obj, attr){
         // Special case for list subclasses. Cf. issue 1081
         res = undefined
     }
+    
     if(res === undefined && obj.__dict__ &&
             obj.__dict__.$string_dict.hasOwnProperty(attr)){
         return obj.__dict__.$string_dict[attr]

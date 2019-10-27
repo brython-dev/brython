@@ -2063,12 +2063,15 @@ str.$factory = function(arg, encoding, errors){
                     {encoding: "utf-8", errors: "strict"}, null, null)
             return _b_.bytes.decode(arg, $.encoding, $.errors)
         }
-        var f = $B.$getattr(arg, "__str__", null)
-        if(f === null ||
+        // Implicit invocation of __str__ uses method __str__ on the class,
+        // even if arg has an attribute __str__
+        var klass = arg.__class__ || $B.get_class(arg)
+        var method = $B.$getattr(klass , "__str__", null)
+        if(method === null ||
                 // if not better than object.__str__, try __repr__
                 (arg.__class__ && arg.__class__ !== _b_.object &&
-                f.$infos && f.$infos.__func__ === _b_.object.__str__)){
-            var f = $B.$getattr(arg, "__repr__")
+                method.$infos && method.$infos.__func__ === _b_.object.__str__)){
+            var method = $B.$getattr(klass, "__repr__")
         }
     }
     catch(err){
@@ -2079,7 +2082,7 @@ str.$factory = function(arg, encoding, errors){
             "default to toString", arg)
         throw err
     }
-    return $B.$call(f)()
+    return $B.$call(method)(arg)
 }
 
 str.__new__ = function(cls){

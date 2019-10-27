@@ -452,7 +452,7 @@ type.__getattribute__ = function(klass, attr){
         }
         if(typeof res == "function"){
             // method
-            if(res.$infos === undefined){
+            if(res.$infos === undefined && $B.debug > 1){
                 console.log("warning: no attribute $infos for", res, "attr", attr)
             }
             if($test){console.log("res is function", res)}

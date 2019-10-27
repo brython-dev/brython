@@ -87,8 +87,8 @@ return js}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,0,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.0"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2019-10-22 22:40:18.584577"
-__BRYTHON__.timestamp=1571776818584
+__BRYTHON__.compiled_date="2019-10-27 21:38:05.751387"
+__BRYTHON__.timestamp=1572208685751
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5577,7 +5577,7 @@ if(res.__get__){if(res.__class__===method){var result=res.__get__(res.__func__,k
 result.$infos={__func__:res,__name__:res.$infos.__name__,__qualname__:klass.$infos.__name__+"."+res.$infos.__name__,__self__:klass}}else{result=res.__get__(klass)}
 return result}
 if(typeof res=="function"){
-if(res.$infos===undefined){console.log("warning: no attribute $infos for",res,"attr",attr)}
+if(res.$infos===undefined && $B.debug > 1){console.log("warning: no attribute $infos for",res,"attr",attr)}
 if($test){console.log("res is function",res)}
 if(attr=="__new__"){res.$type="staticmethod"}
 if(attr=="__class_getitem__" && res.__class__ !==$B.method){res=_b_.classmethod.$factory(res)}
@@ -6051,10 +6051,10 @@ $B.$is=function(a,b){
 if(a instanceof Number && b instanceof Number){return a.valueOf()==b.valueOf()}
 return a===b}
 $B.$is_member=function(item,_set){
-var f,_iter
-try{f=$B.$getattr(_set,"__contains__")}
+var f,_iter,method
+try{method=$B.$getattr(_set.__class__ ||$B.get_class(_set),"__contains__")}
 catch(err){}
-if(f){return f(item)}
+if(method){return $B.$call(method)(_set,item)}
 try{_iter=_b_.iter(_set)}
 catch(err){}
 if(_iter){while(1){try{var elt=_b_.next(_iter)
@@ -6313,9 +6313,9 @@ check_no_kw('abs',obj)
 if(isinstance(obj,_b_.int)){if(obj.__class__===$B.long_int){return{
 __class__:$B.long_int,value:obj.value,pos:true}}else{return _b_.int.$factory(Math.abs(obj))}}
 if(isinstance(obj,_b_.float)){return _b_.float.$factory(Math.abs(obj))}
-if(hasattr(obj,'__abs__')){return $B.$getattr(obj,'__abs__')()}
-throw _b_.TypeError.$factory("Bad operand type for abs(): '"+
-$B.get_class(obj)+"'")}
+var klass=obj.__class__ ||$B.get_class(obj)
+try{return $B.$call($B.$getattr(klass,"__abs__"))(obj)}catch(err){throw _b_.TypeError.$factory("Bad operand type for abs(): '"+
+$B.get_class(obj)+"'")}}
 function all(obj){check_nb_args('all',1,arguments)
 check_no_kw('all',obj)
 var iterable=iter(obj)
@@ -6355,8 +6355,9 @@ if(value >=0){return prefix+value.toString(base)}
 return '-'+prefix+(-value).toString(base)}
 function bin(obj){check_nb_args('bin',1,arguments)
 check_no_kw('bin',obj)
-if(isinstance(obj,_b_.int)){return $builtin_base_convert_helper(obj,2)}
-return $B.$getattr(obj,'__index__')()}
+if(isinstance(obj,_b_.int)){return $builtin_base_convert_helper(obj,2)}else{try{var klass=obj.__class__ ||$B.get_class(obj),res=$B.$call($B.$getattr(klass,'__index__'))(obj)
+return $builtin_base_convert_helper(res,2)}catch(err){throw _b_.TypeError.$factory("'"+$B.class_name(obj)+
+"' object cannot be interpreted as an integer")}}}
 function callable(obj){check_nb_args('callable',1,arguments)
 check_no_kw('callable',obj)
 return hasattr(obj,'__call__')}
@@ -6717,12 +6718,13 @@ obj.__class__===$B.Function){return obj.__hashvalue__=$B.$py_next_hash--}
 if(typeof obj=="string"){var cached=hash_cache[obj]
 if(cached !==undefined){return cached}
 else{return hash_cache[obj]=_b_.str.__hash__(obj)}}
-var hashfunc=$B.$getattr(obj,'__hash__',_b_.None)
-if(hashfunc==_b_.None){throw _b_.TypeError.$factory("unhashable type: '"+
+var klass=obj.__class__ ||$B.get_class(obj)
+var hash_method=$B.$getattr(klass,'__hash__',_b_.None)
+if(hash_method==_b_.None){throw _b_.TypeError.$factory("unhashable type: '"+
 $B.class_name(obj)+"'",'hash')}
-if(hashfunc.$infos===undefined){return obj.__hashvalue__=hashfunc()}
-if(hashfunc.$infos.__func__===_b_.object.__hash__){if($B.$getattr(obj,'__eq__').$infos.__func__ !==_b_.object.__eq__){throw _b_.TypeError.$factory("unhashable type: '"+
-$B.class_name(obj)+"'",'hash')}else{return _b_.object.__hash__(obj)}}else{return hashfunc()}}
+if(hash_method.$infos===undefined){return obj.__hashvalue__=hashfunc()}
+if(hash_method.$infos.__func__===_b_.object.__hash__){if($B.$getattr(obj,'__eq__').$infos.__func__ !==_b_.object.__eq__){throw _b_.TypeError.$factory("unhashable type: '"+
+$B.class_name(obj)+"'",'hash')}else{return _b_.object.__hash__(obj)}}else{return $B.$call(hash_method)(obj)}}
 function _get_builtins_doc(){if($B.builtins_doc===undefined){
 var url=$B.brython_path
 if(url.charAt(url.length-1)=='/'){url=url.substr(0,url.length-1)}
@@ -6818,13 +6820,11 @@ callable_iterator.__next__=function(self){var res=self.func()
 if($B.rich_comp("__eq__",res,self.sentinel)){throw _b_.StopIteration.$factory()}
 return res}
 $B.$iter=function(obj,sentinel){
-if(sentinel===undefined){try{var _iter=$B.$getattr(obj,'__iter__')
-_iter=$B.$call(_iter)}catch(err){var gi=$B.$getattr(obj,'__getitem__',-1),ln=$B.$getattr(obj,'__len__',-1)
-if(gi !==-1){if(ln !==-1){var len=$B.$getattr(ln,'__call__')()
-return iterator_class.$factory(gi,len)}else{return iterator_class.$factory(gi,null)}}
-throw _b_.TypeError.$factory("'"+$B.class_name(obj)+
-"' object is not iterable")}
-var res=$B.$call(_iter)()
+if(sentinel===undefined){var klass=obj.__class__ ||$B.get_class(obj)
+try{var _iter=$B.$call($B.$getattr(klass,'__iter__'))}catch(err){try{var gi_method=$B.$call($B.$getattr(klass,'__getitem__')),gi=function(i){return gi_method(obj,i)},ln=len(obj)
+return iterator_class.$factory(gi,len)}catch(err){throw _b_.TypeError.$factory("'"+$B.class_name(obj)+
+"' object is not iterable")}}
+var res=$B.$call(_iter)(obj)
 try{$B.$getattr(res,'__next__')}
 catch(err){if(isinstance(err,_b_.AttributeError)){throw _b_.TypeError.$factory(
 "iter() returned non-iterator of type '"+
@@ -6836,8 +6836,8 @@ if($.args.length > 0){var sentinel=$.args[0]}
 return $B.$iter($.obj,sentinel)}
 function len(obj){check_no_kw('len',obj)
 check_nb_args('len',1,arguments)
-try{return $B.$getattr(obj,'__len__')()}
-catch(err){throw _b_.TypeError.$factory("object of type '"+
+var klass=obj.__class__ ||$B.get_class(obj)
+try{return $B.$call($B.$getattr(klass,'__len__'))(obj)}catch(err){throw _b_.TypeError.$factory("object of type '"+
 $B.class_name(obj)+"' has no len()")}}
 function locals(){
 check_nb_args('locals',0,arguments)
@@ -6901,7 +6901,8 @@ memoryview.__getitem__=function(self,key){if(isinstance(key,_b_.int)){var start=
 if(self.format=="I"){var res=self.obj.source[start],coef=256
 for(var i=1;i < 4;i++){res+=self.obj.source[start+i]*coef
 coef*=256}
-return res}else if("B".indexOf(self.format)>-1){return self.obj.source[key]}else{
+return res}else if("B".indexOf(self.format)>-1){if(key > self.obj.source.length-1){throw _b_.KeyError.$factory(key)}
+return self.obj.source[key]}else{
 return self.obj.source[key]}}
 var res=self.obj.__class__.__getitem__(self.obj,key)
 if(key.__class__===_b_.slice){return memoryview.$factory(res)}}
@@ -6929,8 +6930,8 @@ $B.set_func_names(memoryview,"builtins")
 function min(){return $extreme(arguments,'__lt__')}
 function next(obj){check_no_kw('next',obj)
 var missing={},$=$B.args("next",2,{obj:null,def:null},['obj','def'],arguments,{def:missing},null,null)
-var ga=$B.$getattr(obj,'__next__')
-if(ga !==undefined){try{return $B.$call(ga)()}catch(err){if(err.__class__===_b_.StopIteration &&
+var klass=obj.__class__ ||$B.get_class(obj),ga=$B.$call($B.$getattr(klass,"__next__"))
+if(ga !==undefined){try{return $B.$call(ga)(obj)}catch(err){if(err.__class__===_b_.StopIteration &&
 $.def !==missing){return $.def}
 throw err}}
 throw _b_.TypeError.$factory("'"+$B.class_name(obj)+
@@ -6958,9 +6959,8 @@ throw _b_.TypeError.$factory('ord() expected a character, but '+
 default:
 throw _b_.TypeError.$factory('ord() expected a character, but '+
 $B.class_name(c)+' was found')}}
-function pow(){var $ns=$B.args('pow',3,{x:null,y:null,z:null},['x','y','z'],arguments,{z:null},null,null)
-var x=$ns['x'],y=$ns['y'],z=$ns['z']
-var res=$B.$getattr(x,'__pow__')(y,z)
+function pow(x,y){var $=$B.args('pow',3,{x:null,y:null,z:null},['x','y','z'],arguments,{z:null},null,null),z=$.z
+var klass=x.__class__ ||$B.get_class(x),res=$B.$call($B.$getattr(klass,'__pow__'))(x,y,z)
 if(z===null){return res}
 else{if(x !=_b_.int.$factory(x)||y !=_b_.int.$factory(y)){throw _b_.TypeError.$factory("pow() 3rd argument not allowed "+
 "unless all arguments are integers")}
@@ -7000,21 +7000,17 @@ function quit(){throw _b_.SystemExit}
 quit.__repr__=quit.__str__=function(){return "Use quit() or Ctrl-Z plus Return to exit"}
 function repr(obj){check_no_kw('repr',obj)
 check_nb_args('repr',1,arguments)
-if(obj.$is_class ||obj.$factory){
-var func=_b_.type.__getattribute__(
-obj.__class__ ||$B.get_class(obj),'__repr__')
-return func(obj)}
-var func=$B.$getattr(obj,'__repr__')
-if(func !==undefined){return $B.$call(func)()}
-throw _b_.AttributeError.$factory("object has no attribute __repr__")}
+var klass=obj.__class__ ||$B.get_class(obj)
+try{return $B.$call($B.$getattr(klass,"__repr__"))(obj)}catch(err){throw _b_.AttributeError.$factory("object has no attribute __repr__")}}
 var reversed=$B.make_class("reversed",function(seq){
 check_no_kw('reversed',seq)
 check_nb_args('reversed',1,arguments)
-var rev_method=$B.$getattr(seq,'__reversed__',null)
-if(rev_method !==null){try{return $B.$call(rev_method)()}catch(err){throw _b_.TypeError.$factory("'"+$B.class_name(seq)+
+var klass=seq.__class__ ||$B.get_class(seq),rev_method=$B.$getattr(klass,'__reversed__',null)
+if(rev_method !==null){try{return $B.$call(rev_method)(seq)}catch(err){throw _b_.TypeError.$factory("'"+$B.class_name(seq)+
 "' object is not reversible")}}
-try{var res={__class__:reversed,$counter :$B.$getattr(seq,'__len__')(),getter:$B.$getattr(seq,'__getitem__')}
-return res}catch(err){throw _b_.TypeError.$factory("argument to reversed() must be a sequence")}}
+try{var res={__class__:reversed,$counter :_b_.len(seq),getter:function(i){return $B.$call($B.$getattr(klass,'__getitem__'))(seq,i)}}
+return res}catch(err){console.log(err.__class__,err.args)
+throw _b_.TypeError.$factory("argument to reversed() must be a sequence")}}
 )
 reversed.__iter__=function(self){return self}
 reversed.__next__=function(self){self.$counter--
@@ -7022,18 +7018,16 @@ if(self.$counter < 0){throw _b_.StopIteration.$factory('')}
 return self.getter(self.$counter)}
 $B.set_func_names(reversed,"builtins")
 function round(arg,n){var $=$B.args('round',2,{number:null,ndigits:null},['number','ndigits'],arguments,{ndigits:None},null,null),arg=$.number,n=$.ndigits
-if(!isinstance(arg,[_b_.int,_b_.float])){if(!hasattr(arg,'__round__'))
-throw _b_.TypeError.$factory("type "+arg.__class__+
-" doesn't define __round__ method")
-if(n===undefined){return $B.$getattr(arg,'__round__')()}
-else{return $B.$getattr(arg,'__round__')(n)}}
+if(!isinstance(arg,[_b_.int,_b_.float])){var klass=arg.__class__ ||$B.get_class(arg)
+try{return $B.$call($B.$getattr(klass,"__round__"))(arg,n)}catch(err){throw _b_.TypeError.$factory("type "+$B.get_class(arg)+
+" doesn't define __round__ method")}}
 if(isinstance(arg,_b_.float)&&
 (arg.value===Infinity ||arg.value===-Infinity)){throw _b_.OverflowError.$factory("cannot convert float infinity to integer")}
 if(n===None){var floor=Math.floor(arg)
 var diff=Math.abs(arg-floor)
 if(diff==0.5){if(floor % 2){return Math.round(arg)}else{return Math.floor(arg)}}else{return _b_.int.$factory(Math.round(arg))}}
 if(!isinstance(n,_b_.int)){throw _b_.TypeError.$factory(
-"'"+n.__class__+"' object cannot be interpreted as an integer")}
+"'"+$B.class_name(n)+"' object cannot be interpreted as an integer")}
 var mult=Math.pow(10,n)
 if(isinstance(arg,_b_.float)){return _b_.float.$factory(_b_.int.__truediv__(
 Number(Math.round(arg.valueOf()*mult)),mult))}else{return _b_.int.$factory(_b_.int.__truediv__(
@@ -9866,9 +9860,12 @@ if(obj){return true}
 return false
 default:
 if(obj.$is_class){return true}
-var missing={},bool_func=$B.$getattr(obj,"__bool__",missing)
-if(bool_func===missing){try{return $B.$getattr(obj,"__len__")()> 0}
-catch(err){return true}}else{return bool_func()}}}
+var klass=obj.__class__ ||$B.get_class(obj),missing={},bool_method=$B.$getattr(klass,"__bool__",missing)
+if(bool_method===missing){try{return _b_.len(obj)> 0}
+catch(err){return true}}else{var res=$B.$call(bool_method)(obj)
+if(res !==true && res !==false){throw _b_.TypeError.$factory("__bool__ should return "+
+"bool, returned "+$B.class_name(res))}
+return res}}}
 var bool={__bases__:[int],__class__:_b_.type,__mro__:[int,_b_.object],$infos:{__name__:"bool",__module__:"builtins"},$is_class:true,$native:true}
 var methods=$B.op2method.subset("operations","binary","comparisons","boolean")
 for(var op in methods){var method="__"+methods[op]+"__"
@@ -11021,8 +11018,7 @@ res.__class__=list
 return res}
 return obj}
 var res=[],pos=0,arg=$B.$iter(obj),next_func=$B.$call(getattr(arg,"__next__"))
-while(1){try{res[pos++]=next_func()}
-catch(err){if(!isinstance(err,_b_.StopIteration)){throw err}
+while(1){try{res[pos++]=next_func()}catch(err){if(!isinstance(err,_b_.StopIteration)){throw err}
 break}}
 res.__brython__=true 
 return res}
@@ -11846,17 +11842,18 @@ if(arg.__class__ && arg.__class__===_b_.bytes &&
 encoding !==undefined){
 var $=$B.args("str",3,{arg:null,encoding:null,errors:null},["arg","encoding","errors"],arguments,{encoding:"utf-8",errors:"strict"},null,null)
 return _b_.bytes.decode(arg,$.encoding,$.errors)}
-var f=$B.$getattr(arg,"__str__",null)
-if(f===null ||
+var klass=arg.__class__ ||$B.get_class(arg)
+var method=$B.$getattr(klass ,"__str__",null)
+if(method===null ||
 (arg.__class__ && arg.__class__ !==_b_.object &&
-f.$infos && f.$infos.__func__===_b_.object.__str__)){var f=$B.$getattr(arg,"__repr__")}}
+method.$infos && method.$infos.__func__===_b_.object.__str__)){var method=$B.$getattr(klass,"__repr__")}}
 catch(err){console.log("no __str__ for",arg)
 console.log("err ",err)
 if($B.debug > 1){console.log(err)}
 console.log("Warning - no method __str__ or __repr__, "+
 "default to toString",arg)
 throw err}
-return $B.$call(f)()}
+return $B.$call(method)(arg)}
 str.__new__=function(cls){if(cls===undefined){throw _b_.TypeError.$factory("str.__new__(): not enough arguments")}
 return{__class__:cls}}
 $B.set_func_names(str,"builtins")
