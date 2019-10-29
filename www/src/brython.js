@@ -87,8 +87,8 @@ return js}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,0,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.0"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2019-10-29 13:26:41.867706"
-__BRYTHON__.timestamp=1572352001852
+__BRYTHON__.compiled_date="2019-10-29 13:34:45.635030"
+__BRYTHON__.timestamp=1572352485635
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -6315,7 +6315,7 @@ __class__:$B.long_int,value:obj.value,pos:true}}else{return _b_.int.$factory(Mat
 if(isinstance(obj,_b_.float)){return _b_.float.$factory(Math.abs(obj))}
 var klass=obj.__class__ ||$B.get_class(obj)
 try{return $B.$call($B.$getattr(klass,"__abs__"))(obj)}catch(err){throw _b_.TypeError.$factory("Bad operand type for abs(): '"+
-$B.get_class(obj)+"'")}}
+$B.class_name(obj)+"'")}}
 function all(obj){check_nb_args('all',1,arguments)
 check_no_kw('all',obj)
 var iterable=iter(obj)
@@ -6468,7 +6468,7 @@ global_scope.parent_block=$B.builtins_scope
 parent_scope=local_scope
 eval("$locals_"+parent_scope.id+" = current_frame[1]")}else{
 if(_globals.__class__ !=_b_.dict){throw _b_.TypeError.$factory("exec() globals must be a dict, not "+
-$B.get_class(_globals).$infos.__name__)}
+$B.class_name(_globals))}
 if(_globals.globals_id){globals_id=globals_name=_globals.globals_id}
 _globals.globals_id=globals_id
 if(_locals===_globals ||_locals===_b_.None){locals_id=globals_id
@@ -7019,7 +7019,7 @@ return self.getter(self.$counter)}
 $B.set_func_names(reversed,"builtins")
 function round(arg,n){var $=$B.args('round',2,{number:null,ndigits:null},['number','ndigits'],arguments,{ndigits:None},null,null),arg=$.number,n=$.ndigits
 if(!isinstance(arg,[_b_.int,_b_.float])){var klass=arg.__class__ ||$B.get_class(arg)
-try{return $B.$call($B.$getattr(klass,"__round__"))(arg,n)}catch(err){throw _b_.TypeError.$factory("type "+$B.get_class(arg)+
+try{return $B.$call($B.$getattr(klass,"__round__"))(arg,n)}catch(err){throw _b_.TypeError.$factory("type "+$B.class_name(arg)+
 " doesn't define __round__ method")}}
 if(isinstance(arg,_b_.float)&&
 (arg.value===Infinity ||arg.value===-Infinity)){throw _b_.OverflowError.$factory("cannot convert float infinity to integer")}

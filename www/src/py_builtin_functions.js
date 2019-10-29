@@ -116,7 +116,7 @@ function abs(obj){
         return $B.$call($B.$getattr(klass, "__abs__"))(obj)
     }catch(err){
         throw _b_.TypeError.$factory("Bad operand type for abs(): '" +
-            $B.get_class(obj) + "'")
+            $B.class_name(obj) + "'")
     }
 }
 
@@ -520,7 +520,7 @@ function $$eval(src, _globals, _locals){
         // globals_id
         if(_globals.__class__ != _b_.dict){
             throw _b_.TypeError.$factory("exec() globals must be a dict, not "+
-                $B.get_class(_globals).$infos.__name__)
+                $B.class_name(_globals))
         }
         if(_globals.globals_id){
             globals_id = globals_name = _globals.globals_id
@@ -1945,7 +1945,7 @@ function round(arg,n){
         try{
             return $B.$call($B.$getattr(klass, "__round__"))(arg, n)
         }catch(err){
-            throw _b_.TypeError.$factory("type " + $B.get_class(arg) +
+            throw _b_.TypeError.$factory("type " + $B.class_name(arg) +
                 " doesn't define __round__ method")
         }
     }
