@@ -1,4 +1,5 @@
 # strings
+from tester import assertRaises
 
 assert 'a'.__class__ == str
 assert isinstance('a', str)
@@ -245,5 +246,8 @@ assert 'xyz'.maketrans('abc', 'def', 'abd') == {97: None, 98: None, 99: 102,
 
 # issue 1103
 assert str() == ""
+
+# issue 1231
+assertRaises(TypeError, sum, ['a', 'b'], '')
 
 print("passed all tests...")

@@ -2206,23 +2206,15 @@ $B.set_func_names(staticmethod, "builtins")
 
 // str() defined in py_string.js
 
-function sum(iterable,start){
+function sum(iterable, start){
     var $ = $B.args('sum', 2, {iterable: null, start: null},
         ['iterable', 'start'], arguments, {start: 0}, null, null),
         iterable = $.iterable,
         start = $.start
-    if(start === undefined){
-        start = 0
-    }else{
-        if(typeof start === 'str'){
-            throw _b_.TypeError.$factory("TypeError: sum() can't sum strings" +
-                " [use ''.join(seq) instead]")
-        }
 
-        if(_b_.isinstance(start, _b_.bytes)){
-            throw _b_.TypeError.$factory("TypeError: sum() can't sum bytes" +
-                " [use b''.join(seq) instead]")
-        }
+    if(_b_.isinstance(start, [_b_.str, _b_.bytes])){
+        throw _b_.TypeError.$factory("TypeError: sum() can't sum bytes" +
+            " [use b''.join(seq) instead]")
     }
 
     var res = start,

@@ -87,8 +87,8 @@ return js}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,0,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.0"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2019-10-27 21:38:05.751387"
-__BRYTHON__.timestamp=1572208685751
+__BRYTHON__.compiled_date="2019-10-29 13:26:41.867706"
+__BRYTHON__.timestamp=1572352001852
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -7113,10 +7113,8 @@ return f}
 )
 $B.set_func_names(staticmethod,"builtins")
 function sum(iterable,start){var $=$B.args('sum',2,{iterable:null,start:null},['iterable','start'],arguments,{start:0},null,null),iterable=$.iterable,start=$.start
-if(start===undefined){start=0}else{if(typeof start==='str'){throw _b_.TypeError.$factory("TypeError: sum() can't sum strings"+
-" [use ''.join(seq) instead]")}
-if(_b_.isinstance(start,_b_.bytes)){throw _b_.TypeError.$factory("TypeError: sum() can't sum bytes"+
-" [use b''.join(seq) instead]")}}
+if(_b_.isinstance(start,[_b_.str,_b_.bytes])){throw _b_.TypeError.$factory("TypeError: sum() can't sum bytes"+
+" [use b''.join(seq) instead]")}
 var res=start,iterable=iter(iterable)
 while(1){try{var _item=next(iterable)
 res=$B.$getattr(res,'__add__')(_item)}catch(err){if(err.__class__===_b_.StopIteration){break}else{throw err}}}
@@ -11099,24 +11097,6 @@ for(const item of $B.unicode_identifiers[key]){if(Array.isArray(item)){for(var i
 ;(function($B){var bltns=$B.InjectBuiltins()
 eval(bltns)
 var unicode_tables=$B.unicode_tables
-if(!String.prototype.trim){
-String.prototype.trim=function(){var c
-for(var i=0;i < this.length;i++){c=this.charCodeAt(i)
-if([32,10,13,9,12,11,160,5760,6158,8192,8193,8194,8195,8196,8197,8198,8199,8200,8201,8202,8232,8233,8239,8287,12288,65279].indexOf(c)>-1){continue}else{break}}
-for(var j=this.length-1;j >=i;j--){c=this.charCodeAt(j)
-if([32,10,13,9,12,11,160,5760,6158,8192,8193,8194,8195,8196,8197,8198,8199,8200,8201,8202,8232,8233,8239,8287,12288,65279].indexOf(c)>-1){continue}else{break}}
-return this.substring(i,j+1);}}
-if(!String.prototype.trimLeft){
-String.prototype.trimLeft=function(){var c
-for(var i=0;i < this.length;i++){c=this.charCodeAt(i)
-if([32,10,13,9,12,11,160,5760,6158,8192,8193,8194,8195,8196,8197,8198,8199,8200,8201,8202,8232,8233,8239,8287,12288,65279].indexOf(c)>-1){continue}else{break}}
-return this.substring(i)}}
-if(!String.prototype.trimRight){String.prototype.trimRight=function(){
-var c
-for(var j=this.length-1;j >=0;j--){c=this.charCodeAt(j)
-if([32,10,13,9,12,11,160,5760,6158,8192,8193,8194,8195,8196,8197,8198,8199,8200,8201,8202,8232,8233,8239,8287,12288,65279].indexOf(c)>-1){continue}else{break}}
-return this.substring(0,j+1)}}
-var object=_b_.object
 var str={__class__:_b_.type,__dir__:object.__dir__,$infos:{__module__:"builtins",__name__:"str"},$is_class:true,$native:true}
 function normalize_start_end($){if($.start===null ||$.start===_b_.None){$.start=0}
 else if($.start < 0){$.start+=$.self.length
