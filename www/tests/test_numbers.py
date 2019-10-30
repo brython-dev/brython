@@ -369,4 +369,12 @@ assert True & A() == "A-rand"
 assert False ^ A() == "A-rxor"
 assert True ^ A() == "A-rxor"
 
+# issue 1234
+assert round(3.75, 1) == 3.8
+assert round(3.65, 1) == 3.6
+assert round(-3.75, 1) == -3.8
+assert round(-3.65, 1) == -3.6
+assert round(3.5) == 4
+assert round(4.5) == 4
+
 print('passed all tests...')

@@ -1935,15 +1935,16 @@ reversed.__next__ = function(self){
 
 $B.set_func_names(reversed, "builtins")
 
-function round(arg,n){
+function round(){
     var $ = $B.args('round', 2, {number: null, ndigits: null},
         ['number', 'ndigits'], arguments, {ndigits: None}, null, null),
-        arg = $.number, n = $.ndigits
+        arg = $.number,
+        n = $.ndigits === None ? 0 : $.ndigits
 
     if(!isinstance(arg,[_b_.int, _b_.float])){
         var klass = arg.__class__ || $B.get_class(arg)
         try{
-            return $B.$call($B.$getattr(klass, "__round__"))(arg, n)
+            return $B.$call($B.$getattr(klass, "__round__")).apply(null, arguments)
         }catch(err){
             throw _b_.TypeError.$factory("type " + $B.class_name(arg) +
                 " doesn't define __round__ method")
@@ -1955,24 +1956,27 @@ function round(arg,n){
         throw _b_.OverflowError.$factory("cannot convert float infinity to integer")
     }
 
-    if(n === None){
-        var floor = Math.floor(arg)
-        var diff = Math.abs(arg - floor)
-        if(diff == 0.5){
-            if(floor % 2){return Math.round(arg)}else{return Math.floor(arg)}
-        }else{
-            return _b_.int.$factory(Math.round(arg))
-        }
-    }
     if(!isinstance(n, _b_.int)){throw _b_.TypeError.$factory(
         "'" + $B.class_name(n) + "' object cannot be interpreted as an integer")}
-    var mult = Math.pow(10, n)
-    if(isinstance(arg, _b_.float)) {
-        return _b_.float.$factory(_b_.int.__truediv__(
-            Number(Math.round(arg.valueOf() * mult)), mult))
+
+    var mult = Math.pow(10, n),
+        x = arg * mult,
+        floor = Math.floor(x),
+        diff = Math.abs(x - floor),
+        res
+    if(diff == 0.5){
+        if(floor % 2){floor += 1}
+        res = _b_.int.__truediv__(floor, mult)
     }else{
-        return _b_.int.$factory(_b_.int.__truediv__(
-            Number(Math.round(arg.valueOf() * mult)), mult))
+        res = _b_.int.__truediv__(Math.round(x), mult)
+    }
+    if($.ndigits === None){
+        // Always return an integer
+        return res.valueOf()
+    }else if(arg instanceof Number){
+        return new Number(res)
+    }else{
+        return res.valueOf()
     }
 }
 
