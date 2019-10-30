@@ -8,7 +8,10 @@ var __BRYTHON__=__BRYTHON__ ||{}
 $B.isWebWorker=('undefined' !==typeof WorkerGlobalScope)&&
 ("function"===typeof importScripts)&&
 (navigator instanceof WorkerNavigator)
-var _window=self;
+$B.isNode=(typeof process !=='undefined')&&(process.release.name==='node')
+var _window
+if($B.isNode){_window={location:{href:'',origin:'',pathname:''},navigator:{userLanguage:''}}}else{
+_window=self}
 var $path
 if($B.brython_path===undefined){
 var this_url;
@@ -87,8 +90,8 @@ return js}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,0,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.0"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2019-10-30 17:50:07.158922"
-__BRYTHON__.timestamp=1572454207158
+__BRYTHON__.compiled_date="2019-10-30 21:23:19.813376"
+__BRYTHON__.timestamp=1572466999813
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -98,11 +101,9 @@ Math.floor(value)===value};
 Number.isSafeInteger=Number.isSafeInteger ||function(value){return Number.isInteger(value)&& Math.abs(value)<=Number.MAX_SAFE_INTEGER;};
 var js,$pos,res,$op
 var _b_=$B.builtins
-var _window=self
-var isWebWorker=$B.isa_web_worker=
-('undefined' !==typeof WorkerGlobalScope)&&
-("function"===typeof importScripts)&&
-(navigator instanceof WorkerNavigator)
+var _window
+if($B.isNode){_window={location:{href:'',origin:'',pathname:''}}}else{
+_window=self}
 $B.parser={}
 var clone=$B.clone=function(obj){var res={}
 for(var attr in obj){res[attr]=obj[attr]}
@@ -4987,7 +4988,7 @@ path_hooks.push($B.$path_hooks[1])
 $B.path_hooks=path_hooks
 var $href=$B.script_path=_window.location.href,$href_elts=$href.split('/')
 $href_elts.pop()
-if($B.isWebWorker){$href_elts.pop()}
+if($B.isWebWorker ||$B.isNode){$href_elts.pop()}
 $B.curdir=$href_elts.join('/')
 if(options.pythonpath !==undefined){$B.path=options.pythonpath
 $B.$options.static_stdlib_import=false}
@@ -5000,7 +5001,7 @@ if(path.slice(-7).toLowerCase()=='.vfs.js' &&
 (prefetch===undefined ||prefetch===true)){$B.path_importer_cache[path+'/']=
 $B.imported['_importlib'].VFSPathFinder(path)}
 if(lang){_importlib.optimize_import_for_path(path,lang)}})}
-if(!$B.isWebWorker){
+if(!($B.isWebWorker ||$B.isNode)){
 var path_links=document.querySelectorAll('head link[rel~=pythonpath]'),_importlib=$B.imported['_importlib']
 for(var i=0,e;e=path_links[i];++i){var href=e.href;
 if((' '+e.rel+' ').indexOf(' prepend ')!=-1){$B.path.unshift(href);}else{$B.path.push(href);}
@@ -5008,7 +5009,7 @@ var filetype=e.hreflang
 if(filetype){if(filetype.slice(0,2)=='x-'){filetype=filetype.slice(2)}
 _importlib.optimize_import_for_path(e.href,filetype)}}}
 if($B.$options.args){$B.__ARGV=$B.$options.args}else{$B.__ARGV=_b_.list.$factory([])}
-if(!$B.isWebWorker){_run_scripts(options)}}
+if(!($B.isWebWorker ||$B.isNode)){_run_scripts(options)}}
 $B.run_script=function(src,name,run_loop){
 if(run_loop){if($B.idb_cx && $B.idb_cx.$closed){$B.tasks.push([$B.idb_open])}}
 $B.$py_module_path[name]=$B.script_path
@@ -5092,6 +5093,8 @@ $B.$Node=$Node
 $B.$NodeJSCtx=$NodeJSCtx
 $B.brython=brython})(__BRYTHON__)
 var brython=__BRYTHON__.brython
+if(__BRYTHON__.isNode){global.__BRYTHON__=__BRYTHON__
+module.exports={__BRYTHON__ }}
 ;
 
 (function($B){var _b_=$B.builtins
@@ -13305,12 +13308,14 @@ while(true){try{var elt=_b_.next(it)
 $B.DOMNode.bind(elt,$.evt,callback)}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){break}
 throw err}}}catch(err){if(_b_.isinstance(err,_b_.AttributeError)){$B.DOMNode.bind($.elt,$.evt,callback)}
 throw err}
-return callback}},console:$B.JSObject.$factory(self.console),self:$B.win,win:$B.win,$$window:$B.win,}
+return callback}},console:self.console && $B.JSObject.$factory(self.console),self:$B.win,win:$B.win,$$window:$B.win,}
 browser.__path__=browser.__file__
-if($B.isWebWorker){browser.is_webworker=true
+if($B.isNode){delete browser.$$window
+delete browser.win}else if($B.isWebWorker){browser.is_webworker=true
 delete browser.$$window
 delete browser.win
-browser.self.js.send=self.postMessage}else{browser.is_webworker=false
+browser.self.js.send=self.postMessage}else{
+browser.is_webworker=false
 update(browser,{$$alert:function(message){window.alert($B.builtins.str.$factory(message))},confirm:$B.JSObject.$factory(window.confirm),$$document:$B.DOMNode.$factory(document),doc:$B.DOMNode.$factory(document),
 DOMEvent:$B.DOMEvent,DOMNode:$B.DOMNode,load:function(script_url){
 var file_obj=$B.builtins.open(script_url)
@@ -13392,7 +13397,7 @@ return obj})(__BRYTHON__)}
 modules['browser']=browser
 modules['javascript']={$$this:function(){
 if($B.js_this===undefined){return $B.builtins.None}
-return $B.JSObject.$factory($B.js_this)},$$Date:$B.JSObject.$factory(self.Date),JSConstructor:{__get__:function(){console.warn('"javascript.JSConstructor" is deprecrated. '+
+return $B.JSObject.$factory($B.js_this)},$$Date:self.Date && $B.JSObject.$factory(self.Date),JSConstructor:{__get__:function(){console.warn('"javascript.JSConstructor" is deprecrated. '+
 'Use window.<js constructor name>.new() instead.')
 return $B.JSConstructor},__set__:function(){throw _b_.AttributeError.$factory("read only")}},JSObject:{__get__:function(){console.warn('"javascript.JSObject" is deprecrated. To use '+
 'a Javascript object, use window.<object name> instead.')
@@ -13400,8 +13405,8 @@ return $B.JSObject},__set__:function(){throw _b_.AttributeError.$factory("read o
 'Use browser.load instead.')
 var file_obj=$B.builtins.open(script_url)
 var content=$B.builtins.getattr(file_obj,'read')()
-eval(content)},$$Math:$B.JSObject.$factory(self.Math),NULL:null,$$Number:$B.JSObject.$factory(self.Number),py2js:function(src,module_name){if(module_name===undefined){module_name='__main__'+$B.UUID()}
-return $B.py2js(src,module_name,module_name,$B.builtins_scope).to_js()},pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},$$RegExp:$B.JSObject.$factory(self.RegExp),$$String:$B.JSObject.$factory(self.String),UNDEFINED:undefined}
+eval(content)},$$Math:self.Math && $B.JSObject.$factory(self.Math),NULL:null,$$Number:self.Number && $B.JSObject.$factory(self.Number),py2js:function(src,module_name){if(module_name===undefined){module_name='__main__'+$B.UUID()}
+return $B.py2js(src,module_name,module_name,$B.builtins_scope).to_js()},pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},$$RegExp:self.RegExp && $B.JSObject.$factory(self.RegExp),$$String:self.String && $B.JSObject.$factory(self.String),UNDEFINED:undefined}
 var arraybuffers=["Int8Array","Uint8Array","Uint8ClampedArray","Int16Array","Uint16Array","Int32Array","Uint32Array","Float32Array","Float64Array","BigInt64Array","BigUint64Array"]
 arraybuffers.forEach(function(ab){if(self[ab]!==undefined){modules['javascript'][ab]=$B.JSObject.$factory(self[ab])}})
 var _b_=$B.builtins
@@ -13418,7 +13423,7 @@ $B.imported[name]=module_obj
 for(var attr in module_obj){if(typeof module_obj[attr]=='function'){var attr1=$B.from_alias(attr)
 module_obj[attr].$infos={__name__:attr1,__qualname__:name+'.'+attr1}}}}
 for(var attr in modules){load(attr,modules[attr])}
-if(! $B.isWebWorker){modules['browser'].html=modules['browser.html']}
+if(!($B.isWebWorker ||$B.isNode)){modules['browser'].html=modules['browser.html']}
 var _b_=$B.builtins
 _b_.__builtins__=$B.module.$factory('__builtins__','Python builtins')
 for(var attr in _b_){_b_.__builtins__[attr]=_b_[attr]
