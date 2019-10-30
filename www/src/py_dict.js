@@ -41,6 +41,7 @@ $B.make_view = function(name, set_like){
         return klass.$infos.__name__ + '(' + _b_.repr(self.items) + ')'
     }
 
+    $B.set_func_names(klass, "builtins")
     return klass
 }
 
