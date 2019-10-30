@@ -223,9 +223,15 @@ function divmod_pos(v1, v2){
         while(true){
             // Uses JS division to test an approximate result
             var candidate = Math.floor(parseInt(left) / parseInt(v2)) + ""
+            if(candidate == "10"){
+                // Might happen for big numbers with v2 slightly bigger
+                // than left, eg with left = 1000000000000000000000000000000
+                // and v2 = 100000000000000000000005772299
+                candidate = "9"
+            }
 
             // Check that candidate is the correct result
-            // Start by computing candidate*v2 : for this, use the table
+            // Start by computing candidate * v2 : for this, use the table
             // mv2, which stores the multiples of v2 already calculated
             if(mv2[candidate] === undefined){
                 mv2[candidate] = mul_pos(v2, candidate).value
@@ -241,7 +247,7 @@ function divmod_pos(v1, v2){
             // Add candidate to the quotient
             quotient += candidate
 
-            // New value for left : left - v2*candidate
+            // New value for left : left - v2 * candidate
             left = sub_pos(left, mv2[candidate]).value
 
             // Stop if all digits in v1 have been used
@@ -335,7 +341,12 @@ function mul_pos(x, y){
         result = s + result
         i++
     }
-    return long_int.$factory(result)
+    try{
+        return long_int.$factory(result)
+    }catch(err){
+        console.log(x, y, products, result)
+        throw err
+    }
 }
 
 function sub_pos(v1, v2){
@@ -360,10 +371,13 @@ function sub_pos(v1, v2){
         i1--
         sv = parseInt(v1.charAt(i1))
         x = (sv - carry - parseInt(v2.charAt(i)))
+        if(isNaN(x)){console.log("x is NaN", v1.length, v2.length, i, i1, sv, carry, i, v2.charAt(i))}
         if(x < 0){res = (10 + x) + res; carry = 1}
         else{res = x + res; carry = 0}
     }
 
+
+    if(res.startsWith("NaN")){alert(res)}
     // If there are remaining digits in v1, substract the carry, if any
     while(i1 > 0){
         i1--
@@ -374,6 +388,9 @@ function sub_pos(v1, v2){
 
     // Remove leading zeros and return the result
     while(res.charAt(0) == "0" && res.length > 1){res = res.substr(1)}
+    if(res.startsWith("NaN")){
+        console.log("hoho !!", v1, v2, v1 >= v2, res)
+    }
     return {__class__: long_int, value: res, pos: true}
 }
 

@@ -87,8 +87,8 @@ return js}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,0,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.0"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2019-10-30 10:39:51.370497"
-__BRYTHON__.timestamp=1572428391370
+__BRYTHON__.compiled_date="2019-10-30 12:05:03.468052"
+__BRYTHON__.timestamp=1572433503468
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -9981,6 +9981,8 @@ var right=v1.substr(left.length)
 var mv2={}
 while(true){
 var candidate=Math.floor(parseInt(left)/parseInt(v2))+""
+if(candidate=="10"){
+candidate="9"}
 if(mv2[candidate]===undefined){mv2[candidate]=mul_pos(v2,candidate).value}
 if(comp_pos(left,mv2[candidate])==-1){
 candidate--
@@ -10016,19 +10018,23 @@ while(products[i]!==undefined){s=products[i].toString()
 if(products[i+1]!==undefined){s="0".repeat(chunk_size-s.length)+s}
 result=s+result
 i++}
-return long_int.$factory(result)}
+try{return long_int.$factory(result)}catch(err){console.log(x,y,products,result)
+throw err}}
 function sub_pos(v1,v2){
 var res="",carry=0,i1=v1.length,sv=0,x
 for(var i=v2.length-1;i >=0;i--){i1--
 sv=parseInt(v1.charAt(i1))
 x=(sv-carry-parseInt(v2.charAt(i)))
+if(isNaN(x)){console.log("x is NaN",v1.length,v2.length,i,i1,sv,carry,i,v2.charAt(i))}
 if(x < 0){res=(10+x)+res;carry=1}
 else{res=x+res;carry=0}}
+if(res.startsWith("NaN")){alert(res)}
 while(i1 > 0){i1--
 x=(parseInt(v1.charAt(i1))-carry)
 if(x < 0){res=(10+x)+res;carry=1}
 else{res=x+res;carry=0}}
 while(res.charAt(0)=="0" && res.length > 1){res=res.substr(1)}
+if(res.startsWith("NaN")){console.log("hoho !!",v1,v2,v1 >=v2,res)}
 return{__class__:long_int,value:res,pos:true}}
 long_int.$from_float=function(value){var s=Math.abs(value).toString(),v=s
 if(s.search("e")>-1){var t=/-?(\d)(\.\d+)?e([+-])(\d*)/.exec(s),n1=t[1],n2=t[2],pos=t[3],exp=t[4]
@@ -12011,6 +12017,7 @@ klass.__iter__=function(self){var it=klass.$iterator.$factory(self.items)
 it.len_func=self.len_func
 return it}
 klass.__repr__=function(self){return klass.$infos.__name__+'('+_b_.repr(self.items)+')'}
+$B.set_func_names(klass,"builtins")
 return klass}
 function dict_iterator_next(self){if(self.len_func()!=self.len){throw RuntimeError.$factory("dictionary changed size during iteration")}
 self.counter++
