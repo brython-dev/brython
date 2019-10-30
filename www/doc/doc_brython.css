@@ -12,6 +12,13 @@
   --text-color: #5c821a;
 }
 
+@font-face{
+    font-family: "libra_bt";
+    src: url("../fonts/libra_bt.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal
+}
+
 html {
 
 }
@@ -94,6 +101,11 @@ a.glink {
   background-color:#FFF;
   color:#000;
   text-decoration:underline
+}
+
+h1.brython{
+    font-family: libra_bt;
+    font-size: 300%;
 }
 
 img.logo {
