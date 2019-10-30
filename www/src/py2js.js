@@ -14,12 +14,15 @@ Number.isSafeInteger = Number.isSafeInteger || function (value) {
 
 var js,$pos,res,$op
 var _b_ = $B.builtins
-var _window = self
-var isWebWorker = $B.isa_web_worker =
-    ('undefined' !== typeof WorkerGlobalScope) &&
-    ("function" === typeof importScripts) &&
-    (navigator instanceof WorkerNavigator)
-
+var _window
+if ($B.isNode){
+    _window={ location: {
+        href:'',
+        origin: '',
+        pathname: ''} }
+} else {
+    _window=self
+}
 $B.parser = {}
 
 /*
@@ -9913,7 +9916,7 @@ var brython = $B.parser.brython = function(options){
     var $href = $B.script_path = _window.location.href,
         $href_elts = $href.split('/')
     $href_elts.pop()
-    if($B.isWebWorker){$href_elts.pop()} // WebWorker script is in the web_workers subdirectory
+    if($B.isWebWorker || $B.isNode){$href_elts.pop()} // WebWorker script is in the web_workers subdirectory
     $B.curdir = $href_elts.join('/')
 
     // List of URLs where imported modules should be searched
@@ -9951,7 +9954,7 @@ var brython = $B.parser.brython = function(options){
         })
     }
 
-    if(!$B.isWebWorker){
+    if(!($B.isWebWorker || $B.isNode)){
         // Get all links with rel=pythonpath and add them to sys.path
         var path_links = document.querySelectorAll('head link[rel~=pythonpath]'),
             _importlib = $B.imported['_importlib']
@@ -9975,7 +9978,7 @@ var brython = $B.parser.brython = function(options){
     }else{
         $B.__ARGV = _b_.list.$factory([])
     }
-    if(!$B.isWebWorker){
+    if(!($B.isWebWorker || $B.isNode)){
         _run_scripts(options)
     }
 }
@@ -10262,4 +10265,7 @@ $B.brython = brython
 
 var brython = __BRYTHON__.brython
 
-
+if (__BRYTHON__.isNode) {
+    global.__BRYTHON__ = __BRYTHON__
+    module.exports = { __BRYTHON__ }
+}

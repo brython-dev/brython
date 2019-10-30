@@ -6,7 +6,18 @@ var __BRYTHON__ = __BRYTHON__ || {}  // global object with brython built-ins
 $B.isWebWorker = ('undefined' !== typeof WorkerGlobalScope) &&
                   ("function" === typeof importScripts) &&
                   (navigator instanceof WorkerNavigator)
-var _window = self;
+$B.isNode = (typeof process !=='undefined') && (process.release.name==='node')
+
+var _window
+if ($B.isNode){
+    _window={ location: {
+        href:'',
+        origin: '',
+        pathname: ''},
+        navigator: {userLanguage: ''} }
+} else {
+    _window=self
+}
 
 var $path
 
