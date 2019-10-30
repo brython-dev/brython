@@ -8,6 +8,7 @@
 <meta http-equiv="Content-Script-Type" content="text/javascript">
 
 <script type="text/javascript" src="../src/brython.js"></script>
+<script type="text/python" src="show_source.py"></script>
 
 <style>
 #drop_zone {
@@ -28,18 +29,17 @@
 <output id="list"></output>
 
 <script type="text/python">
-from browser import document, alert, window
-import browser.html as html
+from browser import document, window, bind, html
 
 Date = window.Date.new
 
+@bind("#drop_zone", "drop")
 def handleFileSelect(evt):
     evt.stopPropagation()
     evt.preventDefault()
 
     files = evt.dataTransfer.files # FileList object.
-    print(files)
-
+    
     # files is a FileList of File objects. List some properties.
     output = []
     _ul = html.UL()
@@ -50,15 +50,12 @@ def handleFileSelect(evt):
 
     document['list'] <= _ul
 
+@bind("#drop_zone", "dragover")
 def handleDragOver(evt):
     evt.stopPropagation()
     evt.preventDefault()
     evt.dataTransfer.dropEffect = 'copy' # Explicitly show this is a copy.
 
-# Setup the dnd listeners.
-dropZone = document['drop_zone']
-dropZone.bind('dragover', handleDragOver)
-dropZone.bind('drop', handleFileSelect)
 </script>
 
 </body>

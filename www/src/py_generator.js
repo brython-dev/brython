@@ -23,10 +23,10 @@ var _b_ = $B.builtins
 var bltns = $B.InjectBuiltins()
 eval(bltns)
 
-function rstrip(s, strip_chars) {
+function rstrip(s, strip_chars){
     var _chars = strip_chars || " \t\n";
     var nstrip = 0, len = s.length;
-    while( nstrip < len && _chars.indexOf(s.charAt(len-1-nstrip)) > -1 ) nstrip ++;
+    while(nstrip < len && _chars.indexOf(s.charAt(len-1-nstrip)) > -1) nstrip ++;
     return s.substr(0, len-nstrip)
 }
 
@@ -43,9 +43,10 @@ function jscode_namespace(iter_name, action, parent_id) {
     var res = 'for(var attr in this.blocks){' +
               'eval("var " + attr + " = this.blocks[attr]")'+
            '};' +
-           'var $locals_' + iter_name + ' = this.env' + _clean + ', '+
-               '$local_name = "' + iter_name + '", ' +
-               '$locals = $locals_' + iter_name + ';'
+           '\nvar $locals_' + iter_name + ' = this.env' + _clean + ', '+
+               '\n    $local_name = "' + iter_name + '", ' +
+               '\n    $locals = $locals_' + iter_name + ',' +
+               '\n    $yield;'
     if(parent_id){
         res += '$locals.$parent = $locals_' + parent_id.replace(/\./g, "_") +
             ';'
@@ -59,14 +60,20 @@ function make_node(top_node, node){
     // for the modified function that will return iterators
     // top_node is the root node of the modified function
 
-    if (node.type === "marker") return
+    if(node.type === "marker"){return}
+
+    var is_cond = false,
+        is_except = false,
+        is_else = false,
+        is_continue,
+        ctx_js
+
     // cache context.to_js
     if(node.context.$genjs){
-        var ctx_js = node.context.$genjs
+        ctx_js = node.context.$genjs
     }else{
-        var ctx_js = node.context.$genjs = node.context.to_js()
+        ctx_js = node.context.$genjs = node.context.to_js()
     }
-    var is_cond = false, is_except = false,is_else = false, is_continue
 
     if(node.locals_def){
         var parent_id = node.func_node.parent_block.id
@@ -115,35 +122,59 @@ function make_node(top_node, node){
 
             // Replace "yield value" by "return [value, node_id]"
 
+            // Is yield node inside a context manager ?
+            var ctx_manager = in_ctx_manager(node)
+
             var yield_node_id = top_node.yields.length
-            ctx_js = rstrip(ctx_js, ';')
+            while(ctx_js.endsWith(";")){
+                ctx_js = ctx_js.substr(0, ctx_js.length - 1)
+            }
             var res =  "return [" + ctx_js + ", " + yield_node_id + "]"
+
+            // Add a local variable that will prevent executing the __exit__
+            // method of the context manager before returning the value
+            if(ctx_manager !== undefined){
+                res = "$yield = true;" + res
+            }
+
             new_node.data = res
             top_node.yields.push(new_node)
 
         }else if(node.is_set_yield_value){
 
             // After each yield, py2js inserts a no-op line as a placeholder
-            // for values or exceptions sent to the iterator
+            // for values or exceptions sent to the iterator.
             //
             // Here, this line is replaced by a test on the attribute
-            // sent_value of __BRYTHON__.modules[iter_id]. This attribute is
-            // set when methods send() or throw() of the generators are
-            // invoked
+            // sent_value of the Javascript built-in value "this". This
+            // attribute is set when methods send() or throw() of the
+            // generator are invoked.
 
-            var yield_node_id = top_node.yields.length
+            // Is yield node inside a context manager ?
+            var ctx_manager
+            if(node.after_yield){
+                ctx_manager = in_ctx_manager(node)
+            }
             var js = "var sent_value = this.sent_value === undefined ? " +
-                "None : this.sent_value;"
-
-            // If method throw was called, raise the exception
-            js += "if(sent_value.__class__ === $B.$GeneratorSendError)"+
-                  "{throw sent_value.err}"
-
-            // Else set the yielded value to sent_value
-            js += "var $yield_value" + ctx_js + " = sent_value;"
+                "None : this.sent_value;",
+                h = "\n" + ' '.repeat(node.indent)
 
             // Reset sent_value value to None for the next iteration
-            js += "this.sent_value = None"
+            js += h + "this.sent_value = None"
+
+            // If method throw was called, raise the exception
+            js += h + "if(sent_value.__class__ === $B.$GeneratorSendError)"+
+                  "{throw sent_value.err};"
+
+            // Else set the yielded value to sent_value
+            if(typeof ctx_js == "number"){
+                js += h + "var $yield_value" + ctx_js + " = sent_value;"
+            }
+
+            if(ctx_manager !== undefined){
+                js += h + "$yield = true;" // to avoid exiting from ctx mngr
+            }
+
             new_node.data = js
 
         }else if(ctype == "break" || ctype == "continue"){
@@ -191,6 +222,14 @@ $B.genNode = function(data, parent){
         child.rank = this.children.length - 1
     }
 
+    this.insert = function(pos, child){
+        if(child === undefined){console.log("child of " + this + " undefined")}
+        this.children.splice(pos, 0, child)
+        this.has_child = true
+        child.parent = this
+        child.rank = pos //this.children.length - 1
+    }
+
     this.clone = function(){
         var res = new $B.genNode(this.data)
         res.has_child = this.has_child
@@ -232,6 +271,7 @@ $B.genNode = function(data, parent){
 
         if(head && (this.is_break || this.is_continue)){
             var loop = in_loop(this)
+            res.loop = loop
             if(loop.has("yield")){
                 res.data = ""
                 if(this.is_break){
@@ -269,6 +309,11 @@ $B.genNode = function(data, parent){
         if(this["is_" + keyword]){return true}
         else{
             for(var i = 0, len = this.children.length; i < len; i++){
+                if(this.children[i].loop_start !== undefined){
+                    // If the child is a loop, don't search a "break" or
+                    // "continue" below it, they don't apply to 'this'
+                    continue
+                }
                 if(this.children[i].has(keyword)){return true}
             }
         }
@@ -314,6 +359,19 @@ $B.$GeneratorSendError = {}
 var $GeneratorReturn = {}
 $B.generator_return = function(value){
     return {__class__: $GeneratorReturn, value: value}
+}
+
+function in_ctx_manager(node){
+    // Is yield node inside a context manager ?
+    var ctx_manager,
+        parent = node.parent
+    while(parent && parent.ntype !== "generator"){
+        ctx_manager = parent.ctx_manager_num
+        if(ctx_manager !== undefined){
+            return ctx_manager
+        }
+        parent = parent.parent
+    }
 }
 
 function in_loop(node){
@@ -382,6 +440,7 @@ $B.$BRgenerator = function(func_name, blocks, def_id, def_node){
         $B.$add_line_num(def_node, def_ctx.rank)
     }
     var func_root = new $B.genNode(def_ctx.to_js())
+
     // Once the Javascript code is generated, remove the nodes for line
     // numbers, they make the rest of the algorithm bug
     remove_line_nums(def_node.parent)
@@ -411,7 +470,8 @@ $B.$BRgenerator = function(func_name, blocks, def_id, def_node){
         num: 0
     }
 
-    var src = func_root.src(), //children[1].src(),
+    // Restore function line num
+    var src = func_root.src(),
         raw_src = src.substr(src.search("function"))
 
     // For the first call, add defaults object as arguement
@@ -471,7 +531,6 @@ function make_next(self, yield_node_id){
     // - goes up one block until it reaches the function root node
 
     while(1){
-
         // Compute the rest of the block to run after exit_node
         var exit_parent = exit_node.parent,
             rest = [],
@@ -503,8 +562,21 @@ function make_next(self, yield_node_id){
             }
         }
 
+        var is_continue
+
         for(var i = start, len = exit_parent.children.length; i < len; i++){
             var clone = exit_parent.children[i].clone_tree(null, true)
+            if(clone.is_continue){
+                // Stop copying
+                is_continue = true
+                var loop = clone.loop
+                // Run loop again
+                for(var j = loop.rank, len = loop.parent.children.length;
+                        j < len; j++){
+                    rest[pos++] = loop.parent.children[j].clone_tree(null, true)
+                }
+                break
+            }
             if(clone.has("continue")){
                 has_continue = true;
             }
@@ -526,6 +598,14 @@ function make_next(self, yield_node_id){
                 "{if(err.__class__ !== $B.GeneratorBreak){throw err}}"
             catch_test = new $B.genNode(catch_test)
             rest = [rest_try, catch_test]
+            if(exit_parent.loop_start !== undefined){
+                var test = 'if($locals["$no_break' + exit_parent.loop_start +
+                    '"])',
+                    test_node = new $B.genNode(test)
+                test_node.addChild(rest_try)
+                test_node.addChild(catch_test)
+                rest = [test_node]
+            }
         }
 
         // Get list of "try" nodes above exit node
@@ -533,7 +613,9 @@ function make_next(self, yield_node_id){
 
         if(tries.length == 0){
             // Not in a "try" clause : run rest at function level
-            for(var i = 0; i < rest.length; i++){fnode.addChild(rest[i])}
+            for(var i = 0; i < rest.length; i++){
+                fnode.addChild(rest[i])
+            }
         }else{
             // Attach "rest" to successive "try" found, or to function body
             var tree = [], pos = 0
@@ -628,6 +710,7 @@ generator.__next__ = function(self){
         console.log(err)
         */
         self.$finished = true
+        err.$stack = $B.frames_stack.slice() // otherwise frame is lot in finally
         throw err
     }finally{
         // The line "leave_frame" is not inserted in the function body for
@@ -714,7 +797,8 @@ generator.$factory = $B.genfunc = function(name, blocks, funcs, $defaults){
             iter_id: iter_id,
             gi_running: false,
             $started: false,
-            $defaults: $defaults
+            $defaults: $defaults,
+            $is_generator_obj: true
         }
         return res
     }

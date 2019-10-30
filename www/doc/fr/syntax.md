@@ -9,7 +9,7 @@ requête Ajax.
 Mots clés et fonctions intégrées
 --------------------------------
 
-Brython supporte la plupart des mots-clés et des fonctions de Python 3 :
+Brython supporte tous les mots-clés et les fonctions de Python 3 :
 
 - mots clés : `and, as, assert, async, await, break, class, continue, def, del, elif, else, `
   `except, False, finally, for, from, global, if, import, in, is, lambda, None, `
@@ -26,15 +26,21 @@ Brython supporte la plupart des mots-clés et des fonctions de Python 3 :
 
 Quelques particularités liées au contexte d'exécution dans un navigateur :
 
-- les fonctions Javascript ne peuvent pas bloquer l'exécution pendant une 
+- les fonctions Javascript ne peuvent pas bloquer l'exécution pendant une
   durée donnée, ou en attendant qu'un événement se produise, avant de passer à
-  l'instruction suivante. Pour cette raison, on ne peut pas utiliser
-  `time.sleep()` (il faut utiliser à la place les fonctions du module
-  **browser.timer** telles que `set_timeout()` ou `set_interval()`) ; la
-  fonction intégrée `input()` est simulée par la fonction Javascript
-  `prompt()` ; les méthodes bloquantes du module `asyncio` ne sont en fait
-  pas bloquantes, c'est-à-dire que les instructions qui suivent sont
-  exécutées immédiatement.
+  l'instruction suivante. Pour cette raison:
+
+ - on ne peut pas utiliser `time.sleep()` (il faut utiliser à la place les
+  fonctions du module **browser.timer** telles que `set_timeout()` ou
+  `set_interval()`)
+ - la fonction intégrée `input()` est simulée par la fonction Javascript
+  `prompt()`. Un exemple dans la galerie montre comment simuler la fonction 
+  input dans une boite de dialogue personnalisée
+
+- pour la même raison, et aussi parce que le navigateur possède une boucle
+  d'événements implicite, le module `asyncio` de la distribution standard ne
+  peut pas être utilisé. A la place, pour la programmation asynchrone, le
+  module [**`browser.aio`**](aio.html) est fourni.
 
 - la fonction `open()` prend comme argument l'url du fichier à ouvrir ; comme
   on utilise un appel Ajax, elle doit être dans le même domaine que le script.
@@ -48,9 +54,6 @@ Quelques particularités liées au contexte d'exécution dans un navigateur :
   `sys.stdout` peuvent être affectés à un objet qui implémente une méthode
   `write()`, ce qui permet par exemple d'afficher les messages d'erreurs dans
   une fenêtre
-
-- `sys.stdin` n'est pas implémenté, mais on peut utiliser la fonction intégrée
-  `input()` qui ouvre une fenêtre d'invite
 
 - pour lancer une impression sur imprimante, utiliser la méthode `print()` de
   l'objet `window` défini dans le module **browser** :

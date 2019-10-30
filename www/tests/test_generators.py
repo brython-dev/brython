@@ -472,6 +472,41 @@ except StopIteration as exc:
 # issue 470
 assert eval('bytes(0 for x in [])') == b''
 
+# issue 502
+def test_gen():
+    for i in range(1):
+        yield i
+    return 20
+
+g = test_gen()
+next(g)
+try:
+    next(g)
+except StopIteration as exc:
+    assert exc.value == 20
+
+# issue 765
+def sub_gen(expect):
+    res = yield None
+    assert res == expect, "Value should be sent to the inner generator"
+    return res
+
+def main_gen(expect):
+    r = yield from sub_gen(expect)
+    assert r == expect, \
+        "Value returned from the inner generator should be result of "\
+        "yield from expression"
+    return r
+
+expect_value = 30
+g = main_gen(expect_value)
+assert g.send(None) is None
+try:
+    g.send(expect_value)
+    assert False, "Return from iterator should send StopIteration"
+except StopIteration as e:
+    assert e.value == expect_value
+
 # issue 857
 def f():
     def x():
@@ -682,5 +717,212 @@ g.send(0)
 g.send(0)
 g.send(0)
 assert g.send(1) == (1, 2, 3)
+
+# issue 1120
+def gen():
+    while True:
+        if True:
+            for char in 'abc':
+                yield char
+            break
+        yield 'Z'
+
+assert list(gen()) == ['a', 'b', 'c']
+
+def gen1():
+    dct = {"1": 1}
+    for key, value in dct.items():
+        yield key
+        yield "---"
+        yield value
+        yield from ['Y', 'Z']
+
+assert list(gen1()) == ["1", "---", 1, 'Y', 'Z']
+
+# issue 1141
+def unpack():
+    x, y = yield
+    assert x + y == 9
+    yield None
+gen = unpack()
+next(gen)
+gen.send((5, 4))
+
+# issue 1143 (yield inside with)
+trace = []
+
+class A(object):
+
+    def __enter__(self):
+        trace.append('enter A')
+
+    def __exit__(self, *pa, **ka):
+        trace.append('exit A')
+
+def test_gen1():
+    trace.append('test starts')
+    with A() as x:
+        yield 1
+        yield 2
+    return
+
+def f():
+    gen = test_gen1()
+    trace.append(next(gen))
+    trace.append(next(gen))
+
+f()
+trace.append('end of f()')
+
+gen2 = test_gen1()
+trace.append(next(gen2))
+del gen2
+
+assert trace == ['test starts', 'enter A', 1, 2, 'exit A', 'end of f()',
+    'test starts', 'enter A', 1, 'exit A']
+
+trace = []
+
+def test_gen2():
+    trace.append('test starts')
+    with A():
+        trace.append(1)
+        yield
+        trace.append(2)
+        yield
+    trace.append(3)
+    yield
+    with A():
+        trace.append(4)
+        yield
+        trace.append(5)
+        yield
+
+list(test_gen2())
+
+assert trace == ['test starts', 'enter A', 1, 2, 'exit A', 3, 'enter A', 4, 5,
+    'exit A']
+
+def test_gen3():
+    with A():
+        if AS_LOOP:
+            for i in range(1, 3):
+                yield i
+        else:
+            yield 1
+            yield 2
+    yield 3
+    with A():
+        if AS_LOOP:
+            for i in range(4, 6):
+                yield i
+        else:
+            yield 4
+            yield 5
+
+AS_LOOP = False
+trace = []
+for value in test_gen3():
+    trace.append(value)
+assert trace == ['enter A', 1, 2, 'exit A', 3, 'enter A', 4, 5, 'exit A']
+
+AS_LOOP = True
+trace = []
+for value in test_gen3():
+    trace.append(value)
+assert trace == ['enter A', 1, 2, 'exit A', 3, 'enter A', 4, 5, 'exit A']
+
+
+def test_gen3():
+    with A():
+        if AS_LOOP:
+            for i in range(1, 3):
+                val = yield i
+                assert val == i+1
+        else:
+            val = yield 1
+            assert val == 2
+            val = yield 2
+            assert val == 3
+    yield 3
+    with A():
+        if AS_LOOP:
+            for i in range(4, 6):
+                yield i
+        else:
+            yield 4
+            yield 5
+
+def run_test_gen3():
+    gen = test_gen3()
+    value = next(gen)
+    for ii in range(2):
+        trace.append(value)
+        value = gen.send(value+1)
+    trace.append(value)
+    for value in gen:
+        trace.append(value)
+    assert trace == ['enter A', 1, 2, 'exit A', 3, 'enter A', 4, 5, 'exit A']
+
+AS_LOOP = False
+trace = []
+run_test_gen3()
+
+AS_LOOP = True
+trace = []
+run_test_gen3()
+
+# issue 1146
+def fgen(SHOW_ERROR):
+    while 1:
+        try:
+            trace.append('trying...')
+            yield
+        except GeneratorExit:   # exit nicely
+            break
+        except:
+            trace.append('ERROR handler start')
+            if SHOW_ERROR:
+                yield
+            trace.append('ERROR handler end')
+        else:
+            trace.append('OK')
+
+trace = []
+
+def test(SHOW_ERROR):
+    del trace[:]
+
+    gen = fgen(SHOW_ERROR)
+    for i in range(5):
+        if i == 2:
+            trace.append('THROW')
+            gen.throw(Exception())
+            if SHOW_ERROR:
+                trace.append(next(gen))
+        else:
+            trace.append(next(gen))
+
+    return trace
+
+assert test(True) == ['trying...', None, 'OK', 'trying...', None, 'THROW',
+    'ERROR handler start', 'ERROR handler end', 'trying...', None, 'OK',
+    'trying...', None, 'OK', 'trying...', None]
+
+assert test(False) == ['trying...', None, 'OK', 'trying...', None, 'THROW',
+    'ERROR handler start', 'ERROR handler end', 'trying...', 'OK',
+    'trying...', None, 'OK', 'trying...', None]
+
+# related to issue #1176
+def f():
+    while True:
+        if t:
+            yield t.pop()
+            continue
+        return t
+
+t = ["a", "b", "c"]
+assert list(f()) == ["c", "b", "a"]
+assert not t
 
 print('passed all tests...')

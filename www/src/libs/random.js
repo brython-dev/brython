@@ -373,6 +373,59 @@ Random.choice = function(){
     else{return _b_.getattr(seq, "__getitem__")(rank)}
 }
 
+Random.choices = function(){
+    var $ = $B.args("choices", 3,
+            {self: null,population:null, weights:null, cum_weights:null, k:null},
+            ["self", "population", "weights", "cum_weights", "k"], arguments,
+            {weights: _b_.None, cum_weights: _b_.None, k: 1}, "*", null),
+            self = $.self,
+            population = $.population,
+            weights = $.weights,
+            cum_weights = $.cum_weights,
+            k = $.k
+
+    if(population.length == 0){
+        throw _b_.ValueError.$factory("population is empty")
+    }
+    if(weights === _b_.None){
+        weights = []
+        population.forEach(function(){
+            weights.push(1)
+        })
+    }else if(cum_weights !== _b_.None){
+        throw _b_.TypeError.$factory("Cannot specify both weights and " +
+            "cumulative weights")
+    }else{
+        if(weights.length != population.length){
+            throw _b_.ValueError.$factory('The number of weights does not ' +
+                'match the population')
+        }
+    }
+    if(cum_weights === _b_.None){
+        var cum_weights = [weights[0]]
+        weights.forEach(function(weight, rank){
+            if(rank > 0){
+                cum_weights.push(cum_weights[rank - 1] + weight)
+            }
+        })
+    }else if(cum_weights.length != population.length){
+        throw _b_.ValueError.$factory('The number of weights does not ' +
+            'match the population')
+    }
+
+    var result = []
+    for(var i = 0; i < k; i++){
+        var rand = self._random() * cum_weights[cum_weights.length - 1]
+        for(var rank = 0, len = population.length; rank < len; rank++){
+            if(cum_weights[rank] > rand){
+                result.push(population[rank])
+                break
+            }
+        }
+    }
+    return result
+}
+
 Random.expovariate = function(self, lambd){
     /*
     Exponential distribution.
@@ -608,11 +661,16 @@ Random.randint = function(self, a, b){
         {self: null, a:null, b:null},
         ['self', 'a', 'b'],
         arguments, {}, null, null)
+    if(! _b_.isinstance($.b, _b_.int)){
+        throw _b_.ValueError.$factory("non-integer arg 1 for randrange()")
+    }
     return Random.randrange($.self, $.a, $.b + 1)
 }
 
 Random.random = function(self){
-    return self._random()
+    var res = self._random()
+    if(! Number.isInteger(res)){return new Number(res)}
+    return res
 }
 
 Random.randrange = function(){
@@ -623,7 +681,12 @@ Random.randrange = function(){
         self = $.self,
         _random = self._random
         //console.log("randrange", $)
-
+    for(var i = 1, len = arguments.length; i < len; i++){
+        if(! _b_.isinstance(arguments[i], _b_.int)){
+            throw _b_.ValueError.$factory("non-integer arg " + i +
+                " for randrange()")
+        }
+    }
     if($.stop === null){
         var start = 0, stop = $.x, step = 1
     }else{
@@ -636,7 +699,7 @@ Random.randrange = function(){
             start + ", " + stop + ", " + step + ")")
     }
     if(typeof start == 'number' && typeof stop == 'number' &&
-        typeof step == 'number'){
+            typeof step == 'number'){
         return start + step * Math.floor(_random() *
             Math.ceil((stop - start) / step))
     }else{

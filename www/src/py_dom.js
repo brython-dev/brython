@@ -282,6 +282,16 @@ DOMEvent.__new__ = function(cls, evt_name){
     return ev
 }
 
+function dom2svg(svg_elt, coords){
+    // Used to compute the mouse position relatively to the upper left corner
+    // of an SVG element, based on the coordinates coords.x, coords.y that are
+    // relative to the browser screen.
+    var pt = svg_elt.createSVGPoint()
+    pt.x = coords.x
+    pt.y = coords.y
+    return pt.matrixTransform(svg_elt.getScreenCTM().inverse())
+}
+
 DOMEvent.__getattribute__ = function(self, attr){
     switch(attr) {
         case '__repr__':
@@ -302,6 +312,18 @@ DOMEvent.__getattribute__ = function(self, attr){
             }
         case 'char':
             return String.fromCharCode(self.which)
+        case 'svgX':
+            if(self.target instanceof SVGSVGElement){
+                return Math.floor(dom2svg(self.target, $mouseCoords(self)).x)
+            }
+            throw _b_.AttributeError.$factory("event target is not an SVG " +
+                "element")
+        case 'svgY':
+            if(self.target instanceof SVGSVGElement){
+                return Math.floor(dom2svg(self.target, $mouseCoords(self)).y)
+            }
+            throw _b_.AttributeError.$factory("event target is not an SVG " +
+                "element")
     }
 
     var res =  self[attr]
@@ -315,7 +337,8 @@ DOMEvent.__getattribute__ = function(self, attr){
                 return res.apply(self, arguments)
             }
             func.$infos = {
-                __name__: res.toString().substr(9, res.toString().search("{"))
+                __name__: res.name,
+                __qualname__: res.name
             }
             return func
         }
@@ -342,12 +365,12 @@ var $DOMEvent = $B.$DOMEvent = function(ev){
     return ev
 }
 
-$B.set_func_names(DOMEvent, "<dom>")
+$B.set_func_names(DOMEvent, "browser")
 
 var Clipboard = {
     __class__: _b_.type,
     $infos: {
-        __module__: "<pydom>",
+        __module__: "browser",
         __name__: "Clipboard"
     }
 }
@@ -507,7 +530,7 @@ var DOMNode = {
     __class__ : _b_.type,
     __mro__: [object],
     $infos: {
-        __module__: "<pydom>",
+        __module__: "browser",
         __name__: "DOMNode"
     }
 }
@@ -719,29 +742,37 @@ DOMNode.__getattribute__ = function(self, attr){
     if(res !== undefined){
         if(res === null){return _b_.None}
         if(typeof res === "function"){
+            // If elt[attr] is a function, it is converted in another function
+            // that produces a Python error message in case of failure.
             var func = (function(f, elt){
                 return function(){
                     var args = [], pos = 0
                     for(var i = 0; i < arguments.length; i++){
                         var arg = arguments[i]
                         if(typeof arg == "function"){
-                            var f1 = function(dest_fn) { return function(){
-                                try{return dest_fn.apply(null, arguments)}
-                                catch(err){
-                                    console.log(dest_fn, typeof dest_fn, err)
-                                    if(err.__class__ !== undefined){
-                                        var msg = $B.$getattr(err, 'info') +
-                                            '\n' + $B.class_name(err)
-                                        if(err.args){msg += ': ' + err.args[0]}
-                                        try{$B.$getattr($B.stderr, "write")(msg)}
-                                        catch(err){console.log(msg)}
-                                    }else{
-                                        try{$B.$getattr($B.stderr, "write")(err)}
-                                        catch(err1){console.log(err)}
+                            // Conversion of function arguments into functions
+                            // that handle exceptions. The converted function
+                            // is cached, so that for instance in this code :
+                            //
+                            // element.addEventListener("click", f)
+                            // element.removeEventListener("click", f)
+                            //
+                            // it is the same function "f" that is added and
+                            // then removed (cf. issue #1157)
+                            if(arg.$cache){
+                                var f1 = arg.$cache
+                            }else{
+                                var f1 = function(dest_fn){
+                                    return function(){
+                                        try{
+                                            return dest_fn.apply(null, arguments)
+                                        }catch(err){
+                                            $B.handle_error(err)
+                                        }
                                     }
-                                    throw err
-                                }
-                            }}(arg)
+                                }(arg)
+                                arg.$cache = f1
+                            }
                             args[pos++] = f1
                         }
                         else if(_b_.isinstance(arg, JSObject)){
@@ -750,6 +781,8 @@ DOMNode.__getattribute__ = function(self, attr){
                             args[pos++] = arg.elt
                         }else if(arg === _b_.None){
                             args[pos++] = null
+                        }else if(arg.__class__ == _b_.dict){
+                            args[pos++] = arg.$string_dict
                         }else{
                             args[pos++] = arg
                         }
@@ -805,6 +838,12 @@ DOMNode.__getitem__ = function(self, key){
              throw _b_.KeyError.$factory(key)
         }
     }
+}
+
+DOMNode.__hash__ = function(self){
+    return self.__hashvalue__ === undefined ?
+        (self.__hashvalue__ = $B.$py_next_hash--) :
+        self.__hashvalue__
 }
 
 DOMNode.__iter__ = function(self){
@@ -1014,45 +1053,46 @@ DOMNode.abs_top = {
 
 DOMNode.bind = function(self, event){
     // bind functions to the event (event = "click", "mouseover" etc.)
-    if(arguments.length == 2){
-        // elt.bind(event) is a decorator for callback functions
-        return (function(obj, evt){
-            function f(callback){
-                DOMNode.bind(obj, evt, callback)
-                return callback
-            }
-            return f
-        })(self, event)
-    }
+    var $ = $B.args("bind", 4,
+            {self: null, event: null, func: null, options: null},
+            ["self", "event", "func", "options"], arguments,
+            {options: _b_.None}, null, null),
+            self = $.self,
+            event = $.event,
+            func = $.func,
+            options = $.options
 
-    for(var i = 2; i < arguments.length; i++){
-        var func = arguments[i]
-        var callback = (function(f){
-            return function(ev){
-                try{
-                    return f($DOMEvent(ev))
-                }catch(err){
-                    if(err.__class__ !== undefined){
-                        var msg = $B.$getattr(err, "info") +
-                            "\n" + $B.class_name(err)
-                        if(err.args){msg += ": " + err.args[0]}
-                        try{$B.$getattr($B.stderr, "write")(msg)}
-                        catch(err){console.log(msg)}
-                    }else{
-                        try{$B.$getattr($B.stderr, "write")(err)}
-                        catch(err1){console.log(err)}
-                    }
+    var callback = (function(f){
+        return function(ev){
+            try{
+                return f($DOMEvent(ev))
+            }catch(err){
+                if(err.__class__ !== undefined){
+                    var msg = $B.$getattr(err, "info") +
+                        "\n" + $B.class_name(err)
+                    if(err.args){msg += ": " + err.args[0]}
+                    try{$B.$getattr($B.stderr, "write")(msg)}
+                    catch(err){console.log(msg)}
+                }else{
+                    try{$B.$getattr($B.stderr, "write")(err)}
+                    catch(err1){console.log(err)}
                 }
-            }}
-        )(func)
-        callback.$infos = func.$infos
-        callback.$attrs = func.$attrs || {}
-        callback.$func = func
+            }
+        }}
+    )(func)
+    callback.$infos = func.$infos
+    callback.$attrs = func.$attrs || {}
+    callback.$func = func
+    if(typeof options == "boolean"){
+        self.elt.addEventListener(event, callback, options)
+    }else if(options.__class__ === _b_.dict){
+        self.elt.addEventListener(event, callback, options.$string_dict)
+    }else if(options === _b_.None){
         self.elt.addEventListener(event, callback, false)
-        self.elt.$events = self.elt.$events || {}
-        self.elt.$events[event] = self.elt.$events[event] || []
-        self.elt.$events[event].push([func, callback])
     }
+    self.elt.$events = self.elt.$events || {}
+    self.elt.$events[event] = self.elt.$events[event] || []
+    self.elt.$events[event].push([func, callback])
     return self
 }
 
@@ -1320,7 +1360,7 @@ DOMNode.set_html = function(self, value){
 
 DOMNode.set_style = function(self, style){ // style is a dict
     if(!_b_.isinstance(style, _b_.dict)){
-        throw TypeError.$factory("style must be dict, not " +
+        throw _b_.TypeError.$factory("style must be dict, not " +
             $B.class_name(style))
     }
     var items = _b_.list.$factory(_b_.dict.items(style))
@@ -1447,7 +1487,7 @@ DOMNode.unbind = function(self, event){
     }
 }
 
-$B.set_func_names(DOMNode, "<dom>")
+$B.set_func_names(DOMNode, "browser")
 
 // return query string as an object with methods to access keys and values
 // same interface as cgi.FieldStorage, with getvalue / getlist / getfirst
@@ -1471,9 +1511,9 @@ Query.__getitem__ = function(self, key){
     return result
 }
 
-var Query_iterator = $B.$iterator_class("query string iterator")
+var Query_iterator = $B.make_iterator_class("query string iterator")
 Query.__iter__ = function(self){
-    return $B.$iterator(self._keys, Query_iterator)
+    return Query_iterator.$factory(self._keys)
 }
 
 Query.__mro__ = [object]
@@ -1593,7 +1633,7 @@ $B.set_func_names(TagSum, "<dom>")
 
 $B.TagSum = TagSum // used in _html.js and _svg.js
 
-var win = JSObject.$factory(_window) //{__class__:$WinDict}
+var win = JSObject.$factory(_window)
 
 win.get_postMessage = function(msg,targetOrigin){
     if(_b_.isinstance(msg, dict)){

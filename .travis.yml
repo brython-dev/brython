@@ -1,18 +1,28 @@
 sudo: required
 
-language: javascript
-
-addons:
-    chrome: stable
-    firefox: "59.0"
-
-cache:
-  directories:
-    - "travis_phantomjs"
-
 matrix:
   include:
     - language: javascript
+      addons:
+          chrome: "stable"
+          firefox: "latest"
+      before_install:
+        - mkdir qunit
+        - wget -O qunit/qunit-1.18.0.css http://code.jquery.com/qunit/qunit-1.18.0.css
+        - wget -O qunit/qunit-1.18.0.js  http://code.jquery.com/qunit/qunit-1.18.0.js
+        - nvm install 8
+        - npm install testem
+        - ./node_modules/.bin/testem launchers
+        # A newer version of libnss3 is needed for the latest Chrome version
+        - sudo apt-get --only-upgrade install libnss3
+
+      before_script:
+        - export DISPLAY=:99.0
+        - sh -e /etc/init.d/xvfb start
+
+      script:
+        - ./node_modules/.bin/testem --launch "Firefox,Headless Chrome" -t www/tests/qunit/run_tests.html ci
+
     - language: python
       python: 3.7
       dist: xenial  # required for Python >= 3.7 (travis-ci/travis-ci#9069)
@@ -22,25 +32,3 @@ matrix:
         - EXCLUDE=./.*,www/src/Lib/test/badsyntax_3131.py
         # stop the build if there are Python syntax errors
         - flake8 . --exclude=$EXCLUDE --exit-zero --select=E999 --show-source --statistics
-
-before_install:
-  - mkdir qunit
-  - wget -O qunit/qunit-1.18.0.css http://code.jquery.com/qunit/qunit-1.18.0.css
-  - wget -O qunit/qunit-1.18.0.js  http://code.jquery.com/qunit/qunit-1.18.0.js
-  - nvm install 8
-  - npm install testem
-  - ./node_modules/.bin/testem launchers
-  # A newer version of libnss3 is needed for the latest Chrome version
-  - sudo apt-get --only-upgrade install libnss3
-
-before_script:
-  - export DISPLAY=:99.0
-  - sh -e /etc/init.d/xvfb start
-  # - chmod a+x scripts/ensure_phantomjs.sh
-  # - scripts/ensure_phantomjs.sh
-  # - export PATH=$PWD/travis_phantomjs/phantomjs-2.1.1-linux-x86_64/bin:$PATH
-
-script:
-  - ./node_modules/.bin/testem --skip PhantomJS,Chromium -t www/tests/qunit/run_tests.html ci
-  #- phantomjs phantomjs/examples/run-qunit.js www/tests/qunit/run_tests.html
-

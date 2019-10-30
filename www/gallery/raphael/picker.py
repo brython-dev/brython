@@ -2,7 +2,7 @@ import math
 
 from browser import document, window
 
-bRaphael = window.Raphael
+Raphael = window.Raphael
 
 out = document["output"]
 vr = document["vr"]
@@ -25,8 +25,8 @@ def on_change(item):
         out.value = clr
         item.color(clr)
         out.style.background = clr
-        out.style.color = "#fff" if bRaphael.rgb2hsb(clr).b < .5 else "#000"
-        clr = bRaphael.color(clr)
+        out.style.color = "#fff" if Raphael.rgb2hsb(clr).b < .5 else "#000"
+        clr = Raphael.color(clr)
         vr.html = clr.r
         vg.html = clr.g
         vb.html = clr.b
@@ -40,10 +40,10 @@ def on_change(item):
 def picker():
         
     # this is where colorpicker created
-    cp = bRaphael.colorpicker(40, 20, 300, "#eee")
-    cp2 = bRaphael.colorwheel(360, 20, 300, "#eee")
+    cp = Raphael.colorpicker(40, 20, 300, "#eee")
+    cp2 = Raphael.colorwheel(360, 20, 300, "#eee")
         
-    clr = bRaphael.color("#eee")
+    clr = Raphael.color("#eee")
     vr.html = clr.r
     vg.html = clr.g
     vb.html = clr.b
@@ -58,5 +58,5 @@ def picker():
     cp.onchange = on_change(cp2)
     cp2.onchange = on_change(cp)
 
-bRaphael(picker)
+Raphael(picker)
 

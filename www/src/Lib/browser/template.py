@@ -53,6 +53,7 @@ functions as the second argument of Template():
 After a handler function is run, if element.data has changed, the element is
 rendered again, with the new value of element.data.
 """
+import tb as traceback
 from browser import document, html
 
 # HTML elements that don't need a closing tag
@@ -159,8 +160,7 @@ class Template:
                     if nb_double_braces != nb_braces:
                         lines = [line for line in elt.text.split("\n")
                             if line.strip()]
-                        text = " ".join(lines).replace('"', "&quot;")
-                        text = 'f"""' + text + '"""'
+                        text = 'f"""' + " ".join(lines) + '"""'
                 self.add_indent ("__write__(" + text + ")\n", elt)
 
         elif hasattr(elt, "tagName"):
@@ -256,26 +256,25 @@ class Template:
         try:
             exec(self.python, ns)
         except Exception as exc:
-            import traceback
             msg = traceback.format_exc()
-            if self.element.nodeType != 9:
-                print("Error rendering template:\n" + self.element.outerHTML)
-            else:
-                print("Error rendering template:\n" + self.element.html)
-            print("Namespace passed to render():\n", self.data.to_dict())
             if isinstance(exc, SyntaxError):
                 line_no = exc.args[2]
             else:
-                line_no = exc.traceback.tb_lineno
+                tb = exc.traceback
+                while tb is not None:
+                    line_no = tb.tb_lineno
+                    tb = tb.tb_next
             elt = self.line_mapping[line_no]
-            print("The error is raised when rendering the element:")
-            try:
-                print(elt.outerHTML)
-            except AttributeError:
-                print('no outerHTML for', elt)
-                print(elt.html)
-            print("Python traceback:")
-            print(msg)
+            print("Error rendering the element:", elt.nodeType)
+            if elt.nodeType == 3: # text
+                print(elt.textContent)
+            else:
+                try:
+                    print(elt.outerHTML)
+                except AttributeError:
+                    print('no outerHTML for', elt)
+                    print(elt.html)
+            print(f"{exc.__class__.__name__}:  {exc}")
             return
 
         # Replace element content by generated html.

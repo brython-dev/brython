@@ -1,4 +1,5 @@
 # strings
+from tester import assertRaises
 
 assert 'a'.__class__ == str
 assert isinstance('a', str)
@@ -126,6 +127,10 @@ assert  r'(?:([\w ]+) ([\w.]+) .*\[.* ([\d.]+)\])' == (r'(?:([\w ]+) ([\w.]+) '
         '.*'
         '\[.* ([\d.]+)\])'), 'raw string continuation'
 
+
+# issue 127
+assert "aaa+AAA".split("+") == ['aaa', 'AAA']
+
 # issue 265
 assert "" in "test"
 assert "" in ""
@@ -133,6 +138,22 @@ assert not "a" in ""
 
 # issue 285
 assert "ab"[1:0:-1] == 'b'
+
+# issue 361
+FULL_ENGLISH_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+FULL_ENTEAN_ALPHABET =  "AZYXEWVTISRLPNOMQKJHUGFDCB"
+tran_tab = str.maketrans(FULL_ENGLISH_ALPHABET, FULL_ENTEAN_ALPHABET, 'sh')
+assert "PETEshelley".translate(tran_tab) == "MEHEelley"
+
+# issue 423
+assert 'a'.islower()
+assert 'A'.isupper()
+assert 'Ⰰ'.isupper() # U+2C00     GLAGOLITIC CAPITAL LETTER AZU
+assert 'a0123'.islower()
+assert not '0123'.islower() # no uppercase, lowercase or titlecase letter
+assert not '0123'.isupper()
+assert not '!!!'.isupper()
+assert not '!!!'.islower()
 
 # identifiers
 assert "x".isidentifier()
@@ -184,5 +205,49 @@ assert s == "Hello,\tworld!"
 
 s = bytes("Hello,\\bworld!", "utf-8").decode("unicode-escape")
 assert s == "Hello,\bworld!"
+
+# issue 1047
+from io import StringIO
+s = StringIO()
+s.write(chr(8364))
+assert s.getvalue() == "€"
+s = chr(8364)
+assert s == "€"
+b = s.encode("utf-8")
+assert b == bytes([0xe2, 0x82, 0xac])
+s1 = b.decode("utf-8")
+assert s1 == "€"
+
+# issue 1049
+class Mystring(str):
+    pass
+
+assert issubclass(Mystring, str)
+
+# issue 1060
+assert str(bytes('abc', encoding='ascii'), encoding='ascii') == "abc"
+b = bytes('pythôn', encoding='utf-8')
+assert str(b, encoding='ascii', errors='ignore') == "pythn"
+
+# issue 1071
+assert 'ß'.encode('ascii', 'ignore') == b''
+
+# issue 1076
+assert 'abc'.isascii()
+assert not 'abç'.isascii()
+
+# issue 1077
+assert str.maketrans({'a': 'A'}) == {97: 'A'}
+assert 'xyz'.maketrans({'a': 'A'}) == {97: 'A'}
+
+# issue 1078
+assert 'xyz'.maketrans('abc', 'def', 'abd') == {97: None, 98: None, 99: 102,
+                                                100: None}
+
+# issue 1103
+assert str() == ""
+
+# issue 1231
+assertRaises(TypeError, sum, ['a', 'b'], '')
 
 print("passed all tests...")

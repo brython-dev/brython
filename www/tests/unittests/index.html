@@ -30,27 +30,27 @@ tr.method:hover{
 
 
 <script type="text/python">
-from browser import document
-from browser import window
 import sys
+
+from browser import document, window
 
 info = sys.implementation.version
 document['version'].text = '%s.%s.%s' % (info.major,info.minor,info.micro)
 
-_height=document.documentElement.clientHeight
-_top=document['container'].offsetTop
-document['container'].style.height='%dpx' % (_height-_top-10)
+_height = document.documentElement.clientHeight
+_top = document['container'].offsetTop
+document['container'].style.height = '%dpx' % (_height - _top - 10)
 </script>
 
 <script type="text/python">
-from browser import timer
-from browser import document, alert, window, html
-
 import sys
 import os
 from test import support
 import unittest
 import HTMLTestRunner
+
+from browser import timer
+from browser import document, alert, bind, window, html
 
 del document["msgbox"]
 
@@ -62,7 +62,8 @@ def flush(*args):
 # a submodule of unittest expects the output object to have a flush function
 sys.stdout.flush = flush
 
-def choose_test(event):
+@bind("#btn_test", "click")
+def run_test(event):
     import time
     _start = time.time()
     document["container"].clear()
@@ -72,13 +73,13 @@ def choose_test(event):
     if module == '':
        return
 
-    #exec("import %s as mod" % module)
     mod = __import__(module)
-    _suite=unittest.TestLoader().loadTestsFromModule(mod)
+    _suite = unittest.TestLoader().loadTestsFromModule(mod)
     HTMLTestRunner.HTMLTestRunner(sys.stdout, verbosity=2).run(_suite)
 
     sys.stderr.write('completed in %s seconds' % (time.time() - _start))
 
+@bind("#btn_show", "click")
 def show_test(event):
     sel = document['test']
     module = sel.options[sel.selectedIndex].value
@@ -89,13 +90,11 @@ def show_test(event):
     mod = __import__(module)
     tab = window.open('show.html?file=%s' %mod.__file__)
 
-document["btn_test"].bind('click', choose_test)
-document["btn_show"].bind('click', show_test)
 </script>
 
 </head>
 
-<body onload="brython({debug:1,
+<body onload="brython({debug:2,
                        static_stdlib_import: true
                        })">
 
@@ -176,6 +175,7 @@ Brython version: <span id="version"></span>
 <script type="text/javascript" src="/src/brython_builtins.js"></script>
 <script type="text/javascript" src="/src/version_info.js"></script>
 <script type="text/javascript" src="/src/py2js.js"></script>
+<script type="text/javascript" src="/src/loaders.js"></script>
 <script type="text/javascript" src="/src/py_object.js"></script>
 <script type="text/javascript" src="/src/py_type.js"></script>
 <script type="text/javascript" src="/src/py_utils.js"></script>
@@ -205,8 +205,6 @@ Brython version: <span id="version"></span>
 
 <script type="text/javascript" src="/src/brython_stdlib.js"></script>
 
-<!--<script type="text/javascript" src="/src/brython.js"></script>
-<script type="text/javascript" src="/src/brython_stdlib.js"></script>-->
 
 </body>
 </html>

@@ -1,4 +1,4 @@
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal, InvalidOperation, getcontext
 
 a = Decimal('5.1')
 b = Decimal('3.14')
@@ -75,3 +75,13 @@ for lead in ["", ' ', '\u00a0', '\u205f']:
 # issue 989
 Decimal(2).exp()
 Decimal(2).ln()
+
+# issue 1228
+getcontext().prec = 30
+a = Decimal(100)
+
+x = a / 2
+for i in range(10):
+    x2 = (x + a / x) / 2
+    x = x2
+    

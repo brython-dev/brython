@@ -7,15 +7,55 @@ var object = _b_.object,
     str_hash = _b_.str.__hash__,
     $N = _b_.None
 
-// dictionary
-function $DictClass($keys,$values){
-    this.iter = null
-    this.__class__ = dict
-    dict.clear(this)
+var set_ops = ["eq", "add", "sub", "and", "or", "xor", "le", "lt", "ge", "gt"]
 
-    var setitem = dict.__setitem__,
-        i = $keys.length
-    while(i--){setitem($keys[i], $values[i])}
+$B.make_view = function(name, set_like){
+    var klass = $B.make_class(name, function(items){
+        return {
+            __class__: klass,
+            __dict__: _b_.dict.$factory(),
+            counter: -1,
+            items: items,
+            len: items.length
+        }
+    })
+
+    if(set_like){
+        for(var i = 0, len = set_ops.length; i < len; i++){
+            var op = "__" + set_ops[i] + "__"
+            klass[op] = (function(op){
+                return function(self, other){
+                    // compare set of items to other
+                    return _b_.set[op](_b_.set.$factory(self),
+                        _b_.set.$factory(other))
+                }
+            })(op)
+        }
+    }
+    klass.__iter__ = function(self){
+        var it = klass.$iterator.$factory(self.items)
+        it.len_func = self.len_func
+        return it
+    }
+    klass.__repr__ = function(self){
+        return klass.$infos.__name__ + '(' + _b_.repr(self.items) + ')'
+    }
+
+    $B.set_func_names(klass, "builtins")
+    return klass
+}
+
+// Special version of __next__ for iterators on dict keys / values / items.
+// Checks that the dictionary size didn't change during iteration.
+function dict_iterator_next(self){
+    if(self.len_func() != self.len){
+        throw RuntimeError.$factory("dictionary changed size during iteration")
+    }
+    self.counter++
+    if(self.counter < self.items.length){
+        return self.items[self.counter]
+    }
+    throw _b_.StopIteration.$factory("StopIteration")
 }
 
 var dict = {
@@ -29,127 +69,71 @@ var dict = {
     $native: true
 }
 
-var $key_iterator = function(d) {
-    this.d = d
-    this.current = 0
-    this.iter = new $item_generator(d)
-}
-$key_iterator.prototype.length = function(){return this.iter.items.length}
-$key_iterator.prototype.next = function(){return this.iter.next()[0]}
-
-var $value_iterator = function(d) {
-    this.d = d
-    this.current = 0
-    this.iter = new $item_generator(d)
-}
-$value_iterator.prototype.length = function(){return this.iter.items.length}
-$value_iterator.prototype.next = function(){return this.iter.next()[1]}
-
-var $item_generator = function(d) {
-
-    this.i = 0
+function to_list(d, ix){
+    var items = [],
+        item
 
     if(d.$jsobj){
-        this.items = []
+        items = []
         for(var attr in d.$jsobj){
             if(attr.charAt(0) != "$"){
                 var val = d.$jsobj[attr]
                 if(val === undefined){val = _b_.NotImplemented}
                 else if(val === null){val = $N}
-                this.items.push([attr, val])
+                items.push([attr, val])
             }
         }
-        return
+    }else{
+        for(var k in d.$numeric_dict){
+            items.push([parseFloat(k), d.$numeric_dict[k]])
+        }
+
+        for(var k in d.$string_dict){items.push([k, d.$string_dict[k]])}
+
+        for(var k in d.$object_dict){
+            d.$object_dict[k].forEach(function(item){
+                items.push(item)
+            })
+        }
     }
 
-    var items = []
-    for(var k in d.$numeric_dict){
-        items.push([parseFloat(k), d.$numeric_dict[k]])
+    if(ix !== undefined){
+        return items.map(function(item){return item[ix]})
+    }else{
+        items.__class__ = _b_.tuple
+        return items.map(function(item){
+            item.__class__ = _b_.tuple; return item}
+        )
     }
-
-    for(var k in d.$string_dict){items.push([k, d.$string_dict[k]])}
-
-    for(var k in d.$object_dict){
-        d.$object_dict[k].forEach(function(item){
-            items.push(item)
-        })
-    }
-
-    this.items = items
 }
 
-$item_generator.prototype.next = function() {
-    if(this.i < this.items.length){
-       return this.items[this.i++]
+$B.dict_to_list = to_list // used in py_types.js
+
+// Special version of __next__ for iterators on dict keys / values / items.
+// Checks that the dictionary size didn't change during iteration.
+function dict_iterator_next(self){
+    if(self.len_func() != self.len){
+        throw RuntimeError.$factory("dictionary changed size during iteration")
+    }
+    self.counter++
+    if(self.counter < self.items.length){
+        return self.items[self.counter]
     }
     throw _b_.StopIteration.$factory("StopIteration")
 }
-$item_generator.prototype.as_list = function() {
-    return this.items
-}
 
-var $item_iterator = function(d) {
-    this.d = d
-    this.current = 0
-    this.iter = new $item_generator(d)
-}
-$item_iterator.prototype.length = function(){return this.iter.items.length}
-$item_iterator.prototype.next = function(){
-    return _b_.tuple.$factory(this.iter.next())
-}
 
 var $copy_dict = function(left, right){
-    var _l = new $item_generator(right).as_list(),
-        si = dict.$setitem,
-        i = _l.length
+    var _l = to_list(right),
+        si = dict.$setitem
     right.$version = right.$version || 0
     var right_version = right.$version || 0
-    while(i--){
+    for(var i = 0, len = _l.length; i < len; i++){
         si(left, _l[i][0], _l[i][1])
         if(right.$version != right_version){
             throw _b_.RuntimeError.$factory("dict mutated during update")
         }
     }
-}
-
-function toSet(items){
-    // Build a set from the iteration on items
-    var res = []
-    while(true){
-        try{res.push(items.next())}
-        catch(err){break}
-    }
-    return _b_.set.$factory(res)
-}
-
-var $iterator_wrapper = function(items, klass){
-    var res = {
-        __class__: klass,
-        __eq__: function(other){
-            // compare set of items to other
-            return $B.rich_comp("__eq__", _b_.set.$factory(res),
-                _b_.set.$factory(other))
-        },
-        __iter__: function(){items.iter.i = 0; return res},
-        __len__: function(){return items.length()},
-        __next__: function(){
-            return items.next()
-        },
-        __repr__:function(){
-            var s = []
-            items.iter.i = 0
-            for(var i = 0, len = items.length(); i < len; i++){
-                s.push(_b_.repr(items.next()))
-            }
-            return klass.$infos.__name__ + "(["+ s.join(",") + "])"
-        },
-    }
-    res.__str__ = res.__repr__
-    klass.__reduce_ex__ = klass.__reduce__ = function(self){
-        return _b_.tuple.$factory([_b_.iter,
-            _b_.tuple.$factory([_b_.list.$factory(self)])])
-    }
-    return res
 }
 
 function rank(self, hash, key){
@@ -351,7 +335,9 @@ dict.__getitem__ = function(){
     var hash = _b_.hash(arg),
         _eq = function(other){return $B.rich_comp("__eq__", arg, other)}
 
-    arg.$hash = hash // cache for setdefault
+    if(typeof arg == "object"){
+        arg.$hash = hash // cache for setdefault
+    }
     var sk = self.$str_hash[hash]
     if(sk !== undefined && _eq(sk)){
         return self.$string_dict[sk]
@@ -385,7 +371,7 @@ dict.__getitem__ = function(){
     throw KeyError.$factory(arg)
 }
 
-dict.__hash__ = None
+dict.__hash__ = _b_.None
 
 function init_from_list(self, args){
     var i = -1,
@@ -491,9 +477,8 @@ dict.__init__ = function(self, first, second){
     return $N
 }
 
-var $dict_iterator = $B.$iterator_class("dict iterator")
 dict.__iter__ = function(self) {
-    return dict.$$keys(self)
+    return _b_.iter(dict.$$keys(self))
 }
 
 dict.__len__ = function(self) {
@@ -533,23 +518,12 @@ dict.__new__ = function(cls){
     return instance
 }
 
-dict.__next__ = function(self){
-    if(self.$iter == null){
-        self.$iter = new $item_generator(self)
-    }
-    try{
-        return self.$iter.next()
-    }catch (err){
-        if(err.__name__ !== "StopIteration"){throw err}
-    }
-}
-
 dict.__repr__ = function(self){
     if(self.$jsobj){ // wrapper around Javascript object
         return dict.__repr__(jsobj2dict(self.$jsobj))
     }
     var res = [],
-        items = new $item_generator(self).as_list()
+        items = to_list(self)
     items.forEach(function(item){
         if((!self.$jsobj && item[1] === self) ||
                 (self.$jsobj && item[1] === self.$jsobj)){
@@ -718,7 +692,8 @@ dict.get = function(){
     }
 }
 
-var $dict_itemsDict = $B.$iterator_class("dict_items")
+var dict_items = $B.make_view("dict_items", true)
+dict_items.$iterator = $B.make_iterator_class("dict_itemiterator")
 
 dict.items = function(self){
     if(arguments.length > 1){
@@ -726,10 +701,13 @@ dict.items = function(self){
            _msg = "items() takes no arguments (" + _len + " given)"
        throw _b_.TypeError.$factory(_msg)
     }
-    return $iterator_wrapper(new $item_iterator(self), $dict_itemsDict)
+    var it = dict_items.$factory(to_list(self))
+    it.len_func = function(){return dict.__len__(self)}
+    return it
 }
 
-var $dict_keysDict = $B.$iterator_class("dict_keys")
+var dict_keys = $B.make_view("dict_keys", true)
+dict_keys.$iterator = $B.make_iterator_class("dict_keyiterator")
 
 dict.$$keys = function(self){
     if(arguments.length > 1){
@@ -737,7 +715,9 @@ dict.$$keys = function(self){
            _msg = "keys() takes no arguments (" + _len + " given)"
        throw _b_.TypeError.$factory(_msg)
     }
-    return $iterator_wrapper(new $key_iterator(self), $dict_keysDict)
+    var it = dict_keys.$factory(to_list(self, 0))
+    it.len_func = function(){return dict.__len__(self)}
+    return it
 }
 
 dict.pop = function(){
@@ -764,7 +744,7 @@ dict.pop = function(){
 
 dict.popitem = function(self){
     try{
-        var itm = new $item_iterator(self).next()
+        var itm = _b_.next(_b_.iter(dict.items(self)))
         dict.__delitem__(self, itm[0])
         return _b_.tuple.$factory(itm)
     }catch(err) {
@@ -810,9 +790,8 @@ dict.update = function(self){
             }
             $copy_dict(self, o)
         }else if(hasattr(o, "keys")){
-            var _keys = _b_.list.$factory($B.$call($B.$getattr(o, "keys"))()),
-                i = _keys.length
-            while(i--){
+            var _keys = _b_.list.$factory($B.$call($B.$getattr(o, "keys"))())
+            for(var i = 0, len = _keys.length; i < len; i++){
                 var _value = getattr(o, "__getitem__")(_keys[i])
                 dict.$setitem(self, _keys[i], _value)
             }
@@ -847,7 +826,8 @@ dict.update = function(self){
     return $N
 }
 
-var $dict_valuesDict = $B.$iterator_class("dict_values")
+var dict_values = $B.make_view("dict_values")
+dict_values.$iterator = $B.make_iterator_class("dict_valueiterator")
 
 dict.values = function(self){
     if(arguments.length > 1){
@@ -855,7 +835,9 @@ dict.values = function(self){
            _msg = "values() takes no arguments (" + _len + " given)"
        throw _b_.TypeError.$factory(_msg)
     }
-    return $iterator_wrapper(new $value_iterator(self), $dict_valuesDict)
+    var it = dict_values.$factory(to_list(self, 1))
+    it.len_func = function(){return dict.__len__(self)}
+    return it
 }
 
 dict.$factory = function(){
@@ -875,18 +857,6 @@ $B.set_func_names(dict, "builtins")
 // This must be done after set_func_names, otherwise dict.fromkeys doesn't
 // have the attribute $infos
 dict.fromkeys = _b_.classmethod.$factory(dict.fromkeys)
-
-// following are used for faster access elsewhere
-$B.$dict_iterator = function(d){return new $item_generator(d)}
-$B.$dict_length = dict.__len__
-$B.$dict_getitem = dict.__getitem__
-$B.$dict_get = dict.get
-$B.$dict_set = dict.__setitem__
-$B.$dict_contains = dict.__contains__
-$B.$dict_items = function(d) { return new $item_generator(d).as_list() }
-$B.$copy_dict = $copy_dict  // copy from right to left
-$B.$dict_get_copy = dict.copy  // return a shallow copy
-
 
 // Class for attribute __dict__ of classes
 var mappingproxy = $B.mappingproxy = $B.make_class("mappingproxy",

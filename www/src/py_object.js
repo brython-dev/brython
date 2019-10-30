@@ -24,9 +24,28 @@ var opnames = ["add", "sub", "mul", "truediv", "floordiv", "mod", "pow",
 var opsigns = ["+", "-", "*", "/", "//", "%", "**", "<<", ">>", "&", "^", "|"]
 
 object.__delattr__ = function(self, attr){
-    _b_.getattr(self, attr) // raises AttributeError if necessary
-    delete self[attr]
-    return _b_.None
+    attr = $B.from_alias(attr)
+    if(self.__dict__ && self.__dict__.$string_dict &&
+            self.__dict__.$string_dict[attr] !== undefined){
+        delete self.__dict__.$string_dict[attr]
+        return _b_.None
+    }else if(self.__dict__ === undefined && self[attr] !== undefined){
+        delete self[attr]
+        return _b_.None
+    }else{
+        // If attr is a descriptor and has a __delete__ method, use it
+        var klass = self.__class__
+        if(klass){
+            var prop = $B.$getattr(klass, attr)
+            if(prop.__class__ === _b_.property){
+                if(prop.__delete__ !== undefined){
+                    prop.__delete__(self)
+                    return _b_.None
+                }
+            }
+        }
+    }
+    throw _b_.AttributeError.$factory(attr)
 }
 
 object.__dir__ = function(self) {
@@ -42,7 +61,10 @@ object.__dir__ = function(self) {
     for(var i = 0, len = objects.length; i < len; i++){
         for(var attr in objects[i]){
             if(attr.charAt(0) == "$") {
-                // exclude internal attributes set by Brython
+                if(attr.charAt(1) == "$"){
+                    // aliased name
+                    res.push(attr.substr(2))
+                }
                 continue
             }
             if(! isNaN(parseInt(attr.charAt(0)))){
@@ -89,12 +111,17 @@ object.__getattribute__ = function(obj, attr){
 
     var klass = obj.__class__ || $B.get_class(obj)
 
-    var $test = false //attr == "f"
+    var $test = false // attr == "attr"
     if($test){console.log("attr", attr, "de", obj, "klass", klass)}
     if(attr === "__class__"){
         return klass
     }
     var res = obj[attr]
+    if(Array.isArray(obj) && Array.prototype[attr] !== undefined){
+        // Special case for list subclasses. Cf. issue 1081
+        res = undefined
+    }
+    
     if(res === undefined && obj.__dict__ &&
             obj.__dict__.$string_dict.hasOwnProperty(attr)){
         return obj.__dict__.$string_dict[attr]
@@ -289,33 +316,7 @@ object.__getattribute__ = function(obj, attr){
             }
         }
         if(_ga !== undefined){
-            try{return _ga(obj, attr)}
-            catch(err){if($B.debug > 2){console.log(err)}}
-        }
-        // for special methods such as __mul__, look for __rmul__ on operand
-        if(attr.substr(0,2) == "__" && attr.substr(attr.length - 2) == "__"){
-            var attr1 = attr.substr(2, attr.length - 4) // stripped of __
-            var rank = opnames.indexOf(attr1)
-            if(rank > -1){
-                var rop = "__r" + opnames[rank] + "__" // name of reflected operator
-                var func = function(){
-                    try{
-                        // Operands must be of different types
-                        if($B.get_class(arguments[0]) === klass){
-                            throw Error('')
-                        }
-                        return _b_.getattr(arguments[0], rop)(obj)
-                    }catch(err){
-                        var msg = "unsupported operand types for " +
-                            opsigns[rank] + ": '" + klass.$infos.__name__ +
-                            "' and '" + $B.class_name(arguments[0]) +
-                            "'"
-                        throw _b_.TypeError.$factory(msg)
-                    }
-                }
-                func.$infos = {__name__ : klass.$infos.__name__ + "." + attr}
-                return func
-            }
+            return _ga(obj, attr)
         }
     }
 }
@@ -399,7 +400,11 @@ _b_.__newobj__ = __newobj__
 
 object.__reduce_ex__ = function(self){
     var res = [__newobj__]
-    res.push(_b_.tuple.$factory([self.__class__]))
+    var arg2 = _b_.tuple.$factory([self.__class__])
+    if(Array.isArray(self)){
+        self.forEach(function(item){arg2.push(item)})
+    }
+    res.push(arg2)
     var d = _b_.dict.$factory(),
         nb = 0
     if(self.__dict__ === undefined){
@@ -426,12 +431,13 @@ object.__repr__ = function(self){
     if(self.__class__ === _b_.type) {
         return "<class '" + self.__name__ + "'>"
     }
-    if(self.__class__.$infos.__module__ !== undefined &&
-            self.__class__.$infos.__module__ !== "builtins"){
+    var module = self.__class__.$infos.__module__
+    if(module !== undefined && !module.startsWith("$") &&
+            module !== "builtins"){
         return "<" + self.__class__.$infos.__module__ + "." +
-            self.__class__.$infos.__name__ + " object>"
+            $B.class_name(self) + " object>"
     }else{
-        return "<" + self.__class__.$infos.__name__ + " object>"
+        return "<" + $B.class_name(self) + " object>"
     }
 }
 

@@ -23,7 +23,7 @@ def show(ev):
 btn.bind("click", show)
 ```
 
-`btn` is a reference to the lement. The arguments of `bind` are the type of
+`btn` is a reference to the element. The arguments of `bind` are the type of
 event the button must handle, and the function to call when this event occurs.
 The following pages give many examples of such events for mouse, keyboard,
 drag-and-drop, etc.
@@ -62,7 +62,7 @@ For events management, the elements of a page have the following methods :
 
 <code>elt.bind(_evt_name, handler_)</code>
 
-> the _handler_ function is called when the event _event_name_ occurs on the
+> the _handler_ function is called when the event _evt_name_ occurs on the
 > element
 
 <code>elt.unbind(_evt\_name[, handler_])</code>

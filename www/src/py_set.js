@@ -36,7 +36,8 @@ set.__add__ = function(self,other){
 }
 
 set.__and__ = function(self, other, accept_iter){
-    $test(accept_iter, other)
+    try{$test(accept_iter, other)}
+    catch(err){return _b_.NotImplemented}
     var res = create_type(self)
     for(var i = 0, len = self.$items.length; i < len; i++){
         if(_b_.getattr(other, "__contains__")(self.$items[i])){
@@ -54,6 +55,8 @@ set.__contains__ = function(self,item){
                     if(isNaN(self.$items[i])){return true}
                 }
                 return false
+            }else if(item instanceof Number){
+                return self.$numbers.indexOf(item.valueOf()) > -1
             }else{
                 return self.$items.indexOf(item) > -1
             }
@@ -94,11 +97,17 @@ set.__format__ = function(self, format_string){
 }
 
 set.__ge__ = function(self, other){
-    return set.__le__(other, self)
+    if(_b_.isinstance(other, [set, frozenset])){
+        return set.__le__(other, self)
+    }
+    return _b_.NotImplemented
 }
 
 set.__gt__ = function(self, other){
-    return set.__lt__(other, self)
+    if(_b_.isinstance(other, [set, frozenset])){
+        return set.__lt__(other, self)
+    }
+    return _b_.NotImplemented
 }
 
 set.__init__ = function(self, iterable, second){
@@ -107,7 +116,7 @@ set.__init__ = function(self, iterable, second){
             for(var i = 0, len = iterable.length; i < len; i++){
                 $add(self, iterable[i])
             }
-            return _b_.None
+            return $N
         }
     }
 
@@ -133,21 +142,14 @@ set.__init__ = function(self, iterable, second){
     return $N
 }
 
-var $set_iterator = $B.$iterator_class("set iterator")
+var set_iterator = $B.make_iterator_class("set iterator")
 set.__iter__ = function(self){
-    var it = $B.$iterator(self.$items, $set_iterator),
-        len = self.$items.length,
-        nxt = it.__next__
-    it.__next__ = function(){
-        if(it.__len__() != len){
-            throw _b_.RuntimeError.$factory("size changed during iteration")
-        }
-        return nxt()
-    }
-    return it
+    self.$items.sort()
+    return set_iterator.$factory(self.$items)
 }
 
 set.__le__ = function(self, other){
+    // Test whether every element in the set is in other.
     if(_b_.isinstance(other, [set, frozenset])){
         var cfunc = _b_.getattr(other, "__contains__")
         for(var i = 0, len = self.$items.length; i < len; i++){
@@ -155,18 +157,18 @@ set.__le__ = function(self, other){
         }
         return true
     }else{
-        return _b_.object.__le__(self, other)
+        return _b_.NotImplemented
     }
 }
 
 set.__len__ = function(self){return self.$items.length}
 
-set.__lt__ = function(self,other){
+set.__lt__ = function(self, other){
     if(_b_.isinstance(other, [set, frozenset])){
-        return set.__le__(self,other) &&
-            set.__len__(self)<_b_.getattr(other,"__len__")()
+        return set.__le__(self, other) &&
+            set.__len__(self) < _b_.getattr(other,"__len__")()
     }else{
-        return _b_.object["__lt__"](self, other) // try other > self
+        return _b_.NotImplemented
     }
 }
 
@@ -179,7 +181,8 @@ set.__new__ = function(cls){
     return {
         __class__: cls,
         $simple: true,
-        $items: []
+        $items: [],
+        $numbers: [] // stores integers, and floats equal to integers
         }
 }
 
@@ -198,24 +201,37 @@ set.__or__ = function(self, other, accept_iter){
     return res
 }
 
+set.__rand__ = function(self, other){
+    // Used when other.__and__(self) is NotImplemented
+    return set.__and__(self, other)
+}
+
 set.__reduce__ = function(self){
     return _b_.tuple.$factory([self.__class__,
-        _b_.tuple.$factory([self.$items]), _b_.None])
+        _b_.tuple.$factory([self.$items]), $N])
 }
 
 set.__reduce_ex__ = function(self, protocol){
     return set.__reduce__(self)
 }
 
+set.__rsub__ = function(self, other){
+    // Used when other.__sub__(self) is NotImplemented
+    return set.__sub__(self, other)
+}
+
+set.__rxor__ = function(self, other){
+    // Used when other.__xor__(self) is NotImplemented
+    return set.__xor__(self, other)
+}
+
 set.__str__ = set.__repr__ = function(self){
-    var frozen = self.$real === "frozen"
+    var klass_name = $B.class_name(self)
     self.$cycle = self.$cycle === undefined ? 0 : self.$cycle + 1
     if(self.$items.length === 0){
-        if(frozen) {return "frozenset()"}
-        return "set()"
+        return klass_name + "()"
     }
-    var klass_name = $B.class_name(self),
-        head = klass_name + "({",
+    var head = klass_name + "({",
         tail = "})"
     if(head == "set({"){head = "{"; tail = "}"}
     var res = []
@@ -223,6 +239,7 @@ set.__str__ = set.__repr__ = function(self){
         self.$cycle--
         return klass_name + "(...)"
     }
+    self.$items.sort()
     for(var i = 0, len = self.$items.length; i < len; i++){
         var r = _b_.repr(self.$items[i])
         if(r === self || r === self.$items[i]){res.push("{...}")}
@@ -235,7 +252,8 @@ set.__str__ = set.__repr__ = function(self){
 
 set.__sub__ = function(self, other, accept_iter){
     // Return a new set with elements in the set that are not in the others
-    $test(accept_iter, other, "-")
+    try{$test(accept_iter, other, "-")}
+    catch(err){return _b_.NotImplemented}
     var res = create_type(self),
         cfunc = _b_.getattr(other, "__contains__")
     for(var i = 0, len = self.$items.length; i < len; i++){
@@ -248,7 +266,8 @@ set.__sub__ = function(self, other, accept_iter){
 
 set.__xor__ = function(self, other, accept_iter){
     // Return a new set with elements in either the set or other but not both
-    $test(accept_iter, other, "^")
+    try{$test(accept_iter, other, "^")}
+    catch(err){return _b_.NotImplemented}
     var res = create_type(self),
         cfunc = _b_.getattr(other, "__contains__")
     for(var i = 0, len = self.$items.length; i < len; i++){
@@ -276,20 +295,38 @@ function $test(accept_iter, other, op){
 $B.make_rmethods(set)
 
 function $add(self, item){
-    if(typeof item !== "string" && typeof item !== "number" &&
-        !(item instanceof Number)){
-        self.$simple = false
-        $B.$getattr(item, "__hash__")
+    var $simple = false
+    if(typeof item === "string" || typeof item === "number" ||
+            item instanceof Number){
+        $simple = true
     }
-    if(self.$simple){
+
+    if($simple){
         var ix = self.$items.indexOf(item)
-        if(ix == -1){self.$items.push(item)}
-        else{
+        if(ix == -1){
+            if(item instanceof Number &&
+                    self.$numbers.indexOf(item.valueOf()) > -1){
+                // do nothing
+            }else if(typeof item == "number" &&
+                    self.$numbers.indexOf(item) > -1){
+                // do nothing
+            }else{
+                self.$items.push(item)
+                var value = item.valueOf()
+                if(typeof value == "number"){
+                    self.$numbers.push(value)
+                }
+            }
+        }else{
             // issue 543 : for some Javascript implementations,
             // [''].indexOf(0) is 0, not -1, so {''}.add(0) is {''}
             if(item !== self.$items[ix]){self.$items.push(item)}
         }
         return $N
+    }else{
+        // Compute hash of item : raises an exception if item is not hashable,
+        // otherwise set its attribute __hashvalue__
+        _b_.hash(item)
     }
     var cfunc = function(other){return $B.rich_comp("__eq__", item, other)}
     for(var i = 0, len = self.$items.length; i < len; i++){
@@ -319,9 +356,12 @@ set.copy = function(){
         arguments, {}, null, null)
     if(_b_.isinstance($.self, frozenset)){return $.self}
     var res = set.$factory() // copy returns an instance of set, even for subclasses
-    for(var i = 0, len = $.self.$items.length; i < len; i++){
-        res.$items[i] = $.self.$items[i]
-    }
+    $.self.$items.forEach(function(item){
+        res.$items.push(item)
+    })
+    $.self.$numbers.forEach(function(item){
+        res.$numbers.push(item)
+    })
     return res
 }
 
@@ -425,11 +465,17 @@ set.remove = function(self, item){
        var _i = self.$items.indexOf(item)
        if(_i == -1){throw _b_.KeyError.$factory(item)}
        self.$items.splice(_i, 1)
+       if(typeof item == "number"){
+           self.$numbers.splice(self.$numbers.indexOf(item), 1)
+       }
        return $N
     }
     for(var i = 0, len = self.$items.length; i < len; i++){
         if($B.rich_comp("__eq__", self.$items[i], item)){
             self.$items.splice(i, 1)
+            if(item instanceof Number){
+                self.$numbers.splice(self.$numbers.indexOf(item.valueOf()), 1)
+            }
             return $N
         }
     }
@@ -507,7 +553,7 @@ set.difference = function(){
 
     var res = clone($.self)
     for(var i = 0; i < $.args.length; i++){
-        res = set.__sub__(res, set.$factory($.args[i]))
+        res = set.__sub__(res, set.$factory($.args[i]), true)
     }
     return res
 }
@@ -569,7 +615,8 @@ set.$factory = function(){
     var res = {
         __class__: set,
         $simple: true,
-        $items: []
+        $items: [],
+        $numbers: []
     }
     // apply __init__ with arguments of set()
     var args = [res].concat(Array.prototype.slice.call(arguments))
@@ -650,7 +697,8 @@ frozenset.__new__ = function(cls){
     return {
         __class__: cls,
         $simple: true,
-        $items: []
+        $items: [],
+        $numbers: []
         }
 }
 
@@ -660,6 +708,7 @@ function empty_frozenset(){
     return {
         __class__: frozenset,
         $items: [],
+        $numbers: [],
         $id: singleton_id
     }
 }
@@ -682,3 +731,4 @@ _b_.set = set
 _b_.frozenset = frozenset
 
 })(__BRYTHON__)
+

@@ -88,4 +88,7 @@ A = True
 gen = test()
 assert list(gen) == list(range(5))
 
+# issue 1051
+assert next(iter([]), 'The End!') == 'The End!'
+
 print("passed all tests...")

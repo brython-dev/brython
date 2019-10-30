@@ -1,7 +1,3 @@
-[![Stories in Ready](https://badge.waffle.io/brython-dev/brython.svg?label=ready&title=Ready)](http://waffle.io/brython-dev/brython)
-[![Travis](https://api.travis-ci.org/brython-dev/brython.svg)](https://travis-ci.org/brython-dev/brython)
-[![CDNJS version](https://img.shields.io/cdnjs/v/brython.svg)](https://cdnjs.com/libraries/brython)
-
 brython
 =======
 
@@ -58,12 +54,12 @@ Getting started
 Zero install !
 --------------
 The most simple way to get started, without anything to install, is to use the
-distribution available online through [cdnjs](https://cdnjs.com). You can 
-choose the latest stable release :
+distribution available online through [jsDelivr](https://www.jsdelivr.com/).
+You can choose the latest stable release :
 
 ```xml
 <script type="text/javascript"
-    src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.7.0/brython.min.js">
+    src="https://cdn.jsdelivr.net/npm/brython@3.8.0/brython.min.js">
 </script>
 ```
 
@@ -73,8 +69,15 @@ with the [available stdlib](https://github.com/brython-dev/brython/tree/master/w
 
 ```xml
 <script type="text/javascript"
-    src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.7.0/brython_stdlib.js">
+    src="https://cdn.jsdelivr.net/npm/brython@3.8.0/brython_stdlib.js">
 </script>
+```
+
+If you want to use the latest development version, you can load these scripts
+instead:
+```
+https://cdn.jsdelivr.net/gh/brython-dev/brython/www/src/brython.js
+https://cdn.jsdelivr.net/gh/brython-dev/brython/www/src/brython_stdlib.js
 ```
 
 Local install
@@ -140,19 +143,7 @@ You can subscribe and post to the
 If you find a bug/issue or do you want to see a new feature in Brython, please,
 [open a new issue](https://github.com/brython-dev/brython/issues "Brython GitHub Issues").
 
-There's a [Brython Community on Google Plus](https://plus.google.com/communities/114694456237115550531).
-
 If you want to contribute to Brython, please read the [contributing guide](https://github.com/brython-dev/brython/blob/master/CONTRIBUTING.md).
-
-Agile Development
-=================
-
-- [**Brython KanBan of Tickets**](https://waffle.io/brython-dev/brython "Agile Development Kanban") *Whats Brython Team working on ?*
-
-- **Throughput Graph:** *Statistics about our work...*
-
-[![Throughput Graph](https://graphs.waffle.io/brython-dev/brython/throughput.svg)](https://waffle.io/brython-dev/brython/metrics)
-
 
 Thank you
 =========

@@ -34,11 +34,48 @@ assert x.__ceil__() == -3
 
 assert x.__divmod__(2) == (-2, 1)
 
-# issue 564
-x = 2
-assert isinstance(.5 * x, float)
-assert isinstance(1.0 + x, float)
-assert isinstance(3.0 - x, float)
+
+#issue 98
+assert int.from_bytes(b'\xfc', 'big') == 252
+assert int.from_bytes(bytearray([252, 0]), 'big') == 64512
+assert int.from_bytes(b'\x00\x10', byteorder='big') == 16
+assert int.from_bytes(b'\x00\x10', byteorder='little') == 4096
+assert int.from_bytes(b'\xfc\x00', byteorder='big', signed=True) == -1024
+assert int.from_bytes(b'\xfc\x00', byteorder='big', signed=False) == 64512
+assert int.from_bytes([255, 0, 0], byteorder='big') == 16711680
+
+# issue 115
+a = 1
+assert a.numerator == 1
+assert a.denominator == 1
+assert a.real == 1
+assert a.imag == 0
+assert isinstance(a.imag, int) == True
+a = 1 + 2j
+assert a.real == 1
+assert a.imag == 2
+assert isinstance(a.real, float) == True
+assert isinstance(a.imag, float) == True
+
+# True and False are instances of int
+assert isinstance(True, int)
+assert isinstance(False, int)
+
+# issue 294
+assert int.from_bytes(bytes=b'some_bytes',byteorder='big') == \
+    545127616933790290830707
+
+# issue 350
+a = float("-inf")
+b = float("-infinity")
+assert a == b
+assert repr(a) == '-inf'
+assert a * 1. == b
+assert a * 1 == b
+
+# issue 352
+a = float("inf")
+assert a * 1 == a
 
 # complex numbers
 x = 8j
@@ -121,6 +158,10 @@ assert int('2qhxjli', 34) == 4294967296
 assert int('2br45qb', 35) == 4294967296
 assert int('1z141z4', 36) == 4294967296
 
+a = 2 ** 53 - 3
+assert a + 10 == 9007199254740999
+assert a + 11 == 9007199254741000
+
 # float subclass
 class Float(float):
 
@@ -147,6 +188,24 @@ try:
     raise Exception("should have raised FloatCompError")
 except FloatCompError:
     pass
+
+# issue 564
+x = 2
+assert isinstance(.5 * x, float)
+assert isinstance(1.0 + x, float)
+assert isinstance(3.0 - x, float)
+
+# issue 749
+assert float.__eq__(1.5, 1.5)
+assert float.__eq__(1.0, 1)
+assert not float.__eq__(1, 0)
+assert int.__eq__(1, 1)
+assert not int.__eq__(1, 0)
+
+# issue 794
+assert (-1024).to_bytes(2, "big", signed=True) == b'\xfc\x00'
+assert (1024).to_bytes(2, "big") == b'\x04\x00'
+assert (1024).to_bytes(2, "little") == b'\x00\x04'
 
 # issue 840
 x = 123 ** 20
@@ -223,5 +282,99 @@ assert 1j / 1.0 == 1j
 from fractions import *
 x = Fraction(1,1000000000000000)/10
 assert str(x) == "1/10000000000000000"
+
+# issue 1040
+assert True + 2 == 3
+assert False + 2 == 2
+assert True * 3 == 3
+assert False * 3 == 0
+assert True / 2 == 0.5
+assert False / 2 == 0
+try:
+    1 / False
+    raise Exception("should have raised ZeroDivisionError")
+except ZeroDivisionError:
+    pass
+
+# issue 1049
+class Myfloat(float):
+    pass
+
+assert issubclass(Myfloat, float)
+
+# issue 1092
+assert (1024).to_bytes(4, byteorder='big') == b'\x00\x00\x04\x00'
+
+# issue 1098
+def test(x, pattern):
+    assert x == pattern, f'''{x!r} != {pattern!r}'''
+
+test( f'''{1.230e-1}''',     '0.123'   )
+test( f'''{1.230e-11}''',    '1.23e-11')
+test( f'''{1.230e-10}''',    '1.23e-10')
+test( f'''{1.230e-3:8.6}''', ' 0.00123')
+test( f'''{1.230e-3:1.6}''', '0.00123' )
+test(f'''{1.23e-11:1.6}''', '1.23e-11')
+test( f'''{1.23e-10:1.6}''', '1.23e-10')
+test( f'''{1.23e-10:9.6}''',' 1.23e-10')
+test(     f'''{1.23e-10:1.15}''', '1.23e-10')
+test(1.23e-10.__format__('1.15'), '1.23e-10')
+
+# issue 1115
+class sffloat(float):
+    def __new__(cls, value, sf=None):
+        return super().__new__(cls, value)
+
+    def __init__(self, value, sf=None):
+        float.__init__(value)
+        self.sf = sf
+
+assert issubclass(sffloat, float)
+
+a = sffloat(1.0,2)
+b = sffloat(2.0,3)
+assert isinstance(a, float)
+
+assert a * b == 2.0
+assert a.sf == 2
+assert b.sf == 3
+
+# issue 1156
+try:
+    isinstance(42, 43)
+    raise Exception("should have raised TypeError")
+except TypeError:
+    pass
+
+# issue 1211
+assert .1j == .1j
+assert .1j + 2 == 2 + 0.1j
+
+# issue 1127
+class A:
+
+    def __rand__(self, other):
+        return "A-rand"
+
+    def __ror__(self, other):
+        return "A-ror"
+
+    def __rxor__(self, other):
+        return "A-rxor"
+
+assert False | A() == "A-ror"
+assert True | A() == "A-ror"
+assert False & A() == "A-rand"
+assert True & A() == "A-rand"
+assert False ^ A() == "A-rxor"
+assert True ^ A() == "A-rxor"
+
+# issue 1234
+assert round(3.75, 1) == 3.8
+assert round(3.65, 1) == 3.6
+assert round(-3.75, 1) == -3.8
+assert round(-3.65, 1) == -3.6
+assert round(3.5) == 4
+assert round(4.5) == 4
 
 print('passed all tests...')

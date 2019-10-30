@@ -21,13 +21,13 @@ you can insert forms and text by :
 ```exec
 from browser import document, svg
 
-titre = svg.text('Title', x=70, y=25, font_size=22,
+title = svg.text('Title', x=70, y=25, font_size=22,
                  text_anchor="middle")
-cercle = svg.circle(cx=70, cy=120, r=40,
+circle = svg.circle(cx=70, cy=120, r=40,
                     stroke="black",stroke_width="2",fill="red")
 panel = document['panel']
-panel <= titre
-panel <= cercle
+panel <= title
+panel <= circle
 ```
 </td>
 
@@ -45,8 +45,6 @@ panel <= cercle
 For the attributes defined in the SVG norm that contain a hyphen (-), it must
 be replaced by an underscore (_) in the arguments : *text\_anchor* instead of
 *text-anchor* which would raise a Python syntax error.
-
-
 
 In the above example, we created a text element and a circle element.
 For a list of color keywords reference this [link](http://www.w3.org/TR/SVG/types.html#ColorKeywords)
@@ -67,9 +65,7 @@ panel = document['panel1']
 panel <= rect
 ```
 </td>
-
 <td>
-
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="140" height="200" style="border-style:solid;border-width:1;border-color:#000;">
   <g id="panel1">
   </g>
@@ -123,9 +119,7 @@ panel = document['panel3']
 panel <= line
 ```
 </td>
-
 <td>
-
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="140" height="200" style="border-style:solid;border-width:1;border-color:#000;">
   <g id="panel3">
   </g>
@@ -153,7 +147,6 @@ panel = document['panel4']
 panel <= star
 ```
 </td>
-
 <td>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="150" height="200" style="border-style:solid;border-width:1;border-color:#000;">
   <g id="panel4">
@@ -178,10 +171,10 @@ rect = svg.rect(x=10, y=10, width=100, height=100)
 def move_rect():
     # the attributes of the SVG element are strings, they must be explicitely
     # converted into integers
-    rect.y = int(rect.y)+1
+    rect.attrs["y"] = int(rect.attrs["y"]) + 1
     
     # ends animation when the rectangle reaches its target
-    if int(rect.y)>50:
+    if int(rect.attrs["y"] ) > 50:
         timer.clear_interval(loop)
 
 panel = document['panel5']
@@ -191,9 +184,7 @@ panel <= rect
 loop = timer.set_interval(move_rect, 30)
 ```
 </td>
-
 <td>
-
 <svg id="panel5" xmlns="http://www.w3.org/2000/svg" viewPort="0 0 120 120" width="120" height="200" style="border-style:solid;border-width:1;border-color:#000;">
 </svg>
 </td>

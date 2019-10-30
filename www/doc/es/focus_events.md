@@ -23,23 +23,22 @@ Los eventos de foco son
 
 #### Ejemplo
 
-Pulsa en el campo de entrada de abajo para hacer que reciba el foco, 
+Pulsa en el campo de entrada de abajo para hacer que reciba el foco,
 posteriormente pulsa en cualquier otro sitio para hacer que pierda el foco.
 
-<p><input id="entry"></input>&nbsp;<span id="traceFocus">&nbsp;</span>
+<p><input id="entry" autocomplete="off">&nbsp;
+<span id="traceFocus">&nbsp;</span>
 
 #### Código
 
 ```exec_on_load
-from browser import document
+from browser import bind, document
 
+@bind("#entry", "focus")
 def focus(ev):
     document["traceFocus"].text = f"{ev.target.id} recibe el foco"
 
-document["entry"].bind("focus", focus)
-
+@bind("#entry", "blur")
 def blur(ev):
     document["traceFocus"].text = f"{ev.target.id} pierde el foco"
-
-document["entry"].bind("blur", blur)
 ```

@@ -1,4 +1,4 @@
-import collections
+import collections, collections.abc
 
 _d = collections.defaultdict(int)
 
@@ -36,6 +36,29 @@ assert a.bar == 1
 assert a.bash == 2
 assert repr(a) == 'foo(bar=1, bash=2, bing=3)'
 
+# issue 156
+assert isinstance(dict(one=1), collections.abc.Mapping)
+assert issubclass(dict, collections.abc.Mapping)
+
+# issue 434
+Set = collections.defaultdict(lambda: None)
+Set[0]
+Set[int]
+Set[str]
+
+# issue 614
+N = collections.namedtuple('N', 'spam, length, eggs')
+n = N(5, 6, 7)
+assert n.length == 6
+
+M = collections.namedtuple('M', 'a, b, c')
+m = M(5, 6, 7)
+try:
+    m.length
+    raise AssertionError("should have raised AttributeError")
+except AttributeError:
+    pass
+
 # issue 725
 A = collections.namedtuple('A', ('x', 'y'))
 a = A(0, 0)
@@ -54,3 +77,10 @@ d['b'] = 3
 assert list(d.keys()) == ["a", "b"]
 assert list(d.values()) == [2, 3]
 assert list(d.items()) == [("a", 2), ("b", 3)]
+
+# issue 1053
+N = collections.namedtuple('N', 'a b')
+N.__new__.__defaults__ = (3, 4)
+n = N()
+assert n.a == 3
+assert n.b == 4

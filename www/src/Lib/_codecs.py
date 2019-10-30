@@ -8,14 +8,26 @@ def ascii_encode(*args,**kw):
 def charbuffer_encode(*args,**kw):
     pass
 
-def charmap_build(*args,**kw):
-    pass
+def charmap_build(decoding_table):
+    return {car: i for (i, car) in enumerate(decoding_table)}
 
-def charmap_decode(*args,**kw):
-    pass
+def charmap_decode(input, errors, decoding_table):
+    res = ''
+    for car in input:
+        code = decoding_table[car]
+        if code is None:
+            raise UnicodeDecodeError(input)
+        res += code
+    return res, len(input)
 
-def charmap_encode(*args,**kw):
-    pass
+def charmap_encode(input, errors, encoding_table):
+    t = []
+    for car in input:
+        code = encoding_table.get(car)
+        if code is None:
+            raise UnicodeEncodeError(input)
+        t.append(code)
+    return bytes(t), len(input)
 
 def decode(obj, encoding="utf-8", errors="strict"):
     """decode(obj, [encoding[,errors]]) -> object

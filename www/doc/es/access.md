@@ -1,8 +1,8 @@
 Accediendo a los elementos
 --------------------------
 
-Acceder a un elemento se puede realizar de varias formas. La más habitual
-sería usar su identificador, ie su atributo _id_ : con un campo de entrada
+El acceso a un elemento se puede realizar de varias formas. La más habitual
+sería usar su identificador, i.e. su atributo _id_ : con un campo de entrada
 definido por
 
 ```xml
@@ -30,15 +30,15 @@ para buscar elementos :
 - `elt.get(selector=S)` devuelve una lista con todos los elementos que
   descienden de `elt` cuyo selector CSS coincide con `S`
 
-`elt.select(S)` es igual a `elt.get(selector=S)`.
+`elt.select(S)` es igual a usar `elt.get(selector=S)`.
 
 Unos pocos ejemplos:
 
 ```python
-document.select(selector='.foo')  # elementos con la clase "foo"
-document.select('form')           # lista de etiquetas "<form>"
-document.select('H1.bar')         # Etiquetas H1 con la clase "bar"
-document.select('#container')     # El elemento con id "container", igual
-                                  # que usar [document["container"]]
-document.select('a[title]')       # Etiquetas A con el atributo "title"
+document.select('.foo')       # elementos con la clase "foo"
+document.select('form')       # lista de etiquetas "<form>"
+document.select('H1.bar')     # Etiquetas H1 con la clase "bar"
+document.select('#container') # El elemento con id "container", igual
+                              # que usar [document["container"]]
+document.select('a[title]')   # Etiquetas A con el atributo "title"
 ```

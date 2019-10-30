@@ -43,7 +43,7 @@ document['zone'].clear()
 
 # insert table in the element
 document['zone'] <= table
-```exec
+```
 
 </td>
 <td id="zone" style="background-color:#FF7400;text-align:center;">Contenido 
@@ -73,6 +73,7 @@ for line in lines:
 document['zone1'].text = ''
 document['zone1']<= t
 ```
+
 </td>
 <td id="zone1" style="background-color:#FF7400;text-align:center;">Contenido 
 inicial<p>

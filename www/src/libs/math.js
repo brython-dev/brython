@@ -236,8 +236,8 @@ var _mod = {
     copysign: function(x,y) {
         var x1 = Math.abs(float_check(x))
         var y1 = float_check(y)
-        var sign = y1 ? y1 < 0 ? -1 : 1 : 1
-        if(isNegZero(y1)){sign = -1}   // probably need to work on adding a check for -0
+        var sign = Math.sign(y1)
+        sign = (sign == 1 || Object.is(sign, +0)) ? 1 : - 1
         return float.$factory(x1 * sign)
     },
     cos : function(x){return float.$factory(Math.cos(float_check(x)))},
@@ -293,7 +293,13 @@ var _mod = {
          if(_b_.$isinf(_r)){throw OverflowError("math range error")}
          return float.$factory(_r)
     },
-    expm1: function(x){return float.$factory(Math.exp(float_check(x)) - 1)},
+    expm1: function(x){
+         if(_b_.$isninf(x)){return float.$factory(0)}
+         if(_b_.$isinf(x)){return float.$factory('inf')}
+         var _r = Math.expm1(float_check(x))
+         if(_b_.$isinf(_r)){throw OverflowError("math range error")}
+         return float.$factory(_r)
+    },
     //fabs: function(x){ return x>0?float.$factory(x):float.$factory(-x)},
     fabs: function(x){return _b_.$fabs(x)}, //located in py_float.js
     factorial: function(x) {
@@ -349,22 +355,48 @@ var _mod = {
         return new Number(res)
     },
     gamma: function(x){
-         //using code from http://stackoverflow.com/questions/3959211/fast-factorial-function-in-javascript
-         // Lanczos Approximation of the Gamma Function
-         // As described in Numerical Recipes in C (2nd ed. Cambridge University Press, 1992)
-         var y = float_check(x)
-         var z = y + 1
-         var d1 = Math.sqrt(2 * Math.PI) / z
+        if(_b_.isinstance(x, int)){
+            if(i < 1){
+                throw _b_.ValueError.$factory("math domain error")
+            }
+            var res = 1
+            for(var i = 1; i < x; i++){res *= i}
+            return new Number(res)
+        }
+        // Adapted from https://en.wikipedia.org/wiki/Lanczos_approximation
+        var p = [676.5203681218851,
+            -1259.1392167224028,
+            771.32342877765313,
+            -176.61502916214059,
+            12.507343278686905,
+            -0.13857109526572012,
+            9.9843695780195716e-6,
+            1.5056327351493116e-7
+            ]
 
-         var d2 = 1.000000000190015;
-         d2 +=  76.18009172947146 / (z + 1)
-         d2 += -86.50532032941677 / (z + 2)
-         d2 +=  24.01409824083091 / (z + 3)
-         d2 += -1.231739572450155 / (z + 4)
-         d2 +=  1.208650973866179E-3 / (z + 5)
-         d2 += -5.395239384953E-6 / (z + 6)
-
-         return d1 * d2 * Math.pow(z + 5.5, z + 0.5) * Math.exp(-(z + 5.5))
+        var EPSILON = 1e-07
+        function drop_imag(z){
+            if(Math.abs(z.imag) <= EPSILON){
+                z = z.real
+            }
+            return z
+        }
+        var z = x
+        if(z < 0.5){
+            var y = Math.PI / (Math.sin(Math.PI * z) * _mod.gamma(1-z)) // Reflection formula
+        }else{
+            z -= 1
+            var x = 0.99999999999980993,
+                i = 0
+            for(var i = 0, len = p.length; i < len; i++){
+                var pval = p[i]
+                x += pval / (z + i + 1)
+            }
+            var t = z + p.length - 0.5,
+                sq = Math.sqrt(2 * Math.PI),
+                y = sq * Math.pow(t, (z + 0.5)) * Math.exp(-t) * x
+        }
+        return drop_imag(y)
     },
     gcd: function(){
         var $ = $B.args("gcd", 2, {a: null, b: null}, ['a', 'b'],
@@ -420,28 +452,14 @@ var _mod = {
     isnan: function(x){return isNaN(float_check(x))},
     ldexp: function(x, i){return _b_.$ldexp(x, i)},   //located in py_float.js
     lgamma: function(x){
-         // see gamma function for sources
-         var y = float_check(x),
-             z = y + 1,
-             d1 = Math.sqrt(2 * Math.PI) / z
-
-         var d2 = 1.000000000190015
-         d2 +=  76.18009172947146 / (z + 1)
-         d2 += -86.50532032941677 / (z + 2)
-         d2 +=  24.01409824083091 / (z + 3)
-         d2 += -1.231739572450155 / (z + 4)
-         d2 +=  1.208650973866179E-3 / (z + 5)
-         d2 += -5.395239384953E-6 / (z + 6)
-
-         return float.$factory(Math.log(Math.abs(d1 * d2 *
-             Math.pow(z + 5.5, z + 0.5) * Math.exp(-(z + 5.5)))))
+        return new Number(Math.log(Math.abs(_mod.gamma(x))))
     },
     log: function(x, base){
          var x1 = float_check(x)
          if(base === undefined){return float.$factory(Math.log(x1))}
          return float.$factory(Math.log(x1) / Math.log(float_check(base)))
     },
-    log1p: function(x){return float.$factory(Math.log(1.0 + float_check(x)))},
+    log1p: function(x){return float.$factory(Math.log1p(float_check(x)))},
     log2: function(x){
         if(isNaN(x)){return float.$factory('nan')}
         if(_b_.$isninf(x)) {throw ValueError('')}
@@ -450,7 +468,7 @@ var _mod = {
         return float.$factory(Math.log(x1) / Math.LN2)
     },
     log10: function(x) {
-        return float.$factory(Math.log(float_check(x)) / Math.LN10)
+        return float.$factory(Math.log10(float_check(x)))
     },
     modf: function(x) {
        if(_b_.$isninf(x)){

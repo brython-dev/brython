@@ -1,13 +1,14 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
-    <head>
-        <title>python plot on the web</title>
-        <meta charset="iso-8859-1">
-        <script src="../src/brython.js"></script>
-        <script src="../src/py_VFS.js"></script>
-    </head>
+<head>
+<title>python plot on the web</title>
+<meta charset="iso-8859-1">
+<script src="/src/brython.js"></script>
+<script src="/src/brython_stdlib.js"></script>
+<script type="text/python" src="show_source.py"></script>
+</head>
 
-    <body onLoad="brython(1)">
+<body onLoad="brython(1)">
 
 
 <script type="text/python">
@@ -19,7 +20,7 @@ canvas = doc["plotarea"]
 ctx = canvas.getContext("2d")
 
 ## After doing this I saw that this could be achieved using
-## translate(0,canvas.height); scale(1,-1); 
+## translate(0,canvas.height); scale(1,-1);
 ## https://developer.mozilla.org/en-US/docs/HTML/Canvas/Tutorial/Transformations
 def change_ref_system(x, y):
     return (20 + x * 8, 420 - y * 20)
@@ -46,10 +47,10 @@ def figure_title():
     ctx.fillStyle = "gray"
     ctx.font = "bold 16px Arial"
     ctx.fillText(doc["titletext"].value, 410, 20)
-    
+
 def title_update(ev):
     figure_title()
-    
+
 dataset = []
 def graph():
     data = random.random() * 20

@@ -10,7 +10,9 @@ Los eventos del teclado son
 <table cellpadding=3 border=1>
 <tr>
 <td>*input*</td>
-<td>se desencadena cuando el valor de un elemento &lt;input&gt; o una &lt;textarea&gt; se modifica, o cuando el contenido de un elemento `contenteditable` se modifica
+<td>se desencadena cuando el valor de un elemento &lt;input&gt; o una 
+&lt;textarea&gt; se modifica, o cuando el contenido de un elemento 
+`contenteditable` se modifica
 </td>
 </tr>
 
@@ -18,13 +20,16 @@ Los eventos del teclado son
 <td>*keydown*</td><td>cuando se pulsa una tecla del teclado</td>
 </tr>
 
-<tr><td>*keypress*</td><td>cuando se pulsa una tecla del teclado y esa tecla produce un 'caracter'. Por ejemplo, cuando pulsamos Ctrl+C, el evento *keypress* solo se dispara cuando la tecla C se pulsa, mientras que *keydown* se dispara inmediatamente al pulsar la tecla Ctrl</td></tr>
+<tr><td>*keypress*</td><td>cuando se pulsa una tecla del teclado y esa tecla 
+produce un 'caracter'. Por ejemplo, cuando pulsamos Ctrl+C, el evento *keypress* 
+solo se dispara cuando la tecla C se pulsa, mientras que *keydown* se dispara 
+inmediatamente al pulsar la tecla Ctrl</td></tr>
 
 <tr><td>*keyup*</td><td>la tecla se deja de pulsar</td></tr>
 
 </table>
 
-atributos del objeto `DOMEvent`
+Atributos del objeto `DOMEvent`
 -------------------------------
 
 Para los eventos del teclado, la instancia `DOMEvent` posee los siguientes atributos
@@ -71,9 +76,11 @@ document["altKey"].bind("keypress", keypress)
 <td>
 #### Ejemplo
 
-Introduce texto en el campo de más abajo. Date cuenta que el carácter se puede leer mediante `ch(ev.charCode)`
+Introduce texto en el campo de más abajo. Date cuenta que el carácter se puede 
+leer mediante `ch(ev.charCode)`
 
-<input id="charCode" value=""></input>&nbsp;<span id="traceCharCode">&nbsp;</span>
+<input id="charCode" value="" autocomplete="off">&nbsp;
+<span id="traceCharCode">&nbsp;</span>
 
 #### Código
 
@@ -96,7 +103,8 @@ document["charCode"].bind("keypress", charCode)
 
 > Este atributo no aplica para el evento *input*
 
-> Normalmente se usa con el evento *keypress*, para ser capaz de comprobar si Ctrl+&lt;key&gt; fue pulsado o solo &lt;key&gt;</td>
+> Normalmente se usa con el evento *keypress*, para ser capaz de comprobar si 
+Ctrl+&lt;key&gt; fue pulsado o solo &lt;key&gt;</td>
 <td>
 #### Ejemplo
 
@@ -117,7 +125,9 @@ def keypress(ev):
 
 document["ctrlKey"].bind("keypress", keypress)
 ```
-Fíjate que `ev.preventDefault()` para evitar el comportamiento por defecto de algunos atajos de teclado que usan la tecla Ctrl
+
+Fíjate que `ev.preventDefault()` para evitar el comportamiento por defecto de 
+algunos atajos de teclado que usan la tecla Ctrl
 
 </td>
 </tr>
@@ -125,23 +135,26 @@ Fíjate que `ev.preventDefault()` para evitar el comportamiento por defecto de a
 <tr>
 <td>
 `keyCode`
-> Un código numérico dependiente del sistema y de la implementación identificando el valor sin modificar de la tecla pulsada
+> Un código numérico dependiente del sistema y de la implementación 
+> identificando el valor sin modificar de la tecla pulsada
 
 > El valor no cambia si se pulsan las teclas Alt, Ctrl o Shift
 
-> Fíjate que el resultado no será el mismo dependiendo del evento a manejar, *keydown*, *keyup* o *keypress*
+> Fíjate que el resultado no será el mismo dependiendo del evento a manejar, 
+*keydown*, *keyup* o *keypress*
 </td>
 <td>
 #### Ejemplo
 
-Introduce texto en el campo de más abajo. Date cuenta que el carácter se puede leer mediante `ch(ev.charCode)` con el evento *keypress*
+Introduce texto en el campo de más abajo. Date cuenta que el carácter se puede 
+leer mediante `ch(ev.charCode)` con el evento *keypress*
 
-with *keydown* <input id="keyCodeKeydown" value=""></input>
+con *keydown* <input id="keyCodeKeydown" value="" autocomplete="off">
 
-<p>with *keypress* <input id="keyCodeKeypress" value=""></input>
+<p>con *keypress* <input id="keyCodeKeypress" value="" autocomplete="off">
 &nbsp;<span id="traceKeyCode">&nbsp;</span>
 
-<p>con *keyup* <input id="keyCodeKeyup" value=""></input>
+<p>con *keyup* <input id="keyCodeKeyup" value="" autocomplete="off">
 
 #### Código
 
@@ -157,7 +170,6 @@ document["keyCodeKeydown"].bind("keydown", keyCode)
 document["keyCodeKeypress"].bind("keypress", keyCode)
 document["keyCodeKeyup"].bind("keyup", keyCode)
 ```
-
 </td>
 </tr>
 
@@ -168,14 +180,15 @@ document["keyCodeKeyup"].bind("keyup", keyCode)
 
 > Este atributo no aplica para el evento *input*
 
-> Normalmente se usa con *keypress*, para ser capaz de comprobar si Shift+&lt;key&gt; fue pulsado o solo &lt;key&gt;</td>
+> Normalmente se usa con *keypress*, para ser capaz de comprobar si 
+Shift+&lt;key&gt; fue pulsado o solo &lt;key&gt;</td>
 </td>
 <td>
 #### Ejemplo
 
 Introduce texto en el campo de más abajo, pulsando y sin pulsar la tecla Shift
 
-<input id="shiftKey" value=""></input>
+<input id="shiftKey" value="" autocomplete="off">
 &nbsp;<span id="traceShiftKey">&nbsp;</span>
 
 #### Code
@@ -195,24 +208,27 @@ document["shiftKey"].bind("keypress", keypress)
 <tr>
 <td>
 `which`
-> Un código numérico dependiente del sistema y de la implementación identificando el alor sin modificar de la tecla pulsada
+> Un código numérico dependiente del sistema y de la implementación 
+> identificando el valor sin modificar de la tecla pulsada
 
-> Fíjate que el resultado no será el mismo dependiendo del evento a manejar, *keydown*, *keyup* o *keypress*
+> Fíjate que el resultado no será el mismo dependiendo del evento a manejar, 
+> *keydown*, *keyup* o *keypress*
 </td>
 <td>
 #### Ejemplo
 
-Introduce texto en el campo de más abajo. Date cuenta que el carácter se puede leer mediante `ch(ev.which)` del evento *keypress*
+Introduce texto en el campo de más abajo. Date cuenta que el carácter se puede 
+leer mediante `ch(ev.which)` del evento *keypress*
 
 
 <table>
 <tr>
 <td>
-con *keydown* <input id="whichKeydown"></input>
+con *keydown* <input id="whichKeydown" autocomplete="off">
 
-<p>con *keypress* <input id="whichKeypress"></input>
+<p>con *keypress* <input id="whichKeypress" autocomplete="off">
 
-<p>con *keyup* <input id="whichKeyup"></input>
+<p>con *keyup* <input id="whichKeyup" autocomplete="off">
 
  </td>
  <td>

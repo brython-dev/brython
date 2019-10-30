@@ -21,9 +21,9 @@ properties:
   there are exceptions : the property for the attribute "class" is "className"
 - generally, the property value is the same as the attribute value, but not
   always : for instance, for an element defined by
-  `<INPUT type="checkbox" checked="checked">`, the value of attribute
-  "checked" is the string "checked", and the value of property "checked" is
-  the boolean `true`
+  `<INPUT type="checkbox" checked="checked">`, the value of the _attribute_
+  "checked" is the string "checked", and the value of the _property_ "checked"
+  is the boolean `true`
 
 Besides the attributes defined by the specification for a given tag, custom
 attributes can be defined (template engines use this a lot) ; for these

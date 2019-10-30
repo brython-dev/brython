@@ -2,36 +2,15 @@
 <html>
 <head>
 <meta charset="utf-8">
+<style>
+body{
+    font-family: sans-serif;
+}
+</style>
 <script src="https://unpkg.com/vue"></script>
 
-<script type="text/javascript" src="../src/brython_builtins.js"></script>
-<script type="text/javascript" src="../src/version_info.js"></script>
-<script type="text/javascript" src="../src/py2js.js"></script>
-<script type="text/javascript" src="../src/py_object.js"></script>
-<script type="text/javascript" src="../src/py_type.js"></script>
-<script type="text/javascript" src="../src/py_utils.js"></script>
-<script type="text/javascript" src="../src/py_builtin_functions.js"></script>
-<script type="text/javascript" src="../src/py_exceptions.js"></script>
-<script type="text/javascript" src="../src/py_range_slice.js"></script>
-<script type="text/javascript" src="../src/py_bytes.js"></script>
-<script type="text/javascript" src="../src/py_set.js"></script>
-<script type="text/javascript" src="../src/js_objects.js"></script>
-<script type="text/javascript" src="../src/stdlib_paths.js"></script>
-<script type="text/javascript" src="../src/py_import.js"></script>
-<script type="text/javascript" src="../src/unicode.min.js"></script>
-<script type="text/javascript" src="../src/py_string.js"></script>
-<script type="text/javascript" src="../src/py_int.js"></script>
-<script type="text/javascript" src="../src/py_long_int.js"></script>
-<script type="text/javascript" src="../src/py_float.js"></script>
-<script type="text/javascript" src="../src/py_complex.js"></script>
-<script type="text/javascript" src="../src/py_dict.js"></script>
-<script type="text/javascript" src="../src/py_list.js"></script>
-<script type="text/javascript" src="../src/py_generator.js"></script>
-<script type="text/javascript" src="../src/py_dom.js"></script>
-
-<script type="text/javascript" src="../src/builtin_modules.js"></script>
-<script type="text/javascript" src="../src/py_import_hooks.js"></script>
-
+<script type="text/javascript" src="../src/brython.js"></script>
+<script type="text/python" src="/gallery/show_source.py"></script>
 </head>
 <body onload="brython(1)">
 
@@ -99,23 +78,23 @@ from javascript import this
 
 Date = window.Date.new
 
-Vue = window.Vue.new
+Vue = window.Vue
 
-app = Vue({
+app = Vue.new({
   'el': '#app',
   'data': {
     'message': 'Hello Brython Vue!'
   }
 })
 
-app2 = Vue({
+app2 = Vue.new({
   'el': '#app-2',
   'data': {
     'message': 'You loaded this page on ' + Date().toLocaleString()
   }
 })
 
-app4 = Vue({
+app4 = Vue.new({
   'el': '#app-4',
   'data': {
     'todos': [
@@ -129,7 +108,7 @@ app4 = Vue({
 def reverse_message(ev):
     this().message = ''.join(reversed(this().message))
 
-app5 = Vue({
+app5 = Vue.new({
   'el': '#app-5',
   'data': {
     'message': 'Hello Vue.js!'
@@ -139,7 +118,7 @@ app5 = Vue({
   }
 })
 
-app6 = Vue({
+app6 = Vue.new({
   'el': '#app-6',
   'data': {
     'message': 'Hello Vue!'
@@ -151,7 +130,7 @@ Vue.component('todo-item', {
   'template': '<li>{{ todo.text }}</li>'
 })
 
-app7 = Vue({
+app7 = Vue.new({
   'el': '#app-7',
   'data': {
     'groceryList': [
@@ -165,7 +144,7 @@ app7 = Vue({
 def created():
     this().todos.push({"id":1, "text": "ADDED"})
 
-window.Vue.new({
+Vue.new({
     "created": created,
     "el": "#pyapp1",
     "data": {
@@ -173,10 +152,13 @@ window.Vue.new({
     }
 })
 
+_id = 1
 def add_item(*args):
-    this().todos.push({"id":1, "text": "ADDED"})
+    global _id
+    _id += 1
+    this().todos.push({"id": _id, "text": "ADDED"})
 
-window.Vue.new({
+Vue.new({
     "methods": {
         "add_item": add_item
     },
@@ -186,6 +168,38 @@ window.Vue.new({
     }
 })
 
+# issue 1185
+
+class DictMore(dict):
+    def __init__(self):
+        self['count'] = 0
+
+def produce_dict(*_):
+    item = dict()
+    item['count'] = 0
+    return item
+
+def produce_dict_more(*_):
+    return DictMore()
+
+Vue.component('button-counter', {
+  'data': produce_dict,
+  'template': '<button v-on:click="count++">You clicked me {{ count }} times.</button>',
+})
+
+Vue.component('button-counter-more', {
+  'data': produce_dict_more,
+  'template': '<button v-on:click="count++">You clicked me {{ count }} times.</button>',
+})
+
+Vue.new({"el": '#components-demo' })
+
 </script>
+
+<div id="components-demo">
+  <button-counter></button-counter>
+  <button-counter-more></button-counter-more>
+</div>
+
 </body>
 </html>

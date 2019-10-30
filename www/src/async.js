@@ -2,17 +2,22 @@
 var _b_ = $B.builtins
 
 var coroutine = $B.coroutine = $B.make_class("coroutine")
-var future = $B.make_class("future")
 
 coroutine.close = function(self){}
 coroutine.send = function(self){
-    var res = self.$func.apply(null, self.$args)
-    return res
+    return self.$func.apply(null, self.$args)
+}
+coroutine.__repr__ = coroutine.__str__ = function(self){
+    if(self.$func.$infos){
+        return "<coroutine " + self.$func.$infos.__name__ + ">"
+    }else{
+        return "<coroutine object>"
+    }
 }
 
 $B.set_func_names(coroutine, "builtins")
 
-$B.make_async = function(func){
+$B.make_async = func => {
     var f = function(){
         var args = arguments
         return {
@@ -25,22 +30,16 @@ $B.make_async = function(func){
     return f
 }
 
+// "x = await coro" is translated into "x = await $B.promise(coro)"
+
 $B.promise = function(obj){
     if(obj.__class__ === $B.JSObject){
         return obj.js
     }else if(obj.__class__ === coroutine){
-        var res = coroutine.send(obj)
-        return res
+        return coroutine.send(obj)
     }
     if(typeof obj == "function"){
         return obj()
-    }
-    return obj
-}
-
-$B.awaitable = function(obj){
-    if(obj instanceof Response){
-        return $B.JSObject.$factory(obj)
     }
     return obj
 }

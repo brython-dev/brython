@@ -136,6 +136,7 @@ select.language {
     border-color:#888;
     border-radius: 10px;
     width:auto;
+    font-family: "Monaco";
 }
 
 .xml{
@@ -148,6 +149,15 @@ select.language {
     border-color:#888;
     border-radius: 10px;
     color:#114;
+    width:auto;
+}
+
+.console{
+    font-size: 0.9em;
+    display: inline-block;
+    background-color:#000;
+    padding:3px 8px 8px 8px;
+    color:#fff;
     width:auto;
 }
 
@@ -190,7 +200,8 @@ em {
 
 strong {
   color:#339;
-  font-family:courier
+  font-family:courier;
+  font-size: 1em;
 }
 
 #main {

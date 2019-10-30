@@ -5,49 +5,58 @@ This module exposes the HTML tags. The tag name is in uppercase letters
 
 The classes defined are :
 
-- HTML4 tags : <code>A, ABBR, ACRONYM, ADDRESS, APPLET, AREA, B, BASE, 
-BASEFONT, BDO, BIG, BLOCKQUOTE, BODY, BR, BUTTON, 
-CAPTION, CENTER, CITE, CODE, COL, COLGROUP, DD, 
-DEL, DFN, DIR, DIV, DL, DT, EM, FIELDSET, FONT, 
-FORM, FRAME, FRAMESET, H1, H2, H3, H4, H5, H6, 
-HEAD, HR, HTML, I, IFRAME, IMG, INPUT, INS, 
-ISINDEX, KBD, LABEL, LEGEND, LI, LINK, MAP, MENU, 
-META, NOFRAMES, NOSCRIPT, OBJECT, OL, OPTGROUP, 
-OPTION, P, PARAM, PRE, Q, S, SAMP, SCRIPT, SELECT, 
+- HTML4 tags : <code>A, ABBR, ACRONYM, ADDRESS, APPLET, AREA, B, BASE,
+BASEFONT, BDO, BIG, BLOCKQUOTE, BODY, BR, BUTTON,
+CAPTION, CENTER, CITE, CODE, COL, COLGROUP, DD,
+DEL, DFN, DIR, DIV, DL, DT, EM, FIELDSET, FONT,
+FORM, FRAME, FRAMESET, H1, H2, H3, H4, H5, H6,
+HEAD, HR, HTML, I, IFRAME, IMG, INPUT, INS,
+ISINDEX, KBD, LABEL, LEGEND, LI, LINK, MAP, MENU,
+META, NOFRAMES, NOSCRIPT, OBJECT, OL, OPTGROUP,
+OPTION, P, PARAM, PRE, Q, S, SAMP, SCRIPT, SELECT,
 SMALL, SPAN, STRIKE, STRONG, STYLE, SUB, SUP, SVG,
-TABLE, TBODY, TD, TEXTAREA, TFOOT, TH, THEAD, 
+TABLE, TBODY, TD, TEXTAREA, TFOOT, TH, THEAD,
 TITLE, TR, TT, U, UL, VAR</code>
 
-- HTML5 tags : <code>ARTICLE, ASIDE, AUDIO, BDI, CANVAS, 
-COMMAND, DATA, DATALIST, EMBED, FIGCAPTION, 
-FIGURE, FOOTER, HEADER, KEYGEN, MAIN, MARK, 
-MATH, METER, NAV, OUTPUT, PROGRESS, RB, 
-RP, RT, RTC, RUBY, SECTION, SOURCE, 
-SUMMARY, TEMPLATE, TIME, TRACK, VIDEO, 
+- HTML5 tags : <code>ARTICLE, ASIDE, AUDIO, BDI, CANVAS,
+COMMAND, DATA, DATALIST, EMBED, FIGCAPTION,
+FIGURE, FOOTER, HEADER, KEYGEN, MAIN, MARK,
+MATH, METER, NAV, OUTPUT, PROGRESS, RB,
+RP, RT, RTC, RUBY, SECTION, SOURCE,
+SUMMARY, TEMPLATE, TIME, TRACK, VIDEO,
 WBR</code>
 
 - HTML5.1 tags : <code>DETAILS, DIALOG, MENUITEM, PICTURE, SUMMARY</code>
 
-> In the following [link](https://w3c.github.io/elements-of-html/) you can 
+> In the following [link](https://w3c.github.io/elements-of-html/) you can
 > find the index of HTML tags with references (DRAFT).
 
-[Note: In the following examples we assume that the **browser.html** module 
+[Note: In the following examples we assume that the **browser.html** module
 has been imported as follows: `from brower import html`]
 
 The syntax to create an object (e.g. a hyperlink) is :
 
-`A(`*[content,[attributes]]*`)`
+`A(`*[content, [attributes]]*`)`
 
-> *content* is the child node of the the object ; it can be a Python object 
-> such as a string, a number, etc., or an instance of another class in 
+> *content* is the child node of the the object ; it can be a Python object
+> such as a string, a number, etc., or an instance of another class in
 > the **html** module
 
-> *attributes* is a sequence of keywords corresponding to the 
-> [attributes](http://www.w3.org/TR/html5-author/index.html#attributes-1) of 
-> the HTML tag. If the attribute contains a hyphen (`-`) it must be replaced by
-> an underscore (`_`) : *http\_equiv* and not *http-equiv* (the `-` would be
-> interpreted as the minus sign).
+> *attributes* is a sequence of keywords corresponding to the
+> [attributes](http://www.w3.org/TR/html5-author/index.html#attributes-1) of
+> the HTML tag. If the attribute contains a hyphen (-) it must be replaced by
+> an underscore (_) : `http_equiv` and not `http-equiv` (the - would be
+> interpreted as the minus sign). For more complex attribute names you can use
+> the syntax
+<blockquote>
+```python
+html.BUTTON("hello", **{"v-on:click": "count++"})
+```
+</blockquote>
 
+> See also the function [`attribute_mapper`](#attribute_mapper) below for more
+> customization of the translation from Python keyword argument to HTML tag
+> attribute.
 
 If *content* is an iterable (other than a string), all the items in the
 iterable become children of the object. For instance :
@@ -73,7 +82,7 @@ d = html.DIV('Brython', style=dict(height=100, width=200))
 The keyword arguments of *style* must be written by the Javascript syntax, not
 CSS : *backgroundColor* and not *background-color*.
 
-To avoid conflicts with the Python keyword, the attribute *class* must be 
+To avoid conflicts with the Python keyword, the attribute *class* must be
 capitalized :
 
 ```python
@@ -83,10 +92,11 @@ d = html.DIV('Brython', Class="container")
 You can also create an object without argument, then build it up:
 
 - to add a child node, use the **<=** operator
-- to add attributes, use the classic Python syntax : 
-  `object.attribute = value`
+- to add attributes, use the syntax :
+  `object.attrs[key] = value` (see section
+  [Attributes and methods](attributes.html))
 
-Example :    
+Example :
 
 ```python
 link = html.A()
@@ -94,7 +104,7 @@ link <= html.B('connexion')
 link.href = 'http://example.com'
 ```
 
-You can also create multiple elements at the same level by using the plus (+) 
+You can also create multiple elements at the same level by using the plus (+)
 sign :
 
 ```python
@@ -107,23 +117,23 @@ and you can add all the items in an iterable :
 from browser.html import *
 
 t = TABLE()
-t <= TR(TH('Number')+TH('Square'))
-t <= (TR(TD(i)+TD(i*i)) for i in range(10))
+t <= TR(TH('Number') + TH('Square'))
+t <= (TR(TD(i)+TD(i * i)) for i in range(10))
 ```
 
-Here is how to create a selection box from a list (by combining these 
+Here is how to create a selection box from a list (by combining these
 operators and Python syntax) :
 
 ```python
 from browser import document
 from browser.html import *
 
-document <= SELECT(OPTION(elt, value=i) 
+document <= SELECT(OPTION(elt, value=i)
     for i, elt in enumerate(['one', 'two', 'three']))
 ```
 
-It is important to note that the creation of an instance of a class involves 
-creating HTML from a single DOM object. If we assign the instance to a 
+It is important to note that the creation of an instance of a class involves
+creating HTML from a single DOM object. If we assign the instance to a
 variable, you can not use it in several places. For example, with this code :
 
 ```python
@@ -132,7 +142,7 @@ document <= 'Official Python Website: ' + link
 document <= html.P() + 'I repeat: the site is ' + link
 ```
 
-the link will only show in the second line. One solution is to clone the 
+the link will only show in the second line. One solution is to clone the
 original object :
 
 ```python
@@ -142,12 +152,12 @@ document <= html.P() + 'I repeat: the site is ' + link.clone()
 ```
 
 As a rule of thumb, instances of HTML classes have the same attribute names as
-the corresponding DOM objects. For example, it can retrieve the option 
-selected by the `selectedIndex` attribute of the `SELECT` object. Brython adds 
+the corresponding DOM objects. For example, it can retrieve the option
+selected by the `selectedIndex` attribute of the `SELECT` object. Brython adds
 a few things to make the manipulation a bit more Pythonic
 
-Let's see a more complete example. The code below have created the structure 
-in the blue panel. The blue panel is a `div` element with `id="container"` 
+Let's see a more complete example. The code below have created the structure
+in the blue panel. The blue panel is a `div` element with `id="container"`
 attribute.
 
 We will use this `div` to create an 'ugly' html structure inside with a div, a
@@ -159,16 +169,16 @@ table, a form and a HTML5 canvas:
 <td style="width:100px;">
 ```exec_on_load
 # First of all, the import of some libraries
-from browser import document as doc
+from browser import document
 from browser import html
 
 # All the elements will be inserted in the div with the "container" id
-container = doc['container']
+container = document['container']
 
 # We create a new div element
 newdiv = html.DIV(id = "new-div")
 # Now we add some style
-newdiv.style = {"padding": "5px", 
+newdiv.style = {"padding": "5px",
                "backgroundColor": "#ADD8E6"}
 
 # Now, lets add a table with a column with numbers and a
@@ -177,10 +187,10 @@ text = "Brython is really cool"
 textlist = text.split()
 table = html.TABLE()
 for i, word in enumerate(textlist):
-    table <= html.TR(html.TD(i + 1) + 
+    table <= html.TR(html.TD(i + 1) +
                      html.TD(word))
 # Now we add some style to the table
-table.style = {"padding": "5px", 
+table.style = {"padding": "5px",
                "backgroundColor": "#aaaaaa",
                "width": "100%"}
 # Now we add the table to the new div previously created
@@ -220,3 +230,45 @@ container <= newdiv
 </tr>
 </table>
 </div>
+
+### Creating new tags
+
+The module exposes the function
+
+`maketag(`_name_`)`
+
+> Creates a new class for a tag with the specified name. The class can be used
+> like those associated with standard HTML tags :
+
+```python
+p2 = maketag('P2')
+document <= p2('test')
+```
+
+The module has a related attribute :
+
+_tags_
+
+> Dictionary mapping tag names to the matching class. If new classes are
+> added by function `maketag()`, they are also added to this dictionary.
+
+<a name="attribute_mapper"></a>
+
+### Generating HTML attributes from Python keyword arguments
+
+`attribute_mapper(`*attr*`)`
+
+> For all the classes defined in the module, this function is called to
+> transform the keyword arguments into HTML tag attributes. For example:
+<blockquote>
+```python
+import re
+def f(attr):
+    return re.sub("^v_(.*)_(.*)$", r"v-\1:\2", attr)
+
+html.attribute_mapper = f
+print(html.BUTTON("hello", v_on_click="count++").outerHTML)
+```
+</blockquote>
+
+> By default, the function replaces underscores (_) by hyphens (-).

@@ -37,7 +37,7 @@ def discover_brython_test_modules():
           ("issues.py", "issues")
         ]),
         ("Modules", [
-          ("test_aio.py", "asyncio"),
+          ("test_aio.py", "browser.aio"),
           ("test_bisect.py", "bisect"),
           ("test_collections.py", "collections"),
           ("test_dataclasses.py", "dataclasses"),
@@ -52,7 +52,9 @@ def discover_brython_test_modules():
           ("test_re.py", "re"),
           ("test_storage.py", "storage"),
           ("test_struct.py", "struct"),
+          ("test_sys.py", "sys"),
           ("test_types.py", "types"),
+          ("test_unicodedata.py", "unicodedata"),
           ("test_unittest.py", "unittest"),
           ("test_urllib.py", "urllib"),
           #("test_indexedDB.py", "indexedDB"),
@@ -77,11 +79,13 @@ def populate_testmod_input(elem, selected=None):
                 o = html.OPTION(caption, value=filenm)
             g <= o
 
-def run(src):
+def run(src, file_path=None):
     t0 = time.perf_counter()
     msg = ''
     try:
         ns = {'__name__':'__main__'}
+        if file_path is not None:
+            ns['__file__'] = file_path
         exec(src, ns)
         state = 1
     except Exception as exc:
@@ -94,6 +98,7 @@ def run(src):
 def run_test_module(filename, base_path=''):
     if base_path and not base_path.endswith('/'):
         base_path += '/'
-    src = open(base_path + filename).read()
-    return run(src)
+    file_path = base_path + filename
+    src = open(file_path).read()
+    return run(src, file_path)
 

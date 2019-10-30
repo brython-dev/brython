@@ -23,18 +23,18 @@ javascript:
 ```xml
 <button onclick="echo()">
 ```
-
 (debido a que la función _echo_ no es accesible directamente desde
 Javascript), la solución sería definir un atributo id al elemento:
 
 ```xml
 <button id="mybutton">
 ```
+
 y definir un enlace entre este elemento y el evento _click_ mediante :
 
 ```python
 from browser import document
-document['mybutton'].bind('click',echo)
+document['mybutton'].bind('click', echo)
 ```
 
 Otra opción sería forzar la instroducción de la función _echo_ en el espacio
@@ -45,7 +45,6 @@ presente en el módulo **browser** :
 from browser import window
 window.echo = echo
 ```
-
 <strong>NOTA: No se recomienda usar este segundo método ya que introduce un
 riesgo de conflicto con nombres ya definidos por otros programas o librerías
 Javascript usadas en la página.
@@ -64,7 +63,7 @@ Por ejemplo :
 
 ```xml
 <script type="text/javascript">
-circle = {surface:function(r){return 3.14*r*r}}
+circle = {surface:function(r){return 3.14 * r * r}}
 </script>
 
 <script type="text/python">
@@ -130,12 +129,12 @@ Por ejemplo :
 
 ```xml
 <script type="text/javascript">
-function Rectangle(x0,y0,x1,y1){
+function Rectangle(x0, y0, x1, y1){
     this.x0 = x0
     this.y0 = y0
     this.x1 = x1
     this.y1 = y1
-    this.surface = function(){return (x1-x0)*(y1-y0)}
+    this.surface = function(){return (x1 - x0) * (y1 - y0)}
 }
 </script>
 
@@ -143,7 +142,7 @@ function Rectangle(x0,y0,x1,y1){
 from browser import alert, window
 
 rectangle = window.Rectangle
-alert(rectangle.new(10,10,30,30).surface())
+alert(rectangle.new(10, 10, 30, 30).surface())
 </script>
 ```
 
@@ -216,3 +215,45 @@ jq.each(jq('span'), show)
 Puedes encontrar otros ejemplos en la [galería](../../gallery/gallery_en.html)
 para ver como usar librerías Javascript (Three, Highcharts, Raphael) en
 scripts Brython.
+
+### Integración de una biblioteca Javascript en un módulo Python
+
+Otra forma de integrar una biblioteca sería crear un módulo que pueda ser
+importado en los scripts sin la necesidad de cargar esta biblioteca en el script
+de la página.
+
+Para ello, ¿la biblioteca debe ser accesible a través de una llamada Ajax? Se carga
+usando la función `load(url)` del módulo [browser](browser.html) y los nombres
+que añade al espacio de nombres global Javascript se exponen en el módulo Python.
+
+Por ejemplo, podemos crear un módulo **jquery**:
+
+```python
+from browser import window, load
+
+load("/path/to/jquery.min.js")
+
+# jQuery adds the name jQuery to the global Javascript namespace
+# (also called $, but this is not a valid Python identifier)
+jq = window.jQuery
+```
+
+Una vez hecho lo anterior podremos usar este módulo en una página Brython page (fíjate que no cargamos
+jquery.js):
+
+```xml
+<html>
+<head>
+<script src="brython.js"></script>
+</head>
+<body onload="brython(1)">
+<script type="text/python">
+import jquery
+
+jquery("#test").text("I can use jQuery here !")
+</script>
+
+<div id="test"></div>
+</body>
+</html>
+```

@@ -32,15 +32,13 @@ outside the field to make it lose focus.
 #### Code
 
 ```exec_on_load
-from browser import document
+from browser import bind, document
 
+@bind("#entry", "focus")
 def focus(ev):
     document["traceFocus"].text = f"{ev.target.id} receives focus"
 
-document["entry"].bind("focus", focus)
-
+@bind("#entry", "blur")
 def blur(ev):
     document["traceFocus"].text = f"{ev.target.id} loses focus"
-
-document["entry"].bind("blur")
 ```

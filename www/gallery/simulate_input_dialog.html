@@ -1,0 +1,102 @@
+<!doctype html>
+<html>
+<meta charset="utf-8">
+<head>
+<style>
+body,td,th{
+    font-family:sans-serif;
+    font-size:12px;
+}
+#zone{
+    position: absolute;
+    top: 10px;
+    background-color:#fff;
+    color: #000;
+    padding: 5px;
+    width: 200px;
+    text-align: center;
+    border-color: #000;
+    border-style: solid;
+    border-width: 1px;
+}
+</style>
+
+<script type="text/javascript" src="../src/brython_builtins.js"></script>
+<script type="text/javascript" src="../src/version_info.js"></script>
+<script type="text/javascript" src="../src/py2js.js"></script>
+<script type="text/javascript" src="../src/loaders.js"></script>
+<script type="text/javascript" src="../src/py_object.js"></script>
+<script type="text/javascript" src="../src/py_type.js"></script>
+<script type="text/javascript" src="../src/py_utils.js"></script>
+<script type="text/javascript" src="../src/py_sort.js"></script>
+<script type="text/javascript" src="../src/py_builtin_functions.js"></script>
+<script type="text/javascript" src="../src/py_exceptions.js"></script>
+<script type="text/javascript" src="../src/py_range_slice.js"></script>
+<script type="text/javascript" src="../src/py_bytes.js"></script>
+<script type="text/javascript" src="../src/py_set.js"></script>
+<script type="text/javascript" src="../src/js_objects.js"></script>
+<script type="text/javascript" src="../src/stdlib_paths.js"></script>
+<script type="text/javascript" src="../src/py_import.js"></script>
+<script type="text/javascript" src="../src/unicode_data.js"></script>
+<script type="text/javascript" src="../src/py_string.js"></script>
+<script type="text/javascript" src="../src/py_int.js"></script>
+<script type="text/javascript" src="../src/py_long_int.js"></script>
+<script type="text/javascript" src="../src/py_float.js"></script>
+<script type="text/javascript" src="../src/py_complex.js"></script>
+<script type="text/javascript" src="../src/py_dict.js"></script>
+<script type="text/javascript" src="../src/py_list.js"></script>
+<script type="text/javascript" src="../src/py_generator.js"></script>
+<script type="text/javascript" src="../src/py_dom.js"></script>
+
+<script type="text/javascript" src="../src/builtin_modules.js"></script>
+<script type="text/javascript" src="../src/py_import_hooks.js"></script>
+<script type="text/javascript" src="../src/async.js"></script>
+<script type="text/python" src="show_source.py"></script>
+</head>
+<body onload="brython(1)">
+
+<table width="100%">
+<tr>
+<td width="25%" style="padding-left:3%;">
+<h2>Simulate input() - uses browser.widgets</h2>
+This is another replacement for the built-in function <code>input()</code>,
+using the module <b><tt>dialog</tt></b> included in a package of the Brython
+standard library, <b><tt>browser.widgets</tt></b>.
+
+This module exposes classes to manage dialog boxes:
+<ul>
+<li><code>EntryDialog</code> to enter a value; when user clicks on "Ok" or
+hits the Enter key, an event "entry" is triggered on the
+<code>EntryDialog</code> instance
+<li><code>InfoDialog</code> to display a message
+</ul>
+</td>
+<td id="right" align="top">
+</td>
+</tr>
+</table>
+
+<script type="text/python">
+from browser import bind, window
+from browser.widgets import dialog
+
+left = int(window.innerWidth / 3)
+
+box = dialog.EntryDialog("Enter an integer", top=10, left=left)
+
+@bind(box, "entry")
+def validate(evt):
+    try:
+        value = int(box.entry.value)
+        box.close()
+        message = f"Integer value entered: {value}"
+        dialog.InfoDialog("Information",
+                           top=10,
+                           left=left,
+                           message=message)
+    except ValueError:
+        box.entry.value = ""
+
+</script>
+</body>
+</html>

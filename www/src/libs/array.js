@@ -58,8 +58,6 @@ var array = $B.make_class("array",
 
 array.$buffer_protocol = true
 
-var array_iterator = $B.$iterator_class("array_iterator")
-
 array.__getitem__ = function(self, key){
     if(self.obj && self.obj[key] !== undefined){
         return self.obj[key]
@@ -67,8 +65,9 @@ array.__getitem__ = function(self, key){
     throw _b_.IndexError("array index out of range")
 }
 
+var array_iterator = $B.make_iterator_class("array_iterator")
 array.__iter__ = function(self){
-    return $B.$iterator(self.obj, array_iterator)
+    return array_iterator.$factory(self.obj)
 }
 
 array.__len__ = function(self){
@@ -253,7 +252,7 @@ array.reverse = function(self){
 array.tobytes = function(self){
     $B.args("tobytes", 1, {self: null},
         ["self"], arguments, {}, null, null)
-    var items = Array.slice.call(null, self.obj),
+    var items = Array.prototype.slice.call(self.obj),
         res = []
     items.forEach(function(item){
         while(item > 256){
@@ -268,7 +267,7 @@ array.tobytes = function(self){
 array.tolist = function(self){
     $B.args("tolist", 1, {self: null},
         ["self"], arguments, {}, null, null)
-    return Array.slice.call(null, self.obj)
+    return Array.prototype.slice.call(self.obj)
 }
 
 array.tostring = array.tobytes

@@ -1,13 +1,18 @@
 from browser import document as doc
-from browser import window as win
+from browser import window
 from browser import alert
 from browser.html import *
 
 # globals #########################
 refr = False
-geo = win.navigator.geolocation
+geo = window.navigator.geolocation
 watchid = 0
 
+img = doc["world_map"]
+container = doc["container"]
+
+print(img.abs_left, img.abs_top)
+projection = window.Robinson.new(img.offsetWidth, img.offsetHeight)
 
 # functions ###########################
 def navi(pos):
@@ -17,16 +22,18 @@ def navi(pos):
     ul <= LI('lat: %s' % xyz.latitude)
     ul <= LI('lon: %s' % xyz.longitude)
 
-    mapurl = "http://maps.googleapis.com/maps/api/staticmap?markers=%f,%f&zoom=15&size=320x298&sensor=true" % (xyz.latitude, xyz.longitude)
-    img = IMG(src = mapurl, id = "map")
-    try:
-        doc["nav"].html = ul.html
-    except KeyError:
-        doc["navarea"] <= ul
-    try:
-        doc["map"].src = mapurl
-    except KeyError:
-        doc["maparea"] <= img
+    point = projection.project(xyz.latitude, xyz.longitude)
+    print("point", point.x, point.y)
+    x = img.abs_left + int(img.offsetWidth / 2) + int(point.x)
+    y = img.abs_top + int(img.offsetHeight / 2) - int(point.y)
+    print(x, y)
+    div = DIV("x", style={"position": "absolute",
+                          "top": y,
+                          "left": x,
+                          "background-color": "red",
+                          "zIndex": 99})
+    container <= div
+
 
 def nonavi(error):
     print(error)

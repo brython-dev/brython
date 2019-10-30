@@ -140,7 +140,7 @@ def minify(src, preserve_lines=False):
             last_type = item.type
 
     # replace lines with only whitespace by empty lines
-    out = re.sub('^\s+$', '', out, re.M)
+    out = re.sub(r'^\s+$', '', out, re.M)
 
     if not preserve_lines:
         # remove empty line at the start of the script (doc string)

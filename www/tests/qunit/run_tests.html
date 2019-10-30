@@ -156,7 +156,9 @@ qunit_add_tests(test_utils.load_brython_test_cases('..'))
 
 from unittest.loader import TestLoader
 import test.test_dict
+import test.test_grammar
 qunit_add_tests(TestLoader().loadTestsFromModule(test.test_dict))
+qunit_add_tests(TestLoader().loadTestsFromModule(test.test_grammar))
 
 </script>
 

@@ -1,0 +1,282 @@
+<!doctype html>
+<html>
+<head>
+<meta name="description" content="Brython">
+<meta name="keywords" content="Python,Brython">
+<meta name="author" content="Dan Stromberg, Pierre Quentel">
+<meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
+<script type="text/javascript" src="../src/brython_builtins.js"></script>
+<script type="text/javascript" src="../src/version_info.js"></script>
+<script type="text/javascript" src="../src/py2js.js"></script>
+<script type="text/javascript" src="../src/loaders.js"></script>
+<script type="text/javascript" src="../src/py_object.js"></script>
+<script type="text/javascript" src="../src/py_type.js"></script>
+<script type="text/javascript" src="../src/py_utils.js"></script>
+<script type="text/javascript" src="../src/py_sort.js"></script>
+<script type="text/javascript" src="../src/py_builtin_functions.js"></script>
+<script type="text/javascript" src="../src/py_exceptions.js"></script>
+<script type="text/javascript" src="../src/py_range_slice.js"></script>
+<script type="text/javascript" src="../src/py_bytes.js"></script>
+<script type="text/javascript" src="../src/py_set.js"></script>
+<script type="text/javascript" src="../src/js_objects.js"></script>
+<script type="text/javascript" src="../src/stdlib_paths.js"></script>
+<script type="text/javascript" src="../src/py_import.js"></script>
+<script type="text/javascript" src="../src/unicode_data.js"></script>
+<script type="text/javascript" src="../src/py_string.js"></script>
+<script type="text/javascript" src="../src/py_int.js"></script>
+<script type="text/javascript" src="../src/py_long_int.js"></script>
+<script type="text/javascript" src="../src/py_float.js"></script>
+<script type="text/javascript" src="../src/py_complex.js"></script>
+<script type="text/javascript" src="../src/py_dict.js"></script>
+<script type="text/javascript" src="../src/py_list.js"></script>
+<script type="text/javascript" src="../src/py_generator.js"></script>
+<script type="text/javascript" src="../src/py_dom.js"></script>
+
+<script type="text/javascript" src="../src/builtin_modules.js"></script>
+<script type="text/javascript" src="../src/py_import_hooks.js"></script>
+<script type="text/javascript" src="../src/async.js"></script>
+
+
+<script type="text/python" src="show_source.py"></script>
+
+<style>
+body,td,th{
+    font-family:sans-serif;
+    font-size:12px;
+}
+td{
+    vertical-align: top;
+}
+
+#panel{
+    background-color: #fff;
+    border-width: 2;
+    border-color: #000;
+    border-style: solid;
+}
+</style>
+
+<title>Brython mandelbrot</title>
+
+</head>
+<body onload="brython(2)">
+
+<script type="text/python" class="webworker" id="line_maker">
+"""Web Worker script. Computes the points that should be on or off in the
+image."""
+
+from browser import bind, self
+
+def set_coords(coords):
+    """Set values of object and pixel coordinates."""
+    global object_height, object_width, object_left, object_bottom
+    global left, right, width, height, bottom
+
+    obj = coords["object"]
+    object_height = obj["height"]
+    object_width = obj["width"]
+    object_left = obj["left"]
+    object_bottom = obj["bottom"]
+
+    pixel = coords["pixel"]
+    left = pixel["left"]
+    right = pixel["right"]
+    width = pixel["width"]
+    height = pixel["height"]
+    bottom = pixel["bottom"]
+
+nb_iter = 200
+
+@bind(self, "message")
+def make_line(ev):
+    """Main script first sends a message with coordinates, then messages
+    with the line number."""
+    if "coords" in ev.data:
+        # Fist message : set global values for coordinates
+        set_coords(ev.data["coords"])
+        # Tell the main script that this step is ok
+        self.send({"coords": "ok"})
+    else:
+        # Next messages : number of the line to draw
+        y = ev.data["y"]
+        filled = {}
+        c_imaginary = (y - bottom) * object_height / height + object_bottom
+        for x in range(left, right + 1):
+            c_real = (x - left) * object_width  / width  + object_left
+            v_real = 0.0
+            v_imaginary = 0.0
+            for i in range(nb_iter):
+                temp_v_real =  v_real * v_real - (v_imaginary * v_imaginary) + c_real
+                v_imaginary = 2.0 * v_real * v_imaginary + c_imaginary
+                v_real = temp_v_real
+                if v_real * v_real + v_imaginary * v_imaginary > 4:
+                    filled[x] = i
+                    break
+        # Return to main script the line number and the columns in this line
+        # to paint in black.
+        self.send({"line": y, "filled": filled})
+</script>
+
+<script type="text/python">
+"""Main script for the Mandelbrot set. Uses a web worker for computation."""
+
+from browser import bind, document, window, worker
+
+canvas = document["mandelbrot"]
+ctx = canvas.getContext("2d")
+
+pixel_coords = {
+    "top": 0,
+    "bottom": canvas.height - 1,
+    "height": canvas.height,
+    "left": 0,
+    "right": canvas.width -1,
+    "width": canvas.width
+}
+
+object_coords = {
+    "bottom": 1,
+    "width": 2,
+    "left": -1.5,
+    "height": 2
+}
+
+line_maker = worker.Worker("line_maker")
+
+distrib = {}
+
+@bind(line_maker, "message")
+def message(ev):
+    if "coords" in ev.data:
+        # Worker sent a message saying that the coordinates are set. Send a
+        # message saying to compute values for the first line.
+        line_maker.send({"y": pixel_coords["top"]})
+    else:
+        # The worker's response gives the line number and the colum numbers to
+        # draw in black.
+        y, pixels = ev.data["line"], ev.data["filled"]
+        for x in pixels:
+            c0 = min(255, int(450 / pixels[x]))
+            if c0 in distrib:
+                distrib[c0] += 1
+            else:
+                distrib[c0] = 1
+            ctx.fillStyle = f"rgb({c0},{c0},{c0})"
+            ctx.fillRect(x, y, 1, 1)
+        y += 1
+        if y > pixel_coords["bottom"]:
+            print(distrib)
+            return
+        # If bottom line not reached, send a message telling the worker to
+        # compute values for the next line.
+        line_maker.send({"y": y})
+
+# Initiate work by sending coordinates to the worker.
+line_maker.send({"coords": {"pixel": pixel_coords, "object": object_coords}})
+</script>
+
+<script type="text/python">
+"""Another unrelated script, to show that the browser remains responsive
+during the computation of the Mandelbrot set."""
+
+from browser import bind, document, html, svg
+
+# Add buttons to select pen color
+for color in ["black", "red", "green", "blue", "purple", "brown"]:
+    document["select_color"] <= html.BUTTON("&nbsp;",
+                                     style={"background-color": color,
+                                            "border-color": "black",
+                                            "border-style": "solid",
+                                            "border-width": 1})
+
+drawing = False
+mouse_pos = [None, None]
+color = "black"
+
+@bind("button", "click")
+def change_color(ev):
+    """Select pen color."""
+    global color
+    color = ev.target.style.backgroundColor
+
+# Difference between (x, y) DOM coordinates and (x, y) coordinates relative
+# to the top left corner of the SVG area. Set only once, when the user clicks
+# in the area for the first time.
+offset = [None, None]
+
+panel = document["panel"]
+
+def dom2svg(x, y):
+    """Converts the DOM coordinates x, y to coordinates relative to the top
+    left corner of the SVG area."""
+    pt = panel.createSVGPoint()
+    pt.x = x
+    pt.y = y
+    return pt.matrixTransform(panel.getScreenCTM().inverse())
+
+@bind(panel, "mousedown")
+def mousedown(ev):
+    """Start drawing."""
+    global drawing
+    drawing = True
+    mouse_pos[0] = ev.x
+    mouse_pos[1] = ev.y
+    if offset[0] is None:
+        coords = dom2svg(ev.x, ev.y)
+        offset[0] = ev.x - coords.x
+        offset[1] = ev.y - coords.y
+
+@bind(panel, "mousemove")
+def mousemove(ev):
+    if drawing:
+        # Draw line between previous position and new position
+        # Positions are relative to the SVG top left corner
+        panel <= svg.line(x1=mouse_pos[0] - offset[0],
+                          y1=mouse_pos[1] - offset[1],
+                          x2=ev.x - offset[0],
+                          y2=ev.y - offset[1],
+                          stroke=color,
+                          stroke_width=2)
+        mouse_pos[0] = ev.x
+        mouse_pos[1] = ev.y
+
+@bind(panel, "mouseup")
+def mouseup(ev):
+    """End drawing."""
+    global drawing
+    drawing = False
+
+</script>
+
+<h2>Drawing a Mandelbrot set, using a Web Worker for computation</h2>
+
+<table width="100%">
+
+<tr>
+
+<td width="20%" style="padding:1em;">
+This example shows how to use the <a href="/static_doc/en/worker.html">browser.worker</a>
+module to keep an application responsive while making relatively complex
+computing (here the famous Mandelbrot set).
+</td>
+<td>
+<canvas width="300" height="150" id="mandelbrot">
+<i>Sorry, Brython can't make the demo work on your browser ; <br>check if ECMAScript is turned on
+</canvas>
+</td>
+<td>
+<h4>Draw with the mouse</h4>
+Not very interesting, but shows that the script remains responsive while the
+Mandelbrot set is built.
+<p>
+<div id="select_color"></div>
+<svg id="panel" width="400" height="300">
+</svg>
+</td>
+</tr>
+</table>
+
+</body>
+</html>
+
+

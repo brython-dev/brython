@@ -80,34 +80,46 @@ On suppose qu'il y a un DIV avec l'id _result_ dans la page HTML.
 from browser import document, ajax
 
 def on_complete(req):
-   if req.status==200 or req.status==0:
+   if req.status == 200 or req.status == 0:
        document["result"].html = req.text
    else:
-       document["result"].html = "erreur "+req.text
+       document["result"].html = "erreur " + req.text
 
 req = ajax.ajax()
-req.bind('complete',on_complete)
+req.bind('complete', on_complete)
 # envoie une requête POST à l'url
-req.open('POST',url,True)
-req.set_header('content-type','application/x-www-form-urlencoded')
+req.open('POST', url, True)
+req.set_header('content-type', 'application/x-www-form-urlencoded')
 # envoie les données sous forme de dictionnaire
-req.send({'x':0, 'y':1})
+req.send({'x': 0, 'y': 1})
 ```
 
 ### Raccourcis
 
-Les appels GET et POST peuvent être effectués plus simplement avec les
+Les appels peuvent être effectués plus simplement avec les
 fonctions correspondantes :
 
-`get(`_url[, async=True, headers={}, timeout=None, data="", **callbacks]_`)`
+`get(`_url[, blocking=False, headers={}, mode="text", timeout=None, cache=False, data="", **callbacks]_`)`
 
-`post(`_url[, async=True, headers={"Content-Type": _
+et de même pour `delete`, `head` et `options`.
+
+`post(`_url[, blocking=False, headers={"Content-Type": _
 _"application/x-www-form-urlencoded"}, timeout=None, data="", **callbacks]_`)`
+
+et de même pour `put`.
+
+> _blocking_ est un booléen qui indique si la requête doit être bloquante
+> ou non. La valeur par défaut est `False` (la requête est asynchrone)
 
 > _headers_ est un dictionnaire avec les clés-valeurs des entêtes HTTP
 
+> _mode_ est le mode de lecture : "text" ou "binary"
+
+> _cache_ est un booléen qui indique si la requête GET doit utiliser le cache
+> du navigateur
+
 > _data_ est soit une chaine de caractères, soit un dictionnaire. Si c'est un
-> dictionnaire, il est converti en une chaine de la forme `x=1&y=2`.
+> dictionnaire, il est converti en une chaine de la forme `x=1&y=2`
 
 > _timeout_ est la durée en secondes après laquelle la requête est abandonnée
 
@@ -115,6 +127,10 @@ _"application/x-www-form-urlencoded"}, timeout=None, data="", **callbacks]_`)`
 > `on` + nom d'événement (`onloaded`, `oncomplete`...) et comme valeur la
 > fonction qui gère cet événement. La clé `ontimeout` a pour valeur la
 > fonction à appeler si la durée définie dans _timeout_ est dépassée.
+
+Dans la fonction de rappel, l'objet Ajax possède une méthode _read()_ qui lit
+le contenu de la réponse sous forme de chaine si le mode est "text" et sous
+forme de `bytes` si le mode est "binary".
 
 L'exemple ci-dessus peut être réécrit de la façon suivante:
 
@@ -129,6 +145,58 @@ def on_complete(req):
 
 ajax.post(url,
           data={'x': 0, 'y': 1},
-          complete=on_complete)
+          oncomplete=on_complete)
 ```
 
+Lecture d'un fichier en mode binaire:
+
+```python
+from browser import ajax
+
+def read(f):
+    data = f.read()
+    assert isinstance(data, bytes)
+
+req = ajax.get("tests.zip", mode="binary",
+    oncomplete=read)
+```
+
+### Envoi de fichiers
+
+Pour envoyer des fichiers saisis dans un formulaire par une balise du type
+```xml
+<input type="file" name="choosefiles" multiple="multiple">
+```
+on peut utiliser la fonction
+
+`file_upload(`_url, file, [**callbacks]_`)`
+
+> _file_ est l'objet fichier à envoyer vers l'_url_, typiquement le résultat
+> d'une expression
+<blockquote>
+```python
+for file in document["choosefiles"].files:
+    ...
+```
+</blockquote>
+
+Exemple:
+```xml
+<script type="text/python">
+from browser import ajax, bind, document
+
+def upload_ok(req):
+    print("c'est tout bon")
+
+@bind("#upload", "click")
+def uploadfiles(event):
+    for f in document["choosefiles"].files:
+        ajax.file_upload("/cgi-bin/savefile.py", f,
+            oncomplete=upload_ok)
+</script>
+
+<form>
+    <input id="choosefiles" type="file" multiple="multiple" />
+</form>
+<button id="upload">Upload</button>
+```

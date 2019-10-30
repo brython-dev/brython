@@ -12,8 +12,16 @@ var $module = (function($B){
 
 var _b_ = $B.builtins
 
+var responseType = {
+    "text": "text",
+    "binary": "arraybuffer",
+    "dataURL": "arraybuffer"
+}
+
 function handle_kwargs(kw, method){
     var data,
+        cache = "no-cache",
+        format = "text",
         headers = {},
         timeout = {}
     for(var key in kw.$string_dict){
@@ -45,6 +53,10 @@ function handle_kwargs(kw, method){
             }
         }else if(key == "timeout"){
             timeout.seconds = kw.$string_dict[key]
+        }else if(key == "cache"){
+            cache = kw.$string_dict[key]
+        }else if(key == "format"){
+            format = kw.$string_dict[key]
         }
     }
     if(method == "post"){
@@ -58,83 +70,203 @@ function handle_kwargs(kw, method){
     }
     return {
         body: data,
+        cache: cache,
+        format: format,
         timeout: timeout,
         headers: headers
     }
 }
 
-function get(){
-    var $ = $B.args("get", 2, {url: null, async: null},
-            ["url", "async"], arguments, {async: true},
+function ajax(){
+    var $ = $B.args("ajax", 2, {method: null, url: null},
+            ["method", "url"], arguments, {},
             null, "kw"),
+        method = $.method,
         url = $.url,
-        async = $.async,
         kw = $.kw
-    var args = handle_kwargs(kw, "get"),
-        init = {
-            method: "GET",
-            headers: args.headers,
-            cache: "no-cache"
-        }
+    var args = handle_kwargs(kw, "get")
+    if(! args.cache){
+        url = "?ts" + (new Date()).getTime() + "=0"
+    }
     if(args.body){
-        url = url + "?" + args.body
-        console.log("add body", args.body)
+        url = url + (args.cache ? "?" : "&") + args.body
     }
-    var promise = {
+    var func = function(){
+        return new Promise(function(resolve, reject){
+            var xhr = new XMLHttpRequest()
+            xhr.open(method, url, true)
+            for(key in args.headers){
+                xhr.setRequestHeader(key, args.headers[key])
+            }
+            xhr.format = args.format
+            xhr.responseType = responseType[args.format]
+            xhr.onreadystatechange = function(){
+                if(this.readyState == 4){
+                    this.__class__ = HTTPRequest
+                    resolve(this)
+                }
+            }
+            xhr.send()
+        })
+    }
+    func.$infos = {
+        __name__: "ajax_" + method
+    }
+    return {
         __class__: $B.coroutine,
-        $args: [url, init],
-        $func: function(){
-            return fetch.apply(null, promise.$args)
-        }
+        $args: [url, args],
+        $func: func
     }
-    return promise
+}
+
+function event(){
+    // event(element, *names) is a Promise on the events "names" happening on
+    // the element. This promise always resolves (never rejects) with the
+    // first triggered DOM event.
+    var $ = $B.args("event", 1, {element: null},
+            ["element"], arguments, {}, "names", null),
+        element = $.element,
+        names = $.names
+    return new Promise(function(resolve){
+        var callbacks = []
+        names.forEach(function(name){
+            var callback = function(evt){
+                // When one of the handled events is triggered, all bindings
+                // are removed
+                callbacks.forEach(function(items){
+                    $B.DOMNode.unbind(element, items[0], items[1])
+                })
+                resolve($B.$DOMEvent(evt))
+            }
+            callbacks.push([name, callback])
+            $B.DOMNode.bind(element, name, callback)
+        })
+    })
+}
+
+var HTTPRequest = $B.make_class("Request")
+
+HTTPRequest.data = _b_.property.$factory(function(self){
+    if(self.format == "binary"){
+        var view = new Uint8Array(self.response)
+        return _b_.bytes.$factory(Array.from(view))
+    }else if(self.format == "text"){
+        return self.responseText
+    }else if(self.format == "dataURL"){
+        var base64String = btoa(String.fromCharCode.apply(null,
+            new Uint8Array(self.response)))
+        return "data:" + self.getResponseHeader("Content-Type") +
+            ";base64," + base64String
+    }
+})
+
+HTTPRequest.response_headers = _b_.property.$factory(function(self){
+    var headers = self.getAllResponseHeaders()
+    if(headers === null){return _b_.None}
+    var res = _b_.dict.$factory()
+    if(headers.length > 0){
+        // Convert the header string into an array
+        // of individual headers
+        var lines = headers.trim().split(/[\r\n]+/)
+        // Create a map of header names to values
+        lines.forEach(function(line){
+          var parts = line.split(': ')
+          var header = parts.shift()
+          var value = parts.join(': ')
+          res.$string_dict[header] = value
+        })
+    }
+    return res
+})
+
+function get(){
+    var args = ["GET"]
+    for(var i = 0, len = arguments.length; i < len; i++){
+        args.push(arguments[i])
+    }
+    return ajax.apply(null, args)
+}
+
+function iscoroutine(f){
+    return f.__class__ === $B.coroutine
+}
+
+function iscoroutinefunction(f){
+    return (f.$infos.__code__.co_flags & 128) != 0
 }
 
 function post(){
-    var $ = $B.args("post", 1, {url: null},
-            ["url"], arguments, {},
-            null, "kw"),
-        url = $.url,
-        kw = $.kw,
-        data
-    var args = handle_kwargs(kw, "post")
-    var init = {
-            method: "POST",
-            headers: args.headers,
-            body: args.body
-        }
-    var promise = {
-        __class__: $B.coroutine,
-        $args: [url, init],
-        $func: function(){
-            return fetch.apply(null, promise.$args)
-        }
+    var args = ["POST"]
+    for(var i = 0, len = arguments.length; i < len; i++){
+        args.push(arguments[i])
     }
-    return promise
-}
-
-function sleep(seconds){
-    return {
-        __class__: $B.coroutine,
-        $args: [seconds],
-        $func: function(){
-            return new Promise(resolve => setTimeout(resolve, 1000 * seconds))
-        }
-    }
+    return ajax.apply(null, args)
 }
 
 function run(coro){
-    var noop = function(){}
+    var handle_success = function(){
+            $B.leave_frame()
+        },
+        handle_error = function(ev){
+            console.log("handle error, ev", ev)
+            var err_msg = "Traceback (most recent call last):\n"
+            err_msg += $B.print_stack(ev.$stack)
+            err_msg += "\n" + ev.__class__.$infos.__name__ +
+                ': ' + ev.args[0]
+            $B.builtins.print(err_msg)
+            throw ev
+        }
+
     var $ = $B.args("run", 3, {coro: null, onsuccess: null, onerror: null},
             ["coro", "onsuccess", "onerror"], arguments,
-            {onsuccess: noop, onerror: noop},
+            {onsuccess: handle_success, onerror: handle_error},
             null, null),
         coro = $.coro,
         onsuccess = $.onsuccess,
         onerror = $.onerror
-    return $B.coroutine.send(coro).then(onsuccess).catch(onerror)
+
+    if(onerror !== handle_error){
+        function error_func(exc){
+            try{
+                onerror(exc)
+            }catch(err){
+                handle_error(err)
+            }
+        }
+    }else{
+        error_func = handle_error
+    }
+    // Add top frame a second time to get the correct frame when the async
+    // function exits
+    $B.frames_stack.push($B.last($B.frames_stack))
+    $B.coroutine.send(coro).then(onsuccess).catch(error_func)
+    return _b_.None
 }
 
-return {get: get, post: post, run: run, sleep: sleep}
+function sleep(seconds){
+    var func = function(){
+        return new Promise(resolve => setTimeout(
+            function(){resolve(_b_.None)}, 1000 * seconds))
+    }
+    func.$infos = {
+        __name__: "sleep"
+    }
+    return {
+        __class__: $B.coroutine,
+        $args: [seconds],
+        $func: func
+    }
+}
+
+return {
+    ajax: ajax,
+    event: event,
+    get: get,
+    iscoroutine: iscoroutine,
+    iscoroutinefunction: iscoroutinefunction,
+    post: post,
+    run: run,
+    sleep: sleep
+}
 
 })(__BRYTHON__)

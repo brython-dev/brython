@@ -4,14 +4,27 @@ Desplegando una aplicación Brython en un servidor
 La aplicación se puede desplegar subiendo todo el contenido del directorio
 al servidor.
 
-También puedes generar un fichero __brython_modules.js__ siguiendo las
-indicaciones en la página [import](import.html), y desplegando solo :
+Desde la versión 3.4.0 es posible desplegar una aplicación Brython usando
+la misma herramienta que se usa para los paquetes de CPython, i.e. `pip`.
 
-- la página HTML con la aplicación
-- los ficheros __brython.js__ y __brython_modules.js__
-- Si hubiera, los scripts Python incluidos en la página mediante
+Para ello, instala el paquete Brython (`pip install brython`),
+abre una consola y en el directorio de la aplicación ejecuta:
+```console
+python -m brython --make_dist
+```
+Durante la primera ejecución el usuario deberá proporcionar la información requerida
+para un paquete : su nombre, número de versión, etc. Esta información se almacena en un fichero
+__brython_setup.json__ que se puede modificar a posteriori.
 
-    <script type="text/python" src="..."></script>
+El comando creará un subdirectorio __\_\_dist\_\___ ; en este subdirectorio se incluye el script
+__setup.py__ que se usa para crear el paquete para la aplicación y para desplegar
+la misma en PyPI (Python Package Index).
 
-- el resto de ficheros usados por la aplicación (imágenes, sonidos, ficheros de texto, 
-  hojas de estilo...) si los hubiera
+Los usuarios podrían, después, instalar el paquete CPython usando el comando tradicional:
+```console
+pip install <nombre_aplicacion>
+```
+e instala la aplicación Brython en un directorio mediante:
+```console
+python -m <nombre_aplicacion> --install
+```

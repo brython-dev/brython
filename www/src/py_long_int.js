@@ -56,6 +56,46 @@ function add_pos(v1, v2){
     return {__class__: long_int, value: res, pos: true}
 }
 
+var len = ((Math.pow(2, 53) - 1) + '').length - 1
+
+function binary(t){
+    var nb_chunks = Math.ceil(t.length / len),
+        chunks = [],
+        pos,
+        start,
+        nb,
+        bin = []
+    for(var i = 0; i < nb_chunks; i++){
+        pos = t.length - (i + 1) * len
+        start = Math.max(0, pos)
+        nb = pos - start
+        chunks.push(t.substr(start, len + nb))
+    }
+    chunks = chunks.reverse()
+    chunks.forEach(function(chunk, i){
+        chunks[i] = parseInt(chunk)
+    })
+
+    var rest
+    var carry = Math.pow(10, 15)
+
+    while(chunks[chunks.length - 1] > 0){
+        chunks.forEach(function(chunk, i){
+            rest = chunk % 2
+            chunks[i] = Math.floor(chunk / 2)
+            if(rest && i < chunks.length - 1){
+                chunks[i + 1] += carry
+            }
+        })
+        bin.push(rest)
+        if(chunks[0] == 0){
+            chunks.shift()
+        }
+    }
+    bin = bin.reverse().join('')
+    return bin
+}
+
 function check_shift(shift){
     // Check the argument of >> and <<
     if(! isinstance(shift, long_int)){
@@ -83,10 +123,80 @@ function comp_pos(v1, v2){
     return 0
 }
 
+function divmod_by_safe_int(t, n){
+    // Division of the string t holding a long integer in base 10 by the
+    // "safe" positive integer n
+
+    if(n == 1){return [t, 0]}
+
+    // Number of digits such that each intermediate result is a safe integer
+    var len = (Math.floor((Math.pow(2, 53) - 1) / n) + '').length - 1,
+        nb_chunks = Math.ceil(t.length / len), // number of items after split
+        chunks = [],
+        pos,
+        start,
+        nb,
+        in_base = []
+
+    // Split string into chunks of at most len digits
+    for(var i = 0; i < nb_chunks; i++){
+        pos = t.length - (i + 1) * len
+        start = Math.max(0, pos)
+        nb = pos - start
+        chunks.push(t.substr(start, len + nb))
+    }
+    chunks = chunks.reverse()
+
+    // Transform into (safe) integers
+    chunks.forEach(function(chunk, i){
+        chunks[i] = parseInt(chunk)
+    })
+
+    var rest,
+        carry = Math.pow(10, len),
+        x
+
+    chunks.forEach(function(chunk, i){
+        rest = chunk % n
+        chunks[i] = Math.floor(chunk / n)
+        if(i < chunks.length - 1){
+            // len is such that that this number is a safe integer
+            chunks[i + 1] += carry * rest
+        }
+    })
+    if(chunks[0] == 0){
+        chunks.shift()
+        if(chunks.length == 0){
+            return "0"
+        }
+    }
+
+    // Build result string
+    x = chunks[0] + ''
+    chunks.forEach(function(chunk, i){
+        if(i > 0){ // Pad with 0 if required
+            x += "0".repeat(len - chunk.toString().length) + chunk
+        }
+    })
+    return [x, rest]
+}
+
 function divmod_pos(v1, v2){
     // v1, v2 : strings, represent 2 positive integers A and B
     // Return [a, b] where a and b are instances of long_int
     // a = A // B, b = A % B
+    var iv1 = parseInt(v1),
+        iv2 = parseInt(v2),
+        res1
+    if(iv1 < $B.max_int && iv2 < $B.max_int){
+        var rest = iv1 % iv2,
+            quot = Math.floor(iv1 / iv2).toString()
+        var res1 = [
+            {__class__:long_int, value: quot.toString(), pos: true},
+            {__class__:long_int, value: rest.toString(), pos: true}
+        ]
+        return res1
+    }
     var quotient, mod
     if(comp_pos(v1, v2) == -1){ // a < b
         quotient = "0"
@@ -113,9 +223,15 @@ function divmod_pos(v1, v2){
         while(true){
             // Uses JS division to test an approximate result
             var candidate = Math.floor(parseInt(left) / parseInt(v2)) + ""
+            if(candidate == "10"){
+                // Might happen for big numbers with v2 slightly bigger
+                // than left, eg with left = 1000000000000000000000000000000
+                // and v2 = 100000000000000000000005772299
+                candidate = "9"
+            }
 
             // Check that candidate is the correct result
-            // Start by computing candidate*v2 : for this, use the table
+            // Start by computing candidate * v2 : for this, use the table
             // mv2, which stores the multiples of v2 already calculated
             if(mv2[candidate] === undefined){
                 mv2[candidate] = mul_pos(v2, candidate).value
@@ -131,7 +247,7 @@ function divmod_pos(v1, v2){
             // Add candidate to the quotient
             quotient += candidate
 
-            // New value for left : left - v2*candidate
+            // New value for left : left - v2 * candidate
             left = sub_pos(left, mv2[candidate]).value
 
             // Stop if all digits in v1 have been used
@@ -144,6 +260,15 @@ function divmod_pos(v1, v2){
         // Modulo is A - (A//B)*B
         mod = sub_pos(v1, mul_pos(quotient, v2).value)
     }
+    /*
+    if(res1 !== undefined){
+        if(quotient != res1[0].value){
+            console.log("quotient", quotient, res1[0].value)
+        }else if(parseInt(mod.value) !== res1[1]){
+            console.log("rest", mod, res1[1])
+        }
+    }
+    */
     return [long_int.$factory(quotient), mod]
 }
 
@@ -160,6 +285,16 @@ function split_chunks(s, size){
 }
 
 function mul_pos(x, y){
+    var ix = parseInt(x),
+        iy = parseInt(y),
+        z = ix * iy
+    if(z < $B.max_int){
+        return {
+            __class__: long_int,
+            value: z.toString(),
+            pos: true
+        }
+    }
     // To multiply long integers in strings x and y, split the strings in
     // chunks of chunk_size digits to get integers than can be safely
     // multiplied by Javascript
@@ -206,7 +341,12 @@ function mul_pos(x, y){
         result = s + result
         i++
     }
-    return long_int.$factory(result)
+    try{
+        return long_int.$factory(result)
+    }catch(err){
+        console.log(x, y, products, result)
+        throw err
+    }
 }
 
 function sub_pos(v1, v2){
@@ -231,10 +371,13 @@ function sub_pos(v1, v2){
         i1--
         sv = parseInt(v1.charAt(i1))
         x = (sv - carry - parseInt(v2.charAt(i)))
+        if(isNaN(x)){console.log("x is NaN", v1.length, v2.length, i, i1, sv, carry, i, v2.charAt(i))}
         if(x < 0){res = (10 + x) + res; carry = 1}
         else{res = x + res; carry = 0}
     }
 
+
+    if(res.startsWith("NaN")){alert(res)}
     // If there are remaining digits in v1, substract the carry, if any
     while(i1 > 0){
         i1--
@@ -245,6 +388,9 @@ function sub_pos(v1, v2){
 
     // Remove leading zeros and return the result
     while(res.charAt(0) == "0" && res.length > 1){res = res.substr(1)}
+    if(res.startsWith("NaN")){
+        console.log("hoho !!", v1, v2, v1 >= v2, res)
+    }
     return {__class__: long_int, value: res, pos: true}
 }
 
@@ -343,7 +489,7 @@ long_int.__and__ = function(self, other){
     var start = v1.length - v2.length,
         res = ""
     for(var i = 0; i < v2.length; i++){
-        if(v1.charAt(start+i) == "1" && v2.charAt(i) == "1"){res += "1"}
+        if(v1.charAt(start + i) == "1" && v2.charAt(i) == "1"){res += "1"}
         else{res += "0"}
     }
     // Return the long_int instance represented by res in base 2
@@ -384,7 +530,12 @@ long_int.__floordiv__ = function(self, other){
         return _b_.float.$factory(parseInt(self.value) / other)
     }
     if(typeof other == "number"){
-        other = long_int.$factory(_b_.str.$factory(other))
+        var t = self.value,
+            res = divmod_by_safe_int(t, other),
+            pos = other > 0 ? self.pos : !self.pos
+        return {__class__: long_int,
+                value: res[0],
+                pos: pos}
     }
     return intOrLong(long_int.__divmod__(self, other)[0])
 }
@@ -408,7 +559,6 @@ long_int.__index__ = function(self){
     // Used by bin()
     // returns a string with the binary value of self
     // The algorithm computes the result of the floor division of self by 2
-
     var res = '',
         temp = self.value,
         d
@@ -683,6 +833,9 @@ long_int.real = function(self){return self}
 
 long_int.to_base = function(self, base){
     // Returns the string representation of self in specified base
+    if(base == 2){
+        return binary(self.value)
+    }
     var res = "",
         v = self.value
     while(v > 0){
@@ -734,6 +887,7 @@ function intOrLong(long){
 }
 
 long_int.$factory = function(value, base){
+    // console.log("longint factory", value, base)
     if(arguments.length > 2){
         throw _b_.TypeError.$factory("long_int takes at most 2 arguments (" +
             arguments.length + " given)")

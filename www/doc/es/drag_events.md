@@ -45,7 +45,7 @@ Atributo del objeto `DOMEvent`
 ------------------------------
 
 `dataTransfer`
-> un "data store" usado para almacenar infurmación durante el proceso de arrastrar y soltar (drag and drop)
+> un "data store" usado para almacenar información durante el proceso de arrastrar y soltar (drag and drop)
 
 Atributos y métodos del data store
 ---------------------------------
@@ -54,7 +54,7 @@ El "data store" posee los siguientes atributos y métodos :
 
 `dropEffect`
 
-> una cadena que representa el fecto que se usará, y deberá ser siempre uno de los valores posibles de `effectAllowed`.
+> una cadena que representa el efecto que se usará, y deberá ser siempre uno de los valores posibles de `effectAllowed`.
 
 > para los eventos *dragenter* y *dragover*, el `dropEffect` se inicializará basándose en la acción que esté solicitando el usuario. Como se determine esto depende de la plataforma, pero el usuario, normalmente, puede pulsar teclas de modificación que ajusten la acción que se desea. Dentro del manejador de un evento para los eventos *dragenter* y *dragover*, el `dropEffect` debería ser modificado si la acción solicitada por el usuario no es la deseada.
 

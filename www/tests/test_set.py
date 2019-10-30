@@ -71,12 +71,26 @@ class foo(set):
 x = foo([1, 2])
 assert x.show() == 'show'
 
+# issue 456
+assert {0, 1, 2}.issuperset([0, 1])
+assert not {0, 1, 2}.issuperset([2, 3])
+
+assert {0, 1}.issubset(range(3))
+assert not {7, 8}.issubset([6, 7])
+
 # issue 543
 assert {''} | {0} == {'', 0}
 
 s = set(range(20))
 s.intersection_update({5})
 assert s == {5}
+
+# issue 558
+a = set([5, 10])
+b = set(a)
+a.difference_update([5])
+assert a == {10}
+assert b == {5, 10}
 
 # issue 797 test set inplace operators
 # from stdlib Lib/test/test_set.py
@@ -217,5 +231,24 @@ from copy import deepcopy
 a = {1}
 b = deepcopy(a)
 assert b == {1}
+
+# issue 1052
+t1 = {1, "a", (7,), 2, (8,)}
+t2 = {2, (8,), 1, "a", (7,)}
+assert str(t1) == str(t2)
+assert list(t1) == list(t2)
+assert {tuple({1, 2}), tuple({2,1})} == {(1, 2)}
+
+# issue 1119
+L1 = [0, 70.5, 80, 10, 10, 20.0, 20.0, 40, 40.0, 60.0, 60, 70.5, 70.5, 80]
+S = set(L1)
+L2 = sorted(S)
+assert L2 == [0, 10, 20.0, 40, 60.0, 70.5, 80]
+
+# issue with floats
+s = {2.7}
+assert 2.7 in s
+s2 = s.copy()
+assert 2.7 in s2
 
 print("passed all tests..")

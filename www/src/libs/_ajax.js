@@ -28,9 +28,29 @@ function set_timeout(self, timeout){
     }
 }
 
+function _read(req){
+    var xhr = req.js,
+        res
+    if(xhr.responseType == "json"){
+        return $B.structuredclone2pyobj(xhr.response)
+    }
+    if(xhr.responseType == "arraybuffer"){
+        var abuf = new Uint8Array(xhr.response)
+        res = []
+        for(var i = 0, len = abuf.length; i < len; i++){
+            res.push(abuf[i])
+        }
+        return _b_.bytes.$factory(res)
+    }else{
+        return xhr.responseText
+    }
+}
+
 function handle_kwargs(self, kw, method){
     var data,
         headers,
+        cache,
+        mode,
         timeout = {}
     for(var key in kw.$string_dict){
         if(key == "data"){
@@ -60,18 +80,29 @@ function handle_kwargs(self, kw, method){
             if(event == "timeout"){
                 timeout.func = kw.$string_dict[key]
             }else{
-                ajax.bind(self, event, kw.$string_dict[key])
+                var f = kw.$string_dict[key]
+                ajax.bind(self, event, f)
+            }
+        }else if(key == "mode"){
+            if(kw.$string_dict[key] == "binary"){
+                self.js.responseType = "arraybuffer"
+                mode = "binary"
+            }else if(kw.$string_dict[key] == "json"){
+                self.js.responseType = "json"
+                mode = "json"
             }
         }else if(key == "timeout"){
             timeout.seconds = kw.$string_dict[key]
+        }else if(key == "cache"){
+            cache = kw.$string_dict[key]
         }
     }
-    if(method == "post" && ! headers){
+    if((method == "post" || method == "put") && ! headers){
         // For POST requests, set default header
         self.js.setRequestHeader("Content-type",
                                  "application/x-www-form-urlencoded")
     }
-    return [data, timeout]
+    return {cache: cache, data:data, mode: mode, timeout: timeout}
 }
 
 var ajax = {
@@ -84,6 +115,8 @@ var ajax = {
             return function(params){
                 return ajax.send(self, params)
             }
+        }else if(attr == 'xml'){ // alias
+            attr = 'responseXML'
         }
         // Otherwise default to JSObject method
         return $B.JSObject.__getattribute__(self, attr)
@@ -97,7 +130,7 @@ var ajax = {
         __name__: "ajax"
     },
 
-    bind : function(self, evt, func){
+    bind: function(self, evt, func){
         // req.bind(evt,func) is the same as req.onevt = func
         self.js['on' + evt] = function(){
             try{
@@ -118,7 +151,7 @@ var ajax = {
         return $N
     },
 
-    send : function(self, params){
+    send: function(self, params){
         // params can be Python dictionary or string
         var res = ''
         if(!params){
@@ -160,12 +193,12 @@ var ajax = {
         return $N
     },
 
-    set_header : function(self,key,value){
+    set_header: function(self,key,value){
         self.js.setRequestHeader(key,value)
         self.headers[key.toLowerCase()] = value.toLowerCase()
     },
 
-    set_timeout : function(self, seconds, func){
+    set_timeout: function(self, seconds, func){
         self.js.$requestTimer = setTimeout(
             function() {self.js.abort();func()},
             seconds * 1000)
@@ -203,44 +236,112 @@ ajax.$factory = function(){
     return res
 }
 
-function get(){
-    var $ = $B.args("get", 2, {url: null, async: null},
-            ["url", "async"], arguments, {async: true},
-            null, "kw"),
-        url = $.url,
-        async = $.async,
-        kw = $.kw
+function _request_without_body(){
+    var $ = $B.args(method, 3, {method: null, url: null, blocking: null},
+        ["method", "url", "blocking"], arguments, {blocking: false},
+        null, "kw"),
+    method = $.method,
+    url = $.url,
+    async = !$.blocking,
+    kw = $.kw
     var self = ajax.$factory(),
-        items = handle_kwargs(self, kw, "get"),
-        qs = items[0],
-        timeout = items[1]
+        items = handle_kwargs(self, kw, method),
+        qs = items.data,
+        timeout = items.timeout
     set_timeout(self, timeout)
     if(qs){
         url += "?" + qs
     }
-    self.js.open("GET", url, async)
+    if(! (items.cache === true)){
+        url += (qs ? "&" : "?") + (new Date()).getTime()
+    }
+    // Add function read() to return str or bytes according to mode
+    self.js.read = function(){
+        return _read(self)
+    }
+    self.js.open(method.toUpperCase(), url, async)
     self.js.send()
 }
 
-function post(){
-    var $ = $B.args("get", 2, {url: null, async: null},
-            ["url", "async"], arguments, {async: true},
-            null, "kw"),
-        url = $.url,
-        async = $.async,
-        kw = $.kw,
-        data
+function _request_with_body(){
+    var $ = $B.args(method, 3, {method: null, url: null, blocking: null},
+        ["method", "url", "blocking"], arguments, {blocking: false},
+        null, "kw"),
+    method = $.method,
+    url = $.url,
+    async = !$.blocking,
+    kw = $.kw
+
     var self = ajax.$factory()
-    self.js.open("POST", url, async)
-    var items = handle_kwargs(self, kw, "post"),
-        data = items[0],
-        timeout = items[1]
+    self.js.open(method.toUpperCase(), url, async)
+    var items = handle_kwargs(self, kw, method),
+        data = items.data,
+        timeout = items.timeout
     set_timeout(self, timeout)
+    // Add function read() to return str or bytes according to mode
+    self.js.read = function(){
+        return _read(self)
+    }
     self.js.send(data)
+}
+
+function _delete(){
+    _request_without_body.call(null, "delete", ...arguments)
+}
+
+function get(){
+    _request_without_body.call(null, "get", ...arguments)
+}
+
+function head(){
+    _request_without_body.call(null, "head", ...arguments)
+}
+
+function options(){
+    _request_without_body.call(null, "options", ...arguments)
+}
+
+function post(){
+    _request_with_body.call(null, "post", ...arguments)
+}
+
+function put(){
+    _request_with_body.call(null, "put", ...arguments)
+}
+
+function file_upload(){
+    var $ = $B.args("file_upload", 2, {url: null, "file": file},
+            ["url", "file"], arguments, {}, null, "kw"),
+        url = $.url,
+        file = $.file,
+        kw = $.kw
+
+    var formdata = new FormData()
+    formdata.append('filetosave', file, file.name)
+
+    var self = ajax.$factory()
+    self.js.open('POST', url, True)
+    self.js.send(formdata)
+
+    for(key in kw.$string_dict){
+        if(key.startsWith("on")){
+            ajax.bind(self, key.substr(2), kw.$string_dict[key])
+        }
+    }
 }
 
 $B.set_func_names(ajax)
 
-return {ajax: ajax, Ajax: ajax, get: get, post: post}
+return {
+    ajax: ajax,
+    Ajax: ajax,
+    delete: _delete,
+    file_upload: file_upload,
+    get: get,
+    head: head,
+    options: options,
+    post: post,
+    put: put
+}
 
 })(__BRYTHON__)

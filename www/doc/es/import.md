@@ -2,10 +2,10 @@ Implementación de import
 ------------------------
 
 Como en Python estándar, puedes instalar módulos o paquetes en tu
-aplicación colocándolos en el directorio raíz o en directorios con un 
+aplicación colocándolos en el directorio raíz o en directorios con un
 fichero __\_\_init\_\_.py__.
 
-Destacar que los módulos deben ser codificados en utf-8 ; la declaración de codificación al inicio 
+Destacar que los módulos deben ser codificados en utf-8 ; la declaración de codificación al inicio
 del script será ignarada.
 
 Por ejemplo, la aplicación podría disponer de los siguientes ficheros y
@@ -33,24 +33,26 @@ import app.records
 
 Si la distribución estándar ha sido incluida en la página mediante
 
-    <script type="text/javascript" src="brython_stdlib.js"></script>
+```xml
+<script type="text/javascript" src="brython_stdlib.js"></script>
+```
 
-el script podrá también hacer, por ejemplo, 
+el script podrá también hacer, por ejemplo,
 
 ```python
 import datetime
 import re
 ```
 
-Para importar módulos o paquetes Brython usa el mismo mecanismo que CPython: 
+Para importar módulos o paquetes Brython usa el mismo mecanismo que CPython:
 para resolver "import X", el programa busca un fichero en diferentes sitios:
 
 - un módulo __X__ en la distribución estándar
 - un fichero __X.py__ en el directorio raíz
 - un fichero __\_\_init\_\_.py__ en el directorio __X__
 
-Debido a que el navegador no tiene acceso directo al sistema de ficheros, 
-la búsqueda de un fichero debe realizarse mediante una llamada Ajax, 
+Debido a que el navegador no tiene acceso directo al sistema de ficheros,
+la búsqueda de un fichero debe realizarse mediante una llamada Ajax,
 que devolverá un mensaje de error si no encuentra el fichero en la ruta especificada.
 
 Optimización
@@ -65,15 +67,23 @@ Para optimizar los _imports, si Brython fue instalado usando `pip`, puedes gener
 un fichero __brython_modules.js__ que solo contendrá los módulos usados por la
 aplicación.
 
-Para ello, la lista de los módulos debe ser añadida en un fichero __.bundle-include__ 
-en el directorio raíz y luego ejecutar en la línea de comandos
+Para ello, desde el directorio raíz de la aplicación ejecuta en la línea de comandos
 
-`python -m brython --update`
+```console
+python -m brython --modules
+```
 
-Para obtener la lista de los módulos usados puedes ejecutar la aplicación en un navegador, 
-abre la consola del navegador y ejecuta el comando:
+Ten en cuenta que este programa analiza el código Brython en todos los scripts, módulos
+y páginas HTML del directorio y todos sus sub-directorios. La versión CPython
+usada debe ser compatible con el código Brython: por ejemplo, si existen
+f-strings en el código Brython, se requiere usar CPython 3.6+, si no obtendrás
+errores de sintaxis.
 
-`__BRYTHON__.imports()`
-
-Esto abre una nueva ventana con la lista de los módulos usados que puedes copiar y pegar
-en __.bundle-include__.
+Puedes reemplazar todas las ocurrencias de
+```xml
+<script type="text/javascript" src="brython_stdlib.js"></script>
+```
+por
+```xml
+<script type="text/javascript" src="brython_modules.js"></script>
+```

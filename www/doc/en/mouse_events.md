@@ -2,7 +2,7 @@ Mouse events
 ============
 
 <script type="text/python">
-from browser import doc, alert
+from browser import document, alert
 </script>
 
 The mouse-related events (movement, pressing a button) are
@@ -193,3 +193,15 @@ For mouse events, the instance of `DOMEvent` has the following attributes
 
 </table>
 
+If the target of the event is an SVG element (the container defined by a 
+&lt;SVG&gt; tag), the event has the additional attributes:
+
+<table cellpadding=3 border=1>
+
+<tr>
+  <td>*svgX, svgY*</td>
+  <td>the X, Y coordinates of the mouse pointer, relatively to the upper left
+  corner of the SVG element</td>
+</tr>
+
+</table>

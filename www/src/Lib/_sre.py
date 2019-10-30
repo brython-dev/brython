@@ -24,7 +24,7 @@ import sys
 
 # Identifying as _sre from Python 2.3 or 2.4
 #if sys.version_info[:2] >= (2, 4):
-MAGIC = 20031017
+MAGIC = 20171005
 #else:
 #    MAGIC = 20030419
 

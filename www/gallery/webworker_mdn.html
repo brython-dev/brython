@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport" content="width=device-width">
+
+<title>Web Workers basic example</title>
+
+<link rel="stylesheet" href="/static_doc/doc_brython.css">
+<style>
+body{
+    margin-left: 3em;
+}
+</style>
+<script type="text/javascript" src="/src/brython.js"></script>
+<script type="text/javascript" src="/src/brython_stdlib.js"></script>
+
+<script type="text/python" src="show_source.py"></script>
+</head>
+
+<body onload="brython(1)">
+<h1>WebWorkers basic example</h1>
+Adapted from Mozilla Developer Network's
+<a href="https://github.com/mdn/simple-web-worker">Simple Web Worker</a>
+example
+<p>
+<div class="controls" tabindex="0">
+
+  <form>
+    <div>
+      <label for="number1">Multiply number 1: </label>
+      <input type="text" id="number1" autocomplete="off" value="0">
+    </div>
+    <div>
+      <label for="number2">Multiply number 2: </label>
+      <input type="text" id="number2" autocomplete="off" value="0">
+    </div>
+  </form>
+
+  <p class="result">Result: 0</p>
+
+</div>
+
+<script type="text/python" class="webworker" id="worker">
+"""Web Worker script."""
+
+# In web workers, "window" is replaced by "self".
+from browser import bind, self
+
+@bind(self, "message")
+def message(evt):
+    """Handle a message sent by the main script.
+    evt.data is the message body.
+    """
+    try:
+        result = int(evt.data[0]) * int(evt.data[1])
+        workerResult = f'Result: {result}'
+        # Send a message to the main script.
+        # In the main script, it will be handled by the function bound to
+        # the event "message" for the worker.
+        self.send(workerResult)
+    except ValueError:
+        self.send('Please write two numbers')
+</script>
+
+<script type="text/python">
+"""Main script."""
+
+from browser import bind, document, worker
+
+result = document.select_one('.result')
+inputs = document.select("input")
+
+
+# Create a web worker, identified by a script id in this page.
+myWorker = worker.Worker("worker")
+
+@bind(inputs, "change")
+def change(evt):
+    """Called when the value in one of the input fields changes."""
+    # Send a message (here a list of values) to the worker
+    myWorker.send([x.value for x in inputs])
+    
+@bind(myWorker, "message")
+def onmessage(e):
+    """Handles the messages sent by the worker."""
+    result.text = e.data
+        
+    </script>
+  </body>
+</html>

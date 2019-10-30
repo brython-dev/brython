@@ -33,7 +33,7 @@ Javascript, il faut plutôt affecter un id à l'élément :
 et définir le lien entre cet élément et un événement _click_ par :
 
 ```python
-document['echo'].bind('click',echo)
+document['echo'].bind('click', echo)
 ```
 
 Une autre possibilité est de forcer l'inscription de _echo_ dans l'espace de
@@ -62,7 +62,7 @@ Par exemple :
 
 ```xml
 <script type="text/javascript">
-circle = {surface:function(r){return 3.14*r*r}}
+circle = {surface: function(r){return 3.14 * r * r}}
 </script>
 
 <script type="text/python">
@@ -128,12 +128,12 @@ Par exemple :
 
 ```xml
 <script type="text/javascript">
-function Rectangle(x0,y0,x1,y1){
+function Rectangle(x0, y0, x1, y1){
     this.x0 = x0
     this.y0 = y0
     this.x1 = x1
     this.y1 = y1
-    this.surface = function(){return (x1-x0)*(y1-y0)}
+    this.surface = function(){return (x1 - x0) * (y1 - y0)}
 }
 </script>
 
@@ -141,7 +141,7 @@ function Rectangle(x0,y0,x1,y1){
 from browser import alert, window
 
 rectangle = window.Rectangle
-alert(rectangle.new(10,10,30,30).surface())
+alert(rectangle.new(10, 10, 30, 30).surface())
 </script>
 ```
 

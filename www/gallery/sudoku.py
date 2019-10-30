@@ -3,9 +3,15 @@
 #
 # Adapted for Brython by Pierre Quentel
 
-# load pre-computed tables
-import json
-data = json.loads(open('sudoku.json').read())
+# Load pre-computed tables
+# Don't use the stdlib module json (much too slow), use Javascript object
+# JSON instead
+from browser import window
+
+json = window.JSON
+src = open('sudoku.json').read()
+data = json.parse(src)
+
 w2q = data['w2q']
 q2w = data['q2w']
 w2q2w = data['w2q2w']
@@ -36,9 +42,9 @@ def search(w0s,q2nw,takens,ws) :
                         w0s.append((set(q2w[q])-takens).pop())
         if len(ws)>80 :
             raise Completed(ws)
-        w1,w0 = set(q2w[q2nw.index(2)])-takens 
+        w1,w0 = set(q2w[q2nw.index(2)])-takens
         try : search([w1],q2nw[:],takens.copy(),ws.copy())
-        except KeyError : 
+        except KeyError :
             w0s.append(w0)
 
 if __name__=='__main__':

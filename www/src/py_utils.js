@@ -9,22 +9,18 @@ var _b_ = $B.builtins,
 $B.args = function($fname, argcount, slots, var_names, args, $dobj,
     extra_pos_args, extra_kw_args){
     // builds a namespace from the arguments provided in $args
-    // in a function defined like foo(x,y,z=1,*args,u,v,**kw) the parameters are
-    // $fname = "f"
-    // argcount = 3 (for x, y , z)
-    // slots = {x:null, y:null, z:null, u:null, v:null}
-    // var_names = ['x', 'y', 'z', 'u', 'v']
-    // $dobj = {'z':1}
-    // extra_pos_args = 'args'
-    // extra_kw_args = 'kw'
+    // in a function defined as
+    //     foo(x, y, z=1, *args, u, v, **kw)
+    // the parameters are
+    //     $fname = "f"
+    //     argcount = 3 (for x, y , z)
+    //     slots = {x:null, y:null, z:null, u:null, v:null}
+    //     var_names = ['x', 'y', 'z', 'u', 'v']
+    //     $dobj = {'z':1}
+    //     extra_pos_args = 'args'
+    //     extra_kw_args = 'kw'
+    //     kwonlyargcount = 2
 
-    /*
-    if($B.fargs[$fname] !== undefined){
-        $B.fargs[$fname]++
-    }else{
-        $B.fargs[$fname] = 1
-    }
-    */
     var $args = []
     if(Array.isArray(args)){$args = args}
     else{
@@ -35,7 +31,17 @@ $B.args = function($fname, argcount, slots, var_names, args, $dobj,
     }
     var has_kw_args = false,
         nb_pos = $args.length,
-        filled = 0
+        filled = 0,
+        extra_kw,
+        only_positional
+
+    // If the function definition indicates the end of positional arguments,
+    // store the position and remove "/" from variable names
+    var end_positional = var_names.indexOf("/")
+    if(end_positional != -1){
+        var_names.splice(end_positional, 1)
+        only_positional = var_names.slice(0, end_positional)
+    }
 
     // If the function call had keywords arguments, they are in the last
     // element of $args
@@ -56,7 +62,7 @@ $B.args = function($fname, argcount, slots, var_names, args, $dobj,
     }
     if(extra_kw_args){
         // Build a dict object faster than with _b_.dict()
-        slots[extra_kw_args] = {
+        extra_kw = {
             __class__: _b_.dict,
             $numeric_dict: {},
             $object_dict: {},
@@ -68,7 +74,7 @@ $B.args = function($fname, argcount, slots, var_names, args, $dobj,
 
     if(nb_pos > argcount){
         // More positional arguments than formal parameters
-        if(extra_pos_args === null){
+        if(extra_pos_args === null || extra_pos_args == "*"){
             // No parameter to store extra positional arguments :
             // thow an exception
             msg = $fname + "() takes " + argcount + " positional argument" +
@@ -93,31 +99,38 @@ $B.args = function($fname, argcount, slots, var_names, args, $dobj,
 
     if(filled == argcount && argcount === var_names.length &&
             ! has_kw_args){
+        if(extra_kw_args){
+            slots[extra_kw_args] = extra_kw
+        }
         return slots
     }
 
     // Then fill slots with keyword arguments, if any
     if(has_kw_args){
         for(var key in kw_args){
-            var value = kw_args[key]
-            if(slots[key] === undefined){
+            var value = kw_args[key],
+                key1 = $B.to_alias(key)
+            if(slots[key1] === undefined){
                 // The name of the keyword argument doesn't match any of the
                 // formal parameters
                 if(extra_kw_args){
                     // If there is a place to store extra keyword arguments
                     if(key.substr(0, 2) == "$$"){key = key.substr(2)}
-                    slots[extra_kw_args].$string_dict[key] = value
+                    extra_kw.$string_dict[key] = value
                 }else{
                     throw _b_.TypeError.$factory($fname +
                         "() got an unexpected keyword argument '" + key + "'")
                 }
-            }else if(slots[key] !== null){
+            }else if(slots[key1] !== null){
                 // The slot is already filled
                 throw _b_.TypeError.$factory($fname +
                     "() got multiple values for argument '" + key + "'")
+            }else if(only_positional && only_positional.indexOf(key1) > -1){
+                throw _b_.TypeError.$factory($fname + "() got an " +
+                    "unexpected keyword argument '" + key + "'")
             }else{
                 // Fill the slot with the key/value pair
-                slots[key] = value
+                slots[key1] = value
             }
         }
     }
@@ -143,6 +156,10 @@ $B.args = function($fname, argcount, slots, var_names, args, $dobj,
             throw _b_.TypeError.$factory(msg)
         }
 
+    }
+
+    if(extra_kw_args){
+        slots[extra_kw_args] = extra_kw
     }
 
     return slots
@@ -174,11 +191,9 @@ $B.get_class = function(obj){
         switch(typeof obj) {
             case "number":
                 if(obj % 1 === 0){ // this is an int
-                   obj.__class__ = _b_.int
                    return _b_.int
                 }
                 // this is a float
-                obj.__class__ = _b_.float
                 return _b_.float
             case "string":
                 return _b_.str
@@ -188,6 +203,7 @@ $B.get_class = function(obj){
                 obj.__class__ = $B.Function
                 return $B.Function
             case "object":
+                if(obj.$class){return obj.$class} // module object
                 if(Array.isArray(obj)){
                     if(Object.getPrototypeOf(obj) === Array.prototype){
                         obj.__class__ = _b_.list
@@ -204,13 +220,6 @@ $B.get_class = function(obj){
 
 $B.class_name = function(obj){
     return $B.get_class(obj).$infos.__name__
-}
-
-$B.$mkdict = function(glob, loc){
-    var res = {}
-    for(var arg in glob){res[arg] = glob[arg]}
-    for(var arg in loc){res[arg] = loc[arg]}
-    return res
 }
 
 $B.$list_comp = function(items){
@@ -328,7 +337,8 @@ $B.$search = function(name, global_ns){
     else if(frame[3][name] !== undefined){return frame[3][name]}
     else if(_b_[name] !== undefined){return _b_[name]}
     else{
-        if(frame[0] == frame[2] || frame[1].$type == "class"){
+        if(frame[0] == frame[2] || frame[1].$type == "class" ||
+                frame[1].$exec_locals){
             throw _b_.NameError.$factory(
                 "name '" + name + "' is not defined")}
         else{
@@ -367,22 +377,27 @@ $B.$local_search = function(name){
     var frame = $B.last($B.frames_stack)
     if(frame[1][name] !== undefined){return frame[1][name]}
     else{
-        throw _b_.UnboundLocalError.$factory("local variable '" + name +
-                "' referenced before assignment")
+        throw _b_.UnboundLocalError.$factory("local variable '" +
+            $B.from_alias(name) + "' referenced before assignment")
     }
 }
 
 $B.$check_def = function(name, value){
     // Check if value is not undefined
-    if(value !== undefined){return value}
-    throw _b_.NameError.$factory("name '" + name + "' is not defined")
+    if(value !== undefined){
+        return value
+    }else if(_b_[name] !== undefined){ // issue 1133
+        return _b_[name]
+    }
+    throw _b_.NameError.$factory("name '" + $B.from_alias(name) +
+        "' is not defined")
 }
 
 $B.$check_def_local = function(name, value){
     // Check if value is not undefined
     if(value !== undefined){return value}
-    throw _b_.UnboundLocalError.$factory("local variable '" + name +
-        "' referenced before assignment")
+    throw _b_.UnboundLocalError.$factory("local variable '" +
+        $B.from_alias(name) + "' referenced before assignment")
 }
 
 $B.$check_def_free = function(name, value){
@@ -395,7 +410,7 @@ $B.$check_def_free = function(name, value){
         res = $B.frames_stack[i][3][name]
         if(res !== undefined){return res}
     }
-    throw _b_.NameError.$factory("free variable '" + name +
+    throw _b_.NameError.$factory("free variable '" + $B.from_alias(name) +
         "' referenced before assignment in enclosing scope")
 }
 
@@ -417,7 +432,7 @@ $B.$check_def_free1 = function(name, scope_id){
             if(res !== undefined){return res}
         }
     }
-    throw _b_.NameError.$factory("free variable '" + name +
+    throw _b_.NameError.$factory("free variable '" + $B.from_alias(name) +
         "' referenced before assignment in enclosing scope")
 }
 
@@ -429,12 +444,17 @@ $B.$JS2Py = function(src){
         return _b_.float.$factory(src)
     }
     if(src === null || src === undefined){return _b_.None}
+    if(Array.isArray(src) &&
+            Object.getPrototypeOf(src) === Array.prototype){
+        var res = []
+        for(var i = 0, len = src.length; i< len; i++){
+            res.push($B.$JS2Py(src[i]))
+        }
+        return res
+    }
     var klass = $B.get_class(src)
     if(klass !== undefined){
-        if(klass === _b_.list){
-            if(src.__class__){return src}
-            return $B.JSArray.$factory(src) // defined in py_list.js
-        }else if(klass === $B.JSObject){
+        if(klass === $B.JSObject){
             src = src.js
         }else{
             return src
@@ -444,14 +464,6 @@ $B.$JS2Py = function(src){
         if($B.$isNode(src)){return $B.DOMNode.$factory(src)}
         if($B.$isEvent(src)){return $B.$DOMEvent(src)}
         if($B.$isNodeList(src)){return $B.DOMNode.$factory(src)}
-        if(Array.isArray(src) &&
-                Object.getPrototypeOf(src) === Array.prototype){
-            var res = []
-            for(var i = 0, len = src.length; i< len; i++){
-                res.push($B.$JS2Py(src[i]))
-            }
-            return res
-        }
     }
     return $B.JSObject.$factory(src)
 }
@@ -623,8 +635,6 @@ $B.set_list_slice_step = function(obj, start, stop, step, value){
     }
 }
 
-$B.nbsi = 0
-$B.siklass = {}
 $B.$setitem = function(obj, item, value){
     if(Array.isArray(obj) && obj.__class__ === undefined &&
             typeof item == "number" &&
@@ -643,13 +653,6 @@ $B.$setitem = function(obj, item, value){
         return
     }else if(obj.__class__ === _b_.list){
         return _b_.list.$setitem(obj, item, value)
-    }
-    $B.nbsi++
-    var klname = obj.__class__.$infos.__name__
-    if($B.siklass[klname] !== undefined){
-        $B.siklass[klname]++
-    }else{
-        $B.siklass[klname] = 1
     }
     $B.$getattr(obj, "__setitem__")(item, value)
 }
@@ -762,13 +765,18 @@ $B.$is = function(a, b){
 
 $B.$is_member = function(item, _set){
     // used for "item in _set"
-    var f, _iter
+    var f, _iter, method
 
-    // use __contains__ if defined
-    try{f = $B.$getattr(_set, "__contains__")}
+    // Use __contains__ if defined *on the class* (implicit invocation of
+    // special methods don't use object __dict__)
+    try{
+        method = $B.$getattr(_set.__class__ || $B.get_class(_set),
+            "__contains__")
+
+    }
     catch(err){}
 
-    if(f){return f(item)}
+    if(method){return $B.$call(method)(_set, item)}
 
     // use __iter__ if defined
     try{_iter = _b_.iter(_set)}
@@ -779,10 +787,7 @@ $B.$is_member = function(item, _set){
                 var elt = _b_.next(_iter)
                 if($B.rich_comp("__eq__", elt, item)){return true}
             }catch(err){
-                if(err.__class__ === _b_.StopIteration){
-                    return false
-                }
-                throw err
+                return false
             }
         }
     }
@@ -835,23 +840,25 @@ $B.$call = function(callable){
     }
 }
 
-// default standard output and error
-// can be reset by sys.stdout or sys.stderr
-var $io = {__class__: _b_.type, $infos:{__name__: "io"}}
-$io.__mro__ = [_b_.object]
+// Default standard output and error
+// Can be reset by sys.stdout or sys.stderr
+var $io = $B.make_class("io", function(){
+    return {__class__: $io}
+    }
+)
 
-$B.stderr = {
-    __class__: $io,
-    write: function(data){console.log(data)},
-    flush: function(){}
+$io.flush = function(){
+    // do nothing
 }
-$B.stderr_buff = "" // buffer for standard output
 
-$B.stdout = {
-    __class__: $io,
-    write: function(data){console.log(data)},
-    flush: function(){}
+$io.write = function(self, msg){
+    // Default to printing to browser console
+    console.log(msg)
+    return _b_.None
 }
+
+$B.stderr = $io.$factory()
+$B.stdout = $io.$factory()
 
 $B.stdin = {
     __class__: $io,
@@ -867,149 +874,56 @@ $B.stdin = {
     }
 }
 
-$B.jsobject2pyobject = function(obj){
-    switch(obj) {
-        case null:
-            return _b_.None
-        case true:
-            return _b_.True
-        case false:
-            return _b_.False
-    }
+$B.make_iterator_class = function(name){
+    // Builds a class to iterate over items
 
-    if(typeof obj === "object" && ! Array.isArray(obj) &&
-            obj.__class__ === undefined){
-        // transform JS object into a Python dict
-        var res = _b_.dict.$factory()
-        for(var attr in obj){
-           res.$string_dict[attr] = $B.jsobject2pyobject(obj[attr])
-        }
-        return res
-    }
-
-    if(_b_.isinstance(obj, _b_.list)){
-        var res = [],
-            pos = 0
-        for(var i = 0, len = obj.length; i < len; i++){
-            res[pos++] = $B.jsobject2pyobject(obj[i])
-        }
-        return res
-    }
-
-    if(obj.__class__ !== undefined){
-        if(obj.__class__ === _b_.list){
-          for(var i = 0, len = obj.length; i < len; i++){
-              obj[i] = $B.jsobject2pyobject(obj[i])
-          }
-          return obj
-        }
-        return obj
-    }
-
-    if(obj._type_ === "iter") { // this is an iterator
-       return _b_.iter(obj.data)
-    }
-
-    return $B.JSObject.$factory(obj)
-}
-
-$B.set_line = function(line_num, module_name){
-    $B.line_info = line_num + "," + module_name
-    return _b_.None
-}
-
-// functions to define iterators
-$B.$iterator = function(items, klass){
-    var res = {
-        __class__: klass,
-        __iter__: function(){return res},
-        __len__: function(){return items.length},
-        __next__: function(){
-            res.counter++
-            if(res.counter < items.length){return items[res.counter]}
-            throw _b_.StopIteration.$factory("StopIteration")
-        },
-        __repr__: function(){return "<" + klass.$infos.__name__ + " object>"},
-        counter: -1
-    }
-    res.__str__ = res.toString = res.__repr__
-    return res
-}
-
-$B.$iterator_class = function(name){
-
-    var res = {
+    var klass = {
         __class__: _b_.type,
         __mro__: [_b_.object],
-        $infos:{
-            __name__: name,
-            __module__: "builtins"
+        $factory: function(items){
+            return {
+                __class__: klass,
+                __dict__: _b_.dict.$factory(),
+                counter: -1,
+                items: items,
+                len: items.length
+            }
         },
-        $is_class: true
+        $infos:{
+            __name__: name
+        },
+        $is_class: true,
+
+        __iter__: function(self){
+            self.counter = self.counter === undefined ? -1 : self.counter
+            self.len = self.items.length
+            return self
+        },
+
+        __len__: function(self){
+            return self.items.length
+        },
+
+        __next__: function(self){
+            if(typeof self.len_func == "function" &&
+                    self.len_func() != self.len){
+                throw _b_.RuntimeError.$factory(
+                    "dictionary changed size during iteration")
+            }
+            self.counter++
+            if(self.counter < self.items.length){
+                return self.items[self.counter]
+            }
+            throw _b_.StopIteration.$factory("StopIteration")
+        },
+
+        __reduce_ex__: function(self, protocol){
+            return $B.fast_tuple([_b_.iter, _b_.tuple.$factory([self.items])])
+        }
     }
 
-    function as_array(s) {
-       var _a = [],
-           pos = 0,
-           _it = _b_.iter(s)
-       while (1) {
-         try{
-              _a[pos++] = _b_.next(_it)
-         }catch(err){
-              if(err.__class__ === _b_.StopIteration){
-                  break
-              }
-         }
-       }
-       return _a
-    }
-
-    function as_list(s){return _b_.list.$factory(as_array(s))}
-    function as_set(s){return _b_.set.$factory(as_array(s))}
-
-    res.__eq__ = function(self,other){
-       if(_b_.isinstance(other, [_b_.tuple, _b_.set, _b_.list])){
-          return $B.$getattr(as_list(self), "__eq__")(other)
-       }
-
-       if(_b_.hasattr(other, "__iter__")){
-          return $B.$getattr(as_list(self), "__eq__")(as_list(other))
-       }
-
-       _b_.NotImplementedError.$factory(
-           "__eq__ not implemented yet for list and " + _b_.type(other))
-    }
-
-    var _ops = ["eq", "ne"],
-        _f = res.__eq__ + ""
-
-    for (var i = 0; i < _ops.length; i++) {
-        var _op = "__" + _ops[i] + "__"
-        eval("res." + _op + "=" + _f.replace(new RegExp("__eq__", "g"), _op))
-    }
-
-    res.__or__ = function(self, other){
-       if(_b_.isinstance(other, [_b_.tuple, _b_.set, _b_.list])){
-          return $B.$getattr(as_set(self), "__or__")(other)
-       }
-
-       if(_b_.hasattr(other, "__iter__")){
-          return $B.$getattr(as_set(self), "__or__")(as_set(other))
-       }
-
-       _b_.NotImplementedError.$factory(
-           "__or__ not implemented yet for set and " + _b_.type(other))
-    }
-
-    var _ops = ["sub", "and", "xor", "gt", "ge", "lt", "le"],
-        _f = res.__or__ + ""
-
-    for(var i = 0; i < _ops.length; i++){
-        var _op = "__" + _ops[i] + "__"
-        eval("res." + _op + "=" + _f.replace(new RegExp("__or__", "g"), _op))
-    }
-
-    return res
+    $B.set_func_names(klass, "builtins")
+    return klass
 }
 
 function $err(op, klass, other){
@@ -1041,11 +955,9 @@ $B.make_rmethods = function(klass){
 
 // UUID is a function to produce a unique id.
 // the variable $B.py_UUID is defined in py2js.js (in the brython function)
-$B.UUID = function() {return $B.$py_UUID++}
+$B.UUID = function(){return $B.$py_UUID++}
 
-$B.nb_inject = 0
 $B.InjectBuiltins = function() {
-    $B.nb_inject++
    var _str = ["var _b_ = $B.builtins"],
        pos = 1
    for(var $b in $B.builtins){
@@ -1106,36 +1018,44 @@ $B.int_or_bool = function(v){
     }
 }
 
-$B.int_value = function(v){
-    // If v is an integer, return v
-    // If it's a boolean, return 0 or 1
-    // If it's a complex with v.imag = 0, return int_value(v.real)
-    // If it's a float that equals an integer, return it
-    // Else throw ValueError
-    try{return $B.int_or_bool(v)}
-    catch(err){
-        if(_b_.isinstance(v, _b_.complex) && v.$imag == 0){
-            return $B.int_or_bool(v.$real)
-        }else if(isinstance(v, _b_.float) && v == Math.floor(v)){
-            return Math.floor(v)
-        }else{
-            throw _b_.TypeError.$factory("'" + $B.class_name(v) +
-                "' object cannot be interpreted as an integer")
-        }
-    }
-}
-
 $B.enter_frame = function(frame){
     // Enter execution frame : save on top of frames stack
     $B.frames_stack.push(frame)
 }
 
+function exit_ctx_managers_in_generators(frame){
+    // Called when leaving an execution frame.
+    // Inspect the generators in frame's locals. If they have unclosed context
+    // managers, close them.
+    for(key in frame[1]){
+        if(frame[1][key] && frame[1][key].$is_generator_obj){
+            var gen_obj = frame[1][key]
+            // If the generator object's attribute env has an attribute
+            // $ctx_manager_exit, it means that a context manager has not yet
+            // called the method __exit__ (issue #1143)
+            if(gen_obj.env !== undefined){
+                for(var attr in gen_obj.env){
+                    if(attr.search(/^\$ctx_manager_exit\d+$/) > -1){
+                        // Call __exit__
+                        $B.$call(gen_obj.env[attr])()
+                    }
+                }
+            }
+        }
+    }
+}
+
 $B.leave_frame = function(arg){
     // Leave execution frame
-    if($B.profile > 0){$B.$profile.return()}
     if($B.frames_stack.length == 0){console.log("empty stack"); return}
     $B.del_exc()
-    $B.frames_stack.pop()
+    var frame = $B.frames_stack.pop()
+    if(frame[1].$has_yield_in_cm){
+        // The attribute $has_yield_in_cm is set in py2js.js /
+        // $YieldCtx.transform only if the frame has "yield" inside a
+        // context manager.
+        exit_ctx_managers_in_generators(frame)
+    }
 }
 
 $B.leave_frame_exec = function(arg){
@@ -1144,201 +1064,13 @@ $B.leave_frame_exec = function(arg){
     if($B.profile > 0){$B.$profile.return()}
     if($B.frames_stack.length == 0){console.log("empty stack"); return}
     var frame = $B.frames_stack.pop()
+    exit_ctx_managers_in_generators(frame)
     for(var i = $B.frames_stack.length - 1; i >= 0; i--){
         if($B.frames_stack[i][2] == frame[2]){
             $B.frames_stack[i][3] = frame[3]
         }
     }
 }
-
-$B.memory = function(){
-    var info = []
-    for(var attr in __BRYTHON__){
-       var obj = __BRYTHON__[attr]
-       if(obj === null){continue}
-       if(Array.isArray(obj)){info.push([obj.length, attr])}
-       else if(typeof obj == "object"){
-           info.push([Object.keys(obj).length, attr])
-       }
-   }
-   info.sort(function(x, y){return x[0] - y[0]})
-   for(var i = 0, len = info.length; i < len; i++){
-       console.log(info[i][0], info[i][1], __BRYTHON__[info[i][1]])
-   }
-}
-
-var Profile = $B.make_class("profile",
-    function(){return {__class__: Profile}}
-)
-Profile.__dir__ = function(self){
-    return Object.keys(self)
-}
-Profile.__getattribute__ = function(self, attr){
-    if(attr == "__str__"){
-        return function(){
-            var res = "<profile object"
-            for(var attr in self){
-                if(attr.startsWith("__")){continue}
-                res += " " + attr + ": "
-                if(typeof self[attr] == "object"){
-                    res += _b_.dict.__str__($B.obj_dict(self[attr]))
-                }else{
-                    res += _b_.str.$factory(self[attr])
-                }
-            }
-            return res + ">"
-        }
-    }
-    return $B.jsobj2pyobj(self[attr])
-}
-
-$B.$profile_data = Profile.$factory()
-
-$B.$profile = (function(profile) {
-    var call_times = {},    // indexed by function-hash,
-                            //   - given a function it contains a stack with an element for
-                            //     each currently running call of the function
-                            //     the element is a quadruple:
-                            //         start of the function call
-                            //         hash of the caller (from where the function was invoked)
-                            //         cumulated time spent in function not-including subcalls up to last subcall
-                            //         time when the function was last resumed after a subcall (or the time when
-                            //         started runnig if there were no subcalls)
-        _START = 0,         //  used as indices to access elements of call_times
-        _CALLER = 1,
-        _CUMULATED = 2,
-        _LAST_RESUMED =3,
-        call_stack = [],      // contains hashes of the currently running functions (in call-order)
-        profile_start = null, // Time when profiling started (or restarted after being paused)
-        active = false,       // true when collecting data
-        paused = false,       // true when paused
-        cumulated = 0         // cumulated time of data collection from first start until last restart after a pause.
-
-    var _fhash = function(module, fname, line){
-        return module + "." + fname + ":" + line
-    }
-    var _hash = function(module, line){return module + ":" + line}
-    var _is_recursive = function(h) {
-        for(var i = 0; i < call_stack.length; i++)
-            if(call_stack[i] == h){return true}
-        return false
-    }
-
-    var $profile = {
-        "call": function(module, fname, line, caller){
-            if($B.profile > 1 && active){
-                var ctime = new Date()
-                var h = _fhash(module, fname, line)
-                if(!(h in call_times)){call_times[h] = []}
-                if(call_stack.length > 0){
-                    in_func = call_stack[call_stack.length - 1]
-                    func_stack = call_times[in_func]
-                    inner_most_call = func_stack[func_stack.length - 1]
-                    inner_most_call[_CUMULATED] += ctime -
-                        inner_most_call[_LAST_RESUMED]
-                    caller = caller + ":" + in_func
-                }
-                call_times[h].push([ctime, caller, 0, ctime]) // start time, caller hash, duration without subcalls, start_of_last_subcall
-                call_stack.push(h)
-            }
-        },
-        "return": function(){
-            if($B.profile > 1 && active){
-                var h = call_stack.pop()
-                if(h in call_times){
-                    var t_end = new Date(),
-                        data = call_times[h].pop()
-                    t_start = data[_START]
-                    caller = data[_CALLER]
-                    t_duration = t_end - t_start
-                    t_in_func = data[_CUMULATED] + t_end -
-                        data[_LAST_RESUMED]
-                    if(!(h in profile.call_times)){
-                        profile.call_times[h] = 0
-                        profile.call_times_proper[h] = 0
-                        profile.call_counts[h] = 0
-                        profile.call_counts_norec[h] = 0
-                        profile.callers[h] = {}
-                    }
-                    profile.call_times[h] += t_duration
-                    profile.call_times_proper[h] += t_in_func
-                    profile.call_counts[h] += 1
-                    if(!(caller in profile.callers[h])){
-                        profile.callers[h][caller] = [0, 0, 0, 0]
-                    }
-                    if(! _is_recursive(h)){
-                        profile.call_counts_norec[h] += 1
-                        profile.callers[h][caller][3]++       // Nuber norec calls (for given caller)
-                    }
-                    profile.callers[h][caller][0] += t_duration // Total time including subcalls (for given caller)
-                    profile.callers[h][caller][1] += t_in_func  // Total time excluding subcalls (for given caller)
-                    profile.callers[h][caller][2]++           // Nuber of calls (for given caller)
-
-                    if(call_stack.length > 0){              // We are returning into a function call, need to update
-                                                            // its last resume time
-                        in_func = call_stack[call_stack.length - 1]
-                        func_stack = call_times[in_func]
-                        inner_most_call = func_stack[func_stack.length - 1]
-                        inner_most_call[_LAST_RESUMED] = new Date()
-                    }
-                }
-            }
-        },
-        "count": function(module,line){
-            if(active){
-                var h = _hash(module, line)
-                if(!(h in profile.line_counts)){ profile.line_counts[h] = 0}
-                profile.line_counts[h]++
-            }
-        },
-        "pause": function() {
-            if(active){
-                elapsed = (new Date()) - profile_start
-                cumulated += elapsed
-                active = false
-                paused = true
-            }
-        },
-        "start": function() {
-            if($B.profile > 0){
-                if(! paused){$B.$profile.clear()}
-                else{paused = false}
-                active = true
-                profile_start = new Date()
-            }
-        },
-        "elapsed": function() {
-            if(active){return cumulated + (new Date()) - profile_start}
-            else{return cumulated}
-        },
-        "stop": function() {
-            if(active || paused){
-                profile.profile_duration = ((new Date()) - profile_start) +
-                    cumulated
-                active = false
-                paused = false
-            }
-        },
-        "clear":function(){
-            cumulated = 0;
-            profile.line_counts = {}
-            profile.call_times = {}
-            profile.call_times_proper = {}
-            profile.call_counts = {}
-            profile.call_counts_norec = {}
-            profile.callers = {}
-            active = false
-            paused = false
-        },
-        "status":function() {
-            if($B.profile <= 0){return "Disabled"}
-            if(active){return "Collecting data: active"}
-            else if(paused){return "Collecting data: paused"}
-            else{return "Stopped"}
-        },
-    }
-    return $profile
-})($B.$profile_data)
 
 var min_int = Math.pow(-2, 53), max_int = Math.pow(2, 53) - 1
 
@@ -1351,6 +1083,25 @@ $B.is_safe_int = function(){
 }
 
 $B.add = function(x, y){
+    if(typeof x.valueOf() == "number" && typeof y.valueOf() == "number"){
+        if(typeof x == "number" && typeof y == "number"){
+            // ints
+            var z = x + y
+            if(z < max_int){return z}
+            return $B.long_int.__add__($B.long_int.$factory(x),
+                $B.long_int.$factory(y))
+        }else{
+            // floats
+            return new Number(x + y)
+        }
+    }else if (typeof x == "string" && typeof y == "string"){
+        // strings
+        return x + y
+    }
+    return _b_.getattr(x, "__add__")(y)
+}
+
+$B.zzadd = function(x, y){
     var z = (typeof x != "number" || typeof y != "number") ?
                 new Number(x + y) : x + y
     if(x > min_int && x < max_int && y > min_int && y < max_int
@@ -1472,11 +1223,12 @@ $B.rich_comp = function(op, x, y){
     if(x.$is_class || x.$factory) {
         if(op == "__eq__"){
             return (x === y)
-        }else if ( op == "__ne__"){
+        }else if(op == "__ne__"){
             return !(x === y)
         }else{
-            throw _b_.TypeError.$factory("'" + op +
-                "' not supported between types")
+            throw _b_.TypeError.$factory("'" + method2comp[op] +
+                "' not supported between instances of '" + $B.class_name(x) +
+                "' and '" + $B.class_name(y) + "'")
         }
     }
 
@@ -1500,7 +1252,7 @@ $B.rich_comp = function(op, x, y){
     if(res !== _b_.NotImplemented){return res}
     if(compared){return false}
     rev_op = reversed_op[op] || op
-    res = $B.$getattr(y, rev_op)(x)
+    res = $B.$call($B.$getattr(y, rev_op))(x)
     if(res !== _b_.NotImplemented ){return res}
     // If both operands return NotImplemented, return False if the operand is
     // __eq__, True if it is __ne__, raise TypeError otherwise
@@ -1510,6 +1262,57 @@ $B.rich_comp = function(op, x, y){
     throw _b_.TypeError.$factory("'" + method2comp[op] +
         "' not supported between instances of '" + $B.class_name(x) +
         "' and '" + $B.class_name(y) + "'")
+}
+
+var opname2opsign = {sub: "-", xor: "^", mul: "*"}
+
+$B.rich_op = function(op, x, y){
+    var x_class = x.__class__ || $B.get_class(x),
+        y_class = y.__class__ || $B.get_class(y),
+        method
+    if(x_class === y_class){
+        // For objects of the same type, don't try the reversed operator
+        try{
+            method = $B.$call($B.$getattr(x, "__" + op + "__"))
+        }catch(err){
+            if(err.__class__ === _b_.AttributeError){
+                var kl_name = $B.class_name(x)
+                throw _b_.TypeError.$factory("unsupported operand type(s) " +
+                    "for " + opname2opsign[op] + ": '" + kl_name + "' and '" +
+                    kl_name + "'")
+            }
+            throw err
+        }
+        return method(y)
+    }
+    // For instances of different classes, try reversed operator
+    var res
+    try{
+        method = $B.$call($B.$getattr(x, "__" + op + "__"))
+    }catch(err){
+        if(err.__class__ !== _b_.AttributeError){
+            throw err
+        }
+        res = $B.$call($B.$getattr(y, "__r" + op + "__"))(x)
+        if(res !== _b_.NotImplemented){
+            return res
+        }
+        throw _b_.TypeError.$factory("'" + (opname2opsign[op] || op) +
+            "' not supported between instances of '" + $B.class_name(x) +
+            "' and '" + $B.class_name(y) + "'")
+    }
+    res = method(y)
+    if(res === _b_.NotImplemented){
+        res = $B.$call($B.$getattr(y, "__r" + op + "__"))(x)
+        if(res !== _b_.NotImplemented){
+            return res
+        }
+        throw _b_.TypeError.$factory("'" + (opname2opsign[op] || op) +
+            "' not supported between instances of '" + $B.class_name(x) +
+            "' and '" + $B.class_name(y) + "'")
+    }else{
+        return res
+    }
 }
 
 $B.is_none = function(o){

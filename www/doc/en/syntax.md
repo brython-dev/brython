@@ -9,29 +9,36 @@ limited to the folders accessible with an Ajax request.
 Keywords and built-in functions
 -------------------------------
 
-Brython supports most of the keywords and functions of Python 3 :
+Brython supports all the keywords and functions of Python 3 :
 
-- keywords : `and, as, assert, async, await, break, class, continue, def, del, elif, else,`
-  `except, False, finally, for, from, global, if, import, in, is, lambda, `
-  `None, nonlocal, not, or, pass, raise, return, True, try, while, with, yield`
+- keywords : `and, as, assert, async, await, break, class, continue, def, del, `
+  `elif, else, except, False, finally, for, from, global, if, import, in, is, `
+  `lambda, None, nonlocal, not, or, pass, raise, return, True, try, while, with, yield`
 - built-in functions and classes : `abs, all, any, ascii, bin, bool, bytes,`
   `callable, chr, classmethod, delattr, dict, dir, divmod, `
   `enumerate, eval, exec, filter, float, frozenset, getattr, `
   `globals, hasattr, hash, hex, id, input, int, isinstance, `
   `iter, len, list, locals, map, max, memoryview, min, `
   `next, object, open, ord, pow, print, property, range, `
-  repr, reversed, round, set, setattr, slice, sorted, str, `
+  `repr, reversed, round, set, setattr, slice, sorted, str, `
   `sum, super, tuple, type, vars, zip, __import__`
 
 Here are a few features and limitations imposed by the browser and Javascript :
 
 - Javascript functions can't block execution for a given time, or waiting for
-  an event to happen, before going to the next instruction. For this reason,
-  `time.sleep()` can't be used : functions in module **browser.timer** such as
-  `set_timeout()` or `set_interval()` must be used instead ; the built-in
-  function `input()` is simulated by the Javascript function `prompt()` ;
-  blocking methods in module `asyncio` are in fact not blocking, that is to
-  say, the instructions that follow are executed immediately.
+  an event to happen, before going to the next instruction. For this reason:
+
+ - `time.sleep()` can't be used : functions in module **browser.timer** such
+   as `set_timeout()` or `set_interval()` must be used instead
+
+ - the built-in function `input()` is simulated by the Javascript function
+ `prompt()`. An example in the gallery shows how to simulate
+  an input function in a custom dialog box.
+
+- for the same reason, and also because the browser has its own implicit
+  event loop, the CPython `asyncio` module is not usable. A Brython-specific
+  module, [**`browser.aio`**](aio.html), is provided for asynchronous
+  programming.
 
 - the built-in function `open()` takes as argument the url of the file to
   open. Since it is read with an Ajax call, it must be in the same domain as
@@ -47,9 +54,6 @@ Here are a few features and limitations imposed by the browser and Javascript :
 
 - to open a print dialog (to a printer), call `window.print` (`window` is
   defined in module **browser**).
-
-- `sys.stdin` is not implemented at this time, however there is an `input()`
-  built-in function that will open a blocking input dialog (a prompt).
 
 - the objects lifecycle is managed by the Javascript garbage collector,
   Brython doesn't manage reference counting like CPython. Therefore, method

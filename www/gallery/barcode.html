@@ -2,13 +2,13 @@
 
 <head>
 <meta charset="utf-8">
-<script src="../src/brython.js"></script>
-
+<script src="/src/brython.js"></script>
+<script type="text/python" src="show_source.py"></script>
 <style>
 
-    body { background: indianred }
+    body { font-family: sans-serif }
 
-    input, div, h1 { width: 700px; margin: 25px; color: brown }
+    input { width: 700px; margin: 25px; color: #000; }
 
     input {
         font-size: 20px;
@@ -27,13 +27,11 @@
 
 <body onload=brython(1)>
 
-<center>
 <h1>Interleaved 2 of 5 Barcode Generator</h1>
 <div id=user_in>
 <input type="text" placeholder="enter an even number of decimal digits...">
 </div>
 <div id=barcode></div>
-</center>
 
 <script type=text/python>
 

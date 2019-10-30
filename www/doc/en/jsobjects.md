@@ -32,7 +32,7 @@ and to define the link between this element and the event _click_ by :
 
 ```python
 from browser import document
-document['mybutton'].bind('click',echo)
+document['mybutton'].bind('click', echo)
 ```
 
 Another option is to force the introduction of the name _echo_ in the
@@ -60,7 +60,7 @@ For instance :
 
 ```xml
 <script type="text/javascript">
-circle = {surface:function(r){return 3.14*r*r}}
+circle = {surface: function(r){return 3.14 * r * r}}
 </script>
 
 <script type="text/python">
@@ -125,12 +125,12 @@ For instance :
 
 ```xml
 <script type="text/javascript">
-function Rectangle(x0,y0,x1,y1){
+function Rectangle(x0, y0, x1, y1){
     this.x0 = x0
     this.y0 = y0
     this.x1 = x1
     this.y1 = y1
-    this.surface = function(){return (x1-x0)*(y1-y0)}
+    this.surface = function(){return (x1 - x0) * (y1 - y0)}
 }
 </script>
 
@@ -138,7 +138,7 @@ function Rectangle(x0,y0,x1,y1){
 from browser import alert, window
 
 rectangle = window.Rectangle
-alert(rectangle.new(10,10,30,30).surface())
+alert(rectangle.new(10, 10, 30, 30).surface())
 </script>
 ```
 
@@ -208,7 +208,7 @@ jq.each(jq('span'), show)
 ### Other examples
 
 You will find in the [gallery](../../gallery/gallery_en.html) other examples
-of how to use Javascript librairies (Three, Highcharts, Raphael) in Brython
+of how to use Javascript libraries (Three, Highcharts, Raphael) in Brython
 scripts.
 
 

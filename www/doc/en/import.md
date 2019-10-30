@@ -33,7 +33,9 @@ import app.records
 
 If the standard distribution has been included in the page by
 
-    <script type="text/javascript" src="brython_stdlib.js"></script>
+```xml
+<script type="text/javascript" src="brython_stdlib.js"></script>
+```
 
 the script can also run
 
@@ -67,7 +69,9 @@ application.
 For that, open a console window, navigate to the application directory and
 execute
 
-`python -m brython --modules`
+```console
+python -m brython --modules
+```
 
 Note that this program parses the Brython code in all the scripts, modules
 and HTML pages of the directory and its sub-directories. The CPython version
@@ -77,10 +81,10 @@ get syntax errors.
 
 You can then replace all the occurrences of
 
-    <script type="text/javascript" src="brython_stdlib.js"></script>
-
+```xml
+<script type="text/javascript" src="brython_stdlib.js"></script>
+```
 by
-
-    <script type="text/javascript" src="brython_modules.js"></script>
-
-
+```xml
+<script type="text/javascript" src="brython_modules.js"></script>
+```

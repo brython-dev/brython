@@ -1,6 +1,6 @@
 import sys
 import time
-import traceback
+import tb as traceback
 import javascript
 
 from browser import document as doc, window, alert
@@ -10,15 +10,18 @@ _height = doc.documentElement.clientHeight
 _s = doc['container']
 _s.style.height = '%spx' % int(_height * 0.66)
 
+doc["legend"].style.top = '%spx' % int(_height * 0.9)
+doc["legend"].style.visibility = "visible"
+
 has_ace = True
 try:
     editor = window.ace.edit("editor")
-    session = editor.getSession()
-    session.setMode("ace/mode/python")
+    editor.setTheme("ace/theme/solarized_light")
+    editor.session.setMode("ace/mode/python")
+    editor.focus()
 
     editor.setOptions({
      'enableLiveAutocompletion': True,
-     'enableSnippets': True,
      'highlightActiveLine': False,
      'highlightSelectedWord': True
     })
@@ -27,7 +30,7 @@ except:
     editor = html.TEXTAREA(rows=20, cols=70)
     doc["editor"] <= editor
     def get_value(): return editor.value
-    def set_value(x):editor.value = x
+    def set_value(x): editor.value = x
     editor.getValue = get_value
     editor.setValue = set_value
     has_ace = False

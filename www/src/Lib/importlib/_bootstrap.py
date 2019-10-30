@@ -23,6 +23,8 @@ work. One should use importlib as the public-facing version of this module.
 # Bootstrap-related code ######################################################
 
 _bootstrap_external = None
+_thread = None # Brython
+import _weakref # Brython
 
 def _wrap(new, old):
     """Simple substitute for functools.update_wrapper."""

@@ -3,11 +3,12 @@ módulo **browser.timer**
 
 Implementa métodos que permiten la ejecución de funciones de forma repetida o diferida.
 
-<code>set\_timeout(*funcion,ms*)</code>
-
+`set_timeout(`_function,ms_`)`
 > ejecuta la *funcion* después de *ms* milisegundos. *function* no toma ningún argumento
+> Devuelve un objeto que será usado en la siguiente función
 
-> Es un wrapper de la función javascript `setTimeout`. La documentación oficial se puede encontrar [aquí](http://www.w3.org/TR/2011/WD-html5-20110525/timers.html#dom-windowtimers-settimeout).
+> Es un wrapper de la función javascript `setTimeout`. La documentación oficial 
+> se puede encontrar [aquí](http://www.w3.org/TR/2011/WD-html5-20110525/timers.html#dom-windowtimers-settimeout).
 
 > En este ejemplo el color del texto en la caja negra cambiará después de 3 segundos.
 
@@ -37,13 +38,15 @@ doc['first-button'].bind('click', press_button)
 </table>
 </div>
 
-<code>clear\_timeout(*id*)</code>
+`clear_timeout(`_timer_`)`
+> cancela la ejecución de la función definida en *set_timeout()*. Recibe un argumento
+> el valor `id` devuelto por la llamada a *set_timeout()*
 
-> cancela la ejecución de la función definida en *set_timeout()* y como parámetro se usa el valor devuelto por *set_timeout()*
+> Es un wrapper de la función javascript `cancelTimeout`. La documentación 
+> oficial se puede encontrar [aquí](http://www.w3.org/TR/2011/WD-html5-20110525/timers.html#dom-windowtimers-cleartimeout).
 
-> Es un wrapper de la función javascript `cancelTimeout`. La documentación oficial se puede encontrar [aquí](http://www.w3.org/TR/2011/WD-html5-20110525/timers.html#dom-windowtimers-cleartimeout).
-
-> Veamos el ejemplo previo. Ahora tienes la posibilidad de para la ejecución antes de que se cumplan los tres segundos.
+> Veamos el ejemplo previo. Ahora tienes la posibilidad de parar la ejecución 
+> antes de que se cumplan los tres segundos.
 
 <div style="padding-left:50px;">
 ```exec_on_load
@@ -79,20 +82,21 @@ document['ct-stop'].bind('click', stop_button)
 </table>
 </div>
 
-<code>set\_interval(*funcion,ms*)</code>
+`set_interval(`_function, ms_`)`
+> ejecuta la *funcion* de forma repetida cada *ms* milisegundos. Esta función 
+> devuelve un objeto usable en la siguiente función, `clear_interval`, definida más abajo
 
-> ejecuta la *funcion* de forma repetida cada *ms* milisegundos. Esta función devuelve un objeto usable en la siguiente función
+> Es un wrapper de la función javascript `setInterval`. La documentación oficial 
+se puede encontrar [aquí](http://www.w3.org/TR/2011/WD-html5-20110525/timers.html#dom-windowtimers-setinterval).
 
-> Es un wrapper de la función javascript `setInterval`. La documentación oficial se puede encontrar [aquí](http://www.w3.org/TR/2011/WD-html5-20110525/timers.html#dom-windowtimers-setinterval).
+> Siempre que sea posible, deberías evitar el uso de esta función y usar 
+> request_animation_frame (ver más abajo) como alternativa. 
 
-> Siempre que sea posible, deberías evitar el uso de esta función y usar request_animation_frame (ver más abajo) como alternativa. 
+`clear_interval(`_timer_`)`
+> detiene la ejecución repetitiva de la función definida por `set_interval()`
 
-
-`clear_interval(`*id*`)`
-
-> detiene la ejecución repetitiva de la función definida por <code>set\_interval()</code> y como parámetro se usa el valor devuelto por *set_interval()*
-
-> Es un wrapper de la función javascript `clearInterval`. La documentación oficial se puede encontrar [aquí](http://www.w3.org/TR/2011/WD-html5-20110525/timers.html#dom-windowtimers-clearinterval).
+> Es un wrapper de la función javascript `clearInterval`. La documentación oficial 
+> se puede encontrar [aquí](http://www.w3.org/TR/2011/WD-html5-20110525/timers.html#dom-windowtimers-clearinterval).
 
 > Aquí abajo puedes ver un ejemplo donde se usa conjuntamente `set_interval` y `cancel_interval`:
 
@@ -149,17 +153,19 @@ doc['stop'].bind('click', stop_timer)
 </table>
 </div>
 
-<code>request\_animation\_frame(*funcion*)</code>
+`request_animation_frame(*function*)`
+> ejecuta la *funcion* de forma repetitiva dejando que el navegador se encargue 
+> de actualizar la ejecución. *function* usa un argumento falso
 
-> ejecuta la *funcion* de forma repetitiva dejando que el navegador se encargue de actualizar la ejecución. *function* usa un argumento falso
+> Es un wrapper de la función javascript `requestAnimationFrame`. La documentación 
+> oficial se pueden encontrar [aquí](http://www.w3.org/TR/animation-timing/#dom-windowanimationtiming-requestanimationframe). 
 
-> Es un wrapper de la función javascript `requestAnimationFrame`. La documentación oficial se pueden encontrar [aquí](http://www.w3.org/TR/animation-timing/#dom-windowanimationtiming-requestanimationframe). 
+`cancel_animation_frame(*id*)`
+> cancela la ejecución de la función definida en *request_animation_frame()* y 
+> como parámetro se usa el valor *id* devuelto por *request_animation_frame()*
 
-<code>cancel\_animation\_frame(*id*)</code>
-
-> cancela la ejecución de la función definida en *request_animation_frame()* y como parámetro se usa el valor devuelto por *request_animation_frame()*
-
-> Es un wrapper de la función javascript `cancelAnimationFrame`. La documentación oficial se puede encontrar [aquí](http://www.w3.org/TR/animation-timing/#dom-windowanimationtiming-cancelanimationframe).
+> Es un wrapper de la función javascript `cancelAnimationFrame`. La documentación 
+> oficial se puede encontrar [aquí](http://www.w3.org/TR/animation-timing/#dom-windowanimationtiming-cancelanimationframe).
 
 > Debajo puedes ver un ejemplo donde se usa `request_animation_frame` y `cancel_animation_frame`:
 

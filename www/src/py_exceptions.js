@@ -63,7 +63,10 @@ $B.$syntax_err_line = function(exc, module, src, pos, line_num){
         exc.text = line
         lpos -= len - line.length
         if(lpos < 0){lpos = 0}
-        line = line.replace(/^\s*/,'')
+        while(line.charAt(0) == ' '){
+            line = line.substr(1)
+            if(lpos > 0){lpos--}
+        }
         exc.offset = lpos
         exc.args = _b_.tuple.$factory([$B.$getitem(exc.args, 0), module,
             line_num, lpos, line])
@@ -97,24 +100,31 @@ $B.$IndentationError = function(module, msg, src, pos, line_num, root) {
     throw exc
 }
 
-$B.print_stack = function(){
-    $B.frames_stack.forEach(function(frame){
+$B.print_stack = function(stack){
+    stack = stack || $B.frames_stack
+    var trace = []
+    stack.forEach(function(frame){
         var line_info = frame[1].$line_info
         if(line_info !== undefined){
             var info = line_info.split(",")
-            console.log(info[1] + " line " + info[0])
+            if(info[1].startsWith("$exec")){
+                info[1] = "<module>"
+            }
+            trace.push(info[1] + " line " + info[0])
             var src = $B.file_cache[frame[3].__file__]
             if(src){
                 var lines = src.split("\n"),
                     line = lines[parseInt(info[0]) - 1]
-                console.log("    " + line.trim())
+                trace.push("  " + line.trim())
             }
         }
     })
+    console.log("print stack ok", trace)
+    return trace.join("\n")
 }
 
 // class of traceback objects
-var traceback = $B.make_class("traceback",
+var traceback = $B.traceback = $B.make_class("traceback",
     function(exc, stack){
         if(stack === undefined)
             stack = exc.$stack
@@ -156,13 +166,26 @@ traceback.__getattribute__ = function(self, attr){
             }
             else{return parseInt(line_info.split(",")[0])}
         case "tb_lasti":
-            if(line_info === undefined){return "<unknown>"}
-            else{
-                var info = line_info.split(",")
-                var src = $B.$py_src[info[1]]
+            if(line_info === undefined){
+                return "<unknown>"
+            }else{
+                var info = line_info.split(","),
+                    src
+                for(var i = self.$stack.length - 1; i >= 0; i--){
+                    var fr = self.$stack[i]
+                    if(fr[2] == info[1]){
+                        src = fr[3].$src
+                        break
+                    }
+                }
+                if(src === undefined && $B.file_cache.hasOwnProperty(info[1])){
+                    src = $B.file_cache[info[1]]
+                }
                 if(src !== undefined){
                     return src.split("\n")[parseInt(info[0] - 1)].trim()
-                }else{return "<unknown>"}
+                }else{
+                    return "<unknown>"
+                }
             }
         case "tb_next":
             if(self.$stack.length <= 1){return None}
@@ -187,6 +210,7 @@ var frame = $B.make_class("frame",
             $stack: deep_copy(stack)
         }
         if(pos === undefined){pos = 0}
+        //pos = fs.length - pos - 1
         res.$pos = pos
         if(fs.length){
             var _frame = fs[pos],
@@ -200,7 +224,9 @@ var frame = $B.make_class("frame",
             }
             res.f_globals = $B.obj_dict(_frame[3])
 
-            if(locals_id.startsWith("$exec")){
+            if(_frame[3].__file__ !== undefined){
+                filename = _frame[3].__file__
+            }else if(locals_id.startsWith("$exec")){
                 filename = "<string>"
             }
             if(_frame[1].$line_info === undefined){
@@ -215,7 +241,8 @@ var frame = $B.make_class("frame",
                 res.f_lineno = parseInt(_frame[1].$line_info.split(',')[0])
             }
 
-            var co_name = locals_id
+            var co_name = locals_id.startsWith("$exec") ? "<string>" :
+                          locals_id
             if(locals_id == _frame[2]){
                 co_name = "<module>"
             }else{
@@ -346,9 +373,9 @@ var getExceptionTrace = function(exc, includeInternal) {
             info += ', in ' + frame[4].$infos.__name__
         }
 
-        if (src !== undefined) {
-            var lines = src.split("\n");
-            var line = lines[parseInt(line_info[0]) - 1]
+        if(src !== undefined){
+            var lines = src.split("\n"),
+                line = lines[parseInt(line_info[0]) - 1]
             if(line){line = line.replace(/^[ ]+/g, "")}
             info += "\n    " + line
         }else{
@@ -357,7 +384,7 @@ var getExceptionTrace = function(exc, includeInternal) {
     }
     if(exc.__class__ === _b_.SyntaxError){
         info += "\n  File " + exc.args[1] + ", line " + exc.args[2] +
-            "\n    " + exc.text
+            "\n    " + exc.args[4]
 
     }
     return info
@@ -369,7 +396,7 @@ BaseException.__getattr__ = function(self, attr){
         return getExceptionTrace(self, false);
     }else if (attr == "infoWithInternal"){
         return getExceptionTrace(self, true);
-    }else if(attr == "traceback"){
+    }else if(attr == "__traceback__"){
         // Return traceback object
         if(self.$traceback !== undefined){return self.$traceback}
         return traceback.$factory(self)
@@ -380,7 +407,7 @@ BaseException.__getattr__ = function(self, attr){
 }
 
 BaseException.with_traceback = function(self, tb){
-    self.traceback = tb
+    self.$traceback = tb
     return self
 }
 
@@ -402,7 +429,9 @@ BaseException.$factory = function (){
     err.__class__ = _b_.BaseException
     err.$py_error = true
     // Make a copy of the current frame stack array
-    err.$stack = deep_copy($B.frames_stack);
+    if(err.$stack === undefined){
+        err.$stack = deep_copy($B.frames_stack);
+    }
     if($B.frames_stack.length){
         err.$line_info = $B.last($B.frames_stack)[1].$line_info
     }
@@ -430,12 +459,15 @@ $B.exception = function(js_exc){
     if(! js_exc.$py_error){
         console.log("Javascript exception:", js_exc)
         console.log($B.last($B.frames_stack))
+        console.log("recursion error ?", $B.is_recursion_error(js_exc))
         var exc = Error()
         exc.__name__ = "Internal Javascript error: " +
             (js_exc.__name__ || js_exc.name)
         exc.__class__ = _b_.Exception
         exc.$js_exc = js_exc
-        if(js_exc.name == "ReferenceError"){
+        if($B.is_recursion_error(js_exc)){
+            return _b_.RecursionError.$factory("too much recursion")
+        }else if(js_exc.name == "ReferenceError"){
             exc.__name__ = "NameError"
             exc.__class__ = _b_.NameError
             js_exc.message = js_exc.message.replace("$$", "")
@@ -471,6 +503,17 @@ $B.is_exc = function(exc, exc_list){
         if(issubclass(this_exc_class, exc_class)){return true}
     }
     return false
+}
+
+$B.is_recursion_error = function(js_exc){
+    // Test if the JS exception matches Python RecursionError
+    var msg = js_exc + "",
+        parts = msg.split(":"),
+        err_type = parts[0].trim(),
+        err_msg = parts[1].trim()
+    return (err_type == 'InternalError' && err_msg == 'too much recursion') ||
+        (err_type == 'Error' && err_msg == 'Out of stack space') ||
+        (err_type == 'RangeError' && err_msg == 'Maximum call stack size exceeded')
 }
 
 function $make_exc(names, parent){
@@ -512,12 +555,14 @@ function $make_exc(names, parent){
 $make_exc(["SystemExit", "KeyboardInterrupt", "GeneratorExit", "Exception"],
     BaseException)
 $make_exc([["StopIteration","err.value = arguments[0]"],
+    ["StopAsyncIteration","err.value = arguments[0]"],
     "ArithmeticError", "AssertionError", "AttributeError",
     "BufferError", "EOFError", "ImportError", "LookupError", "MemoryError",
     "NameError", "OSError", "ReferenceError", "RuntimeError", "SyntaxError",
     "SystemError", "TypeError", "ValueError", "Warning"],_b_.Exception)
 $make_exc(["FloatingPointError", "OverflowError", "ZeroDivisionError"],
     _b_.ArithmeticError)
+$make_exc(["ModuleNotFoundError"], _b_.ImportError)
 $make_exc(["IndexError","KeyError"], _b_.LookupError)
 $make_exc(["UnboundLocalError"], _b_.NameError)
 $make_exc(["BlockingIOError", "ChildProcessError", "ConnectionError",
@@ -526,7 +571,7 @@ $make_exc(["BlockingIOError", "ChildProcessError", "ConnectionError",
     "ProcessLookupError", "TimeoutError"], _b_.OSError)
 $make_exc(["BrokenPipeError", "ConnectionAbortedError",
     "ConnectionRefusedError", "ConnectionResetError"], _b_.ConnectionError)
-$make_exc(["NotImplementedError"], _b_.RuntimeError)
+$make_exc(["NotImplementedError", "RecursionError"], _b_.RuntimeError)
 $make_exc(["IndentationError"], _b_.SyntaxError)
 $make_exc(["TabError"], _b_.IndentationError)
 $make_exc(["UnicodeError"], _b_.ValueError)
@@ -543,5 +588,30 @@ $make_exc(["EnvironmentError", "IOError", "VMSError", "WindowsError"],
 $B.$TypeError = function(msg){
     throw _b_.TypeError.$factory(msg)
 }
+
+// SyntaxError instances have special attributes
+var se = _b_.SyntaxError.$factory
+_b_.SyntaxError.$factory = function(){
+    var arg = arguments[0]
+    if(arg.__class__ === _b_.SyntaxError){
+        return arg
+    }
+    var exc = se.apply(null, arguments),
+        frame = $B.last($B.frames_stack)
+    if(frame){
+        line_info = frame[1].$line_info
+        exc.filename = frame[3].__file__
+        exc.lineno = parseInt(line_info.split(",")[0])
+        var src = $B.file_cache[frame[3].__file__]
+        if(src){
+            lines = src.split("\n")
+            exc.text = lines[exc.lineno - 1]
+        }
+        exc.offset = arg.offset
+    }
+    return exc
+}
+
+_b_.SyntaxError
 
 })(__BRYTHON__)

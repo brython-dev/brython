@@ -6,7 +6,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
 <script type="text/javascript" src="/src/brython.js"></script>
-
+<script type="text/python" src="show_source.py"></script>
 
 <style type="text/css" media="screen">
   body {
@@ -172,8 +172,8 @@ def release_cell(ev):
         return
 
     # Row and column of cell when move stops
-    row = round(target.top/side)
-    col = round(target.left/side)
+    row = round(target.top / side)
+    col = round(target.left / side)
 
     # Detect if cell has moved to a different row / column
     has_moved = [row, col] != [target.row, target.col]
@@ -184,7 +184,7 @@ def release_cell(ev):
         grid[erow][ecol] = None
 
         # Delta row and column
-        drow, dcol = row-target.row, col-target.col
+        drow, dcol = row - target.row, col - target.col
 
         # Change attributes row and col of all moving cells
         for cell in moving:
@@ -221,13 +221,13 @@ def move_cell(ev):
         return release_cell(ev)
 
     # Move vertically if allowed
-    if (allow=='up' and Y < Y0) or (allow=='down' and Y > Y0):
+    if (allow == 'up' and Y < Y0) or (allow == 'down' and Y > Y0):
         for i, (cell, (x0, y0)) in enumerate(zip(moving,coords)):
             cell.top = y0 +  Y- Y0
 
     # Else move horizontally
-    elif (allow=='right' and X > X0) or (allow=='left' and X < X0):
-        for i, (cell, (x0, y0)) in enumerate(zip(moving,coords)):
+    elif (allow == 'right' and X > X0) or (allow == 'left' and X < X0):
+        for i, (cell, (x0, y0)) in enumerate(zip(moving, coords)):
             cell.left = x0 + X - X0
 
 grid = []               # grid[row][cell] is the cell at specified row and column
@@ -246,7 +246,7 @@ def init(*args):
     del cells[:]
     del grid[:]
 
-    ranks = list(range(15))+[None]
+    ranks = list(range(15)) + [None]
 
     erow, ecol = 3, 3
 
