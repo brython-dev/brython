@@ -76,21 +76,24 @@
             }
         },
 
-        console: $B.JSObject.$factory(self.console),
+        console: self.console && $B.JSObject.$factory(self.console),
         self: $B.win,
         win: $B.win,
         $$window: $B.win,
     }
     browser.__path__ = browser.__file__
 
-    if($B.isWebWorker){
+    if ($B.isNode) {
+        delete browser.$$window
+        delete browser.win
+    }else if($B.isWebWorker){
         browser.is_webworker = true
         // In a web worker, name "window" is not defined, but name "self" is
         delete browser.$$window
         delete browser.win
         // browser.send is an alias for postMessage
         browser.self.js.send = self.postMessage
-    }else{
+    } else {
         browser.is_webworker = false
         update(browser, {
             $$alert:function(message){
@@ -349,7 +352,7 @@
             if($B.js_this === undefined){return $B.builtins.None}
             return $B.JSObject.$factory($B.js_this)
         },
-        $$Date: $B.JSObject.$factory(self.Date),
+        $$Date: self.Date && $B.JSObject.$factory(self.Date),
         JSConstructor: {
             __get__: function(){
                 console.warn('"javascript.JSConstructor" is deprecrated. ' +
@@ -389,9 +392,9 @@
             var content = $B.builtins.getattr(file_obj, 'read')()
             eval(content)
         },
-        $$Math: $B.JSObject.$factory(self.Math),
+        $$Math: self.Math && $B.JSObject.$factory(self.Math),
         NULL: null,
-        $$Number: $B.JSObject.$factory(self.Number),
+        $$Number: self.Number && $B.JSObject.$factory(self.Number),
         py2js: function(src, module_name){
             if(module_name === undefined){
                 module_name = '__main__' + $B.UUID()
@@ -400,8 +403,8 @@
                 $B.builtins_scope).to_js()
         },
         pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},
-        $$RegExp: $B.JSObject.$factory(self.RegExp),
-        $$String: $B.JSObject.$factory(self.String),
+        $$RegExp: self.RegExp && $B.JSObject.$factory(self.RegExp),
+        $$String: self.String && $B.JSObject.$factory(self.String),
         UNDEFINED: undefined
     }
 
@@ -517,7 +520,7 @@
     }
 
     for(var attr in modules){load(attr, modules[attr])}
-    if(! $B.isWebWorker){modules['browser'].html = modules['browser.html']}
+    if(!($B.isWebWorker || $B.isNode)){modules['browser'].html = modules['browser.html']}
 
     var _b_ = $B.builtins
 
