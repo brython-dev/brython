@@ -34,7 +34,7 @@ WBR</code>
 
 La syntaxe pour créer un objet (par exemple un lien hypertexte) est :
 
-`A(`*[content,[attributes]]*`)`
+`A(`*[content, [attributes]]*`)`
 
 > *content* est le noeud «fils» de l'objet ; il peut s'agir d'un objet Python
 > comme une chaîne de caractères, un nombre, etc., ou bien une
@@ -42,9 +42,21 @@ La syntaxe pour créer un objet (par exemple un lien hypertexte) est :
 
 > *attributes* est une suite de mots-clés correspondant aux
 > [attributs](http://www.w3.org/TR/html5-author/index.html#attributes-1) de la
-> balise HTML. Les traits d'union (`-`) doivent être remplacés par des soulignés
-> (`_`) : *http\_equiv* et pas *http-equiv* (sinon le `-` serait interprété comme
-> le signe moins).
+> balise HTML. Les traits d'union (-) doivent être remplacés par des soulignés
+> (_) : `http_equiv` et pas `http-equiv` (sinon le - serait interprété comme
+> le signe moins). Pour des attributs qui ne sont pas des noms Python valides
+> parce qu'ils contiennent des caractères comme ":" on peut les passer
+> par la syntaxe
+<blockquote>
+```python
+html.BUTTON("hello", **{"v-on:click": "count++"})
+```
+</blockquote>
+
+> Voir aussi la fonction [`attribute_mapper`](#attribute_mapper) ci-dessous
+> pour personnaliser davantage la transformation des arguments mots-clés
+> Python en attributs de balise HTML.
+
 
 Si *content* est un itérable autre qu'une chaine de caractères, tous les
 éléments sont ajoutés comme descendants de l'élément. Par exemple :
@@ -81,22 +93,23 @@ d = html.DIV('Brython', Class="container")
 On peut aussi créer un objet sans argument, puis le compléter :
 
 - pour ajouter un noeud enfant, utiliser l'opérateur **<=**
-- pour ajouter des attributs, utiliser la syntaxe Python classique :
-  `objet.attribut = valeur`
+- pour ajouter des attributs, utiliser la syntaxe :
+  `objet.attrs[cle] = valeur` (voir la section
+  [Attributs et méthodes](attributes.html))
 
 Exemple :
 
 ```python
 link = html.A()
-link <= html.B('connexion')
-link.href = 'http://example.com'
+link <= html.B("connexion")
+link.attrs["href"] = "http://example.com"
 ```
 
 On peut aussi créer plusieurs éléments de même niveau par addition (symbole
 **+**) :
 
 ```python
-row = html.TR(html.TH('Nom')+html.TH('Prénom'))
+row = html.TR(html.TH('Nom') + html.TH('Prénom'))
 ```
 
 et on peut ajouter tous les éléments d'un itérable en une seule opération :
@@ -105,8 +118,8 @@ et on peut ajouter tous les éléments d'un itérable en une seule opération :
 from browser.html import *
 
 t = TABLE()
-t <= TR(TH('Number')+TH('Square'))
-t <= (TR(TD(i)+TD(i*i)) for i in range(10))
+t <= TR(TH('Number') + TH('Square'))
+t <= (TR(TD(i) + TD(i * i)) for i in range(10))
 ```
 
 En combinant ces opérateurs et la syntaxe Python, voici comment créer une boîte
@@ -125,7 +138,7 @@ entraîne la création d'un unique objet DOM. Si on affecte l'instance à une
 variable, on ne peut pas l'utiliser à plusieurs endroits. Par exemple :
 
 ```python
-link = html.A('Python',href='http://www.python.org')
+link = html.A('Python', href='http://www.python.org')
 doc <= 'Site officiel de Python : ' + link
 doc <= html.BR() + 'Je répète : le site est ' + link
 ```
@@ -134,8 +147,8 @@ le lien ne sera montré que dans la deuxième ligne. Une solution est de cloner
 l'objet initial :
 
 ```python
-link = html.A('Python',href='http://www.python.org')
-doc <= 'Site officiel de Python : '+link
+link = html.A('Python', href='http://www.python.org')
+doc <= 'Site officiel de Python : ' + link
 doc <= html.BR() + 'Je répète : le site est ' + link.clone()
 ```
 
@@ -156,11 +169,11 @@ et un `canvas` HTML5 :
 
 ```exec_on_load
 # Tout d’abord, l’import de quelques bibliothèques.
-from browser import document as doc
+from browser import document
 from browser import html
 
 # Nous allons ajouter les éléments à la div identifiée "container".
-container = doc['container']
+container = document['container']
 
 # Création d’une nouvelle div,
 newdiv = html.DIV(id = "new-div")
@@ -225,13 +238,14 @@ Le module expose la fonction
 `maketag(`_nom_`)`
 
 > Crée une nouvelle classe pour une balise avec le nom indiqué. On peut
-> cette classe comme celles associées aux noms des balises HTML :
+> utiliser cette classe comme celles associées aux noms des balises HTML :
 
+<blockquote>
 ```python
 p2 = maketag('P2')
 document <= p2('test')
 ```
-
+</blockquote>
 Le module possède un autre attribut :
 
 _tags_
@@ -240,3 +254,23 @@ _tags_
 > aux classes correspondantes. Si de nouvelles balises sont ajoutées
 > par la fonction `maketag()` elles sont ajoutées à ce dictionnaire.
 
+<a name="attribute_mapper"></a>
+### Génération des attributs HTML à partir de mots-clés Python
+
+`attribute_mapper(`*attr*`)`
+
+> Pour toutes les classes définies dans le module, cette fonction est appelée
+> pour transformer les attributs passés comme mots-clés en attributs de la
+> balise HTML. Par exemple:
+<blockquote>
+```python
+import re
+def f(attr):
+    return re.sub("^v_(.*)_(.*)$", r"v-\1:\2", attr)
+
+html.attribute_mapper = f
+print(html.BUTTON("hello", v_on_click="count++").outerHTML)
+```
+</blockquote>
+
+> Par défaut, la fonction remplace les soulignés (_) par des tirets(-)

@@ -55,6 +55,8 @@ set.__contains__ = function(self,item){
                     if(isNaN(self.$items[i])){return true}
                 }
                 return false
+            }else if(item instanceof Number){
+                return self.$numbers.indexOf(item.valueOf()) > -1
             }else{
                 return self.$items.indexOf(item) > -1
             }
@@ -322,7 +324,9 @@ function $add(self, item){
         }
         return $N
     }else{
-        $B.$getattr(item, "__hash__")
+        // Compute hash of item : raises an exception if item is not hashable,
+        // otherwise set its attribute __hashvalue__
+        _b_.hash(item)
     }
     var cfunc = function(other){return $B.rich_comp("__eq__", item, other)}
     for(var i = 0, len = self.$items.length; i < len; i++){
@@ -352,9 +356,12 @@ set.copy = function(){
         arguments, {}, null, null)
     if(_b_.isinstance($.self, frozenset)){return $.self}
     var res = set.$factory() // copy returns an instance of set, even for subclasses
-    for(var i = 0, len = $.self.$items.length; i < len; i++){
-        res.$items[i] = $.self.$items[i]
-    }
+    $.self.$items.forEach(function(item){
+        res.$items.push(item)
+    })
+    $.self.$numbers.forEach(function(item){
+        res.$numbers.push(item)
+    })
     return res
 }
 
@@ -458,11 +465,17 @@ set.remove = function(self, item){
        var _i = self.$items.indexOf(item)
        if(_i == -1){throw _b_.KeyError.$factory(item)}
        self.$items.splice(_i, 1)
+       if(typeof item == "number"){
+           self.$numbers.splice(self.$numbers.indexOf(item), 1)
+       }
        return $N
     }
     for(var i = 0, len = self.$items.length; i < len; i++){
         if($B.rich_comp("__eq__", self.$items[i], item)){
             self.$items.splice(i, 1)
+            if(item instanceof Number){
+                self.$numbers.splice(self.$numbers.indexOf(item.valueOf()), 1)
+            }
             return $N
         }
     }
@@ -718,3 +731,4 @@ _b_.set = set
 _b_.frozenset = frozenset
 
 })(__BRYTHON__)
+

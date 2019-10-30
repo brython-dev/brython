@@ -111,4 +111,9 @@ assert "Tested on {0:%Y-%m-%d}".format(d) == "Tested on 2010-09-07"
 d = datetime(2010, 7, 4, 12, 15, 58)
 assert '{:%Y-%m-%d %H:%M:%S}'.format(d) == '2010-07-04 12:15:58'
 
+# issue 1194
+s = '2019-08-05T22:24:10.544Z'
+dt = datetime.strptime(s,"%Y-%m-%dT%H:%M:%S.%f%z")
+assert str(dt) == "2019-08-05 22:24:10.544000+00:00"
+
 print('passed all tests')

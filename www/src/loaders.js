@@ -4,6 +4,12 @@
 
 var _b_ = $B.builtins
 
+if($B.VFS_timestamp && $B.VFS_timestamp > $B.timestamp){
+    // A VFS created by python -m brython --modules has its own
+    // timestamp. If it is after the one in brython.js, use it
+    $B.timestamp = $B.VFS_timestamp
+}
+
 function idb_load(evt, module){
     // Callback function of a request to the indexedDB database with a module
     // name as key.
@@ -15,23 +21,18 @@ function idb_load(evt, module){
 
     var timestamp = $B.timestamp
 
-    if($B.VFS_timestamp && $B.VFS_timestamp > $B.timestamp){
-        // A VFS created by python -m brython --modules has its own
-        // timestamp. If it is after the one in brython.js, use it
-        $B.timestamp = $B.VFS_timestamp
-    }
-
     if(res === undefined || res.timestamp != $B.timestamp){
         // Not found or not with the same date as in brython_stdlib.js:
         // search in VFS
         if($B.VFS[module] !== undefined){
             var elts = $B.VFS[module],
                 ext = elts[0],
-                source = elts[1],
-                is_package = elts.length == 4,
-                __package__
+                source = elts[1]
             if(ext == ".py"){
-                // Store Javascript translation in indexedDB
+                var imports = elts[2],
+                    is_package = elts.length == 4,
+                    source_ts = elts.timestamp,
+                    __package__
 
                 // Temporarily set $B.imported[module] for relative imports
                 if(is_package){__package__ = module}
@@ -53,10 +54,15 @@ function idb_load(evt, module){
                 delete $B.imported[module]
                 if($B.debug > 1){console.log("precompile", module)}
 
-                var imports = elts[2]
-                imports = imports.join(",")
-                $B.tasks.splice(0, 0, [store_precompiled,
-                    module, js, imports, is_package])
+                // Store Javascript translation in indexedDB
+                var parts = module.split(".")
+                if(parts.length > 1){parts.pop()}
+                if($B.stdlib.hasOwnProperty(parts.join("."))){
+                    var imports = elts[2]
+                    imports = imports.join(",")
+                    $B.tasks.splice(0, 0, [store_precompiled,
+                        module, js, source_ts, imports, is_package])
+                }
             }else{
                 console.log('bizarre', module, ext)
             }
@@ -114,17 +120,24 @@ function idb_load(evt, module){
     loop()
 }
 
-function store_precompiled(module, js, imports, is_package){
+function store_precompiled(module, js, source_ts, imports, is_package){
     // Sends a request to store the compiled Javascript for a module.
     var db = $B.idb_cx.result,
         tx = db.transaction("modules", "readwrite"),
         store = tx.objectStore("modules"),
         cursor = store.openCursor(),
-        data = {"name": module, "content": js,
+        data = {"name": module,
+            "content": js,
             "imports": imports,
+            "origin": origin,
             "timestamp": __BRYTHON__.timestamp,
-            "is_package": is_package},
+            "source_ts": source_ts,
+            "is_package": is_package
+            },
         request = store.put(data)
+        if($B.debug > 1){
+            console.log("store precompiled", module, "package", is_package)
+        }
     request.onsuccess = function(evt){
         // Restart the task "idb_get", knowing that this time it will use
         // the compiled version.
@@ -148,15 +161,25 @@ function idb_get(module){
     }
 }
 
+function remove_from_cache(cursor, record){
+    var request = cursor.delete()
+    request.onsuccess = function(){
+        if($B.debug > 1){
+            console.log("delete outdated", record.name)
+        }
+    }
+}
+
 $B.idb_open = function(obj){
-    var idb_cx = $B.idb_cx = indexedDB.open("brython_stdlib")
+    $B.idb_name = "brython-cache"
+    var idb_cx = $B.idb_cx = indexedDB.open($B.idb_name)
     idb_cx.onsuccess = function(){
         var db = idb_cx.result
         if(!db.objectStoreNames.contains("modules")){
             var version = db.version
             db.close()
             console.info('create object store', version)
-            idb_cx = indexedDB.open("brython_stdlib", version+1)
+            idb_cx = indexedDB.open($B.idb_name, version+1)
             idb_cx.onupgradeneeded = function(){
                 console.info("upgrade needed")
                 var db = $B.idb_cx.result,
@@ -174,7 +197,50 @@ $B.idb_open = function(obj){
             }
         }else{
             console.info("using indexedDB for stdlib modules cache")
-            loop()
+            // Preload all compiled modules
+
+            var tx = db.transaction("modules", "readwrite"),
+                store = tx.objectStore("modules"),
+                record,
+                outdated = []
+
+            store.openCursor().onsuccess = function(evt){
+                cursor = evt.target.result
+                if(cursor){
+                    record = cursor.value
+                    // A record is valid if the Brython engine timestamp is
+                    // the same as record.timestamp, and the timestamp of the
+                    // VFS file where the file stands is the same as
+                    // record.source_ts
+                    if(record.timestamp == $B.timestamp){
+                        if(!$B.VFS || !$B.VFS[record.name] ||
+                                $B.VFS[record.name].timestamp == record.source_ts){
+                            // Load in __BRYTHON__.precompiled
+                            if(record.is_package){
+                                $B.precompiled[record.name] = [record.content]
+                            }else{
+                                $B.precompiled[record.name] = record.content
+                            }
+                            if($B.debug > 1){
+                                console.log("load from cache", record.name)
+                            }
+                        }else{
+                            // If module with name record.name exists in a VFS
+                            // and its timestamp is not the VFS timestamp,
+                            // remove from cache
+                            remove_from_cache(cursor, record)
+                        }
+                    }else{
+                        remove_from_cache(cursor, record)
+                    }
+                    cursor.continue()
+                }else{
+                    if($B.debug > 1){
+                        console.log("done")
+                    }
+                    loop()
+                }
+            }
         }
     }
     idb_cx.onupgradeneeded = function(){
@@ -276,6 +342,9 @@ var loop = $B.loop = function(){
                     $B.print_stack()
                     err = _b_.RuntimeError.$factory(err + '')
                 }
+            }
+            if($B.debug > 1){
+                console.log("handle error", err.__class__, err.args)
             }
             $B.handle_error(err)
         }

@@ -176,11 +176,12 @@ header.show()
     <code>document[element_id]</code> is the element with attribute id equal
     to element_id. In this example, <code>document["button0"]</code> is a
     reference to the button you click on.
-    <p><code>bind(<i>event</i>)</code> is a method that returns a decorator,
-    applied to the function to call when the <i>event</i> occurs on the
-    element. When the user clicks on the element, this event is called
-    "click". The code means : when the user clicks on the element (here,
-    the button with the text "display an alert box"), call the function <code>hello()</code>.
+    <p><code>bind(<i>event, function</i>)</code> is a method of elements that
+    takes two arguments, the name of an event and the function to call when
+    the event occurs on the element. When the user clicks on the element, this
+    event is called "click". The code means : when the user clicks on the
+    element (here, the button with the text "display an alert box"), call the
+    function <code>hello</code>.
     The function takes one argument, an object representing the event.
     <p><code>alert</code> is used to display small popup windows.
     </span>
@@ -246,7 +247,7 @@ header.show()
     <p>
 
     <span class="comment">
-    Elements have an attribute <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/style" target="_blank"><code>style</code></a>, which itself has (among many others) the attributes <code>color</code> (text color), <code>backgroundColor</code> (background color), <code>fontWeigth</code> ("bold" or "normal"), <code>fontSize</code> (size of the letters, in pixels), etc.
+    Elements have an attribute <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/style" target="_blank"><code>style</code></a>, which itself has (among many others) the attributes <code>color</code> (text color), <code>backgroundColor</code> (background color), <code>fontWeight</code> ("bold" or "normal"), <code>fontSize</code> (size of the letters, in pixels), etc.
     <p>Look <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference" target="_blank" class="external">here</a> for a reference on CSS.
     <p>Note that the attribute names that have a hyphen is CSS are written in camelCase in Python code : for instance, to set the CSS attribute <code>background-color</code>, the syntax is <code>style.backgroundColor</code>
     </span>
@@ -291,13 +292,13 @@ header.show()
     <span id="zone3" class="zone">on / off</span>
 
     <script type="text/python"  id="script3">
-    from browser import document
+    from browser import bind, document
 
+    @bind("#button3", "click")
     def change(event):
         display = document["zone3"].style.display
         document["zone3"].style.display = "inline" if display == "none" else "none"
 
-    document["button3"].bind("click", change)
     </script>
 
     <p>
@@ -306,6 +307,18 @@ header.show()
 
     <span class="comment">
     <code>display</code> is another attribute of <code>style</code>. Setting it to <code>"none"</code> hides the element.
+    <p>Note that in this example, we use a variant of the syntax to bind
+    events to functions. Instead of the form we had seen before, which uses
+    the <i>method</i> <code>bind</code> of DOM elements, here we use the
+    <i>function</i> bind defined in module <code>browser</code>. It is used
+    as a decorator for the callback function, and takes two parameters:
+    <ul>
+    <li>- an identifier of the element(s) to bind : either a reference to the
+    element, or a <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors"
+    class="external">CSS selector</a> (here, the selector "#button3" refers to the
+    button)
+    <li>- the event name
+    </ul>
     </span>
 </div>
 
@@ -368,8 +381,8 @@ header.show()
     <p>
 
     <span class="comment">
-    To create DOM elements, Brython provides the module <code class="module">browser.html</code>. It defines classes with the name of all the valid HTML tags in uppercase ; <code>html.B("message")</code> creates the element <code class="html">&lt;B&gt;message&lt;B&gt;</code>
-    <p>To include an element inside another one, Brython uses the operator <code><=</code> : think of it as a left arrow, not as "inferior or equal". The use of an operator is more concise and avoids having to use a function call.
+    To create DOM elements, Brython provides the module <code class="module">browser.html</code>. It defines classes with the name of all the valid HTML tags in uppercase ; <code>html.B("message")</code> creates the element <code class="html">&lt;B&gt;message&lt;/B&gt;</code>
+    <p>To include an element inside another one, Brython uses the operator <code><=</code> : think of it as a left arrow, not as "less than or equal". The use of an operator is more concise and avoids having to use a function call.
     </code>
     </span>
 
@@ -544,8 +557,6 @@ the end.
     </pre>
     <p>
 
-    So far we have used the method <code>bind()</code> as a decorator for a callback function, with the event name as single argument. It can also be used with the function as
-the second argument.
     <p>In function <code>show(event)</code>, <code>event.target</code> is the element itself.
     <p>A <a href="https://developer.mozilla.org/en-US/docs/Web/API/HTMLSelectElement" target="_blank">SELECT element</a> has an attribute <a href="https://developer.mozilla.org/en-US/docs/Web/API/HTMLSelectElement/selectedIndex" target="_blank"><code>selectedIndex</code></a>, the rank of the selected item in the list of options, available by its attribute <code>options</code>. The OPTION element itself has an attribute <code>value</code>, here the option text.
     </span>
@@ -951,7 +962,8 @@ the second argument.
     <p>
 
     <span class="comment">
-    By default, <code>print()</code> writes message in the browser console window (to open it, do Ctrl+Maj+K on Firefox, Ctrl+Maj+J on Chrome, F12 on IE, etc).
+    By default, <code>print()</code> writes message in the browser console window (to open it, right-click on the page, and click the "Inspect Element" button. 
+    Safari users cannot see this option initially.).
     <p>Like in Python, the output can be reset by setting <code>sys.stdout</code> to an object with a method <code>write()</code>.
     </span>
 </div>
@@ -1080,7 +1092,7 @@ the second argument.
     <span class="comment">
     Similarly, Brython provides the standard Python module
     <code class="module">re</code> for regular expressions, but it can also
-    use the Javascript <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions" target="_blank">RegExp</a> 
+    use the Javascript <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions" target="_blank">RegExp</a>
     and <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String" target="_blank">String</a> classes.
     </span>
 </div>

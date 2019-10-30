@@ -144,6 +144,25 @@ bytearray.append = function(self, b){
     self.source[self.source.length] = b
 }
 
+bytearray.extend = function(self, b){
+    if(b.__class__ === bytearray || b.__class__ === bytes){
+        b.source.forEach(function(item){
+            self.source.push(item)
+        })
+        return _b_.None
+    }
+    var it = _b_.iter(b)
+    while(true){
+        try{
+            bytearray.__add__(self, _b_.next(it))
+        }catch(err){
+            if(err === _b_.StopIteration){break}
+            throw err
+        }
+    }
+    return _b_.None
+}
+
 bytearray.insert = function(self, pos, b){
     if(arguments.length != 3){throw _b_.TypeError.$factory(
         "insert takes exactly 2 arguments (" + (arguments.length - 1) +
@@ -188,9 +207,9 @@ bytes.__contains__ = function(self, other){
     if(typeof other == "number"){
         return self.source.indexOf(other) > -1
     }
-    if(self.source.length > other.source.length){return false}
-    var len = self.source.length
-    for(var i = 0; i < other.source.length - self.source.length + 1; i++){
+    if(self.source.length < other.source.length){return false}
+    var len = other.source.length
+    for(var i = 0; i < self.source.length - other.source.length + 1; i++){
         var flag = true
         for(var j = 0; j < len; j++){
             if(other.source[i + j] != self.source[j]){
@@ -457,7 +476,7 @@ bytes.decode = function(self, encoding,errors){
       case 'surrogatepass':
       case 'xmlcharrefreplace':
       case 'backslashreplace':
-        return decode($.self.source, $.encoding, $.errors)
+        return decode($.self, $.encoding, $.errors)
       default:
         // raise error since errors variable is not valid
     }
@@ -1193,10 +1212,10 @@ function normalise(encoding){
 function load_decoder(enc){
     // load table from Lib/encodings/<enc>.py
     if(to_unicode[enc] === undefined){
-        load_encoder(enc)
-        to_unicode[enc] = {}
-        for(var attr in from_unicode[enc]){
-            to_unicode[enc][from_unicode[enc][attr]] = attr
+        var mod = _b_.__import__("encodings." + enc)
+        if(mod[enc].getregentry){
+            to_unicode[enc] = $B.$getattr(mod[enc].getregentry(),
+                "decode")
         }
     }
 }
@@ -1205,16 +1224,16 @@ function load_encoder(enc){
     // load table from encodings/<enc>.py
     if(from_unicode[enc] === undefined){
         var mod = _b_.__import__("encodings." + enc)
-        table = mod[enc].decoding_table
-        from_unicode[enc] = {}
-        for(var i = 0; i < table.length; i++){
-            from_unicode[enc][table.charCodeAt(i)] = i
+        if(mod[enc].getregentry){
+            from_unicode[enc] = $B.$getattr(mod[enc].getregentry(),
+                "encode")
         }
     }
 }
 
-var decode = $B.decode = function(b, encoding, errors){
+var decode = $B.decode = function(obj, encoding, errors){
     var s = "",
+        b = obj.source,
         enc = normalise(encoding)
     switch(enc) {
       case "utf_8":
@@ -1321,10 +1340,11 @@ var decode = $B.decode = function(b, encoding, errors){
           })
           break
       case "unicode_escape":
-          if(Array.isArray(b)){
-              b = decode(b, "latin-1", "strict")
+          // obj is str or bytes
+          if(obj.__class__ === bytes || obj.__class__ === bytearray){
+              obj = decode(obj, "latin-1", "strict")
           }
-          return b.replace(/\\n/g, "\n").
+          return obj.replace(/\\n/g, "\n").
                    replace(/\\a/g, "\u0007").
                    replace(/\\b/g, "\b").
                    replace(/\\f/g, "\f").
@@ -1332,14 +1352,13 @@ var decode = $B.decode = function(b, encoding, errors){
                    replace(/\\'/g, "'").
                    replace(/\\"/g, '"')
       case "raw_unicode_escape":
-          if(Array.isArray(b)){
-              b = decode(b, "latin-1", "strict")
+          if(obj.__class__ === bytes || obj.__class__ === bytearray){
+              obj = decode(obj, "latin-1", "strict")
           }
-          b = b.replace(/\\u([a-fA-F0-9]{4})/g, function(mo){
+          return obj.replace(/\\u([a-fA-F0-9]{4})/g, function(mo){
               var cp = parseInt(mo.substr(2), 16)
               return String.fromCharCode(cp)
           })
-          return b
       case "ascii":
           for(var i = 0, len = b.length; i < len; i++){
               var cp = b[i]
@@ -1364,12 +1383,7 @@ var decode = $B.decode = function(b, encoding, errors){
               console.log(b, encoding, "error load_decoder", err)
               throw _b_.LookupError.$factory("unknown encoding: " + enc)
           }
-          b.forEach(function(item){
-              var u = to_unicode[enc][item]
-              if(u !== undefined){s += String.fromCharCode(u)}
-              else{s += String.fromCharCode(item)}
-          })
-          break
+          return to_unicode[enc](obj)[0]
     }
     return s
 }
@@ -1406,9 +1420,14 @@ var encode = $B.encode = function(){
                 }
             }
             return res
+        case "latin":
         case "latin1":
+        case "latin-1":
+        case "L1":
         case "iso8859_1":
         case "iso_8859_1":
+        case "8859":
+        case "cp819":
         case "windows1252":
             for(var i = 0, len = s.length; i < len; i++){
                 var cp = s.charCodeAt(i) // code point
@@ -1444,15 +1463,7 @@ var encode = $B.encode = function(){
             }catch(err){
                 throw _b_.LookupError.$factory("unknown encoding: " + encoding)
             }
-
-            for(var i = 0, len = s.length; i < len; i++){
-                var cp = s.charCodeAt(i) // code point
-                if(from_unicode[enc][cp] === undefined){
-                    $UnicodeEncodeError(encoding, cp, i)
-                }
-                t[pos++] = from_unicode[enc][cp]
-            }
-            break
+            t = from_unicode[enc](s)[0].source
     }
     return t
 }

@@ -31,7 +31,17 @@ $B.args = function($fname, argcount, slots, var_names, args, $dobj,
     }
     var has_kw_args = false,
         nb_pos = $args.length,
-        filled = 0
+        filled = 0,
+        extra_kw,
+        only_positional
+
+    // If the function definition indicates the end of positional arguments,
+    // store the position and remove "/" from variable names
+    var end_positional = var_names.indexOf("/")
+    if(end_positional != -1){
+        var_names.splice(end_positional, 1)
+        only_positional = var_names.slice(0, end_positional)
+    }
 
     // If the function call had keywords arguments, they are in the last
     // element of $args
@@ -115,6 +125,9 @@ $B.args = function($fname, argcount, slots, var_names, args, $dobj,
                 // The slot is already filled
                 throw _b_.TypeError.$factory($fname +
                     "() got multiple values for argument '" + key + "'")
+            }else if(only_positional && only_positional.indexOf(key1) > -1){
+                throw _b_.TypeError.$factory($fname + "() got an " +
+                    "unexpected keyword argument '" + key + "'")
             }else{
                 // Fill the slot with the key/value pair
                 slots[key1] = value
@@ -178,11 +191,9 @@ $B.get_class = function(obj){
         switch(typeof obj) {
             case "number":
                 if(obj % 1 === 0){ // this is an int
-                   obj.__class__ = _b_.int
                    return _b_.int
                 }
                 // this is a float
-                obj.__class__ = _b_.float
                 return _b_.float
             case "string":
                 return _b_.str
@@ -326,7 +337,8 @@ $B.$search = function(name, global_ns){
     else if(frame[3][name] !== undefined){return frame[3][name]}
     else if(_b_[name] !== undefined){return _b_[name]}
     else{
-        if(frame[0] == frame[2] || frame[1].$type == "class"){
+        if(frame[0] == frame[2] || frame[1].$type == "class" ||
+                frame[1].$exec_locals){
             throw _b_.NameError.$factory(
                 "name '" + name + "' is not defined")}
         else{
@@ -432,12 +444,17 @@ $B.$JS2Py = function(src){
         return _b_.float.$factory(src)
     }
     if(src === null || src === undefined){return _b_.None}
+    if(Array.isArray(src) &&
+            Object.getPrototypeOf(src) === Array.prototype){
+        var res = []
+        for(var i = 0, len = src.length; i< len; i++){
+            res.push($B.$JS2Py(src[i]))
+        }
+        return res
+    }
     var klass = $B.get_class(src)
     if(klass !== undefined){
-        if(klass === _b_.list){
-            if(src.__class__){return src}
-            return $B.JSArray.$factory(src) // defined in py_list.js
-        }else if(klass === $B.JSObject){
+        if(klass === $B.JSObject){
             src = src.js
         }else{
             return src
@@ -447,14 +464,6 @@ $B.$JS2Py = function(src){
         if($B.$isNode(src)){return $B.DOMNode.$factory(src)}
         if($B.$isEvent(src)){return $B.$DOMEvent(src)}
         if($B.$isNodeList(src)){return $B.DOMNode.$factory(src)}
-        if(Array.isArray(src) &&
-                Object.getPrototypeOf(src) === Array.prototype){
-            var res = []
-            for(var i = 0, len = src.length; i< len; i++){
-                res.push($B.$JS2Py(src[i]))
-            }
-            return res
-        }
     }
     return $B.JSObject.$factory(src)
 }
@@ -756,13 +765,18 @@ $B.$is = function(a, b){
 
 $B.$is_member = function(item, _set){
     // used for "item in _set"
-    var f, _iter
+    var f, _iter, method
 
-    // use __contains__ if defined
-    try{f = $B.$getattr(_set, "__contains__")}
+    // Use __contains__ if defined *on the class* (implicit invocation of
+    // special methods don't use object __dict__)
+    try{
+        method = $B.$getattr(_set.__class__ || $B.get_class(_set),
+            "__contains__")
+
+    }
     catch(err){}
 
-    if(f){return f(item)}
+    if(method){return $B.$call(method)(_set, item)}
 
     // use __iter__ if defined
     try{_iter = _b_.iter(_set)}
@@ -1033,11 +1047,15 @@ function exit_ctx_managers_in_generators(frame){
 
 $B.leave_frame = function(arg){
     // Leave execution frame
-    if($B.profile > 0){$B.$profile.return()}
     if($B.frames_stack.length == 0){console.log("empty stack"); return}
     $B.del_exc()
     var frame = $B.frames_stack.pop()
-    exit_ctx_managers_in_generators(frame)
+    if(frame[1].$has_yield_in_cm){
+        // The attribute $has_yield_in_cm is set in py2js.js /
+        // $YieldCtx.transform only if the frame has "yield" inside a
+        // context manager.
+        exit_ctx_managers_in_generators(frame)
+    }
 }
 
 $B.leave_frame_exec = function(arg){
@@ -1252,7 +1270,7 @@ $B.rich_op = function(op, x, y){
     var x_class = x.__class__ || $B.get_class(x),
         y_class = y.__class__ || $B.get_class(y),
         method
-    if(x.__class__ === y.__class__){
+    if(x_class === y_class){
         // For objects of the same type, don't try the reversed operator
         try{
             method = $B.$call($B.$getattr(x, "__" + op + "__"))

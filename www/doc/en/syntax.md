@@ -9,18 +9,18 @@ limited to the folders accessible with an Ajax request.
 Keywords and built-in functions
 -------------------------------
 
-Brython supports most of the keywords and functions of Python 3 :
+Brython supports all the keywords and functions of Python 3 :
 
-- keywords : `and, as, assert, async, await, break, class, continue, def, del, elif, else,`
-  `except, False, finally, for, from, global, if, import, in, is, lambda, `
-  `None, nonlocal, not, or, pass, raise, return, True, try, while, with, yield`
+- keywords : `and, as, assert, async, await, break, class, continue, def, del, `
+  `elif, else, except, False, finally, for, from, global, if, import, in, is, `
+  `lambda, None, nonlocal, not, or, pass, raise, return, True, try, while, with, yield`
 - built-in functions and classes : `abs, all, any, ascii, bin, bool, bytes,`
   `callable, chr, classmethod, delattr, dict, dir, divmod, `
   `enumerate, eval, exec, filter, float, frozenset, getattr, `
   `globals, hasattr, hash, hex, id, input, int, isinstance, `
   `iter, len, list, locals, map, max, memoryview, min, `
   `next, object, open, ord, pow, print, property, range, `
-  repr, reversed, round, set, setattr, slice, sorted, str, `
+  `repr, reversed, round, set, setattr, slice, sorted, str, `
   `sum, super, tuple, type, vars, zip, __import__`
 
 Here are a few features and limitations imposed by the browser and Javascript :
@@ -32,11 +32,12 @@ Here are a few features and limitations imposed by the browser and Javascript :
    as `set_timeout()` or `set_interval()` must be used instead
 
  - the built-in function `input()` is simulated by the Javascript function
- `prompt()`
+ `prompt()`. An example in the gallery shows how to simulate
+  an input function in a custom dialog box.
 
 - for the same reason, and also because the browser has its own implicit
   event loop, the CPython `asyncio` module is not usable. A Brython-specific
-  module, [**`browser.aio`**](aio.html), is provided for asynchrnous
+  module, [**`browser.aio`**](aio.html), is provided for asynchronous
   programming.
 
 - the built-in function `open()` takes as argument the url of the file to
@@ -53,11 +54,6 @@ Here are a few features and limitations imposed by the browser and Javascript :
 
 - to open a print dialog (to a printer), call `window.print` (`window` is
   defined in module **browser**).
-
-- the `input()` built-in is implemented with the browser's blocking function
-  _prompt()_. Since blocking functions can't be defined with Javascript,
-  `sys.stdin` is read-only. An example in the gallery shows how to simulate
-  an input function in a custom dialog box.
 
 - the objects lifecycle is managed by the Javascript garbage collector,
   Brython doesn't manage reference counting like CPython. Therefore, method

@@ -3,5 +3,4 @@ class A:
         self.x = x
 
 for i in range(100000):
-    
     A(i)

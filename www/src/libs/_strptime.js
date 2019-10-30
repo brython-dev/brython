@@ -42,13 +42,15 @@ var $module = (function($B){
 
             var regexps = {
                 d: ["day", new RegExp("0[1-9]|[123][0-9]")],
+                f: ["microsecond", new RegExp("(\\d{1,6})")],
                 H: ["hour", new RegExp("[01][0-9]|2[0-3]|\\d")],
                 I: ["hour", new RegExp("0[0-9]|1[0-2]")],
                 m: ["month", new RegExp("0[1-9]|1[012]")],
                 M: ["minute", new RegExp("[0-5][0-9]")],
                 S: ["second", new RegExp("([1-5]\\d)|(0?\\d)")],
                 y: ["year", new RegExp("0{0,2}\\d{2}")],
-                Y: ["year", new RegExp("\\d{4}")]
+                Y: ["year", new RegExp("\\d{4}")],
+                z: ["tzinfo", new RegExp("Z")]
             }
 
             while(pos_fmt < fmt.length){
@@ -67,6 +69,16 @@ var $module = (function($B){
                                 throw Error(attr + " is defined more than once")
                             }else{
                                 dt[attr] = parseInt(res[0])
+                                if(attr == "microsecond"){
+                                    while(dt[attr] < 100000){
+                                        dt[attr] *= 10
+                                    }
+                                }else if(attr == "tzinfo"){
+                                    // Only value supported for the moment : Z
+                                    // (UTC)
+                                    var dt_module = $B.imported[cls.__module__]
+                                    dt.tzinfo = dt_module.timezone.utc
+                                }
                                 pos_fmt += 2
                                 pos_s += res[0].length
                             }
@@ -113,7 +125,6 @@ var $module = (function($B){
                         // Locale's appropriate date and time representation
                         var fmt1 = fmt.substr(0, pos_fmt - 1) + _locale_c_format() +
                             fmt.substr(pos_fmt + 2)
-                        console.log("fmt1", fmt1)
                         fmt = fmt1
                     }else if(spec == "%"){
                         if(s.charAt(pos_s) == "%"){
@@ -135,7 +146,8 @@ var $module = (function($B){
                 }
             }
             return $B.$call(cls)(dt.year, dt.month, dt.day,
-                dt.hour || 0, dt.minute || 0, dt.second || 0)
+                dt.hour || 0, dt.minute || 0, dt.second || 0,
+                dt.microsecond || 0, dt.tzinfo || _b_.None)
         }
     }
 })(__BRYTHON__)

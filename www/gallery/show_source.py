@@ -64,7 +64,6 @@ div_style = {"position": "absolute",
 
 def show_source(text):
     shown = document.select(".show_source")
-    print(shown)
     if not shown:
         top = btn.offsetTop + btn.offsetHeight
     else:

@@ -10,7 +10,9 @@ the same tool as for CPython packages, ie `pip`.
 For that, install the CPython Brython package (`pip install brython`),
 open a console window and in the application directory run:
 
-    python -m brython --make_dist
+```console
+python -m brython --make_dist
+```
 
 On first execution, the user is asked to enter required information for a
 package : its name, version number, etc. This information is stored in a file
@@ -21,10 +23,10 @@ __setup.py__ that is used to create a package for the application, and to
 deploy it on the Python Package Index.
 
 Users can then install the CPython package by the usual command:
-
-    pip install <nom_application>
-
+```console
+pip install <application_name>
+```
 and install the Brython application in a directory by:
-
-    python -m <nom_application> --install
-
+```console
+python -m <application_name> --install
+```

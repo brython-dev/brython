@@ -1,5 +1,3 @@
-[![CDNJS version](https://img.shields.io/cdnjs/v/brython.svg)](https://cdnjs.com/libraries/brython)
-
 brython
 =======
 
@@ -56,12 +54,12 @@ Getting started
 Zero install !
 --------------
 The most simple way to get started, without anything to install, is to use the
-distribution available online through [cdnjs](https://cdnjs.com). You can 
-choose the latest stable release :
+distribution available online through [jsDelivr](https://www.jsdelivr.com/).
+You can choose the latest stable release :
 
 ```xml
 <script type="text/javascript"
-    src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.7.3/brython.min.js">
+    src="https://cdn.jsdelivr.net/npm/brython@3.8.0/brython.min.js">
 </script>
 ```
 
@@ -71,8 +69,15 @@ with the [available stdlib](https://github.com/brython-dev/brython/tree/master/w
 
 ```xml
 <script type="text/javascript"
-    src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.7.3/brython_stdlib.js">
+    src="https://cdn.jsdelivr.net/npm/brython@3.8.0/brython_stdlib.js">
 </script>
+```
+
+If you want to use the latest development version, you can load these scripts
+instead:
+```
+https://cdn.jsdelivr.net/gh/brython-dev/brython/www/src/brython.js
+https://cdn.jsdelivr.net/gh/brython-dev/brython/www/src/brython_stdlib.js
 ```
 
 Local install

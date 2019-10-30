@@ -15,6 +15,7 @@ Solución
 from browser import document
 document['zone'] <= "blah "
 ```
+
 </td>
 <td id="zone" style="background-color:#FF7400;text-align:center;">Contenido 
 inicial<p>
@@ -22,7 +23,7 @@ inicial<p>
 </tr>
 </table>
 
-`doc["zone"]` es el elemento en la p&aacute;gina web con el id "zone" (aquí, 
+`document["zone"]` es el elemento en la p&aacute;gina web con el id "zone" (aquí, 
 la celda coloreada de la tabla)
 
 

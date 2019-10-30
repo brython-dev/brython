@@ -124,7 +124,7 @@ $B.print_stack = function(stack){
 }
 
 // class of traceback objects
-var traceback = $B.make_class("traceback",
+var traceback = $B.traceback = $B.make_class("traceback",
     function(exc, stack){
         if(stack === undefined)
             stack = exc.$stack
@@ -210,6 +210,7 @@ var frame = $B.make_class("frame",
             $stack: deep_copy(stack)
         }
         if(pos === undefined){pos = 0}
+        //pos = fs.length - pos - 1
         res.$pos = pos
         if(fs.length){
             var _frame = fs[pos],
@@ -372,9 +373,9 @@ var getExceptionTrace = function(exc, includeInternal) {
             info += ', in ' + frame[4].$infos.__name__
         }
 
-        if (src !== undefined) {
-            var lines = src.split("\n");
-            var line = lines[parseInt(line_info[0]) - 1]
+        if(src !== undefined){
+            var lines = src.split("\n"),
+                line = lines[parseInt(line_info[0]) - 1]
             if(line){line = line.replace(/^[ ]+/g, "")}
             info += "\n    " + line
         }else{
@@ -395,7 +396,7 @@ BaseException.__getattr__ = function(self, attr){
         return getExceptionTrace(self, false);
     }else if (attr == "infoWithInternal"){
         return getExceptionTrace(self, true);
-    }else if(attr == "traceback"){
+    }else if(attr == "__traceback__"){
         // Return traceback object
         if(self.$traceback !== undefined){return self.$traceback}
         return traceback.$factory(self)
@@ -406,7 +407,7 @@ BaseException.__getattr__ = function(self, attr){
 }
 
 BaseException.with_traceback = function(self, tb){
-    self.traceback = tb
+    self.$traceback = tb
     return self
 }
 
@@ -561,6 +562,7 @@ $make_exc([["StopIteration","err.value = arguments[0]"],
     "SystemError", "TypeError", "ValueError", "Warning"],_b_.Exception)
 $make_exc(["FloatingPointError", "OverflowError", "ZeroDivisionError"],
     _b_.ArithmeticError)
+$make_exc(["ModuleNotFoundError"], _b_.ImportError)
 $make_exc(["IndexError","KeyError"], _b_.LookupError)
 $make_exc(["UnboundLocalError"], _b_.NameError)
 $make_exc(["BlockingIOError", "ChildProcessError", "ConnectionError",
@@ -586,5 +588,30 @@ $make_exc(["EnvironmentError", "IOError", "VMSError", "WindowsError"],
 $B.$TypeError = function(msg){
     throw _b_.TypeError.$factory(msg)
 }
+
+// SyntaxError instances have special attributes
+var se = _b_.SyntaxError.$factory
+_b_.SyntaxError.$factory = function(){
+    var arg = arguments[0]
+    if(arg.__class__ === _b_.SyntaxError){
+        return arg
+    }
+    var exc = se.apply(null, arguments),
+        frame = $B.last($B.frames_stack)
+    if(frame){
+        line_info = frame[1].$line_info
+        exc.filename = frame[3].__file__
+        exc.lineno = parseInt(line_info.split(",")[0])
+        var src = $B.file_cache[frame[3].__file__]
+        if(src){
+            lines = src.split("\n")
+            exc.text = lines[exc.lineno - 1]
+        }
+        exc.offset = arg.offset
+    }
+    return exc
+}
+
+_b_.SyntaxError
 
 })(__BRYTHON__)

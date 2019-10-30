@@ -62,4 +62,26 @@ u{123}
 zz'''
 assert d == "ddf\nu123\nzz"
 
+# issue 1183
+a = f""
+assert a == ""
+
+entry = "hello"
+a = f"""
+<p>
+{entry}
+</p>
+"""
+assert a == """
+<p>
+hello
+</p>
+"""
+
+# debug f-strings (new in Python 3.8)
+x = 5.323
+assert f"{x = :.1f}" == "x = 5.3"
+y = 8
+assert f"{y=}" == "y=8"
+
 print("passed all tests")

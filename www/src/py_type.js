@@ -186,9 +186,12 @@ $B.$class_constructor = function(class_name, class_obj, bases,
             if(attr == "__setattr__"){
                 cl_dict.$has_setattr = true
                 break
-            }else if(mro[i][attr] && mro[i][attr].__get__){
-                cl_dict.$has_setattr = true
-                break
+            }else if(mro[i][attr]){
+                if(mro[i][attr].__get__ || (mro[i][attr].__class__ &&
+                        mro[i][attr].__class__.__get__)){ // issue #1204
+                    cl_dict.$has_setattr = true
+                    break
+                }
             }
         }
     }
@@ -226,7 +229,7 @@ $B.$class_constructor = function(class_name, class_obj, bases,
         bases[i].$subclasses.push(kls)
         // call __init_subclass__ with the extra keyword arguments
         if(i == 0){
-            init_subclass = _b_.type.__getattribute__(bases[i],
+            var init_subclass = _b_.type.__getattribute__(bases[i],
                 "__init_subclass__")
             if(init_subclass.$infos.__func__ !== undefined){
                 init_subclass.$infos.__func__(kls, {$nat: "kw", kw: extra_kwargs})
@@ -291,7 +294,6 @@ type.__format__ = function(klass, fmt_spec){
 }
 
 type.__getattribute__ = function(klass, attr){
-
     switch(attr) {
         case "__annotations__":
             var mro = [klass].concat(klass.__mro__),
@@ -343,9 +345,9 @@ type.__getattribute__ = function(klass, attr){
                 function(key){delete klass[key]})
     }
     var res = klass[attr]
-    var $test = false // attr=="__new__" && klass.$infos.__name__ == "N"
+    var $test = false // attr=="__str__" // && klass.$infos.__name__ == "N"
     if($test){
-        console.log("attr", attr, "of", klass, res)
+        console.log("attr", attr, "of", klass, res, res + "")
     }
     if(res === undefined && klass.__slots__ &&
             klass.__slots__.indexOf(attr) > -1){
@@ -450,8 +452,8 @@ type.__getattribute__ = function(klass, attr){
         }
         if(typeof res == "function"){
             // method
-            if(res.$infos === undefined){
-                console.log("warning: no attribute $infos for", res)
+            if(res.$infos === undefined && $B.debug > 1){
+                console.log("warning: no attribute $infos for", res, "attr", attr)
             }
             if($test){console.log("res is function", res)}
 
@@ -470,6 +472,10 @@ type.__getattribute__ = function(klass, attr){
         }
 
     }
+}
+
+type.__hash__ = function(cls){
+    return _b_.hash(cls)
 }
 
 type.__init__ = function(){
@@ -510,6 +516,12 @@ type.__name__ = {
     },
     __set__: function(self, value){
         self.$infos.__name__ = value
+    },
+    __str__: function(self){
+        return "type"
+    },
+    __eq__: function(self, other){
+        return self.$infos.__name__ == other
     }
 }
 
@@ -542,7 +554,20 @@ type.__new__ = function(meta, name, bases, cl_dict){
     for(var i = 0; i < items.length; i++){
         var key = $B.to_alias(items[i][0]),
             v = items[i][1]
+        if(v === undefined){continue}
         class_dict[key] = v
+        if(v.__class__){
+            // cf PEP 487 and issue #1178
+            var is_descriptor =
+                $B.$getattr(v.__class__, "__set__", _b_.None) !== _b_.None
+
+            if(is_descriptor){
+                var set_name = $B.$getattr(v.__class__, "__set_name__", _b_.None)
+                if(set_name !== _b_.None){
+                    set_name(v, v.__class__, key)
+                }
+            }
+        }
         if(typeof v == "function"){
             v.$infos.$class = class_dict
             if(v.$infos.$defaults){
@@ -583,6 +608,12 @@ type.__qualname__ = {
     },
     __set__: function(self, value){
         self.$infos.__qualname__ = value
+    },
+    __str__: function(self){
+        console.log("type.__qualname__")
+    },
+    __eq__: function(self, other){
+        return self.$infos.__qualname__ == other
     }
 }
 
@@ -736,6 +767,7 @@ var $instance_creator = $B.$instance_creator = function(klass){
     var metaclass = klass.__class__,
         call_func,
         factory
+
     if(metaclass === _b_.type && (!klass.__bases__ || klass.__bases__.length == 0)){
         if(klass.hasOwnProperty("__new__")){
             if(klass.hasOwnProperty("__init__")){
@@ -889,11 +921,9 @@ method.__setattr__ = function(self, key, value){
 
 $B.set_func_names(method, "builtins")
 
-method_descriptor = $B.method_descriptor =
-    $B.make_class("method_descriptor")
+$B.method_descriptor = $B.make_class("method_descriptor")
 
-classmethod_descriptor = $B.classmethod_descriptor =
-    $B.make_class("classmethod_descriptor")
+$B.classmethod_descriptor = $B.make_class("classmethod_descriptor")
 
 // this could not be done before $type and $factory are defined
 _b_.object.__class__ = type

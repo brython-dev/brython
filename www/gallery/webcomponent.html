@@ -20,12 +20,41 @@ a.sort_link{
 
 </style>
 
-<script type="text/javascript" src="/src/brython.js"></script>
+<script type="text/javascript" src="../src/brython_builtins.js"></script>
+<script type="text/javascript" src="../src/version_info.js"></script>
+<script type="text/javascript" src="../src/py2js.js"></script>
+<script type="text/javascript" src="../src/loaders.js"></script>
+<script type="text/javascript" src="../src/py_object.js"></script>
+<script type="text/javascript" src="../src/py_type.js"></script>
+<script type="text/javascript" src="../src/py_utils.js"></script>
+<script type="text/javascript" src="../src/py_sort.js"></script>
+<script type="text/javascript" src="../src/py_builtin_functions.js"></script>
+<script type="text/javascript" src="../src/py_exceptions.js"></script>
+<script type="text/javascript" src="../src/py_range_slice.js"></script>
+<script type="text/javascript" src="../src/py_bytes.js"></script>
+<script type="text/javascript" src="../src/py_set.js"></script>
+<script type="text/javascript" src="../src/js_objects.js"></script>
+<script type="text/javascript" src="../src/stdlib_paths.js"></script>
+<script type="text/javascript" src="../src/py_import.js"></script>
+<script type="text/javascript" src="../src/unicode_data.js"></script>
+<script type="text/javascript" src="../src/py_string.js"></script>
+<script type="text/javascript" src="../src/py_int.js"></script>
+<script type="text/javascript" src="../src/py_long_int.js"></script>
+<script type="text/javascript" src="../src/py_float.js"></script>
+<script type="text/javascript" src="../src/py_complex.js"></script>
+<script type="text/javascript" src="../src/py_dict.js"></script>
+<script type="text/javascript" src="../src/py_list.js"></script>
+<script type="text/javascript" src="../src/py_generator.js"></script>
+<script type="text/javascript" src="../src/py_dom.js"></script>
+
+<script type="text/javascript" src="../src/builtin_modules.js"></script>
+<script type="text/javascript" src="../src/py_import_hooks.js"></script>
+<script type="text/javascript" src="../src/async.js"></script>
 
 <script type="text/python" src="show_source.py"></script>
 
 </head>
-<body onLoad="brython(2)">
+<body onLoad="brython(1)">
 
 <table width="100%">
 <tr>
@@ -45,18 +74,20 @@ a.sort_link{
     <label for="cvc">Enter your CVC
     <popup-info img="img/alt.png" data-text="Your card validation code (CVC) is an extra security feature — it is the last 3 or 4 numbers on the back of your card."></popup-info></label>
     <input type="text" id="cvc">
+    <p>
+    <bold-italic data-val="hello"></bold_italic>
   </div>
 </form>
 
+<child-component></child-component>
 </td>
 </tr>
 </table>
 
 
 <script type="text/python">
-from browser import document, window, html
+from browser import document, window, html, webcomponent
 import javascript
-from browser.webcomponent import WebComponent
 
 style_str = """
   .wrapper {
@@ -85,9 +116,7 @@ style_str = """
   }
 """
 
-class PopUpInfo(metaclass=WebComponent):
-
-    tag_name = "popup-info"
+class PopUpInfo:
 
     def __init__(self):
         # Create a shadow root
@@ -98,7 +127,7 @@ class PopUpInfo(metaclass=WebComponent):
 
         info = html.SPAN(Class="info")
         # Take attribute content and put it inside the info span
-        text = self.getAttribute('data-text')
+        text = self.attrs['data-text']
         info.textContent = text
 
         # Insert icon
@@ -123,8 +152,46 @@ class PopUpInfo(metaclass=WebComponent):
     def connectedCallback(self):
         print("connected callback", self)
 
-</script>
+webcomponent.define("popup-info", PopUpInfo)
 
+class BoldItalic:
+
+    def __init__(self):
+        # Create a shadow root
+        shadow = self.attachShadow({'mode': 'open'})
+
+        # Insert the value of attribute "data-val" in bold italic
+        # in the shadow root
+        shadow <= html.B(html.I(self.attrs['data-val']))
+
+webcomponent.define("bold-italic", BoldItalic)
+
+
+class Parent:
+
+    def __init__(self):
+        self.shadow = self.attachShadow({'mode': 'open'})
+        self.shadow <= html.B('parent component') + html.BR()
+
+class Child(Parent):
+
+    nb_cx = 0
+
+    def __init__(self):
+        super().__init__()
+        self.shadow <= html.B('child component')
+        assert type(self) is Child
+        assert self.__class__ is Child
+        assert isinstance(self, Child)
+
+    def connectedCallback(self):
+        print(self, "connected")
+        Child.nb_cx += 1
+
+webcomponent.define("parent-component", Parent)
+webcomponent.define("child-component", Child)
+assert Child.nb_cx == 1
+</script>
 
 
 

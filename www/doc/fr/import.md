@@ -32,7 +32,9 @@ import app.records
 
 Si la bibliothèque standard a été insérée dans la page par
 
-    <script type="text/javascript" src="brython_stdlib.js"></script>
+```xml
+<script type="text/javascript" src="brython_stdlib.js"></script>
+```
 
 le script peut aussi exécuter
 
@@ -67,18 +69,22 @@ utilisés par l'application.
 Pour cela il faut ouvrir une console système, se positionner dans le
 répertoire de l'application, et exécuter
 
-`python -m brython --modules`
+```console
+python -m brython --modules
+```
 
 A noter que ce programme analyse le code Brython contenu dans tous les scripts,
 modules et pages HTML qui se trouvent dans le répertoire et ses
 sous-répertoires. La version de CPython utilisée doit donc être compatible
-avec le code Brython : par exemple si ce code inclut des f-strings, il faut au 
+avec le code Brython : par exemple si ce code inclut des f-strings, il faut au
 minimum CPython 3.6, sinon le programme détectera des erreurs de syntaxe.
 
 Vous pouvez ensuite remplacer toutes les occurrences de
 
-    <script type="text/javascript" src="brython_stdlib.js"></script>
-
+```xml
+<script type="text/javascript" src="brython_stdlib.js"></script>
+```
 par
-
-    <script type="text/javascript" src="brython_modules.js"></script>
+```xml
+<script type="text/javascript" src="brython_modules.js"></script>
+```

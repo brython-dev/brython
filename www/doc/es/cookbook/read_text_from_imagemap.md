@@ -42,7 +42,6 @@ for coord, msg in zip(coords, messages):
 
 <div id="description" style="background-color:#700;padding:10px;color:#FFF;"></div>
 
-
 <img src="/static_doc/images/imagemap_example.png" width ="400" height ="400" alt="Happy Family" usemap="#familymap" />
 
 <map name="familymap" id="familymap">

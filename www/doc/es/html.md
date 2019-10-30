@@ -34,7 +34,7 @@ WBR</code>
 
 La sintaxis para crear un objeto (eg un hiperenlace) es :
 
-<code>A(*[content,[attributes]]*)</code>
+`A(`*[content, [attributes]]*`)`
 
 > *content* es el nodo hijo del objeto ; puede ser un objeto Python como un string, 
 > un número, una lista, etc, o una instancia de otra clase del módulo **html**.
@@ -42,8 +42,17 @@ La sintaxis para crear un objeto (eg un hiperenlace) es :
 > *attributes* es una secuencia de palabras clave (keywords) correspondientes a los
 >  [atributos](http://www.w3.org/TR/html5-author/index.html#attributes-1) de la etiqueta HTML. 
 > Si el atributo contiene un guión (`-`) deberá ser reemplazado por un guión bajo (`_`): _http\_equiv_ 
-> en lugar de _http-quiv_ (el símbolo `-` será interpretado como el signo 'menos').
+> en lugar de _http-equiv_ (el símbolo `-` será interpretado como el signo 'menos'). 
+> Para nombres de atributos más complejos se puede usar la sintaxis
 
+<blockquote>
+```python
+html.BUTTON("hello", **{"v-on:click": "count++"})
+```
+</blockquote>
+
+> Mira también la función [`attribute_mapper`](#attribute_mapper) más abajo para mayor
+> personalización de la traducción de palabra clave de Python a atributo de la etiqueta HTML.
 
 Si *content* es un iterable (que no sea un string), todos los elementos en el
 iterable se convierten en hijos del objeto. Por ejemplo :
@@ -78,7 +87,8 @@ d = html.DIV('Brython', Class="container")
 También se puede crear un objeto sin argumentos y añadirlos a posteriori:
 
 - Para añadir un nodo hijo hay que usar el operador **<=**
-- Para añadir atributos se usa la sintaxis clásica de Python : `object.attribute = value`
+- Para añadir atributos se usa la sintaxis clásica de Python : `object.attrs[key] = value` (ver la sección
+  [atributos y métodos](attributes.html))
 
 Ejemplo :
 
@@ -100,8 +110,8 @@ y puedes añadir todos los elementos en un iterable :
 from browser.html import *
 
 t = TABLE()
-t <= TR(TH('Number')+TH('Square'))
-t <= (TR(TD(i)+TD(i*i)) for i in range(10))
+t <= TR(TH('Number') + TH('Square'))
+t <= (TR(TD(i) + TD(i * i)) for i in range(10))
 ```
 
 
@@ -152,11 +162,11 @@ un `div`, una tabla, un formulario y un elemento canvas HTML5:
 <td style="width:100px;">
 ```exec_on_load
 # First of all, the import of some libraries
-from browser import document as doc
+from browser import document
 from browser import html
 
 # All the elements will be inserted in the div with the "container" id
-container = doc['container']
+container = document['container']
 
 # We create a new div element
 newdiv = html.DIV(id = "new-div")
@@ -213,3 +223,46 @@ container <= newdiv
 </tr>
 </table>
 </div>
+
+
+### Creando nuevas etiquetas
+
+El módulo expone la función
+
+`maketag(`_name_`)`
+
+> Crea una clase nueva para una etiqueta con el nombre especificado. La clase se puede usar
+> como aquellas asociadas con las etiquetas HTML estándar:
+
+```python
+p2 = maketag('P2')
+document <= p2('test')
+```
+
+El módulo tiene un atributo relacionado:
+
+_tags_
+
+> Diccionario que mapea los nombres de etiquetas con su clase. Si se añaden nuevas clases
+> mediante la función `maketag()`, también se añadirán a este diccionario.
+
+<a name="attribute_mapper"></a>
+
+### Generando atributos HTML a partir de argumentos con palabras clave Python
+
+`attribute_mapper(`*attr*`)`
+
+> Para todas las clases definidas en el módulo se llamará a esta función 
+> para transformar los argumentos con palabras clave a atributos de la etiqueta HTML. Por ejemplo:
+<blockquote>
+```python
+import re
+def f(attr):
+    return re.sub("^v_(.*)_(.*)$", r"v-\1:\2", attr)
+
+html.attribute_mapper = f
+print(html.BUTTON("hello", v_on_click="count++").outerHTML)
+```
+</blockquote>
+
+> Por defecto, la función reemplaza los guiones bajos (_) con guiones normales (-).

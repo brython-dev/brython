@@ -365,12 +365,12 @@ var $DOMEvent = $B.$DOMEvent = function(ev){
     return ev
 }
 
-$B.set_func_names(DOMEvent, "<dom>")
+$B.set_func_names(DOMEvent, "browser")
 
 var Clipboard = {
     __class__: _b_.type,
     $infos: {
-        __module__: "<pydom>",
+        __module__: "browser",
         __name__: "Clipboard"
     }
 }
@@ -530,7 +530,7 @@ var DOMNode = {
     __class__ : _b_.type,
     __mro__: [object],
     $infos: {
-        __module__: "<pydom>",
+        __module__: "browser",
         __name__: "DOMNode"
     }
 }
@@ -781,6 +781,8 @@ DOMNode.__getattribute__ = function(self, attr){
                             args[pos++] = arg.elt
                         }else if(arg === _b_.None){
                             args[pos++] = null
+                        }else if(arg.__class__ == _b_.dict){
+                            args[pos++] = arg.$string_dict
                         }else{
                             args[pos++] = arg
                         }
@@ -836,6 +838,12 @@ DOMNode.__getitem__ = function(self, key){
              throw _b_.KeyError.$factory(key)
         }
     }
+}
+
+DOMNode.__hash__ = function(self){
+    return self.__hashvalue__ === undefined ?
+        (self.__hashvalue__ = $B.$py_next_hash--) :
+        self.__hashvalue__
 }
 
 DOMNode.__iter__ = function(self){
@@ -1479,7 +1487,7 @@ DOMNode.unbind = function(self, event){
     }
 }
 
-$B.set_func_names(DOMNode, "<dom>")
+$B.set_func_names(DOMNode, "browser")
 
 // return query string as an object with methods to access keys and values
 // same interface as cgi.FieldStorage, with getvalue / getlist / getfirst

@@ -8,7 +8,7 @@ This module allows running Ajax requests. It defines a single class :
 
 This object has the following attributes and methods :
 
-`bind(`_evt,function_`)`
+`bind(`_evt, function_`)`
 > attaches the _function_ to the event _evt_. _evt_ is a string that matches
 > the different request states :
 
@@ -18,7 +18,7 @@ This object has the following attributes and methods :
 - "interactive": response in progress
 - "complete" : finished
 
-> The _function_ takes a single argument, the `ajax` object.
+> The _function_ takes a single argument, the `Ajax` instance.
 
 `open(`_method, url, async_`)`
 > _method_ is the HTTP method used for the request (usually GET or POST),
@@ -83,18 +83,18 @@ We suppose there is a DIV with id _result_ in the HTML page
 from browser import document, ajax
 
 def on_complete(req):
-   if req.status==200 or req.status==0:
+   if req.status == 200 or req.status == 0:
        document["result"].html = req.text
    else:
-       document["result"].html = "error "+req.text
+       document["result"].html = "error " + req.text
 
-req = ajax.ajax()
-req.bind('complete',on_complete)
+req = ajax.Ajax()
+req.bind('complete', on_complete)
 # send a POST request to the url
-req.open('POST',url,True)
-req.set_header('content-type','application/x-www-form-urlencoded')
+req.open('POST', url, True)
+req.set_header('content-type', 'application/x-www-form-urlencoded')
 # send data as a dictionary
-req.send({'x':0, 'y':1})
+req.send({'x': 0, 'y': 1})
 ```
 
 ### Shortcuts
@@ -102,13 +102,17 @@ req.send({'x':0, 'y':1})
 GET and POST calls can be performed in a more straightforward way with the
 matching functions:
 
-`get(`_url[, async=True, headers={}, mode="text", timeout=None, data="", **callbacks]_`)`
+`get(`_url[, blocking=False, headers={}, mode="text", timeout=None, cache=False, data="", **callbacks]_`)`
 
-`post(`_url[, async=True, headers={"Content-Type": _
+and the same for `delete`, `head` and `options`.
+
+`post(`_url[, blocking=False, headers={"Content-Type": _
 _"application/x-www-form-urlencoded"}, timeout=None, data="", **callbacks]_`)`
 
-> _async_ is a boolean to specify if the request is asynchronous
-> (default value) or synchronous (blocking)
+and the same for `put`.
+
+> _blocking_ is a boolean to specify if the request is blocking or not.
+> The default value is `False` (asynchronous request)
 
 > _headers_ is a dictionary with the HTTP headers key / values
 
@@ -128,7 +132,7 @@ _"application/x-www-form-urlencoded"}, timeout=None, data="", **callbacks]_`)`
 > is the function to call if the duration defined in _timeout_ has been
 > reached.
 
-In the callback function, the Ajax object has a method _read()_ that reads the
+In the callback function, the `Ajax` object has a method _read()_ that reads the
 response content as a string if mode is "text" and as `bytes` if mode is
 "binary".
 
@@ -159,4 +163,44 @@ def read(f):
 
 req = ajax.get("tests.zip", mode="binary",
     oncomplete=read)
+```
+
+### File upload
+
+To send files entered in a form by a tag such as
+```xml
+<input type="file" name="choosefiles" multiple="multiple">
+```
+the module provides the function
+
+`file_upload(`_url, file, [**callbacks]_`)`
+
+> _file_ is the file object to upload to the _url_, usually the result of an
+> expression
+<blockquote>
+```python
+for file in document["choosefiles"].files:
+    ...
+```
+</blockquote>
+
+Example:
+```xml
+<script type="text/python">
+from browser import ajax, bind, document
+
+def upload_ok(req):
+    print("all right")
+
+@bind("#upload", "click")
+def uploadfiles(event):
+    for f in document["choosefiles"].files:
+        ajax.file_upload("/cgi-bin/savefile.py", f,
+            oncomplete=upload_ok)
+</script>
+
+<form>
+    <input id="choosefiles" type="file" multiple="multiple" />
+</form>
+<button id="upload">Upload</button>
 ```

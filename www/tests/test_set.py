@@ -245,4 +245,10 @@ S = set(L1)
 L2 = sorted(S)
 assert L2 == [0, 10, 20.0, 40, 60.0, 70.5, 80]
 
+# issue with floats
+s = {2.7}
+assert 2.7 in s
+s2 = s.copy()
+assert 2.7 in s2
+
 print("passed all tests..")

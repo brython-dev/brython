@@ -91,40 +91,55 @@ function ajax(){
     if(args.body){
         url = url + (args.cache ? "?" : "&") + args.body
     }
+    var func = function(){
+        return new Promise(function(resolve, reject){
+            var xhr = new XMLHttpRequest()
+            xhr.open(method, url, true)
+            for(key in args.headers){
+                xhr.setRequestHeader(key, args.headers[key])
+            }
+            xhr.format = args.format
+            xhr.responseType = responseType[args.format]
+            xhr.onreadystatechange = function(){
+                if(this.readyState == 4){
+                    this.__class__ = HTTPRequest
+                    resolve(this)
+                }
+            }
+            xhr.send()
+        })
+    }
+    func.$infos = {
+        __name__: "ajax_" + method
+    }
     return {
         __class__: $B.coroutine,
         $args: [url, args],
-        $func: function(){
-            return new Promise(function(resolve, reject){
-                var xhr = new XMLHttpRequest()
-                xhr.open(method, url, true)
-                for(key in args.headers){
-                    xhr.setRequestHeader(key, args.headers[key])
-                }
-                xhr.format = args.format
-                xhr.responseType = responseType[args.format]
-                xhr.onreadystatechange = function(){
-                    if(this.readyState == 4){
-                        this.__class__ = HTTPRequest
-                        resolve(this)
-                    }
-                }
-                xhr.send()
-            })
-        }
+        $func: func
     }
 }
 
 function event(){
-    // event(element, name) is a Promise on the event "name" happening on the
-    // element. This promise always resolves (never rejects) with the DOM event.
-    var $ = $B.args("event", 2, {element: null, name: null},
-            ["element", "name"], arguments, {}, null, null),
+    // event(element, *names) is a Promise on the events "names" happening on
+    // the element. This promise always resolves (never rejects) with the
+    // first triggered DOM event.
+    var $ = $B.args("event", 1, {element: null},
+            ["element"], arguments, {}, "names", null),
         element = $.element,
-        name = $.name
+        names = $.names
     return new Promise(function(resolve){
-        element.elt.addEventListener(name, function(evt){
-            resolve($B.$DOMEvent(evt))
+        var callbacks = []
+        names.forEach(function(name){
+            var callback = function(evt){
+                // When one of the handled events is triggered, all bindings
+                // are removed
+                callbacks.forEach(function(items){
+                    $B.DOMNode.unbind(element, items[0], items[1])
+                })
+                resolve($B.$DOMEvent(evt))
+            }
+            callbacks.push([name, callback])
+            $B.DOMNode.bind(element, name, callback)
         })
     })
 }
@@ -193,6 +208,7 @@ function run(coro){
             $B.leave_frame()
         },
         handle_error = function(ev){
+            console.log("handle error, ev", ev)
             var err_msg = "Traceback (most recent call last):\n"
             err_msg += $B.print_stack(ev.$stack)
             err_msg += "\n" + ev.__class__.$infos.__name__ +
@@ -228,12 +244,17 @@ function run(coro){
 }
 
 function sleep(seconds){
+    var func = function(){
+        return new Promise(resolve => setTimeout(
+            function(){resolve(_b_.None)}, 1000 * seconds))
+    }
+    func.$infos = {
+        __name__: "sleep"
+    }
     return {
         __class__: $B.coroutine,
         $args: [seconds],
-        $func: function(){
-            return new Promise(resolve => setTimeout(resolve, 1000 * seconds))
-        }
+        $func: func
     }
 }
 

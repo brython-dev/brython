@@ -89,6 +89,42 @@ async def ajax_call(url):
     else:
         return (url, None)
 
+class Lock:
+  def __init__(self):
+    self._locked = False
+
+  async def acquire(self):
+    while self._locked:
+      await aio.sleep(0)
+    self._locked = True
+    
+  def release(self):
+    if not self._locked:
+      raise RuntimeError('Lock is already released')
+    self._locked = False
+
+  def locked(self):
+    return self._locked
+
+  async def __aenter__(self):
+    await self.acquire()
+    return self
+
+  async def __aexit__(self, *l):
+    self.release()
+
+aio.Lock = Lock
+
+async def test_lock(): # issue 1205
+    # "async with" with alias
+    async with aio.Lock() as l:
+        pass
+
+    # "async with" without alias
+    l = aio.Lock()
+    async with l:
+      pass
+
 async def main(secs, urls):
     print(f"wait {secs} seconds...")
     await aio.sleep(secs)
@@ -98,6 +134,7 @@ async def main(secs, urls):
     report()
     await test_async_for()
     await test_async_with()
+    await test_lock()
     await raise_error()
 
 print("Start...")

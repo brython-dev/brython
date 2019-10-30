@@ -1,12 +1,14 @@
 Creating a document
 -------------------
 
-Brython is made to program web applications, thus HTML pages that the user can interact with
+Brython is made to program web applications, thus HTML pages that the user can
+interact with.
 
-A page is made of elements (texts, images, sounds...) that can be included in the page in two different ways :
+A page is made of elements (texts, images, sounds...) that can be included in 
+the page in two different ways :
 
 - writing HTML code with tags, for instance
-
+<blockquote>
 ```xml
 <html>
 <body>
@@ -15,9 +17,11 @@ for web browsers
 </body>
 </html>
 ```
+</blockquote>
 
 - or writing Python code, using the built-in module **browser.html**
 
+<blockquote>
 ```xml
 <html>
 <body>
@@ -25,9 +29,10 @@ for web browsers
 from browser import document
 from browser.html import A,B
 
-document <= B("Brython")+"is an implementation of "
-document <= A("Python",href="http://www.python.org")+" for web browsers"
+document <= B("Brython") + "is an implementation of "
+document <= A("Python", href="http://www.python.org") + " for web browsers"
 </script>
 </body>
 </html>
 ```
+</blockquote>

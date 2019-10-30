@@ -752,8 +752,9 @@ list.$factory = function(){
         next_func = $B.$call(getattr(arg, "__next__"))
 
     while(1){
-        try{res[pos++] = next_func()}
-        catch(err){
+        try{
+            res[pos++] = next_func()
+        }catch(err){
             if(!isinstance(err, _b_.StopIteration)){throw err}
             break
         }

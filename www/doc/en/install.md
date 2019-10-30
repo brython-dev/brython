@@ -4,16 +4,14 @@ First installation
 To install Brython :
 
 - if your PC has CPython and pip, install the package `brython` by
-
-```
-    pip install brython
+```console
+pip install brython
 ```
 
 > then in an empty directory run
-
-```
-    python -m brython --install
-```
+>```console
+>python -m brython --install
+>```
 
 - if you can't use this method, go to the [releases page](https://github.com/brython-dev/brython/releases)
 on Github, select the latest version, download and unzip __Brython-x.y.z.zip__.
@@ -31,7 +29,7 @@ __brython.js__ includes very often used modules : `browser, browser.html, javasc
 If your application uses modules of the standard distribution, you need to
 include __brython_stdlib.js__ besides __brython.js__:
 
-```
+```xml
 <script type="text/javascript" src="brython.js"></script>
 <script type="text/javascript" src="brython_stdlib.js"></script>
 ```
@@ -41,24 +39,24 @@ Updates
 When a new version of Brython is published, the update is done by the usual
 command:
 
-```
+```console
 pip install brython --upgrade
 ```
 
 In the application directory, you can then update the Brython files
-(__brython.js__ et __brython_stdlib.js__) by:
+(__brython.js__ and __brython_stdlib.js__) by:
 
-```
+```console
 python -m brython --update
 ```
 
 Installing a CPython package
 ----------------------------
 A CPython package installed by `pip` can be installed in a Brython application
-by the command `--add package <package name>`.
+by the command `--add_package <package name>`.
 
 For example:
-```
+```console
 pip install attrs
 python -m brython --add_package attrs
 ```
@@ -80,6 +78,11 @@ Other commands
 > generate a CPython package, suitable for distribution by PyPI, to install a
 > Brython application. See section [Deploying a Brython application](deploy.html)
 
+`-- make_package`
+
+> generates a "Brython package", allowing to distribute a module or a package
+> in a very straightforward way. See section [Packages Brython](brython-packages.html)
+
 Web server
 ----------
 The HTML files can be opened in the browser, but it is recommended to
@@ -88,13 +91,13 @@ start a web server in the application directory.
 The most straightforward is to use the module **http.server** in CPython
 standard distribution:
 
-```bash
+```console
 python -m http.server
 ```
 
 The default port is 8000. To choose another port:
 
-```bash
+```console
 python -m http.server 8001
 ```
 

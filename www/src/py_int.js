@@ -772,13 +772,19 @@ $B.$bool = function(obj){ // return true or false
             return false
         default:
             if(obj.$is_class){return true}
-            var missing = {},
-                bool_func = $B.$getattr(obj, "__bool__", missing)
-            if(bool_func === missing){
-                try{return $B.$getattr(obj, "__len__")() > 0}
+            var klass = obj.__class__ || $B.get_class(obj),
+                missing = {},
+                bool_method = $B.$getattr(klass, "__bool__", missing)
+            if(bool_method === missing){
+                try{return _b_.len(obj) > 0}
                 catch(err){return true}
             }else{
-                return bool_func()
+                var res = $B.$call(bool_method)(obj)
+                if(res !== true && res !== false){
+                    throw _b_.TypeError.$factory("__bool__ should return " +
+                        "bool, returned " + $B.class_name(res))
+                }
+                return res
             }
     }
 }
@@ -810,7 +816,12 @@ for(var op in methods){
 }
 
 bool.__and__ = function(self, other){
-    return $B.$bool(int.__and__(self, other))
+    if(_b_.isinstance(other, bool)){
+        return self && other
+    }else if(_b_.isinstance(other, int)){
+        return int.__and__(bool.__index__(self), int.__index__(other))
+    }
+    return _b_.NotImplemented
 }
 
 bool.__hash__ = bool.__index__ = bool.__int__ = function(self){
@@ -821,7 +832,12 @@ bool.__hash__ = bool.__index__ = bool.__int__ = function(self){
 bool.__neg__ = function(self){return -$B.int_or_bool(self)}
 
 bool.__or__ = function(self, other){
-    return $B.$bool(int.__or__(self, other))
+    if(_b_.isinstance(other, bool)){
+        return self || other
+    }else if(_b_.isinstance(other, int)){
+        return int.__or__(bool.__index__(self), int.__index__(other))
+    }
+    return _b_.NotImplemented
 }
 
 bool.__pos__ = $B.int_or_bool
@@ -840,7 +856,12 @@ bool.__setattr__ = function(self, attr){
 }
 
 bool.__xor__ = function(self, other) {
-    return self.valueOf() != other.valueOf()
+    if(_b_.isinstance(other, bool)){
+        return self ^ other ? true : false
+    }else if(_b_.isinstance(other, int)){
+        return int.__xor__(bool.__index__(self), int.__index__(other))
+    }
+    return _b_.NotImplemented
 }
 
 bool.$factory = function(){

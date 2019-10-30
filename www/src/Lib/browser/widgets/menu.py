@@ -1,5 +1,5 @@
-from browser import document, html
-print("browser.menu")
+from browser import console, document, html, window
+
 color = "CadetBlue"
 
 st1 = {
@@ -9,10 +9,13 @@ st1 = {
     "font-family": "sans-serif"
 }
 
+table = {
+    "border-spacing": 0
+}
+
 li_style1 = {
     "backgroundColor": color,
     "color": "#fff",
-    "float": "left",
     "padding": "0.5em 1em 0.5em 1em",
     "cursor": "default"
 }
@@ -33,51 +36,57 @@ div_style = {
 
 class Menu:
 
-    def __init__(self, container=None, parent=None):
+    def __init__(self, container=document.body, parent=None):
         self.container = container
         self.parent = parent
-        self.panel = html.UL(style=st1)
-        self.container <= self.panel
+        self._table = html.TABLE(style=table)
+        self.panel = html.TR(style=st1)
+        self._table <= self.panel
+        self.container <= self._table
+        cstyle = window.getComputedStyle(self.container)
+        self.fontSize = cstyle.getPropertyValue('font-size')
 
         document.bind("click", self.hide_menus)
 
     def add_item(self, name, callback=None):
         if self.parent is None:
             # First level
-            li = html.LI(name, style=li_style1, Class="top")
+            td = html.TD(name, style=li_style1, Class="top")
         else:
             # Next levels
-            li = html.LI(name, style=li_style2, Class="sub")
-        self.panel <= li
-        if callback is not None:
+            td = html.TD(name, style=li_style2, Class="sub")
+        td.style.fontSize = self.fontSize
+        self.panel <= td
+        def deco(callback):
             def f(ev):
                 for div in document.select(".submenu"):
                     div.style.display = "none"
                 ev.stopPropagation()
                 ev.preventDefault()
                 return callback(ev)
-            li.bind("click", f)
-        return li
+            td.bind("click", f)
+            return f
+        return deco
 
     def add_menu(self, name):
         """Add a new submenu in the current menu."""
         if self.parent is not None:
             name += "..."
-        li = self.add_item(name)
+        td = self.add_item(name)
         # create a DIV for the submenu
         div = html.DIV(style=div_style, Class="submenu")
         if self.parent is None:
-            div.style.left = f"{li.abs_left}px"
-            div.style.top = f"{li.abs_top + li.offsetHeight}px"
+            div.style.left = f"{td.abs_left}px"
+            div.style.top = f"{td.abs_top + td.offsetHeight}px"
         else:
             left = self.container.abs_left + self.container.offsetWidth
             div.style.left = f"{left}px"
-            div.style.top = f"{li.abs_top}px"
-        div.style.fontSize = self.container.style.fontSize
-        print("font size", div.style.fontSize)
+            div.style.top = f"{td.abs_top}px"
+        div.style.fontSize = self.fontSize
+        console.log("add_menu, self.container", self.container)
         div.style.display = "none"
         document <= div
-        li.bind("click", lambda ev: self.unfold(ev, div))
+        td.bind("click", lambda ev: self.unfold(ev, div))
         return Menu(div, self)
 
     def hide_menus(self, ev):
@@ -87,7 +96,6 @@ class Menu:
 
     def unfold(self, event, element):
         """Called when a label with a submenu is clicked."""
-        print("unfold", event.target.class_name)
         if event.target.class_name != "sub":
             self.hide_menus(event)
 

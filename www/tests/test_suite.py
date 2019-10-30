@@ -1,3 +1,5 @@
+from tester import assertRaises
+
 # numbers
 assert 2 + 2 == 4
 assert (50 - 5 * 6) / 4 == 5.0
@@ -491,5 +493,100 @@ for value in [0.,
     if value is not None:
         assert value != None
         assert not (value == None)
+
+# PEP 570 (positional-only parameters)
+def pos_only_arg(arg, /):
+    return arg
+
+pos_only_arg(1)
+assertRaises(TypeError, pos_only_arg, arg=2)
+
+def kwd_only_arg(*, arg):
+    return arg
+
+assert kwd_only_arg(arg=2) == 2
+assertRaises(TypeError, kwd_only_arg, 1)
+
+def combined_example(pos_only, /, standard, *, kwd_only):
+    return pos_only, standard, kwd_only
+
+assert combined_example(1, 2, kwd_only=3) == (1, 2, 3)
+assert combined_example(1, standard=2, kwd_only=3) == (1, 2, 3)
+assertRaises(TypeError, combined_example, 1, 2, 3)
+
+# del
+attr = 5
+del attr
+for attr in range(5):
+    pass
+
+# PEP 572 (assignement expressions)
+
+def f(x):
+    return x
+
+(y := f(8))
+assert y == 8
+
+assertRaises(SyntaxError, exec, "y0 = y1 := f(5)")
+
+y0 = (y1 := f(5))
+assert y0 == 5
+assert y1 == 5
+
+assertRaises(SyntaxError, exec, "foo(x = y := f(x))")
+
+assertRaises(SyntaxError, exec,
+    """def foo(answer = p := 42):
+    pass""")
+
+def foo(answer=(p := 42)):
+    return answer, p
+
+assert foo() == (42, 42)
+assert foo(5) == (5, 42)
+
+assertRaises(SyntaxError, exec,
+    """def foo(answer: p := 42 = 5):
+    pass""")
+
+def foo1(answer: (p := 42) = 5):
+    return (answer, p)
+
+assert foo1() == (5, 42)
+assert foo1(8) == (8, 42)
+
+assertRaises(SyntaxError, exec, "lambda x:= 1")
+assertRaises(SyntaxError, exec, "(lambda x:= 1)")
+
+f = lambda: (x := 1)
+assert f() == 1
+
+assert f'{(xw:=10)}' == "10"
+assert xw == 10
+
+z = 3
+assert f'{z:=5}' == '    3'
+
+total = 0
+partial_sums = [total := total + v for v in range(5)]
+assert total == 10
+
+def assign_expr_in_comp_global():
+    global total
+    [total := total + v for v in range(5)]
+
+assign_expr_in_comp_global()
+assert total == 20
+
+def assign_expr_in_comp_nonlocal():
+    x = 0
+    def g():
+        nonlocal x
+        [ x := x + i for i in range(5)]
+    g()
+    return x
+
+assert assign_expr_in_comp_nonlocal() == 10
 
 print('passed all tests...')

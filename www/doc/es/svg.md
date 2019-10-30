@@ -169,10 +169,10 @@ rect = svg.rect(x=10, y=10, width=100, height=100)
 def move_rect():
     # the attributes of the SVG element are strings, they must be explicitely
     # converted into integers
-    rect.y = int(rect.y)+1
+    rect.attrs["y"] = int(rect.attrs["y"]) + 1
     
     # ends animation when the rectangle reaches its target
-    if int(rect.y)>50:
+    if int(rect.attrs["y"]) > 50:
         timer.clear_interval(loop)
 
 panel = document['panel5']

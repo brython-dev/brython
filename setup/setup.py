@@ -5,8 +5,33 @@ import os
 import shutil
 import sys
 
-with open('README.rst', encoding='utf-8') as fobj:
+this_dir = os.getcwd()
+root_dir = os.path.dirname(this_dir)
+release_dir = os.path.join(root_dir, "releases")
+
+with open(os.path.join(release_dir, 'README.rst'), encoding='utf-8') as fobj:
     LONG_DESCRIPTION = fobj.read()
+
+# source of index.html
+html = """<!doctype html>
+<html>
+
+<head>
+<meta charset="utf-8">
+<script type="text/javascript" src="brython.js"></script>
+<script type="text/javascript" src="brython_stdlib.js"></script>
+</head>
+
+<body onload="brython(1)">
+<script type="text/python">
+from browser import document
+
+document <= "Hello"
+</script>
+</body>
+
+</html>"""
+
 
 command = sys.argv[1]
 
@@ -14,17 +39,33 @@ if command == "sdist":
     # before creating the distribution, copy files from other locations in
     # the repository
     print("copying files...")
-    this_dir = os.getcwd()
-    root_dir = os.path.dirname(this_dir)
     src_dir = os.path.join(root_dir, "www", "src")
-    data_dir = os.path.join(this_dir, "data")
+    brython_dir = os.path.join(this_dir, "brython")
 
-    # copy files from /www/src
-    for fname in ["brython.js", "brython_stdlib.js", "unicode.txt"]:
+    # copy python_minifier from /scripts into current directory
+    fname = "python_minifier.py"
+    shutil.copyfile(os.path.join(root_dir, "scripts", fname),
+        os.path.join(brython_dir, fname))
+
+    # create an empty subdirectory for data files
+    data_dir = os.path.join(this_dir, "brython", "data")
+    if os.path.exists(data_dir):
+        shutil.rmtree(data_dir)
+    os.mkdir(data_dir)
+
+    # copy files from /www/src into data_dir
+    for fname in ["brython_stdlib.js", "unicode.txt"]:
         shutil.copyfile(os.path.join(src_dir, fname),
             os.path.join(data_dir, fname))
+    shutil.copyfile(os.path.join(src_dir, "brython_no_static.js"),
+        os.path.join(data_dir, "brython.js"))
 
-    # copy demo.html
+    # copy files from release_dir to data_dir
+    for fname in ["index.html", "README.txt"]:
+        shutil.copyfile(os.path.join(release_dir, fname),
+            os.path.join(data_dir, fname))
+
+    # copy demo.html in data_dir
     with open(os.path.join(root_dir, 'www', 'demo.html'), encoding="utf-8") as f:
         demo = f.read()
     start_tag = "<!-- start copy -->"
@@ -37,7 +78,7 @@ if command == "sdist":
         raise Exception("No tag <!-- end copy --> in demo.html")
     body = demo[start + len(start_tag) : end].strip()
 
-    with open(os.path.join(data_dir, "demo.tmpl"), encoding="utf-8") as f:
+    with open(os.path.join(release_dir, "demo.tmpl"), encoding="utf-8") as f:
         template = f.read()
 
     demo = template.replace("{{body}}", body)
@@ -45,11 +86,10 @@ if command == "sdist":
     with open(os.path.join(data_dir, "demo.html"), "w", encoding="utf-8") as out:
         out.write(demo)
 
-
 setup(
     name='brython',
 
-    version='3.7.3',
+    version='3.8.0',
     description='Brython is an implementation of Python 3 running in the browser',
 
     long_description=LONG_DESCRIPTION,
@@ -61,7 +101,7 @@ setup(
     author='Pierre Quentel',
     author_email='quentel.pierre@orange.fr',
 
-    packages = ['data', 'data.tools'],
+    packages=find_packages(),
 
     # Choose your license
     license='BSD',
@@ -86,16 +126,8 @@ setup(
     # What does your project relate to?
     keywords='Python browser',
 
-    py_modules=["brython", "list_modules"],
-
     package_data={
-        'data': [
-            'README.txt',
-            'demo.html',
-            'brython.js',
-            'brython_stdlib.js',
-            'unicode.txt'
-            ]
+        'brython': ['data/*.*']
     }
 
 )

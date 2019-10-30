@@ -30,27 +30,27 @@ tr.method:hover{
 
 
 <script type="text/python">
-from browser import document
-from browser import window
 import sys
+
+from browser import document, window
 
 info = sys.implementation.version
 document['version'].text = '%s.%s.%s' % (info.major,info.minor,info.micro)
 
-_height=document.documentElement.clientHeight
-_top=document['container'].offsetTop
-document['container'].style.height='%dpx' % (_height-_top-10)
+_height = document.documentElement.clientHeight
+_top = document['container'].offsetTop
+document['container'].style.height = '%dpx' % (_height - _top - 10)
 </script>
 
 <script type="text/python">
-from browser import timer
-from browser import document, alert, bind, window, html
-
 import sys
 import os
 from test import support
 import unittest
 import HTMLTestRunner
+
+from browser import timer
+from browser import document, alert, bind, window, html
 
 del document["msgbox"]
 
@@ -73,7 +73,6 @@ def run_test(event):
     if module == '':
        return
 
-    #exec("import %s as mod" % module)
     mod = __import__(module)
     _suite = unittest.TestLoader().loadTestsFromModule(mod)
     HTMLTestRunner.HTMLTestRunner(sys.stdout, verbosity=2).run(_suite)

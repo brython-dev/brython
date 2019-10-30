@@ -346,4 +346,35 @@ try:
 except TypeError:
     pass
 
+# issue 1211
+assert .1j == .1j
+assert .1j + 2 == 2 + 0.1j
+
+# issue 1127
+class A:
+
+    def __rand__(self, other):
+        return "A-rand"
+
+    def __ror__(self, other):
+        return "A-ror"
+
+    def __rxor__(self, other):
+        return "A-rxor"
+
+assert False | A() == "A-ror"
+assert True | A() == "A-ror"
+assert False & A() == "A-rand"
+assert True & A() == "A-rand"
+assert False ^ A() == "A-rxor"
+assert True ^ A() == "A-rxor"
+
+# issue 1234
+assert round(3.75, 1) == 3.8
+assert round(3.65, 1) == 3.6
+assert round(-3.75, 1) == -3.8
+assert round(-3.65, 1) == -3.6
+assert round(3.5) == 4
+assert round(4.5) == 4
+
 print('passed all tests...')

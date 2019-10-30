@@ -41,7 +41,7 @@ A simple example of `local_storage` is as follows:
 
 ```python
 from browser.local_storage import storage
-storage['foo']='bar'
+storage['foo'] = 'bar'
 print(storage['foo'])
 ```
 

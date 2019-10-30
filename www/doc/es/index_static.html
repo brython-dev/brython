@@ -22,7 +22,7 @@ def run(ev):
     tg = ev.target
     while tg.tagName != 'BUTTON':
         tg = tg.parent
-    exec(tg.python_code,{})
+    exec(tg.elt.text.strip(), {})
     elt.focus()
 
 target = 'content'
@@ -38,7 +38,7 @@ for elt in document[target].get(selector='.exec'):
     btn = html.BUTTON('▶')
     btn.bind('click', run)
     # set attribute python_code, used when button is hit
-    btn.python_code = src
+    btn.elt = elt
     elt.parent.insertBefore(btn, elt)
 for elt in document[target].get(selector='.exec_on_load'):
     # Python code executed on page load
@@ -47,7 +47,7 @@ for elt in document[target].get(selector='.exec_on_load'):
     h.className = "pycode"
     elt.clear()
     elt <= h
-    exec(src, {})
+    exec(src)
 for elt in document[target].get(selector='.python'):
     src = elt.text.strip()
     h = highlight.highlight(src)
@@ -82,7 +82,7 @@ for elt in document[target].get(selector='.python'):
 <a class="navig" href="dom_api.html">Introducción - DOM API</a>
 <br><a class="navig" href="create.html">Creando un documento</a>
 <br><a class="navig" href="access.html">Accediendo a los elementos</a>
-<br><a class="navig" href="attributes.html">Atributos y métodos</a>
+<br><a class="navig" href="attributes.html">Atributos, propriedades y métodos</a>
 <br>
 <br><a class="navig" href="events.html">Eventos</a>
 <br><a class="navig" href="mouse_events.html">Eventos del ratón</a>
@@ -98,6 +98,7 @@ for elt in document[target].get(selector='.python'):
 <h4>Módulos específicos de Brython</h4>
 <div style="padding-left:10px;">
 <a class="navig" href="browser.html">El módulo integrado `browser`</a>
+<br><a class="navig" href="aio.html">browser.aio</a>
 <br><a class="navig" href="ajax.html">browser.ajax</a>
 <br><a class="navig" href="html.html">browser.html</a>
 <br><a class="navig" href="local_storage.html">browser.local_storage</a>
@@ -105,24 +106,20 @@ for elt in document[target].get(selector='.python'):
 <br><a class="navig" href="object_storage.html">browser.object_storage</a>
 <br><a class="navig" href="local_storage.html">browser.session_storage</a>
 <br><a class="navig" href="svg.html">browser.svg</a>
+<br><a class="navig" href="template.html">browser.template</a>
 <br><a class="navig" href="timer.html">browser.timer</a>
+<br><a class="navig" href="webcomponent.html">browser.webcomponent</a>
 <br><a class="navig" href="websockets.html">browser.websocket</a>
+<br><a class="navig" href="worker.html">browser.worker</a>
 <br>
 <br><a class="navig" href="javascript.html">javascript</a>
-<br><a class="navig" href="asyncio.html">asyncio</a>
 </div>
 
 <h4>Trabajando con Brython</h4>
 <div style="padding-left:10px;">
 <a class="navig" href="options.html">Opciones de la función <code>brython()</code></a>
 <br><a class="navig" href="test.html">Testing y depuración</a>
-<br><a class="navig" href="deploy.html">Desplegando una aplicación</a></div>
-
-<h4>Brython para Firefox OS</h4>
-<div style="padding-left:10px;">
-<a class="navig" href="firefox_os_intro.html">Introducción</a>
-<br><a class="navig" href="firefox_os_tuto1.html">WebApps : diseño</a>
-<br><a class="navig" href="firefox_os_tuto2.html">WebApps : aplicación</a>
+<br><a class="navig" href="deploy.html">Desplegando una aplicación</a>
 </div>
 
 <h4>Cookbook</h4>

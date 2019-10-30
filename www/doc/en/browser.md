@@ -7,7 +7,7 @@ The package **browser** groups the built-in Brython-specific names and modules
 > a function used as a decorator for event binding. Cf. section [events](events.html).
 
 **browser**.`confirm(`_message_`)`
-> a function that print the _message_ in a window, and two buttons (ok/cancel). Returns `True` if ok, `False` if cancel
+> a function that prints the _message_ in a window, and two buttons (ok/cancel). Returns `True` if ok, `False` if cancel
 
 **browser**.`console`
 > an object with methods to interact with the browser console. Its interface is browser-specific. It exposes at least the method `log(msg)`, which prints the message _msg_ in the console
@@ -42,7 +42,7 @@ The package **browser** groups the built-in Brython-specific names and modules
 > Returns the entered value ; if no value was entered, return _default_ if
 > defined, else the empty string
 
-**browser**.`run_script(`_src[, nom]_`)`
+**browser**.`run_script(`_src[, name]_`)`
 > this function executes the Python source code in _src_ with an optional
 > _name_. It can be used as an alternative to `exec()`, with the benefit
 > that the indexedDB cache is used for importing modules from the standard

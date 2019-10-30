@@ -10,10 +10,10 @@ from sys import *
 
 # different import patterns to check that __annotations__ does not interfere
 # with import machinery
-# import test.ann_module as ann_module  # Doesn't work in Brython
+import test.ann_module as ann_module  # Doesn't work in Brython
 import typing
 from collections import ChainMap
-# from test import ann_module2  # Doesn't work in Brython
+from test import ann_module2  # Doesn't work in Brython
 import test
 
 # These are shared with test_tokenize and other test modules.
@@ -226,7 +226,6 @@ the \'lazy\' dog.\n\
 
 
 
-    @unittest.skip('Fails in Brython -- still needs to be investigated')
     def test_eof_error(self):
         samples = ("def foo(", "\ndef foo(", "def foo(\n")
         for s in samples:
@@ -340,7 +339,6 @@ class GrammarTests(unittest.TestCase):
                 x: int
                 x.y: list = []
 
-    @unittest.skip('Fails in Brython -- still needs to be investigated')
     def test_var_annot_metaclass_semantics(self):
         class CMeta(type):
             @classmethod
@@ -350,7 +348,6 @@ class GrammarTests(unittest.TestCase):
             XX: 'ANNOT'
         self.assertEqual(CC.__annotations__['xx'], 'ANNOT')
 
-    @unittest.skip('Fails in Brython -- still needs to be investigated')
     def test_var_annot_module_semantics(self):
         with self.assertRaises(AttributeError):
             print(test.__annotations__)

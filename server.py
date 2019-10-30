@@ -7,6 +7,7 @@ served from subdirectory cgi-bin
 """
 
 
+import io
 import os
 import time
 from webbrowser import open_new_tab
@@ -17,6 +18,76 @@ import urllib.parse
 from http import HTTPStatus
 import socketserver
 from http.server import CGIHTTPRequestHandler
+import http.cookiejar
+
+# Python might be built without zlib
+try:
+    import zlib
+except ImportError:
+    zlib = None
+
+# List of commonly compressed content types, copied from
+# https://github.com/h5bp/server-configs-apache.
+commonly_compressed_types = [
+    "application/atom+xml",
+    "application/javascript",
+    "application/json",
+    "application/ld+json",
+    "application/manifest+json",
+    "application/rdf+xml",
+    "application/rss+xml",
+    "application/schema+json",
+    "application/vnd.geo+json",
+    "application/vnd.ms-fontobject",
+    "application/x-font-ttf",
+    "application/x-javascript",
+    "application/x-web-app-manifest+json",
+    "application/xhtml+xml",
+    "application/xml",
+    "font/eot",
+    "font/opentype",
+    "image/bmp",
+    "image/svg+xml",
+    "image/vnd.microsoft.icon",
+    "image/x-icon",
+    "text/cache-manifest",
+    "text/css",
+    "text/html",
+    "text/javascript",
+    "text/plain",
+    "text/vcard",
+    "text/vnd.rim.location.xloc",
+    "text/vtt",
+    "text/x-component",
+    "text/x-cross-domain-policy",
+    "text/xml"
+]
+
+# Generators for HTTP compression
+
+def _zlib_producer(fileobj, wbits):
+    """Generator that yields data read from the file object fileobj,
+    compressed with the zlib library.
+    wbits is the same argument as for zlib.compressobj.
+    """
+    bufsize = 2 << 17
+    producer = zlib.compressobj(wbits=wbits)
+    with fileobj:
+        while True:
+            buf = fileobj.read(bufsize)
+            if not buf: # end of file
+                yield producer.flush()
+                return
+            yield producer.compress(buf)
+
+def _gzip_producer(fileobj):
+    """Generator for gzip compression."""
+    return _zlib_producer(fileobj, 31)
+
+def _deflate_producer(fileobj):
+    """Generator for deflate compression."""
+    return _zlib_producer(fileobj, 15)
+
 
 # port to be used when the server runs locally
 parser = argparse.ArgumentParser()
@@ -52,21 +123,59 @@ POST_PATHS = ['/time_cpython']
 
 class RequestHandler(CGIHTTPRequestHandler):
 
+    # List of Content Types that are returned with HTTP compression.
+    # Set to the commonly_compressed_types by default.
+    compressed_types = commonly_compressed_types
+
+    # Dictionary mapping an encoding (in an Accept-Encoding header) to a
+    # generator of compressed data. By default, provided zlib is available,
+    # the supported encodings are gzip and deflate.
+    # Override if a subclass wants to use other compression algorithms.
+    compressions = {}
+    if zlib:
+        compressions = {
+            'deflate': _deflate_producer,
+            'gzip': _gzip_producer,
+            'x-gzip': _gzip_producer # alias for gzip
+        }
+
+    def do_GET(self):
+        """Serve a GET request."""
+        f = self.send_head()
+        if f:
+            try:
+                if hasattr(f, "read"):
+                    self.copyfile(f, self.wfile)
+                else:
+                    # Generator for compressed data
+                    if self.protocol_version >= "HTTP/1.1":
+                        # Chunked Transfer
+                        for data in f:
+                            if data:
+                                self.wfile.write(self._make_chunk(data))
+                        self.wfile.write(self._make_chunk(b''))
+                    else:
+                        for data in f:
+                            self.wfile.write(data)
+            finally:
+                f.close()
+
+    def _make_chunk(self, data):
+        """Make a data chunk in Chunked Transfer Encoding format."""
+        return f"{len(data):X}".encode("ascii") + b"\r\n" + data + b"\r\n"
+
+
     def send_head(self):
         """Common code for GET and HEAD commands.
         This sends the response code and MIME headers.
-        Return value is either a file object (which has to be copied
-        to the outputfile by the caller unless the command was HEAD,
-        and must be closed by the caller under all circumstances), or
-        None, in which case the caller has nothing further to do.
+        Return value is either:
+        - a file object (which has to be copied to the outputfile by the
+        caller unless the command was HEAD, and must be closed by the caller
+        under all circumstances)
+        - a generator of pieces of compressed data if HTTP compression is used
+        - None, in which case the caller has nothing further to do
         """
-        if self.is_cgi():
-            return self.run_cgi()
-
         path = self.translate_path(self.path)
-        if path in POST_PATHS:
-            return
-
         f = None
         if os.path.isdir(path):
             parts = urllib.parse.urlsplit(self.path)
@@ -87,10 +196,6 @@ class RequestHandler(CGIHTTPRequestHandler):
             else:
                 return self.list_directory(path)
         ctype = self.guess_type(path)
-        # I had the case where the mimetype associated with .js in the Windows 
-        # registery was text/plain...
-        if os.path.splitext(path)[1] == ".js":
-            ctype = "application/javascript"
         try:
             f = open(path, 'rb')
         except OSError:
@@ -99,15 +204,82 @@ class RequestHandler(CGIHTTPRequestHandler):
 
         try:
             fs = os.fstat(f.fileno())
+            content_length = fs[6]
             self.send_response(HTTPStatus.OK)
             self.send_header("Content-type", ctype)
-            self.send_header("Content-Length", str(fs[6]))
             self.send_header("Cache-Control", "max-age=0")
+
+            if ctype not in self.compressed_types:
+                self.send_header("Content-Length", str(content_length))
+                self.end_headers()
+                return f
+
+            # Use HTTP compression if possible
+
+            # Get accepted encodings ; "encodings" is a dictionary mapping
+            # encodings to their quality ; eg for header "gzip; q=0.8",
+            # encodings["gzip"] is set to 0.8
+            accept_encoding = self.headers.get_all("Accept-Encoding", ())
+            encodings = {}
+            for accept in http.cookiejar.split_header_words(accept_encoding):
+                params = iter(accept)
+                encoding = next(params, ("", ""))[0]
+                quality, value = next(params, ("", ""))
+                if quality == "q" and value:
+                    try:
+                        q = float(value)
+                    except ValueError:
+                        # Invalid quality : ignore encoding
+                        q = 0
+                else:
+                    q = 1 # quality defaults to 1
+                if q:
+                    encodings[encoding] = max(encodings.get(encoding, 0), q)
+
+            compressions = set(encodings).intersection(self.compressions)
+            compression = None
+            if compressions:
+                # Take the encoding with highest quality
+                compression = max((encodings[enc], enc)
+                    for enc in compressions)[1]
+            elif '*' in encodings and self.compressions:
+                # If no specified encoding is supported but "*" is accepted,
+                # take one of the available compressions.
+                compression = list(self.compressions)[0]
+            if compression:
+                # If at least one encoding is accepted, send data compressed
+                # with the selected compression algorithm.
+                producer = self.compressions[compression]
+                self.send_header("Content-Encoding", compression)
+                if content_length < 2 << 18:
+                    # For small files, load content in memory
+                    with f:
+                        content = b''.join(producer(f))
+                    content_length = len(content)
+                    f = io.BytesIO(content)
+                else:
+                    chunked = self.protocol_version >= "HTTP/1.1"
+                    if chunked:
+                        # Use Chunked Transfer Encoding (RFC 7230 section 4.1)
+                        self.send_header("Transfer-Encoding", "chunked")
+                    self.end_headers()
+                    # Return a generator of pieces of compressed data
+                    return producer(f)
+
+            self.send_header("Content-Length", str(content_length))
             self.end_headers()
             return f
         except:
             f.close()
             raise
+
+    def guess_type(self, path):
+        ctype = CGIHTTPRequestHandler.guess_type(self, path)
+        # I had the case where the mimetype associated with .js in the Windows
+        # registery was text/plain...
+        if os.path.splitext(path)[1] == ".js":
+            ctype = "application/javascript"
+        return ctype
 
     def translate_path(self, path):
         """For paths starting with /cgi-bin/, serve from cgi_dir"""

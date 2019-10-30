@@ -23,7 +23,7 @@ charref = re.compile('&#(?:[0-9]+|[xX][0-9a-fA-F]+)[^0-9a-fA-F]')
 starttagopen = re.compile('<[a-zA-Z]')
 piclose = re.compile('>')
 commentclose = re.compile(r'--\s*>')
-tagfind = re.compile('([a-zA-Z][-.a-zA-Z0-9:_]*)(?:\s|/(?!>))*')
+tagfind = re.compile(r'([a-zA-Z][-.a-zA-Z0-9:_]*)(?:\s|/(?!>))*')
 # see http://www.w3.org/TR/html5/tokenization.html#tag-open-state
 # and http://www.w3.org/TR/html5/tokenization.html#tag-name-state
 tagfind_tolerant = re.compile('[a-zA-Z][^\t\n\r\f />\x00]*')
@@ -71,7 +71,7 @@ locatestarttagend_tolerant = re.compile(r"""
 endendtag = re.compile('>')
 # the HTML 5 spec, section 8.1.2.2, doesn't allow spaces between
 # </ and the tag name, so maybe this should be fixed
-endtagfind = re.compile('</\s*([a-zA-Z][-.a-zA-Z0-9:_]*)\s*>')
+endtagfind = re.compile(r'</\s*([a-zA-Z][-.a-zA-Z0-9:_]*)\s*>')
 
 
 class HTMLParseError(Exception):

@@ -9,7 +9,7 @@ requête Ajax.
 Mots clés et fonctions intégrées
 --------------------------------
 
-Brython supporte la plupart des mots-clés et des fonctions de Python 3 :
+Brython supporte tous les mots-clés et les fonctions de Python 3 :
 
 - mots clés : `and, as, assert, async, await, break, class, continue, def, del, elif, else, `
   `except, False, finally, for, from, global, if, import, in, is, lambda, None, `
@@ -34,7 +34,8 @@ Quelques particularités liées au contexte d'exécution dans un navigateur :
   fonctions du module **browser.timer** telles que `set_timeout()` ou
   `set_interval()`)
  - la fonction intégrée `input()` est simulée par la fonction Javascript
-  `prompt()`
+  `prompt()`. Un exemple dans la galerie montre comment simuler la fonction 
+  input dans une boite de dialogue personnalisée
 
 - pour la même raison, et aussi parce que le navigateur possède une boucle
   d'événements implicite, le module `asyncio` de la distribution standard ne
@@ -53,12 +54,6 @@ Quelques particularités liées au contexte d'exécution dans un navigateur :
   `sys.stdout` peuvent être affectés à un objet qui implémente une méthode
   `write()`, ce qui permet par exemple d'afficher les messages d'erreurs dans
   une fenêtre
-
-- la fonction intégrée `input()` est implémentée avec la fonction bloquante
-  du navigateur __prompt()__. Comme on ne peut pas définir de fonction
-  bloquante en Javascript, `sys.stdin` est en lecture seule. Un exemple dans
-  la galerie montre comment simuler la fonction input dans une boite de
-  dialogue personnalisée
 
 - pour lancer une impression sur imprimante, utiliser la méthode `print()` de
   l'objet `window` défini dans le module **browser** :

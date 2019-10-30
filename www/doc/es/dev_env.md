@@ -5,7 +5,7 @@ Los desarrolladores deberían usar el entorno de desarrollo disponible para
 descarga en [downloads](https://github.com/brython-dev/brython/releases) : 
 elige el fichero zip cuyo nombre comienza por "BrythonX.Y.Z_site_mirror" donde 
 X.Y.Z es el número de versión y descomprímelo en una carpeta (la llamaremos la 
-carpeta Brython  en los siguientes párrafos).
+*brython_directory* en los siguientes párrafos).
 
 Es necesario un servidor web para poder probar los scripts localmente mientras 
 nos encontramos desarrollando. Cualquier servidor web que sea capaz de servir 

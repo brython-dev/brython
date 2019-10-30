@@ -4,6 +4,7 @@ import ast
 import json
 import os
 import re
+import time
 
 import python_minifier
 import git
@@ -47,10 +48,12 @@ class Visitor(ast.NodeVisitor):
 def process(filename, exclude_dirs=['test','site-packages']):
     """Process a VFS filename for Brython."""
     print("Generating {}".format(filename))
+    timestamp = int(1000 * time.time())
     nb = 0
     nb_err = 0
     main_root = os.path.dirname(filename)
-    VFS = {}
+    VFS = {"$timestamp": timestamp}
+    print("generated VFS timestamp", timestamp)
     for stdlib_dir in ("libs", "Lib"):
         lib_path = os.path.join(main_root, stdlib_dir)
         for root, _dir, files in os.walk(lib_path):
@@ -124,8 +127,8 @@ def process(filename, exclude_dirs=['test','site-packages']):
     print('{} files, {} errors'.format(nb, nb_err))
     with open(filename, "w") as out:
       out.write('__BRYTHON__.use_VFS = true;\n')
-      out.write('__BRYTHON__.VFS={}\n\n'.format(json.dumps(VFS)))
-
+      out.write('var scripts = {}\n'.format(json.dumps(VFS)))
+      out.write('__BRYTHON__.update_VFS(scripts)\n')
 
 
 if __name__ == '__main__':

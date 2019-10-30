@@ -76,7 +76,7 @@ object.__dir__ = function(self) {
             res.push(attr)
         }
     }
-    
+
     // add object's own attributes
     if(self.__dict__){
         for(var attr in self.__dict__.$string_dict){
@@ -121,6 +121,7 @@ object.__getattribute__ = function(obj, attr){
         // Special case for list subclasses. Cf. issue 1081
         res = undefined
     }
+    
     if(res === undefined && obj.__dict__ &&
             obj.__dict__.$string_dict.hasOwnProperty(attr)){
         return obj.__dict__.$string_dict[attr]
@@ -430,8 +431,9 @@ object.__repr__ = function(self){
     if(self.__class__ === _b_.type) {
         return "<class '" + self.__name__ + "'>"
     }
-    if(self.__class__.$infos.__module__ !== undefined &&
-            self.__class__.$infos.__module__ !== "builtins"){
+    var module = self.__class__.$infos.__module__
+    if(module !== undefined && !module.startsWith("$") &&
+            module !== "builtins"){
         return "<" + self.__class__.$infos.__module__ + "." +
             $B.class_name(self) + " object>"
     }else{
