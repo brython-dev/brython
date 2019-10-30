@@ -87,8 +87,8 @@ return js}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,0,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.0"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2019-10-29 13:34:45.635030"
-__BRYTHON__.timestamp=1572352485635
+__BRYTHON__.compiled_date="2019-10-30 10:39:51.370497"
+__BRYTHON__.timestamp=1572428391370
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -1974,6 +1974,7 @@ else{ctx.locals.push(value)}}}
 ctx=ctx.parent}
 if(C.type=='target_list' ||
 (C.type=='expr' && C.parent.type=='target_list')){
+this.no_bindings=true
 $bind(value,scope,this)
 this.bound=true}
 if(scope.ntype=='def' ||scope.ntype=='generator'){
@@ -1989,12 +1990,15 @@ var scope=this.scope,found=[],nb=0
 while(scope && nb++< 20){if(scope.binding && scope.binding[this.value]){return scope.id}
 scope=scope.parent}}
 this.boundBefore=function(scope){
-var nb=0,node=$get_node(this),found=false
-while(!found && node.parent && nb++< 100){var pnode=node.parent
-if(pnode.bindings && pnode.bindings[this.value]){return pnode.bindings[this.value]}
+var node=$get_node(this),found=false
+var $test=this.value=="bx"
+while(!found && node.parent){var pnode=node.parent
+if(pnode.bindings && pnode.bindings[this.value]){if($test){console.log("bound in",pnode)}
+return pnode.bindings[this.value]}
 for(var i=0;i < pnode.children.length;i++){var child=pnode.children[i]
 if(child===node){break}
-if(child.bindings && child.bindings[this.value]){return child.bindings[this.value]}}
+if(child.bindings && child.bindings[this.value]){if($test){console.log("bound in child",child)}
+return child.bindings[this.value]}}
 if(pnode===scope){break}
 node=pnode}
 return found}
@@ -2031,7 +2035,7 @@ if(val=='__BRYTHON__' ||val=='$B'){return val}
 var innermost=$get_scope(this),scope=innermost,found=[]
 var search_ids=['"'+innermost.id+'"']
 var gs=innermost
-var $test=false 
+var $test=val=="bx"
 if($test){console.log("this",this)}
 while(true){if($test){console.log(gs.id,gs)}
 if(gs.parent_block){if(gs.parent_block==$B.builtins_scope){break}
@@ -2106,7 +2110,8 @@ if($test){console.log("name found at module level")}
 if(this.bound ||this.augm_assign){
 val=scope_ns+'["'+val+'"]'}else{if(scope===innermost && this.env[val]===undefined){
 this.result='$B.$search("'+val+'")'
-return this.result}else{if(this.boundBefore(scope)){
+return this.result}else{if($test){console.log("boudn before ?",this.boundBefore(scope))}
+if(this.boundBefore(scope)){
 val=scope_ns+'["'+val+'"]'}else{
 if($test){console.log("use check def")}
 val='$B.$check_def("'+val+'",'+
@@ -3158,9 +3163,9 @@ return}
 if(scope.globals && scope.globals.has(name)){var module=$get_module(C)
 module.binding[name]=true
 return}
-var node=$get_node(C)
+if(! C.no_bindings){var node=$get_node(C)
 node.bindings=node.bindings ||{}
-node.bindings[name]=true
+node.bindings[name]=true}
 scope.binding=scope.binding ||{}
 if(scope.binding[name]===undefined){scope.binding[name]=true}}
 function $parent_match(ctx,obj){

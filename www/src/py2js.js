@@ -4003,7 +4003,10 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
 
     if(context.type == 'target_list' ||
             (context.type == 'expr' && context.parent.type == 'target_list')){
-        // An id defined as a target in a "for" loop is bound
+        // An id defined as a target in a "for" loop is bound in the scope,
+        // but *not* in the node bindings, because if the iterable is empty
+        // the name has no value (cf. issue 1233)
+        this.no_bindings = true
         $bind(value, scope, this)
         this.bound = true
     }
@@ -4064,19 +4067,21 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         // code tree. It will be translated to $local_search("x"), which will
         // check at run time if the name "x" exists and if not, raise an
         // UnboundLocalError.
-        var nb = 0,
-            node = $get_node(this),
+        var node = $get_node(this),
             found = false
+        var $test = this.value == "bx"
 
-        while(!found && node.parent && nb++ < 100){
+        while(!found && node.parent){
             var pnode = node.parent
             if(pnode.bindings && pnode.bindings[this.value]){
+                if($test){console.log("bound in", pnode)}
                 return pnode.bindings[this.value]
             }
             for(var i = 0; i < pnode.children.length; i++){
                 var child = pnode.children[i]
                 if(child === node){break}
                 if(child.bindings && child.bindings[this.value]){
+                    if($test){console.log("bound in child", child)}
                     return child.bindings[this.value]
                 }
             }
@@ -4199,7 +4204,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         // get global scope
         var gs = innermost
 
-        var $test = false // val == "bx"
+        var $test = val == "bx"
 
         if($test){
             console.log("this", this)
@@ -4435,6 +4440,9 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                             this.result = '$B.$search("' + val + '")'
                             return this.result
                         }else{
+                            if($test){
+                                console.log("boudn before ?", this.boundBefore(scope))
+                            }
                             if(this.boundBefore(scope)){
                                 // We are sure that the name is defined in the
                                 // scope
@@ -6693,7 +6701,11 @@ var $add_line_num = $B.parser.$add_line_num = function(node,rank){
 $B.$add_line_num = $add_line_num
 
 var $bind = $B.parser.$bind = function(name, scope, context){
-    // Bind a name in scope
+    // Bind a name in scope:
+    // - add the name in the attribute "binding" of the scope
+    // - add it to the attribute "bindings" of the node, except if no_bindings
+    //   is set, which is the case for "for x in A" : if A is empty the name
+    //   has no value (issue #1233)
     if(scope.nonlocals && scope.nonlocals[name]){
         // name is declared nonlocal in the scope : don't bind
         return
@@ -6705,10 +6717,12 @@ var $bind = $B.parser.$bind = function(name, scope, context){
         return
     }
 
-    var node = $get_node(context)
-    // Add name to attribute "bindings" of node. Used in $IdCtx.boundBefore()
-    node.bindings = node.bindings || {}
-    node.bindings[name] = true
+    if(! context.no_bindings){
+        var node = $get_node(context)
+        // Add name to attribute "bindings" of node. Used in $IdCtx.boundBefore()
+        node.bindings = node.bindings || {}
+        node.bindings[name] = true
+    }
 
     scope.binding = scope.binding || {}
     if(scope.binding[name] === undefined){

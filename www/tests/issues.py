@@ -2376,6 +2376,13 @@ assert str(a) == "real str"
 
 a.__str__ = lambda : "fake str"
 assert str(a) == "real str"
+
+# issue 1233
+for x1233 in range(0):
+    pass
+
+assertRaises(NameError, exec, "x1233")
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
