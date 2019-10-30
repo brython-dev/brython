@@ -9,17 +9,11 @@ unicode=unicode||{},unicode.title=function(r){for(var n="",t=!1,e=0;r.length>e;e
 var __BRYTHON__=__BRYTHON__ ||{}
 ;(function($B){
 var isWebWorker=('undefined' !==typeof WorkerGlobalScope)&&("function"===typeof importScripts)&&(navigator instanceof WorkerNavigator)
-var isNode=(typeof process !=='undefined')&&(process.release.name==='node')
-var _window;
-if(isNode){var dummyWindow={location:{href:'',origin:'',pathname:'',},navigator:{language:'english'},console:this.console}
-_window=dummyWindow
-self=_window
-window=_window}else{
-_window=self;}
+var _window=self;
 var $path
 if($B.brython_path===undefined){
 var this_url;
-if(isWebWorker ||isNode){this_url=_window.location.href;}else{var scripts=document.getElementsByTagName('script')
+if(isWebWorker){this_url=_window.location.href;}else{var scripts=document.getElementsByTagName('script')
 this_url=scripts[scripts.length-1].src}
 var elts=this_url.split('/')
 elts.pop()
@@ -49,7 +43,7 @@ else{throw $B.builtins.AttributeError.$factory(
 '__BRYTHON__ object has no attribute '+attr)}}
 $B.language=_window.navigator.userLanguage ||_window.navigator.language
 $B.locale="C" 
-if(isWebWorker ||isNode){$B.charset="utf-8"}else{
+if(isWebWorker){$B.charset="utf-8"}else{
 $B.charset=document.characterSet ||document.inputEncoding ||"utf-8"}
 $B.max_int=Math.pow(2,53)-1
 $B.min_int=-$B.max_int
@@ -86,8 +80,8 @@ $B.regexIdentifier=/^(?:[\$A-Z_a-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C
 __BRYTHON__.implementation=[3,7,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.7.1"
 __BRYTHON__.version_info=[3,7,0,'final',0]
-__BRYTHON__.compiled_date="2019-02-14 10:34:08.435602"
-__BRYTHON__.timestamp=1550140448435
+__BRYTHON__.compiled_date="2019-02-09 09:12:55.083676"
+__BRYTHON__.timestamp=1549699975083
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_sys","_warnings","array","builtins","dis","hashlib","json","long_int","marshal","math","modulefinder","posix","random","zlib"]
 ;
 
@@ -97,15 +91,11 @@ Math.floor(value)===value};
 Number.isSafeInteger=Number.isSafeInteger ||function(value){return Number.isInteger(value)&& Math.abs(value)<=Number.MAX_SAFE_INTEGER;};
 var js,$pos,res,$op
 var _b_=$B.builtins
-var _window;
+var _window=self;
 var isWebWorker=$B.isa_web_worker=
 ('undefined' !==typeof WorkerGlobalScope)&&
 ("function"===typeof importScripts)&&
 (navigator instanceof WorkerNavigator)
-var isNode=$B.is_node=(typeof process !=='undefined')&&(process.release.name==='node')
-if(isNode){var dummyWindow={location:{href:''}}
-_window=dummyWindow}else{
-_window=self}
 $B.parser={}
 var keys=$B.keys=function(obj){var res=[]
 for(var attr in obj){res.push(attr)}
@@ -4715,7 +4705,7 @@ path_hooks.push($B.$path_hooks[1])
 $B.path_hooks=path_hooks
 var $href=$B.script_path=_window.location.href,$href_elts=$href.split('/')
 $href_elts.pop()
-if(isWebWorker ||isNode){$href_elts.pop()}
+if(isWebWorker){$href_elts.pop()}
 $B.curdir=$href_elts.join('/')
 if(options.pythonpath !==undefined){$B.path=options.pythonpath
 $B.$options.static_stdlib_import=false}
@@ -4728,7 +4718,7 @@ if(path.slice(-7).toLowerCase()=='.vfs.js' &&
 (prefetch===undefined ||prefetch===true)){$B.path_importer_cache[path+'/']=
 $B.imported['_importlib'].VFSPathFinder(path)}
 if(lang){_importlib.optimize_import_for_path(path,lang)}})}
-if(!(isWebWorker ||isNode)){
+if(!isWebWorker){
 var path_links=document.querySelectorAll('head link[rel~=pythonpath]'),_importlib=$B.imported['_importlib']
 for(var i=0,e;e=path_links[i];++i){var href=e.href;
 if((' '+e.rel+' ').indexOf(' prepend ')!=-1){$B.path.unshift(href);}else{$B.path.push(href);}
@@ -4743,7 +4733,7 @@ if(options.re_module !==undefined){if(options.re_module=='pyre' ||options.re_mod
 console.log("DeprecationWarning: \'re_module\' option of \'brython\' "+
 "function will be deprecated in future versions of Brython.")}
 if($B.$options.args){$B.__ARGV=$B.$options.args}else{$B.__ARGV=_b_.list.$factory([])}
-if(!(isWebWorker ||isNode)){_run_scripts(options)}}
+if(!isWebWorker){_run_scripts(options)}}
 $B.run_script=function(src,name,run_loop){
 if(run_loop){if($B.idb_cx && $B.idb_cx.$closed){$B.tasks.push([$B.idb_open])}}
 $B.$py_module_path[name]=$B.script_path
@@ -4817,9 +4807,6 @@ $B.$Node=$Node
 $B.$NodeJSCtx=$NodeJSCtx
 $B.brython=brython})(__BRYTHON__)
 var brython=__BRYTHON__.brython
-var isNode=(typeof process !=='undefined')&&(process.release.name==='node')
-if(isNode){global.__BRYTHON__=__BRYTHON__
-module.exports={__BRYTHON__ }}
 ;
 
 (function($B){var _b_=$B.builtins
@@ -12743,7 +12730,7 @@ var modules={}
 var browser={$package:true,$is_package:true,__initialized__:true,__package__:'browser',__file__:$B.brython_path.replace(/\/*$/g,'')+
 '/Lib/browser/__init__.py',console:$B.JSObject.$factory(self.console),win:$B.win,$$window:$B.win,}
 browser.__path__=browser.__file__
-if(!($B.isa_web_worker ||$B.is_node)){update(browser,{$$alert:function(message){window.alert($B.builtins.str.$factory(message))},bind:function(){
+if(! $B.isa_web_worker ){update(browser,{$$alert:function(message){window.alert($B.builtins.str.$factory(message))},bind:function(){
 var $=$B.args("bind",2,{elt:null,evt:null},["elt","evt"],arguments,{},null,null)
 return function(callback){if($.elt.__class__===$B.JSObject){
 $B.$call($B.$getattr($.elt,"bind"))($.evt,callback)
@@ -12862,7 +12849,7 @@ for(var attr in module_obj){if(typeof module_obj[attr]=='function'){var name=att
 while(name.charAt(0)=='$'){name=name.substr(1)}
 module_obj[attr].$infos={__name__:name}}}}
 for(var attr in modules){load(attr,modules[attr])}
-if(!($B.isa_web_worker ||$B.is_node)){modules['browser'].html=modules['browser.html']}
+if(! $B.isa_web_worker){modules['browser'].html=modules['browser.html']}
 var _b_=$B.builtins
 _b_.__builtins__=$B.module.$factory('__builtins__','Python builtins')
 for(var attr in _b_){_b_.__builtins__[attr]=_b_[attr]
