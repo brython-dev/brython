@@ -113,11 +113,15 @@ function abs(obj){
     if(isinstance(obj, _b_.float)){return _b_.float.$factory(Math.abs(obj))}
     var klass = obj.__class__ || $B.get_class(obj)
     try{
-        return $B.$call($B.$getattr(klass, "__abs__"))(obj)
+        var method = $B.$getattr(klass, "__abs__")
     }catch(err){
-        throw _b_.TypeError.$factory("Bad operand type for abs(): '" +
-            $B.class_name(obj) + "'")
+        if(err.__class__ === _b_.AttributeError){
+            throw _b_.TypeError.$factory("Bad operand type for abs(): '" +
+                $B.class_name(obj) + "'")
+        }
+        throw err
     }
+    return $B.$call(method)(obj)
 }
 
 function all(obj){
@@ -192,23 +196,32 @@ function $builtin_base_convert_helper(obj, base) {
   return '-' + prefix + (-value).toString(base)
 }
 
+function bin_hex_oct(base, obj){
+    // Used by built-in function bin, hex and oct
+    // base is respectively 2, 16 and 8
+    if(isinstance(obj, _b_.int)){
+        return $builtin_base_convert_helper(obj, base)
+    }else{
+        try{
+            var klass = obj.__class__ || $B.get_class(obj),
+                method = $B.$getattr(klass, '__index__')
+        }catch(err){
+            if(err.__class__ === _b_.AttributeError){
+                throw _b_.TypeError.$factory("'" + $B.class_name(obj) +
+                    "' object cannot be interpreted as an integer")
+            }
+            throw err
+        }
+        var res = $B.$call(method)(obj)
+        return $builtin_base_convert_helper(res, base)
+    }
+}
 
 // bin() (built in function)
 function bin(obj) {
     check_nb_args('bin', 1, arguments)
     check_no_kw('bin', obj)
-    if(isinstance(obj, _b_.int)){
-        return $builtin_base_convert_helper(obj, 2)
-    }else{
-        try{
-            var klass = obj.__class__ || $B.get_class(obj),
-                res = $B.$call($B.$getattr(klass, '__index__'))(obj)
-            return $builtin_base_convert_helper(res, 2)
-        }catch(err){
-            throw _b_.TypeError.$factory("'" + $B.class_name(obj) +
-                "' object cannot be interpreted as an integer")
-        }
-    }
+    return bin_hex_oct(2, obj)
 }
 
 function callable(obj) {
@@ -1244,13 +1257,13 @@ help.__repr__ = help.__str__ = function(){
         "for help about object."
 }
 
-function hex(x) {
-    check_no_kw('hex', x)
+function hex(obj){
+    check_no_kw('hex', obj)
     check_nb_args('hex', 1, arguments)
-    return $builtin_base_convert_helper(x, 16)
+    return bin_hex_oct(16, obj)
 }
 
-function id(obj) {
+function id(obj){
    check_no_kw('id', obj)
    check_nb_args('id', 1, arguments)
    if(isinstance(obj, [_b_.str, _b_.int, _b_.float]) &&
@@ -1443,22 +1456,27 @@ $B.$iter = function(obj, sentinel){
         try{
             var _iter = $B.$call($B.$getattr(klass, '__iter__'))
         }catch(err){
-            try{
-                var gi_method = $B.$call($B.$getattr(klass, '__getitem__')),
-                    gi = function(i){return gi_method(obj, i)},
-                    ln = len(obj)
-                return iterator_class.$factory(gi, len)
-            }catch(err){
-                throw _b_.TypeError.$factory("'" + $B.class_name(obj) +
-                    "' object is not iterable")
+            if(err.__class__ === _b_.AttributeError){
+                try{
+                    var gi_method = $B.$call($B.$getattr(klass, '__getitem__')),
+                        gi = function(i){return gi_method(obj, i)},
+                        ln = len(obj)
+                    return iterator_class.$factory(gi, len)
+                }catch(err){
+                    throw _b_.TypeError.$factory("'" + $B.class_name(obj) +
+                        "' object is not iterable")
+                }
             }
+            throw err
         }
         var res = $B.$call(_iter)(obj)
         try{$B.$getattr(res, '__next__')}
         catch(err){
-            if(isinstance(err, _b_.AttributeError)){throw _b_.TypeError.$factory(
-                "iter() returned non-iterator of type '" +
-                 $B.class_name(res) + "'")}
+            if(isinstance(err, _b_.AttributeError)){
+                throw _b_.TypeError.$factory(
+                    "iter() returned non-iterator of type '" +
+                     $B.class_name(res) + "'")
+            }
         }
         return res
     }else{
@@ -1483,11 +1501,12 @@ function len(obj){
 
     var klass = obj.__class__ || $B.get_class(obj)
     try{
-        return $B.$call($B.$getattr(klass, '__len__'))(obj)
+        var method = $B.$getattr(klass, '__len__')
     }catch(err){
         throw _b_.TypeError.$factory("object of type '" +
             $B.class_name(obj) + "' has no len()")
     }
+    return $B.$call(method)(obj)
 }
 
 function locals(){
@@ -1753,7 +1772,11 @@ var NotImplemented = {
 
 function $not(obj){return !$B.$bool(obj)}
 
-function oct(x) {return $builtin_base_convert_helper(x, 8)}
+function oct(obj){
+    check_no_kw('oct', obj)
+    check_nb_args('oct', 1, arguments)
+    return bin_hex_oct(8, obj)
+}
 
 function ord(c) {
     check_no_kw('ord', c)
@@ -1883,19 +1906,15 @@ function repr(obj){
     check_nb_args('repr', 1, arguments)
 
     var klass = obj.__class__ || $B.get_class(obj)
-    try{
-        return $B.$call($B.$getattr(klass, "__repr__"))(obj)
-    }catch(err){
-        throw _b_.AttributeError.$factory("object has no attribute __repr__")
-    }
+    return $B.$call($B.$getattr(klass, "__repr__"))(obj)
 }
 
 var reversed = $B.make_class("reversed",
     function(seq){
         // Return a reverse iterator. seq must be an object which has a
-        // __reversed__() method or supports the sequence protocol (the __len__()
-        // method and the __getitem__() method with integer arguments starting at
-        // 0).
+        // __reversed__() method or supports the sequence protocol (the
+        // __len__() method and the __getitem__() method with integer
+        // arguments starting at 0).
 
         check_no_kw('reversed', seq)
         check_nb_args('reversed', 1, arguments)
@@ -1903,26 +1922,22 @@ var reversed = $B.make_class("reversed",
         var klass = seq.__class__ || $B.get_class(seq),
             rev_method = $B.$getattr(klass, '__reversed__', null)
         if(rev_method !== null){
-            try{
-                return $B.$call(rev_method)(seq)
-            }catch(err){
-                throw _b_.TypeError.$factory("'" + $B.class_name(seq) +
-                    "' object is not reversible")
-            }
+            return $B.$call(rev_method)(seq)
         }
         try{
-            var res = {
-                __class__: reversed,
-                $counter : _b_.len(seq),
-                getter: function(i){
-                    return $B.$call($B.$getattr(klass, '__getitem__'))(seq, i)
-                }
-            }
-            return res
+            var method = $B.$getattr(klass, '__getitem__')
         }catch(err){
-        console.log(err.__class__, err.args)
             throw _b_.TypeError.$factory("argument to reversed() must be a sequence")
         }
+
+        var res = {
+            __class__: reversed,
+            $counter : _b_.len(seq),
+            getter: function(i){
+                return $B.$call(method)(seq, i)
+            }
+        }
+        return res
     }
 )
 
@@ -1946,8 +1961,12 @@ function round(){
         try{
             return $B.$call($B.$getattr(klass, "__round__")).apply(null, arguments)
         }catch(err){
-            throw _b_.TypeError.$factory("type " + $B.class_name(arg) +
-                " doesn't define __round__ method")
+            if(err.__class__ === _b_.AttributeError){
+                throw _b_.TypeError.$factory("type " + $B.class_name(arg) +
+                    " doesn't define __round__ method")
+            }else{
+                throw err
+            }
         }
     }
 

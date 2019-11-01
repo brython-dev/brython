@@ -386,7 +386,7 @@ var type_conversions = ["__complex__", "__float__", "__int__"]
 var _convert = function(num){
     for(var i = 0; i < type_conversions.length; i++) {
         var missing = {},
-            tc = getattr(num, type_conversions[i], missing)
+            tc = $B.$getattr(num, type_conversions[i], missing)
         if(tc !== missing){
             return tc()
         }

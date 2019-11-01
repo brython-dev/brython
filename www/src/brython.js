@@ -90,8 +90,8 @@ return js}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,0,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.0"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2019-10-30 21:23:19.813376"
-__BRYTHON__.timestamp=1572466999813
+__BRYTHON__.compiled_date="2019-11-01 16:00:21.807600"
+__BRYTHON__.timestamp=1572620421807
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5034,9 +5034,6 @@ var kk=Object.keys(_window)
 var defined_ids={}
 if(options.ipy_id !==undefined){var $elts=[]
 options.ipy_id.forEach(function(elt){$elts.push(document.getElementById(elt))})}else{var scripts=document.getElementsByTagName('script'),$elts=[],webworkers=[]
-for(var script_id in $B.scripts){
-console.log("ext script",script_id)
-$elts.push({id:script_id,type:"text/python",textContent:$B.scripts[script_id]})}
 for(var i=0;i < scripts.length;i++){var script=scripts[i]
 if(script.type=="text/python" ||script.type=="text/python3"){if(script.className=="webworker"){if(script.id===undefined){throw _b_.AttributeError.$factory(
 "webworker script has no attribute 'id'")}
@@ -5077,8 +5074,7 @@ src=src.replace(/^\n/,'')
 $B.webworkers[worker.id]=src}}
 for(var i=0;i < $elts.length;i++){var elt=$elts[i]
 if(elt.type=="text/python" ||elt.type=="text/python3"){
-if(elt.id){module_name=elt.id}
-else{
+if(elt.id){module_name=elt.id}else{
 if(first_script){module_name='__main__'
 first_script=false}else{module_name='__main__'+$B.UUID()}
 while(defined_ids[module_name]!==undefined){module_name='__main__'+$B.UUID()}}
@@ -6322,8 +6318,10 @@ if(isinstance(obj,_b_.int)){if(obj.__class__===$B.long_int){return{
 __class__:$B.long_int,value:obj.value,pos:true}}else{return _b_.int.$factory(Math.abs(obj))}}
 if(isinstance(obj,_b_.float)){return _b_.float.$factory(Math.abs(obj))}
 var klass=obj.__class__ ||$B.get_class(obj)
-try{return $B.$call($B.$getattr(klass,"__abs__"))(obj)}catch(err){throw _b_.TypeError.$factory("Bad operand type for abs(): '"+
-$B.class_name(obj)+"'")}}
+try{var method=$B.$getattr(klass,"__abs__")}catch(err){if(err.__class__===_b_.AttributeError){throw _b_.TypeError.$factory("Bad operand type for abs(): '"+
+$B.class_name(obj)+"'")}
+throw err}
+return $B.$call(method)(obj)}
 function all(obj){check_nb_args('all',1,arguments)
 check_no_kw('all',obj)
 var iterable=iter(obj)
@@ -6361,11 +6359,15 @@ throw _b_.TypeError.$factory('Error, argument must be an integer or'+
 ' contains an __index__ function')}
 if(value >=0){return prefix+value.toString(base)}
 return '-'+prefix+(-value).toString(base)}
+function bin_hex_oct(base,obj){
+if(isinstance(obj,_b_.int)){return $builtin_base_convert_helper(obj,base)}else{try{var klass=obj.__class__ ||$B.get_class(obj),method=$B.$getattr(klass,'__index__')}catch(err){if(err.__class__===_b_.AttributeError){throw _b_.TypeError.$factory("'"+$B.class_name(obj)+
+"' object cannot be interpreted as an integer")}
+throw err}
+var res=$B.$call(method)(obj)
+return $builtin_base_convert_helper(res,base)}}
 function bin(obj){check_nb_args('bin',1,arguments)
 check_no_kw('bin',obj)
-if(isinstance(obj,_b_.int)){return $builtin_base_convert_helper(obj,2)}else{try{var klass=obj.__class__ ||$B.get_class(obj),res=$B.$call($B.$getattr(klass,'__index__'))(obj)
-return $builtin_base_convert_helper(res,2)}catch(err){throw _b_.TypeError.$factory("'"+$B.class_name(obj)+
-"' object cannot be interpreted as an integer")}}}
+return bin_hex_oct(2,obj)}
 function callable(obj){check_nb_args('callable',1,arguments)
 check_no_kw('callable',obj)
 return hasattr(obj,'__call__')}
@@ -6755,9 +6757,9 @@ try{return $B.$getattr(obj,'__doc__')}
 catch(err){return ''}}
 help.__repr__=help.__str__=function(){return "Type help() for interactive help, or help(object) "+
 "for help about object."}
-function hex(x){check_no_kw('hex',x)
+function hex(obj){check_no_kw('hex',obj)
 check_nb_args('hex',1,arguments)
-return $builtin_base_convert_helper(x,16)}
+return bin_hex_oct(16,obj)}
 function id(obj){check_no_kw('id',obj)
 check_nb_args('id',1,arguments)
 if(isinstance(obj,[_b_.str,_b_.int,_b_.float])&&
@@ -6829,9 +6831,10 @@ if($B.rich_comp("__eq__",res,self.sentinel)){throw _b_.StopIteration.$factory()}
 return res}
 $B.$iter=function(obj,sentinel){
 if(sentinel===undefined){var klass=obj.__class__ ||$B.get_class(obj)
-try{var _iter=$B.$call($B.$getattr(klass,'__iter__'))}catch(err){try{var gi_method=$B.$call($B.$getattr(klass,'__getitem__')),gi=function(i){return gi_method(obj,i)},ln=len(obj)
+try{var _iter=$B.$call($B.$getattr(klass,'__iter__'))}catch(err){if(err.__class__===_b_.AttributeError){try{var gi_method=$B.$call($B.$getattr(klass,'__getitem__')),gi=function(i){return gi_method(obj,i)},ln=len(obj)
 return iterator_class.$factory(gi,len)}catch(err){throw _b_.TypeError.$factory("'"+$B.class_name(obj)+
 "' object is not iterable")}}
+throw err}
 var res=$B.$call(_iter)(obj)
 try{$B.$getattr(res,'__next__')}
 catch(err){if(isinstance(err,_b_.AttributeError)){throw _b_.TypeError.$factory(
@@ -6845,8 +6848,9 @@ return $B.$iter($.obj,sentinel)}
 function len(obj){check_no_kw('len',obj)
 check_nb_args('len',1,arguments)
 var klass=obj.__class__ ||$B.get_class(obj)
-try{return $B.$call($B.$getattr(klass,'__len__'))(obj)}catch(err){throw _b_.TypeError.$factory("object of type '"+
-$B.class_name(obj)+"' has no len()")}}
+try{var method=$B.$getattr(klass,'__len__')}catch(err){throw _b_.TypeError.$factory("object of type '"+
+$B.class_name(obj)+"' has no len()")}
+return $B.$call(method)(obj)}
 function locals(){
 check_nb_args('locals',0,arguments)
 var res=$B.obj_dict($B.last($B.frames_stack)[1])
@@ -6949,7 +6953,9 @@ var NotImplementedType=$B.make_class("NotImplementedType",function(){return NotI
 NotImplementedType.__repr__=NotImplementedType.__str__=function(self){return "NotImplemented"}
 var NotImplemented={__class__:NotImplementedType}
 function $not(obj){return !$B.$bool(obj)}
-function oct(x){return $builtin_base_convert_helper(x,8)}
+function oct(obj){check_no_kw('oct',obj)
+check_nb_args('oct',1,arguments)
+return bin_hex_oct(8,obj)}
 function ord(c){check_no_kw('ord',c)
 check_nb_args('ord',1,arguments)
 if(typeof c=='string'){if(c.length==1){return c.charCodeAt(0)}
@@ -7009,16 +7015,15 @@ quit.__repr__=quit.__str__=function(){return "Use quit() or Ctrl-Z plus Return t
 function repr(obj){check_no_kw('repr',obj)
 check_nb_args('repr',1,arguments)
 var klass=obj.__class__ ||$B.get_class(obj)
-try{return $B.$call($B.$getattr(klass,"__repr__"))(obj)}catch(err){throw _b_.AttributeError.$factory("object has no attribute __repr__")}}
+return $B.$call($B.$getattr(klass,"__repr__"))(obj)}
 var reversed=$B.make_class("reversed",function(seq){
 check_no_kw('reversed',seq)
 check_nb_args('reversed',1,arguments)
 var klass=seq.__class__ ||$B.get_class(seq),rev_method=$B.$getattr(klass,'__reversed__',null)
-if(rev_method !==null){try{return $B.$call(rev_method)(seq)}catch(err){throw _b_.TypeError.$factory("'"+$B.class_name(seq)+
-"' object is not reversible")}}
-try{var res={__class__:reversed,$counter :_b_.len(seq),getter:function(i){return $B.$call($B.$getattr(klass,'__getitem__'))(seq,i)}}
-return res}catch(err){console.log(err.__class__,err.args)
-throw _b_.TypeError.$factory("argument to reversed() must be a sequence")}}
+if(rev_method !==null){return $B.$call(rev_method)(seq)}
+try{var method=$B.$getattr(klass,'__getitem__')}catch(err){throw _b_.TypeError.$factory("argument to reversed() must be a sequence")}
+var res={__class__:reversed,$counter :_b_.len(seq),getter:function(i){return $B.$call(method)(seq,i)}}
+return res}
 )
 reversed.__iter__=function(self){return self}
 reversed.__next__=function(self){self.$counter--
@@ -7027,8 +7032,8 @@ return self.getter(self.$counter)}
 $B.set_func_names(reversed,"builtins")
 function round(){var $=$B.args('round',2,{number:null,ndigits:null},['number','ndigits'],arguments,{ndigits:None},null,null),arg=$.number,n=$.ndigits===None ? 0 :$.ndigits
 if(!isinstance(arg,[_b_.int,_b_.float])){var klass=arg.__class__ ||$B.get_class(arg)
-try{return $B.$call($B.$getattr(klass,"__round__")).apply(null,arguments)}catch(err){throw _b_.TypeError.$factory("type "+$B.class_name(arg)+
-" doesn't define __round__ method")}}
+try{return $B.$call($B.$getattr(klass,"__round__")).apply(null,arguments)}catch(err){if(err.__class__===_b_.AttributeError){throw _b_.TypeError.$factory("type "+$B.class_name(arg)+
+" doesn't define __round__ method")}else{throw err}}}
 if(isinstance(arg,_b_.float)&&
 (arg.value===Infinity ||arg.value===-Infinity)){throw _b_.OverflowError.$factory("cannot convert float infinity to integer")}
 if(!isinstance(n,_b_.int)){throw _b_.TypeError.$factory(
@@ -9796,8 +9801,6 @@ int.$factory=function(value,base){
 if(value===undefined){return 0}
 if(typeof value=="number" &&
 (base===undefined ||base==10)){return parseInt(value)}
-if(base !==undefined){if(! _b_.isinstance(value,[_b_.str,_b_.bytes,_b_.bytearray])){throw _b_.TypeError.$factory(
-"int() can't convert non-string with explicit base")}}
 if(_b_.isinstance(value,_b_.complex)){throw _b_.TypeError.$factory("can't convert complex to int")}
 var $ns=$B.args("int",2,{x:null,base:null},["x","base"],arguments,{"base":10},null,null),value=$ns["x"],base=$ns["base"]
 if(_b_.isinstance(value,_b_.float)&& base==10){if(value < $B.min_int ||value > $B.max_int){return $B.long_int.$from_float(value)}
@@ -10441,7 +10444,7 @@ complex.imag=function(self){return new Number(self.$imag)}
 complex.imag.setter=function(){throw _b_.AttributeError.$factory("readonly attribute")}
 var _real=1,_real_mantissa=2,_sign=3,_imag=4,_imag_mantissa=5,_j=6
 var type_conversions=["__complex__","__float__","__int__"]
-var _convert=function(num){for(var i=0;i < type_conversions.length;i++){var missing={},tc=getattr(num,type_conversions[i],missing)
+var _convert=function(num){for(var i=0;i < type_conversions.length;i++){var missing={},tc=$B.$getattr(num,type_conversions[i],missing)
 if(tc !==missing){return tc()}}
 return num}
 var make_complex=$B.make_complex=function(real,imag){return{
