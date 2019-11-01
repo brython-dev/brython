@@ -852,7 +852,7 @@ Random.seed = function(){
             a = parseInt(res)
         }
     }else{
-        throw ValueError.$factory('version can only be 1 or 2')
+        throw _b_.ValueError.$factory('version can only be 1 or 2')
     }
 
     self._random.seed(a)
