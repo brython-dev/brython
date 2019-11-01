@@ -3,7 +3,8 @@
 if __name__ != 'test.support':
     raise ImportError('support must be imported from the test package')
 
-import asyncio.events
+# Brython: asyncio is not available
+# import asyncio.events
 import collections.abc
 import contextlib
 import errno

@@ -168,7 +168,7 @@ implementation = _implementation()
 class _hash_info:
 
   def __init__(self):
-      self.width = 32,
+      self.width = 32
       self.modulus = 2147483647
       self.inf = 314159
       self.nan = 0
