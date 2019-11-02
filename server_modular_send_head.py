@@ -1327,6 +1327,6 @@ if __name__ == '__main__':
     if args.cgi:
         handler_class = CGIHTTPRequestHandler
     else:
-        handler_class = partial(CompressedHandler,
+        handler_class = partial(SimpleHTTPRequestHandler,
                                 directory=args.directory)
     test(HandlerClass=handler_class, port=args.port, bind=args.bind)

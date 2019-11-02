@@ -227,8 +227,6 @@ os.chdir(os.path.join(os.getcwd(), 'www'))
 
 cgi_dir = os.path.join(os.path.dirname(os.getcwd()), 'cgi-bin')
 
-POST_PATHS = ['/time_cpython']
-
 server_address, handler = ('', port), CompressedHandler
 httpd = socketserver.ThreadingTCPServer(server_address, handler)
 httpd.server_name = "Brython built-in server"
