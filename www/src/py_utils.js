@@ -980,6 +980,35 @@ $B.$GetInt = function(value) {
       "' object cannot be interpreted as an integer")
 }
 
+
+$B.to_num = function(obj, methods){
+    // If object's class defines one of the methods, return the result
+    // of method(obj), else return null
+    var expected_class = {
+        "__complex__": _b_.complex,
+        "__float__": _b_.float,
+        "__index__": _b_.int,
+        "__int__": _b_.int
+    }
+    var klass = obj.__class__ || $B.get_class(obj)
+    for(var i = 0; i < methods.length; i++) {
+        var missing = {},
+            method = $B.$getattr(klass, methods[i], missing)
+        if(method !== missing){
+            var res = method(obj)
+            if(!_b_.isinstance(res, expected_class[methods[i]])){
+                console.log(res, methods[i], expected_class[methods[i]])
+                throw _b_.TypeError.$factory(methods[i] + "returned non-" +
+                    expected_class[methods[i]].$infos.__name__ +
+                    "(type " + $B.get_class(res) +")")
+            }
+            return res
+        }
+    }
+    return null
+}
+
+
 $B.PyNumber_Index = function(item){
     switch(typeof item){
         case "boolean":
@@ -1098,24 +1127,16 @@ $B.add = function(x, y){
         // strings
         return x + y
     }
-    return _b_.getattr(x, "__add__")(y)
-}
-
-$B.zzadd = function(x, y){
-    var z = (typeof x != "number" || typeof y != "number") ?
-                new Number(x + y) : x + y
-    if(x > min_int && x < max_int && y > min_int && y < max_int
-        && z > min_int && z < max_int){return z}
-    else if((typeof x == "number" || x.__class__ === $B.long_int)
-            && (typeof y == "number" || y.__class__ === $B.long_int)){
-        if((typeof x == "number" && isNaN(x)) ||
-                (typeof y == "number" && isNaN(y))){
-            return _b_.float.$factory("nan")
+    try{
+        var method = $B.$getattr(x.__class__ || $B.get_class(x), "__add__")
+    }catch(err){
+        if(err.__class__ === _b_.AttributeError){
+            throw _b_.TypeError.$factory("unsupported operand type(s) for " +
+                "+: '" + $B.class_name(x) +"' and '" + $B.class_name(y) + "'")
         }
-        var res = $B.long_int.__add__($B.long_int.$factory(x),
-            $B.long_int.$factory(y))
-        return res
-    }else{return z}
+        throw err
+    }
+    return $B.$call(method)(x, y)
 }
 
 $B.div = function(x, y){
@@ -1143,7 +1164,7 @@ $B.floordiv = function(x, y){
     }
 }
 
-$B.mul = function(x,y){
+$B.mul = function(x, y){
     var z = (typeof x != "number" || typeof y != "number") ?
             new Number(x * y) : x * y
     if(x > min_int && x < max_int && y > min_int && y < max_int

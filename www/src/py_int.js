@@ -726,15 +726,19 @@ int.$factory = function(value, base){
     if(_b_.isinstance(value, [_b_.bytes, _b_.bytearray])){
         return int.$factory($B.$getattr(value, "decode")("latin-1"), base)
     }
-    var $int = $B.$getattr(value, "__int__", _b_.None)
-    if($int !== _b_.None){return $int()}
 
-    var $index = $B.$getattr(value, "__index__", _b_.None)
-    if($index !== _b_.None){return $index()}
+    var num_value = $B.to_num(value, ["__int__", "__index__", "__trunc__"])
+    if(num_value === null){
+        throw _b_.TypeError.$factory(
+            "int() argument must be a string, a bytes-like " +
+            "object or a number, not '" + $B.class_name(value) + "'")
+    }
+    return num_value
 
+    /*
     var $trunc = $B.$getattr(value, "__trunc__", _b_.None)
     if($trunc !== _b_.None){
-        var res = $truc(),
+        var res = $trunc(),
             int_func = $int
         if(int_func === _b_.None){
             throw _b_.TypeError.$factory("__trunc__ returned non-Integral (type "+
@@ -748,6 +752,7 @@ int.$factory = function(value, base){
     throw _b_.TypeError.$factory(
         "int() argument must be a string, a bytes-like " +
         "object or a number, not '" + $B.class_name(value) + "'")
+    */
 }
 
 $B.set_func_names(int, "builtins")

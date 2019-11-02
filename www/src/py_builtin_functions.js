@@ -833,12 +833,19 @@ filter.__next__ = function(self) {
 $B.set_func_names(filter, "builtins")
 
 function format(value, format_spec) {
-  var args = $B.args("format", 2, {value: null, format_spec: null},
-      ["value", "format_spec"], arguments, {format_spec: ''}, null, null)
-  var fmt = $B.$getattr(args.value, '__format__', null)
-  if(fmt !== null){return fmt(args.format_spec)}
-  throw _b_.NotImplementedError("__format__ is not implemented for object '" +
-      _b_.str.$factory(args.value) + "'")
+    var $ = $B.args("format", 2, {value: null, format_spec: null},
+        ["value", "format_spec"], arguments, {format_spec: ''}, null, null)
+    var klass = value.__class__ || $B.get_class(value)
+    try{
+        var method = $B.$getattr(klass, '__format__')
+    }catch(err){
+        if(err.__class__ === _b_.AttributeError){
+            throw _b_.NotImplementedError("__format__ is not implemented " +
+                "for object '" + _b_.str.$factory(value) + "'")
+        }
+        throw err
+    }
+    return $B.$call(method)(value, $.format_spec)
 }
 
 function attr_error(attr, cname){

@@ -1,11 +1,4 @@
-def assertRaises(exc, func, *args, **kw):
-    try:
-        func(*args, **kw)
-    except exc:
-        pass
-    except Exception as exc1:
-        print(f"{exc1} raised by {func} instead of {exc}")
-        raise
+from tester import assertRaises
 
 class Exc(Exception):
     pass
@@ -97,5 +90,13 @@ class BadRepr(object):
 
 d = {1: BadRepr()}
 assertRaises(Exc, repr, d)
+
+class A:
+    pass
+
+a = A()
+a.__add__ = lambda other: 99
+
+assertRaises(TypeError, exec, "a + 7", globals())
 
 print("tests pass")

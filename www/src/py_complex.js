@@ -177,8 +177,8 @@ complex.__new__ = function(cls){
     if(arguments.length == 1 && $real.__class__ === complex && $imag == 0){
         return $real
     }
-    if((_b_.isinstance($real, _b_.float) || _b_.isinstance($real, _b_.int)) &&
-            (_b_.isinstance($imag, _b_.float) || _b_.isinstance($imag, _b_.int))){
+    if(_b_.isinstance($real, [_b_.float, _b_.int]) &&
+            _b_.isinstance($imag, [_b_.float, _b_.int])){
         res = {
             __class__: complex,
             $real: $real,
@@ -187,7 +187,13 @@ complex.__new__ = function(cls){
         return res
     }
 
-    $real = _convert($real)
+    var real_to_num = $B.to_num($real, 
+        ["__complex__", "__float__", "__index__"])
+    if(real_to_num === null){
+        throw _b_.TypeError.$factory("complex() first argument must be a " +
+            " string or a number, not '" + $B.class_name($real) +"'")
+    }
+    $real = real_to_num
     $imag = _convert($imag)
     if(! _b_.isinstance($real, _b_.float) && ! _b_.isinstance($real, _b_.int) &&
             ! _b_.isinstance($real, _b_.complex)){
@@ -382,16 +388,17 @@ var _real = 1,
     _imag = 4,
     _imag_mantissa = 5,
     _j = 6
-var type_conversions = ["__complex__", "__float__", "__int__"]
+var type_conversions = ["__complex__", "__float__", "__index__"]
 var _convert = function(num){
+    var klass = num.__class__ || $B.get_class(num)
     for(var i = 0; i < type_conversions.length; i++) {
         var missing = {},
-            tc = $B.$getattr(num, type_conversions[i], missing)
-        if(tc !== missing){
-            return tc()
+            method = $B.$getattr(klass, type_conversions[i], missing)
+        if(method !== missing){
+            return method(num)
         }
     }
-    return num
+    return null
 }
 
 var make_complex = $B.make_complex = function(real, imag){

@@ -90,8 +90,8 @@ return js}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,0,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.0"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2019-11-01 16:04:42.549701"
-__BRYTHON__.timestamp=1572620682549
+__BRYTHON__.compiled_date="2019-11-02 16:46:57.331472"
+__BRYTHON__.timestamp=1572709617331
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -6118,6 +6118,17 @@ if(! value.$is_class){try{var v=$B.$getattr(value,"__int__")();return v}catch(e)
 try{var v=$B.$getattr(value,"__index__")();return v}catch(e){}}
 throw _b_.TypeError.$factory("'"+$B.class_name(value)+
 "' object cannot be interpreted as an integer")}
+$B.to_num=function(obj,methods){
+var expected_class={"__complex__":_b_.complex,"__float__":_b_.float,"__index__":_b_.int,"__int__":_b_.int}
+var klass=obj.__class__ ||$B.get_class(obj)
+for(var i=0;i < methods.length;i++){var missing={},method=$B.$getattr(klass,methods[i],missing)
+if(method !==missing){var res=method(obj)
+if(!_b_.isinstance(res,expected_class[methods[i]])){console.log(res,methods[i],expected_class[methods[i]])
+throw _b_.TypeError.$factory(methods[i]+"returned non-"+
+expected_class[methods[i]].$infos.__name__+
+"(type "+$B.get_class(res)+")")}
+return res}}
+return null}
 $B.PyNumber_Index=function(item){switch(typeof item){case "boolean":
 return item ? 1 :0
 case "number":
@@ -6170,16 +6181,10 @@ if(z < max_int){return z}
 return $B.long_int.__add__($B.long_int.$factory(x),$B.long_int.$factory(y))}else{
 return new Number(x+y)}}else if(typeof x=="string" && typeof y=="string"){
 return x+y}
-return _b_.getattr(x,"__add__")(y)}
-$B.zzadd=function(x,y){var z=(typeof x !="number" ||typeof y !="number")?
-new Number(x+y):x+y
-if(x > min_int && x < max_int && y > min_int && y < max_int
-&& z > min_int && z < max_int){return z}
-else if((typeof x=="number" ||x.__class__===$B.long_int)
-&&(typeof y=="number" ||y.__class__===$B.long_int)){if((typeof x=="number" && isNaN(x))||
-(typeof y=="number" && isNaN(y))){return _b_.float.$factory("nan")}
-var res=$B.long_int.__add__($B.long_int.$factory(x),$B.long_int.$factory(y))
-return res}else{return z}}
+try{var method=$B.$getattr(x.__class__ ||$B.get_class(x),"__add__")}catch(err){if(err.__class__===_b_.AttributeError){throw _b_.TypeError.$factory("unsupported operand type(s) for "+
+"+: '"+$B.class_name(x)+"' and '"+$B.class_name(y)+"'")}
+throw err}
+return $B.$call(method)(x,y)}
 $B.div=function(x,y){var z=x/y
 if(x > min_int && x < max_int && y > min_int && y < max_int
 && z > min_int && z < max_int){return z}
@@ -6575,11 +6580,12 @@ filter.__iter__=function(self){return self}
 filter.__next__=function(self){while(true){var _item=next(self.iterable)
 if(self.func(_item)){return _item}}}
 $B.set_func_names(filter,"builtins")
-function format(value,format_spec){var args=$B.args("format",2,{value:null,format_spec:null},["value","format_spec"],arguments,{format_spec:''},null,null)
-var fmt=$B.$getattr(args.value,'__format__',null)
-if(fmt !==null){return fmt(args.format_spec)}
-throw _b_.NotImplementedError("__format__ is not implemented for object '"+
-_b_.str.$factory(args.value)+"'")}
+function format(value,format_spec){var $=$B.args("format",2,{value:null,format_spec:null},["value","format_spec"],arguments,{format_spec:''},null,null)
+var klass=value.__class__ ||$B.get_class(value)
+try{var method=$B.$getattr(klass,'__format__')}catch(err){if(err.__class__===_b_.AttributeError){throw _b_.NotImplementedError("__format__ is not implemented "+
+"for object '"+_b_.str.$factory(value)+"'")}
+throw err}
+return $B.$call(method)(value,$.format_spec)}
 function attr_error(attr,cname){var msg="bad operand type for unary #: '"+cname+"'"
 switch(attr){case '__neg__':
 throw _b_.TypeError.$factory(msg.replace('#','-'))
@@ -9496,7 +9502,6 @@ if(typeof value=="number"){return new Number(value)}
 if(isinstance(value,float)){return value}
 if(isinstance(value,bytes)){var s=getattr(value,"decode")("latin-1")
 return float.$factory(getattr(value,"decode")("latin-1"))}
-if(hasattr(value,"__float__")){return $FloatClass(getattr(value,"__float__")())}
 if(typeof value=="string"){value=value.trim()
 switch(value.toLowerCase()){case "+inf":
 case "inf":
@@ -9522,6 +9527,8 @@ _b_.str.encode(value,"latin-1")
 throw _b_.ValueError.$factory(
 "Could not convert to float(): '"+
 _b_.str.$factory(value)+"'")}}}
+var klass=value.__class__ ||$B.get_class(value),num_value=$B.to_num(value,["__float__","__index__"])
+if(num_value !==null){return num_value}
 throw _b_.TypeError.$factory("float() argument must be a string or a "+
 "number, not '"+$B.class_name(value)+"'")}
 $B.$FloatClass=$FloatClass
@@ -9840,21 +9847,11 @@ var res=parseInt(value,base)
 if(res < $B.min_int ||res > $B.max_int){return $B.long_int.$factory(value,base)}
 return res}
 if(_b_.isinstance(value,[_b_.bytes,_b_.bytearray])){return int.$factory($B.$getattr(value,"decode")("latin-1"),base)}
-var $int=$B.$getattr(value,"__int__",_b_.None)
-if($int !==_b_.None){return $int()}
-var $index=$B.$getattr(value,"__index__",_b_.None)
-if($index !==_b_.None){return $index()}
-var $trunc=$B.$getattr(value,"__trunc__",_b_.None)
-if($trunc !==_b_.None){var res=$truc(),int_func=$int
-if(int_func===_b_.None){throw _b_.TypeError.$factory("__trunc__ returned non-Integral (type "+
-$B.class_name(res)+")")}
-var res=int_func()
-if(_b_.isinstance(res,int)){return int_value(res)}
-throw _b_.TypeError.$factory("__trunc__ returned non-Integral (type "+
-$B.class_name(res)+")")}
-throw _b_.TypeError.$factory(
+var num_value=$B.to_num(value,["__int__","__index__","__trunc__"])
+if(num_value===null){throw _b_.TypeError.$factory(
 "int() argument must be a string, a bytes-like "+
 "object or a number, not '"+$B.class_name(value)+"'")}
+return num_value}
 $B.set_func_names(int,"builtins")
 _b_.int=int
 $B.$bool=function(obj){
@@ -10367,10 +10364,13 @@ res={__class__:complex,$real:$real ||0,$imag:$imag ||0}
 return res}}
 $imag=$imag===missing ? 0 :$imag
 if(arguments.length==1 && $real.__class__===complex && $imag==0){return $real}
-if((_b_.isinstance($real,_b_.float)||_b_.isinstance($real,_b_.int))&&
-(_b_.isinstance($imag,_b_.float)||_b_.isinstance($imag,_b_.int))){res={__class__:complex,$real:$real,$imag:$imag}
+if(_b_.isinstance($real,[_b_.float,_b_.int])&&
+_b_.isinstance($imag,[_b_.float,_b_.int])){res={__class__:complex,$real:$real,$imag:$imag}
 return res}
-$real=_convert($real)
+var real_to_num=$B.to_num($real,["__complex__","__float__","__index__"])
+if(real_to_num===null){throw _b_.TypeError.$factory("complex() first argument must be a "+
+" string or a number, not '"+$B.class_name($real)+"'")}
+$real=real_to_num
 $imag=_convert($imag)
 if(! _b_.isinstance($real,_b_.float)&& ! _b_.isinstance($real,_b_.int)&&
 ! _b_.isinstance($real,_b_.complex)){throw _b_.TypeError.$factory("complex() argument must be a string "+
@@ -10443,10 +10443,11 @@ complex.real.setter=function(){throw _b_.AttributeError.$factory("readonly attri
 complex.imag=function(self){return new Number(self.$imag)}
 complex.imag.setter=function(){throw _b_.AttributeError.$factory("readonly attribute")}
 var _real=1,_real_mantissa=2,_sign=3,_imag=4,_imag_mantissa=5,_j=6
-var type_conversions=["__complex__","__float__","__int__"]
-var _convert=function(num){for(var i=0;i < type_conversions.length;i++){var missing={},tc=$B.$getattr(num,type_conversions[i],missing)
-if(tc !==missing){return tc()}}
-return num}
+var type_conversions=["__complex__","__float__","__index__"]
+var _convert=function(num){var klass=num.__class__ ||$B.get_class(num)
+for(var i=0;i < type_conversions.length;i++){var missing={},method=$B.$getattr(klass,type_conversions[i],missing)
+if(method !==missing){return method(num)}}
+return null}
 var make_complex=$B.make_complex=function(real,imag){return{
 __class__:complex,$real:real,$imag:imag}}
 complex.$factory=function(){return complex.__new__(complex,...arguments)}

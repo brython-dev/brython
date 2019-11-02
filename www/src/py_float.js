@@ -707,9 +707,7 @@ float.$factory = function (value){
       var s = getattr(value, "decode")("latin-1")
       return float.$factory(getattr(value, "decode")("latin-1"))
     }
-    if(hasattr(value, "__float__")){
-      return $FloatClass(getattr(value, "__float__")())
-    }
+
     if(typeof value == "string"){
        value = value.trim()   // remove leading and trailing whitespace
        switch(value.toLowerCase()) {
@@ -740,6 +738,13 @@ float.$factory = function (value){
                }
          }
     }
+    var klass = value.__class__ || $B.get_class(value),
+        num_value = $B.to_num(value, ["__float__", "__index__"])
+
+    if(num_value !== null){
+        return num_value
+    }
+
     throw _b_.TypeError.$factory("float() argument must be a string or a " +
         "number, not '" + $B.class_name(value) + "'")
 }
