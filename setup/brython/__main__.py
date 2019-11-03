@@ -24,6 +24,8 @@ if __name__ == "__main__":
 
     parser.add_argument('--make_package', help='Make a loadable Python package')
 
+    parser.add_argument('--make_file_system', help='Make a virtual file system')
+
     parser.add_argument('--modules',
         help='Create brython_modules.js with all the modules used by the application',
         action="store_true")
@@ -99,7 +101,8 @@ if __name__ == "__main__":
             os.path.join(os.getcwd(), 'brython_modules.js'))
 
     if args.modules:
-        print('Create brython_modules.js with all the modules used by the application')
+        print('Create brython_modules.js with all the modules used by the '
+            'application')
         from . import list_modules
 
         finder = list_modules.ModulesFinder()
@@ -113,6 +116,13 @@ if __name__ == "__main__":
         finder.inspect()
         finder.make_brython_modules()
         finder.make_setup()
+        print('done')
+
+    if args.make_file_system:
+        print('Create a Javascript file for all the files in the directory')
+        vfs_name = args.make_file_system
+        from .make_file_system import make
+        make(vfs_name)
         print('done')
 
     if args.make_package:
