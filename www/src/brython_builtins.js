@@ -9,15 +9,23 @@ $B.isWebWorker = ('undefined' !== typeof WorkerGlobalScope) &&
 $B.isNode = (typeof process !=='undefined') && (process.release.name==='node')
 
 var _window
-if ($B.isNode){
-    _window={ location: {
-        href:'',
-        origin: '',
-        pathname: ''},
-        navigator: {userLanguage: ''} }
+if($B.isNode){
+    _window = {
+        location: {
+            href:'',
+            origin: '',
+            pathname: ''
+        },
+        navigator: {
+            userLanguage: ''
+        }
+    }
 } else {
-    _window=self
+    _window = self
 }
+
+var href = _window.location.href
+$B.protocol = href.split(':')[0]
 
 var $path
 
@@ -212,6 +220,14 @@ $B.update_VFS = function(scripts){
         }
         $B.VFS[script] = scripts[script]
         $B.VFS[script].timestamp = vfs_timestamp
+    }
+}
+
+$B.add_files = function(files){
+    // Used to add files that programs can open with open()
+    $B.files = $B.files || {}
+    for(var file in files){
+        $B.files[file] = files[file]
     }
 }
 
