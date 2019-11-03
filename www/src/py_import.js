@@ -116,7 +116,7 @@ function $download_module(mod, url, $package){
 
 $B.$download_module = $download_module
 
-function import_js(mod, path) {
+function import_js(mod, path){
     try{
         var module_contents = $download_module(mod, path, undefined)
     }catch(err){
@@ -140,7 +140,7 @@ function run_js(module_contents, path, _module){
     try{$module}
     catch(err){
         console.log("no $module")
-        throw _b_.ImportError.$factory("name '$module' is not defined in module")
+        throw _b_.ImportError.$factory("name '$module' not defined in module")
     }
 
     $module.__name__ = _module.__name__
@@ -239,7 +239,6 @@ function run_py(module_contents, path, module, compiled) {
 
     try{
         js = compiled ? module_contents : root.to_js()
-        //console.log('imports in', module.__name__, root.imports)
         if($B.$options.debug == 10){
            console.log("code for module " + module.__name__)
            console.log(js)
@@ -348,7 +347,8 @@ var finder_VFS = {
                var mod_js = $B.precompiled[parent],
                    is_package = modobj.$is_package
                if(Array.isArray(mod_js)){mod_js = mod_js[0]}
-               $B.imported[parent] = module.$factory(parent, undefined, is_package)
+               $B.imported[parent] = module.$factory(parent, undefined,
+                   is_package)
                $B.imported[parent].__initialized__ = true
                $B.imported[parent].__file__ =
                    $B.imported[parent].__cached__ = "VFS." +
@@ -381,7 +381,8 @@ var finder_VFS = {
                }
                if(i>0){
                    // Set attribute of parent module
-                   $B.builtins.setattr($B.imported[parts.slice(0, i).join(".")],
+                   $B.builtins.setattr(
+                       $B.imported[parts.slice(0, i).join(".")],
                        parts[i], $module)
                }
 
@@ -532,7 +533,8 @@ var finder_stdlib_static = {
             if(address !== undefined){
                 var ext = address[0],
                     is_pkg = address[1] !== undefined,
-                    path = $B.brython_path + ((ext == "py")? "Lib/" : "libs/") +
+                    path = $B.brython_path +
+                           ((ext == "py")? "Lib/" : "libs/") +
                            fullname.replace(/\./g, "/"),
                     metadata = {
                         ext: ext,
@@ -683,7 +685,7 @@ var url_hook = {
     __mro__: [_b_.object],
     __repr__: function(self) {
         return "<UrlPathFinder" + (self.hint? " for '" + self.hint + "'":
-                                   "(unbound)") + " at " + self.path_entry + '>'
+               "(unbound)") + " at " + self.path_entry + '>'
     },
     $infos: {
         __module__: "builtins",
@@ -822,7 +824,8 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
    }
 
    var modobj = $B.imported[mod_name],
-       parsed_name = mod_name.split('.')
+       parsed_name = mod_name.split('.'),
+       has_from = fromlist.length > 0
 
    if(modobj == _b_.None){
        // [Import spec] Stop loading loop right away
@@ -863,7 +866,6 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
                     }
                 }
             }
-            // else { } // [Import spec] Module cache hit . Nothing to do.
             // [Import spec] If __path__ can not be accessed an ImportError is raised
             if(i < len){
                 try{
@@ -878,7 +880,18 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
                                 module){
                         return $B.imported[_mod_name][parsed_name[len]]
                     }
-                    import_error(_mod_name)
+                    if(has_from){ // "from a import b" : ImportError
+                        import_error(mod_name)
+                    }else{
+                        // "import a.b" if a is not a package : ModuleNotFoundError
+                        var exc = _b_.ModuleNotFoundError.$factory()
+                        exc.msg = "No module named '" + mod_name +"'; '" +
+                            _mod_name + "' is not a package"
+                        exc.args = $B.fast_tuple([exc.msg])
+                        exc.name = mod_name
+                        exc.path = _b_.None
+                        throw exc
+                    }
                 }
             }
        }
@@ -959,7 +972,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
     // FIXME: Should we need locals dict supply it in, now it is useless
     var importer = typeof __import__ == "function" ?
                         __import__ :
-                        _b_.getattr(__import__, "__call__"),
+                        $B.$getattr(__import__, "__call__"),
         modobj = importer(mod_name, globals, undefined, fromlist, 0)
 
     // Apply bindings upon local namespace
@@ -1023,7 +1036,8 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                         }
                         if($err3.$py_error){
                             var errname = $err3.__class__.$infos.__name__
-                            if($err3.__class__ != _b_.ImportError){
+                            if($err3.__class__ !== _b_.ImportError &&
+                                    $err3.__class__ !== _b_.ModuleNotFoundError){
                                 $B.handle_error($err3)
                             }
                             throw _b_.ImportError.$factory(

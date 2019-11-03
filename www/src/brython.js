@@ -95,8 +95,8 @@ return js}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,0,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.0"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2019-11-03 11:04:52.606407"
-__BRYTHON__.timestamp=1572775492606
+__BRYTHON__.compiled_date="2019-11-03 21:44:29.407468"
+__BRYTHON__.timestamp=1572813869407
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -8882,7 +8882,7 @@ console.log(path,_module)
 throw err}
 try{$module}
 catch(err){console.log("no $module")
-throw _b_.ImportError.$factory("name '$module' is not defined in module")}
+throw _b_.ImportError.$factory("name '$module' not defined in module")}
 $module.__name__=_module.__name__
 for(var attr in $module){if(typeof $module[attr]=="function"){$module[attr].$infos={__module__:_module.__name__,__name__:attr,__qualname__:attr}}}
 if(_module !==undefined){
@@ -8980,7 +8980,8 @@ if($B.debug > 2){console.log(mod_js)}}
 throw err}
 for(var attr in $module){$B.imported[parent][attr]=$module[attr]}
 if(i>0){
-$B.builtins.setattr($B.imported[parts.slice(0,i).join(".")],parts[i],$module)}}
+$B.builtins.setattr(
+$B.imported[parts.slice(0,i).join(".")],parts[i],$module)}}
 return $module}else{var mod_name=modobj.__name__
 if($B.debug > 1){console.log("run Python code from VFS",mod_name)}
 var record=run_py(module_contents,modobj.__path__,modobj)
@@ -9028,7 +9029,8 @@ if(address===undefined){var elts=fullname.split(".")
 if(elts.length > 1){elts.pop()
 var $package=$B.stdlib[elts.join(".")]
 if($package && $package[1]){address=["py"]}}}
-if(address !==undefined){var ext=address[0],is_pkg=address[1]!==undefined,path=$B.brython_path+((ext=="py")? "Lib/" :"libs/")+
+if(address !==undefined){var ext=address[0],is_pkg=address[1]!==undefined,path=$B.brython_path+
+((ext=="py")? "Lib/" :"libs/")+
 fullname.replace(/\./g,"/"),metadata={ext:ext,is_package:is_pkg,path:path+(is_pkg? "/__init__.py" :
 ((ext=="py")? ".py" :".js")),address:address}
 var res=new_spec({name :fullname,loader:cls,
@@ -9110,7 +9112,7 @@ if((file.startsWith($B.brython_path+"Lib/")&&
 ! file.startsWith($B.brython_path+"Lib/site-packages/"))||
 file.startsWith($B.brython_path+"libs/")||
 file.startsWith("VFS.")){from_stdlib=true}}
-var modobj=$B.imported[mod_name],parsed_name=mod_name.split('.')
+var modobj=$B.imported[mod_name],parsed_name=mod_name.split('.'),has_from=fromlist.length > 0
 if(modobj==_b_.None){
 import_error(mod_name)}
 if(modobj===undefined){
@@ -9129,7 +9131,15 @@ if(i==len-1 &&
 $B.imported[_mod_name][parsed_name[len]]&&
 $B.imported[_mod_name][parsed_name[len]].__class__===
 module){return $B.imported[_mod_name][parsed_name[len]]}
-import_error(_mod_name)}}}}else{if($B.imported[parsed_name[0]]&&
+if(has_from){
+import_error(mod_name)}else{
+var exc=_b_.ModuleNotFoundError.$factory()
+exc.msg="No module named '"+mod_name+"'; '"+
+_mod_name+"' is not a package"
+exc.args=$B.fast_tuple([exc.msg])
+exc.name=mod_name
+exc.path=_b_.None
+throw exc}}}}}else{if($B.imported[parsed_name[0]]&&
 parsed_name.length > 1){try{$B.$setattr($B.imported[parsed_name[0]],parsed_name[1],modobj)}catch(err){console.log("error",parsed_name,modobj)
 throw err}}}
 if(fromlist.length > 0){
@@ -9153,7 +9163,7 @@ if(__import__===undefined){
 __import__=$B.$__import__}
 var importer=typeof __import__=="function" ?
 __import__ :
-_b_.getattr(__import__,"__call__"),modobj=importer(mod_name,globals,undefined,fromlist,0)
+$B.$getattr(__import__,"__call__"),modobj=importer(mod_name,globals,undefined,fromlist,0)
 if(! fromlist ||fromlist.length==0){
 var alias=aliases[mod_name]
 if(alias){locals[alias]=$B.imported[mod_name]}else{locals[$B.to_alias(norm_parts[0])]=modobj}}else{var __all__=fromlist,thunk={}
@@ -9173,7 +9183,8 @@ if(mod_name==="__future__"){
 var frame=$B.last($B.frames_stack),line_info=frame[3].$line_info,line_elts=line_info.split(','),line_num=parseInt(line_elts[0])
 $B.$SyntaxError(frame[2],"future feature "+name+" is not defined",current_frame[3].src,undefined,line_num)}
 if($err3.$py_error){var errname=$err3.__class__.$infos.__name__
-if($err3.__class__ !=_b_.ImportError){$B.handle_error($err3)}
+if($err3.__class__ !==_b_.ImportError &&
+$err3.__class__ !==_b_.ModuleNotFoundError){$B.handle_error($err3)}
 throw _b_.ImportError.$factory(
 "cannot import name '"+name+"'")}
 console.log($err3)
