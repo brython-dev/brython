@@ -9894,7 +9894,7 @@ var brython = $B.parser.brython = function(options){
         path_hooks.push($B.$path_hooks[0])
     }
 
-    if(options.static_stdlib_import !== false){
+    if(options.static_stdlib_import !== false && $B.protocol != "file"){
         // Add finder using static paths
         meta_path.push($B.$meta_path[1])
         // Remove /Lib and /libs in sys.path :
@@ -9907,9 +9907,11 @@ var brython = $B.parser.brython = function(options){
     }
 
     // Always use the defaut finder using sys.path
-    meta_path.push($B.$meta_path[2])
+    if($B.protocol !== "file"){
+        meta_path.push($B.$meta_path[2])
+        path_hooks.push($B.$path_hooks[1])
+    }
     $B.meta_path = meta_path
-    path_hooks.push($B.$path_hooks[1])
     $B.path_hooks = path_hooks
 
     // URL of the script where function brython() is called
