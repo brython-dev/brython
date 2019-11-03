@@ -2511,6 +2511,11 @@ function $url_open(){
     if(isinstance(file, $B.JSObject)){
         return $B.OpenFile.$factory(file.js, mode, encoding) // defined in py_dom.js
     }
+    if(mode.search('w') > -1){
+        throw _b_.IOError.$factory("Browsers cannot write on disk")
+    }else if(['r', 'rb'].indexOf(mode) == -1){
+        throw _b_.ValueError.$factory("Invalid mode '" + mode + "'")
+    }    
     if(isinstance(file, _b_.str)){
         // read the file content and return an object with file object methods
         var is_binary = mode.search('b') > -1

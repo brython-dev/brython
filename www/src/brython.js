@@ -12,6 +12,8 @@ $B.isNode=(typeof process !=='undefined')&&(process.release.name==='node')
 var _window
 if($B.isNode){_window={location:{href:'',origin:'',pathname:''},navigator:{userLanguage:''}}}else{
 _window=self}
+var href=_window.location.href
+$B.protocol=href.split(':')[0]
 var $path
 if($B.brython_path===undefined){
 var this_url;
@@ -80,6 +82,9 @@ if(vfs_timestamp !==undefined){delete scripts.$timestamp}
 for(var script in scripts){if($B.VFS.hasOwnProperty(script)){console.warn("Virtual File System: duplicate entry "+script)}
 $B.VFS[script]=scripts[script]
 $B.VFS[script].timestamp=vfs_timestamp}}
+$B.add_files=function(files){
+$B.files=$B.files ||{}
+for(var file in files){$B.files[file]=files[file]}}
 $B.python_to_js=function(src,script_id){$B.meta_path=$B.$meta_path.slice()
 if(!$B.use_VFS){$B.meta_path.shift()}
 if(script_id===undefined){script_id="__main__"}
@@ -90,8 +95,8 @@ return js}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,0,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.0"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2019-11-02 16:46:57.331472"
-__BRYTHON__.timestamp=1572709617331
+__BRYTHON__.compiled_date="2019-11-03 11:04:52.606407"
+__BRYTHON__.timestamp=1572775492606
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -4978,13 +4983,13 @@ $B.$options=options
 var meta_path=[],path_hooks=[]
 if($B.use_VFS){meta_path.push($B.$meta_path[0])
 path_hooks.push($B.$path_hooks[0])}
-if(options.static_stdlib_import !==false){
+if(options.static_stdlib_import !==false && $B.protocol !="file"){
 meta_path.push($B.$meta_path[1])
 if($B.path.length > 3){$B.path.shift()
 $B.path.shift()}}
-meta_path.push($B.$meta_path[2])
+if($B.protocol !=="file"){meta_path.push($B.$meta_path[2])
+path_hooks.push($B.$path_hooks[1])}
 $B.meta_path=meta_path
-path_hooks.push($B.$path_hooks[1])
 $B.path_hooks=path_hooks
 var $href=$B.script_path=_window.location.href,$href_elts=$href.split('/')
 $href_elts.pop()
@@ -5175,12 +5180,13 @@ var db=idb_cx.result,store=db.createObjectStore("modules",{"keyPath":"name"})
 store.onsuccess=loop}
 idb_cx.onerror=function(){console.info('could not open indexedDB database')}}
 $B.ajax_load_script=function(script){var url=script.url,name=script.name
-var req=new XMLHttpRequest()
+if($B.files && $B.files.hasOwnProperty(name)){$B.tasks.splice(0,0,[$B.run_script,$B.files[name],name,true])
+loop()}else if($B.protocol !="file"){var req=new XMLHttpRequest()
 req.open("GET",url+"?"+Date.now(),true)
 req.onreadystatechange=function(){if(this.readyState==4){if(this.status==200){var src=this.responseText
 if(script.is_ww){$B.webworkers[name]=src}else{$B.tasks.splice(0,0,[$B.run_script,src,name,true])}}else if(this.status==404){throw Error(url+" not found")}
 loop()}}
-req.send()}
+req.send()}}
 function add_jsmodule(module,source){
 source+="\nvar $locals_"+
 module.replace(/\./g,"_")+" = $module"
@@ -7187,9 +7193,8 @@ $Reader.flush=function(self){return None}
 $Reader.read=function(){var $=$B.args("read",2,{self:null,size:null},["self","size"],arguments,{size:-1},null,null),self=$.self,size=$B.$GetInt($.size)
 if(self.closed===true){throw _b_.ValueError.$factory('I/O operation on closed file')}
 self.$counter=self.$counter ||0
-if(size < 0){var res=self.$content.substr(self.$counter)
-self.$counter=self.$content.length-1
-return res}
+var binary=self.$content.__class__===_b_.bytes,len=binary ? self.$content.source.length :self.$content.length
+if(size < 0){size=len-1}
 if(self.$content.__class__===_b_.bytes){res=_b_.bytes.$factory(self.$content.source.slice(self.$counter,self.$counter+size))}else{res=self.$content.substr(self.$counter-size,size)}
 self.$counter+=size
 return res}
@@ -7234,17 +7239,24 @@ for(var attr in $ns){eval('var '+attr+'=$ns["'+attr+'"]')}
 if(args.length > 0){var mode=args[0]}
 if(args.length > 1){var encoding=args[1]}
 if(isinstance(file,$B.JSObject)){return $B.OpenFile.$factory(file.js,mode,encoding)}
+if(mode.search('w')>-1){throw _b_.IOError.$factory("Browsers cannot write on disk")}else if(['r','rb'].indexOf(mode)==-1){throw _b_.ValueError.$factory("Invalid mode '"+mode+"'")}
 if(isinstance(file,_b_.str)){
 var is_binary=mode.search('b')>-1
 if($ns.file=="<string>"){console.log($ns.file,$B.file_cache[$ns.file])}
 if($B.file_cache.hasOwnProperty($ns.file)){var str_content=$B.file_cache[$ns.file]
-if(is_binary){$res=_b_.str.encode(str_content,"utf-8")}else{$res=str_content}}else{if(is_binary){throw _b_.IOError.$factory(
+if(is_binary){$res=_b_.str.encode(str_content,"utf-8")}else{$res=str_content}}else if($B.files && $B.files.hasOwnProperty($ns.file)){$res=atob($B.files[$ns.file])
+if(is_binary){var source=[]
+for(const char of $res){source.push(char.charCodeAt(0))}
+console.log(source.slice(0,10))
+console.log(source.slice(source.length-10))
+$res=_b_.bytes.$factory()
+$res.source=source}}else if($B.protocol !="file"){if(is_binary){throw _b_.IOError.$factory(
 "open() in binary mode is not supported")}
 var req=new XMLHttpRequest();
 req.onreadystatechange=function(){try{var status=this.status
 if(status==404){$res=_b_.IOError.$factory('File '+file+' not found')}else if(status !=200){$res=_b_.IOError.$factory('Could not open file '+
-file+' : status '+status)}else{$res=this.responseText}}catch(err){$res=_b_.IOError.$factory('Could not open file '+file+
-' : error '+err)}}
+file+' : status '+status)}else{$res=this.responseText}}catch(err){$res=_b_.IOError.$factory('Could not open file '+
+file+' : error '+err)}}
 var fake_qs='?foo='+(new Date().getTime())
 req.open('GET',file+fake_qs,false)
 req.overrideMimeType('text/plain; charset=utf-8')
@@ -8296,6 +8308,7 @@ return res
 case "latin":
 case "latin1":
 case "latin-1":
+case "latin_1":
 case "L1":
 case "iso8859_1":
 case "iso_8859_1":
@@ -13475,7 +13488,7 @@ return _sys_modules[spec.name]=module}
 _loader=_b_.getattr(spec,"loader",_b_.None)
 break}}}
 if(_loader===undefined){
-var exc=_b_.ImportError.$factory("No module named "+mod_name)
+var exc=_b_.ModuleNotFoundError.$factory(mod_name)
 exc.name=mod_name
 throw exc}
 if($B.is_none(module)){var _spec_name=_b_.getattr(spec,"name")
