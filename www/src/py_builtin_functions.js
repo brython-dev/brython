@@ -2403,10 +2403,10 @@ $Reader.read = function(){
         throw _b_.ValueError.$factory('I/O operation on closed file')
     }
     self.$counter = self.$counter || 0
+    var binary = self.$content.__class__ === _b_.bytes,
+        len = binary ? self.$content.source.length : self.$content.length
     if(size < 0){
-        var res = self.$content.substr(self.$counter)
-        self.$counter = self.$content.length - 1
-        return res
+        size = len - 1
     }
 
     if(self.$content.__class__ === _b_.bytes){
@@ -2518,16 +2518,27 @@ function $url_open(){
         if($B.file_cache.hasOwnProperty($ns.file)){
             var str_content = $B.file_cache[$ns.file]
             if(is_binary){
-                $res =  _b_.str.encode(str_content, "utf-8")
+                $res = _b_.str.encode(str_content, "utf-8")
             }else{
                 $res = str_content
             }
-        }else{
+        }else if($B.files && $B.files.hasOwnProperty($ns.file)){
+            $res = atob($B.files[$ns.file])
+            if(is_binary){
+                var source = []
+                for(const char of $res){
+                    source.push(char.charCodeAt(0))
+                }
+                console.log(source.slice(0,10))
+                console.log(source.slice(source.length-10))
+                $res = _b_.bytes.$factory()
+                $res.source = source
+            }
+        }else if($B.protocol != "file"){
             if(is_binary){
                 throw _b_.IOError.$factory(
                     "open() in binary mode is not supported")
             }
-
             var req = new XMLHttpRequest();
             req.onreadystatechange = function(){
                 try{
@@ -2541,8 +2552,8 @@ function $url_open(){
                         $res = this.responseText
                     }
                 }catch (err){
-                    $res = _b_.IOError.$factory('Could not open file ' + file +
-                        ' : error ' + err)
+                    $res = _b_.IOError.$factory('Could not open file ' +
+                        file + ' : error ' + err)
                 }
             }
             // add fake query string to avoid caching

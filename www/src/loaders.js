@@ -257,24 +257,30 @@ $B.idb_open = function(obj){
 $B.ajax_load_script = function(script){
     var url = script.url,
         name = script.name
-    var req = new XMLHttpRequest()
-    req.open("GET", url + "?" + Date.now(), true)
-    req.onreadystatechange = function(){
-        if(this.readyState == 4){
-            if(this.status == 200){
-                var src = this.responseText
-                if(script.is_ww){
-                    $B.webworkers[name] = src
-                }else{
-                    $B.tasks.splice(0, 0, [$B.run_script, src, name, true])
+    if($B.files && $B.files.hasOwnProperty(name)){
+        $B.tasks.splice(0, 0, [$B.run_script, $B.files[name],
+            name, true])
+        loop()
+    }else if($B.protocol != "file"){
+        var req = new XMLHttpRequest()
+        req.open("GET", url + "?" + Date.now(), true)
+        req.onreadystatechange = function(){
+            if(this.readyState == 4){
+                if(this.status == 200){
+                    var src = this.responseText
+                    if(script.is_ww){
+                        $B.webworkers[name] = src
+                    }else{
+                        $B.tasks.splice(0, 0, [$B.run_script, src, name, true])
+                    }
+                }else if(this.status == 404){
+                    throw Error(url + " not found")
                 }
-            }else if(this.status == 404){
-                throw Error(url + " not found")
+                loop()
             }
-            loop()
         }
+        req.send()
     }
-    req.send()
 }
 
 function add_jsmodule(module, source){
