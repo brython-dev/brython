@@ -9,6 +9,8 @@ def make(vfs_name):
 
     this_dir = os.getcwd()
     dest_file = f"{vfs_name}.vfs.js"
+    virtual_dir = vfs_name.split("/") if vfs_name else []
+    print("virtual dir", virtual_dir)
 
     for dirpath, dirnames, filenames in os.walk(this_dir):
         del dirnames[:]
@@ -17,10 +19,10 @@ def make(vfs_name):
         else:
             path = dirpath[len(this_dir) + len(os.sep):].split(os.sep)
         for filename in filenames:
-            if dirpath == this_dir and filename == dest_file:
+            if filename.endswith(".vfs.js"):
                 # avoid recursion
                 continue
-            rel_path = "/".join(path + [filename])
+            rel_path = "/".join(virtual_dir + path + [filename])
             with open(os.path.join(dirpath, filename), "rb") as f:
                 files[rel_path] = binascii.b2a_base64(f.read()).decode('ascii')
                 print(rel_path, type(files[rel_path]))

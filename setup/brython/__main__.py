@@ -24,7 +24,8 @@ if __name__ == "__main__":
 
     parser.add_argument('--make_package', help='Make a loadable Python package')
 
-    parser.add_argument('--make_file_system', help='Make a virtual file system')
+    parser.add_argument('--make_file_system', help='Make a virtual file system',
+        nargs="?", const="")
 
     parser.add_argument('--modules',
         help='Create brython_modules.js with all the modules used by the application',
@@ -38,6 +39,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    print(args.make_file_system)
     files = ['README.txt', 'demo.html', 'index.html',
         'brython.js', 'brython_stdlib.js', 'unicode.txt']
 
@@ -118,7 +120,7 @@ if __name__ == "__main__":
         finder.make_setup()
         print('done')
 
-    if args.make_file_system:
+    if args.make_file_system is not None:
         print('Create a Javascript file for all the files in the directory')
         vfs_name = args.make_file_system
         from .make_file_system import make
