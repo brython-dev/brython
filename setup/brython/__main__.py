@@ -25,7 +25,7 @@ if __name__ == "__main__":
     parser.add_argument('--make_package', help='Make a loadable Python package')
 
     parser.add_argument('--make_file_system', help='Make a virtual file system',
-        nargs="?", const="")
+        action="extend", nargs="+")
 
     parser.add_argument('--modules',
         help='Create brython_modules.js with all the modules used by the application',
@@ -77,7 +77,8 @@ if __name__ == "__main__":
                 os.path.basename(package_file)))
 
     if args.install:
-        print('Installing Brython {} in an empty directory'.format(implementation))
+        print('Installing Brython {} in an empty directory'.format(
+            implementation))
 
         data_path = os.path.join(os.path.dirname(__file__), 'data')
 
@@ -120,11 +121,16 @@ if __name__ == "__main__":
         finder.make_setup()
         print('done')
 
-    if args.make_file_system is not None:
+    if args.make_file_system:
         print('Create a Javascript file for all the files in the directory')
-        vfs_name = args.make_file_system
+        args_fs = args.make_file_system
+        if len(args_fs) > 2:
+            raise ValueError("--make_file_systems expects at most 2 "
+                "arguments, got " + str(len(args_fs)))
+        vfs_name = args_fs[0]
+        prefix = args_fs[1] if len(args_fs) > 1 else None
         from .make_file_system import make
-        make(vfs_name)
+        make(vfs_name, prefix)
         print('done')
 
     if args.make_package:
