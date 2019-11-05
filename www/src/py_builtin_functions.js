@@ -2402,18 +2402,17 @@ $Reader.read = function(){
     if(self.closed === true){
         throw _b_.ValueError.$factory('I/O operation on closed file')
     }
-    self.$counter = self.$counter || 0
     var binary = self.$content.__class__ === _b_.bytes,
         len = binary ? self.$content.source.length : self.$content.length
     if(size < 0){
-        size = len - 1
+        size = len
     }
 
     if(self.$content.__class__ === _b_.bytes){
         res = _b_.bytes.$factory(self.$content.source.slice(self.$counter,
             self.$counter + size))
     }else{
-        res = self.$content.substr(self.$counter - size, size)
+        res = self.$content.substr(self.$counter, size)
     }
     self.$counter += size
     return res
@@ -2515,11 +2514,10 @@ function $url_open(){
         throw _b_.IOError.$factory("Browsers cannot write on disk")
     }else if(['r', 'rb'].indexOf(mode) == -1){
         throw _b_.ValueError.$factory("Invalid mode '" + mode + "'")
-    }    
+    }
     if(isinstance(file, _b_.str)){
         // read the file content and return an object with file object methods
         var is_binary = mode.search('b') > -1
-        if($ns.file == "<string>"){console.log($ns.file, $B.file_cache[$ns.file])}
         if($B.file_cache.hasOwnProperty($ns.file)){
             var str_content = $B.file_cache[$ns.file]
             if(is_binary){
@@ -2528,18 +2526,21 @@ function $url_open(){
                 $res = str_content
             }
         }else if($B.files && $B.files.hasOwnProperty($ns.file)){
-            $res = atob($B.files[$ns.file])
-            if(is_binary){
-                var source = []
-                for(const char of $res){
-                    source.push(char.charCodeAt(0))
-                }
-                console.log(source.slice(0,10))
-                console.log(source.slice(source.length-10))
-                $res = _b_.bytes.$factory()
-                $res.source = source
+            // Virtual file system created by
+            // python -m brython --make_file_system
+            $res = atob($B.files[$ns.file].content)
+            var source = []
+            for(const char of $res){
+                source.push(char.charCodeAt(0))
+            }
+            $res = _b_.bytes.$factory()
+            $res.source = source
+            if(! is_binary){
+                // Decode bytes with specified encoding
+                $res = _b_.bytes.decode($res, $ns.encoding)
             }
         }else if($B.protocol != "file"){
+            // Try to load file by synchronous Ajax call
             if(is_binary){
                 throw _b_.IOError.$factory(
                     "open() in binary mode is not supported")
@@ -2549,7 +2550,7 @@ function $url_open(){
                 try{
                     var status = this.status
                     if(status == 404){
-                        $res = _b_.IOError.$factory('File ' + file + ' not found')
+                        $res = _b_.FileNotFoundError(file)
                     }else if(status != 200){
                         $res = _b_.IOError.$factory('Could not open file ' +
                             file + ' : status ' + status)
@@ -2568,6 +2569,10 @@ function $url_open(){
             req.send()
 
             if($res.constructor === Error){throw $res}
+        }
+
+        if($res === undefined){
+            throw _b_.FileNotFoundError.$factory($ns.file)
         }
 
         if(typeof $res == "string"){

@@ -95,8 +95,8 @@ return js}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,0,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.0"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2019-11-03 21:44:29.407468"
-__BRYTHON__.timestamp=1572813869407
+__BRYTHON__.compiled_date="2019-11-05 14:40:43.787618"
+__BRYTHON__.timestamp=1572961243787
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -7192,10 +7192,9 @@ $Reader.close=function(self){self.closed=true}
 $Reader.flush=function(self){return None}
 $Reader.read=function(){var $=$B.args("read",2,{self:null,size:null},["self","size"],arguments,{size:-1},null,null),self=$.self,size=$B.$GetInt($.size)
 if(self.closed===true){throw _b_.ValueError.$factory('I/O operation on closed file')}
-self.$counter=self.$counter ||0
 var binary=self.$content.__class__===_b_.bytes,len=binary ? self.$content.source.length :self.$content.length
-if(size < 0){size=len-1}
-if(self.$content.__class__===_b_.bytes){res=_b_.bytes.$factory(self.$content.source.slice(self.$counter,self.$counter+size))}else{res=self.$content.substr(self.$counter-size,size)}
+if(size < 0){size=len}
+if(self.$content.__class__===_b_.bytes){res=_b_.bytes.$factory(self.$content.source.slice(self.$counter,self.$counter+size))}else{res=self.$content.substr(self.$counter,size)}
 self.$counter+=size
 return res}
 $Reader.readable=function(self){return true}
@@ -7242,19 +7241,20 @@ if(isinstance(file,$B.JSObject)){return $B.OpenFile.$factory(file.js,mode,encodi
 if(mode.search('w')>-1){throw _b_.IOError.$factory("Browsers cannot write on disk")}else if(['r','rb'].indexOf(mode)==-1){throw _b_.ValueError.$factory("Invalid mode '"+mode+"'")}
 if(isinstance(file,_b_.str)){
 var is_binary=mode.search('b')>-1
-if($ns.file=="<string>"){console.log($ns.file,$B.file_cache[$ns.file])}
 if($B.file_cache.hasOwnProperty($ns.file)){var str_content=$B.file_cache[$ns.file]
-if(is_binary){$res=_b_.str.encode(str_content,"utf-8")}else{$res=str_content}}else if($B.files && $B.files.hasOwnProperty($ns.file)){$res=atob($B.files[$ns.file])
-if(is_binary){var source=[]
+if(is_binary){$res=_b_.str.encode(str_content,"utf-8")}else{$res=str_content}}else if($B.files && $B.files.hasOwnProperty($ns.file)){
+$res=atob($B.files[$ns.file].content)
+var source=[]
 for(const char of $res){source.push(char.charCodeAt(0))}
-console.log(source.slice(0,10))
-console.log(source.slice(source.length-10))
 $res=_b_.bytes.$factory()
-$res.source=source}}else if($B.protocol !="file"){if(is_binary){throw _b_.IOError.$factory(
+$res.source=source
+if(! is_binary){
+$res=_b_.bytes.decode($res,$ns.encoding)}}else if($B.protocol !="file"){
+if(is_binary){throw _b_.IOError.$factory(
 "open() in binary mode is not supported")}
 var req=new XMLHttpRequest();
 req.onreadystatechange=function(){try{var status=this.status
-if(status==404){$res=_b_.IOError.$factory('File '+file+' not found')}else if(status !=200){$res=_b_.IOError.$factory('Could not open file '+
+if(status==404){$res=_b_.FileNotFoundError(file)}else if(status !=200){$res=_b_.IOError.$factory('Could not open file '+
 file+' : status '+status)}else{$res=this.responseText}}catch(err){$res=_b_.IOError.$factory('Could not open file '+
 file+' : error '+err)}}
 var fake_qs='?foo='+(new Date().getTime())
@@ -7262,6 +7262,7 @@ req.open('GET',file+fake_qs,false)
 req.overrideMimeType('text/plain; charset=utf-8')
 req.send()
 if($res.constructor===Error){throw $res}}
+if($res===undefined){throw _b_.FileNotFoundError.$factory($ns.file)}
 if(typeof $res=="string"){var lines=$res.split('\n')
 for(var i=0;i < lines.length-1;i++){lines[i]+='\n'}}else{var lines=_b_.bytes.split($res,_b_.bytes.$factory([10]))}
 var res={$content:$res,$counter:0,$lines:lines,closed:False,encoding:encoding,mode:mode,name:file}
@@ -8936,7 +8937,6 @@ var mod=eval("$module")
 for(var attr in mod){module[attr]=mod[attr]}
 module.__initializing__=false
 $B.imported[module.__name__]=module
-$B.file_cache[module.__name__]=module_contents
 return{
 content:src,name:mod_name,imports:Object.keys(root.imports).join(",")}}catch(err){console.log(""+err+" "+" for module "+module.__name__)
 for(var attr in err){console.log(attr+" "+err[attr])}
@@ -8947,7 +8947,7 @@ function new_spec(fields){
 fields.__class__=module
 return fields}
 var finder_VFS={__class__:_b_.type,__mro__:[_b_.object],$infos:{__module__:"builtins",__name__:"VFSFinder"},create_module :function(cls,spec){
-return _b_.None},exec_module :function(cls,modobj){var stored=modobj.__spec__.loader_state.stored
+return _b_.None},exec_module :function(cls,modobj){var stored=modobj.__spec__.loader_state.stored,timestamp=modobj.__spec__.loader_state.timestamp
 delete modobj.__spec__["loader_state"]
 var ext=stored[0],module_contents=stored[1],imports=stored[2]
 modobj.$is_package=stored[3]||false
@@ -8960,25 +8960,23 @@ if($B.imported.hasOwnProperty(parent)&&
 $B.imported[parent].__initialized__){continue}
 var mod_js=$B.precompiled[parent],is_package=modobj.$is_package
 if(Array.isArray(mod_js)){mod_js=mod_js[0]}
-$B.imported[parent]=module.$factory(parent,undefined,is_package)
-$B.imported[parent].__initialized__=true
-$B.imported[parent].__file__=
-$B.imported[parent].__cached__="VFS."+
-modobj.__name__+".py"
-$B.file_cache[$B.imported[parent].__file__]=module_contents
-if(is_package){$B.imported[parent].__path__="<stdlib>"
-$B.imported[parent].__package__=parent}else{var elts=parent.split(".")
+var mod=$B.imported[parent]=module.$factory(parent,undefined,is_package)
+mod.__initialized__=true
+mod.__file__=mod.__cached__="VFS."+modobj.__name__+".py"
+$B.file_cache[mod.__file__]=module_contents
+if(is_package){mod.__path__="<stdlib>"
+mod.__package__=parent}else{var elts=parent.split(".")
 elts.pop()
-$B.imported[parent].__package__=elts.join(".")}
+mod.__package__=elts.join(".")}
 try{var parent_id=parent.replace(/\./g,"_")
 mod_js+="return $locals_"+parent_id
 var $module=new Function("$locals_"+parent_id,mod_js)(
-$B.imported[parent])}catch(err){if($B.debug > 1){console.log(err)
+mod)}catch(err){if($B.debug > 1){console.log(err)
 for(var k in err){console.log(k,err[k])}
 console.log(Object.keys($B.imported))
 if($B.debug > 2){console.log(mod_js)}}
 throw err}
-for(var attr in $module){$B.imported[parent][attr]=$module[attr]}
+for(var attr in $module){mod[attr]=$module[attr]}
 if(i>0){
 $B.builtins.setattr(
 $B.imported[parts.slice(0,i).join(".")],parts[i],$module)}}
@@ -8987,7 +8985,7 @@ if($B.debug > 1){console.log("run Python code from VFS",mod_name)}
 var record=run_py(module_contents,modobj.__path__,modobj)
 record.is_package=modobj.$is_package
 record.timestamp=$B.timestamp
-record.source_ts=$B.VFS[record.name].timestamp
+record.source_ts=timestamp
 $B.precompiled[mod_name]=record.is_package ?[record.content]:
 record.content
 var elts=mod_name.split(".")
@@ -9001,14 +8999,17 @@ __class__:Loader,load_module:function(name,path){var spec=cls.find_spec(cls,name
 var mod=module.$factory(name)
 $B.imported[name]=mod
 mod.__spec__=spec
-cls.exec_module(cls,mod)}}},find_spec :function(cls,fullname,path,prev_module){if(!$B.use_VFS){return _b_.None}
-var stored=$B.VFS[fullname]
+cls.exec_module(cls,mod)}}},find_spec :function(cls,fullname,path,prev_module){var stored,is_package,timestamp
+if(!$B.use_VFS){return _b_.None}
+stored=$B.VFS[fullname]
 if(stored===undefined){return _b_.None}
-var is_package=stored[3]||false,is_builtin=$B.builtin_module_names.indexOf(fullname)>-1
+is_package=stored[3]||false
+timestamp=stored.timestamp
+if(stored){var is_builtin=$B.builtin_module_names.indexOf(fullname)>-1
 return new_spec({name :fullname,loader:cls,
 origin :is_builtin? "built-in" :"brython_stdlib",
-submodule_search_locations:is_package?[]:_b_.None,loader_state:{stored:stored},
-cached:_b_.None,parent:is_package? fullname :parent_package(fullname),has_location:_b_.False})}}
+submodule_search_locations:is_package?[]:_b_.None,loader_state:{stored:stored,timestamp:timestamp},
+cached:_b_.None,parent:is_package? fullname :parent_package(fullname),has_location:_b_.False})}}}
 $B.set_func_names(finder_VFS,"<import>")
 for(var method in finder_VFS){if(typeof finder_VFS[method]=="function"){finder_VFS[method]=_b_.classmethod.$factory(
 finder_VFS[method])}}
