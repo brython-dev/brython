@@ -75,6 +75,18 @@ def process(filename, exclude_dirs=['test','site-packages']):
                 else:
                     package = root[len(lib_path) + 1:].split(os.sep)
 
+            if root != lib_path and "__init__.py" not in files:
+                # This is the case for package "browser"
+                _file = "__init__.py"
+                file_name = os.path.join(root, _file)
+                vfs_path = os.path.join(root, _file).replace(main_root, '')
+                vfs_path = vfs_path.replace("\\", "/")
+                mod_name = vfs_path[len(stdlib_dir) + 2:].replace('/', '.')
+                mod_name, ext = os.path.splitext(mod_name)
+                mod_name = mod_name[:-9]
+                VFS[mod_name] = [".py", "", [], 1]
+                print("adding", mod_name)
+
             for _file in files:
                 ext = os.path.splitext(_file)[1]
                 if ext not in ('.js', '.py'):
