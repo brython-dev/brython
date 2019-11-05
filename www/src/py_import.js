@@ -285,7 +285,6 @@ function run_py(module_contents, path, module, compiled) {
         // setting attributes in a program affects the module namespace
         // See issue #7
         $B.imported[module.__name__] = module
-        $B.file_cache[module.__name__] = module_contents
         return {
             content: src,
             name: mod_name,
@@ -324,7 +323,8 @@ var finder_VFS = {
     },
 
     exec_module : function(cls, modobj) {
-        var stored = modobj.__spec__.loader_state.stored
+        var stored = modobj.__spec__.loader_state.stored,
+            timestamp = modobj.__spec__.loader_state.timestamp
         delete modobj.__spec__["loader_state"]
         var ext = stored[0],
             module_contents = stored[1],
@@ -347,26 +347,24 @@ var finder_VFS = {
                var mod_js = $B.precompiled[parent],
                    is_package = modobj.$is_package
                if(Array.isArray(mod_js)){mod_js = mod_js[0]}
-               $B.imported[parent] = module.$factory(parent, undefined,
-                   is_package)
-               $B.imported[parent].__initialized__ = true
-               $B.imported[parent].__file__ =
-                   $B.imported[parent].__cached__ = "VFS." +
-                       modobj.__name__ + ".py"
-               $B.file_cache[$B.imported[parent].__file__] = module_contents
+               var mod = $B.imported[parent] = module.$factory(parent,
+                   undefined, is_package)
+               mod.__initialized__ = true
+               mod.__file__ = mod.__cached__ = "VFS." + modobj.__name__ + ".py"
+               $B.file_cache[mod.__file__] = module_contents
                if(is_package){
-                   $B.imported[parent].__path__ = "<stdlib>"
-                   $B.imported[parent].__package__ = parent
+                   mod.__path__ = "<stdlib>"
+                   mod.__package__ = parent
                }else{
                    var elts = parent.split(".")
                    elts.pop()
-                   $B.imported[parent].__package__ = elts.join(".")
+                   mod.__package__ = elts.join(".")
                }
                try{
                    var parent_id = parent.replace(/\./g, "_")
                    mod_js += "return $locals_" + parent_id
                    var $module = new Function("$locals_" + parent_id, mod_js)(
-                       $B.imported[parent])
+                       mod)
                }catch(err){
                    if($B.debug > 1){
                        console.log(err)
@@ -377,7 +375,7 @@ var finder_VFS = {
                    throw err
                }
                for(var attr in $module){
-                   $B.imported[parent][attr] = $module[attr]
+                   mod[attr] = $module[attr]
                }
                if(i>0){
                    // Set attribute of parent module
@@ -398,7 +396,7 @@ var finder_VFS = {
             var record = run_py(module_contents, modobj.__path__, modobj)
             record.is_package = modobj.$is_package
             record.timestamp = $B.timestamp
-            record.source_ts = $B.VFS[record.name].timestamp
+            record.source_ts = timestamp
             $B.precompiled[mod_name] = record.is_package ? [record.content] :
                 record.content
             var elts = mod_name.split(".")
@@ -441,24 +439,35 @@ var finder_VFS = {
     },
 
     find_spec : function(cls, fullname, path, prev_module) {
+        var stored,
+            is_package,
+            timestamp
+
         if(!$B.use_VFS){return _b_.None}
-        var stored = $B.VFS[fullname]
+        stored = $B.VFS[fullname]
         if(stored === undefined){return _b_.None}
-        var is_package = stored[3] || false,
-            is_builtin = $B.builtin_module_names.indexOf(fullname) > -1
-        return new_spec({
-            name : fullname,
-            loader: cls,
-            // FIXME : Better origin string.
-            origin : is_builtin? "built-in" : "brython_stdlib",
-            // FIXME: Namespace packages ?
-            submodule_search_locations: is_package? [] : _b_.None,
-            loader_state: {stored: stored},
-            // FIXME : Where exactly compiled module is stored ?
-            cached: _b_.None,
-            parent: is_package? fullname : parent_package(fullname),
-            has_location: _b_.False
-        })
+        is_package = stored[3] || false
+        timestamp = stored.timestamp
+
+        if(stored){
+            var is_builtin = $B.builtin_module_names.indexOf(fullname) > -1
+            return new_spec({
+                name : fullname,
+                loader: cls,
+                // FIXME : Better origin string.
+                origin : is_builtin? "built-in" : "brython_stdlib",
+                // FIXME: Namespace packages ?
+                submodule_search_locations: is_package? [] : _b_.None,
+                loader_state: {
+                    stored: stored,
+                    timestamp:timestamp
+                },
+                // FIXME : Where exactly compiled module is stored ?
+                cached: _b_.None,
+                parent: is_package? fullname : parent_package(fullname),
+                has_location: _b_.False
+            })
+        }
     }
 }
 
