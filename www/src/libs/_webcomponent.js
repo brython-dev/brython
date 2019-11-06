@@ -36,6 +36,13 @@ function define(tag_name, cls){
             }
         }
       }
+        static get observedAttributes(){
+            if(cls.observedAttributes){
+                return cls.observedAttributes(cls)
+            }else{
+                return []
+            }
+        }
     }
     `
     var name = cls.$infos.__name__

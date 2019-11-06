@@ -72,21 +72,27 @@ a.sort_link{
 <form>
   <div>
     <label for="cvc">Enter your CVC
-    <popup-info img="img/alt.png" data-text="Your card validation code (CVC) is an extra security feature — it is the last 3 or 4 numbers on the back of your card."></popup-info></label>
+        <popup-info img="img/alt.png"
+            data-text="Your card validation code (CVC) is an extra security feature — it is the last 3 or 4 numbers on the back of your card.">
+        </popup-info>
+    </label>
     <input type="text" id="cvc">
     <p>
     <bold-italic data-val="hello"></bold_italic>
   </div>
 </form>
 
-<child-component></child-component>
+<child-component data="initial" id="child"></child-component>
+
+<p style="margin-top: 5em;">Change attribute value <button id="change_data">change</button>
+
 </td>
 </tr>
 </table>
 
 
 <script type="text/python">
-from browser import document, window, html, webcomponent
+from browser import bind, document, window, html, webcomponent
 import javascript
 
 style_str = """
@@ -147,10 +153,11 @@ class PopUpInfo:
         shadow <= style
         shadow <= wrapper
         wrapper <= icon
+        print("info", info)
         wrapper <= info
 
     def connectedCallback(self):
-        print("connected callback", self)
+        print("PopUpInfo connected callback", self)
 
 webcomponent.define("popup-info", PopUpInfo)
 
@@ -188,12 +195,21 @@ class Child(Parent):
         print(self, "connected")
         Child.nb_cx += 1
 
+    def observedAttributes(self):
+        return ["data"]
+
+    def attributeChangedCallback(self, name, old, new, ns):
+        print(f"attribute {name} changed from {old} to {new}")
+
 webcomponent.define("parent-component", Parent)
 webcomponent.define("child-component", Child)
 assert Child.nb_cx == 1
+
+@bind("#change_data", "click")
+def change_data(ev):
+    document["child"].attrs["data"] = "new"
+
 </script>
-
-
 
 </body>
 </html>
