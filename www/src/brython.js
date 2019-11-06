@@ -95,8 +95,8 @@ return js}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,0,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.0"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2019-11-06 09:48:44.950001"
-__BRYTHON__.timestamp=1573030124950
+__BRYTHON__.compiled_date="2019-11-06 09:54:50.828791"
+__BRYTHON__.timestamp=1573030490828
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -1693,6 +1693,7 @@ else{break}}
 range_is_builtin=found.length==1 &&
 found[0]=="__builtins__"
 var test_range_node=new $Node()
+test_range_node.module=node.parent.module
 if(range_is_builtin){new $NodeJSCtx(test_range_node,'if(1)')}else{new $NodeJSCtx(test_range_node,'if('+call.func.to_js()+' === $B.builtins.range)')}
 new_nodes[pos++]=test_range_node
 var idt=target.to_js(),shortcut=false

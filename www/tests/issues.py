@@ -2383,6 +2383,11 @@ for x1233 in range(0):
 
 assertRaises(NameError, exec, "x1233")
 
+# issue 1243
+assertRaises(SyntaxError, exec,
+"""for i in range(1):
+    f(), = 0""")
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

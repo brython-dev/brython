@@ -3384,6 +3384,7 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
 
             // Line to test if the callable "range" is the built-in "range"
             var test_range_node = new $Node()
+            test_range_node.module = node.parent.module
             if(range_is_builtin){
                 new $NodeJSCtx(test_range_node, 'if(1)')
             }else{
