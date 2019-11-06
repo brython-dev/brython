@@ -776,7 +776,9 @@ $B.$is_member = function(item, _set){
     }
     catch(err){}
 
-    if(method){return $B.$call(method)(_set, item)}
+    if(method){
+        return $B.$call(method)(_set, item)
+    }
 
     // use __iter__ if defined
     try{_iter = _b_.iter(_set)}

@@ -163,7 +163,11 @@ dict.__contains__ = function(){
         self = $.self,
         key = $.key
 
-    if(self.$jsobj){return self.$jsobj[key] !== undefined}
+    if(self.$is_namespace){key = $B.to_alias(key)} // issue 1244
+
+    if(self.$jsobj){
+        return self.$jsobj[key] !== undefined
+    }
 
     switch(typeof key) {
         case "string":

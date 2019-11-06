@@ -577,7 +577,7 @@ function $$eval(src, _globals, _locals){
             obj = {}
         eval(ex) // needed for generators
         for(var attr in gobj){
-            if((! attr.startsWith("$")) || attr.startsWith('$$')){
+            if((! attr.startsWith("$"))){
                 obj[attr] = gobj[attr]
             }
         }
@@ -598,6 +598,7 @@ function $$eval(src, _globals, _locals){
             }
         }
     }
+    _globals.$is_namespace = true
 
     // Initialise block locals
 
@@ -631,6 +632,7 @@ function $$eval(src, _globals, _locals){
         // NameError instead of UnboundLocalError
         eval("$locals_" + locals_id + ".$exec_locals = true")
     }
+    _locals.$is_namespace = true
 
     if(_globals === _b_.None && _locals === _b_.None &&
             current_frame[0] == current_frame[2]){
@@ -688,7 +690,7 @@ function $$eval(src, _globals, _locals){
         }
 
         js = root.to_js()
-
+        
         if(is_exec){
             var locals_obj = eval("$locals_" + locals_id),
                 globals_obj = eval("$locals_" + globals_id)
@@ -740,13 +742,13 @@ function $$eval(src, _globals, _locals){
             for(var attr in gns){
                 attr1 = $B.from_alias(attr)
                 if(attr1.charAt(0) != '$'){
-                    if(_globals.$jsobj){_globals.$jsobj[attr] = gns[attr]}
-                    else{_globals.$string_dict[attr1] = gns[attr]}
+                    if(_globals.$jsobj){_globals.$jsobj[attr1] = gns[attr]}
+                    else{_globals.$string_dict[attr] = gns[attr]}
                 }
             }
             // Remove attributes starting with $
             for(var attr in _globals.$string_dict){
-                if(attr.startsWith("$")){
+                if(attr.startsWith("$") && !attr.startsWith("$$")){
                     delete _globals.$string_dict[attr]
                 }
             }
@@ -1149,6 +1151,7 @@ function globals(){
     check_nb_args('globals', 0, arguments)
     var res = $B.obj_dict($B.last($B.frames_stack)[3])
     res.$jsobj.__BRYTHON__ = $B.JSObject.$factory($B) // issue 1181
+    res.$is_namespace = true
     return res
 }
 
@@ -1521,6 +1524,7 @@ function locals(){
     // [locals_name, locals_obj, globals_name, globals_obj]
     check_nb_args('locals', 0, arguments)
     var res = $B.obj_dict($B.last($B.frames_stack)[1])
+    res.$is_namespace = true
     delete res.$jsobj.__annotations__
     return res
 }

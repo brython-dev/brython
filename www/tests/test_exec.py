@@ -115,4 +115,23 @@ except NameError:
 # issue 1223
 eval("[x for x in range(3)]")
 
+# issue 1244
+var = 'hi'
+# bug 1 -- this assert statement should pass but doesn't
+assert 'var' in globals()
+
+g = {}
+
+exec('''
+var = 123
+def f():
+    return(var)
+''', g)
+
+# this assert passes, which is good
+assert 'var' in g
+
+# bug 2 -- var is undefined when f is called
+assert g['f']() == 123
+
 print("passed all tests...")
