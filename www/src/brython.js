@@ -95,8 +95,8 @@ return js}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.1"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2019-11-07 16:12:45.872657"
-__BRYTHON__.timestamp=1573139565872
+__BRYTHON__.compiled_date="2019-11-07 17:37:57.436309"
+__BRYTHON__.timestamp=1573144677436
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -9051,7 +9051,7 @@ for(var method in finder_stdlib_static){if(typeof finder_stdlib_static[method]==
 finder_stdlib_static[method])}}
 finder_stdlib_static.$factory=function(){return{__class__:finder_stdlib_static}}
 var finder_path={__class__:_b_.type,__mro__:[_b_.object],$infos:{__module__:"builtins",__name__:"ImporterPath"},create_module :function(cls,spec){
-return _b_.None},exec_module :function(cls,_module){var _spec=_b_.getattr(_module,"__spec__"),code=_spec.loader_state.code;
+return _b_.None},exec_module :function(cls,_module){var _spec=$B.$getattr(_module,"__spec__"),code=_spec.loader_state.code;
 _module.$is_package=_spec.loader_state.is_package,delete _spec.loader_state["code"]
 var src_type=_spec.loader_state.type
 if(src_type=="py" ||src_type=="pyc.js"){run_py(code,_spec.origin,_module,src_type=="pyc.js")}
@@ -9067,13 +9067,13 @@ if(finder===undefined){var finder_notfound=true
 for(var j=0,lj=$B.path_hooks.length;
 j < lj && finder_notfound;++j){var hook=$B.path_hooks[j].$factory
 try{finder=(typeof hook=="function" ? hook :
-_b_.getattr(hook,"__call__"))(path_entry)
+$B.$getattr(hook,"__call__"))(path_entry)
 finder_notfound=false}catch(e){if(e.__class__ !==_b_.ImportError){throw e}}}
 if(finder_notfound){$B.path_importer_cache[path_entry]=_b_.None}}
 if($B.is_none(finder)){continue}
-var find_spec=_b_.getattr(finder,"find_spec"),fs_func=typeof find_spec=="function" ?
+var find_spec=$B.$getattr(finder,"find_spec"),fs_func=typeof find_spec=="function" ?
 find_spec :
-_b_.getattr(find_spec,"__call__")
+$B.$getattr(find_spec,"__call__")
 var spec=fs_func(fullname,prev_module)
 if(!$B.is_none(spec)){return spec}}
 return _b_.None}}
@@ -9103,7 +9103,8 @@ submodule_search_locations:loader_data.is_package?
 cached:_b_.None,parent:loader_data.is_package? fullname :
 parent_package(fullname),has_location:_b_.True})}
 return _b_.None},invalidate_caches :function(self){}}
-url_hook.$factory=function(path_entry,hint){return{__class__:url_hook,path_entry:path_entry,hint:hint}}
+url_hook.$factory=function(path_entry,hint){return{
+__class__:url_hook,path_entry:path_entry.endsWith("/")? path_entry :path_entry+"/",hint:hint}}
 $B.set_func_names(url_hook,"<import>")
 $B.path_importer_cache={};
 var _sys_paths=[[$B.script_dir+"/","py"],[$B.brython_path+"Lib/","py"],[$B.brython_path+"Lib/site-packages/","py"],[$B.brython_path+"libs/","js"]]
@@ -9134,7 +9135,7 @@ import_error(_mod_name)}else if(modobj===undefined){try{$B.import_hooks(_mod_nam
 throw err}
 if($B.is_none($B.imported[_mod_name])){import_error(_mod_name)}else{
 if(_parent_name){_b_.setattr($B.imported[_parent_name],parsed_name[i],$B.imported[_mod_name])}}}
-if(i < len){try{__path__=_b_.getattr($B.imported[_mod_name],"__path__")}catch(e){
+if(i < len){try{__path__=$B.$getattr($B.imported[_mod_name],"__path__")}catch(e){
 if(i==len-1 &&
 $B.imported[_mod_name][parsed_name[len]]&&
 $B.imported[_mod_name][parsed_name[len]].__class__===
@@ -9175,7 +9176,7 @@ $B.$getattr(__import__,"__call__"),modobj=importer(mod_name,globals,undefined,fr
 if(! fromlist ||fromlist.length==0){
 var alias=aliases[mod_name]
 if(alias){locals[alias]=$B.imported[mod_name]}else{locals[$B.to_alias(norm_parts[0])]=modobj}}else{var __all__=fromlist,thunk={}
-if(fromlist && fromlist[0]=="*"){__all__=_b_.getattr(modobj,"__all__",thunk);
+if(fromlist && fromlist[0]=="*"){__all__=$B.$getattr(modobj,"__all__",thunk);
 if(__all__ !==thunk){
 aliases={}}}
 if(__all__===thunk){

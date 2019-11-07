@@ -602,7 +602,7 @@ var finder_path = {
     },
 
     exec_module : function(cls, _module) {
-        var _spec = _b_.getattr(_module, "__spec__"),
+        var _spec = $B.$getattr(_module, "__spec__"),
             code = _spec.loader_state.code;
         _module.$is_package = _spec.loader_state.is_package,
         delete _spec.loader_state["code"]
@@ -640,11 +640,11 @@ var finder_path = {
             if(finder === undefined){
                 var finder_notfound = true
                 for(var j = 0, lj = $B.path_hooks.length;
-                     j < lj && finder_notfound; ++j){
+                        j < lj && finder_notfound; ++j){
                     var hook = $B.path_hooks[j].$factory
                     try{
                         finder = (typeof hook == "function" ? hook :
-                            _b_.getattr(hook, "__call__"))(path_entry)
+                            $B.$getattr(hook, "__call__"))(path_entry)
                         finder_notfound = false
                     }catch(e){
                         if(e.__class__ !== _b_.ImportError){throw e}
@@ -656,11 +656,10 @@ var finder_path = {
             }
             // Skip this path entry if finder turns out to be None
             if($B.is_none(finder)){continue}
-            var find_spec = _b_.getattr(finder, "find_spec"),
+            var find_spec = $B.$getattr(finder, "find_spec"),
                 fs_func = typeof find_spec == "function" ?
                     find_spec :
-                    _b_.getattr(find_spec, "__call__")
-
+                    $B.$getattr(find_spec, "__call__")
             var spec = fs_func(fullname, prev_module)
             if(!$B.is_none(spec)){return spec}
         }
@@ -677,7 +676,7 @@ for(var method in finder_path){
     }
 }
 
- finder_path.$factory = function(){
+finder_path.$factory = function(){
     return {__class__: finder_path}
 }
 
@@ -760,7 +759,11 @@ var url_hook = {
     }
 }
 url_hook.$factory = function(path_entry, hint){
-    return {__class__: url_hook, path_entry: path_entry, hint: hint}
+    return {
+        __class__: url_hook,
+        path_entry: path_entry.endsWith("/") ? path_entry : path_entry + "/",
+        hint: hint
+    }
 }
 $B.set_func_names(url_hook, "<import>")
 
@@ -878,7 +881,7 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
             // [Import spec] If __path__ can not be accessed an ImportError is raised
             if(i < len){
                 try{
-                    __path__ = _b_.getattr($B.imported[_mod_name], "__path__")
+                    __path__ = $B.$getattr($B.imported[_mod_name], "__path__")
                 }catch(e){
                     // If this is the last but one part, and the last part is
                     // an attribute of module, and this attribute is a module,
@@ -999,7 +1002,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
         var __all__ = fromlist,
             thunk = {}
         if(fromlist && fromlist[0] == "*"){
-            __all__ = _b_.getattr(modobj, "__all__", thunk);
+            __all__ = $B.$getattr(modobj, "__all__", thunk);
             if(__all__ !== thunk){
                 // from modname import * ... when __all__ is defined
                 // then fallback to importing __all__ names with no alias
