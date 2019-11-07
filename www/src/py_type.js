@@ -865,7 +865,7 @@ $B.set_func_names(member_descriptor, "builtins")
 var method = $B.method = $B.make_class("method",
     function(func, cls){
         var f = function(){
-            return func(cls, ...arguments)
+            return $B.$call(func)(cls, ...arguments)
         }
         f.__class__ = method
         f.$infos = func.$infos
