@@ -111,7 +111,7 @@ object.__getattribute__ = function(obj, attr){
 
     var klass = obj.__class__ || $B.get_class(obj)
 
-    var $test = false // attr == "attr"
+    var $test = false // attr == "x"
     if($test){console.log("attr", attr, "de", obj, "klass", klass)}
     if(attr === "__class__"){
         return klass
@@ -121,7 +121,7 @@ object.__getattribute__ = function(obj, attr){
         // Special case for list subclasses. Cf. issue 1081
         res = undefined
     }
-    
+
     if(res === undefined && obj.__dict__ &&
             obj.__dict__.$string_dict.hasOwnProperty(attr)){
         return obj.__dict__.$string_dict[attr]
@@ -260,10 +260,8 @@ object.__getattribute__ = function(obj, attr){
                         for(var i = 0; i < arguments.length; i++){
                             args.push(arguments[i])
                         }
-                        var result = res.apply(null, args)
-                        return result
+                        return res.apply(null, args)
                     }
-                    if(attr == "a"){console.log("make method from res", res)}
                     method.__class__ = $B.method
                     method.__get__ = function(obj, cls){
                         var clmethod = function(){

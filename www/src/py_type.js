@@ -862,7 +862,16 @@ $B.set_func_names(member_descriptor, "builtins")
 
 // used as the factory for method objects
 
-var method = $B.method = $B.make_class("method")
+var method = $B.method = $B.make_class("method",
+    function(func, cls){
+        var f = function(){
+            return func(cls, ...arguments)
+        }
+        f.__class__ = method
+        f.$infos = func.$infos
+        return f
+    }
+)
 
 method.__eq__ = function(self, other){
     return self.$infos !== undefined &&

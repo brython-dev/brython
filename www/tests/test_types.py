@@ -31,6 +31,15 @@ class _C:
 MethodType = type(_C()._m)
 assert(_C()._m, MethodType)
 
+class A:
+    pass
+
+def f(*args):
+    return args
+
+m = MethodType(f, A)
+assert m(6) == (A, 6)
+
 BuiltinFunctionType = type(len)
 assert isinstance(len, BuiltinFunctionType)
 
