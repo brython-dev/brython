@@ -13,7 +13,7 @@ function _randint(a, b){
 }
 
 var stat_result = $B.make_class("stat_result",
-    function(){
+    function(filename){
         // Use $B.files, created by "python -m brython --make_file_system"
         if($B.files && $B.files.hasOwnProperty(filename)){
             var f = $B.files[filename],
@@ -87,8 +87,8 @@ var $module = {
     getpid: function(){return 0},
     lstat: function(){return stat_result.$factory()},
     open: function(path, flags){return _b_.open(path, flags)},
-    stat: function(){return stat_result.$factory()},
-    stat_result: function(){return stat_result.$factory()},
+    stat: function(filename){return stat_result.$factory(filename)},
+    stat_result: function(filename){return stat_result.$factory(filename)},
     urandom: function(n){
         var randbytes = []
         for(var i = 0; i < n; i++){
