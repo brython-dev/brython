@@ -95,8 +95,8 @@ return js}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.1"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2019-11-07 17:37:57.436309"
-__BRYTHON__.timestamp=1573144677436
+__BRYTHON__.compiled_date="2019-11-07 21:36:20.120570"
+__BRYTHON__.timestamp=1573158980120
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -4552,7 +4552,7 @@ var kwdict=["class","return","break","for","lambda","try","finally","raise","def
 var unsupported=[]
 var $indented=["class","def","for","condition","single_kw","try","except","with"
 ]
-var int_pattern=/^\d[0-9_]*(j|J)?/,float_pattern1=/^(\d[\d_]*)\.(\d*)([eE][+-]?\d+(_\d+)*)?(j|J)?/,float_pattern2=/^(\d[\d_]*)([eE][+-]?\d+(_\d+)*)(j|J)?/,hex_pattern=/^0[xX]([\da-fA-F_]+)/,octal_pattern=/^0[oO]([0-7_]+)/,binary_pattern=/^0[bB]([01_]+)/
+var int_pattern=/^(\d[0-9_]*)(j|J)?/,float_pattern1=/^(\d[\d_]*)\.(\d*)([eE][+-]?\d+(_\d+)*)?(j|J)?/,float_pattern2=/^(\d[\d_]*)([eE][+-]?\d+(_\d+)*)(j|J)?/,hex_pattern=/^0[xX]([\da-fA-F_]+)/,octal_pattern=/^0[oO]([0-7_]+)/,binary_pattern=/^0[bB]([01_]+)/
 var C=null
 var new_node=new $Node(),current=root,name="",_type=null,pos=0,indent=null,string_modifier=false
 var module=root.module
@@ -4722,7 +4722,7 @@ $_SyntaxError(C,"invalid literal")}
 return numeric_literal.replace(/_/g,"")}
 function check_int(numeric_literal){
 rmuf(numeric_literal)
-if(numeric_literal.startsWith("0")){if(numeric_literal.search(/[^0_]/)>-1){
+if(numeric_literal.startsWith("0")){if(numeric_literal.substr(1).search(/[^0_]/)>-1){
 $_SyntaxError(C,"invalid literal")}else{return "0"}}}
 function rmu(numeric_literal){return numeric_literal.replace(/_/g,"")}
 switch(car){case ' ':
@@ -4781,9 +4781,9 @@ if($B.last(res)!==undefined){C=$transition(C,'imaginary',rmuf(res[0].substr(0,re
 if(res){check_int(res[1])
 $pos=pos
 if($B.last(res)!==undefined){C=$transition(C,'imaginary',rmuf(res[0].substr(0,res[0].length-1)))}else{C=$transition(C,'float',rmuf(res[0]))}}else{res=int_pattern.exec(src.substr(pos))
-check_int(res[0])
+check_int(res[1])
 $pos=pos
-if(res[1]!==undefined){C=$transition(C,'imaginary',rmu(res[0].substr(0,res[0].length-1)))}else{C=$transition(C,'int',[10,rmu(res[0])])}}}
+if(res[2]!==undefined){C=$transition(C,'imaginary',rmu(res[1]))}else{C=$transition(C,'int',[10,rmu(res[0])])}}}
 pos+=res[0].length
 break
 case '\n':

@@ -377,4 +377,7 @@ assert round(-3.65, 1) == -3.6
 assert round(3.5) == 4
 assert round(4.5) == 4
 
+# issue 1245
+assert eval("0j") == 0j
+
 print('passed all tests...')

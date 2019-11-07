@@ -8991,7 +8991,7 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
     ]
     // from https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Reserved_Words
 
-    var int_pattern = /^\d[0-9_]*(j|J)?/,
+    var int_pattern = /^(\d[0-9_]*)(j|J)?/,
         float_pattern1 = /^(\d[\d_]*)\.(\d*)([eE][+-]?\d+(_\d+)*)?(j|J)?/,
         float_pattern2 = /^(\d[\d_]*)([eE][+-]?\d+(_\d+)*)(j|J)?/,
         hex_pattern = /^0[xX]([\da-fA-F_]+)/,
@@ -9376,7 +9376,7 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
             // starting with 0
             rmuf(numeric_literal)
             if(numeric_literal.startsWith("0")){
-                if(numeric_literal.search(/[^0_]/) > -1){
+                if(numeric_literal.substr(1).search(/[^0_]/) > -1){
                     // 007 or 0_7 is invalid, only 0_0 is ok
                     $_SyntaxError(context, "invalid literal")
                 }else{
@@ -9482,11 +9482,11 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
                         }else{context = $transition(context, 'float', rmuf(res[0]))}
                     }else{
                         res = int_pattern.exec(src.substr(pos))
-                        check_int(res[0])
+                        check_int(res[1])
                         $pos = pos
-                        if(res[1] !== undefined){
+                        if(res[2] !== undefined){
                             context = $transition(context, 'imaginary',
-                                rmu(res[0].substr(0, res[0].length - 1)))
+                                rmu(res[1]))
                         }else{
                             context = $transition(context, 'int',
                                 [10, rmu(res[0])])
