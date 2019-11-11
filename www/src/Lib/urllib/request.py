@@ -2,11 +2,18 @@ from browser import ajax
 from . import error
 
 class FileIO:
-  def __init__(self, data):
-      self._data=data
 
-  def read(self):
-      return self._data
+    def __init__(self, data):
+        self._data=data
+  
+    def __enter__(self):
+        return self
+  
+    def __exit__(self, *args):
+        pass
+  
+    def read(self):
+        return self._data
 
 def urlopen(url, data=None, timeout=None):
     global result
@@ -32,6 +39,6 @@ def urlopen(url, data=None, timeout=None):
     if result is not None:
         if isinstance(result.text, str):
            return FileIO(result.text) #, url, {'status': result.status}
-    
+
         return FileIO(result.text()) #, url, {'status': result.status}
     raise error.HTTPError('file not found')
