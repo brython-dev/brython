@@ -95,8 +95,8 @@ return js}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.1"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2019-11-11 21:20:20.752073"
-__BRYTHON__.timestamp=1573503620752
+__BRYTHON__.compiled_date="2019-11-11 22:04:17.704057"
+__BRYTHON__.timestamp=1573506257704
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -6679,10 +6679,11 @@ break}
 if(typeof obj=='function'){var value=obj[attr]
 if(value !==undefined){if(attr=='__module__'){return value}}}
 if((! is_class)&& klass.$native){if($test){console.log("native class",klass,klass[attr])}
+if(attr=="__doc__" && klass[attr]===undefined && klass.$infos){_get_builtins_doc()
+klass[attr]=$B.builtins_doc[klass.$infos.__name__]}
 if(klass[attr]===undefined){var object_attr=_b_.object[attr]
 if($test){console.log("object attr",object_attr)}
-if(object_attr !==undefined){klass[attr]=object_attr}
-else{if($test){console.log("obj[attr]",obj[attr])}
+if(object_attr !==undefined){klass[attr]=object_attr}else{if($test){console.log("obj[attr]",obj[attr])}
 var attrs=obj.__dict__
 if(attrs &&
 (object_attr=attrs.$string_dict[attr])!==undefined){return object_attr}
@@ -6698,9 +6699,8 @@ for(var i=0,len=arguments.length;i < len;i++){args.push(arguments[i])}
 return klass[attr].apply(null,args)}
 method.__class__=$B.method
 method.$infos={__func__:func,__name__:attr,__self__:self,__qualname__:klass.$infos.__name__+"."+attr}
-return method}
-attr_error(rawname,klass.$infos.__name__)
-return klass[attr]}
+return method}else if(klass[attr]!==undefined){return klass[attr]}
+attr_error(rawname,klass.$infos.__name__)}
 var mro,attr_func
 if(is_class){attr_func=_b_.type.__getattribute__ }else{attr_func=klass.__getattribute__
 if(attr_func===undefined){var mro=klass.__mro__

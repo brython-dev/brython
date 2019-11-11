@@ -690,7 +690,7 @@ function $$eval(src, _globals, _locals){
         }
 
         js = root.to_js()
-        
+
         if(is_exec){
             var locals_obj = eval("$locals_" + locals_id),
                 globals_obj = eval("$locals_" + globals_id)
@@ -903,7 +903,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false //attr == "__context__" // && obj === $B // "Point"
+    var $test = false // attr == "__doc__" // && obj === $B // "Point"
     if($test){console.log("$getattr", attr, obj, klass)}
 
     // Shortcut for classes without parents
@@ -1032,11 +1032,16 @@ $B.$getattr = function(obj, attr, _default){
 
     if((! is_class) && klass.$native){
         if($test){console.log("native class", klass, klass[attr])}
+        if(attr == "__doc__" && klass[attr] === undefined && klass.$infos){
+            _get_builtins_doc()
+            klass[attr] = $B.builtins_doc[klass.$infos.__name__]
+        }
         if(klass[attr] === undefined){
             var object_attr = _b_.object[attr]
             if($test){console.log("object attr", object_attr)}
-            if(object_attr !== undefined){klass[attr] = object_attr}
-            else{
+            if(object_attr !== undefined){
+                klass[attr] = object_attr
+            }else{
                 if($test){console.log("obj[attr]", obj[attr])}
                 var attrs = obj.__dict__
                 if(attrs &&
@@ -1075,9 +1080,10 @@ $B.$getattr = function(obj, attr, _default){
                 __qualname__: klass.$infos.__name__ + "." + attr
             }
             return method
+        }else if(klass[attr] !== undefined){
+            return klass[attr]
         }
         attr_error(rawname, klass.$infos.__name__)
-        return klass[attr]
     }
 
     var mro, attr_func
