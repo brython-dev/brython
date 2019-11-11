@@ -227,7 +227,7 @@ $B.genNode = function(data, parent){
         this.children.splice(pos, 0, child)
         this.has_child = true
         child.parent = this
-        child.rank = pos //this.children.length - 1
+        child.rank = pos
     }
 
     this.clone = function(){
@@ -272,18 +272,14 @@ $B.genNode = function(data, parent){
         if(head && (this.is_break || this.is_continue)){
             var loop = in_loop(this)
             res.loop = loop
-            if(loop.has("yield")){
-                res.data = ""
-                if(this.is_break){
-                    res.data += '$locals["$no_break' + this.loop_num +
-                        '"] = false;'
-                }
-                res.data += 'var err = new Error("break"); ' +
-                    "err.__class__ = $B.GeneratorBreak; throw err;"
-                res.is_break = this.is_break
-            }else{
-                res.is_break = this.is_break
+            res.data = ""
+            if(this.is_break){
+                res.data += '$locals["$no_break' + this.loop_num +
+                    '"] = false;'
             }
+            res.data += 'var err = new Error("break"); ' +
+                "err.__class__ = $B.GeneratorBreak; throw err;"
+            res.is_break = this.is_break
         }
         res.is_continue = this.is_continue
         res.has_child = this.has_child
@@ -306,15 +302,18 @@ $B.genNode = function(data, parent){
     this.has = function(keyword){
         // keyword is "break" or "continue"
         // Checks if node is break, or one of its children has the keyword
-        if(this["is_" + keyword]){return true}
-        else{
+        if(this["is_" + keyword]){
+            return true
+        }else{
             for(var i = 0, len = this.children.length; i < len; i++){
                 if(this.children[i].loop_start !== undefined){
                     // If the child is a loop, don't search a "break" or
                     // "continue" below it, they don't apply to 'this'
                     continue
                 }
-                if(this.children[i].has(keyword)){return true}
+                if(this.children[i].has(keyword)){
+                    return true
+                }
             }
         }
         return false
@@ -491,7 +490,7 @@ $B.$BRgenerator = function(func_name, blocks, def_id, def_node){
 function make_next(self, yield_node_id){
     // Get node where yield was thrown
     var exit_node = self.func_root.yields[yield_node_id]
-
+    
     // Attribute "replaced" is used to replace a node only once if it was
     // inside a loop
     exit_node.replaced = false
@@ -529,15 +528,14 @@ function make_next(self, yield_node_id){
     // - wraps the code of "rest" in the same try/except clauses as exit_node,
     //   if any
     // - goes up one block until it reaches the function root node
-
     while(1){
         // Compute the rest of the block to run after exit_node
         var exit_parent = exit_node.parent,
             rest = [],
             pos = 0,
+            breaks = [],
             has_break,
             has_continue
-
         // "start" is the position where the rest of the block starts
         // By default it is the node of rank exit_node.rank + 1
         var start = exit_node.rank + 1
@@ -570,18 +568,15 @@ function make_next(self, yield_node_id){
                 // Stop copying
                 is_continue = true
                 var loop = clone.loop
-                // Run loop again
-                for(var j = loop.rank, len = loop.parent.children.length;
-                        j < len; j++){
-                    rest[pos++] = loop.parent.children[j].clone_tree(null, true)
-                }
+                rest[pos++] = loop.clone_tree()
                 break
             }
             if(clone.has("continue")){
                 has_continue = true;
             }
             rest[pos++] = clone
-            if(clone.has("break")){
+            var break_num = clone.has("break")
+            if(break_num){
                 has_break = true
             }
         }

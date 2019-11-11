@@ -95,8 +95,8 @@ return js}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.1"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2019-11-11 12:38:00.992133"
-__BRYTHON__.timestamp=1573472280992
+__BRYTHON__.compiled_date="2019-11-11 21:20:20.752073"
+__BRYTHON__.timestamp=1573503620752
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -13100,7 +13100,7 @@ this.insert=function(pos,child){if(child===undefined){console.log("child of "+th
 this.children.splice(pos,0,child)
 this.has_child=true
 child.parent=this
-child.rank=pos }
+child.rank=pos}
 this.clone=function(){var res=new $B.genNode(this.data)
 res.has_child=this.has_child
 res.is_cond=this.is_cond
@@ -13125,12 +13125,12 @@ res=new $B.genNode("void(0)")}else{res=new $B.genNode(exit_node.data)}
 exit_node.replaced=true}
 if(head &&(this.is_break ||this.is_continue)){var loop=in_loop(this)
 res.loop=loop
-if(loop.has("yield")){res.data=""
+res.data=""
 if(this.is_break){res.data+='$locals["$no_break'+this.loop_num+
 '"] = false;'}
 res.data+='var err = new Error("break"); '+
 "err.__class__ = $B.GeneratorBreak; throw err;"
-res.is_break=this.is_break}else{res.is_break=this.is_break}}
+res.is_break=this.is_break}
 res.is_continue=this.is_continue
 res.has_child=this.has_child
 res.is_cond=this.is_cond
@@ -13146,8 +13146,7 @@ for(var i=0,len=this.children.length;i < len;i++){res.addChild(this.children[i].
 if(this.children[i].is_break){res.no_break=false}}
 return res}
 this.has=function(keyword){
-if(this["is_"+keyword]){return true}
-else{for(var i=0,len=this.children.length;i < len;i++){if(this.children[i].loop_start !==undefined){
+if(this["is_"+keyword]){return true}else{for(var i=0,len=this.children.length;i < len;i++){if(this.children[i].loop_start !==undefined){
 continue}
 if(this.children[i].has(keyword)){return true}}}
 return false}
@@ -13222,7 +13221,7 @@ js='var $top_frame = ["'+self.iter_id+'",$locals,"'+self.module+
 '$B.frames_stack.length;'
 fnode.addChild(new $B.genNode(js))
 while(1){
-var exit_parent=exit_node.parent,rest=[],pos=0,has_break,has_continue
+var exit_parent=exit_node.parent,rest=[],pos=0,breaks=[],has_break,has_continue
 var start=exit_node.rank+1
 if(exit_node.loop_start !==undefined){
 start=exit_node.rank}else if(exit_node.is_cond){
@@ -13237,12 +13236,12 @@ for(var i=start,len=exit_parent.children.length;i < len;i++){var clone=exit_pare
 if(clone.is_continue){
 is_continue=true
 var loop=clone.loop
-for(var j=loop.rank,len=loop.parent.children.length;
-j < len;j++){rest[pos++]=loop.parent.children[j].clone_tree(null,true)}
+rest[pos++]=loop.clone_tree()
 break}
 if(clone.has("continue")){has_continue=true;}
 rest[pos++]=clone
-if(clone.has("break")){has_break=true}}
+var break_num=clone.has("break")
+if(break_num){has_break=true}}
 if((has_break ||has_continue)&& rest.length > 0){
 var rest_try=new $B.genNode("try")
 for(var i=0,len=rest.length;i < len;i++){rest_try.addChild(rest[i])}

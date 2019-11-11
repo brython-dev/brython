@@ -925,4 +925,15 @@ t = ["a", "b", "c"]
 assert list(f()) == ["c", "b", "a"]
 assert not t
 
+# code found in email.feedparser
+def _parsegen(self):
+    while True:
+        while True:
+            if line is NeedMoreData:
+                yield NeedMoreData
+                continue
+            break
+        if line == '':
+            break
+
 print('passed all tests...')
