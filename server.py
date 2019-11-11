@@ -139,7 +139,7 @@ class CompressedHandler(CGIHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(response_data)
         else:
-            super(RequestHandler, self).do_POST()
+            super(CompressedHandler, self).do_POST()
 
     def handle_compression(self, f):
 
