@@ -6,15 +6,22 @@
 @viewport{width:device-width}
 
 :root {
-  --main-bg-color: #dae8c0;
-  --header-color: #0f1b07;
-  --selected-header-color: #c6d166;
-  --text-color: #5c821a;
+  --main-bg-color: #c9bc49;
+  --header-color: #373b46;
+  --selected-header-color: #cf5e5a;
+  --text-color: #6c5756;
 }
 
 @font-face{
     font-family: "libra_bt";
     src: url("../fonts/libra_bt.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal
+}
+
+@font-face{
+    font-family: "Montserrat";
+    src: url("../fonts/Montserrat-Light.otf") format("truetype");
     font-weight: normal;
     font-style: normal
 }
@@ -148,7 +155,7 @@ select.language {
     border-color:#888;
     border-radius: 10px;
     width:auto;
-    font-family: "Monaco";
+    font-family: "Consolas";
 }
 
 .xml{
