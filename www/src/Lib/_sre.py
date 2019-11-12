@@ -79,6 +79,17 @@ class SRE_Pattern:
             return SRE_Match(self, state)
         return None
 
+    def fullmatch(self, string, pos=0, endpos=sys.maxsize):
+        """If the whole string matches this regular expression, return a
+        corresponding match object. Return None if the string does not match
+        the pattern; note that this is different from a zero-length match."""
+        if not string.endswith("$"):
+            string += "$"
+        state = _State(string, pos, endpos, self.flags)
+        if state.match(self._code):
+            return SRE_Match(self, state)
+        return None
+
     def search(self, string, pos=0, endpos=sys.maxsize):
         """Scan through string looking for a location where this regular
         expression produces a match, and return a corresponding MatchObject
