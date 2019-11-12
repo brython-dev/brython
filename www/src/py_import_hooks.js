@@ -19,7 +19,7 @@ function import_hooks(mod_name, _path, from_stdlib) {
         _sys_modules = $B.imported,
         _loader,
         spec
-    
+
     if(from_stdlib){
         // When importing from a module in the standard library, remove
         // finder_path from the finders : the module can't be in the current
@@ -38,11 +38,13 @@ function import_hooks(mod_name, _path, from_stdlib) {
             var find_module = $B.$getattr(_finder, "find_module", _b_.None)
             if(find_module !== _b_.None){
                 _loader = find_module(mod_name, _path)
-                // The loader has a method load_module()
-                var load_module = $B.$getattr(_loader, "load_module"),
-                    module = $B.$call(load_module)(mod_name)
-                _sys_modules[mod_name] = module
-                return module
+                if(_loader !== _b_.None){
+                    // The loader has a method load_module()
+                    var load_module = $B.$getattr(_loader, "load_module"),
+                        module = $B.$call(load_module)(mod_name)
+                    _sys_modules[mod_name] = module
+                    return module
+                }
             }
         }else{
             spec = find_spec(mod_name, _path)
@@ -68,6 +70,9 @@ function import_hooks(mod_name, _path, from_stdlib) {
 
     // Import spec represents a match
     if($B.is_none(module)){
+        if(spec === _b_.None){
+            throw _b_.ModuleNotFoundError.$factory(mod_name)
+        }
         var _spec_name = _b_.getattr(spec, "name")
 
         // Create module object
