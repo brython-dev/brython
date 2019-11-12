@@ -143,7 +143,7 @@ $B.$class_constructor = function(class_name, class_obj, bases,
             }
         }
     }
-    class_dict.__mro__ = _b_.type.mro(class_dict)
+    class_dict.__mro__ = _b_.type.mro(class_dict).slice(1)
 
     // Check if at least one method is abstract (cf PEP 3119)
     // If this is the case, the class cannot be instanciated
@@ -527,9 +527,6 @@ type.__name__ = {
 
 
 type.__new__ = function(meta, name, bases, cl_dict){
-    // DRo - cls changed to meta to reflect that the class (cls) hasn't
-    // yet been created. It's about to be created by "meta"
-
     // Return a new type object. This is essentially a dynamic form of the
     // class statement. The name string is the class name and becomes the
     // __name__ attribute; the bases tuple itemizes the base classes and
@@ -581,7 +578,7 @@ type.__new__ = function(meta, name, bases, cl_dict){
         }
     }
 
-    class_dict.__mro__ = type.mro(class_dict)
+    class_dict.__mro__ = type.mro(class_dict).slice(1)
     return class_dict
 }
 
@@ -683,8 +680,8 @@ type.mro = function(cls){
 
     for(var i = 0; i < bases.length; i++){seqs[pos1++] = bases[i]}
 
-    var mro = [],
-        mpos = 0
+    var mro = [cls],
+        mpos = 1
     while(1){
         var non_empty = [],
             pos = 0

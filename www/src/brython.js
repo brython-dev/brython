@@ -95,8 +95,8 @@ return js}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.1"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2019-11-11 22:04:17.704057"
-__BRYTHON__.timestamp=1573506257704
+__BRYTHON__.compiled_date="2019-11-12 14:48:01.625313"
+__BRYTHON__.timestamp=1573566481625
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5471,7 +5471,7 @@ if(cl_dict.__class__===_b_.dict){for(var key in cl_dict.$string_dict){class_dict
 var it=_b_.iter(cl_dict)
 while(true){try{var key=_b_.next(it)
 class_dict[key]=get_class_item(key)}catch(err){break}}}
-class_dict.__mro__=_b_.type.mro(class_dict)
+class_dict.__mro__=_b_.type.mro(class_dict).slice(1)
 var is_instanciable=true,non_abstract_methods={},abstract_methods={},mro=[class_dict].concat(class_dict.__mro__)
 for(var i=0;i < mro.length;i++){var kdict=i==0 ? mro0 :mro[i]
 for(var attr in kdict){if(non_abstract_methods[attr]){continue}
@@ -5621,7 +5621,7 @@ if(typeof v=="function"){v.$infos.$class=class_dict
 if(v.$infos.$defaults){
 var $defaults=v.$infos.$defaults
 $B.Function.__setattr__(v,"__defaults__",$defaults)}}}
-class_dict.__mro__=type.mro(class_dict)
+class_dict.__mro__=type.mro(class_dict).slice(1)
 return class_dict}
 type.__repr__=type.__str__=function(kls){if(kls.$infos===undefined){console.log("no $infos",kls)}
 var qualname=kls.$infos.__name__
@@ -5652,7 +5652,7 @@ for(var k=0;k < _tmp.length;k++){bmro[pos++]=_tmp[k]}
 seqs[pos1++]=bmro}
 if(bases.indexOf(_b_.object)==-1){bases=bases.concat(_b_.tuple.$factory([_b_.object]))}
 for(var i=0;i < bases.length;i++){seqs[pos1++]=bases[i]}
-var mro=[],mpos=0
+var mro=[cls],mpos=1
 while(1){var non_empty=[],pos=0
 for(var i=0;i < seqs.length;i++){if(seqs[i].length > 0){non_empty[pos++]=seqs[i]}}
 if(non_empty.length==0){break}
