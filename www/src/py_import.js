@@ -1055,8 +1055,10 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                             throw _b_.ImportError.$factory(
                                 "cannot import name '" + name + "'")
                         }
-                        console.log($err3)
-                        console.log($B.last($B.frames_stack))
+                        if($B.debug > 1){
+                            console.log($err3)
+                            console.log($B.last($B.frames_stack))
+                        }
                         throw _b_.ImportError.$factory(
                             "cannot import name '" + name + "'")
                     }
