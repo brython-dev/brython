@@ -283,7 +283,7 @@ def decompresser(codelengths):
 def tree_from_codelengths(codelengths):
     return decompresser(codelengths)["root"]
 
-class Error(Exception):
+class error(Exception):
     pass
 
 
@@ -711,7 +711,7 @@ def decompress(buf):
 
     CM = reader.read(4) # compression method (usually 8)
     if CM != 8:
-        raise Error("unsupported compression method: {}".format(CM))
+        raise error("unsupported compression method: {}".format(CM))
 
     CINFO = reader.read(4) # ln(window size) - 8
 
