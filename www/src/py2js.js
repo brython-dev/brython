@@ -861,6 +861,7 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context, expression){
             assigned.push(left.tree[1])
             left = left.tree[0]
         }
+
         if(assigned.length > 0){
             assigned.push(left)
 
@@ -884,7 +885,8 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context, expression){
                 new $RawJSCtx(assign, '$temp' + $loop_num)
             })
             $loop_num++
-            return assigned.length - 1
+            this.tree[0] = left
+            return
         }
 
         var left_items = null
@@ -926,6 +928,7 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context, expression){
                 (right.type == 'expr' && right.tree.length > 1)){
             right_items = right.tree
         }
+        
         if(right_items !== null){ // form x, y = a, b
             if(right_items.length > left_items.length){
                 throw Error('ValueError : too many values to unpack (expected ' +

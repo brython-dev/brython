@@ -95,8 +95,8 @@ return js}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.1"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2019-11-14 08:43:53.229250"
-__BRYTHON__.timestamp=1573717433229
+__BRYTHON__.compiled_date="2019-11-14 17:28:11.381667"
+__BRYTHON__.timestamp=1573748891381
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -458,7 +458,8 @@ elt.parent=node_ctx
 var assign=new $AssignCtx(elt)
 new $RawJSCtx(assign,'$temp'+$loop_num)})
 $loop_num++
-return assigned.length-1}
+this.tree[0]=left
+return}
 var left_items=null
 switch(left.type){case 'expr':
 if(left.tree.length > 1){left_items=left.tree}else if(left.tree[0].type=='list_or_tuple' ||
