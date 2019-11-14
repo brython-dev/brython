@@ -2388,6 +2388,10 @@ assertRaises(SyntaxError, exec,
 """for i in range(1):
     f(), = 0""")
 
+# issue 1247
+assertRaises(SyntaxError, exec,
+"""def f():
+    return x += 1""")
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

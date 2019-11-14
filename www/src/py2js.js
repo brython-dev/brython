@@ -369,6 +369,19 @@ as a child of the block where it stands : the root for instructions at
 module level, or a function definition, a loop, a condition, etc.
 */
 
+/*
+Function that checks that a context is not inside another incompatible
+context. Used for (augmented) assignements */
+function check_assignment(context){
+    var ctx = context
+    while(ctx){
+        if(['assert', 'del', 'import', 'raise', 'return'].indexOf(ctx.type) > -1){
+            $_SyntaxError(context, 'invalid syntax - assign')
+        }
+        ctx = ctx.parent
+    }
+}
+
 var $Node = $B.parser.$Node = function(type){
     this.type = type
     this.children = []
@@ -762,13 +775,7 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context, expression){
     disabled if a new AssignCtx object is created afterwards by method
     transform()
     */
-    var ctx = context
-    while(ctx){
-        if(ctx.type == 'assert'){
-            $_SyntaxError(context, 'invalid syntax - assign')
-        }
-        ctx = ctx.parent
-    }
+    check_assignment(context)
 
     this.type = 'assign'
     if(expression == 'expression'){
@@ -1210,6 +1217,9 @@ var $AttrCtx = $B.parser.$AttrCtx = function(context){
 
 var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
     // Class for augmented assignments such as "+="
+
+    check_assignment(context)
+
     this.type = 'augm_assign'
     this.parent = context.parent
     context.parent.tree.pop()

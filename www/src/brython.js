@@ -95,8 +95,8 @@ return js}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.1"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2019-11-14 08:37:24.108247"
-__BRYTHON__.timestamp=1573717044108
+__BRYTHON__.compiled_date="2019-11-14 08:43:53.229250"
+__BRYTHON__.timestamp=1573717433229
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -226,6 +226,9 @@ if(indent===undefined){if(Array.isArray(msg)){$B.$SyntaxError(module,msg[0],src,
 if(msg==="Triple string end not found"){
 $B.$SyntaxError(module,'invalid syntax : triple string end not found',src,$pos,line_num,root)}
 $B.$SyntaxError(module,'invalid syntax',src,$pos,line_num,root)}else{throw $B.$IndentationError(module,msg,src,$pos,line_num,root)}}
+function check_assignment(C){var ctx=C
+while(ctx){if(['assert','del','import','raise','return'].indexOf(ctx.type)>-1){$_SyntaxError(C,'invalid syntax - assign')}
+ctx=ctx.parent}}
 var $Node=$B.parser.$Node=function(type){this.type=type
 this.children=[]
 this.yield_atoms=[]
@@ -412,9 +415,7 @@ message.to_js()+'))'}
 new $NodeJSCtx(new_node,js)
 node.add(new_node)}}
 var $AssignCtx=$B.parser.$AssignCtx=function(C,expression){
-var ctx=C
-while(ctx){if(ctx.type=='assert'){$_SyntaxError(C,'invalid syntax - assign')}
-ctx=ctx.parent}
+check_assignment(C)
 this.type='assign'
 if(expression=='expression'){this.expression=true
 console.log("parent of assign expr",C.parent)}
@@ -640,6 +641,7 @@ js+".__class__.$has_setattr && ! "+js+
 if(this.func=='setattr'){
 return '$B.$setattr('+js+',"'+this.name+'")'}else{return '$B.$getattr('+js+',"'+this.name+'")'}}}
 var $AugmentedAssignCtx=$B.parser.$AugmentedAssignCtx=function(C,op){
+check_assignment(C)
 this.type='augm_assign'
 this.parent=C.parent
 C.parent.tree.pop()
