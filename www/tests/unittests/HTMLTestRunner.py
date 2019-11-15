@@ -132,7 +132,25 @@ class _TestResult(TestResult):
         return [html.TD(test.__class__.__name__),
             html.TD(test._testMethodName),
             html.TD(test.lineno, Class="number"),
-            html.TD(round(1000*(time.time()-test.startTime)), Class="number")]
+            html.TD(round(1000*(time.time() - test.startTime)),
+                Class="number")]
+
+    def addSubTest(self, test, subtest, err):
+        TestResult.addSubTest(self, test, subtest, err)
+        # special case, don't use ident()
+        cell2 = (test._testMethodName + html.BR() +
+            str(subtest._subDescription()))
+
+        row = html.TR([html.TD(test.__class__.__name__),
+            html.TD(cell2),
+            html.TD(test.lineno, Class="number"),
+            html.TD(round(1000*(time.time() - test.startTime)),
+                Class="number")])
+
+        row <= html.TD('ok', colspan=2, Class="report_cell")
+        # reset startTime
+        test.startTime = time.time()
+        document['report'] <= row
 
     def addSuccess(self, test):
         self.success_count += 1
