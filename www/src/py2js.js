@@ -373,9 +373,10 @@ module level, or a function definition, a loop, a condition, etc.
 Function that checks that a context is not inside another incompatible
 context. Used for (augmented) assignements */
 function check_assignment(context){
-    var ctx = context
+    var ctx = context,
+        forbidden = ['assert', 'del', 'import', 'raise', 'return']
     while(ctx){
-        if(['assert', 'del', 'import', 'raise', 'return'].indexOf(ctx.type) > -1){
+        if(forbidden.indexOf(ctx.type) > -1){
             $_SyntaxError(context, 'invalid syntax - assign')
         }
         ctx = ctx.parent
@@ -776,6 +777,9 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context, expression){
     transform()
     */
     check_assignment(context)
+    if(context.type == "expr" && context.tree[0].type == "lambda"){
+        $_SyntaxError(context, ["cannot assign to lambda"])
+    }
 
     this.type = 'assign'
     if(expression == 'expression'){
@@ -928,7 +932,7 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context, expression){
                 (right.type == 'expr' && right.tree.length > 1)){
             right_items = right.tree
         }
-        
+
         if(right_items !== null){ // form x, y = a, b
             if(right_items.length > left_items.length){
                 throw Error('ValueError : too many values to unpack (expected ' +
@@ -8325,12 +8329,11 @@ var $transition = $B.parser.$transition = function(context, token, value){
                 context.tree = []
                 context.body_start = $pos
                 return new $AbstractExprCtx(context, false)
-            }
-            if(context.args !== undefined){ // returning from expression
+            }if(context.args !== undefined){ // returning from expression
                 context.body_end = $pos
                 return $transition(context.parent, token)
             }
-            if(context.args === undefined){
+            if(context.args === undefined && token != "("){
                 return $transition(new $CallCtx(context), token, value)
             }
             $_SyntaxError(context, 'token ' + token + ' after ' + context)
@@ -9905,7 +9908,7 @@ var brython = $B.parser.brython = function(options){
     // Virtual File System (VFS)
     if($B.use_VFS){
         meta_path.push($B.$meta_path[0])
-        path_hooks.push($B.$path_hooks[0])
+        //path_hooks.push($B.$path_hooks[0])
     }
 
     if(options.static_stdlib_import !== false && $B.protocol != "file"){
@@ -9920,10 +9923,10 @@ var brython = $B.parser.brython = function(options){
         }
     }
 
-    // Always use the defaut finder using sys.path
+    // Use the defaut finder using sys.path if protocol is not file://
     if($B.protocol !== "file"){
         meta_path.push($B.$meta_path[2])
-        path_hooks.push($B.$path_hooks[1])
+        path_hooks.push($B.$path_hooks[0])
     }
     $B.meta_path = meta_path
     $B.path_hooks = path_hooks

@@ -95,8 +95,8 @@ return js}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.1"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2019-11-14 17:28:11.381667"
-__BRYTHON__.timestamp=1573748891381
+__BRYTHON__.compiled_date="2019-11-15 12:52:58.519491"
+__BRYTHON__.timestamp=1573818778519
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -226,8 +226,8 @@ if(indent===undefined){if(Array.isArray(msg)){$B.$SyntaxError(module,msg[0],src,
 if(msg==="Triple string end not found"){
 $B.$SyntaxError(module,'invalid syntax : triple string end not found',src,$pos,line_num,root)}
 $B.$SyntaxError(module,'invalid syntax',src,$pos,line_num,root)}else{throw $B.$IndentationError(module,msg,src,$pos,line_num,root)}}
-function check_assignment(C){var ctx=C
-while(ctx){if(['assert','del','import','raise','return'].indexOf(ctx.type)>-1){$_SyntaxError(C,'invalid syntax - assign')}
+function check_assignment(C){var ctx=C,forbidden=['assert','del','import','raise','return']
+while(ctx){if(forbidden.indexOf(ctx.type)>-1){$_SyntaxError(C,'invalid syntax - assign')}
 ctx=ctx.parent}}
 var $Node=$B.parser.$Node=function(type){this.type=type
 this.children=[]
@@ -416,6 +416,7 @@ new $NodeJSCtx(new_node,js)
 node.add(new_node)}}
 var $AssignCtx=$B.parser.$AssignCtx=function(C,expression){
 check_assignment(C)
+if(C.type=="expr" && C.tree[0].type=="lambda"){$_SyntaxError(C,["cannot assign to lambda"])}
 this.type='assign'
 if(expression=='expression'){this.expression=true
 console.log("parent of assign expr",C.parent)}
@@ -4117,11 +4118,10 @@ case 'lambda':
 if(token==':' && C.args===undefined){C.args=C.tree
 C.tree=[]
 C.body_start=$pos
-return new $AbstractExprCtx(C,false)}
-if(C.args !==undefined){
+return new $AbstractExprCtx(C,false)}if(C.args !==undefined){
 C.body_end=$pos
 return $transition(C.parent,token)}
-if(C.args===undefined){return $transition(new $CallCtx(C),token,value)}
+if(C.args===undefined && token !="("){return $transition(new $CallCtx(C),token,value)}
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'list_or_tuple':
 if(C.closed){if(token=='['){return new $AbstractExprCtx(
@@ -4985,14 +4985,13 @@ if(options.static_stdlib_import===undefined){options.static_stdlib_import=true}
 $B.static_stdlib_import=options.static_stdlib_import
 $B.$options=options
 var meta_path=[],path_hooks=[]
-if($B.use_VFS){meta_path.push($B.$meta_path[0])
-path_hooks.push($B.$path_hooks[0])}
+if($B.use_VFS){meta_path.push($B.$meta_path[0])}
 if(options.static_stdlib_import !==false && $B.protocol !="file"){
 meta_path.push($B.$meta_path[1])
 if($B.path.length > 3){$B.path.shift()
 $B.path.shift()}}
 if($B.protocol !=="file"){meta_path.push($B.$meta_path[2])
-path_hooks.push($B.$path_hooks[1])}
+path_hooks.push($B.$path_hooks[0])}
 $B.meta_path=meta_path
 $B.path_hooks=path_hooks
 var $href=$B.script_path=_window.location.href,$href_elts=$href.split('/')
