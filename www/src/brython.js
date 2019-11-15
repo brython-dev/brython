@@ -95,8 +95,8 @@ return js}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.1"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2019-11-15 13:57:31.357963"
-__BRYTHON__.timestamp=1573822651357
+__BRYTHON__.compiled_date="2019-11-15 22:11:56.247979"
+__BRYTHON__.timestamp=1573852316247
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -1403,7 +1403,7 @@ var root=$get_module(this)
 node.parent.insert(rank+offset++,$NodeJS('    __module__ : "'+root.module+'",'))
 for(var attr in this.binding){this.varnames[attr]=true}
 var co_varnames=[]
-for(var attr in this.varnames){co_varnames.push('"'+attr+'"')}
+for(var attr in this.varnames){co_varnames.push('"'+$B.from_alias(attr)+'"')}
 var free_vars=[]
 if(this.parent.node.referenced){for(var attr in this.parent.node.referenced){if(! this.parent.node.binding[attr]){free_vars.push('"'+attr+'"')}}}
 var CODE_MARKER='___%%%-CODE-%%%___'+this.name+this.num;
@@ -1420,8 +1420,8 @@ h1+'co_kwonlyargcount:'+this.kwonlyargcount+
 h1+'co_name: "'+this.name+'"'+
 h1+'co_nlocals: '+co_varnames.length+
 h1+'co_posonlyargcount: '+(this.pos_only ||0)+
-h1+'co_varnames: ['+co_varnames.join(', ')+']'+
-h+'}\n'+' '.repeat(indent+4)+'};'
+h1+'co_varnames: $B.fast_tuple(['+co_varnames.join(', ')+']'+
+h+')}\n'+' '.repeat(indent+4)+'};'
 js+='None;'
 node.parent.insert(rank+offset++,$NodeJS(js))
 this.default_str='{'+defs1.join(', ')+'}'
@@ -11862,6 +11862,8 @@ default:
 return "0".repeat(width-self.length)+self}}
 str.$factory=function(arg,encoding,errors){if(arguments.length==0){return ""}
 if(arg===undefined){throw _b_.TypeError.$factory("str() argument is undefined")}
+if(encoding !==undefined){
+var $=$B.args("str",3,{arg:null,encoding:null,errors:null},["arg","encoding","errors"],arguments,{encoding:"utf-8",errors:"strict"},null,null),encoding=$.encoding,errors=$.errors}
 switch(typeof arg){case "string":
 return str.__str__(arg)
 case "number":
@@ -11871,7 +11873,6 @@ var func=$B.$getattr(arg.__class__,"__str__")
 return func(arg)}
 if(arg.__class__ && arg.__class__===_b_.bytes &&
 encoding !==undefined){
-var $=$B.args("str",3,{arg:null,encoding:null,errors:null},["arg","encoding","errors"],arguments,{encoding:"utf-8",errors:"strict"},null,null)
 return _b_.bytes.decode(arg,$.encoding,$.errors)}
 var klass=arg.__class__ ||$B.get_class(arg)
 var method=$B.$getattr(klass ,"__str__",null)

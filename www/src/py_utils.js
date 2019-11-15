@@ -20,7 +20,6 @@ $B.args = function($fname, argcount, slots, var_names, args, $dobj,
     //     extra_pos_args = 'args'
     //     extra_kw_args = 'kw'
     //     kwonlyargcount = 2
-
     var $args = []
     if(Array.isArray(args)){$args = args}
     else{

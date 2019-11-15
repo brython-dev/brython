@@ -2831,7 +2831,9 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
 
         for(var attr in this.binding){this.varnames[attr] = true}
         var co_varnames = []
-        for(var attr in this.varnames){co_varnames.push('"' + attr + '"')}
+        for(var attr in this.varnames){
+            co_varnames.push('"' + $B.from_alias(attr) + '"')
+        }
 
         // Get "free variables" (referenced in function but not bound inside
         // it)
@@ -2860,8 +2862,8 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
             h1 + 'co_name: "' + this.name + '"' +
             h1 + 'co_nlocals: ' + co_varnames.length +
             h1 + 'co_posonlyargcount: ' + (this.pos_only || 0) +
-            h1 + 'co_varnames: [' + co_varnames.join(', ') + ']' +
-            h + '}\n' + ' '.repeat(indent + 4) +'};'
+            h1 + 'co_varnames: $B.fast_tuple([' + co_varnames.join(', ') + ']' +
+            h + ')}\n' + ' '.repeat(indent + 4) +'};'
 
         // End with None for interactive interpreter
         js += 'None;'
