@@ -638,7 +638,6 @@ class GrammarTests(unittest.TestCase):
         def f(a, *args, b, **kwds,): pass
         def f(a, *, b, **kwds,): pass
 
-    @unittest.skip('Fails in Brython -- still needs to be investigated')
     def test_lambdef(self):
         ### lambdef: 'lambda' [varargslist] ':' test
         l1 = lambda : 0
@@ -689,7 +688,6 @@ class GrammarTests(unittest.TestCase):
     ### small_stmt: expr_stmt | pass_stmt | del_stmt | flow_stmt | import_stmt | global_stmt | access_stmt
     # Tested below
 
-    @unittest.skip('Fails in Brython -- still needs to be investigated')
     def test_expr_stmt(self):
         # (exprlist '=')* exprlist
         1
@@ -705,7 +703,6 @@ class GrammarTests(unittest.TestCase):
 
     # Check the heuristic for print & exec covers significant cases
     # As well as placing some limits on false positives
-    @unittest.skip('Fails in Brython -- still needs to be investigated')
     def test_former_statements_refer_to_builtins(self):
         keywords = "print", "exec"
         # Cases where we want the custom error
