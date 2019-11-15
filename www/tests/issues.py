@@ -2392,6 +2392,11 @@ assertRaises(SyntaxError, exec,
 assertRaises(SyntaxError, exec,
 """def f():
     return x += 1""")
+
+# issue 1248
+def f():
+    x += 1
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

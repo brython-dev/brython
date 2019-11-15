@@ -95,8 +95,8 @@ return js}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.1"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2019-11-15 12:52:58.519491"
-__BRYTHON__.timestamp=1573818778519
+__BRYTHON__.compiled_date="2019-11-15 13:57:31.357963"
+__BRYTHON__.timestamp=1573822651357
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -719,8 +719,8 @@ in_class=true
 offset++}}}
 var left=C.tree[0].to_js()
 if(C.tree[0].type=="id"){var binding_scope=C.tree[0].firstBindingScopeId()
-left="$locals_"+binding_scope.replace(/\./g,'_')+
-'["'+C.tree[0].value+'"]'}
+if(binding_scope){left="$locals_"+binding_scope.replace(/\./g,'_')+
+'["'+C.tree[0].value+'"]'}}
 if(left_bound_to_int && right_is_int){parent.insert(rank+offset,$NodeJS(left+" "+op+" "+right))
 return offset++}
 prefix=prefix && !C.tree[0].unknown_binding && !left_id_unbound

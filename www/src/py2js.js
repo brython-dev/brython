@@ -1379,8 +1379,10 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
         var left = context.tree[0].to_js()
         if(context.tree[0].type == "id"){
             var binding_scope = context.tree[0].firstBindingScopeId()
-            left = "$locals_" + binding_scope.replace(/\./g, '_') +
+            if(binding_scope){
+                left = "$locals_" + binding_scope.replace(/\./g, '_') +
                     '["' + context.tree[0].value + '"]'
+            }
         }
 
         if(left_bound_to_int && right_is_int){
