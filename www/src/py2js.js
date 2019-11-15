@@ -7642,10 +7642,18 @@ var $transition = $B.parser.$transition = function(context, token, value){
               case 'lambda':
               case 'pass':
               case 'str':
-              case '{':
                   $_SyntaxError(context, 'token ' + token + ' after ' +
                       context)
                   break
+              case '{':
+                  // Special case : "print {...}" must raise a SyntaxError
+                  // with "Missing parenthesis"...
+                  if(context.tree[0].type != "id" ||
+                          ["print", "exec"].indexOf(context.tree[0].value) == -1){
+                      $_SyntaxError(context, 'token ' + token + ' after ' +
+                          context)
+                  }
+                  return new $DictOrSetCtx(context)
               case '[':
               case '(':
               case '.':
@@ -7967,6 +7975,13 @@ var $transition = $B.parser.$transition = function(context, token, value){
                 }
                 return new $AbstractExprCtx(new $TernaryCtx(ctx), false)
             case 'eol':
+                // Special case for print and exec
+                if(context.tree.length == 2 &&
+                        context.tree[0].type == "id" &&
+                        ["print", "exec"].indexOf(context.tree[0].value) > -1){
+                    $_SyntaxError(context, ["Missing parentheses in call " +
+                        "to '" + context.tree[0].value + "'."])
+                }
                 if(["dict_or_set", "list_or_tuple"].indexOf(context.parent.type) == -1){
                     var t = context.tree[0]
                     if(t.type == "packed" ||
@@ -8233,9 +8248,10 @@ var $transition = $B.parser.$transition = function(context, token, value){
                 case 'int':
                 case 'float':
                 case 'imaginary':
-                    if(context.value == "print"){
+                    if(["print", "exec"].indexOf(context.value) > -1 ){
                         $_SyntaxError(context,
-                            ["missing parenthesis in call to 'print'"])
+                            ["missing parenthesis in call to '" +
+                            context.value + "'"])
                     }
                     $_SyntaxError(context, 'token ' + token + ' after ' +
                         context)

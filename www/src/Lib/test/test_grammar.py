@@ -357,7 +357,7 @@ class GrammarTests(unittest.TestCase):
                               {'123': 123, 'o': type})
         self.assertEqual(ann_module2.__annotations__, {})
 
-    @unittest.skip('Fails in Brython')
+    @unittest.skip('Fails in Brython -- still needs to be investigated')
     def test_var_annot_in_module(self):
         # check that functions fail the same way when executed
         # outside of module where they were defined
@@ -798,7 +798,6 @@ class GrammarTests(unittest.TestCase):
                 self.fail("continue then break in try/except in loop broken!")
         test_inner()
 
-    @unittest.skip('Fails in Brython -- still needs to be investigated')
     def test_return(self):
         # 'return' [testlist]
         def g1(): return

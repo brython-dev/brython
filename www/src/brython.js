@@ -95,8 +95,8 @@ return js}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.1"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2019-11-15 22:11:56.247979"
-__BRYTHON__.timestamp=1573852316247
+__BRYTHON__.compiled_date="2019-11-15 23:09:42.101306"
+__BRYTHON__.timestamp=1573855782101
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -3731,10 +3731,14 @@ case 'int':
 case 'lambda':
 case 'pass':
 case 'str':
-case '{':
 $_SyntaxError(C,'token '+token+' after '+
 C)
 break
+case '{':
+if(C.tree[0].type !="id" ||
+["print","exec"].indexOf(C.tree[0].value)==-1){$_SyntaxError(C,'token '+token+' after '+
+C)}
+return new $DictOrSetCtx(C)
 case '[':
 case '(':
 case '.':
@@ -3897,6 +3901,10 @@ if(ctx.type=='expr' &&
 ctx.parent && ctx.parent.type=='op'){ctx=ctx.parent}}
 return new $AbstractExprCtx(new $TernaryCtx(ctx),false)
 case 'eol':
+if(C.tree.length==2 &&
+C.tree[0].type=="id" &&
+["print","exec"].indexOf(C.tree[0].value)>-1){$_SyntaxError(C,["Missing parentheses in call "+
+"to '"+C.tree[0].value+"'."])}
 if(["dict_or_set","list_or_tuple"].indexOf(C.parent.type)==-1){var t=C.tree[0]
 if(t.type=="packed" ||
 (t.type=="call" && t.func.type=="packed")){$_SyntaxError(C,["can't use starred expression here"])}}}
@@ -4052,7 +4060,8 @@ case 'str':
 case 'int':
 case 'float':
 case 'imaginary':
-if(C.value=="print"){$_SyntaxError(C,["missing parenthesis in call to 'print'"])}
+if(["print","exec"].indexOf(C.value)>-1 ){$_SyntaxError(C,["missing parenthesis in call to '"+
+C.value+"'"])}
 $_SyntaxError(C,'token '+token+' after '+
 C)}
 if(C.value=="async"){
