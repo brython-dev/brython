@@ -145,7 +145,7 @@ class _TestResult(TestResult):
             html.TD(cell2),
             html.TD(test.lineno, Class="number"),
             html.TD(round(1000*(time.time() - test.startTime)),
-                Class="number")])
+                Class="number")], Class="method")
 
         row <= html.TD('ok', colspan=2, Class="report_cell")
         # reset startTime
