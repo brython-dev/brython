@@ -10,10 +10,10 @@ from sys import *
 
 # different import patterns to check that __annotations__ does not interfere
 # with import machinery
-import test.ann_module as ann_module  # Doesn't work in Brython
+import test.ann_module as ann_module
 import typing
 from collections import ChainMap
-from test import ann_module2  # Doesn't work in Brython
+from test import ann_module2
 import test
 
 # These are shared with test_tokenize and other test modules.
@@ -1054,7 +1054,6 @@ class GrammarTests(unittest.TestCase):
             x = 2
         self.assertEqual(x, 2)
 
-    @unittest.skip('Fails in Brython -- still needs to be investigated')
     def test_for(self):
         # 'for' exprlist 'in' exprlist ':' suite ['else' ':' suite]
         for i in 1, 2, 3: pass
