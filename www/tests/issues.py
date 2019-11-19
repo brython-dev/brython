@@ -2397,6 +2397,9 @@ assertRaises(SyntaxError, exec,
 def f():
     x += 1
 
+# issue 1251
+assertRaises(SyntaxError, eval, '\\\n')
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

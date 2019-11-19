@@ -9683,6 +9683,12 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
                 if(src.charAt(pos + 1) == '\n'){
                   lnum++
                   pos += 2
+                  if(pos == src.length){
+                      $_SyntaxError(context,
+                          ["unexpected EOF while parsing"])
+                  }else if(context.type == "node"){
+                      $_SyntaxError(context, 'nothing before \\')
+                  }
                   break
                 }else{
                     $pos = pos
