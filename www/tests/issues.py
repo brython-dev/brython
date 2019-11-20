@@ -2400,6 +2400,14 @@ def f():
 # issue 1251
 assertRaises(SyntaxError, eval, '\\\n')
 
+# issue 1253
+assertRaises(UnboundLocalError, exec,
+"""x = 1
+def f():
+    (((((x))))) += 1
+f()
+""")
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

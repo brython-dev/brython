@@ -8372,7 +8372,9 @@ var $transition = $B.parser.$transition = function(context, token, value){
                         case 'tuple':
                         case 'gen_expr':
                             if(token == ')'){
-                                if(context.parent.type == "expr" &&
+                                while(context.type == "list_or_tuple" &&
+                                        context.real == "tuple" &&
+                                        context.parent.type == "expr" &&
                                         context.parent.parent.type == "node" &&
                                         context.tree.length == 1){
                                     // Not a tuple, just an expression inside
@@ -8380,12 +8382,19 @@ var $transition = $B.parser.$transition = function(context, token, value){
                                     // the expression.
                                     // Required for code like
                                     //     (pars): bool = True
+                                    //
+                                    // See also issue #1253 with code like
+                                    //
+                                    // def f():
+                                    //     ((((x)))) = 1
+                                    //
                                     var node = context.parent.parent,
                                         ix = node.tree.indexOf(context.parent),
                                         expr = context.tree[0]
                                     expr.parent = node
                                     expr.$in_parens = true // keep information
                                     node.tree.splice(ix, 1, expr)
+                                    context = expr.tree[0]
                                 }
                                 context.closed = true
                                 if(context.real == 'gen_expr'){
