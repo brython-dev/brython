@@ -2408,6 +2408,28 @@ def f():
 f()
 """)
 
+# issue 1254
+assertRaises(SyntaxError, exec,
+"""def f():
+    print('hi')
+f(*)""")
+
+assertRaises(SyntaxError, exec,
+"""def f():
+    print('hi')
+f(*, 1)""")
+
+assertRaises(SyntaxError, exec,
+"""def f(x, **):
+    print('hi')
+f(7)""")
+
+assertRaises(SyntaxError, exec,
+"""def f(x, *):
+    print('hi')
+f(7)""")
+
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

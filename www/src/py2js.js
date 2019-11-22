@@ -8146,6 +8146,18 @@ var $transition = $B.parser.$transition = function(context, token, value){
                     $_SyntaxError(context, 'token ' + token + ' after ' +
                         context)
                 case ')':
+                    var last = $B.last(context.tree)
+                    if(last && last.type == "func_star_arg"){
+                        if(last.name == "*"){
+                            if(context.op == '*'){
+                                // Form "def f(x, *)" is invalid
+                                $_SyntaxError(context,
+                                    ['named arguments must follow bare *'])
+                            }else{
+                                $_SyntaxError(context, 'invalid syntax')
+                            }
+                        }
+                    }
                     return context.parent
                 case 'op':
                     if(context.has_kw_arg){
@@ -8795,8 +8807,10 @@ var $transition = $B.parser.$transition = function(context, token, value){
                     return $transition(new $AbstractExprCtx(context, false),
                         token, value)
                 case ',':
-                    return $transition(context.parent, token)
                 case ')':
+                    if(context.tree.length == 0){
+                        $_SyntaxError(context, "unnamed star argument")
+                    }
                     return $transition(context.parent, token)
                 case ':':
                     if(context.parent.parent.type == 'lambda'){

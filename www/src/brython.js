@@ -95,8 +95,8 @@ return js}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.1"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2019-11-20 22:31:30.097019"
-__BRYTHON__.timestamp=1574285490097
+__BRYTHON__.compiled_date="2019-11-22 10:18:10.278218"
+__BRYTHON__.timestamp=1574414290278
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -4001,6 +4001,9 @@ return C}
 $_SyntaxError(C,'token '+token+' after '+
 C)
 case ')':
+var last=$B.last(C.tree)
+if(last && last.type=="func_star_arg"){if(last.name=="*"){if(C.op=='*'){
+$_SyntaxError(C,['named arguments must follow bare *'])}else{$_SyntaxError(C,'invalid syntax')}}}
 return C.parent
 case 'op':
 if(C.has_kw_arg){$_SyntaxError(C,'duplicate kw arg')}
@@ -4424,8 +4427,8 @@ case 'not':
 case 'lambda':
 return $transition(new $AbstractExprCtx(C,false),token,value)
 case ',':
-return $transition(C.parent,token)
 case ')':
+if(C.tree.length==0){$_SyntaxError(C,"unnamed star argument")}
 return $transition(C.parent,token)
 case ':':
 if(C.parent.parent.type=='lambda'){return $transition(C.parent.parent,token)}}
