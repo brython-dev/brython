@@ -13,7 +13,7 @@ var object = _b_.object,
 $B.$comps = {'>':'gt','>=':'ge','<':'lt','<=':'le'}
 $B.$inv_comps = {'>': 'lt', '>=': 'le', '<': 'gt', '<=': 'ge'}
 
-function check_nb_args(name, expected, args){
+var check_nb_args = $B.check_nb_args = function(name, expected, args){
     // Check the number of arguments
     var len = args.length,
         last = args[len - 1]
@@ -37,7 +37,7 @@ function check_nb_args(name, expected, args){
     }
 }
 
-function check_no_kw(name, x, y){
+var check_no_kw = $B.check_no_kw = function(name, x, y){
     // Throw error if one of x, y is a keyword argument
     if(x === undefined){
         console.log("x undef", name, x, y)

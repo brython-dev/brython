@@ -95,9 +95,9 @@ return js}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.1"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2019-11-22 10:18:10.278218"
-__BRYTHON__.timestamp=1574414290278
-__BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
+__BRYTHON__.compiled_date="2019-11-22 13:47:52.944599"
+__BRYTHON__.timestamp=1574426872944
+__BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -6320,7 +6320,7 @@ _b_.__debug__=false
 var object=_b_.object,odga=object.__getattribute__
 $B.$comps={'>':'gt','>=':'ge','<':'lt','<=':'le'}
 $B.$inv_comps={'>':'lt','>=':'le','<':'gt','<=':'ge'}
-function check_nb_args(name,expected,args){
+var check_nb_args=$B.check_nb_args=function(name,expected,args){
 var len=args.length,last=args[len-1]
 if(last && last.$nat=="kw"){var kw=last.kw
 if(Array.isArray(kw)&& kw[1]&& kw[1].__class__===_b_.dict){if(Object.keys(kw[1].$string_dict).length==0){len--}}}
@@ -6328,7 +6328,7 @@ if(len !=expected){if(expected==0){throw _b_.TypeError.$factory(name+"() takes n
 " ("+len+" given)")}else{throw _b_.TypeError.$factory(name+"() takes exactly "+
 expected+" argument"+(expected < 2 ? '' :'s')+
 " ("+len+" given)")}}}
-function check_no_kw(name,x,y){
+var check_no_kw=$B.check_no_kw=function(name,x,y){
 if(x===undefined){console.log("x undef",name,x,y)}
 if(x.$nat ||(y !==undefined && y.$nat)){throw _b_.TypeError.$factory(name+"() takes no keyword arguments")}}
 var NoneType={$factory:function(){return None},$infos:{__name__:"NoneType",__module__:"builtins"},__bool__:function(self){return False},__class__:_b_.type,__hash__:function(self){return 0},__mro__:[object],__repr__:function(self){return 'None'},__str__:function(self){return 'None'},$is_class:true}
@@ -8857,7 +8857,7 @@ $B.JSConstructor=JSConstructor})(__BRYTHON__)
 ;(function($B){$B.stdlib={}
 var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_collections_abc','_compat_pickle','_contextvars','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_operator','_py_abc','_pydecimal','_queue','_random','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_weakref','_weakrefset','abc','antigravity','argparse','atexit','base64','bdb','binascii','bisect','browser.aio','browser.ajax','browser.highlight','browser.html','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.template','browser.timer','browser.webcomponent','browser.websocket','browser.webworker','browser.worker','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','gettext','glob','heapq','hmac','imp','inspect','io','ipaddress','itertools','keyword','linecache','locale','mimetypes','nntplib','numbers','opcode','operator','optparse','os','pdb','pickle','pkgutil','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','re','reprlib','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','string','stringprep','struct','subprocess','sys','sysconfig','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uu','uuid','warnings','weakref','webbrowser','zipfile','zlib']
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
-var js=['_aio','_ajax','_base64','_binascii','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_sre_utils','_string','_strptime','_svg','_warnings','_webcomponent','_webworker','_zlib_utils','aes','array','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','long_int','marshal','math','md5','modulefinder','pbkdf2','posix','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata']
+var js=['_aio','_ajax','_base64','_binascii','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_sre_utils','_string','_strptime','_svg','_warnings','_webcomponent','_webworker','_zlib_utils','aes','array','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','long_int','marshal','math','math1','math_kozh','md5','modulefinder','pbkdf2','posix','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
 var pkglist=['browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','json','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
 for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}})(__BRYTHON__)

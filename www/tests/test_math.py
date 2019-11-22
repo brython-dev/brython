@@ -1,5 +1,7 @@
 import math
 
+from tester import assertRaises
+
 def almost_equal(actual, expected):
     return abs(actual - expected) < 0.00001
 
@@ -174,5 +176,8 @@ assert math.gamma(2) == 1.0
 
 # issue 1113
 assert math.lgamma(2) == 0.0
+
+# issue 1246
+assertRaises(TypeError, math.cos)
 
 print("passed all tests..")

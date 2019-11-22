@@ -187,38 +187,68 @@ with({$: BigNumber, o: BigNumber.prototype}){
 var isNegZero = function(x) {return x === 0 && Math.atan2(x,x) < 0}
 
 var _mod = {
-    __getattr__ : function(attr){
+    __getattr__: function(attr){
+        $B.check_nb_args('__getattr__ ', 1, arguments)
+        $B.check_no_kw('__getattr__ ', attr)
+
         var res = this[attr]
         if(res === undefined){$raise('AttributeError',
             'module math has no attribute ' + attr)}
         return res
     },
-    acos: function(x) {return float.$factory(Math.acos(float_check(x)))},
-    acosh: function(x) {
+    acos: function(x){
+        $B.check_nb_args('acos', 1, arguments)
+        $B.check_no_kw('acos', x)
+        return float.$factory(Math.acos(float_check(x)))
+    },
+    acosh: function(x){
+        $B.check_nb_args('acosh', 1, arguments)
+        $B.check_no_kw('acosh', x)
+
         if(_b_.$isinf(x)){return float.$factory('inf')}
         var y = float_check(x)
         return float.$factory(Math.log(y + Math.sqrt(y * y - 1)))
     },
-    asin: function(x) {return float.$factory(Math.asin(float_check(x)))},
-    asinh: function(x) {
+    asin: function(x){
+        $B.check_nb_args('asin', 1, arguments)
+        $B.check_no_kw('asin', x)
+        return float.$factory(Math.asin(float_check(x)))
+    },
+    asinh: function(x){
+        $B.check_nb_args('asinh', 1, arguments)
+        $B.check_no_kw('asinh', x)
+
         if(_b_.$isninf(x)){return float.$factory('-inf')}
         if(_b_.$isinf(x)){return float.$factory('inf')}
         var y = float_check(x)
         return float.$factory(Math.log(y + Math.sqrt(y * y + 1)))
     },
-    atan: function(x) {
+    atan: function(x){
+        $B.check_nb_args('atan', 1, arguments)
+        $B.check_no_kw('atan', x)
+
         if(_b_.$isninf(x)){return float.$factory(-Math.PI / 2)}
         if(_b_.$isinf(x)){return float.$factory(Math.PI / 2)}
-        return float.$factory(Math.atan(float_check(x)))},
-    atan2: function(y, x) {
+        return float.$factory(Math.atan(float_check(x)))
+    },
+    atan2: function(y, x){
+        $B.check_nb_args('atan2', 2, arguments)
+        $B.check_no_kw('atan2', y, x)
+
         return float.$factory(Math.atan2(float_check(y), float_check(x)))
     },
-    atanh: function(x) {
+    atanh: function(x){
+        $B.check_nb_args('atanh', 1, arguments)
+        $B.check_no_kw('atanh', x)
+
        var y = float_check(x)
        if(y == 0){return 0}
        return float.$factory(0.5 * Math.log((1 / y + 1)/(1 / y - 1)));
     },
-    ceil: function(x) {
+    ceil: function(x){
+        $B.check_nb_args('ceil', 1, arguments)
+        $B.check_no_kw('ceil', x)
+
        try{return getattr(x, '__ceil__')()}catch(err){}
 
        if(_b_.$isninf(x)){return float.$factory('-inf')}
@@ -233,23 +263,41 @@ var _mod = {
        $raise('ValueError',
            'object is not a number and does not contain __ceil__')
     },
-    copysign: function(x,y) {
+    copysign: function(x, y){
+        $B.check_nb_args('copysign', 2, arguments)
+        $B.check_no_kw('copysign', x,y)
+
         var x1 = Math.abs(float_check(x))
         var y1 = float_check(y)
         var sign = Math.sign(y1)
         sign = (sign == 1 || Object.is(sign, +0)) ? 1 : - 1
         return float.$factory(x1 * sign)
     },
-    cos : function(x){return float.$factory(Math.cos(float_check(x)))},
+    cos : function(x){
+        $B.check_nb_args('cos ', 1, arguments)
+        $B.check_no_kw('cos ', x)
+        return float.$factory(Math.cos(float_check(x)))
+    },
     cosh: function(x){
+        $B.check_nb_args('cosh', 1, arguments)
+        $B.check_no_kw('cosh', x)
+
         if(_b_.$isinf(x)) {return float.$factory('inf')}
         var y = float_check(x)
         if(Math.cosh !== undefined){return float.$factory(Math.cosh(y))}
-        return float.$factory((Math.pow(Math.E, y) + Math.pow(Math.E, -y)) / 2)
+        return float.$factory((Math.pow(Math.E, y) +
+            Math.pow(Math.E, -y)) / 2)
     },
-    degrees: function(x){return float.$factory(float_check(x) * 180 / Math.PI)},
+    degrees: function(x){
+        $B.check_nb_args('degrees', 1, arguments)
+        $B.check_no_kw('degrees', x)
+        return float.$factory(float_check(x) * 180 / Math.PI)
+    },
     e: float.$factory(Math.E),
-    erf: function(x) {
+    erf: function(x){
+        $B.check_nb_args('erf', 1, arguments)
+        $B.check_no_kw('erf', x)
+
         // inspired from
         // http://stackoverflow.com/questions/457408/is-there-an-easily-available-implementation-of-erf-for-python
         var y = float_check(x)
@@ -267,8 +315,11 @@ var _mod = {
         if(y >= 0.0){return ans}
         return -ans
     },
+    erfc: function(x){
 
-    erfc: function(x) {
+        $B.check_nb_args('erfc', 1, arguments)
+        $B.check_no_kw('erfc', x)
+
         // inspired from
         // http://stackoverflow.com/questions/457408/is-there-an-easily-available-implementation-of-erf-for-python
         var y = float_check(x)
@@ -287,6 +338,9 @@ var _mod = {
         return 1 + ans
     },
     exp: function(x){
+        $B.check_nb_args('exp', 1, arguments)
+        $B.check_no_kw('exp', x)
+
          if(_b_.$isninf(x)){return float.$factory(0)}
          if(_b_.$isinf(x)){return float.$factory('inf')}
          var _r = Math.exp(float_check(x))
@@ -294,6 +348,9 @@ var _mod = {
          return float.$factory(_r)
     },
     expm1: function(x){
+        $B.check_nb_args('expm1', 1, arguments)
+        $B.check_no_kw('expm1', x)
+
          if(_b_.$isninf(x)){return float.$factory(0)}
          if(_b_.$isinf(x)){return float.$factory('inf')}
          var _r = Math.expm1(float_check(x))
@@ -301,21 +358,42 @@ var _mod = {
          return float.$factory(_r)
     },
     //fabs: function(x){ return x>0?float.$factory(x):float.$factory(-x)},
-    fabs: function(x){return _b_.$fabs(x)}, //located in py_float.js
-    factorial: function(x) {
+    fabs: function(x){
+        $B.check_nb_args('fabs', 1, arguments)
+        $B.check_no_kw('fabs', x)
+        return _b_.$fabs(x) // located in py_float.js
+    },
+    factorial: function(x){
+        $B.check_nb_args('factorial', 1, arguments)
+        $B.check_no_kw('factorial', x)
+
          //using code from http://stackoverflow.com/questions/3959211/fast-factorial-function-in-javascript
          var y = float_check(x),
              r = 1
          for(var i = 2; i <= y; i++){r *= i}
          return r
     },
-    floor: function(x){return Math.floor(float_check(x))},
-    fmod: function(x,y){return float.$factory(float_check(x) % float_check(y))},
+    floor: function(x){
+        $B.check_nb_args('floor', 1, arguments)
+        $B.check_no_kw('floor', x)
+        return Math.floor(float_check(x))
+    },
+    fmod: function(x,y){
+        $B.check_nb_args('fmod', 2, arguments)
+        $B.check_no_kw('fmod', x,y)
+        return float.$factory(float_check(x) % float_check(y))
+    },
     frexp: function(x){
+        $B.check_nb_args('frexp', 1, arguments)
+        $B.check_no_kw('frexp', x)
+
         var _l = _b_.$frexp(x)
         return _b_.tuple.$factory([float.$factory(_l[0]), _l[1]])
     },
     fsum: function(x){
+        $B.check_nb_args('fsum', 1, arguments)
+        $B.check_no_kw('fsum', x)
+
         /* Translation into Javascript of the function msum in an Active
            State Cookbook recipe : https://code.activestate.com/recipes/393090/
            by Raymond Hettinger
@@ -355,6 +433,9 @@ var _mod = {
         return new Number(res)
     },
     gamma: function(x){
+        $B.check_nb_args('gamma', 1, arguments)
+        $B.check_no_kw('gamma', x)
+
         if(_b_.isinstance(x, int)){
             if(i < 1){
                 throw _b_.ValueError.$factory("math domain error")
@@ -415,13 +496,17 @@ var _mod = {
             b %= a
         }
     },
-    hypot: function(x,y){
+    hypot: function(x, y){
+        $B.check_nb_args('hypot', 2, arguments)
+        $B.check_no_kw('hypot', x,y)
+
        if(_b_.$isinf(x) || _b_.$isinf(y)){return float.$factory('inf')}
        var x1 = float_check(x),
            y1 = float_check(y)
-       return float.$factory(Math.sqrt(x1 * x1 + y1 * y1))},
+       return float.$factory(Math.sqrt(x1 * x1 + y1 * y1))
+    },
     inf: float.$factory('inf'),
-    isclose:function(){
+    isclose: function(){
         var $ns = $B.args("isclose",
                           4,
                           {a: null, b: null, rel_tol: null, abs_tol: null},
@@ -447,30 +532,67 @@ var _mod = {
         )
         return result
     },
-    isfinite: function(x){return isFinite(float_check(x))},
-    isinf: function(x){return _b_.$isinf(float_check(x))},
-    isnan: function(x){return isNaN(float_check(x))},
-    ldexp: function(x, i){return _b_.$ldexp(x, i)},   //located in py_float.js
+    isfinite: function(x){
+        $B.check_nb_args('isfinite', 1, arguments)
+        $B.check_no_kw('isfinite', x)
+        return isFinite(float_check(x))
+    },
+    isinf: function(x){
+        $B.check_nb_args('isinf', 1, arguments)
+        $B.check_no_kw('isinf', x)
+        return _b_.$isinf(float_check(x))
+    },
+    isnan: function(x){
+        $B.check_nb_args('isnan', 1, arguments)
+        $B.check_no_kw('isnan', x)
+        return isNaN(float_check(x))
+    },
+    ldexp: function(x, i){
+        $B.check_nb_args('ldexp', 2, arguments)
+        $B.check_no_kw('ldexp', x, i)
+        return _b_.$ldexp(x, i)   //located in py_float.js
+    },
     lgamma: function(x){
+        $B.check_nb_args('lgamma', 1, arguments)
+        $B.check_no_kw('lgamma', x)
+
         return new Number(Math.log(Math.abs(_mod.gamma(x))))
     },
     log: function(x, base){
+        var $ = $B.args("log", 2, {x: null, base: null}, ['x', 'base'],
+            arguments, {base: _b_.None}, null, null),
+            x = $.x,
+            base = $.base
+
          var x1 = float_check(x)
-         if(base === undefined){return float.$factory(Math.log(x1))}
+         if(base === _b_.None){return float.$factory(Math.log(x1))}
          return float.$factory(Math.log(x1) / Math.log(float_check(base)))
     },
-    log1p: function(x){return float.$factory(Math.log1p(float_check(x)))},
+    log1p: function(x){
+        $B.check_nb_args('log1p', 1, arguments)
+        $B.check_no_kw('log1p', x)
+        return float.$factory(Math.log1p(float_check(x)))
+    },
     log2: function(x){
+        $B.check_nb_args('log2', 1, arguments)
+        $B.check_no_kw('log2', x)
+
         if(isNaN(x)){return float.$factory('nan')}
         if(_b_.$isninf(x)) {throw ValueError('')}
         var x1 = float_check(x)
         if(x1 < 0.0){throw ValueError('')}
         return float.$factory(Math.log(x1) / Math.LN2)
     },
-    log10: function(x) {
+    log10: function(x){
+        $B.check_nb_args('log10', 1, arguments)
+        $B.check_no_kw('log10', x)
+
         return float.$factory(Math.log10(float_check(x)))
     },
-    modf: function(x) {
+    modf: function(x){
+        $B.check_nb_args('modf', 1, arguments)
+        $B.check_no_kw('modf', x)
+
        if(_b_.$isninf(x)){
            return _b_.tuple.$factory([0.0, float.$factory('-inf')])
        }
@@ -494,7 +616,10 @@ var _mod = {
     },
     nan: float.$factory('nan'),
     pi : float.$factory(Math.PI),
-    pow: function(x,y) {
+    pow: function(x, y){
+        $B.check_nb_args('pow', 2, arguments)
+        $B.check_no_kw('pow', x,y)
+
         var x1 = float_check(x)
         var y1 = float_check(y)
         if(y1 == 0){return float.$factory(1)}
@@ -547,17 +672,28 @@ var _mod = {
         return r
     },
     radians: function(x){
+        $B.check_nb_args('radians', 1, arguments)
+        $B.check_no_kw('radians', x)
+
         return float.$factory(float_check(x) * Math.PI / 180)
     },
-    sin : function(x){return float.$factory(Math.sin(float_check(x)))},
+    sin : function(x){
+        $B.check_nb_args('sin ', 1, arguments)
+        $B.check_no_kw('sin ', x)
+        return float.$factory(Math.sin(float_check(x)))},
     sinh: function(x) {
-        //if (_b_.$isinf(x)) return float.$factory('inf');
+        $B.check_nb_args('sinh', 1, arguments)
+        $B.check_no_kw('sinh', x)
+
         var y = float_check(x)
         if(Math.sinh !== undefined){return float.$factory(Math.sinh(y))}
         return float.$factory(
             (Math.pow(Math.E, y) - Math.pow(Math.E, -y)) / 2)
     },
-    sqrt : function(x){
+    sqrt: function(x){
+        $B.check_nb_args('sqrt ', 1, arguments)
+        $B.check_no_kw('sqrt ', x)
+
       var y = float_check(x)
       if(y < 0){throw ValueError("math range error")}
       if(_b_.$isinf(y)){return float.$factory('inf')}
@@ -566,16 +702,25 @@ var _mod = {
       return float.$factory(_r)
     },
     tan: function(x) {
+        $B.check_nb_args('tan', 1, arguments)
+        $B.check_no_kw('tan', x)
+
         var y = float_check(x)
         return float.$factory(Math.tan(y))
     },
     tanh: function(x) {
+        $B.check_nb_args('tanh', 1, arguments)
+        $B.check_no_kw('tanh', x)
+
         var y = float_check(x)
         if(Math.tanh !== undefined){return float.$factory(Math.tanh(y))}
         return float.$factory((Math.pow(Math.E, y) - Math.pow(Math.E, -y))/
              (Math.pow(Math.E, y) + Math.pow(Math.E, -y)))
     },
     trunc: function(x) {
+        $B.check_nb_args('trunc', 1, arguments)
+        $B.check_no_kw('trunc', x)
+
        try{return getattr(x, '__trunc__')()}catch(err){}
        var x1 = float_check(x)
        if(!isNaN(parseFloat(x1)) && isFinite(x1)){
