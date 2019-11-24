@@ -1,3 +1,4 @@
+<!doctype html>
 <html>
 
 <head>
@@ -687,7 +688,7 @@ the end.
 <div class="example" id="ex14">
     <button id="button14">rotate an element</button>
     <span id="zone14" class="zone">
-        <button style="background-color: red; width: 2em;" id="rot14">&nbsp;</button>
+        <button style="background-color: red; width: 1.5em;" id="rot14">&nbsp;</button>
     </span>
 
     <script type="text/python" id="script14">
@@ -773,7 +774,7 @@ the end.
     <button id="button_mousemove" style="border-width:0;background-color:inherit;">
         move an element with the mouse
     </button>
-    <b style="position: relative;left:140;top:10;font-size:16px; padding: 3px; background-color: #ddd; border-radius: 4px;"
+    <b style="position: relative;left:140px;top:10px;font-size:16px; padding: 3px; background-color: #ddd; border-radius: 4px;"
         id="moving">drag me
     </b>
 
@@ -787,7 +788,6 @@ the end.
             self.moving = moving
             self.is_moving = False
             self.moving.bind("mousedown", self.start)
-            self.moving.bind("mousemove", self.move)
             self.moving.bind("mouseup", self.stop)
             moving.style.cursor = "move"
 
@@ -797,6 +797,7 @@ the end.
             self.is_moving = True
             self.mouse_pos = [event.x, event.y]
             self.elt_pos = [self.moving.left, self.moving.top]
+            document.bind("mousemove", self.move)
             # prevent default behaviour to avoid selecting the moving element
             event.preventDefault()
 
@@ -812,6 +813,7 @@ the end.
         def stop(self, event):
             """When user releases the mouse button, stop moving the element"""
             self.is_moving = False
+            document.unbind("mousemove")
 
     ElementMove(document["moving"])
     </script>
@@ -962,7 +964,7 @@ the end.
     <p>
 
     <span class="comment">
-    By default, <code>print()</code> writes message in the browser console window (to open it, right-click on the page, and click the "Inspect Element" button. 
+    By default, <code>print()</code> writes message in the browser console window (to open it, right-click on the page, and click the "Inspect Element" button.
     Safari users cannot see this option initially.).
     <p>Like in Python, the output can be reset by setting <code>sys.stdout</code> to an object with a method <code>write()</code>.
     </span>
@@ -1167,7 +1169,36 @@ for example in document.get(selector=".example"):
 
 <!-- end copy -->
 
-<script type="text/javascript" src="/src/brython.js"></script>
+<script type="text/javascript" src="../src/brython_builtins.js"></script>
+<script type="text/javascript" src="../src/version_info.js"></script>
+<script type="text/javascript" src="../src/py2js.js"></script>
+<script type="text/javascript" src="../src/loaders.js"></script>
+<script type="text/javascript" src="../src/py_object.js"></script>
+<script type="text/javascript" src="../src/py_type.js"></script>
+<script type="text/javascript" src="../src/py_utils.js"></script>
+<script type="text/javascript" src="../src/py_sort.js"></script>
+<script type="text/javascript" src="../src/py_builtin_functions.js"></script>
+<script type="text/javascript" src="../src/py_exceptions.js"></script>
+<script type="text/javascript" src="../src/py_range_slice.js"></script>
+<script type="text/javascript" src="../src/py_bytes.js"></script>
+<script type="text/javascript" src="../src/py_set.js"></script>
+<script type="text/javascript" src="../src/js_objects.js"></script>
+<script type="text/javascript" src="../src/stdlib_paths.js"></script>
+<script type="text/javascript" src="../src/py_import.js"></script>
+<script type="text/javascript" src="../src/unicode_data.js"></script>
+<script type="text/javascript" src="../src/py_string.js"></script>
+<script type="text/javascript" src="../src/py_int.js"></script>
+<script type="text/javascript" src="../src/py_long_int.js"></script>
+<script type="text/javascript" src="../src/py_float.js"></script>
+<script type="text/javascript" src="../src/py_complex.js"></script>
+<script type="text/javascript" src="../src/py_dict.js"></script>
+<script type="text/javascript" src="../src/py_list.js"></script>
+<script type="text/javascript" src="../src/py_generator.js"></script>
+<script type="text/javascript" src="../src/py_dom.js"></script>
+
+<script type="text/javascript" src="../src/builtin_modules.js"></script>
+<script type="text/javascript" src="../src/py_import_hooks.js"></script>
+<script type="text/javascript" src="../src/async.js"></script>
 
 <script src="/src/brython_stdlib.js"></script>
 
