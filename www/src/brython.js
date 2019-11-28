@@ -95,8 +95,8 @@ return js}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.1"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2019-11-28 14:16:32.799230"
-__BRYTHON__.timestamp=1574946992798
+__BRYTHON__.compiled_date="2019-11-28 14:52:24.870186"
+__BRYTHON__.timestamp=1574949144854
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -2780,6 +2780,9 @@ var elt=parsed_fstring[i].replace(re,"\\'")
 .replace(/\n/g,"\\n")
 elts.push("'"+elt+"'")}}
 return elts.join(' + ')}
+function prepare(value){value=value.replace(/\n/g,'\\n\\\n')
+value=value.replace(/\\U([A-Fa-f0-9]{8})/gm,function(mo){return String.fromCharCode("0x"+mo.slice(2))})
+return value}
 for(var i=0;i < this.tree.length;i++){if(this.tree[i].type=="call"){
 var js='(function(){throw TypeError.$factory("'+"'str'"+
 ' object is not callable")}())'
@@ -2787,7 +2790,7 @@ return js}else{var value=this.tree[i],is_fstring=Array.isArray(value),is_bytes=f
 if(!is_fstring){is_bytes=value.charAt(0)=='b'}
 if(type==null){type=is_bytes
 if(is_bytes){res+='bytes.$factory('}}else if(type !=is_bytes){return '$B.$TypeError("can\'t concat bytes to str")'}
-if(!is_bytes){if(is_fstring){res+=fstring(value)}else{res+=value.replace(/\n/g,'\\n\\\n')}}else{res+=value.substr(1).replace(/\n/g,'\\n\\\n')}
+if(!is_bytes){if(is_fstring){res+=fstring(value)}else{res+=prepare(value)}}else{res+=prepare(value.substr(1))}
 if(i < this.tree.length-1){res+='+'}}}
 if(is_bytes){res+=',"ISO-8859-1")'}
 if(res.length==0){res='""'}

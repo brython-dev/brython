@@ -5849,6 +5849,15 @@ var $StringCtx = $B.parser.$StringCtx = function(context,value){
             return elts.join(' + ')
         }
 
+        function prepare(value){
+            value = value.replace(/\n/g,'\\n\\\n')
+            value = value.replace(/\\U([A-Fa-f0-9]{8})/gm,
+                        function(mo){
+                            return String.fromCharCode("0x"+mo.slice(2))
+                        })
+            return value
+        }
+
         for(var i = 0; i < this.tree.length; i++){
             if(this.tree[i].type == "call"){
                 // syntax like "hello"(*args, **kw) raises TypeError
@@ -5875,10 +5884,10 @@ var $StringCtx = $B.parser.$StringCtx = function(context,value){
                     if(is_fstring){
                         res += fstring(value)
                     }else{
-                        res += value.replace(/\n/g,'\\n\\\n')
+                        res += prepare(value)
                     }
                 }else{
-                    res += value.substr(1).replace(/\n/g,'\\n\\\n')
+                    res += prepare(value.substr(1))
                 }
                 if(i < this.tree.length - 1){res += '+'}
             }
