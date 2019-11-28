@@ -95,8 +95,8 @@ return js}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.1"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2019-11-22 13:47:52.944599"
-__BRYTHON__.timestamp=1574426872944
+__BRYTHON__.compiled_date="2019-11-28 14:16:32.799230"
+__BRYTHON__.timestamp=1574946992798
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -8794,8 +8794,7 @@ return JSObject.$factory(res)}else if(typeof rank=="string" &&
 typeof self.js.getNamedItem=='function'){var res=JSObject.$factory(self.js.getNamedItem(rank))
 if(res===undefined){throw _b_.KeyError.$factory(rank)}
 return res}}
-try{return getattr(self.js,'__getitem__')(rank)}
-catch(err){if(self.js[rank]!==undefined){return JSObject.$factory(self.js[rank])}
+try{return $B.$call($B.$getattr(self.js,'__getitem__'))(rank)}catch(err){if(self.js[rank]!==undefined){return JSObject.$factory(self.js[rank])}
 throw _b_.KeyError.$factory(rank)}}
 var JSObject_iterator=$B.make_iterator_class('JS object iterator')
 JSObject.__iter__=function(self){var items=[]

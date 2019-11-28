@@ -428,8 +428,9 @@ JSObject.__getitem__ = function(self, rank){
             return res
         }
     }
-    try{return getattr(self.js, '__getitem__')(rank)}
-    catch(err){
+    try{
+        return $B.$call($B.$getattr(self.js, '__getitem__'))(rank)
+    }catch(err){
         if(self.js[rank] !== undefined){
             return JSObject.$factory(self.js[rank])
         }

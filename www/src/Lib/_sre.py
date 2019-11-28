@@ -273,6 +273,9 @@ class SRE_Match:
         else:
             self.lastgroup = None
 
+    def __getitem__(self, rank):
+        return self.group(rank)
+
     def _create_regs(self, state):
         """Creates a tuple of index pairs representing matched groups."""
         regs = [(state.start, state.string_position)]

@@ -554,7 +554,9 @@ $B.$getitem = function(obj, item){
     }
 
     var gi = $B.$getattr(obj, "__getitem__", _b_.None)
-    if(gi !== _b_.None){return gi(item)}
+    if(gi !== _b_.None){
+        return gi(item)
+    }
 
     throw _b_.TypeError.$factory("'" + $B.class_name(obj) +
         "' object is not subscriptable")

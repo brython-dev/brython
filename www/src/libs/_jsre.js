@@ -175,6 +175,10 @@ var $module=(function($B){
         var jsmatch = string.match(jsp)
         if(jsmatch === null){return None}
         var mo = new Object()
+        mo.item = function(rank){
+            return jsmatch[rank]
+        }
+        mo.length = jsmatch.length
         mo.group = function(){
             var res = []
             for(var i = 0, _len_i = arguments.length; i < _len_i; i++){

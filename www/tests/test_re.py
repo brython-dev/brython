@@ -69,4 +69,9 @@ assert _m.group('diag') is None and _m.group('sign') is None
 _m = _parser("-Inf")
 assert _m.group('diag') is None and _m.group('sign') == '-'
 
+# issue 1257
+regex = re.compile('(a|b)')
+assert regex.match("a").group(0) =="a"
+assert regex.match("a")[0] == "a"
+
 print('all tests ok..')
