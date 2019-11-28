@@ -205,6 +205,8 @@ def release_cell(ev):
 
 def move_cell(ev):
     """Handler for mouse or finger move"""
+    ev.preventDefault()
+    ev.stopPropagation()
 
     if rect is None:
         return
@@ -223,12 +225,12 @@ def move_cell(ev):
     # Move vertically if allowed
     if (allow == 'up' and Y < Y0) or (allow == 'down' and Y > Y0):
         for i, (cell, (x0, y0)) in enumerate(zip(moving,coords)):
-            cell.top = y0 +  Y- Y0
+            cell.top = round(y0 + Y - Y0)
 
     # Else move horizontally
     elif (allow == 'right' and X > X0) or (allow == 'left' and X < X0):
         for i, (cell, (x0, y0)) in enumerate(zip(moving, coords)):
-            cell.left = x0 + X - X0
+            cell.left = round(x0 + X - X0)
 
 grid = []               # grid[row][cell] is the cell at specified row and column
 cells = []              # list of cells
