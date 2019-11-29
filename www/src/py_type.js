@@ -397,9 +397,8 @@ type.__getattribute__ = function(klass, attr){
                     return res.fget(klass)
                 }
                 if(typeof res == "function"){
-                    var meta_method = function(){
-                        return res(klass, ...arguments)
-                    }
+                    // insert klass as first argument
+                    var meta_method = res.bind(null, klass)
                     meta_method.__class__ = $B.method
                     meta_method.$infos = {
                         __self__: klass,
@@ -769,19 +768,16 @@ var $instance_creator = $B.$instance_creator = function(klass){
         if(klass.hasOwnProperty("__new__")){
             if(klass.hasOwnProperty("__init__")){
                 factory = function(){
-                    var args = []
-                    for(var i = 0; i < arguments.length; i++){
-                        args.push(arguments[i])
-                    }
-                    var obj = klass.__new__.apply(null, [klass].concat(args))
-                    klass.__init__.apply(null, [obj].concat(args))
+                    // Call __new__ with klass as first argument
+                    var obj = klass.__new__.bind(null, klass).
+                                            apply(null, arguments)
+                    klass.__init__.bind(null, obj).apply(null, arguments)
                     return obj
                 }
             }else{
                 factory = function(){
-                    var args = [klass]
-                    for(var i = 0; i < arguments.length; i++){args.push(arguments[i])}
-                    return klass.__new__.apply(null, args)
+                    return klass.__new__.bind(null, klass).
+                                         apply(null, arguments)
                 }
             }
         }else if(klass.hasOwnProperty("__init__")){
@@ -790,9 +786,7 @@ var $instance_creator = $B.$instance_creator = function(klass){
                     __class__: klass,
                     __dict__: _b_.dict.$factory()
                 }
-                var args = [obj]
-                for(var i = 0; i < arguments.length; i++){args.push(arguments[i])}
-                klass.__init__.apply(null, args)
+                klass.__init__.bind(null, obj).apply(null, arguments)
                 return obj
             }
         }else{
@@ -810,9 +804,7 @@ var $instance_creator = $B.$instance_creator = function(klass){
     }else{
         call_func = _b_.type.__getattribute__(metaclass, "__call__")
         var factory = function(){
-            var args = [klass]
-            for(var i = 0; i < arguments.length; i++){args.push(arguments[i])}
-            return call_func.apply(null, args)
+            return call_func.bind(null, klass).apply(null, arguments)
         }
     }
     factory.__class__ = $B.Function
@@ -862,7 +854,7 @@ $B.set_func_names(member_descriptor, "builtins")
 var method = $B.method = $B.make_class("method",
     function(func, cls){
         var f = function(){
-            return $B.$call(func)(cls, ...arguments)
+            return $B.$call(func).bind(null, cls).apply(null, arguments)
         }
         f.__class__ = method
         f.$infos = func.$infos

@@ -254,25 +254,18 @@ object.__getattribute__ = function(obj, attr){
                 // instance method object
                 if(res.$type == "staticmethod"){return res}
                 else{
-                    var self = res.__class__ === $B.method ? klass : obj
-                    function method(){
-                        var args = [self]
-                        for(var i = 0; i < arguments.length; i++){
-                            args.push(arguments[i])
-                        }
-                        return res.apply(null, args)
-                    }
+                    var self = res.__class__ === $B.method ? klass : obj,
+                        method = res.bind(null, self) // add self as first argument
                     method.__class__ = $B.method
                     method.__get__ = function(obj, cls){
-                        var clmethod = function(){
-                            return res(cls, ...arguments)
-                        }
+                        var clmethod = res.bind(null, cls)
                         clmethod.__class__ = $B.method
                         clmethod.$infos = {
                             __self__: cls,
                             __func__: res,
                             __name__: res.$infos.__name__,
-                            __qualname__: cls.$infos.__name__ + "." + res.$infos.__name__
+                            __qualname__: cls.$infos.__name__ + "." +
+                                res.$infos.__name__
                         }
                         return clmethod
                     }

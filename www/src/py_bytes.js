@@ -1398,7 +1398,7 @@ var encode = $B.encode = function(){
     var t = [],
         pos = 0,
         enc = normalise(encoding)
-    
+
     switch(enc) {
         case "utf-8":
         case "utf_8":

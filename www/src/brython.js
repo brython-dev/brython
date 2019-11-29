@@ -95,8 +95,8 @@ return js}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,1,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.1"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2019-11-28 14:52:24.870186"
-__BRYTHON__.timestamp=1574949144854
+__BRYTHON__.compiled_date="2019-11-29 11:11:41.784266"
+__BRYTHON__.timestamp=1575022301784
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5344,14 +5344,12 @@ if($test){console.log("res",res,"res1",res1)}
 if(typeof res1=="function"){
 if(res1.__class__===$B.method){return res}
 if(res.$type=="staticmethod"){return res}
-else{var self=res.__class__===$B.method ? klass :obj
-function method(){var args=[self]
-for(var i=0;i < arguments.length;i++){args.push(arguments[i])}
-return res.apply(null,args)}
+else{var self=res.__class__===$B.method ? klass :obj,method=res.bind(null,self)
 method.__class__=$B.method
-method.__get__=function(obj,cls){var clmethod=function(){return res(cls,...arguments)}
+method.__get__=function(obj,cls){var clmethod=res.bind(null,cls)
 clmethod.__class__=$B.method
-clmethod.$infos={__self__:cls,__func__:res,__name__:res.$infos.__name__,__qualname__:cls.$infos.__name__+"."+res.$infos.__name__}
+clmethod.$infos={__self__:cls,__func__:res,__name__:res.$infos.__name__,__qualname__:cls.$infos.__name__+"."+
+res.$infos.__name__}
 return clmethod}
 method.__get__.__class__=$B.method_wrapper
 method.__get__.$infos=res.$infos
@@ -5592,7 +5590,8 @@ for(var i=0;i < meta_mro.length;i++){var res=meta_mro[i][attr]
 if(res !==undefined){break}}}
 if(res !==undefined){if($test){console.log("found in meta",res,typeof res)}
 if(res.__class__===_b_.property){return res.fget(klass)}
-if(typeof res=="function"){var meta_method=function(){return res(klass,...arguments)}
+if(typeof res=="function"){
+var meta_method=res.bind(null,klass)
 meta_method.__class__=$B.method
 meta_method.$infos={__self__:klass,__func__:res,__name__:attr,__qualname__:klass.$infos.__name__+"."+attr,__module__:res.$infos ? res.$infos.__module__ :""}
 return meta_method}}
@@ -5707,22 +5706,17 @@ if(klass.$instanciable !==undefined){return function(){throw _b_.TypeError.$fact
 "Can't instantiate abstract class interface "+
 "with abstract methods")}}
 var metaclass=klass.__class__,call_func,factory
-if(metaclass===_b_.type &&(!klass.__bases__ ||klass.__bases__.length==0)){if(klass.hasOwnProperty("__new__")){if(klass.hasOwnProperty("__init__")){factory=function(){var args=[]
-for(var i=0;i < arguments.length;i++){args.push(arguments[i])}
-var obj=klass.__new__.apply(null,[klass].concat(args))
-klass.__init__.apply(null,[obj].concat(args))
-return obj}}else{factory=function(){var args=[klass]
-for(var i=0;i < arguments.length;i++){args.push(arguments[i])}
-return klass.__new__.apply(null,args)}}}else if(klass.hasOwnProperty("__init__")){factory=function(){var obj={__class__:klass,__dict__:_b_.dict.$factory()}
-var args=[obj]
-for(var i=0;i < arguments.length;i++){args.push(arguments[i])}
-klass.__init__.apply(null,args)
+if(metaclass===_b_.type &&(!klass.__bases__ ||klass.__bases__.length==0)){if(klass.hasOwnProperty("__new__")){if(klass.hasOwnProperty("__init__")){factory=function(){
+var obj=klass.__new__.bind(null,klass).
+apply(null,arguments)
+klass.__init__.bind(null,obj).apply(null,arguments)
+return obj}}else{factory=function(){return klass.__new__.bind(null,klass).
+apply(null,arguments)}}}else if(klass.hasOwnProperty("__init__")){factory=function(){var obj={__class__:klass,__dict__:_b_.dict.$factory()}
+klass.__init__.bind(null,obj).apply(null,arguments)
 return obj}}else{factory=function(){if(arguments.length > 0){if(arguments.length==1 && arguments[0].$nat &&
 Object.keys(arguments[0].kw).length==0){}else{throw _b_.TypeError.$factory("object() takes no parameters")}}
 return{__class__:klass,__dict__:_b_.dict.$factory()}}}}else{call_func=_b_.type.__getattribute__(metaclass,"__call__")
-var factory=function(){var args=[klass]
-for(var i=0;i < arguments.length;i++){args.push(arguments[i])}
-return call_func.apply(null,args)}}
+var factory=function(){return call_func.bind(null,klass).apply(null,arguments)}}
 factory.__class__=$B.Function
 factory.$infos={__name__:klass.$infos.__name__,__module__:klass.$infos.__module__}
 return factory}
@@ -5736,7 +5730,7 @@ var member_descriptor=$B.make_class("member_descriptor",function(attr,cls){retur
 member_descriptor.__str__=member_descriptor.__repr__=function(self){return "<member '"+self.attr+"' of '"+self.cls.$infos.__name__+
 "' objects>"}
 $B.set_func_names(member_descriptor,"builtins")
-var method=$B.method=$B.make_class("method",function(func,cls){var f=function(){return $B.$call(func)(cls,...arguments)}
+var method=$B.method=$B.make_class("method",function(func,cls){var f=function(){return $B.$call(func).bind(null,cls).apply(null,arguments)}
 f.__class__=method
 f.$infos=func.$infos
 return f}
@@ -6714,10 +6708,7 @@ if(klass.$descriptors && klass.$descriptors[attr]!==undefined){return klass[attr
 if(typeof klass[attr]=='function'){var func=klass[attr]
 if(attr=='__new__'){func.$type="staticmethod"}
 if(func.$type=="staticmethod"){return func}
-var self=klass[attr].__class__==$B.method ? klass :obj
-function method(){var args=[self]
-for(var i=0,len=arguments.length;i < len;i++){args.push(arguments[i])}
-return klass[attr].apply(null,args)}
+var self=klass[attr].__class__==$B.method ? klass :obj,method=klass[attr].bind(null,self)
 method.__class__=$B.method
 method.$infos={__func__:func,__name__:attr,__self__:self,__qualname__:klass.$infos.__name__+"."+attr}
 return method}else if(klass[attr]!==undefined){return klass[attr]}

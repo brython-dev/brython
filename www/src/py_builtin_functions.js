@@ -1064,14 +1064,8 @@ $B.$getattr = function(obj, attr, _default){
 
             if(func.$type == "staticmethod"){return func}
 
-            var self = klass[attr].__class__ == $B.method ? klass : obj
-            function method(){
-                var args = [self]
-                for(var i = 0, len = arguments.length; i < len; i++){
-                    args.push(arguments[i])
-                }
-                return klass[attr].apply(null, args)
-            }
+            var self = klass[attr].__class__ == $B.method ? klass : obj,
+                method = klass[attr].bind(null, self)
             method.__class__ = $B.method
             method.$infos = {
                 __func__: func,
