@@ -34,7 +34,7 @@ Quelques particularités liées au contexte d'exécution dans un navigateur :
   fonctions du module **browser.timer** telles que `set_timeout()` ou
   `set_interval()`)
  - la fonction intégrée `input()` est simulée par la fonction Javascript
-  `prompt()`. Un exemple dans la galerie montre comment simuler la fonction 
+  `prompt()`. Un exemple dans la galerie montre comment simuler la fonction
   input dans une boite de dialogue personnalisée
 
 - pour la même raison, et aussi parce que le navigateur possède une boucle
@@ -70,9 +70,18 @@ window.print(text)
   méthode `__del__()` n'est pas appelée quand une instance de classe n'est
   plus référencée.
 
-- le parseur JSON réutilise celui de Javascript ; à cause de cela, les
-  nombres réels égaux à des entiers (par exemple 1.0) sont convertis en
-  entiers dans la sérialisation par `json.dumps()`.
+Bibliothèque standard
+---------------------
+Brython est fourni avec une partie de la bibliothèque standard de Python.
+
+Certains des modules qui sont écrits en C dans la distribution CPython ont été
+écrits en Javascript dans la distribution Brython (`math`, `random`,
+`unicodedata`...). Pour d'autres (le module `re` ou le package `json` par 
+exemple), une version en pur Python est fournie (elle est moins rapide !).
+
+Le package `xml` n'est pas fourni, parce que celui de la distribution
+CPython utilise un module en C (`pyexpat`) qui n'est disponible ni en
+Javascript ni en pur Python.
 
 Valeur intégrée `__name__`
 --------------------------

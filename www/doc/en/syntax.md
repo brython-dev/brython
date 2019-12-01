@@ -59,9 +59,18 @@ Here are a few features and limitations imposed by the browser and Javascript :
   Brython doesn't manage reference counting like CPython. Therefore, method
   `__del__()` is not called when a class instance is no more referenced.
 
-- the JSON parser uses that of Javascript ; because of that, the real
-  numbers that are equal to integers (eg 1.0) are converted into integers
-  by `json.dumps()`.
+Standard library
+----------------
+Brython is shipped with a part of the CPython standard library.
+
+Some of the modules that are written in C in CPython standard library have
+been written in Javascript in Brython distribution (`math`, `unicodedata`...).
+For others (module `re` or package `json` for instance), a pure-Python version
+is provided (it is not as fast !).
+
+The `xml` package is not provided because that of the CPython distribution
+uses a C module (`pyexpat`) which is available neither in Javascript nor in
+pure Python.
 
 Built-in value `__name__`
 -------------------------
