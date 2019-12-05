@@ -193,7 +193,7 @@ def run():
         first = 'Changes in Brython version {}'.format(vname)
         with open(os.path.join(pdir, 'setup', 'changelog.txt')) as f:
             input_changelog_data_string = f.read()
-        with open(os.path.join(pdir, 'setup', 'data',
+        with open(os.path.join(release_dir, 
                 'changelog_{}.txt'.format(vname)), 'w') as out:
             out.write('%s\n' % first)
             out.write('%s\n\n' % ('=' * len(first)))
