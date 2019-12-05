@@ -2554,7 +2554,7 @@ function $url_open(){
                 try{
                     var status = this.status
                     if(status == 404){
-                        $res = _b_.FileNotFoundError(file)
+                        $res = _b_.FileNotFoundError.$factory(file)
                     }else if(status != 200){
                         $res = _b_.IOError.$factory('Could not open file ' +
                             file + ' : status ' + status)
