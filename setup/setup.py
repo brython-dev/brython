@@ -89,7 +89,7 @@ if command == "sdist":
 setup(
     name='brython',
 
-    version='3.8.0',
+    version='3.8.1',
     description='Brython is an implementation of Python 3 running in the browser',
 
     long_description=LONG_DESCRIPTION,
