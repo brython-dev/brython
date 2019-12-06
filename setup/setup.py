@@ -7,6 +7,10 @@ import sys
 
 this_dir = os.getcwd()
 root_dir = os.path.dirname(this_dir)
+release_dir = os.path.join(root_dir, "releases")
+
+with open('README.rst', encoding='utf-8') as fobj:
+    LONG_DESCRIPTION = fobj.read()
 
 # source of index.html
 html = """<!doctype html>
@@ -35,11 +39,6 @@ if command == "sdist":
     # before creating the distribution, copy files from other locations in
     # the repository
     print("copying files...")
-    release_dir = os.path.join(root_dir, "releases")
-
-    with open(os.path.join(release_dir, 'README.rst'), encoding='utf-8') as fobj:
-        LONG_DESCRIPTION = fobj.read()
-
     src_dir = os.path.join(root_dir, "www", "src")
     brython_dir = os.path.join(this_dir, "brython")
 
@@ -90,7 +89,7 @@ if command == "sdist":
 setup(
     name='brython',
 
-    version='3.8.2',
+    version='3.8.1',
     description='Brython is an implementation of Python 3 running in the browser',
 
     long_description=LONG_DESCRIPTION,
