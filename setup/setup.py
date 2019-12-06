@@ -9,8 +9,30 @@ this_dir = os.getcwd()
 root_dir = os.path.dirname(this_dir)
 release_dir = os.path.join(root_dir, "releases")
 
-with open('README.rst', encoding='utf-8') as fobj:
-    LONG_DESCRIPTION = fobj.read()
+
+LONG_DESCRIPTION = \
+"""With Brython you can write browser programs in Python instead of Javascript,
+by inserting Python code in an HTML page by::
+
+    <script type="text/python">
+    ...
+    </script>
+
+Usage::
+
+    pip install brython
+
+Then in an empty folder::
+
+    python -m brython --install
+
+or in a folder with older versions already present::
+
+    python -m brython --update
+
+The package includes a page **demo.html** with examples of use. For more
+information see the `Brython site <http://brython.info>`_.
+"""
 
 # source of index.html
 html = """<!doctype html>
