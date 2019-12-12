@@ -3815,7 +3815,7 @@ var $FromCtx = $B.parser.$FromCtx = function(context){
 
         // FIXME : Replacement still needed ?
         var mod_name = this.module.replace(/\$/g, '')
-        res[pos++] = '$B.$import("'
+        res[pos++] = 'var module = $B.$import("'
         res[pos++] = mod_name + '",["'
         res[pos++] = this.names.join('","') + '"], {'
         var sep = ''
@@ -3830,9 +3830,9 @@ var $FromCtx = $B.parser.$FromCtx = function(context){
             // Set attribute to indicate that the scope has a
             // 'from X import *' : this will make name resolution harder :-(
             scope.blurred = true
-            res[pos++] = '\n' + head + 'for(var $attr in $B.imported["' +
-                mod_name + '"]){if($attr.charAt(0) !== "_" && $attr.charAt(0) !== "$")' +
-                '{$locals[$attr] = $B.imported["' + mod_name + '"][$attr]}};'
+            res[pos++] = '\n' + head + 'for(var attr in module' +
+                '){if(attr.charAt(0) !== "_" && attr.charAt(0) !== "$")' +
+                '{$locals[attr] = module[attr]}};'
         }else{
             this.names.forEach(function(name){
                 module.imports[this.module + '.' + name] = true
@@ -9916,6 +9916,49 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
     return root
 }
 
+$B.set_import_paths = function(){
+    // Set $B.meta_path, the list of finders to use for imports
+    //
+    // The original list in $B.meta_path is made of 3 finders defined in
+    // py_import.js :
+    // - finder_VFS : in the Virtual File System : a Javascript object with
+    //   source of the standard distribution
+    // - finder_static_stlib : use the script stdlib_path.js to identify the
+    //   packages and modules in the standard distribution
+    // - finder_path : search module at different urls
+
+    var meta_path = [],
+        path_hooks = []
+
+    // $B.use_VFS is set to true if the script brython_stdlib.js or
+    // brython_modules.js has been loaded in the page. In this case we use the
+    // Virtual File System (VFS)
+    if($B.use_VFS){
+        meta_path.push($B.$meta_path[0])
+        //path_hooks.push($B.$path_hooks[0])
+    }
+
+    if($B.$options.static_stdlib_import !== false && $B.protocol != "file"){
+        // Add finder using static paths
+        meta_path.push($B.$meta_path[1])
+        // Remove /Lib and /libs in sys.path :
+        // if we use the static list and the module
+        // was not find in it, it's no use searching twice in the same place
+        if($B.path.length > 3) {
+            $B.path.shift()
+            $B.path.shift()
+        }
+    }
+
+    // Use the defaut finder using sys.path if protocol is not file://
+    if($B.protocol !== "file"){
+        meta_path.push($B.$meta_path[2])
+        path_hooks.push($B.$path_hooks[0])
+    }
+    $B.meta_path = meta_path
+    $B.path_hooks = path_hooks
+}
+
 var brython = $B.parser.brython = function(options){
     // By default, only set debug level
     if(options === undefined){options = {'debug': 0}}
@@ -9948,46 +9991,7 @@ var brython = $B.parser.brython = function(options){
 
     $B.$options = options
 
-    // Set $B.meta_path, the list of finders to use for imports
-    //
-    // The original list in $B.meta_path is made of 3 finders defined in
-    // py_import.js :
-    // - finder_VFS : in the Virtual File System : a Javascript object with
-    //   source of the standard distribution
-    // - finder_static_stlib : use the script stdlib_path.js to identify the
-    //   packages and modules in the standard distribution
-    // - finder_path : search module at different urls
-
-    var meta_path = [],
-        path_hooks = []
-
-    // $B.use_VFS is set to true if the script brython_stdlib.js or
-    // brython_modules.js has been loaded in the page. In this case we use the
-    // Virtual File System (VFS)
-    if($B.use_VFS){
-        meta_path.push($B.$meta_path[0])
-        //path_hooks.push($B.$path_hooks[0])
-    }
-
-    if(options.static_stdlib_import !== false && $B.protocol != "file"){
-        // Add finder using static paths
-        meta_path.push($B.$meta_path[1])
-        // Remove /Lib and /libs in sys.path :
-        // if we use the static list and the module
-        // was not find in it, it's no use searching twice in the same place
-        if($B.path.length > 3) {
-            $B.path.shift()
-            $B.path.shift()
-        }
-    }
-
-    // Use the defaut finder using sys.path if protocol is not file://
-    if($B.protocol !== "file"){
-        meta_path.push($B.$meta_path[2])
-        path_hooks.push($B.$path_hooks[0])
-    }
-    $B.meta_path = meta_path
-    $B.path_hooks = path_hooks
+    $B.set_import_paths()
 
     // URL of the script where function brython() is called
     var $href = $B.script_path = _window.location.href,
