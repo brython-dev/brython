@@ -1,23 +1,25 @@
 import simple
 
 class Simple2:
+    
     def __init__(self):
         self.info = "SimpleClass2"
 
 class Simple3(simple.Simple):
-  def __init__(self):
-      simple.Simple.__init__(self)
+
+    def __init__(self):
+        simple.Simple.__init__(self)
 
 text = "text in simple"
 
 assert simple.text == text
 
-_s=simple.Simple()
-_s3=Simple3()
-assert _s.info==_s3.info
+_s = simple.Simple()
+_s3 = Simple3()
+assert _s.info == _s3.info
 
 import recursive_import
-_s=recursive_import.myClass()
+_s = recursive_import.myClass()
 
 assert str(_s) == "success!"
 
@@ -37,5 +39,15 @@ delegate = Delegator([])
 # issue 768
 import modtest
 
-print('passed all tests')
+# issue 1261
+import colorsys
+colorsys.ONE_THIRD # no AttributeError
 
+from colorsys import *
+try:
+    ONE_THIRD
+    raise Exception("should have raised NameError")
+except NameError:
+    pass
+
+print('passed all tests')

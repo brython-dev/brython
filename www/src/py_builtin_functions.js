@@ -1139,7 +1139,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var cname = klass.$infos.__name__
     if(is_class){cname = obj.$infos.__name__}
-
+                
     attr_error(rawname, cname)
 }
 

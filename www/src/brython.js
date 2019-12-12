@@ -1,6 +1,6 @@
 // brython.js brython.info
 // version [3, 8, 0, 'final', 0]
-// implementation [3, 8, 2, 'dev', 0]
+// implementation [3, 8, 5, 'dev', 0]
 // version compiled from commented, indented source files at
 // github.com/brython-dev/brython
 var __BRYTHON__=__BRYTHON__ ||{}
@@ -90,13 +90,17 @@ if(!$B.use_VFS){$B.meta_path.shift()}
 if(script_id===undefined){script_id="__main__"}
 var root=__BRYTHON__.py2js(src,script_id,script_id),js=root.to_js()
 js="(function() {\n var $locals_"+script_id+" = {}\n"+js+"\n}())"
-return js}})(__BRYTHON__)
+return js}
+window.py=function(src){
+var root=$B.py2js(src[0],"script","script"),js=root.to_js()
+$B.set_import_paths()
+new Function("$locals_script",js)({})}})(__BRYTHON__)
 ;
-__BRYTHON__.implementation=[3,8,2,'dev',0]
-__BRYTHON__.__MAGIC__="3.8.2"
+__BRYTHON__.implementation=[3,8,5,'dev',0]
+__BRYTHON__.__MAGIC__="3.8.5"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2019-12-06 20:44:48.249999"
-__BRYTHON__.timestamp=1575661488249
+__BRYTHON__.compiled_date="2019-12-12 21:52:41.285101"
+__BRYTHON__.timestamp=1576183961285
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -1874,7 +1878,7 @@ _mod=_mod.substr(1)}else{break}}
 if(_mod){packages.push(_mod)}
 this.module=packages.join('.')
 var mod_name=this.module.replace(/\$/g,'')
-res[pos++]='$B.$import("'
+res[pos++]='var module = $B.$import("'
 res[pos++]=mod_name+'",["'
 res[pos++]=this.names.join('","')+'"], {'
 var sep=''
@@ -1883,9 +1887,9 @@ sep=','}
 res[pos++]='}, {}, true);'
 if(this.names[0]=='*'){
 scope.blurred=true
-res[pos++]='\n'+head+'for(var $attr in $B.imported["'+
-mod_name+'"]){if($attr.charAt(0) !== "_" && $attr.charAt(0) !== "$")'+
-'{$locals[$attr] = $B.imported["'+mod_name+'"][$attr]}};'}else{this.names.forEach(function(name){module.imports[this.module+'.'+name]=true
+res[pos++]='\n'+head+'for(var attr in module'+
+'){if(attr.charAt(0) !== "_" && attr.charAt(0) !== "$")'+
+'{$locals[attr] = module[attr]}};'}else{this.names.forEach(function(name){module.imports[this.module+'.'+name]=true
 res[pos++]='\n'+head+'$locals["'+
 (this.aliases[name]||name)+'"] = $B.$getattr($B.imported["'+
 mod_name+'"], "'+name+'");'},this)}
@@ -4990,6 +4994,17 @@ if($B.debug > 2){if(module==locals_id){console.log('module '+module+' translated
 (t1-t0)+' ms')}}
 $B.compile_time+=t1-t0
 return root}
+$B.set_import_paths=function(){
+var meta_path=[],path_hooks=[]
+if($B.use_VFS){meta_path.push($B.$meta_path[0])}
+if($B.$options.static_stdlib_import !==false && $B.protocol !="file"){
+meta_path.push($B.$meta_path[1])
+if($B.path.length > 3){$B.path.shift()
+$B.path.shift()}}
+if($B.protocol !=="file"){meta_path.push($B.$meta_path[2])
+path_hooks.push($B.$path_hooks[0])}
+$B.meta_path=meta_path
+$B.path_hooks=path_hooks}
 var brython=$B.parser.brython=function(options){
 if(options===undefined){options={'debug':0}}
 if(typeof options=='number'){options={'debug':options}}
@@ -5003,16 +5018,7 @@ if(options.indexedDB===undefined){options.indexedDB=true}
 if(options.static_stdlib_import===undefined){options.static_stdlib_import=true}
 $B.static_stdlib_import=options.static_stdlib_import
 $B.$options=options
-var meta_path=[],path_hooks=[]
-if($B.use_VFS){meta_path.push($B.$meta_path[0])}
-if(options.static_stdlib_import !==false && $B.protocol !="file"){
-meta_path.push($B.$meta_path[1])
-if($B.path.length > 3){$B.path.shift()
-$B.path.shift()}}
-if($B.protocol !=="file"){meta_path.push($B.$meta_path[2])
-path_hooks.push($B.$path_hooks[0])}
-$B.meta_path=meta_path
-$B.path_hooks=path_hooks
+$B.set_import_paths()
 var $href=$B.script_path=_window.location.href,$href_elts=$href.split('/')
 $href_elts.pop()
 if($B.isWebWorker ||$B.isNode){$href_elts.pop()}
@@ -5231,7 +5237,8 @@ new Function("$locals_"+script_id,script.js)(module)}catch(err){
 if(err.$py_error===undefined){console.log('Javascript error',err)
 if($B.is_recursion_error(err)){err=_b_.RecursionError.$factory("too much recursion")}else{$B.print_stack()
 err=_b_.RuntimeError.$factory(err+'')}}
-if($B.debug > 1){console.log("handle error",err.__class__,err.args)}
+if($B.debug > 1){console.log("handle error",err.__class__,err.args,err.$stack)
+console.log($B.frames_stack.slice())}
 $B.handle_error(err)}
 loop()}else{
 func.apply(null,args)}}
@@ -5243,7 +5250,8 @@ if(name=='SyntaxError' ||name=='IndentationError'){var offset=err.args[3]
 trace+='\n    '+' '.repeat(offset)+'^'+
 '\n'+name+': '+err.args[0]}else{trace+='\n'+name+': '+err.args}}else{console.log(err)
 trace=err+""}
-try{_b_.getattr($B.stderr,'write')(trace)}catch(print_exc_err){console.log(trace)}
+try{$B.$getattr($B.stderr,'write')(trace)
+try{$B.$getattr($B.stderr,'flush')()}catch(err){console.log(err)}}catch(print_exc_err){console.log(trace)}
 throw err}
 function required_stdlib_imports(imports,start){
 var nb_added=0
@@ -9210,7 +9218,8 @@ throw _b_.ImportError.$factory(
 if($B.debug > 1){console.log($err3)
 console.log($B.last($B.frames_stack))}
 throw _b_.ImportError.$factory(
-"cannot import name '"+name+"'")}}}}}}
+"cannot import name '"+name+"'")}}}}
+return locals}}
 $B.$path_hooks=[url_hook]
 $B.$meta_path=[finder_VFS,finder_stdlib_static,finder_path]
 $B.finders={VFS:finder_VFS,stdlib_static:finder_stdlib_static,path:finder_path}

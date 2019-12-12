@@ -986,7 +986,6 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                         __import__ :
                         $B.$getattr(__import__, "__call__"),
         modobj = importer(mod_name, globals, undefined, fromlist, 0)
-
     // Apply bindings upon local namespace
     if(! fromlist || fromlist.length == 0){
         // import mod_name [as alias]
@@ -1065,6 +1064,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                 }
             }
         }
+        return locals
     }
 }
 
