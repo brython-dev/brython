@@ -350,7 +350,8 @@ var loop = $B.loop = function(){
                 }
             }
             if($B.debug > 1){
-                console.log("handle error", err.__class__, err.args)
+                console.log("handle error", err.__class__, err.args, err.$stack)
+                console.log($B.frames_stack.slice())
             }
             $B.handle_error(err)
         }
@@ -381,7 +382,12 @@ $B.handle_error = function(err){
         trace = err + ""
     }
     try{
-        _b_.getattr($B.stderr, 'write')(trace)
+        $B.$getattr($B.stderr, 'write')(trace)
+        try{
+            $B.$getattr($B.stderr, 'flush')()
+        }catch(err){
+            console.log(err)
+        }
     }catch(print_exc_err){
         console.log(trace)
     }
