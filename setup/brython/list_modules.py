@@ -4,14 +4,17 @@ by an application.
 Generate a Python package ready for installation and upload on PyPI.
 """
 
+
 import os
 import shutil
 import html.parser
-import ast
 import json
 import traceback
 import sys
 import time
+import io
+import tokenize
+import token
 
 # Template for application setup.py script
 setup = """from setuptools import setup, find_packages
@@ -74,49 +77,128 @@ if args.install:
 
 """
 
-class ImportsFinder(ast.NodeVisitor):
-    """Used to detect all imports in an AST tree and store the results in
-    attribute imports.
-    """
+
+class FromImport:
+
+    def __init__(self):
+        self.source = ''
+        self.type = "from"
+        self.level = 0
+        self.expect = "source"
+        self.names = []
+
+    def __str__(self):
+        return '<import ' + str(self.names) + ' from ' + str(self.source) +'>'
+
+
+class Import:
+
+    def __init__(self):
+        self.type = "import"
+        self.expect = "module"
+        self.modules = []
+
+    def __str__(self):
+        return '<import ' + str(self.modules) + '>'
+
+
+class ImportsFinder:
 
     def __init__(self, *args, **kw):
         self.package = kw.pop("package") or ""
-        ast.NodeVisitor.__init__(self, *args, **kw)
+
+    def find(self, src):
+        """Find imports in source code src. Uses the tokenize module instead
+        of ast in previous Brython version, so that this script can be run
+        with CPython versions older than the one implemented in Brython."""
+        imports = set()
+        importing = None
+        f = io.BytesIO(src.encode("utf-8"))
+        for tok_type, tok_string, *_ in tokenize.tokenize(f.readline):
+            tok_type = token.tok_name[tok_type]
+            if importing is None:
+                if tok_type == "NAME" and tok_string in ["import", "from"]:
+                    context = Import() if tok_string == "import" \
+                        else FromImport()
+                    importing = True
+            else:
+                if tok_type == "NEWLINE":
+                    imports.add(context)
+                    importing = None
+                else:
+                    self.transition(context, tok_type, tok_string)
+
+        if importing:
+            imports.add(context)
+
+        # Transform raw import objects into a list of qualified module names
         self.imports = set()
+        for imp in imports:
+            if isinstance(imp, Import):
+                for mod in imp.modules:
+                    parts = mod.split('.')
+                    while parts:
+                        self.imports.add('.'.join(parts))
+                        parts.pop()
+            elif isinstance(imp, FromImport):
+                source = imp.source
+                if imp.level > 0:
+                    if imp.level == 1:
+                        imp.source = self.package
+                    else:
+                        parts = self.package.split(".")
+                        imp.source = '.'.join(parts[:1 - imp.level])
+                    if source:
+                        imp.source += '.' + source
+                parts = imp.source.split('.')
+                while parts:
+                    self.imports.add('.'.join(parts))
+                    parts.pop()
+                self.imports.add(imp.source)
+                for name in imp.names:
+                    parts = name.split('.')
+                    while parts:
+                        self.imports.add(imp.source + '.' + '.'.join(parts))
+                        parts.pop()
 
-    def visit_Import(self, node):
-        for name in node.names:
-            if name.name != '*':
-                # For "import A.B.C", modules A, A.B and A.B.C must be stored
-                # in self.imports
-                elts = name.name.split('.')
-                while elts:
-                    self.imports.add('.'.join(elts))
-                    elts.pop()
+    def transition(self, context, token, value):
+        if context.type == "from":
+            if token == "NAME":
+                if context.expect == "source":
+                    if value == "import" and context.level:
+                        # syntax "from . import name"
+                        context.expect = "names"
+                    else:
+                        context.source += value
+                        context.expect = "."
+                elif context.expect == "." and value == "import":
+                    context.expect = "names"
+                elif context.expect == "names":
+                    context.names.append(value)
+                    context.expect = ","
+            elif token == "OP":
+                if value == "," and context.expect == ",":
+                    context.expect = "names"
+                elif value == "." and context.expect == ".":
+                    context.source += '.'
+                    context.expect = "source"
+                elif value == "." and context.expect == "source":
+                    context.level += 1
 
-    def visit_ImportFrom(self, node):
-        if node.level == 0:
-            package = ""
-        else:
-            parts = self.package.split('.')
-            for _ in range(node.level - 1):
-                parts.pop()
-            package = '.'.join(parts)
-        if package:
-            package += '.'
-        if node.module is None:
-            # syntax "from .. import name1, name2"
-            self.imports.add(package)
-            for name in node.names:
-                if name.name != '*':
-                    self.imports.add('{}{}'.format(package, name.name))
-        else:
-            # syntax "from .foo import name1, name2"
-            self.imports.add('{}{}'.format(package, node.module))
-            for name in node.names:
-                if name.name != "*":
-                    self.imports.add('{}{}.{}'.format(package, node.module,
-                        name.name))
+        elif context.type == "import":
+            if token == "NAME":
+                if context.expect == "module":
+                    if context.modules and context.modules[-1].endswith("."):
+                        context.modules[-1] += value
+                    else:
+                        context.modules.append(value)
+                    context.expect = '.'
+            elif token == "OP":
+                if context.expect == ".":
+                    if value == ".":
+                        context.modules[-1] += '.'
+                    context.expect = "module"
+
 
 class ModulesFinder:
 
@@ -126,9 +208,8 @@ class ModulesFinder:
 
     def get_imports(self, src, package=None):
         """Get all imports in source code src."""
-        tree = ast.parse(src)
         finder = ImportsFinder(package=package)
-        finder.visit(tree)
+        finder.find(src)
         for module in finder.imports:
             if module in self.modules:
                 continue
@@ -141,11 +222,12 @@ class ModulesFinder:
                         is_package = len(module_dict[module]) == 4
                         if is_package:
                             package = module
-                        else:
+                        elif "." in module:
                             package = module[:module.rfind(".")]
+                        else:
+                            package = ""
                         imports = self.get_imports(module_dict[module][1],
                             package)
-
         return finder.imports
 
     def norm_indent(self, script):
@@ -181,6 +263,7 @@ class ModulesFinder:
                     continue
                 ext = os.path.splitext(filename)[1]
                 if ext.lower() == '.html':
+                    print("script in html", filename)
                     # detect charset
                     charset_detector = CharsetDetector()
                     with open(path, encoding="iso-8859-1") as fobj:
@@ -198,6 +281,7 @@ class ModulesFinder:
                             print('syntax error', path)
                             traceback.print_exc(file=sys.stderr)
                 elif ext.lower() == '.py':
+                    print("python", filename)
                     if filename == "list_modules.py":
                         continue
                     if dirname != self.directory and not is_package(dirname):
@@ -219,6 +303,7 @@ class ModulesFinder:
         """Build brython_modules.js from the list of modules needed by the
         application.
         """
+        print("modules", self.modules, "http" in self.modules)
         vfs = {"$timestamp": int(1000 * time.time())}
         for module in self.modules:
             dico = stdlib if module in stdlib else user_modules
