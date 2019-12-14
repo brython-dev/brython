@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,5,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.5"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2019-12-12 21:52:41.285101"
-__BRYTHON__.timestamp=1576183961285
+__BRYTHON__.compiled_date="2019-12-14 18:51:17.367765"
+__BRYTHON__.timestamp=1576345877367
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5642,7 +5642,7 @@ if(v===undefined){continue}
 class_dict[key]=v
 if(v.__class__){
 var is_descriptor=
-$B.$getattr(v.__class__,"__set__",_b_.None)!==_b_.None
+$B.$getattr(v.__class__,"__get__",_b_.None)!==_b_.None
 if(is_descriptor){var set_name=$B.$getattr(v.__class__,"__set_name__",_b_.None)
 if(set_name !==_b_.None){set_name(v,v.__class__,key)}}}
 if(typeof v=="function"){v.$infos.$class=class_dict

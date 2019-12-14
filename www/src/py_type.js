@@ -555,7 +555,7 @@ type.__new__ = function(meta, name, bases, cl_dict){
         if(v.__class__){
             // cf PEP 487 and issue #1178
             var is_descriptor =
-                $B.$getattr(v.__class__, "__set__", _b_.None) !== _b_.None
+                $B.$getattr(v.__class__, "__get__", _b_.None) !== _b_.None
 
             if(is_descriptor){
                 var set_name = $B.$getattr(v.__class__, "__set_name__", _b_.None)
