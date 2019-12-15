@@ -19,16 +19,20 @@ body{
 }
 
 a{
-    color: #333;
+    color: #fff;
 }
 
 a.menu:hover{
-    background-color: #ccc;
+    background-color: var(--text-color);
+    color: var(--header-color);
 }
 a:visited{
-    color: #333;
+    color: #fff;
 }
-
+a.selected{
+    font-weight: bold;
+    color: var(--header-color);
+}
 a.external{
     text-decoration: underline gray;
 }
@@ -105,6 +109,15 @@ code.file{
 .down{
     font-size:0.8em;
 }
+#moving{
+    position: relative;
+    left:140px;
+    top:10px;
+    font-size:16px;
+    padding: 3px;
+    background-color: var(--header-color); 
+    border-radius: 4px;
+}
 </style>
 
 <script type="text/python">
@@ -117,7 +130,7 @@ header.show()
 
 <table id="banner" cellpadding=0 cellspacing=0>
 <tr id="banner_row">
-<td class="logo"><a href="../index.html"><img src="brython_tp.png" class="logo"></a></td>
+<td class="logo"><a href="../index.html" class="logo">Brython</a></td>
 </tr>
 </table>
 
@@ -774,8 +787,7 @@ the end.
     <button id="button_mousemove" style="border-width:0;background-color:inherit;">
         move an element with the mouse
     </button>
-    <b style="position: relative;left:140px;top:10px;font-size:16px; padding: 3px; background-color: #ddd; border-radius: 4px;"
-        id="moving">drag me
+    <b id="moving" style="top:10px; left: 140px;">drag me
     </b>
 
     <script type="text/python"  id="script_mousemove">
@@ -1129,9 +1141,9 @@ def load_example(ev):
     if current is not None:
         document[current].style.display = "none"
         document <= document[current]
-        document["a"+current].style.fontWeight = "normal"
+        document["a"+current].classList.remove("selected")
     example_id = ev.target.num
-    ev.target.style.fontWeight = "bold"
+    ev.target.classList.add("selected")
     document["panel"].clear()
     document["panel"] <= document[example_id]
     document[example_id].style.display="block"

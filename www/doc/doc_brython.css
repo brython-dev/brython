@@ -6,10 +6,10 @@
 @viewport{width:device-width}
 
 :root {
-  --main-bg-color: #c9bc49;
-  --header-color: #373b46;
-  --selected-header-color: #edd2a7;
-  --text-color: #6c5756;
+  --main-bg-color: black;
+  --header-color: red;
+  --selected-header-color: black;
+  --text-color: white;
 }
 
 @font-face{
@@ -26,15 +26,13 @@
     font-style: normal
 }
 
-html {
-
-}
 
 body {
   font-family:Montserrat, Arial;
   font-size:0.9em;
   margin: 0px;
   background-color: var(--main-bg-color);
+  color: var(--text-color);
 }
 
 a.navig:link,a:link,a:hover,a:visited,a.navig:visited {
@@ -107,7 +105,7 @@ button:disabled{
 a.glink {
   background-color:#FFF;
   color:#000;
-  text-decoration:underline
+  text-decoration:underline;
 }
 
 h1.brython{
@@ -115,17 +113,16 @@ h1.brython{
     font-size: 300%;
 }
 
-img.logo {
-  border-width:0;
-  height:auto;
-  padding:0;
-  width:auto;
-}
-
 td.logo {
+  font-family: libra_bt;
   background-color:var(--header-color);
   padding-left:20px;
-  width:15%
+  width:15%;
+}
+
+a.logo {
+  text-decoration: none;
+  font-size: 3em;
 }
 
 td.top_menu {
@@ -148,7 +145,8 @@ select.language {
 .pycode{
     font-size: 0.9em;
     display: inline-block;
-    background-color:#F0F0F0;
+    background-color:var(--text-color);
+    color: var(--main-bg-color);
     padding:3px 8px 8px 8px;
     border-style:solid;
     border-width:1px;
@@ -188,7 +186,7 @@ pre{
     font-family: Consolas;
 }
 pre.marked {
-  color:#339;
+  color:var(--header-color);
   font-size: 12px;
 }
 
@@ -208,23 +206,23 @@ span.python-builtin{
 }
 
 code {
-  color:#228;
+  color:var(--header-color);
   font-family: Consolas;
 }
 
 em {
-  color:#339;
+  color:var(--header-color);
   font-family:courier
 }
 
 strong {
-  color:#339;
+  color:var(--header-color);
   font-family:courier;
   font-size: 1em;
 }
 
 #main {
-  border-color:#000;
+  border-color:green;
   border-style:solid;
   border-width:1px;
   min-height:20px;
