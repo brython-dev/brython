@@ -24,8 +24,7 @@ if __name__ == "__main__":
 
     parser.add_argument('--make_package', help='Make a loadable Python package')
 
-    parser.add_argument('--make_file_system', help='Make a virtual file system',
-        action="extend", nargs="+")
+    parser.add_argument('--make_file_system', help='Make a virtual file system')
 
     parser.add_argument('--modules',
         help='Create brython_modules.js with all the modules used by the application',
@@ -123,7 +122,7 @@ if __name__ == "__main__":
 
     if args.make_file_system:
         print('Create a Javascript file for all the files in the directory')
-        args_fs = args.make_file_system
+        args_fs = args.make_file_system.split("#")
         if len(args_fs) > 2:
             raise ValueError("--make_file_systems expects at most 2 "
                 "arguments, got " + str(len(args_fs)))
