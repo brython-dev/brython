@@ -244,7 +244,7 @@ $B.python_to_js = function(src, script_id){
     return js
 }
 
-window.py = function(src){
+_window.py = function(src){
     // Used by JS scripts that start with py`
     var root = $B.py2js(src[0], "script", "script"),
         js = root.to_js()
