@@ -392,9 +392,7 @@ function dir(obj){
     }
     try{
         var res = $B.$call($B.$getattr(obj, '__dir__'))()
-
         res = _b_.list.$factory(res)
-        res.sort()
         return res
     }catch (err){
         // ignore, default

@@ -111,7 +111,7 @@ object.__getattribute__ = function(obj, attr){
 
     var klass = obj.__class__ || $B.get_class(obj)
 
-    var $test = false // attr == "x"
+    var $test = false // attr == "strange"
     if($test){console.log("attr", attr, "de", obj, "klass", klass)}
     if(attr === "__class__"){
         return klass
@@ -307,6 +307,9 @@ object.__getattribute__ = function(obj, attr){
             }
         }
         if(_ga !== undefined){
+            if(klass === $B.module){
+                return _ga(attr)
+            }
             return _ga(obj, attr)
         }
     }

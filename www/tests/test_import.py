@@ -1,7 +1,7 @@
 import simple
 
 class Simple2:
-    
+
     def __init__(self):
         self.info = "SimpleClass2"
 
@@ -49,5 +49,10 @@ try:
     raise Exception("should have raised NameError")
 except NameError:
     pass
+
+# use "__getattr__" and "__dir__" at module level (PEP 562)
+assert simple.strange == "a strange name"
+assert dir(simple) == ["Simple", "text", "strange", "unknown"]
+
 
 print('passed all tests')
