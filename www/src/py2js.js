@@ -1517,8 +1517,16 @@ var $AwaitCtx = $B.parser.$AwaitCtx = function(context){
     this.tree = []
     context.tree.push(this)
 
+    var p = context
+    while(p){
+        if(p.type == "list_or_tuple"){
+            p.is_await = true
+        }
+        p = p.parent
+    }
+
     this.to_js = function(){
-        return 'await $B.promise(' + $to_js(this.tree) + ')'
+        return 'await ($B.promise(' + $to_js(this.tree) + '))'
     }
 }
 
@@ -3267,7 +3275,7 @@ var $ExprCtx = $B.parser.$ExprCtx = function(context, name, with_commas){
         else if(this.tree.length == 1){res = this.tree[0].to_js(arg)}
         else{res = '_b_.tuple.$factory([' + $to_js(this.tree) + '])'}
         if(this.is_await){
-            res = "await $B.promise(" + res + ")"
+            res = "await ($B.promise(" + res + "))"
         }
         if(this.assign){
             // Assignement expression (PEP 572)
@@ -3688,8 +3696,8 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
 
         // TARGET = await type(iter).__anext__(iter)
         if(target.tree.length == 1){
-            var js = target.to_js() + ' = await $B.promise(' +
-                anext_name + '(' + iterable_name + '))'
+            var js = target.to_js() + ' = await ($B.promise(' +
+                anext_name + '(' + iterable_name + ')))'
             try_node.add($NodeJS(js))
         }else{
             var new_node = new $Node(),
@@ -3699,8 +3707,8 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
             target.parent = expr
             var assign = new $AssignCtx(expr)
 
-            new $RawJSCtx(assign, 'await $B.promise(' +
-                anext_name + '(' + iterable_name + '))')
+            new $RawJSCtx(assign, 'await ($B.promise(' +
+                anext_name + '(' + iterable_name + ')))')
 
             try_node.add(new_node)
         }
@@ -4930,9 +4938,12 @@ var $ListOrTupleCtx = $B.parser.$ListOrTupleCtx = function(context,real){
                         delete $B.$py_src[listcomp_name]
 
                         js += 'return $locals_lc' + ix + '["x' + ix + '"]'
-                        js = '(function($locals_' + listcomp_name + '){' +
+                        js = 'function($locals_' + listcomp_name + '){' +
                             js + '})({})'
-                        return js
+                        if(this.is_await){
+                            js = 'async ' + js
+                        }
+                        return '(' + js
 
                     case 'dict_or_set_comp':
                         if(this.expression.length == 1){
@@ -6464,7 +6475,7 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
         if(alias){
             if(alias.tree[0].tree[0].type != "list_or_tuple"){
                 var js = alias.tree[0].to_js() + ' = ' +
-                    'await $B.promise(' + cmenter_name + ')'
+                    'await ($B.promise(' + cmenter_name + '))'
                 new_nodes.push($NodeJS(js))
             }else{
                 // Form "with manager as(x, y)"
@@ -6475,13 +6486,13 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
                 alias.tree[0].tree[0].parent = expr
                 var assign = new $AssignCtx(expr)
 
-                new $RawJSCtx(assign, 'await $B.promise(' +
-                    cmenter_name + ')')
+                new $RawJSCtx(assign, 'await ($B.promise(' +
+                    cmenter_name + '))')
 
                 new_nodes.push(new_node)
             }
         }else{
-            new_nodes.push($NodeJS('await $B.promise(' + cmenter_name + ')'))
+            new_nodes.push($NodeJS('await ($B.promise(' + cmenter_name + '))'))
         }
 
         // try:
@@ -6500,9 +6511,9 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
         catch_node.add($NodeJS(this.exc_name + ' = true'))
         catch_node.add($NodeJS('var ' + err_name +
             ' = $B.imported["_sys"].exc_info()'))
-        var if_node = $NodeJS('if(! await $B.promise(' +
+        var if_node = $NodeJS('if(! await ($B.promise(' +
             this.cmexit_name + '(' + this.cm_name + ', ' + err_name + '[0], ' +
-            err_name + '[1], ' + err_name + '[2])))')
+            err_name + '[1], ' + err_name + '[2]))))')
         catch_node.add(if_node)
         //         raise
         if_node.add($NodeJS('$B.$raise()'))
@@ -6511,8 +6522,8 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
         var else_node = $NodeJS('if(! ' + this.exc_name +')')
         new_nodes.push(else_node)
         //     await aexit(mgr, None, None, None)
-        else_node.add($NodeJS('await $B.promise(' + this.cmexit_name + '(' +
-            this.cm_name +', _b_.None, _b_.None, _b_.None))'))
+        else_node.add($NodeJS('await ($B.promise(' + this.cmexit_name + '(' +
+            this.cm_name +', _b_.None, _b_.None, _b_.None)))'))
 
         // Remove original node
         node.parent.children.splice(rank, 1)

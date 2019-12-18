@@ -97,7 +97,7 @@ class Lock:
     while self._locked:
       await aio.sleep(0)
     self._locked = True
-    
+
   def release(self):
     if not self._locked:
       raise RuntimeError('Lock is already released')
@@ -125,6 +125,15 @@ async def test_lock(): # issue 1205
     async with l:
       pass
 
+# async comprehensions
+async def test_async_comp():
+  for url, req in await async_comp():
+    print(url, len(req.data))
+  print("test async comp ok")
+
+async def async_comp():
+  return [(url, await aio.get(url)) for url in ["console.html", "index.html"]]
+
 async def main(secs, urls):
     print(f"wait {secs} seconds...")
     await aio.sleep(secs)
@@ -135,6 +144,7 @@ async def main(secs, urls):
     await test_async_for()
     await test_async_with()
     await test_lock()
+    await test_async_comp()
     await raise_error()
 
 print("Start...")

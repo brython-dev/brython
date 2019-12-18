@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,6,'final',0]
 __BRYTHON__.__MAGIC__="3.8.6"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2019-12-18 09:43:50.002839"
-__BRYTHON__.timestamp=1576658630002
+__BRYTHON__.compiled_date="2019-12-18 12:03:46.177286"
+__BRYTHON__.timestamp=1576667026177
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -800,7 +800,10 @@ this.type='await'
 this.parent=C
 this.tree=[]
 C.tree.push(this)
-this.to_js=function(){return 'await $B.promise('+$to_js(this.tree)+')'}}
+var p=C
+while(p){if(p.type=="list_or_tuple"){p.is_await=true}
+p=p.parent}
+this.to_js=function(){return 'await ($B.promise('+$to_js(this.tree)+'))'}}
 var $BodyCtx=$B.parser.$BodyCtx=function(C){
 var ctx_node=C.parent
 while(ctx_node.type !=='node'){ctx_node=ctx_node.parent}
@@ -1636,7 +1639,7 @@ this.js_processed=true
 if(this.type=='list'){res='['+$to_js(this.tree)+']'}
 else if(this.tree.length==1){res=this.tree[0].to_js(arg)}
 else{res='_b_.tuple.$factory(['+$to_js(this.tree)+'])'}
-if(this.is_await){res="await $B.promise("+res+")"}
+if(this.is_await){res="await ($B.promise("+res+"))"}
 if(this.assign){
 var scope=$get_scope(this)
 while(scope.is_comp){scope=scope.parent_block}
@@ -1823,14 +1826,14 @@ var while_node=$NodeJS('while('+running_name+')')
 new_nodes.push(while_node)
 var try_node=$NodeJS('try')
 while_node.add(try_node)
-if(target.tree.length==1){var js=target.to_js()+' = await $B.promise('+
-anext_name+'('+iterable_name+'))'
+if(target.tree.length==1){var js=target.to_js()+' = await ($B.promise('+
+anext_name+'('+iterable_name+')))'
 try_node.add($NodeJS(js))}else{var new_node=new $Node(),ctx=new $NodeCtx(new_node),expr=new $ExprCtx(ctx,"left",false)
 expr.tree.push(target)
 target.parent=expr
 var assign=new $AssignCtx(expr)
-new $RawJSCtx(assign,'await $B.promise('+
-anext_name+'('+iterable_name+'))')
+new $RawJSCtx(assign,'await ($B.promise('+
+anext_name+'('+iterable_name+')))')
 try_node.add(new_node)}
 var catch_node=$NodeJS('catch(err)')
 while_node.add(catch_node)
@@ -2340,9 +2343,10 @@ root=null
 $B.clear_ns(listcomp_name)
 delete $B.$py_src[listcomp_name]
 js+='return $locals_lc'+ix+'["x'+ix+'"]'
-js='(function($locals_'+listcomp_name+'){'+
+js='function($locals_'+listcomp_name+'){'+
 js+'})({})'
-return js
+if(this.is_await){js='async '+js}
+return '('+js
 case 'dict_or_set_comp':
 if(this.expression.length==1){return $B.$gen_expr(module_name,scope,items,line_num)}
 return $B.$dict_comp(module_name,scope,items,line_num)}
@@ -3055,15 +3059,15 @@ new_nodes.push($NodeJS('    '+cmenter_name+
 new_nodes.push($NodeJS("    "+this.exc_name+" = false"))
 js=""
 if(alias){if(alias.tree[0].tree[0].type !="list_or_tuple"){var js=alias.tree[0].to_js()+' = '+
-'await $B.promise('+cmenter_name+')'
+'await ($B.promise('+cmenter_name+'))'
 new_nodes.push($NodeJS(js))}else{
 var new_node=new $Node(),ctx=new $NodeCtx(new_node),expr=new $ExprCtx(ctx,"left",false)
 expr.tree.push(alias.tree[0].tree[0])
 alias.tree[0].tree[0].parent=expr
 var assign=new $AssignCtx(expr)
-new $RawJSCtx(assign,'await $B.promise('+
-cmenter_name+')')
-new_nodes.push(new_node)}}else{new_nodes.push($NodeJS('await $B.promise('+cmenter_name+')'))}
+new $RawJSCtx(assign,'await ($B.promise('+
+cmenter_name+'))')
+new_nodes.push(new_node)}}else{new_nodes.push($NodeJS('await ($B.promise('+cmenter_name+'))'))}
 var try_node=new $NodeJS('try')
 node.children.forEach(function(child){try_node.add(child)})
 new_nodes.push(try_node)
@@ -3072,15 +3076,15 @@ new_nodes.push(catch_node)
 catch_node.add($NodeJS(this.exc_name+' = true'))
 catch_node.add($NodeJS('var '+err_name+
 ' = $B.imported["_sys"].exc_info()'))
-var if_node=$NodeJS('if(! await $B.promise('+
+var if_node=$NodeJS('if(! await ($B.promise('+
 this.cmexit_name+'('+this.cm_name+', '+err_name+'[0], '+
-err_name+'[1], '+err_name+'[2])))')
+err_name+'[1], '+err_name+'[2]))))')
 catch_node.add(if_node)
 if_node.add($NodeJS('$B.$raise()'))
 var else_node=$NodeJS('if(! '+this.exc_name+')')
 new_nodes.push(else_node)
-else_node.add($NodeJS('await $B.promise('+this.cmexit_name+'('+
-this.cm_name+', _b_.None, _b_.None, _b_.None))'))
+else_node.add($NodeJS('await ($B.promise('+this.cmexit_name+'('+
+this.cm_name+', _b_.None, _b_.None, _b_.None)))'))
 node.parent.children.splice(rank,1)
 for(var i=new_nodes.length-1;i >=0;i--){node.parent.insert(rank,new_nodes[i])}
 node.children=[]
