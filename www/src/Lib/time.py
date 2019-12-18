@@ -414,11 +414,13 @@ CLOCK_PROCESS_CPUTIME_ID = _clock_msg % "https://docs.python.org/3/library/time.
 CLOCK_REALTIME = _clock_msg % "https://docs.python.org/3/library/time.html#time.CLOCK_REALTIME"
 CLOCK_THREAD_CPUTIME_ID = _clock_msg % "https://docs.python.org/3/library/time.html#time.CLOCK_THREAD_CPUTIME_ID"
 
+class ClockInfo:
+
+    def __init__(self, *kw):
+        for key, value in kw.items():
+            setattr(self, key, value)
 
 def get_clock_info(cl):
-    from collections import namedtuple
-    ClockInfo = namedtuple('ClockInfo',
-        ['adjustable', 'implementation', 'monotonic', 'resolution'])
 
     if cl == 'monotonic':
         return ClockInfo(adjustable=False,
