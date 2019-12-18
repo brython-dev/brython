@@ -518,12 +518,46 @@ var octal_format = function(val, flags) {
     return format_padding(ret, flags)
 }
 
+function series_of_bytes(val, flags){
+    if(val.__class__ && val.__class__.$buffer_protocol){
+        var it = _b_.iter(val),
+            ints = []
+        while(true){
+            try{
+                ints.push(_b_.next(it))
+            }catch(err){
+                if(err.__class__ === _b_.StopIteration){
+                    var b = _b_.bytes.$factory(ints)
+                    return format_padding(_b_.bytes.decode(b, "ascii"), flags)
+                }
+                throw err
+            }
+        }
+    }else{
+        try{
+            bytes_obj = $B.$getattr(val, "__bytes__")
+            return format_padding(_b_.bytes.decode(bytes_obj), flags)
+        }catch(err){
+            if(err.__class__ === _b_.AttributeError){
+                throw _b_.TypeError.$factory("%b does not accept '" +
+                    $B.class_name(val) + "'")
+            }
+            throw err
+        }
+    }
+}
+
 var single_char_format = function(val, flags){
-    if(isinstance(val, str) && val.length == 1) return val
-    try{
-        val = _b_.int.$factory(val)  // yes, floats are valid (they are cast to int)
-    }catch (err){
-        throw _b_.TypeError.$factory("%c requires int or char")
+    if(isinstance(val, str) && val.length == 1){
+        return val
+    }else if(isinstance(val, bytes) && val.source.length == 1){
+        val = val.source[0]
+    }else{
+        try{
+            val = _b_.int.$factory(val)  // yes, floats are valid (they are cast to int)
+        }catch (err){
+            throw _b_.TypeError.$factory("%c requires int or char")
+        }
     }
     return format_padding(chr(val), flags)
 }
@@ -566,6 +600,7 @@ var alternate_flag = function(val, flags){
 }
 
 var char_mapping = {
+    "b": series_of_bytes,
     "s": str_format,
     "d": num_format,
     "i": num_format,

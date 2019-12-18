@@ -179,4 +179,28 @@ assert bytearray.fromhex('2Ef0 F1f2 ') == bytearray(b'.\xf0\xf1\xf2')
 # issue 1091
 assert bytearray(b'\x07\xf0\xf1\xf2').hex() == "07f0f1f2"
 
+# % formatting (PEP 461)
+assert b'%x' %10 == b'a'
+assert b'%4x' % 10 == b'   a'
+assert b'%#4x' % 10 == b' 0xa'
+assert b'%c' % 48 == b'0'
+assert b'%c' % b'a' == b'a'
+assert b'%b' % b'abc' == b'abc'
+assert b'%b' % 'some string'.encode('utf8') == b'some string'
+try:
+    b'%b' % 3.14
+    raise Exception("should have raised TypeError")
+except TypeError:
+    pass
+
+try:
+    b'%b' % 'hello world!'
+    raise Exception("should have raised TypeError")
+except TypeError:
+    pass
+
+assert b'%a' % 3.14 == b'3.14'
+assert b'%a' % b'abc' == b"b'abc'"
+assert b'%a' % 'def' == b"'def'"
+
 print('passed all tests...')

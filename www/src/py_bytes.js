@@ -314,6 +314,13 @@ bytes.__lt__ = function(self, other){
     return _b_.list.__lt__(self.source, other.source)
 }
 
+bytes.__mod__ = function(self, args){
+    // PEP 461
+    var s = decode(self, "ascii", "strict"),
+        res = _b_.str.__mod__(s, args)
+    return _b_.str.encode(res, "ascii")
+}
+
 bytes.__mul__ = function(){
     var $ = $B.args('__mul__', 2, {self: null, other: null}, ['self', 'other'],
         arguments, {}, null, null),
@@ -383,7 +390,7 @@ bytes.$new = function(cls, source, encoding, errors){
 }
 
 bytes.__repr__ = bytes.__str__ = function(self){
-    var res = "b'"
+    var res = ""
     for(var i = 0, len = self.source.length; i < len; i++){
         var s = self.source[i]
         if(s == 10){
@@ -398,7 +405,11 @@ bytes.__repr__ = bytes.__str__ = function(self){
             res += String.fromCharCode(s)
         }
     }
-    return res + "'"
+    if(res.indexOf("'") > -1 && res.indexOf('"') == -1){
+        return 'b"' + res + '"'
+    }else{
+        return "b'" + res.replace(new RegExp("'", "g", "\\'"))  + "'"
+    }
 }
 
 bytes.__reduce_ex__ = function(self){return bytes.__repr__(self)}

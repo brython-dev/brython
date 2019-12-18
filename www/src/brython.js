@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,6,'final',0]
 __BRYTHON__.__MAGIC__="3.8.6"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2019-12-18 14:08:14.372255"
-__BRYTHON__.timestamp=1576674494372
+__BRYTHON__.compiled_date="2019-12-18 14:59:51.174178"
+__BRYTHON__.timestamp=1576677591174
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -7944,6 +7944,9 @@ return _b_.list.__le__(self.source,other.source)}
 bytes.__len__=function(self){return self.source.length}
 bytes.__lt__=function(self,other){if(invalid(other)){return _b_.NotImplemented}
 return _b_.list.__lt__(self.source,other.source)}
+bytes.__mod__=function(self,args){
+var s=decode(self,"ascii","strict"),res=_b_.str.__mod__(s,args)
+return _b_.str.encode(res,"ascii")}
 bytes.__mul__=function(){var $=$B.args('__mul__',2,{self:null,other:null},['self','other'],arguments,{},null,null),other=$B.PyNumber_Index($.other)
 var t=[],source=$.self.source,slen=source.length
 for(var i=0;i < other;i++){for(var j=0;j < slen;j++){t.push(source[j])}}
@@ -7968,12 +7971,12 @@ self.source=int_list
 self.encoding=encoding
 self.errors=errors
 return self}
-bytes.__repr__=bytes.__str__=function(self){var res="b'"
+bytes.__repr__=bytes.__str__=function(self){var res=""
 for(var i=0,len=self.source.length;i < len;i++){var s=self.source[i]
 if(s==10){res+='\\n'}else if(s < 32 ||s >=128){var hx=s.toString(16)
 hx=(hx.length==1 ? '0' :'')+hx
 res+='\\x'+hx}else if(s=="\\".charCodeAt(0)){res+="\\\\"}else{res+=String.fromCharCode(s)}}
-return res+"'"}
+if(res.indexOf("'")>-1 && res.indexOf('"')==-1){return 'b"'+res+'"'}else{return "b'"+res.replace(new RegExp("'","g","\\'"))+"'"}}
 bytes.__reduce_ex__=function(self){return bytes.__repr__(self)}
 bytes.capitalize=function(self){var src=self.source,len=src.length,buffer=src.slice()
 if(buffer[0]> 96 && buffer[0]< 123){buffer[0]-=32}
@@ -11357,8 +11360,14 @@ if(sign !==""){ret=sign+format_padding(ret,flags,true)}}
 if(flags.alternate){if(ret.charAt(0)==="-"){ret="-0o"+ret.slice(1)}
 else{ret="0o"+ret}}
 return format_padding(ret,flags)}
-var single_char_format=function(val,flags){if(isinstance(val,str)&& val.length==1)return val
-try{val=_b_.int.$factory(val)}catch(err){throw _b_.TypeError.$factory("%c requires int or char")}
+function series_of_bytes(val,flags){if(val.__class__ && val.__class__.$buffer_protocol){var it=_b_.iter(val),ints=[]
+while(true){try{ints.push(_b_.next(it))}catch(err){if(err.__class__===_b_.StopIteration){var b=_b_.bytes.$factory(ints)
+return format_padding(_b_.bytes.decode(b,"ascii"),flags)}
+throw err}}}else{try{bytes_obj=$B.$getattr(val,"__bytes__")
+return format_padding(_b_.bytes.decode(bytes_obj),flags)}catch(err){if(err.__class__===_b_.AttributeError){throw _b_.TypeError.$factory("%b does not accept '"+
+$B.class_name(val)+"'")}
+throw err}}}
+var single_char_format=function(val,flags){if(isinstance(val,str)&& val.length==1){return val}else if(isinstance(val,bytes)&& val.source.length==1){val=val.source[0]}else{try{val=_b_.int.$factory(val)}catch(err){throw _b_.TypeError.$factory("%c requires int or char")}}
 return format_padding(chr(val),flags)}
 var num_flag=function(c,flags){if(c==="0" && ! flags.padding && ! flags.decimal_point && ! flags.left){flags.pad_char="0"
 return}
@@ -11371,7 +11380,7 @@ flags.left=true}
 var space_flag=function(val,flags){flags.space=true}
 var sign_flag=function(val,flags){flags.sign=true}
 var alternate_flag=function(val,flags){flags.alternate=true}
-var char_mapping={"s":str_format,"d":num_format,"i":num_format,"u":num_format,"o":octal_format,"r":repr_format,"a":ascii_format,"g":function(val,flags){return floating_point_format(val,false,flags)},"G":function(val,flags){return floating_point_format(val,true,flags)},"f":function(val,flags){return floating_point_decimal_format(val,false,flags)},"F":function(val,flags){return floating_point_decimal_format(val,true,flags)},"e":function(val,flags){return floating_point_exponential_format(val,false,flags)},"E":function(val,flags){return floating_point_exponential_format(val,true,flags)},"x":function(val,flags){return signed_hex_format(val,false,flags)},"X":function(val,flags){return signed_hex_format(val,true,flags)},"c":single_char_format,"0":function(val,flags){return num_flag("0",flags)},"1":function(val,flags){return num_flag("1",flags)},"2":function(val,flags){return num_flag("2",flags)},"3":function(val,flags){return num_flag("3",flags)},"4":function(val,flags){return num_flag("4",flags)},"5":function(val,flags){return num_flag("5",flags)},"6":function(val,flags){return num_flag("6",flags)},"7":function(val,flags){return num_flag("7",flags)},"8":function(val,flags){return num_flag("8",flags)},"9":function(val,flags){return num_flag("9",flags)},"-":neg_flag," ":space_flag,"+":sign_flag,".":decimal_point_flag,"#":alternate_flag}
+var char_mapping={"b":series_of_bytes,"s":str_format,"d":num_format,"i":num_format,"u":num_format,"o":octal_format,"r":repr_format,"a":ascii_format,"g":function(val,flags){return floating_point_format(val,false,flags)},"G":function(val,flags){return floating_point_format(val,true,flags)},"f":function(val,flags){return floating_point_decimal_format(val,false,flags)},"F":function(val,flags){return floating_point_decimal_format(val,true,flags)},"e":function(val,flags){return floating_point_exponential_format(val,false,flags)},"E":function(val,flags){return floating_point_exponential_format(val,true,flags)},"x":function(val,flags){return signed_hex_format(val,false,flags)},"X":function(val,flags){return signed_hex_format(val,true,flags)},"c":single_char_format,"0":function(val,flags){return num_flag("0",flags)},"1":function(val,flags){return num_flag("1",flags)},"2":function(val,flags){return num_flag("2",flags)},"3":function(val,flags){return num_flag("3",flags)},"4":function(val,flags){return num_flag("4",flags)},"5":function(val,flags){return num_flag("5",flags)},"6":function(val,flags){return num_flag("6",flags)},"7":function(val,flags){return num_flag("7",flags)},"8":function(val,flags){return num_flag("8",flags)},"9":function(val,flags){return num_flag("9",flags)},"-":neg_flag," ":space_flag,"+":sign_flag,".":decimal_point_flag,"#":alternate_flag}
 var UnsupportedChar=function(){this.name="UnsupportedChar"}
 str.__mod__=function(self,args){var length=self.length,pos=0 |0,argpos=null,getitem
 if(_b_.isinstance(args,_b_.tuple)){argpos=0 |0}else{getitem=_b_.getattr(args,"__getitem__",_b_.None)}
