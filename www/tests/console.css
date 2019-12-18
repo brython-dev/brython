@@ -5,44 +5,46 @@ textarea {
 }
 
 #container {
-width:90%;
-height: 66%;
-position:relative;
-margin: auto;
+    width:90%;
+    height: 66%;
+    position:relative;
+    margin: auto;
 }
 
 #left-div {
-width:50%;
-height:100%;
-#position:relative;
-margin: auto;
-float:left;
+    width:50%;
+    height:100%;
+    #position:relative;
+    margin: auto;
+    float:left;
 }
 
 #right-div {
-width:48%;
-height:100%;
-position:relative;
-margin: auto;
-float:right;
+    width:48%;
+    height:100%;
+    position:relative;
+    margin: auto;
+    float:right;
 }
 
 #editor {
-float:none;
-width:50%;
-height:100%;
+    float:none;
+    width:50%;
+    height:100%;
 }
 
 #controls {
-width:10%;
-float:none;
+    width:10%;
+    float:none;
 }
 
 #console {
-width:100%;
-height:100%;
-float:none;
-color: #fff;
+    width:100%;
+    height:100%;
+    font-size: 12px;
+    float:none;
+    background-color:var(--text-color);
+    color:var(--main-bg-color);
 }
 
 #legend{

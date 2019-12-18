@@ -90,12 +90,7 @@ button:disabled{
     cursor: not-allowed;
 }
 
-#console {
-  background-color:#000;
-  color:var(--text-color);
-  font-size:12px;
-  font-weight:700
-}
+
 
 #content {
   padding-left:5%;
