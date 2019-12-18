@@ -406,6 +406,13 @@ class A:
             self.c + other.a + self.d + other.c,
             self.c * other.b + self.d * other.d)
 
+    def __rmatmul__(self, other):
+        return A(
+            other.a * self.a + other.b * self.c,
+            other.a * self.b + other.b * self.d,
+            other.c + self.a + other.d + self.c,
+            other.c * self.b + other.d * self.d)
+
     def __str__(self):
         return "({} {})\n({} {})".format(self.a, self.b,
             self.c, self.d)
@@ -427,6 +434,16 @@ assert a1 @ a2 == a3
 a1 @= a2
 assert a1 == a3
 
+class B:
+
+    def __init__(self, a, b, c, d):
+        self.a = a
+        self.b = b
+        self.c = c
+        self.d = d
+
+
+assert B(1, 2, 3, 4) @ A(2, 3, 4, 5) == a3
 # sys.exc_info
 import sys
 
