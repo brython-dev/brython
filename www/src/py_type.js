@@ -153,7 +153,7 @@ $B.$class_constructor = function(class_name, class_obj, bases,
         mro = [class_dict].concat(class_dict.__mro__)
 
     for(var i = 0; i < mro.length; i++){
-        var kdict = i == 0 ? mro0 : mro[i]  // DRo mr0 set above to choose rightly
+        var kdict = i == 0 ? mro0 : mro[i]
         for(var attr in kdict){
             if(non_abstract_methods[attr]){continue}
             var v = kdict[attr]
@@ -532,14 +532,15 @@ type.__new__ = function(meta, name, bases, cl_dict){
     // becomes the __bases__ attribute; and the dict dictionary is the
     // namespace containing definitions for class body and becomes the
     // __dict__ attribute
-
+    
     // Create the class dictionary
     var class_dict = {
         __class__ : meta,
         __bases__ : bases,
         __dict__ : cl_dict,
         $infos:{
-            __name__: name.replace("$$", "")
+            __name__: name.replace("$$", ""),
+            __module__: cl_dict.$string_dict.__module__
         },
         $is_class: true,
         $has_setattr: cl_dict.$has_setattr
@@ -550,18 +551,14 @@ type.__new__ = function(meta, name, bases, cl_dict){
     for(var i = 0; i < items.length; i++){
         var key = $B.to_alias(items[i][0]),
             v = items[i][1]
+        if(key === "__module__"){continue} // already set
         if(v === undefined){continue}
         class_dict[key] = v
         if(v.__class__){
             // cf PEP 487 and issue #1178
-            var is_descriptor =
-                $B.$getattr(v.__class__, "__get__", _b_.None) !== _b_.None
-
-            if(is_descriptor){
-                var set_name = $B.$getattr(v.__class__, "__set_name__", _b_.None)
-                if(set_name !== _b_.None){
-                    set_name(v, v.__class__, key)
-                }
+            var set_name = $B.$getattr(v.__class__, "__set_name__", _b_.None)
+            if(set_name !== _b_.None){
+                set_name(v, class_dict, key)
             }
         }
         if(typeof v == "function"){

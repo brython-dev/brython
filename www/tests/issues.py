@@ -2429,6 +2429,17 @@ assertRaises(SyntaxError, exec,
     print('hi')
 f(7)""")
 
+# issue 1264
+class TestDescriptor:
+    counter = 0
+    def __set_name__(self, owner, name):
+        TestDescriptor.counter += 1
+
+class TestObject:
+    my_descriptor = TestDescriptor()
+
+assert TestDescriptor.counter == 1
+
 
 # ==========================================
 # Finally, report that all tests have passed

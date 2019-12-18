@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,6,'final',0]
 __BRYTHON__.__MAGIC__="3.8.6"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2019-12-16 11:49:28.915522"
-__BRYTHON__.timestamp=1576493368915
+__BRYTHON__.compiled_date="2019-12-18 09:43:50.002839"
+__BRYTHON__.timestamp=1576658630002
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5635,16 +5635,15 @@ return false}
 type.__instancecheck__.$type="staticmethod"
 type.__name__={__get__:function(self){return self.$infos.__name__},__set__:function(self,value){self.$infos.__name__=value},__str__:function(self){return "type"},__eq__:function(self,other){return self.$infos.__name__==other}}
 type.__new__=function(meta,name,bases,cl_dict){
-var class_dict={__class__ :meta,__bases__ :bases,__dict__ :cl_dict,$infos:{__name__:name.replace("$$","")},$is_class:true,$has_setattr:cl_dict.$has_setattr}
+var class_dict={__class__ :meta,__bases__ :bases,__dict__ :cl_dict,$infos:{__name__:name.replace("$$",""),__module__:cl_dict.$string_dict.__module__},$is_class:true,$has_setattr:cl_dict.$has_setattr}
 var items=$B.dict_to_list(cl_dict)
 for(var i=0;i < items.length;i++){var key=$B.to_alias(items[i][0]),v=items[i][1]
+if(key==="__module__"){continue}
 if(v===undefined){continue}
 class_dict[key]=v
 if(v.__class__){
-var is_descriptor=
-$B.$getattr(v.__class__,"__get__",_b_.None)!==_b_.None
-if(is_descriptor){var set_name=$B.$getattr(v.__class__,"__set_name__",_b_.None)
-if(set_name !==_b_.None){set_name(v,v.__class__,key)}}}
+var set_name=$B.$getattr(v.__class__,"__set_name__",_b_.None)
+if(set_name !==_b_.None){set_name(v,class_dict,key)}}
 if(typeof v=="function"){v.$infos.$class=class_dict
 if(v.$infos.$defaults){
 var $defaults=v.$infos.$defaults
