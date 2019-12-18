@@ -32,6 +32,12 @@ var int = {
     }
 }
 
+int.as_integer_ratio = function(){
+  var $ = $B.args("as_integer_ratio", 1, {self:null}, ["self"],
+          arguments, {}, null, null)
+  return $B.$list([$.self, 1])
+}
+
 int.from_bytes = function() {
   var $ = $B.args("from_bytes", 3,
       {bytes:null, byteorder:null, signed:null},

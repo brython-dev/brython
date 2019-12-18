@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,6,'final',0]
 __BRYTHON__.__MAGIC__="3.8.6"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2019-12-18 13:34:36.238256"
-__BRYTHON__.timestamp=1576672476238
+__BRYTHON__.compiled_date="2019-12-18 13:45:21.063370"
+__BRYTHON__.timestamp=1576673121063
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -9604,6 +9604,8 @@ throw _b_.TypeError.$factory(msg)}
 function int_value(obj){
 return obj.$value !==undefined ? obj.$value :obj}
 var int={__class__:_b_.type,__dir__:_b_.object.__dir__,$infos:{__module__:"builtins",__name__:"int"},$is_class:true,$native:true,$descriptors:{"numerator":true,"denominator":true,"imag":true,"real":true}}
+int.as_integer_ratio=function(){var $=$B.args("as_integer_ratio",1,{self:null},["self"],arguments,{},null,null)
+return $B.$list([$.self,1])}
 int.from_bytes=function(){var $=$B.args("from_bytes",3,{bytes:null,byteorder:null,signed:null},["bytes","byteorder","signed"],arguments,{signed:false},null,null)
 var x=$.bytes,byteorder=$.byteorder,signed=$.signed,_bytes,_len
 if(_b_.isinstance(x,[_b_.bytes,_b_.bytearray])){_bytes=x.source

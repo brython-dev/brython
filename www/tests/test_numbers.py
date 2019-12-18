@@ -380,4 +380,8 @@ assert round(4.5) == 4
 # issue 1245
 assert eval("0j") == 0j
 
+# as_integer_ratio() on integers
+x = 19
+assert x.as_integer_ratio() == [19, 1]
+
 print('passed all tests...')
