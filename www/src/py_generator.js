@@ -490,7 +490,7 @@ $B.$BRgenerator = function(func_name, blocks, def_id, def_node){
 function make_next(self, yield_node_id){
     // Get node where yield was thrown
     var exit_node = self.func_root.yields[yield_node_id]
-    
+
     // Attribute "replaced" is used to replace a node only once if it was
     // inside a loop
     exit_node.replaced = false
@@ -752,7 +752,15 @@ generator.send = function(self, value){
 
 generator.$$throw = function(self, type, value, traceback){
     var exc = type
-    if(value !== undefined){exc = $B.$call(exc)(value)}
+    if(value === undefined){
+        var exc = $B.$call(exc)()
+        if(! _b_.isinstance(exc, _b_.BaseException)){
+            throw _b_.TypeError.$factory("exception value must be an " +
+                "instance of BaseException")
+        }
+    }else{
+        exc = $B.$call(exc)(value)
+    }
     if(traceback !== undefined){exc.$traceback = traceback}
     self.sent_value = {__class__: $B.$GeneratorSendError, err: exc}
     return generator.__next__(self)
