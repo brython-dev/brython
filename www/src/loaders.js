@@ -260,7 +260,6 @@ $B.ajax_load_script = function(script){
     if($B.files && $B.files.hasOwnProperty(name)){
         $B.tasks.splice(0, 0, [$B.run_script, $B.files[name],
             name, true])
-        loop()
     }else if($B.protocol != "file"){
         var req = new XMLHttpRequest()
         req.open("GET", url + "?" + Date.now(), true)
@@ -280,7 +279,11 @@ $B.ajax_load_script = function(script){
             }
         }
         req.send()
+    }else{
+        throw _b_.IOError.$factory("can't load external script at " + 
+            script.url + " (Ajax calls not supported with protocol file:///)")
     }
+    loop()
 }
 
 function add_jsmodule(module, source){
@@ -340,7 +343,7 @@ var loop = $B.loop = function(){
         }catch(err){
             // If the error was not caught by the Python runtime, build an
             // instance of a Python exception
-            if(err.$py_error === undefined){
+            if(err.__class__ === undefined){
                 console.log('Javascript error', err)
                 if($B.is_recursion_error(err)){
                     err = _b_.RecursionError.$factory("too much recursion")
@@ -358,7 +361,11 @@ var loop = $B.loop = function(){
         loop()
     }else{
         // Run function with arguments
-        func.apply(null, args)
+        try{
+            func.apply(null, args)
+        }catch(err){
+            $B.handle_error(err)
+        }
     }
 }
 
