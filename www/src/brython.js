@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,6,'final',0]
 __BRYTHON__.__MAGIC__="3.8.6"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2019-12-18 15:11:11.286429"
-__BRYTHON__.timestamp=1576678271286
+__BRYTHON__.compiled_date="2019-12-22 13:38:52.200033"
+__BRYTHON__.timestamp=1577018332200
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -225,7 +225,7 @@ while(root.parent !==undefined){root=root.parent}
 var module=tree_node.module,src=root.src,line_num=tree_node.line_num
 if(src){line_num=src.substr(0,$pos).split("\n").length}
 if(root.line_info){line_num=root.line_info}
-if(indent !==undefined){line_num++}
+if(indent !==undefined)
 if(indent===undefined){if(Array.isArray(msg)){$B.$SyntaxError(module,msg[0],src,$pos,line_num)}
 if(msg==="Triple string end not found"){
 $B.$SyntaxError(module,'invalid syntax : triple string end not found',src,$pos,line_num,root)}
@@ -5212,13 +5212,14 @@ var db=idb_cx.result,store=db.createObjectStore("modules",{"keyPath":"name"})
 store.onsuccess=loop}
 idb_cx.onerror=function(){console.info('could not open indexedDB database')}}
 $B.ajax_load_script=function(script){var url=script.url,name=script.name
-if($B.files && $B.files.hasOwnProperty(name)){$B.tasks.splice(0,0,[$B.run_script,$B.files[name],name,true])
-loop()}else if($B.protocol !="file"){var req=new XMLHttpRequest()
-req.open("GET",url+"?"+Date.now(),true)
+if($B.files && $B.files.hasOwnProperty(name)){$B.tasks.splice(0,0,[$B.run_script,$B.files[name],name,true])}else if($B.protocol !="file"){var req=new XMLHttpRequest(),qs=$B.$options.cache ? '' :'?'+Date.now()
+req.open("GET",url+qs,true)
 req.onreadystatechange=function(){if(this.readyState==4){if(this.status==200){var src=this.responseText
 if(script.is_ww){$B.webworkers[name]=src}else{$B.tasks.splice(0,0,[$B.run_script,src,name,true])}}else if(this.status==404){throw Error(url+" not found")}
 loop()}}
-req.send()}}
+req.send()}else{throw _b_.IOError.$factory("can't load external script at "+
+script.url+" (Ajax calls not supported with protocol file:///)")}
+loop()}
 function add_jsmodule(module,source){
 source+="\nvar $locals_"+
 module.replace(/\./g,"_")+" = $module"
@@ -5238,14 +5239,14 @@ module.$src=script.$src
 module.__file__=script.__file__
 $B.imported[script_id]=module
 new Function("$locals_"+script_id,script.js)(module)}catch(err){
-if(err.$py_error===undefined){console.log('Javascript error',err)
+if(err.__class__===undefined){console.log('Javascript error',err)
 if($B.is_recursion_error(err)){err=_b_.RecursionError.$factory("too much recursion")}else{$B.print_stack()
 err=_b_.RuntimeError.$factory(err+'')}}
 if($B.debug > 1){console.log("handle error",err.__class__,err.args,err.$stack)
 console.log($B.frames_stack.slice())}
 $B.handle_error(err)}
 loop()}else{
-func.apply(null,args)}}
+try{func.apply(null,args)}catch(err){$B.handle_error(err)}}}
 $B.tasks=[]
 $B.has_indexedDB=self.indexedDB !==undefined
 $B.handle_error=function(err){
@@ -7976,7 +7977,7 @@ for(var i=0,len=self.source.length;i < len;i++){var s=self.source[i]
 if(s==10){res+='\\n'}else if(s < 32 ||s >=128){var hx=s.toString(16)
 hx=(hx.length==1 ? '0' :'')+hx
 res+='\\x'+hx}else if(s=="\\".charCodeAt(0)){res+="\\\\"}else{res+=String.fromCharCode(s)}}
-if(res.indexOf("'")>-1 && res.indexOf('"')==-1){return 'b"'+res+'"'}else{return "b'"+res.replace(new RegExp("'","g","\\'"))+"'"}}
+if(res.indexOf("'")>-1 && res.indexOf('"')==-1){return 'b"'+res+'"'}else{return "b'"+res.replace(new RegExp("'","g"),"\\'")+"'"}}
 bytes.__reduce_ex__=function(self){return bytes.__repr__(self)}
 bytes.capitalize=function(self){var src=self.source,len=src.length,buffer=src.slice()
 if(buffer[0]> 96 && buffer[0]< 123){buffer[0]-=32}
@@ -8888,7 +8889,7 @@ parts.pop()
 return parts.join(".")}
 function $download_module(mod,url,$package){var xhr=new XMLHttpRequest(),fake_qs="?v="+(new Date().getTime()),res=null,mod_name=mod.__name__
 var timer=_window.setTimeout(function(){xhr.abort()},5000)
-xhr.open("GET",url+fake_qs,false)
+if($B.$options.cache){xhr.open("GET",url,false)}else{xhr.open("GET",url+fake_qs,false)}
 xhr.send()
 if($B.$CORS){if(xhr.status==200 ||xhr.status==0){res=xhr.responseText}else{res=_b_.FileNotFoundError.$factory("No module named '"+
 mod_name+"'")}}else{if(xhr.readyState==4){if(xhr.status==200){res=xhr.responseText
@@ -12663,6 +12664,10 @@ if(self.elt.tagName=="CANVAS" && self.elt[attr]){return self.elt[attr]}
 if(self.elt instanceof SVGElement){return self.elt[attr].baseVal.value}
 if(self.elt.style[attr]){return parseInt(self.elt.style[attr])}else{throw _b_.AttributeError.$factory("style."+attr+
 " is not set for "+_b_.str.$factory(self))}
+case "x":
+case "y":
+if(!(self.elt instanceof SVGElement)){var pos=$getPosition(self.elt)
+return attr=="x" ? pos.left :pos.top}
 case "clear":
 case "closest":
 return function(){return DOMNode[attr](self,arguments[0])}
@@ -13340,7 +13345,9 @@ throw err}}
 generator.send=function(self,value){self.sent_value=value
 return generator.__next__(self)}
 generator.$$throw=function(self,type,value,traceback){var exc=type
-if(value !==undefined){exc=$B.$call(exc)(value)}
+if(value===undefined){var exc=$B.$call(exc)()
+if(! _b_.isinstance(exc,_b_.BaseException)){throw _b_.TypeError.$factory("exception value must be an "+
+"instance of BaseException")}}else{exc=$B.$call(exc)(value)}
 if(traceback !==undefined){exc.$traceback=traceback}
 self.sent_value={__class__:$B.$GeneratorSendError,err:exc}
 return generator.__next__(self)}

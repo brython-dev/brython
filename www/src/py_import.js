@@ -73,8 +73,11 @@ function $download_module(mod, url, $package){
     var timer = _window.setTimeout(function(){
             xhr.abort()
         }, 5000)
-
-    xhr.open("GET", url + fake_qs, false)
+    if($B.$options.cache){
+        xhr.open("GET", url, false)
+    }else{
+        xhr.open("GET", url + fake_qs, false)
+    }
     xhr.send()
 
     if($B.$CORS){

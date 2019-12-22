@@ -261,8 +261,9 @@ $B.ajax_load_script = function(script){
         $B.tasks.splice(0, 0, [$B.run_script, $B.files[name],
             name, true])
     }else if($B.protocol != "file"){
-        var req = new XMLHttpRequest()
-        req.open("GET", url + "?" + Date.now(), true)
+        var req = new XMLHttpRequest(),
+            qs = $B.$options.cache ? '' : '?' + Date.now()
+        req.open("GET", url + qs, true)
         req.onreadystatechange = function(){
             if(this.readyState == 4){
                 if(this.status == 200){
@@ -280,7 +281,7 @@ $B.ajax_load_script = function(script){
         }
         req.send()
     }else{
-        throw _b_.IOError.$factory("can't load external script at " + 
+        throw _b_.IOError.$factory("can't load external script at " +
             script.url + " (Ajax calls not supported with protocol file:///)")
     }
     loop()
