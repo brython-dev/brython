@@ -408,7 +408,7 @@ bytes.__repr__ = bytes.__str__ = function(self){
     if(res.indexOf("'") > -1 && res.indexOf('"') == -1){
         return 'b"' + res + '"'
     }else{
-        return "b'" + res.replace(new RegExp("'", "g", "\\'"))  + "'"
+        return "b'" + res.replace(new RegExp("'", "g"), "\\'")  + "'"
     }
 }
 
