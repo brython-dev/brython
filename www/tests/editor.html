@@ -49,6 +49,7 @@
 from browser import document as doc, window
 from browser import html
 import header
+
 import editor
 
 qs_lang,language = header.show()
@@ -68,11 +69,6 @@ for key in trans:
     if key in doc:
         doc[key].html = trans[key].get(language,trans[key]['en'])
 
-# link to test page
-tplink = doc['test_page']
-if qs_lang:
-    tplink.attrs["href"] += '?lang=%s' %qs_lang
-
 def set_debug(ev):
     if ev.target.checked:
         __BRYTHON__.debug = 1
@@ -90,32 +86,8 @@ doc['show_js'].bind('click',editor.show_js)
 doc['run'].bind('click',lambda *args: editor.run())
 doc['show_console'].bind('click',editor.show_console)
 
-# erase "main" div
-def clear_main(ev):
-    doc['main'].text = ''
 
-main_content = 'Zone with id="main" ; use it to test interaction with DOM elements'
 
-# add "main" div
-def add_main(ev):
-    global main_content
-    try:
-        # if "main" div already exists, save content and erase container
-        main_content = doc["main"].html
-        doc["main_container"].html = ""
-        doc["add_main"].text = 'Show "main" div'
-    except KeyError:
-        t = html.TABLE()
-        row = html.TR()
-        b = html.BUTTON('Clear')
-        b.bind('click', clear_main)
-        row <= html.TD(b)+html.TD(html.DIV(Id="main"))
-        t <= row
-        doc["main_container"] <= t
-        doc["main"].html = main_content
-        doc["add_main"].text = 'Hide "main" div'
-
-doc["add_main"].bind('click', add_main)
 
 </script>
 
@@ -140,49 +112,40 @@ function run_js(){
 
 <div id="main_container"></div>
 
-<div style="text-align:center">Brython version: <span id="version"></span>
 </div>
 
-<div id="container">
-<div id="left-div">
-<div style="padding: 3px 3px 3px 3px;">
-<button id="add_main">Add <b>&lt;div id=main&gt;</b></button>
+<table id="container">
+  <tr>
+    <td>Brython version: <span id="version"></span></td>
+    <td></td>
+    <td>
+        <button id="run"> ▶ Run</button>
+        Debug<input type="checkbox" id="set_debug" checked>
+        <button id="show_console">Python</button>
+        <button id="show_js">Javascript</button>
+    </td>
+  </tr>
 
-</div>
-  <div id="editor" style="width:100%;"></div>
-</div>
+  <tr>
+    <td id="left">
+      <div id="editor" style="width:100%;"></div>
+    </td>
+    <td id="separator"></td>
+    <td id="right">
+      <textarea id="console" autocomplete="off"></textarea>
+    </td>
+  </tr>
 
-<div id="right-div">
-<div style="padding: 3px 3px 3px 3px;">
-  <div style="float:left">
-    <button id="run"> ▶ Run</button>
-    Debug<input type="checkbox" id="set_debug" checked>
-  </div>
-
-  <div style="float:right">
-    <button id="show_console">Python</button>
-    <button id="show_js">Javascript</button>
-  </div>
-</div>
-<div style="width:100%;height:100%;">
-<textarea id="console" autocomplete="off"></textarea>
-</div>
-</div>
-
-<div style="float:left;margin-top:50px">
-    <a href="//github.com/brython-dev/brython/issues" title="Please report Bugs on the GitHub Issue Tracker !">
-        Report a bug
-    </a><br>
-    <a href='index.html' id="test_page">
-        Built-in test suite
-    </a><br>
-    <a href='unittests/index.html'>
-        CPython tests
-    </a><br>
-    <div id="legend">
-    Python code editor uses <a href="https://ace.c9.io/" target="_blank">Ace</a>.
-    </div>
-</div>
+  <tr>
+    <td>
+      Python code editor uses <a href="https://ace.c9.io/" target="_blank">Ace</a>.
+    </td>
+    <td></td>
+    <td>
+      <a href="index.html">Tests suite</a>
+    </td>
+  </tr>
+</table>
 
 </body>
 </html>

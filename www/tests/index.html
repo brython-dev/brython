@@ -179,48 +179,43 @@ for key in trans:
 <div style="text-align:center">
 <br>Brython version: <span id="version"></span>
 </div>
-</center>
 
 
-<div id="container">
-<div id="left-div">
-<div style="padding: 3px 3px 3px 3px;">
-Test:
-<select name="filename" id="files">
-</select>
-<button id="test_all">Run all tests</button>
+<table id="container">
+  <tr>
+    <td>
+      <div style="padding: 3px 3px 3px 3px;">
+        Test:
+        <select name="filename" id="files">
+        </select>
+        <button id="test_all">Run all tests</button>
 
-</div>
-  <div id="editor" style="width:100%;"></div>
-</div>
+      </div>
+    </td>
 
-<div id="right-div">
-<div style="padding: 3px 3px 3px 3px;">
-  <div style="float:left">
-    <button id="run">run</button>
-    debug<input type="checkbox" id="set_debug" checked>
-  </div>
-  <div style="float:right">
-    <button id="show_console">Show console</button>
-    <button id="show_js">Show Javascript</button>
-  </div>
-</div>
-
-<div style="width:100%;height:100%;">
-<textarea id="console" autocomplete="off"></textarea>
-</div>
-
-<div id="timeout_dialog" title="Set timeout for loops" style="visibility:hidden">
-    <form>
-     <fieldset>
-      <label for="loop_timeout">Timeout (sec.)</label>
-      <input type="text" name="timeout" id="timeout" value="20" class="text ui-widget-content ui-corner-all">
-     </fieldset>
-    </form>
-</div>
-
-</div>
-</div>
+    <td>
+      <div style="padding: 3px 3px 3px 3px;">
+        <div style="float:left">
+          <button id="run">run</button>
+          debug<input type="checkbox" id="set_debug" checked>
+        </div>
+        <div style="float:right">
+          <button id="show_console">Show console</button>
+          <button id="show_js">Show Javascript</button>
+        </div>
+    </td>
+  </tr>
+  <tr>
+    <td id="left">
+      <div id="editor" style="width:100%;"></div>
+    </td>
+    <td id="right">
+        <div style="width:100%;height:100%;">
+        <textarea id="console" autocomplete="off"></textarea>
+        </div>
+    </td>
+  </tr>
+</table>
 
 <div id="legend">
     Python code editor uses <a href="https://ace.c9.io/" target="_blank">Ace</a>.

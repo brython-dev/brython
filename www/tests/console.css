@@ -6,30 +6,29 @@ textarea {
 
 #container {
     width:90%;
-    height: 66%;
+    height: 80%;
     position:relative;
     margin: auto;
 }
 
-#left-div {
-    width:50%;
+#left {
+    width:49%;
     height:100%;
-    #position:relative;
-    margin: auto;
-    float:left;
 }
 
-#right-div {
-    width:48%;
+#separator{
+    width:1%;
     height:100%;
-    position:relative;
-    margin: auto;
-    float:right;
+}
+
+#right {
+    width:49%;
+    height:100%;
 }
 
 #editor {
     float:none;
-    width:50%;
+    width:100%;
     height:100%;
 }
 

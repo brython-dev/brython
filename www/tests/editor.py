@@ -5,13 +5,10 @@ import javascript
 
 from browser import document as doc, window, alert
 
-# set height of container to 66% of screen
+# set height of container to 75% of screen
 _height = doc.documentElement.clientHeight
 _s = doc['container']
-_s.style.height = '%spx' % int(_height * 0.66)
-
-doc["legend"].style.top = '%spx' % int(_height * 0.9)
-doc["legend"].style.visibility = "visible"
+_s.style.height = '%spx' % int(_height * 0.85)
 
 has_ace = True
 try:
