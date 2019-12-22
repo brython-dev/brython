@@ -686,6 +686,12 @@ DOMNode.__getattribute__ = function(self, attr){
                 throw _b_.AttributeError.$factory("style." + attr +
                     " is not set for " + _b_.str.$factory(self))
             }
+        case "x":
+        case "y":
+            if(! (self.elt instanceof SVGElement)){
+                var pos = $getPosition(self.elt)
+                return attr == "x" ? pos.left : pos.top
+            }
         case "clear":
         case "closest":
             return function(){return DOMNode[attr](self, arguments[0])}
