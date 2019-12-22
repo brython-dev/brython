@@ -15,7 +15,7 @@ function decode(bytes, altchars, validate){
     var alphabet = make_alphabet(altchars)
 
     var input = bytes.source
-
+    
     // If validate is set, check that all characters in input
     // are in the alphabet
     var _input = ''
@@ -60,7 +60,6 @@ function decode(bytes, altchars, validate){
     }
     // return Python bytes
     return _b_.bytes.$factory(output, 'utf-8', 'strict')
-
 }
 
 function make_alphabet(altchars){
@@ -78,7 +77,7 @@ var module = {
     a2b_base64: function(){
         var $ = $B.args("a2b_base64", 1, {s: null}, ['s'],
                 arguments, {}, null, null)
-        return decode($.s)
+        return decode(_b_.str.encode($.s, 'ascii'))
     },
     b2a_base64: function(){
         var $ = $B.args("b2a_base64", 1, {data: null}, ['data'],
