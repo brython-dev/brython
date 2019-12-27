@@ -752,14 +752,16 @@ generator.send = function(self, value){
 
 generator.$$throw = function(self, type, value, traceback){
     var exc = type
-    if(value === undefined){
-        var exc = $B.$call(exc)()
-        if(! _b_.isinstance(exc, _b_.BaseException)){
-            throw _b_.TypeError.$factory("exception value must be an " +
-                "instance of BaseException")
+    if(! _b_.isinstance(type, _b_.BaseException)){
+        if(value === undefined){
+            var exc = $B.$call(exc)()
+            if(! _b_.isinstance(exc, _b_.BaseException)){
+                throw _b_.TypeError.$factory("exception value must be an " +
+                    "instance of BaseException")
+            }
+        }else{
+            exc = $B.$call(exc)(value)
         }
-    }else{
-        exc = $B.$call(exc)(value)
     }
     if(traceback !== undefined){exc.$traceback = traceback}
     self.sent_value = {__class__: $B.$GeneratorSendError, err: exc}

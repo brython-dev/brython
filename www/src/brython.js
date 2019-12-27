@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,6,'final',0]
 __BRYTHON__.__MAGIC__="3.8.6"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2019-12-26 08:52:55.130378"
-__BRYTHON__.timestamp=1577346775129
+__BRYTHON__.compiled_date="2019-12-27 19:20:19.464489"
+__BRYTHON__.timestamp=1577470819464
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -225,7 +225,6 @@ while(root.parent !==undefined){root=root.parent}
 var module=tree_node.module,src=root.src,line_num=tree_node.line_num
 if(src){line_num=src.substr(0,$pos).split("\n").length}
 if(root.line_info){line_num=root.line_info}
-if(indent !==undefined)
 if(indent===undefined){if(Array.isArray(msg)){$B.$SyntaxError(module,msg[0],src,$pos,line_num)}
 if(msg==="Triple string end not found"){
 $B.$SyntaxError(module,'invalid syntax : triple string end not found',src,$pos,line_num,root)}
@@ -12065,8 +12064,9 @@ current.expression+=car
 i++}else if(car=="="){
 var ce=current.expression
 if(ce.length==0 ||
-"=!<>:".search(ce.charAt(ce.length-1))>-1){current.expression+=car
-i++}else{
+string.charAt(i+1)=="=" ||
+"=!<>:".search(ce.charAt(ce.length-1))>-1){current.expression+=car+string.charAt(i+1)
+i+=2}else{
 tail=car
 while(string.charAt(i+1).match(/\s/)){tail+=string.charAt(i+1)
 i++}
@@ -13347,9 +13347,9 @@ throw err}}
 generator.send=function(self,value){self.sent_value=value
 return generator.__next__(self)}
 generator.$$throw=function(self,type,value,traceback){var exc=type
-if(value===undefined){var exc=$B.$call(exc)()
+if(! _b_.isinstance(type,_b_.BaseException)){if(value===undefined){var exc=$B.$call(exc)()
 if(! _b_.isinstance(exc,_b_.BaseException)){throw _b_.TypeError.$factory("exception value must be an "+
-"instance of BaseException")}}else{exc=$B.$call(exc)(value)}
+"instance of BaseException")}}else{exc=$B.$call(exc)(value)}}
 if(traceback !==undefined){exc.$traceback=traceback}
 self.sent_value={__class__:$B.$GeneratorSendError,err:exc}
 return generator.__next__(self)}

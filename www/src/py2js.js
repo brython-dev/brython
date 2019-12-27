@@ -342,7 +342,6 @@ var $_SyntaxError = $B.parser.$_SyntaxError = function (context, msg, indent){
     if(root.line_info){
         line_num = root.line_info
     }
-    if(indent !== undefined)
     if(indent === undefined){
         if(Array.isArray(msg)){
             $B.$SyntaxError(module, msg[0], src, $pos, line_num)
