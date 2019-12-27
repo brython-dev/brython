@@ -158,6 +158,10 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj) {
         return jsobj
     }
 
+    if(jsobj instanceof Node){
+        return $B.DOMNode.$factory(jsobj)
+    }
+
     return JSObject.$factory(jsobj)
 }
 
@@ -270,7 +274,7 @@ JSObject.__dir__ = function(self){
 }
 
 JSObject.__getattribute__ = function(self,attr){
-    var $test = false //attr == "data"
+    var $test = false //attr == "createChooseButton"
     if($test){console.log("get attr", attr, "of", self)}
     if(attr.substr(0,2) == '$$'){attr = attr.substr(2)}
     if(self.js === null){return object.__getattribute__(None, attr)}
@@ -356,6 +360,9 @@ JSObject.__getattribute__ = function(self,attr){
                     new_this = this
                 }
                 var result = js_attr.apply(new_this, args)
+                if($test){
+                    console.log("result", result, jsobj2pyobj(result))
+                }
                 return jsobj2pyobj(result)
             }
             res.__repr__ = function(){return '<function ' + attr + '>'}
