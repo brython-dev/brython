@@ -725,14 +725,13 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         Return value is either a file object (which has to be copied
         to the outputfile by the caller unless the command was HEAD,
         and must be closed by the caller under all circumstances), or
-        a generator of data chunks, or None, in which case the caller 
+        a generator of data chunks, or None, in which case the caller
         has nothing further to do.
 
         """
         path = self.translate_path(self.path)
         f = None
         if os.path.isdir(path):
-            print("path is dir", path)
             parts = urllib.parse.urlsplit(self.path)
             if not parts.path.endswith('/'):
                 # redirect browser - doing basically what apache does
@@ -788,7 +787,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             # Use HTTP compression if available
             f = self.handle_compression(f)
 
-            if self.content_length: # Not set for Chunked Tranfer Encoding
+            if self.content_length: # Not set for Chunked Transfer Encoding
                 self.send_header("Content-Length", str(self.content_length))
             self.end_headers()
             return f

@@ -188,11 +188,16 @@ class CompressedHandler(CGIHTTPRequestHandler):
                 self.content_length = len(content)
                 return io.BytesIO(content)
             else:
+                self.content_length = None
                 chunked = self.protocol_version >= "HTTP/1.1"
                 if chunked:
                     # Use Chunked Transfer Encoding (RFC 7230 section 4.1)
-                    self.content_length = None
                     self.send_header("Transfer-Encoding", "chunked")
+                else:
+                    # Set Expires header for cache
+                    self.send_header("Expires",
+                        self.date_time_string(time.time() + 3600))
+                    self.send_header("Max-age", 3600)
                 # Return a generator of pieces of compressed data
                 return producer(f)
 
