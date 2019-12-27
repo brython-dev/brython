@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,6,'final',0]
 __BRYTHON__.__MAGIC__="3.8.6"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2019-12-22 13:38:52.200033"
-__BRYTHON__.timestamp=1577018332200
+__BRYTHON__.compiled_date="2019-12-26 08:52:55.130378"
+__BRYTHON__.timestamp=1577346775129
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -8698,6 +8698,7 @@ if(Array.isArray(jsobj)){return _b_.list.$factory(jsobj.map(jsobj2pyobj))}
 if(typeof jsobj==='number'){if(jsobj.toString().indexOf('.')==-1){return _b_.int.$factory(jsobj)}
 return _b_.float.$factory(jsobj)}
 if(jsobj.$nat==='kw'){return jsobj}
+if(jsobj instanceof Node){return $B.DOMNode.$factory(jsobj)}
 return JSObject.$factory(jsobj)}
 var pyobj2jsobj=$B.pyobj2jsobj=function(pyobj){
 if(pyobj===true ||pyobj===false){return pyobj}
@@ -8771,6 +8772,7 @@ if(self.js_func){
 new_this=self.js_func;}
 if(this !==null && this !==undefined && this !==_window){new_this=this}
 var result=js_attr.apply(new_this,args)
+if($test){console.log("result",result,jsobj2pyobj(result))}
 return jsobj2pyobj(result)}
 res.__repr__=function(){return '<function '+attr+'>'}
 res.__str__=function(){return '<function '+attr+'>'}

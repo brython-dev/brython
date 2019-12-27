@@ -84,4 +84,10 @@ assert f"{x = :.1f}" == "x = 5.3"
 y = 8
 assert f"{y=}" == "y=8"
 
+# issue 1267
+a = 5
+assert f'{"is" if a == 1 else "are"}' == "are"
+a = 1
+assert f'{"is" if a == 1 else "are"}' == "is"
+
 print("passed all tests")
