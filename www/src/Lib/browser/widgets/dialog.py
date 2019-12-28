@@ -63,15 +63,15 @@ class Dialog(html.DIV):
 
         document <= self
         cstyle = window.getComputedStyle(self)
-
+        
         # Center horizontally and vertically
         if left is None:
-            width = int(cstyle.width[:-2])
+            width = round(float(cstyle.width[:-2]) + 0.5)
             left = int((window.innerWidth - width) / 2)
         self.left = left
         self.style.left = f'{left}px'
         if top is None:
-            height = int(cstyle.height[:-2])
+            height = round(float(cstyle.height[:-2]) + 0.5)
             top = int((window.innerHeight - height) / 2)
         self.top = top
         self.style.top = f'{top}px'
