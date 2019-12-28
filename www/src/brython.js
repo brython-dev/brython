@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,6,'final',0]
 __BRYTHON__.__MAGIC__="3.8.6"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2019-12-27 19:20:19.464489"
-__BRYTHON__.timestamp=1577470819464
+__BRYTHON__.compiled_date="2019-12-28 21:59:51.902843"
+__BRYTHON__.timestamp=1577566791902
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5619,7 +5619,7 @@ if(res.__get__){if(res.__class__===method){var result=res.__get__(res.__func__,k
 result.$infos={__func__:res,__name__:res.$infos.__name__,__qualname__:klass.$infos.__name__+"."+res.$infos.__name__,__self__:klass}}else{result=res.__get__(klass)}
 return result}
 if(typeof res=="function"){
-if(res.$infos===undefined && $B.debug > 1){console.log("warning: no attribute $infos for",res,"attr",attr)}
+if(res.$infos===undefined && $B.debug > 1){console.log("warning: no attribute $infos for",res,"klass",klass,"attr",attr)}
 if($test){console.log("res is function",res)}
 if(attr=="__new__"){res.$type="staticmethod"}
 if(attr=="__class_getitem__" && res.__class__ !==$B.method){res=_b_.classmethod.$factory(res)}
@@ -6435,11 +6435,15 @@ var code=$B.code=$B.make_class("code")
 code.__repr__=code.__str__=function(self){return '<code object '+self.name+', file '+self.filename+'>'}
 code.__getattr__=function(self,attr){if(attr=="co_code"){return 'co_code'}
 return self[attr]}
+$B.set_func_names(code,"builtins")
 function compile(){var $=$B.args('compile',6,{source:null,filename:null,mode:null,flags:null,dont_inherit:null,optimize:null},['source','filename','mode','flags','dont_inherit','optimize'],arguments,{flags:0,dont_inherit:false,optimize:-1},null,null)
 var module_name='$exec_'+$B.UUID()
 $B.clear_ns(module_name)
 $.__class__=code
 $.co_flags=$.flags
+$.name="<module>"
+if($.mode=="single" &&($.flags & 0x200)&& ! $.source.endsWith("\n")){var lines=$.source.split("\n")
+if($B.last(lines).startsWith(" ")){throw _b_.SyntaxError.$factory("unexpected EOF while parsing")}}
 $B.py2js($.source,module_name,module_name)
 return $}
 var __debug__=$B.debug > 0
@@ -6498,11 +6502,11 @@ $B.from_alias=function(attr){if(attr.substr(0,2)=='$$' && $B.aliased_names[attr.
 return attr}
 $B.to_alias=function(attr){if($B.aliased_names[attr]){return '$$'+attr}
 return attr}
-function $$eval(src,_globals,_locals){var $=$B.args("eval",4,{src:null,globals:null,locals:null,is_exec:null},["src","globals","locals","is_exec"],arguments,{globals:_b_.None,locals:_b_.None,is_exec:false},null,null),src=$.src,_globals=$.globals,_locals=$.locals,is_exec=$.is_exec
+function $$eval(src,_globals,_locals){var $=$B.args("eval",4,{src:null,globals:null,locals:null,mode:null},["src","globals","locals","mode"],arguments,{globals:_b_.None,locals:_b_.None,mode:"eval"},null,null),src=$.src,_globals=$.globals,_locals=$.locals,mode=$.mode
 var current_frame=$B.frames_stack[$B.frames_stack.length-1]
 if(current_frame !==undefined){var current_locals_id=current_frame[0].replace(/\./,'_'),current_globals_id=current_frame[2].replace(/\./,'_')}
 var stack_len=$B.frames_stack.length
-if(src.__class__===code){is_exec=src.mode=="exec"
+if(src.__class__===code){mode=src.mode
 src=src.source}else if(typeof src !=='string'){throw _b_.TypeError.$factory("eval() arg 1 must be a string, bytes "+
 "or code object")}
 var globals_id='$exec_'+$B.UUID(),globals_name=globals_id,locals_id='$exec_'+$B.UUID(),parent_scope
@@ -6569,10 +6573,10 @@ root.children.splice(root.children.length-2,2)
 for(var i=0;i < children.length-1;i++){root.add(children[i])}
 break
 default:
-if(!is_exec){throw _b_.SyntaxError.$factory(
+if(mode=="eval"){throw _b_.SyntaxError.$factory(
 "eval() argument must be an expression",'<string>',1,1,src)}}
 js=root.to_js()
-if(is_exec){var locals_obj=eval("$locals_"+locals_id),globals_obj=eval("$locals_"+globals_id)
+if(mode !="eval"){var locals_obj=eval("$locals_"+locals_id),globals_obj=eval("$locals_"+globals_id)
 if(_globals===_b_.None){var res=new Function("$locals_"+globals_id,"$locals_"+locals_id,js)(globals_obj,locals_obj)}else{current_globals_obj=current_frame[3]
 current_locals_obj=current_frame[1]
 var res=new Function("$locals_"+globals_id,"$locals_"+locals_id,"$locals_"+current_globals_id,"$locals_"+current_locals_id,js)(globals_obj,locals_obj,current_globals_obj,current_locals_obj)}}else{var res=eval(js)}
@@ -6602,7 +6606,7 @@ $B.clear_ns(locals_id)}}
 $$eval.$is_func=true
 function exec(src,globals,locals){var missing={}
 var $=$B.args("exec",3,{src:null,globals:null,locals:null},["src","globals","locals"],arguments,{globals:_b_.None,locals:_b_.None},null,null),src=$.src,globals=$.globals,locals=$.locals
-return $$eval(src,globals,locals,true)||_b_.None}
+return $$eval(src,globals,locals,"exec")||_b_.None}
 exec.$is_func=true
 function exit(){throw _b_.SystemExit}
 exit.__repr__=exit.__str__=function(){return "Use exit() or Ctrl-Z plus Return to exit"}
@@ -7658,7 +7662,7 @@ _str[pos++]="$B.set_func_names(_b_."+name+", 'builtins')"}
 try{eval(_str.join(";"))}catch(err){console.log("--err"+err)
 throw err}}
 $make_exc(["SystemExit","KeyboardInterrupt","GeneratorExit","Exception"],BaseException)
-$make_exc([["StopIteration","err.value = arguments[0]"],["StopAsyncIteration","err.value = arguments[0]"],"ArithmeticError","AssertionError","AttributeError","BufferError","EOFError","ImportError","LookupError","MemoryError","NameError","OSError","ReferenceError","RuntimeError","SyntaxError","SystemError","TypeError","ValueError","Warning"],_b_.Exception)
+$make_exc([["StopIteration","err.value = arguments[0]"],["StopAsyncIteration","err.value = arguments[0]"],"ArithmeticError","AssertionError","AttributeError","BufferError","EOFError","ImportError","LookupError","MemoryError","NameError","OSError","ReferenceError","RuntimeError",["SyntaxError","err.msg = arguments[0]"],"SystemError","TypeError","ValueError","Warning"],_b_.Exception)
 $make_exc(["FloatingPointError","OverflowError","ZeroDivisionError"],_b_.ArithmeticError)
 $make_exc(["ModuleNotFoundError"],_b_.ImportError)
 $make_exc(["IndexError","KeyError"],_b_.LookupError)

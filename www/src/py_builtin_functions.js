@@ -294,6 +294,8 @@ code.__getattr__ = function(self, attr){
     return self[attr]
 }
 
+$B.set_func_names(code, "builtins")
+
 function compile() {
     var $ = $B.args('compile', 6,
         {source:null, filename:null, mode:null, flags:null, dont_inherit:null,
@@ -305,6 +307,16 @@ function compile() {
     $B.clear_ns(module_name)
     $.__class__ = code
     $.co_flags = $.flags
+    $.name = "<module>"
+    if($.mode == "single" && ($.flags & 0x200) && ! $.source.endsWith("\n")){
+        // This is used in codeop.py to raise SyntaxError until a block in the
+        // interactive interpreter ends with "\n"
+        // Cf. issue #853
+        var lines = $.source.split("\n")
+        if($B.last(lines).startsWith(" ")){
+            throw _b_.SyntaxError.$factory("unexpected EOF while parsing")
+        }
+    }
     // Run py2js to detect potential syntax errors
     $B.py2js($.source, module_name, module_name)
     return $
@@ -463,14 +475,13 @@ $B.to_alias = function(attr){
 function $$eval(src, _globals, _locals){
 
     var $ = $B.args("eval", 4,
-            {src: null, globals: null, locals: null, is_exec: null},
-            ["src", "globals", "locals", "is_exec"], arguments,
-            {globals: _b_.None, locals: _b_.None, is_exec: false}, null, null),
+            {src: null, globals: null, locals: null, mode: null},
+            ["src", "globals", "locals", "mode"], arguments,
+            {globals: _b_.None, locals: _b_.None, mode: "eval"}, null, null),
             src = $.src,
             _globals = $.globals,
             _locals = $.locals,
-            is_exec = $.is_exec
-
+            mode = $.mode
     var current_frame = $B.frames_stack[$B.frames_stack.length - 1]
     if(current_frame !== undefined){
         var current_locals_id = current_frame[0].replace(/\./, '_'),
@@ -480,7 +491,7 @@ function $$eval(src, _globals, _locals){
     var stack_len = $B.frames_stack.length
 
     if(src.__class__ === code){
-        is_exec = src.mode == "exec"
+        mode = src.mode
         src = src.source
     }else if(typeof src !== 'string'){
         throw _b_.TypeError.$factory("eval() arg 1 must be a string, bytes "+
@@ -680,7 +691,7 @@ function $$eval(src, _globals, _locals){
                 }
                 break
             default:
-                if(!is_exec){
+                if(mode == "eval"){
                     throw _b_.SyntaxError.$factory(
                         "eval() argument must be an expression",
                         '<string>', 1, 1, src)
@@ -689,7 +700,7 @@ function $$eval(src, _globals, _locals){
 
         js = root.to_js()
 
-        if(is_exec){
+        if(mode != "eval"){
             var locals_obj = eval("$locals_" + locals_id),
                 globals_obj = eval("$locals_" + globals_id)
 
@@ -792,7 +803,7 @@ function exec(src, globals, locals){
         src = $.src,
         globals = $.globals,
         locals = $.locals
-    return $$eval(src, globals, locals, true) || _b_.None
+    return $$eval(src, globals, locals, "exec") || _b_.None
 }
 
 exec.$is_func = true
@@ -1137,7 +1148,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var cname = klass.$infos.__name__
     if(is_class){cname = obj.$infos.__name__}
-                
+
     attr_error(rawname, cname)
 }
 

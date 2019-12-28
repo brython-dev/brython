@@ -452,7 +452,8 @@ type.__getattribute__ = function(klass, attr){
         if(typeof res == "function"){
             // method
             if(res.$infos === undefined && $B.debug > 1){
-                console.log("warning: no attribute $infos for", res, "attr", attr)
+                console.log("warning: no attribute $infos for", res, 
+                    "klass", klass, "attr", attr)
             }
             if($test){console.log("res is function", res)}
 
@@ -532,7 +533,7 @@ type.__new__ = function(meta, name, bases, cl_dict){
     // becomes the __bases__ attribute; and the dict dictionary is the
     // namespace containing definitions for class body and becomes the
     // __dict__ attribute
-    
+
     // Create the class dictionary
     var class_dict = {
         __class__ : meta,
