@@ -269,3 +269,5 @@ __stdout__ = __BRYTHON__.stdout
 __stderr__ = __BRYTHON__.stderr
 __stdin__ = __BRYTHON__.stdin
 
+def __excepthook__(*args):
+    pass
