@@ -558,7 +558,8 @@ $make_exc([["StopIteration","err.value = arguments[0]"],
     ["StopAsyncIteration","err.value = arguments[0]"],
     "ArithmeticError", "AssertionError", "AttributeError",
     "BufferError", "EOFError", "ImportError", "LookupError", "MemoryError",
-    "NameError", "OSError", "ReferenceError", "RuntimeError", "SyntaxError",
+    "NameError", "OSError", "ReferenceError", "RuntimeError", 
+    ["SyntaxError", "err.msg = arguments[0]"],
     "SystemError", "TypeError", "ValueError", "Warning"],_b_.Exception)
 $make_exc(["FloatingPointError", "OverflowError", "ZeroDivisionError"],
     _b_.ArithmeticError)
