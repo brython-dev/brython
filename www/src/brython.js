@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,6,'final',0]
 __BRYTHON__.__MAGIC__="3.8.6"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2019-12-28 21:59:51.902843"
-__BRYTHON__.timestamp=1577566791902
+__BRYTHON__.compiled_date="2019-12-30 18:10:27.571628"
+__BRYTHON__.timestamp=1577725827571
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -6442,7 +6442,8 @@ $B.clear_ns(module_name)
 $.__class__=code
 $.co_flags=$.flags
 $.name="<module>"
-if($.mode=="single" &&($.flags & 0x200)&& ! $.source.endsWith("\n")){var lines=$.source.split("\n")
+if($.mode=="single" &&($.flags & 0x200)&& ! $.source.endsWith("\n")){
+var lines=$.source.split("\n")
 if($B.last(lines).startsWith(" ")){throw _b_.SyntaxError.$factory("unexpected EOF while parsing")}}
 $B.py2js($.source,module_name,module_name)
 return $}
@@ -6575,11 +6576,20 @@ break
 default:
 if(mode=="eval"){throw _b_.SyntaxError.$factory(
 "eval() argument must be an expression",'<string>',1,1,src)}}
+if(mode !="eval"){
+var last=$B.last(root.children),js=last.to_js()
+if(["node_js"].indexOf(last.C.type)==-1){last.to_js=function(){while(js.endsWith("\n")){js=js.substr(0,js.length-1)}
+while(js.endsWith(";")){js=js.substr(0,js.length-1)}
+return "return ("+js+")"}}
 js=root.to_js()
-if(mode !="eval"){var locals_obj=eval("$locals_"+locals_id),globals_obj=eval("$locals_"+globals_id)
-if(_globals===_b_.None){var res=new Function("$locals_"+globals_id,"$locals_"+locals_id,js)(globals_obj,locals_obj)}else{current_globals_obj=current_frame[3]
+var locals_obj=eval("$locals_"+locals_id),globals_obj=eval("$locals_"+globals_id)
+if(_globals===_b_.None){var res=new Function("$locals_"+globals_id,"$locals_"+locals_id,js)(
+globals_obj,locals_obj)}else{current_globals_obj=current_frame[3]
 current_locals_obj=current_frame[1]
-var res=new Function("$locals_"+globals_id,"$locals_"+locals_id,"$locals_"+current_globals_id,"$locals_"+current_locals_id,js)(globals_obj,locals_obj,current_globals_obj,current_locals_obj)}}else{var res=eval(js)}
+var res=new Function("$locals_"+globals_id,"$locals_"+locals_id,"$locals_"+current_globals_id,"$locals_"+current_locals_id,js)(globals_obj,locals_obj,current_globals_obj,current_locals_obj)}}else{js=root.to_js()
+var res=eval(js)}
+if($.src.filename=="<console>" && $.src.mode=="single" &&
+res !==undefined && res !==_b_.None){_b_.print(res)}
 gns=eval("$locals_"+globals_id)
 if($B.frames_stack[$B.frames_stack.length-1][2]==globals_id){gns=$B.frames_stack[$B.frames_stack.length-1][3]}
 if(_locals !==_b_.None){lns=eval("$locals_"+locals_id)
@@ -6594,6 +6604,8 @@ for(var attr in _globals.$string_dict){if(attr.startsWith("$")&& !attr.startsWit
 if(res===undefined){return _b_.None}
 return res}catch(err){err.src=src
 err.module=globals_id
+for(var i=0,len=err.$stack.length;i < len;i++){if(err.$stack[i][0]==current_frame[0]){err.$stack=err.$stack.slice(i)
+break}}
 if(err.$py_error===undefined){throw $B.exception(err)}
 throw err}finally{
 if($B.frames_stack.length==stack_len+1){$B.frames_stack.pop()}

@@ -698,15 +698,27 @@ function $$eval(src, _globals, _locals){
                 }
         }
 
-        js = root.to_js()
 
         if(mode != "eval"){
+            // The last instruction is transformed to return its result
+            var last = $B.last(root.children),
+                js = last.to_js()
+            if(["node_js"].indexOf(last.context.type) == -1){
+                last.to_js = function(){
+                    while(js.endsWith("\n")){js = js.substr(0, js.length - 1)}
+                    while(js.endsWith(";")){js = js.substr(0, js.length - 1)}
+                    return "return (" + js + ")"
+                }
+            }
+            js = root.to_js()
+
             var locals_obj = eval("$locals_" + locals_id),
                 globals_obj = eval("$locals_" + globals_id)
 
             if(_globals === _b_.None){
                 var res = new Function("$locals_" + globals_id,
-                    "$locals_" + locals_id, js)(globals_obj, locals_obj)
+                    "$locals_" + locals_id, js)(
+                        globals_obj, locals_obj)
 
             }else{
                 current_globals_obj = current_frame[3]
@@ -720,7 +732,13 @@ function $$eval(src, _globals, _locals){
                         current_globals_obj, current_locals_obj)
             }
         }else{
+            js = root.to_js()
             var res = eval(js)
+        }
+
+        if($.src.filename == "<console>" && $.src.mode == "single" &&
+                res !== undefined && res !== _b_.None){
+            _b_.print(res)
         }
 
         gns = eval("$locals_" + globals_id)
@@ -776,6 +794,13 @@ function $$eval(src, _globals, _locals){
     }catch(err){
         err.src = src
         err.module = globals_id
+        // Exception trace of exec starts at current frame
+        for(var i = 0, len = err.$stack.length; i < len; i++){
+            if(err.$stack[i][0] == current_frame[0]){
+                err.$stack = err.$stack.slice(i)
+                break
+            }
+        }
         if(err.$py_error === undefined){throw $B.exception(err)}
         throw err
     }finally{
@@ -791,6 +816,7 @@ function $$eval(src, _globals, _locals){
 
         $B.clear_ns(globals_id)
         $B.clear_ns(locals_id)
+
     }
 }
 $$eval.$is_func = true
