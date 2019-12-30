@@ -118,3 +118,8 @@ ch1 = random.choices([0, 1, 2], [2, 1, 1], k = 50)
 random.seed(31416)
 ch2 = random.choices([0, 1, 2], [2, 1, 1], k = 50)
 assert ch1 == ch2
+
+# issue 1268
+random.choices('abc', k=2)
+
+print("passed all tests...")

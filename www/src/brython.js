@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,6,'final',0]
 __BRYTHON__.__MAGIC__="3.8.6"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2019-12-30 18:10:27.571628"
-__BRYTHON__.timestamp=1577725827571
+__BRYTHON__.compiled_date="2019-12-30 22:24:19.377720"
+__BRYTHON__.timestamp=1577741059377
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -6604,9 +6604,9 @@ for(var attr in _globals.$string_dict){if(attr.startsWith("$")&& !attr.startsWit
 if(res===undefined){return _b_.None}
 return res}catch(err){err.src=src
 err.module=globals_id
+if(err.$py_error===undefined){throw $B.exception(err)}else{
 for(var i=0,len=err.$stack.length;i < len;i++){if(err.$stack[i][0]==current_frame[0]){err.$stack=err.$stack.slice(i)
-break}}
-if(err.$py_error===undefined){throw $B.exception(err)}
+break}}}
 throw err}finally{
 if($B.frames_stack.length==stack_len+1){$B.frames_stack.pop()}
 root=null

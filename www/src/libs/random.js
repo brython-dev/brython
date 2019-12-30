@@ -387,6 +387,7 @@ Random.choices = function(){
     if(population.length == 0){
         throw _b_.ValueError.$factory("population is empty")
     }
+    population = _b_.list.$factory(population) // issue #1268
     if(weights === _b_.None){
         weights = []
         population.forEach(function(){
