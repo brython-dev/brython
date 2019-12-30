@@ -54,7 +54,7 @@ import time
 import sys
 import tb as traceback
 
-from browser import document as doc, bind
+from browser import document as doc, bind, console
 from browser import timer, aio
 from browser.local_storage import storage
 
@@ -140,17 +140,19 @@ doc['files'].bind('change', editor.load_script)
 from browser import document as doc
 import header
 
-qs_lang,language = header.show()
+qs_lang, language = header.show()
 
 # other translations
 
 trans = {
-    'report_bugs':{'en':'Please report bugs in the ',
-                   'es':'Poner los bugs en el ',
-                   'fr':"Signalez les bugs dans l'"},
-    'test_page':{'en':'Tests page','es':'Página de pruebas','fr':'Page de tests'},
-    'run':{'en':'run','es':'ejecutar','fr':'exécuter'},
-    'clear':{'en':'clear','es':'borrar','fr':'effacer'}
+    'report_bugs':{'en': 'Please report bugs in the ',
+                   'es': 'Poner los bugs en el ',
+                   'fr': "Signalez les bugs dans l'"},
+    'test_page':{'en': 'Tests page',
+                 'es': 'Página de pruebas', 
+                 'fr':' Page de tests'},
+    'run':{'en': 'run', 'es': 'ejecutar', 'fr': 'exécuter'},
+    'clear':{'en': 'clear', 'es': 'borrar', 'fr': 'effacer'}
 }
 
 
@@ -165,7 +167,7 @@ for key in trans:
 
 </head>
 
-<body onload="brython({debug:1, cache:'none', static_stdlib_import:true})">
+<body onload="brython({debug:1, static_stdlib_import:true})">
 
 <!-- HTML needed to run tests included in dom.py -->
 <div id="dom-test-element-id"></div>
