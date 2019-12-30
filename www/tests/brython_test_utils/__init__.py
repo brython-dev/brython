@@ -1,6 +1,8 @@
 import sys
 import time
-import traceback
+import tb as traceback
+
+from browser import console
 
 def discover_brython_test_modules():
     # TODO : Test discovery based on file system paths
