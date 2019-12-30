@@ -11,20 +11,14 @@ class Trace:
 
     def format(self):
         """Remove calls to function in this script from the traceback."""
-        lines = self.buf.split("\n")
-        stripped = [lines[0]]
-        for i in range(3, len(lines), 2):
-            if __file__ in lines[i]:
-                continue
-            stripped += lines[i: i+2]
-        return "\n".join(stripped)
+        return self.buf
 
 def format_exc():
     trace = Trace()
     exc_info = sys.exc_info()
     exc_class = exc_info[0].__name__
     exc_msg = str(exc_info[1])
-    tb = exc_info[2]
+    tb = exc_info[2].tb_next
     if exc_info[0] is SyntaxError:
         return syntax_error(exc_info[1].args)
     trace.write("Traceback (most recent call last):\n")
