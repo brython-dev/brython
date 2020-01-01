@@ -9908,10 +9908,8 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
 
     root.add(catch_node)
 
-    if($B.profile > 0){$add_profile(root, null, module)}
-    if($B.debug > 0){
-        $add_line_num(root, null, module)
-    }
+    // Add line numbers for debugging
+    $add_line_num(root, null, module)
 
     var t1 = new Date().getTime()
     if($B.debug > 2){
@@ -9971,12 +9969,12 @@ $B.set_import_paths = function(){
 
 var brython = $B.parser.brython = function(options){
     // By default, only set debug level
-    if(options === undefined){options = {'debug': 0}}
+    if(options === undefined){options = {'debug': 1}}
 
     // If the argument provided to brython() is a number, it is the debug
     // level
     if(typeof options == 'number'){options = {'debug': options}}
-    if(options.debug === undefined){options.debug = 0}
+    if(options.debug === undefined){options.debug = 1}
     $B.debug = options.debug
     // set built-in variable __debug__
     _b_.__debug__ = $B.debug > 0

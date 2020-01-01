@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,6,'final',0]
 __BRYTHON__.__MAGIC__="3.8.6"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2019-12-30 22:24:19.377720"
-__BRYTHON__.timestamp=1577741059377
+__BRYTHON__.compiled_date="2020-01-01 17:46:19.327656"
+__BRYTHON__.timestamp=1577897179327
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -4990,8 +4990,7 @@ var catch_node=$NodeJS('catch(err)')
 catch_node.add($NodeJS('$B.leave_frame()'))
 catch_node.add($NodeJS('throw err'))
 root.add(catch_node)
-if($B.profile > 0){$add_profile(root,null,module)}
-if($B.debug > 0){$add_line_num(root,null,module)}
+$add_line_num(root,null,module)
 var t1=new Date().getTime()
 if($B.debug > 2){if(module==locals_id){console.log('module '+module+' translated in '+
 (t1-t0)+' ms')}}
@@ -5009,9 +5008,9 @@ path_hooks.push($B.$path_hooks[0])}
 $B.meta_path=meta_path
 $B.path_hooks=path_hooks}
 var brython=$B.parser.brython=function(options){
-if(options===undefined){options={'debug':0}}
+if(options===undefined){options={'debug':1}}
 if(typeof options=='number'){options={'debug':options}}
-if(options.debug===undefined){options.debug=0}
+if(options.debug===undefined){options.debug=1}
 $B.debug=options.debug
 _b_.__debug__=$B.debug > 0
 $B.compile_time=0
