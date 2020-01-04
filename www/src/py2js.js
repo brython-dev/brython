@@ -344,7 +344,7 @@ var $_SyntaxError = $B.parser.$_SyntaxError = function (context, msg, indent){
     }
     if(indent === undefined){
         if(Array.isArray(msg)){
-            $B.$SyntaxError(module, msg[0], src, $pos, line_num)
+            $B.$SyntaxError(module, msg[0], src, $pos, line_num, root)
         }
         if(msg === "Triple string end not found"){
             // add an extra argument : used in interactive mode to
@@ -6025,7 +6025,7 @@ var $TryCtx = $B.parser.$TryCtx = function(context){
 
     this.transform = function(node, rank){
         if(node.parent.children.length == rank + 1){
-            $_SyntaxError(context, "missing clause after 'try'")
+            $_SyntaxError(context, ["unexpected EOF while parsing"])
         }else{
             var next_ctx = node.parent.children[rank + 1].context.tree[0]
             switch(next_ctx.type) {
@@ -6034,7 +6034,7 @@ var $TryCtx = $B.parser.$TryCtx = function(context){
                 case 'single_kw':
                     break
                 default:
-                    $_SyntaxError(context, "missing clause after 'try'")
+                    $_SyntaxError(context, "no clause after try")
             }
         }
         var scope = $get_scope(this)
@@ -9104,7 +9104,10 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
             }
             // ignore empty lines
             var _s = src.charAt(pos)
-            if(_s == '\n'){pos++; lnum++; indent = null; continue}
+            if(_s == '\n'){
+                pos++; lnum++; indent = null;
+                continue
+            }
             else if(_s == '#'){ // comment
                 var offset = src.substr(pos).search(/\n/)
                 if(offset == -1){break}
@@ -9575,7 +9578,7 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
                 break
             case '\n':
                 // line end
-                lnum++
+               lnum++
                 if(br_stack.length > 0){
                     // implicit line joining inside brackets
                     pos++
@@ -9756,18 +9759,26 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
             ["unexpected EOF while parsing (" + fname + ", line " +
                 (lines.length - 1) + ")"])
     }
-    if(context !== null && context.type == "async"){
-        // issue 941
-        console.log("error with async", pos, src, src.substr(pos))
-        $pos = pos - 7
-        throw $_SyntaxError(context, "car " + car + "after async", pos)
+    if(context !== null){
+        if(context.type == "async"){
+            // issue 941
+            console.log("error with async", pos, src, src.substr(pos))
+            $pos = pos - 7
+            throw $_SyntaxError(context, "car " + car + "after async", pos)
+        }else if(context.tree[0] &&
+                $indented.indexOf(context.tree[0].type) > -1){
+            $pos = pos - 1
+            $_SyntaxError(context, 'expected an indented block', pos)
+        }else{
+            var parent = current.parent
+            if(parent.context && parent.context.tree &&
+                    parent.context.tree[0] &&
+                    parent.context.tree[0].type == "try"){
+                $pos = pos - 1
+                $_SyntaxError(context, ["unexpected EOF while parsing"])
+            }
+        }
     }
-    if(context !== null && context.tree[0] &&
-            $indented.indexOf(context.tree[0].type) > -1){
-        $pos = pos - 1
-        $_SyntaxError(context, 'expected an indented block', pos)
-    }
-
 }
 
 var $create_root_node = $B.parser.$create_root_node = function(src, module,

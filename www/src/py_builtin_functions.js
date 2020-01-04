@@ -308,7 +308,9 @@ function compile() {
     $.__class__ = code
     $.co_flags = $.flags
     $.name = "<module>"
-    if($.mode == "single" && ($.flags & 0x200) && ! $.source.endsWith("\n")){
+    var interactive = $.mode == "single" && ($.flags & 0x200)
+
+    if(interactive && ! $.source.endsWith("\n")){
         // This is used in codeop.py to raise SyntaxError until a block in the
         // interactive interpreter ends with "\n"
         // Cf. issue #853
@@ -317,6 +319,7 @@ function compile() {
             throw _b_.SyntaxError.$factory("unexpected EOF while parsing")
         }
     }
+
     // Run py2js to detect potential syntax errors
     $B.py2js($.source, module_name, module_name)
     return $
@@ -804,7 +807,7 @@ function $$eval(src, _globals, _locals){
                     break
                 }
             }
-        }        
+        }
         throw err
     }finally{
         // "leave_frame" was removed so we must execute it here

@@ -77,8 +77,6 @@ $B.$syntax_err_line = function(exc, module, src, pos, line_num){
 }
 
 $B.$SyntaxError = function(module, msg, src, pos, line_num, root) {
-    //$B.frames_stack.push([module, {$line_info: line_num + "," + module},
-    //    module, {$src: src}])
     if(root !== undefined && root.line_info !== undefined){
         // this may happen for syntax errors inside a lambda
         line_num = root.line_info
@@ -313,7 +311,14 @@ BaseException.__init__ = function(self){
 }
 
 BaseException.__repr__ = function(self){
-    return self.__class__.$infos.__name__ + repr(self.args)
+    var res =  self.__class__.$infos.__name__
+    if(self.args[0]){
+        res += '(' + repr(self.args[0])
+    }
+    if(self.args.length > 1){
+        res += ', ' + repr($B.fast_tuple(self.args.slice(1)))
+    }
+    return res + ')'
 }
 
 BaseException.__str__ = function(self){
@@ -558,7 +563,7 @@ $make_exc([["StopIteration","err.value = arguments[0]"],
     ["StopAsyncIteration","err.value = arguments[0]"],
     "ArithmeticError", "AssertionError", "AttributeError",
     "BufferError", "EOFError", "ImportError", "LookupError", "MemoryError",
-    "NameError", "OSError", "ReferenceError", "RuntimeError", 
+    "NameError", "OSError", "ReferenceError", "RuntimeError",
     ["SyntaxError", "err.msg = arguments[0]"],
     "SystemError", "TypeError", "ValueError", "Warning"],_b_.Exception)
 $make_exc(["FloatingPointError", "OverflowError", "ZeroDivisionError"],

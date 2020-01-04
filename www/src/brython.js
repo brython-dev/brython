@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,6,'final',0]
 __BRYTHON__.__MAGIC__="3.8.6"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-01-01 17:46:19.327656"
-__BRYTHON__.timestamp=1577897179327
+__BRYTHON__.compiled_date="2020-01-04 11:13:41.548009"
+__BRYTHON__.timestamp=1578132821548
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -225,7 +225,7 @@ while(root.parent !==undefined){root=root.parent}
 var module=tree_node.module,src=root.src,line_num=tree_node.line_num
 if(src){line_num=src.substr(0,$pos).split("\n").length}
 if(root.line_info){line_num=root.line_info}
-if(indent===undefined){if(Array.isArray(msg)){$B.$SyntaxError(module,msg[0],src,$pos,line_num)}
+if(indent===undefined){if(Array.isArray(msg)){$B.$SyntaxError(module,msg[0],src,$pos,line_num,root)}
 if(msg==="Triple string end not found"){
 $B.$SyntaxError(module,'invalid syntax : triple string end not found',src,$pos,line_num,root)}
 $B.$SyntaxError(module,'invalid syntax',src,$pos,line_num,root)}else{throw $B.$IndentationError(module,msg,src,$pos,line_num,root)}}
@@ -2866,13 +2866,13 @@ this.type='try'
 this.parent=C
 C.tree[C.tree.length]=this
 this.toString=function(){return '(try) '}
-this.transform=function(node,rank){if(node.parent.children.length==rank+1){$_SyntaxError(C,"missing clause after 'try'")}else{var next_ctx=node.parent.children[rank+1].C.tree[0]
+this.transform=function(node,rank){if(node.parent.children.length==rank+1){$_SyntaxError(C,["unexpected EOF while parsing"])}else{var next_ctx=node.parent.children[rank+1].C.tree[0]
 switch(next_ctx.type){case 'except':
 case 'finally':
 case 'single_kw':
 break
 default:
-$_SyntaxError(C,"missing clause after 'try'")}}
+$_SyntaxError(C,"no clause after try")}}
 var scope=$get_scope(this)
 var error_name=create_temp_name('$err')
 var failed_name="$locals."+create_temp_name('$failed')
@@ -4593,7 +4593,8 @@ else if(_s=="\t"){
 indent++;pos++
 if(indent % 8 > 0){indent+=8-indent % 8}}else{break}}
 var _s=src.charAt(pos)
-if(_s=='\n'){pos++;lnum++;indent=null;continue}
+if(_s=='\n'){pos++;lnum++;indent=null;
+continue}
 else if(_s=='#'){
 var offset=src.substr(pos).search(/\n/)
 if(offset==-1){break}
@@ -4925,13 +4926,16 @@ $pos=br_err[1]
 var lines=src.split("\n"),id=root.id,fname=id.startsWith("$")? '<string>' :id
 $_SyntaxError(br_err[0],["unexpected EOF while parsing ("+fname+", line "+
 (lines.length-1)+")"])}
-if(C !==null && C.type=="async"){
+if(C !==null){if(C.type=="async"){
 console.log("error with async",pos,src,src.substr(pos))
 $pos=pos-7
-throw $_SyntaxError(C,"car "+car+"after async",pos)}
-if(C !==null && C.tree[0]&&
+throw $_SyntaxError(C,"car "+car+"after async",pos)}else if(C.tree[0]&&
 $indented.indexOf(C.tree[0].type)>-1){$pos=pos-1
-$_SyntaxError(C,'expected an indented block',pos)}}
+$_SyntaxError(C,'expected an indented block',pos)}else{var parent=current.parent
+if(parent.C && parent.C.tree &&
+parent.C.tree[0]&&
+parent.C.tree[0].type=="try"){$pos=pos-1
+$_SyntaxError(C,["unexpected EOF while parsing"])}}}}
 var $create_root_node=$B.parser.$create_root_node=function(src,module,locals_id,parent_block,line_num){var root=new $Node('module')
 root.module=module
 root.id=locals_id
@@ -6441,7 +6445,8 @@ $B.clear_ns(module_name)
 $.__class__=code
 $.co_flags=$.flags
 $.name="<module>"
-if($.mode=="single" &&($.flags & 0x200)&& ! $.source.endsWith("\n")){
+var interactive=$.mode=="single" &&($.flags & 0x200)
+if(interactive && ! $.source.endsWith("\n")){
 var lines=$.source.split("\n")
 if($B.last(lines).startsWith(" ")){throw _b_.SyntaxError.$factory("unexpected EOF while parsing")}}
 $B.py2js($.source,module_name,module_name)
@@ -7475,8 +7480,7 @@ exc.args=_b_.tuple.$factory([$B.$getitem(exc.args,0),module,line_num,lpos,line])
 exc.lineno=line_num
 exc.msg=exc.args[0]
 exc.filename=module}
-$B.$SyntaxError=function(module,msg,src,pos,line_num,root){
-if(root !==undefined && root.line_info !==undefined){
+$B.$SyntaxError=function(module,msg,src,pos,line_num,root){if(root !==undefined && root.line_info !==undefined){
 line_num=root.line_info}
 var exc=_b_.SyntaxError.$factory(msg)
 $B.$syntax_err_line(exc,module,src,pos,line_num)
@@ -7565,7 +7569,10 @@ $B._frame=frame
 var BaseException=_b_.BaseException={__class__:_b_.type,__bases__ :[_b_.object],__mro__:[_b_.object],args:[],$infos:{__name__:"BaseException",__module__:"builtins"},$is_class:true}
 BaseException.__init__=function(self){var args=arguments[1]===undefined ?[]:[arguments[1]]
 self.args=_b_.tuple.$factory(args)}
-BaseException.__repr__=function(self){return self.__class__.$infos.__name__+repr(self.args)}
+BaseException.__repr__=function(self){var res=self.__class__.$infos.__name__
+if(self.args[0]){res+='('+repr(self.args[0])}
+if(self.args.length > 1){res+=', '+repr($B.fast_tuple(self.args.slice(1)))}
+return res+')'}
 BaseException.__str__=function(self){if(self.args.length > 0){return _b_.str.$factory(self.args[0])}
 return self.__class__.$infos.__name__}
 BaseException.__new__=function(cls){var err=_b_.BaseException.$factory()

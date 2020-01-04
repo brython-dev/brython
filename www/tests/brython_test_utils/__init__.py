@@ -42,6 +42,7 @@ def discover_brython_test_modules():
         ("Modules", [
           ("test_aio.py", "browser.aio"),
           ("test_bisect.py", "bisect"),
+          ("test_code.py", "code"),
           ("test_collections.py", "collections"),
           ("test_dataclasses.py", "dataclasses"),
           ("test_datetime.py", "datetime"),
