@@ -42,8 +42,8 @@ textarea {
     height:100%;
     font-size: 12px;
     float:none;
-    background-color:var(--text-color);
-    color:var(--main-bg-color);
+    background-color:var(--dark-3);
+    color:var(--clear-1);
 }
 
 #legend{
