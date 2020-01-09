@@ -6,11 +6,7 @@
 
 <title>Brython demo</title>
 
-<link rel="stylesheet" href="doc/doc_brython.css">
-
-<link rel="stylesheet" type="text/css"
-      href="https://fonts.googleapis.com/css?family=Montserrat">
-
+<link rel="stylesheet" href="/brython.css">
 
 <style>
 body{
@@ -18,23 +14,21 @@ body{
     font-family: Montserrat, Helvetica;
 }
 
-a{
-    color: #fff;
+a, a:visited{
+    color: var(--dark-1);
 }
 
 a.menu:hover{
-    background-color: var(--text-color);
-    color: var(--header-color);
-}
-a:visited{
-    color: #fff;
+    background-color: var(--dark-1);
+    color: var(--clear-2);
 }
 a.selected{
     font-weight: bold;
-    color: var(--header-color);
+    color: var(--dark-2);
 }
 a.external{
     text-decoration: underline gray;
+    color: #789;
 }
 
 li{
@@ -69,7 +63,7 @@ div.example{
 pre{
     display: inline-block;
     font-family: Consolas, Courier New;
-    color: #113;
+    color: var(--dark-1);
     background: linear-gradient(to right, #ccc, #ddd);
     border-width: 0 0 0 2;
     border-color: #aac;
@@ -85,26 +79,16 @@ pre.html{
     margin-left: 5em;
     padding: 1em;
     border-width: 1px;
-    border-color: #333;
+    border-color: var(--dark-2);
     border-style: solid;
     width: 20em;
 }
 
 code{
     font-family: Consolas, Courier New;
-    color:var(--header-color);
+    color:var(--dark-2);
     padding-left: 0.2em;
     padding-right: 0.2em;
-}
-
-code.file{
-    background-color: #fff;
-    font-weigth: bold;
-    font-style: italic;
-}
-
-code.module{
-  color: var(--header-color);
 }
 
 .up{
@@ -119,7 +103,7 @@ code.module{
     top:10px;
     font-size:16px;
     padding: 3px;
-    background-color: var(--header-color);
+    background-color: var(--clear-2);
     border-radius: 4px;
 }
 </style>
@@ -128,6 +112,7 @@ code.module{
 import header
 header.show()
 </script>
+
 </head>
 
 <body onload="brython({debug:1, indexedDB: false})">
@@ -966,6 +951,45 @@ the end.
 
 </div>
 
+<div class="example" id="ex50">
+    <button id="button50">select and read a local file</button>
+
+    <script type="text/python" id="script50">
+    from browser import window, document as doc
+
+    def file_read(ev):
+
+        def onload(event):
+            """Triggered when file is read. The FileReader instance is
+            event.target.
+            The file content, as text, is the FileReader instance's "result"
+            attribute."""
+            doc['rt1'].value = event.target.result
+
+        # Get the selected file as a DOM File object
+        file = doc['rtfile1'].files[0]
+        # Create a new DOM FileReader instance
+        reader = window.FileReader.new()
+        # Read the file content as text
+        reader.readAsText(file)
+        reader.bind("load", onload)
+
+    doc["rtfile1"].bind("input", file_read)
+  </script>
+
+    <input type="file" id="rtfile1">
+    <br><textarea id="rt1" rows=10 cols=60 autocomplete="off"></textarea>
+    <p>
+    <pre class="python"></pre>
+    <p>
+
+    <span class="comment">
+    This example shows how to select a local file in the user's machine and display its content in a TEXTAREA.
+    <p>It uses the interface
+    <a href="https://developer.mozilla.org/en-US/docs/Web/API/File" target="_blank" class="external">File</a> of the DOM API.
+    </span>
+</div>
+
 <div class="example" id="ex5">
     <button id="button5">write in the browser console</button>
 
@@ -1217,7 +1241,7 @@ for example in document.get(selector=".example"):
 <script type="text/javascript" src="../src/async.js"></script>
 
 <script src="/src/brython_stdlib.js"></script>
-
+<script src="/assets/header.brython.js"></script>
 </body>
 
 </html>

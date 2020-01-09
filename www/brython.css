@@ -1,57 +1,263 @@
 @charset 'utf-8';
-@-webkit-viewport{width: device-width}
-@-moz-viewport{width: device-width}
-@-ms-viewport{width: device-width}
-@-o-viewport{width: device-width}
-@viewport{width: device-width}
 
+/*
+0a090c-f0edee-1b9aaa-224870-2a4494
+*/
 
-#banner {
-  padding-bottom:15px;
-  width:85%
+:root {
+  --clear-1: #f0edee;
+  --clear-2: #e0ddde;
+  --clear-3: #e9f1f7;
+  --dark-1: #2a4494;
+  --dark-2: #028090;
+  --dark-3: #0a090c;
 }
 
-#console {
-  background-color:#000;
-  color:#FFF;
-  font-weight:700
+@font-face{
+    font-family: "libra_bt";
+    src: url("../fonts/libra_bt.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal
 }
 
-a.banner:hover,a.banner:active {
-  background:#000 url(doc/images/noir-2.png) repeat-x;
-  color:#FFF
+@font-face{
+    font-family: "Montserrat";
+    src: url("../fonts/Montserrat-Light.otf") format("truetype");
+    font-weight: normal;
+    font-style: normal
+}
+
+
+body {
+  font-family:Montserrat, Arial;
+  font-size:0.9em;
+  margin: 0px;
+  background-color: var(--clear-1);
+  color: var(--dark-1);
+}
+
+a.navig:link,a:link,a:hover,a:visited,a.navig:visited {
+  color:var(--dark-1);
+  text-decoration:none;
+}
+
+a.banner{
+  border-bottom-style: solid;
+  border-bottom-color: var(--clear-2);
+  border-bottom-width: 6px;
 }
 
 a.banner:link,a.banner:visited {
-  background:#000 url(doc/images/noir-1.png) repeat-x;
-  color:#FFF;
+  background-color:var(--clear-2);
+  color:var(--dark-2);
   display:block;
-  font-size:14px;
-  font-weight:700;
-  line-height:35px;
-  padding:8px;
+  font-size:1em;
+  line-height:30px;
+  padding:1.3em;
   text-align:center;
-  text-decoration:none
+  text-decoration:none;
+}
+
+a.banner:hover,a.banner:active {
+  background-color:var(--clear-2);
+  border-bottom-color:var(--dark-2);
+  color:var(--dark-1);
+}
+
+a.selected_header{
+  border-bottom-color:var(--dark-2);
 }
 
 a.glink {
-  background-color:#FFF;
-  color:#000;
-  text-decoration:underline
+  background-color:var(--clear-1);
+  color:var(--dark-1);
+  text-decoration:underline;
 }
 
-body {
-  font-family:Oxygen,arial;
-  font-size:14px
+#content {
+  padding-left:5%;
+  padding-right:5%
+}
+
+#content a{
+    text-decoration: underline;
+}
+
+#banner {
+  padding-bottom:15px;
+  width:100%
+}
+
+button{
+    background-color: var(--clear-2);
+    border-color: var(--clear-2);
+    color: var(--dark-1);
+    border: 1px solid;
+    padding: 0.2em;
+}
+button:hover{
+    border-color: var(--dark-2);
+}
+button:disabled{
+    cursor: not-allowed;
+}
+
+h1.brython{
+    font-family: libra_bt;
+    font-size: 300%;
+}
+
+td.logo {
+  font-family: libra_bt;
+  background-color:var(--clear-2);
+  padding-left:20px;
+  width:15%;
+}
+
+a.logo {
+  text-decoration: none;
+  font-size: 3em;
+}
+
+td.top_menu {
+  width:10%
+}
+
+td.language {
+  background-color:var(--dark-1);
+  text-align:right
+}
+
+select.language {
+  border-width:0;
+  color:var(--dark-1);
+  font-size:0.8em;
+  margin-left:2em;
+  background-color: var(--clear-1);
+}
+
+.pycode{
+    font-size: 0.9em;
+    display: inline-block;
+    background-color:var(--clear-3);
+    color: var(--dark-1);
+    padding:3px 8px 8px 8px;
+    border-style:solid;
+    border-width:1px;
+    border-color:#888;
+    border-radius: 10px;
+    width:auto;
+    font-family: "Consolas";
+}
+
+.xml{
+    font-size: 0.9em;
+    display: inline-block;
+    background-color:var(--clear-1);
+    padding:3px 8px 8px 8px;
+    border-style:solid;
+    border-width:1px;
+    border-color:#888;
+    border-radius: 10px;
+    color:var(--dark-3);
+    width:auto;
+}
+
+.console{
+    font-size: 0.9em;
+    display: inline-block;
+    background-color:var(--dark-3);
+    padding:3px 8px 8px 8px;
+    color:var(--clear-3);
+    width:auto;
 }
 
 li {
-  float:left
+  margin-bottom:3px
 }
 
-ul {
-  list-style-type:none;
-  margin:0;
-  overflow:hidden;
-  padding:0
+pre{
+    font-family: Consolas;
+}
+pre.marked {
+  color:var(--dark-3);
+  font-size: 12px;
+}
+
+/* colors for highlighted Python code */
+
+span.python-string{
+    color: blue;
+}
+span.python-comment{
+    color: green;
+}
+span.python-keyword{
+    color: purple;
+}
+span.python-builtin{
+    color: #963;
+}
+
+code {
+  color:var(--dark-3);
+  font-family: Consolas;
+}
+
+code.file{
+    background-color: var(--dark-2);
+    font-weigth: bold;
+    font-style: italic;
+}
+
+code.module{
+  color: var(--dark-2);
+}
+
+em{
+  color:var(--dark-2);
+  font-family:courier;
+}
+
+strong {
+  color:var(--dark-2);
+  font-family:courier;
+  font-size: 1em;
+}
+
+#main {
+  border-color:green;
+  border-style:solid;
+  border-width:1px;
+  min-height:20px;
+  min-width:200px;
+  padding:5px
+}
+
+
+/* Breakpoint for all color devices of < 999px width */
+@media all and (color) and (max-width: 999px) {
+
+    #banner {
+        padding-bottom: 0
+    }
+
+    a.banner:link,a.banner:visited {
+        font-size: 2em;
+        line-height: 4em;
+        padding: 0
+    }
+
+    #console {
+        font-size: 10px
+    }
+
+    #content {
+        padding: 0
+    }
+
+    img.logo, td.logo {
+        display: none
+    }
+
 }
