@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,6,'final',0]
 __BRYTHON__.__MAGIC__="3.8.6"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-01-04 11:13:41.548009"
-__BRYTHON__.timestamp=1578132821548
+__BRYTHON__.compiled_date="2020-01-07 14:32:26.727736"
+__BRYTHON__.timestamp=1578403946727
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -12668,6 +12668,7 @@ self.elt.parentNode.removeChild(self.elt)}}
 DOMNode.__dir__=function(self){var res=[]
 for(var attr in self.elt){if(attr.charAt(0)!="$"){res.push(attr)}}
 for(var attr in DOMNode){if(attr.charAt(0)!="$" && res.indexOf(attr)==-1){res.push(attr)}}
+res.sort()
 return res}
 DOMNode.__eq__=function(self,other){return self.elt==other.elt}
 DOMNode.__getattribute__=function(self,attr){if(attr.substr(0,2)=="$$"){attr=attr.substr(2)}
@@ -12686,7 +12687,9 @@ case "top":
 case "width":
 if(self.elt.tagName=="CANVAS" && self.elt[attr]){return self.elt[attr]}
 if(self.elt instanceof SVGElement){return self.elt[attr].baseVal.value}
-if(self.elt.style[attr]){return parseInt(self.elt.style[attr])}else{throw _b_.AttributeError.$factory("style."+attr+
+if(self.elt.style[attr]){return parseInt(self.elt.style[attr])}else{var computed=window.getComputedStyle(self.elt)[attr]
+if(computed !==undefined){return Math.floor(parseFloat(computed)+0.5)}
+throw _b_.AttributeError.$factory("style."+attr+
 " is not set for "+_b_.str.$factory(self))}
 case "x":
 case "y":

@@ -646,6 +646,7 @@ DOMNode.__dir__ = function(self){
     for(var attr in DOMNode){
         if(attr.charAt(0) != "$" && res.indexOf(attr) == -1){res.push(attr)}
     }
+    res.sort()
     return res
 }
 
@@ -683,6 +684,10 @@ DOMNode.__getattribute__ = function(self, attr){
             if(self.elt.style[attr]){
                 return parseInt(self.elt.style[attr])
             }else{
+                var computed = window.getComputedStyle(self.elt)[attr]
+                if(computed !== undefined){
+                    return Math.floor(parseFloat(computed) + 0.5)
+                }
                 throw _b_.AttributeError.$factory("style." + attr +
                     " is not set for " + _b_.str.$factory(self))
             }
