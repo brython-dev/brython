@@ -1,10 +1,9 @@
-from browser import document, markdown, html
-import highlight
+from browser import document, highlight, markdown, html, window
 
 def _keydown(ev, path, zone, page):
     if ev.keyCode in [39,40]: # key right or down : next page
         show(path, zone, page+1)
-        ev.preventDefault()    
+        ev.preventDefault()
     elif ev.keyCode in [37,38]: #key left or up: previous page
         show(path, zone, page-1)
         ev.preventDefault()
@@ -19,10 +18,10 @@ def keydown(ev, slideshow, zone):
         if slideshow.page_num < 0:
             slideshow.page_num = len(slideshow.pages)-1
     show_page(slideshow, zone, slideshow.page_num)
-    ev.preventDefault()  
+    ev.preventDefault()
 
 def move_to(ev, slideshow, zone):
-    pc = (ev.x-ev.target.left)/ev.target.width
+    pc = (ev.x - ev.target.left) / ev.target.width
     nb_pages = len(slideshow.pages)-1
     page = round(nb_pages*pc)
     slideshow.page_num = page
@@ -42,10 +41,10 @@ class Slideshow:
         self.src = src = open(path).read()
         self.title = ''
         self.show_page_num = False
-        
+
         # table of contents : matches matter with page number
         self.contents = []
-        
+
         # directives for the document
         while src.startswith('@'):
             line_end = src.find('\n')
@@ -71,10 +70,10 @@ class Slideshow:
 
         if lines:
             self.pages.append('\n'.join(lines))
-            
+
 def show(path, zone, page_num=0):
     slideshow = Slideshow(path)
-    
+
     if page_num<0:
         page_num = 0
     elif page_num >= len(slideshow.pages):
@@ -89,14 +88,14 @@ def show_page(slideshow, zone, page_num):
     # if table of contents is not empty, add it
     if slideshow.contents:
         toc = html.SELECT(name="toc")
-        toc.bind('change', lambda ev: show_page(slideshow, zone, 
+        toc.bind('change', lambda ev: show_page(slideshow, zone,
             int(ev.target.options[ev.target.selectedIndex].value)))
         for content in slideshow.contents:
             toc <= html.OPTION(content[0], value=content[1],
                 selected=page_num>=content[1])
 
     zone.clear()
-            
+
     body = html.DIV()
     body.html = markdown.mark(slideshow.pages[page_num])[0]
 
@@ -115,8 +114,10 @@ def show_page(slideshow, zone, page_num):
     timeline.bind('click', lambda ev:move_to(ev, slideshow, zone))
     tl_pos.bind('click', click_on_tl_pos)
     zone <= body+footer+timeline
-    tl_pos.style.left = '%spx' %(timeline.width*page_num/len(slideshow.pages))
-    
+    tw = window.getComputedStyle(timeline).width
+    tw = round(float(tw[:-2]))
+    tl_pos.style.left = '%spx' %(tw * page_num / len(slideshow.pages))
+
     for elt in zone.get(selector='.python'):
         src = elt.text.strip()
         width = max(len(line) for line in src.split('\n'))
