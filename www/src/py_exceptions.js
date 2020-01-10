@@ -178,10 +178,15 @@ traceback.__getattribute__ = function(self, attr){
                 }
                 if(src === undefined && $B.file_cache.hasOwnProperty(info[1])){
                     src = $B.file_cache[info[1]]
+                }else if($B.imported[info[1]] && $B.imported[info[1]].__file__ ){
+                    src = $B.file_cache[$B.imported[info[1]].__file__]
                 }
                 if(src !== undefined){
                     return src.split("\n")[parseInt(info[0] - 1)].trim()
                 }else{
+                    if($B.debug > 1){
+                        console.log("no src for", info)
+                    }
                     return "<unknown>"
                 }
             }
