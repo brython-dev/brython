@@ -27,7 +27,6 @@
     font-style: normal
 }
 
-
 body {
   font-family:Montserrat, Arial;
   font-size:0.9em;
@@ -206,7 +205,7 @@ code {
 
 code.file{
     background-color: var(--dark-2);
-    font-weigth: bold;
+    font-weight: bold;
     font-style: italic;
 }
 
