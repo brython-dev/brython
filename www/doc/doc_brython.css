@@ -1,15 +1,15 @@
 @charset 'utf-8';
-@-webkit-viewport{width:device-width}
-@-moz-viewport{width:device-width}
-@-ms-viewport{width:device-width}
-@-o-viewport{width:device-width}
-@viewport{width:device-width}
+
+/*
+0a090c-f0edee-1b9aaa-224870-2a4494
+*/
 
 :root {
-  --main-bg-color: black;
-  --header-color: red;
-  --selected-header-color: black;
-  --text-color: white;
+  --main-bg-color: #f0edee;
+  --header-color: #e0ddde;
+  --selected-header-color: #1b9aaa;
+  --text-color: #2a4494;
+  --special-text-color: #0a090c;
 }
 
 @font-face{
@@ -60,7 +60,7 @@ a.banner:link,a.banner:visited {
 a.banner:hover,a.banner:active {
   background-color:var(--header-color);
   border-bottom-color:var(--selected-header-color);
-  color:var(--main-bg-color);
+  color:var(--text-color);
 }
 
 a.selected_header{
@@ -89,8 +89,6 @@ button:hover{
 button:disabled{
     cursor: not-allowed;
 }
-
-
 
 #content {
   padding-left:5%;
@@ -140,8 +138,8 @@ select.language {
 .pycode{
     font-size: 0.9em;
     display: inline-block;
-    background-color:var(--text-color);
-    color: var(--main-bg-color);
+    background-color:var(--main-bg-color);
+    color: var(--text-color);
     padding:3px 8px 8px 8px;
     border-style:solid;
     border-width:1px;
@@ -154,7 +152,7 @@ select.language {
 .xml{
     font-size: 0.9em;
     display: inline-block;
-    background-color:#F0F0F0;
+    background-color:var(--main-bg-color);
     padding:3px 8px 8px 8px;
     border-style:solid;
     border-width:1px;
@@ -201,7 +199,7 @@ span.python-builtin{
 }
 
 code {
-  color:var(--header-color);
+  color:var(--special-text-color);
   font-family: Consolas;
 }
 
