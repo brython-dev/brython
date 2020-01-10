@@ -681,7 +681,7 @@ Random.randrange = function(){
         arguments, {stop:null, step:null}, null, null),
         self = $.self,
         _random = self._random
-        //console.log("randrange", $)
+
     for(var i = 1, len = arguments.length; i < len; i++){
         if(! _b_.isinstance(arguments[i], _b_.int)){
             throw _b_.ValueError.$factory("non-integer arg " + i +
@@ -695,7 +695,8 @@ Random.randrange = function(){
             step = $.step === null ? 1 : $.step
         if(step == 0){throw _b_.ValueError.$factory('step cannot be 0')}
     }
-    if((step > 0 && start > stop) || (step < 0 && start < stop)){
+
+    if((step > 0 && start >= stop) || (step < 0 && start <= stop)){
         throw _b_.ValueError.$factory("empty range for randrange() (" +
             start + ", " + stop + ", " + step + ")")
     }
