@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,6,'final',0]
 __BRYTHON__.__MAGIC__="3.8.6"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-01-07 14:32:26.727736"
-__BRYTHON__.timestamp=1578403946727
+__BRYTHON__.compiled_date="2020-01-10 11:11:42.332752"
+__BRYTHON__.timestamp=1578651102332
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -6342,7 +6342,8 @@ expected+" argument"+(expected < 2 ? '' :'s')+
 " ("+len+" given)")}}}
 var check_no_kw=$B.check_no_kw=function(name,x,y){
 if(x===undefined){console.log("x undef",name,x,y)}
-if(x.$nat ||(y !==undefined && y.$nat)){throw _b_.TypeError.$factory(name+"() takes no keyword arguments")}}
+if((x.$nat && x.kw && x.kw[0]&& x.kw[0].length > 0)||
+(y !==undefined && y.$nat)){throw _b_.TypeError.$factory(name+"() takes no keyword arguments")}}
 var NoneType={$factory:function(){return None},$infos:{__name__:"NoneType",__module__:"builtins"},__bool__:function(self){return False},__class__:_b_.type,__hash__:function(self){return 0},__mro__:[object],__repr__:function(self){return 'None'},__str__:function(self){return 'None'},$is_class:true}
 NoneType.__setattr__=function(self,attr){return no_set_attr(NoneType,attr)}
 var None={__class__:NoneType,}
@@ -7528,8 +7529,9 @@ if(line_info===undefined){return "<unknown>"}else{var info=line_info.split(","),
 for(var i=self.$stack.length-1;i >=0;i--){var fr=self.$stack[i]
 if(fr[2]==info[1]){src=fr[3].$src
 break}}
-if(src===undefined && $B.file_cache.hasOwnProperty(info[1])){src=$B.file_cache[info[1]]}
-if(src !==undefined){return src.split("\n")[parseInt(info[0]-1)].trim()}else{return "<unknown>"}}
+if(src===undefined && $B.file_cache.hasOwnProperty(info[1])){src=$B.file_cache[info[1]]}else if($B.imported[info[1]]&& $B.imported[info[1]].__file__ ){src=$B.file_cache[$B.imported[info[1]].__file__]}
+if(src !==undefined){return src.split("\n")[parseInt(info[0]-1)].trim()}else{if($B.debug > 1){console.log("no src for",info)}
+return "<unknown>"}}
 case "tb_next":
 if(self.$stack.length <=1){return None}
 else{return traceback.$factory(self.exc,self.$stack.slice(1))}
