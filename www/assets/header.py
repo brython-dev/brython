@@ -71,7 +71,6 @@ def show(language=None):
         if key not in ["download", "dev"]:
             # add lang to href
             href += f"?lang={language}"
-        print(key, href)
         if key == "home":
             img = IMG(src="/brython.svg", Class="logo")
             link = A(img, href=href)
@@ -86,4 +85,4 @@ def show(language=None):
             link.attrs["target"] = "_blank"
         _banner <= cell
 
-    return qs_lang,language
+    return qs_lang, language
