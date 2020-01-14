@@ -498,6 +498,7 @@ var $Node = $B.parser.$Node = function(type){
                 // create a node to set the yielded value to the last
                 // value sent to the generator, if any
                 var set_yield = new $Node()
+                set_yield.line_num = this.line_num
                 set_yield.is_set_yield_value = true
                 set_yield.after_yield = true
 
@@ -2729,7 +2730,9 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         if(this.type == "generator"){
             var suspension_node = $NodeJS("// suspension")
             suspension_node.is_set_yield_value = true
+            suspension_node.parent = node
             suspension_node.num = node.num
+            suspension_node.line_num = node.line_num
             nodes.push(suspension_node)
         }
 
@@ -6375,7 +6378,7 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
         new $NodeJSCtx(catch_node, 'catch(' + this.err_name + ')')
 
         var js = this.exc_name + ' = false;' + this.err_name +
-                ' = $B.exception(' + this.err_name + ')\n' +
+                ' = $B.exception(' + this.err_name + ', true)\n' +
                 ' '.repeat(node.indent + 4) +
                 'var $b = ' + this.cmexit_name + '(' +
                 this.err_name + '.__class__,' +
@@ -6629,6 +6632,7 @@ var $YieldCtx = $B.parser.$YieldCtx = function(context, is_await){
         // send() or throw().
         var new_node = $NodeJS('// placeholder for generator sent value')
         new_node.is_set_yield_value = true
+        new_node.line_num = node.line_num
         new_node.after_yield = true
         new_node.indent = node.indent
         node.parent.insert(rank + 1, new_node)

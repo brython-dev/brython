@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,6,'final',0]
 __BRYTHON__.__MAGIC__="3.8.6"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-01-10 11:11:42.332752"
-__BRYTHON__.timestamp=1578651102332
+__BRYTHON__.compiled_date="2020-01-14 15:51:53.654534"
+__BRYTHON__.timestamp=1579013513654
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -291,6 +291,7 @@ this.parent.insert(rank+offset+1,yield_node)
 var yield_expr=new $YieldCtx(new $NodeCtx(yield_node))
 new $StringCtx(yield_expr,'$yield_value'+$loop_num)
 var set_yield=new $Node()
+set_yield.line_num=this.line_num
 set_yield.is_set_yield_value=true
 set_yield.after_yield=true
 js=$loop_num
@@ -1363,7 +1364,9 @@ nodes.push($NodeJS("$locals.__class__ = "+class_ref))}
 nodes.push($NodeJS('$B.js_this = this;'))
 if(this.type=="generator"){var suspension_node=$NodeJS("// suspension")
 suspension_node.is_set_yield_value=true
+suspension_node.parent=node
 suspension_node.num=node.num
+suspension_node.line_num=node.line_num
 nodes.push(suspension_node)}
 for(var i=nodes.length-1;i >=0;i--){node.children.splice(0,0,nodes[i])}
 var def_func_node=new $Node()
@@ -3012,7 +3015,7 @@ var catch_node=new $Node()
 catch_node.is_catch=true 
 new $NodeJSCtx(catch_node,'catch('+this.err_name+')')
 var js=this.exc_name+' = false;'+this.err_name+
-' = $B.exception('+this.err_name+')\n'+
+' = $B.exception('+this.err_name+', true)\n'+
 ' '.repeat(node.indent+4)+
 'var $b = '+this.cmexit_name+'('+
 this.err_name+'.__class__,'+
@@ -3128,6 +3131,7 @@ this.toString=function(){return '(yield) '+(this.from ? '(from) ' :'')+this.tree
 this.transform=function(node,rank){
 var new_node=$NodeJS('// placeholder for generator sent value')
 new_node.is_set_yield_value=true
+new_node.line_num=node.line_num
 new_node.after_yield=true
 new_node.indent=node.indent
 node.parent.insert(rank+1,new_node)
@@ -7503,8 +7507,8 @@ if(src){var lines=src.split("\n"),line=lines[parseInt(info[0])-1]
 trace.push("  "+line.trim())}}})
 console.log("print stack ok",trace)
 return trace.join("\n")}
-var traceback=$B.traceback=$B.make_class("traceback",function(exc,stack){if(stack===undefined)
-stack=exc.$stack
+var traceback=$B.traceback=$B.make_class("traceback",function(exc,stack){var frame=$B.last($B.frames_stack)
+if(stack===undefined){stack=exc.$stack}
 return{
 __class__ :traceback,$stack:stack,exc:exc}}
 )
@@ -7530,7 +7534,7 @@ for(var i=self.$stack.length-1;i >=0;i--){var fr=self.$stack[i]
 if(fr[2]==info[1]){src=fr[3].$src
 break}}
 if(src===undefined && $B.file_cache.hasOwnProperty(info[1])){src=$B.file_cache[info[1]]}else if($B.imported[info[1]]&& $B.imported[info[1]].__file__ ){src=$B.file_cache[$B.imported[info[1]].__file__]}
-if(src !==undefined){return src.split("\n")[parseInt(info[0]-1)].trim()}else{if($B.debug > 1){console.log("no src for",info)}
+if(src !==undefined){return src.split("\n")[parseInt(info[0]-1)].trim()}else{console.log("no src for",info)
 return "<unknown>"}}
 case "tb_next":
 if(self.$stack.length <=1){return None}
@@ -7610,17 +7614,25 @@ return traceback.$factory(self)}else{throw _b_.AttributeError.$factory(self.__cl
 " has no attribute '"+attr+"'")}}
 BaseException.with_traceback=function(self,tb){self.$traceback=tb
 return self}
-function deep_copy(stack){var result=stack.slice();
-for(var i=0;i < result.length;i++){
-result[i]=result[i].slice()
-result[i][1]={$line_info:result[i][1].$line_info}}
-return result;}
+function deep_copy(stack){var current_frame=$B.last($B.frames_stack),is_local=current_frame[0]!=current_frame[2]
+if(is_local){for(var i=0,len=$B.frames_stack.length;i < len;i++){if($B.frames_stack[0]==current_frame[0]){console.log("reduce stack",current_frame[0])
+return stack.slice(i)}}}
+return stack.slice()}
+$B.freeze=function(stack){var res=[],copy
+for(const frame of stack){copy=[frame[0],{},frame[2],{}]
+for(var key in frame[1]){copy[1][key]=frame[1][key]}
+for(var key in frame[3]){copy[3][key]=frame[3][key]}
+res.push(copy)}
+return res}
+var show_stack=$B.show_stack=function(stack){stack=stack ||$B.frames_stack
+for(const frame of stack){console.log(frame[0],frame[1].$line_info)}}
 BaseException.$factory=function(){var err=Error()
 err.args=_b_.tuple.$factory(Array.prototype.slice.call(arguments))
 err.__class__=_b_.BaseException
 err.$py_error=true
-if(err.$stack===undefined){err.$stack=deep_copy($B.frames_stack);}
+if(err.$stack===undefined){err.$stack=$B.freeze($B.frames_stack)}
 if($B.frames_stack.length){err.$line_info=$B.last($B.frames_stack)[1].$line_info}
+err.$traceback=traceback.$factory(err)
 eval("//placeholder//")
 err.__cause__=_b_.None 
 err.__context__=_b_.None 
@@ -7629,8 +7641,8 @@ return err}
 BaseException.$factory.$infos={__name__:"BaseException",__qualname__:"BaseException"}
 $B.set_func_names(BaseException)
 _b_.BaseException=BaseException
-$B.exception=function(js_exc){
-if(! js_exc.$py_error){console.log("Javascript exception:",js_exc)
+$B.exception=function(js_exc,in_ctx_manager){
+if(! js_exc.__class__){console.log("Javascript exception:",js_exc)
 console.log($B.last($B.frames_stack))
 console.log("recursion error ?",$B.is_recursion_error(js_exc))
 var exc=Error()
@@ -7649,7 +7661,12 @@ var $message="<Javascript "+js_exc.name+">: "+
 (js_exc.message ||"<"+js_exc+">")
 exc.args=_b_.tuple.$factory([$message])
 exc.$py_error=true
-exc.$stack=deep_copy($B.frames_stack);}else{var exc=js_exc}
+exc.$stack=deep_copy($B.frames_stack);}else{var exc=js_exc
+if(in_ctx_manager){
+var current_locals=$B.last($B.frames_stack)[0]
+for(var i=0,len=exc.$stack.length;i < len;i++){if(exc.$stack[i][0]==current_locals){exc.$stack=exc.$stack.slice(i)
+exc.$traceback=traceback.$factory(exc)
+break}}}}
 return exc}
 $B.is_exc=function(exc,exc_list){
 if(exc.__class__===undefined){exc=$B.exception(exc)}
@@ -7659,6 +7676,7 @@ if(this_exc_class===undefined){console.log("exc class undefined",exc)}
 if(issubclass(this_exc_class,exc_class)){return true}}
 return false}
 $B.is_recursion_error=function(js_exc){
+console.log("test is js exc is recursion error",js_exc,js_exc+"")
 var msg=js_exc+"",parts=msg.split(":"),err_type=parts[0].trim(),err_msg=parts[1].trim()
 return(err_type=='InternalError' && err_msg=='too much recursion')||
 (err_type=='Error' && err_msg=='Out of stack space')||
@@ -13130,14 +13148,16 @@ while(ctx_js.endsWith(";")){ctx_js=ctx_js.substr(0,ctx_js.length-1)}
 var res="return ["+ctx_js+", "+yield_node_id+"]"
 if(ctx_manager !==undefined){res="$yield = true;"+res}
 new_node.data=res
-top_node.yields.push(new_node)}else if(node.is_set_yield_value){
+top_node.yields.push(new_node)}else if(node.is_set_yield_value){if(node.module=="__main__"){console.log("node is set yield",node.line_num,node.module)}
 var ctx_manager
 if(node.after_yield){ctx_manager=in_ctx_manager(node)}
+if(node.line_num===undefined){console.log("bizarre",node)}
 var js="var sent_value = this.sent_value === undefined ? "+
 "None : this.sent_value;",h="\n"+' '.repeat(node.indent)
 js+=h+"this.sent_value = None"
 js+=h+"if(sent_value.__class__ === $B.$GeneratorSendError)"+
-"{throw sent_value.err};"
+"{sent_value.err.$stack.splice(0, 0, $B.freeze([$top_frame])[0]);"+
+" throw sent_value.err};"
 if(typeof ctx_js=="number"){js+=h+"var $yield_value"+ctx_js+" = sent_value;"}
 if(ctx_manager !==undefined){js+=h+"$yield = true;" }
 new_node.data=js}else if(ctype=="break" ||ctype=="continue"){
@@ -13374,11 +13394,10 @@ throw err}}
 generator.send=function(self,value){self.sent_value=value
 return generator.__next__(self)}
 generator.$$throw=function(self,type,value,traceback){var exc=type
-if(! _b_.isinstance(type,_b_.BaseException)){if(value===undefined){var exc=$B.$call(exc)()
-if(! _b_.isinstance(exc,_b_.BaseException)){throw _b_.TypeError.$factory("exception value must be an "+
-"instance of BaseException")}}else{exc=$B.$call(exc)(value)}}
+if(exc.$is_class){if(! _b_.issubclass(type,_b_.BaseException)){throw _b_.TypeError.$factory("exception value must be an "+
+"instance of BaseException")}else if(value===undefined){value=$B.$call(exc)()}}else{if(value===undefined){value=exc}else{exc=$B.$call(exc)(value)}}
 if(traceback !==undefined){exc.$traceback=traceback}
-self.sent_value={__class__:$B.$GeneratorSendError,err:exc}
+self.sent_value={__class__:$B.$GeneratorSendError,err:value}
 return generator.__next__(self)}
 generator.$factory=$B.genfunc=function(name,blocks,funcs,$defaults){
 if(name.startsWith("__ge")){
