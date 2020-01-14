@@ -114,6 +114,9 @@ test(random.randrange, 2.5)
 for (a, b) in [(0, 2.5), (0.5, 2)]:
     test(random.randrange, a, b)
 
+random.randint(0, 1.0)
+random.randrange(1.0, 3.0, 1.0)
+
 # issue 1121
 random.seed(31416)
 ch1 = random.choices([0, 1, 2], [2, 1, 1], k = 50)

@@ -657,14 +657,23 @@ Random.paretovariate = function(){
     return 1 / Math.pow(u, 1 / $.alpha)
 }
 
+function is_integer(x){
+    return _b_.isinstance(x, _b_.int) || (
+        _b_.isinstance(x, _b_.float) && 
+            x.valueOf() == Math.floor(x.valueOf()))
+}
 Random.randint = function(self, a, b){
     var $ = $B.args('randint', 3,
         {self: null, a:null, b:null},
         ['self', 'a', 'b'],
         arguments, {}, null, null)
-    if(! _b_.isinstance($.b, _b_.int)){
-        throw _b_.ValueError.$factory("non-integer arg 1 for randrange()")
+    if(! is_integer($.a)){
+        throw _b_.ValueError.$factory("non-integer value for start")
     }
+    if(! is_integer($.b)){
+        throw _b_.ValueError.$factory("non-integer value for stop")
+    }
+
     return Random.randrange($.self, $.a, $.b + 1)
 }
 
@@ -683,16 +692,16 @@ Random.randrange = function(){
         _random = self._random
 
     for(var i = 1, len = arguments.length; i < len; i++){
-        if(! _b_.isinstance(arguments[i], _b_.int)){
+        if(! is_integer(arguments[i])){
             throw _b_.ValueError.$factory("non-integer arg " + i +
                 " for randrange()")
         }
     }
     if($.stop === null){
-        var start = 0, stop = $.x, step = 1
+        var start = 0, stop = $.x.valueOf(), step = 1
     }else{
-        var start = $.x, stop = $.stop,
-            step = $.step === null ? 1 : $.step
+        var start = $.x.valueOf(), stop = $.stop.valueOf(),
+            step = $.step === null ? 1 : $.step.valueOf()
         if(step == 0){throw _b_.ValueError.$factory('step cannot be 0')}
     }
 
