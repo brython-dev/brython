@@ -158,7 +158,7 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj) {
         return jsobj
     }
 
-    if(jsobj instanceof Node){
+    if($B.$isNode(jsobj)){
         return $B.DOMNode.$factory(jsobj)
     }
 
