@@ -192,8 +192,10 @@ var _mod = {
         $B.check_no_kw('__getattr__ ', attr)
 
         var res = this[attr]
-        if(res === undefined){$raise('AttributeError',
-            'module math has no attribute ' + attr)}
+        if(res === undefined){
+            throw _b_.AttributeError.$factory(
+                'module math has no attribute ' + attr)
+        }
         return res
     },
     acos: function(x){
@@ -260,7 +262,7 @@ var _mod = {
            return int.$factory(Math.ceil(y))
        }
 
-       $raise('ValueError',
+       throw _b_.ValueError.$factory(
            'object is not a number and does not contain __ceil__')
     },
     copysign: function(x, y){
@@ -728,7 +730,7 @@ var _mod = {
           if(x1 > 0){return int.$factory(Math.floor(x1))}
           return int.$factory(Math.ceil(x1))  // x1 < 0
        }
-       $raise('ValueError',
+       throw _b_.ValueError.$factory(
            'object is not a number and does not contain __trunc__')
     }
 }
