@@ -99,9 +99,9 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,6,'final',0]
 __BRYTHON__.__MAGIC__="3.8.6"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-01-14 15:51:53.654534"
-__BRYTHON__.timestamp=1579013513654
-__BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
+__BRYTHON__.compiled_date="2020-01-17 08:24:35.707951"
+__BRYTHON__.timestamp=1579245875707
+__BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -7247,15 +7247,27 @@ $Reader.close=function(self){self.closed=true}
 $Reader.flush=function(self){return None}
 $Reader.read=function(){var $=$B.args("read",2,{self:null,size:null},["self","size"],arguments,{size:-1},null,null),self=$.self,size=$B.$GetInt($.size)
 if(self.closed===true){throw _b_.ValueError.$factory('I/O operation on closed file')}
-var binary=self.$content.__class__===_b_.bytes,len=binary ? self.$content.source.length :self.$content.length
-if(size < 0){size=len}
-if(self.$content.__class__===_b_.bytes){res=_b_.bytes.$factory(self.$content.source.slice(self.$counter,self.$counter+size))}else{res=self.$content.substr(self.$counter,size)}
+make_content(self)
+var len=self.$binary ? self.$bytes.source.length :self.$string.length
+if(size < 0){size=len-self.$counter}
+if(self.$binary){res=_b_.bytes.$factory(self.$bytes.source.slice(self.$counter,self.$counter+size))}else{res=self.$string.substr(self.$counter,size)}
 self.$counter+=size
 return res}
 $Reader.readable=function(self){return true}
+function make_content(self){
+if(self.$binary && self.$bytes===undefined){self.$bytes=_b_.str.encode(self.$string,self.encoding)}else if((! self.$binary)&& self.$string===undefined){self.$string=_b_.bytes.decode(self.$bytes,self.encoding)}}
+function make_lines(self){
+if(self.$lines===undefined){make_content(self)
+if(! self.$binary){self.$lines=self.$string.split("\n")}else{var lines=[],pos=0,source=self.$bytes.source
+while(true){var ix=source.indexOf(10)
+if(ix==-1){lines.push({__class__:_b_.bytes,source:source})
+break}else{lines.push({__class__:_b_.bytes,source:source.slice(0,ix)})
+source=source.splice(0,ix)}}
+self.$lines=lines}}}
 $Reader.readline=function(self,size){var $=$B.args("readline",2,{self:null,size:null},["self","size"],arguments,{size:-1},null,null),self=$.self,size=$B.$GetInt($.size)
 self.$lc=self.$lc===undefined ?-1 :self.$lc
 if(self.closed===true){throw _b_.ValueError.$factory('I/O operation on closed file')}
+make_lines(self)
 if(self.$lc==self.$lines.length-1){return ''}
 self.$lc++
 var line=self.$lines[self.$lc]
@@ -7266,6 +7278,7 @@ $Reader.readlines=function(){var $=$B.args("readlines",2,{self:null,hint:null},[
 var nb_read=0
 if(self.closed===true){throw _b_.ValueError.$factory('I/O operation on closed file')}
 self.$lc=self.$lc===undefined ?-1 :self.$lc
+make_lines(self)
 if(hint < 0){var lines=self.$lines.slice(self.$lc+1)}else{var lines=[]
 while(self.$lc < self.$lines.length &&
 nb_read < hint){self.$lc++
@@ -7278,17 +7291,23 @@ if(whence===0){self.$counter=offset}
 else if(whence===1){self.$counter+=offset}
 else if(whence===2){self.$counter=self.$content.length+offset}}
 $Reader.seekable=function(self){return true}
-$Reader.tell=function(self){return self.$counter}
+$Reader.tell=function(self){console.log("tell",self)
+return self.$counter}
 $Reader.writable=function(self){return false}
 $B.set_func_names($Reader,"builtins")
 var $BufferedReader=$B.make_class('_io.BufferedReader')
 $BufferedReader.__mro__=[$Reader,object]
-var $TextIOWrapper=$B.make_class('_io.TextIOWrapper')
+var $TextIOWrapper=$B.make_class('_io.TextIOWrapper',function(){var $=$B.args("TextIOWrapper",6,{buffer:null,encoding:null,errors:null,newline:null,line_buffering:null,write_through:null},["buffer","encoding","errors","newline","line_buffering","write_through"],arguments,{encoding:"utf-8",errors:_b_.None,newline:_b_.None,line_buffering:_b_.False,write_through:_b_.False},null,null)
+return{
+__class__:$TextIOWrapper,$bytes:$.buffer.$bytes,encoding:$.encoding,errors:$.errors,newline:$.newline}}
+)
 $TextIOWrapper.__mro__=[$Reader,object]
 $B.set_func_names($TextIOWrapper,"builtins")
+$B.Reader=$Reader
 $B.TextIOWrapper=$TextIOWrapper
+$B.BufferedReader=$BufferedReader
 function $url_open(){
-var $ns=$B.args('open',3,{file:null,mode:null,encoding:null},['file','mode','encoding'],arguments,{mode:'r',encoding:'utf-8'},'args','kw'),$res
+var $ns=$B.args('open',3,{file:null,mode:null,encoding:null},['file','mode','encoding'],arguments,{mode:'r',encoding:'utf-8'},'args','kw'),$bytes,$string,$res
 for(var attr in $ns){eval('var '+attr+'=$ns["'+attr+'"]')}
 if(args.length > 0){var mode=args[0]}
 if(args.length > 1){var encoding=args[1]}
@@ -7296,15 +7315,12 @@ if(isinstance(file,$B.JSObject)){return $B.OpenFile.$factory(file.js,mode,encodi
 if(mode.search('w')>-1){throw _b_.IOError.$factory("Browsers cannot write on disk")}else if(['r','rb'].indexOf(mode)==-1){throw _b_.ValueError.$factory("Invalid mode '"+mode+"'")}
 if(isinstance(file,_b_.str)){
 var is_binary=mode.search('b')>-1
-if($B.file_cache.hasOwnProperty($ns.file)){var str_content=$B.file_cache[$ns.file]
-if(is_binary){$res=_b_.str.encode(str_content,"utf-8")}else{$res=str_content}}else if($B.files && $B.files.hasOwnProperty($ns.file)){
+if($B.file_cache.hasOwnProperty($ns.file)){$string=$B.file_cache[$ns.file]}else if($B.files && $B.files.hasOwnProperty($ns.file)){
 $res=atob($B.files[$ns.file].content)
 var source=[]
 for(const char of $res){source.push(char.charCodeAt(0))}
-$res=_b_.bytes.$factory()
-$res.source=source
-if(! is_binary){
-$res=_b_.bytes.decode($res,$ns.encoding)}}else if($B.protocol !="file"){
+$bytes=_b_.bytes.$factory()
+$bytes.source=source}else if($B.protocol !="file"){
 if(is_binary){throw _b_.IOError.$factory(
 "open() in binary mode is not supported")}
 var req=new XMLHttpRequest();
@@ -7316,11 +7332,10 @@ var fake_qs='?foo='+(new Date().getTime())
 req.open('GET',file+fake_qs,false)
 req.overrideMimeType('text/plain; charset=utf-8')
 req.send()
-if($res.constructor===Error){throw $res}}
-if($res===undefined){throw _b_.FileNotFoundError.$factory($ns.file)}
-if(typeof $res=="string"){var lines=$res.split('\n')
-for(var i=0;i < lines.length-1;i++){lines[i]+='\n'}}else{var lines=_b_.bytes.split($res,_b_.bytes.$factory([10]))}
-var res={$content:$res,$counter:0,$lines:lines,closed:False,encoding:encoding,mode:mode,name:file}
+if($res.constructor===Error){throw $res}
+$string=$res}
+if($string===undefined && $bytes===undefined){throw _b_.FileNotFoundError.$factory($ns.file)}
+var res={$binary:is_binary,$string:$string,$bytes:$bytes,$counter:0,closed:False,encoding:encoding,mode:mode,name:file}
 res.__class__=is_binary ? $BufferedReader :$TextIOWrapper
 return res}}
 var zip=$B.make_class("zip",function(){var res={__class__:zip,items:[]}
@@ -7519,15 +7534,16 @@ attr==='tb_lasti' ||
 attr==='tb_next'){if(self.$stack.length==0){console.log("no stack",attr)}
 var first_frame=self.$stack[0]
 if(first_frame===undefined){console.log("last frame undef",self.$stack,Object.keys(self.$stack))}
-var line_info=first_frame[1].$line_info}
+var line_info=first_frame[1].$line_info
+if(first_frame[1].$frozen_line_info !=undefined){line_info=first_frame[1].$frozen_line_info}}
 switch(attr){case "tb_frame":
 return frame.$factory(self.$stack)
 case "tb_lineno":
+var lineno
 if(line_info===undefined ||
 first_frame[0].search($B.lambda_magic)>-1){if(first_frame[4]&& first_frame[4].$infos &&
-first_frame[4].$infos.__code__){return first_frame[4].$infos.__code__.co_firstlineno}
-return-1}
-else{return parseInt(line_info.split(",")[0])}
+first_frame[4].$infos.__code__){lineno=first_frame[4].$infos.__code__.co_firstlineno}else{lineno=-1}}else{lineno=parseInt(line_info.split(",")[0])}
+return lineno
 case "tb_lasti":
 if(line_info===undefined){return "<unknown>"}else{var info=line_info.split(","),src
 for(var i=self.$stack.length-1;i >=0;i--){var fr=self.$stack[i]
@@ -7615,24 +7631,22 @@ return traceback.$factory(self)}else{throw _b_.AttributeError.$factory(self.__cl
 BaseException.with_traceback=function(self,tb){self.$traceback=tb
 return self}
 function deep_copy(stack){var current_frame=$B.last($B.frames_stack),is_local=current_frame[0]!=current_frame[2]
-if(is_local){for(var i=0,len=$B.frames_stack.length;i < len;i++){if($B.frames_stack[0]==current_frame[0]){console.log("reduce stack",current_frame[0])
-return stack.slice(i)}}}
+if(is_local){for(var i=0,len=$B.frames_stack.length;i < len;i++){if($B.frames_stack[0]==current_frame[0]){return stack.slice(i)}}}
 return stack.slice()}
-$B.freeze=function(stack){var res=[],copy
-for(const frame of stack){copy=[frame[0],{},frame[2],{}]
-for(var key in frame[1]){copy[1][key]=frame[1][key]}
-for(var key in frame[3]){copy[3][key]=frame[3][key]}
-res.push(copy)}
-return res}
+$B.count_exc={}
+$B.freeze=function(stack){for(var i=0,len=stack.length;i < len;i++){stack[i][1].$frozen_line_info=stack[i][1].$line_info
+stack[i][3].$frozen_line_info=stack[i][3].$line_info}
+return stack}
 var show_stack=$B.show_stack=function(stack){stack=stack ||$B.frames_stack
 for(const frame of stack){console.log(frame[0],frame[1].$line_info)}}
 BaseException.$factory=function(){var err=Error()
-err.args=_b_.tuple.$factory(Array.prototype.slice.call(arguments))
+err.args=$B.fast_tuple(Array.prototype.slice.call(arguments))
 err.__class__=_b_.BaseException
 err.$py_error=true
-if(err.$stack===undefined){err.$stack=$B.freeze($B.frames_stack)}
+if(err.$stack===undefined){var err_name=err.__class__.$infos.__name__
+if(err_name==="StopIteration"){if($B.count_exc[err.args[0]]===undefined){$B.count_exc[err.args[0]]=1}else{$B.count_exc[err.args[0]]+=1}}
+err.$stack=$B.freeze($B.frames_stack.slice())}
 if($B.frames_stack.length){err.$line_info=$B.last($B.frames_stack)[1].$line_info}
-err.$traceback=traceback.$factory(err)
 eval("//placeholder//")
 err.__cause__=_b_.None 
 err.__context__=_b_.None 
@@ -7661,7 +7675,7 @@ var $message="<Javascript "+js_exc.name+">: "+
 (js_exc.message ||"<"+js_exc+">")
 exc.args=_b_.tuple.$factory([$message])
 exc.$py_error=true
-exc.$stack=deep_copy($B.frames_stack);}else{var exc=js_exc
+exc.$stack=$B.freeze($B.frames_stack.slice());}else{var exc=js_exc
 if(in_ctx_manager){
 var current_locals=$B.last($B.frames_stack)[0]
 for(var i=0,len=exc.$stack.length;i < len;i++){if(exc.$stack[i][0]==current_locals){exc.$stack=exc.$stack.slice(i)
@@ -8290,9 +8304,11 @@ if(enc.startsWith("cp")||enc.startsWith("iso")){enc=enc.replace("-","")}
 enc=enc.replace(/-/g,"_")
 return enc}
 function load_decoder(enc){
+console.log("load decoder",enc)
 if(to_unicode[enc]===undefined){var mod=_b_.__import__("encodings."+enc)
 if(mod[enc].getregentry){to_unicode[enc]=$B.$getattr(mod[enc].getregentry(),"decode")}}}
 function load_encoder(enc){
+console.log("load encoder",enc)
 if(from_unicode[enc]===undefined){var mod=_b_.__import__("encodings."+enc)
 if(mod[enc].getregentry){from_unicode[enc]=$B.$getattr(mod[enc].getregentry(),"encode")}}}
 var decode=$B.decode=function(obj,encoding,errors){var s="",b=obj.source,enc=normalise(encoding)
@@ -8908,7 +8924,7 @@ $B.JSConstructor=JSConstructor})(__BRYTHON__)
 ;(function($B){$B.stdlib={}
 var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_collections_abc','_compat_pickle','_contextvars','_csv','_dummy_thread','_functools','_imp','_io','_markupbase','_operator','_py_abc','_pydecimal','_queue','_random','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_weakref','_weakrefset','abc','antigravity','argparse','atexit','base64','bdb','binascii','bisect','browser.aio','browser.ajax','browser.highlight','browser.html','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.template','browser.timer','browser.webcomponent','browser.websocket','browser.webworker','browser.worker','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','gettext','glob','heapq','hmac','imp','inspect','io','ipaddress','itertools','keyword','linecache','locale','mimetypes','nntplib','numbers','opcode','operator','optparse','os','pdb','pickle','pkgutil','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','re','reprlib','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','string','stringprep','struct','subprocess','sys','sysconfig','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uu','uuid','warnings','weakref','webbrowser','zipfile','zlib']
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
-var js=['_aio','_ajax','_base64','_binascii','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_sre_utils','_string','_strptime','_svg','_warnings','_webcomponent','_webworker','_zlib_utils','aes','array','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','long_int','marshal','math','math1','math_kozh','md5','modulefinder','pbkdf2','posix','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata']
+var js=['_aio','_ajax','_base64','_binascii','_io_classes','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_sre_utils','_string','_strptime','_svg','_warnings','_webcomponent','_webworker','_zlib_utils','aes','array','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','long_int','marshal','math','math1','math_kozh','md5','modulefinder','pbkdf2','posix','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
 var pkglist=['browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','json','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
 for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}})(__BRYTHON__)
@@ -12140,7 +12156,7 @@ return klass}
 function dict_iterator_next(self){if(self.len_func()!=self.len){throw RuntimeError.$factory("dictionary changed size during iteration")}
 self.counter++
 if(self.counter < self.items.length){return self.items[self.counter]}
-throw _b_.StopIteration.$factory("StopIteration")}
+throw _b_.StopIteration.$factory("StopIteration dict 1")}
 var dict={__class__:_b_.type,__mro__:[object],$infos:{__module__:"builtins",__name__:"dict"},$is_class:true,$native:true}
 function to_list(d,ix){var items=[],item
 if(d.$jsobj){items=[]
@@ -12157,7 +12173,7 @@ $B.dict_to_list=to_list
 function dict_iterator_next(self){if(self.len_func()!=self.len){throw RuntimeError.$factory("dictionary changed size during iteration")}
 self.counter++
 if(self.counter < self.items.length){return self.items[self.counter]}
-throw _b_.StopIteration.$factory("StopIteration")}
+throw _b_.StopIteration.$factory("StopIteration dict 2")}
 var $copy_dict=function(left,right){var _l=to_list(right),si=dict.$setitem
 right.$version=right.$version ||0
 var right_version=right.$version ||0

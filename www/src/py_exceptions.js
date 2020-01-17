@@ -150,21 +150,28 @@ traceback.__getattribute__ = function(self, attr){
             console.log("last frame undef", self.$stack, Object.keys(self.$stack))
         }
         var line_info = first_frame[1].$line_info
+        if(first_frame[1].$frozen_line_info != undefined){
+            line_info = first_frame[1].$frozen_line_info
+        }
     }
 
     switch(attr){
         case "tb_frame":
             return frame.$factory(self.$stack)
         case "tb_lineno":
+            var lineno
             if(line_info === undefined ||
                     first_frame[0].search($B.lambda_magic) > -1){
                 if(first_frame[4] && first_frame[4].$infos &&
                         first_frame[4].$infos.__code__){
-                    return first_frame[4].$infos.__code__.co_firstlineno
+                    lineno = first_frame[4].$infos.__code__.co_firstlineno
+                }else{
+                    lineno = -1
                 }
-                return -1
+            }else{
+                lineno = parseInt(line_info.split(",")[0])
             }
-            else{return parseInt(line_info.split(",")[0])}
+            return lineno
         case "tb_lasti":
             if(line_info === undefined){
                 return "<unknown>"
@@ -437,19 +444,14 @@ function deep_copy(stack){
 }
 
 $B.freeze = function(stack){
-    var res = [],
-        copy
-    for(const frame of stack){
-        copy = [frame[0], {}, frame[2], {}]
-        for(var key in frame[1]){
-            copy[1][key] = frame[1][key]
-        }
-        for(var key in frame[3]){
-            copy[3][key] = frame[3][key]
-        }
-        res.push(copy)
+    // Set attribute $frozen_line_info to each frame in exception stack. If we
+    // only use $line_info, it might have been updated when exception handling
+    // starts.
+    for(var i = 0, len = stack.length; i < len; i++){
+        stack[i][1].$frozen_line_info = stack[i][1].$line_info
+        stack[i][3].$frozen_line_info = stack[i][3].$line_info
     }
-    return res
+    return stack
 }
 
 var show_stack = $B.show_stack = function(stack){
@@ -461,17 +463,17 @@ var show_stack = $B.show_stack = function(stack){
 
 BaseException.$factory = function (){
     var err = Error()
-    err.args = _b_.tuple.$factory(Array.prototype.slice.call(arguments))
+    err.args = $B.fast_tuple(Array.prototype.slice.call(arguments))
     err.__class__ = _b_.BaseException
     err.$py_error = true
     // Make a copy of the current frame stack array
     if(err.$stack === undefined){
-        err.$stack = $B.freeze($B.frames_stack) //$B.freeze($B.frames_stack);
+        err.$stack = $B.freeze($B.frames_stack.slice())
     }
     if($B.frames_stack.length){
         err.$line_info = $B.last($B.frames_stack)[1].$line_info
     }
-    err.$traceback = traceback.$factory(err)
+    //err.$traceback = traceback.$factory(err)
     eval("//placeholder//")
     err.__cause__ = _b_.None // XXX fix me
     err.__context__ = _b_.None // XXX fix me
@@ -519,7 +521,7 @@ $B.exception = function(js_exc, in_ctx_manager){
             (js_exc.message || "<" + js_exc + ">")
         exc.args = _b_.tuple.$factory([$message])
         exc.$py_error = true
-        exc.$stack = $B.freeze($B.frames_stack);
+        exc.$stack = $B.freeze($B.frames_stack.slice());
     }else{
         var exc = js_exc
         if(in_ctx_manager){
