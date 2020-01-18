@@ -2449,7 +2449,7 @@ $Reader.read = function(){
         throw _b_.ValueError.$factory('I/O operation on closed file')
     }
     make_content(self)
-
+    
     var len = self.$binary ? self.$bytes.source.length : self.$string.length
     if(size < 0){
         size = len - self.$counter
@@ -2488,6 +2488,7 @@ function make_lines(self){
         if(! self.$binary){
             self.$lines = self.$string.split("\n")
         }else{
+            console.log("make lines, binary")
             var lines = [],
                 pos = 0,
                 source = self.$bytes.source
@@ -2499,9 +2500,9 @@ function make_lines(self){
                 }else{
                     lines.push({
                         __class__: _b_.bytes,
-                        source: source.slice(0, ix)
+                        source: source.slice(0, ix + 1)
                     })
-                    source = source.splice(0, ix)
+                    source = source.slice(ix + 1)
                 }
             }
             self.$lines = lines
@@ -2520,18 +2521,31 @@ $Reader.readline = function(self, size){
     if(self.closed === true){
         throw _b_.ValueError.$factory('I/O operation on closed file')
     }
-    make_lines(self)
 
-    if(self.$lc == self.$lines.length - 1){
-        return ''
+    make_content(self)
+    if(self.$binary){
+        var ix = self.$bytes.source.indexOf(10, self.$counter)
+        if(ix == -1){
+            return _b_.bytes.$factory()
+        }else{
+            var res = {
+                __class__: _b_.bytes,
+                source : self.$bytes.source.slice(self.$counter,
+                    ix + 1)
+            }
+            self.$counter = ix + 1
+            return res
+        }
+    }else{
+        var ix = self.$string.indexOf("\n", self.$counter)
+        if(ix == -1){
+            return ''
+        }else{
+            var res = self.$string.substring(self.$counter, ix + 1)
+            self.$counter = ix + 1
+            return res
+        }
     }
-    self.$lc++
-    var line = self.$lines[self.$lc]
-    if(size > 0){
-        line = line.substr(0, size)
-    }
-    self.$counter += line.length
-    return line
 }
 
 $Reader.readlines = function(){
@@ -2573,7 +2587,6 @@ $Reader.seek = function(self, offset, whence){
 $Reader.seekable = function(self){return true}
 
 $Reader.tell = function(self){
-    console.log("tell", self)
     return self.$counter
 }
 

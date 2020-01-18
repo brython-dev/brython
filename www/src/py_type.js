@@ -144,7 +144,7 @@ $B.$class_constructor = function(class_name, class_obj, bases,
         }
     }
     class_dict.__mro__ = _b_.type.mro(class_dict).slice(1)
-
+    
     // Check if at least one method is abstract (cf PEP 3119)
     // If this is the case, the class cannot be instanciated
     var is_instanciable = true,
@@ -452,7 +452,7 @@ type.__getattribute__ = function(klass, attr){
         if(typeof res == "function"){
             // method
             if(res.$infos === undefined && $B.debug > 1){
-                console.log("warning: no attribute $infos for", res, 
+                console.log("warning: no attribute $infos for", res,
                     "klass", klass, "attr", attr)
             }
             if($test){console.log("res is function", res)}
@@ -675,7 +675,7 @@ type.mro = function(cls){
         bases = bases.concat(_b_.tuple.$factory([_b_.object]))
     }
 
-    for(var i = 0; i < bases.length; i++){seqs[pos1++] = bases[i]}
+    seqs[pos1++] = bases.slice()
 
     var mro = [cls],
         mpos = 1
@@ -686,7 +686,7 @@ type.mro = function(cls){
             if(seqs[i].length > 0){non_empty[pos++] = seqs[i]}
         }
         if(non_empty.length == 0){break}
-        for(var i  =0; i < non_empty.length; i++){
+        for(var i = 0; i < non_empty.length; i++){
             var seq = non_empty[i],
                 candidate = seq[0],
                 not_head = [],

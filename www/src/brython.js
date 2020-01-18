@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,6,'final',0]
 __BRYTHON__.__MAGIC__="3.8.6"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-01-17 08:24:35.707951"
-__BRYTHON__.timestamp=1579245875707
+__BRYTHON__.compiled_date="2020-01-18 17:22:26.985428"
+__BRYTHON__.timestamp=1579364546985
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5690,7 +5690,7 @@ if(_tmp[0]===bases[i]){_tmp.splice(0,1)}
 for(var k=0;k < _tmp.length;k++){bmro[pos++]=_tmp[k]}
 seqs[pos1++]=bmro}
 if(bases.indexOf(_b_.object)==-1){bases=bases.concat(_b_.tuple.$factory([_b_.object]))}
-for(var i=0;i < bases.length;i++){seqs[pos1++]=bases[i]}
+seqs[pos1++]=bases.slice()
 var mro=[cls],mpos=1
 while(1){var non_empty=[],pos=0
 for(var i=0;i < seqs.length;i++){if(seqs[i].length > 0){non_empty[pos++]=seqs[i]}}
@@ -7258,22 +7258,24 @@ function make_content(self){
 if(self.$binary && self.$bytes===undefined){self.$bytes=_b_.str.encode(self.$string,self.encoding)}else if((! self.$binary)&& self.$string===undefined){self.$string=_b_.bytes.decode(self.$bytes,self.encoding)}}
 function make_lines(self){
 if(self.$lines===undefined){make_content(self)
-if(! self.$binary){self.$lines=self.$string.split("\n")}else{var lines=[],pos=0,source=self.$bytes.source
+if(! self.$binary){self.$lines=self.$string.split("\n")}else{console.log("make lines, binary")
+var lines=[],pos=0,source=self.$bytes.source
 while(true){var ix=source.indexOf(10)
 if(ix==-1){lines.push({__class__:_b_.bytes,source:source})
-break}else{lines.push({__class__:_b_.bytes,source:source.slice(0,ix)})
-source=source.splice(0,ix)}}
+break}else{lines.push({__class__:_b_.bytes,source:source.slice(0,ix+1)})
+source=source.slice(ix+1)}}
 self.$lines=lines}}}
 $Reader.readline=function(self,size){var $=$B.args("readline",2,{self:null,size:null},["self","size"],arguments,{size:-1},null,null),self=$.self,size=$B.$GetInt($.size)
 self.$lc=self.$lc===undefined ?-1 :self.$lc
 if(self.closed===true){throw _b_.ValueError.$factory('I/O operation on closed file')}
-make_lines(self)
-if(self.$lc==self.$lines.length-1){return ''}
-self.$lc++
-var line=self.$lines[self.$lc]
-if(size > 0){line=line.substr(0,size)}
-self.$counter+=line.length
-return line}
+make_content(self)
+if(self.$binary){var ix=self.$bytes.source.indexOf(10,self.$counter)
+if(ix==-1){return _b_.bytes.$factory()}else{var res={__class__:_b_.bytes,source :self.$bytes.source.slice(self.$counter,ix+1)}
+self.$counter=ix+1
+return res}}else{var ix=self.$string.indexOf("\n",self.$counter)
+if(ix==-1){return ''}else{var res=self.$string.substring(self.$counter,ix+1)
+self.$counter=ix+1
+return res}}}
 $Reader.readlines=function(){var $=$B.args("readlines",2,{self:null,hint:null},["self","hint"],arguments,{hint:-1},null,null),self=$.self,hint=$B.$GetInt($.hint)
 var nb_read=0
 if(self.closed===true){throw _b_.ValueError.$factory('I/O operation on closed file')}
@@ -7291,8 +7293,7 @@ if(whence===0){self.$counter=offset}
 else if(whence===1){self.$counter+=offset}
 else if(whence===2){self.$counter=self.$content.length+offset}}
 $Reader.seekable=function(self){return true}
-$Reader.tell=function(self){console.log("tell",self)
-return self.$counter}
+$Reader.tell=function(self){return self.$counter}
 $Reader.writable=function(self){return false}
 $B.set_func_names($Reader,"builtins")
 var $BufferedReader=$B.make_class('_io.BufferedReader')
@@ -7633,8 +7634,8 @@ return self}
 function deep_copy(stack){var current_frame=$B.last($B.frames_stack),is_local=current_frame[0]!=current_frame[2]
 if(is_local){for(var i=0,len=$B.frames_stack.length;i < len;i++){if($B.frames_stack[0]==current_frame[0]){return stack.slice(i)}}}
 return stack.slice()}
-$B.count_exc={}
-$B.freeze=function(stack){for(var i=0,len=stack.length;i < len;i++){stack[i][1].$frozen_line_info=stack[i][1].$line_info
+$B.freeze=function(stack){
+for(var i=0,len=stack.length;i < len;i++){stack[i][1].$frozen_line_info=stack[i][1].$line_info
 stack[i][3].$frozen_line_info=stack[i][3].$line_info}
 return stack}
 var show_stack=$B.show_stack=function(stack){stack=stack ||$B.frames_stack
@@ -7643,9 +7644,7 @@ BaseException.$factory=function(){var err=Error()
 err.args=$B.fast_tuple(Array.prototype.slice.call(arguments))
 err.__class__=_b_.BaseException
 err.$py_error=true
-if(err.$stack===undefined){var err_name=err.__class__.$infos.__name__
-if(err_name==="StopIteration"){if($B.count_exc[err.args[0]]===undefined){$B.count_exc[err.args[0]]=1}else{$B.count_exc[err.args[0]]+=1}}
-err.$stack=$B.freeze($B.frames_stack.slice())}
+if(err.$stack===undefined){err.$stack=$B.freeze($B.frames_stack.slice())}
 if($B.frames_stack.length){err.$line_info=$B.last($B.frames_stack)[1].$line_info}
 eval("//placeholder//")
 err.__cause__=_b_.None 
@@ -8304,11 +8303,9 @@ if(enc.startsWith("cp")||enc.startsWith("iso")){enc=enc.replace("-","")}
 enc=enc.replace(/-/g,"_")
 return enc}
 function load_decoder(enc){
-console.log("load decoder",enc)
 if(to_unicode[enc]===undefined){var mod=_b_.__import__("encodings."+enc)
 if(mod[enc].getregentry){to_unicode[enc]=$B.$getattr(mod[enc].getregentry(),"decode")}}}
 function load_encoder(enc){
-console.log("load encoder",enc)
 if(from_unicode[enc]===undefined){var mod=_b_.__import__("encodings."+enc)
 if(mod[enc].getregentry){from_unicode[enc]=$B.$getattr(mod[enc].getregentry(),"encode")}}}
 var decode=$B.decode=function(obj,encoding,errors){var s="",b=obj.source,enc=normalise(encoding)
@@ -12156,7 +12153,7 @@ return klass}
 function dict_iterator_next(self){if(self.len_func()!=self.len){throw RuntimeError.$factory("dictionary changed size during iteration")}
 self.counter++
 if(self.counter < self.items.length){return self.items[self.counter]}
-throw _b_.StopIteration.$factory("StopIteration dict 1")}
+throw _b_.StopIteration.$factory("StopIteration")}
 var dict={__class__:_b_.type,__mro__:[object],$infos:{__module__:"builtins",__name__:"dict"},$is_class:true,$native:true}
 function to_list(d,ix){var items=[],item
 if(d.$jsobj){items=[]
@@ -12173,7 +12170,7 @@ $B.dict_to_list=to_list
 function dict_iterator_next(self){if(self.len_func()!=self.len){throw RuntimeError.$factory("dictionary changed size during iteration")}
 self.counter++
 if(self.counter < self.items.length){return self.items[self.counter]}
-throw _b_.StopIteration.$factory("StopIteration dict 2")}
+throw _b_.StopIteration.$factory("StopIteration")}
 var $copy_dict=function(left,right){var _l=to_list(right),si=dict.$setitem
 right.$version=right.$version ||0
 var right_version=right.$version ||0

@@ -4,24 +4,28 @@ function get_self(name, args){
     return $B.args(name, 1, {self: null}, ["self"], args, {}, null, null).self
 }
 
-var IOBase = $B.make_class("IOBase")
-IOBase.__mro__ = [_b_.object]
+var _IOBase = $B.make_class("_IOBase")
+_IOBase.__mro__ = [_b_.object]
 
-IOBase.close = function(){
+_IOBase.close = function(){
     get_self("close", arguments).__closed = true
 }
 
-IOBase.flush = function(){
+_IOBase.flush = function(){
     get_self("flush", arguments)
     return _b_.None
 }
 
+// Base class for binary streams that support some kind of buffering.
+var _BufferedIOBase = $B.make_class("_BufferedIOBase")
+_BufferedIOBase.__mro__ = [_IOBase, _b_.object]
+
 // Base class for raw binary I/O.
-var RawIOBase = $B.make_class("RawIOBase")
+var _RawIOBase = $B.make_class("_RawIOBase")
 
-RawIOBase.__mro__ = [IOBase, _b_.object]
+_RawIOBase.__mro__ = [_IOBase, _b_.object]
 
-RawIOBase.read = function(){
+_RawIOBase.read = function(){
     var $ = $B.args("read", 2, {self: null, size: null}, ["self", "size"],
                     arguments, {size: -1}, null, null),
         self = $.self,
@@ -42,9 +46,13 @@ RawIOBase.read = function(){
     return res
 }
 
-RawIOBase.readall = function(){
-    return RawIOBase.read(get_self("readall", arguments))
+_RawIOBase.readall = function(){
+    return _RawIOBase.read(get_self("readall", arguments))
 }
+
+// Base class for text streams.
+_TextIOBase = $B.make_class("_TextIOBase")
+_TextIOBase.__mro__ = [_IOBase, _b_.object]
 
 var StringIO = $B.make_class("StringIO",
     function(){
@@ -53,6 +61,7 @@ var StringIO = $B.make_class("StringIO",
                 null, null)
         return {
             __class__: StringIO,
+            $counter: 0,
             $string: $.value
         }
     }
@@ -69,6 +78,7 @@ StringIO.write = function(){
     var $ = $B.args("write", 2, {self: null, data: null},
             ["self", "data"], arguments, {}, null, null)
     $.self.$string += $.data
+    $.self.$counter += $.data.length
     return _b_.None
 }
 $B.set_func_names(StringIO, "_io")
@@ -78,20 +88,24 @@ var BytesIO = $B.make_class("BytesIO",
         var $ = $B.args("BytesIO", 1, {value: null},
                 ["value"], arguments, {value: _b_.bytes.$factory()},
                 null, null)
-        console.log("create bytesio", $)
         return {
             __class__: BytesIO,
             $binary: true,
-            $bytes: $.value
+            $bytes: $.value,
+            $counter: 0
         }
     }
 )
 BytesIO.__mro__ = [$B.Reader, _b_.object]
 
+BytesIO.getbuffer = function(){
+    var self = get_self("getbuffer", arguments)
+    return self.$bytes
+}
+
 BytesIO.getvalue = function(){
-    var $ = $B.args("getvalue", 1, {self: null},
-            ["self"], arguments, {}, null, null)
-    return $.self.$bytes
+    var self = get_self("getvalue", arguments)
+    return self.$bytes
 }
 
 BytesIO.write = function(){
@@ -99,27 +113,16 @@ BytesIO.write = function(){
             ["self", "data"], arguments, {}, null, null)
     $.self.$bytes.source = $.self.$bytes.source.concat(
         $.data.source)
+    $.self.$counter += $.data.source.length
     return _b_.None
 }
 $B.set_func_names(BytesIO, "_io")
 
 var $module = (function($B){
     return {
-        _BufferedIOBase: $B.make_class("_BufferedIOBase",
-            function(){
-                return "fileio"
-            }
-        ),
-        _IOBase: $B.make_class("_IOBase",
-            function(){
-                return "fileio"
-            }
-        ),
-        _RawIOBase: $B.make_class("_RawIOBase",
-            function(){
-                return "fileio"
-            }
-        ),
+        _BufferedIOBase: _BufferedIOBase,
+        _IOBase: _IOBase,
+        _RawIOBase: _RawIOBase,
         _TextIOBase: $B.make_class("_TextIOBase",
             function(){
                 return "fileio"
