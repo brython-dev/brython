@@ -1,0 +1,71 @@
+<!doctype html>
+<html>
+<head>
+<meta name="description" content="Brython">
+<meta name="keywords" content="Python,Brython">
+<meta name="author" content="Pierre Quentel">
+<meta charset="utf-8">
+
+<style>
+#content{
+    float: right;
+    width: 75%;
+}
+#menu{
+    padding-left:1%;
+    margin-right: 80%;
+    position: fixed;
+}
+</style>
+
+<link rel="icon" type="image/png" href="favicon.png" />
+
+<noscript>Please enable Javascript to view this page correctly.</noscript>
+
+<script type="text/javascript" src="/src/brython.js"></script>
+
+<script src="/assets/header.brython.js"></script>
+
+
+<script type="text/python3">
+from browser import document, highlight, html
+import header
+
+qs_lang, language = header.show()
+
+# Highlight Python code
+for elt in document.get(selector='.python'):
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+
+# Generate menu
+menu = document["menu"]
+for i, tag in enumerate(document.select("H1")):
+    menu <= html.A(tag.text, href=f"#item{i}") + html.BR()
+    tag.parent.insertBefore(html.A(name=f"item{i}"), tag)
+
+</script>
+
+<title>Brython</title>
+<link rel="stylesheet" href="/brython.css">
+</head>
+
+<body onload="brython(1)">
+
+<table id="banner" cellpadding=0 cellspacing=0>
+<tr id="banner_row">
+<td class="logo"><a href="/index.html" class="logo">Brython</a></td>
+</tr>
+</table>
+
+<div id="content">
+{{content}}
+</div>
+
+<div id="menu"></div>
+
+</body>
+</html>
