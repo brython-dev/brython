@@ -1973,7 +1973,7 @@ try:
     exec("x += 1, y = 2")
     raise Exception("should have raised SyntaxError")
 except SyntaxError as exc:
-    assert exc.args[0] == "invalid syntax"
+    assert exc.args[0].startswith("invalid syntax")
 
 # issue 953
 adk = 4

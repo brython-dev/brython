@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,6,'final',0]
 __BRYTHON__.__MAGIC__="3.8.6"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-01-19 11:34:51.684381"
-__BRYTHON__.timestamp=1579430091668
+__BRYTHON__.compiled_date="2020-01-19 20:49:36.291536"
+__BRYTHON__.timestamp=1579463376291
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -225,10 +225,13 @@ while(root.parent !==undefined){root=root.parent}
 var module=tree_node.module,src=root.src,line_num=tree_node.line_num
 if(src){line_num=src.substr(0,$pos).split("\n").length}
 if(root.line_info){line_num=root.line_info}
-if(indent===undefined){if(Array.isArray(msg)){$B.$SyntaxError(module,msg[0],src,$pos,line_num,root)}
+console.log("syntax error",msg,indent)
+if(indent===undefined ||typeof indent !="number"){if(Array.isArray(msg)){$B.$SyntaxError(module,msg[0],src,$pos,line_num,root)}
 if(msg==="Triple string end not found"){
 $B.$SyntaxError(module,'invalid syntax : triple string end not found',src,$pos,line_num,root)}
-$B.$SyntaxError(module,'invalid syntax',src,$pos,line_num,root)}else{throw $B.$IndentationError(module,msg,src,$pos,line_num,root)}}
+var message='invalid syntax'
+if(!(msg.startsWith("token "))){message+=' ('+msg+')'}
+$B.$SyntaxError(module,message,src,$pos,line_num,root)}else{throw $B.$IndentationError(module,msg,src,$pos,line_num,root)}}
 function check_assignment(C){var ctx=C,forbidden=['assert','del','import','raise','return']
 while(ctx){if(forbidden.indexOf(ctx.type)>-1){$_SyntaxError(C,'invalid syntax - assign')}
 ctx=ctx.parent}}
@@ -3362,6 +3365,8 @@ case 'call_arg':
 case 'op':
 case 'yield':
 break
+case 'annotation':
+$_SyntaxError(C,"empty annotation")
 default:
 $_SyntaxError(C,token)}}
 return $transition(C.parent,token,value)
@@ -3490,7 +3495,7 @@ case ')':
 if(C.parent.kwargs &&
 $B.last(C.parent.tree).tree[0]&& 
 ['kwarg','star_arg','double_star_arg'].
-indexOf($B.last(C.parent.tree).tree[0].type)==-1){$_SyntaxError(C,['non-keyword arg after keyword arg'])}
+indexOf($B.last(C.parent.tree).tree[0].type)==-1){$_SyntaxError(C,['non-keyword argument after keyword argument'])}
 if(C.tree.length > 0){var son=C.tree[C.tree.length-1]
 if(son.type=='list_or_tuple' &&
 son.real=='gen_expr'){son.intervals.push($pos)}}
@@ -3502,7 +3507,7 @@ break
 case ',':
 if(C.expect==','){if(C.parent.kwargs &&
 ['kwarg','star_arg','double_star_arg'].
-indexOf($B.last(C.parent.tree).tree[0].type)==-1){$_SyntaxError(C,['non-keyword arg after keyword arg'])}
+indexOf($B.last(C.parent.tree).tree[0].type)==-1){$_SyntaxError(C,['non-keyword argument after keyword argument'])}
 return $transition(C.parent,token,value)}}
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'class':
@@ -3567,14 +3572,15 @@ if(C.name){$_SyntaxError(C,'token '+token+' after '+C)}
 C.set_name(value)
 return C
 case '(':
-if(C.name==null){$_SyntaxError(C,'token '+token+
-' after '+C)}
+if(C.name==null){$_SyntaxError(C,"missing name in function definition")}
 C.has_args=true;
 return new $FuncArgs(C)
 case 'annotation':
 return new $AbstractExprCtx(new $AnnotationCtx(C),true)
 case ':':
-if(C.has_args){return $BodyCtx(C)}}
+if(C.has_args){return $BodyCtx(C)}else{$_SyntaxError(C,"missing function parameters")}
+case 'eol':
+if(C.has_args){$_SyntaxError(C,"missing colon")}}
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'del':
 if(token=='eol'){return $transition(C.parent,token)}
@@ -3615,8 +3621,7 @@ if(C.real=='dict'){C.expect=','
 return new $AbstractExprCtx(C,false)}else{$_SyntaxError(C,'token '+token+
 ' after '+C)}
 case 'for':
-if(C.real=='dict_or_set'){C.real='set_comp'}
-else{C.real='dict_comp'}
+if(C.real=='dict_or_set'){C.real='set_comp'}else{C.real='dict_comp'}
 var lst=new $ListOrTupleCtx(C,'dict_or_set_comp')
 lst.intervals=[C.start+1]
 lst.vars=C.vars
@@ -3857,7 +3862,7 @@ var new_op=new $OpCtx(repl,op)
 return new $AbstractExprCtx(new_op,false)
 case 'augm_assign':
 var parent=C.parent
-while(parent){if(parent.type=="assign" ||parent.type=="augm_assign"){$_SyntaxError(C,"augmented assign inside assign")}else if(parent.type=="op"){$_SyntaxError(C,["can't assign to operator"])}
+while(parent){if(parent.type=="assign" ||parent.type=="augm_assign"){$_SyntaxError(C,"augmented assignment inside assignment")}else if(parent.type=="op"){$_SyntaxError(C,["can't assign to operator"])}
 parent=parent.parent}
 if(C.expect==','){return new $AbstractExprCtx(
 new $AugmentedAssignCtx(C,value),true)}
@@ -3885,7 +3890,7 @@ for(var i=0;i < C.parent.tree.length;i++){var item=C.parent.tree[i]
 if(item.type=="expr" && item.name=="operand"){$_SyntaxError(C,["can't assign to operator"])}}}
 while(C.parent !==undefined){C=C.parent
 if(C.type=="condition"){$_SyntaxError(C,'token '+token+' after '
-+C)}else if(C.type=="augm_assign"){$_SyntaxError(C,"assign inside augmented assign")}}
++C)}else if(C.type=="augm_assign"){$_SyntaxError(C,"assignment inside augmented assignment")}}
 C=C.tree[0]
 return new $AbstractExprCtx(new $AssignCtx(C),true)}
 break
@@ -3897,7 +3902,7 @@ C.parent.tree.length > 0){
 $_SyntaxError(C,':= invalid, parent '+ptype)}else if(ptype=="call_arg" &&
 C.parent.parent.type=="call" &&
 C.parent.parent.parent.type=="lambda"){
-$_SyntaxError(C,':= invalid, parent '+ptype)}
+$_SyntaxError(C,':= invalid inside function arguments' )}
 if(C.tree.length==1 &&
 C.tree[0].type=="id"){var scope=$get_scope(C),name=C.tree[0].value
 while(scope.is_comp){scope=scope.parent_block}
@@ -4013,7 +4018,7 @@ return new $AbstractExprCtx(new $AnnotationCtx(C),false)}
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'func_args':
 switch(token){case 'id':
-if(C.has_kw_arg){$_SyntaxError(C,'duplicate kw arg')}
+if(C.has_kw_arg){$_SyntaxError(C,'duplicate keyword argument')}
 if(C.expect=='id'){C.expect=','
 if(C.names.indexOf(value)>-1){$_SyntaxError(C,['duplicate argument '+value+
 ' in function definition'])}}
@@ -4029,10 +4034,10 @@ if(last && last.type=="func_star_arg"){if(last.name=="*"){if(C.op=='*'){
 $_SyntaxError(C,['named arguments must follow bare *'])}else{$_SyntaxError(C,'invalid syntax')}}}
 return C.parent
 case 'op':
-if(C.has_kw_arg){$_SyntaxError(C,'duplicate kw arg')}
+if(C.has_kw_arg){$_SyntaxError(C,'duplicate keyword argument')}
 var op=value
 C.expect=','
-if(op=='*'){if(C.has_star_arg){$_SyntaxError(C,'duplicate star arg')}
+if(op=='*'){if(C.has_star_arg){$_SyntaxError(C,'duplicate star argument')}
 return new $FuncStarArgCtx(C,'*')}else if(op=='**'){return new $FuncStarArgCtx(C,'**')}else if(op=='/'){
 if(C.has_end_positional){$_SyntaxError(C,['duplicate / in function parameters'])}else if(C.has_star_arg){$_SyntaxError(C,['/ after * in function parameters'])}
 return new $EndOfPositionalCtx(C)}
@@ -4347,7 +4352,6 @@ if(C.tree.length==0){
 C.node.parent.children.pop()
 return C.node.parent.C}
 return C}
-console.log('syntax error','token',token,'after',C)
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'not':
 switch(token){case 'in':
@@ -4406,7 +4410,6 @@ C)}}
 return $transition(C.parent,token)
 case 'packed':
 if(C.tree.length > 0 && token=="["){
-console.log("apply to packed element",C.tree[0])
 return $transition(C.tree[0],token,value)}
 if(token=='id'){new $IdCtx(C,value)
 C.parent.expect=','
