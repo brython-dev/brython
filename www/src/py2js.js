@@ -4718,6 +4718,17 @@ var $LambdaCtx = $B.parser.$LambdaCtx = function(context){
     this.vars = []
     this.locals = []
 
+    // initialize object for names bound in the function
+    this.node = $get_node(this)
+    this.node.binding = {}
+
+    // Arrays for arguments
+    this.positional_list = []
+    this.default_list = []
+    this.other_args = null
+    this.other_kw = null
+    this.after_star = []
+
     this.toString = function(){
         return '(lambda) ' + this.args_start + ' ' + this.body_start
     }
@@ -4726,7 +4737,7 @@ var $LambdaCtx = $B.parser.$LambdaCtx = function(context){
 
         this.js_processed = true
 
-        var node = $get_node(this),
+        var node = this.node,
             module = $get_module(this),
             src = $get_src(context),
             args = src.substring(this.args_start, this.body_start),
@@ -8136,6 +8147,10 @@ var $transition = $B.parser.$transition = function(context, token, value){
                         return $transition(context.parent, token)
                     }
                 case ':':
+                    if(context.parent.parent.type == "lambda"){
+                        // end of parameters
+                        return $transition(context.parent.parent, ":")
+                    }
                     // annotation associated with a function parameter
                     if(context.has_default){ // issue 610
                         $_SyntaxError(context, 'token ' + token + ' after ' +
@@ -8206,6 +8221,10 @@ var $transition = $B.parser.$transition = function(context, token, value){
                         return new $EndOfPositionalCtx(context)
                     }
                     $_SyntaxError(context, 'token ' + op + ' after ' + context)
+                case ':':
+                    if(context.parent.type == "lambda"){
+                        return $transition(context.parent, token)
+                    }
             }
             $_SyntaxError(context, 'token ' + token + ' after ' + context)
 
@@ -8231,6 +8250,10 @@ var $transition = $B.parser.$transition = function(context, token, value){
                     }
                     return $transition(context.parent, token)
                 case ':':
+                    if(context.parent.parent.type == "lambda"){
+                        // end of parameters
+                        return $transition(context.parent.parent, ":")
+                    }
                     // annotation associated with a function parameter
                     if(context.name === undefined){
                         $_SyntaxError(context,
@@ -8389,7 +8412,7 @@ var $transition = $B.parser.$transition = function(context, token, value){
                 return $transition(context.parent, token)
             }
             if(context.args === undefined && token != "("){
-                return $transition(new $CallCtx(context), token, value)
+                return $transition(new $FuncArgs(context), token, value)
             }
             $_SyntaxError(context, 'token ' + token + ' after ' + context)
 

@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,6,'final',0]
 __BRYTHON__.__MAGIC__="3.8.6"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-01-18 17:22:26.985428"
-__BRYTHON__.timestamp=1579364546985
+__BRYTHON__.compiled_date="2020-01-19 11:34:51.684381"
+__BRYTHON__.timestamp=1579430091668
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -2234,9 +2234,16 @@ this.tree=[]
 this.args_start=$pos+6
 this.vars=[]
 this.locals=[]
+this.node=$get_node(this)
+this.node.binding={}
+this.positional_list=[]
+this.default_list=[]
+this.other_args=null
+this.other_kw=null
+this.after_star=[]
 this.toString=function(){return '(lambda) '+this.args_start+' '+this.body_start}
 this.to_js=function(){this.js_processed=true
-var node=$get_node(this),module=$get_module(this),src=$get_src(C),args=src.substring(this.args_start,this.body_start),body=src.substring(this.body_start+1,this.body_end)
+var node=this.node,module=$get_module(this),src=$get_src(C),args=src.substring(this.args_start,this.body_start),body=src.substring(this.body_start+1,this.body_end)
 body=body.replace(/\\\n/g,' ')
 body=body.replace(/\n/g,' ')
 var scope=$get_scope(this)
@@ -3997,6 +4004,8 @@ if(C.parent.has_default && C.tree.length==0 &&
 C.parent.has_star_arg===undefined){$pos-=C.name.length
 $_SyntaxError(C,['non-default argument follows default argument'])}else{return $transition(C.parent,token)}
 case ':':
+if(C.parent.parent.type=="lambda"){
+return $transition(C.parent.parent,":")}
 if(C.has_default){
 $_SyntaxError(C,'token '+token+' after '+
 C)}
@@ -4027,7 +4036,9 @@ if(op=='*'){if(C.has_star_arg){$_SyntaxError(C,'duplicate star arg')}
 return new $FuncStarArgCtx(C,'*')}else if(op=='**'){return new $FuncStarArgCtx(C,'**')}else if(op=='/'){
 if(C.has_end_positional){$_SyntaxError(C,['duplicate / in function parameters'])}else if(C.has_star_arg){$_SyntaxError(C,['/ after * in function parameters'])}
 return new $EndOfPositionalCtx(C)}
-$_SyntaxError(C,'token '+op+' after '+C)}
+$_SyntaxError(C,'token '+op+' after '+C)
+case ':':
+if(C.parent.type=="lambda"){return $transition(C.parent,token)}}
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'func_star_arg':
 switch(token){case 'id':
@@ -4043,6 +4054,8 @@ C.set_name('*')
 C.parent.names.push('*')}
 return $transition(C.parent,token)
 case ':':
+if(C.parent.parent.type=="lambda"){
+return $transition(C.parent.parent,":")}
 if(C.name===undefined){$_SyntaxError(C,'annotation on an unnamed parameter')}
 return new $AbstractExprCtx(
 new $AnnotationCtx(C),false)}
@@ -4147,7 +4160,7 @@ C.body_start=$pos
 return new $AbstractExprCtx(C,false)}if(C.args !==undefined){
 C.body_end=$pos
 return $transition(C.parent,token)}
-if(C.args===undefined && token !="("){return $transition(new $CallCtx(C),token,value)}
+if(C.args===undefined && token !="("){return $transition(new $FuncArgs(C),token,value)}
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'list_or_tuple':
 if(C.closed){if(token=='['){return new $AbstractExprCtx(
@@ -5785,6 +5798,7 @@ _b_.object.__class__=type})(__BRYTHON__)
 ("function"===typeof importScripts)&&
 (navigator instanceof WorkerNavigator)
 $B.args=function($fname,argcount,slots,var_names,args,$dobj,extra_pos_args,extra_kw_args){
+if($fname.startsWith("lambda_"+$B.lambda_magic)){$fname="<lambda>"}
 var $args=[]
 if(Array.isArray(args)){$args=args}
 else{
@@ -5804,7 +5818,7 @@ extra_kw={__class__:_b_.dict,$numeric_dict:{},$object_dict:{},$string_dict :{},$
 if(nb_pos > argcount){
 if(extra_pos_args===null ||extra_pos_args=="*"){
 msg=$fname+"() takes "+argcount+" positional argument"+
-(argcount> 1 ? "" :"s")+" but more were given"
+(argcount > 1 ? "s" :"")+" but more were given"
 throw _b_.TypeError.$factory(msg)}else{
 for(var i=argcount;i < nb_pos;i++){slots[extra_pos_args].push($args[i])}
 nb_pos=argcount}}

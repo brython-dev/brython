@@ -2440,6 +2440,26 @@ class TestObject:
 
 assert TestDescriptor.counter == 1
 
+# issue #1273
+lambda x, y, *, k=20: x+y+k
+lambda *args: args
+l6 = lambda x, y, *, k=20: x+y+k
+assert l6(3, 4) == 27
+assert l6(3, 4, k=1) == 8
+assertRaises(TypeError, l6, 1, 2, 3)
+l16 = lambda *, b,: b
+assertRaises(TypeError, l16, 10)
+assert l16(b=2) == 2
+assertRaises(TypeError, l16, 5)
+
+l19 = lambda a, *, b,: a + b
+assert l19(8, b=10) == 18
+assertRaises(TypeError, l19, 5)
+l22 = lambda *, b, **kwds,: b
+assertRaises(TypeError, l22, 1)
+assert l22(b=2) == 2
+l24 = lambda a, *, b, **kwds,: (a + b, kwds)
+assert l24(1, b=2, c=24) == (3, {'c': 24})
 
 # ==========================================
 # Finally, report that all tests have passed

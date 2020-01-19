@@ -20,6 +20,9 @@ $B.args = function($fname, argcount, slots, var_names, args, $dobj,
     //     extra_pos_args = 'args'
     //     extra_kw_args = 'kw'
     //     kwonlyargcount = 2
+    if($fname.startsWith("lambda_" + $B.lambda_magic)){
+        $fname = "<lambda>"
+    }
     var $args = []
     if(Array.isArray(args)){$args = args}
     else{
@@ -77,7 +80,7 @@ $B.args = function($fname, argcount, slots, var_names, args, $dobj,
             // No parameter to store extra positional arguments :
             // thow an exception
             msg = $fname + "() takes " + argcount + " positional argument" +
-                (argcount> 1 ? "" : "s") + " but more were given"
+                (argcount > 1 ? "s" : "") + " but more were given"
             throw _b_.TypeError.$factory(msg)
         }else{
             // Store extra positional arguments
