@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,6,'final',0]
 __BRYTHON__.__MAGIC__="3.8.6"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-01-19 20:49:36.291536"
-__BRYTHON__.timestamp=1579463376291
+__BRYTHON__.compiled_date="2020-01-21 15:00:48.852453"
+__BRYTHON__.timestamp=1579615248852
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5166,8 +5166,7 @@ else{var parts=module.split(".")
 parts.pop()
 __package__=parts.join(".")}
 $B.imported[module]=$B.module.$factory(module,"",__package__)
-try{var root=$B.py2js(source,module,module),js=root.to_js()}catch(err){$B.handle_error(err)
-throw err}
+try{var root=$B.py2js(source,module,module),js=root.to_js()}catch(err){$B.handle_error(err)}
 delete $B.imported[module]
 if($B.debug > 1){console.log("precompile",module)}
 var parts=module.split(".")
@@ -5195,6 +5194,9 @@ loop()}
 function store_precompiled(module,js,source_ts,imports,is_package){
 var db=$B.idb_cx.result,tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules"),cursor=store.openCursor(),data={"name":module,"content":js,"imports":imports,"origin":origin,"timestamp":__BRYTHON__.timestamp,"source_ts":source_ts,"is_package":is_package},request=store.put(data)
 if($B.debug > 1){console.log("store precompiled",module,"package",is_package)}
+document.dispatchEvent(new CustomEvent('precompile',{detail:'cache module '+module}))
+var ix=$B.outdated.indexOf(module)
+if(ix >-1){$B.outdated.splice(ix,1)}
 request.onsuccess=function(evt){
 $B.tasks.splice(0,0,[idb_get,module])
 loop()}}
@@ -5203,8 +5205,6 @@ var db=$B.idb_cx.result,tx=db.transaction("modules","readonly")
 try{var store=tx.objectStore("modules")
 req=store.get(module)
 req.onsuccess=function(evt){idb_load(evt,module)}}catch(err){console.info('error',err)}}
-function remove_from_cache(cursor,record){var request=cursor.delete()
-request.onsuccess=function(){if($B.debug > 1){console.log("delete outdated",record.name)}}}
 $B.idb_open=function(obj){$B.idb_name="brython-cache"
 var idb_cx=$B.idb_cx=indexedDB.open($B.idb_name)
 idb_cx.onsuccess=function(){var db=idb_cx.result
@@ -5225,9 +5225,10 @@ if(cursor){record=cursor.value
 if(record.timestamp==$B.timestamp){if(!$B.VFS ||!$B.VFS[record.name]||
 $B.VFS[record.name].timestamp==record.source_ts){
 if(record.is_package){$B.precompiled[record.name]=[record.content]}else{$B.precompiled[record.name]=record.content}
-if($B.debug > 1){console.log("load from cache",record.name)}}else{
-remove_from_cache(cursor,record)}}else{remove_from_cache(cursor,record)}
+if($B.debug > 1){console.info("load from cache",record.name)}}else{
+outdated.push(record.name)}}else{outdated.push(record.name)}
 cursor.continue()}else{if($B.debug > 1){console.log("done")}
+$B.outdated=outdated
 loop()}}}}
 idb_cx.onupgradeneeded=function(){console.info("upgrade needed")
 var db=idb_cx.result,store=db.createObjectStore("modules",{"keyPath":"name"})
@@ -5252,7 +5253,14 @@ var ext=elts[0],source=elts[1],is_package=elts.length==4
 if(ext==".py"){if($B.idb_cx){$B.tasks.splice(0,0,[idb_get,module])}}else{add_jsmodule(module,source)}}else{console.log("bizarre",module)}
 loop()}
 var loop=$B.loop=function(){if($B.tasks.length==0){
-if($B.idb_cx){$B.idb_cx.result.close()
+if($B.idb_cx){var db=$B.idb_cx.result,tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules")
+console.log("end of loop, outdated",$B.outdated)
+while($B.outdated.length > 0){var module=$B.outdated.pop(),req=store.delete(module)
+req.onsuccess=function(event){console.info("delete outdated",module)
+document.dispatchEvent(new CustomEvent('precompile',{detail:'remove outdated '+module+
+' from cache'}))}}
+document.dispatchEvent(new CustomEvent('precompile',{detail:"close"}))
+$B.idb_cx.result.close()
 $B.idb_cx.$closed=true}
 return}
 var task=$B.tasks.shift(),func=task[0],args=task.slice(1)

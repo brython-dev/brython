@@ -16,6 +16,35 @@
 <script src="/assets/header.brython.js"></script>
 
 <script type="text/python">
+"""On page load, Brython inspects all the scripts in the page and, if
+brython_stdlib.js is loaded, finds all the modules it has to import. If the
+Brython version has not changed, it loads the Javascript translation of these
+modules from the indexedDB cache.
+
+If it has changed, the outdated modules in the cache are removed and a new
+version of the translation to Javascript is stored in the cache. These actions
+(storing in or removing from the cache) trigger a custom event called
+'precompile'. This script captures this event and displays a message at the
+top of the page to explain why the loading takes some time."""
+
+from browser import document, bind, html
+
+report = document["report"]
+
+@bind(document, 'precompile')
+def precompile(ev):
+  if not list(report.select("div")):
+      report <= html.DIV("New Brython version detected, please wait")
+      zone = html.DIV("&nbsp;", id="report_message", style=dict(width="0px"))
+      report <= zone
+  if ev.detail == "close":
+      report.style.display = "none"
+  else:
+      document["report_message"].width += 5
+
+</script>
+
+<script type="text/python">
 """Load header and text according to the language."""
 from browser import document, html
 import header
@@ -163,6 +192,11 @@ else:
 <title>Brython</title>
 
 <link rel="stylesheet" href="/brython.css">
+<style>
+#report_message {
+    background-color: var(--dark-2);
+}
+</style>
 </head>
 
 <body onload="brython(1)">
@@ -172,6 +206,8 @@ else:
 <td class="logo"><a href="../index.html" class="logo">Brython</a></td>
 </tr>
 </table>
+
+<div id="report"></div>
 
 <div id="content"></div>
 

@@ -8883,7 +8883,7 @@ var $transition = $B.parser.$transition = function(context, token, value){
                     return new $AbstractExprCtx(new $SubCtx(context.parent),
                         false)
                 case '(':
-                    // Strings are not callable. We replace the string by a 
+                    // Strings are not callable. We replace the string by a
                     // call to an object that will raise the correct exception
                     context.parent.tree[0] = context
                     return new $CallCtx(context.parent)
@@ -10364,7 +10364,7 @@ var _run_scripts = $B.parser._run_scripts = function(options){
             }
         }
     }
-
+    
     if(options.ipy_id === undefined){$B.loop()}
 
     /* Uncomment to check the names added in global Javascript namespace

@@ -48,7 +48,6 @@ function idb_load(evt, module){
                         js = root.to_js()
                 }catch(err){
                     $B.handle_error(err)
-                    throw err
                 }
                 // Delete temporary import
                 delete $B.imported[module]
@@ -138,6 +137,12 @@ function store_precompiled(module, js, source_ts, imports, is_package){
         if($B.debug > 1){
             console.log("store precompiled", module, "package", is_package)
         }
+        document.dispatchEvent(new CustomEvent('precompile',
+            {detail: 'cache module '  + module}))
+        var ix = $B.outdated.indexOf(module)
+        if(ix > -1){
+            $B.outdated.splice(ix, 1)
+        }
     request.onsuccess = function(evt){
         // Restart the task "idb_get", knowing that this time it will use
         // the compiled version.
@@ -158,15 +163,6 @@ function idb_get(module){
         req.onsuccess = function(evt){idb_load(evt, module)}
     }catch(err){
         console.info('error', err)
-    }
-}
-
-function remove_from_cache(cursor, record){
-    var request = cursor.delete()
-    request.onsuccess = function(){
-        if($B.debug > 1){
-            console.log("delete outdated", record.name)
-        }
     }
 }
 
@@ -222,22 +218,23 @@ $B.idb_open = function(obj){
                                 $B.precompiled[record.name] = record.content
                             }
                             if($B.debug > 1){
-                                console.log("load from cache", record.name)
+                                console.info("load from cache", record.name)
                             }
                         }else{
                             // If module with name record.name exists in a VFS
                             // and its timestamp is not the VFS timestamp,
                             // remove from cache
-                            remove_from_cache(cursor, record)
+                            outdated.push(record.name)
                         }
                     }else{
-                        remove_from_cache(cursor, record)
+                        outdated.push(record.name)
                     }
                     cursor.continue()
                 }else{
                     if($B.debug > 1){
                         console.log("done")
                     }
+                    $B.outdated = outdated
                     loop()
                 }
             }
@@ -320,6 +317,21 @@ var loop = $B.loop = function(){
     if($B.tasks.length == 0){
         // No more task to process.
         if($B.idb_cx){
+            var db = $B.idb_cx.result,
+                tx = db.transaction("modules", "readwrite"),
+                store = tx.objectStore("modules")
+            while($B.outdated.length > 0){
+                var module = $B.outdated.pop(),
+                    req = store.delete(module)
+                req.onsuccess = function(event){
+                    console.info("delete outdated", module)
+                    document.dispatchEvent(new CustomEvent('precompile',
+                        {detail: 'remove outdated ' + module +
+                         ' from cache'}))
+                }
+            }
+            document.dispatchEvent(new CustomEvent('precompile',
+                {detail: "close"}))
             $B.idb_cx.result.close()
             $B.idb_cx.$closed = true
         }
