@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,6,'final',0]
 __BRYTHON__.__MAGIC__="3.8.6"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-01-21 15:00:48.852453"
-__BRYTHON__.timestamp=1579615248852
+__BRYTHON__.compiled_date="2020-01-21 21:05:07.651467"
+__BRYTHON__.timestamp=1579637107651
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5254,7 +5254,6 @@ if(ext==".py"){if($B.idb_cx){$B.tasks.splice(0,0,[idb_get,module])}}else{add_jsm
 loop()}
 var loop=$B.loop=function(){if($B.tasks.length==0){
 if($B.idb_cx){var db=$B.idb_cx.result,tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules")
-console.log("end of loop, outdated",$B.outdated)
 while($B.outdated.length > 0){var module=$B.outdated.pop(),req=store.delete(module)
 req.onsuccess=function(event){console.info("delete outdated",module)
 document.dispatchEvent(new CustomEvent('precompile',{detail:'remove outdated '+module+
@@ -10210,7 +10209,7 @@ res=sub_pos(self.value,other.value)
 res.pos=false
 break
 case 0:
-res={__class__:ong_int,value:0,pos:true}
+res={__class__:long_int,value:0,pos:true}
 break
 case-1:
 res=sub_pos(other.value,self.value)

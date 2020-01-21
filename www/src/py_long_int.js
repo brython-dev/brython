@@ -466,7 +466,7 @@ long_int.__add__ = function(self, other){
                 res.pos = false
                 break
             case 0:
-                res = {__class__: ong_int, value: 0, pos: true}
+                res = {__class__: long_int, value: 0, pos: true}
                 break
             case -1:
                 res = sub_pos(other.value, self.value)
