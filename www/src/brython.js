@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,6,'final',0]
 __BRYTHON__.__MAGIC__="3.8.6"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-01-22 09:01:15.122013"
-__BRYTHON__.timestamp=1579680075122
+__BRYTHON__.compiled_date="2020-01-22 22:09:52.560568"
+__BRYTHON__.timestamp=1579727392560
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -7154,7 +7154,7 @@ if(value.__class__){if(value.__module__=="builtins"){error("__class__ assignemen
 "' object layout differs from '"+
 $B.class_name(value)+"'")}}}}
 obj.__class__=value
-return None}
+return None}else if(attr=="__doc__" && obj.__class__===_b_.property){obj[attr]=value}
 if($test){console.log("set attr",attr,"to",obj)}
 if(obj.$factory ||obj.$is_class){var metaclass=obj.__class__
 if($test){console.log("obj is class",metaclass,metaclass[attr])}
@@ -7203,7 +7203,8 @@ break}}}
 if(! has_slot){throw _b_.AttributeError.$factory("'"+klass.$infos.__name__+
 "' object has no attribute '"+attr+"'")}}
 if($test){console.log("attr",attr,"use _setattr",_setattr)}
-if(!_setattr){if(obj.__dict__===undefined){obj[attr]=value}else{obj.__dict__.$string_dict[attr]=value}}else{_setattr(obj,attr,value)}
+if(!_setattr){if(obj.__dict__===undefined){obj[attr]=value}else{obj.__dict__.$string_dict[attr]=value}
+if($test){console.log("no setattr, obj",obj)}}else{_setattr(obj,attr,value)}
 return None}
 function sorted(){var $=$B.args('sorted',1,{iterable:null},['iterable'],arguments,{},null,'kw')
 var _list=_b_.list.$factory(iter($.iterable)),args=[_list]

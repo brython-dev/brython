@@ -84,3 +84,8 @@ N.__new__.__defaults__ = (3, 4)
 n = N()
 assert n.a == 3
 assert n.b == 4
+
+# issue 1277
+N = collections.namedtuple('N', 'x y')
+N.x.__doc__ = """my doc."""
+assert f'doc={N.x.__doc__}' == "doc=my doc."
