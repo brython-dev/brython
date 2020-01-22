@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,6,'final',0]
 __BRYTHON__.__MAGIC__="3.8.6"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-01-22 08:28:34.430985"
-__BRYTHON__.timestamp=1579678114430
+__BRYTHON__.compiled_date="2020-01-22 09:01:15.122013"
+__BRYTHON__.timestamp=1579680075122
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -232,7 +232,8 @@ var message='invalid syntax'
 if(!(msg.startsWith("token "))){message+=' ('+msg+')'}
 $B.$SyntaxError(module,message,src,$pos,line_num,root)}else{throw $B.$IndentationError(module,msg,src,$pos,line_num,root)}}
 function check_assignment(C){var ctx=C,forbidden=['assert','del','import','raise','return']
-while(ctx){if(forbidden.indexOf(ctx.type)>-1){$_SyntaxError(C,'invalid syntax - assign')}
+while(ctx){if(forbidden.indexOf(ctx.type)>-1){$_SyntaxError(C,'invalid syntax - assign')}else if(ctx.type=="expr" &&
+ctx.tree[0].type=="op"){if($B.op2method.comparisons[ctx.tree[0].op]!==undefined){$_SyntaxError(C,["cannot assign to comparison"])}else{$_SyntaxError(C,["cannot assign to operator"])}}
 ctx=ctx.parent}}
 var $Node=$B.parser.$Node=function(type){this.type=type
 this.children=[]
@@ -431,18 +432,18 @@ C.parent.tree[C.parent.tree.length]=this
 this.parent=C.parent
 this.tree=[C]
 var scope=$get_scope(this)
-if(C.type=='expr' && C.tree[0].type=='call'){$_SyntaxError(C,["can't assign to function call "])}else if(C.type=='list_or_tuple' ||
+if(C.type=='expr' && C.tree[0].type=='call'){$_SyntaxError(C,["cannot assign to function call "])}else if(C.type=='list_or_tuple' ||
 (C.type=='expr' && C.tree[0].type=='list_or_tuple')){if(C.type=='expr'){C=C.tree[0]}
 C.bind_ids(scope)}else if(C.type=='assign'){C.tree.forEach(function(elt){var assigned=elt.tree[0]
 if(assigned.type=='id'){$bind(assigned.value,scope,this)}},this)}else{var assigned=C.tree[0]
-if(assigned && assigned.type=='id'){if(noassign[assigned.value]===true){$_SyntaxError(C,["can't assign to keyword"])}
+if(assigned && assigned.type=='id'){if(noassign[assigned.value]===true){$_SyntaxError(C,["cannot assign to keyword"])}
 assigned.bound=true
 if(!scope.globals ||!scope.globals.has(assigned.value)){
 var node=$get_node(this)
 node.bound_before=Object.keys(scope.binding)
 $bind(assigned.value,scope,this)}else{
 var module=$get_module(C)
-$bind(assigned.value,module,this)}}else if(["str","int","float","complex"].indexOf(assigned.type)>-1){$_SyntaxError(C,["can't assign to literal"])}else if(assigned.type=="unary"){$_SyntaxError(C,["can't assign to operator"])}}
+$bind(assigned.value,module,this)}}else if(["str","int","float","complex"].indexOf(assigned.type)>-1){$_SyntaxError(C,["cannot assign to literal"])}else if(assigned.type=="unary"){$_SyntaxError(C,["cannot assign to operator"])}}
 this.guess_type=function(){return}
 this.toString=function(){return '(assign) '+this.tree[0]+'='+this.tree[1]}
 this.transform=function(node,rank){
@@ -659,10 +660,10 @@ this.tree=[C]
 var scope=this.scope=$get_scope(this)
 if(C.type=='expr'){var assigned=C.tree[0]
 if(assigned.type=='id'){var name=assigned.value
-if(noassign[name]===true){$_SyntaxError(C,["can't assign to keyword"])}else if((scope.ntype=='def' ||scope.ntype=='generator')&&
+if(noassign[name]===true){$_SyntaxError(C,["cannot assign to keyword"])}else if((scope.ntype=='def' ||scope.ntype=='generator')&&
 (scope.binding[name]===undefined)){if(scope.globals===undefined ||
 ! scope.globals.has(name)){
-assigned.unbound=true}}}else if(['str','int','float','complex'].indexOf(assigned.type)>-1){$_SyntaxError(C,["can't assign to literal"])}}
+assigned.unbound=true}}}else if(['str','int','float','complex'].indexOf(assigned.type)>-1){$_SyntaxError(C,["cannot assign to literal"])}}
 $get_node(this).bound_before=Object.keys(scope.binding)
 this.module=scope.module
 this.toString=function(){return '(augm assign) '+this.tree}
@@ -1509,14 +1510,14 @@ js=expr.to_js()
 expr.func='getitem'
 return js
 case 'op':
-$_SyntaxError(this,["can't delete operator"])
+$_SyntaxError(this,["cannot delete operator"])
 case 'call':
-$_SyntaxError(this,["can't delete function call"])
+$_SyntaxError(this,["cannot delete function call"])
 case 'attribute':
 return 'delattr('+expr.value.to_js()+',"'+
 expr.name+'")'
 default:
-$_SyntaxError(this,["can't delete "+expr.type])}}}}
+$_SyntaxError(this,["cannot delete "+expr.type])}}}}
 var $DictOrSetCtx=$B.parser.$DictOrSetCtx=function(C){
 this.type='dict_or_set'
 this.real='dict_or_set'
@@ -3348,7 +3349,8 @@ new $ExprCtx(C,'not',commas))}
 $_SyntaxError(C,'token '+token+' after '+
 C)
 case '=':
-$_SyntaxError(C,token)
+$_SyntaxError(C,'token '+token+' after '+
+C)
 case 'yield':
 return new $AbstractExprCtx(new $YieldCtx(C),true)
 case ':':
@@ -3861,7 +3863,7 @@ var new_op=new $OpCtx(repl,op)
 return new $AbstractExprCtx(new_op,false)
 case 'augm_assign':
 var parent=C.parent
-while(parent){if(parent.type=="assign" ||parent.type=="augm_assign"){$_SyntaxError(C,"augmented assignment inside assignment")}else if(parent.type=="op"){$_SyntaxError(C,["can't assign to operator"])}
+while(parent){if(parent.type=="assign" ||parent.type=="augm_assign"){$_SyntaxError(C,"augmented assignment inside assignment")}else if(parent.type=="op"){$_SyntaxError(C,["cannot assign to operator"])}
 parent=parent.parent}
 if(C.expect==','){return new $AbstractExprCtx(
 new $AugmentedAssignCtx(C,value),true)}
@@ -3884,9 +3886,9 @@ var annotation
 if(C.expect==','){if(C.parent.type=="call_arg"){
 if(C.tree[0].type !="id"){$_SyntaxError(C,["keyword can't be an expression"])}
 return new $AbstractExprCtx(new $KwArgCtx(C),true)}else if(annotation=has_parent(C,"annotation")){return $transition(annotation,token,value)}else if(C.parent.type=="op"){
-$_SyntaxError(C,["can't assign to operator"])}else if(C.parent.type=="list_or_tuple"){
+$_SyntaxError(C,["cannot assign to operator"])}else if(C.parent.type=="list_or_tuple"){
 for(var i=0;i < C.parent.tree.length;i++){var item=C.parent.tree[i]
-if(item.type=="expr" && item.name=="operand"){$_SyntaxError(C,["can't assign to operator"])}}}
+if(item.type=="expr" && item.name=="operand"){$_SyntaxError(C,["cannot assign to operator"])}}}
 while(C.parent !==undefined){C=C.parent
 if(C.type=="condition"){$_SyntaxError(C,'token '+token+' after '
 +C)}else if(C.type=="augm_assign"){$_SyntaxError(C,"assignment inside augmented assignment")}}
@@ -5268,7 +5270,6 @@ module.__file__=script.__file__
 $B.imported[script_id]=module
 new Function("$locals_"+script_id,script.js)(module)}catch(err){
 if(err.__class__===undefined){console.log('Javascript error',err)
-console.log($B.frames_stack.slice())
 if($B.is_recursion_error(err)){err=_b_.RecursionError.$factory("too much recursion")}else{$B.print_stack()
 err=_b_.RuntimeError.$factory(err+'')}}
 if($B.debug > 1){console.log("handle error",err.__class__,err.args,err.$stack)

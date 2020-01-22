@@ -1944,7 +1944,7 @@ try:
     exec("a = +25, b = 25")
     raise Exception("should have raised SyntaxError")
 except SyntaxError as exc:
-    assert exc.args[0] == "can't assign to operator"
+    assert exc.args[0] == "cannot assign to operator"
 
 # issue 949
 class A(object):
@@ -1990,7 +1990,7 @@ try:
     exec("x + x += 10")
     raise Exception("should have raised SyntaxError")
 except SyntaxError as exc:
-    assert exc.args[0] == "can't assign to operator"
+    assert exc.args[0] == "cannot assign to operator"
 
 # issue 965
 assertRaises(SyntaxError, exec, "if:x=2")
@@ -2002,7 +2002,7 @@ try:
     exec("x = 400 - a, y = 400 - b")
     raise Exception("should have raised SyntaxError")
 except SyntaxError as exc:
-    assert exc.args[0] == "can't assign to operator"
+    assert exc.args[0] == "cannot assign to operator"
 
 # issue 975
 l = [1, 2, 3]
@@ -2440,7 +2440,7 @@ class TestObject:
 
 assert TestDescriptor.counter == 1
 
-# issue #1273
+# issue 1273
 lambda x, y, *, k=20: x+y+k
 lambda *args: args
 l6 = lambda x, y, *, k=20: x+y+k
@@ -2460,6 +2460,24 @@ assertRaises(TypeError, l22, 1)
 assert l22(b=2) == 2
 l24 = lambda a, *, b, **kwds,: (a + b, kwds)
 assert l24(1, b=2, c=24) == (3, {'c': 24})
+
+# issue 1276
+class A: pass
+
+x = A()
+x.a = 1
+
+try:
+    exec("(x.a < 2) += 100")
+    raise Exception("should have raised SyntaxError")
+except SyntaxError as exc:
+    assert exc.args[0] == "cannot assign to comparison"
+
+try:
+    exec("(x.a * 2) += 100")
+    raise Exception("should have raised SyntaxError")
+except SyntaxError as exc:
+    assert exc.args[0] == "cannot assign to operator"
 
 # ==========================================
 # Finally, report that all tests have passed

@@ -381,6 +381,13 @@ function check_assignment(context){
     while(ctx){
         if(forbidden.indexOf(ctx.type) > -1){
             $_SyntaxError(context, 'invalid syntax - assign')
+        }else if(ctx.type == "expr" &&
+                ctx.tree[0].type == "op"){
+            if($B.op2method.comparisons[ctx.tree[0].op] !== undefined){
+                $_SyntaxError(context, ["cannot assign to comparison"])
+            }else{
+                $_SyntaxError(context, ["cannot assign to operator"])
+            }
         }
         ctx = ctx.parent
     }
@@ -800,7 +807,7 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context, expression){
     var scope = $get_scope(this)
 
     if(context.type == 'expr' && context.tree[0].type == 'call'){
-          $_SyntaxError(context, ["can't assign to function call "])
+          $_SyntaxError(context, ["cannot assign to function call "])
     }else if(context.type == 'list_or_tuple' ||
             (context.type == 'expr' && context.tree[0].type == 'list_or_tuple')){
         if(context.type == 'expr'){context = context.tree[0]}
@@ -817,7 +824,7 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context, expression){
         var assigned = context.tree[0]
         if(assigned && assigned.type == 'id'){
             if(noassign[assigned.value] === true){
-                $_SyntaxError(context,["can't assign to keyword"])
+                $_SyntaxError(context,["cannot assign to keyword"])
             }
             // Attribute bound of an id indicates if it is being
             // bound, as it is the case in the left part of an assignment
@@ -843,9 +850,9 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context, expression){
                 $bind(assigned.value, module, this)
             }
         }else if(["str", "int", "float", "complex"].indexOf(assigned.type) > -1){
-            $_SyntaxError(context, ["can't assign to literal"])
+            $_SyntaxError(context, ["cannot assign to literal"])
         }else if(assigned.type == "unary"){
-            $_SyntaxError(context, ["can't assign to operator"])
+            $_SyntaxError(context, ["cannot assign to operator"])
         }
     }
 
@@ -1245,7 +1252,7 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
         if(assigned.type == 'id'){
             var name = assigned.value
             if(noassign[name] === true){
-                $_SyntaxError(context, ["can't assign to keyword"])
+                $_SyntaxError(context, ["cannot assign to keyword"])
             }else if((scope.ntype == 'def' || scope.ntype == 'generator') &&
                     (scope.binding[name] === undefined)){
                 if(scope.globals === undefined ||
@@ -1258,7 +1265,7 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
                 }
             }
         }else if(['str', 'int', 'float', 'complex'].indexOf(assigned.type) > -1){
-            $_SyntaxError(context, ["can't assign to literal"])
+            $_SyntaxError(context, ["cannot assign to literal"])
         }
     }
 
@@ -3018,14 +3025,14 @@ var $DelCtx = $B.parser.$DelCtx = function(context){
                     expr.func = 'getitem'
                     return js
                 case 'op':
-                      $_SyntaxError(this, ["can't delete operator"])
+                      $_SyntaxError(this, ["cannot delete operator"])
                 case 'call':
-                    $_SyntaxError(this, ["can't delete function call"])
+                    $_SyntaxError(this, ["cannot delete function call"])
                 case 'attribute':
                     return 'delattr(' + expr.value.to_js() + ',"' +
                         expr.name + '")'
                 default:
-                    $_SyntaxError(this, ["can't delete " + expr.type])
+                    $_SyntaxError(this, ["cannot delete " + expr.type])
             }
         }
     }
@@ -7057,7 +7064,8 @@ var $transition = $B.parser.$transition = function(context, token, value){
                   $_SyntaxError(context, 'token ' + token + ' after ' +
                       context)
               case '=':
-                  $_SyntaxError(context, token)
+                  $_SyntaxError(context, 'token ' + token + ' after ' +
+                      context)
               case 'yield':
                   return new $AbstractExprCtx(new $YieldCtx(context), true)
               case ':':
@@ -7887,7 +7895,7 @@ var $transition = $B.parser.$transition = function(context, token, value){
                         $_SyntaxError(context,
                             "augmented assignment inside assignment")
                     }else if(parent.type == "op"){
-                        $_SyntaxError(context, ["can't assign to operator"])
+                        $_SyntaxError(context, ["cannot assign to operator"])
                     }
                     parent = parent.parent
                 }
@@ -7941,13 +7949,13 @@ var $transition = $B.parser.$transition = function(context, token, value){
                        return $transition(annotation, token, value)
                    }else if(context.parent.type == "op"){
                         // issue 811
-                        $_SyntaxError(context, ["can't assign to operator"])
+                        $_SyntaxError(context, ["cannot assign to operator"])
                    }else if(context.parent.type == "list_or_tuple"){
                        // issue 973
                        for(var i = 0; i < context.parent.tree.length; i++){
                            var item = context.parent.tree[i]
                            if(item.type == "expr" && item.name == "operand"){
-                               $_SyntaxError(context, ["can't assign to operator"])
+                               $_SyntaxError(context, ["cannot assign to operator"])
                            }
                        }
                    }
