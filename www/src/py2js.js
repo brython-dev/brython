@@ -342,7 +342,6 @@ var $_SyntaxError = $B.parser.$_SyntaxError = function (context, msg, indent){
     if(root.line_info){
         line_num = root.line_info
     }
-    console.log("syntax error", msg, indent)
     if(indent === undefined || typeof indent != "number"){
         if(Array.isArray(msg)){
             $B.$SyntaxError(module, msg[0], src, $pos, line_num, root)
@@ -1948,8 +1947,7 @@ var $ClassCtx = $B.parser.$ClassCtx = function(context){
         var js = ' '.repeat(node.indent + 4) +
                  '$top_frame = [$local_name, $locals,' + '"' +
                  global_scope.id + '", ' + global_ns + ']' +
-                 indent + '$B.frames_stack.push($top_frame)'
-
+                 indent + '$B.enter_frame($top_frame);'
         node.insert(1, $NodeJS(js))
 
         // exit frame
@@ -2581,7 +2579,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         var enter_frame_nodes = [
             $NodeJS('var $top_frame = [$local_name, $locals,' +
                 '"' + global_scope.id + '", ' + global_ns + ', ' + name + ']'),
-            $NodeJS('$B.frames_stack.push($top_frame)'),
+            $NodeJS('$B.enter_frame($top_frame)'),
             $NodeJS('var $stack_length = $B.frames_stack.length;')
         ]
         if(this.async){
@@ -9933,8 +9931,9 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
     var enter_frame_pos = offset,
         js = 'var $top_frame = ["' + locals_id.replace(/\./g, '_') + '", ' +
             local_ns + ', "' + module.replace(/\./g, '_') + '", ' +
-            global_ns + ']\n$B.frames_stack.push($top_frame)\n' +
+            global_ns + ']\n$B.enter_frame($top_frame)\n' +
             'var $stack_length = $B.frames_stack.length;'
+
     root.insert(offset++, $NodeJS(js))
 
     // Wrap code in a try/finally to make sure we leave the frame
@@ -10364,7 +10363,7 @@ var _run_scripts = $B.parser._run_scripts = function(options){
             }
         }
     }
-    
+
     if(options.ipy_id === undefined){$B.loop()}
 
     /* Uncomment to check the names added in global Javascript namespace

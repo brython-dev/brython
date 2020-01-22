@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,6,'final',0]
 __BRYTHON__.__MAGIC__="3.8.6"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-01-21 21:11:46.428358"
-__BRYTHON__.timestamp=1579637506428
+__BRYTHON__.compiled_date="2020-01-22 08:28:34.430985"
+__BRYTHON__.timestamp=1579678114430
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -225,7 +225,6 @@ while(root.parent !==undefined){root=root.parent}
 var module=tree_node.module,src=root.src,line_num=tree_node.line_num
 if(src){line_num=src.substr(0,$pos).split("\n").length}
 if(root.line_info){line_num=root.line_info}
-console.log("syntax error",msg,indent)
 if(indent===undefined ||typeof indent !="number"){if(Array.isArray(msg)){$B.$SyntaxError(module,msg[0],src,$pos,line_num,root)}
 if(msg==="Triple string end not found"){
 $B.$SyntaxError(module,'invalid syntax : triple string end not found',src,$pos,line_num,root)}
@@ -1010,7 +1009,7 @@ var global_ns='$locals_'+global_scope.id.replace(/\./g,'_')
 var js=' '.repeat(node.indent+4)+
 '$top_frame = [$local_name, $locals,'+'"'+
 global_scope.id+'", '+global_ns+']'+
-indent+'$B.frames_stack.push($top_frame)'
+indent+'$B.enter_frame($top_frame);'
 node.insert(1,$NodeJS(js))
 node.add($NodeJS('$B.leave_frame()'))
 var ret_obj=new $Node()
@@ -1299,7 +1298,7 @@ new_node.func_node=node
 new $NodeJSCtx(new_node,js)
 nodes.push(new_node)
 var enter_frame_nodes=[$NodeJS('var $top_frame = [$local_name, $locals,'+
-'"'+global_scope.id+'", '+global_ns+', '+name+']'),$NodeJS('$B.frames_stack.push($top_frame)'),$NodeJS('var $stack_length = $B.frames_stack.length;')
+'"'+global_scope.id+'", '+global_ns+', '+name+']'),$NodeJS('$B.enter_frame($top_frame)'),$NodeJS('var $stack_length = $B.frames_stack.length;')
 ]
 if(this.async){enter_frame_nodes.push($NodeJS("var $stack = "+
 "$B.frames_stack.slice()"))}
@@ -5001,7 +5000,7 @@ root.insert(offset++,$NodeJS(local_ns+'["__package__"] = "'+__package__+'"'))
 if(root.binding.__annotations__){root.insert(offset++,$NodeJS('$locals.__annotations__ = _b_.dict.$factory()'))}
 var enter_frame_pos=offset,js='var $top_frame = ["'+locals_id.replace(/\./g,'_')+'", '+
 local_ns+', "'+module.replace(/\./g,'_')+'", '+
-global_ns+']\n$B.frames_stack.push($top_frame)\n'+
+global_ns+']\n$B.enter_frame($top_frame)\n'+
 'var $stack_length = $B.frames_stack.length;'
 root.insert(offset++,$NodeJS(js))
 var try_node=new $NodeJS('try'),children=root.children.slice(enter_frame_pos+1,root.children.length)
@@ -5269,6 +5268,7 @@ module.__file__=script.__file__
 $B.imported[script_id]=module
 new Function("$locals_"+script_id,script.js)(module)}catch(err){
 if(err.__class__===undefined){console.log('Javascript error',err)
+console.log($B.frames_stack.slice())
 if($B.is_recursion_error(err)){err=_b_.RecursionError.$factory("too much recursion")}else{$B.print_stack()
 err=_b_.RuntimeError.$factory(err+'')}}
 if($B.debug > 1){console.log("handle error",err.__class__,err.args,err.$stack)
@@ -6221,7 +6221,8 @@ default:
 throw _b_.TypeError.$factory("'"+$B.class_name(v)+
 "' object cannot be interpreted as an integer")}}
 $B.enter_frame=function(frame){
-$B.frames_stack.push(frame)}
+$B.frames_stack.push(frame)
+if($B.tracefunc){$B.tracefunc($B._frame.$factory($B.frames_stack),'call',_b_.None)}}
 function exit_ctx_managers_in_generators(frame){
 for(key in frame[1]){if(frame[1][key]&& frame[1][key].$is_generator_obj){var gen_obj=frame[1][key]
 if(gen_obj.env !==undefined){for(var attr in gen_obj.env){if(attr.search(/^\$ctx_manager_exit\d+$/)>-1){
@@ -13575,10 +13576,12 @@ var arraybuffers=["Int8Array","Uint8Array","Uint8ClampedArray","Int16Array","Uin
 arraybuffers.forEach(function(ab){if(self[ab]!==undefined){modules['javascript'][ab]=$B.JSObject.$factory(self[ab])}})
 var _b_=$B.builtins
 modules['_sys']={
-Getframe :function(depth){return $B._frame.$factory($B.frames_stack,$B.frames_stack.length-depth-1)},exc_info:function(){for(var i=$B.frames_stack.length-1;i >=0;i--){var frame=$B.frames_stack[i],exc=frame[1].$current_exception
+Getframe :function(){var $=$B.args("_getframe",1,{depth:null},['depth'],arguments,{depth:0},null,null),depth=$.depth
+return $B._frame.$factory($B.frames_stack,$B.frames_stack.length-depth-1)},exc_info:function(){for(var i=$B.frames_stack.length-1;i >=0;i--){var frame=$B.frames_stack[i],exc=frame[1].$current_exception
 if(exc){return _b_.tuple.$factory([exc.__class__,exc,$B.$getattr(exc,"__traceback__")])}}
 return _b_.tuple.$factory([_b_.None,_b_.None,_b_.None])},excepthook:function(exc_class,exc_value,traceback){$B.handle_error(exc_value)},modules:{__get__:function(){return $B.obj_dict($B.imported)},__set__:function(self,obj,value){throw _b_.TypeError.$factory("Read only property 'sys.modules'")}},path:{__get__:function(){return $B.path},__set__:function(self,obj,value){$B.path=value;}},meta_path:{__get__:function(){return $B.meta_path},__set__:function(self,obj,value){$B.meta_path=value }},path_hooks:{__get__:function(){return $B.path_hooks},__set__:function(self,obj,value){$B.path_hooks=value }},path_importer_cache:{__get__:function(){return _b_.dict.$factory($B.JSObject.$factory($B.path_importer_cache))},__set__:function(self,obj,value){throw _b_.TypeError.$factory("Read only property"+
-" 'sys.path_importer_cache'")}},stderr:{__get__:function(){return $B.stderr},__set__:function(self,obj,value){$B.stderr=value},write:function(data){_b_.getattr($B.stderr,"write")(data)}},stdout:{__get__:function(){return $B.stdout},__set__:function(self,obj,value){$B.stdout=value},write:function(data){_b_.getattr($B.stdout,"write")(data)}},stdin:{__get__:function(){return $B.stdin},__set__:function(){throw _b_.TypeError.$factory("sys.stdin is read-only")}},vfs:{__get__:function(){if($B.hasOwnProperty("VFS")){return $B.obj_dict($B.VFS)}
+" 'sys.path_importer_cache'")}},settrace:function(){var $=$B.args("settrace",1,{tracefunc:null},['tracefunc'],arguments,{},null,null)
+$B.tracefunc=$.tracefunc},stderr:{__get__:function(){return $B.stderr},__set__:function(self,obj,value){$B.stderr=value},write:function(data){_b_.getattr($B.stderr,"write")(data)}},stdout:{__get__:function(){return $B.stdout},__set__:function(self,obj,value){$B.stdout=value},write:function(data){_b_.getattr($B.stdout,"write")(data)}},stdin:{__get__:function(){return $B.stdin},__set__:function(){throw _b_.TypeError.$factory("sys.stdin is read-only")}},vfs:{__get__:function(){if($B.hasOwnProperty("VFS")){return $B.obj_dict($B.VFS)}
 else{return _b_.None}},__set__:function(){throw _b_.TypeError.$factory("Read only property 'sys.vfs'")}}}
 function load(name,module_obj){
 module_obj.__class__=$B.module

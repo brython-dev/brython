@@ -425,7 +425,10 @@
     modules['_sys'] = {
         // Called "Getframe" because "_getframe" wouldn't be imported in
         // sys.py with "from _sys import *"
-        Getframe : function(depth){
+        Getframe : function(){
+            var $ = $B.args("_getframe", 1, {depth: null}, ['depth'],
+                    arguments, {depth: 0}, null, null),
+                depth = $.depth
             return $B._frame.$factory($B.frames_stack,
                 $B.frames_stack.length - depth - 1)
         },
@@ -473,6 +476,11 @@
                 throw _b_.TypeError.$factory("Read only property" +
                     " 'sys.path_importer_cache'")
             }
+        },
+        settrace: function(){
+            var $ = $B.args("settrace", 1, {tracefunc: null}, ['tracefunc'],
+                    arguments, {}, null, null)
+            $B.tracefunc = $.tracefunc
         },
         stderr: {
             __get__: function(){return $B.stderr},

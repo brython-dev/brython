@@ -76,9 +76,6 @@ platform = "brython"
 
 prefix = __BRYTHON__.brython_path
 
-def settrace(tracefunc):
-    print("set trace")
-
 version = '.'.join(str(x) for x in __BRYTHON__.version_info[:3])
 version += " (default, %s) \n[Javascript 1.5] on Brython" \
     % __BRYTHON__.compiled_date

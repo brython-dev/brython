@@ -1056,6 +1056,9 @@ $B.int_or_bool = function(v){
 $B.enter_frame = function(frame){
     // Enter execution frame : save on top of frames stack
     $B.frames_stack.push(frame)
+    if($B.tracefunc){
+        $B.tracefunc($B._frame.$factory($B.frames_stack), 'call', _b_.None)
+    }
 }
 
 function exit_ctx_managers_in_generators(frame){
