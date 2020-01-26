@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,6,'final',0]
 __BRYTHON__.__MAGIC__="3.8.6"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-01-26 21:01:48.512348"
-__BRYTHON__.timestamp=1580068908496
+__BRYTHON__.compiled_date="2020-01-26 21:35:45.267353"
+__BRYTHON__.timestamp=1580070945267
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -2010,7 +2010,9 @@ return}else if(C.type=='global'){if(scope.globals===undefined){scope.globals=new
 this.toString=function(){return '(id) '+this.value+':'+(this.tree ||'')}
 this.firstBindingScopeId=function(){
 var scope=this.scope,found=[],nb=0
-while(scope && nb++< 20){if(scope.binding && scope.binding[this.value]){return scope.id}
+while(scope && nb++< 20){if(this.value=="reader"){console.log("scope",scope)}
+if(scope.globals && scope.globals.has(this.value)){return $get_module(this).id}
+if(scope.binding && scope.binding[this.value]){return scope.id}
 scope=scope.parent}}
 this.boundBefore=function(scope){
 var node=$get_node(this),found=false
@@ -2070,6 +2072,7 @@ if(innermost.globals && innermost.globals.has(val)){search_ids=['"'+gs.id+'"']
 innermost=gs}
 if($test){console.log("search ids",search_ids)}
 if(this.nonlocal ||this.bound){var bscope=this.firstBindingScopeId()
+if(val=="reader"){console.log(val,"first binding scope",bscope)}
 if($test){console.log("binding",bscope)}
 if(bscope !==undefined){return "$locals_"+bscope.replace(/\./g,"_")+'["'+
 val+'"]'}else if(this.bound){return "$locals_"+innermost.id.replace(/\./g,"_")+
@@ -7339,7 +7342,8 @@ var $ns=$B.args('open',3,{file:null,mode:null,encoding:null},['file','mode','enc
 for(var attr in $ns){eval('var '+attr+'=$ns["'+attr+'"]')}
 if(args.length > 0){var mode=args[0]}
 if(args.length > 1){var encoding=args[1]}
-if(isinstance(file,$B.JSObject)){return $B.OpenFile.$factory(file.js,mode,encoding)}
+if(isinstance(file,$B.JSObject)){if(file.js instanceof File){throw _b_.TypeError.$factory("invalid argument for open(): "+
+_b_.str.$factory(file))}}
 if(mode.search('w')>-1){throw _b_.IOError.$factory("Browsers cannot write on disk")}else if(['r','rb'].indexOf(mode)==-1){throw _b_.ValueError.$factory("Invalid mode '"+mode+"'")}
 if(isinstance(file,_b_.str)){
 var is_binary=mode.search('b')>-1

@@ -4089,6 +4089,12 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
             found = [],
             nb = 0
         while(scope && nb++ < 20){
+            if(this.value == "reader"){
+                console.log("scope", scope)
+            }
+            if(scope.globals && scope.globals.has(this.value)){
+                return $get_module(this).id
+            }
             if(scope.binding && scope.binding[this.value]){
                 return scope.id
             }
@@ -4279,6 +4285,9 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
 
         if(this.nonlocal || this.bound){
             var bscope = this.firstBindingScopeId()
+            if(val == "reader"){
+                console.log(val, "first binding scope", bscope)
+            }
             if($test){console.log("binding", bscope)}
             // Might be undefined, for augmented assignments or if the name
             // has been deleted before (by del)
