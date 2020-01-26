@@ -2479,6 +2479,13 @@ try:
 except SyntaxError as exc:
     assert exc.args[0] == "cannot assign to operator"
 
+# issue 1278
+import textwrap
+assert textwrap.wrap('1234 123', width=5) == ['1234', '123']
+assert textwrap.wrap('12345 123', width=5) == ['12345', '123']
+assert textwrap.wrap('123456 123', width=5, break_long_words=False) == \
+    ['123456', '123']
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

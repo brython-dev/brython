@@ -74,4 +74,9 @@ regex = re.compile('(a|b)')
 assert regex.match("a").group(0) =="a"
 assert regex.match("a")[0] == "a"
 
+# issue 1278
+_whitespace = '\t\n\x0b\x0c\r '
+s = re.escape(_whitespace)
+assert len(s) == 12
+
 print('all tests ok..')

@@ -803,17 +803,17 @@ str.__mul__ = function(){
 str.__ne__ = function(self,other){return other !== self.valueOf()}
 
 str.__repr__ = function(self){
-    var res = self
+var res = self
     // escape the escape char
     res = self.replace(/\\/g, "\\\\")
     // special cases
     res = res.replace(new RegExp("\u0007", "g"), "\\x07").
               replace(new RegExp("\b", "g"), "\\x08").
+              replace(new RegExp("\u000b", "g"), "\\x0b").
               replace(new RegExp("\f", "g"), "\\x0c").
               replace(new RegExp("\n", "g"), "\\n").
               replace(new RegExp("\r", "g"), "\\r").
               replace(new RegExp("\t", "g"), "\\t")
-
     res = res.replace(combining_re, "\u200B$1")
     if(res.search('"') == -1 && res.search("'") == -1){
         return "'" + res + "'"
@@ -1967,7 +1967,11 @@ str.translate = function(self, table){
         try{
             var repl = getitem(self.charCodeAt(i))
             if(repl !== _b_.None){
-                res.push(String.fromCharCode(repl))
+                if(typeof repl == "string"){
+                    res.push(repl)
+                }else if(typeof repl == "number"){
+                    res.push(String.fromCharCode(repl))
+                }
             }
         }catch(err){
             res.push(self.charAt(i))

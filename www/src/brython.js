@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,6,'final',0]
 __BRYTHON__.__MAGIC__="3.8.6"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-01-22 22:09:52.560568"
-__BRYTHON__.timestamp=1579727392560
+__BRYTHON__.compiled_date="2020-01-26 21:01:48.512348"
+__BRYTHON__.timestamp=1580068908496
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -11528,6 +11528,7 @@ str.__repr__=function(self){var res=self
 res=self.replace(/\\/g,"\\\\")
 res=res.replace(new RegExp("\u0007","g"),"\\x07").
 replace(new RegExp("\b","g"),"\\x08").
+replace(new RegExp("\u000b","g"),"\\x0b").
 replace(new RegExp("\f","g"),"\\x0c").
 replace(new RegExp("\n","g"),"\\n").
 replace(new RegExp("\r","g"),"\\r").
@@ -11964,7 +11965,7 @@ res+=self.charAt(i)}}
 return res}
 str.translate=function(self,table){var res=[],getitem=$B.$getattr(table,"__getitem__")
 for(var i=0,len=self.length;i < len;i++){try{var repl=getitem(self.charCodeAt(i))
-if(repl !==_b_.None){res.push(String.fromCharCode(repl))}}catch(err){res.push(self.charAt(i))}}
+if(repl !==_b_.None){if(typeof repl=="string"){res.push(repl)}else if(typeof repl=="number"){res.push(String.fromCharCode(repl))}}}catch(err){res.push(self.charAt(i))}}
 return res.join("")}
 str.upper=function(self){var $=$B.args("upper",1,{self:null},["self"],arguments,{},null,null)
 return self.toUpperCase()}
