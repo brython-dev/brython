@@ -2643,12 +2643,6 @@ function $url_open(){
     for(var attr in $ns){eval('var ' + attr + '=$ns["' + attr + '"]')}
     if(args.length > 0){var mode = args[0]}
     if(args.length > 1){var encoding = args[1]}
-    if(isinstance(file, $B.JSObject)){
-        if(file.js instanceof File){
-            throw _b_.TypeError.$factory("invalid argument for open(): " +
-                _b_.str.$factory(file))
-        }
-    }
     if(mode.search('w') > -1){
         throw _b_.IOError.$factory("Browsers cannot write on disk")
     }else if(['r', 'rb'].indexOf(mode) == -1){
@@ -2722,6 +2716,9 @@ function $url_open(){
         res.__class__ = is_binary ? $BufferedReader : $TextIOWrapper
 
         return res
+    }else{
+        throw _b_.TypeError.$factory("invalid argument for open(): " +
+            _b_.str.$factory(file))
     }
 }
 

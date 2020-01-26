@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,6,'final',0]
 __BRYTHON__.__MAGIC__="3.8.6"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-01-26 21:35:45.267353"
-__BRYTHON__.timestamp=1580070945267
+__BRYTHON__.compiled_date="2020-01-26 21:39:00.225955"
+__BRYTHON__.timestamp=1580071140225
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -7342,8 +7342,6 @@ var $ns=$B.args('open',3,{file:null,mode:null,encoding:null},['file','mode','enc
 for(var attr in $ns){eval('var '+attr+'=$ns["'+attr+'"]')}
 if(args.length > 0){var mode=args[0]}
 if(args.length > 1){var encoding=args[1]}
-if(isinstance(file,$B.JSObject)){if(file.js instanceof File){throw _b_.TypeError.$factory("invalid argument for open(): "+
-_b_.str.$factory(file))}}
 if(mode.search('w')>-1){throw _b_.IOError.$factory("Browsers cannot write on disk")}else if(['r','rb'].indexOf(mode)==-1){throw _b_.ValueError.$factory("Invalid mode '"+mode+"'")}
 if(isinstance(file,_b_.str)){
 var is_binary=mode.search('b')>-1
@@ -7369,7 +7367,8 @@ $string=$res}
 if($string===undefined && $bytes===undefined){throw _b_.FileNotFoundError.$factory($ns.file)}
 var res={$binary:is_binary,$string:$string,$bytes:$bytes,$counter:0,closed:False,encoding:encoding,mode:mode,name:file}
 res.__class__=is_binary ? $BufferedReader :$TextIOWrapper
-return res}}
+return res}else{throw _b_.TypeError.$factory("invalid argument for open(): "+
+_b_.str.$factory(file))}}
 var zip=$B.make_class("zip",function(){var res={__class__:zip,items:[]}
 if(arguments.length==0)return res
 var $ns=$B.args('zip',0,{},[],arguments,{},'args','kw')
