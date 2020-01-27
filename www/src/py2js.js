@@ -1930,9 +1930,9 @@ var $ClassCtx = $B.parser.$ClassCtx = function(context){
     }
 
     this.transform = function(node, rank){
-
         // doc string
         this.doc_string = $get_docstring(node)
+        this.module = $get_module(this).module.replace(/\./g, '_')
 
         var indent = '\n' + ' '.repeat(node.indent + 12),
             instance_decl = new $Node(),
@@ -1940,7 +1940,8 @@ var $ClassCtx = $B.parser.$ClassCtx = function(context){
             js = 'var ' + local_ns + ' = {' +
                  '__annotations__: _b_.dict.$factory()}, ' +
                  indent + '$locals = ' + local_ns + ', ' +
-                 indent + '$local_name = "' + local_ns + '",'
+                 indent + '$local_name = "' + local_ns + '"'
+
         new $NodeJSCtx(instance_decl, js)
         node.insert(0, instance_decl)
 
@@ -1952,9 +1953,14 @@ var $ClassCtx = $B.parser.$ClassCtx = function(context){
         var global_ns = '$locals_' + global_scope.id.replace(/\./g, '_')
 
         var js = ' '.repeat(node.indent + 4) +
-                 '$top_frame = [$local_name, $locals,' + '"' +
+                 '$locals.$name = "' + this.name + '"' + indent +
+                 '$locals.$line_info = "' + node.line_num + ',' +
+                 this.module + '";' + indent +
+                 'var $top_frame = [$local_name, $locals,' + '"' +
                  global_scope.id + '", ' + global_ns + ']' +
-                 indent + '$B.enter_frame($top_frame);'
+                 indent + '$locals.$f_trace = $B.enter_frame($top_frame);' +
+                 indent + 'if($locals.$f_trace !== _b_.None){' +
+                 '$locals.$f_trace = $B.trace_line()}'
         node.insert(1, $NodeJS(js))
 
         // exit frame
@@ -1970,7 +1976,7 @@ var $ClassCtx = $B.parser.$ClassCtx = function(context){
         node.parent.insert(rank + 1, run_func)
 
         var module_name = '$locals_' +
-            $get_module(this).module.replace(/\./g, '_') + '.__name__'
+            this.module + '.__name__'
 
         rank++
         node.parent.insert(rank + 1,
@@ -2151,7 +2157,7 @@ var $ConditionCtx = $B.parser.$ConditionCtx = function(context,token){
         }else if(tok == 'else if'){
             var line_info = $get_node(this).line_num + ',' +
                 $get_scope(this).id
-            res.push('($locals.$line_info = "' + line_info + '") && ')
+            res.push('($B.set_line("' + line_info + '")) && ')
         }
         if(this.tree.length == 1){
             res.push($to_js(this.tree) + '))')
@@ -2584,9 +2590,11 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
 
         // Push id in frames stack
         var enter_frame_nodes = [
+            $NodeJS('$locals.$line_info = "' + node.line_num + ',' +
+                this.module + '"'),
             $NodeJS('var $top_frame = [$local_name, $locals,' +
                 '"' + global_scope.id + '", ' + global_ns + ', ' + name + ']'),
-            $NodeJS('$B.enter_frame($top_frame)'),
+            $NodeJS('$locals.$f_trace = $B.enter_frame($top_frame)'),
             $NodeJS('var $stack_length = $B.frames_stack.length;')
         ]
         if(this.async){
@@ -3482,8 +3490,10 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
                 for_node.add(child)
             })
             // Add a line to reset the line number
-            for_node.add($NodeJS('$locals.$line_info = "' + node.line_num +
-                ',' + scope.id + '"; None;'))
+            var js = '$locals.$line_info = "' + node.line_num +
+                ',' + scope.id + '";if($locals.$f_trace !== _b_.None){' +
+                '$B.trace_line()};None;'
+            for_node.add($NodeJS(js))
 
             // Check if current "for" loop is inside another "for" loop
             var in_loop = false
@@ -4089,9 +4099,6 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
             found = [],
             nb = 0
         while(scope && nb++ < 20){
-            if(this.value == "reader"){
-                console.log("scope", scope)
-            }
             if(scope.globals && scope.globals.has(this.value)){
                 return $get_module(this).id
             }
@@ -6748,7 +6755,8 @@ var $add_line_num = $B.parser.$add_line_num = function(node,rank){
         if(flag){
             // add a trailing None for interactive mode
             var js = ';$locals.$line_info = "' + line_num + ',' +
-                mod_id + '";'
+                mod_id + '";if($locals.$f_trace !== _b_.None){' +
+                '$locals.$f_trace = $B.trace_line()}'
 
             var new_node = new $Node()
             new_node.is_line_num = true // used in generators
@@ -9948,7 +9956,7 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
     var enter_frame_pos = offset,
         js = 'var $top_frame = ["' + locals_id.replace(/\./g, '_') + '", ' +
             local_ns + ', "' + module.replace(/\./g, '_') + '", ' +
-            global_ns + ']\n$B.enter_frame($top_frame)\n' +
+            global_ns + ']\n$locals.$f_trace = $B.enter_frame($top_frame)\n' +
             'var $stack_length = $B.frames_stack.length;'
 
     root.insert(offset++, $NodeJS(js))

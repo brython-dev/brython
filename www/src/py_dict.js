@@ -924,7 +924,7 @@ $B.obj_dict = function(obj, from_js){
             " has no attribute '__dict__'")}
     var res = dict.$factory()
     res.$jsobj = obj
-    res.$from_js = from_js // set to true if created by JSObject.to_dict()
+    res.$from_js = from_js // set to true if 
     return res
 }
 

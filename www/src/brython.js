@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,6,'final',0]
 __BRYTHON__.__MAGIC__="3.8.6"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-01-26 21:39:00.225955"
-__BRYTHON__.timestamp=1580071140225
+__BRYTHON__.compiled_date="2020-01-27 22:31:58.712767"
+__BRYTHON__.timestamp=1580160718712
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -998,19 +998,25 @@ $bind(name,this.scope,this)
 if(scope.is_function){if(scope.C.tree[0].locals.indexOf(name)==-1){scope.C.tree[0].locals.push(name)}}}
 this.transform=function(node,rank){
 this.doc_string=$get_docstring(node)
+this.module=$get_module(this).module.replace(/\./g,'_')
 var indent='\n'+' '.repeat(node.indent+12),instance_decl=new $Node(),local_ns='$locals_'+this.id.replace(/\./g,'_'),js='var '+local_ns+' = {'+
 '__annotations__: _b_.dict.$factory()}, '+
 indent+'$locals = '+local_ns+', '+
-indent+'$local_name = "'+local_ns+'",'
+indent+'$local_name = "'+local_ns+'"'
 new $NodeJSCtx(instance_decl,js)
 node.insert(0,instance_decl)
 var global_scope=this.scope
 while(global_scope.parent_block.id !=='__builtins__'){global_scope=global_scope.parent_block}
 var global_ns='$locals_'+global_scope.id.replace(/\./g,'_')
 var js=' '.repeat(node.indent+4)+
-'$top_frame = [$local_name, $locals,'+'"'+
+'$locals.$name = "'+this.name+'"'+indent+
+'$locals.$line_info = "'+node.line_num+','+
+this.module+'";'+indent+
+'var $top_frame = [$local_name, $locals,'+'"'+
 global_scope.id+'", '+global_ns+']'+
-indent+'$B.enter_frame($top_frame);'
+indent+'$locals.$f_trace = $B.enter_frame($top_frame);'+
+indent+'if($locals.$f_trace !== _b_.None){'+
+'$locals.$f_trace = $B.trace_line()}'
 node.insert(1,$NodeJS(js))
 node.add($NodeJS('$B.leave_frame()'))
 var ret_obj=new $Node()
@@ -1020,7 +1026,7 @@ var run_func=new $Node()
 new $NodeJSCtx(run_func,')();')
 node.parent.insert(rank+1,run_func)
 var module_name='$locals_'+
-$get_module(this).module.replace(/\./g,'_')+'.__name__'
+this.module+'.__name__'
 rank++
 node.parent.insert(rank+1,$NodeJS('$'+this.name+'_'+this.random+".__module__ = "+
 module_name))
@@ -1115,7 +1121,7 @@ if(tok=='elif'){tok='else if'}
 var res=[tok+'($B.$bool(']
 if(tok=='while'){res.push('$locals["$no_break'+this.loop_num+'"] && ')}else if(tok=='else if'){var line_info=$get_node(this).line_num+','+
 $get_scope(this).id
-res.push('($locals.$line_info = "'+line_info+'") && ')}
+res.push('($B.set_line("'+line_info+'")) && ')}
 if(this.tree.length==1){res.push($to_js(this.tree)+'))')}else{
 res.push(this.tree[0].to_js()+'))')
 if(this.tree[1].tree.length > 0){res.push('{'+this.tree[1].to_js()+'}')}}
@@ -1298,8 +1304,9 @@ new_node.locals_def=true
 new_node.func_node=node
 new $NodeJSCtx(new_node,js)
 nodes.push(new_node)
-var enter_frame_nodes=[$NodeJS('var $top_frame = [$local_name, $locals,'+
-'"'+global_scope.id+'", '+global_ns+', '+name+']'),$NodeJS('$B.enter_frame($top_frame)'),$NodeJS('var $stack_length = $B.frames_stack.length;')
+var enter_frame_nodes=[$NodeJS('$locals.$line_info = "'+node.line_num+','+
+this.module+'"'),$NodeJS('var $top_frame = [$local_name, $locals,'+
+'"'+global_scope.id+'", '+global_ns+', '+name+']'),$NodeJS('$locals.$f_trace = $B.enter_frame($top_frame)'),$NodeJS('var $stack_length = $B.frames_stack.length;')
 ]
 if(this.async){enter_frame_nodes.push($NodeJS("var $stack = "+
 "$B.frames_stack.slice()"))}
@@ -1738,8 +1745,10 @@ for_node.add($NodeJS('if($safe'+num+'){$next'+num+
 for_node.add($NodeJS('else{$next'+num+' = $B.add($next'+
 num+',1)}'))}
 children.forEach(function(child){for_node.add(child)})
-for_node.add($NodeJS('$locals.$line_info = "'+node.line_num+
-','+scope.id+'"; None;'))
+var js='$locals.$line_info = "'+node.line_num+
+','+scope.id+'";if($locals.$f_trace !== _b_.None){'+
+'$B.trace_line()};None;'
+for_node.add($NodeJS(js))
 var in_loop=false
 if(scope.ntype=='module'){var pnode=node.parent
 while(pnode){if(pnode.for_wrapper){in_loop=true;break}
@@ -2010,8 +2019,7 @@ return}else if(C.type=='global'){if(scope.globals===undefined){scope.globals=new
 this.toString=function(){return '(id) '+this.value+':'+(this.tree ||'')}
 this.firstBindingScopeId=function(){
 var scope=this.scope,found=[],nb=0
-while(scope && nb++< 20){if(this.value=="reader"){console.log("scope",scope)}
-if(scope.globals && scope.globals.has(this.value)){return $get_module(this).id}
+while(scope && nb++< 20){if(scope.globals && scope.globals.has(this.value)){return $get_module(this).id}
 if(scope.binding && scope.binding[this.value]){return scope.id}
 scope=scope.parent}}
 this.boundBefore=function(scope){
@@ -3182,7 +3190,8 @@ else if(elt.type=='except'){flag=false}
 else if(elt.type=='single_kw'){flag=false}
 if(flag){
 var js=';$locals.$line_info = "'+line_num+','+
-mod_id+'";'
+mod_id+'";if($locals.$f_trace !== _b_.None){'+
+'$locals.$f_trace = $B.trace_line()}'
 var new_node=new $Node()
 new_node.is_line_num=true 
 new $NodeJSCtx(new_node,js)
@@ -5005,7 +5014,7 @@ root.insert(offset++,$NodeJS(local_ns+'["__package__"] = "'+__package__+'"'))
 if(root.binding.__annotations__){root.insert(offset++,$NodeJS('$locals.__annotations__ = _b_.dict.$factory()'))}
 var enter_frame_pos=offset,js='var $top_frame = ["'+locals_id.replace(/\./g,'_')+'", '+
 local_ns+', "'+module.replace(/\./g,'_')+'", '+
-global_ns+']\n$B.enter_frame($top_frame)\n'+
+global_ns+']\n$locals.$f_trace = $B.enter_frame($top_frame)\n'+
 'var $stack_length = $B.frames_stack.length;'
 root.insert(offset++,$NodeJS(js))
 var try_node=new $NodeJS('try'),children=root.children.slice(enter_frame_pos+1,root.children.length)
@@ -6226,7 +6235,18 @@ throw _b_.TypeError.$factory("'"+$B.class_name(v)+
 "' object cannot be interpreted as an integer")}}
 $B.enter_frame=function(frame){
 $B.frames_stack.push(frame)
-if($B.tracefunc){$B.tracefunc($B._frame.$factory($B.frames_stack),'call',_b_.None)}}
+if($B.tracefunc){if(frame[4]===$B.tracefunc){
+return _b_.None}else{return $B.tracefunc($B._frame.$factory($B.frames_stack,$B.frames_stack.length-1),'call',_b_.None)}}
+return _b_.None}
+$B.trace_line=function(){var top_frame=$B.last($B.frames_stack),trace_func=top_frame[1].$f_trace,frame_obj=$B._frame.$factory($B.frames_stack,$B.frames_stack.length-1)
+return trace_func(frame_obj,'line',_b_.None)}
+$B.set_line=function(line_info){
+var top_frame=$B.last($B.frames_stack)
+top_frame[1].$line_info=line_info
+var trace_func=top_frame[1].$f_trace
+if(trace_func !==_b_.None){var frame_obj=$B._frame.$factory($B.frames_stack,$B.frames_stack.length-1)
+top_frame[1].$ftrace=trace_func(frame_obj,'line',_b_.None)}
+return true}
 function exit_ctx_managers_in_generators(frame){
 for(key in frame[1]){if(frame[1][key]&& frame[1][key].$is_generator_obj){var gen_obj=frame[1][key]
 if(gen_obj.env !==undefined){for(var attr in gen_obj.env){if(attr.search(/^\$ctx_manager_exit\d+$/)>-1){
@@ -7591,7 +7611,7 @@ return _b_.object.__getattribute__(self,attr)}}
 $B.set_func_names(traceback,"builtins")
 var frame=$B.make_class("frame",function(stack,pos){var fs=stack
 var res={__class__:frame,f_builtins :{},
-$stack:deep_copy(stack)}
+$stack:stack.slice()}
 if(pos===undefined){pos=0}
 res.$pos=pos
 if(fs.length){var _frame=fs[pos],locals_id=_frame[0],filename
@@ -7599,14 +7619,16 @@ try{res.f_locals=$B.obj_dict(_frame[1])}catch(err){console.log("err "+err)
 throw err}
 res.f_globals=$B.obj_dict(_frame[3])
 if(_frame[3].__file__ !==undefined){filename=_frame[3].__file__}else if(locals_id.startsWith("$exec")){filename="<string>"}
-if(_frame[1].$line_info===undefined){res.f_lineno=-1}else{var line_info=_frame[1].$line_info.split(",")
+if(_frame[1].$line_info===undefined){console.log("$line info undef",_frame[1])
+console.log(_frame)
+res.f_lineno=-1}else{var line_info=_frame[1].$line_info.split(",")
 res.f_lineno=parseInt(line_info[0])
 var module_name=line_info[1]
 if($B.imported.hasOwnProperty(module_name)){filename=$B.imported[module_name].__file__}
 res.f_lineno=parseInt(_frame[1].$line_info.split(',')[0])}
 var co_name=locals_id.startsWith("$exec")? "<string>" :
 locals_id
-if(locals_id==_frame[2]){co_name="<module>"}else{if(_frame[0].$name){co_name=_frame[0].$name}else if(_frame.length > 4){if(_frame[4].$infos){co_name=_frame[4].$infos.__name__}else{co_name=_frame[4].name}
+if(locals_id==_frame[2]){co_name="<module>"}else{if(_frame[1].$name){co_name=_frame[1].$name}else if(_frame.length > 4){if(_frame[4].$infos){co_name=_frame[4].$infos.__name__}else{co_name=_frame[4].name}
 if(filename===undefined && _frame[4].$infos.__code__){filename=_frame[4].$infos.__code__.co_filename
 res.f_lineno=_frame[4].$infos.__code__.co_firstlineno}}}
 res.f_code={__class__:$B.code,co_code:None,
@@ -7617,6 +7639,8 @@ return res}
 )
 frame.__getattr__=function(self,attr){
 if(attr=="f_back"){if(self.$pos > 0){return frame.$factory(self.$stack.slice(0,self.$stack.length-1))}else{return _b_.None}}else if(attr=="clear"){return function(){}}}
+frame.__str__=frame.__repr__=function(self){return '<frame object, file '+self.f_code.co_filename+
+', line '+self.f_lineno+', code '+self.f_code.co_name+'>'}
 $B.set_func_names(frame,"builtins")
 $B._frame=frame 
 var BaseException=_b_.BaseException={__class__:_b_.type,__bases__ :[_b_.object],__mro__:[_b_.object],args:[],$infos:{__name__:"BaseException",__module__:"builtins"},$is_class:true}

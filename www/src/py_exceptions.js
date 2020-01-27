@@ -217,11 +217,10 @@ var frame = $B.make_class("frame",
         var res = {
             __class__: frame,
             f_builtins : {}, // XXX fix me
-            $stack: deep_copy(stack)
+            $stack: stack.slice()
         }
         if(pos === undefined){
             pos = 0
-            // pos = fs.length - 1
         }
         res.$pos = pos
         if(fs.length){
@@ -242,6 +241,8 @@ var frame = $B.make_class("frame",
                 filename = "<string>"
             }
             if(_frame[1].$line_info === undefined){
+                console.log("$line info undef", _frame[1])
+                console.log(_frame)
                 res.f_lineno = -1
             }else{
                 var line_info = _frame[1].$line_info.split(",")
@@ -258,8 +259,8 @@ var frame = $B.make_class("frame",
             if(locals_id == _frame[2]){
                 co_name = "<module>"
             }else{
-                if(_frame[0].$name){
-                    co_name = _frame[0].$name
+                if(_frame[1].$name){
+                    co_name = _frame[1].$name
                 }else if(_frame.length > 4){
                     if(_frame[4].$infos){
                         co_name = _frame[4].$infos.__name__
@@ -299,6 +300,11 @@ frame.__getattr__ = function(self, attr){
             // XXX fix me
         }
     }
+}
+
+frame.__str__ = frame.__repr__ = function(self){
+    return '<frame object, file ' + self.f_code.co_filename +
+        ', line ' + self.f_lineno + ', code ' + self.f_code.co_name + '>'
 }
 
 $B.set_func_names(frame, "builtins")

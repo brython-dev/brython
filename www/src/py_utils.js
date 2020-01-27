@@ -1057,8 +1057,36 @@ $B.enter_frame = function(frame){
     // Enter execution frame : save on top of frames stack
     $B.frames_stack.push(frame)
     if($B.tracefunc){
-        $B.tracefunc($B._frame.$factory($B.frames_stack), 'call', _b_.None)
+        if(frame[4] === $B.tracefunc){
+            // avoid recursion !
+            return _b_.None
+        }else{
+            return $B.tracefunc($B._frame.$factory($B.frames_stack, $B.frames_stack.length - 1), 'call',
+                _b_.None)
+        }
     }
+    return _b_.None
+}
+
+$B.trace_line = function(){
+    var top_frame = $B.last($B.frames_stack),
+        trace_func = top_frame[1].$f_trace,
+        frame_obj = $B._frame.$factory($B.frames_stack,
+            $B.frames_stack.length - 1)
+    return trace_func(frame_obj, 'line', _b_.None)
+}
+
+$B.set_line = function(line_info){
+    // Used in loops to run trace function
+    var top_frame = $B.last($B.frames_stack)
+    top_frame[1].$line_info = line_info
+    var trace_func = top_frame[1].$f_trace
+    if(trace_func !== _b_.None){
+        var frame_obj = $B._frame.$factory($B.frames_stack,
+            $B.frames_stack.length - 1)
+        top_frame[1].$ftrace = trace_func(frame_obj, 'line', _b_.None)
+    }
+    return true
 }
 
 function exit_ctx_managers_in_generators(frame){
