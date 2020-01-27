@@ -263,7 +263,7 @@ function _request_without_body(){
     self.js.send()
 }
 
-function _request_with_body(){
+function _request_with_body(method){
     var $ = $B.args(method, 3, {method: null, url: null, blocking: null},
         ["method", "url", "blocking"], arguments, {blocking: false},
         null, "kw"),
