@@ -236,7 +236,7 @@ ajax.$factory = function(){
     return res
 }
 
-function _request_without_body(){
+function _request_without_body(method){
     var $ = $B.args(method, 3, {method: null, url: null, blocking: null},
         ["method", "url", "blocking"], arguments, {blocking: false},
         null, "kw"),
