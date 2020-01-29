@@ -2950,6 +2950,9 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
             if(this.async){
                 except_node.add($NodeJS('err.$stack = $stack'))
             }
+            except_node.add($NodeJS('$B.set_exc(err)'))
+            except_node.add($NodeJS('if($locals.$f_trace !== _b_.None){' +
+                '$locals.$f_trace = $B.trace_exception()}'))
             except_node.add($NodeJS('$B.leave_frame();throw err'))
 
             parent.add(except_node)
@@ -3660,7 +3663,7 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
         children.forEach(function(child){
             while_node.add(child)
         })
-        
+
         node.children = []
         return 0
     }
@@ -6770,7 +6773,7 @@ var $add_line_num = $B.parser.$add_line_num = function(node,rank){
         if(flag){
             var js = ';$locals.$line_info = "' + line_num + ',' +
                 mod_id + '";if($locals.$f_trace !== _b_.None){' +
-                '$locals.$f_trace = $B.trace_line()}; _b_.None;'
+                '$B.trace_line()}; _b_.None;'
 
             var new_node = new $Node()
             new_node.is_line_num = true // used in generators
@@ -6789,7 +6792,7 @@ var $add_line_num = $B.parser.$add_line_num = function(node,rank){
             if($B.last(node.children).context.tree[0].type != "return"){
                 var js = ';$locals.$line_info = "' + line_num + ',' +
                     mod_id + '";if($locals.$f_trace !== _b_.None){' +
-                    '$locals.$f_trace = $B.trace_line()}; _b_.None;'
+                    '$B.trace_line()}; _b_.None;'
                 node.add($NodeJS(js))
             }
         }

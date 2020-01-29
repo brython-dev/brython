@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,6,'final',0]
 __BRYTHON__.__MAGIC__="3.8.6"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-01-29 11:08:26.235914"
-__BRYTHON__.timestamp=1580292506220
+__BRYTHON__.compiled_date="2020-01-29 21:30:15.412270"
+__BRYTHON__.timestamp=1580329815412
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -1472,6 +1472,9 @@ children.forEach(function(child){if(child.is_def_func){child.children.forEach(fu
 parent.children.splice(pos+2,parent.children.length)
 var except_node=$NodeJS('catch(err)')
 if(this.async){except_node.add($NodeJS('err.$stack = $stack'))}
+except_node.add($NodeJS('$B.set_exc(err)'))
+except_node.add($NodeJS('if($locals.$f_trace !== _b_.None){'+
+'$locals.$f_trace = $B.trace_exception()}'))
 except_node.add($NodeJS('$B.leave_frame();throw err'))
 parent.add(except_node)}
 this.transformed=true
@@ -3204,7 +3207,7 @@ else if(elt.type=='except'){flag=false}
 else if(elt.type=='single_kw'){flag=false}
 if(flag){var js=';$locals.$line_info = "'+line_num+','+
 mod_id+'";if($locals.$f_trace !== _b_.None){'+
-'$locals.$f_trace = $B.trace_line()}; _b_.None;'
+'$B.trace_line()}; _b_.None;'
 var new_node=new $Node()
 new_node.is_line_num=true 
 new $NodeJSCtx(new_node,js)
@@ -3215,7 +3218,7 @@ while(i < node.children.length){i+=$add_line_num(node.children[i],i)}
 if((elt.type=='condition' && elt.token=="while")
 ||node.C.type=='for'){if($B.last(node.children).C.tree[0].type !="return"){var js=';$locals.$line_info = "'+line_num+','+
 mod_id+'";if($locals.$f_trace !== _b_.None){'+
-'$locals.$f_trace = $B.trace_line()}; _b_.None;'
+'$B.trace_line()}; _b_.None;'
 node.add($NodeJS(js))}}
 return offset}else{return 1}}
 $B.$add_line_num=$add_line_num
