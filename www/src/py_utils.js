@@ -1068,6 +1068,16 @@ $B.enter_frame = function(frame){
     return _b_.None
 }
 
+$B.trace_exception = function(){
+    var top_frame = $B.last($B.frames_stack),
+        trace_func = top_frame[1].$f_trace,
+        exc = top_frame[1].$current_exception,
+        frame_obj = $B._frame.$factory($B.frames_stack,
+            $B.frames_stack.length - 1)
+    return trace_func(frame_obj, 'exception', $B.fast_tuple([
+        exc.__class__, exc, $B.traceback.$factory(exc)]))
+}
+
 $B.trace_line = function(){
     var top_frame = $B.last($B.frames_stack),
         trace_func = top_frame[1].$f_trace,
@@ -1087,6 +1097,14 @@ $B.set_line = function(line_info){
         top_frame[1].$ftrace = trace_func(frame_obj, 'line', _b_.None)
     }
     return true
+}
+
+$B.trace_return = function(value){
+    var top_frame = $B.last($B.frames_stack),
+        trace_func = top_frame[1].$f_trace,
+        frame_obj = $B._frame.$factory($B.frames_stack,
+            $B.frames_stack.length - 1)
+    trace_func(frame_obj, 'return', value)
 }
 
 function exit_ctx_managers_in_generators(frame){

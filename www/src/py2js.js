@@ -1964,6 +1964,8 @@ var $ClassCtx = $B.parser.$ClassCtx = function(context){
         node.insert(1, $NodeJS(js))
 
         // exit frame
+        node.add($NodeJS('if($locals.$f_trace !== _b_.None){' +
+            '$B.trace_return(_b_.None)}'))
         node.add($NodeJS('$B.leave_frame()'))
         // return local namespace at the end of class definition
         var ret_obj = new $Node()
@@ -2774,11 +2776,15 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         var last_instr = node.children[node.children.length - 1].context.tree[0]
         if(last_instr.type != 'return' && this.type != 'generator'){
             // as always, leave frame before returning
-            var js = '$B.leave_frame'
+            js = 'if($locals.$f_trace !== _b_.None){\n' +
+                ' '.repeat(indent + 4) + '$B.trace_return(_b_.None)\n' +
+                ' '.repeat(indent) + '}\n' + ' '.repeat(indent)
+            js += '$B.leave_frame'
             if(this.id.substr(0,5) == '$exec'){
                 js += '_exec'
             }
-            node.add($NodeJS(js + '();return None'))
+            js += '();return _b_.None'
+            node.add($NodeJS(js))
         }
 
         // Add the new function definition
@@ -3224,6 +3230,11 @@ var $ExceptCtx = $B.parser.$ExceptCtx = function(context){
     }
 
     this.transform = function(node, rank){
+        // Add a no-op instruction just to have a line with the "except" node
+        // line num, for trace functions
+        var linenum_node = $NodeJS("void(0)")
+        linenum_node.line_num = node.line_num
+        node.insert(0, linenum_node)
         // Add instruction to delete current exception, except if the last
         // instruction in the except block is a return (to avoid the
         // message "unreachable code after return statement")
@@ -3593,7 +3604,7 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
 
         if(this.has_break){
             js = 'while(' + local_ns + '["$no_break' + num + '"])'
-        }else{js = 'while(1)'}
+        }else{js = 'while(true)'}
 
         new $NodeJSCtx(while_node,js)
         while_node.context.loop_num = num // used for "else" clauses
@@ -3649,7 +3660,7 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
         children.forEach(function(child){
             while_node.add(child)
         })
-
+        
         node.children = []
         return 0
     }
@@ -4292,9 +4303,6 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
 
         if(this.nonlocal || this.bound){
             var bscope = this.firstBindingScopeId()
-            if(val == "reader"){
-                console.log(val, "first binding scope", bscope)
-            }
             if($test){console.log("binding", bscope)}
             // Might be undefined, for augmented assignments or if the name
             // has been deleted before (by del)
@@ -5642,7 +5650,7 @@ var $ReturnCtx = $B.parser.$ReturnCtx = function(context){
     // Check if return is inside a "for" loop
     // In this case, the loop will not be included inside a function
     // for optimisation
-    var node = $get_node(this)
+    var node = this.node = $get_node(this)
     while(node.parent){
         if(node.parent.context){
             var elt = node.parent.context.tree[0]
@@ -5674,9 +5682,13 @@ var $ReturnCtx = $B.parser.$ReturnCtx = function(context){
         // Returning from a function means leaving the execution frame
         // If the return is in a try block with a finally block, the frames
         // will be restored when entering "finally"
-        var js = 'var $res = ' + $to_js(this.tree) + ';' + '$B.leave_frame'
+        var indent = '    '.repeat(this.node.indent + 1)
+        var js = 'var $res = ' + $to_js(this.tree) + ';\n' + indent +
+        'if($locals.$f_trace !== _b_.None){$B.trace_return($res)}\n' + indent +
+        '$B.leave_frame'
         if(scope.id.substr(0, 6) == '$exec_'){js += '_exec'}
-        return js + '("' + scope.id +'");return $res'
+        js += '("' + scope.id +'");\n' + indent + 'return $res'
+        return js
     }
 }
 
@@ -6100,8 +6112,11 @@ var $TryCtx = $B.parser.$TryCtx = function(context){
         catch_node.is_catch = true
         node.parent.insert(rank + 1, catch_node)
 
-        // Store exception as __BRYTHON__.cuex (for "current exception")
+        // Store exception as the attribute $current_exception of $locals
         catch_node.add($NodeJS("$B.set_exc(" + error_name + ")"))
+        // Trace exception if needed
+        catch_node.add($NodeJS("if($locals.$f_trace !== _b_.None)" +
+            "{$locals.$f_trace = $B.trace_exception()}"))
 
         // Set the boolean $failed to true
         // Set attribute "pmframe" (post mortem frame) to $B in case an error
@@ -6111,7 +6126,7 @@ var $TryCtx = $B.parser.$TryCtx = function(context){
             $NodeJS(failed_name + ' = true;' +
             '$B.pmframe = $B.last($B.frames_stack);'+
             // Fake line to start the 'else if' clauses
-            'if(0){}')
+            'if(false){}')
         )
 
         var pos = rank + 2,
@@ -6753,10 +6768,9 @@ var $add_line_num = $B.parser.$add_line_num = function(node,rank){
         else if(elt.type == 'except'){flag = false}
         else if(elt.type == 'single_kw'){flag = false}
         if(flag){
-            // add a trailing None for interactive mode
             var js = ';$locals.$line_info = "' + line_num + ',' +
                 mod_id + '";if($locals.$f_trace !== _b_.None){' +
-                '$locals.$f_trace = $B.trace_line()}'
+                '$locals.$f_trace = $B.trace_line()}; _b_.None;'
 
             var new_node = new $Node()
             new_node.is_line_num = true // used in generators
@@ -6773,8 +6787,10 @@ var $add_line_num = $B.parser.$add_line_num = function(node,rank){
         if((elt.type == 'condition' && elt.token == "while")
                 || node.context.type == 'for'){
             if($B.last(node.children).context.tree[0].type != "return"){
-                node.add($NodeJS('$locals.$line_info = "' + line_num +
-                    ',' + mod_id + '";'))
+                var js = ';$locals.$line_info = "' + line_num + ',' +
+                    mod_id + '";if($locals.$f_trace !== _b_.None){' +
+                    '$locals.$f_trace = $B.trace_line()}; _b_.None;'
+                node.add($NodeJS(js))
             }
         }
 

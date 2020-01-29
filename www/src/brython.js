@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,6,'final',0]
 __BRYTHON__.__MAGIC__="3.8.6"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-01-28 12:24:28.727414"
-__BRYTHON__.timestamp=1580210668727
+__BRYTHON__.compiled_date="2020-01-29 11:08:26.235914"
+__BRYTHON__.timestamp=1580292506220
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -1018,6 +1018,8 @@ indent+'$locals.$f_trace = $B.enter_frame($top_frame);'+
 indent+'if($locals.$f_trace !== _b_.None){'+
 '$locals.$f_trace = $B.trace_line()}'
 node.insert(1,$NodeJS(js))
+node.add($NodeJS('if($locals.$f_trace !== _b_.None){'+
+'$B.trace_return(_b_.None)}'))
 node.add($NodeJS('$B.leave_frame()'))
 var ret_obj=new $Node()
 new $NodeJSCtx(ret_obj,'return '+local_ns+';')
@@ -1387,9 +1389,13 @@ def_func_node.is_def_func=true
 def_func_node.module=this.module
 var last_instr=node.children[node.children.length-1].C.tree[0]
 if(last_instr.type !='return' && this.type !='generator'){
-var js='$B.leave_frame'
+js='if($locals.$f_trace !== _b_.None){\n'+
+' '.repeat(indent+4)+'$B.trace_return(_b_.None)\n'+
+' '.repeat(indent)+'}\n'+' '.repeat(indent)
+js+='$B.leave_frame'
 if(this.id.substr(0,5)=='$exec'){js+='_exec'}
-node.add($NodeJS(js+'();return None'))}
+js+='();return _b_.None'
+node.add($NodeJS(js))}
 node.add(def_func_node)
 var offset=1,indent=node.indent
 node.parent.insert(rank+offset++,$NodeJS(name+'.$is_func = true'))
@@ -1615,6 +1621,9 @@ this.toString=function(){return '(except) '}
 this.set_alias=function(alias){this.tree[0].alias=$mangle(alias,this)
 $bind(alias,this.scope,this)}
 this.transform=function(node,rank){
+var linenum_node=$NodeJS("void(0)")
+linenum_node.line_num=node.line_num
+node.insert(0,linenum_node)
 var last_child=$B.last(node.children)
 if(last_child.C.tree && last_child.C.tree[0]&&
 last_child.C.tree[0].type=="return"){}
@@ -1792,7 +1801,7 @@ if(this.has_break){
 new_nodes[pos++]=$NodeJS(local_ns+'["$no_break'+num+
 '"] = true;')}
 var while_node=new $Node()
-if(this.has_break){js='while('+local_ns+'["$no_break'+num+'"])'}else{js='while(1)'}
+if(this.has_break){js='while('+local_ns+'["$no_break'+num+'"])'}else{js='while(true)'}
 new $NodeJSCtx(while_node,js)
 while_node.C.loop_num=num 
 while_node.C.type='for' 
@@ -2080,7 +2089,6 @@ if(innermost.globals && innermost.globals.has(val)){search_ids=['"'+gs.id+'"']
 innermost=gs}
 if($test){console.log("search ids",search_ids)}
 if(this.nonlocal ||this.bound){var bscope=this.firstBindingScopeId()
-if(val=="reader"){console.log(val,"first binding scope",bscope)}
 if($test){console.log("binding",bscope)}
 if(bscope !==undefined){return "$locals_"+bscope.replace(/\./g,"_")+'["'+
 val+'"]'}else if(this.bound){return "$locals_"+innermost.id.replace(/\./g,"_")+
@@ -2695,7 +2703,7 @@ this.tree=[]
 C.tree[C.tree.length]=this
 this.scope=$get_scope(this)
 if(["def","generator"].indexOf(this.scope.ntype)==-1){$_SyntaxError(C,["'return' outside function"])}
-var node=$get_node(this)
+var node=this.node=$get_node(this)
 while(node.parent){if(node.parent.C){var elt=node.parent.C.tree[0]
 if(elt.type=='for'){elt.has_return=true
 break}else if(elt.type=='try'){elt.has_return=true}else if(elt.type=='single_kw' && elt.token=='finally'){elt.has_return=true}}
@@ -2707,9 +2715,13 @@ this.tree.pop()
 new $IdCtx(new $ExprCtx(this,'rvalue',false),'None')}
 var scope=this.scope
 if(scope.ntype=='generator'){return 'return [$B.generator_return('+$to_js(this.tree)+')]'}
-var js='var $res = '+$to_js(this.tree)+';'+'$B.leave_frame'
+var indent='    '.repeat(this.node.indent+1)
+var js='var $res = '+$to_js(this.tree)+';\n'+indent+
+'if($locals.$f_trace !== _b_.None){$B.trace_return($res)}\n'+indent+
+'$B.leave_frame'
 if(scope.id.substr(0,6)=='$exec_'){js+='_exec'}
-return js+'("'+scope.id+'");return $res'}}
+js+='("'+scope.id+'");\n'+indent+'return $res'
+return js}}
 var $SingleKwCtx=$B.parser.$SingleKwCtx=function(C,token){
 this.type='single_kw'
 this.token=token
@@ -2909,10 +2921,12 @@ var catch_node=$NodeJS('catch('+error_name+')')
 catch_node.is_catch=true
 node.parent.insert(rank+1,catch_node)
 catch_node.add($NodeJS("$B.set_exc("+error_name+")"))
+catch_node.add($NodeJS("if($locals.$f_trace !== _b_.None)"+
+"{$locals.$f_trace = $B.trace_exception()}"))
 catch_node.add(
 $NodeJS(failed_name+' = true;'+
 '$B.pmframe = $B.last($B.frames_stack);'+
-'if(0){}')
+'if(false){}')
 )
 var pos=rank+2,has_default=false,
 has_else=false,
@@ -3188,10 +3202,9 @@ if(line_num===undefined){flag=false}
 if(elt.type=='condition' && elt.token=='elif'){flag=false}
 else if(elt.type=='except'){flag=false}
 else if(elt.type=='single_kw'){flag=false}
-if(flag){
-var js=';$locals.$line_info = "'+line_num+','+
+if(flag){var js=';$locals.$line_info = "'+line_num+','+
 mod_id+'";if($locals.$f_trace !== _b_.None){'+
-'$locals.$f_trace = $B.trace_line()}'
+'$locals.$f_trace = $B.trace_line()}; _b_.None;'
 var new_node=new $Node()
 new_node.is_line_num=true 
 new $NodeJSCtx(new_node,js)
@@ -3200,8 +3213,10 @@ offset=2}
 var i=0
 while(i < node.children.length){i+=$add_line_num(node.children[i],i)}
 if((elt.type=='condition' && elt.token=="while")
-||node.C.type=='for'){if($B.last(node.children).C.tree[0].type !="return"){node.add($NodeJS('$locals.$line_info = "'+line_num+
-','+mod_id+'";'))}}
+||node.C.type=='for'){if($B.last(node.children).C.tree[0].type !="return"){var js=';$locals.$line_info = "'+line_num+','+
+mod_id+'";if($locals.$f_trace !== _b_.None){'+
+'$locals.$f_trace = $B.trace_line()}; _b_.None;'
+node.add($NodeJS(js))}}
 return offset}else{return 1}}
 $B.$add_line_num=$add_line_num
 var $bind=$B.parser.$bind=function(name,scope,C){
@@ -6238,6 +6253,8 @@ $B.frames_stack.push(frame)
 if($B.tracefunc){if(frame[4]===$B.tracefunc){
 return _b_.None}else{return $B.tracefunc($B._frame.$factory($B.frames_stack,$B.frames_stack.length-1),'call',_b_.None)}}
 return _b_.None}
+$B.trace_exception=function(){var top_frame=$B.last($B.frames_stack),trace_func=top_frame[1].$f_trace,exc=top_frame[1].$current_exception,frame_obj=$B._frame.$factory($B.frames_stack,$B.frames_stack.length-1)
+return trace_func(frame_obj,'exception',$B.fast_tuple([exc.__class__,exc,$B.traceback.$factory(exc)]))}
 $B.trace_line=function(){var top_frame=$B.last($B.frames_stack),trace_func=top_frame[1].$f_trace,frame_obj=$B._frame.$factory($B.frames_stack,$B.frames_stack.length-1)
 return trace_func(frame_obj,'line',_b_.None)}
 $B.set_line=function(line_info){
@@ -6247,6 +6264,8 @@ var trace_func=top_frame[1].$f_trace
 if(trace_func !==_b_.None){var frame_obj=$B._frame.$factory($B.frames_stack,$B.frames_stack.length-1)
 top_frame[1].$ftrace=trace_func(frame_obj,'line',_b_.None)}
 return true}
+$B.trace_return=function(value){var top_frame=$B.last($B.frames_stack),trace_func=top_frame[1].$f_trace,frame_obj=$B._frame.$factory($B.frames_stack,$B.frames_stack.length-1)
+trace_func(frame_obj,'return',value)}
 function exit_ctx_managers_in_generators(frame){
 for(key in frame[1]){if(frame[1][key]&& frame[1][key].$is_generator_obj){var gen_obj=frame[1][key]
 if(gen_obj.env !==undefined){for(var attr in gen_obj.env){if(attr.search(/^\$ctx_manager_exit\d+$/)>-1){
