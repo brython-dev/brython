@@ -1309,9 +1309,6 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
                 var check_node = $NodeJS('if(' + this.tree[0].to_js() +
                     ' === undefined){throw NameError.$factory("name \'' +
                     this.tree[0].tree[0].value + '\' is not defined")}')
-                // Add attribute forced_line_num instead of line_num because
-                // it would break on profile mode
-                check_node.forced_line_num = node.line_num
                 node.parent.insert(rank, check_node)
                 offset++
             }
@@ -2140,6 +2137,12 @@ var $ConditionCtx = $B.parser.$ConditionCtx = function(context,token){
             }
             node.parent.insert(rank,
                 $NodeJS('$locals["$no_break' + this.loop_num + '"] = true'))
+            // Add a line to reset the line number
+            var module = $get_module(this).module
+            var js = '$locals.$line_info = "' + node.line_num +
+                ',' + module + '";if($locals.$f_trace !== _b_.None){' +
+                '$B.trace_line()};None;'
+            node.add($NodeJS(js))
             // because a node was inserted, return 2 to avoid infinite loop
             return 2
         }
@@ -3505,7 +3508,7 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
             })
             // Add a line to reset the line number
             var js = '$locals.$line_info = "' + node.line_num +
-                ',' + scope.id + '";if($locals.$f_trace !== _b_.None){' +
+                ',' + this.module + '";if($locals.$f_trace !== _b_.None){' +
                 '$B.trace_line()};None;'
             for_node.add($NodeJS(js))
 
@@ -3612,7 +3615,7 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
         new $NodeJSCtx(while_node,js)
         while_node.context.loop_num = num // used for "else" clauses
         while_node.context.type = 'for' // used in $add_line_num
-        while_node.line_num = node.line_num
+        //while_node.line_num = node.line_num
         if(scope.ntype == 'generator'){
             // used in generators to signal a loop start
             while_node.loop_start = num
@@ -3663,6 +3666,13 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
         children.forEach(function(child){
             while_node.add(child)
         })
+
+        // Add a line to reset the line number
+        var js = '$locals.$line_info = "' + node.line_num +
+            ',' + this.module + '";if($locals.$f_trace !== _b_.None){' +
+            '$B.trace_line()};None;'
+        while_node.add($NodeJS(js))
+
 
         node.children = []
         return 0
@@ -6763,7 +6773,7 @@ var $add_line_num = $B.parser.$add_line_num = function(node,rank){
         while(pnode.parent !== undefined){pnode = pnode.parent}
         var mod_id = pnode.id
         // ignore lines added in transform()
-        var line_num = node.line_num || node.forced_line_num
+        var line_num = node.line_num
         if(line_num === undefined){flag = false}
         // Don't add line num before try,finally,else,elif
         // because it would throw a syntax error in Javascript
@@ -6793,7 +6803,7 @@ var $add_line_num = $B.parser.$add_line_num = function(node,rank){
                 var js = ';$locals.$line_info = "' + line_num + ',' +
                     mod_id + '";if($locals.$f_trace !== _b_.None){' +
                     '$B.trace_line()}; _b_.None;'
-                node.add($NodeJS(js))
+                //node.add($NodeJS(js))
             }
         }
 

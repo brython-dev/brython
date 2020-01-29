@@ -241,8 +241,8 @@ var frame = $B.make_class("frame",
                 filename = "<string>"
             }
             if(_frame[1].$line_info === undefined){
-                console.log("$line info undef", _frame[1])
-                console.log(_frame)
+                //console.log("$line info undef", _frame[1])
+                //console.log(_frame)
                 res.f_lineno = -1
             }else{
                 var line_info = _frame[1].$line_info.split(",")

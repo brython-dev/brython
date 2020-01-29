@@ -11,3 +11,77 @@ def t():
     assert outer_locals['x'] == "Outer stack frame"
 
 t()
+
+# trace functions
+traces = []
+def f(frame, event, arg):
+    global first_line
+    if isinstance(arg, tuple):
+        arg = arg[0]
+    if not traces:
+        first_line = frame.f_lineno
+    trace = [event, frame.f_code.co_name,
+        frame.f_lineno - first_line, arg]
+    
+    traces.append(trace)
+    return f
+
+sys.settrace(f)
+
+def g(x):
+  for i in range(2):
+      pass
+  try:
+      1/0
+  except:
+      pass # ignore exception
+  for car in 'abc':
+      pass
+  return x
+
+g(44)
+
+def h():
+    pass
+
+h()
+
+class A:
+
+  def f(self):
+    print("A.f")
+    return 4
+
+A()
+
+expected = [
+    ['call', 'g', 0, None],
+    ['line', 'g', 1, None],
+    ['line', 'g', 2, None],
+    ['line', 'g', 1, None],
+    ['line', 'g', 2, None],
+    ['line', 'g', 1, None],
+    ['line', 'g', 3, None],
+    ['line', 'g', 4, None],
+    ['exception', 'g', 4, ZeroDivisionError],
+    ['line', 'g', 5, None],
+    ['line', 'g', 6, None],
+    ['line', 'g', 7, None],
+    ['line', 'g', 8, None],
+    ['line', 'g', 7, None],
+    ['line', 'g', 8, None],
+    ['line', 'g', 7, None],
+    ['line', 'g', 8, None],
+    ['line', 'g', 7, None],
+    ['line', 'g', 9, None],
+    ['return', 'g', 9, 44],
+    ['call', 'h', 13, None],
+    ['line', 'h', 14, None],
+    ['return', 'h', 14, None],
+    ['call', 'A', 18, None],
+    ['line', 'A', 18, None],
+    ['line', 'A', 20, None], 
+    ['return', 'A', 20, None]
+]
+
+assert traces == expected

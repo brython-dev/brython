@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,6,'final',0]
 __BRYTHON__.__MAGIC__="3.8.6"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-01-29 21:30:15.412270"
-__BRYTHON__.timestamp=1580329815412
+__BRYTHON__.compiled_date="2020-01-29 23:08:02.173232"
+__BRYTHON__.timestamp=1580335682173
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -677,7 +677,6 @@ this.tree[0].tree[0].augm_assign=true
 if($B.debug > 0){var check_node=$NodeJS('if('+this.tree[0].to_js()+
 ' === undefined){throw NameError.$factory("name \'' +
                     this.tree[0].tree[0].value + '\' is not defined")}')
-check_node.forced_line_num=node.line_num
 node.parent.insert(rank,check_node)
 offset++}
 var left_id=this.tree[0].tree[0].value,was_bound=this.scope.binding[left_id]!==undefined,left_id_unbound=this.tree[0].tree[0].unbound}
@@ -1116,6 +1115,11 @@ this.toString=function(){return this.token+' '+this.tree}
 this.transform=function(node,rank){var scope=$get_scope(this)
 if(this.token=="while"){if(scope.ntype=="generator"){this.parent.node.loop_start=this.loop_num}
 node.parent.insert(rank,$NodeJS('$locals["$no_break'+this.loop_num+'"] = true'))
+var module=$get_module(this).module
+var js='$locals.$line_info = "'+node.line_num+
+','+module+'";if($locals.$f_trace !== _b_.None){'+
+'$B.trace_line()};None;'
+node.add($NodeJS(js))
 return 2}}
 this.to_js=function(){this.js_processed=true
 var tok=this.token
@@ -1758,7 +1762,7 @@ for_node.add($NodeJS('else{$next'+num+' = $B.add($next'+
 num+',1)}'))}
 children.forEach(function(child){for_node.add(child)})
 var js='$locals.$line_info = "'+node.line_num+
-','+scope.id+'";if($locals.$f_trace !== _b_.None){'+
+','+this.module+'";if($locals.$f_trace !== _b_.None){'+
 '$B.trace_line()};None;'
 for_node.add($NodeJS(js))
 var in_loop=false
@@ -1808,7 +1812,6 @@ if(this.has_break){js='while('+local_ns+'["$no_break'+num+'"])'}else{js='while(t
 new $NodeJSCtx(while_node,js)
 while_node.C.loop_num=num 
 while_node.C.type='for' 
-while_node.line_num=node.line_num
 if(scope.ntype=='generator'){
 while_node.loop_start=num}
 new_nodes[pos++]=while_node
@@ -1833,6 +1836,10 @@ while_node.add(
 $NodeJS('catch($err){if($B.is_exc($err, [StopIteration]))'+
 '{break;}else{throw($err)}}'))
 children.forEach(function(child){while_node.add(child)})
+var js='$locals.$line_info = "'+node.line_num+
+','+this.module+'";if($locals.$f_trace !== _b_.None){'+
+'$B.trace_line()};None;'
+while_node.add($NodeJS(js))
 node.children=[]
 return 0}
 this.transform_async=function(node,rank){
@@ -3200,7 +3207,7 @@ var $add_line_num=$B.parser.$add_line_num=function(node,rank){if(node.type=='mod
 while(i < node.children.length){i+=$add_line_num(node.children[i],i)}}else if(node.type !=='marker'){var elt=node.C.tree[0],offset=1,flag=true,pnode=node
 while(pnode.parent !==undefined){pnode=pnode.parent}
 var mod_id=pnode.id
-var line_num=node.line_num ||node.forced_line_num
+var line_num=node.line_num
 if(line_num===undefined){flag=false}
 if(elt.type=='condition' && elt.token=='elif'){flag=false}
 else if(elt.type=='except'){flag=false}
@@ -3218,8 +3225,7 @@ while(i < node.children.length){i+=$add_line_num(node.children[i],i)}
 if((elt.type=='condition' && elt.token=="while")
 ||node.C.type=='for'){if($B.last(node.children).C.tree[0].type !="return"){var js=';$locals.$line_info = "'+line_num+','+
 mod_id+'";if($locals.$f_trace !== _b_.None){'+
-'$B.trace_line()}; _b_.None;'
-node.add($NodeJS(js))}}
+'$B.trace_line()}; _b_.None;'}}
 return offset}else{return 1}}
 $B.$add_line_num=$add_line_num
 var $bind=$B.parser.$bind=function(name,scope,C){
@@ -7641,8 +7647,7 @@ try{res.f_locals=$B.obj_dict(_frame[1])}catch(err){console.log("err "+err)
 throw err}
 res.f_globals=$B.obj_dict(_frame[3])
 if(_frame[3].__file__ !==undefined){filename=_frame[3].__file__}else if(locals_id.startsWith("$exec")){filename="<string>"}
-if(_frame[1].$line_info===undefined){console.log("$line info undef",_frame[1])
-console.log(_frame)
+if(_frame[1].$line_info===undefined){
 res.f_lineno=-1}else{var line_info=_frame[1].$line_info.split(",")
 res.f_lineno=parseInt(line_info[0])
 var module_name=line_info[1]
