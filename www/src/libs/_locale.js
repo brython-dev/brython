@@ -875,7 +875,10 @@ var $module=(function($B){
                     'int_frac_digits': 127
              }
              var res = _b_.dict.$factory()
-             res.$string_dict = conv
+             for(var key in conv){
+                 res.$string_dict[key] = [conv, res.$version]
+                 res.$version++
+             }
              return res
          },
 

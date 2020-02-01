@@ -380,7 +380,7 @@ list.__setattr__ = function(self, attr, value){
         }
     }
     // list subclass : use __dict__
-    self.__dict__.$string_dict[attr] = value
+    _b_.dict.$setitem(self.__dict__, attr, value)
     return $N
 }
 
@@ -624,10 +624,14 @@ list.sort = function(self){
         keys = _b_.list.$factory(_b_.dict.$$keys(kw_args))
 
     for(var i = 0; i < keys.length; i++){
-        if(keys[i] == "key"){func = kw_args.$string_dict[keys[i]]}
-        else if(keys[i] == "reverse"){reverse = kw_args.$string_dict[keys[i]]}
-        else{throw _b_.TypeError.$factory("'" + keys[i] +
-            "' is an invalid keyword argument for this function")}
+        if(keys[i] == "key"){
+            func = kw_args.$string_dict[keys[i]][0]
+        }else if(keys[i] == "reverse"){
+            reverse = kw_args.$string_dict[keys[i]][0]
+        }else{
+            throw _b_.TypeError.$factory("'" + keys[i] +
+                "' is an invalid keyword argument for this function")
+        }
     }
     if(self.length == 0){return}
 

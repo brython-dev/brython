@@ -30,7 +30,7 @@ $B.pyobj2structuredclone = function(obj){
         }
         var res = {}
         for(var key in obj.$string_dict){
-            res[key] = $B.pyobj2structuredclone(obj.$string_dict[key])
+            res[key] = $B.pyobj2structuredclone(obj.$string_dict[key][0])
         }
         return res
     }else{
@@ -56,7 +56,7 @@ $B.structuredclone2pyobj = function(obj){
     }else if(typeof obj == "object"){
         var res = _b_.dict.$factory()
         for(var key in obj){
-            res.$string_dict[key] = $B.structuredclone2pyobj(obj[key])
+            _b_.dict.$setitem(res, key, $B.structuredclone2pyobj(obj[key]))
         }
         return res
     }else{

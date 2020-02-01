@@ -108,4 +108,22 @@ class X:
 d = {0: set()}
 assert not (0, X()) in d.items()
 
+# issue 1285 : preserve insertion order
+
+d = dict()
+d.update({(1, 0): 0, (2, 0): 0, (3, 0): 0})
+assert str(d) == "{(1, 0): 0, (2, 0): 0, (3, 0): 0}"
+
+import random
+
+class A:
+    pass
+
+keys = [1, 'a', (2, 3), 2, 'c', (5, 6, 7), A()]
+
+for i in range(100):
+    random.shuffle(keys)
+    d = {k: k for k in keys}
+    assert list(d) == keys
+    
 print("passed all tests..")

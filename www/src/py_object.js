@@ -124,7 +124,7 @@ object.__getattribute__ = function(obj, attr){
 
     if(res === undefined && obj.__dict__ &&
             obj.__dict__.$string_dict.hasOwnProperty(attr)){
-        return obj.__dict__.$string_dict[attr]
+        return obj.__dict__.$string_dict[attr][0]
     }
 
     if(res === undefined){
@@ -376,7 +376,8 @@ object.__reduce__ = function(self){
         concat(self.__class__.__mro__)))
     var d = _b_.dict.$factory()
     for(var attr in self.__dict__.$string_dict){
-        d.$string_dict[attr] = self.__dict__.$string_dict[attr]
+        _b_.dict.$setitem(d.$string_dict, attr,
+            self.__dict__.$string_dict[attr][0])
     }
     console.log("object.__reduce__, d", d)
     res.push(d)
@@ -411,7 +412,8 @@ object.__reduce_ex__ = function(self){
         if(attr == "__class__" || attr.startsWith("$")){
             continue
         }
-        d.$string_dict[attr] = self.__dict__.$string_dict[attr]
+        _b_.dict.$setitem(d, attr,
+            self.__dict__.$string_dict[attr][0])
         nb++
     }
     if(nb == 0){d = _b_.None}
@@ -452,7 +454,7 @@ object.__setattr__ = function(self, attr, val){
     }
     if($B.aliased_names[attr]){attr = "$$"+attr}
     if(self.__dict__){
-        self.__dict__.$string_dict[attr] = val
+        _b_.dict.$setitem(self.__dict__, attr, val)
     }else{
         // for
         self[attr] = val

@@ -12,7 +12,7 @@ $B.$class_constructor = function(class_name, class_obj, bases,
     var module = class_obj.__module__
     if(module === undefined){
         // Get module of current frame
-        module = $B.last($B.frames_stack)[2]
+        module = class_obj.__module__ = $B.last($B.frames_stack)[2]
     }
 
     // check if parents are defined
@@ -97,18 +97,24 @@ $B.$class_constructor = function(class_name, class_obj, bases,
         set_class_item = $B.$getattr(cl_dict, "__setitem__")
     }else{
         set_class_item = function(attr, value){
-            cl_dict.$string_dict[attr] = value
+            cl_dict.$string_dict[attr] = [value, cl_dict.$version]
+            cl_dict.$version++
         }
     }
 
     // Transform class object into a dictionary
     for(var attr in class_obj){
         if(attr == "__annotations__"){
-            cl_dict.$string_dict[attr] = cl_dict.$string_dict[attr] ||
-                _b_.dict.$factory()
+            var rank = cl_dict.$version
+            if(cl_dict.$string_dict[attr] !== undefined){
+                cl_dict.$string_dict[attr] = [class_obj[attr], rank]
+            }else{
+                cl_dict.$string_dict[attr] = [_b_.dict.$factory(), rank]
+            }
+            cl_dict.$version++
             for(var key in class_obj[attr].$string_dict){
-                $B.$setitem(cl_dict.$string_dict[attr], key,
-                    class_obj[attr].$string_dict[key])
+                $B.$setitem(cl_dict.$string_dict[attr][0], key,
+                    class_obj[attr].$string_dict[key][0])
             }
         }else{
             if(attr.charAt(0) != "$" || attr.substr(0,2) == "$$"){
@@ -129,7 +135,7 @@ $B.$class_constructor = function(class_name, class_obj, bases,
     }
     if(cl_dict.__class__ === _b_.dict){
         for(var key in cl_dict.$string_dict){
-            class_dict[key] = cl_dict.$string_dict[key]
+            class_dict[key] = cl_dict.$string_dict[key][0]
         }
     }else{
         var get_class_item = $B.$getattr(cl_dict, "__getitem__")
@@ -144,7 +150,7 @@ $B.$class_constructor = function(class_name, class_obj, bases,
         }
     }
     class_dict.__mro__ = _b_.type.mro(class_dict).slice(1)
-    
+
     // Check if at least one method is abstract (cf PEP 3119)
     // If this is the case, the class cannot be instanciated
     var is_instanciable = true,
@@ -300,7 +306,7 @@ type.__getattribute__ = function(klass, attr){
                 res
             for(var i = 0, len = mro.length; i < len; i++){
                 if(mro[i].__dict__){
-                    var ann = mro[i].__dict__.$string_dict.__annotations__
+                    var ann = mro[i].__dict__.$string_dict.__annotations__[0]
                     if(ann){
                         if(res === undefined){
                             res = ann
@@ -535,6 +541,10 @@ type.__new__ = function(meta, name, bases, cl_dict){
     // __dict__ attribute
 
     // Create the class dictionary
+    var module = cl_dict.$string_dict.__module__
+    if(module){
+        module = module[0]
+    }
     var class_dict = {
         __class__ : meta,
         __bases__ : bases,

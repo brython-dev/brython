@@ -84,7 +84,7 @@ var module = {
                 arguments, {}, null, "kw")
         var newline = false
         if($.kw && $.kw.$string_dict){
-            newline = $.kw.$string_dict["newline"]
+            newline = $.kw.$string_dict["newline"][0]
         }
 
         var string = $B.to_bytes($.data),

@@ -491,7 +491,6 @@ function $$eval(src, _globals, _locals){
         var current_locals_id = current_frame[0].replace(/\./, '_'),
             current_globals_id = current_frame[2].replace(/\./, '_')
     }
-
     var stack_len = $B.frames_stack.length
 
     if(src.__class__ === code){
@@ -596,14 +595,19 @@ function $$eval(src, _globals, _locals){
         }
         eval("$locals_" + globals_id +" = obj")
     }else{
-        if(_globals.$jsobj){var items = _globals.$jsobj}
-        else{var items = _globals.$string_dict}
-        eval("$locals_" + globals_id + " = _globals.$string_dict")
+        var globals_is_dict = false
+        if(_globals.$jsobj){
+            var items = _globals.$jsobj
+        }else{
+            var items = _b_.dict.$to_obj(_globals)
+            _globals.$jsobj = items
+            globals_is_dict = true
+        }
+        eval("$locals_" + globals_id + " = _globals.$jsobj")
         for(var item in items){
             var item1 = $B.to_alias(item)
             try{
-                eval('$locals_' + globals_id + '["' + item1 +
-                    '"] = items[item]')
+                eval('$locals_' + globals_id + '["' + item + '"] = items.' + item)
             }catch(err){
                 console.log(err)
                 console.log('error setting', item)
@@ -629,8 +633,14 @@ function $$eval(src, _globals, _locals){
             eval('$locals_' + locals_id + " = obj")
         }
     }else{
-        if(_locals.$jsobj){var items = _locals.$jsobj}
-        else{var items = _locals.$string_dict}
+        var locals_is_dict = false
+        if(_locals.$jsobj){
+            var items = _locals.$jsobj
+        }else{
+            locals_id_dict = true
+            var items = _b_.dict.$to_obj(_locals)
+            _locals.$jsobj = items
+        }
         for(var item in items){
             var item1 = $B.to_alias(item)
             try{
@@ -715,10 +725,9 @@ function $$eval(src, _globals, _locals){
                 }
             }
             js = root.to_js()
-
+            
             var locals_obj = eval("$locals_" + locals_id),
                 globals_obj = eval("$locals_" + globals_id)
-
             if(_globals === _b_.None){
                 var res = new Function("$locals_" + globals_id,
                     "$locals_" + locals_id, js)(
@@ -749,15 +758,18 @@ function $$eval(src, _globals, _locals){
         if($B.frames_stack[$B.frames_stack.length - 1][2] == globals_id){
             gns = $B.frames_stack[$B.frames_stack.length - 1][3]
         }
-
+        
         // Update _locals with the namespace after execution
         if(_locals !== _b_.None){
             lns = eval("$locals_" + locals_id)
             for(var attr in lns){
                 var attr1 = $B.from_alias(attr)
                 if(attr1.charAt(0) != '$'){
-                    if(_locals.$jsobj){_locals.$jsobj[attr] = lns[attr]}
-                    else{_locals.$string_dict[attr1] = lns[attr]}
+                    if(_locals.$jsobj){
+                        _locals.$jsobj[attr] = lns[attr]
+                    }else{
+                        _b_.dict.$setitem(_locals, attr1, lns[attr])
+                    }
                 }
             }
         }else{
@@ -770,11 +782,18 @@ function $$eval(src, _globals, _locals){
 
         if(_globals !== _b_.None){
             // Update _globals with the namespace after execution
+            if(globals_is_dict){
+                var jsobj = _globals.$jsobj
+                delete _globals.$jsobj
+            }
             for(var attr in gns){
                 attr1 = $B.from_alias(attr)
                 if(attr1.charAt(0) != '$'){
-                    if(_globals.$jsobj){_globals.$jsobj[attr1] = gns[attr]}
-                    else{_globals.$string_dict[attr] = gns[attr]}
+                    if(globals_is_dict){
+                        _b_.dict.$setitem(_globals, attr, gns[attr])
+                    }else{
+                        _globals.$jsobj[attr1] = gns[attr]
+                    }
                 }
             }
             // Remove attributes starting with $
@@ -945,7 +964,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false // attr == "__doc__" // && obj === $B // "Point"
+    var $test = attr == "Date" // && obj === $B // "Point"
     if($test){console.log("$getattr", attr, obj, klass)}
 
     // Shortcut for classes without parents
@@ -959,7 +978,7 @@ $B.$getattr = function(obj, attr, _default){
                 obj.__dict__.$string_dict.hasOwnProperty(attr) &&
                 ! (klass.hasOwnProperty(attr) &&
                    klass[attr].__get__)){
-            return obj.__dict__.$string_dict[attr]
+            return obj.__dict__.$string_dict[attr][0]
         }else if(klass.hasOwnProperty(attr)){
             if(typeof klass[attr] != "function" &&
                     attr != "__dict__" &&
@@ -1088,7 +1107,7 @@ $B.$getattr = function(obj, attr, _default){
                 var attrs = obj.__dict__
                 if(attrs &&
                         (object_attr = attrs.$string_dict[attr]) !== undefined){
-                    return object_attr
+                    return object_attr[0]
                 }
                 if(_default === undefined){
                     attr_error(attr, klass.$infos.__name__)
@@ -1877,9 +1896,9 @@ function $print(){
     var $ns = $B.args('print', 0, {}, [], arguments,
         {}, 'args', 'kw')
     var ks = $ns['kw'].$string_dict
-    var end = (ks['end'] === undefined || ks['end'] === None) ? '\n' : ks['end'],
-        sep = (ks['sep'] === undefined || ks['sep'] === None) ? ' ' : ks['sep'],
-        file = ks['file'] === undefined ? $B.stdout : ks['file'],
+    var end = (ks['end'] === undefined || ks['end'] === None) ? '\n' : ks['end'][0],
+        sep = (ks['sep'] === undefined || ks['sep'] === None) ? ' ' : ks['sep'][0],
+        file = ks['file'] === undefined ? $B.stdout : ks['file'][0],
         args = $ns['args']
     var items = []
     args.forEach(function(arg){
@@ -2245,7 +2264,7 @@ $B.$setattr = function(obj, attr, value){
         if(obj.__dict__ === undefined){
             obj[attr] = value
         }else{
-            obj.__dict__.$string_dict[attr] = value
+            _b_.dict.$setitem(obj.__dict__, attr, value)
         }
         if($test){
             console.log("no setattr, obj", obj)
@@ -2871,8 +2890,6 @@ $B.Function.__get__ = function(self, obj){
 $B.Function.__getattribute__ = function(self, attr){
     // Internal attributes __name__, __module__, __doc__ etc.
     // are stored in self.$infos
-    //if(!self.$infos){console.log("get attr", attr, "from function", self,
-    //    "no $infos")}
     if(self.$infos && self.$infos[attr] !== undefined){
         if(attr == '__code__'){
             var res = {__class__: code}
@@ -2891,7 +2908,7 @@ $B.Function.__getattribute__ = function(self, attr){
         }
     }else if(self.$infos && self.$infos.__dict__ &&
                 self.$infos.__dict__.$string_dict[attr] !== undefined){
-            return self.$infos.__dict__.$string_dict[attr]
+            return self.$infos.__dict__.$string_dict[attr][0]
     }else if(attr == "__closure__"){
         var free_vars = self.$infos.__code__.co_freevars
         if(free_vars.length == 0){return None}

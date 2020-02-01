@@ -1214,9 +1214,9 @@ var $AttrCtx = $B.parser.$AttrCtx = function(context){
                         this.assign_self = true
                         return [js + ".__class__ && " + js + ".__dict__ && !" +
                             js + ".__class__.$has_setattr && ! " + js +
-                            ".$is_class ? " + js +
-                            ".__dict__.$string_dict['" + this.name +
-                            "'] = ", " : $B.$setattr(" + js +
+                            ".$is_class ? _b_.dict.$setitem(" + js +
+                            ".__dict__, '" + this.name +
+                            "', ", ") : $B.$setattr(" + js +
                             ', "' + this.name + '", ']
                     }
                 }
@@ -2137,12 +2137,16 @@ var $ConditionCtx = $B.parser.$ConditionCtx = function(context,token){
             }
             node.parent.insert(rank,
                 $NodeJS('$locals["$no_break' + this.loop_num + '"] = true'))
-            // Add a line to reset the line number
+            // Add a line to reset the line number, except if the last
+            // instruction in the loop is a return, because the next
+            // line would never be reached
             var module = $get_module(this).module
-            var js = '$locals.$line_info = "' + node.line_num +
-                ',' + module + '";if($locals.$f_trace !== _b_.None){' +
-                '$B.trace_line()};None;'
-            node.add($NodeJS(js))
+            if($B.last(node.children).context.tree[0].type != "return"){
+                var js = '$locals.$line_info = "' + node.line_num +
+                    ',' + module + '";if($locals.$f_trace !== _b_.None){' +
+                    '$B.trace_line()};None;'
+                node.add($NodeJS(js))
+            }
             // because a node was inserted, return 2 to avoid infinite loop
             return 2
         }
@@ -2854,8 +2858,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
 
         // Add attribute __dict__
         node.parent.insert(rank + offset++,
-            $NodeJS('    __dict__: {__class__: _b_.dict, $string_dict: {},' +
-                '$str_hash: {}, $numeric_dict: {}, $object_dict:{}},'))
+            $NodeJS('    __dict__: _b_.dict.__new__(_b_.dict),'))
 
         // Add attribute __doc__
         node.parent.insert(rank + offset++,
@@ -3507,10 +3510,12 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
                 for_node.add(child)
             })
             // Add a line to reset the line number
-            var js = '$locals.$line_info = "' + node.line_num +
-                ',' + this.module + '";if($locals.$f_trace !== _b_.None){' +
-                '$B.trace_line()};None;'
-            for_node.add($NodeJS(js))
+            if($B.last(node.children).context.tree[0].type != "return"){
+                var js = '$locals.$line_info = "' + node.line_num +
+                    ',' + this.module + '";if($locals.$f_trace !== _b_.None){' +
+                    '$B.trace_line()};None;'
+                for_node.add($NodeJS(js))
+            }
 
             // Check if current "for" loop is inside another "for" loop
             var in_loop = false
@@ -3667,13 +3672,15 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
             while_node.add(child)
         })
 
-        // Add a line to reset the line number
-        var js = '$locals.$line_info = "' + node.line_num +
-            ',' + this.module + '";if($locals.$f_trace !== _b_.None){' +
-            '$B.trace_line()};None;'
-        while_node.add($NodeJS(js))
-
-
+        // Add a line to reset the line number, except if the last
+        // instruction in the loop is a return, because the next
+        // line would never be reached
+        if($B.last(node.children).context.tree[0].type != "return"){
+            var js = '$locals.$line_info = "' + node.line_num +
+                ',' + this.module + '";if($locals.$f_trace !== _b_.None){' +
+                '$B.trace_line()};None;'
+            while_node.add($NodeJS(js))
+        }
         node.children = []
         return 0
     }
@@ -5091,9 +5098,9 @@ var $NodeCtx = $B.parser.$NodeCtx = function(node){
                         if(this.create_annotations){
                             js += "$locals.__annotations__ = _b_.dict.$factory();"
                         }
-                        return js + "$locals.__annotations__.$string_dict['" +
-                            this.tree[0].tree[0].value + "'] = " +
-                            this.tree[0].annotation.to_js() + ";"
+                        return js + "_b_.dict.$setitem($locals.__annotations__, '" +
+                            this.tree[0].tree[0].value + "', " +
+                            this.tree[0].annotation.to_js() + ");"
                     }else if(this.tree[0].type == "def"){
                         // Evaluate annotation
                         this.js = this.tree[0].annotation.to_js() + ";"
@@ -5120,9 +5127,9 @@ var $NodeCtx = $B.parser.$NodeCtx = function(node){
                 this.tree[0].tree.splice(1, 1)
                 new $RawJSCtx(this.tree[0], "$value")
                 if(left.tree[0] && left.tree[0].type == "id" && is_not_def){
-                    this.js += "$locals.__annotations__.$string_dict['" +
-                        left.tree[0].value + "'] = " +
-                        left.annotation.to_js() + ";"
+                    this.js += "_b_.dict.$setitem($locals.__annotations__, '" +
+                        left.tree[0].value + "', " +
+                        left.annotation.to_js() + ");"
                 }else{
                     // Evaluate annotation
                     this.js +=  $to_js(this.tree) + ";"

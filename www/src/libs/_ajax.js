@@ -54,7 +54,7 @@ function handle_kwargs(self, kw, method){
         timeout = {}
     for(var key in kw.$string_dict){
         if(key == "data"){
-            var params = kw.$string_dict[key]
+            var params = kw.$string_dict[key][0]
             if(typeof params == "string"){
                 data = params
             }else{
@@ -66,35 +66,35 @@ function handle_kwargs(self, kw, method){
                 var items = []
                 for(var key in params){
                     items.push(encodeURIComponent(key) + "=" +
-                               encodeURIComponent(params[key]))
+                               encodeURIComponent(params[key][0]))
                 }
                 data = items.join("&")
             }
         }else if(key=="headers"){
             headers = kw.$string_dict[key].$string_dict
             for(var key in headers){
-                self.js.setRequestHeader(key, headers[key])
+                self.js.setRequestHeader(key, headers[key][0])
             }
         }else if(key.startsWith("on")){
             var event = key.substr(2)
             if(event == "timeout"){
-                timeout.func = kw.$string_dict[key]
+                timeout.func = kw.$string_dict[key][0]
             }else{
-                var f = kw.$string_dict[key]
+                var f = kw.$string_dict[key][0]
                 ajax.bind(self, event, f)
             }
         }else if(key == "mode"){
-            if(kw.$string_dict[key] == "binary"){
+            if(kw.$string_dict[key][0] == "binary"){
                 self.js.responseType = "arraybuffer"
                 mode = "binary"
-            }else if(kw.$string_dict[key] == "json"){
+            }else if(kw.$string_dict[key][0] == "json"){
                 self.js.responseType = "json"
                 mode = "json"
             }
         }else if(key == "timeout"){
-            timeout.seconds = kw.$string_dict[key]
+            timeout.seconds = kw.$string_dict[key][0]
         }else if(key == "cache"){
-            cache = kw.$string_dict[key]
+            cache = kw.$string_dict[key][0]
         }
     }
     if((method == "post" || method == "put") && ! headers){
@@ -325,7 +325,7 @@ function file_upload(){
 
     for(key in kw.$string_dict){
         if(key.startsWith("on")){
-            ajax.bind(self, key.substr(2), kw.$string_dict[key])
+            ajax.bind(self, key.substr(2), kw.$string_dict[key][0])
         }
     }
 }

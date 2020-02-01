@@ -459,7 +459,7 @@ int.__setattr__ = function(self, attr, value){
         }
     }
     // subclasses of int can have attributes set
-    self.__dict__.$string_dict[attr] = value
+    _b_.dict.$setitem(self.__dict__, attr, value)
     return _b_.None
 }
 

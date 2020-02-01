@@ -270,11 +270,11 @@ class A:
 
 
 a = A()
-assert str(A.f) == "<function A.f>"
-assert str(type(A.f)) == "<class 'function'>"
-assert str(a.f) == "<bound method A.f of <__main__.A object>>"
+assert str(A.f).startswith("<function A.f")
+assert str(type(A.f)) == "<class 'function'>", str(type(A.f))
+assert str(a.f).startswith("<bound method A.f of"), str(a.f)
 assert str(type(a.f)) == "<class 'method'>"
-assert str(a.f.__func__) == "<function A.f>"
+assert str(a.f.__func__).startswith("<function A.f")
 
 assert a.f.__func__ == A.f
 assert A.f_cl == a.f_cl

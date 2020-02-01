@@ -133,5 +133,6 @@ for(var i = 0, len = $svg_tags.length; i < len; i++){
     var tag = $svg_tags[i]
     obj[tag] = makeTagDict(tag)
 }
+
 return obj
 })(__BRYTHON__)

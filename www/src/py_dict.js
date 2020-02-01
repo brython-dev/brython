@@ -69,6 +69,17 @@ var dict = {
     $native: true
 }
 
+dict.$to_obj = function(d){
+    // Function applied to dictionary that only have string keys,
+    // return a Javascript objects with the kays mapped to the value,
+    // excluding the insertion rank
+    var res = {}
+    for(var key in d.$string_dict){
+        res[key] = d.$string_dict[key][0]
+    }
+    return res
+}
+
 function to_list(d, ix){
     var items = [],
         item
@@ -95,6 +106,11 @@ function to_list(d, ix){
                 items.push(item)
             })
         }
+        // sort by insertion order
+        items.sort(function(a, b){
+            return a[1][1] - b[1][1]
+        })
+        items = items.map(function(item){return [item[0], item[1][0]]})
     }
 
     if(ix !== undefined){
@@ -162,7 +178,6 @@ dict.__contains__ = function(){
         ["self", "key"], arguments, {}, null, null),
         self = $.self,
         key = $.key
-
     if(self.$is_namespace){key = $B.to_alias(key)} // issue 1244
 
     if(self.$jsobj){
@@ -248,8 +263,8 @@ dict.__eq__ = function(){
 
     for(var k in self.$numeric_dict){
         if(other.$numeric_dict.hasOwnProperty(k)){
-            if(!$B.rich_comp("__eq__", other.$numeric_dict[k],
-                    self.$numeric_dict[k])){
+            if(!$B.rich_comp("__eq__", other.$numeric_dict[k][0],
+                    self.$numeric_dict[k][0])){
                 return false
             }
         }else if(other.$object_dict.hasOwnProperty(k)){
@@ -270,8 +285,8 @@ dict.__eq__ = function(){
     }
     for(var k in self.$string_dict){
         if(!other.$string_dict.hasOwnProperty(k) ||
-                !$B.rich_comp("__eq__", other.$string_dict[k],
-                self.$string_dict[k])){
+                !$B.rich_comp("__eq__", other.$string_dict[k][0],
+                    self.$string_dict[k][0])){
             return false
         }
     }
@@ -291,10 +306,10 @@ dict.__eq__ = function(){
         for(var i = 0, len_i = pairs.length; i < len_i; i++){
             var flag = false
             var key = pairs[i][0],
-                value = pairs[i][1]
+                value = pairs[i][1][0]
             for(var j = 0, len_j = other_pairs.length; j < len_j; j++){
                 if($B.rich_comp("__eq__", key, other_pairs[j][0]) &&
-                        $B.rich_comp("__eq__", value, other_pairs[j][1])){
+                        $B.rich_comp("__eq__", value, other_pairs[j][1][0])){
                     flag = true
                     break
                 }
@@ -312,6 +327,10 @@ dict.__getitem__ = function(){
         ["self", "arg"], arguments, {}, null, null),
         self = $.self,
         arg = $.arg
+    return dict.$getitem(self, arg)
+}
+
+dict.$getitem = function(self, arg){
     if(self.$jsobj){
         if(!self.$jsobj.hasOwnProperty(arg)){
             throw _b_.KeyError.$factory(str.$factory(arg))
@@ -324,12 +343,12 @@ dict.__getitem__ = function(){
     switch(typeof arg){
         case "string":
             if(self.$string_dict[arg] !== undefined){
-                return self.$string_dict[arg]
+                return self.$string_dict[arg][0]
             }
             break
         case "number":
             if(self.$numeric_dict[arg] !== undefined){
-                return self.$numeric_dict[arg]
+                return self.$numeric_dict[arg][0]
             }
             break
     }
@@ -344,20 +363,20 @@ dict.__getitem__ = function(){
     }
     var sk = self.$str_hash[hash]
     if(sk !== undefined && _eq(sk)){
-        return self.$string_dict[sk]
+        return self.$string_dict[sk][0]
     }
     if(self.$numeric_dict[hash] !== undefined && _eq(hash)){
-         return self.$numeric_dict[hash]
+         return self.$numeric_dict[hash][0]
     }
     if(isinstance(arg, _b_.str)){
         // string subclass
         var res = self.$string_dict[arg.valueOf()]
-        if(res !== undefined){return res}
+        if(res !== undefined){return res[0]}
     }
 
     var ix = rank(self, hash, arg)
     if(ix > -1){
-        return self.$object_dict[hash][ix][1]
+        return self.$object_dict[hash][ix][1][0]
     }
 
     if(self.__class__ !== dict){
@@ -385,11 +404,13 @@ function init_from_list(self, args){
         var item = args[i]
         switch(typeof item[0]) {
             case 'string':
-                self.$string_dict[item[0]] = item[1]
+                self.$string_dict[item[0]] = [item[1], self.$version]
                 self.$str_hash[str_hash(item[0])] = item[0]
+                self.$version++
                 break
             case 'number':
-                self.$numeric_dict[item[0]] = item[1]
+                self.$numeric_dict[item[0]] = [item[1], self.$version]
+                self.$version++
                 break
             default:
                 si(self, item[0], item[1])
@@ -546,6 +567,26 @@ dict.__setitem__ = function(self, key, value){
 }
 
 dict.$setitem = function(self, key, value, $hash){
+    // Set a dictionary item mapping key and value.
+    //
+    // If key is a string, set $string_dict[key] = value and
+    // $str_hash[hash(key)] to key
+    //
+    // If key is a number, set $numeric_dict[key] = value
+    //
+    // If key is another object, compute its hash value:
+    // - if the hash is a key of $str_hash, and key == $str_hash[hash],
+    //   replace $string_dict[$str_hash[hash]] by value
+    // - if the hash is a key of $numeric_dict, and hash == key, replace
+    //   $numeric_dict[hash] by value
+    // - if the hash is a key of $object_dict: $object_dict[hash] is a list
+    //   of [k, v] pairs. If key is equal to one of the "k", replace the
+    //   matching v by value. Otherwise, add [key, value] to the list
+    // - else set $object_dict[hash] = [[key, value]]
+    //
+    // In all cases, increment attribute $version, used to detect dictionary
+    // cahnges during an iteration.
+    //
     // Parameter $hash is only set if this method is called by setdefault.
     // In this case the hash of key has already been computed and we
     // know that the key is not present in the dictionary, so it's no
@@ -570,12 +611,15 @@ dict.$setitem = function(self, key, value, $hash){
 
     switch(typeof key){
         case "string":
-            self.$string_dict[key] = value
+            if(self.$string_dict === undefined){
+                console.log("pas de string dict", self, key, value)
+            }
+            self.$string_dict[key] = [value, self.$version]
             self.$str_hash[str_hash(key)] = key
             self.$version++
             return $N
         case "number":
-            self.$numeric_dict[key] = value
+            self.$numeric_dict[key] = [value, self.$version]
             self.$version++
             return $N
     }
@@ -586,13 +630,13 @@ dict.$setitem = function(self, key, value, $hash){
         _eq = function(other){return $B.rich_comp("__eq__", key, other)}
 
     if(self.$numeric_dict[hash] !== undefined && _eq(hash)){
-        self.$numeric_dict[hash] = value
+        self.$numeric_dict[hash] = [value, self.$numeric_dict[hash][1]]
         self.$version++
         return $N
     }
     var sk = self.$str_hash[hash]
     if(sk !== undefined && _eq(sk)){
-        self.$string_dict[sk] = value
+        self.$string_dict[sk] = [value, self.$string_dict[sk][1]]
         self.$version++
         return $N
     }
@@ -601,9 +645,9 @@ dict.$setitem = function(self, key, value, $hash){
     // with any object
     if($hash){
         if(self.$object_dict[$hash] !== undefined){
-            self.$object_dict[$hash].push([key, value])
+            self.$object_dict[$hash].push([key, [value, self.$version]])
         }else{
-            self.$object_dict[$hash] = [[key, value]]
+            self.$object_dict[$hash] = [[key, [value, self.$version]]]
         }
         self.$version++
         return $N
@@ -611,18 +655,21 @@ dict.$setitem = function(self, key, value, $hash){
     var ix = rank(self, hash, key)
     if(ix > -1){
         // reset value
-        self.$object_dict[hash][ix][1] = value
+        self.$object_dict[hash][ix][1] = [value,
+            self.$object_dict[hash][ix][1][1]]
         return $N
     }else if(self.$object_dict.hasOwnProperty(hash)){
-        self.$object_dict[hash].push([key, value])
+        self.$object_dict[hash].push([key, [value, self.$version]])
     }else{
-        self.$object_dict[hash] = [[key, value]]
+        self.$object_dict[hash] = [[key, [value, self.$version]]]
     }
     self.$version++
     return $N
 }
 
-dict.__str__ = function(){return dict.__repr__.apply(null, arguments)}
+dict.__str__ = function(){
+    return dict.__repr__.apply(null, arguments)
+}
 
 // add "reflected" methods
 $B.make_rmethods(dict)
@@ -866,8 +913,11 @@ dict.fromkeys = _b_.classmethod.$factory(dict.fromkeys)
 var mappingproxy = $B.mappingproxy = $B.make_class("mappingproxy",
     function(obj){
         if(_b_.isinstance(obj, dict)){
-            // Should be a dictionary
-            var res = $B.obj_dict(obj.$string_dict)
+            // obj is a dictionary, with $string_dict table such that
+            // obj.$string_dict[key] = [value, rank]
+            // Transform it into an object with attribute $jsobj such that
+            // res.$jsobj[key] = value
+            var res = $B.obj_dict(dict.$to_obj(obj))
         }else{
             var res = $B.obj_dict(obj)
         }
@@ -908,10 +958,11 @@ function jsobj2dict(x){
             if(x[attr] === undefined){
                 continue
             }else if(x[attr].$jsobj === x){
-                d.$string_dict[attr] = d
+                d.$string_dict[attr] = [d, d.$version]
             }else{
-                d.$string_dict[attr] = x[attr]
+                d.$string_dict[attr] = [x[attr], d.$version]
             }
+            d.$version++
         }
     }
     return d
@@ -924,7 +975,7 @@ $B.obj_dict = function(obj, from_js){
             " has no attribute '__dict__'")}
     var res = dict.$factory()
     res.$jsobj = obj
-    res.$from_js = from_js // set to true if 
+    res.$from_js = from_js // set to true if
     return res
 }
 

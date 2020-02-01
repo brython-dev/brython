@@ -141,10 +141,7 @@ function make_node(top_node, node){
             top_node.yields.push(new_node)
 
         }else if(node.is_set_yield_value){
-            if(node.module == "__main__"){
-                console.log("node is set yield", node.line_num, node.module)
-            }
-
+            
             // After each yield, py2js inserts a no-op line as a placeholder
             // for values or exceptions sent to the iterator.
             //

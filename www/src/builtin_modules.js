@@ -323,7 +323,8 @@
                 }
                 var klass = dicts[tag] = makeTagDict(tag)
                 klass.$factory = makeFactory(klass)
-                obj.tags.$string_dict[tag] = klass
+                _b_.dict.$setitem(obj.tags, tag, klass)
+                
                 return klass
             }
 

@@ -555,8 +555,13 @@ DOMNode.$factory = function(elt, fromtag){
     if(fromtag === undefined) {
         if(DOMNode.tags !== undefined) {  // tags is a python dictionary
             var tdict = DOMNode.tags.$string_dict
-            if(tdict !== undefined) {
-                var klass = tdict[elt.tagName]
+            if(tdict !== undefined && tdict.hasOwnProperty(elt.tagName)) {
+                try{
+                    var klass = tdict[elt.tagName][0]
+                }catch(err){
+                    console.log("tdict", tdict, "tag name", elt.tagName)
+                    throw err
+                }
                 if(klass !== undefined) {
                     // all checks are good
                     klass.$elt_wrap = elt  // tell class to wrap element
@@ -793,7 +798,7 @@ DOMNode.__getattribute__ = function(self, attr){
                         }else if(arg === _b_.None){
                             args[pos++] = null
                         }else if(arg.__class__ == _b_.dict){
-                            args[pos++] = arg.$string_dict
+                            args[pos++] = _b_.dict.$to_obj(arg)
                         }else{
                             args[pos++] = arg
                         }
@@ -1097,7 +1102,7 @@ DOMNode.bind = function(self, event){
     if(typeof options == "boolean"){
         self.elt.addEventListener(event, callback, options)
     }else if(options.__class__ === _b_.dict){
-        self.elt.addEventListener(event, callback, options.$string_dict)
+        self.elt.addEventListener(event, callback, _b_.dict.$to_obj(options))
     }else if(options === _b_.None){
         self.elt.addEventListener(event, callback, false)
     }
