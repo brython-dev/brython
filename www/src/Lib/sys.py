@@ -79,7 +79,7 @@ prefix = __BRYTHON__.brython_path
 version = '.'.join(str(x) for x in __BRYTHON__.version_info[:3])
 version += " (default, %s) \n[Javascript 1.5] on Brython" \
     % __BRYTHON__.compiled_date
-hexversion = 0x03070000   # python 3.7
+hexversion = 0x030800f0   # python 3.8
 
 class _version_info:
 
