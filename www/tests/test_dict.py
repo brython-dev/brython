@@ -125,5 +125,11 @@ for i in range(100):
     random.shuffle(keys)
     d = {k: k for k in keys}
     assert list(d) == keys
+
+while keys:
+    key = random.choice(keys)
+    keys.remove(key)
+    del d[key]
+    assert list(d) == keys
     
 print("passed all tests..")

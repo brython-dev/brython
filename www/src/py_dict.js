@@ -1,5 +1,30 @@
 ;(function($B){
 
+/*
+Implementation of Python dictionaries
+
+We can't use Javascript's Map here, because the behaviour is not exactly the
+same (eg with keys that are instances of classes with a __hash__ method...)
+and because Map is much slower than regular Javascript objects.
+
+A Python dictionary is implemented as a Javascript objects with these
+attributes:
+. $version: an integer with an initial value of 0, incremented at each
+  insertion
+. $numeric_dict: for keys of type int
+. $string_dict and $str_hash: for keys of type str
+. $object_dict: for keys of other types
+
+The value associated to a key in $numeric_dict and $string_dict is a pair
+[value, rank] where "value" is the value associated with the key and "rank"
+is the value of the dict attribute $version when the pair is inserted. This
+is required to keep track of the insertion order, mandatory since Python 3.7.
+
+For keys that are not str or int, their hash value is computed. Since several
+keys with the same hash can be stored in a dictionary, $object_dict[hash] is a 
+list of [key, [value, rank]] lists.
+*/
+
 var bltns = $B.InjectBuiltins()
 eval(bltns)
 
