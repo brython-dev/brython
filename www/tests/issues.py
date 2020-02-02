@@ -2486,6 +2486,55 @@ assert textwrap.wrap('12345 123', width=5) == ['12345', '123']
 assert textwrap.wrap('123456 123', width=5, break_long_words=False) == \
     ['123456', '123']
 
+# issue 1286
+assertRaises(ZeroDivisionError, tuple, (1/0 for n in range(10)))
+
+def zde1():
+    {1 / 0 for n in range(10)}
+
+assertRaises(ZeroDivisionError, zde1)
+
+def zde2():
+    sum(1 / 0 for n in range(10))
+
+assertRaises(ZeroDivisionError, zde2)
+
+def zde3():
+    [1 / 0 for n in range(10)]
+
+assertRaises(ZeroDivisionError, zde3)
+
+def zde4():
+    {n: 1 / 0 for n in range(10)}
+
+assertRaises(ZeroDivisionError, zde4)
+
+try:
+    [1/0 for n in range(10)]
+    raise AssertionError(f"should have raised ZeroDivisionError")
+except ZeroDivisionError:
+    pass
+
+try:
+    list(1/0 for n in range(10))
+    raise AssertionError(f"should have raised ZeroDivisionError")
+except ZeroDivisionError:
+    pass
+
+try:
+    {1/0 for n in range(10)}
+    raise AssertionError(f"should have raised ZeroDivisionError")
+except ZeroDivisionError:
+    pass
+
+try:
+    {n: 1/0 for n in range(10)}
+    raise AssertionError(f"should have raised ZeroDivisionError")
+except ZeroDivisionError:
+    pass
+
+assertRaises(NameError, tuple, (d999['missing key'] for n in range(10)))
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

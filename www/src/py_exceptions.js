@@ -161,7 +161,7 @@ traceback.__getattribute__ = function(self, attr){
         case "tb_lineno":
             var lineno
             if(line_info === undefined ||
-                    first_frame[0].search($B.lambda_magic) > -1){
+                    first_frame[0].startsWith($B.lambda_magic)){
                 if(first_frame[4] && first_frame[4].$infos &&
                         first_frame[4].$infos.__code__){
                     lineno = first_frame[4].$infos.__code__.co_firstlineno
@@ -241,8 +241,6 @@ var frame = $B.make_class("frame",
                 filename = "<string>"
             }
             if(_frame[1].$line_info === undefined){
-                //console.log("$line info undef", _frame[1])
-                //console.log(_frame)
                 res.f_lineno = -1
             }else{
                 var line_info = _frame[1].$line_info.split(",")
@@ -261,13 +259,26 @@ var frame = $B.make_class("frame",
             }else{
                 if(_frame[1].$name){
                     co_name = _frame[1].$name
+                }else if(_frame[1].$dict_comp){
+                    co_name = '<dictcomp>'
+                }else if(_frame[1].$list_comp){
+                    co_name = '<listcomp>'
                 }else if(_frame.length > 4){
                     if(_frame[4].$infos){
                         co_name = _frame[4].$infos.__name__
                     }else{
                         co_name = _frame[4].name
                     }
-                    if(filename === undefined && _frame[4].$infos.__code__){
+                    if(_frame[4].$infos === undefined){
+                        // issue 1286
+                        filename = "<string>"
+                        if(_frame[4].name.startsWith("__ge")){
+                            co_name = "<genexpr>"
+                        }else if(_frame[4].name.startsWith("set_comp" +
+                                $B.lambda_magic)){
+                            co_name = "<setcomp>"
+                        }
+                    }else if(filename === undefined && _frame[4].$infos.__code__){
                         filename = _frame[4].$infos.__code__.co_filename
                         res.f_lineno = _frame[4].$infos.__code__.co_firstlineno
                     }
@@ -394,8 +405,20 @@ var getExceptionTrace = function(exc, includeInternal) {
         var module = line_info[1]
         if(module.charAt(0) == "$"){module = "<module>"}
         info += "\n  module " + module + " line " + line_info[0]
-        if (frame.length > 4 && frame[4].$infos) {
-            info += ', in ' + frame[4].$infos.__name__
+        if(frame.length > 4){
+            if(frame[4].$infos){
+                info += ', in ' + frame[4].$infos.__name__
+            }else if(frame[4].name.startsWith("__ge")){
+                info += ', in <genexpr>'
+            }else if(frame[4].name.startsWith("set_comp" + $B.lambda_magic)){
+                info += ', in <setcomp>'
+            }else{
+                console.log("frame[4]", frame[4])
+            }
+        }else if(frame[1].$list_comp){
+            info += ', in <listcomp>'
+        }else if(frame[1].$dict_comp){
+            info += ', in <dictcomp>'
         }
 
         if(src !== undefined){

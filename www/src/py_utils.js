@@ -256,23 +256,29 @@ $B.$dict_comp = function(module_name, parent_scope, items, line_num){
     }
     py += "    ".repeat(indent) + res + ".update({" + items[0] + "})"
 
+    var line_info = line_num + ',' + module_name
+
     var dictcomp_name = "dc" + ix,
-        root = $B.py2js({src:py, is_comp:true}, module_name, dictcomp_name,
-            parent_scope, line_num),
+        root = $B.py2js(
+            {src:py, is_comp:true, line_info: line_info},
+            module_name, dictcomp_name, parent_scope, line_num),
         js = root.to_js()
     js += '\nreturn $locals["' + res + '"]\n'
 
-    js = "(function($locals_" + dictcomp_name + "){" + js + "})({})"
+    js = "(function($locals_" + dictcomp_name + "){" + js +
+        "})({$dict_comp: true})"
     $B.clear_ns(dictcomp_name)
     delete $B.$py_src[dictcomp_name]
 
     return js
 }
 
-$B.$gen_expr = function(module_name, parent_scope, items, line_num){
-    // Called for generator expressions
+$B.$gen_expr = function(module_name, parent_scope, items, line_num, set_comp){
+    // Called for generator expressions, or set comprehensions if "set_comp"
+    // is set
     var $ix = $B.UUID(),
-        py = "def __ge" + $ix + "():\n", // use a special name (cf $global_search)
+        genexpr_name = (set_comp ? "set_comp" + $B.lambda_magic : "__ge") + $ix,
+        py = "def " + genexpr_name + "():\n", // use a special name (cf $global_search)
         indent = 1
     for(var i = 1, len = items.length; i < len; i++){
         var item = items[i].replace(/\s+$/, "").replace(/\n/g, "")
@@ -282,9 +288,10 @@ $B.$gen_expr = function(module_name, parent_scope, items, line_num){
     py += " ".repeat(indent)
     py += "yield (" + items[0] + ")"
 
-    var genexpr_name = "__ge" + $ix,
-        root = $B.py2js({src: py, is_comp: true}, genexpr_name, genexpr_name,
-            parent_scope, line_num),
+    var line_info = line_num + ',' + module_name
+
+    var root = $B.py2js({src: py, is_comp: true, line_info:line_info},
+            genexpr_name, genexpr_name, parent_scope, line_num),
         js = root.to_js(),
         lines = js.split("\n")
 
@@ -292,9 +299,6 @@ $B.$gen_expr = function(module_name, parent_scope, items, line_num){
     js += "\nvar $res = $locals_" + genexpr_name + '["' + genexpr_name +
         '"]();\n$res.is_gen_expr = true;\nreturn $res\n'
     js = "(function($locals_" + genexpr_name +"){" + js + "})({})\n"
-
-    //$B.clear_ns(genexpr_name)
-    delete $B.$py_src[genexpr_name]
 
     return js
 }

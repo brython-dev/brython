@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,6,'final',0]
 __BRYTHON__.__MAGIC__="3.8.6"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-02-01 15:51:37.097690"
-__BRYTHON__.timestamp=1580568697097
+__BRYTHON__.compiled_date="2020-02-02 13:57:56.763806"
+__BRYTHON__.timestamp=1580648276748
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -2375,8 +2375,9 @@ res1.push('['+res2.join(',')+']')}
 var line_num=$get_node(this).line_num
 switch(this.real){case 'list_comp':
 var lc=$B.$list_comp(items),
-py=lc[0],ix=lc[1],listcomp_name='lc'+ix,save_pos=$pos
-var root=$B.py2js({src:py,is_comp:true},module_name,listcomp_name,scope,1)
+py=lc[0],ix=lc[1],listcomp_name='lc'+ix,save_pos=$pos,line_info=line_num+','+module_name
+var root=$B.py2js(
+{src:py,is_comp:true,line_info:line_info},module_name,listcomp_name,scope,1)
 $pos=save_pos
 var js=root.to_js()
 root=null
@@ -2384,11 +2385,11 @@ $B.clear_ns(listcomp_name)
 delete $B.$py_src[listcomp_name]
 js+='return $locals_lc'+ix+'["x'+ix+'"]'
 js='function($locals_'+listcomp_name+'){'+
-js+'})({})'
+js+'})({$list_comp: true})'
 if(this.is_await){js='async '+js}
 return '('+js
 case 'dict_or_set_comp':
-if(this.expression.length==1){return $B.$gen_expr(module_name,scope,items,line_num)}
+if(this.expression.length==1){return $B.$gen_expr(module_name,scope,items,line_num,true)}
 return $B.$dict_comp(module_name,scope,items,line_num)}
 return $B.$gen_expr(module_name,scope,items,line_num)
 case 'tuple':
@@ -3202,8 +3203,8 @@ offset=2}
 var i=0
 while(i < node.children.length){i+=$add_profile(node.children[i],i)}
 return offset}}
-var $add_line_num=$B.parser.$add_line_num=function(node,rank){if(node.type=='module'){var i=0
-while(i < node.children.length){i+=$add_line_num(node.children[i],i)}}else if(node.type !=='marker'){var elt=node.C.tree[0],offset=1,flag=true,pnode=node
+var $add_line_num=$B.parser.$add_line_num=function(node,rank,line_info){if(node.type=='module'){var i=0
+while(i < node.children.length){i+=$add_line_num(node.children[i],i,line_info)}}else if(node.type !=='marker'){var elt=node.C.tree[0],offset=1,flag=true,pnode=node,_line_info
 while(pnode.parent !==undefined){pnode=pnode.parent}
 var mod_id=pnode.id
 var line_num=node.line_num
@@ -3211,20 +3212,18 @@ if(line_num===undefined){flag=false}
 if(elt.type=='condition' && elt.token=='elif'){flag=false}
 else if(elt.type=='except'){flag=false}
 else if(elt.type=='single_kw'){flag=false}
-if(flag){var js=';$locals.$line_info = "'+line_num+','+
-mod_id+'";if($locals.$f_trace !== _b_.None){'+
-'$B.trace_line()}; _b_.None;'
+if(flag){_line_info=line_info===undefined ? line_num+','+mod_id :
+line_info
+var js=';$locals.$line_info = "'+_line_info+
+'";if($locals.$f_trace !== _b_.None){$B.trace_line()};'+
+'_b_.None;'
 var new_node=new $Node()
 new_node.is_line_num=true 
 new $NodeJSCtx(new_node,js)
 node.parent.insert(rank,new_node)
 offset=2}
 var i=0
-while(i < node.children.length){i+=$add_line_num(node.children[i],i)}
-if((elt.type=='condition' && elt.token=="while")
-||node.C.type=='for'){if($B.last(node.children).C.tree[0].type !="return"){var js=';$locals.$line_info = "'+line_num+','+
-mod_id+'";if($locals.$f_trace !== _b_.None){'+
-'$B.trace_line()}; _b_.None;'}}
+while(i < node.children.length){i+=$add_line_num(node.children[i],i,line_info)}
 return offset}else{return 1}}
 $B.$add_line_num=$add_line_num
 var $bind=$B.parser.$bind=function(name,scope,C){
@@ -5011,8 +5010,10 @@ $pos=0
 if(typeof module=="object"){var __package__=module.__package__
 module=module.__name__}else{var __package__=""}
 parent_scope=parent_scope ||$B.builtins_scope
-var t0=new Date().getTime(),is_comp=false,has_annotations=true 
-if(typeof src=='object'){var is_comp=src.is_comp,has_annotations=src.has_annotations
+var t0=new Date().getTime(),is_comp=false,has_annotations=true,
+line_info 
+if(typeof src=='object'){var is_comp=src.is_comp,has_annotations=src.has_annotations,line_info=src.line_info
+if(line_info !==undefined){line_num=parseInt(line_info.split(",")[0])}
 src=src.src}
 src=src.replace(/\r\n/gm,"\n")
 if(src.endsWith("\\")&& !src.endsWith("\\\\")){src=src.substr(0,src.length-1)}
@@ -5050,7 +5051,7 @@ var catch_node=$NodeJS('catch(err)')
 catch_node.add($NodeJS('$B.leave_frame()'))
 catch_node.add($NodeJS('throw err'))
 root.add(catch_node)
-$add_line_num(root,null,module)
+$add_line_num(root,null,line_info)
 var t1=new Date().getTime()
 if($B.debug > 2){if(module==locals_id){console.log('module '+module+' translated in '+
 (t1-t0)+' ms')}}
@@ -5940,26 +5941,29 @@ for(var i=1,len=items.length;i < len;i++){var item=items[i].replace(/\s+$/,"").r
 py+="    ".repeat(indent)+item+":\n"
 indent++}
 py+="    ".repeat(indent)+res+".update({"+items[0]+"})"
-var dictcomp_name="dc"+ix,root=$B.py2js({src:py,is_comp:true},module_name,dictcomp_name,parent_scope,line_num),js=root.to_js()
+var line_info=line_num+','+module_name
+var dictcomp_name="dc"+ix,root=$B.py2js(
+{src:py,is_comp:true,line_info:line_info},module_name,dictcomp_name,parent_scope,line_num),js=root.to_js()
 js+='\nreturn $locals["'+res+'"]\n'
-js="(function($locals_"+dictcomp_name+"){"+js+"})({})"
+js="(function($locals_"+dictcomp_name+"){"+js+
+"})({$dict_comp: true})"
 $B.clear_ns(dictcomp_name)
 delete $B.$py_src[dictcomp_name]
 return js}
-$B.$gen_expr=function(module_name,parent_scope,items,line_num){
-var $ix=$B.UUID(),py="def __ge"+$ix+"():\n",
+$B.$gen_expr=function(module_name,parent_scope,items,line_num,set_comp){
+var $ix=$B.UUID(),genexpr_name=(set_comp ? "set_comp"+$B.lambda_magic :"__ge")+$ix,py="def "+genexpr_name+"():\n",
 indent=1
 for(var i=1,len=items.length;i < len;i++){var item=items[i].replace(/\s+$/,"").replace(/\n/g,"")
 py+=" ".repeat(indent)+item+":\n"
 indent+=4}
 py+=" ".repeat(indent)
 py+="yield ("+items[0]+")"
-var genexpr_name="__ge"+$ix,root=$B.py2js({src:py,is_comp:true},genexpr_name,genexpr_name,parent_scope,line_num),js=root.to_js(),lines=js.split("\n")
+var line_info=line_num+','+module_name
+var root=$B.py2js({src:py,is_comp:true,line_info:line_info},genexpr_name,genexpr_name,parent_scope,line_num),js=root.to_js(),lines=js.split("\n")
 js=lines.join("\n")
 js+="\nvar $res = $locals_"+genexpr_name+'["'+genexpr_name+
 '"]();\n$res.is_gen_expr = true;\nreturn $res\n'
 js="(function($locals_"+genexpr_name+"){"+js+"})({})\n"
-delete $B.$py_src[genexpr_name]
 return js}
 $B.clear_ns=function(name){
 if(name.startsWith("__ge")){console.log("clear ns",name)}
@@ -7627,7 +7631,7 @@ return frame.$factory(self.$stack)
 case "tb_lineno":
 var lineno
 if(line_info===undefined ||
-first_frame[0].search($B.lambda_magic)>-1){if(first_frame[4]&& first_frame[4].$infos &&
+first_frame[0].startsWith($B.lambda_magic)){if(first_frame[4]&& first_frame[4].$infos &&
 first_frame[4].$infos.__code__){lineno=first_frame[4].$infos.__code__.co_firstlineno}else{lineno=-1}}else{lineno=parseInt(line_info.split(",")[0])}
 return lineno
 case "tb_lasti":
@@ -7654,16 +7658,18 @@ try{res.f_locals=$B.obj_dict(_frame[1])}catch(err){console.log("err "+err)
 throw err}
 res.f_globals=$B.obj_dict(_frame[3])
 if(_frame[3].__file__ !==undefined){filename=_frame[3].__file__}else if(locals_id.startsWith("$exec")){filename="<string>"}
-if(_frame[1].$line_info===undefined){
-res.f_lineno=-1}else{var line_info=_frame[1].$line_info.split(",")
+if(_frame[1].$line_info===undefined){res.f_lineno=-1}else{var line_info=_frame[1].$line_info.split(",")
 res.f_lineno=parseInt(line_info[0])
 var module_name=line_info[1]
 if($B.imported.hasOwnProperty(module_name)){filename=$B.imported[module_name].__file__}
 res.f_lineno=parseInt(_frame[1].$line_info.split(',')[0])}
 var co_name=locals_id.startsWith("$exec")? "<string>" :
 locals_id
-if(locals_id==_frame[2]){co_name="<module>"}else{if(_frame[1].$name){co_name=_frame[1].$name}else if(_frame.length > 4){if(_frame[4].$infos){co_name=_frame[4].$infos.__name__}else{co_name=_frame[4].name}
-if(filename===undefined && _frame[4].$infos.__code__){filename=_frame[4].$infos.__code__.co_filename
+if(locals_id==_frame[2]){co_name="<module>"}else{if(_frame[1].$name){co_name=_frame[1].$name}else if(_frame[1].$dict_comp){co_name='<dictcomp>'}else if(_frame[1].$list_comp){co_name='<listcomp>'}else if(_frame.length > 4){if(_frame[4].$infos){co_name=_frame[4].$infos.__name__}else{co_name=_frame[4].name}
+if(_frame[4].$infos===undefined){
+filename="<string>"
+if(_frame[4].name.startsWith("__ge")){co_name="<genexpr>"}else if(_frame[4].name.startsWith("set_comp"+
+$B.lambda_magic)){co_name="<setcomp>"}}else if(filename===undefined && _frame[4].$infos.__code__){filename=_frame[4].$infos.__code__.co_filename
 res.f_lineno=_frame[4].$infos.__code__.co_firstlineno}}}
 res.f_code={__class__:$B.code,co_code:None,
 co_name:co_name,
@@ -7706,7 +7712,7 @@ if(src===undefined){if($B.VFS && $B.VFS.hasOwnProperty(frame[2])){src=$B.VFS[fra
 var module=line_info[1]
 if(module.charAt(0)=="$"){module="<module>"}
 info+="\n  module "+module+" line "+line_info[0]
-if(frame.length > 4 && frame[4].$infos){info+=', in '+frame[4].$infos.__name__}
+if(frame.length > 4){if(frame[4].$infos){info+=', in '+frame[4].$infos.__name__}else if(frame[4].name.startsWith("__ge")){info+=', in <genexpr>'}else if(frame[4].name.startsWith("set_comp"+$B.lambda_magic)){info+=', in <setcomp>'}else{console.log("frame[4]",frame[4])}}else if(frame[1].$list_comp){info+=', in <listcomp>'}else if(frame[1].$dict_comp){info+=', in <dictcomp>'}
 if(src !==undefined){var lines=src.split("\n"),line=lines[parseInt(line_info[0])-1]
 if(line){line=line.replace(/^[ ]+/g,"")}
 info+="\n    "+line}else{console.log("src undef",line_info)}}
@@ -13386,11 +13392,14 @@ $B.gen_counter=0
 function remove_line_nums(node){
 for(var i=0;i < node.children.length;i++){if(node.children[i].is_line_num){node.children.splice(i,1)}else{remove_line_nums(node.children[i])}}}
 $B.$BRgenerator=function(func_name,blocks,def_id,def_node){
+var pblock=def_node.parent_block
+while(pblock.parent_block && pblock.parent_block.id !="__builtins__"){pblock=pblock.parent_block}
+var line_info=def_node.line_num+','+pblock.id.replace(/\./g,'_')
 var def_ctx=def_node.C.tree[0]
 var module=def_node.module,
 iter_id=def_id
 if($B.debug > 0){
-$B.$add_line_num(def_node,def_ctx.rank)}
+$B.$add_line_num(def_node,def_ctx.rank,line_info)}
 var func_root=new $B.genNode(def_ctx.to_js())
 remove_line_nums(def_node.parent)
 func_root.module=module

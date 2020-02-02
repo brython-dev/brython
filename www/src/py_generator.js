@@ -141,7 +141,7 @@ function make_node(top_node, node){
             top_node.yields.push(new_node)
 
         }else if(node.is_set_yield_value){
-            
+
             // After each yield, py2js inserts a no-op line as a placeholder
             // for values or exceptions sent to the iterator.
             //
@@ -429,6 +429,11 @@ $B.$BRgenerator = function(func_name, blocks, def_id, def_node){
     // blocks : the id of the surrounding code blocks
     // def_id : generator function identifier
     // def_node : instance of Node for the function
+    var pblock = def_node.parent_block
+    while(pblock.parent_block && pblock.parent_block.id != "__builtins__"){
+        pblock = pblock.parent_block
+    }
+    var line_info = def_node.line_num + ',' + pblock.id.replace(/\./g, '_')
 
     var def_ctx = def_node.context.tree[0]
 
@@ -440,7 +445,7 @@ $B.$BRgenerator = function(func_name, blocks, def_id, def_node){
     // namespace
     if($B.debug > 0){
         // add line nums for error reporting
-        $B.$add_line_num(def_node, def_ctx.rank)
+        $B.$add_line_num(def_node, def_ctx.rank, line_info)
     }
     var func_root = new $B.genNode(def_ctx.to_js())
 

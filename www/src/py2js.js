@@ -4992,8 +4992,10 @@ var $ListOrTupleCtx = $B.parser.$ListOrTupleCtx = function(context,real){
                             py = lc[0],
                             ix = lc[1],
                             listcomp_name = 'lc' + ix,
-                            save_pos = $pos
-                        var root = $B.py2js({src:py, is_comp:true},
+                            save_pos = $pos,
+                            line_info = line_num + ',' + module_name
+                        var root = $B.py2js(
+                            {src:py, is_comp:true, line_info: line_info},
                             module_name, listcomp_name, scope, 1)
 
                         $pos = save_pos
@@ -5006,7 +5008,7 @@ var $ListOrTupleCtx = $B.parser.$ListOrTupleCtx = function(context,real){
 
                         js += 'return $locals_lc' + ix + '["x' + ix + '"]'
                         js = 'function($locals_' + listcomp_name + '){' +
-                            js + '})({})'
+                            js + '})({$list_comp: true})'
                         if(this.is_await){
                             js = 'async ' + js
                         }
@@ -5014,7 +5016,8 @@ var $ListOrTupleCtx = $B.parser.$ListOrTupleCtx = function(context,real){
 
                     case 'dict_or_set_comp':
                         if(this.expression.length == 1){
-                            return $B.$gen_expr(module_name, scope, items, line_num)
+                            return $B.$gen_expr(module_name, scope, items, 
+                                line_num, true)
                         }
 
                         return $B.$dict_comp(module_name, scope, items, line_num)
@@ -6766,17 +6769,19 @@ var $add_profile = $B.parser.$add_profile = function(node,rank){
     }
 }
 
-var $add_line_num = $B.parser.$add_line_num = function(node,rank){
+var $add_line_num = $B.parser.$add_line_num = function(node, rank, line_info){
+
     if(node.type == 'module'){
         var i = 0
         while(i < node.children.length){
-            i += $add_line_num(node.children[i], i)
+            i += $add_line_num(node.children[i], i, line_info)
         }
     }else if(node.type !== 'marker'){
         var elt = node.context.tree[0],
             offset = 1,
             flag = true,
-            pnode = node
+            pnode = node,
+            _line_info
         while(pnode.parent !== undefined){pnode = pnode.parent}
         var mod_id = pnode.id
         // ignore lines added in transform()
@@ -6788,9 +6793,11 @@ var $add_line_num = $B.parser.$add_line_num = function(node,rank){
         else if(elt.type == 'except'){flag = false}
         else if(elt.type == 'single_kw'){flag = false}
         if(flag){
-            var js = ';$locals.$line_info = "' + line_num + ',' +
-                mod_id + '";if($locals.$f_trace !== _b_.None){' +
-                '$B.trace_line()}; _b_.None;'
+            _line_info = line_info === undefined ? line_num + ',' + mod_id :
+                line_info
+            var js = ';$locals.$line_info = "' + _line_info +
+                '";if($locals.$f_trace !== _b_.None){$B.trace_line()};' +
+                '_b_.None;'
 
             var new_node = new $Node()
             new_node.is_line_num = true // used in generators
@@ -6800,20 +6807,8 @@ var $add_line_num = $B.parser.$add_line_num = function(node,rank){
         }
         var i = 0
         while(i < node.children.length){
-            i += $add_line_num(node.children[i], i)
+            i += $add_line_num(node.children[i], i, line_info)
         }
-        // At the end of a "while" or "for" loop body, add a line to reset
-        // line number to that of the "while" or "for" loop (cf issue #281)
-        if((elt.type == 'condition' && elt.token == "while")
-                || node.context.type == 'for'){
-            if($B.last(node.children).context.tree[0].type != "return"){
-                var js = ';$locals.$line_info = "' + line_num + ',' +
-                    mod_id + '";if($locals.$f_trace !== _b_.None){' +
-                    '$B.trace_line()}; _b_.None;'
-                //node.add($NodeJS(js))
-            }
-        }
-
         return offset
     }else{
         return 1
@@ -9929,11 +9924,15 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
 
     var t0 = new Date().getTime(),
         is_comp = false,
-        has_annotations = true // determine if __annotations__ is created
-
+        has_annotations = true, // determine if __annotations__ is created
+        line_info // set for generator expression
     if(typeof src == 'object'){
         var is_comp = src.is_comp,
-            has_annotations = src.has_annotations
+            has_annotations = src.has_annotations,
+            line_info = src.line_info
+        if(line_info !== undefined){
+            line_num = parseInt(line_info.split(",")[0])
+        }
         src = src.src
     }
 
@@ -10020,7 +10019,7 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
     root.add(catch_node)
 
     // Add line numbers for debugging
-    $add_line_num(root, null, module)
+    $add_line_num(root, null, line_info)
 
     var t1 = new Date().getTime()
     if($B.debug > 2){
