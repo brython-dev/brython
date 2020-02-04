@@ -75,7 +75,6 @@ for elt in document.select("select.language"):
 
 import time
 import math
-import datetime
 
 from browser import document
 import browser.timer
@@ -113,8 +112,10 @@ def set_clock():
     show_hours()
 
     # print day
-    now = datetime.datetime.now()
-    day = now.day
+    now_time = time.time()
+    now = time.localtime(now_time)
+    microsecs = now_time - int(now_time)
+    day = now.tm_mday
     ctx.font = "bold 14px Arial"
     ctx.textAlign = "center"
     ctx.textBaseline = "middle"
@@ -123,14 +124,14 @@ def set_clock():
 
     # draw needles for hour, minute, seconds
     ctx.lineWidth = 2
-    hour = now.hour % 12 + now.minute / 60
+    hour = now.tm_hour % 12 + now.tm_min / 60
     angle = hour * 2 * math.pi / 12 - math.pi / 2
     needle(angle, 0.05, 0.5)
-    minute = now.minute
+    minute = now.tm_min
     angle = minute * 2 *math.pi / 60 - math.pi / 2
     needle(angle, 0.05, 0.85)
     ctx.lineWidth = 1
-    second = now.second + now.microsecond / 1_000_000
+    second = now.tm_sec + microsecs
     angle = second * 2 * math.pi / 60 - math.pi / 2
     needle(angle, 0.05, 0.85, "#FF0000") # in red
 
