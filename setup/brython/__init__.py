@@ -1,1 +1,1 @@
-implementation = "3.8.6"
+implementation = "3.8.7"

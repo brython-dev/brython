@@ -20,7 +20,7 @@ if sys.version_info[0] != 3:
 pdir = os.path.dirname(os.getcwd())
 # version info
 version = [3, 8, 0, "final", 0]
-implementation = [3, 8, 6, "final", 0]
+implementation = [3, 8, 7, "final", 0]
 
 # version name
 vname = '.'.join(str(x) for x in implementation[:3])
