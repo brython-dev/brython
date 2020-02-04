@@ -298,7 +298,7 @@ list.__lt__ = function(self, other){
     }
     var i = 0
     while(i < self.length){
-        if(i >= other.length){return true}
+        if(i >= other.length){return false}
         if($B.rich_comp("__eq__", self[i], other[i])){
             i++
         }else{

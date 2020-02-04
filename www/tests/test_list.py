@@ -244,4 +244,9 @@ a = list(range(10))
 a[::-4] = [10] * 3
 assert a == [0, 10, 2, 3, 4, 10, 6, 7, 8, 10]
 
+# issue 1289
+assert ([2, 3] < [2]) is False
+assert [2] < [2, 3]
+assert [2, 3] > [2]
+
 print("passed all tests..")
