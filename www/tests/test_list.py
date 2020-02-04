@@ -239,4 +239,9 @@ assert test2 == [1, 2, 3]
 # issue 1139
 assert [*[1, 2, 3][:]] == [1, 2, 3]
 
+# issue 1288
+a = list(range(10))
+a[::-4] = [10] * 3
+assert a == [0, 10, 2, 3, 4, 10, 6, 7, 8, 10]
+
 print("passed all tests..")

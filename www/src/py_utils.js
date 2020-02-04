@@ -603,16 +603,16 @@ $B.set_list_slice_step = function(obj, start, stop, step, value){
     if(step == 0){throw _b_.ValueError.$factory("slice step cannot be zero")}
     step = $B.$GetInt(step)
 
-    if(start === null){start = step > 0 ? 0 : obj.length - 1}
-    else{
+    if(start === null){
+        start = step > 0 ? 0 : obj.length - 1
+    }else{
         start = $B.$GetInt(start)
-        if(start < 0){start = Math.min(0, start + obj.length)}
     }
 
-    if(stop === null){stop = step > 0 ? obj.length : -1}
-    else{
+    if(stop === null){
+        stop = step > 0 ? obj.length : -1
+    }else{
         stop = $B.$GetInt(stop)
-        if(stop < 0){stop = Math.max(0, stop + obj.length)}
     }
 
     var repl = _b_.list.$factory(value),
@@ -626,9 +626,9 @@ $B.set_list_slice_step = function(obj, start, stop, step, value){
     // length of the replacement sequence
     for(var i = start; test(i); i += step){nb++}
     if(nb != repl.length){
-            throw _b_.ValueError.$factory(
-                "attempt to assign sequence of size " + repl.length +
-                " to extended slice of size " + nb)
+        throw _b_.ValueError.$factory(
+            "attempt to assign sequence of size " + repl.length +
+            " to extended slice of size " + nb)
     }
 
     for(var i = start; test(i); i += step){

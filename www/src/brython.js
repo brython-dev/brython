@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,6,'final',0]
 __BRYTHON__.__MAGIC__="3.8.6"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-02-02 13:57:56.763806"
-__BRYTHON__.timestamp=1580648276748
+__BRYTHON__.compiled_date="2020-02-04 08:47:17.325008"
+__BRYTHON__.timestamp=1580802437325
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -6104,12 +6104,8 @@ obj.splice.apply(obj,[start,stop-start].concat(res))}
 $B.set_list_slice_step=function(obj,start,stop,step,value){if(step===null ||step==1){return $B.set_list_slice(obj,start,stop,value)}
 if(step==0){throw _b_.ValueError.$factory("slice step cannot be zero")}
 step=$B.$GetInt(step)
-if(start===null){start=step > 0 ? 0 :obj.length-1}
-else{start=$B.$GetInt(start)
-if(start < 0){start=Math.min(0,start+obj.length)}}
-if(stop===null){stop=step > 0 ? obj.length :-1}
-else{stop=$B.$GetInt(stop)
-if(stop < 0){stop=Math.max(0,stop+obj.length)}}
+if(start===null){start=step > 0 ? 0 :obj.length-1}else{start=$B.$GetInt(start)}
+if(stop===null){stop=step > 0 ? obj.length :-1}else{stop=$B.$GetInt(stop)}
 var repl=_b_.list.$factory(value),j=0,test,nb=0
 if(step > 0){test=function(i){return i < stop}}
 else{test=function(i){return i > stop}}
@@ -7951,11 +7947,9 @@ if(step==0){throw _b_.ValueError.$factory('slice step cannot be zero')}
 var start
 if(self.start===None){start=step_is_neg ? len_1 :0}else{start=$B.PyNumber_Index(self.start)
 if($B.gt(0,start)){start=$B.add(start,len)}
-if($B.gt(0,start)){start=step < 0 ?-1 :0}
 if($B.ge(start,len)){start=step < 0 ? len_1 :len}}
 if(self.stop===None){stop=step_is_neg ?-1 :len}else{stop=$B.PyNumber_Index(self.stop)
-if($B.gt(0,stop)){stop+=len}
-if($B.gt(0,stop)){stop=step < 0 ?-1 :0}
+if($B.gt(0,stop)){stop=$B.add(stop,len)}
 if($B.ge(stop,len)){stop=step_is_neg ? len_1 :len}}
 return{start:start,stop:stop,step:step}}
 slice.start=function(self){return self.start}

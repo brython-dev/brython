@@ -366,15 +366,13 @@ slice.$conv_for_seq = function(self, len){
     }else{
         start = $B.PyNumber_Index(self.start)
         if($B.gt(0, start)){start = $B.add(start, len)}
-        if($B.gt(0, start)){start = step < 0 ? -1 : 0}
         if($B.ge(start, len)){start = step < 0 ? len_1 : len}
     }
     if(self.stop === None){
         stop = step_is_neg ? -1 : len
     }else{
         stop = $B.PyNumber_Index(self.stop)
-        if($B.gt(0, stop)){stop += len}
-        if($B.gt(0, stop)){stop = step < 0 ? -1 : 0}
+        if($B.gt(0, stop)){stop = $B.add(stop, len)}
         if($B.ge(stop, len)){stop = step_is_neg ? len_1 : len}
     }
     return {start: start, stop: stop, step: step}
