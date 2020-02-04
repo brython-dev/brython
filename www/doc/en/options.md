@@ -20,6 +20,9 @@ on page load.
 *options* can be a Javascript object, its keys can be
 
 - *debug* : debug level (see above)
+- *cache* : if set to `true`, the Ajax calls to import modules, load external
+  scripts by `<script src="foo.py">` or read files with `open()` use the
+  browser cache. Defaults to `false`.
 - *static\_stdlib\_import* : boolean, indicates if, in order to import modules
   or packages from the standard library, the static mapping table in the
   script __stdlib\_paths.js__ should be used. Defaults to `true`

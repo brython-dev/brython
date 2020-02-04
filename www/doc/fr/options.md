@@ -20,6 +20,10 @@ lancer la fonction `brython()` au chargement de la page.
 *options* peut être un objet Javascript, dont les clés possibles sont
 
 - *debug* : le mode de débogage, comme indiqué ci-dessus
+- *cache* : si la valeur est `true`, les appels Ajax pour importer des
+  modules, charger des scripts externes par `<script src="foo.py">` ou lire
+  des fichiers avec `open()` utilisent le cache du navigateur. Vaut `false`
+  par défaut
 - *static\_stdlib\_import* : booléen qui indique si, pour importer des modules
   ou des paquetages de la bibliothèque standard, on se sert du tableau de
   correspondance statique du script __stdlib\_paths.js__. Vaut `true` par
