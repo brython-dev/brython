@@ -30,6 +30,17 @@ import users
 import app.records
 ```
 
+**Avertissement** : _ceci ne fonctionne pas si le script est ouvert dans le_
+_navigateur par le menu Fichier / Ouvrir_. En effet, comme le navigateur n'a
+pas accès directement au système de fichiers, les modules sont chargés par un
+appel Ajax, et les appels Ajax ne sont pas possibles quand la page est ouverte
+de cette façon.
+
+Pour que ces imports fonctionnent, il faut ouvrir la page en lançant un
+serveur web permettant d'accéder à la page. Pour des tests en local, il suffit
+d'exécuter `python -m http.server` dans le répertoire où se trouve la page et
+de saisir _localhost:8000/app.html_ dans la barre d'adresse du navigateur.
+
 Si la bibliothèque standard a été insérée dans la page par
 
 ```xml
@@ -51,9 +62,6 @@ plusieurs emplacements :
 - un fichier __X.py__ dans le répertoire courant
 - un fichier __\_\_init\_\_.py__ dans le répertoire X
 
-Comme le navigateur n'a pas accès directement au système de fichiers, la
-recherche de l'existence d'un fichier doit être effectuée par un appel Ajax,
-qui renvoie une erreur s'il n'y a pas de fichier à l'adresse recherchée.
 
 Optimisation
 ============

@@ -31,7 +31,10 @@ document <= "Hello !"
 </html>
 ```
 
-In an empty directory, save this page as __`index.html`__. To read it in the browser, use the File/Open menu: it is the most simple solution. It brings some limitations for an advanced use, but it works perfectly for this tutorial.
+In an empty directory, save this page as __`index.html`__. To read it in the browser, you have two options:
+
+- use the File/Open menu: it is the most simple solution. It brings [some limitations](/static_doc/en/file_or_http.html) for an advanced use, but it works perfectly for this tutorial
+- launch a web server, for isntance that of the CPython standard distribution by running `python -m http.server` in the file directory, then enter _localhost:8000/index.html_ in the browser address bar
 
 When you open the page, you should see the message "Hello !" printed on the browser window.
 

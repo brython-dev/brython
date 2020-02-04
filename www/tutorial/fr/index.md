@@ -31,7 +31,10 @@ document <= "Bonjour !"
 </html>
 ```
 
-Dans un répertoire vide, sauvegardez cette page sous le nom __`index.html`__. Pour lire cette page dans le navigateur, utilisez le menu Fichier/Ouvrir du navigateur : c'est la solution la plus rapide. Elle apporte quelques limitations pour un usage avancé, mais pour ce tutoriel elle est parfaitement adaptée.
+Dans un répertoire vide, sauvegardez cette page sous le nom __`index.html`__. Pour lire cette page dans le navigateur, vous avez deux options:
+
+- utiliser le menu Fichier/Ouvrir du navigateur : c'est la solution la plus rapide. Elle apporte [quelques limitations](/static_doc/fr/file_or_http.html) pour un usage avancé, mais pour ce tutoriel elle est parfaitement adaptée
+- lancer un serveur web local, par exemple celui de la distribution standard en exécutant `python -m http.server` dans le répertoire du fichier, puis entrer _localhost:8000/index.html_ dans la barre d'adresse du navigateur
 
 En ouvrant la page, vous devriez voir le message "Bonjour !" s'afficher sur la page.
 
