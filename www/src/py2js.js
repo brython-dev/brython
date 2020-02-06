@@ -4969,6 +4969,8 @@ var $ListOrTupleCtx = $B.parser.$ListOrTupleCtx = function(context,real){
                         }
                     })
 
+                    txt = txt.replace(/\\\n/g, " ") // continuation lines
+
                     items.push(txt)
                     var lines = txt.split('\n')
                     var res2 = []
@@ -5016,7 +5018,7 @@ var $ListOrTupleCtx = $B.parser.$ListOrTupleCtx = function(context,real){
 
                     case 'dict_or_set_comp':
                         if(this.expression.length == 1){
-                            return $B.$gen_expr(module_name, scope, items, 
+                            return $B.$gen_expr(module_name, scope, items,
                                 line_num, true)
                         }
 

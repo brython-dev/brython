@@ -2535,6 +2535,11 @@ except ZeroDivisionError:
 
 assertRaises(NameError, tuple, (d999['missing key'] for n in range(10)))
 
+# continuation lines inside comprehensions
+
+[n for \
+    n in range(10)]
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
