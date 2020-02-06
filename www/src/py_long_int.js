@@ -130,7 +130,7 @@ function divmod_by_safe_int(t, n){
     if(n == 1){return [t, 0]}
 
     // Number of digits such that each intermediate result is a safe integer
-    var len = (Math.floor((Math.pow(2, 53) - 1) / n) + '').length - 1,
+    var len = 15, //(Math.floor((Math.pow(2, 53) - 1) / n) + '').length - 1,
         nb_chunks = Math.ceil(t.length / len), // number of items after split
         chunks = [],
         pos,
@@ -196,6 +196,9 @@ function divmod_pos(v1, v2){
             {__class__:long_int, value: rest.toString(), pos: true}
         ]
         return res1
+    }else if(iv2 < $B.max_int){
+        var res_safe = divmod_by_safe_int(v1, iv2)
+        return [long_int.$factory(res_safe[0]), long_int.$factory(res_safe[1])]
     }
     var quotient, mod
     if(comp_pos(v1, v2) == -1){ // a < b
@@ -269,6 +272,17 @@ function divmod_pos(v1, v2){
         }
     }
     */
+    if(iv2 < $B.max_int){
+        if(res_safe[0] !== quotient){
+            console.log("bizarre", v1, v2, res_safe, quotient)
+            alert()
+        }else if(res_safe[1] !== mod){
+            console.log("bizarre2 ", v1, v2, res_safe, mod)
+            alert()
+        }else{
+            console.log("ok")
+        }
+    }
     return [long_int.$factory(quotient), mod]
 }
 
@@ -735,6 +749,17 @@ long_int.__pow__ = function(self, power, z){
 }
 
 long_int.__rshift__ = function(self, shift){
+    if(typeof shift == "number"){
+        var pow2 = Math.pow(2, shift)
+        if(pow2 < $B.max_int){
+            var res = divmod_by_safe_int(self.value, pow2)
+            return intOrLong({
+                __class__: long_int,
+                value: res[0],
+                pos: self.pos
+            })
+        }
+    }
     shift = long_int.$factory(shift)
     if(shift.value == "0"){return self}
     var res = self.value
