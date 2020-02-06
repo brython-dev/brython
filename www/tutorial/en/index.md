@@ -40,7 +40,7 @@ When you open the page, you should see the message "Hello !" printed on the brow
 
 Page structure
 ==============
-Let's take a look at the page contents. In the `<head>` zone we load the script __`brython.js`__ : it is the Brython engine, the program that will find and execute the Python scripts included in the page. In this example we get it from a CDN, so that there is nothing to install on the PC. Note the version number (`brython@3.8.6`) : it can be updated for each new Brython version.
+Let's take a look at the page contents. In the `<head>` zone we load the script __`brython.js`__ : it is the Brython engine, the program that will find and execute the Python scripts included in the page. In this example we get it from a CDN, so that there is nothing to install on the PC. Note the version number (`brython@3.8.7`) : it can be updated for each new Brython version.
 
 The `<body>` tag has an attribute `onload="brython()"`. It means that when the page has finished loading, the browser has to call the function `brython()`, which is defined in the Brython engine loaded in the page. The function searches all the `<script>`tags that have the attribute `type="text/python"` and executes them.
 

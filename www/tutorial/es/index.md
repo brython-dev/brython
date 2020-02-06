@@ -40,7 +40,7 @@ Cuando abras la página deberías ver el mensaje "Hola !" mostrado en la ventana
 
 Estructura de la página
 =======================
-Echemos un vistazo a los contenidos de la página. En la zona del `<head>` llamamos al script __`brython.js`__ : Es la biblioteca Brython, el programa que encontrará y ejecutará los scripts Python incluidos en la página. En este ejemplo obtenemos la biblioteca usando un CDN de tal forma que no hace falta instalar nada en el PC. El número de versión (`brython@3.8.6`) se puede actualizar para cada nueva versión de Brython.
+Echemos un vistazo a los contenidos de la página. En la zona del `<head>` llamamos al script __`brython.js`__ : Es la biblioteca Brython, el programa que encontrará y ejecutará los scripts Python incluidos en la página. En este ejemplo obtenemos la biblioteca usando un CDN de tal forma que no hace falta instalar nada en el PC. El número de versión (`brython@3.8.7`) se puede actualizar para cada nueva versión de Brython.
 
 La etiqueta `<body>` contiene el atributo `onload="brython()"`. Significa que cuando la página termine de cargarse el navegador llamará a la función `brython()`, la cual está definida en la biblioteca Brython ya cargada en la página. La función busca todas las etiquetas `<script>` que contienen el atributo `type="text/python"` y ejecuta el código contenido en ellas.
 
