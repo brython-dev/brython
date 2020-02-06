@@ -131,5 +131,10 @@ while keys:
     keys.remove(key)
     del d[key]
     assert list(d) == keys
-    
+
+# issue 1290
+assert len({'a': 'b'}.values()) == 1
+assert len({'a': 'b'}.keys()) == 1
+assert len({'a': 'b'}.items()) == 1
+
 print("passed all tests..")

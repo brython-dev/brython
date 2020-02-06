@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,7,'final',0]
 __BRYTHON__.__MAGIC__="3.8.7"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-02-04 15:08:35.807824"
-__BRYTHON__.timestamp=1580825315807
+__BRYTHON__.compiled_date="2020-02-06 08:59:14.628878"
+__BRYTHON__.timestamp=1580975954628
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -12235,6 +12235,7 @@ return _b_.set[op](_b_.set.$factory(self),_b_.set.$factory(other))}})(op)}}
 klass.__iter__=function(self){var it=klass.$iterator.$factory(self.items)
 it.len_func=self.len_func
 return it}
+klass.__len__=function(self){return self.len}
 klass.__repr__=function(self){return klass.$infos.__name__+'('+_b_.repr(self.items)+')'}
 $B.set_func_names(klass,"builtins")
 return klass}

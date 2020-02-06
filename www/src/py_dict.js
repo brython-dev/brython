@@ -21,7 +21,7 @@ is the value of the dict attribute $version when the pair is inserted. This
 is required to keep track of the insertion order, mandatory since Python 3.7.
 
 For keys that are not str or int, their hash value is computed. Since several
-keys with the same hash can be stored in a dictionary, $object_dict[hash] is a 
+keys with the same hash can be stored in a dictionary, $object_dict[hash] is a
 list of [key, [value, rank]] lists.
 */
 
@@ -62,6 +62,11 @@ $B.make_view = function(name, set_like){
         it.len_func = self.len_func
         return it
     }
+
+    klass.__len__ = function(self){
+        return self.len
+    }
+    
     klass.__repr__ = function(self){
         return klass.$infos.__name__ + '(' + _b_.repr(self.items) + ')'
     }
