@@ -13,7 +13,7 @@ Dans l'éditeur de texte, créez une page html avec le contenu suivant :
 <head>
     <meta charset="utf-8">
     <script type="text/javascript"
-        src="https://cdn.jsdelivr.net/npm/brython@3.8.6/brython.min.js">
+        src="https://cdn.jsdelivr.net/npm/brython@3.8.7/brython.min.js">
     </script>
 </head>
 
@@ -227,3 +227,6 @@ for button in document.select("td"):
     button.bind("click", action)
 ```
 
+Résultat
+========
+<iframe width="800", height="400" src="/gallery/calculator.html"></iframe>
