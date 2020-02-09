@@ -659,9 +659,10 @@ Random.paretovariate = function(){
 
 function is_integer(x){
     return _b_.isinstance(x, _b_.int) || (
-        _b_.isinstance(x, _b_.float) && 
+        _b_.isinstance(x, _b_.float) &&
             x.valueOf() == Math.floor(x.valueOf()))
 }
+
 Random.randint = function(self, a, b){
     var $ = $B.args('randint', 3,
         {self: null, a:null, b:null},
@@ -673,8 +674,7 @@ Random.randint = function(self, a, b){
     if(! is_integer($.b)){
         throw _b_.ValueError.$factory("non-integer value for stop")
     }
-
-    return Random.randrange($.self, $.a, $.b + 1)
+    return Random.randrange($.self, $.a, $B.add($.b, 1))
 }
 
 Random.random = function(self){
@@ -693,6 +693,7 @@ Random.randrange = function(){
 
     for(var i = 1, len = arguments.length; i < len; i++){
         if(! is_integer(arguments[i])){
+            console.log(arguments[i])
             throw _b_.ValueError.$factory("non-integer arg " + i +
                 " for randrange()")
         }
