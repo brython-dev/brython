@@ -2540,6 +2540,21 @@ assertRaises(NameError, tuple, (d999['missing key'] for n in range(10)))
 [n for \
     n in range(10)]
 
+# change definition of range
+def range(n):
+  return 'abc'
+
+t = []
+for i in range(10):
+  t.append(i)
+
+assert t == ['a', 'b', 'c']
+
+# reset range to builtins
+range = __builtins__.range
+
+assert list(range(3)) == [0, 1, 2]
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

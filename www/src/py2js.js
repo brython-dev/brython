@@ -3669,7 +3669,15 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
 
         // set new loop children
         children.forEach(function(child){
-            while_node.add(child)
+            // Copy clone, because child might have already been added to the
+            // "for" node if the iterable is range.
+            // This happens in code like
+            //
+            //     def range(n):
+            //         return 'abc'
+            //     for i in range(2):
+            //         print(i)
+            while_node.add(child.clone())
         })
 
         // Add a line to reset the line number, except if the last

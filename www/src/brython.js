@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,7,'final',0]
 __BRYTHON__.__MAGIC__="3.8.7"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-02-09 11:31:02.584511"
-__BRYTHON__.timestamp=1581244262584
+__BRYTHON__.compiled_date="2020-02-09 11:56:28.717273"
+__BRYTHON__.timestamp=1581245788717
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -1834,7 +1834,8 @@ try_node.add(iter_node)
 while_node.add(
 $NodeJS('catch($err){if($B.is_exc($err, [StopIteration]))'+
 '{break;}else{throw($err)}}'))
-children.forEach(function(child){while_node.add(child)})
+children.forEach(function(child){
+while_node.add(child.clone())})
 if($B.last(node.children).C.tree[0].type !="return"){var js='$locals.$line_info = "'+node.line_num+
 ','+this.module+'";if($locals.$f_trace !== _b_.None){'+
 '$B.trace_line()};None;'
@@ -9319,7 +9320,9 @@ _mod_name+"' is not a package"
 exc.args=$B.fast_tuple([exc.msg])
 exc.name=mod_name
 exc.path=_b_.None
-throw exc}}}}}
+throw exc}}}}}else{if($B.imported[parsed_name[0]]&&
+parsed_name.length==2){try{$B.$setattr($B.imported[parsed_name[0]],parsed_name[1],modobj)}catch(err){console.log("error",parsed_name,modobj)
+throw err}}}
 if(fromlist.length > 0){
 return $B.imported[mod_name]}else{
 return $B.imported[parsed_name[0]]}}
