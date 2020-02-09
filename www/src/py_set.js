@@ -17,6 +17,9 @@ function create_type(obj){
 function clone(obj){
     var res = create_type(obj)
     res.$items = obj.$items.slice()
+    for(key in obj.$hashes){
+        res.$hashes[key] = obj.$hashes[key]
+    }
     return res
 }
 
@@ -41,13 +44,13 @@ set.__and__ = function(self, other, accept_iter){
     var res = create_type(self)
     for(var i = 0, len = self.$items.length; i < len; i++){
         if(_b_.getattr(other, "__contains__")(self.$items[i])){
-            set.add(res,self.$items[i])
+            set.add(res, self.$items[i])
         }
     }
     return res
 }
 
-set.__contains__ = function(self,item){
+set.__contains__ = function(self, item){
     if(self.$simple){
         if(typeof item == "number" || item instanceof Number){
             if(isNaN(item)){ // special case for NaN
@@ -69,11 +72,15 @@ set.__contains__ = function(self,item){
         // If item is a set, "item in self" is True if item compares equal to
         // one of the set items
     }
-    for(var i = 0, len = self.$items.length; i < len;i++){
-        if($B.rich_comp("__eq__", self.$items[i], item)){return true}
+    var hash = _b_.hash(item)
+    if(self.$hashes[hash]){
+        for(var i = 0, len = self.$hashes[hash].length; i < len;i++){
+            if($B.rich_comp("__eq__", self.$hashes[hash][i], item)){
+                return true
+            }
+        }
     }
     return false
-
 }
 
 set.__eq__ = function(self, other){
@@ -83,7 +90,10 @@ set.__eq__ = function(self, other){
     if(_b_.isinstance(other, [_b_.set, _b_.frozenset])){
       if(other.$items.length == self.$items.length){
         for(var i = 0, len = self.$items.length; i < len; i++){
-           if(set.__contains__(self, other.$items[i]) === false){return false}
+           if(set.__contains__(self, other.$items[i]) === false){
+               console.log("self does not contain", other.$items[i])
+               return false
+           }
         }
         return true
       }
@@ -127,13 +137,17 @@ set.__init__ = function(self, iterable, second){
 
     if(_b_.isinstance(iterable, [set, frozenset])){
         self.$items = iterable.$items.slice()
+        self.$hashes = {}
+        for(var key in iterable.$hashes){
+            self.$hashes[key] = iterable.$hashes[key]
+        }
         return $N
     }
     var it = $B.$iter(iterable)
     while(1){
         try{
             var item = _b_.next(it)
-            set.add(self, item)
+            $add(self, item)
         }catch(err){
             if(_b_.isinstance(err, _b_.StopIteration)){break}
             throw err
@@ -182,8 +196,9 @@ set.__new__ = function(cls){
         __class__: cls,
         $simple: true,
         $items: [],
-        $numbers: [] // stores integers, and floats equal to integers
-        }
+        $numbers: [], // stores integers, and floats equal to integers
+        $hashes: {}
+    }
 }
 
 set.__or__ = function(self, other, accept_iter){
@@ -191,7 +206,9 @@ set.__or__ = function(self, other, accept_iter){
     var res = clone(self),
         func = _b_.getattr($B.$iter(other), "__next__")
     while(1){
-        try{set.add(res, func())}
+        try{
+            set.add(res, func())
+        }
         catch(err){
             if(_b_.isinstance(err, _b_.StopIteration)){break}
             throw err
@@ -300,7 +317,7 @@ function $add(self, item){
             item instanceof Number){
         $simple = true
     }
-
+    
     if($simple){
         var ix = self.$items.indexOf(item)
         if(ix == -1){
@@ -322,17 +339,30 @@ function $add(self, item){
             // [''].indexOf(0) is 0, not -1, so {''}.add(0) is {''}
             if(item !== self.$items[ix]){self.$items.push(item)}
         }
-        return $N
     }else{
         // Compute hash of item : raises an exception if item is not hashable,
         // otherwise set its attribute __hashvalue__
         _b_.hash(item)
+        var items = self.$hashes[item.__hashvalue__]
+        if(items === undefined){
+            self.$hashes[item.__hashvalue__] = [item]
+            self.$items.push(item)
+        }else{
+            var items = self.$hashes[item.__hashvalue__],
+                cfunc = function(other){
+                    return $B.rich_comp("__eq__", item, other)
+                }
+            for(var i = 0, len = items.length; i < len; i++){
+                if(cfunc(items[i])){
+                    // One of the items with the same hash compares equal to
+                    // item : don't add the item
+                    return $N
+                }
+            }
+            self.$hashes[item.__hashvalue__].push(item)
+            self.$items.push(item)
+        }
     }
-    var cfunc = function(other){return $B.rich_comp("__eq__", item, other)}
-    for(var i = 0, len = self.$items.length; i < len; i++){
-        if(cfunc(self.$items[i])) {return $N}
-    }
-    self.$items.push(item)
     return $N
 }
 
@@ -348,6 +378,7 @@ set.clear = function(){
     var $ = $B.args("clear", 1, {self: null}, ["self"],
         arguments, {}, null, null)
     $.self.$items = []
+    $.self.$hashes = {}
     return $N
 }
 
@@ -362,6 +393,9 @@ set.copy = function(){
     $.self.$numbers.forEach(function(item){
         res.$numbers.push(item)
     })
+    for(key in self.$hashes){
+        res.$hashes[key] = self.$hashes[key]
+    }
     return res
 }
 
@@ -374,18 +408,28 @@ set.difference_update = function(self){
             item
         while (true){
             try{
-               item = _next()
-               var _type = typeof item
+                item = _next()
+                var _type = typeof item
 
-               if(_type == "string" || _type == "number") {
-                   var _index = self.$items.indexOf(item)
-                   if(_index > -1){self.$items.splice(_index, 1)}
-               }else{
-                   for(var j = 0; j < self.$items.length; j++){
-                       if($B.rich_comp("__eq__", self.$items[j], item)){
-                         self.$items.splice(j, 1)
-                       }
-                   }
+                if(_type == "string" || _type == "number") {
+                    var _index = self.$items.indexOf(item)
+                    if(_index > -1){self.$items.splice(_index, 1)}
+                }else{
+
+                    for(var j = 0; j < self.$items.length; j++){
+                        if($B.rich_comp("__eq__", self.$items[j], item)){
+                            self.$items.splice(j, 1)
+                            var hash = _b_.hash(item)
+                            if(self.$hashes[hash]){
+                                for(var k = 0; k < self.$hashes[hash].length; k++){
+                                    if($B.rich_comp("__eq__", self.$hashes[hash][k], item)){
+                                        self.$hashes[hash].splice(k, 1)
+                                        break
+                                    }
+                                }
+                            }
+                        }
+                    }
                }
            }catch(err){
                if(_b_.isinstance(err, _b_.StopIteration)){break}
@@ -420,11 +464,26 @@ set.intersection_update = function(){
             if(_type == "string" || _type == "number") {
                 if(s.$items.indexOf(_item) == -1){remove.push(j)}
             }else{
-              var found = false
-              for(var k = 0; ! found && k < s.$items.length; k++){
-                if($B.rich_comp("__eq__", s.$items[k], _item)){found = true}
+              var found = false,
+                  hash = _b_.hash(_item)
+              if(s.$hashes[hash]){
+                  var hashes = s.$hashes[hash]
+                  for(var k = 0; ! found && k < hashes.length; k++){
+                      if($B.rich_comp("__eq__", hashes[k], _item)){
+                          found = true
+                      }
+                  }
+                  if(! found){
+                      remove.push(j)
+                      // remove from self.$hashes
+                      hashes = self.$hashes[hash]
+                      for(var k = 0; ! found && k < hashes.length; k++){
+                          if($B.rich_comp("__eq__", hashes[k], _item)){
+                              self.$hashes.splice(k, 1)
+                          }
+                      }
+                  }
               }
-              if(! found){remove.push(j)}
            }
        }
        remove.sort(function(x, y){return x - y}).reverse()
@@ -451,7 +510,19 @@ set.pop = function(self){
     if(self.$items.length === 0){
         throw _b_.KeyError.$factory('pop from an empty set')
     }
-    return self.$items.pop()
+    var item = self.$items.pop()
+    if(typeof item != "string" && typeof item != "number"){
+        // remove from hashes
+        var hash = _b_.hash(item),
+            items = self.$hashes[hash]
+        for(var k = 0; k < items.length; k++){
+            if($B.rich_comp("__eq__", items[k], _item)){
+                self.$hashes[hash].splice(k, 1)
+                break
+            }
+        }
+    }
+    return item
 }
 
 set.remove = function(self, item){
@@ -470,14 +541,26 @@ set.remove = function(self, item){
        }
        return $N
     }
-    for(var i = 0, len = self.$items.length; i < len; i++){
-        if($B.rich_comp("__eq__", self.$items[i], item)){
-            self.$items.splice(i, 1)
-            if(item instanceof Number){
-                self.$numbers.splice(self.$numbers.indexOf(item.valueOf()), 1)
+    var hash = _b_.hash(item)
+    if(self.$hashes[hash]){
+        // remove from items
+        for(var i = 0, len = self.$items.length; i < len; i++){
+            if($B.rich_comp("__eq__", self.$items[i], item)){
+                self.$items.splice(i, 1)
+                if(item instanceof Number){
+                    self.$numbers.splice(self.$numbers.indexOf(item.valueOf()), 1)
+                }
+                break
             }
-            return $N
         }
+        // remove from hashes
+        for(var i = 0, len = self.$hashes[hash].length; i < len; i++){
+            if($B.rich_comp("__eq__", self.$hashes[hash][i], item)){
+                self.$hashes[hash].splice(i, 1)
+                break
+            }
+        }
+        return $N
     }
     throw _b_.KeyError.$factory(item)
 }
@@ -531,7 +614,7 @@ set.update = function(self){
     for(var i = 0; i < $.args.length; i++){
         var other = set.$factory($.args[i])
         for(var j = 0, _len = other.$items.length; j < _len; j++) {
-            set.add(self, other.$items[j])
+            $add(self, other.$items[j])
         }
     }
     return $N
@@ -616,7 +699,8 @@ set.$factory = function(){
         __class__: set,
         $simple: true,
         $items: [],
-        $numbers: []
+        $numbers: [],
+        $hashes: {}
     }
     // apply __init__ with arguments of set()
     var args = [res].concat(Array.prototype.slice.call(arguments))
@@ -698,7 +782,8 @@ frozenset.__new__ = function(cls){
         __class__: cls,
         $simple: true,
         $items: [],
-        $numbers: []
+        $numbers: [],
+        $hashes: {}
         }
 }
 
@@ -731,4 +816,5 @@ _b_.set = set
 _b_.frozenset = frozenset
 
 })(__BRYTHON__)
+
 
