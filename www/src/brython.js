@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,7,'final',0]
 __BRYTHON__.__MAGIC__="3.8.7"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-02-09 11:56:28.717273"
-__BRYTHON__.timestamp=1581245788717
+__BRYTHON__.compiled_date="2020-02-09 16:52:30.709979"
+__BRYTHON__.timestamp=1581263550709
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -10169,7 +10169,7 @@ chunks[i]=Math.floor(chunk/n)
 if(i < chunks.length-1){
 chunks[i+1]+=carry*rest}})
 if(chunks[0]==0){chunks.shift()
-if(chunks.length==0){return "0"}}
+if(chunks.length==0){return[0,rest]}}
 x=chunks[0]+''
 chunks.forEach(function(chunk,i){if(i > 0){
 x+="0".repeat(len-chunk.toString().length)+chunk}})
@@ -10287,13 +10287,17 @@ res=sub_pos(other.value,self.value)
 break}
 return intOrLong(res)}}
 long_int.__and__=function(self,other){if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}
-var v1=long_int.__index__(self),v2=long_int.__index__(other)
-if(v1.length < v2.length){var temp=v2;v2=v1;v1=temp}
-if(v2.charAt(0)=="1"){v2="1".repeat(v1.length-v2.length)+v2}
-var start=v1.length-v2.length,res=""
-for(var i=0;i < v2.length;i++){if(v1.charAt(start+i)=="1" && v2.charAt(i)=="1"){res+="1"}
-else{res+="0"}}
-return intOrLong(long_int.$factory(res,2))}
+var v1=self.value,v2=other.value,temp1,temp2,res=""
+while(true){temp1=divmod_by_safe_int(v1,2)
+temp2=divmod_by_safe_int(v2,2)
+res=((temp1[1]=="1" && temp2[1]=="1")?
+"1" :"0")+res
+v1=temp1[0]
+v2=temp2[0]
+if(v1=="0"){var res0=intOrLong(long_int.$factory(res,2))
+break}else if(v2=="0"){var res0=intOrLong(long_int.$factory(res,2))
+break}}
+return res0}
 long_int.__divmod__=function(self,other){if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}
 var dm=divmod_pos(self.value,other.value)
 if(self.pos !==other.pos){if(dm[0].value !="0"){dm[0].pos=false}
@@ -10315,7 +10319,8 @@ else if(self.value.length < other.value.length){return ! self.pos}
 else{return self.pos ? self.value >=other.value :
 self.value <=other.value}}
 long_int.__gt__=function(self,other){return ! long_int.__le__(self,other)}
-long_int.__index__=function(self){
+$B.nb_index=0
+long_int.__index__=function(self){$B.nb_index+=1
 var res='',temp=self.value,d
 while(true){d=divmod_pos(temp,"2")
 res=d[1].value+res

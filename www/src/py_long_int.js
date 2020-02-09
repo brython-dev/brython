@@ -167,7 +167,7 @@ function divmod_by_safe_int(t, n){
     if(chunks[0] == 0){
         chunks.shift()
         if(chunks.length == 0){
-            return "0"
+            return [0, rest]
         }
     }
 
@@ -490,24 +490,32 @@ long_int.__add__ = function(self, other){
     }
 }
 
+
 long_int.__and__ = function(self, other){
     if(typeof other == "number"){
         other = long_int.$factory(_b_.str.$factory(other))
     }
-    // Bitwise "and" : build the binary representation of self and other
-    var v1 = long_int.__index__(self),
-        v2 = long_int.__index__(other)
-    // apply "and" on zeros and ones
-    if(v1.length < v2.length){var temp = v2; v2 = v1; v1 = temp}
-    if(v2.charAt(0) == "1"){v2 = "1".repeat(v1.length - v2.length) + v2}
-    var start = v1.length - v2.length,
+    var v1 = self.value,
+        v2 = other.value,
+        temp1,
+        temp2,
         res = ""
-    for(var i = 0; i < v2.length; i++){
-        if(v1.charAt(start + i) == "1" && v2.charAt(i) == "1"){res += "1"}
-        else{res += "0"}
+    while(true){
+        temp1 = divmod_by_safe_int(v1, 2)
+        temp2 = divmod_by_safe_int(v2, 2)
+        res = ((temp1[1] == "1" && temp2[1] == "1") ?
+            "1" : "0") + res
+        v1 = temp1[0]
+        v2 = temp2[0]
+        if(v1 == "0"){
+            var res0 = intOrLong(long_int.$factory(res, 2))
+            break
+        }else if(v2 == "0"){
+            var res0 = intOrLong(long_int.$factory(res, 2))
+            break
+        }
     }
-    // Return the long_int instance represented by res in base 2
-    return intOrLong(long_int.$factory(res, 2))
+    return res0
 }
 
 long_int.__divmod__ = function(self, other){
@@ -569,7 +577,10 @@ long_int.__gt__ = function(self, other){
     return ! long_int.__le__(self, other)
 }
 
+$B.nb_index = 0
+
 long_int.__index__ = function(self){
+    $B.nb_index += 1
     // Used by bin()
     // returns a string with the binary value of self
     // The algorithm computes the result of the floor division of self by 2
