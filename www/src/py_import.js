@@ -910,18 +910,7 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
                 }
             }
        }
-    }else{
-        if($B.imported[parsed_name[0]] &&
-                parsed_name.length > 1){
-            try{
-                $B.$setattr($B.imported[parsed_name[0]], parsed_name[1], modobj)
-            }catch(err){
-                console.log("error", parsed_name, modobj)
-                throw err
-            }
-        }
     }
-   // else { } // [Import spec] Module cache hit . Nothing to do.
 
    if(fromlist.length > 0){
         // Return module object matching requested module name

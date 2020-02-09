@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,7,'final',0]
 __BRYTHON__.__MAGIC__="3.8.7"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-02-06 10:24:28.880545"
-__BRYTHON__.timestamp=1580981068880
+__BRYTHON__.compiled_date="2020-02-09 11:31:02.584511"
+__BRYTHON__.timestamp=1581244262584
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -9319,9 +9319,7 @@ _mod_name+"' is not a package"
 exc.args=$B.fast_tuple([exc.msg])
 exc.name=mod_name
 exc.path=_b_.None
-throw exc}}}}}else{if($B.imported[parsed_name[0]]&&
-parsed_name.length > 1){try{$B.$setattr($B.imported[parsed_name[0]],parsed_name[1],modobj)}catch(err){console.log("error",parsed_name,modobj)
-throw err}}}
+throw exc}}}}}
 if(fromlist.length > 0){
 return $B.imported[mod_name]}else{
 return $B.imported[parsed_name[0]]}}
@@ -10153,7 +10151,8 @@ else if(v1 < v2){return-1}}
 return 0}
 function divmod_by_safe_int(t,n){
 if(n==1){return[t,0]}
-var len=(Math.floor((Math.pow(2,53)-1)/n)+'').length-1,nb_chunks=Math.ceil(t.length/len),
+var len=15,
+nb_chunks=Math.ceil(t.length/len),
 chunks=[],pos,start,nb,in_base=[]
 for(var i=0;i < nb_chunks;i++){pos=t.length-(i+1)*len
 start=Math.max(0,pos)
@@ -10177,7 +10176,8 @@ var iv1=parseInt(v1),iv2=parseInt(v2),res1
 if(iv1 < $B.max_int && iv2 < $B.max_int){var rest=iv1 % iv2,quot=Math.floor(iv1/iv2).toString()
 var res1=[{__class__:long_int,value:quot.toString(),pos:true},{__class__:long_int,value:rest.toString(),pos:true}
 ]
-return res1}
+return res1}else if(iv2 < $B.max_int){var res_safe=divmod_by_safe_int(v1,iv2)
+return[long_int.$factory(res_safe[0]),long_int.$factory(res_safe[1])]}
 var quotient,mod
 if(comp_pos(v1,v2)==-1){
 quotient="0"
@@ -10201,6 +10201,9 @@ if(right.length==0){break}
 left+=right.charAt(0)
 right=right.substr(1)}
 mod=sub_pos(v1,mul_pos(quotient,v2).value)}
+if(iv2 < $B.max_int){if(res_safe[0]!==quotient){console.log("bizarre",v1,v2,res_safe,quotient)
+alert()}else if(res_safe[1]!==mod){console.log("bizarre2 ",v1,v2,res_safe,mod)
+alert()}else{console.log("ok")}}
 return[long_int.$factory(quotient),mod]}
 function split_chunks(s,size){var nb=Math.ceil(s.length/size),chunks=[],len=s.length
 for(var i=0;i < nb;i++){var pos=len-size*(i+1)
@@ -10389,7 +10392,10 @@ if(pow=="0"){break}
 res=long_int.$factory(long_int.__mul__(res,self))
 if(z !==undefined){res=long_int.__mod__(res,z)}}
 return intOrLong(res)}
-long_int.__rshift__=function(self,shift){shift=long_int.$factory(shift)
+long_int.__rshift__=function(self,shift){if(typeof shift=="number"){var pow2=Math.pow(2,shift)
+if(pow2 < $B.max_int){var res=divmod_by_safe_int(self.value,pow2)
+return intOrLong({__class__:long_int,value:res[0],pos:self.pos})}}
+shift=long_int.$factory(shift)
 if(shift.value=="0"){return self}
 var res=self.value
 while(true){res=divmod_pos(res,"2")[0].value
