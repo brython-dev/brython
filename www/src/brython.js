@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,7,'final',0]
 __BRYTHON__.__MAGIC__="3.8.7"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-02-09 16:52:30.709979"
-__BRYTHON__.timestamp=1581263550709
+__BRYTHON__.compiled_date="2020-02-09 22:39:05.710862"
+__BRYTHON__.timestamp=1581284345710
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -6873,7 +6873,8 @@ function hash(obj){check_no_kw('hash',obj)
 check_nb_args('hash',1,arguments)
 if(obj.__hashvalue__ !==undefined){return obj.__hashvalue__}
 if(isinstance(obj,_b_.bool)){return _b_.int.$factory(obj)}
-if(isinstance(obj,_b_.int)){return obj.valueOf()}
+if(isinstance(obj,_b_.int)){if(obj.$value===undefined){return obj.valueOf()}else{
+return obj.__hashvalue__=obj.$value}}
 if(obj.$is_class ||
 obj.__class__===_b_.type ||
 obj.__class__===$B.Function){return obj.__hashvalue__=$B.$py_next_hash--}
@@ -6886,7 +6887,7 @@ if(hash_method==_b_.None){throw _b_.TypeError.$factory("unhashable type: '"+
 $B.class_name(obj)+"'",'hash')}
 if(hash_method.$infos===undefined){return obj.__hashvalue__=hashfunc()}
 if(hash_method.$infos.__func__===_b_.object.__hash__){if($B.$getattr(obj,'__eq__').$infos.__func__ !==_b_.object.__eq__){throw _b_.TypeError.$factory("unhashable type: '"+
-$B.class_name(obj)+"'",'hash')}else{return _b_.object.__hash__(obj)}}else{return $B.$call(hash_method)(obj)}}
+$B.class_name(obj)+"'",'hash')}else{return obj.__hashvalue__=_b_.object.__hash__(obj)}}else{return obj.__hashvalue__=$B.$call(hash_method)(obj)}}
 function _get_builtins_doc(){if($B.builtins_doc===undefined){
 var url=$B.brython_path
 if(url.charAt(url.length-1)=='/'){url=url.substr(0,url.length-1)}
@@ -8530,6 +8531,7 @@ _b_.bytearray=bytearray})(__BRYTHON__)
 function create_type(obj){return $B.get_class(obj).$factory()}
 function clone(obj){var res=create_type(obj)
 res.$items=obj.$items.slice()
+for(key in obj.$hashes){res.$hashes[key]=obj.$hashes[key]}
 return res}
 var set={__class__:_b_.type,$infos:{__module__:"builtins",__name__:"set"},$is_class:true,$native:true}
 set.__add__=function(self,other){throw _b_.TypeError.$factory(
@@ -8543,11 +8545,13 @@ set.__contains__=function(self,item){if(self.$simple){if(typeof item=="number" |
 for(var i=self.$items.length-1;i >=0;i--){if(isNaN(self.$items[i])){return true}}
 return false}else if(item instanceof Number){return self.$numbers.indexOf(item.valueOf())>-1}else{return self.$items.indexOf(item)>-1}}else if(typeof item=="string"){return self.$items.indexOf(item)>-1}}
 if(! _b_.isinstance(item,set)){$B.$getattr(item,"__hash__")}
-for(var i=0,len=self.$items.length;i < len;i++){if($B.rich_comp("__eq__",self.$items[i],item)){return true}}
+var hash=_b_.hash(item)
+if(self.$hashes[hash]){for(var i=0,len=self.$hashes[hash].length;i < len;i++){if($B.rich_comp("__eq__",self.$hashes[hash][i],item)){return true}}}
 return false}
 set.__eq__=function(self,other){
 if(other===undefined){return self===set}
-if(_b_.isinstance(other,[_b_.set,_b_.frozenset])){if(other.$items.length==self.$items.length){for(var i=0,len=self.$items.length;i < len;i++){if(set.__contains__(self,other.$items[i])===false){return false}}
+if(_b_.isinstance(other,[_b_.set,_b_.frozenset])){if(other.$items.length==self.$items.length){for(var i=0,len=self.$items.length;i < len;i++){if(set.__contains__(self,other.$items[i])===false){console.log("self does not contain",other.$items[i])
+return false}}
 return true}
 return false}
 return _b_.NotImplemented}
@@ -8560,10 +8564,12 @@ set.__init__=function(self,iterable,second){if(second===undefined){if(Array.isAr
 return $N}}
 var $=$B.args("__init__",2,{self:null,iterable:null},["self","iterable"],arguments,{iterable:[]},null,null),self=$.self,iterable=$.iterable
 if(_b_.isinstance(iterable,[set,frozenset])){self.$items=iterable.$items.slice()
+self.$hashes={}
+for(var key in iterable.$hashes){self.$hashes[key]=iterable.$hashes[key]}
 return $N}
 var it=$B.$iter(iterable)
 while(1){try{var item=_b_.next(it)
-set.add(self,item)}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){break}
+$add(self,item)}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){break}
 throw err}}
 return $N}
 var set_iterator=$B.make_iterator_class("set iterator")
@@ -8579,7 +8585,8 @@ set.__len__(self)< _b_.getattr(other,"__len__")()}else{return _b_.NotImplemented
 set.__mro__=[_b_.object]
 set.__new__=function(cls){if(cls===undefined){throw _b_.TypeError.$factory("set.__new__(): not enough arguments")}
 return{
-__class__:cls,$simple:true,$items:[],$numbers:[]}}
+__class__:cls,$simple:true,$items:[],$numbers:[],
+$hashes:{}}}
 set.__or__=function(self,other,accept_iter){
 var res=clone(self),func=_b_.getattr($B.$iter(other),"__next__")
 while(1){try{set.add(res,func())}
@@ -8636,30 +8643,38 @@ self.$numbers.indexOf(item.valueOf())>-1){}else if(typeof item=="number" &&
 self.$numbers.indexOf(item)>-1){}else{self.$items.push(item)
 var value=item.valueOf()
 if(typeof value=="number"){self.$numbers.push(value)}}}else{
-if(item !==self.$items[ix]){self.$items.push(item)}}
-return $N}else{
-_b_.hash(item)}
-var cfunc=function(other){return $B.rich_comp("__eq__",item,other)}
-for(var i=0,len=self.$items.length;i < len;i++){if(cfunc(self.$items[i])){return $N}}
-self.$items.push(item)
+if(item !==self.$items[ix]){self.$items.push(item)}}}else{
+_b_.hash(item)
+var items=self.$hashes[item.__hashvalue__]
+if(items===undefined){self.$hashes[item.__hashvalue__]=[item]
+self.$items.push(item)}else{var items=self.$hashes[item.__hashvalue__],cfunc=function(other){return $B.rich_comp("__eq__",item,other)}
+for(var i=0,len=items.length;i < len;i++){if(cfunc(items[i])){
+return $N}}
+self.$hashes[item.__hashvalue__].push(item)
+self.$items.push(item)}}
 return $N}
 set.add=function(){var $=$B.args("add",2,{self:null,item:null},["self","item"],arguments,{},null,null),self=$.self,item=$.item
 return $add(self,item)}
 set.clear=function(){var $=$B.args("clear",1,{self:null},["self"],arguments,{},null,null)
 $.self.$items=[]
+$.self.$hashes={}
 return $N}
 set.copy=function(){var $=$B.args("copy",1,{self:null},["self"],arguments,{},null,null)
 if(_b_.isinstance($.self,frozenset)){return $.self}
 var res=set.$factory()
 $.self.$items.forEach(function(item){res.$items.push(item)})
 $.self.$numbers.forEach(function(item){res.$numbers.push(item)})
+for(key in self.$hashes){res.$hashes[key]=self.$hashes[key]}
 return res}
 set.difference_update=function(self){var $=$B.args("difference_update",1,{self:null},["self"],arguments,{},"args",null)
 for(var i=0;i < $.args.length;i++){var s=set.$factory($.args[i]),_next=_b_.getattr($B.$iter(s),"__next__"),item
 while(true){try{item=_next()
 var _type=typeof item
 if(_type=="string" ||_type=="number"){var _index=self.$items.indexOf(item)
-if(_index >-1){self.$items.splice(_index,1)}}else{for(var j=0;j < self.$items.length;j++){if($B.rich_comp("__eq__",self.$items[j],item)){self.$items.splice(j,1)}}}}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){break}
+if(_index >-1){self.$items.splice(_index,1)}}else{for(var j=0;j < self.$items.length;j++){if($B.rich_comp("__eq__",self.$items[j],item)){self.$items.splice(j,1)
+var hash=_b_.hash(item)
+if(self.$hashes[hash]){for(var k=0;k < self.$hashes[hash].length;k++){if($B.rich_comp("__eq__",self.$hashes[hash][k],item)){self.$hashes[hash].splice(k,1)
+break}}}}}}}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){break}
 throw err}}}
 return $N}
 set.discard=function(){var $=$B.args("discard",2,{self:null,item:null},["self","item"],arguments,{},null,null)
@@ -8670,9 +8685,12 @@ set.intersection_update=function(){
 var $=$B.args("intersection_update",1,{self:null},["self"],arguments,{},"args",null),self=$.self
 for(var i=0;i < $.args.length;i++){var remove=[],s=set.$factory($.args[i])
 for(var j=0;j < self.$items.length;j++){var _item=self.$items[j],_type=typeof _item
-if(_type=="string" ||_type=="number"){if(s.$items.indexOf(_item)==-1){remove.push(j)}}else{var found=false
-for(var k=0;! found && k < s.$items.length;k++){if($B.rich_comp("__eq__",s.$items[k],_item)){found=true}}
-if(! found){remove.push(j)}}}
+if(_type=="string" ||_type=="number"){if(s.$items.indexOf(_item)==-1){remove.push(j)}}else{var found=false,hash=_b_.hash(_item)
+if(s.$hashes[hash]){var hashes=s.$hashes[hash]
+for(var k=0;! found && k < hashes.length;k++){if($B.rich_comp("__eq__",hashes[k],_item)){found=true}}
+if(! found){remove.push(j)
+hashes=self.$hashes[hash]
+for(var k=0;! found && k < hashes.length;k++){if($B.rich_comp("__eq__",hashes[k],_item)){self.$hashes.splice(k,1)}}}}}}
 remove.sort(function(x,y){return x-y}).reverse()
 for(var j=0;j < remove.length;j++){self.$items.splice(remove[j],1)}}
 return $N}
@@ -8680,7 +8698,12 @@ set.isdisjoint=function(){var $=$B.args("is_disjoint",2,{self:null,other:null},[
 for(var i=0,len=$.self.$items.length;i < len;i++){if(_b_.getattr($.other,"__contains__")($.self.$items[i])){return false}}
 return true}
 set.pop=function(self){if(self.$items.length===0){throw _b_.KeyError.$factory('pop from an empty set')}
-return self.$items.pop()}
+var item=self.$items.pop()
+if(typeof item !="string" && typeof item !="number"){
+var hash=_b_.hash(item),items=self.$hashes[hash]
+for(var k=0;k < items.length;k++){if($B.rich_comp("__eq__",items[k],_item)){self.$hashes[hash].splice(k,1)
+break}}}
+return item}
 set.remove=function(self,item){
 var $=$B.args("remove",2,{self:null,item:null},["self","item"],arguments,{},null,null),self=$.self,item=$.item
 if(! _b_.isinstance(item,set)){_b_.hash(item)}
@@ -8689,9 +8712,14 @@ if(_i==-1){throw _b_.KeyError.$factory(item)}
 self.$items.splice(_i,1)
 if(typeof item=="number"){self.$numbers.splice(self.$numbers.indexOf(item),1)}
 return $N}
+var hash=_b_.hash(item)
+if(self.$hashes[hash]){
 for(var i=0,len=self.$items.length;i < len;i++){if($B.rich_comp("__eq__",self.$items[i],item)){self.$items.splice(i,1)
 if(item instanceof Number){self.$numbers.splice(self.$numbers.indexOf(item.valueOf()),1)}
-return $N}}
+break}}
+for(var i=0,len=self.$hashes[hash].length;i < len;i++){if($B.rich_comp("__eq__",self.$hashes[hash][i],item)){self.$hashes[hash].splice(i,1)
+break}}
+return $N}
 throw _b_.KeyError.$factory(item)}
 set.symmetric_difference_update=function(self,s){
 var $=$B.args("symmetric_difference_update",2,{self:null,s:null},["self","s"],arguments,{},null,null),self=$.self,s=$.s
@@ -8711,7 +8739,7 @@ return $N}
 set.update=function(self){
 var $=$B.args("update",1,{self:null},["self"],arguments,{},"args",null)
 for(var i=0;i < $.args.length;i++){var other=set.$factory($.args[i])
-for(var j=0,_len=other.$items.length;j < _len;j++){set.add(self,other.$items[j])}}
+for(var j=0,_len=other.$items.length;j < _len;j++){$add(self,other.$items[j])}}
 return $N}
 set.difference=function(){var $=$B.args("difference",1,{self:null},["self"],arguments,{},"args",null)
 if($.args.length==0){return set.copy($.self)}
@@ -8742,7 +8770,7 @@ set.__isub__=$accept_only_set(set.difference_update,"-=")
 set.__ixor__=$accept_only_set(set.symmetric_difference_update,"^=")
 set.__ior__=$accept_only_set(set.update,"|=")
 set.$factory=function(){
-var res={__class__:set,$simple:true,$items:[],$numbers:[]}
+var res={__class__:set,$simple:true,$items:[],$numbers:[],$hashes:{}}
 var args=[res].concat(Array.prototype.slice.call(arguments))
 set.__init__.apply(null,args)
 return res}
@@ -8771,7 +8799,7 @@ return $N}
 frozenset.__new__=function(cls){if(cls===undefined){throw _b_.TypeError.$factory(
 "frozenset.__new__(): not enough arguments")}
 return{
-__class__:cls,$simple:true,$items:[],$numbers:[]}}
+__class__:cls,$simple:true,$items:[],$numbers:[],$hashes:{}}}
 var singleton_id=Math.floor(Math.random()*Math.pow(2,40))
 function empty_frozenset(){return{
 __class__:frozenset,$items:[],$numbers:[],$id:singleton_id}}

@@ -66,7 +66,7 @@ $B.make_view = function(name, set_like){
     klass.__len__ = function(self){
         return self.len
     }
-    
+
     klass.__repr__ = function(self){
         return klass.$infos.__name__ + '(' + _b_.repr(self.items) + ')'
     }

@@ -725,7 +725,7 @@ function $$eval(src, _globals, _locals){
                 }
             }
             js = root.to_js()
-            
+
             var locals_obj = eval("$locals_" + locals_id),
                 globals_obj = eval("$locals_" + globals_id)
             if(_globals === _b_.None){
@@ -758,7 +758,7 @@ function $$eval(src, _globals, _locals){
         if($B.frames_stack[$B.frames_stack.length - 1][2] == globals_id){
             gns = $B.frames_stack[$B.frames_stack.length - 1][3]
         }
-        
+
         // Update _locals with the namespace after execution
         if(_locals !== _b_.None){
             lns = eval("$locals_" + locals_id)
@@ -1230,7 +1230,13 @@ function hash(obj){
 
     if(obj.__hashvalue__ !== undefined){return obj.__hashvalue__}
     if(isinstance(obj, _b_.bool)){return _b_.int.$factory(obj)}
-    if(isinstance(obj, _b_.int)){return obj.valueOf()}
+    if(isinstance(obj, _b_.int)){
+        if(obj.$value === undefined){
+            return obj.valueOf()
+        }else{ // int subclass
+            return obj.__hashvalue__ = obj.$value
+        }
+    }
     if(obj.$is_class ||
             obj.__class__ === _b_.type ||
             obj.__class__ === $B.Function){
@@ -1273,10 +1279,10 @@ function hash(obj){
             throw _b_.TypeError.$factory("unhashable type: '" +
                 $B.class_name(obj) + "'", 'hash')
         }else{
-            return _b_.object.__hash__(obj)
+            return obj.__hashvalue__ = _b_.object.__hash__(obj)
         }
     }else{
-        return $B.$call(hash_method)(obj)
+        return obj.__hashvalue__ = $B.$call(hash_method)(obj)
     }
 }
 
