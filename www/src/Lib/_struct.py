@@ -270,6 +270,7 @@ big_endian_format = {
     'Q': {'size': 8, 'alignment': 0, 'pack': pack_unsigned_int, 'unpack': unpack_int},
     'f': {'size': 4, 'alignment': 0, 'pack': pack_float, 'unpack': unpack_float},
     'd': {'size': 8, 'alignment': 0, 'pack': pack_float, 'unpack': unpack_float},
+    'P': {'size': 8, 'alignment': 0, 'pack': pack_unsigned_int, 'unpack': unpack_int}
     }
 
 default = big_endian_format
