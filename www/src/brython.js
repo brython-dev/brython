@@ -1,6 +1,6 @@
 // brython.js brython.info
 // version [3, 8, 0, 'final', 0]
-// implementation [3, 8, 7, 'final', 0]
+// implementation [3, 8, 8, 'dev', 0]
 // version compiled from commented, indented source files at
 // github.com/brython-dev/brython
 var __BRYTHON__=__BRYTHON__ ||{}
@@ -96,11 +96,11 @@ var root=$B.py2js(src[0],"script","script"),js=root.to_js()
 $B.set_import_paths()
 new Function("$locals_script",js)({})}})(__BRYTHON__)
 ;
-__BRYTHON__.implementation=[3,8,7,'final',0]
-__BRYTHON__.__MAGIC__="3.8.7"
+__BRYTHON__.implementation=[3,8,8,'dev',0]
+__BRYTHON__.__MAGIC__="3.8.8"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-02-09 22:39:05.710862"
-__BRYTHON__.timestamp=1581284345710
+__BRYTHON__.compiled_date="2020-02-11 14:32:54.629367"
+__BRYTHON__.timestamp=1581427974629
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -7949,7 +7949,8 @@ var step=self.step===None ? 1 :$B.PyNumber_Index(self.step),step_is_neg=$B.gt(0,
 if(step==0){throw _b_.ValueError.$factory('slice step cannot be zero')}
 var start
 if(self.start===None){start=step_is_neg ? len_1 :0}else{start=$B.PyNumber_Index(self.start)
-if($B.gt(0,start)){start=$B.add(start,len)}
+if($B.gt(0,start)){start=$B.add(start,len)
+if($B.gt(0,start)){start=0}}
 if($B.ge(start,len)){start=step < 0 ? len_1 :len}}
 if(self.stop===None){stop=step_is_neg ?-1 :len}else{stop=$B.PyNumber_Index(self.stop)
 if($B.gt(0,stop)){stop=$B.add(stop,len)}

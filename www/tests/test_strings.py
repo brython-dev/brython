@@ -253,5 +253,10 @@ assertRaises(TypeError, sum, ['a', 'b'], '')
 # issue 1256
 assert "\U00000065" == "e"
 
+# issue 1292
+s = 'abcd'
+assert s[-100:] == 'abcd'
+assert s[:100] == 'abcd'
+assert s[-100:100] == 'abcd'
 
 print("passed all tests...")

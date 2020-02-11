@@ -249,4 +249,10 @@ assert ([2, 3] < [2]) is False
 assert [2] < [2, 3]
 assert [2, 3] > [2]
 
+# issue 1292
+lst = [1, 2, 3]
+assert lst[-100:] == [1, 2, 3]
+assert lst[:100] == [1, 2, 3]
+assert lst[-100:100] == [1, 2, 3]
+
 print("passed all tests..")
