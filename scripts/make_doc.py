@@ -46,6 +46,7 @@ with open(os.path.join(md_tutorial_path, "index.html"),
         encoding="utf-8") as f:
     index_tutorial = f.read()
 
+# documentation
 for lang in ['fr', 'en', 'es']:
     dest_path = os.path.join(static_doc_path, lang)
     dest_paths = [dest_path, os.path.join(dest_path,'cookbook')]
@@ -90,6 +91,8 @@ for lang in ['fr', 'en', 'es']:
                     shutil.rmtree(dest_dir)
                 shutil.copytree(os.path.join(src_path, filename), dest_dir)
 
+# tutorial
+for lang in ['br', 'fr', 'en', 'es', 'it']:
     print(f"tutorial {lang}")
     md_path = os.path.join(md_tutorial_path, lang)
     static_path = os.path.join(static_tutorial_path, lang)
