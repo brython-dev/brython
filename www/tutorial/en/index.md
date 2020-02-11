@@ -1,6 +1,6 @@
 This tutorial explains how to develop an application that runs in the browser using the Python programming language. We will take the example of writing a calculator.
 
-You will need a text editor, and of course a browser with an Internet access. Note that you don't have to install the Python interpreter (the one that can be loaded on the language site, python.org).
+You will need a text editor, and of course a browser with an Internet access.
 
 The contents of this tutorial assumes that you have at least a basic knowledge of HTML (general page structure, most usual tags), of stylesheets (CSS) and of the Python language.
 
@@ -34,7 +34,7 @@ document <= "Hello !"
 In an empty directory, save this page as __`index.html`__. To read it in the browser, you have two options:
 
 - use the File/Open menu: it is the most simple solution. It brings [some limitations](/static_doc/en/file_or_http.html) for an advanced use, but it works perfectly for this tutorial
-- launch a web server, for isntance that of the CPython standard distribution by running `python -m http.server` in the file directory, then enter _localhost:8000/index.html_ in the browser address bar
+- launch a web server : for instance, if the Python interpreter available from python.org is available on your machine, run `python -m http.server` in the file directory, then enter _localhost:8000/index.html_ in the browser address bar
 
 When you open the page, you should see the message "Hello !" printed on the browser window.
 
@@ -60,7 +60,7 @@ To add a text to the document - concretely, to display a text in the browser - t
 document <= "Hello !"
 ```
 
-You can think of the `<=` sign as a left arrow : the document "receives" a new element, here the string "Hello !". You will see in the demo page that it is always possible to use the standardized DOM syntax to interact with the page, by Brython provides a few shortcuts to make the code less verbose.
+You can think of the `<=` sign as a left arrow : the document "receives" a new element, here the string "Hello !". You will see later that it is always possible to use the standardized DOM syntax to interact with the page, by Brython provides a few shortcuts to make the code less verbose.
 
 Text formatting with HTML tags
 ==============================
@@ -176,7 +176,7 @@ for button in document.select("td"):
     button.bind("click", action)
 ```
 
-To be compliant to Python syntax, the function `action()` must have been defined somewhere before in the program. Such "callback" functions take a single parameter, an objects that represents the event.
+To be compliant to Python syntax, the function `action()` must have been defined somewhere before in the program. Such "callback" functions take a single parameter, an object that represents the event.
 
 Complete program
 ================

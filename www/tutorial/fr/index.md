@@ -1,6 +1,6 @@
 Ce tutoriel vous explique comment développer une application qui s'exécute dans un navigateur en utilisant le langage Python. Nous prendrons comme exemple la construction d'une calculatrice.
 
-Vous aurez besoin d'un éditeur de texte, et naturellement d'un navigateur avec un accès à Internet. A noter que vous n'avez pas besoin d'installer l'interpréteur Python (celui qu'on peut télécharger sur le site du langage, python.org).
+Vous aurez besoin d'un éditeur de texte, et naturellement d'un navigateur avec un accès à Internet.
 
 Le contenu de ce tutoriel suppose que vous avez une connaissance basique de HTML (structure générale d'une page, principales balises), des feuilles de style (CSS), et du langage Python.
 
@@ -34,7 +34,7 @@ document <= "Bonjour !"
 Dans un répertoire vide, sauvegardez cette page sous le nom __`index.html`__. Pour lire cette page dans le navigateur, vous avez deux options:
 
 - utiliser le menu Fichier/Ouvrir du navigateur : c'est la solution la plus rapide. Elle apporte [quelques limitations](/static_doc/fr/file_or_http.html) pour un usage avancé, mais pour ce tutoriel elle est parfaitement adaptée
-- lancer un serveur web local, par exemple celui de la distribution standard en exécutant `python -m http.server` dans le répertoire du fichier, puis entrer _localhost:8000/index.html_ dans la barre d'adresse du navigateur
+- lancer un serveur web local : par exemple, si votre poste est équipé de la version de Python disponible sur python.org, exécuter `python -m http.server` dans le répertoire du fichier, puis entrer _localhost:8000/index.html_ dans la barre d'adresse du navigateur
 
 En ouvrant la page, vous devriez voir le message "Bonjour !" s'afficher sur la page.
 

@@ -1,6 +1,6 @@
 Este tutorial explica como desarrollar una aplicación que se ejecuta en el navegador usando el lenguaje de programación Python. Usaremos el ejemplo de crear una calculadora.
 
-Necesitarás un editor de texto y, por supuesto, un navegador con acceso a internet. No hace falta que instales el intérprete de Python (el que se descarga del sitio oficial de Python, python.org).
+Necesitarás un editor de texto y, por supuesto, un navegador con acceso a internet.
 
 Los contenidos de este tutorial asume que dispones de conocimientos basicos de HTML (estructura general de la página, las etiquetas más usadas), de hojas de estilos (CSS) y del lenguaje Python.
 
@@ -34,7 +34,7 @@ document <= "Hola !"
 Guarda la página en un directorio vacio con el nombre __`index.html`__. Para verlo en el navegador dispones de varias opciones:
 
 - usa el menú File/Open del navegador: es la solución más simple. Tiene ciertas limitaciones [ciertas limitaciones](/static_doc/en/file_or_http.html) para un uso más avanzado pero esta opción funcionará sin problemas para poder llevar este tutorial a cabo.
-- lanza un servidor web, como por ejemplo el disponible en la distribución estándar de CPython ejecutando `python -m http.server` en el directorio donde hemos guardado el fichero. Luego puedes introducir _localhost:8000/index.html_ en la barra de direcciones del navegador (para esta opción SÍ que te hará falta tener instalado un intérprete de CPython).
+- lanza un servidor web : por ejemplo, si el intérprete de Python que se descarga del site python.org está instalado en el equipo, ejecuta `python -m http.server` en el directorio donde hemos guardado el fichero. Luego puedes introducir _localhost:8000/index.html_ en la barra de direcciones del navegador (para esta opción SÍ que te hará falta tener instalado un intérprete de CPython).
 
 Cuando abras la página deberías ver el mensaje "Hola !" mostrado en la ventana del navegador.
 
