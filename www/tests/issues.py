@@ -2555,6 +2555,9 @@ range = __builtins__.range
 
 assert list(range(3)) == [0, 1, 2]
 
+# issue 1292
+assertRaises(SyntaxError, exec, "for in range(1):\n pass")
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

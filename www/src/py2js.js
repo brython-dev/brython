@@ -8121,6 +8121,10 @@ var $transition = $B.parser.$transition = function(context, token, value){
         case 'for':
             switch(token) {
                 case 'in':
+                    if(context.tree[0].tree.length == 0){
+                        // issue 1293 : "for in range(n)"
+                        $_SyntaxError(context, "missing target of 'for' loop")
+                    }
                     return new $AbstractExprCtx(
                         new $ExprCtx(context,'target list', true), false)
                 case ':':
