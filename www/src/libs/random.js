@@ -693,7 +693,6 @@ Random.randrange = function(){
 
     for(var i = 1, len = arguments.length; i < len; i++){
         if(! is_integer(arguments[i])){
-            console.log(arguments[i])
             throw _b_.ValueError.$factory("non-integer arg " + i +
                 " for randrange()")
         }
