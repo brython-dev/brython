@@ -398,5 +398,9 @@ for v1, v2 in [
     [145243080305115916 , 12]
 ]:
     assert v1 & 255 == v2, (v1, v1 & 255)
-    
+
+# issue 1298
+pow(10, Fraction(1))
+pow(10, Fraction(-1))
+
 print('passed all tests...')

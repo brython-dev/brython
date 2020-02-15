@@ -242,7 +242,7 @@ int.__floordiv__ = function(self, other){
         }
         return Math.floor(self / other)
     }
-    if(hasattr(other, "__rfloordiv__")){
+    if(_b_.hasattr(other, "__rfloordiv__")){
         return $B.$getattr(other, "__rfloordiv__")(self)
     }
     $err("//", other)
@@ -297,7 +297,9 @@ int.__mod__ = function(self, other) {
             "integer division or modulo by zero")}
         return (self % other + other) % other
     }
-    if(hasattr(other, "__rmod__")){return $B.$getattr(other, "__rmod__")(self)}
+    if(_b_.hasattr(other, "__rmod__")){
+        return $B.$getattr(other, "__rmod__")(self)
+    }
     $err("%", other)
 }
 
@@ -427,7 +429,10 @@ int.__pow__ = function(self, other, z){
             ln = Math.log(self)
         return $B.make_complex(preal * Math.cos(ln), preal * Math.sin(ln))
     }
-    if(hasattr(other, "__rpow__")){return $B.$getattr(other, "__rpow__")(self)}
+    var rpow = $B.$getattr(other, "__rpow__", _b_.None)
+    if(rpow !== _b_.None){
+        return rpow(self)
+    }
     $err("**", other)
 }
 
@@ -740,25 +745,6 @@ int.$factory = function(value, base){
             "object or a number, not '" + $B.class_name(value) + "'")
     }
     return num_value
-
-    /*
-    var $trunc = $B.$getattr(value, "__trunc__", _b_.None)
-    if($trunc !== _b_.None){
-        var res = $trunc(),
-            int_func = $int
-        if(int_func === _b_.None){
-            throw _b_.TypeError.$factory("__trunc__ returned non-Integral (type "+
-                $B.class_name(res) + ")")
-        }
-        var res = int_func()
-        if(_b_.isinstance(res, int)){return int_value(res)}
-        throw _b_.TypeError.$factory("__trunc__ returned non-Integral (type "+
-                $B.class_name(res) + ")")
-    }
-    throw _b_.TypeError.$factory(
-        "int() argument must be a string, a bytes-like " +
-        "object or a number, not '" + $B.class_name(value) + "'")
-    */
 }
 
 $B.set_func_names(int, "builtins")

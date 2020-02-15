@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,8,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.8"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-02-15 15:20:03.913386"
-__BRYTHON__.timestamp=1581776403913
+__BRYTHON__.compiled_date="2020-02-15 15:32:02.560941"
+__BRYTHON__.timestamp=1581777122560
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -9888,7 +9888,7 @@ if(other==0){throw _b_.ZeroDivisionError.$factory("division by zero")}
 return Math.floor(self/other)}
 if(_b_.isinstance(other,_b_.float)){if(!other.valueOf()){throw _b_.ZeroDivisionError.$factory("division by zero")}
 return Math.floor(self/other)}
-if(hasattr(other,"__rfloordiv__")){return $B.$getattr(other,"__rfloordiv__")(self)}
+if(_b_.hasattr(other,"__rfloordiv__")){return $B.$getattr(other,"__rfloordiv__")(self)}
 $err("//",other)}
 int.__hash__=function(self){if(self===undefined){return int.__hashvalue__ ||$B.$py_next_hash--}
 return self.valueOf()}
@@ -9912,7 +9912,7 @@ else if(other===true){other=1}
 if(other==0){throw _b_.ZeroDivisionError.$factory(
 "integer division or modulo by zero")}
 return(self % other+other)% other}
-if(hasattr(other,"__rmod__")){return $B.$getattr(other,"__rmod__")(self)}
+if(_b_.hasattr(other,"__rmod__")){return $B.$getattr(other,"__rmod__")(self)}
 $err("%",other)}
 int.__mro__=[_b_.object]
 int.__mul__=function(self,other){var val=self.valueOf()
@@ -9963,7 +9963,8 @@ if(_b_.isinstance(other,_b_.float)){if(self >=0){return new Number(Math.pow(self
 else{
 return _b_.complex.__pow__($B.make_complex(self,0),other)}}else if(_b_.isinstance(other,_b_.complex)){var preal=Math.pow(self,other.$real),ln=Math.log(self)
 return $B.make_complex(preal*Math.cos(ln),preal*Math.sin(ln))}
-if(hasattr(other,"__rpow__")){return $B.$getattr(other,"__rpow__")(self)}
+var rpow=$B.$getattr(other,"__rpow__",_b_.None)
+if(rpow !==_b_.None){return rpow(self)}
 $err("**",other)}
 int.__repr__=function(self){if(self===int){return "<class 'int'>"}
 return self.toString()}
