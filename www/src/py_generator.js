@@ -675,7 +675,8 @@ var generator = {
     $infos: {
         __module__: "builtins",
         __name__: "generator"
-    }
+    },
+    $is_class: true
 }
 
 //fix me, need to investigate __enter__ and __exit__ and what they do

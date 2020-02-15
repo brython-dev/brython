@@ -98,15 +98,13 @@ range.__hash__ = function(self){
 var RangeIterator = {
     __class__: _b_.type,
     __mro__: [_b_.object],
-
     __iter__: function(self){return self},
-
     __next__: function(self){return _b_.next(self.obj)},
-
     $infos:{
         __name__: "range_iterator",
         __module__: "builtins"
-    }
+    },
+    $is_class: true
 }
 
 RangeIterator.$factory = function(obj){
