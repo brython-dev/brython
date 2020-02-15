@@ -8016,6 +8016,10 @@ var $transition = $B.parser.$transition = function(context, token, value){
                                $_SyntaxError(context, ["cannot assign to operator"])
                            }
                        }
+                   }else if(context.parent.type == "expr" &&
+                           context.parent.name == "target list"){
+                       $_SyntaxError(context, 'token ' + token + ' after '
+                           + context)
                    }
                    while(context.parent !== undefined){
                        context = context.parent

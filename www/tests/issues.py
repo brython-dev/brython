@@ -2558,6 +2558,10 @@ assert list(range(3)) == [0, 1, 2]
 # issue 1292
 assertRaises(SyntaxError, exec, "for in range(1):\n pass")
 
+# issue 1297
+assertRaises(SyntaxError, exec, "for i in range = 10")
+
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
