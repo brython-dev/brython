@@ -964,7 +964,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = attr == "Date" // && obj === $B // "Point"
+    var $test = false // attr == "__mro__" // && obj === $B // "Point"
     if($test){console.log("$getattr", attr, obj, klass)}
 
     // Shortcut for classes without parents
@@ -1067,8 +1067,13 @@ $B.$getattr = function(obj, attr, _default){
               // The attribute __mro__ of class objects doesn't include the
               // class itself
               return _b_.tuple.$factory([obj].concat(obj.__mro__))
+          }else if(obj.__dict__ &&
+                  obj.__dict__.$string_dict.__mro__ !== undefined){
+              return obj.__dict__.$string_dict.__mro__
           }
-          break
+          // stop search here, looking in the objects's class would return
+          // the classe's __mro__
+          throw _b_.AttributeError.$factory(attr)
       case '__subclasses__':
           if(klass.$factory || klass.$is_class){
               var subclasses = obj.$subclasses || []
