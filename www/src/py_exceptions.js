@@ -181,18 +181,22 @@ traceback.__getattribute__ = function(self, attr){
                 for(var i = self.$stack.length - 1; i >= 0; i--){
                     var fr = self.$stack[i]
                     if(fr[2] == info[1]){
-                        src = fr[3].$src
+                        file = fr[3].__file__
                         break
                     }
                 }
-                if(src === undefined && $B.file_cache.hasOwnProperty(info[1])){
-                    src = $B.file_cache[info[1]]
-                }else if($B.imported[info[1]] && $B.imported[info[1]].__file__ ){
-                    src = $B.file_cache[$B.imported[info[1]].__file__]
+                if(src === undefined){
+                    if($B.file_cache.hasOwnProperty(file)){
+                        src = $B.file_cache[file]
+                    }else if($B.imported[info[1]] && $B.imported[info[1]].__file__ ){
+                        src = $B.file_cache[$B.imported[info[1]].__file__]
+                        console.log("from filecache", line_info, $B.imported[info[1]].__file__)
+                    }
                 }
                 if(src !== undefined){
                     return src.split("\n")[parseInt(info[0] - 1)].trim()
                 }else{
+                    console.log(file)
                     console.log("no src for", info)
                     return "<unknown>"
                 }
@@ -271,7 +275,6 @@ var frame = $B.make_class("frame",
                     }
                     if(_frame[4].$infos === undefined){
                         // issue 1286
-                        filename = "<string>"
                         if(_frame[4].name.startsWith("__ge")){
                             co_name = "<genexpr>"
                         }else if(_frame[4].name.startsWith("set_comp" +
@@ -280,16 +283,19 @@ var frame = $B.make_class("frame",
                         }
                     }else if(filename === undefined && _frame[4].$infos.__code__){
                         filename = _frame[4].$infos.__code__.co_filename
+                        if(filename === undefined){
+                            filename = _frame[4].$infos.__module__
+                        }
                         res.f_lineno = _frame[4].$infos.__code__.co_firstlineno
                     }
                 }
             }
             res.f_code = {__class__: $B.code,
                 co_code: None, // XXX fix me
-                co_name: co_name, // idem
-                co_filename: filename // idem
+                co_name: co_name,
+                co_filename: filename
             }
-            if(res.f_code.co_filename === undefined){
+            if(filename === undefined){
                 res.f_code.co_filename = "<string>"
             }
         }

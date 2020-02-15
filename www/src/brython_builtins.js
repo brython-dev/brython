@@ -72,7 +72,7 @@ $B.webworkers = {}
 // Mapping between a module name and its path (url)
 $B.$py_module_path = {}
 
-// File cache
+// File cache, indexed by module names
 $B.file_cache = {}
 
 // Mapping between a Python module name and its source code

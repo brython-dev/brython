@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,8,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.8"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-02-12 14:04:11.106915"
-__BRYTHON__.timestamp=1581512651106
+__BRYTHON__.compiled_date="2020-02-15 15:05:15.347182"
+__BRYTHON__.timestamp=1581775515347
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -6764,7 +6764,7 @@ attr=$B.to_alias(attr)
 if(obj===undefined){console.log("get attr",attr,"of undefined")}
 var is_class=obj.$is_class ||obj.$factory
 var klass=obj.__class__
-var $test=attr=="Date" 
+var $test=false 
 if($test){console.log("$getattr",attr,obj,klass)}
 if(klass !==undefined && klass.__bases__ &&
 (klass.__bases__.length==0 ||
@@ -6806,8 +6806,9 @@ return $B.builtins_doc[builtin_names[i]]}}
 break
 case '__mro__':
 if(obj.$is_class){
-return _b_.tuple.$factory([obj].concat(obj.__mro__))}
-break
+return _b_.tuple.$factory([obj].concat(obj.__mro__))}else if(obj.__dict__ &&
+obj.__dict__.$string_dict.__mro__ !==undefined){return obj.__dict__.$string_dict.__mro__}
+throw _b_.AttributeError.$factory(attr)
 case '__subclasses__':
 if(klass.$factory ||klass.$is_class){var subclasses=obj.$subclasses ||[]
 return function(){return subclasses}}
@@ -7638,10 +7639,12 @@ return lineno
 case "tb_lasti":
 if(line_info===undefined){return "<unknown>"}else{var info=line_info.split(","),src
 for(var i=self.$stack.length-1;i >=0;i--){var fr=self.$stack[i]
-if(fr[2]==info[1]){src=fr[3].$src
+if(fr[2]==info[1]){file=fr[3].__file__
 break}}
-if(src===undefined && $B.file_cache.hasOwnProperty(info[1])){src=$B.file_cache[info[1]]}else if($B.imported[info[1]]&& $B.imported[info[1]].__file__ ){src=$B.file_cache[$B.imported[info[1]].__file__]}
-if(src !==undefined){return src.split("\n")[parseInt(info[0]-1)].trim()}else{console.log("no src for",info)
+if(src===undefined){if($B.file_cache.hasOwnProperty(file)){src=$B.file_cache[file]}else if($B.imported[info[1]]&& $B.imported[info[1]].__file__ ){src=$B.file_cache[$B.imported[info[1]].__file__]
+console.log("from filecache",line_info,$B.imported[info[1]].__file__)}}
+if(src !==undefined){return src.split("\n")[parseInt(info[0]-1)].trim()}else{console.log(file)
+console.log("no src for",info)
 return "<unknown>"}}
 case "tb_next":
 if(self.$stack.length <=1){return None}
@@ -7668,14 +7671,13 @@ var co_name=locals_id.startsWith("$exec")? "<string>" :
 locals_id
 if(locals_id==_frame[2]){co_name="<module>"}else{if(_frame[1].$name){co_name=_frame[1].$name}else if(_frame[1].$dict_comp){co_name='<dictcomp>'}else if(_frame[1].$list_comp){co_name='<listcomp>'}else if(_frame.length > 4){if(_frame[4].$infos){co_name=_frame[4].$infos.__name__}else{co_name=_frame[4].name}
 if(_frame[4].$infos===undefined){
-filename="<string>"
 if(_frame[4].name.startsWith("__ge")){co_name="<genexpr>"}else if(_frame[4].name.startsWith("set_comp"+
 $B.lambda_magic)){co_name="<setcomp>"}}else if(filename===undefined && _frame[4].$infos.__code__){filename=_frame[4].$infos.__code__.co_filename
+if(filename===undefined){filename=_frame[4].$infos.__module__}
 res.f_lineno=_frame[4].$infos.__code__.co_firstlineno}}}
 res.f_code={__class__:$B.code,co_code:None,
-co_name:co_name,
-co_filename:filename }
-if(res.f_code.co_filename===undefined){res.f_code.co_filename="<string>"}}
+co_name:co_name,co_filename:filename}
+if(filename===undefined){res.f_code.co_filename="<string>"}}
 return res}
 )
 frame.__getattr__=function(self,attr){
@@ -7872,7 +7874,7 @@ range.__hash__=function(self){var len=range.__len__(self)
 if(len==0){return _b_.hash(_b_.tuple.$factory([0,None,None]))}
 if(len==1){return _b_.hash(_b_.tuple.$factory([1,self.start,None]))}
 return _b_.hash(_b_.tuple.$factory([len,self.start,self.step]))}
-var RangeIterator={__class__:_b_.type,__mro__:[_b_.object],__iter__:function(self){return self},__next__:function(self){return _b_.next(self.obj)},$infos:{__name__:"range_iterator",__module__:"builtins"}}
+var RangeIterator={__class__:_b_.type,__mro__:[_b_.object],__iter__:function(self){return self},__next__:function(self){return _b_.next(self.obj)},$infos:{__name__:"range_iterator",__module__:"builtins"},$is_class:true}
 RangeIterator.$factory=function(obj){return{__class__:RangeIterator,obj:obj}}
 $B.set_func_names(RangeIterator,"builtins")
 range.__iter__=function(self){var res={__class__ :range,start:self.start,stop:self.stop,step:self.step}
@@ -9161,9 +9163,10 @@ return _b_.None},exec_module :function(cls,modobj){var stored=modobj.__spec__.lo
 delete modobj.__spec__["loader_state"]
 var ext=stored[0],module_contents=stored[1],imports=stored[2]
 modobj.$is_package=stored[3]||false
-var path=$B.brython_path+"Lib/"+modobj.__name__
-if(modobj.$is_package){path+="/__init__.py"}
+var path="VFS."+modobj.__name__
+path+=modobj.$is_package ? "/__init__.py" :ext
 modobj.__file__=path
+$B.file_cache[modobj.__file__]=$B.VFS[modobj.__name__][1]
 if(ext=='.js'){run_js(module_contents,modobj.__path__,modobj)}else if($B.precompiled.hasOwnProperty(modobj.__name__)){var parts=modobj.__name__.split(".")
 for(var i=0;i < parts.length;i++){var parent=parts.slice(0,i+1).join(".")
 if($B.imported.hasOwnProperty(parent)&&
@@ -9172,12 +9175,11 @@ var mod_js=$B.precompiled[parent],is_package=modobj.$is_package
 if(Array.isArray(mod_js)){mod_js=mod_js[0]}
 var mod=$B.imported[parent]=module.$factory(parent,undefined,is_package)
 mod.__initialized__=true
-mod.__file__=mod.__cached__="VFS."+modobj.__name__+".py"
-$B.file_cache[mod.__file__]=module_contents
 if(is_package){mod.__path__="<stdlib>"
 mod.__package__=parent}else{var elts=parent.split(".")
 elts.pop()
 mod.__package__=elts.join(".")}
+mod.__file__=path
 try{var parent_id=parent.replace(/\./g,"_")
 mod_js+="return $locals_"+parent_id
 var $module=new Function("$locals_"+parent_id,mod_js)(
@@ -9187,6 +9189,7 @@ console.log(Object.keys($B.imported))
 if($B.debug > 2){console.log(mod_js)}}
 throw err}
 for(var attr in $module){mod[attr]=$module[attr]}
+$module.__file__=path
 if(i>0){
 $B.builtins.setattr(
 $B.imported[parts.slice(0,i).join(".")],parts[i],$module)}}
@@ -13527,7 +13530,7 @@ var src=root.children[0].src(),next_src=src.substr(src.search("function"))
 next_src=next_src.substr(10)
 next_src=next_src.substr(next_src.search("function"))
 return next_src}
-var generator={__class__:_b_.type,__mro__:[_b_.object],$infos:{__module__:"builtins",__name__:"generator"}}
+var generator={__class__:_b_.type,__mro__:[_b_.object],$infos:{__module__:"builtins",__name__:"generator"},$is_class:true}
 generator.__enter__=function(self){console.log("generator.__enter__ called")}
 generator.__exit__=function(self){console.log("generator.__exit__ called")}
 generator.__str__=function(self){return "<generator object "+self.__name__+">"}
