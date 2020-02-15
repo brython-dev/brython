@@ -251,7 +251,7 @@ function run_py(module_contents, path, module, compiled) {
             module.__name__.replace(/\./g, "_") + "})(__BRYTHON__)\n" +
             "return $module"
         var module_id = "$locals_" + module.__name__.replace(/\./g, '_')
-        var $module = (new Function(module_id, js))(module) //eval(js)
+        var $module = (new Function(module_id, js))(module)
     }catch(err){
         /*
         console.log(err + " for module " + module.__name__)
@@ -333,9 +333,10 @@ var finder_VFS = {
             module_contents = stored[1],
             imports = stored[2]
         modobj.$is_package = stored[3] || false
-        var path = $B.brython_path + "Lib/" + modobj.__name__
-        if(modobj.$is_package){path += "/__init__.py"}
+        var path = "VFS." + modobj.__name__
+        path += modobj.$is_package ? "/__init__.py" : ext
         modobj.__file__ = path
+        $B.file_cache[modobj.__file__] = $B.VFS[modobj.__name__][1]
         if(ext == '.js'){
             run_js(module_contents, modobj.__path__, modobj)
         }else if($B.precompiled.hasOwnProperty(modobj.__name__)){
@@ -353,8 +354,6 @@ var finder_VFS = {
                var mod = $B.imported[parent] = module.$factory(parent,
                    undefined, is_package)
                mod.__initialized__ = true
-               mod.__file__ = mod.__cached__ = "VFS." + modobj.__name__ + ".py"
-               $B.file_cache[mod.__file__] = module_contents
                if(is_package){
                    mod.__path__ = "<stdlib>"
                    mod.__package__ = parent
@@ -363,6 +362,7 @@ var finder_VFS = {
                    elts.pop()
                    mod.__package__ = elts.join(".")
                }
+               mod.__file__ = path
                try{
                    var parent_id = parent.replace(/\./g, "_")
                    mod_js += "return $locals_" + parent_id
@@ -380,6 +380,7 @@ var finder_VFS = {
                for(var attr in $module){
                    mod[attr] = $module[attr]
                }
+               $module.__file__ = path
                if(i>0){
                    // Set attribute of parent module
                    $B.builtins.setattr(
@@ -389,7 +390,6 @@ var finder_VFS = {
 
            }
            return $module
-
 
         }else{
             var mod_name = modobj.__name__
@@ -914,7 +914,7 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
         if($B.imported[parsed_name[0]] &&
                 parsed_name.length == 2){
             try{
-                $B.$setattr($B.imported[parsed_name[0]], parsed_name[1], 
+                $B.$setattr($B.imported[parsed_name[0]], parsed_name[1],
                     modobj)
             }catch(err){
                 console.log("error", parsed_name, modobj)
