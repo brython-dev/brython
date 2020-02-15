@@ -380,7 +380,7 @@ int.__pow__ = function(self, other, z){
             case 1:
                 return int.$factory(self.valueOf())
       }
-      if(z !== undefined && z !== null){
+      if(z !== undefined && z !== _b_.None){
           // If z is provided, the algorithm is faster than computing
           // self ** other then applying the modulo z
           if(z == 1){return 0}

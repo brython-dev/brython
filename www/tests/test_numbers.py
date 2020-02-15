@@ -400,7 +400,9 @@ for v1, v2 in [
     assert v1 & 255 == v2, (v1, v1 & 255)
 
 # issue 1298
-pow(10, Fraction(1))
-pow(10, Fraction(-1))
+assert str(pow(10, Fraction(1))) == "10"
+assert str(pow(10, Fraction(-1))) == "1/10"
+assert str(pow(Fraction(10), 1)) == "10"
+assert str(pow(Fraction(10), -1)) == "1/10"
 
 print('passed all tests...')

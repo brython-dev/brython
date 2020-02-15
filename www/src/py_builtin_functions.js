@@ -1887,19 +1887,21 @@ function ord(c) {
     }
 }
 
-function pow(x, y) {
+function pow() {
     var $ = $B.args('pow', 3, {x: null, y: null, z: null},['x', 'y', 'z'],
-        arguments, {z: null}, null, null),
+        arguments, {z: None}, null, null),
+        x = $.x,
+        y = $.y,
         z = $.z
-    var klass = x.__class__ || $B.get_class(x),
-        res = $B.$call($B.$getattr(klass, '__pow__'))(x, y, z)
-    if(z === null){return res}
-    else{
+    var klass = x.__class__ || $B.get_class(x)
+    if(z === _b_.None){
+        return $B.$call($B.$getattr(klass, '__pow__'))(x, y)
+    }else{
         if(x != _b_.int.$factory(x) || y != _b_.int.$factory(y)){
             throw _b_.TypeError.$factory("pow() 3rd argument not allowed " +
                 "unless all arguments are integers")
         }
-        return $B.$getattr(res, '__mod__')(z)
+        return $B.$call($B.$getattr(klass, '__pow__'))(x, y, z)
     }
 }
 

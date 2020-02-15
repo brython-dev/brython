@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,8,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.8"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-02-15 15:32:02.560941"
-__BRYTHON__.timestamp=1581777122560
+__BRYTHON__.compiled_date="2020-02-15 16:19:50.461238"
+__BRYTHON__.timestamp=1581779990461
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -7132,12 +7132,11 @@ throw _b_.TypeError.$factory('ord() expected a character, but '+
 default:
 throw _b_.TypeError.$factory('ord() expected a character, but '+
 $B.class_name(c)+' was found')}}
-function pow(x,y){var $=$B.args('pow',3,{x:null,y:null,z:null},['x','y','z'],arguments,{z:null},null,null),z=$.z
-var klass=x.__class__ ||$B.get_class(x),res=$B.$call($B.$getattr(klass,'__pow__'))(x,y,z)
-if(z===null){return res}
-else{if(x !=_b_.int.$factory(x)||y !=_b_.int.$factory(y)){throw _b_.TypeError.$factory("pow() 3rd argument not allowed "+
+function pow(){var $=$B.args('pow',3,{x:null,y:null,z:null},['x','y','z'],arguments,{z:None},null,null),x=$.x,y=$.y,z=$.z
+var klass=x.__class__ ||$B.get_class(x)
+if(z===_b_.None){return $B.$call($B.$getattr(klass,'__pow__'))(x,y)}else{if(x !=_b_.int.$factory(x)||y !=_b_.int.$factory(y)){throw _b_.TypeError.$factory("pow() 3rd argument not allowed "+
 "unless all arguments are integers")}
-return $B.$getattr(res,'__mod__')(z)}}
+return $B.$call($B.$getattr(klass,'__pow__'))(x,y,z)}}
 function $print(){var $ns=$B.args('print',0,{},[],arguments,{},'args','kw')
 var ks=$ns['kw'].$string_dict
 var end=(ks['end']===undefined ||ks['end']===None)? '\n' :ks['end'][0],sep=(ks['sep']===undefined ||ks['sep']===None)? ' ' :ks['sep'][0],file=ks['file']===undefined ? $B.stdout :ks['file'][0],args=$ns['args']
@@ -9945,7 +9944,7 @@ switch(other.valueOf()){case 0:
 return int.$factory(1)
 case 1:
 return int.$factory(self.valueOf())}
-if(z !==undefined && z !==null){
+if(z !==undefined && z !==_b_.None){
 if(z==1){return 0}
 var result=1,base=self % z,exponent=other,long_int=$B.long_int
 while(exponent > 0){if(exponent % 2==1){if(result*base > $B.max_int){result=long_int.__mul__(
