@@ -964,7 +964,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false // attr == "__mro__" // && obj === $B // "Point"
+    var $test = false // attr == "__subclasscheck__" // && obj === $B // "Point"
     if($test){console.log("$getattr", attr, obj, klass)}
 
     // Shortcut for classes without parents
@@ -1166,7 +1166,7 @@ $B.$getattr = function(obj, attr, _default){
     if(typeof attr_func !== 'function'){
         console.log(attr + ' is not a function ' + attr_func, klass)
     }
-    if($test){console.log("attr_func is odga", attr_func,
+    if($test){console.log("attr_func is odga", attr_func, attr_func + "",
         attr_func === odga, obj[attr])}
     if(attr_func === odga){
         var res = obj[attr]
@@ -1469,21 +1469,19 @@ function issubclass(klass,classinfo){
 
     if(classinfo.$factory || classinfo.$is_class){
         if(klass === classinfo ||
-            klass.__mro__.indexOf(classinfo) > -1){return true}
+                klass.__mro__.indexOf(classinfo) > -1){
+            return true
+        }
     }
 
     // Search __subclasscheck__ on classinfo
-    var sch = $B.$getattr(classinfo, '__subclasscheck__', _b_.None)
+    var sch = $B.$getattr(classinfo.__class__ || $B.get_class(classinfo),
+        '__subclasscheck__', _b_.None)
 
     if(sch == _b_.None){
         return false
     }
-    if(classinfo === _b_.type ||
-            (classinfo.__bases__ &&
-             classinfo.__bases__.indexOf(_b_.type) > -1)){
-        return sch(classinfo, klass)
-    }
-    return sch(klass)
+    return sch(classinfo, klass)
 }
 
 // Utility class for iterators built from objects that have a __getitem__ and
@@ -1867,7 +1865,7 @@ function ord(c) {
     //return String.charCodeAt(c)  <= this returns an undefined function error
     // see http://msdn.microsoft.com/en-us/library/ie/hza4d04f(v=vs.94).aspx
     if(typeof c == 'string'){
-        if(c.length == 1){return c.charCodeAt(0)} // <= strobj.charCodeAt(index)
+        if(c.length == 1){return c.charCodeAt(0)}
         throw _b_.TypeError.$factory('ord() expected a character, but ' +
             'string of length ' + c.length + ' found')
     }

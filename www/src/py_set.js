@@ -317,7 +317,7 @@ function $add(self, item){
             item instanceof Number){
         $simple = true
     }
-    
+
     if($simple){
         var ix = self.$items.indexOf(item)
         if(ix == -1){

@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,8,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.8"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-02-15 16:19:50.461238"
-__BRYTHON__.timestamp=1581779990461
+__BRYTHON__.compiled_date="2020-02-16 14:48:55.793923"
+__BRYTHON__.timestamp=1581860935793
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -2043,7 +2043,7 @@ if(scope.binding && scope.binding[this.value]){return scope.id}
 scope=scope.parent}}
 this.boundBefore=function(scope){
 var node=$get_node(this),found=false
-var $test=this.value=="bx"
+var $test=false 
 while(!found && node.parent){var pnode=node.parent
 if(pnode.bindings && pnode.bindings[this.value]){if($test){console.log("bound in",pnode)}
 return pnode.bindings[this.value]}
@@ -2087,7 +2087,7 @@ if(val=='__BRYTHON__' ||val=='$B'){return val}
 var innermost=$get_scope(this),scope=innermost,found=[]
 var search_ids=['"'+innermost.id+'"']
 var gs=innermost
-var $test=val=="bx"
+var $test=false 
 if($test){console.log("this",this)}
 while(true){if($test){console.log(gs.id,gs)}
 if(gs.parent_block){if(gs.parent_block==$B.builtins_scope){break}
@@ -3817,7 +3817,7 @@ return $transition(C.parent,token)}
 if(C.expect==','){return $transition(C,'op','in')}
 break
 case ',':
-if(C.expect==','){if(C.with_commas){if($parent_match(C,{type:"yield","from":true})){$_SyntaxError(C,"no implicit tuple for yield from")}
+if(C.expect==','){if(C.with_commas ||C.parent.type=="assign"){if($parent_match(C,{type:"yield","from":true})){$_SyntaxError(C,"no implicit tuple for yield from")}
 C.parent.tree.pop()
 var tuple=new $ListOrTupleCtx(C.parent,'tuple')
 tuple.implicit=true
@@ -4741,9 +4741,10 @@ if($B.unicodedb !==undefined){var re=new RegExp("^([0-9A-F]+);"+
 description+";.*$","m")
 search=re.exec($B.unicodedb)
 if(search===null){$_SyntaxError(C,"(unicode error) "+
-"unknown Unicode character name",pos)}
-if(search[1].length==4){zone+="\\u"+search[1]
-end=end_lit+1}else{end++}}else{end++}}else{if(end < src.length-1 &&
+"unknown Unicode character name")}
+var cp="0x"+search[1]
+zone+=String.fromCodePoint(eval(cp))
+end=end_lit+1}else{end++}}else{if(end < src.length-1 &&
 is_escaped[src.charAt(end+1)]===undefined){zone+='\\'}
 zone+='\\'
 escaped=true
@@ -5560,8 +5561,7 @@ i--
 continue}}}
 if(metaclass===undefined){if(bases && bases.length > 0 && bases[0].__class__ !==$B.JSObject){metaclass=bases[0].__class__
 for(var i=1;i < bases.length;i++){var mc=bases[i].__class__
-if(mc===metaclass){}else if(mc.__bases__ &&
-mc.__bases__.indexOf(metaclass)>-1){metaclass=mc}else if(metaclass.__bases__ &&
+if(mc===metaclass ||_b_.issubclass(metaclass,mc)){}else if(_b_.issubclass(mc,metaclass)){metaclass=mc}else if(metaclass.__bases__ &&
 metaclass.__bases__.indexOf(mc)==-1){throw _b_.TypeError.$factory("metaclass conflict: the "+
 "metaclass of a derived class must be a (non-"+
 "strict) subclass of the metaclasses of all its bases")}}}else{metaclass=_b_.type}}
@@ -6847,7 +6847,7 @@ if(mro===undefined){console.log(obj,attr,"no mro, klass",klass)}
 for(var i=0,len=mro.length;i < len;i++){attr_func=mro[i]['__getattribute__']
 if(attr_func !==undefined){break}}}}
 if(typeof attr_func !=='function'){console.log(attr+' is not a function '+attr_func,klass)}
-if($test){console.log("attr_func is odga",attr_func,attr_func===odga,obj[attr])}
+if($test){console.log("attr_func is odga",attr_func,attr_func+"",attr_func===odga,obj[attr])}
 if(attr_func===odga){var res=obj[attr]
 if(Array.isArray(obj)&& Array.prototype[attr]!==undefined){
 res=undefined}
@@ -6967,12 +6967,9 @@ if(isinstance(classinfo,_b_.tuple)){for(var i=0;i < classinfo.length;i++){if(iss
 return false}
 if(classinfo.$factory ||classinfo.$is_class){if(klass===classinfo ||
 klass.__mro__.indexOf(classinfo)>-1){return true}}
-var sch=$B.$getattr(classinfo,'__subclasscheck__',_b_.None)
+var sch=$B.$getattr(classinfo.__class__ ||$B.get_class(classinfo),'__subclasscheck__',_b_.None)
 if(sch==_b_.None){return false}
-if(classinfo===_b_.type ||
-(classinfo.__bases__ &&
-classinfo.__bases__.indexOf(_b_.type)>-1)){return sch(classinfo,klass)}
-return sch(klass)}
+return sch(classinfo,klass)}
 var iterator_class=$B.make_class("iterator",function(getitem,len){return{
 __class__:iterator_class,getitem:getitem,len:len,counter:-1}}
 )
