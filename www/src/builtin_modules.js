@@ -324,7 +324,7 @@
                 var klass = dicts[tag] = makeTagDict(tag)
                 klass.$factory = makeFactory(klass)
                 _b_.dict.$setitem(obj.tags, tag, klass)
-                
+
                 return klass
             }
 
@@ -447,67 +447,77 @@
         excepthook: function(exc_class, exc_value, traceback){
             $B.handle_error(exc_value)
         },
-        modules: {
-            __get__: function(){
+        modules: _b_.property.$factory(
+            function(){
                 return $B.obj_dict($B.imported)
             },
-            __set__: function(self, obj, value){
+            function(self, obj, value){
                  throw _b_.TypeError.$factory("Read only property 'sys.modules'")
             }
-        },
-        path: {
-            __get__: function(){return $B.path},
-            __set__: function(self, obj, value){
+        ),
+        path: _b_.property.$factory(
+            function(){
+                return $B.path
+            },
+            function(self, obj, value){
                  $B.path = value;
             }
-        },
-        meta_path: {
-            __get__: function(){return $B.meta_path},
-            __set__: function(self, obj, value){ $B.meta_path = value }
-        },
-        path_hooks: {
-            __get__: function(){return $B.path_hooks},
-            __set__: function(self, obj, value){ $B.path_hooks = value }
-        },
-        path_importer_cache: {
-            __get__: function(){
+        ),
+        meta_path: _b_.property.$factory(
+            function(){return $B.meta_path},
+            function(self, obj, value){ $B.meta_path = value }
+        ),
+        path_hooks: _b_.property.$factory(
+            function(){return $B.path_hooks},
+            function(self, obj, value){ $B.path_hooks = value }
+        ),
+        path_importer_cache: _b_.property.$factory(
+            function(){
                 return _b_.dict.$factory($B.JSObject.$factory($B.path_importer_cache))
             },
-            __set__: function(self, obj, value){
+            function(self, obj, value){
                 throw _b_.TypeError.$factory("Read only property" +
                     " 'sys.path_importer_cache'")
             }
-        },
+        ),
         settrace: function(){
             var $ = $B.args("settrace", 1, {tracefunc: null}, ['tracefunc'],
                     arguments, {}, null, null)
             $B.tracefunc = $.tracefunc
         },
-        stderr: {
-            __get__: function(){return $B.stderr},
-            __set__: function(self, obj, value){$B.stderr = value},
-            write: function(data){_b_.getattr($B.stderr,"write")(data)}
-        },
-        stdout: {
-            __get__: function(){return $B.stdout},
-            __set__: function(self, obj, value){$B.stdout = value},
-            write: function(data){_b_.getattr($B.stdout,"write")(data)}
-        },
-        stdin: {
-            __get__: function(){return $B.stdin},
-            __set__: function(){
+        stderr: _b_.property.$factory(
+            function(){return $B.stderr},
+            function(self, value){$B.stderr = value}
+        ),
+        stdout: _b_.property.$factory(
+            function(){return $B.stdout},
+            function(self, value){
+                $B.stdout = value
+            }
+        ),
+        stdin: _b_.property.$factory(
+            function(){return $B.stdin},
+            function(){
                 throw _b_.TypeError.$factory("sys.stdin is read-only")
             }
-        },
-        vfs: {
-            __get__: function(){
+        ),
+        vfs: _b_.property.$factory(
+            function(){
                 if($B.hasOwnProperty("VFS")){return $B.obj_dict($B.VFS)}
                 else{return _b_.None}
             },
-            __set__: function(){
+            function(){
                 throw _b_.TypeError.$factory("Read only property 'sys.vfs'")
             }
-        }
+        )
+    }
+
+    modules._sys.stderr.write = function(data){
+        return $B.$getattr(_sys.stderr.__get__(), "write")(data)
+    }
+
+    modules._sys.stdout.write = function(data){
+        return $B.$getattr(_sys.stdout.__get__(), "write")(data)
     }
 
     function load(name, module_obj){
@@ -521,6 +531,7 @@
             if(typeof module_obj[attr] == 'function'){
                 var attr1 = $B.from_alias(attr)
                 module_obj[attr].$infos = {
+                    __module__: name,
                     __name__: attr1,
                     __qualname__: name + '.' + attr1
                 }

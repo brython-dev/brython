@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,8,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.8"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-02-16 14:59:44.785868"
-__BRYTHON__.timestamp=1581861584785
+__BRYTHON__.compiled_date="2020-02-16 20:47:10.850742"
+__BRYTHON__.timestamp=1581882430850
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -343,6 +343,11 @@ this.parent.insert(rank+offset-1,new_node)}
 return ctx_offset}}
 this.clone=function(){var res=new $Node(this.type)
 for(var attr in this){res[attr]=this[attr]}
+return res}
+this.clone_tree=function(){var res=new $Node(this.type)
+for(var attr in this){res[attr]=this[attr]}
+res.children=[]
+for(var i=0,len=this.children.length;i < len;i++){res.add(this.children[i].clone_tree())}
 return res}}
 var $YieldFromMarkerNode=$B.parser.$YieldFromMarkerNode=function(params){$Node.apply(this,['marker'])
 new $NodeCtx(this)
@@ -724,9 +729,9 @@ parent.insert(rank+offset,new_node)
 in_class=true
 offset++}}}
 var left=C.tree[0].to_js()
-if(C.tree[0].type=="id"){var binding_scope=C.tree[0].firstBindingScopeId()
+if(C.tree[0].type=="id"){var binding_scope=C.tree[0].firstBindingScopeId(),left_value=C.tree[0].value
 if(binding_scope){left="$locals_"+binding_scope.replace(/\./g,'_')+
-'["'+C.tree[0].value+'"]'}}
+'["'+left_value+'"]'}else{left='$locals["'+left_value+'"]'}}
 if(left_bound_to_int && right_is_int){parent.insert(rank+offset,$NodeJS(left+" "+op+" "+right))
 return offset++}
 prefix=prefix && !C.tree[0].unknown_binding && !left_id_unbound
@@ -787,7 +792,9 @@ aa2.line_num=node.line_num
 else_node.add(aa2)
 var ctx2=new $NodeCtx(aa2)
 var expr2=new $ExprCtx(ctx2,'clone',false)
-if(left_id_unbound){new $RawJSCtx(expr2,left)}else{expr2.tree=C.tree
+if(left_id_unbound){var js=left
+if(! binding_scope){js='$B.$local_search("'+left_value+'");'+left}
+new $RawJSCtx(expr2,js)}else{expr2.tree=C.tree
 expr2.tree.forEach(function(elt){elt.parent=expr2})}
 var assign2=new $AssignCtx(expr2)
 assign2.tree.push($NodeJS('$B.$getattr('+C.to_js()+',"'+
@@ -1663,9 +1670,7 @@ C.tree[C.tree.length]=this
 this.toString=function(){return '(expr '+with_commas+') '+this.tree}
 this.to_js=function(arg){var res
 this.js_processed=true
-if(this.type=='list'){res='['+$to_js(this.tree)+']'}
-else if(this.tree.length==1){res=this.tree[0].to_js(arg)}
-else{res='_b_.tuple.$factory(['+$to_js(this.tree)+'])'}
+if(this.type=='list'){res='['+$to_js(this.tree)+']'}else if(this.tree.length==1){res=this.tree[0].to_js(arg)}else{res='_b_.tuple.$factory(['+$to_js(this.tree)+'])'}
 if(this.is_await){res="await ($B.promise("+res+"))"}
 if(this.assign){
 var scope=$get_scope(this)
@@ -1759,7 +1764,7 @@ for_node.add($NodeJS('if($safe'+num+'){$next'+num+
 ' += 1}'))
 for_node.add($NodeJS('else{$next'+num+' = $B.add($next'+
 num+',1)}'))}
-children.forEach(function(child){for_node.add(child)})
+children.forEach(function(child){for_node.add(child.clone_tree())})
 if($B.last(node.children).C.tree[0].type !="return"){var js='$locals.$line_info = "'+node.line_num+
 ','+this.module+'";if($locals.$f_trace !== _b_.None){'+
 '$B.trace_line()};None;'
@@ -2031,7 +2036,7 @@ this.bound=true}
 if(scope.ntype=='def' ||scope.ntype=='generator'){
 var _ctx=this.parent
 while(_ctx){if(_ctx.type=='list_or_tuple' && _ctx.is_comp()){this.in_comp=true
-return}
+break}
 _ctx=_ctx.parent}
 if(C.type=='expr' && C.parent.type=='comp_if'){
 return}else if(C.type=='global'){if(scope.globals===undefined){scope.globals=new Set([value])}else{scope.globals.add(value)}}}
@@ -2133,13 +2138,15 @@ if(this.nonlocal && found[0]===innermost){found.shift()}
 if(found.length > 0){
 if(found[0].C && found[0]===innermost
 && val.charAt(0)!='$'){var locs=this_node.locals ||{},nonlocs=innermost.nonlocals
-if(locs[val]===undefined &&
+try{if(locs[val]===undefined &&
 ((innermost.type !='def' ||
 innermost.type !='generator')&&
 innermost.ntype !='class' &&
+innermost.C.tree[0].args &&
 innermost.C.tree[0].args.indexOf(val)==-1)&&
 (nonlocs===undefined ||nonlocs[val]===undefined)){this.result='$B.$local_search("'+val+'")'
-return this.result}}
+return this.result}}catch(err){console.log("error",val,innermost)
+throw err}}
 if(found.length > 1 && found[0].C){if(found[0].C.tree[0].type=='class'){var ns0='$locals_'+found[0].id.replace(/\./g,'_'),ns1='$locals_'+found[1].id.replace(/\./g,'_'),res
 if(bound_before){if(bound_before.indexOf(val)>-1){this.found=found[0].binding[val]
 res=ns0}else{this.found=found[1].binding[val]
@@ -7148,7 +7155,10 @@ if(flush !==None){flush()}
 return None}
 $print.__name__='print'
 $print.is_func=true
-var property=$B.make_class("property")
+var property=$B.make_class("property",function(fget,fset,fdel,doc){var res={__class__:property}
+property.__init__(res,fget,fset,fdel,doc)
+return res}
+)
 property.__init__=function(self,fget,fset,fdel,doc){self.__doc__=doc ||""
 self.$type=fget.$type
 self.fget=fget
@@ -7164,6 +7174,8 @@ self.__delete__=fdel;
 self.getter=function(fget){return property.$factory(fget,self.fset,self.fdel,self.__doc__)}
 self.setter=function(fset){return property.$factory(self.fget,fset,self.fdel,self.__doc__)}
 self.deleter=function(fdel){return property.$factory(self.fget,self.fset,fdel,self.__doc__)}}
+property.__repr__=function(self){return _b_.repr(self.fget(self))}
+property.__str__=function(self){return _b_.str.$factory(self.fget(self))}
 $B.set_func_names(property,"builtins")
 function quit(){throw _b_.SystemExit}
 quit.__repr__=quit.__str__=function(){return "Use quit() or Ctrl-Z plus Return to exit"}
@@ -7491,7 +7503,7 @@ if(free_vars.length==0){return None}
 var cells=[]
 for(var i=0;i < free_vars.length;i++){try{cells.push($B.cell.$factory($B.$check_def_free(free_vars[i])))}catch(err){
 cells.push($B.cell.$factory(None))}}
-return _b_.tuple.$factory(cells)}else if(self.$attrs && self.$attrs[attr]!==undefined){return self.$attrs[attr]}else{return _b_.object.__getattribute__(self,attr)}}
+return _b_.tuple.$factory(cells)}else if(attr=="__globals__"){return $B.obj_dict($B.imported[self.$infos.__module__])}else if(self.$attrs && self.$attrs[attr]!==undefined){return self.$attrs[attr]}else{return _b_.object.__getattribute__(self,attr)}}
 $B.Function.__repr__=$B.Function.__str__=function(self){if(self.$infos===undefined){return '<function '+self.name+'>'}else{return '<function '+self.$infos.__qualname__+'>'}}
 $B.Function.__mro__=[object]
 $B.Function.__setattr__=function(self,attr,value){if(attr=="__closure__"){throw _b_.AttributeError.$factory("readonly attribute")}else if(attr=="__defaults__"){
@@ -13706,16 +13718,36 @@ modules['_sys']={
 Getframe :function(){var $=$B.args("_getframe",1,{depth:null},['depth'],arguments,{depth:0},null,null),depth=$.depth
 return $B._frame.$factory($B.frames_stack,$B.frames_stack.length-depth-1)},exc_info:function(){for(var i=$B.frames_stack.length-1;i >=0;i--){var frame=$B.frames_stack[i],exc=frame[1].$current_exception
 if(exc){return _b_.tuple.$factory([exc.__class__,exc,$B.$getattr(exc,"__traceback__")])}}
-return _b_.tuple.$factory([_b_.None,_b_.None,_b_.None])},excepthook:function(exc_class,exc_value,traceback){$B.handle_error(exc_value)},modules:{__get__:function(){return $B.obj_dict($B.imported)},__set__:function(self,obj,value){throw _b_.TypeError.$factory("Read only property 'sys.modules'")}},path:{__get__:function(){return $B.path},__set__:function(self,obj,value){$B.path=value;}},meta_path:{__get__:function(){return $B.meta_path},__set__:function(self,obj,value){$B.meta_path=value }},path_hooks:{__get__:function(){return $B.path_hooks},__set__:function(self,obj,value){$B.path_hooks=value }},path_importer_cache:{__get__:function(){return _b_.dict.$factory($B.JSObject.$factory($B.path_importer_cache))},__set__:function(self,obj,value){throw _b_.TypeError.$factory("Read only property"+
-" 'sys.path_importer_cache'")}},settrace:function(){var $=$B.args("settrace",1,{tracefunc:null},['tracefunc'],arguments,{},null,null)
-$B.tracefunc=$.tracefunc},stderr:{__get__:function(){return $B.stderr},__set__:function(self,obj,value){$B.stderr=value},write:function(data){_b_.getattr($B.stderr,"write")(data)}},stdout:{__get__:function(){return $B.stdout},__set__:function(self,obj,value){$B.stdout=value},write:function(data){_b_.getattr($B.stdout,"write")(data)}},stdin:{__get__:function(){return $B.stdin},__set__:function(){throw _b_.TypeError.$factory("sys.stdin is read-only")}},vfs:{__get__:function(){if($B.hasOwnProperty("VFS")){return $B.obj_dict($B.VFS)}
-else{return _b_.None}},__set__:function(){throw _b_.TypeError.$factory("Read only property 'sys.vfs'")}}}
+return _b_.tuple.$factory([_b_.None,_b_.None,_b_.None])},excepthook:function(exc_class,exc_value,traceback){$B.handle_error(exc_value)},modules:_b_.property.$factory(
+function(){return $B.obj_dict($B.imported)},function(self,obj,value){throw _b_.TypeError.$factory("Read only property 'sys.modules'")}
+),path:_b_.property.$factory(
+function(){return $B.path},function(self,obj,value){$B.path=value;}
+),meta_path:_b_.property.$factory(
+function(){return $B.meta_path},function(self,obj,value){$B.meta_path=value }
+),path_hooks:_b_.property.$factory(
+function(){return $B.path_hooks},function(self,obj,value){$B.path_hooks=value }
+),path_importer_cache:_b_.property.$factory(
+function(){return _b_.dict.$factory($B.JSObject.$factory($B.path_importer_cache))},function(self,obj,value){throw _b_.TypeError.$factory("Read only property"+
+" 'sys.path_importer_cache'")}
+),settrace:function(){var $=$B.args("settrace",1,{tracefunc:null},['tracefunc'],arguments,{},null,null)
+$B.tracefunc=$.tracefunc},stderr:_b_.property.$factory(
+function(){return $B.stderr},function(self,value){$B.stderr=value}
+),stdout:_b_.property.$factory(
+function(){return $B.stdout},function(self,value){$B.stdout=value}
+),stdin:_b_.property.$factory(
+function(){return $B.stdin},function(){throw _b_.TypeError.$factory("sys.stdin is read-only")}
+),vfs:_b_.property.$factory(
+function(){if($B.hasOwnProperty("VFS")){return $B.obj_dict($B.VFS)}
+else{return _b_.None}},function(){throw _b_.TypeError.$factory("Read only property 'sys.vfs'")}
+)}
+modules._sys.stderr.write=function(data){return $B.$getattr(_sys.stderr.__get__(),"write")(data)}
+modules._sys.stdout.write=function(data){return $B.$getattr(_sys.stdout.__get__(),"write")(data)}
 function load(name,module_obj){
 module_obj.__class__=$B.module
 module_obj.__name__=name
 $B.imported[name]=module_obj
 for(var attr in module_obj){if(typeof module_obj[attr]=='function'){var attr1=$B.from_alias(attr)
-module_obj[attr].$infos={__name__:attr1,__qualname__:name+'.'+attr1}}}}
+module_obj[attr].$infos={__module__:name,__name__:attr1,__qualname__:name+'.'+attr1}}}}
 for(var attr in modules){load(attr,modules[attr])}
 if(!($B.isWebWorker ||$B.isNode)){modules['browser'].html=modules['browser.html']}
 var _b_=$B.builtins

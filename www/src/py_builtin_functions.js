@@ -1930,7 +1930,15 @@ $print.__name__ = 'print'
 $print.is_func = true
 
 // property (built in function)
-var property = $B.make_class("property")
+var property = $B.make_class("property",
+    function(fget, fset, fdel, doc){
+        var res = {
+            __class__: property
+        }
+        property.__init__(res, fget, fset, fdel, doc)
+        return res
+    }
+)
 
 property.__init__ = function(self, fget, fset, fdel, doc) {
 
@@ -1973,6 +1981,14 @@ property.__init__ = function(self, fget, fset, fdel, doc) {
         return property.$factory(self.fget, self.fset, fdel, self.__doc__)
     }
 
+}
+
+property.__repr__ = function(self){
+    return _b_.repr(self.fget(self))
+}
+
+property.__str__ = function(self){
+    return _b_.str.$factory(self.fget(self))
 }
 
 $B.set_func_names(property, "builtins")
@@ -2933,6 +2949,8 @@ $B.Function.__getattribute__ = function(self, attr){
             }
         }
         return _b_.tuple.$factory(cells)
+    }else if(attr == "__globals__"){
+        return $B.obj_dict($B.imported[self.$infos.__module__])
     }else if(self.$attrs && self.$attrs[attr] !== undefined){
         return self.$attrs[attr]
     }else{
