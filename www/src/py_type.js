@@ -73,10 +73,9 @@ $B.$class_constructor = function(class_name, class_obj, bases,
             metaclass = bases[0].__class__
             for(var i = 1; i < bases.length; i++){
                 var mc = bases[i].__class__
-                if(mc === metaclass){
-                    // same metaclass, do nothing
-                }else if(mc.__bases__ &&
-                        mc.__bases__.indexOf(metaclass) > -1){
+                if(mc === metaclass || _b_.issubclass(metaclass, mc)){
+                    // same metaclass or a subclass, do nothing
+                }else if(_b_.issubclass(mc, metaclass)){
                     metaclass = mc
                 }else if(metaclass.__bases__ &&
                         metaclass.__bases__.indexOf(mc) == -1){
@@ -351,7 +350,7 @@ type.__getattribute__ = function(klass, attr){
                 function(key){delete klass[key]})
     }
     var res = klass[attr]
-    var $test = false // attr=="__str__" // && klass.$infos.__name__ == "N"
+    var $test = false // attr=="__subclasscheck__" // && klass.$infos.__name__ == "N"
     if($test){
         console.log("attr", attr, "of", klass, res, res + "")
     }
