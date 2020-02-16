@@ -7794,7 +7794,7 @@ var $transition = $B.parser.$transition = function(context, token, value){
                   break
               case ',':
                   if(context.expect == ','){
-                      if(context.with_commas){
+                      if(context.with_commas || context.parent.type == "assign"){
                           if($parent_match(context, {type: "yield", "from": true})){
                               $_SyntaxError(context, "no implicit tuple for yield from")
                           }
