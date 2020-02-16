@@ -3835,7 +3835,6 @@ var $FromCtx = $B.parser.$FromCtx = function(context){
     this.parent = context
     this.module = ''
     this.names = []
-    this.aliases = {}
     context.tree[context.tree.length] = this
     this.expect = 'module'
     this.scope = $get_scope(this)
@@ -3850,14 +3849,15 @@ var $FromCtx = $B.parser.$FromCtx = function(context){
         // Binds the names or aliases in current scope
         var scope = $get_scope(this)
         this.names.forEach(function(name){
-            name = this.aliases[name] || name
+            if(Array.isArray(name)){
+                name = name[1]
+            }
             $bind(name, scope, this)
         }, this)
     }
 
     this.toString = function(){
-        return '(from) ' + this.module + ' (import) ' + this.names +
-            '(as)' + this.aliases
+        return '(from) ' + this.module + ' (import) ' + this.names
     }
 
     this.to_js = function(){
@@ -3911,7 +3911,15 @@ var $FromCtx = $B.parser.$FromCtx = function(context){
         var mod_name = this.module.replace(/\$/g, '')
         res[pos++] = 'var module = $B.$import("'
         res[pos++] = mod_name + '",["'
-        res[pos++] = this.names.join('","') + '"], {'
+        var names = []
+        for(var i = 0, len = this.names.length; i < len; i++){
+            if(Array.isArray(this.names[i])){
+                names.push(this.names[i][0])
+            }else{
+                names.push(this.names[i])
+            }
+        }
+        res[pos++] = names.join('","') + '"], {'
         var sep = ''
         for (var attr in this.aliases) {
             res[pos++] = sep + '"' + attr + '": "' + this.aliases[attr] + '"'
@@ -3929,10 +3937,15 @@ var $FromCtx = $B.parser.$FromCtx = function(context){
                 '{$locals[attr] = module[attr]}};'
         }else{
             this.names.forEach(function(name){
+                var alias = name
+                if(Array.isArray(name)){
+                    alias = name[1]
+                    name = name[0]
+                }
                 module.imports[this.module + '.' + name] = true
                 res[pos++] = '\n' + head + '$locals["' +
-                (this.aliases[name] || name) + '"] = $B.$getattr($B.imported["' +
-                mod_name + '"], "' + name + '");'
+                    alias + '"] = $B.$getattr($B.imported["' +
+                    mod_name + '"], "' + name + '");'
             }, this)
         }
         res[pos++] = '\n' + head + 'None;'
@@ -8183,8 +8196,8 @@ var $transition = $B.parser.$transition = function(context, token, value){
                         return context
                     }
                     if(context.expect == 'alias'){
-                        context.aliases[context.names[context.names.length - 1]] =
-                            value
+                        context.names[context.names.length - 1] =
+                            [$B.last(context.names), value]
                         context.expect = ','
                         return context
                     }

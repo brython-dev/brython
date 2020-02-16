@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,8,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.8"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-02-16 21:16:13.030504"
-__BRYTHON__.timestamp=1581884173030
+__BRYTHON__.compiled_date="2020-02-16 22:08:06.394425"
+__BRYTHON__.timestamp=1581887286394
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -1891,7 +1891,6 @@ this.type='from'
 this.parent=C
 this.module=''
 this.names=[]
-this.aliases={}
 C.tree[C.tree.length]=this
 this.expect='module'
 this.scope=$get_scope(this)
@@ -1899,10 +1898,9 @@ this.add_name=function(name){this.names[this.names.length]=name
 if(name=='*'){this.scope.blurred=true}}
 this.bind_names=function(){
 var scope=$get_scope(this)
-this.names.forEach(function(name){name=this.aliases[name]||name
+this.names.forEach(function(name){if(Array.isArray(name)){name=name[1]}
 $bind(name,scope,this)},this)}
-this.toString=function(){return '(from) '+this.module+' (import) '+this.names+
-'(as)'+this.aliases}
+this.toString=function(){return '(from) '+this.module+' (import) '+this.names}
 this.to_js=function(){this.js_processed=true
 var scope=$get_scope(this),module=$get_module(this),mod=module.module,res=[],pos=0,indent=$get_node(this).indent,head=' '.repeat(indent)
 if(mod.startsWith("$exec")){var frame=$B.last($B.frames_stack)[1]
@@ -1921,7 +1919,9 @@ this.module=packages.join('.')
 var mod_name=this.module.replace(/\$/g,'')
 res[pos++]='var module = $B.$import("'
 res[pos++]=mod_name+'",["'
-res[pos++]=this.names.join('","')+'"], {'
+var names=[]
+for(var i=0,len=this.names.length;i < len;i++){if(Array.isArray(this.names[i])){names.push(this.names[i][0])}else{names.push(this.names[i])}}
+res[pos++]=names.join('","')+'"], {'
 var sep=''
 for(var attr in this.aliases){res[pos++]=sep+'"'+attr+'": "'+this.aliases[attr]+'"'
 sep=','}
@@ -1930,9 +1930,12 @@ if(this.names[0]=='*'){
 scope.blurred=true
 res[pos++]='\n'+head+'for(var attr in module'+
 '){if(attr.charAt(0) !== "_" && attr.charAt(0) !== "$")'+
-'{$locals[attr] = module[attr]}};'}else{this.names.forEach(function(name){module.imports[this.module+'.'+name]=true
+'{$locals[attr] = module[attr]}};'}else{this.names.forEach(function(name){var alias=name
+if(Array.isArray(name)){alias=name[1]
+name=name[0]}
+module.imports[this.module+'.'+name]=true
 res[pos++]='\n'+head+'$locals["'+
-(this.aliases[name]||name)+'"] = $B.$getattr($B.imported["'+
+alias+'"] = $B.$getattr($B.imported["'+
 mod_name+'"], "'+name+'");'},this)}
 res[pos++]='\n'+head+'None;'
 return res.join('');}}
@@ -4004,8 +4007,8 @@ switch(token){case 'id':
 if(C.expect=='id'){C.add_name(value)
 C.expect=','
 return C}
-if(C.expect=='alias'){C.aliases[C.names[C.names.length-1]]=
-value
+if(C.expect=='alias'){C.names[C.names.length-1]=
+[$B.last(C.names),value]
 C.expect=','
 return C}
 case '.':
