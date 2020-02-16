@@ -609,7 +609,21 @@ var $Node = $B.parser.$Node = function(type){
 
     this.clone = function(){
         var res = new $Node(this.type)
-        for(var attr in this){res[attr] = this[attr]}
+        for(var attr in this){
+            res[attr] = this[attr]
+        }
+        return res
+    }
+
+    this.clone_tree = function(){
+        var res = new $Node(this.type)
+        for(var attr in this){
+            res[attr] = this[attr]
+        }
+        res.children = []
+        for(var i = 0, len = this.children.length; i < len; i++){
+            res.add(this.children[i].clone_tree())
+        }
         return res
     }
 
@@ -1386,10 +1400,13 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
 
         var left = context.tree[0].to_js()
         if(context.tree[0].type == "id"){
-            var binding_scope = context.tree[0].firstBindingScopeId()
+            var binding_scope = context.tree[0].firstBindingScopeId(),
+                left_value = context.tree[0].value
             if(binding_scope){
                 left = "$locals_" + binding_scope.replace(/\./g, '_') +
-                    '["' + context.tree[0].value + '"]'
+                    '["' + left_value + '"]'
+            }else{
+                left = '$locals["' + left_value + '"]'
             }
         }
 
@@ -1493,7 +1510,11 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
         var ctx2 = new $NodeCtx(aa2)
         var expr2 = new $ExprCtx(ctx2, 'clone', false)
         if(left_id_unbound){
-            new $RawJSCtx(expr2, left) //'$locals["' + left_id + '"]')
+            var js = left
+            if(! binding_scope){
+                js = '$B.$local_search("' + left_value + '");' + left
+            }
+            new $RawJSCtx(expr2, js) //'$locals["' + left_id + '"]')
         }else{
             expr2.tree = context.tree
             expr2.tree.forEach(function(elt){
@@ -3311,9 +3332,13 @@ var $ExprCtx = $B.parser.$ExprCtx = function(context, name, with_commas){
     this.to_js = function(arg){
         var res
         this.js_processed = true
-        if(this.type == 'list'){res = '[' + $to_js(this.tree) + ']'}
-        else if(this.tree.length == 1){res = this.tree[0].to_js(arg)}
-        else{res = '_b_.tuple.$factory([' + $to_js(this.tree) + '])'}
+        if(this.type == 'list'){
+            res = '[' + $to_js(this.tree) + ']'
+        }else if(this.tree.length == 1){
+            res = this.tree[0].to_js(arg)
+        }else{
+            res = '_b_.tuple.$factory([' + $to_js(this.tree) + '])'
+        }
         if(this.is_await){
             res = "await ($B.promise(" + res + "))"
         }
@@ -3507,7 +3532,7 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
             }
             // Add the loop body
             children.forEach(function(child){
-                for_node.add(child)
+                for_node.add(child.clone_tree())
             })
             // Add a line to reset the line number
             if($B.last(node.children).context.tree[0].type != "return"){
@@ -4061,7 +4086,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
     var scope = this.scope = $get_scope(this)
     this.blurred_scope = this.scope.blurred
     this.env = clone(this.scope.binding)
-
+    
     // Store variables referenced in scope
     if(scope.ntype == "def" || scope.ntype == "generator"){
         scope.referenced = scope.referenced || {}
@@ -4112,7 +4137,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         while(_ctx){
             if(_ctx.type == 'list_or_tuple' && _ctx.is_comp()){
                 this.in_comp = true
-                return
+                break
             }
             _ctx = _ctx.parent
         }
@@ -4450,15 +4475,20 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                     && val.charAt(0) != '$'){
                 var locs = this_node.locals || {},
                     nonlocs = innermost.nonlocals
-
+                try{
                 if(locs[val] === undefined &&
                         ((innermost.type != 'def' ||
                              innermost.type != 'generator') &&
                         innermost.ntype != 'class' &&
+                        innermost.context.tree[0].args &&
                         innermost.context.tree[0].args.indexOf(val) == -1) &&
                         (nonlocs === undefined || nonlocs[val] === undefined)){
                     this.result = '$B.$local_search("' + val + '")'
                     return this.result
+                }
+                }catch(err){
+                    console.log("error", val, innermost)
+                    throw err
                 }
             }
             if(found.length > 1 && found[0].context){
@@ -6779,7 +6809,7 @@ var $add_profile = $B.parser.$add_profile = function(node,rank){
     }
 }
 
-var $add_line_num = $B.parser.$add_line_num = function(node, rank, line_info){
+ var $add_line_num = $B.parser.$add_line_num = function(node, rank, line_info){
 
     if(node.type == 'module'){
         var i = 0
@@ -6803,6 +6833,7 @@ var $add_line_num = $B.parser.$add_line_num = function(node, rank, line_info){
         else if(elt.type == 'except'){flag = false}
         else if(elt.type == 'single_kw'){flag = false}
         if(flag){
+
             _line_info = line_info === undefined ? line_num + ',' + mod_id :
                 line_info
             var js = ';$locals.$line_info = "' + _line_info +
