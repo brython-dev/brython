@@ -9352,7 +9352,7 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
                         }else if(src.substr(end + 1, 2) == 'N{'){
                             // Unicode literal ?
                             var end_lit = end + 3,
-                                re = new RegExp("[-A-Z0-9 ]+"),
+                                re = new RegExp("[-a-zA-Z0-9 ]+"),
                                 search = re.exec(src.substr(end_lit))
                             if(search === null){
                                 $_SyntaxError(context,"(unicode error) " +
@@ -9361,9 +9361,9 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
                             var end_lit = end_lit + search[0].length
                             if(src.charAt(end_lit) != "}"){
                                 $_SyntaxError(context, "(unicode error) " +
-                                    "malformed \\N character escape", pos)
+                                    "malformed \\N character escape")
                             }
-                            var description = search[0]
+                            var description = search[0].toUpperCase()
                             // Load unicode table if not already loaded
                             if($B.unicodedb === undefined){
                                 var xhr = new XMLHttpRequest

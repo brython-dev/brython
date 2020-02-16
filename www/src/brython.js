@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,8,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.8"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-02-16 14:48:55.793923"
-__BRYTHON__.timestamp=1581860935793
+__BRYTHON__.compiled_date="2020-02-16 14:59:44.785868"
+__BRYTHON__.timestamp=1581861584785
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -4725,13 +4725,13 @@ end++}
 escaped=true}else{if(src.charAt(end+1)=='\n'){
 end+=2
 lnum++}else if(src.substr(end+1,2)=='N{'){
-var end_lit=end+3,re=new RegExp("[-A-Z0-9 ]+"),search=re.exec(src.substr(end_lit))
+var end_lit=end+3,re=new RegExp("[-a-zA-Z0-9 ]+"),search=re.exec(src.substr(end_lit))
 if(search===null){$_SyntaxError(C,"(unicode error) "+
 "malformed \\N character escape",pos)}
 var end_lit=end_lit+search[0].length
 if(src.charAt(end_lit)!="}"){$_SyntaxError(C,"(unicode error) "+
-"malformed \\N character escape",pos)}
-var description=search[0]
+"malformed \\N character escape")}
+var description=search[0].toUpperCase()
 if($B.unicodedb===undefined){var xhr=new XMLHttpRequest
 xhr.open("GET",$B.brython_path+"unicode.txt",false)
 xhr.onreadystatechange=function(){if(this.readyState==4){if(this.status==200){$B.unicodedb=this.responseText}else{console.log("Warning - could not "+
