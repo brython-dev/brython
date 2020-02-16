@@ -20,12 +20,10 @@ digits = {}
 numerics = {}
 
 with open(dest_path, "w", encoding="ascii") as out:
-    with open("UnicodeData.txt", encoding="ascii") as f:
+    with open(os.path.join("ucd", "UnicodeData.txt"), encoding="ascii") as f:
         for line in f:
             items = line.strip().split(";")
             cp, lit, category = items[0], items[1], items[2]
-            if len(cp) > 4:
-                break
             if not lit:
                 continue
             combining, bidir, decomp = items[3], items[4], items[5]

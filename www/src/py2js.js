@@ -4166,7 +4166,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         // UnboundLocalError.
         var node = $get_node(this),
             found = false
-        var $test = this.value == "bx"
+        var $test = false // this.value == "bx"
 
         while(!found && node.parent){
             var pnode = node.parent
@@ -4301,7 +4301,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         // get global scope
         var gs = innermost
 
-        var $test = val == "bx"
+        var $test = false // val == "bx"
 
         if($test){
             console.log("this", this)
@@ -9386,15 +9386,12 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
                                     description + ";.*$", "m")
                                 search = re.exec($B.unicodedb)
                                 if(search === null){
-                                    $_SyntaxError(context,"(unicode error) " +
-                                        "unknown Unicode character name",pos)
+                                    $_SyntaxError(context, "(unicode error) " +
+                                        "unknown Unicode character name")
                                 }
-                                if(search[1].length == 4){
-                                    zone += "\\u" + search[1]
-                                    end = end_lit + 1
-                                }else{
-                                    end++
-                                }
+                                var cp = "0x" + search[1] // code point
+                                zone += String.fromCodePoint(eval(cp))
+                                end = end_lit + 1
                             }else{
                                 end++
                             }

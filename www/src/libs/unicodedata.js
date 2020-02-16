@@ -23,14 +23,14 @@ var $module = (function($B){
     }
 
     function _info(chr){
-        var ord = _b_.ord(chr),
+        var ord = chr.codePointAt(0),
             hex = ord.toString(16).toUpperCase()
         while(hex.length < 4){hex = "0" + hex}
         var re = new RegExp("^" + hex +";(.+?);(.*?);(.*?);(.*?);(.*?);(.*);(.*);(.*)$",
                 "m"),
             search = re.exec($B.unicodedb)
         if(search === null){
-            console.log("null", re)
+            console.log("null", chr, "value", cps, value, hex,  re)
             return null
         }else{
             return {
