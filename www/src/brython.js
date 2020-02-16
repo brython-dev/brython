@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,8,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.8"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-02-16 20:47:10.850742"
-__BRYTHON__.timestamp=1581882430850
+__BRYTHON__.compiled_date="2020-02-16 21:16:13.030504"
+__BRYTHON__.timestamp=1581884173030
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -3963,7 +3963,7 @@ case 'if':
 var in_comp=false,ctx=C.parent
 while(true){if(ctx.type=="list_or_tuple"){
 break}else if(ctx.type=='comp_for' ||ctx.type=="comp_if"){in_comp=true
-break}
+break}else if(ctx.type=='call_arg'){break}
 if(ctx.parent !==undefined){ctx=ctx.parent}
 else{break}}
 if(in_comp){break}

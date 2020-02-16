@@ -4086,7 +4086,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
     var scope = this.scope = $get_scope(this)
     this.blurred_scope = this.scope.blurred
     this.env = clone(this.scope.binding)
-    
+
     // Store variables referenced in scope
     if(scope.ntype == "def" || scope.ntype == "generator"){
         scope.referenced = scope.referenced || {}
@@ -8108,6 +8108,8 @@ var $transition = $B.parser.$transition = function(context, token, value){
                         break
                     }else if(ctx.type == 'comp_for' || ctx.type == "comp_if"){
                         in_comp = true
+                        break
+                    }else if(ctx.type == 'call_arg'){
                         break
                     }
                     if(ctx.parent !== undefined){ctx = ctx.parent}
