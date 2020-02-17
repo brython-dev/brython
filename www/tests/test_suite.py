@@ -606,4 +606,10 @@ def assign_expr_in_comp_nonlocal():
 
 assert assign_expr_in_comp_nonlocal() == 10
 
+# operation with unary neg
+def f(x, y):
+  return -x[1]*y[2], -x[0]*y[2]
+
+assert f([1, 2, 3], [4, 5, 6]) == (-12, -6)
+
 print('passed all tests...')
