@@ -2561,6 +2561,9 @@ assertRaises(SyntaxError, exec, "for in range(1):\n pass")
 # issue 1297
 assertRaises(SyntaxError, exec, "for i in range = 10")
 
+# ternary
+x = 1 if True is not None else 2, 3, 4
+assert x == (1, 3, 4)
 
 # ==========================================
 # Finally, report that all tests have passed

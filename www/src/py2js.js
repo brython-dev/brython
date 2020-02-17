@@ -6124,14 +6124,12 @@ var $TargetListCtx = $B.parser.$TargetListCtx = function(context){
     }
 }
 
-var $TernaryCtx = $B.parser.$TernaryCtx = function(context){
+var $TernaryCtx = $B.parser.$TernaryCtx = function(context, expr1){
     // Class for the ternary operator : "x if C else y"
     this.type = 'ternary'
-    this.parent = context.parent
-    context.parent.tree.pop()
-    context.parent.tree.push(this)
-    context.parent = this
-    this.tree = [context]
+    this.parent = context
+    context.tree.push(this)
+    this.tree = [expr1]
 
     this.toString = function(){return '(ternary) ' + this.tree}
 
@@ -8141,7 +8139,9 @@ var $transition = $B.parser.$transition = function(context, token, value){
                         ctx = ctx.parent
                     }
                 }
-                return new $AbstractExprCtx(new $TernaryCtx(ctx), false)
+                ctx.parent.tree.pop()
+                var expr = new $ExprCtx(ctx.parent, "ternary", false)
+                return new $AbstractExprCtx(new $TernaryCtx(expr, ctx), true)
             case 'eol':
                 // Special case for print and exec
                 if(context.tree.length == 2 &&
@@ -9085,6 +9085,15 @@ var $transition = $B.parser.$transition = function(context, token, value){
                 return new $AbstractExprCtx(context, false)
             }else if(! context.in_else){
                 $_SyntaxError(context, 'token ' + token + ' after ' + context)
+            }else if(false) { // token == ","){
+                // eg x = a if b else c, 2, 3
+                context.parent.tree.pop()
+                var t = new $ListOrTupleCtx(context.parent, 'tuple')
+                t.implicit = true
+                t.tree[0] = context
+                contx.parent = t
+                t.expect = "id"
+                return t
             }
             return $transition(context.parent, token, value)
         case 'try':
