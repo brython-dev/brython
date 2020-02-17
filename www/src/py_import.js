@@ -1071,6 +1071,17 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
     }
 }
 
+$B.import_all = function(locals, module){
+    // Used for "from module import *"
+    for(var attr in module){
+        if(attr.startsWith("$$")){
+            locals[attr] = module[attr]
+        }else if('_$'.indexOf(attr.charAt(0)) == -1){
+            locals[attr] = module[attr]
+        }
+    }
+}
+
 // List of path hooks. It is changed by function brython() depending
 // on the options passed
 $B.$path_hooks = [url_hook]

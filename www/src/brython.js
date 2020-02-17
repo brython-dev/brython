@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,8,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.8"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-02-17 21:34:00.782366"
-__BRYTHON__.timestamp=1581971640782
+__BRYTHON__.compiled_date="2020-02-17 22:21:01.286212"
+__BRYTHON__.timestamp=1581974461286
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -1928,9 +1928,7 @@ sep=','}
 res[pos++]='}, {}, true);'
 if(this.names[0]=='*'){
 scope.blurred=true
-res[pos++]='\n'+head+'for(var attr in module'+
-'){if(attr.charAt(0) !== "_" && attr.charAt(0) !== "$")'+
-'{$locals[attr] = module[attr]}};'}else{this.names.forEach(function(name){var alias=name
+res[pos++]='\n'+head+'$B.import_all($locals, module);'}else{this.names.forEach(function(name){var alias=name
 if(Array.isArray(name)){alias=name[1]
 name=name[0]}
 module.imports[this.module+'.'+name]=true
@@ -2907,11 +2905,13 @@ C.tree[C.tree.length]=this
 this.toString=function(){return '(target list) '+this.tree}
 this.to_js=function(){this.js_processed=true
 return $to_js(this.tree)}}
-var $TernaryCtx=$B.parser.$TernaryCtx=function(C,expr1){
+var $TernaryCtx=$B.parser.$TernaryCtx=function(C){
 this.type='ternary'
-this.parent=C
-C.tree.push(this)
-this.tree=[expr1]
+this.parent=C.parent
+C.parent.tree.pop()
+C.parent.tree.push(this)
+C.parent=this
+this.tree=[C]
 this.toString=function(){return '(ternary) '+this.tree}
 this.to_js=function(){this.js_processed=true
 var res='$B.$bool('+this.tree[1].to_js()+') ? ' 
@@ -3972,9 +3972,7 @@ var ctx=C
 while(ctx.parent && ctx.parent.type=='op'){ctx=ctx.parent
 if(ctx.type=='expr' &&
 ctx.parent && ctx.parent.type=='op'){ctx=ctx.parent}}
-ctx.parent.tree.pop()
-var expr=new $ExprCtx(ctx.parent,"ternary",false)
-return new $AbstractExprCtx(new $TernaryCtx(expr,ctx),true)
+return new $AbstractExprCtx(new $TernaryCtx(ctx),true)
 case 'eol':
 if(C.tree.length==2 &&
 C.tree[0].type=="id" &&
@@ -4571,14 +4569,15 @@ return $transition(C.parent,token,value)}
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'ternary':
 if(token=='else'){C.in_else=true
-return new $AbstractExprCtx(C,false)}else if(! C.in_else){$_SyntaxError(C,'token '+token+' after '+C)}else if(false){
-C.parent.tree.pop()
+return new $AbstractExprCtx(C,false)}else if(! C.in_else){$_SyntaxError(C,'token '+token+' after '+C)}else if(token==","){
+if(["assign","augm_assign","node","return"].
+indexOf(C.parent.type)>-1){C.parent.tree.pop()
 var t=new $ListOrTupleCtx(C.parent,'tuple')
 t.implicit=true
 t.tree[0]=C
-contx.parent=t
+C.parent=t
 t.expect="id"
-return t}
+return t}}
 return $transition(C.parent,token,value)
 case 'try':
 if(token==':'){return $BodyCtx(C)}
@@ -9427,6 +9426,8 @@ console.log($B.last($B.frames_stack))}
 throw _b_.ImportError.$factory(
 "cannot import name '"+name+"'")}}}}
 return locals}}
+$B.import_all=function(locals,module){
+for(var attr in module){if(attr.startsWith("$$")){locals[attr]=module[attr]}else if('_$'.indexOf(attr.charAt(0))==-1){locals[attr]=module[attr]}}}
 $B.$path_hooks=[url_hook]
 $B.$meta_path=[finder_VFS,finder_stdlib_static,finder_path]
 $B.finders={VFS:finder_VFS,stdlib_static:finder_stdlib_static,path:finder_path}
