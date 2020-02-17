@@ -3932,9 +3932,7 @@ var $FromCtx = $B.parser.$FromCtx = function(context){
             // Set attribute to indicate that the scope has a
             // 'from X import *' : this will make name resolution harder :-(
             scope.blurred = true
-            res[pos++] = '\n' + head + 'for(var attr in module' +
-                '){if(attr.charAt(0) !== "_" && attr.charAt(0) !== "$")' +
-                '{$locals[attr] = module[attr]}};'
+            res[pos++] = '\n' + head + '$B.import_all($locals, module);'
         }else{
             this.names.forEach(function(name){
                 var alias = name
@@ -6124,12 +6122,14 @@ var $TargetListCtx = $B.parser.$TargetListCtx = function(context){
     }
 }
 
-var $TernaryCtx = $B.parser.$TernaryCtx = function(context, expr1){
+var $TernaryCtx = $B.parser.$TernaryCtx = function(context){
     // Class for the ternary operator : "x if C else y"
     this.type = 'ternary'
-    this.parent = context
-    context.tree.push(this)
-    this.tree = [expr1]
+    this.parent = context.parent
+    context.parent.tree.pop()
+    context.parent.tree.push(this)
+    context.parent = this
+    this.tree = [context]
 
     this.toString = function(){return '(ternary) ' + this.tree}
 
@@ -8139,9 +8139,7 @@ var $transition = $B.parser.$transition = function(context, token, value){
                         ctx = ctx.parent
                     }
                 }
-                ctx.parent.tree.pop()
-                var expr = new $ExprCtx(ctx.parent, "ternary", false)
-                return new $AbstractExprCtx(new $TernaryCtx(expr, ctx), true)
+                return new $AbstractExprCtx(new $TernaryCtx(ctx), true)
             case 'eol':
                 // Special case for print and exec
                 if(context.tree.length == 2 &&
@@ -9085,15 +9083,18 @@ var $transition = $B.parser.$transition = function(context, token, value){
                 return new $AbstractExprCtx(context, false)
             }else if(! context.in_else){
                 $_SyntaxError(context, 'token ' + token + ' after ' + context)
-            }else if(false) { // token == ","){
+            }else if(token == ","){
                 // eg x = a if b else c, 2, 3
-                context.parent.tree.pop()
-                var t = new $ListOrTupleCtx(context.parent, 'tuple')
-                t.implicit = true
-                t.tree[0] = context
-                contx.parent = t
-                t.expect = "id"
-                return t
+                if(["assign", "augm_assign", "node", "return"].
+                    indexOf(context.parent.type) > -1){
+                    context.parent.tree.pop()
+                    var t = new $ListOrTupleCtx(context.parent, 'tuple')
+                    t.implicit = true
+                    t.tree[0] = context
+                    context.parent = t
+                    t.expect = "id"
+                    return t
+                }
             }
             return $transition(context.parent, token, value)
         case 'try':
