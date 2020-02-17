@@ -9059,7 +9059,8 @@ var $transition = $B.parser.$transition = function(context, token, value){
                 case '[':
                     if(context.expect == 'id'){
                       context.expect = ','
-                      return new $TargetListCtx(context)
+                      return new $ListOrTupleCtx(context,
+                          token == '(' ? 'tuple' : 'list')
                     }
                 case ')':
                 case ']':

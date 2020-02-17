@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,8,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.8"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-02-16 22:08:06.394425"
-__BRYTHON__.timestamp=1581887286394
+__BRYTHON__.compiled_date="2020-02-17 09:19:55.899493"
+__BRYTHON__.timestamp=1581927595899
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -4559,7 +4559,7 @@ return new $PackedCtx(C)}
 case '(':
 case '[':
 if(C.expect=='id'){C.expect=','
-return new $TargetListCtx(C)}
+return new $ListOrTupleCtx(C,token=='(' ? 'tuple' :'list')}
 case ')':
 case ']':
 if(C.expect==','){return C.parent}
