@@ -226,7 +226,7 @@ class ModulesFinder:
                             package = module[:module.rfind(".")]
                         else:
                             package = ""
-                        imports = self.get_imports(module_dict[module][1],
+                        self.get_imports(module_dict[module][1],
                             package)
         return finder.imports
 
@@ -253,7 +253,7 @@ class ModulesFinder:
         imports = set()
         for dirname, dirnames, filenames in os.walk(self.directory):
             for name in dirnames:
-                if name.endswith('__dist__'):
+                if name.endswith('__dist__') or name.endswith("__pycache__"):
                     # don't inspect files in the subfolder __dist__
                     dirnames.remove(name)
                     break
@@ -465,7 +465,10 @@ else:
     sp_dir = os.path.join(stdlib_dir, "Lib", "site-packages")
     if os.path.exists(sp_dir):
         print("search in site-packages...")
+        mf = ModulesFinder()
         for dirpath, dirnames, filenames in os.walk(sp_dir):
+            if dirpath.endswith("__pycache__"):
+                continue
             package = dirpath[len(sp_dir) + 1:]
             for filename in filenames:
                 if not filename.endswith(".py"):
@@ -484,7 +487,6 @@ else:
                     module = ".".join(elts)
                 with open(fullpath, encoding="utf-8") as f:
                     src = f.read()
-                mf = ModulesFinder()
                 imports = mf.get_imports(src)
                 stdlib[module] = [".py", src, list(imports), is_package]
 
@@ -643,4 +645,5 @@ if __name__ == "__main__":
     finder = ModulesFinder()
     finder.inspect()
     print(sorted(list(finder.modules)))
+
 
