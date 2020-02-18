@@ -516,7 +516,7 @@ set.pop = function(self){
         var hash = _b_.hash(item),
             items = self.$hashes[hash]
         for(var k = 0; k < items.length; k++){
-            if($B.rich_comp("__eq__", items[k], _item)){
+            if($B.rich_comp("__eq__", items[k], item)){
                 self.$hashes[hash].splice(k, 1)
                 break
             }

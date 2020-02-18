@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,8,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.8"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-02-17 22:48:08.043918"
-__BRYTHON__.timestamp=1581976088043
+__BRYTHON__.compiled_date="2020-02-18 12:05:05.019491"
+__BRYTHON__.timestamp=1582023905019
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -8726,7 +8726,7 @@ set.pop=function(self){if(self.$items.length===0){throw _b_.KeyError.$factory('p
 var item=self.$items.pop()
 if(typeof item !="string" && typeof item !="number"){
 var hash=_b_.hash(item),items=self.$hashes[hash]
-for(var k=0;k < items.length;k++){if($B.rich_comp("__eq__",items[k],_item)){self.$hashes[hash].splice(k,1)
+for(var k=0;k < items.length;k++){if($B.rich_comp("__eq__",items[k],item)){self.$hashes[hash].splice(k,1)
 break}}}
 return item}
 set.remove=function(self,item){
