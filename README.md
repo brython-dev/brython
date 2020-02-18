@@ -34,19 +34,20 @@ Here is a simple example of an HTML page running Python:
 To use Brython, all there is to do is:
 
 1. Load the script [brython.js](http://brython.info/src/brython.js "Brython from the site brython.info").
-2. Run the function `brython()` on page load, like `<body onload=brython()>`.
-3. Write Python code inside tags `<script type="text/python">` or linking it.
+2. Run the function `brython()` on page load, like `<body onload="brython()">`.
+3. Write Python code inside tags `<script type="text/python">`.
 
 
 Main features
 =============
-Brython supports most of the syntax of [Python 3](https://www.python.org "Python Homepage"),
+Brython supports the syntax of [Python 3](https://www.python.org "Python Homepage"),
 including comprehensions, generators, metaclasses, imports, etc.
 and many modules of the CPython distribution.
 
 It includes libraries to interact with DOM elements and events,
 and with existing Javascript libraries such as jQuery, 3D, Highcharts, Raphael etc.
-It supports lastest specs of HTML5/CSS3, and can use CSS Frameworks like Bootstrap3, LESS, SASS etc.
+It supports the latest specs of HTML5/CSS3, and can use CSS Frameworks like
+Bootstrap3, LESS, SASS etc.
 
 
 Getting started
@@ -117,12 +118,14 @@ Gallery of examples
 ===================
 There is a [gallery of examples](http://brython.info/gallery/gallery_en.html "gallery of examples")
 where you can see simple and advanced examples using vanilla Brython or
-interacting with other javascript libraries.
+interacting with Javascript libraries.
 
 
 Documentation
 =============
-Documentation is available on the [official site](http://www.brython.info "Brython Homepage").
+You can start by reading the official [Brython tutorial](https://brython.info/static_tutorial/en/index.html).
+
+Full documentation is available on the [official site](http://www.brython.info "Brython Homepage").
 You can read the docs in [English](http://brython.info/static_doc/en/intro.html),
 [French](http://brython.info/static_doc/fr/intro.html) and
 [Spanish](http://brython.info/static_doc/es/intro.html).
