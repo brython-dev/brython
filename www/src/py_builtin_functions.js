@@ -2742,6 +2742,8 @@ function $url_open(){
                 throw $res
             }
             $string = $res
+        }else{
+            console.warn("cannot load by Ajax call with protocol 'file'")
         }
 
         if($string === undefined && $bytes === undefined){
