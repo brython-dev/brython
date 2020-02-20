@@ -106,7 +106,7 @@ class ImportsFinder:
 
     def __init__(self, *args, **kw):
         self.package = kw.pop("package") or ""
-
+        
     def find(self, src):
         """Find imports in source code src. Uses the tokenize module instead
         of ast in previous Brython version, so that this script can be run
@@ -226,8 +226,8 @@ class ModulesFinder:
                             package = module[:module.rfind(".")]
                         else:
                             package = ""
-                        self.get_imports(module_dict[module][1],
-                            package)
+                        module_dict[module][2] = list(self.get_imports(
+                            module_dict[module][1], package))
         return finder.imports
 
     def norm_indent(self, script):
@@ -276,12 +276,12 @@ class ModulesFinder:
                     for script in parser.scripts:
                         script = self.norm_indent(script)
                         try:
-                            imports |= self.get_imports(script)
+                            self.get_imports(script)
                         except SyntaxError:
                             print('syntax error', path)
                             traceback.print_exc(file=sys.stderr)
                 elif ext.lower() == '.py':
-                    print("python", filename)
+                    #print("python", filename)
                     if filename == "list_modules.py":
                         continue
                     if dirname != self.directory and not is_package(dirname):
@@ -297,7 +297,6 @@ class ModulesFinder:
                         except SyntaxError:
                             print('syntax error', path)
                             traceback.print_exc(file=sys.stderr)
-        self.imports = sorted(list(imports))
 
     def make_brython_modules(self):
         """Build brython_modules.js from the list of modules needed by the
@@ -472,9 +471,9 @@ else:
             package = dirpath[len(sp_dir) + 1:]
             for filename in filenames:
                 if not filename.endswith(".py"):
-                    print("skip non-Python module", filename)
                     continue
                 fullpath = os.path.join(dirpath, filename)
+                #print(fullpath)
                 is_package = False
                 if not package:
                     # file in site-packages
@@ -487,8 +486,10 @@ else:
                     module = ".".join(elts)
                 with open(fullpath, encoding="utf-8") as f:
                     src = f.read()
-                imports = mf.get_imports(src)
-                stdlib[module] = [".py", src, list(imports), is_package]
+                #imports = mf.get_imports(src)
+                stdlib[module] = [".py", src, None]
+                if is_package:
+                    stdlib[module].append(1)
 
 packages = {os.getcwd(), os.getcwd() + '/Lib/site-packages'}
 
@@ -534,10 +535,10 @@ for dirname, dirnames, filenames in os.walk(os.getcwd()):
                 module_name = "{}.{}".format(package, name)
             with open(path, encoding="utf-8") as fobj:
                 src = fobj.read()
-            mf = ModulesFinder(dirname)
-            imports = mf.get_imports(src, package or None)
-            imports = sorted(list(imports))
-            user_modules[module_name] = [ext, src, imports]
+            #mf = ModulesFinder(dirname)
+            #imports = mf.get_imports(src, package or None)
+            #imports = sorted(list(imports))
+            user_modules[module_name] = [ext, src, None]
             if module_name == package:
                 user_modules[module_name].append(1)
 
@@ -645,5 +646,4 @@ if __name__ == "__main__":
     finder = ModulesFinder()
     finder.inspect()
     print(sorted(list(finder.modules)))
-
 
