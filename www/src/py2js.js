@@ -7836,7 +7836,7 @@ var $transition = $B.parser.$transition = function(context, token, value){
                   break
               case ',':
                   if(context.expect == ','){
-                      if(context.with_commas || 
+                      if(context.with_commas ||
                               ["assign", "return"].indexOf(context.parent.type) > -1){
                           if($parent_match(context, {type: "yield", "from": true})){
                               $_SyntaxError(context, "no implicit tuple for yield from")
@@ -9240,7 +9240,7 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
     // from https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Reserved_Words
 
     var int_pattern = /^(\d[0-9_]*)(j|J)?/,
-        float_pattern1 = /^(\d[\d_]*)\.(\d*)([eE][+-]?\d+(_\d+)*)?(j|J)?/,
+        float_pattern1 = /^(\d[\d_]*)\.(\d+(_\d+)*)?([eE][+-]?\d+(_\d+)*)?(j|J)?/,
         float_pattern2 = /^(\d[\d_]*)([eE][+-]?\d+(_\d+)*)(j|J)?/,
         hex_pattern = /^0[xX]([\da-fA-F_]+)/,
         octal_pattern = /^0[oO]([0-7_]+)/,

@@ -423,4 +423,7 @@ assert formatted == ['59.94', '299.7']
 assert pow(38, -1, mod=97) == 23
 assert 23 * 38 % 97 == 1
 
+# issue 1300
+assert 3.14_15_93j == 3.141593j
+
 print('passed all tests...')
