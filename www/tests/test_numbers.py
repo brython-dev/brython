@@ -405,4 +405,18 @@ assert str(pow(10, Fraction(-1))) == "1/10"
 assert str(pow(Fraction(10), 1)) == "10"
 assert str(pow(Fraction(10), -1)) == "1/10"
 
+# issue 1295
+nums = ['1.0472', '5.236']
+formatted = [f'{(float(i)*180/3.1446464646):.2g}' for i in nums]
+assert formatted == ['60', '3e+02']
+
+formatted = [f'{(float(i)*180/3.1446464646):#.2G}' for i in nums]
+assert formatted == ['60.', '3.0E+02']
+
+formatted = [f'{(float(i)*180/3.1446464646):.3g}' for i in nums]
+assert formatted == ['59.9', '300']
+
+formatted = [f'{(float(i)*180/3.1446464646):.4g}' for i in nums]
+assert formatted == ['59.94', '299.7']
+
 print('passed all tests...')

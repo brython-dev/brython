@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,8,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.8"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-02-18 12:05:05.019491"
-__BRYTHON__.timestamp=1582023905019
+__BRYTHON__.compiled_date="2020-02-20 14:32:47.209267"
+__BRYTHON__.timestamp=1582205567209
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -9162,7 +9162,17 @@ js="var $module = (function(){\n"+js+"return $locals_"+
 module.__name__.replace(/\./g,"_")+"})(__BRYTHON__)\n"+
 "return $module"
 var module_id="$locals_"+module.__name__.replace(/\./g,'_')
-var $module=(new Function(module_id,js))(module)}catch(err){
+var $module=(new Function(module_id,js))(module)}catch(err){console.log(err+" for module "+module.__name__)
+console.log("module",module)
+console.log(root)
+console.log(err)
+if($B.debug > 1){console.log(js)}
+for(var attr in err){console.log(attr,err[attr])}
+console.log(_b_.getattr(err,"info","[no info]"))
+console.log("message: "+err.$message)
+console.log("filename: "+err.fileName)
+console.log("linenum: "+err.lineNumber)
+if($B.debug > 0){console.log("line info "+$B.line_info)}
 throw err}finally{$B.clear_ns(module.__name__)}
 try{
 var mod=eval("$module")
@@ -9187,7 +9197,8 @@ var path="VFS."+modobj.__name__
 path+=modobj.$is_package ? "/__init__.py" :ext
 modobj.__file__=path
 $B.file_cache[modobj.__file__]=$B.VFS[modobj.__name__][1]
-if(ext=='.js'){run_js(module_contents,modobj.__path__,modobj)}else if($B.precompiled.hasOwnProperty(modobj.__name__)){var parts=modobj.__name__.split(".")
+if(ext=='.js'){run_js(module_contents,modobj.__path__,modobj)}else if($B.precompiled.hasOwnProperty(modobj.__name__)){if($B.debug > 1){console.info("load",modobj.__name__,"from precompiled")}
+var parts=modobj.__name__.split(".")
 for(var i=0;i < parts.length;i++){var parent=parts.slice(0,i+1).join(".")
 if($B.imported.hasOwnProperty(parent)&&
 $B.imported[parent].__initialized__){continue}
@@ -9206,11 +9217,11 @@ var $module=new Function("$locals_"+parent_id,mod_js)(
 mod)}catch(err){if($B.debug > 1){console.log(err)
 for(var k in err){console.log(k,err[k])}
 console.log(Object.keys($B.imported))
-if($B.debug > 2){console.log(mod_js)}}
+if($B.debug > 2){console.log(modobj,"mod_js",mod_js)}}
 throw err}
 for(var attr in $module){mod[attr]=$module[attr]}
 $module.__file__=path
-if(i>0){
+if(i > 0){
 $B.builtins.setattr(
 $B.imported[parts.slice(0,i).join(".")],parts[i],$module)}}
 return $module}else{var mod_name=modobj.__name__
@@ -9227,7 +9238,8 @@ if($B.$options.indexedDB && self.indexedDB &&
 $B.idb_name){
 var idb_cx=indexedDB.open($B.idb_name)
 idb_cx.onsuccess=function(evt){var db=evt.target.result,tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules"),cursor=store.openCursor(),request=store.put(record)
-request.onsuccess=function(){if($B.debug > 1){console.info(modobj.__name__,"stored in db")}}}}}},find_module:function(cls,name,path){return{
+request.onsuccess=function(){if($B.debug > 1){console.info(modobj.__name__,"stored in db")}}
+request.onerror=function(){console.info("could not store "+modobj.__name__)}}}}},find_module:function(cls,name,path){return{
 __class__:Loader,load_module:function(name,path){var spec=cls.find_spec(cls,name,path)
 var mod=module.$factory(name)
 $B.imported[name]=mod
@@ -9537,7 +9549,16 @@ var res=self.toFixed(prec),pt_pos=res.indexOf(".")
 if(fmt.type !==undefined &&
 (fmt.type=="%" ||fmt.type.toLowerCase()=="f")){if(pt_pos==-1){res+="."+"0".repeat(fmt.precision)}
 else{var missing=fmt.precision-res.length+pt_pos+1
-if(missing > 0){res+="0".repeat(missing)}}}else{var res1=self.toExponential(fmt.precision-1),exp=parseInt(res1.substr(res1.search("e")+1))
+if(missing > 0){res+="0".repeat(missing)}}}else if(fmt.type && fmt.type.toLowerCase()=="g"){var exp_fmt=preformat(self,{type:"e"}).split("e"),exp=parseInt(exp_fmt[1])
+if(-4 <=exp && exp < fmt.precision){res=preformat(self,{type:"f",precision:fmt.precision-1-exp})}else{res=preformat(self,{type:"e",precision:fmt.precision-1})}
+var parts=res.split("e")
+if(fmt.alternate){if(parts[0].search(/\./)==-1){parts[0]+='.'}}else{if(parts[1]){var signif=parts[0]
+while(signif.endsWith("0")){signif=signif.substr(0,signif.length-1)}
+if(signif.endsWith(".")){signif=signif.substr(0,signif.length-1)}
+parts[0]=signif}}
+res=parts.join("e")
+if(fmt.type=="G"){res=res.toUpperCase()}
+return res}else{var res1=self.toExponential(fmt.precision-1),exp=parseInt(res1.substr(res1.search("e")+1))
 if(exp <-4 ||exp >=fmt.precision-1){var elts=res1.split("e")
 while(elts[0].endsWith("0")){elts[0]=elts[0].substr(0,elts[0].length-1)}
 res=elts.join("e")}}}else{var res=_b_.str.$factory(self)}

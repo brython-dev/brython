@@ -221,6 +221,38 @@ function preformat(self, fmt){
                 var missing = fmt.precision - res.length + pt_pos + 1
                 if(missing > 0){res += "0".repeat(missing)}
             }
+        }else if(fmt.type && fmt.type.toLowerCase() == "g"){
+            var exp_fmt = preformat(self, {type: "e"}).split("e"),
+                exp = parseInt(exp_fmt[1])
+            if(-4 <= exp && exp < fmt.precision){
+                res = preformat(self,
+                        {type: "f", precision: fmt.precision - 1 - exp})
+            }else{
+                res = preformat(self,
+                    {type: "e", precision: fmt.precision - 1})
+            }
+            var parts = res.split("e")
+            if(fmt.alternate){
+                if(parts[0].search(/\./) == -1){
+                    parts[0] += '.'
+                }
+            }else{
+                if(parts[1]){
+                    var signif = parts[0]
+                    while(signif.endsWith("0")){
+                        signif = signif.substr(0, signif.length - 1)
+                    }
+                    if(signif.endsWith(".")){
+                        signif = signif.substr(0, signif.length - 1)
+                    }
+                    parts[0] = signif
+                }
+            }
+            res = parts.join("e")
+            if(fmt.type == "G"){
+                res = res.toUpperCase()
+            }
+            return res
         }else{
             var res1 = self.toExponential(fmt.precision - 1),
                 exp = parseInt(res1.substr(res1.search("e") + 1))

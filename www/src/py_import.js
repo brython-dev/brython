@@ -253,7 +253,7 @@ function run_py(module_contents, path, module, compiled) {
         var module_id = "$locals_" + module.__name__.replace(/\./g, '_')
         var $module = (new Function(module_id, js))(module)
     }catch(err){
-        /*
+
         console.log(err + " for module " + module.__name__)
         console.log("module", module)
         console.log(root)
@@ -270,7 +270,7 @@ function run_py(module_contents, path, module, compiled) {
         console.log("filename: " + err.fileName)
         console.log("linenum: " + err.lineNumber)
         if($B.debug > 0){console.log("line info " + $B.line_info)}
-        */
+
         throw err
     }finally{
         $B.clear_ns(module.__name__)
@@ -340,56 +340,59 @@ var finder_VFS = {
         if(ext == '.js'){
             run_js(module_contents, modobj.__path__, modobj)
         }else if($B.precompiled.hasOwnProperty(modobj.__name__)){
-           var parts = modobj.__name__.split(".")
-           for(var i = 0; i < parts.length; i++){
-               var parent = parts.slice(0, i + 1).join(".")
-               if($B.imported.hasOwnProperty(parent) &&
-                       $B.imported[parent].__initialized__){
-                   continue
-               }
-               // Initialise $B.imported[parent]
-               var mod_js = $B.precompiled[parent],
-                   is_package = modobj.$is_package
-               if(Array.isArray(mod_js)){mod_js = mod_js[0]}
-               var mod = $B.imported[parent] = module.$factory(parent,
-                   undefined, is_package)
-               mod.__initialized__ = true
-               if(is_package){
-                   mod.__path__ = "<stdlib>"
-                   mod.__package__ = parent
-               }else{
-                   var elts = parent.split(".")
-                   elts.pop()
-                   mod.__package__ = elts.join(".")
-               }
-               mod.__file__ = path
-               try{
-                   var parent_id = parent.replace(/\./g, "_")
-                   mod_js += "return $locals_" + parent_id
-                   var $module = new Function("$locals_" + parent_id, mod_js)(
-                       mod)
-               }catch(err){
-                   if($B.debug > 1){
-                       console.log(err)
-                       for(var k in err){console.log(k, err[k])}
-                       console.log(Object.keys($B.imported))
-                       if($B.debug > 2){console.log(mod_js)}
-                   }
-                   throw err
-               }
-               for(var attr in $module){
-                   mod[attr] = $module[attr]
-               }
-               $module.__file__ = path
-               if(i>0){
-                   // Set attribute of parent module
-                   $B.builtins.setattr(
-                       $B.imported[parts.slice(0, i).join(".")],
-                       parts[i], $module)
-               }
+            if($B.debug > 1){
+                console.info("load", modobj.__name__, "from precompiled")
+            }
+            var parts = modobj.__name__.split(".")
+            for(var i = 0; i < parts.length; i++){
+                var parent = parts.slice(0, i + 1).join(".")
+                if($B.imported.hasOwnProperty(parent) &&
+                        $B.imported[parent].__initialized__){
+                    continue
+                }
+                // Initialise $B.imported[parent]
+                var mod_js = $B.precompiled[parent],
+                    is_package = modobj.$is_package
+                if(Array.isArray(mod_js)){mod_js = mod_js[0]}
+                var mod = $B.imported[parent] = module.$factory(parent,
+                    undefined, is_package)
+                mod.__initialized__ = true
+                if(is_package){
+                    mod.__path__ = "<stdlib>"
+                    mod.__package__ = parent
+                }else{
+                    var elts = parent.split(".")
+                    elts.pop()
+                    mod.__package__ = elts.join(".")
+                }
+                mod.__file__ = path
+                try{
+                    var parent_id = parent.replace(/\./g, "_")
+                    mod_js += "return $locals_" + parent_id
+                    var $module = new Function("$locals_" + parent_id, mod_js)(
+                        mod)
+                }catch(err){
+                    if($B.debug > 1){
+                        console.log(err)
+                        for(var k in err){console.log(k, err[k])}
+                        console.log(Object.keys($B.imported))
+                        if($B.debug > 2){console.log(modobj, "mod_js", mod_js)}
+                    }
+                    throw err
+                }
+                for(var attr in $module){
+                    mod[attr] = $module[attr]
+                }
+                $module.__file__ = path
+                if(i > 0){
+                    // Set attribute of parent module
+                    $B.builtins.setattr(
+                        $B.imported[parts.slice(0, i).join(".")],
+                        parts[i], $module)
+                }
 
-           }
-           return $module
+            }
+            return $module
 
         }else{
             var mod_name = modobj.__name__
@@ -422,6 +425,9 @@ var finder_VFS = {
                         if($B.debug > 1){
                             console.info(modobj.__name__, "stored in db")
                         }
+                    }
+                    request.onerror = function(){
+                        console.info("could not store " + modobj.__name__)
                     }
                 }
             }
