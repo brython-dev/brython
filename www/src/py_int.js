@@ -371,6 +371,16 @@ int.__new__ = function(cls, value){
 
 int.__pos__ = function(self){return self}
 
+function extended_euclidean(a, b){
+    var d, u, v
+    if(b == 0){
+      return [a, 1, 0]
+    }else{
+      [d, u, v] = extended_euclidean(b, a % b)
+      return [d, v, u - Math.floor(a / b) * v]
+    }
+}
+
 int.__pow__ = function(self, other, z){
     if(_b_.isinstance(other, int)){
         other = int_value(other)
@@ -388,6 +398,15 @@ int.__pow__ = function(self, other, z){
               base = self % z,
               exponent = other,
               long_int = $B.long_int
+          if(exponent < 0){
+              var gcd, inv, _
+              [gcd, inv, _] = extended_euclidean(self, z)
+              if(gcd !== 1){
+                  throw _b_.ValueError.$factory("not relative primes: " +
+                      self + ' and ' + z)
+              }
+              return int.__pow__(inv, -exponent, z)
+          }
           while(exponent > 0){
               if(exponent % 2 == 1){
                   if(result * base > $B.max_int){

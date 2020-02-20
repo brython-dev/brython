@@ -1886,11 +1886,11 @@ function ord(c) {
 }
 
 function pow() {
-    var $ = $B.args('pow', 3, {x: null, y: null, z: null},['x', 'y', 'z'],
-        arguments, {z: None}, null, null),
+    var $ = $B.args('pow', 3, {x: null, y: null, mod: null},['x', 'y', 'mod'],
+        arguments, {mod: None}, null, null),
         x = $.x,
         y = $.y,
-        z = $.z
+        z = $.mod
     var klass = x.__class__ || $B.get_class(x)
     if(z === _b_.None){
         return $B.$call($B.$getattr(klass, '__pow__'))(x, y)

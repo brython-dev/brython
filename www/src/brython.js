@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,8,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.8"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-02-20 14:32:47.209267"
-__BRYTHON__.timestamp=1582205567209
+__BRYTHON__.compiled_date="2020-02-20 15:10:33.491388"
+__BRYTHON__.timestamp=1582207833491
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -7146,7 +7146,7 @@ throw _b_.TypeError.$factory('ord() expected a character, but '+
 default:
 throw _b_.TypeError.$factory('ord() expected a character, but '+
 $B.class_name(c)+' was found')}}
-function pow(){var $=$B.args('pow',3,{x:null,y:null,z:null},['x','y','z'],arguments,{z:None},null,null),x=$.x,y=$.y,z=$.z
+function pow(){var $=$B.args('pow',3,{x:null,y:null,mod:null},['x','y','mod'],arguments,{mod:None},null,null),x=$.x,y=$.y,z=$.mod
 var klass=x.__class__ ||$B.get_class(x)
 if(z===_b_.None){return $B.$call($B.$getattr(klass,'__pow__'))(x,y)}else{if(x !=_b_.int.$factory(x)||y !=_b_.int.$factory(y)){throw _b_.TypeError.$factory("pow() 3rd argument not allowed "+
 "unless all arguments are integers")}
@@ -9981,6 +9981,9 @@ if(cls===int){return int.$factory(value)}
 return{
 __class__:cls,__dict__:_b_.dict.$factory(),$value:value ||0}}
 int.__pos__=function(self){return self}
+function extended_euclidean(a,b){var d,u,v
+if(b==0){return[a,1,0]}else{[d,u,v]=extended_euclidean(b,a % b)
+return[d,v,u-Math.floor(a/b)*v]}}
 int.__pow__=function(self,other,z){if(_b_.isinstance(other,int)){other=int_value(other)
 switch(other.valueOf()){case 0:
 return int.$factory(1)
@@ -9989,6 +9992,11 @@ return int.$factory(self.valueOf())}
 if(z !==undefined && z !==_b_.None){
 if(z==1){return 0}
 var result=1,base=self % z,exponent=other,long_int=$B.long_int
+if(exponent < 0){var gcd,inv,_
+[gcd,inv,_]=extended_euclidean(self,z)
+if(gcd !==1){throw _b_.ValueError.$factory("not relative primes: "+
+self+' and '+z)}
+return int.__pow__(inv,-exponent,z)}
 while(exponent > 0){if(exponent % 2==1){if(result*base > $B.max_int){result=long_int.__mul__(
 long_int.$factory(result),long_int.$factory(base))
 result=long_int.__mod__(result,z)}else{result=(result*base)% z}}

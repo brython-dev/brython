@@ -419,4 +419,8 @@ assert formatted == ['59.9', '300']
 formatted = [f'{(float(i)*180/3.1446464646):.4g}' for i in nums]
 assert formatted == ['59.94', '299.7']
 
+# issue 1299
+assert pow(38, -1, mod=97) == 23
+assert 23 * 38 % 97 == 1
+
 print('passed all tests...')
