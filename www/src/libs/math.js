@@ -499,13 +499,18 @@ var _mod = {
         }
     },
     hypot: function(x, y){
-        $B.check_nb_args('hypot', 2, arguments)
-        $B.check_no_kw('hypot', x,y)
-
-       if(_b_.$isinf(x) || _b_.$isinf(y)){return float.$factory('inf')}
-       var x1 = float_check(x),
-           y1 = float_check(y)
-       return float.$factory(Math.sqrt(x1 * x1 + y1 * y1))
+        var $ = $B.args("hypot", 2, {x: null, y:null}, ['x', 'y'],
+                    arguments, {}, "args", null),
+            args = [x, y].concat($.args),
+            res = 0
+        for var(i = 0, len = args.length; i < len; i++){
+            if(_b_.$isinf(args[i])){
+                return float.$factory('inf')
+            }
+            float_check(args[i])
+            res += args[i] * args[i]
+        }
+        return float.$factory(Math.sqrt(res))
     },
     inf: float.$factory('inf'),
     isclose: function(){
