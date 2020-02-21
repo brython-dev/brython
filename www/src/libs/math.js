@@ -503,7 +503,7 @@ var _mod = {
                     arguments, {}, "args", null),
             args = [x, y].concat($.args),
             res = 0
-        for var(i = 0, len = args.length; i < len; i++){
+        for (var i = 0, len = args.length; i < len; i++){
             if(_b_.$isinf(args[i])){
                 return float.$factory('inf')
             }
