@@ -48,6 +48,8 @@ var _Worker = $B.make_class("Worker", function(id, onmessage, onerror){
         // restore brython_path
         header += '__BRYTHON__.brython_path = "' + $B.brython_path +
             '"\n'
+        // restore path for imports (cf. issue #1305)
+        header += '__BRYTHON__.path = "' + $B.path +'".split(",")\n'
         // Call brython() to initialize internal Brython values
         header += 'brython(1)\n'
         js = header + js
