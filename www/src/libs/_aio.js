@@ -81,14 +81,14 @@ function ajax(){
     var $ = $B.args("ajax", 2, {method: null, url: null},
             ["method", "url"], arguments, {},
             null, "kw"),
-        method = $.method,
+        method = $.method.toUpperCase(),
         url = $.url,
         kw = $.kw
     var args = handle_kwargs(kw, "get")
     if(! args.cache){
         url = "?ts" + (new Date()).getTime() + "=0"
     }
-    if(args.body){
+    if(args.body && method == "GET"){
         url = url + (args.cache ? "?" : "&") + args.body
     }
     var func = function(){
@@ -106,7 +106,11 @@ function ajax(){
                     resolve(this)
                 }
             }
-            xhr.send()
+            if(method == "POST" && args.body){
+                xhr.send(args.body)
+            }else{
+                xhr.send()
+            }
         })
     }
     func.$infos = {
