@@ -936,4 +936,26 @@ def _parsegen(self):
         if line == '':
             break
 
+# issue 1302
+def gen1():
+    yield 10
+    x = 0
+    while x < 10:
+        if x > 2:
+            x += 1
+            continue
+        x += 1
+    yield 20
+
+assert list(gen1()) == [10, 20]
+
+def gen2():
+    yield 10
+    for x in range(10):
+        if x > 2:
+            break
+    yield 20
+
+assert list(gen2()) == [10, 20]
+
 print('passed all tests...')

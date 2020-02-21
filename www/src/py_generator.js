@@ -276,13 +276,21 @@ $B.genNode = function(data, parent){
         if(head && (this.is_break || this.is_continue)){
             var loop = in_loop(this)
             res.loop = loop
+            var loop_has_yield = loop.has("yield")
             res.data = ""
             if(this.is_break){
                 res.data += '$locals["$no_break' + this.loop_num +
                     '"] = false;'
             }
-            res.data += 'var err = new Error("break"); ' +
-                "err.__class__ = $B.GeneratorBreak; throw err;"
+            if(loop.has("yield")){
+                // If the loop has a "yield", its code will be wrapped in a
+                // try / catch in make_next()
+                res.data += 'var err = new Error("' +
+                    (this.is_break ? 'break' : 'continue') +'"); ' +
+                    "err.__class__ = $B.GeneratorBreak; throw err;"
+            }else{
+                res.data += this.is_break ? "break" : "continue"
+            }
             res.is_break = this.is_break
         }
         res.is_continue = this.is_continue
@@ -310,7 +318,8 @@ $B.genNode = function(data, parent){
             return true
         }else{
             for(var i = 0, len = this.children.length; i < len; i++){
-                if(this.children[i].loop_start !== undefined){
+                if(["break", "continue"].indexOf(keyword) > -1 &&
+                        this.children[i].loop_start !== undefined){
                     // If the child is a loop, don't search a "break" or
                     // "continue" below it, they don't apply to 'this'
                     continue
@@ -423,7 +432,6 @@ function remove_line_nums(node){
     }
 }
 $B.$BRgenerator = function(func_name, blocks, def_id, def_node){
-
     // Creates a function that will return an iterator
     // func_name : function name
     // blocks : the id of the surrounding code blocks
@@ -443,10 +451,10 @@ $B.$BRgenerator = function(func_name, blocks, def_id, def_node){
     // Create a tree structure based on the generator tree
     // iter_id is used in the node where the iterator resets local
     // namespace
-    if($B.debug > 0){
-        // add line nums for error reporting
-        $B.$add_line_num(def_node, def_ctx.rank, line_info)
-    }
+
+    // add line nums for error reporting
+    $B.$add_line_num(def_node, def_ctx.rank)
+
     var func_root = new $B.genNode(def_ctx.to_js())
 
     // Once the Javascript code is generated, remove the nodes for line
@@ -582,6 +590,8 @@ function make_next(self, yield_node_id){
             }
             if(clone.has("continue")){
                 has_continue = true;
+                continue_pos = pos + 1
+                //console.log("clone has continue", clone, i, pos)
             }
             rest[pos++] = clone
             var break_num = clone.has("break")
@@ -589,7 +599,6 @@ function make_next(self, yield_node_id){
                 has_break = true
             }
         }
-
         // add rest of block to new function
         if((has_break || has_continue) && rest.length > 0){
             // If the rest had a "break", this "break" is converted into
@@ -598,9 +607,9 @@ function make_next(self, yield_node_id){
             for(var i = 0, len = rest.length; i < len; i++){
                 rest_try.addChild(rest[i])
             }
-            var catch_test = "catch(err)" +
-                "{if(err.__class__ !== $B.GeneratorBreak){throw err}}"
-            catch_test = new $B.genNode(catch_test)
+            catch_test = new $B.genNode("catch(err)")
+            catch_test.addChild(new $B.genNode(
+                "if(err.__class__ !== $B.GeneratorBreak){throw err}"))
             rest = [rest_try, catch_test]
             if(exit_parent.loop_start !== undefined){
                 var test = 'if($locals["$no_break' + exit_parent.loop_start +

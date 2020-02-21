@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,8,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.8"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-02-20 15:37:07.673620"
-__BRYTHON__.timestamp=1582209427673
+__BRYTHON__.compiled_date="2020-02-21 09:55:56.415512"
+__BRYTHON__.timestamp=1582275356415
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -13429,11 +13429,14 @@ res=new $B.genNode("void(0)")}else{res=new $B.genNode(exit_node.data)}
 exit_node.replaced=true}
 if(head &&(this.is_break ||this.is_continue)){var loop=in_loop(this)
 res.loop=loop
+var loop_has_yield=loop.has("yield")
 res.data=""
 if(this.is_break){res.data+='$locals["$no_break'+this.loop_num+
 '"] = false;'}
-res.data+='var err = new Error("break"); '+
-"err.__class__ = $B.GeneratorBreak; throw err;"
+if(loop.has("yield")){
+res.data+='var err = new Error("'+
+(this.is_break ? 'break' :'continue')+'"); '+
+"err.__class__ = $B.GeneratorBreak; throw err;"}else{res.data+=this.is_break ? "break" :"continue"}
 res.is_break=this.is_break}
 res.is_continue=this.is_continue
 res.has_child=this.has_child
@@ -13450,7 +13453,8 @@ for(var i=0,len=this.children.length;i < len;i++){res.addChild(this.children[i].
 if(this.children[i].is_break){res.no_break=false}}
 return res}
 this.has=function(keyword){
-if(this["is_"+keyword]){return true}else{for(var i=0,len=this.children.length;i < len;i++){if(this.children[i].loop_start !==undefined){
+if(this["is_"+keyword]){return true}else{for(var i=0,len=this.children.length;i < len;i++){if(["break","continue"].indexOf(keyword)>-1 &&
+this.children[i].loop_start !==undefined){
 continue}
 if(this.children[i].has(keyword)){return true}}}
 return false}
@@ -13494,8 +13498,7 @@ var line_info=def_node.line_num+','+pblock.id.replace(/\./g,'_')
 var def_ctx=def_node.C.tree[0]
 var module=def_node.module,
 iter_id=def_id
-if($B.debug > 0){
-$B.$add_line_num(def_node,def_ctx.rank,line_info)}
+$B.$add_line_num(def_node,def_ctx.rank)
 var func_root=new $B.genNode(def_ctx.to_js())
 remove_line_nums(def_node.parent)
 func_root.module=module
@@ -13545,16 +13548,17 @@ is_continue=true
 var loop=clone.loop
 rest[pos++]=loop.clone_tree()
 break}
-if(clone.has("continue")){has_continue=true;}
+if(clone.has("continue")){has_continue=true;
+continue_pos=pos+1}
 rest[pos++]=clone
 var break_num=clone.has("break")
 if(break_num){has_break=true}}
 if((has_break ||has_continue)&& rest.length > 0){
 var rest_try=new $B.genNode("try")
 for(var i=0,len=rest.length;i < len;i++){rest_try.addChild(rest[i])}
-var catch_test="catch(err)"+
-"{if(err.__class__ !== $B.GeneratorBreak){throw err}}"
-catch_test=new $B.genNode(catch_test)
+catch_test=new $B.genNode("catch(err)")
+catch_test.addChild(new $B.genNode(
+"if(err.__class__ !== $B.GeneratorBreak){throw err}"))
 rest=[rest_try,catch_test]
 if(exit_parent.loop_start !==undefined){var test='if($locals["$no_break'+exit_parent.loop_start+
 '"])',test_node=new $B.genNode(test)
