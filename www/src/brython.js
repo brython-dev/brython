@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,8,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.8"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-02-25 11:18:04.284697"
-__BRYTHON__.timestamp=1582625884284
+__BRYTHON__.compiled_date="2020-02-25 12:05:58.735457"
+__BRYTHON__.timestamp=1582628758735
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -6947,7 +6947,11 @@ else{return obj.$id=$B.UUID()}}
 function __import__(mod_name,globals,locals,fromlist,level){
 var $=$B.args('__import__',5,{name:null,globals:null,locals:null,fromlist:null,level:null},['name','globals','locals','fromlist','level'],arguments,{globals:None,locals:None,fromlist:_b_.tuple.$factory(),level:0},null,null)
 return $B.$__import__($.name,$.globals,$.locals,$.fromlist)}
-function input(msg){return prompt(msg ||'')||''}
+function input(msg){var res=prompt(msg ||'')||''
+if($B.imported["sys"]&& $B.imported["sys"].ps1){
+var ps1=$B.imported["sys"].ps1,ps2=$B.imported["sys"].ps2
+if(msg==ps1 ||msg==ps2){console.log(msg,res)}}
+return res}
 function isinstance(obj,cls){check_no_kw('isinstance',obj,cls)
 check_nb_args('isinstance',2,arguments)
 if(obj===null){return cls===None}

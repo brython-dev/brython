@@ -1369,7 +1369,17 @@ function __import__(mod_name, globals, locals, fromlist, level) {
 
 // not a direct alias of prompt: input has no default value
 function input(msg) {
-    return prompt(msg || '') || ''
+    var res = prompt(msg || '') || ''
+    if($B.imported["sys"] && $B.imported["sys"].ps1){
+        // Interactive mode : echo the prompt + input
+        // cf. issue #853
+        var ps1 = $B.imported["sys"].ps1,
+            ps2 = $B.imported["sys"].ps2
+        if(msg == ps1 || msg == ps2){
+            console.log(msg, res)
+        }
+    }
+    return res
 }
 
 function isinstance(obj, cls){
