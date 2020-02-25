@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,8,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.8"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-02-21 21:32:04.857776"
-__BRYTHON__.timestamp=1582317124857
+__BRYTHON__.compiled_date="2020-02-25 11:18:04.284697"
+__BRYTHON__.timestamp=1582625884284
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5294,7 +5294,11 @@ loop()}}}}
 idb_cx.onupgradeneeded=function(){console.info("upgrade needed")
 var db=idb_cx.result,store=db.createObjectStore("modules",{"keyPath":"name"})
 store.onsuccess=loop}
-idb_cx.onerror=function(){console.info('could not open indexedDB database')}}
+idb_cx.onerror=function(){console.info('could not open indexedDB database')
+$B.idb_cx=null
+$B.idb_name=null
+$B.$options.indexedDB=false
+loop()}}
 $B.ajax_load_script=function(script){var url=script.url,name=script.name
 if($B.files && $B.files.hasOwnProperty(name)){$B.tasks.splice(0,0,[$B.run_script,$B.files[name],name,true])}else if($B.protocol !="file"){var req=new XMLHttpRequest(),qs=$B.$options.cache ? '' :'?'+Date.now()
 req.open("GET",url+qs,true)

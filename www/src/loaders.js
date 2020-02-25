@@ -248,6 +248,11 @@ $B.idb_open = function(obj){
     }
     idb_cx.onerror = function(){
         console.info('could not open indexedDB database')
+        // Proceed without indexedDB
+        $B.idb_cx = null
+        $B.idb_name = null
+        $B.$options.indexedDB = false
+        loop()
     }
 }
 
