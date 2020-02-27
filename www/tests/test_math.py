@@ -180,4 +180,6 @@ assert math.lgamma(2) == 0.0
 # issue 1246
 assertRaises(TypeError, math.cos)
 
+# issue 1308
+assert math.factorial(69) == 171122452428141311372468338881272839092270544893520369393648040923257279754140647424000000000000000
 print("passed all tests..")

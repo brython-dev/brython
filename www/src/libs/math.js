@@ -370,9 +370,16 @@ var _mod = {
         $B.check_no_kw('factorial', x)
 
          //using code from http://stackoverflow.com/questions/3959211/fast-factorial-function-in-javascript
-         var y = float_check(x),
-             r = 1
-         for(var i = 2; i <= y; i++){r *= i}
+         if((x instanceof Number && x != Math.floor(x)) &&
+                 ! _b_.isinstance(x, int)){
+             throw _b_.ValueError.$factory("factorial() only accepts integral values")
+         }else if($B.rich_comp("__lt__", x, 0)){
+             throw _b_.ValueError.$factory("factorial() not defined for negative values")
+         }
+         var r = 1
+         for(var i = 2; i <= x; i++){
+             r = $B.mul(r, i)
+         }
          return r
     },
     floor: function(x){
