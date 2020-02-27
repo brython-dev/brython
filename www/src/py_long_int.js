@@ -998,7 +998,25 @@ long_int.$factory = function(value, base){
     var is_digits = digits(base),
         point = -1
     for(var i = 0; i < value.length; i++){
-        if(value.charAt(i) == "." && point == -1){point = i}
+        if(value.charAt(i) == "." && point == -1){
+            point = i
+        }else if(value.charAt(i) == "e"){
+            // Form 123e56 or 12.3e45
+            var mant = value.substr(0, i)
+            if(/^[+-]?\d+$/.exec(value.substr(i + 1))){
+                exp = parseInt(value.substr(i + 1))
+            }else{
+                throw Error("wrong exp " + value.substr(i + 1))
+            }
+            if(point != -1){
+                mant = mant.substr(0, point) + mant.substr(point + 1)
+                exp = exp + point - 1
+            }
+            point = -1
+            value = mant + "0".repeat(exp - mant.length)
+            break
+        }
+
         else if(! is_digits[value.charAt(i)]){
             throw ValueError.$factory(
                 'long_int argument is not a valid number: "' + value + '"')

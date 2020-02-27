@@ -1020,12 +1020,18 @@ $B.PyNumber_Index = function(item){
         case "number":
             return item
         case "object":
-            if(item.__class__ === $B.long_int){return item}
+            if(item.__class__ === $B.long_int){
+                return item
+            }
+            if(_b_.isinstance(item, _b_.int)){
+                // int subclass
+                return item.$value
+            }
             var method = $B.$getattr(item, "__index__", _b_.None)
             if(method !== _b_.None){
                 method = typeof method == "function" ?
                             method : $B.$getattr(method, "__call__")
-                return $B.int_or_bool(method)
+                return $B.int_or_bool(method())
             }
         default:
             throw _b_.TypeError.$factory("'" + $B.class_name(item) +

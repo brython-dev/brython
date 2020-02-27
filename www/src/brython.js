@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,8,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.8"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-02-27 13:49:09.658885"
-__BRYTHON__.timestamp=1582807749643
+__BRYTHON__.compiled_date="2020-02-27 21:18:16.550016"
+__BRYTHON__.timestamp=1582834696550
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -6269,10 +6269,12 @@ case "number":
 return item
 case "object":
 if(item.__class__===$B.long_int){return item}
+if(_b_.isinstance(item,_b_.int)){
+return item.$value}
 var method=$B.$getattr(item,"__index__",_b_.None)
 if(method !==_b_.None){method=typeof method=="function" ?
 method :$B.$getattr(method,"__call__")
-return $B.int_or_bool(method)}
+return $B.int_or_bool(method())}
 default:
 throw _b_.TypeError.$factory("'"+$B.class_name(item)+
 "' object cannot be interpreted as an integer")}}
@@ -10610,7 +10612,14 @@ throw ValueError.$factory(
 while(start < value.length-1 && value.charAt(start)=="0"){start++}
 value=value.substr(start)
 var is_digits=digits(base),point=-1
-for(var i=0;i < value.length;i++){if(value.charAt(i)=="." && point==-1){point=i}
+for(var i=0;i < value.length;i++){if(value.charAt(i)=="." && point==-1){point=i}else if(value.charAt(i)=="e"){
+var mant=value.substr(0,i)
+if(/^[+-]?\d+$/.exec(value.substr(i+1))){exp=parseInt(value.substr(i+1))}else{throw Error("wrong exp "+value.substr(i+1))}
+if(point !=-1){mant=mant.substr(0,point)+mant.substr(point+1)
+exp=exp+point-1}
+point=-1
+value=mant+"0".repeat(exp-mant.length)
+break}
 else if(! is_digits[value.charAt(i)]){throw ValueError.$factory(
 'long_int argument is not a valid number: "'+value+'"')}}
 if(point !=-1){value=value.substr(0,point)}

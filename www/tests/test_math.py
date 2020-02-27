@@ -161,7 +161,7 @@ assert math.gcd(234, 78) == 78
 assert math.copysign(1.0, -0.0) == -1.0
 
 # issue 1109
-assert math.expm1(1e-5) == 0.000010000050000166668
+assert my_isclose(math.expm1(1e-5), 0.000010000050000166668), math.expm1(1e-5)
 
 # issue 1110
 assert math.log10(1000) == 3.0
@@ -182,4 +182,22 @@ assertRaises(TypeError, math.cos)
 
 # issue 1308
 assert math.factorial(69) == 171122452428141311372468338881272839092270544893520369393648040923257279754140647424000000000000000
+
+# issue 1312
+assert math.comb(5, 2) == 10
+assert math.comb(69, 12) == 8815083648488
+
+assert math.perm(69, 12) == 4222439171759589580800
+
+x = math.prod(range(1, 33))
+assert x == 263130836933693530167218012160000000
+
+assert math.isqrt(x) == 512962802680363491
+
+y = math.factorial(69)
+assert math.isqrt(y) == 13081378078327271990661335578798848847474255303826
+
+assert math.dist([1, 2, 3], [4, 5, 6]) == 5.196152422706632
+
+
 print("passed all tests..")
