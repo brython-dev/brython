@@ -275,10 +275,10 @@ $B.ajax_load_script = function(script){
                     }else{
                         $B.tasks.splice(0, 0, [$B.run_script, src, name, true])
                     }
+                    loop()
                 }else if(this.status == 404){
                     throw Error(url + " not found")
                 }
-                loop()
             }
         }
         req.send()
@@ -286,7 +286,6 @@ $B.ajax_load_script = function(script){
         throw _b_.IOError.$factory("can't load external script at " +
             script.url + " (Ajax calls not supported with protocol file:///)")
     }
-    loop()
 }
 
 function add_jsmodule(module, source){
