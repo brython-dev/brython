@@ -1036,37 +1036,39 @@ bytes.split = function(){
     return res
 }
 
-bytes.splitlines = function() {
+bytes.splitlines = function(self) {
     var $ = $B.args('splitlines', 2, {self: null, keepends: null},
-        ['self', 'keepends'], arguments, {keepends:false}, null, null),
-        lines = [],
-        src = $.self.source,
+                    ['self', 'keepends'], arguments, {keepends: false},
+                    null, null)
+    if(!_b_.isinstance($.keepends,[_b_.bool, _b_.int])){
+        throw _b_.TypeError('integer argument expected, got '+
+            $B.get_class($.keepends).__name)
+    }
+    var keepends = _b_.int.$factory($.keepends),
+        res = [],
+        source = $.self.source,
         start = 0,
-        end = -1,
-        newline_end = -1
-
-    for(var i = 0; i < src.length; ++i){
-        var newline_end = -1
-        if(src[i] === 13){
-            end = i
-            newline_end = ++i
-        }
-        if(src[i] === 10){
-            end = newline_end == -1 ? i : i - 1
-            newline_end = ++i
-        }
-        if(newline_end != -1){
-            lines.push(bytes.$factory(src.slice(start, $.keepends ?
-                newline_end : end)))
-            start = i
+        pos = 0
+    if(! source.length){
+        return res
+    }
+    while(pos < source.length){
+        if (pos < source.length - 1 && source[pos] == 0x0d &&
+                source[pos + 1] == 0x0a){
+            res.push(bytes.$factory(source.slice(start, keepends ? pos + 2 : pos)))
+            start = pos = pos + 2
+        }else if(source[pos] == 0x0d || source[pos] == 0x0a){
+            res.push(bytes.$factory(source.slice(start, keepends ? pos + 1 : pos)))
+            start = pos = pos + 1
+        }else{
+            pos++
         }
     }
-    if(src.length > 0){
-        lines.push(bytes.$factory(src.slice(start)))
+    if(start < source.length){
+        res.push(bytes.$factory(source.slice(start)))
     }
-    return lines
+    return res
 }
-
 bytes.startswith = function(){
     var $ = $B.args('startswith', 3, {self: null, prefix: null, start:null},
         ['self', 'prefix', 'start'], arguments, {start:0}, null, null),

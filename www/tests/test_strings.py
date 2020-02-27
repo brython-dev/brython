@@ -259,4 +259,44 @@ assert s[-100:] == 'abcd'
 assert s[:100] == 'abcd'
 assert s[-100:100] == 'abcd'
 
+# issue 1306
+strs = ['', ' ', '\n', '\n\n', 'a\nb', 'one\ntwo\nthree',
+        'one\ntwo\nthree\n', 'one\ntwo\nthree\n\n']
+good = [
+[], [],
+[], [],
+[], [],
+[' '], [' '],
+[' '], [' '],
+[' '], [' '],
+[''], ['\n'],
+[''], ['\r'],
+[''], ['\r\n'],
+['', ''], ['\n', '\n'],
+['', ''], ['\r', '\r'],
+['', ''], ['\r\n', '\r\n'],
+['a', 'b'], ['a\n', 'b'],
+['a', 'b'], ['a\r', 'b'],
+['a', 'b'], ['a\r\n', 'b'],
+['one', 'two', 'three'], ['one\n', 'two\n', 'three'],
+['one', 'two', 'three'], ['one\r', 'two\r', 'three'],
+['one', 'two', 'three'], ['one\r\n', 'two\r\n', 'three'],
+['one', 'two', 'three'], ['one\n', 'two\n', 'three\n'],
+['one', 'two', 'three'], ['one\r', 'two\r', 'three\r'],
+['one', 'two', 'three'], ['one\r\n', 'two\r\n', 'three\r\n'],
+['one', 'two', 'three', ''], ['one\n', 'two\n', 'three\n', '\n'],
+['one', 'two', 'three', ''], ['one\r', 'two\r', 'three\r', '\r'],
+['one', 'two', 'three', ''], ['one\r\n', 'two\r\n', 'three\r\n', '\r\n']
+]
+ii = 0
+for ss in strs:
+    for sep in ('\n', '\r', '\r\n'):
+        ss_ = ss.replace('\n', sep)
+        for args in ((), (True,)):
+            ll = ss_.splitlines(*args)
+            if ll != good[ii]:
+                raise AssertionError('%s%s => %s != %s' % (
+                    repr(ss_), ' (keepends)' if args==(True,) else '', ll, good[ii]))
+            ii += 1
+
 print("passed all tests...")

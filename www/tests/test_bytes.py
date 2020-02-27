@@ -203,4 +203,44 @@ assert b'%a' % 3.14 == b'3.14'
 assert b'%a' % b'abc' == b"b'abc'"
 assert b'%a' % 'def' == b"'def'"
 
+# issue 1306
+bstrs = [b'', b' ', b'\n', b'\n\n', b'a\nb', b'one\ntwo\nthree',
+         b'one\ntwo\nthree\n', b'one\ntwo\nthree\n\n']
+good = [
+[], [],
+[], [],
+[], [],
+[b' '], [b' '],
+[b' '], [b' '],
+[b' '], [b' '],
+[b''], [b'\n'],
+[b''], [b'\r'],
+[b''], [b'\r\n'],
+[b'', b''], [b'\n', b'\n'],
+[b'', b''], [b'\r', b'\r'],
+[b'', b''], [b'\r\n', b'\r\n'],
+[b'a', b'b'], [b'a\n', b'b'],
+[b'a', b'b'], [b'a\r', b'b'],
+[b'a', b'b'], [b'a\r\n', b'b'],
+[b'one', b'two', b'three'], [b'one\n', b'two\n', b'three'],
+[b'one', b'two', b'three'], [b'one\r', b'two\r', b'three'],
+[b'one', b'two', b'three'], [b'one\r\n', b'two\r\n', b'three'],
+[b'one', b'two', b'three'], [b'one\n', b'two\n', b'three\n'],
+[b'one', b'two', b'three'], [b'one\r', b'two\r', b'three\r'],
+[b'one', b'two', b'three'], [b'one\r\n', b'two\r\n', b'three\r\n'],
+[b'one', b'two', b'three', b''], [b'one\n', b'two\n', b'three\n', b'\n'],
+[b'one', b'two', b'three', b''], [b'one\r', b'two\r', b'three\r', b'\r'],
+[b'one', b'two', b'three', b''], [b'one\r\n', b'two\r\n', b'three\r\n', b'\r\n']
+]
+ii = 0
+for ss in bstrs:
+    for sep in (b'\n', b'\r', b'\r\n'):
+        ss_ = ss.replace(b'\n', sep)
+        for args in ((), (True,)):
+            ll = ss_.splitlines(*args)
+            if ll != good[ii]:
+                raise AssertionError('%s%s => %s != %s' % (
+                    repr(ss_), ' (keepends)' if args==(True,) else '', ll, good[ii]))
+            ii += 1
+            
 print('passed all tests...')

@@ -1838,38 +1838,37 @@ str.split = function(){
     }
 }
 
-str.splitlines = function(self){
-    var $ = $B.args("splitlines", 2, {self: null, keepends: null},
-        ["self", "keepends"], arguments, {keepends: false}, null, null)
-    if(! _b_.isinstance($.keepends, [_b_.bool, _b_.int])){
-        throw _b_.TypeError.$factory("integer argument expected, got " +
+str.splitlines = function(self) {
+    var $ = $B.args('splitlines', 2, {self: null, keepends: null},
+                    ['self','keepends'], arguments, {keepends: false},
+                    null, null)
+    if(!_b_.isinstance($.keepends,[_b_.bool, _b_.int])){
+        throw _b_.TypeError('integer argument expected, got '+
             $B.get_class($.keepends).__name)
     }
-    var keepends = _b_.int.$factory($.keepends)
-    // Remove trailing line breaks
-    if(keepends){
-        var res = [],
-            start = pos,
-            pos = 0,
-            self = $.self
-        while(pos < self.length){
-            if(self.substr(pos, 2) == "\r\n"){
-                res.push(self.substring(start, pos + 2))
-                start = pos + 2
-                pos = start
-            }else if(self.charAt(pos) == "\r" || self.charAt(pos) == "\n"){
-                res.push(self.substring(start, pos + 1))
-                start = pos + 1
-                pos = start
-            }else{pos++}
-        }
-        var rest = self.substr(start)
-        if(rest){res.push(rest)}
+    var keepends = _b_.int.$factory($.keepends),
+        res = [],
+        self = $.self,
+        start = 0,
+        pos = 0
+    if(!self.length){
         return res
-    }else{
-        var self = $.self.replace(/[\r\n]$/, "")
-        return self.split(/\n|\r\n|\r/)
     }
+    while (pos < self.length) {
+        if(self.substr(pos, 2) == '\r\n'){
+            res.push(self.slice(start, keepends ? pos + 2 : pos))
+            start = pos = pos+2
+        }else if(self[pos] == '\r' || self[pos] == '\n'){
+            res.push(self.slice(start, keepends ? pos+1 : pos))
+            start = pos = pos+1
+        }else{
+            pos++
+        }
+    }
+    if(start < self.length){
+        res.push(self.slice(start))
+    }
+    return res
 }
 
 str.startswith = function(){

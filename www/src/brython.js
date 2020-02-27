@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,8,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.8"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-02-27 09:19:28.720518"
-__BRYTHON__.timestamp=1582791568720
+__BRYTHON__.compiled_date="2020-02-27 12:02:22.229629"
+__BRYTHON__.timestamp=1582801342229
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -8367,17 +8367,17 @@ start=stop+len
 stop=start}else{stop++}}
 if(match ||(stop > start)){res.push(bytes.$factory(src.slice(start,stop)))}
 return res}
-bytes.splitlines=function(){var $=$B.args('splitlines',2,{self:null,keepends:null},['self','keepends'],arguments,{keepends:false},null,null),lines=[],src=$.self.source,start=0,end=-1,newline_end=-1
-for(var i=0;i < src.length;++i){var newline_end=-1
-if(src[i]===13){end=i
-newline_end=++i}
-if(src[i]===10){end=newline_end==-1 ? i :i-1
-newline_end=++i}
-if(newline_end !=-1){lines.push(bytes.$factory(src.slice(start,$.keepends ?
-newline_end :end)))
-start=i}}
-if(src.length > 0){lines.push(bytes.$factory(src.slice(start)))}
-return lines}
+bytes.splitlines=function(self){var $=$B.args('splitlines',2,{self:null,keepends:null},['self','keepends'],arguments,{keepends:false},null,null)
+if(!_b_.isinstance($.keepends,[_b_.bool,_b_.int])){throw _b_.TypeError('integer argument expected, got '+
+$B.get_class($.keepends).__name)}
+var keepends=_b_.int.$factory($.keepends),res=[],source=$.self.source,start=0,pos=0
+if(! source.length){return res}
+while(pos < source.length){if(pos < source.length-1 && source[pos]==0x0d &&
+source[pos+1]==0x0a){res.push(bytes.$factory(source.slice(start,keepends ? pos+2 :pos)))
+start=pos=pos+2}else if(source[pos]==0x0d ||source[pos]==0x0a){res.push(bytes.$factory(source.slice(start,keepends ? pos+1 :pos)))
+start=pos=pos+1}else{pos++}}
+if(start < source.length){res.push(bytes.$factory(source.slice(start)))}
+return res}
 bytes.startswith=function(){var $=$B.args('startswith',3,{self:null,prefix:null,start:null},['self','prefix','start'],arguments,{start:0},null,null),start=$.start
 if(_b_.isinstance($.prefix,bytes)){var res=true
 for(var i=0;i < $.prefix.source.length && res;i++){res=$.self.source[start+i]==$.prefix.source[i]}
@@ -12093,20 +12093,16 @@ s=""}else{s+=self.charAt(pos)
 pos++}}
 res.push(s)
 return res}}
-str.splitlines=function(self){var $=$B.args("splitlines",2,{self:null,keepends:null},["self","keepends"],arguments,{keepends:false},null,null)
-if(! _b_.isinstance($.keepends,[_b_.bool,_b_.int])){throw _b_.TypeError.$factory("integer argument expected, got "+
+str.splitlines=function(self){var $=$B.args('splitlines',2,{self:null,keepends:null},['self','keepends'],arguments,{keepends:false},null,null)
+if(!_b_.isinstance($.keepends,[_b_.bool,_b_.int])){throw _b_.TypeError('integer argument expected, got '+
 $B.get_class($.keepends).__name)}
-var keepends=_b_.int.$factory($.keepends)
-if(keepends){var res=[],start=pos,pos=0,self=$.self
-while(pos < self.length){if(self.substr(pos,2)=="\r\n"){res.push(self.substring(start,pos+2))
-start=pos+2
-pos=start}else if(self.charAt(pos)=="\r" ||self.charAt(pos)=="\n"){res.push(self.substring(start,pos+1))
-start=pos+1
-pos=start}else{pos++}}
-var rest=self.substr(start)
-if(rest){res.push(rest)}
-return res}else{var self=$.self.replace(/[\r\n]$/,"")
-return self.split(/\n|\r\n|\r/)}}
+var keepends=_b_.int.$factory($.keepends),res=[],self=$.self,start=0,pos=0
+if(!self.length){return res}
+while(pos < self.length){if(self.substr(pos,2)=='\r\n'){res.push(self.slice(start,keepends ? pos+2 :pos))
+start=pos=pos+2}else if(self[pos]=='\r' ||self[pos]=='\n'){res.push(self.slice(start,keepends ? pos+1 :pos))
+start=pos=pos+1}else{pos++}}
+if(start < self.length){res.push(self.slice(start))}
+return res}
 str.startswith=function(){
 var $=$B.args("startswith",4,{self:null,prefix:null,start:null,end:null},["self","prefix","start","end"],arguments,{start:0,end:null},null,null)
 normalize_start_end($)
