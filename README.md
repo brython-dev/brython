@@ -77,8 +77,8 @@ with the [available stdlib](https://github.com/brython-dev/brython/tree/master/w
 If you want to use the latest development version, you can load these scripts
 instead:
 ```
-https://cdn.jsdelivr.net/gh/brython-dev/brython/www/src/brython.js
-https://cdn.jsdelivr.net/gh/brython-dev/brython/www/src/brython_stdlib.js
+https://raw.githack.com/brython-dev/brython/master/www/src/brython.js
+https://raw.githack.com/brython-dev/brython/master/www/src/brython_stdlib.js
 ```
 
 Local install
