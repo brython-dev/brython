@@ -426,4 +426,8 @@ assert 23 * 38 % 97 == 1
 # issue 1300
 assert 3.14_15_93j == 3.141593j
 
+# issue 1309
+x = pow(2, 64) + Fraction(1, 2)
+assert x == Fraction(36893488147419103233, 2)
+
 print('passed all tests...')

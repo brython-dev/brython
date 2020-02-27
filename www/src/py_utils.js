@@ -1189,7 +1189,11 @@ $B.add = function(x, y){
         }
         throw err
     }
-    return $B.$call(method)(x, y)
+    var res = $B.$call(method)(x, y)
+    if(res === _b_.NotImplemented){ // issue 1309
+        return $B.rich_op("add", x, y)
+    }
+    return res
 }
 
 $B.div = function(x, y){

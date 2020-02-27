@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,8,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.8"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-02-27 09:02:36.014312"
-__BRYTHON__.timestamp=1582790556014
+__BRYTHON__.compiled_date="2020-02-27 09:19:28.720518"
+__BRYTHON__.timestamp=1582791568720
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -6335,7 +6335,10 @@ return x+y}
 try{var method=$B.$getattr(x.__class__ ||$B.get_class(x),"__add__")}catch(err){if(err.__class__===_b_.AttributeError){throw _b_.TypeError.$factory("unsupported operand type(s) for "+
 "+: '"+$B.class_name(x)+"' and '"+$B.class_name(y)+"'")}
 throw err}
-return $B.$call(method)(x,y)}
+var res=$B.$call(method)(x,y)
+if(res===_b_.NotImplemented){
+return $B.rich_op("add",x,y)}
+return res}
 $B.div=function(x,y){var z=x/y
 if(x > min_int && x < max_int && y > min_int && y < max_int
 && z > min_int && z < max_int){return z}
@@ -10351,7 +10354,7 @@ return{__class__:long_int,value:v,pos:value >=0}}
 long_int.__abs__=function(self){return{__class__:long_int,value:self.value,pos:true}}
 long_int.__add__=function(self,other){if(isinstance(other,_b_.float)){return _b_.float.$factory(parseInt(self.value)+other.value)}
 if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}else if(other.__class__ !==long_int){if(isinstance(other,_b_.bool)){other=long_int.$factory(other ? 1 :0)}else if(isinstance(other,int)){
-other=long_int.$factory(_b_.str.$factory(_b_.int.__index__(other)))}}
+other=long_int.$factory(_b_.str.$factory(_b_.int.__index__(other)))}else{return _b_.NotImplemented}}
 var res
 if(self.pos && other.pos){
 return add_pos(self.value,other.value)}else if(! self.pos && ! other.pos){

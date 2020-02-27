@@ -445,6 +445,8 @@ long_int.__add__ = function(self, other){
         }else if(isinstance(other, int)){
             // int subclass
             other = long_int.$factory(_b_.str.$factory(_b_.int.__index__(other)))
+        }else{
+            return _b_.NotImplemented
         }
     }
 
