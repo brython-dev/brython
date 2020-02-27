@@ -199,5 +199,8 @@ assert math.isqrt(y) == 13081378078327271990661335578798848847474255303826
 
 assert math.dist([1, 2, 3], [4, 5, 6]) == 5.196152422706632
 
+# issue 1314
+assert math.gcd(pow(2, 53) - 2, 2) == 2
+assert math.gcd(pow(2, 53) - 1, 2) == 1
 
 print("passed all tests..")

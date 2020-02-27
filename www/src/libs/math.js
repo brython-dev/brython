@@ -572,14 +572,22 @@ var _mod = {
             b = $B.PyNumber_Index($.b)
         if(a == 0 && b == 0){return 0}
         // https://stackoverflow.com/questions/17445231/js-how-to-find-the-greatest-common-divisor
-        a = Math.abs(a);
-        b = Math.abs(b);
-        if(b > a){var temp = a; a = b; b = temp;}
+        a = _b_.abs(a)
+        b = _b_.abs(b)
+        if($B.rich_comp("__gt__", b, a)){
+            var temp = a
+            a = b
+            b = temp
+        }
         while(true){
-            if(b == 0){return a}
-            a %= b
-            if(a == 0){return b}
-            b %= a
+            if(b == 0){
+                return a
+            }
+            a = $B.rich_op("mod", a, b)
+            if(a == 0){
+                return b
+            }
+            b = $B.rich_op("mod", b, a)
         }
     },
     hypot: function(x, y){
