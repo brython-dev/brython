@@ -510,6 +510,7 @@ var $Node = $B.parser.$Node = function(type){
                 // value sent to the generator, if any
                 var set_yield = new $Node()
                 set_yield.line_num = this.line_num
+                set_yield.indent = this.indent
                 set_yield.is_set_yield_value = true
                 set_yield.after_yield = true
 
@@ -5361,10 +5362,10 @@ var $OpCtx = $B.parser.$OpCtx = function(context,op){
                                             " int() " + this.op + ' str()")'
                                 }
                             case 'id':
-                                return 'typeof ' + js0 + ' == "number" ? ' +
+                                return '(typeof ' + js0 + ' == "number" ? ' +
                                     js0 + this.op + js1 + ' : $B.rich_comp("__' +
                                     method + '__",' + this.tree[0].to_js() +
-                                    ',' + this.tree[1].to_js() + ')'
+                                    ',' + this.tree[1].to_js() + '))'
                         }
 
                       break;
@@ -5383,10 +5384,10 @@ var $OpCtx = $B.parser.$OpCtx = function(context,op){
                                           ' str() ' + this.op + ' int()")'
                               }
                           case 'id':
-                              return 'typeof ' + js0 + ' == "string" ? ' +
+                              return '(typeof ' + js0 + ' == "string" ? ' +
                                   js0 + this.op + js1 + ' : $B.rich_comp("__' +
                                   method + '__",' + this.tree[0].to_js() +
-                                  ',' + this.tree[1].to_js() + ')'
+                                  ',' + this.tree[1].to_js() + '))'
                       }
                       break;
                   case 'id':

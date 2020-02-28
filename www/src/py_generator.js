@@ -159,11 +159,10 @@ function make_node(top_node, node){
                 console.log("bizarre", node)
             }
             var js = "var sent_value = this.sent_value === undefined ? " +
-                "None : this.sent_value;",
-                h = "\n" + ' '.repeat(node.indent)
-
+                    "_b_.None : this.sent_value;",
+                h = "\n" + ' '.repeat(node.indent - 4)
             // Reset sent_value value to None for the next iteration
-            js += h + "this.sent_value = None"
+            js += h + "this.sent_value = _b_.None"
 
             // If method throw was called, raise the exception
             js += h + "if(sent_value.__class__ === $B.$GeneratorSendError)"+

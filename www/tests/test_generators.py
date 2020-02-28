@@ -958,4 +958,43 @@ def gen2():
 
 assert list(gen2()) == [10, 20]
 
+trace = []
+def gg1():
+    while 1:
+        tt = 3
+        while tt > 0:
+            trace.append(tt)
+            val = yield
+            if val is not None:
+                trace.append('breaking early...')
+                break
+            tt -= 1
+        trace.append('try!')
+
+gg1 = gg1()
+for ii in range(10):
+    gg1.send(True if ii == 7 else None)
+
+assert trace == [3, 2, 1, 'try!', 3, 2, 1, 'try!', 3, 'breaking early...', 'try!', 3, 2, 1]
+
+trace = []
+def gg1():
+    while 1:
+        tt = 3
+        while tt > 0:
+            trace.append(tt)
+            val = yield
+            if val is not None:
+                tt = 10    # <= uncomment this line
+                trace.append('breaking early...')
+                break
+            tt -= 1
+        trace.append('try!')
+
+gg1 = gg1()
+for ii in range(10):
+    gg1.send(True if ii == 7 else None)
+
+assert trace == [3, 2, 1, 'try!', 3, 2, 1, 'try!', 3, 'breaking early...', 'try!', 3, 2, 1]
+
 print('passed all tests...')

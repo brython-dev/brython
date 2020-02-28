@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,8,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.8"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-02-27 21:48:50.207141"
-__BRYTHON__.timestamp=1582836530207
+__BRYTHON__.compiled_date="2020-02-28 09:23:35.993252"
+__BRYTHON__.timestamp=1582878215993
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -295,6 +295,7 @@ var yield_expr=new $YieldCtx(new $NodeCtx(yield_node))
 new $StringCtx(yield_expr,'$yield_value'+$loop_num)
 var set_yield=new $Node()
 set_yield.line_num=this.line_num
+set_yield.indent=this.indent
 set_yield.is_set_yield_value=true
 set_yield.after_yield=true
 js=$loop_num
@@ -2537,10 +2538,10 @@ default:
 return '$B.$TypeError("unorderable types: '+
 " int() "+this.op+' str()")'}
 case 'id':
-return 'typeof '+js0+' == "number" ? '+
+return '(typeof '+js0+' == "number" ? '+
 js0+this.op+js1+' : $B.rich_comp("__'+
 method+'__",'+this.tree[0].to_js()+
-','+this.tree[1].to_js()+')'}
+','+this.tree[1].to_js()+'))'}
 break;
 case 'str':
 switch(t0.type){case 'str':
@@ -2554,10 +2555,10 @@ default:
 return '$B.$TypeError("unorderable types: '+
 ' str() '+this.op+' int()")'}
 case 'id':
-return 'typeof '+js0+' == "string" ? '+
+return '(typeof '+js0+' == "string" ? '+
 js0+this.op+js1+' : $B.rich_comp("__'+
 method+'__",'+this.tree[0].to_js()+
-','+this.tree[1].to_js()+')'}
+','+this.tree[1].to_js()+'))'}
 break;
 case 'id':
 if(t0.type=='id'){return 'typeof '+js0+'!="object" && typeof '+
@@ -13383,8 +13384,8 @@ var ctx_manager
 if(node.after_yield){ctx_manager=in_ctx_manager(node)}
 if(node.line_num===undefined){console.log("bizarre",node)}
 var js="var sent_value = this.sent_value === undefined ? "+
-"None : this.sent_value;",h="\n"+' '.repeat(node.indent)
-js+=h+"this.sent_value = None"
+"_b_.None : this.sent_value;",h="\n"+' '.repeat(node.indent-4)
+js+=h+"this.sent_value = _b_.None"
 js+=h+"if(sent_value.__class__ === $B.$GeneratorSendError)"+
 "{sent_value.err.$stack.splice(0, 0, $B.freeze([$top_frame])[0]);"+
 " throw sent_value.err};"
@@ -13790,7 +13791,9 @@ function(){return $B.path_hooks},function(self,obj,value){$B.path_hooks=value }
 function(){return _b_.dict.$factory($B.JSObject.$factory($B.path_importer_cache))},function(self,obj,value){throw _b_.TypeError.$factory("Read only property"+
 " 'sys.path_importer_cache'")}
 ),settrace:function(){var $=$B.args("settrace",1,{tracefunc:null},['tracefunc'],arguments,{},null,null)
-$B.tracefunc=$.tracefunc},stderr:_b_.property.$factory(
+$B.tracefunc=$.tracefunc
+$.tracefunc.$current_frame_id=$B.last($B.frames_stack)[0]
+return _b_.None},stderr:_b_.property.$factory(
 function(){return $B.stderr},function(self,value){$B.stderr=value}
 ),stdout:_b_.property.$factory(
 function(){return $B.stdout},function(self,value){$B.stdout=value}
