@@ -27,8 +27,18 @@ $B.$raise = function(arg){
         if(es !== undefined){throw es}
         throw _b_.RuntimeError.$factory("No active exception to reraise")
     }else if(isinstance(arg, BaseException)){
+        if(arg.__class__ === _b_.StopIteration &&
+                $B.last($B.frames_stack)[1].$is_generator){
+            // PEP 479
+            arg = _b_.RuntimeError.$factory("generator raised StopIteration")
+        }
         throw arg
     }else if(arg.$is_class && issubclass(arg, BaseException)){
+        if(arg === _b_.StopIteration &&
+                $B.last($B.frames_stack)[1].$is_generator){
+            // PEP 479
+            throw _b_.RuntimeError.$factory("generator raised StopIteration")
+        }
         throw $B.$call(arg)()
     }else{
         throw _b_.TypeError.$factory("exceptions must derive from BaseException")
