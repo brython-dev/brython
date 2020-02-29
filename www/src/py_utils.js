@@ -1126,10 +1126,20 @@ function exit_ctx_managers_in_generators(frame){
                     if(attr.search(/^\$ctx_manager_exit\d+$/) > -1){
                         // Call __exit__
                         $B.$call(gen_obj.env[attr])()
+                        return true
                     }
                 }
             }
         }
+    }
+}
+
+$B.set_cm_in_generator = function(cm_exit){
+    if(cm_exit !== undefined){
+        $B.frames_stack.forEach(function(frame){
+            frame[1].$cm_in_gen = frame[1].$cm_in_gen || new Set()
+            frame[1].$cm_in_gen.add(cm_exit)
+        })
     }
 }
 
@@ -1142,7 +1152,10 @@ $B.leave_frame = function(arg){
         // The attribute $has_yield_in_cm is set in py2js.js /
         // $YieldCtx.transform only if the frame has "yield" inside a
         // context manager.
-        exit_ctx_managers_in_generators(frame)
+        var closed_cm = exit_ctx_managers_in_generators(frame)
+        if((! closed_cm) && $B.frames_stack.length > 0){
+            $B.last($B.frames_stack)[1].$has_yield_in_cm = true
+        }
     }
 }
 

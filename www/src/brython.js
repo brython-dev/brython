@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,8,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.8"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-02-28 09:23:35.993252"
-__BRYTHON__.timestamp=1582878215993
+__BRYTHON__.compiled_date="2020-02-29 15:32:14.821628"
+__BRYTHON__.timestamp=1582986734821
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -3046,6 +3046,7 @@ this.cmexit_name=this.prefix+'$ctx_manager_exit'+num
 this.exc_name=this.prefix+'$exc'+num
 this.err_name='$err'+num
 this.val_name='$value'+num
+this.yield_name=this.prefix+'$yield'+num
 if(this.tree[0].alias===null){this.tree[0].alias='$temp'}
 if(this.tree[0].type=='expr' &&
 this.tree[0].tree[0].type=='list_or_tuple'){if(this.tree[1].type !='expr' ||
@@ -3067,6 +3068,7 @@ if(this.tree[0].alias){var alias=this.tree[0].alias.tree[0].tree[0].value
 try_node.add($NodeJS('$locals'+'["'+alias+'"] = '+
 this.val_name))}
 block.forEach(function(elt){try_node.add(elt)})
+if(this.scope.ntype=="generator"){try_node.add($NodeJS(this.yield_name+" = false"))}
 var catch_node=new $Node()
 catch_node.is_catch=true 
 new $NodeJSCtx(catch_node,'catch('+this.err_name+')')
@@ -3077,7 +3079,7 @@ var js=this.exc_name+' = false;'+this.err_name+
 this.err_name+'.__class__,'+
 this.err_name+','+
 '$B.$getattr('+this.err_name+', "__traceback__"));'
-if(this.scope.ntype=="generator"){js+='delete '+this.cmexit_name+';'}
+if(this.scope.ntype=="generator"){js+='$B.set_cm_in_generator('+this.cmexit_name+');'}
 js+='if(!$B.$bool($b)){throw '+this.err_name+'}'
 catch_node.add($NodeJS(js))
 top_try_node.add(catch_node)
@@ -3089,12 +3091,11 @@ finally_node.C.in_ctx_manager=true
 finally_node.is_except=true
 finally_node.in_ctx_manager=true
 var js='if('+this.exc_name
-if(this.scope.ntype=="generator"){js+=' && (!$yield)'+
+if(this.scope.ntype=="generator"){js+=' && (!'+this.yield_name+')'+
 ' && '+this.cmexit_name}
-js+='){;'+this.cmexit_name+'(None,None,None);'
+js+='){'+this.cmexit_name+'(None,None,None);'
 if(this.scope.ntype=="generator"){js+='delete '+this.cmexit_name}
-js+='}'
-if(this.scope.ntype=="generator"){js+='$yield = undefined'}
+js+='};'
 finally_node.add($NodeJS(js))
 node.parent.insert(rank+2,finally_node)
 this.transformed=true}
@@ -3192,7 +3193,8 @@ new_node.after_yield=true
 new_node.indent=node.indent
 node.parent.insert(rank+1,new_node)
 var parent=node.parent
-while(parent){if(parent.ctx_manager_num !==undefined){node.parent.insert(rank+2,$NodeJS("$top_frame[1].$has_yield_in_cm = true"))
+while(parent){if(parent.ctx_manager_num !==undefined){node.parent.insert(rank+1,$NodeJS("$top_frame[1].$has_yield_in_cm = true"))
+if(node===$B.last(parent.children)){console.log("-- yield is last child of cm")}
 break}
 parent=parent.parent}}
 this.to_js=function(){this.js_processed=true
@@ -6311,13 +6313,17 @@ trace_func(frame_obj,'return',value)}
 function exit_ctx_managers_in_generators(frame){
 for(key in frame[1]){if(frame[1][key]&& frame[1][key].$is_generator_obj){var gen_obj=frame[1][key]
 if(gen_obj.env !==undefined){for(var attr in gen_obj.env){if(attr.search(/^\$ctx_manager_exit\d+$/)>-1){
-$B.$call(gen_obj.env[attr])()}}}}}}
+$B.$call(gen_obj.env[attr])()
+return true}}}}}}
+$B.set_cm_in_generator=function(cm_exit){if(cm_exit !==undefined){$B.frames_stack.forEach(function(frame){frame[1].$cm_in_gen=frame[1].$cm_in_gen ||new Set()
+frame[1].$cm_in_gen.add(cm_exit)})}}
 $B.leave_frame=function(arg){
 if($B.frames_stack.length==0){console.log("empty stack");return}
 $B.del_exc()
 var frame=$B.frames_stack.pop()
 if(frame[1].$has_yield_in_cm){
-exit_ctx_managers_in_generators(frame)}}
+var closed_cm=exit_ctx_managers_in_generators(frame)
+if((! closed_cm)&& $B.frames_stack.length > 0){$B.last($B.frames_stack)[1].$has_yield_in_cm=true}}}
 $B.leave_frame_exec=function(arg){
 if($B.profile > 0){$B.$profile.return()}
 if($B.frames_stack.length==0){console.log("empty stack");return}
@@ -7604,7 +7610,13 @@ return frame[1].$current_exception}
 $B.$raise=function(arg){
 if(arg===undefined){var es=$B.get_exc()
 if(es !==undefined){throw es}
-throw _b_.RuntimeError.$factory("No active exception to reraise")}else if(isinstance(arg,BaseException)){throw arg}else if(arg.$is_class && issubclass(arg,BaseException)){throw $B.$call(arg)()}else{throw _b_.TypeError.$factory("exceptions must derive from BaseException")}}
+throw _b_.RuntimeError.$factory("No active exception to reraise")}else if(isinstance(arg,BaseException)){if(arg.__class__===_b_.StopIteration &&
+$B.last($B.frames_stack)[1].$is_generator){
+arg=_b_.RuntimeError.$factory("generator raised StopIteration")}
+throw arg}else if(arg.$is_class && issubclass(arg,BaseException)){if(arg===_b_.StopIteration &&
+$B.last($B.frames_stack)[1].$is_generator){
+throw _b_.RuntimeError.$factory("generator raised StopIteration")}
+throw $B.$call(arg)()}else{throw _b_.TypeError.$factory("exceptions must derive from BaseException")}}
 $B.$syntax_err_line=function(exc,module,src,pos,line_num){
 var pos2line={},lnum=1,module=module.charAt(0)=="$" ? "<string>" :module
 if(src===undefined){exc.$line_info=line_num+','+module
@@ -13340,8 +13352,7 @@ var res='for(var attr in this.blocks){'+
 '};'+
 '\nvar $locals_'+iter_name+' = this.env'+_clean+', '+
 '\n    $local_name = "'+iter_name+'", '+
-'\n    $locals = $locals_'+iter_name+','+
-'\n    $yield;'
+'\n    $locals = $locals_'+iter_name+';'
 if(parent_id){res+='$locals.$parent = $locals_'+parent_id.replace(/\./g,"_")+
 ';'}
 return res}
@@ -13377,23 +13388,30 @@ var ctx_manager=in_ctx_manager(node)
 var yield_node_id=top_node.yields.length
 while(ctx_js.endsWith(";")){ctx_js=ctx_js.substr(0,ctx_js.length-1)}
 var res="return ["+ctx_js+", "+yield_node_id+"]"
-if(ctx_manager !==undefined){res="$yield = true;"+res}
+if(ctx_manager !==undefined){res="$locals.$yield"+ctx_manager.ctx_manager_num+
+" = true;"+res}
 new_node.data=res
 top_node.yields.push(new_node)}else if(node.is_set_yield_value){
 var ctx_manager
 if(node.after_yield){ctx_manager=in_ctx_manager(node)}
 if(node.line_num===undefined){console.log("bizarre",node)}
 var js="var sent_value = this.sent_value === undefined ? "+
-"_b_.None : this.sent_value;",h="\n"+' '.repeat(node.indent-4)
+"_b_.None : this.sent_value;",h="\n"+' '.repeat(node.indent)
 js+=h+"this.sent_value = _b_.None"
 js+=h+"if(sent_value.__class__ === $B.$GeneratorSendError)"+
 "{sent_value.err.$stack.splice(0, 0, $B.freeze([$top_frame])[0]);"+
 " throw sent_value.err};"
 if(typeof ctx_js=="number"){js+=h+"var $yield_value"+ctx_js+" = sent_value;"}
-if(ctx_manager !==undefined){js+=h+"$yield = true;" }
+if(ctx_manager !==undefined){var num=ctx_manager.ctx_manager_num
+js+=h+"$locals.$yield"+num+" = true;" 
+js+=h+"$locals.$exc"+num+" = true;"}
 new_node.data=js}else if(ctype=="break" ||ctype=="continue"){
 new_node["is_"+ctype]=true
-new_node.loop_num=node.C.tree[0].loop_ctx.loop_num}
+new_node.loop_num=node.C.tree[0].loop_ctx.loop_num}else if(ctype=="return"){
+var ctx_manager=in_ctx_manager(node)
+if(ctx_manager){new_node.data="$locals.$ctx_manager_exit"+
+ctx_manager.ctx_manager_num+
+"(_b_.None, _b_.None, _b_.None);"+new_node.data}}
 new_node.is_yield=(ctype=="yield" ||ctype=="return")
 new_node.is_cond=is_cond
 new_node.is_except=is_except
@@ -13402,6 +13420,7 @@ new_node.is_try=node.is_try
 new_node.is_else=is_else
 new_node.loop_start=node.loop_start
 new_node.is_set_yield_value=node.is_set_yield_value
+new_node.ctx_manager_num=node.ctx_manager_num
 for(var i=0,len=node.children.length;i < len;i++){var nd=make_node(top_node,node.children[i])
 if(nd !==undefined){new_node.addChild(nd)}}}
 return new_node}
@@ -13492,7 +13511,7 @@ $B.generator_return=function(value){return{__class__:$GeneratorReturn,value:valu
 function in_ctx_manager(node){
 var ctx_manager,parent=node.parent
 while(parent && parent.ntype !=="generator"){ctx_manager=parent.ctx_manager_num
-if(ctx_manager !==undefined){return ctx_manager}
+if(ctx_manager !==undefined){return parent}
 parent=parent.parent}}
 function in_loop(node){
 while(node){if(node.loop_start !==undefined){return node}
@@ -13545,6 +13564,8 @@ js='var $top_frame = ["'+self.iter_id+'",$locals,"'+self.module+
 '",$locals_'+self.module.replace(/\./g,'_')+'];'+
 '$B.frames_stack.push($top_frame); var $stack_length = '+
 '$B.frames_stack.length;'
+js+='$locals.$is_generator = true;'
+js+='$locals.$yield_node_id = '+yield_node_id+';'
 fnode.addChild(new $B.genNode(js))
 while(1){
 var exit_parent=exit_node.parent,rest=[],pos=0,breaks=[],has_break,has_continue

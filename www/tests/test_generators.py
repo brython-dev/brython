@@ -82,7 +82,11 @@ def f():
     raise StopIteration
     yield 2 # never reached
 
-assert [x for x in f()] == [1]
+try:
+    [x for x in f()]
+    raise AssertionError("should have raised RuntimeError (PEP 479)")
+except RuntimeError:
+    pass
 
 def g1():
     try:
@@ -996,5 +1000,51 @@ for ii in range(10):
     gg1.send(True if ii == 7 else None)
 
 assert trace == [3, 2, 1, 'try!', 3, 2, 1, 'try!', 3, 'breaking early...', 'try!', 3, 2, 1]
+
+# issue 1313
+class Ctx:
+    def __init__(self, name):
+        self.name = name
+    def __enter__(self):
+        trace.append('[' + self.name)
+        return self
+    def __exit__(self, type, value, traceback):
+        trace.append(self.name + ']')
+
+def G1(ret_in_with=False):
+    with Ctx('A') as ctx:
+        with Ctx('A.1') as ctx:      # no yield inside => ok
+            trace.append('inside A.1')
+        yield 1
+        with Ctx('A.2') as ctx:      # yield inside => not ok
+            trace.append('inside A.2')
+            yield 2
+        trace.append('inside A')
+    trace.append('ret')
+    return
+
+trace = []
+assert list(G1()) == [1, 2]
+assert trace == ['[A', '[A.1', 'inside A.1', 'A.1]', '[A.2', 'inside A.2', 'A.2]', 'inside A', 'A]', 'ret']
+
+def G2():
+    with Ctx('A') as ctx:
+        with Ctx('A.1') as ctx:      # no yield inside => ok
+            trace.append('inside A.1')
+        yield 1
+        if True:              # enable to cause different problem
+            trace.append('ret')
+            return
+        with Ctx('A.2') as ctx:      # yield inside => not ok
+            trace.append('inside A.2')
+            yield 2
+        trace.append('inside A')
+    trace.append('ret')
+    return
+
+
+trace = []
+assert list(G2()) == [1]
+assert trace == ['[A', '[A.1', 'inside A.1', 'A.1]', 'ret', 'A]']
 
 print('passed all tests...')

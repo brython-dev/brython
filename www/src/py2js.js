@@ -6455,6 +6455,7 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
         this.exc_name = this.prefix + '$exc' + num
         this.err_name = '$err' + num
         this.val_name = '$value' + num
+        this.yield_name = this.prefix + '$yield' + num
 
         if(this.tree[0].alias === null){this.tree[0].alias = '$temp'}
 
@@ -6500,6 +6501,10 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
         // place block inside a try clause
         block.forEach(function(elt){try_node.add(elt)})
 
+        if(this.scope.ntype == "generator"){
+            try_node.add($NodeJS(this.yield_name + " = false"))
+        }
+
         var catch_node = new $Node()
         catch_node.is_catch = true // for generators
         new $NodeJSCtx(catch_node, 'catch(' + this.err_name + ')')
@@ -6512,7 +6517,7 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
                 this.err_name + ','+
                 '$B.$getattr(' + this.err_name + ', "__traceback__"));'
         if(this.scope.ntype == "generator"){
-            js += 'delete ' + this.cmexit_name + ';'
+            js += '$B.set_cm_in_generator(' + this.cmexit_name + ');'
         }
         js += 'if(!$B.$bool($b)){throw ' + this.err_name + '}'
         catch_node.add($NodeJS(js))
@@ -6527,17 +6532,14 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
         finally_node.in_ctx_manager = true
         var js = 'if(' + this.exc_name
         if(this.scope.ntype == "generator"){
-            js += ' && (!$yield)' +
+            js += ' && (!' + this.yield_name + ')' +
                   ' && ' + this.cmexit_name
         }
-        js += '){;'+ this.cmexit_name + '(None,None,None);'
+        js += '){' + this.cmexit_name + '(None,None,None);'
         if(this.scope.ntype == "generator"){
             js += 'delete ' + this.cmexit_name
         }
-        js += '}'
-        if(this.scope.ntype == "generator"){
-            js += '$yield = undefined'
-        }
+        js += '};'
         finally_node.add($NodeJS(js))
         node.parent.insert(rank + 2, finally_node)
 
@@ -6768,8 +6770,11 @@ var $YieldCtx = $B.parser.$YieldCtx = function(context, is_await){
         var parent = node.parent
         while(parent){
             if(parent.ctx_manager_num !== undefined){
-                node.parent.insert(rank + 2,
+                node.parent.insert(rank + 1,
                     $NodeJS("$top_frame[1].$has_yield_in_cm = true"))
+                if(node === $B.last(parent.children)){
+                    console.log("-- yield is last child of cm")
+                }
                 break
             }
             parent = parent.parent

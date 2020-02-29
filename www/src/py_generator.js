@@ -45,8 +45,7 @@ function jscode_namespace(iter_name, action, parent_id) {
            '};' +
            '\nvar $locals_' + iter_name + ' = this.env' + _clean + ', '+
                '\n    $local_name = "' + iter_name + '", ' +
-               '\n    $locals = $locals_' + iter_name + ',' +
-               '\n    $yield;'
+               '\n    $locals = $locals_' + iter_name + ';'
     if(parent_id){
         res += '$locals.$parent = $locals_' + parent_id.replace(/\./g, "_") +
             ';'
@@ -134,7 +133,8 @@ function make_node(top_node, node){
             // Add a local variable that will prevent executing the __exit__
             // method of the context manager before returning the value
             if(ctx_manager !== undefined){
-                res = "$yield = true;" + res
+                res = "$locals.$yield" + ctx_manager.ctx_manager_num +
+                    " = true;" + res
             }
 
             new_node.data = res
@@ -160,7 +160,7 @@ function make_node(top_node, node){
             }
             var js = "var sent_value = this.sent_value === undefined ? " +
                     "_b_.None : this.sent_value;",
-                h = "\n" + ' '.repeat(node.indent - 4)
+                h = "\n" + ' '.repeat(node.indent)
             // Reset sent_value value to None for the next iteration
             js += h + "this.sent_value = _b_.None"
 
@@ -175,7 +175,9 @@ function make_node(top_node, node){
             }
 
             if(ctx_manager !== undefined){
-                js += h + "$yield = true;" // to avoid exiting from ctx mngr
+                var num = ctx_manager.ctx_manager_num
+                js += h + "$locals.$yield" + num + " = true;" // to avoid exiting from ctx mngr
+                js += h + "$locals.$exc" + num + " = true;"
             }
 
             new_node.data = js
@@ -187,6 +189,16 @@ function make_node(top_node, node){
             new_node["is_" + ctype] = true
             new_node.loop_num = node.context.tree[0].loop_ctx.loop_num
 
+        }else if(ctype == "return"){
+            // If the return is inside a context manager, close it before
+            // returning (cf. issue #1313)
+            var ctx_manager = in_ctx_manager(node)
+            if(ctx_manager){
+                new_node.data = "$locals.$ctx_manager_exit" +
+                    ctx_manager.ctx_manager_num +
+                    "(_b_.None, _b_.None, _b_.None);" + new_node.data
+            }
+
         }
 
         new_node.is_yield = (ctype == "yield" || ctype == "return")
@@ -197,6 +209,7 @@ function make_node(top_node, node){
         new_node.is_else = is_else
         new_node.loop_start = node.loop_start
         new_node.is_set_yield_value = node.is_set_yield_value
+        new_node.ctx_manager_num = node.ctx_manager_num
 
         // Recursion
         for(var i = 0, len = node.children.length; i < len; i++){
@@ -379,7 +392,7 @@ function in_ctx_manager(node){
     while(parent && parent.ntype !== "generator"){
         ctx_manager = parent.ctx_manager_num
         if(ctx_manager !== undefined){
-            return ctx_manager
+            return parent
         }
         parent = parent.parent
     }
@@ -532,6 +545,8 @@ function make_next(self, yield_node_id){
         '",$locals_' + self.module.replace(/\./g, '_') + '];' +
         '$B.frames_stack.push($top_frame); var $stack_length = ' +
         '$B.frames_stack.length;'
+    js += '$locals.$is_generator = true;'
+    js += '$locals.$yield_node_id = ' + yield_node_id + ';'
     fnode.addChild(new $B.genNode(js))
 
     // To build the new function, we must identify the rest of the function to
@@ -590,7 +605,6 @@ function make_next(self, yield_node_id){
             if(clone.has("continue")){
                 has_continue = true;
                 continue_pos = pos + 1
-                //console.log("clone has continue", clone, i, pos)
             }
             rest[pos++] = clone
             var break_num = clone.has("break")
