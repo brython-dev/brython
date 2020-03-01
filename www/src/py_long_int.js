@@ -130,7 +130,7 @@ function divmod_by_safe_int(t, n){
     if(n == 1){return [t, 0]}
 
     // Number of digits such that each intermediate result is a safe integer
-    var len = 15, //(Math.floor((Math.pow(2, 53) - 1) / n) + '').length - 1,
+    var len = (Math.floor((Math.pow(2, 53) - 1) / n) + '').length - 1,
         nb_chunks = Math.ceil(t.length / len), // number of items after split
         chunks = [],
         pos,
@@ -146,7 +146,7 @@ function divmod_by_safe_int(t, n){
         chunks.push(t.substr(start, len + nb))
     }
     chunks = chunks.reverse()
-
+    
     // Transform into (safe) integers
     chunks.forEach(function(chunk, i){
         chunks[i] = parseInt(chunk)
@@ -164,7 +164,7 @@ function divmod_by_safe_int(t, n){
             chunks[i + 1] += carry * rest
         }
     })
-    if(chunks[0] == 0){
+    while(chunks[0] == 0){
         chunks.shift()
         if(chunks.length == 0){
             return [0, rest]
@@ -535,7 +535,7 @@ long_int.__divmod__ = function(self, other){
             dm[1] = long_int.__add__(dm[1], long_int.$factory("1"))
         }
     }
-    return [intOrLong(dm[0]), intOrLong(dm[1])]
+    return $B.fast_tuple([intOrLong(dm[0]), intOrLong(dm[1])])
 }
 
 long_int.__eq__ = function(self, other){

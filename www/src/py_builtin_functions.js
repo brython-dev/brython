@@ -432,6 +432,10 @@ function divmod(x,y) {
    check_nb_args('divmod', 2, arguments)
 
    var klass = x.__class__ || $B.get_class(x)
+   var dm = $B.$getattr(klass, "__divmod__", _b_.None)
+   if(dm !== _b_.None){
+       return dm(x, y)
+   }
    return _b_.tuple.$factory([$B.$getattr(klass, '__floordiv__')(x, y),
        $B.$getattr(klass, '__mod__')(x, y)])
 }

@@ -144,7 +144,10 @@ int.__bool__ = function(self){
 
 int.__ceil__ = function(self){return Math.ceil(int_value(self))}
 
-int.__divmod__ = function(self, other){return _b_.divmod(self, other)}
+int.__divmod__ = function(self, other){
+    return $B.fast_tuple([int.__floordiv__(self, other), 
+        int.__mod__(self, other)])
+}
 
 int.__eq__ = function(self, other){
     // compare object "self" to class "int"

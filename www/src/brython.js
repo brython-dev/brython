@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,8,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.8"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-02-29 15:32:14.821628"
-__BRYTHON__.timestamp=1582986734821
+__BRYTHON__.compiled_date="2020-03-01 16:44:43.747980"
+__BRYTHON__.timestamp=1583077483732
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -6617,6 +6617,8 @@ return res}
 function divmod(x,y){check_no_kw('divmod',x,y)
 check_nb_args('divmod',2,arguments)
 var klass=x.__class__ ||$B.get_class(x)
+var dm=$B.$getattr(klass,"__divmod__",_b_.None)
+if(dm !==_b_.None){return dm(x,y)}
 return _b_.tuple.$factory([$B.$getattr(klass,'__floordiv__')(x,y),$B.$getattr(klass,'__mod__')(x,y)])}
 var enumerate=$B.make_class("enumerate",function(){var $ns=$B.args("enumerate",2,{iterable:null,start:null},['iterable','start'],arguments,{start:0},null,null),_iter=iter($ns["iterable"]),start=$ns["start"]
 return{
@@ -9902,7 +9904,7 @@ __class__:_b_.bytes,source:res}}
 int.__abs__=function(self){return _b_.abs(self)}
 int.__bool__=function(self){return int_value(self).valueOf()==0 ? false :true}
 int.__ceil__=function(self){return Math.ceil(int_value(self))}
-int.__divmod__=function(self,other){return _b_.divmod(self,other)}
+int.__divmod__=function(self,other){return $B.fast_tuple([int.__floordiv__(self,other),int.__mod__(self,other)])}
 int.__eq__=function(self,other){
 if(other===undefined){return self===int}
 if(_b_.isinstance(other,int)){return self.valueOf()==int_value(other).valueOf()}
@@ -10265,8 +10267,7 @@ else if(v1 < v2){return-1}}
 return 0}
 function divmod_by_safe_int(t,n){
 if(n==1){return[t,0]}
-var len=15,
-nb_chunks=Math.ceil(t.length/len),
+var len=(Math.floor((Math.pow(2,53)-1)/n)+'').length-1,nb_chunks=Math.ceil(t.length/len),
 chunks=[],pos,start,nb,in_base=[]
 for(var i=0;i < nb_chunks;i++){pos=t.length-(i+1)*len
 start=Math.max(0,pos)
@@ -10279,7 +10280,7 @@ chunks.forEach(function(chunk,i){rest=chunk % n
 chunks[i]=Math.floor(chunk/n)
 if(i < chunks.length-1){
 chunks[i+1]+=carry*rest}})
-if(chunks[0]==0){chunks.shift()
+while(chunks[0]==0){chunks.shift()
 if(chunks.length==0){return[0,rest]}}
 x=chunks[0]+''
 chunks.forEach(function(chunk,i){if(i > 0){
@@ -10415,7 +10416,7 @@ if(self.pos !==other.pos){if(dm[0].value !="0"){dm[0].pos=false}
 if(dm[1].value !="0"){
 dm[0]=long_int.__sub__(dm[0],long_int.$factory("1"))
 dm[1]=long_int.__add__(dm[1],long_int.$factory("1"))}}
-return[intOrLong(dm[0]),intOrLong(dm[1])]}
+return $B.fast_tuple([intOrLong(dm[0]),intOrLong(dm[1])])}
 long_int.__eq__=function(self,other){if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}
 return self.value==other.value && self.pos==other.pos}
 long_int.__float__=function(self){return new Number(parseFloat(self.value))}

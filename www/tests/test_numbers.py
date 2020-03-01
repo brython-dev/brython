@@ -430,4 +430,9 @@ assert 3.14_15_93j == 3.141593j
 x = pow(2, 64) + Fraction(1, 2)
 assert x == Fraction(36893488147419103233, 2)
 
+# issue 1315
+dm = divmod(pow(2, 64) - 1, pow(2, 32))
+assert dm == (4294967295, 4294967295)
+assert str(dm) == '(4294967295, 4294967295)'
+
 print('passed all tests...')
