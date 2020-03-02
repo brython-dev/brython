@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,8,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.8"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-03-01 16:44:43.747980"
-__BRYTHON__.timestamp=1583077483732
+__BRYTHON__.compiled_date="2020-03-02 09:33:21.107194"
+__BRYTHON__.timestamp=1583138001097
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5453,7 +5453,9 @@ if($test){console.log("res",res,"res1",res1)}
 if(typeof res1=="function"){
 if(res1.__class__===$B.method){return res}
 if(res.$type=="staticmethod"){return res}
-else{var self=res.__class__===$B.method ? klass :obj,method=res.bind(null,self)
+else{var self=res.__class__===$B.method ? klass :obj,method=function(){var args=[self]
+for(var i=0,len=arguments.length;i < len;i++){args.push(arguments[i])}
+return res.apply(this,args)}
 method.__class__=$B.method
 method.__get__=function(obj,cls){var clmethod=res.bind(null,cls)
 clmethod.__class__=$B.method

@@ -255,7 +255,13 @@ object.__getattribute__ = function(obj, attr){
                 if(res.$type == "staticmethod"){return res}
                 else{
                     var self = res.__class__ === $B.method ? klass : obj,
-                        method = res.bind(null, self) // add self as first argument
+                        method = function(){
+                            var args = [self] // add self as first argument
+                            for(var i = 0, len = arguments.length; i < len; i++){
+                                args.push(arguments[i])
+                            }
+                            return res.apply(this, args)
+                        }
                     method.__class__ = $B.method
                     method.__get__ = function(obj, cls){
                         var clmethod = res.bind(null, cls)
