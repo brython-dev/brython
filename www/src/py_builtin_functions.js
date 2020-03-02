@@ -1304,7 +1304,7 @@ function _get_builtins_doc(){
         }
         url += '/builtins_docstrings.js'
         var f = _b_.open(url)
-        eval(f.$content)
+        eval(f.$string)
         $B.builtins_doc = docs
     }
 }

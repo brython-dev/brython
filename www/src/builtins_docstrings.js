@@ -142,3 +142,4 @@ type:"type(object_or_name, bases, dict)\ntype(object) -> the object's type\ntype
 vars:"vars([object]) -> dictionary\n\nWithout arguments, equivalent to locals().\nWith an argument, equivalent to object.__dict__.",
 zip:"zip(iter1 [,iter2 [...]]) --> zip object\n\nReturn a zip object whose .__next__() method returns a tuple where\nthe i-th element comes from the i-th iterable argument.  The .__next__()\nmethod continues until the shortest iterable in the argument sequence\nis exhausted and then it raises StopIteration.",
 }
+__BRYTHON__.builtins_doc = docs

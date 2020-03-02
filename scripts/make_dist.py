@@ -79,7 +79,7 @@ def run():
         'stdlib_paths', 'py_import', 'py_float', 'py_int', 'py_long_int',
         'py_complex', 'py_sort', 'py_list', 'unicode_data', 'py_string',
         'py_dict', 'py_dom', 'py_generator', 'builtin_modules',
-        'py_import_hooks', 'async'
+        'builtins_docstrings', 'py_import_hooks', 'async'
     ]
 
     res = """// brython.js brython.info
