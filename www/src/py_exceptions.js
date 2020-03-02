@@ -655,13 +655,15 @@ $make_exc(["SystemExit", "KeyboardInterrupt", "GeneratorExit", "Exception"],
 $make_exc([["StopIteration","err.value = arguments[0]"],
     ["StopAsyncIteration","err.value = arguments[0]"],
     "ArithmeticError", "AssertionError", "AttributeError",
-    "BufferError", "EOFError", "ImportError", "LookupError", "MemoryError",
+    "BufferError", "EOFError",
+    ["ImportError", "err.name = arguments[0]"], 
+    "LookupError", "MemoryError",
     "NameError", "OSError", "ReferenceError", "RuntimeError",
     ["SyntaxError", "err.msg = arguments[0]"],
     "SystemError", "TypeError", "ValueError", "Warning"],_b_.Exception)
 $make_exc(["FloatingPointError", "OverflowError", "ZeroDivisionError"],
     _b_.ArithmeticError)
-$make_exc(["ModuleNotFoundError"], _b_.ImportError)
+$make_exc([["ModuleNotFoundError", "err.name = arguments[0]"]], _b_.ImportError)
 $make_exc(["IndexError","KeyError"], _b_.LookupError)
 $make_exc(["UnboundLocalError"], _b_.NameError)
 $make_exc(["BlockingIOError", "ChildProcessError", "ConnectionError",
