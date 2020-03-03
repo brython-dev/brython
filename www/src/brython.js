@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,8,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.8"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-03-02 11:00:25.565269"
-__BRYTHON__.timestamp=1583143225565
+__BRYTHON__.compiled_date="2020-03-03 17:58:05.670051"
+__BRYTHON__.timestamp=1583254685670
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -1117,12 +1117,13 @@ this.type='condition'
 this.token=token
 this.parent=C
 this.tree=[]
-if(token=='while'){this.loop_num=$loop_num++}
+this.scope=$get_scope(this)
+if(token=='while'){this.loop_num=$loop_num++
+$get_node(this).loop_start=this.loop_num}
 C.tree[C.tree.length]=this
 this.toString=function(){return this.token+' '+this.tree}
 this.transform=function(node,rank){var scope=$get_scope(this)
-if(this.token=="while"){if(scope.ntype=="generator"){this.parent.node.loop_start=this.loop_num}
-node.parent.insert(rank,$NodeJS('$locals["$no_break'+this.loop_num+'"] = true'))
+if(this.token=="while"){node.parent.insert(rank,$NodeJS('$locals["$no_break'+this.loop_num+'"] = true'))
 var module=$get_module(this).module
 if($B.last(node.children).C.tree[0].type !="return"){var js='$locals.$line_info = "'+node.line_num+
 ','+module+'";if($locals.$f_trace !== _b_.None){'+

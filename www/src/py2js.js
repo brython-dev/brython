@@ -2146,7 +2146,12 @@ var $ConditionCtx = $B.parser.$ConditionCtx = function(context,token){
     this.token = token
     this.parent = context
     this.tree = []
-    if(token == 'while'){this.loop_num = $loop_num++}
+    this.scope = $get_scope(this)
+    if(token == 'while'){
+        this.loop_num = $loop_num++
+        // Set attribute loop_start, used in generators (cf. issue 1317)
+        $get_node(this).loop_start = this.loop_num
+    }
     context.tree[context.tree.length] = this
 
     this.toString = function(){return this.token + ' ' + this.tree}
@@ -2154,9 +2159,6 @@ var $ConditionCtx = $B.parser.$ConditionCtx = function(context,token){
     this.transform = function(node, rank){
         var scope = $get_scope(this)
         if(this.token == "while"){
-            if(scope.ntype == "generator"){
-                this.parent.node.loop_start = this.loop_num
-            }
             node.parent.insert(rank,
                 $NodeJS('$locals["$no_break' + this.loop_num + '"] = true'))
             // Add a line to reset the line number, except if the last

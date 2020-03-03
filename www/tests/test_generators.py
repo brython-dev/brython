@@ -1047,4 +1047,15 @@ trace = []
 assert list(G2()) == [1]
 assert trace == ['[A', '[A.1', 'inside A.1', 'A.1]', 'ret', 'A]']
 
+# issue 1317
+def f1317():
+    for jj in range(2):
+        ii = 0
+        done = False
+        while not done:
+            ii += 1
+            done = ii == 3
+            yield ii
+assert list(f1317()) == [1, 2, 3, 1, 2, 3]
+
 print('passed all tests...')
