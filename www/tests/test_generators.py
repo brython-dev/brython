@@ -1058,4 +1058,9 @@ def f1317():
             yield ii
 assert list(f1317()) == [1, 2, 3, 1, 2, 3]
 
+# issue 1319
+def f1319():
+    val = yield lambda: 10
+assert next(f1319())() == 10
+
 print('passed all tests...')

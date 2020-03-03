@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,8,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.8"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-03-03 17:58:05.670051"
-__BRYTHON__.timestamp=1583254685670
+__BRYTHON__.compiled_date="2020-03-03 18:21:12.070518"
+__BRYTHON__.timestamp=1583256072070
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -284,24 +284,24 @@ if(this.yield_atoms.length > 0){
 this.parent.children.splice(rank,1)
 var offset=0
 this.yield_atoms.forEach(function(atom){
-var temp_node=new $Node()
-var js='var $yield_value'+$loop_num
+var temp_node=new $Node(),loop_num=$loop_num,
+var_name='$yield_value'+loop_num,js='var '+var_name
 js+=' = '+(atom.to_js()||'None')
 new $NodeJSCtx(temp_node,js)
 this.parent.insert(rank+offset,temp_node)
 var yield_node=new $Node()
 this.parent.insert(rank+offset+1,yield_node)
 var yield_expr=new $YieldCtx(new $NodeCtx(yield_node))
-new $StringCtx(yield_expr,'$yield_value'+$loop_num)
+new $StringCtx(yield_expr,var_name)
 var set_yield=new $Node()
 set_yield.line_num=this.line_num
 set_yield.indent=this.indent
 set_yield.is_set_yield_value=true
 set_yield.after_yield=true
-js=$loop_num
+js=loop_num
 new $NodeJSCtx(set_yield,js)
 this.parent.insert(rank+offset+2,set_yield)
-atom.to_js=(function(x){return function(){return '$yield_value'+x}})($loop_num)
+atom.to_js=(function(x){return function(){return '$yield_value'+x}})(loop_num)
 $loop_num++
 offset+=3},this)
 this.parent.insert(rank+offset,this)
@@ -3195,7 +3195,6 @@ new_node.indent=node.indent
 node.parent.insert(rank+1,new_node)
 var parent=node.parent
 while(parent){if(parent.ctx_manager_num !==undefined){node.parent.insert(rank+1,$NodeJS("$top_frame[1].$has_yield_in_cm = true"))
-if(node===$B.last(parent.children)){console.log("-- yield is last child of cm")}
 break}
 parent=parent.parent}}
 this.to_js=function(){this.js_processed=true

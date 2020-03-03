@@ -494,8 +494,10 @@ var $Node = $B.parser.$Node = function(type){
             this.yield_atoms.forEach(function(atom){
                 // create a line to store the yield expression in a
                 // temporary variable
-                var temp_node = new $Node()
-                var js = 'var $yield_value' + $loop_num
+                var temp_node = new $Node(),
+                    loop_num = $loop_num, // freeze loop_num (cf. issue 1319)
+                    var_name = '$yield_value' + loop_num,
+                    js = 'var ' + var_name
                 js += ' = ' + (atom.to_js() || 'None')
                 new $NodeJSCtx(temp_node, js)
                 this.parent.insert(rank + offset, temp_node)
@@ -504,7 +506,7 @@ var $Node = $B.parser.$Node = function(type){
                 var yield_node = new $Node()
                 this.parent.insert(rank + offset + 1, yield_node)
                 var yield_expr = new $YieldCtx(new $NodeCtx(yield_node))
-                new $StringCtx(yield_expr, '$yield_value' + $loop_num)
+                new $StringCtx(yield_expr, var_name)
 
                 // create a node to set the yielded value to the last
                 // value sent to the generator, if any
@@ -515,14 +517,14 @@ var $Node = $B.parser.$Node = function(type){
                 set_yield.after_yield = true
 
                 // the JS code will be set in py_utils.$B.make_node
-                js = $loop_num
+                js = loop_num
                 new $NodeJSCtx(set_yield, js)
                 this.parent.insert(rank + offset + 2, set_yield)
 
                 // in the original node, replace yield atom by None
                 atom.to_js = (function(x){
                     return function(){return '$yield_value' + x}
-                    })($loop_num)
+                    })(loop_num)
 
                 $loop_num++
                 offset += 3
@@ -6774,9 +6776,6 @@ var $YieldCtx = $B.parser.$YieldCtx = function(context, is_await){
             if(parent.ctx_manager_num !== undefined){
                 node.parent.insert(rank + 1,
                     $NodeJS("$top_frame[1].$has_yield_in_cm = true"))
-                if(node === $B.last(parent.children)){
-                    console.log("-- yield is last child of cm")
-                }
                 break
             }
             parent = parent.parent
