@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,8,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.8"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-03-04 15:07:22.113838"
-__BRYTHON__.timestamp=1583330842113
+__BRYTHON__.compiled_date="2020-03-04 18:35:01.032800"
+__BRYTHON__.timestamp=1583343301032
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -6321,6 +6321,8 @@ if(trace_func !==_b_.None){var frame_obj=$B._frame.$factory($B.frames_stack,$B.f
 top_frame[1].$ftrace=trace_func(frame_obj,'line',_b_.None)}
 return true}
 $B.trace_return=function(value){var top_frame=$B.last($B.frames_stack),trace_func=top_frame[1].$f_trace,frame_obj=$B._frame.$factory($B.frames_stack,$B.frames_stack.length-1)
+if(top_frame[0]==$B.tracefunc.$current_frame_id){
+return _b_.None}
 trace_func(frame_obj,'return',value)}
 function exit_ctx_managers_in_generators(frame){
 for(key in frame[1]){if(frame[1][key]&& frame[1][key].$is_generator_obj){var gen_obj=frame[1][key]
@@ -6337,7 +6339,8 @@ if($B.last($B.frames_stack)[1].$f_trace !==_b_.None){$B.trace_return(arg.value)}
 var frame=$B.frames_stack.pop()
 if(frame[1].$has_yield_in_cm){
 var closed_cm=exit_ctx_managers_in_generators(frame)
-if((! closed_cm)&& $B.frames_stack.length > 0){$B.last($B.frames_stack)[1].$has_yield_in_cm=true}}}
+if((! closed_cm)&& $B.frames_stack.length > 0){$B.last($B.frames_stack)[1].$has_yield_in_cm=true}}
+return _b_.None}
 $B.leave_frame_exec=function(arg){
 if($B.profile > 0){$B.$profile.return()}
 if($B.frames_stack.length==0){console.log("empty stack");return}
@@ -6648,6 +6651,9 @@ return attr}
 $B.to_alias=function(attr){if($B.aliased_names[attr]){return '$$'+attr}
 return attr}
 function $$eval(src,_globals,_locals){var $=$B.args("eval",4,{src:null,globals:null,locals:null,mode:null},["src","globals","locals","mode"],arguments,{globals:_b_.None,locals:_b_.None,mode:"eval"},null,null),src=$.src,_globals=$.globals,_locals=$.locals,mode=$.mode
+if($.src.mode && $.src.mode=="single" &&
+["<console>","<stdin>"].indexOf($.src.filename)>-1){
+_b_.print(">",$.src.source.trim())}
 var current_frame=$B.frames_stack[$B.frames_stack.length-1]
 if(current_frame !==undefined){var current_locals_id=current_frame[0].replace(/\./,'_'),current_globals_id=current_frame[2].replace(/\./,'_')}
 var stack_len=$B.frames_stack.length
@@ -6733,7 +6739,9 @@ var locals_obj=eval("$locals_"+locals_id),globals_obj=eval("$locals_"+globals_id
 if(_globals===_b_.None){var res=new Function("$locals_"+globals_id,"$locals_"+locals_id,js)(
 globals_obj,locals_obj)}else{current_globals_obj=current_frame[3]
 current_locals_obj=current_frame[1]
-var res=new Function("$locals_"+globals_id,"$locals_"+locals_id,"$locals_"+current_globals_id,"$locals_"+current_locals_id,js)(globals_obj,locals_obj,current_globals_obj,current_locals_obj)}}else{js=root.to_js()
+var res=new Function("$locals_"+globals_id,"$locals_"+locals_id,"$locals_"+current_globals_id,"$locals_"+current_locals_id,js)(globals_obj,locals_obj,current_globals_obj,current_locals_obj)}
+if($.src.mode && $.src.mode=="single" &&
+$.src.filename=="<stdin>"){if(res !==_b_.None && res !==undefined){_b_.print(res)}}}else{js=root.to_js()
 var res=eval(js)}
 if($.src.filename=="<console>" && $.src.mode=="single" &&
 res !==undefined && res !==_b_.None){_b_.print(res)}
@@ -7743,6 +7751,8 @@ return res}
 )
 frame.__getattr__=function(self,attr){
 if(attr=="f_back"){if(self.$pos > 0){return frame.$factory(self.$stack.slice(0,self.$stack.length-1))}else{return _b_.None}}else if(attr=="clear"){return function(){}}}
+frame.__setattr__=function(self,attr,value){if(attr=="f_trace"){
+$B.last(self.$stack)[1].$f_trace=value}}
 frame.__str__=frame.__repr__=function(self){return '<frame object, file '+self.f_code.co_filename+
 ', line '+self.f_lineno+', code '+self.f_code.co_name+'>'}
 $B.set_func_names(frame,"builtins")

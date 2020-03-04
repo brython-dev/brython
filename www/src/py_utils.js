@@ -1128,6 +1128,11 @@ $B.trace_return = function(value){
         trace_func = top_frame[1].$f_trace,
         frame_obj = $B._frame.$factory($B.frames_stack,
             $B.frames_stack.length - 1)
+    if(top_frame[0] == $B.tracefunc.$current_frame_id){
+        // don't call trace func when returning from the frame where
+        // sys.settrace was called
+        return _b_.None
+    }
     trace_func(frame_obj, 'return', value)
 }
 
@@ -1187,6 +1192,7 @@ $B.leave_frame = function(arg){
             $B.last($B.frames_stack)[1].$has_yield_in_cm = true
         }
     }
+    return _b_.None
 }
 
 $B.leave_frame_exec = function(arg){

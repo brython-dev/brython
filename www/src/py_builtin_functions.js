@@ -490,6 +490,13 @@ function $$eval(src, _globals, _locals){
             _globals = $.globals,
             _locals = $.locals,
             mode = $.mode
+
+    if($.src.mode && $.src.mode == "single" &&
+            ["<console>", "<stdin>"].indexOf($.src.filename) > -1){
+        // echo input in interactive mode
+        _b_.print(">", $.src.source.trim())
+    }
+
     var current_frame = $B.frames_stack[$B.frames_stack.length - 1]
     if(current_frame !== undefined){
         var current_locals_id = current_frame[0].replace(/\./, '_'),
@@ -747,6 +754,12 @@ function $$eval(src, _globals, _locals){
                     "$locals_" + current_locals_id,
                     js)(globals_obj, locals_obj,
                         current_globals_obj, current_locals_obj)
+            }
+            if($.src.mode && $.src.mode == "single" &&
+                    $.src.filename == "<stdin>"){
+                if(res !== _b_.None && res !== undefined){
+                    _b_.print(res)
+                }
             }
         }else{
             js = root.to_js()

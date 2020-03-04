@@ -329,6 +329,13 @@ frame.__getattr__ = function(self, attr){
     }
 }
 
+frame.__setattr__ = function(self, attr, value){
+    if(attr == "f_trace"){
+        // used in trace functions, as defined by sys.settrace()
+        $B.last(self.$stack)[1].$f_trace = value
+    }
+}
+
 frame.__str__ = frame.__repr__ = function(self){
     return '<frame object, file ' + self.f_code.co_filename +
         ', line ' + self.f_lineno + ', code ' + self.f_code.co_name + '>'
@@ -656,7 +663,7 @@ $make_exc([["StopIteration","err.value = arguments[0]"],
     ["StopAsyncIteration","err.value = arguments[0]"],
     "ArithmeticError", "AssertionError", "AttributeError",
     "BufferError", "EOFError",
-    ["ImportError", "err.name = arguments[0]"], 
+    ["ImportError", "err.name = arguments[0]"],
     "LookupError", "MemoryError",
     "NameError", "OSError", "ReferenceError", "RuntimeError",
     ["SyntaxError", "err.msg = arguments[0]"],
