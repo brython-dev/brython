@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,8,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.8"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-03-03 18:21:12.070518"
-__BRYTHON__.timestamp=1583256072070
+__BRYTHON__.compiled_date="2020-03-04 15:07:22.113838"
+__BRYTHON__.timestamp=1583330842113
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5072,10 +5072,10 @@ var try_node=new $NodeJS('try'),children=root.children.slice(enter_frame_pos+1,r
 root.insert(enter_frame_pos+1,try_node)
 if(children.length==0){children=[$NodeJS('')]}
 children.forEach(function(child){try_node.add(child)})
-try_node.add($NodeJS('$B.leave_frame()'))
+try_node.add($NodeJS('$B.leave_frame({value: _b_.None})'))
 root.children.splice(enter_frame_pos+2,root.children.length)
 var catch_node=$NodeJS('catch(err)')
-catch_node.add($NodeJS('$B.leave_frame()'))
+catch_node.add($NodeJS('$B.leave_frame({value: _b_.None})'))
 catch_node.add($NodeJS('throw err'))
 root.add(catch_node)
 $add_line_num(root,null,line_info)
@@ -6296,15 +6296,25 @@ throw _b_.TypeError.$factory("'"+$B.class_name(v)+
 "' object cannot be interpreted as an integer")}}
 $B.enter_frame=function(frame){
 $B.frames_stack.push(frame)
-if($B.tracefunc){if(frame[4]===$B.tracefunc){
-return _b_.None}else{return $B.tracefunc($B._frame.$factory($B.frames_stack,$B.frames_stack.length-1),'call',_b_.None)}}
+if($B.tracefunc){if(frame[4]===$B.tracefunc ||
+($B.tracefunc.$infos && frame[4]&&
+frame[4]===$B.tracefunc.$infos.__func__)){
+$B.tracefunc.$frame_id=frame[0]
+return _b_.None}else{
+for(var i=$B.frames_stack.length-1;i >=0;i--){if($B.frames_stack[i][0]==$B.tracefunc.$frame_id){return _b_.None}}
+return $B.tracefunc($B._frame.$factory($B.frames_stack,$B.frames_stack.length-1),'call',_b_.None)}}
 return _b_.None}
-$B.trace_exception=function(){var top_frame=$B.last($B.frames_stack),trace_func=top_frame[1].$f_trace,exc=top_frame[1].$current_exception,frame_obj=$B._frame.$factory($B.frames_stack,$B.frames_stack.length-1)
+$B.trace_exception=function(){var top_frame=$B.last($B.frames_stack)
+if(top_frame[0]==$B.tracefunc.$current_frame_id){return _b_.None}
+var trace_func=top_frame[1].$f_trace,exc=top_frame[1].$current_exception,frame_obj=$B._frame.$factory($B.frames_stack,$B.frames_stack.length-1)
 return trace_func(frame_obj,'exception',$B.fast_tuple([exc.__class__,exc,$B.traceback.$factory(exc)]))}
-$B.trace_line=function(){var top_frame=$B.last($B.frames_stack),trace_func=top_frame[1].$f_trace,frame_obj=$B._frame.$factory($B.frames_stack,$B.frames_stack.length-1)
+$B.trace_line=function(){var top_frame=$B.last($B.frames_stack)
+if(top_frame[0]==$B.tracefunc.$current_frame_id){return _b_.None}
+var trace_func=top_frame[1].$f_trace,frame_obj=$B._frame.$factory($B.frames_stack,$B.frames_stack.length-1)
 return trace_func(frame_obj,'line',_b_.None)}
 $B.set_line=function(line_info){
 var top_frame=$B.last($B.frames_stack)
+if($B.tracefunc && top_frame[0]==$B.tracefunc.$current_frame_id){return _b_.None}
 top_frame[1].$line_info=line_info
 var trace_func=top_frame[1].$f_trace
 if(trace_func !==_b_.None){var frame_obj=$B._frame.$factory($B.frames_stack,$B.frames_stack.length-1)
@@ -6322,6 +6332,8 @@ frame[1].$cm_in_gen.add(cm_exit)})}}
 $B.leave_frame=function(arg){
 if($B.frames_stack.length==0){console.log("empty stack");return}
 $B.del_exc()
+if(arg && arg.value !==undefined && $B.tracefunc){if($B.last($B.frames_stack)[1].$f_trace===undefined){$B.last($B.frames_stack)[1].$f_trace=$B.tracefunc}
+if($B.last($B.frames_stack)[1].$f_trace !==_b_.None){$B.trace_return(arg.value)}}
 var frame=$B.frames_stack.pop()
 if(frame[1].$has_yield_in_cm){
 var closed_cm=exit_ctx_managers_in_generators(frame)
@@ -13816,13 +13828,14 @@ function(){return _b_.dict.$factory($B.JSObject.$factory($B.path_importer_cache)
 " 'sys.path_importer_cache'")}
 ),settrace:function(){var $=$B.args("settrace",1,{tracefunc:null},['tracefunc'],arguments,{},null,null)
 $B.tracefunc=$.tracefunc
+$B.last($B.frames_stack)[1].$f_trace=$B.tracefunc
 $.tracefunc.$current_frame_id=$B.last($B.frames_stack)[0]
 return _b_.None},stderr:_b_.property.$factory(
 function(){return $B.stderr},function(self,value){$B.stderr=value}
 ),stdout:_b_.property.$factory(
 function(){return $B.stdout},function(self,value){$B.stdout=value}
 ),stdin:_b_.property.$factory(
-function(){return $B.stdin},function(){throw _b_.TypeError.$factory("sys.stdin is read-only")}
+function(){return $B.stdin},function(self,value){$B.stdin=value}
 ),vfs:_b_.property.$factory(
 function(){if($B.hasOwnProperty("VFS")){return $B.obj_dict($B.VFS)}
 else{return _b_.None}},function(){throw _b_.TypeError.$factory("Read only property 'sys.vfs'")}

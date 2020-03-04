@@ -1061,20 +1061,34 @@ $B.enter_frame = function(frame){
     // Enter execution frame : save on top of frames stack
     $B.frames_stack.push(frame)
     if($B.tracefunc){
-        if(frame[4] === $B.tracefunc){
-            // avoid recursion !
+        if(frame[4] === $B.tracefunc ||
+                ($B.tracefunc.$infos && frame[4] &&
+                 frame[4] === $B.tracefunc.$infos.__func__)){
+            // to avoid recursion, don't run the trace function inside itself
+            $B.tracefunc.$frame_id = frame[0]
             return _b_.None
         }else{
-            return $B.tracefunc($B._frame.$factory($B.frames_stack, $B.frames_stack.length - 1), 'call',
-                _b_.None)
+            // also to avoid recursion, don't run the trace function in the
+            // frame "below" it (ie in functions that the trace function
+            // calls)
+            for(var i = $B.frames_stack.length - 1; i >= 0; i--){
+                if($B.frames_stack[i][0] == $B.tracefunc.$frame_id){
+                    return _b_.None
+                }
+            }
+            return $B.tracefunc($B._frame.$factory($B.frames_stack,
+                $B.frames_stack.length - 1), 'call', _b_.None)
         }
     }
     return _b_.None
 }
 
 $B.trace_exception = function(){
-    var top_frame = $B.last($B.frames_stack),
-        trace_func = top_frame[1].$f_trace,
+    var top_frame = $B.last($B.frames_stack)
+    if(top_frame[0] == $B.tracefunc.$current_frame_id){
+        return _b_.None
+    }
+    var trace_func = top_frame[1].$f_trace,
         exc = top_frame[1].$current_exception,
         frame_obj = $B._frame.$factory($B.frames_stack,
             $B.frames_stack.length - 1)
@@ -1083,8 +1097,11 @@ $B.trace_exception = function(){
 }
 
 $B.trace_line = function(){
-    var top_frame = $B.last($B.frames_stack),
-        trace_func = top_frame[1].$f_trace,
+    var top_frame = $B.last($B.frames_stack)
+    if(top_frame[0] == $B.tracefunc.$current_frame_id){
+        return _b_.None
+    }
+    var trace_func = top_frame[1].$f_trace,
         frame_obj = $B._frame.$factory($B.frames_stack,
             $B.frames_stack.length - 1)
     return trace_func(frame_obj, 'line', _b_.None)
@@ -1093,6 +1110,9 @@ $B.trace_line = function(){
 $B.set_line = function(line_info){
     // Used in loops to run trace function
     var top_frame = $B.last($B.frames_stack)
+    if($B.tracefunc && top_frame[0] == $B.tracefunc.$current_frame_id){
+        return _b_.None
+    }
     top_frame[1].$line_info = line_info
     var trace_func = top_frame[1].$f_trace
     if(trace_func !== _b_.None){
@@ -1147,6 +1167,16 @@ $B.leave_frame = function(arg){
     // Leave execution frame
     if($B.frames_stack.length == 0){console.log("empty stack"); return}
     $B.del_exc()
+    // When leaving a module, arg is set as an object of the form
+    // {value: _b_None}
+    if(arg && arg.value !== undefined && $B.tracefunc){
+        if($B.last($B.frames_stack)[1].$f_trace === undefined){
+            $B.last($B.frames_stack)[1].$f_trace = $B.tracefunc
+        }
+        if($B.last($B.frames_stack)[1].$f_trace !== _b_.None){
+            $B.trace_return(arg.value)
+        }
+    }
     var frame = $B.frames_stack.pop()
     if(frame[1].$has_yield_in_cm){
         // The attribute $has_yield_in_cm is set in py2js.js /

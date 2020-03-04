@@ -26,6 +26,11 @@ executable = __BRYTHON__.brython_path + '/brython.js'
 
 argv = __BRYTHON__.__ARGV
 
+
+def displayhook(value):
+    if value is not None:
+        stdout.write(repr(value))
+        
 def exit(i=None):
     raise SystemExit('')
 

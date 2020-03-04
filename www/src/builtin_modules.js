@@ -484,10 +484,11 @@
             var $ = $B.args("settrace", 1, {tracefunc: null}, ['tracefunc'],
                     arguments, {}, null, null)
             $B.tracefunc = $.tracefunc
+            $B.last($B.frames_stack)[1].$f_trace = $B.tracefunc
             // settrace() does not activite the trace function on the current
             // frame (the one sys.settrace() was called in); we set an
             // attribute to identify this frame. It is used in the functions
-            // in py_utils.js that manage tracing (enter_frame, trace_call, 
+            // in py_utils.js that manage tracing (enter_frame, trace_call,
             // etc.)
             $.tracefunc.$current_frame_id = $B.last($B.frames_stack)[0]
             return _b_.None
@@ -504,8 +505,8 @@
         ),
         stdin: _b_.property.$factory(
             function(){return $B.stdin},
-            function(){
-                throw _b_.TypeError.$factory("sys.stdin is read-only")
+            function(self, value){
+                $B.stdin = value
             }
         ),
         vfs: _b_.property.$factory(

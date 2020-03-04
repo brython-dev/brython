@@ -10088,12 +10088,12 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
         try_node.add(child)
     })
     // add node to exit frame in case no exception was raised
-    try_node.add($NodeJS('$B.leave_frame()'))
+    try_node.add($NodeJS('$B.leave_frame({value: _b_.None})'))
 
     root.children.splice(enter_frame_pos + 2, root.children.length)
 
     var catch_node = $NodeJS('catch(err)')
-    catch_node.add($NodeJS('$B.leave_frame()'))
+    catch_node.add($NodeJS('$B.leave_frame({value: _b_.None})'))
     catch_node.add($NodeJS('throw err'))
 
     root.add(catch_node)
