@@ -758,7 +758,7 @@ function $$eval(src, _globals, _locals){
             if($.src.mode && $.src.mode == "single" &&
                     $.src.filename == "<stdin>"){
                 if(res !== _b_.None && res !== undefined){
-                    _b_.print(res)
+                    _b_.print(_b_.repr(res))
                 }
             }
         }else{

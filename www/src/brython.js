@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,8,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.8"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-03-04 18:35:01.032800"
-__BRYTHON__.timestamp=1583343301032
+__BRYTHON__.compiled_date="2020-03-04 18:46:14.529976"
+__BRYTHON__.timestamp=1583343974529
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -6741,7 +6741,7 @@ globals_obj,locals_obj)}else{current_globals_obj=current_frame[3]
 current_locals_obj=current_frame[1]
 var res=new Function("$locals_"+globals_id,"$locals_"+locals_id,"$locals_"+current_globals_id,"$locals_"+current_locals_id,js)(globals_obj,locals_obj,current_globals_obj,current_locals_obj)}
 if($.src.mode && $.src.mode=="single" &&
-$.src.filename=="<stdin>"){if(res !==_b_.None && res !==undefined){_b_.print(res)}}}else{js=root.to_js()
+$.src.filename=="<stdin>"){if(res !==_b_.None && res !==undefined){_b_.print(_b_.repr(res))}}}else{js=root.to_js()
 var res=eval(js)}
 if($.src.filename=="<console>" && $.src.mode=="single" &&
 res !==undefined && res !==_b_.None){_b_.print(res)}
