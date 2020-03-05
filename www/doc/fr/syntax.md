@@ -14,7 +14,7 @@ Brython supporte tous les mots-clés et les fonctions de Python 3 :
 - mots clés : `and, as, assert, async, await, break, class, continue, def, del, elif, else, `
   `except, False, finally, for, from, global, if, import, in, is, lambda, None, `
   `nonlocal, not, or, pass, raise, return, True, try, while, with, yield`
-- fonctions et classes intégrées : `abs, all, any, ascii, bin, bool, bytes,`
+- fonctions et classes intégrées : `abs, all, any, ascii, bin, bool, breakpoint, bytes,`
   `callable, chr, classmethod, delattr, dict, dir, divmod, `
   `enumerate, eval, exec, filter, float, frozenset, getattr, `
   `globals, hasattr, hash, hex, id, input, int, isinstance, `

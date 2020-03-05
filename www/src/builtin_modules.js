@@ -433,6 +433,28 @@
             return $B._frame.$factory($B.frames_stack,
                 $B.frames_stack.length - depth - 1)
         },
+        breakpointhook: function(){
+            var hookname = $B.$options.breakpoint,
+                modname,
+                dot,
+                funcname,
+                hook
+            if(hookname === undefined){
+                hookname = "pdb.set_trace"
+            }
+            [modname, dot, funcname] = _b_.str.rpartition(hookname, '.')
+            if(dot == ""){
+                modname = "builtins"
+            }
+            try{
+                $B.$import(modname)
+                hook = $B.$getattr($B.imported[modname], funcname)
+            }catch(err){
+                console.warn("cannot import breakpoint", hookname)
+                return _b_.None
+            }
+            return $B.$call(hook).apply(null, arguments)
+        },
         exc_info: function(){
             for(var i = $B.frames_stack.length - 1; i >=0; i--){
                 var frame = $B.frames_stack[i],
@@ -519,6 +541,8 @@
             }
         )
     }
+
+    modules._sys.__breakpointhook__ = modules._sys.breakpointhook
 
     modules._sys.stderr.write = function(data){
         return $B.$getattr(_sys.stderr.__get__(), "write")(data)

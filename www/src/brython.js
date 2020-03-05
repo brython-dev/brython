@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,8,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.8"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-03-04 18:46:14.529976"
-__BRYTHON__.timestamp=1583343974529
+__BRYTHON__.compiled_date="2020-03-05 13:56:50.093571"
+__BRYTHON__.timestamp=1583413010093
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -6553,6 +6553,11 @@ return $builtin_base_convert_helper(res,base)}}
 function bin(obj){check_nb_args('bin',1,arguments)
 check_no_kw('bin',obj)
 return bin_hex_oct(2,obj)}
+function breakpoint(){
+$B.$import('sys',[])
+var missing={},hook=$B.$getattr($B.imported.sys,'breakpointhook',missing)
+if(hook===missing){throw _b_.RuntimeError.$factory('lost sys.breakpointhook')}
+return $B.$call(hook).apply(null,arguments)}
 function callable(obj){check_nb_args('callable',1,arguments)
 check_no_kw('callable',obj)
 return hasattr(obj,'__call__')}
@@ -7585,7 +7590,7 @@ else{self.$attrs=self.$attrs ||{};self.$attrs[attr]=value}}
 $B.Function.$factory=function(){}
 $B.set_func_names($B.Function,"builtins")
 _b_.__BRYTHON__=__BRYTHON__
-$B.builtin_funcs=["abs","all","any","ascii","bin","callable","chr","compile","delattr","dir","divmod","eval","exec","exit","format","getattr","globals","hasattr","hash","help","hex","id","input","isinstance","issubclass","iter","len","locals","max","min","next","oct","open","ord","pow","print","quit","repr","round","setattr","sorted","sum","vars"
+$B.builtin_funcs=["abs","all","any","ascii","bin","breakpoint","callable","chr","compile","delattr","dir","divmod","eval","exec","exit","format","getattr","globals","hasattr","hash","help","hex","id","input","isinstance","issubclass","iter","len","locals","max","min","next","oct","open","ord","pow","print","quit","repr","round","setattr","sorted","sum","vars"
 ]
 var builtin_function=$B.builtin_function=$B.make_class("builtin_function_or_method")
 builtin_function.__getattribute__=$B.Function.__getattribute__
@@ -9443,7 +9448,10 @@ throw err}}}
 if(fromlist.length > 0){
 return $B.imported[mod_name]}else{
 return $B.imported[parsed_name[0]]}}
-$B.$import=function(mod_name,fromlist,aliases,locals){var parts=mod_name.split(".")
+$B.$import=function(mod_name,fromlist,aliases,locals){fromlist=fromlist===undefined ?[]:fromlist
+aliases=aliases===undefined ?{}:aliases
+locals=locals===undefined ?{}:locals
+var parts=mod_name.split(".")
 if(mod_name[mod_name.length-1]=="."){parts.pop()}
 var norm_parts=[],prefix=true
 for(var i=0,len=parts.length;i < len;i++){var p=parts[i]
@@ -13823,7 +13831,14 @@ arraybuffers.forEach(function(ab){if(self[ab]!==undefined){modules['javascript']
 var _b_=$B.builtins
 modules['_sys']={
 Getframe :function(){var $=$B.args("_getframe",1,{depth:null},['depth'],arguments,{depth:0},null,null),depth=$.depth
-return $B._frame.$factory($B.frames_stack,$B.frames_stack.length-depth-1)},exc_info:function(){for(var i=$B.frames_stack.length-1;i >=0;i--){var frame=$B.frames_stack[i],exc=frame[1].$current_exception
+return $B._frame.$factory($B.frames_stack,$B.frames_stack.length-depth-1)},breakpointhook:function(){var hookname=$B.$options.breakpoint,modname,dot,funcname,hook
+if(hookname===undefined){hookname="pdb.set_trace"}
+[modname,dot,funcname]=_b_.str.rpartition(hookname,'.')
+if(dot==""){modname="builtins"}
+try{$B.$import(modname)
+hook=$B.$getattr($B.imported[modname],funcname)}catch(err){console.warn("cannot import breakpoint",hookname)
+return _b_.None}
+return $B.$call(hook).apply(null,arguments)},exc_info:function(){for(var i=$B.frames_stack.length-1;i >=0;i--){var frame=$B.frames_stack[i],exc=frame[1].$current_exception
 if(exc){return _b_.tuple.$factory([exc.__class__,exc,$B.$getattr(exc,"__traceback__")])}}
 return _b_.tuple.$factory([_b_.None,_b_.None,_b_.None])},excepthook:function(exc_class,exc_value,traceback){$B.handle_error(exc_value)},modules:_b_.property.$factory(
 function(){return $B.obj_dict($B.imported)},function(self,obj,value){throw _b_.TypeError.$factory("Read only property 'sys.modules'")}
@@ -13850,6 +13865,7 @@ function(){return $B.stdin},function(self,value){$B.stdin=value}
 function(){if($B.hasOwnProperty("VFS")){return $B.obj_dict($B.VFS)}
 else{return _b_.None}},function(){throw _b_.TypeError.$factory("Read only property 'sys.vfs'")}
 )}
+modules._sys.__breakpointhook__=modules._sys.breakpointhook
 modules._sys.stderr.write=function(data){return $B.$getattr(_sys.stderr.__get__(),"write")(data)}
 modules._sys.stdout.write=function(data){return $B.$getattr(_sys.stdout.__get__(),"write")(data)}
 function load(name,module_obj){

@@ -225,6 +225,17 @@ function bin(obj) {
     return bin_hex_oct(2, obj)
 }
 
+function breakpoint(){
+    // PEP 553
+    $B.$import('sys', [])
+    var missing = {},
+        hook = $B.$getattr($B.imported.sys, 'breakpointhook', missing)
+    if(hook === missing){
+        throw _b_.RuntimeError.$factory('lost sys.breakpointhook')
+    }
+    return $B.$call(hook).apply(null, arguments)
+}
+
 function callable(obj) {
     check_nb_args('callable', 1, arguments)
     check_no_kw('callable', obj)
@@ -3053,11 +3064,11 @@ $B.set_func_names($B.Function, "builtins")
 _b_.__BRYTHON__ = __BRYTHON__
 
 $B.builtin_funcs = [
-    "abs", "all", "any", "ascii", "bin", "callable", "chr", "compile",
-    "delattr", "dir", "divmod", "eval", "exec", "exit", "format", "getattr",
-    "globals", "hasattr", "hash", "help", "hex", "id", "input", "isinstance",
-    "issubclass", "iter", "len", "locals", "max", "min", "next", "oct",
-    "open", "ord", "pow", "print", "quit", "repr", "round", "setattr",
+    "abs", "all", "any", "ascii", "bin", "breakpoint", "callable", "chr",
+    "compile", "delattr", "dir", "divmod", "eval", "exec", "exit", "format",
+    "getattr", "globals", "hasattr", "hash", "help", "hex", "id", "input",
+    "isinstance", "issubclass", "iter", "len", "locals", "max", "min", "next", 
+    "oct", "open", "ord", "pow", "print", "quit", "repr", "round", "setattr",
     "sorted", "sum", "vars"
 ]
 

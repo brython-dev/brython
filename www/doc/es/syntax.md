@@ -14,7 +14,7 @@ Brython soporta la mayor parte de keywords y funciones de Python 3 :
 - keywords : `and, as, assert, async, await, break, class, continue, def, del, `
   `elif, else, except, False, finally, for, from, global, if, import, in, is, `
   `lambda, None, nonlocal, not, or, pass, raise, return, True, try, while, with, yield`
-- funciones y clases integradas : `abs, all, any, ascii, bin, bool, bytes,`
+- funciones y clases integradas : `abs, all, any, ascii, bin, bool, breakpoint, bytes,`
   `callable, chr, classmethod, delattr, dict, dir, divmod, `
   `enumerate, eval, exec, filter, float, frozenset, getattr, `
   `globals, hasattr, hash, hex, id, input, int, isinstance, `
