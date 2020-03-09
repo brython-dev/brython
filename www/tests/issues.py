@@ -2565,6 +2565,13 @@ assertRaises(SyntaxError, exec, "for i in range = 10")
 x = 1 if True is not None else 2, 3, 4
 assert x == (1, 3, 4)
 
+# issue 1323
+
+try:
+    exit()
+except SystemExit:
+    print('Caught the exception')
+  
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

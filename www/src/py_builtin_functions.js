@@ -3067,7 +3067,7 @@ $B.builtin_funcs = [
     "abs", "all", "any", "ascii", "bin", "breakpoint", "callable", "chr",
     "compile", "delattr", "dir", "divmod", "eval", "exec", "exit", "format",
     "getattr", "globals", "hasattr", "hash", "help", "hex", "id", "input",
-    "isinstance", "issubclass", "iter", "len", "locals", "max", "min", "next", 
+    "isinstance", "issubclass", "iter", "len", "locals", "max", "min", "next",
     "oct", "open", "ord", "pow", "print", "quit", "repr", "round", "setattr",
     "sorted", "sum", "vars"
 ]
