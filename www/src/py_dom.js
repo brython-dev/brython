@@ -226,7 +226,7 @@ Attributes.get = function(){
         return Attributes.__getitem__($.self, $.key)
     }catch(err){
         if(err.__class__ === _b_.KeyError){
-            return $B.deflt
+            return $.deflt
         }else{
             throw err
         }
