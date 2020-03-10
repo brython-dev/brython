@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,8,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.8"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-03-05 13:56:50.093571"
-__BRYTHON__.timestamp=1583413010093
+__BRYTHON__.compiled_date="2020-03-10 11:26:07.074861"
+__BRYTHON__.timestamp=1583835967059
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -13643,8 +13643,17 @@ for(var i=0;i < tries.length;i++){var try_node=tries[i],try_clone=try_node.clone
 if(i==0){for(var j=0;j < rest.length;j++){try_clone.addChild(rest[j])}}
 var children=[try_clone],cpos=1
 for(var j=try_node.rank+1;
-j < try_node.parent.children.length;j++){if(try_node.parent.children[j].is_except){children[cpos++]=
-try_node.parent.children[j].clone_tree(null,true)}else{break}}
+j < try_node.parent.children.length;j++){if(try_node.parent.children[j].is_except){if(try_node.parent.children[j].data=="finally"){var loop=in_loop(exit_node),flag=true
+if(loop){
+var parent=loop.parent
+while(parent){if(parent===try_node){flag=false
+break}
+parent=parent.parent}}
+if(flag){children[cpos++]=
+try_node.parent.children[j].clone_tree(null,true)}}else{children[cpos++]=
+try_node.parent.children[j].clone_tree(null,true)}}else{break}}
+if(children.length==1){
+children.push(new $B.genNode("catch(err){}"))}
 tree[pos++]=children}
 var parent=fnode
 while(tree.length){children=tree.pop()

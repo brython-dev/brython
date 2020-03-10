@@ -658,11 +658,38 @@ function make_next(self, yield_node_id){
                 for(var j = try_node.rank + 1;
                         j < try_node.parent.children.length; j++){
                     if(try_node.parent.children[j].is_except){
-                        children[cpos++] =
-                            try_node.parent.children[j].clone_tree(null, true)
+                        if(try_node.parent.children[j].data == "finally"){
+                            var loop = in_loop(exit_node),
+                                flag = true
+                            if(loop){
+                                // If exit node is in a loop, and the loop is
+                                // in the try block, don't execute the
+                                // "finally" block of this loop (issue 1325)
+                                var parent = loop.parent
+                                while(parent){
+                                    if(parent === try_node){
+                                        flag = false
+                                        break
+                                    }
+                                    parent = parent.parent
+                                }
+                            }
+                            if(flag){
+                                children[cpos++] =
+                                    try_node.parent.children[j].clone_tree(null, true)
+                            }
+                        }else{
+                            children[cpos++] =
+                                try_node.parent.children[j].clone_tree(null, true)
+                        }
                     }else{
                         break
                     }
+                }
+                if(children.length == 1){
+                    // If the "finally" block has been remove above, add a 
+                    // fake "catch" block to avoid a syntax error
+                    children.push(new $B.genNode("catch(err){}"))
                 }
                 tree[pos++] = children
             }

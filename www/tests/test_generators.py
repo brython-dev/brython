@@ -1063,4 +1063,31 @@ def f1319():
     val = yield lambda: 10
 assert next(f1319())() == 10
 
+# issue 1325
+def g1_1325(ll):
+    try:
+        ll.append('(')
+        for ii in range(3):
+            yield ii
+    finally:
+        ll.append(')')
+
+ll = []
+assert list(g1_1325(ll)) == [0, 1, 2]
+assert ''.join(ll) == "()"
+
+def g2_1325(ll):
+    ii = 0
+    try:
+        ll.append('(')
+        while ii < 3:
+            yield ii
+            ii += 1
+    finally:
+        ll.append(')')
+
+ll = []
+assert list(g2_1325(ll)) == [0, 1, 2]
+assert ''.join(ll) == "()"
+
 print('passed all tests...')
