@@ -599,8 +599,8 @@ $B.is_exc = function(exc, exc_list){
     if(exc.__class__ === undefined){
         exc = $B.exception(exc)
     }
-
-    var this_exc_class = exc.__class__
+    
+    var this_exc_class = exc.$is_class ? exc : exc.__class__
     for(var i = 0; i < exc_list.length; i++){
         var exc_class = exc_list[i]
         if(this_exc_class === undefined){console.log("exc class undefined", exc)}
