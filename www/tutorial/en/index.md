@@ -136,6 +136,7 @@ td{
     padding: 10px 30px 10px 30px;
     border-radius: 0.2em;
     text-align: center;
+    cursor: default;
 }
 #result{
     border-color: #000;
