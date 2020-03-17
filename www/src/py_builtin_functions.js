@@ -1286,10 +1286,10 @@ function hash(obj){
     // obj has an attribute __hash__
     var klass = obj.__class__ || $B.get_class(obj)
     var hash_method = $B.$getattr(klass, '__hash__', _b_.None)
-
-    if(hash_method == _b_.None){
+    
+    if(hash_method === _b_.None){
         throw _b_.TypeError.$factory("unhashable type: '" +
-                $B.class_name(obj) + "'", 'hash')
+                $B.class_name(obj) + "'")
     }
 
     if(hash_method.$infos === undefined){

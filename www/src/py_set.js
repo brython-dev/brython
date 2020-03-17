@@ -120,6 +120,8 @@ set.__gt__ = function(self, other){
     return _b_.NotImplemented
 }
 
+set.__hash__ = _b_.None
+
 set.__init__ = function(self, iterable, second){
     if(second === undefined){
         if(Array.isArray(iterable)){

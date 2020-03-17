@@ -251,4 +251,19 @@ assert 2.7 in s
 s2 = s.copy()
 assert 2.7 in s2
 
+# issue 1329
+try:
+    hash({1, 2, 3})
+    raise Exception("should have raised TypeError")
+except TypeError:
+    pass
+
+s = set()
+try:
+    s.add({1,2,3})
+    raise Exception("should have raised TypeError")
+except TypeError:
+    pass
+
+
 print("passed all tests..")
