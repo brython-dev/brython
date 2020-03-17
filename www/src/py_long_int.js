@@ -146,7 +146,7 @@ function divmod_by_safe_int(t, n){
         chunks.push(t.substr(start, len + nb))
     }
     chunks = chunks.reverse()
-    
+
     // Transform into (safe) integers
     chunks.forEach(function(chunk, i){
         chunks[i] = parseInt(chunk)
@@ -793,7 +793,8 @@ long_int.__str__ = long_int.__repr__ = function(self){
 
 long_int.__sub__ = function(self, other){
     if(isinstance(other, _b_.float)){
-        return _b_.float.$factory(parseInt(self.value) - other.value)
+        other = other instanceof Number ? other : other.$value
+        return _b_.float.$factory(parseInt(self.value) - other)
     }
     if(typeof other == "number"){
         other = long_int.$factory(_b_.str.$factory(other))

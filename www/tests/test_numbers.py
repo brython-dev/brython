@@ -435,4 +435,8 @@ dm = divmod(pow(2, 64) - 1, pow(2, 32))
 assert dm == (4294967295, 4294967295)
 assert str(dm) == '(4294967295, 4294967295)'
 
+# issue 1328
+assert float(pow(2, 53) - 1) - (pow(2, 53) - 1) == 0.0
+assert (pow(2, 53) - 1) - float(pow(2, 53) - 1) == 0.0
+
 print('passed all tests...')
