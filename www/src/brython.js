@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-03-18 09:51:26.111962"
-__BRYTHON__.timestamp=1584521486111
+__BRYTHON__.compiled_date="2020-03-18 11:05:23.842589"
+__BRYTHON__.timestamp=1584525923826
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -10253,6 +10253,8 @@ var bltns=$B.InjectBuiltins()
 eval(bltns)
 var long_int={__class__:_b_.type,__mro__:[int,object],$infos:{__module__:"builtins",__name__:"int"},$is_class:true,$native:true,$descriptors:{"numerator":true,"denominator":true,"imag":true,"real":true}}
 function add_pos(v1,v2){
+if(window.BigInt){return{
+__class__:long_int,value:(BigInt(v1)+BigInt(v2)).toString(),pos:true}}
 var res="",carry=0,iself=v1.length,sv=0,x
 for(var i=v2.length-1;i >=0 ;i--){iself--
 if(iself < 0){sv=0}else{sv=parseInt(v1.charAt(iself))}
@@ -10320,6 +10322,8 @@ chunks.forEach(function(chunk,i){if(i > 0){
 x+="0".repeat(len-chunk.toString().length)+chunk}})
 return[x,rest]}
 function divmod_pos(v1,v2){
+if(window.BigInt){var a={__class__:long_int,value:(BigInt(v1)/BigInt(v2)).toString(),pos:true},b={__class__:long_int,value:(BigInt(v1)% BigInt(v2)).toString(),pos:true}
+return[a,b]}
 var iv1=parseInt(v1),iv2=parseInt(v2),res1
 if(iv1 < $B.max_int && iv2 < $B.max_int){var rest=iv1 % iv2,quot=Math.floor(iv1/iv2).toString()
 var res1=[{__class__:long_int,value:quot.toString(),pos:true},{__class__:long_int,value:rest.toString(),pos:true}
@@ -10358,7 +10362,8 @@ for(var i=0;i < nb;i++){var pos=len-size*(i+1)
 if(pos < 0){size+=pos;pos=0}
 chunks.push(parseInt(s.substr(pos,size)))}
 return chunks}
-function mul_pos(x,y){var ix=parseInt(x),iy=parseInt(y),z=ix*iy
+function mul_pos(x,y){if(window.BigInt){return{__class__:long_int,value:(BigInt(x)*BigInt(y)).toString(),pos:true}}
+var ix=parseInt(x),iy=parseInt(y),z=ix*iy
 if(z < $B.max_int){return{
 __class__:long_int,value:z.toString(),pos:true}}
 var chunk_size=6,cx=split_chunks(x,chunk_size),cy=split_chunks(y,chunk_size)
@@ -10380,6 +10385,8 @@ i++}
 try{return long_int.$factory(result)}catch(err){console.log(x,y,products,result)
 throw err}}
 function sub_pos(v1,v2){
+if(window.BigInt){return{
+__class__:long_int,value:(BigInt(v1)-BigInt(v2)).toString(),pos:true}}
 var res="",carry=0,i1=v1.length,sv=0,x
 for(var i=v2.length-1;i >=0;i--){i1--
 sv=parseInt(v1.charAt(i1))
@@ -10487,10 +10494,13 @@ else if(self.value.length < other.value.length){return self.pos}
 else{return self.pos ? self.value <=other.value :
 self.value >=other.value}}
 long_int.__lt__=function(self,other){return !long_int.__ge__(self,other)}
-long_int.__lshift__=function(self,shift){var is_long=shift.__class__===long_int,shift_safe
+long_int.__lshift__=function(self,shift){if(window.BigInt){if(shift.__class__==long_int){shift=shift.value}
+return intOrLong({__class__:long_int,value:(BigInt(self.value)<< BigInt(shift)).toString(),pos:self.pos})}
+var is_long=shift.__class__===long_int,shift_safe
 if(is_long){var shift_value=parseInt(shift.value)
 if(shift_value < 0){throw _b_.ValueError.$factory('negative shift count')}
-if(shift_value < $B.max_int){shift_safe=true;shift=shift_value}}
+if(shift_value < $B.max_int){shift_safe=true
+shift=shift_value}}
 if(shift_safe){if(shift_value==0){return self}}else{shift=long_int.$factory(shift)
 if(shift.value=="0"){return self}}
 var res=self.value
@@ -10539,6 +10549,13 @@ power=long_int.$factory(_b_.str.$factory(_b_.int.__index__(power)))}else if(! is
 throw TypeError.$factory(msg+$B.class_name(power)+"'")}
 if(! power.pos){if(self.value=="1"){return self}
 return long_int.$factory("0")}else if(power.value=="0"){return long_int.$factory("1")}
+if(window.BigInt){var s=BigInt(self.value),b=BigInt(1),x=BigInt(power.value),z=z===undefined ? z :typeof z=="number" ? BigInt(z):
+BigInt(z.value)
+while(x > 0){if(x % BigInt(2)==1){b=b*s}
+x=x/BigInt(2)
+if(x > 0){s=s*s}
+if(z !==undefined){b=b % z}}
+return{__class__:long_int,value:b.toString(),pos:true}}
 var b={__class__:long_int,value:"1",pos:true},s=self,pow=power.value,temp
 while(true){if(typeof pow=="string" && parseInt(pow)< $B.max_int){pow=parseInt(pow)}
 if(pow==0){break}else if(typeof pow=="string"){if(parseInt(pow.charAt(pow.length-1))% 2==1){b=long_int.__mul__(b,s)}
@@ -10549,7 +10566,11 @@ if(pow > 0){if(typeof s=="number" &&(temp=s*s)< $B.max_int){s=temp}else{s=long_i
 s=long_int.__mul__(s,s)}}
 if(z !==undefined){b=long_int.__mod__(b,z)}}
 return intOrLong(b)}
-long_int.__rshift__=function(self,shift){if(typeof shift=="number"){var pow2=Math.pow(2,shift)
+long_int.__rshift__=function(self,shift){if(window.BigInt){if(shift.__class__===long_int){shift=shift.value}
+return intOrLong(
+{__class__:long_int,value:(BigInt(self.value)>> BigInt(shift)).toString(),pos:self.pos}
+)}
+if(typeof shift=="number"){var pow2=Math.pow(2,shift)
 if(pow2 < $B.max_int){var res=divmod_by_safe_int(self.value,pow2)
 return intOrLong({__class__:long_int,value:res[0],pos:self.pos})}}
 shift=long_int.$factory(shift)

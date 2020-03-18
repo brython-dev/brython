@@ -27,6 +27,13 @@ function add_pos(v1, v2){
     // Add two positive numbers
     // v1, v2 : strings
     // Return an instance of long_int
+    if(window.BigInt){
+        return {
+            __class__: long_int,
+            value: (BigInt(v1) + BigInt(v2)).toString(),
+            pos: true
+        }
+    }
 
     var res = "",
         carry = 0,
@@ -185,6 +192,20 @@ function divmod_pos(v1, v2){
     // v1, v2 : strings, represent 2 positive integers A and B
     // Return [a, b] where a and b are instances of long_int
     // a = A // B, b = A % B
+    if(window.BigInt){
+        var a = {
+            __class__: long_int,
+            value: (BigInt(v1) / BigInt(v2)).toString(),
+            pos: true
+        },
+        b = {
+            __class__: long_int,
+            value: (BigInt(v1) % BigInt(v2)).toString(),
+            pos: true
+        }
+        return [a, b]
+    }
+
     var iv1 = parseInt(v1),
         iv2 = parseInt(v2),
         res1
@@ -299,6 +320,12 @@ function split_chunks(s, size){
 }
 
 function mul_pos(x, y){
+    if(window.BigInt){
+        return {__class__: long_int,
+                value: (BigInt(x) * BigInt(y)).toString(),
+                pos: true
+        }
+    }
     var ix = parseInt(x),
         iy = parseInt(y),
         z = ix * iy
@@ -365,6 +392,13 @@ function mul_pos(x, y){
 
 function sub_pos(v1, v2){
     // Substraction of positive numbers with v1>=v2
+    if(window.BigInt){
+        return {
+            __class__: long_int,
+            value: (BigInt(v1) - BigInt(v2)).toString(),
+            pos: true
+        }
+    }
 
     var res = "",
         carry = 0,
@@ -636,6 +670,16 @@ long_int.__lt__ = function(self, other){
 }
 
 long_int.__lshift__ = function(self, shift){
+    if(window.BigInt){
+        if(shift.__class__ == long_int){
+            shift = shift.value
+        }
+        return intOrLong({
+            __class__: long_int,
+            value: (BigInt(self.value) << BigInt(shift)).toString(),
+            pos: self.pos
+        })
+    }
     var is_long = shift.__class__ === long_int,
         shift_safe
     if(is_long){
@@ -644,7 +688,9 @@ long_int.__lshift__ = function(self, shift){
             throw _b_.ValueError.$factory('negative shift count')
         }
         if(shift_value < $B.max_int){
-            shift_safe = true;shift = shift_value}
+            shift_safe = true
+            shift = shift_value
+        }
     }
     if(shift_safe){
         if(shift_value == 0){return self}
@@ -761,6 +807,27 @@ long_int.__pow__ = function(self, power, z){
                   s = s * s
           return b
     */
+    if(window.BigInt){
+        var s = BigInt(self.value),
+            b = BigInt(1),
+            x = BigInt(power.value),
+            z = z === undefined ? z : typeof z == "number" ? BigInt(z) :
+                BigInt(z.value)
+        while(x > 0){
+            if(x % BigInt(2) == 1){
+                b = b * s
+            }
+            x = x / BigInt(2)
+            if(x > 0){
+                s = s * s
+            }
+            if(z !== undefined){
+                b = b % z
+            }
+        }
+        return {__class__: long_int, value: b.toString(), pos: true}
+    }
+
     var b = {__class__: long_int, value: "1", pos: true},
         s = self,
         pow = power.value,
@@ -804,6 +871,18 @@ long_int.__pow__ = function(self, power, z){
 }
 
 long_int.__rshift__ = function(self, shift){
+    if(window.BigInt){
+        if(shift.__class__ === long_int){
+            shift = shift.value
+        }
+        return intOrLong(
+            {
+                __class__: long_int,
+                value: (BigInt(self.value) >> BigInt(shift)).toString(),
+                pos: self.pos
+            }
+        )
+    }
     if(typeof shift == "number"){
         var pow2 = Math.pow(2, shift)
         if(pow2 < $B.max_int){
