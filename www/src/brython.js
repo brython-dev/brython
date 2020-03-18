@@ -1,6 +1,6 @@
 // brython.js brython.info
 // version [3, 8, 0, 'final', 0]
-// implementation [3, 8, 8, 'dev', 0]
+// implementation [3, 8, 9, 'dev', 0]
 // version compiled from commented, indented source files at
 // github.com/brython-dev/brython
 var __BRYTHON__=__BRYTHON__ ||{}
@@ -96,11 +96,11 @@ var root=$B.py2js(src[0],"script","script"),js=root.to_js()
 $B.set_import_paths()
 new Function("$locals_script",js)({})}})(__BRYTHON__)
 ;
-__BRYTHON__.implementation=[3,8,8,'dev',0]
-__BRYTHON__.__MAGIC__="3.8.8"
+__BRYTHON__.implementation=[3,8,9,'dev',0]
+__BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-03-17 18:47:39.871010"
-__BRYTHON__.timestamp=1584467259871
+__BRYTHON__.compiled_date="2020-03-18 09:51:26.111962"
+__BRYTHON__.timestamp=1584521486111
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -10535,16 +10535,20 @@ else{res+="0"}}
 return intOrLong(long_int.$factory(res,2))}
 long_int.__pos__=function(self){return self}
 long_int.__pow__=function(self,power,z){if(typeof power=="number"){power=long_int.$factory(_b_.str.$factory(power))}else if(isinstance(power,int)){
-power=long_int.$factory(_b_.str.$factory(_b_.int.__index__(power)))}else if(! isinstance(power,long_int)){var msg="power must be a LongDict, not '"
+power=long_int.$factory(_b_.str.$factory(_b_.int.__index__(power)))}else if(! isinstance(power,long_int)){var msg="power must be an integer, not '"
 throw TypeError.$factory(msg+$B.class_name(power)+"'")}
 if(! power.pos){if(self.value=="1"){return self}
 return long_int.$factory("0")}else if(power.value=="0"){return long_int.$factory("1")}
-var res={__class__:long_int,value:self.value,pos:self.pos},pow=power.value
-while(true){pow=sub_pos(pow,"1").value
-if(pow=="0"){break}
-res=long_int.$factory(long_int.__mul__(res,self))
-if(z !==undefined){res=long_int.__mod__(res,z)}}
-return intOrLong(res)}
+var b={__class__:long_int,value:"1",pos:true},s=self,pow=power.value,temp
+while(true){if(typeof pow=="string" && parseInt(pow)< $B.max_int){pow=parseInt(pow)}
+if(pow==0){break}else if(typeof pow=="string"){if(parseInt(pow.charAt(pow.length-1))% 2==1){b=long_int.__mul__(b,s)}
+pow=long_int.__floordiv__(pow,2)}else{if(pow % 2==1){if(typeof b=="number" && typeof s=="number" &&
+(temp=b*s)< $B.max_int){b=temp}else{b=long_int.__mul__(long_int.$factory(b),long_int.$factory(s))}}
+pow=Math.floor(pow/2)}
+if(pow > 0){if(typeof s=="number" &&(temp=s*s)< $B.max_int){s=temp}else{s=long_int.$factory(s)
+s=long_int.__mul__(s,s)}}
+if(z !==undefined){b=long_int.__mod__(b,z)}}
+return intOrLong(b)}
 long_int.__rshift__=function(self,shift){if(typeof shift=="number"){var pow2=Math.pow(2,shift)
 if(pow2 < $B.max_int){var res=divmod_by_safe_int(self.value,pow2)
 return intOrLong({__class__:long_int,value:res[0],pos:self.pos})}}

@@ -738,7 +738,7 @@ long_int.__pow__ = function(self, power, z){
         // int subclass
         power = long_int.$factory(_b_.str.$factory(_b_.int.__index__(power)))
     }else if(! isinstance(power, long_int)){
-        var msg = "power must be a LongDict, not '"
+        var msg = "power must be an integer, not '"
         throw TypeError.$factory(msg + $B.class_name(power) + "'")
     }
     if(! power.pos){
@@ -748,17 +748,59 @@ long_int.__pow__ = function(self, power, z){
     }else if(power.value == "0"){
         return long_int.$factory("1")
     }
-    var res = {__class__: long_int, value: self.value, pos: self.pos},
-        pow = power.value
+    /*
+    Algorithm in https://www.hindawi.com/journals/jam/2014/107109/
+    def exp(a, x):
+          b = 1
+          s = a
+          while x:
+              if x % 2:
+                  b = b * s
+              x = x // 2
+              if x:
+                  s = s * s
+          return b
+    */
+    var b = {__class__: long_int, value: "1", pos: true},
+        s = self,
+        pow = power.value,
+        temp
     while(true){
-        pow = sub_pos(pow, "1").value
-        if(pow == "0"){break}
-        res = long_int.$factory(long_int.__mul__(res, self))
+        if(typeof pow == "string" && parseInt(pow) < $B.max_int){
+            pow = parseInt(pow)
+        }
+        if(pow == 0){
+            break
+        }else if(typeof pow == "string"){
+            if(parseInt(pow.charAt(pow.length - 1)) % 2 == 1){
+                b = long_int.__mul__(b, s)
+            }
+            pow = long_int.__floordiv__(pow, 2)
+        }else{
+            if(pow % 2 == 1){
+                if(typeof b == "number" && typeof s == "number" &&
+                        (temp = b * s) < $B.max_int){
+                    b = temp
+                }else{
+                    b = long_int.__mul__(long_int.$factory(b),
+                        long_int.$factory(s))
+                }
+            }
+            pow = Math.floor(pow / 2)
+        }
+        if(pow > 0){
+            if(typeof s == "number" && (temp = s * s) < $B.max_int){
+                s = temp
+            }else{
+                s = long_int.$factory(s)
+                s = long_int.__mul__(s, s)
+            }
+        }
         if(z !== undefined){
-            res = long_int.__mod__(res, z)
+            b = long_int.__mod__(b, z)
         }
     }
-    return intOrLong(res)
+    return intOrLong(b)
 }
 
 long_int.__rshift__ = function(self, shift){
