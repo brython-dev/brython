@@ -41,10 +41,14 @@ if 'set_debug' in doc:
     __BRYTHON__.debug = int(doc['set_debug'].checked)
 
 def reset_src():
-    if storage is not None and "py_src" in storage:
-        editor.setValue(storage["py_src"])
+    if "code" in window.location.href:
+        code = window.location.href.split("&code=")[1].split("&")[0]
+        editor.setValue(window.decodeURIComponent(code))
     else:
-        editor.setValue('for i in range(10):\n\tprint(i)')
+        if storage is not None and "py_src" in storage:
+            editor.setValue(storage["py_src"])
+        else:
+            editor.setValue('for i in range(10):\n\tprint(i)')
     editor.scrollToRow(0)
     editor.gotoLine(0)
 
@@ -123,6 +127,12 @@ def run(*args):
 def show_js(ev):
     src = editor.getValue()
     doc["console"].value = javascript.py2js(src, '__main__')
+
+def share_code(ev):
+    src = editor.getValue()
+    src = window.encodeURIComponent(src)
+    url = f"https://brython.info/tests/editor.html?lang=en&code={src}"
+    alert(f"Copy the url: {url}")
 
 if has_ace:
     reset_src()
