@@ -571,7 +571,45 @@ float.__repr__ = float.__str__ = function(self){
     if(isNaN(self.valueOf())){return 'nan'}
 
     var res = self.valueOf() + "" // coerce to string
-    if(res.indexOf(".") == -1){res += ".0"}
+    if(res.indexOf(".") == -1){
+        res += ".0"
+    }
+    var x, y
+    [x, y] = res.split('.')
+    if(x.length > 16){
+        var exp = x.length - 1,
+            int_part = x[0],
+            dec_part = x.substr(1) + y
+        while(dec_part.endsWith("0")){
+            dec_part = dec_part.substr(0, dec_part.length - 1)
+        }
+        var mant = int_part
+        if(dec_part.length > 0){
+            mant += '.' + dec_part
+        }
+        return mant + 'e+' + exp
+    }else if(x == "0"){
+        var exp = 0
+        while(exp < y.length && y.charAt(exp) == "0"){
+            exp++
+        }
+        if(exp > 3){
+            // form 0.0000xyz
+            var rest = y.substr(exp),
+                exp = (exp + 1).toString()
+            while(rest.endsWith("0")){
+                rest = rest.substr(0, res.length - 1)
+            }
+            var mant = rest[0]
+            if(rest.length > 1){
+                mant += '.' + rest.substr(1)
+            }
+            if(exp.length == 1){
+                exp = '0' + exp
+            }
+            return mant + 'e-' + exp
+        }
+    }
     return _b_.str.$factory(res)
 }
 

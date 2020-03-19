@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-03-18 11:05:23.842589"
-__BRYTHON__.timestamp=1584525923826
+__BRYTHON__.compiled_date="2020-03-19 09:08:10.826068"
+__BRYTHON__.timestamp=1584605290826
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -9769,6 +9769,21 @@ if(self.valueOf()==-Infinity){return '-inf'}
 if(isNaN(self.valueOf())){return 'nan'}
 var res=self.valueOf()+"" 
 if(res.indexOf(".")==-1){res+=".0"}
+var x,y
+[x,y]=res.split('.')
+if(x.length > 16){var exp=x.length-1,int_part=x[0],dec_part=x.substr(1)+y
+while(dec_part.endsWith("0")){dec_part=dec_part.substr(0,dec_part.length-1)}
+var mant=int_part
+if(dec_part.length > 0){mant+='.'+dec_part}
+return mant+'e+'+exp}else if(x=="0"){var exp=0
+while(exp < y.length && y.charAt(exp)=="0"){exp++}
+if(exp > 3){
+var rest=y.substr(exp),exp=(exp+1).toString()
+while(rest.endsWith("0")){rest=rest.substr(0,res.length-1)}
+var mant=rest[0]
+if(rest.length > 1){mant+='.'+rest.substr(1)}
+if(exp.length==1){exp='0'+exp}
+return mant+'e-'+exp}}
 return _b_.str.$factory(res)}
 float.__setattr__=function(self,attr,value){if(self.constructor===Number){if(float[attr]===undefined){throw _b_.AttributeError.$factory("'float' object has no attribute '"+
 attr+"'")}else{throw _b_.AttributeError.$factory("'float' object attribute '"+
