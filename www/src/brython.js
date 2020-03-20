@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-03-19 09:08:10.826068"
-__BRYTHON__.timestamp=1584605290826
+__BRYTHON__.compiled_date="2020-03-20 08:40:59.680049"
+__BRYTHON__.timestamp=1584690059680
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -4468,7 +4468,8 @@ if(token=='id'){new $IdCtx(C,value)
 C.parent.expect=','
 return C.parent}else if(token=="["){C.parent.expect=','
 return new $ListOrTupleCtx(C,"list")}else if(token=="("){C.parent.expect=','
-return new $ListOrTupleCtx(C,"tuple")}else if(token=="]"){return $transition(C.parent,token,value)}
+return new $ListOrTupleCtx(C,"tuple")}else if(token=="]"){return $transition(C.parent,token,value)}else if(token=="{"){C.parent.expect=','
+return new $DictOrSetCtx(C)}
 console.log("syntax error",C,token)
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'pass':

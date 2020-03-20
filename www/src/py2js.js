@@ -8934,6 +8934,9 @@ var $transition = $B.parser.$transition = function(context, token, value){
                 return new $ListOrTupleCtx(context, "tuple")
             }else if(token == "]"){
                 return $transition(context.parent, token, value)
+            }else if(token == "{"){
+                context.parent.expect = ','
+                return new $DictOrSetCtx(context)
             }
             console.log("syntax error", context, token)
             $_SyntaxError(context, 'token ' + token + ' after ' + context)

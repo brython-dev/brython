@@ -2566,12 +2566,16 @@ x = 1 if True is not None else 2, 3, 4
 assert x == (1, 3, 4)
 
 # issue 1323
-
 try:
     exit()
+    raise AssertionError("should have raised SystemExit")
 except SystemExit:
-    print('Caught the exception')
-  
+    pass
+
+# issue 1331
+assert [*{*['a', 'b', 'a']}] == ['a', 'b']
+assert [*{'a': 1, 'b': 2}] == ['a', 'b']
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
