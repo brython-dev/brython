@@ -38,7 +38,7 @@
 <script type="text/javascript" src="../src/py_import_hooks.js"></script>
 <script type="text/javascript" src="../src/async.js"></script>
 
-<script type="text/javascript" src="../src/brython_stdlib.js"></script>
+<!-- script type="text/javascript" src="../src/brython_stdlib.js"></script -->
 
 <script src="/assets/header.brython.js"></script>
 
@@ -50,7 +50,7 @@ from browser import document as doc, window
 from browser import html
 import header
 
-import editor
+import editor_kiko as editor
 
 qs_lang,language = header.show()
 
@@ -82,6 +82,7 @@ doc['set_debug'].bind('change',set_debug)
 
 # next functions are defined in editor.py
 doc['show_js'].bind('click',editor.show_js)
+doc['share_code'].bind('click',editor.share_code)
 # Create a lambda around editor.run() so that the event object is not passed to it
 doc['run'].bind('click',lambda *args: editor.run())
 doc['show_console'].bind('click',editor.show_console)
@@ -123,6 +124,7 @@ function run_js(){
         Debug<input type="checkbox" id="set_debug" checked>
         <button id="show_console">Python</button>
         <button id="show_js">Javascript</button>
+        <button id="share_code">Share code</button>
     </td>
   </tr>
 

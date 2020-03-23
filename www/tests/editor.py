@@ -1,9 +1,12 @@
 import sys
 import time
+import binascii
+
 import tb as traceback
 import javascript
 
-from browser import document as doc, window, alert
+from browser import document as doc, window, alert, bind, html
+from browser.widgets import dialog
 
 # set height of container to 75% of screen
 _height = doc.documentElement.clientHeight
@@ -41,10 +44,14 @@ if 'set_debug' in doc:
     __BRYTHON__.debug = int(doc['set_debug'].checked)
 
 def reset_src():
-    if storage is not None and "py_src" in storage:
-        editor.setValue(storage["py_src"])
+    if "code" in doc.query:
+        code = doc.query.getlist("code")[0]
+        editor.setValue(code)
     else:
-        editor.setValue('for i in range(10):\n\tprint(i)')
+        if storage is not None and "py_src" in storage:
+            editor.setValue(storage["py_src"])
+        else:
+            editor.setValue('for i in range(10):\n\tprint(i)')
     editor.scrollToRow(0)
     editor.gotoLine(0)
 
@@ -123,6 +130,39 @@ def run(*args):
 def show_js(ev):
     src = editor.getValue()
     doc["console"].value = javascript.py2js(src, '__main__')
+
+def share_code(ev):
+    src = editor.getValue()
+    #src = window.encodeURIComponent(src)
+    if len(src) > 2048:
+        d = dialog.InfoDialog("Copy url",
+                              f"code length is {len(src)}, must be < 2048",
+                              style={"zIndex": 10},
+                              ok=True)
+    else:
+        href = window.location.href.rsplit("?", 1)[0]
+        query = doc.query
+        query["code"] = src
+        url = f"{href}{query}"
+        d = dialog.Dialog("Copy url", style={"zIndex": 10})
+        area = html.TEXTAREA(rows=0, cols=0)
+        d.panel <= area
+        area.value = url
+        # copy to clipboard
+        area.focus()
+        area.select()
+        doc.execCommand("copy")
+        d.remove()
+        d = dialog.Dialog("Copy url", style={"zIndex": 10})
+        d.panel <= html.DIV("url copied<br>Send it to share the code")
+        buttons = html.DIV()
+        ok = html.BUTTON("Ok")
+        buttons <= html.DIV(ok, style={"text-align": "center"})
+        d.panel <= html.BR() + buttons
+
+        @bind(ok, "click")
+        def click(evt):
+            d.remove()
 
 if has_ace:
     reset_src()
