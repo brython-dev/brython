@@ -63,7 +63,7 @@ class Dialog(html.DIV):
 
         document <= self
         cstyle = window.getComputedStyle(self)
-        
+
         # Center horizontally and vertically
         if left is None:
             width = round(float(cstyle.width[:-2]) + 0.5)
@@ -87,7 +87,7 @@ class Dialog(html.DIV):
 
     def mousedown(self, event):
         self.is_moving = True
-        self.offset = [self.left - event.x, self.top - event.y]
+        self.initial = [self.left - event.x, self.top - event.y]
         # prevent default behaviour to avoid selecting the moving element
         event.preventDefault()
 
@@ -96,8 +96,8 @@ class Dialog(html.DIV):
             return
 
         # set new moving element coordinates
-        self.left = self.offset[0] + event.x
-        self.top = self.offset[1] + event.y
+        self.left = self.initial[0] + event.x
+        self.top = self.initial[1] + event.y
 
     def mouseup(self, event):
         self.is_moving = False
@@ -139,11 +139,16 @@ class InfoDialog(Dialog):
     """Dialog box with an information message and no "Ok / Cancel" button."""
 
     def __init__(self, title="", message="", style={}, top=None, left=None,
-            remove_after=None):
+            remove_after=None, ok=False):
         """If remove_after is set, number of seconds after which the dialog is
         removed."""
         Dialog.__init__(self, title, style, top, left)
-        self.panel <= message
+        self.panel <= html.DIV(message)
+        if ok:
+            ok_button = html.BUTTON("Ok")
+            self.panel <= html.P()
+            self.panel <= html.DIV(ok_button, style={"text-align": "center"})
+            ok_button.bind("click", lambda ev: self.remove())
         if remove_after:
             if not isinstance(remove_after, (int, float)):
                 raise TypeError("remove_after should be a number, not " +
