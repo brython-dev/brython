@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-03-20 08:40:59.680049"
-__BRYTHON__.timestamp=1584690059680
+__BRYTHON__.compiled_date="2020-03-23 13:35:27.275743"
+__BRYTHON__.timestamp=1584966927269
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -13032,6 +13032,7 @@ throw _b_.AttributeError.$factory("style."+attr+
 " is not set for "+_b_.str.$factory(self))}
 case "x":
 case "y":
+console.log("get attr",attr)
 if(!(self.elt instanceof SVGElement)){var pos=$getPosition(self.elt)
 return attr=="x" ? pos.left :pos.top}
 case "clear":
@@ -13175,11 +13176,7 @@ DOMNode.abs_top={__get__:function(self){return $getPosition(self.elt).top},__set
 "'abs_top' is read-only")}}
 DOMNode.bind=function(self,event){
 var $=$B.args("bind",4,{self:null,event:null,func:null,options:null},["self","event","func","options"],arguments,{options:_b_.None},null,null),self=$.self,event=$.event,func=$.func,options=$.options
-var callback=(function(f){return function(ev){try{return f($DOMEvent(ev))}catch(err){if(err.__class__ !==undefined){var msg=$B.$getattr(err,"info")+
-"\n"+$B.class_name(err)
-if(err.args){msg+=": "+err.args[0]}
-try{$B.$getattr($B.stderr,"write")(msg)}
-catch(err){console.log(msg)}}else{try{$B.$getattr($B.stderr,"write")(err)}
+var callback=(function(f){return function(ev){try{return f($DOMEvent(ev))}catch(err){if(err.__class__ !==undefined){$B.handle_error(err)}else{try{$B.$getattr($B.stderr,"write")(err)}
 catch(err1){console.log(err)}}}}}
 )(func)
 callback.$infos=func.$infos
@@ -13354,16 +13351,20 @@ flag=true
 break}}
 if(!flag){throw _b_.KeyError.$factory('missing callback for event '+event)}}}
 $B.set_func_names(DOMNode,"browser")
-var Query={__class__:_b_.type,$infos:{__name__:"query"}}
+var Query={__class__:_b_.type,__mro__:[_b_.object],$infos:{__name__:"query"}}
 Query.__contains__=function(self,key){return self._keys.indexOf(key)>-1}
 Query.__getitem__=function(self,key){
 var result=self._values[key]
-if(result===undefined){throw _b_.KeyError.$factory(key)}
-if(result.length==1){return result[0]}
+if(result===undefined){throw _b_.KeyError.$factory(key)}else if(result.length==1){return result[0]}
 return result}
 var Query_iterator=$B.make_iterator_class("query string iterator")
 Query.__iter__=function(self){return Query_iterator.$factory(self._keys)}
-Query.__mro__=[object]
+Query.__setitem__=function(self,key,value){self._values[key]=[value]
+return _b_.None}
+Query.__str__=Query.__repr__=function(self){
+var elts=[]
+for(var key in self._values){for(const val of self._values[key]){elts.push(encodeURIComponent(key)+"="+encodeURIComponent(val))}}
+if(elts.length==0){return ""}else{return "?"+elts.join("&")}}
 Query.getfirst=function(self,key,_default){
 var result=self._values[key]
 if(result===undefined){if(_default===undefined){return _b_.None}
@@ -13380,8 +13381,7 @@ Query.keys=function(self){return self._keys}
 DOMNode.query=function(self){var res={__class__:Query,_keys :[],_values :{}}
 var qs=location.search.substr(1).split('&')
 for(var i=0;i < qs.length;i++){var pos=qs[i].search("="),elts=[qs[i].substr(0,pos),qs[i].substr(pos+1)],key=decodeURIComponent(elts[0]),value=decodeURIComponent(elts[1])
-if(res._keys.indexOf(key)>-1){res._values[key].push(value)}
-else{res._keys.push(key)
+if(res._keys.indexOf(key)>-1){res._values[key].push(value)}else{res._keys.push(key)
 res._values[key]=[value]}}
 return res}
 var TagSum={__class__ :_b_.type,__mro__:[object],$infos:{__module__:"<pydom>",__name__:"TagSum"}}

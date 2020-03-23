@@ -698,6 +698,7 @@ DOMNode.__getattribute__ = function(self, attr){
             }
         case "x":
         case "y":
+            console.log("get attr", attr)
             if(! (self.elt instanceof SVGElement)){
                 var pos = $getPosition(self.elt)
                 return attr == "x" ? pos.left : pos.top
@@ -1084,11 +1085,7 @@ DOMNode.bind = function(self, event){
                 return f($DOMEvent(ev))
             }catch(err){
                 if(err.__class__ !== undefined){
-                    var msg = $B.$getattr(err, "info") +
-                        "\n" + $B.class_name(err)
-                    if(err.args){msg += ": " + err.args[0]}
-                    try{$B.$getattr($B.stderr, "write")(msg)}
-                    catch(err){console.log(msg)}
+                    $B.handle_error(err)
                 }else{
                     try{$B.$getattr($B.stderr, "write")(err)}
                     catch(err1){console.log(err)}
@@ -1509,6 +1506,7 @@ $B.set_func_names(DOMNode, "browser")
 // same interface as cgi.FieldStorage, with getvalue / getlist / getfirst
 var Query = {
     __class__: _b_.type,
+    __mro__: [_b_.object],
     $infos:{
         __name__: "query"
     }
@@ -1522,8 +1520,11 @@ Query.__getitem__ = function(self, key){
     // returns a single value or a list of values
     // associated with key, or raise KeyError
     var result = self._values[key]
-    if(result === undefined){throw _b_.KeyError.$factory(key)}
-    if(result.length == 1){return result[0]}
+    if(result === undefined){
+        throw _b_.KeyError.$factory(key)
+    }else if(result.length == 1){
+        return result[0]
+    }
     return result
 }
 
@@ -1532,7 +1533,25 @@ Query.__iter__ = function(self){
     return Query_iterator.$factory(self._keys)
 }
 
-Query.__mro__ = [object]
+Query.__setitem__ = function(self, key, value){
+    self._values[key] = [value]
+    return _b_.None
+}
+
+Query.__str__ = Query.__repr__ = function(self){
+    // build query string from keys/values
+    var elts = []
+    for(var key in self._values){
+        for(const val of self._values[key]){
+            elts.push(encodeURIComponent(key) + "=" + encodeURIComponent(val))
+        }
+    }
+    if(elts.length == 0){
+        return ""
+    }else{
+        return "?" + elts.join("&")
+    }
+}
 
 Query.getfirst = function(self, key, _default){
     // returns the first value associated with key
@@ -1559,7 +1578,9 @@ Query.getvalue = function(self, key, _default){
     }
 }
 
-Query.keys = function(self){return self._keys}
+Query.keys = function(self){
+    return self._keys
+}
 
 DOMNode.query = function(self){
 
@@ -1574,8 +1595,9 @@ DOMNode.query = function(self){
             elts = [qs[i].substr(0,pos),qs[i].substr(pos + 1)],
             key = decodeURIComponent(elts[0]),
             value = decodeURIComponent(elts[1])
-        if(res._keys.indexOf(key) > -1){res._values[key].push(value)}
-        else{
+        if(res._keys.indexOf(key) > -1){
+            res._values[key].push(value)
+        }else{
             res._keys.push(key)
             res._values[key] = [value]
         }
