@@ -2,6 +2,10 @@ import os
 import shutil
 import sys
 
+from version import implementation
+
+impl_name = '.'.join(str(x) for x in implementation[:3])
+
 # hack sys.path to be able to import markdown
 sys.path.insert(0, os.path.join(os.path.dirname(os.getcwd()),
     'www','src','Lib','browser'))
@@ -106,6 +110,7 @@ for lang in ['br', 'fr', 'en', 'es', 'it']:
                 src_path = os.path.join(md_path, filename)
                 with open(src_path, encoding="utf-8") as f:
                     src = f.read()
+                    src = src.replace('{implementation}', impl_name)
                     html, scripts = markdown.mark(src)
                     dest_path = os.path.join(static_path, basename + '.html')
                     print("save in", dest_path)

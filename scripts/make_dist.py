@@ -12,15 +12,13 @@ import zipfile
 import shutil
 
 import javascript_minifier
+from version import version, implementation
 
 if sys.version_info[0] != 3:
     raise ValueError("This script only works with Python 3")
 
 # path of parent directory
 pdir = os.path.dirname(os.getcwd())
-# version info
-version = [3, 8, 0, "final", 0]
-implementation = [3, 8, 9, "dev", 0]
 
 # version name
 vname = '.'.join(str(x) for x in implementation[:3])
@@ -192,7 +190,7 @@ def run():
         first = 'Changes in Brython version {}'.format(vname)
         with open(os.path.join(pdir, 'setup', 'changelog.txt')) as f:
             input_changelog_data_string = f.read()
-        with open(os.path.join(release_dir, 
+        with open(os.path.join(release_dir,
                 'changelog_{}.txt'.format(vname)), 'w') as out:
             out.write('%s\n' % first)
             out.write('%s\n\n' % ('=' * len(first)))

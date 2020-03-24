@@ -13,7 +13,7 @@ Dans l'éditeur de texte, créez une page html avec le contenu suivant :
 <head>
     <meta charset="utf-8">
     <script type="text/javascript"
-        src="https://cdn.jsdelivr.net/npm/brython@3.8.7/brython.min.js">
+        src="https://cdn.jsdelivr.net/npm/brython@{implementation}/brython.min.js">
     </script>
 </head>
 
@@ -40,7 +40,7 @@ En ouvrant la page, vous devriez voir le message "Bonjour !" s'afficher sur la p
 
 Structure d'une page
 ====================
-Analysons le contenu de cette page. Dans la zone `<head>` nous chargeons le script __`brython.js`__ : c'est le moteur Brython, c'est-à-dire le programme qui va permettre d'exécuter les scripts Python qui se trouvent sur la page. Dans cet exemple nous allons le chercher sur un CDN, pour ne rien avoir à installer sur le PC. Notez le numéro de version (`brython@3.8.7`) : à chaque nouvelle version de Brython vous pourrez mettre à jour cette partie de l'adresse.
+Analysons le contenu de cette page. Dans la zone `<head>` nous chargeons le script __`brython.js`__ : c'est le moteur Brython, c'est-à-dire le programme qui va permettre d'exécuter les scripts Python qui se trouvent sur la page. Dans cet exemple nous allons le chercher sur un CDN, pour ne rien avoir à installer sur le PC. Notez le numéro de version (`brython@{implementation}`) : à chaque nouvelle version de Brython vous pourrez mettre à jour cette partie de l'adresse.
 
 La balise `<body>` possède un attribut `onload="brython()"`. Ceci indique au navigateur qu'une fois la page complètement chargée, il faut appeler la fonction `brython()`; celle-ci est définie par le moteur Brython chargé dans la page. Elle recherche dans la page tous les scripts qui ont le type `type="text/python"` et les exécute.
 

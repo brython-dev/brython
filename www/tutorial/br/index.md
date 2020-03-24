@@ -1,4 +1,4 @@
-Ar gentel-mañ a ziskouez penaos skrivañ ur program hag a ya en-dro e-barzh ar merdeer, en ur implij ar yezh-programmiñ Python. Evit-se emaomp o vont da skrivañ kod ur jedonerezh.
+Ar gentel-mañ a ziskouez penaos skrivañ ur program hag a ya en-dro e-barzh ar merdeer gant ar yezh-programmiñ Python. Evit-se emaomp o vont da skrivañ kod ur jedonerezh.
 
 Ezhomm ho peus eus ur skridtreterezh, hag eveljust ur merdeer kevreet gant ar genrouedad.
 
@@ -13,7 +13,7 @@ E-barzh ar skridtreterezh, krouit ur bajenn HTML, enni ar kod a-dreñv:
 <head>
     <meta charset="utf-8">
     <script type="text/javascript"
-        src="https://cdn.jsdelivr.net/npm/brython@3.8.7/brython.min.js">
+        src="https://cdn.jsdelivr.net/npm/brython@{implementation}/brython.min.js">
     </script>
 </head>
 
@@ -40,9 +40,9 @@ Pa vo digoret ar bajenn, emichañs e vo gwelet "Hopala !" moullet war prenestr a
 
 Framm ur bajenn
 ===============
-Taolomp ur sell ouzh ar pezh a zo er bajenn. E-barzh al lodenn `<head>` e kargomp ar skript __`brython.js`__ : ar c'heflusker Brython eo, ar programm a ra war-dro an holl skriptoù Python er bajenn. Karget eo amañ diwar ur CDN, kuit da staliañ tra ebet war ar PC. Taolit evezh ouzh an niverenn doare (`brython@3.8.7`) : gallout a raer he hizivaat pep gwech ez a un doare Brython nevez er-maez.
+Taolomp ur sell ouzh ar pezh a zo er bajenn. E-barzh al lodenn `<head>` e kargomp ar skript __`brython.js`__ : ar c'heflusker Brython eo, ar programm a ra war-dro an holl skriptoù Python er bajenn. Karget eo amañ diwar ur CDN, kuit da staliañ tra ebet war ar PC. Taolit evezh ouzh an niverenn doare (`brython@{implementation}`) : gallout a raer he hizivaat pep gwech ez a un doare Brython nevez er-maez.
 
-Ar valizenn `<body>` he deus un doareenn `onload="brython()"`. Gourc'hemenn a ra ar merdeer lakaat an arc'hwel `brython()` en-dro pa vo echuet kargañ an holl bajenn. An arc'hwel a zo termenet e-barzh ar c'heflusker Brython. Klask a ra an holl balizennoù `<script>` gant an doareenn `type="text/python"` ha seveniñ a ra anezho.
+Ar valizenn `<body>` he deus un doareenn `onload="brython()"`. Gourc'hemenn a ra ar merdeer kas an arc'hwel `brython()` en-dro pa vo echuet kargañ an holl bajenn. An arc'hwel a zo termenet e-barzh ar c'heflusker Brython. Klask a ra an holl balizennoù `<script>` gant an doareenn `type="text/python"` ha seveniñ a ra anezho.
 
 E-barzh hor pajenn __`index.hml`__ e kaver ar skript-mañ:
 
@@ -74,13 +74,13 @@ from browser import document, html
 document <= html.B("Hopala !")
 ```
 
-Balizennoù a c'hell bezañ lakaet an eil e-barzh egile:
+Balizennoù a c'hell bezañ lakaet an eil e-barzh eben:
 
 ```python
 document <= html.B(html.I("Hopala !"))
 ```
 
-Ouzhpennañ balizennoù ha chadennoù an eil ouzh egile a c'heller ober ivez:
+Ouzhpennañ balizennoù ha chadennoù an eil ouzh eben a c'heller ober ivez:
 
 ```python
 document <= html.B("Hopala, ") + "Chapalain !"
@@ -102,7 +102,7 @@ Tresañ ar jedonerezh
 ====================
 Gallout a reomp tresañ hon jedonerezh e stumm un daolenn HTML.
 
-Linenn gentañ a vez graet eus an dachenn evit an disorc'h, war e lerc'h un nozelenn nullañ. An tri linenn war-lerc'h a zo stokelloù ar jedonerezh, sifroù hag oberiadurioù.
+Al linenn gentañ a vez graet eus an dachenn evit an disorc'h, war e lerc'h un nozelenn nullañ. An teir linenn war-lerc'h a zo stokelloù ar jedonerezh, sifroù hag oberiadurioù.
 
 ```python
 from browser import document, html
@@ -153,18 +153,18 @@ Ober gant degouezhadennoù
 Ret eo lavaret bremañ petra a c'hoarvez pa vount an implijer war stokelloù ar jedonerezh:
 
 - evit sifroù hag oberiadurioù : moullañ anezho e-barzh an dachenn-disorc'h
-- evit ar stokell = : seveniñ ar jedad ha moulañ an disorc'h, peotramant ur gemennad fazi ma'z eo direizh ar jedad
+- evit ar stokell = : seveniñ ar jedad ha moullañ an disorc'h, peotramant ur gemennad fazi ma'z eo direizh ar jedad
 - evit ar stokell C : mannañ an dachenn-disorc'h
 
-Evit ober gant degouezhadennoù war elemantoù ar bajenn ez eo ret d'ar program kavout un dave anezho. Boutonoù a zo bet krouet e stumm `<TD>` balizennoù; evit kavout an holl balizennoù seurt-se e skriver
+Evit ober gant degouezhadennoù war elemantoù ar bajenn ez eo ret d'ar program kavout un dave anezho. Stokelloù a zo bet krouet e stumm balizennoù `<TD>`; evit kavout an holl balizennoù seurt-se e skriver
 
 ```python
 document.select("td")
 ```
 
-Ar arguzenn kaset d'ar metod `select()` a zo un _diuzer CSS_. A re a gaver ar muiañ a zo: anv ur valizenn ("td"), doareenn `id` un elemant ("#result") pe e doareenn "class" (".classname"). Disorc'h `select()` a vez dalc'hmat ul listenn elemantoù.
+Ar arguzenn kaset d'ar metod `select()` a zo un _diuzer CSS_. A re a gaver ar muiañ a zo: anv ur valizenn ("td"), doareenn `id` un elemant ("#result") pe e doareenn `class` (".classname"). Disorc'h `select()` a vez dalc'hmat ul listenn elemantoù.
 
-An degouezhadennoù a c'hell c'hoarvez war elemantoù ur bajenn o deus un anv reolataet: pa glik an implijer war un nozelenn, an degouezhadenn a zo "click" e anv. E-barzh ar programm, an degouezhadenn a dle lakaat un arc'hwel en-dro. Al liamm etre elemant, degouezhadenn hag arc'hwel a vez graet e mod-se:
+An degouezhadennoù a c'hell c'hoarvez war elemantoù ur bajenn o deus un anv reolataet: pa glik an implijer war un nozelenn, an degouezhadenn a zo "click" e anv. E-barzh ar programm, an degouezhadenn a dle kas un arc'hwel en-dro. Al liamm etre elemant, degouezhadenn hag arc'hwel a vez graet e mod-se:
 
 ```python
 element.bind("click", action)
@@ -181,7 +181,7 @@ Ret eo termeniñ an arch'wel `action()` en un lec'h bennak a-raok er programm. S
 
 Ar programm a-bezh
 ==================
-Setu amañ ar c'hod a c'hell lakaat en-dro un doare eeunañ eus ur jedonerezh. Al lodenn bouezusañ a zo e-barzh an alc'hwez `action(event)`.
+Setu amañ ar c'hod a c'hell kas en-dro un doare eeun eus ur jedonerezh. Al lodenn bouezusañ a zo e-barzh an alc'hwez `action(event)`.
 
 ```python
 from browser import document, html
