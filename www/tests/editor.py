@@ -133,7 +133,6 @@ def show_js(ev):
 
 def share_code(ev):
     src = editor.getValue()
-    #src = window.encodeURIComponent(src)
     if len(src) > 2048:
         d = dialog.InfoDialog("Copy url",
                               f"code length is {len(src)}, must be < 2048",
@@ -144,6 +143,7 @@ def share_code(ev):
         query = doc.query
         query["code"] = src
         url = f"{href}{query}"
+        url = url.replace("(", "%28").replace(")", "%29")
         d = dialog.Dialog("Copy url", style={"zIndex": 10})
         area = html.TEXTAREA(rows=0, cols=0)
         d.panel <= area
