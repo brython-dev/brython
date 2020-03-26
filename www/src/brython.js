@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-03-23 13:35:27.275743"
-__BRYTHON__.timestamp=1584966927269
+__BRYTHON__.compiled_date="2020-03-26 08:46:07.087712"
+__BRYTHON__.timestamp=1585208767087
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -2317,6 +2317,15 @@ return '('+this.real+') ['+this.intervals+'-'+
 this.tree+']'
 default:
 return '(tuple) ('+this.tree+')'}}
+this.close=function(){this.closed=true
+for(var i=0,len=this.tree.length;i < len;i++){
+var elt=this.tree[i]
+if(elt.type=="expr" &&
+elt.tree[0].type=="list_or_tuple" &&
+elt.tree[0].real=="tuple" &&
+elt.tree[0].tree.length==1 &&
+elt.tree[0].expect==","){this.tree[i]=elt.tree[0].tree[0]
+this.tree[i].parent=this}}}
 this.is_comp=function(){switch(this.real){case 'list_comp':
 case 'gen_expr':
 case 'dict_or_set_comp':
@@ -4226,24 +4235,26 @@ new $SubCtx(C.parent),false)}
 if(token=='('){return new $CallCtx(C.parent)}
 return $transition(C.parent,token,value)}else{if(C.expect==','){switch(C.real){case 'tuple':
 case 'gen_expr':
-if(token==')'){while(C.type=="list_or_tuple" &&
+if(token==')'){var close=true
+while(C.type=="list_or_tuple" &&
 C.real=="tuple" &&
 C.parent.type=="expr" &&
 C.parent.parent.type=="node" &&
 C.tree.length==1){
+close=false
 var node=C.parent.parent,ix=node.tree.indexOf(C.parent),expr=C.tree[0]
 expr.parent=node
 expr.$in_parens=true 
 node.tree.splice(ix,1,expr)
 C=expr.tree[0]}
-C.closed=true
+if(close){C.close()}
 if(C.real=='gen_expr'){C.intervals.push($pos)}
 if(C.parent.type=="packed"){return C.parent.parent}
 return C.parent}
 break
 case 'list':
 case 'list_comp':
-if(token==']'){C.closed=true
+if(token==']'){C.close()
 if(C.real=='list_comp'){C.intervals.push($pos)}
 if(C.parent.type=="packed"){if(C.parent.tree.length > 0){return C.parent.tree[0]}else{return C.parent.parent}}
 return C.parent}
@@ -4265,22 +4276,22 @@ C.tree=[]
 var comp=new $ComprehensionCtx(C)
 return new $TargetListCtx(new $CompForCtx(comp))}
 return $transition(C.parent,token,value)}else if(C.expect=='id'){switch(C.real){case 'tuple':
-if(token==')'){C.closed=true
+if(token==')'){C.close()
 return C.parent}
-if(token=='eol' && C.implicit===true){C.closed=true
+if(token=='eol' && C.implicit===true){C.close()
 return $transition(C.parent,token)}
 break
 case 'gen_expr':
-if(token==')'){C.closed=true
+if(token==')'){C.close()
 return $transition(C.parent,token)}
 break
 case 'list':
-if(token==']'){C.closed=true
+if(token==']'){C.close()
 return C}
 break}
 switch(token){case '=':
 if(C.real=='tuple' &&
-C.implicit===true){C.closed=true
+C.implicit===true){C.close()
 C.parent.tree.pop()
 var expr=new $ExprCtx(C.parent,'tuple',false)
 expr.tree=[C]

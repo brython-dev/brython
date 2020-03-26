@@ -4904,6 +4904,24 @@ var $ListOrTupleCtx = $B.parser.$ListOrTupleCtx = function(context,real){
         }
     }
 
+    this.close = function(){
+        this.closed = true
+        for(var i = 0, len = this.tree.length; i < len; i++){
+            // Replace parenthesized expressions inside list or tuple
+            // by the expression itself, eg (x, (y)) by (x, y).
+            // Cf. issue 1333
+            var elt = this.tree[i]
+            if(elt.type == "expr" &&
+                    elt.tree[0].type == "list_or_tuple" &&
+                    elt.tree[0].real == "tuple" &&
+                    elt.tree[0].tree.length == 1 &&
+                    elt.tree[0].expect == ","){
+                this.tree[i] = elt.tree[0].tree[0]
+                this.tree[i].parent = this
+            }
+        }
+    }
+
     this.is_comp = function(){
         switch(this.real) {
             case 'list_comp':
@@ -8574,6 +8592,7 @@ var $transition = $B.parser.$transition = function(context, token, value){
                         case 'tuple':
                         case 'gen_expr':
                             if(token == ')'){
+                                var close = true
                                 while(context.type == "list_or_tuple" &&
                                         context.real == "tuple" &&
                                         context.parent.type == "expr" &&
@@ -8590,6 +8609,7 @@ var $transition = $B.parser.$transition = function(context, token, value){
                                     // def f():
                                     //     ((((x)))) = 1
                                     //
+                                    close = false
                                     var node = context.parent.parent,
                                         ix = node.tree.indexOf(context.parent),
                                         expr = context.tree[0]
@@ -8598,7 +8618,9 @@ var $transition = $B.parser.$transition = function(context, token, value){
                                     node.tree.splice(ix, 1, expr)
                                     context = expr.tree[0]
                                 }
-                                context.closed = true
+                                if(close){
+                                    context.close()
+                                }
                                 if(context.real == 'gen_expr'){
                                     context.intervals.push($pos)
                                 }
@@ -8611,7 +8633,7 @@ var $transition = $B.parser.$transition = function(context, token, value){
                         case 'list':
                         case 'list_comp':
                             if(token == ']'){
-                                 context.closed = true
+                                 context.close()
                                  if(context.real == 'list_comp'){
                                      context.intervals.push($pos)
                                  }
@@ -8659,23 +8681,23 @@ var $transition = $B.parser.$transition = function(context, token, value){
                     switch(context.real) {
                         case 'tuple':
                             if(token == ')'){
-                              context.closed = true
+                              context.close()
                               return context.parent
                             }
                             if(token == 'eol' && context.implicit === true){
-                              context.closed = true
+                              context.close()
                               return $transition(context.parent, token)
                             }
                             break
                         case 'gen_expr':
                             if(token == ')'){
-                              context.closed = true
+                              context.close()
                               return $transition(context.parent, token)
                             }
                             break
                         case 'list':
                             if(token == ']'){
-                              context.closed = true
+                              context.close()
                               return context
                             }
                             break
@@ -8685,7 +8707,7 @@ var $transition = $B.parser.$transition = function(context, token, value){
                         case '=':
                             if(context.real == 'tuple' &&
                                     context.implicit === true){
-                                context.closed = true
+                                context.close()
                                 context.parent.tree.pop()
                                 var expr = new $ExprCtx(context.parent,
                                     'tuple', false)
