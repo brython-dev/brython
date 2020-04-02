@@ -199,7 +199,6 @@ $B.get_class = function(obj){
                 obj.__class__ = $B.Function
                 return $B.Function
             case "object":
-                if(obj.$class){return obj.$class} // module object
                 if(Array.isArray(obj)){
                     if(Object.getPrototypeOf(obj) === Array.prototype){
                         obj.__class__ = _b_.list

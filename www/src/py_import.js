@@ -19,8 +19,7 @@ module.__init__ = function(){}
 
 module.__new__ = function(cls, name, doc, $package){
     return {
-        //__class__: cls,
-        $class: cls,
+        __class__: cls,
         __name__: name,
         __doc__: doc || _b_.None,
         __package__: $package || _b_.None
@@ -45,8 +44,7 @@ module.__setattr__ = function(self, attr, value){
 
 module.$factory = function(name, doc, $package){
     return {
-        //__class__: module,
-        $class: module,
+        __class__: module,
         __name__: name,
         __doc__: doc || _b_.None,
         __package__: $package || _b_.None
