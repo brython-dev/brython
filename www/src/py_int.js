@@ -10,8 +10,8 @@ function $err(op, other){
 
 function int_value(obj){
     // Instances of int subclasses that call int.__new__(cls, value)
-    // have an attribute $value set
-    return obj.$value !== undefined ? obj.$value : obj
+    // have an attribute $brython_value set
+    return obj.$brython_value !== undefined ? obj.$brython_value : obj
 }
 
 // dictionary for built-in class 'int'
@@ -145,7 +145,7 @@ int.__bool__ = function(self){
 int.__ceil__ = function(self){return Math.ceil(int_value(self))}
 
 int.__divmod__ = function(self, other){
-    return $B.fast_tuple([int.__floordiv__(self, other), 
+    return $B.fast_tuple([int.__floordiv__(self, other),
         int.__mod__(self, other)])
 }
 
@@ -368,7 +368,7 @@ int.__new__ = function(cls, value){
     return {
         __class__: cls,
         __dict__: _b_.dict.$factory(),
-        $value: value || 0
+        $brython_value: value || 0
     }
 }
 

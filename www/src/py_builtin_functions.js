@@ -1264,10 +1264,10 @@ function hash(obj){
     if(obj.__hashvalue__ !== undefined){return obj.__hashvalue__}
     if(isinstance(obj, _b_.bool)){return _b_.int.$factory(obj)}
     if(isinstance(obj, _b_.int)){
-        if(obj.$value === undefined){
+        if(obj.$brython_value === undefined){
             return obj.valueOf()
         }else{ // int subclass
-            return obj.__hashvalue__ = obj.$value
+            return obj.__hashvalue__ = obj.$brython_value
         }
     }
     if(obj.$is_class ||

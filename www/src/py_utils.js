@@ -1024,7 +1024,7 @@ $B.PyNumber_Index = function(item){
             }
             if(_b_.isinstance(item, _b_.int)){
                 // int subclass
-                return item.$value
+                return item.$brython_value
             }
             var method = $B.$getattr(item, "__index__", _b_.None)
             if(method !== _b_.None){

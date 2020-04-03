@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-04-02 15:34:55.799155"
-__BRYTHON__.timestamp=1585834495799
+__BRYTHON__.compiled_date="2020-04-03 21:43:54.559183"
+__BRYTHON__.timestamp=1585943034559
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -6286,7 +6286,7 @@ return item
 case "object":
 if(item.__class__===$B.long_int){return item}
 if(_b_.isinstance(item,_b_.int)){
-return item.$value}
+return item.$brython_value}
 var method=$B.$getattr(item,"__index__",_b_.None)
 if(method !==_b_.None){method=typeof method=="function" ?
 method :$B.$getattr(method,"__call__")
@@ -6950,8 +6950,8 @@ function hash(obj){check_no_kw('hash',obj)
 check_nb_args('hash',1,arguments)
 if(obj.__hashvalue__ !==undefined){return obj.__hashvalue__}
 if(isinstance(obj,_b_.bool)){return _b_.int.$factory(obj)}
-if(isinstance(obj,_b_.int)){if(obj.$value===undefined){return obj.valueOf()}else{
-return obj.__hashvalue__=obj.$value}}
+if(isinstance(obj,_b_.int)){if(obj.$brython_value===undefined){return obj.valueOf()}else{
+return obj.__hashvalue__=obj.$brython_value}}
 if(obj.$is_class ||
 obj.__class__===_b_.type ||
 obj.__class__===$B.Function){return obj.__hashvalue__=$B.$py_next_hash--}
@@ -9142,16 +9142,14 @@ for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}})(__BRYTH
 var module=$B.module={__class__ :_b_.type,__mro__:[_b_.object],$infos:{__module__:"builtins",__name__:"module"},$is_class:true}
 module.__init__=function(){}
 module.__new__=function(cls,name,doc,$package){return{
-__class__:cls,
-__name__:name,__doc__:doc ||_b_.None,__package__:$package ||_b_.None}}
+__class__:cls,__name__:name,__doc__:doc ||_b_.None,__package__:$package ||_b_.None}}
 module.__repr__=module.__str__=function(self){var res="<module "+self.__name__
 if(self.__file__===undefined){res+=" (built-in)"}
 return res+">"}
 module.__setattr__=function(self,attr,value){if(self.__name__=="__builtins__"){
 $B.builtins[attr]=value}else{self[attr]=value}}
 module.$factory=function(name,doc,$package){return{
-__class__:module,
-__name__:name,__doc__:doc ||_b_.None,__package__:$package ||_b_.None}}
+__class__:module,__name__:name,__doc__:doc ||_b_.None,__package__:$package ||_b_.None}}
 $B.set_func_names(module,"builtins")
 function parent_package(mod_name){var parts=mod_name.split(".")
 parts.pop()
@@ -9533,7 +9531,7 @@ function $err(op,other){var msg="unsupported operand type(s) for "+op+
 ": 'float' and '"+$B.class_name(other)+"'"
 throw _b_.TypeError.$factory(msg)}
 function float_value(obj){
-return obj.$value !==undefined ? obj.$value :obj}
+return obj.$brython_value !==undefined ? obj.$brython_value :obj}
 var float={__class__:_b_.type,__dir__:object.__dir__,$infos:{__module__:"builtins",__name__:"float"},$is_class:true,$native:true,$descriptors:{"numerator":true,"denominator":true,"imag":true,"real":true}}
 float.numerator=function(self){return float_value(self)}
 float.denominator=function(self){return _b_.int.$factory(1)}
@@ -9753,7 +9751,7 @@ float.__neg__=function(self,other){return float.$factory(-float_value(self))}
 float.__new__=function(cls,value){if(cls===undefined){throw _b_.TypeError.$factory("float.__new__(): not enough arguments")}else if(! _b_.isinstance(cls,_b_.type)){throw _b_.TypeError.$factory("float.__new__(X): X is not a type object")}
 if(cls===float){return float.$factory(value)}
 return{
-__class__:cls,__dict__:_b_.dict.$factory(),$value:value ||0}}
+__class__:cls,__dict__:_b_.dict.$factory(),$brython_value:value ||0}}
 float.__pos__=function(self){return float_value(self)}
 float.__pow__=function(self,other){self=float_value(self)
 other=float_value(other)
@@ -9917,7 +9915,7 @@ function $err(op,other){var msg="unsupported operand type(s) for "+op+
 ": 'int' and '"+$B.class_name(other)+"'"
 throw _b_.TypeError.$factory(msg)}
 function int_value(obj){
-return obj.$value !==undefined ? obj.$value :obj}
+return obj.$brython_value !==undefined ? obj.$brython_value :obj}
 var int={__class__:_b_.type,__dir__:_b_.object.__dir__,$infos:{__module__:"builtins",__name__:"int"},$is_class:true,$native:true,$descriptors:{"numerator":true,"denominator":true,"imag":true,"real":true}}
 int.as_integer_ratio=function(){var $=$B.args("as_integer_ratio",1,{self:null},["self"],arguments,{},null,null)
 return $B.$list([$.self,1])}
@@ -10067,7 +10065,7 @@ int.__neg__=function(self){return-self}
 int.__new__=function(cls,value){if(cls===undefined){throw _b_.TypeError.$factory("int.__new__(): not enough arguments")}else if(! _b_.isinstance(cls,_b_.type)){throw _b_.TypeError.$factory("int.__new__(X): X is not a type object")}
 if(cls===int){return int.$factory(value)}
 return{
-__class__:cls,__dict__:_b_.dict.$factory(),$value:value ||0}}
+__class__:cls,__dict__:_b_.dict.$factory(),$brython_value:value ||0}}
 int.__pos__=function(self){return self}
 function extended_euclidean(a,b){var d,u,v
 if(b==0){return[a,1,0]}else{[d,u,v]=extended_euclidean(b,a % b)
@@ -10612,7 +10610,7 @@ return intOrLong({__class__:long_int,value:res,pos:self.pos})}
 long_int.__str__=long_int.__repr__=function(self){var res=""
 if(! self.pos){res+='-'}
 return res+self.value}
-long_int.__sub__=function(self,other){if(isinstance(other,_b_.float)){other=other instanceof Number ? other :other.$value
+long_int.__sub__=function(self,other){if(isinstance(other,_b_.float)){other=other instanceof Number ? other :other.$brython_value
 return _b_.float.$factory(parseInt(self.value)-other)}
 if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}
 var res
@@ -10698,7 +10696,7 @@ if(typeof value=="number"){if(isSafeInteger(value)){value=value.toString()}
 else if(value.constructor==Number){value=value.toString()}
 else{throw ValueError.$factory(
 "argument of long_int is not a safe integer")}}else if(value.__class__===long_int){return value}else if(isinstance(value,int)){
-value=value.$value+""}else if(isinstance(value,_b_.bool)){value=_b_.bool.__int__(value)+""}else if(typeof value !="string"){throw ValueError.$factory(
+value=value.$brython_value+""}else if(isinstance(value,_b_.bool)){value=_b_.bool.__int__(value)+""}else if(typeof value !="string"){throw ValueError.$factory(
 "argument of long_int must be a string, not "+
 $B.class_name(value))}
 var has_prefix=false,pos=true,start=0

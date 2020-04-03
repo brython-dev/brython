@@ -914,7 +914,7 @@ long_int.__str__ = long_int.__repr__ = function(self){
 
 long_int.__sub__ = function(self, other){
     if(isinstance(other, _b_.float)){
-        other = other instanceof Number ? other : other.$value
+        other = other instanceof Number ? other : other.$brython_value
         return _b_.float.$factory(parseInt(self.value) - other)
     }
     if(typeof other == "number"){
@@ -1085,7 +1085,7 @@ long_int.$factory = function(value, base){
         return value
     }else if(isinstance(value, int)){
         // int subclass
-        value = value.$value + ""
+        value = value.$brython_value + ""
     }else if(isinstance(value, _b_.bool)){
         value = _b_.bool.__int__(value) + ""
     }else if(typeof value != "string"){

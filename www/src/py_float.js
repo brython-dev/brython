@@ -13,8 +13,8 @@ function $err(op, other){
 
 function float_value(obj){
     // Instances of float subclasses that call float.__new__(cls, value)
-    // have an attribute $value set
-    return obj.$value !== undefined ? obj.$value : obj
+    // have an attribute $brython_value set
+    return obj.$brython_value !== undefined ? obj.$brython_value : obj
 }
 
 // dictionary for built-in class 'float'
@@ -509,7 +509,7 @@ float.__new__ = function(cls, value){
     return {
         __class__: cls,
         __dict__: _b_.dict.$factory(),
-        $value: value || 0
+        $brython_value: value || 0
     }
 }
 
