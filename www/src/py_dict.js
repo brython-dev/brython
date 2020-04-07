@@ -577,16 +577,15 @@ dict.__repr__ = function(self){
     if(self.$jsobj){ // wrapper around Javascript object
         return dict.__repr__(jsobj2dict(self.$jsobj))
     }
+    if($B.repr.enter(self)){
+        return "{...}"
+    }
     var res = [],
         items = to_list(self)
     items.forEach(function(item){
-        if((!self.$jsobj && item[1] === self) ||
-                (self.$jsobj && item[1] === self.$jsobj)){
-            res.push(repr(item[0]) + ": {...}")
-        }else{
-            res.push(repr(item[0]) + ": " + repr(item[1]))
-        }
+        res.push(repr(item[0]) + ": " + repr(item[1]))
     })
+    $B.repr.leave(self)
     return "{" + res.join(", ") + "}"
 }
 

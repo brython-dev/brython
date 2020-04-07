@@ -137,4 +137,10 @@ assert len({'a': 'b'}.values()) == 1
 assert len({'a': 'b'}.keys()) == 1
 assert len({'a': 'b'}.items()) == 1
 
+# issue 1337
+d = {}
+d['a'] = []
+d['b'] = {0: d}
+assert repr(d) == str(d) == "{'a': [], 'b': {0: {...}}}"
+
 print("passed all tests..")

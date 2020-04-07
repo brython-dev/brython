@@ -352,21 +352,25 @@ list.__new__ = function(cls, ...args){
     return res
 }
 
-
 list.__repr__ = function(self){
-    if(self === undefined){return "<class 'list'>"}
+    if($B.repr.enter(self)){ // in py_utils.js
+        return '[...]'
+    }
+    var _r = [],
+        res
 
-    var _r = []
     for(var i = 0; i < self.length; i++){
-        if(self[i] === self){_r.push('[...]')}
-        else{_r.push(_b_.repr(self[i]))}
+        _r.push(_b_.repr(self[i]))
     }
 
     if(self.__class__ === tuple){
         if(self.length == 1){return "(" + _r[0] + ",)"}
-        return "(" + _r.join(", ") + ")"
+        res = "(" + _r.join(", ") + ")"
+    }else{
+        res = "[" + _r.join(", ") + "]"
     }
-    return "[" + _r.join(", ") + "]"
+    $B.repr.leave(self)
+    return res
 }
 
 list.__setattr__ = function(self, attr, value){

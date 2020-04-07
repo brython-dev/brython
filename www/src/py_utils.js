@@ -1451,30 +1451,20 @@ $B.is_none = function(o){
     return o === undefined || o === null || o == _b_.None
 }
 
+// used to detect recursion in repr() / str() of lists and dicts
+var repr_stack = new Set()
+
+$B.repr = {
+    enter: function(obj){
+        if(repr_stack.has(obj)){
+            return true
+        }else{
+            repr_stack.add(obj)
+        }
+    },
+    leave: function(obj){
+        repr_stack.delete(obj)
+    }
+}
+
 })(__BRYTHON__)
-
-// IE doesn't implement indexOf on Arrays
-if(!Array.prototype.indexOf){
-  Array.prototype.indexOf = function(obj, fromIndex){
-    if (fromIndex < 0) fromIndex += this.length
-    for(var i = fromIndex || 0, len = this.length; i < len; i++){
-        if(this[i] === obj){return i}
-    }
-    return -1
-  }
-}
-
-
-// http://stackoverflow.com/questions/202605/repeat-string-javascript
-// allows for efficient indention..
-if(!String.prototype.repeat){
-  String.prototype.repeat = function(count) {
-    if(count < 1){return ''}
-    var result = '', pattern = this.valueOf()
-    while(count > 1){
-        if(count & 1){result += pattern}
-        count >>= 1, pattern += pattern
-    }
-    return result + pattern
-  }
-}

@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-04-03 21:43:54.559183"
-__BRYTHON__.timestamp=1585943034559
+__BRYTHON__.compiled_date="2020-04-07 12:14:56.878149"
+__BRYTHON__.timestamp=1586254496878
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -6466,15 +6466,9 @@ if(res !==_b_.NotImplemented){return res}
 throw _b_.TypeError.$factory("'"+(opname2opsign[op]||op)+
 "' not supported between instances of '"+$B.class_name(x)+
 "' and '"+$B.class_name(y)+"'")}else{return res}}
-$B.is_none=function(o){return o===undefined ||o===null ||o==_b_.None}})(__BRYTHON__)
-if(!Array.prototype.indexOf){Array.prototype.indexOf=function(obj,fromIndex){if(fromIndex < 0)fromIndex+=this.length
-for(var i=fromIndex ||0,len=this.length;i < len;i++){if(this[i]===obj){return i}}
-return-1}}
-if(!String.prototype.repeat){String.prototype.repeat=function(count){if(count < 1){return ''}
-var result='',pattern=this.valueOf()
-while(count > 1){if(count & 1){result+=pattern}
-count >>=1,pattern+=pattern}
-return result+pattern}}
+$B.is_none=function(o){return o===undefined ||o===null ||o==_b_.None}
+var repr_stack=new Set()
+$B.repr={enter:function(obj){if(repr_stack.has(obj)){return true}else{repr_stack.add(obj)}},leave:function(obj){repr_stack.delete(obj)}}})(__BRYTHON__)
 ;
 
 ;(function($B){var bltns=$B.InjectBuiltins()
@@ -11299,13 +11293,14 @@ res.__class__=cls
 res.__brython__=true
 res.__dict__=_b_.dict.$factory()
 return res}
-list.__repr__=function(self){if(self===undefined){return "<class 'list'>"}
-var _r=[]
-for(var i=0;i < self.length;i++){if(self[i]===self){_r.push('[...]')}
-else{_r.push(_b_.repr(self[i]))}}
+list.__repr__=function(self){if($B.repr.enter(self)){
+return '[...]'}
+var _r=[],res
+for(var i=0;i < self.length;i++){_r.push(_b_.repr(self[i]))}
 if(self.__class__===tuple){if(self.length==1){return "("+_r[0]+",)"}
-return "("+_r.join(", ")+")"}
-return "["+_r.join(", ")+"]"}
+res="("+_r.join(", ")+")"}else{res="["+_r.join(", ")+"]"}
+$B.repr.leave(self)
+return res}
 list.__setattr__=function(self,attr,value){if(self.__class__===list){if(list.hasOwnProperty(attr)){throw _b_.AttributeError.$factory("'list' object attribute '"+
 attr+"' is read-only")}else{throw _b_.AttributeError.$factory(
 "'list' object has no attribute '"+attr+"'")}}
@@ -12637,9 +12632,10 @@ if(cls !==dict){instance.__dict__=_b_.dict.$factory()}
 return instance}
 dict.__repr__=function(self){if(self.$jsobj){
 return dict.__repr__(jsobj2dict(self.$jsobj))}
+if($B.repr.enter(self)){return "{...}"}
 var res=[],items=to_list(self)
-items.forEach(function(item){if((!self.$jsobj && item[1]===self)||
-(self.$jsobj && item[1]===self.$jsobj)){res.push(repr(item[0])+": {...}")}else{res.push(repr(item[0])+": "+repr(item[1]))}})
+items.forEach(function(item){res.push(repr(item[0])+": "+repr(item[1]))})
+$B.repr.leave(self)
 return "{"+res.join(", ")+"}"}
 dict.__setitem__=function(self,key,value){var $=$B.args("__setitem__",3,{self:null,key:null,value:null},["self","key","value"],arguments,{},null,null)
 return dict.$setitem($.self,$.key,$.value)}

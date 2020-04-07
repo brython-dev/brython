@@ -264,4 +264,12 @@ assert ('a', (*range(4))) == ('a', 0, 1, 2, 3)
 assert ('a', (*range(4),)) == ('a', (0, 1, 2, 3))
 assert ('1', (((*a)))) == ('1', 'x', 'y')
 
+# issue 1337
+L = [[0], [1]]
+L[0].append(L[1])
+L[1].append(L[0])
+assert repr(L) == "[[0, [1, [...]]], [1, [0, [...]]]]"
+assert str(L) == "[[0, [1, [...]]], [1, [0, [...]]]]"
+assert repr(L[1]) == "[1, [0, [...]]]"
+
 print("passed all tests..")
