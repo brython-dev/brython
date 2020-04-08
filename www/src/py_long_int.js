@@ -281,28 +281,8 @@ function divmod_pos(v1, v2){
             left += right.charAt(0)
             right = right.substr(1)
         }
-        // Modulo is A - (A//B)*B
+        // Modulo is A - (A//B) * B
         mod = sub_pos(v1, mul_pos(quotient, v2).value)
-    }
-    /*
-    if(res1 !== undefined){
-        if(quotient != res1[0].value){
-            console.log("quotient", quotient, res1[0].value)
-        }else if(parseInt(mod.value) !== res1[1]){
-            console.log("rest", mod, res1[1])
-        }
-    }
-    */
-    if(iv2 < $B.max_int){
-        if(res_safe[0] !== quotient){
-            console.log("bizarre", v1, v2, res_safe, quotient)
-            alert()
-        }else if(res_safe[1] !== mod){
-            console.log("bizarre2 ", v1, v2, res_safe, mod)
-            alert()
-        }else{
-            console.log("ok")
-        }
     }
     return [long_int.$factory(quotient), mod]
 }
@@ -561,12 +541,16 @@ long_int.__divmod__ = function(self, other){
 
     var dm = divmod_pos(self.value, other.value)
     if(self.pos !== other.pos){
-        if(dm[0].value != "0"){dm[0].pos = false}
+        if(dm[0].value != "0"){
+            dm[0].pos = false
+        }
         if(dm[1].value != "0"){
-            // If self and other have different signs and self is not a multiple
-            // of other, round to the previous integer
+            // If self and other have different signs and self is not a
+            // multiple of other, round to the previous integer
             dm[0] = long_int.__sub__(dm[0], long_int.$factory("1"))
-            dm[1] = long_int.__add__(dm[1], long_int.$factory("1"))
+            // Modulo is A - (A//B) * B
+            dm[1] = long_int.__sub__(self,
+                long_int.__mul__(other, long_int.$factory(dm[0])))
         }
     }
     return $B.fast_tuple([intOrLong(dm[0]), intOrLong(dm[1])])

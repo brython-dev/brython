@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-04-07 12:14:56.878149"
-__BRYTHON__.timestamp=1586254496878
+__BRYTHON__.compiled_date="2020-04-08 11:05:33.137399"
+__BRYTHON__.timestamp=1586336733137
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -10373,9 +10373,6 @@ if(right.length==0){break}
 left+=right.charAt(0)
 right=right.substr(1)}
 mod=sub_pos(v1,mul_pos(quotient,v2).value)}
-if(iv2 < $B.max_int){if(res_safe[0]!==quotient){console.log("bizarre",v1,v2,res_safe,quotient)
-alert()}else if(res_safe[1]!==mod){console.log("bizarre2 ",v1,v2,res_safe,mod)
-alert()}else{console.log("ok")}}
 return[long_int.$factory(quotient),mod]}
 function split_chunks(s,size){var nb=Math.ceil(s.length/size),chunks=[],len=s.length
 for(var i=0;i < nb;i++){var pos=len-size*(i+1)
@@ -10475,7 +10472,7 @@ var dm=divmod_pos(self.value,other.value)
 if(self.pos !==other.pos){if(dm[0].value !="0"){dm[0].pos=false}
 if(dm[1].value !="0"){
 dm[0]=long_int.__sub__(dm[0],long_int.$factory("1"))
-dm[1]=long_int.__add__(dm[1],long_int.$factory("1"))}}
+dm[1]=long_int.__sub__(self,long_int.__mul__(other,long_int.$factory(dm[0])))}}
 return $B.fast_tuple([intOrLong(dm[0]),intOrLong(dm[1])])}
 long_int.__eq__=function(self,other){if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}
 return self.value==other.value && self.pos==other.pos}
