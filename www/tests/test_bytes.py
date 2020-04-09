@@ -242,5 +242,20 @@ for ss in bstrs:
                 raise AssertionError('%s%s => %s != %s' % (
                     repr(ss_), ' (keepends)' if args==(True,) else '', ll, good[ii]))
             ii += 1
-            
+
+# issue 1339
+
+seq1 =  [0, 1, 2]
+seq2 =  '\x00\x01\x02'
+seq3 = b'\x00\x01\x02'
+class foo:
+    def __init__(self, x):
+        self.x = x
+    def __index__(self):
+        return self.x
+
+assert seq1[foo(1):] == seq1[1:]
+assert seq2[foo(1):] == seq2[1:]
+assert seq3[foo(1):] == seq3[1:]
+
 print('passed all tests...')

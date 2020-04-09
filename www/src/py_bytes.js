@@ -242,34 +242,37 @@ bytes.__getitem__ = function(self, arg){
     var i
     if(isinstance(arg, _b_.int)){
         var pos = arg
-        if(arg < 0){pos = self.source.length + pos}
-
-        if(pos >= 0 && pos < self.source.length){return self.source[pos]}
+        if(arg < 0){
+            pos = self.source.length + pos
+        }
+        if(pos >= 0 && pos < self.source.length){
+            return self.source[pos]
+        }
         throw _b_.IndexError.$factory("index out of range")
     }else if(isinstance(arg, _b_.slice)){
-        var step = arg.step === None ? 1 : arg.step
-        if(step > 0){
-            var start = arg.start === None ? 0 : arg.start
-            var stop = arg.stop === None ?
-                getattr(self.source, '__len__')() : arg.stop
-        }else{
-            var start = arg.start === None ?
-                getattr(self.source,'__len__')() - 1 : arg.start
-            var stop = arg.stop === None ? 0 : arg.stop
-        }
-        if(start < 0){start = self.source.length + start}
-        if(stop < 0){stop = self.source.length + stop}
+        var s = _b_.slice.$conv_for_seq(arg, self.source.length),
+            start = s.start,
+            stop = s.stop,
+            step = s.step
         var res = [],
             i = null,
             pos = 0
         if(step > 0){
-          stop = Math.min(stop, self.source.length)
-          if(stop <= start){return bytes.$factory([])}
-          for(var i = start; i < stop; i += step){res[pos++] = self.source[i]}
+            stop = Math.min(stop, self.source.length)
+            if(stop <= start){
+                return bytes.$factory([])
+            }
+            for(var i = start; i < stop; i += step){
+                res[pos++] = self.source[i]
+            }
         }else{
-            if(stop >= start){return bytes.$factory([])}
+            if(stop >= start){
+                return bytes.$factory([])
+            }
             stop = Math.max(0, stop)
-            for(var i = start; i >= stop; i += step){res[pos++] = self.source[i]}
+            for(var i = start; i >= stop; i += step){
+                res[pos++] = self.source[i]
+            }
         }
         return bytes.$factory(res)
     }else if(isinstance(arg, _b_.bool)){

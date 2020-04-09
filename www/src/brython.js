@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-04-08 11:05:33.137399"
-__BRYTHON__.timestamp=1586336733137
+__BRYTHON__.compiled_date="2020-04-09 11:56:52.115716"
+__BRYTHON__.timestamp=1586426212105
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -380,6 +380,107 @@ this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this
 this.toString=function(){return '(abstract_expr '+with_commas+') '+this.tree}
+this.transition=function(token,value){var C=this
+var packed=C.packed,is_await=C.is_await,assign=C.assign
+if(! assign){switch(token){case 'id':
+case 'imaginary':
+case 'int':
+case 'float':
+case 'str':
+case 'bytes':
+case '[':
+case '(':
+case '{':
+case '.':
+case 'not':
+case 'lambda':
+case 'yield':
+C.parent.tree.pop()
+var commas=C.with_commas
+C=C.parent
+C.packed=packed
+C.is_await=is_await
+if(assign){console.log("set assign to parent",C)
+C.assign=assign}}}
+switch(token){case 'await':
+return new $AwaitCtx(C)
+case 'id':
+return new $IdCtx(new $ExprCtx(C,'id',commas),value)
+case 'str':
+return new $StringCtx(new $ExprCtx(C,'str',commas),value)
+case 'bytes':
+return new $StringCtx(new $ExprCtx(C,'bytes',commas),value)
+case 'int':
+return new $NumberCtx('int',new $ExprCtx(C,'int',commas),value)
+case 'float':
+return new $NumberCtx('float',new $ExprCtx(C,'float',commas),value)
+case 'imaginary':
+return new $NumberCtx('imaginary',new $ExprCtx(C,'imaginary',commas),value)
+case '(':
+return new $ListOrTupleCtx(
+new $ExprCtx(C,'tuple',commas),'tuple')
+case '[':
+return new $ListOrTupleCtx(
+new $ExprCtx(C,'list',commas),'list')
+case '{':
+return new $DictOrSetCtx(
+new $ExprCtx(C,'dict_or_set',commas))
+case '.':
+return new $EllipsisCtx(
+new $ExprCtx(C,'ellipsis',commas))
+case 'not':
+if(C.type=='op' && C.op=='is'){
+C.op='is_not'
+return C}
+return new $NotCtx(new $ExprCtx(C,'not',commas))
+case 'lambda':
+return new $LambdaCtx(new $ExprCtx(C,'lambda',commas))
+case 'op':
+var tg=value
+switch(tg){case '*':
+C.parent.tree.pop()
+var commas=C.with_commas
+C=C.parent
+return new $PackedCtx(
+new $ExprCtx(C,'expr',commas))
+case '-':
+case '~':
+case '+':
+C.parent.tree.pop()
+var left=new $UnaryCtx(C.parent,tg)
+if(tg=='-'){var op_expr=new $OpCtx(left,'unary_neg')}else if(tg=='+'){var op_expr=new $OpCtx(left,'unary_pos')}else{var op_expr=new $OpCtx(left,'unary_inv')}
+return new $AbstractExprCtx(op_expr,false)
+case 'not':
+C.parent.tree.pop()
+var commas=C.with_commas
+C=C.parent
+return new $NotCtx(
+new $ExprCtx(C,'not',commas))}
+$_SyntaxError(C,'token '+token+' after '+
+C)
+case '=':
+$_SyntaxError(C,'token '+token+' after '+
+C)
+case 'yield':
+return new $AbstractExprCtx(new $YieldCtx(C),true)
+case ':':
+if(C.parent.type=="sub" ||
+(C.parent.type=="list_or_tuple" &&
+C.parent.parent.type=="sub")){return new $AbstractExprCtx(new $SliceCtx(C.parent),false)}
+return $transition(C.parent,token,value)
+case ')':
+case ',':
+switch(C.parent.type){case 'slice':
+case 'list_or_tuple':
+case 'call_arg':
+case 'op':
+case 'yield':
+break
+case 'annotation':
+$_SyntaxError(C,"empty annotation")
+default:
+$_SyntaxError(C,token)}}
+return $transition(C.parent,token,value)}
 this.to_js=function(){this.js_processed=true
 if(this.type==='list')return '['+$to_js(this.tree)+']'
 return $to_js(this.tree)}}
@@ -387,7 +488,13 @@ var $AliasCtx=$B.parser.$AliasCtx=function(C){
 this.type='ctx_manager_alias'
 this.parent=C
 this.tree=[]
-C.tree[C.tree.length-1].alias=this}
+C.tree[C.tree.length-1].alias=this
+this.transition=function(token,value){var C=this
+switch(token){case ',':
+case ':':
+C.parent.set_alias(C.tree[0].tree[0])
+return $transition(C.parent,token,value)}
+$_SyntaxError(C,'token '+token+' after '+C)}}
 var $AnnotationCtx=$B.parser.$AnnotationCtx=function(C){
 this.type='annotation'
 this.parent=C
@@ -406,6 +513,10 @@ scope.annotations.add(name)
 if(! C.$in_parens){scope.binding=scope.binding ||{}
 scope.binding[name]=true}}
 this.toString=function(){return '(annotation) '+this.tree}
+this.transition=function(token,value){var C=this
+if(token=="eol" && C.tree.length==1 &&
+C.tree[0].tree.length==0){$_SyntaxError(C,"empty annotation")}else if(token==':' && C.parent.type !="def"){$_SyntaxError(C,"more than one annotation")}else if(token=="augm_assign"){$_SyntaxError(C,"augmented assign as annotation")}else if(token=="op"){$_SyntaxError(C,"operator as annotation")}
+return $transition(C.parent,token)}
 this.to_js=function(){return $to_js(this.tree)}}
 var $AssertCtx=$B.parser.$AssertCtx=function(C){
 this.type='assert'
@@ -413,6 +524,9 @@ this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this
 this.toString=function(){return '(assert) '+this.tree}
+this.transition=function(token,value){var C=this
+if(token=='eol'){return $transition(C.parent,token)}
+$_SyntaxError(C,token)}
 this.transform=function(node,rank){if(this.tree[0].type=='list_or_tuple'){
 var condition=this.tree[0].tree[0]
 var message=this.tree[0].tree[1]}else{var condition=this.tree[0]
@@ -452,6 +566,12 @@ var module=$get_module(C)
 $bind(assigned.value,module,this)}}else if(["str","int","float","complex"].indexOf(assigned.type)>-1){$_SyntaxError(C,["cannot assign to literal"])}else if(assigned.type=="unary"){$_SyntaxError(C,["cannot assign to operator"])}}
 this.guess_type=function(){return}
 this.toString=function(){return '(assign) '+this.tree[0]+'='+this.tree[1]}
+this.transition=function(token,value){var C=this
+if(token=='eol'){if(C.tree[1].type=='abstract_expr'){$_SyntaxError(C,'token '+token+' after '+
+C)}
+C.guess_type()
+return $transition(C.parent,'eol')}
+$_SyntaxError(C,'token '+token+' after '+C)}
 this.transform=function(node,rank){
 var scope=$get_scope(this)
 var left=this.tree[0],right=this.tree[1],assigned=[]
@@ -630,7 +750,15 @@ var $AsyncCtx=$B.parser.$AsyncCtx=function(C){
 this.type='async'
 this.parent=C
 C.async=true
-this.toString=function(){return '(async)'}}
+this.toString=function(){return '(async)'}
+this.transition=function(token,value){var C=this
+if(token=="def"){return $transition(C.parent,token,value)}else if(token=="for" ||token=="with"){var ntype=$get_scope(C).ntype
+if(ntype !=="def" && ntype !="generator"){$_SyntaxError(C,["'async "+token+
+"' outside async function"])}
+var ctx=$transition(C.parent,token,value)
+ctx.parent.async=true 
+return ctx}
+$_SyntaxError(C,'token '+token+' after '+C)}}
 var $AttrCtx=$B.parser.$AttrCtx=function(C){
 this.type='attribute'
 this.value=C.tree[0]
@@ -640,6 +768,13 @@ C.tree[C.tree.length]=this
 this.tree=[]
 this.func='getattr' 
 this.toString=function(){return '(attr) '+this.value+'.'+this.name}
+this.transition=function(token,value){var C=this
+if(token==='id'){var name=value
+if(noassign[name]===true){$_SyntaxError(C,["cannot assign to "+name])}
+name=$mangle(name,C)
+C.name=name
+return C.parent}
+$_SyntaxError(C,token)}
 this.to_js=function(){this.js_processed=true
 var js=this.value.to_js()
 if(this.func=="setattr" && this.value.type=="id"){var scope=$get_scope(this),parent=scope.parent
@@ -673,6 +808,11 @@ assigned.unbound=true}}}else if(['str','int','float','complex'].indexOf(assigned
 $get_node(this).bound_before=Object.keys(scope.binding)
 this.module=scope.module
 this.toString=function(){return '(augm assign) '+this.tree}
+this.transition=function(token,value){var C=this
+if(token=='eol'){if(C.tree[1].type=='abstract_expr'){$_SyntaxError(C,'token '+token+' after '+
+C)}
+return $transition(C.parent,'eol')}
+$_SyntaxError(C,'token '+token+' after '+C)}
 this.transform=function(node,rank){var func='__'+$operators[op]+'__',offset=0,parent=node.parent,line_num=node.line_num,lnum_set=false
 parent.children.splice(rank,1)
 var left_is_id=(this.tree[0].type=='expr' &&
@@ -813,6 +953,9 @@ C.tree.push(this)
 var p=C
 while(p){if(p.type=="list_or_tuple"){p.is_await=true}
 p=p.parent}
+this.transition=function(token,value){var C=this
+C.parent.is_await=true
+return $transition(C.parent,token,value)}
 this.to_js=function(){return 'await ($B.promise('+$to_js(this.tree)+'))'}}
 var $BodyCtx=$B.parser.$BodyCtx=function(C){
 var ctx_node=C.parent
@@ -852,6 +995,9 @@ this.parent=C
 C.tree[C.tree.length]=this
 set_loop_context.apply(this,[C,'break'])
 this.toString=function(){return 'break '}
+this.transition=function(token,value){var C=this
+if(token=='eol'){return $transition(C.parent,'eol')}
+$_SyntaxError(C,token)}
 this.to_js=function(){this.js_processed=true
 var scope=$get_scope(this)
 var res=';$locals_'+scope.id.replace(/\./g,'_')+
@@ -867,6 +1013,69 @@ this.tree=[]
 C.tree.push(this)
 this.expect='id'
 this.toString=function(){return 'call_arg '+this.tree}
+this.transition=function(token,value){var C=this
+switch(token){case 'await':
+case 'id':
+case 'imaginary':
+case 'int':
+case 'float':
+case 'str':
+case 'bytes':
+case '[':
+case '(':
+case '{':
+case '.':
+case 'not':
+case 'lambda':
+if(C.expect=='id'){C.expect=','
+var expr=new $AbstractExprCtx(C,false)
+return $transition(expr,token,value)}
+break
+case '=':
+if(C.expect==','){return new $ExprCtx(new $KwArgCtx(C),'kw_value',false)}
+break
+case 'for':
+var lst=new $ListOrTupleCtx(C,'gen_expr')
+lst.vars=C.vars 
+lst.locals=C.locals
+lst.intervals=[C.start]
+C.tree.pop()
+lst.expression=C.tree
+C.tree=[lst]
+lst.tree=[]
+var comp=new $ComprehensionCtx(lst)
+return new $TargetListCtx(new $CompForCtx(comp))
+case 'op':
+if(C.expect=='id'){var op=value
+C.expect=','
+switch(op){case '+':
+case '-':
+case '~':
+return $transition(new $AbstractExprCtx(C,false),token,op)
+case '*':
+return new $StarArgCtx(C)
+case '**':
+return new $DoubleStarArgCtx(C)}}
+$_SyntaxError(C,'token '+token+' after '+C)
+case ')':
+if(C.parent.kwargs &&
+$B.last(C.parent.tree).tree[0]&& 
+['kwarg','star_arg','double_star_arg'].
+indexOf($B.last(C.parent.tree).tree[0].type)==-1){$_SyntaxError(C,['non-keyword argument after keyword argument'])}
+if(C.tree.length > 0){var son=C.tree[C.tree.length-1]
+if(son.type=='list_or_tuple' &&
+son.real=='gen_expr'){son.intervals.push($pos)}}
+return $transition(C.parent,token)
+case ':':
+if(C.expect==',' &&
+C.parent.parent.type=='lambda'){return $transition(C.parent.parent,token)}
+break
+case ',':
+if(C.expect==','){if(C.parent.kwargs &&
+['kwarg','star_arg','double_star_arg'].
+indexOf($B.last(C.parent.tree).tree[0].type)==-1){$_SyntaxError(C,['non-keyword argument after keyword argument'])}
+return $transition(C.parent,token,value)}}
+$_SyntaxError(C,'token '+token+' after '+C)}
 this.to_js=function(){this.js_processed=true
 return $to_js(this.tree)}}
 var $CallCtx=$B.parser.$CallCtx=function(C){
@@ -886,6 +1095,44 @@ if(this.func && this.func.type=="attribute" && this.func.name=="wait"
 && this.func.value.type=="id" && this.func.value.value=="time"){console.log('call',this.func)
 $get_node(this).blocking={'type':'wait','call':this}}
 if(this.func && this.func.value=='input'){$get_node(this).blocking={'type':'input'}}
+this.transition=function(token,value){var C=this
+switch(token){case ',':
+if(C.expect=='id'){$_SyntaxError(C,token)}
+C.expect='id'
+return C
+case 'await':
+case 'id':
+case 'imaginary':
+case 'int':
+case 'float':
+case 'str':
+case 'bytes':
+case '[':
+case '(':
+case '{':
+case '.':
+case 'not':
+case 'lambda':
+C.expect=','
+return $transition(new $CallArgCtx(C),token,value)
+case ')':
+C.end=$pos
+return C.parent
+case 'op':
+C.expect=','
+switch(value){case '-':
+case '~':
+case '+':
+C.expect=','
+return $transition(new $CallArgCtx(C),token,value)
+case '*':
+C.has_star=true
+return new $StarArgCtx(C)
+case '**':
+C.has_dstar=true
+return new $DoubleStarArgCtx(C)}
+$_SyntaxError(C,token)}
+return $transition(C.parent,token,value)}
 this.to_js=function(){this.js_processed=true
 if(this.tree.length > 0){if(this.tree[this.tree.length-1].tree.length==0){
 this.tree.pop()}}
@@ -989,6 +1236,17 @@ this.parent.node.parent_block=scope
 this.parent.node.bound={}
 this.parent.node.binding={__annotations__:true}
 this.toString=function(){return '(class) '+this.name+' '+this.tree+' args '+this.args}
+this.transition=function(token,value){var C=this
+switch(token){case 'id':
+if(C.expect=='id'){C.set_name(value)
+C.expect='(:'
+return C}
+break
+case '(':
+return new $CallCtx(C)
+case ':':
+return $BodyCtx(C)}
+$_SyntaxError(C,'token '+token+' after '+C)}
 this.set_name=function(name){this.random=$B.UUID()
 this.name=name
 this.id=C.node.module+'_'+name+'_'+this.random
@@ -1082,6 +1340,8 @@ this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this
 this.toString=function(){return '(comp if) '+this.tree}
+this.transition=function(token,value){var C=this
+return $transition(C.parent,token,value)}
 this.to_js=function(){this.js_processed=true
 return $to_js(this.tree)}}
 var $ComprehensionCtx=$B.parser.$ComprehensionCtx=function(C){
@@ -1090,6 +1350,12 @@ this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this
 this.toString=function(){return '(comprehension) '+this.tree}
+this.transition=function(token,value){var C=this
+switch(token){case 'if':
+return new $AbstractExprCtx(new $CompIfCtx(C),false)
+case 'for':
+return new $TargetListCtx(new $CompForCtx(C))}
+return $transition(C.parent,token,value)}
 this.to_js=function(){this.js_processed=true
 var intervals=[]
 this.tree.forEach(function(elt){intervals.push(elt.start)})
@@ -1102,6 +1368,12 @@ this.tree=[]
 this.expect='in'
 C.tree[C.tree.length]=this
 this.toString=function(){return '(comp for) '+this.tree}
+this.transition=function(token,value){var C=this
+if(token=='in' && C.expect=='in'){C.expect=null
+return new $AbstractExprCtx(new $CompIterableCtx(C),true)}
+if(C.expect===null){
+return $transition(C.parent,token,value)}
+$_SyntaxError(C,'token '+token+' after '+C)}
 this.to_js=function(){this.js_processed=true
 return $to_js(this.tree)}}
 var $CompIterableCtx=$B.parser.$CompIterableCtx=function(C){
@@ -1110,6 +1382,8 @@ this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this
 this.toString=function(){return '(comp iter) '+this.tree}
+this.transition=function(token,value){var C=this
+return $transition(C.parent,token,value)}
 this.to_js=function(){this.js_processed=true
 return $to_js(this.tree)}}
 var $ConditionCtx=$B.parser.$ConditionCtx=function(C,token){
@@ -1122,6 +1396,12 @@ if(token=='while'){this.loop_num=$loop_num++
 $get_node(this).loop_start=this.loop_num}
 C.tree[C.tree.length]=this
 this.toString=function(){return this.token+' '+this.tree}
+this.transition=function(token,value){var C=this
+if(token==':'){if(C.tree[0].type=="abstract_expr" &&
+C.tree[0].tree.length==0){
+$_SyntaxError(C,'token '+token+' after '+C)}
+return $BodyCtx(C)}
+$_SyntaxError(C,'token '+token+' after '+C)}
 this.transform=function(node,rank){var scope=$get_scope(this)
 if(this.token=="while"){node.parent.insert(rank,$NodeJS('$locals["$no_break'+this.loop_num+'"] = true'))
 var module=$get_module(this).module
@@ -1148,6 +1428,9 @@ $get_node(this).is_continue=true
 C.tree[C.tree.length]=this
 set_loop_context.apply(this,[C,'continue'])
 this.toString=function(){return '(continue)'}
+this.transition=function(token,value){var C=this
+if(token=='eol'){return C.parent}
+$_SyntaxError(C,'token '+token+' after '+C)}
 this.to_js=function(){this.js_processed=true
 return 'continue'}}
 var $DebuggerCtx=$B.parser.$DebuggerCtx=function(C){
@@ -1155,6 +1438,7 @@ this.type='continue'
 this.parent=C
 C.tree[C.tree.length]=this
 this.toString=function(){return '(debugger)'}
+this.transition=function(token,value){var C=this}
 this.to_js=function(){this.js_processed=true
 return 'debugger'}}
 var $DecoratorCtx=$B.parser.$DecoratorCtx=function(C){
@@ -1163,6 +1447,10 @@ this.parent=C
 C.tree[C.tree.length]=this
 this.tree=[]
 this.toString=function(){return '(decorator) '+this.tree}
+this.transition=function(token,value){var C=this
+if(token=='id' && C.tree.length==0){return $transition(new $DecoratorExprCtx(C),token,value)}
+if(token=='eol'){return $transition(C.parent,token)}
+$_SyntaxError(C,'token '+token+' after '+C)}
 this.transform=function(node,rank){var func_rank=rank+1,children=node.parent.children,decorators=[this.tree]
 while(1){if(func_rank >=children.length){$_SyntaxError(C,['decorator expects function'])}
 else if(children[func_rank].C.type=='node_js'){func_rank++}else if(children[func_rank].C.tree[0].type==
@@ -1198,6 +1486,16 @@ this.names=[]
 this.tree=[]
 this.is_call=false
 this.toString=function(){return '(decorator expression)'}
+this.transition=function(token,value){var C=this
+if(C.expects===undefined){if(token=="id"){C.names.push(value)
+C.expects="."
+return C}
+$_SyntaxError(C,'token '+token+' after '+C)}else if(C.is_call && token !=="eol"){$_SyntaxError(C,'token '+token+' after '+C)}else if(token=="id" && C.expects=="id"){C.names.push(value)
+C.expects="."
+return C}else if(token=="." && C.expects=="."){C.expects="id"
+return C}else if(token=="(" && C.expects=="."){if(! C.is_call){C.is_call=true
+return new $CallCtx(C)}}else if(token=='eol'){return $transition(C.parent,token)}
+$_SyntaxError(C,'token '+token+' after '+C)}
 this.to_js=function(){this.js_processed=true
 var func=new $IdCtx(this,this.names[0])
 var obj=func.to_js()
@@ -1255,6 +1553,22 @@ $bind(name,this.root,this)}else{$bind(name,this.scope,this)}
 id_ctx.bound=true
 if(scope.is_function){if(scope.C.tree[0].locals.indexOf(name)==-1){scope.C.tree[0].locals.push(name)}}}
 this.toString=function(){return 'def '+this.name+'('+this.tree+')'}
+this.transition=function(token,value){var C=this
+switch(token){case 'id':
+if(C.name){$_SyntaxError(C,'token '+token+' after '+C)}
+C.set_name(value)
+return C
+case '(':
+if(C.name==null){$_SyntaxError(C,"missing name in function definition")}
+C.has_args=true;
+return new $FuncArgs(C)
+case 'annotation':
+return new $AbstractExprCtx(new $AnnotationCtx(C),true)
+case ':':
+if(C.has_args){return $BodyCtx(C)}else{$_SyntaxError(C,"missing function parameters")}
+case 'eol':
+if(C.has_args){$_SyntaxError(C,"missing colon")}}
+$_SyntaxError(C,'token '+token+' after '+C)}
 this.transform=function(node,rank){
 if(this.transformed !==undefined){return}
 var scope=this.scope
@@ -1504,6 +1818,9 @@ this.parent=C
 C.tree[C.tree.length]=this
 this.tree=[]
 this.toString=function(){return 'del '+this.tree}
+this.transition=function(token,value){var C=this
+if(token=='eol'){return $transition(C.parent,token)}
+$_SyntaxError(C,'token '+token+' after '+C)}
 this.to_js=function(){this.js_processed=true
 if(this.tree[0].type=='list_or_tuple'){
 var res=[]
@@ -1560,6 +1877,99 @@ return '(dict) {'+this.items+'}'
 case 'set':
 return '(set) {'+this.tree+'}'}
 return '(dict_or_set) {'+this.tree+'}'}
+this.transition=function(token,value){var C=this
+if(C.closed){switch(token){case '[':
+return new $AbstractExprCtx(new $SubCtx(C.parent),false)
+case '(':
+return new $CallArgCtx(new $CallCtx(C.parent))}
+return $transition(C.parent,token,value)}else{if(C.expect==','){switch(token){case '}':
+switch(C.real){case 'dict_or_set':
+if(C.tree.length !=1){break}
+C.real='set' 
+case 'set':
+case 'set_comp':
+case 'dict_comp':
+C.items=C.tree
+C.tree=[]
+C.closed=true
+return C
+case 'dict':
+if(C.nb_dict_items()% 2==0){C.items=C.tree
+C.tree=[]
+C.closed=true
+return C}}
+$_SyntaxError(C,'token '+token+
+' after '+C)
+case ',':
+if(C.real=='dict_or_set'){C.real='set'}
+if(C.real=='dict' &&
+C.nb_dict_items()% 2){$_SyntaxError(C,'token '+token+
+' after '+C)}
+C.expect='id'
+return C
+case ':':
+if(C.real=='dict_or_set'){C.real='dict'}
+if(C.real=='dict'){C.expect=','
+return new $AbstractExprCtx(C,false)}else{$_SyntaxError(C,'token '+token+
+' after '+C)}
+case 'for':
+if(C.real=='dict_or_set'){C.real='set_comp'}else{C.real='dict_comp'}
+var lst=new $ListOrTupleCtx(C,'dict_or_set_comp')
+lst.intervals=[C.start+1]
+lst.vars=C.vars
+C.tree.pop()
+lst.expression=C.tree
+C.tree=[lst]
+lst.tree=[]
+var comp=new $ComprehensionCtx(lst)
+return new $TargetListCtx(new $CompForCtx(comp))}
+$_SyntaxError(C,'token '+token+' after '+C)}else if(C.expect=='id'){switch(token){case '}':
+if(C.tree.length==0){
+C.items=[]
+C.real='dict'}else{
+C.items=C.tree}
+C.tree=[]
+C.closed=true
+return C
+case 'id':
+case 'imaginary':
+case 'int':
+case 'float':
+case 'str':
+case 'bytes':
+case '[':
+case '(':
+case '{':
+case '.':
+case 'not':
+case 'lambda':
+C.expect=','
+var expr=new $AbstractExprCtx(C,false)
+return $transition(expr,token,value)
+case 'op':
+switch(value){case '*':
+case '**':
+C.expect=","
+var expr=new $AbstractExprCtx(C,false)
+expr.packed=value.length 
+if(C.real=="dict_or_set"){C.real=value=="*" ? "set" :
+"dict"}else if(
+(C.real=="set" && value=="**")||
+(C.real=="dict" && value=="*")){$_SyntaxError(C,'token '+token+
+' after '+C)}
+return expr
+case '+':
+return C
+case '-':
+case '~':
+C.expect=','
+var left=new $UnaryCtx(C,value)
+if(value=='-'){var op_expr=new $OpCtx(left,'unary_neg')}else if(value=='+'){var op_expr=new $OpCtx(left,'unary_pos')}else{var op_expr=new $OpCtx(left,'unary_inv')}
+return new $AbstractExprCtx(op_expr,false)}
+$_SyntaxError(C,'token '+token+
+' after '+C)}
+$_SyntaxError(C,'token '+token+' after '+C)}
+return $transition(C.parent,token,value)}}
 this.nb_dict_items=function(){var nb=0
 this.tree.forEach(function(item){if(item.packed){nb+=2}
 else{nb++}})
@@ -1607,6 +2017,26 @@ this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this
 this.toString=function(){return '**'+this.tree}
+this.transition=function(token,value){var C=this
+switch(token){case 'id':
+case 'imaginary':
+case 'int':
+case 'float':
+case 'str':
+case 'bytes':
+case '[':
+case '(':
+case '{':
+case '.':
+case 'not':
+case 'lambda':
+return $transition(new $AbstractExprCtx(C,false),token,value)
+case ',':
+case ')':
+return $transition(C.parent,token)
+case ':':
+if(C.parent.parent.type=='lambda'){return $transition(C.parent.parent,token)}}
+$_SyntaxError(C,'token '+token+' after '+C)}
 this.to_js=function(){this.js_processed=true
 return '{$nat:"pdict",arg:'+$to_js(this.tree)+'}'}}
 var $EllipsisCtx=$B.parser.$EllipsisCtx=function(C){
@@ -1616,6 +2046,12 @@ this.nbdots=1
 this.start=$pos
 C.tree[C.tree.length]=this
 this.toString=function(){return 'ellipsis'}
+this.transition=function(token,value){var C=this
+if(token=='.'){C.nbdots++
+if(C.nbdots==3 && $pos-C.start==2){C.$complete=true}
+return C}else{if(! C.$complete){$pos--
+$_SyntaxError(C,'token '+token+' after '+
+C)}else{return $transition(C.parent,token,value)}}}
 this.to_js=function(){this.js_processed=true
 return '$B.builtins["Ellipsis"]'}}
 var $EndOfPositionalCtx=$B.parser.$EndOfConditionalCtx=function(C){
@@ -1624,6 +2060,9 @@ this.parent=C
 C.has_end_positional=true
 C.parent.pos_only=C.tree.length
 C.tree.push(this)
+this.transition=function(token,value){var C=this
+if(token=="," ||token==")"){return $transition(C.parent,token,value)}
+$_SyntaxError(C,'token '+token+' after '+C)}
 this.to_js=function(){return "/"}}
 var $ExceptCtx=$B.parser.$ExceptCtx=function(C){
 this.type='except'
@@ -1633,6 +2072,47 @@ this.tree=[]
 this.expect='id'
 this.scope=$get_scope(this)
 this.toString=function(){return '(except) '}
+this.transition=function(token,value){var C=this
+switch(token){case 'id':
+case 'imaginary':
+case 'int':
+case 'float':
+case 'str':
+case 'bytes':
+case '[':
+case '(':
+case '{':
+case 'not':
+case 'lambda':
+if(C.expect=='id'){C.expect='as'
+return $transition(new $AbstractExprCtx(C,false),token,value)}
+case 'as':
+if(C.expect=='as' &&
+C.has_alias===undefined){C.expect='alias'
+C.has_alias=true
+return C}
+case 'id':
+if(C.expect=='alias'){C.expect=':'
+C.set_alias(value)
+return C}
+break
+case ':':
+var _ce=C.expect
+if(_ce=='id' ||_ce=='as' ||_ce==':'){return $BodyCtx(C)}
+break
+case '(':
+if(C.expect=='id' && C.tree.length==0){C.parenth=true
+return C}
+break
+case ')':
+if(C.expect==',' ||C.expect=='as'){C.expect='as'
+return C}
+case ',':
+if(C.parenth !==undefined &&
+C.has_alias===undefined &&
+(C.expect=='as' ||C.expect==',')){C.expect='id'
+return C}}
+$_SyntaxError(C,'token '+token+' after '+C.expect)}
 this.set_alias=function(alias){this.tree[0].alias=$mangle(alias,this)
 $bind(alias,this.scope,this)}
 this.transform=function(node,rank){
@@ -1670,6 +2150,196 @@ this.assign=C.assign}
 this.tree=[]
 C.tree[C.tree.length]=this
 this.toString=function(){return '(expr '+with_commas+') '+this.tree}
+this.transition=function(token,value){var C=this
+switch(token){case 'bytes':
+case 'float':
+case 'id':
+case 'imaginary':
+case 'int':
+case 'lambda':
+case 'pass':
+case 'str':
+$_SyntaxError(C,'token '+token+' after '+
+C)
+break
+case '{':
+if(C.tree[0].type !="id" ||
+["print","exec"].indexOf(C.tree[0].value)==-1){$_SyntaxError(C,'token '+token+' after '+
+C)}
+return new $DictOrSetCtx(C)
+case '[':
+case '(':
+case '.':
+case 'not':
+if(C.expect=='expr'){C.expect=','
+return $transition(new $AbstractExprCtx(C,false),token,value)}}
+switch(token){case 'not':
+if(C.expect==','){return new $ExprNot(C)}
+break
+case 'in':
+if(C.parent.type=='target_list'){
+return $transition(C.parent,token)}
+if(C.expect==','){return $transition(C,'op','in')}
+break
+case ',':
+if(C.expect==','){if(C.with_commas ||
+["assign","return"].indexOf(C.parent.type)>-1){if($parent_match(C,{type:"yield","from":true})){$_SyntaxError(C,"no implicit tuple for yield from")}
+C.parent.tree.pop()
+var tuple=new $ListOrTupleCtx(C.parent,'tuple')
+tuple.implicit=true
+tuple.has_comma=true
+tuple.tree=[C]
+C.parent=tuple
+return tuple}}
+return $transition(C.parent,token)
+case '.':
+return new $AttrCtx(C)
+case '[':
+return new $AbstractExprCtx(new $SubCtx(C),true)
+case '(':
+return new $CallCtx(C)
+case 'op':
+var op_parent=C.parent,op=value
+if(op_parent.type=='ternary' && op_parent.in_else){var new_op=new $OpCtx(C,op)
+return new $AbstractExprCtx(new_op,false)}
+var op1=C.parent,repl=null
+while(1){if(op1.type=='expr'){op1=op1.parent}
+else if(op1.type=='op' &&
+$op_weight[op1.op]>=$op_weight[op]&&
+!(op1.op=='**' && op=='**')){
+repl=op1
+op1=op1.parent}else if(op1.type=="not" &&
+$op_weight['not']> $op_weight[op]){repl=op1
+op1=op1.parent}else{break}}
+if(repl===null){while(1){if(C.parent !==op1){C=C.parent
+op_parent=C.parent}else{break}}
+C.parent.tree.pop()
+var expr=new $ExprCtx(op_parent,'operand',C.with_commas)
+expr.expect=','
+C.parent=expr
+var new_op=new $OpCtx(C,op)
+return new $AbstractExprCtx(new_op,false)}else{
+if(op==='and' ||op==='or'){while(repl.parent.type=='not'||
+(repl.parent.type=='expr' &&
+repl.parent.parent.type=='not')){
+repl=repl.parent
+op_parent=repl.parent}}}
+if(repl.type=='op'){var _flag=false
+switch(repl.op){case '<':
+case '<=':
+case '==':
+case '!=':
+case 'is':
+case '>=':
+case '>':
+_flag=true}
+if(_flag){switch(op){case '<':
+case '<=':
+case '==':
+case '!=':
+case 'is':
+case '>=':
+case '>':
+var c2=repl.tree[1],
+c2js=c2.to_js()
+var c2_clone=new Object()
+for(var attr in c2){c2_clone[attr]=c2[attr]}
+var vname="$c"+chained_comp_num
+c2.to_js=function(){return vname}
+c2_clone.to_js=function(){return vname}
+chained_comp_num++
+while(repl.parent && repl.parent.type=='op'){if($op_weight[repl.parent.op]<
+$op_weight[repl.op]){repl=repl.parent}else{break}}
+repl.parent.tree.pop()
+var and_expr=new $OpCtx(repl,'and')
+and_expr.wrap={'name':vname,'js':c2js}
+c2_clone.parent=and_expr
+and_expr.tree.push('xxx')
+var new_op=new $OpCtx(c2_clone,op)
+return new $AbstractExprCtx(new_op,false)}}}
+repl.parent.tree.pop()
+var expr=new $ExprCtx(repl.parent,'operand',false)
+expr.tree=[op1]
+repl.parent=expr
+var new_op=new $OpCtx(repl,op)
+return new $AbstractExprCtx(new_op,false)
+case 'augm_assign':
+var parent=C.parent
+while(parent){if(parent.type=="assign" ||parent.type=="augm_assign"){$_SyntaxError(C,"augmented assignment inside assignment")}else if(parent.type=="op"){$_SyntaxError(C,["cannot assign to operator"])}
+parent=parent.parent}
+if(C.expect==','){return new $AbstractExprCtx(
+new $AugmentedAssignCtx(C,value),true)}
+return $transition(C.parent,token,value)
+case ":":
+if(C.parent.type=="sub" ||
+(C.parent.type=="list_or_tuple" &&
+C.parent.parent.type=="sub")){return new $AbstractExprCtx(new $SliceCtx(C.parent),false)}else if(C.parent.type=="slice"){return $transition(C.parent,token,value)}else if(C.parent.type=="node"){
+if(C.tree.length==1){var child=C.tree[0]
+if(["id","sub","attribute"].indexOf(child.type)>-1){return new $AbstractExprCtx(new $AnnotationCtx(C),false)}else if(child.real=="tuple" && child.expect=="," &&
+child.tree.length==1){return new $AbstractExprCtx(new $AnnotationCtx(child.tree[0]),false)}}
+$_SyntaxError(C,"invalid target for annotation")}
+break
+case '=':
+function has_parent(ctx,type){
+while(ctx.parent){if(ctx.parent.type==type){return ctx.parent}
+ctx=ctx.parent}
+return false}
+var annotation
+if(C.expect==','){if(C.parent.type=="call_arg"){
+if(C.tree[0].type !="id"){$_SyntaxError(C,["keyword can't be an expression"])}
+return new $AbstractExprCtx(new $KwArgCtx(C),true)}else if(annotation=has_parent(C,"annotation")){return $transition(annotation,token,value)}else if(C.parent.type=="op"){
+$_SyntaxError(C,["cannot assign to operator"])}else if(C.parent.type=="list_or_tuple"){
+for(var i=0;i < C.parent.tree.length;i++){var item=C.parent.tree[i]
+if(item.type=="expr" && item.name=="operand"){$_SyntaxError(C,["cannot assign to operator"])}}}else if(C.parent.type=="expr" &&
+C.parent.name=="target list"){$_SyntaxError(C,'token '+token+' after '
++C)}
+while(C.parent !==undefined){C=C.parent
+if(C.type=="condition"){$_SyntaxError(C,'token '+token+' after '
++C)}else if(C.type=="augm_assign"){$_SyntaxError(C,"assignment inside augmented assignment")}}
+C=C.tree[0]
+return new $AbstractExprCtx(new $AssignCtx(C),true)}
+break
+case ':=':
+var ptype=C.parent.type
+if(["node","assign","kwarg","annotation"].
+indexOf(ptype)>-1){$_SyntaxError(C,':= invalid, parent '+ptype)}else if(ptype=="func_arg_id" &&
+C.parent.tree.length > 0){
+$_SyntaxError(C,':= invalid, parent '+ptype)}else if(ptype=="call_arg" &&
+C.parent.parent.type=="call" &&
+C.parent.parent.parent.type=="lambda"){
+$_SyntaxError(C,':= invalid inside function arguments' )}
+if(C.tree.length==1 &&
+C.tree[0].type=="id"){var scope=$get_scope(C),name=C.tree[0].value
+while(scope.is_comp){scope=scope.parent_block}
+$bind(name,scope,C)
+var parent=C.parent
+parent.tree.pop()
+var assign_expr=new $AbstractExprCtx(parent,false)
+assign_expr.assign=C.tree[0]
+return assign_expr}
+$_SyntaxError(C,'token '+token+' after '+C)
+case 'if':
+var in_comp=false,ctx=C.parent
+while(true){if(ctx.type=="list_or_tuple"){
+break}else if(ctx.type=='comp_for' ||ctx.type=="comp_if"){in_comp=true
+break}else if(ctx.type=='call_arg'){break}
+if(ctx.parent !==undefined){ctx=ctx.parent}
+else{break}}
+if(in_comp){break}
+var ctx=C
+while(ctx.parent && ctx.parent.type=='op'){ctx=ctx.parent
+if(ctx.type=='expr' &&
+ctx.parent && ctx.parent.type=='op'){ctx=ctx.parent}}
+return new $AbstractExprCtx(new $TernaryCtx(ctx),true)
+case 'eol':
+if(C.tree.length==2 &&
+C.tree[0].type=="id" &&
+["print","exec"].indexOf(C.tree[0].value)>-1){$_SyntaxError(C,["Missing parentheses in call "+
+"to '"+C.tree[0].value+"'."])}
+if(["dict_or_set","list_or_tuple"].indexOf(C.parent.type)==-1){var t=C.tree[0]
+if(t.type=="packed" ||
+(t.type=="call" && t.func.type=="packed")){$_SyntaxError(C,["can't use starred expression here"])}}}
+return $transition(C.parent,token)}
 this.to_js=function(arg){var res
 this.js_processed=true
 if(this.type=='list'){res='['+$to_js(this.tree)+']'}else if(this.tree.length==1){res=this.tree[0].to_js(arg)}else{res='_b_.tuple.$factory(['+$to_js(this.tree)+'])'}
@@ -1690,18 +2360,13 @@ this.type='expr_not'
 this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this
+this.transition=function(token,value){var C=this
+if(token=='in'){
+C.parent.tree.pop()
+return new $AbstractExprCtx(
+new $OpCtx(C.parent,'not_in'),false)}
+$_SyntaxError(C,'token '+token+' after '+C)}
 this.toString=function(){return '(expr_not)'}}
-var $FloatCtx=$B.parser.$FloatCtx=function(C,value){
-this.type='float'
-this.value=value
-this.parent=C
-this.tree=[]
-C.tree[C.tree.length]=this
-this.toString=function(){return 'float '+this.value}
-this.to_js=function(){this.js_processed=true
-if(/^\d+$/.exec(this.value)||
-/^\d+\.\d*$/.exec(this.value)){return '(new Number('+this.value+'))'}
-return 'float.$factory('+this.value+')'}}
 var $ForExpr=$B.parser.$ForExpr=function(C){
 this.type='for'
 this.parent=C
@@ -1711,6 +2376,18 @@ this.loop_num=$loop_num
 this.module=$get_scope(this).module
 $loop_num++
 this.toString=function(){return '(for) '+this.tree}
+this.transition=function(token,value){var C=this
+switch(token){case 'in':
+if(C.tree[0].tree.length==0){
+$_SyntaxError(C,"missing target between 'for' and 'in'")}
+return new $AbstractExprCtx(
+new $ExprCtx(C,'target list',true),false)
+case ':':
+if(C.tree.length < 2 
+||C.tree[1].tree[0].type=="abstract_expr"){$_SyntaxError(C,'token '+token+' after '+
+C)}
+return $BodyCtx(C)}
+$_SyntaxError(C,'token '+token+' after '+C)}
 this.transform=function(node,rank){if(this.async){return this.transform_async(node,rank)}
 var scope=$get_scope(this),target=this.tree[0],target_is_1_tuple=target.tree.length==1 && target.expect=='id',iterable=this.tree[1],num=this.loop_num,local_ns='$locals_'+scope.id.replace(/\./g,'_'),h='\n'+' '.repeat(node.indent+4)
 var $range=false
@@ -1902,6 +2579,51 @@ this.bind_names=function(){
 var scope=$get_scope(this)
 this.names.forEach(function(name){if(Array.isArray(name)){name=name[1]}
 $bind(name,scope,this)},this)}
+this.transition=function(token,value){var C=this
+switch(token){case 'id':
+if(C.expect=='id'){C.add_name(value)
+C.expect=','
+return C}
+if(C.expect=='alias'){C.names[C.names.length-1]=
+[$B.last(C.names),value]
+C.expect=','
+return C}
+case '.':
+if(C.expect=='module'){if(token=='id'){C.module+=value}
+else{C.module+='.'}
+return C}
+case 'import':
+if(C.expect=='module'){C.expect='id'
+return C}
+case 'op':
+if(value=='*' && C.expect=='id'
+&& C.names.length==0){if($get_scope(C).ntype !=='module'){$_SyntaxError(C,["import * only allowed at module level"])}
+C.add_name('*')
+C.expect='eol'
+return C}
+case ',':
+if(C.expect==','){C.expect='id'
+return C}
+case 'eol':
+switch(C.expect){case ',':
+case 'eol':
+C.bind_names()
+return $transition(C.parent,token)
+case 'id':
+$_SyntaxError(C,['trailing comma not allowed without '+
+'surrounding parentheses'])
+default:
+$_SyntaxError(C,['invalid syntax'])}
+case 'as':
+if(C.expect==',' ||C.expect=='eol'){C.expect='alias'
+return C}
+case '(':
+if(C.expect=='id'){C.expect='id'
+return C}
+case ')':
+if(C.expect==',' ||C.expect=='id'){C.expect='eol'
+return C}}
+$_SyntaxError(C,'token '+token+' after '+C)}
 this.toString=function(){return '(from) '+this.module+' (import) '+this.names}
 this.to_js=function(){this.js_processed=true
 var scope=$get_scope(this),module=$get_module(this),mod=module.module,res=[],pos=0,indent=$get_node(this).indent,head=' '.repeat(indent)
@@ -1950,6 +2672,35 @@ this.has_default=false
 this.has_star_arg=false
 this.has_kw_arg=false
 this.toString=function(){return 'func args '+this.tree}
+this.transition=function(token,value){var C=this
+switch(token){case 'id':
+if(C.has_kw_arg){$_SyntaxError(C,'duplicate keyword argument')}
+if(C.expect=='id'){C.expect=','
+if(C.names.indexOf(value)>-1){$_SyntaxError(C,['duplicate argument '+value+
+' in function definition'])}}
+return new $FuncArgIdCtx(C,value)
+case ',':
+if(C.expect==','){C.expect='id'
+return C}
+$_SyntaxError(C,'token '+token+' after '+
+C)
+case ')':
+var last=$B.last(C.tree)
+if(last && last.type=="func_star_arg"){if(last.name=="*"){if(C.op=='*'){
+$_SyntaxError(C,['named arguments must follow bare *'])}else{$_SyntaxError(C,'invalid syntax')}}}
+return C.parent
+case 'op':
+if(C.has_kw_arg){$_SyntaxError(C,'duplicate keyword argument')}
+var op=value
+C.expect=','
+if(op=='*'){if(C.has_star_arg){$_SyntaxError(C,'duplicate star argument')}
+return new $FuncStarArgCtx(C,'*')}else if(op=='**'){return new $FuncStarArgCtx(C,'**')}else if(op=='/'){
+if(C.has_end_positional){$_SyntaxError(C,['duplicate / in function parameters'])}else if(C.has_star_arg){$_SyntaxError(C,['/ after * in function parameters'])}
+return new $EndOfPositionalCtx(C)}
+$_SyntaxError(C,'token '+op+' after '+C)
+case ':':
+if(C.parent.type=="lambda"){return $transition(C.parent,token)}}
+$_SyntaxError(C,'token '+token+' after '+C)}
 this.to_js=function(){this.js_processed=true
 return $to_js(this.tree)}}
 var $FuncArgIdCtx=$B.parser.$FuncArgIdCtx=function(C,name){
@@ -1968,6 +2719,26 @@ break}
 ctx=ctx.parent}
 this.expect='='
 this.toString=function(){return 'func arg id '+this.name+'='+this.tree}
+this.transition=function(token,value){var C=this
+switch(token){case '=':
+if(C.expect=='='){C.has_default=true
+var def_ctx=C.parent.parent
+if(C.parent.has_star_arg){def_ctx.default_list.push(def_ctx.after_star.pop())}else{def_ctx.default_list.push(def_ctx.positional_list.pop())}
+return new $AbstractExprCtx(C,false)}
+break
+case ',':
+case ')':
+if(C.parent.has_default && C.tree.length==0 &&
+C.parent.has_star_arg===undefined){$pos-=C.name.length
+$_SyntaxError(C,['non-default argument follows default argument'])}else{return $transition(C.parent,token)}
+case ':':
+if(C.parent.parent.type=="lambda"){
+return $transition(C.parent.parent,":")}
+if(C.has_default){
+$_SyntaxError(C,'token '+token+' after '+
+C)}
+return new $AbstractExprCtx(new $AnnotationCtx(C),false)}
+$_SyntaxError(C,'token '+token+' after '+C)}
 this.to_js=function(){this.js_processed=true
 return this.name+$to_js(this.tree)}}
 var $FuncStarArgCtx=$B.parser.$FuncStarArgCtx=function(C,op){
@@ -1979,6 +2750,26 @@ C.has_star_arg=op=='*'
 C.has_kw_arg=op=='**'
 C.tree[C.tree.length]=this
 this.toString=function(){return '(func star arg '+this.op+') '+this.name}
+this.transition=function(token,value){var C=this
+switch(token){case 'id':
+if(C.name===undefined){if(C.parent.names.indexOf(value)>-1){$_SyntaxError(C,['duplicate argument '+value+
+' in function definition'])}}
+C.set_name(value)
+C.parent.names.push(value)
+return C
+case ',':
+case ')':
+if(C.name===undefined){
+C.set_name('*')
+C.parent.names.push('*')}
+return $transition(C.parent,token)
+case ':':
+if(C.parent.parent.type=="lambda"){
+return $transition(C.parent.parent,":")}
+if(C.name===undefined){$_SyntaxError(C,'annotation on an unnamed parameter')}
+return new $AbstractExprCtx(
+new $AnnotationCtx(C),false)}
+$_SyntaxError(C,'token '+token+' after '+C)}
 this.set_name=function(name){this.name=name
 if(this.node.binding[name]){$_SyntaxError(C,["duplicate argument '"+name+"' in function definition"])}
 $bind(name,this.node,this)
@@ -1999,6 +2790,21 @@ this.scope.globals=this.scope.globals ||new Set()
 this.module=$get_module(this)
 this.module.binding=this.module.binding ||{}
 this.toString=function(){return 'global '+this.tree}
+this.transition=function(token,value){var C=this
+switch(token){case 'id':
+if(C.expect=='id'){new $IdCtx(C,value)
+C.add(value)
+C.expect=','
+return C}
+break
+case ',':
+if(C.expect==','){C.expect='id'
+return C}
+break
+case 'eol':
+if(C.expect==','){return $transition(C.parent,token)}
+break}
+$_SyntaxError(C,'token '+token+' after '+C)}
 this.add=function(name){if(this.scope.annotations && this.scope.annotations.has(name)){$_SyntaxError(C,["annotated name '"+name+
 "' can't be global"])}
 this.scope.globals.add(name)
@@ -2041,9 +2847,32 @@ var _ctx=this.parent
 while(_ctx){if(_ctx.type=='list_or_tuple' && _ctx.is_comp()){this.in_comp=true
 break}
 _ctx=_ctx.parent}
-if(C.type=='expr' && C.parent.type=='comp_if'){
-return}else if(C.type=='global'){if(scope.globals===undefined){scope.globals=new Set([value])}else{scope.globals.add(value)}}}
+if(C.type=='expr' && C.parent.type=='comp_if'){}else if(C.type=='global'){if(scope.globals===undefined){scope.globals=new Set([value])}else{scope.globals.add(value)}}}
 this.toString=function(){return '(id) '+this.value+':'+(this.tree ||'')}
+this.transition=function(token,value){var C=this
+switch(token){case '=':
+if(C.parent.type=='expr' &&
+C.parent.parent !==undefined &&
+C.parent.parent.type=='call_arg'){return new $AbstractExprCtx(
+new $KwArgCtx(C.parent),false)}
+return $transition(C.parent,token,value)
+case 'op':
+return $transition(C.parent,token,value)
+case 'id':
+case 'str':
+case 'int':
+case 'float':
+case 'imaginary':
+if(["print","exec"].indexOf(C.value)>-1 ){$_SyntaxError(C,["missing parenthesis in call to '"+
+C.value+"'"])}
+$_SyntaxError(C,'token '+token+' after '+
+C)}
+if(C.value=="async"){
+if(token=='def'){C.parent.parent.tree=[]
+var ctx=$transition(C.parent.parent,token,value)
+ctx.async=true
+return ctx}}
+return $transition(C.parent,token,value)}
 this.firstBindingScopeId=function(){
 var scope=this.scope,found=[],nb=0
 while(scope && nb++< 20){if(scope.globals && scope.globals.has(this.value)){return $get_module(this).id}
@@ -2195,15 +3024,6 @@ return this.result}else{
 this.unknown_binding=true
 this.result='$B.$global_search("'+val+'", '+search_ids+')'
 return this.result}}}
-var $ImaginaryCtx=$B.parser.$ImaginaryCtx=function(C,value){
-this.type='imaginary'
-this.value=value
-this.parent=C
-this.tree=[]
-C.tree[C.tree.length]=this
-this.toString=function(){return 'imaginary '+this.value}
-this.to_js=function(){this.js_processed=true
-return '$B.make_complex(0,'+this.value+')'}}
 var $ImportCtx=$B.parser.$ImportCtx=function(C){
 this.type='import'
 this.parent=C
@@ -2211,6 +3031,39 @@ this.tree=[]
 C.tree[C.tree.length]=this
 this.expect='id'
 this.toString=function(){return 'import '+this.tree}
+this.transition=function(token,value){var C=this
+switch(token){case 'id':
+if(C.expect=='id'){new $ImportedModuleCtx(C,value)
+C.expect=','
+return C}
+if(C.expect=='qual'){C.expect=','
+C.tree[C.tree.length-1].name+=
+'.'+value
+C.tree[C.tree.length-1].alias+=
+'.'+value
+return C}
+if(C.expect=='alias'){C.expect=','
+C.tree[C.tree.length-1].alias=
+value
+return C}
+break
+case '.':
+if(C.expect==','){C.expect='qual'
+return C}
+break
+case ',':
+if(C.expect==','){C.expect='id'
+return C}
+break
+case 'as':
+if(C.expect==','){C.expect='alias'
+return C}
+break
+case 'eol':
+if(C.expect==','){C.bind_names()
+return $transition(C.parent,token)}
+break}
+$_SyntaxError(C,'token '+token+' after '+C)}
 this.bind_names=function(){
 var scope=$get_scope(this)
 this.tree.forEach(function(item){if(item.name==item.alias){var name=item.name,parts=name.split('.'),bound=name
@@ -2232,21 +3085,12 @@ this.name=name
 this.alias=name
 C.tree[C.tree.length]=this
 this.toString=function(){return ' (imported module) '+this.name}
+this.transition=function(token,value){var C=this}
 this.to_js=function(){this.js_processed=true
 return '"'+this.name+'"'}}
-var $IntCtx=$B.parser.$IntCtx=function(C,value){
-this.type='int'
-this.value=value
-this.parent=C
-this.tree=[]
-C.tree[C.tree.length]=this
-this.toString=function(){return 'int '+this.value}
-this.to_js=function(){this.js_processed=true
-var v=parseInt(value[1],value[0])
-if(v > $B.min_int && v < $B.max_int){return v}
-else{return '$B.long_int.$factory("'+value[1]+'", '+value[0]+')'}}}
 var $JSCode=$B.parser.$JSCode=function(js){this.js=js
 this.toString=function(){return this.js}
+this.transition=function(token,value){var C=this}
 this.to_js=function(){this.js_processed=true
 return this.js}}
 var $KwArgCtx=$B.parser.$KwArgCtx=function(C){
@@ -2262,6 +3106,9 @@ if(ctx.kwargs===undefined){ctx.kwargs=[value]}
 else if(ctx.kwargs.indexOf(value)==-1){ctx.kwargs.push(value)}
 else{$_SyntaxError(C,['keyword argument repeated'])}
 this.toString=function(){return 'kwarg '+this.tree[0]+'='+this.tree[1]}
+this.transition=function(token,value){var C=this
+if(token==','){return new $CallArgCtx(C.parent.parent)}
+return $transition(C.parent,token)}
 this.to_js=function(){this.js_processed=true
 var key=this.tree[0].value
 if(key.substr(0,2)=='$$'){key=key.substr(2)}
@@ -2284,6 +3131,15 @@ this.other_args=null
 this.other_kw=null
 this.after_star=[]
 this.toString=function(){return '(lambda) '+this.args_start+' '+this.body_start}
+this.transition=function(token,value){var C=this
+if(token==':' && C.args===undefined){C.args=C.tree
+C.tree=[]
+C.body_start=$pos
+return new $AbstractExprCtx(C,false)}if(C.args !==undefined){
+C.body_end=$pos
+return $transition(C.parent,token)}
+if(C.args===undefined && token !="("){return $transition(new $FuncArgs(C),token,value)}
+$_SyntaxError(C,'token '+token+' after '+C)}
 this.to_js=function(){this.js_processed=true
 var node=this.node,module=$get_module(this),src=$get_src(C),args=src.substring(this.args_start,this.body_start),body=src.substring(this.body_start+1,this.body_end)
 body=body.replace(/\\\n/g,' ')
@@ -2317,6 +3173,87 @@ return '('+this.real+') ['+this.intervals+'-'+
 this.tree+']'
 default:
 return '(tuple) ('+this.tree+')'}}
+this.transition=function(token,value){var C=this
+if(C.closed){if(token=='['){return new $AbstractExprCtx(
+new $SubCtx(C.parent),false)}
+if(token=='('){return new $CallCtx(C.parent)}
+return $transition(C.parent,token,value)}else{if(C.expect==','){switch(C.real){case 'tuple':
+case 'gen_expr':
+if(token==')'){var close=true
+while(C.type=="list_or_tuple" &&
+C.real=="tuple" &&
+C.parent.type=="expr" &&
+C.parent.parent.type=="node" &&
+C.tree.length==1){
+close=false
+var node=C.parent.parent,ix=node.tree.indexOf(C.parent),expr=C.tree[0]
+expr.parent=node
+expr.$in_parens=true 
+node.tree.splice(ix,1,expr)
+C=expr.tree[0]}
+if(close){C.close()}
+if(C.real=='gen_expr'){C.intervals.push($pos)}
+if(C.parent.type=="packed"){return C.parent.parent}
+return C.parent}
+break
+case 'list':
+case 'list_comp':
+if(token==']'){C.close()
+if(C.real=='list_comp'){C.intervals.push($pos)}
+if(C.parent.type=="packed"){if(C.parent.tree.length > 0){return C.parent.tree[0]}else{return C.parent.parent}}
+return C.parent}
+break
+case 'dict_or_set_comp':
+if(token=='}'){C.intervals.push($pos)
+return $transition(C.parent,token)}
+break}
+switch(token){case ',':
+if(C.real=='tuple'){C.has_comma=true}
+C.expect='id'
+return C
+case 'for':
+if(C.real=='list'){C.real='list_comp'}
+else{C.real='gen_expr'}
+C.intervals=[C.start+1]
+C.expression=C.tree
+C.tree=[]
+var comp=new $ComprehensionCtx(C)
+return new $TargetListCtx(new $CompForCtx(comp))}
+return $transition(C.parent,token,value)}else if(C.expect=='id'){switch(C.real){case 'tuple':
+if(token==')'){C.close()
+return C.parent}
+if(token=='eol' && C.implicit===true){C.close()
+return $transition(C.parent,token)}
+break
+case 'gen_expr':
+if(token==')'){C.close()
+return $transition(C.parent,token)}
+break
+case 'list':
+if(token==']'){C.close()
+return C}
+break}
+switch(token){case '=':
+if(C.real=='tuple' &&
+C.implicit===true){C.close()
+C.parent.tree.pop()
+var expr=new $ExprCtx(C.parent,'tuple',false)
+expr.tree=[C]
+C.parent=expr
+return $transition(C.parent,token)}
+break
+case ')':
+break
+case ']':
+if(C.real=='tuple' &&
+C.implicit===true){
+return $transition(C.parent,token,value)}else{break}
+case ',':
+$_SyntaxError(C,'unexpected comma inside list')
+default:
+C.expect=','
+var expr=new $AbstractExprCtx(C,false)
+return $transition(expr,token,value)}}else{return $transition(C.parent,token,value)}}}
 this.close=function(){this.closed=true
 for(var i=0,len=this.tree.length;i < len;i++){
 var elt=this.tree[i]
@@ -2437,6 +3374,105 @@ if(scope===null){scope=tree_node.parent ||tree_node }
 this.node.locals=clone(scope.binding)
 this.scope=scope
 this.toString=function(){return 'node '+this.tree}
+this.transition=function(token,value){var C=this
+switch(token){case 'id':
+case 'imaginary':
+case 'int':
+case 'float':
+case 'str':
+case 'bytes':
+case '[':
+case '(':
+case '{':
+case 'not':
+case 'lambda':
+case '.':
+var expr=new $AbstractExprCtx(C,true)
+return $transition(expr,token,value)
+case 'op':
+switch(value){case '*':
+case '+':
+case '-':
+case '~':
+var expr=new $AbstractExprCtx(C,true)
+return $transition(expr,token,value)}
+break
+case 'async':
+return new $AsyncCtx(C)
+case 'await':
+return new $AbstractExprCtx(new $AwaitCtx(C),true)
+case 'class':
+return new $ClassCtx(C)
+case 'continue':
+return new $ContinueCtx(C)
+case '__debugger__':
+return new $DebuggerCtx(C)
+case 'break':
+return new $BreakCtx(C)
+case 'def':
+return new $DefCtx(C)
+case 'for':
+return new $TargetListCtx(new $ForExpr(C))
+case 'if':
+case 'while':
+return new $AbstractExprCtx(
+new $ConditionCtx(C,token),false)
+case 'elif':
+var previous=$previous(C)
+if(['condition'].indexOf(previous.type)==-1 ||
+previous.token=='while'){$_SyntaxError(C,'elif after '+previous.type)}
+return new $AbstractExprCtx(
+new $ConditionCtx(C,token),false)
+case 'else':
+var previous=$previous(C)
+if(['condition','except','for'].
+indexOf(previous.type)==-1){$_SyntaxError(C,'else after '+previous.type)}
+return new $SingleKwCtx(C,token)
+case 'finally':
+var previous=$previous(C)
+if(['try','except'].indexOf(previous.type)==-1 &&
+(previous.type !='single_kw' ||
+previous.token !='else')){$_SyntaxError(C,'finally after '+previous.type)}
+return new $SingleKwCtx(C,token)
+case 'try':
+return new $TryCtx(C)
+case 'except':
+var previous=$previous(C)
+if(['try','except'].indexOf(previous.type)==-1){$_SyntaxError(C,'except after '+previous.type)}
+return new $ExceptCtx(C)
+case 'assert':
+return new $AbstractExprCtx(
+new $AssertCtx(C),'assert',true)
+case 'from':
+return new $FromCtx(C)
+case 'import':
+return new $ImportCtx(C)
+case 'global':
+return new $GlobalCtx(C)
+case 'nonlocal':
+return new $NonlocalCtx(C)
+case 'lambda':
+return new $LambdaCtx(C)
+case 'pass':
+return new $PassCtx(C)
+case 'raise':
+return new $AbstractExprCtx(new $RaiseCtx(C),true)
+case 'return':
+return new $AbstractExprCtx(new $ReturnCtx(C),true)
+case 'with':
+return new $AbstractExprCtx(new $WithCtx(C),false)
+case 'yield':
+return new $AbstractExprCtx(new $YieldCtx(C),true)
+case 'del':
+return new $AbstractExprCtx(new $DelCtx(C),true)
+case '@':
+return new $DecoratorCtx(C)
+case 'eol':
+if(C.tree.length==0){
+C.node.parent.children.pop()
+return C.node.parent.C}
+return C}
+$_SyntaxError(C,'token '+token+' after '+C)}
 this.to_js=function(){if(this.js !==undefined){return this.js}
 this.js_processed=true
 if(this.tree.length > 1){var new_node=new $Node()
@@ -2499,6 +3535,21 @@ this.toString=function(){return 'nonlocal '+this.tree}
 this.add=function(name){if(this.scope.binding[name]=="arg"){$_SyntaxError(C,["name '"+name+"' is parameter and nonlocal"])}
 this.names[name]=[false,$pos]
 this.scope.nonlocals[name]=true}
+this.transition=function(token,value){var C=this
+switch(token){case 'id':
+if(C.expect=='id'){new $IdCtx(C,value)
+C.add(value)
+C.expect=','
+return C}
+break
+case ',':
+if(C.expect==','){C.expect='id'
+return C}
+break
+case 'eol':
+if(C.expect==','){return $transition(C.parent,token)}
+break}
+$_SyntaxError(C,'token '+token+' after '+C)}
 this.transform=function(node,rank){var pscope=this.scope.parent_block
 if(pscope.C===undefined){$_SyntaxError(C,["no binding for nonlocal '"+
 $B.last(Object.keys(this.names))+"' found"])}else{while(pscope !==undefined && pscope.C !==undefined){for(var name in this.names){if(pscope.binding[name]!==undefined){this.names[name]=[true]}}
@@ -2515,8 +3566,61 @@ this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this
 this.toString=function(){return 'not ('+this.tree+')'}
+this.transition=function(token,value){var C=this
+switch(token){case 'in':
+C.parent.parent.tree.pop()
+return new $ExprCtx(new $OpCtx(C.parent,'not_in'),'op',false)
+case 'id':
+case 'imaginary':
+case 'int':
+case 'float':
+case 'str':
+case 'bytes':
+case '[':
+case '(':
+case '{':
+case '.':
+case 'not':
+case 'lambda':
+var expr=new $AbstractExprCtx(C,false)
+return $transition(expr,token,value)
+case 'op':
+var a=value
+if('+'==a ||'-'==a ||'~'==a){var expr=new $AbstractExprCtx(C,false)
+return $transition(expr,token,value)}}
+return $transition(C.parent,token)}
 this.to_js=function(){this.js_processed=true
 return '!$B.$bool('+$to_js(this.tree)+')'}}
+var $NumberCtx=$B.parser.$NumberCtx=function(type,C,value){
+this.type=type
+this.value=value
+this.parent=C
+this.tree=[]
+C.tree[C.tree.length]=this
+this.toString=function(){return type+' '+this.value}
+this.transition=function(token,value){var C=this
+switch(token){case 'id':
+case 'imaginary':
+case 'int':
+case 'float':
+case 'str':
+case 'bytes':
+case '[':
+case '(':
+case '{':
+case 'not':
+case 'lambda':
+$_SyntaxError(C,'token '+token+' after '+
+C)}
+return $transition(C.parent,token,value)}
+this.to_js=function(){this.js_processed=true
+if(type=='int'){var v=parseInt(value[1],value[0])
+if(v > $B.min_int && v < $B.max_int){return v}
+else{return '$B.long_int.$factory("'+value[1]+'", '+value[0]
++')'}}else if(type=="float"){
+if(/^\d+$/.exec(this.value)||
+/^\d+\.\d*$/.exec(this.value)){return '(new Number('+this.value+'))'}
+return '_b_.float.$factory('+this.value+')'}else if(type=="imaginary"){return '$B.make_complex(0,'+this.value+')'}}}
 var $OpCtx=$B.parser.$OpCtx=function(C,op){
 this.type='op'
 this.op=op
@@ -2528,6 +3632,38 @@ if(binding){this.left_type=binding.type}}}
 C.parent.tree.pop()
 C.parent.tree.push(this)
 this.toString=function(){return '(op '+this.op+') ['+this.tree+']'}
+this.transition=function(token,value){var C=this
+if(C.op===undefined){$_SyntaxError(C,['C op undefined '+C])}
+if(C.op.substr(0,5)=='unary' && token !='eol'){if(C.parent.type=='assign' ||
+C.parent.type=='return'){
+C.parent.tree.pop()
+var t=new $ListOrTupleCtx(C.parent,'tuple')
+t.tree.push(C)
+C.parent=t
+return t}}
+switch(token){case 'id':
+case 'imaginary':
+case 'int':
+case 'float':
+case 'str':
+case 'bytes':
+case '[':
+case '(':
+case '{':
+case '.':
+case 'not':
+case 'lambda':
+return $transition(new $AbstractExprCtx(C,false),token,value)
+case 'op':
+switch(value){case '+':
+case '-':
+case '~':
+return new $UnaryCtx(C,value)}
+default:
+if(C.tree[C.tree.length-1].type==
+'abstract_expr'){$_SyntaxError(C,'token '+token+' after '+
+C)}}
+return $transition(C.parent,token)}
 this.to_js=function(){this.js_processed=true
 var comps={'==':'eq','!=':'ne','>=':'ge','<=':'le','<':'lt','>':'gt'}
 if(comps[this.op]!==undefined){var method=comps[this.op]
@@ -2700,6 +3836,17 @@ this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this
 this.toString=function(){return '(packed) '+this.tree}
+this.transition=function(token,value){var C=this
+if(C.tree.length > 0 && token=="["){
+return $transition(C.tree[0],token,value)}
+if(token=='id'){new $IdCtx(C,value)
+C.parent.expect=','
+return C.parent}else if(token=="["){C.parent.expect=','
+return new $ListOrTupleCtx(C,"list")}else if(token=="("){C.parent.expect=','
+return new $ListOrTupleCtx(C,"tuple")}else if(token=="]"){return $transition(C.parent,token,value)}else if(token=="{"){C.parent.expect=','
+return new $DictOrSetCtx(C)}
+console.log("syntax error",C,token)
+$_SyntaxError(C,'token '+token+' after '+C)}
 this.to_js=function(){this.js_processed=true
 return $to_js(this.tree)}}
 var $PassCtx=$B.parser.$PassCtx=function(C){
@@ -2708,6 +3855,9 @@ this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this
 this.toString=function(){return '(pass)'}
+this.transition=function(token,value){var C=this
+if(token=='eol'){return C.parent}
+$_SyntaxError(C,'token '+token+' after '+C)}
 this.to_js=function(){this.js_processed=true
 return 'void(0)'}}
 var $RaiseCtx=$B.parser.$RaiseCtx=function(C){
@@ -2716,6 +3866,16 @@ this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this
 this.toString=function(){return ' (raise) '+this.tree}
+this.transition=function(token,value){var C=this
+switch(token){case 'id':
+if(C.tree.length==0){return new $IdCtx(new $ExprCtx(C,'exc',false),value)}
+break
+case 'from':
+if(C.tree.length > 0){return new $AbstractExprCtx(C,false)}
+break
+case 'eol':
+return $transition(C.parent,token)}
+$_SyntaxError(C,'token '+token+' after '+C)}
 this.to_js=function(){this.js_processed=true
 var res=''
 if(this.tree.length==0){return '$B.$raise()'}
@@ -2725,6 +3885,7 @@ var $RawJSCtx=$B.parser.$RawJSCtx=function(C,js){this.type="raw_js"
 C.tree[C.tree.length]=this
 this.parent=C
 this.toString=function(){return '(js) '+js}
+this.transition=function(token,value){var C=this}
 this.to_js=function(){this.js_processed=true
 return js}}
 var $ReturnCtx=$B.parser.$ReturnCtx=function(C){
@@ -2740,6 +3901,8 @@ if(elt.type=='for'){elt.has_return=true
 break}else if(elt.type=='try'){elt.has_return=true}else if(elt.type=='single_kw' && elt.token=='finally'){elt.has_return=true}}
 node=node.parent}
 this.toString=function(){return 'return '+this.tree}
+this.transition=function(token,value){var C=this
+return $transition(C.parent,token)}
 this.to_js=function(){this.js_processed=true
 if(this.tree.length==1 && this.tree[0].type=='abstract_expr'){
 this.tree.pop()
@@ -2770,6 +3933,9 @@ elt.type=='asyncfor' ||
 elt.else_node=$get_node(this)
 this.loop_num=elt.loop_num}}}
 this.toString=function(){return this.token}
+this.transition=function(token,value){var C=this
+if(token==':'){return $BodyCtx(C)}
+$_SyntaxError(C,'token '+token+' after '+C)}
 this.transform=function(node,rank){
 if(this.token=='finally'){var scope=$get_scope(this)
 if(scope.ntype !='generator'){node.insert(0,$NodeJS('var $exit;'+
@@ -2792,6 +3958,9 @@ this.type='slice'
 this.parent=C
 this.tree=C.tree.length > 0 ?[C.tree.pop()]:[]
 C.tree.push(this)
+this.transition=function(token,value){var C=this
+if(token==":"){return new $AbstractExprCtx(C,false)}
+return $transition(C.parent,token,value)}
 this.to_js=function(){for(var i=0;i < this.tree.length;i++){if(this.tree[i].type=="abstract_expr"){this.tree[i].to_js=function(){return "None"}}}
 return "slice.$factory("+$to_js(this.tree)+")"}}
 var $StarArgCtx=$B.parser.$StarArgCtx=function(C){
@@ -2800,6 +3969,30 @@ this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this
 this.toString=function(){return '(star arg) '+this.tree}
+this.transition=function(token,value){var C=this
+switch(token){case 'id':
+if(C.parent.type=="target_list"){C.tree.push(value)
+C.parent.expect=','
+return C.parent}
+return $transition(new $AbstractExprCtx(C,false),token,value)
+case 'imaginary':
+case 'int':
+case 'float':
+case 'str':
+case 'bytes':
+case '[':
+case '(':
+case '{':
+case 'not':
+case 'lambda':
+return $transition(new $AbstractExprCtx(C,false),token,value)
+case ',':
+case ')':
+if(C.tree.length==0){$_SyntaxError(C,"unnamed star argument")}
+return $transition(C.parent,token)
+case ':':
+if(C.parent.parent.type=='lambda'){return $transition(C.parent.parent,token)}}
+$_SyntaxError(C,'token '+token+' after '+C)}
 this.to_js=function(){this.js_processed=true
 return '{$nat:"ptuple",arg:'+$to_js(this.tree)+'}'}}
 var $StringCtx=$B.parser.$StringCtx=function(C,value){
@@ -2809,6 +4002,16 @@ this.tree=[value]
 C.tree[C.tree.length]=this
 this.raw=false
 this.toString=function(){return 'string '+(this.tree ||'')}
+this.transition=function(token,value){var C=this
+switch(token){case '[':
+return new $AbstractExprCtx(new $SubCtx(C.parent),false)
+case '(':
+C.parent.tree[0]=C
+return new $CallCtx(C.parent)
+case 'str':
+C.tree.push(value)
+return C}
+return $transition(C.parent,token,value)}
 this.to_js=function(){this.js_processed=true
 var res='',type=null,scope=$get_scope(this)
 function fstring(parsed_fstring){
@@ -2878,6 +4081,30 @@ C.tree[C.tree.length]=this
 this.parent=C
 this.tree=[]
 this.toString=function(){return '(sub) (value) '+this.value+' (tree) '+this.tree}
+this.transition=function(token,value){var C=this
+switch(token){case 'id':
+case 'imaginary':
+case 'int':
+case 'float':
+case 'str':
+case 'bytes':
+case '[':
+case '(':
+case '{':
+case '.':
+case 'not':
+case 'lambda':
+var expr=new $AbstractExprCtx(C,false)
+return $transition(expr,token,value)
+case ']':
+if(C.parent.packed){return C.parent.tree[0]}
+if(C.tree[0].tree.length > 0){return C.parent}
+break
+case ':':
+return new $AbstractExprCtx(new $SliceCtx(C),false)
+case ',':
+return new $AbstractExprCtx(C,false)}
+$_SyntaxError(C,'token '+token+' after '+C)}
 this.to_js=function(){this.js_processed=true
 if(this.func=='getitem' && this.value.type=='id'){var type=$get_node(this).locals[this.value.value],val=this.value.to_js()
 if(type=='list' ||type=='tuple'){if(this.tree.length==1){return '$B.list_key('+val+
@@ -2914,6 +4141,27 @@ this.tree=[]
 this.expect='id'
 C.tree[C.tree.length]=this
 this.toString=function(){return '(target list) '+this.tree}
+this.transition=function(token,value){var C=this
+switch(token){case 'id':
+if(C.expect=='id'){C.expect=','
+return new $IdCtx(
+new $ExprCtx(C,'target',false),value)}
+case 'op':
+if(C.expect=='id' && value=='*'){
+return new $PackedCtx(C)}
+case '(':
+case '[':
+if(C.expect=='id'){C.expect=','
+return new $ListOrTupleCtx(C,token=='(' ? 'tuple' :'list')}
+case ')':
+case ']':
+if(C.expect==','){return C.parent}
+case ',':
+if(C.expect==','){C.expect='id'
+return C}}
+if(C.expect==','){return $transition(C.parent,token,value)}else if(token=='in'){
+return $transition(C.parent,token,value)}
+$_SyntaxError(C,'token '+token+' after '+C)}
 this.to_js=function(){this.js_processed=true
 return $to_js(this.tree)}}
 var $TernaryCtx=$B.parser.$TernaryCtx=function(C){
@@ -2924,6 +4172,18 @@ C.parent.tree.push(this)
 C.parent=this
 this.tree=[C]
 this.toString=function(){return '(ternary) '+this.tree}
+this.transition=function(token,value){var C=this
+if(token=='else'){C.in_else=true
+return new $AbstractExprCtx(C,false)}else if(! C.in_else){$_SyntaxError(C,'token '+token+' after '+C)}else if(token==","){
+if(["assign","augm_assign","node","return"].
+indexOf(C.parent.type)>-1){C.parent.tree.pop()
+var t=new $ListOrTupleCtx(C.parent,'tuple')
+t.implicit=true
+t.tree[0]=C
+C.parent=t
+t.expect="id"
+return t}}
+return $transition(C.parent,token,value)}
 this.to_js=function(){this.js_processed=true
 var res='$B.$bool('+this.tree[1].to_js()+') ? ' 
 res+=this.tree[0].to_js()+' : ' 
@@ -2933,6 +4193,9 @@ this.type='try'
 this.parent=C
 C.tree[C.tree.length]=this
 this.toString=function(){return '(try) '}
+this.transition=function(token,value){var C=this
+if(token==':'){return $BodyCtx(C)}
+$_SyntaxError(C,'token '+token+' after '+C)}
 this.transform=function(node,rank){if(node.parent.children.length==rank+1){$_SyntaxError(C,["unexpected EOF while parsing"])}else{var next_ctx=node.parent.children[rank+1].C.tree[0]
 switch(next_ctx.type){case 'except':
 case 'finally':
@@ -3006,6 +4269,30 @@ this.op=op
 this.parent=C
 C.tree[C.tree.length]=this
 this.toString=function(){return '(unary) '+this.op}
+this.transition=function(token,value){var C=this
+switch(token){case 'int':
+case 'float':
+case 'imaginary':
+var expr=C.parent
+C.parent.parent.tree.pop()
+if(C.op=='-'){value="-"+value}
+else if(C.op=='~'){value=~value}
+return $transition(C.parent.parent,token,value)
+case 'id':
+C.parent.parent.tree.pop()
+var expr=new $ExprCtx(C.parent.parent,'call',false)
+var expr1=new $ExprCtx(expr,'id',false)
+new $IdCtx(expr1,value)
+var repl=new $AttrCtx(expr)
+if(C.op=='+'){repl.name='__pos__'}
+else if(C.op=='-'){repl.name='__neg__'}
+else{repl.name='__invert__'}
+return expr1
+case 'op':
+if('+'==value ||'-'==value){if(C.op===value){C.op='+'}
+else{C.op='-'}
+return C}}
+return $transition(C.parent,token,value)}
 this.to_js=function(){this.js_processed=true
 return this.op}}
 var $WithCtx=$B.parser.$WithCtx=function(C){
@@ -3016,6 +4303,39 @@ this.tree=[]
 this.expect='as'
 this.scope=$get_scope(this)
 this.toString=function(){return '(with) '+this.tree}
+this.transition=function(token,value){var C=this
+switch(token){case 'id':
+if(C.expect=='id'){C.expect='as'
+return $transition(
+new $AbstractExprCtx(C,false),token,value)}
+$_SyntaxError(C,'token '+token+' after '+C)
+case 'as':
+return new $AbstractExprCtx(new $AliasCtx(C))
+case ':':
+switch(C.expect){case 'id':
+case 'as':
+case ':':
+return $BodyCtx(C)}
+break
+case '(':
+if(C.expect=='id' && C.tree.length==0){C.parenth=true
+return C}else if(C.expect=='alias'){C.expect=':'
+return new $TargetListCtx(C,false)}
+break
+case ')':
+if(C.expect==',' ||C.expect=='as'){C.expect=':'
+return C}
+break
+case ',':
+if(C.parenth !==undefined &&
+C.has_alias===undefined &&
+(C.expect==',' ||C.expect=='as')){C.expect='id'
+return C}else if(C.expect=='as'){C.expect='id'
+return C}else if(C.expect==':'){C.expect='id'
+return C}
+break}
+$_SyntaxError(C,'token '+token+' after '+
+C.expect)}
 this.set_alias=function(ctx){var ids=[]
 if(ctx.type=="id"){ids=[ctx]}else if(ctx.type=="list_or_tuple"){
 ctx.tree.forEach(function(expr){if(expr.type=="expr" && expr.tree[0].type=="id"){ids.push(expr.tree[0])}})}
@@ -3195,6 +4515,14 @@ if(! is_await){def.type='generator'
 func_scope.ntype='generator'}
 def.yields.push(this)}
 this.toString=function(){return '(yield) '+(this.from ? '(from) ' :'')+this.tree}
+this.transition=function(token,value){var C=this
+if(token=='from'){
+if(C.tree[0].type !='abstract_expr'){
+$_SyntaxError(C,"'from' must follow 'yield'")}
+C.from=true
+$add_yield_from_code(C)
+return C.tree[0]}
+return $transition(C.parent,token)}
 this.transform=function(node,rank){
 var new_node=$NodeJS('// placeholder for generator sent value')
 new_node.is_set_yield_value=true
@@ -3325,1344 +4653,7 @@ else if(scope.ntype=="class"){var class_name=scope.C.tree[0].name
 while(class_name.charAt(0)=='_'){class_name=class_name.substr(1)}
 return '_'+class_name+name}else{if(scope.parent && scope.parent.C){scope=$get_scope(scope.C.tree[0])}else{return name}}}}else{return name}}
 var $transition=$B.parser.$transition=function(C,token,value){
-switch(C.type){case 'abstract_expr':
-var packed=C.packed,is_await=C.is_await,assign=C.assign
-if(! assign){switch(token){case 'id':
-case 'imaginary':
-case 'int':
-case 'float':
-case 'str':
-case 'bytes':
-case '[':
-case '(':
-case '{':
-case '.':
-case 'not':
-case 'lambda':
-case 'yield':
-C.parent.tree.pop()
-var commas=C.with_commas
-C=C.parent
-C.packed=packed
-C.is_await=is_await
-if(assign){console.log("set assign to parent",C)
-C.assign=assign}}}
-switch(token){case 'await':
-return new $AwaitCtx(C)
-case 'id':
-return new $IdCtx(new $ExprCtx(C,'id',commas),value)
-case 'str':
-return new $StringCtx(new $ExprCtx(C,'str',commas),value)
-case 'bytes':
-return new $StringCtx(new $ExprCtx(C,'bytes',commas),value)
-case 'int':
-return new $IntCtx(new $ExprCtx(C,'int',commas),value)
-case 'float':
-return new $FloatCtx(new $ExprCtx(C,'float',commas),value)
-case 'imaginary':
-return new $ImaginaryCtx(
-new $ExprCtx(C,'imaginary',commas),value)
-case '(':
-return new $ListOrTupleCtx(
-new $ExprCtx(C,'tuple',commas),'tuple')
-case '[':
-return new $ListOrTupleCtx(
-new $ExprCtx(C,'list',commas),'list')
-case '{':
-return new $DictOrSetCtx(
-new $ExprCtx(C,'dict_or_set',commas))
-case '.':
-return new $EllipsisCtx(
-new $ExprCtx(C,'ellipsis',commas))
-case 'not':
-if(C.type=='op' && C.op=='is'){
-C.op='is_not'
-return C}
-return new $NotCtx(new $ExprCtx(C,'not',commas))
-case 'lambda':
-return new $LambdaCtx(new $ExprCtx(C,'lambda',commas))
-case 'op':
-var tg=value
-switch(tg){case '*':
-C.parent.tree.pop()
-var commas=C.with_commas
-C=C.parent
-return new $PackedCtx(
-new $ExprCtx(C,'expr',commas))
-case '-':
-case '~':
-case '+':
-C.parent.tree.pop()
-var left=new $UnaryCtx(C.parent,tg)
-if(tg=='-'){var op_expr=new $OpCtx(left,'unary_neg')}else if(tg=='+'){var op_expr=new $OpCtx(left,'unary_pos')}else{var op_expr=new $OpCtx(left,'unary_inv')}
-return new $AbstractExprCtx(op_expr,false)
-case 'not':
-C.parent.tree.pop()
-var commas=C.with_commas
-C=C.parent
-return new $NotCtx(
-new $ExprCtx(C,'not',commas))}
-$_SyntaxError(C,'token '+token+' after '+
-C)
-case '=':
-$_SyntaxError(C,'token '+token+' after '+
-C)
-case 'yield':
-return new $AbstractExprCtx(new $YieldCtx(C),true)
-case ':':
-if(C.parent.type=="sub" ||
-(C.parent.type=="list_or_tuple" &&
-C.parent.parent.type=="sub")){return new $AbstractExprCtx(new $SliceCtx(C.parent),false)}
-return $transition(C.parent,token,value)
-case ')':
-case ',':
-switch(C.parent.type){case 'slice':
-case 'list_or_tuple':
-case 'call_arg':
-case 'op':
-case 'yield':
-break
-case 'annotation':
-$_SyntaxError(C,"empty annotation")
-default:
-$_SyntaxError(C,token)}}
-return $transition(C.parent,token,value)
-case 'annotation':
-if(token=="eol" && C.tree.length==1 &&
-C.tree[0].tree.length==0){$_SyntaxError(C,"empty annotation")}else if(token==':' && C.parent.type !="def"){$_SyntaxError(C,"more than one annotation")}else if(token=="augm_assign"){$_SyntaxError(C,"augmented assign as annotation")}else if(token=="op"){$_SyntaxError(C,"operator as annotation")}
-return $transition(C.parent,token)
-case 'assert':
-if(token=='eol'){return $transition(C.parent,token)}
-$_SyntaxError(C,token)
-case 'assign':
-if(token=='eol'){if(C.tree[1].type=='abstract_expr'){$_SyntaxError(C,'token '+token+' after '+
-C)}
-C.guess_type()
-return $transition(C.parent,'eol')}
-$_SyntaxError(C,'token '+token+' after '+C)
-case 'async':
-if(token=="def"){return $transition(C.parent,token,value)}else if(token=="for" ||token=="with"){var ntype=$get_scope(C).ntype
-if(ntype !=="def" && ntype !="generator"){$_SyntaxError(C,["'async "+token+
-"' outside async function"])}
-var ctx=$transition(C.parent,token,value)
-ctx.parent.async=true 
-return ctx}
-$_SyntaxError(C,'token '+token+' after '+C)
-case 'attribute':
-if(token==='id'){var name=value
-if(noassign[name]===true){$_SyntaxError(C,["cannot assign to "+name])}
-name=$mangle(name,C)
-C.name=name
-return C.parent}
-$_SyntaxError(C,token)
-case 'augm_assign':
-if(token=='eol'){if(C.tree[1].type=='abstract_expr'){$_SyntaxError(C,'token '+token+' after '+
-C)}
-return $transition(C.parent,'eol')}
-$_SyntaxError(C,'token '+token+' after '+C)
-case 'await':
-C.parent.is_await=true
-return $transition(C.parent,token,value)
-case 'break':
-if(token=='eol'){return $transition(C.parent,'eol')}
-$_SyntaxError(C,token)
-case 'call':
-switch(token){case ',':
-if(C.expect=='id'){$_SyntaxError(C,token)}
-C.expect='id'
-return C
-case 'await':
-case 'id':
-case 'imaginary':
-case 'int':
-case 'float':
-case 'str':
-case 'bytes':
-case '[':
-case '(':
-case '{':
-case '.':
-case 'not':
-case 'lambda':
-C.expect=','
-return $transition(new $CallArgCtx(C),token,value)
-case ')':
-C.end=$pos
-return C.parent
-case 'op':
-C.expect=','
-switch(value){case '-':
-case '~':
-case '+':
-C.expect=','
-return $transition(new $CallArgCtx(C),token,value)
-case '*':
-C.has_star=true
-return new $StarArgCtx(C)
-case '**':
-C.has_dstar=true
-return new $DoubleStarArgCtx(C)}
-$_SyntaxError(C,token)}
-return $transition(C.parent,token,value)
-case 'call_arg':
-switch(token){case 'await':
-case 'id':
-case 'imaginary':
-case 'int':
-case 'float':
-case 'str':
-case 'bytes':
-case '[':
-case '(':
-case '{':
-case '.':
-case 'not':
-case 'lambda':
-if(C.expect=='id'){C.expect=','
-var expr=new $AbstractExprCtx(C,false)
-return $transition(expr,token,value)}
-break
-case '=':
-if(C.expect==','){return new $ExprCtx(new $KwArgCtx(C),'kw_value',false)}
-break
-case 'for':
-var lst=new $ListOrTupleCtx(C,'gen_expr')
-lst.vars=C.vars 
-lst.locals=C.locals
-lst.intervals=[C.start]
-C.tree.pop()
-lst.expression=C.tree
-C.tree=[lst]
-lst.tree=[]
-var comp=new $ComprehensionCtx(lst)
-return new $TargetListCtx(new $CompForCtx(comp))
-case 'op':
-if(C.expect=='id'){var op=value
-C.expect=','
-switch(op){case '+':
-case '-':
-case '~':
-return $transition(new $AbstractExprCtx(C,false),token,op)
-case '*':
-return new $StarArgCtx(C)
-case '**':
-return new $DoubleStarArgCtx(C)}}
-$_SyntaxError(C,'token '+token+' after '+C)
-case ')':
-if(C.parent.kwargs &&
-$B.last(C.parent.tree).tree[0]&& 
-['kwarg','star_arg','double_star_arg'].
-indexOf($B.last(C.parent.tree).tree[0].type)==-1){$_SyntaxError(C,['non-keyword argument after keyword argument'])}
-if(C.tree.length > 0){var son=C.tree[C.tree.length-1]
-if(son.type=='list_or_tuple' &&
-son.real=='gen_expr'){son.intervals.push($pos)}}
-return $transition(C.parent,token)
-case ':':
-if(C.expect==',' &&
-C.parent.parent.type=='lambda'){return $transition(C.parent.parent,token)}
-break
-case ',':
-if(C.expect==','){if(C.parent.kwargs &&
-['kwarg','star_arg','double_star_arg'].
-indexOf($B.last(C.parent.tree).tree[0].type)==-1){$_SyntaxError(C,['non-keyword argument after keyword argument'])}
-return $transition(C.parent,token,value)}}
-$_SyntaxError(C,'token '+token+' after '+C)
-case 'class':
-switch(token){case 'id':
-if(C.expect=='id'){C.set_name(value)
-C.expect='(:'
-return C}
-break
-case '(':
-return new $CallCtx(C)
-case ':':
-return $BodyCtx(C)}
-$_SyntaxError(C,'token '+token+' after '+C)
-case 'comp_if':
-return $transition(C.parent,token,value)
-case 'comp_for':
-if(token=='in' && C.expect=='in'){C.expect=null
-return new $AbstractExprCtx(new $CompIterableCtx(C),true)}
-if(C.expect===null){
-return $transition(C.parent,token,value)}
-$_SyntaxError(C,'token '+token+' after '+C)
-case 'comp_iterable':
-return $transition(C.parent,token,value)
-case 'comprehension':
-switch(token){case 'if':
-return new $AbstractExprCtx(new $CompIfCtx(C),false)
-case 'for':
-return new $TargetListCtx(new $CompForCtx(C))}
-return $transition(C.parent,token,value)
-case 'condition':
-if(token==':'){if(C.tree[0].type=="abstract_expr" &&
-C.tree[0].tree.length==0){
-$_SyntaxError(C,'token '+token+' after '+C)}
-return $BodyCtx(C)}
-$_SyntaxError(C,'token '+token+' after '+C)
-case 'continue':
-if(token=='eol'){return C.parent}
-$_SyntaxError(C,'token '+token+' after '+C)
-case 'ctx_manager_alias':
-switch(token){case ',':
-case ':':
-C.parent.set_alias(C.tree[0].tree[0])
-return $transition(C.parent,token,value)}
-$_SyntaxError(C,'token '+token+' after '+C)
-case 'decorator':
-if(token=='id' && C.tree.length==0){return $transition(new $DecoratorExprCtx(C),token,value)}
-if(token=='eol'){return $transition(C.parent,token)}
-$_SyntaxError(C,'token '+token+' after '+C)
-case 'decorator_expression':
-if(C.expects===undefined){if(token=="id"){C.names.push(value)
-C.expects="."
-return C}
-$_SyntaxError(C,'token '+token+' after '+C)}else if(C.is_call && token !=="eol"){$_SyntaxError(C,'token '+token+' after '+C)}else if(token=="id" && C.expects=="id"){C.names.push(value)
-C.expects="."
-return C}else if(token=="." && C.expects=="."){C.expects="id"
-return C}else if(token=="(" && C.expects=="."){if(! C.is_call){C.is_call=true
-return new $CallCtx(C)}}else if(token=='eol'){return $transition(C.parent,token)}
-$_SyntaxError(C,'token '+token+' after '+C)
-case 'def':
-switch(token){case 'id':
-if(C.name){$_SyntaxError(C,'token '+token+' after '+C)}
-C.set_name(value)
-return C
-case '(':
-if(C.name==null){$_SyntaxError(C,"missing name in function definition")}
-C.has_args=true;
-return new $FuncArgs(C)
-case 'annotation':
-return new $AbstractExprCtx(new $AnnotationCtx(C),true)
-case ':':
-if(C.has_args){return $BodyCtx(C)}else{$_SyntaxError(C,"missing function parameters")}
-case 'eol':
-if(C.has_args){$_SyntaxError(C,"missing colon")}}
-$_SyntaxError(C,'token '+token+' after '+C)
-case 'del':
-if(token=='eol'){return $transition(C.parent,token)}
-$_SyntaxError(C,'token '+token+' after '+C)
-case 'dict_or_set':
-if(C.closed){switch(token){case '[':
-return new $AbstractExprCtx(new $SubCtx(C.parent),false)
-case '(':
-return new $CallArgCtx(new $CallCtx(C.parent))}
-return $transition(C.parent,token,value)}else{if(C.expect==','){switch(token){case '}':
-switch(C.real){case 'dict_or_set':
-if(C.tree.length !=1){break}
-C.real='set' 
-case 'set':
-case 'set_comp':
-case 'dict_comp':
-C.items=C.tree
-C.tree=[]
-C.closed=true
-return C
-case 'dict':
-if(C.nb_dict_items()% 2==0){C.items=C.tree
-C.tree=[]
-C.closed=true
-return C}}
-$_SyntaxError(C,'token '+token+
-' after '+C)
-case ',':
-if(C.real=='dict_or_set'){C.real='set'}
-if(C.real=='dict' &&
-C.nb_dict_items()% 2){$_SyntaxError(C,'token '+token+
-' after '+C)}
-C.expect='id'
-return C
-case ':':
-if(C.real=='dict_or_set'){C.real='dict'}
-if(C.real=='dict'){C.expect=','
-return new $AbstractExprCtx(C,false)}else{$_SyntaxError(C,'token '+token+
-' after '+C)}
-case 'for':
-if(C.real=='dict_or_set'){C.real='set_comp'}else{C.real='dict_comp'}
-var lst=new $ListOrTupleCtx(C,'dict_or_set_comp')
-lst.intervals=[C.start+1]
-lst.vars=C.vars
-C.tree.pop()
-lst.expression=C.tree
-C.tree=[lst]
-lst.tree=[]
-var comp=new $ComprehensionCtx(lst)
-return new $TargetListCtx(new $CompForCtx(comp))}
-$_SyntaxError(C,'token '+token+' after '+C)}else if(C.expect=='id'){switch(token){case '}':
-if(C.tree.length==0){
-C.items=[]
-C.real='dict'}else{
-C.items=C.tree}
-C.tree=[]
-C.closed=true
-return C
-case 'id':
-case 'imaginary':
-case 'int':
-case 'float':
-case 'str':
-case 'bytes':
-case '[':
-case '(':
-case '{':
-case '.':
-case 'not':
-case 'lambda':
-C.expect=','
-var expr=new $AbstractExprCtx(C,false)
-return $transition(expr,token,value)
-case 'op':
-switch(value){case '*':
-case '**':
-C.expect=","
-var expr=new $AbstractExprCtx(C,false)
-expr.packed=value.length 
-if(C.real=="dict_or_set"){C.real=value=="*" ? "set" :
-"dict"}else if(
-(C.real=="set" && value=="**")||
-(C.real=="dict" && value=="*")){$_SyntaxError(C,'token '+token+
-' after '+C)}
-return expr
-case '+':
-return C
-case '-':
-case '~':
-C.expect=','
-var left=new $UnaryCtx(C,value)
-if(value=='-'){var op_expr=new $OpCtx(left,'unary_neg')}else if(value=='+'){var op_expr=new $OpCtx(left,'unary_pos')}else{var op_expr=new $OpCtx(left,'unary_inv')}
-return new $AbstractExprCtx(op_expr,false)}
-$_SyntaxError(C,'token '+token+
-' after '+C)}
-$_SyntaxError(C,'token '+token+' after '+C)}
-return $transition(C.parent,token,value)}
-case 'double_star_arg':
-switch(token){case 'id':
-case 'imaginary':
-case 'int':
-case 'float':
-case 'str':
-case 'bytes':
-case '[':
-case '(':
-case '{':
-case '.':
-case 'not':
-case 'lambda':
-return $transition(new $AbstractExprCtx(C,false),token,value)
-case ',':
-case ')':
-return $transition(C.parent,token)
-case ':':
-if(C.parent.parent.type=='lambda'){return $transition(C.parent.parent,token)}}
-$_SyntaxError(C,'token '+token+' after '+C)
-case 'ellipsis':
-if(token=='.'){C.nbdots++
-if(C.nbdots==3 && $pos-C.start==2){C.$complete=true}
-return C}else{if(! C.$complete){$pos--
-$_SyntaxError(C,'token '+token+' after '+
-C)}else{return $transition(C.parent,token,value)}}
-case 'end_positional':
-if(token=="," ||token==")"){return $transition(C.parent,token,value)}
-$_SyntaxError(C,'token '+token+' after '+C)
-case 'except':
-switch(token){case 'id':
-case 'imaginary':
-case 'int':
-case 'float':
-case 'str':
-case 'bytes':
-case '[':
-case '(':
-case '{':
-case 'not':
-case 'lambda':
-if(C.expect=='id'){C.expect='as'
-return $transition(new $AbstractExprCtx(C,false),token,value)}
-case 'as':
-if(C.expect=='as' &&
-C.has_alias===undefined){C.expect='alias'
-C.has_alias=true
-return C}
-case 'id':
-if(C.expect=='alias'){C.expect=':'
-C.set_alias(value)
-return C}
-break
-case ':':
-var _ce=C.expect
-if(_ce=='id' ||_ce=='as' ||_ce==':'){return $BodyCtx(C)}
-break
-case '(':
-if(C.expect=='id' && C.tree.length==0){C.parenth=true
-return C}
-break
-case ')':
-if(C.expect==',' ||C.expect=='as'){C.expect='as'
-return C}
-case ',':
-if(C.parenth !==undefined &&
-C.has_alias===undefined &&
-(C.expect=='as' ||C.expect==',')){C.expect='id'
-return C}}
-$_SyntaxError(C,'token '+token+' after '+C.expect)
-case 'expr':
-switch(token){case 'bytes':
-case 'float':
-case 'id':
-case 'imaginary':
-case 'int':
-case 'lambda':
-case 'pass':
-case 'str':
-$_SyntaxError(C,'token '+token+' after '+
-C)
-break
-case '{':
-if(C.tree[0].type !="id" ||
-["print","exec"].indexOf(C.tree[0].value)==-1){$_SyntaxError(C,'token '+token+' after '+
-C)}
-return new $DictOrSetCtx(C)
-case '[':
-case '(':
-case '.':
-case 'not':
-if(C.expect=='expr'){C.expect=','
-return $transition(new $AbstractExprCtx(C,false),token,value)}}
-switch(token){case 'not':
-if(C.expect==','){return new $ExprNot(C)}
-break
-case 'in':
-if(C.parent.type=='target_list'){
-return $transition(C.parent,token)}
-if(C.expect==','){return $transition(C,'op','in')}
-break
-case ',':
-if(C.expect==','){if(C.with_commas ||
-["assign","return"].indexOf(C.parent.type)>-1){if($parent_match(C,{type:"yield","from":true})){$_SyntaxError(C,"no implicit tuple for yield from")}
-C.parent.tree.pop()
-var tuple=new $ListOrTupleCtx(C.parent,'tuple')
-tuple.implicit=true
-tuple.has_comma=true
-tuple.tree=[C]
-C.parent=tuple
-return tuple}}
-return $transition(C.parent,token)
-case '.':
-return new $AttrCtx(C)
-case '[':
-return new $AbstractExprCtx(new $SubCtx(C),true)
-case '(':
-return new $CallCtx(C)
-case 'op':
-var op_parent=C.parent,op=value
-if(op_parent.type=='ternary' && op_parent.in_else){var new_op=new $OpCtx(C,op)
-return new $AbstractExprCtx(new_op,false)}
-var op1=C.parent,repl=null
-while(1){if(op1.type=='expr'){op1=op1.parent}
-else if(op1.type=='op' &&
-$op_weight[op1.op]>=$op_weight[op]&&
-!(op1.op=='**' && op=='**')){
-repl=op1
-op1=op1.parent}else if(op1.type=="not" &&
-$op_weight['not']> $op_weight[op]){repl=op1
-op1=op1.parent}else{break}}
-if(repl===null){while(1){if(C.parent !==op1){C=C.parent
-op_parent=C.parent}else{break}}
-C.parent.tree.pop()
-var expr=new $ExprCtx(op_parent,'operand',C.with_commas)
-expr.expect=','
-C.parent=expr
-var new_op=new $OpCtx(C,op)
-return new $AbstractExprCtx(new_op,false)}else{
-if(op==='and' ||op==='or'){while(repl.parent.type=='not'||
-(repl.parent.type=='expr' &&
-repl.parent.parent.type=='not')){
-repl=repl.parent
-op_parent=repl.parent}}}
-if(repl.type=='op'){var _flag=false
-switch(repl.op){case '<':
-case '<=':
-case '==':
-case '!=':
-case 'is':
-case '>=':
-case '>':
-_flag=true}
-if(_flag){switch(op){case '<':
-case '<=':
-case '==':
-case '!=':
-case 'is':
-case '>=':
-case '>':
-var c2=repl.tree[1],
-c2js=c2.to_js()
-var c2_clone=new Object()
-for(var attr in c2){c2_clone[attr]=c2[attr]}
-var vname="$c"+chained_comp_num
-c2.to_js=function(){return vname}
-c2_clone.to_js=function(){return vname}
-chained_comp_num++
-while(repl.parent && repl.parent.type=='op'){if($op_weight[repl.parent.op]<
-$op_weight[repl.op]){repl=repl.parent}else{break}}
-repl.parent.tree.pop()
-var and_expr=new $OpCtx(repl,'and')
-and_expr.wrap={'name':vname,'js':c2js}
-c2_clone.parent=and_expr
-and_expr.tree.push('xxx')
-var new_op=new $OpCtx(c2_clone,op)
-return new $AbstractExprCtx(new_op,false)}}}
-repl.parent.tree.pop()
-var expr=new $ExprCtx(repl.parent,'operand',false)
-expr.tree=[op1]
-repl.parent=expr
-var new_op=new $OpCtx(repl,op)
-return new $AbstractExprCtx(new_op,false)
-case 'augm_assign':
-var parent=C.parent
-while(parent){if(parent.type=="assign" ||parent.type=="augm_assign"){$_SyntaxError(C,"augmented assignment inside assignment")}else if(parent.type=="op"){$_SyntaxError(C,["cannot assign to operator"])}
-parent=parent.parent}
-if(C.expect==','){return new $AbstractExprCtx(
-new $AugmentedAssignCtx(C,value),true)}
-return $transition(C.parent,token,value)
-case ":":
-if(C.parent.type=="sub" ||
-(C.parent.type=="list_or_tuple" &&
-C.parent.parent.type=="sub")){return new $AbstractExprCtx(new $SliceCtx(C.parent),false)}else if(C.parent.type=="slice"){return $transition(C.parent,token,value)}else if(C.parent.type=="node"){
-if(C.tree.length==1){var child=C.tree[0]
-if(["id","sub","attribute"].indexOf(child.type)>-1){return new $AbstractExprCtx(new $AnnotationCtx(C),false)}else if(child.real=="tuple" && child.expect=="," &&
-child.tree.length==1){return new $AbstractExprCtx(new $AnnotationCtx(child.tree[0]),false)}}
-$_SyntaxError(C,"invalid target for annotation")}
-break
-case '=':
-function has_parent(ctx,type){
-while(ctx.parent){if(ctx.parent.type==type){return ctx.parent}
-ctx=ctx.parent}
-return false}
-var annotation
-if(C.expect==','){if(C.parent.type=="call_arg"){
-if(C.tree[0].type !="id"){$_SyntaxError(C,["keyword can't be an expression"])}
-return new $AbstractExprCtx(new $KwArgCtx(C),true)}else if(annotation=has_parent(C,"annotation")){return $transition(annotation,token,value)}else if(C.parent.type=="op"){
-$_SyntaxError(C,["cannot assign to operator"])}else if(C.parent.type=="list_or_tuple"){
-for(var i=0;i < C.parent.tree.length;i++){var item=C.parent.tree[i]
-if(item.type=="expr" && item.name=="operand"){$_SyntaxError(C,["cannot assign to operator"])}}}else if(C.parent.type=="expr" &&
-C.parent.name=="target list"){$_SyntaxError(C,'token '+token+' after '
-+C)}
-while(C.parent !==undefined){C=C.parent
-if(C.type=="condition"){$_SyntaxError(C,'token '+token+' after '
-+C)}else if(C.type=="augm_assign"){$_SyntaxError(C,"assignment inside augmented assignment")}}
-C=C.tree[0]
-return new $AbstractExprCtx(new $AssignCtx(C),true)}
-break
-case ':=':
-var ptype=C.parent.type
-if(["node","assign","kwarg","annotation"].
-indexOf(ptype)>-1){$_SyntaxError(C,':= invalid, parent '+ptype)}else if(ptype=="func_arg_id" &&
-C.parent.tree.length > 0){
-$_SyntaxError(C,':= invalid, parent '+ptype)}else if(ptype=="call_arg" &&
-C.parent.parent.type=="call" &&
-C.parent.parent.parent.type=="lambda"){
-$_SyntaxError(C,':= invalid inside function arguments' )}
-if(C.tree.length==1 &&
-C.tree[0].type=="id"){var scope=$get_scope(C),name=C.tree[0].value
-while(scope.is_comp){scope=scope.parent_block}
-$bind(name,scope,C)
-var parent=C.parent
-parent.tree.pop()
-var assign_expr=new $AbstractExprCtx(parent,false)
-assign_expr.assign=C.tree[0]
-return assign_expr}
-$_SyntaxError(C,'token '+token+' after '+C)
-case 'if':
-var in_comp=false,ctx=C.parent
-while(true){if(ctx.type=="list_or_tuple"){
-break}else if(ctx.type=='comp_for' ||ctx.type=="comp_if"){in_comp=true
-break}else if(ctx.type=='call_arg'){break}
-if(ctx.parent !==undefined){ctx=ctx.parent}
-else{break}}
-if(in_comp){break}
-var ctx=C
-while(ctx.parent && ctx.parent.type=='op'){ctx=ctx.parent
-if(ctx.type=='expr' &&
-ctx.parent && ctx.parent.type=='op'){ctx=ctx.parent}}
-return new $AbstractExprCtx(new $TernaryCtx(ctx),true)
-case 'eol':
-if(C.tree.length==2 &&
-C.tree[0].type=="id" &&
-["print","exec"].indexOf(C.tree[0].value)>-1){$_SyntaxError(C,["Missing parentheses in call "+
-"to '"+C.tree[0].value+"'."])}
-if(["dict_or_set","list_or_tuple"].indexOf(C.parent.type)==-1){var t=C.tree[0]
-if(t.type=="packed" ||
-(t.type=="call" && t.func.type=="packed")){$_SyntaxError(C,["can't use starred expression here"])}}}
-return $transition(C.parent,token)
-case 'expr_not':
-if(token=='in'){
-C.parent.tree.pop()
-return new $AbstractExprCtx(
-new $OpCtx(C.parent,'not_in'),false)}
-$_SyntaxError(C,'token '+token+' after '+C)
-case 'for':
-switch(token){case 'in':
-if(C.tree[0].tree.length==0){
-$_SyntaxError(C,"missing target between 'for' and 'in'")}
-return new $AbstractExprCtx(
-new $ExprCtx(C,'target list',true),false)
-case ':':
-if(C.tree.length < 2 
-||C.tree[1].tree[0].type=="abstract_expr"){$_SyntaxError(C,'token '+token+' after '+
-C)}
-return $BodyCtx(C)}
-$_SyntaxError(C,'token '+token+' after '+C)
-case 'from':
-switch(token){case 'id':
-if(C.expect=='id'){C.add_name(value)
-C.expect=','
-return C}
-if(C.expect=='alias'){C.names[C.names.length-1]=
-[$B.last(C.names),value]
-C.expect=','
-return C}
-case '.':
-if(C.expect=='module'){if(token=='id'){C.module+=value}
-else{C.module+='.'}
-return C}
-case 'import':
-if(C.expect=='module'){C.expect='id'
-return C}
-case 'op':
-if(value=='*' && C.expect=='id'
-&& C.names.length==0){if($get_scope(C).ntype !=='module'){$_SyntaxError(C,["import * only allowed at module level"])}
-C.add_name('*')
-C.expect='eol'
-return C}
-case ',':
-if(C.expect==','){C.expect='id'
-return C}
-case 'eol':
-switch(C.expect){case ',':
-case 'eol':
-C.bind_names()
-return $transition(C.parent,token)
-case 'id':
-$_SyntaxError(C,['trailing comma not allowed without '+
-'surrounding parentheses'])
-default:
-$_SyntaxError(C,['invalid syntax'])}
-case 'as':
-if(C.expect==',' ||C.expect=='eol'){C.expect='alias'
-return C}
-case '(':
-if(C.expect=='id'){C.expect='id'
-return C}
-case ')':
-if(C.expect==',' ||C.expect=='id'){C.expect='eol'
-return C}}
-$_SyntaxError(C,'token '+token+' after '+C)
-case 'func_arg_id':
-switch(token){case '=':
-if(C.expect=='='){C.has_default=true
-var def_ctx=C.parent.parent
-if(C.parent.has_star_arg){def_ctx.default_list.push(def_ctx.after_star.pop())}else{def_ctx.default_list.push(def_ctx.positional_list.pop())}
-return new $AbstractExprCtx(C,false)}
-break
-case ',':
-case ')':
-if(C.parent.has_default && C.tree.length==0 &&
-C.parent.has_star_arg===undefined){$pos-=C.name.length
-$_SyntaxError(C,['non-default argument follows default argument'])}else{return $transition(C.parent,token)}
-case ':':
-if(C.parent.parent.type=="lambda"){
-return $transition(C.parent.parent,":")}
-if(C.has_default){
-$_SyntaxError(C,'token '+token+' after '+
-C)}
-return new $AbstractExprCtx(new $AnnotationCtx(C),false)}
-$_SyntaxError(C,'token '+token+' after '+C)
-case 'func_args':
-switch(token){case 'id':
-if(C.has_kw_arg){$_SyntaxError(C,'duplicate keyword argument')}
-if(C.expect=='id'){C.expect=','
-if(C.names.indexOf(value)>-1){$_SyntaxError(C,['duplicate argument '+value+
-' in function definition'])}}
-return new $FuncArgIdCtx(C,value)
-case ',':
-if(C.expect==','){C.expect='id'
-return C}
-$_SyntaxError(C,'token '+token+' after '+
-C)
-case ')':
-var last=$B.last(C.tree)
-if(last && last.type=="func_star_arg"){if(last.name=="*"){if(C.op=='*'){
-$_SyntaxError(C,['named arguments must follow bare *'])}else{$_SyntaxError(C,'invalid syntax')}}}
-return C.parent
-case 'op':
-if(C.has_kw_arg){$_SyntaxError(C,'duplicate keyword argument')}
-var op=value
-C.expect=','
-if(op=='*'){if(C.has_star_arg){$_SyntaxError(C,'duplicate star argument')}
-return new $FuncStarArgCtx(C,'*')}else if(op=='**'){return new $FuncStarArgCtx(C,'**')}else if(op=='/'){
-if(C.has_end_positional){$_SyntaxError(C,['duplicate / in function parameters'])}else if(C.has_star_arg){$_SyntaxError(C,['/ after * in function parameters'])}
-return new $EndOfPositionalCtx(C)}
-$_SyntaxError(C,'token '+op+' after '+C)
-case ':':
-if(C.parent.type=="lambda"){return $transition(C.parent,token)}}
-$_SyntaxError(C,'token '+token+' after '+C)
-case 'func_star_arg':
-switch(token){case 'id':
-if(C.name===undefined){if(C.parent.names.indexOf(value)>-1){$_SyntaxError(C,['duplicate argument '+value+
-' in function definition'])}}
-C.set_name(value)
-C.parent.names.push(value)
-return C
-case ',':
-case ')':
-if(C.name===undefined){
-C.set_name('*')
-C.parent.names.push('*')}
-return $transition(C.parent,token)
-case ':':
-if(C.parent.parent.type=="lambda"){
-return $transition(C.parent.parent,":")}
-if(C.name===undefined){$_SyntaxError(C,'annotation on an unnamed parameter')}
-return new $AbstractExprCtx(
-new $AnnotationCtx(C),false)}
-$_SyntaxError(C,'token '+token+' after '+C)
-case 'global':
-case 'nonlocal':
-switch(token){case 'id':
-if(C.expect=='id'){new $IdCtx(C,value)
-C.add(value)
-C.expect=','
-return C}
-break
-case ',':
-if(C.expect==','){C.expect='id'
-return C}
-break
-case 'eol':
-if(C.expect==','){return $transition(C.parent,token)}
-break}
-$_SyntaxError(C,'token '+token+' after '+C)
-case 'id':
-switch(token){case '=':
-if(C.parent.type=='expr' &&
-C.parent.parent !==undefined &&
-C.parent.parent.type=='call_arg'){return new $AbstractExprCtx(
-new $KwArgCtx(C.parent),false)}
-return $transition(C.parent,token,value)
-case 'op':
-return $transition(C.parent,token,value)
-case 'id':
-case 'str':
-case 'int':
-case 'float':
-case 'imaginary':
-if(["print","exec"].indexOf(C.value)>-1 ){$_SyntaxError(C,["missing parenthesis in call to '"+
-C.value+"'"])}
-$_SyntaxError(C,'token '+token+' after '+
-C)}
-if(C.value=="async"){
-if(token=='def'){C.parent.parent.tree=[]
-var ctx=$transition(C.parent.parent,token,value)
-ctx.async=true
-return ctx}}
-return $transition(C.parent,token,value)
-case 'import':
-switch(token){case 'id':
-if(C.expect=='id'){new $ImportedModuleCtx(C,value)
-C.expect=','
-return C}
-if(C.expect=='qual'){C.expect=','
-C.tree[C.tree.length-1].name+=
-'.'+value
-C.tree[C.tree.length-1].alias+=
-'.'+value
-return C}
-if(C.expect=='alias'){C.expect=','
-C.tree[C.tree.length-1].alias=
-value
-return C}
-break
-case '.':
-if(C.expect==','){C.expect='qual'
-return C}
-break
-case ',':
-if(C.expect==','){C.expect='id'
-return C}
-break
-case 'as':
-if(C.expect==','){C.expect='alias'
-return C}
-break
-case 'eol':
-if(C.expect==','){C.bind_names()
-return $transition(C.parent,token)}
-break}
-$_SyntaxError(C,'token '+token+' after '+C)
-case 'imaginary':
-case 'int':
-case 'float':
-switch(token){case 'id':
-case 'imaginary':
-case 'int':
-case 'float':
-case 'str':
-case 'bytes':
-case '[':
-case '(':
-case '{':
-case 'not':
-case 'lambda':
-$_SyntaxError(C,'token '+token+' after '+
-C)}
-return $transition(C.parent,token,value)
-case 'kwarg':
-if(token==','){return new $CallArgCtx(C.parent.parent)}
-return $transition(C.parent,token)
-case 'lambda':
-if(token==':' && C.args===undefined){C.args=C.tree
-C.tree=[]
-C.body_start=$pos
-return new $AbstractExprCtx(C,false)}if(C.args !==undefined){
-C.body_end=$pos
-return $transition(C.parent,token)}
-if(C.args===undefined && token !="("){return $transition(new $FuncArgs(C),token,value)}
-$_SyntaxError(C,'token '+token+' after '+C)
-case 'list_or_tuple':
-if(C.closed){if(token=='['){return new $AbstractExprCtx(
-new $SubCtx(C.parent),false)}
-if(token=='('){return new $CallCtx(C.parent)}
-return $transition(C.parent,token,value)}else{if(C.expect==','){switch(C.real){case 'tuple':
-case 'gen_expr':
-if(token==')'){var close=true
-while(C.type=="list_or_tuple" &&
-C.real=="tuple" &&
-C.parent.type=="expr" &&
-C.parent.parent.type=="node" &&
-C.tree.length==1){
-close=false
-var node=C.parent.parent,ix=node.tree.indexOf(C.parent),expr=C.tree[0]
-expr.parent=node
-expr.$in_parens=true 
-node.tree.splice(ix,1,expr)
-C=expr.tree[0]}
-if(close){C.close()}
-if(C.real=='gen_expr'){C.intervals.push($pos)}
-if(C.parent.type=="packed"){return C.parent.parent}
-return C.parent}
-break
-case 'list':
-case 'list_comp':
-if(token==']'){C.close()
-if(C.real=='list_comp'){C.intervals.push($pos)}
-if(C.parent.type=="packed"){if(C.parent.tree.length > 0){return C.parent.tree[0]}else{return C.parent.parent}}
-return C.parent}
-break
-case 'dict_or_set_comp':
-if(token=='}'){C.intervals.push($pos)
-return $transition(C.parent,token)}
-break}
-switch(token){case ',':
-if(C.real=='tuple'){C.has_comma=true}
-C.expect='id'
-return C
-case 'for':
-if(C.real=='list'){C.real='list_comp'}
-else{C.real='gen_expr'}
-C.intervals=[C.start+1]
-C.expression=C.tree
-C.tree=[]
-var comp=new $ComprehensionCtx(C)
-return new $TargetListCtx(new $CompForCtx(comp))}
-return $transition(C.parent,token,value)}else if(C.expect=='id'){switch(C.real){case 'tuple':
-if(token==')'){C.close()
-return C.parent}
-if(token=='eol' && C.implicit===true){C.close()
-return $transition(C.parent,token)}
-break
-case 'gen_expr':
-if(token==')'){C.close()
-return $transition(C.parent,token)}
-break
-case 'list':
-if(token==']'){C.close()
-return C}
-break}
-switch(token){case '=':
-if(C.real=='tuple' &&
-C.implicit===true){C.close()
-C.parent.tree.pop()
-var expr=new $ExprCtx(C.parent,'tuple',false)
-expr.tree=[C]
-C.parent=expr
-return $transition(C.parent,token)}
-break
-case ')':
-break
-case ']':
-if(C.real=='tuple' &&
-C.implicit===true){
-return $transition(C.parent,token,value)}else{break}
-case ',':
-$_SyntaxError(C,'unexpected comma inside list')
-default:
-C.expect=','
-var expr=new $AbstractExprCtx(C,false)
-return $transition(expr,token,value)}}else{return $transition(C.parent,token,value)}}
-case 'list_comp':
-switch(token){case ']':
-return C.parent
-case 'in':
-return new $ExprCtx(C,'iterable',true)
-case 'if':
-return new $ExprCtx(C,'condition',true)}
-$_SyntaxError(C,'token '+token+' after '+C)
-case 'node':
-switch(token){case 'id':
-case 'imaginary':
-case 'int':
-case 'float':
-case 'str':
-case 'bytes':
-case '[':
-case '(':
-case '{':
-case 'not':
-case 'lambda':
-case '.':
-var expr=new $AbstractExprCtx(C,true)
-return $transition(expr,token,value)
-case 'op':
-switch(value){case '*':
-case '+':
-case '-':
-case '~':
-var expr=new $AbstractExprCtx(C,true)
-return $transition(expr,token,value)}
-break
-case 'async':
-return new $AsyncCtx(C)
-case 'await':
-return new $AbstractExprCtx(new $AwaitCtx(C),true)
-case 'class':
-return new $ClassCtx(C)
-case 'continue':
-return new $ContinueCtx(C)
-case '__debugger__':
-return new $DebuggerCtx(C)
-case 'break':
-return new $BreakCtx(C)
-case 'def':
-return new $DefCtx(C)
-case 'for':
-return new $TargetListCtx(new $ForExpr(C))
-case 'if':
-case 'while':
-return new $AbstractExprCtx(
-new $ConditionCtx(C,token),false)
-case 'elif':
-var previous=$previous(C)
-if(['condition'].indexOf(previous.type)==-1 ||
-previous.token=='while'){$_SyntaxError(C,'elif after '+previous.type)}
-return new $AbstractExprCtx(
-new $ConditionCtx(C,token),false)
-case 'else':
-var previous=$previous(C)
-if(['condition','except','for'].
-indexOf(previous.type)==-1){$_SyntaxError(C,'else after '+previous.type)}
-return new $SingleKwCtx(C,token)
-case 'finally':
-var previous=$previous(C)
-if(['try','except'].indexOf(previous.type)==-1 &&
-(previous.type !='single_kw' ||
-previous.token !='else')){$_SyntaxError(C,'finally after '+previous.type)}
-return new $SingleKwCtx(C,token)
-case 'try':
-return new $TryCtx(C)
-case 'except':
-var previous=$previous(C)
-if(['try','except'].indexOf(previous.type)==-1){$_SyntaxError(C,'except after '+previous.type)}
-return new $ExceptCtx(C)
-case 'assert':
-return new $AbstractExprCtx(
-new $AssertCtx(C),'assert',true)
-case 'from':
-return new $FromCtx(C)
-case 'import':
-return new $ImportCtx(C)
-case 'global':
-return new $GlobalCtx(C)
-case 'nonlocal':
-return new $NonlocalCtx(C)
-case 'lambda':
-return new $LambdaCtx(C)
-case 'pass':
-return new $PassCtx(C)
-case 'raise':
-return new $AbstractExprCtx(new $RaiseCtx(C),true)
-case 'return':
-return new $AbstractExprCtx(new $ReturnCtx(C),true)
-case 'with':
-return new $AbstractExprCtx(new $WithCtx(C),false)
-case 'yield':
-return new $AbstractExprCtx(new $YieldCtx(C),true)
-case 'del':
-return new $AbstractExprCtx(new $DelCtx(C),true)
-case '@':
-return new $DecoratorCtx(C)
-case 'eol':
-if(C.tree.length==0){
-C.node.parent.children.pop()
-return C.node.parent.C}
-return C}
-$_SyntaxError(C,'token '+token+' after '+C)
-case 'not':
-switch(token){case 'in':
-C.parent.parent.tree.pop()
-return new $ExprCtx(new $OpCtx(C.parent,'not_in'),'op',false)
-case 'id':
-case 'imaginary':
-case 'int':
-case 'float':
-case 'str':
-case 'bytes':
-case '[':
-case '(':
-case '{':
-case '.':
-case 'not':
-case 'lambda':
-var expr=new $AbstractExprCtx(C,false)
-return $transition(expr,token,value)
-case 'op':
-var a=value
-if('+'==a ||'-'==a ||'~'==a){var expr=new $AbstractExprCtx(C,false)
-return $transition(expr,token,value)}}
-return $transition(C.parent,token)
-case 'op':
-if(C.op===undefined){$_SyntaxError(C,['C op undefined '+C])}
-if(C.op.substr(0,5)=='unary' && token !='eol'){if(C.parent.type=='assign' ||
-C.parent.type=='return'){
-C.parent.tree.pop()
-var t=new $ListOrTupleCtx(C.parent,'tuple')
-t.tree.push(C)
-C.parent=t
-return t}}
-switch(token){case 'id':
-case 'imaginary':
-case 'int':
-case 'float':
-case 'str':
-case 'bytes':
-case '[':
-case '(':
-case '{':
-case '.':
-case 'not':
-case 'lambda':
-return $transition(new $AbstractExprCtx(C,false),token,value)
-case 'op':
-switch(value){case '+':
-case '-':
-case '~':
-return new $UnaryCtx(C,value)}
-default:
-if(C.tree[C.tree.length-1].type==
-'abstract_expr'){$_SyntaxError(C,'token '+token+' after '+
-C)}}
-return $transition(C.parent,token)
-case 'packed':
-if(C.tree.length > 0 && token=="["){
-return $transition(C.tree[0],token,value)}
-if(token=='id'){new $IdCtx(C,value)
-C.parent.expect=','
-return C.parent}else if(token=="["){C.parent.expect=','
-return new $ListOrTupleCtx(C,"list")}else if(token=="("){C.parent.expect=','
-return new $ListOrTupleCtx(C,"tuple")}else if(token=="]"){return $transition(C.parent,token,value)}else if(token=="{"){C.parent.expect=','
-return new $DictOrSetCtx(C)}
-console.log("syntax error",C,token)
-$_SyntaxError(C,'token '+token+' after '+C)
-case 'pass':
-if(token=='eol'){return C.parent}
-$_SyntaxError(C,'token '+token+' after '+C)
-case 'raise':
-switch(token){case 'id':
-if(C.tree.length==0){return new $IdCtx(new $ExprCtx(C,'exc',false),value)}
-break
-case 'from':
-if(C.tree.length > 0){return new $AbstractExprCtx(C,false)}
-break
-case 'eol':
-return $transition(C.parent,token)}
-$_SyntaxError(C,'token '+token+' after '+C)
-case 'return':
-return $transition(C.parent,token)
-case 'single_kw':
-if(token==':'){return $BodyCtx(C)}
-$_SyntaxError(C,'token '+token+' after '+C)
-case 'slice':
-if(token==":"){return new $AbstractExprCtx(C,false)}
-return $transition(C.parent,token,value)
-case 'star_arg':
-switch(token){case 'id':
-if(C.parent.type=="target_list"){C.tree.push(value)
-C.parent.expect=','
-return C.parent}
-return $transition(new $AbstractExprCtx(C,false),token,value)
-case 'imaginary':
-case 'int':
-case 'float':
-case 'str':
-case 'bytes':
-case '[':
-case '(':
-case '{':
-case 'not':
-case 'lambda':
-return $transition(new $AbstractExprCtx(C,false),token,value)
-case ',':
-case ')':
-if(C.tree.length==0){$_SyntaxError(C,"unnamed star argument")}
-return $transition(C.parent,token)
-case ':':
-if(C.parent.parent.type=='lambda'){return $transition(C.parent.parent,token)}}
-$_SyntaxError(C,'token '+token+' after '+C)
-case 'str':
-switch(token){case '[':
-return new $AbstractExprCtx(new $SubCtx(C.parent),false)
-case '(':
-C.parent.tree[0]=C
-return new $CallCtx(C.parent)
-case 'str':
-C.tree.push(value)
-return C}
-return $transition(C.parent,token,value)
-case 'sub':
-switch(token){case 'id':
-case 'imaginary':
-case 'int':
-case 'float':
-case 'str':
-case 'bytes':
-case '[':
-case '(':
-case '{':
-case '.':
-case 'not':
-case 'lambda':
-var expr=new $AbstractExprCtx(C,false)
-return $transition(expr,token,value)
-case ']':
-if(C.parent.packed){return C.parent.tree[0]}
-if(C.tree[0].tree.length > 0){return C.parent}
-break
-case ':':
-return new $AbstractExprCtx(new $SliceCtx(C),false)
-case ',':
-return new $AbstractExprCtx(C,false)}
-$_SyntaxError(C,'token '+token+' after '+C)
-case 'target_list':
-switch(token){case 'id':
-if(C.expect=='id'){C.expect=','
-return new $IdCtx(
-new $ExprCtx(C,'target',false),value)}
-case 'op':
-if(C.expect=='id' && value=='*'){
-return new $PackedCtx(C)}
-case '(':
-case '[':
-if(C.expect=='id'){C.expect=','
-return new $ListOrTupleCtx(C,token=='(' ? 'tuple' :'list')}
-case ')':
-case ']':
-if(C.expect==','){return C.parent}
-case ',':
-if(C.expect==','){C.expect='id'
-return C}}
-if(C.expect==','){return $transition(C.parent,token,value)}else if(token=='in'){
-return $transition(C.parent,token,value)}
-$_SyntaxError(C,'token '+token+' after '+C)
-case 'ternary':
-if(token=='else'){C.in_else=true
-return new $AbstractExprCtx(C,false)}else if(! C.in_else){$_SyntaxError(C,'token '+token+' after '+C)}else if(token==","){
-if(["assign","augm_assign","node","return"].
-indexOf(C.parent.type)>-1){C.parent.tree.pop()
-var t=new $ListOrTupleCtx(C.parent,'tuple')
-t.implicit=true
-t.tree[0]=C
-C.parent=t
-t.expect="id"
-return t}}
-return $transition(C.parent,token,value)
-case 'try':
-if(token==':'){return $BodyCtx(C)}
-$_SyntaxError(C,'token '+token+' after '+C)
-case 'unary':
-switch(token){case 'int':
-case 'float':
-case 'imaginary':
-var expr=C.parent
-C.parent.parent.tree.pop()
-if(C.op=='-'){value="-"+value}
-else if(C.op=='~'){value=~value}
-return $transition(C.parent.parent,token,value)
-case 'id':
-C.parent.parent.tree.pop()
-var expr=new $ExprCtx(C.parent.parent,'call',false)
-var expr1=new $ExprCtx(expr,'id',false)
-new $IdCtx(expr1,value)
-var repl=new $AttrCtx(expr)
-if(C.op=='+'){repl.name='__pos__'}
-else if(C.op=='-'){repl.name='__neg__'}
-else{repl.name='__invert__'}
-return expr1
-case 'op':
-if('+'==value ||'-'==value){if(C.op===value){C.op='+'}
-else{C.op='-'}
-return C}}
-return $transition(C.parent,token,value)
-case 'with':
-switch(token){case 'id':
-if(C.expect=='id'){C.expect='as'
-return $transition(
-new $AbstractExprCtx(C,false),token,value)}
-$_SyntaxError(C,'token '+token+' after '+C)
-case 'as':
-return new $AbstractExprCtx(new $AliasCtx(C))
-case ':':
-switch(C.expect){case 'id':
-case 'as':
-case ':':
-return $BodyCtx(C)}
-break
-case '(':
-if(C.expect=='id' && C.tree.length==0){C.parenth=true
-return C}else if(C.expect=='alias'){C.expect=':'
-return new $TargetListCtx(C,false)}
-break
-case ')':
-if(C.expect==',' ||C.expect=='as'){C.expect=':'
-return C}
-break
-case ',':
-if(C.parenth !==undefined &&
-C.has_alias===undefined &&
-(C.expect==',' ||C.expect=='as')){C.expect='id'
-return C}else if(C.expect=='as'){C.expect='id'
-return C}else if(C.expect==':'){C.expect='id'
-return C}
-break}
-$_SyntaxError(C,'token '+token+' after '+
-C.expect)
-case 'yield':
-if(token=='from'){
-if(C.tree[0].type !='abstract_expr'){
-$_SyntaxError(C,"'from' must follow 'yield'")}
-C.from=true
-$add_yield_from_code(C)
-return C.tree[0]}
-return $transition(C.parent,token)}}
+return C.transition(token,value)}
 $B.forbidden=["alert","arguments","case","catch","const","constructor","Date","debugger","delete","default","do","document","enum","export","eval","extends","Error","history","function","instanceof","keys","length","location","Math","message","new","null","Number","RegExp","String","super","switch","this","throw","typeof","var","window","toLocaleString","toString","void"]
 $B.aliased_names=$B.list2obj($B.forbidden)
 var s_escaped='abfnrtvxuU"0123456789'+"'"+'\\',is_escaped={}
@@ -8149,14 +8140,7 @@ bytes.__getitem__=function(self,arg){var i
 if(isinstance(arg,_b_.int)){var pos=arg
 if(arg < 0){pos=self.source.length+pos}
 if(pos >=0 && pos < self.source.length){return self.source[pos]}
-throw _b_.IndexError.$factory("index out of range")}else if(isinstance(arg,_b_.slice)){var step=arg.step===None ? 1 :arg.step
-if(step > 0){var start=arg.start===None ? 0 :arg.start
-var stop=arg.stop===None ?
-getattr(self.source,'__len__')():arg.stop}else{var start=arg.start===None ?
-getattr(self.source,'__len__')()-1 :arg.start
-var stop=arg.stop===None ? 0 :arg.stop}
-if(start < 0){start=self.source.length+start}
-if(stop < 0){stop=self.source.length+stop}
+throw _b_.IndexError.$factory("index out of range")}else if(isinstance(arg,_b_.slice)){var s=_b_.slice.$conv_for_seq(arg,self.source.length),start=s.start,stop=s.stop,step=s.step
 var res=[],i=null,pos=0
 if(step > 0){stop=Math.min(stop,self.source.length)
 if(stop <=start){return bytes.$factory([])}
