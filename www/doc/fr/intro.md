@@ -87,6 +87,15 @@ _src_ de la balise `<script>` :
 Attention, dans ce deuxième cas le script Python est récupéré par un appel
 Ajax : il doit donc se trouver dans le même domaine que la page HTML.
 
+Ce script a normalement l'extension __`.py`__. Dans certains cas les serveurs
+interprètent un appel Ajax vers cette extension comme une demande
+d'exécuter le script sur le serveur. Dans ce cas il faut changer l'extension,
+par exemple la remplacer par __`.bry`__ comme dans le code suivant:
+
+```xml
+<script type="text/python" src="test.bry"></script>
+```
+
 Quand on clique sur le bouton, la fonction `echo()` définie dans le script
 Python est exécutée. Cette fonction récupère la valeur de l'élément INPUT
 par son id _zone_, en utilisant la syntaxe `document["zone"]` : `document`

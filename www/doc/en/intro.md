@@ -85,6 +85,15 @@ file, and to load it using the _src_ attribute of the _script_ tag :
 Please note that in this case the Python script will be loaded through an
 Ajax call : it must be in the same domain as the HTML page.
 
+The script extension is usually __`.py`__. In some cases, servers interpret
+Ajax calls to this extension as a request to execute the script in the server.
+In this case you have to change the extension, for instance replace it by
+__`.bry`__ as in the following example:
+
+```xml
+<script type="text/python" src="test.bry"></script>
+```
+
 In the above two examples of code, when we click on the button, the onclick
 event calls and run the `echo()` function, which was defined in the Python
 script. This function gets the value of the INPUT element, through its id
