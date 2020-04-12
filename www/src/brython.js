@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-04-09 11:56:52.115716"
-__BRYTHON__.timestamp=1586426212105
+__BRYTHON__.compiled_date="2020-04-12 14:18:19.914369"
+__BRYTHON__.timestamp=1586693899898
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -281,6 +281,20 @@ this.js=this.res.join('')
 return this.js}
 this.transform=function(rank){
 if(this.yield_atoms.length > 0){
+var in_while=false
+if(this.C && this.C.tree &&
+this.C.tree[0].type=="condition" &&
+this.C.tree[0].token=="while"){in_while=true
+var condition=this.C.tree[0].tree.pop()
+new $RawJSCtx(this.C.tree[0],"true")
+var new_node=new $Node(),ctx=new $NodeCtx(new_node),if_ctx=new $ConditionCtx(ctx,"if"),not_ctx=new $NotCtx(if_ctx)
+not_ctx.tree=[condition]
+new_node.yield_atoms=this.yield_atoms.slice()
+this.insert(0,new_node)
+new_node.add(new $NodeJS('locals["no_break'+$loop_num+
+'"] = true'))
+this.yield_atoms=[]
+return 0}
 this.parent.children.splice(rank,1)
 var offset=0
 this.yield_atoms.forEach(function(atom){
@@ -1403,7 +1417,8 @@ $_SyntaxError(C,'token '+token+' after '+C)}
 return $BodyCtx(C)}
 $_SyntaxError(C,'token '+token+' after '+C)}
 this.transform=function(node,rank){var scope=$get_scope(this)
-if(this.token=="while"){node.parent.insert(rank,$NodeJS('$locals["$no_break'+this.loop_num+'"] = true'))
+if(this.token=="while"){console.log("while ctx",this,"node",node)
+node.parent.insert(rank,$NodeJS('$locals["$no_break'+this.loop_num+'"] = true'))
 var module=$get_module(this).module
 if($B.last(node.children).C.tree[0].type !="return"){var js='$locals.$line_info = "'+node.line_num+
 ','+module+'";if($locals.$f_trace !== _b_.None){'+
@@ -4497,8 +4512,8 @@ parent=parent.parent}
 if(! in_lambda){switch(C.type){case 'node':
 break;
 case 'assign':
-case 'tuple':
 case 'list_or_tuple':
+console.log("set yield atom of node")
 $get_node(C).yield_atoms.push(this)
 break
 default:
@@ -6458,6 +6473,12 @@ throw _b_.TypeError.$factory("'"+(opname2opsign[op]||op)+
 "' not supported between instances of '"+$B.class_name(x)+
 "' and '"+$B.class_name(y)+"'")}else{return res}}
 $B.is_none=function(o){return o===undefined ||o===null ||o==_b_.None}
+$B.yield_value=function(obj,top_frame){var sent_value=obj.sent_value===undefined ? _b_.None :obj.sent_value;
+obj.sent_value=_b_.None
+if(sent_value.__class__===$B.$GeneratorSendError){console.log("send error")
+sent_value.err.$stack.splice(0,0,$B.freeze([top_frame])[0])
+throw sent_value.err}
+return sent_value}
 var repr_stack=new Set()
 $B.repr={enter:function(obj){if(repr_stack.has(obj)){return true}else{repr_stack.add(obj)}},leave:function(obj){repr_stack.delete(obj)}}})(__BRYTHON__)
 ;

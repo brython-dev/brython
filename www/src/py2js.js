@@ -487,6 +487,33 @@ var $Node = $B.parser.$Node = function(type){
             //     yield $yield_value0
             //     $yield_value0 = <value sent to generator > or None
             //     a = $yield_value0
+            var in_while = false
+            if(this.context && this.context.tree &&
+                    this.context.tree[0].type == "condition" &&
+                    this.context.tree[0].token == "while"){
+                // If there is a "yield" in the condition associated with
+                // "while" (eg "while (a := yield)"), transform it into
+                //
+                // while True:
+                //     if not condition:
+                //         break
+                //
+                // Cf. issue #1341
+                in_while = true
+                var condition = this.context.tree[0].tree.pop()
+                new $RawJSCtx(this.context.tree[0], "true")
+                var new_node = new $Node(),
+                    ctx = new $NodeCtx(new_node),
+                    if_ctx = new $ConditionCtx(ctx, "if"),
+                    not_ctx = new $NotCtx(if_ctx)
+                not_ctx.tree = [condition]
+                new_node.yield_atoms = this.yield_atoms.slice()
+                this.insert(0, new_node)
+                new_node.add(new $NodeJS('locals["no_break' + $loop_num +
+                    '"] = true'))
+                this.yield_atoms = []
+                return 0
+            }
 
             // remove original line
             this.parent.children.splice(rank, 1)
@@ -9020,7 +9047,6 @@ var $YieldCtx = $B.parser.$YieldCtx = function(context, is_await){
             // right-hand side of an assignment
 
             case 'assign':
-            case 'tuple':
             case 'list_or_tuple':
                 // mark the node as containing a yield atom
                 $get_node(context).yield_atoms.push(this)

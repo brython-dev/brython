@@ -1090,4 +1090,14 @@ ll = []
 assert list(g2_1325(ll)) == [0, 1, 2]
 assert ''.join(ll) == "()"
 
+# issue 1341
+results = []
+
+def main():
+  while (a:=(yield)): # something funny happens here and freezes the page.
+    results.append(a)
+next(test:=main())
+test.send('magic')
+assert results == ["magic"]
+
 print('passed all tests...')

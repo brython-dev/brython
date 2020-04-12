@@ -687,7 +687,7 @@ function make_next(self, yield_node_id){
                     }
                 }
                 if(children.length == 1){
-                    // If the "finally" block has been remove above, add a 
+                    // If the "finally" block has been remove above, add a
                     // fake "catch" block to avoid a syntax error
                     children.push(new $B.genNode("catch(err){}"))
                 }
