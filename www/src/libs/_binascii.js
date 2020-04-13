@@ -15,7 +15,7 @@ function decode(bytes, altchars, validate){
     var alphabet = make_alphabet(altchars)
 
     var input = bytes.source
-    
+
     // If validate is set, check that all characters in input
     // are in the alphabet
     var _input = ''
@@ -62,6 +62,14 @@ function decode(bytes, altchars, validate){
     return _b_.bytes.$factory(output, 'utf-8', 'strict')
 }
 
+
+var hex2int = {},
+    hex = '0123456789abcdef'
+for(var i = 0; i < hex.length; i++){
+    hex2int[hex[i]] = i
+    hex2int[hex[i].toUpperCase()] = i
+}
+
 function make_alphabet(altchars){
     var alphabet = _keyStr
     if(altchars !== undefined && altchars !== _b_.None){
@@ -78,6 +86,29 @@ var module = {
         var $ = $B.args("a2b_base64", 1, {s: null}, ['s'],
                 arguments, {}, null, null)
         return decode(_b_.str.encode($.s, 'ascii'))
+    },
+    a2b_hex: function(){
+        var $ = $B.args("a2b_hex", 1, {s: null}, ['s'],
+                arguments, {}, null, null),
+            s = $.s
+        if(_b_.isinstance(s, _b_.bytes)){
+            s = _b_.bytes.decode(s, 'ascii')
+        }
+        if(typeof s !== "string"){
+            throw _b_.TypeError.$factory("argument should be bytes, " +
+                "buffer or ASCII string, not '" + $B.class_name(s) + "'")
+        }
+    
+        var len = s.length
+        if(len % 2 == 1){
+            throw _b_.TypeError.$factory('Odd-length string')
+        }
+    
+        var res = []
+        for(var i = 0; i < len; i += 2){
+            res.push((hex2int[s.charAt(i)] << 4) + hex2int[s.charAt(i + 1)])
+        }
+        return _b_.bytes.$factory(res)
     },
     b2a_base64: function(){
         var $ = $B.args("b2a_base64", 1, {data: null}, ['data'],
@@ -132,6 +163,7 @@ var module = {
 }
 
 module.hexlify = module.b2a_hex
+module.unhexlify = module.a2b_hex
 
 return module
 }
