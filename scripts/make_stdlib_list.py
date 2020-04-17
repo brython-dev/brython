@@ -7,30 +7,40 @@ import git
 
 dico = {
     'title': {
-        'en':'Brython distribution vs CPython',
-        'fr':'Comparaison des distributions Brython et CPython',
-        'es':'Distribución Brython vs CPython'
-    },'dir': {
+            'en':'Brython distribution vs CPython',
+            'fr':'Comparaison des distributions Brython et CPython',
+            'es':'Distribución Brython vs CPython'
+    },
+    'dir': {
         'en':'Directory',
         'fr':'Répertoire',
         'es':'Directorio'
-     },'both': {
-         'en':'Files in both distributions',
-         'fr':'Fichiers communs aux deux distributions',
-         'es':'Archivos comunes en ambas distribuciones'
-     },'specific': {
-         'en':'Brython-specific',
-         'fr':'Spécifiques à Brython',
-         'es':'Especificos de Brython'
-     },'not_yet': {
-         'en':'In CPython but not (yet) in Brython',
-         'fr':'Dans CPython mais pas (encore) dans Brython',
-         'es':'En CPython pero no (todavía) en Brython'
-     },'missing': {
-         'en':'Directories in CPython distribution missing in Brython',
-         'fr':'Répertoires de la distribution CPython absents de Brython',
-         'es':'Directorios en CPython ausentes en la distribución en Brython'
-     }
+    },
+    'both': {
+        'en':'Files in both distributions',
+        'fr':'Fichiers communs aux deux distributions',
+        'es':'Archivos comunes en ambas distribuciones'
+    },
+    'specific': {
+        'en':'Brython-specific',
+        'fr':'Spécifiques à Brython',
+        'es':'Especificos de Brython'
+    },
+    'not_yet': {
+        'en':'In CPython but not (yet) in Brython',
+        'fr':'Dans CPython mais pas (encore) dans Brython',
+        'es':'En CPython pero no (todavía) en Brython'
+    },
+    'missing': {
+        'en':'Directories in CPython distribution missing in Brython',
+        'fr':'Répertoires de la distribution CPython absents de Brython',
+        'es':'Directorios en CPython ausentes en la distribución en Brython'
+    },
+    'diff': {
+        'en': '* indicates that Brython version is different from CPython',
+        'fr': '* indique que la version Brython est différente de CPython',
+        'es': '* indica que la versión de Brython es diferente de CPython'
+    }
 }
 
 if(sys.version_info[0]!=3):
@@ -56,7 +66,8 @@ for lang in 'en','es','fr':
     with open(os.path.join(static_doc_folder,lang,'stdlib.html'), 'w', encoding="utf-8") as out:
 
         html = '<h1>%s %s'\
-            '</h1>\n<div style="padding-left:30px;">' %(dico['title'][lang],version)
+            '</h1>\n<div style="padding-left:30px;">' %(dico['title'][lang], version)
+        html += '\n<div>%s</div>' %dico["diff"][lang]
         html += '<table border=1>\n'
         html += '<tr>\n<th>%s</th>\n'\
             '<th>%s</th>\n'\
@@ -74,6 +85,8 @@ for lang in 'en','es','fr':
                 dirnames.remove('.git')
             for dirname in dirnames:
                 if dirname == 'dist':
+                    continue
+                if dirname == "__pycache__":
                     continue
 
             if "site-packages" in dirpath:
@@ -98,7 +111,11 @@ for lang in 'en','es','fr':
 
                 if valid:
                     common = [v for v in valid
-                        if os.path.exists(os.path.join(python_path,v))]
+                        if os.path.exists(os.path.join(python_path, v))]
+                    for i, f in enumerate(common):
+                        if os.stat(os.path.join(dirpath, f)).st_size != \
+                                os.stat(os.path.join(python_path, f)).st_size:
+                            common[i] = "*" + common[i]
                     brython_specific = [v for v in valid if not v in common]
                     if os.path.exists(python_path):
                         missing = [f for f in os.listdir(python_path)
