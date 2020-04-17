@@ -801,7 +801,10 @@ generator.__next__ = function(self){
 }
 
 generator.close = function(self, value){
-    self.sent_value = _b_.GeneratorExit.$factory()
+    self.sent_value = {
+        __class__: $B.$GeneratorSendError,
+        err: _b_.GeneratorExit.$factory()
+    }
     try{
         var res = generator.__next__(self)
         if(res !== _b_.None){

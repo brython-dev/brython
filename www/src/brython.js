@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-04-17 08:46:38.446348"
-__BRYTHON__.timestamp=1587105998446
+__BRYTHON__.compiled_date="2020-04-17 09:13:42.880012"
+__BRYTHON__.timestamp=1587107622880
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -13738,7 +13738,7 @@ throw StopIteration.$factory(res[0].value)}
 self.next=self.nexts[res[1]]
 self.gi_running=false
 return res[0]}
-generator.close=function(self,value){self.sent_value=_b_.GeneratorExit.$factory()
+generator.close=function(self,value){self.sent_value={__class__:$B.$GeneratorSendError,err:_b_.GeneratorExit.$factory()}
 try{var res=generator.__next__(self)
 if(res !==_b_.None){throw _b_.RuntimeError.$factory("closed generator returned a value")}}catch(err){if($B.is_exc(err,[_b_.StopIteration,_b_.GeneratorExit])){return _b_.None}
 throw err}}

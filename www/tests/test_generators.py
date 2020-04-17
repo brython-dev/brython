@@ -1100,4 +1100,23 @@ next(test:=main())
 test.send('magic')
 assert results == ["magic"]
 
+# issue 1345
+close_result = []
+
+def gtest():
+  y = ''
+  try:
+    while True:
+      y = yield
+      close_result.append(str(y))
+      # do stuff
+  except GeneratorExit:
+    # cancel tasks
+    close_result.append('done')
+
+next(g:=gtest())
+g.send('magic')
+g.close()
+assert close_result == ["magic", "done"]
+
 print('passed all tests...')
