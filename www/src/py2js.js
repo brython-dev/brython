@@ -625,8 +625,8 @@ var $Node = $B.parser.$Node = function(type){
                     res = 'var ' + def_ctx.name + def_ctx.num + ' = ' +
                         '$locals_' + block_id + '["' + def_ctx.name +
                         '"] = $B.genfunc("' +
-                        def_ctx.name + '", ' + blocks + ',[' + g + '],' +
-                        def_ctx.default_str + ')'
+                        def_ctx.name + '", ' + def_ctx.async + ', ' + blocks + 
+                        ',[' + g + '],' + def_ctx.default_str + ')'
                 var new_node = $NodeJS(res)
                 new_node.bindings = this.bindings
                 this.parent.children.splice(rank, 1)

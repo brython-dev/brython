@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-04-12 14:18:19.914369"
-__BRYTHON__.timestamp=1586693899898
+__BRYTHON__.compiled_date="2020-04-17 08:34:01.493635"
+__BRYTHON__.timestamp=1587105241493
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -284,7 +284,8 @@ if(this.yield_atoms.length > 0){
 var in_while=false
 if(this.C && this.C.tree &&
 this.C.tree[0].type=="condition" &&
-this.C.tree[0].token=="while"){in_while=true
+this.C.tree[0].token=="while"){
+in_while=true
 var condition=this.C.tree[0].tree.pop()
 new $RawJSCtx(this.C.tree[0],"true")
 var new_node=new $Node(),ctx=new $NodeCtx(new_node),if_ctx=new $ConditionCtx(ctx,"if"),not_ctx=new $NotCtx(if_ctx)
@@ -349,8 +350,8 @@ var g=$B.$BRgenerator(def_ctx.name,blocks,def_ctx.id,def_node),block_id=parent.i
 def_ctx.name+def_ctx.num,res='var '+def_ctx.name+def_ctx.num+' = '+
 '$locals_'+block_id+'["'+def_ctx.name+
 '"] = $B.genfunc("'+
-def_ctx.name+'", '+blocks+',['+g+'],'+
-def_ctx.default_str+')'
+def_ctx.name+'", '+def_ctx.async+', '+blocks+
+',['+g+'],'+def_ctx.default_str+')'
 var new_node=$NodeJS(res)
 new_node.bindings=this.bindings
 this.parent.children.splice(rank,1)
@@ -1417,8 +1418,7 @@ $_SyntaxError(C,'token '+token+' after '+C)}
 return $BodyCtx(C)}
 $_SyntaxError(C,'token '+token+' after '+C)}
 this.transform=function(node,rank){var scope=$get_scope(this)
-if(this.token=="while"){console.log("while ctx",this,"node",node)
-node.parent.insert(rank,$NodeJS('$locals["$no_break'+this.loop_num+'"] = true'))
+if(this.token=="while"){node.parent.insert(rank,$NodeJS('$locals["$no_break'+this.loop_num+'"] = true'))
 var module=$get_module(this).module
 if($B.last(node.children).C.tree[0].type !="return"){var js='$locals.$line_info = "'+node.line_num+
 ','+module+'";if($locals.$f_trace !== _b_.None){'+
@@ -4513,7 +4513,6 @@ if(! in_lambda){switch(C.type){case 'node':
 break;
 case 'assign':
 case 'list_or_tuple':
-console.log("set yield atom of node")
 $get_node(C).yield_atoms.push(this)
 break
 default:
@@ -5364,10 +5363,12 @@ try{func.apply(null,args)}catch(err){$B.handle_error(err)}}}
 $B.tasks=[]
 $B.has_indexedDB=self.indexedDB !==undefined
 $B.handle_error=function(err){
+console.log("handle error",err.__class__,err.args)
 if(err.__class__ !==undefined){var name=$B.class_name(err),trace=_b_.getattr(err,'info')
 if(name=='SyntaxError' ||name=='IndentationError'){var offset=err.args[3]
 trace+='\n    '+' '.repeat(offset)+'^'+
-'\n'+name+': '+err.args[0]}else{trace+='\n'+name+': '+err.args}}else{console.log(err)
+'\n'+name+': '+err.args[0]}else{trace+='\n'+name
+if(err.args[0]&& err.args[0]!==_b_.None){trace+=': '+_b_.str.$factory(err.args[0])}}}else{console.log(err)
 trace=err+""}
 try{$B.$getattr($B.stderr,'write')(trace)
 try{$B.$getattr($B.stderr,'flush')()}catch(err){console.log(err)}}catch(print_exc_err){console.log(trace)}
@@ -6473,12 +6474,6 @@ throw _b_.TypeError.$factory("'"+(opname2opsign[op]||op)+
 "' not supported between instances of '"+$B.class_name(x)+
 "' and '"+$B.class_name(y)+"'")}else{return res}}
 $B.is_none=function(o){return o===undefined ||o===null ||o==_b_.None}
-$B.yield_value=function(obj,top_frame){var sent_value=obj.sent_value===undefined ? _b_.None :obj.sent_value;
-obj.sent_value=_b_.None
-if(sent_value.__class__===$B.$GeneratorSendError){console.log("send error")
-sent_value.err.$stack.splice(0,0,$B.freeze([top_frame])[0])
-throw sent_value.err}
-return sent_value}
 var repr_stack=new Set()
 $B.repr={enter:function(obj){if(repr_stack.has(obj)){return true}else{repr_stack.add(obj)}},leave:function(obj){repr_stack.delete(obj)}}})(__BRYTHON__)
 ;
@@ -13715,8 +13710,12 @@ if(exit_node===self.func_root){break}}
 var src=root.children[0].src(),next_src=src.substr(src.search("function"))
 next_src=next_src.substr(10)
 next_src=next_src.substr(next_src.search("function"))
+if(self.def_ctx.async){next_src="async "+next_src}
 return next_src}
 var generator={__class__:_b_.type,__mro__:[_b_.object],$infos:{__module__:"builtins",__name__:"generator"},$is_class:true}
+generator.__dir__=function(self){var attrs=object.__dir__(self)
+for(const attr of["blocks","env","nexts","next","iter_id","sent_value"]){attrs.splice(attrs.indexOf(attr),1)}
+return attrs}
 generator.__enter__=function(self){console.log("generator.__enter__ called")}
 generator.__exit__=function(self){console.log("generator.__exit__ called")}
 generator.__str__=function(self){return "<generator object "+self.__name__+">"}
@@ -13751,16 +13750,53 @@ if(exc.$is_class){if(! _b_.issubclass(type,_b_.BaseException)){throw _b_.TypeErr
 if(traceback !==undefined){exc.$traceback=traceback}
 self.sent_value={__class__:$B.$GeneratorSendError,err:value}
 return generator.__next__(self)}
-generator.$factory=$B.genfunc=function(name,blocks,funcs,$defaults){
+var async_generator={__class__:_b_.type,__mro__:[_b_.object],$infos:{__module__:"builtins",__name__:"async_generator"},$is_class:true}
+generator.$factory=$B.genfunc=function(name,async,blocks,funcs,$defaults){
 if(name.startsWith("__ge")){
 for(var block_id in blocks){if(block_id=="$locals_"+name){continue}
 for(var attr in blocks[block_id]){blocks["$locals_"+name][attr]=blocks[block_id][attr]}}}
 return function(){var iter_id="$gen"+$B.gen_counter++,gfuncs=[]
 gfuncs.push(funcs[0]($defaults))
 for(var i=1;i < funcs.length;i++){gfuncs.push(funcs[i])}
-var res={__class__:generator,__name__:name,args:Array.prototype.slice.call(arguments),blocks:blocks,env:{},name:name,nexts:gfuncs.slice(1),next:gfuncs[0],iter_id:iter_id,gi_running:false,$started:false,$defaults:$defaults,$is_generator_obj:true}
+var res={__class__:async ? async_generator :generator,__name__:name,args:Array.prototype.slice.call(arguments),blocks:blocks,env:{},name:name,nexts:gfuncs.slice(1),next:gfuncs[0],iter_id:iter_id,$started:false,$defaults:$defaults,$is_generator_obj:true}
+if(async){res.ag_running=false}else{res.gi_running=false}
 return res}}
-$B.set_func_names(generator,"builtins")})(__BRYTHON__)
+$B.set_func_names(generator,"builtins")
+var ag_closed={}
+async_generator.__aiter__=function(self){return self}
+async_generator.__anext__=async function(self){if(self.$finished){throw _b_.StopAsyncIteration.$factory(_b_.None)}
+if(self.$closed){throw _b_.StopAsyncIteration.$factory()}
+if(self.$exc){throw self.$exc}
+if(self.ag_running===true){throw ValueError.$factory("generator already executing")}
+self.ag_running=true
+if(self.next===undefined){self.$finished=true
+throw _b_.StopAsyncIteration.$factory(_b_.None)}
+try{var res=await self.next.apply(self,self.args)
+if(res===undefined){throw _b_.StopAsyncIteration.$factory(_b_.None)}else if(res[0].__class__===$GeneratorReturn){
+self.$finished=true
+throw _b_.StopAsyncIteration.$factory(res[0].value)}
+self.next=self.nexts[res[1]]
+self.ag_running=false
+return res[0]}catch(err){
+self.$finished=true
+err.$stack=$B.frames_stack.slice()
+if(err.__class__ !==_b_.GeneratorExit){throw err}}finally{
+self.ag_running=false
+$B.leave_frame(self.iter_id)}}
+async_generator.__dir__=generator.__dir__
+async_generator.aclose=function(self){if(self.$finished){return _b_.None}
+self.sent_value={__class__:$B.$GeneratorSendError,err:_b_.GeneratorExit.$factory()}
+return async_generator.__anext__(self)}
+async_generator.asend=function(){var $=$B.args("asend",2,{self:null,value:null},['self','value'],arguments,{},null,null),self=$.self,value=$.value
+self.sent_value=value
+return async_generator.__anext__(self)}
+async_generator.athrow=function(self,type,value,traceback){var exc=type
+if(exc.$is_class){if(! _b_.issubclass(type,_b_.BaseException)){throw _b_.TypeError.$factory("exception value must be an "+
+"instance of BaseException")}else if(value===undefined){value=$B.$call(exc)()}}else{if(value===undefined){value=exc}else{exc=$B.$call(exc)(value)}}
+if(traceback !==undefined){exc.$traceback=traceback}
+self.sent_value={__class__:$B.$GeneratorSendError,err:value}
+return async_generator.__anext__(self)}
+$B.set_func_names(async_generator,"builtins")})(__BRYTHON__)
 ;
  ;(function($B){var _b_=$B.builtins
 var update=function(mod,data){for(attr in data){mod[attr]=data[attr]}}

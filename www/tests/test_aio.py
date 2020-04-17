@@ -1,4 +1,4 @@
-from browser import html, aio
+from browser import aio
 
 results = []
 
@@ -134,6 +134,37 @@ async def test_async_comp():
 async def async_comp():
   return [(url, await aio.get(url)) for url in ["console.html", "index.html"]]
 
+async def async_gen():
+  count = 0
+  while count < 5:
+    count += 1
+    yield count
+    await aio.sleep(0.1)
+
+async def test_async_gen(throw, close, expected):
+  result = []
+  a = async_gen()
+  result.append(await a.__anext__())
+
+  a.__aiter__()
+
+  result.append(await a.asend(None))
+
+  if throw:
+    try:
+      await a.athrow(ZeroDivisionError)
+    except Exception as e:
+      result.append(type(e))
+
+  if close:
+    await a.aclose()
+
+  async for i in a:
+    result.append(i)
+
+  assert result == expected,(close, result, expected)
+  print(throw, close, "async generator ok")
+
 async def main(secs, urls):
     print(f"wait {secs} seconds...")
     await aio.sleep(secs)
@@ -145,6 +176,14 @@ async def main(secs, urls):
     await test_async_with()
     await test_lock()
     await test_async_comp()
+
+    for throw, close, expected in [
+            [False, False, [1, 2, 3, 4, 5]],
+            [True, False, [1, 2, ZeroDivisionError]],
+            [False, True, [1, 2]],
+            [True, True, [1, 2, ZeroDivisionError]]]:
+        await test_async_gen(throw, close, expected)
+
     await raise_error()
 
 print("Start...")

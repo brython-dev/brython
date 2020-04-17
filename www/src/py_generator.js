@@ -502,7 +502,7 @@ $B.$BRgenerator = function(func_name, blocks, def_id, def_node){
     var src = func_root.src(),
         raw_src = src.substr(src.search("function"))
 
-    // For the first call, add defaults object as arguement
+    // For the first call, add defaults object as argument
     raw_src += "return " + def_ctx.name + def_ctx.num + "}"
 
     var funcs = [raw_src]
@@ -715,6 +715,10 @@ function make_next(self, yield_node_id){
     next_src = next_src.substr(10)
     next_src = next_src.substr(next_src.search("function"))
 
+    if(self.def_ctx.async){
+        next_src = "async " + next_src
+    }
+
     return next_src
 }
 
@@ -728,6 +732,13 @@ var generator = {
     $is_class: true
 }
 
+generator.__dir__ = function(self){
+    var attrs = object.__dir__(self)
+    for(const attr of ["blocks", "env", "nexts", "next", "iter_id", "sent_value"]){
+        attrs.splice(attrs.indexOf(attr), 1)
+    }
+    return attrs
+}
 //fix me, need to investigate __enter__ and __exit__ and what they do
 generator.__enter__ = function(self){console.log("generator.__enter__ called")}
 generator.__exit__ = function(self){console.log("generator.__exit__ called")}
@@ -764,7 +775,7 @@ generator.__next__ = function(self){
         console.log(err)
         */
         self.$finished = true
-        err.$stack = $B.frames_stack.slice() // otherwise frame is lot in finally
+        err.$stack = $B.frames_stack.slice() // otherwise frame is lost in finally
         throw err
     }finally{
         // The line "leave_frame" is not inserted in the function body for
@@ -831,7 +842,18 @@ generator.$$throw = function(self, type, value, traceback){
     return generator.__next__(self)
 }
 
-generator.$factory = $B.genfunc = function(name, blocks, funcs, $defaults){
+var async_generator = {
+    __class__: _b_.type,
+    __mro__: [_b_.object],
+    $infos: {
+        __module__: "builtins",
+        __name__: "async_generator"
+    },
+    $is_class: true
+}
+
+
+generator.$factory = $B.genfunc = function(name, async, blocks, funcs, $defaults){
     // Transform a list of functions into a generator object, ie a function
     // that returns an iterator
     if(name.startsWith("__ge")){
@@ -854,7 +876,7 @@ generator.$factory = $B.genfunc = function(name, blocks, funcs, $defaults){
         }
 
         var res = {
-            __class__: generator,
+            __class__: async ? async_generator : generator,
             __name__: name,
             args: Array.prototype.slice.call(arguments),
             blocks: blocks,
@@ -863,15 +885,128 @@ generator.$factory = $B.genfunc = function(name, blocks, funcs, $defaults){
             nexts: gfuncs.slice(1),
             next: gfuncs[0],
             iter_id: iter_id,
-            gi_running: false,
             $started: false,
             $defaults: $defaults,
             $is_generator_obj: true
+        }
+        if(async){
+            res.ag_running = false
+        }else{
+            res.gi_running = false
         }
         return res
     }
 }
 
 $B.set_func_names(generator, "builtins")
+
+var ag_closed = {}
+
+async_generator.__aiter__ = function(self){
+    return self
+}
+
+async_generator.__anext__ = async function(self){
+    if(self.$finished){
+        throw _b_.StopAsyncIteration.$factory(_b_.None)
+    }
+    if(self.$closed){
+        throw _b_.StopAsyncIteration.$factory()
+    }
+    if(self.$exc){
+        throw self.$exc
+    }
+    if(self.ag_running === true){
+        throw ValueError.$factory("generator already executing")
+    }
+    self.ag_running = true
+    if(self.next === undefined){
+        self.$finished = true
+        throw _b_.StopAsyncIteration.$factory(_b_.None)
+    }
+
+    try{
+        var res = await self.next.apply(self, self.args)
+        if(res === undefined){
+            throw _b_.StopAsyncIteration.$factory(_b_.None)
+        }else if(res[0].__class__ === $GeneratorReturn){
+            // The function may have ordinary "return" lines, in this case
+            // the iteration stops
+            self.$finished = true
+            throw _b_.StopAsyncIteration.$factory(res[0].value)
+        }
+
+        self.next = self.nexts[res[1]]
+        self.ag_running = false
+        return res[0]
+    }catch(err){
+        /*
+        var src = self.next + '',
+            line_num = err.lineNumber,
+            lines = src.split("\n")
+        console.log(src)
+        console.log(line_num, lines.length)
+        console.log(lines[line_num - 1])
+        console.log(err)
+        */
+        self.$finished = true
+        err.$stack = $B.frames_stack.slice() // otherwise frame is lost in finally
+        if(err.__class__ !== _b_.GeneratorExit){
+            throw err
+        }
+    }finally{
+        // The line "leave_frame" is not inserted in the function body for
+        // generators, so we must call it here to pop from frames stack
+        self.ag_running = false
+        $B.leave_frame(self.iter_id)
+    }
+}
+
+async_generator.__dir__ = generator.__dir__
+
+async_generator.aclose = function(self){
+    if(self.$finished){
+        return _b_.None
+    }
+    self.sent_value = {
+        __class__: $B.$GeneratorSendError,
+        err: _b_.GeneratorExit.$factory()
+    }
+    return async_generator.__anext__(self)
+}
+
+async_generator.asend = function(){
+    var $ = $B.args("asend", 2, {self: null, value: null}, ['self', 'value'],
+            arguments, {}, null, null),
+        self = $.self,
+        value = $.value
+    self.sent_value = value
+    return async_generator.__anext__(self)
+}
+
+async_generator.athrow = function(self, type, value, traceback){
+    var exc = type
+
+    if(exc.$is_class){
+        if(! _b_.issubclass(type, _b_.BaseException)){
+            throw _b_.TypeError.$factory("exception value must be an " +
+                "instance of BaseException")
+        }else if(value === undefined){
+            value = $B.$call(exc)()
+        }
+    }else{
+        if(value === undefined){
+            value = exc
+        }else{
+            exc = $B.$call(exc)(value)
+        }
+    }
+    if(traceback !== undefined){exc.$traceback = traceback}
+    self.sent_value = {__class__: $B.$GeneratorSendError, err: value}
+    return async_generator.__anext__(self)
+}
+
+$B.set_func_names(async_generator, "builtins")
+
 
 })(__BRYTHON__)

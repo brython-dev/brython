@@ -391,6 +391,7 @@ $B.has_indexedDB = self.indexedDB !== undefined
 
 $B.handle_error = function(err){
     // Print the error traceback on the standard error stream
+    console.log("handle error", err.__class__, err.args)
     if(err.__class__ !== undefined){
         var name = $B.class_name(err),
             trace = _b_.getattr(err, 'info')
@@ -399,7 +400,10 @@ $B.handle_error = function(err){
             trace += '\n    ' + ' '.repeat(offset) + '^' +
                 '\n' + name + ': '+err.args[0]
         }else{
-            trace += '\n' + name + ': ' + err.args
+            trace += '\n' + name
+            if(err.args[0] && err.args[0] !== _b_.None){
+                trace += ': ' + _b_.str.$factory(err.args[0])
+            }
         }
     }else{
         console.log(err)

@@ -203,16 +203,8 @@ function run(coro){
     var handle_success = function(){
             $B.leave_frame()
         },
-        handle_error = function(ev){
-            console.log("handle error, ev", ev)
-            var err_msg = "Traceback (most recent call last):\n"
-            err_msg += $B.print_stack(ev.$stack)
-            if(ev.__class){
-                err_msg += "\n" + ev.__class__.$infos.__name__ +
-                    ': ' + ev.args[0]
-            }
-            $B.builtins.print(err_msg)
-            throw ev
+        handle_error = function(err){
+            $B.handle_error(err)
         }
 
     var $ = $B.args("run", 3, {coro: null, onsuccess: null, onerror: null},
