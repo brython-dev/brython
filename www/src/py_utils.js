@@ -449,6 +449,7 @@ $B.$JS2Py = function(src){
         for(var i = 0, len = src.length; i< len; i++){
             res.push($B.$JS2Py(src[i]))
         }
+        res.__class__ = src.__class__
         return res
     }
     var klass = $B.get_class(src)

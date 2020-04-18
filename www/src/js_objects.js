@@ -590,6 +590,8 @@ JSObject.$factory = function(obj){
     }
 }
 
+$B.set_func_names(JSObject, "builtins")
+
 $B.JSObject = JSObject
 $B.JSConstructor = JSConstructor
 

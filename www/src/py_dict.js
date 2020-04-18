@@ -362,11 +362,12 @@ dict.__getitem__ = function(){
 
 dict.$getitem = function(self, arg){
     if(self.$jsobj){
-        if(!self.$jsobj.hasOwnProperty(arg)){
-            throw _b_.KeyError.$factory(str.$factory(arg))
-        }else if(self.$jsobj[arg] === undefined){
-            return _b_.NotImplemented
-        }else if(self.$jsobj[arg] === null){return $N}
+        if(self.$jsobj[arg] === undefined){
+            if(self.$jsobj.hasOwnProperty(arg)){
+                return undefined
+            }
+            throw _b_.KeyError.$factory(arg)
+        }
         return self.$jsobj[arg]
     }
 
@@ -583,7 +584,12 @@ dict.__repr__ = function(self){
     var res = [],
         items = to_list(self)
     items.forEach(function(item){
-        res.push(repr(item[0]) + ": " + repr(item[1]))
+        try{
+            res.push(repr(item[0]) + ": " + repr(item[1]))
+        }catch(err){
+            console.log("error", item)
+            throw err
+        }
     })
     $B.repr.leave(self)
     return "{" + res.join(", ") + "}"
@@ -598,8 +604,10 @@ dict.__setitem__ = function(self, key, value){
 dict.$setitem = function(self, key, value, $hash){
     // Set a dictionary item mapping key and value.
     //
-    // If key is a string, set $string_dict[key] = value and
-    // $str_hash[hash(key)] to key
+    // If key is a string, set:
+    // - $string_dict[key] = [value, order] where "order" is an auto-increment
+    //   unique id to keep track of insertion order
+    // - $str_hash[hash(key)] to key
     //
     // If key is a number, set $numeric_dict[key] = value
     //
@@ -614,7 +622,7 @@ dict.$setitem = function(self, key, value, $hash){
     // - else set $object_dict[hash] = [[key, value]]
     //
     // In all cases, increment attribute $version, used to detect dictionary
-    // cahnges during an iteration.
+    // changes during an iteration.
     //
     // Parameter $hash is only set if this method is called by setdefault.
     // In this case the hash of key has already been computed and we
@@ -984,12 +992,14 @@ function jsobj2dict(x){
     var d = dict.$factory()
     for(var attr in x){
         if(attr.charAt(0) != "$" && attr !== "__class__"){
-            if(x[attr] === undefined){
+            if(x[attr] === null){
+                d.$string_dict[attr] = [_b_.None, d.$version]
+            }else if(x[attr] === undefined){
                 continue
             }else if(x[attr].$jsobj === x){
                 d.$string_dict[attr] = [d, d.$version]
             }else{
-                d.$string_dict[attr] = [x[attr], d.$version]
+                d.$string_dict[attr] = [$B.$JS2Py(x[attr]), d.$version]
             }
             d.$version++
         }

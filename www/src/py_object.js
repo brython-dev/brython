@@ -122,9 +122,11 @@ object.__getattribute__ = function(obj, attr){
         res = undefined
     }
 
-    if(res === undefined && obj.__dict__ &&
-            obj.__dict__.$string_dict.hasOwnProperty(attr)){
-        return obj.__dict__.$string_dict[attr][0]
+    if(res === undefined && obj.__dict__){
+        var dict = obj.__dict__
+        if(dict.$string_dict.hasOwnProperty(attr)){
+            return dict.$string_dict[attr][0]
+        }
     }
 
     if(res === undefined){

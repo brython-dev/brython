@@ -356,6 +356,7 @@ DOMEvent.$factory = function(evt_name){
 // Function to transform a DOM event into an instance of DOMEvent
 var $DOMEvent = $B.$DOMEvent = function(ev){
     ev.__class__ = DOMEvent
+    ev.$no_dict = true
     if(ev.preventDefault === undefined){
         ev.preventDefault = function(){ev.returnValue = false}
     }
@@ -575,9 +576,11 @@ DOMNode.$factory = function(elt, fromtag){
         // add a unique id for comparisons
         elt.$brython_id = "DOM-" + $B.UUID()
     }
-
+    var __dict__ = _b_.dict.$factory()
+    __dict__.$jsobj = elt
     return {
         __class__: DOMNode,
+        __dict__: __dict__,
         elt: elt
     }
 }
@@ -649,7 +652,7 @@ DOMNode.__dir__ = function(self){
     }
     // Brython-specific attributes
     for(var attr in DOMNode){
-        if(attr.charAt(0) != "$" && res.indexOf(attr) == -1){res.push(attr)}
+        //if(attr.charAt(0) != "$" && res.indexOf(attr) == -1){res.push(attr)}
     }
     res.sort()
     return res
@@ -808,7 +811,7 @@ DOMNode.__getattribute__ = function(self, attr){
                     return $B.$JS2Py(result)
                 }
             })(res, self.elt)
-            func.$infos = {__name__ : attr}
+            func.$infos = {__name__ : attr, __qualname__: attr}
             func.$is_func = true
             return func
         }

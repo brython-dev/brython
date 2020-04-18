@@ -1,5 +1,7 @@
 # issue 744: Javascript objects should allow integer attribute names.
 from browser import window
+import javascript
+
 a = window.Uint8ClampedArray.new(10)
 
 for i in range(10):
@@ -9,8 +11,8 @@ for i in range(10):
 # Test dict initialization from native js objects
 # JS objects are in script jsobj_tests.js
 pyobj = window.test_jsobj.to_dict()
-assert pyobj["null_value"] is None
-assert pyobj["undef_value"] is NotImplemented
+assert pyobj["null_value"] is javascript.NULL
+assert pyobj["undef_value"] is javascript.UNDEFINED
 assert pyobj["test_num"] == 10
 assert len(list(pyobj.items())) == 3
 assert len(list(pyobj.values())) == 3
