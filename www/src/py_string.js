@@ -2002,7 +2002,7 @@ str.zfill = function(self, width){
 str.$factory = function(arg, encoding, errors){
     if(arguments.length == 0){return ""}
     if(arg === undefined){
-        throw _b_.TypeError.$factory("str() argument is undefined")
+        return $B.UndefinedClass.__str__()
     }
     if(encoding !== undefined){
         // Arguments may be passed as keywords (cf. issue #1060)

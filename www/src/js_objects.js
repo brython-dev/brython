@@ -122,17 +122,7 @@ JSConstructor.$factory = function(obj){
     }
 }
 
-// Object used to convert Javascript undefined value
-var UndefinedClass = $B.make_class("undefined",
-    function(){return Undefined}
-)
-UndefinedClass.__bool__ = function(){return false}
-UndefinedClass.__repr__ = function(){return "undefined"}
-var Undefined = {
-    __class__: UndefinedClass
-}
 
-$B.set_func_names(UndefinedClass, "<javascript>")
 
 var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj) {
     switch(jsobj) {

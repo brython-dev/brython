@@ -263,6 +263,9 @@ $B.$class_constructor = function(class_name, class_obj, bases,
 var type = $B.make_class("type",
     function(obj, bases, cl_dict){
         if(arguments.length == 1){
+            if(obj === undefined){
+                return $B.UndefinedClass
+            }
             return obj.__class__ || $B.get_class(obj)
         }
         return type.__new__(type, obj, bases, cl_dict)

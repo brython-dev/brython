@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-04-18 21:06:30.443479"
-__BRYTHON__.timestamp=1587236790443
+__BRYTHON__.compiled_date="2020-04-19 09:37:06.790762"
+__BRYTHON__.timestamp=1587281826790
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5658,7 +5658,8 @@ Object.keys(abstract_methods).join(", "))}
 kls.$factory=nofactory}
 kls.__qualname__=class_name.replace("$$","")
 return kls}
-var type=$B.make_class("type",function(obj,bases,cl_dict){if(arguments.length==1){return obj.__class__ ||$B.get_class(obj)}
+var type=$B.make_class("type",function(obj,bases,cl_dict){if(arguments.length==1){if(obj===undefined){return $B.UndefinedClass}
+return obj.__class__ ||$B.get_class(obj)}
 return type.__new__(type,obj,bases,cl_dict)}
 )
 type.__call__=function(){var extra_args=[],klass=arguments[0]
@@ -5957,6 +5958,7 @@ positional.slice(received))}else{throw _b_.TypeError.$factory(name+"() takes "+e
 " but more were given")}}
 $B.get_class=function(obj){
 if(obj===null){return $B.$NoneDict}
+if(obj===undefined){return $B.UndefinedClass}
 var klass=obj.__class__
 if(klass===undefined){switch(typeof obj){case "number":
 if(obj % 1===0){
@@ -8943,12 +8945,6 @@ return $B.$JS2Py(res)}}
 return JSObject.__getattribute__(self,attr)}
 JSConstructor.$factory=function(obj){return{
 __class__:JSConstructor,js:obj,func:obj.js_func}}
-var UndefinedClass=$B.make_class("undefined",function(){return Undefined}
-)
-UndefinedClass.__bool__=function(){return false}
-UndefinedClass.__repr__=function(){return "undefined"}
-var Undefined={__class__:UndefinedClass}
-$B.set_func_names(UndefinedClass,"<javascript>")
 var jsobj2pyobj=$B.jsobj2pyobj=function(jsobj){switch(jsobj){case true:
 case false:
 return jsobj}
@@ -12246,7 +12242,7 @@ return self.charAt(0)+
 default:
 return "0".repeat(width-self.length)+self}}
 str.$factory=function(arg,encoding,errors){if(arguments.length==0){return ""}
-if(arg===undefined){throw _b_.TypeError.$factory("str() argument is undefined")}
+if(arg===undefined){return $B.UndefinedClass.__str__()}
 if(encoding !==undefined){
 var $=$B.args("str",3,{arg:null,encoding:null,errors:null},["arg","encoding","errors"],arguments,{encoding:"utf-8",errors:"strict"},null,null),encoding=$.encoding,errors=$.errors}
 switch(typeof arg){case "string":
@@ -12545,7 +12541,7 @@ if(! flag){return false}}}
 return true}
 dict.__getitem__=function(){var $=$B.args("__getitem__",2,{self:null,arg:null},["self","arg"],arguments,{},null,null),self=$.self,arg=$.arg
 return dict.$getitem(self,arg)}
-dict.$getitem=function(self,arg){if(self.$jsobj){if(self.$jsobj[arg]===undefined){if(self.$jsobj.hasOwnProperty(arg)){return undefined}
+dict.$getitem=function(self,arg){if(self.$jsobj){if(self.$jsobj[arg]===undefined){if(self.$jsobj.hasOwnProperty(arg)){return $B.Undefined}
 throw _b_.KeyError.$factory(arg)}
 return self.$jsobj[arg]}
 switch(typeof arg){case "string":
@@ -13917,6 +13913,13 @@ obj.maketag=maketag
 obj.attribute_mapper=function(attr){return attr.replace(/_/g,'-')}
 return obj})(__BRYTHON__)}
 modules['browser']=browser
+$B.UndefinedClass=$B.make_class("Undefined",function(){return $B.Undefined}
+)
+$B.UndefinedClass.__mro__=[_b_.object]
+$B.UndefinedClass.__bool__=function(self){return false}
+$B.UndefinedClass.__repr__=$B.UndefinedClass.__str__=function(self){return "<Javascript undefined>"}
+$B.Undefined={__class__:$B.UndefinedClass}
+$B.set_func_names($B.UndefinedClass,"javascript")
 modules['javascript']={$$this:function(){
 if($B.js_this===undefined){return $B.builtins.None}
 return $B.JSObject.$factory($B.js_this)},$$Date:self.Date && $B.JSObject.$factory(self.Date),JSConstructor:{__get__:function(){console.warn('"javascript.JSConstructor" is deprecrated. '+
@@ -13928,7 +13931,7 @@ return $B.JSObject},__set__:function(){throw _b_.AttributeError.$factory("read o
 var file_obj=$B.builtins.open(script_url)
 var content=$B.builtins.getattr(file_obj,'read')()
 eval(content)},$$Math:self.Math && $B.JSObject.$factory(self.Math),NULL:null,$$Number:self.Number && $B.JSObject.$factory(self.Number),py2js:function(src,module_name){if(module_name===undefined){module_name='__main__'+$B.UUID()}
-return $B.py2js(src,module_name,module_name,$B.builtins_scope).to_js()},pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},$$RegExp:self.RegExp && $B.JSObject.$factory(self.RegExp),$$String:self.String && $B.JSObject.$factory(self.String),UNDEFINED:undefined}
+return $B.py2js(src,module_name,module_name,$B.builtins_scope).to_js()},pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},$$RegExp:self.RegExp && $B.JSObject.$factory(self.RegExp),$$String:self.String && $B.JSObject.$factory(self.String),UNDEFINED:$B.Undefined,UndefinedType:$B.UndefinedClass}
 var arraybuffers=["Int8Array","Uint8Array","Uint8ClampedArray","Int16Array","Uint16Array","Int32Array","Uint32Array","Float32Array","Float64Array","BigInt64Array","BigUint64Array"]
 arraybuffers.forEach(function(ab){if(self[ab]!==undefined){modules['javascript'][ab]=$B.JSObject.$factory(self[ab])}})
 var _b_=$B.builtins

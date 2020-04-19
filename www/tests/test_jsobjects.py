@@ -78,3 +78,8 @@ assert x == 'x'
 import javascript
 obj = javascript.JSON.parse('{"foo": null}')
 assert obj == {"foo": None}
+
+# issue 1352
+x = window.eval()
+assert x == javascript.UNDEFINED
+assert type(x) == javascript.UndefinedType

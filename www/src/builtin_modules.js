@@ -346,6 +346,22 @@
 
     modules['browser'] = browser
 
+    // Class for Javascript "undefined"
+    $B.UndefinedClass = $B.make_class("Undefined",
+        function(){return $B.Undefined}
+    )
+    $B.UndefinedClass.__mro__ = [_b_.object]
+    $B.UndefinedClass.__bool__ = function(self){
+        return false
+    }
+    $B.UndefinedClass.__repr__ = $B.UndefinedClass.__str__ = function(self){
+        return "<Javascript undefined>"
+    }
+
+    $B.Undefined = {__class__: $B.UndefinedClass}
+
+    $B.set_func_names($B.UndefinedClass, "javascript")
+
     modules['javascript'] = {
         $$this: function(){
             // returns the content of Javascript "this"
@@ -406,7 +422,8 @@
         pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},
         $$RegExp: self.RegExp && $B.JSObject.$factory(self.RegExp),
         $$String: self.String && $B.JSObject.$factory(self.String),
-        UNDEFINED: undefined
+        UNDEFINED: $B.Undefined,
+        UndefinedType: $B.UndefinedClass
     }
 
     var arraybuffers = ["Int8Array", "Uint8Array", "Uint8ClampedArray",

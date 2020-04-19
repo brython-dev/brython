@@ -182,6 +182,7 @@ $B.get_class = function(obj){
     // don't have this attribute so we must return it
 
     if(obj === null){return $B.$NoneDict}
+    if(obj === undefined){return $B.UndefinedClass} // in builtin_modules.js
     var klass = obj.__class__
     if(klass === undefined){
         switch(typeof obj) {

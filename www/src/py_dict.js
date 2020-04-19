@@ -364,7 +364,7 @@ dict.$getitem = function(self, arg){
     if(self.$jsobj){
         if(self.$jsobj[arg] === undefined){
             if(self.$jsobj.hasOwnProperty(arg)){
-                return undefined
+                return $B.Undefined
             }
             throw _b_.KeyError.$factory(arg)
         }
