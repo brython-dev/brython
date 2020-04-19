@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-04-19 09:37:06.790762"
-__BRYTHON__.timestamp=1587281826790
+__BRYTHON__.compiled_date="2020-04-19 14:25:36.728406"
+__BRYTHON__.timestamp=1587299136728
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -3329,15 +3329,23 @@ var scope=$get_scope(this),sc=scope,scope_id=scope.id.replace(/\//g, '_'),
                 var res1 = [], items = []
                 var qesc = new RegExp('"', "g") //to escape double quotes in arguments
 var comments=root.comments
+console.log("list comp, src",src)
+console.log("intervals",this.intervals)
+console.log("comments",root.comments)
 for(var i=1;i < this.intervals.length;i++){var start=this.intervals[i-1],end=this.intervals[i],txt=src.substring(start,end)
-comments.forEach(function(comment){if(comment[0]> start && comment[0]< end){
+console.log("start",start,"end",end,"interval text",txt)
+for(var j=comments.length-1;j >=0;j--){var comment=comments[j]
+if(comment[0]> start && comment[0]< end){
 var pos=comment[0]-start
+console.log("remove comment",txt.substr(pos,comment[1]+1))
 txt=txt.substr(0,pos)+
 ' '.repeat(comment[1])+
-txt.substr(pos+comment[1]+1)}})
+txt.substr(pos+comment[1]+1)
+console.log("new text",txt)}}
 txt=txt.replace(/\\\n/g," ")
 items.push(txt)
 var lines=txt.split('\n')
+console.log("lines",lines)
 var res2=[]
 lines.forEach(function(txt){
 if(txt.replace(/ /g,'').length !=0){txt=txt.replace(/\n/g,' ')
@@ -5978,12 +5986,14 @@ break}}
 return klass}
 $B.class_name=function(obj){return $B.get_class(obj).$infos.__name__}
 $B.$list_comp=function(items){
+console.log("list comp",items)
 var ix=$B.UUID(),py="x"+ix+"=[]\n",indent=0
 for(var i=1,len=items.length;i < len;i++){var item=items[i].replace(/\s+$/,"").replace(/\n/g,"")
 py+=" ".repeat(indent)+item+":\n"
 indent+=4}
 py+=" ".repeat(indent)
 py+="x"+ix+".append("+items[0]+")\n"
+console.log(py)
 return[py,ix]}
 $B.$dict_comp=function(module_name,parent_scope,items,line_num){
 var ix=$B.UUID(),res="res"+ix,py=res+"={}\n",

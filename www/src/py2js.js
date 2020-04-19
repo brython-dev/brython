@@ -625,7 +625,7 @@ var $Node = $B.parser.$Node = function(type){
                     res = 'var ' + def_ctx.name + def_ctx.num + ' = ' +
                         '$locals_' + block_id + '["' + def_ctx.name +
                         '"] = $B.genfunc("' +
-                        def_ctx.name + '", ' + def_ctx.async + ', ' + blocks + 
+                        def_ctx.name + '", ' + def_ctx.async + ', ' + blocks +
                         ',[' + g + '],' + def_ctx.default_str + ')'
                 var new_node = $NodeJS(res)
                 new_node.bindings = this.bindings
@@ -6734,8 +6734,9 @@ var $ListOrTupleCtx = $B.parser.$ListOrTupleCtx = function(context,real){
                     var start = this.intervals[i - 1],
                         end = this.intervals[i],
                         txt = src.substring(start, end)
-
-                    comments.forEach(function(comment){
+                    
+                    for(var j = comments.length - 1; j >= 0; j--){
+                        var comment = comments[j]
                         if(comment[0] > start && comment[0] < end){
                             // If there is a comment inside the interval,
                             // replace it by spaces. Cf issue #776
@@ -6744,7 +6745,7 @@ var $ListOrTupleCtx = $B.parser.$ListOrTupleCtx = function(context,real){
                                 ' '.repeat(comment[1]) +
                                 txt.substr(pos + comment[1] + 1)
                         }
-                    })
+                    }
 
                     txt = txt.replace(/\\\n/g, " ") // continuation lines
 

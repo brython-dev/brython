@@ -612,4 +612,10 @@ def f(x, y):
 
 assert f([1, 2, 3], [4, 5, 6]) == (-12, -6)
 
+# issue 1355
+def f():
+  [{ # comment
+    0: 0} # comment
+    for _ in []]
+
 print('passed all tests...')
