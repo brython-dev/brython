@@ -587,7 +587,6 @@ dict.__repr__ = function(self){
         try{
             res.push(repr(item[0]) + ": " + repr(item[1]))
         }catch(err){
-            console.log("error", item)
             throw err
         }
     })

@@ -155,9 +155,6 @@ function make_node(top_node, node){
             if(node.after_yield){
                 ctx_manager = in_ctx_manager(node)
             }
-            if(node.line_num === undefined){
-                console.log("bizarre", node)
-            }
             var js = "var sent_value = this.sent_value === undefined ? " +
                     "_b_.None : this.sent_value;",
                 h = "\n" + ' '.repeat(node.indent)
