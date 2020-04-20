@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-04-19 14:25:36.728406"
-__BRYTHON__.timestamp=1587299136728
+__BRYTHON__.compiled_date="2020-04-20 09:46:15.965240"
+__BRYTHON__.timestamp=1587368775965
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -3329,23 +3329,16 @@ var scope=$get_scope(this),sc=scope,scope_id=scope.id.replace(/\//g, '_'),
                 var res1 = [], items = []
                 var qesc = new RegExp('"', "g") //to escape double quotes in arguments
 var comments=root.comments
-console.log("list comp, src",src)
-console.log("intervals",this.intervals)
-console.log("comments",root.comments)
 for(var i=1;i < this.intervals.length;i++){var start=this.intervals[i-1],end=this.intervals[i],txt=src.substring(start,end)
-console.log("start",start,"end",end,"interval text",txt)
 for(var j=comments.length-1;j >=0;j--){var comment=comments[j]
 if(comment[0]> start && comment[0]< end){
 var pos=comment[0]-start
-console.log("remove comment",txt.substr(pos,comment[1]+1))
 txt=txt.substr(0,pos)+
 ' '.repeat(comment[1])+
-txt.substr(pos+comment[1]+1)
-console.log("new text",txt)}}
+txt.substr(pos+comment[1]+1)}}
 txt=txt.replace(/\\\n/g," ")
 items.push(txt)
 var lines=txt.split('\n')
-console.log("lines",lines)
 var res2=[]
 lines.forEach(function(txt){
 if(txt.replace(/ /g,'').length !=0){txt=txt.replace(/\n/g,' ')
@@ -5986,14 +5979,12 @@ break}}
 return klass}
 $B.class_name=function(obj){return $B.get_class(obj).$infos.__name__}
 $B.$list_comp=function(items){
-console.log("list comp",items)
 var ix=$B.UUID(),py="x"+ix+"=[]\n",indent=0
 for(var i=1,len=items.length;i < len;i++){var item=items[i].replace(/\s+$/,"").replace(/\n/g,"")
 py+=" ".repeat(indent)+item+":\n"
 indent+=4}
 py+=" ".repeat(indent)
 py+="x"+ix+".append("+items[0]+")\n"
-console.log(py)
 return[py,ix]}
 $B.$dict_comp=function(module_name,parent_scope,items,line_num){
 var ix=$B.UUID(),res="res"+ix,py=res+"={}\n",
@@ -6327,7 +6318,7 @@ throw _b_.TypeError.$factory("'"+$B.class_name(v)+
 "' object cannot be interpreted as an integer")}}
 $B.enter_frame=function(frame){
 $B.frames_stack.push(frame)
-if($B.tracefunc){if(frame[4]===$B.tracefunc ||
+if($B.tracefunc && $B.tracefunc !==_b_.None){if(frame[4]===$B.tracefunc ||
 ($B.tracefunc.$infos && frame[4]&&
 frame[4]===$B.tracefunc.$infos.__func__)){
 $B.tracefunc.$frame_id=frame[0]
@@ -7779,8 +7770,11 @@ co_name:co_name,co_filename:filename}
 if(filename===undefined){res.f_code.co_filename="<string>"}}
 return res}
 )
+frame.__delattr__=function(self,attr){if(attr=="f_trace"){$B.last(self.$stack)[1].$f_trace=_b_.None}}
 frame.__getattr__=function(self,attr){
-if(attr=="f_back"){if(self.$pos > 0){return frame.$factory(self.$stack.slice(0,self.$stack.length-1))}else{return _b_.None}}else if(attr=="clear"){return function(){}}}
+if(attr=="f_back"){if(self.$pos > 0){return frame.$factory(self.$stack.slice(0,self.$stack.length-1))}else{return _b_.None}}else if(attr=="clear"){return function(){}}else if(attr=="f_trace"){var locals=$B.last(self.$stack)[1]
+if(locals.$f_trace===undefined){return _b_.None}
+return locals.$f_trace}}
 frame.__setattr__=function(self,attr,value){if(attr=="f_trace"){
 $B.last(self.$stack)[1].$f_trace=value}}
 frame.__str__=frame.__repr__=function(self){return '<frame object, file '+self.f_code.co_filename+
@@ -12640,8 +12634,7 @@ dict.__repr__=function(self){if(self.$jsobj){
 return dict.__repr__(jsobj2dict(self.$jsobj))}
 if($B.repr.enter(self)){return "{...}"}
 var res=[],items=to_list(self)
-items.forEach(function(item){try{res.push(repr(item[0])+": "+repr(item[1]))}catch(err){console.log("error",item)
-throw err}})
+items.forEach(function(item){try{res.push(repr(item[0])+": "+repr(item[1]))}catch(err){throw err}})
 $B.repr.leave(self)
 return "{"+res.join(", ")+"}"}
 dict.__setitem__=function(self,key,value){var $=$B.args("__setitem__",3,{self:null,key:null,value:null},["self","key","value"],arguments,{},null,null)
@@ -13486,7 +13479,6 @@ new_node.data=res
 top_node.yields.push(new_node)}else if(node.is_set_yield_value){
 var ctx_manager
 if(node.after_yield){ctx_manager=in_ctx_manager(node)}
-if(node.line_num===undefined){console.log("bizarre",node)}
 var js="var sent_value = this.sent_value === undefined ? "+
 "_b_.None : this.sent_value;",h="\n"+' '.repeat(node.indent)
 js+=h+"this.sent_value = _b_.None"
@@ -13970,7 +13962,7 @@ function(){return _b_.dict.$factory($B.JSObject.$factory($B.path_importer_cache)
 ),settrace:function(){var $=$B.args("settrace",1,{tracefunc:null},['tracefunc'],arguments,{},null,null)
 $B.tracefunc=$.tracefunc
 $B.last($B.frames_stack)[1].$f_trace=$B.tracefunc
-$.tracefunc.$current_frame_id=$B.last($B.frames_stack)[0]
+$B.tracefunc.$current_frame_id=$B.last($B.frames_stack)[0]
 return _b_.None},stderr:_b_.property.$factory(
 function(){return $B.stderr},function(self,value){$B.stderr=value}
 ),stdout:_b_.property.$factory(

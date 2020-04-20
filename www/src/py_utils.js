@@ -1061,7 +1061,7 @@ $B.int_or_bool = function(v){
 $B.enter_frame = function(frame){
     // Enter execution frame : save on top of frames stack
     $B.frames_stack.push(frame)
-    if($B.tracefunc){
+    if($B.tracefunc && $B.tracefunc !== _b_.None){
         if(frame[4] === $B.tracefunc ||
                 ($B.tracefunc.$infos && frame[4] &&
                  frame[4] === $B.tracefunc.$infos.__func__)){

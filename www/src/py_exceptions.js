@@ -313,6 +313,12 @@ var frame = $B.make_class("frame",
     }
 )
 
+frame.__delattr__ = function(self, attr){
+    if(attr == "f_trace"){
+        $B.last(self.$stack)[1].$f_trace = _b_.None
+    }
+}
+
 frame.__getattr__ = function(self, attr){
     // Used for f_back to avoid computing it when the frame object
     // is initialised
@@ -326,6 +332,12 @@ frame.__getattr__ = function(self, attr){
         return function(){
             // XXX fix me
         }
+    }else if(attr == "f_trace"){
+        var locals = $B.last(self.$stack)[1]
+        if(locals.$f_trace === undefined){
+            return _b_.None
+        }
+        return locals.$f_trace
     }
 }
 
@@ -599,7 +611,7 @@ $B.is_exc = function(exc, exc_list){
     if(exc.__class__ === undefined){
         exc = $B.exception(exc)
     }
-    
+
     var this_exc_class = exc.$is_class ? exc : exc.__class__
     for(var i = 0; i < exc_list.length; i++){
         var exc_class = exc_list[i]

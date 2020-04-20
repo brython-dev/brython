@@ -992,7 +992,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false // attr == "__subclasscheck__" // && obj === $B // "Point"
+    var $test = false // attr == "f_trace" || attr == "f_back" // && obj === $B // "Point"
     if($test){console.log("$getattr", attr, obj, klass)}
 
     // Shortcut for classes without parents
