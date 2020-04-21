@@ -44,7 +44,7 @@ Let's take a look at the page contents. In the `<head>` zone we load the script 
 
 The `<body>` tag has an attribute `onload="brython()"`. It means that when the page has finished loading, the browser has to call the function `brython()`, which is defined in the Brython engine loaded in the page. The function searches all the `<script>`tags that have the attribute `type="text/python"` and executes them.
 
-Our __`index.hml`__ page embeds this script:
+Our __`index.html`__ page embeds this script:
 
 ```python
 from browser import document

@@ -44,7 +44,7 @@ Analysons le contenu de cette page. Dans la zone `<head>` nous chargeons le scri
 
 La balise `<body>` possède un attribut `onload="brython()"`. Ceci indique au navigateur qu'une fois la page complètement chargée, il faut appeler la fonction `brython()`; celle-ci est définie par le moteur Brython chargé dans la page. Elle recherche dans la page tous les scripts qui ont le type `type="text/python"` et les exécute.
 
-Notre page __`index.hml`__ comporte ce script:
+Notre page __`index.html`__ comporte ce script:
 
 ```python
 from browser import document

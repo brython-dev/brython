@@ -44,7 +44,7 @@ Ora diamo un'occhiata al contenuto della pagina. Nella sezione `<head>` viene ca
 
 Il tag `<body>` contiene l'attributo `onload="brython()"`. Significa che quando la pagina ha finito di caricarsi, il browser deve chiamare la funzione `brython()`, che è definita nell'engine Brython descritto poco sopra. Questa funzione cerca tutti i tag `<script>` che hanno l'attributo `type="text/python"` e li esegue.
 
-La nostra pagina __`index.hml`__ contiene proprio uno di questi script:
+La nostra pagina __`index.html`__ contiene proprio uno di questi script:
 
 ```python
 from browser import document

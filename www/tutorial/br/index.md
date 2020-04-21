@@ -44,7 +44,7 @@ Taolomp ur sell ouzh ar pezh a zo er bajenn. E-barzh al lodenn `<head>` e kargom
 
 Ar valizenn `<body>` he deus un doareenn `onload="brython()"`. Gourc'hemenn a ra ar merdeer kas an arc'hwel `brython()` en-dro pa vo echuet kargañ an holl bajenn. An arc'hwel a zo termenet e-barzh ar c'heflusker Brython. Klask a ra an holl balizennoù `<script>` gant an doareenn `type="text/python"` ha seveniñ a ra anezho.
 
-E-barzh hor pajenn __`index.hml`__ e kaver ar skript-mañ:
+E-barzh hor pajenn __`index.html`__ e kaver ar skript-mañ:
 
 ```python
 from browser import document
