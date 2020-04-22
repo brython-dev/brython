@@ -12,7 +12,7 @@ import inspect
 import types
 
 
-stdlib_name = '_operator'
+stdlib_name = '_frozen_importlib'
 ns = {}
 exec('import %s;print(dir(%s))' % (stdlib_name, stdlib_name), ns)
 
