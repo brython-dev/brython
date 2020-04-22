@@ -187,10 +187,11 @@ traceback.__getattribute__ = function(self, attr){
                 return "<unknown>"
             }else{
                 var info = line_info.split(","),
-                    src
+                    src,
+                    file
                 for(var i = self.$stack.length - 1; i >= 0; i--){
                     var fr = self.$stack[i]
-                    if(fr[2] == info[1]){
+                    if(fr[2] == info[1].replace(/\./g, '_')){
                         file = fr[3].__file__
                         break
                     }
