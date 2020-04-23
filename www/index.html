@@ -11,7 +11,7 @@
 <noscript>Please enable Javascript to view this page correctly.</noscript>
 
 <script type="text/javascript" src="/src/brython.js"></script>
-<script type="text/javascript" src="/src/brython_stdlib.js"></script>
+<!-- script type="text/javascript" src="/src/brython_stdlib.js"></script -->
 
 <script src="/assets/header.brython.js"></script>
 
@@ -30,14 +30,7 @@ document["content"].html = document[f"content_{language}"].html
 if qs_lang:
     document[f"c_{qs_lang}"].href += f"?lang={qs_lang}"
 
-# If user changes the language in the select box, reload the page.
-def change_language(ev):
-    sel = ev.target
-    new_lang = sel.options[sel.selectedIndex].value
-    document.location.href = f"index.html?lang={new_lang}"
 
-for elt in document.select("select.language"):
-    elt.bind('change', change_language)
 
 </script>
 
@@ -169,30 +162,20 @@ else:
 
 <body onload="brython(1)">
 
-<table id="banner" cellpadding=0 cellspacing=0>
-<tr id="banner_row">
-<td class="logo"><a href="../index.html" class="logo">Brython</a></td>
-</tr>
-</table>
+<div id="banner_row">
+</div>
 
 <div id="content"></div>
 
 <div id="content_en" style="height:1px;visibility:hidden">
 
 <table style="width:85%;margin-left:10%">
-<tr>
-<td>
+  <tr>
+    <td>
+      <H2>A Python 3 implementation for client-side web programming</H2>
+    </td>
 
-<H2>A Python 3 implementation for client-side web programming</H2>
-</td>
-<td valign="top">
-<select class="language" id="change_lang_en">
-<option value="en" selected>English
-<option value="es">Espa&ntilde;ol
-<option value="fr">Fran&ccedil;ais
-</select>
-</td>
-</tr>
+  </tr>
 </table>
 
 <table style="width:85%;margin-left:10%">
@@ -228,13 +211,7 @@ However, right click and view the source of this page...
 
 <H2>Une implémentation de Python 3 pour la programmation web côté client</H2>
 </td>
-<td valign="top">
-<select class="language" id="change_lang_fr">
-<option value="en">English
-<option value="es">Espa&ntilde;ol
-<option value="fr" selected>Fran&ccedil;ais
-</select>
-</td>
+
 </tr>
 </table>
 
@@ -270,13 +247,7 @@ Maintenant, regardez le code source de cette page...
 
 <H2>Una implementación de Python para la programación web del lado del cliente</H2>
 </td>
-<td valign="top">
-<select class="language" id="change_lang_en">
-<option value="en">English
-<option value="es" selected>Espa&ntilde;ol
-<option value="fr">Fran&ccedil;ais
-</select>
-</td>
+
 </tr>
 </table>
 

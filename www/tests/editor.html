@@ -54,6 +54,7 @@ import editor
 
 qs_lang,language = header.show()
 
+doc["test_suite"].href = f"index.html?lang={language}"
 # other translations
 
 trans = {
@@ -103,13 +104,9 @@ function run_js(){
 }
 </script>
 </head>
-<body onload="brython({debug:1})">
+<body onload="brython({debug:2})">
 
-<table id=banner cellpadding=0 cellspacing=0>
-<tr id=banner_row >
-<td class="logo"><a href="../index.html" class="logo">Brython</a></td>
-</tr>
-</table>
+<div id="banner_row"></div>
 
 <div id="main_container"></div>
 
@@ -144,7 +141,7 @@ function run_js(){
     </td>
     <td></td>
     <td>
-      <a href="index.html">Tests suite</a>
+      <a href="#" id="test_suite">Tests suite</a>
     </td>
   </tr>
 </table>
