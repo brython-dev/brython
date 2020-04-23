@@ -618,4 +618,10 @@ def f():
     0: 0} # comment
     for _ in []]
 
+# issue 1363
+a = (b) = (c) = "test"
+assert a == "test"
+assert b == "test"
+assert c == "test"
+
 print('passed all tests...')

@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-04-23 17:15:37.571930"
-__BRYTHON__.timestamp=1587654937571
+__BRYTHON__.compiled_date="2020-04-23 20:25:18.877357"
+__BRYTHON__.timestamp=1587666318877
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -599,7 +599,11 @@ var nleft=new $RawJSCtx(ctx,'var $temp'+$loop_num)
 nleft.tree=ctx.tree
 var nassign=new $AssignCtx(nleft)
 nassign.tree[1]=right
-assigned.forEach(function(elt){var new_node=new $Node(),node_ctx=new $NodeCtx(new_node)
+assigned.forEach(function(elt){if(elt.type=="expr" && elt.tree[0].type=="list_or_tuple" &&
+elt.tree[0].real=="tuple" &&
+elt.tree[0].tree.length==1){
+elt=elt.tree[0].tree[0]}
+var new_node=new $Node(),node_ctx=new $NodeCtx(new_node)
 new_node.locals=node.locals
 new_node.line_num=node.line_num
 node.parent.insert(rank+1,new_node)
@@ -624,6 +628,7 @@ if(left_items===null){if(left.tree[0].bound){if(right.type=="expr" && right.name
 node.bindings[left.tree[0].value]="int"}}
 return}
 var right_items=null
+console.log("right",right.type)
 if(right.type=='list' ||right.type=='tuple'||
 (right.type=='expr' && right.tree.length > 1)){right_items=right.tree}
 if(right_items !==null){
@@ -5334,7 +5339,6 @@ source+="\nvar $locals_"+
 module.replace(/\./g,"_")+" = $module"
 $B.precompiled[module]=source}
 var inImported=$B.inImported=function(module){if($B.imported.hasOwnProperty(module)){}else if(__BRYTHON__.VFS && __BRYTHON__.VFS.hasOwnProperty(module)){var elts=__BRYTHON__.VFS[module]
-console.log("load from VFS",module)
 if(elts===undefined){console.log('bizarre',module)}
 var ext=elts[0],source=elts[1],is_package=elts.length==4
 if(ext==".py"){if($B.idb_cx){$B.tasks.splice(0,0,[idb_get,module])}}else{add_jsmodule(module,source)}}else{console.log("bizarre",module)}

@@ -1117,6 +1117,12 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context, expression){
 
             // create nodes with target set to right, from left to right
             assigned.forEach(function(elt){
+                if(elt.type == "expr" && elt.tree[0].type == "list_or_tuple" &&
+                        elt.tree[0].real == "tuple" &&
+                        elt.tree[0].tree.length == 1){
+                    // issue 1363
+                    elt = elt.tree[0].tree[0]
+                }
                 var new_node = new $Node(),
                     node_ctx = new $NodeCtx(new_node)
                 new_node.locals = node.locals
@@ -1166,6 +1172,7 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context, expression){
         }
 
         var right_items = null
+        console.log("right", right.type)
         if(right.type == 'list' || right.type == 'tuple'||
                 (right.type == 'expr' && right.tree.length > 1)){
             right_items = right.tree
@@ -6734,7 +6741,7 @@ var $ListOrTupleCtx = $B.parser.$ListOrTupleCtx = function(context,real){
                     var start = this.intervals[i - 1],
                         end = this.intervals[i],
                         txt = src.substring(start, end)
-                    
+
                     for(var j = comments.length - 1; j >= 0; j--){
                         var comment = comments[j]
                         if(comment[0] > start && comment[0] < end){

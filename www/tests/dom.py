@@ -75,5 +75,5 @@ import javascript
 assert window.jsReturnsUndefined() is javascript.UNDEFINED
 
 # issue 1327
-num = document['banner'].attrs.get('test', 10)
+num = document['banner_row'].attrs.get('test', 10)
 assert num == 10
