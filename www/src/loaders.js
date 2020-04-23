@@ -21,7 +21,8 @@ function idb_load(evt, module){
 
     var timestamp = $B.timestamp
 
-    if(res === undefined || res.timestamp != $B.timestamp){
+    if(res === undefined || res.timestamp != $B.timestamp ||
+            ($B.VFS[module] && res.source_ts !== $B.VFS[module].timestamp)){
         // Not found or not with the same date as in brython_stdlib.js:
         // search in VFS
         if($B.VFS[module] !== undefined){
