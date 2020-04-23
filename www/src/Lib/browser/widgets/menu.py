@@ -34,81 +34,94 @@ div_style = {
     "borderColor": color
 }
 
+css = {}
+
 class Menu:
 
-    def __init__(self, container=document.body, parent=None):
+    def __init__(self, container=document.body, parent=None, level=0):
+        """Create a new menu, inserted inside the container. For the top level
+        menu, parent is None, otherwise it is a SPAN item."""
         self.container = container
+        self.level = level
         self.parent = parent
-        self._table = html.TABLE(style=table)
-        self.panel = html.TR(style=st1)
-        self._table <= self.panel
-        self.container <= self._table
-        cstyle = window.getComputedStyle(self.container)
-        self.fontSize = cstyle.getPropertyValue('font-size')
+        self.submenus = []
 
-        document.bind("click", self.hide_menus)
+        if parent:
+            self.submenu = html.DIV(Class="sub")
+            if "menu-submenu" in css:
+                self.submenu.classList.add(css["menu-submenu"])
+            self.submenu.style.position = "absolute"
+            self.submenu.style.display = "none"
+            self.container <= self.submenu
+
+            parent.bind("click", self.unfold)
+
+        if not hasattr(self.container, "bind_document"):
+            document.bind("click", self.hide_menus)
+            self.container.bind_document = True
 
     def add_item(self, name, callback=None):
         if self.parent is None:
             # First level
-            td = html.TD(name, style=li_style1, Class="top")
+            item = html.SPAN(name)
+            if "menu-item-top" in css:
+                item.attrs["class"] = css["menu-item-top"]
+            self.container <= item
+            item.bind("click", self.hide_menus)
         else:
             # Next levels
-            td = html.TD(name, style=li_style2, Class="sub")
-        td.style.fontSize = self.fontSize
-        self.panel <= td
-        def deco(callback):
-            def f(ev):
-                for div in document.select(".submenu"):
-                    div.style.display = "none"
-                ev.stopPropagation()
-                ev.preventDefault()
-                return callback(ev)
-            td.bind("click", f)
-            return f
-        return deco
+            item = html.DIV(name)
+            self.submenu <= item
+            if "menu-item-sub" in css:
+                item.attrs["class"] = css["menu-item-sub"]
+
+        if callback is not None:
+            item.bind("click", callback)
+
+        return item
 
     def add_menu(self, name):
         """Add a new submenu in the current menu."""
         if self.parent is not None:
             name += "..."
-        td = self.add_item(name)
+        item = self.add_item(name)
         # create a DIV for the submenu
-        div = html.DIV(style=div_style, Class="submenu")
-        if self.parent is None:
-            div.style.left = f"{td.abs_left}px"
-            div.style.top = f"{td.abs_top + td.offsetHeight}px"
-        else:
-            left = self.container.abs_left + self.container.offsetWidth
-            div.style.left = f"{left}px"
-            div.style.top = f"{td.abs_top}px"
-        div.style.fontSize = self.fontSize
-        console.log("add_menu, self.container", self.container)
-        div.style.display = "none"
-        document <= div
-        td.bind("click", lambda ev: self.unfold(ev, div))
-        return Menu(div, self)
+        span = html.SPAN(Class="sub")
+        span.style.position = "absolute"
+        if "submenu" in css:
+            span.classList.add(css["submenu"])
 
-    def hide_menus(self, ev):
+        if self.parent is None:
+            self.container <= span
+
+        submenu = Menu(self.container, item, self.level + 1)
+        self.submenus.append(submenu)
+        submenu.parent_menu = self
+        return submenu
+
+    def hide_menus(self, *args):
         """When user clicks outside of open submenus, close them all."""
-        for div in document.select(".submenu"):
+        for div in document.select(".sub"):
             div.style.display = "none"
 
-    def unfold(self, event, element):
+    def unfold(self, ev):
         """Called when a label with a submenu is clicked."""
-        if event.target.class_name != "sub":
-            self.hide_menus(event)
+        parent = self.parent
 
-        element.style.display = "block"
-        if event.target.class_name == "sub":
-            # compute position of element
-            container = event.target.closest("DIV")
-            left = container.abs_left + container.offsetWidth
-            element.style.left = f"{left}px"
-            element.style.top = f"{event.target.abs_top}px"
+        if self.level == 1:
+            # Click on an item in the main menu bar
+            self.submenu.style.left = f"{parent.abs_left}px"
         else:
-            print(event.target.abs_left, event.target.offsetHeight)
-            element.style.left = f"{event.target.abs_left}px"
-            top = event.target.abs_top + event.target.offsetHeight
-            element.style.top = f"{top}px"
-        event.stopPropagation() # to avoid calling hide_menus() again
+            # remove other submenus of parent
+            for menu in self.parent_menu.submenus:
+                menu.submenu.style.display = "none"
+            # set top and left
+            self.submenu.style.top = f"{parent.abs_top}px"
+            self.submenu.style.left = f"{parent.abs_left + parent.offsetWidth}px"
+
+        # display menu
+        self.submenu.style.display = "block"
+
+        # stop propagation, otherwise "click" is triggered on document,
+        # which removes all menus...
+        ev.stopPropagation()
