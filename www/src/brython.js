@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-04-22 11:17:53.754189"
-__BRYTHON__.timestamp=1587547073754
+__BRYTHON__.compiled_date="2020-04-23 17:15:37.571930"
+__BRYTHON__.timestamp=1587654937571
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5240,7 +5240,8 @@ $B.timestamp=$B.VFS_timestamp}
 function idb_load(evt,module){
 var res=evt.target.result
 var timestamp=$B.timestamp
-if(res===undefined ||res.timestamp !=$B.timestamp){
+if(res===undefined ||res.timestamp !=$B.timestamp ||
+($B.VFS[module]&& res.source_ts !==$B.VFS[module].timestamp)){
 if($B.VFS[module]!==undefined){var elts=$B.VFS[module],ext=elts[0],source=elts[1]
 if(ext==".py"){var imports=elts[2],is_package=elts.length==4,source_ts=elts.timestamp,__package__
 if(is_package){__package__=module}
@@ -5333,6 +5334,7 @@ source+="\nvar $locals_"+
 module.replace(/\./g,"_")+" = $module"
 $B.precompiled[module]=source}
 var inImported=$B.inImported=function(module){if($B.imported.hasOwnProperty(module)){}else if(__BRYTHON__.VFS && __BRYTHON__.VFS.hasOwnProperty(module)){var elts=__BRYTHON__.VFS[module]
+console.log("load from VFS",module)
 if(elts===undefined){console.log('bizarre',module)}
 var ext=elts[0],source=elts[1],is_package=elts.length==4
 if(ext==".py"){if($B.idb_cx){$B.tasks.splice(0,0,[idb_get,module])}}else{add_jsmodule(module,source)}}else{console.log("bizarre",module)}
