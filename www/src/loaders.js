@@ -329,7 +329,9 @@ var loop = $B.loop = function(){
                 var module = $B.outdated.pop(),
                     req = store.delete(module)
                 req.onsuccess = function(event){
-                    console.info("delete outdated", module)
+                    if($B.debug > 1){
+                        console.info("delete outdated", module)
+                    }
                     document.dispatchEvent(new CustomEvent('precompile',
                         {detail: 'remove outdated ' + module +
                          ' from cache'}))
