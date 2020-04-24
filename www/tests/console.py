@@ -257,14 +257,16 @@ def myKeyDown(event):
     elif event.keyCode in [33, 34]: # page up, page down
         event.preventDefault()
 
-
-doc['code'].bind('keypress', myKeyPress)
-doc['code'].bind('keydown', myKeyDown)
-doc['code'].bind('click', cursorToEnd)
-v = sys.implementation.version
-doc['code'].value = "Brython %s.%s.%s on %s %s\n>>> " % (
-    v[0], v[1], v[2], window.navigator.appName, window.navigator.appVersion)
-#doc['code'].value += 'Type "copyright", "credits" or "license" for more information.'
-doc['code'].focus()
-cursorToEnd()
+def open(elt_id):
+    zone = document[elt_id]
+    print("open in zone", zone)
+    zone.bind('keypress', myKeyPress)
+    zone.bind('keydown', myKeyDown)
+    zone.bind('click', cursorToEnd)
+    v = sys.implementation.version
+    zone.value = "Brython %s.%s.%s on %s %s\n>>> " % (
+        v[0], v[1], v[2], window.navigator.appName, window.navigator.appVersion)
+    #doc['code'].value += 'Type "copyright", "credits" or "license" for more information.'
+    zone.focus()
+    cursorToEnd()
 

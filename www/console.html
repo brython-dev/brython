@@ -14,6 +14,7 @@
     <link rel=stylesheet href="/brython.css">
 
     <script src="/src/brython.js"></script>
+    <!-- script src="/src/brython_stdlib.js"></script -->
 
     <style>
     .codearea {
@@ -36,11 +37,16 @@
         <tr id="banner_row" ></tr>
     </table>
 
-    <textarea id=code class=codearea rows=20></textarea>
+    <textarea id="code" class="codearea" rows="20"></textarea>
 
     <div id=content></div>
 
-    <script type="text/python3" src="tests/console.py"></script>
+    <script type="text/python3">
+  from browser import repl
+
+  # open REPL in textarea with id "code"
+  repl.Repl("code")
+  </script>
 
     <div>
         The console can be embedded in a web page by adding

@@ -11,8 +11,8 @@
     <link rel="icon" type="image/png" href="../favicon.png" />
 
     <link rel=stylesheet href="/brython.css">
-    <script type="text/javascript" src="../src/brython.js"></script>
-    <script type="text/javascript" src="../src/brython_stdlib.js"></script>
+    <script type="text/javascript" src="/src/brython.js"></script>
+    <script type="text/javascript" src="/src/brython_stdlib.js"></script>
 
     <script src="/assets/header.brython.js"></script>
 
@@ -46,7 +46,10 @@
     <div id="content"></div>
 
 
-    <script type="text/python3" src="console.py" id="__main__"></script>
+    <script type="text/python3">
+     import repl
+     repl.open("code")
+ </script>
     <div>
         Embed:
         <blockquote title="The Console can be embedded in a web page by adding this line">

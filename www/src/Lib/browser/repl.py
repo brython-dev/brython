@@ -1,7 +1,8 @@
 import sys
 import tb as traceback
 
-from browser import document, window
+from browser import document, window, html
+from browser.widgets.dialog import Dialog
 
 _credits = """    Thanks to CWI, CNRI, BeOpen.com, Zope Corporation and a cast of thousands
     for supporting Python development.  See www.python.org for more information."""
@@ -49,17 +50,22 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 """
 
-def credits():
-    print(_credits)
-credits.__repr__ = lambda:_credits
+class Info:
+    def __init__(self, msg):
+        self.msg = msg
 
-def copyright():
-    print(_copyright)
-copyright.__repr__ = lambda:_copyright
+    def __repr__(self):
+        return self.msg
 
-def license():
-    print(_license)
-license.__repr__ = lambda:_license
+
+
+# execution namespace
+editor_ns = {
+    'credits': Info(_credits),
+    'copyright': Info(_copyright),
+    'license': Info(_license),
+    '__name__':'__main__'
+}
 
 class Trace:
 
@@ -80,21 +86,15 @@ class Trace:
         return "\n".join(stripped)
 
 
-# execution namespace
-editor_ns = {
-    'credits':credits,
-    'copyright':copyright,
-    'license':license,
-    '__name__':'__main__'
-}
-
 class Repl:
 
-    def __init__(self, elt_id):
-        self.zone = document[elt_id]
-        self.zone.bind('keypress', self.myKeyPress)
-        self.zone.bind('keydown', self.myKeyDown)
-        self.zone.bind('click', self.cursorToEnd)
+    def __init__(self, elt_id=None, globals=None, locals=None):
+        if elt_id is None:
+            d = Dialog("REPL")
+            self.zone = html.TEXTAREA(rows=30, cols=60)
+            d.panel <= self.zone
+        else:
+            self.zone = document[elt_id]
         v = sys.implementation.version
         self.zone.value = "Brython %s.%s.%s on %s %s\n>>> " % (
             v[0], v[1], v[2], window.navigator.appName, window.navigator.appVersion)
@@ -107,6 +107,14 @@ class Repl:
         self.buffer = ''
         sys.stdout.write = sys.stderr.write = self.write
         sys.stdout.__len__ = sys.stderr.__len__ = lambda: len(self.buffer)
+
+        self.globals = globals or {}
+        self.globals.update(editor_ns)
+        self.locals = locals or {}
+
+        self.zone.bind('keypress', self.myKeyPress)
+        self.zone.bind('keydown', self.myKeyDown)
+        self.zone.bind('click', self.cursorToEnd)
 
     def cursorToEnd(self, *args):
         pos = len(self.zone.value)
@@ -143,7 +151,9 @@ class Repl:
             self.current = len(self.history)
             if self._status in ["main", "3string"]:
                 try:
-                    _ = editor_ns['_'] = eval(currentLine, editor_ns)
+                    _ = editor_ns['_'] = eval(currentLine,
+                                              self.globals,
+                                              self.locals)
                     self.flush()
                     if _ is not None:
                         self.write(repr(_)+'\n')
