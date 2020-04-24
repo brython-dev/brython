@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-04-23 20:25:18.877357"
-__BRYTHON__.timestamp=1587666318877
+__BRYTHON__.compiled_date="2020-04-24 09:01:08.922094"
+__BRYTHON__.timestamp=1587711668922
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -628,7 +628,6 @@ if(left_items===null){if(left.tree[0].bound){if(right.type=="expr" && right.name
 node.bindings[left.tree[0].value]="int"}}
 return}
 var right_items=null
-console.log("right",right.type)
 if(right.type=='list' ||right.type=='tuple'||
 (right.type=='expr' && right.tree.length > 1)){right_items=right.tree}
 if(right_items !==null){
@@ -6607,7 +6606,7 @@ code.__repr__=code.__str__=function(self){return '<code object '+self.name+', fi
 code.__getattr__=function(self,attr){if(attr=="co_code"){return 'co_code'}
 return self[attr]}
 $B.set_func_names(code,"builtins")
-function compile(){var $=$B.args('compile',6,{source:null,filename:null,mode:null,flags:null,dont_inherit:null,optimize:null},['source','filename','mode','flags','dont_inherit','optimize'],arguments,{flags:0,dont_inherit:false,optimize:-1},null,null)
+function compile(){var $=$B.args('compile',6,{source:null,filename:null,mode:null,flags:null,dont_inherit:null,optimize:null,_feature_version:null},['source','filename','mode','flags','dont_inherit','optimize','_feature_version'],arguments,{flags:0,dont_inherit:false,optimize:-1,_feature_version:0},null,null)
 var module_name='$exec_'+$B.UUID()
 $B.clear_ns(module_name)
 $.__class__=code
@@ -7391,8 +7390,6 @@ if(sc !==undefined){if(!sc.$is_class){sc=sc.__class__}
 var sc_mro=[sc].concat(sc.__mro__)
 for(var i=0;i < sc_mro.length;i++){if(sc_mro[i]===self.__thisclass__){mro=sc_mro.slice(i+1)
 break}}}
-if(attr=="__repr__" ||attr=="__str__"){
-return function(){return $$super.__repr__(self)}}
 var f=_b_.type.__getattribute__(mro[0],attr)
 var $test=false 
 if($test){console.log("super",attr,self,f,f+'')}

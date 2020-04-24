@@ -1172,7 +1172,6 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context, expression){
         }
 
         var right_items = null
-        console.log("right", right.type)
         if(right.type == 'list' || right.type == 'tuple'||
                 (right.type == 'expr' && right.tree.length > 1)){
             right_items = right.tree

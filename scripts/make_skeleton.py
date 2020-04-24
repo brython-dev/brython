@@ -12,14 +12,14 @@ import inspect
 import types
 
 
-stdlib_name = '_frozen_importlib'
+stdlib_name = '_ast'
 ns = {}
 exec('import %s;print(dir(%s))' % (stdlib_name, stdlib_name), ns)
 
 if('.') in stdlib_name:
     package, name = stdlib_name.split('.')
     infos = getattr(ns[package], name)
-    
+
 else:
     infos = ns[stdlib_name]
 
@@ -40,7 +40,7 @@ def skeleton(infos):
             res += '\n%s = %s\n' % (key, val)
         elif isinstance(val, str):
             res += '\n%s = """%s"""\n' % (key, val)
-        elif type(val)in [types.BuiltinFunctionType,
+        elif type(val) in [types.BuiltinFunctionType,
                           types.BuiltinMethodType, types.FunctionType]:
             res += '\ndef %s(*args,**kw):\n' % key
             if val.__doc__:

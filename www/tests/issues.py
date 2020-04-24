@@ -2576,6 +2576,21 @@ except SystemExit:
 assert [*{*['a', 'b', 'a']}] == ['a', 'b']
 assert [*{'a': 1, 'b': 2}] == ['a', 'b']
 
+# issue 1366
+class A(object):
+     def __str__(self):
+        return "A __str__ output."
+
+class B(A):
+    def __str__(self):
+        return super().__str__() + " (from B)"
+
+x = A()
+assert str(x) == "A __str__ output."
+y = B()
+assert str(y) == "A __str__ output. (from B)"
+
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

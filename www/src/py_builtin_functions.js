@@ -311,9 +311,12 @@ $B.set_func_names(code, "builtins")
 function compile() {
     var $ = $B.args('compile', 6,
         {source:null, filename:null, mode:null, flags:null, dont_inherit:null,
-         optimize:null},
-         ['source', 'filename', 'mode', 'flags', 'dont_inherit', 'optimize'],
-         arguments, {flags: 0, dont_inherit: false, optimize: -1}, null, null)
+         optimize:null, _feature_version:null},
+         ['source', 'filename', 'mode', 'flags', 'dont_inherit', 'optimize',
+             '_feature_version'],
+         arguments,
+         {flags: 0, dont_inherit: false, optimize: -1, _feature_version: 0}, 
+         null, null)
 
     var module_name = '$exec_' + $B.UUID()
     $B.clear_ns(module_name)
@@ -2440,10 +2443,6 @@ $$super.__getattribute__ = function(self, attr){
         }
     }
 
-    if(attr == "__repr__" || attr == "__str__"){
-        // Special cases
-        return function(){return $$super.__repr__(self)}
-    }
     var f = _b_.type.__getattribute__(mro[0], attr)
 
     var $test = false // attr == "__new__"
