@@ -8029,7 +8029,23 @@ var $StringCtx = $B.parser.$StringCtx = function(context,value){
         this.js_processed = true
         var res = '',
             type = null,
-            scope = $get_scope(this)
+            scope = $get_scope(this),
+            has_surrogate = false
+
+        function _has_surrogate(s){
+            for(var i = 0; i < s.length; i++){
+                try{
+                    code = s.charCodeAt(i)
+                }catch(err){
+                    console.log("err for s", s)
+                    throw err
+                }
+                if(code >= 0xD800 && code <= 0xDBFF){
+                    return true
+                }
+            }
+            return false
+        }
 
         function fstring(parsed_fstring){
             // generate code for a f-string
@@ -8121,6 +8137,7 @@ var $StringCtx = $B.parser.$StringCtx = function(context,value){
                     var re = new RegExp("'", "g")
                     var elt = parsed_fstring[i].replace(re, "\\'")
                                                .replace(/\n/g, "\\n")
+                    has_surrogate = has_surrogate || _has_surrogate(elt)
                     elts.push("'" + elt + "'")
                 }
             }
@@ -8162,6 +8179,7 @@ var $StringCtx = $B.parser.$StringCtx = function(context,value){
                     if(is_fstring){
                         res += fstring(value)
                     }else{
+                        has_surrogate = has_surrogate || _has_surrogate(value)
                         res += prepare(value)
                     }
                 }else{
@@ -8172,6 +8190,9 @@ var $StringCtx = $B.parser.$StringCtx = function(context,value){
         }
         if(is_bytes){res += ',"ISO-8859-1")'}
         if(res.length == 0){res = '""'}
+        if(has_surrogate){
+            res = "_b_.str.$surrogate.$factory(" + res + ")"
+        }
         return res
     }
 }
@@ -9689,10 +9710,12 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
                         found = true
                         // end of string
                         $pos = pos
+                        var $string = zone.substr(1),
+                            string = ''
+
                         // Escape quotes inside string, except if they are
                         // already escaped.
                         // In raw mode, always escape.
-                        var $string = zone.substr(1), string = ''
                         for(var i = 0; i < $string.length; i++){
                             var $car = $string.charAt(i)
                             if($car == car &&
@@ -9702,6 +9725,7 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
                             }
                             string += $car
                         }
+
                         if(fstring){
                             try{
                                 var re = new RegExp("\\\\" + car, "g"),

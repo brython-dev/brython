@@ -315,7 +315,7 @@ function compile() {
          ['source', 'filename', 'mode', 'flags', 'dont_inherit', 'optimize',
              '_feature_version'],
          arguments,
-         {flags: 0, dont_inherit: false, optimize: -1, _feature_version: 0}, 
+         {flags: 0, dont_inherit: false, optimize: -1, _feature_version: 0},
          null, null)
 
     var module_name = '$exec_' + $B.UUID()
@@ -1906,7 +1906,9 @@ function ord(c) {
     //return String.charCodeAt(c)  <= this returns an undefined function error
     // see http://msdn.microsoft.com/en-us/library/ie/hza4d04f(v=vs.94).aspx
     if(typeof c == 'string'){
-        if(c.length == 1){return c.charCodeAt(0)}
+        if(c.length == 1){
+            return c.charCodeAt(0)
+        }
         throw _b_.TypeError.$factory('ord() expected a character, but ' +
             'string of length ' + c.length + ' found')
     }
@@ -1915,6 +1917,12 @@ function ord(c) {
         if(c.length == 1){return c.charCodeAt(0)} // <= strobj.charCodeAt(index)
         throw _b_.TypeError.$factory('ord() expected a character, but ' +
             'string of length ' + c.length + ' found')
+      case _b_.str.$surrogate:
+        if(c.items.length == 1){
+            return c.items[0].codePointAt(0)
+        }
+        throw _b_.TypeError.$factory('ord() expected a character, but ' +
+            'string of length ' + c.items.length + ' found')
       case _b_.bytes:
       case _b_.bytearray:
         if(c.source.length == 1){return c.source[0]} // <= strobj.charCodeAt(index)

@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-04-24 11:14:44.704893"
-__BRYTHON__.timestamp=1587719684704
+__BRYTHON__.compiled_date="2020-04-25 14:25:59.641734"
+__BRYTHON__.timestamp=1587817559641
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -4033,7 +4033,11 @@ C.tree.push(value)
 return C}
 return $transition(C.parent,token,value)}
 this.to_js=function(){this.js_processed=true
-var res='',type=null,scope=$get_scope(this)
+var res='',type=null,scope=$get_scope(this),has_surrogate=false
+function _has_surrogate(s){for(var i=0;i < s.length;i++){try{code=s.charCodeAt(i)}catch(err){console.log("err for s",s)
+throw err}
+if(code >=0xD800 && code <=0xDBFF){return true}}
+return false}
 function fstring(parsed_fstring){
 var elts=[]
 for(var i=0;i < parsed_fstring.length;i++){if(parsed_fstring[i].type=='expression'){var expr=parsed_fstring[i].expression
@@ -4075,6 +4079,7 @@ elts.push(res1)}else{if(parsed_fstring[i].conversion===null){expr1='$B.builtins.
 elts.push(expr1)}}else{var re=new RegExp("'","g")
 var elt=parsed_fstring[i].replace(re,"\\'")
 .replace(/\n/g,"\\n")
+has_surrogate=has_surrogate ||_has_surrogate(elt)
 elts.push("'"+elt+"'")}}
 return elts.join(' + ')}
 function prepare(value){value=value.replace(/\n/g,'\\n\\\n')
@@ -4087,10 +4092,12 @@ return js}else{var value=this.tree[i],is_fstring=Array.isArray(value),is_bytes=f
 if(!is_fstring){is_bytes=value.charAt(0)=='b'}
 if(type==null){type=is_bytes
 if(is_bytes){res+='bytes.$factory('}}else if(type !=is_bytes){return '$B.$TypeError("can\'t concat bytes to str")'}
-if(!is_bytes){if(is_fstring){res+=fstring(value)}else{res+=prepare(value)}}else{res+=prepare(value.substr(1))}
+if(!is_bytes){if(is_fstring){res+=fstring(value)}else{has_surrogate=has_surrogate ||_has_surrogate(value)
+res+=prepare(value)}}else{res+=prepare(value.substr(1))}
 if(i < this.tree.length-1){res+='+'}}}
 if(is_bytes){res+=',"ISO-8859-1")'}
 if(res.length==0){res='""'}
+if(has_surrogate){res="_b_.str.$surrogate.$factory("+res+")"}
 return res}}
 var $SubCtx=$B.parser.$SubCtx=function(C){
 this.type='sub'
@@ -7207,6 +7214,10 @@ switch($B.get_class(c)){case _b_.str:
 if(c.length==1){return c.charCodeAt(0)}
 throw _b_.TypeError.$factory('ord() expected a character, but '+
 'string of length '+c.length+' found')
+case _b_.str.$surrogate:
+if(c.items.length==1){return c.items[0].codePointAt(0)}
+throw _b_.TypeError.$factory('ord() expected a character, but '+
+'string of length '+c.items.length+' found')
 case _b_.bytes:
 case _b_.bytearray:
 if(c.source.length==1){return c.source[0]}
@@ -8495,7 +8506,7 @@ if(mod[enc].getregentry){to_unicode[enc]=$B.$getattr(mod[enc].getregentry(),"dec
 function load_encoder(enc){
 if(from_unicode[enc]===undefined){var mod=_b_.__import__("encodings."+enc)
 if(mod[enc].getregentry){from_unicode[enc]=$B.$getattr(mod[enc].getregentry(),"encode")}}}
-var decode=$B.decode=function(obj,encoding,errors){var s="",b=obj.source,enc=normalise(encoding)
+var decode=$B.decode=function(obj,encoding,errors){var s="",b=obj.source,enc=normalise(encoding),has_surrogate=false
 switch(enc){case "utf_8":
 case "utf-8":
 case "utf8":
@@ -8530,11 +8541,27 @@ cp=cp << 12
 cp+=(b[pos+1]& 0x3f)<< 6
 cp+=b[pos+2]& 0x3f
 s+=String.fromCodePoint(cp)
-pos+=3}}else{if(errors=="ignore"){pos++}else if(errors=="surrogateescape"){s+=String.fromCodePoint(0xdc80+b[pos]-0x80)
+pos+=3}}else if((byte >> 3)==30){
+has_surrogate=true
+if(b[pos+1]===undefined){err_info=[byte,pos,"end",pos+1]}else if((b[pos+1]& 0xc0)!=0x80){err_info=[byte,pos,"continuation",pos+2]}else if(b[pos+2]===undefined){err_info=[byte,pos+'-'+(pos+1),"end",pos+2]}else if((b[pos+2]& 0xc0)!=0x80){err_info=[byte,pos,"continuation",pos+3]}else if(b[pos+3]===undefined){err_info=[byte,pos+'-'+(pos+1)+'-'+(pos+2),"end",pos+3]}else if((b[pos+2]& 0xc0)!=0x80){err_info=[byte,pos,"continuation",pos+3]}
+if(err_info !==null){if(errors=="ignore"){pos=err_info[3]}else if(errors=="surrogateescape"){for(var i=pos;i < err_info[3];i++){s+=String.fromCodePoint(0xdc80+b[i]-0x80)}
+pos=err_info[3]}else{throw _b_.UnicodeDecodeError.$factory(
+"'utf-8' codec can't decode byte 0x"+
+err_info[0].toString(16)+"  in position "+
+err_info[1]+
+(err_info[2]=="end" ? ": unexpected end of data" :
+": invalid continuation byte"))}}else{var cp=byte & 0xf
+cp=cp << 18
+cp+=(b[pos+1]& 0x3f)<< 12
+cp+=(b[pos+2]& 0x3f)<< 6
+cp+=(b[pos+3]& 0x3f)
+s+=String.fromCodePoint(cp)
+pos+=4}}else{if(errors=="ignore"){pos++}else if(errors=="surrogateescape"){s+=String.fromCodePoint(0xdc80+b[pos]-0x80)
 pos++}else{throw _b_.UnicodeDecodeError.$factory(
 "'utf-8' codec can't decode byte 0x"+
-byte.toString(16)+"in position "+pos+
+byte.toString(16)+" in position "+pos+
 ": invalid start byte")}}}
+if(has_surrogate){return _b_.str.$surrogate.$factory(s)}
 return s
 case "latin_1":
 case "windows1252":
@@ -11550,9 +11577,9 @@ str.__add__=function(self,other){if(!(typeof other==="string")){try{return getat
 catch(err){throw _b_.TypeError.$factory("Can't convert "+
 $B.class_name(other)+" to str implicitly")}}
 return self+other}
-str.__contains__=function(self,item){if(!(typeof item=="string")){throw _b_.TypeError.$factory("'in <string>' requires "+
+str.__contains__=function(self,item){if(! _b_.isinstance(item,str)){throw _b_.TypeError.$factory("'in <string>' requires "+
 "string as left operand, not "+item.__class__)}
-var nbcar=item.length
+if(typeof item=="string"){var nbcar=item.length}else{var nbcar=_b_.len(item)}
 if(nbcar==0){return true}
 if(self.length==0){return nbcar==0}
 for(var i=0,len=self.length;i < len;i++){if(self.substr(i,nbcar)==item){return true}}
@@ -12432,7 +12459,37 @@ i++}}else{current.expression+=car
 i++}}
 if(nb_braces > 0){throw Error("f-string: expected '}'")}}}
 if(current.length > 0){elts.push(current)}
-return elts}})(__BRYTHON__)
+return elts}
+var surrogate=str.$surrogate=$B.make_class("surrogate_string",function(s){
+var items=[]
+for(var i=0,len=s.length;i < len;i++){var code=s.charCodeAt(i)
+if(code >=0xD800 && code <=0xDBFF){i++
+var low=s.charCodeAt(i)
+code=((code-0xD800)*0x400)+(low-0xDC00)+0x10000}
+items.push(String.fromCodePoint(code))}
+return{
+__class__:str.$surrogate,items:items}})
+surrogate.__mro__=[str,object]
+surrogate.__contains__=function(self,other){return str.__contains__(self.items.join(''),other)}
+surrogate.__getitem__=function(self,arg){if(isinstance(arg,_b_.int)){var pos=arg
+if(arg < 0){pos+=self.items.length}
+if(pos >=0 && pos < self.items.length){if(self.items[pos].length==2){return surrogate.$factory(self.items[pos])}
+return self.items[pos]}
+throw _b_.IndexError.$factory("string index out of range")}
+if(isinstance(arg,slice)){var s=_b_.slice.$conv_for_seq(arg,self.items.length),start=s.start,stop=s.stop,step=s.step
+var res="",i=null
+if(step > 0){if(stop <=start){return ""}
+for(var i=start;i < stop;i+=step){res+=self.items[i]}}else{if(stop >=start){return ''}
+for(var i=start;i > stop;i+=step){res+=self.items[i]}}
+return res}
+if(isinstance(arg,_b_.bool)){return surrogate.__getitem__(self,_b_.int.$factory(arg))}
+throw _b_.TypeError.$factory("string indices must be integers")}
+surrogate.__hash__=function(self){return str.__hash__(self.items.join(''))}
+surrogate.__iter__=function(self){return str_iterator.$factory(self.items)}
+surrogate.__len__=function(self){return self.items.length}
+surrogate.__repr__=function(self){return str.__repr__(self.items.join(''))}
+surrogate.__str__=function(self){return str.__str__(self.items.join(''))}
+$B.set_func_names(surrogate,"builtins")})(__BRYTHON__)
 ;
 ;(function($B){
 var bltns=$B.InjectBuiltins()

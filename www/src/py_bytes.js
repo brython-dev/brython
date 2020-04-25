@@ -1250,7 +1250,8 @@ function load_encoder(enc){
 var decode = $B.decode = function(obj, encoding, errors){
     var s = "",
         b = obj.source,
-        enc = normalise(encoding)
+        enc = normalise(encoding),
+        has_surrogate = false
     switch(enc) {
       case "utf_8":
       case "utf-8":
@@ -1327,6 +1328,50 @@ var decode = $B.decode = function(obj, encoding, errors){
                       s += String.fromCodePoint(cp)
                       pos += 3
                   }
+              }else if((byte >> 3) == 30){
+                  // 4 bytes, 1st of the form 11110xxx and 3 next 10xxxxxx
+                  has_surrogate = true
+                  if(b[pos + 1] === undefined){
+                      err_info = [byte, pos, "end", pos + 1]
+                  }else if((b[pos + 1] & 0xc0) != 0x80){
+                      err_info = [byte, pos, "continuation", pos + 2]
+                  }else if(b[pos + 2] === undefined){
+                      err_info = [byte, pos + '-' + (pos + 1), "end", pos + 2]
+                  }else if((b[pos + 2] & 0xc0) != 0x80){
+                      err_info = [byte, pos, "continuation", pos + 3]
+                  }else if(b[pos + 3] === undefined){
+                      err_info = [byte,
+                                  pos + '-' + (pos + 1) + '-' + (pos + 2),
+                                  "end", pos + 3]
+                  }else if((b[pos + 2] & 0xc0) != 0x80){
+                      err_info = [byte, pos, "continuation", pos + 3]
+                  }
+                  if(err_info !== null){
+                      if(errors == "ignore"){
+                          pos = err_info[3]
+                      }else if(errors == "surrogateescape"){
+                          for(var i = pos; i < err_info[3]; i++){
+                              s += String.fromCodePoint(0xdc80 + b[i] - 0x80)
+                          }
+                          pos = err_info[3]
+                      }else{
+                          throw _b_.UnicodeDecodeError.$factory(
+                              "'utf-8' codec can't decode byte 0x" +
+                              err_info[0].toString(16) +"  in position " +
+                              err_info[1] +
+                              (err_info[2] == "end" ? ": unexpected end of data" :
+                                  ": invalid continuation byte"))
+                      }
+                  }else{
+                      var cp = byte & 0xf
+                      cp = cp << 18
+                      cp += (b[pos + 1] & 0x3f) << 12
+                      cp += (b[pos + 2] & 0x3f) << 6
+                      cp += (b[pos + 3] & 0x3f)
+                      s += String.fromCodePoint(cp)
+                      pos += 4
+                  }
+
               }else{
                   if(errors == "ignore"){
                       pos++
@@ -1336,10 +1381,13 @@ var decode = $B.decode = function(obj, encoding, errors){
                   }else{
                       throw _b_.UnicodeDecodeError.$factory(
                           "'utf-8' codec can't decode byte 0x" +
-                          byte.toString(16) + "in position " + pos +
+                          byte.toString(16) + " in position " + pos +
                           ": invalid start byte")
                   }
               }
+          }
+          if(has_surrogate){
+              return _b_.str.$surrogate.$factory(s)
           }
           return s
       case "latin_1":

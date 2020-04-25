@@ -59,11 +59,15 @@ str.__add__ = function(self,other){
 }
 
 str.__contains__ = function(self, item){
-    if(!(typeof item == "string")){
+    if(! _b_.isinstance(item, str)){
         throw _b_.TypeError.$factory("'in <string>' requires " +
             "string as left operand, not " + item.__class__)
     }
-    var nbcar = item.length
+    if(typeof item == "string"){
+        var nbcar = item.length
+    }else{
+        var nbcar = _b_.len(item)
+    }
     if(nbcar == 0) {return true} // a string contains the empty string
     if(self.length == 0){return nbcar == 0}
     for(var i = 0, len = self.length; i < len; i++){
@@ -171,11 +175,13 @@ str.__init__ = function(self, arg){
 
 var str_iterator = $B.make_iterator_class("str_iterator")
 str.__iter__ = function(self){
-    var items = self.split("") // list of all characters in string
+    var items = self.split("")
     return str_iterator.$factory(items)
 }
 
-str.__len__ = function(self){return self.length}
+str.__len__ = function(self){
+    return self.length
+}
 
 // Start of section for legacy formatting (with %)
 
@@ -2422,5 +2428,95 @@ $B.parse_fstring = function(string){
     if(current.length > 0){elts.push(current)}
     return elts
 }
+
+// Class for strings with surrogate pairs. We can't rely on Javascript
+// strings in this case because they don't count characters like Python
+
+var surrogate = str.$surrogate = $B.make_class("surrogate_string", function(s){
+    // create an instance of str subclass for strings with surrogate pairs
+    var items = []
+    for(var i = 0, len = s.length; i < len; i++){
+        var code = s.charCodeAt(i)
+        if(code >= 0xD800 && code <= 0xDBFF){
+            i++
+            var low = s.charCodeAt(i)
+            code = ((code - 0xD800) * 0x400) + (low - 0xDC00) + 0x10000
+        }
+        items.push(String.fromCodePoint(code))
+    }
+    return {
+        __class__: str.$surrogate,
+        items: items
+    }
+})
+
+surrogate.__mro__ = [str, object]
+
+surrogate.__contains__ = function(self, other){
+    return str.__contains__(self.items.join(''), other)
+}
+
+surrogate.__getitem__ = function(self, arg){
+    if(isinstance(arg, _b_.int)){
+        var pos = arg
+        if(arg < 0){
+            pos += self.items.length
+        }
+        if(pos >= 0 && pos < self.items.length){
+            if(self.items[pos].length == 2){
+                return surrogate.$factory(self.items[pos])
+            }
+            return self.items[pos]
+        }
+        throw _b_.IndexError.$factory("string index out of range")
+    }
+    if(isinstance(arg, slice)) {
+        var s = _b_.slice.$conv_for_seq(arg, self.items.length),
+            start = s.start,
+            stop = s.stop,
+            step = s.step
+        var res = "",
+            i = null
+        if(step > 0){
+            if(stop <= start){return ""}
+            for(var i = start; i < stop; i += step){
+                res += self.items[i]
+            }
+        }else{
+            if(stop >= start){return ''}
+            for(var i = start; i > stop; i += step){
+                res += self.items[i]
+            }
+        }
+        return res
+    }
+    if(isinstance(arg, _b_.bool)){
+        return surrogate.__getitem__(self, _b_.int.$factory(arg))
+    }
+    throw _b_.TypeError.$factory("string indices must be integers")
+}
+
+surrogate.__hash__ = function(self){
+    return str.__hash__(self.items.join(''))
+}
+
+surrogate.__iter__ = function(self){
+    return str_iterator.$factory(self.items)
+}
+
+surrogate.__len__ = function(self){
+    return self.items.length
+}
+
+surrogate.__repr__ = function(self){
+    return str.__repr__(self.items.join(''))
+}
+
+surrogate.__str__ = function(self){
+    return str.__str__(self.items.join(''))
+}
+
+$B.set_func_names(surrogate, "builtins")
+
 
 })(__BRYTHON__)
