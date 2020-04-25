@@ -102,7 +102,7 @@ req.send({'x': 0, 'y': 1})
 GET and POST calls can be performed in a more straightforward way with the
 matching functions:
 
-`get(`_url[, blocking=False, headers={}, mode="text", timeout=None, cache=False, data="", **callbacks]_`)`
+`get(`_url[, blocking=False, headers={}, mode="text", encoding="utf-8", timeout=None, cache=False, data="", **callbacks]_`)`
 
 and the same for `delete`, `head` and `options`.
 
@@ -117,6 +117,8 @@ and the same for `put`.
 > _headers_ is a dictionary with the HTTP headers key / values
 
 > _mode_ is "text" or "binary"
+
+> if _mode_ is "text", _encoding_ is the text file encoding
 
 > _data_ is either a string, or a dictionary. In the second case, the
 > dictionary is converted into a string of the form `x=1&y=2`.

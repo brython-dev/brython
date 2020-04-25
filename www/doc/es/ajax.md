@@ -101,7 +101,7 @@ req.send({'x': 0, 'y': 1})
 Las llamadas GET y POST se pueden efectuar de una forma más directa de la
 siguiente forma:
 
-`get(`_url[, blocking=False, headers={}, mode="text", timeout=None, cache=False, data="", **callbacks]_`)`
+`get(`_url[, blocking=False, headers={}, mode="text", encoding="utf-8", timeout=None, cache=False, data="", **callbacks]_`)`
 
 y lo mismo se podría hacer con `delete`, `head` y `options`.
 
@@ -116,6 +116,8 @@ y lo mismo para `put`.
 > _headers_ es un diccionario con los cabeceros HTTP (claves / valores)
 
 > _mode_ es "text" o "binary"
+
+> si _mode_ es "text", _encoding_ es la codificación del archivo de texto
 
 > _data_ puede ser tanto un *string* como un diccionario. En el caso del,
 > diccionario el mismo se convierte a una cadena de la forma `x=1&y=2`.

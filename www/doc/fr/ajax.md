@@ -99,7 +99,7 @@ req.send({'x': 0, 'y': 1})
 Les appels peuvent être effectués plus simplement avec les
 fonctions correspondantes :
 
-`get(`_url[, blocking=False, headers={}, mode="text", timeout=None, cache=False, data="", **callbacks]_`)`
+`get(`_url[, blocking=False, headers={}, mode="text", encoding="utf-8", timeout=None, cache=False, data="", **callbacks]_`)`
 
 et de même pour `delete`, `head` et `options`.
 
@@ -114,6 +114,8 @@ et de même pour `put`.
 > _headers_ est un dictionnaire avec les clés-valeurs des entêtes HTTP
 
 > _mode_ est le mode de lecture : "text" ou "binary"
+
+> si _mode_ est "text", _encoding_ est l'encodage du fichier texte
 
 > _cache_ est un booléen qui indique si la requête GET doit utiliser le cache
 > du navigateur
