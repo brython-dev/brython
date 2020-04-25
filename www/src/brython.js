@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-04-25 14:25:59.641734"
-__BRYTHON__.timestamp=1587817559641
+__BRYTHON__.compiled_date="2020-04-25 21:25:39.904166"
+__BRYTHON__.timestamp=1587842739888
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -2856,8 +2856,7 @@ else if(ctx.vars.indexOf(value)==-1){ctx.vars.push(value)}
 if(this.call_arg&&ctx.type=='lambda'){if(ctx.locals===undefined){ctx.locals=[value]}
 else{ctx.locals.push(value)}}}
 ctx=ctx.parent}
-if(C.type=='target_list' ||
-(C.type=='expr' && C.parent.type=='target_list')){
+if($parent_match(C,{type:'target_list'})){
 this.no_bindings=true
 $bind(value,scope,this)
 this.bound=true}
@@ -2886,11 +2885,8 @@ if(["print","exec"].indexOf(C.value)>-1 ){$_SyntaxError(C,["missing parenthesis 
 C.value+"'"])}
 $_SyntaxError(C,'token '+token+' after '+
 C)}
-if(C.value=="async"){
-if(token=='def'){C.parent.parent.tree=[]
-var ctx=$transition(C.parent.parent,token,value)
-ctx.async=true
-return ctx}}
+var packed=$parent_match(C,{type:"packed"})
+if(packed){if(['.','[','('].indexOf(token)==-1){return packed.transition(token,value)}}
 return $transition(C.parent,token,value)}
 this.firstBindingScopeId=function(){
 var scope=this.scope,found=[],nb=0
@@ -3298,8 +3294,9 @@ return src}
 this.bind_ids=function(scope){
 this.tree.forEach(function(item){if(item.type=='id'){$bind(item.value,scope,this)
 item.bound=true}else if(item.type=='expr' && item.tree[0].type=="id"){$bind(item.tree[0].value,scope,this)
-item.tree[0].bound=true}else if(item.type=='expr' && item.tree[0].type=="packed"){if(item.tree[0].tree[0].type=='id'){$bind(item.tree[0].tree[0].value,scope,this)
-item.tree[0].tree[0].bound=true}}else if(item.type=='list_or_tuple' ||
+item.tree[0].bound=true}else if(item.type=='expr' && item.tree[0].type=="packed"){var ctx=item.tree[0].tree[0]
+if(ctx.type=='expr' && ctx.tree[0].type=='id'){$bind(ctx.tree[0].value,scope,this)
+ctx.tree[0].bound=true}}else if(item.type=='list_or_tuple' ||
 (item.type=="expr" &&
 item.tree[0].type=='list_or_tuple')){if(item.type=="expr"){item=item.tree[0]}
 item.bind_ids(scope)}},this)}
@@ -3859,14 +3856,15 @@ this.toString=function(){return '(packed) '+this.tree}
 this.transition=function(token,value){var C=this
 if(C.tree.length > 0 && token=="["){
 return $transition(C.tree[0],token,value)}
-if(token=='id'){new $IdCtx(C,value)
+if(token=='id'){var expr=new $AbstractExprCtx(C,false)
+expr.packed=true
 C.parent.expect=','
-return C.parent}else if(token=="["){C.parent.expect=','
+var id=$transition(expr,token,value)
+return id}else if(token=="["){C.parent.expect=','
 return new $ListOrTupleCtx(C,"list")}else if(token=="("){C.parent.expect=','
 return new $ListOrTupleCtx(C,"tuple")}else if(token=="]"){return $transition(C.parent,token,value)}else if(token=="{"){C.parent.expect=','
 return new $DictOrSetCtx(C)}
-console.log("syntax error",C,token)
-$_SyntaxError(C,'token '+token+' after '+C)}
+return C.parent.transition(token,C)}
 this.to_js=function(){this.js_processed=true
 return $to_js(this.tree)}}
 var $PassCtx=$B.parser.$PassCtx=function(C){

@@ -5595,8 +5595,9 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         ctx = ctx.parent
     }
 
-    if(context.type == 'target_list' ||
-            (context.type == 'expr' && context.parent.type == 'target_list')){
+    if($parent_match(context, {type: 'target_list'})){
+            // ||
+            //(context.type == 'expr' && context.parent.type == 'target_list')){
         // An id defined as a target in a "for" loop is bound in the scope,
         // but *not* in the node bindings, because if the iterable is empty
         // the name has no value (cf. issue 1233)
@@ -5658,17 +5659,12 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                 $_SyntaxError(context, 'token ' + token + ' after ' +
                     context)
         }
-        if(context.value == "async"){
-            // Until Python 3.7 async is not a keyword
-            if(token == 'def'){
-                context.parent.parent.tree = []
-                var ctx = $transition(context.parent.parent,
-                    token, value)
-                ctx.async = true
-                return ctx
+        var packed = $parent_match(context, {type: "packed"})
+        if(packed){
+            if(['.', '[', '('].indexOf(token) == -1){
+                return packed.transition(token, value)
             }
         }
-
         return $transition(context.parent, token, value)
     }
 
@@ -6669,9 +6665,10 @@ var $ListOrTupleCtx = $B.parser.$ListOrTupleCtx = function(context,real){
                 $bind(item.tree[0].value, scope, this)
                 item.tree[0].bound = true
             }else if(item.type == 'expr' && item.tree[0].type == "packed"){
-                if(item.tree[0].tree[0].type == 'id'){
-                    $bind(item.tree[0].tree[0].value, scope, this)
-                    item.tree[0].tree[0].bound = true
+                var ctx = item.tree[0].tree[0]
+                if(ctx.type == 'expr' && ctx.tree[0].type == 'id'){
+                    $bind(ctx.tree[0].value, scope, this)
+                    ctx.tree[0].bound = true
                 }
             }else if(item.type == 'list_or_tuple' ||
                     (item.type == "expr" &&
@@ -7674,9 +7671,11 @@ var $PackedCtx = $B.parser.$PackedCtx = function(context){
             return $transition(context.tree[0], token, value)
         }
         if(token == 'id'){
-            new $IdCtx(context, value)
+            var expr = new $AbstractExprCtx(context, false)
+            expr.packed = true
             context.parent.expect = ','
-            return context.parent
+            var id = $transition(expr, token, value)
+            return id
         }else if(token == "["){
             context.parent.expect = ','
             return new $ListOrTupleCtx(context, "list")
@@ -7689,8 +7688,7 @@ var $PackedCtx = $B.parser.$PackedCtx = function(context){
             context.parent.expect = ','
             return new $DictOrSetCtx(context)
         }
-        console.log("syntax error", context, token)
-        $_SyntaxError(context, 'token ' + token + ' after ' + context)
+        return context.parent.transition(token, context)
     }
 
     this.to_js = function(){

@@ -272,4 +272,22 @@ assert repr(L) == "[[0, [1, [...]]], [1, [0, [...]]]]"
 assert str(L) == "[[0, [1, [...]]], [1, [0, [...]]]]"
 assert repr(L[1]) == "[1, [0, [...]]]"
 
+# issue 1368
+class Test:
+  def __init__(self):
+    self.count = [1, 2, 3]
+  def test_unpack(self):
+    return [*self.count]
+
+t = Test()
+assert t.test_unpack() == [1, 2, 3]
+
+s = [4, 5, 6]
+assert [*s] == [4, 5, 6]
+
+class A:
+  x = [7, 8, 9]
+
+assert [*A.x] == [7, 8, 9]
+
 print("passed all tests..")
