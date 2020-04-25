@@ -131,7 +131,7 @@ def run():
     # update implementation in brython/__init__.py
     br_script = os.path.join(pdir, 'setup', 'brython', '__init__.py')
     with open(br_script, "w", encoding="utf-8") as out:
-        out.write('implementation = "{}"'.format(vname))
+        out.write('__version__ = implementation = "{}"'.format(vname))
 
     # copy demo.html
     with open(os.path.join(pdir, 'www', 'demo.html'), encoding="utf-8") as f:
