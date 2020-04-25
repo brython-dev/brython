@@ -108,9 +108,9 @@ class Repl:
         sys.stdout.write = sys.stderr.write = self.write
         sys.stdout.__len__ = sys.stderr.__len__ = lambda: len(self.buffer)
 
-        self.globals = globals or {}
+        self.globals = {} if globals is None else globals
         self.globals.update(editor_ns)
-        self.locals = locals or {}
+        self.locals = {} if locals is None else locals
 
         self.zone.bind('keypress', self.myKeyPress)
         self.zone.bind('keydown', self.myKeyDown)
@@ -170,7 +170,9 @@ class Repl:
                         self._status = "3string"
                     elif str(msg) == 'eval() argument must be an expression':
                         try:
-                            exec(currentLine, editor_ns)
+                            exec(currentLine,
+                                self.globals,
+                                self.locals)
                         except:
                             self.print_tb()
                         self.flush()
