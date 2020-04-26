@@ -12,14 +12,14 @@
 
     <link rel=stylesheet href="/brython.css">
     <script type="text/javascript" src="/src/brython.js"></script>
-    <script type="text/javascript" src="/src/brython_stdlib.js"></script>
+    <!-- script type="text/javascript" src="/src/brython_stdlib.js"></script -->
 
     <script src="/assets/header.brython.js"></script>
 
     <script type=text/python3>
     import header
     qs_lang, language = header.show()
-    </script>
+  </script>
     <style>
     .codearea {
         background-color:#000;
@@ -45,10 +45,11 @@
 
     <div id="content"></div>
 
-
     <script type="text/python3">
-     import repl
-     repl.open("code")
+     from browser import repl
+
+     # Start an interactive interpreter in textarea with id "code"
+     repl.Repl("code")
  </script>
     <div>
         Embed:
