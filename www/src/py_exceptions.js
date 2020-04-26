@@ -184,7 +184,8 @@ traceback.__getattribute__ = function(self, attr){
             return lineno
         case "tb_lasti":
             if(line_info === undefined){
-                return "<unknown>"
+                console.log("no line info", self.$stack)
+                return ""
             }else{
                 var info = line_info.split(","),
                     src,
@@ -209,7 +210,7 @@ traceback.__getattribute__ = function(self, attr){
                 }else{
                     console.log(file)
                     console.log("no src for", info)
-                    return "<unknown>"
+                    return ""
                 }
             }
         case "tb_next":
@@ -266,7 +267,6 @@ var frame = $B.make_class("frame",
                 }
                 res.f_lineno = parseInt(_frame[1].$line_info.split(',')[0])
             }
-
             var co_name = locals_id.startsWith("$exec") ? "<string>" :
                           locals_id
             if(locals_id == _frame[2]){
@@ -325,7 +325,8 @@ frame.__getattr__ = function(self, attr){
     // is initialised
     if(attr == "f_back"){
         if(self.$pos > 0){
-            return frame.$factory(self.$stack.slice(0, self.$stack.length - 1))
+            return frame.$factory(self.$stack.slice(0, self.$stack.length - 1),
+                self.$pos - 1)
         }else{
             return _b_.None
         }
