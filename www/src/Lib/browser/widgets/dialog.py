@@ -1,7 +1,7 @@
 from browser import console, document, html, window
 
 styles = {
-    "dialog": {
+    "dialog-main": {
         "font-family": "arial",
         "position": "absolute",
         "left": "10px",
@@ -11,25 +11,34 @@ styles = {
         "border-width": "0 1px 1px 1px",
         "z-index": 0
     },
-    "title": {
+    "dialog-title": {
         "background-color": "CadetBlue",
         "color": "#fff",
         "padding": "0.4em",
         "cursor": "default"
     },
-    "close": {
+    "dialog-close": {
         "float": "right",
         "background-color": "#fff",
         "color": "#000",
         "cursor": "default",
         "padding": "0.1em"
     },
-    "panel": {
-        "background-color": "#fff",
+    "dialog-panel": {
         "color": "#000",
         "padding": "0.6em"
     }
 }
+
+css = {}
+
+def set_style(elt, class_name):
+    if class_name in css:
+        elt.attrs["class"] = css[class_name]
+    else:
+        for key, value in styles[class_name].items():
+            setattr(elt.style, key, value)
+
 
 class Dialog(html.DIV):
     """Basic, moveable dialog box with a title bar, optional
@@ -40,17 +49,18 @@ class Dialog(html.DIV):
     Method close() removes the dialog box.
     """
 
-    def __init__(self, title="", style={}, top=None, left=None, ok_cancel=False):
-        for key in style:
-            for item in styles:
-                styles[item][key] = style[key]
-        html.DIV.__init__(self, style=styles["dialog"])
-        self._title = html.DIV(html.SPAN(title), style=styles["title"])
+    def __init__(self, title="", top=None, left=None, ok_cancel=False):
+        html.DIV.__init__(self)
+        set_style(self, "dialog-main")
+        self._title = html.DIV(html.SPAN(title))
+        set_style(self._title, "dialog-title")
         self <= self._title
-        btn = html.SPAN("&times;", style=styles["close"])
+        btn = html.SPAN("&times;")
+        set_style(btn, "dialog-close")
         self._title <= btn
         btn.bind("click", self.close)
-        self.panel = html.DIV(style=styles["panel"])
+        self.panel = html.DIV()
+        set_style(self.panel, "dialog-panel")
         self <= self.panel
 
         if ok_cancel:
@@ -101,6 +111,7 @@ class Dialog(html.DIV):
 
     def mouseup(self, event):
         self.is_moving = False
+
 
 class EntryDialog(Dialog):
     """Dialog box with "Ok / Cancel" buttons and an INPUT element.
