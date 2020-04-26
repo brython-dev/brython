@@ -3317,6 +3317,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         nodes.push($NodeJS('$locals.__annotations__ = _b_.dict.$factory()'))
         nodes.push($NodeJS('$top_frame[1] = $locals'))
         nodes.push($NodeJS('$locals.$parent = $parent'))
+        nodes.push($NodeJS('$locals.$name = "' + this.name + '"'))
 
         // Handle name __class__ in methods (PEP 3135 and issue #1068)
         var is_method = scope.ntype == "class"
@@ -10286,7 +10287,7 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
 
     // package, if available
     root.insert(offset++,
-        $NodeJS(local_ns + '["__package__"] = "' + __package__ +'"'))
+        $NodeJS(local_ns + '.__package__ = "' + __package__ +'"'))
 
     // annotations
     if(root.binding.__annotations__){

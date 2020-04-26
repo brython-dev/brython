@@ -394,12 +394,12 @@ $B.$delete = function(name, is_global){
 
 function dir(obj){
     if(obj === undefined){
-        // if dir is called without arguments, use globals
-        var frame = $B.last($B.frames_stack),
-            globals_obj = frame[3],
+        // if dir is called without arguments, use locals
+        var frame = $B.last($B.frames_stack)
+            locals_obj = frame[1],
             res = _b_.list.$factory(),
             pos = 0
-        for(var attr in globals_obj){
+        for(var attr in locals_obj){
             if(attr.charAt(0) == '$' && attr.charAt(1) != '$') {
                 // exclude internal attributes set by Brython
                 continue

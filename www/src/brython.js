@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-04-25 21:25:39.904166"
-__BRYTHON__.timestamp=1587842739888
+__BRYTHON__.compiled_date="2020-04-26 22:22:47.373302"
+__BRYTHON__.timestamp=1587932567373
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -1714,6 +1714,7 @@ nodes=nodes.concat(enter_frame_nodes)
 nodes.push($NodeJS('$locals.__annotations__ = _b_.dict.$factory()'))
 nodes.push($NodeJS('$top_frame[1] = $locals'))
 nodes.push($NodeJS('$locals.$parent = $parent'))
+nodes.push($NodeJS('$locals.$name = "'+this.name+'"'))
 var is_method=scope.ntype=="class"
 if(is_method){var class_name=scope.C.tree[0].name,class_block=scope.parent_block,class_ref="$locals_"+class_block.id.replace(/\./g,'_')+
 '["'+class_name+'"]'
@@ -5088,7 +5089,7 @@ js[pos]='var $locals = '+local_ns+';'
 var offset=0
 root.insert(0,$NodeJS(js.join('')))
 offset++
-root.insert(offset++,$NodeJS(local_ns+'["__package__"] = "'+__package__+'"'))
+root.insert(offset++,$NodeJS(local_ns+'.__package__ = "'+__package__+'"'))
 if(root.binding.__annotations__){root.insert(offset++,$NodeJS('$locals.__annotations__ = _b_.dict.$factory()'))}
 var enter_frame_pos=offset,js='var $top_frame = ["'+locals_id.replace(/\./g,'_')+'", '+
 local_ns+', "'+module.replace(/\./g,'_')+'", '+
@@ -6642,8 +6643,9 @@ del(frame[3][name])
 delete frame[3][name]}}
 if(!found){throw _b_.NameError.$factory(name)}}
 function dir(obj){if(obj===undefined){
-var frame=$B.last($B.frames_stack),globals_obj=frame[3],res=_b_.list.$factory(),pos=0
-for(var attr in globals_obj){if(attr.charAt(0)=='$' && attr.charAt(1)!='$'){
+var frame=$B.last($B.frames_stack)
+locals_obj=frame[1],res=_b_.list.$factory(),pos=0
+for(var attr in locals_obj){if(attr.charAt(0)=='$' && attr.charAt(1)!='$'){
 continue}
 res[pos++]=attr}
 _b_.list.sort(res)
@@ -7739,7 +7741,8 @@ first_frame[0].startsWith($B.lambda_magic)){if(first_frame[4]&& first_frame[4].$
 first_frame[4].$infos.__code__){lineno=first_frame[4].$infos.__code__.co_firstlineno}else{lineno=-1}}else{lineno=parseInt(line_info.split(",")[0])}
 return lineno
 case "tb_lasti":
-if(line_info===undefined){return "<unknown>"}else{var info=line_info.split(","),src,file
+if(line_info===undefined){console.log("no line info",self.$stack)
+return ""}else{var info=line_info.split(","),src,file
 for(var i=self.$stack.length-1;i >=0;i--){var fr=self.$stack[i]
 if(fr[2]==info[1].replace(/\./g,'_')){file=fr[3].__file__
 break}}
@@ -7747,7 +7750,7 @@ if(src===undefined){if($B.file_cache.hasOwnProperty(file)){src=$B.file_cache[fil
 console.log("from filecache",line_info,$B.imported[info[1]].__file__)}}
 if(src !==undefined){return src.split("\n")[parseInt(info[0]-1)].trim()}else{console.log(file)
 console.log("no src for",info)
-return "<unknown>"}}
+return ""}}
 case "tb_next":
 if(self.$stack.length <=1){return None}
 else{return traceback.$factory(self.exc,self.$stack.slice(1))}
@@ -7784,7 +7787,7 @@ return res}
 )
 frame.__delattr__=function(self,attr){if(attr=="f_trace"){$B.last(self.$stack)[1].$f_trace=_b_.None}}
 frame.__getattr__=function(self,attr){
-if(attr=="f_back"){if(self.$pos > 0){return frame.$factory(self.$stack.slice(0,self.$stack.length-1))}else{return _b_.None}}else if(attr=="clear"){return function(){}}else if(attr=="f_trace"){var locals=$B.last(self.$stack)[1]
+if(attr=="f_back"){if(self.$pos > 0){return frame.$factory(self.$stack.slice(0,self.$stack.length-1),self.$pos-1)}else{return _b_.None}}else if(attr=="clear"){return function(){}}else if(attr=="f_trace"){var locals=$B.last(self.$stack)[1]
 if(locals.$f_trace===undefined){return _b_.None}
 return locals.$f_trace}}
 frame.__setattr__=function(self,attr,value){if(attr=="f_trace"){
