@@ -1,7 +1,7 @@
 import sys
 import tb as traceback
 
-from browser import document, window, html
+from browser import console, document, window, html
 from browser.widgets.dialog import Dialog
 
 _credits = """    Thanks to CWI, CNRI, BeOpen.com, Zope Corporation and a cast of thousands
@@ -58,14 +58,30 @@ class Info:
         return self.msg
 
 
-
 # execution namespace
 editor_ns = {
     'credits': Info(_credits),
     'copyright': Info(_copyright),
-    'license': Info(_license),
-    '__name__':'__main__'
+    'license': Info(_license)
 }
+
+# default style for console textarea
+styles = {
+    'brython-console': {
+        'backgroundColor': '#000',
+        'color': '#fff',
+        'fontFamily': 'consolas, courier'
+    }
+}
+
+css = {}
+
+def set_style(elt, class_name):
+    if class_name in css:
+        elt.attrs["class"] = css[class_name]
+    else:
+        for key, value in styles[class_name].items():
+            setattr(elt.style, key, value)
 
 class Trace:
 
@@ -87,36 +103,46 @@ class Trace:
 
 
 class Repl:
+    """Add a Python interactive interpreter in a textarea."""
 
-    def __init__(self, elt_id=None, globals=None, locals=None):
+    def __init__(self, elt_id=None, title="REPL", globals=None, locals=None):
+        """
+        Create the interpreter.
+        - "elt_id" is the id of a textarea in the document. If not set, a new
+          popup window is added with a textarea.
+        - "globals" and "locals" are the namespaces the RPEL runs in
+        """
         if elt_id is None:
-            d = Dialog("REPL")
+            self.dialog = Dialog(title=title, top=10, left=10)
             self.zone = html.TEXTAREA(rows=30, cols=60)
-            d.panel <= self.zone
+            set_style(self.zone, "brython-console")
+            self.dialog.panel <= self.zone
         else:
             self.zone = document[elt_id]
         v = sys.implementation.version
-        self.zone.value = "Brython %s.%s.%s on %s %s\n>>> " % (
-            v[0], v[1], v[2], window.navigator.appName, window.navigator.appVersion)
+        self.zone.value = (f"Brython {v[0]}.{v[1]}.{v[2]} on " +
+            f"{window.navigator.appName} {window.navigator.appVersion}\n>>> ")
         self.zone.focus()
-        self.cursorToEnd()
+        self.cursor_to_end()
         self._status = "main"
         self.current = 0
         self.history = []
-
-        self.buffer = ''
-        sys.stdout.write = sys.stderr.write = self.write
-        sys.stdout.__len__ = sys.stderr.__len__ = lambda: len(self.buffer)
 
         self.globals = {} if globals is None else globals
         self.globals.update(editor_ns)
         self.locals = {} if locals is None else locals
 
-        self.zone.bind('keypress', self.myKeyPress)
-        self.zone.bind('keydown', self.myKeyDown)
-        self.zone.bind('click', self.cursorToEnd)
+        self.buffer = ''
+        sys.stdout.write = sys.stderr.write = self.write
+        sys.stdout.__len__ = sys.stderr.__len__ = lambda: len(self.buffer)
 
-    def cursorToEnd(self, *args):
+        self.zone.bind('keypress', self.keypress)
+        self.zone.bind('keydown', self.keydown)
+        self.zone.bind('mouseup', self.mouseup)
+
+        self.zone.focus()
+
+    def cursor_to_end(self, *args):
         pos = len(self.zone.value)
         self.zone.setSelectionRange(pos, pos)
         self.zone.scrollTop = self.zone.scrollHeight
@@ -129,11 +155,19 @@ class Repl:
             sel -= len(line) + 1
         return sel
 
-    def myKeyPress(self, event):
+    def keypress(self, event):
         if event.keyCode == 9:  # tab key
             event.preventDefault()
             self.zone.value += "    "
         elif event.keyCode == 13:  # return
+            sel_start = self.zone.selectionStart
+            sel_end = self.zone.selectionEnd
+            if sel_end > sel_start:
+                # If text was selected by the mouse, copy to clipboard
+                document.execCommand("copy")
+                self.cursor_to_end()
+                event.preventDefault() # don't insert line feed
+                return
             src = self.zone.value
             if self._status == "main":
                 currentLine = src[src.rfind('>>>') + 4:]
@@ -209,10 +243,10 @@ class Repl:
             else:
                 self.zone.value += '... '
 
-            self.cursorToEnd()
+            self.cursor_to_end()
             event.preventDefault()
 
-    def myKeyDown(self, event):
+    def keydown(self, event):
         if event.keyCode == 37:  # left arrow
             sel = self.get_col()
             if sel < 5:
@@ -256,6 +290,13 @@ class Repl:
         elif event.keyCode in [33, 34]: # page up, page down
             event.preventDefault()
 
+    def mouseup(self, ev):
+        """If nothing was selected by the mouse, set cursor to prompt."""
+        sel_start = self.zone.selectionStart
+        sel_end = self.zone.selectionEnd
+        if sel_end == sel_start:
+            self.cursor_to_end()
+
     def write(self, data):
         self.buffer += str(data)
 
@@ -275,6 +316,35 @@ class Repl:
         print("    " + offset * " " + "^")
         print("SyntaxError:", info)
         self.flush()
+
+class Debugger(Repl):
+
+    def __init__(self):
+        frame = sys._getframe().f_back
+        Repl.__init__(self,
+                      title="Debugger",
+                      globals=frame.f_globals,
+                      locals=frame.f_locals)
+
+        frames_sel = html.SELECT()
+        self.frames = []
+        while frame:
+            self.frames.append(frame)
+            name = frame.f_code.co_name
+            name = name.replace("<", "&lt;").replace(">", "&gt;")
+            frames_sel <= html.OPTION(name)
+            frame = frame.f_back
+        frames_sel.bind("change", self.change_frame)
+        frame_div = html.DIV("Frame " + frames_sel)
+        panel_style = window.getComputedStyle(self.dialog.panel)
+        frame_div.style.paddingLeft = panel_style.paddingLeft
+        frame_div.style.paddingTop = panel_style.paddingTop
+        self.dialog.insertBefore(frame_div, self.dialog.panel)
+
+    def change_frame(self, ev):
+        frame = self.frames[ev.target.selectedIndex]
+        self.globals = frame.f_globals
+        self.locals = frame.f_locals
 
 def open(elt_id):
     Repl(elt_id)
