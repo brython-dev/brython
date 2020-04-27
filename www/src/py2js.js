@@ -5703,7 +5703,11 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         // UnboundLocalError.
         var node = $get_node(this),
             found = false
-        var $test = false // this.value == "bx"
+        var $test = false // this.value == "console"
+        if($test){
+            console.log(this.value, "bound before")
+            console.log("node", node)
+        }
 
         while(!found && node.parent){
             var pnode = node.parent
@@ -5838,7 +5842,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         // get global scope
         var gs = innermost
 
-        var $test = false // val == "bx"
+        var $test = false // val == "console"
 
         if($test){
             console.log("this", this)
@@ -6080,7 +6084,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                             return this.result
                         }else{
                             if($test){
-                                console.log("boudn before ?", this.boundBefore(scope))
+                                console.log("boudn before ?", scope, this.boundBefore(scope))
                             }
                             if(this.boundBefore(scope)){
                                 // We are sure that the name is defined in the

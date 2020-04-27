@@ -614,9 +614,8 @@ function $$eval(src, _globals, _locals){
             obj = {}
         eval(ex) // needed for generators
         for(var attr in gobj){
-            if((! attr.startsWith("$"))){
-                obj[attr] = gobj[attr]
-            }
+            if(attr.startsWith("$") && !attr.startsWith("$$")){continue}
+            obj[attr] = gobj[attr]
         }
         eval("$locals_" + globals_id +" = obj")
     }else{
@@ -695,7 +694,7 @@ function $$eval(src, _globals, _locals){
             root.binding[attr] = true
         }
     }
-
+    
     try{
         // The result of py2js ends with
         // try{

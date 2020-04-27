@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-04-27 11:34:43.453373"
-__BRYTHON__.timestamp=1587980083453
+__BRYTHON__.compiled_date="2020-04-27 21:15:01.758342"
+__BRYTHON__.timestamp=1588014901758
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -2897,6 +2897,8 @@ scope=scope.parent}}
 this.boundBefore=function(scope){
 var node=$get_node(this),found=false
 var $test=false 
+if($test){console.log(this.value,"bound before")
+console.log("node",node)}
 while(!found && node.parent){var pnode=node.parent
 if(pnode.bindings && pnode.bindings[this.value]){if($test){console.log("bound in",pnode)}
 return pnode.bindings[this.value]}
@@ -3017,7 +3019,7 @@ if($test){console.log("name found at module level")}
 if(this.bound ||this.augm_assign){
 val=scope_ns+'["'+val+'"]'}else{if(scope===innermost && this.env[val]===undefined){
 this.result='$B.$search("'+val+'")'
-return this.result}else{if($test){console.log("boudn before ?",this.boundBefore(scope))}
+return this.result}else{if($test){console.log("boudn before ?",scope,this.boundBefore(scope))}
 if(this.boundBefore(scope)){
 val=scope_ns+'["'+val+'"]'}else{
 if($test){console.log("use check def")}
@@ -6720,7 +6722,8 @@ eval('var $locals_'+globals_id+' = {}\nvar $locals_'+
 locals_id+' = {}')
 if(_globals===_b_.None){var gobj=current_frame[3],ex='var $locals_'+globals_id+' = gobj;',obj={}
 eval(ex)
-for(var attr in gobj){if((! attr.startsWith("$"))){obj[attr]=gobj[attr]}}
+for(var attr in gobj){if(attr.startsWith("$")&& !attr.startsWith("$$")){continue}
+obj[attr]=gobj[attr]}
 eval("$locals_"+globals_id+" = obj")}else{var globals_is_dict=false
 if(_globals.$jsobj){var items=_globals.$jsobj}else{var items=_b_.dict.$to_obj(_globals)
 _globals.$jsobj=items
