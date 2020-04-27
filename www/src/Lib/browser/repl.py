@@ -233,7 +233,9 @@ class Repl:
                 # status must be set before executing code in globals()
                 self._status = "main"
                 try:
-                    _ = exec(block_src, editor_ns)
+                    _ = exec(block_src,
+                             self.globals,
+                             self.locals)
                     if _ is not None:
                         print(repr(_))
                 except:
