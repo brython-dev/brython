@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-04-26 22:22:47.373302"
-__BRYTHON__.timestamp=1587932567373
+__BRYTHON__.compiled_date="2020-04-27 11:34:43.453373"
+__BRYTHON__.timestamp=1587980083453
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -7772,7 +7772,7 @@ res.f_lineno=parseInt(line_info[0])
 var module_name=line_info[1]
 if($B.imported.hasOwnProperty(module_name)){filename=$B.imported[module_name].__file__}
 res.f_lineno=parseInt(_frame[1].$line_info.split(',')[0])}
-var co_name=locals_id.startsWith("$exec")? "<string>" :
+var co_name=locals_id.startsWith("$exec")? "<module>" :
 locals_id
 if(locals_id==_frame[2]){co_name="<module>"}else{if(_frame[1].$name){co_name=_frame[1].$name}else if(_frame[1].$dict_comp){co_name='<dictcomp>'}else if(_frame[1].$list_comp){co_name='<listcomp>'}else if(_frame.length > 4){if(_frame[4].$infos){co_name=_frame[4].$infos.__name__}else{co_name=_frame[4].name}
 if(_frame[4].$infos===undefined){
@@ -7816,19 +7816,20 @@ if(exc.$js_exc !==undefined && includeInternal){info+="\nJS stack:\n"+exc.$js_ex
 info+="Traceback (most recent call last):"
 var line_info=exc.$line_info
 for(var i=0;i < exc.$stack.length;i++){var frame=exc.$stack[i]
+console.log("frame",frame)
 if(! frame[1]||! frame[1].$line_info){continue}
 var $line_info=frame[1].$line_info
 var line_info=$line_info.split(','),src
 if(exc.module==line_info[1]){src=exc.src}
 if(!includeInternal){var src=frame[3].$src
 if(src===undefined){if($B.VFS && $B.VFS.hasOwnProperty(frame[2])){src=$B.VFS[frame[2]][1]}else if(src=$B.file_cache[frame[3].__file__]){}else{continue}}}
-var module=line_info[1]
-if(module.charAt(0)=="$"){module="<module>"}
-info+="\n  module "+module+" line "+line_info[0]
-if(frame.length > 4){if(frame[4].$infos){info+=', in '+frame[4].$infos.__name__}else if(frame[4].name.startsWith("__ge")){info+=', in <genexpr>'}else if(frame[4].name.startsWith("set_comp"+$B.lambda_magic)){info+=', in <setcomp>'}else{console.log("frame[4]",frame[4])}}else if(frame[1].$list_comp){info+=', in <listcomp>'}else if(frame[1].$dict_comp){info+=', in <dictcomp>'}
-if(src !==undefined){var lines=src.split("\n"),line=lines[parseInt(line_info[0])-1]
+var file=frame[3].__file__ ||"<string>",module=line_info[1],is_exec=module.charAt(0)=="$"
+if(is_exec){module="<module>"}
+info+="\n  File "+file+" line "+line_info[0]
+if(frame.length > 4){if(frame[4].$infos){info+=', in '+frame[4].$infos.__name__}else if(frame[4].name.startsWith("__ge")){info+=', in <genexpr>'}else if(frame[4].name.startsWith("set_comp"+$B.lambda_magic)){info+=', in <setcomp>'}else{console.log("frame[4]",frame[4])}}else if(frame[1].$list_comp){info+=', in <listcomp>'}else if(frame[1].$dict_comp){info+=', in <dictcomp>'}else{info+=', in <module>'}
+if(src !==undefined && ! is_exec){var lines=src.split("\n"),line=lines[parseInt(line_info[0])-1]
 if(line){line=line.replace(/^[ ]+/g,"")}
-info+="\n    "+line}else{console.log("src undef",line_info)}}
+info+="\n    "+line}}
 if(exc.__class__===_b_.SyntaxError){info+="\n  File "+exc.args[1]+", line "+exc.args[2]+
 "\n    "+exc.args[4]}
 return info}

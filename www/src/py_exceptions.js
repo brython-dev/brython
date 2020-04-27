@@ -267,7 +267,7 @@ var frame = $B.make_class("frame",
                 }
                 res.f_lineno = parseInt(_frame[1].$line_info.split(',')[0])
             }
-            var co_name = locals_id.startsWith("$exec") ? "<string>" :
+            var co_name = locals_id.startsWith("$exec") ? "<module>" :
                           locals_id
             if(locals_id == _frame[2]){
                 co_name = "<module>"
@@ -418,6 +418,7 @@ var getExceptionTrace = function(exc, includeInternal) {
 
     for(var i = 0; i < exc.$stack.length; i++){
         var frame = exc.$stack[i]
+        console.log("frame", frame)
         if(! frame[1] || ! frame[1].$line_info){
             continue
         }
@@ -439,9 +440,13 @@ var getExceptionTrace = function(exc, includeInternal) {
                 }
             }
         }
-        var module = line_info[1]
-        if(module.charAt(0) == "$"){module = "<module>"}
-        info += "\n  module " + module + " line " + line_info[0]
+        var file = frame[3].__file__ || "<string>",
+            module = line_info[1],
+            is_exec = module.charAt(0) == "$"
+        if(is_exec){
+            module = "<module>"
+        }
+        info += "\n  File " + file + " line " + line_info[0]
         if(frame.length > 4){
             if(frame[4].$infos){
                 info += ', in ' + frame[4].$infos.__name__
@@ -456,15 +461,15 @@ var getExceptionTrace = function(exc, includeInternal) {
             info += ', in <listcomp>'
         }else if(frame[1].$dict_comp){
             info += ', in <dictcomp>'
+        }else{
+            info += ', in <module>'
         }
 
-        if(src !== undefined){
+        if(src !== undefined && ! is_exec){
             var lines = src.split("\n"),
                 line = lines[parseInt(line_info[0]) - 1]
             if(line){line = line.replace(/^[ ]+/g, "")}
             info += "\n    " + line
-        }else{
-            console.log("src undef", line_info)
         }
     }
     if(exc.__class__ === _b_.SyntaxError){
