@@ -25,10 +25,10 @@ var $mod = {
 
 //todo: eventually move this function to a "utility" file or use ajax module?
 function $get_CryptoJS_lib(alg){
-    if($B.VFS !== undefined){
+    if($B.VFS !== undefined && $B.VFS.hashlib){
         // use file in brython_stdlib.js
         var lib = $B.VFS["crypto_js.rollups." + alg]
-        if (lib===undefined){
+        if (lib === undefined){
             throw _b_.ImportError.$factory("can't import hashlib." + alg)
         }
         var res = lib[1]
