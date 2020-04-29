@@ -217,7 +217,7 @@ parser.add_argument(
 
 args = parser.parse_args()
 
-port = int(args.port) if args.port else 8001
+port = int(args.port) if args.port else 8000
 
 if not args.no_docs:
     # generate static doc pages if not already present
