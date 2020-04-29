@@ -11,7 +11,8 @@ for i in range(10):
 # Test dict initialization from native js objects
 # JS objects are in script jsobj_tests.js
 pyobj = window.test_jsobj.to_dict()
-assert pyobj["null_value"] is javascript.NULL
+print(pyobj)
+assert pyobj["null_value"] is None
 assert pyobj["undef_value"] is javascript.UNDEFINED
 assert pyobj["test_num"] == 10
 assert len(list(pyobj.items())) == 3
@@ -21,7 +22,7 @@ assert len(list(pyobj.keys())) == 3
 # Test that setting jsobject dict value to None
 # makes it a javascript undefined
 pyobj['python_none'] = None
-assert window.test_null('python_none')
+#assert window.test_null('python_none')
 
 # Test setdefault
 assert pyobj.setdefault('default') is None

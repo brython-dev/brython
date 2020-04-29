@@ -38,9 +38,12 @@ $B.pyobj2structuredclone = function(obj){
         return obj
     }
 }
+
 $B.structuredclone2pyobj = function(obj){
     if(obj === null){
         return _b_.None
+    }else if(obj === undefined){
+        return $B.Undefined
     }else if(typeof obj == "boolean" || typeof obj == "number" ||
             typeof obj == "string"){
         return obj
@@ -264,7 +267,7 @@ JSObject.__dir__ = function(self){
 }
 
 JSObject.__getattribute__ = function(self,attr){
-    var $test = false //attr == "createChooseButton"
+    var $test = false // attr == "log"
     if($test){console.log("get attr", attr, "of", self)}
     if(attr.substr(0,2) == '$$'){attr = attr.substr(2)}
     if(self.js === null){return object.__getattribute__(None, attr)}
@@ -305,9 +308,10 @@ JSObject.__getattribute__ = function(self,attr){
     if(js_attr !== undefined){
         if($test){console.log("jsattr", js_attr)}
         if(typeof js_attr == 'function'){
-            // If the attribute of a JSObject is a function F, it is converted to a function G
-            // where the arguments passed to the Python function G are converted to Javascript
-            // objects usable by the underlying function F
+            // If the attribute of a JSObject is a function F, it is converted
+            // to a function G // where the arguments passed to the Python
+            // function G are converted to Javascript objects usable by the
+            // underlying function F
             var res = function(){
                 var args = []
                 for(var i = 0, len = arguments.length; i < len; i++){
@@ -552,7 +556,7 @@ JSObject.bind = function(self, evt, func){
 
 JSObject.to_dict = function(self){
     // Returns a Python dictionary based on the underlying Javascript object
-    return $B.obj_dict(self.js, true)
+    return $B.structuredclone2pyobj(self.js)
 }
 
 JSObject.$factory = function(obj){
@@ -589,4 +593,5 @@ $B.JSConstructor = JSConstructor
 
 
 })(__BRYTHON__)
+
 

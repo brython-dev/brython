@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-04-27 21:15:01.758342"
-__BRYTHON__.timestamp=1588014901758
+__BRYTHON__.compiled_date="2020-04-29 12:32:30.444309"
+__BRYTHON__.timestamp=1588156350444
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -8959,7 +8959,7 @@ var res={}
 for(var key in obj.$string_dict){res[key]=$B.pyobj2structuredclone(obj.$string_dict[key][0])}
 return res}else{console.log(obj,obj.__class__)
 return obj}}
-$B.structuredclone2pyobj=function(obj){if(obj===null){return _b_.None}else if(typeof obj=="boolean" ||typeof obj=="number" ||
+$B.structuredclone2pyobj=function(obj){if(obj===null){return _b_.None}else if(obj===undefined){return $B.Undefined}else if(typeof obj=="boolean" ||typeof obj=="number" ||
 typeof obj=="string"){return obj}else if(obj instanceof Number){return obj.valueOf()}else if(Array.isArray(obj)||obj.__class__===_b_.list ||
 obj.__class__===_b_.tuple){var res=_b_.list.$factory()
 for(var i=0,len=obj.length;i < len;i++){res.push($B.structuredclone2pyobj(obj[i]))}
@@ -9147,7 +9147,7 @@ JSObject.bind=function(self,evt,func){var js_func=function(ev){return func(jsobj
 self.js.addEventListener(evt,js_func)
 return _b_.None}
 JSObject.to_dict=function(self){
-return $B.obj_dict(self.js,true)}
+return $B.structuredclone2pyobj(self.js)}
 JSObject.$factory=function(obj){if(obj===null){return _b_.None}
 if(typeof obj=='function'){return{__class__:JSObject,js:obj,js_func:obj}}
 var klass=$B.get_class(obj)
