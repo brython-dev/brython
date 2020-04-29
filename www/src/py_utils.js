@@ -446,12 +446,7 @@ $B.$JS2Py = function(src){
     if(src === null || src === undefined){return _b_.None}
     if(Array.isArray(src) &&
             Object.getPrototypeOf(src) === Array.prototype){
-        var res = []
-        for(var i = 0, len = src.length; i< len; i++){
-            res.push($B.$JS2Py(src[i]))
-        }
-        res.__class__ = src.__class__
-        return res
+        return src
     }
     var klass = $B.get_class(src)
     if(klass !== undefined){

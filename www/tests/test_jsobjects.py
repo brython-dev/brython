@@ -84,3 +84,17 @@ assert obj == {"foo": None}
 x = window.eval()
 assert x == javascript.UNDEFINED
 assert type(x) == javascript.UndefinedType
+
+# issue #1376
+setattr(window, 'foo', [])
+
+window.foo.append('one')
+window.foo.append('two')
+assert window.foo == ['one', 'two']
+
+setattr(window, 'bar', [])
+bar = window.bar
+bar.append('one')
+bar = window.bar
+bar.append('two')
+assert bar == ['one', 'two']

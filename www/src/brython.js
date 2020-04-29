@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-04-29 12:32:30.444309"
-__BRYTHON__.timestamp=1588156350444
+__BRYTHON__.compiled_date="2020-04-29 14:21:14.839723"
+__BRYTHON__.timestamp=1588162874839
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -6100,10 +6100,7 @@ $B.$JS2Py=function(src){if(typeof src==="number"){if(src % 1===0){return src}
 return _b_.float.$factory(src)}
 if(src===null ||src===undefined){return _b_.None}
 if(Array.isArray(src)&&
-Object.getPrototypeOf(src)===Array.prototype){var res=[]
-for(var i=0,len=src.length;i< len;i++){res.push($B.$JS2Py(src[i]))}
-res.__class__=src.__class__
-return res}
+Object.getPrototypeOf(src)===Array.prototype){return src}
 var klass=$B.get_class(src)
 if(klass !==undefined){if(klass===$B.JSObject){src=src.js}else{return src}}
 if(typeof src=="object"){if($B.$isNode(src)){return $B.DOMNode.$factory(src)}
