@@ -126,8 +126,8 @@ class EntryDialog(Dialog):
             ...
     """
 
-    def __init__(self, title="", message=None, style={}, top=0, left=0):
-        Dialog.__init__(self, title, style, top, left, ok_cancel=True)
+    def __init__(self, title="", message=None, top=0, left=0):
+        Dialog.__init__(self, title, top, left, ok_cancel=True)
         if message is not None:
             self.panel <= message
         self.entry = html.INPUT()
@@ -149,11 +149,11 @@ class EntryDialog(Dialog):
 class InfoDialog(Dialog):
     """Dialog box with an information message and no "Ok / Cancel" button."""
 
-    def __init__(self, title="", message="", style={}, top=None, left=None,
+    def __init__(self, title="", message="", top=None, left=None,
             remove_after=None, ok=False):
         """If remove_after is set, number of seconds after which the dialog is
         removed."""
-        Dialog.__init__(self, title, style, top, left)
+        Dialog.__init__(self, title, top, left)
         self.panel <= html.DIV(message)
         if ok:
             ok_button = html.BUTTON("Ok")
