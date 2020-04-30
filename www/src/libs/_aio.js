@@ -43,7 +43,7 @@ function handle_kwargs(kw, method){
                 data = items.join("&")
             }
         }else if(key == "headers"){
-            headers = _b_.dict.$to_obj(kw)
+            headers = _b_.dict.$to_obj(kw.$string_dict[key][0])
         }else if(key.startsWith("on")){
             var event = key.substr(2)
             if(event == "timeout"){
