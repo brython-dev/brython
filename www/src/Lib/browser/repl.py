@@ -325,8 +325,8 @@ class Debugger(Repl):
         frame = sys._getframe().f_back
         Repl.__init__(self,
                       title="Debugger",
-                      globals=frame.f_globals,
-                      locals=frame.f_locals)
+                      globals=frame.f_globals.copy(),
+                      locals=frame.f_locals.copy())
 
         frames_sel = html.SELECT()
         self.frames = []
