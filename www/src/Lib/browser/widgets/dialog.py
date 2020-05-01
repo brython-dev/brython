@@ -1,43 +1,45 @@
 from browser import console, document, html, window
 
-styles = {
-    "dialog-main": {
-        "font-family": "arial",
-        "position": "absolute",
-        "left": "10px",
-        "top": "10px",
-        "border-style": "solid",
-        "border-color": "CadetBlue",
-        "border-width": "0 1px 1px 1px",
-        "z-index": 0
-    },
-    "dialog-title": {
-        "background-color": "CadetBlue",
-        "color": "#fff",
-        "padding": "0.4em",
-        "cursor": "default"
-    },
-    "dialog-close": {
-        "float": "right",
-        "background-color": "#fff",
-        "color": "#000",
-        "cursor": "default",
-        "padding": "0.1em"
-    },
-    "dialog-panel": {
-        "color": "#000",
-        "padding": "0.6em"
-    }
+style_sheet = """
+.brython-dialog-main {
+    font-family: arial;
+    left: 10px;
+    top: 10px;
+    border-style: solid;
+    border-color: CadetBlue;
+    border-width: 0 1px 1px 1px;
+    background-color: #fff;
+    z-index: 10;
 }
 
-css = {}
+.brython-dialog-title {
+    background-color: CadetBlue;
+    color: #fff;
+    padding: 0.4em;
+    cursor: default;
+}
 
-def set_style(elt, class_name):
-    if class_name in css:
-        elt.attrs["class"] = css[class_name]
-    else:
-        for key, value in styles[class_name].items():
-            setattr(elt.style, key, value)
+.brython-dialog-close {
+    float: right;
+    background-color: #fff;
+    color: #000;
+    cursor: default;
+    padding: 0.1em;
+}
+
+.brython-dialog-panel {
+    color: #000;
+    padding: 0.6em;
+}
+
+.brython-dialog-message {
+    padding-right: 0.6em;
+}
+
+.brython-dialog-button {
+    margin: 0.5em;
+}
+"""
 
 
 class Dialog(html.DIV):
@@ -50,23 +52,34 @@ class Dialog(html.DIV):
     """
 
     def __init__(self, title="", top=None, left=None, ok_cancel=False):
-        html.DIV.__init__(self)
-        set_style(self, "dialog-main")
-        self._title = html.DIV(html.SPAN(title))
-        set_style(self._title, "dialog-title")
-        self <= self._title
-        btn = html.SPAN("&times;")
-        set_style(btn, "dialog-close")
-        self._title <= btn
-        btn.bind("click", self.close)
-        self.panel = html.DIV()
-        set_style(self.panel, "dialog-panel")
+        for stylesheet in document.styleSheets:
+            if stylesheet.ownerNode.id == "brython-dialog":
+                break
+        else:
+            document <= html.STYLE(style_sheet, id="brython-dialog")
+
+        html.DIV.__init__(self, style=dict(position="absolute"),
+            Class="brython-dialog-main")
+        #set_style(self, "dialog-main")
+        self.title_bar = html.DIV(html.SPAN(title), Class="brython-dialog-title")
+        self <= self.title_bar
+        self.close_button = html.SPAN("&times;", Class="brython-dialog-close")
+        self.title_bar <= self.close_button
+        self.close_button.bind("click", self.close)
+        self.panel = html.DIV(Class="brython-dialog-panel")
         self <= self.panel
 
         if ok_cancel:
             ok_cancel_zone = html.DIV(style={"text-align": "center"})
-            self.ok_button = html.BUTTON("Ok")
-            self.cancel_button = html.BUTTON("Cancel")
+            ok, cancel = "Ok", "Cancel"
+            if isinstance(ok_cancel, (list, tuple)):
+                if not len(ok_cancel) == 2:
+                    raise ValueError(
+                        f"ok_cancel expects 2 elements, got {len(ok_cancel)}")
+                ok, cancel = ok_cancel
+            self.ok_button = html.BUTTON(ok, Class="brython-dialog-button")
+            self.cancel_button = html.BUTTON(cancel,
+                Class="brython-dialog-button")
             self.cancel_button.bind("click", self.close)
             ok_cancel_zone <= self.ok_button + self.cancel_button
             self <= ok_cancel_zone
@@ -83,12 +96,13 @@ class Dialog(html.DIV):
         if top is None:
             height = round(float(cstyle.height[:-2]) + 0.5)
             top = int((window.innerHeight - height) / 2)
+        # top is relative to document scrollTop
+        top += document.scrollingElement.scrollTop
         self.top = top
         self.style.top = f'{top}px'
 
-        self._title.bind("mousedown", self.mousedown)
-        document.bind("mousemove", self.mousemove)
-        self._title.bind("mouseup", self.mouseup)
+        self.title_bar.bind("mousedown", self.mousedown)
+        self.title_bar.bind("mouseup", self.mouseup)
         self.bind("leave", self.mouseup)
         self.is_moving = False
 
@@ -96,6 +110,7 @@ class Dialog(html.DIV):
         self.remove()
 
     def mousedown(self, event):
+        document.bind("mousemove", self.mousemove)
         self.is_moving = True
         self.initial = [self.left - event.x, self.top - event.y]
         # prevent default behaviour to avoid selecting the moving element
@@ -111,6 +126,7 @@ class Dialog(html.DIV):
 
     def mouseup(self, event):
         self.is_moving = False
+        document.unbind("mousemove")
 
 
 class EntryDialog(Dialog):
@@ -126,12 +142,12 @@ class EntryDialog(Dialog):
             ...
     """
 
-    def __init__(self, title="", message=None, top=0, left=0):
+    def __init__(self, title, message=None, top=None, left=None):
         Dialog.__init__(self, title, top, left, ok_cancel=True)
-        if message is not None:
-            self.panel <= message
+        self.message = html.SPAN(message, Class="brython-dialog-message") \
+            or ""
         self.entry = html.INPUT()
-        self.panel <= html.BR() + self.entry
+        self.panel <= self.message + self.entry
         self.entry.focus()
 
         self.entry.bind("keypress", self.callback)
@@ -149,17 +165,19 @@ class EntryDialog(Dialog):
 class InfoDialog(Dialog):
     """Dialog box with an information message and no "Ok / Cancel" button."""
 
-    def __init__(self, title="", message="", top=None, left=None,
-            remove_after=None, ok=False):
+    def __init__(self, title, message, top=None, left=None, remove_after=None,
+                 ok=False):
         """If remove_after is set, number of seconds after which the dialog is
         removed."""
         Dialog.__init__(self, title, top, left)
         self.panel <= html.DIV(message)
         if ok:
-            ok_button = html.BUTTON("Ok")
+            ok = ok if isinstance(ok, str) else "Ok"
+            self.ok_button = html.BUTTON(ok, Class="brython-dialog-button")
             self.panel <= html.P()
-            self.panel <= html.DIV(ok_button, style={"text-align": "center"})
-            ok_button.bind("click", lambda ev: self.remove())
+            self.panel <= html.DIV(self.ok_button,
+                style={"text-align": "center"})
+            self.ok_button.bind("click", lambda ev: self.remove())
         if remove_after:
             if not isinstance(remove_after, (int, float)):
                 raise TypeError("remove_after should be a number, not " +
