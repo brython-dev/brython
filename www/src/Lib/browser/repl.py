@@ -319,7 +319,7 @@ class Repl:
         print("SyntaxError:", info)
         self.flush()
 
-class Debugger(Repl):
+class Inspector(Repl):
 
     def __init__(self):
         frame = sys._getframe().f_back
@@ -331,7 +331,8 @@ class Debugger(Repl):
         frames_sel = html.SELECT()
         self.frames = []
         while frame:
-            self.frames.append(frame)
+            self.frames.append([frame.f_globals.copy(), 
+                                frame.f_locals.copy()])
             name = frame.f_code.co_name
             name = name.replace("<", "&lt;").replace(">", "&gt;")
             frames_sel <= html.OPTION(name)
@@ -344,9 +345,7 @@ class Debugger(Repl):
         self.dialog.insertBefore(frame_div, self.dialog.panel)
 
     def change_frame(self, ev):
-        frame = self.frames[ev.target.selectedIndex]
-        self.globals = frame.f_globals
-        self.locals = frame.f_locals
+        self.globals, self.locals = self.frames[ev.target.selectedIndex]
 
 def open(elt_id):
     Repl(elt_id)
