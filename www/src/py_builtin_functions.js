@@ -694,7 +694,7 @@ function $$eval(src, _globals, _locals){
             root.binding[attr] = true
         }
     }
-    
+
     try{
         // The result of py2js ends with
         // try{
@@ -2777,7 +2777,8 @@ function $url_open(){
                 }
             }
             // add fake query string to avoid caching
-            var fake_qs = '?foo=' + (new Date().getTime())
+            var fake_qs = $B.$options.cache ? '' :
+                              '?foo=' + (new Date().getTime())
             req.open('GET', file + fake_qs, false)
             req.overrideMimeType('text/plain; charset=utf-8')
             req.send()
