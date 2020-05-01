@@ -84,11 +84,11 @@ read + write</th>
 </tr>
 
 <tr>
-<td>*abs_left*</td><td>integer</td><td>position of the element relatively to the window left border</td><td>R</td>
+<td>*abs_left*</td><td>integer</td><td>position of the element relatively to the document left border (1)</td><td>R</td>
 </tr>
 
 <tr>
-<td>*abs_top*</td><td>integer</td><td>position of the element relatively to the window top border</td><td>R</td>
+<td>*abs_top*</td><td>integer</td><td>position of the element relatively to the document top border (1)</td><td>R</td>
 </tr>
 
 <tr>
@@ -148,12 +148,24 @@ contained inside element `other`</td><td>-</td>
 
 <tr>
 <td>*left*</td><td>integer</td><td>the position of the element relatively to
-the left border of the first positioned parent (1)</td><td>R/W</td>
+the left border of the first positioned parent (3)</td><td>R/W</td>
 </tr>
 
 <tr>
 <td>*parent*</td><td>`DOMNode` instance</td><td>the element's parent (`None`
 for `doc`)</td><td>R</td>
+</tr>
+
+<tr>
+<td>*scrolled_left*</td>
+<td>integer</td>
+<td>position of the element relatively to the left border of the visible part of the document (1)</td><td>L</td>
+</tr>
+
+<tr>
+<td>*scrolled_top*</td>
+<td>entier</td>
+<td>position of the element relatively to the top border of the visible part of the document (1)</td><td>L</td>
 </tr>
 
 <tr>
@@ -173,7 +185,7 @@ for `doc`)</td><td>R</td>
 
 <tr>
 <td>*top*</td><td>integer</td><td>the position of the element relatively to
-the upper border of the first positioned parent (1)</td><td>R/W</td>
+the upper border of the first positioned parent (3)</td><td>R/W</td>
 </tr>
 
 <tr>
@@ -182,12 +194,18 @@ the upper border of the first positioned parent (1)</td><td>R/W</td>
 
 </table>
 
-(1) When going up the DOM tree, we stop at the first parent whose attribute
+(1) On page load, properties `abs_left` and `scrolled_left` of an element are
+the same, and the same for `abs_top` and `scrolled_top`. If the document is
+scrolled down by n pixels, `abs_top` always keeps the same value but
+`scrolled_top` is decremented by n
+
+(2) Same as `style.height` and `style.width` but as integers.
+
+(3) When going up the DOM tree, we stop at the first parent whose attribute
 `style.position` is set to a value different of "static". `left` and `top` are
 computed like `style.left` and `style.top` but are integers, not strings ending
 with `px`.
 
-(2) Same as `style.height` and `style.width` but as integers.
 
 To add a child to an element, use the operator __<=__ (think of it as a left
 arrow for assignment)

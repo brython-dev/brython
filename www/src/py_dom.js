@@ -19,7 +19,8 @@ function $getPosition(e){
     var left = 0,
         top  = 0,
         width = e.width || e.offsetWidth,
-        height = e.height || e.offsetHeight
+        height = e.height || e.offsetHeight,
+        scroll = document.scrollingElement.scrollTop
 
     while (e.offsetParent){
         left += e.offsetLeft
@@ -1314,6 +1315,28 @@ DOMNode.parent = function(self){
 
 DOMNode.reset = function(self){ // for FORM
     return function(){self.elt.reset()}
+}
+
+DOMNode.scrolled_left = {
+    __get__: function(self){
+        return $getPosition(self.elt).left -
+            document.scrollingElement.scrollLeft
+    },
+    __set__: function(){
+        throw _b_.AttributeError.$factory("'DOMNode' objectattribute " +
+            "'scrolled_left' is read-only")
+    }
+}
+
+DOMNode.scrolled_top = {
+    __get__: function(self){
+        return $getPosition(self.elt).top -
+            document.scrollingElement.scrollTop
+    },
+    __set__: function(){
+        throw _b_.AttributeError.$factory("'DOMNode' objectattribute " +
+            "'scrolled_top' is read-only")
+    }
 }
 
 DOMNode.select = function(self, selector){

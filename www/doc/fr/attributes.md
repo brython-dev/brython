@@ -38,7 +38,7 @@ Les valeurs des attributs sont toujours des chaines de caractères, alors que
 les valeurs des propriétés peuvent être de n'importe quel type.
 
 Les attributs sont insensibles à la casse pour les éléments HTML et sensibles
-à la casse pour les éléments SVG ; les propriétés sont toujours sensibles à la 
+à la casse pour les éléments SVG ; les propriétés sont toujours sensibles à la
 casse.
 
 ### Gestion des attributs et des propriétés en Brython
@@ -88,11 +88,11 @@ Par commodité, Brython définit un certain nombre de propriétés et de méthod
 </tr>
 
 <tr>
-<td>*abs_left*</td><td>entier</td><td>position de l'élément par rapport au bord gauche de l'écran</td><td>L</td>
+<td>*abs_left*</td><td>entier</td><td>position de l'élément par rapport au bord gauche du document (3)</td><td>L</td>
 </tr>
 
 <tr>
-<td>*abs_top*</td><td>entier</td><td>position de l'élément par rapport au bord supérieur de l'écran</td><td>L</td>
+<td>*abs_top*</td><td>entier</td><td>position de l'élément par rapport au bord supérieur du document (3)</td><td>L</td>
 </tr>
 
 <tr>
@@ -162,6 +162,18 @@ ne correspond pas au sélecteur, la méthode renvoie -1</td><td>-</td>
 </tr>
 
 <tr>
+<td>*scrolled_left*</td>
+<td>entier</td>
+<td>position de l'élément par rapport au bord gauche de la partie visible du document (3)</td><td>L</td>
+</tr>
+
+<tr>
+<td>*scrolled_top*</td>
+<td>entier</td>
+<td>position de l'élément par rapport au bord supérieur de la partie visible du document (3)</td><td>L</td>
+</tr>
+
+<tr>
 <td>*text*</td><td>chaine</td><td>le texte contenu dans l'élément</td><td>L/E</td>
 </tr>
 
@@ -179,6 +191,8 @@ ne correspond pas au sélecteur, la méthode renvoie -1</td><td>-</td>
 (1) En remontant dans l'arbre DOM, on s'arrête au premier élément dont l'attribut `style.position` est défini à une valeur autre que "static". `left` et `top` ont le même mode de calcul que `style.left` et `style.top` mais sont des valeurs entières et pas des chaines de caractères se terminant par `px`.
 
 (2) Même mode de calcul que `style.height` ou `style.width` mais ce sont des valeurs entières
+
+(3) Au chargement d'une page, les propriétés `abs_left` et `scrolled_left` d'un élément sont égales, et de même pour `abs_top` et `scrolled_top`. Si on déplace le document de n pixels vers le bas, `abs_top` garde toujours la même valeur mais `scrolled_top` est diminué de n.
 
 Pour ajouter un descendant à un élément, on utilise l'opérateur __<=__ (à visualiser comme une flèche vers la gauche, pas comme "inférieur ou égal")
 
