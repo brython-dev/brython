@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-04-30 08:29:38.212523"
-__BRYTHON__.timestamp=1588228178212
+__BRYTHON__.compiled_date="2020-05-01 16:43:18.263071"
+__BRYTHON__.timestamp=1588344198263
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -12856,7 +12856,7 @@ function $getMouseOffset(target,ev){ev=ev ||_window.event;
 var docPos=$getPosition(target);
 var mousePos=$mouseCoords(ev);
 return{x:mousePos.x-docPos.x,y:mousePos.y-docPos.y};}
-function $getPosition(e){var left=0,top=0,width=e.width ||e.offsetWidth,height=e.height ||e.offsetHeight
+function $getPosition(e){var left=0,top=0,width=e.width ||e.offsetWidth,height=e.height ||e.offsetHeight,scroll=document.scrollingElement.scrollTop
 while(e.offsetParent){left+=e.offsetLeft
 top+=e.offsetTop
 e=e.offsetParent}
@@ -13342,6 +13342,12 @@ DOMNode.parent=function(self){if(self.elt.parentElement){return DOMNode.$factory
 return _b_.None}
 DOMNode.reset=function(self){
 return function(){self.elt.reset()}}
+DOMNode.scrolled_left={__get__:function(self){return $getPosition(self.elt).left-
+document.scrollingElement.scrollLeft},__set__:function(){throw _b_.AttributeError.$factory("'DOMNode' objectattribute "+
+"'scrolled_left' is read-only")}}
+DOMNode.scrolled_top={__get__:function(self){return $getPosition(self.elt).top-
+document.scrollingElement.scrollTop},__set__:function(){throw _b_.AttributeError.$factory("'DOMNode' objectattribute "+
+"'scrolled_top' is read-only")}}
 DOMNode.select=function(self,selector){
 if(self.elt.querySelectorAll===undefined){throw _b_.TypeError.$factory("DOMNode object doesn't support "+
 "selection by selector")}
