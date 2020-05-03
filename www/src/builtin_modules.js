@@ -97,7 +97,7 @@
         browser.is_webworker = false
         update(browser, {
             $$alert:function(message){
-                window.alert($B.builtins.str.$factory(message))
+                window.alert($B.builtins.str.$factory(message || ""))
             },
             confirm: $B.JSObject.$factory(window.confirm),
             $$document:$B.DOMNode.$factory(document),

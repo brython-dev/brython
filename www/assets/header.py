@@ -10,8 +10,6 @@ if protocol == "http" and host.endswith("brython.info"):
     document.location.href = f"https://{rest}"
 
 Menu = menu.Menu
-menu.css["menu-item-top"] = "menu-item-top"
-menu.css["menu-item-sub"] = "menu-item-sub"
 
 trans_menu = {
     "menu_console": {"en": "Console", "es": "Consola", "fr": "Console"},

@@ -43,8 +43,8 @@ body {
   margin-bottom: 1em;
 }
 
-.menu-item-top {
-  background-color:var(--clear-2);
+.brython-menu-navbar-item {
+  background-color:red;
   color:var(--dark-2);
   font-family:Montserrat, Arial;
   font-size:1.5em;
