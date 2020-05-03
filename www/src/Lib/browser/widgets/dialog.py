@@ -1,34 +1,40 @@
 from browser import console, document, html, window
 
 style_sheet = """
+:root {
+    --brython-menu-color1: CadetBlue;
+    --brython-menu-color2: #fff;
+    --brython-menu-color3: #000;
+}
+
 .brython-dialog-main {
     font-family: arial;
     left: 10px;
     top: 10px;
     border-style: solid;
-    border-color: CadetBlue;
+    border-color: var(--brython-menu-color1);
     border-width: 0 1px 1px 1px;
-    background-color: #fff;
+    background-color: var(--brython-menu-color2);
     z-index: 10;
 }
 
 .brython-dialog-title {
-    background-color: CadetBlue;
-    color: #fff;
+    background-color: var(--brython-menu-color1);
+    color: var(--brython-menu-color2);
     padding: 0.4em;
     cursor: default;
 }
 
 .brython-dialog-close {
     float: right;
-    background-color: #fff;
-    color: #000;
+    background-color: var(--brython-menu-color2);
+    color: var(--brython-menu-color3);
     cursor: default;
     padding: 0.1em;
 }
 
 .brython-dialog-panel {
-    color: #000;
+    color: var(--brython-menu-color3);
     padding: 0.6em;
 }
 
@@ -51,12 +57,14 @@ class Dialog(html.DIV):
     Method close() removes the dialog box.
     """
 
-    def __init__(self, title="", top=None, left=None, ok_cancel=False):
-        for stylesheet in document.styleSheets:
-            if stylesheet.ownerNode.id == "brython-dialog":
-                break
-        else:
-            document <= html.STYLE(style_sheet, id="brython-dialog")
+    def __init__(self, title="", *,
+            top=None, left=None, ok_cancel=False, default_css=True):
+        if default_css:
+            for stylesheet in document.styleSheets:
+                if stylesheet.ownerNode.id == "brython-dialog":
+                    break
+            else:
+                document <= html.STYLE(style_sheet, id="brython-dialog")
 
         html.DIV.__init__(self, style=dict(position="absolute"),
             Class="brython-dialog-main")
@@ -142,8 +150,11 @@ class EntryDialog(Dialog):
             ...
     """
 
-    def __init__(self, title, message=None, top=None, left=None):
-        Dialog.__init__(self, title, top, left, ok_cancel=True)
+    def __init__(self, title, message=None, *,
+            top=None, left=None, default_css=True):
+        Dialog.__init__(self, title,
+                        top=top, left=left, ok_cancel=True,
+                        default_css=default_css)
         self.message = html.SPAN(message, Class="brython-dialog-message") \
             or ""
         self.entry = html.INPUT()
@@ -165,11 +176,13 @@ class EntryDialog(Dialog):
 class InfoDialog(Dialog):
     """Dialog box with an information message and no "Ok / Cancel" button."""
 
-    def __init__(self, title, message, top=None, left=None, remove_after=None,
-                 ok=False):
+    def __init__(self, title, message, *,
+            top=None, left=None, default_css=True,
+            remove_after=None, ok=False):
         """If remove_after is set, number of seconds after which the dialog is
         removed."""
-        Dialog.__init__(self, title, top, left)
+        Dialog.__init__(self, title,
+            top=top, left=left, default_css=default_css)
         self.panel <= html.DIV(message)
         if ok:
             ok = ok if isinstance(ok, str) else "Ok"

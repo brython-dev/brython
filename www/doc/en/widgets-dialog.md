@@ -5,7 +5,7 @@ This module provides dialog boxes.
 
 ### Classes
 
-`InfoDialog(title, message, top=None, left=None, remove_after=None, ok=False)`
+`InfoDialog(title, message, *, top=None, left=None, default_css=True, remove_after=None, ok=False)`
 > Displays a dialog box with an information message
 
 - _title_ is the box title
@@ -13,6 +13,9 @@ This module provides dialog boxes.
 - if _top_ and _left_ are provided, they are the position of the box
   relatively to the top and left borders of the visible part of the
   document. By default, the box is centered
+- _default_css_ specifies if the style sheet provided by the module should be
+  used. If set to `False`, the styles defined in the HTML page are used (cf.
+  "CSS Style" below)
 - _remove_after_ is the number of seconds after which the box is
   automatically closed
 - _ok_ specifies if an "Ok" button should be present. If the value passed is
@@ -36,12 +39,12 @@ d1 = InfoDialog("Test", "Closing in 3 seconds", remove_after=3)
 </blockquote>
 
 
-`EntryDialog(title, message=None, top=None, left=None, ok=True)`
+`EntryDialog(title, message=None, *, top=None, left=None, default_css=True, ok=True)`
 > Displays a dialog box with a prompt message and an entry zone.
 > When the user hits the "Ok" button or the Entry key inside the entry zone,
 > an event called "entry" is triggered on the `EntryDialog` instance.
 
-- _title, top, left_ and _ok_ are the same as for `InfoDialog`
+- _title, top, left, default_css_ and _ok_ are the same as for `InfoDialog`
 - _message_ is the optional prompt message to print at the left of the entry
   zone
 
@@ -64,11 +67,11 @@ def entry(ev):
 </blockquote>
 
 
-`Dialog(title, top=None, left=None, ok_cancel=False)`
+`Dialog(title, *, top=None, left=None, default_css=True, ok_cancel=False)`
 > Displays a generic dialog box, that can be completed by adding elements to
 > its attribute `panel`
 
-- _title, top_ and _left_ are the same as above
+- _title, top, left_ and _default_css_ are the same as above
 - _ok_cancel_ specifies if buttons "Ok" and "Cancel" should be displayed. If
   the value passed is a 2-element list or tuple of strings, these stings will
   be printed in the buttons; if the value is `True`, strings "Ok" and "Cancel"
@@ -111,10 +114,10 @@ def ok(ev):
 ```
 </blockquote>
 
-### Style CSS
+### CSS Style
 
-When a dialog box is displayed, the following style sheet is inserted in the
-current HTML page:
+If the argument _default_css_ passed to the menu is `True`, the following
+style sheet is inserted in the current HTML page:
 
 <blockquote>
 ```
@@ -159,18 +162,14 @@ current HTML page:
 ```
 </blockquote>
 
-To customize dialog boxes, CSS classes can be applied to their different
-elements.
+To customize dialog boxes, set _default_css_ to `False` and redefine the
+CSS classes. The most staightforward is to copy the stylesheet above and edit
+it.
 
-For instance, if the document defines a CSS class `.my-title-bar` for the
-title bar, you apply it with:
+### Dialog box elements and CSS styles
 
-```python
-d = Dialog("Test")
-d.title_bar.attrs["class"] = "my-title-bar"
-```
-
-The different elements are referenced by the following properties:
+The different elements of a dialog box have the following properties and CSS
+classes:
 
 <table cellpadding="3" border="1">
 

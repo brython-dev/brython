@@ -5,7 +5,7 @@ Ce module fournit des boites de dialogue.
 
 ### Classes
 
-`InfoDialog(title, message, top=None, left=None, remove_after=None, ok=False)`
+`InfoDialog(title, message, *, top=None, left=None, default_css=True, remove_after=None, ok=False)`
 > Affiche une boite de dialogue avec un message d'information
 
 - _title_ est le titre de la boite
@@ -13,6 +13,9 @@ Ce module fournit des boites de dialogue.
 - si _top_ et _left_ sont fournis ils indiquent la position de la
   boite par rapport au haut et à la gauche de la partie affichée de la page.
   Par défaut la boite est affichée au milieu de la page
+- _default_css_ indique s'il faut utiliser la feuille de style fournie par le
+  module. Si la valeur est `False`, les styles définis dans la page HTML sont
+  utilisés (voir "Style CSS" ci-dessous)
 - _remove_after_ est le nombre de secondes après lequel la fenêtre est
   automatiquement fermée
 - _ok_ indique s'il faut afficher un bouton "Ok". Si la valeur passée est
@@ -36,14 +39,15 @@ d1 = InfoDialog("Test", "Je ferme dans 3 secondes", remove_after=3)
 </blockquote>
 
 
-`EntryDialog(title, message=None, top=None, left=None, ok=True)`
+`EntryDialog(title, message=None, *, top=None, left=None, default_css=True, ok=True)`
 > Affiche une boite de dialogue avec un message d'information et une zone de
 > saisie.
 > Quand l'utilisateur clique sur le bouton "Ok", ou tape sur la touche Entrée
 > dans la zone de saisie, un événement nommé "entry" est déclenché sur
 > sur l'instance de `EntryDialog`.
 
-- _title, top, left_ et _ok_ ont la même signification que pour `InfoDialog`
+- _title, top, left, default_css_ et _ok_ ont la même signification que pour 
+  `InfoDialog`
 - _message_ est le texte optionnel à afficher à gauche de la zone d'entrée
 
 > Les instances de `EntryDialog` possèdent l'attribut `value`, qui contient la
@@ -66,11 +70,11 @@ def entry(ev):
 </blockquote>
 
 
-`Dialog(title, top=None, left=None, ok_cancel=False)`
+`Dialog(title, *, top=None, left=None, default_css=True, ok_cancel=False)`
 > Affiche une boite de dialogue générique, qu'on peut compléter en ajoutant
 > des élements à son attribut `panel`
 
-- _title, top_ et _left_ ont la même signification que ci-dessus
+- _title, top, left_ et _default_css_ ont la même signification que ci-dessus
 - _ok_cancel_ indique s'il faut afficher les boutons "Ok" et "Annuler". Si la
   valeur passée est une liste ou un tuple de 2 chaines de caractères, ces
   chaines sont affichées dans les boutons; si la value est `True`, les chaines
@@ -116,8 +120,8 @@ def ok(ev):
 
 ### Style CSS
 
-Quand une boite de dialogue est affichée, la feuille de style suivante est
-ajoutée au document courant:
+Si l'argument _default_css_ passé au menu vaut `True` (valeur par défaut), la
+feuille de style suivante est insérée dans le document courant:
 
 <blockquote>
 ```
@@ -162,18 +166,13 @@ ajoutée au document courant:
 ```
 </blockquote>
 
-Pour personnaliser l'apparence des boites, il faut définir des classes CSS et
-les appliquer aux différents élements.
+Pour personnaliser l'apparence des boites, il faut passer comme argument
+`default_css=False` et redéfinir les classes CSS. Le plus simple est de
+copier-coller la feuille de style ci-dessus et de l'éditer.
 
-Par example si le document définit une classe CSS `.my-title-bar` pour la
-barre de titre:
+### Zones d'une boite de dialogue et classes CSS
 
-```python
-d = Dialog("Test")
-d.title_bar.attrs["class"] = "my-title-bar"
-```
-
-Les différentes zones de la boite sont accessibles par les propriétés 
+Les différentes zones de la boite possèdent les propriétés et les classes CSS
 suivantes:
 
 <table cellpadding="3" border="1">
