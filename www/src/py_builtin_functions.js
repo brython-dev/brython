@@ -1287,10 +1287,6 @@ function hash(obj){
     // Implicit invocation of special methods uses object class, even if
     // obj has an attribute __hash__
     var klass = obj.__class__ || $B.get_class(obj)
-    if(klass === undefined){
-        throw _b_.TypeError.$factory("unhashable type: '" +
-                _b_.str.$factory($B.JSObject.$factory(obj)) + "'")
-    }
     var hash_method = $B.$getattr(klass, '__hash__', _b_.None)
 
     if(hash_method === _b_.None){
