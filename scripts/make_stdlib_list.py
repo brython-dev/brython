@@ -9,37 +9,44 @@ dico = {
     'title': {
             'en':'Brython distribution vs CPython',
             'fr':'Comparaison des distributions Brython et CPython',
-            'es':'Distribución Brython vs CPython'
+            'es':'Distribución Brython vs CPython',
+            'zh-hant': 'Brython 分發 vs CPython'
     },
     'dir': {
         'en':'Directory',
         'fr':'Répertoire',
-        'es':'Directorio'
+        'es':'Directorio',
+        'zh-hant': '目錄'
     },
     'both': {
         'en':'Files in both distributions',
         'fr':'Fichiers communs aux deux distributions',
-        'es':'Archivos comunes en ambas distribuciones'
+        'es':'Archivos comunes en ambas distribuciones',
+        'zh-hant': '兩個分發中的檔案'
     },
     'specific': {
         'en':'Brython-specific',
         'fr':'Spécifiques à Brython',
-        'es':'Especificos de Brython'
+        'es':'Especificos de Brython',
+        'zh-hant': 'Brython特定'
     },
     'not_yet': {
         'en':'In CPython but not (yet) in Brython',
         'fr':'Dans CPython mais pas (encore) dans Brython',
-        'es':'En CPython pero no (todavía) en Brython'
+        'es':'En CPython pero no (todavía) en Brython',
+        'zh-hant': '在CPython中，但尚未在Brython中'
     },
     'missing': {
         'en':'Directories in CPython distribution missing in Brython',
         'fr':'Répertoires de la distribution CPython absents de Brython',
-        'es':'Directorios en CPython ausentes en la distribución en Brython'
+        'es':'Directorios en CPython ausentes en la distribución en Brython',
+        'zh-hant': '在CPython分發中而在Brython缺少的目錄'
     },
     'diff': {
         'en': '* indicates that Brython version is different from CPython',
         'fr': '* indique que la version Brython est différente de CPython',
-        'es': '* indica que la versión de Brython es diferente de CPython'
+        'es': '* indica que la versión de Brython es diferente de CPython',
+        'zh-hant': '表明Brython版本與CPython的不同'
     }
 }
 
@@ -60,7 +67,7 @@ static_doc_folder = os.path.join(os.path.dirname(os.getcwd()),
 if not os.path.exists(static_doc_folder):
     import make_doc
 
-for lang in 'en','es','fr':
+for lang in 'en','es','fr', 'zh-hant':
     index = open(os.path.join(doc_folder,lang,'index_static.html'), 'r', encoding="utf-8").read()
 
     with open(os.path.join(static_doc_folder,lang,'stdlib.html'), 'w', encoding="utf-8") as out:

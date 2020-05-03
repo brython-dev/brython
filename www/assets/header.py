@@ -14,18 +14,18 @@ menu.css["menu-item-top"] = "menu-item-top"
 menu.css["menu-item-sub"] = "menu-item-sub"
 
 trans_menu = {
-    "menu_console": {"en": "Console", "es": "Consola", "fr": "Console"},
-    "menu_editor": {"en": "Editor", "es": "Editor", "fr": "Editeur"},
-    "menu_demo": {"en": "Demo", "es": "Demo", "fr": "Démo"},
-    "menu_gallery": {"en": "Gallery", "es": "Galería", "fr": "Galerie"},
-    "menu_doc": {"en": "Documentation", "es": "Documentación", "fr": "Documentation"},
-    "menu_download": {"en": "Download", "es": "Descargas", "fr": "Téléchargement"},
-    "menu_dev": {"en": "Development", "es": "Desarrollo", "fr": "Développement"},
-    "menu_ex": {"en": "Examples", "es": "Ejemplos", "fr": "Exemples"},
-    "menu_groups": {"en": "Community", "es": "Comunidad", "fr": "Communauté"},
-    "menu_ref": {"en": "Reference", "es": "Referencia", "fr": "Référence"},
-    "menu_resources": {"en": "Resources", "es": "Recursos", "fr": "Ressources"},
-    "menu_tutorial": {"en": "Tutorial", "es": "Tutorial", "fr": "Tutoriel"}
+    "menu_console": {"en": "Console", "es": "Consola", "fr": "Console", 'zh-hant': '控制台'},
+    "menu_editor": {"en": "Editor", "es": "Editor", "fr": "Editeur", 'zh-hant': '編輯器'},
+    "menu_demo": {"en": "Demo", "es": "Demo", "fr": "Démo", 'zh-hant': '演示'},
+    "menu_gallery": {"en": "Gallery", "es": "Galería", "fr": "Galerie", 'zh-hant': 'Gallery'},
+    "menu_doc": {"en": "Documentation", "es": "Documentación", "fr": "Documentation", 'zh-hant': '文檔'},
+    "menu_download": {"en": "Download", "es": "Descargas", "fr": "Téléchargement", 'zh-hant': '下載'},
+    "menu_dev": {"en": "Development", "es": "Desarrollo", "fr": "Développement", 'zh-hant': '開發'},
+    "menu_ex": {"en": "Examples", "es": "Ejemplos", "fr": "Exemples", 'zh-hant': '範例'},
+    "menu_groups": {"en": "Community", "es": "Comunidad", "fr": "Communauté", 'zh-hant': '社群'},
+    "menu_ref": {"en": "Reference", "es": "Referencia", "fr": "Référence", 'zh-hant': '參考'},
+    "menu_resources": {"en": "Resources", "es": "Recursos", "fr": "Ressources", 'zh-hant': '資源'},
+    "menu_tutorial": {"en": "Tutorial", "es": "Tutorial", "fr": "Tutoriel", 'zh-hant': '教學'}
 }
 links = {
     "home": "/index.html",
@@ -50,13 +50,15 @@ def show(language=None):
 
     if language is None:
         qs_lang = document.query.getfirst("lang") # query string
-        if qs_lang and qs_lang in ["en", "fr", "es"]:
+        if qs_lang and qs_lang in ["en", "fr", "es", "zh-hant"]:
             has_req = True
             language = qs_lang
         else:
             lang = __BRYTHON__.language # browser setting
             if lang in ["en", "fr", "es"]:
                 language = lang
+            elif lang[:2] == "zh":
+                language = "zh-hant"
 
     language = language or "en"
 
@@ -120,7 +122,8 @@ def show(language=None):
     sel_lang <= select
     for lang1, lang2 in [["en", "English"],
                          ["fr", "Français"],
-                         ["es", "Español"]]:
+                         ["es", "Español"],
+                         ["zh-hant", "繁體中文"]]:
         select <= html.OPTION(lang2, value=lang1, selected=lang1==language)
 
     @bind(select, "change")
@@ -130,7 +133,7 @@ def show(language=None):
         new_lang = sel.options[sel.selectedIndex].value
         head = f"{protocol}://{host}"
         new_href = href
-        if addr.startswith("index.html"):
+        if addr == "" or addr.startswith("index.html"):
             new_href = f"{head}/index.html?lang={new_lang}"
         elif addr.startswith(("static_tutorial", "static_doc")):
             elts = addr.split("/")

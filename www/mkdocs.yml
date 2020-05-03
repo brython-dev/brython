@@ -28,3 +28,4 @@ pages:
     - ['es/intro.md', 'spanish', 'Docs Intro']
     - ['fr/intro.md', 'french', 'Docs Intro']
     - ['pt/intro.md', 'italian', 'Docs Intro']
+    - ['zh-hant/intro.md', '繁體中文', '文檔介紹']

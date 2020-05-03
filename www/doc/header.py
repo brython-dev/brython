@@ -2,13 +2,13 @@ from browser import document as doc
 from browser.html import *
 
 trans_menu = { 
-    'menu_console':{'en':'Console','es':'Consola','fr':'Console', 'pt':'Console'},
-    'menu_editor':{'en':'Editor','es':'Editor','fr':'Editeur', 'pt':'Editor'},
-    'menu_gallery':{'en':'Gallery','es':'Galería','fr':'Galerie', 'pt':'Galeria'},
-    'menu_doc':{'en':'Documentation','es':'Documentación','fr':'Documentation', 'pt':'Documentação'},
-    'menu_download':{'en':'Download','es':'Descargas','fr':'Téléchargement', 'pt':'Download'},
-    'menu_dev':{'en':'Development','es':'Desarrollo','fr':'Développement', 'pt':'Desenvolvimento'},
-    'menu_groups':{'en':'Groups','es':'Grupos','fr':'Groupes', 'pt':'Grupos'}
+    'menu_console':{'en':'Console','es':'Consola','fr':'Console', 'pt':'Console', 'zh-hant': '控制台'},
+    'menu_editor':{'en':'Editor','es':'Editor','fr':'Editeur', 'pt':'Editor', 'zh-hant': '編輯器'},
+    'menu_gallery':{'en':'Gallery','es':'Galería','fr':'Galerie', 'pt':'Galeria', 'zh-hant': 'Gallery'},
+    'menu_doc':{'en':'Documentation','es':'Documentación','fr':'Documentation', 'pt':'Documentação', 'zh-hant': '文檔'},
+    'menu_download':{'en':'Download','es':'Descargas','fr':'Téléchargement', 'pt':'Download', 'zh-hant': '下載'},
+    'menu_dev':{'en':'Development','es':'Desarrollo','fr':'Développement', 'pt':'Desenvolvimento', 'zh-hant': '開發'},
+    'menu_groups':{'en':'Groups','es':'Grupos','fr':'Groupes', 'pt':'Grupos', 'zh-hant': '群組'}
 }
 links = {'home':'index.html',
     'console':'tests/console.html',
@@ -26,16 +26,18 @@ def show(prefix=''):
     has_req = False
     
     qs_lang = doc.query.getfirst("lang")
-    if qs_lang and qs_lang in ["en","fr","es","pt"]:
+    if qs_lang and qs_lang in ["en","fr","es","pt","zh-hant"]:
         has_req = True
         language = qs_lang
     else:
         import locale
         try:
-            lang,enc = locale.getdefaultlocale()
-            lang = lang[:2]
+            lang_code, enc = locale.getdefaultlocale()
+            lang = lang_code[:2]
             if lang in ["en","fr","es","pt"]:
                 language = lang
+            elif lang == "zh":
+                language = "zh-hant"
         except:
             pass
 

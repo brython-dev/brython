@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Brython 文檔</title>
+
+<link rel="stylesheet" href="/brython.css">
+
+<script src="/src/brython.js"></script>
+<script type="text/javascript" src="/src/brython_stdlib.js"></script>
+
+<script src="/assets/header.brython.js"></script>
+
+<script type="text/python3">
+from browser import window, document, html, highlight
+
+import header
+header.show('zh-hant')
+
+def run(ev):
+    # run the code in the element after the button
+    tg = ev.target
+    while tg.tagName != 'BUTTON':
+        tg = tg.parent
+    exec(tg.elt.text.strip(), {})
+
+target = 'content'
+for elt in document[target].get(selector='.exec'):
+    # Python code executed when user clicks on a button
+    elt.contentEditable = True
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    elt.focus()
+    btn = html.BUTTON('▶')
+    btn.bind('click', run)
+    # set attribute python_code, used when button is hit
+    btn.elt = elt
+    elt.parent.insertBefore(btn, elt)
+for elt in document[target].get(selector='.exec_on_load'):
+    # Python code executed on page load
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+    exec(src)
+for elt in document[target].get(selector='.python'):
+    src = elt.text.strip()
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    elt.clear()
+    elt <= h
+</script>
+
+</head>
+<body onLoad="brython(1)">
+
+<div id="banner_row"></div>
+
+<table width="100%">
+<tr>
+<td style="width:20%;vertical-align:top;">
+<h4><a class="navig" href="intro.html">介紹</a></h4>
+<h4><a class="navig" href="install.html">安裝</a></h4>
+<h4><a class="navig" href="file_or_http.html">“file”協議的限制</a></h4>
+<h4><a class="navig" href="faq.html">常問問題</a></h4>
+<h4><a class="navig" href="syntax.html">語法，關鍵字和內置函式</a></h4>
+<h4><a class="navig" href="stdlib.html">標準分發</a></h4>
+<h4><a class="navig" href="import.html"><tt>import</tt> 實現</a></h4>
+<h4><a class="navig" href="brython-packages.html">Brython 套件</a></h4>
+
+<h4>瀏覽器介面</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="dom_api.html">簡介 ─ DOM API</a>
+<br><a class="navig" href="create.html">建立 document</a>
+<br><a class="navig" href="access.html">存取 element</a>
+<br><a class="navig" href="attributes.html">Attributes, properties and methods</a>
+<br>
+<br><a class="navig" href="events.html">事件</a>
+<br><a class="navig" href="mouse_events.html">鼠標事件</a>
+<br><a class="navig" href="keyboard_events.html">鍵盤事件</a>
+<br><a class="navig" href="focus_events.html">聚焦事件</a>
+<br><a class="navig" href="drag_events.html">拖曳事件</a>
+<br>
+<br><a class="navig" href="query.html">Query string</a>
+<br>
+<br><a class="navig" href="jsobjects.html">使用Javascript對象和函式庫</a>
+</div>
+
+<h4>Brython特定的內置模組</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="browser.html">browser</a>
+<br><a class="navig" href="aio.html">browser.aio</a>
+<br><a class="navig" href="ajax.html">browser.ajax</a>
+<br><a class="navig" href="html.html">browser.html</a>
+<br><a class="navig" href="local_storage.html">browser.local_storage</a>
+<br><a class="navig" href="markdown.html">browser.markdown</a>
+<br><a class="navig" href="object_storage.html">browser.object_storage</a>
+<br><a class="navig" href="local_storage.html">browser.session_storage</a>
+<br><a class="navig" href="svg.html">browser.svg</a>
+<br><a class="navig" href="template.html">browser.template</a>
+<br><a class="navig" href="timer.html">browser.timer</a>
+<br><a class="navig" href="webcomponent.html">browser.webcomponent</a>
+<br><a class="navig" href="websockets.html">browser.websocket</a>
+<br><a class="navig" href="worker.html">browser.worker</a>
+<br>
+<br><i>Widgets</i>
+<br><a class="navig" href="widgets-dialog.html">browser.widgets.dialog</a>
+<br>
+<br><a class="navig" href="javascript.html">javascript</a>
+</div>
+
+<h4>與Brython工作</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="options.html"><code>brython()</code>函式選項</a>
+<br><a class="navig" href="test.html">測試與調試</a>
+<br><a class="navig" href="deploy.html">部署應用</a>
+</div>
+
+<h4>Cookbook</h4>
+<div style="padding-left:10px;">
+<a class="navig" href="../en/cookbook/hello_world.html">Hello world !</a>
+<br><a class="navig" href="../en/cookbook/content_in_div.html">在元素中插入內容</a>
+<br><a class="navig" href="../en/cookbook/basic_markup.html">HTML標記（粗體，斜體...）</a>
+<br><a class="navig" href="../en/cookbook/table.html">HTML表格</a>
+<br><a class="navig" href="../en/cookbook/bind_unbind.html">綁定和取消綁定事件</a>
+<br><a class="navig" href="../en/cookbook/select_checkbox.html">處理SELECT元素中的選項</a>
+<br><a class="navig" href="../en/cookbook/drag_drop.html">拖放元素</a>
+<br><a class="navig" href="../en/cookbook/get_content.html">獲取元素的內容</a>
+<br><a class="navig" href="../en/cookbook/read_file.html">讀取文件內容</a>
+<br><a class="navig" href="../en/cookbook/local_storage.html">本地存儲物件</a>
+<br><a class="navig" href="../en/cookbook/read_text_from_imagemap.html">onmouseover範例</a>
+</div>
+
+</td>
+
+<td id="content" style="vertical-align:top;">
+&nbsp;<content>
+</td>
+</tr>
+</table>
+</html>
