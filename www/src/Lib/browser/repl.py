@@ -190,7 +190,7 @@ class Repl:
                                               self.locals)
                     self.flush()
                     if _ is not None:
-                        self.write(repr(_)+'\n')
+                        self.write(repr(_) + '\n')
                     self.flush()
                     self.zone.value += '>>> '
                     self._status = "main"
@@ -199,7 +199,7 @@ class Repl:
                     self._status = "block"
                 except SyntaxError as msg:
                     if str(msg) == 'invalid syntax : triple string end not found' or \
-                        str(msg).startswith('Unbalanced bracket'):
+                            str(msg).startswith('Unbalanced bracket'):
                         self.zone.value += '... '
                         self._status = "3string"
                     elif str(msg) == 'eval() argument must be an expression':
@@ -227,7 +227,7 @@ class Repl:
                     self.zone.value += '>>> '
                     self._status = "main"
             elif currentLine == "":  # end of block
-                block = src[src.rfind('>>>') + 4:].splitlines()
+                block = src[src.rfind('\n>>>') + 5:].splitlines()
                 block = [block[0]] + [b[4:] for b in block[1:]]
                 block_src = '\n'.join(block)
                 # status must be set before executing code in globals()
