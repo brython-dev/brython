@@ -17,7 +17,7 @@ and the [editor](https://www.brython.info/tests/editor.html) of the site
   attribute `id` of an existing TEXTAREA.
 - if _element_ is `None`, _title_ is the title of the dialog box
 - dictionaries _globals_ and _locals_ are the environment where the interpreter
-  commands are executed
+  commands are executed (by default, empty dictionaries)
 - _rows_ and _cols_ are the TEXTAREA dimensions
 - _default_css_ specifies if the CSS stylesheet provided by the module should
   be used. If the value is `False`, the styles defined in the HTML page are

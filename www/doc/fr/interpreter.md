@@ -17,7 +17,7 @@ l'[éditeur](https://www.brython.info/tests/editor.html) du site
   TEXTAREA de la page
 - _title_ est le titre à afficher dans la boite de dialogue
 - _globals_ et _locals_ sont l'environnement dans lequel les commandes de
-  l'interpréteur seront exécutés
+  l'interpréteur seront exécutés (par défaut, des dictionnaires vides)
 - _rows_ et _cols_ sont les dimensions du TEXTAREA
 - _default_css_ indique s'il faut utiliser la feuille de style fournie par le
   module. Si la valeur est `False`, les styles définis dans la page HTML sont
@@ -42,7 +42,7 @@ Interpreter()
 > représentent l'état au moment de l'ouverture
 
 > Ainsi, dans l'exemple suivant, la valeur de `y` dans le cadre `f` vaudra
-> 8:
+> 8 et non pas 9:
 <blockquote>
 ```exec
 from interpreter import Inspector
