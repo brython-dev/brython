@@ -68,7 +68,7 @@ editor_ns = {
 
 # default style for console textarea
 style_sheet = """
-.brython-repl-console {
+.brython-interpreter {
     background-color: #000;
     color: #fff;
     font-family: consolas, courier;
@@ -95,11 +95,12 @@ class Trace:
         return "\n".join(stripped)
 
 
-class Interpereter:
+class Interpreter:
     """Add a Python interactive interpreter in a textarea."""
 
-    def __init__(self, elt_id=None, title="REPL", globals=None, locals=None,
-            rows=30, cols=84, default_css=True):
+    def __init__(self, elt_id=None, title="Interactive Interpreter",
+                 globals=None, locals=None,
+                 rows=30, cols=84, default_css=True):
         """
         Create the interpreter.
         - "elt_id" is the id of a textarea in the document. If not set, a new
@@ -109,16 +110,16 @@ class Interpereter:
         if default_css:
             # Insert default CSS stylesheet if not already loaded
             for stylesheet in document.styleSheets:
-                if stylesheet.ownerNode.id == "brython-repl":
+                if stylesheet.ownerNode.id == "brython-interpreter":
                     break
             else:
-                document <= html.STYLE(style_sheet, id="brython-repl")
+                document <= html.STYLE(style_sheet, id="brython-interpreter")
 
         if elt_id is None:
             self.dialog = Dialog(title=title, top=10, left=10,
                 default_css=default_css)
             self.zone = html.TEXTAREA(rows=rows, cols=cols,
-                Class="brython-repl-console")
+                Class="brython-interpreter")
             self.dialog.panel <= self.zone
         else:
             if isinstance(elt_id, str):
@@ -338,12 +339,12 @@ class Interpereter:
         print("SyntaxError:", info)
         self.flush()
 
-class Inspector(Inperpreter):
+class Inspector(Interpreter):
 
-    def __init__(self, elt_id=None, title="Inspector", rows=30, cols=84,
-                 default_css=True):
+    def __init__(self, title="Frames inspector",
+                   rows=30, cols=84, default_css=True):
         frame = sys._getframe().f_back
-        super().__init__(self, elt_id, title,
+        super().__init__(None, title,
                       globals=frame.f_globals.copy(),
                       locals=frame.f_locals.copy(),
                       rows=rows, cols=cols, default_css=default_css)
@@ -367,5 +368,3 @@ class Inspector(Inperpreter):
     def change_frame(self, ev):
         self.globals, self.locals = self.frames[ev.target.selectedIndex]
 
-def open(elt_id):
-    Repl(elt_id)
