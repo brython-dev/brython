@@ -43,26 +43,72 @@ body {
   margin-bottom: 1em;
 }
 
-.menu-item-top {
-  background-color:var(--clear-2);
-  color:var(--dark-2);
-  font-family:Montserrat, Arial;
-  font-size:1.5em;
-  text-align:left;
-  padding-left: 1.5em;
-  cursor: default;
+/* Classes for brython.widgets.menu */
+
+:root {
+  --brython-menu-font-family: Montserrat;
+  --brython-menu-font-size: 1.2em;
+  --brython-menu-navbar-bgcolor: var(--clear-2);
+  --brython-menu-navbar-bgcolor-selected: var(--clear-3);
+  --brython-menu-navbar-color: var(--dark-1);
+  --brython-menu-color: #000;
+  --brython-menu-submenu-bgcolor: var(--clear-2);
+  --brython-menu-submenu-bgcolor-selected: var(--clear-3);
 }
 
-.menu-item-sub {
-  background-color:var(--clear-2);
-  color:var(--dark-2);
-  font-size:1.5em;
-  line-height:30px;
-  padding: 0.3em 1em 0em 1.5em;
-  text-align:left;
-  cursor: default;
+/* Item in the main horizontal navigation bar */
+.brython-menu-navbar-item {
+    font-family: var(--brython-menu-font-family);
+    font-size: var(--brython-menu-font-size);
+    background-color: var(--brython-menu-navbar-bgcolor);
+    color: var(--brython-menu-navbar-color);
+    padding: 0.5em 1em 0.5em 1em;
+    cursor: default;
 }
 
+.brython-menu-navbar-item:hover {
+    background-color: var(--brython-menu-navbar-bgcolor-selected);
+}
+
+.brython-menu-navbar-item-selected {
+    background-color: var(--brython-menu-navbar-bgcolor-selected);
+}
+
+/* Table for a submenu, opened by a click on an item */
+.brython-menu-submenu {
+    font-family: var(--brython-menu-font-family);
+    font-size: var(--brython-menu-font-size);
+    background-color: var(--brython-menu-submenu-bgcolor);
+    position: absolute;
+    border-style: solid;
+    border-width: 0px 0px 0px 1px;
+    border-color: var(--brython-menu-color);
+    border-spacing: 0;
+}
+
+/* TR for a submenu item row */
+.brython-menu-submenu-row:hover {
+    color: var(--brython-menu-color);
+    background-color: var(--brython-menu-submenu-bgcolor-selected);
+}
+
+.brython-menu-submenu-row-selected {
+    color: var(--brython-menu-color);
+    background-color: var(--brython-menu-submenu-bgcolor-selected);
+}
+
+/*
+   TD for a cell in a submenu row
+   Each row has two cells, one for the item label, the other one
+   filled with a > if the item has a submenu
+*/
+.brython-menu-submenu-item {
+    font-family: var(--brython-menu-font-family);
+    padding: 0.3em 0.3em 0.3em 1em;
+    cursor: default;
+}
+
+/* end of browser.widgets.menu classes */
 a.glink {
   background-color:var(--clear-1);
   color:var(--dark-1);
@@ -160,6 +206,12 @@ select.language {
     border-radius: 10px;
     color:var(--dark-3);
     width:auto;
+}
+
+.css {
+    background-color: var(--clear-2);
+    display: inline-block;
+    padding:3px 8px 8px 8px;
 }
 
 .console{

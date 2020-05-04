@@ -10,8 +10,6 @@ if protocol == "http" and host.endswith("brython.info"):
     document.location.href = f"https://{rest}"
 
 Menu = menu.Menu
-menu.css["menu-item-top"] = "menu-item-top"
-menu.css["menu-item-sub"] = "menu-item-sub"
 
 trans_menu = {
     "menu_console": {"en": "Console", "es": "Consola", "fr": "Console", 'zh-hant': '控制台'},
@@ -83,7 +81,7 @@ def show(language=None):
             window.location.href = href + f"?lang={language}"
         return f
 
-    menu = Menu(_banner)
+    menu = Menu(_banner, default_css=False)
 
     home = menu.add_item("brython", callback=load_page("home"))
     home.attrs["class"] = "logo"

@@ -124,35 +124,49 @@ Si l'argument _default_css_ passé au menu vaut `True` (valeur par défaut), la
 feuille de style suivante est insérée dans le document courant:
 
 <blockquote>
-```
+```css
+:root {
+    --brython-dialog-font-family: Arial;
+    --brython-dialog-font-size: 100%;
+    --brython-dialog-bgcolor: #fff;
+    --brython-dialog-border-color: #000;
+    --brython-dialog-title-bgcolor: CadetBlue;
+    --brython-dialog-title-color: #fff;
+    --brython-dialog-close-bgcolor: #fff;
+    --brython-dialog-close-color: #000;
+}
+
 .brython-dialog-main {
-    font-family: arial;
+    font-family: var(--brython-dialog-font-family);
+    font-size: var(--brython-dialog-font-size);
+    background-color: var(--brython-dialog-bgcolor);
     left: 10px;
     top: 10px;
     border-style: solid;
-    border-color: CadetBlue;
-    border-width: 0 1px 1px 1px;
-    background-color: #fff;
+    border-color: var(--brython-dialog-border-color);
+    border-width: 1px;
     z-index: 10;
 }
 
 .brython-dialog-title {
-    background-color: CadetBlue;
-    color: #fff;
+    background-color: var(--brython-dialog-title-bgcolor);
+    color: var(--brython-dialog-title-color);
+    border-style: solid;
+    border-color: var(--brython-dialog-border-color);
+    border-width: 0px 0px 1px 0px;
     padding: 0.4em;
     cursor: default;
 }
 
 .brython-dialog-close {
     float: right;
-    background-color: #fff;
-    color: #000;
+    background-color: var(--brython-dialog-close-bgcolor);
+    color: var(--brython-dialog-close-color);
     cursor: default;
     padding: 0.1em;
 }
 
 .brython-dialog-panel {
-    color: #000;
     padding: 0.6em;
 }
 
