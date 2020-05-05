@@ -691,12 +691,16 @@ Random.randrange = function(){
         self = $.self,
         _random = self._random
 
-    for(var i = 1, len = arguments.length; i < len; i++){
-        if(! is_integer(arguments[i])){
-            throw _b_.ValueError.$factory("non-integer arg " + i +
-                " for randrange()")
-        }
+    if(! is_integer($.x)){
+        throw _b_.ValueError.$factory("non-integer arg 1 for randrange()")
     }
+    if($.stop !== null && ! is_integer($.stop)){
+        throw _b_.ValueError.$factory("non-integer arg 2 for randrange()")
+    }
+    if($.step !== null && ! is_integer($.step)){
+        throw _b_.ValueError.$factory("non-integer arg 3 for randrange()")
+    }
+
     if($.stop === null){
         var start = 0, stop = $.x.valueOf(), step = 1
     }else{

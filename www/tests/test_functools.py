@@ -10,3 +10,9 @@ class Test:
 
     def __lt__(self, other):
         pass
+
+# issue 1383
+import random
+
+func = partial(random.randrange, 100)
+func()

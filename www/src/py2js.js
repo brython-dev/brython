@@ -6789,7 +6789,7 @@ var $ListOrTupleCtx = $B.parser.$ListOrTupleCtx = function(context,real){
                         $pos = save_pos
 
                         var js = root.to_js()
-                        
+
                         root = null
                         $B.clear_ns(listcomp_name)
                         delete $B.$py_src[listcomp_name]
