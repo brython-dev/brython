@@ -635,6 +635,15 @@ DOMNode.__del__ = function(self){
     self.elt.parentNode.removeChild(self.elt)
 }
 
+DOMNode.__delattr__ = function(self, attr){
+    if(self.elt[attr] === undefined){
+        throw _b_.AttributeError.$factory(
+            `cannot delete DOMNode attribute '${attr}'`)
+    }
+    delete self.elt[attr]
+    return _b_.None
+}
+
 DOMNode.__delitem__ = function(self, key){
     if(self.elt.nodeType == 9){ // document : remove by id
         var res = self.elt.getElementById(key)
@@ -650,10 +659,6 @@ DOMNode.__dir__ = function(self){
     // generic DOM attributes
     for(var attr in self.elt){
         if(attr.charAt(0) != "$"){res.push(attr)}
-    }
-    // Brython-specific attributes
-    for(var attr in DOMNode){
-        //if(attr.charAt(0) != "$" && res.indexOf(attr) == -1){res.push(attr)}
     }
     res.sort()
     return res
@@ -702,14 +707,15 @@ DOMNode.__getattribute__ = function(self, attr){
             }
         case "x":
         case "y":
-            console.log("get attr", attr)
             if(! (self.elt instanceof SVGElement)){
                 var pos = $getPosition(self.elt)
                 return attr == "x" ? pos.left : pos.top
             }
         case "clear":
         case "closest":
-            return function(){return DOMNode[attr](self, arguments[0])}
+            return function(){
+                return DOMNode[attr](self, arguments[0])
+            }
         case "headers":
           if(self.elt.nodeType == 9){
               // HTTP headers

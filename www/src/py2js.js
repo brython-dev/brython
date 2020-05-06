@@ -3645,7 +3645,7 @@ var $DelCtx = $B.parser.$DelCtx = function(context){
                 case 'call':
                     $_SyntaxError(this, ["cannot delete function call"])
                 case 'attribute':
-                    return 'delattr(' + expr.value.to_js() + ',"' +
+                    return '_b_.delattr(' + expr.value.to_js() + ',"' +
                         expr.name + '")'
                 default:
                     $_SyntaxError(this, ["cannot delete " + expr.type])

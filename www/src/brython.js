@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-05-05 09:12:30.970616"
-__BRYTHON__.timestamp=1588662750970
+__BRYTHON__.compiled_date="2020-05-06 08:00:08.561611"
+__BRYTHON__.timestamp=1588744808561
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -1879,7 +1879,7 @@ $_SyntaxError(this,["cannot delete operator"])
 case 'call':
 $_SyntaxError(this,["cannot delete function call"])
 case 'attribute':
-return 'delattr('+expr.value.to_js()+',"'+
+return '_b_.delattr('+expr.value.to_js()+',"'+
 expr.name+'")'
 default:
 $_SyntaxError(this,["cannot delete "+expr.type])}}}}
@@ -13074,6 +13074,10 @@ return false}
 DOMNode.__del__=function(self){
 if(!self.elt.parentNode){throw _b_.ValueError.$factory("can't delete "+_b_.str.$factory(self.elt))}
 self.elt.parentNode.removeChild(self.elt)}
+DOMNode.__delattr__=function(self,attr){if(self.elt[attr]===undefined){throw _b_.AttributeError.$factory(
+`cannot delete DOMNode attribute '${attr}'`)}
+delete self.elt[attr]
+return _b_.None}
 DOMNode.__delitem__=function(self,key){if(self.elt.nodeType==9){
 var res=self.elt.getElementById(key)
 if(res){res.parentNode.removeChild(res)}
@@ -13081,7 +13085,6 @@ else{throw _b_.KeyError.$factory(key)}}else{
 self.elt.parentNode.removeChild(self.elt)}}
 DOMNode.__dir__=function(self){var res=[]
 for(var attr in self.elt){if(attr.charAt(0)!="$"){res.push(attr)}}
-for(var attr in DOMNode){}
 res.sort()
 return res}
 DOMNode.__eq__=function(self,other){return self.elt==other.elt}
@@ -13107,7 +13110,6 @@ throw _b_.AttributeError.$factory("style."+attr+
 " is not set for "+_b_.str.$factory(self))}
 case "x":
 case "y":
-console.log("get attr",attr)
 if(!(self.elt instanceof SVGElement)){var pos=$getPosition(self.elt)
 return attr=="x" ? pos.left :pos.top}
 case "clear":

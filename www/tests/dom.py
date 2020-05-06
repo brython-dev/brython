@@ -77,3 +77,27 @@ assert window.jsReturnsUndefined() is javascript.UNDEFINED
 # issue 1327
 num = document['banner_row'].attrs.get('test', 10)
 assert num == 10
+
+# issue 1384
+class A(html.DIV):
+    def __init__(self, s):
+        self.myattr = s
+
+x = A("Andy")
+assert x.myattr == "Andy"
+del x.myattr
+assert not hasattr(x, "myattr")
+try:
+    del x.attrs
+    raise Exception("should have raised AttributeError")
+except AttributeError:
+    pass
+
+class B(svg.line):
+    def __init__(self, s):
+        self.myattr = s
+
+y = B("Didier")
+assert y.myattr == "Didier"
+del y.myattr
+assert not hasattr(y, "myattr")
