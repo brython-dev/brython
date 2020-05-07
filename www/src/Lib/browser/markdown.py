@@ -52,14 +52,6 @@ class CodeBlock:
         return res, []
 
 
-class HtmlBlock:
-
-    def __init__(self, src):
-        self.src = src
-
-    def to_html(self):
-        return self.src
-
 class Marked:
 
     def __init__(self, line=''):
@@ -68,6 +60,16 @@ class Marked:
 
     def to_html(self):
         return apply_markdown(self.line)
+
+
+class Script:
+
+    def __init__(self, src):
+        self.src = src
+
+    def to_html(self):
+        return self.src, []
+
 
 # get references
 refs = {}
@@ -96,7 +98,7 @@ def mark(src):
     i = bq = 0
     ul = ol = 0
 
-    while i<len(lines):
+    while i < len(lines):
 
         # enclose lines starting by > in a blockquote
         if lines[i].startswith('>'):
@@ -204,13 +206,13 @@ def mark(src):
         elif line.lower().startswith('<script'):
             if isinstance(section, Marked) and section.line:
                 sections.append(section)
-                section = Marked()
             j = i + 1
             while j < len(lines):
                 if lines[j].lower().startswith('</script>'):
-                    scripts.append('\n'.join(lines[i + 1:j]))
+                    sections.append(Script('\n'.join(lines[i:j + 1])))
                     for k in range(i, j + 1):
                         lines[k] = ''
+                    section = Marked()
                     break
                 j += 1
             i = j
