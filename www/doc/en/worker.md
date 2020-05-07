@@ -18,7 +18,7 @@ can't access the document currently displayed, nor modify it.
 A worker script is inserted in an HTML page with a specific form of the
 `<script type="text/python">` tag:
 
-```
+```xml
 <script type="text/python" class="webworker" id="myworker">
 # instructions of the worker program
 </script>
@@ -26,7 +26,7 @@ A worker script is inserted in an HTML page with a specific form of the
 
 The attribute `src` can also be used to load the worker script:
 
-```
+```xml
 <script type="text/python" class="webworker" id="myworker" src="myworker.py">
 </script>
 ```

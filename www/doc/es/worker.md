@@ -18,7 +18,7 @@ no puede acceder al documento que se está mostrando ni modificarlo.
 Un script worker se inserta en una página HTML medianto una forma específica de la 
 stiqueta `<script type="text/python">`:
 
-```
+```xml
 <script type="text/python" class="webworker" id="myworker">
 # instructions of the worker program
 </script>
@@ -26,7 +26,7 @@ stiqueta `<script type="text/python">`:
 
 El atributo `src` se puede usar también para cargar el script del worker:
 
-```
+```xml
 <script type="text/python" class="webworker" id="myworker" src="myworker.py">
 </script>
 ```

@@ -63,30 +63,30 @@ Exemple :
 <tr>
 <td>
 ```exec_on_load
-from browser import alert, document as doc
-from browser import websocket
+from browser import document, websocket
+from browser.widgets.dialog import InfoDialog
 
 def on_open(evt):
-    doc['sendbtn'].disabled = False
-    doc['closebtn'].disabled = False
-    doc['openbtn'].disabled = True
-    alert("Connexion ouverte")
+    document['sendbtn'].disabled = False
+    document['closebtn'].disabled = False
+    document['openbtn'].disabled = True
+    InfoDialog("websocket", "Connexion ouverte")
 
 def on_message(evt):
     # message reçu du serveur
-    alert("Message reçu : %s" %evt.data)
+    InfoDialog("websocket", f"Message reçu : {evt.data}")
 
 def on_close(evt):
     # la websocket est fermée
-    alert("La connexion est fermée")
-    doc['openbtn'].disabled = False
-    doc['closebtn'].disabled = True
-    doc['sendbtn'].disabled = True
+    InfoDialog("websocket", "La connexion est fermée")
+    document['openbtn'].disabled = False
+    document['closebtn'].disabled = True
+    document['sendbtn'].disabled = True
 
 ws = None
 def _open(ev):
     if not websocket.supported:
-        alert("WebSocket n'est pas pris en charge par votre navigateur")
+        InfoDialog("websocket", "WebSocket n'est pas pris en charge par votre navigateur")
         return
     global ws
     # open a web socket
@@ -97,17 +97,17 @@ def _open(ev):
     ws.bind('close', on_close)
 
 def send(ev):
-    data = doc["data"].value
+    data = document["data"].value
     if data:
         ws.send(data)
 
 def close_connection(ev):
     ws.close()
-    doc['openbtn'].disabled = False
+    document['openbtn'].disabled = False
 
-doc['openbtn'].bind('click', _open)
-doc['sendbtn'].bind('click', send)
-doc['closebtn'].bind('click', close_connection)
+document['openbtn'].bind('click', _open)
+document['sendbtn'].bind('click', send)
+document['closebtn'].bind('click', close_connection)
 ```
 </td>
 <td valign="top">

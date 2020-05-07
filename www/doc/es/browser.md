@@ -31,12 +31,6 @@ El paquete **browser** agrupa los nombres y módulos que son específicos de Bry
 > Los nombres insertados por la librería en el espacio global de nombres Javascript
 > están disponibles en el script Brython como atributos del objeto `window`.
 
-> Por ejemplo, el módulo **jqueryui** en la librería estándar de Brython
-> provee de una interfaz a la librería Javascript jQueryUI. Para usarlo en un
-> script Brython simplemente escribe `import jqueryui` sin insertar las
-> librerías Javascript en la página. Es el módulo **jqueryui** el encargado
-> de cargarlas, usando la función `load()`.
-
 **browser**.`prompt(`_mensaje[,default]_`)`
 > una función que muestra el _mensaje_ en una ventana y un campo de entrada.
 > Devuelve el valor que se ha introducido en el campo de entrada ; si no se ha

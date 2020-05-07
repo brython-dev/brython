@@ -7,18 +7,18 @@ El módulo define una función :
 
 `supported`
 
-> indica si el protocolo está soportado por el navegador 
+> indica si el protocolo está soportado por el navegador
 
-y una función: 
+y una función:
 
 `WebSocket(`_host_`)`
 
 > _host_ define la localización de un servidor que soporta el protocolo WebSocket. devuelve un objeto `WebSocket`.
-> Si el navegador no soporta `WebSocket`, se lanzará un `NotImplementedError` 
+> Si el navegador no soporta `WebSocket`, se lanzará un `NotImplementedError`
 
 Un objeto `WebSocket` dispone de los siguientes métodos :
 
-`bind(`_evt,function_`)` 
+`bind(`_evt,function_`)`
 > adjunta la _funcion_ al evento _evt_. Los eventos y los correspondientes argumentos de la función son :
 
 <blockquote>
@@ -57,30 +57,32 @@ Ejemplo :
 <tr>
 <td valign="top">
 ```exec_on_load
-from browser import alert, document, websocket
+from browser import bind, document, websocket
+from browser.widgets.dialog import InfoDialog
 
 def on_open(evt):
     document['sendbtn'].disabled = False
     document['closebtn'].disabled = False
     document['openbtn'].disabled = True
+    InfoDialog("websocket", f"Conexión abierta")
 
 def on_message(evt):
     # message received from server
-    alert(f"Message received : {evt.data}")
+    InfoDialog("websocket", f"Mensaje recibido : {evt.data}")
 
 def on_close(evt):
     # websocket is closed
-    alert("Connection is closed")
+    InfoDialog("websocket", "La conexión esta cierrada")
     document['openbtn'].disabled = False
     document['closebtn'].disabled = True
     document['sendbtn'].disabled = True
 
 ws = None
 
-@document['openbtn'].bind('click')
+@bind('#openbtn', 'click')
 def _open(ev):
     if not websocket.supported:
-        alert("WebSocket is not supported by your browser")
+        InfoDialog("websocket", "WebSocket is not supported by your browser")
         return
     global ws
     # open a web socket
@@ -90,17 +92,17 @@ def _open(ev):
     ws.bind('message',on_message)
     ws.bind('close',on_close)
 
-@document['sendbtn'].bind('click')
+@bind('#sendbtn', 'click')
 def send(ev):
     data = document["data"].value
     if data:
         ws.send(data)
 
-@document['closebtn'].bind('click')
+@bind('#closebtn', 'click')
 def close_connection(ev):
     ws.close()
     document['openbtn'].disabled = False
-```        
+```
 </td>
 
 <td valign="top">

@@ -56,30 +56,32 @@ Example :
 <tr>
 <td valign="top">
 ```exec_on_load
-from browser import alert, document, websocket
+from browser import bind, document, websocket
+from browser.widgets.dialog import InfoDialog
 
 def on_open(evt):
     document['sendbtn'].disabled = False
     document['closebtn'].disabled = False
     document['openbtn'].disabled = True
+    InfoDialog("websocket", f"Connection open")    
 
 def on_message(evt):
     # message received from server
-    alert(f"Message received : {evt.data}")
+    InfoDialog("websocket", f"Message received : {evt.data}")
 
 def on_close(evt):
     # websocket is closed
-    alert("Connection is closed")
+    InfoDialog("websocket", "Connection is closed")
     document['openbtn'].disabled = False
     document['closebtn'].disabled = True
     document['sendbtn'].disabled = True
 
 ws = None
 
-@document['openbtn'].bind('click')
+@bind('#openbtn', 'click')
 def _open(ev):
     if not websocket.supported:
-        alert("WebSocket is not supported by your browser")
+        InfoDialog("websocket", "WebSocket is not supported by your browser")
         return
     global ws
     # open a web socket
@@ -89,13 +91,13 @@ def _open(ev):
     ws.bind('message',on_message)
     ws.bind('close',on_close)
 
-@document['sendbtn'].bind('click')
+@bind('#sendbtn', 'click')
 def send(ev):
     data = document["data"].value
     if data:
         ws.send(data)
 
-@document['closebtn'].bind('click')
+@bind('#closebtn', 'click')
 def close_connection(ev):
     ws.close()
     document['openbtn'].disabled = False

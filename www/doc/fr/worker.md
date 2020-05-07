@@ -20,7 +20,7 @@ navigateur, ni le modifier.
 Pour insérer un script travailleur dans une page HTML, on utilise une forme
 particulière de la balise `<script type="text/python">`:
 
-```
+```xml
 <script type="text/python" class="webworker" id="myworker">
 # instructions Python du script travailleur
 </script>
@@ -28,7 +28,7 @@ particulière de la balise `<script type="text/python">`:
 
 On peut aussi utiliser l'attribut `src` pour charger le script travailleur:
 
-```
+```xml
 <script type="text/python" class="webworker" id="myworker" src="myworker.py">
 </script>
 ```

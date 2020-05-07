@@ -123,7 +123,11 @@ possèdent les propriétés suivantes
 <td>
 <button id="_bubbles">test</button>
 <script type="text/python">
-doc['_bubbles'].bind('click',lambda ev:alert('bubbles : %s ' %ev.bubbles))
+from browser import document
+from browser.widgets.dialog import InfoDialog
+
+document['_bubbles'].bind('click',
+    lambda ev:InfoDialog("Events", f'bubbles : {ev.bubbles}'))
 </script>
 </td>
 </tr>
@@ -136,7 +140,11 @@ doc['_bubbles'].bind('click',lambda ev:alert('bubbles : %s ' %ev.bubbles))
 <td>
 <button id="_cancelable">test</button>
 <script type="text/python">
-doc['_cancelable'].bind('click', lambda ev:alert('cancelable : %s ' %ev.cancelable))
+from browser import document
+from browser.widgets.dialog import InfoDialog
+
+document['_cancelable'].bind('click',
+    lambda ev:InfoDialog("Events", f'cancelable : {ev.cancelable}'))
 </script>
 </td>
 </tr>
@@ -149,7 +157,12 @@ doc['_cancelable'].bind('click', lambda ev:alert('cancelable : %s ' %ev.cancelab
 <td>
 <button id="_currentTarget">test</button>
 <script type="text/python">
-doc['_currentTarget'].bind('click',lambda ev:alert('currentTarget : %s ' %ev.currentTarget))
+from browser import document
+from browser.widgets.dialog import InfoDialog
+
+document['_currentTarget'].bind('click',
+    lambda ev:InfoDialog("Events",
+                         f'currentTarget : {str(ev.currentTarget).replace("<", "&lt;")}'))
 </script>
 </td>
 </tr>
@@ -162,7 +175,11 @@ doc['_currentTarget'].bind('click',lambda ev:alert('currentTarget : %s ' %ev.cur
 <td>
 <button id="_defaultPrevented">test</button>
 <script type="text/python">
-doc['_defaultPrevented'].bind('click',lambda ev:alert('defaultPrevented : %s ' %ev.defaultPrevented))
+from browser import document
+from browser.widgets.dialog import InfoDialog
+
+document['_defaultPrevented'].bind('click',
+    lambda ev:InfoDialog("Events", f'defaultPrevented : {ev.defaultPrevented}'))
 </script>
 </td>
 </tr>
@@ -175,7 +192,11 @@ doc['_defaultPrevented'].bind('click',lambda ev:alert('defaultPrevented : %s ' %
 <td>
 <button id="_eventPhase">test</button>
 <script type="text/python">
-doc['_eventPhase'].bind('click',lambda ev:alert('eventPhase : %s ' %ev.eventPhase))
+from browser import document
+from browser.widgets.dialog import InfoDialog
+
+document['_eventPhase'].bind('click',
+    lambda ev:InfoDialog("Events", f'eventPhase : {ev.eventPhase}'))
 </script>
 </td>
 </tr>
@@ -188,7 +209,11 @@ doc['_eventPhase'].bind('click',lambda ev:alert('eventPhase : %s ' %ev.eventPhas
 <td>
 <button id="_target">test</button>
 <script type="text/python">
-doc['_target'].bind('click',lambda ev:alert('target : %s ' %ev.target))
+from browser import document
+from browser.widgets.dialog import InfoDialog
+
+document['_target'].bind('click',
+    lambda ev:InfoDialog("Events", f'target : {str(ev.target).replace("<", "&lt;")}'))
 </script>
 </td>
 </tr>
@@ -200,7 +225,11 @@ doc['_target'].bind('click',lambda ev:alert('target : %s ' %ev.target))
 <td>
 <button id="_timeStamp">test</button>
 <script type="text/python">
-doc['_timeStamp'].bind('click',lambda ev:alert('timeStamp : %s ' %ev.timeStamp))
+from browser import document
+from browser.widgets.dialog import InfoDialog
+
+document['_timeStamp'].bind('click',
+    lambda ev:InfoDialog("Events", f'timeStamp : {ev.timeStamp}'))
 </script>
 </td>
 </tr>
@@ -211,7 +240,11 @@ doc['_timeStamp'].bind('click',lambda ev:alert('timeStamp : %s ' %ev.timeStamp))
 <td>
 <button id="_type">test</button>
 <script type="text/python">
-doc['_type'].bind('click',lambda ev:alert('type : %s ' %ev.type))
+from browser import document
+from browser.widgets.dialog import InfoDialog
+
+document['_type'].bind('click',
+    lambda ev: InfoDialog("Events", f'type : {ev.type}'))
 </script>
 </td>
 </tr>
@@ -262,13 +295,14 @@ document["disabled_cbox"].bind("click", click)
 
 <blockquote>
 ```exec_on_load
-from browser import document, alert
+from browser import document
+from browser.widgets.dialog import InfoDialog
 
 def show(ev):
-    alert("clic sur %s" %ev.currentTarget.id)
+    InfoDialog("Events", f"clic sur {ev.currentTarget.id}")
 
 def show_stop(ev):
-    alert("clic sur %s" %ev.currentTarget.id)
+    InfoDialog("Events", f"clic sur {ev.currentTarget.id}")
     ev.stopPropagation()
 
 document["jaune"].bind("click", show)

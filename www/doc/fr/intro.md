@@ -43,15 +43,15 @@ document["echo"].bind("click")
 
 essayez :<p>
 <script type="text/python">
-from browser import document, alert
+from browser import document
+from browser.widgets.dialog import InfoDialog
 
-# bind event 'click' on button to function click
 def click(ev):
-    alert(document["zone"].value)
+    InfoDialog("Hello", f"Hello, {document['zone'].value} !")
 
+# bind event 'click' on button to function click()
 document["echo"].bind("click", click)
 </script>
-
 <input id="zone" autocomplete="off">
 <button id="echo">clic !</button>
 </td>

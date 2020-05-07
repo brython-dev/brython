@@ -12,14 +12,14 @@ Solution
 
 ```exec_on_load
 from browser import document
-from browser import alert
+from browser.widgets.dialog import InfoDialog
 
 def myevent(ev):
-    alert("ça marche !")
+    InfoDialog("bind", "ça marche !")
 
 def compteur():
-    alert('%s événement(s) attaché(s) à "click"'
-        %len(document["myblock"].events("click")))
+    nb_events = len(document["myblock"].events("click"))
+    InfoDialog("bind", f'{nb_events} événement(s) attaché(s) à "click"')
 
 def attache(ev):
     document["myblock"].bind("click", myevent)
