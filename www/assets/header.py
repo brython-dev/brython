@@ -132,9 +132,8 @@ def show(language=None):
             new_href = f"{head}/index.html?lang={new_lang}"
         elif addr.startswith(("static_tutorial", "static_doc")):
             elts = addr.split("/")
-            page = elts[-1].split("?")[0]
             elts[1] = new_lang
-            new_href = f"{head}/{elts[0]}/{new_lang}/{page}"
+            new_href = f"{head}/{'/'.join(elts)}"
         elif addr.startswith(("demo.html",
                               "tests/console.html",
                               "tests/editor.html")):
