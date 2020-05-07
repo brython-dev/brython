@@ -13,14 +13,15 @@
 
 <script type="text/python">
 from browser import document, alert
+from browser.widgets.dialog import InfoDialog
 
 def echo(ev):
-    alert("Hello {} !".format(document["zone"].value))
+    InfoDialog("Hello", f"Hello {document['zone'].value} !")
 
 document["test"].bind("click", echo)
 </script>
 <p>Your name is : <input id="zone" autocomplete="off">
-<button id="test">clic !</button>
+<button id="test">click !</button>
 </body>
 
 </html>
