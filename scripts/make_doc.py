@@ -68,20 +68,18 @@ for lang in ['fr', 'en', 'es']:
         os.path.join(md_doc_path,lang,'cookbook')], dest_paths)):
         for filename in os.listdir(src_path):
             ext = os.path.splitext(filename)[1]
-            if ext=='.md':
+            if ext == '.md':
                 src = open(os.path.join(src_path, filename), 'rb').read()
                 src = src.decode('utf-8')
                 html, scripts = markdown.mark(src)
                 out = open(os.path.join(dest_path,filename[:-3]+'.html'), 'wb')
                 html = index.replace('<content>',html)
                 html = html.replace('<prefix>','/'.join(['..']*(i+1)))
-                if i==1:
+                if i == 1:
                     html = html.replace('class="navig" href="',
                         'class="navig" href="../')
                 if scripts:
-                    script_content = "\n".join(
-                        f'<script type="text/python">{script}\n</script>' for
-                        script in scripts)
+                    script_content = "\n".join(scripts)
                     html = html.replace('<scripts>', script_content)
                 out.write(html.encode('utf-8'))
                 out.close()
