@@ -91,7 +91,6 @@ set.__eq__ = function(self, other){
       if(other.$items.length == self.$items.length){
         for(var i = 0, len = self.$items.length; i < len; i++){
            if(set.__contains__(self, other.$items[i]) === false){
-               console.log("self does not contain", other.$items[i])
                return false
            }
         }
