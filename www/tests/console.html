@@ -39,17 +39,20 @@
 <body onload=brython({"debug":1}) ><!-- remove the 1 to leave debug mode -->
     <noscript>Please enable Javascript to view this page correctly</noscript>
 
-    <div id="banner_row"></div>
+    <div id="banner_row">
+    <span class="logo"><a href="/index.html">brython</a></span>
+    </div>
+
 
     <textarea id="code" class="codearea" rows="20"></textarea>
 
     <div id="content"></div>
 
     <script type="text/python3">
-     from browser import repl
+     from interpreter import Interpreter
 
      # Start an interactive interpreter in textarea with id "code"
-     repl.Repl("code")
+     Interpreter("code")
  </script>
     <div>
         Embed:

@@ -81,9 +81,6 @@ def show(language=None):
 
     menu = Menu(_banner, default_css=False)
 
-    home = menu.add_item("brython", callback=load_page("home"))
-    home.attrs["class"] = "logo"
-
     menu.add_item(trans_menu["menu_console"][language],
         callback=load_page("console"))
 
