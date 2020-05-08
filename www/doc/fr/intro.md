@@ -23,14 +23,14 @@ Un exemple simple :
 </head>
 <body onload="brython()">
 <script type="text/python">
-from browser import document, alert
-
-# associe une fonction à l'événement "click" sur le bouton
+from browser import document
+from browser.widgets.dialog import InfoDialog
 
 def click(ev):
-    alert(document["zone"].value)
+    InfoDialog("Hello", f"Bonjour, {document['zone'].value} !")
 
-document["echo"].bind("click")
+# associe une fonction à l'événement "click" sur le bouton
+document["echo"].bind("click", click)
 </script>
 <input id="zone">
 <button id="echo">click !</button>
@@ -47,7 +47,7 @@ from browser import document
 from browser.widgets.dialog import InfoDialog
 
 def click(ev):
-    InfoDialog("Hello", f"Hello, {document['zone'].value} !")
+    InfoDialog("Hello", f"Bonjour, {document['zone'].value} !")
 
 # bind event 'click' on button to function click()
 document["echo"].bind("click", click)

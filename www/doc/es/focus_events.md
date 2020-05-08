@@ -1,10 +1,6 @@
 Eventos de foco
 ===============
 
-<script type="text/python">
-from browser import document as doc
-from browser import alert
-</script>
 
 Los eventos de foco son
 

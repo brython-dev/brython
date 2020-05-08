@@ -1,10 +1,6 @@
 Evénements
 ==========
 
-<script type="text/python">
-from browser import doc, alert
-</script>
-
 Introduction
 ------------
 

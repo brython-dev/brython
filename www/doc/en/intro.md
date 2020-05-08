@@ -20,14 +20,14 @@ A simple example :
 </head>
 <body onload="brython()">
 <script type="text/python">
-from browser import document, alert
+from browser import document
+from browser.widgets.dialog import InfoDialog
+
+def click(ev):
+    InfoDialog("Hello", f"Hello, {document['zone'].value} !")
 
 # bind event 'click' on button to function echo
-
-def echo(ev):
-    alert(document["zone"].value)
-
-document["mybutton"].bind("click", echo)
+document["echo"].bind("click", click)
 </script>
 <input id="zone">
 <button id="mybutton">click !</button>
@@ -41,16 +41,18 @@ document["mybutton"].bind("click", echo)
 Try it!
 
 <script type="text/python">
-from browser import document, alert
+from browser import document
+from browser.widgets.dialog import InfoDialog
 
-def echo(ev):
-    alert(document["zone"].value)
+def click(ev):
+    InfoDialog("Hello", f"Hello, {document['zone'].value} !")
 
-document["mybutton"].bind("click", echo)
+# bind event 'click' on button to function echo
+document["echo"].bind("click", click)
 </script>
 
 <input id="zone">
-<button id="mybutton">click!</button>
+<button id="echo">click!</button>
 
 </td>
 </tr>

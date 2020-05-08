@@ -2,10 +2,7 @@
 Focus events
 ============
 
-<script type="text/python">
-from browser import document as doc
-from browser import alert
-</script>
+
 Les événement focus sont :
 
 <table cellpadding=3 border=1>

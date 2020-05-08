@@ -1,11 +1,6 @@
 Evénements glisser-déposer
 ==========================
 
-<script type="text/python">
-from browser import document as doc
-from browser import alert
-</script>
-
 Les événements associés aux opérations de glisser-déposer sont
 
 <table cellpadding=3 border=1>

@@ -1,11 +1,6 @@
 Eventos de arrastre (Drag)
 ==========================
 
-<script type="text/python">
-from browser import document as doc
-from browser import alert
-</script>
-
 Los eventos de arrastre son
 
 <table cellpadding=3 border=1>
