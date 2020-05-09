@@ -118,7 +118,9 @@ class Dialog(html.DIV):
         self.style.top = f'{top}px'
 
         self.title_bar.bind("mousedown", self.mousedown)
+        self.title_bar.bind("touchstart", self.mousedown)
         self.title_bar.bind("mouseup", self.mouseup)
+        self.title_bar.bind("touchend", self.mouseup)
         self.bind("leave", self.mouseup)
         self.is_moving = False
 
@@ -127,6 +129,7 @@ class Dialog(html.DIV):
 
     def mousedown(self, event):
         document.bind("mousemove", self.mousemove)
+        document.bind("touchmove", self.mousemove)
         self.is_moving = True
         self.initial = [self.left - event.x, self.top - event.y]
         # prevent default behaviour to avoid selecting the moving element
@@ -143,6 +146,7 @@ class Dialog(html.DIV):
     def mouseup(self, event):
         self.is_moving = False
         document.unbind("mousemove")
+        document.unbind("touchmove")
 
 
 class EntryDialog(Dialog):
