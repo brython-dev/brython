@@ -42,7 +42,8 @@ def grab(evt):
         GrabPoint.y = TrueCoords.y - transMatrix.f
         DragStart = GrabPoint
 
-        dragged_pos = [int(i) for i in DragTarget.id.split("_")]
+        dragged_pos = [int((DragTarget.cx.baseVal.value - left) / dx),
+            int((DragTarget.cy.baseVal.value - top - dy) / dy)]
 
         # move this element to the "top" of the display, so it is (almost)
         # always over other elements (exception: in this case, elements that are
@@ -126,21 +127,16 @@ def drop(evt):
                 f"translate({cx - old_x},{cy - old_y})")
             border_pos += math.pi / 18
 
-            # remove dragged ball
-            del document[DragTarget.id]
-
-            # create new ball at target position
-            ball = svg.circle(id="{}_{}".format(*target_pos),
-                cx=left + target_pos[0] * dx,
-                cy=top + dy + dy * target_pos[1],
-                r=ray,
-                style={"fill": ball_color})
-            SVGRoot <= ball
+            # position dragged ball
+            draggedBall = document[DragTarget.id]
+            draggedBall.attrs['cx'] = left + target_pos[0] * dx
+            draggedBall.attrs['cy'] = top + dy + dy * target_pos[1]
+            draggedBall.setAttributeNS(None, "transform", "translate(0,0)")
 
             # reset dictionary
             filled[dragged_pos[0]][dragged_pos[1]] = None
             filled[col][row] = None
-            filled[target_pos[0]][target_pos[1]] = ball
+            filled[target_pos[0]][target_pos[1]] = draggedBall
             check_finished()
         else:
             # invalid move : jump over an empty cell
