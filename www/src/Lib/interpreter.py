@@ -150,7 +150,7 @@ class Interpreter:
 
         self.globals = {} if globals is None else globals
         self.globals.update(editor_ns)
-        self.locals = {} if locals is None else locals
+        self.locals = self.globals if locals is None else locals
 
         self.buffer = ''
         sys.stdout.write = sys.stderr.write = self.write
