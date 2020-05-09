@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-05-09 10:03:22.048258"
-__BRYTHON__.timestamp=1589011402032
+__BRYTHON__.compiled_date="2020-05-09 21:03:27.174223"
+__BRYTHON__.timestamp=1589051007158
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -12870,7 +12870,15 @@ var parent_pos=$getPosition(e.parentElement)
 left+=parent_pos.left
 top+=parent_pos.top}
 return{left:left,top:top,width:width,height:height}}
-function $mouseCoords(ev){var posx=0,posy=0
+function trace(msg){var elt=document.getElementById("trace")
+if(elt){elt.innerText+=msg}}
+function $mouseCoords(ev){if(ev.type.startsWith("touch")){var res={}
+res.x=_b_.int.$factory(ev.touches[0].screenX)
+res.y=_b_.int.$factory(ev.touches[0].screenY)
+res.__getattr__=function(attr){return this[attr]}
+res.__class__="MouseCoords"
+return res}
+var posx=0,posy=0
 if(!ev){var ev=_window.event}
 if(ev.pageX ||ev.pageY){posx=ev.pageX
 posy=ev.pageY}else if(ev.clientX ||ev.clientY){posx=ev.clientX+document.body.scrollLeft+

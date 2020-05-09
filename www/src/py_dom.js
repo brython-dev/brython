@@ -41,7 +41,22 @@ function $getPosition(e){
     return {left: left, top: top, width: width, height: height}
 }
 
+function trace(msg){
+    var elt = document.getElementById("trace")
+    if(elt){
+        elt.innerText += msg
+    }
+}
+
 function $mouseCoords(ev){
+    if(ev.type.startsWith("touch")){
+        var res = {}
+        res.x = _b_.int.$factory(ev.touches[0].screenX)
+        res.y = _b_.int.$factory(ev.touches[0].screenY)
+        res.__getattr__ = function(attr){return this[attr]}
+        res.__class__ = "MouseCoords"
+        return res
+    }
     var posx = 0,
         posy = 0
     if(!ev){var ev = _window.event}
