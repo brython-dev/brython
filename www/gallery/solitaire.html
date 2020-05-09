@@ -19,7 +19,7 @@ plate_color = "moccasin"
 
 
 def screenCoordsToGridCoords(x,y):
-    return [int((x - left) / dx), int((y - top - dy) / dy)]
+    return [int((x - left) / dx), int((y - top) / dy)]
 
 def grab(evt):
     global DragTarget,DragStart,dragged_pos
@@ -135,7 +135,7 @@ def drop(evt):
             # position dragged ball
             draggedBall = document[DragTarget.id]
             draggedBall.attrs['cx'] = left + target_pos[0] * dx
-            draggedBall.attrs['cy'] = top + dy + dy * target_pos[1]
+            draggedBall.attrs['cy'] = top + dy * target_pos[1]
             draggedBall.setAttributeNS(None, "transform", "translate(0,0)")
 
             # reset dictionary
@@ -204,7 +204,7 @@ BackDrop = document["BackDrop"]
 ray = 20
 dx = dy = 60
 left = 150
-top = 100
+top = 160
 filled = dict((i, dict((j, False) for j in range(7))) for i in range(7))
 
 border_pos = - math.pi / 2 # angle for position of next place to put captured balls
@@ -212,7 +212,7 @@ store_ray = int(13.5 * ray)
 
 # plate
 center_x = left + 3 * dx
-center_y = top + 4 * dy
+center_y = top  + 3 * dy
 
 big_plate = svg.circle(
         cx=center_x,
@@ -233,28 +233,28 @@ SVGRoot <= plate
 for i in range(3):
     SVGRoot <= svg.circle(Id=f"hole0_{i + 2}",
         cx=left + (2 + i) * dx,
-        cy=top + dy, r=ray,
+        cy=top, r=ray,
         style={"fill": "white", "stroke":ball_color})
     SVGRoot <= svg.circle(Id=f"hole6_{i + 2}",
         cx=left + (2 + i) * dx,
-        cy=top + 7 * dy, r=ray,
+        cy=top + 6 * dy, r=ray,
         style={"fill": "white", "stroke": ball_color})
 
 for i in range(5):
     SVGRoot <= svg.circle(Id=f"hole1_{i + 1}",
         cx=left + (1 + i) * dx,
-        cy=top + 2 * dy, r=ray,
+        cy=top + dy, r=ray,
         style={"fill": "white", "stroke": ball_color})
     SVGRoot <= svg.circle(Id=f"hole5_{i + 1}",
         cx=left  +(1 + i) * dx,
-        cy=top +6 * dy, r=ray,
+        cy=top + 5 * dy, r=ray,
         style={"fill": "white", "stroke": ball_color})
 
 for i in range(7):
     for row in range(3):
         SVGRoot <= svg.circle(Id=f"hole{row + 2}_{i}",
             cx=left + i * dx,
-            cy=top + (3 + row) * dy, r=ray,
+            cy=top + (2 + row) * dy, r=ray,
             style={"fill": "white", "stroke": ball_color})
 
 # put balls on all the cells except in the center
@@ -262,14 +262,14 @@ for i in range(3):
 
     ball = svg.circle(id=f"{i + 2}_0",
         cx=left + (2 + i) * dx,
-        cy=top + dy, r=ray,
+        cy=top, r=ray,
         style={"fill": ball_color})
     SVGRoot <= ball
     filled[2+i][0] = ball
 
     ball = svg.circle(id=f"{i + 2}_6",
         cx=left + (2 + i) * dx,
-        cy=top + 7 * dy, r=ray,
+        cy=top + 6 * dy, r=ray,
         style={"fill": ball_color})
     SVGRoot <= ball
     filled[2 + i][6] = ball
@@ -277,14 +277,14 @@ for i in range(3):
 for i in range(5):
     ball = svg.circle(id=f"{i + 1}_1",
         cx=left + (1 + i) * dx,
-        cy=top + 2 * dy, r=ray,
+        cy=top + dy, r=ray,
         style={"fill": ball_color})
     SVGRoot <= ball
     filled[1 + i][1] = ball
 
     ball = svg.circle(id=f"{i + 1}_5",
         cx=left + (1 + i) * dx,
-        cy=top + 6 * dy, r=ray,
+        cy=top + 5 * dy, r=ray,
         style={"fill": ball_color})
     SVGRoot <= ball
     filled[1 + i][5] = ball
@@ -294,7 +294,7 @@ for i in range(7):
         if row != 1 or i !=3:
             ball = svg.circle(id=f"{i}_{row + 2}",
                 cx=left + i * dx,
-                cy=top + (3 + row) * dy, r=ray,
+                cy=top + (2 + row) * dy, r=ray,
                 style={"fill": ball_color})
             SVGRoot <= ball
             filled[i][2 + row] = ball
