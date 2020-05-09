@@ -18,6 +18,9 @@ ball_color = "sienna"
 plate_color = "moccasin"
 
 
+def screenCoordsToGridCoords(x,y):
+    return [int((x - left) / dx), int((y - top - dy) / dy)]
+
 def grab(evt):
     global DragTarget,DragStart,dragged_pos
 
@@ -42,8 +45,9 @@ def grab(evt):
         GrabPoint.y = TrueCoords.y - transMatrix.f
         DragStart = GrabPoint
 
-        dragged_pos = [int((DragTarget.cx.baseVal.value - left) / dx),
-            int((DragTarget.cy.baseVal.value - top - dy) / dy)]
+        dragged_pos = screenCoordsToGridCoords(
+            DragTarget.cx.baseVal.value,
+            DragTarget.cy.baseVal.value)
 
         # move this element to the "top" of the display, so it is (almost)
         # always over other elements (exception: in this case, elements that are
@@ -103,8 +107,9 @@ def drop(evt):
     else:
         # drop and replace
         # compute column and row of target cell
-        target_pos = [int((targetElement.cx.baseVal.value - left) / dx),
-            int((targetElement.cy.baseVal.value - top - dy) / dy)]
+        target_pos = screenCoordsToGridCoords(
+            targetElement.cx.baseVal.value,
+            targetElement.cy.baseVal.value)
         newX = target_pos[0] - dragged_pos[0]
         newY = target_pos[1] - dragged_pos[1]
 
