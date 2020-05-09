@@ -169,7 +169,7 @@ header.show()
 
 
 <div class="example" id="ex0">
-    <button id="button0">display an alert box</button>
+    <button id="button_alert">display an alert box</button>
 
     <script type="text/python" id="script0">
     from browser import document, alert
@@ -177,7 +177,7 @@ header.show()
     def hello(ev):
         alert("Hello !")
 
-    document["button0"].bind("click", hello)
+    document["button_alert"].bind("click", hello)
     </script>
 
     <p>
@@ -198,6 +198,28 @@ header.show()
     function <code>hello</code>.
     The function takes one argument, an object representing the event.
     <p><code>alert</code> is used to display small popup windows.
+    </span>
+</div>
+
+<div class="example" id="ex_dialog">
+    <button id="button_dialog">display a popup window</button>
+
+    <script type="text/python" id="script_dailog">
+    from browser import document
+    from browser.widgets.dialog import InfoDialog
+
+    def hello(ev):
+        InfoDialog("Demo", "Hello world !")
+
+    document["button_dialog"].bind("click", hello)
+    </script>
+
+    <p>
+    <pre class="python"></pre>
+
+    <p><span class="comment">
+    Instead of the browser alert box, you can use a popup window provided
+    by the built-in module <code class="module">browser.widgets.dialog</code>.
     </span>
 </div>
 
@@ -541,12 +563,13 @@ the end.
     <span id="zone12" class="zone"></span>
 
     <script type="text/python" id="script12">
-    from browser import document, alert, html
+    from browser import document, html
+    from browser.widgets.dialog import InfoDialog
 
     def show(event):
         dropdown = event.target
         num = dropdown.selectedIndex
-        alert("Selected: {}".format(dropdown.options[num].value))
+        InfoDialog("Demo", "Selected: {}".format(dropdown.options[num].value))
 
     def insert_dropdown(event):
         document["zone12"] <= "Your choice : "
@@ -1014,7 +1037,7 @@ the end.
 
     <span class="comment">
     This example is a minimalist text editor : it shows how to select a local
-    file in the user's machine, display its content in a TEXTAREA, and save the 
+    file in the user's machine, display its content in a TEXTAREA, and save the
     TEXTAREA content to disk.
     <p>It uses the interface
     <a href="https://developer.mozilla.org/en-US/docs/Web/API/File" target="_blank" class="external">File</a> of the DOM API.
@@ -1196,19 +1219,19 @@ current = "home"
 
 def load_example(ev):
     global current
+    # remove dialogs
+    for dialog in document.select(".brython-dialog-main"):
+        dialog.remove()
     if current is not None:
         document[current].style.display = "none"
         document <= document[current]
         document["a"+current].classList.remove("selected")
     example_id = ev.target.num
+    example = document[example_id]
     ev.target.classList.add("selected")
     document["panel"].clear()
-    document["panel"] <= document[example_id]
-    document[example_id].style.display="block"
-    current = example_id
-
-for example in document.get(selector=".example"):
-    # add the Python source inside the example
+    document["panel"] <= example
+    example.style.display="block"
     script = example.get(selector="script")[0]
     src = script.text
     while src.startswith("\n"):
@@ -1223,6 +1246,10 @@ for example in document.get(selector=".example"):
         code_elt[0].html = src.html
     else:
         example <= src
+    current = example_id
+
+for example in document.get(selector=".example"):
+    # add the Python source inside the example
 
     # create a menu entry
     button = example.get(selector="button")[0]
