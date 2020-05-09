@@ -53,7 +53,7 @@ background = "SteelBlue"
 digits = "#fff"
 border = "blue"
 
-def needle(angle, r1, r2, color="#fff"):
+def needle(angle, r1, r2):
     """Draw a needle at specified angle in specified color.
     r1 and r2 are percentages of clock ray.
     """
@@ -62,18 +62,9 @@ def needle(angle, r1, r2, color="#fff"):
     x2 = width / 2 + ray * cos(angle) * r2
     y2 = height / 2 + ray * sin(angle) * r2
     ctx.beginPath()
-    ctx.strokeStyle = color
+    ctx.strokeStyle = "#fff"
     ctx.moveTo(x1, y1)
     ctx.lineTo(x2, y2)
-    ctx.stroke()
-
-def seconds(angle):
-    r = 0.68
-    x = width / 2 + ray * cos(angle) * r
-    y = height / 2 + ray * sin(angle) * r
-    ctx.beginPath()
-    ctx.strokeStyle = "#fff"
-    ctx.arc(x, y, ray * 0.03, 0, 2 * math.pi)
     ctx.stroke()
 
 def set_clock():
@@ -108,7 +99,7 @@ def set_clock():
     ctx.lineWidth = 1
     second = now.tm_sec + microsecs
     angle = second * 2 * math.pi / 60 - math.pi / 2
-    seconds(angle)
+    needle(angle, 0.05, 0.8)
 
 def show_hours():
     ctx.beginPath()
