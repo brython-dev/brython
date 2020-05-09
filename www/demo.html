@@ -209,7 +209,7 @@ header.show()
     from browser.widgets.dialog import InfoDialog
 
     def hello(ev):
-        InfoDialog("Demo", "Hello world !")
+        InfoDialog("Demo", "Hello world !", left=ev.x, top=ev.y)
 
     document["button_dialog"].bind("click", hello)
     </script>
@@ -218,8 +218,11 @@ header.show()
     <pre class="python"></pre>
 
     <p><span class="comment">
-    Instead of the browser alert box, you can use a popup window provided
+    Instead of the browser alert box, you can use a dialog box provided
     by the built-in module <code class="module">browser.widgets.dialog</code>.
+    <p>Here, the box is positioned at the mouse position (given by the attributes
+    <code>x</code> and <code>y</code> of the event object) by keyword arguments
+    <code>left</code> and <code>top</code>.
     </span>
 </div>
 
