@@ -10,13 +10,16 @@ at http://svg-whiz.com/svg/DragAndDrop.svg"""
 
 import math
 
-from browser import document, svg
+from browser import document, svg, alert
 
 SVGRoot = document["svg_root"]
 
 ball_color = "sienna"
 plate_color = "moccasin"
 
+
+def screenCoordsToGridCoords(x,y):
+    return [int((x - left) / dx), int((y - top) / dy)]
 
 def grab(evt):
     global DragTarget,DragStart,dragged_pos
@@ -42,7 +45,9 @@ def grab(evt):
         GrabPoint.y = TrueCoords.y - transMatrix.f
         DragStart = GrabPoint
 
-        dragged_pos = [int(i) for i in DragTarget.id.split("_")]
+        dragged_pos = screenCoordsToGridCoords(
+            DragTarget.cx.baseVal.value,
+            DragTarget.cy.baseVal.value)
 
         # move this element to the "top" of the display, so it is (almost)
         # always over other elements (exception: in this case, elements that are
@@ -102,8 +107,9 @@ def drop(evt):
     else:
         # drop and replace
         # compute column and row of target cell
-        target_pos = [int((targetElement.cx.baseVal.value - left) / dx),
-            int((targetElement.cy.baseVal.value - top - dy) / dy)]
+        target_pos = screenCoordsToGridCoords(
+            targetElement.cx.baseVal.value,
+            targetElement.cy.baseVal.value)
         newX = target_pos[0] - dragged_pos[0]
         newY = target_pos[1] - dragged_pos[1]
 
@@ -126,21 +132,16 @@ def drop(evt):
                 f"translate({cx - old_x},{cy - old_y})")
             border_pos += math.pi / 18
 
-            # remove dragged ball
-            del document[DragTarget.id]
-
-            # create new ball at target position
-            ball = svg.circle(id="{}_{}".format(*target_pos),
-                cx=left + target_pos[0] * dx,
-                cy=top + dy + dy * target_pos[1],
-                r=ray,
-                style={"fill": ball_color})
-            SVGRoot <= ball
+            # position dragged ball
+            draggedBall = document[DragTarget.id]
+            draggedBall.attrs['cx'] = left + target_pos[0] * dx
+            draggedBall.attrs['cy'] = top + dy * target_pos[1]
+            draggedBall.setAttributeNS(None, "transform", "translate(0,0)")
 
             # reset dictionary
             filled[dragged_pos[0]][dragged_pos[1]] = None
             filled[col][row] = None
-            filled[target_pos[0]][target_pos[1]] = ball
+            filled[target_pos[0]][target_pos[1]] = draggedBall
             check_finished()
         else:
             # invalid move : jump over an empty cell
@@ -203,15 +204,22 @@ BackDrop = document["BackDrop"]
 ray = 20
 dx = dy = 60
 left = 150
-top = 100
-filled = dict((i, dict((j, False) for j in range(7))) for i in range(7))
+top = 160
+filled = [
+    [0,0,2,2,2,0,0],
+    [0,2,2,2,2,2,0],
+    [2,2,2,2,2,2,2],
+    [2,2,2,1,2,2,2],
+    [2,2,2,2,2,2,2],
+    [0,2,2,2,2,2,0],
+    [0,0,2,2,2,0,0]]
 
 border_pos = - math.pi / 2 # angle for position of next place to put captured balls
 store_ray = int(13.5 * ray)
 
 # plate
 center_x = left + 3 * dx
-center_y = top + 4 * dy
+center_y = top  + 3 * dy
 
 big_plate = svg.circle(
         cx=center_x,
@@ -228,77 +236,26 @@ plate = svg.circle(
 SVGRoot <= plate
 
 
-# create cells
-for i in range(3):
-    SVGRoot <= svg.circle(Id=f"hole0_{i + 2}",
-        cx=left + (2 + i) * dx,
-        cy=top + dy, r=ray,
-        style={"fill": "white", "stroke":ball_color})
-    SVGRoot <= svg.circle(Id=f"hole6_{i + 2}",
-        cx=left + (2 + i) * dx,
-        cy=top + 7 * dy, r=ray,
-        style={"fill": "white", "stroke": ball_color})
-
-for i in range(5):
-    SVGRoot <= svg.circle(Id=f"hole1_{i + 1}",
-        cx=left + (1 + i) * dx,
-        cy=top + 2 * dy, r=ray,
-        style={"fill": "white", "stroke": ball_color})
-    SVGRoot <= svg.circle(Id=f"hole5_{i + 1}",
-        cx=left  +(1 + i) * dx,
-        cy=top +6 * dy, r=ray,
-        style={"fill": "white", "stroke": ball_color})
-
-for i in range(7):
-    for row in range(3):
-        SVGRoot <= svg.circle(Id=f"hole{row + 2}_{i}",
-            cx=left + i * dx,
-            cy=top + (3 + row) * dy, r=ray,
-            style={"fill": "white", "stroke": ball_color})
-
-# put balls on all the cells except in the center
-for i in range(3):
-
-    ball = svg.circle(id=f"{i + 2}_0",
-        cx=left + (2 + i) * dx,
-        cy=top + dy, r=ray,
-        style={"fill": ball_color})
-    SVGRoot <= ball
-    filled[2+i][0] = ball
-
-    ball = svg.circle(id=f"{i + 2}_6",
-        cx=left + (2 + i) * dx,
-        cy=top + 7 * dy, r=ray,
-        style={"fill": ball_color})
-    SVGRoot <= ball
-    filled[2 + i][6] = ball
-
-for i in range(5):
-    ball = svg.circle(id=f"{i + 1}_1",
-        cx=left + (1 + i) * dx,
-        cy=top + 2 * dy, r=ray,
-        style={"fill": ball_color})
-    SVGRoot <= ball
-    filled[1 + i][1] = ball
-
-    ball = svg.circle(id=f"{i + 1}_5",
-        cx=left + (1 + i) * dx,
-        cy=top + 6 * dy, r=ray,
-        style={"fill": ball_color})
-    SVGRoot <= ball
-    filled[1 + i][5] = ball
-
-for i in range(7):
-    for row in range(3):
-        if row != 1 or i !=3:
-            ball = svg.circle(id=f"{i}_{row + 2}",
-                cx=left + i * dx,
-                cy=top + (3 + row) * dy, r=ray,
-                style={"fill": ball_color})
-            SVGRoot <= ball
-            filled[i][2 + row] = ball
-
-filled[3][3] = None
+for col in range(7):
+    for row in range(7):
+        if filled[col][row] >= 1:
+            SVGRoot <= svg.circle(
+                id = f"hole{row}_{col}",
+                cx = left + col*dx,
+                cy = top  + row*dy, 
+                r  = ray,
+                style = {"fill": "white", "stroke":ball_color})
+            if filled[col][row] == 2:
+                ball = svg.circle(
+                    id = f"{col}_{row}",
+                    cx = left + col*dx,
+                    cy = top  + row*dy, 
+                    r  = ray,
+                    style = {"fill": ball_color})
+                SVGRoot <= ball
+                filled[col][row] = ball
+            else:
+                filled[col][row] = None
 
 </script>
 </head>
