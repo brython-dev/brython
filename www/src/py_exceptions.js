@@ -418,7 +418,6 @@ var getExceptionTrace = function(exc, includeInternal) {
 
     for(var i = 0; i < exc.$stack.length; i++){
         var frame = exc.$stack[i]
-        console.log("frame", frame)
         if(! frame[1] || ! frame[1].$line_info){
             continue
         }
