@@ -81,22 +81,22 @@ def show(language=None):
 
     menu = Menu(_banner, default_css=False)
 
+    menu.add_item(trans_menu["menu_tutorial"][language],
+        callback=load_page("tutorial"))
+
+    menu.add_item(trans_menu["menu_demo"][language],
+        callback=load_page("demo"))
+
+    menu.add_item(trans_menu["menu_doc"][language],
+        callback=load_page("doc"))
+
     menu.add_item(trans_menu["menu_console"][language],
         callback=load_page("console"))
 
     menu.add_item(trans_menu["menu_editor"][language],
         callback=load_page("editor"))
 
-    docs_menu = menu.add_menu(trans_menu["menu_doc"][language])
-    docs_menu.add_item(trans_menu["menu_tutorial"][language],
-        callback=load_page("tutorial"))
-    docs_menu.add_item(trans_menu["menu_ref"][language],
-        callback=load_page("ref"))
-
-    ex_menu = menu.add_menu(trans_menu["menu_ex"][language])
-    ex_menu.add_item(trans_menu["menu_demo"][language],
-        callback=load_page("demo"))
-    ex_menu.add_item(trans_menu["menu_gallery"][language],
+    menu.add_item(trans_menu["menu_gallery"][language],
         callback=load_page("gallery"))
 
     ex_resources = menu.add_menu(trans_menu["menu_resources"][language])
