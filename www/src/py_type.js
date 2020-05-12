@@ -753,13 +753,6 @@ $B.set_func_names(wrapper_descriptor, "builtins")
 
 type.__call__.__class__ = wrapper_descriptor
 
-// class of constructors
-$B.$factory = {
-    __class__: type,
-    $is_class: true
-}
-$B.$factory.__mro__ = [type, _b_.object]
-
 
 var $instance_creator = $B.$instance_creator = function(klass){
     // return the function to initalise a class instance
