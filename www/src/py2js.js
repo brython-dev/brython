@@ -4508,12 +4508,10 @@ var $ExprCtx = $B.parser.$ExprCtx = function(context, name, with_commas){
               // precedence
               // Example : print(1+n if n else 0)
               var ctx = context
-              while(ctx.parent && ctx.parent.type == 'op'){
+              while(ctx.parent &&
+                      (ctx.parent.type == 'op' ||
+                       (ctx.parent.type == "expr" && ctx.parent.name == "operand"))){
                   ctx = ctx.parent
-                  if(ctx.type == 'expr' &&
-                          ctx.parent && ctx.parent.type == 'op'){
-                      ctx = ctx.parent
-                  }
               }
               return new $AbstractExprCtx(new $TernaryCtx(ctx), true)
           case 'eol':

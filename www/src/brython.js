@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-05-09 21:03:27.174223"
-__BRYTHON__.timestamp=1589051007158
+__BRYTHON__.compiled_date="2020-05-12 10:08:55.592469"
+__BRYTHON__.timestamp=1589270935592
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -2347,9 +2347,9 @@ if(ctx.parent !==undefined){ctx=ctx.parent}
 else{break}}
 if(in_comp){break}
 var ctx=C
-while(ctx.parent && ctx.parent.type=='op'){ctx=ctx.parent
-if(ctx.type=='expr' &&
-ctx.parent && ctx.parent.type=='op'){ctx=ctx.parent}}
+while(ctx.parent &&
+(ctx.parent.type=='op' ||
+(ctx.parent.type=="expr" && ctx.parent.name=="operand"))){ctx=ctx.parent}
 return new $AbstractExprCtx(new $TernaryCtx(ctx),true)
 case 'eol':
 if(C.tree.length==2 &&
@@ -7819,7 +7819,6 @@ if(exc.$js_exc !==undefined && includeInternal){info+="\nJS stack:\n"+exc.$js_ex
 info+="Traceback (most recent call last):"
 var line_info=exc.$line_info
 for(var i=0;i < exc.$stack.length;i++){var frame=exc.$stack[i]
-console.log("frame",frame)
 if(! frame[1]||! frame[1].$line_info){continue}
 var $line_info=frame[1].$line_info
 var line_info=$line_info.split(','),src

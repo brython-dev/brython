@@ -624,4 +624,15 @@ assert a == "test"
 assert b == "test"
 assert c == "test"
 
+# issue 1387
+x = 10
+
+a = -7
+b = a + 5 * x if a < 0 else a
+assert b == 43
+
+a = 7
+b = a + 5 * x if a < 0 else a
+assert b == 7
+
 print('passed all tests...')
