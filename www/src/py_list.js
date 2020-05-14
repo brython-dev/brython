@@ -39,7 +39,11 @@ list.__add__ = function(self, other){
         throw _b_.TypeError.$factory('can only concatenate list (not "' +
             $B.class_name(other) + '") to list')
     }
-    var res = self.valueOf().concat(other.valueOf())
+    var res = self.slice(),
+        is_js = other.$brython_class == "js" // list of JS objects
+    for(const item of other){
+        res.push(is_js ? $B.$JS2Py(item) : item)
+    }
     res.__brython__ = true
     if(isinstance(self, tuple)){res = tuple.$factory(res)}
     return res
@@ -497,7 +501,7 @@ list.index = function(){
 list.insert = function(){
     var $ = $B.args("insert", 3, {self: null, i: null, item: null},
         ["self", "i", "item"], arguments, {}, null, null)
-    $.self.splice($.i,0,$.item)
+    $.self.splice($.i, 0, $.item)
     return $N
 }
 

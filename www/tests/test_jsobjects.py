@@ -98,3 +98,8 @@ bar.append('one')
 bar = window.bar
 bar.append('two')
 assert bar == ['one', 'two']
+
+# issue 1388
+t = []
+t.extend(window.root.children)
+assert t[0].x == 2

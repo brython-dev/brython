@@ -446,7 +446,7 @@ $B.$JS2Py = function(src){
     if(src === null || src === undefined){return _b_.None}
     if(Array.isArray(src) &&
             Object.getPrototypeOf(src) === Array.prototype){
-        return src
+        src.$brython_class = "js" // used in make_iterator_class
     }
     var klass = $B.get_class(src)
     if(klass !== undefined){
@@ -912,7 +912,13 @@ $B.make_iterator_class = function(name){
             }
             self.counter++
             if(self.counter < self.items.length){
-                return self.items[self.counter]
+                var item = self.items[self.counter]
+                if(self.items.$brython_class == "js"){
+                    // iteration on Javascript lists produces Python objects
+                    // cf. issue #1388
+                    item = $B.$JS2Py(item)
+                }
+                return item
             }
             throw _b_.StopIteration.$factory("StopIteration")
         },

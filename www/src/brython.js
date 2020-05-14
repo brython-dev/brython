@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-05-12 18:08:26.584724"
-__BRYTHON__.timestamp=1589299706584
+__BRYTHON__.compiled_date="2020-05-14 20:45:16.838573"
+__BRYTHON__.timestamp=1589481916838
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -6098,7 +6098,7 @@ $B.$JS2Py=function(src){if(typeof src==="number"){if(src % 1===0){return src}
 return _b_.float.$factory(src)}
 if(src===null ||src===undefined){return _b_.None}
 if(Array.isArray(src)&&
-Object.getPrototypeOf(src)===Array.prototype){return src}
+Object.getPrototypeOf(src)===Array.prototype){src.$brython_class="js" }
 var klass=$B.get_class(src)
 if(klass !==undefined){if(klass===$B.JSObject){src=src.js}else{return src}}
 if(typeof src=="object"){if($B.$isNode(src)){return $B.DOMNode.$factory(src)}
@@ -6263,7 +6263,10 @@ return self},__len__:function(self){return self.items.length},__next__:function(
 self.len_func()!=self.len){throw _b_.RuntimeError.$factory(
 "dictionary changed size during iteration")}
 self.counter++
-if(self.counter < self.items.length){return self.items[self.counter]}
+if(self.counter < self.items.length){var item=self.items[self.counter]
+if(self.items.$brython_class=="js"){
+item=$B.$JS2Py(item)}
+return item}
 throw _b_.StopIteration.$factory("StopIteration")},__reduce_ex__:function(self,protocol){return $B.fast_tuple([_b_.iter,_b_.tuple.$factory([self.items])])}}
 $B.set_func_names(klass,"builtins")
 return klass}
@@ -11198,7 +11201,8 @@ list.__add__=function(self,other){if($B.get_class(self)!==$B.get_class(other)){v
 if(radd !==_b_.NotImplemented){return radd(self)}
 throw _b_.TypeError.$factory('can only concatenate list (not "'+
 $B.class_name(other)+'") to list')}
-var res=self.valueOf().concat(other.valueOf())
+var res=self.slice(),is_js=other.$brython_class=="js" 
+for(const item of other){res.push(is_js ? $B.$JS2Py(item):item)}
 res.__brython__=true
 if(isinstance(self,tuple)){res=tuple.$factory(res)}
 return res}

@@ -29,3 +29,17 @@ class JSWithEq {
 function initJSWithEq() {
   return new JSWithEq();
 }
+
+var root = {
+    x: 1,
+    children:[
+        {
+            x: 2,
+            y: 3
+        },
+        {
+            x: 5,
+            y: 8
+        }
+    ]
+}
