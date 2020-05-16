@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-05-16 16:48:36.155559"
-__BRYTHON__.timestamp=1589640516155
+__BRYTHON__.compiled_date="2020-05-16 19:02:30.955363"
+__BRYTHON__.timestamp=1589648550955
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -13262,6 +13262,9 @@ attr+"'] instead.")}
 break}}else{break}
 proto=Object.getPrototypeOf(proto)}
 if(self.elt.style && self.elt.style[attr]!==undefined){warn("Warning: '"+attr+"' is a property of element.style")}
+if(value.__class__===$B.JSObject &&
+value.js instanceof EventTarget){
+value=value.js}
 self.elt[attr]=value
 return _b_.None}}
 DOMNode.__setitem__=function(self,key,value){if(typeof key=="number"){self.elt.childNodes[key]=value}else if(typeof key=="string"){if(self.elt.attributes){if(self.elt instanceof SVGElement){self.elt.setAttributeNS(null,key,value)}else if(typeof self.elt.setAttribute=="function"){self.elt.setAttribute(key,value)}}}}

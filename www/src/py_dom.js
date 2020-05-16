@@ -1053,6 +1053,11 @@ DOMNode.__setattr__ = function(self, attr, value){
         }
 
         // Set the property
+        if(value.__class__ === $B.JSObject &&
+                value.js instanceof EventTarget){
+            // Cf. issue #1393
+            value = value.js
+        }
         self.elt[attr] = value
 
         return _b_.None
