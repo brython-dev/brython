@@ -1119,4 +1119,15 @@ g.send('magic')
 g.close()
 assert close_result == ["magic", "done"]
 
+# issue 1390
+def g1390():
+    try:
+        yield 1
+        yield 2
+        yield 3
+    finally:
+        yield 'done'
+
+assert list(g1390()) == [1, 2, 3, 'done']
+
 print('passed all tests...')

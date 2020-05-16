@@ -117,6 +117,7 @@ function make_node(top_node, node){
         var new_node = new $B.genNode(ctx_js)
         new_node.line_num = node.line_num
 
+
         if(ctype == "yield"){
 
             // Replace "yield value" by "return [value, node_id]"
@@ -128,7 +129,8 @@ function make_node(top_node, node){
             while(ctx_js.endsWith(";")){
                 ctx_js = ctx_js.substr(0, ctx_js.length - 1)
             }
-            var res =  "return [" + ctx_js + ", " + yield_node_id + "]"
+            var res = "$locals.$run_finally = false;" +
+                "return [" + ctx_js + ", " + yield_node_id + "]"
 
             // Add a local variable that will prevent executing the __exit__
             // method of the context manager before returning the value
@@ -195,6 +197,7 @@ function make_node(top_node, node){
                     ctx_manager.ctx_manager_num +
                     "(_b_.None, _b_.None, _b_.None);" + new_node.data
             }
+            new_node.data = "$locals.$run_finally = true; " + new_node.data
 
         }
 
@@ -209,9 +212,30 @@ function make_node(top_node, node){
         new_node.ctx_manager_num = node.ctx_manager_num
 
         // Recursion
-        for(var i = 0, len = node.children.length; i < len; i++){
-            var nd = make_node(top_node, node.children[i])
-            if(nd !== undefined){new_node.addChild(nd)}
+
+
+        if(ctype == "single_kw" && ctx.token == "finally"){
+            // special case for "finally" : the block is executed only if the
+            // attribute $locals.$run_finally is true, which is the case if
+            // the "try" block exits with a "return" or at the end of the
+            // "try" block, but not if the "try" block exits with a "yield"
+            // Cf. issue #1390
+            var f_children = node.children.slice(),
+                if_run = new $B.genNode("if($locals.$run_finally)")
+            new_node.addChild(if_run)
+            for(const f_child of f_children){
+                var nd = make_node(top_node, f_child)
+                if(nd !== undefined){if_run.addChild(nd)}
+            }
+        }else{
+            for(var i = 0, len = node.children.length; i < len; i++){
+                var nd = make_node(top_node, node.children[i])
+                if(nd !== undefined){new_node.addChild(nd)}
+            }
+            if(node.is_try){
+                // add last line to try node to set the attribute $run_finally
+                new_node.addChild(new $B.genNode("$locals.$run_finally = true"))
+            }
         }
     }
     return new_node
@@ -671,7 +695,7 @@ function make_next(self, yield_node_id){
                                     parent = parent.parent
                                 }
                             }
-                            if(flag){
+                            if(true){ //flag){
                                 children[cpos++] =
                                     try_node.parent.children[j].clone_tree(null, true)
                             }

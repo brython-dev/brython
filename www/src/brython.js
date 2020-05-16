@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-05-14 20:45:16.838573"
-__BRYTHON__.timestamp=1589481916838
+__BRYTHON__.compiled_date="2020-05-16 10:58:05.960386"
+__BRYTHON__.timestamp=1589619485944
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -13554,7 +13554,8 @@ if(ctype=="yield"){
 var ctx_manager=in_ctx_manager(node)
 var yield_node_id=top_node.yields.length
 while(ctx_js.endsWith(";")){ctx_js=ctx_js.substr(0,ctx_js.length-1)}
-var res="return ["+ctx_js+", "+yield_node_id+"]"
+var res="$locals.$run_finally = false;"+
+"return ["+ctx_js+", "+yield_node_id+"]"
 if(ctx_manager !==undefined){res="$locals.$yield"+ctx_manager.ctx_manager_num+
 " = true;"+res}
 new_node.data=res
@@ -13577,7 +13578,8 @@ new_node.loop_num=node.C.tree[0].loop_ctx.loop_num}else if(ctype=="return"){
 var ctx_manager=in_ctx_manager(node)
 if(ctx_manager){new_node.data="$locals.$ctx_manager_exit"+
 ctx_manager.ctx_manager_num+
-"(_b_.None, _b_.None, _b_.None);"+new_node.data}}
+"(_b_.None, _b_.None, _b_.None);"+new_node.data}
+new_node.data="$locals.$run_finally = true; "+new_node.data}
 new_node.is_yield=(ctype=="yield" ||ctype=="return")
 new_node.is_cond=is_cond
 new_node.is_except=is_except
@@ -13587,8 +13589,14 @@ new_node.is_else=is_else
 new_node.loop_start=node.loop_start
 new_node.is_set_yield_value=node.is_set_yield_value
 new_node.ctx_manager_num=node.ctx_manager_num
-for(var i=0,len=node.children.length;i < len;i++){var nd=make_node(top_node,node.children[i])
-if(nd !==undefined){new_node.addChild(nd)}}}
+if(ctype=="single_kw" && ctx.token=="finally"){
+var f_children=node.children.slice(),if_run=new $B.genNode("if($locals.$run_finally)")
+new_node.addChild(if_run)
+for(const f_child of f_children){var nd=make_node(top_node,f_child)
+if(nd !==undefined){if_run.addChild(nd)}}}else{for(var i=0,len=node.children.length;i < len;i++){var nd=make_node(top_node,node.children[i])
+if(nd !==undefined){new_node.addChild(nd)}}
+if(node.is_try){
+new_node.addChild(new $B.genNode("$locals.$run_finally = true"))}}}
 return new_node}
 $B.genNode=function(data,parent){this.data=data
 this.parent=parent
@@ -13782,7 +13790,8 @@ var parent=loop.parent
 while(parent){if(parent===try_node){flag=false
 break}
 parent=parent.parent}}
-if(flag){children[cpos++]=
+if(true){
+children[cpos++]=
 try_node.parent.children[j].clone_tree(null,true)}}else{children[cpos++]=
 try_node.parent.children[j].clone_tree(null,true)}}else{break}}
 if(children.length==1){
