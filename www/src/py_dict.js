@@ -945,6 +945,22 @@ $B.set_func_names(dict, "builtins")
 // have the attribute $infos
 dict.fromkeys = _b_.classmethod.$factory(dict.fromkeys)
 
+$B.getset_descriptor = $B.make_class("getset_descriptor",
+    function(klass, attr){
+        return {
+            __class__: $B.getset_descriptor,
+            cls: klass,
+            attr: attr
+        }
+    }
+)
+
+$B.getset_descriptor.__repr__ = $B.getset_descriptor.__str__ = function(self){
+    return `<attribute '${self.attr}' of '${self.cls.$infos.__name__}' objects>`
+}
+
+$B.set_func_names($B.getset_descriptor, "builtins")
+
 // Class for attribute __dict__ of classes
 var mappingproxy = $B.mappingproxy = $B.make_class("mappingproxy",
     function(obj){

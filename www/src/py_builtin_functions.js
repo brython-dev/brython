@@ -1070,7 +1070,16 @@ $B.$getattr = function(obj, attr, _default){
           return klass
       case '__dict__':
           if(is_class){
-              return $B.mappingproxy.$factory(obj) // defined in py_dict.js
+              var proxy = {}
+              for(var key in obj){
+                  var key1 = $B.from_alias(key)
+                  if(! key1.startsWith("$")){
+                      proxy[key1] = obj[key]
+                  }
+              }
+              proxy.__dict__ = $B.getset_descriptor.$factory(obj, 
+                  "__dict__") // in py_dict.js
+              return $B.mappingproxy.$factory(proxy) // in py_dict.js
           }else{
               if(obj.hasOwnProperty(attr)){
                   return obj[attr]

@@ -491,4 +491,24 @@ class A:
 
 assert A.x == 5
 
+# issue 1392
+class A():
+    b = "This is b"
+    message = "This is a"
+
+    def __init__(self):
+        self.x = 5
+
+assert "b" in A.__dict__
+assert "message" in A.__dict__
+assert "__init__" in A.__dict__
+
+d = A.__dict__["__dict__"]
+try:
+    d.b
+    raise Exception("should have raised AttributeError")
+except AttributeError:
+    pass
+
+
 print('passed all tests..')
