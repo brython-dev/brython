@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-05-16 13:22:21.419883"
-__BRYTHON__.timestamp=1589628141419
+__BRYTHON__.compiled_date="2020-05-16 15:53:34.949263"
+__BRYTHON__.timestamp=1589637214949
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -13526,7 +13526,7 @@ if(parent_id){res+='$locals.$parent = $locals_'+parent_id.replace(/\./g,"_")+
 return res}
 function make_node(top_node,node){
 if(node.type==="marker"){return}
-var is_cond=false,is_except=false,is_else=false,is_continue,ctx_js
+var is_cond=false,is_except=false,is_else=false,is_continue,ctx_js,res
 if(node.C.$genjs){ctx_js=node.C.$genjs}else{ctx_js=node.C.$genjs=node.C.to_js()}
 if(node.locals_def){var parent_id=node.func_node.parent_block.id
 if(node.func_node.ntype=="generator"){
@@ -13555,8 +13555,10 @@ if(ctype=="yield"){
 var ctx_manager=in_ctx_manager(node)
 var yield_node_id=top_node.yields.length
 while(ctx_js.endsWith(";")){ctx_js=ctx_js.substr(0,ctx_js.length-1)}
-var res="$locals.$run_finally = false;"+
-"return ["+ctx_js+", "+yield_node_id+"]"
+res=""
+for(const try_node of in_try(node)){
+res+=`$locals.$run_finally${try_node.line_num}=false;`}
+res+="return ["+ctx_js+", "+yield_node_id+"]"
 if(ctx_manager !==undefined){res="$locals.$yield"+ctx_manager.ctx_manager_num+
 " = true;"+res}
 new_node.data=res
@@ -13580,7 +13582,10 @@ var ctx_manager=in_ctx_manager(node)
 if(ctx_manager){new_node.data="$locals.$ctx_manager_exit"+
 ctx_manager.ctx_manager_num+
 "(_b_.None, _b_.None, _b_.None);"+new_node.data}
-new_node.data="$locals.$run_finally = true; "+new_node.data}
+var prefix=""
+for(const try_node of in_try(node)){
+prefix+=`$locals.$run_finally${try_node.line_num}=true;`}
+new_node.data=prefix+new_node.data}
 new_node.is_yield=(ctype=="yield" ||ctype=="return")
 new_node.is_cond=is_cond
 new_node.is_except=is_except
@@ -13591,13 +13596,17 @@ new_node.loop_start=node.loop_start
 new_node.is_set_yield_value=node.is_set_yield_value
 new_node.ctx_manager_num=node.ctx_manager_num
 if(ctype=="single_kw" && ctx.token=="finally"){
-var f_children=node.children.slice(),if_run=new $B.genNode("if($locals.$run_finally)")
+var try_node
+for(const child of node.parent.children){if(child.is_try){try_node=child}else if(child===node){break}}
+var f_children=node.children.slice(),if_run=new $B.genNode(
+`if($locals.$run_finally${try_node.line_num})`)
 new_node.addChild(if_run)
 for(const f_child of f_children){var nd=make_node(top_node,f_child)
 if(nd !==undefined){if_run.addChild(nd)}}}else{for(var i=0,len=node.children.length;i < len;i++){var nd=make_node(top_node,node.children[i])
 if(nd !==undefined){new_node.addChild(nd)}}
 if(node.is_try){
-new_node.addChild(new $B.genNode("$locals.$run_finally = true"))}}}
+new_node.addChild(new $B.genNode(
+`$locals.$run_finally${node.line_num}=true`))}}}
 return new_node}
 $B.genNode=function(data,parent){this.data=data
 this.parent=parent

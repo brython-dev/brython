@@ -1130,4 +1130,17 @@ def g1390():
 
 assert list(g1390()) == [1, 2, 3, 'done']
 
+def g1390_2():
+    try:
+        yield 1
+        try:
+            yield 2
+        except:
+            pass
+        yield 3
+    finally:
+        yield 'done'
+
+assert list(g1390_2()) == [1, 2, 3, 'done']
+
 print('passed all tests...')

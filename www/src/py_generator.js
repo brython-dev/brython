@@ -65,7 +65,8 @@ function make_node(top_node, node){
         is_except = false,
         is_else = false,
         is_continue,
-        ctx_js
+        ctx_js,
+        res
 
     // cache context.to_js
     if(node.context.$genjs){
@@ -129,8 +130,15 @@ function make_node(top_node, node){
             while(ctx_js.endsWith(";")){
                 ctx_js = ctx_js.substr(0, ctx_js.length - 1)
             }
-            var res = "$locals.$run_finally = false;" +
-                "return [" + ctx_js + ", " + yield_node_id + "]"
+
+            res = ""
+            for(const try_node of in_try(node)){
+                // "yield" doesn't trigger the execution of the "finally"
+                // blocks attached to all the "try" blocks enclosing the
+                // "yield" (cf. issue #1390)
+                res += `$locals.$run_finally${try_node.line_num} = false;`
+            }
+            res += "return [" + ctx_js + ", " + yield_node_id + "]"
 
             // Add a local variable that will prevent executing the __exit__
             // method of the context manager before returning the value
@@ -197,7 +205,13 @@ function make_node(top_node, node){
                     ctx_manager.ctx_manager_num +
                     "(_b_.None, _b_.None, _b_.None);" + new_node.data
             }
-            new_node.data = "$locals.$run_finally = true; " + new_node.data
+            var prefix = ""
+            for(const try_node of in_try(node)){
+                // Tells all the "finally" blocks of the surrounding "try"
+                // blocks to execute if the generator exits with "return"
+                prefix += `$locals.$run_finally${try_node.line_num} = true;`
+            }
+            new_node.data = prefix + new_node.data
 
         }
 
@@ -216,12 +230,24 @@ function make_node(top_node, node){
 
         if(ctype == "single_kw" && ctx.token == "finally"){
             // special case for "finally" : the block is executed only if the
-            // attribute $locals.$run_finally is true, which is the case if
-            // the "try" block exits with a "return" or at the end of the
-            // "try" block, but not if the "try" block exits with a "yield"
+            // attribute $locals.$run_finally attached to the "try" block is
+            // true, which is the case if the "try" block exits with a
+            // "return", or at the end of the "try" block, but not if the "try"
+            // block exits with a "yield"
             // Cf. issue #1390
+
+            // Get matching "try" node
+            var try_node
+            for(const child of node.parent.children){
+                if(child.is_try){
+                    try_node = child
+                }else if(child === node){
+                    break
+                }
+            }
             var f_children = node.children.slice(),
-                if_run = new $B.genNode("if($locals.$run_finally)")
+                if_run = new $B.genNode(
+                    `if($locals.$run_finally${try_node.line_num})`)
             new_node.addChild(if_run)
             for(const f_child of f_children){
                 var nd = make_node(top_node, f_child)
@@ -234,7 +260,8 @@ function make_node(top_node, node){
             }
             if(node.is_try){
                 // add last line to try node to set the attribute $run_finally
-                new_node.addChild(new $B.genNode("$locals.$run_finally = true"))
+                new_node.addChild(new $B.genNode(
+                    `$locals.$run_finally${node.line_num} = true`))
             }
         }
     }
