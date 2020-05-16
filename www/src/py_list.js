@@ -665,10 +665,10 @@ list.sort = function(self){
         if(func === $N){
             if(reverse){
                 cmp = function(b, a) {
-                    res = getattr(a, "__le__")(b)
+                    res = getattr(a, "__lt__")(b)
                     if(res === _b_.NotImplemented){
                         throw _b_.TypeError.$factory("unorderable types: " +
-                            $B.class_name(b) + "() <=" +
+                            $B.class_name(b) + "() < " +
                             $B.class_name(a) + "()")
                     }
                     if(res){
@@ -679,10 +679,10 @@ list.sort = function(self){
                 }
             }else{
                 cmp = function(a, b){
-                    res = getattr(a, "__le__")(b)
+                    res = getattr(a, "__lt__")(b)
                     if(res === _b_.NotImplemented){
                         throw _b_.TypeError.$factory("unorderable types: " +
-                            $B.class_name(a) + "() <=" +
+                            $B.class_name(a) + "() < " +
                             $B.class_name(b) + "()")
                     }
                     if(res){
@@ -697,10 +697,10 @@ list.sort = function(self){
                 cmp = function(b, a) {
                     var _a = func(a),
                         _b = func(b)
-                    res = getattr(_a, "__le__")(_b)
+                    res = getattr(_a, "__lt__")(_b)
                     if(res === _b_.NotImplemented){
                         throw _b_.TypeError.$factory("unorderable types: " +
-                            $B.class_name(b) + "() <=" +
+                            $B.class_name(b) + "() < " +
                             $B.class_name(a) + "()")
                     }
                     if(res){
@@ -716,7 +716,7 @@ list.sort = function(self){
                     res = $B.$getattr(_a, "__lt__")(_b)
                     if(res === _b_.NotImplemented){
                         throw _b_.TypeError.$factory("unorderable types: " +
-                            $B.class_name(a) + "() <=" +
+                            $B.class_name(a) + "() < " +
                             $B.class_name(b) + "()")
                     }
                     if(res){

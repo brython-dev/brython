@@ -290,4 +290,28 @@ class A:
 
 assert [*A.x] == [7, 8, 9]
 
+# issue 1389
+class P(object):
+    def __init__(self, x):
+        self.value = x
+
+    def __eq__(self, other):
+        return self.value == other.value
+
+    def __lt__(self, other):
+        return self.value < other.value
+
+    def __repr__(self):
+        return f"P({self.value})"
+
+a = P(5)
+b = P(6)
+assert not a == b
+assert a != b
+assert a < b
+
+L = [P(7), P(3), P(5), P(1), P(3)]
+L.sort()
+assert L == [P(1), P(3), P(3), P(5), P(7)]
+
 print("passed all tests..")
