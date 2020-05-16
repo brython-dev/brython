@@ -481,4 +481,14 @@ class Expr2(EvalfMixin, Basic):
 assert Expr1.__class__ is ManagedProperties
 assert Expr2.__class__ is ManagedProperties
 
+# issue 1390
+class desc(object):
+    def __get__(self, instance, owner):
+        return 5
+
+class A:
+    x = desc()
+
+assert A.x == 5
+
 print('passed all tests..')

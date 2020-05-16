@@ -353,7 +353,7 @@ type.__getattribute__ = function(klass, attr){
                 function(key){delete klass[key]})
     }
     var res = klass[attr]
-    var $test = false // attr=="__subclasscheck__" // && klass.$infos.__name__ == "N"
+    var $test = false // attr=="__class_getitem__" // && klass.$infos.__name__ == "N"
     if($test){
         console.log("attr", attr, "of", klass, res, res + "")
     }
@@ -439,9 +439,9 @@ type.__getattribute__ = function(klass, attr){
 
     if(res !== undefined){
         if($test){console.log("res", res)}
-        // If the attribute is a property, return the result of fget()
+        // If the attribute is a property, return it
         if(res.__class__ === _b_.property){
-            return res //.fget(klass)
+            return res
         }
         if(res.__get__){
             if(res.__class__ === method){
@@ -456,6 +456,11 @@ type.__getattribute__ = function(klass, attr){
                 result = res.__get__(klass)
             }
             return result
+        }else if(res.__class__ && res.__class__.__get__){
+            // issue #1391
+            if(!(attr.startsWith("__") && attr.endsWith("__"))){
+                return res.__class__.__get__(res, _b_.None, klass)
+            }
         }
         if(typeof res == "function"){
             // method
