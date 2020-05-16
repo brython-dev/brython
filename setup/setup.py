@@ -152,7 +152,7 @@ setup(
         'brython': ['data/*.*']
     },
     entry_points={
-        'console_script': [
+        'console_scripts': [
             'brython = brython.__main__:main'
             ]
     }
