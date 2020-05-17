@@ -153,7 +153,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'brython = brython.__main__:main'
+            'brython-cli = brython.__main__:main'
             ]
     }
 
