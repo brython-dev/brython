@@ -9,8 +9,9 @@ import argparse
 
 from . import implementation
 
-if __name__ == "__main__":
 
+
+def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--add_package',
@@ -38,7 +39,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    print(args.make_file_system)
     files = ['README.txt', 'demo.html', 'index.html',
         'brython.js', 'brython_stdlib.js', 'unicode.txt']
 
@@ -137,3 +137,6 @@ if __name__ == "__main__":
         from . import make_package
         make_package.make(package_name, os.getcwd())
         print("done")
+
+if __name__ == "__main__":
+    main()

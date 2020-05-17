@@ -150,6 +150,12 @@ setup(
 
     package_data={
         'brython': ['data/*.*']
+    },
+    entry_points={
+        'console_scripts': [
+            'brython-cli = brython.__main__:main'
+            ]
     }
+
 
 )
