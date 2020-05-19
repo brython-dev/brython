@@ -11,7 +11,7 @@ Pour cela, il faut récupérer le package Brython (`pip install brython`),
 ouvrir une console système et dans le répertoire de l'application faire :
 
 ```console
-python -m brython --make_dist
+brython-cli --make_dist
 ```
 
 Lors de la première exécution de la commande, l'utilisateur doit entrer les

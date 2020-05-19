@@ -8,9 +8,11 @@ Para instalar Brython :
 pip install brython
 ```
 
+El paquete instala un sotfware del cliente `brython-cli` (equivalente a `python -m brython`).
+
 > Una vez hecho lo anterior, en un directorio vacio ejecuta
 >```console
->python -m brython --install
+>brython-cli --install
 >```
 
 - Si no puedes instalar Brython de esta forma, ve a la [página de _releases_](https://github.com/brython-dev/brython/releases)
@@ -20,7 +22,7 @@ En ambos casos, el directorio tiene los siguientes ficheros :
 
 - __brython.js__ : el motor (*engine*) Brython, que hay que incluir en la página HTML
 - __brython_stdlib.js__ : agrupa todos los módulos y paquetes de parte de la librería estándar soportados por Brython
-- __demo.html__ : una página con unos pocos exemplos sobre cómo usar Brython 
+- __demo.html__ : una página con unos pocos exemplos sobre cómo usar Brython
   para desarrollo en el cliente
 
 __brython.js__ incluye los módulos de uso frecuente : `browser, browser.html, javascript`.
@@ -46,7 +48,7 @@ En el directorio de la aplicación puedes actualizar los ficheros Brython
 (__brython.js__ y __brython_stdlib.js__) usando:
 
 ```console
-python -m brython --update
+brython-cli --update
 ```
 
 Instalando un paquete CPython
@@ -57,7 +59,7 @@ mediante el comando `--add_package <package name>`.
 Por ejemplo:
 ```console
 pip install attrs
-python -m brython --add_package attrs
+brython-cli --add_package attrs
 ```
 
 Todos los ficheros en el paquete deben, por supuesto, ser usables por Brython; esto,

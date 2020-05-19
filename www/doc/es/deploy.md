@@ -10,7 +10,7 @@ la misma herramienta que se usa para los paquetes de CPython, i.e. `pip`.
 Para ello, instala el paquete Brython (`pip install brython`),
 abre una consola y en el directorio de la aplicación ejecuta:
 ```console
-python -m brython --make_dist
+brython-cli --make_dist
 ```
 Durante la primera ejecución el usuario deberá proporcionar la información requerida
 para un paquete : su nombre, número de versión, etc. Esta información se almacena en un fichero

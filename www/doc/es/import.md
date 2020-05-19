@@ -70,7 +70,7 @@ aplicación.
 Para ello, desde el directorio raíz de la aplicación ejecuta en la línea de comandos
 
 ```console
-python -m brython --modules
+brython-cli --modules
 ```
 
 Ten en cuenta que este programa analiza el código Brython en todos los scripts, módulos

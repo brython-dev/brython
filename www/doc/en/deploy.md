@@ -11,7 +11,7 @@ For that, install the CPython Brython package (`pip install brython`),
 open a console window and in the application directory run:
 
 ```console
-python -m brython --make_dist
+brython-cli --make_dist
 ```
 
 On first execution, the user is asked to enter required information for a
