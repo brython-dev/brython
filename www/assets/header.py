@@ -31,7 +31,7 @@ links = {
     "demo": "/demo.html",
     "editor": "/tests/editor.html",
     "gallery": "/gallery/gallery_{language}.html",
-    "ref": "/static_doc/{language}/intro.html",
+    "doc": "/static_doc/{language}/intro.html",
     "download": "https://github.com/brython-dev/brython/releases",
     "dev": "https://github.com/brython-dev/brython",
     "groups": "/groups.html",
