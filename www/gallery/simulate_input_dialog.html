@@ -82,7 +82,7 @@ from browser.widgets import dialog
 
 left = int(window.innerWidth / 3)
 
-box = dialog.EntryDialog("Enter an integer", top=10, left=left)
+box = dialog.EntryDialog("Input", "Enter an integer", top=10, left=left)
 
 @bind(box, "entry")
 def validate(evt):
