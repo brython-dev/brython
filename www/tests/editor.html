@@ -82,11 +82,11 @@ __BRYTHON__.debug = int(doc['set_debug'].checked)
 doc['set_debug'].bind('change',set_debug)
 
 # next functions are defined in editor.py
-doc['show_js'].bind('click',editor.show_js)
-doc['share_code'].bind('click',editor.share_code)
+doc['show_js'].bind('click', editor.show_js)
+doc['share_code'].bind('click', editor.share_code)
 # Create a lambda around editor.run() so that the event object is not passed to it
 doc['run'].bind('click',lambda *args: editor.run())
-doc['show_console'].bind('click',editor.show_console)
+doc['show_console'].bind('click', editor.show_console)
 
 
 

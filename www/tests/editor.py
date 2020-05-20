@@ -144,7 +144,7 @@ def share_code(ev):
         query["code"] = src
         url = f"{href}{query}"
         url = url.replace("(", "%28").replace(")", "%29")
-        d = dialog.Dialog("Copy url", style={"zIndex": 10})
+        d = dialog.Dialog("Copy url")
         area = html.TEXTAREA(rows=0, cols=0)
         d.panel <= area
         area.value = url
@@ -153,8 +153,8 @@ def share_code(ev):
         area.select()
         doc.execCommand("copy")
         d.remove()
-        d = dialog.Dialog("Copy url", style={"zIndex": 10})
-        d.panel <= html.DIV("url copied<br>Send it to share the code")
+        d = dialog.Dialog("Copy url")
+        d.panel <= html.DIV("url copied in the clipboard<br>Send it to share the code")
         buttons = html.DIV()
         ok = html.BUTTON("Ok")
         buttons <= html.DIV(ok, style={"text-align": "center"})
