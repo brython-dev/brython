@@ -109,6 +109,9 @@ str.__format__ = function(self, format_spec) {
         throw _b_.ValueError.$factory(
             "Sign not allowed in string format specifier")
     }
+    if(fmt.precision){
+        self = self.substr(0, fmt.precision)
+    }
     // For strings, alignment default to left
     fmt.align = fmt.align || "<"
     return $B.format_width(preformat(self, fmt), fmt)
@@ -1250,7 +1253,7 @@ str.format = function(self) {
             // For classes, don't use the class __format__ method
             res += value.__class__.__format__(value, fmt.spec)
         }else{
-            res += _b_.getattr(value, "__format__")(fmt.spec)
+            res += $B.$getattr(value, "__format__")(fmt.spec)
         }
     }
     return res

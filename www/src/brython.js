@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,10,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.10"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-05-21 13:34:08.934730"
-__BRYTHON__.timestamp=1590060848934
+__BRYTHON__.compiled_date="2020-05-21 14:29:57.227762"
+__BRYTHON__.timestamp=1590064197227
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -9653,8 +9653,7 @@ var prec=fmt.precision
 if(prec==0){return Math.round(self)+""}
 var res=self.toFixed(prec),pt_pos=res.indexOf(".")
 if(fmt.type !==undefined &&
-(fmt.type=="%" ||fmt.type.toLowerCase()=="f")){if(pt_pos==-1){res+="."+"0".repeat(fmt.precision)}
-else{var missing=fmt.precision-res.length+pt_pos+1
+(fmt.type=="%" ||fmt.type.toLowerCase()=="f")){if(pt_pos==-1){res+="."+"0".repeat(fmt.precision)}else{var missing=fmt.precision-res.length+pt_pos+1
 if(missing > 0){res+="0".repeat(missing)}}}else if(fmt.type && fmt.type.toLowerCase()=="g"){var exp_fmt=preformat(self,{type:"e"}).split("e"),exp=parseInt(exp_fmt[1])
 if(-4 <=exp && exp < fmt.precision){res=preformat(self,{type:"f",precision:fmt.precision-1-exp})}else{res=preformat(self,{type:"e",precision:fmt.precision-1})}
 var parts=res.split("e")
@@ -9664,11 +9663,13 @@ if(signif.endsWith(".")){signif=signif.substr(0,signif.length-1)}
 parts[0]=signif}}
 res=parts.join("e")
 if(fmt.type=="G"){res=res.toUpperCase()}
-return res}else{var res1=self.toExponential(fmt.precision-1),exp=parseInt(res1.substr(res1.search("e")+1))
+return res}else if(fmt.type===undefined){fmt.type="g"
+res=preformat(self,fmt)
+fmt.type=undefined}else{var res1=self.toExponential(fmt.precision-1),exp=parseInt(res1.substr(res1.search("e")+1))
 if(exp <-4 ||exp >=fmt.precision-1){var elts=res1.split("e")
 while(elts[0].endsWith("0")){elts[0]=elts[0].substr(0,elts[0].length-1)}
 res=elts.join("e")}}}else{var res=_b_.str.$factory(self)}
-if(fmt.type===undefined||"gGn".indexOf(fmt.type)!=-1){
+if(fmt.type===undefined ||"gGn".indexOf(fmt.type)!=-1){
 if(res.search("e")==-1){while(res.charAt(res.length-1)=="0"){res=res.substr(0,res.length-1)}}
 if(res.charAt(res.length-1)=="."){if(fmt.type===undefined){res+="0"}
 else{res=res.substr(0,res.length-1)}}}
@@ -11607,6 +11608,7 @@ return self}
 str.__format__=function(self,format_spec){var fmt=new $B.parse_format_spec(format_spec)
 if(fmt.sign !==undefined){throw _b_.ValueError.$factory(
 "Sign not allowed in string format specifier")}
+if(fmt.precision){self=self.substr(0,fmt.precision)}
 fmt.align=fmt.align ||"<"
 return $B.format_width(preformat(self,fmt),fmt)}
 str.__getitem__=function(self,arg){if(isinstance(arg,_b_.int)){var pos=arg
@@ -12017,7 +12019,7 @@ if(fmt.conv=="a"){value=_b_.ascii(value)}
 else if(fmt.conv=="r"){value=_b_.repr(value)}
 else if(fmt.conv=="s"){value=_b_.str.$factory(value)}
 if(value.$is_class ||value.$factory){
-res+=value.__class__.__format__(value,fmt.spec)}else{res+=_b_.getattr(value,"__format__")(fmt.spec)}}
+res+=value.__class__.__format__(value,fmt.spec)}else{res+=$B.$getattr(value,"__format__")(fmt.spec)}}
 return res}
 str.format_map=function(self){throw NotImplementedError.$factory(
 "function format_map not implemented yet")}

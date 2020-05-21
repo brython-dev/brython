@@ -273,4 +273,9 @@ assert s == "Distance 5.1km"
 # issue 1071
 assert format(123.456, "^-09.3f") == "0123.4560"
 
+# issue 1396
+assert '|{0:.4}|'.format("Hello") == "|Hell|"
+
+
+
 print("passed all tests...")

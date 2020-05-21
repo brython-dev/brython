@@ -179,7 +179,9 @@ float.__getformat__ = function(arg){
 }
 
 function preformat(self, fmt){
-    if(fmt.empty){return _b_.str.$factory(self)}
+    if(fmt.empty){
+        return _b_.str.$factory(self)
+    }
     if(fmt.type && 'eEfFgGn%'.indexOf(fmt.type) == -1){
         throw _b_.ValueError.$factory("Unknown format code '" + fmt.type +
             "' for object of type 'float'")
@@ -216,10 +218,13 @@ function preformat(self, fmt){
             pt_pos = res.indexOf(".")
         if(fmt.type !== undefined &&
                 (fmt.type == "%" || fmt.type.toLowerCase() == "f")){
-            if(pt_pos == -1){res += "." + "0".repeat(fmt.precision)}
-            else{
+            if(pt_pos == -1){
+                res += "." + "0".repeat(fmt.precision)
+            }else{
                 var missing = fmt.precision - res.length + pt_pos + 1
-                if(missing > 0){res += "0".repeat(missing)}
+                if(missing > 0){
+                    res += "0".repeat(missing)
+                }
             }
         }else if(fmt.type && fmt.type.toLowerCase() == "g"){
             var exp_fmt = preformat(self, {type: "e"}).split("e"),
@@ -253,6 +258,10 @@ function preformat(self, fmt){
                 res = res.toUpperCase()
             }
             return res
+        }else if(fmt.type === undefined){
+            fmt.type = "g"
+            res = preformat(self, fmt)
+            fmt.type = undefined
         }else{
             var res1 = self.toExponential(fmt.precision - 1),
                 exp = parseInt(res1.substr(res1.search("e") + 1))
@@ -266,7 +275,7 @@ function preformat(self, fmt){
         }
     }else{var res = _b_.str.$factory(self)}
 
-    if(fmt.type === undefined|| "gGn".indexOf(fmt.type) != -1){
+    if(fmt.type === undefined || "gGn".indexOf(fmt.type) != -1){
         // remove trailing 0 for non-exponential formats
         if(res.search("e") == -1){
             while(res.charAt(res.length - 1) == "0"){
