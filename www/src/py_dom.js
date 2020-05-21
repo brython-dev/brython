@@ -321,7 +321,7 @@ DOMEvent.__getattribute__ = function(self, attr){
             if(self.dataTransfer !== undefined){
                 return Clipboard.$factory(self.dataTransfer)
             }
-            return self['data']
+            return $B.$JS2Py(self['data'])
         case 'target':
             if(self.target !== undefined){
                 return DOMNode.$factory(self.target)
