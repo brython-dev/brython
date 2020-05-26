@@ -684,7 +684,6 @@ DOMNode.__eq__ = function(self, other){
 }
 
 DOMNode.__getattribute__ = function(self, attr){
-
     if(attr.substr(0, 2) == "$$"){attr = attr.substr(2)}
     switch(attr) {
         case "attrs":
@@ -780,7 +779,7 @@ DOMNode.__getattribute__ = function(self, attr){
     }
 
     var res = property
-
+    
     if(res !== undefined){
         if(res === null){return _b_.None}
         if(typeof res === "function"){
@@ -840,7 +839,6 @@ DOMNode.__getattribute__ = function(self, attr){
         if(attr == 'options'){return Options.$factory(self.elt)}
         if(attr == 'style'){return $B.JSObject.$factory(self.elt[attr])}
         if(Array.isArray(res)){return res} // issue #619
-
         return $B.$JS2Py(res)
     }
     return object.__getattribute__(self, attr)

@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,10,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.10"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-05-21 14:29:57.227762"
-__BRYTHON__.timestamp=1590064197227
+__BRYTHON__.compiled_date="2020-05-26 09:23:36.987237"
+__BRYTHON__.timestamp=1590477816987
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -6104,7 +6104,9 @@ var klass=$B.get_class(src)
 if(klass !==undefined){if(klass===$B.JSObject){src=src.js}else{return src}}
 if(typeof src=="object"){if($B.$isNode(src)){return $B.DOMNode.$factory(src)}
 if($B.$isEvent(src)){return $B.$DOMEvent(src)}
-if($B.$isNodeList(src)){return $B.DOMNode.$factory(src)}}
+if($B.$isNodeList(src)){var res=[]
+for(const item of src){res.push($B.$JS2Py(item))}
+return _b_.list.$factory(res)}}
 return $B.JSObject.$factory(src)}
 $B.list_key=function(obj,key){key=$B.$GetInt(key)
 if(key < 0){key+=obj.length}
@@ -6148,6 +6150,11 @@ var gi=$B.$getattr(obj,"__getitem__",_b_.None)
 if(gi !==_b_.None){return gi(item)}
 throw _b_.TypeError.$factory("'"+$B.class_name(obj)+
 "' object is not subscriptable")}
+$B.$getitem_slice=function(obj,start,stop){if(stop===_b_.None){stop=obj.length}
+if(typeof start=="number" && typeof stop=="number"){if(start < 0){start+=obj.length}
+if(stop < 0){stop+=obj.length}
+if(typeof obj=="string"){return obj.substring(start,stop)}else if(Array.isArray(obj)){return obj.slice(start,stop)}}
+return $B.$getitem(obj,_b_.slice.$factory(start,stop))}
 $B.set_list_key=function(obj,key,value){try{key=$B.$GetInt(key)}
 catch(err){if(_b_.isinstance(key,_b_.slice)){var s=_b_.slice.$conv_for_seq(key,obj.length)
 return $B.set_list_slice_step(obj,s.start,s.stop,s.step,value)}}
@@ -9030,7 +9037,8 @@ console.log($B.class_name(err)+':',err.args.length > 0 ? err.args[0]:'' )
 throw err}}}else{
 return pyobj}}
 var JSObject={__class__:_b_.type,__mro__:[object],$infos:{__module__:"builtins",__name__:'JSObject'}}
-JSObject.__bool__=function(self){return(new Boolean(self.js)).valueOf()}
+JSObject.__bool__=function(self){if(self.js.length !==undefined){return self.js.length > 0}
+return(new Boolean(self.js)).valueOf()}
 JSObject.__delattr__=function(self,attr){_b_.getattr(self,attr)
 delete self.js[attr]
 return _b_.None}
@@ -9100,7 +9108,7 @@ typeof self.js.item=='function'){var rank_to_int=_b_.int.$factory(rank)
 if(rank_to_int < 0){rank_to_int+=self.js.length}
 var res=self.js.item(rank_to_int)
 if(res===null){throw _b_.IndexError.$factory(rank)}
-return JSObject.$factory(res)}else if(typeof rank=="string" &&
+return $B.$JS2Py(res)}else if(typeof rank=="string" &&
 typeof self.js.getNamedItem=='function'){var res=JSObject.$factory(self.js.getNamedItem(rank))
 if(res===undefined){throw _b_.KeyError.$factory(rank)}
 return res}}

@@ -349,7 +349,7 @@ var _mod = {
                             "the same number of dimensions")
                     }catch(err){
                         if(err.__class__ === _b_.StopIteration){
-                            if(typeof res == "number"){
+                            if(typeof res == "number" || res instanceof Number){
                                 return Math.sqrt(res)
                             }else{
                                 return Math.sqrt(parseInt(res.value))

@@ -203,4 +203,6 @@ assert math.dist([1, 2, 3], [4, 5, 6]) == 5.196152422706632
 assert math.gcd(pow(2, 53) - 2, 2) == 2
 assert math.gcd(pow(2, 53) - 1, 2) == 1
 
+# issue 1397
+assert math.dist((1.0, 1.0), (1.5, 0.0))  == 1.118033988749895
 print("passed all tests..")
