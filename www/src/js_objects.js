@@ -253,6 +253,9 @@ var JSObject = {
 }
 
 JSObject.__bool__ = function(self){
+    if(self.js.length !== undefined){
+        return self.js.length > 0
+    }
     return (new Boolean(self.js)).valueOf()
 }
 
@@ -421,7 +424,7 @@ JSObject.__getitem__ = function(self, rank){
             if(rank_to_int < 0){rank_to_int += self.js.length}
             var res = self.js.item(rank_to_int)
             if(res === null){throw _b_.IndexError.$factory(rank)}
-            return JSObject.$factory(res)
+            return $B.$JS2Py(res)
         }else if(typeof rank == "string" &&
                 typeof self.js.getNamedItem == 'function'){
             var res = JSObject.$factory(self.js.getNamedItem(rank))
