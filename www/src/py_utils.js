@@ -459,7 +459,13 @@ $B.$JS2Py = function(src){
     if(typeof src == "object"){
         if($B.$isNode(src)){return $B.DOMNode.$factory(src)}
         if($B.$isEvent(src)){return $B.$DOMEvent(src)}
-        if($B.$isNodeList(src)){return $B.DOMNode.$factory(src)}
+        if($B.$isNodeList(src)){
+            var res = []
+            for(const item of src){
+                res.push($B.$JS2Py(item))
+            }
+            return _b_.list.$factory(res)
+        }
     }
     return $B.JSObject.$factory(src)
 }
@@ -558,7 +564,6 @@ $B.$getitem = function(obj, item){
     throw _b_.TypeError.$factory("'" + $B.class_name(obj) +
         "' object is not subscriptable")
 }
-
 
 // Set list key or slice
 $B.set_list_key = function(obj, key, value){
