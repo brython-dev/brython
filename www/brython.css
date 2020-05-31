@@ -74,6 +74,15 @@ body {
     background-color: var(--brython-menu-navbar-bgcolor-selected);
 }
 
+.brython-menu-navbar-link {
+    font-family: var(--brython-menu-font-family);
+    font-size: var(--brython-menu-font-size);
+    background-color: var(--brython-menu-navbar-bgcolor);
+    color: var(--brython-menu-navbar-color);
+    padding: 0.5em 1em 0.5em 1em;
+    text-decoration: none;
+}
+
 /* Table for a submenu, opened by a click on an item */
 .brython-menu-submenu {
     font-family: var(--brython-menu-font-family);
@@ -106,6 +115,12 @@ body {
     font-family: var(--brython-menu-font-family);
     padding: 0.3em 0.3em 0.3em 1em;
     cursor: default;
+}
+
+.brython-menu-submenu-link {
+    font-family: var(--brython-menu-font-family);
+    padding: 0.3em 0.3em 0.3em 1em;
+    text-decoration: none;
 }
 
 /* end of browser.widgets.menu classes */

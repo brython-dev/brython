@@ -81,31 +81,31 @@ def show(language=None):
 
     menu = Menu(_banner, default_css=False)
 
-    menu.add_item(trans_menu["menu_tutorial"][language],
-        callback=load_page("tutorial"))
+    menu.add_link(trans_menu["menu_tutorial"][language],
+        href=links["tutorial"].format(language=language))
 
-    menu.add_item(trans_menu["menu_demo"][language],
-        callback=load_page("demo"))
+    menu.add_link(trans_menu["menu_demo"][language],
+        href=links["demo"])
 
-    menu.add_item(trans_menu["menu_doc"][language],
-        callback=load_page("doc"))
+    menu.add_link(trans_menu["menu_doc"][language],
+        href=links["doc"].format(language=language))
 
-    menu.add_item(trans_menu["menu_console"][language],
-        callback=load_page("console"))
+    menu.add_link(trans_menu["menu_console"][language],
+        href=links["console"])
 
-    menu.add_item(trans_menu["menu_editor"][language],
-        callback=load_page("editor"))
+    menu.add_link(trans_menu["menu_editor"][language],
+        href=links["editor"])
 
-    menu.add_item(trans_menu["menu_gallery"][language],
-        callback=load_page("gallery"))
+    menu.add_link(trans_menu["menu_gallery"][language],
+        href=links["gallery"].format(language=language))
 
     ex_resources = menu.add_menu(trans_menu["menu_resources"][language])
-    ex_resources.add_item(trans_menu["menu_download"][language],
-        callback=load_page("download"))
-    ex_resources.add_item(trans_menu["menu_dev"][language],
-        callback=load_page("dev"))
-    ex_resources.add_item(trans_menu["menu_groups"][language],
-        callback=load_page("groups"))
+    ex_resources.add_link(trans_menu["menu_download"][language],
+        href=links["download"])
+    ex_resources.add_link(trans_menu["menu_dev"][language],
+        href=links["dev"])
+    ex_resources.add_link(trans_menu["menu_groups"][language],
+        href=links["groups"])
 
     # insert language selection menu
     sel_lang = html.DIV(Class="sel_lang")
@@ -131,6 +131,8 @@ def show(language=None):
             elts = addr.split("/")
             elts[1] = new_lang
             new_href = f"{head}/{'/'.join(elts)}"
+        elif addr.startswith("gallery"):
+            new_href = links["gallery"].format(language=new_lang)
         elif addr.startswith(("demo.html",
                               "tests/console.html",
                               "tests/editor.html")):

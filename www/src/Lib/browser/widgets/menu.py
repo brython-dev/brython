@@ -123,6 +123,21 @@ class Menu:
 
         return item
 
+    def add_link(self, label, href):
+        """Add a link to the specified address."""
+        if self.parent is None:
+            # First level
+            item = html.A(label, Class="brython-menu-navbar-link", href=href)
+            self.container <= item
+        else:
+            # Next levels
+            item = html.TR(Class="brython-menu-submenu-row")
+            self.parent.submenu <= item
+            item <= html.TD(html.A(label, Class="brython-menu-submenu-link", 
+                href=href))
+
+        return item
+
     def add_menu(self, label):
         """Add a new submenu in the current menu."""
         # add an item

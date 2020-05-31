@@ -26,6 +26,13 @@ Les instances de la classe `Menu` possèdents les méthodes suivantes:
   l'élément. Cette fonction doit prendre un seul argument, un objet de
   type [événement](events.html)
 
+`Menu.add_link(label, href)`
+
+> ajoute un lien (balise HTML <A>) au menu et renvoie cet élément
+
+- _label_ est le texte du lien
+- _href_ est l'adresse associée au lien
+
 `Menu.add_menu(label)`
 
 > ajoute un sous-menu au menu courant et renvoie ce sous-menu, qui est aussi

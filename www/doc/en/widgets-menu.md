@@ -24,6 +24,13 @@ Instances of class `Menu` have the following methods:
   clicked on. This function takes a single argument, an object of type
   [event](events.html)
 
+`Menu.add_link(label, href)`
+
+> add a link (HTML tag <A>) to the menu and return this element
+
+- _label_ is the link text
+- _href_ is the address associated with the link
+
 `Menu.add_menu(label)`
 
 > add a submenu to the current menu and returns it; the submenu is also an
