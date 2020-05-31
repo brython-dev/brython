@@ -1077,7 +1077,7 @@ $B.$getattr = function(obj, attr, _default){
                       proxy[key1] = obj[key]
                   }
               }
-              proxy.__dict__ = $B.getset_descriptor.$factory(obj, 
+              proxy.__dict__ = $B.getset_descriptor.$factory(obj,
                   "__dict__") // in py_dict.js
               return $B.mappingproxy.$factory(proxy) // in py_dict.js
           }else{

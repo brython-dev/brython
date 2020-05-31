@@ -23,6 +23,47 @@ var _b_ = $B.builtins
 var bltns = $B.InjectBuiltins()
 eval(bltns)
 
+$B.generator = $B.make_class("generator",
+    function(func){
+        /*
+        func.__class__ = $B.generator
+        return func
+        */
+        return function(){
+            var res = func.apply(null, arguments)
+            res.__class__ = $B.generator
+            return res
+        }
+    }
+)
+
+$B.generator.__iter__ = function(self){
+    return self
+}
+
+$B.generator.__next__ = function(self){
+    return $B.generator.send(self, _b_.None)
+}
+
+$B.generator.send = function(self, value){
+    if(self.gi_running === true){
+        throw _b_.ValueError.$factory("generator already executing")
+    }
+    self.gi_running = true
+    var res = self.next(value)
+    self.gi_running = false
+    if(res.done){
+        throw _b_.StopIteration.$factory(value)
+    }
+    return res.value
+}
+
+$B.generator.$$throw = function(self, exc){
+    self.throw(exc)
+}
+
+$B.set_func_names($B.generator, "builtins")
+
 function rstrip(s, strip_chars){
     var _chars = strip_chars || " \t\n";
     var nstrip = 0, len = s.length;
@@ -302,6 +343,7 @@ $B.genNode = function(data, parent){
         res.is_if = this.is_if
         res.is_try = this.is_try
         res.is_else = this.is_else
+        res.is_continue = this.is_continue
         res.loop_num = this.loop_num
         res.loop_start = this.loop_start
         res.is_yield = this.is_yield
@@ -334,6 +376,9 @@ $B.genNode = function(data, parent){
         }
 
         if(head && (this.is_break || this.is_continue)){
+            if(this.is_continue){
+                console.log("is continue", this)
+            }
             var loop = in_loop(this)
             res.loop = loop
             var loop_has_yield = loop.has("yield")
@@ -645,12 +690,14 @@ function make_next(self, yield_node_id){
             var clone = exit_parent.children[i].clone_tree(null, true)
             if(clone.is_continue){
                 // Stop copying
-                is_continue = true
+                has_continue = true
                 var loop = clone.loop
                 rest[pos++] = loop.clone_tree()
+                console.log("clone is continue", clone)
                 break
             }
             if(clone.has("continue")){
+                console.log("has continue", clone)
                 has_continue = true;
                 continue_pos = pos + 1
             }
@@ -662,6 +709,7 @@ function make_next(self, yield_node_id){
         }
         // add rest of block to new function
         if((has_break || has_continue) && rest.length > 0){
+            console.log("wrap in try for exit node", exit_node)
             // If the rest had a "break", this "break" is converted into
             // raising an exception with __class__ set to GeneratorBreak
             var rest_try = new $B.genNode("try")

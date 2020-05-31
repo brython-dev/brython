@@ -317,6 +317,108 @@ var $add_yield_from_code = $B.parser.$add_yield_from_code = function(yield_ctx){
 
 }
 
+var $add_yield_from_code1 = $B.parser.$add_yield_from_code1 = function(yield_ctx){
+    var pnode = $get_node(yield_ctx),
+        scope = $get_scope(yield_ctx),
+        generator = scope.context.tree[0]
+
+    //pnode.yield_atoms.splice(pnode.yield_atoms.indexOf(this), 1)
+    //generator.yields.splice(generator.yields.indexOf(this), 1)
+
+    /*
+                  RESULT = yield from EXPR
+
+        should be equivalent to
+
+                  _i = iter(EXPR)
+    */
+
+
+    var INDENT = " ".repeat(pnode.indent),
+        n = yield_ctx.from_num
+
+    var replace_with = `$B.$import("sys", [],{},$locals___main__, true)
+    var $failed${n} = false
+    try{
+        var _y${n} = _b_.next(_i${n})
+    }catch(_e){
+        $B.set_exc(_e)
+        $failed${n} = true
+        $B.pmframe = $B.last($B.frames_stack)
+        _e = $B.exception(_e)
+        if(_e.__class__ === _b_.StopIteration){
+            var _r${n} = $B.$getattr(_e, "value")
+        }else{
+            throw _e
+        }
+    }
+    if(! $failed${n}){
+        while(true){
+            var $failed1${n} = false
+            try{
+                var _s${n} = yield _y${n}
+            }catch(_e){
+                if(_e.__class__ === _b_.GeneratorExit){
+                    var $failed2${n} = false
+                    try{
+                        var _m${n} = $B.$geatttr(_i${n}, "close")
+                    }catch(_e1){
+                        $failed2${n} = true
+                        if(_e1.__class__ !== _b_.AttributeError){
+                            throw _e1
+                        }
+                    }
+                    if(! $failed2${n}){
+                        $B.$call(_m${n})()
+                    }
+                    throw _e
+                }else if($B.is_exc(_e, [_b_.BaseException])){
+                    var _x = $B.$call($B.$getattr($locals.sys, "exc_info"))()
+                    var $failed3${n} = false
+                    try{
+                        var _m${n} = $B.$getattr(_i${n}, "throw")
+                    }catch(err){
+                        $failed3${n} = true
+                        if($B.is_exc(err, [_b_.AttributeError])){
+                            throw err
+                        }
+                    }
+                    if(! $failed3${n}){
+                        try{
+                            _y${n} = $B.$call(_m${n}).apply(null,
+                                _b_.list.$factory(_x${n}))
+                        }catch(err){
+                            if($B.$is_exc(err, [_b_.StopIteration])){
+                                _r${n} = $B.$getattr(err, "value")
+                                break
+                            }
+                            throw err
+                        }
+                    }
+                }
+            }
+            if(! $failed1${n}){
+                try{
+                    if(_s${n} === _b_.None){
+                        _y${n} = _b_.next(_i${n})
+                    }else{
+                        _y${n} = $B.$call($B.$getattr(_i${n}, "send"))(_s${n})
+                    }
+                }catch(err){
+                    if($B.is_exc(err, [_b_.StopIteration])){
+                        _r${n} = $B.$getattr(err, "value")
+                        break
+                    }
+                    throw err
+                }
+            }
+        }
+    }`
+
+    return replace_with
+
+}
+
 
 // Variable used for chained comparison
 var chained_comp_num = 0
@@ -565,6 +667,13 @@ var $Node = $B.parser.$Node = function(type){
           return offset
         }
 
+        if(this.has_Yield){
+            var parent = this.parent
+            parent.insert(rank, $NodeJS("$B.leave_frame()"))
+            parent.insert(rank + 2, $NodeJS("$B.frames_stack.push($top_frame)"))
+            return 2
+        }
+
         if(this.type === 'module'){
             // module doc string
             this.__doc__ = $get_docstring(this)
@@ -760,6 +869,7 @@ var $AbstractExprCtx = $B.parser.$AbstractExprCtx = function(context, with_comma
                 case 'not':
                 case 'lambda':
                 case 'yield':
+                case 'Yield': // XXX
                     context.parent.tree.pop() // remove abstract expression
                     var commas = context.with_commas
                     context = context.parent
@@ -851,6 +961,8 @@ var $AbstractExprCtx = $B.parser.$AbstractExprCtx = function(context, with_comma
                     context)
             case 'yield':
                 return new $AbstractExprCtx(new $YieldCtx(context), true)
+            case 'Yield':
+                return new $AbstractExprCtx(new $YieldCtx1(context), true)
             case ':':
                 if(context.parent.type == "sub" ||
                         (context.parent.type == "list_or_tuple" &&
@@ -866,6 +978,7 @@ var $AbstractExprCtx = $B.parser.$AbstractExprCtx = function(context, with_comma
                     case 'call_arg':
                     case 'op':
                     case 'yield':
+                    case 'Yield':
                         break
                     case 'annotation':
                         $_SyntaxError(context, "empty annotation")
@@ -2023,6 +2136,7 @@ var $CallArgCtx = $B.parser.$CallArgCtx = function(context){
                     return $transition(context.parent, token, value)
                 }
         }
+        console.log('token ', token, ' after ' , context)
         $_SyntaxError(context, 'token ' + token + ' after ' + context)
     }
 
@@ -3192,6 +3306,9 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
             $NodeJS('$locals.$f_trace = $B.enter_frame($top_frame)'),
             $NodeJS('var $stack_length = $B.frames_stack.length;')
         ]
+        if(this.type == "generator1"){
+            enter_frame_nodes.push($NodeJS("$locals.$is_generator = true"))
+        }
         if(this.async){
             enter_frame_nodes.push($NodeJS("var $stack = " +
                 "$B.frames_stack.slice()"))
@@ -3499,13 +3616,17 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
 
         // Close anonymous function with defaults as argument
         this.default_str = '{' + defs1.join(', ') + '}'
-        if(this.type == "def"){
+        if(this.type != "generator"){
             // Add a node to mark the end of the function
             node.parent.insert(rank + offset++, new $MarkerNode('func_end:' +
                 CODE_MARKER))
-            var res = 'return ' + name
+            var name1 = name
+            if(this.type == "generator1"){
+                name1 = `$B.generator.$factory(${name})`
+            }
+            var res = 'return ' + name1
             if(this.async){
-                res = 'return $B.make_async(' + name + ')'
+                res = 'return $B.make_async(' + name1 + ')'
             }
             node.parent.insert(rank + offset++,
                 $NodeJS(res + '}'))
@@ -3564,7 +3685,8 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
 
         return "var " + this.name + '$' + this.num +
             ' = function($defaults){' +
-            (this.async ? 'async ' : '') + 'function '+
+            (this.async ? 'async ' : '') + 'function'+
+            (this.type == 'generator1' ? "* " : " ") +
             this.name + this.num + '(' + this.params + ')'
     }
 }
@@ -5840,7 +5962,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         // get global scope
         var gs = innermost
 
-        var $test = false // val == "console"
+        var $test = false // val == "xyz"
 
         if($test){
             console.log("this", this)
@@ -6964,6 +7086,8 @@ var $NodeCtx = $B.parser.$NodeCtx = function(node){
                 return new $AbstractExprCtx(new $WithCtx(context),false)
             case 'yield':
                 return new $AbstractExprCtx(new $YieldCtx(context),true)
+            case 'Yield':
+                return new $AbstractExprCtx(new $YieldCtx1(context),true)
             case 'del':
                 return new $AbstractExprCtx(new $DelCtx(context),true)
             case '@':
@@ -7786,7 +7910,7 @@ var $ReturnCtx = $B.parser.$ReturnCtx = function(context){
 
     // Check if inside a function
     this.scope = $get_scope(this)
-    if(["def", "generator"].indexOf(this.scope.ntype) == -1){
+    if(["def", "generator", "generator1"].indexOf(this.scope.ntype) == -1){
         $_SyntaxError(context, ["'return' outside function"])
     }
 
@@ -9165,6 +9289,154 @@ var $YieldCtx = $B.parser.$YieldCtx = function(context, is_await){
     }
 }
 
+var $YieldCtx1 = $B.parser.$YieldCtx1 = function(context, is_await){
+    // Class for keyword "yield"
+    this.type = 'Yield'
+    this.parent = context
+    this.tree = []
+    context.tree[context.tree.length] = this
+
+    $get_node(this).has_Yield = true
+
+    var in_lambda = false,
+        parent = context
+    while(parent){
+        if(parent.type == "lambda"){
+            in_lambda = true
+            break
+        }
+        parent = parent.parent
+    }
+
+    // Syntax control : 'yield' can start a 'yield expression'
+    if(! in_lambda){
+        switch(context.type) {
+            case 'node':
+                break;
+
+            // or start a 'yield atom'
+            // a 'yield atom' without enclosing "(" and ")" is only allowed as the
+            // right-hand side of an assignment
+
+            case 'assign':
+            case 'list_or_tuple':
+                // mark the node as containing a yield atom
+                //$get_node(context).yield_atoms.push(this)
+                break
+           default:
+                // else it is a SyntaxError
+                $_SyntaxError(context, 'yield atom must be inside ()')
+        }
+    }
+
+    var scope = this.scope = $get_scope(this, true)
+
+    if(! in_lambda){
+        var in_func = scope.is_function,
+            func_scope = scope
+        if(! in_func && scope.is_comp){
+            var parent = scope.parent_block
+            while(parent.is_comp){
+                parent = parent_block
+            }
+            in_func = parent.is_function
+            func_scope = parent
+        }
+        if(! in_func){
+            $_SyntaxError(context, ["'yield' outside function"])
+        }
+    }
+
+    // Change type of function to generator
+    if(! in_lambda){
+        var def = func_scope.context.tree[0]
+        if(! is_await){
+            def.type = 'generator1'
+            func_scope.ntype = 'generator'
+        }
+        // Add to list of "yields" in function
+        def.yields.push(this)
+    }
+
+    this.toString = function(){
+        return '(yield) ' + (this.from ? '(from) ' : '') + this.tree
+    }
+
+    this.transition = function(token, value){
+        var context = this
+        if(token == 'from'){ // form "yield from <expr>"
+            if(context.tree[0].type != 'abstract_expr'){
+                // 'from' must follow 'yield' immediately
+                $_SyntaxError(context, "'from' must follow 'yield'")
+            }
+
+            context.from = true
+            context.from_num = $B.UUID()
+            console.log("Yield from")
+            $get_node(this).context.tree[0].transform = function(){
+                return context.transform.apply(context, arguments)
+            }
+            return context.tree[0]
+        }
+        return $transition(context.parent, token)
+    }
+
+    this.transform = function(node, rank){
+        // Add a node to handle values passed to the generator with methods
+        // send() or throw().
+        console.log("transform Yeidl", this)
+        if(this.from){
+            console.log("insert code for yield from")
+            var new_node = new $Node()
+            new_node.id = this.scope.id
+            var new_ctx = new $NodeCtx(new_node)
+            var new_expr = new $ExprCtx(new_ctx, 'js', false)
+            // The id must be a "raw_js", otherwise if scope is a class,
+            // it would create a class attribute "$class.$temp"
+            var _id = new $RawJSCtx(new_expr, `var _i${this.from_num}`)
+            var assign = new $AssignCtx(new_expr)
+            var right = new $ExprCtx(assign)
+            right.tree = this.tree
+            node.parent.insert(rank, new_node)
+            /*
+
+            var init_node = new $Node(),
+                ctx = new $NodeCtx(init_node),
+                left = new $RawJSCtx(ctx, "var _i"),
+                assign = new $AssignCtx(ctx, left)
+            */
+            node.parent.insert(rank + 1,
+                $NodeJS($add_yield_from_code1(this)))
+        }
+        var new_node = $NodeJS('// placeholder for generator sent value')
+        new_node.is_set_yield_value = true
+        new_node.line_num = node.line_num
+        new_node.after_yield = true
+        new_node.indent = node.indent
+        //node.parent.insert(rank + 1, new_node)
+
+        // If inside a context manager, mark frame
+        var parent = node.parent
+        while(parent){
+            if(parent.ctx_manager_num !== undefined){
+                node.parent.insert(rank + 1,
+                    $NodeJS("$top_frame[1].$has_yield_in_cm = true"))
+                break
+            }
+            parent = parent.parent
+        }
+        return 3
+    }
+
+    this.to_js = function(){
+        if(this.from){
+            return `_r${this.from_num}`
+        }else{
+            return "yield " + $to_js(this.tree)
+        }
+    }
+}
+
 var $add_profile = $B.parser.$add_profile = function(node,rank){
     if(node.type == 'module'){
         var i = 0
@@ -9339,6 +9611,7 @@ var $get_scope = $B.parser.$get_scope = function(context, flag){
             case 'def':
             case 'class':
             case 'generator':
+            case 'generator1':
                 var scope = tree_node.parent
                 scope.ntype = ntype
                 scope.is_function = ntype != 'class'
@@ -9464,7 +9737,8 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
         "raise", "def", "from", "nonlocal", "while", "del", "global",
         "with", "as", "elif", "else", "if", "yield", "assert", "import",
         "except", "raise", "in", "pass", "with", "continue", "__debugger__",
-        "async", "await"
+        "async", "await",
+        "Yield" // XXX
         ]
     var unsupported = []
     var $indented = [
