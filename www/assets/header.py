@@ -51,6 +51,12 @@ def show(language=None):
         if qs_lang and qs_lang in ["en", "fr", "es"]:
             has_req = True
             language = qs_lang
+        elif addr.startswith("gallery"):
+            elts = addr.split("/")
+            if len(elts) > 1:
+                elt1 = elts[1].split(".")[0].split("_")
+                if len(elt1) == 2:
+                    language = elt1[1]
         else:
             lang = __BRYTHON__.language # browser setting
             if lang in ["en", "fr", "es"]:
@@ -85,16 +91,16 @@ def show(language=None):
         href=links["tutorial"].format(language=language))
 
     menu.add_link(trans_menu["menu_demo"][language],
-        href=links["demo"])
+        href=links["demo"] + f"?lang={language}")
 
     menu.add_link(trans_menu["menu_doc"][language],
         href=links["doc"].format(language=language))
 
     menu.add_link(trans_menu["menu_console"][language],
-        href=links["console"])
+        href=links["console"] + f"?lang={language}")
 
     menu.add_link(trans_menu["menu_editor"][language],
-        href=links["editor"])
+        href=links["editor"] + f"?lang={language}")
 
     menu.add_link(trans_menu["menu_gallery"][language],
         href=links["gallery"].format(language=language))
@@ -125,7 +131,7 @@ def show(language=None):
         new_lang = sel.options[sel.selectedIndex].value
         head = f"{protocol}://{host}"
         new_href = href
-        if addr.startswith("index.html"):
+        if addr.startswith("index.html") or addr == "":
             new_href = f"{head}/index.html?lang={new_lang}"
         elif addr.startswith(("static_tutorial", "static_doc")):
             elts = addr.split("/")
