@@ -45,12 +45,30 @@ $B.generator.__next__ = function(self){
     return $B.generator.send(self, _b_.None)
 }
 
+$B.generator.close = function(self){
+    try{
+        $B.generator.$$throw(self, _b_.GeneratorExit.$factory())
+    }catch(err){
+        if(! $B.is_exc(err, [_b_.GeneratorExit, _b_.StopIteration])){
+            throw _b_.RuntimeError.$factory("generator ignored GeneratorExit")
+        }
+    }
+}
+
 $B.generator.send = function(self, value){
+    if(self.$finished){
+        throw _b_.StopIteration.$factory(value)
+    }
     if(self.gi_running === true){
         throw _b_.ValueError.$factory("generator already executing")
     }
     self.gi_running = true
-    var res = self.next(value)
+    try{
+        var res = self.next(value)
+    }catch(err){
+        self.$finished = true
+        throw err
+    }
     self.gi_running = false
     if(res.done){
         throw _b_.StopIteration.$factory(value)
@@ -376,9 +394,6 @@ $B.genNode = function(data, parent){
         }
 
         if(head && (this.is_break || this.is_continue)){
-            if(this.is_continue){
-                console.log("is continue", this)
-            }
             var loop = in_loop(this)
             res.loop = loop
             var loop_has_yield = loop.has("yield")
@@ -693,11 +708,9 @@ function make_next(self, yield_node_id){
                 has_continue = true
                 var loop = clone.loop
                 rest[pos++] = loop.clone_tree()
-                console.log("clone is continue", clone)
                 break
             }
             if(clone.has("continue")){
-                console.log("has continue", clone)
                 has_continue = true;
                 continue_pos = pos + 1
             }
@@ -709,7 +722,6 @@ function make_next(self, yield_node_id){
         }
         // add rest of block to new function
         if((has_break || has_continue) && rest.length > 0){
-            console.log("wrap in try for exit node", exit_node)
             // If the rest had a "break", this "break" is converted into
             // raising an exception with __class__ set to GeneratorBreak
             var rest_try = new $B.genNode("try")

@@ -668,10 +668,57 @@ var $Node = $B.parser.$Node = function(type){
         }
 
         if(this.has_Yield){
+            /* replace "RESULT = Yield EXPR" by
+
+                var result = EXPR
+                try{
+                    leave_frame()
+                    RESULT = yield result
+                }catch(err){
+                    $B.frames_stack.push($top_frame)
+                    throw err
+                }
+
+            so that:
+            - if the evaluation of EXPR raises an exception, it happens
+              in the generator scope
+            - if "yield result" doesn't raise an exception, the generator
+              frame is remove from the stack
+            - if "yield result" raises an exception thrown by generator.throw,
+              the frame is restored
+            */
             var parent = this.parent
-            parent.insert(rank, $NodeJS("$B.leave_frame()"))
-            parent.insert(rank + 2, $NodeJS("$B.frames_stack.push($top_frame)"))
-            return 2
+            parent.children.splice(rank, 1)
+            if(this.has_Yield.tree[0].type === 'abstract_expr'){
+                new_node = $NodeJS("var result = _b_.None")
+            }else{
+                var new_node = new $Node()
+                var new_ctx = new $NodeCtx(new_node)
+                var new_expr = new $ExprCtx(new_ctx, 'js', false)
+                var _id = new $RawJSCtx(new_expr, 'var result')
+                var assign = new $AssignCtx(new_expr)
+                assign.tree[1] = this.has_Yield.tree[0]
+                _id.parent = assign
+            }
+            new_node.line_num = this.line_num
+            parent.insert(rank, new_node)
+            var try_node = new $NodeJS("try")
+            try_node.add($NodeJS("$B.leave_frame()"))
+            try_node.add(this)
+
+            parent.insert(rank + 1, try_node)
+            this.has_Yield.to_js = function(){
+                return 'yield result'
+            }
+
+            var catch_node = $NodeJS(`catch(err${this.line_num})`)
+            catch_node.add($NodeJS("$B.frames_stack.push($top_frame)"))
+            catch_node.add($NodeJS(`throw err${this.line_num}`))
+            parent.insert(rank + 2, catch_node)
+
+            parent.insert(rank + 3,
+                $NodeJS("$B.frames_stack.push($top_frame)"))
+            return 4
         }
 
         if(this.type === 'module'){
@@ -5684,7 +5731,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
     this.env = clone(this.scope.binding)
 
     // Store variables referenced in scope
-    if(scope.ntype == "def" || scope.ntype == "generator"){
+    if(["def", "generator", "generator1"].indexOf(scope.ntype) > -1){
         scope.referenced = scope.referenced || {}
         if(! $B.builtins[this.value]){
             scope.referenced[this.value] = true
@@ -5727,7 +5774,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         this.bound = true
     }
 
-    if(scope.ntype == 'def' || scope.ntype == 'generator'){
+    if(["def", "generator", "generator1"].indexOf(scope.ntype) > -1){
         // if variable is declared inside a comprehension,
         // don't add it to function namespace
         var _ctx = this.parent
@@ -5916,7 +5963,8 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
     this.to_js = function(arg){
         // Store the result in this.result
         // For generator expressions, to_js() is called in $make_node
-        if(this.result !== undefined && this.scope.ntype == 'generator'){
+        if(this.result !== undefined && (
+                this.scope.ntype == 'generator' || this.scope.ntype == 'generator1')){
             return this.result
         }
 
@@ -5962,7 +6010,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         // get global scope
         var gs = innermost
 
-        var $test = false // val == "xyz"
+        var $test = val == "data_items_seen"
 
         if($test){
             console.log("this", this)
@@ -6112,16 +6160,22 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                 var locs = this_node.locals || {},
                     nonlocs = innermost.nonlocals
                 try{
-                if(locs[val] === undefined &&
-                        ((innermost.type != 'def' ||
-                             innermost.type != 'generator') &&
-                        innermost.ntype != 'class' &&
-                        innermost.context.tree[0].args &&
-                        innermost.context.tree[0].args.indexOf(val) == -1) &&
-                        (nonlocs === undefined || nonlocs[val] === undefined)){
-                    this.result = '$B.$local_search("' + val + '")'
-                    return this.result
-                }
+                    if(locs[val] === undefined &&
+                            ! this.augm_assign &&
+                            ((innermost.type != 'def' ||
+                                 innermost.type != 'generator' ||
+                                 innermost.type != 'generator1') &&
+                            innermost.ntype != 'class' &&
+                            innermost.context.tree[0].args &&
+                            innermost.context.tree[0].args.indexOf(val) == -1) &&
+                            (nonlocs === undefined || nonlocs[val] === undefined)){
+                        if($test){
+                            console.log("$local search", val, "found", found,
+                            "innermost", innermost, "this", this)
+                        }
+                        this.result = '$B.$local_search("' + val + '")'
+                        return this.result
+                    }
                 }catch(err){
                     console.log("error", val, innermost)
                     throw err
@@ -9296,7 +9350,7 @@ var $YieldCtx1 = $B.parser.$YieldCtx1 = function(context, is_await){
     this.tree = []
     context.tree[context.tree.length] = this
 
-    $get_node(this).has_Yield = true
+    $get_node(this).has_Yield = this
 
     var in_lambda = false,
         parent = context
@@ -9384,7 +9438,6 @@ var $YieldCtx1 = $B.parser.$YieldCtx1 = function(context, is_await){
     this.transform = function(node, rank){
         // Add a node to handle values passed to the generator with methods
         // send() or throw().
-        console.log("transform Yeidl", this)
         if(this.from){
             console.log("insert code for yield from")
             var new_node = new $Node()
