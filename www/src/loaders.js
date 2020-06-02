@@ -265,7 +265,8 @@ $B.ajax_load_script = function(script){
             name, true])
     }else if($B.protocol != "file"){
         var req = new XMLHttpRequest(),
-            qs = $B.$options.cache ? '' : '?' + Date.now()
+            qs = $B.$options.cache ? '' :
+                    (url.search(/\?/) > -1 ? '&' : '?') + Date.now()
         req.open("GET", url + qs, true)
         req.onreadystatechange = function(){
             if(this.readyState == 4){

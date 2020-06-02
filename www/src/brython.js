@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,10,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.10"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-05-30 08:17:12.732265"
-__BRYTHON__.timestamp=1590819432732
+__BRYTHON__.compiled_date="2020-06-02 08:52:50.061630"
+__BRYTHON__.timestamp=1591080770061
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -347,10 +347,29 @@ offset+=3},this)
 this.parent.insert(rank+offset,this)
 this.yield_atoms=[]
 return offset}
-if(this.has_Yield){var parent=this.parent
-parent.insert(rank,$NodeJS("$B.leave_frame()"))
-parent.insert(rank+2,$NodeJS("$B.frames_stack.push($top_frame)"))
-return 2}
+if(this.has_Yield){
+var parent=this.parent
+parent.children.splice(rank,1)
+if(this.has_Yield.tree[0].type==='abstract_expr'){new_node=$NodeJS("var result = _b_.None")}else{var new_node=new $Node()
+var new_ctx=new $NodeCtx(new_node)
+var new_expr=new $ExprCtx(new_ctx,'js',false)
+var _id=new $RawJSCtx(new_expr,'var result')
+var assign=new $AssignCtx(new_expr)
+assign.tree[1]=this.has_Yield.tree[0]
+_id.parent=assign}
+new_node.line_num=this.line_num
+parent.insert(rank,new_node)
+var try_node=new $NodeJS("try")
+try_node.add($NodeJS("$B.leave_frame()"))
+try_node.add(this)
+parent.insert(rank+1,try_node)
+this.has_Yield.to_js=function(){return 'yield result'}
+var catch_node=$NodeJS(`catch(err${this.line_num})`)
+catch_node.add($NodeJS("$B.frames_stack.push($top_frame)"))
+catch_node.add($NodeJS(`throw err${this.line_num}`))
+parent.insert(rank+2,catch_node)
+parent.insert(rank+3,$NodeJS("$B.frames_stack.push($top_frame)"))
+return 4}
 if(this.type==='module'){
 this.__doc__=$get_docstring(this)
 var i=0
@@ -2878,7 +2897,7 @@ C.tree[C.tree.length]=this
 var scope=this.scope=$get_scope(this)
 this.blurred_scope=this.scope.blurred
 this.env=clone(this.scope.binding)
-if(scope.ntype=="def" ||scope.ntype=="generator"){scope.referenced=scope.referenced ||{}
+if(["def","generator","generator1"].indexOf(scope.ntype)>-1){scope.referenced=scope.referenced ||{}
 if(! $B.builtins[this.value]){scope.referenced[this.value]=true}}
 if(C.parent.type=='call_arg'){this.call_arg=true}
 var ctx=C
@@ -2899,7 +2918,7 @@ if($parent_match(C,{type:'target_list'})){
 this.no_bindings=true
 $bind(value,scope,this)
 this.bound=true}
-if(scope.ntype=='def' ||scope.ntype=='generator'){
+if(["def","generator","generator1"].indexOf(scope.ntype)>-1){
 var _ctx=this.parent
 while(_ctx){if(_ctx.type=='list_or_tuple' && _ctx.is_comp()){this.in_comp=true
 break}
@@ -2963,7 +2982,8 @@ if(pnode===scope){break}
 node=pnode}
 return found}
 this.to_js=function(arg){
-if(this.result !==undefined && this.scope.ntype=='generator'){return this.result}
+if(this.result !==undefined &&(
+this.scope.ntype=='generator' ||this.scope.ntype=='generator1')){return this.result}
 this.js_processed=true
 var val=this.value
 var is_local=this.scope.binding[val]!==undefined,this_node=$get_node(this),bound_before=this_node.bound_before
@@ -2980,7 +3000,7 @@ if(val=='__BRYTHON__' ||val=='$B'){return val}
 var innermost=$get_scope(this),scope=innermost,found=[]
 var search_ids=['"'+innermost.id+'"']
 var gs=innermost
-var $test=false 
+var $test=val=="data_items_seen"
 if($test){console.log("this",this)}
 while(true){if($test){console.log(gs.id,gs)}
 if(gs.parent_block){if(gs.parent_block==$B.builtins_scope){break}
@@ -3027,12 +3047,15 @@ if(found.length > 0){
 if(found[0].C && found[0]===innermost
 && val.charAt(0)!='$'){var locs=this_node.locals ||{},nonlocs=innermost.nonlocals
 try{if(locs[val]===undefined &&
+! this.augm_assign &&
 ((innermost.type !='def' ||
-innermost.type !='generator')&&
+innermost.type !='generator' ||
+innermost.type !='generator1')&&
 innermost.ntype !='class' &&
 innermost.C.tree[0].args &&
 innermost.C.tree[0].args.indexOf(val)==-1)&&
-(nonlocs===undefined ||nonlocs[val]===undefined)){this.result='$B.$local_search("'+val+'")'
+(nonlocs===undefined ||nonlocs[val]===undefined)){if($test){console.log("$local search",val,"found",found,"innermost",innermost,"this",this)}
+this.result='$B.$local_search("'+val+'")'
 return this.result}}catch(err){console.log("error",val,innermost)
 throw err}}
 if(found.length > 1 && found[0].C){if(found[0].C.tree[0].type=='class'){var ns0='$locals_'+found[0].id.replace(/\./g,'_'),ns1='$locals_'+found[1].id.replace(/\./g,'_'),res
@@ -4609,7 +4632,7 @@ this.type='Yield'
 this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this
-$get_node(this).has_Yield=true
+$get_node(this).has_Yield=this
 var in_lambda=false,parent=C
 while(parent){if(parent.type=="lambda"){in_lambda=true
 break}
@@ -4644,7 +4667,6 @@ $get_node(this).C.tree[0].transform=function(){return C.transform.apply(C,argume
 return C.tree[0]}
 return $transition(C.parent,token)}
 this.transform=function(node,rank){
-console.log("transform Yeidl",this)
 if(this.from){console.log("insert code for yield from")
 var new_node=new $Node()
 new_node.id=this.scope.id
@@ -5438,7 +5460,8 @@ $B.idb_name=null
 $B.$options.indexedDB=false
 loop()}}
 $B.ajax_load_script=function(script){var url=script.url,name=script.name
-if($B.files && $B.files.hasOwnProperty(name)){$B.tasks.splice(0,0,[$B.run_script,$B.files[name],name,true])}else if($B.protocol !="file"){var req=new XMLHttpRequest(),qs=$B.$options.cache ? '' :'?'+Date.now()
+if($B.files && $B.files.hasOwnProperty(name)){$B.tasks.splice(0,0,[$B.run_script,$B.files[name],name,true])}else if($B.protocol !="file"){var req=new XMLHttpRequest(),qs=$B.$options.cache ? '' :
+(url.search(/\?/)>-1 ? '&' :'?')+Date.now()
 req.open("GET",url+qs,true)
 req.onreadystatechange=function(){if(this.readyState==4){if(this.status==200){var src=this.responseText
 if(script.is_ww){$B.webworkers[name]=src}else{$B.tasks.splice(0,0,[$B.run_script,src,name,true])}
@@ -6167,7 +6190,6 @@ throw _b_.NameError.$factory("name '"+$B.from_alias(name)+
 "' is not defined")}
 $B.$local_search=function(name){
 var frame=$B.last($B.frames_stack)
-if(name=="_s"){console.log("search local",name,frame)}
 if(frame[1][name]!==undefined){return frame[1][name]}
 else{throw _b_.UnboundLocalError.$factory("local variable '"+
 $B.from_alias(name)+"' referenced before assignment")}}
@@ -13638,9 +13660,12 @@ return res}}
 )
 $B.generator.__iter__=function(self){return self}
 $B.generator.__next__=function(self){return $B.generator.send(self,_b_.None)}
-$B.generator.send=function(self,value){if(self.gi_running===true){throw _b_.ValueError.$factory("generator already executing")}
+$B.generator.close=function(self){try{$B.generator.$$throw(self,_b_.GeneratorExit.$factory())}catch(err){if(! $B.is_exc(err,[_b_.GeneratorExit,_b_.StopIteration])){throw _b_.RuntimeError.$factory("generator ignored GeneratorExit")}}}
+$B.generator.send=function(self,value){if(self.$finished){throw _b_.StopIteration.$factory(value)}
+if(self.gi_running===true){throw _b_.ValueError.$factory("generator already executing")}
 self.gi_running=true
-var res=self.next(value)
+try{var res=self.next(value)}catch(err){self.$finished=true
+throw err}
 self.gi_running=false
 if(res.done){throw _b_.StopIteration.$factory(value)}
 return res.value}
@@ -13784,8 +13809,7 @@ if(! exit_node.replaced){
 console.log("replace by void(0)",this)
 res=new $B.genNode("void(0)")}else{res=new $B.genNode(exit_node.data)}
 exit_node.replaced=true}
-if(head &&(this.is_break ||this.is_continue)){if(this.is_continue){console.log("is continue",this)}
-var loop=in_loop(this)
+if(head &&(this.is_break ||this.is_continue)){var loop=in_loop(this)
 res.loop=loop
 var loop_has_yield=loop.has("yield")
 res.data=""
@@ -13907,15 +13931,13 @@ if(clone.is_continue){
 has_continue=true
 var loop=clone.loop
 rest[pos++]=loop.clone_tree()
-console.log("clone is continue",clone)
 break}
-if(clone.has("continue")){console.log("has continue",clone)
-has_continue=true;
+if(clone.has("continue")){has_continue=true;
 continue_pos=pos+1}
 rest[pos++]=clone
 var break_num=clone.has("break")
 if(break_num){has_break=true}}
-if((has_break ||has_continue)&& rest.length > 0){console.log("wrap in try for exit node",exit_node)
+if((has_break ||has_continue)&& rest.length > 0){
 var rest_try=new $B.genNode("try")
 for(var i=0,len=rest.length;i < len;i++){rest_try.addChild(rest[i])}
 catch_test=new $B.genNode("catch(err)")
