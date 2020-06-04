@@ -371,6 +371,10 @@ $B.$delete = function(name, is_global){
                 }
             }
         }
+        if(obj.__class__ === $B.generator){
+            // Force generator return (useful if yield was in a context manager)
+            obj.return()
+        }
     }
     var found = false,
         frame = $B.last($B.frames_stack)

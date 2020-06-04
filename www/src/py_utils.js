@@ -222,8 +222,8 @@ $B.$list_comp = function(items){
     // Called for list comprehensions
     // items[0] is the Python code for the comprehension expression
     // items[1:] is the loops and conditions in the comprehension
-    // For instance in [ x*2 for x in A if x>2 ],
-    // items is ["x*2", "for x in A", "if x>2"]
+    // For instance in [ x * 2 for x in A if x > 2 ],
+    // items is ["x * 2", "for x in A", "if x > 2"]
     var ix = $B.UUID(),
         py = "x" + ix + "=[]\n",
         indent = 0
@@ -1163,6 +1163,12 @@ function exit_ctx_managers_in_generators(frame){
                 }
             }
         }
+        if(frame[1][key] && frame[1][key].__class__ == $B.generator){
+            // Force generator termination, which executes the "finally" block
+            // associated with the context manager
+            var gen_obj = frame[1][key]
+            gen_obj.return()
+        }
     }
 }
 
@@ -1180,7 +1186,7 @@ $B.leave_frame = function(arg){
     if($B.frames_stack.length == 0){console.log("empty stack"); return}
     $B.del_exc()
     // When leaving a module, arg is set as an object of the form
-    // {value: _b_None}
+    // {value: _b_.None}
     if(arg && arg.value !== undefined && $B.tracefunc){
         if($B.last($B.frames_stack)[1].$f_trace === undefined){
             $B.last($B.frames_stack)[1].$f_trace = $B.tracefunc

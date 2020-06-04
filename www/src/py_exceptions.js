@@ -34,10 +34,11 @@ $B.$raise = function(arg){
         }
         throw arg
     }else if(arg.$is_class && issubclass(arg, BaseException)){
-        if(arg === _b_.StopIteration &&
-                $B.last($B.frames_stack)[1].$is_generator){
-            // PEP 479
-            throw _b_.RuntimeError.$factory("generator raised StopIteration")
+        if(arg === _b_.StopIteration){
+            if($B.last($B.frames_stack)[1].$is_generator){
+                // PEP 479
+                throw _b_.RuntimeError.$factory("generator raised StopIteration")
+            }
         }
         throw $B.$call(arg)()
     }else{

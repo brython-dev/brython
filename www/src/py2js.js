@@ -338,6 +338,7 @@ var $add_yield_from_code1 = $B.parser.$add_yield_from_code1 = function(yield_ctx
         n = yield_ctx.from_num
 
     var replace_with = `$B.$import("sys", [],{},$locals___main__, true)
+    _i${n} = _b_.iter(_i${n})
     var $failed${n} = false
     try{
         var _y${n} = _b_.next(_i${n})
@@ -356,7 +357,9 @@ var $add_yield_from_code1 = $B.parser.$add_yield_from_code1 = function(yield_ctx
         while(true){
             var $failed1${n} = false
             try{
+                $B.leave_frame()
                 var _s${n} = yield _y${n}
+                $B.frames_stack.push($top_frame)
             }catch(_e){
                 if(_e.__class__ === _b_.GeneratorExit){
                     var $failed2${n} = false
@@ -667,7 +670,7 @@ var $Node = $B.parser.$Node = function(type){
           return offset
         }
 
-        if(this.has_Yield){
+        if(this.has_Yield && ! this.has_Yield.transformed){
             /* replace "RESULT = Yield EXPR" by
 
                 var result = EXPR
@@ -688,6 +691,19 @@ var $Node = $B.parser.$Node = function(type){
               the frame is restored
             */
             var parent = this.parent
+            if(this.has_Yield.from){
+                var new_node = new $Node()
+                var new_ctx = new $NodeCtx(new_node)
+                var new_expr = new $ExprCtx(new_ctx, 'js', false)
+                var _id = new $RawJSCtx(new_expr, `var _i${this.has_Yield.from_num}`)
+                var assign = new $AssignCtx(new_expr)
+                var right = new $ExprCtx(assign)
+                right.tree = this.has_Yield.tree
+                parent.insert(rank, new_node)
+                var yfc = $add_yield_from_code1(this.has_Yield)
+                parent.insert(rank + 1, $NodeJS(yfc))
+                return 3
+            }
             parent.children.splice(rank, 1)
             if(this.has_Yield.tree[0].type === 'abstract_expr'){
                 new_node = $NodeJS("var result = _b_.None")
@@ -710,6 +726,21 @@ var $Node = $B.parser.$Node = function(type){
             this.has_Yield.to_js = function(){
                 return 'yield result'
             }
+            // set attribute "transformed" to avoid recursion in loop below
+            this.has_Yield.transformed = true
+
+            // Transform children of "try" node, including "this" node
+            // because in code like
+            //
+            //     x, y = yield value
+            //
+            // the multiple assignment must be transformed
+            var i = 0
+            while(i < try_node.children.length){
+                var offset = try_node.children[i].transform(i)
+                if(offset === undefined){offset = 1}
+                i += offset
+            }
 
             var catch_node = $NodeJS(`catch(err${this.line_num})`)
             catch_node.add($NodeJS("$B.frames_stack.push($top_frame)"))
@@ -718,7 +749,7 @@ var $Node = $B.parser.$Node = function(type){
 
             parent.insert(rank + 3,
                 $NodeJS("$B.frames_stack.push($top_frame)"))
-            return 4
+            return 2
         }
 
         if(this.type === 'module'){
@@ -3689,7 +3720,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         }
 
         // wrap everything in a try/catch to be sure to exit from frame
-        if(this.type == 'def'){
+        if(this.type == 'def' || this.type == "generator1"){
             var parent = node
             for(var pos = 0; pos < parent.children.length &&
                 parent.children[pos] !== $B.last(enter_frame_nodes); pos++){}
@@ -6010,7 +6041,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         // get global scope
         var gs = innermost
 
-        var $test = val == "data_items_seen"
+        var $test = false // val == "data_items_seen"
 
         if($test){
             console.log("this", this)
@@ -7906,6 +7937,7 @@ var $RaiseCtx = $B.parser.$RaiseCtx = function(context){
     this.parent = context
     this.tree = []
     context.tree[context.tree.length] = this
+    this.scope_type = $get_scope(this).ntype
 
     this.toString = function(){return ' (raise) ' + this.tree}
 
@@ -7931,10 +7963,8 @@ var $RaiseCtx = $B.parser.$RaiseCtx = function(context){
 
     this.to_js = function(){
         this.js_processed = true
-        var res = ''
-        if(this.tree.length == 0){return '$B.$raise()'}
-        var exc_js = this.tree[0].to_js()
-        return '$B.$raise(' + exc_js + ')'
+        var exc = this.tree.length == 0 ? '' : this.tree[0].to_js()
+        return '$B.$raise(' + exc + ')'
     }
 }
 
@@ -7942,6 +7972,7 @@ var $RawJSCtx = $B.parser.$RawJSCtx = function(context, js){
     this.type = "raw_js"
     context.tree[context.tree.length] = this
     this.parent = context
+    this.js = js
 
     this.toString = function(){return '(js) ' + js}
 
@@ -8004,7 +8035,11 @@ var $ReturnCtx = $B.parser.$ReturnCtx = function(context){
         var scope = this.scope
         if(scope.ntype == 'generator'){
             return 'return [$B.generator_return(' + $to_js(this.tree) + ')]'
+        }else if(scope.ntype == 'generator1'){
+            return 'var $res = ' + $to_js(this.tree) + '; $B.leave_frame();' +
+                'return $B.generator_return($res)'
         }
+
         // Returning from a function means leaving the execution frame
         // If the return is in a try block with a finally block, the frames
         // will be restored when entering "finally"
@@ -9058,7 +9093,7 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
                 this.err_name + '.__class__,' +
                 this.err_name + ','+
                 '$B.$getattr(' + this.err_name + ', "__traceback__"));'
-        if(this.scope.ntype == "generator"){
+        if(this.scope.ntype == "generator" || this.scope.ntype == "generator1"){
             js += '$B.set_cm_in_generator(' + this.cmexit_name + ');'
         }
         js += 'if(!$B.$bool($b)){throw ' + this.err_name + '}'
@@ -9078,7 +9113,7 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
                   ' && ' + this.cmexit_name
         }
         js += '){' + this.cmexit_name + '(None,None,None);'
-        if(this.scope.ntype == "generator"){
+        if(this.scope.ntype == "generator" || this.scope.ntype == "generator1"){
             js += 'delete ' + this.cmexit_name
         }
         js += '};'
@@ -9426,7 +9461,6 @@ var $YieldCtx1 = $B.parser.$YieldCtx1 = function(context, is_await){
 
             context.from = true
             context.from_num = $B.UUID()
-            console.log("Yield from")
             $get_node(this).context.tree[0].transform = function(){
                 return context.transform.apply(context, arguments)
             }
@@ -9451,13 +9485,6 @@ var $YieldCtx1 = $B.parser.$YieldCtx1 = function(context, is_await){
             var right = new $ExprCtx(assign)
             right.tree = this.tree
             node.parent.insert(rank, new_node)
-            /*
-
-            var init_node = new $Node(),
-                ctx = new $NodeCtx(init_node),
-                left = new $RawJSCtx(ctx, "var _i"),
-                assign = new $AssignCtx(ctx, left)
-            */
             node.parent.insert(rank + 1,
                 $NodeJS($add_yield_from_code1(this)))
         }

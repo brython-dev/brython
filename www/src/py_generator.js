@@ -69,6 +69,10 @@ $B.generator.send = function(self, value){
         self.$finished = true
         throw err
     }
+    if(res.value.__class__ === $GeneratorReturn){
+        self.$finished = true
+        throw _b_.StopIteration.$factory(res.value.value)
+    }
     self.gi_running = false
     if(res.done){
         throw _b_.StopIteration.$factory(value)
