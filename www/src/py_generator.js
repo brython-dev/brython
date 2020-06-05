@@ -25,15 +25,13 @@ eval(bltns)
 
 $B.generator = $B.make_class("generator",
     function(func){
-        /*
-        func.__class__ = $B.generator
-        return func
-        */
-        return function(){
+        var res = function(){
             var res = func.apply(null, arguments)
             res.__class__ = $B.generator
             return res
         }
+        res.$is_genfunc = true
+        return res
     }
 )
 
@@ -85,6 +83,82 @@ $B.generator.$$throw = function(self, exc){
 }
 
 $B.set_func_names($B.generator, "builtins")
+
+$B.async_generator = $B.make_class("async_generator",
+    function(func){
+        var f = function(){
+            var res = func.apply(null, arguments)
+            res.__class__ = $B.async_generator
+            return res
+        }
+        return f
+    }
+)
+
+var ag_closed = {}
+
+$B.async_generator.__aiter__ = function(self){
+    return self
+}
+
+$B.async_generator.__anext__ = function(self){
+    return $B.async_generator.asend(self, _b_.None)
+}
+
+//$B.async_generator.__dir__ = generator.__dir__
+
+$B.async_generator.aclose = function(self){
+    self.$finished = true
+    return _b_.None
+}
+
+$B.async_generator.asend = async function(self, value){
+    if(self.$finished){
+        throw _b_.StopAsyncIteration.$factory(value)
+    }
+    if(self.ag_running === true){
+        throw _b_.ValueError.$factory("generator already executing")
+    }
+    self.ag_running = true
+    try{
+        var res = await self.next(value)
+    }catch(err){
+        self.$finished = true
+        throw err
+    }
+    if(res.done){
+        throw _b_.StopAsyncIteration.$factory(value)
+    }
+    if(res.value.__class__ === $GeneratorReturn){
+        self.$finished = true
+        throw _b_.StopAsyncIteration.$factory(res.value.value)
+    }
+    self.ag_running = false
+    return res.value
+}
+
+$B.async_generator.athrow = async function(self, type, value, traceback){
+    var exc = type
+
+    if(exc.$is_class){
+        if(! _b_.issubclass(type, _b_.BaseException)){
+            throw _b_.TypeError.$factory("exception value must be an " +
+                "instance of BaseException")
+        }else if(value === undefined){
+            value = $B.$call(exc)()
+        }
+    }else{
+        if(value === undefined){
+            value = exc
+        }else{
+            exc = $B.$call(exc)(value)
+        }
+    }
+    if(traceback !== undefined){exc.$traceback = traceback}
+    await self.throw(value)
+}
+
+$B.set_func_names($B.async_generator, "builtins")
 
 function rstrip(s, strip_chars){
     var _chars = strip_chars || " \t\n";
@@ -991,7 +1065,7 @@ generator.$factory = $B.genfunc = function(name, async, blocks, funcs, $defaults
         }
 
         var res = {
-            __class__: async ? async_generator : generator,
+            __class__: async ? $B.async_generator : generator,
             __name__: name,
             args: Array.prototype.slice.call(arguments),
             blocks: blocks,

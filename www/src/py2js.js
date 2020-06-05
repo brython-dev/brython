@@ -3704,7 +3704,11 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
             }
             var res = 'return ' + name1
             if(this.async){
-                res = 'return $B.make_async(' + name1 + ')'
+                if(this.type == "generator1"){
+                    res = `return $B.async_generator.$factory(${name})`
+                }else{
+                    res = 'return $B.make_async(' + name1 + ')'
+                }
             }
             node.parent.insert(rank + offset++,
                 $NodeJS(res + '}'))
