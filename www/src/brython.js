@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,10,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.10"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-06-09 22:23:31.936004"
-__BRYTHON__.timestamp=1591734211936
+__BRYTHON__.compiled_date="2020-06-09 22:39:37.342514"
+__BRYTHON__.timestamp=1591735177342
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -160,62 +160,6 @@ else
 parent.insert(insert_at,new_node)
 assign.tree[1]=val
 return new_node}
-var $add_yield_from_code=$B.parser.$add_yield_from_code=function(yield_ctx){var pnode=$get_node(yield_ctx)
-var generator=$get_scope(yield_ctx).C.tree[0]
-pnode.yield_atoms.splice(pnode.yield_atoms.indexOf(this),1)
-generator.yields.splice(generator.yields.indexOf(this),1)
-var INDENT=" ".repeat(pnode.indent)
-var replace_with=
-INDENT+"import sys"+"\n"+
-INDENT+"try:"+"\n"+
-INDENT+"    _y = next(_i)"+"\n"+
-INDENT+"except StopIteration as _e:"+"\n"+
-INDENT+"    _r = _e.value"+"\n"+
-INDENT+"else:"+"\n"+
-INDENT+"    while 1:"+"\n"+
-INDENT+"        try:"+"\n"+
-INDENT+"            _s = yield _y"+"\n"+
-INDENT+"        except GeneratorExit as _e:"+"\n"+
-INDENT+"            try:"+"\n"+
-INDENT+"                _m = _i.close"+"\n"+
-INDENT+"            except AttributeError:"+"\n"+
-INDENT+"                pass"+"\n"+
-INDENT+"            else:"+"\n"+
-INDENT+"                _m()"+"\n"+
-INDENT+"            raise _e"+"\n"+
-INDENT+"        except BaseException as _e:"+"\n"+
-INDENT+"            _x = sys.exc_info()"+"\n"+
-INDENT+"            try:"+"\n"+
-INDENT+"                _m = _i.throw"+"\n"+
-INDENT+"            except AttributeError:"+"\n"+
-INDENT+"                raise _e"+"\n"+
-INDENT+"            else:"+"\n"+
-INDENT+"                try:"+"\n"+
-INDENT+"                    _y = _m(*_x)"+"\n"+
-INDENT+"                except StopIteration as _e:"+"\n"+
-INDENT+"                    _r = _e.value"+"\n"+
-INDENT+"                    break"+"\n"+
-INDENT+"        else:"+"\n"+
-INDENT+"            try:"+"\n"+
-INDENT+"                if _s is None:"+"\n"+
-INDENT+"                    _y = next(_i)"+"\n"+
-INDENT+"                else:"+"\n"+
-INDENT+"                    _y = _i.send(_s)"+"\n"+
-INDENT+"            except StopIteration as _e:"+"\n"+
-INDENT+"                _r = _e.value"+"\n"+
-INDENT+"                break"+"\n";
-var repl={_i :create_temp_name('__i'),_y :create_temp_name('__y'),_r :create_temp_name('__r'),_e :create_temp_name('__e'),_s :create_temp_name('__s'),_m :create_temp_name('__m'),}
-pnode.bindings=pnode.bindings ||{}
-for(attr in repl){replace_with=replace_with.replace(new RegExp("\\b"+attr+"\\b",'g'),repl[attr])
-pnode.bindings[repl[attr]]=true}
-$tokenize(pnode,replace_with)
-var params={iter_name:repl._i,result_var_name:repl._r,yield_expr:yield_ctx,}
-if(yield_ctx.parent.type==='assign'){params.save_result=true
-params.assign_ctx=yield_ctx.parent
-params.save_result_rank=pnode.parent.children.length-
-pnode.parent.children.indexOf(pnode)}
-var new_node=new $YieldFromMarkerNode(params)
-replace_node(pnode,new_node)}
 var $add_yield_from_code1=$B.parser.$add_yield_from_code1=function(yield_ctx){var pnode=$get_node(yield_ctx),scope=$get_scope(yield_ctx),generator=scope.C.tree[0]
 var INDENT=" ".repeat(pnode.indent),n=yield_ctx.from_num
 var replace_with=`$B.$import("sys",[],{})
@@ -265,7 +209,6 @@ ctx.tree[0].type=="op"){if($B.op2method.comparisons[ctx.tree[0].op]!==undefined)
 ctx=ctx.parent}}
 var $Node=$B.parser.$Node=function(type){this.type=type
 this.children=[]
-this.yield_atoms=[]
 this.add=function(child){
 this.children[this.children.length]=child
 child.parent=this
@@ -308,48 +251,6 @@ this.res.push('}\n')}}
 this.js=this.res.join('')
 return this.js}
 this.transform=function(rank){
-if(this.yield_atoms.length > 0){
-var in_while=false
-if(this.C && this.C.tree &&
-this.C.tree[0].type=="condition" &&
-this.C.tree[0].token=="while"){
-in_while=true
-var condition=this.C.tree[0].tree.pop()
-new $RawJSCtx(this.C.tree[0],"true")
-var new_node=new $Node(),ctx=new $NodeCtx(new_node),if_ctx=new $ConditionCtx(ctx,"if"),not_ctx=new $NotCtx(if_ctx)
-not_ctx.tree=[condition]
-new_node.yield_atoms=this.yield_atoms.slice()
-this.insert(0,new_node)
-new_node.add(new $NodeJS('locals["no_break'+$loop_num+
-'"] = true'))
-this.yield_atoms=[]
-return 0}
-this.parent.children.splice(rank,1)
-var offset=0
-this.yield_atoms.forEach(function(atom){
-var temp_node=new $Node(),loop_num=$loop_num,
-var_name='$yield_value'+loop_num,js='var '+var_name
-js+=' = '+(atom.to_js()||'None')
-new $NodeJSCtx(temp_node,js)
-this.parent.insert(rank+offset,temp_node)
-var yield_node=new $Node()
-this.parent.insert(rank+offset+1,yield_node)
-var yield_expr=new $YieldCtx(new $NodeCtx(yield_node))
-new $StringCtx(yield_expr,var_name)
-var set_yield=new $Node()
-set_yield.line_num=this.line_num
-set_yield.indent=this.indent
-set_yield.is_set_yield_value=true
-set_yield.after_yield=true
-js=loop_num
-new $NodeJSCtx(set_yield,js)
-this.parent.insert(rank+offset+2,set_yield)
-atom.to_js=(function(x){return function(){return '$yield_value'+x}})(loop_num)
-$loop_num++
-offset+=3},this)
-this.parent.insert(rank+offset,this)
-this.yield_atoms=[]
-return offset}
 if(this.has_Yield && ! this.has_Yield.transformed){
 var parent=this.parent
 if(this.has_Yield.from){var new_node=new $Node()
@@ -546,8 +447,6 @@ $_SyntaxError(C,'token '+token+' after '+
 C)
 case 'yield':
 return new $AbstractExprCtx(new $YieldCtx1(C),true)
-case 'Yield':
-return new $AbstractExprCtx(new $YieldCtx(C),true)
 case ':':
 if(C.parent.type=="sub" ||
 (C.parent.type=="list_or_tuple" &&
@@ -3581,8 +3480,6 @@ case 'with':
 return new $AbstractExprCtx(new $WithCtx(C),false)
 case 'yield':
 return new $AbstractExprCtx(new $YieldCtx1(C),true)
-case 'Yield':
-return new $AbstractExprCtx(new $YieldCtx(C),true)
 case 'del':
 return new $AbstractExprCtx(new $DelCtx(C),true)
 case '@':
@@ -4614,57 +4511,6 @@ return 'var '+cm_name+' = '+this.tree[0].to_js()+'\n'+
 h+cme_name+' = $B.$getattr('+cm_name+',"__exit__")\n'+
 h+'var '+val_name+' = $B.$getattr('+cm_name+',"__enter__")()\n'+
 h+exc_name+' = true\n'}}
-var $YieldCtx=$B.parser.$YieldCtx=function(C,is_await){
-this.type='yield'
-this.parent=C
-this.tree=[]
-C.tree[C.tree.length]=this
-var in_lambda=false,parent=C
-while(parent){if(parent.type=="lambda"){in_lambda=true
-break}
-parent=parent.parent}
-if(! in_lambda){switch(C.type){case 'node':
-break;
-case 'assign':
-case 'list_or_tuple':
-$get_node(C).yield_atoms.push(this)
-break
-default:
-$_SyntaxError(C,'yield atom must be inside ()')}}
-var scope=this.scope=$get_scope(this,true)
-if(! in_lambda){var in_func=scope.is_function,func_scope=scope
-if(! in_func && scope.is_comp){var parent=scope.parent_block
-while(parent.is_comp){parent=parent_block}
-in_func=parent.is_function
-func_scope=parent}
-if(! in_func){$_SyntaxError(C,["'yield' outside function"])}}
-if(! in_lambda){var def=func_scope.C.tree[0]
-if(! is_await){def.type='generator'
-func_scope.ntype='generator'}
-def.yields.push(this)}
-this.toString=function(){return '(yield) '+(this.from ? '(from) ' :'')+this.tree}
-this.transition=function(token,value){var C=this
-if(token=='from'){
-if(C.tree[0].type !='abstract_expr'){
-$_SyntaxError(C,"'from' must follow 'yield'")}
-C.from=true
-$add_yield_from_code(C)
-return C.tree[0]}
-return $transition(C.parent,token)}
-this.transform=function(node,rank){
-var new_node=$NodeJS('// placeholder for generator sent value')
-new_node.is_set_yield_value=true
-new_node.line_num=node.line_num
-new_node.after_yield=true
-new_node.indent=node.indent
-node.parent.insert(rank+1,new_node)
-var parent=node.parent
-while(parent){if(parent.ctx_manager_num !==undefined){node.parent.insert(rank+1,$NodeJS("$top_frame[1].$has_yield_in_cm = true;"))
-break}
-parent=parent.parent}}
-this.to_js=function(){this.js_processed=true
-if(this.from===undefined){return $to_js(this.tree)||'None'}
-return $to_js(this.tree)}}
 var $YieldCtx1=$B.parser.$YieldCtx1=function(C,is_await){
 this.type='Yield'
 this.parent=C
@@ -13701,6 +13547,8 @@ $B.win=win})(__BRYTHON__)
 var _b_=$B.builtins
 var bltns=$B.InjectBuiltins()
 eval(bltns)
+var $GeneratorReturn={}
+$B.generator_return=function(value){return{__class__:$GeneratorReturn,value:value}}
 $B.generator=$B.make_class("generator",function(func){var res=function(){var res=func.apply(null,arguments)
 res.$name=func.name
 res.$func=func
@@ -13760,398 +13608,7 @@ $B.set_func_names($B.async_generator,"builtins")
 function rstrip(s,strip_chars){var _chars=strip_chars ||" \t\n";
 var nstrip=0,len=s.length;
 while(nstrip < len && _chars.indexOf(s.charAt(len-1-nstrip))>-1)nstrip++;
-return s.substr(0,len-nstrip)}
-function jscode_namespace(iter_name,action,parent_id){var _clean='';
-if(action==='store'){_clean=' = {}'}
-var res='for(var attr in this.blocks){'+
-'eval("var " + attr + " = this.blocks[attr]")'+
-'};'+
-'\nvar $locals_'+iter_name+' = this.env'+_clean+', '+
-'\n    $local_name = "'+iter_name+'", '+
-'\n    $locals = $locals_'+iter_name+';'
-if(parent_id){res+='$locals.$parent = $locals_'+parent_id.replace(/\./g,"_")+
-';'}
-return res}
-function make_node(top_node,node){
-if(node.type==="marker"){return}
-var is_cond=false,is_except=false,is_else=false,is_continue,ctx_js,res
-if(node.C.$genjs){ctx_js=node.C.$genjs}else{ctx_js=node.C.$genjs=node.C.to_js()}
-if(node.locals_def){var parent_id=node.func_node.parent_block.id
-if(node.func_node.ntype=="generator"){
-var iter_name=top_node.iter_id
-ctx_js=jscode_namespace(iter_name,'store',parent_id)}else{ctx_js+="$locals.$parent = $locals_"+parent_id+";"}}
-if(node.is_catch){is_except=true;is_cond=true}
-if(node.is_except){is_except=true}
-if(node.C.type=="node"){var ctx=node.C.tree[0]
-var ctype=ctx.type
-switch(ctx.type){case "except":
-is_except=true
-is_cond=true
-break
-case "single_kw":
-is_cond=true
-if(ctx.token=="else"){is_else=true}
-if(ctx.token=="finally"){is_except=true}
-break
-case "condition":
-if(ctx.token=="elif"){is_else=true;is_cond=true}
-if(ctx.token=="if"){is_cond=true}}}
-if(ctx_js){
-var new_node=new $B.genNode(ctx_js)
-new_node.line_num=node.line_num
-if(ctype=="yield"){
-var ctx_manager=in_ctx_manager(node)
-var yield_node_id=top_node.yields.length
-while(ctx_js.endsWith(";")){ctx_js=ctx_js.substr(0,ctx_js.length-1)}
-res=""
-for(const try_node of in_try(node)){
-res+=`$locals.$run_finally${try_node.line_num}=false;`}
-res+="return ["+ctx_js+", "+yield_node_id+"]"
-if(ctx_manager !==undefined){res="$locals.$yield"+ctx_manager.ctx_manager_num+
-" = true;"+res}
-new_node.data=res
-top_node.yields.push(new_node)}else if(node.is_set_yield_value){
-var ctx_manager
-if(node.after_yield){ctx_manager=in_ctx_manager(node)}
-var js="var sent_value = this.sent_value === undefined ? "+
-"_b_.None : this.sent_value;",h="\n"+' '.repeat(node.indent)
-js+=h+"this.sent_value = _b_.None"
-js+=h+"if(sent_value.__class__ === $B.$GeneratorSendError)"+
-"{sent_value.err.$stack.splice(0, 0, $B.freeze([$top_frame])[0]);"+
-" throw sent_value.err};"
-if(typeof ctx_js=="number"){js+=h+"var $yield_value"+ctx_js+" = sent_value;"}
-if(ctx_manager !==undefined){var num=ctx_manager.ctx_manager_num
-js+=h+"$locals.$yield"+num+" = true;" 
-js+=h+"$locals.$exc"+num+" = true;"}
-new_node.data=js}else if(ctype=="break" ||ctype=="continue"){
-new_node["is_"+ctype]=true
-new_node.loop_num=node.C.tree[0].loop_ctx.loop_num}else if(ctype=="return"){
-var ctx_manager=in_ctx_manager(node)
-if(ctx_manager){new_node.data="$locals.$ctx_manager_exit"+
-ctx_manager.ctx_manager_num+
-"(_b_.None, _b_.None, _b_.None);"+new_node.data}
-var prefix=""
-for(const try_node of in_try(node)){
-prefix+=`$locals.$run_finally${try_node.line_num}=true;`}
-new_node.data=prefix+new_node.data}
-new_node.is_yield=(ctype=="yield" ||ctype=="return")
-new_node.is_cond=is_cond
-new_node.is_except=is_except
-new_node.is_if=ctype=="condition" && ctx.token=="if"
-new_node.is_try=node.is_try
-new_node.is_else=is_else
-new_node.loop_start=node.loop_start
-new_node.is_set_yield_value=node.is_set_yield_value
-new_node.ctx_manager_num=node.ctx_manager_num
-if(ctype=="single_kw" && ctx.token=="finally"){
-var try_node
-for(const child of node.parent.children){if(child.is_try){try_node=child}else if(child===node){break}}
-var f_children=node.children.slice(),if_run=new $B.genNode(
-`if($locals.$run_finally${try_node.line_num})`)
-new_node.addChild(if_run)
-for(const f_child of f_children){var nd=make_node(top_node,f_child)
-if(nd !==undefined){if_run.addChild(nd)}}}else{for(var i=0,len=node.children.length;i < len;i++){var nd=make_node(top_node,node.children[i])
-if(nd !==undefined){new_node.addChild(nd)}}
-if(node.is_try){
-new_node.addChild(new $B.genNode(
-`$locals.$run_finally${node.line_num}=true`))}}}
-return new_node}
-$B.genNode=function(data,parent){this.data=data
-this.parent=parent
-this.children=[]
-this.has_child=false
-if(parent===undefined){this.nodes={}
-this.num=0}
-this.addChild=function(child){if(child===undefined){console.log("child of "+this+" undefined")}
-this.children[this.children.length]=child
-this.has_child=true
-child.parent=this
-child.rank=this.children.length-1}
-this.insert=function(pos,child){if(child===undefined){console.log("child of "+this+" undefined")}
-this.children.splice(pos,0,child)
-this.has_child=true
-child.parent=this
-child.rank=pos}
-this.clone=function(){var res=new $B.genNode(this.data)
-res.has_child=this.has_child
-res.is_cond=this.is_cond
-res.is_except=this.is_except
-res.is_if=this.is_if
-res.is_try=this.is_try
-res.is_else=this.is_else
-res.is_continue=this.is_continue
-res.loop_num=this.loop_num
-res.loop_start=this.loop_start
-res.is_yield=this.is_yield
-res.line_num=this.line_num
-return res}
-this.clone_tree=function(exit_node,head){
-var res=new $B.genNode(this.data)
-if(this.replaced && ! in_loop(this)){
-console.log("already replaced",this)
-res.data="void(0)"}
-if(this===exit_node &&(this.parent.is_cond ||! in_loop(this))){
-if(! exit_node.replaced){
-console.log("replace by void(0)",this)
-res=new $B.genNode("void(0)")}else{res=new $B.genNode(exit_node.data)}
-exit_node.replaced=true}
-if(head &&(this.is_break ||this.is_continue)){var loop=in_loop(this)
-res.loop=loop
-var loop_has_yield=loop.has("yield")
-res.data=""
-if(this.is_break){res.data+='$locals["$no_break'+this.loop_num+
-'"] = false;'}
-if(loop.has("yield")){
-res.data+='var err = new Error("'+
-(this.is_break ? 'break' :'continue')+'"); '+
-"err.__class__ = $B.GeneratorBreak; throw err;"}else{res.data+=this.is_break ? "break" :"continue"}
-res.is_break=this.is_break}
-res.is_continue=this.is_continue
-res.has_child=this.has_child
-res.is_cond=this.is_cond
-res.is_except=this.is_except
-res.is_try=this.is_try
-res.is_else=this.is_else
-res.loop_num=this.loop_num
-res.loop_start=this.loop_start
-res.no_break=true
-res.is_yield=this.is_yield
-res.line_num=this.line_num
-for(var i=0,len=this.children.length;i < len;i++){res.addChild(this.children[i].clone_tree(exit_node,head))
-if(this.children[i].is_break){res.no_break=false}}
-return res}
-this.has=function(keyword){
-if(this["is_"+keyword]){return true}else{for(var i=0,len=this.children.length;i < len;i++){if(["break","continue"].indexOf(keyword)>-1 &&
-this.children[i].loop_start !==undefined){
-continue}
-if(this.children[i].has(keyword)){return true}}}
-return false}
-this.indent_src=function(indent){return " ".repeat(indent*indent)}
-this.src=function(indent){
-indent=indent ||0
-var res=[this.indent_src(indent)+this.data],pos=1
-if(this.has_child){res[pos++]="{"}
-res[pos++]="\n"
-for(var i=0,len=this.children.length;i < len;i++){res[pos++]=this.children[i].src(indent+1)
-if(this.children[i].is_yield){break}}
-if(this.has_child){res[pos++]="\n"+this.indent_src(indent)+"}\n"}
-return res.join("")}
-this.toString=function(){return "<Node "+this.data+">"}}
-$B.GeneratorBreak=$B.make_class("GeneratorBreak")
-$B.$GeneratorSendError={}
-var $GeneratorReturn={}
-$B.generator_return=function(value){return{__class__:$GeneratorReturn,value:value}}
-function in_ctx_manager(node){
-var ctx_manager,parent=node.parent
-while(parent && parent.ntype !=="generator"){ctx_manager=parent.ctx_manager_num
-if(ctx_manager !==undefined){return parent}
-parent=parent.parent}}
-function in_loop(node){
-while(node){if(node.loop_start !==undefined){return node}
-node=node.parent}
-return false}
-function in_try(node){
-var tries=[],pnode=node.parent,pos=0
-while(pnode){if(pnode.is_try){tries[pos++]=pnode}
-pnode=pnode.parent}
-return tries}
-var $BRGeneratorDict={__class__:_b_.type,$infos:{__name__:"generator",__module__:"builtins"},$is_class:true}
-$B.gen_counter=0 
-function remove_line_nums(node){
-for(var i=0;i < node.children.length;i++){if(node.children[i].is_line_num){node.children.splice(i,1)}else{remove_line_nums(node.children[i])}}}
-$B.$BRgenerator=function(func_name,blocks,def_id,def_node){
-var pblock=def_node.parent_block
-while(pblock.parent_block && pblock.parent_block.id !="__builtins__"){pblock=pblock.parent_block}
-var line_info=def_node.line_num+','+pblock.id.replace(/\./g,'_')
-var def_ctx=def_node.C.tree[0]
-var module=def_node.module,
-iter_id=def_id
-$B.$add_line_num(def_node,def_ctx.rank)
-var func_root=new $B.genNode(def_ctx.to_js())
-remove_line_nums(def_node.parent)
-func_root.module=module
-func_root.yields=[]
-func_root.loop_ends={}
-func_root.def_id=def_id
-func_root.iter_id=iter_id
-for(var i=0,len=def_node.children.length;i < len;i++){var nd=make_node(func_root,def_node.children[i])
-if(nd===undefined){continue}
-func_root.addChild(nd)}
-var obj={__class__ :$BRGeneratorDict,blocks:blocks,def_ctx:def_ctx,def_id:def_id,func_name:func_name,func_root:func_root,module:module,gi_running:false,iter_id:iter_id,id:iter_id,num:0}
-var src=func_root.src(),raw_src=src.substr(src.search("function"))
-raw_src+="return "+def_ctx.name+def_ctx.num+"}"
-var funcs=[raw_src]
-obj.parent_block=def_node
-for(var i=0;i < func_root.yields.length;i++){funcs.push(make_next(obj,i))}
-return funcs}
-function make_next(self,yield_node_id){
-var exit_node=self.func_root.yields[yield_node_id]
-exit_node.replaced=false
-var root=new $B.genNode(self.def_ctx.to_js())
-var fnode=self.func_root.clone()
-root.addChild(fnode)
-var parent_scope=self.func_root
-var js=jscode_namespace(self.iter_id,'restore')
-fnode.addChild(new $B.genNode(js))
-js='var $top_frame = ["'+self.iter_id+'",$locals,"'+self.module+
-'",$locals_'+self.module.replace(/\./g,'_')+'];'+
-'$B.frames_stack.push($top_frame); var $stack_length = '+
-'$B.frames_stack.length;'
-js+='$locals.$is_generator = true;'
-js+='$locals.$yield_node_id = '+yield_node_id+';'
-fnode.addChild(new $B.genNode(js))
-while(1){
-var exit_parent=exit_node.parent,rest=[],pos=0,breaks=[],has_break,has_continue
-var start=exit_node.rank+1
-if(exit_node.loop_start !==undefined){
-start=exit_node.rank}else if(exit_node.is_cond){
-while(start < exit_parent.children.length &&
-(exit_parent.children[start].is_except ||
-exit_parent.children[start].is_else)){start++}}else if(exit_node.is_try ||exit_node.is_except){
-while(start < exit_parent.children.length &&
-(exit_parent.children[start].is_except ||
-exit_parent.children[start].is_else)){start++}}
-var is_continue
-for(var i=start,len=exit_parent.children.length;i < len;i++){var clone=exit_parent.children[i].clone_tree(null,true)
-if(clone.is_continue){
-has_continue=true
-var loop=clone.loop
-rest[pos++]=loop.clone_tree()
-break}
-if(clone.has("continue")){has_continue=true;
-continue_pos=pos+1}
-rest[pos++]=clone
-var break_num=clone.has("break")
-if(break_num){has_break=true}}
-if((has_break ||has_continue)&& rest.length > 0){
-var rest_try=new $B.genNode("try")
-for(var i=0,len=rest.length;i < len;i++){rest_try.addChild(rest[i])}
-catch_test=new $B.genNode("catch(err)")
-catch_test.addChild(new $B.genNode(
-"if(err.__class__ !== $B.GeneratorBreak){throw err}"))
-rest=[rest_try,catch_test]
-if(exit_parent.loop_start !==undefined){var test='if($locals["$no_break'+exit_parent.loop_start+
-'"])',test_node=new $B.genNode(test)
-test_node.addChild(rest_try)
-test_node.addChild(catch_test)
-rest=[test_node]}}
-var tries=in_try(exit_node)
-if(tries.length==0){
-for(var i=0;i < rest.length;i++){fnode.addChild(rest[i])}}else{
-var tree=[],pos=0
-for(var i=0;i < tries.length;i++){var try_node=tries[i],try_clone=try_node.clone()
-if(i==0){for(var j=0;j < rest.length;j++){try_clone.addChild(rest[j])}}
-var children=[try_clone],cpos=1
-for(var j=try_node.rank+1;
-j < try_node.parent.children.length;j++){if(try_node.parent.children[j].is_except){if(try_node.parent.children[j].data=="finally"){var loop=in_loop(exit_node),flag=true
-if(loop){
-var parent=loop.parent
-while(parent){if(parent===try_node){flag=false
-break}
-parent=parent.parent}}
-if(true){
-children[cpos++]=
-try_node.parent.children[j].clone_tree(null,true)}}else{children[cpos++]=
-try_node.parent.children[j].clone_tree(null,true)}}else{break}}
-if(children.length==1){
-children.push(new $B.genNode("catch(err){}"))}
-tree[pos++]=children}
-var parent=fnode
-while(tree.length){children=tree.pop()
-children.forEach(function(child){parent.addChild(child)})
-parent=children[0]}}
-exit_node=exit_parent
-if(exit_node===self.func_root){break}}
-var src=root.children[0].src(),next_src=src.substr(src.search("function"))
-next_src=next_src.substr(10)
-next_src=next_src.substr(next_src.search("function"))
-if(self.def_ctx.async){next_src="async "+next_src}
-return next_src}
-var generator={__class__:_b_.type,__mro__:[_b_.object],$infos:{__module__:"builtins",__name__:"generator"},$is_class:true}
-generator.__dir__=function(self){var attrs=object.__dir__(self)
-for(const attr of["blocks","env","nexts","next","iter_id","sent_value"]){attrs.splice(attrs.indexOf(attr),1)}
-return attrs}
-generator.__enter__=function(self){console.log("generator.__enter__ called")}
-generator.__exit__=function(self){console.log("generator.__exit__ called")}
-generator.__str__=function(self){return "<generator object "+self.__name__+">"}
-generator.__iter__=function(self){return self}
-generator.__next__=function(self){if(self.$finished){throw _b_.StopIteration.$factory(_b_.None)}
-if(self.gi_running===true){throw ValueError.$factory("generator already executing")}
-self.gi_running=true
-if(self.next===undefined){self.$finished=true
-throw _b_.StopIteration.$factory(_b_.None)}
-try{var res=self.next.apply(self,self.args)}catch(err){
-self.$finished=true
-err.$stack=$B.frames_stack.slice()
-throw err}finally{
-self.gi_running=false
-$B.leave_frame(self.iter_id)}
-if(res===undefined){throw _b_.StopIteration.$factory(_b_.None)}
-else if(res[0].__class__===$GeneratorReturn){
-self.$finished=true
-throw StopIteration.$factory(res[0].value)}
-self.next=self.nexts[res[1]]
-self.gi_running=false
-return res[0]}
-generator.close=function(self,value){self.sent_value={__class__:$B.$GeneratorSendError,err:_b_.GeneratorExit.$factory()}
-try{var res=generator.__next__(self)
-if(res !==_b_.None){throw _b_.RuntimeError.$factory("closed generator returned a value")}}catch(err){if($B.is_exc(err,[_b_.StopIteration,_b_.GeneratorExit])){return _b_.None}
-throw err}}
-generator.send=function(self,value){self.sent_value=value
-return generator.__next__(self)}
-generator.$$throw=function(self,type,value,traceback){var exc=type
-if(exc.$is_class){if(! _b_.issubclass(type,_b_.BaseException)){throw _b_.TypeError.$factory("exception value must be an "+
-"instance of BaseException")}else if(value===undefined){value=$B.$call(exc)()}}else{if(value===undefined){value=exc}else{exc=$B.$call(exc)(value)}}
-if(traceback !==undefined){exc.$traceback=traceback}
-self.sent_value={__class__:$B.$GeneratorSendError,err:value}
-return generator.__next__(self)}
-var async_generator={__class__:_b_.type,__mro__:[_b_.object],$infos:{__module__:"builtins",__name__:"async_generator"},$is_class:true}
-generator.$factory=$B.genfunc=function(name,async,blocks,funcs,$defaults){
-if(name.startsWith("__ge")){
-for(var block_id in blocks){if(block_id=="$locals_"+name){continue}
-for(var attr in blocks[block_id]){blocks["$locals_"+name][attr]=blocks[block_id][attr]}}}
-return function(){var iter_id="$gen"+$B.gen_counter++,gfuncs=[]
-gfuncs.push(funcs[0]($defaults))
-for(var i=1;i < funcs.length;i++){gfuncs.push(funcs[i])}
-var res={__class__:async ? $B.async_generator :generator,__name__:name,args:Array.prototype.slice.call(arguments),blocks:blocks,env:{},name:name,nexts:gfuncs.slice(1),next:gfuncs[0],iter_id:iter_id,$started:false,$defaults:$defaults,$is_generator_obj:true}
-if(async){res.ag_running=false}else{res.gi_running=false}
-return res}}
-$B.set_func_names(generator,"builtins")
-var ag_closed={}
-async_generator.__aiter__=function(self){return self}
-async_generator.__anext__=async function(self){if(self.$finished){throw _b_.StopAsyncIteration.$factory(_b_.None)}
-if(self.$closed){throw _b_.StopAsyncIteration.$factory()}
-if(self.$exc){throw self.$exc}
-if(self.ag_running===true){throw ValueError.$factory("generator already executing")}
-self.ag_running=true
-if(self.next===undefined){self.$finished=true
-throw _b_.StopAsyncIteration.$factory(_b_.None)}
-try{var res=await self.next.apply(self,self.args)
-if(res===undefined){throw _b_.StopAsyncIteration.$factory(_b_.None)}else if(res[0].__class__===$GeneratorReturn){
-self.$finished=true
-throw _b_.StopAsyncIteration.$factory(res[0].value)}
-self.next=self.nexts[res[1]]
-self.ag_running=false
-return res[0]}catch(err){
-self.$finished=true
-err.$stack=$B.frames_stack.slice()
-if(err.__class__ !==_b_.GeneratorExit){throw err}}finally{
-self.ag_running=false
-$B.leave_frame(self.iter_id)}}
-async_generator.__dir__=generator.__dir__
-async_generator.aclose=function(self){if(self.$finished){return _b_.None}
-self.sent_value={__class__:$B.$GeneratorSendError,err:_b_.GeneratorExit.$factory()}
-return async_generator.__anext__(self)}
-async_generator.asend=function(){var $=$B.args("asend",2,{self:null,value:null},['self','value'],arguments,{},null,null),self=$.self,value=$.value
-self.sent_value=value
-return async_generator.__anext__(self)}
-async_generator.athrow=function(self,type,value,traceback){var exc=type
-if(exc.$is_class){if(! _b_.issubclass(type,_b_.BaseException)){throw _b_.TypeError.$factory("exception value must be an "+
-"instance of BaseException")}else if(value===undefined){value=$B.$call(exc)()}}else{if(value===undefined){value=exc}else{exc=$B.$call(exc)(value)}}
-if(traceback !==undefined){exc.$traceback=traceback}
-self.sent_value={__class__:$B.$GeneratorSendError,err:value}
-return async_generator.__anext__(self)}
-$B.set_func_names(async_generator,"builtins")})(__BRYTHON__)
+return s.substr(0,len-nstrip)}})(__BRYTHON__)
 ;
  ;(function($B){var _b_=$B.builtins
 var update=function(mod,data){for(attr in data){mod[attr]=data[attr]}}
