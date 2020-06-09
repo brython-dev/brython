@@ -998,7 +998,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false // attr == "data" // && obj === $B // "Point"
+    var $test = false // attr == "__traceback__" // && obj === $B // "Point"
     if($test){console.log("$getattr", attr, obj, klass)}
 
     // Shortcut for classes without parents
@@ -1209,7 +1209,7 @@ $B.$getattr = function(obj, attr, _default){
     if(typeof attr_func !== 'function'){
         console.log(attr + ' is not a function ' + attr_func, klass)
     }
-    if($test){console.log("attr_func is odga", attr_func, attr_func + "",
+    if($test){console.log("attr_func is odga", attr_func,
         attr_func === odga, obj[attr])}
     if(attr_func === odga){
         var res = obj[attr]
@@ -1248,7 +1248,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var cname = klass.$infos.__name__
     if(is_class){cname = obj.$infos.__name__}
-
+    
     attr_error(rawname, cname)
 }
 
@@ -1509,9 +1509,10 @@ function isinstance(obj, cls){
     return false
 }
 
-function issubclass(klass,classinfo){
+function issubclass(klass, classinfo){
     check_no_kw('issubclass', klass, classinfo)
     check_nb_args('issubclass', 2, arguments)
+
 
     if(!klass.__class__ ||
             !(klass.$factory !== undefined || klass.$is_class !== undefined)){

@@ -225,7 +225,7 @@ $B.$list_comp = function(items){
     // For instance in [ x * 2 for x in A if x > 2 ],
     // items is ["x * 2", "for x in A", "if x > 2"]
     var ix = $B.UUID(),
-        py = "x" + ix + "=[]\n",
+        py = "x" + ix + " = []\n",
         indent = 0
     for(var i = 1, len = items.length; i < len; i++){
         var item = items[i].replace(/\s+$/, "").replace(/\n/g, "")
@@ -262,11 +262,13 @@ $B.$dict_comp = function(module_name, parent_scope, items, line_num){
         root = $B.py2js(
             {src:py, is_comp:true, line_info: line_info},
             module_name, dictcomp_name, parent_scope, line_num),
+        outer_expr = root.outermost_expr.to_js(),
         js = root.to_js()
+
     js += '\nreturn $locals["' + res + '"]\n'
 
-    js = "(function($locals_" + dictcomp_name + "){" + js +
-        "})({$dict_comp: true})"
+    js = "(function(expr){" + js +
+        "})(" + outer_expr + ")"
     $B.clear_ns(dictcomp_name)
     delete $B.$py_src[dictcomp_name]
 
@@ -275,10 +277,12 @@ $B.$dict_comp = function(module_name, parent_scope, items, line_num){
 
 $B.$gen_expr = function(module_name, parent_scope, items, line_num, set_comp){
     // Called for generator expressions, or set comprehensions if "set_comp"
-    // is set
-    var $ix = $B.UUID(),
-        genexpr_name = (set_comp ? "set_comp" + $B.lambda_magic : "__ge") + $ix,
-        py = "def " + genexpr_name + "():\n", // use a special name (cf $global_search)
+    // is set.
+    // outer_expr is the outermost expression, evaluated prior to running the
+    // generator
+    var ix = $B.UUID(),
+        genexpr_name = (set_comp ? "set_comp" + $B.lambda_magic : "__ge") + ix,
+        py = `def ${genexpr_name}(expr):\n`, // use a special name (cf $global_search)
         indent = 1
     for(var i = 1, len = items.length; i < len; i++){
         var item = items[i].replace(/\s+$/, "").replace(/\n/g, "")
@@ -290,17 +294,33 @@ $B.$gen_expr = function(module_name, parent_scope, items, line_num, set_comp){
 
     var line_info = line_num + ',' + module_name
 
-    var root = $B.py2js({src: py, is_comp: true, line_info:line_info},
+    var root = $B.py2js({src: py, is_comp: true, line_info:line_info, ix: ix},
             genexpr_name, genexpr_name, parent_scope, line_num),
         js = root.to_js(),
         lines = js.split("\n")
-
+    if(root.outermost_expr === undefined){
+        console.log("no outermost", module_name, parent_scope)
+    }
+    var outer_expr = root.outermost_expr.to_js()
     js = lines.join("\n")
-    js += "\nvar $res = $locals_" + genexpr_name + '["' + genexpr_name +
-        '"]();\n$res.is_gen_expr = true;\nreturn $res\n'
-    js = "(function($locals_" + genexpr_name +"){" + js + "})({})\n"
-
+    js += "\nvar $res = $B.generator.$factory(" + genexpr_name +
+        ')(' + outer_expr + ');\nreturn $res\n'
+    js = "(function($locals_" + genexpr_name +"){" + js + "})($locals)\n"
     return js
+}
+
+$B.copy_namespace = function(){
+    var ns = {}
+    for(const frame of $B.frames_stack){
+        for(const kv of [frame[1], frame[3]]){
+            for(var key in kv){
+                if(key.startsWith('$$') || !key.startsWith('$')){
+                    ns[key] = kv[key]
+                }
+            }
+        }
+    }
+    return ns
 }
 
 $B.clear_ns = function(name){
@@ -938,7 +958,7 @@ $B.make_iterator_class = function(name){
 }
 
 function $err(op, klass, other){
-    var msg = "unsupported operand type(s) for " + op + ": '" +
+    var msg = "unsupported operand type(s) for " + op + " : '" +
         klass.$infos.__name__ + "' and '" + $B.class_name(other) + "'"
     throw _b_.TypeError.$factory(msg)
 }
@@ -1200,10 +1220,7 @@ $B.leave_frame = function(arg){
         // The attribute $has_yield_in_cm is set in py2js.js /
         // $YieldCtx.transform only if the frame has "yield" inside a
         // context manager.
-        var closed_cm = exit_ctx_managers_in_generators(frame)
-        if((! closed_cm) && $B.frames_stack.length > 0){
-            $B.last($B.frames_stack)[1].$has_yield_in_cm = true
-        }
+        exit_ctx_managers_in_generators(frame)
     }
     return _b_.None
 }
@@ -1304,6 +1321,7 @@ $B.mul = function(x, y){
             $B.long_int.$factory(y))
     }else{return z}
 }
+
 $B.sub = function(x, y){
     var z = (typeof x != "number" || typeof y != "number") ?
                 new Number(x - y) : x - y
@@ -1424,7 +1442,7 @@ $B.rich_op = function(op, x, y){
             if(err.__class__ === _b_.AttributeError){
                 var kl_name = $B.class_name(x)
                 throw _b_.TypeError.$factory("unsupported operand type(s) " +
-                    "for " + opname2opsign[op] + ": '" + kl_name + "' and '" +
+                    "for " + opname2opsign[op] + " : '" + kl_name + "' and '" +
                     kl_name + "'")
             }
             throw err

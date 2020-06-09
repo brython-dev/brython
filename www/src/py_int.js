@@ -4,7 +4,7 @@ var _b_ = $B.builtins
 
 function $err(op, other){
     var msg = "unsupported operand type(s) for " + op +
-        ": 'int' and '" + $B.class_name(other) + "'"
+        " : 'int' and '" + $B.class_name(other) + "'"
     throw _b_.TypeError.$factory(msg)
 }
 
@@ -597,6 +597,8 @@ var $op_func = function(self, other){
     }
     var rsub = $B.$getattr(other, "__rsub__", _b_.None)
     if(rsub !== _b_.None){return rsub(self)}
+    console.log("err", self, other)
+    console.log($B.frames_stack.slice())
     throw $err("-", other)
 }
 $op_func += "" // source code

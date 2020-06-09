@@ -353,7 +353,7 @@ type.__getattribute__ = function(klass, attr){
                 function(key){delete klass[key]})
     }
     var res = klass[attr]
-    var $test = false // attr=="__class_getitem__" // && klass.$infos.__name__ == "N"
+    var $test = false // attr == "__instancecheck__" // && klass.$infos.__name__ == "generator"
     if($test){
         console.log("attr", attr, "of", klass, res, res + "")
     }
@@ -580,6 +580,10 @@ type.__new__ = function(meta, name, bases, cl_dict){
             }
         }
         if(typeof v == "function"){
+            if(v.$infos === undefined){
+                console.log("type new", v, v + "")
+                console.log($B.frames_stack.slice())
+            }
             v.$infos.$class = class_dict
             if(v.$infos.$defaults){
                 // If the function was set an attribute __defaults__, it is

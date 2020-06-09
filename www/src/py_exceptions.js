@@ -207,7 +207,12 @@ traceback.__getattribute__ = function(self, attr){
                     }
                 }
                 if(src !== undefined){
-                    return src.split("\n")[parseInt(info[0] - 1)].trim()
+                    try{
+                        return src.split("\n")[parseInt(info[0] - 1)].trim()
+                    }catch(err){
+                        console.log(src, info)
+                        throw err
+                    }
                 }else{
                     console.log(file)
                     console.log("no src for", info)

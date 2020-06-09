@@ -19,7 +19,6 @@ $B.set_func_names(coroutine, "builtins")
 
 $B.make_async = func => {
     if(func.$is_genfunc){
-        console.log("async gen", func + "")
         return func
     }
     var f = function(){

@@ -27,9 +27,12 @@ $B.generator = $B.make_class("generator",
     function(func){
         var res = function(){
             var res = func.apply(null, arguments)
+            res.$name = func.name
+            res.$func = func
             res.__class__ = $B.generator
             return res
         }
+        res.$infos = func.$infos
         res.$is_genfunc = true
         return res
     }
@@ -67,7 +70,7 @@ $B.generator.send = function(self, value){
         self.$finished = true
         throw err
     }
-    if(res.value.__class__ === $GeneratorReturn){
+    if(res.value && res.value.__class__ === $GeneratorReturn){
         self.$finished = true
         throw _b_.StopIteration.$factory(res.value.value)
     }
@@ -78,8 +81,31 @@ $B.generator.send = function(self, value){
     return res.value
 }
 
-$B.generator.$$throw = function(self, exc){
-    self.throw(exc)
+$B.generator.$$throw = function(self, type, value, traceback){
+    var exc = type
+
+    if(exc.$is_class){
+        if(! _b_.issubclass(type, _b_.BaseException)){
+            throw _b_.TypeError.$factory("exception value must be an " +
+                "instance of BaseException")
+        }else if(value === undefined){
+            exc = $B.$call(exc)()
+        }else if(_b_.isinstance(value, type)){
+            exc = value
+        }
+    }else{
+        if(value === undefined){
+            value = exc
+        }else{
+            exc = $B.$call(exc)(value)
+        }
+    }
+    if(traceback !== undefined){exc.$traceback = traceback}
+    var res = self.throw(exc)
+    if(res.done){
+        throw _b_.StopIteration.$factory("StopIteration")
+    }
+    return res.value
 }
 
 $B.set_func_names($B.generator, "builtins")
