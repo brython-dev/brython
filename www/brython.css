@@ -38,7 +38,6 @@ body {
 #banner_row {
   background-color:var(--clear-2);
   font-family:Montserrat, Arial;
-  width:100%;
   padding: 0.5em 1em 0.5em 1em;
   margin-bottom: 1em;
 }
