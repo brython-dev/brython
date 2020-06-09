@@ -1143,4 +1143,35 @@ def g1390_2():
 
 assert list(g1390_2()) == [1, 2, 3, 'done']
 
+# issue 1398
+out = []
+prn = out.append
+def g():
+    while 1:
+        prn('start')
+        err = 0
+        try:
+            yield
+        except Exception as ee:
+            prn(str(ee))
+            err = 1
+            # work-around: shift left (out of `except`):
+            if err:
+                continue
+        prn('end')
+    prn("shouldn't be here")
+
+g = g()
+prn('1:'); next(g)
+prn('2:'); next(g)
+prn('3:'); g.throw(Exception('ERROR'))
+prn('4:'); next(g)
+prn('5:'); next(g)
+assert out == [
+    '1:', 'start',
+    '2:', 'end', 'start',
+    '3:', 'ERROR', 'start',
+    '4:', 'end', 'start',
+    '5:', 'end', 'start']
+
 print('passed all tests...')
