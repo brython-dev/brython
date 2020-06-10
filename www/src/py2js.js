@@ -225,9 +225,6 @@ var $add_yield_from_code1 = $B.parser.$add_yield_from_code1 = function(yield_ctx
         scope = $get_scope(yield_ctx),
         generator = scope.context.tree[0]
 
-    //pnode.yield_atoms.splice(pnode.yield_atoms.indexOf(this), 1)
-    //generator.yields.splice(generator.yields.indexOf(this), 1)
-
     /*
                   RESULT = yield from EXPR
 
@@ -593,49 +590,6 @@ var $Node = $B.parser.$Node = function(type){
                 i += offset
             }
             if(ctx_offset === undefined){ctx_offset = 1}
-
-            if(this.context && this.context.tree !== undefined &&
-                    this.context.tree[0].type == "generator"){
-                var def_node = this,
-                    def_ctx = def_node.context.tree[0]
-                var blocks = [],
-                    node = def_node.parent_block,
-                    is_comp = node.is_comp
-
-                while(true){
-                    var node_id = node.id.replace(/\./g, '_'),
-                        block = '"$locals_' + node_id + '": '
-                    if(is_comp){
-                        block += '$B.clone($locals_' + node_id + ')'
-                    }else{
-                        block += '$locals_' + node_id
-                    }
-                    blocks.push(block)
-                    node = node.parent_block
-                    if(node === undefined || node.id == '__builtins__'){break}
-                }
-                blocks = '{' + blocks + '}'
-
-                var parent = this.parent
-                while(parent !== undefined && parent.id === undefined){
-                    parent = parent.parent
-                }
-                // $B.$BRgenerator defined in py_generators.js
-                var g = $B.$BRgenerator(def_ctx.name, blocks,
-                    def_ctx.id, def_node),
-                    block_id = parent.id.replace(/\./g, '_'),
-                    name = def_ctx.decorated ? def_ctx.alias :
-                        def_ctx.name + def_ctx.num,
-                    res = 'var ' + def_ctx.name + def_ctx.num + ' = ' +
-                        '$locals_' + block_id + '["' + def_ctx.name +
-                        '"] = $B.genfunc("' +
-                        def_ctx.name + '", ' + def_ctx.async + ', ' + blocks +
-                        ',[' + g + '],' + def_ctx.default_str + ')'
-                var new_node = $NodeJS(res)
-                new_node.bindings = this.bindings
-                this.parent.children.splice(rank, 1)
-                this.parent.insert(rank + offset - 1, new_node)
-            }
 
             return ctx_offset
         }
@@ -1432,7 +1386,7 @@ var $AsyncCtx = $B.parser.$AsyncCtx = function(context){
             return $transition(context.parent, token, value)
         }else if(token == "for" || token == "with"){
             var ntype = $get_scope(context).ntype
-            if(ntype !== "def" && ntype != "generator"){
+            if(ntype !== "def" && ntype != "generator1"){
                 $_SyntaxError(context, ["'async " + token +
                     "' outside async function"])
             }
@@ -1524,7 +1478,7 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
             var name = assigned.value
             if(noassign[name] === true){
                 $_SyntaxError(context, ["cannot assign to keyword"])
-            }else if((scope.ntype == 'def' || scope.ntype == 'generator') &&
+            }else if((scope.ntype == 'def' || scope.ntype == 'generator1') &&
                     (scope.binding[name] === undefined)){
                 if(scope.globals === undefined ||
                         ! scope.globals.has(name)){
@@ -1646,7 +1600,7 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
                             prefix = global_ns
                             break
                         case 'def':
-                        case 'generator':
+                        case 'generator1':
                             if(scope.globals &&
                                     scope.globals.has(context.tree[0].value)){
                                 prefix = global_ns
@@ -1878,7 +1832,7 @@ var set_loop_context = $B.parser.set_loop_context = function(context, kw){
                     break_flag = true
                     break
                 case 'def':
-                case 'generator':
+                case 'generator1':
                 case 'class':
                     // "break" must not be inside a def or class, even if they
                     // are enclosed in a loop
@@ -2141,7 +2095,7 @@ var $CallCtx = $B.parser.$CallCtx = function(context){
                        // super() called with no argument : if inside a class,
                        // add the class parent as first argument
                        var scope = $get_scope(this)
-                       if(scope.ntype == 'def' || scope.ntype == 'generator'){
+                       if(scope.ntype == 'def' || scope.ntype == 'generator1'){
                           var def_scope = $get_scope(scope.context.tree[0])
                           if(def_scope.ntype == 'class'){
                              new $IdCtx(this, def_scope.context.tree[0].name)
@@ -2151,7 +2105,7 @@ var $CallCtx = $B.parser.$CallCtx = function(context){
                     if(this.tree.length == 1){
                        // second argument omitted : add the instance
                        var scope = $get_scope(this)
-                       if(scope.ntype == 'def' || scope.ntype == 'generator'){
+                       if(scope.ntype == 'def' || scope.ntype == 'generator1'){
                           var args = scope.context.tree[0].args
                           if(args.length > 0){
                              var missing_id = new $IdCtx(this, args[0])
@@ -2372,7 +2326,7 @@ var $ClassCtx = $B.parser.$ClassCtx = function(context){
         }
         while(parent_block.context &&
                'def' != parent_block.context.tree[0].type &&
-               'generator' != parent_block.context.tree[0].type){
+               'generator1' != parent_block.context.tree[0].type){
             parent_block = parent_block.parent
         }
         this.parent.node.parent_block = parent_block
@@ -2958,8 +2912,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         parent_block = parent_block.parent
     }
     while(parent_block.context &&
-          'def' != parent_block.context.tree[0].type &&
-          'generator' != parent_block.context.tree[0].type){
+          'def' != parent_block.context.tree[0].type){
         parent_block = parent_block.parent
     }
 
@@ -3165,7 +3118,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         var flags = 67
         if(this.star_arg){flags |= 4}
         if(this.kw_arg){flags |= 8}
-        if(this.type == 'generator'){flags |= 32}
+        if(this.type == 'generator1'){flags |= 32}
         if(this.async){flags |= 128}
 
         var nodes = [], js
@@ -3226,10 +3179,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
 
         var make_args_nodes = []
 
-        // If function is not a generator, $locals is the result of $B.args
-        var js = this.type != 'generator' ? local_ns + ' = $locals' : 'var $ns'
-
-        js += ' = $B.args("' + this.name + '", ' +
+        var js = local_ns + ' = $locals = $B.args("' + this.name + '", ' +
             this.argcount + ', {' + this.slots.join(', ') + '}, ' +
             '[' + slot_list.join(', ') + '], arguments, $defaults, ' +
             this.other_args + ', ' + this.other_kw + ');'
@@ -3237,12 +3187,6 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         var new_node = new $Node()
         new $NodeJSCtx(new_node, js)
         make_args_nodes.push(new_node)
-
-        if(this.type == 'generator'){
-            // For generators, update $locals with the result of $B.args
-            js ='for(var $var in $ns){$locals[$var] = $ns[$var]};'
-            make_args_nodes.push($NodeJS(js))
-        }
 
         var only_positional = false
         if(this.other_args === null && this.other_kw === null &&
@@ -3281,18 +3225,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
             var test_node = $NodeJS('if($len == ' + pos_len + ')')
             else_node.add(test_node)
 
-            if(this.type == 'generator'){
-                if(this.args.length == 0){test_node.add($NodeJS('//'))}
-                else{
-                    this.args.forEach(function(arg){
-                        test_node.add($NodeJS('$locals["' + arg + '"] = ' +
-                            arg))
-                    })
-                }
-            }else{
-                test_node.add($NodeJS(local_ns +
-                    ' = $locals = ' + slot_init))
-            }
+            test_node.add($NodeJS(local_ns + ' = $locals = ' + slot_init))
 
             // Too many arguments
             else_node.add($NodeJS('else if($len > ' + pos_len +
@@ -3309,15 +3242,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
                 subelse_node = $NodeJS("else")
                 else_node.add(subelse_node)
 
-                if(this.type == 'generator'){
-                    this.args.forEach(function(arg){
-                        subelse_node.add($NodeJS('$locals["' + arg + '"] = ' +
-                            arg))
-                    })
-                }else{
-                    subelse_node.add($NodeJS(local_ns +
-                        ' = $locals = ' + slot_init))
-                }
+                subelse_node.add($NodeJS(local_ns + ' = $locals = ' + slot_init))
                 subelse_node.add($NodeJS("var defparams = [" + slot_list + "]"))
                 subelse_node.add($NodeJS("for(var i=$len; i < defparams.length" +
                     ";i++){$locals[defparams[i]] = $defaults[defparams[i]]}"))
@@ -3353,18 +3278,6 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         // this() in module javascript
         nodes.push($NodeJS('$B.js_this = this;'))
 
-        // If the function is a generator, the beginning of the function body
-        // is the "suspension point" for generator.throw or generator.send,
-        // so we insert a set_yield_value node
-        if(this.type == "generator"){
-            var suspension_node = $NodeJS("// suspension")
-            suspension_node.is_set_yield_value = true
-            suspension_node.parent = node
-            suspension_node.num = node.num
-            suspension_node.line_num = node.line_num
-            nodes.push(suspension_node)
-        }
-
         // remove children of original node
         for(var i = nodes.length - 1; i >= 0; i--){
             node.children.splice(0, 0, nodes[i])
@@ -3383,7 +3296,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         // If the last instruction in the function is not a return,
         // add an explicit line "return None".
         var last_instr = node.children[node.children.length - 1].context.tree[0]
-        if(last_instr.type != 'return' && this.type != 'generator'){
+        if(last_instr.type != 'return'){
             // as always, leave frame before returning
             js = 'if($locals.$f_trace !== _b_.None){\n' +
                 ' '.repeat(indent + 4) + '$B.trace_return(_b_.None)\n' +
@@ -3437,33 +3350,31 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
             js = '    __qualname__:"' + __qualname__ + '",'
             node.parent.insert(rank + offset++, $NodeJS(js))
 
-            if(this.type != "generator"){
-                // Add attribute __defaults__
-                if(this.otherdefaults.length > 0){
-                    var def_names = []
-                    this.otherdefaults.forEach(function(_default){
-                        def_names.push('$defaults.' + _default)
-                    })
-                    node.parent.insert(rank + offset++, $NodeJS('    __defaults__ : ' +
-                        '$B.fast_tuple([' + def_names.join(', ') + ']),'))
-                }else{
-                    node.parent.insert(rank + offset++, $NodeJS('    __defaults__ : ' +
-                        '_b_.None,'))
-                }
+            // Add attribute __defaults__
+            if(this.otherdefaults.length > 0){
+                var def_names = []
+                this.otherdefaults.forEach(function(_default){
+                    def_names.push('$defaults.' + _default)
+                })
+                node.parent.insert(rank + offset++, $NodeJS('    __defaults__ : ' +
+                    '$B.fast_tuple([' + def_names.join(', ') + ']),'))
+            }else{
+                node.parent.insert(rank + offset++, $NodeJS('    __defaults__ : ' +
+                    '_b_.None,'))
+            }
 
-                // Add attribute __kwdefaults__ for default values of
-                // keyword-only parameters
-                if(this.kwonlyargsdefaults.lengh > 0){
-                    var def_names = []
-                    this.kwonlyargsdefaults.forEach(function(_default){
-                        def_names.push('$defaults.' + _default)
-                    })
-                    node.parent.insert(rank + offset++, $NodeJS('    __kwdefaults__ : ' +
-                        '$B.fast_tuple([' + def_names.join(', ') + ']),'))
-                }else{
-                    node.parent.insert(rank + offset++, $NodeJS('    __kwdefaults__ : ' +
-                        '_b_.None,'))
-                }
+            // Add attribute __kwdefaults__ for default values of
+            // keyword-only parameters
+            if(this.kwonlyargsdefaults.lengh > 0){
+                var def_names = []
+                this.kwonlyargsdefaults.forEach(function(_default){
+                    def_names.push('$defaults.' + _default)
+                })
+                node.parent.insert(rank + offset++, $NodeJS('    __kwdefaults__ : ' +
+                    '$B.fast_tuple([' + def_names.join(', ') + ']),'))
+            }else{
+                node.parent.insert(rank + offset++, $NodeJS('    __kwdefaults__ : ' +
+                    '_b_.None,'))
             }
 
             // Add attribute __annotations__
@@ -3517,7 +3428,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
 
         // Close anonymous function with defaults as argument
         this.default_str = '{' + defs1.join(', ') + '}'
-        if(this.type != "generator" && ! this.is_comp){
+        if(! this.is_comp){
             // Add a node to mark the end of the function
             node.parent.insert(rank + offset++, new $MarkerNode('func_end:' +
                 CODE_MARKER))
@@ -3547,32 +3458,30 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         }
 
         // wrap everything in a try/catch to be sure to exit from frame
-        if(this.type == 'def' || this.type == "generator1"){
-            var parent = node
-            for(var pos = 0; pos < parent.children.length &&
-                parent.children[pos] !== $B.last(enter_frame_nodes); pos++){}
-            var try_node = $NodeJS('try'),
-                children = parent.children.slice(pos + 1)
-            parent.insert(pos + 1, try_node)
-            children.forEach(function(child){
-                if(child.is_def_func){
-                    child.children.forEach(function(grand_child){
-                        try_node.add(grand_child)
-                    })
-                }else{
-                    try_node.add(child)
-                }
-            })
-            parent.children.splice(pos + 2, parent.children.length)
+        var parent = node
+        for(var pos = 0; pos < parent.children.length &&
+            parent.children[pos] !== $B.last(enter_frame_nodes); pos++){}
+        var try_node = $NodeJS('try'),
+            children = parent.children.slice(pos + 1)
+        parent.insert(pos + 1, try_node)
+        children.forEach(function(child){
+            if(child.is_def_func){
+                child.children.forEach(function(grand_child){
+                    try_node.add(grand_child)
+                })
+            }else{
+                try_node.add(child)
+            }
+        })
+        parent.children.splice(pos + 2, parent.children.length)
 
-            var except_node = $NodeJS('catch(err)')
-            except_node.add($NodeJS('$B.set_exc(err)'))
-            except_node.add($NodeJS('if($locals.$f_trace !== _b_.None){' +
-                '$locals.$f_trace = $B.trace_exception()}'))
-            except_node.add($NodeJS('$B.leave_frame();throw err'))
+        var except_node = $NodeJS('catch(err)')
+        except_node.add($NodeJS('$B.set_exc(err)'))
+        except_node.add($NodeJS('if($locals.$f_trace !== _b_.None){' +
+            '$locals.$f_trace = $B.trace_exception()}'))
+        except_node.add($NodeJS('$B.leave_frame();throw err'))
 
-            parent.add(except_node)
-        }
+        parent.add(except_node)
 
         this.transformed = true
 
@@ -3641,7 +3550,7 @@ var $DelCtx = $B.parser.$DelCtx = function(context){
                     // cf issue #923
                     var scope = $get_scope(this),
                         is_global = false
-                    if((scope.ntype == "def" || scope.ntype == "generator") &&
+                    if((scope.ntype == "def" || scope.ntype == "generator1") &&
                             scope.globals && scope.globals.has(expr.value)){
                         // Delete from global namespace
                         scope = scope.parent
@@ -4713,7 +4622,7 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
 
         var offset = 1
 
-        if($range && scope.ntype != 'generator'){
+        if($range){
             if(this.has_break){
                 // If there is a "break" in the loop, add a boolean
                 // used if there is an "else" clause and in generators
@@ -4904,11 +4813,6 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
         new $NodeJSCtx(while_node,js)
         while_node.context.loop_num = num // used for "else" clauses
         while_node.context.type = 'for' // used in $add_line_num
-        //while_node.line_num = node.line_num
-        if(scope.ntype == 'generator'){
-            // used in generators to signal a loop start
-            while_node.loop_start = num
-        }
 
         new_nodes[pos++] = while_node
 
@@ -5609,7 +5513,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
     this.env = clone(this.scope.binding)
 
     // Store variables referenced in scope
-    if(["def", "generator", "generator1"].indexOf(scope.ntype) > -1){
+    if(["def", "generator1"].indexOf(scope.ntype) > -1){
         scope.referenced = scope.referenced || {}
         if(! $B.builtins[this.value]){
             scope.referenced[this.value] = true
@@ -5652,7 +5556,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         this.bound = true
     }
 
-    if(["def", "generator", "generator1"].indexOf(scope.ntype) > -1){
+    if(["def", "generator1"].indexOf(scope.ntype) > -1){
         // if variable is declared inside a comprehension,
         // don't add it to function namespace
         var _ctx = this.parent
@@ -5841,8 +5745,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
     this.to_js = function(arg){
         // Store the result in this.result
         // For generator expressions, to_js() is called in $make_node
-        if(this.result !== undefined && (
-                this.scope.ntype == 'generator' || this.scope.ntype == 'generator1')){
+        if(this.result !== undefined && this.scope.ntype == 'generator1'){
             return this.result
         }
 
@@ -5870,7 +5773,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         }
 
         if(this.unbound && !this.nonlocal){
-            if(this.scope.ntype == 'def' || this.scope.ntype == 'generator'){
+            if(this.scope.ntype == 'def' || this.scope.ntype == 'generator1'){
                 return '$B.$local_search("' + val + '")'
             }else{
                 return '$B.$search("' + val + '")'
@@ -6041,7 +5944,6 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                     if(locs[val] === undefined &&
                             ! this.augm_assign &&
                             ((innermost.type != 'def' ||
-                                 innermost.type != 'generator' ||
                                  innermost.type != 'generator1') &&
                             innermost.ntype != 'class' &&
                             innermost.context.tree[0].args &&
@@ -6177,23 +6079,8 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
             }else if(!this.augm_assign){
                 // name was found between innermost and the global of builtins
                 // namespace
-                if(scope.ntype == 'generator'){
-                    // If the name is bound in a generator, we must search the
-                    // value in the locals object for the currently executed
-                    // function. It can be found as the second element of the
-                    // frame stack at the same level up than the generator
-                    // function.
-                    var up = 0, // number of levels of the generator above innermost
-                        sc = innermost
-                    while(sc !== scope){up++; sc = sc.parent_block}
-                    var scope_name = "$B.frames_stack[$B.frames_stack.length-1-" +
-                        up + "][1]"
-                    val = '$B.$check_def_free1("' + val + '", "' +
-                        scope.id.replace(/\./g, "_") + '")'
-                }else{
-                    val = '$B.$check_def_free("' + val + '",' + scope_ns +
-                        '["' + val + '"])'
-                }
+                val = '$B.$check_def_free("' + val + '",' + scope_ns +
+                    '["' + val + '"])'
             }else{
                 val = scope_ns + '["' + val + '"]'
             }
@@ -6908,7 +6795,7 @@ var $NodeCtx = $B.parser.$NodeCtx = function(node){
         switch(ntype){
             case 'def':
             case 'class':
-            case 'generator':
+            case 'generator1':
                 scope = tree_node.parent
                 _break_flag = true
         }
@@ -7851,7 +7738,7 @@ var $ReturnCtx = $B.parser.$ReturnCtx = function(context){
 
     // Check if inside a function
     this.scope = $get_scope(this)
-    if(["def", "generator", "generator1"].indexOf(this.scope.ntype) == -1){
+    if(["def", "generator1"].indexOf(this.scope.ntype) == -1){
         $_SyntaxError(context, ["'return' outside function"])
     }
 
@@ -7889,9 +7776,7 @@ var $ReturnCtx = $B.parser.$ReturnCtx = function(context){
             new $IdCtx(new $ExprCtx(this, 'rvalue', false), 'None')
         }
         var scope = this.scope
-        if(scope.ntype == 'generator'){
-            return 'return [$B.generator_return(' + $to_js(this.tree) + ')]'
-        }else if(scope.ntype == 'generator1'){
+        if(scope.ntype == 'generator1'){
             return 'var $res = ' + $to_js(this.tree) + '; $B.leave_frame();' +
                 'return $B.generator_return($res)'
         }
@@ -7953,23 +7838,21 @@ var $SingleKwCtx = $B.parser.$SingleKwCtx = function(context,token){
         // when exiting the "finally" block
         if(this.token == 'finally'){
             var scope = $get_scope(this)
-            if(scope.ntype != 'generator'){
-                node.insert(0,
-                    $NodeJS('var $exit;'+
-                    'if($B.frames_stack.length<$stack_length){' +
-                        '$exit = true;'+
-                        '$B.frames_stack.push($top_frame)'+
-                    '}')
-                )
+            node.insert(0,
+                $NodeJS('var $exit;'+
+                'if($B.frames_stack.length<$stack_length){' +
+                    '$exit = true;'+
+                    '$B.frames_stack.push($top_frame)'+
+                '}')
+            )
 
-                var scope_id = scope.id.replace(/\./g, '_')
-                var last_child = node.children[node.children.length - 1]
+            var scope_id = scope.id.replace(/\./g, '_')
+            var last_child = node.children[node.children.length - 1]
 
-                // If the finally block ends with "return", don't add the
-                // final line
-                if(last_child.context.tree[0].type != "return"){
-                    node.add($NodeJS('if($exit){$B.leave_frame()}'))
-                }
+            // If the finally block ends with "return", don't add the
+            // final line
+            if(last_child.context.tree[0].type != "return"){
+                node.add($NodeJS('if($exit){$B.leave_frame()}'))
             }
         }
     }
@@ -8837,9 +8720,6 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
         if(this.transformed){return}  // used if inside a for loop
 
         this.prefix = ""
-        if(this.scope.ntype == "generator"){
-            this.prefix = "$locals."
-        }
 
         // If there are several "with" clauses, create a new child
         // For instance :
@@ -8934,10 +8814,6 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
         // place block inside a try clause
         block.forEach(function(elt){try_node.add(elt)})
 
-        if(this.scope.ntype == "generator"){
-            try_node.add($NodeJS(this.yield_name + " = false"))
-        }
-
         var catch_node = new $Node()
         catch_node.is_catch = true // for generators
         new $NodeJSCtx(catch_node, 'catch(' + this.err_name + ')')
@@ -8949,7 +8825,7 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
                 this.err_name + '.__class__,' +
                 this.err_name + ','+
                 '$B.$getattr(' + this.err_name + ', "__traceback__"));'
-        if(this.scope.ntype == "generator" || this.scope.ntype == "generator1"){
+        if(this.scope.ntype == "generator1"){
             js += '$B.set_cm_in_generator(' + this.cmexit_name + ');'
         }
         js += 'if(!$B.$bool($b)){throw ' + this.err_name + '}'
@@ -8964,12 +8840,8 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
         finally_node.is_except = true
         finally_node.in_ctx_manager = true
         var js = 'if(' + this.exc_name
-        if(this.scope.ntype == "generator"){
-            js += ' && (!' + this.yield_name + ')' +
-                  ' && ' + this.cmexit_name
-        }
         js += '){' + this.cmexit_name + '(None,None,None);'
-        if(this.scope.ntype == "generator" || this.scope.ntype == "generator1"){
+        if(this.scope.ntype == "generator1"){
             js += 'delete ' + this.cmexit_name
         }
         js += '};'
@@ -9423,7 +9295,6 @@ var $get_scope = $B.parser.$get_scope = function(context, flag){
         switch (ntype) {
             case 'def':
             case 'class':
-            case 'generator':
             case 'generator1':
                 var scope = tree_node.parent
                 scope.ntype = ntype
