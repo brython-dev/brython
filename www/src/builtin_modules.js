@@ -107,7 +107,7 @@
             load:function(script_url){
                 // Load and eval() the Javascript file at script_url
                 var file_obj = $B.builtins.open(script_url)
-                var content = $B.builtins.getattr(file_obj, 'read')()
+                var content = $B.$getattr(file_obj, 'read')()
                 eval(content)
             },
             mouseCoords: function(ev){return $B.JSObject.$factory($mouseCoords(ev))},
@@ -406,7 +406,7 @@
             // Load and eval() the Javascript file at script_url
             // Set the names in array "names" in the Javacript global namespace
             var file_obj = $B.builtins.open(script_url)
-            var content = $B.builtins.getattr(file_obj, 'read')()
+            var content = $B.$getattr(file_obj, 'read')()
             eval(content)
         },
         $$Math: self.Math && $B.JSObject.$factory(self.Math),

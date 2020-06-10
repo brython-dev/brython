@@ -122,11 +122,7 @@ def run():
 
     make_VFS.process(os.path.join(pdir, 'www', 'src', 'brython_stdlib.js'))
 
-    # Create brython_dist.js : core + libraries
     src_dir = os.path.join(pdir, 'www', 'src')
-    with open(os.path.join(src_dir, 'brython_dist.js'), 'w') as distrib:
-        distrib.write(open(os.path.join(src_dir, 'brython.js')).read())
-        distrib.write(open(os.path.join(src_dir, 'brython_stdlib.js')).read())
 
     # update implementation in brython/__init__.py
     br_script = os.path.join(pdir, 'setup', 'brython', '__init__.py')

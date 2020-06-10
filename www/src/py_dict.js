@@ -28,8 +28,7 @@ list of [key, [value, rank]] lists.
 var bltns = $B.InjectBuiltins()
 eval(bltns)
 
-var object = _b_.object,
-    str_hash = _b_.str.__hash__,
+var str_hash = _b_.str.__hash__,
     $N = _b_.None
 
 var set_ops = ["eq", "add", "sub", "and", "or", "xor", "le", "lt", "ge", "gt"]
@@ -79,7 +78,7 @@ $B.make_view = function(name, set_like){
 // Checks that the dictionary size didn't change during iteration.
 function dict_iterator_next(self){
     if(self.len_func() != self.len){
-        throw RuntimeError.$factory("dictionary changed size during iteration")
+        throw _b_.RuntimeError.$factory("dictionary changed size during iteration")
     }
     self.counter++
     if(self.counter < self.items.length){
@@ -90,7 +89,7 @@ function dict_iterator_next(self){
 
 var dict = {
     __class__: _b_.type,
-    __mro__: [object],
+    __mro__: [_b_.object],
     $infos: {
         __module__: "builtins",
         __name__: "dict"
@@ -159,7 +158,7 @@ $B.dict_to_list = to_list // used in py_types.js
 // Checks that the dictionary size didn't change during iteration.
 function dict_iterator_next(self){
     if(self.len_func() != self.len){
-        throw RuntimeError.$factory("dictionary changed size during iteration")
+        throw _b_.RuntimeError.$factory("dictionary changed size during iteration")
     }
     self.counter++
     if(self.counter < self.items.length){
@@ -237,14 +236,14 @@ dict.__delitem__ = function(){
         arg = $.arg
 
     if(self.$jsobj){
-        if(self.$jsobj[arg] === undefined){throw KeyError.$factory(arg)}
+        if(self.$jsobj[arg] === undefined){throw _b_.KeyError.$factory(arg)}
         delete self.$jsobj[arg]
         return $N
     }
     switch(typeof arg){
         case "string":
             if(self.$string_dict[arg] === undefined){
-                throw KeyError.$factory(_b_.str.$factory(arg))
+                throw _b_.KeyError.$factory(_b_.str.$factory(arg))
             }
             delete self.$string_dict[arg]
             delete self.$str_hash[str_hash(arg)]
@@ -252,7 +251,7 @@ dict.__delitem__ = function(){
             return $N
         case "number":
             if(self.$numeric_dict[arg] === undefined){
-                throw KeyError.$factory(_b_.str.$factory(arg))
+                throw _b_.KeyError.$factory(_b_.str.$factory(arg))
             }
             delete self.$numeric_dict[arg]
             self.$version++
@@ -266,7 +265,7 @@ dict.__delitem__ = function(){
     if((ix = rank(self, hash, arg)) > -1){
         self.$object_dict[hash].splice(ix, 1)
     }else{
-        throw KeyError.$factory(_b_.str.$factory(arg))
+        throw _b_.KeyError.$factory(_b_.str.$factory(arg))
     }
 
     self.$version++
@@ -279,7 +278,7 @@ dict.__eq__ = function(){
         self = $.self,
         other = $.other
 
-    if(! isinstance(other, dict)){return false}
+    if(! _b_.isinstance(other, dict)){return false}
 
     if(self.$jsobj){self = jsobj2dict(self.$jsobj)}
     if(other.$jsobj){other = jsobj2dict(other.$jsobj)}
@@ -399,7 +398,7 @@ dict.$getitem = function(self, arg){
     if(self.$numeric_dict[hash] !== undefined && _eq(hash)){
          return self.$numeric_dict[hash][0]
     }
-    if(isinstance(arg, _b_.str)){
+    if(_b_.isinstance(arg, _b_.str)){
         // string subclass
         var res = self.$string_dict[arg.valueOf()]
         if(res !== undefined){return res[0]}
@@ -422,7 +421,7 @@ dict.$getitem = function(self, arg){
             return missing_method(self, arg)
         }
     }
-    throw KeyError.$factory(arg)
+    throw _b_.KeyError.$factory(arg)
 }
 
 dict.__hash__ = _b_.None
@@ -482,7 +481,7 @@ dict.__init__ = function(self, first, second){
                 forEach(function(d){
                     for(key in args[d]){self[d][key] = args[d][key]}
                 })
-        }else if(isinstance(args, dict)){
+        }else if(_b_.isinstance(args, dict)){
             $copy_dict(self, args)
         }else{
             var keys = $B.$getattr(args, "keys", null)
@@ -836,7 +835,7 @@ dict.popitem = function(self){
         return _b_.tuple.$factory(itm)
     }catch(err) {
         if (err.__class__ == _b_.StopIteration) {
-            throw KeyError.$factory("'popitem(): dictionary is empty'")
+            throw _b_.KeyError.$factory("'popitem(): dictionary is empty'")
         }
     }
 }
@@ -871,12 +870,12 @@ dict.update = function(self){
         kw = $.kw
     if(args.length > 0){
         var o = args[0]
-        if(isinstance(o, dict)){
+        if(_b_.isinstance(o, dict)){
             if(o.$jsobj){
                 o = jsobj2dict(o.$jsobj)
             }
             $copy_dict(self, o)
-        }else if(hasattr(o, "keys")){
+        }else if(_b_.hasattr(o, "keys")){
             var _keys = _b_.list.$factory($B.$call($B.$getattr(o, "keys"))())
             for(var i = 0, len = _keys.length; i < len; i++){
                 var _value = getattr(o, "__getitem__")(_keys[i])
@@ -1004,7 +1003,7 @@ for(var attr in dict){
 $B.set_func_names(mappingproxy, "builtins")
 
 function jsobj2dict(x){
-    var d = dict.$factory()
+    var d = _b_.dict.$factory()
     for(var attr in x){
         if(attr.charAt(0) != "$" && attr !== "__class__"){
             if(x[attr] === null){
@@ -1027,7 +1026,7 @@ $B.obj_dict = function(obj, from_js){
     if(klass !== undefined && klass.$native){
         throw _b_.AttributeError.$factory(klass.__name__ +
             " has no attribute '__dict__'")}
-    var res = dict.$factory()
+    var res = _b_.dict.$factory()
     res.$jsobj = obj
     res.$from_js = from_js // set to true if
     return res

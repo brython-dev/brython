@@ -1,13 +1,8 @@
 // built-in functions
 ;(function($B){
 
-var bltns = $B.InjectBuiltins()
-eval(bltns)
-
+var _b_ = $B.builtins
 _b_.__debug__ = false
-
-var object = _b_.object,
-    odga = object.__getattribute__
 
 // maps comparison operator to method names
 $B.$comps = {'>':'gt','>=':'ge','<':'lt','<=':'le'}
@@ -58,7 +53,7 @@ var NoneType = {
     __bool__: function(self){return False},
     __class__: _b_.type,
     __hash__: function(self){return 0},
-    __mro__: [object],
+    __mro__: [_b_.object],
     __repr__: function(self){return 'None'},
     __str__: function(self){return 'None'},
     $is_class: true
@@ -1212,6 +1207,7 @@ $B.$getattr = function(obj, attr, _default){
     if(typeof attr_func !== 'function'){
         console.log(attr + ' is not a function ' + attr_func, klass)
     }
+    var odga = _b_.object.__getattribute__
     if($test){console.log("attr_func is odga", attr_func,
         attr_func === odga, obj[attr])}
     if(attr_func === odga){
@@ -2713,7 +2709,7 @@ $B.set_func_names($Reader, "builtins")
 
 var $BufferedReader = $B.make_class('_io.BufferedReader')
 
-$BufferedReader.__mro__ = [$Reader, object]
+$BufferedReader.__mro__ = [$Reader, _b_.object]
 
 var $TextIOWrapper = $B.make_class('_io.TextIOWrapper',
     function(){
@@ -2736,7 +2732,7 @@ var $TextIOWrapper = $B.make_class('_io.TextIOWrapper',
     }
 )
 
-$TextIOWrapper.__mro__ = [$Reader, object]
+$TextIOWrapper.__mro__ = [$Reader, _b_.object]
 
 $B.set_func_names($TextIOWrapper, "builtins")
 
@@ -2939,7 +2935,7 @@ $B.Function = {
     __class__: _b_.type,
     __code__: {__class__: FunctionCode, __name__: 'function code'},
     __globals__: {__class__: FunctionGlobals, __name__: 'function globals'},
-    __mro__: [object],
+    __mro__: [_b_.object],
     $infos: {
         __name__: 'function',
         __module__: "builtins"
@@ -3035,7 +3031,7 @@ $B.Function.__repr__ = $B.Function.__str__ = function(self){
     }
 }
 
-$B.Function.__mro__ = [object]
+$B.Function.__mro__ = [_b_.object]
 $B.Function.__setattr__ = function(self, attr, value){
     if(attr == "__closure__"){
         throw _b_.AttributeError.$factory("readonly attribute")

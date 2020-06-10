@@ -242,12 +242,12 @@ $B.$dict_comp = function(module_name, parent_scope, items, line_num){
     // Called for dict comprehensions
     // items[0] is the Python code for the comprehension expression
     // items[1:] is the loops and conditions in the comprehension
-    // For instance in { x:x*2 for x in A if x>2 },
-    // items is ["x:x*2", "for x in A", "if x>2"]
+    // For instance in {x: x * 2 for x in A if x > 2},
+    // items is ["x: x * 2", "for x in A", "if x > 2"]
 
     var ix = $B.UUID(),
         res = "res" + ix,
-        py = res + "={}\n", // Python code
+        py = res + " = {}\n", // Python code
         indent = 0
     for(var i = 1, len = items.length; i < len; i++){
         var item = items[i].replace(/\s+$/,"").replace(/\n/g, "")
@@ -267,8 +267,7 @@ $B.$dict_comp = function(module_name, parent_scope, items, line_num){
 
     js += '\nreturn $locals["' + res + '"]\n'
 
-    js = "(function(expr){" + js +
-        "})(" + outer_expr + ")"
+    js = "(function(expr){" + js + "})(" + outer_expr + ")"
     $B.clear_ns(dictcomp_name)
     delete $B.$py_src[dictcomp_name]
 

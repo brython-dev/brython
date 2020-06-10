@@ -398,7 +398,7 @@ $B.handle_error = function(err){
     console.log("handle error", err.__class__, err.args)
     if(err.__class__ !== undefined){
         var name = $B.class_name(err),
-            trace = _b_.getattr(err, 'info')
+            trace = $B.$getattr(err, 'info')
         if(name == 'SyntaxError' || name == 'IndentationError'){
             var offset = err.args[3]
             trace += '\n    ' + ' '.repeat(offset) + '^' +

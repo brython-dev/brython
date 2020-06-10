@@ -10,9 +10,6 @@
 //    -- wrap the whole thing into a function which injects the
 //       sort implementation into the __BRYTHON__ object
 
-var bltns = $B.InjectBuiltins()
-eval(bltns)
-
 /**
  * Default minimum size of a run.
  */

@@ -1,7 +1,6 @@
 ;(function($B){
 
-var bltns = $B.InjectBuiltins()
-eval(bltns)
+var _b_ = $B.builtins
 
 var object = _b_.object
 
@@ -226,7 +225,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
                 return pyobj2jsobj(pyobj.apply(this, args))
             }catch(err){
                 console.log(err)
-                console.log(_b_.getattr(err,'info'))
+                console.log($B.$getattr(err,'info'))
                 console.log($B.class_name(err) + ':',
                     err.args.length > 0 ? err.args[0] : '' )
                 throw err
@@ -260,7 +259,7 @@ JSObject.__bool__ = function(self){
 }
 
 JSObject.__delattr__ = function(self, attr){
-    _b_.getattr(self, attr) // raises AttributeError if necessary
+    $B.$getattr(self, attr) // raises AttributeError if necessary
     delete self.js[attr]
     return _b_.None
 }
@@ -486,7 +485,7 @@ JSObject.__le__ = function(self, other){
 }
 JSObject.__len__ = function(self){
     if(typeof self.js.length == 'number'){return self.js.length}
-    try{return getattr(self.js, '__len__')()}
+    try{return $B.$getattr(self.js, '__len__')()}
     catch(err){
         throw _b_.AttributeError.$factory(self.js + ' has no attribute __len__')
     }
@@ -511,7 +510,7 @@ JSObject.__setattr__ = function(self, attr, value){
         // aliased attribute names, eg "message"
         attr = attr.substr(2)
     }
-    if(isinstance(value, JSObject)){self.js[attr] = value.js}
+    if(_b_.isinstance(value, JSObject)){self.js[attr] = value.js}
     else{
         self.js[attr] = value
         if(typeof value == 'function'){
@@ -523,7 +522,7 @@ JSObject.__setattr__ = function(self, attr, value){
                 try{return value.apply(null, args)}
                 catch(err){
                     err = $B.exception(err)
-                    var info = _b_.getattr(err, 'info')
+                    var info = $B.$getattr(err, 'info')
                     if(err.args.length > 0){
                         err.toString = function(){
                             return info + '\n' + $B.class_name(err) +
