@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,10,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.10"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-06-10 09:05:41.822172"
-__BRYTHON__.timestamp=1591772741822
+__BRYTHON__.compiled_date="2020-06-10 09:12:53.863444"
+__BRYTHON__.timestamp=1591773173863
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -7494,6 +7494,7 @@ self.$counter=ix+1
 return res}}else{var ix=self.$string.indexOf("\n",self.$counter)
 if(ix==-1){return ''}else{var res=self.$string.substring(self.$counter,ix+1)
 self.$counter=ix+1
+self.$lc+=1
 return res}}}
 $Reader.readlines=function(){var $=$B.args("readlines",2,{self:null,hint:null},["self","hint"],arguments,{hint:-1},null,null),self=$.self,hint=$B.$GetInt($.hint)
 var nb_read=0

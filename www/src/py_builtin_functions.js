@@ -2659,6 +2659,7 @@ $Reader.readline = function(self, size){
         }else{
             var res = self.$string.substring(self.$counter, ix + 1)
             self.$counter = ix + 1
+            self.$lc += 1
             return res
         }
     }
