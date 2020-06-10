@@ -99,8 +99,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,10,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.10"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-06-09 22:39:37.342514"
-__BRYTHON__.timestamp=1591735177342
+__BRYTHON__.compiled_date="2020-06-10 09:05:41.822172"
+__BRYTHON__.timestamp=1591772741822
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -6548,7 +6548,8 @@ function abs(obj){check_nb_args('abs',1,arguments)
 check_no_kw('abs',obj)
 if(isinstance(obj,_b_.int)){if(obj.__class__===$B.long_int){return{
 __class__:$B.long_int,value:obj.value,pos:true}}else{return _b_.int.$factory(Math.abs(obj))}}
-if(isinstance(obj,_b_.float)){return _b_.float.$factory(Math.abs(obj))}
+if(isinstance(obj,_b_.float)){
+return _b_.float.$factory(Math.abs(_b_.float.numerator(obj)))}
 var klass=obj.__class__ ||$B.get_class(obj)
 try{var method=$B.$getattr(klass,"__abs__")}catch(err){if(err.__class__===_b_.AttributeError){throw _b_.TypeError.$factory("Bad operand type for abs(): '"+
 $B.class_name(obj)+"'")}
@@ -9926,7 +9927,7 @@ return new Number(1)
 case false:
 return new Number(0)}
 if(typeof value=="number"){return new Number(value)}
-if(isinstance(value,float)){return value}
+if(isinstance(value,float)){return float_value(value)}
 if(isinstance(value,bytes)){var s=getattr(value,"decode")("latin-1")
 return float.$factory(getattr(value,"decode")("latin-1"))}
 if(typeof value=="string"){value=value.trim()
@@ -10250,7 +10251,8 @@ if(typeof value=="number" &&
 (base===undefined ||base==10)){return parseInt(value)}
 if(_b_.isinstance(value,_b_.complex)){throw _b_.TypeError.$factory("can't convert complex to int")}
 var $ns=$B.args("int",2,{x:null,base:null},["x","base"],arguments,{"base":10},null,null),value=$ns["x"],base=$ns["base"]
-if(_b_.isinstance(value,_b_.float)&& base==10){if(value < $B.min_int ||value > $B.max_int){return $B.long_int.$from_float(value)}
+if(_b_.isinstance(value,_b_.float)&& base==10){value=_b_.float.numerator(value)
+if(value < $B.min_int ||value > $B.max_int){return $B.long_int.$from_float(value)}
 else{return value > 0 ? Math.floor(value):Math.ceil(value)}}
 if(!(base >=2 && base <=36)){
 if(base !=0){throw _b_.ValueError.$factory("invalid base")}}

@@ -670,7 +670,9 @@ var $op_func = function(self, other){
             return float.$factory(self - parseInt(other.value))
         }else{return float.$factory(self - other)}
     }
-    if(isinstance(other, float)){return float.$factory(self - other)}
+    if(isinstance(other, float)){
+        return float.$factory(self - other)
+    }
     if(isinstance(other, _b_.bool)){
         var bool_value = 0
         if(other.valueOf()){bool_value = 1}
@@ -781,7 +783,7 @@ float.$factory = function (value){
     }
 
     if(typeof value == "number"){return new Number(value)}
-    if(isinstance(value, float)){return value}
+    if(isinstance(value, float)){return float_value(value)}
     if(isinstance(value, bytes)){
       var s = getattr(value, "decode")("latin-1")
       return float.$factory(getattr(value, "decode")("latin-1"))

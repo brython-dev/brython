@@ -205,4 +205,19 @@ assert math.gcd(pow(2, 53) - 1, 2) == 1
 
 # issue 1397
 assert math.dist((1.0, 1.0), (1.5, 0.0))  == 1.118033988749895
+
+# issue 1401
+class Angle(float):
+    def __new__(cls, angle, point):
+        return super().__new__(cls, angle)
+    def __init__(self, angle, point):
+        self.points = point
+
+x = Angle(36.9, (1,2))
+y = Angle(53.1, (3,4))
+
+assert (x, x + y, x < y, x ** 0.5) == (36.9, 90.0, True, 6.074537019394976)
+assert (abs(x), int(x), math.sin(x), math.log(x)) == \
+       (36.9, 36, -0.7167370231606575, 3.6082115510464816)
+
 print("passed all tests..")

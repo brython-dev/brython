@@ -672,6 +672,7 @@ int.$factory = function(value, base){
         base = $ns["base"]
 
     if(_b_.isinstance(value, _b_.float) && base == 10){
+        value = _b_.float.numerator(value) // for float subclasses
         if(value < $B.min_int || value > $B.max_int){
             return $B.long_int.$from_float(value)
         }

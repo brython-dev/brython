@@ -111,7 +111,10 @@ function abs(obj){
             return _b_.int.$factory(Math.abs(obj))
         }
     }
-    if(isinstance(obj, _b_.float)){return _b_.float.$factory(Math.abs(obj))}
+    if(isinstance(obj, _b_.float)){
+        // use numerator in case it's a subclass of float
+        return _b_.float.$factory(Math.abs(_b_.float.numerator(obj)))
+    }
     var klass = obj.__class__ || $B.get_class(obj)
     try{
         var method = $B.$getattr(klass, "__abs__")
@@ -1248,7 +1251,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var cname = klass.$infos.__name__
     if(is_class){cname = obj.$infos.__name__}
-    
+
     attr_error(rawname, cname)
 }
 
