@@ -4,6 +4,10 @@
 // version compiled from commented, indented source files at
 // github.com/brython-dev/brython
 var __BRYTHON__=__BRYTHON__ ||{}
+try{
+eval("async function* f(){}")}catch(err){alert("Unsupported browser. If you are using Microsoft Edge, "+
+"please upgrade to the latest version")
+throw Error("unsupported browser")}
 ;(function($B){
 $B.isWebWorker=('undefined' !==typeof WorkerGlobalScope)&&
 ("function"===typeof importScripts)&&
@@ -99,8 +103,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,10,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.10"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-06-10 17:48:12.384663"
-__BRYTHON__.timestamp=1591804092384
+__BRYTHON__.compiled_date="2020-06-11 10:37:23.293794"
+__BRYTHON__.timestamp=1591864643293
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5005,7 +5009,7 @@ root.is_comp=is_comp
 if(ix !=undefined){root.ix=ix}
 root.transform()
 var js=['var $B = __BRYTHON__;\n'],pos=1
-js[pos++]='var _b_ = __BRYTHON__.builtins;'
+js[pos++]='var _b_ = __BRYTHON__.builtins;\n'
 js[pos]='var $locals = '+local_ns
 if(is_comp){js[pos]+=' = {}'}
 var offset=0
@@ -5361,7 +5365,11 @@ if($.spec !==""){throw _b_.TypeError.$factory(
 "non-empty format string passed to object.__format__")}
 return _b_.getattr($.self,"__str__")()}
 object.__ge__=function(){return _b_.NotImplemented}
-object.__getattribute__=function(obj,attr){var klass=obj.__class__ ||$B.get_class(obj)
+object.__getattribute__=function(obj,attr){if(obj.$method_cache &&
+obj.$method_cache[attr]&& 
+obj.__class__[attr]==obj.$method_cache[attr][1]){
+return obj.$method_cache[attr][0]}
+var klass=obj.__class__ ||$B.get_class(obj),is_own_class_instance_method=false
 var $test=false 
 if($test){console.log("attr",attr,"de",obj,"klass",klass)}
 if(attr==="__class__"){return klass}
@@ -5377,7 +5385,8 @@ res=check(obj,klass,attr)
 if(res===undefined){var mro=klass.__mro__
 for(var i=0,len=mro.length;i < len;i++){res=check(obj,mro[i],attr)
 if(res !==undefined){if($test){console.log("found in",mro[i])}
-break}}}}else{if(res.__set__===undefined){
+break}}}else{if(res.__class__ !==$B.method && res.__get__===undefined){
+is_own_class_instance_method=true}}}else{if(res.__set__===undefined){
 return res}}
 if(res !==undefined){if($test){console.log(res)}
 if(res.__class__===_b_.property){return res.__get__(res,obj,klass)}
@@ -5422,6 +5431,8 @@ if(klass.$infos===undefined){console.log("no $infos",klass)
 console.log($B.last($B.frames_stack))}
 method.$infos={__self__:self,__func__:res,__name__:attr,__qualname__:klass.$infos.__name__+"."+attr}
 if($test){console.log("return method",method)}
+if(is_own_class_instance_method){obj.$method_cache=obj.$method_cache ||{}
+obj.$method_cache[attr]=[method,res]}
 return method}}else{
 return res1}}
 return res}else{

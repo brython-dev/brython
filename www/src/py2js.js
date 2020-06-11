@@ -10174,7 +10174,7 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
 
     //js[pos++] = 'var $bltns = __BRYTHON__.InjectBuiltins();eval($bltns);\n\n'
 
-    js[pos++] = 'var _b_ = __BRYTHON__.builtins;'
+    js[pos++] = 'var _b_ = __BRYTHON__.builtins;\n'
 
     js[pos] = 'var $locals = ' + local_ns
 

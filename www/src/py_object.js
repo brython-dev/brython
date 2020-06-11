@@ -109,7 +109,19 @@ object.__ge__ = function(){return _b_.NotImplemented}
 
 object.__getattribute__ = function(obj, attr){
 
-    var klass = obj.__class__ || $B.get_class(obj)
+    if(obj.$method_cache &&
+            obj.$method_cache[attr] && 
+            obj.__class__[attr] == obj.$method_cache[attr][1]){
+        // Optimisation : cache for instance methods
+        // If the attribute is a method defined in the instance's class,
+        // obj.$mc[attr] is a 2-element list [method, func] where method is
+        // the method and func is the function obj.__class__[attr]
+        // We check that the function has not changed since the method was
+        // cached and if not, return the method
+        return obj.$method_cache[attr][0]
+    }
+    var klass = obj.__class__ || $B.get_class(obj),
+        is_own_class_instance_method = false
 
     var $test = false // attr == "strange"
     if($test){console.log("attr", attr, "de", obj, "klass", klass)}
@@ -147,6 +159,11 @@ object.__getattribute__ = function(obj, attr){
                     if($test){console.log("found in", mro[i])}
                     break
                 }
+            }
+        }else{
+            if(res.__class__ !== $B.method && res.__get__ === undefined){
+                // console.log("simple instance method", obj, klass, attr, res)
+                is_own_class_instance_method = true
             }
         }
 
@@ -290,6 +307,10 @@ object.__getattribute__ = function(obj, attr){
                         __qualname__: klass.$infos.__name__ + "." + attr
                     }
                     if($test){console.log("return method", method)}
+                    if(is_own_class_instance_method){
+                        obj.$method_cache = obj.$method_cache || {}
+                        obj.$method_cache[attr] = [method, res]
+                    }
                     return method
                 }
             }else{
