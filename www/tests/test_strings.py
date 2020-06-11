@@ -299,4 +299,38 @@ for ss in strs:
                     repr(ss_), ' (keepends)' if args==(True,) else '', ll, good[ii]))
             ii += 1
 
+# PEP 616
+s = "beforeremove"
+assert s.removeprefix("before") == "remove"
+assert s == "beforeremove"
+
+assert s.removeprefix("z") == s
+
+s = "removeafter"
+assert s.removesuffix("after") == "remove"
+assert s == "removeafter"
+
+assert s.removesuffix("z") == s
+
+class S(str):
+  pass
+
+s = S("beforeremove")
+assert s.removeprefix("before") == "remove"
+assert type(s.removeprefix("before")) is str
+assert s == "beforeremove"
+assert type(s)  is S
+
+assert s.removeprefix("z") == s
+assert s is not s.removeprefix("z")
+
+s = S("removeafter")
+assert s.removesuffix("after") == "remove"
+assert type(s.removesuffix("after")) is str
+assert s == "removeafter"
+assert type(s) is S
+
+assert s.removesuffix("z") == s
+assert s is not s.removesuffix("z")
+
 print("passed all tests...")

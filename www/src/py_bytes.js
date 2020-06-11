@@ -851,6 +851,34 @@ bytes.partition = function() {
     ])
 }
 
+bytes.removeprefix = function(){
+    var $ = $B.args("removeprefix", 2, {self: null, prefix: null},
+                    ["self", "prefix"], arguments, {}, null, null)
+    if(!_b_.isinstance($.prefix, [bytes, bytearray])){
+        throw _b_.ValueError.$factory("prefix should be bytes, not " +
+            `'${$B.class_name($.prefix)}'`)
+    }
+    if(bytes.startswith($.self, $.prefix)){
+        return bytes.__getitem__($.self,
+            _b_.slice.$factory($.prefix.source.length, _b_.None))
+    }
+    return bytes.__getitem__($.self, _b_.slice.$factory(0, _b_.None))
+}
+
+bytes.removesuffix = function(){
+    var $ = $B.args("removesuffix", 2, {self: null, prefix: null},
+                    ["self", "suffix"], arguments, {}, null, null)
+    if(!_b_.isinstance($.suffix, [bytes, bytearray])){
+        throw _b_.ValueError.$factory("suffix should be bytes, not " +
+            `'${$B.class_name($.suffix)}'`)
+    }
+    if(bytes.endswith($.self, $.suffix)){
+        return bytes.__getitem__($.self,
+            _b_.slice.$factory(0, $.suffix.source.length + 1))
+    }
+    return bytes.__getitem__($.self, _b_.slice.$factory(0, _b_.None))
+}
+
 bytes.replace = function(){
     var $ = $B.args('replace', 4,
         {self: null, old: null, new: null, count: null},

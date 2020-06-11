@@ -1630,6 +1630,32 @@ str.partition = function() {
         $.self.substring(i + $.sep.length)])
 }
 
+str.removeprefix = function(){
+    var $ = $B.args("removeprefix", 2, {self: null, prefix: null},
+                    ["self", "prefix"], arguments, {}, null, null)
+    if(!_b_.isinstance($.prefix, str)){
+        throw _b_.ValueError.$factory("prefix should be str, not " +
+            `'${$B.class_name($.prefix)}'`)
+    }
+    if(str.startswith($.self, $.prefix)){
+        return $.self.substr($.prefix.length)
+    }
+    return $.self.substr(0)
+}
+
+str.removesuffix = function(){
+    var $ = $B.args("removesuffix", 2, {self: null, prefix: null},
+                    ["self", "suffix"], arguments, {}, null, null)
+    if(!_b_.isinstance($.suffix, str)){
+        throw _b_.ValueError.$factory("suffix should be str, not " +
+            `'${$B.class_name($.prefix)}'`)
+    }
+    if($.suffix.length > 0 && str.endswith($.self, $.suffix)){
+        return $.self.substr(0, $.self.length - $.suffix.length)
+    }
+    return $.self.substr(0)
+}
+
 function $re_escape(str){
     var specials = "[.*+?|()$^"
     for(var i = 0, len = specials.length; i < len; i++){

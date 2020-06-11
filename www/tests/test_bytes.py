@@ -258,4 +258,15 @@ assert seq1[foo(1):] == seq1[1:]
 assert seq2[foo(1):] == seq2[1:]
 assert seq3[foo(1):] == seq3[1:]
 
+# PEP 616
+b = b'beforeremove'
+assert b.removeprefix(b"before") == b"remove"
+assert b.removeprefix(b"z") == b
+
+b = b"removeafter"
+assert b.removesuffix(b"after") == b"remove"
+assert b == b"removeafter"
+
+assert b.removesuffix(b"z") == b
+
 print('passed all tests...')
