@@ -31,7 +31,7 @@ html = """<!doctype html>
 <head>
 <meta charset="utf-8">
 <title>Brython speed compared to CPython</title>
-<link rel="stylesheet" href="static_doc/doc_brython.css">
+<link rel="stylesheet" href="/brython.css">
 <style>
 body{
     padding-left: 2em;
