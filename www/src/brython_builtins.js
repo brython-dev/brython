@@ -1,5 +1,13 @@
 var __BRYTHON__ = __BRYTHON__ || {}  // global object with brython built-ins
 
+try{
+    // "async function*" is not supported in old versions of Microsoft Edge
+    eval("async function* f(){}")
+}catch(err){
+    alert("Unsupported browser. If you are using Microsoft Edge, " +
+        "please upgrade to the latest version")
+    throw Error("unsupported browser")
+}
 ;(function($B) {
 
 // Detect whether we are in a Web Worker
