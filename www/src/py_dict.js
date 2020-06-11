@@ -536,6 +536,12 @@ dict.__iter__ = function(self) {
     return _b_.iter(dict.$$keys(self))
 }
 
+dict.__ior__ = function(self, other){
+    // PEP 584
+    dict.update(self, other)
+    return self
+}
+
 dict.__len__ = function(self) {
     var _count = 0
 
@@ -573,6 +579,16 @@ dict.__new__ = function(cls){
     return instance
 }
 
+dict.__or__ = function(self, other){
+    // PEP 584
+    if(! _b_.isinstance(other, dict)){
+        return _b_.NotImplemented
+    }
+    var res = dict.copy(self)
+    dict.update(res, other)
+    return res
+}
+
 dict.__repr__ = function(self){
     if(self.$jsobj){ // wrapper around Javascript object
         return dict.__repr__(jsobj2dict(self.$jsobj))
@@ -591,6 +607,16 @@ dict.__repr__ = function(self){
     })
     $B.repr.leave(self)
     return "{" + res.join(", ") + "}"
+}
+
+dict.__ror__ = function(self, other){
+    // PEP 584
+    if(! _b_.isinstance(other, dict)){
+        return _b_.NotImplemented
+    }
+    var res = dict.copy(other)
+    dict.update(res, self)
+    return res
 }
 
 dict.__setitem__ = function(self, key, value){

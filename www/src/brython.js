@@ -103,8 +103,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,10,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.10"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-06-11 13:56:03.533896"
-__BRYTHON__.timestamp=1591876563533
+__BRYTHON__.compiled_date="2020-06-11 14:34:33.898150"
+__BRYTHON__.timestamp=1591878873898
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -12637,6 +12637,9 @@ si(self,attr,kw[attr])
 break}}
 return $N}
 dict.__iter__=function(self){return _b_.iter(dict.$$keys(self))}
+dict.__ior__=function(self,other){
+dict.update(self,other)
+return self}
 dict.__len__=function(self){var _count=0
 if(self.$jsobj){for(var attr in self.$jsobj){if(attr.charAt(0)!="$"){_count++}}
 return _count}
@@ -12649,6 +12652,11 @@ dict.__new__=function(cls){if(cls===undefined){throw _b_.TypeError.$factory("int
 var instance={__class__:cls,$numeric_dict :{},$object_dict :{},$string_dict :{},$str_hash:{},$version:0}
 if(cls !==dict){instance.__dict__=_b_.dict.$factory()}
 return instance}
+dict.__or__=function(self,other){
+if(! _b_.isinstance(other,dict)){return _b_.NotImplemented}
+var res=dict.copy(self)
+dict.update(res,other)
+return res}
 dict.__repr__=function(self){if(self.$jsobj){
 return dict.__repr__(jsobj2dict(self.$jsobj))}
 if($B.repr.enter(self)){return "{...}"}
@@ -12656,6 +12664,11 @@ var res=[],items=to_list(self)
 items.forEach(function(item){try{res.push(repr(item[0])+": "+repr(item[1]))}catch(err){throw err}})
 $B.repr.leave(self)
 return "{"+res.join(", ")+"}"}
+dict.__ror__=function(self,other){
+if(! _b_.isinstance(other,dict)){return _b_.NotImplemented}
+var res=dict.copy(other)
+dict.update(res,self)
+return res}
 dict.__setitem__=function(self,key,value){var $=$B.args("__setitem__",3,{self:null,key:null,value:null},["self","key","value"],arguments,{},null,null)
 return dict.$setitem($.self,$.key,$.value)}
 dict.$setitem=function(self,key,value,$hash){

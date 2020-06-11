@@ -143,4 +143,13 @@ d['a'] = []
 d['b'] = {0: d}
 assert repr(d) == str(d) == "{'a': [], 'b': {0: {...}}}"
 
+# PEP 584
+d = {'spam': 1, 'eggs': 2, 'cheese': 3}
+e = {'cheese': 'cheddar', 'aardvark': 'Ethel'}
+assert d | e == {'spam': 1, 'eggs': 2, 'cheese': 'cheddar', 
+                 'aardvark': 'Ethel'}
+assert e | d == {'aardvark': 'Ethel', 'spam': 1, 'eggs': 2, 'cheese': 3}
+d |= e
+assert d == {'spam': 1, 'eggs': 2, 'cheese': 'cheddar', 'aardvark': 'Ethel'}
+
 print("passed all tests..")
