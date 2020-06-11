@@ -457,11 +457,11 @@ JSObject.__iter__ = function(self){
                 if(nxt.done){
                     break
                 }
-                items.push(nxt.value)
+                items.push(jsobj2pyobj(nxt.value))
             }
         }else if(self.js.length !== undefined && self.js.item !== undefined){
             for(var i = 0; i < self.js.length; i++){
-                items.push(self.js.item(i))
+                items.push(jsobj2pyobj(self.js.item(i)))
             }
         }
         return JSObject_iterator.$factory(items)

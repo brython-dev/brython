@@ -779,7 +779,7 @@ DOMNode.__getattribute__ = function(self, attr){
     }
 
     var res = property
-    
+
     if(res !== undefined){
         if(res === null){return _b_.None}
         if(typeof res === "function"){

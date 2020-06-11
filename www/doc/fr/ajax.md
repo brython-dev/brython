@@ -171,7 +171,7 @@ Pour envoyer des fichiers saisis dans un formulaire par une balise du type
 ```
 on peut utiliser la fonction
 
-`file_upload(`_url, file, [**callbacks]_`)`
+`file_upload(`_url, file, method="POST", [**callbacks]_`)`
 
 > _file_ est l'objet fichier à envoyer vers l'_url_, typiquement le résultat
 > d'une expression
@@ -181,6 +181,9 @@ for file in document["choosefiles"].files:
     ...
 ```
 </blockquote>
+
+> _method_ est la méthode à utiliser pour l'envoi du fichier ('POST' par
+> défaut, mais peut prendre la valeur 'PUT')
 
 Exemple:
 ```xml

@@ -40,7 +40,7 @@ function _read(req){
         res.push(abuf[i])
     }
     var b = _b_.bytes.$factory(res)
-    
+
     if(xhr.mode == "binary"){
         return b
     }else{
@@ -61,11 +61,7 @@ function handle_kwargs(self, kw, method){
             var params = kw.$string_dict[key][0]
             if(typeof params == "string"){
                 data = params
-            }else{
-                if(params.__class__ !== _b_.dict){
-                    throw _b_.TypeError.$factory("wrong type for data, " +
-                        "expected dict or str, got " + $B.class_name(params))
-                }
+            }else if(params.__class__ === _b_.dict){
                 params = params.$string_dict
                 var items = []
                 for(var key in params){
@@ -73,6 +69,11 @@ function handle_kwargs(self, kw, method){
                                encodeURIComponent(params[key][0]))
                 }
                 data = items.join("&")
+            }else if(params.__class__ === $B.JSObject){
+                data = params.js
+            }else{
+                throw _b_.TypeError.$factory("wrong type for data: " +
+                    $B.class_name(params))
             }
         }else if(key == "encoding"){
             encoding = kw.$string_dict[key][0]
@@ -330,6 +331,7 @@ function put(){
 }
 
 function file_upload(){
+    // ajax.file_upload(url, file, method="POST", **callbacks)
     var $ = $B.args("file_upload", 2, {url: null, "file": file},
             ["url", "file"], arguments, {}, null, "kw"),
         url = $.url,
@@ -337,10 +339,17 @@ function file_upload(){
         kw = $.kw
 
     var formdata = new FormData()
-    formdata.append('filetosave', file, file.name)
+    // file is a JSObject
+    formdata.append('filetosave', file.js, file.js.name)
 
-    var self = ajax.$factory()
-    self.js.open('POST', url, True)
+    var self = ajax.$factory(),
+        method = 'POST'
+
+    if(kw.$string_dict.method !== undefined){
+        method = kw.$string_dict.method[0]
+    }
+
+    self.js.open(method, url, True)
     self.js.send(formdata)
 
     for(key in kw.$string_dict){

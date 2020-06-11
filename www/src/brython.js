@@ -103,8 +103,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,10,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.10"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-06-11 10:37:23.293794"
-__BRYTHON__.timestamp=1591864643293
+__BRYTHON__.compiled_date="2020-06-11 13:56:03.533896"
+__BRYTHON__.timestamp=1591876563533
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -9057,7 +9057,7 @@ if(_window.Symbol && self.js[Symbol.iterator]!==undefined){
 var items=[]
 if(self.js.next !==undefined){while(true){var nxt=self.js.next()
 if(nxt.done){break}
-items.push(nxt.value)}}else if(self.js.length !==undefined && self.js.item !==undefined){for(var i=0;i < self.js.length;i++){items.push(self.js.item(i))}}
+items.push(jsobj2pyobj(nxt.value))}}else if(self.js.length !==undefined && self.js.item !==undefined){for(var i=0;i < self.js.length;i++){items.push(jsobj2pyobj(self.js.item(i)))}}
 return JSObject_iterator.$factory(items)}else if(self.js.length !==undefined && self.js.item !==undefined){
 for(var i=0;i < self.js.length;i++){items.push(JSObject.$factory(self.js.item(i)))}
 return JSObject_iterator.$factory(items)}

@@ -175,7 +175,7 @@ To send files entered in a form by a tag such as
 ```
 the module provides the function
 
-`file_upload(`_url, file, [**callbacks]_`)`
+`file_upload(`_url, file, method="POST", [**callbacks]_`)`
 
 > _file_ is the file object to upload to the _url_, usually the result of an
 > expression
@@ -185,6 +185,9 @@ for file in document["choosefiles"].files:
     ...
 ```
 </blockquote>
+
+> _method_ is the method used for the upload call, "POST" by default but can
+> be set to "PUT"
 
 Example:
 ```xml
