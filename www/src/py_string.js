@@ -146,7 +146,11 @@ str.__getitem__ = function(self,arg){
 
 var prefix = 2,
     suffix = 3,
-    mask = (2 ** 32 - 1)
+    mask = (2 ** 32 - 1),
+    str_hash_cache = {}
+
+$B.nb_cache = 0
+
 function fnv(p){
     if(p.length == 0){
         return 0
@@ -167,7 +171,11 @@ function fnv(p){
 }
 
 str.__hash__ = function(self) {
-    return fnv(self)
+    if(str_hash_cache[self] !== undefined){
+        $B.nb_cache++
+        return str_hash_cache[self]
+    }
+    return str_hash_cache[self] = fnv(self)
 }
 
 str.__init__ = function(self, arg){
