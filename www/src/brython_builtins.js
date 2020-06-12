@@ -4,9 +4,8 @@ try{
     // "async function*" is not supported in old versions of Microsoft Edge
     eval("async function* f(){}")
 }catch(err){
-    alert("Unsupported browser. If you are using Microsoft Edge, " +
-        "please upgrade to the latest version")
-    throw Error("unsupported browser")
+    console.warn("Your browser is not fully supported. If you are using " +
+        "Microsoft Edge, please upgrade to the latest version")
 }
 ;(function($B) {
 

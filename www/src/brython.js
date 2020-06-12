@@ -5,9 +5,8 @@
 // github.com/brython-dev/brython
 var __BRYTHON__=__BRYTHON__ ||{}
 try{
-eval("async function* f(){}")}catch(err){alert("Unsupported browser. If you are using Microsoft Edge, "+
-"please upgrade to the latest version")
-throw Error("unsupported browser")}
+eval("async function* f(){}")}catch(err){console.warn("Your browser is not fully supported. If you are using "+
+"Microsoft Edge, please upgrade to the latest version")}
 ;(function($B){
 $B.isWebWorker=('undefined' !==typeof WorkerGlobalScope)&&
 ("function"===typeof importScripts)&&
@@ -103,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,10,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.10"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-06-11 15:25:09.110973"
-__BRYTHON__.timestamp=1591881909110
+__BRYTHON__.compiled_date="2020-06-12 17:28:14.853527"
+__BRYTHON__.timestamp=1591975694837
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5365,11 +5364,7 @@ if($.spec !==""){throw _b_.TypeError.$factory(
 "non-empty format string passed to object.__format__")}
 return _b_.getattr($.self,"__str__")()}
 object.__ge__=function(){return _b_.NotImplemented}
-object.__getattribute__=function(obj,attr){if(obj.$method_cache &&
-obj.$method_cache[attr]&& 
-obj.__class__[attr]==obj.$method_cache[attr][1]){
-return obj.$method_cache[attr][0]}
-var klass=obj.__class__ ||$B.get_class(obj),is_own_class_instance_method=false
+object.__getattribute__=function(obj,attr){var klass=obj.__class__ ||$B.get_class(obj),is_own_class_instance_method=false
 var $test=false 
 if($test){console.log("attr",attr,"de",obj,"klass",klass)}
 if(attr==="__class__"){return klass}
@@ -6795,8 +6790,12 @@ var mro=klass.__mro__
 for(var i=0,len=mro.length;i < len;i++){if(mro[i].hasOwnProperty(attr)){return mro[i][attr]}}
 return false}
 $B.$getattr=function(obj,attr,_default){
-var rawname=attr
 attr=$B.to_alias(attr)
+if(obj.$method_cache &&
+obj.$method_cache[attr]&&
+obj.__class__[attr]==obj.$method_cache[attr][1]){
+return obj.$method_cache[attr][0]}
+var rawname=attr
 if(obj===undefined){console.log("get attr",attr,"of undefined")}
 var is_class=obj.$is_class ||obj.$factory
 var klass=obj.__class__
@@ -11579,7 +11578,8 @@ for(var i=start;i > stop;i+=step){res+=self.charAt(i)}}
 return res}
 if(isinstance(arg,_b_.bool)){return self.__getitem__(_b_.int.$factory(arg))}
 throw _b_.TypeError.$factory("string indices must be integers")}
-var prefix=2,suffix=3,mask=(2**32-1)
+var prefix=2,suffix=3,mask=(2**32-1),str_hash_cache={}
+$B.nb_cache=0
 function fnv(p){if(p.length==0){return 0}
 var x=prefix
 x=(x ^(p.charCodeAt(0)<< 7))& mask
@@ -11588,7 +11588,9 @@ x=(x ^ p.length)& mask
 x=(x ^ suffix)& mask
 if(x==-1){x=-2}
 return x}
-str.__hash__=function(self){return fnv(self)}
+str.__hash__=function(self){if(str_hash_cache[self]!==undefined){$B.nb_cache++
+return str_hash_cache[self]}
+return str_hash_cache[self]=fnv(self)}
 str.__init__=function(self,arg){self.valueOf=function(){return arg}
 self.toString=function(){return arg}
 return _b_.None}

@@ -984,9 +984,24 @@ function in_mro(klass, attr){
 }
 
 $B.$getattr = function(obj, attr, _default){
+
     // Used internally to avoid having to parse the arguments
-    var rawname = attr
+
     attr = $B.to_alias(attr)
+
+    if(obj.$method_cache &&
+            obj.$method_cache[attr] &&
+            obj.__class__[attr] == obj.$method_cache[attr][1]){
+        // Optimisation : cache for instance methods
+        // If the attribute is a method defined in the instance's class,
+        // obj.$mc[attr] is a 2-element list [method, func] where method is
+        // the method and func is the function obj.__class__[attr]
+        // We check that the function has not changed since the method was
+        // cached and if not, return the method
+        return obj.$method_cache[attr][0]
+    }
+
+    var rawname = attr
 
     if(obj === undefined){
         console.log("get attr", attr, "of undefined")
