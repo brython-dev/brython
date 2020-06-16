@@ -359,16 +359,6 @@ function delattr(obj, attr) {
 $B.$delete = function(name, is_global){
     // remove name from namespace
     function del(obj){
-        // If obj is a generator object with a context manager whose method
-        // __exit__ has not yet been called, call it
-        if(obj.$is_generator_obj && obj.env){
-            for(var attr in obj.env){
-                if(attr.search(/^\$ctx_manager_exit\d+$/) > -1){
-                    $B.$call(obj.env[attr])()
-                    delete obj.env[attr]
-                }
-            }
-        }
         if(obj.__class__ === $B.generator){
             // Force generator return (useful if yield was in a context manager)
             obj.return()

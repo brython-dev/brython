@@ -82,7 +82,7 @@ $B.generator.send = function(self, value){
     }
     self.gi_running = false
     if(res.done){
-        throw _b_.StopIteration.$factory(value)
+        throw _b_.StopIteration.$factory(res.value)
     }
     return res.value
 }

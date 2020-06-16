@@ -1167,21 +1167,6 @@ function exit_ctx_managers_in_generators(frame){
     // Inspect the generators in frame's locals. If they have unclosed context
     // managers, close them.
     for(key in frame[1]){
-        if(frame[1][key] && frame[1][key].$is_generator_obj){
-            var gen_obj = frame[1][key]
-            // If the generator object's attribute env has an attribute
-            // $ctx_manager_exit, it means that a context manager has not yet
-            // called the method __exit__ (issue #1143)
-            if(gen_obj.env !== undefined){
-                for(var attr in gen_obj.env){
-                    if(attr.search(/^\$ctx_manager_exit\d+$/) > -1){
-                        // Call __exit__
-                        $B.$call(gen_obj.env[attr])()
-                        return true
-                    }
-                }
-            }
-        }
         if(frame[1][key] && frame[1][key].__class__ == $B.generator){
             // Force generator termination, which executes the "finally" block
             // associated with the context manager

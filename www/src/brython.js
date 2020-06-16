@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,10,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.10"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-06-16 10:17:38.490702"
-__BRYTHON__.timestamp=1592295458490
+__BRYTHON__.compiled_date="2020-06-16 11:02:23.268371"
+__BRYTHON__.timestamp=1592298143268
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -259,26 +259,26 @@ if(this.has_await){this.parent.insert(rank,$NodeJS("var save_stack = $B.save_sta
 this.parent.insert(rank+2,$NodeJS("$B.restore_stack(save_stack, $locals)"))
 this.has_await=false 
 return 1}
-if(this.has_Yield && ! this.has_Yield.transformed){
+if(this.has_yield && ! this.has_yield.transformed){
 var parent=this.parent
-if(this.has_Yield.from){var new_node=new $Node()
+if(this.has_yield.from){var new_node=new $Node()
 var new_ctx=new $NodeCtx(new_node)
 var new_expr=new $ExprCtx(new_ctx,'js',false)
-var _id=new $RawJSCtx(new_expr,`var _i${this.has_Yield.from_num}`)
+var _id=new $RawJSCtx(new_expr,`var _i${this.has_yield.from_num}`)
 var assign=new $AssignCtx(new_expr)
 var right=new $ExprCtx(assign)
-right.tree=this.has_Yield.tree
+right.tree=this.has_yield.tree
 parent.insert(rank,new_node)
-var yfc=$add_yield_from_code1(this.has_Yield)
+var yfc=$add_yield_from_code1(this.has_yield)
 parent.insert(rank+1,$NodeJS(yfc))
 return 3}
 parent.children.splice(rank,1)
-if(this.has_Yield.tree[0].type==='abstract_expr'){new_node=$NodeJS("var result = _b_.None")}else{var new_node=new $Node()
+if(this.has_yield.tree[0].type==='abstract_expr'){new_node=$NodeJS("var result = _b_.None")}else{var new_node=new $Node()
 var new_ctx=new $NodeCtx(new_node)
 var new_expr=new $ExprCtx(new_ctx,'js',false)
 var _id=new $RawJSCtx(new_expr,'var result')
 var assign=new $AssignCtx(new_expr)
-assign.tree[1]=this.has_Yield.tree[0]
+assign.tree[1]=this.has_yield.tree[0]
 _id.parent=assign}
 new_node.line_num=this.line_num
 parent.insert(rank,new_node)
@@ -286,8 +286,8 @@ var try_node=new $NodeJS("try")
 try_node.add($NodeJS("$B.leave_frame()"))
 try_node.add(this)
 parent.insert(rank+1,try_node)
-this.has_Yield.to_js=function(){return 'yield result'}
-this.has_Yield.transformed=true
+this.has_yield.to_js=function(){return 'yield result'}
+this.has_yield.transformed=true
 var i=0
 while(i < try_node.children.length){var offset=try_node.children[i].transform(i)
 if(offset===undefined){offset=1}
@@ -432,7 +432,7 @@ case '=':
 $_SyntaxError(C,'token '+token+' after '+
 C)
 case 'yield':
-return new $AbstractExprCtx(new $YieldCtx1(C),true)
+return new $AbstractExprCtx(new $YieldCtx(C),true)
 case ':':
 if(C.parent.type=="sub" ||
 (C.parent.type=="list_or_tuple" &&
@@ -727,7 +727,7 @@ C.async=true
 this.toString=function(){return '(async)'}
 this.transition=function(token,value){var C=this
 if(token=="def"){return $transition(C.parent,token,value)}else if(token=="for" ||token=="with"){var ntype=$get_scope(C).ntype
-if(ntype !=="def" && ntype !="generator1"){$_SyntaxError(C,["'async "+token+
+if(ntype !=="def" && ntype !="generator"){$_SyntaxError(C,["'async "+token+
 "' outside async function"])}
 var ctx=$transition(C.parent,token,value)
 ctx.parent.async=true 
@@ -775,7 +775,7 @@ this.tree=[C]
 var scope=this.scope=$get_scope(this)
 if(C.type=='expr'){var assigned=C.tree[0]
 if(assigned.type=='id'){var name=assigned.value
-if(noassign[name]===true){$_SyntaxError(C,["cannot assign to keyword"])}else if((scope.ntype=='def' ||scope.ntype=='generator1')&&
+if(noassign[name]===true){$_SyntaxError(C,["cannot assign to keyword"])}else if((scope.ntype=='def' ||scope.ntype=='generator')&&
 (scope.binding[name]===undefined)){if(scope.globals===undefined ||
 ! scope.globals.has(name)){
 assigned.unbound=true}}}else if(['str','int','float','complex'].indexOf(assigned.type)>-1){$_SyntaxError(C,["cannot assign to literal"])}}
@@ -830,7 +830,7 @@ switch(scope.ntype){case 'module':
 prefix=global_ns
 break
 case 'def':
-case 'generator1':
+case 'generator':
 if(scope.globals &&
 scope.globals.has(C.tree[0].value)){prefix=global_ns}else{prefix='$locals'}
 break
@@ -959,7 +959,7 @@ ctx['has_'+kw]=true
 break_flag=true
 break
 case 'def':
-case 'generator1':
+case 'generator':
 case 'class':
 $_SyntaxError(C,kw+' outside of a loop')
 default:
@@ -1119,11 +1119,11 @@ return '_b_.classmethod.$factory('+$to_js(this.tree)+')'
 case '$$super':
 if(this.tree.length==0){
 var scope=$get_scope(this)
-if(scope.ntype=='def' ||scope.ntype=='generator1'){var def_scope=$get_scope(scope.C.tree[0])
+if(scope.ntype=='def' ||scope.ntype=='generator'){var def_scope=$get_scope(scope.C.tree[0])
 if(def_scope.ntype=='class'){new $IdCtx(this,def_scope.C.tree[0].name)}}}
 if(this.tree.length==1){
 var scope=$get_scope(this)
-if(scope.ntype=='def' ||scope.ntype=='generator1'){var args=scope.C.tree[0].args
+if(scope.ntype=='def' ||scope.ntype=='generator'){var args=scope.C.tree[0].args
 if(args.length > 0){var missing_id=new $IdCtx(this,args[0])
 missing_id.to_js=function(){return "[$locals['"+args[0]+"']]"}}}}
 break
@@ -1234,7 +1234,7 @@ while(parent_block.C &&
 parent_block.C.tree[0].type=='class'){parent_block=parent_block.parent}
 while(parent_block.C &&
 'def' !=parent_block.C.tree[0].type &&
-'generator1' !=parent_block.C.tree[0].type){parent_block=parent_block.parent}
+'generator' !=parent_block.C.tree[0].type){parent_block=parent_block.parent}
 this.parent.node.parent_block=parent_block
 $bind(name,this.scope,this)
 if(scope.is_function){if(scope.C.tree[0].locals.indexOf(name)==-1){scope.C.tree[0].locals.push(name)}}}
@@ -1592,7 +1592,7 @@ slot_init='{'+slot_init.join(", ")+'}'
 var flags=67
 if(this.star_arg){flags |=4}
 if(this.kw_arg){flags |=8}
-if(this.type=='generator1'){flags |=32}
+if(this.type=='generator'){flags |=32}
 if(this.async){flags |=128}
 var nodes=[],js
 var global_scope=scope
@@ -1614,7 +1614,7 @@ this.module+'"'),$NodeJS('var $top_frame = [$local_name, $locals,'+
 '"'+global_scope.id+'", '+global_ns+', '+
 (this.is_comp ? this.name :name)+']'),$NodeJS('$locals.$f_trace = $B.enter_frame($top_frame)'),$NodeJS('var $stack_length = $B.frames_stack.length;')
 ]
-if(this.type=="generator1"){enter_frame_nodes.push($NodeJS("$locals.$is_generator = true"))}
+if(this.type=="generator"){enter_frame_nodes.push($NodeJS("$locals.$is_generator = true"))}
 enter_frame_nodes.forEach(function(node){node.enter_frame=true})
 if(this.is_comp){nodes.push($NodeJS("var $defaults = {}"))}
 nodes.push($NodeJS("var $nb_defaults = Object.keys($defaults).length"))
@@ -1740,9 +1740,9 @@ if(! this.is_comp){
 node.parent.insert(rank+offset++,new $MarkerNode('func_end:'+
 CODE_MARKER))
 var name1=name
-if(this.type=="generator1"){name1=`$B.generator.$factory(${name})`}
+if(this.type=="generator"){name1=`$B.generator.$factory(${name})`}
 var res='return '+name1
-if(this.async){if(this.type=="generator1"){res=`return $B.async_generator.$factory(${name})`}else{res='return $B.make_async('+name1+')'}}
+if(this.async){if(this.type=="generator"){res=`return $B.async_generator.$factory(${name})`}else{res='return $B.make_async('+name1+')'}}
 node.parent.insert(rank+offset++,$NodeJS(res+'}'))
 node.parent.insert(rank+offset++,$NodeJS(
 this.func_name+" = "+this.name+'$'+this.num+
@@ -1775,7 +1775,7 @@ if(this.decorated){func_name='var '+this.alias}
 return "var "+this.name+'$'+this.num+
 ' = function($defaults){'+
 (this.async ? 'async ' :'')+'function'+
-(this.type=='generator1' ? "* " :" ")+
+(this.type=='generator' ? "* " :" ")+
 this.name+this.num+'('+this.params+')'}}
 var $DelCtx=$B.parser.$DelCtx=function(C){
 this.type='del'
@@ -1800,7 +1800,7 @@ this.tree[0]=this.tree[0].tree[0]
 return this.to_js()}else{var expr=this.tree[0].tree[0]
 switch(expr.type){case 'id':
 var scope=$get_scope(this),is_global=false
-if((scope.ntype=="def" ||scope.ntype=="generator1")&&
+if((scope.ntype=="def" ||scope.ntype=="generator")&&
 scope.globals && scope.globals.has(expr.value)){
 scope=scope.parent
 while(scope.parent &&
@@ -2796,7 +2796,7 @@ C.tree[C.tree.length]=this
 var scope=this.scope=$get_scope(this)
 this.blurred_scope=this.scope.blurred
 this.env=clone(this.scope.binding)
-if(["def","generator1"].indexOf(scope.ntype)>-1){scope.referenced=scope.referenced ||{}
+if(["def","generator"].indexOf(scope.ntype)>-1){scope.referenced=scope.referenced ||{}
 if(! $B.builtins[this.value]){scope.referenced[this.value]=true}}
 if(C.parent.type=='call_arg'){this.call_arg=true}
 var ctx=C
@@ -2817,7 +2817,7 @@ if($parent_match(C,{type:'target_list'})){
 this.no_bindings=true
 $bind(value,scope,this)
 this.bound=true}
-if(["def","generator1"].indexOf(scope.ntype)>-1){
+if(["def","generator"].indexOf(scope.ntype)>-1){
 var _ctx=this.parent
 while(_ctx){if(_ctx.type=='list_or_tuple' && _ctx.is_comp()){this.in_comp=true
 break}
@@ -2881,7 +2881,7 @@ if(pnode===scope){break}
 node=pnode}
 return found}
 this.to_js=function(arg){
-if(this.result !==undefined && this.scope.ntype=='generator1'){return this.result}
+if(this.result !==undefined && this.scope.ntype=='generator'){return this.result}
 this.js_processed=true
 var val=this.value
 var is_local=this.scope.binding[val]!==undefined,this_node=$get_node(this),bound_before=this_node.bound_before
@@ -2893,7 +2893,7 @@ if((!this.bound)&& this.scope.C
 && this.scope.ntype=='class' &&
 this.scope.C.tree[0].name==val){
 return '$B.$search("'+val+'")'}
-if(this.unbound && !this.nonlocal){if(this.scope.ntype=='def' ||this.scope.ntype=='generator1'){return '$B.$local_search("'+val+'")'}else{return '$B.$search("'+val+'")'}}
+if(this.unbound && !this.nonlocal){if(this.scope.ntype=='def' ||this.scope.ntype=='generator'){return '$B.$local_search("'+val+'")'}else{return '$B.$search("'+val+'")'}}
 if(val=='__BRYTHON__' ||val=='$B'){return val}
 var innermost=$get_scope(this),scope=innermost,found=[]
 var search_ids=['"'+innermost.id+'"']
@@ -2947,7 +2947,7 @@ if(found[0].C && found[0]===innermost
 try{if(locs[val]===undefined &&
 ! this.augm_assign &&
 ((innermost.type !='def' ||
-innermost.type !='generator1')&&
+innermost.type !='generator')&&
 innermost.ntype !='class' &&
 innermost.C.tree[0].args &&
 innermost.C.tree[0].args.indexOf(val)==-1)&&
@@ -3340,7 +3340,7 @@ var tree_node=node
 while(tree_node.parent && tree_node.parent.type !='module'){var ntype=tree_node.parent.C.tree[0].type,_break_flag=false
 switch(ntype){case 'def':
 case 'class':
-case 'generator1':
+case 'generator':
 scope=tree_node.parent
 _break_flag=true}
 if(_break_flag){break}
@@ -3437,7 +3437,7 @@ return new $AbstractExprCtx(new $ReturnCtx(C),true)
 case 'with':
 return new $AbstractExprCtx(new $WithCtx(C),false)
 case 'yield':
-return new $AbstractExprCtx(new $YieldCtx1(C),true)
+return new $AbstractExprCtx(new $YieldCtx(C),true)
 case 'del':
 return new $AbstractExprCtx(new $DelCtx(C),true)
 case '@':
@@ -3870,7 +3870,7 @@ this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this
 this.scope=$get_scope(this)
-if(["def","generator1"].indexOf(this.scope.ntype)==-1){$_SyntaxError(C,["'return' outside function"])}
+if(["def","generator"].indexOf(this.scope.ntype)==-1){$_SyntaxError(C,["'return' outside function"])}
 var node=this.node=$get_node(this)
 while(node.parent){if(node.parent.C){var elt=node.parent.C.tree[0]
 if(elt.type=='for'){elt.has_return=true
@@ -3884,7 +3884,7 @@ if(this.tree.length==1 && this.tree[0].type=='abstract_expr'){
 this.tree.pop()
 new $IdCtx(new $ExprCtx(this,'rvalue',false),'None')}
 var scope=this.scope
-if(scope.ntype=='generator1'){return 'var $res = '+$to_js(this.tree)+'; $B.leave_frame();'+
+if(scope.ntype=='generator'){return 'var $res = '+$to_js(this.tree)+'; $B.leave_frame();'+
 'return $B.generator_return($res)'}
 var indent=' '.repeat(this.node.indent+1)
 var js='var $res = '+$to_js(this.tree)+';\n'+indent+
@@ -4193,10 +4193,8 @@ var failed_name="$locals."+create_temp_name('$failed')
 var js=failed_name+' = false;\n'+
 ' '.repeat(node.indent+4)+'try'
 new $NodeJSCtx(node,js)
-node.is_try=true 
 node.has_return=this.has_return
 var catch_node=$NodeJS('catch('+error_name+')')
-catch_node.is_catch=true
 node.parent.insert(rank+1,catch_node)
 catch_node.add($NodeJS("$B.set_exc("+error_name+")"))
 catch_node.add($NodeJS("if($locals.$f_trace !== _b_.None)"+
@@ -4350,7 +4348,6 @@ this.transformed=true
 return}
 if(this.async){return this.transform_async(node,rank)}
 var top_try_node=$NodeJS("try")
-top_try_node.is_try=true
 node.parent.insert(rank+1,top_try_node)
 var num=this.num=$loop_num++
 top_try_node.ctx_manager_num=num
@@ -4374,7 +4371,6 @@ this.tree.splice(0,0,ids[i])}}
 var block=node.children 
 node.children=[]
 var try_node=new $Node()
-try_node.is_try=true
 new $NodeJSCtx(try_node,'try')
 top_try_node.add(try_node)
 if(this.tree[0].alias){var alias=this.tree[0].alias.tree[0].tree[0].value
@@ -4382,7 +4378,6 @@ try_node.add($NodeJS('$locals'+'["'+alias+'"] = '+
 this.val_name))}
 block.forEach(function(elt){try_node.add(elt)})
 var catch_node=new $Node()
-catch_node.is_catch=true 
 new $NodeJSCtx(catch_node,'catch('+this.err_name+')')
 var js=this.exc_name+' = false;'+this.err_name+
 ' = $B.exception('+this.err_name+', true)\n'+
@@ -4391,7 +4386,7 @@ var js=this.exc_name+' = false;'+this.err_name+
 this.err_name+'.__class__,'+
 this.err_name+','+
 '$B.$getattr('+this.err_name+', "__traceback__"));'
-if(this.scope.ntype=="generator1"){js+='$B.set_cm_in_generator('+this.cmexit_name+');'}
+if(this.scope.ntype=="generator"){js+='$B.set_cm_in_generator('+this.cmexit_name+');'}
 js+='if(!$B.$bool($b)){throw '+this.err_name+'}'
 catch_node.add($NodeJS(js))
 top_try_node.add(catch_node)
@@ -4404,7 +4399,7 @@ finally_node.is_except=true
 finally_node.in_ctx_manager=true
 var js='if('+this.exc_name
 js+='){'+this.cmexit_name+'(_b_.None, _b_.None, _b_.None);'
-if(this.scope.ntype=="generator1"){js+='delete '+this.cmexit_name}
+if(this.scope.ntype=="generator"){js+='delete '+this.cmexit_name}
 js+='};'
 finally_node.add($NodeJS(js))
 node.parent.insert(rank+2,finally_node)
@@ -4465,12 +4460,12 @@ return 'var '+cm_name+' = '+this.tree[0].to_js()+'\n'+
 h+cme_name+' = $B.$getattr('+cm_name+',"__exit__")\n'+
 h+'var '+val_name+' = $B.$getattr('+cm_name+',"__enter__")()\n'+
 h+exc_name+' = true\n'}}
-var $YieldCtx1=$B.parser.$YieldCtx1=function(C,is_await){
+var $YieldCtx=$B.parser.$YieldCtx=function(C,is_await){
 this.type='yield'
 this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this
-$get_node(this).has_Yield=this
+$get_node(this).has_yield=this
 var in_lambda=false,parent=C
 while(parent){if(parent.type=="lambda"){in_lambda=true
 break}
@@ -4490,8 +4485,7 @@ in_func=parent.is_function
 func_scope=parent}
 if(! in_func){$_SyntaxError(C,["'yield' outside function"])}}
 if(! in_lambda){var def=func_scope.C.tree[0]
-if(! is_await){def.type='generator1'
-func_scope.ntype='generator'}}
+if(! is_await){def.type='generator'}}
 this.toString=function(){return '(yield) '+(this.from ? '(from) ' :'')+this.tree}
 this.transition=function(token,value){var C=this
 if(token=='from'){
@@ -4499,7 +4493,6 @@ if(C.tree[0].type !='abstract_expr'){
 $_SyntaxError(C,"'from' must follow 'yield'")}
 C.from=true
 C.from_num=$B.UUID()
-$get_node(this).C.tree[0].transform=function(){return C.transform.apply(C,arguments)}
 return C.tree[0]}
 return $transition(C.parent,token)}
 this.transform=function(node,rank){
@@ -4566,7 +4559,7 @@ var tree_node=ctx_node.node,scope=null
 while(tree_node.parent && tree_node.parent.type !=='module'){var ntype=tree_node.parent.C.tree[0].type
 switch(ntype){case 'def':
 case 'class':
-case 'generator1':
+case 'generator':
 var scope=tree_node.parent
 scope.ntype=ntype
 scope.is_function=ntype !='class'
@@ -6303,11 +6296,7 @@ if(top_frame[0]==$B.tracefunc.$current_frame_id){
 return _b_.None}
 trace_func(frame_obj,'return',value)}
 function exit_ctx_managers_in_generators(frame){
-for(key in frame[1]){if(frame[1][key]&& frame[1][key].$is_generator_obj){var gen_obj=frame[1][key]
-if(gen_obj.env !==undefined){for(var attr in gen_obj.env){if(attr.search(/^\$ctx_manager_exit\d+$/)>-1){
-$B.$call(gen_obj.env[attr])()
-return true}}}}
-if(frame[1][key]&& frame[1][key].__class__==$B.generator){
+for(key in frame[1]){if(frame[1][key]&& frame[1][key].__class__==$B.generator){
 var gen_obj=frame[1][key]
 gen_obj.return()}}}
 $B.set_cm_in_generator=function(cm_exit){if(cm_exit !==undefined){$B.frames_stack.forEach(function(frame){frame[1].$cm_in_gen=frame[1].$cm_in_gen ||new Set()
@@ -6578,10 +6567,7 @@ if(typeof attr !='string'){throw _b_.TypeError.$factory("attribute name must be 
 $B.class_name(attr)+"'")}
 return $B.$getattr(obj,'__delattr__')(attr)}
 $B.$delete=function(name,is_global){
-function del(obj){
-if(obj.$is_generator_obj && obj.env){for(var attr in obj.env){if(attr.search(/^\$ctx_manager_exit\d+$/)>-1){$B.$call(obj.env[attr])()
-delete obj.env[attr]}}}
-if(obj.__class__===$B.generator){
+function del(obj){if(obj.__class__===$B.generator){
 obj.return()}}
 var found=false,frame=$B.last($B.frames_stack)
 if(! is_global){if(frame[1][name]!==undefined){found=true
@@ -13542,7 +13528,7 @@ throw err}
 if(res.value && res.value.__class__===$GeneratorReturn){self.$finished=true
 throw _b_.StopIteration.$factory(res.value.value)}
 self.gi_running=false
-if(res.done){throw _b_.StopIteration.$factory(value)}
+if(res.done){throw _b_.StopIteration.$factory(res.value)}
 return res.value}
 $B.generator.$$throw=function(self,type,value,traceback){var exc=type
 if(exc.$is_class){if(! _b_.issubclass(type,_b_.BaseException)){throw _b_.TypeError.$factory("exception value must be an "+
