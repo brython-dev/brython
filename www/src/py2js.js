@@ -38,7 +38,12 @@ var clone = $B.clone = function(obj){
 }
 
 // Last element in a list
-$B.last = function(table){return table[table.length - 1]}
+$B.last = function(table){
+    if(table === undefined){
+        console.log($B.frames_stack.slice())
+    }
+    return table[table.length - 1]
+}
 
 // Convert a list to an object indexed with list values
 $B.list2obj = function(list, value){
@@ -482,7 +487,14 @@ var $Node = $B.parser.$Node = function(type){
         // Returns an offset : in case children were inserted by transform(),
         // we must jump to the next original node, skipping those that have
         // just been inserted
-
+        if(this.has_await){
+            this.parent.insert(rank,
+                $NodeJS("var save_stack = $B.save_stack()"))
+            this.parent.insert(rank + 2,
+                $NodeJS("$B.restore_stack(save_stack, $locals)"))
+            this.has_await = false // avoid recursion
+            return 1
+        }
 
         if(this.has_Yield && ! this.has_Yield.transformed){
             /* replace "RESULT = yield EXPR" by
@@ -1782,10 +1794,9 @@ var $AwaitCtx = $B.parser.$AwaitCtx = function(context){
     }
 
     this.to_js = function(){
-        return 'var save_stack = $B.deep_copy($B.frames_stack);' +
+        return 'var save_stack = $B.save_stack();' +
             'await ($B.promise(' + $to_js(this.tree) + '));' +
-            '$B.frames_stack = save_stack; ' +
-            '$B.frames_stack[$B.frames_stack.length - 1][1] = $locals;'
+            '$B.restore_stack(save_stack, $locals); '
     }
 }
 
@@ -4082,7 +4093,10 @@ var $ExprCtx = $B.parser.$ExprCtx = function(context, name, with_commas){
         this.packed = context.packed
     }
     if(context.is_await){
+        var node = $get_node(this)
+        node.has_await = node.has_await || []
         this.is_await = context.is_await
+        node.has_await.push(this)
     }
     if(context.assign){
         // assignment expression
@@ -4864,6 +4878,9 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
         // Add a line to reset the line number, except if the last
         // instruction in the loop is a return, because the next
         // line would never be reached
+        if(node.children.length == 0){
+            console.log("bizarre", this)
+        }
         if($B.last(node.children).context.tree[0].type != "return"){
             var js = '$locals.$line_info = "' + node.line_num +
                 ',' + this.module + '";if($locals.$f_trace !== _b_.None){' +

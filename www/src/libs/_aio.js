@@ -206,7 +206,7 @@ function run(coro){
         handle_error = function(err){
             // coro.$stack is a snapshot of the frames stack when the async
             // function was called. Restore it to get the correct call tree
-            console.log("Exception in asynchronous function", err.$stack)
+            console.log("Exception in asynchronous function")
             err.$stack = coro.$stack.concat([$B.last(err.$stack)])
             $B.handle_error(err)
         }

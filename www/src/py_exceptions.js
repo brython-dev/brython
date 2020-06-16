@@ -10,6 +10,9 @@ $B.del_exc = function(){
 
 $B.set_exc = function(exc){
     var frame = $B.last($B.frames_stack)
+    if(frame === undefined){
+        console.log("no frame", exc)
+    }
     frame[1].$current_exception = $B.exception(exc)
 }
 
@@ -519,6 +522,15 @@ $B.deep_copy = function(stack){
         res.push(item)
     }
     return res
+}
+
+$B.save_stack = function(){
+    return $B.deep_copy($B.frames_stack)
+}
+
+$B.restore_stack = function(stack, locals){
+    $B.frames_stack = stack
+    $B.frames_stack[$B.frames_stack.length - 1][1] = locals
 }
 
 $B.freeze = function(stack){

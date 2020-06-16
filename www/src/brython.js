@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,10,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.10"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-06-16 09:17:35.996529"
-__BRYTHON__.timestamp=1592291855996
+__BRYTHON__.compiled_date="2020-06-16 10:17:38.490702"
+__BRYTHON__.timestamp=1592295458490
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -120,7 +120,8 @@ $B.parser={}
 var clone=$B.clone=function(obj){var res={}
 for(var attr in obj){res[attr]=obj[attr]}
 return res}
-$B.last=function(table){return table[table.length-1]}
+$B.last=function(table){if(table===undefined){console.log($B.frames_stack.slice())}
+return table[table.length-1]}
 $B.list2obj=function(list,value){var res={},i=list.length
 if(value===undefined){value=true}
 while(i--> 0){res[list[i]]=value}
@@ -254,6 +255,10 @@ this.res.push('}\n')}}
 this.js=this.res.join('')
 return this.js}
 this.transform=function(rank){
+if(this.has_await){this.parent.insert(rank,$NodeJS("var save_stack = $B.save_stack()"))
+this.parent.insert(rank+2,$NodeJS("$B.restore_stack(save_stack, $locals)"))
+this.has_await=false 
+return 1}
 if(this.has_Yield && ! this.has_Yield.transformed){
 var parent=this.parent
 if(this.has_Yield.from){var new_node=new $Node()
@@ -925,10 +930,9 @@ p=p.parent}
 this.transition=function(token,value){var C=this
 C.parent.is_await=true
 return $transition(C.parent,token,value)}
-this.to_js=function(){return 'var save_stack = $B.deep_copy($B.frames_stack);'+
+this.to_js=function(){return 'var save_stack = $B.save_stack();'+
 'await ($B.promise('+$to_js(this.tree)+'));'+
-'$B.frames_stack = save_stack; '+
-'$B.frames_stack[$B.frames_stack.length - 1][1] = $locals;'}}
+'$B.restore_stack(save_stack, $locals); '}}
 var $BodyCtx=$B.parser.$BodyCtx=function(C){
 var ctx_node=C.parent
 while(ctx_node.type !=='node'){ctx_node=ctx_node.parent}
@@ -2105,7 +2109,10 @@ this.with_commas=with_commas
 this.expect=',' 
 this.parent=C
 if(C.packed){this.packed=C.packed}
-if(C.is_await){this.is_await=C.is_await}
+if(C.is_await){var node=$get_node(this)
+node.has_await=node.has_await ||[]
+this.is_await=C.is_await
+node.has_await.push(this)}
 if(C.assign){
 this.assign=C.assign}
 this.tree=[]
@@ -2488,6 +2495,7 @@ $NodeJS('catch($err){if($B.is_exc($err, [_b_.StopIteration]))'+
 '{break;}else{throw($err)}}'))
 children.forEach(function(child){
 while_node.add(child.clone())})
+if(node.children.length==0){console.log("bizarre",this)}
 if($B.last(node.children).C.tree[0].type !="return"){var js='$locals.$line_info = "'+node.line_num+
 ','+this.module+'";if($locals.$f_trace !== _b_.None){'+
 '$B.trace_line()};_b_.None;'
@@ -6264,7 +6272,7 @@ else{throw _b_.TypeError.$factory("'"+$B.class_name(v)+
 default:
 throw _b_.TypeError.$factory("'"+$B.class_name(v)+
 "' object cannot be interpreted as an integer")}}
-$B.enter_frame=function(frame,async_id){
+$B.enter_frame=function(frame){
 $B.frames_stack.push(frame)
 if($B.tracefunc && $B.tracefunc !==_b_.None){if(frame[4]===$B.tracefunc ||
 ($B.tracefunc.$infos && frame[4]&&
@@ -7617,6 +7625,7 @@ eval(bltns)
 $B.del_exc=function(){var frame=$B.last($B.frames_stack)
 frame[1].$current_exception=undefined}
 $B.set_exc=function(exc){var frame=$B.last($B.frames_stack)
+if(frame===undefined){console.log("no frame",exc)}
 frame[1].$current_exception=$B.exception(exc)}
 $B.get_exc=function(){var frame=$B.last($B.frames_stack)
 return frame[1].$current_exception}
@@ -7798,6 +7807,9 @@ if(s[4]!==undefined){item.push(s[4])}
 for(const i of[1,3]){for(var key in s[i]){item[i][key]=s[i][key]}}
 res.push(item)}
 return res}
+$B.save_stack=function(){return $B.deep_copy($B.frames_stack)}
+$B.restore_stack=function(stack,locals){$B.frames_stack=stack
+$B.frames_stack[$B.frames_stack.length-1][1]=locals}
 $B.freeze=function(stack){
 for(var i=0,len=stack.length;i < len;i++){stack[i][1].$frozen_line_info=stack[i][1].$line_info
 stack[i][3].$frozen_line_info=stack[i][3].$line_info}
