@@ -4,9 +4,9 @@ On peut utiliser Brython sans avoir à installer quoi que ce soit, il suffit
 d'inclure les scripts Brython dans la page HTML depuis un CDN:
 
 ```xml
-<script src="https://cdn.jsdelivr.net/npm/brython@3.8.8/brython.min.js">
+<script src="https://cdn.jsdelivr.net/npm/brython@3.8.9/brython.min.js">
 </script>
-<script src="https://cdn.jsdelivr.net/npm/brython@3.8.8/brython_stdlib.js">
+<script src="https://cdn.jsdelivr.net/npm/brython@3.8.9/brython_stdlib.js">
 </script>
 ```
 

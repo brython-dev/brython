@@ -113,6 +113,27 @@ def run():
 
     sys.path.append("scripts")
 
+    # update implementation in README.md
+    print("Update readme and install doc pages", vname)
+    README_page = os.path.join(pdir, "README.md")
+    with open(README_page, encoding="utf-8") as f:
+        content = f.read()
+        content = re.sub("npm/brython@\d\.\d+\.\d+", "npm/brython@" + vname,
+            content)
+    with open(README_page, "w", encoding="utf-8") as out:
+        out.write(content)
+
+    for lang in ["en", "fr", "es"]:
+        install_page = os.path.join(pdir, "www", "doc", lang, "install.md")
+        with open(install_page, encoding="utf-8") as f:
+            content = f.read()
+        content = re.sub("npm/brython@\d\.\d+\.\d+", "npm/brython@" + vname,
+            content)
+        content = re.sub("/brython/\d\.\d+\.\d+", "/brython/" + vname,
+            content)
+        with open(install_page, "w", encoding="utf-8") as out:
+            out.write(content)
+
     try:
         import make_VFS
     except ImportError:
