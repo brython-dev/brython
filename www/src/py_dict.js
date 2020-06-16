@@ -974,6 +974,7 @@ $B.getset_descriptor = $B.make_class("getset_descriptor",
     function(klass, attr){
         return {
             __class__: $B.getset_descriptor,
+            __doc__: _b_.None,
             cls: klass,
             attr: attr
         }

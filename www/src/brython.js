@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-06-16 20:36:15.630897"
-__BRYTHON__.timestamp=1592332575630
+__BRYTHON__.compiled_date="2020-06-16 21:40:42.057214"
+__BRYTHON__.timestamp=1592336442057
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -12821,7 +12821,7 @@ _b_.dict=dict
 $B.set_func_names(dict,"builtins")
 dict.fromkeys=_b_.classmethod.$factory(dict.fromkeys)
 $B.getset_descriptor=$B.make_class("getset_descriptor",function(klass,attr){return{
-__class__:$B.getset_descriptor,cls:klass,attr:attr}}
+__class__:$B.getset_descriptor,__doc__:_b_.None,cls:klass,attr:attr}}
 )
 $B.getset_descriptor.__repr__=$B.getset_descriptor.__str__=function(self){return `<attribute '${self.attr}' of '${self.cls.$infos.__name__}' objects>`}
 $B.set_func_names($B.getset_descriptor,"builtins")
