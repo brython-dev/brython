@@ -1,6 +1,6 @@
 // brython.js brython.info
 // version [3, 8, 0, 'final', 0]
-// implementation [3, 8, 10, 'dev', 0]
+// implementation [3, 8, 9, 'dev', 0]
 // version compiled from commented, indented source files at
 // github.com/brython-dev/brython
 var __BRYTHON__=__BRYTHON__ ||{}
@@ -99,11 +99,11 @@ var root=$B.py2js(src[0],"script","script"),js=root.to_js()
 $B.set_import_paths()
 new Function("$locals_script",js)({})}})(__BRYTHON__)
 ;
-__BRYTHON__.implementation=[3,8,10,'dev',0]
-__BRYTHON__.__MAGIC__="3.8.10"
+__BRYTHON__.implementation=[3,8,9,'dev',0]
+__BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-06-16 11:02:23.268371"
-__BRYTHON__.timestamp=1592298143268
+__BRYTHON__.compiled_date="2020-06-16 18:08:55.186318"
+__BRYTHON__.timestamp=1592323735186
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -13288,10 +13288,9 @@ for(var event in events){var evt_list=events[event]
 evt_list.forEach(function(evt){var func=evt[0]
 DOMNode.bind(res,event,func)})}
 return res}
-DOMNode.closest=function(self,tagName){
-var res=self.elt,tagName=tagName.toLowerCase()
-while(res.tagName.toLowerCase()!=tagName){res=res.parentNode
-if(res===undefined ||res.tagName===undefined){throw _b_.KeyError.$factory("no parent of type "+tagName)}}
+DOMNode.closest=function(self,selector){
+var res=self.elt.closest(selector)
+if(res===null){throw _b_.KeyError.$factory("no parent with selector "+selector)}
 return DOMNode.$factory(res)}
 DOMNode.events=function(self,event){self.elt.$events=self.elt.$events ||{}
 var evt_list=self.elt.$events[event]=self.elt.$events[event]||[],callbacks=[]

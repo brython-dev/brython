@@ -1179,16 +1179,12 @@ DOMNode.clone = function(self){
     return res
 }
 
-DOMNode.closest = function(self, tagName){
-    // Returns the first parent of self with specified tagName
+DOMNode.closest = function(self, selector){
+    // Returns the first parent of self with specified CSS selector
     // Raises KeyError if not found
-    var res = self.elt,
-        tagName = tagName.toLowerCase()
-    while(res.tagName.toLowerCase() != tagName){
-        res = res.parentNode
-        if(res === undefined || res.tagName === undefined){
-            throw _b_.KeyError.$factory("no parent of type " + tagName)
-        }
+    var res = self.elt.closest(selector)
+    if(res === null){
+        throw _b_.KeyError.$factory("no parent with selector " + selector)
     }
     return DOMNode.$factory(res)
 }
