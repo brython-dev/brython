@@ -1782,7 +1782,10 @@ var $AwaitCtx = $B.parser.$AwaitCtx = function(context){
     }
 
     this.to_js = function(){
-        return 'await ($B.promise(' + $to_js(this.tree) + '))'
+        return 'var save_stack = $B.deep_copy($B.frames_stack);' +
+            'await ($B.promise(' + $to_js(this.tree) + '));' +
+            '$B.frames_stack = save_stack; ' +
+            '$B.frames_stack[$B.frames_stack.length - 1][1] = $locals;'
     }
 }
 
@@ -3150,6 +3153,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
             $NodeJS('$locals.$f_trace = $B.enter_frame($top_frame)'),
             $NodeJS('var $stack_length = $B.frames_stack.length;')
         ]
+
         if(this.type == "generator1"){
             enter_frame_nodes.push($NodeJS("$locals.$is_generator = true"))
         }
@@ -3162,8 +3166,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
             nodes.push($NodeJS("var $defaults = {}"))
         }
 
-        nodes.push($NodeJS("var $nb_defaults = Object.keys($defaults).length,"))
-        nodes.push($NodeJS("    $parent = $locals.$parent"))
+        nodes.push($NodeJS("var $nb_defaults = Object.keys($defaults).length"))
 
         this.env = []
 
@@ -3236,8 +3239,8 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
 
                 subelse_node.add($NodeJS(local_ns + ' = $locals = ' + slot_init))
                 subelse_node.add($NodeJS("var defparams = [" + slot_list + "]"))
-                subelse_node.add($NodeJS("for(var i=$len; i < defparams.length" +
-                    ";i++){$locals[defparams[i]] = $defaults[defparams[i]]}"))
+                subelse_node.add($NodeJS("for(var i = $len; i < defparams.length" +
+                    "; i++){$locals[defparams[i]] = $defaults[defparams[i]]}"))
             }
         }else{
             nodes.push(make_args_nodes[0])
@@ -3247,8 +3250,6 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         nodes = nodes.concat(enter_frame_nodes)
 
         nodes.push($NodeJS('$locals.__annotations__ = _b_.dict.$factory()'))
-        nodes.push($NodeJS('$top_frame[1] = $locals'))
-        nodes.push($NodeJS('$locals.$parent = $parent'))
         nodes.push($NodeJS('$locals.$name = "' + this.name + '"'))
 
         // Handle name __class__ in methods (PEP 3135 and issue #1068)
@@ -7832,7 +7833,7 @@ var $SingleKwCtx = $B.parser.$SingleKwCtx = function(context,token){
             var scope = $get_scope(this)
             node.insert(0,
                 $NodeJS('var $exit;'+
-                'if($B.frames_stack.length<$stack_length){' +
+                'if($B.frames_stack.length < $stack_length){' +
                     '$exit = true;'+
                     '$B.frames_stack.push($top_frame)'+
                 '}')
@@ -9589,6 +9590,7 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
                 }else if(src.charAt(end) == '\n' && _type != 'triple_string'){
                     // In a string with single quotes, line feed not following
                     // a backslash raises SyntaxError
+                    console.log(pos, end, src.substring(pos, end))
                     $pos = end
                     $_SyntaxError(context, ["EOL while scanning string literal"])
                 }else if(src.charAt(end) == car){

@@ -22,11 +22,13 @@ $B.make_async = func => {
         return func
     }
     var f = function(){
-        var args = arguments
+        var args = arguments,
+            stack = $B.deep_copy($B.frames_stack)
         return {
             __class__: coroutine,
             $args: args,
-            $func: func
+            $func: func,
+            $stack: stack
         }
     }
     f.$infos = func.$infos

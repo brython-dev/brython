@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,10,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.10"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-06-12 17:28:14.853527"
-__BRYTHON__.timestamp=1591975694837
+__BRYTHON__.compiled_date="2020-06-16 09:17:35.996529"
+__BRYTHON__.timestamp=1592291855996
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -925,7 +925,10 @@ p=p.parent}
 this.transition=function(token,value){var C=this
 C.parent.is_await=true
 return $transition(C.parent,token,value)}
-this.to_js=function(){return 'await ($B.promise('+$to_js(this.tree)+'))'}}
+this.to_js=function(){return 'var save_stack = $B.deep_copy($B.frames_stack);'+
+'await ($B.promise('+$to_js(this.tree)+'));'+
+'$B.frames_stack = save_stack; '+
+'$B.frames_stack[$B.frames_stack.length - 1][1] = $locals;'}}
 var $BodyCtx=$B.parser.$BodyCtx=function(C){
 var ctx_node=C.parent
 while(ctx_node.type !=='node'){ctx_node=ctx_node.parent}
@@ -1610,8 +1613,7 @@ this.module+'"'),$NodeJS('var $top_frame = [$local_name, $locals,'+
 if(this.type=="generator1"){enter_frame_nodes.push($NodeJS("$locals.$is_generator = true"))}
 enter_frame_nodes.forEach(function(node){node.enter_frame=true})
 if(this.is_comp){nodes.push($NodeJS("var $defaults = {}"))}
-nodes.push($NodeJS("var $nb_defaults = Object.keys($defaults).length,"))
-nodes.push($NodeJS("    $parent = $locals.$parent"))
+nodes.push($NodeJS("var $nb_defaults = Object.keys($defaults).length"))
 this.env=[]
 var make_args_nodes=[]
 var js=local_ns+' = $locals = $B.args("'+this.name+'", '+
@@ -1649,13 +1651,11 @@ subelse_node=$NodeJS("else")
 else_node.add(subelse_node)
 subelse_node.add($NodeJS(local_ns+' = $locals = '+slot_init))
 subelse_node.add($NodeJS("var defparams = ["+slot_list+"]"))
-subelse_node.add($NodeJS("for(var i=$len; i < defparams.length"+
-";i++){$locals[defparams[i]] = $defaults[defparams[i]]}"))}}else{nodes.push(make_args_nodes[0])
+subelse_node.add($NodeJS("for(var i = $len; i < defparams.length"+
+"; i++){$locals[defparams[i]] = $defaults[defparams[i]]}"))}}else{nodes.push(make_args_nodes[0])
 if(make_args_nodes.length > 1){nodes.push(make_args_nodes[1])}}
 nodes=nodes.concat(enter_frame_nodes)
 nodes.push($NodeJS('$locals.__annotations__ = _b_.dict.$factory()'))
-nodes.push($NodeJS('$top_frame[1] = $locals'))
-nodes.push($NodeJS('$locals.$parent = $parent'))
 nodes.push($NodeJS('$locals.$name = "'+this.name+'"'))
 var is_method=scope.ntype=="class"
 if(is_method){var class_name=scope.C.tree[0].name,class_block=scope.parent_block,class_ref="$locals_"+class_block.id.replace(/\./g,'_')+
@@ -3908,7 +3908,7 @@ $_SyntaxError(C,'token '+token+' after '+C)}
 this.transform=function(node,rank){
 if(this.token=='finally'){var scope=$get_scope(this)
 node.insert(0,$NodeJS('var $exit;'+
-'if($B.frames_stack.length<$stack_length){'+
+'if($B.frames_stack.length < $stack_length){'+
 '$exit = true;'+
 '$B.frames_stack.push($top_frame)'+
 '}')
@@ -4719,6 +4719,7 @@ is_escaped[src.charAt(end+1)]===undefined){zone+='\\'}
 zone+='\\'
 escaped=true
 end++}}}else if(src.charAt(end)=='\n' && _type !='triple_string'){
+console.log(pos,end,src.substring(pos,end))
 $pos=end
 $_SyntaxError(C,["EOL while scanning string literal"])}else if(src.charAt(end)==car){if(_type=="triple_string" &&
 src.substr(end,3)!=car+car+car){zone+=src.charAt(end)
@@ -5301,7 +5302,7 @@ try{func.apply(null,args)}catch(err){$B.handle_error(err)}}}
 $B.tasks=[]
 $B.has_indexedDB=self.indexedDB !==undefined
 $B.handle_error=function(err){
-console.log("handle error",err.__class__,err.args)
+if($B.debug > 1){console.log("handle error",err.__class__,err.args)}
 if(err.__class__ !==undefined){var name=$B.class_name(err),trace=$B.$getattr(err,'info')
 if(name=='SyntaxError' ||name=='IndentationError'){var offset=err.args[3]
 trace+='\n    '+' '.repeat(offset)+'^'+
@@ -6263,7 +6264,7 @@ else{throw _b_.TypeError.$factory("'"+$B.class_name(v)+
 default:
 throw _b_.TypeError.$factory("'"+$B.class_name(v)+
 "' object cannot be interpreted as an integer")}}
-$B.enter_frame=function(frame){
+$B.enter_frame=function(frame,async_id){
 $B.frames_stack.push(frame)
 if($B.tracefunc && $B.tracefunc !==_b_.None){if(frame[4]===$B.tracefunc ||
 ($B.tracefunc.$infos && frame[4]&&
@@ -7791,9 +7792,12 @@ return traceback.$factory(self)}else{throw _b_.AttributeError.$factory(self.__cl
 " has no attribute '"+attr+"'")}}
 BaseException.with_traceback=function(self,tb){self.$traceback=tb
 return self}
-function deep_copy(stack){var current_frame=$B.last($B.frames_stack),is_local=current_frame[0]!=current_frame[2]
-if(is_local){for(var i=0,len=$B.frames_stack.length;i < len;i++){if($B.frames_stack[0]==current_frame[0]){return stack.slice(i)}}}
-return stack.slice()}
+$B.deep_copy=function(stack){var res=[]
+for(const s of stack){var item=[s[0],{},s[2],{}]
+if(s[4]!==undefined){item.push(s[4])}
+for(const i of[1,3]){for(var key in s[i]){item[i][key]=s[i][key]}}
+res.push(item)}
+return res}
 $B.freeze=function(stack){
 for(var i=0,len=stack.length;i < len;i++){stack[i][1].$frozen_line_info=stack[i][1].$line_info
 stack[i][3].$frozen_line_info=stack[i][3].$line_info}
@@ -13862,9 +13866,9 @@ coroutine.__repr__=coroutine.__str__=function(self){if(self.$func.$infos){return
 $B.set_func_names(coroutine,"builtins")
 $B.make_async=func=>{
 if(func.$is_genfunc){return func}
-var f=function(){var args=arguments
+var f=function(){var args=arguments,stack=$B.deep_copy($B.frames_stack)
 return{
-__class__:coroutine,$args:args,$func:func}}
+__class__:coroutine,$args:args,$func:func,$stack:stack}}
 f.$infos=func.$infos
 return f}
 $B.promise=function(obj){if(obj.__class__===$B.JSObject){return obj.js}else if(obj.__class__===coroutine){return coroutine.send(obj)}

@@ -506,17 +506,19 @@ BaseException.with_traceback = function(self, tb){
     return self
 }
 
-function deep_copy(stack){
-    var current_frame = $B.last($B.frames_stack),
-        is_local = current_frame[0] != current_frame[2]
-    if(is_local){
-        for(var i = 0, len = $B.frames_stack.length; i < len; i++){
-            if($B.frames_stack[0] == current_frame[0]){
-                return stack.slice(i)
+$B.deep_copy = function(stack){
+    var res = []
+    for(const s of stack){
+        var item = [s[0], {}, s[2], {}]
+        if(s[4] !== undefined){item.push(s[4])}
+        for(const i of [1, 3]){
+            for(var key in s[i]){
+                item[i][key] = s[i][key]
             }
         }
+        res.push(item)
     }
-    return stack.slice()
+    return res
 }
 
 $B.freeze = function(stack){
