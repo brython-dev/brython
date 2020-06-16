@@ -25,20 +25,10 @@ vname = '.'.join(str(x) for x in implementation[:3])
 if implementation[3] == 'rc':
     vname += 'rc%s' % implementation[4]
 
+abs_path = lambda _pth: os.path.join(os.path.dirname(os.getcwd()), 'www',
+    'src', _pth)
+
 def run():
-    # update package.json
-    package_file = os.path.join(pdir, 'npm', 'package.json')
-    with open(package_file, encoding="utf-8") as fobj:
-        package_info = fobj.read()
-        package_info = re.sub('"version": "(.*)"',
-            '"version": "{}"'.format(vname),
-            package_info)
-
-    with open(package_file, "w", encoding="utf-8") as fobj:
-        fobj.write(package_info)
-
-    abs_path = lambda _pth: os.path.join(os.path.dirname(os.getcwd()), 'www',
-        'src', _pth)
     now = datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
 
     timestamp = int(1000 * time.time())
@@ -64,9 +54,6 @@ def run():
         _modules.sort()
         vinfo_file_out.write(',\n    '.join(_modules))
         vinfo_file_out.write(']\n')
-
-    # generate html files that compare Brython and CPython distributions
-    import make_stdlib_list
 
     import make_stdlib_static
     # build brython.js from base Javascript files
@@ -113,27 +100,6 @@ def run():
 
     sys.path.append("scripts")
 
-    # update implementation in README.md
-    print("Update readme and install doc pages", vname)
-    README_page = os.path.join(pdir, "README.md")
-    with open(README_page, encoding="utf-8") as f:
-        content = f.read()
-        content = re.sub("npm/brython@\d\.\d+\.\d+", "npm/brython@" + vname,
-            content)
-    with open(README_page, "w", encoding="utf-8") as out:
-        out.write(content)
-
-    for lang in ["en", "fr", "es"]:
-        install_page = os.path.join(pdir, "www", "doc", lang, "install.md")
-        with open(install_page, encoding="utf-8") as f:
-            content = f.read()
-        content = re.sub("npm/brython@\d\.\d+\.\d+", "npm/brython@" + vname,
-            content)
-        content = re.sub("/brython/\d\.\d+\.\d+", "/brython/" + vname,
-            content)
-        with open(install_page, "w", encoding="utf-8") as out:
-            out.write(content)
-
     try:
         import make_VFS
     except ImportError:
@@ -150,71 +116,11 @@ def run():
     with open(br_script, "w", encoding="utf-8") as out:
         out.write('__version__ = implementation = "{}"'.format(vname))
 
-    # copy demo.html
-    with open(os.path.join(pdir, 'www', 'demo.html'), encoding="utf-8") as f:
-        demo = f.read()
-    start_tag = "<!-- start copy -->"
-    end_tag = "<!-- end copy -->"
-    start = demo.find(start_tag)
-    if start == -1:
-        raise Exception("No tag <!-- start copy --> in demo.html")
-    end = demo.find(end_tag)
-    if end == -1:
-        raise Exception("No tag <!-- end copy --> in demo.html")
-    body = demo[start + len(start_tag) : end].strip()
-
-    release_dir = os.path.join(pdir, "releases")
-    with open(os.path.join(release_dir, "demo.tmpl"), encoding="utf-8") as f:
-        template = f.read()
-
-    demo = template.replace("{{body}}", body)
-
-    with open(os.path.join(release_dir, "demo.html"),
-            "w", encoding="utf-8") as out:
-        out.write(demo)
-
     # copy files in folder /npm
     npmdir = os.path.join(pdir, 'npm')
     for f in ['brython.js', 'brython_stdlib.js', 'unicode.txt']:
         shutil.copyfile(os.path.join(src_dir, f), os.path.join(npmdir, f))
 
-    # create zip files
-    print('create zip files in /releases')
-    name = 'Brython-{}'.format(vname)
-    dest_path = os.path.join(release_dir, name)
-    dist1 = tarfile.open(dest_path + '.tar.gz', mode='w:gz')
-    dist2 = tarfile.open(dest_path+'.tar.bz2', mode='w:bz2')
-    dist3 = zipfile.ZipFile(dest_path + '.zip', mode='w',
-                            compression=zipfile.ZIP_DEFLATED)
-
-    paths1 = ['README.txt', 'demo.html', 'index.html']
-    paths2 = ['brython.js', 'brython_stdlib.js', 'unicode.txt']
-
-    for arc, wfunc in ((dist1, dist1.add), (dist2, dist2.add),
-            (dist3, dist3.write)):
-        for path in paths1:
-            wfunc(os.path.join(release_dir, path),
-                arcname=os.path.join(name, path))
-        for path in paths2:
-            wfunc(abs_path(path),
-                arcname=os.path.join(name, path))
-
-        arc.close()
-
-    # changelog file
-    print('write changelog file')
-    try:
-        first = 'Changes in Brython version {}'.format(vname)
-        with open(os.path.join(pdir, 'setup', 'changelog.txt')) as f:
-            input_changelog_data_string = f.read()
-        with open(os.path.join(release_dir,
-                'changelog_{}.txt'.format(vname)), 'w') as out:
-            out.write('%s\n' % first)
-            out.write('%s\n\n' % ('=' * len(first)))
-            out.write(input_changelog_data_string)
-    except Exception as error:
-        print(error)
-        print("Warning - no changelog file")
 
 if __name__ == "__main__":
     run()
