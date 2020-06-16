@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-06-16 18:08:55.186318"
-__BRYTHON__.timestamp=1592323735186
+__BRYTHON__.compiled_date="2020-06-16 20:36:15.630897"
+__BRYTHON__.timestamp=1592332575630
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -802,6 +802,8 @@ offset++}
 var left_id=this.tree[0].tree[0].value,was_bound=this.scope.binding[left_id]!==undefined,left_id_unbound=this.tree[0].tree[0].unbound}
 var right_is_int=(this.tree[1].type=='expr' &&
 this.tree[1].tree[0].type=='int')
+if(right_is_int){var value=this.tree[1].tree[0].value,to_int=parseInt(value[1],value[0])
+right_is_int=(to_int > $B.min_int)&&(to_int < $B.max_int)}
 var right=right_is_int ? this.tree[1].tree[0].to_js():'$temp'
 if(!right_is_int){
 var new_node=new $Node()

@@ -1566,6 +1566,11 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
 
         var right_is_int = (this.tree[1].type == 'expr' &&
             this.tree[1].tree[0].type == 'int')
+        if(right_is_int){
+            var value = this.tree[1].tree[0].value,
+                to_int = parseInt(value[1], value[0])
+            right_is_int = (to_int > $B.min_int) && (to_int < $B.max_int)
+        }
 
         var right = right_is_int ? this.tree[1].tree[0].to_js() : '$temp'
 
@@ -8762,7 +8767,7 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
 
         var top_try_node = $NodeJS("try")
         node.parent.insert(rank + 1, top_try_node)
-        
+
         // Used to create js identifiers:
         var num = this.num = $loop_num++
 
