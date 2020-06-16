@@ -1,7 +1,28 @@
-Première installation
----------------------
+Sans installation
+-----------------
+On peut utiliser Brython sans avoir à installer quoi que ce soit, il suffit
+d'inclure les scripts Brython dans la page HTML depuis un CDN:
 
-Pour installer Brython :
+```xml
+<script src="https://cdn.jsdelivr.net/npm/brython@3.8.8/brython.min.js">
+</script>
+<script src="https://cdn.jsdelivr.net/npm/brython@3.8.8/brython_stdlib.js">
+</script>
+```
+
+ou
+
+```xml
+<script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.8.9/brython.min.js">
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.8.9/brython_stdlib.min.js">
+</script>
+```
+
+Installation locale
+-------------------
+
+Pour installer Brython localement:
 
 - si votre PC peut utiliser CPython et pip, installez le package `brython` par
 ```console
