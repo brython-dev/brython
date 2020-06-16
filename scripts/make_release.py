@@ -2,6 +2,7 @@ import os
 import re
 import tarfile
 import zipfile
+import shutil
 
 # generate html files that compare Brython and CPython distributions
 import make_stdlib_list
@@ -44,6 +45,19 @@ for lang in ["en", "fr", "es"]:
         content)
     with open(install_page, "w", encoding="utf-8") as out:
         out.write(content)
+
+# update implementation in brython/__init__.py
+print("Update CPython brython package...")
+br_script = os.path.join(pdir, 'setup', 'brython', '__init__.py')
+with open(br_script, "w", encoding="utf-8") as out:
+    out.write('__version__ = implementation = "{}"'.format(vname))
+
+# copy files in folder /npm
+print("Udpate npm folder...")
+npmdir = os.path.join(pdir, 'npm')
+src_dir = os.path.join(pdir, 'www', 'src')
+for f in ['brython.js', 'brython_stdlib.js', 'unicode.txt']:
+    shutil.copyfile(os.path.join(src_dir, f), os.path.join(npmdir, f))
 
 # copy demo.html
 print("Copy demo.html...")

@@ -7,9 +7,6 @@ import datetime
 import os
 import re
 import sys
-import tarfile
-import zipfile
-import shutil
 
 import javascript_minifier
 from version import version, implementation
@@ -108,18 +105,6 @@ def run():
         sys.exit()
 
     make_VFS.process(os.path.join(pdir, 'www', 'src', 'brython_stdlib.js'))
-
-    src_dir = os.path.join(pdir, 'www', 'src')
-
-    # update implementation in brython/__init__.py
-    br_script = os.path.join(pdir, 'setup', 'brython', '__init__.py')
-    with open(br_script, "w", encoding="utf-8") as out:
-        out.write('__version__ = implementation = "{}"'.format(vname))
-
-    # copy files in folder /npm
-    npmdir = os.path.join(pdir, 'npm')
-    for f in ['brython.js', 'brython_stdlib.js', 'unicode.txt']:
-        shutil.copyfile(os.path.join(src_dir, f), os.path.join(npmdir, f))
 
 
 if __name__ == "__main__":
