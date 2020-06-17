@@ -22,7 +22,6 @@ function $list(){
 
 var list = {
     __class__: _b_.type,
-    __proto__: Array.prototype,
     __mro__: [object],
     $infos: {
         __module__: "builtins",
@@ -436,15 +435,16 @@ var _ops = ["add", "sub"]
 
 list.append = function(){
     var self = arguments[0];
-    var value = arguments[1];
-    self.push(value);
-    // NOTE(redradist): Instead of accessing Python object,
-    // lets use optimized JavaScript Array for cases
-    // where mapping could be done
+    var x = arguments[1];
+    self[self.length] = x
+
+    // NOTE(redradist): Seems like performance is low
+    // due to parsing complex arguments everytime
+    // Lets call arguments directly without $B.args for simple cases
+    // for all other cases leave it as it is
     // var $ = $B.args("append", 2 ,{self: null, x: null}, ["self", "x"],
     //     arguments, {}, null, null)
     // $.self[$.self.length] = $.x
-
     return $N
 }
 
