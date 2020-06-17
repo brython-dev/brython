@@ -22,6 +22,7 @@ function $list(){
 
 var list = {
     __class__: _b_.type,
+    __proto__: Array.prototype,
     __mro__: [object],
     $infos: {
         __module__: "builtins",
@@ -434,9 +435,16 @@ $B.make_rmethods(list)
 var _ops = ["add", "sub"]
 
 list.append = function(){
-    var $ = $B.args("append", 2 ,{self: null, x: null}, ["self", "x"],
-        arguments, {}, null, null)
-    $.self[$.self.length] = $.x
+    var self = arguments[0];
+    var value = arguments[1];
+    self.push(value);
+    // NOTE(redradist): Instead of accessing Python object,
+    // lets use optimized JavaScript Array for cases
+    // where mapping could be done
+    // var $ = $B.args("append", 2 ,{self: null, x: null}, ["self", "x"],
+    //     arguments, {}, null, null)
+    // $.self[$.self.length] = $.x
+
     return $N
 }
 
