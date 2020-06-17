@@ -6,7 +6,7 @@ var _b_ = $B.builtins,
             ("function" === typeof importScripts) &&
             (navigator instanceof WorkerNavigator)
 
-$B.applyPosArgs = function(args) {
+$B.posArgs = function(args) {
     var pos_args = [];
     try {
         var self = args[0];
