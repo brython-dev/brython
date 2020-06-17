@@ -48,18 +48,15 @@ function $import_hooks(mod_name, path, from_stdlib) {
         for (var j = 0, _len_j = ext.length; j < _len_j; j++) {
             for (var k = 0, _len_k = mods.length; k < _len_k; k++) {
                 var path = search_path[i] + '/' + mods[k] + ext[j]
-                var module_contents;
                 try {
-                    module_contents = fs.readFileSync(path, 'utf8')
-                    if (module_contents !== undefined) {
-                        if (ext[j] === '.js') {
-                            __BRYTHON__.$js_module_path[mod_name] = path
-                        } else {
-                            __BRYTHON__.$py_module_path[mod_name] = path
-                        }
-                        __BRYTHON__.imported[mod_name] = path
-                        return module_contents
+                    var module_contents = fs.readFileSync(path, 'utf8')
+                    if (ext[j] === '.js') {
+                        __BRYTHON__.$js_module_path[mod_name] = path
+                    } else {
+                        __BRYTHON__.$py_module_path[mod_name] = path
                     }
+                    __BRYTHON__.imported[mod_name] = path
+                    return module_contents
                 } catch (err) {
                 }
             }
