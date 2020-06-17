@@ -434,37 +434,15 @@ $B.make_rmethods(list)
 var _ops = ["add", "sub"]
 
 list.append = function(){
-    try {
-        var self = arguments[0];
-        for (var i = 1; i < arguments.length; ++i) {
-            self[self.length] = arguments[i];
-        }
-    } catch (err) {
-        // NOTE(redradist): Seems like performance is low
-        // due to parsing complex arguments everytime
-        // Lets call arguments directly without $B.args for simple cases
-        // for all other cases leave it as it is
-        var $ = $B.args("append", 2 ,{self: null, x: null}, ["self", "x"],
-            arguments, {}, null, null)
-        $.self[$.self.length] = $.x
-    }
+    // NOTE(redradist): Seems like performance is low
+    // due to parsing complex arguments each time
+    // Lets call arguments directly without $B.args for simple cases
+    // for all other cases leave it as it is
 
-    // var posArgs = $B.posArgs(arguments);
-    // if (posArgs === arguments.length-1) {
-    //     var self = arguments[0];
-    //     for (var i = 1; i < posArgs.length; ++i) {
-    //         var x = posArgs[i];
-    //         self[self.length] = x
-    //     }
-    // } else {
-    //     // NOTE(redradist): Seems like performance is low
-    //     // due to parsing complex arguments everytime
-    //     // Lets call arguments directly without $B.args for simple cases
-    //     // for all other cases leave it as it is
-    //     var $ = $B.args("append", 2 ,{self: null, x: null}, ["self", "x"],
-    //         arguments, {}, null, null)
-    //     $.self[$.self.length] = $.x
-    // }
+    // Simple positional argument
+    var self = arguments[0];
+    var x = arguments[1];
+    self[self.length] = x;
     return $N
 }
 
