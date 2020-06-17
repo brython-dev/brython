@@ -6,6 +6,17 @@ var _b_ = $B.builtins,
             ("function" === typeof importScripts) &&
             (navigator instanceof WorkerNavigator)
 
+$B.applyPosArgs = function(args) {
+    var pos_args = [];
+    try {
+        var self = args[0];
+        for (var i = 1; i < args.length; ++i) {
+            pos_args.push(args[i]);
+        }
+    } catch (err) {}
+    return pos_args;
+}
+
 $B.args = function($fname, argcount, slots, var_names, args, $dobj,
     extra_pos_args, extra_kw_args){
     // builds a namespace from the arguments provided in $args
