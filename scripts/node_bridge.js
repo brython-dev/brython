@@ -26,6 +26,8 @@ document.$debug = 0
 
 self = {};
 __BRYTHON__ = {}
+__BRYTHON__.$js_module_path = {}
+__BRYTHON__.$js_module_alias = {}
 __BRYTHON__.$py_module_path = {}
 __BRYTHON__.$py_module_alias = {}
 __BRYTHON__.$py_next_hash = -Math.pow(2, 53)
@@ -51,9 +53,10 @@ function $import_hooks(mod_name, path, from_stdlib) {
                     module_contents = fs.readFileSync(path, 'utf8')
                     if (module_contents !== undefined) {
                         if (ext[j] === '.js') {
-                            return $import_js_module(mod_name, alias, names, path, module_contents)
+                            __BRYTHON__.$js_module_path[mod_name] = path
+                        } else {
+                            __BRYTHON__.$py_module_path[mod_name] = path
                         }
-                        __BRYTHON__.$py_module_path[mod_name] = path
                         __BRYTHON__.imported[mod_name] = path
                         return module_contents
                     }
@@ -63,9 +66,9 @@ function $import_hooks(mod_name, path, from_stdlib) {
         }
     }
     console.log("error time!");
-    res = Error()
+    var res = Error()
     res.name = 'NotFoundError'
-    res.message = "No module named '" + module + "'"
+    res.message = "No module named '" + mod_name + "'"
     throw res
 }
 
@@ -148,6 +151,8 @@ function execute_python_script(filename) {
     eval(js);
 }
 
+__BRYTHON__.$js_module_path = __BRYTHON__.$js_module_path || {}
+__BRYTHON__.$js_module_alias = __BRYTHON__.$js_module_alias || {}
 __BRYTHON__.$py_module_path = __BRYTHON__.$py_module_path || {}
 __BRYTHON__.$py_module_alias = __BRYTHON__.$py_module_alias || {}
 __BRYTHON__.exception_stack = __BRYTHON__.exception_stack || []
