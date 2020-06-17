@@ -14,9 +14,10 @@ $B.isWebWorker = ('undefined' !== typeof WorkerGlobalScope) &&
                   ("function" === typeof importScripts) &&
                   (navigator instanceof WorkerNavigator)
 $B.isNode = (typeof process !=='undefined') && (process.release.name==='node')
+$B.isDeno = (typeof Deno !=='undefined')
 
 var _window
-if($B.isNode){
+if($B.isNode || $B.isDeno){
     _window = {
         location: {
             href:'',

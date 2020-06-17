@@ -12,8 +12,9 @@ $B.isWebWorker=('undefined' !==typeof WorkerGlobalScope)&&
 ("function"===typeof importScripts)&&
 (navigator instanceof WorkerNavigator)
 $B.isNode=(typeof process !=='undefined')&&(process.release.name==='node')
+$B.isDeno = (typeof Deno !=='undefined')
 var _window
-if($B.isNode){_window={location:{href:'',origin:'',pathname:''},navigator:{userLanguage:''}}}else{
+if($B.isNode||$B.isDeno){_window={location:{href:'',origin:'',pathname:''},navigator:{userLanguage:''}}}else{
 _window=self}
 var href=_window.location.href
 $B.protocol=href.split(':')[0]
@@ -114,7 +115,7 @@ Number.isSafeInteger=Number.isSafeInteger ||function(value){return Number.isInte
 var js,$pos,res,$op
 var _b_=$B.builtins
 var _window
-if($B.isNode){_window={location:{href:'',origin:'',pathname:''}}}else{
+if($B.isNode||$B.isDeno){_window={location:{href:'',origin:'',pathname:''}}}else{
 _window=self}
 $B.parser={}
 var clone=$B.clone=function(obj){var res={}
@@ -5068,7 +5069,7 @@ $B.$options=options
 $B.set_import_paths()
 var $href=$B.script_path=_window.location.href,$href_elts=$href.split('/')
 $href_elts.pop()
-if($B.isWebWorker ||$B.isNode){$href_elts.pop()}
+if($B.isWebWorker||$B.isNode||$B.isDeno){$href_elts.pop()}
 $B.curdir=$href_elts.join('/')
 if(options.pythonpath !==undefined){$B.path=options.pythonpath
 $B.$options.static_stdlib_import=false}
@@ -5081,7 +5082,7 @@ if(path.slice(-7).toLowerCase()=='.vfs.js' &&
 (prefetch===undefined ||prefetch===true)){$B.path_importer_cache[path+'/']=
 $B.imported['_importlib'].VFSPathFinder(path)}
 if(lang){_importlib.optimize_import_for_path(path,lang)}})}
-if(!($B.isWebWorker ||$B.isNode)){
+if(!($B.isWebWorker||$B.isNode||$B.isDeno)){
 var path_links=document.querySelectorAll('head link[rel~=pythonpath]'),_importlib=$B.imported['_importlib']
 for(var i=0,e;e=path_links[i];++i){var href=e.href;
 if((' '+e.rel+' ').indexOf(' prepend ')!=-1){$B.path.unshift(href);}else{$B.path.push(href);}
@@ -5089,7 +5090,7 @@ var filetype=e.hreflang
 if(filetype){if(filetype.slice(0,2)=='x-'){filetype=filetype.slice(2)}
 _importlib.optimize_import_for_path(e.href,filetype)}}}
 if($B.$options.args){$B.__ARGV=$B.$options.args}else{$B.__ARGV=_b_.list.$factory([])}
-if(!($B.isWebWorker ||$B.isNode)){_run_scripts(options)}}
+if(!($B.isWebWorker||$B.isNode||$B.isDeno)){_run_scripts(options)}}
 $B.run_script=function(src,name,run_loop){
 if(run_loop){if($B.idb_cx && $B.idb_cx.$closed){$B.tasks.push([$B.idb_open])}}
 $B.$py_module_path[name]=$B.script_path
@@ -13597,7 +13598,7 @@ throw err}}}catch(err){if(_b_.isinstance(err,_b_.AttributeError)){$B.DOMNode.bin
 throw err}
 return callback}},console:self.console && $B.JSObject.$factory(self.console),self:$B.win,win:$B.win,$$window:$B.win,}
 browser.__path__=browser.__file__
-if($B.isNode){delete browser.$$window
+if($B.isNode||$B.isDeno){delete browser.$$window
 delete browser.win}else if($B.isWebWorker){browser.is_webworker=true
 delete browser.$$window
 delete browser.win
@@ -13750,7 +13751,7 @@ $B.imported[name]=module_obj
 for(var attr in module_obj){if(typeof module_obj[attr]=='function'){var attr1=$B.from_alias(attr)
 module_obj[attr].$infos={__module__:name,__name__:attr1,__qualname__:name+'.'+attr1}}}}
 for(var attr in modules){load(attr,modules[attr])}
-if(!($B.isWebWorker ||$B.isNode)){modules['browser'].html=modules['browser.html']}
+if(!($B.isWebWorker||$B.isNode||$B.isDeno)){modules['browser'].html=modules['browser.html']}
 var _b_=$B.builtins
 _b_.__builtins__=$B.module.$factory('__builtins__','Python builtins')
 for(var attr in _b_){_b_.__builtins__[attr]=_b_[attr]
