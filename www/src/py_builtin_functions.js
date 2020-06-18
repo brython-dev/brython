@@ -1055,7 +1055,7 @@ $B.$getattr = function(obj, attr, _default){
                 obj.__dict__.$string_dict.hasOwnProperty(attr) &&
                 ! (klass.hasOwnProperty(attr) &&
                    klass[attr].__get__)){
-            return obj.__dict__.$string_dict[attr][0];
+            return obj.__dict__.$string_dict[attr][0]; // Cannot be cached, one of the tests failed
         }else if(klass.hasOwnProperty(attr)){
             if(typeof klass[attr] != "function" &&
                     attr != "__dict__" &&
@@ -1092,7 +1092,7 @@ $B.$getattr = function(obj, attr, _default){
                             __name__: attr,
                             __qualname__: attr
                         }
-                        return setAttrCacheValue(obj, attr, f);
+                        return f;
                     }else{
                         return setAttrCacheValue(obj, attr, $B.$JS2Py(res));
                     }
@@ -1109,7 +1109,7 @@ $B.$getattr = function(obj, attr, _default){
               var res = function(){return obj.apply(null, arguments)}
               res.__class__ = method_wrapper
               res.$infos = {__name__: "__call__"}
-              return setAttrCacheValue(obj, attr, res);
+              return res;
           }
           break
       case '__class__':
@@ -1284,7 +1284,7 @@ $B.$getattr = function(obj, attr, _default){
             if(res.__set__ === undefined || res.$is_class){
                 if($test){console.log("return", res, res+'',
                     res.__set__, res.$is_class)}
-                return res
+                return setAttrCacheValue(obj, attr, res);
             }
         }
     }
@@ -1299,7 +1299,9 @@ $B.$getattr = function(obj, attr, _default){
         throw err
     }
 
-    if(res !== undefined){return res}
+    if(res !== undefined){
+        return res; // Cannot be cached, one of the tests failed
+    }
     if(_default !== undefined){return _default}
 
     var cname = klass.$infos.__name__
