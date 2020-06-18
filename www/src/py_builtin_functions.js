@@ -1094,7 +1094,7 @@ $B.$getattr = function(obj, attr, _default){
                         }
                         return setAttrCacheValue(obj, attr, f);
                     }else{
-                        return $B.$JS2Py(res)
+                        return setAttrCacheValue(obj, attr, $B.$JS2Py(res));
                     }
                 }
                 if(_default !== undefined){return _default}
@@ -1109,12 +1109,12 @@ $B.$getattr = function(obj, attr, _default){
               var res = function(){return obj.apply(null, arguments)}
               res.__class__ = method_wrapper
               res.$infos = {__name__: "__call__"}
-              return res
+              return setAttrCacheValue(obj, attr, res);
           }
           break
       case '__class__':
           // attribute __class__ is set for all Python objects
-          return klass
+          return setAttrCacheValue(obj, attr, klass);
       case '__dict__':
           if(is_class){
               var proxy = {}
