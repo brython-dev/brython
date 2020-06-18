@@ -1086,7 +1086,7 @@ $B.$getattr = function(obj, attr, _default){
                     if(typeof res == "function"){
                         var f = function(){
                             // In function, "this" is set to the object
-                            return setAttrCacheValue(obj, attr, res.apply(obj, arguments));
+                            return res.apply(obj, arguments);
                         }
                         f.$infos = {
                             __name__: attr,
@@ -1106,7 +1106,7 @@ $B.$getattr = function(obj, attr, _default){
     switch(attr) {
       case '__call__':
           if(typeof obj == 'function'){
-              var res = function(){return setAttrCacheValue(obj, attr, obj.apply(null, arguments))}
+              var res = function(){return obj.apply(null, arguments)}
               res.__class__ = method_wrapper
               res.$infos = {__name__: "__call__"}
               return setAttrCacheValue(obj, attr, res)
@@ -1163,7 +1163,7 @@ $B.$getattr = function(obj, attr, _default){
       case '__subclasses__':
           if(klass.$factory || klass.$is_class){
               var subclasses = obj.$subclasses || []
-              return setAttrCacheValue(obj, attr, function(){return subclasses});
+              return function(){return subclasses}
           }
           break
       case '$$new':
