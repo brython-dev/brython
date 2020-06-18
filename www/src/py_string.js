@@ -149,7 +149,7 @@ var prefix = 2,
     mask = (2 ** 32 - 1),
     str_hash_cache = {}
 
-$B.nb_cache = 0
+str.$nb_str_hash_cache = 0
 
 function fnv(p){
     if(p.length == 0){
@@ -172,8 +172,13 @@ function fnv(p){
 
 str.__hash__ = function(self) {
     if(str_hash_cache[self] !== undefined){
-        $B.nb_cache++
         return str_hash_cache[self]
+    }
+    str.$nb_str_hash_cache++
+    if(str.$nb_str_hash_cache > 100000){
+        // Avoid memory overflow
+        str.$nb_str_hash_cache = 0
+        str_hash_cache = {}
     }
     return str_hash_cache[self] = fnv(self)
 }

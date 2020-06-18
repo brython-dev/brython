@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-06-16 21:40:42.057214"
-__BRYTHON__.timestamp=1592336442057
+__BRYTHON__.compiled_date="2020-06-18 14:52:55.727048"
+__BRYTHON__.timestamp=1592484775727
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -6854,7 +6854,8 @@ if(klass===$B.JSObject && obj.js_func !==undefined){return $B.JSConstructor.$fac
 break}
 if(typeof obj=='function'){var value=obj[attr]
 if(value !==undefined){if(attr=='__module__'){return value}}}
-if((! is_class)&& klass.$native){if($test){console.log("native class",klass,klass[attr])}
+if((! is_class)&& klass.$native){if(obj.$method_cache && obj.$method_cache[attr]){return obj.$method_cache[attr]}
+if($test){console.log("native class",klass,klass[attr])}
 if(attr=="__doc__" && klass[attr]===undefined && klass.$infos){_get_builtins_doc()
 klass[attr]=$B.builtins_doc[klass.$infos.__name__]}
 if(klass[attr]===undefined){var object_attr=_b_.object[attr]
@@ -6872,6 +6873,10 @@ if(func.$type=="staticmethod"){return func}
 var self=klass[attr].__class__==$B.method ? klass :obj,method=klass[attr].bind(null,self)
 method.__class__=$B.method
 method.$infos={__func__:func,__name__:attr,__self__:self,__qualname__:klass.$infos.__name__+"."+attr}
+if(typeof obj=="object"){
+obj.__class__=klass
+obj.$method_cache=obj.$method_cache ||{}
+obj.$method_cache[attr]=method}
 return method}else if(klass[attr]!==undefined){return klass[attr]}
 attr_error(rawname,klass.$infos.__name__)}
 var mro,attr_func
@@ -10274,6 +10279,7 @@ $B.set_func_names(bool,"builtins")})(__BRYTHON__)
 ;(function($B){
 var bltns=$B.InjectBuiltins()
 eval(bltns)
+try{eval("window")}catch(err){window=self}
 var long_int={__class__:_b_.type,__mro__:[int,object],$infos:{__module__:"builtins",__name__:"int"},$is_class:true,$native:true,$descriptors:{"numerator":true,"denominator":true,"imag":true,"real":true}}
 function add_pos(v1,v2){
 if(window.BigInt){return{
@@ -11323,8 +11329,9 @@ throw _b_.TypeError.$factory("list indices must be integer, not "+
 $B.class_name(arg))}
 $B.make_rmethods(list)
 var _ops=["add","sub"]
-list.append=function(){var $=$B.args("append",2 ,{self:null,x:null},["self","x"],arguments,{},null,null)
-$.self[$.self.length]=$.x
+list.append=function(self,x){$B.check_no_kw("append",self,x)
+$B.check_nb_args("append",2,arguments)
+self.push(x)
 return $N}
 list.clear=function(){var $=$B.args("clear",1,{self:null},["self"],arguments,{},null,null)
 while($.self.length){$.self.pop()}
@@ -11583,7 +11590,7 @@ return res}
 if(isinstance(arg,_b_.bool)){return self.__getitem__(_b_.int.$factory(arg))}
 throw _b_.TypeError.$factory("string indices must be integers")}
 var prefix=2,suffix=3,mask=(2**32-1),str_hash_cache={}
-$B.nb_cache=0
+str.$nb_str_hash_cache=0
 function fnv(p){if(p.length==0){return 0}
 var x=prefix
 x=(x ^(p.charCodeAt(0)<< 7))& mask
@@ -11592,8 +11599,11 @@ x=(x ^ p.length)& mask
 x=(x ^ suffix)& mask
 if(x==-1){x=-2}
 return x}
-str.__hash__=function(self){if(str_hash_cache[self]!==undefined){$B.nb_cache++
-return str_hash_cache[self]}
+str.__hash__=function(self){if(str_hash_cache[self]!==undefined){return str_hash_cache[self]}
+str.$nb_str_hash_cache++
+if(str.$nb_str_hash_cache > 100000){
+str.$nb_str_hash_cache=0
+str_hash_cache={}}
 return str_hash_cache[self]=fnv(self)}
 str.__init__=function(self,arg){self.valueOf=function(){return arg}
 self.toString=function(){return arg}

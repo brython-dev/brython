@@ -6,6 +6,12 @@ Module to manipulate long integers
 var bltns = $B.InjectBuiltins()
 eval(bltns)
 
+try{
+    eval("window")
+}catch(err){
+    window = self
+}
+
 var long_int = {
     __class__: _b_.type,
     __mro__: [int, object],
