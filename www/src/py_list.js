@@ -433,10 +433,15 @@ $B.make_rmethods(list)
 
 var _ops = ["add", "sub"]
 
-list.append = function(){
+list.append = function(self, x){
+    $B.check_no_kw("append", self, x)
+    $B.check_nb_args("append", 2, arguments)
+    /*
     var $ = $B.args("append", 2 ,{self: null, x: null}, ["self", "x"],
         arguments, {}, null, null)
     $.self[$.self.length] = $.x
+    */
+    self.push(x)
     return $N
 }
 
