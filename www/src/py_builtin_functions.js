@@ -1143,6 +1143,11 @@ $B.$getattr = function(obj, attr, _default){
     }
 
     if((! is_class) && klass.$native){
+
+        if(obj.$method_cache && obj.$method_cache[attr]){
+            return obj.$method_cache[attr]
+        }
+
         if($test){console.log("native class", klass, klass[attr])}
         if(attr == "__doc__" && klass[attr] === undefined && klass.$infos){
             _get_builtins_doc()
@@ -1184,6 +1189,13 @@ $B.$getattr = function(obj, attr, _default){
                 __name__: attr,
                 __self__: self,
                 __qualname__: klass.$infos.__name__ + "." + attr
+            }
+            if(typeof obj == "object"){
+                // Optimization : set attribute __class__ and store method
+                // as attribute of obj.$method_cache
+                obj.__class__ = klass
+                obj.$method_cache = obj.$method_cache || {}
+                obj.$method_cache[attr] = method
             }
             return method
         }else if(klass[attr] !== undefined){
