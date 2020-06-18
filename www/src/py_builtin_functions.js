@@ -973,10 +973,13 @@ function in_mro(klass, attr){
     return false
 }
 
+var dirtyAttribs = new Set();
+
 var getAttrCacheValue = function(obj, attr) {
     if (typeof obj === "boolean" ||
         typeof obj === "number" ||
-        typeof obj === "string") {
+        typeof obj === "string" ||
+        dirtyAttribs.has(attr)) {
         return undefined;
     }
     if (obj.$attrscache === undefined) {
@@ -997,7 +1000,8 @@ var setAttrCacheValue = function(obj, attr, value) {
             obj.$attrscache = {};
         }
         if (value === null) {
-            obj.$attrscache[attr] = null;
+            dirtyAttribs.add(attr);
+            delete obj.$attrscache[attr];
         } else {
             obj.$attrscache[attr] = value;
         }
@@ -1181,7 +1185,7 @@ $B.$getattr = function(obj, attr, _default){
     if((! is_class) && klass.$native){
 
         if(obj.$method_cache && obj.$method_cache[attr]){
-            return obj.$method_cache[attr]
+            return setAttrCacheValue(obj, attr, obj.$method_cache[attr]);
         }
 
         if($test){console.log("native class", klass, klass[attr])}
