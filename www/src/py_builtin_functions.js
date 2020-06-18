@@ -1055,7 +1055,7 @@ $B.$getattr = function(obj, attr, _default){
                 obj.__dict__.$string_dict.hasOwnProperty(attr) &&
                 ! (klass.hasOwnProperty(attr) &&
                    klass[attr].__get__)){
-            return setAttrCacheValue(obj, attr, obj.__dict__.$string_dict[attr][0]);
+            return obj.__dict__.$string_dict[attr][0];
         }else if(klass.hasOwnProperty(attr)){
             if(typeof klass[attr] != "function" &&
                     attr != "__dict__" &&
@@ -1092,9 +1092,9 @@ $B.$getattr = function(obj, attr, _default){
                             __name__: attr,
                             __qualname__: attr
                         }
-                        return setAttrCacheValue(obj, attr, f)
+                        return setAttrCacheValue(obj, attr, f);
                     }else{
-                        return setAttrCacheValue(obj, attr, $B.$JS2Py(res))
+                        return $B.$JS2Py(res)
                     }
                 }
                 if(_default !== undefined){return _default}
@@ -1109,12 +1109,12 @@ $B.$getattr = function(obj, attr, _default){
               var res = function(){return obj.apply(null, arguments)}
               res.__class__ = method_wrapper
               res.$infos = {__name__: "__call__"}
-              return setAttrCacheValue(obj, attr, res)
+              return res
           }
           break
       case '__class__':
           // attribute __class__ is set for all Python objects
-          return setAttrCacheValue(obj, attr, klass)
+          return klass
       case '__dict__':
           if(is_class){
               var proxy = {}
@@ -1126,25 +1126,25 @@ $B.$getattr = function(obj, attr, _default){
               }
               proxy.__dict__ = $B.getset_descriptor.$factory(obj,
                   "__dict__") // in py_dict.js
-              return setAttrCacheValue(obj, attr, $B.mappingproxy.$factory(proxy)) // in py_dict.js
+              return $B.mappingproxy.$factory(proxy) // in py_dict.js
           }else{
               if(obj.hasOwnProperty(attr)){
-                  return setAttrCacheValue(obj, attr, obj[attr]);
+                  return obj[attr]
               }else if(obj.$infos){
                   if(obj.$infos.hasOwnProperty("__dict__")){
-                      return setAttrCacheValue(obj, attr, obj.$infos.__dict__);
+                      return obj.$infos.__dict__
                   }else if(obj.$infos.hasOwnProperty("__func__")){
-                      return setAttrCacheValue(obj, attr, obj.$infos.__func__.$infos.__dict__);
+                      return obj.$infos.__func__.$infos.__dict__
                   }
               }
-              return setAttrCacheValue(obj, attr, $B.obj_dict(obj));
+              return $B.obj_dict(obj)
           }
       case '__doc__':
           // for builtins objects, use $B.builtins_doc
           for(var i = 0; i < builtin_names.length; i++){
               if(obj === _b_[builtin_names[i]]){
                   _get_builtins_doc()
-                  return setAttrCacheValue(obj, attr, $B.builtins_doc[builtin_names[i]]);
+                  return $B.builtins_doc[builtin_names[i]]
               }
           }
           break
@@ -1152,10 +1152,10 @@ $B.$getattr = function(obj, attr, _default){
           if(obj.$is_class){
               // The attribute __mro__ of class objects doesn't include the
               // class itself
-              return setAttrCacheValue(obj, attr, _b_.tuple.$factory([obj].concat(obj.__mro__)));
+              return _b_.tuple.$factory([obj].concat(obj.__mro__))
           }else if(obj.__dict__ &&
                   obj.__dict__.$string_dict.__mro__ !== undefined){
-              return setAttrCacheValue(obj, attr, obj.__dict__.$string_dict.__mro__);
+              return obj.__dict__.$string_dict.__mro__
           }
           // stop search here, looking in the objects's class would return
           // the classe's __mro__
@@ -1168,7 +1168,7 @@ $B.$getattr = function(obj, attr, _default){
           break
       case '$$new':
           if(klass === $B.JSObject && obj.js_func !== undefined){
-              return setAttrCacheValue(obj, attr, $B.JSConstructor.$factory(obj));
+              return $B.JSConstructor.$factory(obj)
           }
           break
     }
@@ -1177,7 +1177,7 @@ $B.$getattr = function(obj, attr, _default){
         var value = obj[attr]
         if(value !== undefined){
             if(attr == '__module__'){
-                return setAttrCacheValue(obj, attr, value);
+                return value
             }
         }
     }
@@ -1203,7 +1203,7 @@ $B.$getattr = function(obj, attr, _default){
                 var attrs = obj.__dict__
                 if(attrs &&
                         (object_attr = attrs.$string_dict[attr]) !== undefined){
-                    return setAttrCacheValue(obj, attr, object_attr[0]);
+                    return object_attr[0]
                 }
                 if(_default === undefined){
                     attr_error(attr, klass.$infos.__name__)
@@ -1212,7 +1212,7 @@ $B.$getattr = function(obj, attr, _default){
             }
         }
         if(klass.$descriptors && klass.$descriptors[attr] !== undefined){
-            return setAttrCacheValue(obj, attr, klass[attr](obj));
+            return klass[attr](obj)
         }
         if(typeof klass[attr] == 'function'){
             var func = klass[attr]
@@ -1239,7 +1239,7 @@ $B.$getattr = function(obj, attr, _default){
             }
             return setAttrCacheValue(obj, attr, method);
         }else if(klass[attr] !== undefined){
-            return setAttrCacheValue(obj, attr, klass[attr]);
+            return klass[attr]
         }
         attr_error(rawname, klass.$infos.__name__)
     }
@@ -1275,7 +1275,7 @@ $B.$getattr = function(obj, attr, _default){
         }
         if(res === null){return null}
         else if(res === undefined && obj.hasOwnProperty(attr)){
-            return setAttrCacheValue(obj, attr, res);
+            return res
         }else if(res !== undefined){
             if($test){console.log(obj, attr, obj[attr],
                 res.__set__ || res.$is_class)}
@@ -1284,7 +1284,7 @@ $B.$getattr = function(obj, attr, _default){
             if(res.__set__ === undefined || res.$is_class){
                 if($test){console.log("return", res, res+'',
                     res.__set__, res.$is_class)}
-                return setAttrCacheValue(obj, attr, res);
+                return res
             }
         }
     }
@@ -1299,7 +1299,7 @@ $B.$getattr = function(obj, attr, _default){
         throw err
     }
 
-    if(res !== undefined){return setAttrCacheValue(obj, attr, res)}
+    if(res !== undefined){return res}
     if(_default !== undefined){return _default}
 
     var cname = klass.$infos.__name__
