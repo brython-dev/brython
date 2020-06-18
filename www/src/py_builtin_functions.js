@@ -974,6 +974,11 @@ function in_mro(klass, attr){
 }
 
 var getAttrCacheValue = function(obj, attr) {
+    if (typeof obj === "boolean" ||
+        typeof obj === "number" ||
+        typeof obj === "string") {
+        return undefined;
+    }
     if (obj.$attrscache === undefined) {
         obj.$attrscache = {};
     }
@@ -985,13 +990,17 @@ var getAttrCacheValue = function(obj, attr) {
 }
 
 var setAttrCacheValue = function(obj, attr, value) {
-    if (obj.$attrscache === undefined) {
-        obj.$attrscache = {};
-    }
-    if (value === null) {
-        obj.$attrscache[attr] = null;
-    } else {
-        obj.$attrscache[attr] = value;
+    if (typeof obj !== "boolean" &&
+        typeof obj !== "number" &&
+        typeof obj !== "string") {
+        if (obj.$attrscache === undefined) {
+            obj.$attrscache = {};
+        }
+        if (value === null) {
+            obj.$attrscache[attr] = null;
+        } else {
+            obj.$attrscache[attr] = value;
+        }
     }
     return value;
 }
