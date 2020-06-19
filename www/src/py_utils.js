@@ -575,6 +575,10 @@ $B.$getitem = function(obj, item){
         }
     }
 
+    if(is_list){
+        return _b_.list.$getitem(obj, item)
+    }
+
     var gi = $B.$getattr(obj, "__getitem__", _b_.None)
     if(gi !== _b_.None){
         return gi(item)
@@ -582,6 +586,35 @@ $B.$getitem = function(obj, item){
 
     throw _b_.TypeError.$factory("'" + $B.class_name(obj) +
         "' object is not subscriptable")
+}
+
+$B.getitem_slice = function(obj, slice){
+    var res
+    if(Array.isArray(obj)){
+        if(slice.start === _b_.None && slice.stop === _b_.None){
+            if(slice.step === _b_.None || slice.step == 1){
+                res = obj.slice()
+            }else if(slice.step == -1){
+                res = obj.slice().reverse()
+            }
+        }else if(slice.step === _b_.None){
+            if(slice.start === _b_.None){slice.start = 0}
+            if(slice.stop === _b_.None){slice.stop = obj.length}
+            if(typeof slice.start == "number" &&
+                    typeof slice.stop == "number"){
+                if(slice.start < 0){slice.start += obj.length}
+                if(slice.stop < 0){slice.stop += obj.length}
+                res = obj.slice(slice.start, slice.stop)
+            }
+        }
+        if(res){
+            res.__class__ = obj.__class__ // can be tuple
+            return res
+        }else{
+            return _b_.list.$getitem(obj, slice)
+        }
+    }
+    return $B.$getattr(obj, "__getitem__")(slice)
 }
 
 // Set list key or slice

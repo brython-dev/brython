@@ -138,8 +138,11 @@ list.__getitem__ = function(self, key){
     //     key = $.key
     $B.check_no_kw("__getitem__", self, key)
     $B.check_nb_args("__getitem__", 2, arguments)
+    return list.$getitem(self, key)
+}
 
-    var factory = $B.get_class(self).$factory
+list.$getitem = function(self, key){
+    var factory = (self.__class__ || $B.get_class(self)).$factory
 
     if(isinstance(key, _b_.int)){
         var items = self.valueOf(),
@@ -149,8 +152,12 @@ list.__getitem__ = function(self, key){
 
         throw _b_.IndexError.$factory("list index out of range")
     }
-    if(isinstance(key, _b_.slice)){
+    if(key.__class__ === _b_.slice || isinstance(key, _b_.slice)){
         // Find integer values for start, stop and step
+        if(key.start === _b_.None && key.stop === _b_.None &&
+                key.step === _b_.None){
+            return self.slice()
+        }
         var s = _b_.slice.$conv_for_seq(key, self.length)
         // Return the sliced list
         var res = [],

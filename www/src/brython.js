@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-06-18 14:52:55.727048"
-__BRYTHON__.timestamp=1592484775727
+__BRYTHON__.compiled_date="2020-06-19 21:11:25.942003"
+__BRYTHON__.timestamp=1592593885942
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -4100,7 +4100,9 @@ if(type=='list' ||type=='tuple'){if(this.tree.length==1){return '$B.list_key('+v
 ', '+(this.tree[0].to_js()||"null")+','+
 (this.tree[1].to_js()||"null")+','+
 (this.tree[2].to_js()||"null")+')'}}}
-if(this.func=='getitem' && this.tree.length==1){return '$B.$getitem('+this.value.to_js()+','+
+if(this.func=='getitem' && this.tree.length==1){if(this.tree[0].type=="slice"){return `$B.getitem_slice(${this.value.to_js()},`+
+`${this.tree[0].to_js()})`}
+return '$B.$getitem('+this.value.to_js()+','+
 this.tree[0].to_js()+')'}
 var res='',shortcut=false
 if(this.func !=='delitem' &&
@@ -6071,6 +6073,7 @@ if(step > 0){for(var i=start;i < stop;i+=step){res.push(obj[i])}}else{for(var i=
 return res}
 function index_error(obj){var type=typeof obj=="string" ? "string" :"list"
 throw _b_.IndexError.$factory(type+" index out of range")}
+$B.nbzz=0
 $B.$getitem=function(obj,item){var is_list=Array.isArray(obj)&& obj.__class__===_b_.list
 if(typeof item=="number"){if(is_list ||typeof obj=="string"){item=item >=0 ? item :obj.length+item
 if(obj[item]!==undefined){return obj[item]}
@@ -6083,10 +6086,21 @@ else{index_error(obj)}}
 if(obj.$is_class){var class_gi=$B.$getattr(obj,"__class_getitem__",_b_.None)
 if(class_gi !==_b_.None){return class_gi(item)}else if(obj.__class__){class_gi=$B.$getattr(obj.__class__,"__getitem__",_b_.None)
 if(class_gi !==_b_.None){return class_gi(obj,item)}}}
+if(is_list){return _b_.list.$getitem(obj,item)}
 var gi=$B.$getattr(obj,"__getitem__",_b_.None)
 if(gi !==_b_.None){return gi(item)}
 throw _b_.TypeError.$factory("'"+$B.class_name(obj)+
 "' object is not subscriptable")}
+$B.getitem_slice=function(obj,slice){var res
+if(Array.isArray(obj)){if(slice.start===_b_.None && slice.stop===_b_.None){if(slice.step===_b_.None ||slice.step==1){res=obj.slice()}else if(slice.step==-1){res=obj.slice().reverse()}}else if(slice.step===_b_.None){if(slice.start===_b_.None){slice.start=0}
+if(slice.stop===_b_.None){slice.stop=obj.length}
+if(typeof slice.start=="number" &&
+typeof slice.stop=="number"){if(slice.start < 0){slice.start+=obj.length}
+if(slice.stop < 0){slice.stop+=obj.length}
+res=obj.slice(slice.start,slice.stop)}}
+if(res){res.__class__=obj.__class__ 
+return res}else{return _b_.list.$getitem(obj,slice)}}
+return $B.$getattr(obj,"__getitem__")(slice)}
 $B.set_list_key=function(obj,key,value){try{key=$B.$GetInt(key)}
 catch(err){if(_b_.isinstance(key,_b_.slice)){var s=_b_.slice.$conv_for_seq(key,obj.length)
 return $B.set_list_slice_step(obj,s.start,s.stop,s.step,value)}}
@@ -11211,13 +11225,18 @@ if(isinstance(other,klass)){if(other.length==self.length){var i=self.length
 while(i--){if(! $B.rich_comp("__eq__",self[i],other[i])){return false}}
 return true}}
 return _b_.NotImplemented}
-list.__getitem__=function(self,arg){var $=$B.args("__getitem__",2,{self:null,key:null},["self","key"],arguments,{},null,null),self=$.self,key=$.key
-var factory=$B.get_class(self).$factory
+list.__getitem__=function(self,key){
+$B.check_no_kw("__getitem__",self,key)
+$B.check_nb_args("__getitem__",2,arguments)
+return list.$getitem(self,key)}
+list.$getitem=function(self,key){var factory=(self.__class__ ||$B.get_class(self)).$factory
 if(isinstance(key,_b_.int)){var items=self.valueOf(),pos=key
 if(key < 0){pos=items.length+pos}
 if(pos >=0 && pos < items.length){return items[pos]}
 throw _b_.IndexError.$factory("list index out of range")}
-if(isinstance(key,_b_.slice)){
+if(key.__class__===_b_.slice ||isinstance(key,_b_.slice)){
+if(key.start===_b_.None && key.stop===_b_.None &&
+key.step===_b_.None){return self.slice()}
 var s=_b_.slice.$conv_for_seq(key,self.length)
 var res=[],i=null,items=self.valueOf(),pos=0,start=s.start,stop=s.stop,step=s.step
 if(step > 0){if(stop <=start){return factory(res)}

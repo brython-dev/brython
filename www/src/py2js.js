@@ -8235,6 +8235,10 @@ var $SubCtx = $B.parser.$SubCtx = function(context){
             }
         }
         if(this.func == 'getitem' && this.tree.length == 1){
+            if(this.tree[0].type == "slice"){
+                return `$B.getitem_slice(${this.value.to_js()}, ` +
+                    `${this.tree[0].to_js()})`
+            }
             return '$B.$getitem(' + this.value.to_js() + ',' +
                 this.tree[0].to_js() + ')'
         }
