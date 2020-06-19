@@ -131,11 +131,13 @@ list.__eq__ = function(self, other){
     return _b_.NotImplemented
 }
 
-list.__getitem__ = function(self, arg){
-    var $ = $B.args("__getitem__",2,{self: null, key: null},
-        ["self", "key"], arguments, {}, null, null),
-        self = $.self,
-        key = $.key
+list.__getitem__ = function(self, key){
+    // var $ = $B.args("__getitem__",2,{self: null, key: null},
+    //     ["self", "key"], arguments, {}, null, null),
+    //     self = $.self,
+    //     key = $.key
+    $B.check_no_kw("__getitem__", self, key)
+    $B.check_nb_args("__getitem__", 2, arguments)
 
     var factory = $B.get_class(self).$factory
 
