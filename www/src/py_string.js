@@ -2438,10 +2438,13 @@ $B.parse_fstring = function(string){
                     i++
                 }else if(car == "="){
                     // might be a "debug expression", eg f"{x=}"
-                    var ce = current.expression
+                    var ce = current.expression,
+                        last_char = ce.charAt(ce.length - 1),
+                        last_char_re = ('()'.indexOf(last_char) > -1 ? "\\" : "") + last_char
+                        
                     if(ce.length == 0 ||
                             string.charAt(i + 1) == "=" ||
-                            "=!<>:".search(ce.charAt(ce.length - 1)) > -1){
+                                "=!<>:".search(last_char_re) > -1){
                         current.expression += car + string.charAt(i + 1)
                         i += 2
                     }else{

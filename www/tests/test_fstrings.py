@@ -90,4 +90,10 @@ assert f'{"is" if a == 1 else "are"}' == "are"
 a = 1
 assert f'{"is" if a == 1 else "are"}' == "is"
 
+# issue 1427
+from math import cos, radians
+theta = 30
+assert f'{theta=}  {cos(radians(theta))=:.3f}' == \
+  "theta=30  cos(radians(theta))=0.866"
+  
 print("passed all tests")
