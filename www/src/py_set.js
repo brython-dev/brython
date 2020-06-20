@@ -790,13 +790,11 @@ frozenset.__new__ = function(cls){
 
 // Singleton for empty frozensets
 var singleton_id = Math.floor(Math.random() * Math.pow(2, 40))
+
 function empty_frozenset(){
-    return {
-        __class__: frozenset,
-        $items: [],
-        $numbers: [],
-        $id: singleton_id
-    }
+    var res = frozenset.__new__(frozenset)
+    res.$id = singleton_id
+    return res
 }
 
 frozenset.$factory = function(){

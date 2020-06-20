@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-06-20 08:58:13.771707"
-__BRYTHON__.timestamp=1592636293771
+__BRYTHON__.compiled_date="2020-06-20 09:17:17.874389"
+__BRYTHON__.timestamp=1592637437874
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -6052,17 +6052,14 @@ if(key < 0){key+=obj.length}
 var res=obj[key]
 if(res===undefined){throw _b_.IndexError.$factory("list index out of range")}
 return res}
-$B.nbkwh=0
-$B.list_slice=function(obj,start,stop){$B.nbkwh++
-if(start===null){start=0}
+$B.list_slice=function(obj,start,stop){if(start===null){start=0}
 else{start=$B.$GetInt(start)
 if(start < 0){start=Math.max(0,start+obj.length)}}
 if(stop===null){return obj.slice(start)}
 stop=$B.$GetInt(stop)
 if(stop < 0){stop=Math.max(0,stop+obj.length)}
 return obj.slice(start,stop)}
-$B.list_slice_step=function(obj,start,stop,step){$B.nbkwh++
-if(step===null ||step==1){return $B.list_slice(obj,start,stop)}
+$B.list_slice_step=function(obj,start,stop,step){if(step===null ||step==1){return $B.list_slice(obj,start,stop)}
 if(step==0){throw _b_.ValueError.$factory("slice step cannot be zero")}
 step=$B.$GetInt(step)
 if(start===null){start=step >=0 ? 0 :obj.length-1}
@@ -8913,8 +8910,9 @@ frozenset.__new__=function(cls){if(cls===undefined){throw _b_.TypeError.$factory
 return{
 __class__:cls,$simple:true,$items:[],$numbers:[],$hashes:{}}}
 var singleton_id=Math.floor(Math.random()*Math.pow(2,40))
-function empty_frozenset(){return{
-__class__:frozenset,$items:[],$numbers:[],$id:singleton_id}}
+function empty_frozenset(){var res=frozenset.__new__(frozenset)
+res.$id=singleton_id
+return res}
 frozenset.$factory=function(){var $=$B.args("frozenset",1,{iterable:null},["iterable"],arguments,{iterable:null},null,null)
 if($.iterable===null){return empty_frozenset()}
 else if($.iterable.__class__==frozenset){return $.iterable}
