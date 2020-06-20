@@ -318,7 +318,7 @@ DOMEvent.__getattribute__ = function(self, attr){
         case 'y':
             return $mouseCoords(self).y
         case 'data':
-            if(self.dataTransfer !== undefined){
+            if(self.dataTransfer !== null){
                 return Clipboard.$factory(self.dataTransfer)
             }
             return $B.$JS2Py(self['data'])
