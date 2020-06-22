@@ -236,10 +236,8 @@ def __open(file, mode="r", buffering=-1, encoding=None, errors=None,
 
 open = __open
 
-def open_code(*args):
-    # Exists in Brython to avoid errors when importing it from io,
-    # but does nothing
-    return
+def open_code(file):
+    return __builtins__.open(file, encoding="utf-8")
 
 class DocDescriptor:
     """Helper for builtins.open.__doc__

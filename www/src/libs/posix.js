@@ -83,6 +83,9 @@ var $module = {
         [['PYTHONPATH', $B.brython_path],
          ['PYTHONUSERBASE', ' ']]),
     error: _b_.OSError,
+    fspath: function(path){
+        return path
+    },
     getcwd: function(){return $B.brython_path},
     getpid: function(){return 0},
     lstat: function(){return stat_result.$factory()},

@@ -82,7 +82,7 @@ function $download_module(mod, url, $package){
         if(xhr.status == 200 || xhr.status == 0){
            res = xhr.responseText
         }else{
-           res = _b_.FileNotFoundError.$factory("No module named '" +
+           res = _b_.ModuleNotFoundError.$factory("No module named '" +
                mod_name + "'")
         }
     }else{
@@ -97,7 +97,7 @@ function $download_module(mod, url, $package){
                 console.info("Error " + xhr.status +
                     " means that Python module " + mod_name +
                     " was not found at url " + url)
-                res = _b_.FileNotFoundError.$factory("No module named '" +
+                res = _b_.ModuleNotFoundError.$factory("No module named '" +
                     mod_name + "'")
             }
         }
@@ -107,7 +107,7 @@ function $download_module(mod, url, $package){
     // sometimes chrome doesn't set res correctly, so if res == null,
     // assume no module found
     if(res == null){
-        throw _b_.FileNotFoundError.$factory("No module named '" +
+        throw _b_.ModuleNotFoundError.$factory("No module named '" +
             mod_name + "' (res is null)")
     }
 
