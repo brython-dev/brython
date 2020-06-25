@@ -26,6 +26,10 @@ data = [
 json.dump(data, open("speed_results.json", "w", encoding="utf-8"),
     indent=4)
 
+with open("speed_results.txt", "w", encoding="utf-8") as out:
+    for line in data:
+        out.write(f'{line["description"]};{line["ratio"]}\n')
+        
 html = """<!doctype html>
 <html>
 <head>
