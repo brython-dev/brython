@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-06-22 15:16:17.203859"
-__BRYTHON__.timestamp=1592831777203
+__BRYTHON__.compiled_date="2020-06-26 11:19:53.959237"
+__BRYTHON__.timestamp=1593163193959
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -7490,7 +7490,8 @@ req.open('GET',file+fake_qs,false)
 req.overrideMimeType('text/plain; charset=utf-8')
 req.send()
 if($res.constructor===Error){throw $res}
-$string=$res}else{console.warn("cannot load by Ajax call with protocol 'file'")}
+$string=$res}else{throw _b_.FileNotFoundError.$factory(
+"cannot use 'open()' with protocol 'file'")}
 if($string===undefined && $bytes===undefined){throw _b_.FileNotFoundError.$factory($ns.file)}
 var res={$binary:is_binary,$string:$string,$bytes:$bytes,$counter:0,closed:False,encoding:encoding,mode:mode,name:file}
 res.__class__=is_binary ? $BufferedReader :$TextIOWrapper
@@ -9100,15 +9101,12 @@ return _b_.NotImplemented}
 JSObject.__len__=function(self){if(typeof self.js.length=='number'){return self.js.length}
 try{return $B.$getattr(self.js,'__len__')()}
 catch(err){throw _b_.AttributeError.$factory(self.js+' has no attribute __len__')}}
-JSObject.__repr__=function(self){if(self.js instanceof Date){return self.js.toString()}else if(typeof self.js=="bigint"){return self.js}
+JSObject.__repr__=function(self){if(self.js instanceof Date){return self.js.toString()}
 var proto=Object.getPrototypeOf(self.js)
 if(proto){var name=proto.constructor.name
 if(name===undefined){
 var proto_str=proto.constructor.toString()
 name=proto_str.substring(8,proto_str.length-1)}
-console.log("JSObject str",self.js,$B.imported.javascript.BigInt)
-if($B.imported.javascript.BigInt &&
-self.js instanceof $B.imported.javascript.BigInt.js){console.log("str of BigInt")}
 return "<"+name+" object>"}
 return "<JSObject wraps "+self.js+">"}
 JSObject.__setattr__=function(self,attr,value){if(attr.substr && attr.substr(0,2)=='$$'){
@@ -9469,11 +9467,9 @@ _mod_name+"' is not a package"
 exc.args=$B.fast_tuple([exc.msg])
 exc.name=mod_name
 exc.path=_b_.None
-throw exc}}}}}else{if(mod_name=="_frozen_importlib_external"){console.log(mod_name,"in imported",$B.imported[mod_name])}
-if($B.imported[parsed_name[0]]&&
+throw exc}}}}}else{if($B.imported[parsed_name[0]]&&
 parsed_name.length==2){try{$B.$setattr($B.imported[parsed_name[0]],parsed_name[1],modobj)}catch(err){console.log("error",parsed_name,modobj)
 throw err}}}
-if(mod_name=="_frozen_importlib_external"){alert("for "+mod_name+" __file__ "+$B.imported[mod_name].__file__)}
 if(fromlist.length > 0){
 return $B.imported[mod_name]}else{
 return $B.imported[parsed_name[0]]}}
@@ -11353,13 +11349,6 @@ throw _b_.TypeError.$factory("list indices must be integer, not "+
 $B.class_name(arg))}
 $B.make_rmethods(list)
 var _ops=["add","sub"]
-var simple_args=function(name,expected,args){var len=args.length,last=args[len-1]
-if(last && last.$nat){throw _b_.TypeError.$factory(name+"() takes no keyword arguments")}
-if(len !=expected){if(expected==0){throw _b_.TypeError.$factory(name+"() takes no argument"+
-" ("+len+" given)")}else{
-throw _b_.TypeError.$factory(name+"() takes exactly "+
-expected+" argument"+(expected < 2 ? '' :'s')+
-" ("+len+" given)")}}}
 list.append=function(self,x){$B.check_no_kw("append",self,x)
 $B.check_nb_args("append",2,arguments)
 self.push(x)
@@ -13868,7 +13857,9 @@ return _sys_modules[spec.name]=module}
 _loader=_b_.getattr(spec,"loader",_b_.None)
 break}}}
 if(_loader===undefined){
-var exc=_b_.ModuleNotFoundError.$factory(mod_name)
+message=mod_name
+if($B.protocol=="file"){message+=" (warning: cannot import local files with protocol 'file')"}
+var exc=_b_.ModuleNotFoundError.$factory(message)
 exc.name=mod_name
 throw exc}
 if($B.is_none(module)){if(spec===_b_.None){throw _b_.ModuleNotFoundError.$factory(mod_name)}

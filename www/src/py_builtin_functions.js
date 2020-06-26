@@ -984,7 +984,7 @@ $B.$getattr = function(obj, attr, _default){
             obj.__class__[attr] == obj.$method_cache[attr][1]){
         // Optimisation : cache for instance methods
         // If the attribute is a method defined in the instance's class,
-        // obj.$method_cache[attr] is a 2-element list [method, func] where 
+        // obj.$method_cache[attr] is a 2-element list [method, func] where
         // method is the method and func is the function obj.__class__[attr]
         // We check that the function has not changed since the method was
         // cached and if not, return the method
@@ -2823,7 +2823,8 @@ function $url_open(){
             }
             $string = $res
         }else{
-            console.warn("cannot load by Ajax call with protocol 'file'")
+            throw _b_.FileNotFoundError.$factory(
+                "cannot use 'open()' with protocol 'file'")
         }
 
         if($string === undefined && $bytes === undefined){

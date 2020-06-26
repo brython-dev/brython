@@ -63,7 +63,11 @@ function import_hooks(mod_name, _path, from_stdlib) {
 
     if(_loader === undefined){
         // No import spec found
-        var exc = _b_.ModuleNotFoundError.$factory(mod_name)
+        message = mod_name
+        if($B.protocol == "file"){
+            message += " (warning: cannot import local files with protocol 'file')"
+        }
+        var exc = _b_.ModuleNotFoundError.$factory(message)
         exc.name = mod_name
         throw exc
     }
