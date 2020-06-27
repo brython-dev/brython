@@ -32,11 +32,16 @@ $B.generator_return = function(value){
 $B.generator = $B.make_class("generator",
     function(func){
         var res = function(){
-            var res = func.apply(null, arguments)
-            res.$name = func.name
-            res.$func = func
-            res.__class__ = $B.generator
-            return res
+            var gen = func.apply(null, arguments)
+            gen.$name = func.name
+            gen.$func = func
+            gen.__class__ = $B.generator
+            if(func.$has_yield_in_cm){
+                var locals = $B.last($B.frames_stack)[1]
+                locals.$close_generators = $B.close_generators || []
+                locals.$close_generators.push(gen)
+            }
+            return gen
         }
         res.$infos = func.$infos
         res.$is_genfunc = true

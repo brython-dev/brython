@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-06-26 11:19:53.959237"
-__BRYTHON__.timestamp=1593163193959
+__BRYTHON__.compiled_date="2020-06-27 15:39:57.303214"
+__BRYTHON__.timestamp=1593265197303
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -1546,8 +1546,7 @@ if(C.has_args){return $BodyCtx(C)}else{$_SyntaxError(C,"missing function paramet
 case 'eol':
 if(C.has_args){$_SyntaxError(C,"missing colon")}}
 $_SyntaxError(C,'token '+token+' after '+C)}
-this.transform=function(node,rank){
-if(this.is_comp){$get_node(this).is_comp=true}
+this.transform=function(node,rank){if(this.is_comp){$get_node(this).is_comp=true}
 if(this.transformed !==undefined){return}
 var scope=this.scope
 this.doc_string=$get_docstring(node)
@@ -1691,6 +1690,7 @@ node.add(def_func_node)
 var offset=1,indent=node.indent
 if(! this.is_comp){
 node.parent.insert(rank+offset++,$NodeJS(name+'.$is_func = true'))
+if(this.$has_yield_in_cm){node.parent.insert(rank+offset++,$NodeJS(name+'.$has_yield_in_cm = true'))}
 node.parent.insert(rank+offset++,$NodeJS(name+'.$infos = {'))
 var __name__=this.name
 if(this.name.substr(0,2)=="$$"){__name__=__name__.substr(2)}
@@ -1752,7 +1752,8 @@ this.func_name+" = "+this.name+'$'+this.num+
 node.parent.insert(rank+offset++,$NodeJS(
 func_name1+".$set_defaults = function(value){return "+
 func_name1+" = "+this.name+"$"+this.num+
-"(value)}"))}
+"(value)}"))
+if(this.$has_yield_in_cm){node.parent.insert(rank+offset++,$NodeJS(`${func_name1}.$has_yield_in_cm=true`))}}
 var parent=node
 for(var pos=0;pos < parent.children.length &&
 parent.children[pos]!==$B.last(enter_frame_nodes);pos++){}
@@ -4469,9 +4470,15 @@ this.type='yield'
 this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this
-$get_node(this).has_yield=this
+var scope=this.scope=$get_scope(this,true),node=$get_node(this)
+node.has_yield=this
 var in_lambda=false,parent=C
 while(parent){if(parent.type=="lambda"){in_lambda=true
+break}
+parent=parent.parent}
+var parent=node.parent
+while(parent){if(parent.C && parent.C.tree.length > 0 &&
+parent.C.tree[0].type=="with"){scope.C.tree[0].$has_yield_in_cm=true
 break}
 parent=parent.parent}
 if(! in_lambda){switch(C.type){case 'node':
@@ -4481,7 +4488,6 @@ case 'list_or_tuple':
 break
 default:
 $_SyntaxError(C,'yield atom must be inside ()')}}
-var scope=this.scope=$get_scope(this,true)
 if(! in_lambda){var in_func=scope.is_function,func_scope=scope
 if(! in_func && scope.is_comp){var parent=scope.parent_block
 while(parent.is_comp){parent=parent_block}
@@ -6316,14 +6322,15 @@ var gen_obj=frame[1][key]
 gen_obj.return()}}}
 $B.set_cm_in_generator=function(cm_exit){if(cm_exit !==undefined){$B.frames_stack.forEach(function(frame){frame[1].$cm_in_gen=frame[1].$cm_in_gen ||new Set()
 frame[1].$cm_in_gen.add(cm_exit)})}}
+$B.call_gen_with_yield_in_cm=function(){console.log("call gen with yield in cm",$B.last($B.frames_stack))}
 $B.leave_frame=function(arg){
 if($B.frames_stack.length==0){console.log("empty stack");return}
 $B.del_exc()
 if(arg && arg.value !==undefined && $B.tracefunc){if($B.last($B.frames_stack)[1].$f_trace===undefined){$B.last($B.frames_stack)[1].$f_trace=$B.tracefunc}
 if($B.last($B.frames_stack)[1].$f_trace !==_b_.None){$B.trace_return(arg.value)}}
 var frame=$B.frames_stack.pop()
-if(frame[1].$has_yield_in_cm){
-exit_ctx_managers_in_generators(frame)}
+if(frame[1].$close_generators){
+for(const gen of frame[1].$close_generators){gen.return()}}
 return _b_.None}
 $B.leave_frame_exec=function(arg){
 if($B.profile > 0){$B.$profile.return()}
@@ -7744,7 +7751,7 @@ if($B.imported.hasOwnProperty(module_name)){filename=$B.imported[module_name].__
 res.f_lineno=parseInt(_frame[1].$line_info.split(',')[0])}
 var co_name=locals_id.startsWith("$exec")? "<module>" :
 locals_id
-if(locals_id==_frame[2]){co_name="<module>"}else{if(_frame[1].$name){co_name=_frame[1].$name}else if(_frame[1].$dict_comp){co_name='<dictcomp>'}else if(_frame[1].$list_comp){co_name='<listcomp>'}else if(_frame.length > 4){if(_frame[4].$infos){co_name=_frame[4].$infos.__name__}else{co_name=_frame[4].name}
+if(locals_id==_frame[2]){co_name="<module>"}else if(locals_id.startsWith("lc"+$B.lambda_magic)){co_name="<listcomp>"}else{if(_frame[1].$name){co_name=_frame[1].$name}else if(_frame[1].$dict_comp){co_name='<dictcomp>'}else if(_frame[1].$list_comp){co_name='<listcomp>'}else if(_frame.length > 4){if(_frame[4].$infos){co_name=_frame[4].$infos.__name__}else{co_name=_frame[4].name}
 if(_frame[4].$infos===undefined){
 if(_frame[4].name.startsWith("__ge")){co_name="<genexpr>"}else if(_frame[4].name.startsWith("set_comp"+
 $B.lambda_magic)){co_name="<setcomp>"}}else if(filename===undefined && _frame[4].$infos.__code__){filename=_frame[4].$infos.__code__.co_filename
@@ -7779,7 +7786,8 @@ BaseException.__new__=function(cls){var err=_b_.BaseException.$factory()
 err.__class__=cls
 err.__dict__=_b_.dict.$factory()
 return err}
-var getExceptionTrace=function(exc,includeInternal){if(exc.__class__===undefined){if($B.debug > 1){console.log("no class",exc)}
+var getExceptionTrace=function(exc,includeInternal){console.log("exc trace")
+if(exc.__class__===undefined){if($B.debug > 1){console.log("no class",exc)}
 return exc+''}
 var info=''
 if(exc.$js_exc !==undefined && includeInternal){info+="\nJS stack:\n"+exc.$js_exc.stack+"\n"}
@@ -7795,7 +7803,9 @@ if(src===undefined){if($B.VFS && $B.VFS.hasOwnProperty(frame[2])){src=$B.VFS[fra
 var file=frame[3].__file__ ||"<string>",module=line_info[1],is_exec=module.charAt(0)=="$"
 if(is_exec){module="<module>"}
 info+="\n  File "+file+" line "+line_info[0]
-if(frame.length > 4){if(frame[4].$infos){info+=', in '+frame[4].$infos.__name__}else if(frame[4].name.startsWith("__ge")){info+=', in <genexpr>'}else if(frame[4].name.startsWith("set_comp"+$B.lambda_magic)){info+=', in <setcomp>'}else{console.log("frame[4]",frame[4])}}else if(frame[1].$list_comp){info+=', in <listcomp>'}else if(frame[1].$dict_comp){info+=', in <dictcomp>'}else{info+=', in <module>'}
+if(frame.length > 4){if(frame[4].$infos){var name=frame[4].$infos.__name__
+console.log("name",name)
+if(name.startsWith("lc"+$B.lambda_magic)){info+=',in <listcomp>'}else{info+=', in '+name}}else if(frame[4].name.startsWith("__ge")){info+=', in <genexpr>'}else if(frame[4].name.startsWith("set_comp"+$B.lambda_magic)){info+=', in <setcomp>'}else if(frame[4].name.startsWith("lc"+$B.lambda_magic)){info+=', in <listcomp>'}else{console.log("frame[4]",frame[4])}}else if(frame[1].$list_comp){info+=', in <listcomp>'}else if(frame[1].$dict_comp){info+=', in <dictcomp>'}else{info+=', in <module>'}
 if(src !==undefined && ! is_exec){var lines=src.split("\n"),line=lines[parseInt(line_info[0])-1]
 if(line){line=line.replace(/^[ ]+/g,"")}
 info+="\n    "+line}}
@@ -13539,11 +13549,14 @@ var bltns=$B.InjectBuiltins()
 eval(bltns)
 var $GeneratorReturn={}
 $B.generator_return=function(value){return{__class__:$GeneratorReturn,value:value}}
-$B.generator=$B.make_class("generator",function(func){var res=function(){var res=func.apply(null,arguments)
-res.$name=func.name
-res.$func=func
-res.__class__=$B.generator
-return res}
+$B.generator=$B.make_class("generator",function(func){var res=function(){var gen=func.apply(null,arguments)
+gen.$name=func.name
+gen.$func=func
+gen.__class__=$B.generator
+if(func.$has_yield_in_cm){var locals=$B.last($B.frames_stack)[1]
+locals.$close_generators=$B.close_generators ||[]
+locals.$close_generators.push(gen)}
+return gen}
 res.$infos=func.$infos
 res.$is_genfunc=true
 return res}

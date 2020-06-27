@@ -3028,10 +3028,10 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
     }
 
     this.transform = function(node, rank){
-        // already transformed ?
         if(this.is_comp){
             $get_node(this).is_comp = true
         }
+        // already transformed ?
         if(this.transformed !== undefined){return}
 
         var scope = this.scope
@@ -3339,6 +3339,11 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
             // Set attribute $is_func
             node.parent.insert(rank + offset++, $NodeJS(name + '.$is_func = true'))
 
+            if(this.$has_yield_in_cm){
+                node.parent.insert(rank + offset++, 
+                    $NodeJS(name + '.$has_yield_in_cm = true'))
+            }
+
             // Create attribute $infos for the function
             // Adding only one attribute is much faster than adding all the
             // keys/values in $infos
@@ -3464,6 +3469,12 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
                 func_name1 + ".$set_defaults = function(value){return " +
                 func_name1 + " = " + this.name + "$" + this.num +
                 "(value)}"))
+
+            if(this.$has_yield_in_cm){
+                node.parent.insert(rank + offset++,
+                    $NodeJS(`${func_name1}.$has_yield_in_cm = true`))
+            }
+
         }
 
         // wrap everything in a try/catch to be sure to exit from frame
@@ -9008,13 +9019,26 @@ var $YieldCtx = $B.parser.$YieldCtx = function(context, is_await){
     this.tree = []
     context.tree[context.tree.length] = this
 
-    $get_node(this).has_yield = this
+    var scope = this.scope = $get_scope(this, true),
+        node = $get_node(this)
+
+    node.has_yield = this
 
     var in_lambda = false,
         parent = context
     while(parent){
         if(parent.type == "lambda"){
             in_lambda = true
+            break
+        }
+        parent = parent.parent
+    }
+
+    var parent = node.parent
+    while(parent){
+        if(parent.context && parent.context.tree.length > 0 &&
+                parent.context.tree[0].type == "with"){
+            scope.context.tree[0].$has_yield_in_cm = true
             break
         }
         parent = parent.parent
@@ -9041,7 +9065,6 @@ var $YieldCtx = $B.parser.$YieldCtx = function(context, is_await){
         }
     }
 
-    var scope = this.scope = $get_scope(this, true)
 
     if(! in_lambda){
         var in_func = scope.is_function,
