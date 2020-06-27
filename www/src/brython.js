@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-06-27 15:39:57.303214"
-__BRYTHON__.timestamp=1593265197303
+__BRYTHON__.compiled_date="2020-06-27 16:01:31.421838"
+__BRYTHON__.timestamp=1593266491421
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -6322,13 +6322,12 @@ var gen_obj=frame[1][key]
 gen_obj.return()}}}
 $B.set_cm_in_generator=function(cm_exit){if(cm_exit !==undefined){$B.frames_stack.forEach(function(frame){frame[1].$cm_in_gen=frame[1].$cm_in_gen ||new Set()
 frame[1].$cm_in_gen.add(cm_exit)})}}
-$B.call_gen_with_yield_in_cm=function(){console.log("call gen with yield in cm",$B.last($B.frames_stack))}
 $B.leave_frame=function(arg){
 if($B.frames_stack.length==0){console.log("empty stack");return}
-$B.del_exc()
 if(arg && arg.value !==undefined && $B.tracefunc){if($B.last($B.frames_stack)[1].$f_trace===undefined){$B.last($B.frames_stack)[1].$f_trace=$B.tracefunc}
 if($B.last($B.frames_stack)[1].$f_trace !==_b_.None){$B.trace_return(arg.value)}}
 var frame=$B.frames_stack.pop()
+frame[1].$current_exception=undefined
 if(frame[1].$close_generators){
 for(const gen of frame[1].$close_generators){gen.return()}}
 return _b_.None}
@@ -7786,8 +7785,7 @@ BaseException.__new__=function(cls){var err=_b_.BaseException.$factory()
 err.__class__=cls
 err.__dict__=_b_.dict.$factory()
 return err}
-var getExceptionTrace=function(exc,includeInternal){console.log("exc trace")
-if(exc.__class__===undefined){if($B.debug > 1){console.log("no class",exc)}
+var getExceptionTrace=function(exc,includeInternal){if(exc.__class__===undefined){if($B.debug > 1){console.log("no class",exc)}
 return exc+''}
 var info=''
 if(exc.$js_exc !==undefined && includeInternal){info+="\nJS stack:\n"+exc.$js_exc.stack+"\n"}
@@ -7804,7 +7802,6 @@ var file=frame[3].__file__ ||"<string>",module=line_info[1],is_exec=module.charA
 if(is_exec){module="<module>"}
 info+="\n  File "+file+" line "+line_info[0]
 if(frame.length > 4){if(frame[4].$infos){var name=frame[4].$infos.__name__
-console.log("name",name)
 if(name.startsWith("lc"+$B.lambda_magic)){info+=',in <listcomp>'}else{info+=', in '+name}}else if(frame[4].name.startsWith("__ge")){info+=', in <genexpr>'}else if(frame[4].name.startsWith("set_comp"+$B.lambda_magic)){info+=', in <setcomp>'}else if(frame[4].name.startsWith("lc"+$B.lambda_magic)){info+=', in <listcomp>'}else{console.log("frame[4]",frame[4])}}else if(frame[1].$list_comp){info+=', in <listcomp>'}else if(frame[1].$dict_comp){info+=', in <dictcomp>'}else{info+=', in <module>'}
 if(src !==undefined && ! is_exec){var lines=src.split("\n"),line=lines[parseInt(line_info[0])-1]
 if(line){line=line.replace(/^[ ]+/g,"")}

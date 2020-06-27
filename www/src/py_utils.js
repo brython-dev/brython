@@ -1222,7 +1222,6 @@ $B.set_cm_in_generator = function(cm_exit){
 $B.leave_frame = function(arg){
     // Leave execution frame
     if($B.frames_stack.length == 0){console.log("empty stack"); return}
-    $B.del_exc()
     // When leaving a module, arg is set as an object of the form
     // {value: _b_.None}
     if(arg && arg.value !== undefined && $B.tracefunc){
@@ -1234,6 +1233,7 @@ $B.leave_frame = function(arg){
         }
     }
     var frame = $B.frames_stack.pop()
+    frame[1].$current_exception = undefined
     if(frame[1].$close_generators){
         // The attribute $close_generators is set in $B.$call
         for(const gen of frame[1].$close_generators){
