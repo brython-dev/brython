@@ -280,6 +280,8 @@ var frame = $B.make_class("frame",
                           locals_id
             if(locals_id == _frame[2]){
                 co_name = "<module>"
+            }else if(locals_id.startsWith("lc" + $B.lambda_magic)){
+                co_name = "<listcomp>"
             }else{
                 if(_frame[1].$name){
                     co_name = _frame[1].$name
@@ -457,11 +459,18 @@ var getExceptionTrace = function(exc, includeInternal) {
         info += "\n  File " + file + " line " + line_info[0]
         if(frame.length > 4){
             if(frame[4].$infos){
-                info += ', in ' + frame[4].$infos.__name__
+                var name = frame[4].$infos.__name__
+                if(name.startsWith("lc" + $B.lambda_magic)){
+                    info += ',in <listcomp>'
+                }else{
+                    info += ', in ' + name
+                }
             }else if(frame[4].name.startsWith("__ge")){
                 info += ', in <genexpr>'
             }else if(frame[4].name.startsWith("set_comp" + $B.lambda_magic)){
                 info += ', in <setcomp>'
+            }else if(frame[4].name.startsWith("lc" + $B.lambda_magic)){
+                info += ', in <listcomp>'
             }else{
                 console.log("frame[4]", frame[4])
             }
