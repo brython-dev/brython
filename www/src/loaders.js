@@ -322,7 +322,7 @@ var inImported = $B.inImported = function(module){
 var loop = $B.loop = function(){
     if($B.tasks.length == 0){
         // No more task to process.
-        if($B.idb_cx){
+        if($B.idb_cx && ! $B.idb_cx.$closed){
             var db = $B.idb_cx.result,
                 tx = db.transaction("modules", "readwrite"),
                 store = tx.objectStore("modules")
