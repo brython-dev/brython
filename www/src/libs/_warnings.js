@@ -15,7 +15,7 @@ return  {
         ['ignore', _b_.None, _b_.BytesWarning, _b_.None, 0]].map(
             function(x){return _b_.tuple.$factory(x)}),
 
-    once_registry: _b_.dict.$factory(),
+    once_registry: $B.empty_dict(),
 
     warn: function(){},
 

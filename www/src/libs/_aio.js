@@ -167,7 +167,7 @@ HTTPRequest.data = _b_.property.$factory(function(self){
 HTTPRequest.response_headers = _b_.property.$factory(function(self){
     var headers = self.getAllResponseHeaders()
     if(headers === null){return _b_.None}
-    var res = _b_.dict.$factory()
+    var res = $B.empty_dict()
     if(headers.length > 0){
         // Convert the header string into an array
         // of individual headers

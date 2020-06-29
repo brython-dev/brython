@@ -56,7 +56,7 @@ $B.structuredclone2pyobj = function(obj){
         }
         return res
     }else if(typeof obj == "object"){
-        var res = _b_.dict.$factory()
+        var res = $B.empty_dict()
         for(var key in obj){
             _b_.dict.$setitem(res, key, $B.structuredclone2pyobj(obj[key]))
         }

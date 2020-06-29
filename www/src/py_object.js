@@ -368,7 +368,7 @@ object.__new__ = function(cls, ...args){
     }
     return {
         __class__ : cls,
-        __dict__: _b_.dict.$factory()
+        __dict__: $B.empty_dict()
         }
 }
 
@@ -392,7 +392,7 @@ object.__reduce__ = function(self){
     var res = [_reconstructor]
     res.push(_b_.tuple.$factory([self.__class__].
         concat(self.__class__.__mro__)))
-    var d = _b_.dict.$factory()
+    var d = $B.empty_dict()
     for(var attr in self.__dict__.$string_dict){
         _b_.dict.$setitem(d.$string_dict, attr,
             self.__dict__.$string_dict[attr][0])
@@ -418,7 +418,7 @@ object.__reduce_ex__ = function(self){
         self.forEach(function(item){arg2.push(item)})
     }
     res.push(arg2)
-    var d = _b_.dict.$factory(),
+    var d = $B.empty_dict(),
         nb = 0
     if(self.__dict__ === undefined){
         console.log("no dict", self)

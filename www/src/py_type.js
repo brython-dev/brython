@@ -108,7 +108,7 @@ $B.$class_constructor = function(class_name, class_obj, bases,
             if(cl_dict.$string_dict[attr] !== undefined){
                 cl_dict.$string_dict[attr] = [class_obj[attr], rank]
             }else{
-                cl_dict.$string_dict[attr] = [_b_.dict.$factory(), rank]
+                cl_dict.$string_dict[attr] = [$B.empty_dict(), rank]
             }
             cl_dict.$version++
             for(var key in class_obj[attr].$string_dict){
@@ -323,7 +323,7 @@ type.__getattribute__ = function(klass, attr){
                     }
                 }
             }
-            if(res === undefined){res = _b_.dict.$factory()}
+            if(res === undefined){res = $B.empty_dict()}
             return res
         case "__bases__":
             var res = klass.__bases__ || _b_.tuple.$factory()
@@ -614,7 +614,7 @@ type.__repr__ = type.__str__ = function(kls){
 }
 
 type.__prepare__ = function(){
-    return _b_.dict.$factory()
+    return $B.empty_dict()
 }
 
 type.__qualname__ = {
@@ -796,7 +796,7 @@ var $instance_creator = $B.$instance_creator = function(klass){
             factory = function(){
                 var obj = {
                     __class__: klass,
-                    __dict__: _b_.dict.$factory()
+                    __dict__: $B.empty_dict()
                 }
                 klass.__init__.bind(null, obj).apply(null, arguments)
                 return obj
@@ -810,7 +810,7 @@ var $instance_creator = $B.$instance_creator = function(klass){
                         throw _b_.TypeError.$factory("object() takes no parameters")
                     }
                 }
-                return {__class__: klass, __dict__:_b_.dict.$factory()}
+                return {__class__: klass, __dict__: $B.empty_dict()}
             }
         }
     }else{

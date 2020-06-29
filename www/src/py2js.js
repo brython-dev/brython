@@ -2369,7 +2369,7 @@ var $ClassCtx = $B.parser.$ClassCtx = function(context){
             instance_decl = new $Node(),
             local_ns = '$locals_' + this.id.replace(/\./g, '_'),
             js = 'var ' + local_ns + ' = {' +
-                 '__annotations__: _b_.dict.$factory()}, ' +
+                 '__annotations__: $B.empty_dict()}, ' +
                  indent + '$locals = ' + local_ns + ', ' +
                  indent + '$local_name = "' + local_ns + '"'
 
@@ -3265,7 +3265,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
 
         nodes = nodes.concat(enter_frame_nodes)
 
-        nodes.push($NodeJS('$locals.__annotations__ = _b_.dict.$factory()'))
+        nodes.push($NodeJS('$locals.__annotations__ = $B.empty_dict()'))
         nodes.push($NodeJS('$locals.$name = "' + this.name + '"'))
 
         // Handle name __class__ in methods (PEP 3135 and issue #1068)
@@ -3397,7 +3397,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
 
             // Add attribute __dict__
             node.parent.insert(rank + offset++,
-                $NodeJS('    __dict__: _b_.dict.__new__(_b_.dict),'))
+                $NodeJS('    __dict__: $B.empty_dict(),'))
 
             // Add attribute __doc__
             node.parent.insert(rank + offset++,
@@ -3840,7 +3840,6 @@ var $DictOrSetCtx = $B.parser.$DictOrSetCtx = function(context){
         })
         return js
     }
-
 
     this.to_js = function(){
         this.js_processed = true
@@ -6978,7 +6977,7 @@ var $NodeCtx = $B.parser.$NodeCtx = function(node){
                             this.tree[0].tree[0].type == "id"){
                         var js = ""
                         if(this.create_annotations){
-                            js += "$locals.__annotations__ = _b_.dict.$factory();"
+                            js += "$locals.__annotations__ = $B.empty_dict();"
                         }
                         return js + "_b_.dict.$setitem($locals.__annotations__, '" +
                             this.tree[0].tree[0].value + "', " +
@@ -7003,7 +7002,7 @@ var $NodeCtx = $B.parser.$NodeCtx = function(node){
                     right = this.tree[0].tree[1]
                 // Evaluate value first
                 if(this.create_annotations){
-                    this.js += "$locals.__annotations__ = _b_.dict.$factory();"
+                    this.js += "$locals.__annotations__ = $B.empty_dict();"
                 }
                 this.js += "var $value = " + right.to_js() + ";"
                 this.tree[0].tree.splice(1, 1)
@@ -10234,7 +10233,7 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
     // annotations
     if(root.binding.__annotations__){
         root.insert(offset++,
-            $NodeJS('$locals.__annotations__ = _b_.dict.$factory()'))
+            $NodeJS('$locals.__annotations__ = $B.empty_dict()'))
     }
 
     // Code to create the execution frame and store it on the frames stack

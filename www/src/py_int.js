@@ -367,7 +367,7 @@ int.__new__ = function(cls, value){
     if(cls === int){return int.$factory(value)}
     return {
         __class__: cls,
-        __dict__: _b_.dict.$factory(),
+        __dict__: $B.empty_dict(),
         $brython_value: value || 0
     }
 }

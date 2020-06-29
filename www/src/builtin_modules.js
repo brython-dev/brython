@@ -254,7 +254,7 @@
                         res._wrapped = false  // not wrapped
                     }
                     res.__class__ = cls
-                    res.__dict__ = _b_.dict.$factory()
+                    res.__dict__ = $B.empty_dict()
                     return res
                 }
                 $B.set_func_names(dict, "browser.html")
@@ -311,7 +311,7 @@
 
             // Module has an attribute "tags" : a dictionary that maps all tag
             // names to the matching tag class factory function.
-            var obj = {tags:_b_.dict.$factory()},
+            var obj = {tags:$B.empty_dict()},
                 dicts = {}
 
             // register tags in DOMNode to autogenerate tags when DOMNode is invoked

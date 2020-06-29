@@ -1567,7 +1567,7 @@ str.maketrans = function() {
     var $ = $B.args("maketrans", 3, {x: null, y: null, z: null},
         ["x", "y", "z"], arguments, {y: null, z: null}, null, null)
 
-    var _t = _b_.dict.$factory()
+    var _t = $B.empty_dict()
 
     if($.y === null && $.z === null){
         // If there is only one argument, it must be a dictionary mapping

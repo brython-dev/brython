@@ -940,7 +940,7 @@ $B.make_iterator_class = function(name){
         $factory: function(items){
             return {
                 __class__: klass,
-                __dict__: _b_.dict.$factory(),
+                __dict__: $B.empty_dict(),
                 counter: -1,
                 items: items,
                 len: items.length
@@ -1236,8 +1236,8 @@ $B.leave_frame = function(arg){
     frame[1].$current_exception = undefined
     if(frame[1].$close_generators){
         // The attribute $close_generators is set in $B.$call
-        for(const gen of frame[1].$close_generators){
-            gen.return()
+        for(var i = 0, len = frame[1].$close_generators.length; i < len; i++){
+            frame[1].$close_generators[i].return()
         }
     }
     return _b_.None

@@ -37,7 +37,7 @@ $B.make_view = function(name, set_like){
     var klass = $B.make_class(name, function(items){
         return {
             __class__: klass,
-            __dict__: _b_.dict.$factory(),
+            __dict__: $B.empty_dict(),
             counter: -1,
             items: items,
             len: items.length
@@ -574,7 +574,7 @@ dict.__new__ = function(cls){
         $version: 0
     }
     if(cls !== dict){
-        instance.__dict__ = _b_.dict.$factory()
+        instance.__dict__ = $B.empty_dict()
     }
     return instance
 }
@@ -762,7 +762,7 @@ dict.copy = function(self){
     var $ = $B.args("copy", 1, {self: null},["self"], arguments,{},
         null, null),
         self = $.self,
-        res = _b_.dict.$factory()
+        res = $B.empty_dict()
     $copy_dict(res, self)
     return res
 }
@@ -966,6 +966,17 @@ _b_.dict = dict
 
 $B.set_func_names(dict, "builtins")
 
+$B.empty_dict = function(){
+    return {
+        __class__: dict,
+        $numeric_dict : {},
+        $object_dict : {},
+        $string_dict : {},
+        $str_hash: {},
+        $version: 0
+    }
+}
+
 // This must be done after set_func_names, otherwise dict.fromkeys doesn't
 // have the attribute $infos
 dict.fromkeys = _b_.classmethod.$factory(dict.fromkeys)
@@ -1030,7 +1041,7 @@ for(var attr in dict){
 $B.set_func_names(mappingproxy, "builtins")
 
 function jsobj2dict(x){
-    var d = _b_.dict.$factory()
+    var d = $B.empty_dict()
     for(var attr in x){
         if(attr.charAt(0) != "$" && attr !== "__class__"){
             if(x[attr] === null){
@@ -1053,7 +1064,7 @@ $B.obj_dict = function(obj, from_js){
     if(klass !== undefined && klass.$native){
         throw _b_.AttributeError.$factory(klass.__name__ +
             " has no attribute '__dict__'")}
-    var res = _b_.dict.$factory()
+    var res = $B.empty_dict()
     res.$jsobj = obj
     res.$from_js = from_js // set to true if
     return res

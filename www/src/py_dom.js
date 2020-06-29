@@ -405,7 +405,7 @@ Clipboard.__setitem__ = function(self, name, value){
 Clipboard.$factory = function(data){ // drag and drop dataTransfer
     return {
         __class__ : Clipboard,
-        __dict__: _b_.dict.$factory(),
+        __dict__: $B.empty_dict(),
         data : data
     }
 }
@@ -592,7 +592,7 @@ DOMNode.$factory = function(elt, fromtag){
         // add a unique id for comparisons
         elt.$brython_id = "DOM-" + $B.UUID()
     }
-    var __dict__ = _b_.dict.$factory()
+    var __dict__ = $B.empty_dict()
     __dict__.$jsobj = elt
     return {
         __class__: DOMNode,
@@ -738,7 +738,7 @@ DOMNode.__getattribute__ = function(self, attr){
               req.send(null);
               var headers = req.getAllResponseHeaders()
               headers = headers.split("\r\n")
-              var res = _b_.dict.$factory()
+              var res = $B.empty_dict()
               for(var i = 0; i < headers.length; i++){
                   var header = headers[i]
                   if(header.strip().length == 0){continue}

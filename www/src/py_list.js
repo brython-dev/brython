@@ -361,7 +361,7 @@ list.__new__ = function(cls, ...args){
     var res = []
     res.__class__ = cls
     res.__brython__ = true
-    res.__dict__ = _b_.dict.$factory()
+    res.__dict__ = $B.empty_dict()
     return res
 }
 
@@ -861,7 +861,7 @@ tuple.$factory = function(){
 $B.fast_tuple = function(array){
     array.__class__ = tuple
     array.__brython__ = true
-    array.__dict__ = _b_.dict.$factory()
+    array.__dict__ = $B.empty_dict()
     return array
 }
 // add tuple methods
@@ -925,7 +925,7 @@ tuple.__new__ = function(cls, ...args){
     var self = []
     self.__class__ = cls
     self.__brython__ = true
-    self.__dict__ = _b_.dict.$factory()
+    self.__dict__ = $B.empty_dict()
     var arg = $B.$iter(args[0]),
         next_func = $B.$call(getattr(arg, "__next__"))
     while(1){
