@@ -34,6 +34,8 @@ if($B.isNode){
 var href = _window.location.href
 $B.protocol = href.split(':')[0]
 
+$B.BigInt = _window.BigInt
+
 var $path
 
 if($B.brython_path === undefined){

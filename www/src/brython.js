@@ -17,6 +17,7 @@ if($B.isNode){_window={location:{href:'',origin:'',pathname:''},navigator:{userL
 _window=self}
 var href=_window.location.href
 $B.protocol=href.split(':')[0]
+$B.BigInt=_window.BigInt
 var $path
 if($B.brython_path===undefined){
 var this_url;
@@ -102,8 +103,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-06-29 09:35:36.128583"
-__BRYTHON__.timestamp=1593416136127
+__BRYTHON__.compiled_date="2020-06-30 10:07:10.275407"
+__BRYTHON__.timestamp=1593504430275
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -6371,6 +6372,9 @@ if(x > min_int && x < max_int && y > min_int && y < max_int
 else if((typeof x=="number" ||x.__class__===$B.long_int)
 &&(typeof y=="number" ||y.__class__===$B.long_int)){if((typeof x=="number" && isNaN(x))||
 (typeof y=="number" && isNaN(y))){return _b_.float.$factory("nan")}
+switch(x){case Infinity:
+case-Infinity:
+if(y==0){return _b_.float.$factory("nan")}else{return y > 0 ? x :-x}}
 return $B.long_int.__mul__($B.long_int.$factory(x),$B.long_int.$factory(y))}else{return z}}
 $B.sub=function(x,y){var z=(typeof x !="number" ||typeof y !="number")?
 new Number(x-y):x-y
@@ -6426,6 +6430,7 @@ throw _b_.TypeError.$factory("'"+method2comp[op]+
 var opname2opsign={sub:"-",xor:"^",mul:"*"}
 $B.rich_op=function(op,x,y){var x_class=x.__class__ ||$B.get_class(x),y_class=y.__class__ ||$B.get_class(y),method
 if(x_class===y_class){
+if(x_class===_b_.int){return _b_.int["__"+op+"__"](x,y)}
 try{method=$B.$call($B.$getattr(x,"__"+op+"__"))}catch(err){if(err.__class__===_b_.AttributeError){var kl_name=$B.class_name(x)
 throw _b_.TypeError.$factory("unsupported operand type(s) "+
 "for "+opname2opsign[op]+" : '"+kl_name+"' and '"+
@@ -10091,7 +10096,8 @@ int.__pos__=function(self){return self}
 function extended_euclidean(a,b){var d,u,v
 if(b==0){return[a,1,0]}else{[d,u,v]=extended_euclidean(b,a % b)
 return[d,v,u-Math.floor(a/b)*v]}}
-int.__pow__=function(self,other,z){if(_b_.isinstance(other,int)){other=int_value(other)
+$B.use_bigint=0
+int.__pow__=function(self,other,z){if(typeof other=="number" ||_b_.isinstance(other,int)){other=int_value(other)
 switch(other.valueOf()){case 0:
 return int.$factory(1)
 case 1:
@@ -10114,7 +10120,10 @@ return result}
 var res=Math.pow(self.valueOf(),other.valueOf())
 if(res > $B.min_int && res < $B.max_int){return res}
 else if(res !==Infinity && !isFinite(res)){return res}
-else{return int.$factory($B.long_int.__pow__($B.long_int.$factory(self),$B.long_int.$factory(other)))}}
+else{if($B.BigInt){$B.use_bigint++
+return{
+__class__:$B.long_int,value:($B.BigInt(self)**$B.BigInt(other)).toString(),pos:true}}
+return $B.long_int.__pow__($B.long_int.$from_int(self),$B.long_int.$from_int(other))}}
 if(_b_.isinstance(other,_b_.float)){if(self >=0){return new Number(Math.pow(self,other.valueOf()))}
 else{
 return _b_.complex.__pow__($B.make_complex(self,0),other)}}else if(_b_.isinstance(other,_b_.complex)){var preal=Math.pow(self,other.$real),ln=Math.log(self)
@@ -10519,8 +10528,7 @@ else if(self.value.length < other.value.length){return ! self.pos}
 else{return self.pos ? self.value >=other.value :
 self.value <=other.value}}
 long_int.__gt__=function(self,other){return ! long_int.__le__(self,other)}
-$B.nb_index=0
-long_int.__index__=function(self){$B.nb_index+=1
+long_int.__index__=function(self){
 var res='',temp=self.value,d
 while(true){d=divmod_pos(temp,"2")
 res=d[1].value+res
@@ -10592,13 +10600,15 @@ for(var i=0;i < v2.length;i++){if(v1.charAt(start+i)=="1" ||v2.charAt(i)=="1"){r
 else{res+="0"}}
 return intOrLong(long_int.$factory(res,2))}
 long_int.__pos__=function(self){return self}
-long_int.__pow__=function(self,power,z){if(typeof power=="number"){power=long_int.$factory(_b_.str.$factory(power))}else if(isinstance(power,int)){
+long_int.__pow__=function(self,power,z){if(typeof power=="number"){power=long_int.$from_int(power)}else if(isinstance(power,int)){
 power=long_int.$factory(_b_.str.$factory(_b_.int.__index__(power)))}else if(! isinstance(power,long_int)){var msg="power must be an integer, not '"
 throw TypeError.$factory(msg+$B.class_name(power)+"'")}
 if(! power.pos){if(self.value=="1"){return self}
 return long_int.$factory("0")}else if(power.value=="0"){return long_int.$factory("1")}
 if(window.BigInt){var s=BigInt(self.value),b=BigInt(1),x=BigInt(power.value),z=z===undefined ? z :typeof z=="number" ? BigInt(z):
 BigInt(z.value)
+if(z===undefined){return{
+__class__:long_int,value:(s**x).toString(),pos:true}}
 while(x > 0){if(x % BigInt(2)==1){b=b*s}
 x=x/BigInt(2)
 if(x > 0){s=s*s}
@@ -10701,6 +10711,7 @@ function intOrLong(long){
 var v=parseInt(long.value)*(long.pos ? 1 :-1)
 if(v > MIN_SAFE_INTEGER && v < MAX_SAFE_INTEGER){return v}
 return long}
+long_int.$from_int=function(value){return{__class__:long_int,value:value.toString(),pos:value > 0}}
 long_int.$factory=function(value,base){
 if(arguments.length > 2){throw _b_.TypeError.$factory("long_int takes at most 2 arguments ("+
 arguments.length+" given)")}
@@ -10709,15 +10720,14 @@ else if(!isinstance(base,int)){throw TypeError.$factory("'"+$B.class_name(base)+
 "' object cannot be interpreted as an integer")}
 if(base < 0 ||base==1 ||base > 36){throw ValueError.$factory(
 "long_int.$factory() base must be >= 2 and <= 36")}
-if(isinstance(value,_b_.float)){if(value===Number.POSITIVE_INFINITY ||
-value===Number.NEGATIVE_INFINITY){return value}
-if(value >=0){value=new Number(Math.round(value.value))}
-else{value=new Number(Math.ceil(value.value))}}else if(isinstance(value,_b_.bool)){if(value.valueOf()){return int.$factory(1)}
-return int.$factory(0)}
 if(typeof value=="number"){if(isSafeInteger(value)){value=value.toString()}
 else if(value.constructor==Number){value=value.toString()}
 else{throw ValueError.$factory(
-"argument of long_int is not a safe integer")}}else if(value.__class__===long_int){return value}else if(isinstance(value,int)){
+"argument of long_int is not a safe integer")}}else if(isinstance(value,_b_.float)){if(value===Number.POSITIVE_INFINITY ||
+value===Number.NEGATIVE_INFINITY){return value}
+if(value >=0){value=new Number(Math.round(value.value))}
+else{value=new Number(Math.ceil(value.value))}}else if(isinstance(value,_b_.bool)){if(value.valueOf()){return int.$factory(1)}
+return int.$factory(0)}else if(value.__class__===long_int){return value}else if(isinstance(value,int)){
 value=value.$brython_value+""}else if(isinstance(value,_b_.bool)){value=_b_.bool.__int__(value)+""}else if(typeof value !="string"){throw ValueError.$factory(
 "argument of long_int must be a string, not "+
 $B.class_name(value))}

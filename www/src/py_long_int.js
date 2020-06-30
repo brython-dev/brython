@@ -603,10 +603,7 @@ long_int.__gt__ = function(self, other){
     return ! long_int.__le__(self, other)
 }
 
-$B.nb_index = 0
-
 long_int.__index__ = function(self){
-    $B.nb_index += 1
     // Used by bin()
     // returns a string with the binary value of self
     // The algorithm computes the result of the floor division of self by 2
@@ -769,7 +766,7 @@ long_int.__pos__ = function(self){return self}
 
 long_int.__pow__ = function(self, power, z){
     if(typeof power == "number"){
-        power = long_int.$factory(_b_.str.$factory(power))
+        power = long_int.$from_int(power)
     }else if(isinstance(power, int)){
         // int subclass
         power = long_int.$factory(_b_.str.$factory(_b_.int.__index__(power)))
@@ -779,7 +776,7 @@ long_int.__pow__ = function(self, power, z){
     }
     if(! power.pos){
         if(self.value == "1"){return self}
-        // For all other integers, x**-n is 0
+        // For all other integers, x ** -n is 0
         return long_int.$factory("0")
     }else if(power.value == "0"){
         return long_int.$factory("1")
@@ -803,6 +800,13 @@ long_int.__pow__ = function(self, power, z){
             x = BigInt(power.value),
             z = z === undefined ? z : typeof z == "number" ? BigInt(z) :
                 BigInt(z.value)
+        if(z === undefined){
+            return {
+                __class__: long_int,
+                value: (s ** x).toString(),
+                pos: true
+            }
+        }
         while(x > 0){
             if(x % BigInt(2) == 1){
                 b = b * s
@@ -1036,6 +1040,10 @@ function intOrLong(long){
     return long
 }
 
+long_int.$from_int = function(value){
+    return {__class__: long_int, value: value.toString(), pos: value > 0}
+}
+
 long_int.$factory = function(value, base){
     // console.log("longint factory", value, base)
     if(arguments.length > 2){
@@ -1053,7 +1061,14 @@ long_int.$factory = function(value, base){
         throw ValueError.$factory(
             "long_int.$factory() base must be >= 2 and <= 36")
     }
-    if(isinstance(value, _b_.float)){
+    if(typeof value == "number"){
+        if(isSafeInteger(value)){value = value.toString()}
+        else if(value.constructor == Number){value = value.toString()}
+        else{
+            throw ValueError.$factory(
+                "argument of long_int is not a safe integer")
+        }
+    }else if(isinstance(value, _b_.float)){
         if(value === Number.POSITIVE_INFINITY ||
                 value === Number.NEGATIVE_INFINITY){
             return value
@@ -1063,14 +1078,6 @@ long_int.$factory = function(value, base){
     }else if(isinstance(value, _b_.bool)){
         if(value.valueOf()){return int.$factory(1)}
         return int.$factory(0)
-    }
-    if(typeof value == "number"){
-        if(isSafeInteger(value)){value = value.toString()}
-        else if(value.constructor == Number){value = value.toString()}
-        else{
-            throw ValueError.$factory(
-                "argument of long_int is not a safe integer")
-        }
     }else if(value.__class__ === long_int){
         return value
     }else if(isinstance(value, int)){

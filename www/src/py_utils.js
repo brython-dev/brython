@@ -1335,6 +1335,15 @@ $B.mul = function(x, y){
                 (typeof y == "number" && isNaN(y))){
             return _b_.float.$factory("nan")
         }
+        switch(x){
+            case Infinity:
+            case -Infinity:
+                if(y == 0){
+                    return _b_.float.$factory("nan")
+                }else{
+                    return y > 0 ? x : -x
+                }
+        }            
         return $B.long_int.__mul__($B.long_int.$factory(x),
             $B.long_int.$factory(y))
     }else{return z}
@@ -1454,6 +1463,9 @@ $B.rich_op = function(op, x, y){
         method
     if(x_class === y_class){
         // For objects of the same type, don't try the reversed operator
+        if(x_class === _b_.int){
+            return _b_.int["__" + op + "__"](x, y)
+        }
         try{
             method = $B.$call($B.$getattr(x, "__" + op + "__"))
         }catch(err){

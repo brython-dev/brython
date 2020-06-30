@@ -384,8 +384,9 @@ function extended_euclidean(a, b){
     }
 }
 
+$B.use_bigint = 0
 int.__pow__ = function(self, other, z){
-    if(_b_.isinstance(other, int)){
+    if(typeof other == "number"  || _b_.isinstance(other, int)){
         other = int_value(other)
         switch(other.valueOf()) {
             case 0:
@@ -436,8 +437,16 @@ int.__pow__ = function(self, other, z){
       if(res > $B.min_int && res < $B.max_int){return res}
       else if(res !== Infinity && !isFinite(res)){return res}
       else{
-          return int.$factory($B.long_int.__pow__($B.long_int.$factory(self),
-             $B.long_int.$factory(other)))
+          if($B.BigInt){
+              $B.use_bigint++
+              return {
+                  __class__: $B.long_int,
+                  value: ($B.BigInt(self) ** $B.BigInt(other)).toString(),
+                  pos: true
+              }
+          }
+          return $B.long_int.__pow__($B.long_int.$from_int(self),
+             $B.long_int.$from_int(other))
       }
     }
     if(_b_.isinstance(other, _b_.float)) {
