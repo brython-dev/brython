@@ -171,8 +171,12 @@ bytearray.insert = function(self, pos, b){
     _b_.list.insert(self.source, pos, b)
 }
 
-bytearray.$factory = function(source, encoding, errors) {
-    return bytearray.__new__(bytearray, source, encoding, errors)
+bytearray.$factory = function(){
+    var args = [bytearray]
+    for(var i = 0, len = arguments.length; i < len; i++){
+        args.push(arguments[i])
+    }
+    return bytearray.__new__.apply(null, args)
 }
 
 //bytes() (built in function)
@@ -343,7 +347,7 @@ bytes.__new__ = function(cls, source, encoding, errors){
     var $ = $B.args("__new__", 4,
             {cls: null, source: null, encoding: null, errors: null},
             ["cls", "source", "encoding", "errors"], arguments,
-            {encoding: "utf-8", errors: "strict"}, null, null)
+            {source: [], encoding: "utf-8", errors: "strict"}, null, null)
     return bytes.$new($.cls, $.source, $.encoding, $.errors)
 }
 
@@ -355,15 +359,15 @@ bytes.$new = function(cls, source, encoding, errors){
         pos = 0
     if(source === undefined){
         // empty list
-    }else if(_b_.isinstance(source, _b_.int)){
+    }else if(typeof source == "number" || _b_.isinstance(source, _b_.int)){
         var i = source
         while(i--){int_list[pos++] = 0}
     }else{
-        if(_b_.isinstance(source, _b_.str)){
+        if(typeof source == "string" || _b_.isinstance(source, _b_.str)){
             if(encoding === undefined){
                 throw _b_.TypeError.$factory("string argument without an encoding")
             }
-            int_list = encode(source, encoding, errors)
+            int_list = encode(source, encoding || "utf-8", errors || "strict")
         }else{
             // tranform iterable "source" into a list
             int_list = _b_.list.$factory(source)

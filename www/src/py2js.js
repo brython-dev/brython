@@ -8147,7 +8147,7 @@ var $StringCtx = $B.parser.$StringCtx = function(context,value){
 
                 if(type == null){
                     type = is_bytes
-                    if(is_bytes){res += '_b_.bytes.$factory('}
+                    if(is_bytes){res += '_b_.bytes.$new(_b_.bytes, '}
                 }else if(type != is_bytes){
                     return '$B.$TypeError("can\'t concat bytes to str")'
                 }
