@@ -3181,9 +3181,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         if(this.is_comp){
             nodes.push($NodeJS("var $defaults = {}"))
         }
-
-        nodes.push($NodeJS("var $nb_defaults = Object.keys($defaults).length"))
-
+        
         this.env = []
 
         // Code in the worst case, uses $B.args in py_utils.js
@@ -3245,7 +3243,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
 
             if(pos_len > 0){
                 // Not enough arguments
-                else_node.add($NodeJS('else if($len + $nb_defaults < ' +
+                else_node.add($NodeJS('else if($len + Object.keys($defaults).length < ' +
                     pos_len + '){$B.wrong_nb_args("' + this.name +
                     '", $len, ' + pos_len + ', [' + slot_list + '])}'))
 
@@ -3340,7 +3338,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
             node.parent.insert(rank + offset++, $NodeJS(name + '.$is_func = true'))
 
             if(this.$has_yield_in_cm){
-                node.parent.insert(rank + offset++, 
+                node.parent.insert(rank + offset++,
                     $NodeJS(name + '.$has_yield_in_cm = true'))
             }
 
