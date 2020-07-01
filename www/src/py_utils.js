@@ -23,16 +23,8 @@ $B.args = function($fname, argcount, slots, var_names, args, $dobj,
     if($fname.startsWith("lambda_" + $B.lambda_magic)){
         $fname = "<lambda>"
     }
-    var $args = []
-    if(Array.isArray(args)){$args = args}
-    else{
-        // Transform "arguments" object into a list (faster)
-        for(var i = 0, len = args.length; i < len; i++){
-            $args.push(args[i])
-        }
-    }
     var has_kw_args = false,
-        nb_pos = $args.length,
+        nb_pos = args.length,
         filled = 0,
         extra_kw,
         only_positional
@@ -47,13 +39,58 @@ $B.args = function($fname, argcount, slots, var_names, args, $dobj,
 
     // If the function call had keywords arguments, they are in the last
     // element of $args
-    if(nb_pos > 0 && $args[nb_pos - 1] && $args[nb_pos - 1].$nat){
+    if(nb_pos > 0 && args[nb_pos - 1].$nat){
         nb_pos--
-        if(Object.keys($args[nb_pos].kw).length > 0){
+        if(Object.keys(args[nb_pos].kw).length > 0){
             has_kw_args = true
-            var kw_args = $args[nb_pos].kw
+            var kw_args = args[nb_pos].kw
             if(Array.isArray(kw_args)){
-                kw_args = $B.extend($fname, ...kw_args)
+                var kwa = kw_args[0]
+                for(var i = 1, len = kw_args.length; i < len; i++){
+                    var kw_arg = kw_args[i]
+                    if(kw_arg.__class__ === _b_.dict){
+                        for(var k in kw_arg.$numeric_dict){
+                            throw _b_.TypeError.$factory($fname +
+                                "() keywords must be strings")
+                        }
+                        for(var k in kw_arg.$object_dict){
+                            throw _b_.TypeError.$factory($fname +
+                                "() keywords must be strings")
+                        }
+                        for(var k in kw_arg.$string_dict){
+                            if(kwa[k] !== undefined){
+                                throw _b_.TypeError.$factory($fname +
+                                    "() got multiple values for argument '" +
+                                    k + "'")
+                            }
+                            kwa[k] = kw_arg.$string_dict[k][0]
+                        }
+                    }else{
+                        var it = _b_.iter(kw_arg),
+                            getitem = $B.$getattr(kw_arg, '__getitem__')
+                        while(true){
+                            try{
+                                var k = _b_.next(it)
+                                if(typeof k !== "string"){
+                                    throw _b_.TypeError.$factory($fname +
+                                        "() keywords must be strings")
+                                }
+                                if(kwa[k] !== undefined){
+                                    throw _b_.TypeError.$factory($fname +
+                                        "() got multiple values for argument '" +
+                                        k + "'")
+                                }
+                                kwa[k] = getitem(k)
+                            }catch(err){
+                                if($B.is_exc(err, [_b_.StopIteration])){
+                                    break
+                                }
+                                throw err
+                            }
+                        }
+                    }
+                }
+                kw_args = kwa
             }
         }
     }
@@ -78,7 +115,7 @@ $B.args = function($fname, argcount, slots, var_names, args, $dobj,
         }else{
             // Store extra positional arguments
             for(var i = argcount; i < nb_pos; i++){
-                slots[extra_pos_args].push($args[i])
+                slots[extra_pos_args].push(args[i])
             }
             // For the next step of the algorithm, only use the arguments
             // before these extra arguments
@@ -88,7 +125,7 @@ $B.args = function($fname, argcount, slots, var_names, args, $dobj,
 
     // Fill slots with positional (non-extra) arguments
     for(var i = 0; i < nb_pos; i++){
-        slots[var_names[i]] = $args[i]
+        slots[var_names[i]] = args[i]
         filled++
     }
 
@@ -1343,7 +1380,7 @@ $B.mul = function(x, y){
                 }else{
                     return y > 0 ? x : -x
                 }
-        }            
+        }
         return $B.long_int.__mul__($B.long_int.$factory(x),
             $B.long_int.$factory(y))
     }else{return z}

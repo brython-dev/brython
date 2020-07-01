@@ -185,7 +185,7 @@ object.__getattribute__ = function(obj, attr){
         }
         if($test){console.log("get", get)}
         var __get__ = get === undefined ? null :
-            _b_.getattr(res, "__get__", null)
+            $B.$getattr(res, "__get__", null)
 
         if($test){console.log("__get__", __get__)}
         // For descriptors, attribute resolution is done by applying __get__

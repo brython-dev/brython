@@ -103,8 +103,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-06-30 10:07:10.275407"
-__BRYTHON__.timestamp=1593504430275
+__BRYTHON__.compiled_date="2020-07-01 17:06:52.050266"
+__BRYTHON__.timestamp=1593616012050
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -1619,7 +1619,6 @@ this.module+'"'),$NodeJS('var $top_frame = [$local_name, $locals,'+
 if(this.type=="generator"){enter_frame_nodes.push($NodeJS("$locals.$is_generator = true"))}
 enter_frame_nodes.forEach(function(node){node.enter_frame=true})
 if(this.is_comp){nodes.push($NodeJS("var $defaults = {}"))}
-nodes.push($NodeJS("var $nb_defaults = Object.keys($defaults).length"))
 this.env=[]
 var make_args_nodes=[]
 var js=local_ns+' = $locals = $B.args("'+this.name+'", '+
@@ -1650,7 +1649,7 @@ else_node.add($NodeJS('else if($len > '+pos_len+
 '){$B.wrong_nb_args("'+this.name+'", $len, '+
 pos_len+', ['+slot_list+'])}'))
 if(pos_len > 0){
-else_node.add($NodeJS('else if($len + $nb_defaults < '+
+else_node.add($NodeJS('else if($len + Object.keys($defaults).length < '+
 pos_len+'){$B.wrong_nb_args("'+this.name+
 '", $len, '+pos_len+', ['+slot_list+'])}'))
 subelse_node=$NodeJS("else")
@@ -4052,7 +4051,7 @@ var js='(function(){throw _b_.TypeError.$factory("'+"'str'"+
 return js}else{var value=this.tree[i],is_fstring=Array.isArray(value),is_bytes=false
 if(!is_fstring){is_bytes=value.charAt(0)=='b'}
 if(type==null){type=is_bytes
-if(is_bytes){res+='_b_.bytes.$factory('}}else if(type !=is_bytes){return '$B.$TypeError("can\'t concat bytes to str")'}
+if(is_bytes){res+='_b_.bytes.$new(_b_.bytes, '}}else if(type !=is_bytes){return '$B.$TypeError("can\'t concat bytes to str")'}
 if(!is_bytes){if(is_fstring){res+=fstring(value)}else{has_surrogate=has_surrogate ||_has_surrogate(value)
 res+=prepare(value)}}else{res+=prepare(value.substr(1))}
 if(i < this.tree.length-1){res+='+'}}}
@@ -5407,7 +5406,7 @@ for(var i=0;i < res.__class__.__mro__.length &&
 get===undefined;i++){get=res.__class__.__mro__[i].__get__}}
 if($test){console.log("get",get)}
 var __get__=get===undefined ? null :
-_b_.getattr(res,"__get__",null)
+$B.$getattr(res,"__get__",null)
 if($test){console.log("__get__",__get__)}
 if(__get__ !==null){try{return __get__.apply(null,[obj,klass])}
 catch(err){console.log('error in get.apply',err)
@@ -5856,18 +5855,32 @@ _b_.object.__class__=type})(__BRYTHON__)
 (navigator instanceof WorkerNavigator)
 $B.args=function($fname,argcount,slots,var_names,args,$dobj,extra_pos_args,extra_kw_args){
 if($fname.startsWith("lambda_"+$B.lambda_magic)){$fname="<lambda>"}
-var $args=[]
-if(Array.isArray(args)){$args=args}
-else{
-for(var i=0,len=args.length;i < len;i++){$args.push(args[i])}}
-var has_kw_args=false,nb_pos=$args.length,filled=0,extra_kw,only_positional
+var has_kw_args=false,nb_pos=args.length,filled=0,extra_kw,only_positional
 var end_positional=var_names.indexOf("/")
 if(end_positional !=-1){var_names.splice(end_positional,1)
 only_positional=var_names.slice(0,end_positional)}
-if(nb_pos > 0 && $args[nb_pos-1]&& $args[nb_pos-1].$nat){nb_pos--
-if(Object.keys($args[nb_pos].kw).length > 0){has_kw_args=true
-var kw_args=$args[nb_pos].kw
-if(Array.isArray(kw_args)){kw_args=$B.extend($fname,...kw_args)}}}
+if(nb_pos > 0 && args[nb_pos-1].$nat){nb_pos--
+if(Object.keys(args[nb_pos].kw).length > 0){has_kw_args=true
+var kw_args=args[nb_pos].kw
+if(Array.isArray(kw_args)){var kwa=kw_args[0]
+for(var i=1,len=kw_args.length;i < len;i++){var kw_arg=kw_args[i]
+if(kw_arg.__class__===_b_.dict){for(var k in kw_arg.$numeric_dict){throw _b_.TypeError.$factory($fname+
+"() keywords must be strings")}
+for(var k in kw_arg.$object_dict){throw _b_.TypeError.$factory($fname+
+"() keywords must be strings")}
+for(var k in kw_arg.$string_dict){if(kwa[k]!==undefined){throw _b_.TypeError.$factory($fname+
+"() got multiple values for argument '"+
+k+"'")}
+kwa[k]=kw_arg.$string_dict[k][0]}}else{var it=_b_.iter(kw_arg),getitem=$B.$getattr(kw_arg,'__getitem__')
+while(true){try{var k=_b_.next(it)
+if(typeof k !=="string"){throw _b_.TypeError.$factory($fname+
+"() keywords must be strings")}
+if(kwa[k]!==undefined){throw _b_.TypeError.$factory($fname+
+"() got multiple values for argument '"+
+k+"'")}
+kwa[k]=getitem(k)}catch(err){if($B.is_exc(err,[_b_.StopIteration])){break}
+throw err}}}}
+kw_args=kwa}}}
 if(extra_pos_args){slots[extra_pos_args]=[]
 slots[extra_pos_args].__class__=_b_.tuple}
 if(extra_kw_args){
@@ -5877,9 +5890,9 @@ if(extra_pos_args===null ||extra_pos_args=="*"){
 msg=$fname+"() takes "+argcount+" positional argument"+
 (argcount > 1 ? "s" :"")+" but more were given"
 throw _b_.TypeError.$factory(msg)}else{
-for(var i=argcount;i < nb_pos;i++){slots[extra_pos_args].push($args[i])}
+for(var i=argcount;i < nb_pos;i++){slots[extra_pos_args].push(args[i])}
 nb_pos=argcount}}
-for(var i=0;i < nb_pos;i++){slots[var_names[i]]=$args[i]
+for(var i=0;i < nb_pos;i++){slots[var_names[i]]=args[i]
 filled++}
 if(filled==argcount && argcount===var_names.length &&
 ! has_kw_args){if(extra_kw_args){slots[extra_kw_args]=extra_kw}
@@ -8143,7 +8156,9 @@ bytearray.insert=function(self,pos,b){if(arguments.length !=3){throw _b_.TypeErr
 if(! _b_.isinstance(b,_b_.int)){throw _b_.TypeError.$factory("an integer is required")}
 if(b > 255){throw ValueError.$factory("byte must be in range(0, 256)")}
 _b_.list.insert(self.source,pos,b)}
-bytearray.$factory=function(source,encoding,errors){return bytearray.__new__(bytearray,source,encoding,errors)}
+bytearray.$factory=function(){var args=[bytearray]
+for(var i=0,len=arguments.length;i < len;i++){args.push(arguments[i])}
+return bytearray.__new__.apply(null,args)}
 var bytes={__class__ :_b_.type,__mro__:[_b_.object],$buffer_protocol:true,$infos:{__module__:"builtins",__name__:"bytes"},$is_class:true}
 bytes.__add__=function(self,other){if(_b_.isinstance(other,bytes)){return self.__class__.$factory(self.source.concat(other.source))}else if(_b_.isinstance(other,bytearray)){return self.__class__.$factory(bytes.__add__(self,bytes.$factory(other)))}else if(_b_.isinstance(other,_b_.memoryview)){return self.__class__.$factory(bytes.__add__(self,_b_.memoryview.tobytes(other)))}
 throw _b_.TypeError.$factory("can't concat bytes to "+
@@ -8196,13 +8211,13 @@ var res=bytes.$factory()
 res.source=t
 return res}
 bytes.__ne__=function(self,other){return ! bytes.__eq__(self,other)}
-bytes.__new__=function(cls,source,encoding,errors){var $=$B.args("__new__",4,{cls:null,source:null,encoding:null,errors:null},["cls","source","encoding","errors"],arguments,{encoding:"utf-8",errors:"strict"},null,null)
+bytes.__new__=function(cls,source,encoding,errors){var $=$B.args("__new__",4,{cls:null,source:null,encoding:null,errors:null},["cls","source","encoding","errors"],arguments,{source:[],encoding:"utf-8",errors:"strict"},null,null)
 return bytes.$new($.cls,$.source,$.encoding,$.errors)}
 bytes.$new=function(cls,source,encoding,errors){
 var self={__class__:cls},int_list=[],pos=0
-if(source===undefined){}else if(_b_.isinstance(source,_b_.int)){var i=source
-while(i--){int_list[pos++]=0}}else{if(_b_.isinstance(source,_b_.str)){if(encoding===undefined){throw _b_.TypeError.$factory("string argument without an encoding")}
-int_list=encode(source,encoding,errors)}else{
+if(source===undefined){}else if(typeof source=="number" ||_b_.isinstance(source,_b_.int)){var i=source
+while(i--){int_list[pos++]=0}}else{if(typeof source=="string" ||_b_.isinstance(source,_b_.str)){if(encoding===undefined){throw _b_.TypeError.$factory("string argument without an encoding")}
+int_list=encode(source,encoding ||"utf-8",errors ||"strict")}else{
 int_list=_b_.list.$factory(source)
 for(var i=0;i < int_list.length;i++){try{var item=_b_.int.$factory(int_list[i])}catch(err){throw _b_.TypeError.$factory("'"+
 $B.class_name(int_list[i])+"' object "+
