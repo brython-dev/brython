@@ -2370,8 +2370,7 @@ var $ClassCtx = $B.parser.$ClassCtx = function(context){
             local_ns = '$locals_' + this.id.replace(/\./g, '_'),
             js = 'var ' + local_ns + ' = {' +
                  '__annotations__: $B.empty_dict()}, ' +
-                 indent + '$locals = ' + local_ns + ', ' +
-                 indent + '$local_name = "' + local_ns + '"'
+                 indent + '$locals = ' + local_ns
 
         new $NodeJSCtx(instance_decl, js)
         node.insert(0, instance_decl)
@@ -2387,7 +2386,7 @@ var $ClassCtx = $B.parser.$ClassCtx = function(context){
                  '$locals.$name = "' + this.name + '"' + indent +
                  '$locals.$line_info = "' + node.line_num + ',' +
                  this.module + '";' + indent +
-                 'var $top_frame = [$local_name, $locals,' + '"' +
+                 'var $top_frame = ["' + local_ns +'", $locals,' + '"' +
                  global_scope.id + '", ' + global_ns + ']' +
                  indent + '$locals.$f_trace = $B.enter_frame($top_frame);' +
                  indent + 'if($locals.$f_trace !== _b_.None){' +
@@ -3150,8 +3149,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         var local_ns = '$locals_' + this.id,
             h = '\n' + ' '.repeat(indent)
         js = 'var ' + local_ns + ' = {},' +
-            h +'$local_name = "' + this.id +
-            '",' + h + '$locals = ' + local_ns + ';'
+            h + '$locals = ' + local_ns + ';'
 
         var new_node = new $Node()
         new_node.locals_def = true
@@ -3163,7 +3161,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         var enter_frame_nodes = [
             $NodeJS('$locals.$line_info = "' + node.line_num + ',' +
                 this.module + '"'),
-            $NodeJS('var $top_frame = [$local_name, $locals,' +
+            $NodeJS(`var $top_frame = ["${this.id}", $locals,` +
                 '"' + global_scope.id + '", ' + global_ns + ', ' +
                 (this.is_comp ? this.name : name) + ']'),
             $NodeJS('$locals.$f_trace = $B.enter_frame($top_frame)'),
@@ -3428,8 +3426,8 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
                 h1 + 'co_name: "' + this.name + '"' +
                 h1 + 'co_nlocals: ' + co_varnames.length +
                 h1 + 'co_posonlyargcount: ' + (this.pos_only || 0) +
-                h1 + 'co_varnames: $B.fast_tuple([' + co_varnames.join(', ') + ']' +
-                h + ')}\n' + ' '.repeat(indent + 4) +'};'
+                h1 + 'co_varnames: $B.fast_tuple([' + co_varnames.join(', ') + '])' +
+                h + '}\n' + ' '.repeat(indent + 4) +'};'
 
             // End with None for interactive interpreter
             js += '_b_.None;'
