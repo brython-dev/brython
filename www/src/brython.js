@@ -103,8 +103,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-07-02 08:57:18.535141"
-__BRYTHON__.timestamp=1593673038535
+__BRYTHON__.compiled_date="2020-07-02 22:13:02.577773"
+__BRYTHON__.timestamp=1593720782577
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -1658,7 +1658,6 @@ subelse_node.add($NodeJS("for(var i = $len; i < defparams.length"+
 "; i++){$locals[defparams[i]] = $defaults[defparams[i]]}"))}}else{nodes.push(make_args_nodes[0])
 if(make_args_nodes.length > 1){nodes.push(make_args_nodes[1])}}
 nodes=nodes.concat(enter_frame_nodes)
-nodes.push($NodeJS('$locals.__annotations__ = $B.empty_dict()'))
 nodes.push($NodeJS('$locals.$name = "'+this.name+'"'))
 var is_method=scope.ntype=="class"
 if(is_method){var class_name=scope.C.tree[0].name,class_block=scope.parent_block,class_ref="$locals_"+class_block.id.replace(/\./g,'_')+
@@ -1673,11 +1672,11 @@ if(only_positional){this.params=Object.keys(this.varnames).join(', ')}
 new $NodeJSCtx(def_func_node,'')
 def_func_node.is_def_func=true
 def_func_node.module=this.module
-var last_instr=node.children[node.children.length-1].C.tree[0]
+var last_node=node.children[node.children.length-1],indent=last_node.indent,last_instr=last_node.C.tree[0]
 if(last_instr.type !='return'){
 js='if($locals.$f_trace !== _b_.None){\n'+
-' '.repeat(indent+4)+'$B.trace_return(_b_.None)\n'+
-' '.repeat(indent)+'}\n'+' '.repeat(indent)
+'    '.repeat(indent)+'$B.trace_return(_b_.None)\n'+
+'    '.repeat(indent)+'}\n'+'    '.repeat(indent)
 js+='$B.leave_frame'
 if(this.id.substr(0,5)=='$exec'){js+='_exec'}
 js+='();return _b_.None'
@@ -3887,7 +3886,7 @@ new $IdCtx(new $ExprCtx(this,'rvalue',false),'None')}
 var scope=this.scope
 if(scope.ntype=='generator'){return 'var $res = '+$to_js(this.tree)+'; $B.leave_frame();'+
 'return $B.generator_return($res)'}
-var indent=' '.repeat(this.node.indent+1)
+var indent='    '.repeat(this.node.indent-1)
 var js='var $res = '+$to_js(this.tree)+';\n'+indent+
 'if($locals.$f_trace !== _b_.None){$B.trace_return($res)}\n'+indent+
 '$B.leave_frame'

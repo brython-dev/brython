@@ -3179,7 +3179,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         if(this.is_comp){
             nodes.push($NodeJS("var $defaults = {}"))
         }
-        
+
         this.env = []
 
         // Code in the worst case, uses $B.args in py_utils.js
@@ -3261,7 +3261,6 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
 
         nodes = nodes.concat(enter_frame_nodes)
 
-        nodes.push($NodeJS('$locals.__annotations__ = $B.empty_dict()'))
         nodes.push($NodeJS('$locals.$name = "' + this.name + '"'))
 
         // Handle name __class__ in methods (PEP 3135 and issue #1068)
@@ -3300,12 +3299,14 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
 
         // If the last instruction in the function is not a return,
         // add an explicit line "return None".
-        var last_instr = node.children[node.children.length - 1].context.tree[0]
+        var last_node = node.children[node.children.length - 1],
+            indent = last_node.indent,
+            last_instr = last_node.context.tree[0]
         if(last_instr.type != 'return'){
             // as always, leave frame before returning
             js = 'if($locals.$f_trace !== _b_.None){\n' +
-                ' '.repeat(indent + 4) + '$B.trace_return(_b_.None)\n' +
-                ' '.repeat(indent) + '}\n' + ' '.repeat(indent)
+                '    '.repeat(indent) + '$B.trace_return(_b_.None)\n' +
+                '    '.repeat(indent) + '}\n' + '    '.repeat(indent)
             js += '$B.leave_frame'
             if(this.id.substr(0,5) == '$exec'){
                 js += '_exec'
@@ -7805,7 +7806,7 @@ var $ReturnCtx = $B.parser.$ReturnCtx = function(context){
         // Returning from a function means leaving the execution frame
         // If the return is in a try block with a finally block, the frames
         // will be restored when entering "finally"
-        var indent = ' '.repeat(this.node.indent + 1)
+        var indent = '    '.repeat(this.node.indent - 1)
         var js = 'var $res = ' + $to_js(this.tree) + ';\n' + indent +
         'if($locals.$f_trace !== _b_.None){$B.trace_return($res)}\n' + indent +
         '$B.leave_frame'
