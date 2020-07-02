@@ -943,6 +943,7 @@ Random.shuffle = function(x, random){
             x_set(i, temp)
         }
     }
+    return _b_.None
 }
 
 Random.triangular = function(){

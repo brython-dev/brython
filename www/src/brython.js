@@ -103,8 +103,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-07-01 17:06:52.050266"
-__BRYTHON__.timestamp=1593616012050
+__BRYTHON__.compiled_date="2020-07-02 08:57:18.535141"
+__BRYTHON__.timestamp=1593673038535
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -1246,8 +1246,7 @@ this.doc_string=$get_docstring(node)
 this.module=$get_module(this).module.replace(/\./g,'_')
 var indent='\n'+' '.repeat(node.indent+12),instance_decl=new $Node(),local_ns='$locals_'+this.id.replace(/\./g,'_'),js='var '+local_ns+' = {'+
 '__annotations__: $B.empty_dict()}, '+
-indent+'$locals = '+local_ns+', '+
-indent+'$local_name = "'+local_ns+'"'
+indent+'$locals = '+local_ns
 new $NodeJSCtx(instance_decl,js)
 node.insert(0,instance_decl)
 var global_scope=this.scope
@@ -1257,7 +1256,7 @@ var js=' '.repeat(node.indent+4)+
 '$locals.$name = "'+this.name+'"'+indent+
 '$locals.$line_info = "'+node.line_num+','+
 this.module+'";'+indent+
-'var $top_frame = [$local_name, $locals,'+'"'+
+'var $top_frame = ["'+local_ns+'", $locals,'+'"'+
 global_scope.id+'", '+global_ns+']'+
 indent+'$locals.$f_trace = $B.enter_frame($top_frame);'+
 indent+'if($locals.$f_trace !== _b_.None){'+
@@ -1604,15 +1603,14 @@ var global_ns='$locals_'+global_scope.id.replace(/\./g,'_')
 var name=this.name+this.num
 var local_ns='$locals_'+this.id,h='\n'+' '.repeat(indent)
 js='var '+local_ns+' = {},'+
-h+'$local_name = "'+this.id+
-'",'+h+'$locals = '+local_ns+';'
+h+'$locals = '+local_ns+';'
 var new_node=new $Node()
 new_node.locals_def=true
 new_node.func_node=node
 new $NodeJSCtx(new_node,js)
 nodes.push(new_node)
 var enter_frame_nodes=[$NodeJS('$locals.$line_info = "'+node.line_num+','+
-this.module+'"'),$NodeJS('var $top_frame = [$local_name, $locals,'+
+this.module+'"'),$NodeJS(`var $top_frame=["${this.id}",$locals,`+
 '"'+global_scope.id+'", '+global_ns+', '+
 (this.is_comp ? this.name :name)+']'),$NodeJS('$locals.$f_trace = $B.enter_frame($top_frame)'),$NodeJS('var $stack_length = $B.frames_stack.length;')
 ]
@@ -1733,8 +1731,8 @@ h1+'co_kwonlyargcount:'+this.kwonlyargcount+
 h1+'co_name: "'+this.name+'"'+
 h1+'co_nlocals: '+co_varnames.length+
 h1+'co_posonlyargcount: '+(this.pos_only ||0)+
-h1+'co_varnames: $B.fast_tuple(['+co_varnames.join(', ')+']'+
-h+')}\n'+' '.repeat(indent+4)+'};'
+h1+'co_varnames: $B.fast_tuple(['+co_varnames.join(', ')+'])'+
+h+'}\n'+' '.repeat(indent+4)+'};'
 js+='_b_.None;'
 node.parent.insert(rank+offset++,$NodeJS(js))}
 this.default_str='{'+defs1.join(', ')+'}'
@@ -5884,7 +5882,7 @@ kw_args=kwa}}}
 if(extra_pos_args){slots[extra_pos_args]=[]
 slots[extra_pos_args].__class__=_b_.tuple}
 if(extra_kw_args){
-extra_kw=_b_.dict.__new__(_b_.dict)}
+extra_kw=$B.empty_dict()}
 if(nb_pos > argcount){
 if(extra_pos_args===null ||extra_pos_args=="*"){
 msg=$fname+"() takes "+argcount+" positional argument"+
@@ -5901,8 +5899,7 @@ if(has_kw_args){for(var key in kw_args){var value=kw_args[key],key1=$B.to_alias(
 if(slots[key1]===undefined){
 if(extra_kw_args){
 if(key.substr(0,2)=="$$"){key=key.substr(2)}
-extra_kw.$string_dict[key]=[value,extra_kw.$version]
-extra_kw.$version++}else{throw _b_.TypeError.$factory($fname+
+extra_kw.$string_dict[key]=[value,extra_kw.$version++]}else{throw _b_.TypeError.$factory($fname+
 "() got an unexpected keyword argument '"+key+"'")}}else if(slots[key1]!==null){
 throw _b_.TypeError.$factory($fname+
 "() got multiple values for argument '"+key+"'")}else if(only_positional && only_positional.indexOf(key1)>-1){throw _b_.TypeError.$factory($fname+"() got an "+
