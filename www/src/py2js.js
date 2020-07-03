@@ -10432,11 +10432,6 @@ var brython = $B.parser.brython = function(options){
 $B.run_script = function(src, name, run_loop){
     // run_loop is set to true if run_script is added to tasks in
     // ajax_load_script
-    if(run_loop){
-        if($B.idb_cx && $B.idb_cx.$closed){
-            $B.tasks.push([$B.idb_open])
-        }
-    }
     $B.$py_module_path[name] = $B.script_path
     try{
         var root = $B.py2js(src, name, name),

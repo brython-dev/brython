@@ -170,6 +170,7 @@ function idb_get(module){
 $B.idb_open = function(obj){
     $B.idb_name = "brython-cache"
     var idb_cx = $B.idb_cx = indexedDB.open($B.idb_name)
+
     idb_cx.onsuccess = function(){
         var db = idb_cx.result
         if(!db.objectStoreNames.contains("modules")){
@@ -201,7 +202,13 @@ $B.idb_open = function(obj){
                 record,
                 outdated = []
 
-            store.openCursor().onsuccess = function(evt){
+            var openCursor = store.openCursor()
+
+            openCursor.onerror = function(evt){
+                console.log("open cursor error", evt)
+            }
+
+            openCursor.onsuccess = function(evt){
                 cursor = evt.target.result
                 if(cursor){
                     record = cursor.value
@@ -307,7 +314,7 @@ var inImported = $B.inImported = function(module){
             source = elts[1],
             is_package = elts.length == 4
         if(ext==".py"){
-            if($B.idb_cx){
+            if($B.idb_cx && !$B.idb_cx.$closed){
                 $B.tasks.splice(0, 0, [idb_get, module])
             }
         }else{
@@ -354,7 +361,6 @@ var loop = $B.loop = function(){
             var script = task[1],
                 script_id = script.__name__.replace(/\./g, "_"),
                 module = $B.module.$factory(script.__name__)
-
             module.$src = script.$src
             module.__file__ = script.__file__
             $B.imported[script_id] = module
