@@ -655,27 +655,15 @@ type.mro = function(cls){
                     __class__: _b_.type,
                     __mro__: [_b_.object],
                     __name__: js_func.name,
-                    __init__: function(instance, ...args){
-                        args.forEach(function(arg, i){
-                            args[i] = $B.pyobj2jsobj(arg)
-                        })
-                        js_func.apply(instance, args)
-                        // Transform function attributes into methods
-                        for(var attr in instance){
-                            if(typeof instance[attr] == "function"){
-                                instance[attr] = (function(f){
-                                    return function(){
-                                        var res = f.apply(instance, arguments)
-                                        return $B.jsobj2pyobj(res)
-                                    }
-                                })(instance[attr])
-                            }
+                    __new__: function(){
+                        var args = []
+                        for(var i = 1, len = arguments.length; i < len; i++){
+                            args.push($B.pyobj2jsobj(arguments[i]))
                         }
+                        return new js_func(...args)
                     }
                 }
-                bases[i].__init__.$infos = {
-                    __name__: bases[i].$infos.__name__
-                }
+                $B.set_func_names(bases[i], js_func.name)
             }else{
                 throw _b_.TypeError.$factory(
                     "Object passed as base class is not a class")

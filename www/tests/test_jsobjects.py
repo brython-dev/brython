@@ -1,3 +1,5 @@
+"""Javascript objects used in this script are in jsobj_tests.js."""
+
 # issue 744: Javascript objects should allow integer attribute names.
 from browser import window
 import javascript
@@ -103,3 +105,19 @@ assert bar == ['one', 'two']
 t = []
 t.extend(window.root.children)
 assert t[0].x == 2
+
+# issue 1418
+class Rectangle(window.Rectangle):
+  pass
+
+r = Rectangle(3, 4)
+assert r.height == 3
+assert r.width == 4
+assert r.surface() == 12
+
+class Square(window.Square):
+  pass
+
+s = Square(5)
+assert s.x == 5
+assert s.surface() == 25

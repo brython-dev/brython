@@ -162,7 +162,6 @@ $B.set_func_names = function(klass, module){
         klass.$infos.__qualname__ = name
     }else{
         var name = klass.__name__
-        console.log("bizarre", klass)
         klass.$infos = {
             __name__: name,
             __module__: module,

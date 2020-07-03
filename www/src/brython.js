@@ -63,7 +63,6 @@ $B.lambda_magic=Math.random().toString(36).substr(2,8)
 $B.set_func_names=function(klass,module){if(klass.$infos){var name=klass.$infos.__name__
 klass.$infos.__module__=module
 klass.$infos.__qualname__=name}else{var name=klass.__name__
-console.log("bizarre",klass)
 klass.$infos={__name__:name,__module__:module,__qualname__:name}}
 klass.__module__=module
 for(var attr in klass){if(typeof klass[attr]=='function'){klass[attr].$infos={__doc__:klass[attr].__doc__ ||"",__module__:module,__qualname__ :name+'.'+attr,__name__:attr}
@@ -103,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-07-03 09:10:57.190942"
-__BRYTHON__.timestamp=1593760257190
+__BRYTHON__.compiled_date="2020-07-03 16:37:30.764654"
+__BRYTHON__.timestamp=1593787050764
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5747,11 +5746,10 @@ var bmro=[],pos=0
 if(bases[i]===undefined ||
 bases[i].__mro__===undefined){if(bases[i].__class__===$B.JSObject){
 var js_func=bases[i].js_func
-bases[i]={__class__:_b_.type,__mro__:[_b_.object],__name__:js_func.name,__init__:function(instance,...args){args.forEach(function(arg,i){args[i]=$B.pyobj2jsobj(arg)})
-js_func.apply(instance,args)
-for(var attr in instance){if(typeof instance[attr]=="function"){instance[attr]=(function(f){return function(){var res=f.apply(instance,arguments)
-return $B.jsobj2pyobj(res)}})(instance[attr])}}}}
-bases[i].__init__.$infos={__name__:bases[i].$infos.__name__}}else{throw _b_.TypeError.$factory(
+bases[i]={__class__:_b_.type,__mro__:[_b_.object],__name__:js_func.name,__new__:function(){var args=[]
+for(var i=1,len=arguments.length;i < len;i++){args.push($B.pyobj2jsobj(arguments[i]))}
+return new js_func(...args)}}
+$B.set_func_names(bases[i],js_func.name)}else{throw _b_.TypeError.$factory(
 "Object passed as base class is not a class")}}
 bmro[pos++]=bases[i]
 var _tmp=bases[i].__mro__
