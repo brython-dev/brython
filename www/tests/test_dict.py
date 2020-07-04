@@ -146,10 +146,21 @@ assert repr(d) == str(d) == "{'a': [], 'b': {0: {...}}}"
 # PEP 584
 d = {'spam': 1, 'eggs': 2, 'cheese': 3}
 e = {'cheese': 'cheddar', 'aardvark': 'Ethel'}
-assert d | e == {'spam': 1, 'eggs': 2, 'cheese': 'cheddar', 
+assert d | e == {'spam': 1, 'eggs': 2, 'cheese': 'cheddar',
                  'aardvark': 'Ethel'}
 assert e | d == {'aardvark': 'Ethel', 'spam': 1, 'eggs': 2, 'cheese': 3}
 d |= e
 assert d == {'spam': 1, 'eggs': 2, 'cheese': 'cheddar', 'aardvark': 'Ethel'}
+
+# issue 1437
+a = {1:1, 2:2}
+a.update({1:3})
+assert str(a) == '{1: 3, 2: 2}'
+a.update({4:4})
+assert str(a) == '{1: 3, 2: 2, 4: 4}'
+
+b = {'a': 1, 'b': 2}
+b['a'] = 3
+assert str(b) == "{'a': 3, 'b': 2}"
 
 print("passed all tests..")

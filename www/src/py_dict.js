@@ -434,12 +434,12 @@ function init_from_list(self, args){
         var item = args[i]
         switch(typeof item[0]) {
             case 'string':
-                self.$string_dict[item[0]] = [item[1], self.$version]
+                self.$string_dict[item[0]] = [item[1], self.$order++]
                 self.$str_hash[str_hash(item[0])] = item[0]
                 self.$version++
                 break
             case 'number':
-                self.$numeric_dict[item[0]] = [item[1], self.$version]
+                self.$numeric_dict[item[0]] = [item[1], self.$order++]
                 self.$version++
                 break
             default:
@@ -518,14 +518,14 @@ dict.__init__ = function(self, first, second){
     for(var attr in kw){
         switch(typeof attr){
             case "string":
-                self.$string_dict[attr] = kw[attr]
+                self.$string_dict[attr] = [kw[attr][0], self.$order++]
                 self.$str_hash[str_hash(attr)] = attr
                 break
             case "number":
-                self.$numeric_dict[attr] = kw[attr]
+                self.$numeric_dict[attr] = [kw[attr][0], self.$order++]
                 break
             default:
-                si(self, attr, kw[attr])
+                si(self, attr, kw[attr][0])
                 break
         }
     }
@@ -571,7 +571,8 @@ dict.__new__ = function(cls){
         $object_dict : {},
         $string_dict : {},
         $str_hash: {},
-        $version: 0
+        $version: 0,
+        $order: 0
     }
     if(cls !== dict){
         instance.__dict__ = $B.empty_dict()
@@ -675,13 +676,23 @@ dict.$setitem = function(self, key, value, $hash){
             if(self.$string_dict === undefined){
                 console.log("pas de string dict", self, key, value)
             }
-            self.$string_dict[key] = [value, self.$version]
-            self.$str_hash[str_hash(key)] = key
-            self.$version++
+            if(self.$string_dict[key] !== undefined){
+                self.$string_dict[key][0] = value
+            }else{
+                self.$string_dict[key] = [value, self.$order++]
+                self.$str_hash[str_hash(key)] = key
+                self.$version++
+            }
             return $N
         case "number":
-            self.$numeric_dict[key] = [value, self.$version]
-            self.$version++
+            if(self.$numeric_dict[key] !== undefined){
+                // existing key: preserve order
+                self.$numeric_dict[key][0] = value
+            }else{
+                // new key
+                self.$numeric_dict[key] = [value, self.$order++]
+                self.$version++
+            }
             return $N
     }
 
@@ -706,9 +717,9 @@ dict.$setitem = function(self, key, value, $hash){
     // with any object
     if($hash){
         if(self.$object_dict[$hash] !== undefined){
-            self.$object_dict[$hash].push([key, [value, self.$version]])
+            self.$object_dict[$hash].push([key, [value, self.$order++]])
         }else{
-            self.$object_dict[$hash] = [[key, [value, self.$version]]]
+            self.$object_dict[$hash] = [[key, [value, self.$order++]]]
         }
         self.$version++
         return $N
@@ -720,9 +731,9 @@ dict.$setitem = function(self, key, value, $hash){
             self.$object_dict[hash][ix][1][1]]
         return $N
     }else if(self.$object_dict.hasOwnProperty(hash)){
-        self.$object_dict[hash].push([key, [value, self.$version]])
+        self.$object_dict[hash].push([key, [value, self.$order++]])
     }else{
-        self.$object_dict[hash] = [[key, [value, self.$version]]]
+        self.$object_dict[hash] = [[key, [value, self.$order++]]]
     }
     self.$version++
     return $N
@@ -754,6 +765,7 @@ dict.clear = function(){
         }
     }
     self.$version++
+    self.$order = 0
     return $N
 }
 
@@ -973,7 +985,8 @@ $B.empty_dict = function(){
         $object_dict : {},
         $string_dict : {},
         $str_hash: {},
-        $version: 0
+        $version: 0,
+        $order: 0
     }
 }
 
@@ -1045,15 +1058,14 @@ function jsobj2dict(x){
     for(var attr in x){
         if(attr.charAt(0) != "$" && attr !== "__class__"){
             if(x[attr] === null){
-                d.$string_dict[attr] = [_b_.None, d.$version]
+                d.$string_dict[attr] = [_b_.None, d.$order++]
             }else if(x[attr] === undefined){
                 continue
             }else if(x[attr].$jsobj === x){
-                d.$string_dict[attr] = [d, d.$version]
+                d.$string_dict[attr] = [d, d.$order++]
             }else{
-                d.$string_dict[attr] = [$B.$JS2Py(x[attr]), d.$version]
+                d.$string_dict[attr] = [$B.$JS2Py(x[attr]), d.$order++]
             }
-            d.$version++
         }
     }
     return d

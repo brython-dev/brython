@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-07-03 16:37:30.764654"
-__BRYTHON__.timestamp=1593787050764
+__BRYTHON__.compiled_date="2020-07-04 08:33:16.969257"
+__BRYTHON__.timestamp=1593844396969
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -12673,12 +12673,12 @@ dict.__hash__=_b_.None
 function init_from_list(self,args){var i=-1,stop=args.length-1,si=dict.__setitem__
 while(i++< stop){var item=args[i]
 switch(typeof item[0]){case 'string':
-self.$string_dict[item[0]]=[item[1],self.$version]
+self.$string_dict[item[0]]=[item[1],self.$order++]
 self.$str_hash[str_hash(item[0])]=item[0]
 self.$version++
 break
 case 'number':
-self.$numeric_dict[item[0]]=[item[1],self.$version]
+self.$numeric_dict[item[0]]=[item[1],self.$order++]
 self.$version++
 break
 default:
@@ -12709,14 +12709,14 @@ if(! Array.isArray(args)){args=_b_.list.$factory(args)}
 init_from_list(self,args)}}
 var kw=$.second.$string_dict
 for(var attr in kw){switch(typeof attr){case "string":
-self.$string_dict[attr]=kw[attr]
+self.$string_dict[attr]=[kw[attr][0],self.$order++]
 self.$str_hash[str_hash(attr)]=attr
 break
 case "number":
-self.$numeric_dict[attr]=kw[attr]
+self.$numeric_dict[attr]=[kw[attr][0],self.$order++]
 break
 default:
-si(self,attr,kw[attr])
+si(self,attr,kw[attr][0])
 break}}
 return $N}
 dict.__iter__=function(self){return _b_.iter(dict.$$keys(self))}
@@ -12732,7 +12732,7 @@ for(var hash in self.$object_dict){_count+=self.$object_dict[hash].length}
 return _count}
 dict.__ne__=function(self,other){return ! dict.__eq__(self,other)}
 dict.__new__=function(cls){if(cls===undefined){throw _b_.TypeError.$factory("int.__new__(): not enough arguments")}
-var instance={__class__:cls,$numeric_dict :{},$object_dict :{},$string_dict :{},$str_hash:{},$version:0}
+var instance={__class__:cls,$numeric_dict :{},$object_dict :{},$string_dict :{},$str_hash:{},$version:0,$order:0}
 if(cls !==dict){instance.__dict__=$B.empty_dict()}
 return instance}
 dict.__or__=function(self,other){
@@ -12763,13 +12763,15 @@ self.$jsobj.$factory=$B.$instance_creator(self.$jsobj)}}else{self.$jsobj[key]=va
 return $N}
 switch(typeof key){case "string":
 if(self.$string_dict===undefined){console.log("pas de string dict",self,key,value)}
-self.$string_dict[key]=[value,self.$version]
+if(self.$string_dict[key]!==undefined){self.$string_dict[key][0]=value}else{self.$string_dict[key]=[value,self.$order++]
 self.$str_hash[str_hash(key)]=key
-self.$version++
+self.$version++}
 return $N
 case "number":
-self.$numeric_dict[key]=[value,self.$version]
-self.$version++
+if(self.$numeric_dict[key]!==undefined){
+self.$numeric_dict[key][0]=value}else{
+self.$numeric_dict[key]=[value,self.$order++]
+self.$version++}
 return $N}
 var hash=$hash===undefined ? _b_.hash(key):$hash,_eq=function(other){return $B.rich_comp("__eq__",key,other)}
 if(self.$numeric_dict[hash]!==undefined && _eq(hash)){self.$numeric_dict[hash]=[value,self.$numeric_dict[hash][1]]
@@ -12779,13 +12781,13 @@ var sk=self.$str_hash[hash]
 if(sk !==undefined && _eq(sk)){self.$string_dict[sk]=[value,self.$string_dict[sk][1]]
 self.$version++
 return $N}
-if($hash){if(self.$object_dict[$hash]!==undefined){self.$object_dict[$hash].push([key,[value,self.$version]])}else{self.$object_dict[$hash]=[[key,[value,self.$version]]]}
+if($hash){if(self.$object_dict[$hash]!==undefined){self.$object_dict[$hash].push([key,[value,self.$order++]])}else{self.$object_dict[$hash]=[[key,[value,self.$order++]]]}
 self.$version++
 return $N}
 var ix=rank(self,hash,key)
 if(ix >-1){
 self.$object_dict[hash][ix][1]=[value,self.$object_dict[hash][ix][1][1]]
-return $N}else if(self.$object_dict.hasOwnProperty(hash)){self.$object_dict[hash].push([key,[value,self.$version]])}else{self.$object_dict[hash]=[[key,[value,self.$version]]]}
+return $N}else if(self.$object_dict.hasOwnProperty(hash)){self.$object_dict[hash].push([key,[value,self.$order++]])}else{self.$object_dict[hash]=[[key,[value,self.$order++]]]}
 self.$version++
 return $N}
 dict.__str__=function(){return dict.__repr__.apply(null,arguments)}
@@ -12798,6 +12800,7 @@ self.$str_hash={}
 self.$object_dict={}
 if(self.$jsobj){for(var attr in self.$jsobj){if(attr.charAt(0)!=="$" && attr !=="__class__"){delete self.$jsobj[attr]}}}
 self.$version++
+self.$order=0
 return $N}
 dict.copy=function(self){
 var $=$B.args("copy",1,{self:null},["self"],arguments,{},null,null),self=$.self,res=$B.empty_dict()
@@ -12877,7 +12880,7 @@ return res}
 _b_.dict=dict
 $B.set_func_names(dict,"builtins")
 $B.empty_dict=function(){return{
-__class__:dict,$numeric_dict :{},$object_dict :{},$string_dict :{},$str_hash:{},$version:0}}
+__class__:dict,$numeric_dict :{},$object_dict :{},$string_dict :{},$str_hash:{},$version:0,$order:0}}
 dict.fromkeys=_b_.classmethod.$factory(dict.fromkeys)
 $B.getset_descriptor=$B.make_class("getset_descriptor",function(klass,attr){return{
 __class__:$B.getset_descriptor,__doc__:_b_.None,cls:klass,attr:attr}}
@@ -12896,8 +12899,7 @@ for(var attr in dict){if(mappingproxy[attr]!==undefined ||
 if(typeof dict[attr]=="function"){mappingproxy[attr]=(function(key){return function(){return dict[key].apply(null,arguments)}})(attr)}else{mappingproxy[attr]=dict[attr]}}
 $B.set_func_names(mappingproxy,"builtins")
 function jsobj2dict(x){var d=$B.empty_dict()
-for(var attr in x){if(attr.charAt(0)!="$" && attr !=="__class__"){if(x[attr]===null){d.$string_dict[attr]=[_b_.None,d.$version]}else if(x[attr]===undefined){continue}else if(x[attr].$jsobj===x){d.$string_dict[attr]=[d,d.$version]}else{d.$string_dict[attr]=[$B.$JS2Py(x[attr]),d.$version]}
-d.$version++}}
+for(var attr in x){if(attr.charAt(0)!="$" && attr !=="__class__"){if(x[attr]===null){d.$string_dict[attr]=[_b_.None,d.$order++]}else if(x[attr]===undefined){continue}else if(x[attr].$jsobj===x){d.$string_dict[attr]=[d,d.$order++]}else{d.$string_dict[attr]=[$B.$JS2Py(x[attr]),d.$order++]}}}
 return d}
 $B.obj_dict=function(obj,from_js){var klass=obj.__class__ ||$B.get_class(obj)
 if(klass !==undefined && klass.$native){throw _b_.AttributeError.$factory(klass.__name__+
