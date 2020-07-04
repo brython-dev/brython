@@ -148,7 +148,7 @@ $B.args = function($fname, argcount, slots, var_names, args, $dobj,
                 if(extra_kw_args){
                     // If there is a place to store extra keyword arguments
                     if(key.substr(0, 2) == "$$"){key = key.substr(2)}
-                    extra_kw.$string_dict[key] = [value, extra_kw.$version++]
+                    extra_kw.$string_dict[key] = [value, extra_kw.$order++]
                 }else{
                     throw _b_.TypeError.$factory($fname +
                         "() got an unexpected keyword argument '" + key + "'")

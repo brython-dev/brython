@@ -96,21 +96,20 @@ $B.$class_constructor = function(class_name, class_obj, bases,
         set_class_item = $B.$getattr(cl_dict, "__setitem__")
     }else{
         set_class_item = function(attr, value){
-            cl_dict.$string_dict[attr] = [value, cl_dict.$version]
-            cl_dict.$version++
+            cl_dict.$string_dict[attr] = [value, cl_dict.$order++]
         }
     }
 
     // Transform class object into a dictionary
     for(var attr in class_obj){
         if(attr == "__annotations__"){
-            var rank = cl_dict.$version
+            var rank = cl_dict.$order
             if(cl_dict.$string_dict[attr] !== undefined){
                 cl_dict.$string_dict[attr] = [class_obj[attr], rank]
             }else{
                 cl_dict.$string_dict[attr] = [$B.empty_dict(), rank]
             }
-            cl_dict.$version++
+            cl_dict.$order++
             for(var key in class_obj[attr].$string_dict){
                 $B.$setitem(cl_dict.$string_dict[attr][0], key,
                     class_obj[attr].$string_dict[key][0])
