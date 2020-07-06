@@ -421,10 +421,8 @@ object.__reduce_ex__ = function(self){
     var d = $B.empty_dict(),
         nb = 0
     if(self.__dict__ === undefined){
-        console.log("no dict", self)
-        $B.frames_stack.forEach(function(frame){
-            console.log(frame[0], frame[1], frame[2])
-        })
+        throw _b_.TypeError.$factory("cannot pickle '" +
+            $B.class_name(self) + "' object")
     }
     for(var attr in self.__dict__.$string_dict){
         if(attr == "__class__" || attr.startsWith("$")){

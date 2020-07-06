@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-07-04 17:56:36.581901"
-__BRYTHON__.timestamp=1593878196581
+__BRYTHON__.compiled_date="2020-07-06 12:07:22.874541"
+__BRYTHON__.timestamp=1594030042874
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5487,8 +5487,8 @@ var arg2=_b_.tuple.$factory([self.__class__])
 if(Array.isArray(self)){self.forEach(function(item){arg2.push(item)})}
 res.push(arg2)
 var d=$B.empty_dict(),nb=0
-if(self.__dict__===undefined){console.log("no dict",self)
-$B.frames_stack.forEach(function(frame){console.log(frame[0],frame[1],frame[2])})}
+if(self.__dict__===undefined){throw _b_.TypeError.$factory("cannot pickle '"+
+$B.class_name(self)+"' object")}
 for(var attr in self.__dict__.$string_dict){if(attr=="__class__" ||attr.startsWith("$")){continue}
 _b_.dict.$setitem(d,attr,self.__dict__.$string_dict[attr][0])
 nb++}
