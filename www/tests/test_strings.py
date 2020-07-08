@@ -333,4 +333,8 @@ assert type(s) is S
 assert s.removesuffix("z") == s
 assert s is not s.removesuffix("z")
 
+# issue 1440
+assert repr(chr(888)) == r"'\u0378'"
+
+
 print("passed all tests...")

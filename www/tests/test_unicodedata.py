@@ -1461,3 +1461,8 @@ assert unicodedata.normalize('NFKC', chr(0x2162)) == "III"
 assert unicodedata.normalize('NFKD', chr(0x2162)) == "III"
 
 print("normalize ok")
+
+# issue 1440
+assert unicodedata.category(chr(888)) == "Cn"
+s = ''.join('' for i in range(889) if 'N' in unicodedata.category(chr(i)))
+assert len(s) == 0

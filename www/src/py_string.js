@@ -825,7 +825,7 @@ str.__mul__ = function(){
 str.__ne__ = function(self,other){return other !== self.valueOf()}
 
 str.__repr__ = function(self){
-var res = self
+    var res = self
     // escape the escape char
     res = self.replace(/\\/g, "\\\\")
     // special cases
@@ -837,6 +837,21 @@ var res = self
               replace(new RegExp("\r", "g"), "\\r").
               replace(new RegExp("\t", "g"), "\\t")
     res = res.replace(combining_re, "\u200B$1")
+    // Replace unassigned code point by \uabcd...
+    // Uses function $B.is_unicode_cn() in unicode_data.js
+    var repl = ''
+    for(var i = 0; i < res.length; i++){
+        if($B.is_unicode_cn(res.codePointAt(i))){
+            var s = res.codePointAt(i).toString(16)
+            while(s.length < 4){
+                s = '0' + s
+            }
+            repl += '\\u' + s
+        }else{
+            repl += res.charAt(i)
+        }
+    }
+    res = repl
     if(res.search('"') == -1 && res.search("'") == -1){
         return "'" + res + "'"
     }else if(self.search('"') == -1){
@@ -2441,7 +2456,7 @@ $B.parse_fstring = function(string){
                     var ce = current.expression,
                         last_char = ce.charAt(ce.length - 1),
                         last_char_re = ('()'.indexOf(last_char) > -1 ? "\\" : "") + last_char
-                        
+
                     if(ce.length == 0 ||
                             string.charAt(i + 1) == "=" ||
                                 "=!<>:".search(last_char_re) > -1){
