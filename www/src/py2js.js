@@ -4375,8 +4375,8 @@ var $ExprCtx = $B.parser.$ExprCtx = function(context, name, with_commas){
                  if(context.parent.type == "call_arg"){
                      // issue 708
                      if(context.tree[0].type != "id"){
-                         $_SyntaxError(context,
-                             ["keyword can't be an expression"])
+                         $_SyntaxError(context, ['expression cannot contain' +
+                             ' assignment, perhaps you meant "=="?'])
                      }
                      return new $AbstractExprCtx(new $KwArgCtx(context), true)
                  }else if(annotation = has_parent(context, "annotation")){
@@ -4396,6 +4396,11 @@ var $ExprCtx = $B.parser.$ExprCtx = function(context, name, with_commas){
                          context.parent.name == "target list"){
                      $_SyntaxError(context, 'token ' + token + ' after '
                          + context)
+                 }else if(context.parent.type == "lambda"){
+                     if(context.parent.parent.parent.type != "node"){
+                         $_SyntaxError(context, ['expression cannot contain' +
+                             ' assignment, perhaps you meant "=="?'])
+                     }
                  }
                  while(context.parent !== undefined){
                      context = context.parent

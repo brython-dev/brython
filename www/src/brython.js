@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-07-06 12:07:22.874541"
-__BRYTHON__.timestamp=1594030042874
+__BRYTHON__.compiled_date="2020-07-08 09:05:11.858137"
+__BRYTHON__.timestamp=1594191911858
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -522,7 +522,8 @@ C.parent.tree[C.parent.tree.length]=this
 this.parent=C.parent
 this.tree=[C]
 var scope=$get_scope(this)
-if(C.type=='expr' && C.tree[0].type=='call'){$_SyntaxError(C,["cannot assign to function call "])}else if(C.type=='list_or_tuple' ||
+if(C.type=='expr' && C.tree[0].type=='call'){console.log("error C",C,C.parent.type,C.tree[0])
+$_SyntaxError(C,["cannot assign to function call "])}else if(C.type=='list_or_tuple' ||
 (C.type=='expr' && C.tree[0].type=='list_or_tuple')){if(C.type=='expr'){C=C.tree[0]}
 C.bind_ids(scope)}else if(C.type=='assign'){C.tree.forEach(function(elt){var assigned=elt.tree[0]
 if(assigned.type=='id'){$bind(assigned.value,scope,this)}},this)}else{var assigned=C.tree[0]
@@ -2259,7 +2260,8 @@ $_SyntaxError(C,["cannot assign to operator"])}else if(C.parent.type=="list_or_t
 for(var i=0;i < C.parent.tree.length;i++){var item=C.parent.tree[i]
 if(item.type=="expr" && item.name=="operand"){$_SyntaxError(C,["cannot assign to operator"])}}}else if(C.parent.type=="expr" &&
 C.parent.name=="target list"){$_SyntaxError(C,'token '+token+' after '
-+C)}
++C)}else if(C.parent.type=="lambda"){$_SyntaxError(C,["expression cannot contain "+
+'assignment, perhaps you meant "=="?'])}
 while(C.parent !==undefined){C=C.parent
 if(C.type=="condition"){$_SyntaxError(C,'token '+token+' after '
 +C)}else if(C.type=="augm_assign"){$_SyntaxError(C,"assignment inside augmented assignment")}}
