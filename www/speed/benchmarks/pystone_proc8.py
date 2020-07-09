@@ -30,6 +30,8 @@ Version History:
 
 """
 
+from __future__ import print_function
+
 LOOPS = 5000
 
 from time import time as clock
@@ -166,8 +168,8 @@ def Func2(StrParI1, StrParI2):
 if __name__ == '__main__':
     import sys
     def error(msg):
-        print >>sys.stderr, msg,
-        print >>sys.stderr, "usage: %s [number_of_loops]" % sys.argv[0]
+        print(msg, file=sys.stderr)
+        print("usage: %s [number_of_loops]" % sys.argv[0], file=sys.stderr)
         sys.exit(100)
     nargs = len(sys.argv) - 1
     if nargs > 1:
