@@ -3261,7 +3261,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
 
         nodes = nodes.concat(enter_frame_nodes)
 
-        nodes.push($NodeJS('$locals.$name = "' + this.name + '"'))
+        // nodes.push($NodeJS('$locals.$name = "' + this.name + '"'))
 
         // Handle name __class__ in methods (PEP 3135 and issue #1068)
         var is_method = scope.ntype == "class"
@@ -6370,7 +6370,7 @@ var $LambdaCtx = $B.parser.$LambdaCtx = function(context){
 
         var rand = $B.UUID(),
             func_name = 'lambda_' + $B.lambda_magic + '_' + rand,
-            py = 'def ' + func_name + '(' + args + '):\n'
+            py = 'def ' + func_name + '(' + args + '):'
         py += '    return ' + body
 
         var lambda_name = 'lambda' + rand,

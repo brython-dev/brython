@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-07-09 08:16:17.821260"
-__BRYTHON__.timestamp=1594275377821
+__BRYTHON__.compiled_date="2020-07-09 18:09:07.499730"
+__BRYTHON__.timestamp=1594310947499
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -1657,7 +1657,6 @@ subelse_node.add($NodeJS("for(var i = $len; i < defparams.length"+
 "; i++){$locals[defparams[i]] = $defaults[defparams[i]]}"))}}else{nodes.push(make_args_nodes[0])
 if(make_args_nodes.length > 1){nodes.push(make_args_nodes[1])}}
 nodes=nodes.concat(enter_frame_nodes)
-nodes.push($NodeJS('$locals.$name = "'+this.name+'"'))
 var is_method=scope.ntype=="class"
 if(is_method){var class_name=scope.C.tree[0].name,class_block=scope.parent_block,class_ref="$locals_"+class_block.id.replace(/\./g,'_')+
 '["'+class_name+'"]'
@@ -3115,7 +3114,7 @@ var node=this.node,module=$get_module(this),src=$get_src(C),args=src.substring(t
 body=body.replace(/\\\n/g,' ')
 body=body.replace(/\n/g,' ')
 var scope=$get_scope(this)
-var rand=$B.UUID(),func_name='lambda_'+$B.lambda_magic+'_'+rand,py='def '+func_name+'('+args+'):\n'
+var rand=$B.UUID(),func_name='lambda_'+$B.lambda_magic+'_'+rand,py='def '+func_name+'('+args+'):'
 py+='    return '+body
 var lambda_name='lambda'+rand,module_name=module.id.replace(/\./g,'_')
 var root=$B.py2js(py,module_name,lambda_name,scope,node.line_num)
@@ -6762,9 +6761,7 @@ for(var attr in _globals.$string_dict){if(attr.startsWith("$")&& !attr.startsWit
 if(res===undefined){return _b_.None}
 return res}catch(err){err.src=src
 err.module=globals_id
-if(err.$py_error===undefined){throw $B.exception(err)}else{
-for(var i=0,len=err.$stack.length;i < len;i++){if(err.$stack[i][0]==current_frame[0]){err.$stack=err.$stack.slice(i)
-break}}}
+if(err.$py_error===undefined){throw $B.exception(err)}
 throw err}finally{
 if($B.frames_stack.length==stack_len+1){$B.frames_stack.pop()}
 root=null
@@ -7718,9 +7715,8 @@ attr==='tb_lineno' ||
 attr==='tb_lasti' ||
 attr==='tb_next'){if(self.$stack.length==0){console.log("no stack",attr)}
 var first_frame=self.$stack[0]
-if(first_frame===undefined){console.log("last frame undef",self.$stack,Object.keys(self.$stack))}
-var line_info=first_frame[1].$line_info
-if(first_frame[1].$frozen_line_info !=undefined){line_info=first_frame[1].$frozen_line_info}}
+line_info=self.exc.$line_infos[self.exc.$line_infos.length-
+self.$stack.length]}
 switch(attr){case "tb_frame":
 return frame.$factory(self.$stack)
 case "tb_lineno":
@@ -7756,7 +7752,8 @@ if(fs.length){var _frame=fs[pos],locals_id=_frame[0],filename
 try{res.f_locals=$B.obj_dict(_frame[1])}catch(err){console.log("err "+err)
 throw err}
 res.f_globals=$B.obj_dict(_frame[3])
-if(_frame[3].__file__ !==undefined){filename=_frame[3].__file__}else if(locals_id.startsWith("$exec")){filename="<string>"}
+if(_frame[3].__file__ !==undefined){filename=_frame[3].__file__}
+if(locals_id.startsWith("$exec")){filename="<string>"}
 if(_frame[1].$line_info===undefined){res.f_lineno=-1}else{var line_info=_frame[1].$line_info.split(",")
 res.f_lineno=parseInt(line_info[0])
 var module_name=line_info[1]
@@ -7767,7 +7764,8 @@ locals_id
 if(locals_id==_frame[2]){co_name="<module>"}else if(locals_id.startsWith("lc"+$B.lambda_magic)){co_name="<listcomp>"}else{if(_frame[1].$name){co_name=_frame[1].$name}else if(_frame[1].$dict_comp){co_name='<dictcomp>'}else if(_frame[1].$list_comp){co_name='<listcomp>'}else if(_frame.length > 4){if(_frame[4].$infos){co_name=_frame[4].$infos.__name__}else{co_name=_frame[4].name}
 if(_frame[4].$infos===undefined){
 if(_frame[4].name.startsWith("__ge")){co_name="<genexpr>"}else if(_frame[4].name.startsWith("set_comp"+
-$B.lambda_magic)){co_name="<setcomp>"}}else if(filename===undefined && _frame[4].$infos.__code__){filename=_frame[4].$infos.__code__.co_filename
+$B.lambda_magic)){co_name="<setcomp>"}else if(_frame[4].name.startsWith("lambda"+
+$B.lambda_magic)){co_name="<lambda>"}}else if(filename===undefined && _frame[4].$infos.__code__){filename=_frame[4].$infos.__code__.co_filename
 if(filename===undefined){filename=_frame[4].$infos.__module__}
 res.f_lineno=_frame[4].$infos.__code__.co_firstlineno}}}
 res.f_code={__class__:$B.code,co_code:None,
@@ -7838,18 +7836,18 @@ return res}
 $B.save_stack=function(){return $B.deep_copy($B.frames_stack)}
 $B.restore_stack=function(stack,locals){$B.frames_stack=stack
 $B.frames_stack[$B.frames_stack.length-1][1]=locals}
-$B.freeze=function(stack){
-for(var i=0,len=stack.length;i < len;i++){stack[i][1].$frozen_line_info=stack[i][1].$line_info
-stack[i][3].$frozen_line_info=stack[i][3].$line_info}
-return stack}
+$B.freeze=function(err){
+if(err.$stack===undefined){err.$line_infos=[]
+for(var i=0,len=$B.frames_stack.length;i < len;i++){err.$line_infos.push($B.frames_stack[i][1].$line_info)}
+err.$stack=$B.frames_stack.slice()
+if($B.frames_stack.length){err.$line_info=$B.last($B.frames_stack)[1].$line_info}}}
 var show_stack=$B.show_stack=function(stack){stack=stack ||$B.frames_stack
 for(const frame of stack){console.log(frame[0],frame[1].$line_info)}}
 BaseException.$factory=function(){var err=Error()
 err.args=$B.fast_tuple(Array.prototype.slice.call(arguments))
 err.__class__=_b_.BaseException
 err.$py_error=true
-if(err.$stack===undefined){err.$stack=$B.freeze($B.frames_stack.slice())}
-if($B.frames_stack.length){err.$line_info=$B.last($B.frames_stack)[1].$line_info}
+$B.freeze(err)
 eval("//placeholder//")
 err.__cause__=_b_.None 
 err.__context__=_b_.None 
@@ -7878,7 +7876,8 @@ var $message="<Javascript "+js_exc.name+">: "+
 (js_exc.message ||"<"+js_exc+">")
 exc.args=_b_.tuple.$factory([$message])
 exc.$py_error=true
-exc.$stack=$B.freeze($B.frames_stack.slice());}else{var exc=js_exc
+$B.freeze(exc)}else{var exc=js_exc
+$B.freeze(exc)
 if(in_ctx_manager){
 var current_locals=$B.last($B.frames_stack)[0]
 for(var i=0,len=exc.$stack.length;i < len;i++){if(exc.$stack[i][0]==current_locals){exc.$stack=exc.$stack.slice(i)

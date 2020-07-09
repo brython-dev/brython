@@ -841,14 +841,6 @@ function $$eval(src, _globals, _locals){
         err.module = globals_id
         if(err.$py_error === undefined){
             throw $B.exception(err)
-        }else{
-            // Exception trace of exec starts at current frame
-            for(var i = 0, len = err.$stack.length; i < len; i++){
-                if(err.$stack[i][0] == current_frame[0]){
-                    err.$stack = err.$stack.slice(i)
-                    break
-                }
-            }
         }
         throw err
     }finally{

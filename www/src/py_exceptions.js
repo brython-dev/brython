@@ -160,13 +160,8 @@ traceback.__getattribute__ = function(self, attr){
             console.log("no stack", attr)
         }
         var first_frame = self.$stack[0]
-        if(first_frame === undefined){
-            console.log("last frame undef", self.$stack, Object.keys(self.$stack))
-        }
-        var line_info = first_frame[1].$line_info
-        if(first_frame[1].$frozen_line_info != undefined){
-            line_info = first_frame[1].$frozen_line_info
-        }
+        line_info = self.exc.$line_infos[self.exc.$line_infos.length -
+            self.$stack.length]
     }
 
     switch(attr){
@@ -262,7 +257,8 @@ var frame = $B.make_class("frame",
 
             if(_frame[3].__file__ !== undefined){
                 filename = _frame[3].__file__
-            }else if(locals_id.startsWith("$exec")){
+            }
+            if(locals_id.startsWith("$exec")){
                 filename = "<string>"
             }
             if(_frame[1].$line_info === undefined){
@@ -302,6 +298,9 @@ var frame = $B.make_class("frame",
                         }else if(_frame[4].name.startsWith("set_comp" +
                                 $B.lambda_magic)){
                             co_name = "<setcomp>"
+                        }else if(_frame[4].name.startsWith("lambda" +
+                                $B.lambda_magic)){
+                            co_name = "<lambda>"
                         }
                     }else if(filename === undefined && _frame[4].$infos.__code__){
                         filename = _frame[4].$infos.__code__.co_filename
@@ -542,15 +541,19 @@ $B.restore_stack = function(stack, locals){
     $B.frames_stack[$B.frames_stack.length - 1][1] = locals
 }
 
-$B.freeze = function(stack){
-    // Set attribute $frozen_line_info to each frame in exception stack. If we
-    // only use $line_info, it might have been updated when exception handling
-    // starts.
-    for(var i = 0, len = stack.length; i < len; i++){
-        stack[i][1].$frozen_line_info = stack[i][1].$line_info
-        stack[i][3].$frozen_line_info = stack[i][3].$line_info
+$B.freeze = function(err){
+    // Store line numbers in frames stack when the exception occured
+    if(err.$stack === undefined){
+        err.$line_infos = []
+        for(var i = 0, len = $B.frames_stack.length; i < len; i++){
+            err.$line_infos.push($B.frames_stack[i][1].$line_info)
+        }
+        // Make a copy of the current frames stack array
+        err.$stack = $B.frames_stack.slice()
+        if($B.frames_stack.length){
+            err.$line_info = $B.last($B.frames_stack)[1].$line_info
+        }
     }
-    return stack
 }
 
 var show_stack = $B.show_stack = function(stack){
@@ -565,13 +568,7 @@ BaseException.$factory = function (){
     err.args = $B.fast_tuple(Array.prototype.slice.call(arguments))
     err.__class__ = _b_.BaseException
     err.$py_error = true
-    // Make a copy of the current frame stack array
-    if(err.$stack === undefined){
-        err.$stack = $B.freeze($B.frames_stack.slice())
-    }
-    if($B.frames_stack.length){
-        err.$line_info = $B.last($B.frames_stack)[1].$line_info
-    }
+    $B.freeze(err)
     //err.$traceback = traceback.$factory(err)
     eval("//placeholder//")
     err.__cause__ = _b_.None // XXX fix me
@@ -620,9 +617,10 @@ $B.exception = function(js_exc, in_ctx_manager){
             (js_exc.message || "<" + js_exc + ">")
         exc.args = _b_.tuple.$factory([$message])
         exc.$py_error = true
-        exc.$stack = $B.freeze($B.frames_stack.slice());
+        $B.freeze(exc)
     }else{
         var exc = js_exc
+        $B.freeze(exc)
         if(in_ctx_manager){
             // Is this documented anywhere ? For exceptions raised inside a
             // context manager, the frames stack starts at the current
