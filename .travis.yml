@@ -1,31 +1,30 @@
-sudo: required
+os: linux
+dist: focal
+language: node_js
+node_js: node
 
-matrix:
+jobs:
   include:
-    - language: javascript
-      addons:
-          chrome: "stable"
-          firefox: "latest"
+    - addons:
+        chrome: "stable"
+        firefox: "latest"
+        apt:
+          packages:
+            - libnss3
+      services:
+        - xvfb
       before_install:
         - mkdir qunit
         - wget -O qunit/qunit-1.18.0.css http://code.jquery.com/qunit/qunit-1.18.0.css
         - wget -O qunit/qunit-1.18.0.js  http://code.jquery.com/qunit/qunit-1.18.0.js
-        - nvm install 8
         - npm install testem
         - ./node_modules/.bin/testem launchers
-        # A newer version of libnss3 is needed for the latest Chrome version
-        - sudo apt-get --only-upgrade install libnss3
-
-      before_script:
-        - export DISPLAY=:99.0
-        - sh -e /etc/init.d/xvfb start
 
       script:
         - ./node_modules/.bin/testem --launch "Firefox,Headless Chrome" -t www/tests/qunit/run_tests.html ci
 
     - language: python
-      python: 3.7
-      dist: xenial  # required for Python >= 3.7 (travis-ci/travis-ci#9069)
+      python: 3.8
       before_install: pip install --upgrade pip
       before_script: pip install flake8
       script:
