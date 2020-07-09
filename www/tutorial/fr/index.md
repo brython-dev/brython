@@ -62,6 +62,12 @@ document <= "Bonjour !"
 
 Il faut interpréter le signe `<=` comme une flèche vers la gauche : le document "reçoit" un nouvel élément, ici le texte "Bonjour !". Nous verrons plus loin qu'il est toujours possible d'utiliser la syntaxe normalisée pour interagir avec la page, mais Brython introduit quelques raccourcis pour rendre le code plus simple.
 
+Dans ce cas particulier, ceux qui ne sont pas à l'aise avec l'opérateur `<=` peuvent utiliser la méthode `attach()` des éléments DOM à la place:
+
+```python
+document.attach("Bonjour !")
+```
+
 Mise en forme avec les balises HTML
 ===================================
 Les balises HTML permettent d'enrichir le texte, par exemple de le mettre en gras (balise `<B>`), en italique (`<I>`), etc.

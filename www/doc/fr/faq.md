@@ -114,9 +114,9 @@ __R__ : Python ne possède pas de structure intégrée pour manipuler les arbres
 c'est-à-dire pour ajouter des éléments "enfants" ou "frères" à un noeud de
 l'arbre. Pour ces opérations, on peut utiliser des fonctions ; la syntaxe
 favorisée par Brython est d'utiliser des opérateurs : c'est plus facile à
-saisir (pas de parenthèses) et plus lisible
+saisir (pas de parenthèses) et plus lisible.
 
-Pour ajouter un "frère" on utilise l'opérateur `+`
+Pour ajouter un "frère" on utilise l'opérateur `+`.
 
 Pour ajouter un descendant, l'opérateur `<=` a été choisi pour les raisons
 suivantes :
@@ -124,21 +124,17 @@ suivantes :
 - il a la forme d'une flèche, ce qui indique visuellement une affectation ;
   l'annotation de fonctions en Python utilise d'ailleurs un nouvel opérateur
   `->` qui a été choisi pour sa forme de flèche
-- le signe `=` en deuxième position fait aussi penser à un assignement
-  augmenté, comme `+=`
 - on ne peut pas confondre avec l'opérateur "inférieur ou égal" parce qu'une
   ligne comme "document <= elt" ne ferait rien s'il s'agissait de "inférieur
   ou égal" (qui est toujours utilisé dans une condition ou comme valeur de
   retour d'une fonction)
-- on a tellement l'habitude d'interpréter les deux signes `<` et `=` comme
-  "inférieur ou égal" qu'on oublie que c'est une convention des langages de
-  programmation pour remplacer le "vrai" signe `≤`
 - en Python, `<=` est utilisé comme opérateur pour les ensembles (classe set)
   avec une signification différente de "inférieur ou égal"
-- le signe `<` est souvent utilisé en informatique pour signifier autre chose
-  de "strictement inférieur" : en Python et beaucoup d'autres langages, `<<`
-  signifie décalage à gauche ; en HTML les balises sont délimitées par `<` et
-  `>`
 - Python utilise le même opérateur `%` pour des opérations très différentes :
   modulo et formattage de chaines
+- le module __`pathlib`__ de la bibliothèque standard utilise l'opérateur `/`
+  pour construire des chemins dans le système de fichiers
+
+De toutes façons, ceux qui sont allergiques à la surcharge d'opérateurs
+peuvent utiliser la méthode `attach()` des éléments DOM à la place.
 

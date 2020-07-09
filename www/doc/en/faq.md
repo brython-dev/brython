@@ -104,24 +104,21 @@ __A__ : Python has no built-in structure to manipulate trees, ie to add
 can be used ; the syntax proposed by Brython is to use operators : this is
 easier to type (no parenthesis) and more readable
 
-To add a sibling node, the operator `+` is used
+To add a sibling node, the operator `+` is used.
 
 To add a child, the operator `<=` was chosen for these reasons :
 
 - it has the shape of a left arrow ; note that Python function annotations use
   a new operator `->` that was chosen for its arrow shape
-- it looks like an augmented assignment because of the equal sign
 - it can't be confused with "lesser or equal" because a line with
   `document <= elt` would be a no-op if it was "lesser or equal", which is
   always used in a condition or as the return value of a function
-- we are so used to interpret the 2 signs `<` and `=` as "lesser or equal"
-  that we forget that they are a convention for programming languages, to
-  replace the real sign `≤`
 - in Python, `<=` is used as an operator for sets with a different meaning
   than "lesser or equal"
-- the sign `<` is often used in computer science to mean something else than
-  "lesser than" : in Python and many other languages, `<<` means left shift ;
-  in HTML tags are enclosed with `<` and `>`
 - Python uses the same operator `%` for very different operations : modulo
   and string formatting
+- the __`pathlib`__ module in Python standard library uses the operator `/`
+  to build file system paths
 
+Anyway, those who are allergic to operator overloading can use the method
+`attach()` of DOM elements instead.

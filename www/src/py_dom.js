@@ -1096,6 +1096,8 @@ DOMNode.abs_top = {
     }
 }
 
+DOMNode.attach = DOMNode.__le__ // For allergics to syntax elt <= child
+
 DOMNode.bind = function(self, event){
     // bind functions to the event (event = "click", "mouseover" etc.)
     var $ = $B.args("bind", 4,

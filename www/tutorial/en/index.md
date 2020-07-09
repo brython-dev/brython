@@ -62,6 +62,12 @@ document <= "Hello !"
 
 You can think of the `<=` sign as a left arrow : the document "receives" a new element, here the string "Hello !". You will see later that it is always possible to use the standardized DOM syntax to interact with the page, by Brython provides a few shortcuts to make the code less verbose.
 
+For this specific case, those who are not at ease with the use of the opeartor `<=` can use the method `attach()` of DOM elements instead:
+
+```python
+document.attach("Hello !")
+```
+
 Text formatting with HTML tags
 ==============================
 HTML tags allow text formatting, for instance to write it in bold letters (`<B>` tag), in italic (`<I>`), etc.
