@@ -29,7 +29,7 @@ class _C:
 
 
 MethodType = type(_C()._m)
-assert(_C()._m, MethodType)
+assert isinstance(_C()._m, MethodType)
 
 class A:
     pass
