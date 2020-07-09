@@ -4,6 +4,7 @@ __author__ = "collinwinter@google.com (Collin Winter)"
 
 import math
 import operator
+from functools import reduce
 
 
 def run_benchmark(options, num_runs, bench_func, *args):
