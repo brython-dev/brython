@@ -2595,6 +2595,27 @@ ge = (*((i, i*2) for i in range(3)),)
 assert list(ge) == [(0, 0), (1, 2), (2, 4)]
 assert [*((i, i*2) for i in range(3))] == [(0, 0), (1, 2), (2, 4)]
 
+def matrix(s, types=None, char='|'):
+  ds = ([j.strip() for j in i.split(char)]
+    for i in s.strip().splitlines()
+      if not i.strip().startswith('#'))
+
+  if not types:
+    yield from ds
+  elif isinstance(types, (list, tuple)):
+    for i in ds:
+      yield [k(v or k()) for k, v in zip(types, i)]
+  else:
+    for i in ds:
+      yield [types(v or types()) for v in i]
+
+m = [*matrix('''
+#l | r
+ 1 | 2
+ 3 | 4
+''', (int, int))]
+assert m == [[1, 2], [3, 4]]
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
