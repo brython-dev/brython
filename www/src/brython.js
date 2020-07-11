@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-07-09 18:09:07.499730"
-__BRYTHON__.timestamp=1594310947499
+__BRYTHON__.compiled_date="2020-07-11 08:46:41.887589"
+__BRYTHON__.timestamp=1594450001887
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -2842,8 +2842,7 @@ if(["print","exec"].indexOf(C.value)>-1 ){$_SyntaxError(C,["missing parenthesis 
 C.value+"'"])}
 $_SyntaxError(C,'token '+token+' after '+
 C)}
-var packed=$parent_match(C,{type:"packed"})
-if(packed){if(['.','[','('].indexOf(token)==-1){return packed.transition(token,value)}}
+if(this.parent.parent.type=="packed"){if(['.','[','('].indexOf(token)==-1){return this.parent.parent.transition(token,value)}}
 return $transition(C.parent,token,value)}
 this.firstBindingScopeId=function(){
 var scope=this.scope,found=[],nb=0

@@ -2590,6 +2590,10 @@ assert str(x) == "A __str__ output."
 y = B()
 assert str(y) == "A __str__ output. (from B)"
 
+# issue 1445
+ge = (*((i, i*2) for i in range(3)),)
+assert list(ge) == [(0, 0), (1, 2), (2, 4)]
+assert [*((i, i*2) for i in range(3))] == [(0, 0), (1, 2), (2, 4)]
 
 # ==========================================
 # Finally, report that all tests have passed

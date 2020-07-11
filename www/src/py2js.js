@@ -5636,10 +5636,9 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
                 $_SyntaxError(context, 'token ' + token + ' after ' +
                     context)
         }
-        var packed = $parent_match(context, {type: "packed"})
-        if(packed){
+        if(this.parent.parent.type == "packed"){
             if(['.', '[', '('].indexOf(token) == -1){
-                return packed.transition(token, value)
+                return this.parent.parent.transition(token, value)
             }
         }
         return $transition(context.parent, token, value)
