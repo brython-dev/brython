@@ -71,6 +71,21 @@ $B.$class_constructor = function(class_name, class_obj, bases,
     if(metaclass === undefined){
         if(bases && bases.length > 0 && bases[0].__class__ !== $B.JSObject){
             metaclass = bases[0].__class__
+            if(metaclass === undefined){
+                // Might inherit a Javascript constructor
+                if(typeof bases[0] == "function"){
+                    if(bases.length != 1){
+                        throw _b_.TypeError.$factory("A Brython class " +
+                            "can inherit at most 1 Javascript constructor")
+                    }
+                    metaclass = bases[0].__class__ = $B.JSMeta
+                    $B.set_func_names(bases[0], module)
+                }else{
+                    throw _b_.TypeError.$factory("Argument of " + class_name +
+                        "is not a class (type '" + $B.class_name(bases[0]) +
+                        "')")
+                }
+            }
             for(var i = 1; i < bases.length; i++){
                 var mc = bases[i].__class__
                 if(mc === metaclass || _b_.issubclass(metaclass, mc)){
@@ -234,7 +249,7 @@ $B.$class_constructor = function(class_name, class_obj, bases,
         // call __init_subclass__ with the extra keyword arguments
         if(i == 0){
             var init_subclass = _b_.type.__getattribute__(bases[i],
-                "__init_subclass__")
+                "__init_subclass__", _b_.None)
             if(init_subclass.$infos.__func__ !== undefined){
                 init_subclass.$infos.__func__(kls, {$nat: "kw", kw: extra_kwargs})
             }else{
@@ -352,7 +367,7 @@ type.__getattribute__ = function(klass, attr){
                 function(key){delete klass[key]})
     }
     var res = klass[attr]
-    var $test = false // attr == "__instancecheck__" // && klass.$infos.__name__ == "generator"
+    var $test = false // attr == "__init_subclass__" // && klass.$infos.__name__ == "generator"
     if($test){
         console.log("attr", attr, "of", klass, res, res + "")
     }
@@ -375,6 +390,9 @@ type.__getattribute__ = function(klass, attr){
         var v = klass[attr]
         if(v === undefined){
             var mro = klass.__mro__
+            if(mro === undefined){
+                console.log("pas de mro pour", klass)
+            }
             for(var i = 0; i < mro.length; i++){
                 var v = mro[i][attr]
                 if(v !== undefined){
@@ -388,7 +406,7 @@ type.__getattribute__ = function(klass, attr){
 
         if(res === undefined){
             // search in metaclass
-            var meta = klass.__class__,
+            var meta = klass.__class__ || $B.get_class(klass),
                 res = meta[attr]
             if($test){console.log("search in meta", meta, res)}
             if(res === undefined){
@@ -646,23 +664,10 @@ type.mro = function(cls){
             pos = 0
         if(bases[i] === undefined ||
                 bases[i].__mro__ === undefined){
-            if(bases[i].__class__ === $B.JSObject){
+            if(bases[i].__class__ === undefined){
                 // Brython class inherits a Javascript constructor. The
                 // constructor is the attribute js_func
-                var js_func = bases[i].js_func
-                bases[i] = {
-                    __class__: _b_.type,
-                    __mro__: [_b_.object],
-                    __name__: js_func.name,
-                    __new__: function(){
-                        var args = []
-                        for(var i = 1, len = arguments.length; i < len; i++){
-                            args.push($B.pyobj2jsobj(arguments[i]))
-                        }
-                        return new js_func(...args)
-                    }
-                }
-                $B.set_func_names(bases[i], js_func.name)
+                return [_b_.object]
             }else{
                 throw _b_.TypeError.$factory(
                     "Object passed as base class is not a class")

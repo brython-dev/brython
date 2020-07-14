@@ -28,17 +28,16 @@
                 options == false
             }
             return function(callback){
-                if($.elt.__class__ &&
-                        _b_.issubclass($.elt.__class__, $B.JSObject)){
+                if($B.get_class($.elt) === $B.JSObj){
                     // eg window, Web Worker
                     function f(ev){
                         try{
-                            return callback($B.JSObject.$factory(ev))
+                            return callback($B.JSObj.$factory(ev))
                         }catch(err){
                             $B.handle_error(err)
                         }
                     }
-                    $.elt.js.addEventListener($.evt, f, options)
+                    $.elt.addEventListener($.evt, f, options)
                     return callback
                 }else if(_b_.isinstance($.elt, $B.DOMNode)){
                     // DOM element
@@ -92,7 +91,7 @@
         delete browser.$$window
         delete browser.win
         // browser.send is an alias for postMessage
-        browser.self.js.send = self.postMessage
+        browser.self.send = self.postMessage
     } else {
         browser.is_webworker = false
         update(browser, {
@@ -179,14 +178,14 @@
                         var first = args[0]
                         if(_b_.isinstance(first,[_b_.str, _b_.int, _b_.float])){
                             // set "first" as HTML content (not text)
-                            self.elt.innerHTML = _b_.str.$factory(first)
+                            self.innerHTML = _b_.str.$factory(first)
                         }else if(first.__class__ === TagSum){
                             for(var i = 0, len = first.children.length; i < len; i++){
-                                self.elt.appendChild(first.children[i].elt)
+                                self.appendChild(first.children[i])
                             }
                         }else{
                             if(_b_.isinstance(first, $B.DOMNode)){
-                                self.elt.appendChild(first.elt)
+                                self.appendChild(first)
                             }else{
                                 try{
                                     // If the argument is an iterable other than
@@ -220,7 +219,7 @@
                                 arg.toLowerCase().substr(2)
                             eval(js + '",function(){' + value + '})')
                         }else if(arg.toLowerCase() == "style"){
-                            $B.DOMNode.set_style(self,value)
+                            $B.DOMNode.set_style(self, value)
                         }else{
                             if(value !== false){
                                 // option.selected = false sets it to true :-)
@@ -228,7 +227,7 @@
                                     // Call attribute mapper (cf. issue#1187)
                                     arg = $B.imported["browser.html"].
                                         attribute_mapper(arg)
-                                    self.elt.setAttribute(arg, value)
+                                    self.setAttribute(arg, value)
                                 }catch(err){
                                     throw _b_.ValueError.$factory(
                                         "can't set attribute " + arg)

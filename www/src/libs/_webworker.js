@@ -8,22 +8,12 @@ var brython_scripts = ['brython', 'brython_stdlib']
 
 var wclass = $B.make_class("Worker",
     function(worker){
-        return {
-            __class__: wclass,
-            js: worker
-        }
+        var res = worker
+        res.send = res.postMessage
+        return res
     }
 )
-wclass.__mro__ = [$B.JSObject, _b_.object]
-wclass.send = function(self){
-    var $ = $B.args("send", 1, {self: null}, ["self"], arguments, {}, "args",
-                null),
-            args = $.args
-    for(var i = 0, len = args.length; i < len; i++){
-        args[i] = $B.pyobj2structuredclone(args[i])
-    }
-    self.js.postMessage.apply(self.js, args)
-}
+wclass.__mro__ = [$B.JSObj, _b_.object]
 
 $B.set_func_names(wclass, "browser.worker")
 

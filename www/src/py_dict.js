@@ -456,6 +456,11 @@ dict.__init__ = function(self, first, second){
         if(first.__class__ === $B.JSObject){
             self.$jsobj = first.js
             return $N
+        }else if(first.$nat != 'kw' && $B.get_class(first) === $B.JSObj){
+            for(var key in first){
+                self.$string_dict[key] = [first[key], self.$order++]
+            }
+            return _b_.None
         }else if(first.$jsobj){
             self.$jsobj = {}
             for(var attr in first.$jsobj){

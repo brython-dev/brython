@@ -233,6 +233,9 @@ $B.get_class = function(obj){
             case "boolean":
                 return _b_.bool
             case "function":
+                if(obj.$is_js_func){
+                    return $B.JSObj
+                }
                 obj.__class__ = $B.Function
                 return $B.Function
             case "object":
@@ -243,9 +246,15 @@ $B.get_class = function(obj){
                     }
                 }else if(obj.constructor === Number){
                     return _b_.float
+                }else if(typeof Node !== "undefined" // undefined in Web Workers
+                        && obj instanceof Node){
+                    return $B.DOMNode
                 }
                 break
         }
+    }
+    if(klass === undefined){
+        return $B.JSObj
     }
     return klass
 }
