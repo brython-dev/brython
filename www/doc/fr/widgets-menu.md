@@ -28,7 +28,7 @@ Les instances de la classe `Menu` possèdents les méthodes suivantes:
 
 `Menu.add_link(label, href)`
 
-> ajoute un lien (balise HTML <A>) au menu et renvoie cet élément
+> ajoute un lien (balise HTML `<A>`) au menu et renvoie cet élément
 
 - _label_ est le texte du lien
 - _href_ est l'adresse associée au lien
