@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-07-14 17:46:14.767575"
-__BRYTHON__.timestamp=1594741574767
+__BRYTHON__.compiled_date="2020-07-14 21:50:39.761533"
+__BRYTHON__.timestamp=1594756239761
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -9015,7 +9015,7 @@ if(klass===JSObject ||klass===JSConstructor){
 if(pyobj.js_func !==undefined){return pyobj.js_func}
 return pyobj.js}else if(klass===$B.DOMNode ||
 klass.__mro__.indexOf($B.DOMNode)>-1){
-return pyobj.elt}else if([_b_.list,_b_.tuple].indexOf(klass)>-1){
+return pyobj}else if([_b_.list,_b_.tuple].indexOf(klass)>-1){
 var res=[]
 pyobj.forEach(function(item){res.push(pyobj2jsobj(item))})
 return res}else if(klass===_b_.dict ||_b_.issubclass(klass,_b_.dict)){
@@ -9202,7 +9202,7 @@ if(attr=="bind" && typeof self.addEventListener=="function"){return function(eve
 throw _b_.AttributeError.$factory(attr)}
 if(typeof js_attr==='function'){var res=function(){var args=pyargs2jsargs(arguments),target=self.$js_func ||self
 try{var result=js_attr.apply(target,args)}catch(err){console.log("error",err)
-console.log(attr,js_attr,args)
+console.log(attr,js_attr,args,arguments)
 throw err}
 if(result===undefined){return $B.Undefined}else if(result===null){return _b_.None}
 return $B.JSObj.$factory(result)}

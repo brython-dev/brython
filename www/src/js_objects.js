@@ -183,7 +183,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
 
         // instances of DOMNode or its subclasses are transformed into the
         // underlying DOM element
-        return pyobj.elt
+        return pyobj
 
     }else if([_b_.list, _b_.tuple].indexOf(klass) > -1){
 
@@ -695,7 +695,7 @@ $B.JSObj.__getattribute__ = function(self, attr){
                 var result = js_attr.apply(target, args)
             }catch(err){
                 console.log("error", err)
-                console.log(attr, js_attr, args)
+                console.log(attr, js_attr, args, arguments)
                 throw err
             }
             if(result === undefined){
