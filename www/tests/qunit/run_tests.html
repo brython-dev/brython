@@ -151,25 +151,28 @@ def qunit_add_tests(suite):
 
 qunit_add_tests(test_utils.load_brython_test_cases('..'))
 
+
+def fail_qunit(name, message):
+    def the_test(qunit):
+        qunit.ok(False, message)
+    _QUnit.test(name, the_test)
+
 try:
     from unittest.loader import TestLoader
 except:
-    print('Error loading unittest.loader.TestLoader')
-    traceback.print_exc()
+    fail_qunit('Loading unittest.loader.TestLoader', traceback.format_exc())
 
 try:
     import test.test_dict
     qunit_add_tests(TestLoader().loadTestsFromModule(test.test_dict))
 except:
-    print('Error loading test.test_dict')
-    traceback.print_exc()
+    fail_qunit('Loading test.test_dict', traceback.format_exc())
 
 try:
     import test.test_grammar
     qunit_add_tests(TestLoader().loadTestsFromModule(test.test_grammar))
 except:
-    print('Error loading test.test_gramar')
-    traceback.print_exc()
+    fail_qunit('Loading test.test_grammar', traceback.format_exc())
 </script>
 
   </body>
