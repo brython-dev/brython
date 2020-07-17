@@ -1,3 +1,4 @@
-for i in range(100):
-    2 ** 60
+n = 60
+for i in range(10000):
+    2 ** n
 
