@@ -790,6 +790,15 @@ $B.JSObj.__repr__ = $B.JSObj.__str__ = function(self){
     return '<Javascript ' + self.constructor.name + ' object>'
 }
 
+$B.JSObj.bind = function(self, evt, func){
+    // "bind" is an alias for "addEventListener"
+    var js_func = function(ev) {
+        return func(jsobj2pyobj(ev))
+    }
+    self.addEventListener(evt, js_func)
+    return _b_.None
+}
+
 $B.JSObj.to_dict = function(self){
     // Returns a Python dictionary based on the underlying Javascript object
     return $B.structuredclone2pyobj(self)
