@@ -69,8 +69,6 @@ function handle_kwargs(self, kw, method){
                                encodeURIComponent(params[key][0]))
                 }
                 data = items.join("&")
-            }else if(params.__class__ === $B.JSObject){
-                data = params.js
             }else{
                 throw _b_.TypeError.$factory("wrong type for data: " +
                     $B.class_name(params))
@@ -128,20 +126,7 @@ function handle_kwargs(self, kw, method){
 
 var ajax = {
     __class__: _b_.type,
-    __mro__: [$B.JSObject, _b_.object],
-
-    __getattribute__ : function(self, attr){
-        // Special case for send : accept dict as parameters
-        if(attr == 'send'){
-            return function(params){
-                return ajax.send(self, params)
-            }
-        }else if(attr == 'xml'){ // alias
-            attr = 'responseXML'
-        }
-        // Otherwise default to JSObject method
-        return $B.JSObject.__getattribute__(self, attr)
-    },
+    __mro__: [_b_.object],
 
     __repr__ : function(self){return '<object Ajax>'},
     __str__ : function(self){return '<object Ajax>'},
@@ -150,6 +135,32 @@ var ajax = {
         __module__: "builtins",
         __name__: "ajax"
     },
+
+    __getattribute__: function(self, attr){
+        if(ajax[attr] !== undefined){
+            return function(){
+                return ajax[attr].call(null, self, ...arguments)
+            }
+        }else if(self.js[attr] !== undefined){
+            if(typeof self.js[attr] == "function"){
+                return function(){
+                    if(attr == "setRequestHeader"){
+                        self.$has_request_header = true
+                    }else if(attr == "open"){
+                        self.$method = arguments[0]
+                    }
+                    return self.js[attr](...arguments)
+                }
+            }else{
+                return self.js[attr]
+            }
+        }else if(attr == "text"){
+            return self.js.responseText
+        }else if(attr == "xml"){
+            return self.js.responseXML
+        }
+    },
+
 
     bind: function(self, evt, func){
         // req.bind(evt,func) is the same as req.onevt = func
@@ -191,6 +202,11 @@ var ajax = {
                     add_to_res(res, str.$factory(items[i][0]), items[i][1])
                 }
             }else{
+                if(self.$method && self.$method.toUpperCase() == "POST" &&
+                        ! self.$has_request_header){
+                    self.js.setRequestHeader("Content-Type",
+                        "application/x-www-form-urlencoded")
+                }
                 var items = _b_.list.$factory(_b_.dict.items(params))
                 for(var i = 0, len = items.length; i < len; i++){
                     var key = encodeURIComponent(str.$factory(items[i][0]));
@@ -207,7 +223,8 @@ var ajax = {
                 res = res.substr(0, res.length - 1)
             }
         }else{
-            throw _b_.TypeError("send() argument must be string or dictionary, not '" +
+            throw _b_.TypeError.$factory(
+                "send() argument must be string or dictionary, not '" +
                 str.$factory(params.__class__) + "'")
         }
         self.js.send(res)
@@ -224,6 +241,7 @@ var ajax = {
             function() {self.js.abort();func()},
             seconds * 1000)
     }
+
 }
 
 ajax.$factory = function(){
@@ -338,16 +356,20 @@ function file_upload(){
         file = $.file,
         kw = $.kw
 
-    var formdata = new FormData()
-    // file is a JSObject
-    formdata.append('filetosave', file.js, file.js.name)
-
     var self = ajax.$factory(),
-        method = 'POST'
+        method = 'POST',
+        field_name = 'filetosave'
 
     if(kw.$string_dict.method !== undefined){
         method = kw.$string_dict.method[0]
     }
+
+    if(kw.$string_dict.field_name !== undefined){
+        field_name = kw.$string_dict.field_name[0]
+    }
+
+    var formdata = new FormData()
+    formdata.append(field_name, file, file.name)
 
     self.js.open(method, url, True)
     self.js.send(formdata)

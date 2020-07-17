@@ -63,11 +63,20 @@ def get(ev):
              oncomplete=show,
              data={"foo": 34})
 
+    req = ajax.Ajax()
+    req.open("GET", "/cgi-bin/get_test.py?bar=35")
+    req.bind("complete", lambda ev: print(ev.text))
+    req.send()
+
 @bind("#post_test", "click")
 def post(ev):
     ajax.post("/cgi-bin/post_test.py",
              oncomplete=show,
              data={"foo": 34})
+    req = ajax.Ajax()
+    req.open("POST", "/cgi-bin/post_test.py")
+    req.bind("complete", lambda ev: print(ev.text))
+    req.send({"bar": 45})
 
 @bind("#get_text", "click")
 def get_text(ev):
