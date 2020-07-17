@@ -453,10 +453,7 @@ dict.__init__ = function(self, first, second){
     var $
     if(first === undefined){return $N}
     if(second === undefined){
-        if(first.__class__ === $B.JSObject){
-            self.$jsobj = first.js
-            return $N
-        }else if(first.$nat != 'kw' && $B.get_class(first) === $B.JSObj){
+        if(first.$nat != 'kw' && $B.get_class(first) === $B.JSObj){
             for(var key in first){
                 self.$string_dict[key] = [first[key], self.$order++]
             }
@@ -660,7 +657,7 @@ dict.$setitem = function(self, key, value, $hash){
     // use computing hash(key) again, nor testing equality of keys
     if(self.$jsobj){
         if(self.$from_js){
-            // dictionary created by method to_dict of JSObject instances
+            // dictionary created by method to_dict of JSObj instances
             value = $B.pyobj2jsobj(value)
         }
         if(self.$jsobj.__class__ === _b_.type){

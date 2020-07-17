@@ -208,6 +208,7 @@ traceback.__getattribute__ = function(self, attr){
                     try{
                         return src.split("\n")[parseInt(info[0] - 1)].trim()
                     }catch(err){
+                        console.log("error in attr tb_lasti of", self)
                         console.log(src, info)
                         throw err
                     }

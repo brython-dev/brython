@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-07-14 21:50:39.761533"
-__BRYTHON__.timestamp=1594756239761
+__BRYTHON__.compiled_date="2020-07-17 08:27:07.783321"
+__BRYTHON__.timestamp=1594967227783
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5546,14 +5546,13 @@ prepare_kwargs[key]=val}}
 var mro0=class_obj
 var orig_bases=bases.slice(),use_mro_entries=false
 for(var i=0;i < bases.length;i++){if(bases[i]===undefined ||
-(bases[i].__mro__===undefined &&
-bases[i].__class__ !==$B.JSObject)){var mro_entries=$B.$getattr(bases[i],"__mro_entries__",_b_.None)
+(bases[i].__mro__===undefined)){var mro_entries=$B.$getattr(bases[i],"__mro_entries__",_b_.None)
 if(mro_entries !==_b_.None){var entries=_b_.list.$factory(mro_entries(bases))
 bases.splice(i,1,...entries)
 use_mro_entries=true
 i--
 continue}}}
-if(metaclass===undefined){if(bases && bases.length > 0 && bases[0].__class__ !==$B.JSObject){metaclass=bases[0].__class__
+if(metaclass===undefined){if(bases && bases.length > 0){metaclass=bases[0].__class__
 if(metaclass===undefined){
 if(typeof bases[0]=="function"){if(bases.length !=1){throw _b_.TypeError.$factory("A Brython class "+
 "can inherit at most 1 Javascript constructor")}
@@ -6060,14 +6059,7 @@ return _b_.float.$factory(src)}
 if(src===null ||src===undefined){return _b_.None}
 if(Array.isArray(src)&&
 Object.getPrototypeOf(src)===Array.prototype){src.$brython_class="js" }
-var klass=$B.get_class(src)
-if(klass !==undefined){if(klass===$B.JSObject){src=src.js}else{return src}}
-if(typeof src=="object"){if($B.$isNode(src)){return $B.DOMNode.$factory(src)}
-if($B.$isEvent(src)){return $B.$DOMEvent(src)}
-if($B.$isNodeList(src)){var res=[]
-for(const item of src){res.push($B.$JS2Py(item))}
-return _b_.list.$factory(res)}}
-return $B.JSObject.$factory(src)}
+return src}
 $B.list_key=function(obj,key){key=$B.$GetInt(key)
 if(key < 0){key+=obj.length}
 var res=obj[key]
@@ -6156,7 +6148,6 @@ typeof item=="number" &&
 if(obj[item]===undefined){throw _b_.IndexError.$factory("list assignment index out of range")}
 obj[item]=value
 return}else if(obj.__class__===_b_.dict){_b_.dict.$setitem(obj,item,value)
-return}else if(obj.__class__===$B.JSObject){$B.JSObject.__setattr__(obj,item,value)
 return}else if(obj.__class__===_b_.list){return _b_.list.$setitem(obj,item,value)}
 $B.$getattr(obj,"__setitem__")(item,value)}
 $B.augm_item_add=function(obj,item,incr){if(Array.isArray(obj)&& typeof item=="number" &&
@@ -6216,8 +6207,7 @@ if($B.rich_comp("__eq__",elt,item)){return true}}catch(err){if(err.__class__===_
 throw err}}}}
 $B.$call=function(callable){if(callable.__class__===$B.method){return callable}
 else if(callable.$is_func ||typeof callable=="function"){return callable}else if(callable.$factory){return callable.$factory}else if(callable.$is_class){
-return callable.$factory=$B.$instance_creator(callable)}else if(callable.__class__===$B.JSObject){if(typeof(callable.js)=="function"){return callable.js}else{throw _b_.TypeError.$factory("'"+$B.class_name(callable)+
-"' object is not callable")}}
+return callable.$factory=$B.$instance_creator(callable)}
 try{return $B.$getattr(callable,"__call__")}catch(err){throw _b_.TypeError.$factory("'"+$B.class_name(callable)+
 "' object is not callable")}}
 var $io=$B.make_class("io",function(){return{__class__:$io}}
@@ -6885,9 +6875,6 @@ throw _b_.AttributeError.$factory(attr)
 case '__subclasses__':
 if(klass.$factory ||klass.$is_class){var subclasses=obj.$subclasses ||[]
 return function(){return subclasses}}
-break
-case '$$new':
-if(klass===$B.JSObject && obj.js_func !==undefined){return $B.JSConstructor.$factory(obj)}
 break}
 if(typeof obj=='function'){var value=obj[attr]
 if(value !==undefined){if(attr=='__module__'){return value}}}
@@ -6943,7 +6930,7 @@ attr_error(rawname,cname)}
 function globals(){
 check_nb_args('globals',0,arguments)
 var res=$B.obj_dict($B.last($B.frames_stack)[3])
-res.$jsobj.__BRYTHON__=$B.JSObject.$factory($B)
+res.$jsobj.__BRYTHON__=$B.JSObj.$factory($B)
 res.$is_namespace=true
 return res}
 function hasattr(obj,attr){check_no_kw('hasattr',obj,attr)
@@ -6965,7 +6952,7 @@ if(cached !==undefined){return cached}
 else{return hash_cache[obj]=_b_.str.__hash__(obj)}}
 var klass=obj.__class__ ||$B.get_class(obj)
 if(klass===undefined){throw _b_.TypeError.$factory("unhashable type: '"+
-_b_.str.$factory($B.JSObject.$factory(obj))+"'")}
+_b_.str.$factory($B.JSObj.$factory(obj))+"'")}
 var hash_method=$B.$getattr(klass,'__hash__',_b_.None)
 if(hash_method===_b_.None){throw _b_.TypeError.$factory("unhashable type: '"+
 $B.class_name(obj)+"'")}
@@ -7740,7 +7727,8 @@ if(fr[2]==info[1].replace(/\./g,'_')){file=fr[3].__file__
 break}}
 if(src===undefined){if($B.file_cache.hasOwnProperty(file)){src=$B.file_cache[file]}else if($B.imported[info[1]]&& $B.imported[info[1]].__file__ ){src=$B.file_cache[$B.imported[info[1]].__file__]
 console.log("from filecache",line_info,$B.imported[info[1]].__file__)}}
-if(src !==undefined){try{return src.split("\n")[parseInt(info[0]-1)].trim()}catch(err){console.log(src,info)
+if(src !==undefined){try{return src.split("\n")[parseInt(info[0]-1)].trim()}catch(err){console.log("error in attr tb_lasti of",self)
+console.log(src,info)
 throw err}}else{console.log(file)
 console.log("no src for",info)
 return ""}}
@@ -9236,6 +9224,10 @@ return _b_.dict.__iter__(_dict)}
 $B.JSObj.__len__=function(self){if(typeof self.length=='number'){return self.length}
 throw _b_.AttributeError.$factory(self+' has no attribute __len__')}
 $B.JSObj.__repr__=$B.JSObj.__str__=function(self){return '<Javascript '+self.constructor.name+' object>'}
+$B.JSObj.bind=function(self,evt,func){
+var js_func=function(ev){return func(jsobj2pyobj(ev))}
+self.addEventListener(evt,js_func)
+return _b_.None}
 $B.JSObj.to_dict=function(self){
 return $B.structuredclone2pyobj(self)}
 $B.set_func_names($B.JSObj,"builtins")
@@ -12428,7 +12420,7 @@ if(arg.__class__ && arg.__class__===_b_.bytes &&
 encoding !==undefined){
 return _b_.bytes.decode(arg,$.encoding,$.errors)}
 var klass=arg.__class__ ||$B.get_class(arg)
-if(klass===undefined){return $B.JSObject.__str__($B.JSObject.$factory(arg))}
+if(klass===undefined){return $B.JSObj.__str__($B.JSObj.$factory(arg))}
 var method=$B.$getattr(klass ,"__str__",null)
 if(method===null ||
 (arg.__class__ && arg.__class__ !==_b_.object &&
@@ -12783,8 +12775,7 @@ si(self,item[0],item[1])
 break}}}
 dict.__init__=function(self,first,second){var $
 if(first===undefined){return $N}
-if(second===undefined){if(first.__class__===$B.JSObject){self.$jsobj=first.js
-return $N}else if(first.$nat !='kw' && $B.get_class(first)===$B.JSObj){for(var key in first){self.$string_dict[key]=[first[key],self.$order++]}
+if(second===undefined){if(first.$nat !='kw' && $B.get_class(first)===$B.JSObj){for(var key in first){self.$string_dict[key]=[first[key],self.$order++]}
 return _b_.None}else if(first.$jsobj){self.$jsobj={}
 for(var attr in first.$jsobj){self.$jsobj[attr]=first.$jsobj[attr]}
 return $N}else if(Array.isArray(first)){init_from_list(self,first)
@@ -13306,15 +13297,14 @@ for(var i=0;i < arguments.length;i++){var arg=arguments[i]
 if(typeof arg=="function"){
 if(arg.$cache){var f1=arg.$cache}else{var f1=function(dest_fn){return function(){try{return dest_fn.apply(null,arguments)}catch(err){$B.handle_error(err)}}}(arg)
 arg.$cache=f1}
-args[pos++]=f1}
-else if(_b_.isinstance(arg,JSObject)){args[pos++]=arg.js}else if(_b_.isinstance(arg,DOMNode)){args[pos++]=arg}else if(arg===_b_.None){args[pos++]=null}else if(arg.__class__==_b_.dict){args[pos++]=_b_.dict.$to_obj(arg)}else{args[pos++]=arg}}
+args[pos++]=f1}else if(_b_.isinstance(arg,DOMNode)){args[pos++]=arg}else if(arg===_b_.None){args[pos++]=null}else if(arg.__class__==_b_.dict){args[pos++]=_b_.dict.$to_obj(arg)}else{args[pos++]=arg}}
 var result=f.apply(elt,args)
 return $B.$JS2Py(result)}})(res,self)
 func.$infos={__name__ :attr,__qualname__:attr}
 func.$is_func=true
 return func}
 if(attr=='options'){return Options.$factory(self)}
-if(attr=='style'){return $B.JSObject.$factory(self[attr])}
+if(attr=='style'){return $B.JSObj.$factory(self[attr])}
 if(Array.isArray(res)){return res}
 return $B.$JS2Py(res)}
 return object.__getattribute__(self,attr)}
@@ -13403,9 +13393,6 @@ attr+"'] instead.")}
 break}}else{break}
 proto=Object.getPrototypeOf(proto)}
 if(self.style && self.style[attr]!==undefined){warn("Warning: '"+attr+"' is a property of element.style")}
-if(value.__class__===$B.JSObject &&
-value.js instanceof EventTarget){
-value=value.js}
 self[attr]=value
 return _b_.None}}
 DOMNode.__setitem__=function(self,key,value){if(typeof key=="number"){self.childNodes[key]=value}else if(typeof key=="string"){if(self.attributes){if(self instanceof SVGElement){self.setAttributeNS(null,key,value)}else if(typeof self.setAttribute=="function"){self.setAttribute(key,value)}}}}
@@ -13643,7 +13630,7 @@ TagSum.$factory=function(){return{
 __class__:TagSum,children:[],toString:function(){return "(TagSum)"}}}
 $B.set_func_names(TagSum,"<dom>")
 $B.TagSum=TagSum 
-var win=JSObject.$factory(_window)
+var win=$B.JSObj.$factory(_window)
 win.get_postMessage=function(msg,targetOrigin){if(_b_.isinstance(msg,dict)){var temp={__class__:"dict"},items=_b_.list.$factory(_b_.dict.items(msg))
 items.forEach(function(item){temp[item[0]]=item[1]})
 msg=temp}
@@ -13745,7 +13732,7 @@ while(true){try{var elt=_b_.next(it)
 $B.DOMNode.bind(elt,$.evt,callback)}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){break}
 throw err}}}catch(err){if(_b_.isinstance(err,_b_.AttributeError)){$B.DOMNode.bind($.elt,$.evt,callback)}
 throw err}
-return callback}},console:self.console && $B.JSObject.$factory(self.console),self:$B.win,win:$B.win,$$window:$B.win,}
+return callback}},console:self.console && $B.JSObj.$factory(self.console),self:$B.win,win:$B.win,$$window:$B.win,}
 browser.__path__=browser.__file__
 if($B.isNode){delete browser.$$window
 delete browser.win}else if($B.isWebWorker){browser.is_webworker=true
@@ -13753,11 +13740,11 @@ delete browser.$$window
 delete browser.win
 browser.self.send=self.postMessage}else{
 browser.is_webworker=false
-update(browser,{$$alert:function(message){window.alert($B.builtins.str.$factory(message ||""))},confirm:$B.JSObject.$factory(window.confirm),$$document:$B.DOMNode.$factory(document),doc:$B.DOMNode.$factory(document),
+update(browser,{$$alert:function(message){window.alert($B.builtins.str.$factory(message ||""))},confirm:$B.JSObj.$factory(window.confirm),$$document:$B.DOMNode.$factory(document),doc:$B.DOMNode.$factory(document),
 DOMEvent:$B.DOMEvent,DOMNode:$B.DOMNode,load:function(script_url){
 var file_obj=$B.builtins.open(script_url)
 var content=$B.$getattr(file_obj,'read')()
-eval(content)},mouseCoords:function(ev){return $B.JSObject.$factory($mouseCoords(ev))},prompt:function(message,default_value){return $B.JSObject.$factory(window.prompt(message,default_value||''))},reload:function(){
+eval(content)},mouseCoords:function(ev){return $B.JSObj.$factory($mouseCoords(ev))},prompt:function(message,default_value){return $B.JSObj.$factory(window.prompt(message,default_value||''))},reload:function(){
 var scripts=document.getElementsByTagName('script'),js_scripts=[]
 scripts.forEach(function(script){if(script.type===undefined ||
 script.type=='text/javascript'){js_scripts.push(script)
@@ -13841,7 +13828,7 @@ $B.Undefined={__class__:$B.UndefinedClass}
 $B.set_func_names($B.UndefinedClass,"javascript")
 modules['javascript']={$$this:function(){
 if($B.js_this===undefined){return $B.builtins.None}
-return $B.JSObject.$factory($B.js_this)},$$Date:self.Date && $B.JSObject.$factory(self.Date),JSConstructor:{__get__:function(){console.warn('"javascript.JSConstructor" is deprecrated. '+
+return $B.JSObj.$factory($B.js_this)},$$Date:self.Date && $B.JSObj.$factory(self.Date),JSConstructor:{__get__:function(){console.warn('"javascript.JSConstructor" is deprecrated. '+
 'Use window.<js constructor name>.new() instead.')
 return $B.JSConstructor},__set__:function(){throw _b_.AttributeError.$factory("read only")}},JSObject:{__get__:function(){console.warn('"javascript.JSObject" is deprecrated. To use '+
 'a Javascript object, use window.<object name> instead.')
@@ -13849,10 +13836,10 @@ return $B.JSObject},__set__:function(){throw _b_.AttributeError.$factory("read o
 'Use browser.load instead.')
 var file_obj=$B.builtins.open(script_url)
 var content=$B.$getattr(file_obj,'read')()
-eval(content)},$$Math:self.Math && $B.JSObject.$factory(self.Math),NULL:null,$$Number:self.Number && $B.JSObject.$factory(self.Number),py2js:function(src,module_name){if(module_name===undefined){module_name='__main__'+$B.UUID()}
-return $B.py2js(src,module_name,module_name,$B.builtins_scope).to_js()},pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},$$RegExp:self.RegExp && $B.JSObject.$factory(self.RegExp),$$String:self.String && $B.JSObject.$factory(self.String),UNDEFINED:$B.Undefined,UndefinedType:$B.UndefinedClass}
+eval(content)},$$Math:self.Math && $B.JSObj.$factory(self.Math),NULL:null,$$Number:self.Number && $B.JSObj.$factory(self.Number),py2js:function(src,module_name){if(module_name===undefined){module_name='__main__'+$B.UUID()}
+return $B.py2js(src,module_name,module_name,$B.builtins_scope).to_js()},pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},$$RegExp:self.RegExp && $B.JSObj.$factory(self.RegExp),$$String:self.String && $B.JSObj.$factory(self.String),UNDEFINED:$B.Undefined,UndefinedType:$B.UndefinedClass}
 var arraybuffers=["Int8Array","Uint8Array","Uint8ClampedArray","Int16Array","Uint16Array","Int32Array","Uint32Array","Float32Array","Float64Array","BigInt64Array","BigUint64Array"]
-arraybuffers.forEach(function(ab){if(self[ab]!==undefined){modules['javascript'][ab]=$B.JSObject.$factory(self[ab])}})
+arraybuffers.forEach(function(ab){if(self[ab]!==undefined){modules['javascript'][ab]=$B.JSObj.$factory(self[ab])}})
 var _b_=$B.builtins
 modules['_sys']={
 Getframe :function(){var $=$B.args("_getframe",1,{depth:null},['depth'],arguments,{depth:0},null,null),depth=$.depth
@@ -13874,7 +13861,7 @@ function(){return $B.meta_path},function(self,obj,value){$B.meta_path=value }
 ),path_hooks:_b_.property.$factory(
 function(){return $B.path_hooks},function(self,obj,value){$B.path_hooks=value }
 ),path_importer_cache:_b_.property.$factory(
-function(){return _b_.dict.$factory($B.JSObject.$factory($B.path_importer_cache))},function(self,obj,value){throw _b_.TypeError.$factory("Read only property"+
+function(){return _b_.dict.$factory($B.JSObj.$factory($B.path_importer_cache))},function(self,obj,value){throw _b_.TypeError.$factory("Read only property"+
 " 'sys.path_importer_cache'")}
 ),settrace:function(){var $=$B.args("settrace",1,{tracefunc:null},['tracefunc'],arguments,{},null,null)
 $B.tracefunc=$.tracefunc

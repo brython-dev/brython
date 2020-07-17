@@ -512,26 +512,7 @@ $B.$JS2Py = function(src){
             Object.getPrototypeOf(src) === Array.prototype){
         src.$brython_class = "js" // used in make_iterator_class
     }
-    var klass = $B.get_class(src)
-    if(klass !== undefined){
-        if(klass === $B.JSObject){
-            src = src.js
-        }else{
-            return src
-        }
-    }
-    if(typeof src == "object"){
-        if($B.$isNode(src)){return $B.DOMNode.$factory(src)}
-        if($B.$isEvent(src)){return $B.$DOMEvent(src)}
-        if($B.$isNodeList(src)){
-            var res = []
-            for(const item of src){
-                res.push($B.$JS2Py(item))
-            }
-            return _b_.list.$factory(res)
-        }
-    }
-    return $B.JSObject.$factory(src)
+    return src
 }
 
 // Functions used if we can guess the type from lexical analysis
@@ -748,9 +729,6 @@ $B.$setitem = function(obj, item, value){
     }else if(obj.__class__ === _b_.dict){
         _b_.dict.$setitem(obj, item, value)
         return
-    }else if(obj.__class__ === $B.JSObject){
-        $B.JSObject.__setattr__(obj, item, value)
-        return
     }else if(obj.__class__ === _b_.list){
         return _b_.list.$setitem(obj, item, value)
     }
@@ -926,13 +904,6 @@ $B.$call = function(callable){
     }else if(callable.$is_class){
         // Use metaclass __call__, cache result in callable.$factory
         return callable.$factory = $B.$instance_creator(callable)
-    }else if(callable.__class__ === $B.JSObject){
-        if(typeof(callable.js) == "function"){
-            return callable.js
-        }else{
-            throw _b_.TypeError.$factory("'" + $B.class_name(callable) +
-                "' object is not callable")
-        }
     }
     try{
         return $B.$getattr(callable, "__call__")

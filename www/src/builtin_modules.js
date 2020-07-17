@@ -75,7 +75,7 @@
             }
         },
 
-        console: self.console && $B.JSObject.$factory(self.console),
+        console: self.console && $B.JSObj.$factory(self.console),
         self: $B.win,
         win: $B.win,
         $$window: $B.win,
@@ -98,7 +98,7 @@
             $$alert:function(message){
                 window.alert($B.builtins.str.$factory(message || ""))
             },
-            confirm: $B.JSObject.$factory(window.confirm),
+            confirm: $B.JSObj.$factory(window.confirm),
             $$document:$B.DOMNode.$factory(document),
             doc: $B.DOMNode.$factory(document), // want to use document instead of doc
             DOMEvent:$B.DOMEvent,
@@ -109,9 +109,9 @@
                 var content = $B.$getattr(file_obj, 'read')()
                 eval(content)
             },
-            mouseCoords: function(ev){return $B.JSObject.$factory($mouseCoords(ev))},
+            mouseCoords: function(ev){return $B.JSObj.$factory($mouseCoords(ev))},
             prompt: function(message, default_value){
-                return $B.JSObject.$factory(window.prompt(message, default_value||''))
+                return $B.JSObj.$factory(window.prompt(message, default_value||''))
             },
             reload: function(){
                 // Javascripts in the page
@@ -366,9 +366,9 @@
             // returns the content of Javascript "this"
             // $B.js_this is set to "this" at the beginning of each function
             if($B.js_this === undefined){return $B.builtins.None}
-            return $B.JSObject.$factory($B.js_this)
+            return $B.JSObj.$factory($B.js_this)
         },
-        $$Date: self.Date && $B.JSObject.$factory(self.Date),
+        $$Date: self.Date && $B.JSObj.$factory(self.Date),
         JSConstructor: {
             __get__: function(){
                 console.warn('"javascript.JSConstructor" is deprecrated. ' +
@@ -408,9 +408,9 @@
             var content = $B.$getattr(file_obj, 'read')()
             eval(content)
         },
-        $$Math: self.Math && $B.JSObject.$factory(self.Math),
+        $$Math: self.Math && $B.JSObj.$factory(self.Math),
         NULL: null,
-        $$Number: self.Number && $B.JSObject.$factory(self.Number),
+        $$Number: self.Number && $B.JSObj.$factory(self.Number),
         py2js: function(src, module_name){
             if(module_name === undefined){
                 module_name = '__main__' + $B.UUID()
@@ -419,8 +419,8 @@
                 $B.builtins_scope).to_js()
         },
         pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},
-        $$RegExp: self.RegExp && $B.JSObject.$factory(self.RegExp),
-        $$String: self.String && $B.JSObject.$factory(self.String),
+        $$RegExp: self.RegExp && $B.JSObj.$factory(self.RegExp),
+        $$String: self.String && $B.JSObj.$factory(self.String),
         UNDEFINED: $B.Undefined,
         UndefinedType: $B.UndefinedClass
     }
@@ -430,7 +430,7 @@
         "Float32Array", "Float64Array", "BigInt64Array", "BigUint64Array"]
     arraybuffers.forEach(function(ab){
         if(self[ab] !== undefined){
-            modules['javascript'][ab] = $B.JSObject.$factory(self[ab])
+            modules['javascript'][ab] = $B.JSObj.$factory(self[ab])
         }
     })
 
@@ -511,7 +511,7 @@
         ),
         path_importer_cache: _b_.property.$factory(
             function(){
-                return _b_.dict.$factory($B.JSObject.$factory($B.path_importer_cache))
+                return _b_.dict.$factory($B.JSObj.$factory($B.path_importer_cache))
             },
             function(self, obj, value){
                 throw _b_.TypeError.$factory("Read only property" +

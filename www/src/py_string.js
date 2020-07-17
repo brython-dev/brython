@@ -2103,7 +2103,7 @@ str.$factory = function(arg, encoding, errors){
         // even if arg has an attribute __str__
         var klass = arg.__class__ || $B.get_class(arg)
         if(klass === undefined){
-            return $B.JSObject.__str__($B.JSObject.$factory(arg))
+            return $B.JSObj.__str__($B.JSObj.$factory(arg))
         }
         var method = $B.$getattr(klass , "__str__", null)
         if(method === null ||

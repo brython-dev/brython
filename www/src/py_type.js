@@ -50,8 +50,7 @@ $B.$class_constructor = function(class_name, class_obj, bases,
         use_mro_entries = false
     for(var i = 0; i < bases.length; i++){
         if(bases[i] === undefined ||
-                (bases[i].__mro__ === undefined &&
-                bases[i].__class__ !== $B.JSObject)){
+                (bases[i].__mro__ === undefined)){
             var mro_entries = $B.$getattr(bases[i], "__mro_entries__",
                 _b_.None)
             if(mro_entries !== _b_.None){
@@ -69,7 +68,7 @@ $B.$class_constructor = function(class_name, class_obj, bases,
     // - if the class has parents, inherit the class of the first parent
     // - otherwise default to type
     if(metaclass === undefined){
-        if(bases && bases.length > 0 && bases[0].__class__ !== $B.JSObject){
+        if(bases && bases.length > 0){
             metaclass = bases[0].__class__
             if(metaclass === undefined){
                 // Might inherit a Javascript constructor

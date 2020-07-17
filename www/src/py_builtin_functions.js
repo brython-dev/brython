@@ -1119,11 +1119,6 @@ $B.$getattr = function(obj, attr, _default){
               return function(){return subclasses}
           }
           break
-      case '$$new':
-          if(klass === $B.JSObject && obj.js_func !== undefined){
-              return $B.JSConstructor.$factory(obj)
-          }
-          break
     }
 
     if(typeof obj == 'function') {
@@ -1268,7 +1263,7 @@ function globals(){
     // [locals_name, locals_obj, globals_name, globals_obj]
     check_nb_args('globals', 0, arguments)
     var res = $B.obj_dict($B.last($B.frames_stack)[3])
-    res.$jsobj.__BRYTHON__ = $B.JSObject.$factory($B) // issue 1181
+    res.$jsobj.__BRYTHON__ = $B.JSObj.$factory($B) // issue 1181
     res.$is_namespace = true
     return res
 }
@@ -1311,7 +1306,7 @@ function hash(obj){
     var klass = obj.__class__ || $B.get_class(obj)
     if(klass === undefined){
         throw _b_.TypeError.$factory("unhashable type: '" +
-                _b_.str.$factory($B.JSObject.$factory(obj)) + "'")
+                _b_.str.$factory($B.JSObj.$factory(obj)) + "'")
     }
     var hash_method = $B.$getattr(klass, '__hash__', _b_.None)
 

@@ -808,9 +808,6 @@ DOMNode.__getattribute__ = function(self, attr){
                                 arg.$cache = f1
                             }
                             args[pos++] = f1
-                        }
-                        else if(_b_.isinstance(arg, JSObject)){
-                            args[pos++] = arg.js
                         }else if(_b_.isinstance(arg, DOMNode)){
                             args[pos++] = arg
                         }else if(arg === _b_.None){
@@ -830,7 +827,7 @@ DOMNode.__getattribute__ = function(self, attr){
             return func
         }
         if(attr == 'options'){return Options.$factory(self)}
-        if(attr == 'style'){return $B.JSObject.$factory(self[attr])}
+        if(attr == 'style'){return $B.JSObj.$factory(self[attr])}
         if(Array.isArray(res)){return res} // issue #619
         return $B.$JS2Py(res)
     }
@@ -1043,11 +1040,6 @@ DOMNode.__setattr__ = function(self, attr, value){
         }
 
         // Set the property
-        if(value.__class__ === $B.JSObject &&
-                value.js instanceof EventTarget){
-            // Cf. issue #1393
-            value = value.js
-        }
         self[attr] = value
 
         return _b_.None
@@ -1707,7 +1699,7 @@ $B.set_func_names(TagSum, "<dom>")
 
 $B.TagSum = TagSum // used in _html.js and _svg.js
 
-var win = JSObject.$factory(_window)
+var win = $B.JSObj.$factory(_window)
 
 win.get_postMessage = function(msg,targetOrigin){
     if(_b_.isinstance(msg, dict)){

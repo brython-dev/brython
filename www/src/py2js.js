@@ -7320,6 +7320,7 @@ var $OpCtx = $B.parser.$OpCtx = function(context,op){
         this.js_processed = true
         var comps = {'==': 'eq','!=': 'ne','>=': 'ge','<=': 'le',
             '<': 'lt','>': 'gt'}
+
         if(comps[this.op] !== undefined){
             var method = comps[this.op]
             if(this.tree[0].type == 'expr' && this.tree[1].type == 'expr'){
