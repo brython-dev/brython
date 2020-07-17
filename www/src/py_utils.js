@@ -915,8 +915,12 @@ $B.$call = function(callable){
 
 // Default standard output and error
 // Can be reset by sys.stdout or sys.stderr
-var $io = $B.make_class("io", function(){
-    return {__class__: $io}
+var $io = $B.make_class("io",
+    function(out){
+        return {
+            __class__: $io,
+            out
+        }
     }
 )
 
@@ -926,12 +930,12 @@ $io.flush = function(){
 
 $io.write = function(self, msg){
     // Default to printing to browser console
-    console.log(msg)
+    console[self.out](msg)
     return _b_.None
 }
 
-$B.stderr = $io.$factory()
-$B.stdout = $io.$factory()
+$B.stderr = $io.$factory("error")
+$B.stdout = $io.$factory("log")
 
 $B.stdin = {
     __class__: $io,

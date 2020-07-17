@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-07-17 08:27:07.783321"
-__BRYTHON__.timestamp=1594967227783
+__BRYTHON__.compiled_date="2020-07-17 10:51:39.826325"
+__BRYTHON__.timestamp=1594975899826
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5099,7 +5099,7 @@ $B.$py_module_path[name]=$B.script_path
 try{var root=$B.py2js(src,name,name),js=root.to_js(),script={__doc__:root.__doc__,js:js,__name__:name,$src:src,__file__:$B.script_path+
 ($B.script_path.endsWith("/")? "" :"/")+name}
 $B.file_cache[script.__file__]=src
-if($B.debug > 1){console.log(js)}}catch(err){$B.handle_error(err)}
+if($B.debug > 1){console.log("run script\n",src,"\n",js)}}catch(err){$B.handle_error(err)}
 if($B.hasOwnProperty("VFS")&& $B.has_indexedDB){
 var imports1=Object.keys(root.imports).slice(),imports=imports1.filter(function(item){return $B.VFS.hasOwnProperty(item)})
 Object.keys(imports).forEach(function(name){if($B.VFS.hasOwnProperty(name)){var submodule=$B.VFS[name],type=submodule[0]
@@ -6210,14 +6210,15 @@ else if(callable.$is_func ||typeof callable=="function"){return callable}else if
 return callable.$factory=$B.$instance_creator(callable)}
 try{return $B.$getattr(callable,"__call__")}catch(err){throw _b_.TypeError.$factory("'"+$B.class_name(callable)+
 "' object is not callable")}}
-var $io=$B.make_class("io",function(){return{__class__:$io}}
+var $io=$B.make_class("io",function(out){return{
+__class__:$io,out}}
 )
 $io.flush=function(){}
 $io.write=function(self,msg){
-console.log(msg)
+console[self.out](msg)
 return _b_.None}
-$B.stderr=$io.$factory()
-$B.stdout=$io.$factory()
+$B.stderr=$io.$factory("error")
+$B.stdout=$io.$factory("log")
 $B.stdin={__class__:$io,__original__:true,closed:false,len:1,pos:0,read:function(){return ""},readline:function(){return ""}}
 $B.make_iterator_class=function(name){
 var klass={__class__:_b_.type,__mro__:[_b_.object],$factory:function(items){return{

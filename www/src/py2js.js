@@ -10450,7 +10450,9 @@ $B.run_script = function(src, name, run_loop){
                     ($B.script_path.endsWith("/") ? "" : "/") + name
             }
             $B.file_cache[script.__file__] = src
-            if($B.debug > 1){console.log(js)}
+            if($B.debug > 1){
+                console.log("run script\n", src, "\n", js)
+            }
     }catch(err){
         $B.handle_error(err) // in loaders.js
     }
