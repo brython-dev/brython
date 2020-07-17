@@ -574,11 +574,13 @@ type.__new__ = function(meta, name, bases, cl_dict){
         __dict__ : cl_dict,
         $infos:{
             __name__: name.replace("$$", ""),
-            __module__: cl_dict.$string_dict.__module__
+            __module__: module
         },
         $is_class: true,
         $has_setattr: cl_dict.$has_setattr
     }
+
+    class_dict.__mro__ = type.mro(class_dict).slice(1)
 
     // set class attributes for faster lookups
     var items = $B.dict_to_list(cl_dict) // defined in py_dict.js
@@ -612,7 +614,6 @@ type.__new__ = function(meta, name, bases, cl_dict){
         }
     }
 
-    class_dict.__mro__ = type.mro(class_dict).slice(1)
     return class_dict
 }
 

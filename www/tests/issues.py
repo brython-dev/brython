@@ -2616,6 +2616,17 @@ m = [*matrix('''
 ''', (int, int))]
 assert m == [[1, 2], [3, 4]]
 
+# issue 1448
+class Property:
+  def __set_name__(self, owner, name):
+    assert owner.__name__ == "Cat"
+
+class Cat:
+  name = Property()
+
+  def test(self):
+    pass
+    
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
