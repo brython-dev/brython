@@ -1,11 +1,47 @@
-var $module=(function($B){
+var $module = (function($B){
 
     var _b_ = $B.builtins
     var $s = []
     for(var $b in _b_) $s.push('var ' + $b +'=_b_["' + $b + '"]')
     eval($s.join(';'))
 
-    var JSObject = $B.JSObject
+    var MatchObject = $B.make_class("Match",
+        function(jsmatch, string, pattern){
+            self.__class__ = MatchObject
+            self.jsmatch = jsmatch
+            self.string = string
+            return self
+        }
+    )
+    MatchObject.item = function(self, rank){
+        return self.jsmatch[rank]
+    }
+    MatchObject.group = function(self){
+        var res = []
+        for(var i = 0, _len_i = arguments.length; i < _len_i; i++){
+            if(self.jsmatch[arguments[i]] === undefined){res.push(None)}
+            else{res.push(self.jsmatch[arguments[i]])}
+        }
+        if(arguments.length == 1){return res[0]}
+        return tuple.$factory(res)
+    }
+    MatchObject.groups = function(self, _default){
+        if(_default===undefined){_default=None}
+        var res = []
+        for(var i = 1, _len_i = self.length; i < _len_i; i++){
+            if(self.jsmatch[i] === undefined){res.push(_default)}
+            else{res.push(self.jsmatch[i])}
+        }
+        return tuple.$factory(res)
+    }
+    MatchObject.start = function(self){
+        return self.index
+    }
+    MatchObject.end = function(self){
+        return self.length - self.index
+    }
+
+    $B.set_func_names(MatchObject, '_jsre')
 
     var obj = {__class__: $module,
         __str__: function(){return "<module 're'>"}
@@ -77,6 +113,7 @@ var $module=(function($B){
     $SRE_PatternDict.sub = function(self,repl,string){
         return obj.sub(self.pattern,repl,string,self.flags)
     }
+    $B.set_func_names($SRE_PatternDict, "_jsre")
     // TODO: groups
     // TODO: groupindex
     function normflags(flags){
@@ -159,7 +196,7 @@ var $module=(function($B){
             mo.start = function(){return mo._match.index}
             mo.end = function(){return mo._match.length - mo._match.index}
             mo.string = string
-            _list.push(JSObject.$factory(mo))
+            _list.push(mo)
         }
         return _list
     }
@@ -171,36 +208,10 @@ var $module=(function($B){
         if(args.length>0){var flags = args[0]}
         else{var flags = getattr($ns['kw'], 'get')('flags', '')}
         flags = normflags(flags)
-        var jsp = new RegExp(pattern,flags)
+        var jsp = new RegExp(pattern, flags)
         var jsmatch = string.match(jsp)
         if(jsmatch === null){return None}
-        var mo = new Object()
-        mo.item = function(rank){
-            return jsmatch[rank]
-        }
-        mo.length = jsmatch.length
-        mo.group = function(){
-            var res = []
-            for(var i = 0, _len_i = arguments.length; i < _len_i; i++){
-                if(jsmatch[arguments[i]] === undefined){res.push(None)}
-                else{res.push(jsmatch[arguments[i]])}
-            }
-            if(arguments.length == 1){return res[0]}
-            return tuple.$factory(res)
-        }
-        mo.groups = function(_default){
-            if(_default===undefined){_default=None}
-            var res = []
-            for(var i = 1, _len_i = jsmatch.length; i < _len_i; i++){
-                if(jsmatch[i] === undefined){res.push(_default)}
-                else{res.push(jsmatch[i])}
-            }
-            return tuple.$factory(res)
-        }
-        mo.start = function(){return jsmatch.index}
-        mo.end = function(){return jsmatch.length - jsmatch.index}
-        mo.string = string
-        return JSObject.$factory(mo)
+        return MatchObject.$factory(jsmatch, string, pattern)
     }
     obj.sub = function(pattern, repl, string){
         var $ns=$B.args('re.search', 3,
@@ -249,7 +260,7 @@ var $module=(function($B){
                     if(i==0){return matched}
                     return groups[i-1]
                 }
-                return repl(JSObject.$factory(mo))
+                return repl(mo)
             }
         }
         if(count == 0){flags += 'g'}
