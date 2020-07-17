@@ -934,7 +934,11 @@ $io.write = function(self, msg){
     return _b_.None
 }
 
-$B.stderr = $io.$factory("error")
+if(console.error !== undefined){
+    $B.stderr = $io.$factory("error")
+}else{
+    $B.stderr = $io.$factory("log")
+}
 $B.stdout = $io.$factory("log")
 
 $B.stdin = {

@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-07-17 10:51:39.826325"
-__BRYTHON__.timestamp=1594975899826
+__BRYTHON__.compiled_date="2020-07-17 10:58:49.890913"
+__BRYTHON__.timestamp=1594976329890
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -6217,7 +6217,7 @@ $io.flush=function(){}
 $io.write=function(self,msg){
 console[self.out](msg)
 return _b_.None}
-$B.stderr=$io.$factory("error")
+if(console.error !==undefined){$B.stderr=$io.$factory("error")}else{$B.stderr=$io.$factory("log")}
 $B.stdout=$io.$factory("log")
 $B.stdin={__class__:$io,__original__:true,closed:false,len:1,pos:0,read:function(){return ""},readline:function(){return ""}}
 $B.make_iterator_class=function(name){
