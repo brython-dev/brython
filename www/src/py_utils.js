@@ -838,6 +838,10 @@ $B.$is = function(a, b){
     if(a instanceof Number && b instanceof Number){
         return a.valueOf() == b.valueOf()
     }
+    if((a === _b_.int && b == $B.long_int) ||
+            (a === $B.long_int && b === _b_.int)){
+        return true
+    }
     return a === b
 }
 
