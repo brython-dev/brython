@@ -510,5 +510,22 @@ try:
 except AttributeError:
     pass
 
+# super() with multiple inheritance
+trace = []
+
+class A:
+  pass
+
+class B:
+  def __init__(self):
+    trace.append("init B")
+
+class C(A, B):
+  def __init__(self):
+    superinit = super(C, self).__init__
+    superinit()
+
+C()
+assert trace == ['init B']
 
 print('passed all tests..')

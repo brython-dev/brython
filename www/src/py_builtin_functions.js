@@ -1315,9 +1315,6 @@ function hash(obj){
                 $B.class_name(obj) + "'")
     }
 
-    if(hash_method.$infos === undefined){
-        return obj.__hashvalue__ = hashfunc()
-    }
 
     // If no specific __hash__ method is supplied for the instance but
     // a __eq__ method is defined, the object is not hashable
@@ -1473,18 +1470,11 @@ function isinstance(obj, cls){
             }
         }else if(obj.contructor === Number && Number.isFinite(obj)){
             if(cls == _b_.float){return true}
-            else if($B.builtin_classes.indexOf(cls) > -1){
-                return false
-            }
         }else if(typeof obj == 'number' && Number.isFinite(obj)){
             if(Number.isFinite(obj) && cls == _b_.int){return true}
-            else if($B.builtin_classes.indexOf(cls) > -1){
-                return false
-            }
         }
         klass = $B.get_class(obj)
     }
-
     if(klass === undefined){return false}
 
     // Return true if one of the parents of obj class is cls
@@ -2472,12 +2462,27 @@ $$super.__getattribute__ = function(self, attr){
             }
         }
     }
+    var $test = false // attr == "__init_subclass__"
 
-    var f = _b_.type.__getattribute__(mro[0], attr)
+    // search attr in parent classes; same as getattr() but skips __thisclass__
+    var f
+    for(var i = 0, len = mro.length; i < len; i++){
+        if(mro[i][attr] !== undefined){
+            f = mro[i][attr]
+            break
+        }
+    }
+    if(f === undefined){
+        if($test){
+            console.log("no attr", attr, self, "mro", mro)
+        }
+        throw _b_.AttributeError.$factory(attr)
+    }
 
-    var $test = false // attr == "__new__"
-    if($test){console.log("super", attr, self, f, f + '')}
-    if(f.$type == "staticmethod"){return f}
+    if($test){console.log("super", attr, self, "mro", mro,
+        "found in mro[0]", mro[0],
+        f, f + '')}
+    if(f.$type == "staticmethod" || attr == "__new__"){return f}
     else{
         if(f.__class__ === $B.method){
             // If the function is a bound method, use the underlying function
