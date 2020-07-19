@@ -20,6 +20,16 @@ environ = {'HOME': __BRYTHON__.curdir,
     'PYTHONPATH': __BRYTHON__.brython_path
 }
 
+# fake implementation of terminal size
+class terminal_size:
+
+    def __init__(self, fileno):
+        self.columns = 120
+        self.lines = 30
+
+def get_terminal_size(*args):
+    return terminal_size(None)
+
 def _get_exports_list(module):
     try:
         return list(module.__all__)
