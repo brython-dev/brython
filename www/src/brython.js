@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-07-17 12:50:10.888842"
-__BRYTHON__.timestamp=1594983010888
+__BRYTHON__.compiled_date="2020-07-19 09:27:59.424747"
+__BRYTHON__.timestamp=1595143679424
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5454,6 +5454,10 @@ return self.__hashvalue__=$B.$py_next_hash--}
 object.__init__=function(){if(arguments.length==0){throw _b_.TypeError.$factory("descriptor '__init__' of 'object' "+
 "object needs an argument")}
 return _b_.None}
+object.__init_subclass__=function(){
+var $=$B.args("__init_subclass__",0,{},[],arguments,{},null,null)
+return _b_.None}
+object.__init_subclass__.$type="staticmethod"
 object.__le__=function(){return _b_.NotImplemented}
 object.__lt__=function(){return _b_.NotImplemented}
 object.__mro__=[]
@@ -5596,17 +5600,17 @@ break}}}}
 var meta_new=_b_.type.__getattribute__(metaclass,"__new__")
 var kls=meta_new(metaclass,class_name,bases,cl_dict)
 kls.__module__=module
-kls.$infos={__module__:module,__name__:class_name,__qualname__:class_name}
+kls.$infos={__module__:module,__name__:$B.from_alias(class_name),__qualname__:class_name}
 kls.$subclasses=[]
 for(var attr in class_obj){if(attr.charAt(0)!="$" ||attr.substr(0,2)=="$$"){if(typeof class_obj[attr]=="function"){class_obj[attr].$infos.$class=kls}}}
 if(kls.__class__===metaclass){
 var meta_init=_b_.type.__getattribute__(metaclass,"__init__")
 meta_init(kls,class_name,bases,cl_dict)}
 for(var i=0;i < bases.length;i++){bases[i].$subclasses=bases[i].$subclasses ||[]
-bases[i].$subclasses.push(kls)
-if(i==0){var init_subclass=_b_.type.__getattribute__(bases[i],"__init_subclass__",_b_.None)
-if(init_subclass.$infos.__func__ !==undefined){init_subclass.$infos.__func__(kls,{$nat:"kw",kw:extra_kwargs})}else{init_subclass(kls,{$nat:"kw",kw:extra_kwargs})}}}
-if(bases.length==0){$B.$getattr(metaclass,"__init_subclass__")(kls,{$nat:"kw",kw:extra_kwargs})}
+bases[i].$subclasses.push(kls)}
+var sup=_b_.$$super.$factory(kls,kls)
+var init_subclass=_b_.$$super.__getattribute__(sup,"__init_subclass__")
+init_subclass({$nat:"kw",kw:extra_kwargs})
 if(!is_instanciable){function nofactory(){throw _b_.TypeError.$factory("Can't instantiate abstract class "+
 "interface with abstract methods "+
 Object.keys(abstract_methods).join(", "))}
@@ -5700,12 +5704,13 @@ if(res.$infos===undefined && $B.debug > 1){console.log("warning: no attribute $i
 if($test){console.log("res is function",res)}
 if(attr=="__new__"){res.$type="staticmethod"}
 if(attr=="__class_getitem__" && res.__class__ !==$B.method){res=_b_.classmethod.$factory(res)}
+if(attr=="__init_subclass__"){res=_b_.classmethod.$factory(res)}
 if(res.__class__===$B.method){return res.__get__(null,klass)}else{if($test){console.log("return res",res)}
 return res}}else{return res}}}
 type.__hash__=function(cls){return _b_.hash(cls)}
 type.__init__=function(){}
-type.__init_subclass__=function(cls,kwargs){
-var $=$B.args("__init_subclass__",1,{cls:null},["cls"],arguments,{},"args","kwargs")
+type.__init_subclass__=function(){
+var $=$B.args("__init_subclass__",1,{},[],arguments,{},"args","kwargs")
 if($.kwargs !==undefined){if($.kwargs.__class__ !==_b_.dict ||
 Object.keys($.kwargs.$string_dict).length > 0){throw _b_.TypeError.$factory(
 "__init_subclass__() takes no keyword arguments")}}
@@ -6187,6 +6192,8 @@ $B.$test_expr=function(){
 return $B.$test_result}
 $B.$is=function(a,b){
 if(a instanceof Number && b instanceof Number){return a.valueOf()==b.valueOf()}
+if((a===_b_.int && b==$B.long_int)||
+(a===$B.long_int && b===_b_.int)){return true}
 return a===b}
 $B.$is_member=function(item,_set){
 var f,_iter,method
@@ -6957,7 +6964,6 @@ _b_.str.$factory($B.JSObj.$factory(obj))+"'")}
 var hash_method=$B.$getattr(klass,'__hash__',_b_.None)
 if(hash_method===_b_.None){throw _b_.TypeError.$factory("unhashable type: '"+
 $B.class_name(obj)+"'")}
-if(hash_method.$infos===undefined){return obj.__hashvalue__=hashfunc()}
 if(hash_method.$infos.__func__===_b_.object.__hash__){if($B.$getattr(obj,'__eq__').$infos.__func__ !==_b_.object.__eq__){throw _b_.TypeError.$factory("unhashable type: '"+
 $B.class_name(obj)+"'",'hash')}else{return obj.__hashvalue__=_b_.object.__hash__(obj)}}else{return obj.__hashvalue__=$B.$call(hash_method)(obj)}}
 function _get_builtins_doc(){if($B.builtins_doc===undefined){
@@ -7016,9 +7022,7 @@ case "boolean":
 return true}}
 var klass=obj.__class__
 if(klass==undefined){if(typeof obj=='string'){if(cls==_b_.str){return true}
-else if($B.builtin_classes.indexOf(cls)>-1){return false}}else if(obj.contructor===Number && Number.isFinite(obj)){if(cls==_b_.float){return true}
-else if($B.builtin_classes.indexOf(cls)>-1){return false}}else if(typeof obj=='number' && Number.isFinite(obj)){if(Number.isFinite(obj)&& cls==_b_.int){return true}
-else if($B.builtin_classes.indexOf(cls)>-1){return false}}
+else if($B.builtin_classes.indexOf(cls)>-1){return false}}else if(obj.contructor===Number && Number.isFinite(obj)){if(cls==_b_.float){return true}}else if(typeof obj=='number' && Number.isFinite(obj)){if(Number.isFinite(obj)&& cls==_b_.int){return true}}
 klass=$B.get_class(obj)}
 if(klass===undefined){return false}
 function check(kl,cls){if(kl===cls){return true}
@@ -7379,10 +7383,14 @@ if(sc !==undefined){if(!sc.$is_class){sc=sc.__class__}
 var sc_mro=[sc].concat(sc.__mro__)
 for(var i=0;i < sc_mro.length;i++){if(sc_mro[i]===self.__thisclass__){mro=sc_mro.slice(i+1)
 break}}}
-var f=_b_.type.__getattribute__(mro[0],attr)
 var $test=false 
-if($test){console.log("super",attr,self,f,f+'')}
-if(f.$type=="staticmethod"){return f}
+var f
+for(var i=0,len=mro.length;i < len;i++){if(mro[i][attr]!==undefined){f=mro[i][attr]
+break}}
+if(f===undefined){if($test){console.log("no attr",attr,self,"mro",mro)}
+throw _b_.AttributeError.$factory(attr)}
+if($test){console.log("super",attr,self,"mro",mro,"found in mro[0]",mro[0],f,f+'')}
+if(f.$type=="staticmethod" ||attr=="__new__"){return f}
 else{if(f.__class__===$B.method){
 f=f.$infos.__func__}
 var callable=$B.$call(f)

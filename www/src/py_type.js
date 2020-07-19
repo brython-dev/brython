@@ -220,7 +220,7 @@ $B.$class_constructor = function(class_name, class_obj, bases,
     kls.__module__ = module
     kls.$infos = {
         __module__: module,
-        __name__: class_name,
+        __name__: $B.from_alias(class_name),
         __qualname__: class_name
     }
     kls.$subclasses = []
@@ -245,21 +245,11 @@ $B.$class_constructor = function(class_name, class_obj, bases,
     for(var i = 0; i < bases.length; i++){
         bases[i].$subclasses  = bases[i].$subclasses || []
         bases[i].$subclasses.push(kls)
-        // call __init_subclass__ with the extra keyword arguments
-        if(i == 0){
-            var init_subclass = _b_.type.__getattribute__(bases[i],
-                "__init_subclass__", _b_.None)
-            if(init_subclass.$infos.__func__ !== undefined){
-                init_subclass.$infos.__func__(kls, {$nat: "kw", kw: extra_kwargs})
-            }else{
-                init_subclass(kls, {$nat: "kw", kw: extra_kwargs})
-            }
-        }
     }
-    if(bases.length == 0){
-        $B.$getattr(metaclass, "__init_subclass__")(kls,
-            {$nat: "kw", kw:extra_kwargs})
-    }
+    var sup = _b_.$$super.$factory(kls, kls)
+    var init_subclass = _b_.$$super.__getattribute__(sup, "__init_subclass__")
+    init_subclass({$nat: "kw", kw: extra_kwargs})
+
     if(!is_instanciable){
         function nofactory(){
             throw _b_.TypeError.$factory("Can't instantiate abstract class " +
@@ -490,6 +480,9 @@ type.__getattribute__ = function(klass, attr){
             if(attr == "__class_getitem__" && res.__class__ !== $B.method){
                 res = _b_.classmethod.$factory(res)
             }
+            if(attr == "__init_subclass__"){
+                res = _b_.classmethod.$factory(res)
+            }
             if(res.__class__ === $B.method){
                 return res.__get__(null, klass)
             }else{
@@ -511,9 +504,9 @@ type.__init__ = function(){
     // Returns nothing
 }
 
-type.__init_subclass__ = function(cls, kwargs){
+type.__init_subclass__ = function(){
     // Default implementation only checks that no keyword arguments were passed
-    var $ = $B.args("__init_subclass__", 1, {cls: null}, ["cls"],
+    var $ = $B.args("__init_subclass__", 1, {}, [],
         arguments, {}, "args", "kwargs")
     if($.kwargs !== undefined){
         if($.kwargs.__class__ !== _b_.dict ||
