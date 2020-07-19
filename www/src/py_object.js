@@ -350,6 +350,13 @@ object.__init__ = function(){
     return _b_.None
 }
 
+object.__init_subclass__ = function(){
+    // only checks that no argument is passed
+    var $ = $B.args("__init_subclass__", 0, {}, [], arguments, {}, null, null)
+    return _b_.None
+}
+object.__init_subclass__.$type = "staticmethod"
+
 object.__le__ = function(){return _b_.NotImplemented}
 
 object.__lt__ = function(){return _b_.NotImplemented}
