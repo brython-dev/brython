@@ -1335,7 +1335,7 @@ function hash(obj){
             return obj.__hashvalue__ = _b_.object.__hash__(obj)
         }
     }else{
-        return obj.__hashvalue__ = $B.$call(hash_method)(obj)
+        return $B.$call(hash_method)(obj)
     }
 }
 

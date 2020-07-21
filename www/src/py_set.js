@@ -273,12 +273,14 @@ set.__sub__ = function(self, other, accept_iter){
     try{$test(accept_iter, other, "-")}
     catch(err){return _b_.NotImplemented}
     var res = create_type(self),
-        cfunc = _b_.getattr(other, "__contains__")
+        cfunc = _b_.getattr(other, "__contains__"),
+        items = []
     for(var i = 0, len = self.$items.length; i < len; i++){
         if(! cfunc(self.$items[i])){
-            res.$items.push(self.$items[i])
+            items.push(self.$items[i])
         }
     }
+    set.__init__.call(null, res, items)
     return res
 }
 
@@ -343,13 +345,13 @@ function $add(self, item){
     }else{
         // Compute hash of item : raises an exception if item is not hashable,
         // otherwise set its attribute __hashvalue__
-        _b_.hash(item)
-        var items = self.$hashes[item.__hashvalue__]
+        var hashvalue = _b_.hash(item)
+        var items = self.$hashes[hashvalue]
         if(items === undefined){
-            self.$hashes[item.__hashvalue__] = [item]
+            self.$hashes[hashvalue] = [item]
             self.$items.push(item)
         }else{
-            var items = self.$hashes[item.__hashvalue__],
+            var items = self.$hashes[hashvalue],
                 cfunc = function(other){
                     return $B.rich_comp("__eq__", item, other)
                 }
@@ -360,7 +362,7 @@ function $add(self, item){
                     return $N
                 }
             }
-            self.$hashes[item.__hashvalue__].push(item)
+            self.$hashes[hashvalue].push(item)
             self.$items.push(item)
         }
     }

@@ -163,4 +163,26 @@ b = {'a': 1, 'b': 2}
 b['a'] = 3
 assert str(b) == "{'a': 3, 'b': 2}"
 
+# issue 1450
+d = {}
+
+class Exc(Exception): pass
+
+class BadHash(object):
+    fail = False
+    def __hash__(self):
+        if self.fail:
+            raise Exc()
+        else:
+            return 42
+
+x = BadHash()
+d[x] = 42
+x.fail = True
+try:
+    d.__getitem__(x)
+    raise Exception("should have raise Exc")
+except Exc:
+    pass
+
 print("passed all tests..")

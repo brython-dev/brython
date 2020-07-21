@@ -45,6 +45,12 @@ $B.$class_constructor = function(class_name, class_obj, bases,
 
     var mro0 = class_obj
 
+    // A class that overrides __eq__() and does not define __hash__()
+    // will have its __hash__() implicitly set to None
+    if(class_obj.__eq__ !== undefined && class_obj.__hash__ === undefined){
+        class_obj.__hash__ = _b_.None
+    }
+
     // Replace non-class bases that have a __mro_entries__ (PEP 560)
     var orig_bases = bases.slice(),
         use_mro_entries = false
@@ -162,6 +168,7 @@ $B.$class_constructor = function(class_name, class_obj, bases,
         }
     }
     class_dict.__mro__ = _b_.type.mro(class_dict).slice(1)
+
 
     // Check if at least one method is abstract (cf PEP 3119)
     // If this is the case, the class cannot be instanciated
@@ -304,7 +311,7 @@ type.__format__ = function(klass, fmt_spec){
     return _b_.str.$factory(klass)
 }
 
-type.__getattribute__ = function(klass, attr){
+ type.__getattribute__ = function(klass, attr){
     switch(attr) {
         case "__annotations__":
             var mro = [klass].concat(klass.__mro__),
@@ -356,7 +363,7 @@ type.__getattribute__ = function(klass, attr){
                 function(key){delete klass[key]})
     }
     var res = klass[attr]
-    var $test = false // attr == "__init_subclass__" // && klass.$infos.__name__ == "generator"
+    var $test = false // attr == "__hash__" // && klass.$infos.__name__ == "generator"
     if($test){
         console.log("attr", attr, "of", klass, res, res + "")
     }

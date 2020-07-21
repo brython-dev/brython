@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-07-19 09:27:59.424747"
-__BRYTHON__.timestamp=1595143679424
+__BRYTHON__.compiled_date="2020-07-21 08:40:34.348476"
+__BRYTHON__.timestamp=1595313634348
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5548,6 +5548,7 @@ metaclass=val}else{
 extra_kwargs[key]=val}
 prepare_kwargs[key]=val}}
 var mro0=class_obj
+if(class_obj.__eq__ !==undefined && class_obj.__hash__===undefined){class_obj.__hash__=_b_.None}
 var orig_bases=bases.slice(),use_mro_entries=false
 for(var i=0;i < bases.length;i++){if(bases[i]===undefined ||
 (bases[i].__mro__===undefined)){var mro_entries=$B.$getattr(bases[i],"__mro_entries__",_b_.None)
@@ -6965,7 +6966,7 @@ var hash_method=$B.$getattr(klass,'__hash__',_b_.None)
 if(hash_method===_b_.None){throw _b_.TypeError.$factory("unhashable type: '"+
 $B.class_name(obj)+"'")}
 if(hash_method.$infos.__func__===_b_.object.__hash__){if($B.$getattr(obj,'__eq__').$infos.__func__ !==_b_.object.__eq__){throw _b_.TypeError.$factory("unhashable type: '"+
-$B.class_name(obj)+"'",'hash')}else{return obj.__hashvalue__=_b_.object.__hash__(obj)}}else{return obj.__hashvalue__=$B.$call(hash_method)(obj)}}
+$B.class_name(obj)+"'",'hash')}else{return obj.__hashvalue__=_b_.object.__hash__(obj)}}else{return $B.$call(hash_method)(obj)}}
 function _get_builtins_doc(){if($B.builtins_doc===undefined){
 var url=$B.brython_path
 if(url.charAt(url.length-1)=='/'){url=url.substr(0,url.length-1)}
@@ -8756,8 +8757,9 @@ return head+res+tail}
 set.__sub__=function(self,other,accept_iter){
 try{$test(accept_iter,other,"-")}
 catch(err){return _b_.NotImplemented}
-var res=create_type(self),cfunc=_b_.getattr(other,"__contains__")
-for(var i=0,len=self.$items.length;i < len;i++){if(! cfunc(self.$items[i])){res.$items.push(self.$items[i])}}
+var res=create_type(self),cfunc=_b_.getattr(other,"__contains__"),items=[]
+for(var i=0,len=self.$items.length;i < len;i++){if(! cfunc(self.$items[i])){items.push(self.$items[i])}}
+set.__init__.call(null,res,items)
 return res}
 set.__xor__=function(self,other,accept_iter){
 try{$test(accept_iter,other,"^")}
@@ -8780,13 +8782,13 @@ self.$numbers.indexOf(item)>-1){}else{self.$items.push(item)
 var value=item.valueOf()
 if(typeof value=="number"){self.$numbers.push(value)}}}else{
 if(item !==self.$items[ix]){self.$items.push(item)}}}else{
-_b_.hash(item)
-var items=self.$hashes[item.__hashvalue__]
-if(items===undefined){self.$hashes[item.__hashvalue__]=[item]
-self.$items.push(item)}else{var items=self.$hashes[item.__hashvalue__],cfunc=function(other){return $B.rich_comp("__eq__",item,other)}
+var hashvalue=_b_.hash(item)
+var items=self.$hashes[hashvalue]
+if(items===undefined){self.$hashes[hashvalue]=[item]
+self.$items.push(item)}else{var items=self.$hashes[hashvalue],cfunc=function(other){return $B.rich_comp("__eq__",item,other)}
 for(var i=0,len=items.length;i < len;i++){if(cfunc(items[i])){
 return $N}}
-self.$hashes[item.__hashvalue__].push(item)
+self.$hashes[hashvalue].push(item)
 self.$items.push(item)}}
 return $N}
 set.add=function(){var $=$B.args("add",2,{self:null,item:null},["self","item"],arguments,{},null,null),self=$.self,item=$.item
@@ -12635,12 +12637,35 @@ $B.set_func_names(surrogate,"builtins")})(__BRYTHON__)
 var bltns=$B.InjectBuiltins()
 eval(bltns)
 var str_hash=_b_.str.__hash__,$N=_b_.None
-var set_ops=["eq","add","sub","and","or","xor","le","lt","ge","gt"]
-$B.make_view=function(name,set_like){var klass=$B.make_class(name,function(items){return{
-__class__:klass,__dict__:$B.empty_dict(),counter:-1,items:items,len:items.length}})
-if(set_like){for(var i=0,len=set_ops.length;i < len;i++){var op="__"+set_ops[i]+"__"
+var set_ops=["eq","le","lt","ge","gt","sub","rsub","and","or","xor"]
+function is_sublist(t1,t2){
+for(var i=0,ilen=t1.length;i < ilen;i++){var x=t1[i],flag=false
+for(var j=0,jlen=t2.length;j < jlen;j++){if($B.rich_comp("__eq__",x,t2[j])){t2.splice(j,1)
+flag=true
+break}}
+if(! flag){return false}}
+return true}
+dict_view_op={__eq__:function(t1,t2){return t1.length==t2.length && is_sublist(t1,t2)},__ne__:function(t1,t2){return ! dict_view_op.__eq__(t1,t2)},__lt__:function(t1,t2){return t1.length < t2.length && is_sublist(t1,t2)},__gt__:function(t1,t2){return dict_view_op.__lt__(t2,t1)},__le__:function(t1,t2){return t1.length <=t2.length && is_sublist(t1,t2)},__ge__:function(t1,t2){return dict_view_op.__le__(t2,t1)},__and__:function(t1,t2){var items=[]
+for(var i=0,ilen=t1.length;i < ilen;i++){var x=t1[i]
+flag=false
+for(var j=0,jlen=t2.length;j < jlen;j++){if($B.rich_comp("__eq__",x,t2[j])){t2.splice(j,1)
+items.push(x)
+break}}}
+return items},__or__:function(t1,t2){var items=t1
+for(var j=0,jlen=t2.length;j < jlen;j++){var y=t2[j],flag=false
+for(var i=0,ilen=t1.length;i < ilen;i++){if($B.rich_comp("__eq__",y,t1[i])){t2.splice(j,1)
+flag=true
+break}}
+if(! flag){items.push(y)}}
+return items}}
+$B.make_view=function(name){var klass=$B.make_class(name,function(items,set_like){return{
+__class__:klass,__dict__:$B.empty_dict(),counter:-1,items:items,len:items.length,set_like:set_like}})
+for(var i=0,len=set_ops.length;i < len;i++){var op="__"+set_ops[i]+"__"
 klass[op]=(function(op){return function(self,other){
-return _b_.set[op](_b_.set.$factory(self),_b_.set.$factory(other))}})(op)}}
+if(self.set_like){return _b_.set[op](_b_.set.$factory(self),_b_.set.$factory(other))}else{
+if(other.__class__ !==klass){return false}
+var other_items=_b_.list.$factory(other)
+return dict_view_op[op](self.items,other_items)}}})(op)}
 klass.__iter__=function(self){var it=klass.$iterator.$factory(self.items)
 it.len_func=self.len_func
 return it}
@@ -12918,14 +12943,17 @@ var dict_items=$B.make_view("dict_items",true)
 dict_items.$iterator=$B.make_iterator_class("dict_itemiterator")
 dict.items=function(self){if(arguments.length > 1){var _len=arguments.length-1,_msg="items() takes no arguments ("+_len+" given)"
 throw _b_.TypeError.$factory(_msg)}
-var it=dict_items.$factory(to_list(self))
+var items=to_list(self),set_like=true
+for(var i=0,len=items.length;i < len;i++){try{_b_.hash(items[i][1])}catch(err){set_like=false
+break}}
+var it=dict_items.$factory(to_list(self),set_like)
 it.len_func=function(){return dict.__len__(self)}
 return it}
-var dict_keys=$B.make_view("dict_keys",true)
+var dict_keys=$B.make_view("dict_keys")
 dict_keys.$iterator=$B.make_iterator_class("dict_keyiterator")
 dict.$$keys=function(self){if(arguments.length > 1){var _len=arguments.length-1,_msg="keys() takes no arguments ("+_len+" given)"
 throw _b_.TypeError.$factory(_msg)}
-var it=dict_keys.$factory(to_list(self,0))
+var it=dict_keys.$factory(to_list(self,0),true)
 it.len_func=function(){return dict.__len__(self)}
 return it}
 dict.pop=function(){var missing={},$=$B.args("pop",3,{self:null,key:null,_default:null},["self","key","_default"],arguments,{_default:missing},null,null),self=$.self,key=$.key,_default=$._default
@@ -12967,7 +12995,8 @@ var dict_values=$B.make_view("dict_values")
 dict_values.$iterator=$B.make_iterator_class("dict_valueiterator")
 dict.values=function(self){if(arguments.length > 1){var _len=arguments.length-1,_msg="values() takes no arguments ("+_len+" given)"
 throw _b_.TypeError.$factory(_msg)}
-var it=dict_values.$factory(to_list(self,1))
+var values=to_list(self,1)
+var it=dict_values.$factory(to_list(self,1),false)
 it.len_func=function(){return dict.__len__(self)}
 return it}
 dict.$factory=function(){var res=dict.__new__(dict)
