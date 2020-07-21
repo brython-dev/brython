@@ -1,4 +1,4 @@
-from _zlib_utils import lz_generator
+from _zlib_utils import lz_generator, crc32
 
 class BitIO:
 
@@ -723,7 +723,7 @@ def decompress(buf):
         BFINAL = reader.read(1)
 
         BTYPE = reader.read(2)
-        
+
         if BTYPE == 0b01:
             # Decompression with fixed Huffman codes for literals/lengths
             # and distances
@@ -746,7 +746,7 @@ def decompress(buf):
                         nb = (dist_code // 2) - 1
                         extra = reader.read(nb)
                         half, delta = divmod(dist_code, 2)
-                        distance = (1 + (2 ** half) + 
+                        distance = (1 + (2 ** half) +
                             delta * (2 ** (half - 1)) + extra)
                     for _ in range(length):
                         result.append(result[-distance])
