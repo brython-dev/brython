@@ -35,10 +35,11 @@ $B.generator = $B.make_class("generator",
             var gen = func.apply(null, arguments)
             gen.$name = func.name
             gen.$func = func
+            gen.$has_run = false
             gen.__class__ = $B.generator
             if(func.$has_yield_in_cm){
                 var locals = $B.last($B.frames_stack)[1]
-                locals.$close_generators = $B.close_generators || []
+                locals.$close_generators = locals.$close_generators || []
                 locals.$close_generators.push(gen)
             }
             return gen
@@ -68,6 +69,10 @@ $B.generator.close = function(self){
 }
 
 $B.generator.send = function(self, value){
+    // Set attribute $has_run. It is used in py_utils.js/$B.leave_frame()
+    // to decide if a generator with "yield" inside context managers must
+    // be applied method .return()
+    self.$has_run = true
     if(self.$finished){
         throw _b_.StopIteration.$factory(value)
     }

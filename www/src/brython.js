@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-07-21 08:54:17.271175"
-__BRYTHON__.timestamp=1595314457271
+__BRYTHON__.compiled_date="2020-07-22 10:49:10.403747"
+__BRYTHON__.timestamp=1595407750403
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5099,7 +5099,7 @@ $B.$py_module_path[name]=$B.script_path
 try{var root=$B.py2js(src,name,name),js=root.to_js(),script={__doc__:root.__doc__,js:js,__name__:name,$src:src,__file__:$B.script_path+
 ($B.script_path.endsWith("/")? "" :"/")+name}
 $B.file_cache[script.__file__]=src
-if($B.debug > 1){console.log("run script\n",src,"\n",js)}}catch(err){$B.handle_error(err)}
+if($B.debug > 1){console.log(js)}}catch(err){$B.handle_error(err)}
 if($B.hasOwnProperty("VFS")&& $B.has_indexedDB){
 var imports1=Object.keys(root.imports).slice(),imports=imports1.filter(function(item){return $B.VFS.hasOwnProperty(item)})
 Object.keys(imports).forEach(function(name){if($B.VFS.hasOwnProperty(name)){var submodule=$B.VFS[name],type=submodule[0]
@@ -6343,7 +6343,8 @@ if($B.last($B.frames_stack)[1].$f_trace !==_b_.None){$B.trace_return(arg.value)}
 var frame=$B.frames_stack.pop()
 frame[1].$current_exception=undefined
 if(frame[1].$close_generators){
-for(var i=0,len=frame[1].$close_generators.length;i < len;i++){frame[1].$close_generators[i].return()}}
+for(var i=0,len=frame[1].$close_generators.length;i < len;i++){var gen=frame[1].$close_generators[i]
+if(gen.$has_run){gen.return()}}}
 return _b_.None}
 $B.leave_frame_exec=function(arg){
 if($B.profile > 0){$B.$profile.return()}
@@ -13685,9 +13686,10 @@ $B.generator_return=function(value){return{__class__:$GeneratorReturn,value:valu
 $B.generator=$B.make_class("generator",function(func){var res=function(){var gen=func.apply(null,arguments)
 gen.$name=func.name
 gen.$func=func
+gen.$has_run=false
 gen.__class__=$B.generator
 if(func.$has_yield_in_cm){var locals=$B.last($B.frames_stack)[1]
-locals.$close_generators=$B.close_generators ||[]
+locals.$close_generators=locals.$close_generators ||[]
 locals.$close_generators.push(gen)}
 return gen}
 res.$infos=func.$infos
@@ -13697,7 +13699,9 @@ return res}
 $B.generator.__iter__=function(self){return self}
 $B.generator.__next__=function(self){return $B.generator.send(self,_b_.None)}
 $B.generator.close=function(self){try{$B.generator.$$throw(self,_b_.GeneratorExit.$factory())}catch(err){if(! $B.is_exc(err,[_b_.GeneratorExit,_b_.StopIteration])){throw _b_.RuntimeError.$factory("generator ignored GeneratorExit")}}}
-$B.generator.send=function(self,value){if(self.$finished){throw _b_.StopIteration.$factory(value)}
+$B.generator.send=function(self,value){
+self.$has_run=true
+if(self.$finished){throw _b_.StopIteration.$factory(value)}
 if(self.gi_running===true){throw _b_.ValueError.$factory("generator already executing")}
 self.gi_running=true
 try{var res=self.next(value)}catch(err){self.$finished=true

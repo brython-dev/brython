@@ -1263,9 +1263,14 @@ $B.leave_frame = function(arg){
     var frame = $B.frames_stack.pop()
     frame[1].$current_exception = undefined
     if(frame[1].$close_generators){
-        // The attribute $close_generators is set in $B.$call
+        // The attribute $close_generators is set in
+        // py_generator.js/$B.generator
         for(var i = 0, len = frame[1].$close_generators.length; i < len; i++){
-            frame[1].$close_generators[i].return()
+            var gen = frame[1].$close_generators[i]
+            // Attribute $has_run is set if generator has already been run
+            if(gen.$has_run){
+                gen.return()
+            }
         }
     }
     return _b_.None
