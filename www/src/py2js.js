@@ -10451,7 +10451,7 @@ $B.run_script = function(src, name, run_loop){
             }
             $B.file_cache[script.__file__] = src
             if($B.debug > 1){
-                console.log("run script\n", src, "\n", js)
+                console.log(js)
             }
     }catch(err){
         $B.handle_error(err) // in loaders.js
