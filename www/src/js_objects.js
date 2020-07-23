@@ -633,7 +633,7 @@ $B.JSObj = $B.make_class("JSObj",
 )
 
 $B.JSObj.__getattribute__ = function(self, attr){
-    var test = attr == "onkeydown"
+    var test = false // attr == "FileReader"
     if(test){
         console.log("__ga__", self, attr)
     }

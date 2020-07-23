@@ -7,10 +7,11 @@ var $module = (function($B){
 
     var MatchObject = $B.make_class("Match",
         function(jsmatch, string, pattern){
-            self.__class__ = MatchObject
-            self.jsmatch = jsmatch
-            self.string = string
-            return self
+            return {
+                __class__: MatchObject,
+                jsmatch: jsmatch,
+                string: string
+            }
         }
     )
     MatchObject.item = function(self, rank){

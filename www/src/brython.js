@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-07-23 09:15:56.439617"
-__BRYTHON__.timestamp=1595488556439
+__BRYTHON__.compiled_date="2020-07-23 11:47:21.381805"
+__BRYTHON__.timestamp=1595497641381
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5940,7 +5940,8 @@ return _b_.str
 case "boolean":
 return _b_.bool
 case "function":
-if(obj.$is_js_func){return $B.JSObj}
+if(obj.$is_js_func){
+return $B.JSObj}
 obj.__class__=$B.Function
 return $B.Function
 case "object":
@@ -9182,7 +9183,7 @@ return args}
 $B.JSObj=$B.make_class("JSObj",function(jsobj){if(Array.isArray(jsobj)){}else if(typeof jsobj=="function"){jsobj.$is_js_func=true}
 return jsobj}
 )
-$B.JSObj.__getattribute__=function(self,attr){var test=attr=="onkeydown"
+$B.JSObj.__getattribute__=function(self,attr){var test=false 
 if(test){console.log("__ga__",self,attr)}
 if(attr=="$$new" && typeof self=="function"){
 if(self.$js_func){return function(){var args=pyargs2jsargs(arguments)
