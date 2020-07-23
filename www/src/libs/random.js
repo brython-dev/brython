@@ -277,7 +277,9 @@ function RandomStream(seed) {
     random.seed = function(seed){
         if(! seed){seed = Date.now()}
         if(typeof seed != "number"){seed = parseInt(seed, 10)}
-        if((seed !== 0 && ! seed) || isNaN(seed)){throw "Bad seed"}
+        if((seed !== 0 && ! seed) || isNaN(seed)){
+            throw _b_.ValueError.$factory("Bad seed: " + _b_.str.$factory(seed))
+        }
         init_genrand(seed)
     }
 

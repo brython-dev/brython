@@ -226,10 +226,7 @@ var add_identnode = $B.parser.add_identnode = function(parent, insert_at, name, 
  * $YieldFromMarkerNode.
  */
 var $add_yield_from_code1 = $B.parser.$add_yield_from_code1 = function(yield_ctx){
-    var pnode = $get_node(yield_ctx),
-        scope = $get_scope(yield_ctx),
-        generator = scope.context.tree[0]
-
+    var pnode = $get_node(yield_ctx)
     /*
                   RESULT = yield from EXPR
 
@@ -4564,7 +4561,11 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
     this.tree = []
     context.tree[context.tree.length] = this
     this.loop_num = $loop_num
-    this.module = $get_scope(this).module
+    this.scope = $get_scope(this)
+    if(this.scope.is_comp){
+        //console.log("for in comp", this)
+    }
+    this.module = this.scope.module
     $loop_num++
 
     this.toString = function(){return '(for) ' + this.tree}
@@ -9121,7 +9122,6 @@ var $YieldCtx = $B.parser.$YieldCtx = function(context, is_await){
             }
             parent = parent.parent
         }
-        return 3
     }
 
     this.to_js = function(){

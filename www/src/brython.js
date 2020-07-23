@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-07-23 11:47:21.381805"
-__BRYTHON__.timestamp=1595497641381
+__BRYTHON__.compiled_date="2020-07-23 19:14:01.189854"
+__BRYTHON__.timestamp=1595524441189
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -164,7 +164,7 @@ else
 parent.insert(insert_at,new_node)
 assign.tree[1]=val
 return new_node}
-var $add_yield_from_code1=$B.parser.$add_yield_from_code1=function(yield_ctx){var pnode=$get_node(yield_ctx),scope=$get_scope(yield_ctx),generator=scope.C.tree[0]
+var $add_yield_from_code1=$B.parser.$add_yield_from_code1=function(yield_ctx){var pnode=$get_node(yield_ctx)
 var INDENT=" ".repeat(pnode.indent),n=yield_ctx.from_num
 var replace_with=`$B.$import("sys",[],{})
 _i${n}=_b_.iter(_i${n})
@@ -2341,7 +2341,9 @@ this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this
 this.loop_num=$loop_num
-this.module=$get_scope(this).module
+this.scope=$get_scope(this)
+if(this.scope.is_comp){}
+this.module=this.scope.module
 $loop_num++
 this.toString=function(){return '(for) '+this.tree}
 this.transition=function(token,value){var C=this
@@ -4505,8 +4507,7 @@ this.transform=function(node,rank){
 var parent=node.parent
 while(parent){if(parent.ctx_manager_num !==undefined){node.parent.insert(rank+1,$NodeJS("$top_frame[1].$has_yield_in_cm = true"))
 break}
-parent=parent.parent}
-return 3}
+parent=parent.parent}}
 this.to_js=function(){if(this.from){return `_r${this.from_num}`}else{return "yield "+$to_js(this.tree)}}}
 var $add_line_num=$B.parser.$add_line_num=function(node,rank,line_info){if(node.type=='module'){var i=0
 while(i < node.children.length){i+=$add_line_num(node.children[i],i,line_info)}}else if(node.type !=='marker'){var elt=node.C.tree[0],offset=1,flag=true,pnode=node,_line_info
