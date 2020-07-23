@@ -505,8 +505,8 @@ function $$eval(src, _globals, _locals){
 
     var current_frame = $B.frames_stack[$B.frames_stack.length - 1]
     if(current_frame !== undefined){
-        var current_locals_id = current_frame[0].replace(/\./, '_'),
-            current_globals_id = current_frame[2].replace(/\./, '_')
+        var current_locals_id = current_frame[0].replace(/\./g, '_'),
+            current_globals_id = current_frame[2].replace(/\./g, '_')
     }
     var stack_len = $B.frames_stack.length
 
