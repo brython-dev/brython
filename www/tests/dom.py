@@ -101,3 +101,6 @@ y = B("Didier")
 assert y.myattr == "Didier"
 del y.myattr
 assert not hasattr(y, "myattr")
+
+# chained insertions
+html.P() <= html.B() <= html.I("coucou")

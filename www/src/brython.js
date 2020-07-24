@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-07-23 19:14:01.189854"
-__BRYTHON__.timestamp=1595524441189
+__BRYTHON__.compiled_date="2020-07-24 09:36:40.232304"
+__BRYTHON__.timestamp=1595576200232
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -2336,6 +2336,8 @@ new $OpCtx(C.parent,'not_in'),false)}
 $_SyntaxError(C,'token '+token+' after '+C)}
 this.toString=function(){return '(expr_not)'}}
 var $ForExpr=$B.parser.$ForExpr=function(C){
+if(C.node.parent.is_comp){
+C.node.parent.first_for=this}
 this.type='for'
 this.parent=C
 this.tree=[]
@@ -3312,7 +3314,8 @@ var lc=$B.$list_comp(items),
 py=lc[0],ix=lc[1],listcomp_name='lc'+$B.lambda_magic+ix,save_pos=$pos,line_info=line_num+','+module_name
 var root=$B.py2js(
 {src:py,is_comp:true,line_info:line_info},module_name,listcomp_name,scope,1)
-var outer_most=root.outermost_expr.to_js()
+var outermost_expr=root.outermost_expr
+var outer_most=outermost_expr.to_js()
 $pos=save_pos
 var js=root.to_js()
 root=null
@@ -13379,7 +13382,8 @@ self.appendChild($txt)}else if(_b_.isinstance(other,DOMNode)){
 self.appendChild(other)}else{try{
 var items=_b_.list.$factory(other)
 items.forEach(function(item){DOMNode.__le__(self,item)})}catch(err){throw _b_.TypeError.$factory("can't add '"+
-$B.class_name(other)+"' object to DOMNode instance")}}}
+$B.class_name(other)+"' object to DOMNode instance")}}
+return true }
 DOMNode.__len__=function(self){return self.length}
 DOMNode.__mul__=function(self,other){if(_b_.isinstance(other,_b_.int)&& other.valueOf()> 0){var res=TagSum.$factory()
 var pos=res.children.length

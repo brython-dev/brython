@@ -4556,6 +4556,10 @@ var $ExprNot = $B.parser.$ExprNot = function(context){
 
 var $ForExpr = $B.parser.$ForExpr = function(context){
     // Class for keyword "for" outside of comprehensions
+    if(context.node.parent.is_comp){
+        // first "for" inside a comprehension
+        context.node.parent.first_for = this
+    }
     this.type = 'for'
     this.parent = context
     this.tree = []
@@ -6761,8 +6765,9 @@ var $ListOrTupleCtx = $B.parser.$ListOrTupleCtx = function(context,real){
                         var root = $B.py2js(
                             {src:py, is_comp:true, line_info: line_info},
                             module_name, listcomp_name, scope, 1)
-
-                        var outer_most = root.outermost_expr.to_js()
+                        
+                        var outermost_expr = root.outermost_expr
+                        var outer_most = outermost_expr.to_js()
 
                         $pos = save_pos
 
