@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-07-24 09:36:40.232304"
-__BRYTHON__.timestamp=1595576200232
+__BRYTHON__.compiled_date="2020-07-25 11:20:17.625866"
+__BRYTHON__.timestamp=1595668817625
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -269,8 +269,34 @@ var assign=new $AssignCtx(new_expr)
 var right=new $ExprCtx(assign)
 right.tree=this.has_yield.tree
 parent.insert(rank,new_node)
-var yfc=$add_yield_from_code1(this.has_yield)
-parent.insert(rank+1,$NodeJS(yfc))
+var pnode=$get_node(this.has_yield)
+var n=this.has_yield.from_num
+var replace_with=`$B.$import("sys",[],{})
+_i${n}=_b_.iter(_i${n})
+var $failed${n}=false
+try{var _y${n}=_b_.next(_i${n})}catch(_e){$B.set_exc(_e)
+$failed${n}=true
+$B.pmframe=$B.last($B.frames_stack)
+_e=$B.exception(_e)
+if(_e.__class__===_b_.StopIteration){var _r${n}=$B.$getattr(_e,"value")}else{throw _e}}
+if(! $failed${n}){while(true){var $failed1${n}=false
+try{$B.leave_frame()
+var _s${n}=yield _y${n}
+$B.frames_stack.push($top_frame)}catch(_e){if(_e.__class__===_b_.GeneratorExit){var $failed2${n}=false
+try{var _m${n}=$B.$geatttr(_i${n},"close")}catch(_e1){$failed2${n}=true
+if(_e1.__class__ !==_b_.AttributeError){throw _e1}}
+if(! $failed2${n}){$B.$call(_m${n})()}
+throw _e}else if($B.is_exc(_e,[_b_.BaseException])){var _x=$B.$call($B.$getattr($locals.sys,"exc_info"))()
+var $failed3${n}=false
+try{var _m${n}=$B.$getattr(_i${n},"throw")}catch(err){$failed3${n}=true
+if($B.is_exc(err,[_b_.AttributeError])){throw err}}
+if(! $failed3${n}){try{_y${n}=$B.$call(_m${n}).apply(null,_b_.list.$factory(_x${n}))}catch(err){if($B.$is_exc(err,[_b_.StopIteration])){_r${n}=$B.$getattr(err,"value")
+break}
+throw err}}}}
+if(! $failed1${n}){try{if(_s${n}===_b_.None){_y${n}=_b_.next(_i${n})}else{_y${n}=$B.$call($B.$getattr(_i${n},"send"))(_s${n})}}catch(err){if($B.is_exc(err,[_b_.StopIteration])){_r${n}=$B.$getattr(err,"value")
+break}
+throw err}}}}`
+parent.insert(rank+1,$NodeJS(replace_with))
 return 3}
 parent.children.splice(rank,1)
 if(this.has_yield.tree[0].type==='abstract_expr'){new_node=$NodeJS("var result = _b_.None")}else{var new_node=new $Node()
@@ -3315,6 +3341,8 @@ py=lc[0],ix=lc[1],listcomp_name='lc'+$B.lambda_magic+ix,save_pos=$pos,line_info=
 var root=$B.py2js(
 {src:py,is_comp:true,line_info:line_info},module_name,listcomp_name,scope,1)
 var outermost_expr=root.outermost_expr
+if($get_node(this).has_yield){outermost_expr=this.tree[0].tree[0].tree[1]}
+if(outermost_expr===undefined){outermost_expr=root.first_for.tree[1]}
 var outer_most=outermost_expr.to_js()
 $pos=save_pos
 var js=root.to_js()
@@ -4473,6 +4501,15 @@ this.tree=[]
 C.tree[C.tree.length]=this
 var scope=this.scope=$get_scope(this,true),node=$get_node(this)
 node.has_yield=this
+var in_comp=$parent_match(this,{type:"comprehension"})
+if($get_scope(this).id.startsWith("lc"+$B.lambda_magic)){delete node.has_yield}
+if(in_comp){var outermost_expr=in_comp.tree[0].tree[1]
+var parent=C
+while(parent){if(parent===outermost_expr){break}
+parent=parent.parent}
+if(! parent){$_SyntaxError(C,["'yield' inside list comprehension"])}
+in_comp.outermost_expr_yield=this
+console.log("set has_yield for node",node)}
 var in_lambda=false,parent=C
 while(parent){if(parent.type=="lambda"){in_lambda=true
 break}

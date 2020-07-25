@@ -1174,4 +1174,10 @@ assert out == [
     '4:', 'end', 'start',
     '5:', 'end', 'start']
 
+# issue 1456
+def g():
+    [x for x in [(yield from (1, 2, 3))]]
+
+assert list(g()) == [1, 2, 3]
+
 print('passed all tests...')
