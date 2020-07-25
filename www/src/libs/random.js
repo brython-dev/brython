@@ -64,7 +64,6 @@ var VERSION = 3
 */
 
 function RandomStream(seed) {
-
     /*jshint bitwise:false */
     /* Period parameters */
     //c//#define N 624
@@ -275,7 +274,7 @@ function RandomStream(seed) {
     var random = genrand_res53
 
     random.seed = function(seed){
-        if(! seed){seed = Date.now()}
+        if(seed === undefined){seed = Date.now()}
         if(typeof seed != "number"){seed = parseInt(seed, 10)}
         if((seed !== 0 && ! seed) || isNaN(seed)){
             throw _b_.ValueError.$factory("Bad seed: " + _b_.str.$factory(seed))
@@ -317,7 +316,7 @@ var Random = $B.make_class("Random",
     function(){
         return {
             __class__: Random,
-            _random: RandomStream()
+            _random: RandomStream(Date.now())
         }
     }
 )
