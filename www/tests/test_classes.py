@@ -528,4 +528,23 @@ class C(A, B):
 C()
 assert trace == ['init B']
 
+# issue 1457
+class CNS:
+    def __init__(self):
+        self._dct = {}
+    def __setitem__(self, item, value):
+        self._dct[item.lower()] = value
+    def __getitem__(self, item):
+        return self._dct[item]
+
+class CMeta(type):
+    @classmethod
+    def __prepare__(metacls, name, bases, **kwds):
+        return {'__annotations__': CNS()}
+
+class CC(metaclass=CMeta):
+    XX: 'ANNOT'
+
+assert CC.__annotations__['xx'] == 'ANNOT'
+
 print('passed all tests..')

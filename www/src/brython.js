@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-07-25 11:20:17.625866"
-__BRYTHON__.timestamp=1595668817625
+__BRYTHON__.compiled_date="2020-07-25 14:10:36.629156"
+__BRYTHON__.timestamp=1595679036629
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -4507,9 +4507,7 @@ if(in_comp){var outermost_expr=in_comp.tree[0].tree[1]
 var parent=C
 while(parent){if(parent===outermost_expr){break}
 parent=parent.parent}
-if(! parent){$_SyntaxError(C,["'yield' inside list comprehension"])}
-in_comp.outermost_expr_yield=this
-console.log("set has_yield for node",node)}
+if(! parent){$_SyntaxError(C,["'yield' inside list comprehension"])}}
 var in_lambda=false,parent=C
 while(parent){if(parent.type=="lambda"){in_lambda=true
 break}
@@ -5611,11 +5609,9 @@ if(mc===metaclass ||_b_.issubclass(metaclass,mc)){}else if(_b_.issubclass(mc,met
 metaclass.__bases__.indexOf(mc)==-1){throw _b_.TypeError.$factory("metaclass conflict: the "+
 "metaclass of a derived class must be a (non-"+
 "strict) subclass of the metaclasses of all its bases")}}}else{metaclass=_b_.type}}
-var prepare=$B.$getattr(metaclass,"__prepare__",_b_.None),cl_dict=prepare(class_name,bases)
+var prepare=$B.$getattr(metaclass,"__prepare__",_b_.None),cl_dict=$B.$call(prepare)(class_name,bases)
 if(cl_dict.__class__ !==_b_.dict){set_class_item=$B.$getattr(cl_dict,"__setitem__")}else{set_class_item=function(attr,value){cl_dict.$string_dict[attr]=[value,cl_dict.$order++]}}
-for(var attr in class_obj){if(attr=="__annotations__"){var rank=cl_dict.$order
-if(cl_dict.$string_dict[attr]!==undefined){cl_dict.$string_dict[attr]=[class_obj[attr],rank]}else{cl_dict.$string_dict[attr]=[$B.empty_dict(),rank]}
-cl_dict.$order++
+for(var attr in class_obj){if(attr=="__annotations__"){if(cl_dict.$string_dict[attr]===undefined){cl_dict.$string_dict[attr]=[$B.empty_dict(),cl_dict.$order++]}
 for(var key in class_obj[attr].$string_dict){$B.$setitem(cl_dict.$string_dict[attr][0],key,class_obj[attr].$string_dict[key][0])}}else{if(attr.charAt(0)!="$" ||attr.substr(0,2)=="$$"){set_class_item(attr,class_obj[attr])}}}
 if(use_mro_entries){set_class_item("__orig_bases__",_b_.tuple.$factory(orig_bases))}
 var class_dict={__bases__:bases,__class__:metaclass,__dict__:cl_dict}

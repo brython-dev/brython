@@ -110,7 +110,7 @@ $B.$class_constructor = function(class_name, class_obj, bases,
     }
     // Use __prepare__ (PEP 3115)
     var prepare = $B.$getattr(metaclass, "__prepare__", _b_.None),
-        cl_dict = prepare(class_name, bases) // dict or dict-like
+        cl_dict = $B.$call(prepare)(class_name, bases) // dict or dict-like
 
     if(cl_dict.__class__ !== _b_.dict){
         set_class_item = $B.$getattr(cl_dict, "__setitem__")
@@ -123,13 +123,9 @@ $B.$class_constructor = function(class_name, class_obj, bases,
     // Transform class object into a dictionary
     for(var attr in class_obj){
         if(attr == "__annotations__"){
-            var rank = cl_dict.$order
-            if(cl_dict.$string_dict[attr] !== undefined){
-                cl_dict.$string_dict[attr] = [class_obj[attr], rank]
-            }else{
-                cl_dict.$string_dict[attr] = [$B.empty_dict(), rank]
+            if(cl_dict.$string_dict[attr] === undefined){
+                cl_dict.$string_dict[attr] = [$B.empty_dict(), cl_dict.$order++]
             }
-            cl_dict.$order++
             for(var key in class_obj[attr].$string_dict){
                 $B.$setitem(cl_dict.$string_dict[attr][0], key,
                     class_obj[attr].$string_dict[key][0])
