@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-07-26 11:50:30.903494"
-__BRYTHON__.timestamp=1595757030903
+__BRYTHON__.compiled_date="2020-07-26 16:29:39.349929"
+__BRYTHON__.timestamp=1595773779349
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -215,17 +215,17 @@ while(ctx){if(forbidden.indexOf(ctx.type)>-1){$_SyntaxError(C,'invalid syntax - 
 ctx.tree[0].type=="op"){if($B.op2method.comparisons[ctx.tree[0].op]!==undefined){$_SyntaxError(C,["cannot assign to comparison"])}else{$_SyntaxError(C,["cannot assign to operator"])}}
 ctx=ctx.parent}}
 var $Node=$B.parser.$Node=function(type){this.type=type
-this.children=[]
-this.add=function(child){
+this.children=[]}
+$Node.prototype.add=function(child){
 this.children[this.children.length]=child
 child.parent=this
 child.module=this.module}
-this.insert=function(pos,child){
+$Node.prototype.insert=function(pos,child){
 this.children.splice(pos,0,child)
 child.parent=this
 child.module=this.module}
-this.toString=function(){return "<object 'Node'>"}
-this.show=function(indent){
+$Node.prototype.toString=function(){return "<object 'Node'>"}
+$Node.prototype.show=function(indent){
 var res=''
 if(this.type==='module'){this.children.forEach(function(child){res+=child.show(indent)})
 return res}
@@ -238,7 +238,7 @@ this.children.forEach(function(child){res+='['+i+'] '+child.show(indent+4)})
 if(this.children.length > 0){res+=' '.repeat(indent)
 res+='}\n'}
 return res}
-this.to_js=function(indent){
+$Node.prototype.to_js=function(indent){
 if(this.js !==undefined){return this.js}
 this.res=[]
 this.unbound=[]
@@ -257,7 +257,7 @@ if(this.children.length > 0){this.res.push(' '.repeat(indent))
 this.res.push('}\n')}}
 this.js=this.res.join('')
 return this.js}
-this.transform=function(rank){
+$Node.prototype.transform=function(rank){
 if(this.has_await){this.parent.insert(rank,$NodeJS("var save_stack = $B.save_stack()"))
 this.parent.insert(rank+2,$NodeJS("$B.restore_stack(save_stack, $locals)"))
 this.has_await=false 
@@ -341,14 +341,14 @@ if(offset===undefined){offset=1}
 i+=offset}
 if(ctx_offset===undefined){ctx_offset=1}
 return ctx_offset}}
-this.clone=function(){var res=new $Node(this.type)
+$Node.prototype.clone=function(){var res=new $Node(this.type)
 for(var attr in this){res[attr]=this[attr]}
 return res}
-this.clone_tree=function(){var res=new $Node(this.type)
+$Node.prototype.clone_tree=function(){var res=new $Node(this.type)
 for(var attr in this){res[attr]=this[attr]}
 res.children=[]
 for(var i=0,len=this.children.length;i < len;i++){res.add(this.children[i].clone_tree())}
-return res}}
+return res}
 var $YieldFromMarkerNode=$B.parser.$YieldFromMarkerNode=function(params){$Node.apply(this,['marker'])
 new $NodeCtx(this)
 this.params=params
@@ -4539,8 +4539,10 @@ var $YieldCtx=$B.parser.$YieldCtx=function(C,is_await){
 this.type='yield'
 this.parent=C
 this.tree=[]
+this.is_await=is_await
 C.tree[C.tree.length]=this
 if(C.type=="list_or_tuple" && C.tree.length > 1){$_SyntaxError(C,"non-parenthesized yield")}
+if($parent_match(C,{type:"annotation"})){$_SyntaxError(C,["'yield' outside function"])}
 var parent=this
 while(true){var list_or_tuple=$parent_match(parent,{type:"list_or_tuple"})
 if(list_or_tuple){list_or_tuple.yields=list_or_tuple.yields ||[]
@@ -4551,6 +4553,9 @@ while(true){var set_or_dict=$parent_match(parent,{type:"dict_or_set"})
 if(set_or_dict){set_or_dict.yields=set_or_dict.yields ||[]
 set_or_dict.yields.push([this,$pos])
 parent=set_or_dict}else{break}}
+var root=$get_module(this)
+root.yields_func_check=root.yields_func_check ||[]
+root.yields_func_check.push([this,$pos])
 var scope=this.scope=$get_scope(this,true),node=$get_node(this)
 node.has_yield=this
 var in_comp=$parent_match(this,{type:"comprehension"})
@@ -4562,6 +4567,7 @@ parent=parent.parent}
 if(! parent){$_SyntaxError(C,["'yield' inside list comprehension"])}}
 var in_lambda=false,parent=C
 while(parent){if(parent.type=="lambda"){in_lambda=true
+this.in_lambda=true
 break}
 parent=parent.parent}
 var parent=node.parent
@@ -4575,17 +4581,9 @@ case 'assign':
 case 'list_or_tuple':
 break
 default:
-$_SyntaxError(C,'yield atom must be inside ()')}}
-if(! in_lambda){var in_func=scope.is_function,func_scope=scope
-if(! in_func && scope.is_comp){var parent=scope.parent_block
-while(parent.is_comp){parent=parent_block}
-in_func=parent.is_function
-func_scope=parent}
-if(! in_func){$_SyntaxError(C,["'yield' outside function"])}}
-if(! in_lambda){var def=func_scope.C.tree[0]
-if(! is_await){def.type='generator'}}
-this.toString=function(){return '(yield) '+(this.from ? '(from) ' :'')+this.tree}
-this.transition=function(token,value){var C=this
+$_SyntaxError(C,'yield atom must be inside ()')}}}
+$YieldCtx.prototype.toString=function(){return '(yield) '+(this.from ? '(from) ' :'')+this.tree}
+$YieldCtx.prototype.transition=function(token,value){var C=this
 if(token=='from'){
 if(C.tree[0].type !='abstract_expr'){
 $_SyntaxError(C,"'from' must follow 'yield'")}
@@ -4593,12 +4591,20 @@ C.from=true
 C.from_num=$B.UUID()
 return C.tree[0]}
 return $transition(C.parent,token)}
-this.transform=function(node,rank){
+$YieldCtx.prototype.transform=function(node,rank){
 var parent=node.parent
 while(parent){if(parent.ctx_manager_num !==undefined){node.parent.insert(rank+1,$NodeJS("$top_frame[1].$has_yield_in_cm = true"))
 break}
 parent=parent.parent}}
-this.to_js=function(){if(this.from){return `_r${this.from_num}`}else{return "yield "+$to_js(this.tree)}}}
+$YieldCtx.prototype.to_js=function(){if(this.from){return `_r${this.from_num}`}else{return "yield "+$to_js(this.tree)}}
+$YieldCtx.prototype.check_in_function=function(){if(this.in_lambda){return}
+var scope=$get_scope(this),in_func=scope.is_function,func_scope=scope
+if(! in_func && scope.is_comp){var parent=scope.parent_block
+while(parent.is_comp){parent=parent_block}
+in_func=parent.is_function
+func_scope=parent}
+if(! in_func){$_SyntaxError(this.parent,["'yield' outside function"])}else{var def=func_scope.C.tree[0]
+if(! this.is_await){def.type='generator'}}}
 var $add_line_num=$B.parser.$add_line_num=function(node,rank,line_info){if(node.type=='module'){var i=0
 while(i < node.children.length){i+=$add_line_num(node.children[i],i,line_info)}}else if(node.type !=='marker'){var elt=node.C.tree[0],offset=1,flag=true,pnode=node,_line_info
 while(pnode.parent !==undefined){pnode=pnode.parent}
@@ -5066,7 +5072,11 @@ $_SyntaxError(C,'expected an indented block',pos)}else{var parent=current.parent
 if(parent.C && parent.C.tree &&
 parent.C.tree[0]&&
 parent.C.tree[0].type=="try"){$pos=pos-1
-$_SyntaxError(C,["unexpected EOF while parsing"])}}}}
+$_SyntaxError(C,["unexpected EOF while parsing"])}
+if(root.yields_func_check){var save_pos=$pos
+for(const _yield of root.yields_func_check){$pos=_yield[1]
+_yield[0].check_in_function()}
+$pos=save_pos}}}}
 var $create_root_node=$B.parser.$create_root_node=function(src,module,locals_id,parent_block,line_num){var root=new $Node('module')
 root.module=module
 root.id=locals_id

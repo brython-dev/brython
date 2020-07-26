@@ -408,313 +408,313 @@ function check_assignment(context){
 var $Node = $B.parser.$Node = function(type){
     this.type = type
     this.children = []
+}
 
-    this.add = function(child){
-        // Insert as the last child
-        this.children[this.children.length] = child
-        child.parent = this
-        child.module = this.module
-    }
 
-    this.insert = function(pos, child){
-        // Insert child at position pos
-        this.children.splice(pos, 0, child)
-        child.parent = this
-        child.module = this.module
-    }
+$Node.prototype.add = function(child){
+    // Insert as the last child
+    this.children[this.children.length] = child
+    child.parent = this
+    child.module = this.module
+}
 
-    this.toString = function(){return "<object 'Node'>"}
+$Node.prototype.insert = function(pos, child){
+    // Insert child at position pos
+    this.children.splice(pos, 0, child)
+    child.parent = this
+    child.module = this.module
+}
 
-    this.show = function(indent){
-        // For debugging purposes
-        var res = ''
-        if(this.type === 'module'){
-            this.children.forEach(function(child){
-                res += child.show(indent)
-            })
-            return res
-        }
+$Node.prototype.toString = function(){return "<object 'Node'>"}
 
-        indent = indent || 0
-        res += ' '.repeat(indent)
-        res += this.context
-        if(this.children.length > 0){res += '{'}
-        res +='\n'
+$Node.prototype.show = function(indent){
+    // For debugging purposes
+    var res = ''
+    if(this.type === 'module'){
         this.children.forEach(function(child){
-           res += '[' + i + '] ' + child.show(indent + 4)
+            res += child.show(indent)
         })
-        if(this.children.length > 0){
-          res += ' '.repeat(indent)
-          res += '}\n'
-        }
         return res
     }
 
-    this.to_js = function(indent){
-        // Convert the node into a string with the translation in Javascript
+    indent = indent || 0
+    res += ' '.repeat(indent)
+    res += this.context
+    if(this.children.length > 0){res += '{'}
+    res +='\n'
+    this.children.forEach(function(child){
+       res += '[' + i + '] ' + child.show(indent + 4)
+    })
+    if(this.children.length > 0){
+      res += ' '.repeat(indent)
+      res += '}\n'
+    }
+    return res
+}
 
-        if(this.js !== undefined){return this.js}
+$Node.prototype.to_js = function(indent){
+    // Convert the node into a string with the translation in Javascript
 
-        this.res = []
-        this.unbound = []
-        if(this.type === 'module'){
-            this.children.forEach(function(child){
-                this.res.push(child.to_js())
-            }, this)
-            this.js = this.res.join('')
-            return this.js
-        }
-        indent = indent || 0
-        var ctx_js = this.context.to_js()
-        if(ctx_js){ // empty for "global x"
-          this.res.push(' '.repeat(indent))
-          this.res.push(ctx_js)
-          if(this.children.length > 0){this.res.push('{')}
-          this.res.push('\n')
-          this.children.forEach(function(child){
-              this.res.push(child.to_js(indent + 4))
-          }, this)
-          if(this.children.length > 0){
-             this.res.push(' '.repeat(indent))
-             this.res.push('}\n')
-          }
-        }
+    if(this.js !== undefined){return this.js}
+
+    this.res = []
+    this.unbound = []
+    if(this.type === 'module'){
+        this.children.forEach(function(child){
+            this.res.push(child.to_js())
+        }, this)
         this.js = this.res.join('')
-
         return this.js
     }
+    indent = indent || 0
+    var ctx_js = this.context.to_js()
+    if(ctx_js){ // empty for "global x"
+      this.res.push(' '.repeat(indent))
+      this.res.push(ctx_js)
+      if(this.children.length > 0){this.res.push('{')}
+      this.res.push('\n')
+      this.children.forEach(function(child){
+          this.res.push(child.to_js(indent + 4))
+      }, this)
+      if(this.children.length > 0){
+         this.res.push(' '.repeat(indent))
+         this.res.push('}\n')
+      }
+    }
+    this.js = this.res.join('')
 
-    this.transform = function(rank){
-        // Apply transformations to each node recursively
-        // Returns an offset : in case children were inserted by transform(),
-        // we must jump to the next original node, skipping those that have
-        // just been inserted
-        if(this.has_await){
-            this.parent.insert(rank,
-                $NodeJS("var save_stack = $B.save_stack()"))
-            this.parent.insert(rank + 2,
-                $NodeJS("$B.restore_stack(save_stack, $locals)"))
-            this.has_await = false // avoid recursion
-            return 1
-        }
+    return this.js
+}
 
-        if(this.has_yield && ! this.has_yield.transformed){
-            /* replace "RESULT = yield EXPR" by
+$Node.prototype.transform = function(rank){
+    // Apply transformations to each node recursively
+    // Returns an offset : in case children were inserted by transform(),
+    // we must jump to the next original node, skipping those that have
+    // just been inserted
+    if(this.has_await){
+        this.parent.insert(rank,
+            $NodeJS("var save_stack = $B.save_stack()"))
+        this.parent.insert(rank + 2,
+            $NodeJS("$B.restore_stack(save_stack, $locals)"))
+        this.has_await = false // avoid recursion
+        return 1
+    }
 
-                var result = EXPR
-                try{
-                    leave_frame()
-                    RESULT = yield result
-                }catch(err){
-                    $B.frames_stack.push($top_frame)
-                    throw err
-                }
+    if(this.has_yield && ! this.has_yield.transformed){
+        /* replace "RESULT = yield EXPR" by
 
-            so that:
-            - if the evaluation of EXPR raises an exception, it happens
-              in the generator scope
-            - if "yield result" doesn't raise an exception, the generator
-              frame is remove from the stack
-            - if "yield result" raises an exception thrown by generator.throw,
-              the frame is restored
-            */
-            var parent = this.parent
-            if(this.has_yield.from){
-                var new_node = new $Node()
-                var new_ctx = new $NodeCtx(new_node)
-                var new_expr = new $ExprCtx(new_ctx, 'js', false)
-                var _id = new $RawJSCtx(new_expr, `var _i${this.has_yield.from_num}`)
-                var assign = new $AssignCtx(new_expr)
-                var right = new $ExprCtx(assign)
-                right.tree = this.has_yield.tree
-                parent.insert(rank, new_node)
-
-                var pnode = $get_node(this.has_yield)
-
-
-                var n = this.has_yield.from_num
-
-                var replace_with = `$B.$import("sys", [], {})
-                _i${n} = _b_.iter(_i${n})
-                var $failed${n} = false
-                try{
-                    var _y${n} = _b_.next(_i${n})
-                }catch(_e){
-                    $B.set_exc(_e)
-                    $failed${n} = true
-                    $B.pmframe = $B.last($B.frames_stack)
-                    _e = $B.exception(_e)
-                    if(_e.__class__ === _b_.StopIteration){
-                        var _r${n} = $B.$getattr(_e, "value")
-                    }else{
-                        throw _e
-                    }
-                }
-                if(! $failed${n}){
-                    while(true){
-                        var $failed1${n} = false
-                        try{
-                            $B.leave_frame()
-                            var _s${n} = yield _y${n}
-                            $B.frames_stack.push($top_frame)
-                        }catch(_e){
-                            if(_e.__class__ === _b_.GeneratorExit){
-                                var $failed2${n} = false
-                                try{
-                                    var _m${n} = $B.$geatttr(_i${n}, "close")
-                                }catch(_e1){
-                                    $failed2${n} = true
-                                    if(_e1.__class__ !== _b_.AttributeError){
-                                        throw _e1
-                                    }
-                                }
-                                if(! $failed2${n}){
-                                    $B.$call(_m${n})()
-                                }
-                                throw _e
-                            }else if($B.is_exc(_e, [_b_.BaseException])){
-                                var _x = $B.$call($B.$getattr($locals.sys, "exc_info"))()
-                                var $failed3${n} = false
-                                try{
-                                    var _m${n} = $B.$getattr(_i${n}, "throw")
-                                }catch(err){
-                                    $failed3${n} = true
-                                    if($B.is_exc(err, [_b_.AttributeError])){
-                                        throw err
-                                    }
-                                }
-                                if(! $failed3${n}){
-                                    try{
-                                        _y${n} = $B.$call(_m${n}).apply(null,
-                                            _b_.list.$factory(_x${n}))
-                                    }catch(err){
-                                        if($B.$is_exc(err, [_b_.StopIteration])){
-                                            _r${n} = $B.$getattr(err, "value")
-                                            break
-                                        }
-                                        throw err
-                                    }
-                                }
-                            }
-                        }
-                        if(! $failed1${n}){
-                            try{
-                                if(_s${n} === _b_.None){
-                                    _y${n} = _b_.next(_i${n})
-                                }else{
-                                    _y${n} = $B.$call($B.$getattr(_i${n}, "send"))(_s${n})
-                                }
-                            }catch(err){
-                                if($B.is_exc(err, [_b_.StopIteration])){
-                                    _r${n} = $B.$getattr(err, "value")
-                                    break
-                                }
-                                throw err
-                            }
-                        }
-                    }
-                }`
-
-                parent.insert(rank + 1, $NodeJS(replace_with))
-                return 3
+            var result = EXPR
+            try{
+                leave_frame()
+                RESULT = yield result
+            }catch(err){
+                $B.frames_stack.push($top_frame)
+                throw err
             }
-            parent.children.splice(rank, 1)
-            if(this.has_yield.tree[0].type === 'abstract_expr'){
-                new_node = $NodeJS("var result = _b_.None")
-            }else{
-                var new_node = new $Node()
-                var new_ctx = new $NodeCtx(new_node)
-                var new_expr = new $ExprCtx(new_ctx, 'js', false)
-                var _id = new $RawJSCtx(new_expr, 'var result')
-                var assign = new $AssignCtx(new_expr)
-                assign.tree[1] = this.has_yield.tree[0]
-                _id.parent = assign
-            }
-            new_node.line_num = this.line_num
+
+        so that:
+        - if the evaluation of EXPR raises an exception, it happens
+          in the generator scope
+        - if "yield result" doesn't raise an exception, the generator
+          frame is remove from the stack
+        - if "yield result" raises an exception thrown by generator.throw,
+          the frame is restored
+        */
+        var parent = this.parent
+        if(this.has_yield.from){
+            var new_node = new $Node()
+            var new_ctx = new $NodeCtx(new_node)
+            var new_expr = new $ExprCtx(new_ctx, 'js', false)
+            var _id = new $RawJSCtx(new_expr, `var _i${this.has_yield.from_num}`)
+            var assign = new $AssignCtx(new_expr)
+            var right = new $ExprCtx(assign)
+            right.tree = this.has_yield.tree
             parent.insert(rank, new_node)
-            var try_node = new $NodeJS("try")
-            try_node.add($NodeJS("$B.leave_frame()"))
-            try_node.add(this)
 
-            parent.insert(rank + 1, try_node)
-            this.has_yield.to_js = function(){
-                return 'yield result'
+            var pnode = $get_node(this.has_yield)
+
+
+            var n = this.has_yield.from_num
+
+            var replace_with = `$B.$import("sys", [], {})
+            _i${n} = _b_.iter(_i${n})
+            var $failed${n} = false
+            try{
+                var _y${n} = _b_.next(_i${n})
+            }catch(_e){
+                $B.set_exc(_e)
+                $failed${n} = true
+                $B.pmframe = $B.last($B.frames_stack)
+                _e = $B.exception(_e)
+                if(_e.__class__ === _b_.StopIteration){
+                    var _r${n} = $B.$getattr(_e, "value")
+                }else{
+                    throw _e
+                }
             }
-            // set attribute "transformed" to avoid recursion in loop below
-            this.has_yield.transformed = true
+            if(! $failed${n}){
+                while(true){
+                    var $failed1${n} = false
+                    try{
+                        $B.leave_frame()
+                        var _s${n} = yield _y${n}
+                        $B.frames_stack.push($top_frame)
+                    }catch(_e){
+                        if(_e.__class__ === _b_.GeneratorExit){
+                            var $failed2${n} = false
+                            try{
+                                var _m${n} = $B.$geatttr(_i${n}, "close")
+                            }catch(_e1){
+                                $failed2${n} = true
+                                if(_e1.__class__ !== _b_.AttributeError){
+                                    throw _e1
+                                }
+                            }
+                            if(! $failed2${n}){
+                                $B.$call(_m${n})()
+                            }
+                            throw _e
+                        }else if($B.is_exc(_e, [_b_.BaseException])){
+                            var _x = $B.$call($B.$getattr($locals.sys, "exc_info"))()
+                            var $failed3${n} = false
+                            try{
+                                var _m${n} = $B.$getattr(_i${n}, "throw")
+                            }catch(err){
+                                $failed3${n} = true
+                                if($B.is_exc(err, [_b_.AttributeError])){
+                                    throw err
+                                }
+                            }
+                            if(! $failed3${n}){
+                                try{
+                                    _y${n} = $B.$call(_m${n}).apply(null,
+                                        _b_.list.$factory(_x${n}))
+                                }catch(err){
+                                    if($B.$is_exc(err, [_b_.StopIteration])){
+                                        _r${n} = $B.$getattr(err, "value")
+                                        break
+                                    }
+                                    throw err
+                                }
+                            }
+                        }
+                    }
+                    if(! $failed1${n}){
+                        try{
+                            if(_s${n} === _b_.None){
+                                _y${n} = _b_.next(_i${n})
+                            }else{
+                                _y${n} = $B.$call($B.$getattr(_i${n}, "send"))(_s${n})
+                            }
+                        }catch(err){
+                            if($B.is_exc(err, [_b_.StopIteration])){
+                                _r${n} = $B.$getattr(err, "value")
+                                break
+                            }
+                            throw err
+                        }
+                    }
+                }
+            }`
 
-            // Transform children of "try" node, including "this" node
-            // because in code like
-            //
-            //     x, y = yield value
-            //
-            // the multiple assignment must be transformed
-            var i = 0
-            while(i < try_node.children.length){
-                var offset = try_node.children[i].transform(i)
-                if(offset === undefined){offset = 1}
-                i += offset
-            }
-
-            var catch_node = $NodeJS(`catch(err${this.line_num})`)
-            catch_node.add($NodeJS("$B.frames_stack.push($top_frame)"))
-            catch_node.add($NodeJS(`throw err${this.line_num}`))
-            parent.insert(rank + 2, catch_node)
-
-            parent.insert(rank + 3,
-                $NodeJS("$B.frames_stack.push($top_frame)"))
-            return 2
+            parent.insert(rank + 1, $NodeJS(replace_with))
+            return 3
         }
-
-        if(this.type === 'module'){
-            // module doc string
-            this.__doc__ = $get_docstring(this)
-            var i = 0
-            while(i < this.children.length){
-                var offset = this.children[i].transform(i)
-                if(offset === undefined){offset = 1}
-                i += offset
-            }
+        parent.children.splice(rank, 1)
+        if(this.has_yield.tree[0].type === 'abstract_expr'){
+            new_node = $NodeJS("var result = _b_.None")
         }else{
-            var elt = this.context.tree[0], ctx_offset
-            if(elt === undefined){
-                console.log(this)
-            }
-            if(elt.transform !== undefined){
-                ctx_offset = elt.transform(this, rank)
-            }
-            var i = 0
-            while(i < this.children.length){
-                var offset = this.children[i].transform(i)
-                if(offset === undefined){offset = 1}
-                i += offset
-            }
-            if(ctx_offset === undefined){ctx_offset = 1}
-
-            return ctx_offset
+            var new_node = new $Node()
+            var new_ctx = new $NodeCtx(new_node)
+            var new_expr = new $ExprCtx(new_ctx, 'js', false)
+            var _id = new $RawJSCtx(new_expr, 'var result')
+            var assign = new $AssignCtx(new_expr)
+            assign.tree[1] = this.has_yield.tree[0]
+            _id.parent = assign
         }
+        new_node.line_num = this.line_num
+        parent.insert(rank, new_node)
+        var try_node = new $NodeJS("try")
+        try_node.add($NodeJS("$B.leave_frame()"))
+        try_node.add(this)
+
+        parent.insert(rank + 1, try_node)
+        this.has_yield.to_js = function(){
+            return 'yield result'
+        }
+        // set attribute "transformed" to avoid recursion in loop below
+        this.has_yield.transformed = true
+
+        // Transform children of "try" node, including "this" node
+        // because in code like
+        //
+        //     x, y = yield value
+        //
+        // the multiple assignment must be transformed
+        var i = 0
+        while(i < try_node.children.length){
+            var offset = try_node.children[i].transform(i)
+            if(offset === undefined){offset = 1}
+            i += offset
+        }
+
+        var catch_node = $NodeJS(`catch(err${this.line_num})`)
+        catch_node.add($NodeJS("$B.frames_stack.push($top_frame)"))
+        catch_node.add($NodeJS(`throw err${this.line_num}`))
+        parent.insert(rank + 2, catch_node)
+
+        parent.insert(rank + 3,
+            $NodeJS("$B.frames_stack.push($top_frame)"))
+        return 2
     }
 
-    this.clone = function(){
-        var res = new $Node(this.type)
-        for(var attr in this){
-            res[attr] = this[attr]
+    if(this.type === 'module'){
+        // module doc string
+        this.__doc__ = $get_docstring(this)
+        var i = 0
+        while(i < this.children.length){
+            var offset = this.children[i].transform(i)
+            if(offset === undefined){offset = 1}
+            i += offset
         }
-        return res
-    }
+    }else{
+        var elt = this.context.tree[0], ctx_offset
+        if(elt === undefined){
+            console.log(this)
+        }
+        if(elt.transform !== undefined){
+            ctx_offset = elt.transform(this, rank)
+        }
+        var i = 0
+        while(i < this.children.length){
+            var offset = this.children[i].transform(i)
+            if(offset === undefined){offset = 1}
+            i += offset
+        }
+        if(ctx_offset === undefined){ctx_offset = 1}
 
-    this.clone_tree = function(){
-        var res = new $Node(this.type)
-        for(var attr in this){
-            res[attr] = this[attr]
-        }
-        res.children = []
-        for(var i = 0, len = this.children.length; i < len; i++){
-            res.add(this.children[i].clone_tree())
-        }
-        return res
+        return ctx_offset
     }
+}
 
+$Node.prototype.clone = function(){
+    var res = new $Node(this.type)
+    for(var attr in this){
+        res[attr] = this[attr]
+    }
+    return res
+}
+
+$Node.prototype.clone_tree = function(){
+    var res = new $Node(this.type)
+    for(var attr in this){
+        res[attr] = this[attr]
+    }
+    res.children = []
+    for(var i = 0, len = this.children.length; i < len; i++){
+        res.add(this.children[i].clone_tree())
+    }
+    return res
 }
 
 var $YieldFromMarkerNode = $B.parser.$YieldFromMarkerNode = function(params){
@@ -9207,10 +9207,16 @@ var $YieldCtx = $B.parser.$YieldCtx = function(context, is_await){
     this.type = 'yield'
     this.parent = context
     this.tree = []
+    this.is_await = is_await
     context.tree[context.tree.length] = this
 
     if(context.type == "list_or_tuple" && context.tree.length > 1){
         $_SyntaxError(context, "non-parenthesized yield")
+    }
+
+    if($parent_match(context, {type: "annotation"})){
+        $_SyntaxError(context,
+            ["'yield' outside function"])
     }
 
     // Store "this" in the attribute "yields" of the list_or_tuple
@@ -9241,6 +9247,33 @@ var $YieldCtx = $B.parser.$YieldCtx = function(context, is_await){
         }
     }
 
+    /* Strangely, the control that the "yield" is inside a function is done
+       after parsing the whole program.
+       For instance, the code
+
+           {(yield 1)}
+           a b c
+
+       raises
+
+            a b c
+              ^
+        SyntaxError: invalid syntax
+
+       and not the arguably more expected
+
+             {(yield 1)}
+              ^
+        SyntaxError: 'yield' outside function
+
+       The "yield" is stored in attribute "yields_func_check" of the root node
+    */
+
+    var root = $get_module(this)
+
+    root.yields_func_check = root.yields_func_check || []
+    root.yields_func_check.push([this, $pos])
+
     var scope = this.scope = $get_scope(this, true),
         node = $get_node(this)
 
@@ -9251,6 +9284,7 @@ var $YieldCtx = $B.parser.$YieldCtx = function(context, is_await){
     if($get_scope(this).id.startsWith("lc" + $B.lambda_magic)){
         delete node.has_yield
     }
+
     if(in_comp){
         var outermost_expr = in_comp.tree[0].tree[1]
         // In a comprehension, "yield" is only allowed in the outermost
@@ -9272,6 +9306,7 @@ var $YieldCtx = $B.parser.$YieldCtx = function(context, is_await){
     while(parent){
         if(parent.type == "lambda"){
             in_lambda = true
+            this.in_lambda = true
             break
         }
         parent = parent.parent
@@ -9308,68 +9343,69 @@ var $YieldCtx = $B.parser.$YieldCtx = function(context, is_await){
         }
     }
 
+}
 
-    if(! in_lambda){
-        var in_func = scope.is_function,
-            func_scope = scope
-        if(! in_func && scope.is_comp){
-            var parent = scope.parent_block
-            while(parent.is_comp){
-                parent = parent_block
-            }
-            in_func = parent.is_function
-            func_scope = parent
+$YieldCtx.prototype.toString = function(){
+    return '(yield) ' + (this.from ? '(from) ' : '') + this.tree
+}
+
+$YieldCtx.prototype.transition = function(token, value){
+    var context = this
+    if(token == 'from'){ // form "yield from <expr>"
+        if(context.tree[0].type != 'abstract_expr'){
+            // 'from' must follow 'yield' immediately
+            $_SyntaxError(context, "'from' must follow 'yield'")
         }
-        if(! in_func){
-            $_SyntaxError(context, ["'yield' outside function"])
-        }
+
+        context.from = true
+        context.from_num = $B.UUID()
+        return context.tree[0]
     }
+    return $transition(context.parent, token)
+}
 
-    // Change type of function to generator
-    if(! in_lambda){
+$YieldCtx.prototype.transform = function(node, rank){
+    // If inside a context manager, mark frame
+    var parent = node.parent
+    while(parent){
+        if(parent.ctx_manager_num !== undefined){
+            node.parent.insert(rank + 1,
+                $NodeJS("$top_frame[1].$has_yield_in_cm = true"))
+            break
+        }
+        parent = parent.parent
+    }
+}
+
+$YieldCtx.prototype.to_js = function(){
+    if(this.from){
+        return `_r${this.from_num}`
+    }else{
+        return "yield " + $to_js(this.tree)
+    }
+}
+
+$YieldCtx.prototype.check_in_function = function(){
+    if(this.in_lambda){
+        return
+    }
+    var scope = $get_scope(this),
+        in_func = scope.is_function,
+        func_scope = scope
+    if(! in_func && scope.is_comp){
+        var parent = scope.parent_block
+        while(parent.is_comp){
+            parent = parent_block
+        }
+        in_func = parent.is_function
+        func_scope = parent
+    }
+    if(! in_func){
+        $_SyntaxError(this.parent, ["'yield' outside function"])
+    }else{
         var def = func_scope.context.tree[0]
-        if(! is_await){
+        if(! this.is_await){
             def.type = 'generator'
-        }
-    }
-
-    this.toString = function(){
-        return '(yield) ' + (this.from ? '(from) ' : '') + this.tree
-    }
-
-    this.transition = function(token, value){
-        var context = this
-        if(token == 'from'){ // form "yield from <expr>"
-            if(context.tree[0].type != 'abstract_expr'){
-                // 'from' must follow 'yield' immediately
-                $_SyntaxError(context, "'from' must follow 'yield'")
-            }
-
-            context.from = true
-            context.from_num = $B.UUID()
-            return context.tree[0]
-        }
-        return $transition(context.parent, token)
-    }
-
-    this.transform = function(node, rank){
-        // If inside a context manager, mark frame
-        var parent = node.parent
-        while(parent){
-            if(parent.ctx_manager_num !== undefined){
-                node.parent.insert(rank + 1,
-                    $NodeJS("$top_frame[1].$has_yield_in_cm = true"))
-                break
-            }
-            parent = parent.parent
-        }
-    }
-
-    this.to_js = function(){
-        if(this.from){
-            return `_r${this.from_num}`
-        }else{
-            return "yield " + $to_js(this.tree)
         }
     }
 }
@@ -10344,6 +10380,7 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
                 $indented.indexOf(context.tree[0].type) > -1){
             $pos = pos - 1
             $_SyntaxError(context, 'expected an indented block', pos)
+
         }else{
             var parent = current.parent
             if(parent.context && parent.context.tree &&
@@ -10351,6 +10388,15 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
                     parent.context.tree[0].type == "try"){
                 $pos = pos - 1
                 $_SyntaxError(context, ["unexpected EOF while parsing"])
+            }
+            // Check that all "yield"s are in a function
+            if(root.yields_func_check){
+                var save_pos = $pos
+                for(const _yield of root.yields_func_check){
+                    $pos = _yield[1]
+                    _yield[0].check_in_function()
+                }
+                $pos = save_pos
             }
         }
     }
