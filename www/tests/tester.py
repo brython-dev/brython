@@ -8,9 +8,10 @@ If the test failed, print the exception, and the line in the script where the
 exception happened.
 """
 
-import re
+import _jsre as re
 import sys
 import time
+import tb
 
 class _AssertRaisesBaseContext(object):
 
@@ -152,27 +153,7 @@ class Tester:
                     report.add(method[5:], lineno,
                         round((time.time()-t0)*1000), 'skipped')
                 except Exception as exc:
-                    errmsg = str(exc)
-                    errline = '<nc>'
-                    tb = sys.exc_info()[2]
-                    try:
-                        fname = tb.tb_frame.f_code.co_filename
-                    except:
-                        fname = '<nc>'
-                    module_name = type(self).__module__
-                    module = sys.modules.get(module_name)
-                    module_file = module.__file__ if module else None
-                    while True:
-                        print(fname, "line", tb.tb_lineno)
-                        if fname == module_file:
-                            errline = tb.tb_lineno
-                        tb = tb.tb_next
-                        if tb is None:
-                            break
-                        fname = tb.tb_frame.f_code.co_filename
-                    report.add(method[5:], lineno,
-                        round((time.time()-t0)*1000), 'fail',
-                        'line {}\n{}'.format(errline, errmsg))
+                    tb.print_exc()
         return report
 
 class MethodReport:
