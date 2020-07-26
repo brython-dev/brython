@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-07-25 14:10:36.629156"
-__BRYTHON__.timestamp=1595679036629
+__BRYTHON__.compiled_date="2020-07-26 11:50:30.903494"
+__BRYTHON__.timestamp=1595757030903
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -207,6 +207,9 @@ $B.$SyntaxError(module,'invalid syntax : triple string end not found',src,$pos,l
 var message='invalid syntax'
 if(!(msg.startsWith("token "))){message+=' ('+msg+')'}
 $B.$SyntaxError(module,message,src,$pos,line_num,root)}else{throw $B.$IndentationError(module,msg,src,$pos,line_num,root)}}
+function SyntaxWarning(C,msg){var node=$get_node(C),module=$get_module(C),src=module.src,lines=src.split("\n"),message=`Module ${module.module}line ${node.line_num}:${msg}\n`+
+'    '+lines[node.line_num-1]
+$B.$getattr($B.stderr,"write")(message)}
 function check_assignment(C){var ctx=C,forbidden=['assert','del','import','raise','return']
 while(ctx){if(forbidden.indexOf(ctx.type)>-1){$_SyntaxError(C,'invalid syntax - assign')}else if(ctx.type=="expr" &&
 ctx.tree[0].type=="op"){if($B.op2method.comparisons[ctx.tree[0].op]!==undefined){$_SyntaxError(C,["cannot assign to comparison"])}else{$_SyntaxError(C,["cannot assign to operator"])}}
@@ -527,12 +530,15 @@ this.transform=function(node,rank){if(this.tree[0].type=='list_or_tuple'){
 var condition=this.tree[0].tree[0]
 var message=this.tree[0].tree[1]}else{var condition=this.tree[0]
 var message=null}
+if(this.tree[0].type=="expr" && this.tree[0].name=="tuple" &&
+this.tree[0].tree[0].tree.length > 1){SyntaxWarning(this,"assertion is always true, perhaps "+
+"remove parentheses?")}
 var new_ctx=new $ConditionCtx(node.C,'if')
 var not_ctx=new $NotCtx(new_ctx)
 not_ctx.tree=[condition]
 node.C=new_ctx
 var new_node=new $Node()
-var js='throw _b_.AssertionError.$factory("AssertionError")'
+var js='throw _b_.AssertionError.$factory()'
 if(message !==null){js='throw _b_.AssertionError.$factory(_b_.str.$factory('+
 message.to_js()+'))'}
 new $NodeJSCtx(new_node,js)
@@ -1039,6 +1045,7 @@ case '=':
 if(C.expect==','){return new $ExprCtx(new $KwArgCtx(C),'kw_value',false)}
 break
 case 'for':
+if(this.parent.tree.length > 1){$_SyntaxError(C,"non-parenthesized generator expression")}
 var lst=new $ListOrTupleCtx(C,'gen_expr')
 lst.vars=C.vars 
 lst.locals=C.locals
@@ -1136,6 +1143,8 @@ return new $StarArgCtx(C)
 case '**':
 C.has_dstar=true
 return new $DoubleStarArgCtx(C)}
+$_SyntaxError(C,token)
+case 'yield':
 $_SyntaxError(C,token)}
 return $transition(C.parent,token,value)}
 this.to_js=function(){this.js_processed=true
@@ -1435,7 +1444,10 @@ this.transition=function(token,value){var C=this
 if(token=='eol'){return C.parent}
 $_SyntaxError(C,'token '+token+' after '+C)}
 this.to_js=function(){this.js_processed=true
-return 'continue'}}
+var js='continue'
+if(this.loop_ctx.has_break){
+js=`$locals["$no_break${this.loop_ctx.loop_num}"]=true;${js}`}
+return js}}
 var $DebuggerCtx=$B.parser.$DebuggerCtx=function(C){
 this.type='continue'
 this.parent=C
@@ -1613,7 +1625,8 @@ if(arg.tree.length > 0){defaults.push('"'+arg.name+'"')
 defs1.push(arg.name+':'+$to_js(arg.tree))
 this.__defaults__.push($to_js(arg.tree))}}else if(arg.type=='func_star_arg'){if(arg.op=='*'){this.star_arg=arg.name}
 else if(arg.op=='**'){this.kw_arg=arg.name}}
-if(arg.annotation){annotations.push(arg.name+': '+arg.annotation.to_js())}},this)
+if(arg.annotation){var name=$mangle(arg.name,this)
+annotations.push(name+': '+arg.annotation.to_js())}},this)
 slot_init='{'+slot_init.join(", ")+'}'
 var flags=67
 if(this.star_arg){flags |=4}
@@ -1908,6 +1921,8 @@ lst.intervals=[C.start+1]
 lst.vars=C.vars
 C.tree.pop()
 lst.expression=C.tree
+if(C.yields){lst.expression.yields=C.yields
+delete C.yields}
 C.tree=[lst]
 lst.tree=[]
 var comp=new $ComprehensionCtx(lst)
@@ -3194,19 +3209,30 @@ expr.$in_parens=true
 node.tree.splice(ix,1,expr)
 C=expr.tree[0]}
 if(close){C.close()}
-if(C.real=='gen_expr'){C.intervals.push($pos)}
+if(C.real=='gen_expr'){
+if(C.expression.yields){for(const _yield of C.expression.yields){$pos=_yield[1]
+$_SyntaxError(C,["'yield' inside generator expression"])}}
+C.intervals.push($pos)}
 if(C.parent.type=="packed"){return C.parent.parent}
 return C.parent}
 break
 case 'list':
 case 'list_comp':
 if(token==']'){C.close()
-if(C.real=='list_comp'){C.intervals.push($pos)}
+if(C.real=='list_comp'){
+if(C.expression.yields){for(const _yield of C.expression.yields){$pos=_yield[1]
+$_SyntaxError(C,["'yield' inside list comprehension"])}}
+C.intervals.push($pos)}
 if(C.parent.type=="packed"){if(C.parent.tree.length > 0){return C.parent.tree[0]}else{return C.parent.parent}}
 return C.parent}
 break
 case 'dict_or_set_comp':
-if(token=='}'){C.intervals.push($pos)
+if(token=='}'){
+if(C.expression.yields){for(const _yield of C.expression.yields){$pos=_yield[1]
+var comp_type=C.parent.real=="set_comp" ?
+"set" :"dict"
+$_SyntaxError(C,[`'yield' inside ${comp_type}comprehension`])}}
+C.intervals.push($pos)
 return $transition(C.parent,token)}
 break}
 switch(token){case ',':
@@ -3214,10 +3240,15 @@ if(C.real=='tuple'){C.has_comma=true}
 C.expect='id'
 return C
 case 'for':
-if(C.real=='list'){C.real='list_comp'}
+if(C.real=='list'){if(this.tree.length > 1){
+$_SyntaxError(C,"unparenthesized "+
+"expression before 'for'")}
+C.real='list_comp'}
 else{C.real='gen_expr'}
 C.intervals=[C.start+1]
 C.expression=C.tree
+if(C.yields){C.expression.yields=C.yields
+delete C.yields}
 C.tree=[]
 var comp=new $ComprehensionCtx(C)
 return new $TargetListCtx(new $CompForCtx(comp))}
@@ -3474,6 +3505,16 @@ case 'del':
 return new $AbstractExprCtx(new $DelCtx(C),true)
 case '@':
 return new $DecoratorCtx(C)
+case ',':
+if(C.tree && C.tree.length==0){$_SyntaxError(C,'token '+token+' after '+C)}
+var first=C.tree[0]
+C.tree=[]
+var implicit_tuple=new $ListOrTupleCtx(C)
+implicit_tuple.real="tuple"
+implicit_tuple.implicit=0
+implicit_tuple.tree.push(first)
+first.parent=implicit_tuple
+return implicit_tuple
 case 'eol':
 if(C.tree.length==0){
 C.node.parent.children.pop()
@@ -4499,6 +4540,17 @@ this.type='yield'
 this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this
+if(C.type=="list_or_tuple" && C.tree.length > 1){$_SyntaxError(C,"non-parenthesized yield")}
+var parent=this
+while(true){var list_or_tuple=$parent_match(parent,{type:"list_or_tuple"})
+if(list_or_tuple){list_or_tuple.yields=list_or_tuple.yields ||[]
+list_or_tuple.yields.push([this,$pos])
+parent=list_or_tuple}else{break}}
+var parent=this
+while(true){var set_or_dict=$parent_match(parent,{type:"dict_or_set"})
+if(set_or_dict){set_or_dict.yields=set_or_dict.yields ||[]
+set_or_dict.yields.push([this,$pos])
+parent=set_or_dict}else{break}}
 var scope=this.scope=$get_scope(this,true),node=$get_node(this)
 node.has_yield=this
 var in_comp=$parent_match(this,{type:"comprehension"})

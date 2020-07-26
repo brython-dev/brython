@@ -358,7 +358,19 @@ var $_SyntaxError = $B.parser.$_SyntaxError = function (context, msg, indent){
             message += ' (' + msg + ')'
         }
         $B.$SyntaxError(module, message, src, $pos, line_num, root)
-    }else{throw $B.$IndentationError(module, msg, src, $pos, line_num, root)}
+    }else{
+        throw $B.$IndentationError(module, msg, src, $pos, line_num, root)
+    }
+}
+
+function SyntaxWarning(context, msg){
+    var node = $get_node(context),
+        module = $get_module(context),
+        src = module.src,
+        lines = src.split("\n"),
+        message = `Module ${module.module} line ${node.line_num}: ${msg}\n` +
+            '    ' + lines[node.line_num - 1]
+    $B.$getattr($B.stderr, "write")(message)
 }
 
 /*
@@ -995,7 +1007,9 @@ var $AnnotationCtx = $B.parser.$AnnotationCtx = function(context){
         return $transition(context.parent, token)
     }
 
-    this.to_js = function(){return $to_js(this.tree)}
+    this.to_js = function(){
+        return $to_js(this.tree)
+    }
 }
 
 var $AssertCtx = $B.parser.$AssertCtx = function(context){
@@ -1022,13 +1036,18 @@ var $AssertCtx = $B.parser.$AssertCtx = function(context){
             var condition = this.tree[0]
             var message = null
         }
+        if(this.tree[0].type == "expr" && this.tree[0].name == "tuple" &&
+                this.tree[0].tree[0].tree.length > 1){
+            SyntaxWarning(this, "assertion is always true, perhaps " +
+                "remove parentheses?")
+        }
         // transform "assert cond" into "if not cond: throw AssertionError"
         var new_ctx = new $ConditionCtx(node.context, 'if')
         var not_ctx = new $NotCtx(new_ctx)
         not_ctx.tree = [condition]
         node.context = new_ctx
         var new_node = new $Node()
-        var js = 'throw _b_.AssertionError.$factory("AssertionError")'
+        var js = 'throw _b_.AssertionError.$factory()'
         if(message !== null){
             js = 'throw _b_.AssertionError.$factory(_b_.str.$factory(' +
                 message.to_js() + '))'
@@ -2018,6 +2037,10 @@ var $CallArgCtx = $B.parser.$CallArgCtx = function(context){
                 break
             case 'for':
                 // comprehension
+                if(this.parent.tree.length > 1){
+                    $_SyntaxError(context,
+                        "non-parenthesized generator expression")
+                }
                 var lst = new $ListOrTupleCtx(context, 'gen_expr')
                 lst.vars = context.vars // copy variables
                 lst.locals = context.locals
@@ -2163,6 +2186,8 @@ var $CallCtx = $B.parser.$CallCtx = function(context){
                         context.has_dstar = true
                         return new $DoubleStarArgCtx(context)
                 }
+                $_SyntaxError(context, token)
+            case 'yield':
                 $_SyntaxError(context, token)
         }
 
@@ -2755,7 +2780,20 @@ var $ContinueCtx = $B.parser.$ContinueCtx = function(context){
 
     this.to_js = function(){
         this.js_processed = true
-        return 'continue'
+        var js = 'continue'
+        if(this.loop_ctx.has_break){
+            /* Set $no_break for the loop to True, for code like
+                count = 0
+                while count < 2:
+                    count += 1
+                    try:
+                        break
+                    finally:
+                        continue
+            */
+            js = `$locals["$no_break${this.loop_ctx.loop_num}"] = true;${js}`
+        }
+        return js
     }
 }
 
@@ -3194,7 +3232,8 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
                 else if(arg.op == '**'){this.kw_arg = arg.name}
             }
             if(arg.annotation){
-                annotations.push(arg.name + ': ' + arg.annotation.to_js())
+                var name = $mangle(arg.name, this)
+                annotations.push(name + ': ' + arg.annotation.to_js())
             }
         }, this)
 
@@ -3778,6 +3817,10 @@ var $DictOrSetCtx = $B.parser.$DictOrSetCtx = function(context){
                         lst.vars = context.vars
                         context.tree.pop()
                         lst.expression = context.tree
+                        if(context.yields){
+                            lst.expression.yields = context.yields
+                            delete context.yields
+                        }
                         context.tree = [lst]
                         lst.tree = []
                         var comp = new $ComprehensionCtx(lst)
@@ -6554,6 +6597,14 @@ var $ListOrTupleCtx = $B.parser.$ListOrTupleCtx = function(context,real){
                                 context.close()
                             }
                             if(context.real == 'gen_expr'){
+                                // Check if there is a "yield" in the expression
+                                if(context.expression.yields){
+                                    for(const _yield of context.expression.yields){
+                                        $pos = _yield[1]
+                                        $_SyntaxError(context,
+                                            ["'yield' inside generator expression"])
+                                    }
+                                }
                                 context.intervals.push($pos)
                             }
                             if(context.parent.type == "packed"){
@@ -6567,6 +6618,14 @@ var $ListOrTupleCtx = $B.parser.$ListOrTupleCtx = function(context,real){
                         if(token == ']'){
                              context.close()
                              if(context.real == 'list_comp'){
+                                 // Check if there is a "yield" in the expression
+                                 if(context.expression.yields){
+                                     for(const _yield of context.expression.yields){
+                                         $pos = _yield[1]
+                                         $_SyntaxError(context,
+                                             ["'yield' inside list comprehension"])
+                                     }
+                                 }
                                  context.intervals.push($pos)
                              }
                              if(context.parent.type == "packed"){
@@ -6581,6 +6640,16 @@ var $ListOrTupleCtx = $B.parser.$ListOrTupleCtx = function(context,real){
                         break
                     case 'dict_or_set_comp':
                         if(token == '}'){
+                             // Check if there is a "yield" in the expression
+                             if(context.expression.yields){
+                                 for(const _yield of context.expression.yields){
+                                     $pos = _yield[1]
+                                     var comp_type = context.parent.real == "set_comp" ?
+                                         "set" : "dict"
+                                     $_SyntaxError(context,
+                                         [`'yield' inside ${comp_type} comprehension`])
+                                 }
+                             }
                              context.intervals.push($pos)
                              return $transition(context.parent, token)
                         }
@@ -6597,6 +6666,11 @@ var $ListOrTupleCtx = $B.parser.$ListOrTupleCtx = function(context,real){
                     case 'for':
                         // comprehension
                         if(context.real == 'list'){
+                            if(this.tree.length > 1){
+                                // eg [x, y for x in A for y in B]
+                                $_SyntaxError(context, "unparenthesized " +
+                                    "expression before 'for'")
+                            }
                             context.real = 'list_comp'
                         }
                         else{context.real = 'gen_expr'}
@@ -6604,6 +6678,10 @@ var $ListOrTupleCtx = $B.parser.$ListOrTupleCtx = function(context,real){
                         // the function references
                         context.intervals = [context.start + 1]
                         context.expression = context.tree
+                        if(context.yields){
+                            context.expression.yields = context.yields
+                            delete context.yields
+                        }
                         context.tree = [] // reset tree
                         var comp = new $ComprehensionCtx(context)
                         return new $TargetListCtx(new $CompForCtx(comp))
@@ -7043,6 +7121,20 @@ var $NodeCtx = $B.parser.$NodeCtx = function(node){
                 return new $AbstractExprCtx(new $DelCtx(context),true)
             case '@':
                 return new $DecoratorCtx(context)
+            case ',':
+                if(context.tree && context.tree.length == 0){
+                    $_SyntaxError(context,
+                        'token ' + token + ' after ' + context)
+                }
+                // Implicit tuple
+                var first = context.tree[0]
+                context.tree = []
+                var implicit_tuple = new $ListOrTupleCtx(context)
+                implicit_tuple.real = "tuple"
+                implicit_tuple.implicit = 0
+                implicit_tuple.tree.push(first)
+                first.parent = implicit_tuple
+                return implicit_tuple
             case 'eol':
                 if(context.tree.length == 0){ // might be the case after a :
                     context.node.parent.children.pop()
@@ -9116,6 +9208,38 @@ var $YieldCtx = $B.parser.$YieldCtx = function(context, is_await){
     this.parent = context
     this.tree = []
     context.tree[context.tree.length] = this
+
+    if(context.type == "list_or_tuple" && context.tree.length > 1){
+        $_SyntaxError(context, "non-parenthesized yield")
+    }
+
+    // Store "this" in the attribute "yields" of the list_or_tuple
+    // above; this is used to raise SyntaxError if there is a "yield"
+    // in a comprehension expression
+    var parent = this
+    while(true){
+        var list_or_tuple = $parent_match(parent, {type: "list_or_tuple"})
+        if(list_or_tuple){
+            list_or_tuple.yields = list_or_tuple.yields || []
+            list_or_tuple.yields.push([this, $pos])
+            parent = list_or_tuple
+        }else{
+            break
+        }
+    }
+
+    // Same for set_or_dict
+    var parent = this
+    while(true){
+        var set_or_dict = $parent_match(parent, {type: "dict_or_set"})
+        if(set_or_dict){
+            set_or_dict.yields = set_or_dict.yields || []
+            set_or_dict.yields.push([this, $pos])
+            parent = set_or_dict
+        }else{
+            break
+        }
+    }
 
     var scope = this.scope = $get_scope(this, true),
         node = $get_node(this)
