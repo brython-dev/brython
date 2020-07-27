@@ -10663,6 +10663,10 @@ var brython = $B.parser.brython = function(options){
         $B.$options.static_stdlib_import = false
     }
 
+    if(options.cpython_site_packages){
+        $B.path.push('/cpython_site_packages')
+    }
+
     // Or it can be provided as a list of strings or path objects
     // where a path object has at least a path attribute and, optionally,
     // a prefetch attribute and/or a lang attribute
