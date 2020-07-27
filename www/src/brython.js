@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-07-26 16:29:39.349929"
-__BRYTHON__.timestamp=1595773779349
+__BRYTHON__.compiled_date="2020-07-27 09:08:25.831412"
+__BRYTHON__.timestamp=1595833705831
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5177,6 +5177,8 @@ if($B.isWebWorker ||$B.isNode){$href_elts.pop()}
 $B.curdir=$href_elts.join('/')
 if(options.pythonpath !==undefined){$B.path=options.pythonpath
 $B.$options.static_stdlib_import=false}
+if(options.cpython_site_packages){if(options.cpython_site_packages=="replace"){$B.path.pop()}
+$B.path.push('/cpython_site_packages')}
 if(options.python_paths){options.python_paths.forEach(function(path){var lang,prefetch
 if(typeof path !=="string"){lang=path.lang
 prefetch=path.prefetch

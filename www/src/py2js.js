@@ -10664,6 +10664,9 @@ var brython = $B.parser.brython = function(options){
     }
 
     if(options.cpython_site_packages){
+        if(options.cpython_site_packages == "replace"){
+            $B.path.pop()
+        }
         $B.path.push('/cpython_site_packages')
     }
 
