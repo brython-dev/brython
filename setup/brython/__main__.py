@@ -9,8 +9,6 @@ import argparse
 
 from . import implementation
 
-
-
 def main():
     parser = argparse.ArgumentParser()
 
@@ -33,6 +31,9 @@ def main():
 
     parser.add_argument('--reset', help='Reset brython_modules.js to stdlib',
         action="store_true")
+
+    parser.add_argument('--server', help='Start development server', nargs="?",
+        default="absent")
 
     parser.add_argument('--update', help='Update Brython scripts',
         action="store_true")
@@ -137,6 +138,44 @@ def main():
         from . import make_package
         make_package.make(package_name, os.getcwd())
         print("done")
+
+    if args.server != "absent":
+        # start development server
+        import http.server
+        import sysconfig
+        cpython_site_packages = sysconfig.get_path("purelib")
+
+        class Handler(http.server.CGIHTTPRequestHandler):
+
+            def guess_type(self, path):
+                ctype = super().guess_type(path)
+                # in case the mimetype associated with .js in the Windows
+                # registery is not correctly set
+                if os.path.splitext(path)[1] == ".js":
+                    ctype = "application/javascript"
+                return ctype
+
+            def translate_path(self, path):
+                """Map /cpython_site_packages to local CPython site-packages 
+                directory."""
+                elts = path.split('/')
+                if len(elts) > 1 and elts[0] == '':
+                    if elts[1] == 'cpython_site_packages':
+                        elts[-1] = elts[-1].split("?")[0]
+                        return os.path.join(cpython_site_packages, *elts[2:])
+                return super().translate_path(path)
+
+
+        # port to be used when the server runs locally
+        port = 8000 if args.server is None else int(args.server)
+
+        print("Brython development server. "
+            "Not meant to be used in production.")
+        if args.server is None:
+            print("For a different port provide command-line option "
+                '"--server PORT".')
+        print("Press CTRL+C to Quit.\n")
+        http.server.test(HandlerClass=Handler, port=port)
 
 if __name__ == "__main__":
     main()
