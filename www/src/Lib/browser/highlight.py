@@ -74,26 +74,28 @@ def highlight(txt):
     while i < len(txt):
         car = txt[i]
         if car in ["'", '"']:
+            mul_car = txt[i:i+3]
+            if mul_car in ["'''", '"""']:
+                car = mul_car
             found_match = False
-            k = i + 1
+            k = i + len(car)
             while k < len(txt):
-                if txt[k] == car:
-                    nb_as = 0
-                    j = k - 1
-                    while True:
-                        if txt[j] == '\\':
-                            nb_as += 1
-                            j -= 1
-                        else:
-                            break
+                k = txt.find(car, k)
+                if k != -1: 
+                    nb_as, j = 0, k - 1
+                    while txt[j] == '\\':
+                        nb_as += 1
+                        j -= 1
                     if nb_as % 2 == 0:
-                        res <= name + html.SPAN(escape(txt[i:k + 1]),
+                        res <= name + html.SPAN(escape(txt[i:k + len(car)]),
                             Class="python-string")
-                        i = k
+                        i = k + len(car) - 1
                         name = ''
                         found_match = True
                         break
-                k += 1
+                else:
+                    break
+                k += len(car)
             if not found_match:
                 name += car
         elif car == '#': # comment
