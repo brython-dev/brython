@@ -252,7 +252,7 @@ var $add_yield_from_code1 = $B.parser.$add_yield_from_code1 = function(yield_ctx
         while(true){
             var $failed1${n} = false
             try{
-                $B.leave_frame()
+                $B.leave_frame({$locals})
                 var _s${n} = yield _y${n}
                 $B.frames_stack.push($top_frame)
             }catch(_e){
@@ -556,7 +556,7 @@ $Node.prototype.transform = function(rank){
                 while(true){
                     var $failed1${n} = false
                     try{
-                        $B.leave_frame()
+                        $B.leave_frame({$locals})
                         var _s${n} = yield _y${n}
                         $B.frames_stack.push($top_frame)
                     }catch(_e){
@@ -635,7 +635,7 @@ $Node.prototype.transform = function(rank){
         new_node.line_num = this.line_num
         parent.insert(rank, new_node)
         var try_node = new $NodeJS("try")
-        try_node.add($NodeJS("$B.leave_frame()"))
+        try_node.add($NodeJS("$B.leave_frame({$locals})"))
         try_node.add(this)
 
         parent.insert(rank + 1, try_node)
@@ -2497,7 +2497,7 @@ var $ClassCtx = $B.parser.$ClassCtx = function(context){
         // exit frame
         node.add($NodeJS('if($locals.$f_trace !== _b_.None){' +
             '$B.trace_return(_b_.None)}'))
-        node.add($NodeJS('$B.leave_frame()'))
+        node.add($NodeJS('$B.leave_frame({$locals})'))
         // return local namespace at the end of class definition
         var ret_obj = new $Node()
         new $NodeJSCtx(ret_obj, 'return ' + local_ns + ';')
@@ -3287,6 +3287,11 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
             enter_frame_nodes.push($NodeJS("$locals.$is_generator = true"))
         }
 
+        if(this.async){
+            enter_frame_nodes.splice(1, 0, 
+                $NodeJS(`$locals.$async = "${this.id}"`))
+        }
+
         enter_frame_nodes.forEach(function(node){
             node.enter_frame = true
         })
@@ -3426,7 +3431,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
             if(this.id.substr(0,5) == '$exec'){
                 js += '_exec'
             }
-            js += '();return _b_.None'
+            js += '({$locals});return _b_.None'
             node.add($NodeJS(js))
         }
 
@@ -3611,7 +3616,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         except_node.add($NodeJS('$B.set_exc(err)'))
         except_node.add($NodeJS('if($locals.$f_trace !== _b_.None){' +
             '$locals.$f_trace = $B.trace_exception()}'))
-        except_node.add($NodeJS('$B.leave_frame();throw err'))
+        except_node.add($NodeJS('$B.leave_frame({$locals});throw err'))
 
         parent.add(except_node)
 
@@ -7993,7 +7998,7 @@ var $ReturnCtx = $B.parser.$ReturnCtx = function(context){
         }
         var scope = this.scope
         if(scope.ntype == 'generator'){
-            return 'var $res = ' + $to_js(this.tree) + '; $B.leave_frame();' +
+            return 'var $res = ' + $to_js(this.tree) + '; $B.leave_frame({$locals});' +
                 'return $B.generator_return($res)'
         }
 
@@ -8005,7 +8010,7 @@ var $ReturnCtx = $B.parser.$ReturnCtx = function(context){
         'if($locals.$f_trace !== _b_.None){$B.trace_return($res)}\n' + indent +
         '$B.leave_frame'
         if(scope.id.substr(0, 6) == '$exec_'){js += '_exec'}
-        js += '("' + scope.id +'");\n' + indent + 'return $res'
+        js += '({$locals});\n' + indent + 'return $res'
         return js
     }
 }
@@ -8068,7 +8073,7 @@ var $SingleKwCtx = $B.parser.$SingleKwCtx = function(context,token){
             // If the finally block ends with "return", don't add the
             // final line
             if(last_child.context.tree[0].type != "return"){
-                node.add($NodeJS('if($exit){$B.leave_frame()}'))
+                node.add($NodeJS('if($exit){$B.leave_frame({$locals})}'))
             }
         }
     }
@@ -10546,12 +10551,12 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
         try_node.add(child)
     })
     // add node to exit frame in case no exception was raised
-    try_node.add($NodeJS('$B.leave_frame({value: _b_.None})'))
+    try_node.add($NodeJS('$B.leave_frame({$locals, value: _b_.None})'))
 
     root.children.splice(enter_frame_pos + 2, root.children.length)
 
     var catch_node = $NodeJS('catch(err)')
-    catch_node.add($NodeJS('$B.leave_frame({value: _b_.None})'))
+    catch_node.add($NodeJS('$B.leave_frame({$locals, value: _b_.None})'))
     catch_node.add($NodeJS('throw err'))
 
     root.add(catch_node)

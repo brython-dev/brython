@@ -1253,7 +1253,7 @@ $B.leave_frame = function(arg){
     // Leave execution frame
     if($B.frames_stack.length == 0){console.log("empty stack"); return}
     // When leaving a module, arg is set as an object of the form
-    // {value: _b_.None}
+    // {$locals, value: _b_.None}
     if(arg && arg.value !== undefined && $B.tracefunc){
         if($B.last($B.frames_stack)[1].$f_trace === undefined){
             $B.last($B.frames_stack)[1].$f_trace = $B.tracefunc

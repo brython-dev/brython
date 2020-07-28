@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-07-27 09:08:25.831412"
-__BRYTHON__.timestamp=1595833705831
+__BRYTHON__.compiled_date="2020-07-28 15:02:42.657309"
+__BRYTHON__.timestamp=1595941362657
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -175,7 +175,7 @@ $B.pmframe=$B.last($B.frames_stack)
 _e=$B.exception(_e)
 if(_e.__class__===_b_.StopIteration){var _r${n}=$B.$getattr(_e,"value")}else{throw _e}}
 if(! $failed${n}){while(true){var $failed1${n}=false
-try{$B.leave_frame()
+try{$B.leave_frame({$locals})
 var _s${n}=yield _y${n}
 $B.frames_stack.push($top_frame)}catch(_e){if(_e.__class__===_b_.GeneratorExit){var $failed2${n}=false
 try{var _m${n}=$B.$geatttr(_i${n},"close")}catch(_e1){$failed2${n}=true
@@ -283,7 +283,7 @@ $B.pmframe=$B.last($B.frames_stack)
 _e=$B.exception(_e)
 if(_e.__class__===_b_.StopIteration){var _r${n}=$B.$getattr(_e,"value")}else{throw _e}}
 if(! $failed${n}){while(true){var $failed1${n}=false
-try{$B.leave_frame()
+try{$B.leave_frame({$locals})
 var _s${n}=yield _y${n}
 $B.frames_stack.push($top_frame)}catch(_e){if(_e.__class__===_b_.GeneratorExit){var $failed2${n}=false
 try{var _m${n}=$B.$geatttr(_i${n},"close")}catch(_e1){$failed2${n}=true
@@ -312,7 +312,7 @@ _id.parent=assign}
 new_node.line_num=this.line_num
 parent.insert(rank,new_node)
 var try_node=new $NodeJS("try")
-try_node.add($NodeJS("$B.leave_frame()"))
+try_node.add($NodeJS("$B.leave_frame({$locals})"))
 try_node.add(this)
 parent.insert(rank+1,try_node)
 this.has_yield.to_js=function(){return 'yield result'}
@@ -1298,7 +1298,7 @@ indent+'if($locals.$f_trace !== _b_.None){'+
 node.insert(1,$NodeJS(js))
 node.add($NodeJS('if($locals.$f_trace !== _b_.None){'+
 '$B.trace_return(_b_.None)}'))
-node.add($NodeJS('$B.leave_frame()'))
+node.add($NodeJS('$B.leave_frame({$locals})'))
 var ret_obj=new $Node()
 new $NodeJSCtx(ret_obj,'return '+local_ns+';')
 node.insert(node.children.length,ret_obj)
@@ -1653,6 +1653,7 @@ this.module+'"'),$NodeJS(`var $top_frame=["${this.id}",$locals,`+
 (this.is_comp ? this.name :name)+']'),$NodeJS('$locals.$f_trace = $B.enter_frame($top_frame)'),$NodeJS('var $stack_length = $B.frames_stack.length;')
 ]
 if(this.type=="generator"){enter_frame_nodes.push($NodeJS("$locals.$is_generator = true"))}
+if(this.async){enter_frame_nodes.splice(1,0,$NodeJS(`$locals.$async="${this.id}"`))}
 enter_frame_nodes.forEach(function(node){node.enter_frame=true})
 if(this.is_comp){nodes.push($NodeJS("var $defaults = {}"))}
 this.env=[]
@@ -1716,7 +1717,7 @@ js='if($locals.$f_trace !== _b_.None){\n'+
 '    '.repeat(indent)+'}\n'+'    '.repeat(indent)
 js+='$B.leave_frame'
 if(this.id.substr(0,5)=='$exec'){js+='_exec'}
-js+='();return _b_.None'
+js+='({$locals});return _b_.None'
 node.add($NodeJS(js))}
 var free_vars=[]
 if(this.parent.node.referenced){for(var attr in this.parent.node.referenced){if(! this.parent.node.binding[attr]){free_vars.push('"'+attr+'"')}}}
@@ -1799,7 +1800,7 @@ var except_node=$NodeJS('catch(err)')
 except_node.add($NodeJS('$B.set_exc(err)'))
 except_node.add($NodeJS('if($locals.$f_trace !== _b_.None){'+
 '$locals.$f_trace = $B.trace_exception()}'))
-except_node.add($NodeJS('$B.leave_frame();throw err'))
+except_node.add($NodeJS('$B.leave_frame({$locals});throw err'))
 parent.add(except_node)
 this.transformed=true
 return offset}
@@ -3957,14 +3958,14 @@ if(this.tree.length==1 && this.tree[0].type=='abstract_expr'){
 this.tree.pop()
 new $IdCtx(new $ExprCtx(this,'rvalue',false),'None')}
 var scope=this.scope
-if(scope.ntype=='generator'){return 'var $res = '+$to_js(this.tree)+'; $B.leave_frame();'+
+if(scope.ntype=='generator'){return 'var $res = '+$to_js(this.tree)+'; $B.leave_frame({$locals});'+
 'return $B.generator_return($res)'}
 var indent='    '.repeat(this.node.indent-1)
 var js='var $res = '+$to_js(this.tree)+';\n'+indent+
 'if($locals.$f_trace !== _b_.None){$B.trace_return($res)}\n'+indent+
 '$B.leave_frame'
 if(scope.id.substr(0,6)=='$exec_'){js+='_exec'}
-js+='("'+scope.id+'");\n'+indent+'return $res'
+js+='({$locals});\n'+indent+'return $res'
 return js}}
 var $SingleKwCtx=$B.parser.$SingleKwCtx=function(C,token){
 this.type='single_kw'
@@ -3996,7 +3997,7 @@ node.insert(0,$NodeJS('var $exit;'+
 )
 var scope_id=scope.id.replace(/\./g,'_')
 var last_child=node.children[node.children.length-1]
-if(last_child.C.tree[0].type !="return"){node.add($NodeJS('if($exit){$B.leave_frame()}'))}}}
+if(last_child.C.tree[0].type !="return"){node.add($NodeJS('if($exit){$B.leave_frame({$locals})}'))}}}
 this.to_js=function(){this.js_processed=true
 if(this.token=='finally'){return this.token}
 if(this.loop_num !==undefined){var scope=$get_scope(this)
@@ -5134,10 +5135,10 @@ var try_node=new $NodeJS('try'),children=root.children.slice(enter_frame_pos+1,r
 root.insert(enter_frame_pos+1,try_node)
 if(children.length==0){children=[$NodeJS('')]}
 children.forEach(function(child){try_node.add(child)})
-try_node.add($NodeJS('$B.leave_frame({value: _b_.None})'))
+try_node.add($NodeJS('$B.leave_frame({$locals, value: _b_.None})'))
 root.children.splice(enter_frame_pos+2,root.children.length)
 var catch_node=$NodeJS('catch(err)')
-catch_node.add($NodeJS('$B.leave_frame({value: _b_.None})'))
+catch_node.add($NodeJS('$B.leave_frame({$locals, value: _b_.None})'))
 catch_node.add($NodeJS('throw err'))
 root.add(catch_node)
 $add_line_num(root,null,line_info)
