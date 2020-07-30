@@ -24,11 +24,11 @@ Usage::
 
 Then in an empty folder::
 
-    python -m brython --install
+    brython-cli --install
 
 or in a folder with older versions already present::
 
-    python -m brython --update
+    brython-cli --update
 
 The package includes a page **demo.html** with examples of use. For more
 information see the `Brython site <http://brython.info>`_.
@@ -62,6 +62,11 @@ if command == "sdist":
     # the repository
     print("copying files...")
     src_dir = os.path.join(root_dir, "www", "src")
+    if not os.path.exists(os.path.join(src_dir, "brython_no_static.js")):
+        # reported in issue #1452
+        print("File brython_no_static.js doesn't exist. Please run "
+              "scripts/make_dist.py to generate it.")
+        sys.exit()
     brython_dir = os.path.join(this_dir, "brython")
 
     # copy python_minifier from /scripts into current directory
