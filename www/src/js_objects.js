@@ -6,6 +6,26 @@ var object = _b_.object
 
 var _window = self;
 
+function to_simple(value){
+    switch(typeof value){
+        case 'string':
+        case 'number':
+            return value
+        case 'boolean':
+            return value ? "true" : "false"
+        case 'object':
+            if(value === _b_.None){
+                return 'null'
+            }else if(value instanceof Number){
+                return value.valueOf()
+            }
+        default:
+        console.log("erreur", value)
+            throw _b_.TypeError.$factory("keys must be str, int, " +
+                "float, bool or None, not " + $B.class_name(value))
+    }
+}
+
 $B.pyobj2structuredclone = function(obj, strict){
     // If the Python object supports the structured clone algorithm, return
     // the result, else raise an exception
@@ -26,27 +46,17 @@ $B.pyobj2structuredclone = function(obj, strict){
         }
         return res
     }else if(obj.__class__ === _b_.dict){
-        var res = {}
-        for(var key in obj.$string_dict){
-            res[key] = $B.pyobj2structuredclone(obj.$string_dict[key][0])
-        }
         if(strict){
             if(Object.keys(obj.$numeric_dict).length > 0 ||
                     Object.keys(obj.$object_dict).length > 0){
                 throw _b_.TypeError.$factory("a dictionary with non-string " +
                     "keys does not support structured clone")
             }
-        }else{
-            // Convert other keys to string; raise exception in case of
-            // duplicate string key
-            for(var key in obj.$numeric_dict){
-                if(res[key] !== undefined){
-                    throw _b_.TypeError.$factory("duplicate string key: " +
-                        key)
-                }else{
-                    res[key] = obj.$numeric_dict[key][0]
-                }
-            }
+        }
+        var items = $B.dict_to_list(obj),
+            res = {}
+        for(var i = 0, len = items.length; i < len; i++){
+            res[to_simple(items[i][0])] = $B.pyobj2structuredclone(items[i][1])
         }
         return res
     }else{

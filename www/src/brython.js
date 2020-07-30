@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-07-30 09:32:53.585128"
-__BRYTHON__.timestamp=1596094373585
+__BRYTHON__.compiled_date="2020-07-30 12:02:43.003717"
+__BRYTHON__.timestamp=1596103363003
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -9010,19 +9010,28 @@ _b_.frozenset=frozenset})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins
 var object=_b_.object
 var _window=self;
+function to_simple(value){switch(typeof value){case 'string':
+case 'number':
+return value
+case 'boolean':
+return value ? "true" :"false"
+case 'object':
+if(value===_b_.None){return 'null'}else if(value instanceof Number){return value.valueOf()}
+default:
+console.log("erreur",value)
+throw _b_.TypeError.$factory("keys must be str, int, "+
+"float, bool or None, not "+$B.class_name(value))}}
 $B.pyobj2structuredclone=function(obj,strict){
 strict=strict===undefined ? true :strict
 if(typeof obj=="boolean" ||typeof obj=="number" ||
 typeof obj=="string"){return obj}else if(obj instanceof Number){return obj.valueOf()}else if(obj===_b_.None){return null }else if(Array.isArray(obj)||obj.__class__===_b_.list ||
 obj.__class__===_b_.tuple){var res=[]
 for(var i=0,len=obj.length;i < len;i++){res.push($B.pyobj2structuredclone(obj[i]))}
-return res}else if(obj.__class__===_b_.dict){var res={}
-for(var key in obj.$string_dict){res[key]=$B.pyobj2structuredclone(obj.$string_dict[key][0])}
-if(strict){if(Object.keys(obj.$numeric_dict).length > 0 ||
+return res}else if(obj.__class__===_b_.dict){if(strict){if(Object.keys(obj.$numeric_dict).length > 0 ||
 Object.keys(obj.$object_dict).length > 0){throw _b_.TypeError.$factory("a dictionary with non-string "+
-"keys does not support structured clone")}}else{
-for(var key in obj.$numeric_dict){if(res[key]!==undefined){throw _b_.TypeError.$factory("duplicate string key: "+
-key)}else{res[key]=obj.$numeric_dict[key][0]}}}
+"keys does not support structured clone")}}
+var items=$B.dict_to_list(obj),res={}
+for(var i=0,len=items.length;i < len;i++){res[to_simple(items[i][0])]=$B.pyobj2structuredclone(items[i][1])}
 return res}else{return obj}}
 $B.structuredclone2pyobj=function(obj){if(obj===null){return _b_.None}else if(obj===undefined){return $B.Undefined}else if(typeof obj=="boolean" ||typeof obj=="number" ||
 typeof obj=="string"){return obj}else if(obj instanceof Number){return obj.valueOf()}else if(Array.isArray(obj)||obj.__class__===_b_.list ||
@@ -12858,9 +12867,9 @@ self.$str_hash[str_hash(item[0])]=item[0]
 self.$version++
 break
 case 'number':
-self.$numeric_dict[item[0]]=[item[1],self.$order++]
+if(item[0]!=0 && item[0]!=1){self.$numeric_dict[item[0]]=[item[1],self.$order++]
 self.$version++
-break
+break}
 default:
 si(self,item[0],item[1])
 break}}}
@@ -12950,9 +12959,22 @@ return $N
 case "number":
 if(self.$numeric_dict[key]!==undefined){
 self.$numeric_dict[key][0]=value}else{
-self.$numeric_dict[key]=[value,self.$order++]
+var done=false
+if((key==0 ||key==1)&&
+self.$object_dict[key]!==undefined){for(const item of self.$object_dict[key]){if((key==0 && item[0]===false)||
+(key==1 && item[0]===true)){
+item[1][0]=value
+done=true}}}
+if(! done){
+self.$numeric_dict[key]=[value,self.$order++]}
 self.$version++}
-return $N}
+return $N
+case "boolean":
+var num=key ? 1 :0
+if(self.$numeric_dict[num]!==undefined){var order=self.$numeric_dict[num][1]
+self.$numeric_dict[num]=[value,order]
+return}
+if(self.$object_dict[num]!==undefined){self.$object_dict[num].push([key,[value,self.$order++]])}else{self.$object_dict[num]=[[key,[value,self.$order++]]]}}
 var hash=$hash===undefined ? _b_.hash(key):$hash,_eq=function(other){return $B.rich_comp("__eq__",key,other)}
 if(self.$numeric_dict[hash]!==undefined && _eq(hash)){self.$numeric_dict[hash]=[value,self.$numeric_dict[hash][1]]
 self.$version++

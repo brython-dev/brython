@@ -252,7 +252,6 @@ function dict_iterator_next(self){
     throw _b_.StopIteration.$factory("StopIteration")
 }
 
-
 var $copy_dict = function(left, right){
     var _l = to_list(right),
         si = dict.$setitem
@@ -524,9 +523,11 @@ function init_from_list(self, args){
                 self.$version++
                 break
             case 'number':
-                self.$numeric_dict[item[0]] = [item[1], self.$order++]
-                self.$version++
-                break
+                if(item[0] != 0 && item[0] != 1){
+                    self.$numeric_dict[item[0]] = [item[1], self.$order++]
+                    self.$version++
+                    break
+                }
             default:
                 si(self, item[0], item[1])
                 break
@@ -757,7 +758,7 @@ dict.$setitem = function(self, key, value, $hash){
         }
         return $N
     }
-
+    
     switch(typeof key){
         case "string":
             if(self.$string_dict === undefined){
@@ -776,11 +777,39 @@ dict.$setitem = function(self, key, value, $hash){
                 // existing key: preserve order
                 self.$numeric_dict[key][0] = value
             }else{
-                // new key
-                self.$numeric_dict[key] = [value, self.$order++]
+                // special case for 0 and 1 if True or False are keys
+                var done = false
+                if((key == 0 || key == 1) &&
+                        self.$object_dict[key] !== undefined){
+                    for(const item of self.$object_dict[key]){
+                        if((key == 0 && item[0] === false) ||
+                                (key == 1 && item[0] === true)){
+                            // replace value
+                            item[1][0] = value
+                            done = true
+                        }
+                    }
+                }
+                if(! done){
+                    // new key
+                    self.$numeric_dict[key] = [value, self.$order++]
+                }
                 self.$version++
             }
             return $N
+        case "boolean":
+            // true replaces 1 and false replaces 0
+            var num = key ? 1 : 0
+            if(self.$numeric_dict[num] !== undefined){
+                var order = self.$numeric_dict[num][1] // preserve order
+                self.$numeric_dict[num] = [value, order]
+                return
+            }
+            if(self.$object_dict[num] !== undefined){
+                self.$object_dict[num].push([key, [value, self.$order++]])
+            }else{
+                self.$object_dict[num] = [[key, [value, self.$order++]]]
+            }
     }
 
     // if we got here the key is more complex, use default method

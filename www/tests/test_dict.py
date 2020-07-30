@@ -185,4 +185,14 @@ try:
 except Exc:
     pass
 
+# handle 1 and True, 0 and False
+d = {'a': 1, 1: 2, 1.5: 3, True: 4, False: 5, None: 6}
+assert str(d) == "{'a': 1, 1: 4, 1.5: 3, False: 5, None: 6}"
+
+d = {'a': 1, 1: 2, 'b': 3, True: 4}
+assert str(d) == "{'a': 1, 1: 4, 'b': 3}"
+
+d = {'a': 1, True: 2, 'b': 3, 1: 4}
+assert str(d) == "{'a': 1, True: 4, 'b': 3}"
+
 print("passed all tests..")
