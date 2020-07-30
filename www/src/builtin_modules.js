@@ -391,11 +391,13 @@
         },
         JSON: {
             __class__: $B.make_class("JSON"),
-            parse: function(s){
-                return $B.structuredclone2pyobj(JSON.parse(s))
+            parse: function(){
+                return $B.structuredclone2pyobj(
+                    JSON.parse.apply(this, arguments))
             },
-            stringify: function(obj){
-                return JSON.stringify($B.pyobj2structuredclone(obj))
+            stringify: function(obj, replacer, space){
+                return JSON.stringify($B.pyobj2structuredclone(obj, false),
+                    $B.JSObj.$factory(replacer), space)
             }
         },
         jsobj2pyobj:function(obj){return $B.jsobj2pyobj(obj)},

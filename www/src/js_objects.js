@@ -6,15 +6,17 @@ var object = _b_.object
 
 var _window = self;
 
-$B.pyobj2structuredclone = function(obj){
+$B.pyobj2structuredclone = function(obj, strict){
     // If the Python object supports the structured clone algorithm, return
     // the result, else raise an exception
+    // If "strict" is false, dictionaries with non-string keys are supported
+    strict = strict === undefined ? true : strict
     if(typeof obj == "boolean" || typeof obj == "number" ||
             typeof obj == "string"){
         return obj
     }else if(obj instanceof Number){
         return obj.valueOf()
-    }else if(obj === null){
+    }else if(obj === _b_.None){
         return null // _b_.None
     }else if(Array.isArray(obj) || obj.__class__ === _b_.list ||
             obj.__class__ === _b_.tuple){
@@ -24,14 +26,27 @@ $B.pyobj2structuredclone = function(obj){
         }
         return res
     }else if(obj.__class__ === _b_.dict){
-        if(Object.keys(obj.$numeric_dict).length > 0 ||
-                Object.keys(obj.$object_dict).length > 0){
-            throw _b_.TypeError.$factory("a dictionary with non-string " +
-                "keys cannot be sent to or from a Web Worker")
-        }
         var res = {}
         for(var key in obj.$string_dict){
             res[key] = $B.pyobj2structuredclone(obj.$string_dict[key][0])
+        }
+        if(strict){
+            if(Object.keys(obj.$numeric_dict).length > 0 ||
+                    Object.keys(obj.$object_dict).length > 0){
+                throw _b_.TypeError.$factory("a dictionary with non-string " +
+                    "keys does not support structured clone")
+            }
+        }else{
+            // Convert other keys to string; raise exception in case of
+            // duplicate string key
+            for(var key in obj.$numeric_dict){
+                if(res[key] !== undefined){
+                    throw _b_.TypeError.$factory("duplicate string key: " +
+                        key)
+                }else{
+                    res[key] = obj.$numeric_dict[key][0]
+                }
+            }
         }
         return res
     }else{
