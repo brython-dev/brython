@@ -103,82 +103,22 @@ __all__ = [
 
 __author__ = 'Bob Ippolito <bob@redivi.com>'
 
-from .decoder import JSONDecoder, JSONDecodeError
-from .encoder import JSONEncoder
-import codecs
 
-_default_encoder = JSONEncoder(
-    skipkeys=False,
-    ensure_ascii=True,
-    check_circular=True,
-    allow_nan=True,
-    indent=None,
-    separators=None,
-    default=None,
-)
+# Brython-specific : replace "import codecs"
+class codecs:
 
-def dump(obj, fp, *, skipkeys=False, ensure_ascii=True, check_circular=True,
-        allow_nan=True, cls=None, indent=None, separators=None,
-        default=None, sort_keys=False, **kw):
-    """Serialize ``obj`` as a JSON formatted stream to ``fp`` (a
-    ``.write()``-supporting file-like object).
+    BOM_UTF8 = b'\xef\xbb\xbf'
+    BOM_LE = BOM_UTF16_LE = b'\xff\xfe'
+    BOM_BE = BOM_UTF16_BE = b'\xfe\xff'
+    BOM_UTF32_LE = b'\xff\xfe\x00\x00'
+    BOM_UTF32_BE = b'\x00\x00\xfe\xff'
 
-    If ``skipkeys`` is true then ``dict`` keys that are not basic types
-    (``str``, ``int``, ``float``, ``bool``, ``None``) will be skipped
-    instead of raising a ``TypeError``.
+import javascript # Brython-specific
 
-    If ``ensure_ascii`` is false, then the strings written to ``fp`` can
-    contain non-ASCII characters if they appear in strings contained in
-    ``obj``. Otherwise, all such characters are escaped in JSON strings.
 
-    If ``check_circular`` is false, then the circular reference check
-    for container types will be skipped and a circular reference will
-    result in an ``OverflowError`` (or worse).
-
-    If ``allow_nan`` is false, then it will be a ``ValueError`` to
-    serialize out of range ``float`` values (``nan``, ``inf``, ``-inf``)
-    in strict compliance of the JSON specification, instead of using the
-    JavaScript equivalents (``NaN``, ``Infinity``, ``-Infinity``).
-
-    If ``indent`` is a non-negative integer, then JSON array elements and
-    object members will be pretty-printed with that indent level. An indent
-    level of 0 will only insert newlines. ``None`` is the most compact
-    representation.
-
-    If specified, ``separators`` should be an ``(item_separator, key_separator)``
-    tuple.  The default is ``(', ', ': ')`` if *indent* is ``None`` and
-    ``(',', ': ')`` otherwise.  To get the most compact JSON representation,
-    you should specify ``(',', ':')`` to eliminate whitespace.
-
-    ``default(obj)`` is a function that should return a serializable version
-    of obj or raise TypeError. The default simply raises TypeError.
-
-    If *sort_keys* is true (default: ``False``), then the output of
-    dictionaries will be sorted by key.
-
-    To use a custom ``JSONEncoder`` subclass (e.g. one that overrides the
-    ``.default()`` method to serialize additional types), specify it with
-    the ``cls`` kwarg; otherwise ``JSONEncoder`` is used.
-
-    """
-    # cached encoder
-    if (not skipkeys and ensure_ascii and
-        check_circular and allow_nan and
-        cls is None and indent is None and separators is None and
-        default is None and not sort_keys and not kw):
-        iterable = _default_encoder.iterencode(obj)
-    else:
-        if cls is None:
-            cls = JSONEncoder
-        iterable = cls(skipkeys=skipkeys, ensure_ascii=ensure_ascii,
-            check_circular=check_circular, allow_nan=allow_nan, indent=indent,
-            separators=separators,
-            default=default, sort_keys=sort_keys, **kw).iterencode(obj)
-    # could accelerate with writelines in some versions of Python, at
-    # a debuggability cost
-    for chunk in iterable:
-        fp.write(chunk)
-
+def dump(obj, fp, **kw):
+    s = dumps(obj, **kw)
+    fp.write(s)
 
 def dumps(obj, *, skipkeys=False, ensure_ascii=True, check_circular=True,
         allow_nan=True, cls=None, indent=None, separators=None,
@@ -225,10 +165,20 @@ def dumps(obj, *, skipkeys=False, ensure_ascii=True, check_circular=True,
     """
     # cached encoder
     if (not skipkeys and ensure_ascii and
-        check_circular and allow_nan and
-        cls is None and indent is None and separators is None and
-        default is None and not sort_keys and not kw):
-        return _default_encoder.encode(obj)
+            check_circular and allow_nan and
+            cls is None and separators is None and
+            default is None and not sort_keys and not kw):
+        if indent is None:
+            res = javascript.JSON.stringify(obj, javascript.NULL, ' ')
+            res = javascript.String.new(res).replace(
+                javascript.RegExp.new("([{[])\n\\s*", "g"), "$1")
+            res = javascript.String.new(res).replace(
+                javascript.RegExp.new("\\s*([}\\]])", "g"), "$1")
+            res = javascript.String.new(res).replace(
+                javascript.RegExp.new("\n\\s*", "g"), " ")
+        else:
+            res = javascript.JSON.stringify(obj, javascript.NULL, indent)
+        return res
     if cls is None:
         cls = JSONEncoder
     return cls(
@@ -236,10 +186,6 @@ def dumps(obj, *, skipkeys=False, ensure_ascii=True, check_circular=True,
         check_circular=check_circular, allow_nan=allow_nan, indent=indent,
         separators=separators, default=default, sort_keys=sort_keys,
         **kw).encode(obj)
-
-
-_default_decoder = JSONDecoder(object_hook=None, object_pairs_hook=None)
-
 
 def detect_encoding(b):
     bstartswith = b.startswith
@@ -334,6 +280,7 @@ def loads(s, *, cls=None, object_hook=None, parse_float=None,
     """
     if isinstance(s, str):
         if s.startswith('\ufeff'):
+            from .decoder import JSONDecodeError
             raise JSONDecodeError("Unexpected UTF-8 BOM (decode using utf-8-sig)",
                                   s, 0)
     else:
@@ -341,6 +288,7 @@ def loads(s, *, cls=None, object_hook=None, parse_float=None,
             raise TypeError(f'the JSON object must be str, bytes or bytearray, '
                             f'not {s.__class__.__name__}')
         s = s.decode(detect_encoding(s), 'surrogatepass')
+
 
     if "encoding" in kw:
         import warnings
@@ -354,8 +302,11 @@ def loads(s, *, cls=None, object_hook=None, parse_float=None,
     if (cls is None and object_hook is None and
             parse_int is None and parse_float is None and
             parse_constant is None and object_pairs_hook is None and not kw):
-        return _default_decoder.decode(s)
+        # Brython-specific : in the most simple case, use Javascript JSON : this
+        # is much faster.
+        return javascript.JSON.parse(s)
     if cls is None:
+        from .decoder import JSONDecoder
         cls = JSONDecoder
     if object_hook is not None:
         kw['object_hook'] = object_hook

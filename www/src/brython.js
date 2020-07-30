@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-07-29 09:53:37.624212"
-__BRYTHON__.timestamp=1596009217624
+__BRYTHON__.compiled_date="2020-07-30 08:44:29.493628"
+__BRYTHON__.timestamp=1596091469493
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -9010,16 +9010,19 @@ _b_.frozenset=frozenset})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins
 var object=_b_.object
 var _window=self;
-$B.pyobj2structuredclone=function(obj){
+$B.pyobj2structuredclone=function(obj,strict){
+strict=strict===undefined ? true :strict
 if(typeof obj=="boolean" ||typeof obj=="number" ||
-typeof obj=="string"){return obj}else if(obj instanceof Number){return obj.valueOf()}else if(obj===null){return null }else if(Array.isArray(obj)||obj.__class__===_b_.list ||
+typeof obj=="string"){return obj}else if(obj instanceof Number){return obj.valueOf()}else if(obj===_b_.None){return null }else if(Array.isArray(obj)||obj.__class__===_b_.list ||
 obj.__class__===_b_.tuple){var res=[]
 for(var i=0,len=obj.length;i < len;i++){res.push($B.pyobj2structuredclone(obj[i]))}
-return res}else if(obj.__class__===_b_.dict){if(Object.keys(obj.$numeric_dict).length > 0 ||
-Object.keys(obj.$object_dict).length > 0){throw _b_.TypeError.$factory("a dictionary with non-string "+
-"keys cannot be sent to or from a Web Worker")}
-var res={}
+return res}else if(obj.__class__===_b_.dict){var res={}
 for(var key in obj.$string_dict){res[key]=$B.pyobj2structuredclone(obj.$string_dict[key][0])}
+if(strict){if(Object.keys(obj.$numeric_dict).length > 0 ||
+Object.keys(obj.$object_dict).length > 0){throw _b_.TypeError.$factory("a dictionary with non-string "+
+"keys does not support structured clone")}}else{
+for(var key in obj.$numeric_dict){if(res[key]!==undefined){throw _b_.TypeError.$factory("duplicate string key: "+
+key)}else{res[key]=obj.$numeric_dict[key][0]}}}
 return res}else{return obj}}
 $B.structuredclone2pyobj=function(obj){if(obj===null){return _b_.None}else if(obj===undefined){return $B.Undefined}else if(typeof obj=="boolean" ||typeof obj=="number" ||
 typeof obj=="string"){return obj}else if(obj instanceof Number){return obj.valueOf()}else if(Array.isArray(obj)||obj.__class__===_b_.list ||
@@ -13928,7 +13931,8 @@ return $B.JSObj.$factory($B.js_this)},$$Date:self.Date && $B.JSObj.$factory(self
 'Use window.<js constructor name>.new() instead.')
 return $B.JSConstructor},__set__:function(){throw _b_.AttributeError.$factory("read only")}},JSObject:{__get__:function(){console.warn('"javascript.JSObject" is deprecrated. To use '+
 'a Javascript object, use window.<object name> instead.')
-return $B.JSObject},__set__:function(){throw _b_.AttributeError.$factory("read only")}},JSON:{__class__:$B.make_class("JSON"),parse:function(s){return $B.structuredclone2pyobj(JSON.parse(s))},stringify:function(obj){return JSON.stringify($B.pyobj2structuredclone(obj))}},jsobj2pyobj:function(obj){return $B.jsobj2pyobj(obj)},load:function(script_url){console.log('"javascript.load" is deprecrated. '+
+return $B.JSObject},__set__:function(){throw _b_.AttributeError.$factory("read only")}},JSON:{__class__:$B.make_class("JSON"),parse:function(){return $B.structuredclone2pyobj(
+JSON.parse.apply(this,arguments))},stringify:function(obj,replacer,space){return JSON.stringify($B.pyobj2structuredclone(obj,false),$B.JSObj.$factory(replacer),space)}},jsobj2pyobj:function(obj){return $B.jsobj2pyobj(obj)},load:function(script_url){console.log('"javascript.load" is deprecrated. '+
 'Use browser.load instead.')
 var file_obj=$B.builtins.open(script_url)
 var content=$B.$getattr(file_obj,'read')()
