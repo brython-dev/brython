@@ -103,6 +103,8 @@ __all__ = [
 
 __author__ = 'Bob Ippolito <bob@redivi.com>'
 
+# This version adapted for Brython use the Javascript JSON object whenever
+# possible to improve performance.
 
 # Brython-specific : replace "import codecs"
 class codecs:
@@ -115,10 +117,8 @@ class codecs:
 
 import javascript # Brython-specific
 
-
 def dump(obj, fp, **kw):
-    s = dumps(obj, **kw)
-    fp.write(s)
+    fp.write(dumps(obj, **kw))
 
 def dumps(obj, *, skipkeys=False, ensure_ascii=True, check_circular=True,
         allow_nan=True, cls=None, indent=None, separators=None,
@@ -163,11 +163,11 @@ def dumps(obj, *, skipkeys=False, ensure_ascii=True, check_circular=True,
     the ``cls`` kwarg; otherwise ``JSONEncoder`` is used.
 
     """
-    # cached encoder
     if (not skipkeys and ensure_ascii and
             check_circular and allow_nan and
             cls is None and separators is None and
             default is None and not sort_keys and not kw):
+        # In the most simple case, use the much faster javascript JSON object
         if indent is None:
             res = javascript.JSON.stringify(obj, javascript.NULL, ' ')
             res = javascript.String.new(res).replace(
@@ -180,6 +180,7 @@ def dumps(obj, *, skipkeys=False, ensure_ascii=True, check_circular=True,
             res = javascript.JSON.stringify(obj, javascript.NULL, indent)
         return res
     if cls is None:
+        from .encoder import JSONEncoder
         cls = JSONEncoder
     return cls(
         skipkeys=skipkeys, ensure_ascii=ensure_ascii,
