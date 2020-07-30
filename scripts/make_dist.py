@@ -85,6 +85,7 @@ def run():
             res_no_static += mini
 
     res = re.sub(r'\bcontext\b', 'C', res)
+    res_no_static = re.sub(r'\bcontext\b', 'C', res_no_static)
 
     with open(abs_path('brython.js'), 'w', newline="\n") as out:
         out.write(res)
