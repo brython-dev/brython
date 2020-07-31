@@ -117,12 +117,12 @@ class codecs:
 
 import javascript # Brython-specific
 
+from _json import _dumps
+
 def dump(obj, fp, **kw):
     fp.write(dumps(obj, **kw))
 
-def dumps(obj, *, skipkeys=False, ensure_ascii=True, check_circular=True,
-        allow_nan=True, cls=None, indent=None, separators=None,
-        default=None, sort_keys=False, **kw):
+def dumps(obj, *, cls=None, **kw):
     """Serialize ``obj`` to a JSON formatted ``str``.
 
     If ``skipkeys`` is true then ``dict`` keys that are not basic types
@@ -163,25 +163,8 @@ def dumps(obj, *, skipkeys=False, ensure_ascii=True, check_circular=True,
     the ``cls`` kwarg; otherwise ``JSONEncoder`` is used.
 
     """
-    if (not skipkeys and ensure_ascii and
-            check_circular and allow_nan and
-            cls is None and separators is None and
-            default is None and not sort_keys and not kw):
-        # In the most simple case, use the much faster javascript JSON object
-        if indent is None:
-            res = javascript.JSON.stringify(obj, javascript.NULL, ' ')
-            res = javascript.String.new(res).replace(
-                javascript.RegExp.new("([{[])\n\\s*", "g"), "$1")
-            res = javascript.String.new(res).replace(
-                javascript.RegExp.new("\\s*([}\\]])", "g"), "$1")
-            res = javascript.String.new(res).replace(
-                javascript.RegExp.new("\n\\s*", "g"), " ")
-        else:
-            res = javascript.JSON.stringify(obj, javascript.NULL, indent)
-        return res
     if cls is None:
-        from .encoder import JSONEncoder
-        cls = JSONEncoder
+        return _dumps(obj, 1, **kw)
     return cls(
         skipkeys=skipkeys, ensure_ascii=ensure_ascii,
         check_circular=check_circular, allow_nan=allow_nan, indent=indent,
