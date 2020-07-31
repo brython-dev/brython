@@ -455,11 +455,15 @@ function to_BigInt(x){
 }
 
 function from_BigInt(y){
-    return {
+    var pos = y >= 0
+    y = y.toString()
+    y = y.endsWith("n") ? y.substr(0, y.length - 1) : y
+    y = y.startsWith('-') ? y.substr(1) : y
+    return intOrLong({
         __class__: long_int,
         value: y,
-        pos: y >= 0
-    }
+        pos: pos
+    })
 }
 
 // Special methods to implement operations on instances of long_int
@@ -502,6 +506,9 @@ long_int.__add__ = function(self, other){
         }else{
             return _b_.NotImplemented
         }
+    }
+    if($B.BigInt){
+        //return from_BigInt(to_BigInt(self) + to_BigInt(other))
     }
 
     // Addition of "self" and "other"
@@ -792,6 +799,9 @@ long_int.__mul__ = function(self, other){
     if(isinstance(other, _b_.float)){
         return _b_.float.$factory(parseInt(self.value) * other)
     }
+    if(typeof other == "number"){
+        other = long_int.$factory(other)
+    }
     other_value = other.value
     other_pos = other.pos
     if(other.__class__ !== long_int && isinstance(other, int)){
@@ -799,6 +809,9 @@ long_int.__mul__ = function(self, other){
         var value = int.__index__(other)
         other_value = _b_.str.$factory(value)
         other_pos = value > 0
+    }
+    if($B.BigInt){
+        return from_BigInt(to_BigInt(self) * to_BigInt(other))
     }
     var res = mul_pos(self.value, other_value)
     if(self.pos == other_pos){return intOrLong(res)}
@@ -856,12 +869,12 @@ long_int.__pow__ = function(self, power, z){
                   s = s * s
           return b
     */
-    if(window.BigInt){
-        var s = BigInt(self.value),
-            b = BigInt(1),
-            x = BigInt(power.value),
-            z = z === undefined ? z : typeof z == "number" ? BigInt(z) :
-                BigInt(z.value)
+    if($B.BigInt){
+        var s = $B.BigInt(self.value),
+            b = $B.BigInt(1),
+            x = $B.BigInt(power.value),
+            z = z === undefined ? z : typeof z == "number" ? $B.BigInt(z) :
+                $B.BigInt(z.value)
         if(z === undefined){
             return {
                 __class__: long_int,
@@ -870,10 +883,10 @@ long_int.__pow__ = function(self, power, z){
             }
         }
         while(x > 0){
-            if(x % BigInt(2) == 1){
+            if(x % $B.BigInt(2) == 1){
                 b = b * s
             }
-            x = x / BigInt(2)
+            x = x / $B.BigInt(2)
             if(x > 0){
                 s = s * s
             }
@@ -975,6 +988,9 @@ long_int.__sub__ = function(self, other){
     }
     if(typeof other == "number"){
         other = long_int.$factory(_b_.str.$factory(other))
+    }
+    if($B.BigInt){
+        //return from_BigInt(to_BigInt(self) - to_BigInt(other))
     }
     var res
     if(self.pos && other.pos){

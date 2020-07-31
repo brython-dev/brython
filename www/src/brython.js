@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-07-31 09:57:31.111700"
-__BRYTHON__.timestamp=1596182251111
+__BRYTHON__.compiled_date="2020-07-31 13:49:16.642359"
+__BRYTHON__.timestamp=1596196156642
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","json1","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -10635,8 +10635,11 @@ return{__class__:long_int,value:res,pos:true}}
 function to_BigInt(x){var res=$B.BigInt(x.value)
 if(x.pos){return res}
 return-res}
-function from_BigInt(y){return{
-__class__:long_int,value:y,pos:y >=0}}
+function from_BigInt(y){var pos=y >=0
+y=y.toString()
+y=y.endsWith("n")? y.substr(0,y.length-1):y
+y=y.startsWith('-')? y.substr(1):y
+return intOrLong({__class__:long_int,value:y,pos:pos})}
 long_int.$from_float=function(value){var s=Math.abs(value).toString(),v=s
 if(s.search("e")>-1){var t=/-?(\d)(\.\d+)?e([+-])(\d*)/.exec(s),n1=t[1],n2=t[2],pos=t[3],exp=t[4]
 if(pos=="+"){if(n2===undefined){v=n1+"0".repeat(exp-1)}else{v=n1+n2+"0".repeat(exp-1-n2.length)}}}
@@ -10645,6 +10648,7 @@ long_int.__abs__=function(self){return{__class__:long_int,value:self.value,pos:t
 long_int.__add__=function(self,other){if(isinstance(other,_b_.float)){return _b_.float.$factory(parseInt(self.value)+other.value)}
 if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}else if(other.__class__ !==long_int){if(isinstance(other,_b_.bool)){other=long_int.$factory(other ? 1 :0)}else if(isinstance(other,int)){
 other=long_int.$factory(_b_.str.$factory(_b_.int.__index__(other)))}else{return _b_.NotImplemented}}
+if($B.BigInt){}
 var res
 if(self.pos && other.pos){
 return add_pos(self.value,other.value)}else if(! self.pos && ! other.pos){
@@ -10761,12 +10765,14 @@ if($B.rich_comp("__eq__",other,0)){return NaN}
 else if(_b_.getattr(other,"__gt__")(0)){return self}
 else{return-self}}
 if(isinstance(other,_b_.float)){return _b_.float.$factory(parseInt(self.value)*other)}
+if(typeof other=="number"){other=long_int.$factory(other)}
 other_value=other.value
 other_pos=other.pos
 if(other.__class__ !==long_int && isinstance(other,int)){
 var value=int.__index__(other)
 other_value=_b_.str.$factory(value)
 other_pos=value > 0}
+if($B.BigInt){return from_BigInt(to_BigInt(self)*to_BigInt(other))}
 var res=mul_pos(self.value,other_value)
 if(self.pos==other_pos){return intOrLong(res)}
 res.pos=false
@@ -10787,12 +10793,12 @@ power=long_int.$factory(_b_.str.$factory(_b_.int.__index__(power)))}else if(! is
 throw TypeError.$factory(msg+$B.class_name(power)+"'")}
 if(! power.pos){if(self.value=="1"){return self}
 return long_int.$factory("0")}else if(power.value=="0"){return long_int.$factory("1")}
-if(window.BigInt){var s=BigInt(self.value),b=BigInt(1),x=BigInt(power.value),z=z===undefined ? z :typeof z=="number" ? BigInt(z):
-BigInt(z.value)
+if($B.BigInt){var s=$B.BigInt(self.value),b=$B.BigInt(1),x=$B.BigInt(power.value),z=z===undefined ? z :typeof z=="number" ? $B.BigInt(z):
+$B.BigInt(z.value)
 if(z===undefined){return{
 __class__:long_int,value:(s**x).toString(),pos:true}}
-while(x > 0){if(x % BigInt(2)==1){b=b*s}
-x=x/BigInt(2)
+while(x > 0){if(x % $B.BigInt(2)==1){b=b*s}
+x=x/$B.BigInt(2)
 if(x > 0){s=s*s}
 if(z !==undefined){b=b % z}}
 return{__class__:long_int,value:b.toString(),pos:true}}
@@ -10827,6 +10833,7 @@ return res+self.value}
 long_int.__sub__=function(self,other){if(isinstance(other,_b_.float)){other=other instanceof Number ? other :other.$brython_value
 return _b_.float.$factory(parseInt(self.value)-other)}
 if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}
+if($B.BigInt){}
 var res
 if(self.pos && other.pos){switch(comp_pos(self.value,other.value)){case 1:
 res=sub_pos(self.value,other.value)
