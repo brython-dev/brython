@@ -100,6 +100,8 @@ function to_json(){
         return first + res.join(sep) + last
     }else if(obj instanceof Number){
         return obj.valueOf()
+    }else if(obj === _b_.None){
+        return "null"
     }else if(obj.__class__ === _b_.dict){
         var res = [],
             items = $B.dict_to_list(obj)
@@ -150,7 +152,9 @@ function to_json(){
 }
 
 return {
-    _dumps: to_json
+    _dumps: function(){
+        return _b_.str.$factory(to_json.apply(null, arguments))
+    }
 }
 
 })(__BRYTHON__)
