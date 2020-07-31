@@ -71,7 +71,7 @@ function add_pos(v1, v2){
 
 var len = ((Math.pow(2, 53) - 1) + '').length - 1
 
-function binary(t){
+function binary_pos(t){
     var nb_chunks = Math.ceil(t.length / len),
         chunks = [],
         pos,
@@ -107,6 +107,24 @@ function binary(t){
     }
     bin = bin.reverse().join('')
     return bin
+}
+
+function binary(obj){
+    var bpos = binary_pos(obj.value)
+    if(obj.pos){
+        return bpos
+    }
+    // If obj is < 0, use 2's complement
+    // Invert bits
+    var res = ''
+    for(var i = 0, len = bpos.length; i < len; i++){
+        res += bpos.charAt(i) == "0" ? "1": "0"
+    }
+    // Add 1
+    var add1 = add_pos(res, "1").value
+    // Restore leading "0" in res if any
+    add1 = res.substr(0, res.length - add1.length) + add1
+    return add1
 }
 
 function check_shift(shift){
@@ -428,6 +446,22 @@ function sub_pos(v1, v2){
     return {__class__: long_int, value: res, pos: true}
 }
 
+function to_BigInt(x){
+    var res = $B.BigInt(x.value)
+    if(x.pos){
+        return res
+    }
+    return -res
+}
+
+function from_BigInt(y){
+    return {
+        __class__: long_int,
+        value: y,
+        pos: y >= 0
+    }
+}
+
 // Special methods to implement operations on instances of long_int
 long_int.$from_float = function(value){
     var s = Math.abs(value).toString(),
@@ -512,32 +546,60 @@ long_int.__add__ = function(self, other){
     }
 }
 
-
 long_int.__and__ = function(self, other){
     if(typeof other == "number"){
         other = long_int.$factory(_b_.str.$factory(other))
+    }
+    if($B.BigInt){
+        return from_BigInt(to_BigInt(self) & to_BigInt(other))
     }
     var v1 = self.value,
         v2 = other.value,
         temp1,
         temp2,
         res = ""
+    var neg = (! self.pos) && (! other.pos)
+    if(neg){
+        self = long_int.__neg__(self)
+        other = long_int.__neg__(other)
+    }
+    var b1 = binary(self),
+        len1 = b1.length,
+        b2 = binary(other),
+        len2 = b2.length,
+        i = 1,
+        res = '',
+        x1,
+        x2
     while(true){
-        temp1 = divmod_by_safe_int(v1, 2)
-        temp2 = divmod_by_safe_int(v2, 2)
-        res = ((temp1[1] == "1" && temp2[1] == "1") ?
-            "1" : "0") + res
-        v1 = temp1[0]
-        v2 = temp2[0]
-        if(v1 == "0"){
-            var res0 = intOrLong(long_int.$factory(res, 2))
-            break
-        }else if(v2 == "0"){
-            var res0 = intOrLong(long_int.$factory(res, 2))
+        if(i > len1 && i > len2){
             break
         }
+        if(i > len1){
+            x1 = self.pos ? "0" : "1"
+        }else{
+            x1 = b1.charAt(len1 - i)
+        }
+        if(i > len2){
+            x2 = other.pos ? "0" : "1"
+        }else{
+            x2 = b2.charAt(len2 - i)
+        }
+        if(x1 == "1" && x2 == "1"){
+            res = "1" + res
+        }else{
+            res = "0" + res
+        }
+        i++
     }
-    return res0
+    while(res.charAt(0) == "0"){
+        res = res.substr(1)
+    }
+    res = $B.long_int.$factory(res, 2)
+    if(neg){
+        res.pos = false
+    }
+    return intOrLong(res)
 }
 
 long_int.__divmod__ = function(self, other){
@@ -988,7 +1050,7 @@ long_int.real = function(self){return self}
 long_int.to_base = function(self, base){
     // Returns the string representation of self in specified base
     if(base == 2){
-        return binary(self.value)
+        return binary_pos(self.value)
     }
     var res = "",
         v = self.value

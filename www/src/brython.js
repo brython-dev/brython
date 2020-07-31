@@ -102,9 +102,9 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-07-30 12:02:43.003717"
-__BRYTHON__.timestamp=1596103363003
-__BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
+__BRYTHON__.compiled_date="2020-07-31 09:57:31.111700"
+__BRYTHON__.timestamp=1596182251111
+__BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","json1","long_int","marshal","math","math1","math_kozh","modulefinder","posix","random","unicodedata"]
 ;
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -6591,8 +6591,9 @@ case 16:
 prefix='0x';break
 default:
 console.log('invalid base:'+base)}
-if(obj.__class__===$B.long_int){if(obj.pos){return prefix+$B.long_int.to_base(obj,base)}
-return '-'+prefix+$B.long_int.to_base(-obj,base)}
+if(obj.__class__===$B.long_int){var res=prefix+$B.long_int.to_base(obj,base)
+if(! obj.pos){res="-"+res}
+return res}
 var value=$B.$GetInt(obj)
 if(value===undefined){
 throw _b_.TypeError.$factory('Error, argument must be an integer or'+
@@ -9322,7 +9323,7 @@ $B.set_func_names($B.JSMeta,"builtins")})(__BRYTHON__)
 ;(function($B){$B.stdlib={}
 var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_collections_abc','_compat_pickle','_contextvars','_csv','_dummy_thread','_frozen_importlib','_functools','_imp','_io','_markupbase','_operator','_py_abc','_pydecimal','_queue','_random','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_weakref','_weakrefset','abc','antigravity','argparse','atexit','base64','bdb','binascii','bisect','browser.aio','browser.ajax','browser.highlight','browser.html','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.template','browser.timer','browser.webcomponent','browser.websocket','browser.webworker','browser.worker','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','gettext','glob','heapq','hmac','imp','inspect','interpreter','io','ipaddress','itertools','keyword','linecache','locale','mimetypes','nntplib','ntpath','numbers','opcode','operator','optparse','os','pathlib','pdb','pickle','pkgutil','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','re','reprlib','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','string','stringprep','struct','subprocess','sys','sysconfig','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uu','uuid','warnings','weakref','webbrowser','zipfile','zipimport','zlib']
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
-var js=['_aio','_ajax','_base64','_binascii','_io_classes','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_sre_utils','_string','_strptime','_svg','_warnings','_webcomponent','_webworker','_zlib_utils','aes','array','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','long_int','marshal','math','math1','math_kozh','md5','modulefinder','pbkdf2','posix','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata']
+var js=['_aio','_ajax','_base64','_binascii','_io_classes','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_sre_utils','_string','_strptime','_svg','_warnings','_webcomponent','_webworker','_zlib_utils','aes','array','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','json1','long_int','marshal','math','math1','math_kozh','md5','modulefinder','pbkdf2','posix','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
 var pkglist=['browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','json','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.simpleaio','site-packages.simpy','site-packages.simpy.resources','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
 for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}})(__BRYTHON__)
@@ -10495,7 +10496,7 @@ else{res=x+res;carry=0}}
 if(carry){res=carry+res}
 return{__class__:long_int,value:res,pos:true}}
 var len=((Math.pow(2,53)-1)+'').length-1
-function binary(t){var nb_chunks=Math.ceil(t.length/len),chunks=[],pos,start,nb,bin=[]
+function binary_pos(t){var nb_chunks=Math.ceil(t.length/len),chunks=[],pos,start,nb,bin=[]
 for(var i=0;i < nb_chunks;i++){pos=t.length-(i+1)*len
 start=Math.max(0,pos)
 nb=pos-start
@@ -10511,6 +10512,13 @@ bin.push(rest)
 if(chunks[0]==0){chunks.shift()}}
 bin=bin.reverse().join('')
 return bin}
+function binary(obj){var bpos=binary_pos(obj.value)
+if(obj.pos){return bpos}
+var res=''
+for(var i=0,len=bpos.length;i < len;i++){res+=bpos.charAt(i)=="0" ? "1":"0"}
+var add1=add_pos(res,"1").value
+add1=res.substr(0,res.length-add1.length)+add1
+return add1}
 function check_shift(shift){
 if(! isinstance(shift,long_int)){throw TypeError.$factory("shift must be int, not '"+
 $B.class_name(shift)+"'")}
@@ -10624,6 +10632,11 @@ else{res=x+res;carry=0}}
 while(res.charAt(0)=="0" && res.length > 1){res=res.substr(1)}
 if(res.startsWith("NaN")){console.log("hoho !!",v1,v2,v1 >=v2,res)}
 return{__class__:long_int,value:res,pos:true}}
+function to_BigInt(x){var res=$B.BigInt(x.value)
+if(x.pos){return res}
+return-res}
+function from_BigInt(y){return{
+__class__:long_int,value:y,pos:y >=0}}
 long_int.$from_float=function(value){var s=Math.abs(value).toString(),v=s
 if(s.search("e")>-1){var t=/-?(\d)(\.\d+)?e([+-])(\d*)/.exec(s),n1=t[1],n2=t[2],pos=t[3],exp=t[4]
 if(pos=="+"){if(n2===undefined){v=n1+"0".repeat(exp-1)}else{v=n1+n2+"0".repeat(exp-1-n2.length)}}}
@@ -10661,17 +10674,21 @@ res=sub_pos(other.value,self.value)
 break}
 return intOrLong(res)}}
 long_int.__and__=function(self,other){if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}
+if($B.BigInt){return from_BigInt(to_BigInt(self)& to_BigInt(other))}
 var v1=self.value,v2=other.value,temp1,temp2,res=""
-while(true){temp1=divmod_by_safe_int(v1,2)
-temp2=divmod_by_safe_int(v2,2)
-res=((temp1[1]=="1" && temp2[1]=="1")?
-"1" :"0")+res
-v1=temp1[0]
-v2=temp2[0]
-if(v1=="0"){var res0=intOrLong(long_int.$factory(res,2))
-break}else if(v2=="0"){var res0=intOrLong(long_int.$factory(res,2))
-break}}
-return res0}
+var neg=(! self.pos)&&(! other.pos)
+if(neg){self=long_int.__neg__(self)
+other=long_int.__neg__(other)}
+var b1=binary(self),len1=b1.length,b2=binary(other),len2=b2.length,i=1,res='',x1,x2
+while(true){if(i > len1 && i > len2){break}
+if(i > len1){x1=self.pos ? "0" :"1"}else{x1=b1.charAt(len1-i)}
+if(i > len2){x2=other.pos ? "0" :"1"}else{x2=b2.charAt(len2-i)}
+if(x1=="1" && x2=="1"){res="1"+res}else{res="0"+res}
+i++}
+while(res.charAt(0)=="0"){res=res.substr(1)}
+res=$B.long_int.$factory(res,2)
+if(neg){res.pos=false}
+return intOrLong(res)}
 long_int.__divmod__=function(self,other){if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}
 var dm=divmod_pos(self.value,other.value)
 if(self.pos !==other.pos){if(dm[0].value !="0"){dm[0].pos=false}
@@ -10851,7 +10868,7 @@ long_int.denominator=function(self){return _b_.int.$factory(1)}
 long_int.imag=function(self){return _b_.int.$factory(0)}
 long_int.real=function(self){return self}
 long_int.to_base=function(self,base){
-if(base==2){return binary(self.value)}
+if(base==2){return binary_pos(self.value)}
 var res="",v=self.value
 while(v > 0){var dm=divmod_pos(v,base.toString())
 res=parseInt(dm[1].value).toString(base)+res

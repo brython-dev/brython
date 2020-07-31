@@ -179,8 +179,11 @@ function $builtin_base_convert_helper(obj, base) {
   }
 
   if(obj.__class__ === $B.long_int){
-     if(obj.pos){return prefix + $B.long_int.to_base(obj, base)}
-     return '-' + prefix + $B.long_int.to_base(-obj, base)
+      var res = prefix + $B.long_int.to_base(obj, base)
+      if(! obj.pos){
+          res = "-" + res
+      }
+      return res
   }
 
   var value = $B.$GetInt(obj)
