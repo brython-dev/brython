@@ -17,22 +17,33 @@ function simple(obj){
     return false
 }
 
-function to_json(){
-    var $ = $B.args("to_json", 2, {obj: null, level: null}, ['obj', 'level'],
+function to_json(obj, level){
+    var $defaults = {skipkeys:_b_.False, ensure_ascii:_b_.True,
+            check_circular:_b_.True, allow_nan:_b_.True, cls:_b_.None,
+            indent:_b_.None, separators:_b_.None, "default":_b_.None,
+            sort_keys:_b_.False},
+        $ = $B.args("to_json", 2, {obj: null, level: null}, ['obj', 'level'],
                     arguments, {level: 1}, null, "kw"),
-        obj = $.obj,
-        level = $.level,
-        kw = $.kw.$string_dict,
-        indent = kw.indent === undefined ? _b_.None : kw.indent[0],
-        ensure_ascii = kw.ensure_ascii === undefined ? true : kw.ensure_ascii[0],
-        separators = kw.separators === undefined ?
-            indent === _b_.None ? [', ', ': '] : [',', ': '] :
+        kw = $.kw.$string_dict
+
+    for(key in $defaults){
+        if(kw[key] === undefined){
+            kw[key] = $defaults[key]
+        }else{
+            kw[key] = kw[key][0]
+        }
+    }
+
+    var indent = kw.indent,
+        ensure_ascii = kw.ensure_ascii,
+        separators = kw.separators === _b_.None ?
+             kw.indent === _b_.None ? [', ', ': '] : [',', ': '] :
             kw.separators,
-        skipkeys = kw.skipkeys === undefined ? false : kw.skipkeys[0],
-        $$default = kw.default === undefined ? _b_.None : kw.default[0],
-        sort_keys = kw.sort_keys === undefined ? false : kw.sort_keys[0],
-        allow_nan = kw.allow_nan === undefined ? true : kw.allow_nan[0],
-        check_circular = kw.check_circular === undefined ? true : kw.check_circular[0]
+        skipkeys = kw.skipkeys,
+        $$default = kw.default,
+        sort_keys = kw.sort_keys,
+        allow_nan = kw.allow_nan,
+        check_circular = kw.check_circular
     var item_separator = separators[0],
         key_separator = separators[1]
     if(indent !== _b_.None){
@@ -42,14 +53,13 @@ function to_json(){
         }else if(typeof indent == "number" && indent >= 1){
             indent_str = " ".repeat(indent)
         }else{
-            console.log("indent",indent)
             throw _b_.ValueError.$factory("invalid indent: " +
                 _b_.str.$factory(indent))
         }
     }
     var kwarg = {$nat: "kw", kw: {}}
     for(var key in kw){
-        kwarg.kw[key] = kw[key][0]
+        kwarg.kw[key] = kw[key]
     }
     switch(typeof obj){
         case 'string':
@@ -102,7 +112,7 @@ function to_json(){
         return obj.valueOf()
     }else if(obj === _b_.None){
         return "null"
-    }else if(obj.__class__ === _b_.dict){
+    }else if(_b_.isinstance(obj, _b_.dict)){
         var res = [],
             items = $B.dict_to_list(obj)
         if(sort_keys){
@@ -151,10 +161,67 @@ function to_json(){
     }
 }
 
-return {
-    _dumps: function(){
-        return _b_.str.$factory(to_json.apply(null, arguments))
+function from_json(s){
+    var $defaults = {cls: _b_.None, object_hook: _b_.None,
+            parse_float: _b_.None, parse_int: _b_.None,
+            parse_constant: _b_.None, object_pairs_hook: _b_.None},
+        $ = $B.args("from_json", 1, {s: null}, ['s'], arguments, {},
+            null, "kw"),
+        kw = $.kw.$string_dict
+    if(Object.keys(kw).length == 0){
+        // default
+        return $B.structuredclone2pyobj(JSON.parse(s))
     }
+    for(key in $defaults){
+        if(kw[key] === undefined){
+            kw[key] = $defaults[key]
+        }else{
+            kw[key] = kw[key][0]
+        }
+    }
+
+    function reviver(key, value){
+        if(typeof value == "number"){
+            if(Number.isInteger(value) && kw.parse_int !== _b_.None){
+                return $B.$call(kw.parse_int)(value.toString())
+            }else if(! Number.isInteger(value) && kw.parse_float !== _b_.None){
+                return $B.$call(kw.parse_float)(value.toString())
+            }else if((value === Infinity || value === -Infinity) &&
+                    kw.parse_constant !== _b_.None){
+                return $B.$call(kw.parse_constant)(value)
+            }else{
+                return value
+            }
+        }else if(isNaN(value) && kw.parse_constant !== _b_.None){
+            return $B.$call(kw.parse_constant)(value)
+        }else if(typeof value == "object" && !Array.isArray(value) &&
+                (kw.object_hook !== _b_.None ||
+                    kw.object_pairs_hook !== _b_.None)){
+            // Apply Python function object_hook to the Python dictionary
+            // built from the Javascript object "value"
+            var py_dict = $B.structuredclone2pyobj(value)
+            if(kw.object_pairs_hook === _b_.None){
+                var res = $B.$call(kw.object_hook)(py_dict)
+            }else{
+                var items = $B.dict_to_list(py_dict),
+                    res = $B.$call(kw.object_pairs_hook)(items)
+            }
+            // Transform the result of the Python function to a Javascript
+            // object
+            return $B.pyobj2structuredclone(res)
+        }else{
+            return value
+        }
+    }
+
+    return $B.structuredclone2pyobj(JSON.parse(s, reviver))
+}
+
+return {
+    dumps: function(){
+        return _b_.str.$factory(to_json.apply(null, arguments))
+    },
+    loads: from_json
 }
 
 })(__BRYTHON__)

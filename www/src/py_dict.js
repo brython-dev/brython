@@ -208,7 +208,7 @@ function to_list(d, ix){
                 items.push([attr, val])
             }
         }
-    }else{
+    }else if(_b_.isinstance(d, _b_.dict)){
         for(var k in d.$numeric_dict){
             items.push([parseFloat(k), d.$numeric_dict[k]])
         }
@@ -226,7 +226,6 @@ function to_list(d, ix){
         })
         items = items.map(function(item){return [item[0], item[1][0]]})
     }
-
     if(ix !== undefined){
         return items.map(function(item){return item[ix]})
     }else{
@@ -758,7 +757,7 @@ dict.$setitem = function(self, key, value, $hash){
         }
         return $N
     }
-    
+
     switch(typeof key){
         case "string":
             if(self.$string_dict === undefined){

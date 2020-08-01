@@ -45,7 +45,7 @@ $B.pyobj2structuredclone = function(obj, strict){
             res.push($B.pyobj2structuredclone(obj[i]))
         }
         return res
-    }else if(obj.__class__ === _b_.dict){
+    }else if(_b_.isinstance(obj, _b_.dict)){
         if(strict){
             if(Object.keys(obj.$numeric_dict).length > 0 ||
                     Object.keys(obj.$object_dict).length > 0){

@@ -115,9 +115,32 @@ class codecs:
     BOM_UTF32_LE = b'\xff\xfe\x00\x00'
     BOM_UTF32_BE = b'\x00\x00\xfe\xff'
 
-import javascript # Brython-specific
+import _json
 
-from _json import _dumps
+class JSONDecodeError(ValueError):
+    """Subclass of ValueError with the following additional properties:
+
+    msg: The unformatted error message
+    doc: The JSON document being parsed
+    pos: The start index of doc where parsing failed
+    lineno: The line corresponding to pos
+    colno: The column corresponding to pos
+
+    """
+    # Note that this exception is used from _json
+    def __init__(self, msg, doc, pos):
+        lineno = doc.count('\n', 0, pos) + 1
+        colno = pos - doc.rfind('\n', 0, pos)
+        errmsg = '%s: line %d column %d (char %d)' % (msg, lineno, colno, pos)
+        ValueError.__init__(self, errmsg)
+        self.msg = msg
+        self.doc = doc
+        self.pos = pos
+        self.lineno = lineno
+        self.colno = colno
+
+    def __reduce__(self):
+        return self.__class__, (self.msg, self.doc, self.pos)
 
 def dump(obj, fp, **kw):
     fp.write(dumps(obj, **kw))
@@ -164,7 +187,7 @@ def dumps(obj, *, cls=None, **kw):
 
     """
     if cls is None:
-        return _dumps(obj, 1, **kw)
+        return _json.dumps(obj, 1, **kw)
     return cls(
         skipkeys=skipkeys, ensure_ascii=ensure_ascii,
         check_circular=check_circular, allow_nan=allow_nan, indent=indent,
@@ -226,8 +249,7 @@ def load(fp, *, cls=None, object_hook=None, parse_float=None,
         parse_constant=parse_constant, object_pairs_hook=object_pairs_hook, **kw)
 
 
-def loads(s, *, cls=None, object_hook=None, parse_float=None,
-        parse_int=None, parse_constant=None, object_pairs_hook=None, **kw):
+def loads(s, *, cls=None, **kw):
     """Deserialize ``s`` (a ``str``, ``bytes`` or ``bytearray`` instance
     containing a JSON document) to a Python object.
 
@@ -264,7 +286,6 @@ def loads(s, *, cls=None, object_hook=None, parse_float=None,
     """
     if isinstance(s, str):
         if s.startswith('\ufeff'):
-            from .decoder import JSONDecodeError
             raise JSONDecodeError("Unexpected UTF-8 BOM (decode using utf-8-sig)",
                                   s, 0)
     else:
@@ -283,15 +304,10 @@ def loads(s, *, cls=None, object_hook=None, parse_float=None,
         )
         del kw['encoding']
 
-    if (cls is None and object_hook is None and
-            parse_int is None and parse_float is None and
-            parse_constant is None and object_pairs_hook is None and not kw):
+    if cls is None:
         # Brython-specific : in the most simple case, use Javascript JSON : this
         # is much faster.
-        return javascript.JSON.parse(s)
-    if cls is None:
-        from .decoder import JSONDecoder
-        cls = JSONDecoder
+        return _json.loads(s, **kw)
     if object_hook is not None:
         kw['object_hook'] = object_hook
     if object_pairs_hook is not None:
