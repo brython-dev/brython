@@ -109,7 +109,7 @@ from browser import document, html
 
 calc = html.TABLE()
 calc <= html.TR(html.TH(html.DIV("0", id="result"), colspan=3) +
-                html.TH("C", id="clear"))
+                html.TD("C", id="clear"))
 lines = ["789/",
          "456*",
          "123-",
