@@ -265,5 +265,19 @@ try:
 except TypeError:
     pass
 
+# issue 1468
+s1 = set()
+assert str(s1) == "set()"
+s1.add('hello')
+assert str(s1) == "{'hello'}"
+
+s1 = set()
+class Foo:
+    s1 = s1
+    def __repr__(self):
+        return 'Foo(s1=%r)' % self.s1
+
+s1.add(Foo())
+assert str(s1) == "{Foo(s1=set(...))}", str(s1)
 
 print("passed all tests..")

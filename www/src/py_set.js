@@ -245,7 +245,6 @@ set.__rxor__ = function(self, other){
 
 set.__str__ = set.__repr__ = function(self){
     var klass_name = $B.class_name(self)
-    self.$cycle = self.$cycle === undefined ? 0 : self.$cycle + 1
     if(self.$items.length === 0){
         return klass_name + "()"
     }
@@ -253,8 +252,7 @@ set.__str__ = set.__repr__ = function(self){
         tail = "})"
     if(head == "set({"){head = "{"; tail = "}"}
     var res = []
-    if(self.$cycle){
-        self.$cycle--
+    if($B.repr.enter(self)){
         return klass_name + "(...)"
     }
     self.$items.sort()
@@ -264,7 +262,7 @@ set.__str__ = set.__repr__ = function(self){
         else{res.push(r)}
     }
     res = res.join(", ")
-    self.$cycle--
+    $B.repr.leave(self)
     return head + res + tail
 }
 
