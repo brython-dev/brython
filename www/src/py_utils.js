@@ -293,7 +293,7 @@ $B.$dict_comp = function(module_name, parent_scope, items, line_num){
     // items is ["x: x * 2", "for x in A", "if x > 2"]
 
     var ix = $B.UUID(),
-        res = "res" + ix,
+        res = "comp_result_" + $B.lambda_magic + ix,
         py = res + " = {}\n", // Python code
         indent = 0
     for(var i = 1, len = items.length; i < len; i++){
@@ -312,7 +312,7 @@ $B.$dict_comp = function(module_name, parent_scope, items, line_num){
         outer_expr = root.outermost_expr.to_js(),
         js = root.to_js()
 
-    js += '\nreturn $locals["' + res + '"]\n'
+    js += '\nreturn ' + res + '\n'
 
     js = "(function(expr){" + js + "})(" + outer_expr + ")"
     $B.clear_ns(dictcomp_name)

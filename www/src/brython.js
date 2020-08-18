@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-08-15 18:38:18.305130"
-__BRYTHON__.timestamp=1597509498304
+__BRYTHON__.compiled_date="2020-08-18 18:26:12.954700"
+__BRYTHON__.timestamp=1597767972954
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -2876,8 +2876,11 @@ node=pnode}
 return found}
 $IdCtx.prototype.to_js=function(arg){
 if(this.result !==undefined && this.scope.ntype=='generator'){return this.result}
-this.js_processed=true
 var val=this.value
+if(val=='__BRYTHON__' ||val=='$B'){return val}
+if(val.startsWith("comp_result_"+$B.lambda_magic)){if(this.bound){return "var "+val}
+return val}
+this.js_processed=true
 var is_local=this.scope.binding[val]!==undefined,this_node=$get_node(this),bound_before=this_node.bound_before
 this.nonlocal=this.scope.nonlocals &&
 this.scope.nonlocals[val]!==undefined
@@ -2888,7 +2891,6 @@ if((!this.bound)&& this.scope.C
 this.scope.C.tree[0].name==val){
 return '$B.$search("'+val+'")'}
 if(this.unbound && !this.nonlocal){if(this.scope.ntype=='def' ||this.scope.ntype=='generator'){return '$B.$local_search("'+val+'")'}else{return '$B.$search("'+val+'")'}}
-if(val=='__BRYTHON__' ||val=='$B'){return val}
 var innermost=$get_scope(this),scope=innermost,found=[]
 var search_ids=['"'+innermost.id+'"']
 var gs=innermost
@@ -6013,7 +6015,7 @@ py+=" ".repeat(indent)
 py+="x"+ix+".append("+items[0]+")\n"
 return[py,ix]}
 $B.$dict_comp=function(module_name,parent_scope,items,line_num){
-var ix=$B.UUID(),res="res"+ix,py=res+" = {}\n",
+var ix=$B.UUID(),res="comp_result_"+$B.lambda_magic+ix,py=res+" = {}\n",
 indent=0
 for(var i=1,len=items.length;i < len;i++){var item=items[i].replace(/\s+$/,"").replace(/\n/g,"")
 py+="    ".repeat(indent)+item+":\n"
@@ -6022,7 +6024,7 @@ py+="    ".repeat(indent)+res+".update({"+items[0]+"})"
 var line_info=line_num+','+module_name
 var dictcomp_name="dc"+ix,root=$B.py2js(
 {src:py,is_comp:true,line_info:line_info},module_name,dictcomp_name,parent_scope,line_num),outer_expr=root.outermost_expr.to_js(),js=root.to_js()
-js+='\nreturn $locals["'+res+'"]\n'
+js+='\nreturn '+res+'\n'
 js="(function(expr){"+js+"})("+outer_expr+")"
 $B.clear_ns(dictcomp_name)
 delete $B.$py_src[dictcomp_name]

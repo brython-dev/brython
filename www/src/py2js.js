@@ -5806,8 +5806,20 @@ $IdCtx.prototype.to_js = function(arg){
         return this.result
     }
 
-    this.js_processed = true
     var val = this.value
+
+    // Special cases
+    if(val == '__BRYTHON__' || val == '$B'){
+        return val
+    }
+    if(val.startsWith("comp_result_" + $B.lambda_magic)){
+        if(this.bound){
+            return "var " + val
+        }
+        return val
+    }
+
+    this.js_processed = true
 
     var is_local = this.scope.binding[val] !== undefined,
         this_node = $get_node(this),
@@ -5837,8 +5849,6 @@ $IdCtx.prototype.to_js = function(arg){
         }
     }
 
-    // Special cases
-    if(val == '__BRYTHON__' || val == '$B'){return val}
 
     var innermost = $get_scope(this),
         scope = innermost,
