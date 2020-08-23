@@ -92,7 +92,7 @@ pip install brython
 then create a new directory and run
 
 ```bash
-python -m brython --install
+brython-cli --install
 ```
 
 or by loading the latest version of the Brython zip file from the
