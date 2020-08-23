@@ -76,7 +76,7 @@ with the [available stdlib](https://github.com/brython-dev/brython/tree/master/w
 
 If you want to use the latest development version, you can load these scripts
 instead:
-```
+```xml
 <script src="https://raw.githack.com/brython-dev/brython/master/www/src/brython.js"></script>
 <script src="https://raw.githack.com/brython-dev/brython/master/www/src/brython_stdlib.js"></script>
 ```
