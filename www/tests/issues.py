@@ -2662,6 +2662,59 @@ class Cat:
 assert str(todict(Cat(Cat()))) == \
     "{'name': {'name': '', 'age': 0, 'breed': 'test'}, 'age': 0, 'breed': 'test'}"
 
+# issue 1472
+try:
+  exec("""
+myvar = 1
+result.append(myvar)
+def main_func():
+  nonlocal myvar
+  myvar = 3
+  result.append(myvar)
+  result.append("hello")
+
+main_func()
+result.append(myvar)
+""")
+  raise AssertionError("should have raised SyntaxError")
+except SyntaxError as e:
+  assert e.args[0] == "no binding for nonlocal 'myvar' found"
+
+result = []
+exec("""
+def f():
+  myvar = 1
+  result.append(myvar)
+  def main_func():
+    nonlocal myvar
+    myvar = 3
+    result.append(myvar)
+    result.append("hello")
+
+  main_func()
+  result.append(myvar)
+f()
+""")
+assert result == [1, 3, 'hello', 3]
+
+result = []
+exec("""
+def f():
+  myvar = 1
+  result.append(myvar)
+  def main_func():
+    global myvar
+    myvar = 3
+    result.append(myvar)
+    result.append("hello")
+
+  main_func()
+  result.append(myvar)
+f()
+""")
+assert result == [1, 3, 'hello', 1]
+
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

@@ -7218,7 +7218,8 @@ $NonlocalCtx.prototype.transition = function(token, value){
 }
 
 $NonlocalCtx.prototype.transform = function(node, rank){
-    var pscope = this.scope.parent_block
+    var context = this.parent,
+        pscope = this.scope.parent_block
     if(pscope.context === undefined){
         $_SyntaxError(context,["no binding for nonlocal '" +
             $B.last(Object.keys(this.names)) + "' found"])
