@@ -255,7 +255,7 @@ function run_py(module_contents, path, module, compiled) {
         console.log(err + " for module " + module.__name__)
         console.log("module", module)
         console.log(root)
-        console.log(err)
+        // console.log(err)
         if($B.debug > 1){
             console.log(js)
         }
@@ -490,6 +490,95 @@ for(var method in finder_VFS){
 finder_VFS.$factory = function(){
     return {__class__: finder_VFS}
 }
+
+// Virtual File System optimized module import
+var finder_cpython = {
+    __class__: _b_.type,
+    __mro__: [_b_.object],
+    $infos: {
+        __module__: "builtins",
+        __name__: "CPythonFinder"
+    },
+
+    create_module : function(cls, spec) {
+        // Fallback to default module creation
+        return _b_.None
+    },
+
+    exec_module : function(cls, modobj) {
+        console.log("exec PYthon module", modobj)
+        var loader_state = modobj.__spec__.loader_state
+        var content = loader_state.content
+        delete modobj.__spec__["loader_state"]
+        modobj.$is_package = loader_state.is_package
+        modobj.__file__ = loader_state.__file__
+        $B.file_cache[modobj.__file__] = content
+        var mod_name = modobj.__name__
+        if($B.debug > 1){
+            console.log("run Python code from CPython", mod_name)
+        }
+        run_py(content, modobj.__path__, modobj)
+    },
+
+    find_module: function(cls, name, path){
+        return {
+            __class__: Loader,
+            load_module: function(name, path){
+                var spec = cls.find_spec(cls, name, path)
+                var mod = module.$factory(name)
+                $B.imported[name] = mod
+                mod.__spec__ = spec
+                cls.exec_module(cls, mod)
+            }
+        }
+    },
+
+    find_spec : function(cls, fullname, path, prev_module) {
+        console.log("finder cpython", fullname)
+        var xhr = new XMLHttpRequest(),
+            url = "/cpython_import?module=" + fullname,
+            result
+
+        xhr.open("GET", url, false)
+        xhr.onreadystatechange = function(){
+            if(this.readyState == 4 && this.status == 200){
+                var data = JSON.parse(this.responseText)
+                result = new_spec({
+                    name : fullname,
+                    loader: cls,
+                    // FIXME : Better origin string.
+                    origin : "CPython",
+                    // FIXME: Namespace packages ?
+                    submodule_search_locations: data.is_package? [] : _b_.None,
+                    loader_state: {
+                        content: data.content
+                    },
+                    // FIXME : Where exactly compiled module is stored ?
+                    cached: _b_.None,
+                    parent: data.is_package? fullname : parent_package(fullname),
+                    has_location: _b_.False
+                })
+
+            }
+        }
+        xhr.send()
+        return result
+    }
+}
+
+$B.set_func_names(finder_cpython, "<import>")
+
+for(var method in finder_cpython){
+    if(typeof finder_cpython[method] == "function"){
+        finder_cpython[method] = _b_.classmethod.$factory(
+            finder_cpython[method])
+    }
+}
+
+finder_cpython.$factory = function(){
+    return {__class__: finder_cpython}
+}
+
 
 /**
  * Module importer optimizing module lookups via stdlib_paths.js
@@ -1099,7 +1188,8 @@ $B.$meta_path = [finder_VFS, finder_stdlib_static, finder_path]
 $B.finders = {
     VFS: finder_VFS,
     stdlib_static: finder_stdlib_static,
-    path: finder_path
+    path: finder_path,
+    CPython: finder_cpython
 }
 
 function optimize_import_for_path(path, filetype){

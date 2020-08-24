@@ -5509,6 +5509,7 @@ var $GlobalCtx = $B.parser.$GlobalCtx = function(context){
     this.scope.globals = this.scope.globals || new Set()
     this.module = $get_module(this)
     this.module.binding = this.module.binding || {}
+
 }
 
 $GlobalCtx.prototype.toString = function(){
@@ -5858,7 +5859,7 @@ $IdCtx.prototype.to_js = function(arg){
     // get global scope
     var gs = innermost
 
-    var $test = false // val == "total"
+    var $test = false // val == "myvar"
 
     if($test){
         console.log("this", this)
@@ -9528,12 +9529,14 @@ var $get_module = $B.parser.$get_module = function(context){
     var ctx_node = context.parent
     while(ctx_node.type !== 'node'){ctx_node = ctx_node.parent}
     var tree_node = ctx_node.node
-    if(tree_node.ntype == "module"){return tree_node}
+    if(tree_node.ntype == "module"){
+        return tree_node
+    }
     var scope = null
     while(tree_node.parent.type != 'module'){
         tree_node = tree_node.parent
     }
-    var scope = tree_node.parent // module
+    scope = tree_node.parent // module
     scope.ntype = "module"
     return scope
 }
@@ -10540,13 +10543,12 @@ $B.set_import_paths = function(){
     // brython_modules.js has been loaded in the page. In this case we use the
     // Virtual File System (VFS)
     if($B.use_VFS){
-        meta_path.push($B.$meta_path[0])
-        //path_hooks.push($B.$path_hooks[0])
+        meta_path.push($B.finders.VFS)
     }
 
     if($B.$options.static_stdlib_import !== false && $B.protocol != "file"){
         // Add finder using static paths
-        meta_path.push($B.$meta_path[1])
+        meta_path.push($B.finders.stdlib_static)
         // Remove /Lib and /libs in sys.path :
         // if we use the static list and the module
         // was not find in it, it's no use searching twice in the same place
@@ -10558,9 +10560,18 @@ $B.set_import_paths = function(){
 
     // Use the defaut finder using sys.path if protocol is not file://
     if($B.protocol !== "file"){
-        meta_path.push($B.$meta_path[2])
+        meta_path.push($B.finders.path)
         path_hooks.push($B.$path_hooks[0])
     }
+
+    // Finder using CPython modules
+    if($B.$options.cpython_import){
+        if($B.$options.cpython_import == "replace"){
+            $B.path.pop()
+        }
+        meta_path.push($B.finders.CPython)
+    }
+
     $B.meta_path = meta_path
     $B.path_hooks = path_hooks
 }
@@ -10611,13 +10622,6 @@ var brython = $B.parser.brython = function(options){
     if(options.pythonpath !== undefined){
         $B.path = options.pythonpath
         $B.$options.static_stdlib_import = false
-    }
-
-    if(options.cpython_site_packages){
-        if(options.cpython_site_packages == "replace"){
-            $B.path.pop()
-        }
-        $B.path.push('/cpython_site_packages')
     }
 
     // Or it can be provided as a list of strings or path objects
