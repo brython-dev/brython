@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-08-23 12:16:41.819201"
-__BRYTHON__.timestamp=1598177801819
+__BRYTHON__.compiled_date="2020-08-26 10:19:07.850600"
+__BRYTHON__.timestamp=1598429947834
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -513,6 +513,7 @@ var node=$get_node(this)
 node.bound_before=Object.keys(scope.binding)
 $bind(assigned.value,scope,this)}else{
 var module=$get_module(C)
+assigned.global_module=module.module
 $bind(assigned.value,module,this)}}else if(["str","int","float","complex"].indexOf(assigned.type)>-1){$_SyntaxError(C,["cannot assign to literal"])}else if(assigned.type=="unary"){$_SyntaxError(C,["cannot assign to operator"])}}}
 $AssignCtx.prototype.guess_type=function(){return}
 $AssignCtx.prototype.toString=function(){return '(assign) '+this.tree[0]+'='+this.tree[1]}
@@ -2759,6 +2760,7 @@ this.expect='id'
 this.scope=$get_scope(this)
 this.scope.globals=this.scope.globals ||new Set()
 this.module=$get_module(this)
+while(this.module.module !=this.module.id){this.module=this.module.parent_block}
 this.module.binding=this.module.binding ||{}}
 $GlobalCtx.prototype.toString=function(){return 'global '+this.tree}
 $GlobalCtx.prototype.transition=function(token,value){var C=this
@@ -2779,6 +2781,12 @@ $_SyntaxError(C,'token '+token+' after '+C)}
 $GlobalCtx.prototype.add=function(name){if(this.scope.annotations && this.scope.annotations.has(name)){$_SyntaxError(C,["annotated name '"+name+
 "' can't be global"])}
 this.scope.globals.add(name)
+var mod=this.scope.parent_block
+if(this.module.module.startsWith("$exec")){while(mod && mod.parent_block !==this.module){
+mod._globals=mod._globals ||{}
+mod._globals[name]=this.module.id
+delete mod.binding[name]
+mod=mod.parent_block}}
 this.module.binding[name]=true}
 $GlobalCtx.prototype.to_js=function(){this.js_processed=true
 return ''}
@@ -2841,7 +2849,7 @@ if(this.parent.parent.type=="packed"){if(['.','[','('].indexOf(token)==-1){retur
 return $transition(C.parent,token,value)}
 $IdCtx.prototype.firstBindingScopeId=function(){
 var scope=this.scope,found=[],nb=0
-while(scope && nb++< 20){if(scope.globals && scope.globals.has(this.value)){return $get_module(this).id}
+while(scope){if(scope.globals && scope.globals.has(this.value)){return $get_module(this).id}
 if(scope.binding && scope.binding[this.value]){return scope.id}
 scope=scope.parent}}
 $IdCtx.prototype.boundBefore=function(scope){
@@ -2877,10 +2885,15 @@ return found}
 $IdCtx.prototype.to_js=function(arg){
 if(this.result !==undefined && this.scope.ntype=='generator'){return this.result}
 var val=this.value
+var $test=false 
+if($test){console.log("this",this)}
 if(val=='__BRYTHON__' ||val=='$B'){return val}
 if(val.startsWith("comp_result_"+$B.lambda_magic)){if(this.bound){return "var "+val}
 return val}
 this.js_processed=true
+if(this.scope._globals && this.scope._globals[val]){this.global_module=this.scope._globals[val]}
+if(this.global_module){return '$locals_'+this.global_module.replace(/\./g,"_")+
+'["'+val+'"]'}
 var is_local=this.scope.binding[val]!==undefined,this_node=$get_node(this),bound_before=this_node.bound_before
 this.nonlocal=this.scope.nonlocals &&
 this.scope.nonlocals[val]!==undefined
@@ -2894,8 +2907,6 @@ if(this.unbound && !this.nonlocal){if(this.scope.ntype=='def' ||this.scope.ntype
 var innermost=$get_scope(this),scope=innermost,found=[]
 var search_ids=['"'+innermost.id+'"']
 var gs=innermost
-var $test=false 
-if($test){console.log("this",this)}
 while(true){if($test){console.log(gs.id,gs)}
 if(gs.parent_block){if(gs.parent_block==$B.builtins_scope){break}
 else if(gs.parent_block.id===undefined){break}
@@ -4636,7 +4647,7 @@ var tree_node=ctx_node.node
 if(tree_node.ntype=="module"){return tree_node}
 var scope=null
 while(tree_node.parent.type !='module'){tree_node=tree_node.parent}
-var scope=tree_node.parent 
+scope=tree_node.parent 
 scope.ntype="module"
 return scope}
 var $get_src=$B.parser.$get_src=function(C){
@@ -5101,13 +5112,15 @@ $B.compile_time+=t1-t0
 return root}
 $B.set_import_paths=function(){
 var meta_path=[],path_hooks=[]
-if($B.use_VFS){meta_path.push($B.$meta_path[0])}
+if($B.use_VFS){meta_path.push($B.finders.VFS)}
 if($B.$options.static_stdlib_import !==false && $B.protocol !="file"){
-meta_path.push($B.$meta_path[1])
+meta_path.push($B.finders.stdlib_static)
 if($B.path.length > 3){$B.path.shift()
 $B.path.shift()}}
-if($B.protocol !=="file"){meta_path.push($B.$meta_path[2])
+if($B.protocol !=="file"){meta_path.push($B.finders.path)
 path_hooks.push($B.$path_hooks[0])}
+if($B.$options.cpython_import){if($B.$options.cpython_import=="replace"){$B.path.pop()}
+meta_path.push($B.finders.CPython)}
 $B.meta_path=meta_path
 $B.path_hooks=path_hooks}
 var brython=$B.parser.brython=function(options){
@@ -5130,8 +5143,6 @@ if($B.isWebWorker ||$B.isNode){$href_elts.pop()}
 $B.curdir=$href_elts.join('/')
 if(options.pythonpath !==undefined){$B.path=options.pythonpath
 $B.$options.static_stdlib_import=false}
-if(options.cpython_site_packages){if(options.cpython_site_packages=="replace"){$B.path.pop()}
-$B.path.push('/cpython_site_packages')}
 if(options.python_paths){options.python_paths.forEach(function(path){var lang,prefetch
 if(typeof path !=="string"){lang=path.lang
 prefetch=path.prefetch
@@ -6725,7 +6736,7 @@ src=src.source}else if(typeof src !=='string'){throw _b_.TypeError.$factory("eva
 "or code object")}
 var globals_id='$exec_'+$B.UUID(),globals_name=globals_id,locals_id='$exec_'+$B.UUID(),parent_scope
 if(_globals===_b_.None){if(current_locals_id==current_globals_id){locals_id=globals_id}
-var local_scope={module:locals_id,id:locals_id,binding:{},bindings:{}}
+var local_scope={module:globals_id,id:locals_id,binding:{},bindings:{}}
 for(var attr in current_frame[1]){local_scope.binding[attr]=true
 local_scope.bindings[attr]=true}
 var global_scope={module:globals_id,id:globals_id,binding:{},bindings:{}}
@@ -9424,7 +9435,6 @@ var module_id="$locals_"+module.__name__.replace(/\./g,'_')
 var $module=(new Function(module_id,js))(module)}catch(err){console.log(err+" for module "+module.__name__)
 console.log("module",module)
 console.log(root)
-console.log(err)
 if($B.debug > 1){console.log(js)}
 for(var attr in err){console.log(attr,err[attr])}
 console.log(_b_.getattr(err,"info","[no info]"))
@@ -9518,6 +9528,35 @@ $B.set_func_names(finder_VFS,"<import>")
 for(var method in finder_VFS){if(typeof finder_VFS[method]=="function"){finder_VFS[method]=_b_.classmethod.$factory(
 finder_VFS[method])}}
 finder_VFS.$factory=function(){return{__class__:finder_VFS}}
+var finder_cpython={__class__:_b_.type,__mro__:[_b_.object],$infos:{__module__:"builtins",__name__:"CPythonFinder"},create_module :function(cls,spec){
+return _b_.None},exec_module :function(cls,modobj){console.log("exec PYthon module",modobj)
+var loader_state=modobj.__spec__.loader_state
+var content=loader_state.content
+delete modobj.__spec__["loader_state"]
+modobj.$is_package=loader_state.is_package
+modobj.__file__=loader_state.__file__
+$B.file_cache[modobj.__file__]=content
+var mod_name=modobj.__name__
+if($B.debug > 1){console.log("run Python code from CPython",mod_name)}
+run_py(content,modobj.__path__,modobj)},find_module:function(cls,name,path){return{
+__class__:Loader,load_module:function(name,path){var spec=cls.find_spec(cls,name,path)
+var mod=module.$factory(name)
+$B.imported[name]=mod
+mod.__spec__=spec
+cls.exec_module(cls,mod)}}},find_spec :function(cls,fullname,path,prev_module){console.log("finder cpython",fullname)
+var xhr=new XMLHttpRequest(),url="/cpython_import?module="+fullname,result
+xhr.open("GET",url,false)
+xhr.onreadystatechange=function(){if(this.readyState==4 && this.status==200){var data=JSON.parse(this.responseText)
+result=new_spec({name :fullname,loader:cls,
+origin :"CPython",
+submodule_search_locations:data.is_package?[]:_b_.None,loader_state:{content:data.content},
+cached:_b_.None,parent:data.is_package? fullname :parent_package(fullname),has_location:_b_.False})}}
+xhr.send()
+return result}}
+$B.set_func_names(finder_cpython,"<import>")
+for(var method in finder_cpython){if(typeof finder_cpython[method]=="function"){finder_cpython[method]=_b_.classmethod.$factory(
+finder_cpython[method])}}
+finder_cpython.$factory=function(){return{__class__:finder_cpython}}
 var finder_stdlib_static={$factory :finder_stdlib_static,__class__ :_b_.type,__mro__:[_b_.object],$infos:{__module__:"builtins",__name__:"StdlibStatic"},create_module :function(cls,spec){
 return _b_.None},exec_module :function(cls,module){var metadata=module.__spec__.loader_state
 module.$is_package=metadata.is_package
@@ -9705,7 +9744,7 @@ $B.import_all=function(locals,module){
 for(var attr in module){if(attr.startsWith("$$")){locals[attr]=module[attr]}else if('_$'.indexOf(attr.charAt(0))==-1){locals[attr]=module[attr]}}}
 $B.$path_hooks=[url_hook]
 $B.$meta_path=[finder_VFS,finder_stdlib_static,finder_path]
-$B.finders={VFS:finder_VFS,stdlib_static:finder_stdlib_static,path:finder_path}
+$B.finders={VFS:finder_VFS,stdlib_static:finder_stdlib_static,path:finder_path,CPython:finder_cpython}
 function optimize_import_for_path(path,filetype){if(path.slice(-1)!="/"){path=path+"/" }
 var value=(filetype=='none')? _b_.None :
 url_hook.$factory(path,filetype)

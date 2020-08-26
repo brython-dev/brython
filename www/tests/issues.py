@@ -2714,6 +2714,23 @@ f()
 """)
 assert result == [1, 3, 'hello', 1]
 
+result = []
+def f():
+  exec("""
+myvar = 1
+result.append(myvar)
+
+def main_func():
+  global myvar
+  myvar = 3
+  result.append(myvar)
+
+main_func()
+result.append(myvar)
+""")
+
+f()
+assert result == [1, 3, 3]
 
 # ==========================================
 # Finally, report that all tests have passed

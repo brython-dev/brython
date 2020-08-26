@@ -974,6 +974,8 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context, expression){
                 // assignement to a variable defined as global : bind name at
                 // module level (issue #690)
                 var module = $get_module(context)
+                // Set attribute global_module to simplify IdCtx.to_js()
+                assigned.global_module = module.module
                 $bind(assigned.value, module, this)
             }
         }else if(["str", "int", "float", "complex"].indexOf(assigned.type) > -1){
@@ -5508,6 +5510,9 @@ var $GlobalCtx = $B.parser.$GlobalCtx = function(context){
     this.scope = $get_scope(this)
     this.scope.globals = this.scope.globals || new Set()
     this.module = $get_module(this)
+    while(this.module.module != this.module.id){
+        this.module = this.module.parent_block
+    }
     this.module.binding = this.module.binding || {}
 
 }
@@ -5548,6 +5553,18 @@ $GlobalCtx.prototype.add = function(name){
             "' can't be global"])
     }
     this.scope.globals.add(name)
+    // Remove bindings between scope and module
+    var mod = this.scope.parent_block
+    if(this.module.module.startsWith("$exec")){
+        while(mod && mod.parent_block !== this.module){
+            // Set attribute _globals for intermediate scopes
+            mod._globals = mod._globals || {}
+            mod._globals[name] = this.module.id
+            // Delete possibly existing binding below module level
+            delete mod.binding[name]
+            mod = mod.parent_block
+        }
+    }
     this.module.binding[name] = true
 }
 
@@ -5681,7 +5698,7 @@ $IdCtx.prototype.firstBindingScopeId = function(){
     var scope = this.scope,
         found = [],
         nb = 0
-    while(scope && nb++ < 20){
+    while(scope){
         if(scope.globals && scope.globals.has(this.value)){
             return $get_module(this).id
         }
@@ -5809,6 +5826,12 @@ $IdCtx.prototype.to_js = function(arg){
 
     var val = this.value
 
+    var $test = false // val == "myvar"
+
+    if($test){
+        console.log("this", this)
+    }
+
     // Special cases
     if(val == '__BRYTHON__' || val == '$B'){
         return val
@@ -5821,6 +5844,14 @@ $IdCtx.prototype.to_js = function(arg){
     }
 
     this.js_processed = true
+
+    if(this.scope._globals && this.scope._globals[val]){
+        this.global_module = this.scope._globals[val]
+    }
+    if(this.global_module){
+        return '$locals_' + this.global_module.replace(/\./g, "_") +
+            '["' + val + '"]'
+    }
 
     var is_local = this.scope.binding[val] !== undefined,
         this_node = $get_node(this),
@@ -5859,11 +5890,6 @@ $IdCtx.prototype.to_js = function(arg){
     // get global scope
     var gs = innermost
 
-    var $test = false // val == "myvar"
-
-    if($test){
-        console.log("this", this)
-    }
 
     while(true){
         if($test){
@@ -5878,7 +5904,7 @@ $IdCtx.prototype.to_js = function(arg){
     }
     search_ids = "[" + search_ids.join(", ") + "]"
 
-    if (innermost.globals && innermost.globals.has(val)){
+    if(innermost.globals && innermost.globals.has(val)){
         search_ids = ['"' + gs.id + '"']
         innermost = gs
     }

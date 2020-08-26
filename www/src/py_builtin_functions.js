@@ -533,7 +533,7 @@ function $$eval(src, _globals, _locals){
         }
 
         var local_scope = {
-            module: locals_id,
+            module: globals_id,
             id: locals_id,
             binding: {},
             bindings: {}
@@ -744,7 +744,7 @@ function $$eval(src, _globals, _locals){
                 }
             }
             js = root.to_js()
-
+            
             var locals_obj = eval("$locals_" + locals_id),
                 globals_obj = eval("$locals_" + globals_id)
             if(_globals === _b_.None){
