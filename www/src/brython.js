@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,9,'dev',0]
 __BRYTHON__.__MAGIC__="3.8.9"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-08-26 10:19:07.850600"
-__BRYTHON__.timestamp=1598429947834
+__BRYTHON__.compiled_date="2020-08-27 15:57:05.791263"
+__BRYTHON__.timestamp=1598536625791
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -13426,7 +13426,6 @@ case "class_name":
 case "html":
 case "id":
 case "parent":
-case "query":
 case "text":
 return DOMNode[attr](self)
 case "height":
@@ -13466,6 +13465,13 @@ break}
 if(attr=="select" && self.nodeType==1 &&
 ["INPUT","TEXTAREA"].indexOf(self.tagName.toUpperCase())>-1){return function(selector){if(selector===undefined){self.select();return _b_.None}
 return DOMNode.select(self,selector)}}
+if(attr=="query" && self.nodeType==9){
+var res={__class__:Query,_keys :[],_values :{}}
+var qs=location.search.substr(1).split('&')
+if(location.search !=""){for(var i=0;i < qs.length;i++){var pos=qs[i].search("="),elts=[qs[i].substr(0,pos),qs[i].substr(pos+1)],key=decodeURIComponent(elts[0]),value=decodeURIComponent(elts[1])
+if(res._keys.indexOf(key)>-1){res._values[key].push(value)}else{res._keys.push(key)
+res._values[key]=[value]}}}
+return res}
 var property=self[attr]
 if(property===undefined && $B.aliased_names[attr]){property=self["$$"+attr]}
 if(property===undefined){return object.__getattribute__(self,attr)}
@@ -13784,12 +13790,7 @@ Query.getvalue=function(self,key,_default){try{return Query.__getitem__(self,key
 catch(err){if(_default===undefined){return _b_.None}
 return _default}}
 Query.keys=function(self){return self._keys}
-DOMNode.query=function(self){var res={__class__:Query,_keys :[],_values :{}}
-var qs=location.search.substr(1).split('&')
-for(var i=0;i < qs.length;i++){var pos=qs[i].search("="),elts=[qs[i].substr(0,pos),qs[i].substr(pos+1)],key=decodeURIComponent(elts[0]),value=decodeURIComponent(elts[1])
-if(res._keys.indexOf(key)>-1){res._values[key].push(value)}else{res._keys.push(key)
-res._values[key]=[value]}}
-return res}
+$B.set_func_names(Query,"<dom>")
 var TagSum={__class__ :_b_.type,__mro__:[object],$infos:{__module__:"<pydom>",__name__:"TagSum"}}
 TagSum.appendChild=function(self,child){self.children.push(child)}
 TagSum.__add__=function(self,other){if($B.get_class(other)===TagSum){self.children=self.children.concat(other.children)}else if(_b_.isinstance(other,[_b_.str,_b_.int,_b_.float,_b_.dict,_b_.set,_b_.list])){self.children=self.children.concat(

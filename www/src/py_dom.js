@@ -685,7 +685,6 @@ DOMNode.__getattribute__ = function(self, attr){
         case "html":
         case "id":
         case "parent":
-        case "query":
         case "text":
             return DOMNode[attr](self)
 
@@ -758,6 +757,32 @@ DOMNode.__getattribute__ = function(self, attr){
             if(selector === undefined){self.select(); return _b_.None}
             return DOMNode.select(self, selector)
         }
+    }
+
+    if(attr == "query" && self.nodeType == 9){
+        // document.query is a instance of class Query, representing the
+        // Query String
+        var res = {
+            __class__: Query,
+            _keys : [],
+            _values : {}
+        }
+        var qs = location.search.substr(1).split('&')
+        if(location.search != ""){
+            for(var i = 0; i < qs.length; i++){
+                var pos = qs[i].search("="),
+                    elts = [qs[i].substr(0, pos), qs[i].substr(pos + 1)],
+                    key = decodeURIComponent(elts[0]),
+                    value = decodeURIComponent(elts[1])
+                if(res._keys.indexOf(key) > -1){
+                    res._values[key].push(value)
+                }else{
+                    res._keys.push(key)
+                    res._values[key] = [value]
+                }
+            }
+        }
+        return res
     }
 
     // Looking for property. If the attribute is in the forbidden
@@ -1611,29 +1636,7 @@ Query.keys = function(self){
     return self._keys
 }
 
-DOMNode.query = function(self){
-
-    var res = {
-        __class__: Query,
-        _keys : [],
-        _values : {}
-    }
-    var qs = location.search.substr(1).split('&')
-    for(var i = 0; i < qs.length; i++){
-        var pos = qs[i].search("="),
-            elts = [qs[i].substr(0,pos),qs[i].substr(pos + 1)],
-            key = decodeURIComponent(elts[0]),
-            value = decodeURIComponent(elts[1])
-        if(res._keys.indexOf(key) > -1){
-            res._values[key].push(value)
-        }else{
-            res._keys.push(key)
-            res._values[key] = [value]
-        }
-    }
-
-    return res
-}
+$B.set_func_names(Query, "<dom>")
 
 // class used for tag sums
 var TagSum = {
