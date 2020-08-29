@@ -215,7 +215,7 @@ class SRE_Pattern:
         #return iter(scanner.search, None)
 
     def scanner(self, string, pos=0, endpos=sys.maxsize):
-        return SRE_Scanner(self, string, start, end)
+        return SRE_Scanner(self, string, pos, endpos)
 
     def __copy__(self):
         raise TypeError("cannot copy this pattern object")
