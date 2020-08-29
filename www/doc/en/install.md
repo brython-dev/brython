@@ -4,18 +4,18 @@ You can use Brython without having to install anything, just by including the
 Brython scripts from a CDN:
 
 ```xml
-<script src="https://cdn.jsdelivr.net/npm/brython@3.8.9/brython.min.js">
+<script src="https://cdn.jsdelivr.net/npm/brython@3.8.10/brython.min.js">
 </script>
-<script src="https://cdn.jsdelivr.net/npm/brython@3.8.9/brython_stdlib.js">
+<script src="https://cdn.jsdelivr.net/npm/brython@3.8.10/brython_stdlib.js">
 </script>
 ```
 
 or
 
 ```xml
-<script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.8.9/brython.min.js">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.8.10/brython.min.js">
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.8.9/brython_stdlib.min.js">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.8.10/brython_stdlib.min.js">
 </script>
 ```
 
