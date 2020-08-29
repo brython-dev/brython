@@ -12,12 +12,19 @@ body{
 a{
     color: #333;
 }
+
 a.menu{
     text-decoration: none;
 }
+
 a.menu:hover{
     background-color: #ccc;
 }
+
+a.selected{
+    font-weight: bold;
+}
+
 a:visited{
     color: #333;
 }
@@ -86,6 +93,16 @@ code.file{
     background-color: #fff;
     font-weigth: bold;
     font-style: italic;
+}
+
+#moving{
+    position: relative;
+    left:140px;
+    top:10px;
+    font-size:16px;
+    padding: 3px;
+    background-color: var(--clear-2);
+    border-radius: 4px;
 }
 
 .up{
