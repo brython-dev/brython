@@ -33,6 +33,8 @@ function _read(req){
         res
     if(xhr.responseType == "json"){
         return $B.structuredclone2pyobj(xhr.response)
+    }else if(xhr.responseType == "" || xhr.responseType == "text"){
+        return xhr.responseText
     }
     var abuf = new Uint8Array(xhr.response)
     res = []
