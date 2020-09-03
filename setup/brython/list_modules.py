@@ -106,7 +106,7 @@ class ImportsFinder:
 
     def __init__(self, *args, **kw):
         self.package = kw.pop("package") or ""
-        
+
     def find(self, src):
         """Find imports in source code src. Uses the tokenize module instead
         of ast in previous Brython version, so that this script can be run
@@ -313,6 +313,35 @@ class ModulesFinder:
                     vfs[pkg] = dico[pkg]
         # save in brython_modules.js
         path = os.path.join(stdlib_dir, "brython_modules.js")
+        if os.path.exists(path):
+            # If brython_modules.js already exists, check if there have been
+            # changes. Cf. issue #1471.
+            changes = False
+            with open(path, encoding="utf-8") as f:
+                content = f.read()
+                start_str = "var scripts = "
+                start_pos = content.find(start_str)
+                end_pos = content.find("__BRYTHON__.update_VFS(scripts)")
+                data = content[start_pos + len(start_str):end_pos].strip()
+                old_vfs = json.loads(data)
+                if old_vfs.keys() != vfs.keys():
+                    changes = True
+                else:
+                    changes = True
+                    for key in old_vfs:
+                        if key == "$timestamp":
+                            continue
+                        if not key in vfs:
+                            break
+                        elif vfs[key][1] != old_vfs[key][1]:
+                            break
+                    else: # no break
+                        changes = False
+
+        if not changes:
+            print("No change: brython_modules.js not updated")
+            return
+
         with open(path, "w", encoding="utf-8") as out:
             # Add VFS_timestamp ; used to test if the indexedDB must be
             # refreshed
