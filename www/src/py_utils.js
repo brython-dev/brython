@@ -454,6 +454,11 @@ $B.$check_def = function(name, value){
         return value
     }else if(_b_[name] !== undefined){ // issue 1133
         return _b_[name]
+    }else{
+        var frame = $B.last($B.frames_stack)
+        if(frame[3][name] !== undefined){
+            return frame[3][name]
+        }
     }
     throw _b_.NameError.$factory("name '" + $B.from_alias(name) +
         "' is not defined")
