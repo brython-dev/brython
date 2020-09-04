@@ -720,7 +720,8 @@ $B.JSObj.__getattribute__ = function(self, attr){
                 var result = js_attr.apply(target, args)
             }catch(err){
                 console.log("error", err)
-                console.log(attr, js_attr, args, arguments)
+                console.log("attribute", attr, "of self", self, 
+                    js_attr, args, arguments)
                 throw err
             }
             if(result === undefined){

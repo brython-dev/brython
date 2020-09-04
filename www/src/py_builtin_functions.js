@@ -744,7 +744,7 @@ function $$eval(src, _globals, _locals){
                 }
             }
             js = root.to_js()
-            
+
             var locals_obj = eval("$locals_" + locals_id),
                 globals_obj = eval("$locals_" + globals_id)
             if(_globals === _b_.None){
@@ -2436,7 +2436,7 @@ var $$super = $B.make_class("super",
             _type2 = _type2[0]
             missing2 = true
         }
-
+        
         return {__class__: $$super,
             __thisclass__: _type1,
             __self_class__: _type2,
@@ -2446,6 +2446,7 @@ var $$super = $B.make_class("super",
 )
 
 $$super.__getattribute__ = function(self, attr){
+
     var mro = self.__thisclass__.__mro__,
         res
 

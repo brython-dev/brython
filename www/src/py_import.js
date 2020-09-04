@@ -1007,8 +1007,10 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
         if($B.imported[parsed_name[0]] &&
                 parsed_name.length == 2){
             try{
-                $B.$setattr($B.imported[parsed_name[0]], parsed_name[1],
-                    modobj)
+                if($B.imported[parsed_name[0]][parsed_name[1]] === undefined){
+                    $B.$setattr($B.imported[parsed_name[0]], parsed_name[1],
+                        modobj)
+                }
             }catch(err){
                 console.log("error", parsed_name, modobj)
                 throw err

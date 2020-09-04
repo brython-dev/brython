@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,10,'final',0]
 __BRYTHON__.__MAGIC__="3.8.10"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-09-03 08:45:26.269459"
-__BRYTHON__.timestamp=1599115526269
+__BRYTHON__.compiled_date="2020-09-04 21:39:29.440742"
+__BRYTHON__.timestamp=1599248369440
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -6099,7 +6099,8 @@ else{throw _b_.UnboundLocalError.$factory("local variable '"+
 $B.from_alias(name)+"' referenced before assignment")}}
 $B.$check_def=function(name,value){
 if(value !==undefined){return value}else if(_b_[name]!==undefined){
-return _b_[name]}
+return _b_[name]}else{var frame=$B.last($B.frames_stack)
+if(frame[3][name]!==undefined){return frame[3][name]}}
 throw _b_.NameError.$factory("name '"+$B.from_alias(name)+
 "' is not defined")}
 $B.$check_def_local=function(name,value){
@@ -9279,7 +9280,7 @@ if(attr=="bind" && typeof self.addEventListener=="function"){return function(eve
 throw _b_.AttributeError.$factory(attr)}
 if(typeof js_attr==='function'){var res=function(){var args=pyargs2jsargs(arguments),target=self.$js_func ||self
 try{var result=js_attr.apply(target,args)}catch(err){console.log("error",err)
-console.log(attr,js_attr,args,arguments)
+console.log("attribute",attr,"of self",self,js_attr,args,arguments)
 throw err}
 if(result===undefined){return $B.Undefined}else if(result===null){return _b_.None}
 return $B.JSObj.$factory(result)}
@@ -9336,7 +9337,7 @@ var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_colle
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
 var js=['_aio','_ajax','_base64','_binascii','_io_classes','_json','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_sre_utils','_string','_strptime','_svg','_warnings','_webcomponent','_webworker','_zlib_utils','aes','array','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','long_int','marshal','math','math1','md5','modulefinder','pbkdf2','posix','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
-var pkglist=['browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.simpleaio','site-packages.simpy','site-packages.simpy.resources','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
+var pkglist=['browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.foobar','site-packages.simpleaio','site-packages.simpy','site-packages.simpy.resources','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
 for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}})(__BRYTHON__)
 ;
 
@@ -9685,7 +9686,7 @@ exc.args=$B.fast_tuple([exc.msg])
 exc.name=mod_name
 exc.path=_b_.None
 throw exc}}}}}else{if($B.imported[parsed_name[0]]&&
-parsed_name.length==2){try{$B.$setattr($B.imported[parsed_name[0]],parsed_name[1],modobj)}catch(err){console.log("error",parsed_name,modobj)
+parsed_name.length==2){try{if($B.imported[parsed_name[0]][parsed_name[1]]===undefined){$B.$setattr($B.imported[parsed_name[0]],parsed_name[1],modobj)}}catch(err){console.log("error",parsed_name,modobj)
 throw err}}}
 if(fromlist.length > 0){
 return $B.imported[mod_name]}else{
@@ -14013,7 +14014,28 @@ $B.Undefined={__class__:$B.UndefinedClass}
 $B.set_func_names($B.UndefinedClass,"javascript")
 modules['javascript']={$$this:function(){
 if($B.js_this===undefined){return $B.builtins.None}
-return $B.JSObj.$factory($B.js_this)},$$Date:self.Date && $B.JSObj.$factory(self.Date),JSConstructor:{__get__:function(){console.warn('"javascript.JSConstructor" is deprecrated. '+
+return $B.JSObj.$factory($B.js_this)},$$Date:self.Date && $B.JSObj.$factory(self.Date),$$extends:function(js_constr){return function(obj){if(typeof obj=="function"){var res=function(){js_constr.call(this,...arguments)
+obj.apply(this,arguments)}
+res.prototype=Object.create(js_constr.prototype)
+res.prototype.constructor=res
+res.$is_js_func=true
+return res}else if(obj.$is_class){console.log("obj",obj)
+if(js_constr.$js_func.name=="Named"){console.log("-- Named")}
+var res=function(){console.log("call parent class",obj.$parent_class)
+obj.$parent_class.call(this,...arguments)
+if(obj.$$constructor){var args=[this]
+for(var i=0,len=arguments.length;i < len;i++){args.push(arguments[i])}
+obj.$$constructor.apply(this,args)}}
+res.prototype=Object.create(js_constr.prototype)
+res.prototype.constructor=res
+res.$is_js_func=true
+res.$class=obj
+obj.$parent_class=js_constr
+for(var attr in obj.__dict__.$string_dict){var value=obj.__dict__.$string_dict[attr][0]
+if(typeof value=="function"){res.prototype[attr]=(function(x){return function(){var args=[this]
+for(var i=0,len=arguments.length;i < len;i++){args.push($B.pyobj2jsobj(arguments[i]))}
+return x.apply(this,args)}})(value)}else{res.prototype[attr]=$B.pyobj2jsobj(value)}}
+return res}}},JSConstructor:{__get__:function(){console.warn('"javascript.JSConstructor" is deprecrated. '+
 'Use window.<js constructor name>.new() instead.')
 return $B.JSConstructor},__set__:function(){throw _b_.AttributeError.$factory("read only")}},JSObject:{__get__:function(){console.warn('"javascript.JSObject" is deprecrated. To use '+
 'a Javascript object, use window.<object name> instead.')
