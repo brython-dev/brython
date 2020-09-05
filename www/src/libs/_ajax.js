@@ -79,7 +79,12 @@ function handle_kwargs(self, kw, method){
             encoding = kw.$string_dict[key][0]
             self.js.encoding = encoding
         }else if(key == "headers"){
-            headers = kw.$string_dict[key].$string_dict
+            var value = kw.$string_dict[key][0]
+            if(! _b_.isinstance(value, _b_.dict)){
+                throw _b_.ValueError.$factory(
+                    "headers must be a dict, not " + $B.class_name(value))
+            }
+            headers = value.$string_dict
             for(var key in headers){
                 self.js.setRequestHeader(key, headers[key][0])
             }
@@ -285,8 +290,9 @@ function _request_without_body(method){
     url = $.url,
     async = !$.blocking,
     kw = $.kw
-    var self = ajax.$factory(),
-        items = handle_kwargs(self, kw, method),
+    var self = ajax.$factory()
+    self.js.open(method.toUpperCase(), url, async)
+    var items = handle_kwargs(self, kw, method),
         qs = items.data,
         timeout = items.timeout
     set_timeout(self, timeout)
@@ -300,7 +306,6 @@ function _request_without_body(method){
     self.js.read = function(){
         return _read(self)
     }
-    self.js.open(method.toUpperCase(), url, async)
     self.js.send()
 }
 
