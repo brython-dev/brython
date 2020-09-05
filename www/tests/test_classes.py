@@ -547,4 +547,20 @@ class CC(metaclass=CMeta):
 
 assert CC.__annotations__['xx'] == 'ANNOT'
 
+# similar to issue 600: == with subclassing
+class A_eqWithoutOverride:
+    pass
+
+class B_eqWithoutOverride(A_eqWithoutOverride):
+    pass
+
+a_eqWithoutOverride = A_eqWithoutOverride()
+b_eqWithoutOverride = B_eqWithoutOverride()
+assert (a_eqWithoutOverride == a_eqWithoutOverride)
+assert (b_eqWithoutOverride == b_eqWithoutOverride)
+assert (a_eqWithoutOverride != b_eqWithoutOverride)
+assert not (a_eqWithoutOverride == b_eqWithoutOverride)
+assert (b_eqWithoutOverride != a_eqWithoutOverride)
+assert not (b_eqWithoutOverride == a_eqWithoutOverride)
+
 print('passed all tests..')
