@@ -338,9 +338,9 @@ class ModulesFinder:
                     else: # no break
                         changes = False
 
-        if not changes:
-            print("No change: brython_modules.js not updated")
-            return
+            if not changes:
+                print("No change: brython_modules.js not updated")
+                return
 
         with open(path, "w", encoding="utf-8") as out:
             # Add VFS_timestamp ; used to test if the indexedDB must be
