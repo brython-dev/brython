@@ -1603,8 +1603,9 @@ $AugmentedAssignCtx.prototype.transform = function(node, rank){
         }
     }
 
-    if(left_bound_to_int && right_is_int){
-        parent.insert(rank + offset, $NodeJS(left + " "+ op + " " + right))
+    if(left_bound_to_int && right_is_int &&
+            op != "//="){ // issue 1482
+        parent.insert(rank + offset, $NodeJS(left + " " + op + " " + right))
         return offset++
     }
 
@@ -1676,7 +1677,7 @@ $AugmentedAssignCtx.prototype.transform = function(node, rank){
     var ctx1 = new $NodeCtx(aa1)
     var expr1 = new $ExprCtx(ctx1, 'clone', false)
     if(left_id_unbound){
-        new $RawJSCtx(expr1, left) //'$locals["' + left_id + '"]')
+        new $RawJSCtx(expr1, left)
     }else{
         expr1.tree = context.tree
         expr1.tree.forEach(function(elt){
@@ -7453,15 +7454,26 @@ $OpCtx.prototype.transition = function(token, value){
     if(context.op === undefined){
         $_SyntaxError(context,['context op undefined ' + context])
     }
-    if(context.op.substr(0,5) == 'unary' && token != 'eol'){
-        if(context.parent.type == 'assign' ||
-                context.parent.type == 'return'){
-            // create and return a tuple whose first element is context
+    if(context.op.substr(0,5) == 'unary'){
+        if(token != 'eol'){
+            if(context.parent.type == 'assign' ||
+                    context.parent.type == 'return'){
+                // create and return a tuple whose first element is context
+                context.parent.tree.pop()
+                var t = new $ListOrTupleCtx(context.parent, 'tuple')
+                t.tree.push(context)
+                context.parent = t
+                return t
+            }
+        }
+        if(context.tree.length == 2 && context.tree[1].type == "expr" &&
+                context.tree[1].tree[0].type == "int"){
+            // replace by the integer with the applied unary operator
+            context.tree[1].tree[0].value[1] = context.tree[0].op +
+                context.tree[1].tree[0].value[1]
             context.parent.tree.pop()
-            var t = new $ListOrTupleCtx(context.parent, 'tuple')
-            t.tree.push(context)
-            context.parent = t
-            return t
+            context.parent.tree.push(context.tree[1])
+            context.tree[1].parent = context.parent
         }
     }
 
