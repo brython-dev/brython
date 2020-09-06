@@ -652,6 +652,8 @@ $B.JSObj = $B.make_class("JSObj",
             //jsobj.__class__ = _b_.list
         }else if(typeof jsobj == "function"){
             jsobj.$is_js_func = true
+        }else if(typeof jsobj == "number" && ! Number.isInteger(jsobj)){
+            return new Number(jsobj)
         }
         return jsobj
     }
@@ -720,7 +722,7 @@ $B.JSObj.__getattribute__ = function(self, attr){
                 var result = js_attr.apply(target, args)
             }catch(err){
                 console.log("error", err)
-                console.log("attribute", attr, "of self", self, 
+                console.log("attribute", attr, "of self", self,
                     js_attr, args, arguments)
                 throw err
             }

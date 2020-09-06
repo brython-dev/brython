@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,10,'final',0]
 __BRYTHON__.__MAGIC__="3.8.10"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-09-06 19:01:40.232465"
-__BRYTHON__.timestamp=1599411700232
+__BRYTHON__.compiled_date="2020-09-06 21:07:20.615461"
+__BRYTHON__.timestamp=1599419240615
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -9275,7 +9275,7 @@ throw _b_.TypeError.$factory(
 "A Javascript function can't take "+
 "keyword arguments")}}else{args.push($B.pyobj2jsobj(arg))}}
 return args}
-$B.JSObj=$B.make_class("JSObj",function(jsobj){if(Array.isArray(jsobj)){}else if(typeof jsobj=="function"){jsobj.$is_js_func=true}
+$B.JSObj=$B.make_class("JSObj",function(jsobj){if(Array.isArray(jsobj)){}else if(typeof jsobj=="function"){jsobj.$is_js_func=true}else if(typeof jsobj=="number" && ! Number.isInteger(jsobj)){return new Number(jsobj)}
 return jsobj}
 )
 $B.JSObj.__getattribute__=function(self,attr){var test=false 

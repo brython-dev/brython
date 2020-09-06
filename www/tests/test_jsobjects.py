@@ -121,3 +121,8 @@ class Square(window.Square):
 s = Square(5)
 assert s.x == 5
 assert s.surface() == 25
+
+# issue 1484
+assert abs(window.get_float()) == window.get_float()
+
+print("all tests ok...")

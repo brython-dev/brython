@@ -66,3 +66,7 @@ function Square(x){
     }
 }
 
+// issue 1486
+function get_float() {
+  return 57.735026919;
+}
