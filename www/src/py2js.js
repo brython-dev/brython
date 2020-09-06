@@ -2082,7 +2082,9 @@ $CallCtx.prototype.to_js = function(){
                    if(scope.ntype == 'def' || scope.ntype == 'generator'){
                       var def_scope = $get_scope(scope.context.tree[0])
                       if(def_scope.ntype == 'class'){
-                         new $IdCtx(this, def_scope.context.tree[0].name)
+                         var super_type_id = new $IdCtx(this,
+                             def_scope.context.tree[0].name)
+                         super_type_id.is_super_type = true
                       }
                    }
                 }
@@ -2268,7 +2270,6 @@ var $ClassCtx = $B.parser.$ClassCtx = function(context){
     var scope = this.scope = $get_scope(this)
     this.parent.node.parent_block = scope
     this.parent.node.bound = {} // will store the names bound in the function
-
     // stores names bound in the class scope
     this.parent.node.binding = {
         __annotations__: true
@@ -2354,6 +2355,7 @@ $ClassCtx.prototype.transform = function(node, rank){
 
     var js = ' '.repeat(node.indent + 4) +
              '$locals.$name = "' + this.name + '"' + indent +
+             '$locals.$is_class = true; ' + indent +
              '$locals.$line_info = "' + node.line_num + ',' +
              this.module + '";' + indent +
              'var $top_frame = ["' + local_ns +'", $locals,' + '"' +
@@ -5826,10 +5828,46 @@ $IdCtx.prototype.to_js = function(arg){
 
     var val = this.value
 
-    var $test = false // val == "myvar"
+    var $test = false // val == "Bar"
 
     if($test){
         console.log("this", this)
+    }
+
+    if(this.is_super_type){
+        /* If "this" is the id inserted as the first argument of super(),
+           the resolution is specific. In issue 1488:
+
+            class Foobar:
+                class Foo:
+                    def __str__(self):
+                        return "foo"
+
+                class Bar(Foo):
+                    def __init__(self):
+                        super().__init__()
+                    def __str__(self):
+                        return "bar"
+
+           we replace the missing first argument of super() by Bar. It must be
+           resolved as Foobar.Bar, whereas the defaut resolution of Bar would
+           result in a NameError: name 'Bar' is not defined
+
+        */
+        var scope = $get_scope(this),
+            module = scope.module,
+            refs = []
+        while(scope){
+            if(scope.ntype == "class"){
+                refs.splice(0, 0, scope.context.tree[0].name)
+            }
+            scope = scope.parent
+        }
+        if(refs.length == ""){
+            console.log("bizarre, no refs", this, "scope", scope)
+        }
+        return  "$locals_" + module.replace(/\./g, "_") + "." +
+            refs.join(".")
     }
 
     // Special cases

@@ -547,4 +547,22 @@ class CC(metaclass=CMeta):
 
 assert CC.__annotations__['xx'] == 'ANNOT'
 
+# issue 1488
+class Foobar:
+
+    class Foo:
+
+        def __str__(self):
+            return "foo"
+
+    class Bar(Foo):
+
+        def __init__(self):
+            super().__init__()
+
+        def __str__(self):
+            return "bar"
+
+assert str(Foobar.Bar()) == "bar"
+
 print('passed all tests..')

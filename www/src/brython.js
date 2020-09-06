@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,10,'final',0]
 __BRYTHON__.__MAGIC__="3.8.10"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-09-05 08:23:05.543876"
-__BRYTHON__.timestamp=1599286985543
+__BRYTHON__.compiled_date="2020-09-06 17:25:59.640972"
+__BRYTHON__.timestamp=1599405959640
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -1107,7 +1107,8 @@ case '$$super':
 if(this.tree.length==0){
 var scope=$get_scope(this)
 if(scope.ntype=='def' ||scope.ntype=='generator'){var def_scope=$get_scope(scope.C.tree[0])
-if(def_scope.ntype=='class'){new $IdCtx(this,def_scope.C.tree[0].name)}}}
+if(def_scope.ntype=='class'){var super_type_id=new $IdCtx(this,def_scope.C.tree[0].name)
+super_type_id.is_super_type=true}}}
 if(this.tree.length==1){
 var scope=$get_scope(this)
 if(scope.ntype=='def' ||scope.ntype=='generator'){var args=scope.C.tree[0].args
@@ -1239,6 +1240,7 @@ while(global_scope.parent_block.id !=='__builtins__'){global_scope=global_scope.
 var global_ns='$locals_'+global_scope.id.replace(/\./g,'_')
 var js=' '.repeat(node.indent+4)+
 '$locals.$name = "'+this.name+'"'+indent+
+'$locals.$is_class = true; '+indent+
 '$locals.$line_info = "'+node.line_num+','+
 this.module+'";'+indent+
 'var $top_frame = ["'+local_ns+'", $locals,'+'"'+
@@ -2887,6 +2889,13 @@ if(this.result !==undefined && this.scope.ntype=='generator'){return this.result
 var val=this.value
 var $test=false 
 if($test){console.log("this",this)}
+if(this.is_super_type){
+var scope=$get_scope(this),module=scope.module,refs=[]
+while(scope){if(scope.ntype=="class"){refs.splice(0,0,scope.C.tree[0].name)}
+scope=scope.parent}
+if(refs.length==""){console.log("bizarre, no refs",this,"scope",scope)}
+return "$locals_"+module.replace(/\./g,"_")+"."+
+refs.join(".")}
 if(val=='__BRYTHON__' ||val=='$B'){return val}
 if(val.startsWith("comp_result_"+$B.lambda_magic)){if(this.bound){return "var "+val}
 return val}
