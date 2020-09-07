@@ -54,5 +54,8 @@ except NameError:
 assert simple.strange == "a strange name"
 assert dir(simple) == ["Simple", "text", "strange", "unknown"]
 
+# issue 1483
+from foobar import *
+assert str(Foo()) == "foo"
 
 print('passed all tests')

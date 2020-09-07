@@ -1603,8 +1603,9 @@ $AugmentedAssignCtx.prototype.transform = function(node, rank){
         }
     }
 
-    if(left_bound_to_int && right_is_int){
-        parent.insert(rank + offset, $NodeJS(left + " "+ op + " " + right))
+    if(left_bound_to_int && right_is_int &&
+            op != "//="){ // issue 1482
+        parent.insert(rank + offset, $NodeJS(left + " " + op + " " + right))
         return offset++
     }
 
@@ -1676,7 +1677,7 @@ $AugmentedAssignCtx.prototype.transform = function(node, rank){
     var ctx1 = new $NodeCtx(aa1)
     var expr1 = new $ExprCtx(ctx1, 'clone', false)
     if(left_id_unbound){
-        new $RawJSCtx(expr1, left) //'$locals["' + left_id + '"]')
+        new $RawJSCtx(expr1, left)
     }else{
         expr1.tree = context.tree
         expr1.tree.forEach(function(elt){
@@ -2082,7 +2083,9 @@ $CallCtx.prototype.to_js = function(){
                    if(scope.ntype == 'def' || scope.ntype == 'generator'){
                       var def_scope = $get_scope(scope.context.tree[0])
                       if(def_scope.ntype == 'class'){
-                         new $IdCtx(this, def_scope.context.tree[0].name)
+                         var super_type_id = new $IdCtx(this,
+                             def_scope.context.tree[0].name)
+                         super_type_id.is_super_type = true
                       }
                    }
                 }
@@ -2268,7 +2271,6 @@ var $ClassCtx = $B.parser.$ClassCtx = function(context){
     var scope = this.scope = $get_scope(this)
     this.parent.node.parent_block = scope
     this.parent.node.bound = {} // will store the names bound in the function
-
     // stores names bound in the class scope
     this.parent.node.binding = {
         __annotations__: true
@@ -2354,6 +2356,7 @@ $ClassCtx.prototype.transform = function(node, rank){
 
     var js = ' '.repeat(node.indent + 4) +
              '$locals.$name = "' + this.name + '"' + indent +
+             '$locals.$is_class = true; ' + indent +
              '$locals.$line_info = "' + node.line_num + ',' +
              this.module + '";' + indent +
              'var $top_frame = ["' + local_ns +'", $locals,' + '"' +
@@ -5826,10 +5829,46 @@ $IdCtx.prototype.to_js = function(arg){
 
     var val = this.value
 
-    var $test = false // val == "myvar"
+    var $test = false // val == "Bar"
 
     if($test){
         console.log("this", this)
+    }
+
+    if(this.is_super_type){
+        /* If "this" is the id inserted as the first argument of super(),
+           the resolution is specific. In issue 1488:
+
+            class Foobar:
+                class Foo:
+                    def __str__(self):
+                        return "foo"
+
+                class Bar(Foo):
+                    def __init__(self):
+                        super().__init__()
+                    def __str__(self):
+                        return "bar"
+
+           we replace the missing first argument of super() by Bar. It must be
+           resolved as Foobar.Bar, whereas the defaut resolution of Bar would
+           result in a NameError: name 'Bar' is not defined
+
+        */
+        var scope = $get_scope(this),
+            module = scope.module,
+            refs = []
+        while(scope){
+            if(scope.ntype == "class"){
+                refs.splice(0, 0, scope.context.tree[0].name)
+            }
+            scope = scope.parent
+        }
+        if(refs.length == ""){
+            console.log("bizarre, no refs", this, "scope", scope)
+        }
+        return  "$locals_" + module.replace(/\./g, "_") + "." +
+            refs.join(".")
     }
 
     // Special cases
@@ -7415,15 +7454,26 @@ $OpCtx.prototype.transition = function(token, value){
     if(context.op === undefined){
         $_SyntaxError(context,['context op undefined ' + context])
     }
-    if(context.op.substr(0,5) == 'unary' && token != 'eol'){
-        if(context.parent.type == 'assign' ||
-                context.parent.type == 'return'){
-            // create and return a tuple whose first element is context
+    if(context.op.substr(0,5) == 'unary'){
+        if(token != 'eol'){
+            if(context.parent.type == 'assign' ||
+                    context.parent.type == 'return'){
+                // create and return a tuple whose first element is context
+                context.parent.tree.pop()
+                var t = new $ListOrTupleCtx(context.parent, 'tuple')
+                t.tree.push(context)
+                context.parent = t
+                return t
+            }
+        }
+        if(context.tree.length == 2 && context.tree[1].type == "expr" &&
+                context.tree[1].tree[0].type == "int"){
+            // replace by the integer with the applied unary operator
+            context.tree[1].tree[0].value[1] = context.tree[0].op +
+                context.tree[1].tree[0].value[1]
             context.parent.tree.pop()
-            var t = new $ListOrTupleCtx(context.parent, 'tuple')
-            t.tree.push(context)
-            context.parent = t
-            return t
+            context.parent.tree.push(context.tree[1])
+            context.tree[1].parent = context.parent
         }
     }
 

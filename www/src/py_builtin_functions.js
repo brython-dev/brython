@@ -2436,7 +2436,7 @@ var $$super = $B.make_class("super",
             _type2 = _type2[0]
             missing2 = true
         }
-        
+
         return {__class__: $$super,
             __thisclass__: _type1,
             __self_class__: _type2,

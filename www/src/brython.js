@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,10,'final',0]
 __BRYTHON__.__MAGIC__="3.8.10"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-09-04 21:39:29.440742"
-__BRYTHON__.timestamp=1599248369440
+__BRYTHON__.compiled_date="2020-09-06 21:07:20.615461"
+__BRYTHON__.timestamp=1599419240615
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -831,7 +831,9 @@ var left=C.tree[0].to_js()
 if(C.tree[0].type=="id"){var binding_scope=C.tree[0].firstBindingScopeId(),left_value=C.tree[0].value
 if(binding_scope){left="$locals_"+binding_scope.replace(/\./g,'_')+
 '["'+left_value+'"]'}else{left='$locals["'+left_value+'"]'}}
-if(left_bound_to_int && right_is_int){parent.insert(rank+offset,$NodeJS(left+" "+op+" "+right))
+if(left_bound_to_int && right_is_int &&
+op !="//="){
+parent.insert(rank+offset,$NodeJS(left+" "+op+" "+right))
 return offset++}
 prefix=prefix && !C.tree[0].unknown_binding && !left_id_unbound
 var op1=op.charAt(0)
@@ -1107,7 +1109,8 @@ case '$$super':
 if(this.tree.length==0){
 var scope=$get_scope(this)
 if(scope.ntype=='def' ||scope.ntype=='generator'){var def_scope=$get_scope(scope.C.tree[0])
-if(def_scope.ntype=='class'){new $IdCtx(this,def_scope.C.tree[0].name)}}}
+if(def_scope.ntype=='class'){var super_type_id=new $IdCtx(this,def_scope.C.tree[0].name)
+super_type_id.is_super_type=true}}}
 if(this.tree.length==1){
 var scope=$get_scope(this)
 if(scope.ntype=='def' ||scope.ntype=='generator'){var args=scope.C.tree[0].args
@@ -1239,6 +1242,7 @@ while(global_scope.parent_block.id !=='__builtins__'){global_scope=global_scope.
 var global_ns='$locals_'+global_scope.id.replace(/\./g,'_')
 var js=' '.repeat(node.indent+4)+
 '$locals.$name = "'+this.name+'"'+indent+
+'$locals.$is_class = true; '+indent+
 '$locals.$line_info = "'+node.line_num+','+
 this.module+'";'+indent+
 'var $top_frame = ["'+local_ns+'", $locals,'+'"'+
@@ -2887,6 +2891,13 @@ if(this.result !==undefined && this.scope.ntype=='generator'){return this.result
 var val=this.value
 var $test=false 
 if($test){console.log("this",this)}
+if(this.is_super_type){
+var scope=$get_scope(this),module=scope.module,refs=[]
+while(scope){if(scope.ntype=="class"){refs.splice(0,0,scope.C.tree[0].name)}
+scope=scope.parent}
+if(refs.length==""){console.log("bizarre, no refs",this,"scope",scope)}
+return "$locals_"+module.replace(/\./g,"_")+"."+
+refs.join(".")}
 if(val=='__BRYTHON__' ||val=='$B'){return val}
 if(val.startsWith("comp_result_"+$B.lambda_magic)){if(this.bound){return "var "+val}
 return val}
@@ -3645,13 +3656,20 @@ C.parent.tree.push(this)}
 $OpCtx.prototype.toString=function(){return '(op '+this.op+') ['+this.tree+']'}
 $OpCtx.prototype.transition=function(token,value){var C=this
 if(C.op===undefined){$_SyntaxError(C,['C op undefined '+C])}
-if(C.op.substr(0,5)=='unary' && token !='eol'){if(C.parent.type=='assign' ||
+if(C.op.substr(0,5)=='unary'){if(token !='eol'){if(C.parent.type=='assign' ||
 C.parent.type=='return'){
 C.parent.tree.pop()
 var t=new $ListOrTupleCtx(C.parent,'tuple')
 t.tree.push(C)
 C.parent=t
 return t}}
+if(C.tree.length==2 && C.tree[1].type=="expr" &&
+C.tree[1].tree[0].type=="int"){
+C.tree[1].tree[0].value[1]=C.tree[0].op+
+C.tree[1].tree[0].value[1]
+C.parent.tree.pop()
+C.parent.tree.push(C.tree[1])
+C.tree[1].parent=C.parent}}
 switch(token){case 'id':
 case 'imaginary':
 case 'int':
@@ -9257,7 +9275,7 @@ throw _b_.TypeError.$factory(
 "A Javascript function can't take "+
 "keyword arguments")}}else{args.push($B.pyobj2jsobj(arg))}}
 return args}
-$B.JSObj=$B.make_class("JSObj",function(jsobj){if(Array.isArray(jsobj)){}else if(typeof jsobj=="function"){jsobj.$is_js_func=true}
+$B.JSObj=$B.make_class("JSObj",function(jsobj){if(Array.isArray(jsobj)){}else if(typeof jsobj=="function"){jsobj.$is_js_func=true}else if(typeof jsobj=="number" && ! Number.isInteger(jsobj)){return new Number(jsobj)}
 return jsobj}
 )
 $B.JSObj.__getattribute__=function(self,attr){var test=false 
