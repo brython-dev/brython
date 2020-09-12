@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,10,'final',0]
 __BRYTHON__.__MAGIC__="3.8.10"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-09-06 21:07:20.615461"
-__BRYTHON__.timestamp=1599419240615
+__BRYTHON__.compiled_date="2020-09-12 11:41:16.618139"
+__BRYTHON__.timestamp=1599903676618
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5821,6 +5821,7 @@ if(set_name !==_b_.None){set_name(v,class_dict,key)}}
 if(typeof v=="function"){if(v.$infos===undefined){console.log("type new",v,v+"")
 console.log($B.frames_stack.slice())}
 v.$infos.$class=class_dict
+v.$infos.__qualname__=name+'.'+v.$infos.__name__
 if(v.$infos.$defaults){
 var $defaults=v.$infos.$defaults
 $B.Function.__setattr__(v,"__defaults__",$defaults)}}}
@@ -9278,6 +9279,12 @@ return args}
 $B.JSObj=$B.make_class("JSObj",function(jsobj){if(Array.isArray(jsobj)){}else if(typeof jsobj=="function"){jsobj.$is_js_func=true}else if(typeof jsobj=="number" && ! Number.isInteger(jsobj)){return new Number(jsobj)}
 return jsobj}
 )
+$B.JSObj.__eq__=function(self,other){switch(typeof self){case "object":
+if(Object.keys(self).length !==Object.keys(other).length){return false}
+for(var key in self){if(! $B.JSObj.__eq__(self[key],other[key])){return false}}
+default:
+return self===other}}
+$B.JSObj.__ne__=function(self,other){return ! $B.JSObj.__eq__(self,other)}
 $B.JSObj.__getattribute__=function(self,attr){var test=false 
 if(test){console.log("__ga__",self,attr)}
 if(attr=="$$new" && typeof self=="function"){
@@ -9305,6 +9312,8 @@ return $B.JSObj.$factory(result)}
 res.prototype=js_attr.prototype
 res.$js_func=js_attr
 res.__mro__=[_b_.object]
+res.$infos={__name__:js_attr.name,__qualname__:js_attr.name}
+if($B.frames_stack.length > 0){res.$infos.__module__=$B.last($B.frames_stack)[3].__name__}
 return $B.JSObj.$factory(res)}else{return $B.JSObj.$factory(js_attr)}}
 $B.JSObj.__setattr__=function(self,attr,value){if(typeof attr=="string"){attr=$B.from_alias(attr)}
 self[attr]=$B.pyobj2structuredclone(value)

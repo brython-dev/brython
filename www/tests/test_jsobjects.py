@@ -125,4 +125,17 @@ assert s.surface() == 25
 # issue 1484
 assert abs(window.get_float()) == window.get_float()
 
+# issue 1490
+class JSON_DUMMY_IMPL:
+    dumps = window.JSON.stringify
+    loads = window.JSON.parse
+
+dummy_json = JSON_DUMMY_IMPL
+
+s = '{"x":1,"y":"ab"}'
+
+obj = dummy_json.loads(s)
+assert obj["x"] == 1
+assert dummy_json.dumps(obj) == s
+
 print("all tests ok...")

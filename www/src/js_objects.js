@@ -659,6 +659,26 @@ $B.JSObj = $B.make_class("JSObj",
     }
 )
 
+$B.JSObj.__eq__ = function(self, other){
+    switch(typeof self){
+        case "object":
+            if(Object.keys(self).length !== Object.keys(other).length){
+                return false
+            }
+            for(var key in self){
+                if(! $B.JSObj.__eq__(self[key], other[key])){
+                    return false
+                }
+            }
+        default:
+            return self === other
+    }
+}
+
+$B.JSObj.__ne__ = function(self, other){
+    return ! $B.JSObj.__eq__(self, other)
+}
+
 $B.JSObj.__getattribute__ = function(self, attr){
     var test = false // attr == "FileReader"
     if(test){
@@ -737,6 +757,13 @@ $B.JSObj.__getattribute__ = function(self, attr){
         res.prototype = js_attr.prototype
         res.$js_func = js_attr
         res.__mro__ = [_b_.object]
+        res.$infos = {
+            __name__: js_attr.name,
+            __qualname__: js_attr.name
+        }
+        if($B.frames_stack.length > 0){
+            res.$infos.__module__ = $B.last($B.frames_stack)[3].__name__
+        }
         return $B.JSObj.$factory(res)
     }else{
         return $B.JSObj.$factory(js_attr)
