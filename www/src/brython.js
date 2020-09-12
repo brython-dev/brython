@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,10,'final',0]
 __BRYTHON__.__MAGIC__="3.8.10"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-09-12 11:41:16.618139"
-__BRYTHON__.timestamp=1599903676618
+__BRYTHON__.compiled_date="2020-09-12 11:44:24.415151"
+__BRYTHON__.timestamp=1599903864415
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -6506,7 +6506,7 @@ case "__ge__":
 return x1 >=y1
 case "__gt__":
 return x1 > y1}}
-var res,rev_op,compared=false
+var res,rev_op
 if(x.$is_class ||x.$factory){if(op=="__eq__"){return(x===y)}else if(op=="__ne__"){return !(x===y)}else{throw _b_.TypeError.$factory("'"+method2comp[op]+
 "' not supported between instances of '"+$B.class_name(x)+
 "' and '"+$B.class_name(y)+"'")}}
@@ -6514,11 +6514,9 @@ if(x.__class__ && y.__class__){
 if(y.__class__.__mro__.indexOf(x.__class__)>-1){rev_op=reversed_op[op]||op
 var rev_func=$B.$getattr(y,rev_op)
 res=$B.$call($B.$getattr(y,rev_op))(x)
-if(res !==_b_.NotImplemented){return res}
-compared=true}}
+if(res !==_b_.NotImplemented){return res}}}
 res=$B.$call($B.$getattr(x,op))(y)
 if(res !==_b_.NotImplemented){return res}
-if(compared){return false}
 rev_op=reversed_op[op]||op
 res=$B.$call($B.$getattr(y,rev_op))(x)
 if(res !==_b_.NotImplemented ){return res}
