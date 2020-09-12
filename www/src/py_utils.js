@@ -1448,8 +1448,7 @@ $B.rich_comp = function(op, x, y){
         }
     }
     var res,
-        rev_op,
-        compared = false
+        rev_op
 
     if(x.$is_class || x.$factory) {
         if(op == "__eq__"){
@@ -1475,13 +1474,11 @@ $B.rich_comp = function(op, x, y){
             var rev_func = $B.$getattr(y, rev_op)
             res = $B.$call($B.$getattr(y, rev_op))(x)
             if(res !== _b_.NotImplemented){return res}
-            compared = true
         }
     }
 
     res = $B.$call($B.$getattr(x, op))(y)
     if(res !== _b_.NotImplemented){return res}
-    if(compared){return false}
     rev_op = reversed_op[op] || op
     res = $B.$call($B.$getattr(y, rev_op))(x)
     if(res !== _b_.NotImplemented ){return res}
