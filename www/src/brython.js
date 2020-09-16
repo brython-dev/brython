@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,10,'final',0]
 __BRYTHON__.__MAGIC__="3.8.10"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-09-12 11:44:24.415151"
-__BRYTHON__.timestamp=1599903864415
+__BRYTHON__.compiled_date="2020-09-16 09:54:08.243486"
+__BRYTHON__.timestamp=1600242848243
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -472,11 +472,13 @@ this.tree=[]
 C.tree[C.tree.length]=this}
 $AssertCtx.prototype.toString=function(){return '(assert) '+this.tree}
 $AssertCtx.prototype.transition=function(token,value){var C=this
+if(token==","){if(this.tree.length > 1){$_SyntaxError(C,"too many commas after assert")}
+return new $AbstractExprCtx(this,false)}
 if(token=='eol'){return $transition(C.parent,token)}
 $_SyntaxError(C,token)}
-$AssertCtx.prototype.transform=function(node,rank){if(this.tree[0].type=='list_or_tuple'){
-var condition=this.tree[0].tree[0]
-var message=this.tree[0].tree[1]}else{var condition=this.tree[0]
+$AssertCtx.prototype.transform=function(node,rank){if(this.tree.length > 1){
+var condition=this.tree[0]
+var message=this.tree[1]}else{var condition=this.tree[0]
 var message=null}
 if(this.tree[0].type=="expr" && this.tree[0].name=="tuple" &&
 this.tree[0].tree[0].tree.length > 1){SyntaxWarning(this,"assertion is always true, perhaps "+
@@ -3454,7 +3456,7 @@ if(['try','except'].indexOf(previous.type)==-1){$_SyntaxError(C,'except after '+
 return new $ExceptCtx(C)
 case 'assert':
 return new $AbstractExprCtx(
-new $AssertCtx(C),'assert',true)
+new $AssertCtx(C),false,true)
 case 'from':
 return new $FromCtx(C)
 case 'import':
@@ -3638,9 +3640,16 @@ return $transition(C.parent,token,value)}
 $NumberCtx.prototype.to_js=function(){this.js_processed=true
 var type=this.type,value=this.value
 if(type=='int'){var v=parseInt(value[1],value[0])
-if(v > $B.min_int && v < $B.max_int){return v}
-else{return '$B.long_int.$factory("'+value[1]+'", '+value[0]
-+')'}}else if(type=="float"){
+if(v > $B.min_int && v < $B.max_int){if(this.unary_op){v=eval(this.unary_op+v)}
+return v}else{var v=$B.long_int.$factory(value[1],value[0])
+switch(this.unary_op){case "-":
+v=$B.long_int.__neg__(v)
+break
+case "~":
+v=$B.long_int.__invert__(v)
+break}
+return '{__class__: $B.long_int, value: "'+v.value+
+'", pos: '+v.pos+'}'}}else if(type=="float"){
 if(/^\d+$/.exec(value)||/^\d+\.\d*$/.exec(value)){return '(new Number('+this.value+'))'}
 return '_b_.float.$factory('+value+')'}else if(type=="imaginary"){return '$B.make_complex(0,'+value+')'}}
 var $OpCtx=$B.parser.$OpCtx=function(C,op){
@@ -3665,11 +3674,10 @@ C.parent=t
 return t}}
 if(C.tree.length==2 && C.tree[1].type=="expr" &&
 C.tree[1].tree[0].type=="int"){
-C.tree[1].tree[0].value[1]=C.tree[0].op+
-C.tree[1].tree[0].value[1]
 C.parent.tree.pop()
 C.parent.tree.push(C.tree[1])
-C.tree[1].parent=C.parent}}
+C.tree[1].parent=C.parent
+C.tree[1].tree[0].unary_op=C.tree[0].op}}
 switch(token){case 'id':
 case 'imaginary':
 case 'int':

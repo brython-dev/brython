@@ -872,15 +872,21 @@ $AssertCtx.prototype.toString = function(){return '(assert) ' + this.tree}
 
 $AssertCtx.prototype.transition = function(token, value){
     var context = this
+    if(token == ","){
+        if(this.tree.length > 1){
+            $_SyntaxError(context, "too many commas after assert")
+        }
+        return new $AbstractExprCtx(this, false)
+    }
     if(token == 'eol'){return $transition(context.parent, token)}
     $_SyntaxError(context, token)
 }
 
 $AssertCtx.prototype.transform = function(node, rank){
-    if(this.tree[0].type == 'list_or_tuple'){
+    if(this.tree.length > 1){
         // form "assert condition,message"
-        var condition = this.tree[0].tree[0]
-        var message = this.tree[0].tree[1]
+        var condition = this.tree[0]
+        var message = this.tree[1]
     }else{
         var condition = this.tree[0]
         var message = null
@@ -7080,7 +7086,7 @@ $NodeCtx.prototype.transition = function(token, value){
             return new $ExceptCtx(context)
         case 'assert':
             return new $AbstractExprCtx(
-                new $AssertCtx(context), 'assert', true)
+                new $AssertCtx(context), false, true)
         case 'from':
             return new $FromCtx(context)
         case 'import':
@@ -7406,10 +7412,23 @@ $NumberCtx.prototype.to_js = function(){
         value = this.value
     if(type == 'int'){
         var v = parseInt(value[1], value[0])
-        if(v > $B.min_int && v < $B.max_int){return v}
-        else{
-            return '$B.long_int.$factory("' + value[1] + '", ' + value[0]
-                + ')'
+        if(v > $B.min_int && v < $B.max_int){
+            if(this.unary_op){
+                v = eval(this.unary_op + v)
+            }
+            return v
+        }else{
+            var v = $B.long_int.$factory(value[1], value[0])
+            switch(this.unary_op){
+                case "-":
+                    v = $B.long_int.__neg__(v)
+                    break
+                case "~":
+                    v = $B.long_int.__invert__(v)
+                    break
+            }
+            return '{__class__: $B.long_int, value: "' + v.value +
+                '", pos: ' + v.pos + '}'
         }
     }else if(type == "float"){
         // number literal
@@ -7469,11 +7488,11 @@ $OpCtx.prototype.transition = function(token, value){
         if(context.tree.length == 2 && context.tree[1].type == "expr" &&
                 context.tree[1].tree[0].type == "int"){
             // replace by the integer with the applied unary operator
-            context.tree[1].tree[0].value[1] = context.tree[0].op +
-                context.tree[1].tree[0].value[1]
             context.parent.tree.pop()
             context.parent.tree.push(context.tree[1])
             context.tree[1].parent = context.parent
+            // Set attribute "unary_op", used in $NumberCtx.prototype.to_js()
+            context.tree[1].tree[0].unary_op = context.tree[0].op
         }
     }
 
