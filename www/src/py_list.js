@@ -367,6 +367,7 @@ list.__new__ = function(cls, ...args){
 
 list.__repr__ = function(self){
     if($B.repr.enter(self)){ // in py_utils.js
+    console.log("enter...")
         return '[...]'
     }
     var _r = [],
@@ -377,8 +378,11 @@ list.__repr__ = function(self){
     }
 
     if(self.__class__ === tuple){
-        if(self.length == 1){return "(" + _r[0] + ",)"}
-        res = "(" + _r.join(", ") + ")"
+        if(self.length == 1){
+            res = "(" + _r[0] + ",)"
+        }else{
+            res = "(" + _r.join(", ") + ")"
+        }
     }else{
         res = "[" + _r.join(", ") + "]"
     }
