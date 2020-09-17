@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,10,'final',0]
 __BRYTHON__.__MAGIC__="3.8.10"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-09-17 10:10:06.808212"
-__BRYTHON__.timestamp=1600330206807
+__BRYTHON__.compiled_date="2020-09-17 21:25:49.212533"
+__BRYTHON__.timestamp=1600370749212
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -9199,15 +9199,16 @@ if(res===null){throw _b_.IndexError.$factory(rank)}
 return $B.JSObj.$factory(res)}}}
 throw _b_.KeyError.$factory(rank)}
 $B.JSObj.__setitem__=$B.JSObj.__setattr__
+var JSObj_iterator=$B.make_iterator_class('JS object iterator')
 $B.JSObj.__iter__=function(self){var items=[]
 if(_window.Symbol && self[Symbol.iterator]!==undefined){
 var items=[]
 if(self.next !==undefined){while(true){var nxt=self.next()
 if(nxt.done){break}
 items.push($B.JSObj.$factory(nxt.value))}}else if(self.length !==undefined && self.item !==undefined){for(var i=0;i < self.length;i++){items.push($B.JSObj.$factory(self.item(i)))}}
-return JSObject_iterator.$factory(items)}else if(self.length !==undefined && self.item !==undefined){
+return JSObj_iterator.$factory(items)}else if(self.length !==undefined && self.item !==undefined){
 for(var i=0;i < self.length;i++){items.push($B.JSObj.$factory(self.js.item(i)))}
-return JSObject_iterator.$factory(items)}
+return JSObj_iterator.$factory(items)}
 var _dict=$B.JSObj.to_dict(self)
 return _b_.dict.__iter__(_dict)}
 $B.JSObj.__len__=function(self){if(typeof self.length=='number'){return self.length}
