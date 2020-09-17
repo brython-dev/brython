@@ -3437,7 +3437,7 @@ $DefCtx.prototype.transform = function(node, rank){
         var h1 = ',' + h + ' '.repeat(4)
         var module = $get_module(this).module
         js += h1 + 'co_filename:$locals_' + module.replace(/\./g,'_') +
-            '["__file__"]' +
+            '["__file__"] || "<string>"' +
             h1 + 'co_firstlineno:' + node.line_num +
             h1 + 'co_flags:' + flags +
             h1 + 'co_freevars: [' + free_vars + ']' +

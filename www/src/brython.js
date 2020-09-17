@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,10,'final',0]
 __BRYTHON__.__MAGIC__="3.8.10"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-09-16 13:31:56.921403"
-__BRYTHON__.timestamp=1600255916921
+__BRYTHON__.compiled_date="2020-09-17 10:10:06.808212"
+__BRYTHON__.timestamp=1600330206807
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -1718,7 +1718,7 @@ js='    __code__:{'+h+'    co_argcount:'+this.argcount
 var h1=','+h+' '.repeat(4)
 var module=$get_module(this).module
 js+=h1+'co_filename:$locals_'+module.replace(/\./g,'_')+
-'["__file__"]'+
+'["__file__"] || "<string>"'+
 h1+'co_firstlineno:'+node.line_num+
 h1+'co_flags:'+flags+
 h1+'co_freevars: ['+free_vars+']'+
@@ -6676,9 +6676,8 @@ return f}
 )
 $B.set_func_names(classmethod,"builtins")
 var code=$B.code=$B.make_class("code")
-code.__repr__=code.__str__=function(self){return '<code object '+self.name+', file '+self.filename+'>'}
-code.__getattr__=function(self,attr){if(attr=="co_code"){return 'co_code'}
-return self[attr]}
+code.__repr__=code.__str__=function(self){return '<code object '+self.co_name+', file '+self.co_filename+'>'}
+code.__getattribute__=function(self,attr){return self[attr]}
 $B.set_func_names(code,"builtins")
 function compile(){var $=$B.args('compile',6,{source:null,filename:null,mode:null,flags:null,dont_inherit:null,optimize:null,_feature_version:null},['source','filename','mode','flags','dont_inherit','optimize','_feature_version'],arguments,{flags:0,dont_inherit:false,optimize:-1,_feature_version:0},null,null)
 var module_name='$exec_'+$B.UUID()
@@ -7867,8 +7866,9 @@ $B.lambda_magic)){co_name="<setcomp>"}else if(_frame[4].name.startsWith("lambda"
 $B.lambda_magic)){co_name="<lambda>"}}else if(filename===undefined && _frame[4].$infos.__code__){filename=_frame[4].$infos.__code__.co_filename
 if(filename===undefined){filename=_frame[4].$infos.__module__}
 res.f_lineno=_frame[4].$infos.__code__.co_firstlineno}}}
-res.f_code={__class__:$B.code,co_code:None,
-co_name:co_name,co_filename:filename}
+if(_frame.length > 4 && _frame[4].$infos !==undefined){res.f_code=_frame[4].$infos.__code__}else{res.f_code={co_name:co_name,co_filename:filename}}
+res.f_code.__class__=$B.code
+res.f_code.co_code=_b_.None
 if(filename===undefined){res.f_code.co_filename="<string>"}}
 return res}
 )
@@ -11464,11 +11464,11 @@ res.__brython__=true
 res.__dict__=$B.empty_dict()
 return res}
 list.__repr__=function(self){if($B.repr.enter(self)){
+console.log("enter...")
 return '[...]'}
 var _r=[],res
 for(var i=0;i < self.length;i++){_r.push(_b_.repr(self[i]))}
-if(self.__class__===tuple){if(self.length==1){return "("+_r[0]+",)"}
-res="("+_r.join(", ")+")"}else{res="["+_r.join(", ")+"]"}
+if(self.__class__===tuple){if(self.length==1){res="("+_r[0]+",)"}else{res="("+_r.join(", ")+")"}}else{res="["+_r.join(", ")+"]"}
 $B.repr.leave(self)
 return res}
 list.__setattr__=function(self,attr,value){if(self.__class__===list){if(list.hasOwnProperty(attr)){throw _b_.AttributeError.$factory("'list' object attribute '"+

@@ -299,11 +299,10 @@ $B.set_func_names(classmethod, "builtins")
 var code = $B.code = $B.make_class("code")
 
 code.__repr__ = code.__str__ = function(self){
-    return '<code object ' + self.name + ', file ' + self.filename + '>'
+    return '<code object ' + self.co_name + ', file ' + self.co_filename + '>'
 }
 
-code.__getattr__ = function(self, attr){
-    if(attr == "co_code"){return 'co_code'}
+code.__getattribute__ = function(self, attr){
     return self[attr]
 }
 

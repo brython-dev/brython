@@ -312,11 +312,16 @@ var frame = $B.make_class("frame",
                     }
                 }
             }
-            res.f_code = {__class__: $B.code,
-                co_code: None, // XXX fix me
-                co_name: co_name,
-                co_filename: filename
+            if(_frame.length > 4 && _frame[4].$infos !== undefined){
+                res.f_code = _frame[4].$infos.__code__
+            }else{
+                res.f_code = {
+                    co_name: co_name,
+                    co_filename: filename
+                }
             }
+            res.f_code.__class__ = $B.code
+            res.f_code.co_code = _b_.None
             if(filename === undefined){
                 res.f_code.co_filename = "<string>"
             }
