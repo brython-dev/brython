@@ -38,9 +38,7 @@ $B.make_async = func => {
 // "x = await coro" is translated into "x = await $B.promise(coro)"
 
 $B.promise = function(obj){
-    if(obj.__class__ === $B.JSObject){
-        return obj.js
-    }else if(obj.__class__ === coroutine){
+    if(obj.__class__ === coroutine){
         return coroutine.send(obj)
     }
     if(typeof obj == "function"){

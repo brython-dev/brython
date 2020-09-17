@@ -421,26 +421,6 @@
                 }
             }
         },
-        JSConstructor: {
-            __get__: function(){
-                console.warn('"javascript.JSConstructor" is deprecrated. ' +
-                    'Use window.<js constructor name>.new() instead.')
-                return $B.JSConstructor
-            },
-            __set__: function(){
-                throw _b_.AttributeError.$factory("read only")
-            }
-        },
-        JSObject: {
-            __get__: function(){
-                console.warn('"javascript.JSObject" is deprecrated. To use ' +
-                    'a Javascript object, use window.<object name> instead.')
-                return $B.JSObject
-            },
-            __set__: function(){
-                throw _b_.AttributeError.$factory("read only")
-            }
-        },
         JSON: {
             __class__: $B.make_class("JSON"),
             parse: function(){

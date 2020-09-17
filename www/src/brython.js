@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,10,'final',0]
 __BRYTHON__.__MAGIC__="3.8.10"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-09-16 09:54:08.243486"
-__BRYTHON__.timestamp=1600242848243
+__BRYTHON__.compiled_date="2020-09-16 13:31:56.921403"
+__BRYTHON__.timestamp=1600255916921
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -9106,7 +9106,7 @@ if(typeof jsobj==='number'){if(jsobj.toString().indexOf('.')==-1){return _b_.int
 return _b_.float.$factory(jsobj)}
 if(jsobj.$nat==='kw'){return jsobj}
 if($B.$isNode(jsobj)){return $B.DOMNode.$factory(jsobj)}
-return JSObject.$factory(jsobj)}
+return $B.JSObj.$factory(jsobj)}
 var pyobj2jsobj=$B.pyobj2jsobj=function(pyobj){
 if(pyobj===true ||pyobj===false){return pyobj}
 if(pyobj===_b_.None){return null}
@@ -9114,7 +9114,7 @@ if(pyobj===$B.Undefined){return undefined}
 var klass=$B.get_class(pyobj)
 if(klass===undefined){
 return pyobj;}
-if(klass===JSObject ||klass===JSConstructor){
+if(klass===JSConstructor){
 if(pyobj.js_func !==undefined){return pyobj.js_func}
 return pyobj.js}else if(klass===$B.DOMNode ||
 klass.__mro__.indexOf($B.DOMNode)>-1){
@@ -9137,140 +9137,6 @@ console.log($B.$getattr(err,'info'))
 console.log($B.class_name(err)+':',err.args.length > 0 ? err.args[0]:'' )
 throw err}}}else{
 return pyobj}}
-var JSObject={__class__:_b_.type,__mro__:[object],$infos:{__module__:"builtins",__name__:'JSObject'}}
-JSObject.__bool__=function(self){if(self.js.length !==undefined){return self.js.length > 0}
-return(new Boolean(self.js)).valueOf()}
-JSObject.__delattr__=function(self,attr){$B.$getattr(self,attr)
-delete self.js[attr]
-return _b_.None}
-JSObject.__dir__=function(self){return Object.keys(self.js)}
-JSObject.__getattribute__=function(self,attr){var $test=false 
-if($test){console.log("get attr",attr,"of",self)}
-if(attr.substr(0,2)=='$$'){attr=attr.substr(2)}
-if(self.js===null){return object.__getattribute__(None,attr)}
-if(attr=="__class__"){return JSObject}
-if(attr=="__call__"){if(typeof self.js=="function"){return function(){
-var args=[]
-for(var i=0;i < arguments.length;i++){args.push($B.pyobj2jsobj(arguments[i]))}
-var res=self.js.apply(null,args)
-if(res===undefined){return None}
-return $B.JSObject.$factory(res)}}else{throw _b_.AttributeError.$factory("object is not callable")}}
-if(self.__class__===JSObject && attr=="bind" &&
-self.js[attr]===undefined &&
-self.js['addEventListener']!==undefined){
-attr='addEventListener'}
-if(attr=="data" && self.js instanceof MessageEvent){return $B.structuredclone2pyobj(self.js.data)}
-var js_attr=self.js[attr]
-if(self.js_func && self.js_func[attr]!==undefined){js_attr=self.js_func[attr]}
-if(js_attr !==undefined){if($test){console.log("jsattr",js_attr)}
-if(typeof js_attr=='function'){
-var res=function(){var args=[]
-for(var i=0,len=arguments.length;i < len;i++){var arg=arguments[i]
-if(arg !==undefined && arg !==null &&
-arg.$nat !==undefined){var kw=arg.kw
-if(Array.isArray(kw)){kw=$B.extend(js_attr.name,...kw)}
-if(Object.keys(kw).length > 0){
-throw _b_.TypeError.$factory(
-"A Javascript function can't take "+
-"keyword arguments")}}else{args.push(pyobj2jsobj(arg))}}
-if(attr==='replace' && self.js===location){location.replace(args[0])
-return}
-var new_this=self.js
-if(self.js_func){
-new_this=self.js_func;}
-if(this !==null && this !==undefined && this !==_window){new_this=this}
-var result=js_attr.apply(new_this,args)
-if($test){console.log("result",result,jsobj2pyobj(result))}
-return jsobj2pyobj(result)}
-res.__repr__=function(){return '<function '+attr+'>'}
-res.__str__=function(){return '<function '+attr+'>'}
-res.prototype=js_attr.prototype
-return{__class__:JSObject,js:res,js_func:js_attr}}else{if($test){console.log("use JS2Py",$B.$JS2Py(js_attr))}
-return $B.$JS2Py(js_attr)}}else if(self.js===_window && attr==='$$location'){
-return $Location()}
-var res=self.__class__[attr]
-if(res===undefined){
-var mro=self.__class__.__mro__
-for(var i=0,len=mro.length;i < len;i++){var v=mro[i][attr]
-if(v !==undefined){res=v
-break}}}
-if(res !==undefined){if($test){console.log("found in klass",res+"")}
-if(typeof res==='function'){
-return function(){var args=[self]
-for(var i=0,len=arguments.length;i < len;i++){var arg=arguments[i]
-if(arg &&(arg.__class__===JSObject ||
-arg.__class__===JSConstructor)){args.push(arg.js)}else{args.push(arg)}}
-return res.apply(self,args)}}
-return $B.$JS2Py(res)}else{
-throw _b_.AttributeError.$factory("no attribute "+attr+' for '+
-self.js)}}
-JSObject.__getitem__=function(self,rank){if(typeof self.js.length=='number'){if((typeof rank=="number" ||typeof rank=="boolean")&&
-typeof self.js.item=='function'){var rank_to_int=_b_.int.$factory(rank)
-if(rank_to_int < 0){rank_to_int+=self.js.length}
-var res=self.js.item(rank_to_int)
-if(res===null){throw _b_.IndexError.$factory(rank)}
-return $B.$JS2Py(res)}else if(typeof rank=="string" &&
-typeof self.js.getNamedItem=='function'){var res=JSObject.$factory(self.js.getNamedItem(rank))
-if(res===undefined){throw _b_.KeyError.$factory(rank)}
-return res}}
-try{return $B.$call($B.$getattr(self.js,'__getitem__'))(rank)}catch(err){if(self.js[rank]!==undefined){return JSObject.$factory(self.js[rank])}
-throw _b_.KeyError.$factory(rank)}}
-var JSObject_iterator=$B.make_iterator_class('JS object iterator')
-JSObject.__iter__=function(self){var items=[]
-if(_window.Symbol && self.js[Symbol.iterator]!==undefined){
-var items=[]
-if(self.js.next !==undefined){while(true){var nxt=self.js.next()
-if(nxt.done){break}
-items.push(jsobj2pyobj(nxt.value))}}else if(self.js.length !==undefined && self.js.item !==undefined){for(var i=0;i < self.js.length;i++){items.push(jsobj2pyobj(self.js.item(i)))}}
-return JSObject_iterator.$factory(items)}else if(self.js.length !==undefined && self.js.item !==undefined){
-for(var i=0;i < self.js.length;i++){items.push(JSObject.$factory(self.js.item(i)))}
-return JSObject_iterator.$factory(items)}
-var _dict=JSObject.to_dict(self)
-return _b_.dict.__iter__(_dict)}
-JSObject.__le__=function(self,other){if(typeof self.js["appendChild"]=="function"){return $B.DOMNode.__le__($B.DOMNode.$factory(self.js),other)}
-return _b_.NotImplemented}
-JSObject.__len__=function(self){if(typeof self.js.length=='number'){return self.js.length}
-try{return $B.$getattr(self.js,'__len__')()}
-catch(err){throw _b_.AttributeError.$factory(self.js+' has no attribute __len__')}}
-JSObject.__repr__=function(self){if(self.js instanceof Date){return self.js.toString()}
-var proto=Object.getPrototypeOf(self.js)
-if(proto){var name=proto.constructor.name
-if(name===undefined){
-var proto_str=proto.constructor.toString()
-name=proto_str.substring(8,proto_str.length-1)}
-return "<"+name+" object>"}
-return "<JSObject wraps "+self.js+">"}
-JSObject.__setattr__=function(self,attr,value){if(attr.substr && attr.substr(0,2)=='$$'){
-attr=attr.substr(2)}
-if(_b_.isinstance(value,JSObject)){self.js[attr]=value.js}
-else{self.js[attr]=value
-if(typeof value=='function'){self.js[attr]=function(){var args=[]
-for(var i=0,len=arguments.length;i < len;i++){args.push($B.$JS2Py(arguments[i]))}
-try{return value.apply(null,args)}
-catch(err){err=$B.exception(err)
-var info=$B.$getattr(err,'info')
-if(err.args.length > 0){err.toString=function(){return info+'\n'+$B.class_name(err)+
-': '+_b_.repr(err.args[0])}}else{err.toString=function(){return info+'\n'+$B.class_name(err)}}
-console.log(err+'')
-throw err}}}}}
-JSObject.__setitem__=JSObject.__setattr__
-JSObject.__str__=JSObject.__repr__
-var no_dict={'string':true,'function':true,'number':true,'boolean':true}
-JSObject.bind=function(self,evt,func){var js_func=function(ev){return func(jsobj2pyobj(ev))}
-self.js.addEventListener(evt,js_func)
-return _b_.None}
-JSObject.to_dict=function(self){
-return $B.structuredclone2pyobj(self.js)}
-JSObject.$factory=function(obj){if(obj===null){return _b_.None}
-if(typeof obj=='function'){return{__class__:JSObject,js:obj,js_func:obj}}
-var klass=$B.get_class(obj)
-if(klass===_b_.float){return _b_.float.$factory(obj)}
-if(klass===_b_.list){return $B.JSArray.$factory(obj)}
-if(klass !==undefined){return obj}
-return{
-__class__:JSObject,js:obj}}
-$B.set_func_names(JSObject,"builtins")
-$B.JSObject=JSObject
 $B.JSConstructor=JSConstructor
 function pyargs2jsargs(pyargs){var args=[]
 for(var i=0,len=pyargs.length;i < len;i++){var arg=pyargs[i]
@@ -13213,10 +13079,7 @@ res.$from_js=from_js
 return res}})(__BRYTHON__)
 ;
 ;(function($B){
-var _b_=$B.builtins;
-var object=_b_.object
-var JSObject=$B.JSObject
-var _window=self;
+var _b_=$B.builtins,object=_b_.object,_window=self
 function $getMouseOffset(target,ev){ev=ev ||_window.event;
 var docPos=$getPosition(target);
 var mousePos=$mouseCoords(ev);
@@ -14068,11 +13931,7 @@ for(var attr in obj.__dict__.$string_dict){var value=obj.__dict__.$string_dict[a
 if(typeof value=="function"){res.prototype[attr]=(function(x){return function(){var args=[this]
 for(var i=0,len=arguments.length;i < len;i++){args.push($B.pyobj2jsobj(arguments[i]))}
 return x.apply(this,args)}})(value)}else{res.prototype[attr]=$B.pyobj2jsobj(value)}}
-return res}}},JSConstructor:{__get__:function(){console.warn('"javascript.JSConstructor" is deprecrated. '+
-'Use window.<js constructor name>.new() instead.')
-return $B.JSConstructor},__set__:function(){throw _b_.AttributeError.$factory("read only")}},JSObject:{__get__:function(){console.warn('"javascript.JSObject" is deprecrated. To use '+
-'a Javascript object, use window.<object name> instead.')
-return $B.JSObject},__set__:function(){throw _b_.AttributeError.$factory("read only")}},JSON:{__class__:$B.make_class("JSON"),parse:function(){return $B.structuredclone2pyobj(
+return res}}},JSON:{__class__:$B.make_class("JSON"),parse:function(){return $B.structuredclone2pyobj(
 JSON.parse.apply(this,arguments))},stringify:function(obj,replacer,space){return JSON.stringify($B.pyobj2structuredclone(obj,false),$B.JSObj.$factory(replacer),space)}},jsobj2pyobj:function(obj){return $B.jsobj2pyobj(obj)},load:function(script_url){console.log('"javascript.load" is deprecrated. '+
 'Use browser.load instead.')
 var file_obj=$B.builtins.open(script_url)
@@ -14250,7 +14109,7 @@ return{
 __class__:coroutine,$args:args,$func:func,$stack:stack}}
 f.$infos=func.$infos
 return f}
-$B.promise=function(obj){if(obj.__class__===$B.JSObject){return obj.js}else if(obj.__class__===coroutine){return coroutine.send(obj)}
+$B.promise=function(obj){if(obj.__class__===coroutine){return coroutine.send(obj)}
 if(typeof obj=="function"){return obj()}
 return obj}})(__BRYTHON__)
 ;

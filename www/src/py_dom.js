@@ -2,10 +2,9 @@
 
 //eval($B.InjectBuiltins())
 
-var _b_ = $B.builtins;
-var object = _b_.object
-var JSObject = $B.JSObject
-var _window = self;
+var _b_ = $B.builtins,
+    object = _b_.object,
+    _window = self
 
 // cross-browser utility functions
 function $getMouseOffset(target, ev){

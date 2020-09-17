@@ -54,13 +54,13 @@ class ModuleLoader:
            mod = sys.modules[self._name]
            return mod
         
-        _src=self.get_source()
+        _src = self.get_source()
         if self._filepath.endswith('.js'):
-           mod=JSObject(import_js_module(_src, self._filepath, self._name))
+           mod = JSObject(import_js_module(_src, self._filepath, self._name))
         elif self._filepath.endswith('.py'):
-           mod=JSObject(import_py_module(_src, self._filepath, self._name))
+           mod = JSObject(import_py_module(_src, self._filepath, self._name))
         elif self._filepath.endswith('.pyj'):
-           mod=JSObject(import_pyj_module(_src, self._filepath, self._name))
+           mod = JSObject(import_pyj_module(_src, self._filepath, self._name))
         else:
            raise ImportError('Invalid Module: %s' % self._filepath)
 
