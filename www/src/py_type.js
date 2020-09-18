@@ -5,7 +5,6 @@ var _b_ = $B.builtins
 // generic code for class constructor
 $B.$class_constructor = function(class_name, class_obj, bases,
         parents_names, kwargs){
-
     bases = bases || []
     var metaclass
 
@@ -224,7 +223,7 @@ $B.$class_constructor = function(class_name, class_obj, bases,
     kls.$infos = {
         __module__: module,
         __name__: $B.from_alias(class_name),
-        __qualname__: class_name
+        __qualname__: class_obj.$qualname
     }
     kls.$subclasses = []
 
@@ -618,7 +617,7 @@ type.__repr__ = type.__str__ = function(kls){
     if(kls.$infos === undefined){
         console.log("no $infos", kls)
     }
-    var qualname = kls.$infos.__name__
+    var qualname = kls.$infos.__qualname__
     if(kls.$infos.__module__    &&
             kls.$infos.__module__ != "builtins" &&
             !kls.$infos.__module__.startsWith("$")){

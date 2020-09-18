@@ -2315,6 +2315,16 @@ $ClassCtx.prototype.set_name = function(name){
 
     var scope = this.scope,
         parent_block = scope
+
+    // Set attribute "qualname", which includes possible parent classes
+    var block = scope,
+        parent_classes = []
+    while(block.ntype == "class"){
+        parent_classes.splice(0, 0, block.context.tree[0].name)
+        block = block.parent
+    }
+    this.qualname = parent_classes.concat([name]).join(".")
+
     while(parent_block.context &&
             parent_block.context.tree[0].type == 'class'){
         parent_block = parent_block.parent
@@ -2362,6 +2372,7 @@ $ClassCtx.prototype.transform = function(node, rank){
 
     var js = ' '.repeat(node.indent + 4) +
              '$locals.$name = "' + this.name + '"' + indent +
+             '$locals.$qualname = "' + this.qualname + '"' + indent +
              '$locals.$is_class = true; ' + indent +
              '$locals.$line_info = "' + node.line_num + ',' +
              this.module + '";' + indent +
@@ -2386,8 +2397,7 @@ $ClassCtx.prototype.transform = function(node, rank){
     new $NodeJSCtx(run_func, ')();')
     node.parent.insert(rank + 1, run_func)
 
-    var module_name = '$locals_' +
-        this.module + '.__name__'
+    var module_name = '$locals_' + this.module + '.__name__'
 
     rank++
     node.parent.insert(rank + 1,
@@ -3284,10 +3294,9 @@ $DefCtx.prototype.transform = function(node, rank){
     // Handle name __class__ in methods (PEP 3135 and issue #1068)
     var is_method = scope.ntype == "class"
     if(is_method){
-        var class_name = scope.context.tree[0].name,
-            class_block = scope.parent_block,
-            class_ref = "$locals_" + class_block.id.replace(/\./g, '_') +
-                '["' + class_name + '"]'
+        var class_name = scope.context.tree[0].name
+        class_ref = "$locals_" + scope.parent_block.id.replace(/\./g, '_') +
+            '.' + scope.context.tree[0].qualname
         // bind name __class__ in method
         this.parent.node.binding["__class__"] = true
         // set its value to the class where the method is defined

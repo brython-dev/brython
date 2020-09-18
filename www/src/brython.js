@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,10,'final',0]
 __BRYTHON__.__MAGIC__="3.8.10"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-09-17 21:25:49.212533"
-__BRYTHON__.timestamp=1600370749212
+__BRYTHON__.compiled_date="2020-09-18 11:57:33.391881"
+__BRYTHON__.timestamp=1600423053391
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -1223,6 +1223,10 @@ this.id=C.node.module+'_'+name+'_'+this.random
 this.binding={}
 this.parent.node.id=this.id
 var scope=this.scope,parent_block=scope
+var block=scope,parent_classes=[]
+while(block.ntype=="class"){parent_classes.splice(0,0,block.C.tree[0].name)
+block=block.parent}
+this.qualname=parent_classes.concat([name]).join(".")
 while(parent_block.C &&
 parent_block.C.tree[0].type=='class'){parent_block=parent_block.parent}
 while(parent_block.C &&
@@ -1244,6 +1248,7 @@ while(global_scope.parent_block.id !=='__builtins__'){global_scope=global_scope.
 var global_ns='$locals_'+global_scope.id.replace(/\./g,'_')
 var js=' '.repeat(node.indent+4)+
 '$locals.$name = "'+this.name+'"'+indent+
+'$locals.$qualname = "'+this.qualname+'"'+indent+
 '$locals.$is_class = true; '+indent+
 '$locals.$line_info = "'+node.line_num+','+
 this.module+'";'+indent+
@@ -1262,8 +1267,7 @@ node.insert(node.children.length,ret_obj)
 var run_func=new $Node()
 new $NodeJSCtx(run_func,')();')
 node.parent.insert(rank+1,run_func)
-var module_name='$locals_'+
-this.module+'.__name__'
+var module_name='$locals_'+this.module+'.__name__'
 rank++
 node.parent.insert(rank+1,$NodeJS('$'+this.name+'_'+this.random+".__module__ = "+
 module_name))
@@ -1656,8 +1660,9 @@ subelse_node.add($NodeJS("for(var i = $len; i < defparams.length"+
 if(make_args_nodes.length > 1){nodes.push(make_args_nodes[1])}}
 nodes=nodes.concat(enter_frame_nodes)
 var is_method=scope.ntype=="class"
-if(is_method){var class_name=scope.C.tree[0].name,class_block=scope.parent_block,class_ref="$locals_"+class_block.id.replace(/\./g,'_')+
-'["'+class_name+'"]'
+if(is_method){var class_name=scope.C.tree[0].name
+class_ref="$locals_"+scope.parent_block.id.replace(/\./g,'_')+
+'.'+scope.C.tree[0].qualname
 this.parent.node.binding["__class__"]=true
 nodes.push($NodeJS("$locals.__class__ = "+class_ref))}
 nodes.push($NodeJS('$B.js_this = this;'))
@@ -5692,7 +5697,7 @@ break}}}}
 var meta_new=_b_.type.__getattribute__(metaclass,"__new__")
 var kls=meta_new(metaclass,class_name,bases,cl_dict)
 kls.__module__=module
-kls.$infos={__module__:module,__name__:$B.from_alias(class_name),__qualname__:class_name}
+kls.$infos={__module__:module,__name__:$B.from_alias(class_name),__qualname__:class_obj.$qualname}
 kls.$subclasses=[]
 for(var attr in class_obj){if(attr.charAt(0)!="$" ||attr.substr(0,2)=="$$"){if(typeof class_obj[attr]=="function"){class_obj[attr].$infos.$class=kls}}}
 if(kls.__class__===metaclass){
@@ -5835,7 +5840,7 @@ var $defaults=v.$infos.$defaults
 $B.Function.__setattr__(v,"__defaults__",$defaults)}}}
 return class_dict}
 type.__repr__=type.__str__=function(kls){if(kls.$infos===undefined){console.log("no $infos",kls)}
-var qualname=kls.$infos.__name__
+var qualname=kls.$infos.__qualname__
 if(kls.$infos.__module__ &&
 kls.$infos.__module__ !="builtins" &&
 !kls.$infos.__module__.startsWith("$")){qualname=kls.$infos.__module__+"."+qualname}
