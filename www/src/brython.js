@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,10,'final',0]
 __BRYTHON__.__MAGIC__="3.8.10"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-09-18 11:57:33.391881"
-__BRYTHON__.timestamp=1600423053391
+__BRYTHON__.compiled_date="2020-09-18 16:09:45.009131"
+__BRYTHON__.timestamp=1600438185009
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -1107,18 +1107,6 @@ this.tree.pop()}}
 var func_js=this.func.to_js()
 if(this.func !==undefined){switch(this.func.value){case 'classmethod':
 return '_b_.classmethod.$factory('+$to_js(this.tree)+')'
-case '$$super':
-if(this.tree.length==0){
-var scope=$get_scope(this)
-if(scope.ntype=='def' ||scope.ntype=='generator'){var def_scope=$get_scope(scope.C.tree[0])
-if(def_scope.ntype=='class'){var super_type_id=new $IdCtx(this,def_scope.C.tree[0].name)
-super_type_id.is_super_type=true}}}
-if(this.tree.length==1){
-var scope=$get_scope(this)
-if(scope.ntype=='def' ||scope.ntype=='generator'){var args=scope.C.tree[0].args
-if(args.length > 0){var missing_id=new $IdCtx(this,args[0])
-missing_id.to_js=function(){return "[$locals['"+args[0]+"']]"}}}}
-break
 default:
 if(this.func.type=='unary'){
 var res='$B.$getattr('+$to_js(this.tree)
@@ -1660,8 +1648,7 @@ subelse_node.add($NodeJS("for(var i = $len; i < defparams.length"+
 if(make_args_nodes.length > 1){nodes.push(make_args_nodes[1])}}
 nodes=nodes.concat(enter_frame_nodes)
 var is_method=scope.ntype=="class"
-if(is_method){var class_name=scope.C.tree[0].name
-class_ref="$locals_"+scope.parent_block.id.replace(/\./g,'_')+
+if(is_method){class_ref="$locals_"+scope.parent_block.id.replace(/\./g,'_')+
 '.'+scope.C.tree[0].qualname
 this.parent.node.binding["__class__"]=true
 nodes.push($NodeJS("$locals.__class__ = "+class_ref))}
@@ -2898,13 +2885,6 @@ if(this.result !==undefined && this.scope.ntype=='generator'){return this.result
 var val=this.value
 var $test=false 
 if($test){console.log("this",this)}
-if(this.is_super_type){
-var scope=$get_scope(this),module=scope.module,refs=[]
-while(scope){if(scope.ntype=="class"){refs.splice(0,0,scope.C.tree[0].name)}
-scope=scope.parent}
-if(refs.length==""){console.log("bizarre, no refs",this,"scope",scope)}
-return "$locals_"+module.replace(/\./g,"_")+"."+
-refs.join(".")}
 if(val=='__BRYTHON__' ||val=='$B'){return val}
 if(val.startsWith("comp_result_"+$B.lambda_magic)){if(this.bound){return "var "+val}
 return val}
@@ -7471,10 +7451,12 @@ res=$B.$getattr(res,'__add__')(_item)}catch(err){if(err.__class__===_b_.StopIter
 return res}
 $B.missing_super2=function(obj){obj.$missing=true
 return obj}
-var $$super=$B.make_class("super",function(_type1,_type2){var missing2=false
-if(Array.isArray(_type2)){_type2=_type2[0]
-missing2=true}
-return{__class__:$$super,__thisclass__:_type1,__self_class__:_type2,$missing2:missing2}}
+var $$super=$B.make_class("super",function(_type,object_or_type){if(_type===undefined ||object_or_type===undefined){var frame=$B.last($B.frames_stack),pyframe=$B.imported["_sys"].Getframe()
+if(pyframe.f_code && pyframe.f_code.co_varnames){if(_type===undefined){_type=frame[1].__class__}
+if(object_or_type===undefined){object_or_type=frame[1][pyframe.f_code.co_varnames[0]]}}else{throw _b_.TypeError.$factory("wrong argument for super()")}}
+if(Array.isArray(object_or_type)){object_or_type=object_or_type[0]}
+return{
+__class__:$$super,__thisclass__:_type,__self_class__:object_or_type}}
 )
 $$super.__getattribute__=function(self,attr){var mro=self.__thisclass__.__mro__,res
 var sc=self.__self_class__

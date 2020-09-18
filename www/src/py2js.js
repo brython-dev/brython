@@ -2081,34 +2081,6 @@ $CallCtx.prototype.to_js = function(){
         switch(this.func.value) {
             case 'classmethod':
                 return '_b_.classmethod.$factory(' + $to_js(this.tree) + ')'
-            case '$$super':
-                if(this.tree.length == 0){
-                   // super() called with no argument : if inside a class,
-                   // add the class parent as first argument
-                   var scope = $get_scope(this)
-                   if(scope.ntype == 'def' || scope.ntype == 'generator'){
-                      var def_scope = $get_scope(scope.context.tree[0])
-                      if(def_scope.ntype == 'class'){
-                         var super_type_id = new $IdCtx(this,
-                             def_scope.context.tree[0].name)
-                         super_type_id.is_super_type = true
-                      }
-                   }
-                }
-                if(this.tree.length == 1){
-                   // second argument omitted : add the instance
-                   var scope = $get_scope(this)
-                   if(scope.ntype == 'def' || scope.ntype == 'generator'){
-                      var args = scope.context.tree[0].args
-                      if(args.length > 0){
-                         var missing_id = new $IdCtx(this, args[0])
-                         missing_id.to_js = function(){
-                             return "[$locals['" + args[0] + "']]"
-                         }
-                      }
-                   }
-                }
-                break
             default:
                 if(this.func.type == 'unary'){
                    // form " -(x + 2) "
@@ -3294,7 +3266,6 @@ $DefCtx.prototype.transform = function(node, rank){
     // Handle name __class__ in methods (PEP 3135 and issue #1068)
     var is_method = scope.ntype == "class"
     if(is_method){
-        var class_name = scope.context.tree[0].name
         class_ref = "$locals_" + scope.parent_block.id.replace(/\./g, '_') +
             '.' + scope.context.tree[0].qualname
         // bind name __class__ in method
@@ -5848,42 +5819,6 @@ $IdCtx.prototype.to_js = function(arg){
 
     if($test){
         console.log("this", this)
-    }
-
-    if(this.is_super_type){
-        /* If "this" is the id inserted as the first argument of super(),
-           the resolution is specific. In issue 1488:
-
-            class Foobar:
-                class Foo:
-                    def __str__(self):
-                        return "foo"
-
-                class Bar(Foo):
-                    def __init__(self):
-                        super().__init__()
-                    def __str__(self):
-                        return "bar"
-
-           we replace the missing first argument of super() by Bar. It must be
-           resolved as Foobar.Bar, whereas the defaut resolution of Bar would
-           result in a NameError: name 'Bar' is not defined
-
-        */
-        var scope = $get_scope(this),
-            module = scope.module,
-            refs = []
-        while(scope){
-            if(scope.ntype == "class"){
-                refs.splice(0, 0, scope.context.tree[0].name)
-            }
-            scope = scope.parent
-        }
-        if(refs.length == ""){
-            console.log("bizarre, no refs", this, "scope", scope)
-        }
-        return  "$locals_" + module.replace(/\./g, "_") + "." +
-            refs.join(".")
     }
 
     // Special cases

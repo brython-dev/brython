@@ -2429,17 +2429,29 @@ $B.missing_super2 = function(obj){
 }
 
 var $$super = $B.make_class("super",
-    function (_type1, _type2){
-        var missing2 = false
-        if(Array.isArray(_type2)){
-            _type2 = _type2[0]
-            missing2 = true
+    function (_type, object_or_type){
+        if(_type === undefined || object_or_type === undefined){
+            var frame = $B.last($B.frames_stack),
+                pyframe = $B.imported["_sys"].Getframe()
+            if(pyframe.f_code && pyframe.f_code.co_varnames){
+                if(_type === undefined){
+                    _type = frame[1].__class__
+                }
+                if(object_or_type === undefined){
+                    object_or_type = frame[1][pyframe.f_code.co_varnames[0]]
+                }
+            }else{
+                throw _b_.TypeError.$factory("wrong argument for super()")
+            }
+        }
+        if(Array.isArray(object_or_type)){
+            object_or_type = object_or_type[0]
         }
 
-        return {__class__: $$super,
-            __thisclass__: _type1,
-            __self_class__: _type2,
-            $missing2: missing2
+        return {
+            __class__: $$super,
+            __thisclass__: _type,
+            __self_class__: object_or_type
         }
     }
 )
