@@ -367,7 +367,6 @@ list.__new__ = function(cls, ...args){
 
 list.__repr__ = function(self){
     if($B.repr.enter(self)){ // in py_utils.js
-    console.log("enter...")
         return '[...]'
     }
     var _r = [],
