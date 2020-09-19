@@ -581,4 +581,28 @@ class Foobar:
 
 assert str(Foobar.Bar()) == "bar"
 
+# super() in a function outside of a class
+def f():
+    super()
+
+try:
+    f()
+    raise Exception("should have raised RuntimeError")
+except RuntimeError as exc:
+    assert exc.args[0] == "super(): no arguments"
+
+# super() with a single argument
+# found in https://www.artima.com/weblogs/viewpost.jsp?thread=236278
+class B:
+    a = 1
+
+class C(B):
+    pass
+
+class D(C):
+    sup = super(C)
+
+d = D()
+assert d.sup.a == 1
+
 print('passed all tests..')

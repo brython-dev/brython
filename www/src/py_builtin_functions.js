@@ -996,7 +996,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false // attr == "__eq__" // && obj === $B // "Point"
+    var $test = false // attr == "sup" // && obj === $B // "Point"
     if($test){console.log("$getattr", attr, obj, klass)}
 
     // Shortcut for classes without parents
@@ -2430,18 +2430,17 @@ $B.missing_super2 = function(obj){
 
 var $$super = $B.make_class("super",
     function (_type, object_or_type){
-        if(_type === undefined || object_or_type === undefined){
+        if(_type === undefined && object_or_type === undefined){
             var frame = $B.last($B.frames_stack),
                 pyframe = $B.imported["_sys"].Getframe()
             if(pyframe.f_code && pyframe.f_code.co_varnames){
+                _type = frame[1].__class__
                 if(_type === undefined){
-                    _type = frame[1].__class__
+                    throw _b_.RuntimeError.$factory("super(): no arguments")
                 }
-                if(object_or_type === undefined){
-                    object_or_type = frame[1][pyframe.f_code.co_varnames[0]]
-                }
+                object_or_type = frame[1][pyframe.f_code.co_varnames[0]]
             }else{
-                throw _b_.TypeError.$factory("wrong argument for super()")
+                throw _b_.RuntimeError.$factory("super(): no arguments")
             }
         }
         if(Array.isArray(object_or_type)){
@@ -2456,8 +2455,12 @@ var $$super = $B.make_class("super",
     }
 )
 
-$$super.__getattribute__ = function(self, attr){
+$$super.__get__ = function(self, instance, klass){
+    // https://www.artima.com/weblogs/viewpost.jsp?thread=236278
+    return $$super.$factory(self.__thisclass__, instance)
+}
 
+$$super.__getattribute__ = function(self, attr){
     var mro = self.__thisclass__.__mro__,
         res
 
@@ -2477,7 +2480,7 @@ $$super.__getattribute__ = function(self, attr){
             }
         }
     }
-    var $test = false // attr == "__init_subclass__"
+    var $test = false // attr == "a"
 
     // search attr in parent classes; same as getattr() but skips __thisclass__
     var f
@@ -2488,6 +2491,17 @@ $$super.__getattribute__ = function(self, attr){
         }
     }
     if(f === undefined){
+        if($$super[attr] !== undefined){
+            return (function(x){
+                return function(){
+                    var args = [x]
+                    for(var i = 0, len = arguments.length; i < len; i++){
+                        args.push(arguments[i])
+                    }
+                    return $$super[attr].apply(null, args)
+                }
+            })(self)
+        }
         if($test){
             console.log("no attr", attr, self, "mro", mro)
         }
@@ -2497,8 +2511,11 @@ $$super.__getattribute__ = function(self, attr){
     if($test){console.log("super", attr, self, "mro", mro,
         "found in mro[0]", mro[0],
         f, f + '')}
-    if(f.$type == "staticmethod" || attr == "__new__"){return f}
-    else{
+    if(f.$type == "staticmethod" || attr == "__new__"){
+        return f
+    }else if(typeof f != "function"){
+        return f
+    }else{
         if(f.__class__ === $B.method){
             // If the function is a bound method, use the underlying function
             f = f.$infos.__func__

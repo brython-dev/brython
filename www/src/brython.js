@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,10,'final',0]
 __BRYTHON__.__MAGIC__="3.8.10"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-09-18 16:09:45.009131"
-__BRYTHON__.timestamp=1600438185009
+__BRYTHON__.compiled_date="2020-09-19 23:03:51.735065"
+__BRYTHON__.timestamp=1600549431735
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -7451,13 +7451,16 @@ res=$B.$getattr(res,'__add__')(_item)}catch(err){if(err.__class__===_b_.StopIter
 return res}
 $B.missing_super2=function(obj){obj.$missing=true
 return obj}
-var $$super=$B.make_class("super",function(_type,object_or_type){if(_type===undefined ||object_or_type===undefined){var frame=$B.last($B.frames_stack),pyframe=$B.imported["_sys"].Getframe()
-if(pyframe.f_code && pyframe.f_code.co_varnames){if(_type===undefined){_type=frame[1].__class__}
-if(object_or_type===undefined){object_or_type=frame[1][pyframe.f_code.co_varnames[0]]}}else{throw _b_.TypeError.$factory("wrong argument for super()")}}
+var $$super=$B.make_class("super",function(_type,object_or_type){if(_type===undefined && object_or_type===undefined){var frame=$B.last($B.frames_stack),pyframe=$B.imported["_sys"].Getframe()
+if(pyframe.f_code && pyframe.f_code.co_varnames){_type=frame[1].__class__
+if(_type===undefined){throw _b_.RuntimeError.$factory("super(): no arguments")}
+object_or_type=frame[1][pyframe.f_code.co_varnames[0]]}else{throw _b_.RuntimeError.$factory("super(): no arguments")}}
 if(Array.isArray(object_or_type)){object_or_type=object_or_type[0]}
 return{
 __class__:$$super,__thisclass__:_type,__self_class__:object_or_type}}
 )
+$$super.__get__=function(self,instance,klass){
+return $$super.$factory(self.__thisclass__,instance)}
 $$super.__getattribute__=function(self,attr){var mro=self.__thisclass__.__mro__,res
 var sc=self.__self_class__
 if(sc !==undefined){if(!sc.$is_class){sc=sc.__class__}
@@ -7468,11 +7471,13 @@ var $test=false
 var f
 for(var i=0,len=mro.length;i < len;i++){if(mro[i][attr]!==undefined){f=mro[i][attr]
 break}}
-if(f===undefined){if($test){console.log("no attr",attr,self,"mro",mro)}
+if(f===undefined){if($$super[attr]!==undefined){return(function(x){return function(){var args=[x]
+for(var i=0,len=arguments.length;i < len;i++){args.push(arguments[i])}
+return $$super[attr].apply(null,args)}})(self)}
+if($test){console.log("no attr",attr,self,"mro",mro)}
 throw _b_.AttributeError.$factory(attr)}
 if($test){console.log("super",attr,self,"mro",mro,"found in mro[0]",mro[0],f,f+'')}
-if(f.$type=="staticmethod" ||attr=="__new__"){return f}
-else{if(f.__class__===$B.method){
+if(f.$type=="staticmethod" ||attr=="__new__"){return f}else if(typeof f !="function"){return f}else{if(f.__class__===$B.method){
 f=f.$infos.__func__}
 var callable=$B.$call(f)
 var method=function(){var res=callable(self.__self_class__,...arguments)
@@ -11452,7 +11457,6 @@ res.__brython__=true
 res.__dict__=$B.empty_dict()
 return res}
 list.__repr__=function(self){if($B.repr.enter(self)){
-console.log("enter...")
 return '[...]'}
 var _r=[],res
 for(var i=0;i < self.length;i++){_r.push(_b_.repr(self[i]))}
