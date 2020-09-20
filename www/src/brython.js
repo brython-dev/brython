@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,10,'final',0]
 __BRYTHON__.__MAGIC__="3.8.10"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-09-19 23:03:51.735065"
-__BRYTHON__.timestamp=1600549431735
+__BRYTHON__.compiled_date="2020-09-20 10:00:28.183274"
+__BRYTHON__.timestamp=1600588828183
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -1412,7 +1412,7 @@ C.tree[C.tree.length]=this
 this.tree=[]}
 $DecoratorCtx.prototype.toString=function(){return '(decorator) '+this.tree}
 $DecoratorCtx.prototype.transition=function(token,value){var C=this
-if(token=='id' && C.tree.length==0){return $transition(new $DecoratorExprCtx(C),token,value)}
+if(token=='id' && C.tree.length==0){return $transition(new $AbstractExprCtx(C,false),token,value)}
 if(token=='eol'){return $transition(C.parent,token)}
 $_SyntaxError(C,'token '+token+' after '+C)}
 $DecoratorCtx.prototype.transform=function(node,rank){var func_rank=rank+1,children=node.parent.children,decorators=[this.tree]
@@ -1442,32 +1442,6 @@ var res=[]
 this.decorators.forEach(function(decorator,i){res.push('var '+this.dec_ids[i]+' = '+
 $to_js(decorator)+';')},this)
 return res.join('')}
-var $DecoratorExprCtx=$B.parser.$DecoratorExprCtx=function(C){
-this.type='decorator_expression'
-this.parent=C
-C.tree[C.tree.length]=this
-this.names=[]
-this.tree=[]
-this.is_call=false}
-$DecoratorExprCtx.prototype.toString=function(){return '(decorator expression)'}
-$DecoratorExprCtx.prototype.transition=function(token,value){var C=this
-if(C.expects===undefined){if(token=="id"){C.names.push(value)
-C.expects="."
-return C}
-$_SyntaxError(C,'token '+token+' after '+C)}else if(C.is_call && token !=="eol"){$_SyntaxError(C,'token '+token+' after '+C)}else if(token=="id" && C.expects=="id"){C.names.push(value)
-C.expects="."
-return C}else if(token=="." && C.expects=="."){C.expects="id"
-return C}else if(token=="(" && C.expects=="."){if(! C.is_call){C.is_call=true
-return new $CallCtx(C)}}else if(token=='eol'){return $transition(C.parent,token)}
-$_SyntaxError(C,'token '+token+' after '+C)}
-$DecoratorExprCtx.prototype.to_js=function(){this.js_processed=true
-var func=new $IdCtx(this,this.names[0])
-var obj=func.to_js()
-this.names.slice(1).forEach(function(name){obj=`$B.$getattr(${obj},"${name}")`})
-if(this.tree.length > 1){
-this.tree[0].func={to_js:function(){return obj}}
-return this.tree[0].to_js()}
-return obj}
 var $DefCtx=$B.parser.$DefCtx=function(C){this.type='def'
 this.name=null
 this.parent=C
@@ -13478,7 +13452,9 @@ DOMNode.abs_top={__get__:function(self){return $getPosition(self).top},__set__:f
 "'abs_top' is read-only")}}
 DOMNode.attach=DOMNode.__le__ 
 DOMNode.bind=function(self,event){
-var $=$B.args("bind",4,{self:null,event:null,func:null,options:null},["self","event","func","options"],arguments,{options:_b_.None},null,null),self=$.self,event=$.event,func=$.func,options=$.options
+var $=$B.args("bind",4,{self:null,event:null,func:null,options:null},["self","event","func","options"],arguments,{func:_b_.None,options:_b_.None},null,null),self=$.self,event=$.event,func=$.func,options=$.options
+if(func===_b_.None){
+return function(f){return DOMNode.bind(self,event,f)}}
 var callback=(function(f){return function(ev){try{return f($DOMEvent(ev))}catch(err){if(err.__class__ !==undefined){$B.handle_error(err)}else{try{$B.$getattr($B.stderr,"write")(err)}
 catch(err1){console.log(err)}}}}}
 )(func)

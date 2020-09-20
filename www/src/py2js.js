@@ -2703,7 +2703,7 @@ $DecoratorCtx.prototype.toString = function(){
 $DecoratorCtx.prototype.transition = function(token, value){
     var context = this
     if(token == 'id' && context.tree.length == 0){
-        return $transition(new $DecoratorExprCtx(context),
+        return $transition(new $AbstractExprCtx(context, false),
             token, value)
     }
     if(token == 'eol') {
@@ -2813,66 +2813,6 @@ $DecoratorCtx.prototype.to_js = function(){
             $to_js(decorator) + ';')
     }, this)
     return res.join('')
-}
-
-var $DecoratorExprCtx = $B.parser.$DecoratorExprCtx = function(context){
-    // Class for decorator expression. This can't be an arbitrary expression :
-    // it must be a dotted name, possibly called with arbitrary arguments
-    this.type = 'decorator_expression'
-    this.parent = context
-    context.tree[context.tree.length] = this
-    this.names = []
-    this.tree = []
-    this.is_call = false
-}
-
-$DecoratorExprCtx.prototype.toString = function(){
-    return '(decorator expression)'
-}
-
-$DecoratorExprCtx.prototype.transition = function(token, value){
-    var context = this
-    if(context.expects === undefined){
-        if(token == "id"){
-            context.names.push(value)
-            context.expects = "."
-            return context
-        }
-        $_SyntaxError(context, 'token ' + token + ' after ' + context)
-    }else if(context.is_call && token !== "eol"){
-        $_SyntaxError(context, 'token ' + token + ' after ' + context)
-    }else if(token == "id" && context.expects == "id"){
-        context.names.push(value)
-        context.expects = "."
-        return context
-    }else if(token == "." && context.expects == "."){
-        context.expects = "id"
-        return context
-    }else if(token == "(" && context.expects == "."){
-        if(! context.is_call){
-            context.is_call = true
-            return new $CallCtx(context)
-        }
-    }else if(token == 'eol') {
-        return $transition(context.parent, token)
-    }
-    $_SyntaxError(context, 'token ' + token + ' after ' + context)
-}
-
-$DecoratorExprCtx.prototype.to_js = function(){
-    this.js_processed = true
-
-    var func = new $IdCtx(this, this.names[0])
-    var obj = func.to_js()
-    this.names.slice(1).forEach(function(name){
-        obj = `$B.$getattr(${obj}, "${name}")`
-    })
-    if(this.tree.length > 1){
-        // decorator is a call
-        this.tree[0].func = {to_js: function(){return obj}}
-        return this.tree[0].to_js()
-    }
-    return obj
 }
 
 var $DefCtx = $B.parser.$DefCtx = function(context){

@@ -96,16 +96,4 @@ def f():
 f()
 assert g() == 1
 
-# issue 805 : decorator expressions are not arbitrary expressions
-wrong_decs = ["@f[x]", "@f().a"]
-body = "def g(): pass"
-for wrong_dec in wrong_decs:
-    try:
-        exec(wrong_dec + "\n" + body)
-        raise Exception("should have raised SyntaxError")
-    except SyntaxError:
-        pass
-    except:
-        raise Exception("should have raised SyntaxError")
-
 print('passed all tests..')
