@@ -77,18 +77,28 @@ def main():
                 os.path.basename(package_file)))
 
     if args.install:
-        print('Installing Brython {} in an empty directory'.format(
-            implementation))
-
+        print('Installing Brython {}'.format(implementation))
+    
         data_path = os.path.join(os.path.dirname(__file__), 'data')
-
-        if os.listdir(os.getcwd()):
-            print('Brython can only be installed in an empty folder')
-            import sys
-            sys.exit()
-
+        current_path_files = os.listdir(os.getcwd())
+    
+        if current_path_files and 'brython.js' in current_path_files:
+            override = input(
+                'brython.js is already present in this directory.'
+                ' Override ? (Y/N)'
+            )
+            if override.lower() != 'y':
+                import sys
+                print('exiting')
+                sys.exit()
+    
         for path in os.listdir(data_path):
-            shutil.copyfile(os.path.join(data_path, path), path)
+            try:
+                shutil.copyfile(os.path.join(data_path, path), path)
+            except shutil.SameFileError:
+                print(f'{path} has not been moved. Are the same file.')
+    
+        print('done')
 
     if args.update:
         print('Update Brython scripts to version {}'.format(implementation))
