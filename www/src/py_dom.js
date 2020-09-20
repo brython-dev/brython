@@ -1112,12 +1112,18 @@ DOMNode.bind = function(self, event){
     var $ = $B.args("bind", 4,
             {self: null, event: null, func: null, options: null},
             ["self", "event", "func", "options"], arguments,
-            {options: _b_.None}, null, null),
+            {func: _b_.None, options: _b_.None}, null, null),
             self = $.self,
             event = $.event,
             func = $.func,
             options = $.options
 
+    if(func === _b_.None){
+        // Returns a function to decorate the callback
+        return function(f){
+            return DOMNode.bind(self, event, f)
+        }
+    }
     var callback = (function(f){
         return function(ev){
             try{
