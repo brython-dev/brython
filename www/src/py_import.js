@@ -887,6 +887,8 @@ function import_error(mod_name){
 // Default __import__ function
 // TODO: Include at runtime in importlib.__import__
 $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
+   var $test = mod_name == "collections.abc"
+    if($test){console.log("__import__", mod_name)}
     // Main entry point for __import__
     //
     // If the module name mod_name is already in $B.imported, return it.
@@ -948,6 +950,7 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
 
        for(var i = 0, modsep = "", _mod_name = "", len = parsed_name.length - 1,
                 __path__ = _b_.None; i <= len; ++i){
+
             var _parent_name = _mod_name;
             _mod_name += modsep + parsed_name[i]
             modsep = "."
@@ -955,24 +958,27 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
             if(modobj == _b_.None){
                 // [Import spec] Stop loading loop right away
                 import_error(_mod_name)
-            }else if (modobj === undefined){
+            }else if(modobj === undefined){
                 try{
                     $B.import_hooks(_mod_name, __path__, from_stdlib)
                 }catch(err){
                     delete $B.imported[_mod_name]
                     throw err
                 }
-
                 if($B.is_none($B.imported[_mod_name])){
                     import_error(_mod_name)
                 }else{
                     // [Import spec] Preserve module invariant
-                    // FIXME : Better do this in import_hooks ?
                     if(_parent_name){
                         _b_.setattr($B.imported[_parent_name], parsed_name[i],
                                     $B.imported[_mod_name])
                     }
                 }
+            }else if($B.imported[_parent_name] &&
+                        $B.imported[_parent_name][parsed_name[i]] === undefined){
+                // issue 1494
+                _b_.setattr($B.imported[_parent_name], parsed_name[i],
+                    $B.imported[_mod_name])
             }
             // [Import spec] If __path__ can not be accessed an ImportError is raised
             if(i < len){
