@@ -2732,6 +2732,14 @@ result.append(myvar)
 f()
 assert result == [1, 3, 3]
 
+# issue 1496
+try:
+    exec("not x = 1")
+    raise Exception("should have raised SyntaxError")
+except SyntaxError as exc:
+    assert exc.args[0] == "cannot assign to operator"
+    pass
+    
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

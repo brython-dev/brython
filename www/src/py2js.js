@@ -4331,6 +4331,9 @@ $ExprCtx.prototype.transition = function(token, value){
              }else if(context.parent.type == "op"){
                   // issue 811
                   $_SyntaxError(context, ["cannot assign to operator"])
+             }else if(context.parent.type == "not"){
+                  // issue 1496
+                  $_SyntaxError(context, ["cannot assign to operator"])
              }else if(context.parent.type == "list_or_tuple"){
                  // issue 973
                  for(var i = 0; i < context.parent.tree.length; i++){
