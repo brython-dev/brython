@@ -138,4 +138,22 @@ obj = dummy_json.loads(s)
 assert obj["x"] == 1
 assert dummy_json.dumps(obj) == s
 
+# issue 1417
+b1 = window.BigInt('23456')
+b2 = window.BigInt('78901')
+assert b1 + b2 == window.BigInt(str(23456 + 78901))
+assert b1 - b2 == window.BigInt(str(23456 - 78901))
+assert b1 * b2 == window.BigInt(str(23456 * 78901))
+assert b1 % b2 == window.BigInt(str(23456 % 78901))
+
+b3 = window.BigInt('2')
+assert b1 ** b3 == window.BigInt(str(23456 ** 2))
+
+for num in [1, 4.7]:
+    try:
+        b1 + num
+        raise Exception("should have raised TypeError")
+    except TypeError:
+        pass
+
 print("all tests ok...")

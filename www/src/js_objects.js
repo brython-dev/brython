@@ -308,6 +308,27 @@ $B.JSObj = $B.make_class("JSObj",
     }
 )
 
+// Operations are implemented only for BigInt objects (cf. issue 1417)
+$B.JSObj.__sub__ = function(self, other){
+    // If self - other means anything, return it
+    if(typeof self == "bigint" && typeof other == "bigint"){
+        return self - other
+    }
+    throw _b_.TypeError.$factory("unsupported operand type(s) for - : '" +
+        $B.class_name(self) + "' and '" + $B.class_name(other) + "'")
+}
+
+var ops = {'+': '__add__',
+           '*': '__mul__',
+           '**': '__pow__',
+           '%' : '__mod__'
+          }
+
+for(var op in ops){
+    eval('$B.JSObj.' + ops[op] + ' = ' +
+        ($B.JSObj.__sub__ + '').replace(/-/g, op))
+}
+
 $B.JSObj.__eq__ = function(self, other){
     switch(typeof self){
         case "object":
@@ -493,7 +514,8 @@ $B.JSObj.__len__ = function(self){
 }
 
 $B.JSObj.__repr__ = $B.JSObj.__str__ = function(self){
-    return '<Javascript ' + self.constructor.name + ' object>'
+    return '<Javascript ' + self.constructor.name + ' object: ' + 
+        self.toString() + '>'
 }
 
 $B.JSObj.bind = function(self, evt, func){
