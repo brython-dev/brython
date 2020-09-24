@@ -262,7 +262,12 @@ $B.get_class = function(obj){
 }
 
 $B.class_name = function(obj){
-    return $B.get_class(obj).$infos.__name__
+    var klass = $B.get_class(obj)
+    if(klass === $B.JSObj){
+        return 'Javascript ' + obj.constructor.name
+    }else{
+        return klass.$infos.__name__
+    }
 }
 
 $B.$list_comp = function(items){
