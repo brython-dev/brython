@@ -2467,7 +2467,7 @@ $$super.__getattribute__ = function(self, attr){
     var sc = self.__self_class__
     if(sc !== undefined){
         if(!sc.$is_class){
-            sc = sc.__class__
+            sc = sc.__class__ || $B.get_class(sc)
         }
         // Go up its parent classes until self.__thisclass__ and use
         // the classes of its __mro__ above self.__thisclass__.

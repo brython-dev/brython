@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,10,'final',0]
 __BRYTHON__.__MAGIC__="3.8.10"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-09-24 21:36:49.755127"
-__BRYTHON__.timestamp=1600976209755
+__BRYTHON__.compiled_date="2020-09-26 08:43:37.240490"
+__BRYTHON__.timestamp=1601102617240
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -7439,7 +7439,7 @@ $$super.__get__=function(self,instance,klass){
 return $$super.$factory(self.__thisclass__,instance)}
 $$super.__getattribute__=function(self,attr){var mro=self.__thisclass__.__mro__,res
 var sc=self.__self_class__
-if(sc !==undefined){if(!sc.$is_class){sc=sc.__class__}
+if(sc !==undefined){if(!sc.$is_class){sc=sc.__class__ ||$B.get_class(sc)}
 var sc_mro=[sc].concat(sc.__mro__)
 for(var i=0;i < sc_mro.length;i++){if(sc_mro[i]===self.__thisclass__){mro=sc_mro.slice(i+1)
 break}}}
