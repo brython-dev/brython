@@ -519,6 +519,9 @@
         excepthook: function(exc_class, exc_value, traceback){
             $B.handle_error(exc_value)
         },
+        gettrace: function(){
+            return $B.tracefunc || _b_.None
+        },
         modules: _b_.property.$factory(
             function(){
                 return $B.obj_dict($B.imported)
