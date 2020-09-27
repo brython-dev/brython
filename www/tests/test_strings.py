@@ -336,5 +336,8 @@ assert s is not s.removesuffix("z")
 # issue 1440
 assert repr(chr(888)) == r"'\u0378'"
 
+# issue 1500
+s = 'abc'
+assert s.isprintable()
 
 print("passed all tests...")

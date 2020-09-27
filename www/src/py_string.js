@@ -1444,8 +1444,8 @@ str.isnumeric = function(self){
     return self.length > 0
 }
 
-var printable,
-    printable_gc = ['Cc', 'Cf', 'Co', 'Cs','Zl', 'Zp', 'Zs']
+var unprintable = {},
+    unprintable_gc = ['Cc', 'Cf', 'Co', 'Cs','Zl', 'Zp', 'Zs']
 
 str.isprintable = function(self){
     /* Return true if all characters in the string are printable or the string
@@ -1453,24 +1453,20 @@ str.isprintable = function(self){
     defined in the Unicode character database as "Other" or "Separator",
     excepting the ASCII space (0x20) which is considered printable. */
 
-    // Set printable if not set yet
-    if(printable === undefined){
-        for(var i = 0; i < printable_gc.length; i++){
-            var table = unicode_tables[printable_gc[i]]
+    // Set unprintable if not set yet
+    if(Object.keys(unprintable).length == 0){
+        for(var i = 0; i < unprintable_gc.length; i++){
+            var table = unicode_tables[unprintable_gc[i]]
             for(var cp in table){
-                printable[cp] = true
+                unprintable[cp] = true
             }
         }
-        printable[32] = true
+        unprintable[32] = true
     }
-
     var $ = $B.args("isprintable", 1, {self: null}, ["self"],
-        arguments, {}, null, null),
-        char,
-        flag
+        arguments, {}, null, null)
     for(var i = 0, len = self.length; i < len; i++){
-        char = self.charCodeAt(i)
-        if(! printable[char]){
+        if(unprintable[self.charCodeAt(i)]){
             return false
         }
     }

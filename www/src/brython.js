@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,10,'final',0]
 __BRYTHON__.__MAGIC__="3.8.10"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-09-26 15:23:08.271803"
-__BRYTHON__.timestamp=1601126588271
+__BRYTHON__.compiled_date="2020-09-27 17:52:22.620919"
+__BRYTHON__.timestamp=1601221942620
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -12205,14 +12205,13 @@ str.isnumeric=function(self){
 var $=$B.args("isnumeric",1,{self:null},["self"],arguments,{},null,null)
 for(var i=0,len=self.length;i < len;i++){if(! unicode_tables.numeric[self.charCodeAt(i)]){return false}}
 return self.length > 0}
-var printable,printable_gc=['Cc','Cf','Co','Cs','Zl','Zp','Zs']
+var unprintable={},unprintable_gc=['Cc','Cf','Co','Cs','Zl','Zp','Zs']
 str.isprintable=function(self){
-if(printable===undefined){for(var i=0;i < printable_gc.length;i++){var table=unicode_tables[printable_gc[i]]
-for(var cp in table){printable[cp]=true}}
-printable[32]=true}
-var $=$B.args("isprintable",1,{self:null},["self"],arguments,{},null,null),char,flag
-for(var i=0,len=self.length;i < len;i++){char=self.charCodeAt(i)
-if(! printable[char]){return false}}
+if(Object.keys(unprintable).length==0){for(var i=0;i < unprintable_gc.length;i++){var table=unicode_tables[unprintable_gc[i]]
+for(var cp in table){unprintable[cp]=true}}
+unprintable[32]=true}
+var $=$B.args("isprintable",1,{self:null},["self"],arguments,{},null,null)
+for(var i=0,len=self.length;i < len;i++){if(unprintable[self.charCodeAt(i)]){return false}}
 return true}
 str.isspace=function(self){
 var $=$B.args("isspace",1,{self:null},["self"],arguments,{},null,null),char
