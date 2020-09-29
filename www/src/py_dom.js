@@ -199,7 +199,7 @@ Attributes.__getitem__ = function(){
 Attributes.__iter__ = function(self){
     self.$counter = 0
     // Initialize list of key-value attribute pairs
-    var attrs = self.attributes,
+    var attrs = self.elt.attributes,
         items = []
     for(var i = 0; i < attrs.length; i++){
         items.push(attrs[i].name)
@@ -232,6 +232,16 @@ Attributes.__setitem__ = function(){
         return _b_.None
     }
     throw _b_.TypeError.$factory("Can't set attributes on element")
+}
+
+Attributes.__repr__ = Attributes.__str__ = function(self){
+    var attrs = self.elt.attributes,
+        items = []
+    for(var i = 0; i < attrs.length; i++){
+        items.push(attrs[i].name + ': "' +
+            self.elt.getAttributeNS(null, attrs[i].name) + '"')
+    }
+    return '{' + items.join(", ") + '}'
 }
 
 Attributes.get = function(){
@@ -977,6 +987,17 @@ DOMNode.__radd__ = function(self, other){ // add to a string
 }
 
 DOMNode.__str__ = DOMNode.__repr__ = function(self){
+    var attrs = self.attributes,
+        attrs_str = ""
+    if(attrs !== undefined){
+        var items = []
+        for(var i = 0; i < attrs.length; i++){
+            items.push(attrs[i].name + '="' +
+                self.getAttributeNS(null, attrs[i].name) + '"')
+        }
+        attrs_str = " " + items.join(" ")
+    }
+
     var proto = Object.getPrototypeOf(self)
     if(proto){
         var name = proto.constructor.name
@@ -984,11 +1005,11 @@ DOMNode.__str__ = DOMNode.__repr__ = function(self){
             var proto_str = proto.constructor.toString()
             name = proto_str.substring(8, proto_str.length - 1)
         }
-        return "<" + name + " object>"
+        return "<" + name + attrs_str + ">"
     }
     var res = "<DOMNode object type '"
     return res + $NodeTypes[self.nodeType] + "' name '" +
-        self.nodeName + "'>"
+        self.nodeName + "'" + attrs_str + ">"
 }
 
 DOMNode.__setattr__ = function(self, attr, value){

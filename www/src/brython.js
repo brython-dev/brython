@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,10,'final',0]
 __BRYTHON__.__MAGIC__="3.8.10"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-09-29 10:03:05.703235"
-__BRYTHON__.timestamp=1601366585696
+__BRYTHON__.compiled_date="2020-09-29 14:47:39.385810"
+__BRYTHON__.timestamp=1601383659385
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -13143,7 +13143,7 @@ $.self.elt.hasAttributeNS(null,$.key)){return $.self.elt.getAttributeNS(null,$.k
 $.self.elt.hasAttribute($.key)){return $.self.elt.getAttribute($.key)}
 throw _b_.KeyError.$factory($.key)}
 Attributes.__iter__=function(self){self.$counter=0
-var attrs=self.attributes,items=[]
+var attrs=self.elt.attributes,items=[]
 for(var i=0;i < attrs.length;i++){items.push(attrs[i].name)}
 self.$items=items
 return self}
@@ -13157,6 +13157,10 @@ typeof $.self.elt.setAttributeNS=="function"){$.self.elt.setAttributeNS(null,$.k
 return _b_.None}else if(typeof $.self.elt.setAttribute=="function"){$.self.elt.setAttribute($.key,$.value)
 return _b_.None}
 throw _b_.TypeError.$factory("Can't set attributes on element")}
+Attributes.__repr__=Attributes.__str__=function(self){var attrs=self.elt.attributes,items=[]
+for(var i=0;i < attrs.length;i++){items.push(attrs[i].name+': "'+
+self.elt.getAttributeNS(null,attrs[i].name)+'"')}
+return '{'+items.join(", ")+'}'}
 Attributes.get=function(){var $=$B.args("get",3,{self:null,key:null,deflt:null},["self","key","deflt"],arguments,{deflt:_b_.None},null,null)
 try{return Attributes.__getitem__($.self,$.key)}catch(err){if(err.__class__===_b_.KeyError){return $.deflt}else{throw err}}}
 Attributes.keys=function(){return Attributes.__iter__.apply(null,arguments)}
@@ -13426,15 +13430,20 @@ var res=TagSum.$factory()
 var txt=DOMNode.$factory(document.createTextNode(other))
 res.children=[txt,self]
 return res}
-DOMNode.__str__=DOMNode.__repr__=function(self){var proto=Object.getPrototypeOf(self)
+DOMNode.__str__=DOMNode.__repr__=function(self){var attrs=self.attributes,attrs_str=""
+if(attrs !==undefined){var items=[]
+for(var i=0;i < attrs.length;i++){items.push(attrs[i].name+'="'+
+self.getAttributeNS(null,attrs[i].name)+'"')}
+attrs_str=" "+items.join(" ")}
+var proto=Object.getPrototypeOf(self)
 if(proto){var name=proto.constructor.name
 if(name===undefined){
 var proto_str=proto.constructor.toString()
 name=proto_str.substring(8,proto_str.length-1)}
-return "<"+name+" object>"}
+return "<"+name+attrs_str+">"}
 var res="<DOMNode object type '"
 return res+$NodeTypes[self.nodeType]+"' name '"+
-self.nodeName+"'>"}
+self.nodeName+"'"+attrs_str+">"}
 DOMNode.__setattr__=function(self,attr,value){
 if(attr.substr(0,2)=="on"){
 if(!$B.$bool(value)){
