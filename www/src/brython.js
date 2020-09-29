@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,10,'final',0]
 __BRYTHON__.__MAGIC__="3.8.10"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-09-27 17:52:22.620919"
-__BRYTHON__.timestamp=1601221942620
+__BRYTHON__.compiled_date="2020-09-29 10:03:05.703235"
+__BRYTHON__.timestamp=1601366585696
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -417,8 +417,8 @@ C.parent.parent.type=="sub")){return new $AbstractExprCtx(new $SliceCtx(C.parent
 return $transition(C.parent,token,value)
 case ')':
 case ',':
-switch(C.parent.type){case 'slice':
-case 'list_or_tuple':
+switch(C.parent.type){case 'list_or_tuple':
+case 'slice':
 case 'call_arg':
 case 'op':
 case 'yield':
@@ -655,7 +655,7 @@ if(this.parent.type=='call'){
 return '{$nat:"kw",name:'+this.tree[0].to_js()+
 ',value:'+this.tree[1].to_js()+'}'}
 var left=this.tree[0]
-while(left.type=='expr'){left=left.tree[0]}
+while(left.type=='expr' && ! left.assign){left=left.tree[0]}
 var right=this.tree[1]
 if(left.type=='attribute' ||left.type=='sub'){
 var right_js=right.to_js()
@@ -2222,7 +2222,8 @@ return new $AbstractExprCtx(new $KwArgCtx(C),true)}else if(annotation=has_parent
 $_SyntaxError(C,["cannot assign to operator"])}else if(C.parent.type=="not"){
 $_SyntaxError(C,["cannot assign to operator"])}else if(C.parent.type=="list_or_tuple"){
 for(var i=0;i < C.parent.tree.length;i++){var item=C.parent.tree[i]
-if(item.type=="expr" && item.name=="operand"){$_SyntaxError(C,["cannot assign to operator"])}}}else if(C.parent.type=="expr" &&
+if(item.type=="expr" && item.name=="operand"){$_SyntaxError(C,["cannot assign to operator"])}}}else if(C.tree.length > 0 && C.tree[0].assign){
+$_SyntaxError(C,["cannot assign to named expression"])}else if(C.parent.type=="expr" &&
 C.parent.name=="target list"){$_SyntaxError(C,'token '+token+' after '
 +C)}else if(C.parent.type=="lambda"){if(C.parent.parent.parent.type !="node"){$_SyntaxError(C,['expression cannot contain'+
 ' assignment, perhaps you meant "=="?'])}}
@@ -3150,6 +3151,14 @@ if(C.expression.yields){for(const _yield of C.expression.yields){$pos=_yield[1]
 $_SyntaxError(C,["'yield' inside generator expression"])}}
 C.intervals.push($pos)}
 if(C.parent.type=="packed"){return C.parent.parent}
+if(C.parent.type=="abstract_expr" &&
+C.parent.assign){
+C.parent.parent.tree.pop()
+var expr=new $ExprCtx(C.parent.parent,"assign",false)
+expr.tree=C.parent.tree
+expr.tree[0].parent=expr
+expr.assign=C.parent.assign
+return expr}
 return C.parent}
 break
 case 'list':
@@ -9527,7 +9536,7 @@ $B.path_importer_cache[_path]=url_hook.$factory(_path,_type)}
 function import_error(mod_name){var exc=_b_.ImportError.$factory(mod_name)
 exc.name=mod_name
 throw exc}
-$B.$__import__=function(mod_name,globals,locals,fromlist,level){var $test=mod_name=="collections.abc"
+$B.$__import__=function(mod_name,globals,locals,fromlist,level){var $test=false 
 if($test){console.log("__import__",mod_name)}
 var from_stdlib=false
 if(globals.$jsobj && globals.$jsobj.__file__){var file=globals.$jsobj.__file__

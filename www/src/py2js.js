@@ -767,8 +767,8 @@ $AbstractExprCtx.prototype.transition = function(token, value){
         case ')':
         case ',':
             switch(context.parent.type) {
-                case 'slice':
                 case 'list_or_tuple':
+                case 'slice':
                 case 'call_arg':
                 case 'op':
                 case 'yield':
@@ -1247,7 +1247,7 @@ $AssignCtx.prototype.to_js = function(){
 
     // assignment
     var left = this.tree[0]
-    while(left.type == 'expr'){left = left.tree[0]}
+    while(left.type == 'expr' && ! left.assign){left = left.tree[0]}
 
     var right = this.tree[1]
     if(left.type == 'attribute' || left.type == 'sub'){
@@ -4342,6 +4342,9 @@ $ExprCtx.prototype.transition = function(token, value){
                          $_SyntaxError(context, ["cannot assign to operator"])
                      }
                  }
+             }else if(context.tree.length > 0 && context.tree[0].assign){
+                 // form (a := b) = ...
+                 $_SyntaxError(context, ["cannot assign to named expression"])
              }else if(context.parent.type == "expr" &&
                      context.parent.name == "target list"){
                  $_SyntaxError(context, 'token ' + token + ' after '
@@ -6485,6 +6488,16 @@ $ListOrTupleCtx.prototype.transition = function(token, value){
                         }
                         if(context.parent.type == "packed"){
                             return context.parent.parent
+                        }
+                        if(context.parent.type == "abstract_expr" &&
+                                context.parent.assign){
+                            // issue 1501
+                            context.parent.parent.tree.pop()
+                            var expr = new $ExprCtx(context.parent.parent, "assign", false)
+                            expr.tree = context.parent.tree
+                            expr.tree[0].parent = expr
+                            expr.assign = context.parent.assign
+                            return expr
                         }
                         return context.parent
                     }

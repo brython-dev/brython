@@ -2739,7 +2739,21 @@ try:
 except SyntaxError as exc:
     assert exc.args[0] == "cannot assign to operator"
     pass
-    
+
+# issue 1501
+class B:
+  pass
+
+b = B()
+(a := b).c = 7
+assert a.c == 7
+
+try:
+    exec("(a := b) = 1")
+    raise Exception("should have raised SyntaxError")
+except SyntaxError:
+    pass
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
