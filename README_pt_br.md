@@ -46,7 +46,7 @@ Principais características
 Brython suporta grande parte da sintaxe de [Python 3](https://www.python.org "Python Homepage"),
 incluso compreensões, geradores, metaclasses, importações, dentre outros muitos módulos da distribuição CPython.
 
-Inclui bibliotecas para interagir com elementos e eventos DOM além de algumas das bibliotecas existentes do Javascript tais como, jQuery, 3D, Highcharts, Raphael etc.
+Inclui bibliotecas para interagir com elementos e eventos DOM além de algumas das bibliotecas existentes do Javascript tais como, jQuery, D3, Highcharts, Raphael etc.
 
 Suporta as mais recentes especificações de HTML5/CSS3 podendo ser utilizado com frameworks de CSS como Bootstrap3, LESS, SASS etc.
 
