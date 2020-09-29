@@ -45,7 +45,7 @@ including comprehensions, generators, metaclasses, imports, etc.
 and many modules of the CPython distribution.
 
 It includes libraries to interact with DOM elements and events,
-and with existing Javascript libraries such as jQuery, 3D, Highcharts, Raphael etc.
+and with existing Javascript libraries such as jQuery, D3, Highcharts, Raphael etc.
 It supports the latest specs of HTML5/CSS3, and can use CSS Frameworks like
 Bootstrap3, LESS, SASS etc.
 
