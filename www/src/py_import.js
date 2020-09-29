@@ -887,7 +887,7 @@ function import_error(mod_name){
 // Default __import__ function
 // TODO: Include at runtime in importlib.__import__
 $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
-   var $test = mod_name == "collections.abc"
+    var $test = false // mod_name == "collections.abc"
     if($test){console.log("__import__", mod_name)}
     // Main entry point for __import__
     //
