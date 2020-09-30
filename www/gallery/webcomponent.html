@@ -209,6 +209,21 @@ assert Child.nb_cx == 1
 def change_data(ev):
     document["child"].attrs["data"] = "new"
 
+observed_tag = html.maketag("observed-element")
+
+class Observed:
+
+    def observedAttributes(self):
+        return ["data"]
+
+    def attributeChangedCallback(self, name, old, new, ns):
+        print(f"attribute {name} changed from {old} to {new}")
+
+webcomponent.define("observed-element", Observed)
+
+elt = observed_tag()
+document <= elt
+elt.attrs["data"] = "info"
 </script>
 
 </body>

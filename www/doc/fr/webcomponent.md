@@ -82,3 +82,27 @@ class BoldItalic:
 
 webcomponent.define("bold-italic", BoldItalic)
 ```
+
+Pour gérer les changements apportés à certains attributs, ajouter les
+méthodes `observedAttributes()` et `attributeChangedCallback()` comme
+ci-dessous (notez que cette fois un nouveau composant personnalisé est
+créé en utilisant la fonction `maketag` du module [html](html.html) et
+ajouté dynamiquement au document):
+
+```python
+observed_tag = html.maketag("observed-element")
+
+class Observed:
+
+    def observedAttributes(self):
+        return ["data"]
+
+    def attributeChangedCallback(self, name, old, new, ns):
+        print(f"attribute {name} changed from {old} to {new}")
+
+webcomponent.define("observed-element", Observed)
+
+elt = observed_tag()
+document <= elt
+elt.attrs["data"] = "info"
+```
