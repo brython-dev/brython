@@ -31,12 +31,14 @@ function define(tag_name, cls){
                 var _self = $B.DOMNode.$factory(this)
                 _self.__class__ = cls
                 $B.$call(cls.__init__)(_self)
-                var nb_attrs = _self.attributes.length
-                for(var i = 0; i < nb_attrs; i++){
-                    var item = _self.attributes.item(i)
-                    throw _b_.TypeError.$factory("Custom element must not " +
-                        "have attributes, found: " + item.name + '="' +
-                        item.value + '"')
+                if(WebComponent.initialized){
+                    var nb_attrs = _self.attributes.length
+                    for(var i = 0; i < nb_attrs; i++){
+                        var item = _self.attributes.item(i)
+                        throw _b_.TypeError.$factory("Custom element must not " +
+                            "have attributes, found: " + item.name + '="' +
+                            item.value + '"')
+                    }
                 }
             }catch(err){
                 $B.handle_error(err)
@@ -53,7 +55,7 @@ function define(tag_name, cls){
     }
     `
     var name = cls.$infos.__name__
-    eval(src.replace("WebComponent", name))
+    eval(src.replace(/WebComponent/g, name))
     var webcomp = eval(name) // JS class for component
     webcomp.$cls = cls
 
@@ -86,6 +88,7 @@ function define(tag_name, cls){
 
     // define WebComp as the class to use for the specified tag name
     customElements.define(tag_name, webcomp)
+    webcomp.initialized = true
 }
 
 function get(name){
