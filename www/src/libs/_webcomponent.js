@@ -31,6 +31,13 @@ function define(tag_name, cls){
                 var _self = $B.DOMNode.$factory(this)
                 _self.__class__ = cls
                 $B.$call(cls.__init__)(_self)
+                var nb_attrs = _self.attributes.length
+                for(var i = 0; i < nb_attrs; i++){
+                    var item = _self.attributes.item(i)
+                    throw _b_.TypeError.$factory("Custom element must not " +
+                        "have attributes, found: " + item.name + '="' +
+                        item.value + '"')
+                }
             }catch(err){
                 $B.handle_error(err)
             }

@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,10,'final',0]
 __BRYTHON__.__MAGIC__="3.8.10"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-09-29 14:47:39.385810"
-__BRYTHON__.timestamp=1601383659385
+__BRYTHON__.compiled_date="2020-09-30 08:49:51.577563"
+__BRYTHON__.timestamp=1601448591577
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -13433,14 +13433,14 @@ return res}
 DOMNode.__str__=DOMNode.__repr__=function(self){var attrs=self.attributes,attrs_str=""
 if(attrs !==undefined){var items=[]
 for(var i=0;i < attrs.length;i++){items.push(attrs[i].name+'="'+
-self.getAttributeNS(null,attrs[i].name)+'"')}
-attrs_str=" "+items.join(" ")}
+self.getAttributeNS(null,attrs[i].name)+'"')}}
 var proto=Object.getPrototypeOf(self)
 if(proto){var name=proto.constructor.name
 if(name===undefined){
 var proto_str=proto.constructor.toString()
 name=proto_str.substring(8,proto_str.length-1)}
-return "<"+name+attrs_str+">"}
+items.splice(0,0,name)
+return "<"+items.join(" ")+">"}
 var res="<DOMNode object type '"
 return res+$NodeTypes[self.nodeType]+"' name '"+
 self.nodeName+"'"+attrs_str+">"}
@@ -13878,7 +13878,7 @@ function makeFactory(klass){var factory=function(){if(klass.$elt_wrap !==undefin
 var elt=klass.$elt_wrap 
 klass.$elt_wrap=undefined 
 var res=$B.DOMNode.$factory(elt,true)
-res._wrapped=true }else{if(klass.$infos.__name__=='SVG'){var res=$B.DOMNode.$factory(document.createElementNS("http://www.w3.org/2000/svg","svg"),true)}else{var res=$B.DOMNode.$factory(document.createElement(klass.$infos.__name__),true)}
+res._wrapped=true }else{if(klass.$infos.__name__=='SVG'){var res=$B.DOMNode.$factory(document.createElementNS("http://www.w3.org/2000/svg","svg"),true)}else{var elt=document.createElement(klass.$infos.__name__),res=$B.DOMNode.$factory(elt,true)}
 res._wrapped=false }
 res.__class__=klass
 klass.__init__(res,...arguments)

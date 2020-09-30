@@ -272,7 +272,8 @@
                         if(klass.$infos.__name__ == 'SVG'){
                             var res = $B.DOMNode.$factory(document.createElementNS("http://www.w3.org/2000/svg", "svg"), true)
                         }else{
-                            var res = $B.DOMNode.$factory(document.createElement(klass.$infos.__name__), true)
+                            var elt = document.createElement(klass.$infos.__name__),
+                                res = $B.DOMNode.$factory(elt, true)
                         }
                         res._wrapped = false  // not wrapped
                     }
