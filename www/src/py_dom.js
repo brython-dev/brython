@@ -995,7 +995,6 @@ DOMNode.__str__ = DOMNode.__repr__ = function(self){
             items.push(attrs[i].name + '="' +
                 self.getAttributeNS(null, attrs[i].name) + '"')
         }
-        attrs_str = " " + items.join(" ")
     }
 
     var proto = Object.getPrototypeOf(self)
@@ -1005,7 +1004,8 @@ DOMNode.__str__ = DOMNode.__repr__ = function(self){
             var proto_str = proto.constructor.toString()
             name = proto_str.substring(8, proto_str.length - 1)
         }
-        return "<" + name + attrs_str + ">"
+        items.splice(0, 0, name)
+        return "<" + items.join(" ") + ">"
     }
     var res = "<DOMNode object type '"
     return res + $NodeTypes[self.nodeType] + "' name '" +
