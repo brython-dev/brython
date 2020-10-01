@@ -153,3 +153,6 @@ Thank you
 
 - [BrowserStack](http://www.browserstack.com) for providing an access
 to their online testing environment.
+
+Thanks for reading!!
+I hope you like it.
