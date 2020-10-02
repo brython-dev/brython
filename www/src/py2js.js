@@ -6392,7 +6392,9 @@ $LambdaCtx.prototype.to_js = function(){
         // for the comprehension must be passed because it is used in the
         // code for the lambda function
         params += `, $locals_${module.id.replace(/\./g, '_')}`
-        args += ', {}'
+        // The locals object for the comprehension may be undefined
+        args += `, typeof $locals_${module.id.replace(/\./g, '_')} `+
+            ` === "undefined" ? {} : $locals_${module.id.replace(/\./g, '_')}`
     }
     js = `(function(${params}){\n` + js +
         `\nreturn $locals.${func_name}})(${args})`

@@ -2754,6 +2754,14 @@ try:
 except SyntaxError:
     pass
 
+# issue 1509
+funs = [(lambda i=i: i) for i in range(3)]
+
+t = []
+for f in funs:
+  t.append(f())
+assert t == [0, 1, 2]
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
