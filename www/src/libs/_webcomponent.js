@@ -46,9 +46,13 @@ function define(tag_name, cls){
         }
       }
         static get observedAttributes(){
-            if(cls.observedAttributes){
-                return cls.observedAttributes(cls)
-            }else{
+            try{
+                var obs_attr = $B.$getattr(cls, "observedAttributes")
+                return $B.$call(obs_attr)(cls)
+            }catch(err){
+                if(! $B.is_exc(err, [_b_.AttributeError])){
+                    throw err
+                }
                 return []
             }
         }
@@ -58,18 +62,6 @@ function define(tag_name, cls){
     eval(src.replace(/WebComponent/g, name))
     var webcomp = eval(name) // JS class for component
     webcomp.$cls = cls
-
-    for(key in cls){
-        // Wrap other methods such as connectedCallback
-        if(typeof cls[key] == "function"){
-            webcomp.prototype[key] = (function(attr){
-                return function(){
-                    return $B.pyobj2jsobj(cls[attr]).call(null,
-                        $B.DOMNode.$factory(this), ...arguments)
-                }
-            })(key)
-        }
-    }
 
     // Override __getattribute__ to handle DOMNode attributes such as
     // attachShadow
@@ -85,6 +77,23 @@ function define(tag_name, cls){
             }
         }
     }
+
+    var mro = [cls].concat(cls.__mro__)
+    for(var i = 0, len = mro.length - 1; i < len; i++){
+        var pcls = mro[i]
+        for(var key in pcls){
+            if(webcomp.prototype[key] === undefined && 
+                    typeof pcls[key] == "function"){
+                webcomp.prototype[key] = (function(attr, klass){
+                    return function(){
+                        return $B.pyobj2jsobj(klass[attr]).call(null,
+                            $B.DOMNode.$factory(this), ...arguments)
+                    }
+                })(key, pcls)
+            }
+        }
+    }
+
 
     // define WebComp as the class to use for the specified tag name
     customElements.define(tag_name, webcomp)
