@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,10,'final',0]
 __BRYTHON__.__MAGIC__="3.8.10"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-10-02 09:20:23.317197"
-__BRYTHON__.timestamp=1601623223317
+__BRYTHON__.compiled_date="2020-10-02 14:06:19.773149"
+__BRYTHON__.timestamp=1601640379773
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -10338,7 +10338,7 @@ if(_b_.isinstance(value,_b_.str)){value=value.valueOf()}
 if(typeof value=="string"){var _value=value.trim()
 if(_value.length==2 && base==0 &&
 (_value=="0b" ||_value=="0o" ||_value=="0x")){throw _b_.ValueError.$factory("invalid value")}
-if(_value.length >2){var _pre=_value.substr(0,2).toUpperCase()
+if(_value.length > 2){var _pre=_value.substr(0,2).toUpperCase()
 if(base==0){if(_pre=="0B"){base=2}
 if(_pre=="0O"){base=8}
 if(_pre=="0X"){base=16}}else if(_pre=="0X" && base !=16){invalid(_value,base)}
@@ -10829,18 +10829,28 @@ var v=parseInt(long.value)*(long.pos ? 1 :-1)
 if(v > MIN_SAFE_INTEGER && v < MAX_SAFE_INTEGER){return v}
 return long}
 long_int.$from_int=function(value){return{__class__:long_int,value:value.toString(),pos:value > 0}}
-long_int.$factory=function(value,base){
-if(arguments.length > 2){throw _b_.TypeError.$factory("long_int takes at most 2 arguments ("+
+long_int.$factory=function(value,base){if(arguments.length > 2){throw _b_.TypeError.$factory("long_int takes at most 2 arguments ("+
 arguments.length+" given)")}
 if(base===undefined){base=10}
 else if(!isinstance(base,int)){throw TypeError.$factory("'"+$B.class_name(base)+
 "' object cannot be interpreted as an integer")}
 if(base < 0 ||base==1 ||base > 36){throw ValueError.$factory(
 "long_int.$factory() base must be >= 2 and <= 36")}
-if(typeof value=="number"){if(isSafeInteger(value)){value=value.toString()}
-else if(value.constructor==Number){value=value.toString()}
+if(typeof value=="number"){var pos=value > 0,value=Math.abs(value),res
+if(isSafeInteger(value)){res=long_int.$from_int(value)}
+else if(value.constructor==Number){var s=value.toString(),pos_exp=s.search("e")
+if(pos_exp >-1){var mant=s.substr(0,pos_exp),exp=parseInt(s.substr(pos_exp+1)),point=mant.search(/\./)
+if(point >-1){var nb_dec=mant.substr(point+1).length
+if(nb_dec > exp){var res=mant.substr(0,point)+
+mant.substr(point+1).substr(0,exp)
+res=long_int.$from_int(res)}else{var res=mant.substr(0,point)+
+mant.substr(point+1)+'0'.repeat(exp-nb_dec)
+res=long_int.$from_int(res)}}else{res=long_int.$from_int(mant+'0'.repeat(exp))}}else{var point=s.search(/\./)
+if(point >-1){res=long_int.$from_int(s.substr(0,point))}else{res=long_int.$from_int(s)}}}
 else{throw ValueError.$factory(
-"argument of long_int is not a safe integer")}}else if(isinstance(value,_b_.float)){if(value===Number.POSITIVE_INFINITY ||
+"argument of long_int is not a safe integer")}
+res.pos=pos
+return res}else if(isinstance(value,_b_.float)){if(value===Number.POSITIVE_INFINITY ||
 value===Number.NEGATIVE_INFINITY){return value}
 if(value >=0){value=new Number(Math.round(value.value))}
 else{value=new Number(Math.ceil(value.value))}}else if(isinstance(value,_b_.bool)){if(value.valueOf()){return int.$factory(1)}
@@ -10860,7 +10870,7 @@ throw ValueError.$factory(
 while(start < value.length-1 && value.charAt(start)=="0"){start++}
 value=value.substr(start)
 var is_digits=digits(base),point=-1
-for(var i=0;i < value.length;i++){if(value.charAt(i)=="." && point==-1){point=i}else if(value.charAt(i)=="e"){
+for(var i=0;i < value.length;i++){if(value.charAt(i)=="." && point==-1){point=i}else if(false){
 var mant=value.substr(0,i)
 if(/^[+-]?\d+$/.exec(value.substr(i+1))){exp=parseInt(value.substr(i+1))}else{throw Error("wrong exp "+value.substr(i+1))}
 if(point !=-1){mant=mant.substr(0,point)+mant.substr(point+1)

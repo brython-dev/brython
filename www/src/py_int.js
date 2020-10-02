@@ -733,7 +733,7 @@ int.$factory = function(value, base){
                 (_value == "0b" || _value == "0o" || _value == "0x")){
            throw _b_.ValueError.$factory("invalid value")
         }
-        if(_value.length >2) {
+        if(_value.length > 2) {
             var _pre = _value.substr(0, 2).toUpperCase()
             if(base == 0){
                 if(_pre == "0B"){base = 2}
@@ -760,7 +760,9 @@ int.$factory = function(value, base){
         }else{
             value = _value.replace(/_/g, "")
         }
-        if(base <= 10 && ! isFinite(value)){invalid(_value, base)}
+        if(base <= 10 && ! isFinite(value)){
+            invalid(_value, base)
+        }
         var res = parseInt(value, base)
         if(res < $B.min_int || res > $B.max_int){
             return $B.long_int.$factory(value, base)

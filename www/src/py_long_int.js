@@ -1123,7 +1123,6 @@ long_int.$from_int = function(value){
 }
 
 long_int.$factory = function(value, base){
-    // console.log("longint factory", value, base)
     if(arguments.length > 2){
         throw _b_.TypeError.$factory("long_int takes at most 2 arguments (" +
             arguments.length + " given)")
@@ -1140,12 +1139,48 @@ long_int.$factory = function(value, base){
             "long_int.$factory() base must be >= 2 and <= 36")
     }
     if(typeof value == "number"){
-        if(isSafeInteger(value)){value = value.toString()}
-        else if(value.constructor == Number){value = value.toString()}
+        var pos = value > 0,
+            value = Math.abs(value),
+            res
+        if(isSafeInteger(value)){
+            res = long_int.$from_int(value)
+        }
+        else if(value.constructor == Number){
+            var s = value.toString(),
+                pos_exp = s.search("e")
+            if(pos_exp > -1){
+                var mant = s.substr(0, pos_exp),
+                    exp = parseInt(s.substr(pos_exp + 1)),
+                    point = mant.search(/\./)
+                if(point > -1){
+                    var nb_dec = mant.substr(point + 1).length
+                    if(nb_dec > exp){
+                        var res = mant.substr(0, point) +
+                            mant.substr(point + 1).substr(0, exp)
+                        res = long_int.$from_int(res)
+                    }else{
+                        var res = mant.substr(0, point) +
+                            mant.substr(point + 1) + '0'.repeat(exp - nb_dec)
+                        res = long_int.$from_int(res)
+                    }
+                }else{
+                    res = long_int.$from_int(mant + '0'.repeat(exp))
+                }
+            }else{
+                var point = s.search(/\./)
+                if(point > -1){
+                    res = long_int.$from_int(s.substr(0, point))
+                }else{
+                    res = long_int.$from_int(s)
+                }
+            }
+        }
         else{
             throw ValueError.$factory(
                 "argument of long_int is not a safe integer")
         }
+        res.pos = pos
+        return res
     }else if(isinstance(value, _b_.float)){
         if(value === Number.POSITIVE_INFINITY ||
                 value === Number.NEGATIVE_INFINITY){
@@ -1197,7 +1232,7 @@ long_int.$factory = function(value, base){
     for(var i = 0; i < value.length; i++){
         if(value.charAt(i) == "." && point == -1){
             point = i
-        }else if(value.charAt(i) == "e"){
+        }else if(false){ //value.charAt(i) == "e"){
             // Form 123e56 or 12.3e45
             var mant = value.substr(0, i)
             if(/^[+-]?\d+$/.exec(value.substr(i + 1))){
