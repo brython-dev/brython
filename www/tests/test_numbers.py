@@ -546,4 +546,10 @@ assert 5 - float('-inf') == float('inf')
 assert float('-inf') - float('inf') == float('-inf')
 assert float('inf') + float('inf') == float('inf')
 
+# issue 1512
+assert math.isnan(5 + float('nan'))
+assert math.isnan(5 - float('nan'))
+assert math.isnan(float('nan') + float('nan'))
+assert math.isnan(float('nan') - float('nan'))
+
 print('passed all tests...')
