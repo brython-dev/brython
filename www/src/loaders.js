@@ -194,7 +194,9 @@ $B.idb_open = function(obj){
                 store.onsuccess = loop
             }
         }else{
-            console.info("using indexedDB for stdlib modules cache")
+            if($B.debug > 1){
+                console.info("using indexedDB for stdlib modules cache")
+            }
             // Preload all compiled modules
 
             var tx = db.transaction("modules", "readwrite"),
