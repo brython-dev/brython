@@ -1317,7 +1317,15 @@ $B.add = function(x, y){
         if(typeof x == "number" && typeof y == "number"){
             // ints
             var z = x + y
-            if(z < max_int){return z}
+            if(z < $B.max_int && z > $B.min_int){
+                return z
+            }else if(z === Infinity){
+                return _b_.float.$factory("inf")
+            }else if(z === -Infinity){
+                return _b_.float.$factory("-inf")
+            }else if(isNaN(z)){
+                return _b_.float.$factory('nan')
+            }
             return $B.long_int.__add__($B.long_int.$factory(x),
                 $B.long_int.$factory(y))
         }else{
@@ -1398,17 +1406,21 @@ $B.sub = function(x, y){
     var z = (typeof x != "number" || typeof y != "number") ?
                 new Number(x - y) : x - y
     if(x > min_int && x < max_int && y > min_int && y < max_int
-        && z > min_int && z < max_int){return z}
-    else if((typeof x == "number" || x.__class__  === $B.long_int)
-        && (typeof y == "number" || y.__class__ === $B.long_int)){
+            && z > min_int && z < max_int){
+        return z
+    }else if((typeof x == "number" || x.__class__  === $B.long_int)
+            && (typeof y == "number" || y.__class__ === $B.long_int)){
         if((typeof x == "number" && isNaN(x)) ||
                 (typeof y == "number" && isNaN(y))){
             return _b_.float.$factory("nan")
         }
         return $B.long_int.__sub__($B.long_int.$factory(x),
             $B.long_int.$factory(y))
-    }else{return z}
+    }else{
+        return z
+    }
 }
+
 // greater or equal
 $B.ge = function(x, y){
     if(typeof x == "number" && typeof y == "number"){return x >= y}

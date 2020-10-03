@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,10,'final',0]
 __BRYTHON__.__MAGIC__="3.8.10"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-10-02 15:59:26.592861"
-__BRYTHON__.timestamp=1601647166592
+__BRYTHON__.compiled_date="2020-10-03 17:06:53.664155"
+__BRYTHON__.timestamp=1601737613664
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -3823,8 +3823,7 @@ this.tree[0].to_js()+','+this.tree[1].to_js()+')'}else{return '$B.rich_op("'+$op
 this.tree[0].to_js()+', '+this.tree[1].to_js()+
 ')'}}}
 $OpCtx.prototype.simple_js=function(){var op=this.op
-function sjs(elt){if(elt.type=='op'){return elt.simple_js()}
-else if(elt.type=='expr' && elt.tree[0].type=='list_or_tuple'
+function sjs(elt){if(elt.type=='op'){return elt.simple_js()}else if(elt.type=='expr' && elt.tree[0].type=='list_or_tuple'
 && elt.tree[0].real=='tuple'
 && elt.tree[0].tree.length==1
 && elt.tree[0].tree[0].type=='expr'){return '('+elt.tree[0].tree[0].tree[0].simple_js()+')'}else{return elt.tree[0].to_js()}}
@@ -6423,7 +6422,7 @@ if(arg < min_int ||arg > max_int){return false}}
 return true}
 $B.add=function(x,y){if(typeof x.valueOf()=="number" && typeof y.valueOf()=="number"){if(typeof x=="number" && typeof y=="number"){
 var z=x+y
-if(z < max_int){return z}
+if(z < $B.max_int && z > $B.min_int){return z}else if(z===Infinity){return _b_.float.$factory("inf")}else if(z===-Infinity){return _b_.float.$factory("-inf")}else if(isNaN(z)){return _b_.float.$factory('nan')}
 return $B.long_int.__add__($B.long_int.$factory(x),$B.long_int.$factory(y))}else{
 return new Number(x+y)}}else if(typeof x=="string" && typeof y=="string"){
 return x+y}
@@ -6458,8 +6457,7 @@ return $B.long_int.__mul__($B.long_int.$factory(x),$B.long_int.$factory(y))}else
 $B.sub=function(x,y){var z=(typeof x !="number" ||typeof y !="number")?
 new Number(x-y):x-y
 if(x > min_int && x < max_int && y > min_int && y < max_int
-&& z > min_int && z < max_int){return z}
-else if((typeof x=="number" ||x.__class__===$B.long_int)
+&& z > min_int && z < max_int){return z}else if((typeof x=="number" ||x.__class__===$B.long_int)
 &&(typeof y=="number" ||y.__class__===$B.long_int)){if((typeof x=="number" && isNaN(x))||
 (typeof y=="number" && isNaN(y))){return _b_.float.$factory("nan")}
 return $B.long_int.__sub__($B.long_int.$factory(x),$B.long_int.$factory(y))}else{return z}}

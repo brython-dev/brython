@@ -533,4 +533,17 @@ assert ~0x2000000000003f == -9007199254741056
 # issue 1504
 assert int('db1e8800bc27a3', base=16) == 61676589376350115
 
+# issue 1511
+assert 5 + float('inf') == float('inf')
+assert 5 + float('-inf') == float('-inf')
+assert float('nan') != float('nan')
+assert math.isnan(float('-inf') + float('inf'))
+assert math.isnan(float('inf') - float('inf'))
+assert float('-inf') - float('inf') == float('-inf')
+
+assert 5 - float('inf') == float('-inf')
+assert 5 - float('-inf') == float('inf')
+assert float('-inf') - float('inf') == float('-inf')
+assert float('inf') + float('inf') == float('inf')
+
 print('passed all tests...')

@@ -7711,13 +7711,16 @@ $OpCtx.prototype.to_js = function(){
 $OpCtx.prototype.simple_js = function(){
     var op = this.op
     function sjs(elt){
-        if(elt.type == 'op'){return elt.simple_js()}
-        else if(elt.type == 'expr' && elt.tree[0].type == 'list_or_tuple'
+        if(elt.type == 'op'){
+            return elt.simple_js()
+        }else if(elt.type == 'expr' && elt.tree[0].type == 'list_or_tuple'
                 && elt.tree[0].real == 'tuple'
                 && elt.tree[0].tree.length == 1
                 && elt.tree[0].tree[0].type == 'expr'){
             return '(' + elt.tree[0].tree[0].tree[0].simple_js() + ')'
-        }else{return elt.tree[0].to_js()}
+        }else{
+            return elt.tree[0].to_js()
+        }
     }
     if(op == '+'){
         return '$B.add(' + sjs(this.tree[0]) + ',' +
