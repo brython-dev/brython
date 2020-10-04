@@ -802,6 +802,25 @@ DOMNode.__getattribute__ = function(self, attr){
     }
 
     if(property === undefined){
+        // If custom element, search in the associated class
+        if(self.tagName){
+            var ce = customElements.get(self.tagName.toLowerCase())
+            if(ce !== undefined && ce.$cls !== undefined){
+                // Temporarily set self.__class_ to the WebComponent class
+                var save_class = self.__class__
+                self.__class__ = ce.$cls
+                try{
+                    var res = _b_.object.__getattribute__(self, attr)
+                    self.__class__ = save_class
+                    return res
+                }catch(err){
+                    self.__class__ = save_class
+                    if(! $B.is_exc(err, [_b_.AttributeError])){
+                        throw err
+                    }
+                }
+            }
+        }
         return object.__getattribute__(self, attr)
     }
 

@@ -86,6 +86,8 @@ a.sort_link{
 
 <p style="margin-top: 5em;">Change attribute value <button id="change_data">change</button>
 
+<ui-page></ui-page>
+
 </td>
 </tr>
 </table>
@@ -224,6 +226,60 @@ webcomponent.define("observed-element", Observed)
 elt = observed_tag()
 document <= elt
 elt.attrs["data"] = "info"
+
+class BaseComponent:
+
+    _registry = []
+
+    @classmethod
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        BaseComponent._registry.append(cls)
+
+    @staticmethod
+    def un_camel(word: str) -> str:
+        upper_chars: str = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        last_char: str = word[0]
+        output: list = [last_char.lower()]
+        for c in word[1:]:
+            if c == "_":
+                output.append("-")
+                continue
+            if c in upper_chars:
+                if last_char not in upper_chars:
+                    output.append('-')
+                output.append(c.lower())
+            else:
+                output.append(c)
+            last_char = c
+        return "".join(output)
+
+    @classmethod
+    def register(cls):
+        registry = cls._registry
+        for web_component in registry:
+            web_component_name = cls.un_camel(web_component.__name__)
+            component_name = f"ui-{web_component_name}"
+            webcomponent.define(component_name, web_component)
+
+
+class Page(BaseComponent):
+
+    _ignore_list = ["UI-PAGE-CONTENT", "UI-TOOLBAR"]
+
+    def connectedCallback(self):
+        self.test()
+        assert self.test_static(2) == 4
+        print("tests for Page class ok")
+
+    def test(self):
+        assert self._ignore_list == ["UI-PAGE-CONTENT", "UI-TOOLBAR"]
+
+    @staticmethod
+    def test_static(x):
+        return x * 2
+
+BaseComponent.register()
 </script>
 
 </body>

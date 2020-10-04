@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,10,'final',0]
 __BRYTHON__.__MAGIC__="3.8.10"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-10-03 17:11:54.164963"
-__BRYTHON__.timestamp=1601737914164
+__BRYTHON__.compiled_date="2020-10-04 09:15:20.390016"
+__BRYTHON__.timestamp=1601795720390
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -13371,7 +13371,16 @@ res._values[key]=[value]}}}
 return res}
 var property=self[attr]
 if(property===undefined && $B.aliased_names[attr]){property=self["$$"+attr]}
-if(property===undefined){return object.__getattribute__(self,attr)}
+if(property===undefined){
+if(self.tagName){var ce=customElements.get(self.tagName.toLowerCase())
+if(ce !==undefined && ce.$cls !==undefined){
+var save_class=self.__class__
+self.__class__=ce.$cls
+try{var res=_b_.object.__getattribute__(self,attr)
+self.__class__=save_class
+return res}catch(err){self.__class__=save_class
+if(! $B.is_exc(err,[_b_.AttributeError])){throw err}}}}
+return object.__getattribute__(self,attr)}
 var res=property
 if(res !==undefined){if(res===null){return _b_.None}
 if(typeof res==="function"){

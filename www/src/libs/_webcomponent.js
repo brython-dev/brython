@@ -82,7 +82,7 @@ function define(tag_name, cls){
     for(var i = 0, len = mro.length - 1; i < len; i++){
         var pcls = mro[i]
         for(var key in pcls){
-            if(webcomp.prototype[key] === undefined && 
+            if(webcomp.prototype[key] === undefined &&
                     typeof pcls[key] == "function"){
                 webcomp.prototype[key] = (function(attr, klass){
                     return function(){
@@ -93,7 +93,6 @@ function define(tag_name, cls){
             }
         }
     }
-
 
     // define WebComp as the class to use for the specified tag name
     customElements.define(tag_name, webcomp)
