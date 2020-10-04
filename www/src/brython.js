@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,10,'final',0]
 __BRYTHON__.__MAGIC__="3.8.10"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-10-04 09:15:20.390016"
-__BRYTHON__.timestamp=1601795720390
+__BRYTHON__.compiled_date="2020-10-04 09:30:51.991106"
+__BRYTHON__.timestamp=1601796651991
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -11345,7 +11345,8 @@ list.__delitem__=function(self,arg){if(isinstance(arg,_b_.int)){var pos=arg
 if(arg < 0){pos=self.length+pos}
 if(pos >=0 && pos < self.length){self.splice(pos,1)
 return $N}
-throw _b_.IndexError.$factory("list index out of range")}
+throw _b_.IndexError.$factory($B.class_name(self)+
+" index out of range")}
 if(isinstance(arg,_b_.slice)){var step=arg.step
 if(step===$N){step=1}
 var start=arg.start
@@ -11362,8 +11363,8 @@ while(i--){self.splice(res[i],1)}
 return $N}
 if(_b_.hasattr(arg,"__int__")||_b_.hasattr(arg,"__index__")){list.__delitem__(self,_b_.int.$factory(arg))
 return $N}
-throw _b_.TypeError.$factory("list indices must be integer, not "+
-_b_.str.$factory(arg.__class__))}
+throw _b_.TypeError.$factory($B.class_name(self)+
+" indices must be integer, not "+$B.class_name(arg))}
 list.__eq__=function(self,other){if(isinstance(self,list)){var klass=list}else{var klass=tuple}
 if(isinstance(other,klass)){if(other.length==self.length){var i=self.length
 while(i--){if(! $B.rich_comp("__eq__",self[i],other[i])){return false}}
@@ -11377,7 +11378,8 @@ list.$getitem=function(self,key){var factory=(self.__class__ ||$B.get_class(self
 if(isinstance(key,_b_.int)){var items=self.valueOf(),pos=key
 if(key < 0){pos=items.length+pos}
 if(pos >=0 && pos < items.length){return items[pos]}
-throw _b_.IndexError.$factory("list index out of range")}
+throw _b_.IndexError.$factory($B.class_name(self)+
+" index out of range")}
 if(key.__class__===_b_.slice ||isinstance(key,_b_.slice)){
 if(key.start===_b_.None && key.stop===_b_.None &&
 key.step===_b_.None){return self.slice()}
@@ -11389,8 +11391,8 @@ return factory(res)}else{if(stop > start){return factory(res)}
 for(var i=start;i > stop;i+=step){res[pos++]=items[i]}
 return factory(res)}}
 if(_b_.hasattr(key,"__int__")||_b_.hasattr(key,"__index__")){return list.__getitem__(self,_b_.int.$factory(key))}
-throw _b_.TypeError.$factory("list indices must be integer, not "+
-$B.class_name(key))}
+throw _b_.TypeError.$factory($B.class_name(self)+
+" indices must be integer, not "+$B.class_name(key))}
 list.__ge__=function(self,other){if(! isinstance(other,[list,_b_.tuple])){return _b_.NotImplemented}
 var i=0
 while(i < self.length){if(i >=other.length){return true}
@@ -11478,12 +11480,10 @@ list.$setitem(self,arg,value)}
 list.$setitem=function(self,arg,value){
 if(typeof arg=="number" ||isinstance(arg,_b_.int)){var pos=arg
 if(arg < 0){pos=self.length+pos}
-if(pos >=0 && pos < self.length){self[pos]=value}
-else{throw _b_.IndexError.$factory("list index out of range")}
+if(pos >=0 && pos < self.length){self[pos]=value}else{throw _b_.IndexError.$factory("list index out of range")}
 return $N}
 if(isinstance(arg,_b_.slice)){var s=_b_.slice.$conv_for_seq(arg,self.length)
-if(arg.step===null){$B.set_list_slice(self,s.start,s.stop,value)}
-else{$B.set_list_slice_step(self,s.start,s.stop,s.step,value)}
+if(arg.step===null){$B.set_list_slice(self,s.start,s.stop,value)}else{$B.set_list_slice_step(self,s.start,s.stop,s.step,value)}
 return $N}
 if(_b_.hasattr(arg,"__int__")||_b_.hasattr(arg,"__index__")){list.__setitem__(self,_b_.int.$factory(arg),value)
 return $N}
@@ -11517,7 +11517,8 @@ else{if(stop.__class__===$B.long_int){stop=parseInt(stop.value)*(stop.pos ? 1 :-
 if(stop < 0){stop=Math.min(self.length,stop+self.length)}
 stop=Math.min(stop,self.length)}
 for(var i=start;i < stop;i++){if(_eq(self[i])){return i}}
-throw _b_.ValueError.$factory(_b_.str.$factory($.x)+" is not in list")}
+throw _b_.ValueError.$factory(_b_.repr($.x)+" is not in "+
+$B.class_name(self))}
 list.insert=function(){var $=$B.args("insert",3,{self:null,i:null,item:null},["self","i","item"],arguments,{},null,null)
 $.self.splice($.i,0,$.item)
 return $N}
@@ -11655,7 +11656,7 @@ case "remove":
 case "reverse":
 break
 default:
-if(tuple[attr]===undefined){if(typeof list[attr]=="function"){tuple[attr]=(function(x){return function(){return list[x].apply(null,arguments)}})(attr)}else{}}}}
+if(tuple[attr]===undefined){if(typeof list[attr]=="function"){tuple[attr]=(function(x){return function(){return list[x].apply(null,arguments)}})(attr)}}}}
 tuple.__eq__=function(self,other){
 if(other===undefined){return self===tuple}
 return list.__eq__(self,other)}

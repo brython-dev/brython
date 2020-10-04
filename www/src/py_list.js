@@ -72,7 +72,8 @@ list.__delitem__ = function(self, arg){
             self.splice(pos, 1)
             return $N
         }
-        throw _b_.IndexError.$factory("list index out of range")
+        throw _b_.IndexError.$factory($B.class_name(self) +
+            " index out of range")
     }
     if(isinstance(arg, _b_.slice)) {
         var step = arg.step
@@ -113,8 +114,8 @@ list.__delitem__ = function(self, arg){
        return $N
     }
 
-    throw _b_.TypeError.$factory("list indices must be integer, not " +
-        _b_.str.$factory(arg.__class__))
+    throw _b_.TypeError.$factory($B.class_name(self) +
+        " indices must be integer, not " + $B.class_name(arg))
 }
 
 list.__eq__ = function(self, other){
@@ -150,7 +151,8 @@ list.$getitem = function(self, key){
         if(key < 0){pos = items.length + pos}
         if(pos >= 0 && pos < items.length){return items[pos]}
 
-        throw _b_.IndexError.$factory("list index out of range")
+        throw _b_.IndexError.$factory($B.class_name(self) +
+            " index out of range")
     }
     if(key.__class__ === _b_.slice || isinstance(key, _b_.slice)){
         // Find integer values for start, stop and step
@@ -186,8 +188,8 @@ list.$getitem = function(self, key){
        return list.__getitem__(self, _b_.int.$factory(key))
     }
 
-    throw _b_.TypeError.$factory("list indices must be integer, not " +
-        $B.class_name(key))
+    throw _b_.TypeError.$factory($B.class_name(self) +
+        " indices must be integer, not " + $B.class_name(key))
 }
 
 list.__ge__ = function(self, other){
@@ -417,15 +419,23 @@ list.$setitem = function(self, arg, value){
     // Used internally to avoid using $B.args
     if(typeof arg == "number" || isinstance(arg, _b_.int)){
         var pos = arg
-        if(arg < 0) {pos = self.length + pos}
-        if(pos >= 0 && pos < self.length){self[pos] = value}
-        else {throw _b_.IndexError.$factory("list index out of range")}
+        if(arg < 0){
+            pos = self.length + pos
+        }
+        if(pos >= 0 && pos < self.length){
+            self[pos] = value
+        }else{
+            throw _b_.IndexError.$factory("list index out of range")
+        }
         return $N
     }
     if(isinstance(arg, _b_.slice)){
         var s = _b_.slice.$conv_for_seq(arg, self.length)
-        if(arg.step === null){$B.set_list_slice(self, s.start, s.stop, value)}
-        else{$B.set_list_slice_step(self, s.start, s.stop, s.step, value)}
+        if(arg.step === null){
+            $B.set_list_slice(self, s.start, s.stop, value)
+        }else{
+            $B.set_list_slice_step(self, s.start, s.stop, s.step, value)
+        }
         return $N
     }
 
@@ -448,11 +458,6 @@ var _ops = ["add", "sub"]
 list.append = function(self, x){
     $B.check_no_kw("append", self, x)
     $B.check_nb_args("append", 2, arguments)
-    /*
-    var $ = $B.args("append", 2 ,{self: null, x: null}, ["self", "x"],
-        arguments, {}, null, null)
-    $.self[$.self.length] = $.x
-    */
     self.push(x)
     return $N
 }
@@ -512,7 +517,8 @@ list.index = function(){
     for(var i = start; i < stop; i++){
         if(_eq(self[i])){return i}
     }
-    throw _b_.ValueError.$factory(_b_.str.$factory($.x) + " is not in list")
+    throw _b_.ValueError.$factory(_b_.repr($.x) + " is not in " +
+        $B.class_name(self))
 }
 
 list.insert = function(){
@@ -888,8 +894,6 @@ for(var attr in list){
                             return list[x].apply(null, arguments)
                         }
                     })(attr)
-                }else{
-                    //tuple[attr] = list[attr]
                 }
             }
     }
