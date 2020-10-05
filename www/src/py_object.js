@@ -112,7 +112,7 @@ object.__getattribute__ = function(obj, attr){
     var klass = obj.__class__ || $B.get_class(obj),
         is_own_class_instance_method = false
 
-    var $test = false // attr == "strange"
+    var $test = false // attr == "select"
     if($test){console.log("attr", attr, "de", obj, "klass", klass)}
     if(attr === "__class__"){
         return klass
@@ -126,6 +126,9 @@ object.__getattribute__ = function(obj, attr){
     if(res === undefined && obj.__dict__){
         var dict = obj.__dict__
         if(dict.$string_dict.hasOwnProperty(attr)){
+            if($test){
+                console.log("__dict__ hasOwnProperty", attr, dict.$string_dict[attr])
+            }
             return dict.$string_dict[attr][0]
         }
     }
@@ -329,6 +332,8 @@ object.__getattribute__ = function(obj, attr){
                 return _ga(attr)
             }
             return _ga(obj, attr)
+        }else{
+            throw _b_.AttributeError.$factory(attr)
         }
     }
 }

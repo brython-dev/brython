@@ -767,7 +767,6 @@ DOMNode.__getattribute__ = function(self, attr){
             return DOMNode.select(self, selector)
         }
     }
-
     if(attr == "query" && self.nodeType == 9){
         // document.query is a instance of class Query, representing the
         // Query String

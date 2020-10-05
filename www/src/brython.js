@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,10,'final',0]
 __BRYTHON__.__MAGIC__="3.8.10"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-10-04 09:30:51.991106"
-__BRYTHON__.timestamp=1601796651991
+__BRYTHON__.compiled_date="2020-10-05 09:01:35.305772"
+__BRYTHON__.timestamp=1601881295305
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5443,7 +5443,8 @@ var res=obj[attr]
 if(Array.isArray(obj)&& Array.prototype[attr]!==undefined){
 res=undefined}
 if(res===undefined && obj.__dict__){var dict=obj.__dict__
-if(dict.$string_dict.hasOwnProperty(attr)){return dict.$string_dict[attr][0]}}
+if(dict.$string_dict.hasOwnProperty(attr)){if($test){console.log("__dict__ hasOwnProperty",attr,dict.$string_dict[attr])}
+return dict.$string_dict[attr][0]}}
 if(res===undefined){
 function check(obj,kl,attr){var v=kl[attr]
 if(v !==undefined){return v}}
@@ -5508,7 +5509,7 @@ if(_ga===undefined){var mro=klass.__mro__
 for(var i=0,len=mro.length;i < len;i++){_ga=mro[i]["__getattr__"]
 if(_ga !==undefined){break}}}}
 if(_ga !==undefined){if(klass===$B.module){return _ga(attr)}
-return _ga(obj,attr)}}}
+return _ga(obj,attr)}else{throw _b_.AttributeError.$factory(attr)}}}
 object.__gt__=function(){return _b_.NotImplemented}
 object.__hash__=function(self){var hash=self.__hashvalue__
 if(hash !==undefined){return hash}
