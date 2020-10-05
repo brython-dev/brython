@@ -69,7 +69,7 @@ class BaseTest(unittest.TestCase):
     # simply use the bigger test data for all tests.
     test_size = 0
     BIG_TEXT = bytearray(128*1024)
-    for fname in glob.glob(os.path.join(os.path.dirname(__file__), '*.py')):
+    for fname in glob.glob(os.path.join(glob.escape(os.path.dirname(__file__)), '*.py')):
         with open(fname, 'rb') as fh:
             test_size += fh.readinto(memoryview(BIG_TEXT)[test_size:])
         if test_size > 128*1024:
@@ -99,6 +99,9 @@ class BZ2FileTest(BaseTest):
         self.assertRaises(ValueError, BZ2File, os.devnull, "rbt")
         self.assertRaises(ValueError, BZ2File, os.devnull, compresslevel=0)
         self.assertRaises(ValueError, BZ2File, os.devnull, compresslevel=10)
+
+        # compresslevel is keyword-only
+        self.assertRaises(TypeError, BZ2File, os.devnull, "r", 3)
 
     def testRead(self):
         self.createTempFile()
@@ -707,7 +710,7 @@ class BZ2DecompressorTest(BaseTest):
     def testDecompress4G(self, size):
         # "Test BZ2Decompressor.decompress() with >4GiB input"
         blocksize = 10 * 1024 * 1024
-        block = random.getrandbits(blocksize * 8).to_bytes(blocksize, 'little')
+        block = random.randbytes(blocksize)
         try:
             data = block * (size // blocksize + 1)
             compressed = bz2.compress(data)

@@ -136,6 +136,15 @@ class UUTest(unittest.TestCase):
                 decoded = codecs.decode(encodedtext, "uu_codec")
                 self.assertEqual(decoded, plaintext)
 
+    def test_newlines_escaped(self):
+        # Test newlines are escaped with uu.encode
+        inp = io.BytesIO(plaintext)
+        out = io.BytesIO()
+        filename = "test.txt\n\roverflow.txt"
+        safefilename = b"test.txt\\n\\roverflow.txt"
+        uu.encode(inp, out, filename)
+        self.assertIn(safefilename, out.getvalue())
+
 class UUStdIOTest(unittest.TestCase):
 
     def setUp(self):
@@ -165,8 +174,8 @@ class UUStdIOTest(unittest.TestCase):
 class UUFileTest(unittest.TestCase):
 
     def setUp(self):
-        self.tmpin  = support.TESTFN + "i"
-        self.tmpout = support.TESTFN + "o"
+        self.tmpin  = support.TESTFN_ASCII + "i"
+        self.tmpout = support.TESTFN_ASCII + "o"
         self.addCleanup(support.unlink, self.tmpin)
         self.addCleanup(support.unlink, self.tmpout)
 

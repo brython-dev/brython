@@ -71,9 +71,8 @@ class FaultHandlerTests(unittest.TestCase):
         with support.SuppressCrashReport():
             process = script_helper.spawn_python('-c', code, pass_fds=pass_fds)
             with process:
-                stdout, stderr = process.communicate()
+                output, stderr = process.communicate()
                 exitcode = process.wait()
-        output = support.strip_python_stderr(stdout)
         output = output.decode('ascii', 'backslashreplace')
         if filename:
             self.assertEqual(output, '')
@@ -124,7 +123,9 @@ class FaultHandlerTests(unittest.TestCase):
         self.assertRegex(output, regex)
         self.assertNotEqual(exitcode, 0)
 
-    def check_fatal_error(self, code, line_number, name_regex, **kw):
+    def check_fatal_error(self, code, line_number, name_regex, func=None, **kw):
+        if func:
+            name_regex = '%s: %s' % (func, name_regex)
         fatal_error = 'Fatal Python error: %s' % name_regex
         self.check_error(code, line_number, fatal_error, **kw)
 
@@ -174,6 +175,7 @@ class FaultHandlerTests(unittest.TestCase):
             3,
             'in new thread',
             know_current_thread=False,
+            func='faulthandler_fatal_error_thread',
             py_fatal_error=True)
 
     def test_sigabrt(self):
@@ -231,6 +233,7 @@ class FaultHandlerTests(unittest.TestCase):
             """,
             2,
             'xyz',
+            func='faulthandler_fatal_error_py',
             py_fatal_error=True)
 
     def test_fatal_error_without_gil(self):
@@ -240,6 +243,7 @@ class FaultHandlerTests(unittest.TestCase):
             """,
             2,
             'xyz',
+            func='faulthandler_fatal_error_py',
             py_fatal_error=True)
 
     @unittest.skipIf(sys.platform.startswith('openbsd'),
@@ -535,8 +539,6 @@ class FaultHandlerTests(unittest.TestCase):
         with temporary_filename() as filename:
             self.check_dump_traceback_threads(filename)
 
-    @unittest.skipIf(not hasattr(faulthandler, 'dump_traceback_later'),
-                     'need faulthandler.dump_traceback_later()')
     def check_dump_traceback_later(self, repeat=False, cancel=False, loops=1,
                                    *, filename=None, fd=None):
         """
@@ -744,9 +746,8 @@ class FaultHandlerTests(unittest.TestCase):
             faulthandler.enable()
         with self.check_stderr_none():
             faulthandler.dump_traceback()
-        if hasattr(faulthandler, 'dump_traceback_later'):
-            with self.check_stderr_none():
-                faulthandler.dump_traceback_later(1e-3)
+        with self.check_stderr_none():
+            faulthandler.dump_traceback_later(1e-3)
         if hasattr(faulthandler, "register"):
             with self.check_stderr_none():
                 faulthandler.register(signal.SIGUSR1)
@@ -822,6 +823,17 @@ class FaultHandlerTests(unittest.TestCase):
         output, exitcode = self.get_output(code)
         self.assertEqual(output, [])
         self.assertEqual(exitcode, 0xC0000005)
+
+    def test_cancel_later_without_dump_traceback_later(self):
+        # bpo-37933: Calling cancel_dump_traceback_later()
+        # without dump_traceback_later() must not segfault.
+        code = dedent("""
+            import faulthandler
+            faulthandler.cancel_dump_traceback_later()
+        """)
+        output, exitcode = self.get_output(code)
+        self.assertEqual(output, [])
+        self.assertEqual(exitcode, 0)
 
 
 if __name__ == "__main__":

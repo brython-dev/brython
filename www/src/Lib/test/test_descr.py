@@ -1613,8 +1613,8 @@ order (MRO) for bases """
             spam_cm(spam.spamlist())
         self.assertEqual(
             str(cm.exception),
-            "descriptor 'classmeth' requires a type "
-            "but received a 'xxsubtype.spamlist' instance")
+            "descriptor 'classmeth' for type 'xxsubtype.spamlist' "
+            "needs a type, not a 'xxsubtype.spamlist' as arg 2")
 
         with self.assertRaises(TypeError) as cm:
             spam_cm(list)
@@ -1967,7 +1967,7 @@ order (MRO) for bases """
         # different error messages.
         set_add = set.add
 
-        expected_errmsg = "descriptor 'add' of 'set' object needs an argument"
+        expected_errmsg = "unbound method set.add() needs an argument"
 
         with self.assertRaises(TypeError) as cm:
             set_add()
@@ -2526,9 +2526,9 @@ order (MRO) for bases """
         except TypeError:
             pass
 
-        # Two essentially featureless objects, just inheriting stuff from
-        # object.
-        self.assertEqual(dir(NotImplemented), dir(Ellipsis))
+        # Two essentially featureless objects, (Ellipsis just inherits stuff
+        # from object.
+        self.assertEqual(dir(object()), dir(Ellipsis))
 
         # Nasty test case for proxied objects
         class Wrapper(object):
@@ -4314,6 +4314,42 @@ order (MRO) for bases """
             pass
         else:
             self.fail("Carlo Verre __delattr__ succeeded!")
+
+    def test_carloverre_multi_inherit_valid(self):
+        class A(type):
+            def __setattr__(cls, key, value):
+                type.__setattr__(cls, key, value)
+
+        class B:
+            pass
+
+        class C(B, A):
+            pass
+
+        obj = C('D', (object,), {})
+        try:
+            obj.test = True
+        except TypeError:
+            self.fail("setattr through direct base types should be legal")
+
+    def test_carloverre_multi_inherit_invalid(self):
+        class A(type):
+            def __setattr__(cls, key, value):
+                object.__setattr__(cls, key, value)  # this should fail!
+
+        class B:
+            pass
+
+        class C(B, A):
+            pass
+
+        obj = C('D', (object,), {})
+        try:
+            obj.test = True
+        except TypeError:
+            pass
+        else:
+            self.fail("setattr through indirect base types should be rejected")
 
     def test_weakref_segfault(self):
         # Testing weakref segfault...

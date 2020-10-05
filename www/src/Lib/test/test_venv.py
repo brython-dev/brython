@@ -16,10 +16,11 @@ import sys
 import tempfile
 from test.support import (captured_stdout, captured_stderr, requires_zlib,
                           can_symlink, EnvironmentVarGuard, rmtree,
-                          import_module)
-import threading
+                          import_module,
+                          skip_if_broken_multiprocessing_synchronize)
 import unittest
 import venv
+from unittest.mock import patch
 
 try:
     import ctypes
@@ -79,8 +80,8 @@ class BaseTest(unittest.TestCase):
     def get_env_file(self, *args):
         return os.path.join(self.env_dir, *args)
 
-    def get_text_file_contents(self, *args):
-        with open(self.get_env_file(*args), 'r') as f:
+    def get_text_file_contents(self, *args, encoding='utf-8'):
+        with open(self.get_env_file(*args), 'r', encoding=encoding) as f:
             result = f.read()
         return result
 
@@ -137,6 +138,39 @@ class BasicTest(BaseTest):
         data = self.get_text_file_contents('pyvenv.cfg')
         self.assertEqual(context.prompt, '(My prompt) ')
         self.assertIn("prompt = 'My prompt'\n", data)
+
+        rmtree(self.env_dir)
+        builder = venv.EnvBuilder(prompt='.')
+        cwd = os.path.basename(os.getcwd())
+        self.run_with_capture(builder.create, self.env_dir)
+        context = builder.ensure_directories(self.env_dir)
+        data = self.get_text_file_contents('pyvenv.cfg')
+        self.assertEqual(context.prompt, '(%s) ' % cwd)
+        self.assertIn("prompt = '%s'\n" % cwd, data)
+
+    def test_upgrade_dependencies(self):
+        builder = venv.EnvBuilder()
+        bin_path = 'Scripts' if sys.platform == 'win32' else 'bin'
+        python_exe = 'python.exe' if sys.platform == 'win32' else 'python'
+        with tempfile.TemporaryDirectory() as fake_env_dir:
+
+            def pip_cmd_checker(cmd):
+                self.assertEqual(
+                    cmd,
+                    [
+                        os.path.join(fake_env_dir, bin_path, python_exe),
+                        '-m',
+                        'pip',
+                        'install',
+                        '--upgrade',
+                        'pip',
+                        'setuptools'
+                    ]
+                )
+
+            fake_context = builder.ensure_directories(fake_env_dir)
+            with patch('venv.subprocess.check_call', pip_cmd_checker):
+                builder.upgrade_dependencies(fake_context)
 
     @requireVenvCreate
     def test_prefixes(self):
@@ -324,10 +358,11 @@ class BasicTest(BaseTest):
         """
         Test that the multiprocessing is able to spawn.
         """
-        # Issue bpo-36342: Instanciation of a Pool object imports the
+        # bpo-36342: Instantiation of a Pool object imports the
         # multiprocessing.synchronize module. Skip the test if this module
         # cannot be imported.
-        import_module('multiprocessing.synchronize')
+        skip_if_broken_multiprocessing_synchronize()
+
         rmtree(self.env_dir)
         self.run_with_capture(venv.create, self.env_dir)
         envpy = os.path.join(os.path.realpath(self.env_dir),
@@ -357,6 +392,18 @@ class BasicTest(BaseTest):
         self.assertEqual(out, "".encode())
         self.assertEqual(err, "".encode())
 
+
+    @unittest.skipUnless(sys.platform == 'darwin', 'only relevant on macOS')
+    def test_macos_env(self):
+        rmtree(self.env_dir)
+        builder = venv.EnvBuilder()
+        builder.create(self.env_dir)
+
+        envpy = os.path.join(os.path.realpath(self.env_dir),
+                             self.bindir, self.exe)
+        out, err = check_output([envpy, '-c',
+            'import os; print("__PYVENV_LAUNCHER__" in os.environ)'])
+        self.assertEqual(out.strip(), 'False'.encode())
 
 @requireVenvCreate
 class EnsurePipTest(BaseTest):
@@ -468,7 +515,7 @@ class EnsurePipTest(BaseTest):
         #    executing pip with sudo, you may want sudo's -H flag."
         # where $HOME is replaced by the HOME environment variable.
         err = re.sub("^(WARNING: )?The directory .* or its parent directory "
-                     "is not owned by the current user .*$", "",
+                     "is not owned or is not writable by the current user.*$", "",
                      err, flags=re.MULTILINE)
         self.assertEqual(err.rstrip(), "")
         # Being fairly specific regarding the expected behaviour for the
@@ -485,7 +532,7 @@ class EnsurePipTest(BaseTest):
 
     # Issue #26610: pip/pep425tags.py requires ctypes
     @unittest.skipUnless(ctypes, 'pip requires ctypes')
-    @requires_zlib
+    @requires_zlib()
     def test_with_pip(self):
         self.do_test_with_pip(False)
         self.do_test_with_pip(True)

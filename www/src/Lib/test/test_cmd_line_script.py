@@ -143,7 +143,7 @@ class CmdLineTest(unittest.TestCase):
             *run_args, __isolated=False, __cwd=cwd, **env_vars
         )
         if verbose > 1:
-            print('Output from test script %r:' % script_exec_args)
+            print(f'Output from test script {script_exec_args!r:}')
             print(repr(err))
             print('Expected output: %r' % expected_msg)
         self.assertIn(expected_msg.encode('utf-8'), err)
@@ -217,6 +217,19 @@ class CmdLineTest(unittest.TestCase):
         with support.temp_dir() as script_dir:
             script_name = _make_test_script(script_dir, 'script')
             self._check_script(script_name, script_name, script_name,
+                               script_dir, None,
+                               importlib.machinery.SourceFileLoader,
+                               expected_cwd=script_dir)
+
+    def test_script_abspath(self):
+        # pass the script using the relative path, expect the absolute path
+        # in __file__
+        with support.temp_cwd() as script_dir:
+            self.assertTrue(os.path.isabs(script_dir), script_dir)
+
+            script_name = _make_test_script(script_dir, 'script')
+            relative_name = os.path.basename(script_name)
+            self._check_script(relative_name, script_name, relative_name,
                                script_dir, None,
                                importlib.machinery.SourceFileLoader)
 
@@ -486,6 +499,16 @@ class CmdLineTest(unittest.TestCase):
             self.assertNotIn(b'is a package', err)
             self.assertNotIn(b'Traceback', err)
 
+    def test_hint_when_triying_to_import_a_py_file(self):
+        with support.temp_dir() as script_dir, \
+                support.change_cwd(path=script_dir):
+            # Create invalid *.pyc as empty file
+            with open('asyncio.py', 'wb'):
+                pass
+            err = self.check_dash_m_failure('asyncio.py')
+            self.assertIn(b"Try using 'asyncio' instead "
+                          b"of 'asyncio.py' as the module name", err)
+
     def test_dash_m_init_traceback(self):
         # These were wrapped in an ImportError and tracebacks were
         # suppressed; see Issue 14285
@@ -523,7 +546,7 @@ class CmdLineTest(unittest.TestCase):
             script_name = _make_test_script(script_dir, 'script', script)
             exitcode, stdout, stderr = assert_python_failure(script_name)
             text = stderr.decode('ascii').split('\n')
-            self.assertEqual(len(text), 4)
+            self.assertEqual(len(text), 5)
             self.assertTrue(text[0].startswith('Traceback'))
             self.assertTrue(text[1].startswith('  File '))
             self.assertTrue(text[3].startswith('NameError'))
@@ -542,7 +565,7 @@ class CmdLineTest(unittest.TestCase):
 
         # Issue #16218
         source = 'print(ascii(__file__))\n'
-        script_name = _make_test_script(os.curdir, name, source)
+        script_name = _make_test_script(os.getcwd(), name, source)
         self.addCleanup(support.unlink, script_name)
         rc, stdout, stderr = assert_python_ok(script_name)
         self.assertEqual(
@@ -567,7 +590,7 @@ class CmdLineTest(unittest.TestCase):
             script_name = _make_test_script(script_dir, 'script', script)
             exitcode, stdout, stderr = assert_python_failure(script_name)
             text = stderr.decode('ascii')
-            self.assertEqual(text, "some text")
+            self.assertEqual(text.rstrip(), "some text")
 
     def test_syntaxerror_unindented_caret_position(self):
         script = "1 + 1 = 2\n"
@@ -609,14 +632,14 @@ class CmdLineTest(unittest.TestCase):
             self.assertEqual(
                 stderr.splitlines()[-3:],
                 [
-                    b'    foo = f"""{}',
+                    b'    foo"""',
                     b'          ^',
                     b'SyntaxError: f-string: empty expression not allowed',
                 ],
             )
 
     def test_syntaxerror_invalid_escape_sequence_multi_line(self):
-        script = 'foo = """\\q\n"""\n'
+        script = 'foo = """\\q"""\n'
         with support.temp_dir() as script_dir:
             script_name = _make_test_script(script_dir, 'script', script)
             exitcode, stdout, stderr = assert_python_failure(
@@ -624,10 +647,9 @@ class CmdLineTest(unittest.TestCase):
             )
             self.assertEqual(
                 stderr.splitlines()[-3:],
-                [
-                    b'    foo = """\\q',
+                [   b'    foo = """\\q"""',
                     b'          ^',
-                    b'SyntaxError: invalid escape sequence \\q',
+                    b'SyntaxError: invalid escape sequence \\q'
                 ],
             )
 
@@ -702,7 +724,7 @@ class CmdLineTest(unittest.TestCase):
     def test_nonexisting_script(self):
         # bpo-34783: "./python script.py" must not crash
         # if the script file doesn't exist.
-        # (Skip test for macOS framework builds because sys.excutable name
+        # (Skip test for macOS framework builds because sys.executable name
         #  is not the actual Python executable file name.
         script = 'nonexistingscript.py'
         self.assertFalse(os.path.exists(script))
