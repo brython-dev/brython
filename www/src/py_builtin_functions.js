@@ -1444,6 +1444,12 @@ function isinstance(obj, cls){
         }
         return false
     }
+
+    if(cls.__class__ === $B.GenericAlias){
+        // PEP 585
+        throw _b_.TypeError.$factory(
+            'isinstance() arg 2 cannot be a parameterized generic')
+    }
     if(!cls.__class__ ||
             !(cls.$factory !== undefined || cls.$is_class !== undefined)){
         throw _b_.TypeError.$factory("isinstance() arg 2 must be a type " +
@@ -1508,8 +1514,7 @@ function isinstance(obj, cls){
 function issubclass(klass, classinfo){
     check_no_kw('issubclass', klass, classinfo)
     check_nb_args('issubclass', 2, arguments)
-
-
+    
     if(!klass.__class__ ||
             !(klass.$factory !== undefined || klass.$is_class !== undefined)){
         throw _b_.TypeError.$factory("issubclass() arg 1 must be a class")
@@ -1519,6 +1524,10 @@ function issubclass(klass, classinfo){
            if(issubclass(klass, classinfo[i])){return true}
         }
         return false
+    }
+    if(classinfo.__class__ === $B.GenericAlias){
+        throw _b_.TypeError.$factory(
+            'issubclass() arg 2 cannot be a parameterized generic')
     }
 
     if(classinfo.$factory || classinfo.$is_class){

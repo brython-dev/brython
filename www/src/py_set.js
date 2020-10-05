@@ -50,6 +50,15 @@ set.__and__ = function(self, other, accept_iter){
     return res
 }
 
+set.__class_getitem__ = function(cls, item){
+    // PEP 585
+    // Set as a classmethod at the end of this script, after $B.set_func_names()
+    if(! Array.isArray(item)){
+        item = [item]
+    }
+    return $B.GenericAlias.$factory(cls, item)
+}
+
 set.__contains__ = function(self, item){
     if(self.$simple){
         if(typeof item == "number" || item instanceof Number){
@@ -710,6 +719,8 @@ set.$factory = function(){
 }
 
 $B.set_func_names(set, "builtins")
+
+set.__class_getitem__ = _b_.classmethod.$factory(set.__class_getitem__)
 
 var frozenset = {
     __class__: _b_.type,

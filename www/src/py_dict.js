@@ -284,6 +284,15 @@ dict.__bool__ = function () {
     return dict.__len__($.self) > 0
 }
 
+dict.__class_getitem__ = function(cls, item){
+    // PEP 585
+    // Set as a classmethod at the end of this script, after $B.set_func_names()
+    if(! Array.isArray(item)){
+        item = [item]
+    }
+    return $B.GenericAlias.$factory(cls, item)
+}
+
 dict.__contains__ = function(){
 
     var $ = $B.args("__contains__", 2, {self: null, key: null},
@@ -1104,6 +1113,8 @@ dict.$factory = function(){
 _b_.dict = dict
 
 $B.set_func_names(dict, "builtins")
+
+dict.__class_getitem__ = _b_.classmethod.$factory(dict.__class_getitem__)
 
 $B.empty_dict = function(){
     return {

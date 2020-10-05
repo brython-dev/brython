@@ -102,9 +102,9 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,10,'final',0]
 __BRYTHON__.__MAGIC__="3.8.10"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-10-05 09:01:35.305772"
-__BRYTHON__.timestamp=1601881295305
-__BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
+__BRYTHON__.compiled_date="2020-10-05 15:15:45.723756"
+__BRYTHON__.timestamp=1601903745723
+__BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -5914,6 +5914,18 @@ key+"'")}
 $B.set_func_names(method,"builtins")
 $B.method_descriptor=$B.make_class("method_descriptor")
 $B.classmethod_descriptor=$B.make_class("classmethod_descriptor")
+$B.GenericAlias=$B.make_class("GenericAlias",function(origin_class,items){return{
+__class__:$B.GenericAlias,origin_class,items}}
+)
+$B.GenericAlias.__args__={__get__:function(self){return $B.fast_tuple(self.items)}}
+$B.GenericAlias.__call__=function(self,...args){return self.origin_class.$factory.apply(null,args)}
+$B.GenericAlias.__eq__=function(self,other){return $B.rich_comp("__eq__",self.origin_class,other.origin_class)&&
+$B.rich_comp("__eq__",self.items,other.items)}
+$B.GenericAlias.__origin__={__get__:function(self){return self.origin_class}}
+$B.GenericAlias.__repr__=function(self){var items=self.items
+for(var i=0,len=items.length;i < len;i++){if(items[i]===_b_.Ellipsis){items[i]='...'}else{items[i]=items[i].$infos.__name__}}
+return self.origin_class.$infos.__qualname__+'['+
+items.join(", ")+']'}
 _b_.object.__class__=type})(__BRYTHON__)
 ;
 ;(function($B){var _b_=$B.builtins,_window=self,isWebWorker=('undefined' !==typeof WorkerGlobalScope)&&
@@ -7074,6 +7086,9 @@ if(obj===null){return cls===None}
 if(obj===undefined){return false}
 if(cls.constructor===Array){for(var i=0;i < cls.length;i++){if(isinstance(obj,cls[i])){return true}}
 return false}
+if(cls.__class__===$B.GenericAlias){
+throw _b_.TypeError.$factory(
+'isinstance() arg 2 cannot be a parameterized generic')}
 if(!cls.__class__ ||
 !(cls.$factory !==undefined ||cls.$is_class !==undefined)){throw _b_.TypeError.$factory("isinstance() arg 2 must be a type "+
 "or tuple of types")}
@@ -7104,6 +7119,8 @@ if(!klass.__class__ ||
 !(klass.$factory !==undefined ||klass.$is_class !==undefined)){throw _b_.TypeError.$factory("issubclass() arg 1 must be a class")}
 if(isinstance(classinfo,_b_.tuple)){for(var i=0;i < classinfo.length;i++){if(issubclass(klass,classinfo[i])){return true}}
 return false}
+if(classinfo.__class__===$B.GenericAlias){throw _b_.TypeError.$factory(
+'issubclass() arg 2 cannot be a parameterized generic')}
 if(classinfo.$factory ||classinfo.$is_class){if(klass===classinfo ||
 klass.__mro__.indexOf(classinfo)>-1){return true}}
 var sch=$B.$getattr(classinfo.__class__ ||$B.get_class(classinfo),'__subclasscheck__',_b_.None)
@@ -8749,6 +8766,9 @@ catch(err){return _b_.NotImplemented}
 var res=create_type(self)
 for(var i=0,len=self.$items.length;i < len;i++){if(_b_.getattr(other,"__contains__")(self.$items[i])){set.add(res,self.$items[i])}}
 return res}
+set.__class_getitem__=function(cls,item){
+if(! Array.isArray(item)){item=[item]}
+return $B.GenericAlias.$factory(cls,item)}
 set.__contains__=function(self,item){if(self.$simple){if(typeof item=="number" ||item instanceof Number){if(isNaN(item)){
 for(var i=self.$items.length-1;i >=0;i--){if(isNaN(self.$items[i])){return true}}
 return false}else if(item instanceof Number){return self.$numbers.indexOf(item.valueOf())>-1}else{return self.$items.indexOf(item)>-1}}else if(typeof item=="string"){return self.$items.indexOf(item)>-1}}
@@ -8982,6 +9002,7 @@ var args=[res].concat(Array.prototype.slice.call(arguments))
 set.__init__.apply(null,args)
 return res}
 $B.set_func_names(set,"builtins")
+set.__class_getitem__=_b_.classmethod.$factory(set.__class_getitem__)
 var frozenset={__class__:_b_.type,__mro__:[object],$infos:{__module__:"builtins",__name__:"frozenset"},$is_class:true,$native:true}
 for(var attr in set){switch(attr){case "add":
 case "clear":
@@ -9218,11 +9239,11 @@ $B.JSMeta.__init_subclass__=function(){}
 $B.set_func_names($B.JSMeta,"builtins")})(__BRYTHON__)
 ;
 ;(function($B){$B.stdlib={}
-var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_collections_abc','_compat_pickle','_contextvars','_csv','_dummy_thread','_frozen_importlib','_functools','_imp','_io','_markupbase','_operator','_py_abc','_pydecimal','_queue','_random','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_weakref','_weakrefset','abc','antigravity','argparse','atexit','base64','bdb','binascii','bisect','browser.aio','browser.ajax','browser.highlight','browser.html','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.template','browser.timer','browser.webcomponent','browser.websocket','browser.webworker','browser.worker','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','gettext','glob','heapq','hmac','imp','inspect','interpreter','io','ipaddress','itertools','json','keyword','linecache','locale','mimetypes','nntplib','ntpath','numbers','opcode','operator','optparse','os','pathlib','pdb','pickle','pkgutil','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','re','reprlib','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','string','stringprep','struct','subprocess','sys','sysconfig','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uu','uuid','warnings','weakref','webbrowser','zipfile','zipimport','zlib']
+var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_collections_abc','_compat_pickle','_contextvars','_csv','_dummy_thread','_frozen_importlib','_functools','_imp','_io','_markupbase','_operator','_py_abc','_pydecimal','_queue','_random','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_weakref','_weakrefset','abc','antigravity','argparse','atexit','base64','bdb','binascii','bisect','browser.aio','browser.ajax','browser.highlight','browser.html','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.template','browser.timer','browser.webcomponent','browser.websocket','browser.webworker','browser.worker','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','gettext','glob','heapq','hmac','imp','inspect','interpreter','io','ipaddress','itertools','json','keyword','linecache','locale','mimetypes','nntplib','ntpath','numbers','opcode','operator','optparse','os','pathlib','pdb','pickle','pkgutil','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','re','reprlib','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','string','stringprep','struct','subprocess','sys','sysconfig','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uu','uuid','warnings','weakref','webbrowser','zipfile','zipimport','zlib']
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
-var js=['_aio','_ajax','_base64','_binascii','_io_classes','_json','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_sre_utils','_string','_strptime','_svg','_warnings','_webcomponent','_webworker','_zlib_utils','aes','array','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','long_int','marshal','math','math1','md5','modulefinder','pbkdf2','posix','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata']
+var js=['_aio','_ajax','_base64','_binascii','_io_classes','_json','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_sre_utils','_string','_strptime','_svg','_warnings','_webcomponent','_webworker','_zlib_utils','aes','array','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','long_int','marshal','math','md5','modulefinder','pbkdf2','posix','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
-var pkglist=['browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.foobar','site-packages.simpleaio','site-packages.simpy','site-packages.simpy.resources','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
+var pkglist=['browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.foobar','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
 for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}})(__BRYTHON__)
 ;
 
@@ -11336,6 +11357,9 @@ for(const item of other){res.push(is_js ? $B.$JS2Py(item):item)}
 res.__brython__=true
 if(isinstance(self,tuple)){res=tuple.$factory(res)}
 return res}
+list.__class_getitem__=function(cls,item){
+if(! Array.isArray(item)){item=[item]}
+return $B.GenericAlias.$factory(cls,item)}
 list.__contains__=function(self,item){var $=$B.args("__contains__",2,{self:null,item:null},["self","item"],arguments,{},null,null),self=$.self,item=$.item
 var _eq=function(other){return $B.rich_comp("__eq__",item,other)}
 var i=0
@@ -11625,6 +11649,7 @@ break}}
 res.__brython__=true 
 return res}
 $B.set_func_names(list,"builtins")
+list.__class_getitem__=_b_.classmethod.$factory(list.__class_getitem__)
 var JSArray=$B.JSArray=$B.make_class("JSArray",function(array){return{
 __class__:JSArray,js:array}}
 )
@@ -12738,6 +12763,9 @@ if(pairs !==undefined){for(var i=0,len=pairs.length;i < len;i++){if($B.rich_comp
 return-1}
 dict.__bool__=function(){var $=$B.args("__bool__",1,{self:null},["self"],arguments,{},null,null)
 return dict.__len__($.self)> 0}
+dict.__class_getitem__=function(cls,item){
+if(! Array.isArray(item)){item=[item]}
+return $B.GenericAlias.$factory(cls,item)}
 dict.__contains__=function(){var $=$B.args("__contains__",2,{self:null,key:null},["self","key"],arguments,{},null,null),self=$.self,key=$.key
 if(self.$is_namespace){key=$B.to_alias(key)}
 if(self.$jsobj){return self.$jsobj[key]!==undefined}
@@ -13046,6 +13074,7 @@ dict.__init__.apply(null,args)
 return res}
 _b_.dict=dict
 $B.set_func_names(dict,"builtins")
+dict.__class_getitem__=_b_.classmethod.$factory(dict.__class_getitem__)
 $B.empty_dict=function(){return{
 __class__:dict,$numeric_dict :{},$object_dict :{},$string_dict :{},$str_hash:{},$version:0,$order:0}}
 dict.fromkeys=_b_.classmethod.$factory(dict.fromkeys)

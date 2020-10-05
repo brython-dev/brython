@@ -923,6 +923,51 @@ $B.method_descriptor = $B.make_class("method_descriptor")
 
 $B.classmethod_descriptor = $B.make_class("classmethod_descriptor")
 
+// PEP 585
+$B.GenericAlias = $B.make_class("GenericAlias",
+    function(origin_class, items){
+        return {
+            __class__: $B.GenericAlias,
+            origin_class,
+            items
+        }
+    }
+)
+
+$B.GenericAlias.__args__ = {
+    __get__: function(self){
+        return $B.fast_tuple(self.items)
+    }
+}
+
+$B.GenericAlias.__call__ = function(self, ...args){
+    return self.origin_class.$factory.apply(null, args)
+}
+
+$B.GenericAlias.__eq__ = function(self, other){
+    return $B.rich_comp("__eq__", self.origin_class, other.origin_class) &&
+        $B.rich_comp("__eq__", self.items, other.items)
+}
+
+$B.GenericAlias.__origin__ = {
+    __get__: function(self){
+        return self.origin_class
+    }
+}
+
+$B.GenericAlias.__repr__ = function(self){
+    var items = self.items
+    for(var i = 0, len = items.length; i < len; i++){
+        if(items[i] === _b_.Ellipsis){
+            items[i] = '...'
+        }else{
+            items[i] = items[i].$infos.__name__
+        }
+    }
+    return self.origin_class.$infos.__qualname__ + '[' +
+        items.join(", ") + ']'
+}
+
 // this could not be done before $type and $factory are defined
 _b_.object.__class__ = type
 
