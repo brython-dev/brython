@@ -1,4 +1,4 @@
-Ar gentel-mañ a ziskouez penaos skrivañ ur program hag a ya en-dro e-barzh ar merdeer gant ar yezh-programmiñ Python. Evit-se emaomp o vont da skrivañ kod ur jedonerezh.
+Ar gentel-mañ a ziskouez penaos skrivañ ur programm hag a ya en-dro e-barzh ar merdeer gant ar yezh-programmiñ Python. Evit-se emaomp o vont da skrivañ kod ur jedonerezh.
 
 Ezhomm ho peus eus ur skridtreterezh, hag eveljust ur merdeer kevreet gant ar genrouedad.
 
@@ -120,7 +120,7 @@ calc <= (html.TR(html.TD(x) for x in line) for line in lines)
 document <= calc
 ```
 
-Lakait evezh ouzh implij "jeneratorioù" Python evit berraat ment ar program, ha penaos e chom aes da lenn koulskoude.
+Lakait evezh ouzh implij "jeneratorioù" Python evit berraat ment ar programm, ha penaos e chom aes da lenn koulskoude.
 
 Lakaomp ouzhpenn un nebeut stil war ar balizennoù `<TD>` e-barzh ur folenn-stil, ma vo bravoc'h ar jedonerezh:
 
@@ -156,7 +156,7 @@ Ret eo lavaret bremañ petra a c'hoarvez pa vount an implijer war stokelloù ar 
 - evit ar stokell = : seveniñ ar jedad ha moullañ an disorc'h, peotramant ur gemennad fazi ma'z eo direizh ar jedad
 - evit ar stokell C : mannañ an dachenn-disorc'h
 
-Evit ober gant degouezhadennoù war elemantoù ar bajenn ez eo ret d'ar program kavout un dave anezho. Stokelloù a zo bet krouet e stumm balizennoù `<TD>`; evit kavout an holl balizennoù seurt-se e skriver
+Evit ober gant degouezhadennoù war elemantoù ar bajenn ez eo ret d'ar programm kavout un dave anezho. Stokelloù a zo bet krouet e stumm balizennoù `<TD>`; evit kavout an holl balizennoù seurt-se e skriver
 
 ```python
 document.select("td")
@@ -164,7 +164,7 @@ document.select("td")
 
 Ar arguzenn kaset d'ar metod `select()` a zo un _diuzer CSS_. A re a gaver ar muiañ a zo: anv ur valizenn ("td"), doareenn `id` un elemant ("#result") pe e doareenn `class` (".classname"). Disorc'h `select()` a vez dalc'hmat ul listenn elemantoù.
 
-An degouezhadennoù a c'hell c'hoarvez war elemantoù ur bajenn o deus un anv reolataet: pa glik an implijer war un nozelenn, an degouezhadenn a zo "click" e anv. E-barzh ar programm, an degouezhadenn a dle kas un arc'hwel en-dro. Al liamm etre elemant, degouezhadenn hag arc'hwel a vez graet e mod-se:
+An degouezhadennoù a c'hell c'hoarvez war elemantoù ur bajenn o deus un anv reolataet: pa glik an implijer war un nozelenn, an degouezhadenn a zo "click" hec'h anv. E-barzh ar programm, an degouezhadenn a dle kas un arc'hwel en-dro. Al liamm etre elemant, degouezhadenn hag arc'hwel a vez graet e mod-se:
 
 ```python
 element.bind("click", action)
@@ -196,12 +196,12 @@ calc <= (html.TR(html.TD(x) for x in line) for line in lines)
 
 document <= calc
 
-result = document["result"] # direct acces to an element by its id
+result = document["result"] # adkavout un elemant dre e doareenn "id"
 
 def action(event):
     """Ra war-dro an degouezhadenn "click" war nozelenn ar jedonerezh."""
     # An elemant an implijer a vountas warnañ a zo doareenn "target" an
-    # draezenn degouezhadenn
+    # draezenn "event".
     element = event.target
     # An destenn moullet war an nozelenn a zo doareenn "text" an elemant.
     value = element.text
