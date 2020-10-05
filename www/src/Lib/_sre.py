@@ -83,8 +83,9 @@ class SRE_Pattern:
         """If the whole string matches this regular expression, return a
         corresponding match object. Return None if the string does not match
         the pattern; note that this is different from a zero-length match."""
-        if not string.endswith("$"):
-            string += "$"
+        end = "$" if isinstance(string, str) else b"$"
+        if not string.endswith(end):
+            string += end
         state = _State(string, pos, endpos, self.flags)
         if state.match(self._code):
             return SRE_Match(self, state)
