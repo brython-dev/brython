@@ -38,6 +38,12 @@ links = {
     "tutorial": "/static_tutorial/{language}/index.html"
 }
 
+languages = [
+    ["en", "English"],
+    ["fr", "Français"],
+    ["es", "Español"]
+]
+
 def show(language=None):
     """Detect language, either from the key "lang" in the query string or
     from the browser settings."""
@@ -119,9 +125,7 @@ def show(language=None):
     document.body.insertBefore(sel_lang, _banner.nextElementSibling)
     select = html.SELECT(Class="language")
     sel_lang <= select
-    for lang1, lang2 in [["en", "English"],
-                         ["fr", "Français"],
-                         ["es", "Español"]]:
+    for lang1, lang2 in languages:
         select <= html.OPTION(lang2, value=lang1, selected=lang1==language)
 
     @bind(select, "change")

@@ -31,7 +31,12 @@
 from browser import document, highlight, html
 import header
 
-qs_lang, language = header.show()
+tutorial_languages = header.languages.extend(
+  [["br", "Brezhoneg"],
+   ["it", "Italiano"]
+  ])
+  
+qs_lang, language = header.show(tutorial_languages)
 
 # Highlight Python code
 for elt in document.get(selector='.python'):
@@ -44,6 +49,7 @@ for elt in document.get(selector='.python'):
 # Generate menu
 menu = document["menu"]
 for i, tag in enumerate(document.select("H1")):
+    print(i, tag)
     menu <= html.A(tag.text, href=f"#item{i}") + html.BR()
     tag.parent.insertBefore(html.A(name=f"item{i}"), tag)
 
