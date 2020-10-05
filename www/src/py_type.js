@@ -949,9 +949,24 @@ $B.GenericAlias.__eq__ = function(self, other){
         $B.rich_comp("__eq__", self.items, other.items)
 }
 
+$B.GenericAlias.__getitem__ = function(self, item){
+    throw _b_.TypeError.$factory("descriptor '__getitem__' for '" +
+        self.origin_class.$infos.__name__ +"' objects doesn't apply to a '" +
+        $B.class_name(item) +"' object")
+}
+
 $B.GenericAlias.__origin__ = {
     __get__: function(self){
         return self.origin_class
+    }
+}
+
+$B.GenericAlias.__parameters__ = {
+    __get__: function(self){
+        // In PEP 585 : "a lazily computed tuple (possibly empty) of unique
+        // type variables found in __args__", but what are "unique type
+        // variables" ?
+        return $B.fast_tuple([])
     }
 }
 

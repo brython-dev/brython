@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,8,10,'final',0]
 __BRYTHON__.__MAGIC__="3.8.10"
 __BRYTHON__.version_info=[3,8,0,'final',0]
-__BRYTHON__.compiled_date="2020-10-05 15:15:45.723756"
-__BRYTHON__.timestamp=1601903745723
+__BRYTHON__.compiled_date="2020-10-05 15:56:00.241008"
+__BRYTHON__.timestamp=1601906160241
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5921,7 +5921,12 @@ $B.GenericAlias.__args__={__get__:function(self){return $B.fast_tuple(self.items
 $B.GenericAlias.__call__=function(self,...args){return self.origin_class.$factory.apply(null,args)}
 $B.GenericAlias.__eq__=function(self,other){return $B.rich_comp("__eq__",self.origin_class,other.origin_class)&&
 $B.rich_comp("__eq__",self.items,other.items)}
+$B.GenericAlias.__getitem__=function(self,item){throw _b_.TypeError.$factory("descriptor '__getitem__' for '"+
+self.origin_class.$infos.__name__+"' objects doesn't apply to a '"+
+$B.class_name(item)+"' object")}
 $B.GenericAlias.__origin__={__get__:function(self){return self.origin_class}}
+$B.GenericAlias.__parameters__={__get__:function(self){
+return $B.fast_tuple([])}}
 $B.GenericAlias.__repr__=function(self){var items=self.items
 for(var i=0,len=items.length;i < len;i++){if(items[i]===_b_.Ellipsis){items[i]='...'}else{items[i]=items[i].$infos.__name__}}
 return self.origin_class.$infos.__qualname__+'['+

@@ -639,4 +639,33 @@ a = 7
 b = a + 5 * x if a < 0 else a
 assert b == 7
 
+# PEP 585
+import types
+
+assert str(list[str]) == 'list[str]'
+assert str(list[str, int]) == 'list[str, int]'
+assert str(list[int, ...]) == 'list[int, ...]'
+assert str(tuple[str]) == 'tuple[str]'
+assert isinstance(list[str], types.GenericAlias)
+
+try:
+    isinstance([1, 2, 3], list[str])
+    raise Exception("should have raised TypeError")
+except TypeError:
+    pass
+
+try:
+    issubclass(list, list[str])
+    raise Exception("should have raised TypeError")
+except TypeError:
+    pass
+
+assert list[str]([2, 'a']) == [2, 'a']
+assert list[str].__origin__ is list
+assert list[str].__args__ == (str,)
+
+assert not (list is list[str])
+assert list != list[str]
+assert list[str] == list[str]
+
 print('passed all tests...')
