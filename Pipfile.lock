@@ -1,11 +1,11 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "95bad97a4fc0c379965626c1837c88563aad9f4d8ac4497dc1132a5cd79069ae"
+            "sha256": "1b045f842187c772de16b13a120a51b15fd52e31eed6472425aa16f650793366"
         },
         "pipfile-spec": 6,
         "requires": {
-            "python_version": "3.7"
+            "python_version": "3.9"
         },
         "sources": [
             {
@@ -19,11 +19,11 @@
     "develop": {
         "plumbum": {
             "hashes": [
-                "sha256:d143f079bfb60b11e9bec09a49695ce2e55ce5ca0246877bdb0818ab7c7fc312",
-                "sha256:df96a5facf621db4a6d682bdc93afa5ed6b107a8667c73c3f0a0f0fab4217c81"
+                "sha256:16b9e19d96c80f2e9d051ef5f04927b834a6ac0ce5d2768eb8662b5cd53e43df",
+                "sha256:91418dcc66b58ab9d2e3b04b3d1e0d787dc45923154fb8b4a826bd9316dba0d6"
             ],
             "index": "pypi",
-            "version": "==1.6.7"
+            "version": "==1.6.9"
         }
     }
 }
