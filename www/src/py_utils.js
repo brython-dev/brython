@@ -609,6 +609,10 @@ $B.$getitem = function(obj, item){
             class_gi = $B.$getattr(obj.__class__, "__getitem__", _b_.None)
             if(class_gi !== _b_.None){
                 return class_gi(obj, item)
+            }else{
+                throw _b_.TypeError.$factory("'" +
+                    $B.class_name(obj.__class__) +
+                    "' object is not subscriptable")
             }
         }
     }

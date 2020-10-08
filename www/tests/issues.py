@@ -2762,6 +2762,13 @@ for f in funs:
   t.append(f())
 assert t == [0, 1, 2]
 
+# issue 1515
+try:
+    range[0, 8]
+    raise Exception("should have raised TypeError")
+except TypeError as exc:
+    assert exc.args[0] == "'type' object is not subscriptable"
+    
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
