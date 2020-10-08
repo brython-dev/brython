@@ -67,7 +67,6 @@ function compute_item(r, i){
 }
 
 range.__getitem__ = function(self, rank){
-    console.log("range __gi__", self, rank)
     if(_b_.isinstance(rank, _b_.slice)){
         var norm = _b_.slice.$conv_for_seq(rank, range.__len__(self)),
             substep = $B.mul(self.step, norm.step),
