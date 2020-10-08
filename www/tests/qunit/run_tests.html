@@ -70,7 +70,6 @@
     <script type="text/javascript" src="/src/brython_stdlib.js"></script>
 
 <script type="text/python3">
-from javascript import JSObject
 from browser import window
 import brython_test_utils as utils
 from   brython_test_utils import unittest as test_utils
@@ -115,7 +114,7 @@ def testTraceback(qunit):
         trace = traceback.format_exc()
         assert "line 9, in f" in trace
         assert "line 6, in h" in trace
-        assert "line 5, in <lambda>" in trace
+        assert "line 5, in lambda" in trace
         assert "line 2, in g" in trace
 
     # issue 976
