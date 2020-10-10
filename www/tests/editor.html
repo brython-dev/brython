@@ -89,7 +89,7 @@ doc['run'].bind('click',lambda *args: editor.run())
 doc['show_console'].bind('click', editor.show_console)
 
 
-
+window.loadThemes('theme_select')
 
 </script>
 
@@ -116,7 +116,16 @@ function run_js(){
 
 <table id="container">
   <tr>
-    <td>Brython version: <span id="version"></span></td>
+    <td>
+      <label for="Themes">Theme:</label>
+        <select id="theme_select" name="theme_select" onchange="themeSelectChenged();">
+          <optgroup id="group_light" label="Light"></optgroup>
+          <optgroup id="group_dark" label="Dark"></optgroup>
+        </select>
+
+        <label for="FontSize">Font Size:</label>
+        <input type="number" id="fontsize" min="8" max="34" value="12" onchange="fontSizeChanged();">
+    </td>
     <td></td>
     <td>
         <button id="run"> ▶ Run</button>
@@ -139,7 +148,8 @@ function run_js(){
 
   <tr>
     <td>
-      Python code editor uses <a href="https://ace.c9.io/" target="_blank">Ace</a>.
+      Brython version: <span id="version"></span> 
+      : Python code editor uses <a href="https://ace.c9.io/" target="_blank">Ace</a>.
     </td>
     <td></td>
     <td>
@@ -147,6 +157,128 @@ function run_js(){
     </td>
   </tr>
 </table>
+
+
+<script>
+
+var themeData = [
+    ["Chrome"         ],
+    ["Clouds"         ],
+    ["Crimson Editor" ],
+    ["Dawn"           ],
+    ["Dreamweaver"    ],
+    ["Eclipse"        ],
+    ["GitHub"         ],
+    ["IPlastic"       ],
+    ["Solarized Light"],
+    ["TextMate"       ],
+    ["Tomorrow"       ],
+    ["Xcode"          ],
+    ["Kuroir"],
+    ["KatzenMilch"],
+    ["SQL Server"           ,"sqlserver"               , "light"],
+    ["Ambiance"             ,"ambiance"                ,  "dark"],
+    ["Chaos"                ,"chaos"                   ,  "dark"],
+    ["Clouds Midnight"      ,"clouds_midnight"         ,  "dark"],
+    ["Dracula"              ,""                        ,  "dark"],
+    ["Cobalt"               ,"cobalt"                  ,  "dark"],
+    ["Gruvbox"              ,"gruvbox"                 ,  "dark"],
+    ["Green on Black"       ,"gob"                     ,  "dark"],
+    ["idle Fingers"         ,"idle_fingers"            ,  "dark"],
+    ["krTheme"              ,"kr_theme"                ,  "dark"],
+    ["Merbivore"            ,"merbivore"               ,  "dark"],
+    ["Merbivore Soft"       ,"merbivore_soft"          ,  "dark"],
+    ["Mono Industrial"      ,"mono_industrial"         ,  "dark"],
+    ["Monokai"              ,"monokai"                 ,  "dark"],
+    ["Nord Dark"            ,"nord_dark"               ,  "dark"],
+    ["Pastel on dark"       ,"pastel_on_dark"          ,  "dark"],
+    ["Solarized Dark"       ,"solarized_dark"          ,  "dark"],
+    ["Terminal"             ,"terminal"                ,  "dark"],
+    ["Tomorrow Night"       ,"tomorrow_night"          ,  "dark"],
+    ["Tomorrow Night Blue"  ,"tomorrow_night_blue"     ,  "dark"],
+    ["Tomorrow Night Bright","tomorrow_night_bright"   ,  "dark"],
+    ["Tomorrow Night 80s"   ,"tomorrow_night_eighties" ,  "dark"],
+    ["Twilight"             ,"twilight"                ,  "dark"],
+    ["Vibrant Ink"          ,"vibrant_ink"             ,  "dark"]
+];
+
+function loadThemes(selectid){
+  // set the initial theme data 
+  var DEFAULT_THEME = "ace/theme/solarized_light"
+  var DEFAULT_FONT_SIZE = '14'
+
+  fillThemeData(selectid,themeData)
+
+  //set the default font size 
+  document.getElementById('editor').style.fontSize=DEFAULT_FONT_SIZE+"px"
+
+  // set default dropdown list value
+  document.getElementById(selectid).value = DEFAULT_THEME
+  
+  //update the theme to set it to the default
+  themeSelectChenged()
+
+  //set the fone size to the default
+  fontSizeChanged()
+
+}
+
+function fillThemeData(id, options){
+
+  themesByName = {}
+
+  var light = document.getElementById("group_light");
+  var dark = document.getElementById("group_dark");
+  
+  //create a themes array
+  themes = options.map(function(data) {
+    
+    var name = data[1] || data[0].replace(/ /g, "_").toLowerCase()
+    var theme = {
+        caption: data[0],
+        theme: "ace/theme/" + name,
+        isDark: data[2] == "dark",
+        name: name
+    };
+    themesByName[name] = theme
+    return theme
+    
+  });
+  
+ //fill the drop down list with theme data
+  for(var i=0;i<themes.length;i++)
+  {
+    var opt = themes[i].caption;
+    var val = themes[i].theme
+     
+    var el = document.createElement("option");
+    el.textContent = opt;
+    el.value = val;
+
+    if(themes[i].isDark == true) 
+      dark.appendChild(el);
+    else
+      light.appendChild(el);
+  }
+  
+}
+
+function themeSelectChenged()
+{
+  var e = document.getElementById("theme_select");
+  var value = e.options[e.selectedIndex].value;
+  var text = e.options[e.selectedIndex].text;
+  var editor = ace.edit("editor");
+  editor.setTheme(value);
+}
+
+function fontSizeChanged()
+{
+  size = parseInt(document.getElementById("fontsize").value);
+  document.getElementById('editor').style.fontSize=size+"px";
+}
+
+</script>
 
 </body>
 </html>
