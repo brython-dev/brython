@@ -49,6 +49,7 @@ def show(language=None):
     from the browser settings."""
     has_req = False
     qs_lang = None
+    tuto_language = None
 
     prefix = "/"
 
@@ -67,6 +68,12 @@ def show(language=None):
             lang = __BRYTHON__.language # browser setting
             if lang in ["en", "fr", "es"]:
                 language = lang
+            if addr.startswith("static_tutorial"):
+                elts = addr.split("/")
+                if len(elts) > 1:
+                    tuto_language = elts[1]
+                    if tuto_language in ["en", "fr", "es"]:
+                        language = tuto_language
 
     language = language or "en"
 
@@ -125,8 +132,10 @@ def show(language=None):
     document.body.insertBefore(sel_lang, _banner.nextElementSibling)
     select = html.SELECT(Class="language")
     sel_lang <= select
+    selected_lang = tuto_language or language
     for lang1, lang2 in languages:
-        select <= html.OPTION(lang2, value=lang1, selected=lang1==language)
+        select <= html.OPTION(lang2, value=lang1,
+            selected=lang1==selected_lang)
 
     @bind(select, "change")
     # If user changes the language in the select box, reload the page.
