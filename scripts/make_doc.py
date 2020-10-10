@@ -94,7 +94,7 @@ for lang in ['fr', 'en', 'es']:
                 shutil.copytree(os.path.join(src_path, filename), dest_dir)
 
 # tutorial
-for lang in ['br', 'fr', 'en', 'es', 'it']:
+for lang in ['br', 'fr', 'en', 'es', 'it', 'pt-br']:
     print(f"tutorial {lang}")
     md_path = os.path.join(md_tutorial_path, lang)
     static_path = os.path.join(static_tutorial_path, lang)
