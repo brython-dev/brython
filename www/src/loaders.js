@@ -434,6 +434,8 @@ $B.handle_error = function(err){
         }catch(print_exc_err){
             console.log(trace)
         }
+    }else{
+        console.debug(trace)
     }
     // Throw the error to stop execution
     throw err
