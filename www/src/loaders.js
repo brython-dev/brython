@@ -423,15 +423,17 @@ $B.handle_error = function(err){
         console.log(err)
         trace = err + ""
     }
-    try{
-        $B.$getattr($B.stderr, 'write')(trace)
+    if($B.debug > 0){
         try{
-            $B.$getattr($B.stderr, 'flush')()
-        }catch(err){
-            console.log(err)
+            $B.$getattr($B.stderr, 'write')(trace)
+            try{
+                $B.$getattr($B.stderr, 'flush')()
+            }catch(err){
+                console.log(err)
+            }
+        }catch(print_exc_err){
+            console.log(trace)
         }
-    }catch(print_exc_err){
-        console.log(trace)
     }
     // Throw the error to stop execution
     throw err

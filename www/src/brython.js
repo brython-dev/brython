@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,0,'final',0]
 __BRYTHON__.__MAGIC__="3.9.0"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2020-10-08 15:28:58.728426"
-__BRYTHON__.timestamp=1602163738728
+__BRYTHON__.compiled_date="2020-10-12 11:12:26.254636"
+__BRYTHON__.timestamp=1602493946238
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5379,8 +5379,8 @@ trace+='\n    '+' '.repeat(offset)+'^'+
 '\n'+name+': '+err.args[0]}else{trace+='\n'+name
 if(err.args[0]&& err.args[0]!==_b_.None){trace+=': '+_b_.str.$factory(err.args[0])}}}else{console.log(err)
 trace=err+""}
-try{$B.$getattr($B.stderr,'write')(trace)
-try{$B.$getattr($B.stderr,'flush')()}catch(err){console.log(err)}}catch(print_exc_err){console.log(trace)}
+if($B.debug > 0){try{$B.$getattr($B.stderr,'write')(trace)
+try{$B.$getattr($B.stderr,'flush')()}catch(err){console.log(err)}}catch(print_exc_err){console.log(trace)}}
 throw err}
 function required_stdlib_imports(imports,start){
 var nb_added=0
@@ -9346,7 +9346,7 @@ js="var $module = (function(){\n"+js+"return $locals_"+
 module.__name__.replace(/\./g,"_")+"})(__BRYTHON__)\n"+
 "return $module"
 var module_id="$locals_"+module.__name__.replace(/\./g,'_')
-var $module=(new Function(module_id,js))(module)}catch(err){console.log(err+" for module "+module.__name__)
+var $module=(new Function(module_id,js))(module)}catch(err){if($B.debug > 1){console.log(err+" for module "+module.__name__)
 console.log("module",module)
 console.log(root)
 if($B.debug > 1){console.log(js)}
@@ -9354,7 +9354,7 @@ for(var attr in err){console.log(attr,err[attr])}
 console.log(_b_.getattr(err,"info","[no info]"))
 console.log("message: "+err.$message)
 console.log("filename: "+err.fileName)
-console.log("linenum: "+err.lineNumber)
+console.log("linenum: "+err.lineNumber)}
 if($B.debug > 0){console.log("line info "+$B.line_info)}
 throw err}finally{$B.clear_ns(module.__name__)}
 try{

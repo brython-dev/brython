@@ -251,22 +251,23 @@ function run_py(module_contents, path, module, compiled) {
         var module_id = "$locals_" + module.__name__.replace(/\./g, '_')
         var $module = (new Function(module_id, js))(module)
     }catch(err){
-
-        console.log(err + " for module " + module.__name__)
-        console.log("module", module)
-        console.log(root)
-        // console.log(err)
         if($B.debug > 1){
-            console.log(js)
+            console.log(err + " for module " + module.__name__)
+            console.log("module", module)
+            console.log(root)
+            // console.log(err)
+            if($B.debug > 1){
+                console.log(js)
+            }
+            //console.log(module_contents
+            for(var attr in err){
+                console.log(attr, err[attr])
+            }
+            console.log(_b_.getattr(err, "info", "[no info]"))
+            console.log("message: " + err.$message)
+            console.log("filename: " + err.fileName)
+            console.log("linenum: " + err.lineNumber)
         }
-        //console.log(module_contents
-        for(var attr in err){
-            console.log(attr, err[attr])
-        }
-        console.log(_b_.getattr(err, "info", "[no info]"))
-        console.log("message: " + err.$message)
-        console.log("filename: " + err.fileName)
-        console.log("linenum: " + err.lineNumber)
         if($B.debug > 0){console.log("line info " + $B.line_info)}
 
         throw err
