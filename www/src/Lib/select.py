@@ -3,26 +3,15 @@ borrowed from jython
 https://bitbucket.org/jython/jython/raw/28a66ba038620292520470a0bb4dc9bb8ac2e403/Lib/select.py
 """
 
-#import java.nio.channels.SelectableChannel
-#import java.nio.channels.SelectionKey
-#import java.nio.channels.Selector
-#from java.nio.channels.SelectionKey import OP_ACCEPT, OP_CONNECT, OP_WRITE, OP_READ
-
 import errno
 import os
 
-class error(Exception): pass
+class error(Exception):
+    pass
 
 ALL = None
 
-_exception_map = {
-
-# (<javaexception>, <circumstance>) : lambda: <code that raises the python equivalent>
-
-#(java.nio.channels.ClosedChannelException, ALL) : error(errno.ENOTCONN, 'Socket is not connected'),
-#(java.nio.channels.CancelledKeyException, ALL) : error(errno.ENOTCONN, 'Socket is not connected'),
-#(java.nio.channels.IllegalBlockingModeException, ALL) : error(errno.ESOCKISBLOCKING, 'socket must be in non-blocking mode'),
-}
+_exception_map = {}
 
 def _map_exception(exc, circumstance=ALL):
     try:
@@ -53,16 +42,37 @@ def _getselectable(selectable_object):
         except:
             raise TypeError("Object '%s' is not watchable" % selectable_object,
                             errno.ENOTSOCK)
-    
+
     if channel and not isinstance(channel, java.nio.channels.SelectableChannel):
         raise TypeError("Object '%s' is not watchable" % selectable_object,
                         errno.ENOTSOCK)
     return channel
 
+# Fake Selector
+class Selector:
+
+    def close(self):
+        pass
+
+    def keys(self):
+        return []
+
+    def select(self, timeout=None):
+        return []
+
+    def selectedKeys(self):
+        class SelectedKeys:
+            def iterator(self):
+                return []
+        return SelectedKeys()
+
+    def selectNow(self, timeout=None):
+        return []
+
 class poll:
 
     def __init__(self):
-        self.selector = java.nio.channels.Selector.open()
+        self.selector = Selector()
         self.chanmap = {}
         self.unconnected_sockets = []
 
@@ -101,18 +111,16 @@ class poll:
                 self.unconnected_sockets.append( (socket_object, mask) )
                 return
             self._register_channel(socket_object, channel, mask)
-        except BaseException:
-        #except java.lang.Exception, jlx:
-            raise _map_exception(jlx)
+        except BaseException as exc:
+            raise _map_exception(exc)
 
     def unregister(self, socket_object):
         try:
             channel = _getselectable(socket_object)
             self.chanmap[channel][1].cancel()
             del self.chanmap[channel]
-        except BaseException:
-        #except java.lang.Exception, jlx:
-            raise _map_exception(jlx)
+        except BaseException as exc:
+            raise _map_exception(exc)
 
     def _dopoll(self, timeout):
         if timeout is None or timeout < 0:
@@ -131,23 +139,7 @@ class poll:
         return self.selector.selectedKeys()
 
     def poll(self, timeout=None):
-        try:
-            self._check_unconnected_sockets()
-            selectedkeys = self._dopoll(timeout)
-            results = []
-            for k in selectedkeys.iterator():
-                jmask = k.readyOps()
-                pymask = 0
-                if jmask & OP_READ: pymask |= POLLIN
-                if jmask & OP_WRITE: pymask |= POLLOUT
-                if jmask & OP_ACCEPT: pymask |= POLLIN
-                if jmask & OP_CONNECT: pymask |= POLLOUT
-                # Now return the original userobject, and the return event mask
-                results.append( (self.chanmap[k.channel()][0], pymask) )
-            return results
-        except BaseException:
-        #except java.lang.Exception, jlx:
-            raise _map_exception(jlx)
+        return []
 
     def _deregister_all(self):
         try:
@@ -155,17 +147,15 @@ class poll:
                 k.cancel()
             # Keys are not actually removed from the selector until the next select operation.
             self.selector.selectNow()
-        except BaseException:
-        #except java.lang.Exception, jlx:
-            raise _map_exception(jlx)
+        except BaseException as exc:
+            raise _map_exception(exc)
 
     def close(self):
         try:
             self._deregister_all()
             self.selector.close()
-        except BaseException:
-        #except java.lang.Exception, jlx:
-            raise _map_exception(jlx)
+        except BaseException as exc:
+            raise _map_exception(exc)
 
 def _calcselecttimeoutvalue(value):
     if value is None:

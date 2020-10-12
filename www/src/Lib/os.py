@@ -137,6 +137,9 @@ if name == 'nt':
 def scandir(*args, **kw):
     raise NotImplementedError
 
+def waitstatus_to_exitcode(status):
+    return status >> 8
+
 _set = set()
 
 supports_dir_fd = _set

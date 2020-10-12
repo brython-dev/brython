@@ -423,7 +423,7 @@ $B.handle_error = function(err){
         console.log(err)
         trace = err + ""
     }
-    if($B.debug > 0){
+    if($B.debug > 1){
         try{
             $B.$getattr($B.stderr, 'write')(trace)
             try{
