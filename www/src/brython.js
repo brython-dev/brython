@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,0,'final',0]
 __BRYTHON__.__MAGIC__="3.9.0"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2020-10-12 11:38:33.059966"
-__BRYTHON__.timestamp=1602495513059
+__BRYTHON__.compiled_date="2020-10-12 11:53:13.529473"
+__BRYTHON__.timestamp=1602496393529
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5380,7 +5380,7 @@ trace+='\n    '+' '.repeat(offset)+'^'+
 if(err.args[0]&& err.args[0]!==_b_.None){trace+=': '+_b_.str.$factory(err.args[0])}}}else{console.log(err)
 trace=err+""}
 if($B.debug > 1){try{$B.$getattr($B.stderr,'write')(trace)
-try{$B.$getattr($B.stderr,'flush')()}catch(err){console.log(err)}}catch(print_exc_err){console.log(trace)}}
+try{$B.$getattr($B.stderr,'flush')()}catch(err){console.log(err)}}catch(print_exc_err){console.log(trace)}}else{console.debug(trace)}
 throw err}
 function required_stdlib_imports(imports,start){
 var nb_added=0
@@ -10826,6 +10826,7 @@ for(var i=0;i < v2.length;i++){if(v1.charAt(start+i)=="1" && v2.charAt(i)=="0"){
 else if(v1.charAt(start+i)=="0" && v2.charAt(i)=="1"){res+="1"}
 else{res+="0"}}
 return intOrLong(long_int.$factory(res,2))}
+long_int.bit_length=function(self){return binary(self).length}
 long_int.numerator=function(self){return self}
 long_int.denominator=function(self){return _b_.int.$factory(1)}
 long_int.imag=function(self){return _b_.int.$factory(0)}

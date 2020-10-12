@@ -1057,6 +1057,9 @@ long_int.__xor__ = function(self, other){
     return intOrLong(long_int.$factory(res, 2))
 }
 
+long_int.bit_length = function(self){
+    return binary(self).length
+}
 // descriptors
 long_int.numerator = function(self){return self}
 long_int.denominator = function(self){return _b_.int.$factory(1)}
