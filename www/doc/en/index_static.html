@@ -25,7 +25,7 @@ def run(ev):
     exec(tg.elt.text.strip(), {})
 
 target = 'content'
-for elt in document[target].get(selector='.exec'):
+for elt in document[target].select('.exec'):
     # Python code executed when user clicks on a button
     elt.contentEditable = True
     src = elt.text.strip()
@@ -39,7 +39,7 @@ for elt in document[target].get(selector='.exec'):
     # set attribute python_code, used when button is hit
     btn.elt = elt
     elt.parent.insertBefore(btn, elt)
-for elt in document[target].get(selector='.exec_on_load'):
+for elt in document[target].select('.exec_on_load'):
     # Python code executed on page load
     src = elt.text.strip()
     h = highlight.highlight(src)
@@ -47,7 +47,7 @@ for elt in document[target].get(selector='.exec_on_load'):
     elt.clear()
     elt <= h
     exec(src)
-for elt in document[target].get(selector='.python'):
+for elt in document[target].select('.python'):
     src = elt.text.strip()
     h = highlight.highlight(src)
     h.className = "pycode"
