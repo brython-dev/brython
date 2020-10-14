@@ -72,9 +72,9 @@ for lang in ['fr', 'en', 'es']:
                 src = open(os.path.join(src_path, filename), 'rb').read()
                 src = src.decode('utf-8')
                 html, scripts = markdown.mark(src)
-                out = open(os.path.join(dest_path,filename[:-3]+'.html'), 'wb')
+                out = open(os.path.join(dest_path, filename[:-3]+'.html'), 'wb')
                 html = index.replace('<content>',html)
-                html = html.replace('<prefix>','/'.join(['..']*(i+1)))
+                html = html.replace('<prefix>','/'.join(['..'] * (i + 1)))
                 if i == 1:
                     html = html.replace('class="navig" href="',
                         'class="navig" href="../')
@@ -86,8 +86,8 @@ for lang in ['fr', 'en', 'es']:
             elif ext=='.txt':
                 shutil.copy(os.path.join(src_path, filename),
                     os.path.join(dest_path, filename))
-            elif os.path.isdir(os.path.join(src_path,filename)) \
-                and filename!='cookbook':
+            elif os.path.isdir(os.path.join(src_path, filename)) \
+                and filename != 'cookbook':
                 dest_dir = os.path.join(dest_path, filename)
                 if os.path.exists(dest_dir):
                     shutil.rmtree(dest_dir)

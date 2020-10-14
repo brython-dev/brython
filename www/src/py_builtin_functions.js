@@ -1514,7 +1514,7 @@ function isinstance(obj, cls){
 function issubclass(klass, classinfo){
     check_no_kw('issubclass', klass, classinfo)
     check_nb_args('issubclass', 2, arguments)
-    
+
     if(!klass.__class__ ||
             !(klass.$factory !== undefined || klass.$is_class !== undefined)){
         throw _b_.TypeError.$factory("issubclass() arg 1 must be a class")

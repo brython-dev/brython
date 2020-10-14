@@ -294,12 +294,12 @@ def apply_markdown(src):
     i = 0
     while i < len(src):
         if src[i] == '[':
-            start_a = i+1
+            start_a = i + 1
             while True:
                 end_a = src.find(']', i)
                 if end_a == -1:
                     break
-                if src[end_a - 1]=='\\':
+                if src[end_a - 1] == '\\':
                     i = end_a + 1
                 else:
                     break
