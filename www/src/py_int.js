@@ -240,10 +240,11 @@ int.__floordiv__ = function(self, other){
         return Math.floor(self / other)
     }
     if(_b_.isinstance(other, _b_.float)){
+        other = _b_.float.numerator(other) // for float subclasses
         if(!other.valueOf()){
             throw _b_.ZeroDivisionError.$factory("division by zero")
         }
-        return Math.floor(self / other)
+        return new Number(Math.floor(self / other))
     }
     if(_b_.hasattr(other, "__rfloordiv__")){
         return $B.$getattr(other, "__rfloordiv__")(self)
@@ -327,7 +328,7 @@ int.__mul__ = function(self, other){
         }
     }
     if(_b_.isinstance(other, _b_.float)){
-        return new Number(self * other)
+        return new Number(self * _b_.float.numerator(other))
     }
     if(_b_.isinstance(other, _b_.bool)){
          if(other.valueOf()){return self}
@@ -384,7 +385,6 @@ function extended_euclidean(a, b){
     }
 }
 
-$B.use_bigint = 0
 int.__pow__ = function(self, other, z){
     if(typeof other == "number"  || _b_.isinstance(other, int)){
         other = int_value(other)
@@ -438,7 +438,6 @@ int.__pow__ = function(self, other, z){
       else if(res !== Infinity && !isFinite(res)){return res}
       else{
           if($B.BigInt){
-              $B.use_bigint++
               return {
                   __class__: $B.long_int,
                   value: ($B.BigInt(self) ** $B.BigInt(other)).toString(),
@@ -450,7 +449,8 @@ int.__pow__ = function(self, other, z){
       }
     }
     if(_b_.isinstance(other, _b_.float)) {
-        if(self >= 0){return new Number(Math.pow(self, other.valueOf()))}
+        other = _b_.float.numerator(other)
+        if(self >= 0){return new Number(Math.pow(self, other))}
         else{
             // use complex power
             return _b_.complex.__pow__($B.make_complex(self, 0), other)
@@ -513,6 +513,7 @@ int.__truediv__ = function(self, other){
         return new Number(self / other)
     }
     if(_b_.isinstance(other, _b_.float)){
+        other = _b_.float.numerator(other)
         if(!other.valueOf()){
             throw _b_.ZeroDivisionError.$factory("division by zero")
         }
@@ -591,7 +592,7 @@ var $op_func = function(self, other){
         }
     }
     if(_b_.isinstance(other, _b_.float)){
-        return new Number(self - other)
+        return new Number(self - _b_.float.numerator(other))
     }
     if(_b_.isinstance(other, _b_.complex)){
         return $B.make_complex(self - other.$real, -other.$imag)
@@ -627,7 +628,7 @@ var $comp_func = function(self, other){
         other = int_value(other)
         return self.valueOf() > other.valueOf()
     }else if(_b_.isinstance(other, _b_.float)){
-        return self.valueOf() > other.valueOf()
+        return self.valueOf() > _b_.float.numerator(other)
     }else if(_b_.isinstance(other, _b_.bool)) {
       return self.valueOf() > _b_.bool.__hash__(other)
     }
@@ -685,12 +686,16 @@ int.$factory = function(value, base){
         if(value < $B.min_int || value > $B.max_int){
             return $B.long_int.$from_float(value)
         }
-        else{return value > 0 ? Math.floor(value) : Math.ceil(value)}
+        else{
+            return value > 0 ? Math.floor(value) : Math.ceil(value)
+        }
     }
 
     if(! (base >=2 && base <= 36)){
         // throw error (base must be 0, or 2-36)
-        if(base != 0){throw _b_.ValueError.$factory("invalid base")}
+        if(base != 0){
+            throw _b_.ValueError.$factory("invalid base")
+        }
     }
 
     if(typeof value == "number"){
@@ -726,7 +731,9 @@ int.$factory = function(value, base){
             base + ": '" + _b_.str.$factory(value) + "'")
     }
 
-    if(_b_.isinstance(value, _b_.str)){value = value.valueOf()}
+    if(_b_.isinstance(value, _b_.str)){
+        value = value.valueOf()
+    }
     if(typeof value == "string") {
         var _value = value.trim()    // remove leading/trailing whitespace
         if(_value.length == 2 && base == 0 &&

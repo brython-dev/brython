@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,0,'final',0]
 __BRYTHON__.__MAGIC__="3.9.0"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2020-10-12 11:53:13.529473"
-__BRYTHON__.timestamp=1602496393529
+__BRYTHON__.compiled_date="2020-10-14 09:34:46.851183"
+__BRYTHON__.timestamp=1602660886851
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -6297,9 +6297,9 @@ while(1){i++
 try{var elt=f(i)
 if($B.rich_comp("__eq__",elt,item)){return true}}catch(err){if(err.__class__===_b_.IndexError){return false}
 throw err}}}}
-$B.$call=function(callable){if(callable.__class__===$B.method){return callable}
-else if(callable.$is_func ||typeof callable=="function"){return callable}else if(callable.$factory){return callable.$factory}else if(callable.$is_class){
-return callable.$factory=$B.$instance_creator(callable)}
+$B.$call=function(callable){if(callable.__class__===$B.method){return callable}else if(callable.$factory){return callable.$factory}else if(callable.$is_class){
+return callable.$factory=$B.$instance_creator(callable)}else if(callable.$is_js_class){
+return callable.$factory=function(){return new callable(...arguments)}}else if(callable.$is_func ||typeof callable=="function"){return callable}
 try{return $B.$getattr(callable,"__call__")}catch(err){throw _b_.TypeError.$factory("'"+$B.class_name(callable)+
 "' object is not callable")}}
 var $io=$B.make_class("io",function(out){return{
@@ -9137,7 +9137,8 @@ return pyobj.valueOf()}else if(klass===$B.Function ||klass===$B.method){
 return function(){try{var args=[]
 for(var i=0;i < arguments.length;i++){if(arguments[i]===undefined){args.push(_b_.None)}
 else{args.push(jsobj2pyobj(arguments[i]))}}
-return pyobj2jsobj(pyobj.apply(this,args))}catch(err){console.log(err)
+if(pyobj.prototype.constructor===pyobj){var res=new pyobj(...args)}else{var res=pyobj.apply(this,args)}
+return pyobj2jsobj(res)}catch(err){console.log(err)
 console.log($B.$getattr(err,'info'))
 console.log($B.class_name(err)+':',err.args.length > 0 ? err.args[0]:'' )
 throw err}}}else{
@@ -9153,7 +9154,8 @@ throw _b_.TypeError.$factory(
 "A Javascript function can't take "+
 "keyword arguments")}}else{args.push($B.pyobj2jsobj(arg))}}
 return args}
-$B.JSObj=$B.make_class("JSObj",function(jsobj){if(Array.isArray(jsobj)){}else if(typeof jsobj=="function"){jsobj.$is_js_func=true}else if(typeof jsobj=="number" && ! Number.isInteger(jsobj)){return new Number(jsobj)}
+$B.JSObj=$B.make_class("JSObj",function(jsobj){if(Array.isArray(jsobj)){}else if(typeof jsobj=="function"){jsobj.$is_js_func=true
+jsobj.__new__=function(){return new jsobj.$js_func(...arguments)}}else if(typeof jsobj=="number" && ! Number.isInteger(jsobj)){return new Number(jsobj)}
 return jsobj}
 )
 $B.JSObj.__sub__=function(self,other){
@@ -9236,13 +9238,30 @@ return $B.structuredclone2pyobj(self)}
 $B.set_func_names($B.JSObj,"builtins")
 $B.JSMeta=$B.make_class("JSMeta")
 $B.JSMeta.__call__=function(cls){
-var args=[]
-for(var i=1,len=arguments.length;i < len;i++){args.push(arguments[i])}
-return new cls.__mro__[0].$js_func(...args)}
+var extra_args=[],klass=arguments[0]
+for(var i=1,len=arguments.length;i < len;i++){extra_args.push(arguments[i])}
+var new_func=_b_.type.__getattribute__(klass,"__new__")
+var instance=new_func.apply(null,arguments)
+if(instance instanceof cls.__mro__[0].$js_func){
+var init_func=_b_.type.__getattribute__(klass,"__init__")
+if(init_func !==_b_.object.__init__){
+var args=[instance].concat(extra_args)
+init_func.apply(null,args)}}
+return instance}
 $B.JSMeta.__mro__=[_b_.type,_b_.object]
 $B.JSMeta.__getattribute__=function(cls,attr){if(cls[attr]!==undefined){return cls[attr]}else if($B.JSMeta[attr]!==undefined){return $B.JSMeta[attr]}else{
 return _b_.type.__getattribute__(cls,attr)}}
 $B.JSMeta.__init_subclass__=function(){}
+$B.JSMeta.__new__=function(metaclass,class_name,bases,cl_dict){
+console.log("JSMEta new",class_name)
+console.log("extends",bases[0])
+eval("var "+class_name+" = class extends(bases[0].$js_func){}")
+var new_js_class=eval(class_name)
+new_js_class.__mro__=[bases[0],_b_.type]
+new_js_class.constructor=function(){console.log("constructor of",class_name)}
+console.log("new js class",new_js_class)
+new_js_class.$is_js_class=true
+return new_js_class}
 $B.set_func_names($B.JSMeta,"builtins")})(__BRYTHON__)
 ;
 ;(function($B){$B.stdlib={}
@@ -10161,8 +10180,9 @@ int.__floordiv__=function(self,other){if(other.__class__===$B.long_int){return $
 if(_b_.isinstance(other,int)){other=int_value(other)
 if(other==0){throw _b_.ZeroDivisionError.$factory("division by zero")}
 return Math.floor(self/other)}
-if(_b_.isinstance(other,_b_.float)){if(!other.valueOf()){throw _b_.ZeroDivisionError.$factory("division by zero")}
-return Math.floor(self/other)}
+if(_b_.isinstance(other,_b_.float)){other=_b_.float.numerator(other)
+if(!other.valueOf()){throw _b_.ZeroDivisionError.$factory("division by zero")}
+return new Number(Math.floor(self/other))}
 if(_b_.hasattr(other,"__rfloordiv__")){return $B.$getattr(other,"__rfloordiv__")(self)}
 $err("//",other)}
 int.__hash__=function(self){if(self===undefined){return int.__hashvalue__ ||$B.$py_next_hash--}
@@ -10196,7 +10216,7 @@ if(_b_.isinstance(other,int)){other=int_value(other)
 var res=self*other
 if(res > $B.min_int && res < $B.max_int){return res}
 else{return int.$factory($B.long_int.__mul__($B.long_int.$factory(self),$B.long_int.$factory(other)))}}
-if(_b_.isinstance(other,_b_.float)){return new Number(self*other)}
+if(_b_.isinstance(other,_b_.float)){return new Number(self*_b_.float.numerator(other))}
 if(_b_.isinstance(other,_b_.bool)){if(other.valueOf()){return self}
 return int.$factory(0)}
 if(_b_.isinstance(other,_b_.complex)){return $B.make_complex(int.__mul__(self,other.$real),int.__mul__(self,other.$imag))}
@@ -10218,7 +10238,6 @@ int.__pos__=function(self){return self}
 function extended_euclidean(a,b){var d,u,v
 if(b==0){return[a,1,0]}else{[d,u,v]=extended_euclidean(b,a % b)
 return[d,v,u-Math.floor(a/b)*v]}}
-$B.use_bigint=0
 int.__pow__=function(self,other,z){if(typeof other=="number" ||_b_.isinstance(other,int)){other=int_value(other)
 switch(other.valueOf()){case 0:
 return int.$factory(1)
@@ -10242,11 +10261,11 @@ return result}
 var res=Math.pow(self.valueOf(),other.valueOf())
 if(res > $B.min_int && res < $B.max_int){return res}
 else if(res !==Infinity && !isFinite(res)){return res}
-else{if($B.BigInt){$B.use_bigint++
-return{
+else{if($B.BigInt){return{
 __class__:$B.long_int,value:($B.BigInt(self)**$B.BigInt(other)).toString(),pos:true}}
 return $B.long_int.__pow__($B.long_int.$from_int(self),$B.long_int.$from_int(other))}}
-if(_b_.isinstance(other,_b_.float)){if(self >=0){return new Number(Math.pow(self,other.valueOf()))}
+if(_b_.isinstance(other,_b_.float)){other=_b_.float.numerator(other)
+if(self >=0){return new Number(Math.pow(self,other))}
 else{
 return _b_.complex.__pow__($B.make_complex(self,0),other)}}else if(_b_.isinstance(other,_b_.complex)){var preal=Math.pow(self,other.$real),ln=Math.log(self)
 return $B.make_complex(preal*Math.cos(ln),preal*Math.sin(ln))}
@@ -10270,7 +10289,8 @@ int.__truediv__=function(self,other){if(_b_.isinstance(other,int)){other=int_val
 if(other==0){throw _b_.ZeroDivisionError.$factory("division by zero")}
 if(other.__class__===$B.long_int){return new Number(self/parseInt(other.value))}
 return new Number(self/other)}
-if(_b_.isinstance(other,_b_.float)){if(!other.valueOf()){throw _b_.ZeroDivisionError.$factory("division by zero")}
+if(_b_.isinstance(other,_b_.float)){other=_b_.float.numerator(other)
+if(!other.valueOf()){throw _b_.ZeroDivisionError.$factory("division by zero")}
 return new Number(self/other)}
 if(_b_.isinstance(other,_b_.complex)){var cmod=other.$real*other.$real+other.$imag*other.$imag
 if(cmod==0){throw _b_.ZeroDivisionError.$factory("division by zero")}
@@ -10304,7 +10324,7 @@ var $op_func=function(self,other){if(_b_.isinstance(other,int)){other=int_value(
 if(typeof other=="number"){var res=self.valueOf()-other.valueOf()
 if(res > $B.min_int && res < $B.max_int){return res}
 else{return $B.long_int.__sub__($B.long_int.$factory(self),$B.long_int.$factory(other))}}else if(typeof other=="boolean"){return other ? self-1 :self}else{return $B.long_int.__sub__($B.long_int.$factory(self),$B.long_int.$factory(other))}}
-if(_b_.isinstance(other,_b_.float)){return new Number(self-other)}
+if(_b_.isinstance(other,_b_.float)){return new Number(self-_b_.float.numerator(other))}
 if(_b_.isinstance(other,_b_.complex)){return $B.make_complex(self-other.$real,-other.$imag)}
 if(_b_.isinstance(other,_b_.bool)){var bool_value=0;
 if(other.valueOf()){bool_value=1}
@@ -10322,7 +10342,7 @@ opf=opf.replace(new RegExp("sub","gm"),$ops[$op])
 eval("int.__"+$ops[$op]+"__ = "+opf)}
 var $comp_func=function(self,other){if(other.__class__===$B.long_int){return $B.long_int.__lt__(other,$B.long_int.$factory(self))}
 if(_b_.isinstance(other,int)){other=int_value(other)
-return self.valueOf()> other.valueOf()}else if(_b_.isinstance(other,_b_.float)){return self.valueOf()> other.valueOf()}else if(_b_.isinstance(other,_b_.bool)){return self.valueOf()> _b_.bool.__hash__(other)}
+return self.valueOf()> other.valueOf()}else if(_b_.isinstance(other,_b_.float)){return self.valueOf()> _b_.float.numerator(other)}else if(_b_.isinstance(other,_b_.bool)){return self.valueOf()> _b_.bool.__hash__(other)}
 if(_b_.hasattr(other,"__int__")||_b_.hasattr(other,"__index__")){return int.__gt__(self,$B.$GetInt(other))}
 return _b_.NotImplemented}
 $comp_func+="" 

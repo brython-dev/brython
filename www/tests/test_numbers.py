@@ -556,4 +556,12 @@ assert math.isnan(float('nan') + float('inf'))
 assert math.isnan(float('nan') - float('-inf'))
 assert math.isnan(float('nan') - float('-inf'))
 
+# issue 1524
+assert isinstance(10 // 3.1, float)
+
+class Float(float):
+  pass
+
+assert 10 // Float(2) == 5.0
+
 print('passed all tests...')
