@@ -478,7 +478,10 @@ type.__format__ = function(klass, fmt_spec){
             }
             if($test){console.log("res is function", res)}
 
-            if(attr == "__new__"){res.$type = "staticmethod"}
+            if(attr == "__new__" ||
+                    res.__class__ === $B.builtin_function){
+                res.$type = "staticmethod"
+            }
             if(attr == "__class_getitem__" && res.__class__ !== $B.method){
                 res = _b_.classmethod.$factory(res)
             }

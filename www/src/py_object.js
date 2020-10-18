@@ -218,7 +218,11 @@ object.__getattribute__ = function(obj, attr){
         if(__get__ !== null){ // descriptor
             res.__name__ = attr
             // __new__ is a static method
-            if(attr == "__new__"){res.$type = "staticmethod"}
+            // ... and so are builtin functions (is this documented ?)
+            if(attr == "__new__" ||
+                    res.__class__ === $B.builtin_function){
+                res.$type = "staticmethod"
+            }
             var res1 = __get__.apply(null, [res, obj, klass])
             if($test){console.log("res", res, "res1", res1)}
 

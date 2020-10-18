@@ -605,4 +605,22 @@ class D(C):
 d = D()
 assert d.sup.a == 1
 
+# class attributes set to builtin functions became *static* methods for
+# instances (is this documented ?)
+def not_builtin(instance, x):
+    return x
+
+class WithBuiltinFuncs:
+
+    builtin_func = abs
+    not_builtin_func = not_builtin
+
+    def test(self):
+        # self.not_builtin_func(x) is self.__class__.not_builtin_func(self, x)
+        assert self.not_builtin_func(3) == 3
+        # self.builtin_func(x) is self.__class__.builtin_func(x)
+        assert self.builtin_func(-2) == 2
+
+WithBuiltinFuncs().test()
+
 print('passed all tests..')

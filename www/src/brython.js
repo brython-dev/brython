@@ -102,9 +102,9 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,0,'final',0]
 __BRYTHON__.__MAGIC__="3.9.0"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2020-10-14 09:34:46.851183"
-__BRYTHON__.timestamp=1602660886851
-__BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
+__BRYTHON__.compiled_date="2020-10-18 21:02:07.581873"
+__BRYTHON__.timestamp=1603047727581
+__BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -5477,7 +5477,8 @@ if(typeof res=="object"){if(__get__ &&(typeof __get__=="function")){get_func=fun
 if(__get__===null &&(typeof res=="function")){__get__=function(x){return x}}
 if(__get__ !==null){
 res.__name__=attr
-if(attr=="__new__"){res.$type="staticmethod"}
+if(attr=="__new__" ||
+res.__class__===$B.builtin_function){res.$type="staticmethod"}
 var res1=__get__.apply(null,[res,obj,klass])
 if($test){console.log("res",res,"res1",res1)}
 if(typeof res1=="function"){
@@ -5764,7 +5765,8 @@ if(!(attr.startsWith("__")&& attr.endsWith("__"))){return res.__class__.__get__(
 if(typeof res=="function"){
 if(res.$infos===undefined && $B.debug > 1){console.log("warning: no attribute $infos for",res,"klass",klass,"attr",attr)}
 if($test){console.log("res is function",res)}
-if(attr=="__new__"){res.$type="staticmethod"}
+if(attr=="__new__" ||
+res.__class__===$B.builtin_function){res.$type="staticmethod"}
 if(attr=="__class_getitem__" && res.__class__ !==$B.method){res=_b_.classmethod.$factory(res)}
 if(attr=="__init_subclass__"){res=_b_.classmethod.$factory(res)}
 if(res.__class__===$B.method){return res.__get__(null,klass)}else{if($test){console.log("return res",res)}
@@ -7471,6 +7473,8 @@ __class__:$$super,__thisclass__:_type,__self_class__:object_or_type}}
 $$super.__get__=function(self,instance,klass){
 return $$super.$factory(self.__thisclass__,instance)}
 $$super.__getattribute__=function(self,attr){var mro=self.__thisclass__.__mro__,res
+if(self.__thisclass__.$is_js_class){if(attr=="__init__"){
+return function(){mro[0].$js_func.call(self.__self_class__,...arguments)}}}
 var sc=self.__self_class__
 if(sc !==undefined){if(!sc.$is_class){sc=sc.__class__ ||$B.get_class(sc)}
 var sc_mro=[sc].concat(sc.__mro__)
@@ -7706,7 +7710,9 @@ $B.set_func_names($B.Function,"builtins")
 _b_.__BRYTHON__=__BRYTHON__
 $B.builtin_funcs=["abs","all","any","ascii","bin","breakpoint","callable","chr","compile","delattr","dir","divmod","eval","exec","exit","format","getattr","globals","hasattr","hash","help","hex","id","input","isinstance","issubclass","iter","len","locals","max","min","next","oct","open","ord","pow","print","quit","repr","round","setattr","sorted","sum","vars"
 ]
-var builtin_function=$B.builtin_function=$B.make_class("builtin_function_or_method")
+var builtin_function=$B.builtin_function=$B.make_class(
+"builtin_function_or_method",function(f){f.__class__=builtin_function
+return f})
 builtin_function.__getattribute__=$B.Function.__getattribute__
 builtin_function.__reduce_ex__=builtin_function.__reduce__=function(self){return self.$infos.__name__}
 builtin_function.__repr__=builtin_function.__str__=function(self){return '<built-in function '+self.$infos.__name__+'>'}
@@ -9137,6 +9143,7 @@ return pyobj.valueOf()}else if(klass===$B.Function ||klass===$B.method){
 return function(){try{var args=[]
 for(var i=0;i < arguments.length;i++){if(arguments[i]===undefined){args.push(_b_.None)}
 else{args.push(jsobj2pyobj(arguments[i]))}}
+console.log("pyobj",pyobj,"args",args)
 if(pyobj.prototype.constructor===pyobj){var res=new pyobj(...args)}else{var res=pyobj.apply(this,args)}
 return pyobj2jsobj(res)}catch(err){console.log(err)
 console.log($B.$getattr(err,'info'))
@@ -9253,13 +9260,13 @@ $B.JSMeta.__getattribute__=function(cls,attr){if(cls[attr]!==undefined){return c
 return _b_.type.__getattribute__(cls,attr)}}
 $B.JSMeta.__init_subclass__=function(){}
 $B.JSMeta.__new__=function(metaclass,class_name,bases,cl_dict){
-console.log("JSMEta new",class_name)
-console.log("extends",bases[0])
-eval("var "+class_name+" = class extends(bases[0].$js_func){}")
+eval("var "+class_name+`=function(){if(cl_dict.$string_dict.__init__){var args=[this]
+for(var i=0,len=arguments.length;i < len;i++){args.push(arguments[i])}
+cl_dict.$string_dict.__init__[0].apply(this,args)}else{return new bases[0].$js_func(...arguments)}}`)
 var new_js_class=eval(class_name)
+new_js_class.prototype=Object.create(bases[0].$js_func.prototype)
+new_js_class.prototype.constructor=new_js_class
 new_js_class.__mro__=[bases[0],_b_.type]
-new_js_class.constructor=function(){console.log("constructor of",class_name)}
-console.log("new js class",new_js_class)
 new_js_class.$is_js_class=true
 return new_js_class}
 $B.set_func_names($B.JSMeta,"builtins")})(__BRYTHON__)
@@ -9267,7 +9274,7 @@ $B.set_func_names($B.JSMeta,"builtins")})(__BRYTHON__)
 ;(function($B){$B.stdlib={}
 var pylist=['VFS_import','__future__','_abcoll','_codecs','_collections','_collections_abc','_compat_pickle','_contextvars','_csv','_dummy_thread','_frozen_importlib','_functools','_imp','_io','_markupbase','_operator','_py_abc','_pydecimal','_queue','_random','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_weakref','_weakrefset','abc','antigravity','argparse','atexit','base64','bdb','binascii','bisect','browser.aio','browser.ajax','browser.highlight','browser.html','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.template','browser.timer','browser.webcomponent','browser.websocket','browser.webworker','browser.worker','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','gettext','glob','heapq','hmac','imp','inspect','interpreter','io','ipaddress','itertools','json','keyword','linecache','locale','mimetypes','nntplib','ntpath','numbers','opcode','operator','optparse','os','pathlib','pdb','pickle','pkgutil','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','re','reprlib','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','string','stringprep','struct','subprocess','sys','sysconfig','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uu','uuid','warnings','weakref','webbrowser','zipfile','zipimport','zlib']
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
-var js=['_aio','_ajax','_base64','_binascii','_io_classes','_json','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_sre_utils','_string','_strptime','_svg','_warnings','_webcomponent','_webworker','_zlib_utils','aes','array','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','long_int','marshal','math','math1','md5','modulefinder','pbkdf2','posix','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata']
+var js=['_aio','_ajax','_base64','_binascii','_cmath','_io_classes','_json','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_sre_utils','_string','_strptime','_svg','_warnings','_webcomponent','_webworker','_zlib_utils','aes','array','builtins','dis','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','long_int','marshal','math','math1','md5','modulefinder','pbkdf2','posix','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
 var pkglist=['browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.foobar','site-packages.simpleaio','site-packages.simpy','site-packages.simpy.resources','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
 for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}})(__BRYTHON__)
@@ -10332,8 +10339,6 @@ return self-bool_value}
 if(_b_.isinstance(other,_b_.complex)){return $B.make_complex(self.valueOf()-other.$real,other.$imag)}
 var rsub=$B.$getattr(other,"__rsub__",_b_.None)
 if(rsub !==_b_.None){return rsub(self)}
-console.log("err",self,other)
-console.log($B.frames_stack.slice())
 throw $err("-",other)}
 $op_func+="" 
 var $ops={"+":"add","-":"sub"}
