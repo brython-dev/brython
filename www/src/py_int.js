@@ -607,8 +607,8 @@ var $op_func = function(self, other){
     }
     var rsub = $B.$getattr(other, "__rsub__", _b_.None)
     if(rsub !== _b_.None){return rsub(self)}
-    console.log("err", self, other)
-    console.log($B.frames_stack.slice())
+    //console.log("err", self, other)
+    //console.log($B.frames_stack.slice())
     throw $err("-", other)
 }
 $op_func += "" // source code
