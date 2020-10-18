@@ -246,6 +246,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
                     if(arguments[i] === undefined){args.push(_b_.None)}
                     else{args.push(jsobj2pyobj(arguments[i]))}
                 }
+                console.log("pyobj", pyobj, "args", args)
                 if(pyobj.prototype.constructor === pyobj){
                     var res = new pyobj(...args)
                 }else{
@@ -589,15 +590,21 @@ $B.JSMeta.__init_subclass__ = function(){
 $B.JSMeta.__new__ = function(metaclass, class_name, bases, cl_dict){
     // Creating a class that inherits a Javascript class A must return
     // another Javascript class B that extends A
-    console.log("JSMEta new", class_name)
-    console.log("extends", bases[0])
-    eval("var " + class_name + " = class extends(bases[0].$js_func){}")
+    eval("var " + class_name + ` = function(){
+        if(cl_dict.$string_dict.__init__){
+            var args = [this]
+            for(var i = 0, len = arguments.length; i < len; i++){
+                args.push(arguments[i])
+            }
+            cl_dict.$string_dict.__init__[0].apply(this, args)
+        }else{
+            return new bases[0].$js_func(...arguments)
+        }
+    }`)
     var new_js_class = eval(class_name)
+    new_js_class.prototype = Object.create(bases[0].$js_func.prototype)
+    new_js_class.prototype.constructor = new_js_class
     new_js_class.__mro__ = [bases[0], _b_.type]
-    new_js_class.constructor = function(){
-        console.log("constructor of", class_name)
-    }
-    console.log("new js class", new_js_class)
     new_js_class.$is_js_class = true
     return new_js_class
 }
