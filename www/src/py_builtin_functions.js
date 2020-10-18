@@ -2473,6 +2473,14 @@ $$super.__getattribute__ = function(self, attr){
     var mro = self.__thisclass__.__mro__,
         res
 
+    if(self.__thisclass__.$is_js_class){
+        if(attr == "__init__"){
+            // use call on parent
+            return function(){
+                mro[0].$js_func.call(self.__self_class__, ...arguments)
+            }
+        }
+    }
     var sc = self.__self_class__
     if(sc !== undefined){
         if(!sc.$is_class){
@@ -3150,7 +3158,11 @@ $B.builtin_funcs = [
     "sorted", "sum", "vars"
 ]
 
-var builtin_function = $B.builtin_function = $B.make_class("builtin_function_or_method")
+var builtin_function = $B.builtin_function = $B.make_class(
+    "builtin_function_or_method", function(f){
+        f.__class__ = builtin_function
+        return f
+    })
 
 builtin_function.__getattribute__ = $B.Function.__getattribute__
 builtin_function.__reduce_ex__ = builtin_function.__reduce__ = function(self){
