@@ -612,14 +612,14 @@ var _mod = {
                           ['a', 'b', 'rel_tol', 'abs_tol'],
                           arguments,
                           {rel_tol: 1e-09, abs_tol: 0.0},
-                          null,
+                          '*',
                           null)
         var a = $ns['a'],
             b = $ns['b'],
             rel_tol = $ns['rel_tol'],
             abs_tol = $ns['abs_tol']
         if(rel_tol < 0.0 || abs_tol < 0.0){
-            throw ValueError('tolerances must be non-negative')
+            throw ValueError.$factory('tolerances must be non-negative')
         }
         if(a == b){return True}
         if(_b_.$isinf(a) || _b_.$isinf(b)){return false}
@@ -709,9 +709,9 @@ var _mod = {
         $B.check_no_kw('log2', x)
 
         if(isNaN(x)){return float.$factory('nan')}
-        if(_b_.$isninf(x)) {throw ValueError('')}
+        if(_b_.$isninf(x)) {throw ValueError.$factory('')}
         var x1 = float_check(x)
-        if(x1 < 0.0){throw ValueError('')}
+        if(x1 < 0.0){throw ValueError.$factory('')}
         return float.$factory(Math.log(x1) / Math.LN2)
     },
     log10: function(x){
@@ -783,7 +783,7 @@ var _mod = {
         var x1 = float_check(x)
         var y1 = float_check(y)
         if(y1 == 0){return float.$factory(1)}
-        if(x1 == 0 && y1 < 0){throw _b_.ValueError('')}
+        if(x1 == 0 && y1 < 0){throw _b_.ValueError.$factory('')}
 
         if(isNaN(y1)){
             if(x1 == 1){return float.$factory(1)}
@@ -879,7 +879,7 @@ var _mod = {
         $B.check_no_kw('sqrt ', x)
 
       var y = float_check(x)
-      if(y < 0){throw ValueError("math range error")}
+      if(y < 0){throw ValueError.$factory("math range error")}
       if(_b_.$isinf(y)){return float.$factory('inf')}
       var _r = Math.sqrt(y)
       if(_b_.$isinf(_r)){throw OverflowError("math range error")}
@@ -919,12 +919,7 @@ var _mod = {
 
 for(var $attr in _mod){
     if(typeof _mod[$attr] === 'function'){
-        _mod[$attr].__repr__ = (function(func){
-            return function(){return '<built-in function ' + func + '>'}
-        })($attr)
-        _mod[$attr].__str__ = (function(func){
-            return function(){return '<built-in function ' + func + '>'}
-        })($attr)
+        _mod[$attr].__class__ = $B.builtin_function
     }
 }
 

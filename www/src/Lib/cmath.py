@@ -11,7 +11,7 @@
 import math
 import sys
 
-def takes_complex(func):
+def _takes_complex(func):
     def decorated(x):
         if isinstance(x, complex):
             return func(x)
@@ -37,16 +37,16 @@ def takes_complex(func):
         decorated.__name__ = func.__name__
     return decorated
 
-@takes_complex
+@_takes_complex
 def isfinite(x):
     return math.isfinite(x.imag) and math.isfinite(x.real)
 
-@takes_complex
+@_takes_complex
 def phase(x):
     """Return phase, also known as the argument, of a complex."""
     return math.atan2(x.imag, x.real)
 
-@takes_complex
+@_takes_complex
 def polar(x):
     """
         Convert a complex from rectangular coordinates to polar coordinates.
@@ -90,7 +90,7 @@ def rect(r, phi):
         else:
             return complex(r*math.cos(phi), r*math.sin(phi))
 
-@takes_complex
+@_takes_complex
 def sqrt(x):
     """
        Return the square root of x.
@@ -149,7 +149,7 @@ def sqrt(x):
 
     return complex(_real,_imag)
 
-@takes_complex
+@_takes_complex
 def acos(x):
     """
         Return the arc cosine of x.
@@ -183,7 +183,7 @@ def acos(x):
 
     return complex(_real,_imag)
 
-@takes_complex
+@_takes_complex
 def acosh(x):
     """
         Return the hyperbolic arc cosine of x.
@@ -206,7 +206,7 @@ def acosh(x):
 
     return complex(_real,_imag)
 
-@takes_complex
+@_takes_complex
 def asin(x):
     """
         Return the arc sine of x.
@@ -218,7 +218,7 @@ def asin(x):
     s = asinh(s)
     return complex(s.imag, -s.real)
 
-@takes_complex
+@_takes_complex
 def asinh(x):
     """
         Return the hyperbolic arc sine of x.
@@ -243,7 +243,7 @@ def asinh(x):
         _imag = math.atan2(x.imag, s1.real*s2.real-s1.imag*s2.imag)
     return complex(_real,_imag)
 
-@takes_complex
+@_takes_complex
 def atan(x):
     """
         Return the arc tangent of x.
@@ -254,7 +254,7 @@ def atan(x):
     s = atanh(complex(-x.imag, x.real))
     return complex(s.imag, -s.real)
 
-@takes_complex
+@_takes_complex
 def atanh(x):
     """
         Return the hyperbolic arc tangent of x.
@@ -306,12 +306,12 @@ def atanh(x):
 
     return complex(_real,_imag)
 
-@takes_complex
+@_takes_complex
 def cos(x):
     """Return the cosine of x."""
     return cosh(complex(-x.imag, x.real))
 
-@takes_complex
+@_takes_complex
 def cosh(x):
     """Return the hyperbolic cosine of x."""
 
@@ -347,7 +347,7 @@ def cosh(x):
         raise OverflowError()
     return ret
 
-@takes_complex
+@_takes_complex
 def exp(x):
     """ Return the exponential value e**x."""
     if math.isinf(x.real) or math.isinf(x.imag):
@@ -386,18 +386,18 @@ def isclose(x, y, *, rel_tol=1e-09, abs_tol=0.0):
     abs_tol = float(abs_tol)
     return abs(x - y) <= max(rel_tol * max(abs(x), abs(y)), abs_tol)
 
-@takes_complex
+@_takes_complex
 def isinf(x):
     """Return True if the real or the imaginary part of x is positive or negative infinity."""
     return math.isinf(x.real) or math.isinf(x.imag)
 
-@takes_complex
+@_takes_complex
 def isnan(x):
     """Return True if the real or imaginary part of x is not a number (NaN)."""
     return math.isnan(x.real) or math.isnan(x.imag)
 
 
-@takes_complex
+@_takes_complex
 def _to_complex(x):
     return x
 
@@ -473,7 +473,7 @@ def log(x, base=None):
     _imag = math.atan2(x.imag, x.real)
     return complex(_real, _imag)
 
-@takes_complex
+@_takes_complex
 def log10(x):
     """
         Return the base-10 logarithm of x.
@@ -485,7 +485,7 @@ def log10(x):
     _imag = ret.imag / _M_LN10
     return complex(_real, _imag)
 
-@takes_complex
+@_takes_complex
 def sin(x):
     """ Return the sine of x. """
     # sin(x) = -i sinh(ix)
@@ -493,7 +493,7 @@ def sin(x):
     s = sinh(s)
     return complex(s.imag, -s.real)
 
-@takes_complex
+@_takes_complex
 def sinh(x):
     """ Return the hyperbolic sine of x. """
 
@@ -527,13 +527,13 @@ def sinh(x):
 
     return complex(_real, _imag)
 
-@takes_complex
+@_takes_complex
 def tan(x):
     """ Return the tangent of x. """
     s = atanh(complex(-x.imag, x.real))
     return complex(s.imag, -s.real)
 
-@takes_complex
+@_takes_complex
 def tanh(x):
     """ Return the hyperbolic tangent of x. """
     """
@@ -579,6 +579,13 @@ def tanh(x):
         _imag = ((ty/denom)*cx)*cx
     return complex(_real, _imag)
 
+# For compliance with CPython, set all functions as built-in
+FunctionType = type(_takes_complex)
+locs = locals()
+keys = list(locs.keys())
+for f in keys:
+    if type(locs[f]) is FunctionType and not f.startswith("_"):
+        locals()[f] = type(abs)(locals()[f])
 
 pi = math.pi
 e = math.e
