@@ -1418,6 +1418,23 @@ $B.sub = function(x, y){
         return z
     }else if((typeof x == "number" || x.__class__  === $B.long_int)
             && (typeof y == "number" || y.__class__ === $B.long_int)){
+        if(typeof x == "number" && typeof y == "number"){
+            if(isNaN(x) || isNaN(y)){
+                return _b_.float.$factory("nan")
+            }else if(x === Infinity || x === -Infinity){
+                if(y === x){
+                    return _b_.float.$factory("nan")
+                }else{
+                    return x
+                }
+            }else if(y === Infinity || y === -Infinity){
+                if(y === x){
+                    return _b_.float.$factory("nan")
+                }else{
+                    return -y
+                }
+            }
+        }
         if((typeof x == "number" && isNaN(x)) ||
                 (typeof y == "number" && isNaN(y))){
             return _b_.float.$factory("nan")

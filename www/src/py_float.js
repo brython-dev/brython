@@ -336,17 +336,22 @@ float.__hash__ = function(self) {
 
 _b_.$isninf = function(x) {
     var x1 = x
-    if(isinstance(x, float)){x1 = x.valueOf()}
+    if(isinstance(x, float)){x1 = float.numerator(x)}
     return x1 == -Infinity || x1 == Number.NEGATIVE_INFINITY
 }
 
 _b_.$isinf = function(x) {
     var x1 = x
-    if(isinstance(x, float)){x1 = x.valueOf()}
+    if(isinstance(x, float)){x1 = float.numerator(x)}
     return x1 == Infinity || x1 == -Infinity ||
         x1 == Number.POSITIVE_INFINITY || x1 == Number.NEGATIVE_INFINITY
 }
 
+_b_.$isnan = function(x) {
+    var x1 = x
+    if(isinstance(x, float)){x1 = float.numerator(x)}
+    return isNaN(x1)
+}
 
 _b_.$fabs = function(x){return x > 0 ? float.$factory(x) : float.$factory(-x)}
 
@@ -485,7 +490,9 @@ float.__mul__ = function(self, other){
         }
         return new Number(self * other)
     }
-    if(isinstance(other, float)){return new Number(self * float_value(other))}
+    if(isinstance(other, float)){
+        return new Number(self * float_value(other))
+    }
     if(isinstance(other, _b_.bool)){
       var bool_value = 0
       if(other.valueOf()){bool_value = 1}
@@ -495,8 +502,7 @@ float.__mul__ = function(self, other){
       return $B.make_complex(float.$factory(self * other.$real),
           float.$factory(self * other.$imag))
     }
-    if(hasattr(other, "__rmul__")){return getattr(other,"__rmul__")(self)}
-    $err("*", other)
+    return _b_.NotImplemented
 }
 
 float.__ne__ = function(self, other){

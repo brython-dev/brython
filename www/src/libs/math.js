@@ -621,8 +621,18 @@ var _mod = {
         if(rel_tol < 0.0 || abs_tol < 0.0){
             throw ValueError.$factory('tolerances must be non-negative')
         }
-        if(a == b){return True}
-        if(_b_.$isinf(a) || _b_.$isinf(b)){return false}
+        if(typeof a !== "number" || typeof b !== "number"){
+            if(! _b_.isinstance(a, [_b_.float, _b_.int]) ||
+                    ! _b_.isinstance(b, [_b_.float, _b_.int])){
+                throw _b_.TypeError.$factory("must be real number, not str")
+            }
+        }
+        if(a == b){
+            return True
+        }
+        if(_b_.$isinf(a) || _b_.$isinf(b)){
+            return a === b
+        }
         var diff = _b_.$fabs(b - a)
         var result = (
             (diff <= _b_.$fabs(rel_tol * b)) ||
@@ -901,6 +911,7 @@ var _mod = {
         return float.$factory((Math.pow(Math.E, y) - Math.pow(Math.E, -y))/
              (Math.pow(Math.E, y) + Math.pow(Math.E, -y)))
     },
+    tau: 6.283185307179586,
     trunc: function(x) {
         $B.check_nb_args('trunc', 1, arguments)
         $B.check_no_kw('trunc', x)

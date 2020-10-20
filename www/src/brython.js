@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,0,'final',0]
 __BRYTHON__.__MAGIC__="3.9.0"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2020-10-18 21:02:07.581873"
-__BRYTHON__.timestamp=1603047727581
+__BRYTHON__.compiled_date="2020-10-20 09:25:20.998020"
+__BRYTHON__.timestamp=1603178720998
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -6480,7 +6480,8 @@ $B.sub=function(x,y){var z=(typeof x !="number" ||typeof y !="number")?
 new Number(x-y):x-y
 if(x > min_int && x < max_int && y > min_int && y < max_int
 && z > min_int && z < max_int){return z}else if((typeof x=="number" ||x.__class__===$B.long_int)
-&&(typeof y=="number" ||y.__class__===$B.long_int)){if((typeof x=="number" && isNaN(x))||
+&&(typeof y=="number" ||y.__class__===$B.long_int)){if(typeof x=="number" && typeof y=="number"){if(isNaN(x)||isNaN(y)){return _b_.float.$factory("nan")}else if(x===Infinity ||x===-Infinity){if(y===x){return _b_.float.$factory("nan")}else{return x}}else if(y===Infinity ||y===-Infinity){if(y===x){return _b_.float.$factory("nan")}else{return-y}}}
+if((typeof x=="number" && isNaN(x))||
 (typeof y=="number" && isNaN(y))){return _b_.float.$factory("nan")}
 return $B.long_int.__sub__($B.long_int.$factory(x),$B.long_int.$factory(y))}else{return z}}
 $B.ge=function(x,y){if(typeof x=="number" && typeof y=="number"){return x >=y}
@@ -9836,12 +9837,15 @@ r[0]=(r[0]-hipart)*Math.pow(2,31)
 var x=hipart+_b_.int.$factory(r[0])+(r[1]<< 15)
 return x & 0xFFFFFFFF}
 _b_.$isninf=function(x){var x1=x
-if(isinstance(x,float)){x1=x.valueOf()}
+if(isinstance(x,float)){x1=float.numerator(x)}
 return x1==-Infinity ||x1==Number.NEGATIVE_INFINITY}
 _b_.$isinf=function(x){var x1=x
-if(isinstance(x,float)){x1=x.valueOf()}
+if(isinstance(x,float)){x1=float.numerator(x)}
 return x1==Infinity ||x1==-Infinity ||
 x1==Number.POSITIVE_INFINITY ||x1==Number.NEGATIVE_INFINITY}
+_b_.$isnan=function(x){var x1=x
+if(isinstance(x,float)){x1=float.numerator(x)}
+return isNaN(x1)}
 _b_.$fabs=function(x){return x > 0 ? float.$factory(x):float.$factory(-x)}
 _b_.$frexp=function(x){var x1=x
 if(isinstance(x,float)){x1=x.valueOf()}
@@ -9917,8 +9921,7 @@ if(isinstance(other,_b_.bool)){var bool_value=0
 if(other.valueOf()){bool_value=1}
 return new Number(self*bool_value)}
 if(isinstance(other,_b_.complex)){return $B.make_complex(float.$factory(self*other.$real),float.$factory(self*other.$imag))}
-if(hasattr(other,"__rmul__")){return getattr(other,"__rmul__")(self)}
-$err("*",other)}
+return _b_.NotImplemented}
 float.__ne__=function(self,other){var res=float.__eq__(self,other)
 return res===_b_.NotImplemented ? res :! res}
 float.__neg__=function(self,other){return float.$factory(-float_value(self))}
@@ -10958,6 +10961,7 @@ if(!isFinite(mag)&& _rf && _if){
 throw _b_.OverflowError.$factory("absolute value too large")}
 return mag}
 complex.__bool__=function(self){return(self.$real !=0 ||self.$imag !=0)}
+complex.__complex__=function(self){return self}
 complex.__eq__=function(self,other){if(_b_.isinstance(other,complex)){return self.$real.valueOf()==other.$real.valueOf()&&
 self.$imag.valueOf()==other.$imag.valueOf()}
 if(_b_.isinstance(other,_b_.int)){if(self.$imag !=0){return false}
@@ -11001,12 +11005,13 @@ $imag=0}
 res={__class__:complex,$real:$real ||0,$imag:$imag ||0}
 return res}}
 $imag=$imag===missing ? 0 :$imag
-if(arguments.length==1 && $real.__class__===complex && $imag==0){return $real}
+if(arguments.length==2 && $real.__class__===complex && $imag==0){return $real}
 if(_b_.isinstance($real,[_b_.float,_b_.int])&&
 _b_.isinstance($imag,[_b_.float,_b_.int])){res={__class__:complex,$real:$real,$imag:$imag}
 return res}
 var real_to_num=$B.to_num($real,["__complex__","__float__","__index__"])
-if(real_to_num===null){throw _b_.TypeError.$factory("complex() first argument must be a "+
+if(real_to_num===null){console
+throw _b_.TypeError.$factory("complex() first argument must be a "+
 " string or a number, not '"+$B.class_name($real)+"'")}
 $real=real_to_num
 $imag=_convert($imag)
@@ -11033,11 +11038,12 @@ var pw=Math.pow(exp.norm,x)*Math.pow(Math.E,-y*angle),theta=y*Math.log(exp.norm)
 return make_complex(pw*Math.cos(theta),pw*Math.sin(theta))}else{throw _b_.TypeError.$factory("unsupported operand type(s) "+
 "for ** or pow(): 'complex' and '"+
 $B.class_name(other)+"'")}}
-complex.__str__=complex.__repr__=function(self){if(self.$real==0){if(1/self.$real < 0){if(self.$imag < 0){return "(-0"+self.$imag+"j)"}else if(self.$imag==0 && 1/self.$imag < 0){return "(-0-"+self.$imag+"j)"}else return "(-0+"+self.$imag+"j)"}else{if(self.$imag==0 && 1/self.$imag < 0){return "-"+self.$imag+"j"}else{return self.$imag+"j"}}}
-if(self.$imag > 0){return "("+self.$real+"+"+self.$imag+"j)"}
-if(self.$imag==0){if(1/self.$imag < 0){return "("+self.$real+"-"+self.$imag+"j)"}
-return "("+self.$real+"+"+self.$imag+"j)"}
-return "("+self.$real+"-"+(-self.$imag)+"j)"}
+complex.__str__=complex.__repr__=function(self){var real=_b_.str.$factory(self.$real),imag=_b_.str.$factory(self.$imag)
+if(self.$real==0){if(1/self.$real < 0){if(self.$imag < 0){return "(-0"+imag+"j)"}else if(self.$imag==0 && 1/self.$imag < 0){return "(-0-"+imag+"j)"}else return "(-0+"+imag+"j)"}else{if(self.$imag==0 && 1/self.$imag < 0){return "-"+imag+"j"}else{return imag+"j"}}}
+if(self.$imag > 0){return "("+real+"+"+imag+"j)"}
+if(self.$imag==0){if(1/self.$imag < 0){return "("+real+"-"+imag+"j)"}
+return "("+real+"+"+imag+"j)"}
+return "("+real+"-"+_b_.str.$factory(-self.$imag)+"j)"}
 complex.__sqrt__=function(self){if(self.$imag==0){return complex(Math.sqrt(self.$real))}
 var r=self.$real,i=self.$imag,_a=Math.sqrt((r+sqrt)/2),_b=Number.sign(i)*Math.sqrt((-r+sqrt)/2)
 return make_complex(_a,_b)}

@@ -17,15 +17,21 @@ def _takes_complex(func):
             return func(x)
         elif type(x) in [int, float]:
             return func(complex(x))
-        elif hasattr(x,'__complex__'):
+        elif hasattr(x, '__complex__'):
             c = x.__complex__()
             if not isinstance(c, complex):
                 raise TypeError("A complex number is required")
             else:
                 return func(c)
-        elif hasattr(x,'__float__'):
+        elif hasattr(x, '__float__'):
             try:
-                c = complex(x.__float__(),0)
+                c = complex(x.__float__(), 0)
+            except:
+                raise TypeError("A complex number is required")
+            return func(c)
+        elif hasattr(x, '__index__'):
+            try:
+                c = complex(x.__index__(), 0)
             except:
                 raise TypeError("A complex number is required")
             return func(c)
@@ -71,13 +77,13 @@ def rect(r, phi):
         # if r is +/-infinity and phi is finite but nonzero then
         # result is (+-INF +-INF i), but we need to compute cos(phi)
         # and sin(phi) to figure out the signs.
-        if -_INF < phi < _INF and phi != .0:
+        if -inf < phi < inf and phi != .0:
             if r > 0:
-                _real = math.copysign(_INF, math.cos(phi))
-                _imag = math.copysign(_INF, math.sin(phi))
+                _real = math.copysign(inf, math.cos(phi))
+                _imag = math.copysign(inf, math.sin(phi))
             else:
-                _real = -math.copysign(_INF, cos(phi));
-                _imag = -math.copysign(_INF, sin(phi));
+                _real = -math.copysign(inf, cos(phi));
+                _imag = -math.copysign(inf, sin(phi));
             return complex(_real, _imag)
         return _SPECIAL_VALUE(complex(r,phi), _rect_special_values)
 
@@ -317,13 +323,13 @@ def cosh(x):
 
     # special treatment for cosh(+/-inf + iy) if y is not a NaN
     if isinf(x):
-        if -_INF < x.imag < _INF and x.imag != .0:
+        if -inf < x.imag < inf and x.imag != .0:
             if x.real > 0:
-                _real = math.copysign(_INF, math.cos(x.imag))
-                _imag = math.copysign(_INF, math.sin(x.imag))
+                _real = math.copysign(inf, math.cos(x.imag))
+                _imag = math.copysign(inf, math.sin(x.imag))
             else:
-                _real = math.copysign(_INF, math.cos(x.imag))
-                _imag = -math.copysign(_INF, math.sin(x.imag))
+                _real = math.copysign(inf, math.cos(x.imag))
+                _imag = -math.copysign(inf, math.sin(x.imag))
             return complex(_real,_imag)
         else:
             # need to raise math domain error if y is +/- infinity and x is not a NaN
@@ -352,13 +358,13 @@ def exp(x):
     """ Return the exponential value e**x."""
     if math.isinf(x.real) or math.isinf(x.imag):
         # need to raise DomainError if y is +/- infinity and x is not -infinity or NaN
-        if math.isinf(x.imag) and (-_INF < x.real < _INF or math.isinf(x.real) and x.real > 0):
+        if math.isinf(x.imag) and (-inf < x.real < inf or math.isinf(x.real) and x.real > 0):
             raise ValueError("math domain error")
 
-        if math.isinf(x.real) and -_INF < x.imag < _INF and x.imag != .0:
+        if math.isinf(x.real) and -inf < x.imag < inf and x.imag != .0:
             if x.real > 0:
-                _real = math.copysign(_INF, cos(x.imag))
-                _imag = math.copysign(_INF, sin(x.imag))
+                _real = math.copysign(inf, cos(x.imag))
+                _imag = math.copysign(inf, sin(x.imag))
             else:
                 _real = math.copysign(.0, cos(x.imag))
                 _imag = math.copysign(.0, sin(x.imag))
@@ -382,9 +388,22 @@ def exp(x):
     return complex(_real, _imag)
 
 def isclose(x, y, *, rel_tol=1e-09, abs_tol=0.0):
+    try:
+        complex(x)
+    except ValueError:
+        raise TypeError(f"must be a number, not {x.__class__.__name__}")
+    try:
+        complex(y)
+    except ValueError:
+        raise TypeError(f"must be a number, not {y.__class__.__name__}")
     rel_tol = float(rel_tol)
     abs_tol = float(abs_tol)
-    return abs(x - y) <= max(rel_tol * max(abs(x), abs(y)), abs_tol)
+    # special cases
+    if x is inf or x is _NINF or y is inf or y is _NINF:
+        return y is x
+    if x is nan or y is nan:
+        return False
+    return abs(x - y) <= max(rel_tol * float(max(abs(x), abs(y))), abs_tol)
 
 @_takes_complex
 def isinf(x):
@@ -439,10 +458,9 @@ def log(x, base=None):
     #if type(x) != complex:
         #x = complex(x)
 
-    if base is not None:
-         x = log(x)
-         base = log(base)
-         x = x/base
+    denom = 1 if base is None else log(base)
+    if not x.imag:
+         return math.log(x.real) / denom
 
     ret = _SPECIAL_VALUE(x, _log_special_values)
     if ret is not None:
@@ -460,16 +478,11 @@ def log(x, base=None):
         else:
             # math.log(+/-0. +/- 0i)
             raise ValueError("math domain error")
-            _real = -_INF
+            _real = -inf
             _imag = math.atan2(x.imag, x.real)
     else:
         h = math.hypot(ax, ay)
-        if 0.71 <= h and h <= 1.73:
-            am = max(ax,ay)
-            an = min(ax,ay)
-            _real = math.log1p((am-1)*(am+1)+an*an)/2.
-        else:
-            _real = math.log(h)
+        _real = math.log(h) / denom
     _imag = math.atan2(x.imag, x.real)
     return complex(_real, _imag)
 
@@ -503,13 +516,13 @@ def sinh(x):
         if math.isinf(x.imag) and not math.isnan(x.real):
             raise ValueError("math domain error")
 
-        if math.isinf(x.real) and -_INF < x.imag < _INF and x.imag != .0:
+        if math.isinf(x.real) and -inf < x.imag < inf and x.imag != .0:
             if x.real > 0:
-                _real = math.copysign(_INF, cos(x.imag))
-                _imag = math.copysign(_INF, sin(x.imag))
+                _real = math.copysign(inf, cos(x.imag))
+                _imag = math.copysign(inf, sin(x.imag))
             else:
-                _real = -math.copysign(_INF, cos(x.imag))
-                _imag = math.copysign(_INF, sin(x.imag))
+                _real = -math.copysign(inf, cos(x.imag))
+                _imag = math.copysign(inf, sin(x.imag))
             return complex(_real, _imag)
 
         return  _SPECIAL_VALUE(x,_sinh_special_values)
@@ -530,7 +543,7 @@ def sinh(x):
 @_takes_complex
 def tan(x):
     """ Return the tangent of x. """
-    s = atanh(complex(-x.imag, x.real))
+    s = tanh(complex(-x.imag, x.real))
     return complex(s.imag, -s.real)
 
 @_takes_complex
@@ -551,11 +564,11 @@ def tanh(x):
     #
 
     if isinf(x):
-        if math.isinf(x.imag) and -_INF < x.real < _INF:
+        if math.isinf(x.imag) and -inf < x.real < inf:
             raise ValueError("math domain error")
 
         # special treatment for tanh(+/-inf + iy) if y is finite and nonzero
-        if math.isinf(x.real) and -_INF < x.imag < _INF and x.imag != .0:
+        if math.isinf(x.real) and -inf < x.imag < inf and x.imag != .0:
             if x.real > 0:
                 _real = 1.0
                 _imag = math.copysign(.0, 2.0*math.sin(x.imag)*math.cos(x.imag))
@@ -589,6 +602,7 @@ for f in keys:
 
 pi = math.pi
 e = math.e
+tau = math.tau
 
 _CM_LARGE_DOUBLE = sys.float_info.max/4
 _CM_SQRT_LARGE_DOUBLE = math.sqrt(_CM_LARGE_DOUBLE)
@@ -605,12 +619,15 @@ else:
     raise ("cmath implementation expects the float base to be either 2 or 16, got "+str(sys.float_info.radix)+" instead.")
 _CM_SCALE_DOWN =int((-(_CM_SCALE_UP+1)/2))
 
-_INF = float('inf')
-_NAN = float('nan')
-_PI  = math.pi
-_P14 = 0.25*math.pi
-_P12 = 0.5*math.pi
-_P34 = 0.75*math.pi
+inf = float('inf')
+infj = complex(0.0, inf)
+_NINF = float('-inf')
+nan = float('nan')
+nanj = complex(0.0, float('nan'))
+
+_P14 = 0.25 * pi
+_P12 = 0.5 * pi
+_P34 = 0.75 * pi
 _U   = -9.5426319407711027e33 # unlikely value, used as placeholder
 
 
@@ -630,7 +647,7 @@ def _SPECIAL_VALUE(z, table):
         return None
 
 def _special_type(x):
-    if -_INF < x < _INF:
+    if -inf < x < inf:
         if x != 0:
             if math.copysign(1.0, x) == 1.0:
                 return _ST_POS
@@ -649,111 +666,111 @@ def _special_type(x):
         return _ST_NINF
 
 _acos_special_values = [
-    [complex(_P34,_INF), complex(_PI,_INF), complex(_PI,_INF), complex(_PI,-_INF), complex(_PI,-_INF), complex(_P34,-_INF), complex(_NAN,_INF)],
-    [complex(_P12,_INF), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_P12,-_INF), complex(_NAN,_NAN)],
-    [complex(_P12,_INF), complex(_U,_U), complex(_P12,0.), complex(_P12,-0.), complex(_U,_U), complex(_P12,-_INF), complex(_P12,_NAN)],
-    [complex(_P12,_INF), complex(_U,_U), complex(_P12,0.), complex(_P12,-0.), complex(_U,_U), complex(_P12,-_INF), complex(_P12,_NAN)],
-    [complex(_P12,_INF), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_P12,-_INF), complex(_NAN,_NAN)],
-    [complex(_P14,_INF), complex(0.,_INF), complex(0.,_INF), complex(0.,-_INF), complex(0.,-_INF), complex(_P14,-_INF), complex(_NAN,_INF)],
-    [complex(_NAN,_INF), complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_NAN,-_INF), complex(_NAN,_NAN)],
+    [complex(_P34,inf), complex(pi,inf), complex(pi,inf), complex(pi,-inf), complex(pi,-inf), complex(_P34,-inf), complex(nan,inf)],
+    [complex(_P12,inf), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_P12,-inf), complex(nan,nan)],
+    [complex(_P12,inf), complex(_U,_U), complex(_P12,0.), complex(_P12,-0.), complex(_U,_U), complex(_P12,-inf), complex(_P12,nan)],
+    [complex(_P12,inf), complex(_U,_U), complex(_P12,0.), complex(_P12,-0.), complex(_U,_U), complex(_P12,-inf), complex(_P12,nan)],
+    [complex(_P12,inf), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_P12,-inf), complex(nan,nan)],
+    [complex(_P14,inf), complex(0.,inf), complex(0.,inf), complex(0.,-inf), complex(0.,-inf), complex(_P14,-inf), complex(nan,inf)],
+    [complex(nan,inf), complex(nan,nan), complex(nan,nan), complex(nan,nan), complex(nan,nan), complex(nan,-inf), complex(nan,nan)],
 ]
 
 _acosh_special_values = [
-    [complex(_INF,-_P34), complex(_INF,-_PI), complex(_INF,-_PI), complex(_INF,_PI), complex(_INF,_PI), complex(_INF,_P34), complex(_INF,_NAN)],
-    [complex(_INF,-_P12), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_INF,_P12), complex(_NAN,_NAN)],
-    [complex(_INF,-_P12), complex(_U,_U), complex(0.,-_P12), complex(0.,_P12), complex(_U,_U), complex(_INF,_P12), complex(_NAN,_NAN)],
-    [complex(_INF,-_P12), complex(_U,_U), complex(0.,-_P12), complex(0.,_P12), complex(_U,_U), complex(_INF,_P12), complex(_NAN,_NAN)],
-    [complex(_INF,-_P12), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_INF,_P12), complex(_NAN,_NAN)],
-    [complex(_INF,-_P14), complex(_INF,-0.), complex(_INF,-0.), complex(_INF,0.), complex(_INF,0.), complex(_INF,_P14), complex(_INF,_NAN)],
-    [complex(_INF,_NAN), complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_INF,_NAN), complex(_NAN,_NAN)],
+    [complex(inf,-_P34), complex(inf,-pi), complex(inf,-pi), complex(inf,pi), complex(inf,pi), complex(inf,_P34), complex(inf,nan)],
+    [complex(inf,-_P12), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(inf,_P12), complex(nan,nan)],
+    [complex(inf,-_P12), complex(_U,_U), complex(0.,-_P12), complex(0.,_P12), complex(_U,_U), complex(inf,_P12), complex(nan,nan)],
+    [complex(inf,-_P12), complex(_U,_U), complex(0.,-_P12), complex(0.,_P12), complex(_U,_U), complex(inf,_P12), complex(nan,nan)],
+    [complex(inf,-_P12), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(inf,_P12), complex(nan,nan)],
+    [complex(inf,-_P14), complex(inf,-0.), complex(inf,-0.), complex(inf,0.), complex(inf,0.), complex(inf,_P14), complex(inf,nan)],
+    [complex(inf,nan), complex(nan,nan), complex(nan,nan), complex(nan,nan), complex(nan,nan), complex(inf,nan), complex(nan,nan)],
 ]
 
 _asinh_special_values = [
-    [complex(-_INF,-_P14), complex(-_INF,-0.), complex(-_INF,-0.), complex(-_INF,0.), complex(-_INF,0.), complex(-_INF,_P14), complex(-_INF,_NAN)],
-    [complex(-_INF,-_P12), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(-_INF,_P12), complex(_NAN,_NAN)],
-    [complex(-_INF,-_P12), complex(_U,_U), complex(-0.,-0.), complex(-0.,0.), complex(_U,_U), complex(-_INF,_P12), complex(_NAN,_NAN)],
-    [complex(_INF,-_P12), complex(_U,_U), complex(0.,-0.), complex(0.,0.), complex(_U,_U), complex(_INF,_P12), complex(_NAN,_NAN)],
-    [complex(_INF,-_P12), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_INF,_P12), complex(_NAN,_NAN)],
-    [complex(_INF,-_P14), complex(_INF,-0.), complex(_INF,-0.), complex(_INF,0.), complex(_INF,0.), complex(_INF,_P14), complex(_INF,_NAN)],
-    [complex(_INF,_NAN), complex(_NAN,_NAN), complex(_NAN,-0.), complex(_NAN,0.), complex(_NAN,_NAN), complex(_INF,_NAN), complex(_NAN,_NAN)],
+    [complex(-inf,-_P14), complex(-inf,-0.), complex(-inf,-0.), complex(-inf,0.), complex(-inf,0.), complex(-inf,_P14), complex(-inf,nan)],
+    [complex(-inf,-_P12), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(-inf,_P12), complex(nan,nan)],
+    [complex(-inf,-_P12), complex(_U,_U), complex(-0.,-0.), complex(-0.,0.), complex(_U,_U), complex(-inf,_P12), complex(nan,nan)],
+    [complex(inf,-_P12), complex(_U,_U), complex(0.,-0.), complex(0.,0.), complex(_U,_U), complex(inf,_P12), complex(nan,nan)],
+    [complex(inf,-_P12), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(inf,_P12), complex(nan,nan)],
+    [complex(inf,-_P14), complex(inf,-0.), complex(inf,-0.), complex(inf,0.), complex(inf,0.), complex(inf,_P14), complex(inf,nan)],
+    [complex(inf,nan), complex(nan,nan), complex(nan,-0.), complex(nan,0.), complex(nan,nan), complex(inf,nan), complex(nan,nan)],
 ]
 
 _atanh_special_values = [
-    [complex(-0.,-_P12), complex(-0.,-_P12), complex(-0.,-_P12), complex(-0.,_P12), complex(-0.,_P12), complex(-0.,_P12), complex(-0.,_NAN)],
-    [complex(-0.,-_P12), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(-0.,_P12), complex(_NAN,_NAN)],
-    [complex(-0.,-_P12), complex(_U,_U), complex(-0.,-0.), complex(-0.,0.), complex(_U,_U), complex(-0.,_P12), complex(-0.,_NAN)],
-    [complex(0.,-_P12), complex(_U,_U), complex(0.,-0.), complex(0.,0.), complex(_U,_U), complex(0.,_P12), complex(0.,_NAN)],
-    [complex(0.,-_P12), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(0.,_P12), complex(_NAN,_NAN)],
-    [complex(0.,-_P12), complex(0.,-_P12), complex(0.,-_P12), complex(0.,_P12), complex(0.,_P12), complex(0.,_P12), complex(0.,_NAN)],
-    [complex(0.,-_P12), complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_NAN,_NAN), complex(0.,_P12), complex(_NAN,_NAN)],
+    [complex(-0.,-_P12), complex(-0.,-_P12), complex(-0.,-_P12), complex(-0.,_P12), complex(-0.,_P12), complex(-0.,_P12), complex(-0.,nan)],
+    [complex(-0.,-_P12), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(-0.,_P12), complex(nan,nan)],
+    [complex(-0.,-_P12), complex(_U,_U), complex(-0.,-0.), complex(-0.,0.), complex(_U,_U), complex(-0.,_P12), complex(-0.,nan)],
+    [complex(0.,-_P12), complex(_U,_U), complex(0.,-0.), complex(0.,0.), complex(_U,_U), complex(0.,_P12), complex(0.,nan)],
+    [complex(0.,-_P12), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(0.,_P12), complex(nan,nan)],
+    [complex(0.,-_P12), complex(0.,-_P12), complex(0.,-_P12), complex(0.,_P12), complex(0.,_P12), complex(0.,_P12), complex(0.,nan)],
+    [complex(0.,-_P12), complex(nan,nan), complex(nan,nan), complex(nan,nan), complex(nan,nan), complex(0.,_P12), complex(nan,nan)],
 ]
 
 _cosh_special_values = [
-    [complex(_INF,_NAN), complex(_U,_U), complex(_INF,0.), complex(_INF,-0.), complex(_U,_U), complex(_INF,_NAN), complex(_INF,_NAN)],
-    [complex(_NAN,_NAN), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_NAN,_NAN), complex(_NAN,_NAN)],
-    [complex(_NAN,0.), complex(_U,_U), complex(1.,0.), complex(1.,-0.), complex(_U,_U), complex(_NAN,0.), complex(_NAN,0.)],
-    [complex(_NAN,0.), complex(_U,_U), complex(1.,-0.), complex(1.,0.), complex(_U,_U), complex(_NAN,0.), complex(_NAN,0.)],
-    [complex(_NAN,_NAN), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_NAN,_NAN), complex(_NAN,_NAN)],
-    [complex(_INF,_NAN), complex(_U,_U), complex(_INF,-0.), complex(_INF,0.), complex(_U,_U), complex(_INF,_NAN), complex(_INF,_NAN)],
-    [complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_NAN,0.), complex(_NAN,0.), complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_NAN,_NAN)],
+    [complex(inf,nan), complex(_U,_U), complex(inf,0.), complex(inf,-0.), complex(_U,_U), complex(inf,nan), complex(inf,nan)],
+    [complex(nan,nan), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(nan,nan), complex(nan,nan)],
+    [complex(nan,0.), complex(_U,_U), complex(1.,0.), complex(1.,-0.), complex(_U,_U), complex(nan,0.), complex(nan,0.)],
+    [complex(nan,0.), complex(_U,_U), complex(1.,-0.), complex(1.,0.), complex(_U,_U), complex(nan,0.), complex(nan,0.)],
+    [complex(nan,nan), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(nan,nan), complex(nan,nan)],
+    [complex(inf,nan), complex(_U,_U), complex(inf,-0.), complex(inf,0.), complex(_U,_U), complex(inf,nan), complex(inf,nan)],
+    [complex(nan,nan), complex(nan,nan), complex(nan,0.), complex(nan,0.), complex(nan,nan), complex(nan,nan), complex(nan,nan)],
 ]
 
 _exp_special_values = [
     [complex(0.,0.), complex(_U,_U), complex(0.,-0.), complex(0.,0.), complex(_U,_U), complex(0.,0.), complex(0.,0.)],
-    [complex(_NAN,_NAN), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_NAN,_NAN), complex(_NAN,_NAN)],
-    [complex(_NAN,_NAN), complex(_U,_U), complex(1.,-0.), complex(1.,0.), complex(_U,_U), complex(_NAN,_NAN), complex(_NAN,_NAN)],
-    [complex(_NAN,_NAN), complex(_U,_U), complex(1.,-0.), complex(1.,0.), complex(_U,_U), complex(_NAN,_NAN), complex(_NAN,_NAN)],
-    [complex(_NAN,_NAN), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_NAN,_NAN), complex(_NAN,_NAN)],
-    [complex(_INF,_NAN), complex(_U,_U), complex(_INF,-0.), complex(_INF,0.), complex(_U,_U), complex(_INF,_NAN), complex(_INF,_NAN)],
-    [complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_NAN,-0.), complex(_NAN,0.), complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_NAN,_NAN)],
+    [complex(nan,nan), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(nan,nan), complex(nan,nan)],
+    [complex(nan,nan), complex(_U,_U), complex(1.,-0.), complex(1.,0.), complex(_U,_U), complex(nan,nan), complex(nan,nan)],
+    [complex(nan,nan), complex(_U,_U), complex(1.,-0.), complex(1.,0.), complex(_U,_U), complex(nan,nan), complex(nan,nan)],
+    [complex(nan,nan), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(nan,nan), complex(nan,nan)],
+    [complex(inf,nan), complex(_U,_U), complex(inf,-0.), complex(inf,0.), complex(_U,_U), complex(inf,nan), complex(inf,nan)],
+    [complex(nan,nan), complex(nan,nan), complex(nan,-0.), complex(nan,0.), complex(nan,nan), complex(nan,nan), complex(nan,nan)],
 ]
 
 _log_special_values = [
-    [complex(_INF,-_P34), complex(_INF,-_PI), complex(_INF,-_PI), complex(_INF,_PI), complex(_INF,_PI), complex(_INF,_P34), complex(_INF,_NAN)],
-    [complex(_INF,-_P12), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_INF,_P12), complex(_NAN,_NAN)],
-    [complex(_INF,-_P12), complex(_U,_U), complex(-_INF,-_PI), complex(-_INF,_PI), complex(_U,_U), complex(_INF,_P12), complex(_NAN,_NAN)],
-    [complex(_INF,-_P12), complex(_U,_U), complex(-_INF,-0.), complex(-_INF,0.), complex(_U,_U), complex(_INF,_P12), complex(_NAN,_NAN)],
-    [complex(_INF,-_P12), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_INF,_P12), complex(_NAN,_NAN)],
-    [complex(_INF,-_P14), complex(_INF,-0.), complex(_INF,-0.), complex(_INF,0.), complex(_INF,0.), complex(_INF,_P14), complex(_INF,_NAN)],
-    [complex(_INF,_NAN), complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_INF,_NAN), complex(_NAN,_NAN)],
+    [complex(inf,-_P34), complex(inf,-pi), complex(inf,-pi), complex(inf,pi), complex(inf,pi), complex(inf,_P34), complex(inf,nan)],
+    [complex(inf,-_P12), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(inf,_P12), complex(nan,nan)],
+    [complex(inf,-_P12), complex(_U,_U), complex(-inf,-pi), complex(-inf,pi), complex(_U,_U), complex(inf,_P12), complex(nan,nan)],
+    [complex(inf,-_P12), complex(_U,_U), complex(-inf,-0.), complex(-inf,0.), complex(_U,_U), complex(inf,_P12), complex(nan,nan)],
+    [complex(inf,-_P12), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(inf,_P12), complex(nan,nan)],
+    [complex(inf,-_P14), complex(inf,-0.), complex(inf,-0.), complex(inf,0.), complex(inf,0.), complex(inf,_P14), complex(inf,nan)],
+    [complex(inf,nan), complex(nan,nan), complex(nan,nan), complex(nan,nan), complex(nan,nan), complex(inf,nan), complex(nan,nan)],
 ]
 
 _sinh_special_values = [
-    [complex(_INF,_NAN), complex(_U,_U), complex(-_INF,-0.), complex(-_INF,0.), complex(_U,_U), complex(_INF,_NAN), complex(_INF,_NAN)],
-    [complex(_NAN,_NAN), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_NAN,_NAN), complex(_NAN,_NAN)],
-    [complex(0.,_NAN), complex(_U,_U), complex(-0.,-0.), complex(-0.,0.), complex(_U,_U), complex(0.,_NAN), complex(0.,_NAN)],
-    [complex(0.,_NAN), complex(_U,_U), complex(0.,-0.), complex(0.,0.), complex(_U,_U), complex(0.,_NAN), complex(0.,_NAN)],
-    [complex(_NAN,_NAN), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_NAN,_NAN), complex(_NAN,_NAN)],
-    [complex(_INF,_NAN), complex(_U,_U), complex(_INF,-0.), complex(_INF,0.), complex(_U,_U), complex(_INF,_NAN), complex(_INF,_NAN)],
-    [complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_NAN,-0.), complex(_NAN,0.), complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_NAN,_NAN)],
+    [complex(inf,nan), complex(_U,_U), complex(-inf,-0.), complex(-inf,0.), complex(_U,_U), complex(inf,nan), complex(inf,nan)],
+    [complex(nan,nan), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(nan,nan), complex(nan,nan)],
+    [complex(0.,nan), complex(_U,_U), complex(-0.,-0.), complex(-0.,0.), complex(_U,_U), complex(0.,nan), complex(0.,nan)],
+    [complex(0.,nan), complex(_U,_U), complex(0.,-0.), complex(0.,0.), complex(_U,_U), complex(0.,nan), complex(0.,nan)],
+    [complex(nan,nan), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(nan,nan), complex(nan,nan)],
+    [complex(inf,nan), complex(_U,_U), complex(inf,-0.), complex(inf,0.), complex(_U,_U), complex(inf,nan), complex(inf,nan)],
+    [complex(nan,nan), complex(nan,nan), complex(nan,-0.), complex(nan,0.), complex(nan,nan), complex(nan,nan), complex(nan,nan)],
 ]
 
 _sqrt_special_values = [
-    [complex(_INF,-_INF), complex(0.,-_INF), complex(0.,-_INF), complex(0.,_INF), complex(0.,_INF), complex(_INF,_INF), complex(_NAN,_INF)],
-    [complex(_INF,-_INF), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_INF,_INF), complex(_NAN,_NAN)],
-    [complex(_INF,-_INF), complex(_U,_U), complex(0.,-0.), complex(0.,0.), complex(_U,_U), complex(_INF,_INF), complex(_NAN,_NAN)],
-    [complex(_INF,-_INF), complex(_U,_U), complex(0.,-0.), complex(0.,0.), complex(_U,_U), complex(_INF,_INF), complex(_NAN,_NAN)],
-    [complex(_INF,-_INF), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_INF,_INF), complex(_NAN,_NAN)],
-    [complex(_INF,-_INF), complex(_INF,-0.), complex(_INF,-0.), complex(_INF,0.), complex(_INF,0.), complex(_INF,_INF), complex(_INF,_NAN)],
-    [complex(_INF,-_INF), complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_INF,_INF), complex(_NAN,_NAN)],
+    [complex(inf,-inf), complex(0.,-inf), complex(0.,-inf), complex(0.,inf), complex(0.,inf), complex(inf,inf), complex(nan,inf)],
+    [complex(inf,-inf), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(inf,inf), complex(nan,nan)],
+    [complex(inf,-inf), complex(_U,_U), complex(0.,-0.), complex(0.,0.), complex(_U,_U), complex(inf,inf), complex(nan,nan)],
+    [complex(inf,-inf), complex(_U,_U), complex(0.,-0.), complex(0.,0.), complex(_U,_U), complex(inf,inf), complex(nan,nan)],
+    [complex(inf,-inf), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(inf,inf), complex(nan,nan)],
+    [complex(inf,-inf), complex(inf,-0.), complex(inf,-0.), complex(inf,0.), complex(inf,0.), complex(inf,inf), complex(inf,nan)],
+    [complex(inf,-inf), complex(nan,nan), complex(nan,nan), complex(nan,nan), complex(nan,nan), complex(inf,inf), complex(nan,nan)],
 ]
 
 _tanh_special_values = [
     [complex(-1.,0.), complex(_U,_U), complex(-1.,-0.), complex(-1.,0.), complex(_U,_U), complex(-1.,0.), complex(-1.,0.)],
-    [complex(_NAN,_NAN), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_NAN,_NAN), complex(_NAN,_NAN)],
-    [complex(_NAN,_NAN), complex(_U,_U), complex(-0.,-0.), complex(-0.,0.), complex(_U,_U), complex(_NAN,_NAN), complex(_NAN,_NAN)],
-    [complex(_NAN,_NAN), complex(_U,_U), complex(0.,-0.), complex(0.,0.), complex(_U,_U), complex(_NAN,_NAN), complex(_NAN,_NAN)],
-    [complex(_NAN,_NAN), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_NAN,_NAN), complex(_NAN,_NAN)],
+    [complex(nan,nan), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(nan,nan), complex(nan,nan)],
+    [complex(nan,nan), complex(_U,_U), complex(-0.,-0.), complex(-0.,0.), complex(_U,_U), complex(nan,nan), complex(nan,nan)],
+    [complex(nan,nan), complex(_U,_U), complex(0.,-0.), complex(0.,0.), complex(_U,_U), complex(nan,nan), complex(nan,nan)],
+    [complex(nan,nan), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(nan,nan), complex(nan,nan)],
     [complex(1.,0.), complex(_U,_U), complex(1.,-0.), complex(1.,0.), complex(_U,_U), complex(1.,0.), complex(1.,0.)],
-    [complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_NAN,-0.), complex(_NAN,0.), complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_NAN,_NAN)],
+    [complex(nan,nan), complex(nan,nan), complex(nan,-0.), complex(nan,0.), complex(nan,nan), complex(nan,nan), complex(nan,nan)],
 ]
 
 _rect_special_values = [
-    [complex(_INF,_NAN), complex(_U,_U), complex(-_INF,0.), complex(-_INF,-0.), complex(_U,_U), complex(_INF,_NAN), complex(_INF,_NAN)],
-    [complex(_NAN,_NAN), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_NAN,_NAN), complex(_NAN,_NAN)],
+    [complex(inf,nan), complex(_U,_U), complex(-inf,0.), complex(-inf,-0.), complex(_U,_U), complex(inf,nan), complex(inf,nan)],
+    [complex(nan,nan), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(nan,nan), complex(nan,nan)],
     [complex(0.,0.), complex(_U,_U), complex(-0.,0.), complex(-0.,-0.), complex(_U,_U), complex(0.,0.), complex(0.,0.)],
     [complex(0.,0.), complex(_U,_U), complex(0.,-0.), complex(0.,0.), complex(_U,_U), complex(0.,0.), complex(0.,0.)],
-    [complex(_NAN,_NAN), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_NAN,_NAN), complex(_NAN,_NAN)],
-    [complex(_INF,_NAN), complex(_U,_U), complex(_INF,-0.), complex(_INF,0.), complex(_U,_U), complex(_INF,_NAN), complex(_INF,_NAN)],
-    [complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_NAN,0.), complex(_NAN,0.), complex(_NAN,_NAN), complex(_NAN,_NAN), complex(_NAN,_NAN)],
+    [complex(nan,nan), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(_U,_U), complex(nan,nan), complex(nan,nan)],
+    [complex(inf,nan), complex(_U,_U), complex(inf,-0.), complex(inf,0.), complex(_U,_U), complex(inf,nan), complex(inf,nan)],
+    [complex(nan,nan), complex(nan,nan), complex(nan,0.), complex(nan,0.), complex(nan,nan), complex(nan,nan), complex(nan,nan)],
 ]

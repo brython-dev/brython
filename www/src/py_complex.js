@@ -39,6 +39,10 @@ complex.__bool__ = function(self){
     return (self.$real != 0 || self.$imag != 0)
 }
 
+complex.__complex__ = function(self){
+    return self
+}
+
 complex.__eq__ = function(self, other){
     if(_b_.isinstance(other, complex)){
         return self.$real.valueOf() == other.$real.valueOf() &&
@@ -174,7 +178,7 @@ complex.__new__ = function(cls){
     // If first argument is not a string, the second argument defaults to 0
     $imag = $imag === missing ? 0 : $imag
 
-    if(arguments.length == 1 && $real.__class__ === complex && $imag == 0){
+    if(arguments.length == 2 && $real.__class__ === complex && $imag == 0){
         return $real
     }
     if(_b_.isinstance($real, [_b_.float, _b_.int]) &&
@@ -187,9 +191,10 @@ complex.__new__ = function(cls){
         return res
     }
 
-    var real_to_num = $B.to_num($real, 
+    var real_to_num = $B.to_num($real,
         ["__complex__", "__float__", "__index__"])
     if(real_to_num === null){
+        console
         throw _b_.TypeError.$factory("complex() first argument must be a " +
             " string or a number, not '" + $B.class_name($real) +"'")
     }
@@ -251,27 +256,33 @@ complex.__pow__ = function(self, other){
 }
 
 complex.__str__ = complex.__repr__ = function(self){
+    var real = _b_.str.$factory(self.$real),
+        imag = _b_.str.$factory(self.$imag)
     if(self.$real == 0){
         if(1 / self.$real < 0){
             if(self.$imag < 0){
-                return "(-0" + self.$imag + "j)"
+                return "(-0" + imag + "j)"
             }else if(self.$imag == 0 && 1 / self.$imag < 0){
-                return "(-0-" + self.$imag + "j)"
-            }else return "(-0+" + self.$imag + "j)"
+                return "(-0-" + imag + "j)"
+            }else return "(-0+" + imag + "j)"
         }else{
             if(self.$imag == 0 && 1 / self.$imag < 0){
-                return "-" + self.$imag + "j"
-            }else{return self.$imag + "j"}
+                return "-" + imag + "j"
+            }else{
+                return imag + "j"
+            }
         }
     }
-    if(self.$imag > 0){return "(" + self.$real + "+" + self.$imag + "j)"}
+    if(self.$imag > 0){
+        return "(" + real + "+" + imag + "j)"
+    }
     if(self.$imag == 0){
         if(1 / self.$imag < 0){
-            return "(" + self.$real + "-" + self.$imag + "j)"
+            return "(" + real + "-" + imag + "j)"
         }
-        return "(" + self.$real + "+" + self.$imag + "j)"
+        return "(" + real + "+" + imag + "j)"
     }
-    return "(" + self.$real + "-" + (-self.$imag) + "j)"
+    return "(" + real + "-" + _b_.str.$factory(-self.$imag) + "j)"
 }
 
 complex.__sqrt__ = function(self) {
