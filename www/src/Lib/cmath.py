@@ -61,7 +61,14 @@ def polar(x):
         r is the distance from 0 and phi the phase angle.
     """
     phi = math.atan2(x.imag, x.real)
-    r = math.sqrt(x.real**2+x.imag**2)
+    if math.isnan(x.imag):
+        if math.isinf(x.real):
+            return abs(x.real), nan
+        return nan, nan
+    elif math.isinf(x.imag):
+        r = float('inf')
+    else:
+        r = math.sqrt(x.real ** 2 + x.imag ** 2)
     return r, phi
 
 def rect(r, phi):

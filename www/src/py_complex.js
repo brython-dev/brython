@@ -273,7 +273,7 @@ complex.__str__ = complex.__repr__ = function(self){
             }
         }
     }
-    if(self.$imag > 0){
+    if(self.$imag > 0 || isNaN(self.$imag)){
         return "(" + real + "+" + imag + "j)"
     }
     if(self.$imag == 0){
