@@ -9879,10 +9879,20 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
                         // In raw mode, always escape.
                         for(var i = 0; i < $string.length; i++){
                             var $car = $string.charAt(i)
-                            if($car == car &&
-                                    (raw || (i == 0 ||
-                                        $string.charAt(i - 1) != '\\'))){
-                                string += '\\'
+                            if($car == car){
+                                if(raw || (i == 0 ||
+                                        $string.charAt(i - 1) != '\\')){
+                                    string += '\\'
+                                }else if(_type == "triple_string"){
+                                    // Unescaped quotes in triple string are allowed
+                                    var j = i - 1
+                                    while($string.charAt(j) == '\\'){
+                                        j--
+                                    }
+                                    if((i - j - 1) % 2 == 0){
+                                        string += '\\'
+                                    }
+                                }
                             }
                             string += $car
                         }

@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,0,'final',0]
 __BRYTHON__.__MAGIC__="3.9.0"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2020-10-20 09:25:20.998020"
-__BRYTHON__.timestamp=1603178720998
+__BRYTHON__.compiled_date="2020-10-22 22:26:54.296990"
+__BRYTHON__.timestamp=1603398414296
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -4785,14 +4785,20 @@ end++}}}else if(src.charAt(end)=='\n' && _type !='triple_string'){
 console.log(pos,end,src.substring(pos,end))
 $pos=end
 $_SyntaxError(C,["EOL while scanning string literal"])}else if(src.charAt(end)==car){if(_type=="triple_string" &&
-src.substr(end,3)!=car+car+car){zone+=src.charAt(end)
+src.substr(end,3)!=car+car+car){
+var j=end-1
+while(src.charAt(j)=='\\'){j--}
+var nb_as=end-j-1 
+if(nb_as % 2==0){}
+zone+=src.charAt(end)
 end++}else{found=true
 $pos=pos
 var $string=zone.substr(1),string=''
 for(var i=0;i < $string.length;i++){var $car=$string.charAt(i)
-if($car==car &&
-(raw ||(i==0 ||
-$string.charAt(i-1)!='\\'))){string+='\\'}
+if($car==car){if(raw ||(i==0 ||
+$string.charAt(i-1)!='\\')){string+='\\'}else if(_type=="triple_string"){var j=i-1
+while($string.charAt(j)=='\\'){j--}
+if((i-j-1)% 2==0){string+='\\'}}}
 string+=$car}
 if(fstring){try{var re=new RegExp("\\\\"+car,"g"),string_no_bs=string.replace(re,car)
 var elts=$B.parse_fstring(string_no_bs)}catch(err){$_SyntaxError(C,[err.toString()])}}
@@ -11040,7 +11046,7 @@ return make_complex(pw*Math.cos(theta),pw*Math.sin(theta))}else{throw _b_.TypeEr
 $B.class_name(other)+"'")}}
 complex.__str__=complex.__repr__=function(self){var real=_b_.str.$factory(self.$real),imag=_b_.str.$factory(self.$imag)
 if(self.$real==0){if(1/self.$real < 0){if(self.$imag < 0){return "(-0"+imag+"j)"}else if(self.$imag==0 && 1/self.$imag < 0){return "(-0-"+imag+"j)"}else return "(-0+"+imag+"j)"}else{if(self.$imag==0 && 1/self.$imag < 0){return "-"+imag+"j"}else{return imag+"j"}}}
-if(self.$imag > 0){return "("+real+"+"+imag+"j)"}
+if(self.$imag > 0 ||isNaN(self.$imag)){return "("+real+"+"+imag+"j)"}
 if(self.$imag==0){if(1/self.$imag < 0){return "("+real+"-"+imag+"j)"}
 return "("+real+"+"+imag+"j)"}
 return "("+real+"-"+_b_.str.$factory(-self.$imag)+"j)"}
