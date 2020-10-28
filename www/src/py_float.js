@@ -580,12 +580,18 @@ float.__pow__ = function(self, other){
 }
 
 float.__repr__ = float.__str__ = function(self){
-    self = float_value(self)
-    if(self.valueOf() == Infinity){return 'inf'}
-    if(self.valueOf() == -Infinity){return '-inf'}
-    if(isNaN(self.valueOf())){return 'nan'}
+    self = float_value(self).valueOf()
+    if(self == Infinity){return 'inf'}
+    if(self == -Infinity){return '-inf'}
+    if(isNaN(self)){return 'nan'}
+    if(self === 0){
+        if(1 / self === -Infinity){
+            return '-0.0'
+        }
+        return '0.0'
+    }
 
-    var res = self.valueOf() + "" // coerce to string
+    var res = self + "" // coerce to string
     if(res.indexOf(".") == -1){
         res += ".0"
     }
@@ -685,6 +691,11 @@ var $op_func = function(self, other){
         return float.$factory(self - bool_value)
     }
     if(isinstance(other, _b_.complex)){
+        if(other.$imag == 0){
+            // 1 - 0.0j is complex(1, 0.0) : the imaginary part is 0.0,
+            // *not* -0.0 (cf. https://bugs.python.org/issue22548)
+            return $B.make_complex(self - other.$real, 0)
+        }
         return $B.make_complex(self - other.$real, -other.$imag)
     }
     if(hasattr(other, "__rsub__")){return getattr(other, "__rsub__")(self)}

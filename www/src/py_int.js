@@ -595,6 +595,11 @@ var $op_func = function(self, other){
         return new Number(self - _b_.float.numerator(other))
     }
     if(_b_.isinstance(other, _b_.complex)){
+        if(other.$imag == 0){
+            // 1 - 0.0j is complex(1, 0.0) : the imaginary part is 0.0,
+            // *not* -0.0 (cf. https://bugs.python.org/issue22548)
+            return $B.make_complex(self - other.$real, 0)
+        }
         return $B.make_complex(self - other.$real, -other.$imag)
     }
     if(_b_.isinstance(other, _b_.bool)){
