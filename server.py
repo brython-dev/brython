@@ -14,10 +14,7 @@ import sysconfig
 import time
 from webbrowser import open_new_tab
 import argparse
-import email
-import datetime
 import urllib.parse
-from http import HTTPStatus
 import socketserver
 
 from server_modular_send_head import CGIHTTPRequestHandler
