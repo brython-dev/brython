@@ -839,6 +839,7 @@ function $$eval(src, _globals, _locals){
         if(res === undefined){return _b_.None}
         return res
     }catch(err){
+        console.log("error", js)
         err.src = src
         err.module = globals_id
         if(err.$py_error === undefined){

@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,0,'final',0]
 __BRYTHON__.__MAGIC__="3.9.0"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2020-11-01 16:29:40.769337"
-__BRYTHON__.timestamp=1604244580769
+__BRYTHON__.compiled_date="2020-11-01 17:08:23.589780"
+__BRYTHON__.timestamp=1604246903589
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -2752,7 +2752,7 @@ case 'eol':
 if(C.expect==','){return $transition(C.parent,token)}
 break}
 $_SyntaxError(C,'token '+token+' after '+C)}
-$GlobalCtx.prototype.add=function(name){if(this.scope.annotations && this.scope.annotations.has(name)){$_SyntaxError(C,["annotated name '"+name+
+$GlobalCtx.prototype.add=function(name){if(this.scope.annotations && this.scope.annotations.has(name)){$_SyntaxError(this,["annotated name '"+name+
 "' can't be global"])}
 this.scope.globals.add(name)
 var mod=this.scope.parent_block
@@ -3618,8 +3618,7 @@ break
 case "~":
 v=$B.long_int.__invert__(v)
 break}
-return '{__class__: $B.long_int, value: "'+v.value+
-'", pos: '+v.pos+'}'}}else if(type=="float"){
+return '$B.fast_long_int("'+v.value+'", '+v.pos+')'}}else if(type=="float"){
 if(/^\d+$/.exec(value)||/^\d+\.\d*$/.exec(value)){return '(new Number('+this.value+'))'}
 return '_b_.float.$factory('+value+')'}else if(type=="imaginary"){return '$B.make_complex(0,'+value+')'}}
 var $OpCtx=$B.parser.$OpCtx=function(C,op){
@@ -6853,7 +6852,8 @@ for(var attr in gns){attr1=$B.from_alias(attr)
 if(attr1.charAt(0)!='$'){if(globals_is_dict){_b_.dict.$setitem(_globals,attr,gns[attr])}else{_globals.$jsobj[attr1]=gns[attr]}}}
 for(var attr in _globals.$string_dict){if(attr.startsWith("$")&& !attr.startsWith("$$")){delete _globals.$string_dict[attr]}}}else{for(var attr in gns){if(attr !=="$src"){current_frame[3][attr]=gns[attr]}}}
 if(res===undefined){return _b_.None}
-return res}catch(err){err.src=src
+return res}catch(err){console.log("error",js)
+err.src=src
 err.module=globals_id
 if(err.$py_error===undefined){throw $B.exception(err)}
 throw err}finally{
@@ -10957,7 +10957,8 @@ coef=mul_pos(coef,base.toString()).value}
 return v10}
 return{__class__:long_int,value:value,pos:pos}}
 $B.set_func_names(long_int,"builtins")
-$B.long_int=long_int})(__BRYTHON__)
+$B.long_int=long_int
+$B.fast_long_int=function(value,pos){return{__class__:$B.long_int,value:value,pos:pos}}})(__BRYTHON__)
 ;
 ;(function($B){var _b_=$B.builtins
 function $UnsupportedOpType(op,class1,class2){throw _b_.TypeError.$factory("unsupported operand type(s) for "+

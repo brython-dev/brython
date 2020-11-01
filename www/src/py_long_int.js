@@ -1278,4 +1278,10 @@ $B.set_func_names(long_int, "builtins")
 
 $B.long_int = long_int
 
+$B.fast_long_int = function(value, pos){
+    return {__class__: $B.long_int,
+            value: value,
+            pos: pos
+           }
+}
 })(__BRYTHON__)

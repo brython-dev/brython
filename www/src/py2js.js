@@ -5484,7 +5484,7 @@ $GlobalCtx.prototype.transition = function(token, value){
 
 $GlobalCtx.prototype.add = function(name){
     if(this.scope.annotations && this.scope.annotations.has(name)){
-        $_SyntaxError(context, ["annotated name '" + name +
+        $_SyntaxError(this, ["annotated name '" + name +
             "' can't be global"])
     }
     this.scope.globals.add(name)
@@ -7329,8 +7329,7 @@ $NumberCtx.prototype.to_js = function(){
                     v = $B.long_int.__invert__(v)
                     break
             }
-            return '{__class__: $B.long_int, value: "' + v.value +
-                '", pos: ' + v.pos + '}'
+            return '$B.fast_long_int("' + v.value + '", ' + v.pos + ')'
         }
     }else if(type == "float"){
         // number literal
