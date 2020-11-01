@@ -235,7 +235,10 @@ var _mod = {
         if(_b_.$isninf(x)){return float.$factory('-inf')}
         if(_b_.$isinf(x)){return float.$factory('inf')}
         var y = float_check(x)
-        return float.$factory(Math.log(y + Math.sqrt(y * y + 1)))
+        if(y == 0 && 1 / y === -Infinity){
+            return new Number(-0.0)
+        }
+        return float.$factory(Math.asinh(y))
     },
     atan: function(x){
         $B.check_nb_args('atan', 1, arguments)
@@ -424,7 +427,7 @@ var _mod = {
          if(_b_.$isninf(x)){return float.$factory(0)}
          if(_b_.$isinf(x)){return float.$factory('inf')}
          var _r = Math.exp(float_check(x))
-         if(_b_.$isinf(_r)){throw OverflowError("math range error")}
+         if(_b_.$isinf(_r)){throw _b_.OverflowError.$factory("math range error")}
          return float.$factory(_r)
     },
     expm1: function(x){
@@ -434,7 +437,7 @@ var _mod = {
          if(_b_.$isninf(x)){return float.$factory(0)}
          if(_b_.$isinf(x)){return float.$factory('inf')}
          var _r = Math.expm1(float_check(x))
-         if(_b_.$isinf(_r)){throw OverflowError("math range error")}
+         if(_b_.$isinf(_r)){throw _b_.OverflowError.$factory("math range error")}
          return float.$factory(_r)
     },
     //fabs: function(x){ return x>0?float.$factory(x):float.$factory(-x)},
@@ -595,14 +598,7 @@ var _mod = {
                     arguments, {}, "args", null),
             args = [x, y].concat($.args),
             res = 0
-        for (var i = 0, len = args.length; i < len; i++){
-            if(_b_.$isinf(args[i])){
-                return float.$factory('inf')
-            }
-            float_check(args[i])
-            res += args[i] * args[i]
-        }
-        return float.$factory(Math.sqrt(res))
+        return float.$factory(Math.hypot(...args))
     },
     inf: float.$factory('inf'),
     isclose: function(){
@@ -892,7 +888,7 @@ var _mod = {
       if(y < 0){throw ValueError.$factory("math range error")}
       if(_b_.$isinf(y)){return float.$factory('inf')}
       var _r = Math.sqrt(y)
-      if(_b_.$isinf(_r)){throw OverflowError("math range error")}
+      if(_b_.$isinf(_r)){throw _b_.OverflowError.$factory("math range error")}
       return float.$factory(_r)
     },
     tan: function(x) {

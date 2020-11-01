@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,0,'final',0]
 __BRYTHON__.__MAGIC__="3.9.0"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2020-10-28 11:10:12.744828"
-__BRYTHON__.timestamp=1603879812744
+__BRYTHON__.compiled_date="2020-11-01 16:29:40.769337"
+__BRYTHON__.timestamp=1604244580769
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -4220,7 +4220,8 @@ case 'finally':
 case 'single_kw':
 break
 default:
-$_SyntaxError(C,"no clause after try")}}
+$pos=node.parent.children[rank+1].pos
+$_SyntaxError(node.parent.children[rank+1].C.tree[0],"no clause after try")}}
 var scope=$get_scope(this)
 var error_name=create_temp_name('$err')
 var failed_name="$locals."+create_temp_name('$failed')
@@ -4699,6 +4700,7 @@ continue}
 new_node.indent=indent
 new_node.line_num=lnum
 new_node.module=module
+new_node.pos=pos
 if(current.is_body_node){
 current.indent=indent}
 if(indent > current.indent){
@@ -9848,7 +9850,8 @@ x1==Number.POSITIVE_INFINITY ||x1==Number.NEGATIVE_INFINITY}
 _b_.$isnan=function(x){var x1=x
 if(isinstance(x,float)){x1=float.numerator(x)}
 return isNaN(x1)}
-_b_.$fabs=function(x){return x > 0 ? float.$factory(x):float.$factory(-x)}
+_b_.$fabs=function(x){if(x==0){return new Number(0)}
+return x > 0 ? float.$factory(x):float.$factory(-x)}
 _b_.$frexp=function(x){var x1=x
 if(isinstance(x,float)){x1=x.valueOf()}
 if(isNaN(x1)||_b_.$isinf(x1)){return[x1,-1]}
@@ -9987,7 +9990,7 @@ other=float_value(other)
 if(isinstance(other,[_b_.int,float])){if(other.valueOf()==0){throw ZeroDivisionError.$factory("division by zero")}
 return float.$factory(self/other)}
 if(isinstance(other,_b_.complex)){var cmod=other.$real*other.$real+other.$imag*other.$imag
-if(cmod==0){throw ZeroDivisionError.$factory("division by zero")}
+if(cmod==0){throw _b_.ZeroDivisionError.$factory("division by zero")}
 return $B.make_complex(float.$factory(self*other.$real/cmod),float.$factory(-self*other.$imag/cmod))}
 if(hasattr(other,"__rtruediv__")){return getattr(other,"__rtruediv__")(self)}
 $err("/",other)}
@@ -11047,12 +11050,13 @@ return make_complex(pw*Math.cos(theta),pw*Math.sin(theta))}else{throw _b_.TypeEr
 $B.class_name(other)+"'")}}
 complex.__str__=complex.__repr__=function(self){var real=_b_.str.$factory(self.$real),imag=_b_.str.$factory(self.$imag)
 if(self.$real instanceof Number && self.$real==parseInt(self.$real)){real=_b_.str.$factory(parseInt(self.$real))}
-if(self.$imag instanceof Number && self.$imag==parseInt(self.$imag)){imag=_b_.str.$factory(parseInt(self.$imag))}
+if(self.$imag instanceof Number && self.$imag==parseInt(self.$imag)){imag=_b_.str.$factory(parseInt(self.$imag))
+if(self.$imag==0 && 1/self.$imag===-Infinity){imag="-0"}}
 if(self.$real==0){if(1/self.$real < 0){if(imag.startsWith('-')){return "-0"+imag+"j"}
 return "-0+"+imag+"j"}else{return imag+"j"}}
 if(self.$imag > 0 ||isNaN(self.$imag)){return "("+real+"+"+imag+"j)"}
-if(self.$imag==0){if(1/self.$imag < 0){return "("+real+imag+"j)"}
-return "("+real+"+"+imag+"j)"}
+if(self.$imag==0){if(1/self.$imag < 0){return "("+real+"-0j)"}
+return "("+real+"+0j)"}
 return "("+real+"-"+_b_.str.$factory(-self.$imag)+"j)"}
 complex.__sqrt__=function(self){if(self.$imag==0){return complex(Math.sqrt(self.$real))}
 var r=self.$real,i=self.$imag,_a=Math.sqrt((r+sqrt)/2),_b=Number.sign(i)*Math.sqrt((-r+sqrt)/2)

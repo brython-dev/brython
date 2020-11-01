@@ -353,7 +353,12 @@ _b_.$isnan = function(x) {
     return isNaN(x1)
 }
 
-_b_.$fabs = function(x){return x > 0 ? float.$factory(x) : float.$factory(-x)}
+_b_.$fabs = function(x){
+    if(x == 0){
+        return new Number(0)
+    }
+    return x > 0 ? float.$factory(x) : float.$factory(-x)
+}
 
 _b_.$frexp = function(x){
     var x1 = x
@@ -660,8 +665,9 @@ float.__truediv__ = function(self, other){
     }
     if(isinstance(other, _b_.complex)){
         var cmod = other.$real * other.$real + other.$imag * other.$imag
-        if(cmod == 0){throw ZeroDivisionError.$factory("division by zero")}
-
+        if(cmod == 0){
+            throw _b_.ZeroDivisionError.$factory("division by zero")
+        }
         return $B.make_complex(float.$factory(self * other.$real / cmod),
                            float.$factory(-self * other.$imag / cmod))
     }
@@ -799,7 +805,9 @@ float.$factory = function (value){
             return new Number(0)
     }
 
-    if(typeof value == "number"){return new Number(value)}
+    if(typeof value == "number"){
+        return new Number(value)
+    }
     if(isinstance(value, float)){return float_value(value)}
     if(isinstance(value, bytes)){
       var s = getattr(value, "decode")("latin-1")

@@ -263,6 +263,9 @@ complex.__str__ = complex.__repr__ = function(self){
     }
     if(self.$imag instanceof Number && self.$imag == parseInt(self.$imag)){
         imag = _b_.str.$factory(parseInt(self.$imag))
+        if(self.$imag == 0 && 1 / self.$imag === -Infinity){
+            imag = "-0"
+        }
     }
     if(self.$real == 0){
         if(1 / self.$real < 0){
@@ -279,9 +282,9 @@ complex.__str__ = complex.__repr__ = function(self){
     }
     if(self.$imag == 0){
         if(1 / self.$imag < 0){
-            return "(" + real + imag + "j)"
+            return "(" + real + "-0j)"
         }
-        return "(" + real + "+" + imag + "j)"
+        return "(" + real + "+0j)"
     }
     return "(" + real + "-" + _b_.str.$factory(-self.$imag) + "j)"
 }
