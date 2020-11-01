@@ -8551,7 +8551,10 @@ $TryCtx.prototype.transform = function(node, rank){
             case 'single_kw':
                 break
             default:
-                $_SyntaxError(context, "no clause after try")
+                // Restore $pos
+                $pos = node.parent.children[rank + 1].pos
+                $_SyntaxError(node.parent.children[rank + 1].context.tree[0],
+                    "no clause after try")
         }
     }
     var scope = $get_scope(this)
@@ -9682,6 +9685,7 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
             new_node.indent = indent
             new_node.line_num = lnum
             new_node.module = module
+            new_node.pos = pos
 
             if(current.is_body_node){
                 // eg in "def f(): yield from A"
