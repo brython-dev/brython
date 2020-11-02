@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,0,'final',0]
 __BRYTHON__.__MAGIC__="3.9.0"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2020-11-02 13:27:36.658546"
-__BRYTHON__.timestamp=1604320056658
+__BRYTHON__.compiled_date="2020-11-02 15:05:45.291290"
+__BRYTHON__.timestamp=1604325945291
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -7382,6 +7382,7 @@ if(!(typeof attr=='string')){throw _b_.TypeError.$factory("setattr(): attribute 
 return $B.$setattr(obj,attr,value)}
 $B.$setattr=function(obj,attr,value){
 var $test=false 
+var unaliased=$B.from_alias(attr)
 if($B.aliased_names[attr]){attr='$$'+attr}else if(attr=='__dict__'){
 if(! isinstance(value,_b_.dict)){throw _b_.TypeError.$factory("__dict__ must be set to a dictionary, "+
 "not a '"+$B.class_name(value)+"'")}
@@ -7438,13 +7439,13 @@ if(klass && klass.__slots__ && special_attrs.indexOf(attr)==-1 &&
 ! _setattr){function mangled_slots(klass){if(klass.__slots__){if(Array.isArray(klass.__slots__)){return klass.__slots__.map(function(item){if(item.startsWith("__")&& ! item.endsWith("_")){return "_"+klass.$infos.__name__+item}else{return item}})}else{return klass.__slots__}}
 return[]}
 var has_slot=false
-if(mangled_slots(klass).indexOf(attr)>-1){has_slot=true}else{for(var i=0;i < klass.__mro__.length;i++){var kl=klass.__mro__[i]
-if(mangled_slots(kl).indexOf(attr)>-1){has_slot=true
+if(mangled_slots(klass).indexOf(unaliased)>-1){has_slot=true}else{for(var i=0;i < klass.__mro__.length;i++){var kl=klass.__mro__[i]
+if(mangled_slots(kl).indexOf(unaliased)>-1){has_slot=true
 break}}}
 if(! has_slot){throw _b_.AttributeError.$factory("'"+klass.$infos.__name__+
-"' object has no attribute '"+attr+"'")}}
+"' object has no attribute '"+unaliased+"'")}}
 if($test){console.log("attr",attr,"use _setattr",_setattr)}
-if(!_setattr){if(obj.__dict__===undefined){obj[attr]=value}else{_b_.dict.$setitem(obj.__dict__,$B.from_alias(attr),value)}
+if(!_setattr){if(obj.__dict__===undefined){obj[attr]=value}else{_b_.dict.$setitem(obj.__dict__,unaliased,value)}
 if($test){console.log("no setattr, obj",obj)}}else{_setattr(obj,attr,value)}
 return None}
 function sorted(){var $=$B.args('sorted',1,{iterable:null},['iterable'],arguments,{},null,'kw')
