@@ -1405,7 +1405,7 @@ $AttrCtx.prototype.to_js = function(){
                     return [js + ".__class__ && " + js + ".__dict__ && !" +
                         js + ".__class__.$has_setattr && ! " + js +
                         ".$is_class ? _b_.dict.$setitem(" + js +
-                        ".__dict__, '" + this.name +
+                        ".__dict__, '" + $B.from_alias(this.name) +
                         "', ", ") : $B.$setattr(" + js +
                         ', "' + this.name + '", ']
                 }

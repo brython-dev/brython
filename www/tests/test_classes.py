@@ -623,4 +623,17 @@ class WithBuiltinFuncs:
 
 WithBuiltinFuncs().test()
 
+# Set attributes with aliased names
+class A:
+
+    def __init__(self):
+        self.length = 0
+
+
+a = A()
+a.message = "test"
+assert a.__dict__["message"] == "test"
+assert a.length == 0
+
+
 print('passed all tests..')

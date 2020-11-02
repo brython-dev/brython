@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,0,'final',0]
 __BRYTHON__.__MAGIC__="3.9.0"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2020-11-01 17:08:23.589780"
-__BRYTHON__.timestamp=1604246903589
+__BRYTHON__.compiled_date="2020-11-02 13:27:36.658546"
+__BRYTHON__.timestamp=1604320056658
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -742,7 +742,7 @@ this.assign_self=true
 return[js+".__class__ && "+js+".__dict__ && !"+
 js+".__class__.$has_setattr && ! "+js+
 ".$is_class ? _b_.dict.$setitem("+js+
-".__dict__, '"+this.name+
+".__dict__, '"+$B.from_alias(this.name)+
 "', ",") : $B.$setattr("+js+
 ', "'+this.name+'", ']}}}}
 if(this.func=='setattr'){
@@ -5445,9 +5445,9 @@ if(attr==="__class__"){return klass}
 var res=obj[attr]
 if(Array.isArray(obj)&& Array.prototype[attr]!==undefined){
 res=undefined}
-if(res===undefined && obj.__dict__){var dict=obj.__dict__
-if(dict.$string_dict.hasOwnProperty(attr)){if($test){console.log("__dict__ hasOwnProperty",attr,dict.$string_dict[attr])}
-return dict.$string_dict[attr][0]}}
+if(res===undefined && obj.__dict__){var dict=obj.__dict__,attr1=$B.from_alias(attr)
+if(dict.$string_dict.hasOwnProperty(attr1)){if($test){console.log("__dict__ hasOwnProperty",attr1,dict.$string_dict[attr1])}
+return dict.$string_dict[attr1][0]}}
 if(res===undefined){
 function check(obj,kl,attr){var v=kl[attr]
 if(v !==undefined){return v}}
@@ -6852,8 +6852,7 @@ for(var attr in gns){attr1=$B.from_alias(attr)
 if(attr1.charAt(0)!='$'){if(globals_is_dict){_b_.dict.$setitem(_globals,attr,gns[attr])}else{_globals.$jsobj[attr1]=gns[attr]}}}
 for(var attr in _globals.$string_dict){if(attr.startsWith("$")&& !attr.startsWith("$$")){delete _globals.$string_dict[attr]}}}else{for(var attr in gns){if(attr !=="$src"){current_frame[3][attr]=gns[attr]}}}
 if(res===undefined){return _b_.None}
-return res}catch(err){console.log("error",js)
-err.src=src
+return res}catch(err){err.src=src
 err.module=globals_id
 if(err.$py_error===undefined){throw $B.exception(err)}
 throw err}finally{
@@ -6926,7 +6925,8 @@ if($test){console.log("$getattr",attr,obj,klass)}
 if(klass !==undefined && klass.__bases__ &&
 (klass.__bases__.length==0 ||
 (klass.__bases__.length==1 &&
-klass.__bases__[0]===_b_.object))){if(obj.hasOwnProperty(attr)){return obj[attr]}else if(obj.__dict__ &&
+klass.__bases__[0]===_b_.object))){if($test){console.log("class without parent")}
+if(obj.hasOwnProperty(attr)){return obj[attr]}else if(obj.__dict__ &&
 obj.__dict__.$string_dict.hasOwnProperty(attr)&&
 !(klass.hasOwnProperty(attr)&&
 klass[attr].__get__)){return obj.__dict__.$string_dict[attr][0]}else if(klass.hasOwnProperty(attr)){if(typeof klass[attr]!="function" &&
@@ -7444,7 +7444,7 @@ break}}}
 if(! has_slot){throw _b_.AttributeError.$factory("'"+klass.$infos.__name__+
 "' object has no attribute '"+attr+"'")}}
 if($test){console.log("attr",attr,"use _setattr",_setattr)}
-if(!_setattr){if(obj.__dict__===undefined){obj[attr]=value}else{_b_.dict.$setitem(obj.__dict__,attr,value)}
+if(!_setattr){if(obj.__dict__===undefined){obj[attr]=value}else{_b_.dict.$setitem(obj.__dict__,$B.from_alias(attr),value)}
 if($test){console.log("no setattr, obj",obj)}}else{_setattr(obj,attr,value)}
 return None}
 function sorted(){var $=$B.args('sorted',1,{iterable:null},['iterable'],arguments,{},null,'kw')
@@ -12010,7 +12010,7 @@ var rslt=kwarg_key.exec(s.substring(newpos))
 if(! rslt){throw _b_.ValueError.$factory("incomplete format key")}
 var key=rslt[1]
 newpos+=rslt[0].length
-try{var self=getitem(key)}catch(err){if(err.name==="KeyError"){throw err}
+try{var self=getitem(key)}catch(err){if(err.__class__===_b_.KeyError){throw err}
 throw _b_.TypeError.$factory("format requires a mapping")}
 return get_string_value(s,self)}
 var $get_arg_string=function(s){

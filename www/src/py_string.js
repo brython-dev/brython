@@ -672,7 +672,6 @@ var UnsupportedChar = function(){
 }
 
 str.__mod__ = function(self, args) {
-
     var length = self.length,
         pos = 0 | 0,
         argpos = null,
@@ -695,7 +694,7 @@ str.__mod__ = function(self, args) {
         try{
             var self = getitem(key)
         }catch(err){
-            if(err.name === "KeyError"){
+            if(err.__class__ === _b_.KeyError){
                 throw err
             }
             throw _b_.TypeError.$factory("format requires a mapping")

@@ -131,8 +131,8 @@ class LockType(object):
         """Release the dummy lock."""
         # XXX Perhaps shouldn't actually bother to test?  Could lead
         #     to problems for complex, threaded code.
-        if not self.locked_status:
-            raise error
+        #if not self.locked_status:
+        #    raise error
         self.locked_status = False
         return True
 
