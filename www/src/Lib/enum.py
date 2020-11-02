@@ -104,9 +104,9 @@ class _EnumDict(dict):
                 # enum overwriting a descriptor?
                 raise TypeError('%r already defined as: %r' % (key, self[key]))
             if isinstance(value, auto):
-                self._auto_called = True
                 if value.value == _auto_null:
                     value.value = self._generate_next_value(key, 1, len(self._member_names), self._last_values[:])
+                    self._auto_called = True
                 value = value.value
             self._member_names.append(key)
             self._last_values.append(value)
@@ -628,7 +628,7 @@ class Enum(metaclass=EnumMeta):
 
     @classmethod
     def _missing_(cls, value):
-        raise ValueError("%r is not a valid %s" % (value, cls.__qualname__))
+        return None
 
     def __repr__(self):
         return "<%s.%s: %r>" % (

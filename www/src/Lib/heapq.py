@@ -468,10 +468,7 @@ def nsmallest(n, iterable, key=None):
     if n == 1:
         it = iter(iterable)
         sentinel = object()
-        if key is None:
-            result = min(it, default=sentinel)
-        else:
-            result = min(it, default=sentinel, key=key)
+        result = min(it, default=sentinel, key=key)
         return [] if result is sentinel else [result]
 
     # When n>=size, it's faster to use sorted()
@@ -531,10 +528,7 @@ def nlargest(n, iterable, key=None):
     if n == 1:
         it = iter(iterable)
         sentinel = object()
-        if key is None:
-            result = max(it, default=sentinel)
-        else:
-            result = max(it, default=sentinel, key=key)
+        result = max(it, default=sentinel, key=key)
         return [] if result is sentinel else [result]
 
     # When n>=size, it's faster to use sorted()
@@ -583,9 +577,6 @@ def nlargest(n, iterable, key=None):
     return [elem for (k, order, elem) in result]
 
 # If available, use C implementation
-# Brython - specific : remove next line, _heapq is absent
-
-"""
 try:
     from _heapq import *
 except ImportError:
@@ -602,9 +593,9 @@ try:
     from _heapq import _heappop_max
 except ImportError:
     pass
-"""
+
 
 if __name__ == "__main__":
 
-    import doctest
-    print(doctest.testmod())
+    import doctest # pragma: no cover
+    print(doctest.testmod()) # pragma: no cover
