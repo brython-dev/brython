@@ -1,8 +1,8 @@
 __BRYTHON__.implementation = [3, 9, 0, 'final', 0]
 __BRYTHON__.__MAGIC__ = "3.9.0"
 __BRYTHON__.version_info = [3, 9, 0, 'final', 0]
-__BRYTHON__.compiled_date = "2020-11-02 15:05:45.291290"
-__BRYTHON__.timestamp = 1604325945291
+__BRYTHON__.compiled_date = "2020-11-03 21:34:58.908604"
+__BRYTHON__.timestamp = 1604435698908
 __BRYTHON__.builtin_module_names = ["_aio",
     "_ajax",
     "_base64",

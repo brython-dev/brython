@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,0,'final',0]
 __BRYTHON__.__MAGIC__="3.9.0"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2020-11-02 15:05:45.291290"
-__BRYTHON__.timestamp=1604325945291
+__BRYTHON__.compiled_date="2020-11-03 21:34:58.908604"
+__BRYTHON__.timestamp=1604435698908
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -9236,8 +9236,7 @@ items.push($B.JSObj.$factory(nxt.value))}}else if(self.length !==undefined && se
 return JSObj_iterator.$factory(items)}else if(self.length !==undefined && self.item !==undefined){
 for(var i=0;i < self.length;i++){items.push($B.JSObj.$factory(self.js.item(i)))}
 return JSObj_iterator.$factory(items)}
-var _dict=$B.JSObj.to_dict(self)
-return _b_.dict.__iter__(_dict)}
+return JSObj_iterator.$factory(Object.keys(self))}
 $B.JSObj.__len__=function(self){if(typeof self.length=='number'){return self.length}
 throw _b_.AttributeError.$factory(self+' has no attribute __len__')}
 $B.JSObj.__repr__=$B.JSObj.__str__=function(self){return '<Javascript '+self.constructor.name+' object: '+

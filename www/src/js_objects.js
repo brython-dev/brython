@@ -513,8 +513,7 @@ $B.JSObj.__iter__ = function(self){
         return JSObj_iterator.$factory(items)
     }
     // Else iterate on the dictionary built from the JS object
-    var _dict = $B.JSObj.to_dict(self)
-    return _b_.dict.__iter__(_dict)
+    return JSObj_iterator.$factory(Object.keys(self))
 }
 
 $B.JSObj.__len__ = function(self){
