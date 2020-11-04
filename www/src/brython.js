@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,0,'final',0]
 __BRYTHON__.__MAGIC__="3.9.0"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2020-11-04 11:28:13.745992"
-__BRYTHON__.timestamp=1604485693745
+__BRYTHON__.compiled_date="2020-11-04 11:42:34.331242"
+__BRYTHON__.timestamp=1604486554331
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -3844,14 +3844,25 @@ $PackedCtx.prototype.toString=function(){return '(packed) '+this.tree}
 $PackedCtx.prototype.transition=function(token,value){var C=this
 if(C.tree.length > 0 && token=="["){
 return $transition(C.tree[0],token,value)}
-if(token=='id'){var expr=new $AbstractExprCtx(C,false)
+switch(token){case 'id':
+var expr=new $AbstractExprCtx(C,false)
 expr.packed=true
 C.parent.expect=','
 var id=$transition(expr,token,value)
-return id}else if(token=="["){C.parent.expect=','
-return new $ListOrTupleCtx(C,"list")}else if(token=="("){C.parent.expect=','
-return new $ListOrTupleCtx(C,"tuple")}else if(token=="]"){return $transition(C.parent,token,value)}else if(token=="{"){C.parent.expect=','
-return new $DictOrSetCtx(C)}
+return id
+case "[":
+C.parent.expect=','
+return new $ListOrTupleCtx(C,"list")
+case "(":
+C.parent.expect=','
+return new $ListOrTupleCtx(C,"tuple")
+case "]":
+return $transition(C.parent,token,value)
+case "{":
+C.parent.expect=','
+return new $DictOrSetCtx(C)
+case 'op':
+$_SyntaxError(C,["can't use starred expression here"])}
 return C.parent.transition(token,C)}
 $PackedCtx.prototype.to_js=function(){this.js_processed=true
 return $to_js(this.tree)}
