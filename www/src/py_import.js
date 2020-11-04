@@ -717,8 +717,7 @@ var finder_path = {
     },
 
     find_spec : function(cls, fullname, path, prev_module) {
-        var current_module = $B.last($B.frames_stack)[2]
-        if($B.VFS && $B.VFS[current_module]){
+        if($B.VFS && $B.VFS[fullname]){
             // If current module is in VFS (ie standard library) it's
             // pointless to search in other locations
             return _b_.None
@@ -758,7 +757,9 @@ var finder_path = {
                     find_spec :
                     $B.$getattr(find_spec, "__call__")
             var spec = fs_func(fullname, prev_module)
-            if(!$B.is_none(spec)){return spec}
+            if(!$B.is_none(spec)){
+                return spec
+            }
         }
         return _b_.None
     }

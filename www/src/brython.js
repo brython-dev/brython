@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,0,'final',0]
 __BRYTHON__.__MAGIC__="3.9.0"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2020-11-04 11:42:34.331242"
-__BRYTHON__.timestamp=1604486554331
+__BRYTHON__.compiled_date="2020-11-04 12:06:42.373895"
+__BRYTHON__.timestamp=1604488002373
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -9546,8 +9546,7 @@ return _b_.None},exec_module :function(cls,_module){var _spec=$B.$getattr(_modul
 _module.$is_package=_spec.loader_state.is_package,delete _spec.loader_state["code"]
 var src_type=_spec.loader_state.type
 if(src_type=="py" ||src_type=="pyc.js"){run_py(code,_spec.origin,_module,src_type=="pyc.js")}
-else if(_spec.loader_state.type=="js"){run_js(code,_spec.origin,_module)}},find_module:function(cls,name,path){return finder_path.find_spec(cls,name,path)},find_spec :function(cls,fullname,path,prev_module){var current_module=$B.last($B.frames_stack)[2]
-if($B.VFS && $B.VFS[current_module]){
+else if(_spec.loader_state.type=="js"){run_js(code,_spec.origin,_module)}},find_module:function(cls,name,path){return finder_path.find_spec(cls,name,path)},find_spec :function(cls,fullname,path,prev_module){if($B.VFS && $B.VFS[fullname]){
 return _b_.None}
 if($B.is_none(path)){
 path=$B.path}
@@ -9566,7 +9565,8 @@ var find_spec=$B.$getattr(finder,"find_spec"),fs_func=typeof find_spec=="functio
 find_spec :
 $B.$getattr(find_spec,"__call__")
 var spec=fs_func(fullname,prev_module)
-if(!$B.is_none(spec)){return spec}}
+if(!$B.is_none(spec)){console.log("finder_path, return spec",spec)
+return spec}}
 return _b_.None}}
 $B.set_func_names(finder_path,"<import>")
 for(var method in finder_path){if(typeof finder_path[method]=="function"){finder_path[method]=_b_.classmethod.$factory(
