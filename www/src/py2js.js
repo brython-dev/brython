@@ -752,7 +752,7 @@ $AbstractExprCtx.prototype.transition = function(token, value){
             }
             $_SyntaxError(context, 'token ' + token + ' after ' +
                 context)
-        case '=':
+        case '=', 'in':
             $_SyntaxError(context, 'token ' + token + ' after ' +
                 context)
         case 'yield':
@@ -4113,7 +4113,6 @@ $ExprCtx.prototype.transition = function(token, value){
             if(context.expect == ','){
                 return $transition(context, 'op', 'in')
             }
-            break
         case ',':
             if(context.expect == ','){
                 if(context.with_commas ||
@@ -4542,7 +4541,7 @@ $ForExpr.prototype.transition = function(token, value){
                 $_SyntaxError(context, "missing target between 'for' and 'in'")
             }
             return new $AbstractExprCtx(
-                new $ExprCtx(context,'target list', true), false)
+                new $ExprCtx(context, 'target list', true), false)
         case ':':
             if(context.tree.length < 2 // issue 638
                     || context.tree[1].tree[0].type == "abstract_expr"){

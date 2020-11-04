@@ -2768,7 +2768,10 @@ try:
     raise Exception("should have raised TypeError")
 except TypeError as exc:
     assert exc.args[0] == "'type' object is not subscriptable"
-    
+
+# issue 1529
+assertRaises(SyntaxError, exec, "for x in in range(1):\n pass")
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
