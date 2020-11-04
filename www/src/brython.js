@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,0,'final',0]
 __BRYTHON__.__MAGIC__="3.9.0"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2020-11-04 12:06:42.373895"
-__BRYTHON__.timestamp=1604488002373
+__BRYTHON__.compiled_date="2020-11-04 16:35:12.252290"
+__BRYTHON__.timestamp=1604504112252
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5126,7 +5126,7 @@ meta_path.push($B.finders.stdlib_static)
 if($B.path.length > 3){$B.path.shift()
 $B.path.shift()}}
 if($B.protocol !=="file"){meta_path.push($B.finders.path)
-path_hooks.push($B.$path_hooks[0])}
+path_hooks.push($B.url_hook)}
 if($B.$options.cpython_import){if($B.$options.cpython_import=="replace"){$B.path.pop()}
 meta_path.push($B.finders.CPython)}
 $B.meta_path=meta_path
@@ -9296,21 +9296,17 @@ for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}})(__BRYTH
 ;
 
 ;(function($B){var _b_=$B.builtins,_window=self
-var module=$B.module={__class__ :_b_.type,__mro__:[_b_.object],$infos:{__module__:"builtins",__name__:"module"},$is_class:true}
-module.__init__=function(){}
-module.__new__=function(cls,name,doc,$package){return{
+var Module=$B.module=$B.make_class("module",function(name,doc,$package){return{
+__class__:Module,__name__:name,__doc__:doc ||_b_.None,__package__:$package ||_b_.None}}
+)
+Module.__new__=function(cls,name,doc,$package){return{
 __class__:cls,__name__:name,__doc__:doc ||_b_.None,__package__:$package ||_b_.None}}
-module.__repr__=module.__str__=function(self){var res="<module "+self.__name__
+Module.__repr__=Module.__str__=function(self){var res="<module "+self.__name__
 if(self.__file__===undefined){res+=" (built-in)"}
 return res+">"}
-module.__setattr__=function(self,attr,value){if(self.__name__=="__builtins__"){
+Module.__setattr__=function(self,attr,value){if(self.__name__=="__builtins__"){
 $B.builtins[attr]=value}else{self[attr]=value}}
-module.$factory=function(name,doc,$package){return{
-__class__:module,__name__:name,__doc__:doc ||_b_.None,__package__:$package ||_b_.None}}
-$B.set_func_names(module,"builtins")
-function parent_package(mod_name){var parts=mod_name.split(".")
-parts.pop()
-return parts.join(".")}
+$B.set_func_names(Module,"builtins")
 function $download_module(mod,url,$package){var xhr=new XMLHttpRequest(),fake_qs="?v="+(new Date().getTime()),res=null,mod_name=mod.__name__
 var timer=_window.setTimeout(function(){xhr.abort()},5000)
 if($B.$options.cache){xhr.open("GET",url,false)}else{xhr.open("GET",url+fake_qs,false)}
@@ -9346,8 +9342,8 @@ for(var attr in $module){if(typeof $module[attr]=="function"){$module[attr].$inf
 if(_module !==undefined){
 for(var attr in $module){_module[attr]=$module[attr]}
 $module=_module
-$module.__class__=module }else{
-$module.__class__=module
+$module.__class__=Module }else{
+$module.__class__=Module
 $module.__name__=_module.__name__
 $module.__repr__=$module.__str__=function(){if($B.builtin_module_names.indexOf(_module.name)>-1){return "<module '"+_module.__name__+"' (built-in)>"}
 return "<module '"+_module.__name__+"' from "+path+" >"}
@@ -9392,7 +9388,7 @@ console.log("module",module)
 console.log(root)
 if($B.debug > 1){console.log(js)}
 for(var attr in err){console.log(attr,err[attr])}
-console.log(_b_.getattr(err,"info","[no info]"))
+console.log($B.$getattr(err,"info","[no info]"))
 console.log("message: "+err.$message)
 console.log("filename: "+err.fileName)
 console.log("linenum: "+err.lineNumber)}
@@ -9409,11 +9405,44 @@ for(var attr in err){console.log(attr+" "+err[attr])}
 if($B.debug > 0){console.log("line info "+__BRYTHON__.line_info)}
 throw err}}
 $B.run_py=run_py 
-function new_spec(fields){
-fields.__class__=module
+var ModuleSpec=$B.make_class("ModuleSpec",function(fields){fields.__class__=ModuleSpec
 return fields}
-var finder_VFS={__class__:_b_.type,__mro__:[_b_.object],$infos:{__module__:"builtins",__name__:"VFSFinder"},create_module :function(cls,spec){
-return _b_.None},exec_module :function(cls,modobj){var stored=modobj.__spec__.loader_state.stored,timestamp=modobj.__spec__.loader_state.timestamp
+)
+ModuleSpec.__str__=ModuleSpec.__repr__=function(self){var res=`ModuleSpec(name='${self.name}',`+
+`loader=${_b_.str.$factory(self.loader)},`+
+`origin='${self.origin}'`
+if(self.submodule_search_locations !==_b_.None){res+=`,submodule_search_locations=`+
+`${_b_.str.$factory(self.submodule_search_locations)}`}
+return res+')'}
+$B.set_func_names(ModuleSpec,"builtins")
+function parent_package(mod_name){
+var parts=mod_name.split(".")
+parts.pop()
+return parts.join(".")}
+var VFSFinder=$B.make_class("VFSFinder",function(){return{
+__class__:VFSFinder}}
+)
+VFSFinder.find_spec=function(cls,fullname,path){var stored,is_package,timestamp
+if(!$B.use_VFS){return _b_.None}
+stored=$B.VFS[fullname]
+if(stored===undefined){return _b_.None}
+is_package=stored[3]||false
+timestamp=stored.timestamp
+if(stored){var is_builtin=$B.builtin_module_names.indexOf(fullname)>-1
+return ModuleSpec.$factory({name :fullname,loader:VFSLoader.$factory(),
+origin :is_builtin? "built-in" :"brython_stdlib",
+submodule_search_locations:is_package?[]:_b_.None,loader_state:{stored:stored,timestamp:timestamp},
+cached:_b_.None,parent:is_package? fullname :parent_package(fullname),has_location:_b_.False})}}
+$B.set_func_names(VFSFinder,"<import>")
+for(var method in VFSFinder){if(typeof VFSFinder[method]=="function"){VFSFinder[method]=_b_.classmethod.$factory(
+VFSFinder[method])}}
+VFSLoader=$B.make_class("VFSLoader",function(){return{
+__class__:VFSLoader}}
+)
+VFSLoader.create_module=function(self,spec){
+return _b_.None}
+VFSLoader.exec_module=function(self,modobj){
+var stored=modobj.__spec__.loader_state.stored,timestamp=modobj.__spec__.loader_state.timestamp
 delete modobj.__spec__["loader_state"]
 var ext=stored[0],module_contents=stored[1],imports=stored[2]
 modobj.$is_package=stored[3]||false
@@ -9428,7 +9457,7 @@ if($B.imported.hasOwnProperty(parent)&&
 $B.imported[parent].__initialized__){continue}
 var mod_js=$B.precompiled[parent],is_package=modobj.$is_package
 if(Array.isArray(mod_js)){mod_js=mod_js[0]}
-var mod=$B.imported[parent]=module.$factory(parent,undefined,is_package)
+var mod=$B.imported[parent]=Module.$factory(parent,undefined,is_package)
 mod.__initialized__=true
 if(is_package){mod.__path__="<stdlib>"
 mod.__package__=parent}else{var elts=parent.split(".")
@@ -9463,26 +9492,8 @@ $B.idb_name){
 var idb_cx=indexedDB.open($B.idb_name)
 idb_cx.onsuccess=function(evt){var db=evt.target.result,tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules"),cursor=store.openCursor(),request=store.put(record)
 request.onsuccess=function(){if($B.debug > 1){console.info(modobj.__name__,"stored in db")}}
-request.onerror=function(){console.info("could not store "+modobj.__name__)}}}}},find_module:function(cls,name,path){return{
-__class__:Loader,load_module:function(name,path){var spec=cls.find_spec(cls,name,path)
-var mod=module.$factory(name)
-$B.imported[name]=mod
-mod.__spec__=spec
-cls.exec_module(cls,mod)}}},find_spec :function(cls,fullname,path,prev_module){var stored,is_package,timestamp
-if(!$B.use_VFS){return _b_.None}
-stored=$B.VFS[fullname]
-if(stored===undefined){return _b_.None}
-is_package=stored[3]||false
-timestamp=stored.timestamp
-if(stored){var is_builtin=$B.builtin_module_names.indexOf(fullname)>-1
-return new_spec({name :fullname,loader:cls,
-origin :is_builtin? "built-in" :"brython_stdlib",
-submodule_search_locations:is_package?[]:_b_.None,loader_state:{stored:stored,timestamp:timestamp},
-cached:_b_.None,parent:is_package? fullname :parent_package(fullname),has_location:_b_.False})}}}
-$B.set_func_names(finder_VFS,"<import>")
-for(var method in finder_VFS){if(typeof finder_VFS[method]=="function"){finder_VFS[method]=_b_.classmethod.$factory(
-finder_VFS[method])}}
-finder_VFS.$factory=function(){return{__class__:finder_VFS}}
+request.onerror=function(){console.info("could not store "+modobj.__name__)}}}}}
+$B.set_func_names(VFSLoader,"builtins")
 var finder_cpython={__class__:_b_.type,__mro__:[_b_.object],$infos:{__module__:"builtins",__name__:"CPythonFinder"},create_module :function(cls,spec){
 return _b_.None},exec_module :function(cls,modobj){console.log("exec PYthon module",modobj)
 var loader_state=modobj.__spec__.loader_state
@@ -9495,14 +9506,14 @@ var mod_name=modobj.__name__
 if($B.debug > 1){console.log("run Python code from CPython",mod_name)}
 run_py(content,modobj.__path__,modobj)},find_module:function(cls,name,path){return{
 __class__:Loader,load_module:function(name,path){var spec=cls.find_spec(cls,name,path)
-var mod=module.$factory(name)
+var mod=Module.$factory(name)
 $B.imported[name]=mod
 mod.__spec__=spec
-cls.exec_module(cls,mod)}}},find_spec :function(cls,fullname,path,prev_module){console.log("finder cpython",fullname)
+cls.exec_module(cls,mod)}}},find_spec :function(cls,fullname,path){console.log("finder cpython",fullname)
 var xhr=new XMLHttpRequest(),url="/cpython_import?module="+fullname,result
 xhr.open("GET",url,false)
 xhr.onreadystatechange=function(){if(this.readyState==4 && this.status==200){var data=JSON.parse(this.responseText)
-result=new_spec({name :fullname,loader:cls,
+result=ModuleSpec.$factory({name :fullname,loader:cls,
 origin :"CPython",
 submodule_search_locations:data.is_package?[]:_b_.None,loader_state:{content:data.content},
 cached:_b_.None,parent:data.is_package? fullname :parent_package(fullname),has_location:_b_.False})}}
@@ -9512,18 +9523,11 @@ $B.set_func_names(finder_cpython,"<import>")
 for(var method in finder_cpython){if(typeof finder_cpython[method]=="function"){finder_cpython[method]=_b_.classmethod.$factory(
 finder_cpython[method])}}
 finder_cpython.$factory=function(){return{__class__:finder_cpython}}
-var finder_stdlib_static={$factory :finder_stdlib_static,__class__ :_b_.type,__mro__:[_b_.object],$infos:{__module__:"builtins",__name__:"StdlibStatic"},create_module :function(cls,spec){
-return _b_.None},exec_module :function(cls,module){var metadata=module.__spec__.loader_state
-module.$is_package=metadata.is_package
-if(metadata.ext=="py"){import_py(module,metadata.path,module.__package__)}else{import_js(module,metadata.path)}
-delete module.__spec__["loader_state"]},find_module:function(cls,name,path){var spec=cls.find_spec(cls,name,path)
-if(spec===_b_.None){return _b_.None}
-return{
-__class__:Loader,load_module:function(name,path){var mod=module.$factory(name)
-$B.imported[name]=mod
-mod.__spec__=spec
-mod.__package__=spec.parent
-cls.exec_module(cls,mod)}}},find_spec:function(cls,fullname,path,prev_module){if($B.stdlib && $B.$options.static_stdlib_import){var address=$B.stdlib[fullname]
+var StdlibStaticFinder=$B.make_class("StdlibStaticFinder",function(){return{
+__class__:StdlibStaticFinder}}
+)
+StdlibStaticFinder.find_spec=function(self,fullname,path){
+if($B.stdlib && $B.$options.static_stdlib_import){var address=$B.stdlib[fullname]
 if(address===undefined){var elts=fullname.split(".")
 if(elts.length > 1){elts.pop()
 var $package=$B.stdlib[elts.join(".")]
@@ -9531,77 +9535,127 @@ if($package && $package[1]){address=["py"]}}}
 if(address !==undefined){var ext=address[0],is_pkg=address[1]!==undefined,path=$B.brython_path+
 ((ext=="py")? "Lib/" :"libs/")+
 fullname.replace(/\./g,"/"),metadata={ext:ext,is_package:is_pkg,path:path+(is_pkg? "/__init__.py" :
-((ext=="py")? ".py" :".js")),address:address}
-var res=new_spec({name :fullname,loader:cls,
+((ext=="py")? ".py" :".js")),address:address},_module=Module.$factory(fullname)
+metadata.code=$download_module(_module,metadata.path)
+var res=ModuleSpec.$factory({name :fullname,loader:PathLoader.$factory(),
 origin :metadata.path,submodule_search_locations:is_pkg?[path]:_b_.None,loader_state:metadata,
 cached:_b_.None,parent:is_pkg ? fullname :parent_package(fullname),has_location:_b_.True})
 return res}}
-return _b_.None}}
-$B.set_func_names(finder_stdlib_static,"<import>")
-for(var method in finder_stdlib_static){if(typeof finder_stdlib_static[method]=="function"){finder_stdlib_static[method]=_b_.classmethod.$factory(
-finder_stdlib_static[method])}}
-finder_stdlib_static.$factory=function(){return{__class__:finder_stdlib_static}}
-var finder_path={__class__:_b_.type,__mro__:[_b_.object],$infos:{__module__:"builtins",__name__:"ImporterPath"},create_module :function(cls,spec){
-return _b_.None},exec_module :function(cls,_module){var _spec=$B.$getattr(_module,"__spec__"),code=_spec.loader_state.code;
-_module.$is_package=_spec.loader_state.is_package,delete _spec.loader_state["code"]
-var src_type=_spec.loader_state.type
-if(src_type=="py" ||src_type=="pyc.js"){run_py(code,_spec.origin,_module,src_type=="pyc.js")}
-else if(_spec.loader_state.type=="js"){run_js(code,_spec.origin,_module)}},find_module:function(cls,name,path){return finder_path.find_spec(cls,name,path)},find_spec :function(cls,fullname,path,prev_module){if($B.VFS && $B.VFS[fullname]){
+return _b_.None}
+$B.set_func_names(StdlibStaticFinder,"<import>")
+for(var method in StdlibStaticFinder){if(typeof StdlibStaticFinder[method]=="function"){StdlibStaticFinder[method]=_b_.classmethod.$factory(
+StdlibStaticFinder[method])}}
+StdlibStaticFinder.$factory=function(){return{__class__:StdlibStaticFinder}}
+var PathFinder=$B.make_class("PathFinder",function(){return{
+__class__:PathFinder}}
+)
+PathFinder.find_spec=function(cls,fullname,path){if($B.VFS && $B.VFS[fullname]){
 return _b_.None}
 if($B.is_none(path)){
 path=$B.path}
 for(var i=0,li=path.length;i < li;++i){var path_entry=path[i]
 if(path_entry[path_entry.length-1]!="/"){path_entry+="/"}
 var finder=$B.path_importer_cache[path_entry]
-if(finder===undefined){var finder_notfound=true
-for(var j=0,lj=$B.path_hooks.length;
-j < lj && finder_notfound;++j){var hook=$B.path_hooks[j].$factory
-try{finder=(typeof hook=="function" ? hook :
-$B.$getattr(hook,"__call__"))(path_entry)
-finder_notfound=false}catch(e){if(e.__class__ !==_b_.ImportError){throw e}}}
-if(finder_notfound){$B.path_importer_cache[path_entry]=_b_.None}}
+if(finder===undefined){
+for(var j=0,lj=$B.path_hooks.length;j < lj;++j){var hook=$B.path_hooks[j]
+try{finder=$B.$call(hook)(path_entry)
+$B.path_importer_cache[path_entry]=finder
+break}catch(e){if(e.__class__ !==_b_.ImportError){throw e}}}}
 if($B.is_none(finder)){continue}
-var find_spec=$B.$getattr(finder,"find_spec"),fs_func=typeof find_spec=="function" ?
-find_spec :
-$B.$getattr(find_spec,"__call__")
-var spec=fs_func(fullname,prev_module)
-if(!$B.is_none(spec)){console.log("finder_path, return spec",spec)
-return spec}}
-return _b_.None}}
-$B.set_func_names(finder_path,"<import>")
-for(var method in finder_path){if(typeof finder_path[method]=="function"){finder_path[method]=_b_.classmethod.$factory(
-finder_path[method])}}
-finder_path.$factory=function(){return{__class__:finder_path}}
-var url_hook={__class__:_b_.type,__mro__:[_b_.object],__repr__:function(self){return "<UrlPathFinder"+(self.hint? " for '"+self.hint+"'":
-"(unbound)")+" at "+self.path_entry+'>'},$infos:{__module__:"builtins",__name__:"UrlPathFinder"},find_spec :function(self,fullname,module){var loader_data={},notfound=true,hint=self.hint,base_path=self.path_entry+fullname.match(/[^.]+$/g)[0],modpaths=[]
+var find_spec=$B.$getattr(finder,"find_spec"),spec=$B.$call(find_spec)(fullname)
+if(!$B.is_none(spec)){return spec}}
+return _b_.None}
+$B.set_func_names(PathFinder,"<import>")
+for(var method in PathFinder){if(typeof PathFinder[method]=="function"){PathFinder[method]=_b_.classmethod.$factory(
+PathFinder[method])}}
+var PathEntryFinder=$B.make_class("PathEntryFinder",function(path_entry,hint){return{
+__class__:PathEntryFinder,path_entry:path_entry,hint:hint}}
+)
+PathEntryFinder.find_spec=function(self,fullname){
+var loader_data={},notfound=true,hint=self.hint,base_path=self.path_entry+fullname.match(/[^.]+$/g)[0],modpaths=[]
 var tryall=hint===undefined
 if(tryall ||hint=='py'){
 modpaths=modpaths.concat([[base_path+".py","py",false],[base_path+"/__init__.py","py",true]])}
 for(var j=0;notfound && j < modpaths.length;++j){try{var file_info=modpaths[j],module={__name__:fullname,$is_package:false}
 loader_data.code=$download_module(module,file_info[0],undefined)
 notfound=false
-loader_data.type=file_info[1]
+loader_data.ext=file_info[1]
 loader_data.is_package=file_info[2]
 if(hint===undefined){self.hint=file_info[1]
 $B.path_importer_cache[self.path_entry]=self}
 if(loader_data.is_package){
 $B.path_importer_cache[base_path+'/']=
-url_hook.$factory(base_path+'/',self.hint)}
-loader_data.path=file_info[0]}catch(err){}}
-if(!notfound){return new_spec({name :fullname,loader:finder_path,origin :loader_data.path,
+$B.$call(url_hook)(base_path+'/',self.hint)}
+loader_data.path=file_info[0]}catch(err){if(err.__class__ !==_b_.ModuleNotFoundError){throw err}}}
+if(!notfound){return ModuleSpec.$factory({name :fullname,loader:PathLoader.$factory(),origin :loader_data.path,
 submodule_search_locations:loader_data.is_package?
 [base_path]:_b_.None,loader_state:loader_data,
 cached:_b_.None,parent:loader_data.is_package? fullname :
 parent_package(fullname),has_location:_b_.True})}
-return _b_.None},invalidate_caches :function(self){}}
-url_hook.$factory=function(path_entry,hint){return{
-__class__:url_hook,path_entry:path_entry.endsWith("/")? path_entry :path_entry+"/",hint:hint}}
-$B.set_func_names(url_hook,"<import>")
-$B.path_importer_cache={};
-var _sys_paths=[[$B.script_dir+"/","py"],[$B.brython_path+"Lib/","py"],[$B.brython_path+"Lib/site-packages/","py"],[$B.brython_path+"libs/","js"]]
-for(var i=0;i < _sys_paths.length;++i){var _path=_sys_paths[i],_type=_path[1]
-_path=_path[0]
-$B.path_importer_cache[_path]=url_hook.$factory(_path,_type)}
+return _b_.None}
+$B.set_func_names(PathEntryFinder,"builtins")
+var PathLoader=$B.make_class("PathLoader",function(){return{
+__class__:PathLoader}}
+)
+PathLoader.create_module=function(self,spec){
+return _b_.None}
+PathLoader.exec_module=function(self,module){
+var metadata=module.__spec__.loader_state
+module.$is_package=metadata.is_package
+if(metadata.ext=="py"){run_py(metadata.code,metadata.path,module)}else{run_js(metadata.code,metadata.path,module)}}
+var url_hook=$B.url_hook=function(path_entry){
+path_entry=path_entry.endsWith("/")? path_entry :path_entry+"/"
+return PathEntryFinder.$factory(path_entry)}
+function import_engine(mod_name,_path,from_stdlib){
+var meta_path=$B.meta_path.slice(),_sys_modules=$B.imported,_loader,spec
+if(from_stdlib){
+var path_ix=meta_path.indexOf($B.finders["path"])
+if(path_ix >-1){meta_path.splice(path_ix,1)}}
+for(var i=0,len=meta_path.length;i < len;i++){var _finder=meta_path[i],find_spec=$B.$getattr(_finder,"find_spec",_b_.None)
+if(find_spec==_b_.None){
+var find_module=$B.$getattr(_finder,"find_module",_b_.None)
+if(find_module !==_b_.None){_loader=find_module(mod_name,_path)
+if(_loader !==_b_.None){
+var load_module=$B.$getattr(_loader,"load_module"),module=$B.$call(load_module)(mod_name)
+_sys_modules[mod_name]=module
+return module}}}else{spec=find_spec(mod_name,_path)
+if(!$B.is_none(spec)){module=$B.imported[spec.name]
+if(module !==undefined){
+return _sys_modules[spec.name]=module}
+_loader=$B.$getattr(spec,"loader",_b_.None)
+break}}}
+if(_loader===undefined){
+message=mod_name
+if($B.protocol=="file"){message+=" (warning: cannot import local files with protocol 'file')"}
+var exc=_b_.ModuleNotFoundError.$factory(message)
+exc.name=mod_name
+throw exc}
+if($B.is_none(module)){if(spec===_b_.None){throw _b_.ModuleNotFoundError.$factory(mod_name)}
+var _spec_name=$B.$getattr(spec,"name")
+if(!$B.is_none(_loader)){var create_module=$B.$getattr(_loader,"create_module",_b_.None)
+if(!$B.is_none(create_module)){module=$B.$call(create_module)(spec)}}
+if(module===undefined){throw _b_.ImportError.$factory(mod_name)}
+if($B.is_none(module)){
+module=$B.module.$factory(mod_name)
+var mod_desc=$B.$getattr(spec,"origin")
+if($B.$getattr(spec,"has_location")){mod_desc="from '"+mod_desc+"'"}else{mod_desc="("+mod_desc+")"}}}
+module.__name__=_spec_name
+module.__loader__=_loader
+module.__package__=$B.$getattr(spec,"parent","")
+module.__spec__=spec
+var locs=$B.$getattr(spec,"submodule_search_locations")
+if(module.$is_package=!$B.is_none(locs)){module.__path__=locs}
+if($B.$getattr(spec,"has_location")){module.__file__=$B.$getattr(spec,"origin")
+$B.$py_module_path[module.__name__]=module.__file__}
+var cached=$B.$getattr(spec,"cached")
+if(! $B.is_none(cached)){module.__cached__=cached}
+if($B.is_none(_loader)){if(!$B.is_none(locs)){_sys_modules[_spec_name]=module}else{throw _b_.ImportError.$factory(mod_name)}}else{var exec_module=$B.$getattr(_loader,"exec_module",_b_.None)
+if($B.is_none(exec_module)){
+module=$B.$getattr(_loader,"load_module")(_spec_name)}else{_sys_modules[_spec_name]=module
+try{exec_module(module)}catch(e){delete _sys_modules[_spec_name]
+throw e}}}
+return _sys_modules[_spec_name]}
+$B.path_importer_cache={}
 function import_error(mod_name){var exc=_b_.ImportError.$factory(mod_name)
 exc.name=mod_name
 throw exc}
@@ -9623,7 +9677,7 @@ _mod_name+=modsep+parsed_name[i]
 modsep="."
 var modobj=$B.imported[_mod_name]
 if(modobj==_b_.None){
-import_error(_mod_name)}else if(modobj===undefined){try{$B.import_hooks(_mod_name,__path__,from_stdlib)}catch(err){delete $B.imported[_mod_name]
+import_error(_mod_name)}else if(modobj===undefined){try{import_engine(_mod_name,__path__,from_stdlib)}catch(err){delete $B.imported[_mod_name]
 throw err}
 if($B.is_none($B.imported[_mod_name])){import_error(_mod_name)}else{
 if(_parent_name){_b_.setattr($B.imported[_parent_name],parsed_name[i],$B.imported[_mod_name])}}}else if($B.imported[_parent_name]&&
@@ -9648,7 +9702,8 @@ throw err}}}
 if(fromlist.length > 0){
 return $B.imported[mod_name]}else{
 return $B.imported[parsed_name[0]]}}
-$B.$import=function(mod_name,fromlist,aliases,locals){fromlist=fromlist===undefined ?[]:fromlist
+$B.$import=function(mod_name,fromlist,aliases,locals){
+fromlist=fromlist===undefined ?[]:fromlist
 aliases=aliases===undefined ?{}:aliases
 locals=locals===undefined ?{}:locals
 var parts=mod_name.split(".")
@@ -9701,14 +9756,14 @@ return locals}}
 $B.import_all=function(locals,module){
 for(var attr in module){if(attr.startsWith("$$")){locals[attr]=module[attr]}else if('_$'.indexOf(attr.charAt(0))==-1){locals[attr]=module[attr]}}}
 $B.$path_hooks=[url_hook]
-$B.$meta_path=[finder_VFS,finder_stdlib_static,finder_path]
-$B.finders={VFS:finder_VFS,stdlib_static:finder_stdlib_static,path:finder_path,CPython:finder_cpython}
+$B.$meta_path=[VFSFinder,StdlibStaticFinder,PathFinder]
+$B.finders={VFS:VFSFinder,stdlib_static:StdlibStaticFinder,path:PathFinder,CPython:finder_cpython}
 function optimize_import_for_path(path,filetype){if(path.slice(-1)!="/"){path=path+"/" }
 var value=(filetype=='none')? _b_.None :
-url_hook.$factory(path,filetype)
+url_hook(path,filetype)
 $B.path_importer_cache[path]=value}
 var Loader={__class__:$B.$type,__mro__:[_b_.object],__name__ :"Loader"}
-var _importlib_module={__class__ :module,__name__ :"_importlib",Loader:Loader,VFSFinder:finder_VFS,StdlibStatic:finder_stdlib_static,ImporterPath:finder_path,UrlPathFinder:url_hook,optimize_import_for_path :optimize_import_for_path}
+var _importlib_module={__class__ :Module,__name__ :"_importlib",Loader:Loader,VFSFinder:VFSFinder,StdlibStatic:StdlibStaticFinder,ImporterPath:PathFinder,UrlPathFinder:url_hook,optimize_import_for_path :optimize_import_for_path}
 _importlib_module.__repr__=_importlib_module.__str__=function(){return "<module '_importlib' (built-in)>"}
 $B.imported["_importlib"]=_importlib_module})(__BRYTHON__)
 ;
@@ -14155,57 +14210,6 @@ object:"The most base type",
 oct:"oct(number) -> string\n\nReturn the octal representation of an integer.\n\n   >>> oct(342391)\n   '0o1234567'\n",
 open:"open(file, mode='r', buffering=-1, encoding=None,\n     errors=None, newline=None, closefd=True, opener=None) -> file object\n\nOpen file and return a stream.  Raise IOError upon failure.\n\nfile is either a text or byte string giving the name (and the path\nif the file isn't in the current working directory)of the file to\nbe opened or an integer file descriptor of the file to be\nwrapped.(If a file descriptor is given,it is closed when the\nreturned I/O object is closed,unless closefd is set to False.)\n\nmode is an optional string that specifies the mode in which the file\nis opened. It defaults to 'r' which means open for reading in text\nmode. Other common values are 'w' for writing(truncating the file if\nit already exists),'x' for creating and writing to a new file,and\n'a' for appending(which on some Unix systems,means that all writes\nappend to the end of the file regardless of the current seek position).\nIn text mode,if encoding is not specified the encoding used is platform\ndependent:locale.getpreferredencoding(False)is called to get the\ncurrent locale encoding.(For reading and writing raw bytes use binary\nmode and leave encoding unspecified.)The available modes are:\n\n========================================================================\nCharacter Meaning\n------------------------------------------------------------------------\n'r' open for reading(default)\n'w' open for writing,truncating the file first\n'x' create a new file and open it for writing\n'a' open for writing,appending to the end of the file if it exists\n'b' binary mode\n't' text mode(default)\n'+' open a disk file for updating(reading and writing)\n'U' universal newline mode(deprecated)\n========================================================================\n\nThe default mode is 'rt'(open for reading text). For binary random\naccess,the mode 'w+b' opens and truncates the file to 0 bytes,while\n'r+b' opens the file without truncation. The 'x' mode implies 'w' and\nraises an `FileExistsError` if the file already exists.\n\nPython distinguishes between files opened in binary and text modes,\neven when the underlying operating system doesn't. Files opened in\nbinary mode (appending 'b' to the mode argument) return contents as\nbytes objects without any decoding. In text mode (the default, or when\n't' is appended to the mode argument), the contents of the file are\nreturned as strings, the bytes having been first decoded using a\nplatform-dependent encoding or using the specified encoding if given.\n\n'U' mode is deprecated and will raise an exception in future versions\nof Python.  It has no effect in Python 3.  Use newline to control\nuniversal newlines mode.\n\nbuffering is an optional integer used to set the buffering policy.\nPass 0 to switch buffering off (only allowed in binary mode), 1 to select\nline buffering (only usable in text mode), and an integer > 1 to indicate\nthe size of a fixed-size chunk buffer.  When no buffering argument is\ngiven, the default buffering policy works as follows:\n\n* Binary files are buffered in fixed-size chunks; the size of the buffer\n  is chosen using a heuristic trying to determine the underlying device's\n \"block size\" and falling back on `io.DEFAULT_BUFFER_SIZE`.\n  On many systems, the buffer will typically be 4096 or 8192 bytes long.\n\n* \"Interactive\" text files (files for which isatty() returns True)\n  use line buffering.  Other text files use the policy described above\n  for binary files.\n\nencoding is the name of the encoding used to decode or encode the\nfile. This should only be used in text mode. The default encoding is\nplatform dependent, but any encoding supported by Python can be\npassed.  See the codecs module for the list of supported encodings.\n\nerrors is an optional string that specifies how encoding errors are to\nbe handled---this argument should not be used in binary mode. Pass\n'strict' to raise a ValueError exception if there is an encoding error\n(the default of None has the same effect), or pass 'ignore' to ignore\nerrors. (Note that ignoring encoding errors can lead to data loss.)\nSee the documentation for codecs.register or run 'help(codecs.Codec)'\nfor a list of the permitted encoding error strings.\n\nnewline controls how universal newlines works (it only applies to text\nmode). It can be None, '', '\\n', '\\r', and '\\r\\n'.  It works as\nfollows:\n\n* On input, if newline is None, universal newlines mode is\n  enabled. Lines in the input can end in '\\n', '\\r', or '\\r\\n', and\n  these are translated into '\\n' before being returned to the\n  caller. If it is '', universal newline mode is enabled, but line\n  endings are returned to the caller untranslated. If it has any of\n  the other legal values, input lines are only terminated by the given\n  string, and the line ending is returned to the caller untranslated.\n\n* On output, if newline is None, any '\\n' characters written are\n  translated to the system default line separator, os.linesep. If\n  newline is '' or '\\n', no translation takes place. If newline is any\n  of the other legal values, any '\\n' characters written are translated\n  to the given string.\n\nIf closefd is False, the underlying file descriptor will be kept open\nwhen the file is closed. This does not work when a file name is given\nand must be True in that case.\n\nA custom opener can be used by passing a callable as *opener*. The\nunderlying file descriptor for the file object is then obtained by\ncalling *opener* with (*file*, *flags*). *opener* must return an open\nfile descriptor (passing os.open as *opener* results in functionality\nsimilar to passing None).\n\nopen() returns a file object whose type depends on the mode, and\nthrough which the standard file operations such as reading and writing\nare performed. When open() is used to open a file in a text mode ('w',\n'r', 'wt', 'rt', etc.), it returns a TextIOWrapper. When used to open\na file in a binary mode, the returned class varies: in read binary\nmode, it returns a BufferedReader; in write binary and append binary\nmodes, it returns a BufferedWriter, and in read/write mode, it returns\na BufferedRandom.\n\nIt is also possible to use a string or bytearray as a file for both\nreading and writing. For strings StringIO can be used like a file\nopened in a text mode, and for bytes a BytesIO can be used like a file\nopened in a binary mode.\n",ord:"ord(c) -> integer\n\nReturn the integer ordinal of a one-character string.",pow:"pow(x, y[, z]) -> number\n\nWith two arguments, equivalent to x**y.  With three arguments,\nequivalent to (x**y) % z, but may be more efficient (e.g. for ints).",print:"print(value, ..., sep=' ', end='\\n', file=sys.stdout, flush=False)\n\nPrints the values to a stream, or to sys.stdout by default.\nOptional keyword arguments:\nfile:  a file-like object (stream); defaults to the current sys.stdout.\nsep:   string inserted between values, default a space.\nend:   string appended after the last value, default a newline.\nflush: whether to forcibly flush the stream.",property:"property(fget=None, fset=None, fdel=None, doc=None) -> property attribute\n\nfget is a function to be used for getting an attribute value, and likewise\nfset is a function for setting, and fdel a function for del'ing, an\nattribute.  Typical use is to define a managed attribute x:\n\nclass C(object):\n    def getx(self): return self._x\n    def setx(self, value): self._x = value\n    def delx(self): del self._x\n    x = property(getx, setx, delx, \"I'm the 'x' property.\")\n\nDecorators make defining new properties or modifying existing ones easy:\n\nclass C(object):\n    @property\n    def x(self):\n        \"I am the 'x' property.\"\n        return self._x\n    @x.setter\n    def x(self, value):\n        self._x = value\n    @x.deleter\n    def x(self):\n        del self._x\n",quit:"",range:"range(stop) -> range object\nrange(start, stop[, step]) -> range object\n\nReturn a virtual sequence of numbers from start to stop by step.",repr:"repr(object) -> string\n\nReturn the canonical string representation of the object.\nFor most object types, eval(repr(object)) == object.",reversed:"reversed(sequence) -> reverse iterator over values of the sequence\n\nReturn a reverse iterator",round:"round(number[, ndigits]) -> number\n\nRound a number to a given precision in decimal digits (default 0 digits).\nThis returns an int when called with one argument, otherwise the\nsame type as the number. ndigits may be negative.",set:"set() -> new empty set object\nset(iterable) -> new set object\n\nBuild an unordered collection of unique elements.",setattr:"setattr(object, name, value)\n\nSet a named attribute on an object; setattr(x, 'y', v) is equivalent to\n``x.y = v''.",slice:"slice(stop)\nslice(start, stop[, step])\n\nCreate a slice object.  This is used for extended slicing (e.g. a[0:10:2]).",sorted:"sorted(iterable, key=None, reverse=False) --> new sorted list",staticmethod:"staticmethod(function) -> method\n\nConvert a function to be a static method.\n\nA static method does not receive an implicit first argument.\nTo declare a static method, use this idiom:\n\n     class C:\n     def f(arg1, arg2, ...): ...\n     f = staticmethod(f)\n\nIt can be called either on the class (e.g. C.f()) or on an instance\n(e.g. C().f()).  The instance is ignored except for its class.\n\nStatic methods in Python are similar to those found in Java or C++.\nFor a more advanced concept, see the classmethod builtin.",str:"str(object='') -> str\nstr(bytes_or_buffer[, encoding[, errors]]) -> str\n\nCreate a new string object from the given object. If encoding or\nerrors is specified, then the object must expose a data buffer\nthat will be decoded using the given encoding and error handler.\nOtherwise, returns the result of object.__str__() (if defined)\nor repr(object).\nencoding defaults to sys.getdefaultencoding().\nerrors defaults to 'strict'.",sum:"sum(iterable[, start]) -> value\n\nReturn the sum of an iterable of numbers (NOT strings) plus the value\nof parameter 'start' (which defaults to 0).  When the iterable is\nempty, return start.",super:"super() -> same as super(__class__, <first argument>)\nsuper(type) -> unbound super object\nsuper(type, obj) -> bound super object; requires isinstance(obj, type)\nsuper(type, type2) -> bound super object; requires issubclass(type2, type)\nTypical use to call a cooperative superclass method:\nclass C(B):\n    def meth(self, arg):\n        super().meth(arg)\nThis works for class methods too:\nclass C(B):\n    @classmethod\n    def cmeth(cls, arg):\n        super().cmeth(arg)\n",tuple:"tuple() -> empty tuple\ntuple(iterable) -> tuple initialized from iterable's items\n\nIf the argument is a tuple, the return value is the same object.",type:"type(object_or_name, bases, dict)\ntype(object) -> the object's type\ntype(name, bases, dict) -> a new type",vars:"vars([object]) -> dictionary\n\nWithout arguments, equivalent to locals().\nWith an argument, equivalent to object.__dict__.",zip:"zip(iter1 [,iter2 [...]]) --> zip object\n\nReturn a zip object whose .__next__() method returns a tuple where\nthe i-th element comes from the i-th iterable argument.  The .__next__()\nmethod continues until the shortest iterable in the argument sequence\nis exhausted and then it raises StopIteration.",}
 __BRYTHON__.builtins_doc=docs
-;
-;(function($B){var _b_=$B.builtins
-function import_hooks(mod_name,_path,from_stdlib){var meta_path=$B.meta_path.slice(),_sys_modules=$B.imported,_loader,spec
-if(from_stdlib){
-var path_ix=meta_path.indexOf($B.finders["path"])
-if(path_ix >-1){meta_path.splice(path_ix,1)}}
-for(var i=0,len=meta_path.length;i < len;i++){var _finder=meta_path[i],find_spec=$B.$getattr(_finder,"find_spec",_b_.None)
-if(find_spec==_b_.None){
-var find_module=$B.$getattr(_finder,"find_module",_b_.None)
-if(find_module !==_b_.None){_loader=find_module(mod_name,_path)
-if(_loader !==_b_.None){
-var load_module=$B.$getattr(_loader,"load_module"),module=$B.$call(load_module)(mod_name)
-_sys_modules[mod_name]=module
-return module}}}else{spec=find_spec(mod_name,_path)
-if(!$B.is_none(spec)){module=$B.imported[spec.name]
-if(module !==undefined){
-return _sys_modules[spec.name]=module}
-_loader=_b_.getattr(spec,"loader",_b_.None)
-break}}}
-if(_loader===undefined){
-message=mod_name
-if($B.protocol=="file"){message+=" (warning: cannot import local files with protocol 'file')"}
-var exc=_b_.ModuleNotFoundError.$factory(message)
-exc.name=mod_name
-throw exc}
-if($B.is_none(module)){if(spec===_b_.None){throw _b_.ModuleNotFoundError.$factory(mod_name)}
-var _spec_name=_b_.getattr(spec,"name")
-if(!$B.is_none(_loader)){var create_module=_b_.getattr(_loader,"create_module",_b_.None)
-if(!$B.is_none(create_module)){module=$B.$call(create_module)(spec)}}
-if(module===undefined){throw _b_.ImportError.$factory(mod_name)}
-if($B.is_none(module)){
-module=$B.module.$factory(mod_name)
-var mod_desc=_b_.getattr(spec,"origin")
-if(_b_.getattr(spec,"has_location")){mod_desc="from '"+mod_desc+"'"}else{mod_desc="("+mod_desc+")"}}}
-module.__name__=_spec_name
-module.__loader__=_loader
-module.__package__=_b_.getattr(spec,"parent","")
-module.__spec__=spec
-var locs=_b_.getattr(spec,"submodule_search_locations")
-if(module.$is_package=!$B.is_none(locs)){module.__path__=locs}
-if(_b_.getattr(spec,"has_location")){module.__file__=_b_.getattr(spec,"origin")
-$B.$py_module_path[module.__name__]=module.__file__}
-var cached=_b_.getattr(spec,"cached")
-if(! $B.is_none(cached)){module.__cached__=cached}
-if($B.is_none(_loader)){if(!$B.is_none(locs)){_sys_modules[_spec_name]=module}else{throw _b_.ImportError.$factory(mod_name)}}else{var exec_module=_b_.getattr(_loader,"exec_module",_b_.None)
-if($B.is_none(exec_module)){
-module=_b_.getattr(_loader,"load_module")(_spec_name)}else{_sys_modules[_spec_name]=module
-try{exec_module(module)}catch(e){delete _sys_modules[_spec_name]
-throw e}}}
-return _sys_modules[_spec_name]}
-$B.import_hooks=import_hooks})(__BRYTHON__)
 ;
 ;(function($B){var _b_=$B.builtins
 var coroutine=$B.coroutine=$B.make_class("coroutine")

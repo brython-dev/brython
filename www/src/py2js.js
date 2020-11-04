@@ -10576,7 +10576,7 @@ $B.set_import_paths = function(){
     // Use the defaut finder using sys.path if protocol is not file://
     if($B.protocol !== "file"){
         meta_path.push($B.finders.path)
-        path_hooks.push($B.$path_hooks[0])
+        path_hooks.push($B.url_hook)
     }
 
     // Finder using CPython modules
