@@ -7768,23 +7768,26 @@ $PackedCtx.prototype.transition = function(token, value){
         // Apply subscription to packed element (issue #1139)
         return $transition(context.tree[0], token, value)
     }
-    if(token == 'id'){
-        var expr = new $AbstractExprCtx(context, false)
-        expr.packed = true
-        context.parent.expect = ','
-        var id = $transition(expr, token, value)
-        return id
-    }else if(token == "["){
-        context.parent.expect = ','
-        return new $ListOrTupleCtx(context, "list")
-    }else if(token == "("){
-        context.parent.expect = ','
-        return new $ListOrTupleCtx(context, "tuple")
-    }else if(token == "]"){
-        return $transition(context.parent, token, value)
-    }else if(token == "{"){
-        context.parent.expect = ','
-        return new $DictOrSetCtx(context)
+    switch(token){
+        case 'id':
+            var expr = new $AbstractExprCtx(context, false)
+            expr.packed = true
+            context.parent.expect = ','
+            var id = $transition(expr, token, value)
+            return id
+        case "[":
+            context.parent.expect = ','
+            return new $ListOrTupleCtx(context, "list")
+        case "(":
+            context.parent.expect = ','
+            return new $ListOrTupleCtx(context, "tuple")
+        case "]":
+            return $transition(context.parent, token, value)
+        case "{":
+            context.parent.expect = ','
+            return new $DictOrSetCtx(context)
+        case 'op':
+            $_SyntaxError(context, ["can't use starred expression here"])
     }
     return context.parent.transition(token, context)
 }

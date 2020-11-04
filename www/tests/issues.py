@@ -2772,6 +2772,12 @@ except TypeError as exc:
 # issue 1529
 assertRaises(SyntaxError, exec, "for x in in range(1):\n pass")
 
+# issue 1531
+try:
+    exec("x =* -1")
+    raise Exception("should have raised SyntaxError")
+except SyntaxError as exc:
+    assert exc.args[0] == "can't use starred expression here"
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
