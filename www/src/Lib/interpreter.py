@@ -205,7 +205,7 @@ class Interpreter:
             self.current = len(self.history)
             if self._status in ["main", "3string"]:
                 try:
-                    _ = editor_ns['_'] = eval(currentLine,
+                    _ = self.globals['_'] = eval(currentLine,
                                               self.globals,
                                               self.locals)
                     self.flush()
