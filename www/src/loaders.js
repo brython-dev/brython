@@ -352,6 +352,9 @@ var loop = $B.loop = function(){
             $B.idb_cx.result.close()
             $B.idb_cx.$closed = true
         }
+        // dispatch event "brython_done"
+        document.dispatchEvent(new CustomEvent("brython_done",
+            {detail: $B.obj_dict($B.$options)}))
         return
     }
     var task = $B.tasks.shift(),
