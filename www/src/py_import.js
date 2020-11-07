@@ -997,7 +997,7 @@ function import_error(mod_name){
 
 // Default __import__ function
 $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
-    var $test = false // mod_name == "collections.abc"
+    var $test = false // mod_name == "browser.load_script"
     if($test){console.log("__import__", mod_name)}
     // Main entry point for __import__
     //
@@ -1052,6 +1052,11 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
             _mod_name += modsep + parsed_name[i]
             modsep = "."
             var modobj = $B.imported[_mod_name]
+            if($test){
+                console.log("iter", i, _mod_name, "modobj", modobj,
+                    "__path__", __path__, Array.isArray(__path__))
+                alert()
+            }
             if(modobj == _b_.None){
                 // [Import spec] Stop loading loop right away
                 import_error(_mod_name)

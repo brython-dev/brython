@@ -10769,35 +10769,46 @@ var _run_scripts = $B.parser._run_scripts = function(options){
     var kk = Object.keys(_window)
 
     // Id sets to scripts
-    var defined_ids = {}
+    var defined_ids = {},
+        $elts = [],
+        webworkers = []
 
     // Option to run code on demand and not all the scripts defined in a page
     // The following lines are included to allow to run brython scripts in
     // the IPython/Jupyter notebook using a cell magic. Have a look at
     // https://github.com/kikocorreoso/brythonmagic for more info.
-    if(options.ipy_id !== undefined){
-        var $elts = []
-        options.ipy_id.forEach(function(elt){
-            $elts.push(document.getElementById(elt))
+    var ids = options.ids || options.ipy_id
+    if(ids !== undefined){
+        if(!Array.isArray(ids)){
+            throw _b_.ValueError.$factory("ids is not a list")
+        }
+        var scripts = []
+        options.ids.forEach(function(id){
+            var elt = document.getElementById(id)
+            if(elt === null){
+                throw _b_.KeyError.$factory(`no script with id '${id}'`)
+            }
+            if(elt.tagName !== "SCRIPT"){
+                throw _b_.KeyError.$factory(`element ${id} is not a script`)
+            }
+            scripts.push(elt)
         })
     }else{
-        var scripts = document.getElementsByTagName('script'),
-            $elts = [],
-            webworkers = []
-        // Freeze the list of scripts here ; other scripts can be inserted on
-        // the fly by viruses
-        for(var i = 0; i < scripts.length; i++){
-            var script = scripts[i]
-            if(script.type == "text/python" || script.type == "text/python3"){
-                if(script.className == "webworker"){
-                    if(script.id === undefined){
-                        throw _b_.AttributeError.$factory(
-                            "webworker script has no attribute 'id'")
-                    }
-                    webworkers.push(script)
-                }else{
-                    $elts.push(script)
+        var scripts = document.getElementsByTagName('script')
+    }
+    // Freeze the list of scripts here ; other scripts can be inserted on
+    // the fly by viruses
+    for(var i = 0; i < scripts.length; i++){
+        var script = scripts[i]
+        if(script.type == "text/python" || script.type == "text/python3"){
+            if(script.className == "webworker"){
+                if(script.id === undefined){
+                    throw _b_.AttributeError.$factory(
+                        "webworker script has no attribute 'id'")
                 }
+                webworkers.push(script)
+            }else{
+                $elts.push(script)
             }
         }
     }

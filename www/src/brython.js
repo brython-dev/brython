@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,0,'final',0]
 __BRYTHON__.__MAGIC__="3.9.0"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2020-11-04 16:35:12.252290"
-__BRYTHON__.timestamp=1604504112252
+__BRYTHON__.compiled_date="2020-11-07 11:34:29.653308"
+__BRYTHON__.timestamp=1604745269653
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5189,13 +5189,18 @@ if(run_loop){$B.loop()}}
 var $log=$B.$log=function(js){js.split("\n").forEach(function(line,i){console.log(i+1,":",line)})}
 var _run_scripts=$B.parser._run_scripts=function(options){
 var kk=Object.keys(_window)
-var defined_ids={}
-if(options.ipy_id !==undefined){var $elts=[]
-options.ipy_id.forEach(function(elt){$elts.push(document.getElementById(elt))})}else{var scripts=document.getElementsByTagName('script'),$elts=[],webworkers=[]
+var defined_ids={},$elts=[],webworkers=[]
+var ids=options.ids ||options.ipy_id
+if(ids !==undefined){if(!Array.isArray(ids)){throw _b_.ValueError.$factory("ids is not a list")}
+var scripts=[]
+options.ids.forEach(function(id){var elt=document.getElementById(id)
+if(elt===null){throw _b_.KeyError.$factory(`no script with id '${id}'`)}
+if(elt.tagName !=="SCRIPT"){throw _b_.KeyError.$factory(`element ${id}is not a script`)}
+scripts.push(elt)})}else{var scripts=document.getElementsByTagName('script')}
 for(var i=0;i < scripts.length;i++){var script=scripts[i]
 if(script.type=="text/python" ||script.type=="text/python3"){if(script.className=="webworker"){if(script.id===undefined){throw _b_.AttributeError.$factory(
 "webworker script has no attribute 'id'")}
-webworkers.push(script)}else{$elts.push(script)}}}}
+webworkers.push(script)}else{$elts.push(script)}}}
 var first_script=true,module_name
 if(options.ipy_id !==undefined){module_name='__main__'
 var $src="",js,root
@@ -5367,6 +5372,7 @@ document.dispatchEvent(new CustomEvent('precompile',{detail:'remove outdated '+m
 document.dispatchEvent(new CustomEvent('precompile',{detail:"close"}))
 $B.idb_cx.result.close()
 $B.idb_cx.$closed=true}
+document.dispatchEvent(new CustomEvent("brython_done",{detail:$B.obj_dict($B.$options)}))
 return}
 var task=$B.tasks.shift(),func=task[0],args=task.slice(1)
 if(func=="execute"){try{var script=task[1],script_id=script.__name__.replace(/\./g,"_"),module=$B.module.$factory(script.__name__)
@@ -9159,7 +9165,6 @@ return pyobj.valueOf()}else if(klass===$B.Function ||klass===$B.method){
 return function(){try{var args=[]
 for(var i=0;i < arguments.length;i++){if(arguments[i]===undefined){args.push(_b_.None)}
 else{args.push(jsobj2pyobj(arguments[i]))}}
-console.log("pyobj",pyobj,"args",args)
 if(pyobj.prototype.constructor===pyobj){var res=new pyobj(...args)}else{var res=pyobj.apply(this,args)}
 return pyobj2jsobj(res)}catch(err){console.log(err)
 console.log($B.$getattr(err,'info'))
@@ -9676,6 +9681,8 @@ for(var i=0,modsep="",_mod_name="",len=parsed_name.length-1,__path__=_b_.None;i 
 _mod_name+=modsep+parsed_name[i]
 modsep="."
 var modobj=$B.imported[_mod_name]
+if($test){console.log("iter",i,_mod_name,"modobj",modobj,"__path__",__path__,Array.isArray(__path__))
+alert()}
 if(modobj==_b_.None){
 import_error(_mod_name)}else if(modobj===undefined){try{import_engine(_mod_name,__path__,from_stdlib)}catch(err){delete $B.imported[_mod_name]
 throw err}
@@ -14076,34 +14083,28 @@ $B.Undefined={__class__:$B.UndefinedClass}
 $B.set_func_names($B.UndefinedClass,"javascript")
 modules['javascript']={$$this:function(){
 if($B.js_this===undefined){return $B.builtins.None}
-return $B.JSObj.$factory($B.js_this)},$$Date:self.Date && $B.JSObj.$factory(self.Date),$$extends:function(js_constr){return function(obj){if(typeof obj=="function"){var res=function(){js_constr.call(this,...arguments)
-obj.apply(this,arguments)}
-res.prototype=Object.create(js_constr.prototype)
-res.prototype.constructor=res
-res.$is_js_func=true
-return res}else if(obj.$is_class){console.log("obj",obj)
-if(js_constr.$js_func.name=="Named"){console.log("-- Named")}
-var res=function(){console.log("call parent class",obj.$parent_class)
-obj.$parent_class.call(this,...arguments)
-if(obj.$$constructor){var args=[this]
+return $B.JSObj.$factory($B.js_this)},$$Date:self.Date && $B.JSObj.$factory(self.Date),$$extends:function(js_constr){return function(obj){if(obj.$is_class){var factory=function(){var args=[this]
 for(var i=0,len=arguments.length;i < len;i++){args.push(arguments[i])}
-obj.$$constructor.apply(this,args)}}
-res.prototype=Object.create(js_constr.prototype)
-res.prototype.constructor=res
-res.$is_js_func=true
-res.$class=obj
-obj.$parent_class=js_constr
-for(var attr in obj.__dict__.$string_dict){var value=obj.__dict__.$string_dict[attr][0]
-if(typeof value=="function"){res.prototype[attr]=(function(x){return function(){var args=[this]
-for(var i=0,len=arguments.length;i < len;i++){args.push($B.pyobj2jsobj(arguments[i]))}
-return x.apply(this,args)}})(value)}else{res.prototype[attr]=$B.pyobj2jsobj(value)}}
-return res}}},JSON:{__class__:$B.make_class("JSON"),parse:function(){return $B.structuredclone2pyobj(
+obj.__init__.apply(this,args)
+console.log("fin de factory",this)
+alert()
+return this}
+factory.prototype=Object.create(js_constr.prototype)
+factory.prototype.constructor=factory
+factory.$parent=js_constr.$js_func
+console.log("factory (same as LikeButton)",factory)
+factory.prototype.render=function(){console.log("render of LikeButton factory")
+return obj.render.apply(this,...arguments)}
+return factory}}},JSON:{__class__:$B.make_class("JSON"),parse:function(){return $B.structuredclone2pyobj(
 JSON.parse.apply(this,arguments))},stringify:function(obj,replacer,space){return JSON.stringify($B.pyobj2structuredclone(obj,false),$B.JSObj.$factory(replacer),space)}},jsobj2pyobj:function(obj){return $B.jsobj2pyobj(obj)},load:function(script_url){console.log('"javascript.load" is deprecrated. '+
 'Use browser.load instead.')
 var file_obj=$B.builtins.open(script_url)
 var content=$B.$getattr(file_obj,'read')()
 eval(content)},$$Math:self.Math && $B.JSObj.$factory(self.Math),NULL:null,$$Number:self.Number && $B.JSObj.$factory(self.Number),py2js:function(src,module_name){if(module_name===undefined){module_name='__main__'+$B.UUID()}
-return $B.py2js(src,module_name,module_name,$B.builtins_scope).to_js()},pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},$$RegExp:self.RegExp && $B.JSObj.$factory(self.RegExp),$$String:self.String && $B.JSObj.$factory(self.String),UNDEFINED:$B.Undefined,UndefinedType:$B.UndefinedClass}
+return $B.py2js(src,module_name,module_name,$B.builtins_scope).to_js()},pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},$$RegExp:self.RegExp && $B.JSObj.$factory(self.RegExp),$$String:self.String && $B.JSObj.$factory(self.String),$$super:function(){var that=$B.js_this,proto=Object.getPrototypeOf(that),parent=proto.constructor.$parent.prototype.constructor
+return function(){console.log("parent",parent)
+console.log("that",that)
+parent.call(that,...arguments)}},UNDEFINED:$B.Undefined,UndefinedType:$B.UndefinedClass}
 var arraybuffers=["Int8Array","Uint8Array","Uint8ClampedArray","Int16Array","Uint16Array","Int32Array","Uint32Array","Float32Array","Float64Array","BigInt64Array","BigUint64Array"]
 arraybuffers.forEach(function(ab){if(self[ab]!==undefined){modules['javascript'][ab]=$B.JSObj.$factory(self[ab])}})
 var _b_=$B.builtins
