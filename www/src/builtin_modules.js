@@ -372,53 +372,26 @@
         $$Date: self.Date && $B.JSObj.$factory(self.Date),
         $$extends: function(js_constr){
             return function(obj){
-                if(typeof obj == "function"){
-                    var res = function(){
-                        js_constr.call(this, ...arguments)
-                        obj.apply(this, arguments)
-                    }
-                    res.prototype = Object.create(js_constr.prototype)
-                    res.prototype.constructor = res
-                    res.$is_js_func = true
-                    return res
-                }else if(obj.$is_class){
-                    console.log("obj", obj)
-                    if(js_constr.$js_func.name == "Named"){
-                        console.log("-- Named")
-                    }
-                    var res = function(){
-                        console.log("call parent class", obj.$parent_class)
-                        obj.$parent_class.call(this, ...arguments)
-                        if(obj.$$constructor){
-                            var args = [this]
-                            for(var i = 0, len = arguments.length; i < len; i++){
-                                args.push(arguments[i])
-                            }
-                            obj.$$constructor.apply(this, args)
+                if(obj.$is_class){
+                    var factory = function(){
+                        var args = [this]
+                        for(var i = 0, len = arguments.length; i < len; i++){
+                            args.push(arguments[i])
                         }
+                        obj.__init__.apply(this, args)
+                        console.log("fin de factory", this)
+                        alert()
+                        return this
                     }
-                    res.prototype = Object.create(js_constr.prototype)
-                    res.prototype.constructor = res
-                    res.$is_js_func = true
-                    res.$class = obj
-                    obj.$parent_class = js_constr
-                    for(var attr in obj.__dict__.$string_dict){
-                        var value = obj.__dict__.$string_dict[attr][0]
-                        if(typeof value == "function"){
-                            res.prototype[attr] = (function(x){
-                                return function(){
-                                    var args = [this]
-                                    for(var i = 0, len = arguments.length; i < len; i++){
-                                        args.push($B.pyobj2jsobj(arguments[i]))
-                                    }
-                                    return x.apply(this, args)
-                                }
-                            })(value)
-                        }else{
-                            res.prototype[attr] = $B.pyobj2jsobj(value)
-                        }
+                    factory.prototype = Object.create(js_constr.prototype)
+                    factory.prototype.constructor = factory
+                    factory.$parent = js_constr.$js_func
+                    console.log("factory (same as LikeButton)", factory)
+                    factory.prototype.render = function(){
+                        console.log("render of LikeButton factory")
+                        return obj.render.apply(this, ...arguments)
                     }
-                    return res
+                    return factory
                 }
             }
         },
@@ -456,6 +429,16 @@
         pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},
         $$RegExp: self.RegExp && $B.JSObj.$factory(self.RegExp),
         $$String: self.String && $B.JSObj.$factory(self.String),
+        $$super: function(){
+            var that = $B.js_this,
+                proto = Object.getPrototypeOf(that),
+                parent = proto.constructor.$parent.prototype.constructor
+            return function(){
+                console.log("parent", parent)
+                console.log("that", that)
+                parent.call(that, ...arguments)
+            }
+        },
         UNDEFINED: $B.Undefined,
         UndefinedType: $B.UndefinedClass
     }
