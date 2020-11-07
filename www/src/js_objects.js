@@ -246,7 +246,6 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
                     if(arguments[i] === undefined){args.push(_b_.None)}
                     else{args.push(jsobj2pyobj(arguments[i]))}
                 }
-                console.log("pyobj", pyobj, "args", args)
                 if(pyobj.prototype.constructor === pyobj){
                     var res = new pyobj(...args)
                 }else{
