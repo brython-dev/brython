@@ -26,11 +26,12 @@ function define(tag_name, cls){
       constructor(){
         // Always call super first in constructor
         super()
-        if(cls.__init__){
+        var init = $B.$getattr(cls, "__init__", _b_.None)
+        if(init !== _b_.None){
             try{
                 var _self = $B.DOMNode.$factory(this)
                 _self.__class__ = cls
-                $B.$call(cls.__init__)(_self)
+                $B.$call(init)(_self)
                 if(WebComponent.initialized){
                     var nb_attrs = _self.attributes.length
                     for(var i = 0; i < nb_attrs; i++){
