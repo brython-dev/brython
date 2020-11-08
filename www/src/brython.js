@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,0,'final',0]
 __BRYTHON__.__MAGIC__="3.9.0"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2020-11-07 11:34:29.653308"
-__BRYTHON__.timestamp=1604745269653
+__BRYTHON__.compiled_date="2020-11-08 08:59:58.355452"
+__BRYTHON__.timestamp=1604822398355
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -10976,7 +10976,7 @@ else if(!isinstance(base,int)){throw TypeError.$factory("'"+$B.class_name(base)+
 "' object cannot be interpreted as an integer")}
 if(base < 0 ||base==1 ||base > 36){throw ValueError.$factory(
 "long_int.$factory() base must be >= 2 and <= 36")}
-if(typeof value=="number"){var pos=value > 0,value=Math.abs(value),res
+if(typeof value=="number"){var pos=value >=0,value=Math.abs(value),res
 if(isSafeInteger(value)){res=long_int.$from_int(value)}
 else if(value.constructor==Number){var s=value.toString(),pos_exp=s.search("e")
 if(pos_exp >-1){var mant=s.substr(0,pos_exp),exp=parseInt(s.substr(pos_exp+1)),point=mant.search(/\./)

@@ -1142,7 +1142,7 @@ long_int.$factory = function(value, base){
             "long_int.$factory() base must be >= 2 and <= 36")
     }
     if(typeof value == "number"){
-        var pos = value > 0,
+        var pos = value >= 0,
             value = Math.abs(value),
             res
         if(isSafeInteger(value)){
