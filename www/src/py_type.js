@@ -756,6 +756,10 @@ type.__call__.__class__ = wrapper_descriptor
 
 var $instance_creator = $B.$instance_creator = function(klass){
     // return the function to initalise a class instance
+    if(klass.prototype && klass.prototype.constructor == klass){
+        // JS constructor
+        return klass
+    }
 
     // The class may not be instanciable if it has at least one abstract method
     if(klass.$instanciable !== undefined){
@@ -763,10 +767,9 @@ var $instance_creator = $B.$instance_creator = function(klass){
             "Can't instantiate abstract class interface " +
                 "with abstract methods")}
     }
-    var metaclass = klass.__class__,
+    var metaclass = klass.__class__ || $B.get_class(klass),
         call_func,
         factory
-
     if(metaclass === _b_.type && (!klass.__bases__ || klass.__bases__.length == 0)){
         if(klass.hasOwnProperty("__new__")){
             if(klass.hasOwnProperty("__init__")){

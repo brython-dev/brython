@@ -239,6 +239,11 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
 
     }else if(klass === $B.Function || klass === $B.method){
         // Transform arguments
+        if(pyobj.prototype.constructor === pyobj){
+            // pyobj is a Javascript constructor - this happens with
+            // javascript.extends
+            return pyobj
+        }
         return function(){
             try{
                 var args = []
@@ -249,7 +254,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
                 if(pyobj.prototype.constructor === pyobj){
                     var res = new pyobj(...args)
                 }else{
-                    var res = pyobj.apply(this,args)
+                    var res = pyobj.apply(this, args)
                 }
                 return pyobj2jsobj(res)
             }catch(err){

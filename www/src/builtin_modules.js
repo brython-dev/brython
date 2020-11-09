@@ -374,23 +374,53 @@
             return function(obj){
                 if(obj.$is_class){
                     var factory = function(){
-                        var args = [this]
-                        for(var i = 0, len = arguments.length; i < len; i++){
-                            args.push(arguments[i])
+                        var init = $B.$getattr(obj, "__init__", _b_.None)
+                        if(init !== _b_.None){
+                            init.bind(this, this).apply(this, arguments)
                         }
-                        obj.__init__.apply(this, args)
-                        console.log("fin de factory", this)
-                        alert()
+                        console.log("create instance from", obj, "extends", js_constr)
                         return this
                     }
                     factory.prototype = Object.create(js_constr.prototype)
                     factory.prototype.constructor = factory
                     factory.$parent = js_constr.$js_func
-                    console.log("factory (same as LikeButton)", factory)
-                    factory.prototype.render = function(){
-                        console.log("render of LikeButton factory")
-                        return obj.render.apply(this, ...arguments)
+                    factory.$is_class = true // for $B.$call
+                    factory.$infos = obj.$infos
+                    for(var key in obj){
+                        if(typeof obj[key] == "function"){
+                            factory.prototype[key] = (function(x){
+                                return function(){
+                                    // Add "this" as first argument of method
+                                    return obj[x].bind(this, this).apply(this,
+                                        arguments)
+                                }
+                            })(key)
+                        }
                     }
+                    var proxy = new Proxy(factory, {
+                        get: function(target, prop, receiver){
+                            console.log("get", prop)
+                            if(prop == "$factory"){
+                                return function(){
+                                    console.log("$factory", arguments)
+                                    return factory.apply(this, arguments)
+                                }
+                            }
+                            if(obj[prop] !== undefined){
+                                if(typeof obj[prop] == "function"){
+                                    return function(){
+                                        // Add "this" as first argument of method
+                                        return obj[prop].bind(this, this).apply(this,
+                                            arguments)
+                                    }
+                                }
+                                return obj[prop]
+                            }
+                            return target[prop]
+                        }
+                    })
+                    console.log("extends", proxy)
+                    //proxy.$factory = factory
                     return factory
                 }
             }
@@ -431,11 +461,10 @@
         $$String: self.String && $B.JSObj.$factory(self.String),
         $$super: function(){
             var that = $B.js_this,
-                proto = Object.getPrototypeOf(that),
-                parent = proto.constructor.$parent.prototype.constructor
+                proto = Object.getPrototypeOf(that)
+            console.log("in super", that, proto) 
+            var parent = proto.constructor.$parent.prototype.constructor
             return function(){
-                console.log("parent", parent)
-                console.log("that", that)
                 parent.call(that, ...arguments)
             }
         },
