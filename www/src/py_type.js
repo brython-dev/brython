@@ -758,9 +758,11 @@ var $instance_creator = $B.$instance_creator = function(klass){
     // return the function to initalise a class instance
     if(klass.prototype && klass.prototype.constructor == klass){
         // JS constructor
-        return klass
+        return function(){
+            return new klass(...arguments)
+        }
     }
-
+   
     // The class may not be instanciable if it has at least one abstract method
     if(klass.$instanciable !== undefined){
         return function(){throw _b_.TypeError.$factory(

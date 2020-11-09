@@ -378,7 +378,6 @@
                         if(init !== _b_.None){
                             init.bind(this, this).apply(this, arguments)
                         }
-                        console.log("create instance from", obj, "extends", js_constr)
                         return this
                     }
                     factory.prototype = Object.create(js_constr.prototype)
@@ -397,30 +396,6 @@
                             })(key)
                         }
                     }
-                    var proxy = new Proxy(factory, {
-                        get: function(target, prop, receiver){
-                            console.log("get", prop)
-                            if(prop == "$factory"){
-                                return function(){
-                                    console.log("$factory", arguments)
-                                    return factory.apply(this, arguments)
-                                }
-                            }
-                            if(obj[prop] !== undefined){
-                                if(typeof obj[prop] == "function"){
-                                    return function(){
-                                        // Add "this" as first argument of method
-                                        return obj[prop].bind(this, this).apply(this,
-                                            arguments)
-                                    }
-                                }
-                                return obj[prop]
-                            }
-                            return target[prop]
-                        }
-                    })
-                    console.log("extends", proxy)
-                    //proxy.$factory = factory
                     return factory
                 }
             }
@@ -460,13 +435,25 @@
         $$RegExp: self.RegExp && $B.JSObj.$factory(self.RegExp),
         $$String: self.String && $B.JSObj.$factory(self.String),
         $$super: function(){
-            var that = $B.js_this,
-                proto = Object.getPrototypeOf(that)
-            console.log("in super", that, proto) 
-            var parent = proto.constructor.$parent.prototype.constructor
-            return function(){
-                parent.call(that, ...arguments)
-            }
+            var b_super = _b_.$$super.$factory(),
+                b_self = b_super.__self_class__,
+                proto = Object.getPrototypeOf(b_self),
+                parent = proto.constructor.$parent
+            return {
+                __init__: function(){
+                        var p = parent.bind(b_self),
+                            res
+                        if(parent.toString().startsWith("class")){
+                            res = new p(...arguments)
+                        }else{
+                            res = p(...arguments)
+                        }
+                        for(key in res){
+                            b_self[$B.to_alias(key)] = res[key]
+                        }
+                        return res
+                    }
+                }
         },
         UNDEFINED: $B.Undefined,
         UndefinedType: $B.UndefinedClass
