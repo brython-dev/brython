@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,0,'final',0]
 __BRYTHON__.__MAGIC__="3.9.0"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2020-11-09 10:34:04.769002"
-__BRYTHON__.timestamp=1604914444769
+__BRYTHON__.compiled_date="2020-11-09 14:10:48.436675"
+__BRYTHON__.timestamp=1604927448436
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5886,7 +5886,7 @@ $B.set_func_names(wrapper_descriptor,"builtins")
 type.__call__.__class__=wrapper_descriptor
 var $instance_creator=$B.$instance_creator=function(klass){
 if(klass.prototype && klass.prototype.constructor==klass){
-return klass}
+return function(){return new klass(...arguments)}}
 if(klass.$instanciable !==undefined){return function(){throw _b_.TypeError.$factory(
 "Can't instantiate abstract class interface "+
 "with abstract methods")}}
@@ -13444,7 +13444,7 @@ var DOMNode={__class__ :_b_.type,__mro__:[object],$infos:{__module__:"browser",_
 DOMNode.$factory=function(elt,fromtag){if(elt.__class__===DOMNode){return elt}
 if(typeof elt=="number" ||typeof elt=="boolean" ||
 typeof elt=="string"){return elt}
-if(fromtag===undefined){if(DOMNode.tags !==undefined){
+if(elt.__class__===undefined && fromtag===undefined){if(DOMNode.tags !==undefined){
 var tdict=DOMNode.tags.$string_dict
 if(tdict !==undefined && tdict.hasOwnProperty(elt.tagName)){try{var klass=tdict[elt.tagName][0]}catch(err){console.log("tdict",tdict,"tag name",elt.tagName)
 throw err}
@@ -14097,7 +14097,6 @@ modules['javascript']={$$this:function(){
 if($B.js_this===undefined){return $B.builtins.None}
 return $B.JSObj.$factory($B.js_this)},$$Date:self.Date && $B.JSObj.$factory(self.Date),$$extends:function(js_constr){return function(obj){if(obj.$is_class){var factory=function(){var init=$B.$getattr(obj,"__init__",_b_.None)
 if(init !==_b_.None){init.bind(this,this).apply(this,arguments)}
-console.log("create instance from",obj,"extends",js_constr)
 return this}
 factory.prototype=Object.create(js_constr.prototype)
 factory.prototype.constructor=factory
@@ -14106,24 +14105,18 @@ factory.$is_class=true
 factory.$infos=obj.$infos
 for(var key in obj){if(typeof obj[key]=="function"){factory.prototype[key]=(function(x){return function(){
 return obj[x].bind(this,this).apply(this,arguments)}})(key)}}
-var proxy=new Proxy(factory,{get:function(target,prop,receiver){console.log("get",prop)
-if(prop=="$factory"){return function(){console.log("$factory",arguments)
-return factory.apply(this,arguments)}}
-if(obj[prop]!==undefined){if(typeof obj[prop]=="function"){return function(){
-return obj[prop].bind(this,this).apply(this,arguments)}}
-return obj[prop]}
-return target[prop]}})
-console.log("extends",proxy)
 return factory}}},JSON:{__class__:$B.make_class("JSON"),parse:function(){return $B.structuredclone2pyobj(
 JSON.parse.apply(this,arguments))},stringify:function(obj,replacer,space){return JSON.stringify($B.pyobj2structuredclone(obj,false),$B.JSObj.$factory(replacer),space)}},jsobj2pyobj:function(obj){return $B.jsobj2pyobj(obj)},load:function(script_url){console.log('"javascript.load" is deprecrated. '+
 'Use browser.load instead.')
 var file_obj=$B.builtins.open(script_url)
 var content=$B.$getattr(file_obj,'read')()
 eval(content)},$$Math:self.Math && $B.JSObj.$factory(self.Math),NULL:null,$$Number:self.Number && $B.JSObj.$factory(self.Number),py2js:function(src,module_name){if(module_name===undefined){module_name='__main__'+$B.UUID()}
-return $B.py2js(src,module_name,module_name,$B.builtins_scope).to_js()},pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},$$RegExp:self.RegExp && $B.JSObj.$factory(self.RegExp),$$String:self.String && $B.JSObj.$factory(self.String),$$super:function(){var that=$B.js_this,proto=Object.getPrototypeOf(that)
-console.log("in super",that,proto)
-var parent=proto.constructor.$parent.prototype.constructor
-return function(){parent.call(that,...arguments)}},UNDEFINED:$B.Undefined,UndefinedType:$B.UndefinedClass}
+return $B.py2js(src,module_name,module_name,$B.builtins_scope).to_js()},pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},$$RegExp:self.RegExp && $B.JSObj.$factory(self.RegExp),$$String:self.String && $B.JSObj.$factory(self.String),$$super:function(){var b_super=_b_.$$super.$factory(),b_self=b_super.__self_class__,proto=Object.getPrototypeOf(b_self),parent=proto.constructor.$parent
+return{
+__init__:function(){var p=parent.bind(b_self),res
+if(parent.toString().startsWith("class")){res=new p(...arguments)}else{res=p(...arguments)}
+for(key in res){b_self[$B.to_alias(key)]=res[key]}
+return res}}},UNDEFINED:$B.Undefined,UndefinedType:$B.UndefinedClass}
 var arraybuffers=["Int8Array","Uint8Array","Uint8ClampedArray","Int16Array","Uint16Array","Int32Array","Uint32Array","Float32Array","Float64Array","BigInt64Array","BigUint64Array"]
 arraybuffers.forEach(function(ab){if(self[ab]!==undefined){modules['javascript'][ab]=$B.JSObj.$factory(self[ab])}})
 var _b_=$B.builtins

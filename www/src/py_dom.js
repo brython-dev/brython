@@ -562,9 +562,13 @@ var DOMNode = {
 }
 
 DOMNode.$factory = function(elt, fromtag){
-    if(elt.__class__ === DOMNode){return elt}
+    if(elt.__class__ === DOMNode){
+        return elt
+    }
     if(typeof elt == "number" || typeof elt == "boolean" ||
-        typeof elt == "string"){return elt}
+            typeof elt == "string"){
+        return elt
+    }
 
     // if none of the above, fromtag determines if the call is made by
     // the tag factory or by any other call to DOMNode
@@ -578,7 +582,7 @@ DOMNode.$factory = function(elt, fromtag){
     // it) and piggybacks on the tag factory by adding an "elt_wrap"
     // attribute to the class to let it know, that special behavior
     // is needed. i.e: don't create the element, use the one provided
-    if(fromtag === undefined) {
+    if(elt.__class__ === undefined && fromtag === undefined) {
         if(DOMNode.tags !== undefined) {  // tags is a python dictionary
             var tdict = DOMNode.tags.$string_dict
             if(tdict !== undefined && tdict.hasOwnProperty(elt.tagName)) {
