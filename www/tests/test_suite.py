@@ -668,4 +668,7 @@ assert not (list is list[str])
 assert list != list[str]
 assert list[str] == list[str]
 
+# issue 1535
+assert [x for x in "abc" if "xyz"[0 if 1 else 2] < "z"] == ['a', 'b', 'c']
+
 print('passed all tests...')

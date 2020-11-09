@@ -4401,23 +4401,38 @@ $ExprCtx.prototype.transition = function(token, value){
           }
           $_SyntaxError(context, 'token ' + token + ' after ' + context)
       case 'if':
+          if(context.parent.type == "comp_iterable"){
+              break
+          }
           var in_comp = false,
               ctx = context.parent
-          while(true){
+          while(ctx){
               if(ctx.type == "list_or_tuple"){
                   // In parenthised expression, eg the second "if" in
                   // flds=[f for f in fields if (x if y is None else z)]
                   break
-              }else if(ctx.type == 'comp_for' || ctx.type == "comp_if"){
+              }else if(ctx.type == 'comp_for'){
+                  break
+              }else if(ctx.type == 'comp_if'){
+                  // [x for x in A if condition if ...]
                   in_comp = true
                   break
-              }else if(ctx.type == 'call_arg'){
+              }else if(ctx.type == 'call_arg' || ctx.type == 'sub'){
+                  // f(x if ...)
+                  // f[x if ...]
                   break
+              }else if(ctx.type == 'expr'){
+                  if(ctx.parent.type == 'comp_iterable'){
+                      // [x for x in a + b if ...]
+                      in_comp = true
+                      break
+                  }
               }
-              if(ctx.parent !== undefined){ctx = ctx.parent}
-              else{break}
+              ctx = ctx.parent
           }
-          if(in_comp){break}
+          if(in_comp){
+              break
+          }
           // Ternary operator : "expr1 if cond else expr2"
           // If the part before "if" is an operation, apply operator
           // precedence
@@ -4428,6 +4443,7 @@ $ExprCtx.prototype.transition = function(token, value){
                    (ctx.parent.type == "expr" && ctx.parent.name == "operand"))){
               ctx = ctx.parent
           }
+          console.log("create ternary of ctx", context, ctx)
           return new $AbstractExprCtx(new $TernaryCtx(ctx), true)
       case 'eol':
           // Special case for print and exec
@@ -8478,6 +8494,7 @@ $TargetListCtx.prototype.to_js = function(){
     return $to_js(this.tree)
 }
 
+var ternaries = []
 var $TernaryCtx = $B.parser.$TernaryCtx = function(context){
     // Class for the ternary operator : "x if C else y"
     this.type = 'ternary'
@@ -8486,6 +8503,7 @@ var $TernaryCtx = $B.parser.$TernaryCtx = function(context){
     context.parent.tree.push(this)
     context.parent = this
     this.tree = [context]
+    ternaries.push(this)
 }
 
 $TernaryCtx.prototype.toString = function(){
@@ -8493,6 +8511,7 @@ $TernaryCtx.prototype.toString = function(){
 }
 
 $TernaryCtx.prototype.transition = function(token, value){
+    console.log("transition from ternary, parent type", this.parent.type)
     var context = this
     if(token == 'else'){
         context.in_else = true

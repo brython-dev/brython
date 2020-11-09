@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,0,'final',0]
 __BRYTHON__.__MAGIC__="3.9.0"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2020-11-08 09:17:40.050311"
-__BRYTHON__.timestamp=1604823460050
+__BRYTHON__.compiled_date="2020-11-09 10:34:04.769002"
+__BRYTHON__.timestamp=1604914444769
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -2252,17 +2252,22 @@ assign_expr.assign=C.tree[0]
 return assign_expr}
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'if':
+if(C.parent.type=="comp_iterable"){break}
 var in_comp=false,ctx=C.parent
-while(true){if(ctx.type=="list_or_tuple"){
-break}else if(ctx.type=='comp_for' ||ctx.type=="comp_if"){in_comp=true
-break}else if(ctx.type=='call_arg'){break}
-if(ctx.parent !==undefined){ctx=ctx.parent}
-else{break}}
+while(ctx){if(ctx.type=="list_or_tuple"){
+break}else if(ctx.type=='comp_for'){break}else if(ctx.type=='comp_if'){
+in_comp=true
+break}else if(ctx.type=='call_arg' ||ctx.type=='sub'){
+break}else if(ctx.type=='expr'){if(ctx.parent.type=='comp_iterable'){
+in_comp=true
+break}}
+ctx=ctx.parent}
 if(in_comp){break}
 var ctx=C
 while(ctx.parent &&
 (ctx.parent.type=='op' ||
 (ctx.parent.type=="expr" && ctx.parent.name=="operand"))){ctx=ctx.parent}
+console.log("create ternary of ctx",C,ctx)
 return new $AbstractExprCtx(new $TernaryCtx(ctx),true)
 case 'eol':
 if(C.tree.length==2 &&
@@ -4191,15 +4196,18 @@ return $transition(C.parent,token,value)}
 $_SyntaxError(C,'token '+token+' after '+C)}
 $TargetListCtx.prototype.to_js=function(){this.js_processed=true
 return $to_js(this.tree)}
+var ternaries=[]
 var $TernaryCtx=$B.parser.$TernaryCtx=function(C){
 this.type='ternary'
 this.parent=C.parent
 C.parent.tree.pop()
 C.parent.tree.push(this)
 C.parent=this
-this.tree=[C]}
+this.tree=[C]
+ternaries.push(this)}
 $TernaryCtx.prototype.toString=function(){return '(ternary) '+this.tree}
-$TernaryCtx.prototype.transition=function(token,value){var C=this
+$TernaryCtx.prototype.transition=function(token,value){console.log("transition from ternary, parent type",this.parent.type)
+var C=this
 if(token=='else'){C.in_else=true
 return new $AbstractExprCtx(C,false)}else if(! C.in_else){$_SyntaxError(C,'token '+token+' after '+C)}else if(token==","){
 if(["assign","augm_assign","node","return"].
@@ -5877,10 +5885,12 @@ var wrapper_descriptor=$B.make_class("wrapper_descriptor")
 $B.set_func_names(wrapper_descriptor,"builtins")
 type.__call__.__class__=wrapper_descriptor
 var $instance_creator=$B.$instance_creator=function(klass){
+if(klass.prototype && klass.prototype.constructor==klass){
+return klass}
 if(klass.$instanciable !==undefined){return function(){throw _b_.TypeError.$factory(
 "Can't instantiate abstract class interface "+
 "with abstract methods")}}
-var metaclass=klass.__class__,call_func,factory
+var metaclass=klass.__class__ ||$B.get_class(klass),call_func,factory
 if(metaclass===_b_.type &&(!klass.__bases__ ||klass.__bases__.length==0)){if(klass.hasOwnProperty("__new__")){if(klass.hasOwnProperty("__init__")){factory=function(){
 var obj=klass.__new__.bind(null,klass).
 apply(null,arguments)
@@ -9162,6 +9172,8 @@ item[1].bind(jsobj)}
 jsobj[item[0]]=pyobj2jsobj(item[1])})
 return jsobj}else if(klass===_b_.float){
 return pyobj.valueOf()}else if(klass===$B.Function ||klass===$B.method){
+if(pyobj.prototype.constructor===pyobj){
+return pyobj}
 return function(){try{var args=[]
 for(var i=0;i < arguments.length;i++){if(arguments[i]===undefined){args.push(_b_.None)}
 else{args.push(jsobj2pyobj(arguments[i]))}}
@@ -14083,28 +14095,35 @@ $B.Undefined={__class__:$B.UndefinedClass}
 $B.set_func_names($B.UndefinedClass,"javascript")
 modules['javascript']={$$this:function(){
 if($B.js_this===undefined){return $B.builtins.None}
-return $B.JSObj.$factory($B.js_this)},$$Date:self.Date && $B.JSObj.$factory(self.Date),$$extends:function(js_constr){return function(obj){if(obj.$is_class){var factory=function(){var args=[this]
-for(var i=0,len=arguments.length;i < len;i++){args.push(arguments[i])}
-obj.__init__.apply(this,args)
-console.log("fin de factory",this)
-alert()
+return $B.JSObj.$factory($B.js_this)},$$Date:self.Date && $B.JSObj.$factory(self.Date),$$extends:function(js_constr){return function(obj){if(obj.$is_class){var factory=function(){var init=$B.$getattr(obj,"__init__",_b_.None)
+if(init !==_b_.None){init.bind(this,this).apply(this,arguments)}
+console.log("create instance from",obj,"extends",js_constr)
 return this}
 factory.prototype=Object.create(js_constr.prototype)
 factory.prototype.constructor=factory
 factory.$parent=js_constr.$js_func
-console.log("factory (same as LikeButton)",factory)
-factory.prototype.render=function(){console.log("render of LikeButton factory")
-return obj.render.apply(this,...arguments)}
+factory.$is_class=true 
+factory.$infos=obj.$infos
+for(var key in obj){if(typeof obj[key]=="function"){factory.prototype[key]=(function(x){return function(){
+return obj[x].bind(this,this).apply(this,arguments)}})(key)}}
+var proxy=new Proxy(factory,{get:function(target,prop,receiver){console.log("get",prop)
+if(prop=="$factory"){return function(){console.log("$factory",arguments)
+return factory.apply(this,arguments)}}
+if(obj[prop]!==undefined){if(typeof obj[prop]=="function"){return function(){
+return obj[prop].bind(this,this).apply(this,arguments)}}
+return obj[prop]}
+return target[prop]}})
+console.log("extends",proxy)
 return factory}}},JSON:{__class__:$B.make_class("JSON"),parse:function(){return $B.structuredclone2pyobj(
 JSON.parse.apply(this,arguments))},stringify:function(obj,replacer,space){return JSON.stringify($B.pyobj2structuredclone(obj,false),$B.JSObj.$factory(replacer),space)}},jsobj2pyobj:function(obj){return $B.jsobj2pyobj(obj)},load:function(script_url){console.log('"javascript.load" is deprecrated. '+
 'Use browser.load instead.')
 var file_obj=$B.builtins.open(script_url)
 var content=$B.$getattr(file_obj,'read')()
 eval(content)},$$Math:self.Math && $B.JSObj.$factory(self.Math),NULL:null,$$Number:self.Number && $B.JSObj.$factory(self.Number),py2js:function(src,module_name){if(module_name===undefined){module_name='__main__'+$B.UUID()}
-return $B.py2js(src,module_name,module_name,$B.builtins_scope).to_js()},pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},$$RegExp:self.RegExp && $B.JSObj.$factory(self.RegExp),$$String:self.String && $B.JSObj.$factory(self.String),$$super:function(){var that=$B.js_this,proto=Object.getPrototypeOf(that),parent=proto.constructor.$parent.prototype.constructor
-return function(){console.log("parent",parent)
-console.log("that",that)
-parent.call(that,...arguments)}},UNDEFINED:$B.Undefined,UndefinedType:$B.UndefinedClass}
+return $B.py2js(src,module_name,module_name,$B.builtins_scope).to_js()},pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},$$RegExp:self.RegExp && $B.JSObj.$factory(self.RegExp),$$String:self.String && $B.JSObj.$factory(self.String),$$super:function(){var that=$B.js_this,proto=Object.getPrototypeOf(that)
+console.log("in super",that,proto)
+var parent=proto.constructor.$parent.prototype.constructor
+return function(){parent.call(that,...arguments)}},UNDEFINED:$B.Undefined,UndefinedType:$B.UndefinedClass}
 var arraybuffers=["Int8Array","Uint8Array","Uint8ClampedArray","Int16Array","Uint16Array","Int32Array","Uint32Array","Float32Array","Float64Array","BigInt64Array","BigUint64Array"]
 arraybuffers.forEach(function(ab){if(self[ab]!==undefined){modules['javascript'][ab]=$B.JSObj.$factory(self[ab])}})
 var _b_=$B.builtins
