@@ -156,4 +156,19 @@ for num in [1, 4.7]:
     except TypeError:
         pass
 
+# javascript.extends() and javascript.super()
+@javascript.extends(window.Rectangle)
+class Square2:
+
+    def __init__(self, length):
+        javascript.super()(length, length)
+        self.name = 'Square2'
+
+    def f(self):
+        return javascript.super().surface()
+
+assert Square2(10).name == "Square2"
+assert Square2(25).surface() == 625
+assert Square2(20).f() == 400
+
 print("all tests ok...")
