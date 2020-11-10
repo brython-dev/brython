@@ -362,6 +362,44 @@
 
     $B.set_func_names($B.UndefinedClass, "javascript")
 
+    // Class used by javascript.super()
+    var super_class = $B.make_class("JavascriptSuper",
+        function(){
+            // Use Brython's super() to get a reference to self
+            var b_super = _b_.$$super.$factory(),
+                b_self = b_super.__self_class__,
+                proto = Object.getPrototypeOf(b_self),
+                parent = proto.constructor.$parent
+            var factory = function(){
+                var p = parent.bind(b_self),
+                    res
+                if(parent.toString().startsWith("class")){
+                    res = new p(...arguments)
+                }else{
+                    res = p(...arguments)
+                }
+                for(key in res){
+                    b_self[$B.to_alias(key)] = res[key]
+                }
+                return res
+            }
+            return {
+                __class__: super_class,
+                __init__: factory,
+                __self_class__: b_self
+            }
+        }
+    )
+
+    super_class.__getattribute__ = function(self, attr){
+        if(attr == "__init__" || attr == "__call__"){
+            return self.__init__
+        }
+        return $B.$getattr(self.__self_class__, attr)
+    }
+
+    $B.set_func_names(super_class, "javascript")
+
     modules['javascript'] = {
         $$this: function(){
             // returns the content of Javascript "this"
@@ -434,27 +472,7 @@
         pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},
         $$RegExp: self.RegExp && $B.JSObj.$factory(self.RegExp),
         $$String: self.String && $B.JSObj.$factory(self.String),
-        $$super: function(){
-            var b_super = _b_.$$super.$factory(),
-                b_self = b_super.__self_class__,
-                proto = Object.getPrototypeOf(b_self),
-                parent = proto.constructor.$parent
-            return {
-                __init__: function(){
-                        var p = parent.bind(b_self),
-                            res
-                        if(parent.toString().startsWith("class")){
-                            res = new p(...arguments)
-                        }else{
-                            res = p(...arguments)
-                        }
-                        for(key in res){
-                            b_self[$B.to_alias(key)] = res[key]
-                        }
-                        return res
-                    }
-                }
-        },
+        $$super: super_class,
         UNDEFINED: $B.Undefined,
         UndefinedType: $B.UndefinedClass
     }
